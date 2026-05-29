@@ -22,7 +22,13 @@
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\ce70afdac961d96fa5c106592eb73eb8\PageHeader_qml.cpp.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
+    <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\AgentPage_qml.cpp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\BinariesPage_qml.cpp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\ChatPage_qml.cpp.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\LaunchPage_qml.cpp.rule">
@@ -32,6 +38,9 @@
       <Filter>CMake Rules</Filter>
     </CustomBuild>
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\ProfilesPage_qml.cpp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\SettingsPage_qml.cpp.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\8dc628ec53893cfb9a19f23fa6b8e0b4\module_LlamaCode.aotstats.rule">

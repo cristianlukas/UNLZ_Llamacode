@@ -16,6 +16,8 @@ Item {
     property bool mmprojEnabled: false
     property bool draftEnabled: false
     property bool smokeTestRunning: false
+    property string harnessAdapter: "none"
+    property string harnessProfileId: ""
 
     function splitArgs(raw) {
         const out = []
@@ -27,9 +29,7 @@ Item {
         return out
     }
 
-    function argsFlat() {
-        return splitArgs(extraArgsArea.text)
-    }
+    function argsFlat() { return splitArgs(extraArgsArea.text) }
 
     function findArgValue(flag) {
         const a = argsFlat()
@@ -112,20 +112,24 @@ Item {
 
     function loadLaunch() {
         if (!selectedLaunchId || selectedLaunchId.length === 0) return
-
         const lp = App.profileManager.getLaunchProfile(selectedLaunchId)
         if (!lp || !lp.id) return
 
         backendId = lp.backendProfileId ?? ""
         modelProfileId = lp.modelProfileId ?? ""
         runtimeId = lp.runtimePresetId ?? ""
+        harnessProfileId = lp.harnessProfileId ?? ""
+        if (harnessProfileId.length > 0) {
+            const hp = App.profileManager.getHarness(harnessProfileId)
+            harnessAdapter = hp.adapter ?? "none"
+        } else {
+            harnessAdapter = "none"
+        }
         const rawExtra = (lp.extraArgs ?? [])
         manualExtraArgsArea.text = extractManualArgs(rawExtra).join("\n")
 
         let envText = "{}"
-        try {
-            envText = JSON.stringify(lp.envOverrides ?? {}, null, 2)
-        } catch (e) {}
+        try { envText = JSON.stringify(lp.envOverrides ?? {}, null, 2) } catch (e) {}
         envArea.text = envText
 
         const bp = App.profileManager.getBackend(backendId)
@@ -156,19 +160,11 @@ Item {
         mlockCheck.checked = rt.mlock ?? false
         contBatchCheck.checked = rt.contBatching ?? true
 
-        aliasField.text = ""
-        nPredictField.text = ""
-        cacheTypeVField.text = ""
-        tempField.text = ""
-        topPField.text = ""
-        topKField.text = ""
-        repeatPenaltyField.text = ""
-        presencePenaltyField.text = ""
-        noContextShiftCheck.checked = false
-        metricsCheck.checked = false
-        noWarmupCheck.checked = false
-        cacheRamField.text = ""
-        cacheReuseField.text = ""
+        aliasField.text = ""; nPredictField.text = ""; cacheTypeVField.text = ""
+        tempField.text = ""; topPField.text = ""; topKField.text = ""
+        repeatPenaltyField.text = ""; presencePenaltyField.text = ""
+        noContextShiftCheck.checked = false; metricsCheck.checked = false; noWarmupCheck.checked = false
+        cacheRamField.text = ""; cacheReuseField.text = ""
         for (let i = 0; i < rawExtra.length; ++i) {
             const cur = rawExtra[i]
             const nxt = (i + 1 < rawExtra.length) ? rawExtra[i + 1] : ""
@@ -199,50 +195,22 @@ Item {
             return
         }
 
-        const bpOk = App.profileManager.updateBackend(
-            backendId,
-            backendNameCurrent,
-            backendBinary.currentValue ?? "",
-            backendHost.text,
-            parseInt(backendPort.text),
-            []
-        )
-        if (!bpOk) {
-            App.serverError("No se pudo guardar Backend.")
-            return
-        }
+        const bpOk = App.profileManager.updateBackend(backendId, backendNameCurrent, backendBinary.currentValue ?? "", backendHost.text, parseInt(backendPort.text), [])
+        if (!bpOk) { App.serverError("No se pudo guardar Backend."); return }
 
-        const mpOk = App.profileManager.updateModelProfile(
-            modelProfileId,
-            modelNameCurrent,
-            modelMain.currentValue ?? "",
-            mmprojEnabled ? (modelMmproj.currentValue ?? "") : "",
-            draftEnabled  ? (modelDraft.currentValue  ?? "") : ""
-        )
-        if (!mpOk) {
-            App.serverError("No se pudo guardar Model Profile.")
-            return
-        }
+        const mpOk = App.profileManager.updateModelProfile(modelProfileId, modelNameCurrent, modelMain.currentValue ?? "", mmprojEnabled ? (modelMmproj.currentValue ?? "") : "", draftEnabled ? (modelDraft.currentValue ?? "") : "")
+        if (!mpOk) { App.serverError("No se pudo guardar Model Profile."); return }
 
         const rtOk = App.profileManager.updateRuntimePreset({
-            "id": runtimeId,
-            "name": runtimeNameCurrent,
-            "ctx": parseInt(ctxField.text),
-            "batch": parseInt(batchField.text),
-            "ubatch": parseInt(ubatchField.text),
-            "threads": parseInt(threadsField.text),
-            "gpuLayers": parseInt(gpuLayersField.text),
-            "flashAttention": flashAttnCheck.checked,
-            "mmap": mmapCheck.checked,
-            "mlock": mlockCheck.checked,
-            "contBatching": contBatchCheck.checked,
-            "cacheType": cacheTypeField.text,
+            "id": runtimeId, "name": runtimeNameCurrent,
+            "ctx": parseInt(ctxField.text), "batch": parseInt(batchField.text),
+            "ubatch": parseInt(ubatchField.text), "threads": parseInt(threadsField.text),
+            "gpuLayers": parseInt(gpuLayersField.text), "flashAttention": flashAttnCheck.checked,
+            "mmap": mmapCheck.checked, "mlock": mlockCheck.checked,
+            "contBatching": contBatchCheck.checked, "cacheType": cacheTypeField.text,
             "parallelSlots": parseInt(parallelSlotsField.text)
         })
-        if (!rtOk) {
-            App.serverError("No se pudo guardar Runtime.")
-            return
-        }
+        if (!rtOk) { App.serverError("No se pudo guardar Runtime."); return }
 
         const bp = App.profileManager.getBackend(backendId)
         const binId = bp.binaryId ?? ""
@@ -267,19 +235,25 @@ Item {
         for (let i = 0; i < manual.length; ++i)
             rebuiltArgs.push(manual[i].startsWith('-') ? rf(manual[i]) : manual[i])
 
-        const lpOk = App.profileManager.updateLaunchProfile({
-            "id": selectedLaunchId,
-            "name": launchCombo.displayText,
-            "backendProfileId": backendId,
-            "modelProfileId": modelProfileId,
-            "runtimePresetId": runtimeId,
-            "extraArgs": rebuiltArgs,
-            "envOverrides": envOverrides
-        })
-        if (!lpOk) {
-            App.serverError("No se pudo guardar Launch Profile.")
-            return
+        // Persist harness selection
+        let resolvedHarnessId = ""
+        if (harnessAdapter !== "none") {
+            if (harnessProfileId.length > 0) {
+                App.profileManager.updateHarness({"id": harnessProfileId, "adapter": harnessAdapter, "name": harnessAdapter})
+                resolvedHarnessId = harnessProfileId
+            } else {
+                resolvedHarnessId = App.profileManager.addHarness(harnessAdapter, harnessAdapter)
+                harnessProfileId = resolvedHarnessId
+            }
         }
+
+        const lpOk = App.profileManager.updateLaunchProfile({
+            "id": selectedLaunchId, "name": launchCombo.displayText,
+            "backendProfileId": backendId, "modelProfileId": modelProfileId,
+            "runtimePresetId": runtimeId, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
+            "harnessProfileId": resolvedHarnessId
+        })
+        if (!lpOk) App.serverError("No se pudo guardar Launch Profile.")
     }
 
     Component.onCompleted: {
@@ -296,8 +270,8 @@ Item {
 
         PageHeader {
             Layout.fillWidth: true
-            title: "Profiles"
-            subtitle: "Editor completo de Launch Profile"
+            title: (App.langV, App.l("profiles.title"))
+            subtitle: (App.langV, App.l("profiles.subtitle"))
         }
 
         ScrollView {
@@ -312,8 +286,8 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: topRow.implicitHeight + 20
 
@@ -323,48 +297,44 @@ Item {
                         anchors.margins: 10
                         spacing: 10
 
-                        Text { text: "Launch Profile"; color: "#a6adc8"; font.pixelSize: 13 }
+                        Text { text: (App.langV, App.l("launch.profile")); color: Theme.textSecondary; font.pixelSize: 13 }
                         ComboBox {
                             id: launchCombo
                             Layout.fillWidth: true
                             model: App.profileManager.launchProfiles
                             textRole: "name"
                             valueRole: "profileId"
-                            onCurrentValueChanged: {
-                                selectedLaunchId = currentValue ?? ""
-                                loadLaunch()
-                            }
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
+                            onCurrentValueChanged: { selectedLaunchId = currentValue ?? ""; loadLaunch() }
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text {
-                                text: launchCombo.displayText.length > 0 ? launchCombo.displayText : "— select —"
-                                color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter
+                                text: launchCombo.displayText.length > 0 ? launchCombo.displayText : (App.langV, App.l("common.selectPlaceholder"))
+                                color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter
                             }
                         }
                         LcButton {
-                            text: smokeTestRunning ? "Testeando..." : "Smoke-Test"
+                            text: {
+                                const _lang = App.langV
+                                return smokeTestRunning ? App.l("profiles.smokeTesting") : App.l("profiles.smokeTest")
+                            }
                             secondary: true
                             enabled: selectedLaunchId.length > 0 && !smokeTestRunning && !App.serverRunning
-                            onClicked: {
-                                saveAll()
-                                smokeTestRunning = true
-                                App.smokeTestServer(selectedLaunchId)
-                            }
+                            onClicked: { saveAll(); smokeTestRunning = true; App.smokeTestServer(selectedLaunchId) }
                         }
-                        LcButton { text: "Nuevo"; secondary: true; onClicked: newProfile() }
+                        LcButton { text: (App.langV, App.l("profiles.new")); secondary: true; onClicked: newProfile() }
                         LcButton {
-                            text: "Duplicar"; secondary: true
+                            text: (App.langV, App.l("profiles.duplicate")); secondary: true
                             enabled: selectedLaunchId.length > 0
                             onClicked: duplicateProfile()
                         }
                         LcButton {
-                            text: "Renombrar"; secondary: true
+                            text: (App.langV, App.l("profiles.rename")); secondary: true
                             enabled: selectedLaunchId.length > 0
                             onClicked: { renameField.text = launchCombo.displayText; renameDialog.open() }
                         }
-                        LcButton { text: "Cancelar"; secondary: true; onClicked: loadLaunch() }
-                        LcButton { text: "Guardar"; onClicked: saveAll() }
+                        LcButton { text: (App.langV, App.l("profiles.cancel")); secondary: true; onClicked: loadLaunch() }
+                        LcButton { text: (App.langV, App.l("profiles.save")); onClicked: saveAll() }
                         LcButton {
-                            text: "Eliminar"
+                            text: (App.langV, App.l("profiles.delete"))
                             danger: true
                             enabled: selectedLaunchId.length > 0
                             onClicked: deleteDialog.open()
@@ -374,13 +344,13 @@ Item {
 
                 LcDialog {
                     id: deleteDialog
-                    title: "Eliminar perfil"
+                    title: (App.langV, App.l("profiles.deleteTitle"))
                     width: 440
                     height: 190
                     contentItem: Text {
                         width: 404
-                        text: "¿Eliminar \"" + launchCombo.displayText + "\"? Esta acción no se puede deshacer."
-                        color: "#cdd6f4"
+                        text: (App.langV, App.lf("common.deleteConfirm", launchCombo.displayText))
+                        color: Theme.textPrimary
                         font.pixelSize: 13
                         wrapMode: Text.WordWrap
                     }
@@ -401,7 +371,10 @@ Item {
                     id: smokeTestResultDialog
                     property bool passed: false
                     property string output: ""
-                    title: passed ? "✓ Smoke-Test pasó" : "✗ Smoke-Test falló"
+                    title: {
+                        const _lang = App.langV
+                        return passed ? App.l("profiles.smokeTestPassed") : App.l("profiles.smokeTestFailed")
+                    }
                     width: 520
                     height: 320
                     contentItem: Item {
@@ -409,9 +382,9 @@ Item {
                         height: 220
                         Rectangle {
                             anchors.fill: parent
-                            color: "#11111b"
+                            color: Theme.inputBg
                             radius: 6
-                            border.color: smokeTestResultDialog.passed ? "#a6e3a1" : "#f38ba8"
+                            border.color: smokeTestResultDialog.passed ? Theme.successText : Theme.errorText
                             clip: true
                             ScrollView {
                                 anchors.fill: parent
@@ -420,7 +393,7 @@ Item {
                                 TextArea {
                                     readOnly: true
                                     text: smokeTestResultDialog.output
-                                    color: smokeTestResultDialog.passed ? "#a6e3a1" : "#f38ba8"
+                                    color: smokeTestResultDialog.passed ? Theme.successText : Theme.errorText
                                     font { family: "Consolas,monospace"; pixelSize: 11 }
                                     wrapMode: TextArea.WrapAnywhere
                                     background: null
@@ -442,7 +415,7 @@ Item {
 
                 LcDialog {
                     id: renameDialog
-                    title: "Renombrar perfil"
+                    title: (App.langV, App.l("profiles.renameTitle"))
                     width: 440
                     height: 200
                     contentItem: Item {
@@ -460,8 +433,7 @@ Item {
                         if (newName.length === 0) return
                         const lp = App.profileManager.getLaunchProfile(selectedLaunchId)
                         App.profileManager.updateLaunchProfile({
-                            "id": selectedLaunchId,
-                            "name": newName,
+                            "id": selectedLaunchId, "name": newName,
                             "backendProfileId": lp.backendProfileId ?? "",
                             "modelProfileId": lp.modelProfileId ?? "",
                             "runtimePresetId": lp.runtimePresetId ?? "",
@@ -473,131 +445,100 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: backendGrid.implicitHeight + 20
                     GridLayout {
                         id: backendGrid
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        columns: 2
-                        rowSpacing: 8
-                        columnSpacing: 10
+                        anchors.fill: parent; anchors.margins: 10
+                        columns: 2; rowSpacing: 8; columnSpacing: 10
 
-                        Text { text: "Binary"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "Binary"; color: Theme.textSecondary; font.pixelSize: 12 }
                         ComboBox {
                             id: backendBinary
                             Layout.fillWidth: true
                             model: App.binaryRegistry
-                            textRole: "name"
-                            valueRole: "binId"
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                            contentItem: Text { text: backendBinary.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            textRole: "name"; valueRole: "binId"
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: backendBinary.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
-                        Text { text: "Host"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "Host"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: backendHost; Layout.fillWidth: true }
-                        Text { text: "Port"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "Port"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: backendPort; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
                     }
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: modelGrid.implicitHeight + 20
                     GridLayout {
                         id: modelGrid
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        columns: 3
-                        rowSpacing: 8
-                        columnSpacing: 10
+                        anchors.fill: parent; anchors.margins: 10
+                        columns: 3; rowSpacing: 8; columnSpacing: 10
 
                         Item { implicitWidth: 20 }
-                        Text { text: "Main model"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "Main model"; color: Theme.textSecondary; font.pixelSize: 12 }
                         ComboBox {
                             id: modelMain
                             Layout.fillWidth: true
-                            model: App.modelCatalog
-                            textRole: "fileName"
-                            valueRole: "modelId"
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                            contentItem: Text { text: modelMain.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: modelMain.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
 
-                        CheckBox {
-                            id: mmprojCheck
-                            checked: mmprojEnabled
-                            onCheckedChanged: mmprojEnabled = checked
-                            padding: 0
-                        }
-                        Text { text: "mmproj"; color: mmprojEnabled ? "#a6adc8" : "#585b70"; font.pixelSize: 12 }
+                        CheckBox { id: mmprojCheck; checked: mmprojEnabled; onCheckedChanged: mmprojEnabled = checked; padding: 0 }
+                        Text { text: "mmproj"; color: mmprojEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         ComboBox {
                             id: modelMmproj
                             Layout.fillWidth: true
-                            enabled: mmprojEnabled
-                            opacity: mmprojEnabled ? 1.0 : 0.4
-                            model: App.modelCatalog
-                            textRole: "fileName"
-                            valueRole: "modelId"
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                            contentItem: Text { text: modelMmproj.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            enabled: mmprojEnabled; opacity: mmprojEnabled ? 1.0 : 0.4
+                            model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: modelMmproj.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
 
-                        CheckBox {
-                            id: draftCheck
-                            checked: draftEnabled
-                            onCheckedChanged: draftEnabled = checked
-                            padding: 0
-                        }
-                        Text { text: "Draft model"; color: draftEnabled ? "#a6adc8" : "#585b70"; font.pixelSize: 12 }
+                        CheckBox { id: draftCheck; checked: draftEnabled; onCheckedChanged: draftEnabled = checked; padding: 0 }
+                        Text { text: "Draft model"; color: draftEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         ComboBox {
                             id: modelDraft
                             Layout.fillWidth: true
-                            enabled: draftEnabled
-                            opacity: draftEnabled ? 1.0 : 0.4
-                            model: App.modelCatalog
-                            textRole: "fileName"
-                            valueRole: "modelId"
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                            contentItem: Text { text: modelDraft.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            enabled: draftEnabled; opacity: draftEnabled ? 1.0 : 0.4
+                            model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: modelDraft.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
                     }
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: runtimeGrid.implicitHeight + 20
                     GridLayout {
                         id: runtimeGrid
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        columns: 4
-                        rowSpacing: 8
-                        columnSpacing: 10
+                        anchors.fill: parent; anchors.margins: 10
+                        columns: 4; rowSpacing: 8; columnSpacing: 10
 
-                        Text { text: "ctx"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "ctx"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: ctxField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-
-                        Text { text: "batch"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "batch"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: batchField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "ubatch"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "ubatch"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: ubatchField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-
-                        Text { text: "threads"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "threads"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: threadsField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "gpuLayers"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "gpuLayers"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: gpuLayersField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-
-                        Text { text: "parallelSlots"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "parallelSlots"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: parallelSlotsField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "cacheType"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "cacheType"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheTypeField; Layout.fillWidth: true }
                     }
                 }
@@ -605,49 +546,42 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 16
-                    CheckBox { id: flashAttnCheck; text: "flash-attn"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: mmapCheck; text: "mmap"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: mlockCheck; text: "mlock"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: contBatchCheck; text: "cont-batching"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: flashAttnCheck; text: "flash-attn"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: mmapCheck; text: "mmap"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: mlockCheck; text: "mlock"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: contBatchCheck; text: "cont-batching"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: advancedGrid.implicitHeight + 20
                     GridLayout {
                         id: advancedGrid
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        columns: 4
-                        rowSpacing: 8
-                        columnSpacing: 10
+                        anchors.fill: parent; anchors.margins: 10
+                        columns: 4; rowSpacing: 8; columnSpacing: 10
 
-                        Text { text: "alias"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "alias"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: aliasField; Layout.fillWidth: true }
-                        Text { text: "n-predict"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "n-predict"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: nPredictField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-
-                        Text { text: "cache-type-v"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "cache-type-v"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheTypeVField; Layout.fillWidth: true }
-                        Text { text: "temp"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "temp"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: tempField; Layout.fillWidth: true }
-
-                        Text { text: "top-p"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "top-p"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: topPField; Layout.fillWidth: true }
-                        Text { text: "top-k"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "top-k"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: topKField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-
-                        Text { text: "repeat-penalty"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "repeat-penalty"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: repeatPenaltyField; Layout.fillWidth: true }
-                        Text { text: "presence-penalty"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "presence-penalty"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: presencePenaltyField; Layout.fillWidth: true }
-
-                        Text { text: "cache-ram"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "cache-ram"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheRamField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "cache-reuse"; color: "#a6adc8"; font.pixelSize: 12 }
+                        Text { text: "cache-reuse"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheReuseField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
                     }
                 }
@@ -655,48 +589,176 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 16
-                    CheckBox { id: noContextShiftCheck; text: "no-context-shift"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: metricsCheck; text: "metrics"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
-                    CheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: "#a6adc8"; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: noContextShiftCheck; text: "no-context-shift"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: metricsCheck; text: "metrics"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                 }
 
+                // ── Harness ──────────────────────────────────────────────────
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
+                    radius: 8
+                    implicitHeight: harnessCol.implicitHeight + 20
+
+                    ColumnLayout {
+                        id: harnessCol
+                        anchors { fill: parent; margins: 12 }
+                        spacing: 10
+
+                        Text {
+                            text: (App.langV, App.l("harness.title"))
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            Repeater {
+                                model: [
+                                    { adapter: "none",      label: (App.langV, App.l("harness.none")),  icon: "—" },
+                                    { adapter: "opencode",  label: "Opencode",   icon: "🔮" },
+                                    { adapter: "smallcode", label: "Smallcode",  icon: "🧩" },
+                                ]
+
+                                delegate: Rectangle {
+                                    Layout.fillWidth: true
+                                    height: modelData.adapter === "none" ? 52 : 82
+                                    radius: 8
+                                    color: harnessAdapter === modelData.adapter ? Theme.highlight : Theme.inputBg
+                                    border.color: harnessAdapter === modelData.adapter ? Theme.accent : Theme.borderColor
+                                    border.width: harnessAdapter === modelData.adapter ? 2 : 1
+                                    clip: true
+
+                                    // install status for non-none options
+                                    readonly property bool isInstalled: modelData.adapter === "none"
+                                        ? true
+                                        : (App.harnessCheckV, App.isHarnessInstalled(modelData.adapter))
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: harnessAdapter = modelData.adapter
+                                    }
+
+                                    ColumnLayout {
+                                        anchors { fill: parent; margins: 8 }
+                                        spacing: 4
+
+                                        Row {
+                                            spacing: 6
+                                            Layout.fillWidth: true
+                                            Text { text: modelData.icon; font.pixelSize: 16 }
+                                            Text {
+                                                text: modelData.label
+                                                color: Theme.textPrimary
+                                                font { pixelSize: 13; bold: true }
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+
+                                        // install status row (non-none only)
+                                        RowLayout {
+                                            visible: modelData.adapter !== "none"
+                                            Layout.fillWidth: true
+                                            spacing: 6
+
+                                            Rectangle {
+                                                width: 7; height: 7; radius: 4
+                                                color: parent.visible
+                                                    ? (isInstalled ? Theme.successText : Theme.errorText)
+                                                    : "transparent"
+                                            }
+                                            Text {
+                                                text: {
+                                                    const _lang = App.langV
+                                                    if (!parent.visible) return ""
+                                                    return isInstalled
+                                                        ? App.l("harness.installed")
+                                                        : App.l("harness.notInstalled")
+                                                }
+                                                color: isInstalled ? Theme.successText : Theme.textMuted
+                                                font.pixelSize: 11
+                                                Layout.fillWidth: true
+                                            }
+
+                                            LcButton {
+                                                visible: modelData.adapter !== "none" && !isInstalled
+                                                text: {
+                                                    const _lang = App.langV
+                                                    return App.installingHarness
+                                                        ? App.l("harness.installing")
+                                                        : App.l("harness.install")
+                                                }
+                                                enabled: !App.installingHarness
+                                                onClicked: App.installHarness(modelData.adapter)
+                                                implicitHeight: 26
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // install status message
+                        Text {
+                            visible: App.harnessInstallStatus.length > 0
+                            text: App.harnessInstallStatus
+                            color: Theme.textMuted
+                            font.pixelSize: 11
+                            Layout.fillWidth: true
+                            wrapMode: Text.WrapAnywhere
+                        }
+
+                        Connections {
+                            target: App
+                            function onHarnessInstallFinished(success, adapter, message) {
+                                if (success && harnessAdapter === adapter) {
+                                    // auto-save on successful install
+                                    saveAll()
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ─────────────────────────────────────────────────────────────
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: 220
                     ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        Text { text: "Extra args manuales (se agregan al final)"; color: "#a6adc8"; font.pixelSize: 12 }
+                        anchors.fill: parent; anchors.margins: 10
+                        Text { text: (App.langV, App.l("profiles.extraArgs")); color: Theme.textSecondary; font.pixelSize: 12 }
                         TextArea {
                             id: manualExtraArgsArea
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            color: "#cdd6f4"
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
+                            Layout.fillWidth: true; Layout.fillHeight: true
+                            color: Theme.textPrimary
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                         }
                     }
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
-                    color: "#181825"
-                    border.color: "#313244"
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
                     radius: 8
                     implicitHeight: 220
                     ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 10
-                        Text { text: "envOverrides (JSON)"; color: "#a6adc8"; font.pixelSize: 12 }
+                        anchors.fill: parent; anchors.margins: 10
+                        Text { text: (App.langV, App.l("profiles.envOverrides")); color: Theme.textSecondary; font.pixelSize: 12 }
                         TextArea {
                             id: envArea
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            color: "#cdd6f4"
+                            Layout.fillWidth: true; Layout.fillHeight: true
+                            color: Theme.textPrimary
                             font.family: "Consolas"
-                            background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                         }
                     }
                 }

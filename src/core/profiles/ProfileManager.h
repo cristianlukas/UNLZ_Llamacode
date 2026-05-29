@@ -111,6 +111,12 @@ public:
     Q_INVOKABLE bool updateRuntimePreset(const QVariantMap &data);
     Q_INVOKABLE QVariantMap getRuntimePreset(const QString &id) const;
 
+    // HarnessProfile
+    Q_INVOKABLE QString addHarness(const QString &name, const QString &adapter);
+    Q_INVOKABLE bool removeHarness(const QString &id);
+    Q_INVOKABLE bool updateHarness(const QVariantMap &data);
+    Q_INVOKABLE QVariantMap getHarness(const QString &id) const;
+
     // LaunchProfile
     Q_INVOKABLE QString addLaunchProfile(const QString &name,
                                          const QString &backendId,

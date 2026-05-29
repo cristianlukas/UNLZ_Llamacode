@@ -40,6 +40,13 @@ namespace _0x5f_LlamaCode_qml_pages_LaunchPage_qml {
         reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], nullptr
     };
 }
+namespace _0x5f_LlamaCode_qml_pages_ChatPage_qml { 
+    extern const unsigned char qmlData[];
+    extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
+    const QQmlPrivate::CachedQmlUnit unit = {
+        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], nullptr
+    };
+}
 namespace _0x5f_LlamaCode_qml_components_NavBar_qml { 
     extern const unsigned char qmlData[];
     extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
@@ -82,6 +89,20 @@ namespace _0x5f_LlamaCode_qml_components_LcDialog_qml {
         reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], nullptr
     };
 }
+namespace _0x5f_LlamaCode_qml_pages_AgentPage_qml { 
+    extern const unsigned char qmlData[];
+    extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
+    const QQmlPrivate::CachedQmlUnit unit = {
+        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], nullptr
+    };
+}
+namespace _0x5f_LlamaCode_qml_pages_SettingsPage_qml { 
+    extern const unsigned char qmlData[];
+    extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];
+    const QQmlPrivate::CachedQmlUnit unit = {
+        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], nullptr
+    };
+}
 
 }
 namespace {
@@ -101,12 +122,15 @@ Registry::Registry() {
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/pages/ModelRootsPage.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_pages_ModelRootsPage_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/pages/ProfilesPage.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_pages_ProfilesPage_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/pages/LaunchPage.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_pages_LaunchPage_qml::unit);
+    resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/pages/ChatPage.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_pages_ChatPage_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/components/NavBar.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_components_NavBar_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/components/PageHeader.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_components_PageHeader_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/components/CommandPreview.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_components_CommandPreview_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/components/LcButton.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_components_LcButton_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/components/LcTextField.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_components_LcTextField_qml::unit);
     resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/components/LcDialog.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_components_LcDialog_qml::unit);
+    resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/pages/AgentPage.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_pages_AgentPage_qml::unit);
+    resourcePathToCachedUnit.insert(QStringLiteral("/LlamaCode/qml/pages/SettingsPage.qml"), &QmlCacheGeneratedCode::_0x5f_LlamaCode_qml_pages_SettingsPage_qml::unit);
     QQmlPrivate::RegisterQmlUnitCacheHook registration;
     registration.structVersion = 0;
     registration.lookupCachedQmlUnit = &lookupCachedUnit;

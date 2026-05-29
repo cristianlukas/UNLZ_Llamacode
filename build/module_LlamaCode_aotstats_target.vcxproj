@@ -553,6 +553,70 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\AgentPage_qml.cpp.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/AgentPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/AgentPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\AgentPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/AgentPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/AgentPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\AgentPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/AgentPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/AgentPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\AgentPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/AgentPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/AgentPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\AgentPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\BinariesPage_qml.cpp.rule">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp.aotstats</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
@@ -613,6 +677,70 @@ exit /b %1
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\BinariesPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\ChatPage_qml.cpp.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/ChatPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/ChatPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\ChatPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/ChatPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/ChatPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\ChatPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/ChatPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/ChatPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\ChatPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/ChatPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/ChatPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\ChatPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>
   </ItemGroup>
@@ -809,6 +937,70 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\6c1608f97a79109465377796cec5715a\SettingsPage_qml.cpp.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/SettingsPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/SettingsPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\SettingsPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/SettingsPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/SettingsPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\SettingsPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/SettingsPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/SettingsPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\SettingsPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp, .rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp.aotstats</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -E make_directory C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages
+if %errorlevel% neq 0 goto :cmEnd
+call .qt\bin\qt_setup_tool_path.bat C:/Qt/6.8.3/msvc2022_64/bin/qmlcachegen.exe --bare --resource-path /LlamaCode/qml/pages/SettingsPage.qml -I C:/Users/cristian/Documents/LlamaCode/build -I C:/Qt/6.8.3/msvc2022_64/qml -i C:/Users/cristian/Documents/LlamaCode/build/LlamaCode/qmldir --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/qmake_LlamaCode.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/LlamaCode_raw_qml_0.qrc --resource C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc --dump-aot-stats --module-id=LlamaCode(LlamaCode) -o C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp C:/Users/cristian/Documents/LlamaCode/qml/pages/SettingsPage.qml
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Qt\6.8.3\msvc2022_64\bin\qmlcachegen.exe;C:\Users\cristian\Documents\LlamaCode\qml\pages\SettingsPage.qml;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\qmake_LlamaCode.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\LlamaCode_raw_qml_0.qrc;C:\Users\cristian\Documents\LlamaCode\build\.qt\rcc\llamacode_assets.qrc;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\LlamaCode.qmltypes;C:\Users\cristian\Documents\LlamaCode\build\LlamaCode\qmldir;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
     <CustomBuild Include="C:\Users\cristian\Documents\LlamaCode\build\CMakeFiles\8dc628ec53893cfb9a19f23fa6b8e0b4\module_LlamaCode.aotstats.rule">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generating .rcc/qmlcache/module_LlamaCode.aotstats</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
@@ -820,7 +1012,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstats</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generating .rcc/qmlcache/module_LlamaCode.aotstats</Message>
@@ -833,7 +1025,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstats</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Generating .rcc/qmlcache/module_LlamaCode.aotstats</Message>
@@ -846,7 +1038,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstats</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Generating .rcc/qmlcache/module_LlamaCode.aotstats</Message>
@@ -859,7 +1051,7 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\Main_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\BinariesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ModelRootsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ProfilesPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\LaunchPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\ChatPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\NavBar_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\PageHeader_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\CommandPreview_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcButton_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcTextField_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\components\LcDialog_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\AgentPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\LlamaCode_qml\pages\SettingsPage_qml.cpp.aotstats;C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstatslist;%(AdditionalInputs)</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\cristian\Documents\LlamaCode\build\.rcc\qmlcache\module_LlamaCode.aotstats</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
     </CustomBuild>

@@ -6,13 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick Sql Concurrent)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick Sql Concurrent Network)
 
 qt_standard_project_setup(REQUIRES 6.4)
 
 set(SOURCES
     src/main.cpp
     src/AppController.cpp
+    src/ThemeProvider.cpp
     src/core/LlamaBinary.cpp
     src/core/BinaryRegistry.cpp
     src/core/CapabilityDetector.cpp
@@ -28,6 +29,7 @@ set(SOURCES
 
 set(HEADERS
     src/AppController.h
+    src/ThemeProvider.h
     src/core/LlamaBinary.h
     src/core/BinaryRegistry.h
     src/core/CapabilityDetector.h
@@ -59,13 +61,20 @@ qt_add_qml_module(LlamaCode
         qml/pages/ModelRootsPage.qml
         qml/pages/ProfilesPage.qml
         qml/pages/LaunchPage.qml
+        qml/pages/ChatPage.qml
         qml/components/NavBar.qml
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
         qml/components/LcButton.qml
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
+        qml/pages/AgentPage.qml
+        qml/pages/SettingsPage.qml
 )
+
+if (MSVC)
+    target_compile_options(LlamaCode PRIVATE /utf-8)
+endif()
 
 qt_add_resources(LlamaCode "llamacode_assets"
     PREFIX "/assets"
@@ -81,6 +90,7 @@ target_link_libraries(LlamaCode
     Qt6::Quick
     Qt6::Sql
     Qt6::Concurrent
+    Qt6::Network
 )
 
 set_target_properties(LlamaCode PROPERTIES

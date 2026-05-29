@@ -15,8 +15,11 @@ Item {
 
         PageHeader {
             Layout.fillWidth: true
-            title: "Launch"
-            subtitle: App.serverRunning ? "Server running" : "Server stopped"
+            title: (App.langV, App.l("launch.title"))
+            subtitle: {
+                const _lang = App.langV
+                return App.serverRunning ? App.l("launch.running") : App.l("launch.stopped")
+            }
         }
 
         RowLayout {
@@ -32,7 +35,7 @@ Item {
                 Layout.rightMargin: 20
                 spacing: 16
 
-                Text { text: "Launch Profile"; color: "#585b70"; font.pixelSize: 12 }
+                Text { text: (App.langV, App.l("launch.profile")); color: Theme.textMuted; font.pixelSize: 12 }
 
                 ComboBox {
                     id: launchCombo
@@ -40,10 +43,13 @@ Item {
                     model: App.profileManager.launchProfiles
                     textRole: "name"
                     valueRole: "profileId"
-                    background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
+                    background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                     contentItem: Text {
-                        text: launchCombo.displayText.length > 0 ? launchCombo.displayText : "— select —"
-                        color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10
+                        text: {
+                            const _lang = App.langV
+                            return launchCombo.displayText.length > 0 ? launchCombo.displayText : App.l("common.selectPlaceholder")
+                        }
+                        color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10
                         verticalAlignment: Text.AlignVCenter
                     }
                     onCurrentValueChanged: {
@@ -51,13 +57,12 @@ Item {
                     }
                 }
 
-                // Effective profile summary
                 Rectangle {
                     Layout.fillWidth: true
                     height: summaryCol.implicitHeight + 16
-                    color: "#11111b"
+                    color: Theme.inputBg
                     radius: 8
-                    border.color: "#313244"
+                    border.color: Theme.borderColor
                     visible: launchCombo.currentValue !== undefined
 
                     Column {
@@ -67,17 +72,17 @@ Item {
 
                         Repeater {
                             model: [
-                                ["Binary",  App.effectiveProfile.binaryPath?.split(/[/\\]/).pop() ?? "—"],
-                                ["Valid",   App.effectiveProfile.isValid ? "Yes" : "No"],
+                                [App.l("launch.binary"),  App.effectiveProfile.binaryPath?.split(/[/\\]/).pop() ?? "—"],
+                                [App.l("launch.valid"),   App.effectiveProfile.isValid ? App.l("launch.yes") : App.l("launch.no")],
                             ]
                             delegate: Row {
                                 spacing: 8
-                                Text { text: modelData[0] + ":"; color: "#585b70"; font.pixelSize: 12; width: 60 }
+                                Text { text: modelData[0] + ":"; color: Theme.textMuted; font.pixelSize: 12; width: 60 }
                                 Text {
                                     text: modelData[1]
-                                    color: modelData[0] === "Valid"
-                                           ? (modelData[1] === "Yes" ? "#a6e3a1" : "#f38ba8")
-                                           : "#a6adc8"
+                                    color: modelData[0] === App.l("launch.valid")
+                                           ? (modelData[1] === App.l("launch.yes") ? Theme.successText : Theme.errorText)
+                                           : Theme.textSecondary
                                     font.pixelSize: 12
                                 }
                             }
@@ -85,7 +90,7 @@ Item {
                     }
                 }
 
-                Text { text: "Command Preview"; color: "#585b70"; font.pixelSize: 12 }
+                Text { text: (App.langV, App.l("launch.cmdPreview")); color: Theme.textMuted; font.pixelSize: 12 }
 
                 CommandPreview {
                     Layout.fillWidth: true
@@ -95,13 +100,15 @@ Item {
                     errors: App.effectiveProfile.blockingErrors ?? []
                 }
 
-                // Start/Stop
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 8
 
                     LcButton {
-                        text: App.serverRunning ? "Stop Server" : "Start Server"
+                        text: {
+                            const _lang = App.langV
+                            return App.serverRunning ? App.l("launch.stopServer") : App.l("launch.startServer")
+                        }
                         danger: App.serverRunning
                         Layout.fillWidth: true
                         enabled: launchCombo.currentValue !== undefined || App.serverRunning
@@ -112,20 +119,19 @@ Item {
                     }
 
                     LcButton {
-                        text: "Preview"
+                        text: (App.langV, App.l("launch.preview"))
                         secondary: true
                         enabled: launchCombo.currentValue !== undefined
                         onClicked: App.computeEffectiveProfile(launchCombo.currentValue)
                     }
                 }
 
-                // Status indicator
                 Rectangle {
                     Layout.fillWidth: true
                     height: 36
                     radius: 6
-                    color: App.serverRunning ? "#1a3a1a" : "#3a1a1a"
-                    border.color: App.serverRunning ? "#a6e3a1" : "#f38ba8"
+                    color: App.serverRunning ? Theme.successBg : Theme.errorBg
+                    border.color: App.serverRunning ? Theme.successText : Theme.errorBorder
 
                     Row {
                         anchors.centerIn: parent
@@ -133,7 +139,7 @@ Item {
                         Rectangle {
                             width: 8; height: 8; radius: 4
                             anchors.verticalCenter: parent.verticalCenter
-                            color: App.serverRunning ? "#a6e3a1" : "#f38ba8"
+                            color: App.serverRunning ? Theme.successText : Theme.errorText
                             SequentialAnimation on opacity {
                                 running: App.serverRunning
                                 loops: Animation.Infinite
@@ -142,8 +148,11 @@ Item {
                             }
                         }
                         Text {
-                            text: App.serverRunning ? "Server running" : "Server stopped"
-                            color: App.serverRunning ? "#a6e3a1" : "#f38ba8"
+                            text: {
+                                const _lang = App.langV
+                                return App.serverRunning ? App.l("launch.running") : App.l("launch.stopped")
+                            }
+                            color: App.serverRunning ? Theme.successText : Theme.errorText
                             font.pixelSize: 13
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -157,8 +166,8 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             height: 44
-            color: "#181825"
-            border.color: "#313244"
+            color: Theme.navBg
+            border.color: Theme.borderColor
             border.width: 1
 
             Row {
@@ -168,18 +177,21 @@ Item {
                 spacing: 8
 
                 LcButton {
-                    text: root.logVisible ? "Ocultar log" : "Ver log"
+                    text: {
+                        const _lang = App.langV
+                        return root.logVisible ? App.l("launch.hideLog") : App.l("launch.showLog")
+                    }
                     secondary: true
                     onClicked: root.logVisible = !root.logVisible
                 }
                 LcButton {
-                    text: "Clear"
+                    text: (App.langV, App.l("launch.clear"))
                     secondary: true
                     onClicked: App.clearLog()
                     enabled: root.logVisible
                 }
                 LcButton {
-                    text: "Copiar logs"
+                    text: (App.langV, App.l("launch.copyLogs"))
                     secondary: true
                     enabled: root.logVisible
                     onClicked: App.copyToClipboard(App.serverLog)
@@ -192,8 +204,8 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: root.logVisible ? root.logHeight : 0
             Layout.maximumHeight: root.height * 0.75
-            color: "#0f1020"
-            border.color: "#313244"
+            color: Theme.logBg
+            border.color: Theme.borderColor
             border.width: 1
             clip: true
 
@@ -207,7 +219,7 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 8
-                color: dragArea.containsMouse ? "#3b3f63" : "#2a2d41"
+                color: dragArea.containsMouse ? Theme.splitterHover : Theme.splitterNormal
 
                 MouseArea {
                     id: dragArea
@@ -238,17 +250,17 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: "Server Log"
-                    color: "#585b70"
+                    text: (App.langV, App.l("launch.serverLog"))
+                    color: Theme.textMuted
                     font.pixelSize: 12
                 }
 
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "#11111b"
+                    color: Theme.inputBg
                     radius: 8
-                    border.color: "#313244"
+                    border.color: Theme.borderColor
                     clip: true
 
                     ScrollView {
@@ -259,7 +271,7 @@ Item {
                         TextArea {
                             readOnly: true
                             text: App.serverLog
-                            color: "#a6adc8"
+                            color: Theme.textSecondary
                             font { family: "Consolas,monospace"; pixelSize: 12 }
                             wrapMode: TextArea.WrapAnywhere
                             background: null

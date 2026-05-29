@@ -69,6 +69,11 @@ static constexpr auto qt_meta_stringdata_ZN14ProfileManagerE = QtMocHelpers::str
     "updateRuntimePreset",
     "data",
     "getRuntimePreset",
+    "addHarness",
+    "adapter",
+    "removeHarness",
+    "updateHarness",
+    "getHarness",
     "addLaunchProfile",
     "backendId",
     "runtimeId",
@@ -93,33 +98,37 @@ Q_CONSTINIT static const uint qt_meta_data_ZN14ProfileManagerE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      17,   14, // methods
-       6,  213, // properties
+      21,   14, // methods
+       6,  251, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
        1,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    1,  116,    2, 0x06,    7 /* Public */,
+       1,    1,  140,    2, 0x06,    7 /* Public */,
 
  // methods: name, argc, parameters, tag, flags, initial metatype offsets
-       4,    4,  119,    2, 0x02,    9 /* Public */,
-       9,    1,  128,    2, 0x02,   14 /* Public */,
-      11,    6,  131,    2, 0x02,   16 /* Public */,
-      13,    1,  144,    2, 0x102,   23 /* Public | MethodIsConst  */,
-      15,    4,  147,    2, 0x02,   25 /* Public */,
-      19,    1,  156,    2, 0x02,   30 /* Public */,
-      20,    5,  159,    2, 0x02,   32 /* Public */,
-      21,    1,  170,    2, 0x102,   38 /* Public | MethodIsConst  */,
-      22,    6,  173,    2, 0x02,   40 /* Public */,
-      28,    1,  186,    2, 0x02,   47 /* Public */,
-      29,    1,  189,    2, 0x02,   49 /* Public */,
-      31,    1,  192,    2, 0x102,   51 /* Public | MethodIsConst  */,
-      32,    4,  195,    2, 0x02,   53 /* Public */,
-      35,    1,  204,    2, 0x02,   58 /* Public */,
-      36,    1,  207,    2, 0x02,   60 /* Public */,
-      37,    1,  210,    2, 0x102,   62 /* Public | MethodIsConst  */,
+       4,    4,  143,    2, 0x02,    9 /* Public */,
+       9,    1,  152,    2, 0x02,   14 /* Public */,
+      11,    6,  155,    2, 0x02,   16 /* Public */,
+      13,    1,  168,    2, 0x102,   23 /* Public | MethodIsConst  */,
+      15,    4,  171,    2, 0x02,   25 /* Public */,
+      19,    1,  180,    2, 0x02,   30 /* Public */,
+      20,    5,  183,    2, 0x02,   32 /* Public */,
+      21,    1,  194,    2, 0x102,   38 /* Public | MethodIsConst  */,
+      22,    6,  197,    2, 0x02,   40 /* Public */,
+      28,    1,  210,    2, 0x02,   47 /* Public */,
+      29,    1,  213,    2, 0x02,   49 /* Public */,
+      31,    1,  216,    2, 0x102,   51 /* Public | MethodIsConst  */,
+      32,    2,  219,    2, 0x02,   53 /* Public */,
+      34,    1,  224,    2, 0x02,   56 /* Public */,
+      35,    1,  227,    2, 0x02,   58 /* Public */,
+      36,    1,  230,    2, 0x102,   60 /* Public | MethodIsConst  */,
+      37,    4,  233,    2, 0x02,   62 /* Public */,
+      40,    1,  242,    2, 0x02,   67 /* Public */,
+      41,    1,  245,    2, 0x02,   69 /* Public */,
+      42,    1,  248,    2, 0x102,   71 /* Public | MethodIsConst  */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QString,    3,
@@ -137,18 +146,22 @@ Q_CONSTINIT static const uint qt_meta_data_ZN14ProfileManagerE[] = {
     QMetaType::Bool, QMetaType::QString,   10,
     QMetaType::Bool, 0x80000000 | 14,   30,
     0x80000000 | 14, QMetaType::QString,   10,
-    QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,    5,   33,   16,   34,
+    QMetaType::QString, QMetaType::QString, QMetaType::QString,    5,   33,
+    QMetaType::Bool, QMetaType::QString,   10,
+    QMetaType::Bool, 0x80000000 | 14,   30,
+    0x80000000 | 14, QMetaType::QString,   10,
+    QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString, QMetaType::QString,    5,   38,   16,   39,
     QMetaType::Bool, QMetaType::QString,   10,
     QMetaType::Bool, 0x80000000 | 14,   30,
     0x80000000 | 14, QMetaType::QString,   10,
 
  // properties: name, type, flags, notifyId, revision
-      38, 0x80000000 | 39, 0x00015409, uint(-1), 0,
-      40, 0x80000000 | 39, 0x00015409, uint(-1), 0,
-      41, 0x80000000 | 39, 0x00015409, uint(-1), 0,
-      42, 0x80000000 | 39, 0x00015409, uint(-1), 0,
-      43, 0x80000000 | 39, 0x00015409, uint(-1), 0,
-      44, 0x80000000 | 39, 0x00015409, uint(-1), 0,
+      43, 0x80000000 | 44, 0x00015409, uint(-1), 0,
+      45, 0x80000000 | 44, 0x00015409, uint(-1), 0,
+      46, 0x80000000 | 44, 0x00015409, uint(-1), 0,
+      47, 0x80000000 | 44, 0x00015409, uint(-1), 0,
+      48, 0x80000000 | 44, 0x00015409, uint(-1), 0,
+      49, 0x80000000 | 44, 0x00015409, uint(-1), 0,
 
        0        // eod
 };
@@ -233,6 +246,19 @@ Q_CONSTINIT const QMetaObject ProfileManager::staticMetaObject = { {
         // method 'getRuntimePreset'
         QtPrivate::TypeAndForceComplete<QVariantMap, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'addHarness'
+        QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'removeHarness'
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'updateHarness'
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QVariantMap &, std::false_type>,
+        // method 'getHarness'
+        QtPrivate::TypeAndForceComplete<QVariantMap, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         // method 'addLaunchProfile'
         QtPrivate::TypeAndForceComplete<QString, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
@@ -282,13 +308,21 @@ void ProfileManager::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
         case 12: { QVariantMap _r = _t->getRuntimePreset((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
             if (_a[0]) *reinterpret_cast< QVariantMap*>(_a[0]) = std::move(_r); }  break;
-        case 13: { QString _r = _t->addLaunchProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[3])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[4])));
+        case 13: { QString _r = _t->addHarness((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])));
             if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
-        case 14: { bool _r = _t->removeLaunchProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+        case 14: { bool _r = _t->removeHarness((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 15: { bool _r = _t->updateLaunchProfile((*reinterpret_cast< std::add_pointer_t<QVariantMap>>(_a[1])));
+        case 15: { bool _r = _t->updateHarness((*reinterpret_cast< std::add_pointer_t<QVariantMap>>(_a[1])));
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 16: { QVariantMap _r = _t->getLaunchProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+        case 16: { QVariantMap _r = _t->getHarness((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< QVariantMap*>(_a[0]) = std::move(_r); }  break;
+        case 17: { QString _r = _t->addLaunchProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[3])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[4])));
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 18: { bool _r = _t->removeLaunchProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 19: { bool _r = _t->updateLaunchProfile((*reinterpret_cast< std::add_pointer_t<QVariantMap>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 20: { QVariantMap _r = _t->getLaunchProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
             if (_a[0]) *reinterpret_cast< QVariantMap*>(_a[0]) = std::move(_r); }  break;
         default: ;
         }
@@ -348,14 +382,14 @@ int ProfileManager::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 17)
+        if (_id < 21)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 17;
+        _id -= 21;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 17)
+        if (_id < 21)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 17;
+        _id -= 21;
     }
     if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
             || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty

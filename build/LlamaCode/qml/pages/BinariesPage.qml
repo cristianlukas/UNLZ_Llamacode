@@ -8,10 +8,9 @@ Item {
     id: root
     function openAddDialog() { addDlg.open() }
 
-    // ---- Add dialog ----
     LcDialog {
         id: addDlg
-        title: "Add Binary"
+        title: (App.langV, App.l("binaries.addBinary"))
         width: 560
         height: 340
 
@@ -26,15 +25,15 @@ Item {
             width: 520
             spacing: 12
 
-            Text { text: "Path"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+            Text { text: (App.langV, App.l("binaries.path")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
                 LcTextField { id: pathField; Layout.fillWidth: true; placeholderText: "Path to llama-server.exe" }
-                LcButton { text: "Browse"; secondary: true; onClicked: fileDlg.open() }
+                LcButton { text: (App.langV, App.l("common.browse")); secondary: true; onClicked: fileDlg.open() }
             }
 
-            Text { text: "Name"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+            Text { text: (App.langV, App.l("binaries.name")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
             LcTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Optional display name" }
 
             RowLayout {
@@ -44,26 +43,26 @@ Item {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 6
-                    Text { text: "Flavor"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+                    Text { text: (App.langV, App.l("binaries.flavor")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
                     ComboBox {
                         id: flavorCombo
                         Layout.fillWidth: true
                         model: ["official", "mtp-fork", "custom"]
-                        background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                        contentItem: Text { text: flavorCombo.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        contentItem: Text { text: flavorCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                     }
                 }
 
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 6
-                    Text { text: "Backend"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+                    Text { text: (App.langV, App.l("binaries.backend")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
                     ComboBox {
                         id: backendCombo
                         Layout.fillWidth: true
                         model: ["cpu", "cuda", "vulkan", "metal"]
-                        background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                        contentItem: Text { text: backendCombo.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        contentItem: Text { text: backendCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                     }
                 }
             }
@@ -71,7 +70,7 @@ Item {
 
         FileDialog {
             id: fileDlg
-            title: "Select llama-server binary"
+            title: (App.langV, App.l("binaries.selectTitle"))
             nameFilters: ["Executables (*.exe *.bin *)", "All files (*)"]
             onAccepted: pathField.text = selectedFile.toString().replace(/^file:\/\/\//, "")
         }
@@ -83,10 +82,80 @@ Item {
 
         PageHeader {
             Layout.fillWidth: true
-            title: "Binaries"
-            subtitle: App.binaryRegistry.count + " registered"
-            actionLabel: "+ Add Binary"
+            title: (App.langV, App.l("binaries.title"))
+            subtitle: {
+                const _lang = App.langV
+                return App.binaryRegistry.count + " " + App.l("binaries.registered")
+            }
+            action2Label: {
+                const _lang = App.langV
+                return App.installingOfficialBinary
+                    ? App.l("binaries.downloading")
+                    : App.l("binaries.downloadLatest")
+            }
+            onAction2Clicked: {
+                if (!App.installingOfficialBinary) App.installOfficialBinary()
+            }
+            actionLabel: (App.langV, App.l("binaries.addAction"))
             onActionClicked: addDlg.open()
+        }
+
+        // download progress banner
+        RowLayout {
+            id: downloadBanner
+            Layout.fillWidth: true
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.topMargin: 6
+            Layout.bottomMargin: 2
+            spacing: 8
+            visible: App.installingOfficialBinary || App.officialBinaryInstallStatus.length > 0
+
+            BusyIndicator {
+                running: App.installingOfficialBinary
+                visible: App.installingOfficialBinary
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
+            }
+            Text {
+                Layout.fillWidth: true
+                text: App.officialBinaryInstallStatus
+                color: App.installingOfficialBinary ? Theme.accent : Theme.textMuted
+                font.pixelSize: 12
+                elide: Text.ElideRight
+            }
+            LcButton {
+                visible: App.installingOfficialBinary
+                text: (App.langV, App.l("setup.cancel"))
+                secondary: true
+                onClicked: App.cancelOfficialBinaryInstall()
+            }
+            LcButton {
+                visible: !App.installingOfficialBinary && App.officialBinaryInstallStatus.length > 0
+                text: (App.langV, App.l("setup.viewLog"))
+                secondary: true
+                onClicked: installLogDlg.open()
+            }
+        }
+
+        LcDialog {
+            id: installLogDlg
+            title: (App.langV, App.l("setup.installLog"))
+            width: 680
+            height: 420
+
+            contentItem: ScrollView {
+                clip: true
+                TextArea {
+                    readOnly: true
+                    wrapMode: TextArea.WrapAnywhere
+                    text: App.officialBinaryInstallLog
+                    color: Theme.textPrimary
+                    font.family: "Consolas"
+                    font.pixelSize: 12
+                    background: Rectangle { color: Theme.inputBg; radius: 6 }
+                }
+            }
         }
 
         RowLayout {
@@ -94,7 +163,6 @@ Item {
             Layout.fillHeight: true
             spacing: 0
 
-            // List
             ListView {
                 id: listView
                 Layout.preferredWidth: 280
@@ -102,7 +170,6 @@ Item {
                 clip: true
                 model: App.binaryRegistry
                 currentIndex: -1
-
                 ScrollBar.vertical: ScrollBar {}
 
                 delegate: ItemDelegate {
@@ -110,7 +177,7 @@ Item {
                     height: 64
                     highlighted: listView.currentIndex === index
                     background: Rectangle {
-                        color: parent.highlighted ? "#313244" : (parent.hovered ? "#1e1e2e" : "transparent")
+                        color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
                     }
                     contentItem: Column {
                         anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
@@ -120,52 +187,39 @@ Item {
                             Text {
                                 text: pathValid ? "●" : "○"
                                 font.pixelSize: 10
-                                color: pathValid ? "#a6e3a1" : "#f38ba8"
+                                color: pathValid ? Theme.successText : Theme.errorText
                             }
-                            Text {
-                                text: name
-                                font { pixelSize: 14; bold: true }
-                                color: "#cdd6f4"
-                            }
+                            Text { text: name; font.pixelSize: 14; font.bold: true; color: Theme.textPrimary }
                         }
                         Text {
                             text: backend.toUpperCase() + " · " + flavor
                             font.pixelSize: 11
-                            color: "#585b70"
+                            color: Theme.textMuted
                         }
                     }
                     onClicked: listView.currentIndex = index
                 }
 
-                Rectangle {
-                    anchors.right: parent.right
-                    width: 1; height: parent.height
-                    color: "#313244"
-                }
+                Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Theme.borderColor }
             }
 
-            // Detail panel
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                // Empty state
                 Text {
                     anchors.centerIn: parent
                     visible: listView.currentIndex < 0
-                    text: "Select a binary"
-                    color: "#585b70"
+                    text: (App.langV, App.l("binaries.selectBinary"))
+                    color: Theme.textMuted
                     font.pixelSize: 14
                 }
 
-                // Detail
                 BinaryDetail {
                     anchors.fill: parent
                     visible: listView.currentIndex >= 0
                     binId: listView.currentIndex >= 0
-                           ? App.binaryRegistry.data(
-                                 App.binaryRegistry.index(listView.currentIndex, 0),
-                                 Qt.UserRole + 1)
+                           ? App.binaryRegistry.data(App.binaryRegistry.index(listView.currentIndex, 0), Qt.UserRole + 1)
                            : ""
                 }
             }
@@ -197,15 +251,11 @@ Item {
                     function applyRename() {
                         const t = nameEditField.text.trim()
                         if (t.length > 0 && t !== binData.name)
-                            App.binaryRegistry.update(binId, t,
-                                binData.flavor ?? "official",
-                                binData.backend ?? "cpu",
-                                binData.versionHint ?? "",
-                                binData.workingDirectory ?? "")
+                            App.binaryRegistry.update(binId, t, binData.flavor ?? "official", binData.backend ?? "cpu", binData.versionHint ?? "", binData.workingDirectory ?? "")
                     }
                 }
                 LcButton {
-                    text: "Renombrar"
+                    text: (App.langV, App.l("binaries.rename"))
                     secondary: true
                     enabled: nameEditField.text.trim().length > 0 && nameEditField.text.trim() !== (binData.name ?? "")
                     onClicked: nameEditField.applyRename()
@@ -213,33 +263,37 @@ Item {
             }
 
             GridLayout {
-                columns: 2
-                columnSpacing: 16
-                rowSpacing: 8
+                columns: 2; columnSpacing: 16; rowSpacing: 8
                 Layout.fillWidth: true
 
-                Text { text: "Path";    color: "#585b70"; font.pixelSize: 12 }
-                Text { text: binData.path ?? ""; color: "#a6adc8"; font.pixelSize: 12; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true }
+                Text { text: (App.langV, App.l("binaries.path")) + ":";    color: Theme.textMuted; font.pixelSize: 12 }
+                Text { text: binData.path ?? ""; color: Theme.textSecondary; font.pixelSize: 12; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true }
 
-                Text { text: "Backend"; color: "#585b70"; font.pixelSize: 12 }
-                Text { text: (binData.backend ?? "").toUpperCase(); color: "#89b4fa"; font.pixelSize: 12 }
+                Text { text: (App.langV, App.l("binaries.backend")) + ":"; color: Theme.textMuted; font.pixelSize: 12 }
+                Text { text: (binData.backend ?? "").toUpperCase(); color: Theme.accent; font.pixelSize: 12 }
 
-                Text { text: "Flavor";  color: "#585b70"; font.pixelSize: 12 }
-                Text { text: binData.flavor ?? ""; color: "#a6adc8"; font.pixelSize: 12 }
+                Text { text: (App.langV, App.l("binaries.flavor")) + ":";  color: Theme.textMuted; font.pixelSize: 12 }
+                Text { text: binData.flavor ?? ""; color: Theme.textSecondary; font.pixelSize: 12 }
 
-                Text { text: "Status";  color: "#585b70"; font.pixelSize: 12 }
+                Text { text: (App.langV, App.l("binaries.status")) + ":";  color: Theme.textMuted; font.pixelSize: 12 }
                 Text {
-                    text: (binData.pathValid ?? false) ? "✓ Found" : "✗ Not found"
-                    color: (binData.pathValid ?? false) ? "#a6e3a1" : "#f38ba8"
+                    text: {
+                        const _lang = App.langV
+                        return (binData.pathValid ?? false) ? App.l("binaries.found") : App.l("binaries.notFound")
+                    }
+                    color: (binData.pathValid ?? false) ? Theme.successText : Theme.errorText
                     font.pixelSize: 12
                 }
 
-                Text { text: "Flags";   color: "#585b70"; font.pixelSize: 12 }
+                Text { text: (App.langV, App.l("binaries.flags")) + ":";   color: Theme.textMuted; font.pixelSize: 12 }
                 Text {
-                    text: (binData.hasCapabilities ?? false)
-                          ? ((binData.supportedFlags?.length ?? 0) + " detected")
-                          : "Not detected"
-                    color: (binData.hasCapabilities ?? false) ? "#a6e3a1" : "#585b70"
+                    text: {
+                        const _lang = App.langV
+                        return (binData.hasCapabilities ?? false)
+                            ? ((binData.supportedFlags?.length ?? 0) + " " + App.l("binaries.detected"))
+                            : App.l("binaries.notDetected")
+                    }
+                    color: (binData.hasCapabilities ?? false) ? Theme.successText : Theme.textMuted
                     font.pixelSize: 12
                 }
             }
@@ -247,28 +301,24 @@ Item {
             Row {
                 spacing: 8
                 LcButton {
-                    text: "Detect Capabilities"
+                    text: (App.langV, App.l("binaries.detectCaps"))
                     enabled: binData.pathValid ?? false
                     onClicked: App.binaryRegistry.detectCapabilities(binId)
                 }
                 LcButton {
-                    text: "Remove"
+                    text: (App.langV, App.l("binaries.remove"))
                     danger: true
-                    onClicked: {
-                        App.binaryRegistry.remove(binId)
-                        listView.currentIndex = -1
-                    }
+                    onClicked: { App.binaryRegistry.remove(binId); listView.currentIndex = -1 }
                 }
             }
 
-            // Flags list
             Rectangle {
                 visible: (binData.supportedFlags?.length ?? 0) > 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: "#11111b"
+                color: Theme.inputBg
                 radius: 6
-                border.color: "#313244"
+                border.color: Theme.borderColor
                 clip: true
 
                 ListView {
@@ -277,7 +327,7 @@ Item {
                     delegate: Text {
                         text: modelData
                         font { family: "Consolas,monospace"; pixelSize: 12 }
-                        color: "#a6adc8"
+                        color: Theme.textSecondary
                         height: 20
                     }
                     ScrollBar.vertical: ScrollBar {}

@@ -9,13 +9,12 @@ Item {
 
     LcDialog {
         id: addDlg
-        title: "Add Model Root"
+        title: (App.langV, App.l("models.addRoot"))
         width: 560
         height: 300
 
         onAccepted: {
-            App.rootRegistry.add(pathField.text, labelField.text,
-                                  scanCombo.currentText, [])
+            App.rootRegistry.add(pathField.text, labelField.text, scanCombo.currentText, [])
             pathField.text = ""; labelField.text = ""
         }
 
@@ -23,28 +22,24 @@ Item {
             width: 520
             spacing: 12
 
-            Text { text: "Path"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+            Text { text: (App.langV, App.l("models.path")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
                 LcTextField { id: pathField; Layout.fillWidth: true; placeholderText: "Folder with GGUF files" }
-                LcButton {
-                    text: "Browse"
-                    secondary: true
-                    onClicked: folderDlg.open()
-                }
+                LcButton { text: (App.langV, App.l("common.browse")); secondary: true; onClicked: folderDlg.open() }
             }
 
-            Text { text: "Label"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+            Text { text: (App.langV, App.l("models.label")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
             LcTextField { id: labelField; Layout.fillWidth: true; placeholderText: "Optional label" }
 
-            Text { text: "Scan mode"; color: "#bac2de"; font.pixelSize: 12; font.bold: true }
+            Text { text: (App.langV, App.l("models.scanMode")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
             ComboBox {
                 id: scanCombo
                 Layout.fillWidth: true
                 model: ["manual", "startup", "watch"]
-                background: Rectangle { color: "#11111b"; radius: 6; border.color: "#313244" }
-                contentItem: Text { text: scanCombo.displayText; color: "#cdd6f4"; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                contentItem: Text { text: scanCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
         }
 
@@ -61,9 +56,15 @@ Item {
 
         PageHeader {
             Layout.fillWidth: true
-            title: "Model Roots"
-            subtitle: App.rootRegistry.count + " roots · " + App.modelCatalog.count + " models"
-            actionLabel: App.rootRegistry.scanning ? "Scanning…" : "+ Add Root"
+            title: (App.langV, App.l("models.title"))
+            subtitle: {
+                const _lang = App.langV
+                return App.rootRegistry.count + " " + App.l("models.roots") + " · " + App.modelCatalog.count + " " + App.l("models.modelsCount")
+            }
+            actionLabel: {
+                const _lang = App.langV
+                return App.rootRegistry.scanning ? App.l("models.scanning") : App.l("models.addAction")
+            }
             onActionClicked: if (!App.rootRegistry.scanning) addDlg.open()
         }
 
@@ -72,7 +73,6 @@ Item {
             Layout.fillHeight: true
             spacing: 0
 
-            // Root list
             ListView {
                 id: rootList
                 Layout.preferredWidth: 260
@@ -86,49 +86,34 @@ Item {
                     height: 60
                     highlighted: rootList.currentIndex === index
                     background: Rectangle {
-                        color: parent.highlighted ? "#313244" : (parent.hovered ? "#1e1e2e" : "transparent")
+                        color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
                     }
                     contentItem: Column {
                         anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                         spacing: 3
                         Row {
                             spacing: 6
-                            Text {
-                                text: isOnline ? "●" : "○"
-                                font.pixelSize: 10
-                                color: isOnline ? "#a6e3a1" : "#f38ba8"
-                            }
-                            Text { text: label; font.pixelSize: 14; font.bold: true; color: "#cdd6f4" }
+                            Text { text: isOnline ? "●" : "○"; font.pixelSize: 10; color: isOnline ? Theme.successText : Theme.errorText }
+                            Text { text: label; font.pixelSize: 14; font.bold: true; color: Theme.textPrimary }
                         }
-                        Text {
-                            width: rootList.width - 32
-                            text: path
-                            font.pixelSize: 11
-                            color: "#7f849c"
-                            elide: Text.ElideMiddle
-                        }
-                        Text { text: scanMode; font.pixelSize: 10; color: "#585b70" }
+                        Text { width: rootList.width - 32; text: path; font.pixelSize: 11; color: Theme.textMuted; elide: Text.ElideMiddle }
+                        Text { text: scanMode; font.pixelSize: 10; color: Theme.textMuted }
                     }
-                    onClicked: {
-                        rootList.currentIndex = index
-                        App.modelCatalog.filterRootId = rootId
-                    }
+                    onClicked: { rootList.currentIndex = index; App.modelCatalog.filterRootId = rootId }
                 }
 
-                Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: "#313244" }
+                Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: Theme.borderColor }
             }
 
-            // Model catalog panel
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: 0
 
-                // Root actions bar
                 Rectangle {
                     Layout.fillWidth: true
                     height: 44
-                    color: "#181825"
+                    color: Theme.surfaceBg
                     visible: rootList.currentIndex >= 0
 
                     Row {
@@ -136,24 +121,18 @@ Item {
                         spacing: 8
 
                         LcButton {
-                            text: "Scan"
+                            text: (App.langV, App.l("models.scan"))
                             onClicked: {
-                                const id = App.rootRegistry.data(
-                                               App.rootRegistry.index(rootList.currentIndex, 0), 257)
+                                const id = App.rootRegistry.data(App.rootRegistry.index(rootList.currentIndex, 0), 257)
                                 App.rootRegistry.scan(id)
                             }
                         }
+                        LcButton { text: (App.langV, App.l("models.scanAll")); secondary: true; onClicked: App.rootRegistry.scanAll() }
                         LcButton {
-                            text: "Scan All"
-                            secondary: true
-                            onClicked: App.rootRegistry.scanAll()
-                        }
-                        LcButton {
-                            text: "Remove Root"
+                            text: (App.langV, App.l("models.removeRoot"))
                             danger: true
                             onClicked: {
-                                const id = App.rootRegistry.data(
-                                               App.rootRegistry.index(rootList.currentIndex, 0), 257)
+                                const id = App.rootRegistry.data(App.rootRegistry.index(rootList.currentIndex, 0), 257)
                                 App.rootRegistry.remove(id)
                                 rootList.currentIndex = -1
                                 App.modelCatalog.filterRootId = ""
@@ -161,33 +140,30 @@ Item {
                         }
                     }
 
-                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#313244" }
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.borderColor }
                 }
 
-                // Filter row
                 Rectangle {
                     Layout.fillWidth: true
                     height: 40
-                    color: "#1e1e2e"
+                    color: Theme.baseBg
                     Row {
                         anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
                         spacing: 8
                         LcTextField {
-                            width: 180
-                            height: 28
-                            placeholderText: "Filter by family…"
+                            width: 180; height: 28
+                            placeholderText: (App.langV, App.l("models.filterFamily"))
                             onTextChanged: App.modelCatalog.filterFamily = text
                         }
                         CheckBox {
-                            text: "Vision only"
-                            contentItem: Text { text: parent.text; color: "#a6adc8"; font.pixelSize: 12; leftPadding: parent.indicator.width + 6 }
+                            text: (App.langV, App.l("models.visionOnly"))
+                            contentItem: Text { text: parent.text; color: Theme.textSecondary; font.pixelSize: 12; leftPadding: parent.indicator.width + 6 }
                             onCheckedChanged: App.modelCatalog.filterVisionOnly = checked
                         }
                     }
-                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#313244" }
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.borderColor }
                 }
 
-                // Model list
                 ListView {
                     id: modelList
                     Layout.fillWidth: true
@@ -199,48 +175,41 @@ Item {
                     delegate: Rectangle {
                         width: modelList.width
                         height: 56
-                        color: modelList.currentIndex === index ? "#313244" : (hovered ? "#1e1e2e" : "transparent")
+                        color: modelList.currentIndex === index ? Theme.highlight : (hovered ? Theme.hoverBg : "transparent")
                         property bool hovered: false
                         HoverHandler { onHoveredChanged: parent.hovered = hovered }
-
                         MouseArea { anchors.fill: parent; onClicked: modelList.currentIndex = index }
 
                         Row {
                             anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                             spacing: 10
-
                             Column {
                                 spacing: 3
                                 Row {
                                     spacing: 6
-                                    Text {
-                                        text: isVision ? "👁" : (isDraft ? "⚡" : "📄")
-                                        font.pixelSize: 14
-                                    }
-                                    Text {
-                                        text: fileName
-                                        font { pixelSize: 13; bold: true }
-                                        color: isAvailable ? "#cdd6f4" : "#585b70"
-                                    }
+                                    Text { text: isVision ? "👁" : (isDraft ? "⚡" : "📄"); font.pixelSize: 14 }
+                                    Text { text: fileName; font.pixelSize: 13; font.bold: true; color: isAvailable ? Theme.textPrimary : Theme.textMuted }
                                 }
                                 Row {
                                     spacing: 8
-                                    Text { text: family;     font.pixelSize: 11; color: "#89b4fa" }
-                                    Text { text: quant;      font.pixelSize: 11; color: "#a6e3a1" }
-                                    Text { text: sizeLabel;  font.pixelSize: 11; color: "#585b70" }
+                                    Text { text: family;    font.pixelSize: 11; color: Theme.accent }
+                                    Text { text: quant;     font.pixelSize: 11; color: Theme.successText }
+                                    Text { text: sizeLabel; font.pixelSize: 11; color: Theme.textMuted }
                                 }
                             }
                         }
 
-                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#181825" }
+                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.surfaceBg }
                     }
 
                     Text {
                         anchors.centerIn: parent
                         visible: parent.count === 0
-                        text: rootList.currentIndex < 0 ? "Select a root to view models"
-                                                        : "No models found. Click Scan."
-                        color: "#585b70"
+                        text: {
+                            const _lang = App.langV
+                            return rootList.currentIndex < 0 ? App.l("models.selectRoot") : App.l("models.noModels")
+                        }
+                        color: Theme.textMuted
                         font.pixelSize: 14
                     }
                 }

@@ -9,9 +9,12 @@ C:/Users/cristian/Documents/LlamaCode/build/.qt/rcc/llamacode_assets.qrc
 /LlamaCode/qml/pages/ModelRootsPage.qml
 /LlamaCode/qml/pages/ProfilesPage.qml
 /LlamaCode/qml/pages/LaunchPage.qml
+/LlamaCode/qml/pages/ChatPage.qml
 /LlamaCode/qml/components/NavBar.qml
 /LlamaCode/qml/components/PageHeader.qml
 /LlamaCode/qml/components/CommandPreview.qml
 /LlamaCode/qml/components/LcButton.qml
 /LlamaCode/qml/components/LcTextField.qml
 /LlamaCode/qml/components/LcDialog.qml
+/LlamaCode/qml/pages/AgentPage.qml
+/LlamaCode/qml/pages/SettingsPage.qml

@@ -2,7 +2,7 @@
     "classes": [
         {
             "className": "AppController",
-            "lineNumber": 12,
+            "lineNumber": 16,
             "methods": [
                 {
                     "access": "public",
@@ -12,13 +12,13 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 11,
+                    "index": 16,
                     "name": "startServer",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
-                    "index": 12,
+                    "index": 17,
                     "name": "stopServer",
                     "returnType": "void"
                 },
@@ -30,13 +30,13 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 13,
+                    "index": 18,
                     "name": "computeEffectiveProfile",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
-                    "index": 14,
+                    "index": 19,
                     "name": "clearLog",
                     "returnType": "void"
                 },
@@ -48,19 +48,19 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 15,
+                    "index": 20,
                     "name": "copyToClipboard",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
-                    "index": 16,
+                    "index": 21,
                     "name": "installOfficialBinary",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
-                    "index": 17,
+                    "index": 22,
                     "name": "cancelOfficialBinaryInstall",
                     "returnType": "void"
                 },
@@ -72,13 +72,13 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 18,
+                    "index": 23,
                     "name": "smokeTestServer",
                     "returnType": "void"
                 },
                 {
                     "access": "public",
-                    "index": 19,
+                    "index": 24,
                     "name": "smokeTestRunning",
                     "returnType": "bool"
                 },
@@ -94,15 +94,172 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 20,
+                    "index": 25,
                     "name": "resolveFlag",
                     "returnType": "QString"
                 },
                 {
                     "access": "public",
-                    "index": 21,
+                    "index": 26,
                     "name": "version",
                     "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "key",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 27,
+                    "name": "l",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "key",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "arg1",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 28,
+                    "name": "lf",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "key",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "defaultValue",
+                            "type": "QVariant"
+                        }
+                    ],
+                    "index": 29,
+                    "name": "readSetting",
+                    "returnType": "QVariant"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "key",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 30,
+                    "isCloned": true,
+                    "name": "readSetting",
+                    "returnType": "QVariant"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "key",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "value",
+                            "type": "QVariant"
+                        }
+                    ],
+                    "index": 31,
+                    "name": "writeSetting",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "adapter",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 32,
+                    "name": "isHarnessInstalled",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "adapter",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 33,
+                    "name": "installHarness",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "launchProfileId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 34,
+                    "name": "startAgent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 35,
+                    "name": "stopAgent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "text",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 36,
+                    "name": "sendToAgent",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 37,
+                    "name": "clearAgentLog",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "adapter",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 38,
+                    "name": "agentNativeLogDir",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "adapter",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 39,
+                    "name": "openAgentLogDir",
+                    "returnType": "void"
                 }
             ],
             "object": true,
@@ -234,6 +391,20 @@
                     "designable": true,
                     "final": false,
                     "index": 9,
+                    "name": "serverBaseUrl",
+                    "notify": "serverRunningChanged",
+                    "read": "serverBaseUrl",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 10,
                     "name": "installingOfficialBinary",
                     "notify": "installingOfficialBinaryChanged",
                     "read": "installingOfficialBinary",
@@ -247,7 +418,7 @@
                     "constant": false,
                     "designable": true,
                     "final": false,
-                    "index": 10,
+                    "index": 11,
                     "name": "officialBinaryInstallStatus",
                     "notify": "officialBinaryInstallStatusChanged",
                     "read": "officialBinaryInstallStatus",
@@ -261,7 +432,7 @@
                     "constant": false,
                     "designable": true,
                     "final": false,
-                    "index": 11,
+                    "index": 12,
                     "name": "officialBinaryInstallLog",
                     "notify": "officialBinaryInstallLogChanged",
                     "read": "officialBinaryInstallLog",
@@ -269,6 +440,133 @@
                     "scriptable": true,
                     "stored": true,
                     "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 13,
+                    "name": "language",
+                    "notify": "languageChanged",
+                    "read": "language",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false,
+                    "write": "setLanguage"
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 14,
+                    "name": "langV",
+                    "notify": "languageChanged",
+                    "read": "langV",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 15,
+                    "name": "agentRunning",
+                    "notify": "agentRunningChanged",
+                    "read": "agentRunning",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 16,
+                    "name": "agentLog",
+                    "notify": "agentLogChanged",
+                    "read": "agentLog",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 17,
+                    "name": "activeAgentAdapter",
+                    "notify": "agentRunningChanged",
+                    "read": "activeAgentAdapter",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 18,
+                    "name": "agentInTerminal",
+                    "notify": "agentRunningChanged",
+                    "read": "agentInTerminal",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 19,
+                    "name": "installingHarness",
+                    "notify": "harnessStatusChanged",
+                    "read": "installingHarness",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "bool",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 20,
+                    "name": "harnessInstallStatus",
+                    "notify": "harnessStatusChanged",
+                    "read": "harnessInstallStatus",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "QString",
+                    "user": false
+                },
+                {
+                    "constant": false,
+                    "designable": true,
+                    "final": false,
+                    "index": 21,
+                    "name": "harnessCheckV",
+                    "notify": "harnessStatusChanged",
+                    "read": "harnessCheckV",
+                    "required": false,
+                    "scriptable": true,
+                    "stored": true,
+                    "type": "int",
                     "user": false
                 }
             ],
@@ -368,6 +666,50 @@
                     ],
                     "index": 10,
                     "name": "smokeTestFinished",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 11,
+                    "name": "languageChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 12,
+                    "name": "harnessStatusChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "success",
+                            "type": "bool"
+                        },
+                        {
+                            "name": "adapter",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "message",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 13,
+                    "name": "harnessInstallFinished",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 14,
+                    "name": "agentRunningChanged",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 15,
+                    "name": "agentLogChanged",
                     "returnType": "void"
                 }
             ],

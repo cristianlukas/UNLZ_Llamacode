@@ -5,9 +5,9 @@ import LlamaCode 1.0
 
 Rectangle {
     id: root
-    color: "#11111b"
+    color: Theme.inputBg
     radius: 8
-    border.color: "#313244"
+    border.color: Theme.borderColor
     clip: true
 
     property string commandLine: ""
@@ -19,57 +19,58 @@ Rectangle {
         anchors { fill: parent; margins: 12 }
         spacing: 8
 
-        // Command line
         RowLayout {
             Layout.fillWidth: true
             Text {
                 text: "$ "
                 font { family: "Consolas,monospace"; pixelSize: 13 }
-                color: "#a6e3a1"
+                color: Theme.successText
             }
             Text {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                text: root.commandLine.length > 0 ? root.commandLine : "(no profile selected)"
+                text: {
+                    const _lang = App.langV
+                    return root.commandLine.length > 0 ? root.commandLine : App.l("cmd.noProfile")
+                }
                 font { family: "Consolas,monospace"; pixelSize: 13 }
-                color: root.commandLine.length > 0 ? "#cdd6f4" : "#585b70"
+                color: root.commandLine.length > 0 ? Theme.textPrimary : Theme.textMuted
                 wrapMode: Text.WrapAnywhere
                 maximumLineCount: 5
                 elide: Text.ElideRight
             }
             LcButton {
+                property bool copied: false
                 visible: root.commandLine.length > 0
-                text: "Copy"
+                text: copied ? (App.langV, App.l("cmd.copied")) : (App.langV, App.l("cmd.copy"))
                 secondary: true
                 onClicked: {
                     App.copyToClipboard(root.commandLine)
-                    text = "Copied!"
+                    copied = true
                     copyTimer.start()
                 }
                 Timer {
                     id: copyTimer; interval: 1500
-                    onTriggered: parent.text = "Copy"
+                    onTriggered: parent.copied = false
                 }
             }
         }
 
-        // Warnings
         Repeater {
             model: root.warnings
             delegate: Row {
                 spacing: 6
-                Text { text: "⚠"; font.pixelSize: 12; color: "#f9e2af" }
-                Text { text: modelData; font.pixelSize: 12; color: "#f9e2af"; wrapMode: Text.Wrap }
+                Text { text: "⚠"; font.pixelSize: 12; color: Theme.warnText }
+                Text { text: modelData; font.pixelSize: 12; color: Theme.warnText; wrapMode: Text.Wrap }
             }
         }
 
-        // Errors
         Repeater {
             model: root.errors
             delegate: Row {
                 spacing: 6
-                Text { text: "✗"; font.pixelSize: 12; color: "#f38ba8" }
-                Text { text: modelData; font.pixelSize: 12; color: "#f38ba8"; wrapMode: Text.Wrap }
+                Text { text: "✗"; font.pixelSize: 12; color: Theme.errorText }
+                Text { text: modelData; font.pixelSize: 12; color: Theme.errorText; wrapMode: Text.Wrap }
             }
         }
     }

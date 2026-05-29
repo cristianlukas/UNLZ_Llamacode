@@ -862,6 +862,12 @@
 			null
 		],
 		[
+			"C:/Users/cristian/Documents/LlamaCode/src/ThemeProvider.h",
+			"MU",
+			"UVLADIE3JM/moc_ThemeProvider.cpp",
+			null
+		],
+		[
 			"C:/Users/cristian/Documents/LlamaCode/src/core/BinaryRegistry.h",
 			"MU",
 			"PRMOGMWJPH/moc_BinaryRegistry.cpp",
@@ -1153,10 +1159,13 @@
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/components/LcTextField_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/components/NavBar_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/components/PageHeader_qml.cpp",
+		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp",
+		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/LaunchPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ModelRootsPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ProfilesPage_qml.cpp",
+		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qmlcache_loader.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/llamacode_qmltyperegistrations.cpp"
 	],
@@ -1184,6 +1193,11 @@
 	[
 		[
 			"C:/Users/cristian/Documents/LlamaCode/src/AppController.cpp",
+			"MU",
+			null
+		],
+		[
+			"C:/Users/cristian/Documents/LlamaCode/src/ThemeProvider.cpp",
 			"MU",
 			null
 		],
@@ -1258,10 +1272,13 @@
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/components/LcTextField_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/components/NavBar_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/components/PageHeader_qml.cpp",
+		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/AgentPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/BinariesPage_qml.cpp",
+		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ChatPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/LaunchPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ModelRootsPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/ProfilesPage_qml.cpp",
+		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qml/pages/SettingsPage_qml.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/.rcc/qmlcache/LlamaCode_qmlcache_loader.cpp",
 		"C:/Users/cristian/Documents/LlamaCode/build/llamacode_qmltyperegistrations.cpp"
 	],

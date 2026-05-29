@@ -6,59 +6,61 @@ import LlamaCode 1.0
 Rectangle {
     id: root
     width: 200
-    color: "#181825"
+    color: Theme.navBg
 
     property int currentIndex: 0
     signal pageSelected(int index)
 
     readonly property var pages: [
-        { label: "Launch",    icon: "🚀" },
-        { label: "Profiles",  icon: "📋" },
-        { label: "Models",    icon: "📦" },
-        { label: "Binaries",  icon: "⚙" },
+        { key: "nav.launch",   icon: "🚀",  serverOnly: false },
+        { key: "nav.profiles", icon: "📋",  serverOnly: false },
+        { key: "nav.models",   icon: "📦",  serverOnly: false },
+        { key: "nav.binaries", icon: "⚙",   serverOnly: false },
+        { key: "nav.chat",     icon: "💬",  serverOnly: true  },
+        { key: "agent.title",  icon: "🤖",  serverOnly: true  },
     ]
 
     ColumnLayout {
         anchors { fill: parent; margins: 0 }
         spacing: 0
 
-        // App title
         Rectangle {
             Layout.fillWidth: true
             height: 56
-            color: "#11111b"
+            color: Theme.titleBg
             Text {
                 anchors.centerIn: parent
                 text: "🦙 LlamaCode"
                 font { pixelSize: 16; bold: true }
-                color: "#cdd6f4"
+                color: Theme.textPrimary
             }
         }
 
-        // Nav buttons
         Repeater {
             model: root.pages
             delegate: ItemDelegate {
                 Layout.fillWidth: true
                 height: 48
                 highlighted: root.currentIndex === index
+                enabled: !modelData.serverOnly || App.serverRunning
+                opacity: enabled ? 1.0 : 0.35
                 background: Rectangle {
-                    color: parent.highlighted ? "#313244" : (parent.hovered ? "#1e1e2e" : "transparent")
+                    color: parent.highlighted ? Theme.highlight : (parent.hovered && parent.enabled ? Theme.hoverBg : "transparent")
                     Rectangle {
                         visible: parent.parent.highlighted
                         width: 3; height: parent.height
                         anchors.left: parent.left
-                        color: "#89b4fa"
+                        color: Theme.accent
                     }
                 }
                 contentItem: Row {
                     spacing: 12
                     anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
-                    Text { text: modelData.icon; font.pixelSize: 18; color: "#cdd6f4" }
+                    Text { text: modelData.icon; font.pixelSize: 18; color: Theme.textPrimary }
                     Text {
-                        text: modelData.label
+                        text: (App.langV, App.l(modelData.key))
                         font.pixelSize: 14
-                        color: root.currentIndex === index ? "#cdd6f4" : "#a6adc8"
+                        color: root.currentIndex === index ? Theme.textPrimary : Theme.textSecondary
                     }
                 }
                 onClicked: { root.currentIndex = index; root.pageSelected(index) }
@@ -67,13 +69,38 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
-        // Version
+        ItemDelegate {
+            Layout.fillWidth: true
+            height: 48
+            highlighted: root.currentIndex === 6
+            background: Rectangle {
+                color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
+                Rectangle {
+                    visible: parent.parent.highlighted
+                    width: 3; height: parent.height
+                    anchors.left: parent.left
+                    color: Theme.accent
+                }
+            }
+            contentItem: Row {
+                spacing: 12
+                anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
+                Text { text: "🎛"; font.pixelSize: 18; color: Theme.textPrimary }
+                Text {
+                    text: (App.langV, App.l("nav.settings"))
+                    font.pixelSize: 14
+                    color: root.currentIndex === 6 ? Theme.textPrimary : Theme.textSecondary
+                }
+            }
+            onClicked: { root.currentIndex = 6; root.pageSelected(6) }
+        }
+
         Text {
             Layout.alignment: Qt.AlignHCenter
             bottomPadding: 12
             text: "v" + App.version()
             font.pixelSize: 11
-            color: "#585b70"
+            color: Theme.textDim
         }
     }
 }

@@ -7,6 +7,7 @@
 *****************************************************************************/
 
 #include "../../../../src/AppController.h"
+#include <QtNetwork/QSslError>
 #include <QtCore/qmetatype.h>
 
 #include <QtCore/qtmochelpers.h>
@@ -55,6 +56,12 @@ static constexpr auto qt_meta_stringdata_ZN13AppControllerE = QtMocHelpers::stri
     "smokeTestFinished",
     "passed",
     "output",
+    "languageChanged",
+    "harnessStatusChanged",
+    "harnessInstallFinished",
+    "adapter",
+    "agentRunningChanged",
+    "agentLogChanged",
     "startServer",
     "launchProfileId",
     "stopServer",
@@ -70,6 +77,23 @@ static constexpr auto qt_meta_stringdata_ZN13AppControllerE = QtMocHelpers::stri
     "binaryId",
     "flag",
     "version",
+    "l",
+    "key",
+    "lf",
+    "arg1",
+    "readSetting",
+    "QVariant",
+    "defaultValue",
+    "writeSetting",
+    "value",
+    "isHarnessInstalled",
+    "installHarness",
+    "startAgent",
+    "stopAgent",
+    "sendToAgent",
+    "clearAgentLog",
+    "agentNativeLogDir",
+    "openAgentLogDir",
     "binaryRegistry",
     "BinaryRegistry*",
     "rootRegistry",
@@ -84,9 +108,19 @@ static constexpr auto qt_meta_stringdata_ZN13AppControllerE = QtMocHelpers::stri
     "effectiveProfile",
     "QVariantMap",
     "needsSetup",
+    "serverBaseUrl",
     "installingOfficialBinary",
     "officialBinaryInstallStatus",
-    "officialBinaryInstallLog"
+    "officialBinaryInstallLog",
+    "language",
+    "langV",
+    "agentRunning",
+    "agentLog",
+    "activeAgentAdapter",
+    "agentInTerminal",
+    "installingHarness",
+    "harnessInstallStatus",
+    "harnessCheckV"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -98,38 +132,56 @@ Q_CONSTINIT static const uint qt_meta_data_ZN13AppControllerE[] = {
       12,       // revision
        0,       // classname
        0,    0, // classinfo
-      22,   14, // methods
-      12,  192, // properties
+      40,   14, // methods
+      22,  352, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-      11,       // signalCount
+      16,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    0,  146,    2, 0x06,   13 /* Public */,
-       3,    0,  147,    2, 0x06,   14 /* Public */,
-       4,    0,  148,    2, 0x06,   15 /* Public */,
-       5,    0,  149,    2, 0x06,   16 /* Public */,
-       6,    0,  150,    2, 0x06,   17 /* Public */,
-       7,    0,  151,    2, 0x06,   18 /* Public */,
-       8,    0,  152,    2, 0x06,   19 /* Public */,
-       9,    0,  153,    2, 0x06,   20 /* Public */,
-      10,    3,  154,    2, 0x06,   21 /* Public */,
-      14,    1,  161,    2, 0x06,   25 /* Public */,
-      15,    2,  164,    2, 0x06,   27 /* Public */,
+       1,    0,  254,    2, 0x06,   23 /* Public */,
+       3,    0,  255,    2, 0x06,   24 /* Public */,
+       4,    0,  256,    2, 0x06,   25 /* Public */,
+       5,    0,  257,    2, 0x06,   26 /* Public */,
+       6,    0,  258,    2, 0x06,   27 /* Public */,
+       7,    0,  259,    2, 0x06,   28 /* Public */,
+       8,    0,  260,    2, 0x06,   29 /* Public */,
+       9,    0,  261,    2, 0x06,   30 /* Public */,
+      10,    3,  262,    2, 0x06,   31 /* Public */,
+      14,    1,  269,    2, 0x06,   35 /* Public */,
+      15,    2,  272,    2, 0x06,   37 /* Public */,
+      18,    0,  277,    2, 0x06,   40 /* Public */,
+      19,    0,  278,    2, 0x06,   41 /* Public */,
+      20,    3,  279,    2, 0x06,   42 /* Public */,
+      22,    0,  286,    2, 0x06,   46 /* Public */,
+      23,    0,  287,    2, 0x06,   47 /* Public */,
 
  // methods: name, argc, parameters, tag, flags, initial metatype offsets
-      18,    1,  169,    2, 0x02,   30 /* Public */,
-      20,    0,  172,    2, 0x02,   32 /* Public */,
-      21,    1,  173,    2, 0x02,   33 /* Public */,
-      22,    0,  176,    2, 0x02,   35 /* Public */,
-      23,    1,  177,    2, 0x02,   36 /* Public */,
-      25,    0,  180,    2, 0x02,   38 /* Public */,
-      26,    0,  181,    2, 0x02,   39 /* Public */,
-      27,    1,  182,    2, 0x02,   40 /* Public */,
-      28,    0,  185,    2, 0x102,   42 /* Public | MethodIsConst  */,
-      29,    2,  186,    2, 0x102,   43 /* Public | MethodIsConst  */,
-      32,    0,  191,    2, 0x102,   46 /* Public | MethodIsConst  */,
+      24,    1,  288,    2, 0x02,   48 /* Public */,
+      26,    0,  291,    2, 0x02,   50 /* Public */,
+      27,    1,  292,    2, 0x02,   51 /* Public */,
+      28,    0,  295,    2, 0x02,   53 /* Public */,
+      29,    1,  296,    2, 0x02,   54 /* Public */,
+      31,    0,  299,    2, 0x02,   56 /* Public */,
+      32,    0,  300,    2, 0x02,   57 /* Public */,
+      33,    1,  301,    2, 0x02,   58 /* Public */,
+      34,    0,  304,    2, 0x102,   60 /* Public | MethodIsConst  */,
+      35,    2,  305,    2, 0x102,   61 /* Public | MethodIsConst  */,
+      38,    0,  310,    2, 0x102,   64 /* Public | MethodIsConst  */,
+      39,    1,  311,    2, 0x102,   65 /* Public | MethodIsConst  */,
+      41,    2,  314,    2, 0x102,   67 /* Public | MethodIsConst  */,
+      43,    2,  319,    2, 0x102,   70 /* Public | MethodIsConst  */,
+      43,    1,  324,    2, 0x122,   73 /* Public | MethodCloned | MethodIsConst  */,
+      46,    2,  327,    2, 0x02,   75 /* Public */,
+      48,    1,  332,    2, 0x102,   78 /* Public | MethodIsConst  */,
+      49,    1,  335,    2, 0x02,   80 /* Public */,
+      50,    1,  338,    2, 0x02,   82 /* Public */,
+      51,    0,  341,    2, 0x02,   84 /* Public */,
+      52,    1,  342,    2, 0x02,   85 /* Public */,
+      53,    0,  345,    2, 0x02,   87 /* Public */,
+      54,    1,  346,    2, 0x102,   88 /* Public | MethodIsConst  */,
+      55,    1,  349,    2, 0x102,   90 /* Public | MethodIsConst  */,
 
  // signals: parameters
     QMetaType::Void,
@@ -143,33 +195,61 @@ Q_CONSTINIT static const uint qt_meta_data_ZN13AppControllerE[] = {
     QMetaType::Void, QMetaType::Bool, QMetaType::QString, QMetaType::QString,   11,   12,   13,
     QMetaType::Void, QMetaType::QString,   12,
     QMetaType::Void, QMetaType::Bool, QMetaType::QString,   16,   17,
+    QMetaType::Void,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::Bool, QMetaType::QString, QMetaType::QString,   11,   21,   12,
+    QMetaType::Void,
+    QMetaType::Void,
 
  // methods: parameters
-    QMetaType::Void, QMetaType::QString,   19,
+    QMetaType::Void, QMetaType::QString,   25,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   19,
+    QMetaType::Void, QMetaType::QString,   25,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   24,
+    QMetaType::Void, QMetaType::QString,   30,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString,   19,
+    QMetaType::Void, QMetaType::QString,   25,
     QMetaType::Bool,
-    QMetaType::QString, QMetaType::QString, QMetaType::QString,   30,   31,
+    QMetaType::QString, QMetaType::QString, QMetaType::QString,   36,   37,
     QMetaType::QString,
+    QMetaType::QString, QMetaType::QString,   40,
+    QMetaType::QString, QMetaType::QString, QMetaType::QString,   40,   42,
+    0x80000000 | 44, QMetaType::QString, 0x80000000 | 44,   40,   45,
+    0x80000000 | 44, QMetaType::QString,   40,
+    QMetaType::Void, QMetaType::QString, 0x80000000 | 44,   40,   47,
+    QMetaType::Bool, QMetaType::QString,   21,
+    QMetaType::Void, QMetaType::QString,   21,
+    QMetaType::Void, QMetaType::QString,   25,
+    QMetaType::Void,
+    QMetaType::Void, QMetaType::QString,   30,
+    QMetaType::Void,
+    QMetaType::QString, QMetaType::QString,   21,
+    QMetaType::Void, QMetaType::QString,   21,
 
  // properties: name, type, flags, notifyId, revision
-      33, 0x80000000 | 34, 0x00015409, uint(-1), 0,
-      35, 0x80000000 | 36, 0x00015409, uint(-1), 0,
-      37, 0x80000000 | 38, 0x00015409, uint(-1), 0,
-      39, 0x80000000 | 40, 0x00015409, uint(-1), 0,
-      41, QMetaType::Bool, 0x00015001, uint(0), 0,
-      42, QMetaType::QString, 0x00015001, uint(1), 0,
-      43, QMetaType::QString, 0x00015001, uint(2), 0,
-      44, 0x80000000 | 45, 0x00015009, uint(3), 0,
-      46, QMetaType::Bool, 0x00015001, uint(4), 0,
-      47, QMetaType::Bool, 0x00015001, uint(5), 0,
-      48, QMetaType::QString, 0x00015001, uint(6), 0,
-      49, QMetaType::QString, 0x00015001, uint(7), 0,
+      56, 0x80000000 | 57, 0x00015409, uint(-1), 0,
+      58, 0x80000000 | 59, 0x00015409, uint(-1), 0,
+      60, 0x80000000 | 61, 0x00015409, uint(-1), 0,
+      62, 0x80000000 | 63, 0x00015409, uint(-1), 0,
+      64, QMetaType::Bool, 0x00015001, uint(0), 0,
+      65, QMetaType::QString, 0x00015001, uint(1), 0,
+      66, QMetaType::QString, 0x00015001, uint(2), 0,
+      67, 0x80000000 | 68, 0x00015009, uint(3), 0,
+      69, QMetaType::Bool, 0x00015001, uint(4), 0,
+      70, QMetaType::QString, 0x00015001, uint(0), 0,
+      71, QMetaType::Bool, 0x00015001, uint(5), 0,
+      72, QMetaType::QString, 0x00015001, uint(6), 0,
+      73, QMetaType::QString, 0x00015001, uint(7), 0,
+      74, QMetaType::QString, 0x00015103, uint(11), 0,
+      75, QMetaType::Int, 0x00015001, uint(11), 0,
+      76, QMetaType::Bool, 0x00015001, uint(14), 0,
+      77, QMetaType::QString, 0x00015001, uint(15), 0,
+      78, QMetaType::QString, 0x00015001, uint(14), 0,
+      79, QMetaType::Bool, 0x00015001, uint(14), 0,
+      80, QMetaType::Bool, 0x00015001, uint(12), 0,
+      81, QMetaType::QString, 0x00015001, uint(12), 0,
+      82, QMetaType::Int, 0x00015001, uint(12), 0,
 
        0        // eod
 };
@@ -199,12 +279,32 @@ Q_CONSTINIT const QMetaObject AppController::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<QVariantMap, std::true_type>,
         // property 'needsSetup'
         QtPrivate::TypeAndForceComplete<bool, std::true_type>,
+        // property 'serverBaseUrl'
+        QtPrivate::TypeAndForceComplete<QString, std::true_type>,
         // property 'installingOfficialBinary'
         QtPrivate::TypeAndForceComplete<bool, std::true_type>,
         // property 'officialBinaryInstallStatus'
         QtPrivate::TypeAndForceComplete<QString, std::true_type>,
         // property 'officialBinaryInstallLog'
         QtPrivate::TypeAndForceComplete<QString, std::true_type>,
+        // property 'language'
+        QtPrivate::TypeAndForceComplete<QString, std::true_type>,
+        // property 'langV'
+        QtPrivate::TypeAndForceComplete<int, std::true_type>,
+        // property 'agentRunning'
+        QtPrivate::TypeAndForceComplete<bool, std::true_type>,
+        // property 'agentLog'
+        QtPrivate::TypeAndForceComplete<QString, std::true_type>,
+        // property 'activeAgentAdapter'
+        QtPrivate::TypeAndForceComplete<QString, std::true_type>,
+        // property 'agentInTerminal'
+        QtPrivate::TypeAndForceComplete<bool, std::true_type>,
+        // property 'installingHarness'
+        QtPrivate::TypeAndForceComplete<bool, std::true_type>,
+        // property 'harnessInstallStatus'
+        QtPrivate::TypeAndForceComplete<QString, std::true_type>,
+        // property 'harnessCheckV'
+        QtPrivate::TypeAndForceComplete<int, std::true_type>,
         // Q_OBJECT / Q_GADGET
         QtPrivate::TypeAndForceComplete<AppController, std::true_type>,
         // method 'serverRunningChanged'
@@ -235,6 +335,19 @@ Q_CONSTINIT const QMetaObject AppController::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<bool, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'languageChanged'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'harnessStatusChanged'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'harnessInstallFinished'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'agentRunningChanged'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'agentLogChanged'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
         // method 'startServer'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
@@ -262,7 +375,47 @@ Q_CONSTINIT const QMetaObject AppController::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         // method 'version'
-        QtPrivate::TypeAndForceComplete<QString, std::false_type>
+        QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        // method 'l'
+        QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'lf'
+        QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'readSetting'
+        QtPrivate::TypeAndForceComplete<QVariant, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QVariant &, std::false_type>,
+        // method 'readSetting'
+        QtPrivate::TypeAndForceComplete<QVariant, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'writeSetting'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QVariant &, std::false_type>,
+        // method 'isHarnessInstalled'
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'installHarness'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'startAgent'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'stopAgent'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'sendToAgent'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'clearAgentLog'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'agentNativeLogDir'
+        QtPrivate::TypeAndForceComplete<QString, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'openAgentLogDir'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>
     >,
     nullptr
 } };
@@ -283,20 +436,44 @@ void AppController::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         case 8: _t->officialBinaryInstallFinished((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[3]))); break;
         case 9: _t->serverError((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         case 10: _t->smokeTestFinished((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
-        case 11: _t->startServer((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 12: _t->stopServer(); break;
-        case 13: _t->computeEffectiveProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 14: _t->clearLog(); break;
-        case 15: _t->copyToClipboard((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 16: _t->installOfficialBinary(); break;
-        case 17: _t->cancelOfficialBinaryInstall(); break;
-        case 18: _t->smokeTestServer((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
-        case 19: { bool _r = _t->smokeTestRunning();
+        case 11: _t->languageChanged(); break;
+        case 12: _t->harnessStatusChanged(); break;
+        case 13: _t->harnessInstallFinished((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[3]))); break;
+        case 14: _t->agentRunningChanged(); break;
+        case 15: _t->agentLogChanged(); break;
+        case 16: _t->startServer((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 17: _t->stopServer(); break;
+        case 18: _t->computeEffectiveProfile((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 19: _t->clearLog(); break;
+        case 20: _t->copyToClipboard((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 21: _t->installOfficialBinary(); break;
+        case 22: _t->cancelOfficialBinaryInstall(); break;
+        case 23: _t->smokeTestServer((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 24: { bool _r = _t->smokeTestRunning();
             if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
-        case 20: { QString _r = _t->resolveFlag((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])));
+        case 25: { QString _r = _t->resolveFlag((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])));
             if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
-        case 21: { QString _r = _t->version();
+        case 26: { QString _r = _t->version();
             if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 27: { QString _r = _t->l((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 28: { QString _r = _t->lf((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])));
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 29: { QVariant _r = _t->readSetting((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QVariant>>(_a[2])));
+            if (_a[0]) *reinterpret_cast< QVariant*>(_a[0]) = std::move(_r); }  break;
+        case 30: { QVariant _r = _t->readSetting((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< QVariant*>(_a[0]) = std::move(_r); }  break;
+        case 31: _t->writeSetting((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QVariant>>(_a[2]))); break;
+        case 32: { bool _r = _t->isHarnessInstalled((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< bool*>(_a[0]) = std::move(_r); }  break;
+        case 33: _t->installHarness((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 34: _t->startAgent((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 35: _t->stopAgent(); break;
+        case 36: _t->sendToAgent((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 37: _t->clearAgentLog(); break;
+        case 38: { QString _r = _t->agentNativeLogDir((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])));
+            if (_a[0]) *reinterpret_cast< QString*>(_a[0]) = std::move(_r); }  break;
+        case 39: _t->openAgentLogDir((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         default: ;
         }
     }
@@ -379,6 +556,41 @@ void AppController::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
                 return;
             }
         }
+        {
+            using _q_method_type = void (AppController::*)();
+            if (_q_method_type _q_method = &AppController::languageChanged; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 11;
+                return;
+            }
+        }
+        {
+            using _q_method_type = void (AppController::*)();
+            if (_q_method_type _q_method = &AppController::harnessStatusChanged; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 12;
+                return;
+            }
+        }
+        {
+            using _q_method_type = void (AppController::*)(bool , const QString & , const QString & );
+            if (_q_method_type _q_method = &AppController::harnessInstallFinished; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 13;
+                return;
+            }
+        }
+        {
+            using _q_method_type = void (AppController::*)();
+            if (_q_method_type _q_method = &AppController::agentRunningChanged; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 14;
+                return;
+            }
+        }
+        {
+            using _q_method_type = void (AppController::*)();
+            if (_q_method_type _q_method = &AppController::agentLogChanged; *reinterpret_cast<_q_method_type *>(_a[1]) == _q_method) {
+                *result = 15;
+                return;
+            }
+        }
     }
     if (_c == QMetaObject::RegisterPropertyMetaType) {
         switch (_id) {
@@ -405,9 +617,26 @@ void AppController::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _i
         case 6: *reinterpret_cast< QString*>(_v) = _t->activeLaunchId(); break;
         case 7: *reinterpret_cast< QVariantMap*>(_v) = _t->effectiveProfile(); break;
         case 8: *reinterpret_cast< bool*>(_v) = _t->needsSetup(); break;
-        case 9: *reinterpret_cast< bool*>(_v) = _t->installingOfficialBinary(); break;
-        case 10: *reinterpret_cast< QString*>(_v) = _t->officialBinaryInstallStatus(); break;
-        case 11: *reinterpret_cast< QString*>(_v) = _t->officialBinaryInstallLog(); break;
+        case 9: *reinterpret_cast< QString*>(_v) = _t->serverBaseUrl(); break;
+        case 10: *reinterpret_cast< bool*>(_v) = _t->installingOfficialBinary(); break;
+        case 11: *reinterpret_cast< QString*>(_v) = _t->officialBinaryInstallStatus(); break;
+        case 12: *reinterpret_cast< QString*>(_v) = _t->officialBinaryInstallLog(); break;
+        case 13: *reinterpret_cast< QString*>(_v) = _t->language(); break;
+        case 14: *reinterpret_cast< int*>(_v) = _t->langV(); break;
+        case 15: *reinterpret_cast< bool*>(_v) = _t->agentRunning(); break;
+        case 16: *reinterpret_cast< QString*>(_v) = _t->agentLog(); break;
+        case 17: *reinterpret_cast< QString*>(_v) = _t->activeAgentAdapter(); break;
+        case 18: *reinterpret_cast< bool*>(_v) = _t->agentInTerminal(); break;
+        case 19: *reinterpret_cast< bool*>(_v) = _t->installingHarness(); break;
+        case 20: *reinterpret_cast< QString*>(_v) = _t->harnessInstallStatus(); break;
+        case 21: *reinterpret_cast< int*>(_v) = _t->harnessCheckV(); break;
+        default: break;
+        }
+    }
+    if (_c == QMetaObject::WriteProperty) {
+        void *_v = _a[0];
+        switch (_id) {
+        case 13: _t->setLanguage(*reinterpret_cast< QString*>(_v)); break;
         default: break;
         }
     }
@@ -432,20 +661,20 @@ int AppController::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 22)
+        if (_id < 40)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 22;
+        _id -= 40;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 22)
+        if (_id < 40)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 22;
+        _id -= 40;
     }
     if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
             || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty
             || _c == QMetaObject::RegisterPropertyMetaType) {
         qt_static_metacall(this, _c, _id, _a);
-        _id -= 12;
+        _id -= 22;
     }
     return _id;
 }
@@ -517,5 +746,36 @@ void AppController::smokeTestFinished(bool _t1, const QString & _t2)
 {
     void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))) };
     QMetaObject::activate(this, &staticMetaObject, 10, _a);
+}
+
+// SIGNAL 11
+void AppController::languageChanged()
+{
+    QMetaObject::activate(this, &staticMetaObject, 11, nullptr);
+}
+
+// SIGNAL 12
+void AppController::harnessStatusChanged()
+{
+    QMetaObject::activate(this, &staticMetaObject, 12, nullptr);
+}
+
+// SIGNAL 13
+void AppController::harnessInstallFinished(bool _t1, const QString & _t2, const QString & _t3)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t2))), const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t3))) };
+    QMetaObject::activate(this, &staticMetaObject, 13, _a);
+}
+
+// SIGNAL 14
+void AppController::agentRunningChanged()
+{
+    QMetaObject::activate(this, &staticMetaObject, 14, nullptr);
+}
+
+// SIGNAL 15
+void AppController::agentLogChanged()
+{
+    QMetaObject::activate(this, &staticMetaObject, 15, nullptr);
 }
 QT_WARNING_POP

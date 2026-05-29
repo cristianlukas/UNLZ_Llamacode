@@ -9,7 +9,7 @@ Button {
     contentItem: Text {
         text: root.text
         font.pixelSize: 13
-        color: root.danger ? "#1e1e2e" : (root.secondary ? "#a6adc8" : "#1e1e2e")
+        color: root.danger ? Theme.btnDangerText : (root.secondary ? Theme.btnSecondaryText : Theme.btnPrimaryText)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
@@ -17,9 +17,9 @@ Button {
     background: Rectangle {
         radius: 6
         color: {
-            if (root.danger)     return root.pressed ? "#a6192f" : (root.hovered ? "#e33054" : "#f38ba8")
-            if (root.secondary)  return root.pressed ? "#313244" : (root.hovered ? "#45475a" : "#313244")
-            return root.pressed ? "#5e81ac" : (root.hovered ? "#74c7ec" : "#89b4fa")
+            if (root.danger)    return root.pressed ? Theme.btnDangerPrs   : (root.hovered ? Theme.btnDangerHov   : Theme.btnDangerBg)
+            if (root.secondary) return root.pressed ? Theme.btnSecondaryBg : (root.hovered ? Theme.btnSecondaryHov : Theme.btnSecondaryBg)
+            return root.pressed ? Theme.btnPrimaryPrs : (root.hovered ? Theme.btnPrimaryHover : Theme.btnPrimaryBg)
         }
     }
 

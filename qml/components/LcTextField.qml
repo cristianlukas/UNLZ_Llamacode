@@ -3,8 +3,8 @@ import QtQuick.Controls
 
 TextField {
     id: root
-    color: "#cdd6f4"
-    placeholderTextColor: "#585b70"
+    color: Theme.textPrimary
+    placeholderTextColor: Theme.textMuted
     font.pixelSize: 13
     leftPadding: 10
     rightPadding: 10
@@ -13,8 +13,8 @@ TextField {
 
     background: Rectangle {
         radius: 6
-        color: "#11111b"
-        border.color: root.activeFocus ? "#89b4fa" : "#313244"
+        color: Theme.inputBg
+        border.color: root.activeFocus ? Theme.inputBorderFocus : Theme.inputBorderColor
         border.width: root.activeFocus ? 2 : 1
     }
 }

@@ -20,43 +20,39 @@ Dialog {
     closePolicy: Popup.CloseOnEscape
 
     background: Rectangle {
-        color: "#1b1d31"
+        color: Theme.popupBg
         radius: 12
-        border.color: "#3a3f5c"
+        border.color: Theme.popupBorderColor
         border.width: 1
     }
 
-    Overlay.modal: Rectangle {
-        color: "#90090b14"
-    }
+    Overlay.modal: Rectangle { color: Theme.overlayColor }
 
     header: Rectangle {
-        color: "#14162a"
+        color: Theme.popupHeaderBg
         height: 56
         radius: 12
-        // mask bottom corners
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: "#14162a" }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#333754" }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
         Text {
             anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
             text: root.title
-            font { pixelSize: 28/2; bold: true }
-            color: "#cdd6f4"
+            font { pixelSize: 14; bold: true }
+            color: Theme.textPrimary
         }
     }
 
     footer: Rectangle {
-        color: "#14162a"
+        color: Theme.popupHeaderBg
         height: 56
         radius: 12
-        // mask top corners
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: "#14162a" }
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#333754" }
+        Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
         Row {
             anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
             spacing: 10
-            LcButton { text: "Cancel"; secondary: true; onClicked: root.reject() }
-            LcButton { text: "OK"; onClicked: root.accept() }
+            LcButton { text: (App.langV, App.l("common.cancel")); secondary: true; onClicked: root.reject() }
+            LcButton { text: (App.langV, App.l("common.ok")); onClicked: root.accept() }
         }
     }
 }

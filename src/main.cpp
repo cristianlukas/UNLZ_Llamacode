@@ -1,4 +1,5 @@
 #include "AppController.h"
+#include "ThemeProvider.h"
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -13,9 +14,11 @@ int main(int argc, char *argv[])
     app.setApplicationVersion("0.1.0");
 
     AppController controller;
+    ThemeProvider theme;
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("App", &controller);
+    engine.rootContext()->setContextProperty("Theme", &theme);
     engine.addImportPath(QStringLiteral("qrc:/"));
     engine.loadFromModule("LlamaCode", "Main");
 

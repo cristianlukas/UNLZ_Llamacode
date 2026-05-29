@@ -236,6 +236,58 @@
                             "type": "QString"
                         },
                         {
+                            "name": "adapter",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 13,
+                    "name": "addHarness",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 14,
+                    "name": "removeHarness",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "data",
+                            "type": "QVariantMap"
+                        }
+                    ],
+                    "index": 15,
+                    "name": "updateHarness",
+                    "returnType": "bool"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "id",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 16,
+                    "name": "getHarness",
+                    "returnType": "QVariantMap"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        },
+                        {
                             "name": "backendId",
                             "type": "QString"
                         },
@@ -248,7 +300,7 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 13,
+                    "index": 17,
                     "name": "addLaunchProfile",
                     "returnType": "QString"
                 },
@@ -260,7 +312,7 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 14,
+                    "index": 18,
                     "name": "removeLaunchProfile",
                     "returnType": "bool"
                 },
@@ -272,7 +324,7 @@
                             "type": "QVariantMap"
                         }
                     ],
-                    "index": 15,
+                    "index": 19,
                     "name": "updateLaunchProfile",
                     "returnType": "bool"
                 },
@@ -284,7 +336,7 @@
                             "type": "QString"
                         }
                     ],
-                    "index": 16,
+                    "index": 20,
                     "name": "getLaunchProfile",
                     "returnType": "QVariantMap"
                 }

@@ -11,13 +11,30 @@ ApplicationWindow {
     minimumWidth: 900
     minimumHeight: 600
     visible: true
-    color: "#0b0b10"
+    color: Theme.windowBg
     flags: Qt.Window | Qt.FramelessWindowHint
 
-    property color frameBorderColor: active ? "#3f4360" : "#2a2d41"
-    property color frameBgColor: "#1e1e2e"
-    property color titleBarColor: "#11111b"
+    property color frameBorderColor: active ? Theme.frameBorderActive : Theme.frameBorderInact
+    property color frameBgColor: Theme.baseBg
+    property color titleBarColor: Theme.titleBg
     property int resizeHandleSize: 8
+    property bool restoringWindowState: true
+
+    function saveWindowState() {
+        if (restoringWindowState)
+            return
+        if (window.visibility === Window.Maximized) {
+            App.writeSetting("window/maximized", true)
+            return
+        }
+        if (window.visibility !== Window.Windowed)
+            return
+        App.writeSetting("window/maximized", false)
+        App.writeSetting("window/x", x)
+        App.writeSetting("window/y", y)
+        App.writeSetting("window/width", width)
+        App.writeSetting("window/height", height)
+    }
 
     function startResize(edges) {
         if (window.visibility === Window.Maximized)
@@ -51,7 +68,7 @@ ApplicationWindow {
 
                     Label {
                         text: "LlamaCode"
-                        color: "#cdd6f4"
+                        color: Theme.textPrimary
                         font.pixelSize: 13
                         font.bold: true
                         Layout.alignment: Qt.AlignVCenter
@@ -65,13 +82,13 @@ ApplicationWindow {
                         onClicked: window.showMinimized()
                         contentItem: Text {
                             text: parent.text
-                            color: "#cdd6f4"
+                            color: Theme.textPrimary
                             font.family: "Segoe MDL2 Assets"
                             font.pixelSize: 10
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
-                        background: Rectangle { color: parent.hovered ? "#2a2d41" : "transparent" }
+                        background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
                         Layout.preferredWidth: 46
                         Layout.fillHeight: true
                     }
@@ -82,13 +99,13 @@ ApplicationWindow {
                         onClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
                         contentItem: Text {
                             text: parent.text
-                            color: "#cdd6f4"
+                            color: Theme.textPrimary
                             font.family: "Segoe MDL2 Assets"
                             font.pixelSize: 11
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
-                        background: Rectangle { color: parent.hovered ? "#2a2d41" : "transparent" }
+                        background: Rectangle { color: parent.hovered ? Theme.frameBorderInact : "transparent" }
                         Layout.preferredWidth: 46
                         Layout.fillHeight: true
                     }
@@ -99,13 +116,13 @@ ApplicationWindow {
                         onClicked: window.close()
                         contentItem: Text {
                             text: parent.text
-                            color: "#f5e0dc"
+                            color: Theme.errorText
                             font.family: "Segoe MDL2 Assets"
                             font.pixelSize: 10
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
-                        background: Rectangle { color: parent.hovered ? "#f38ba8" : "transparent" }
+                        background: Rectangle { color: parent.hovered ? Theme.closeHoverBg : "transparent" }
                         Layout.preferredWidth: 46
                         Layout.fillHeight: true
                     }
@@ -131,7 +148,7 @@ ApplicationWindow {
                     onPageSelected: function(idx) { stack.currentIndex = idx }
                 }
 
-                Rectangle { width: 1; Layout.fillHeight: true; color: "#313244" }
+                Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider }
 
                 StackLayout {
                     id: stack
@@ -143,6 +160,9 @@ ApplicationWindow {
                     ProfilesPage    {}
                     ModelRootsPage  { id: modelRootsPage }
                     BinariesPage    { id: binariesPage }
+                    ChatPage        {}
+                    AgentPage       {}
+                    SettingsPage    {}
                 }
             }
         }
@@ -234,14 +254,14 @@ ApplicationWindow {
         function show(msg) { message = msg; open(); closeTimer.start() }
 
         background: Rectangle {
-            color: "#3a1a1a"; radius: 8
-            border.color: "#f38ba8"; border.width: 1
+            color: Theme.errorBg; radius: 8
+            border.color: Theme.errorBorder; border.width: 1
         }
 
         Text {
             anchors.centerIn: parent
             text: errorToast.message
-            color: "#f38ba8"; font.pixelSize: 13
+            color: Theme.errorText; font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             width: parent.width - 24
@@ -263,10 +283,10 @@ ApplicationWindow {
         y: Math.round((parent.height - height) / 2)
 
         background: Rectangle {
-            color: "#1b1d31"
+            color: Theme.popupBg
             radius: 12
             border.width: 1
-            border.color: "#3a3f5c"
+            border.color: Theme.popupBorderColor
         }
 
         contentItem: ColumnLayout {
@@ -275,14 +295,14 @@ ApplicationWindow {
             spacing: 12
 
             Text {
-                text: "Completar Setup Inicial"
-                color: "#cdd6f4"
+                text: (App.langV, App.l("setup.title"))
+                color: Theme.textPrimary
                 font.pixelSize: 20
                 font.bold: true
             }
             Text {
-                text: "No hay binarios ni modelos registrados. Necesitás instalar/localizar un llama-server y descargar al menos un modelo GGUF."
-                color: "#a6adc8"
+                text: (App.langV, App.l("setup.description"))
+                color: Theme.textSecondary
                 Layout.fillWidth: true
                 Layout.preferredWidth: setupPopup.availableWidth
                 Layout.maximumWidth: setupPopup.availableWidth
@@ -291,27 +311,27 @@ ApplicationWindow {
                 font.pixelSize: 13
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#313244" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
                 LcButton {
-                    text: "Localizar binario"
+                    text: (App.langV, App.l("setup.locateBinary"))
                     secondary: true
-                    onClicked: {
-                        stack.currentIndex = 3
-                        binariesPage.openAddDialog()
-                    }
+                    onClicked: { stack.currentIndex = 3; binariesPage.openAddDialog() }
                 }
                 LcButton {
-                    text: App.installingOfficialBinary ? "Instalando..." : "Instalar binario"
+                    text: {
+                        const _lang = App.langV
+                        return App.installingOfficialBinary ? App.l("setup.installing") : App.l("setup.installBinary")
+                    }
                     enabled: !App.installingOfficialBinary
                     onClicked: App.installOfficialBinary()
                 }
                 LcButton {
                     visible: App.installingOfficialBinary
-                    text: "Cancelar"
+                    text: (App.langV, App.l("setup.cancel"))
                     secondary: true
                     onClicked: App.cancelOfficialBinaryInstall()
                 }
@@ -330,13 +350,13 @@ ApplicationWindow {
                 Text {
                     Layout.fillWidth: true
                     text: App.officialBinaryInstallStatus
-                    color: App.installingOfficialBinary ? "#89b4fa" : "#f38ba8"
+                    color: App.installingOfficialBinary ? Theme.accent : Theme.errorText
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
                 }
                 LcButton {
                     visible: !App.installingOfficialBinary && App.officialBinaryInstallStatus.length > 0
-                    text: "Ver log"
+                    text: (App.langV, App.l("setup.viewLog"))
                     secondary: true
                     onClicked: installLogPopup.open()
                 }
@@ -346,12 +366,12 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 spacing: 10
                 LcButton {
-                    text: "Descargar modelo (GGUF)"
+                    text: (App.langV, App.l("setup.downloadModel"))
                     secondary: true
                     onClicked: Qt.openUrlExternally("https://huggingface.co/models?library=gguf")
                 }
                 LcButton {
-                    text: "Ir a Model Roots"
+                    text: (App.langV, App.l("setup.goToModels"))
                     secondary: true
                     onClicked: stack.currentIndex = 2
                 }
@@ -360,8 +380,8 @@ ApplicationWindow {
             Item { Layout.fillHeight: true }
             Text {
                 visible: App.needsSetup
-                text: "El popup se cierra automáticamente cuando exista al menos 1 binario o 1 modelo."
-                color: "#585b70"
+                text: (App.langV, App.l("setup.tip"))
+                color: Theme.textMuted
                 font.pixelSize: 12
             }
         }
@@ -379,10 +399,10 @@ ApplicationWindow {
         padding: 14
 
         background: Rectangle {
-            color: "#1b1d31"
+            color: Theme.popupBg
             radius: 10
             border.width: 1
-            border.color: "#3a3f5c"
+            border.color: Theme.popupBorderColor
         }
 
         contentItem: ColumnLayout {
@@ -391,12 +411,12 @@ ApplicationWindow {
             spacing: 10
 
             Text {
-                text: "Log de instalación"
-                color: "#cdd6f4"
+                text: (App.langV, App.l("setup.installLog"))
+                color: Theme.textPrimary
                 font.pixelSize: 16
                 font.bold: true
             }
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#313244" }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
             ScrollView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -404,28 +424,52 @@ ApplicationWindow {
                     readOnly: true
                     wrapMode: TextArea.WrapAnywhere
                     text: App.officialBinaryInstallLog
-                    color: "#cdd6f4"
+                    color: Theme.textPrimary
                     font.family: "Consolas"
                     font.pixelSize: 12
-                    background: Rectangle { color: "#111322"; radius: 6 }
+                    background: Rectangle { color: Theme.inputBg; radius: 6 }
                 }
             }
             RowLayout {
                 Layout.alignment: Qt.AlignRight
                 spacing: 8
                 LcButton {
-                    text: "Copiar log"
+                    text: (App.langV, App.l("setup.copyLog"))
                     secondary: true
                     onClicked: App.copyToClipboard(App.officialBinaryInstallLog)
                 }
-                LcButton { text: "Cerrar"; onClicked: installLogPopup.close() }
+                LcButton { text: (App.langV, App.l("common.close")); onClicked: installLogPopup.close() }
             }
         }
     }
 
     Component.onCompleted: {
+        const savedX = Number(App.readSetting("window/x", 100))
+        const savedY = Number(App.readSetting("window/y", 100))
+        const savedW = Number(App.readSetting("window/width", 1200))
+        const savedH = Number(App.readSetting("window/height", 760))
+        const savedMaximized = Boolean(App.readSetting("window/maximized", false))
+
+        const restoredW = Math.max(minimumWidth, savedW)
+        const restoredH = Math.max(minimumHeight, savedH)
+        width = restoredW
+        height = restoredH
+        x = savedX
+        y = savedY
+        if (savedMaximized)
+            showMaximized()
+        restoringWindowState = false
+
         if (App.needsSetup) setupPopup.open()
     }
+
+    onClosing: saveWindowState()
+
+    onXChanged: saveWindowState()
+    onYChanged: saveWindowState()
+    onWidthChanged: saveWindowState()
+    onHeightChanged: saveWindowState()
+    onVisibilityChanged: saveWindowState()
 
     Connections {
         target: App

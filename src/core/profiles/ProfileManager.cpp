@@ -165,6 +165,46 @@ QVariantMap ProfileManager::getRuntimePreset(const QString &id) const
             {"parallelSlots", p.parallelSlots}};
 }
 
+// ---- HarnessProfile ----
+
+QString ProfileManager::addHarness(const QString &name, const QString &adapter)
+{
+    HarnessProfile p;
+    p.id = HarnessProfile::generateId();
+    p.name = name.isEmpty() ? adapter : name;
+    p.adapter = adapter;
+    m_harnesses.add(p);
+    save();
+    return p.id;
+}
+
+bool ProfileManager::removeHarness(const QString &id)
+{
+    bool ok = m_harnesses.remove(id);
+    if (ok) save();
+    return ok;
+}
+
+bool ProfileManager::updateHarness(const QVariantMap &data)
+{
+    HarnessProfile p = m_harnesses.findById(data["id"].toString());
+    if (p.id.isEmpty()) return false;
+    p.name    = data.value("name",    p.name).toString();
+    p.adapter = data.value("adapter", p.adapter).toString();
+    const QVariant argsV = data.value("args");
+    if (argsV.isValid()) p.args = argsV.toStringList();
+    bool ok = m_harnesses.update(p);
+    if (ok) save();
+    return ok;
+}
+
+QVariantMap ProfileManager::getHarness(const QString &id) const
+{
+    const auto p = m_harnesses.findById(id);
+    if (p.id.isEmpty()) return {};
+    return {{"id", p.id}, {"name", p.name}, {"adapter", p.adapter}, {"args", p.args}};
+}
+
 // ---- LaunchProfile ----
 
 QString ProfileManager::addLaunchProfile(const QString &name,
