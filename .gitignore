@@ -1,0 +1,68 @@
+# Build directories
+/build/
+/build2/
+/cmake-build-*/
+/out/
+/bin/
+/obj/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# Qt generated artifacts
+.qt/
+.rcc/
+autogen/
+*_autogen/
+qrc_*.cpp
+moc_*.cpp
+ui_*.h
+qmldir
+*.qmltypes
+
+# Visual Studio / MSVC
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.VC.db
+*.VC.opendb
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.ipch
+*.suo
+
+# Binaries/libraries
+*.exe
+*.dll
+*.lib
+*.exp
+build/Debug/LlamaCode.pdb
+
+# Logs / local runtime files
+*.log
+stdout.txt
+stderr.txt
+aqtinstall.log
+
+# Windows shortcuts and metadata
+*.lnk
+Thumbs.db
+Desktop.ini
+
+# Qt Creator / local user settings
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.user
+build/Debug/LlamaCode.pdb
+build/Debug/LlamaCode.pdb
