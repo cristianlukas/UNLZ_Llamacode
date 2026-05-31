@@ -757,7 +757,7 @@ Item {
                         enabled: !App.chatGenerating
                         onToggled: {
                             root.thinkingEnabled = checked
-                            App.writeSetting("chat/thinkingEnabled", checked)
+                            App.setChatThinkingEnabled(checked)
                         }
                         contentItem: Text {
                             text: parent.text

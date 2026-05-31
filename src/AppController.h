@@ -123,6 +123,7 @@ public:
     Q_INVOKABLE void renameChatProject(const QString &oldName, const QString &newName);
     Q_INVOKABLE void sendChatMessage(const QString &text);
     Q_INVOKABLE void stopChatGeneration();
+    Q_INVOKABLE void setChatThinkingEnabled(bool enabled);
     Q_INVOKABLE void startServer(const QString &launchProfileId);
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void computeEffectiveProfile(const QString &launchProfileId);

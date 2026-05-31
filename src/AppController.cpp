@@ -752,6 +752,10 @@ IAgentBackend *AppController::ensureChatBackend()
 {
     if (m_chatBackend) return m_chatBackend;
     auto *b = new RawChatBackend(this);
+    if (auto *raw = qobject_cast<RawChatBackend *>(b)) {
+        const bool thinkingEnabled = readSetting(QStringLiteral("chat/thinkingEnabled"), true).toBool();
+        raw->setThinkingEnabled(thinkingEnabled);
+    }
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_chatMessages = b->messages();
         bool generating = false;
@@ -2095,9 +2099,6 @@ void AppController::sendChatMessage(const QString &text)
     if (text.trimmed().isEmpty()) return;
     IAgentBackend *b = ensureChatBackend();
     if (!b) return;
-    const bool thinkingEnabled = readSetting(QStringLiteral("chat/thinkingEnabled"), true).toBool();
-    if (auto *raw = qobject_cast<RawChatBackend *>(b))
-        raw->setThinkingEnabled(thinkingEnabled);
     AgentContext c;
     c.adapter = QStringLiteral("raw");
     c.serverBaseUrl = serverBaseUrl();
@@ -2111,6 +2112,15 @@ void AppController::stopChatGeneration()
 {
     if (IAgentBackend *b = ensureChatBackend())
         b->cancelGeneration();
+}
+
+void AppController::setChatThinkingEnabled(bool enabled)
+{
+    writeSetting(QStringLiteral("chat/thinkingEnabled"), enabled);
+    if (IAgentBackend *b = ensureChatBackend()) {
+        if (auto *raw = qobject_cast<RawChatBackend *>(b))
+            raw->setThinkingEnabled(enabled);
+    }
 }
 
 // ── Managed-process lifecycle ─────────────────────────────────────────────────
