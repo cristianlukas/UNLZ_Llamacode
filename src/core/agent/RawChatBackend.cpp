@@ -259,10 +259,17 @@ void RawChatBackend::sendMessage(const QString &text)
     payload.insert(QStringLiteral("thinking"), m_thinkingEnabled);
     QJsonObject reasoningObj;
     reasoningObj.insert(QStringLiteral("enabled"), m_thinkingEnabled);
+    if (!m_thinkingEnabled)
+        reasoningObj.insert(QStringLiteral("budget"), 0);
     payload.insert(QStringLiteral("reasoning"), reasoningObj);
     QJsonObject tmplKw;
     tmplKw.insert(QStringLiteral("enable_thinking"), m_thinkingEnabled);
+    tmplKw.insert(QStringLiteral("preserve_thinking"), m_thinkingEnabled);
+    if (!m_thinkingEnabled)
+        tmplKw.insert(QStringLiteral("thinking_budget"), 0);
     payload.insert(QStringLiteral("chat_template_kwargs"), tmplKw);
+    if (!m_thinkingEnabled)
+        payload.insert(QStringLiteral("reasoning_budget"), 0);
 
     m_sseBuf.clear();
     m_reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
