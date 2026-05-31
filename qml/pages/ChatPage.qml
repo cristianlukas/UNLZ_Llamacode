@@ -7,6 +7,8 @@ Item {
     id: root
 
     property bool newProjectDialogOpen: false
+    property var thinkExpanded: ({})
+    property bool thinkingEnabled: (App.readSetting("chat/thinkingEnabled", true) ?? true)
 
     function scrollToBottom() { Qt.callLater(() => { msgList.positionViewAtEnd() }) }
 
@@ -16,6 +18,26 @@ Item {
                 return App.chatSessions[i].projectId ?? ""
         }
         return ""
+    }
+
+    function extractThinkContent(text) {
+        if (!text || text.length === 0) return ""
+        let out = ""
+        const re = /<think>([\s\S]*?)<\/think>/g
+        let m
+        while ((m = re.exec(text)) !== null) {
+            const part = (m[1] ?? "").trim()
+            if (part.length > 0) {
+                if (out.length > 0) out += "\n\n"
+                out += part
+            }
+        }
+        return out
+    }
+
+    function stripThinkBlocks(text) {
+        if (!text || text.length === 0) return ""
+        return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
     }
 
     RowLayout {
@@ -591,6 +613,11 @@ Item {
                     readonly property bool isUser: modelData.role === "user"
                     readonly property string content: modelData.content ?? ""
                     readonly property bool isTyping: modelData.typing ?? false
+                    readonly property string msgId: (modelData.id ?? (index + "-" + modelData.role))
+                    readonly property string thinkContent: root.extractThinkContent(content)
+                    readonly property bool hasThink: thinkContent.trim().length > 0
+                    readonly property string visibleContentRaw: root.stripThinkBlocks(content)
+                    readonly property bool thinkOpen: root.thinkExpanded[msgId] === true
 
                     Rectangle {
                         id: bubbleRect
@@ -602,33 +629,105 @@ Item {
                             leftMargin: delegateRoot.isUser ? undefined : 16
                         }
                         width: Math.min(delegateRoot.width - 80, delegateRoot.width * 0.78)
-                        height: Math.max(msgText.implicitHeight + 22, 44)
+                        height: Math.max(contentCol.implicitHeight + 22, 44)
                         radius: 10
                         color: delegateRoot.isUser ? Theme.chatUserBubble : Theme.chatAsstBubble
                         border.width: delegateRoot.isUser ? 0 : 1
                         border.color: Theme.borderColor
 
-                        TextEdit {
-                            id: msgText
+                        Column {
+                            id: contentCol
                             anchors { top: parent.top; left: parent.left; right: parent.right; margins: 11 }
-                            text: {
-                                if (delegateRoot.isTyping && delegateRoot.content.length === 0)
-                                    return "⏳ Procesando..."
-                                if (delegateRoot.isTyping)
-                                    return delegateRoot.content + "▌"
-                                return delegateRoot.content
+                            spacing: 8
+
+                            Rectangle {
+                                visible: delegateRoot.hasThink
+                                width: parent.width
+                                radius: 6
+                                color: Theme.surfaceBg
+                                border.color: Theme.borderColor
+                                border.width: 1
+                                implicitHeight: thinkHeader.height + (delegateRoot.thinkOpen ? thinkBody.implicitHeight + 8 : 0) + 8
+
+                                Column {
+                                    anchors { fill: parent; margins: 6 }
+                                    spacing: 6
+
+                                    Rectangle {
+                                        id: thinkHeader
+                                        width: parent.width
+                                        height: 24
+                                        color: "transparent"
+
+                                        Row {
+                                            anchors.fill: parent
+                                            spacing: 6
+                                            Text {
+                                                text: delegateRoot.thinkOpen ? "▾" : "▸"
+                                                color: Theme.textMuted
+                                                font.pixelSize: 12
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            Text {
+                                                text: "Think"
+                                                color: Theme.textMuted
+                                                font.pixelSize: 12
+                                                font.bold: true
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                const cur = root.thinkExpanded
+                                                cur[delegateRoot.msgId] = !delegateRoot.thinkOpen
+                                                root.thinkExpanded = cur
+                                            }
+                                        }
+                                    }
+
+                                    TextEdit {
+                                        id: thinkBody
+                                        visible: delegateRoot.thinkOpen
+                                        width: parent.width
+                                        text: delegateRoot.thinkContent
+                                        color: Theme.textMuted
+                                        font.family: "Consolas,monospace"
+                                        font.pixelSize: 12
+                                        wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
+                                        readOnly: true
+                                        selectByMouse: true
+                                    }
+                                }
                             }
-                            color: {
-                                if (delegateRoot.isTyping && delegateRoot.content.length === 0)
-                                    return Theme.textMuted
-                                return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
+
+                            TextEdit {
+                                id: msgText
+                                width: parent.width
+                                text: {
+                                    if (delegateRoot.isTyping && delegateRoot.content.length === 0)
+                                        return "⏳ Procesando..."
+                                    const base = delegateRoot.visibleContentRaw.length > 0
+                                        ? delegateRoot.visibleContentRaw
+                                        : delegateRoot.content
+                                    if (delegateRoot.isTyping)
+                                        return base + "▌"
+                                    return base
+                                }
+                                color: {
+                                    if (delegateRoot.isTyping && delegateRoot.content.length === 0)
+                                        return Theme.textMuted
+                                    return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
+                                }
+                                font.family: "Segoe UI"
+                                font.pixelSize: 13
+                                font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
+                                wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
+                                readOnly: true
+                                selectByMouse: true
                             }
-                            font.family: "Segoe UI"
-                            font.pixelSize: 13
-                            font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
-                            wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
-                            readOnly: true
-                            selectByMouse: true
                         }
                     }
 
@@ -650,6 +749,24 @@ Item {
                 RowLayout {
                     anchors { fill: parent; leftMargin: 12; rightMargin: 12; topMargin: 10; bottomMargin: 10 }
                     spacing: 8
+
+                    CheckBox {
+                        id: thinkingToggle
+                        text: "Thinking"
+                        checked: root.thinkingEnabled
+                        enabled: !App.chatGenerating
+                        onToggled: {
+                            root.thinkingEnabled = checked
+                            App.writeSetting("chat/thinkingEnabled", checked)
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: Theme.textSecondary
+                            leftPadding: parent.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
+                            font.pixelSize: 12
+                        }
+                    }
 
                     TextField {
                         id: inputField

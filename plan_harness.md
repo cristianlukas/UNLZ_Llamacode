@@ -72,7 +72,7 @@ modelo, fallback de JSON roto) es **harness-agnóstico**.
 - ✅ `RawChatBackend` implementa `IAgentBackend` con streaming SSE de OpenAI (`stream:true`).
 - ✅ Definición de producto: `raw` fuera del pipeline de Agente (solo Chat).
 - ✅ Sesiones locales en memoria (crear/cambiar/renombrar/borrar/fork).
-- ⬜ Persistencia local de sesiones (SQLite o store de chat existente).
+- ✅ Persistencia local de sesiones/mensajes de `RawChatBackend` (JSON en AppLocalData).
 - ✅ Integración en Chat para usar `RawChatBackend` como runtime único de chat directo.
 - ⬜ Selector en UI: "Modo: Chat / Agente" (Agente solo con harness tool-calling).
 - **Entregable:** chat directo funcional + interfaz probada con 2 backends reales.

@@ -1,9 +1,12 @@
 #include "RawChatBackend.h"
 #include <QDateTime>
+#include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStandardPaths>
 #include <QUrl>
 #include <QUuid>
 
@@ -27,6 +30,7 @@ void RawChatBackend::start(const AgentContext &ctx)
     m_ctx = ctx;
     m_stopping = false;
     m_running = true;
+    loadFromDisk();
     emit logAppended(QStringLiteral("[raw backend ready]\n"));
     if (m_sessionId.isEmpty())
         createSession(ctx.cwd);
@@ -42,6 +46,7 @@ void RawChatBackend::stop()
         m_reply = nullptr;
     }
     saveCurrentMessages();
+    persistAll();
     m_running = false;
     m_curAsstIdx = -1;
     emit runningChanged();
@@ -72,6 +77,8 @@ void RawChatBackend::createSession(const QString &projectId, const QString &proj
     m_projectDir = projectDir;
     m_messages.clear();
     m_curAsstIdx = -1;
+    persistIndex();
+    persistSession(id);
     emit sessionsChanged();
     emit messagesChanged();
 }
@@ -97,8 +104,10 @@ void RawChatBackend::setCurrentSession(const QString &sessionId)
 
 void RawChatBackend::saveCurrentMessages()
 {
-    if (!m_sessionId.isEmpty())
+    if (!m_sessionId.isEmpty()) {
         m_sessionMessages[m_sessionId] = m_messages;
+        persistSession(m_sessionId);
+    }
 }
 
 QVariantList RawChatBackend::loadMessagesForSession(const QString &sessionId) const
@@ -142,6 +151,8 @@ void RawChatBackend::renameSession(const QString &sessionId, const QString &titl
         }
     }
     if (sessionId == m_sessionId) m_sessionTitle = t;
+    persistIndex();
+    persistSession(sessionId);
     emit sessionsChanged();
 }
 
@@ -155,6 +166,7 @@ void RawChatBackend::deleteSession(const QString &sessionId)
         }
     }
     m_sessionMessages.remove(sessionId);
+    removeSessionFile(sessionId);
     if (sessionId == m_sessionId) {
         m_sessionId.clear();
         m_sessionTitle.clear();
@@ -166,6 +178,7 @@ void RawChatBackend::deleteSession(const QString &sessionId)
         else
             emit messagesChanged();
     }
+    persistIndex();
     emit sessionsChanged();
 }
 
@@ -183,6 +196,7 @@ void RawChatBackend::forkSession(const QString &sessionId)
     createSession(srcProjectDir);
     m_messages = src;
     saveCurrentMessages();
+    persistIndex();
     emit messagesChanged();
 }
 
@@ -238,7 +252,9 @@ void RawChatBackend::sendMessage(const QString &text)
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("raw") : m_ctx.modelId},
         {QStringLiteral("messages"), reqMsgs},
-        {QStringLiteral("stream"), true}
+        {QStringLiteral("stream"), true},
+        // Native thinking toggle (Qwen-compatible OpenAI extensions).
+        {QStringLiteral("enable_thinking"), m_thinkingEnabled}
     };
 
     m_sseBuf.clear();
@@ -324,6 +340,7 @@ bool RawChatBackend::updateSessionProject(const QString &sessionId, const QStrin
         if (sessionId == m_sessionId) {
             m_projectDir = s.value(QStringLiteral("projectDir")).toString();
         }
+        persistIndex();
         emit sessionsChanged();
         return true;
     }
@@ -341,6 +358,120 @@ bool RawChatBackend::renameProject(const QString &oldName, const QString &newNam
         m_sessions[i] = s;
         changed = true;
     }
-    if (changed) emit sessionsChanged();
+    if (changed) {
+        persistIndex();
+        emit sessionsChanged();
+    }
     return changed;
+}
+
+QString RawChatBackend::storageDir() const
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/chat_raw");
+    QDir().mkpath(dir);
+    return dir;
+}
+
+QString RawChatBackend::sessionFilePath(const QString &sessionId) const
+{
+    return storageDir() + QStringLiteral("/") + sessionId + QStringLiteral(".json");
+}
+
+void RawChatBackend::loadFromDisk()
+{
+    if (!m_sessions.isEmpty()) return;
+
+    QFile f(storageDir() + QStringLiteral("/index.json"));
+    if (!f.open(QIODevice::ReadOnly)) return;
+    const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
+    f.close();
+
+    for (const QJsonValue &v : arr) {
+        const QVariantMap s = v.toObject().toVariantMap();
+        const QString sid = s.value(QStringLiteral("id")).toString();
+        if (sid.isEmpty()) continue;
+        m_sessions.append(s);
+
+        QFile sf(sessionFilePath(sid));
+        QVariantList msgs;
+        if (sf.open(QIODevice::ReadOnly)) {
+            const QJsonObject obj = QJsonDocument::fromJson(sf.readAll()).object();
+            sf.close();
+            const QJsonArray m = obj.value(QStringLiteral("messages")).toArray();
+            for (const QJsonValue &mv : m) {
+                const QJsonObject mo = mv.toObject();
+                msgs.append(QVariantMap{
+                    {QStringLiteral("role"), mo.value(QStringLiteral("role")).toString()},
+                    {QStringLiteral("content"), mo.value(QStringLiteral("content")).toString()},
+                    {QStringLiteral("typing"), false}
+                });
+            }
+        }
+        m_sessionMessages.insert(sid, msgs);
+    }
+
+    if (!m_sessions.isEmpty()) {
+        const QVariantMap s0 = m_sessions.first().toMap();
+        m_sessionId = s0.value(QStringLiteral("id")).toString();
+        m_sessionTitle = s0.value(QStringLiteral("title")).toString();
+        m_projectDir = s0.value(QStringLiteral("projectDir")).toString();
+        m_messages = m_sessionMessages.value(m_sessionId);
+    }
+}
+
+void RawChatBackend::persistIndex() const
+{
+    QJsonArray arr;
+    for (const QVariant &v : m_sessions)
+        arr.append(QJsonObject::fromVariantMap(v.toMap()));
+    QFile f(storageDir() + QStringLiteral("/index.json"));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        f.write(QJsonDocument(arr).toJson());
+        f.close();
+    }
+}
+
+void RawChatBackend::persistSession(const QString &sessionId) const
+{
+    if (sessionId.isEmpty()) return;
+    QVariantMap sess;
+    for (const QVariant &v : m_sessions) {
+        const QVariantMap s = v.toMap();
+        if (s.value(QStringLiteral("id")).toString() == sessionId) {
+            sess = s;
+            break;
+        }
+    }
+    QJsonArray msgs;
+    const QVariantList ml = m_sessionMessages.value(sessionId);
+    for (const QVariant &mv : ml) {
+        const QVariantMap m = mv.toMap();
+        msgs.append(QJsonObject{
+            {QStringLiteral("role"), m.value(QStringLiteral("role")).toString()},
+            {QStringLiteral("content"), m.value(QStringLiteral("content")).toString()}
+        });
+    }
+    QJsonObject obj;
+    obj[QStringLiteral("id")] = sessionId;
+    obj[QStringLiteral("title")] = sess.value(QStringLiteral("title")).toString();
+    obj[QStringLiteral("messages")] = msgs;
+    QFile f(sessionFilePath(sessionId));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        f.write(QJsonDocument(obj).toJson());
+        f.close();
+    }
+}
+
+void RawChatBackend::removeSessionFile(const QString &sessionId) const
+{
+    if (sessionId.isEmpty()) return;
+    QFile::remove(sessionFilePath(sessionId));
+}
+
+void RawChatBackend::persistAll() const
+{
+    persistIndex();
+    for (const QVariant &v : m_sessions)
+        persistSession(v.toMap().value(QStringLiteral("id")).toString());
 }

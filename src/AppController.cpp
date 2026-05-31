@@ -2095,6 +2095,9 @@ void AppController::sendChatMessage(const QString &text)
     if (text.trimmed().isEmpty()) return;
     IAgentBackend *b = ensureChatBackend();
     if (!b) return;
+    const bool thinkingEnabled = readSetting(QStringLiteral("chat/thinkingEnabled"), true).toBool();
+    if (auto *raw = qobject_cast<RawChatBackend *>(b))
+        raw->setThinkingEnabled(thinkingEnabled);
     AgentContext c;
     c.adapter = QStringLiteral("raw");
     c.serverBaseUrl = serverBaseUrl();

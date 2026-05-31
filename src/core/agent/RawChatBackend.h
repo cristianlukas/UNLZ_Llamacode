@@ -37,8 +37,16 @@ public:
     bool updateSessionProject(const QString &sessionId, const QString &projectId,
                               const QString &projectName, const QString &projectDir = QString());
     bool renameProject(const QString &oldName, const QString &newName);
+    void setThinkingEnabled(bool enabled) { m_thinkingEnabled = enabled; }
 
 private:
+    QString storageDir() const;
+    QString sessionFilePath(const QString &sessionId) const;
+    void loadFromDisk();
+    void persistIndex() const;
+    void persistSession(const QString &sessionId) const;
+    void removeSessionFile(const QString &sessionId) const;
+    void persistAll() const;
     void createSession(const QString &projectDir);
     void createSession(const QString &projectId, const QString &projectName, const QString &projectDir);
     void setCurrentSession(const QString &sessionId);
@@ -50,6 +58,7 @@ private:
     QNetworkReply *m_reply = nullptr;
     bool m_running = false;
     bool m_stopping = false;
+    bool m_thinkingEnabled = true;
 
     QString m_sessionId;
     QString m_sessionTitle;
