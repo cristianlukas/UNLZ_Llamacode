@@ -79,7 +79,7 @@ Item {
                 Layout.fillHeight: true
                 clip: true
                 model: App.rootRegistry
-                ScrollBar.vertical: ScrollBar {}
+                ScrollBar.vertical: LcScrollBar {}
 
                 delegate: ItemDelegate {
                     width: rootList.width
@@ -170,7 +170,7 @@ Item {
                     Layout.fillHeight: true
                     clip: true
                     model: App.modelCatalog
-                    ScrollBar.vertical: ScrollBar {}
+                    ScrollBar.vertical: LcScrollBar {}
 
                     delegate: Rectangle {
                         width: modelList.width

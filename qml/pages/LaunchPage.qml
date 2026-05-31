@@ -108,12 +108,14 @@ Item {
                         text: {
                             const _lang = App.langV
                             if (App.serverStopping) return "Deteniendo..."
-                            return App.serverRunning ? App.l("launch.stopServer") : App.l("launch.startServer")
+                            if (App.serverRunning) return App.l("launch.stopServer")
+                            if (launchCombo.count === 0) return "Crear un perfil primero"
+                            return App.l("launch.startServer")
                         }
                         danger: App.serverRunning && !App.serverStopping
                         secondary: App.serverStopping
                         Layout.fillWidth: true
-                        enabled: !App.serverStopping && (launchCombo.currentValue !== undefined || App.serverRunning)
+                        enabled: !App.serverStopping && launchCombo.count > 0 && (launchCombo.currentValue !== undefined || App.serverRunning)
                         onClicked: {
                             if (App.serverRunning) App.stopServer()
                             else App.startServer(launchCombo.currentValue ?? "")
@@ -125,40 +127,6 @@ Item {
                         secondary: true
                         enabled: launchCombo.currentValue !== undefined
                         onClicked: App.computeEffectiveProfile(launchCombo.currentValue)
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 36
-                    radius: 6
-                    color: App.serverRunning ? Theme.successBg : Theme.errorBg
-                    border.color: App.serverRunning ? Theme.successText : Theme.errorBorder
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 8
-                        Rectangle {
-                            width: 8; height: 8; radius: 4
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: App.serverRunning ? Theme.successText : Theme.errorText
-                            SequentialAnimation on opacity {
-                                running: App.serverRunning
-                                loops: Animation.Infinite
-                                NumberAnimation { to: 0.3; duration: 800 }
-                                NumberAnimation { to: 1.0; duration: 800 }
-                            }
-                        }
-                        Text {
-                            text: {
-                                const _lang = App.langV
-                                if (App.serverStopping) return "Deteniendo servidor..."
-                                return App.serverRunning ? App.l("launch.running") : App.l("launch.stopped")
-                            }
-                            color: App.serverStopping ? Theme.textMuted : (App.serverRunning ? Theme.successText : Theme.errorText)
-                            font.pixelSize: 13
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
                     }
                 }
 

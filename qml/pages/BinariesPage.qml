@@ -170,7 +170,7 @@ Item {
                 clip: true
                 model: App.binaryRegistry
                 currentIndex: -1
-                ScrollBar.vertical: ScrollBar {}
+                ScrollBar.vertical: LcScrollBar {}
 
                 delegate: ItemDelegate {
                     width: listView.width
@@ -411,7 +411,7 @@ Item {
                         color: Theme.textSecondary
                         height: 20
                     }
-                    ScrollBar.vertical: ScrollBar {}
+                    ScrollBar.vertical: LcScrollBar {}
                 }
             }
 

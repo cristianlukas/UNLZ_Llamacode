@@ -4,10 +4,12 @@
 #include "core/ModelCatalog.h"
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
+#include "core/agent/IAgentBackend.h"
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
 #include <QVariantMap>
+#include <QJsonObject>
 #include <QHash>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -27,6 +29,7 @@ class AppController : public QObject
     Q_PROPERTY(bool         chatGenerating  READ chatGenerating  NOTIFY chatGeneratingChanged)
     Q_PROPERTY(bool   serverRunning   READ serverRunning   NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverStopping  READ serverStopping  NOTIFY serverRunningChanged)
+    Q_PROPERTY(bool   serverReady     READ serverReady     NOTIFY serverReadyChanged)
     Q_PROPERTY(QString serverLog      READ serverLog       NOTIFY serverLogChanged)
     Q_PROPERTY(QString activeLaunchId READ activeLaunchId  NOTIFY activeLaunchIdChanged)
     Q_PROPERTY(QVariantMap effectiveProfile READ effectiveProfile NOTIFY effectiveProfileChanged)
@@ -68,6 +71,7 @@ public:
     bool         chatGenerating()   const { return m_chatGenerating; }
     bool   serverRunning()   const { return m_proc && m_proc->state() != QProcess::NotRunning; }
     bool   serverStopping()  const { return m_serverStopping; }
+    bool   serverReady()     const { return m_serverReady; }
     QString serverLog()      const { return m_log; }
     QString activeLaunchId() const { return m_activeLaunchId; }
     QVariantMap effectiveProfile() const { return m_effectiveProfile; }
@@ -89,6 +93,8 @@ public:
     void setLanguage(const QString &lang);
     int langV() const { return 0; }
     bool agentRunning() const {
+        if (m_agentBackend && m_agentBackend->running()) return true;
+        if (m_piActive) return true;
         return m_agentInTerminal ? (m_agentPid != 0) : (m_agentProc && m_agentProc->state() != QProcess::NotRunning);
     }
     QString agentLog() const { return m_agentLog; }
@@ -109,11 +115,20 @@ public:
     Q_INVOKABLE void newChatSession();
     Q_INVOKABLE void newChatSessionInProject(const QString &projectId, const QString &projectName);
     Q_INVOKABLE void switchChatSession(const QString &id);
+    Q_INVOKABLE void deleteChatSession(const QString &id);
+    Q_INVOKABLE void deleteChatProject(const QString &projectName);
+    Q_INVOKABLE void moveChatToProject(const QString &id, const QString &projectId, const QString &projectName);
+    Q_INVOKABLE QVariantList chatProjects() const;
+    Q_INVOKABLE void renameChatSession(const QString &id, const QString &title);
+    Q_INVOKABLE void renameChatProject(const QString &oldName, const QString &newName);
     Q_INVOKABLE void sendChatMessage(const QString &text);
     Q_INVOKABLE void stopChatGeneration();
     Q_INVOKABLE void startServer(const QString &launchProfileId);
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void computeEffectiveProfile(const QString &launchProfileId);
+    // Recalcula la vista previa desde valores en memoria del editor, sin persistir.
+    Q_INVOKABLE void computeEffectiveProfilePreview(const QString &launchProfileId,
+                                                    const QVariantMap &overrides);
     Q_INVOKABLE void clearLog();
     Q_INVOKABLE void copyToClipboard(const QString &text);
     Q_INVOKABLE void installOfficialBinary();
@@ -137,15 +152,42 @@ public:
     Q_INVOKABLE void newOpencodeSession();
     Q_INVOKABLE void switchOpencodeSession(const QString &sessionId);
     Q_INVOKABLE void refreshOpencodeSessionList();
+    Q_INVOKABLE void renameOpencodeSession(const QString &sessionId, const QString &title);
+    Q_INVOKABLE void deleteOpencodeSession(const QString &sessionId);
+    Q_INVOKABLE void newOpencodeSessionInProject(const QString &projectDir);
+    Q_INVOKABLE void forkOpencodeSession(const QString &sessionId);
     Q_INVOKABLE QString pickDirectory(const QString &title = QString());
     Q_INVOKABLE void changeAgentProject(const QString &directory);
+    Q_INVOKABLE QString currentAgentProjectDir() const;
+
+    // ── Opencode config (opencode.json global / por proyecto) ──
+    Q_INVOKABLE QString opencodeConfigPath(const QString &scope, const QString &projectDir) const;
+    Q_INVOKABLE QString readOpencodeConfig(const QString &scope, const QString &projectDir) const;
+    Q_INVOKABLE bool    writeOpencodeConfig(const QString &scope, const QString &projectDir, const QString &jsonText);
+
+    // ── MCP servers (sobre el bloque "mcp" del config) ──
+    Q_INVOKABLE QVariantList listMcpServers(const QString &scope, const QString &projectDir) const;
+    Q_INVOKABLE bool setMcpServer(const QString &scope, const QString &projectDir,
+                                  const QString &name, const QVariantMap &def);
+    Q_INVOKABLE bool removeMcpServer(const QString &scope, const QString &projectDir, const QString &name);
+    Q_INVOKABLE bool toggleMcpServer(const QString &scope, const QString &projectDir,
+                                     const QString &name, bool enabled);
+
+    // ── Skills / comandos (.opencode/command/*.md) ──
+    Q_INVOKABLE QVariantList listOpencodeCommands(const QString &scope, const QString &projectDir) const;
+    Q_INVOKABLE QString readOpencodeCommand(const QString &scope, const QString &projectDir, const QString &name) const;
+    Q_INVOKABLE bool writeOpencodeCommand(const QString &scope, const QString &projectDir,
+                                          const QString &name, const QString &content);
+    Q_INVOKABLE bool deleteOpencodeCommand(const QString &scope, const QString &projectDir, const QString &name);
     Q_INVOKABLE void startBenchmark(const QStringList &profileIds, const QString &mode);
     Q_INVOKABLE void cancelBenchmark();
     Q_INVOKABLE void clearBenchmarkResults();
+    Q_INVOKABLE void removeBenchmarkResult(int index);
     Q_INVOKABLE void loadBenchmarkResults();
 
 signals:
     void serverRunningChanged();
+    void serverReadyChanged();
     void serverLogChanged();
     void activeLaunchIdChanged();
     void effectiveProfileChanged();
@@ -190,7 +232,11 @@ private:
     QString   m_log;
     QString   m_activeLaunchId;
     bool      m_serverStopping = false;
-    QTimer   *m_stopKillTimer = nullptr;
+    bool      m_serverReady    = false;
+    QTimer   *m_stopKillTimer  = nullptr;
+    QTimer   *m_healthPollTimer = nullptr;
+    void startHealthPolling();
+    void stopHealthPolling();
     QVariantMap m_effectiveProfile;
     bool m_installingOfficialBinary = false;
     QString m_officialBinaryInstallStatus;
@@ -212,6 +258,17 @@ private:
     QString   m_opencodeAttachUrl  = QStringLiteral("http://127.0.0.1:4096");
     QString   m_agentCwdOverride;   // directory for next/current agent start
     QString   m_pendingAgentLaunchId; // used when restarting for project change
+    // pi harness: modo print por-mensaje (sin proceso persistente)
+    bool                m_piActive = false;
+    QProcess           *m_piMsgProc = nullptr;
+    QProcessEnvironment m_piEnv;
+    QString             m_piExe;
+    QString             m_piCwd;
+    QString             m_piSessionPath;
+    // Backend de agente activo (opencode/goose/raw). Dueño de su proceso/conexión.
+    IAgentBackend      *m_agentBackend = nullptr;
+    // Backend de chat directo (raw), separado del modo Agente.
+    IAgentBackend      *m_chatBackend = nullptr;
     // Chat session state
     QString       m_chatProjectIdOverride;
     QString       m_chatProjectNameOverride;
@@ -224,22 +281,26 @@ private:
     int           m_chatAssistantIdx = -1;
     QString       chatStorageDir() const;
     void          loadChatSessions();
+    void          injectDraftSession();
     void          saveChatSession();
     void          loadChatSessionMessages(const QString &id);
 
     QNetworkAccessManager *m_nam = nullptr;
     QString   m_opencodeSessionId;
     QNetworkReply *m_opencodeEventReply = nullptr;
+    bool           m_agentStopping = false;   // evita reconexión SSE al detener
     QVariantList m_agentMessages;
     int       m_currentAssistantIdx = -1;
     QVariantList m_agentSessions;
     QString   m_opencodeSessionTitle;
+    bool      m_forceNewOpencodeSession = false;
     void loadOpencodeSessionList(std::function<void()> then = nullptr);
     void resumeOrCreateOpencodeSession();
     void doCreateOpencodeSession();
     void loadOpencodeSessionMessages(const QString &sessionId);
     void initOpencodeSession();
     void subscribeOpencodeEvents();
+    void respondOpencodePermission(const QString &sessionId, const QString &permissionId);
 
     // Managed-process lifecycle
 #ifdef Q_OS_WIN
@@ -249,6 +310,17 @@ private:
     void assignToJobObject(qint64 pid);
     void killManagedOrphans();
     void writeServiceState(const QString &role, qint64 pid, const QVariantMap &extra = {});
+    void ensurePiConfig(const QString &openaiBaseUrl);
+    void sendPiMessage(const QString &text);
+    // Crea/asegura el backend para el adapter dado y conecta señales→QML.
+    IAgentBackend *ensureAgentBackend(const QString &adapter);
+    IAgentBackend *ensureChatBackend();
+    // Helpers de config opencode
+    QString ocGlobalConfigDir() const;
+    QString ocConfigFilePath(const QString &scope, const QString &projectDir) const;
+    QString ocCommandDir(const QString &scope, const QString &projectDir) const;
+    QJsonObject ocReadConfigObj(const QString &scope, const QString &projectDir) const;
+    bool ocWriteConfigObj(const QString &scope, const QString &projectDir, const QJsonObject &obj);
     void clearServiceState(const QString &role);
     QString serviceStatePath() const;
 
@@ -262,8 +334,8 @@ private:
     QVariantList m_benchmarkResults;
     QString benchmarkStorageDir() const;
     void saveBenchmarkResult(const QVariantMap &result);
-    void loadBenchmarkResults();
-    void benchmarkWaitServerReady(int attemptsLeft, const QString &url,
+    void benchmarkWaitServerReady(int attemptsLeft, int totalAttempts, const QString &url,
+                                  const QString &statusPrefix,
                                   std::function<void(bool)> onResult);
     void benchmarkWaitServerStopped(int remainingMs, std::function<void()> onStopped);
     void benchmarkRequest(const QString &url, const QString &prompt,

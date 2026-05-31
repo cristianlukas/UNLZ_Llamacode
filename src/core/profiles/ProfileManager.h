@@ -125,6 +125,7 @@ public:
     Q_INVOKABLE bool removeLaunchProfile(const QString &id);
     Q_INVOKABLE bool updateLaunchProfile(const QVariantMap &data);
     Q_INVOKABLE QVariantMap getLaunchProfile(const QString &id) const;
+    Q_INVOKABLE void saveProfiles() { save(); }
 
     // Resolve for builder
     BackendProfile resolveBackend(const QString &id) const;
@@ -148,4 +149,8 @@ private:
     ProfileListModel<HarnessProfile>   m_harnesses;
     ProfileListModel<WorkspaceProfile> m_workspaces;
     ProfileListModel<LaunchProfile>    m_launches;
+
+    // Set false when load() can't read an existing file (e.g. locked by another
+    // instance); blocks save() so a partial/empty state can't wipe stored data.
+    mutable bool m_persistAllowed = true;
 };

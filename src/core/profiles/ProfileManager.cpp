@@ -4,6 +4,7 @@
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QDebug>
 
 ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
 {
@@ -272,9 +273,18 @@ LaunchProfile    ProfileManager::resolveLaunch(const QString &id)      const { r
 
 void ProfileManager::load()
 {
-    auto loadList = [](const QString &path, auto &model, auto fromJsonFn) {
+    bool loadFailed = false;
+    auto loadList = [&loadFailed](const QString &path, auto &model, auto fromJsonFn) {
         QFile f(path);
-        if (!f.open(QIODevice::ReadOnly)) return;
+        if (!f.exists()) return;                 // first run / never saved — fine
+        if (!f.open(QIODevice::ReadOnly)) {
+            // File exists but couldn't be read (e.g. locked by another instance).
+            // Treat as a load failure so we never overwrite it with an empty list.
+            qWarning() << "[ProfileManager::load] could not open existing file"
+                       << path << f.errorString();
+            loadFailed = true;
+            return;
+        }
         const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
         QList<std::decay_t<decltype(model.m_items[0])>> items;
         for (const auto &v : arr)
@@ -288,17 +298,45 @@ void ProfileManager::load()
     loadList(storagePath("harnesses"),  m_harnesses,  &HarnessProfile::fromJson);
     loadList(storagePath("workspaces"), m_workspaces, &WorkspaceProfile::fromJson);
     loadList(storagePath("launches"),   m_launches,   &LaunchProfile::fromJson);
+
+    // Only allow persistence once we've loaded cleanly. If any existing file
+    // failed to load, block all saves so a partial/empty in-memory state can
+    // never wipe the user's profiles on disk.
+    m_persistAllowed = !loadFailed;
+    if (loadFailed)
+        qWarning() << "[ProfileManager] load incomplete — saving DISABLED to protect existing data";
 }
 
 void ProfileManager::save() const
 {
+    if (!m_persistAllowed) {
+        qWarning() << "[ProfileManager::save] skipped — persistence disabled after a failed load";
+        return;
+    }
+
     auto saveList = [](const QString &path, const auto &items) {
+        // Anti-wipe guard: never overwrite a non-empty file with an empty list.
+        if (items.isEmpty()) {
+            QFile existing(path);
+            if (existing.exists() && existing.open(QIODevice::ReadOnly)) {
+                const QJsonArray cur = QJsonDocument::fromJson(existing.readAll()).array();
+                existing.close();
+                if (!cur.isEmpty()) {
+                    qWarning() << "[ProfileManager::save] refusing to wipe non-empty file with empty list:"
+                               << path;
+                    return;
+                }
+            }
+        }
+
         QJsonArray arr;
         for (const auto &item : items) arr.append(item.toJson());
         QDir().mkpath(QFileInfo(path).absolutePath());
         QFile f(path);
-        if (f.open(QIODevice::WriteOnly))
+        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
             f.write(QJsonDocument(arr).toJson());
+        else
+            qWarning() << "[ProfileManager::save] FAILED to open" << path << f.errorString();
     };
 
     saveList(storagePath("backends"),   m_backends.m_items);

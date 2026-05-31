@@ -51,7 +51,7 @@ Item {
             "--top-p": true, "--top-k": true, "--repeat-penalty": true, "--presence-penalty": true,
             "--cache-ram": true, "--cache-reuse": true
         }
-        const boolFlags = { "--no-context-shift": true, "--metrics": true, "--no-warmup": true }
+        const boolFlags = { "--no-context-shift": true, "--context-shift": true, "--metrics": true, "--no-warmup": true }
         const out = []
         for (let i = 0; i < rawArgs.length; ++i) {
             const cur = rawArgs[i]
@@ -202,10 +202,6 @@ Item {
         const rawExtra = (lp.extraArgs ?? [])
         manualExtraArgsArea.text = extractManualArgs(rawExtra).join("\n")
 
-        let envText = "{}"
-        try { envText = JSON.stringify(lp.envOverrides ?? {}, null, 2) } catch (e) {}
-        envArea.text = envText
-
         const bp = App.profileManager.getBackend(backendId)
         backendNameCurrent = bp.name ?? ""
         backendHost.text = bp.host ?? "127.0.0.1"
@@ -237,7 +233,8 @@ Item {
         aliasField.text = ""; nPredictField.text = ""; cacheTypeVField.text = ""
         tempField.text = ""; topPField.text = ""; topKField.text = ""
         repeatPenaltyField.text = ""; presencePenaltyField.text = ""
-        noContextShiftCheck.checked = false; metricsCheck.checked = false; noWarmupCheck.checked = false
+        contextShiftCheck.checked = true
+        metricsCheck.checked = false; noWarmupCheck.checked = false
         cacheRamField.text = ""; cacheReuseField.text = ""
         for (let i = 0; i < rawExtra.length; ++i) {
             const cur = rawExtra[i]
@@ -252,62 +249,124 @@ Item {
             if (cur === "--presence-penalty") { presencePenaltyField.text = nxt; i += 1; continue }
             if (cur === "--cache-ram") { cacheRamField.text = nxt; i += 1; continue }
             if (cur === "--cache-reuse") { cacheReuseField.text = nxt; i += 1; continue }
-            if (cur === "--no-context-shift") { noContextShiftCheck.checked = true; continue }
+            if (cur === "--no-context-shift") { contextShiftCheck.checked = false; continue }
+            if (cur === "--context-shift")    { contextShiftCheck.checked = true;  continue }
             if (cur === "--metrics") { metricsCheck.checked = true; continue }
             if (cur === "--no-warmup") { noWarmupCheck.checked = true; continue }
         }
+
+        // Refresca vista previa del comando para el perfil cargado
+        App.computeEffectiveProfile(selectedLaunchId)
+    }
+
+    // Arma los args extra (manuales + campos) tal como van al final del comando.
+    function collectExtraArgs(binId) {
+        function rf(flag) { return binId.length > 0 ? App.resolveFlag(binId, flag) : flag }
+        const out = []
+        if (aliasField.text.trim().length > 0) out.push(rf("--alias"), aliasField.text.trim())
+        if (nPredictField.text.trim().length > 0) out.push(rf("--n-predict"), nPredictField.text.trim())
+        if (cacheTypeVField.text.trim().length > 0) out.push(rf("--cache-type-v"), cacheTypeVField.text.trim())
+        if (tempField.text.trim().length > 0) out.push(rf("--temp"), tempField.text.trim())
+        if (topPField.text.trim().length > 0) out.push(rf("--top-p"), topPField.text.trim())
+        if (topKField.text.trim().length > 0) out.push(rf("--top-k"), topKField.text.trim())
+        if (repeatPenaltyField.text.trim().length > 0) out.push(rf("--repeat-penalty"), repeatPenaltyField.text.trim())
+        if (presencePenaltyField.text.trim().length > 0) out.push(rf("--presence-penalty"), presencePenaltyField.text.trim())
+        // Never use rf() for these — avoids alias mapping --no-context-shift → --context-shift
+        out.push(contextShiftCheck.checked ? "--context-shift" : "--no-context-shift")
+        if (metricsCheck.checked)  out.push("--metrics")
+        if (noWarmupCheck.checked) out.push("--no-warmup")
+        if (cacheRamField.text.trim().length > 0) out.push(rf("--cache-ram"), cacheRamField.text.trim())
+        if (cacheReuseField.text.trim().length > 0) out.push(rf("--cache-reuse"), cacheReuseField.text.trim())
+        const manual = splitArgs(manualExtraArgsArea.text)
+        for (let i = 0; i < manual.length; ++i)
+            out.push(manual[i].startsWith('-') ? rf(manual[i]) : manual[i])
+        return out
+    }
+
+    // Recalcula la vista previa del comando con los valores actuales del editor (sin guardar).
+    function recomputePreview() {
+        if (!selectedLaunchId || selectedLaunchId.length === 0) return
+        const binId = backendBinary.currentValue ?? ""
+        App.computeEffectiveProfilePreview(selectedLaunchId, {
+            "host": backendHost.text,
+            "port": parseInt(backendPort.text) || 8080,
+            "binaryId": binId,
+            "modelId": modelMain.currentValue ?? "",
+            "mmprojId": mmprojEnabled ? (modelMmproj.currentValue ?? "") : "",
+            "draftModelId": draftEnabled ? (modelDraft.currentValue ?? "") : "",
+            "ctx": parseInt(ctxField.text) || 4096,
+            "batch": parseInt(batchField.text) || 512,
+            "ubatch": parseInt(ubatchField.text) || 512,
+            "threads": parseInt(threadsField.text) || -1,
+            "gpuLayers": parseInt(gpuLayersField.text) || -1,
+            "flashAttention": flashAttnCheck.checked,
+            "mmap": mmapCheck.checked,
+            "mlock": mlockCheck.checked,
+            "contBatching": contBatchCheck.checked,
+            "cacheType": cacheTypeField.text,
+            "parallelSlots": parseInt(parallelSlotsField.text) || 1,
+            "extraArgs": collectExtraArgs(binId)
+        })
     }
 
     function saveAll() {
         if (!selectedLaunchId || selectedLaunchId.length === 0) return
 
+        // envOverrides ya no se edita en UI; se preserva el valor existente del perfil.
         let envOverrides = {}
         try {
-            envOverrides = JSON.parse(envArea.text.length > 0 ? envArea.text : "{}")
-        } catch (e) {
-            App.serverError("envOverrides JSON inválido.")
-            return
+            const lpCur = App.profileManager.getLaunchProfile(selectedLaunchId)
+            envOverrides = lpCur.envOverrides ?? {}
+        } catch (e) { envOverrides = {} }
+
+        // Backend: update if exists, create if not
+        const binaryId = backendBinary.currentValue ?? ""
+        let effectiveBid = backendId
+        if (!App.profileManager.updateBackend(effectiveBid, backendNameCurrent, binaryId, backendHost.text, parseInt(backendPort.text), [])) {
+            effectiveBid = App.profileManager.addBackend(
+                backendNameCurrent.length > 0 ? backendNameCurrent : "Backend",
+                binaryId, backendHost.text, parseInt(backendPort.text))
+            if (!effectiveBid || effectiveBid.length === 0) { App.serverError("No se pudo crear Backend."); return }
+            backendId = effectiveBid
         }
 
-        const bpOk = App.profileManager.updateBackend(backendId, backendNameCurrent, backendBinary.currentValue ?? "", backendHost.text, parseInt(backendPort.text), [])
-        if (!bpOk) { App.serverError("No se pudo guardar Backend."); return }
+        // Model: update if exists, create if not
+        const mainModelId  = modelMain.currentValue  ?? ""
+        const mmprojId     = mmprojEnabled  ? (modelMmproj.currentValue ?? "") : ""
+        const draftModelId = draftEnabled   ? (modelDraft.currentValue  ?? "") : ""
+        let effectiveMid = modelProfileId
+        if (!App.profileManager.updateModelProfile(effectiveMid, modelNameCurrent, mainModelId, mmprojId, draftModelId)) {
+            effectiveMid = App.profileManager.addModelProfile(
+                modelNameCurrent.length > 0 ? modelNameCurrent : "Model",
+                mainModelId, mmprojId, draftModelId)
+            if (!effectiveMid || effectiveMid.length === 0) { App.serverError("No se pudo crear Model Profile."); return }
+            modelProfileId = effectiveMid
+        }
 
-        const mpOk = App.profileManager.updateModelProfile(modelProfileId, modelNameCurrent, modelMain.currentValue ?? "", mmprojEnabled ? (modelMmproj.currentValue ?? "") : "", draftEnabled ? (modelDraft.currentValue ?? "") : "")
-        if (!mpOk) { App.serverError("No se pudo guardar Model Profile."); return }
-
-        const rtOk = App.profileManager.updateRuntimePreset({
-            "id": runtimeId, "name": runtimeNameCurrent,
+        // Runtime: update if exists, create if not
+        let effectiveRid = runtimeId
+        const rtData = {
+            "id": effectiveRid, "name": runtimeNameCurrent,
             "ctx": parseInt(ctxField.text), "batch": parseInt(batchField.text),
             "ubatch": parseInt(ubatchField.text), "threads": parseInt(threadsField.text),
             "gpuLayers": parseInt(gpuLayersField.text), "flashAttention": flashAttnCheck.checked,
             "mmap": mmapCheck.checked, "mlock": mlockCheck.checked,
             "contBatching": contBatchCheck.checked, "cacheType": cacheTypeField.text,
             "parallelSlots": parseInt(parallelSlotsField.text)
-        })
-        if (!rtOk) { App.serverError("No se pudo guardar Runtime."); return }
+        }
+        if (!App.profileManager.updateRuntimePreset(rtData)) {
+            effectiveRid = App.profileManager.addRuntimePreset(
+                runtimeNameCurrent.length > 0 ? runtimeNameCurrent : "Runtime",
+                parseInt(ctxField.text), parseInt(batchField.text),
+                parseInt(gpuLayersField.text), flashAttnCheck.checked, contBatchCheck.checked)
+            if (!effectiveRid || effectiveRid.length === 0) { App.serverError("No se pudo crear Runtime."); return }
+            runtimeId = effectiveRid
+            App.profileManager.updateRuntimePreset(Object.assign({}, rtData, {"id": effectiveRid}))
+        }
 
         const bp = App.profileManager.getBackend(backendId)
         const binId = bp.binaryId ?? ""
-        function rf(flag) { return binId.length > 0 ? App.resolveFlag(binId, flag) : flag }
-
-        const rebuiltArgs = []
-        if (aliasField.text.trim().length > 0) rebuiltArgs.push(rf("--alias"), aliasField.text.trim())
-        if (nPredictField.text.trim().length > 0) rebuiltArgs.push(rf("--n-predict"), nPredictField.text.trim())
-        if (cacheTypeVField.text.trim().length > 0) rebuiltArgs.push(rf("--cache-type-v"), cacheTypeVField.text.trim())
-        if (tempField.text.trim().length > 0) rebuiltArgs.push(rf("--temp"), tempField.text.trim())
-        if (topPField.text.trim().length > 0) rebuiltArgs.push(rf("--top-p"), topPField.text.trim())
-        if (topKField.text.trim().length > 0) rebuiltArgs.push(rf("--top-k"), topKField.text.trim())
-        if (repeatPenaltyField.text.trim().length > 0) rebuiltArgs.push(rf("--repeat-penalty"), repeatPenaltyField.text.trim())
-        if (presencePenaltyField.text.trim().length > 0) rebuiltArgs.push(rf("--presence-penalty"), presencePenaltyField.text.trim())
-        if (noContextShiftCheck.checked) rebuiltArgs.push(rf("--no-context-shift"))
-        if (metricsCheck.checked) rebuiltArgs.push(rf("--metrics"))
-        if (noWarmupCheck.checked) rebuiltArgs.push(rf("--no-warmup"))
-        if (cacheRamField.text.trim().length > 0) rebuiltArgs.push(rf("--cache-ram"), cacheRamField.text.trim())
-        if (cacheReuseField.text.trim().length > 0) rebuiltArgs.push(rf("--cache-reuse"), cacheReuseField.text.trim())
-
-        const manual = splitArgs(manualExtraArgsArea.text)
-        for (let i = 0; i < manual.length; ++i)
-            rebuiltArgs.push(manual[i].startsWith('-') ? rf(manual[i]) : manual[i])
+        const rebuiltArgs = collectExtraArgs(binId)
 
         // Persist harness selection
         let resolvedHarnessId = ""
@@ -321,13 +380,24 @@ Item {
             }
         }
 
+        console.log("[saveAll] selectedLaunchId=", selectedLaunchId,
+                    "bid=", effectiveBid, "mid=", effectiveMid, "rid=", effectiveRid,
+                    "args=", rebuiltArgs.length)
+
         const lpOk = App.profileManager.updateLaunchProfile({
             "id": selectedLaunchId, "name": launchCombo.displayText,
-            "backendProfileId": backendId, "modelProfileId": modelProfileId,
-            "runtimePresetId": runtimeId, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
+            "backendProfileId": effectiveBid, "modelProfileId": effectiveMid,
+            "runtimePresetId": effectiveRid, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
             "harnessProfileId": resolvedHarnessId
         })
+
+        console.log("[saveAll] updateLaunchProfile result:", lpOk)
+        App.profileManager.saveProfiles()   // fuerza write a disco
+
         if (!lpOk) App.serverError("No se pudo guardar Launch Profile.")
+
+        // Recalcula vista previa con los args recién guardados
+        App.computeEffectiveProfile(selectedLaunchId)
     }
 
     Component.onCompleted: {
@@ -349,14 +419,21 @@ Item {
         }
 
         ScrollView {
+            id: editorScroll
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            leftPadding: 16
+            rightPadding: 16
+            topPadding: 16
+            bottomPadding: 16
+
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical: LcScrollBar {}
 
             ColumnLayout {
-                width: Math.max(900, root.width - 32)
+                width: Math.max(900, editorScroll.availableWidth)
                 spacing: 12
-                anchors.margins: 16
 
                 Rectangle {
                     Layout.fillWidth: true
@@ -770,7 +847,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 16
-                    CheckBox { id: noContextShiftCheck; text: "no-context-shift"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
+                    CheckBox { id: contextShiftCheck;   text: "context-shift";    checked: true; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                     CheckBox { id: metricsCheck; text: "metrics"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                     CheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                 }
@@ -796,13 +873,63 @@ Item {
 
                         RowLayout {
                             Layout.fillWidth: true
+                            spacing: 10
+
+                            Text {
+                                text: "Selector"
+                                color: Theme.textSecondary
+                                font.pixelSize: 12
+                            }
+
+                            ComboBox {
+                                id: harnessCombo
+                                Layout.fillWidth: true
+                                model: [
+                                    { adapter: "none", label: (App.langV, App.l("harness.none")) },
+                                    { adapter: "opencode", label: "Opencode" }
+                                ]
+                                textRole: "label"
+                                valueRole: "adapter"
+                                currentIndex: {
+                                    for (let i = 0; i < model.length; ++i)
+                                        if ((model[i].adapter ?? "") === harnessAdapter) return i
+                                    return 0
+                                }
+                                onActivated: {
+                                    const picked = currentValue ?? "none"
+                                    harnessAdapter = picked.length > 0 ? picked : "none"
+                                }
+                                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                contentItem: Text {
+                                    text: harnessCombo.displayText
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 13
+                                    leftPadding: 10
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "Tip: también podés seleccionar haciendo click en una tarjeta."
+                            color: Theme.textMuted
+                            font.pixelSize: 11
+                            Layout.fillWidth: true
+                            wrapMode: Text.WrapAnywhere
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
                             spacing: 8
 
                             Repeater {
                                 model: [
                                     { adapter: "none",      label: (App.langV, App.l("harness.none")),  icon: "—" },
                                     { adapter: "opencode",  label: "Opencode",   icon: "🔮" },
-                                    { adapter: "smallcode", label: "Smallcode",  icon: "🧩" },
+                                    // Ocultos por ahora — reactivar agregando al modelo:
+                                    // { adapter: "raw",       label: "Raw Chat",   icon: "💬" },
+                                    // { adapter: "smallcode", label: "Smallcode",  icon: "🧩" },
+                                    // { adapter: "pi",        label: "Pi",         icon: "🥧" },
                                 ]
 
                                 delegate: Rectangle {
@@ -925,21 +1052,37 @@ Item {
                     }
                 }
 
+                // ── Vista previa del comando ─────────────────────────────────
                 Rectangle {
                     Layout.fillWidth: true
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
                     radius: 8
-                    implicitHeight: 220
+                    implicitHeight: previewCol.implicitHeight + 20
                     ColumnLayout {
+                        id: previewCol
                         anchors.fill: parent; anchors.margins: 10
-                        Text { text: (App.langV, App.l("profiles.envOverrides")); color: Theme.textSecondary; font.pixelSize: 12 }
-                        TextArea {
-                            id: envArea
-                            Layout.fillWidth: true; Layout.fillHeight: true
-                            color: Theme.textPrimary
-                            font.family: "Consolas"
-                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        spacing: 8
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: (App.langV, App.l("launch.cmdPreview"))
+                                color: Theme.textSecondary; font.pixelSize: 12
+                                Layout.fillWidth: true
+                            }
+                            LcButton {
+                                text: "Recalcular comando"
+                                secondary: true
+                                onClicked: recomputePreview()
+                            }
+                        }
+                        CommandPreview {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 140
+                            visible: App.effectiveProfile.launchId === selectedLaunchId
+                            commandLine: App.effectiveProfile.commandLine ?? ""
+                            warnings: App.effectiveProfile.warnings ?? []
+                            errors: App.effectiveProfile.blockingErrors ?? []
                         }
                     }
                 }

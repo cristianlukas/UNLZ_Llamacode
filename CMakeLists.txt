@@ -25,6 +25,8 @@ set(SOURCES
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
+    src/core/agent/OpencodeBackend.cpp
+    src/core/agent/RawChatBackend.cpp
 )
 
 set(HEADERS
@@ -41,6 +43,10 @@ set(HEADERS
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h
+    src/core/agent/AgentTypes.h
+    src/core/agent/IAgentBackend.h
+    src/core/agent/OpencodeBackend.h
+    src/core/agent/RawChatBackend.h
 )
 
 qt_add_executable(LlamaCode
@@ -68,6 +74,8 @@ qt_add_qml_module(LlamaCode
         qml/components/LcButton.qml
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
+        qml/components/LcScrollBar.qml
+        qml/components/OpencodeConfigDialog.qml
         qml/pages/AgentPage.qml
         qml/pages/BenchmarkPage.qml
         qml/pages/SettingsPage.qml

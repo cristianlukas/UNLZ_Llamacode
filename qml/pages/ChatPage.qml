@@ -47,15 +47,64 @@ Item {
                             font { pixelSize: 12; bold: true }
                             Layout.fillWidth: true
                         }
-                        LcButton {
-                            text: "+"
-                            secondary: true
-                            implicitWidth: 28; implicitHeight: 24
-                            onClicked: App.newChatSession()
-                        }
                     }
                 }
 
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+
+                // ── Nuevo chat ────────────────────────────────────────────────
+                Rectangle {
+                    id: newChatBtn
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "transparent"
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                        spacing: 6
+                        Text { text: "💬"; font.pixelSize: 11 }
+                        Text {
+                            text: "Nuevo chat"
+                            color: Theme.textMuted
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onEntered: newChatBtn.color = Theme.highlight
+                        onExited:  newChatBtn.color = "transparent"
+                        onClicked: App.newChatSession()
+                    }
+                }
+
+                // ── Nuevo proyecto ────────────────────────────────────────────
+                Rectangle {
+                    id: newProjectBtn
+                    Layout.fillWidth: true
+                    height: 40
+                    color: "transparent"
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                        spacing: 6
+                        Text { text: "📁"; font.pixelSize: 11 }
+                        Text {
+                            text: "Nuevo proyecto"
+                            color: Theme.textMuted
+                            font.pixelSize: 12
+                            Layout.fillWidth: true
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onEntered: newProjectBtn.color = Theme.highlight
+                        onExited:  newProjectBtn.color = "transparent"
+                        onClicked: newProjectPopup.open()
+                    }
+                }
                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
                 ListView {
@@ -64,15 +113,35 @@ Item {
                     Layout.fillHeight: true
                     clip: true
                     model: App.chatSessions
-                    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                    ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                     section.property: "projectName"
                     section.criteria: ViewSection.FullString
+
+                    Text {
+                        anchors.centerIn: parent
+                        width: parent.width - 32
+                        visible: sessionsList.count === 0
+                        text: "Sin chats todavía.\nUsá + para crear uno."
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                    }
 
                     section.delegate: Rectangle {
                         width: sessionsList.width
                         height: 28
                         color: Theme.baseBg
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.RightButton
+                            onClicked: {
+                                projectCtxMenu.projectName = section
+                                projectCtxMenu.popup()
+                            }
+                        }
 
                         RowLayout {
                             anchors { fill: parent; leftMargin: 8; rightMargin: 6 }
@@ -152,38 +221,81 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: App.switchChatSession(modelData.id)
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (mouse) => {
+                                if (mouse.button === Qt.RightButton) {
+                                    ctxMenu.sessionId = modelData.id
+                                    ctxMenu.sessionTitle = (modelData.title ?? "")
+                                    ctxMenu.projects = App.chatProjects()
+                                    ctxMenu.popup()
+                                } else {
+                                    App.switchChatSession(modelData.id)
+                                }
+                            }
+                        }
+                    }
+
+                    Menu {
+                        id: ctxMenu
+                        property string sessionId: ""
+                        property string sessionTitle: ""
+                        property var projects: []
+
+                        Menu {
+                            id: moveMenu
+                            title: "Mover a proyecto"
+                            Instantiator {
+                                model: ctxMenu.projects
+                                delegate: MenuItem {
+                                    text: modelData.projectName
+                                    onTriggered: App.moveChatToProject(ctxMenu.sessionId,
+                                                                       modelData.projectId,
+                                                                       modelData.projectName)
+                                }
+                                onObjectAdded: (index, object) => moveMenu.insertItem(index, object)
+                                onObjectRemoved: (index, object) => moveMenu.removeItem(object)
+                            }
+                        }
+                        MenuItem {
+                            text: "Renombrar chat"
+                            onTriggered: if (ctxMenu.sessionId.length > 0) {
+                                renameDialog.mode = "chat"
+                                renameDialog.targetId = ctxMenu.sessionId
+                                renameDialog.oldName = ctxMenu.sessionTitle
+                                renameField.text = ctxMenu.sessionTitle
+                                renameDialog.open()
+                            }
+                        }
+                        MenuSeparator {}
+                        MenuItem {
+                            text: "Borrar chat"
+                            onTriggered: if (ctxMenu.sessionId.length > 0) App.deleteChatSession(ctxMenu.sessionId)
+                        }
+                    }
+
+                    Menu {
+                        id: projectCtxMenu
+                        property string projectName: ""
+                        MenuItem {
+                            text: "Renombrar proyecto"
+                            onTriggered: if (projectCtxMenu.projectName.length > 0) {
+                                renameDialog.mode = "project"
+                                renameDialog.oldName = projectCtxMenu.projectName
+                                renameField.text = projectCtxMenu.projectName
+                                renameDialog.open()
+                            }
+                        }
+                        MenuSeparator {}
+                        MenuItem {
+                            text: "Borrar proyecto"
+                            onTriggered: if (projectCtxMenu.projectName.length > 0) {
+                                deleteProjectDialog.projectName = projectCtxMenu.projectName
+                                deleteProjectDialog.open()
+                            }
                         }
                     }
                 }
 
-                // ── Nuevo proyecto ────────────────────────────────────────────
-                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
-                Rectangle {
-                    id: newProjectBtn
-                    Layout.fillWidth: true
-                    height: 40
-                    color: "transparent"
-                    RowLayout {
-                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                        spacing: 6
-                        Text { text: "📁"; font.pixelSize: 11 }
-                        Text {
-                            text: "Nuevo proyecto"
-                            color: Theme.textMuted
-                            font.pixelSize: 12
-                            Layout.fillWidth: true
-                        }
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onEntered: newProjectBtn.color = Theme.highlight
-                        onExited:  newProjectBtn.color = "transparent"
-                        onClicked: newProjectPopup.open()
-                    }
-                }
             }
 
             // ── Nuevo proyecto popup ──────────────────────────────────────────
@@ -258,6 +370,144 @@ Item {
 
                 onOpened: newProjNameField.forceActiveFocus()
             }
+
+            // ── Renombrar chat / proyecto ─────────────────────────────────────
+            Dialog {
+                id: renameDialog
+                property string mode: "chat"   // "chat" | "project"
+                property string targetId: ""
+                property string oldName: ""
+                modal: true
+                parent: Overlay.overlay
+                x: Math.round((parent.width - width) / 2)
+                y: Math.round((parent.height - height) / 2)
+                width: 420
+                height: 200
+                closePolicy: Popup.CloseOnEscape
+
+                function commit() {
+                    const t = renameField.text.trim()
+                    if (t.length === 0) return
+                    if (renameDialog.mode === "project")
+                        App.renameChatProject(renameDialog.oldName, t)
+                    else
+                        App.renameChatSession(renameDialog.targetId, t)
+                    renameDialog.close()
+                }
+
+                background: Rectangle {
+                    color: Theme.popupBg; radius: 12
+                    border.color: Theme.popupBorderColor; border.width: 1
+                }
+                Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+                header: Rectangle {
+                    color: Theme.popupHeaderBg; height: 50; radius: 12
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+                    Text {
+                        anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                        text: renameDialog.mode === "project" ? "Renombrar proyecto" : "Renombrar chat"
+                        font { pixelSize: 14; bold: true }
+                        color: Theme.textPrimary
+                    }
+                }
+
+                footer: Rectangle {
+                    color: Theme.popupHeaderBg; height: 50; radius: 12
+                    Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                    Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+                    Row {
+                        anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                        spacing: 10
+                        LcButton {
+                            text: "Cancelar"; secondary: true
+                            onClicked: renameDialog.close()
+                        }
+                        LcButton {
+                            text: "Guardar"
+                            enabled: renameField.text.trim().length > 0
+                            onClicked: renameDialog.commit()
+                        }
+                    }
+                }
+
+                contentItem: Item {
+                    width: 380; height: 46
+                    LcTextField {
+                        id: renameField
+                        anchors.fill: parent
+                        placeholderText: "Nuevo nombre"
+                        Keys.onReturnPressed: renameDialog.commit()
+                    }
+                }
+
+                onOpened: { renameField.forceActiveFocus(); renameField.selectAll() }
+            }
+
+            // ── Borrar proyecto (confirmación) ────────────────────────────────
+            Dialog {
+                id: deleteProjectDialog
+                property string projectName: ""
+                modal: true
+                parent: Overlay.overlay
+                x: Math.round((parent.width - width) / 2)
+                y: Math.round((parent.height - height) / 2)
+                width: 420
+                height: 200
+                closePolicy: Popup.CloseOnEscape
+
+                background: Rectangle {
+                    color: Theme.popupBg; radius: 12
+                    border.color: Theme.popupBorderColor; border.width: 1
+                }
+                Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+                header: Rectangle {
+                    color: Theme.popupHeaderBg; height: 50; radius: 12
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                    Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+                    Text {
+                        anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                        text: "Borrar proyecto"
+                        font { pixelSize: 14; bold: true }
+                        color: Theme.textPrimary
+                    }
+                }
+
+                footer: Rectangle {
+                    color: Theme.popupHeaderBg; height: 50; radius: 12
+                    Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                    Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+                    Row {
+                        anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                        spacing: 10
+                        LcButton {
+                            text: "Cancelar"; secondary: true
+                            onClicked: deleteProjectDialog.close()
+                        }
+                        LcButton {
+                            text: "Borrar"
+                            danger: true
+                            onClicked: {
+                                App.deleteChatProject(deleteProjectDialog.projectName)
+                                deleteProjectDialog.close()
+                            }
+                        }
+                    }
+                }
+
+                contentItem: Item {
+                    Text {
+                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 20 }
+                        text: "Se borrará el proyecto \"" + deleteProjectDialog.projectName
+                              + "\" y todos sus chats. Esta acción no se puede deshacer."
+                        color: Theme.textPrimary
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
         }
 
         Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider; visible: App.serverRunning }
@@ -278,24 +528,32 @@ Item {
                     anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
                     spacing: 10
                     Text { text: "Chat"; color: Theme.textPrimary; font.pixelSize: 15; font.bold: true }
-                    Rectangle { width: 8; height: 8; radius: 4; color: App.serverRunning ? Theme.successText : Theme.errorText }
+                    Rectangle {
+                        width: 8; height: 8; radius: 4
+                        color: !App.serverRunning ? Theme.errorText
+                             : App.serverReady     ? Theme.successText
+                             :                       Theme.warnText
+                        SequentialAnimation on opacity {
+                            running: App.serverRunning && !App.serverReady
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.3; duration: 600 }
+                            NumberAnimation { to: 1.0; duration: 600 }
+                        }
+                    }
                     Text {
                         text: {
                             const _lang = App.langV
                             if (!App.serverRunning) return App.l("chat.serverStopped")
+                            if (!App.serverReady)   return "Cargando modelo..."
                             const title = App.chatSessionTitle ?? ""
                             return title.length > 0 ? title : App.activeLaunchId
                         }
-                        color: App.serverRunning ? Theme.textSecondary : Theme.errorText
+                        color: !App.serverRunning ? Theme.errorText
+                             : !App.serverReady   ? Theme.warnText
+                             :                      Theme.textSecondary
                         font.pixelSize: 12
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-                    }
-                    LcButton {
-                        text: (App.langV, App.l("chat.clear"))
-                        secondary: true
-                        visible: App.chatMessages.length > 0 && !App.chatGenerating
-                        onClicked: App.newChatSession()
                     }
                 }
             }
@@ -312,7 +570,7 @@ Item {
                 topMargin: 12
                 bottomMargin: 12
                 model: App.chatMessages
-                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                 Text {
                     anchors.centerIn: parent
@@ -400,7 +658,7 @@ Item {
                             const _lang = App.langV
                             return App.chatGenerating ? App.l("chat.generating") : App.l("chat.placeholder")
                         }
-                        enabled: App.serverRunning && !App.chatGenerating
+                        enabled: App.serverRunning && App.serverReady && !App.chatGenerating
                         color: Theme.textPrimary
                         placeholderTextColor: Theme.textMuted
                         font.pixelSize: 13
@@ -425,7 +683,7 @@ Item {
                             return App.chatGenerating ? App.l("chat.stop") : App.l("chat.send")
                         }
                         danger: App.chatGenerating
-                        enabled: App.serverRunning && (App.chatGenerating || inputField.text.trim().length > 0)
+                        enabled: App.serverRunning && App.serverReady && (App.chatGenerating || inputField.text.trim().length > 0)
                         onClicked: {
                             if (App.chatGenerating) { App.stopChatGeneration(); return }
                             const t = inputField.text.trim()

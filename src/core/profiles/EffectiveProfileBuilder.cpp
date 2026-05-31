@@ -111,10 +111,10 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
     if (rt.threads > 0)
         args << "--threads" << QString::number(rt.threads);
 
-    if (rt.gpuLayers >= 0)
-        args << "--n-gpu-layers" << QString::number(rt.gpuLayers);
+    if (rt.gpuLayers < 0)
+        args << "--n-gpu-layers" << "999";   // -1 = offload all layers
     else
-        warnings.append("GPU layers set to auto — may not offload on all backends.");
+        args << "--n-gpu-layers" << QString::number(rt.gpuLayers);
 
     if (rt.flashAttention)
         addFlag(bin, "--flash-attn", "on", args, warnings);

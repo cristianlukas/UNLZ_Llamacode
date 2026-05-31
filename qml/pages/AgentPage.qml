@@ -11,6 +11,14 @@ Item {
     property string resolvedAdapterLabel: ""
     property int currentView: 0   // 0 = Vista Agente, 1 = Vista terminal
 
+    function projectDirForSection(sectionName) {
+        for (let i = 0; i < App.agentSessions.length; i++) {
+            if ((App.agentSessions[i].projectName ?? "") === sectionName)
+                return App.agentSessions[i].projectDir ?? ""
+        }
+        return ""
+    }
+
     function resolveHarness(launchId) {
         if (!launchId || launchId.length === 0) {
             resolvedAdapter = "none"; resolvedAdapterLabel = ""; return
@@ -134,10 +142,13 @@ Item {
                 }
 
                 LcButton {
-                    text: (App.langV, App.l("agent.clear"))
+                    text: "⚙ Config opencode"
                     secondary: true
-                    visible: !App.agentRunning
-                    onClicked: App.clearAgentLog()
+                    visible: resolvedAdapter === "opencode"
+                    onClicked: {
+                        opencodeConfigDialog.projectDir = App.currentAgentProjectDir()
+                        opencodeConfigDialog.open()
+                    }
                 }
                 LcButton {
                     text: "Ver log nativo"
@@ -219,13 +230,6 @@ Item {
                                 Layout.fillWidth: true
                             }
                             LcButton {
-                                text: "+"
-                                secondary: true
-                                implicitWidth: 28
-                                implicitHeight: 24
-                                onClicked: App.newOpencodeSession()
-                            }
-                            LcButton {
                                 text: "↻"
                                 secondary: true
                                 implicitWidth: 28
@@ -237,17 +241,89 @@ Item {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
+                    // ── Nueva sesión ──────────────────────────────────────────
+                    Rectangle {
+                        id: newSessionBtn
+                        Layout.fillWidth: true
+                        height: 40
+                        color: "transparent"
+                        RowLayout {
+                            anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                            spacing: 6
+                            Text { text: "💬"; font.pixelSize: 11 }
+                            Text {
+                                text: "Nueva sesión"
+                                color: Theme.textMuted
+                                font.pixelSize: 12
+                                Layout.fillWidth: true
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            onEntered: newSessionBtn.color = Theme.highlight
+                            onExited:  newSessionBtn.color = "transparent"
+                            onClicked: App.newOpencodeSession()
+                        }
+                    }
+
+                    // ── Nuevo proyecto ────────────────────────────────────────
+                    Rectangle {
+                        id: newProjectBtnTop
+                        Layout.fillWidth: true
+                        height: 40
+                        color: "transparent"
+                        RowLayout {
+                            anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                            spacing: 6
+                            Text { text: "📁"; font.pixelSize: 11 }
+                            Text {
+                                text: "Nuevo proyecto"
+                                color: Theme.textMuted
+                                font.pixelSize: 12
+                                Layout.fillWidth: true
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            hoverEnabled: true
+                            onEntered: newProjectBtnTop.color = Theme.highlight
+                            onExited:  newProjectBtnTop.color = "transparent"
+                            onClicked: {
+                                const dir = App.pickDirectory("Elegí la carpeta del proyecto")
+                                if (dir.length === 0) return
+                                App.changeAgentProject(dir)
+                                // Si el agente no está corriendo, arrancarlo en esa carpeta.
+                                if (!App.agentRunning && selectedLaunchId.length > 0)
+                                    App.startAgent(selectedLaunchId)
+                            }
+                        }
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+
                     ListView {
                         id: sessionsList
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
                         model: App.agentSessions
-                        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                        ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                         section.property: "projectName"
                         section.criteria: ViewSection.FullString
 
+                        Text {
+                            anchors.centerIn: parent
+                            width: parent.width - 32
+                            visible: sessionsList.count === 0
+                            text: "Sin sesiones todavía.\nUsá + o ↻ para empezar."
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.WordWrap
+                            color: Theme.textMuted
+                            font.pixelSize: 11
+                        }
 
                         section.delegate: Rectangle {
                             width: sessionsList.width
@@ -280,7 +356,7 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: App.newOpencodeSession()
+                                        onClicked: App.newOpencodeSessionInProject(root.projectDirForSection(section))
                                     }
                                 }
                             }
@@ -330,40 +406,48 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: App.switchOpencodeSession(modelData.id)
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: (mouse) => {
+                                    if (mouse.button === Qt.RightButton) {
+                                        sessionCtxMenu.sessionId = modelData.id
+                                        sessionCtxMenu.sessionTitle = (modelData.title ?? "")
+                                        sessionCtxMenu.popup()
+                                    } else {
+                                        App.switchOpencodeSession(modelData.id)
+                                    }
+                                }
+                            }
+                        }
+
+                        Menu {
+                            id: sessionCtxMenu
+                            property string sessionId: ""
+                            property string sessionTitle: ""
+                            MenuItem {
+                                text: "Renombrar sesión"
+                                onTriggered: if (sessionCtxMenu.sessionId.length > 0) {
+                                    agentRenameDialog.targetId = sessionCtxMenu.sessionId
+                                    agentRenameField.text = sessionCtxMenu.sessionTitle
+                                    agentRenameDialog.open()
+                                }
+                            }
+                            MenuItem {
+                                text: "Bifurcar (fork)"
+                                onTriggered: if (sessionCtxMenu.sessionId.length > 0)
+                                    App.forkOpencodeSession(sessionCtxMenu.sessionId)
+                            }
+                            MenuSeparator {}
+                            MenuItem {
+                                text: "Borrar sesión"
+                                onTriggered: if (sessionCtxMenu.sessionId.length > 0) {
+                                    agentDeleteDialog.targetId = sessionCtxMenu.sessionId
+                                    agentDeleteDialog.sessionTitle = sessionCtxMenu.sessionTitle
+                                    agentDeleteDialog.open()
+                                }
                             }
                         }
                     }
 
-                    // ── Nuevo proyecto ────────────────────────────────────────
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 40
-                        color: "transparent"
-                        RowLayout {
-                            anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                            spacing: 6
-                            Text { text: "📁"; font.pixelSize: 11 }
-                            Text {
-                                text: "Nuevo proyecto"
-                                color: Theme.textMuted
-                                font.pixelSize: 12
-                                Layout.fillWidth: true
-                            }
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            hoverEnabled: true
-                            onEntered: parent.color = Theme.highlight
-                            onExited:  parent.color = "transparent"
-                            onClicked: {
-                                const dir = App.pickDirectory("Seleccionar carpeta del proyecto")
-                                if (dir.length > 0) App.changeAgentProject(dir)
-                            }
-                        }
-                    }
                 }
             }
 
@@ -404,7 +488,7 @@ Item {
                     bottomMargin: 12
                     visible: App.agentMessages.length > 0
                     model: App.agentMessages
-                    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                    ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                     delegate: Item {
                         id: delegateRoot
@@ -580,4 +664,140 @@ Item {
             }
         }
     }
+
+    // ── Renombrar sesión ──────────────────────────────────────────────────────
+    Dialog {
+        id: agentRenameDialog
+        property string targetId: ""
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 420
+        height: 200
+        closePolicy: Popup.CloseOnEscape
+
+        function commit() {
+            const t = agentRenameField.text.trim()
+            if (t.length === 0) return
+            App.renameOpencodeSession(agentRenameDialog.targetId, t)
+            agentRenameDialog.close()
+        }
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "Renombrar sesión"
+                font { pixelSize: 14; bold: true }
+                color: Theme.textPrimary
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Cancelar"; secondary: true
+                    onClicked: agentRenameDialog.close()
+                }
+                LcButton {
+                    text: "Guardar"
+                    enabled: agentRenameField.text.trim().length > 0
+                    onClicked: agentRenameDialog.commit()
+                }
+            }
+        }
+
+        contentItem: Item {
+            width: 380; height: 46
+            LcTextField {
+                id: agentRenameField
+                anchors.fill: parent
+                placeholderText: "Nuevo nombre"
+                Keys.onReturnPressed: agentRenameDialog.commit()
+            }
+        }
+
+        onOpened: { agentRenameField.forceActiveFocus(); agentRenameField.selectAll() }
+    }
+
+    // ── Borrar sesión (confirmación) ──────────────────────────────────────────
+    Dialog {
+        id: agentDeleteDialog
+        property string targetId: ""
+        property string sessionTitle: ""
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 420
+        height: 200
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "Borrar sesión"
+                font { pixelSize: 14; bold: true }
+                color: Theme.textPrimary
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Cancelar"; secondary: true
+                    onClicked: agentDeleteDialog.close()
+                }
+                LcButton {
+                    text: "Borrar"
+                    danger: true
+                    onClicked: {
+                        App.deleteOpencodeSession(agentDeleteDialog.targetId)
+                        agentDeleteDialog.close()
+                    }
+                }
+            }
+        }
+
+        contentItem: Item {
+            Text {
+                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 20 }
+                text: "Se borrará la sesión \"" + agentDeleteDialog.sessionTitle
+                      + "\". Esta acción no se puede deshacer."
+                color: Theme.textPrimary
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+            }
+        }
+    }
+
+    OpencodeConfigDialog { id: opencodeConfigDialog }
 }

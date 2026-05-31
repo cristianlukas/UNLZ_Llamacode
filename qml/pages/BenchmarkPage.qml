@@ -86,7 +86,7 @@ Item {
                             delegate: Item {
                                 id: pd
                                 width: profileList.width; height: 32
-                                property string profileId: model.id ?? ""
+                                property string profileId: model.profileId ?? ""
                                 property bool isSelected: root.selectedIds.indexOf(profileId) >= 0
 
                                 Rectangle {
@@ -113,7 +113,7 @@ Item {
                                 }
                                 TapHandler { onTapped: root.toggleProfile(pd.profileId) }
                             }
-                            ScrollBar.vertical: ScrollBar {}
+                            ScrollBar.vertical: LcScrollBar {}
                         }
                     }
 
@@ -163,12 +163,6 @@ Item {
                             }
                         }
 
-                        LcButton {
-                            text: "Limpiar"
-                            secondary: true
-                            visible: App.benchmarkResults.length > 0 && !App.benchmarkRunning
-                            onClicked: App.clearBenchmarkResults()
-                        }
                     }
                 }
             }
@@ -216,7 +210,7 @@ Item {
                         clip: true
                         model: App.benchmarkResults
                         spacing: 2
-                        ScrollBar.vertical: ScrollBar {}
+                        ScrollBar.vertical: LcScrollBar {}
 
                         // Placeholder vacío
                         Text {
@@ -330,6 +324,21 @@ Item {
                             }
 
                             TapHandler { onTapped: resultRow.expanded = !resultRow.expanded }
+
+                            // ── Botón borrar (al pasar el mouse) ───────────
+                            Rectangle {
+                                width: 22; height: 22; radius: 4
+                                anchors { right: parent.right; rightMargin: 6; top: parent.top; topMargin: 7 }
+                                color: delHover.containsMouse ? Theme.errorText : Theme.surfaceBg
+                                visible: rowHover.containsMouse || delHover.containsMouse
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "✕"; font.pixelSize: 12
+                                    color: delHover.containsMouse ? "white" : Theme.textMuted
+                                }
+                                HoverHandler { id: delHover }
+                                TapHandler { onTapped: App.removeBenchmarkResult(index) }
+                            }
 
                             // ── Task breakdown (expanded) ──────────────────
                             Column {
