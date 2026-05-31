@@ -31,6 +31,9 @@ void RawChatBackend::start(const AgentContext &ctx)
     m_stopping = false;
     m_running = true;
     loadFromDisk();
+    // Sync initial state with UI even when sessions were loaded from disk.
+    emit sessionsChanged();
+    emit messagesChanged();
     emit logAppended(QStringLiteral("[raw backend ready]\n"));
     if (m_sessionId.isEmpty())
         createSession(ctx.cwd);
