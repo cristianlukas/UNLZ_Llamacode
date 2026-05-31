@@ -871,52 +871,7 @@ Item {
                             font.pixelSize: 12
                         }
 
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-
-                            Text {
-                                text: "Selector"
-                                color: Theme.textSecondary
-                                font.pixelSize: 12
-                            }
-
-                            ComboBox {
-                                id: harnessCombo
-                                Layout.fillWidth: true
-                                model: [
-                                    { adapter: "none", label: (App.langV, App.l("harness.none")) },
-                                    { adapter: "opencode", label: "Opencode" }
-                                ]
-                                textRole: "label"
-                                valueRole: "adapter"
-                                currentIndex: {
-                                    for (let i = 0; i < model.length; ++i)
-                                        if ((model[i].adapter ?? "") === harnessAdapter) return i
-                                    return 0
-                                }
-                                onActivated: {
-                                    const picked = currentValue ?? "none"
-                                    harnessAdapter = picked.length > 0 ? picked : "none"
-                                }
-                                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
-                                contentItem: Text {
-                                    text: harnessCombo.displayText
-                                    color: Theme.textPrimary
-                                    font.pixelSize: 13
-                                    leftPadding: 10
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-                            }
-                        }
-
-                        Text {
-                            text: "Tip: también podés seleccionar haciendo click en una tarjeta."
-                            color: Theme.textMuted
-                            font.pixelSize: 11
-                            Layout.fillWidth: true
-                            wrapMode: Text.WrapAnywhere
-                        }
+                        // Selección por tarjetas (sin dropdown).
 
                         RowLayout {
                             Layout.fillWidth: true
