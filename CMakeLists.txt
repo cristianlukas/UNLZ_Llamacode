@@ -22,11 +22,15 @@ set(SOURCES
     src/core/CatalogModel.cpp
     src/core/ModelCatalog.cpp
     src/core/GGUFScanner.cpp
+    src/core/ControlApi.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
     src/core/agent/OpencodeBackend.cpp
     src/core/agent/RawChatBackend.cpp
+    src/core/agent/LlamaAgentBackend.cpp
+    src/core/agent/McpClient.cpp
+    src/core/agent/AgentToolRunner.cpp
 )
 
 set(HEADERS
@@ -40,6 +44,7 @@ set(HEADERS
     src/core/CatalogModel.h
     src/core/ModelCatalog.h
     src/core/GGUFScanner.h
+    src/core/ControlApi.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h
@@ -47,6 +52,9 @@ set(HEADERS
     src/core/agent/IAgentBackend.h
     src/core/agent/OpencodeBackend.h
     src/core/agent/RawChatBackend.h
+    src/core/agent/LlamaAgentBackend.h
+    src/core/agent/McpClient.h
+    src/core/agent/AgentToolRunner.h
 )
 
 qt_add_executable(LlamaCode

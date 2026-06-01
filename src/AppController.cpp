@@ -17,6 +17,7 @@
 #include <QClipboard>
 #include "core/agent/OpencodeBackend.h"
 #include "core/agent/RawChatBackend.h"
+#include "core/agent/LlamaAgentBackend.h"
 #include <QStandardPaths>
 #include <QDir>
 #include <QFileInfo>
@@ -36,15 +37,27 @@
 #include <memory>
 #include <QFile>
 #include <QStandardPaths>
+#include <QTextStream>
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     QSettings s;
     m_language = s.value(QStringLiteral("language"), QStringLiteral("es")).toString();
+    m_agentApprovalMode = s.value(QStringLiteral("agent/approvalMode"), QStringLiteral("ask")).toString();
+    m_agentThinkingEnabled = s.value(QStringLiteral("agent/thinkingEnabled"), false).toBool();
+    m_agentSystemPrompt = s.value(QStringLiteral("agent/systemPrompt")).toString();
+    m_agentTemperature  = s.value(QStringLiteral("agent/temperature"), -1.0).toDouble();
 
     killManagedOrphans();
     createJobObject();
     ensureChatBackend();
+    const QString logDir = runtimeLogDir();
+    m_serverLogFilePath = logDir + QStringLiteral("/server.log");
+    m_agentLogFilePath = logDir + QStringLiteral("/agent.log");
+    appendFileLog(m_serverLogFilePath, QStringLiteral("\n=== session %1 ===\n")
+        .arg(QDateTime::currentDateTime().toString(Qt::ISODateWithMs)));
+    appendFileLog(m_agentLogFilePath, QStringLiteral("\n=== session %1 ===\n")
+        .arg(QDateTime::currentDateTime().toString(Qt::ISODateWithMs)));
 
     m_binaries.refresh();
     m_roots.refresh();
@@ -57,6 +70,19 @@ void AppController::startServer(const QString &launchProfileId)
     if (serverRunning()) {
         emit serverError("Server already running. Stop it first.");
         return;
+    }
+
+    // Repoblar flags soportados del binario justo antes de armar el perfil.
+    // Si el registro quedó con flags stale/parciales, EffectiveProfileBuilder::addFlag
+    // dropea flags de runtime (--flash-attn/--mlock/--cache-type-k/...) → server roto.
+    {
+        const auto launch  = m_profiles.resolveLaunch(launchProfileId);
+        const auto backend = m_profiles.resolveBackend(launch.backendProfileId);
+        if (!backend.binaryId.isEmpty()) {
+            if (!m_binaries.detectCapabilitiesSync(backend.binaryId))
+                appendServerEvent(QStringLiteral("lifecycle"),
+                                  QStringLiteral("Aviso: no se pudieron redetectar flags del binario; uso los guardados."));
+        }
     }
 
     computeEffectiveProfile(launchProfileId);
@@ -82,14 +108,19 @@ void AppController::startServer(const QString &launchProfileId)
     m_proc->setProcessEnvironment(env);
 
     connect(m_proc, &QProcess::readyReadStandardOutput, this, [this]() {
-        appendLog(QString::fromUtf8(m_proc->readAllStandardOutput()));
+        appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(m_proc->readAllStandardOutput()));
     });
     connect(m_proc, &QProcess::readyReadStandardError, this, [this]() {
-        appendLog(QString::fromUtf8(m_proc->readAllStandardError()));
+        appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(m_proc->readAllStandardError()));
     });
     connect(m_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int code, QProcess::ExitStatus) {
-        appendLog(QStringLiteral("\n[Server exited with code %1]\n").arg(code));
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Server exited with code %1").arg(code));
+        if (code == -1073740791) {
+            emit serverError(QStringLiteral(
+                "llama-server crasheó (0xC0000409). Revisá el perfil de lanzamiento activo (args/runtime)."));
+        }
         clearServiceState(QStringLiteral("server"));
         if (m_stopKillTimer) { m_stopKillTimer->stop(); m_stopKillTimer->deleteLater(); m_stopKillTimer = nullptr; }
         stopHealthPolling();
@@ -102,9 +133,8 @@ void AppController::startServer(const QString &launchProfileId)
     });
 
     m_activeLaunchId = launchProfileId;
-    appendLog(QStringLiteral("[%1] Starting: %2 %3\n")
-              .arg(QDateTime::currentDateTime().toString("hh:mm:ss"),
-                   binaryPath, args.join(' ')));
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Starting: %1 %2").arg(binaryPath, args.join(' ')));
 
     m_serverReady = false;
     m_proc->start(binaryPath, args);
@@ -133,12 +163,17 @@ void AppController::startHealthPolling()
         if (!m_nam) m_nam = new QNetworkAccessManager(this);
         auto *reply = m_nam->get(QNetworkRequest(QUrl(serverBaseUrl() + "/health")));
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-            const bool ok = reply->error() == QNetworkReply::NoError &&
-                            reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200;
+            const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            const bool ok = reply->error() == QNetworkReply::NoError && status == 200;
             reply->deleteLater();
+            if (!ok) {
+                appendServerEvent(QStringLiteral("health"),
+                                  QStringLiteral("health fail status=%1 error=%2")
+                                      .arg(status).arg(reply->errorString()));
+            }
             if (ok && !m_serverReady) {
                 m_serverReady = true;
-                appendLog("[Server ready — model loaded]\n");
+                appendServerEvent(QStringLiteral("health"), QStringLiteral("Server ready - model loaded"));
                 emit serverReadyChanged();
                 stopHealthPolling();
                 fetchChatThinkingSupport();
@@ -189,7 +224,7 @@ void AppController::stopServer()
     if (m_chatThinkingSupported) { m_chatThinkingSupported = false; emit chatThinkingSupportedChanged(); }
     emit serverReadyChanged();
     emit serverRunningChanged();
-    appendLog("\n[Stopping server...]\n");
+    appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral("Stopping server..."));
     m_proc->terminate();
     // Kill after 5s if process hasn't exited
     m_stopKillTimer = new QTimer(this);
@@ -549,7 +584,63 @@ void AppController::appendLog(const QString &text)
     // Keep log under 200KB
     if (m_log.size() > 200000)
         m_log = m_log.right(180000);
+    const QString ts = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
+    appendFileLog(m_serverLogFilePath, QStringLiteral("[%1][server/ui] %2").arg(ts, text));
+    if (!text.endsWith(QLatin1Char('\n')))
+        appendFileLog(m_serverLogFilePath, QStringLiteral("\n"));
     emit serverLogChanged();
+}
+
+QString AppController::runtimeLogDir() const
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/logs");
+    QDir().mkpath(dir);
+    return dir;
+}
+
+void AppController::rotateLogIfNeeded(const QString &path) const
+{
+    QFile f(path);
+    if (!f.exists()) return;
+    if (f.size() < 2 * 1024 * 1024) return;
+    const QString backup = path + QStringLiteral(".1");
+    QFile::remove(backup);
+    QFile::rename(path, backup);
+}
+
+void AppController::appendFileLog(const QString &path, const QString &line) const
+{
+    rotateLogIfNeeded(path);
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) return;
+    QTextStream ts(&f);
+    ts << line;
+    f.close();
+}
+
+void AppController::appendServerEvent(const QString &source, const QString &text)
+{
+    const QString ts = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
+    const QString msg = QStringLiteral("[%1][server/%2] %3").arg(ts, source, text);
+    m_log += msg;
+    if (!m_log.endsWith(QLatin1Char('\n'))) m_log += QLatin1Char('\n');
+    if (m_log.size() > 200000) m_log = m_log.right(180000);
+    appendFileLog(m_serverLogFilePath, msg);
+    if (!msg.endsWith(QLatin1Char('\n'))) appendFileLog(m_serverLogFilePath, QStringLiteral("\n"));
+    emit serverLogChanged();
+}
+
+void AppController::appendAgentEvent(const QString &source, const QString &text)
+{
+    const QString ts = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
+    const QString msg = QStringLiteral("[%1][agent/%2] %3").arg(ts, source, text);
+    m_agentLog += msg;
+    if (!m_agentLog.endsWith(QLatin1Char('\n'))) m_agentLog += QLatin1Char('\n');
+    if (m_agentLog.size() > 300000) m_agentLog = m_agentLog.right(250000);
+    appendFileLog(m_agentLogFilePath, msg);
+    if (!msg.endsWith(QLatin1Char('\n'))) appendFileLog(m_agentLogFilePath, QStringLiteral("\n"));
+    emit agentLogChanged();
 }
 
 EffectiveProfileBuilder::Context AppController::buildContext(const QString &launchProfileId)
@@ -571,6 +662,7 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
 bool AppController::isHarnessInstalled(const QString &adapter) const
 {
     if (adapter == QLatin1String("none") || adapter.isEmpty()) return true;
+    if (adapter == QLatin1String("llamaagent")) return true;  // backend interno, sin binario
 #ifdef Q_OS_WIN
     const QString exe = adapter + QStringLiteral(".cmd");
     if (!QStandardPaths::findExecutable(exe).isEmpty()) return true;
@@ -667,19 +759,33 @@ void AppController::ensurePiConfig(const QString &openaiBaseUrl)
 void AppController::sendPiMessage(const QString &text)
 {
     if (m_piMsgProc) {
-        m_agentLog += QStringLiteral("[pi ocupado — esperá la respuesta anterior]\n");
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("pi/lifecycle"), QStringLiteral("pi ocupado - esperá la respuesta anterior"));
         return;
     }
+
+    auto estimateTokens = [](const QString &s) -> int {
+        const int n = s.trimmed().size();
+        return n <= 0 ? 0 : (n + 3) / 4;
+    };
+    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
 
     // Mensaje del usuario + placeholder del asistente (streaming visual)
     QVariantMap userMsg{{QStringLiteral("role"), QStringLiteral("user")},
                         {QStringLiteral("content"), text},
-                        {QStringLiteral("typing"), false}};
+                        {QStringLiteral("typing"), false},
+                        {QStringLiteral("createdAt"), static_cast<double>(nowMs)},
+                        {QStringLiteral("completedAt"), static_cast<double>(nowMs)},
+                        {QStringLiteral("elapsedMs"), 0},
+                        {QStringLiteral("tokens"), estimateTokens(text)},
+                        {QStringLiteral("tps"), 0.0}};
     m_agentMessages.append(userMsg);
     QVariantMap asstMsg{{QStringLiteral("role"), QStringLiteral("assistant")},
                         {QStringLiteral("content"), QString()},
-                        {QStringLiteral("typing"), true}};
+                        {QStringLiteral("typing"), true},
+                        {QStringLiteral("createdAt"), static_cast<double>(nowMs)},
+                        {QStringLiteral("elapsedMs"), 0},
+                        {QStringLiteral("tokens"), 0},
+                        {QStringLiteral("tps"), 0.0}};
     m_agentMessages.append(asstMsg);
     m_currentAssistantIdx = m_agentMessages.size() - 1;
     emit agentMessagesChanged();
@@ -698,29 +804,49 @@ void AppController::sendPiMessage(const QString &text)
         text
     };
 
-    connect(m_piMsgProc, &QProcess::readyReadStandardOutput, this, [this]() {
+    connect(m_piMsgProc, &QProcess::readyReadStandardOutput, this, [this, estimateTokens]() {
         if (!m_piMsgProc) return;
         const QString chunk = QString::fromUtf8(m_piMsgProc->readAllStandardOutput());
         if (chunk.isEmpty() || m_currentAssistantIdx < 0
                 || m_currentAssistantIdx >= m_agentMessages.size()) return;
         QVariantMap m = m_agentMessages[m_currentAssistantIdx].toMap();
-        m[QStringLiteral("content")] = m.value(QStringLiteral("content")).toString() + chunk;
+        const QString content = m.value(QStringLiteral("content")).toString() + chunk;
+        m[QStringLiteral("content")] = content;
         m[QStringLiteral("typing")]  = true;
+        const qint64 startedAt = static_cast<qint64>(m.value(QStringLiteral("createdAt")).toDouble());
+        const qint64 elapsedMs = qMax<qint64>(0, QDateTime::currentMSecsSinceEpoch() - startedAt);
+        const int toks = estimateTokens(content);
+        m[QStringLiteral("tokens")] = toks;
+        m[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+        m[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+            ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+            : 0.0;
         m_agentMessages[m_currentAssistantIdx] = m;
         emit agentMessagesChanged();
     });
     connect(m_piMsgProc, &QProcess::readyReadStandardError, this, [this]() {
         if (!m_piMsgProc) return;
         const QString s = QString::fromUtf8(m_piMsgProc->readAllStandardError());
-        if (!s.isEmpty()) { m_agentLog += s; emit agentLogChanged(); }
+        if (!s.isEmpty()) appendAgentEvent(QStringLiteral("pi/stderr"), s);
     });
     connect(m_piMsgProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [this](int code, QProcess::ExitStatus) {
+            this, [this, estimateTokens](int code, QProcess::ExitStatus) {
         if (m_currentAssistantIdx >= 0 && m_currentAssistantIdx < m_agentMessages.size()) {
             QVariantMap m = m_agentMessages[m_currentAssistantIdx].toMap();
             if (code != 0 && m.value(QStringLiteral("content")).toString().isEmpty())
                 m[QStringLiteral("content")] = QStringLiteral("[pi terminó con código %1]").arg(code);
             m[QStringLiteral("typing")] = false;
+            const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
+            const qint64 startedAt = static_cast<qint64>(m.value(QStringLiteral("createdAt")).toDouble());
+            const qint64 elapsedMs = qMax<qint64>(0, doneAt - startedAt);
+            const QString content = m.value(QStringLiteral("content")).toString();
+            const int toks = estimateTokens(content);
+            m[QStringLiteral("completedAt")] = static_cast<double>(doneAt);
+            m[QStringLiteral("tokens")] = toks;
+            m[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+            m[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+                ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+                : 0.0;
             m_agentMessages[m_currentAssistantIdx] = m;
             emit agentMessagesChanged();
         }
@@ -730,8 +856,7 @@ void AppController::sendPiMessage(const QString &text)
 
     m_piMsgProc->start(m_piExe, args);
     if (!m_piMsgProc->waitForStarted(5000)) {
-        m_agentLog += QStringLiteral("[Error: no se pudo iniciar pi]\n");
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("pi/lifecycle"), QStringLiteral("Error: no se pudo iniciar pi"));
         m_piMsgProc->deleteLater();
         m_piMsgProc = nullptr;
     }
@@ -746,7 +871,23 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     IAgentBackend *b = nullptr;
     if (adapter == QLatin1String("opencode"))
         b = new OpencodeBackend(this);
+    else if (adapter == QLatin1String("llamaagent"))
+        b = new LlamaAgentBackend(this);
     if (!b) return nullptr;
+
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(b)) {
+        cb->setThinkingEnabled(m_agentThinkingEnabled);
+
+        // Servers MCP: global + proyecto (el de proyecto pisa por nombre).
+        const QString proj = currentAgentProjectDir();
+        QMap<QString, QVariant> merged;
+        for (const QVariant &v : listMcpServers(QStringLiteral("global"), QString()))
+            merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        if (!proj.isEmpty())
+            for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj))
+                merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        cb->setMcpServers(merged.values());
+    }
 
     // Reflejar estado del backend en los mirrors expuestos a QML.
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
@@ -760,19 +901,123 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         emit agentSessionsChanged();
     });
     connect(b, &IAgentBackend::logAppended, this, [this](const QString &chunk) {
-        m_agentLog += chunk;
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("backend"), chunk);
     });
     connect(b, &IAgentBackend::runningChanged, this, [this, b]() {
-        if (!b->running()) m_activeAgentAdapter.clear();
+        if (!b->running()) {
+            m_activeAgentAdapter.clear();
+            if (!m_agentPendingTool.isEmpty()) {
+                m_agentPendingTool.clear();
+                emit agentPendingToolChanged();
+            }
+            m_agentContextUsed = 0;
+            emit agentContextChanged();
+        }
         emit agentRunningChanged();
     });
     connect(b, &IAgentBackend::errorOccurred, this, [this](const QString &m) {
+        appendAgentEvent(QStringLiteral("error"), m);
         emit serverError(m);
     });
+    connect(b, &IAgentBackend::toolApprovalNeeded, this, [this](const QVariantMap &toolCall) {
+        m_agentPendingTool = toolCall;
+        emit agentPendingToolChanged();
+    });
+    connect(b, &IAgentBackend::contextUsage, this, [this](int used, int limit) {
+        m_agentContextUsed = used;
+        if (limit > 0) m_agentContextLimit = limit;
+        emit agentContextChanged();
+    });
 
+    b->setApprovalPolicy(m_agentApprovalMode);
+    b->setAgentTuning(m_agentSystemPrompt, m_agentTemperature);
     m_agentBackend = b;
     return b;
+}
+
+void AppController::setAgentSystemPrompt(const QString &p)
+{
+    if (p == m_agentSystemPrompt) return;
+    m_agentSystemPrompt = p;
+    writeSetting(QStringLiteral("agent/systemPrompt"), p);
+    if (m_agentBackend) m_agentBackend->setAgentTuning(m_agentSystemPrompt, m_agentTemperature);
+    emit agentTuningChanged();
+}
+
+void AppController::setAgentTemperature(double t)
+{
+    if (qFuzzyCompare(t, m_agentTemperature)) return;
+    m_agentTemperature = t;
+    writeSetting(QStringLiteral("agent/temperature"), t);
+    if (m_agentBackend) m_agentBackend->setAgentTuning(m_agentSystemPrompt, m_agentTemperature);
+    emit agentTuningChanged();
+}
+
+void AppController::setAgentApprovalMode(const QString &mode)
+{
+    const QString m = mode.trimmed().isEmpty() ? QStringLiteral("ask") : mode;
+    if (m == m_agentApprovalMode) return;
+    m_agentApprovalMode = m;
+    writeSetting(QStringLiteral("agent/approvalMode"), m);
+    if (m_agentBackend) m_agentBackend->setApprovalPolicy(m);
+    emit agentApprovalModeChanged();
+}
+
+void AppController::setAgentThinkingEnabled(bool enabled)
+{
+    if (enabled == m_agentThinkingEnabled) return;
+    m_agentThinkingEnabled = enabled;
+    writeSetting(QStringLiteral("agent/thinkingEnabled"), enabled);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setThinkingEnabled(enabled);
+    emit agentThinkingChanged();
+}
+
+void AppController::approveAgentTool(const QString &id, bool always)
+{
+    if (m_agentBackend) m_agentBackend->approveTool(id, always);
+    if (m_agentPendingTool.value(QStringLiteral("id")).toString() == id) {
+        m_agentPendingTool.clear();
+        emit agentPendingToolChanged();
+    }
+}
+
+void AppController::rejectAgentTool(const QString &id)
+{
+    if (m_agentBackend) m_agentBackend->rejectTool(id);
+    if (m_agentPendingTool.value(QStringLiteral("id")).toString() == id) {
+        m_agentPendingTool.clear();
+        emit agentPendingToolChanged();
+    }
+}
+
+void AppController::revertAgentEdit(const QString &path)
+{
+    if (m_agentBackend) m_agentBackend->revertEdit(path);
+}
+
+QString AppController::readAgentMemory(const QString &projectDir) const
+{
+    const QString dir = projectDir.isEmpty() ? currentAgentProjectDir() : projectDir;
+    if (dir.isEmpty()) return QString();
+    QFile f(LlamaAgentBackend::memoryFilePath(dir));
+    if (!f.open(QIODevice::ReadOnly)) return QString();
+    return QString::fromUtf8(f.read(256 * 1024));
+}
+
+bool AppController::writeAgentMemory(const QString &projectDir, const QString &text)
+{
+    const QString dir = projectDir.isEmpty() ? currentAgentProjectDir() : projectDir;
+    if (dir.isEmpty()) { emit serverError(QStringLiteral("No hay proyecto activo para la memoria.")); return false; }
+    const QString path = LlamaAgentBackend::memoryFilePath(dir);
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        emit serverError(QStringLiteral("No se pudo escribir la memoria: %1").arg(path));
+        return false;
+    }
+    f.write(text.toUtf8());
+    return true;
 }
 
 IAgentBackend *AppController::ensureChatBackend()
@@ -823,21 +1068,52 @@ void AppController::startAgent(const QString &launchProfileId)
     const auto ctx = buildContext(launchProfileId);
     const QString adapter = ctx.harness.adapter;
     if (adapter.isEmpty() || adapter == QLatin1String("none")) {
-        m_agentLog += QStringLiteral("[Error: no harness configured for this profile]\n");
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: no harness configured for this profile"));
         return;
     }
     if (adapter == QLatin1String("raw")) {
-        m_agentLog += QStringLiteral("[Error: 'raw' no soporta tool-calling. Usá 'opencode' para modo Agente.]\n");
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Error: 'raw' no soporta tool-calling. Usá 'opencode' para modo Agente."));
         emit serverError(QStringLiteral("El harness 'raw' no soporta tool-calling en modo Agente."));
         return;
     }
+
+    // Backend propio: sin binario externo, corre dentro de la app.
+    if (adapter == QLatin1String("llamaagent")) {
+        // Necesita el llama-server corriendo (usa su API OpenAI). Sin server → refused.
+        // Si está corriendo pero el modelo aún carga, igual arranca: la UI muestra
+        // "Modelo cargando" y el usuario espera al ready antes de enviar.
+        if (!serverRunning()) {
+            const QString msg = QStringLiteral(
+                "El harness 'LlamaAgent' necesita el servidor corriendo. Iniciá el modelo en 'Lanzar' primero.");
+            appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: %1").arg(msg));
+            emit serverError(msg);
+            return;
+        }
+        IAgentBackend *b = ensureAgentBackend(adapter);
+        if (!b) { appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: backend LlamaAgent no disponible")); return; }
+        const QString agentCwd = m_agentCwdOverride.isEmpty()
+            ? ctx.workspace.cwd.trimmed() : m_agentCwdOverride;
+        AgentContext c;
+        c.adapter       = adapter;
+        c.cwd           = (!agentCwd.isEmpty() && QFileInfo(agentCwd).isDir()) ? agentCwd : QString();
+        c.serverBaseUrl = serverBaseUrl();
+        c.modelId       = ctx.catalogModel.id;
+        m_agentCwdOverride.clear();
+        m_activeAgentAdapter = adapter;
+        m_agentInTerminal    = false;
+        m_agentMessages.clear();
+        m_currentAssistantIdx = -1;
+        emit agentMessagesChanged();
+        b->start(c);
+        return;
+    }
+
     QString exe;
     exe = QStandardPaths::findExecutable(adapter);
     if (exe.isEmpty()) {
-        m_agentLog += QStringLiteral("[Error: '%1' not found in PATH — install it first]\n").arg(adapter);
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Error: '%1' not found in PATH — install it first").arg(adapter));
         return;
     }
 
@@ -887,9 +1163,8 @@ void AppController::startAgent(const QString &launchProfileId)
         m_agentInTerminal     = false;
         m_agentMessages.clear();
         m_currentAssistantIdx = -1;
-        m_agentLog += QStringLiteral("[pi listo — modo print por mensaje]\n");
+        appendAgentEvent(QStringLiteral("pi/lifecycle"), QStringLiteral("pi listo - modo print por mensaje"));
         emit agentMessagesChanged();
-        emit agentLogChanged();
         emit agentRunningChanged();
         return;
     }
@@ -897,7 +1172,7 @@ void AppController::startAgent(const QString &launchProfileId)
     // Backends estructurados (proceso propio o sin proceso): delegados a IAgentBackend.
     if (adapter == QLatin1String("opencode")) {
         IAgentBackend *b = ensureAgentBackend(adapter);
-        if (!b) { m_agentLog += QStringLiteral("[Error: backend %1 no disponible]\n").arg(adapter); emit agentLogChanged(); return; }
+        if (!b) { appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: backend %1 no disponible").arg(adapter)); return; }
         AgentContext c;
         c.adapter         = adapter;
         c.launchProfileId = launchProfileId;
@@ -930,35 +1205,22 @@ void AppController::startAgent(const QString &launchProfileId)
 
     connect(m_agentProc, &QProcess::readyReadStandardOutput, this, [this]() {
         if (!m_agentProc) return;
-        const QString chunk = QString::fromUtf8(m_agentProc->readAllStandardOutput());
-        m_agentLog += chunk;
-        emit agentLogChanged();
-        if (m_activeAgentAdapter == QLatin1String("opencode") && m_opencodeSessionId.isEmpty()
-                && chunk.contains(QLatin1String("server listening")))
-            initOpencodeSession();
+        appendAgentEvent(QStringLiteral("proc/stdout"),
+                         QString::fromUtf8(m_agentProc->readAllStandardOutput()));
     });
     connect(m_agentProc, &QProcess::readyReadStandardError, this, [this]() {
         if (!m_agentProc) return;
-        const QString chunk = QString::fromUtf8(m_agentProc->readAllStandardError());
-        m_agentLog += chunk;
-        emit agentLogChanged();
-        if (m_activeAgentAdapter == QLatin1String("opencode") && m_opencodeSessionId.isEmpty()
-                && chunk.contains(QLatin1String("server listening")))
-            initOpencodeSession();
+        appendAgentEvent(QStringLiteral("proc/stderr"),
+                         QString::fromUtf8(m_agentProc->readAllStandardError()));
     });
     connect(m_agentProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int code, QProcess::ExitStatus) {
-        m_agentLog += QStringLiteral("\n[agent exited with code %1]\n").arg(code);
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("agent exited with code %1").arg(code));
         if (m_agentProc) {
             m_agentProc->deleteLater();
             m_agentProc = nullptr;
         }
-        if (m_opencodeEventReply) {
-            m_opencodeEventReply->abort();
-            m_opencodeEventReply->deleteLater();
-            m_opencodeEventReply = nullptr;
-        }
-        m_opencodeSessionId.clear();
         m_agentMessages.clear();
         m_currentAssistantIdx = -1;
         emit agentMessagesChanged();
@@ -967,52 +1229,33 @@ void AppController::startAgent(const QString &launchProfileId)
         m_agentPid = 0;
         m_agentInTerminal = false;
         m_agentStopping = false;
-        emit agentLogChanged();
         emit agentRunningChanged();
     });
 
+    // Path genérico: adapters basados en stdin (p.ej. smallcode).
+    // opencode se maneja vía OpencodeBackend (delegado arriba) y nunca llega acá.
     QString program = exe;
     QStringList programArgs = ctx.harness.args;
-    if (adapter == QLatin1String("opencode")) {
-        // Kill any stale process holding port 4096 before binding
-#ifdef Q_OS_WIN
-        QProcess::execute(QStringLiteral("cmd"),
-            {QStringLiteral("/c"),
-             QStringLiteral("for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :4096 ^| findstr LISTENING') do taskkill /PID %a /F")});
-#else
-        QProcess::execute(QStringLiteral("sh"),
-            {QStringLiteral("-c"), QStringLiteral("fuser -k 4096/tcp 2>/dev/null || true")});
-#endif
-        programArgs = QStringList{
-            QStringLiteral("serve"),
-            QStringLiteral("--hostname"), QStringLiteral("127.0.0.1"),
-            QStringLiteral("--port"), QStringLiteral("4096")
-        };
-        m_opencodeAttachUrl = QStringLiteral("http://127.0.0.1:4096");
-        m_agentLog += QStringLiteral("[opencode headless server mode]\n");
-    }
 
-    m_agentLog += QStringLiteral("[starting %1]\n").arg(adapter);
+    appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("starting %1").arg(adapter));
     if (!cwd.isEmpty())
-        m_agentLog += QStringLiteral("[cwd: %1]\n").arg(QDir::toNativeSeparators(cwd));
+        appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("cwd: %1")
+                         .arg(QDir::toNativeSeparators(cwd)));
     m_agentProc->start(program, programArgs);
     if (!m_agentProc->waitForStarted(5000)) {
-        m_agentLog += QStringLiteral("[Error: failed to start agent process]\n");
+        appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: failed to start agent process"));
         m_agentProc->deleteLater();
         m_agentProc = nullptr;
         m_activeAgentAdapter.clear();
-        emit agentLogChanged();
         return;
     }
     m_agentPid = m_agentProc->processId();
     assignToJobObject(m_agentPid);
     QVariantMap agentExtra;
     agentExtra[QStringLiteral("adapter")] = adapter;
-    if (adapter == QLatin1String("opencode"))
-        agentExtra[QStringLiteral("port")] = 4096;
     writeServiceState(QStringLiteral("harness"), m_agentPid, agentExtra);
-    m_agentLog += QStringLiteral("[%1 running (PID %2)]\n").arg(adapter).arg(m_agentPid);
-    emit agentLogChanged();
+    appendAgentEvent(QStringLiteral("lifecycle"),
+                     QStringLiteral("%1 running (PID %2)").arg(adapter).arg(m_agentPid));
     emit agentRunningChanged();
 }
 
@@ -1023,12 +1266,6 @@ void AppController::stopAgent()
         m_agentBackend->stop();
         return;
     }
-    if (m_opencodeEventReply) {
-        m_opencodeEventReply->abort();
-        m_opencodeEventReply->deleteLater();
-        m_opencodeEventReply = nullptr;
-    }
-    m_opencodeSessionId.clear();
 
     if (m_piActive) {
         if (m_piMsgProc) {
@@ -1038,8 +1275,7 @@ void AppController::stopAgent()
         }
         m_piActive = false;
         m_activeAgentAdapter.clear();
-        m_agentLog += QStringLiteral("[pi detenido]\n");
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("pi/lifecycle"), QStringLiteral("pi detenido"));
         emit agentRunningChanged();
         return;
     }
@@ -1082,54 +1318,16 @@ void AppController::sendToAgent(const QString &text)
         return;
     }
     if (m_piActive) {
-        m_agentLog += QStringLiteral("> %1\n").arg(text);
-        emit agentLogChanged();
+        appendAgentEvent(QStringLiteral("input"), QStringLiteral("> %1").arg(text));
         sendPiMessage(text);
         return;
     }
 
     if (!m_agentProc || m_agentProc->state() != QProcess::Running) return;
 
-    m_agentLog += QStringLiteral("> %1\n").arg(text);
-    emit agentLogChanged();
+    appendAgentEvent(QStringLiteral("input"), QStringLiteral("> %1").arg(text));
 
-    if (m_activeAgentAdapter == QLatin1String("opencode")) {
-        // Append user + empty assistant message to structured model
-        QVariantMap userMsg;
-        userMsg[QStringLiteral("role")]    = QStringLiteral("user");
-        userMsg[QStringLiteral("content")] = text;
-        userMsg[QStringLiteral("typing")]  = false;
-        m_agentMessages.append(userMsg);
-        QVariantMap asstMsg;
-        asstMsg[QStringLiteral("role")]    = QStringLiteral("assistant");
-        asstMsg[QStringLiteral("content")] = QString();
-        asstMsg[QStringLiteral("typing")]  = true;
-        m_agentMessages.append(asstMsg);
-        m_currentAssistantIdx = m_agentMessages.size() - 1;
-        emit agentMessagesChanged();
-
-        if (m_opencodeSessionId.isEmpty()) {
-            m_agentLog += QStringLiteral("[waiting: opencode session not ready yet]\n");
-            emit agentLogChanged();
-            return;
-        }
-        if (!m_nam) m_nam = new QNetworkAccessManager(this);
-        QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/session/")
-                                 + m_opencodeSessionId + QStringLiteral("/prompt_async")));
-        req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
-        const QJsonObject partObj{{QStringLiteral("type"), QStringLiteral("text")}, {QStringLiteral("text"), text}};
-        const QJsonObject payload{{QStringLiteral("parts"), QJsonArray{partObj}}};
-        auto *reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-            reply->deleteLater();
-            if (reply->error() != QNetworkReply::NoError) {
-                m_agentLog += QStringLiteral("[error sending message: %1]\n").arg(reply->errorString());
-                emit agentLogChanged();
-            }
-        });
-        return;
-    }
-
+    // Adapters genéricos basados en stdin (opencode usa OpencodeBackend, delegado arriba).
     m_agentProc->write((text + QLatin1Char('\n')).toUtf8());
 }
 
@@ -1142,286 +1340,42 @@ void AppController::clearAgentLog()
     emit agentMessagesChanged();
 }
 
-void AppController::initOpencodeSession()
-{
-    if (!m_nam) m_nam = new QNetworkAccessManager(this);
-    loadOpencodeSessionList([this]() { resumeOrCreateOpencodeSession(); });
-}
-
-void AppController::loadOpencodeSessionList(std::function<void()> then)
-{
-    if (!m_nam) m_nam = new QNetworkAccessManager(this);
-    auto *reply = m_nam->get(QNetworkRequest(QUrl(m_opencodeAttachUrl + QStringLiteral("/session"))));
-    connect(reply, &QNetworkReply::finished, this, [this, reply, then]() {
-        reply->deleteLater();
-        if (reply->error() == QNetworkReply::NoError) {
-            const QJsonArray arr = QJsonDocument::fromJson(reply->readAll()).array();
-            // Sort newest-first client-side
-            QVector<QJsonObject> sorted;
-            sorted.reserve(arr.size());
-            for (const QJsonValue &v : arr) sorted.append(v.toObject());
-            std::sort(sorted.begin(), sorted.end(), [](const QJsonObject &a, const QJsonObject &b) {
-                return a.value(QStringLiteral("time")).toObject().value(QStringLiteral("created")).toDouble()
-                     > b.value(QStringLiteral("time")).toObject().value(QStringLiteral("created")).toDouble();
-            });
-            m_agentSessions.clear();
-            for (const QJsonObject &s : sorted) {
-                const QString dir  = s.value(QStringLiteral("directory")).toString();
-                const QString path = s.value(QStringLiteral("path")).toString();
-                // Project display name = last two path segments of directory
-                const QStringList parts = QDir::toNativeSeparators(dir).split(QDir::separator(), Qt::SkipEmptyParts);
-                const QString projectName = parts.size() >= 2
-                    ? parts[parts.size()-2] + QStringLiteral("/") + parts.last()
-                    : (parts.isEmpty() ? QStringLiteral("(sin proyecto)") : parts.last());
-                QVariantMap entry;
-                entry[QStringLiteral("id")]          = s.value(QStringLiteral("id")).toString();
-                entry[QStringLiteral("title")]        = s.value(QStringLiteral("title")).toString();
-                entry[QStringLiteral("created")]      = s.value(QStringLiteral("time")).toObject()
-                                                          .value(QStringLiteral("created")).toDouble();
-                entry[QStringLiteral("projectId")]    = s.value(QStringLiteral("projectID")).toString();
-                entry[QStringLiteral("projectName")]  = projectName;
-                entry[QStringLiteral("projectDir")]   = dir;
-                m_agentSessions.append(entry);
-            }
-            emit agentSessionsChanged();
-        }
-        if (then) then();
-    });
-}
-
-void AppController::resumeOrCreateOpencodeSession()
-{
-    if (m_forceNewOpencodeSession) {
-        m_forceNewOpencodeSession = false;
-        doCreateOpencodeSession();
-        return;
-    }
-    QSettings s;
-    const QString savedId = s.value(QStringLiteral("opencode/lastSessionId")).toString();
-    if (!savedId.isEmpty()) {
-        for (const QVariant &v : std::as_const(m_agentSessions)) {
-            if (v.toMap().value(QStringLiteral("id")).toString() == savedId) {
-                m_opencodeSessionId = savedId;
-                m_opencodeSessionTitle = v.toMap().value(QStringLiteral("title")).toString();
-                emit agentSessionsChanged();
-                m_agentLog += QStringLiteral("[opencode session resumed]\n");
-                emit agentLogChanged();
-                loadOpencodeSessionMessages(savedId);
-                subscribeOpencodeEvents();
-                return;
-            }
-        }
-    }
-    doCreateOpencodeSession();
-}
-
-void AppController::doCreateOpencodeSession()
-{
-    QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/session")));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
-    auto *reply = m_nam->post(req, QByteArrayLiteral("{}"));
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
-            m_agentLog += QStringLiteral("[error: failed to create opencode session: %1]\n")
-                              .arg(reply->errorString());
-            emit agentLogChanged();
-            return;
-        }
-        const QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
-        m_opencodeSessionId    = obj.value(QStringLiteral("id")).toString();
-        m_opencodeSessionTitle = obj.value(QStringLiteral("title")).toString();
-        QSettings().setValue(QStringLiteral("opencode/lastSessionId"), m_opencodeSessionId);
-        // Prepend to session list (reload full list to get project info from server)
-        const QString cwd = m_agentProc ? m_agentProc->workingDirectory() : QString();
-        const QStringList cwdParts = QDir::toNativeSeparators(cwd).split(QDir::separator(), Qt::SkipEmptyParts);
-        const QString projectName = cwdParts.size() >= 2
-            ? cwdParts[cwdParts.size()-2] + QStringLiteral("/") + cwdParts.last()
-            : (cwdParts.isEmpty() ? QStringLiteral("(sin proyecto)") : cwdParts.last());
-        QVariantMap entry;
-        entry[QStringLiteral("id")]         = m_opencodeSessionId;
-        entry[QStringLiteral("title")]      = m_opencodeSessionTitle;
-        entry[QStringLiteral("created")]    = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
-        entry[QStringLiteral("projectId")]  = obj.value(QStringLiteral("projectID")).toString();
-        entry[QStringLiteral("projectName")]= projectName;
-        entry[QStringLiteral("projectDir")] = cwd;
-        m_agentSessions.prepend(entry);
-        emit agentSessionsChanged();
-        m_agentLog += QStringLiteral("[opencode session ready]\n");
-        emit agentLogChanged();
-        subscribeOpencodeEvents();
-    });
-}
-
-void AppController::loadOpencodeSessionMessages(const QString &sessionId)
-{
-    if (!m_nam) return;
-    const QUrl url(m_opencodeAttachUrl + QStringLiteral("/session/") + sessionId + QStringLiteral("/message"));
-    auto *reply = m_nam->get(QNetworkRequest(url));
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) return;
-        const QJsonArray msgs = QJsonDocument::fromJson(reply->readAll()).array();
-        m_agentMessages.clear();
-        m_currentAssistantIdx = -1;
-        for (const QJsonValue &mv : msgs) {
-            const QJsonObject msg = mv.toObject();
-            const QString role = msg.value(QStringLiteral("info")).toObject()
-                                     .value(QStringLiteral("role")).toString();
-            QString text;
-            const QJsonArray parts = msg.value(QStringLiteral("parts")).toArray();
-            for (const QJsonValue &pv : parts) {
-                const QJsonObject part = pv.toObject();
-                if (part.value(QStringLiteral("type")).toString() == QLatin1String("text"))
-                    text += part.value(QStringLiteral("text")).toString();
-            }
-            if (role.isEmpty() || text.isEmpty()) continue;
-            QVariantMap entry;
-            entry[QStringLiteral("role")]    = role;
-            entry[QStringLiteral("content")] = text;
-            entry[QStringLiteral("typing")]  = false;
-            m_agentMessages.append(entry);
-        }
-        emit agentMessagesChanged();
-    });
-}
-
+// Sesiones de agente: delegadas al backend activo (IAgentBackend).
+// El path legacy (opencode por HTTP directo desde AppController) fue removido;
+// OpencodeBackend es ahora el único dueño de sesiones/stream/proceso.
 void AppController::newOpencodeSession()
 {
-    if (m_agentBackend) { m_agentBackend->newSession(); return; }
-    if (!m_nam || m_opencodeAttachUrl.isEmpty()) return;
-    m_agentMessages.clear();
-    m_currentAssistantIdx = -1;
-    m_opencodeSessionId.clear();
-    m_opencodeSessionTitle.clear();
-    emit agentMessagesChanged();
-    emit agentSessionsChanged();
-    doCreateOpencodeSession();
+    if (m_agentBackend) m_agentBackend->newSession();
 }
 
 void AppController::switchOpencodeSession(const QString &sessionId)
 {
-    if (m_agentBackend) { m_agentBackend->switchSession(sessionId); return; }
-    if (sessionId == m_opencodeSessionId) return;
-    m_opencodeSessionId = sessionId;
-    m_agentMessages.clear();
-    m_currentAssistantIdx = -1;
-    for (const QVariant &v : std::as_const(m_agentSessions)) {
-        const QVariantMap m = v.toMap();
-        if (m.value(QStringLiteral("id")).toString() == sessionId) {
-            m_opencodeSessionTitle = m.value(QStringLiteral("title")).toString();
-            break;
-        }
-    }
-    QSettings().setValue(QStringLiteral("opencode/lastSessionId"), sessionId);
-    emit agentSessionsChanged();
-    emit agentMessagesChanged();
-    loadOpencodeSessionMessages(sessionId);
+    if (m_agentBackend) m_agentBackend->switchSession(sessionId);
 }
 
 void AppController::refreshOpencodeSessionList()
 {
-    if (m_agentBackend) { m_agentBackend->refreshSessions(); return; }
-    loadOpencodeSessionList(nullptr);
+    if (m_agentBackend) m_agentBackend->refreshSessions();
 }
 
 void AppController::newOpencodeSessionInProject(const QString &projectDir)
 {
-    if (m_agentBackend) { m_agentBackend->newSessionInProject(projectDir); return; }
-    if (projectDir.isEmpty()) { newOpencodeSession(); return; }
-
-    const QString current = m_agentProc ? m_agentProc->workingDirectory() : QString();
-    if (QDir::cleanPath(current) == QDir::cleanPath(projectDir)) {
-        // Already in that project — just create a new session in place
-        newOpencodeSession();
-        return;
-    }
-
-    // Restart the agent in the project's directory, then force a fresh session.
-    m_forceNewOpencodeSession = true;
-    changeAgentProject(projectDir);
+    if (m_agentBackend) m_agentBackend->newSessionInProject(projectDir);
 }
 
 void AppController::renameOpencodeSession(const QString &sessionId, const QString &title)
 {
-    if (m_agentBackend) { m_agentBackend->renameSession(sessionId, title); return; }
-    if (!m_nam || m_opencodeAttachUrl.isEmpty() || sessionId.isEmpty()) return;
-    const QString t = title.trimmed();
-    if (t.isEmpty()) return;
-
-    QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/session/") + sessionId));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
-    const QByteArray body = QJsonDocument(QJsonObject{{QStringLiteral("title"), t}}).toJson(QJsonDocument::Compact);
-    auto *reply = m_nam->sendCustomRequest(req, QByteArrayLiteral("PATCH"), body);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, sessionId, t]() {
-        reply->deleteLater();
-        // Optimistic local update + reload from server
-        for (int i = 0; i < m_agentSessions.size(); ++i) {
-            QVariantMap m = m_agentSessions[i].toMap();
-            if (m.value(QStringLiteral("id")).toString() == sessionId) {
-                m[QStringLiteral("title")] = t;
-                m_agentSessions[i] = m;
-                break;
-            }
-        }
-        if (sessionId == m_opencodeSessionId) {
-            m_opencodeSessionTitle = t;
-        }
-        emit agentSessionsChanged();
-        loadOpencodeSessionList(nullptr);
-    });
+    if (m_agentBackend) m_agentBackend->renameSession(sessionId, title);
 }
 
 void AppController::deleteOpencodeSession(const QString &sessionId)
 {
-    if (m_agentBackend) { m_agentBackend->deleteSession(sessionId); return; }
-    if (!m_nam || m_opencodeAttachUrl.isEmpty() || sessionId.isEmpty()) return;
-
-    QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/session/") + sessionId));
-    auto *reply = m_nam->deleteResource(req);
-    connect(reply, &QNetworkReply::finished, this, [this, reply, sessionId]() {
-        reply->deleteLater();
-        for (int i = 0; i < m_agentSessions.size(); ++i) {
-            if (m_agentSessions[i].toMap().value(QStringLiteral("id")).toString() == sessionId) {
-                m_agentSessions.removeAt(i);
-                break;
-            }
-        }
-        if (sessionId == m_opencodeSessionId) {
-            m_opencodeSessionId.clear();
-            m_opencodeSessionTitle.clear();
-            m_agentMessages.clear();
-            m_currentAssistantIdx = -1;
-            QSettings().remove(QStringLiteral("opencode/lastSessionId"));
-            emit agentMessagesChanged();
-        }
-        emit agentSessionsChanged();
-        loadOpencodeSessionList(nullptr);
-    });
+    if (m_agentBackend) m_agentBackend->deleteSession(sessionId);
 }
 
 void AppController::forkOpencodeSession(const QString &sessionId)
 {
-    if (m_agentBackend) { m_agentBackend->forkSession(sessionId); return; }
-    if (!m_nam || m_opencodeAttachUrl.isEmpty() || sessionId.isEmpty()) return;
-    QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/session")));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
-    const QByteArray body = QJsonDocument(QJsonObject{
-        {QStringLiteral("parentID"), sessionId}}).toJson(QJsonDocument::Compact);
-    auto *reply = m_nam->post(req, body);
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        reply->deleteLater();
-        if (reply->error() != QNetworkReply::NoError) {
-            m_agentLog += QStringLiteral("[error fork sesión: %1]\n").arg(reply->errorString());
-            emit agentLogChanged();
-            return;
-        }
-        const QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
-        const QString newId = obj.value(QStringLiteral("id")).toString();
-        loadOpencodeSessionList([this, newId]() {
-            if (!newId.isEmpty()) switchOpencodeSession(newId);
-        });
-    });
+    if (m_agentBackend) m_agentBackend->forkSession(sessionId);
 }
 
 QString AppController::currentAgentProjectDir() const
@@ -1676,156 +1630,64 @@ void AppController::changeAgentProject(const QString &directory)
     stopAgent();
 }
 
-void AppController::subscribeOpencodeEvents()
-{
-    if (!m_nam) return;
-    QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/event")));
-    req.setRawHeader(QByteArrayLiteral("Accept"), QByteArrayLiteral("text/event-stream"));
-    req.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork);
-    m_opencodeEventReply = m_nam->get(req);
-
-    connect(m_opencodeEventReply, &QNetworkReply::readyRead, this, [this]() {
-        if (!m_opencodeEventReply) return;
-        const QByteArray data = m_opencodeEventReply->readAll();
-        bool changed = false;
-        for (const QByteArray &raw : data.split('\n')) {
-            const QByteArray line = raw.trimmed();
-            if (!line.startsWith("data: ")) continue;
-            const QJsonDocument doc = QJsonDocument::fromJson(line.mid(6));
-            if (doc.isNull()) continue;
-            const QJsonObject obj = doc.object();
-            const QString type = obj.value(QStringLiteral("type")).toString();
-            const QJsonObject props = obj.value(QStringLiteral("properties")).toObject();
-            if (type == QLatin1String("message.part.delta")) {
-                if (props.value(QStringLiteral("field")).toString() == QLatin1String("text")) {
-                    const QString delta = props.value(QStringLiteral("delta")).toString();
-                    if (!delta.isEmpty()) {
-                        m_agentLog += delta;
-                        if (m_currentAssistantIdx >= 0 && m_currentAssistantIdx < m_agentMessages.size()) {
-                            auto msg = m_agentMessages[m_currentAssistantIdx].toMap();
-                            msg[QStringLiteral("content")] = msg[QStringLiteral("content")].toString() + delta;
-                            m_agentMessages[m_currentAssistantIdx] = msg;
-                            emit agentMessagesChanged();
-                        }
-                        changed = true;
-                    }
-                }
-            } else if (type == QLatin1String("session.updated")) {
-                const QJsonObject info = props.value(QStringLiteral("info")).toObject();
-                const QString title = info.value(QStringLiteral("title")).toString();
-                const QString sid   = info.value(QStringLiteral("id")).toString();
-                if (!title.isEmpty() && sid == m_opencodeSessionId) {
-                    m_opencodeSessionTitle = title;
-                    for (int i = 0; i < m_agentSessions.size(); ++i) {
-                        auto sm = m_agentSessions[i].toMap();
-                        if (sm.value(QStringLiteral("id")).toString() == sid) {
-                            sm[QStringLiteral("title")] = title;
-                            m_agentSessions[i] = sm;
-                            break;
-                        }
-                    }
-                    emit agentSessionsChanged();
-                }
-            } else if (type == QLatin1String("session.status")) {
-                const QString status = props.value(QStringLiteral("status"))
-                                            .toObject().value(QStringLiteral("type")).toString();
-                if (status == QLatin1String("idle")) {
-                    m_agentLog += QLatin1Char('\n');
-                    if (m_currentAssistantIdx >= 0 && m_currentAssistantIdx < m_agentMessages.size()) {
-                        auto msg = m_agentMessages[m_currentAssistantIdx].toMap();
-                        msg[QStringLiteral("typing")] = false;
-                        m_agentMessages[m_currentAssistantIdx] = msg;
-                        emit agentMessagesChanged();
-                    }
-                    m_currentAssistantIdx = -1;
-                    changed = true;
-                }
-            } else if (type == QLatin1String("permission.asked")) {
-                // Headless server has no UI to answer permission prompts, so the
-                // agent would hang forever waiting for a response. Auto-approve.
-                respondOpencodePermission(props.value(QStringLiteral("sessionID")).toString(),
-                                          props.value(QStringLiteral("id")).toString());
-            } else if (type.contains(QLatin1String("error"))) {
-                const QString errMsg = props.value(QStringLiteral("message")).toString();
-                if (!errMsg.isEmpty()) {
-                    m_agentLog += QStringLiteral("[error: %1]\n").arg(errMsg);
-                    if (m_currentAssistantIdx >= 0 && m_currentAssistantIdx < m_agentMessages.size()) {
-                        auto msg = m_agentMessages[m_currentAssistantIdx].toMap();
-                        msg[QStringLiteral("content")] = QStringLiteral("[error: %1]").arg(errMsg);
-                        msg[QStringLiteral("typing")] = false;
-                        m_agentMessages[m_currentAssistantIdx] = msg;
-                        emit agentMessagesChanged();
-                    }
-                    m_currentAssistantIdx = -1;
-                    changed = true;
-                }
-            }
-        }
-        if (changed) emit agentLogChanged();
-    });
-
-    // El server opencode se apaga cuando no hay suscriptores de eventos.
-    // Si el stream se cierra/cae y el agente sigue vivo, reconectar para mantenerlo.
-    connect(m_opencodeEventReply, &QNetworkReply::finished, this, [this]() {
-        QNetworkReply *r = m_opencodeEventReply;
-        if (!r) return;
-        m_opencodeEventReply = nullptr;
-        r->deleteLater();
-        if (m_agentStopping) return;
-        if (m_agentProc && m_agentProc->state() == QProcess::Running) {
-            QTimer::singleShot(200, this, [this]() {
-                if (!m_agentStopping && m_agentProc
-                        && m_agentProc->state() == QProcess::Running)
-                    subscribeOpencodeEvents();
-            });
-        }
-    });
-
-    connect(m_opencodeEventReply, &QNetworkReply::errorOccurred, this,
-            [this](QNetworkReply::NetworkError) {
-        if (!m_opencodeEventReply) return;
-        if (!m_agentStopping) {
-            m_agentLog += QStringLiteral("[opencode event stream reconectando...]\n");
-            emit agentLogChanged();
-        }
-        // reconexión la maneja el slot finished
-    });
-}
-
-void AppController::respondOpencodePermission(const QString &sessionId,
-                                             const QString &permissionId)
-{
-    if (!m_nam || m_opencodeAttachUrl.isEmpty()) return;
-    if (sessionId.isEmpty() || permissionId.isEmpty()) return;
-
-    QNetworkRequest req(QUrl(m_opencodeAttachUrl + QStringLiteral("/session/") + sessionId
-                             + QStringLiteral("/permissions/") + permissionId));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
-    QJsonObject body;
-    body.insert(QStringLiteral("response"), QStringLiteral("always"));
-
-    auto *reply = m_nam->post(req, QJsonDocument(body).toJson(QJsonDocument::Compact));
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() != QNetworkReply::NoError) {
-            m_agentLog += QStringLiteral("[error: permission response failed: %1]\n")
-                              .arg(reply->errorString());
-            emit agentLogChanged();
-        }
-        reply->deleteLater();
-    });
-}
-
 QString AppController::agentNativeLogDir(const QString &adapter) const
 {
-    // opencode stores logs in XDG_DATA_HOME/<adapter>/log/ on all platforms
-    const QString xdgData = qEnvironmentVariable("XDG_DATA_HOME",
+    const QString a = adapter.trimmed().isEmpty() ? QStringLiteral("agent") : adapter.trimmed();
+    const QString xdgData = qEnvironmentVariable(
+        "XDG_DATA_HOME",
         QDir::homePath() + QStringLiteral("/.local/share"));
-    return QDir::toNativeSeparators(xdgData + QStringLiteral("/") + adapter + QStringLiteral("/log"));
+
+    QStringList candidates;
+    candidates << (xdgData + QStringLiteral("/") + a + QStringLiteral("/log"));
+#ifdef Q_OS_WIN
+    candidates << (QDir::homePath() + QStringLiteral("/AppData/Roaming/")
+                   + a + QStringLiteral("/log"));
+#endif
+    candidates << (QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                   + QStringLiteral("/") + a + QStringLiteral("/log"));
+
+    for (const QString &p : std::as_const(candidates)) {
+        if (QFileInfo::exists(p) && QFileInfo(p).isDir())
+            return QDir::toNativeSeparators(p);
+    }
+    return QDir::toNativeSeparators(candidates.first());
 }
 
-void AppController::openAgentLogDir(const QString &adapter) const
+void AppController::openAgentLogDir(const QString &adapter)
 {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(agentNativeLogDir(adapter)));
+    QString dir = agentNativeLogDir(adapter);
+    if (dir.isEmpty()) return;
+    QDir d(dir);
+    if (!d.exists())
+        QDir().mkpath(dir);
+
+    bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+#ifdef Q_OS_WIN
+    if (!ok) {
+        ok = QProcess::startDetached(QStringLiteral("explorer.exe"),
+                                     {QDir::toNativeSeparators(dir)});
+    }
+#endif
+    if (!ok) {
+        emit serverError(QStringLiteral("No se pudo abrir el log nativo: %1")
+                             .arg(QDir::toNativeSeparators(dir)));
+    }
+}
+
+void AppController::openRuntimeLogDir()
+{
+    const QString dir = runtimeLogDir();
+    bool ok = QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+#ifdef Q_OS_WIN
+    if (!ok) {
+        ok = QProcess::startDetached(QStringLiteral("explorer.exe"),
+                                     {QDir::toNativeSeparators(dir)});
+    }
+#endif
+    if (!ok) {
+        emit serverError(QStringLiteral("No se pudo abrir la carpeta de logs: %1")
+                             .arg(QDir::toNativeSeparators(dir)));
+    }
 }
 
 void AppController::setLanguage(const QString &lang)

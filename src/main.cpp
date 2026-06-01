@@ -1,4 +1,5 @@
 #include "AppController.h"
+#include "core/ControlApi.h"
 #include "ThemeProvider.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
@@ -74,6 +75,15 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("App", &controller);
     engine.rootContext()->setContextProperty("Theme", &theme);
+
+    // Control API headless (espejo de AppController) para tests sin GUI.
+    // Puerto: env LLAMACODE_CONTROL_PORT (default 8765). 0 = desactivado. Localhost.
+    {
+        const QByteArray pEnv = qgetenv("LLAMACODE_CONTROL_PORT");
+        const quint16 port = pEnv.isEmpty() ? 8765 : static_cast<quint16>(pEnv.toUInt());
+        auto *ctl = new ControlApi(&controller, &controller);
+        ctl->start(port);
+    }
     engine.addImportPath(QStringLiteral("qrc:/"));
 
     qDebug() << "Loading Main.qml";

@@ -6,8 +6,8 @@ vía una interfaz común `IAgentBackend`. El runtime usa el `llama-server` local
 
 ```
 App Qt/QML
-   ↓  IAgentBackend (start/stop/sendMessage/sesiones/tools)
-Backend: opencode | goose | raw | ...
+   ↓  IAgentBackend (start/stop/sendMessage/sesiones/tools/approval)
+Backend: opencode | custom | raw | ...
    ↓  OpenAI-compatible API
 llama.cpp server
    ↓  tools / MCP
@@ -59,13 +59,18 @@ modelo, fallback de JSON roto) es **harness-agnóstico**.
 - ✅ `startAgent/stopAgent/sendToAgent` + `*OpencodeSession*` + `changeAgentProject` +
   `currentAgentProjectDir` delegan al backend.
 - ✅ QML sin cambios (mismas propiedades/señales).
-- ⬜ **Limpieza pendiente:** borrar el código opencode viejo e inerte de `AppController`
-  (hoy queda con guard `if (m_agentBackend) return;`). No urgente.
+- ✅ **Limpieza hecha:** removido el path opencode legacy de `AppController`
+  (HTTP/SSE/sesiones directas: `initOpencodeSession`, `loadOpencodeSessionList`,
+  `resumeOrCreateOpencodeSession`, `doCreateOpencodeSession`, `loadOpencodeSessionMessages`,
+  `subscribeOpencodeEvents`, `respondOpencodePermission` + miembros `m_opencodeAttachUrl`,
+  `m_opencodeEventReply`, `m_forceNewOpencodeSession`). Los `*OpencodeSession*` ahora solo
+  delegan a `IAgentBackend`; el path `QProcess` genérico quedó solo para adapters stdin
+  (smallcode). `OpencodeBackend` es el único dueño de sesiones/stream/proceso.
 - ⬜ **Falta test en vivo:** iniciar/chatear/sesiones/restart/nuevo-proyecto.
 
 ---
 
-## Etapa 2 — RawChatBackend (modo Chat)  🚧 EN PROGRESO
+## Etapa 2 — RawChatBackend (modo Chat)  ✅ HECHO
 **Meta:** chat directo contra `llama-server` `/v1/chat/completions` (sin harness de agente).
 `raw` es exclusivo de **Chat**; no debe ser seleccionable en perfiles de **Agente**.
 
@@ -74,116 +79,165 @@ modelo, fallback de JSON roto) es **harness-agnóstico**.
 - ✅ Sesiones locales en memoria (crear/cambiar/renombrar/borrar/fork).
 - ✅ Persistencia local de sesiones/mensajes de `RawChatBackend` (JSON en AppLocalData).
 - ✅ Integración en Chat para usar `RawChatBackend` como runtime único de chat directo.
-- ⬜ Selector en UI: "Modo: Chat / Agente" (Agente solo con harness tool-calling).
-- **Entregable:** chat directo funcional + interfaz probada con 2 backends reales.
+- ✅ Extras agregados: adjuntos (imágenes vía mmproj + docs de texto inline),
+  pegar imagen del portapapeles, toggle de thinking con detección de soporte
+  (`chatThinkingSupported` vía `/props`), control per-turn de reasoning (`reasoning_budget`).
+- ✅ Separación Chat/Agente: páginas distintas en nav + `raw` oculto del selector de
+  Agente (no es tool-calling). El "selector de modo" se cumple estructuralmente, no como toggle.
+- **Entregable:** chat directo funcional + interfaz validada con 3 backends reales
+  (opencode, raw, custom).
 
 ---
 
-## Etapa 3 — GooseBackend  ⬜ PENDIENTE
-**Meta:** segundo agente real (runtime Rust, MCP, local-first).
+## Etapa 3 — CustomBackend (segundo backend real)  🚧 EN PROGRESO
+**Decisión:** en vez de Goose (API `goosed` poco documentada → reverse-engineering),
+se implementa un backend propio. Cero dependencias externas, controla el contrato,
+y reusa al 100% el approval/diff harness-agnóstico. Goose queda diferido/descartado.
 
-- ⬜ Spike (0.5 día): validar endpoints de `goosed` con curl ANTES de codear UI.
-- ⬜ Lanzar `goosed`/`goose` server en cwd del proyecto, env → `llama-server`.
-- ⬜ Mapear API Goose: crear sesión, enviar mensaje, stream de eventos, tool approval.
-- ⬜ Config Goose: `~/.config/goose/config.yaml` (YAML). Generalizar el config dialog
-  o crear `GooseConfigDialog`.
-- ⬜ Detección/instalación: descarga binario Rust (no npm).
-- ⬜ Una línea en `ensureAgentBackend` + tarjeta en selector de harness.
-- **Riesgo alto:** API `goosed` poco documentada → reverse-engineering del event stream.
-- **Entregable:** Goose seleccionable (chat + tools + sesiones). opencode intacto.
+- ✅ `CustomBackend` implementa `IAgentBackend`: loop ReAct con tool-calling OpenAI
+  (`/v1/chat/completions`, `tools` + `tool_choice:auto`, non-stream) contra `llama-server`.
+- ✅ Tools nativas: `read_file`, `list_dir`, `grep`, `write_file`, `run_shell`
+  (sandbox simple: rutas confinadas a cwd del proyecto).
+- ✅ Aprobación integrada: clasifica tool (read/write/shell), respeta `agent/approvalMode`,
+  emite `toolApprovalNeeded` y espera; `approveTool`/`rejectTool` reanudan el turno.
+- ✅ Sin binario externo: `startAgent` rama `custom` (no `findExecutable`),
+  `isHarnessInstalled("custom")=true`, tarjeta "Custom (nativo)" en selector.
+- ✅ Registrado en CMake + `ensureAgentBackend`.
+- ⬜ Sesiones: v1 en memoria (1 sesión). Falta persistencia a disco (reusar patrón Raw).
+- ⬜ Streaming de respuesta (hoy non-stream por simplicidad de parseo de tool_calls).
+- ⬜ MCP para tools externas (hoy solo built-in).
+- ⬜ Test en vivo: pedir leer/escribir/ejecutar y verificar loop + approval.
+- **Entregable:** segundo agente real seleccionable (chat + tools + approval). opencode intacto.
 
 ---
 
-## Etapa 4 — Aprobación de herramientas visible  ⬜ PENDIENTE
+## Etapa 4 — Aprobación de herramientas visible  🚧 EN PROGRESO
 **Meta:** human-in-the-loop real (hoy opencode auto-aprueba TODO — peligroso).
 
-- ⬜ Señal `toolApprovalNeeded(ToolCall)` → UI: card con comando/diff/archivo +
-  botones Aprobar / Rechazar / Siempre.
-- ⬜ Backend espera respuesta en vez de auto-`always`.
-- ⬜ Setting global + por proyecto: "auto-aprobar lectura / pedir en escritura+shell".
+- ✅ Señal `toolApprovalNeeded(QVariantMap)` en `IAgentBackend` → `AppController`
+  espeja en `agentPendingTool` → UI: card con tool/título/comando-archivo +
+  botones Rechazar / Aprobar / Siempre (`approveAgentTool`/`rejectAgentTool`).
+- ✅ `OpencodeBackend` espera respuesta (no auto-`always`): clasifica tool por tipo
+  (`toolKind`: read/write/shell), guarda pendiente en `m_pendingPerm`, responde
+  `once`/`always`/`reject` vía `/permissions/`.
+- ✅ Setting global `agent/approvalMode` (auto | ask | manual) + selector en header
+  de Agente. "ask" = auto-aprueba lectura, pide escritura+shell.
+- ⬜ Scope por proyecto (hoy solo global).
+- ⬜ Test en vivo: gatillar un write/bash y verificar card + respuesta opencode.
 - **Entregable:** ninguna escritura/exec sin OK (configurable). Diferenciador clave.
 
 ---
 
-## Etapa 5 — Diffs visibles + control de cambios  ⬜ PENDIENTE
+## Etapa 5 — Diffs visibles + control de cambios  🚧 EN PROGRESO
 **Meta:** ver qué tocó el agente.
 
-- ⬜ Interceptar tool calls de edición → render diff (antes/después) en el chat.
-- ⬜ Botón revertir por-archivo (git stash/checkout o snapshot propio).
+- ✅ `CustomBackend` intercepta `write_file`: snapshot del estado previo, genera diff
+  unificado simple (`makeDiff`, prefijo/sufijo común + bloque +/-) y agrega una entrada
+  `role:"diff"` al chat con path + diff.
+- ✅ Preview de diff en la card de aprobación (antes de aplicar, scroll).
+- ✅ Botón "Revertir" por archivo (snapshot propio `m_editSnapshots`):
+  `IAgentBackend::revertEdit` → `CustomBackend` restaura/borra; marca la entrada como
+  revertida. Invokable `revertAgentEdit`.
+- ⬜ Soporte para `OpencodeBackend` (hoy solo custom; opencode no expone old/new directo).
+- ⬜ Coloreado +/- (verde/rojo) en el render del diff (hoy mono monocolor).
+- ⬜ Revert vía git como alternativa al snapshot.
 - **Entregable:** panel de diffs por mensaje. Integra con Etapa 4.
 
 ---
 
-## Etapa 6 — Memoria + contexto por proyecto  ⬜ PENDIENTE
+## Etapa 6 — Memoria + contexto por proyecto  🚧 EN PROGRESO
 **Meta:** lo que mueve la aguja en LLM local.
 
-- ⬜ Memoria por proyecto: `AGENTS.md` / `.llamacode/memory.md` editable.
-- ⬜ Control de contexto visible: tokens usados/límite, archivos en contexto,
-  pin/exclusión.
+- ✅ Memoria por proyecto: `.llamacode/memory.md` (fallback `AGENTS.md`), editable.
+  `CustomBackend::buildSystemPrompt` la inyecta en el system prompt al crear sesión.
+  Invokables `readAgentMemory`/`writeAgentMemory` + editor (botón "🧠 Memoria" en `AgentPage`).
+- ✅ Control de contexto visible (tokens): `CustomBackend` lee `n_ctx` de `/props` y
+  `usage.total_tokens` de cada respuesta → señal `contextUsage` → `AppController`
+  (`agentContextUsed`/`agentContextLimit`) → barra "ctx N/M" en header de `AgentPage`
+  (color por % de uso).
+- ⬜ Archivos en contexto + pin/exclusión (no aplica al loop actual; futuro).
 - ⬜ Compactación configurable (ya hay flags en perfiles opencode).
-- **Entregable:** barra de contexto + editor de memoria por proyecto.
+- **Entregable:** barra de contexto + editor de memoria por proyecto. ✅ (lo central)
 
 ---
 
-## Etapa 7 — Robustez con modelo local  ⬜ PENDIENTE
+## Etapa 7 — Robustez con modelo local  🚧 EN PROGRESO
 **Meta:** que no explote cuando Qwen rompe JSON/tool calls.
 
-- ⬜ Fallback: tool-call malformado → reintento con prompt corrector / degradar a texto.
-- ⬜ Validación de args (schema) antes de ejecutar.
-- ⬜ Detección de loops (mismo tool call repetido) → cortar.
-- ⬜ Indicador de salud: tool-call success rate por sesión.
+- ✅ Fallback: tool-call con JSON de args malformado → no ejecuta; devuelve `tool`
+  result con el error y pide reintentar con JSON válido (`CustomBackend`).
+- ✅ Validación de args requeridos por tool (`requiredArgs`) antes de ejecutar;
+  faltantes → tool result de error, sin crashear el turno.
+- ✅ Tool desconocida → tool result de error (no aborta).
+- ✅ Detección de loops: firma `name|args` contada por turno; >3 iguales → corta el turno.
+- ✅ Límite de iteraciones por turno (`kMaxTurnIters=12`) → corta y avisa.
+- ✅ Indicador de salud: contador ok/fail por sesión, log `[salud: X/Y tools ok (Z%)]`.
+- ⬜ Equivalente para `OpencodeBackend` (hoy solo custom; opencode maneja su propio loop).
+- ⬜ Exponer salud en UI (hoy solo en log).
 - **Entregable:** sesiones no se cuelgan por JSON roto + logs de fallos.
 
 ---
 
-## Etapa 8 — Perfiles de agente por modelo + UX final  ⬜ PENDIENTE
+## Etapa 8 — Perfiles de agente por modelo + UX final  🚧 EN PROGRESO
 **Meta:** ajuste fino local-first.
 
-- ⬜ Perfil de agente ligado a perfil de modelo: system prompt, temp para tool-calling,
-  handler `--jinja` por modelo (Qwen2.5 / Hermes / Llama3 / Mistral Nemo).
-- ⬜ Config global vs por proyecto de agente (scope ya existe en config dialog).
-- ⬜ Pulido: selector de backend por proyecto, estados, errores claros.
+- ✅ Ajuste del agente (`CustomBackend`): system prompt extra + temperatura para
+  tool-calling. `IAgentBackend::setAgentTuning`; `AppController` persiste en
+  `agent/systemPrompt` + `agent/temperature` y aplica en vivo. Dialog "⚙ Agente"
+  en `AgentPage`. `--jinja` ya se fuerza en `EffectiveProfileBuilder` (Etapa 2).
+- ⬜ Tuning ligado al perfil de modelo concreto (hoy global, no por modelo/perfil).
+- ⬜ Config por proyecto del agente (hoy global).
+- ⬜ Pulido: selector de backend por proyecto, estados/errores.
 - **Entregable:** v1 multi-backend completa.
 
 ---
 
 ## Dependencias
 ```
-0 ✅ → 1 ✅ → 2 (valida interfaz)
+0 ✅ → 1 ✅ → 2 ✅ (valida interfaz)
               ↓
-              3 (Goose)  ── paralelo ──  4 → 5 (approval + diffs)
-                                          ↓
-                                        6 → 7 → 8
+              3 (Custom) ✅core ── paralelo ── 4 ✅core → 5 (diffs)
+                                                ↓
+                                              6 → 7 → 8
 ```
 Etapas 4–8 son **harness-agnósticas** (sirven a cualquier backend).
+Estado actual: 0-1-2 cerradas; 3 y 4 con su core implementado (falta test en vivo +
+pulidos); próximo foco natural = **Etapa 5 (diffs)**, que se apoya en el approval ya hecho.
 
 ## Estimación
-~16–20 días totales. MVP útil en Etapa 4 (opencode + Goose + aprobación visible).
+MVP útil ALCANZADO en core: opencode + custom + raw, con aprobación visible.
+Resto (5–8) son mejoras incrementales harness-agnósticas.
 
 ---
 
-## Ranking de harnesses (para referencia)
-1. **Goose** — mejor integración general app Qt / local-first (runtime Rust, MCP, server API).
-2. **OpenHands SDK** — coding agent pesado; backend Python/Docker (packaging duro).
-3. **Pydantic AI** — harness propio limpio y controlado (FastAPI + Python).
-4. **Aider** — benchmark de edición, no motor embebible.
-5. **LangGraph** — workflows persistentes complejos, no MVP.
-6. **OpenCode / Pi / SmallCode** — ya probados; opencode quedó como default.
+## Decisión de segundo backend (Goose vs propio)
+Se evaluó sumar un segundo agente externo. Goose tiene buena integración pero su API
+(`goosed`) está poco documentada → costo alto de reverse-engineering del event stream.
+Alternativas externas (Pydantic AI, OpenHands) suman runtime Python/Docker.
+**Se eligió `CustomBackend` propio**: cero deps externas, contrato bajo control, y
+reuso total del approval/diff harness-agnóstico. Goose queda diferido; revisitar solo
+si se necesita un harness externo adicional. Ranking de referencia (si se retoma externo):
+Goose > Pydantic AI > OpenHands SDK > Aider > LangGraph.
 
-Backends planeados detrás de `IAgentBackend`:
-- `OpencodeBackend` ✅ (default)
-- `RawChatBackend` ⬜ (chat directo)
-- `GooseBackend` ⬜ (agente local)
-- `CustomBackend` ⬜ (Pydantic AI / ReAct propio — opcional, largo plazo)
+Backends detrás de `IAgentBackend`:
+- `OpencodeBackend` ✅ (default, harness externo)
+- `RawChatBackend` ✅ (chat directo, solo Chat)
+- `CustomBackend` 🚧 (ReAct propio + tools nativas — segundo agente real, reemplaza Goose)
+- `GooseBackend` ⬜ (diferido: API poco documentada; revisitar si hace falta harness externo)
 
 ---
 
 ## Notas de estado actual del repo
 - pi / smallcode: ocultos del selector (UI comentada), lógica aún en `AppController`
-  (pi por print-mode, smallcode por stdin). Migrar a backends o eliminar.
+  (pi por print-mode, smallcode por stdin path genérico). Migrar a backends o eliminar.
 - Editor de config opencode (`OpencodeConfigDialog.qml`) + MCP + skills/commands ya
   implementados (backend en `AppController`: `readOpencodeConfig/writeOpencodeConfig`,
   `listMcpServers/setMcpServer/...`, `listOpencodeCommands/...`). Específico de opencode;
-  generalizar al sumar Goose.
+  generalizar al integrar MCP en `CustomBackend` (Etapa 3 pendiente).
+- Backends vivos: `OpencodeBackend` (externo, default), `RawChatBackend` (Chat),
+  `CustomBackend` (agente nativo). Selección por tarjetas en `ProfilesPage`.
+- Aprobación: `agent/approvalMode` (auto|ask|manual), `agentPendingTool` +
+  `approveAgentTool`/`rejectAgentTool`; card en `AgentPage`.
 - Build: `build.bat` o `cmake --build build --config Debug --target LlamaCode`.
-  QML embebido (qt_add_qml_module) → requiere recompilar para ver cambios de UI.
+  QML y C++ embebidos (qt_add_qml_module / qrc) → requiere recompilar para ver cambios.
+  Agregar fuentes nuevas a `CMakeLists.txt` (SOURCES/HEADERS).

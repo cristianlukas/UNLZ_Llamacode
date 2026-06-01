@@ -31,11 +31,20 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     for (auto it = ctx.launch.envOverrides.begin(); it != ctx.launch.envOverrides.end(); ++it)
         env[it.key()] = it.value();
 
-    // Resolve aliases in extraArgs; split entries that contain spaces (flag+value on one line)
+    // Resolve aliases in extraArgs with pair-aware parsing.
+    // NOTA: NO descartar `-np 1` / `--parallel 1`. Algunos forks (p.ej. MTP)
+    // tienen n_parallel=auto que abre 4 slots; cada uno reserva su KV-cache del
+    // ctx-size completo (262k) → OOM de VRAM y crash 0xC0000409. `-np 1` es
+    // necesario para limitar a un slot. Pasar todos los flags tal cual.
+    QStringList extraTokens;
     for (const QString &rawArg : ctx.launch.extraArgs) {
         const QStringList tokens = rawArg.trimmed().split(u' ', Qt::SkipEmptyParts);
-        for (const QString &arg : tokens)
-            args.append(arg.startsWith(u'-') ? ctx.binary.resolveFlag(arg) : arg);
+        for (const QString &t : tokens)
+            extraTokens.append(t);
+    }
+    for (const QString &cur : extraTokens) {
+        if (!cur.startsWith(u'-')) { args.append(cur); continue; }
+        args.append(ctx.binary.resolveFlag(cur));
     }
 
     // Asegurar --jinja: necesario para que el server respete chat_template_kwargs

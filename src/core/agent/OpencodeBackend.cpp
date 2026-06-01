@@ -9,6 +9,13 @@
 #include <QDateTime>
 #include <algorithm>
 
+static int estimateTokens(const QString &text)
+{
+    const int n = text.trimmed().size();
+    if (n <= 0) return 0;
+    return (n + 3) / 4;
+}
+
 OpencodeBackend::OpencodeBackend(QObject *parent) : IAgentBackend(parent)
 {
     m_nam = new QNetworkAccessManager(this);
@@ -234,7 +241,14 @@ void OpencodeBackend::loadSessionMessages(const QString &sessionId)
             }
             if (role.isEmpty() || text.isEmpty()) continue;
             AgentMessage e; e.role = role; e.content = text; e.typing = false;
-            m_messages.append(e.toMap());
+            QVariantMap mm = e.toMap();
+            const qint64 now = QDateTime::currentMSecsSinceEpoch();
+            mm[QStringLiteral("createdAt")] = static_cast<double>(now);
+            mm[QStringLiteral("completedAt")] = static_cast<double>(now);
+            mm[QStringLiteral("elapsedMs")] = 0;
+            mm[QStringLiteral("tokens")] = estimateTokens(text);
+            mm[QStringLiteral("tps")] = 0.0;
+            m_messages.append(mm);
         }
         emit messagesChanged();
     });
@@ -245,10 +259,22 @@ void OpencodeBackend::sendMessage(const QString &text)
     if (!running()) return;
     emit logAppended(QStringLiteral("> %1\n").arg(text));
 
+    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
     AgentMessage um; um.role = QStringLiteral("user"); um.content = text;
-    m_messages.append(um.toMap());
+    QVariantMap umMap = um.toMap();
+    umMap[QStringLiteral("createdAt")] = static_cast<double>(nowMs);
+    umMap[QStringLiteral("completedAt")] = static_cast<double>(nowMs);
+    umMap[QStringLiteral("elapsedMs")] = 0;
+    umMap[QStringLiteral("tokens")] = estimateTokens(text);
+    umMap[QStringLiteral("tps")] = 0.0;
+    m_messages.append(umMap);
     AgentMessage am; am.role = QStringLiteral("assistant"); am.typing = true;
-    m_messages.append(am.toMap());
+    QVariantMap amMap = am.toMap();
+    amMap[QStringLiteral("createdAt")] = static_cast<double>(nowMs);
+    amMap[QStringLiteral("elapsedMs")] = 0;
+    amMap[QStringLiteral("tokens")] = 0;
+    amMap[QStringLiteral("tps")] = 0.0;
+    m_messages.append(amMap);
     m_curAsstIdx = m_messages.size() - 1;
     emit messagesChanged();
 
@@ -414,7 +440,16 @@ void OpencodeBackend::subscribeEvents()
                         emit logAppended(delta);
                         if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
                             auto msg = m_messages[m_curAsstIdx].toMap();
-                            msg[QStringLiteral("content")] = msg[QStringLiteral("content")].toString() + delta;
+                            const QString content = msg[QStringLiteral("content")].toString() + delta;
+                            msg[QStringLiteral("content")] = content;
+                            const qint64 startedAt = static_cast<qint64>(msg.value(QStringLiteral("createdAt")).toDouble());
+                            const qint64 elapsedMs = qMax<qint64>(0, QDateTime::currentMSecsSinceEpoch() - startedAt);
+                            const int toks = estimateTokens(content);
+                            msg[QStringLiteral("tokens")] = toks;
+                            msg[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+                            msg[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+                                ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+                                : 0.0;
                             m_messages[m_curAsstIdx] = msg;
                             emit messagesChanged();
                         }
@@ -442,15 +477,55 @@ void OpencodeBackend::subscribeEvents()
                     if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
                         auto msg = m_messages[m_curAsstIdx].toMap();
                         msg[QStringLiteral("typing")] = false;
+                        const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
+                        const qint64 startedAt = static_cast<qint64>(msg.value(QStringLiteral("createdAt")).toDouble());
+                        const qint64 elapsedMs = qMax<qint64>(0, doneAt - startedAt);
+                        const QString content = msg.value(QStringLiteral("content")).toString();
+                        const int toks = estimateTokens(content);
+                        msg[QStringLiteral("completedAt")] = static_cast<double>(doneAt);
+                        msg[QStringLiteral("tokens")] = toks;
+                        msg[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+                        msg[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+                            ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+                            : 0.0;
                         m_messages[m_curAsstIdx] = msg;
                         emit messagesChanged();
                     }
                     m_curAsstIdx = -1;
                 }
             } else if (type == QLatin1String("permission.asked")) {
-                // Etapa 4 reemplazará esto por aprobación visible. Por ahora auto-aprueba.
-                respondPermission(props.value(QStringLiteral("sessionID")).toString(),
-                                  props.value(QStringLiteral("id")).toString());
+                const QString permId = props.value(QStringLiteral("id")).toString();
+                const QString sid    = props.value(QStringLiteral("sessionID")).toString();
+                const QString ptype  = props.value(QStringLiteral("type")).toString();
+                const QString kind   = toolKind(ptype);
+
+                // Política de aprobación.
+                const bool autoAll  = (m_approvalMode == QLatin1String("auto"));
+                const bool askAll   = (m_approvalMode == QLatin1String("manual"));
+                const bool autoRead = (m_approvalMode == QLatin1String("ask")
+                                       && kind == QLatin1String("read"));
+                if (autoAll || autoRead) {
+                    respondPermission(sid, permId, QStringLiteral("always"));
+                } else {
+                    Q_UNUSED(askAll)
+                    // Pedir al usuario: guardar pendiente + emitir señal con detalle.
+                    m_pendingPerm.insert(permId, sid);
+                    const QJsonObject meta = props.value(QStringLiteral("metadata")).toObject();
+                    QString detail = meta.value(QStringLiteral("command")).toString();
+                    if (detail.isEmpty()) detail = meta.value(QStringLiteral("filePath")).toString();
+                    if (detail.isEmpty()) detail = meta.value(QStringLiteral("filepath")).toString();
+                    if (detail.isEmpty()) detail = meta.value(QStringLiteral("url")).toString();
+                    const QString diff = meta.value(QStringLiteral("diff")).toString();
+                    emit toolApprovalNeeded(QVariantMap{
+                        {QStringLiteral("id"),      permId},
+                        {QStringLiteral("sessionId"), sid},
+                        {QStringLiteral("tool"),    ptype},
+                        {QStringLiteral("kind"),    kind},
+                        {QStringLiteral("title"),   props.value(QStringLiteral("title")).toString()},
+                        {QStringLiteral("detail"),  detail},
+                        {QStringLiteral("diff"),    diff}
+                    });
+                }
             } else if (type.contains(QLatin1String("error"))) {
                 const QString errMsg = props.value(QStringLiteral("message")).toString();
                 if (!errMsg.isEmpty()) {
@@ -459,6 +534,17 @@ void OpencodeBackend::subscribeEvents()
                         auto msg = m_messages[m_curAsstIdx].toMap();
                         msg[QStringLiteral("content")] = QStringLiteral("[error: %1]").arg(errMsg);
                         msg[QStringLiteral("typing")] = false;
+                        const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
+                        const qint64 startedAt = static_cast<qint64>(msg.value(QStringLiteral("createdAt")).toDouble());
+                        const qint64 elapsedMs = qMax<qint64>(0, doneAt - startedAt);
+                        const QString content = msg.value(QStringLiteral("content")).toString();
+                        const int toks = estimateTokens(content);
+                        msg[QStringLiteral("completedAt")] = static_cast<double>(doneAt);
+                        msg[QStringLiteral("tokens")] = toks;
+                        msg[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+                        msg[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+                            ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+                            : 0.0;
                         m_messages[m_curAsstIdx] = msg;
                         emit messagesChanged();
                     }
@@ -486,17 +572,45 @@ void OpencodeBackend::subscribeEvents()
     });
 }
 
-void OpencodeBackend::respondPermission(const QString &sessionId, const QString &permissionId)
+void OpencodeBackend::respondPermission(const QString &sessionId, const QString &permissionId,
+                                       const QString &response)
 {
     if (sessionId.isEmpty() || permissionId.isEmpty()) return;
     QNetworkRequest req(QUrl(m_attachUrl + QStringLiteral("/session/") + sessionId
                              + QStringLiteral("/permissions/") + permissionId));
     req.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
-    QJsonObject body{{QStringLiteral("response"), QStringLiteral("always")}};
+    QJsonObject body{{QStringLiteral("response"), response}};
     auto *reply = m_nam->post(req, QJsonDocument(body).toJson(QJsonDocument::Compact));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         if (reply->error() != QNetworkReply::NoError)
             emit logAppended(QStringLiteral("[error: permission response failed: %1]\n").arg(reply->errorString()));
         reply->deleteLater();
     });
+}
+
+void OpencodeBackend::approveTool(const QString &id, bool always)
+{
+    const QString sid = m_pendingPerm.take(id);
+    if (sid.isEmpty()) return;
+    respondPermission(sid, id, always ? QStringLiteral("always") : QStringLiteral("once"));
+}
+
+void OpencodeBackend::rejectTool(const QString &id)
+{
+    const QString sid = m_pendingPerm.take(id);
+    if (sid.isEmpty()) return;
+    respondPermission(sid, id, QStringLiteral("reject"));
+}
+
+QString OpencodeBackend::toolKind(const QString &type)
+{
+    const QString t = type.toLower();
+    if (t.contains(QLatin1String("bash")) || t.contains(QLatin1String("shell"))
+            || t.contains(QLatin1String("command")) || t.contains(QLatin1String("exec")))
+        return QStringLiteral("shell");
+    if (t.contains(QLatin1String("edit")) || t.contains(QLatin1String("write"))
+            || t.contains(QLatin1String("patch")) || t.contains(QLatin1String("create"))
+            || t.contains(QLatin1String("delete")) || t.contains(QLatin1String("remove")))
+        return QStringLiteral("write");
+    return QStringLiteral("read");
 }

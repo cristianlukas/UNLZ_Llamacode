@@ -38,6 +38,9 @@ public:
                             const QString &flavor, const QString &backend,
                             const QString &versionHint, const QString &workingDir);
     Q_INVOKABLE void detectCapabilities(const QString &id);
+    // Synchronous detection: blocks until --help is parsed and flags persisted.
+    // Used right before launching the server so EffectiveProfileBuilder sees fresh flags.
+    bool detectCapabilitiesSync(const QString &id);
     Q_INVOKABLE QVariantMap get(const QString &id) const;
     Q_INVOKABLE void refresh();
     Q_INVOKABLE QStringList supportedFlags(const QString &id) const;

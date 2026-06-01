@@ -11,6 +11,13 @@
 #include <QUuid>
 #include <QRegularExpression>
 
+static int estimateTokens(const QString &text)
+{
+    const int n = text.trimmed().size();
+    if (n <= 0) return 0;
+    return (n + 3) / 4; // aproximación simple chars/4
+}
+
 // Quita bloques <think>...</think> (razonamiento) del texto antes de reenviarlo
 // al modelo: el thinking es solo para mostrar, no debe contaminar el contexto.
 static QString stripThinkForContext(const QString &s)
@@ -272,13 +279,24 @@ void RawChatBackend::sendMessage(const QString &text)
         {QStringLiteral("content"), display},
         {QStringLiteral("typing"), false}
     };
+    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+    umMap[QStringLiteral("createdAt")] = static_cast<double>(nowMs);
+    umMap[QStringLiteral("completedAt")] = static_cast<double>(nowMs);
+    umMap[QStringLiteral("elapsedMs")] = 0;
+    umMap[QStringLiteral("tokens")] = estimateTokens(display);
+    umMap[QStringLiteral("tps")] = 0.0;
     if (!attachments.isEmpty()) {
         umMap[QStringLiteral("attachments")] = attachments;
         umMap[QStringLiteral("rawText")] = trimmed;
     }
     AgentMessage am; am.role = QStringLiteral("assistant"); am.typing = true;
+    QVariantMap amMap = am.toMap();
+    amMap[QStringLiteral("createdAt")] = static_cast<double>(nowMs);
+    amMap[QStringLiteral("elapsedMs")] = 0;
+    amMap[QStringLiteral("tokens")] = 0;
+    amMap[QStringLiteral("tps")] = 0.0;
     m_messages.append(umMap);
-    m_messages.append(am.toMap());
+    m_messages.append(amMap);
     m_curAsstIdx = m_messages.size() - 1;
     for (int i = 0; i < m_sessions.size(); ++i) {
         QVariantMap s = m_sessions[i].toMap();
@@ -394,6 +412,14 @@ void RawChatBackend::sendMessage(const QString &text)
             if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
                 QVariantMap asst = m_messages[m_curAsstIdx].toMap();
                 asst[QStringLiteral("content")] = full;
+                const qint64 startedAt = static_cast<qint64>(asst.value(QStringLiteral("createdAt")).toDouble());
+                const qint64 elapsedMs = qMax<qint64>(0, QDateTime::currentMSecsSinceEpoch() - startedAt);
+                const int toks = estimateTokens(full);
+                asst[QStringLiteral("tokens")] = toks;
+                asst[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+                asst[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+                    ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+                    : 0.0;
                 m_messages[m_curAsstIdx] = asst;
                 saveCurrentMessages();
                 emit messagesChanged();
@@ -412,6 +438,17 @@ void RawChatBackend::sendMessage(const QString &text)
             asst[QStringLiteral("typing")] = false;
             if (!ok && asst.value(QStringLiteral("content")).toString().isEmpty())
                 asst[QStringLiteral("content")] = QStringLiteral("[error: %1]").arg(err);
+            const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
+            const qint64 startedAt = static_cast<qint64>(asst.value(QStringLiteral("createdAt")).toDouble());
+            const qint64 elapsedMs = qMax<qint64>(0, doneAt - startedAt);
+            const QString finalText = asst.value(QStringLiteral("content")).toString();
+            const int toks = estimateTokens(finalText);
+            asst[QStringLiteral("completedAt")] = static_cast<double>(doneAt);
+            asst[QStringLiteral("tokens")] = toks;
+            asst[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+            asst[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+                ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+                : 0.0;
             m_messages[m_curAsstIdx] = asst;
             saveCurrentMessages();
             emit messagesChanged();
@@ -431,6 +468,17 @@ void RawChatBackend::cancelGeneration()
     if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
         QVariantMap asst = m_messages[m_curAsstIdx].toMap();
         asst[QStringLiteral("typing")] = false;
+        const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
+        const qint64 startedAt = static_cast<qint64>(asst.value(QStringLiteral("createdAt")).toDouble());
+        const qint64 elapsedMs = qMax<qint64>(0, doneAt - startedAt);
+        const QString finalText = asst.value(QStringLiteral("content")).toString();
+        const int toks = estimateTokens(finalText);
+        asst[QStringLiteral("completedAt")] = static_cast<double>(doneAt);
+        asst[QStringLiteral("tokens")] = toks;
+        asst[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
+        asst[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+            ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
+            : 0.0;
         m_messages[m_curAsstIdx] = asst;
         saveCurrentMessages();
         emit messagesChanged();
@@ -514,11 +562,9 @@ void RawChatBackend::loadFromDisk()
             const QJsonArray m = obj.value(QStringLiteral("messages")).toArray();
             for (const QJsonValue &mv : m) {
                 const QJsonObject mo = mv.toObject();
-                msgs.append(QVariantMap{
-                    {QStringLiteral("role"), mo.value(QStringLiteral("role")).toString()},
-                    {QStringLiteral("content"), mo.value(QStringLiteral("content")).toString()},
-                    {QStringLiteral("typing"), false}
-                });
+                QVariantMap mm = mo.toVariantMap();
+                mm[QStringLiteral("typing")] = false;
+                msgs.append(mm);
             }
         }
         m_sessionMessages.insert(sid, msgs);
@@ -559,11 +605,9 @@ void RawChatBackend::persistSession(const QString &sessionId) const
     QJsonArray msgs;
     const QVariantList ml = m_sessionMessages.value(sessionId);
     for (const QVariant &mv : ml) {
-        const QVariantMap m = mv.toMap();
-        msgs.append(QJsonObject{
-            {QStringLiteral("role"), m.value(QStringLiteral("role")).toString()},
-            {QStringLiteral("content"), m.value(QStringLiteral("content")).toString()}
-        });
+        QVariantMap m = mv.toMap();
+        m.remove(QStringLiteral("typing"));
+        msgs.append(QJsonObject::fromVariantMap(m));
     }
     QJsonObject obj;
     obj[QStringLiteral("id")] = sessionId;

@@ -38,6 +38,14 @@ public:
     virtual void approveTool(const QString &id, bool always = false)
         { Q_UNUSED(id) Q_UNUSED(always) }
     virtual void rejectTool(const QString &id) { Q_UNUSED(id) }
+    // Política: "auto" (aprueba todo), "ask" (auto lectura, pide escritura+shell),
+    // "manual" (pide todo). Default del backend: "ask".
+    virtual void setApprovalPolicy(const QString &mode) { Q_UNUSED(mode) }
+    // Revertir una edición de archivo aplicada por el agente (default: no-op).
+    virtual void revertEdit(const QString &path) { Q_UNUSED(path) }
+    // Ajuste del agente: system prompt extra + temperatura (<0 = default del server).
+    virtual void setAgentTuning(const QString &systemExtra, double temperature)
+        { Q_UNUSED(systemExtra) Q_UNUSED(temperature) }
 
     // Estado expuesto a la UI
     virtual QString currentSessionId() const { return {}; }
@@ -53,4 +61,6 @@ signals:
     void logAppended(const QString &chunk);
     void toolApprovalNeeded(const QVariantMap &toolCall);
     void errorOccurred(const QString &message);
+    // Uso de contexto del último turno: tokens usados / límite (n_ctx). -1 = desconocido.
+    void contextUsage(int used, int limit);
 };

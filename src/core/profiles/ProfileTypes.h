@@ -53,7 +53,7 @@ struct RuntimePreset {
 struct HarnessProfile {
     QString id;
     QString name;
-    QString adapter;  // "none", "opencode", "aider", "custom"
+    QString adapter;  // "none", "opencode", "aider", "llamaagent"
     QStringList args;
     QMap<QString, QString> env;
 

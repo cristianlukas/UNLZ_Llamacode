@@ -31,6 +31,27 @@ Item {
 
     function argsFlat() { return splitArgs(extraArgsArea.text) }
 
+    // ¿El token es un flag (-x / --xxx) y NO un valor numérico negativo (-1, -0.5)?
+    function isArgFlag(tok) {
+        return /^-/.test(tok) && !/^-?\d*\.?\d+$/.test(tok)
+    }
+
+    // Agrupa flag+valor en una línea: "-np 1", "--reasoning off". Los flags sin
+    // valor (seguidos de otro flag) quedan solos en su línea.
+    function formatArgsForDisplay(tokens) {
+        const lines = []
+        for (let i = 0; i < tokens.length; ++i) {
+            const t = tokens[i]
+            if (isArgFlag(t) && i + 1 < tokens.length && !isArgFlag(tokens[i + 1])) {
+                lines.push(t + " " + tokens[i + 1])
+                ++i
+            } else {
+                lines.push(t)
+            }
+        }
+        return lines.join("\n")
+    }
+
     function findArgValue(flag) {
         const a = argsFlat()
         for (let i = 0; i < a.length - 1; ++i) {
@@ -200,7 +221,7 @@ Item {
             harnessAdapter = "none"
         }
         const rawExtra = (lp.extraArgs ?? [])
-        manualExtraArgsArea.text = extractManualArgs(rawExtra).join("\n")
+        manualExtraArgsArea.text = formatArgsForDisplay(extractManualArgs(rawExtra))
 
         const bp = App.profileManager.getBackend(backendId)
         backendNameCurrent = bp.name ?? ""
@@ -895,6 +916,7 @@ Item {
                                 model: [
                                     { adapter: "none",      label: (App.langV, App.l("harness.none")),  icon: "—" },
                                     { adapter: "opencode",  label: "Opencode",   icon: "🔮" },
+                                    { adapter: "llamaagent", label: "LlamaAgent", icon: "🛠" },
                                     // Ocultos por ahora — reactivar agregando al modelo:
                                     // { adapter: "raw",       label: "Raw Chat",   icon: "💬" },
                                     // { adapter: "smallcode", label: "Smallcode",  icon: "🧩" },
@@ -1012,11 +1034,16 @@ Item {
                     ColumnLayout {
                         anchors.fill: parent; anchors.margins: 10
                         Text { text: (App.langV, App.l("profiles.extraArgs")); color: Theme.textSecondary; font.pixelSize: 12 }
-                        TextArea {
-                            id: manualExtraArgsArea
+                        ScrollView {
                             Layout.fillWidth: true; Layout.fillHeight: true
-                            color: Theme.textPrimary
-                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            clip: true
+                            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                            TextArea {
+                                id: manualExtraArgsArea
+                                color: Theme.textPrimary
+                                wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            }
                         }
                     }
                 }
