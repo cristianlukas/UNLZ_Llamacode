@@ -140,6 +140,31 @@ void BinaryRegistry::detectCapabilities(const QString &id)
     });
 }
 
+bool BinaryRegistry::detectCapabilitiesSync(const QString &id)
+{
+    int idx = indexOfId(id);
+    if (idx < 0) return false;
+
+    const QString path = m_items.at(idx).path;
+    DetectedCapabilities caps = CapabilityDetector::detect(path);
+    if (!caps.success)
+        return false;
+
+    idx = indexOfId(id);   // re-resolve in case the model changed
+    if (idx < 0) return false;
+
+    LlamaBinary &b = m_items[idx];
+    b.supportedFlags = caps.flags;
+    b.flagAliases = caps.flagAliases;
+    b.pathValid = QFileInfo::exists(b.path);
+
+    const QModelIndex mi = index(idx);
+    emit dataChanged(mi, mi);
+    save();
+    emit capabilitiesDetected(id, caps.success, caps.error);
+    return true;
+}
+
 QVariantMap BinaryRegistry::get(const QString &id) const
 {
     const int idx = indexOfId(id);

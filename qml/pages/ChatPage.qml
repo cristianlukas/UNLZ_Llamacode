@@ -55,6 +55,45 @@ Item {
         return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim()
     }
 
+    function estimateTokens(text) {
+        const n = String(text ?? "").trim().length
+        return n <= 0 ? 0 : Math.ceil(n / 4)
+    }
+
+    function formatDuration(ms) {
+        const v = Math.max(0, Math.floor(ms || 0))
+        if (v < 1000) return v + "ms"
+        return (v / 1000).toFixed(2) + "s"
+    }
+
+    function formatMeta(modelData) {
+        try {
+            if (!modelData) return ""
+            let ts = Number(modelData.completedAt ?? modelData.createdAt ?? 0)
+            if (!isFinite(ts) || ts <= 0) return ""
+            if (ts < 1000000000000) ts *= 1000
+            const d = new Date(ts)
+            if (isNaN(d.getTime())) return ""
+            const pad = n => (n < 10 ? "0" : "") + n
+            const date = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
+            const hms = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds())
+            const content = String(modelData.content ?? "")
+            const rawTokens = Number(modelData.tokens ?? estimateTokens(content))
+            const tokens = isFinite(rawTokens) && rawTokens >= 0 ? Math.floor(rawTokens) : estimateTokens(content)
+            let elapsedMs = Number(modelData.elapsedMs ?? 0)
+            if (!isFinite(elapsedMs) || elapsedMs < 0) {
+                const started = Number(modelData.createdAt ?? 0)
+                const ended = Number(modelData.completedAt ?? 0)
+                elapsedMs = (isFinite(started) && isFinite(ended) && ended >= started) ? (ended - started) : 0
+            }
+            const rawTps = Number(modelData.tps ?? (elapsedMs > 0 ? (tokens * 1000.0 / elapsedMs) : 0))
+            const tps = isFinite(rawTps) && rawTps >= 0 ? rawTps : 0
+            return date + " - " + hms + " - tok " + tokens + " - " + formatDuration(elapsedMs) + " - " + tps.toFixed(2) + " tps"
+        } catch (e) {
+            return ""
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -665,6 +704,7 @@ Item {
                     readonly property bool hasThink: thinkContent.trim().length > 0
                     readonly property string visibleContentRaw: root.stripThinkBlocks(content)
                     readonly property bool thinkOpen: root.thinkExpanded[msgId] === true
+                    readonly property string metaLine: root.formatMeta(modelData)
 
                     Rectangle {
                         id: bubbleRect
@@ -774,6 +814,15 @@ Item {
                                 wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
                                 readOnly: true
                                 selectByMouse: true
+                            }
+                            Text {
+                                visible: metaLine.length > 0
+                                width: parent.width
+                                text: metaLine
+                                color: Theme.textMuted
+                                font.pixelSize: 10
+                                horizontalAlignment: Text.AlignRight
+                                elide: Text.ElideRight
                             }
                         }
                     }

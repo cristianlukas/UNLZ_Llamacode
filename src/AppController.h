@@ -14,6 +14,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QFile>
 
 class AppController : public QObject
 {
@@ -47,6 +48,13 @@ class AppController : public QObject
     Q_PROPERTY(QVariantList agentSessions  READ agentSessions  NOTIFY agentSessionsChanged)
     Q_PROPERTY(QString opencodeSessionId   READ opencodeSessionId   NOTIFY agentSessionsChanged)
     Q_PROPERTY(QString opencodeSessionTitle READ opencodeSessionTitle NOTIFY agentSessionsChanged)
+    Q_PROPERTY(QVariantMap agentPendingTool READ agentPendingTool NOTIFY agentPendingToolChanged)
+    Q_PROPERTY(QString agentApprovalMode READ agentApprovalMode WRITE setAgentApprovalMode NOTIFY agentApprovalModeChanged)
+    Q_PROPERTY(bool agentThinkingEnabled READ agentThinkingEnabled WRITE setAgentThinkingEnabled NOTIFY agentThinkingChanged)
+    Q_PROPERTY(int agentContextUsed READ agentContextUsed NOTIFY agentContextChanged)
+    Q_PROPERTY(int agentContextLimit READ agentContextLimit NOTIFY agentContextChanged)
+    Q_PROPERTY(QString agentSystemPrompt READ agentSystemPrompt WRITE setAgentSystemPrompt NOTIFY agentTuningChanged)
+    Q_PROPERTY(double agentTemperature READ agentTemperature WRITE setAgentTemperature NOTIFY agentTuningChanged)
     Q_PROPERTY(QString activeAgentAdapter READ activeAgentAdapter NOTIFY agentRunningChanged)
     Q_PROPERTY(bool agentInTerminal   READ agentInTerminal   NOTIFY agentRunningChanged)
     Q_PROPERTY(bool installingHarness READ installingHarness NOTIFY harnessStatusChanged)
@@ -104,6 +112,17 @@ public:
     QVariantList agentSessions()  const { return m_agentSessions; }
     QString opencodeSessionId()   const { return m_opencodeSessionId; }
     QString opencodeSessionTitle() const { return m_opencodeSessionTitle; }
+    QVariantMap agentPendingTool() const { return m_agentPendingTool; }
+    int agentContextUsed() const { return m_agentContextUsed; }
+    int agentContextLimit() const { return m_agentContextLimit; }
+    QString agentSystemPrompt() const { return m_agentSystemPrompt; }
+    double agentTemperature() const { return m_agentTemperature; }
+    void setAgentSystemPrompt(const QString &p);
+    void setAgentTemperature(double t);
+    QString agentApprovalMode() const { return m_agentApprovalMode; }
+    void setAgentApprovalMode(const QString &mode);
+    bool agentThinkingEnabled() const { return m_agentThinkingEnabled; }
+    void setAgentThinkingEnabled(bool enabled);
     QString activeAgentAdapter() const { return m_activeAgentAdapter; }
     bool agentInTerminal() const { return m_agentInTerminal; }
     bool installingHarness() const { return m_installingHarness; }
@@ -153,9 +172,15 @@ public:
     Q_INVOKABLE void startAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopAgent();
     Q_INVOKABLE void sendToAgent(const QString &text);
+    Q_INVOKABLE void approveAgentTool(const QString &id, bool always = false);
+    Q_INVOKABLE void rejectAgentTool(const QString &id);
+    Q_INVOKABLE void revertAgentEdit(const QString &path);
+    Q_INVOKABLE QString readAgentMemory(const QString &projectDir) const;
+    Q_INVOKABLE bool writeAgentMemory(const QString &projectDir, const QString &text);
     Q_INVOKABLE void clearAgentLog();
     Q_INVOKABLE QString agentNativeLogDir(const QString &adapter) const;
-    Q_INVOKABLE void openAgentLogDir(const QString &adapter) const;
+    Q_INVOKABLE void openAgentLogDir(const QString &adapter);
+    Q_INVOKABLE void openRuntimeLogDir();
     Q_INVOKABLE void newOpencodeSession();
     Q_INVOKABLE void switchOpencodeSession(const QString &sessionId);
     Q_INVOKABLE void refreshOpencodeSessionList();
@@ -216,6 +241,11 @@ signals:
     void agentLogChanged();
     void agentMessagesChanged();
     void agentSessionsChanged();
+    void agentPendingToolChanged();
+    void agentApprovalModeChanged();
+    void agentThinkingChanged();
+    void agentContextChanged();
+    void agentTuningChanged();
     void benchmarkRunningChanged();
     void benchmarkProgressChanged();
     void benchmarkStatusChanged();
@@ -223,6 +253,11 @@ signals:
 
 private:
     void appendLog(const QString &text);
+    void appendServerEvent(const QString &source, const QString &text);
+    void appendAgentEvent(const QString &source, const QString &text);
+    QString runtimeLogDir() const;
+    void rotateLogIfNeeded(const QString &path) const;
+    void appendFileLog(const QString &path, const QString &line) const;
     void finishSmokeTest(bool passed, const QString &output);
     EffectiveProfileBuilder::Context buildContext(const QString &launchProfileId);
 
@@ -238,6 +273,7 @@ private:
     QString   m_smokeTestLog;
     bool      m_smokeTestDone = false;
     QString   m_log;
+    QString   m_serverLogFilePath;
     QString   m_activeLaunchId;
     bool      m_serverStopping = false;
     bool      m_serverReady    = false;
@@ -262,8 +298,8 @@ private:
     bool      m_agentInTerminal = false;
     QTimer   *m_agentPollTimer = nullptr;
     QString   m_agentLog;
+    QString   m_agentLogFilePath;
     QString   m_activeAgentAdapter;
-    QString   m_opencodeAttachUrl  = QStringLiteral("http://127.0.0.1:4096");
     QString   m_agentCwdOverride;   // directory for next/current agent start
     QString   m_pendingAgentLaunchId; // used when restarting for project change
     // pi harness: modo print por-mensaje (sin proceso persistente)
@@ -296,21 +332,20 @@ private:
     void          loadChatSessionMessages(const QString &id);
 
     QNetworkAccessManager *m_nam = nullptr;
+    // Espejos del backend de agente activo (poblados desde IAgentBackend).
     QString   m_opencodeSessionId;
-    QNetworkReply *m_opencodeEventReply = nullptr;
-    bool           m_agentStopping = false;   // evita reconexión SSE al detener
+    QString   m_opencodeSessionTitle;
+    bool           m_agentStopping = false;   // reservado para path genérico (stdin)
     QVariantList m_agentMessages;
     int       m_currentAssistantIdx = -1;
     QVariantList m_agentSessions;
-    QString   m_opencodeSessionTitle;
-    bool      m_forceNewOpencodeSession = false;
-    void loadOpencodeSessionList(std::function<void()> then = nullptr);
-    void resumeOrCreateOpencodeSession();
-    void doCreateOpencodeSession();
-    void loadOpencodeSessionMessages(const QString &sessionId);
-    void initOpencodeSession();
-    void subscribeOpencodeEvents();
-    void respondOpencodePermission(const QString &sessionId, const QString &permissionId);
+    QVariantMap m_agentPendingTool;   // tool esperando aprobación ({} si ninguna)
+    QString   m_agentApprovalMode = QStringLiteral("ask");  // auto | ask | manual | super
+    bool      m_agentThinkingEnabled = false;   // razonamiento del agente (default off)
+    int       m_agentContextUsed = 0;
+    int       m_agentContextLimit = -1;
+    QString   m_agentSystemPrompt;
+    double    m_agentTemperature = -1.0;
 
     // Managed-process lifecycle
 #ifdef Q_OS_WIN

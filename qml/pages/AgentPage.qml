@@ -10,6 +10,107 @@ Item {
     property string resolvedAdapter: ""
     property string resolvedAdapterLabel: ""
     property int currentView: 0   // 0 = Vista Agente, 1 = Vista terminal
+    property double lastAgentActivityMs: Date.now()
+    property int idleSeconds: 0
+
+    readonly property bool waitingApproval: (App.agentPendingTool.id ?? "").length > 0
+    readonly property bool hasTypingMessage: {
+        for (let i = 0; i < App.agentMessages.length; i++) {
+            if ((App.agentMessages[i].typing ?? false) === true) return true
+        }
+        return false
+    }
+    readonly property string activityLabel: {
+        if (!App.agentRunning) return "Detenido"
+        if (waitingApproval) return "Esperando aprobación"
+        if (hasTypingMessage) {
+            if (idleSeconds < 12) return "Procesando"
+            return "Sin actividad (" + idleSeconds + "s)"
+        }
+        return "Listo"
+    }
+    readonly property color activityColor: {
+        if (!App.agentRunning) return Theme.textMuted
+        if (waitingApproval) return Theme.warnText
+        if (hasTypingMessage && idleSeconds >= 12) return Theme.errorText
+        if (hasTypingMessage) return Theme.successText
+        return Theme.textSecondary
+    }
+
+    // Confirmación para activar el modo "Super Agente" (acceso total al disco).
+    Dialog {
+        id: superAgentDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 460
+        height: 260
+        closePolicy: Popup.CloseOnEscape
+
+        // Cancelar/cerrar: revertir el combo al modo real actual.
+        function revertCombo() {
+            approvalModeCombo.currentIndex =
+                App.agentApprovalMode === "manual" ? 2
+                : App.agentApprovalMode === "auto" ? 0
+                : App.agentApprovalMode === "super" ? 3 : 1
+        }
+        onRejected: revertCombo()
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "⚠  Modo Super Agente — riesgoso"
+                font { pixelSize: 14; bold: true }
+                color: Theme.textPrimary
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Cancelar"; secondary: true
+                    onClicked: { superAgentDialog.revertCombo(); superAgentDialog.close() }
+                }
+                LcButton {
+                    text: "Activar"
+                    danger: true
+                    onClicked: { App.agentApprovalMode = "super"; superAgentDialog.close() }
+                }
+            }
+        }
+
+        contentItem: Item {
+            Text {
+                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 20 }
+                text: "El Super Agente tendrá acceso de LECTURA y ESCRITURA a TODAS las " +
+                      "carpetas de la computadora y ejecutará comandos de shell SIN pedir " +
+                      "permiso.\n\nPuede modificar o borrar archivos fuera del proyecto. " +
+                      "Usalo solo si confiás en lo que le pedís.\n\n¿Activar Super Agente?"
+                color: Theme.textPrimary
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+            }
+        }
+    }
+
+    // La página vive en un StackLayout (no se recrea): re-resolver el harness
+    // cada vez que se muestra, por si el perfil cambió en Perfiles.
+    onVisibleChanged: if (visible && selectedLaunchId.length > 0) resolveHarness(selectedLaunchId)
 
     function projectDirForSection(sectionName) {
         for (let i = 0; i < App.agentSessions.length; i++) {
@@ -34,11 +135,77 @@ Item {
         }
     }
 
+    function estimateTokens(text) {
+        const n = String(text ?? "").trim().length
+        return n <= 0 ? 0 : Math.ceil(n / 4)
+    }
+
+    function formatDuration(ms) {
+        const v = Math.max(0, Math.floor(ms || 0))
+        if (v < 1000) return v + "ms"
+        return (v / 1000).toFixed(2) + "s"
+    }
+
+    function formatMeta(modelData) {
+        try {
+            if (!modelData) return ""
+            if (String(modelData.role ?? "") === "diff") return ""
+            let ts = Number(modelData.completedAt ?? modelData.createdAt ?? 0)
+            if (!isFinite(ts) || ts <= 0) return ""
+            if (ts < 1000000000000) ts *= 1000 // si vino en segundos
+            const d = new Date(ts)
+            if (isNaN(d.getTime())) return ""
+            const pad = n => (n < 10 ? "0" : "") + n
+            const date = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
+            const hms = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds())
+            const content = String(modelData.content ?? "")
+            const rawTokens = Number(modelData.tokens ?? estimateTokens(content))
+            const tokens = isFinite(rawTokens) && rawTokens >= 0 ? Math.floor(rawTokens) : estimateTokens(content)
+            let elapsedMs = Number(modelData.elapsedMs ?? 0)
+            if (!isFinite(elapsedMs) || elapsedMs < 0) {
+                const started = Number(modelData.createdAt ?? 0)
+                const ended = Number(modelData.completedAt ?? 0)
+                elapsedMs = (isFinite(started) && isFinite(ended) && ended >= started) ? (ended - started) : 0
+            }
+            const rawTps = Number(modelData.tps ?? (elapsedMs > 0 ? (tokens * 1000.0 / elapsedMs) : 0))
+            const tps = isFinite(rawTps) && rawTps >= 0 ? rawTps : 0
+            return date + " - " + hms + " - tok " + tokens + " - " + formatDuration(elapsedMs) + " - " + tps.toFixed(2) + " tps"
+        } catch (e) {
+            return ""
+        }
+    }
+
     Component.onCompleted: {
         if (App.profileManager.launchProfiles.rowCount() > 0) {
             const idx = App.profileManager.launchProfiles.index(0, 0)
             selectedLaunchId = App.profileManager.launchProfiles.data(idx, 257) ?? ""
             resolveHarness(selectedLaunchId)
+        }
+    }
+
+    function markActivity() {
+        lastAgentActivityMs = Date.now()
+        idleSeconds = 0
+    }
+
+    Connections {
+        target: App
+        function onAgentMessagesChanged() { root.markActivity() }
+        function onAgentPendingToolChanged() { root.markActivity() }
+        function onAgentLogChanged() { root.markActivity() }
+        function onAgentRunningChanged() { root.markActivity() }
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!App.agentRunning) {
+                idleSeconds = 0
+                return
+            }
+            idleSeconds = Math.floor((Date.now() - lastAgentActivityMs) / 1000)
         }
     }
 
@@ -112,6 +279,22 @@ Item {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
+                Rectangle {
+                    visible: App.agentRunning
+                    implicitWidth: activityText.implicitWidth + 16
+                    height: 24
+                    radius: 6
+                    color: Theme.inputBg
+                    border.color: root.activityColor
+                    border.width: 1
+                    Text {
+                        id: activityText
+                        anchors.centerIn: parent
+                        text: root.activityLabel
+                        color: root.activityColor
+                        font.pixelSize: 11
+                    }
+                }
 
                 // View toggle tabs
                 Row {
@@ -141,6 +324,97 @@ Item {
                     }
                 }
 
+                // Indicador de contexto (tokens usados / n_ctx).
+                Rectangle {
+                    visible: App.agentContextLimit > 0 && App.agentRunning
+                    implicitWidth: 130; implicitHeight: 26
+                    radius: 6
+                    color: Theme.inputBg
+                    border.color: Theme.borderColor
+                    readonly property real frac: App.agentContextLimit > 0
+                        ? Math.min(1, App.agentContextUsed / App.agentContextLimit) : 0
+                    Rectangle {
+                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom; margins: 1 }
+                        width: (parent.width - 2) * parent.frac
+                        radius: 6
+                        color: parent.frac > 0.9 ? Theme.errorText
+                             : parent.frac > 0.7 ? Theme.warnText : Theme.accent
+                        opacity: 0.35
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        text: "ctx " + App.agentContextUsed + "/" + App.agentContextLimit
+                        color: Theme.textSecondary; font { pixelSize: 11; family: "Consolas,monospace" }
+                    }
+                }
+
+                // Política de aprobación de herramientas.
+                ComboBox {
+                    id: approvalModeCombo
+                    visible: resolvedAdapter === "opencode" || resolvedAdapter === "llamaagent"
+                    implicitWidth: 150
+                    model: [
+                        { key: "auto",   label: "Aprobar todo" },
+                        { key: "ask",    label: "Pedir escritura" },
+                        { key: "manual", label: "Pedir todo" },
+                        { key: "super",  label: "Super Agente ⚠" }
+                    ]
+                    textRole: "label"
+                    valueRole: "key"
+                    // indexOfValue() no es fiable con model de objetos JS (devuelve -1
+                    // y el combo cae a índice 0 mostrando "Aprobar todo" aunque el modo
+                    // real sea "ask"). Mapeo explícito para que UI y backend coincidan.
+                    currentIndex: App.agentApprovalMode === "manual" ? 2
+                                  : App.agentApprovalMode === "auto" ? 0
+                                  : App.agentApprovalMode === "super" ? 3 : 1
+                    onActivated: {
+                        if (currentValue === "super" && App.agentApprovalMode !== "super") {
+                            superAgentDialog.open()   // confirmar antes de aplicar
+                        } else {
+                            App.agentApprovalMode = currentValue
+                        }
+                    }
+                    background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                    contentItem: Text {
+                        text: approvalModeCombo.displayText
+                        color: Theme.textPrimary; font.pixelSize: 12
+                        leftPadding: 10; verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                // Razonamiento del agente (default OFF para respetar perfiles con
+                // --reasoning off y reducir carga del server).
+                CheckBox {
+                    id: agentThinkingCheck
+                    visible: resolvedAdapter === "llamaagent"
+                    text: "Pensar"
+                    checked: App.agentThinkingEnabled
+                    onToggled: App.agentThinkingEnabled = checked
+                    contentItem: Text {
+                        text: agentThinkingCheck.text
+                        color: Theme.textPrimary; font.pixelSize: 12
+                        leftPadding: agentThinkingCheck.indicator.width + 6
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                LcButton {
+                    text: "🧠 Memoria"
+                    secondary: true
+                    visible: (resolvedAdapter === "llamaagent" || resolvedAdapter === "opencode")
+                    onClicked: {
+                        memoryDialog.text = App.readAgentMemory("")
+                        memoryDialog.open()
+                    }
+                }
+                LcButton {
+                    text: "⚙ Agente"
+                    secondary: true
+                    visible: resolvedAdapter === "llamaagent"
+                    onClicked: {
+                        agentTuningSystem.text = App.agentSystemPrompt
+                        agentTuningTemp.text = App.agentTemperature >= 0 ? String(App.agentTemperature) : ""
+                        agentTuningDialog.open()
+                    }
+                }
                 LcButton {
                     text: "⚙ Config opencode"
                     secondary: true
@@ -155,6 +429,11 @@ Item {
                     secondary: true
                     visible: resolvedAdapter.length > 0 && resolvedAdapter !== "none"
                     onClicked: App.openAgentLogDir(resolvedAdapter)
+                }
+                LcButton {
+                    text: "Abrir logs runtime"
+                    secondary: true
+                    onClicked: App.openRuntimeLogDir()
                 }
                 LcButton {
                     text: {
@@ -463,6 +742,41 @@ Item {
                 anchors.fill: parent
                 visible: root.currentView === 0
 
+                // Estado bloqueado: servidor caído o modelo aún cargando.
+                Rectangle {
+                    anchors.centerIn: parent
+                    z: 5
+                    visible: App.agentRunning && (!App.serverRunning || !App.serverReady)
+                    radius: 10
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
+                    implicitWidth: agentLoadingRow.implicitWidth + 32
+                    implicitHeight: agentLoadingRow.implicitHeight + 24
+                    Row {
+                        id: agentLoadingRow
+                        anchors.centerIn: parent
+                        spacing: 10
+                        Rectangle {
+                            width: 10; height: 10; radius: 5
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: Theme.warnText
+                            SequentialAnimation on opacity {
+                                running: parent.parent.visible
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 0.3; duration: 600 }
+                                NumberAnimation { to: 1.0; duration: 600 }
+                            }
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: !App.serverRunning
+                                ? "Servidor no disponible. Iniciá el modelo en Lanzar."
+                                : "Cargando modelo..."
+                            color: Theme.textSecondary; font.pixelSize: 14
+                        }
+                    }
+                }
+
                 // Idle / not running
                 ColumnLayout {
                     anchors.centerIn: parent
@@ -493,14 +807,17 @@ Item {
                     delegate: Item {
                         id: delegateRoot
                         width: msgList.width
-                        height: bubbleRect.height + 8
+                        height: (isDiff ? diffCard.height : bubbleRect.height) + 8
 
                         readonly property bool isUser: modelData.role === "user"
+                        readonly property bool isDiff: modelData.role === "diff"
                         readonly property string content: modelData.content ?? ""
                         readonly property bool isTyping: modelData.typing ?? false
+                        readonly property string metaLine: root.formatMeta(modelData)
 
                         Rectangle {
                             id: bubbleRect
+                            visible: !delegateRoot.isDiff
                             anchors {
                                 top: parent.top
                                 right: delegateRoot.isUser ? parent.right : undefined
@@ -509,33 +826,97 @@ Item {
                                 leftMargin: delegateRoot.isUser ? undefined : 16
                             }
                             width: Math.min(delegateRoot.width - 80, delegateRoot.width * 0.78)
-                            height: Math.max(msgText.implicitHeight + 22, 44)
+                            height: Math.max(msgCol.implicitHeight + 22, 44)
                             radius: 10
                             color: delegateRoot.isUser ? Theme.chatUserBubble : Theme.chatAsstBubble
                             border.width: delegateRoot.isUser ? 0 : 1
                             border.color: Theme.borderColor
 
-                            TextEdit {
-                                id: msgText
+                            Column {
+                                id: msgCol
                                 anchors { top: parent.top; left: parent.left; right: parent.right; margins: 11 }
-                                text: {
-                                    if (delegateRoot.isTyping && delegateRoot.content.length === 0)
-                                        return "⏳ Procesando..."
-                                    if (delegateRoot.isTyping)
-                                        return delegateRoot.content + "▌"
-                                    return delegateRoot.content
+                                spacing: 6
+
+                                TextEdit {
+                                    id: msgText
+                                    width: parent.width
+                                    text: {
+                                        if (delegateRoot.isTyping && delegateRoot.content.length === 0)
+                                            return "⏳ Procesando..."
+                                        if (delegateRoot.isTyping)
+                                            return delegateRoot.content + "▌"
+                                        return delegateRoot.content
+                                    }
+                                    color: {
+                                        if (delegateRoot.isTyping && delegateRoot.content.length === 0)
+                                            return Theme.textMuted
+                                        return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
+                                    }
+                                    font.family: "Segoe UI"
+                                    font.pixelSize: 13
+                                    font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
+                                    wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
+                                    readOnly: true
+                                    selectByMouse: true
                                 }
-                                color: {
-                                    if (delegateRoot.isTyping && delegateRoot.content.length === 0)
-                                        return Theme.textMuted
-                                    return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
+                                Text {
+                                    visible: delegateRoot.metaLine.length > 0
+                                    width: parent.width
+                                    text: delegateRoot.metaLine
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    horizontalAlignment: Text.AlignRight
+                                    elide: Text.ElideRight
                                 }
-                                font.family: "Segoe UI"
-                                font.pixelSize: 13
-                                font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
-                                wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
-                                readOnly: true
-                                selectByMouse: true
+                            }
+                        }
+
+                        // ── Entrada de diff (edición de archivo) ──────────────
+                        Rectangle {
+                            id: diffCard
+                            visible: delegateRoot.isDiff
+                            anchors { top: parent.top; left: parent.left; right: parent.right
+                                      leftMargin: 16; rightMargin: 16 }
+                            height: visible ? diffCol.implicitHeight + 20 : 0
+                            radius: 8
+                            color: Theme.inputBg
+                            border.color: Theme.borderColor
+                            readonly property bool reverted: modelData.reverted ?? false
+
+                            ColumnLayout {
+                                id: diffCol
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                                spacing: 6
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    Text { text: "📝"; font.pixelSize: 13 }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: (modelData.path ?? "")
+                                              + (diffCard.reverted ? "  · revertido" : "")
+                                        color: diffCard.reverted ? Theme.textMuted : Theme.textPrimary
+                                        font { family: "Consolas,monospace"; pixelSize: 12; bold: true }
+                                        elide: Text.ElideMiddle
+                                    }
+                                    LcButton {
+                                        text: "Revertir"; secondary: true
+                                        visible: !diffCard.reverted
+                                        implicitHeight: 24
+                                        onClicked: App.revertAgentEdit(modelData.absPath ?? modelData.path ?? "")
+                                    }
+                                }
+
+                                TextEdit {
+                                    Layout.fillWidth: true
+                                    text: modelData.diff ?? ""
+                                    color: Theme.textSecondary
+                                    font { family: "Consolas,monospace"; pixelSize: 11 }
+                                    wrapMode: TextEdit.NoWrap
+                                    readOnly: true; selectByMouse: true
+                                    opacity: diffCard.reverted ? 0.5 : 1.0
+                                }
                             }
                         }
 
@@ -543,6 +924,114 @@ Item {
                     }
 
                     onCountChanged: Qt.callLater(() => { msgList.positionViewAtEnd() })
+                }
+
+                // ── Tarjeta de aprobación de herramienta (human-in-the-loop) ──
+                Rectangle {
+                    id: approvalCard
+                    readonly property var tool: App.agentPendingTool
+                    readonly property string toolId: tool.id ?? ""
+                    readonly property string kind: tool.kind ?? "read"
+                    visible: toolId.length > 0
+                    anchors {
+                        left: parent.left; right: parent.right; bottom: parent.bottom
+                        margins: 12
+                    }
+                    height: visible ? approvalCol.implicitHeight + 24 : 0
+                    radius: 10
+                    color: Theme.surfaceBg
+                    border.width: 2
+                    border.color: kind === "shell" ? Theme.errorText
+                                : kind === "write" ? Theme.warnText
+                                :                    Theme.borderColor
+
+                    ColumnLayout {
+                        id: approvalCol
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                        spacing: 8
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Text {
+                                text: approvalCard.kind === "shell" ? "🖥️"
+                                    : approvalCard.kind === "write" ? "✏️" : "📄"
+                                font.pixelSize: 16
+                            }
+                            Text {
+                                text: "Aprobar herramienta"
+                                color: Theme.textPrimary; font { pixelSize: 13; bold: true }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: (approvalCard.tool.tool ?? "")
+                                      + (approvalCard.tool.title ? " · " + approvalCard.tool.title : "")
+                                color: Theme.textMuted; font.pixelSize: 12
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            visible: (approvalCard.tool.detail ?? "").length > 0
+                            color: Theme.inputBg; radius: 6
+                            border.color: Theme.borderColor
+                            implicitHeight: detailText.implicitHeight + 16
+                            TextEdit {
+                                id: detailText
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                                text: approvalCard.tool.detail ?? ""
+                                color: Theme.textSecondary
+                                font { family: "Consolas,monospace"; pixelSize: 12 }
+                                wrapMode: TextEdit.WrapAnywhere
+                                readOnly: true; selectByMouse: true
+                            }
+                        }
+
+                        // Preview de diff (solo write_file).
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: Math.min(diffPreview.implicitHeight + 16, 180)
+                            visible: (approvalCard.tool.diff ?? "").length > 0
+                            color: Theme.baseBg; radius: 6
+                            border.color: Theme.borderColor
+                            clip: true
+                            Flickable {
+                                anchors { fill: parent; margins: 8 }
+                                contentHeight: diffPreview.implicitHeight
+                                contentWidth: width
+                                clip: true
+                                ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
+                                TextEdit {
+                                    id: diffPreview
+                                    width: parent.width
+                                    text: approvalCard.tool.diff ?? ""
+                                    color: Theme.textSecondary
+                                    font { family: "Consolas,monospace"; pixelSize: 11 }
+                                    wrapMode: TextEdit.NoWrap
+                                    readOnly: true; selectByMouse: true
+                                }
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Item { Layout.fillWidth: true }
+                            LcButton {
+                                text: "Rechazar"; danger: true
+                                onClicked: App.rejectAgentTool(approvalCard.toolId)
+                            }
+                            LcButton {
+                                text: "Aprobar"
+                                onClicked: App.approveAgentTool(approvalCard.toolId, false)
+                            }
+                            LcButton {
+                                text: "Siempre"; secondary: true
+                                onClicked: App.approveAgentTool(approvalCard.toolId, true)
+                            }
+                        }
+                    }
                 }
 
                 // Terminal mode placeholder
@@ -645,16 +1134,21 @@ Item {
                 LcTextField {
                     id: agentInput
                     Layout.fillWidth: true
-                    placeholderText: (App.langV, App.l("agent.input"))
+                    enabled: App.serverRunning && App.serverReady
+                    placeholderText: (!App.serverRunning)
+                        ? "Servidor no disponible. Iniciá el modelo en Lanzar."
+                        : (App.serverReady
+                        ? (App.langV, App.l("agent.input"))
+                        : "Modelo cargando...")
                     onAccepted: {
                         const t = text.trim()
-                        if (t.length === 0) return
+                        if (t.length === 0 || !App.serverRunning || !App.serverReady) return
                         App.sendToAgent(t); text = ""
                     }
                 }
                 LcButton {
                     text: (App.langV, App.l("agent.send"))
-                    enabled: agentInput.text.trim().length > 0
+                    enabled: agentInput.text.trim().length > 0 && App.serverRunning && App.serverReady
                     onClicked: {
                         const t = agentInput.text.trim()
                         if (t.length === 0) return
@@ -800,4 +1294,161 @@ Item {
     }
 
     OpencodeConfigDialog { id: opencodeConfigDialog }
+
+    // ── Ajustes del agente (LlamaAgentBackend): system prompt + temperatura ─────
+    Dialog {
+        id: agentTuningDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 580
+        height: 440
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 56; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Column {
+                anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                spacing: 2
+                Text { text: "Ajustes del agente"; color: Theme.textPrimary; font.pixelSize: 14; font.bold: true }
+                Text { text: "instrucciones extra + temperatura para tool-calling"; color: Theme.textMuted; font.pixelSize: 11 }
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 56; radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton { text: "Cancelar"; secondary: true; onClicked: agentTuningDialog.close() }
+                LcButton {
+                    text: "Guardar"
+                    onClicked: {
+                        App.agentSystemPrompt = agentTuningSystem.text
+                        const t = parseFloat(agentTuningTemp.text)
+                        App.agentTemperature = (agentTuningTemp.text.trim().length > 0 && !isNaN(t)) ? t : -1
+                        agentTuningDialog.close()
+                    }
+                }
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 10
+
+            Text { text: "Instrucciones del agente (system prompt extra):"; color: Theme.textSecondary; font.pixelSize: 12 }
+            Rectangle {
+                Layout.fillWidth: true; Layout.fillHeight: true
+                color: Theme.inputBg; radius: 8; border.color: Theme.borderColor; clip: true
+                ScrollView {
+                    anchors.fill: parent; anchors.margins: 2
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    TextArea {
+                        id: agentTuningSystem
+                        placeholderText: "p.ej. priorizá cambios mínimos, corré tests antes de terminar, no toques archivos de config…"
+                        color: Theme.textPrimary; placeholderTextColor: Theme.textMuted
+                        font { family: "Consolas,monospace"; pixelSize: 12 }
+                        wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                        background: null; padding: 10; selectByMouse: true
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true; spacing: 10
+                Text { text: "Temperatura:"; color: Theme.textSecondary; font.pixelSize: 12 }
+                LcTextField {
+                    id: agentTuningTemp
+                    Layout.preferredWidth: 100
+                    placeholderText: "auto"
+                    inputMethodHints: Qt.ImhFormattedNumbersOnly
+                }
+                Text {
+                    text: "vacío = default del server. Para tool-calling estable: 0.0–0.3"
+                    color: Theme.textMuted; font.pixelSize: 11; Layout.fillWidth: true
+                }
+            }
+        }
+    }
+
+    // ── Editor de memoria por proyecto (.llamacode/memory.md) ──────────────
+    Dialog {
+        id: memoryDialog
+        property alias text: memoryArea.text
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 620
+        height: 480
+        closePolicy: Popup.CloseOnEscape
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 56; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Column {
+                anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                spacing: 2
+                Text { text: "Memoria del proyecto"; color: Theme.textPrimary; font.pixelSize: 14; font.bold: true }
+                Text {
+                    text: ".llamacode/memory.md · se inyecta en el system prompt del agente"
+                    font.pixelSize: 11; color: Theme.textMuted
+                }
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 56; radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1;  color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton { text: "Cancelar"; secondary: true; onClicked: memoryDialog.close() }
+                LcButton {
+                    text: "Guardar"
+                    onClicked: { App.writeAgentMemory("", memoryArea.text); memoryDialog.close() }
+                }
+            }
+        }
+
+        contentItem: Rectangle {
+            color: Theme.inputBg; radius: 8
+            border.color: Theme.borderColor
+            clip: true
+            ScrollView {
+                anchors.fill: parent; anchors.margins: 2
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                TextArea {
+                    id: memoryArea
+                    placeholderText: "Convenciones, comandos de build/test, arquitectura, do/don't del proyecto…"
+                    color: Theme.textPrimary
+                    placeholderTextColor: Theme.textMuted
+                    font { family: "Consolas,monospace"; pixelSize: 12 }
+                    wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                    background: null
+                    padding: 10
+                    selectByMouse: true
+                }
+            }
+        }
+    }
 }

@@ -10,6 +10,16 @@ bool LlamaBinary::supportsFlag(const QString &flag) const
 
 QString LlamaBinary::resolveFlag(const QString &flag) const
 {
+    // For long flags, prefer the caller-provided spelling unless a safe alias is needed.
+    // This prevents accidental inversions like --no-context-shift -> --context-shift.
+    if (flag.startsWith("--")) {
+        if (supportedFlags.contains(flag))
+            return flag;
+        const QString resolved = flagAliases.value(flag, flag);
+        if (flag.startsWith("--no-") && !resolved.startsWith("--no-"))
+            return flag;
+        return resolved;
+    }
     return flagAliases.value(flag, flag);
 }
 

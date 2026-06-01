@@ -49,12 +49,25 @@ DetectedCapabilities CapabilityDetector::parse(const QString &helpOutput)
         if (canonical.isEmpty() && !parts.isEmpty())
             canonical = parts.first().trimmed();
 
+        // Keep all long variants as explicit supported flags (e.g. --mmap and --no-mmap),
+        // and only alias short variants to the selected canonical long flag.
+        for (const QString &part : parts) {
+            const QString flag = part.trimmed();
+            if (flag.isEmpty())
+                continue;
+            if (flag.startsWith("--")) {
+                if (!cap.flags.contains(flag))
+                    cap.flags.append(flag);
+            }
+        }
         if (!cap.flags.contains(canonical))
             cap.flags.append(canonical);
 
         for (const QString &part : parts) {
             const QString flag = part.trimmed();
-            if (flag != canonical && !flag.isEmpty())
+            if (flag.isEmpty() || flag == canonical)
+                continue;
+            if (flag.startsWith("-") && !flag.startsWith("--"))
                 cap.flagAliases[flag] = canonical;
         }
     }
