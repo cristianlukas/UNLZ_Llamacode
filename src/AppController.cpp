@@ -46,6 +46,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentApprovalMode = s.value(QStringLiteral("agent/approvalMode"), QStringLiteral("ask")).toString();
     m_agentThinkingEnabled = s.value(QStringLiteral("agent/thinkingEnabled"), false).toBool();
     m_agentSystemPrompt = s.value(QStringLiteral("agent/systemPrompt")).toString();
+    m_agentPermRules    = s.value(QStringLiteral("agent/permRules")).toString();
     m_agentTemperature  = s.value(QStringLiteral("agent/temperature"), -1.0).toDouble();
 
     killManagedOrphans();
@@ -137,6 +138,10 @@ void AppController::startServer(const QString &launchProfileId)
         emit serverReadyChanged();
     });
 
+    // Capacidad de visión del modelo activo: el server cargó un mmproj.
+    const bool vision = args.contains(QStringLiteral("--mmproj"));
+    if (vision != m_serverHasVision) { m_serverHasVision = vision; emit serverHasVisionChanged(); }
+
     m_activeLaunchId = launchProfileId;
     writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);  // recordar último usado
     appendServerEvent(QStringLiteral("lifecycle"),
@@ -227,6 +232,7 @@ void AppController::stopServer()
     stopHealthPolling();
     m_serverReady    = false;
     m_serverStopping = true;
+    if (m_serverHasVision) { m_serverHasVision = false; emit serverHasVisionChanged(); }
     if (m_chatThinkingSupported) { m_chatThinkingSupported = false; emit chatThinkingSupportedChanged(); }
     emit serverReadyChanged();
     emit serverRunningChanged();
@@ -982,9 +988,19 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     });
 
     b->setApprovalPolicy(m_agentApprovalMode);
-    b->setAgentTuning(m_agentSystemPrompt, m_agentTemperature);
+    b->setPermissionRules(m_agentPermRules);
+    b->setAgentTuning(m_agentSystemPrompt, m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
     m_agentBackend = b;
     return b;
+}
+
+void AppController::setAgentPermRules(const QString &rules)
+{
+    if (rules == m_agentPermRules) return;
+    m_agentPermRules = rules;
+    writeSetting(QStringLiteral("agent/permRules"), rules);
+    if (m_agentBackend) m_agentBackend->setPermissionRules(rules);
+    emit agentTuningChanged();
 }
 
 void AppController::setAgentSystemPrompt(const QString &p)
@@ -992,7 +1008,7 @@ void AppController::setAgentSystemPrompt(const QString &p)
     if (p == m_agentSystemPrompt) return;
     m_agentSystemPrompt = p;
     writeSetting(QStringLiteral("agent/systemPrompt"), p);
-    if (m_agentBackend) m_agentBackend->setAgentTuning(m_agentSystemPrompt, m_agentTemperature);
+    if (m_agentBackend) m_agentBackend->setAgentTuning(m_agentSystemPrompt, m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
     emit agentTuningChanged();
 }
 
@@ -1001,7 +1017,7 @@ void AppController::setAgentTemperature(double t)
     if (qFuzzyCompare(t, m_agentTemperature)) return;
     m_agentTemperature = t;
     writeSetting(QStringLiteral("agent/temperature"), t);
-    if (m_agentBackend) m_agentBackend->setAgentTuning(m_agentSystemPrompt, m_agentTemperature);
+    if (m_agentBackend) m_agentBackend->setAgentTuning(m_agentSystemPrompt, m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
     emit agentTuningChanged();
 }
 
@@ -1146,8 +1162,24 @@ void AppController::startAgent(const QString &launchProfileId)
             emit serverError(msg);
             return;
         }
+
+        // Parse profile temperature if agent temperature is default (< 0)
+        m_resolvedProfileTemperature = -1.0;
+        const QStringList &args = ctx.launch.extraArgs;
+        for (int i = 0; i < args.size() - 1; ++i) {
+            if (args[i] == QStringLiteral("--temp") || args[i] == QStringLiteral("-t")) {
+                bool ok = false;
+                double val = args[i+1].toDouble(&ok);
+                if (ok) {
+                    m_resolvedProfileTemperature = val;
+                    break;
+                }
+            }
+        }
+
         IAgentBackend *b = ensureAgentBackend(adapter);
         if (!b) { appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: backend LlamaAgent no disponible")); return; }
+        b->setAgentTuning(m_agentSystemPrompt, m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
         const QString agentCwd = m_agentCwdOverride.isEmpty()
             ? ctx.workspace.cwd.trimmed() : m_agentCwdOverride;
         AgentContext c;
@@ -1393,6 +1425,30 @@ void AppController::sendToAgent(const QString &text)
     m_agentProc->write((text + QLatin1Char('\n')).toUtf8());
 }
 
+void AppController::sendToAgentWithAttachments(const QString &text, const QStringList &paths)
+{
+    if (text.trimmed().isEmpty() && paths.isEmpty()) return;
+    if (auto *la = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        if (m_agentBackend->running()) {
+            la->setPendingAttachments(paths);
+            la->sendMessage(text);
+            return;
+        }
+    }
+    sendToAgent(text);   // backend sin soporte de adjuntos → texto solo
+}
+
+QStringList AppController::pickAgentAttachments()
+{
+    QWidget *parent = QApplication::activeWindow();
+    // Sin visión: ocultar imágenes del filtro (no las puede usar).
+    const QString filter = m_serverHasVision
+        ? QStringLiteral("Soportados (*.png *.jpg *.jpeg *.webp *.gif *.bmp *.txt *.md *.json *.csv *.log *.py *.js *.ts *.cpp *.h *.qml);;Todos (*.*)")
+        : QStringLiteral("Texto (*.txt *.md *.json *.csv *.log *.py *.js *.ts *.cpp *.h *.qml);;Todos (*.*)");
+    return QFileDialog::getOpenFileNames(
+        parent, QStringLiteral("Adjuntar archivos"), QDir::homePath(), filter);
+}
+
 void AppController::steerAgent(const QString &text)
 {
     if (text.trimmed().isEmpty()) return;
@@ -1474,6 +1530,42 @@ QString AppController::currentAgentProjectDir() const
 {
     if (m_agentBackend) return m_agentBackend->currentProjectDir();
     return m_agentProc ? m_agentProc->workingDirectory() : QString();
+}
+
+QStringList AppController::agentProjectFiles(const QString &query) const
+{
+    const QString root = currentAgentProjectDir();
+    if (root.isEmpty() || !QFileInfo(root).isDir()) return {};
+    static const QSet<QString> ignored{
+        QStringLiteral("node_modules"), QStringLiteral(".git"), QStringLiteral("build"),
+        QStringLiteral("build2"), QStringLiteral("dist"), QStringLiteral(".venv"),
+        QStringLiteral("venv"), QStringLiteral("__pycache__"), QStringLiteral(".next"),
+        QStringLiteral(".turbo"), QStringLiteral("coverage"), QStringLiteral("target"),
+        QStringLiteral(".cache"), QStringLiteral(".idea"), QStringLiteral(".vs")};
+    const QString q = query.trimmed().toLower();
+    const QDir base(root);
+    QStringList out;
+    QStringList stack{root};
+    int scanned = 0;
+    while (!stack.isEmpty() && out.size() < 50 && scanned < 20000) {
+        QDir d(stack.takeLast());
+        const auto entries = d.entryInfoList(
+            QDir::NoDotAndDotDot | QDir::Files | QDir::Dirs, QDir::Name);
+        for (const QFileInfo &fi : entries) {
+            ++scanned;
+            if (fi.isDir()) {
+                if (!ignored.contains(fi.fileName())) stack << fi.absoluteFilePath();
+                continue;
+            }
+            const QString rel = base.relativeFilePath(fi.absoluteFilePath());
+            if (q.isEmpty() || rel.toLower().contains(q)) {
+                out << rel;
+                if (out.size() >= 50) break;
+            }
+        }
+    }
+    out.sort();
+    return out;
 }
 
 // ───────────────────────── Opencode config helpers ─────────────────────────
@@ -2139,9 +2231,11 @@ QString AppController::pasteClipboardImage()
 QStringList AppController::pickChatAttachments()
 {
     QWidget *parent = QApplication::activeWindow();
+    const QString filter = m_serverHasVision
+        ? QStringLiteral("Soportados (*.png *.jpg *.jpeg *.webp *.gif *.bmp *.txt *.md *.json *.csv *.log *.py *.js *.ts *.cpp *.h *.qml);;Todos (*.*)")
+        : QStringLiteral("Texto (*.txt *.md *.json *.csv *.log *.py *.js *.ts *.cpp *.h *.qml);;Todos (*.*)");
     return QFileDialog::getOpenFileNames(
-        parent, QStringLiteral("Adjuntar archivos"), QDir::homePath(),
-        QStringLiteral("Soportados (*.png *.jpg *.jpeg *.webp *.gif *.bmp *.txt *.md *.json *.csv *.log *.py *.js *.ts *.cpp *.h *.qml);;Todos (*.*)"));
+        parent, QStringLiteral("Adjuntar archivos"), QDir::homePath(), filter);
 }
 
 void AppController::stopChatGeneration()

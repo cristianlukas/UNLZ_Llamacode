@@ -422,10 +422,13 @@ Item {
     }
 
     Component.onCompleted: {
-        if (App.profileManager.launchProfiles.rowCount() > 0) {
-            const idx = App.profileManager.launchProfiles.index(0, 0)
-            selectedLaunchId = App.profileManager.launchProfiles.data(idx, 257) ?? ""
-            loadLaunch()
+        const lastId = App.readSetting("lastLaunchId", "")
+        if (lastId === "" || !selectProfile(lastId)) {
+            if (App.profileManager.launchProfiles.rowCount() > 0) {
+                const idx = App.profileManager.launchProfiles.index(0, 0)
+                selectedLaunchId = App.profileManager.launchProfiles.data(idx, 257) ?? ""
+                loadLaunch()
+            }
         }
     }
 

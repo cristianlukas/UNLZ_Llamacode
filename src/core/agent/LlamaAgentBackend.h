@@ -7,6 +7,7 @@
 #include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QRegularExpression>
 
 class QThread;
 class AgentToolRunner;
@@ -49,11 +50,15 @@ public:
     void approveTool(const QString &id, bool always = false) override;
     void rejectTool(const QString &id) override;
     void setApprovalPolicy(const QString &mode) override;
+    void setPermissionRules(const QString &rules) override;
     void revertEdit(const QString &path) override;
     void setAgentTuning(const QString &systemExtra, double temperature) override;
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
+
+    // Adjuntos (imágenes/docs) a incluir en el PRÓXIMO sendMessage (modelo VL).
+    void setPendingAttachments(const QStringList &paths) { m_pendingAttachments = paths; }
 
     // Servers MCP (stdio) a usar. Cada entrada: {name, command, type, enabled}.
     // Se relanzan en start(). Sus tools se inyectan con prefijo mcp__<server>__<tool>.
@@ -150,6 +155,13 @@ private:
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;
+
+    QStringList m_pendingAttachments;  // adjuntos para el próximo sendMessage
+
+    // Permisos por patrón (evaluados antes de la política global).
+    enum PermAction { PermDeny, PermAllow, PermAsk };
+    struct PermRule { PermAction action; QString kind; QRegularExpression rx; QString glob; };
+    QList<PermRule> m_permRules;
 
     QVariantList m_mcpConfig;        // config de servers MCP (de AppController)
     QVariantList m_mcpTools;         // cache de tool-defs MCP del worker {server,name,description,schema}

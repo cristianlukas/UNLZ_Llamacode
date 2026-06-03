@@ -39,6 +39,8 @@ class AppController : public QObject
     Q_PROPERTY(bool hasAnyBinary READ hasAnyBinary NOTIFY setupStateChanged)
     Q_PROPERTY(bool hasAnyModel  READ hasAnyModel  NOTIFY setupStateChanged)
     Q_PROPERTY(QString serverBaseUrl READ serverBaseUrl NOTIFY serverRunningChanged)
+    // Capacidades del modelo activo. Vision = el server se lanzó con --mmproj.
+    Q_PROPERTY(bool serverHasVision READ serverHasVision NOTIFY serverHasVisionChanged)
     Q_PROPERTY(bool installingOfficialBinary READ installingOfficialBinary NOTIFY installingOfficialBinaryChanged)
     Q_PROPERTY(QString officialBinaryInstallStatus READ officialBinaryInstallStatus NOTIFY officialBinaryInstallStatusChanged)
     Q_PROPERTY(QString officialBinaryInstallLog READ officialBinaryInstallLog NOTIFY officialBinaryInstallLogChanged)
@@ -64,6 +66,7 @@ class AppController : public QObject
     Q_PROPERTY(int agentContextLimit READ agentContextLimit NOTIFY agentContextChanged)
     Q_PROPERTY(QString agentSystemPrompt READ agentSystemPrompt WRITE setAgentSystemPrompt NOTIFY agentTuningChanged)
     Q_PROPERTY(double agentTemperature READ agentTemperature WRITE setAgentTemperature NOTIFY agentTuningChanged)
+    Q_PROPERTY(QString agentPermRules READ agentPermRules WRITE setAgentPermRules NOTIFY agentTuningChanged)
     Q_PROPERTY(QString activeAgentAdapter READ activeAgentAdapter NOTIFY agentRunningChanged)
     Q_PROPERTY(bool agentInTerminal   READ agentInTerminal   NOTIFY agentRunningChanged)
     Q_PROPERTY(bool installingHarness READ installingHarness NOTIFY harnessStatusChanged)
@@ -132,8 +135,10 @@ public:
     int agentContextLimit() const { return m_agentContextLimit; }
     QString agentSystemPrompt() const { return m_agentSystemPrompt; }
     double agentTemperature() const { return m_agentTemperature; }
+    QString agentPermRules() const { return m_agentPermRules; }
     void setAgentSystemPrompt(const QString &p);
     void setAgentTemperature(double t);
+    void setAgentPermRules(const QString &rules);
     QString agentApprovalMode() const { return m_agentApprovalMode; }
     void setAgentApprovalMode(const QString &mode);
     bool agentThinkingEnabled() const { return m_agentThinkingEnabled; }
@@ -192,6 +197,13 @@ public:
     Q_INVOKABLE void startAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopAgent();
     Q_INVOKABLE void sendToAgent(const QString &text);
+    Q_INVOKABLE void sendToAgentWithAttachments(const QString &text, const QStringList &paths);
+    // Diálogo de adjuntos para el agente; filtra imágenes si el modelo no tiene visión.
+    Q_INVOKABLE QStringList pickAgentAttachments();
+    // Archivos del proyecto del agente que matchean `query` (para @-mentions). Rutas
+    // relativas, salta dirs ignorados, cap 50.
+    Q_INVOKABLE QStringList agentProjectFiles(const QString &query) const;
+    bool serverHasVision() const { return m_serverHasVision; }
     // Steering (interrumpe el turno y manda ya) / cola (manda al terminar).
     Q_INVOKABLE void steerAgent(const QString &text);
     Q_INVOKABLE void queueAgent(const QString &text);
@@ -249,6 +261,7 @@ public:
 signals:
     void serverRunningChanged();
     void serverReadyChanged();
+    void serverHasVisionChanged();
     void serverLogChanged();
     void activeLaunchIdChanged();
     void effectiveProfileChanged();
@@ -309,6 +322,7 @@ private:
     QString   m_activeLaunchId;
     bool      m_serverStopping = false;
     bool      m_serverReady    = false;
+    bool      m_serverHasVision = false;
     QTimer   *m_stopKillTimer  = nullptr;
     QTimer   *m_healthPollTimer = nullptr;
     void startHealthPolling();
@@ -381,7 +395,9 @@ private:
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     QString   m_agentSystemPrompt;
+    QString   m_agentPermRules;
     double    m_agentTemperature = -1.0;
+    double    m_resolvedProfileTemperature = -1.0;
 
     // Managed-process lifecycle
 #ifdef Q_OS_WIN

@@ -66,6 +66,32 @@ static QString stripThinkForContext(const QString &s)
 
 static const QString kMcpPrefix = QStringLiteral("mcp__");
 
+// Data-URI base64 si el archivo es imagen soportada por mmproj; "" si no.
+static QString imageDataUri(const QString &path)
+{
+    const QString ext = QFileInfo(path).suffix().toLower();
+    QString mime;
+    if (ext == QLatin1String("png")) mime = QStringLiteral("image/png");
+    else if (ext == QLatin1String("jpg") || ext == QLatin1String("jpeg")) mime = QStringLiteral("image/jpeg");
+    else if (ext == QLatin1String("webp")) mime = QStringLiteral("image/webp");
+    else if (ext == QLatin1String("gif")) mime = QStringLiteral("image/gif");
+    else if (ext == QLatin1String("bmp")) mime = QStringLiteral("image/bmp");
+    else return {};
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) return {};
+    return QStringLiteral("data:%1;base64,%2").arg(mime, QString::fromLatin1(f.readAll().toBase64()));
+}
+
+// Texto de un archivo (UTF-8), "" si binario/imagen.
+static QString readAttachText(const QString &path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) return {};
+    const QByteArray raw = f.read(2 * 1024 * 1024);
+    if (raw.contains('\0')) return {};
+    return QString::fromUtf8(raw);
+}
+
 // Recorta la salida de una tool ANTES de meterla al contexto (m_apiMessages).
 // La tarjeta de la UI conserva la salida completa; al modelo le mandamos una
 // versión acotada. Idea tomada de los "tool budgets" de caveman-code: en local
@@ -486,6 +512,51 @@ void LlamaAgentBackend::setThinkingEnabled(bool enabled)
     m_thinkingEnabled = enabled;
 }
 
+// Glob → regex anclada (mismo criterio que el worker: ** = recursivo).
+static QRegularExpression permGlobToRegex(const QString &glob)
+{
+    QString rx = QRegularExpression::escape(glob);
+    rx.replace(QStringLiteral("\\*\\*"), QStringLiteral("\x01"));
+    rx.replace(QStringLiteral("\\*"), QStringLiteral("[^/\\\\]*"));
+    rx.replace(QStringLiteral("\x01"), QStringLiteral(".*"));
+    rx.replace(QStringLiteral("\\?"), QStringLiteral("[^/\\\\]"));
+    return QRegularExpression(QStringLiteral("^") + rx + QStringLiteral("$"));
+}
+
+// Reglas: una por línea. "allow|deny|ask [kind:]<glob>". kind ∈ read|write|shell.
+// Ej: "deny **/.env", "allow write:src/**", "ask shell:rm *". '#' = comentario.
+void LlamaAgentBackend::setPermissionRules(const QString &rules)
+{
+    m_permRules.clear();
+    const QStringList lines = rules.split(QLatin1Char('\n'));
+    for (const QString &raw : lines) {
+        QString line = raw.trimmed();
+        if (line.isEmpty() || line.startsWith(QLatin1Char('#'))) continue;
+        const int sp = line.indexOf(QRegularExpression(QStringLiteral("\\s")));
+        if (sp < 0) continue;
+        const QString act = line.left(sp).toLower();
+        QString rest = line.mid(sp).trimmed();
+        PermAction action;
+        if (act == QLatin1String("deny")) action = PermDeny;
+        else if (act == QLatin1String("allow")) action = PermAllow;
+        else if (act == QLatin1String("ask")) action = PermAsk;
+        else continue;
+        QString kind;
+        const int colon = rest.indexOf(QLatin1Char(':'));
+        if (colon > 0) {
+            const QString k = rest.left(colon).toLower();
+            if (k == QLatin1String("read") || k == QLatin1String("write")
+                || k == QLatin1String("shell") || k == QLatin1String("mcp")) {
+                kind = k;
+                rest = rest.mid(colon + 1).trimmed();
+            }
+        }
+        if (rest.isEmpty()) continue;
+        m_permRules.append(PermRule{action, kind, permGlobToRegex(rest), rest});
+    }
+    emit logAppended(QStringLiteral("[permisos: %1 regla(s) cargadas]\n").arg(m_permRules.size()));
+}
+
 void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
 {
     m_approvalMode = mode;
@@ -508,7 +579,9 @@ void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
 void LlamaAgentBackend::sendMessage(const QString &text)
 {
     const QString trimmed = text.trimmed();
-    if (!m_running || trimmed.isEmpty()) return;
+    const QStringList attachments = m_pendingAttachments;
+    m_pendingAttachments.clear();
+    if (!m_running || (trimmed.isEmpty() && attachments.isEmpty())) return;
     // Bloquear si hay turno en curso, una tool esperando aprobación, o una
     // compactación async en vuelo. Sin esto, mandar durante la compactación
     // corrompe m_apiMessages (reentrancy) → crash en Qt6Core.
@@ -519,19 +592,58 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     ensureSession();
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
+    // Contenido a mostrar en la UI: texto + chips de adjuntos.
+    QString display = trimmed;
+    for (const QString &p : attachments)
+        display += QStringLiteral("\n📎 ") + QFileInfo(p).fileName();
+
     const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
-    m_messages.append(QVariantMap{
+    QVariantMap userMsg{
         {QStringLiteral("role"), QStringLiteral("user")},
-        {QStringLiteral("content"), trimmed},
+        {QStringLiteral("content"), display},
         {QStringLiteral("typing"), false},
         {QStringLiteral("createdAt"), static_cast<double>(nowMs)},
         {QStringLiteral("completedAt"), static_cast<double>(nowMs)},
         {QStringLiteral("elapsedMs"), 0},
-        {QStringLiteral("tokens"), estimateTokens(trimmed)},
-        {QStringLiteral("tps"), 0.0}});
-    m_apiMessages.append(QJsonObject{
-        {QStringLiteral("role"), QStringLiteral("user")},
-        {QStringLiteral("content"), trimmed}});
+        {QStringLiteral("tokens"), estimateTokens(display)},
+        {QStringLiteral("tps"), 0.0}};
+    if (!attachments.isEmpty()) userMsg[QStringLiteral("attachments")] = attachments;
+    m_messages.append(userMsg);
+
+    // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
+    // inline + docs de texto inlineados); si no, string plano.
+    if (attachments.isEmpty()) {
+        m_apiMessages.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("user")},
+            {QStringLiteral("content"), trimmed}});
+    } else {
+        QString textPart = trimmed;
+        QJsonArray images;
+        for (const QString &p : attachments) {
+            // Los @-mentions vienen relativos al cwd; el picker, absolutos.
+            const QString path = QFileInfo(p).isAbsolute()
+                ? p : QDir(m_cwd).absoluteFilePath(p);
+            const QString uri = imageDataUri(path);
+            if (!uri.isEmpty()) {
+                images.append(QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("image_url")},
+                    {QStringLiteral("image_url"), QJsonObject{{QStringLiteral("url"), uri}}}});
+            } else {
+                const QString doc = readAttachText(path);
+                if (!doc.isEmpty())
+                    textPart += QStringLiteral("\n\n--- %1 ---\n%2")
+                                    .arg(QFileInfo(path).fileName(), doc);
+            }
+        }
+        QJsonArray parts;
+        if (!textPart.trimmed().isEmpty())
+            parts.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("text")},
+                                     {QStringLiteral("text"), textPart}});
+        for (const QJsonValue &iv : images) parts.append(iv);
+        m_apiMessages.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("user")},
+            {QStringLiteral("content"), parts}});
+    }
 
     m_messages.append(QVariantMap{
         {QStringLiteral("role"), QStringLiteral("assistant")},
@@ -1104,13 +1216,45 @@ void LlamaAgentBackend::processPendingCalls()
         return;
     }
 
+    // ── Permisos por patrón (antes de la política global) ─────────────────
+    // subject = ruta (read/write) o comando (shell). Primera regla que matchea gana.
+    bool forceAsk = false;
+    {
+        QString subject = (kind == QLatin1String("shell"))
+            ? args.value(QStringLiteral("command")).toString()
+            : args.value(QStringLiteral("path")).toString();
+        if (subject.isEmpty()) subject = args.value(QStringLiteral("pattern")).toString();
+        if (!subject.isEmpty()) {
+            for (const PermRule &r : std::as_const(m_permRules)) {
+                if (!r.kind.isEmpty() && r.kind != kind) continue;
+                if (!r.rx.match(subject).hasMatch()) continue;
+                if (r.action == PermDeny) {
+                    ++m_toolFail;
+                    m_pendingCalls.removeFirst();
+                    appendToolResult(id, name, QStringLiteral(
+                        "[permiso denegado por regla '%1': '%2' no está permitido]")
+                        .arg(r.glob, subject));
+                    processPendingCalls();
+                    return;
+                }
+                if (r.action == PermAllow) {
+                    emit logAppended(QStringLiteral("[permiso: regla '%1' permite %2]\n").arg(r.glob, name));
+                    approveAndContinue(id, QStringLiteral("once"));
+                    return;
+                }
+                forceAsk = true;   // PermAsk: pedir aprobación aunque el modo sea auto
+                break;
+            }
+        }
+    }
+
     const bool autoAll  = (m_approvalMode == QLatin1String("auto")
                            || m_approvalMode == QLatin1String("super")
                            || m_approvalMode == QLatin1String("plan"));   // plan = todo read → auto
     const bool autoRead = (m_approvalMode == QLatin1String("ask") && kind == QLatin1String("read"));
     const bool always   = m_alwaysAllowed.contains(kind);
 
-    if (autoAll || autoRead || always) {
+    if (!forceAsk && (autoAll || autoRead || always)) {
         emit logAppended(QStringLiteral("[tool] auto-approving %1\n").arg(name));
         approveAndContinue(call.value(QStringLiteral("id")).toString(), QStringLiteral("once"));
         return;

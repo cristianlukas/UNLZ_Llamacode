@@ -54,6 +54,9 @@ public:
     // Política: "auto" (aprueba todo), "ask" (auto lectura, pide escritura+shell),
     // "manual" (pide todo). Default del backend: "ask".
     virtual void setApprovalPolicy(const QString &mode) { Q_UNUSED(mode) }
+    // Reglas de permiso por patrón (una por línea: "allow|deny|ask [kind:]<glob>").
+    // Se evalúan antes de la política global. Default: sin reglas.
+    virtual void setPermissionRules(const QString &rules) { Q_UNUSED(rules) }
     // Revertir una edición de archivo aplicada por el agente (default: no-op).
     virtual void revertEdit(const QString &path) { Q_UNUSED(path) }
     // Ajuste del agente: system prompt extra + temperatura (<0 = default del server).

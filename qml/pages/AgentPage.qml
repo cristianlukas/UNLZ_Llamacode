@@ -12,6 +12,59 @@ Item {
     property int currentView: 0   // 0 = Vista Agente, 1 = Vista terminal
     property double lastAgentActivityMs: Date.now()
     property int idleSeconds: 0
+    property var agentAttachments: []
+
+    // @-mentions: estado del autocompletar de archivos.
+    property var mentionSuggestions: []
+    property int mentionStart: -1      // índice del '@' en el texto
+    property int mentionActive: 0      // sugerencia resaltada
+
+    function fileName(p) { return p.split(/[\\/]/).pop() }
+
+    // Recalcula el popup de @-mentions según el token bajo el cursor.
+    function updateMention() {
+        const txt = agentInput.text
+        const pos = agentInput.cursorPosition
+        let i = pos - 1
+        while (i >= 0 && !/\s/.test(txt.charAt(i))) i--
+        const tokenStart = i + 1
+        const token = txt.substring(tokenStart, pos)
+        if (token.length >= 1 && token.charAt(0) === "@") {
+            root.mentionStart = tokenStart
+            root.mentionSuggestions = App.agentProjectFiles(token.substring(1))
+            root.mentionActive = 0
+            if (root.mentionSuggestions.length > 0) mentionPopup.open()
+            else mentionPopup.close()
+        } else {
+            root.mentionStart = -1
+            mentionPopup.close()
+        }
+    }
+
+    // Acepta una sugerencia: saca el @token del texto y adjunta el archivo.
+    function acceptMention(path) {
+        if (root.mentionStart < 0) { mentionPopup.close(); return }
+        const txt = agentInput.text
+        const before = txt.substring(0, root.mentionStart)
+        const after = txt.substring(agentInput.cursorPosition)
+        agentInput.text = before + after
+        agentInput.cursorPosition = before.length
+        if (root.agentAttachments.indexOf(path) < 0)
+            root.agentAttachments = root.agentAttachments.concat([path])
+        root.mentionStart = -1
+        mentionPopup.close()
+    }
+    // Envío normal (idle): incluye adjuntos si los hay.
+    function agentSend() {
+        const t = agentInput.text.trim()
+        if (t.length === 0 && root.agentAttachments.length === 0) return
+        if (root.agentAttachments.length > 0)
+            App.sendToAgentWithAttachments(t, root.agentAttachments)
+        else
+            App.sendToAgent(t)
+        agentInput.text = ""
+        root.agentAttachments = []
+    }
 
     readonly property bool waitingApproval: (App.agentPendingTool.id ?? "").length > 0
     readonly property bool hasTypingMessage: {
@@ -440,6 +493,7 @@ Item {
                     visible: resolvedAdapter === "llamaagent"
                     onClicked: {
                         agentTuningSystem.text = App.agentSystemPrompt
+                        agentTuningPerm.text = App.agentPermRules
                         agentTuningTemp.text = App.agentTemperature >= 0 ? String(App.agentTemperature) : ""
                         agentTuningDialog.open()
                     }
@@ -1388,75 +1442,170 @@ Item {
         // ── Input bar ────────────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: 52
+            height: inputCol.implicitHeight + 16
             color: Theme.baseBg
             visible: App.agentRunning && !App.agentInTerminal
 
-            RowLayout {
-                anchors { fill: parent; margins: 8 }
-                spacing: 8
+            Column {
+                id: inputCol
+                anchors { left: parent.left; right: parent.right
+                          verticalCenter: parent.verticalCenter; margins: 8 }
+                spacing: 6
 
-                LcTextField {
-                    id: agentInput
-                    Layout.fillWidth: true
-                    enabled: App.serverRunning && App.serverReady
-                    readonly property bool busy: root.hasTypingMessage
-                    placeholderText: (!App.serverRunning)
-                        ? "Servidor no disponible. Iniciá el modelo en Lanzar."
-                        : (!App.serverReady
-                           ? "Modelo cargando..."
-                           : (busy
-                              ? ("Enter encola · Shift+Enter interrumpe"
-                                 + (App.agentQueuedCount > 0 ? "  ·  " + App.agentQueuedCount + " en cola" : ""))
-                              : (App.langV, App.l("agent.input"))))
-                    // Enter = enviar (idle) o encolar (ocupado). Shift+Enter = interrumpir.
-                    Keys.onPressed: (event) => {
-                        if (event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter) return
-                        event.accepted = true
-                        const t = text.trim()
-                        if (t.length === 0 || !App.serverRunning || !App.serverReady) return
-                        if (event.modifiers & Qt.ShiftModifier) { App.steerAgent(t); text = ""; return }
-                        if (busy) { App.queueAgent(t); text = ""; return }
-                        App.sendToAgent(t); text = ""
+                // Chips de adjuntos pendientes.
+                Flow {
+                    width: parent.width
+                    spacing: 6
+                    visible: root.agentAttachments.length > 0
+                    Repeater {
+                        model: root.agentAttachments
+                        Rectangle {
+                            radius: 5; color: Theme.inputBg; border.color: Theme.borderColor
+                            implicitHeight: 22; implicitWidth: chipRow.implicitWidth + 12
+                            Row {
+                                id: chipRow; anchors.centerIn: parent; spacing: 6
+                                Text { text: "📎 " + root.fileName(modelData); color: Theme.textSecondary
+                                       font.pixelSize: 11; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: "✕"; color: Theme.textMuted; font.pixelSize: 11
+                                       anchors.verticalCenter: parent.verticalCenter
+                                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: { let a = root.agentAttachments.slice(); a.splice(index, 1)
+                                                     root.agentAttachments = a } }
+                                }
+                            }
+                        }
                     }
                 }
-                // Idle: un solo botón "Enviar".
-                LcButton {
-                    visible: !agentInput.busy
-                    text: (App.langV, App.l("agent.send"))
-                    enabled: agentInput.text.trim().length > 0 && App.serverRunning && App.serverReady
-                    onClicked: {
-                        const t = agentInput.text.trim()
-                        if (t.length === 0) return
-                        App.sendToAgent(t); agentInput.text = ""
+
+                RowLayout {
+                    width: parent.width
+                    spacing: 8
+
+                    // Adjuntar archivos (imágenes solo si el modelo tiene visión).
+                    LcButton {
+                        text: "📎"
+                        secondary: true
+                        enabled: App.serverRunning && App.serverReady && !agentInput.busy
+                        onClicked: {
+                            const picked = App.pickAgentAttachments()
+                            if (picked && picked.length > 0)
+                                root.agentAttachments = root.agentAttachments.concat(picked)
+                        }
                     }
-                }
-                // Ocupado + hay texto: Encolar (manda al terminar) / Interrumpir (corta y manda ya).
-                LcButton {
-                    visible: agentInput.busy && agentInput.text.trim().length > 0
-                    text: "Encolar" + (App.agentQueuedCount > 0 ? " (" + App.agentQueuedCount + ")" : "")
-                    onClicked: {
-                        const t = agentInput.text.trim()
-                        if (t.length === 0) return
-                        App.queueAgent(t); agentInput.text = ""
+
+                    LcTextField {
+                        id: agentInput
+                        Layout.fillWidth: true
+                        enabled: App.serverRunning && App.serverReady
+                        readonly property bool busy: root.hasTypingMessage
+                        placeholderText: (!App.serverRunning)
+                            ? "Servidor no disponible. Iniciá el modelo en Lanzar."
+                            : (!App.serverReady
+                               ? "Modelo cargando..."
+                               : (busy
+                                  ? ("Enter encola · Shift+Enter interrumpe"
+                                     + (App.agentQueuedCount > 0 ? "  ·  " + App.agentQueuedCount + " en cola" : ""))
+                                  : (App.langV, App.l("agent.input"))))
+                        // @-mentions: recalcular el popup al cambiar texto/cursor.
+                        onTextChanged: root.updateMention()
+                        onCursorPositionChanged: root.updateMention()
+                        // Enter = enviar (idle) o encolar (ocupado). Shift+Enter = interrumpir.
+                        // Si el popup de @-mentions está abierto: ↑/↓ navegan, Enter acepta, Esc cierra.
+                        Keys.onPressed: (event) => {
+                            if (mentionPopup.visible) {
+                                if (event.key === Qt.Key_Down) {
+                                    root.mentionActive = Math.min(root.mentionActive + 1, root.mentionSuggestions.length - 1)
+                                    event.accepted = true; return
+                                }
+                                if (event.key === Qt.Key_Up) {
+                                    root.mentionActive = Math.max(root.mentionActive - 1, 0)
+                                    event.accepted = true; return
+                                }
+                                if (event.key === Qt.Key_Escape) { mentionPopup.close(); event.accepted = true; return }
+                                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter
+                                    || event.key === Qt.Key_Tab) {
+                                    root.acceptMention(root.mentionSuggestions[root.mentionActive])
+                                    event.accepted = true; return
+                                }
+                            }
+                            if (event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter) return
+                            event.accepted = true
+                            const t = text.trim()
+                            if (!App.serverRunning || !App.serverReady) return
+                            if (event.modifiers & Qt.ShiftModifier) {
+                                if (t.length > 0) { App.steerAgent(t); text = "" }
+                                return
+                            }
+                            if (busy) { if (t.length > 0) { App.queueAgent(t); text = "" } return }
+                            root.agentSend()
+                        }
+
+                        // Popup de sugerencias de @-mention (se abre hacia arriba).
+                        Popup {
+                            id: mentionPopup
+                            y: -height - 4
+                            x: 0
+                            width: Math.max(agentInput.width, 280)
+                            implicitHeight: Math.min(mentionList.contentHeight + 8, 200)
+                            padding: 4
+                            closePolicy: Popup.NoAutoClose
+                            background: Rectangle { color: Theme.inputBg
+                                                    radius: 8; border.color: Theme.borderColor }
+                            ListView {
+                                id: mentionList
+                                anchors.fill: parent
+                                clip: true
+                                model: root.mentionSuggestions
+                                currentIndex: root.mentionActive
+                                delegate: Rectangle {
+                                    width: mentionList.width
+                                    height: 24
+                                    radius: 5
+                                    color: index === root.mentionActive ? Theme.highlight : "transparent"
+                                    Text {
+                                        anchors { left: parent.left; right: parent.right
+                                                  verticalCenter: parent.verticalCenter; margins: 8 }
+                                        text: "📄 " + modelData
+                                        color: Theme.textPrimary; font { family: "Consolas,monospace"; pixelSize: 11 }
+                                        elide: Text.ElideMiddle
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent; hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onEntered: root.mentionActive = index
+                                        onClicked: root.acceptMention(modelData)
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-                LcButton {
-                    visible: agentInput.busy && agentInput.text.trim().length > 0
-                    text: "Interrumpir"
-                    danger: true
-                    onClicked: {
-                        const t = agentInput.text.trim()
-                        if (t.length === 0) return
-                        App.steerAgent(t); agentInput.text = ""
+                    // Idle: "Enviar" (incluye adjuntos).
+                    LcButton {
+                        visible: !agentInput.busy
+                        text: (App.langV, App.l("agent.send"))
+                        enabled: App.serverRunning && App.serverReady
+                            && (agentInput.text.trim().length > 0 || root.agentAttachments.length > 0)
+                        onClicked: root.agentSend()
                     }
-                }
-                // PARAR: abortar el turno sin enviar nada (siempre visible si genera).
-                LcButton {
-                    visible: agentInput.busy
-                    text: "PARAR"
-                    danger: true
-                    onClicked: App.cancelAgentGeneration()
+                    // Ocupado + hay texto: Encolar / Interrumpir (solo texto).
+                    LcButton {
+                        visible: agentInput.busy && agentInput.text.trim().length > 0
+                        text: "Encolar" + (App.agentQueuedCount > 0 ? " (" + App.agentQueuedCount + ")" : "")
+                        onClicked: { const t = agentInput.text.trim(); if (t.length > 0) { App.queueAgent(t); agentInput.text = "" } }
+                    }
+                    LcButton {
+                        visible: agentInput.busy && agentInput.text.trim().length > 0
+                        text: "Interrumpir"
+                        danger: true
+                        onClicked: { const t = agentInput.text.trim(); if (t.length > 0) { App.steerAgent(t); agentInput.text = "" } }
+                    }
+                    // PARAR: abortar el turno sin enviar nada.
+                    LcButton {
+                        visible: agentInput.busy
+                        text: "PARAR"
+                        danger: true
+                        onClicked: App.cancelAgentGeneration()
+                    }
                 }
             }
         }
@@ -1735,6 +1884,7 @@ Item {
                     text: "Guardar"
                     onClicked: {
                         App.agentSystemPrompt = agentTuningSystem.text
+                        App.agentPermRules = agentTuningPerm.text
                         const t = parseFloat(agentTuningTemp.text)
                         App.agentTemperature = (agentTuningTemp.text.trim().length > 0 && !isNaN(t)) ? t : -1
                         agentTuningDialog.close()
@@ -1777,6 +1927,30 @@ Item {
                     text: "vacío = default del server. Para tool-calling estable: 0.0–0.3"
                     color: Theme.textMuted; font.pixelSize: 11; Layout.fillWidth: true
                 }
+            }
+
+            Text { text: "Permisos por patrón (una regla por línea, antes de la política global):"
+                   color: Theme.textSecondary; font.pixelSize: 12 }
+            Rectangle {
+                Layout.fillWidth: true; Layout.preferredHeight: 96
+                color: Theme.inputBg; radius: 8; border.color: Theme.borderColor; clip: true
+                ScrollView {
+                    anchors.fill: parent; anchors.margins: 2
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    TextArea {
+                        id: agentTuningPerm
+                        placeholderText: "allow|deny|ask  [read:|write:|shell:]<glob>\n"
+                            + "deny **/.env\ndeny write:**/secrets/**\nallow write:src/**\nask shell:rm *"
+                        color: Theme.textPrimary; placeholderTextColor: Theme.textMuted
+                        font { family: "Consolas,monospace"; pixelSize: 12 }
+                        wrapMode: TextArea.NoWrap
+                        background: null; padding: 10; selectByMouse: true
+                    }
+                }
+            }
+            Text {
+                text: "deny = bloquea · allow = auto-aprueba · ask = pide aprobación. kind opcional (read/write/shell)."
+                color: Theme.textMuted; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.WordWrap
             }
         }
     }
