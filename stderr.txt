@@ -1,2 +1,0 @@
-QQmlApplicationEngine failed to load component
-qrc:/LlamaCode/qml/Main.qml:4:1: el módulo «Qt.labs.settings» no está instalado

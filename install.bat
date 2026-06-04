@@ -49,6 +49,7 @@ if not exist "C:\Qt\6.8.3\msvc2022_64\lib\cmake\Qt6\Qt6Config.cmake" (
         echo [ERROR] Qt installation failed.
         exit /b 1
     )
+    if exist aqtinstall.log ( if not exist logs mkdir logs & move /Y aqtinstall.log logs\ >nul )
 )
 
 echo.

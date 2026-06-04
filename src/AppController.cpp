@@ -3509,6 +3509,9 @@ static const TrEntry k_tr[] = {
     {"launch.select",      "— seleccionar —", "— select —",      "— 选择 —",   "— sélectionner —","— seleziona —", "— auswählen —"},
     {"launch.cmdPreview",  "Vista previa del comando","Command Preview","命令预览","Aperçu de la commande","Anteprima comando","Befehlsvorschau"},
     {"launch.startServer", "Iniciar servidor","Start Server",    "启动服务器","Démarrer le serveur","Avvia server","Server starten"},
+    {"launch.startServerAndAgent", "Iniciar servidor + agente","Start Server + Agent","启动服务器+智能体","Démarrer le serveur + agent","Avvia server + agente","Server + Agent starten"},
+    {"launch.startServerOnly", "Iniciar solo servidor","Start Server Only","仅启动服务器","Démarrer le serveur seul","Avvia solo server","Nur Server starten"},
+    {"launch.endpointLabel", "Endpoint OpenAI (para otros agentes)","OpenAI endpoint (for other agents)","OpenAI 端点（用于其他智能体）","Point de terminaison OpenAI (pour d'autres agents)","Endpoint OpenAI (per altri agenti)","OpenAI-Endpunkt (für andere Agenten)"},
     {"launch.stopServer",  "Detener servidor","Stop Server",     "停止服务器","Arrêter le serveur","Ferma server","Server stoppen"},
     {"launch.preview",     "Vista previa",   "Preview",          "预览",        "Aperçu",     "Anteprima",          "Vorschau"},
     {"launch.showLog",     "Ver log",        "Show log",         "显示日志","Voir le journal","Mostra log",       "Log anzeigen"},
@@ -3940,43 +3943,142 @@ static double catalogSpeedTps(const QString &gpuName, double activeParamsB, doub
     return qMax(0.0, (bw / denom) * 0.55);
 }
 
-static int catalogScore(const QJsonObject &model, double paramsB, double requiredGb, double ramGb, double vramGb,
-                        const QString &quant, const QString &caps, int ctx, const QString &fit, double tps)
+// Normalize a catalog model name to a benchmark-table key: drop the provider
+// prefix, strip quant/format suffixes (AWQ, FP8, GGUF, Q4_K_M, -4bit…) and
+// role tags (instruct/it/base/thinking…), collapse separators to single spaces.
+// Must mirror the key shape used in assets/benchmarks/aa_intelligence.json.
+static QString benchmarkKey(const QString &rawName)
 {
-    Q_UNUSED(requiredGb)
-    int quality = 30;
-    if (paramsB < 3) quality = 45;
-    else if (paramsB < 7) quality = 60;
-    else if (paramsB < 10) quality = 75;
-    else if (paramsB < 20) quality = 82;
-    else if (paramsB < 40) quality = 89;
-    else quality = 95;
+    QString s = rawName.section(QLatin1Char('/'), -1).toLower();
+    const auto strip = [&s](const QString &pat) {
+        s.remove(QRegularExpression(pat, QRegularExpression::CaseInsensitiveOption));
+    };
+    // GGUF k-quant tiers (q4_k_m, q5_k, q8_0, iq4_xs…)
+    strip(QStringLiteral("[-_.]?(q[0-9](_k(_[a-z])?|_[0-9])?|iq[0-9][a-z0-9]*)\\b"));
+    // Prequantized / float formats, with optional bit-width
+    strip(QStringLiteral("[-_.]?(awq|gptq|gguf|mlx|exl2|bnb|nvfp4|mxfp4|fp4|fp8|fp16|bf16|f16|f32|int4|int8|w4a16|w8a8|w8a16|nf4)([-_]?[0-9]{1,2}(bit)?)?\\b"));
+    // Bare bit-width tags (4bit, 8bit)
+    strip(QStringLiteral("[-_.]?[0-9]{1,2}bit\\b"));
+    // Date-stamp tokens (2507, 2501, 2512…)
+    strip(QStringLiteral("[-_.]?2[0-9]{3}\\b"));
+    // Role / variant tags
+    strip(QStringLiteral("[-_](instruct|it|base|chat|thinking|reasoning|captioner|preview|distill|hf|mtp)\\b"));
+    // Collapse separators
+    s.replace(QRegularExpression(QStringLiteral("[-_/]")), QStringLiteral(" "));
+    s.replace(QRegularExpression(QStringLiteral("\\s+")), QStringLiteral(" "));
+    return s.trimmed();
+}
 
-    const QString name = model.value(QStringLiteral("name")).toString().toLower();
-    if (name.contains(QStringLiteral("qwen3"))) quality += 4;
-    else if (name.contains(QStringLiteral("qwen2.5"))) quality += 2;
-    if (name.contains(QStringLiteral("deepseek"))) quality += 3;
-    if (name.contains(QStringLiteral("llama"))) quality += 2;
-    if (quant.contains(QStringLiteral("Q4"))) quality -= 5;
-    if (quant.contains(QStringLiteral("Q5"))) quality -= 2;
-    if (quant.contains(QStringLiteral("Q6"))) quality -= 1;
-    if (caps.contains(QStringLiteral("code"))) quality += 4;
-    if (caps.contains(QStringLiteral("moe"))) quality += 2;
+// Quality penalty per quant tier — ported from Odysseus services/hwfit/models.py
+// QUANT_QUALITY_PENALTY so quant choice nudges quality the same way the cookbook does.
+static double quantQualityPenalty(const QString &quant)
+{
+    const QString q = quant.toUpper();
+    if (q.contains(QStringLiteral("Q2"))) return -12.0;
+    if (q.contains(QStringLiteral("Q3"))) return -8.0;
+    if (q.contains(QStringLiteral("Q4"))) return -5.0;
+    if (q.contains(QStringLiteral("Q5"))) return -2.0;
+    if (q.contains(QStringLiteral("Q6"))) return -1.0;
+    if (q.contains(QStringLiteral("NF4"))) return -4.0;
+    if (q.contains(QStringLiteral("NVFP4")) || q.contains(QStringLiteral("MXFP4")) || q.contains(QStringLiteral("FP4"))) return -3.0;
+    if (q.contains(QStringLiteral("AWQ"))) return q.contains(QStringLiteral("4")) ? -4.0 : -1.0;
+    if (q.contains(QStringLiteral("GPTQ"))) return q.contains(QStringLiteral("4")) ? -4.0 : -1.0;
+    if (q.contains(QStringLiteral("INT4")) || q.contains(QStringLiteral("W4"))) return -4.0;
+    // FP8 / INT8 / BF16 / F16 / Q8 → no penalty
+    return 0.0;
+}
 
-    int fitScore = 0;
-    if (fit == QLatin1String("Perfecto")) fitScore = 100;
-    else if (fit == QLatin1String("Bueno")) fitScore = 82;
-    else if (fit == QLatin1String("Marginal")) fitScore = 55;
-    else fitScore = 10;
+// Newer family gets a quality boost — ported from Odysseus _architecture_bonus.
+static int architectureBonus(const QString &name, const QString &arch)
+{
+    const QString text = (name + QLatin1Char(' ') + arch).toLower();
+    if (text.contains(QStringLiteral("qwen3.6")) || text.contains(QStringLiteral("qwen3_6"))) return 9;
+    if (text.contains(QStringLiteral("qwen3.5")) || text.contains(QStringLiteral("qwen3_5"))) return 8;
+    if (text.contains(QStringLiteral("qwen3-next")) || text.contains(QStringLiteral("qwen3_next"))) return 6;
+    if (text.contains(QStringLiteral("qwen3"))) return 4;
+    if (text.contains(QStringLiteral("qwen2.5")) || text.contains(QStringLiteral("qwen2_5"))) return 2;
+    return 0;
+}
 
-    const int speedScore = qBound(0, int((tps / 40.0) * 100.0), 100);
-    const int ctxScore = ctx >= 32768 ? 100 : (ctx >= 8192 ? 80 : 55);
-    const int popularity = qBound(0, int(std::log10(qMax(1.0, model.value(QStringLiteral("hf_downloads")).toDouble())) * 12.0), 60);
-    int score = qRound(quality * 0.45 + speedScore * 0.20 + fitScore * 0.20 + ctxScore * 0.08 + popularity * 0.07);
+// Composite score ported from Odysseus services/hwfit/fit.py — quality/speed/fit/context
+// weighted at the "general" use-case (0.45/0.30/0.15/0.10). No popularity term, and
+// coder-specialised models are penalised in a general scan so they don't dominate.
+static int catalogScore(const QJsonObject &model, double paramsB, double requiredGb, double ramGb, double vramGb,
+                        const QString &quant, const QString &caps, int ctx, const QString &fit, double tps,
+                        double benchmarkQuality)
+{
+    Q_UNUSED(fit)
+    // ── quality ──
+    // Prefer a real benchmark (Artificial Analysis Intelligence Index, remapped
+    // to a 0-100 quality) when we have one for this model; the quant tier still
+    // costs a little quality. Otherwise fall back to the param/family heuristic.
+    double quality;
+    if (benchmarkQuality >= 0) {
+        quality = benchmarkQuality + quantQualityPenalty(quant);
+    } else {
+        if (paramsB < 1) quality = 30;
+        else if (paramsB < 3) quality = 45;
+        else if (paramsB < 7) quality = 60;
+        else if (paramsB < 10) quality = 75;
+        else if (paramsB < 20) quality = 82;
+        else if (paramsB < 40) quality = 89;
+        else quality = 95;
 
-    if (ramGb >= 64 && vramGb >= 16 && paramsB < 7)
-        score -= 20;
-    return qBound(0, score, 100);
+        const QString name = model.value(QStringLiteral("name")).toString().toLower();
+        if (name.contains(QStringLiteral("qwen"))) quality += 2;
+        if (name.contains(QStringLiteral("deepseek"))) quality += 3;
+        if (name.contains(QStringLiteral("llama"))) quality += 2;
+        if (name.contains(QStringLiteral("mistral")) || name.contains(QStringLiteral("mixtral"))) quality += 1;
+        if (name.contains(QStringLiteral("gemma"))) quality += 1;
+
+        quality += architectureBonus(name, model.value(QStringLiteral("architecture")).toString());
+        quality += quantQualityPenalty(quant);
+
+        // Use-case adjustment (default scan == "general"). Coder models are useful
+        // generally but must not dominate the default list — penalise like Odysseus.
+        // (Benchmark path already reflects general ability, so skip there.)
+        const QString uc = catalogUseCase(caps);
+        if (uc == QLatin1String("coding")) quality -= 10;
+    }
+    quality = qBound(0.0, quality, 100.0);
+
+    // ── speed ── target 40 t/s at general use case
+    const double speedScore = qBound(0.0, (tps / 40.0) * 100.0, 100.0);
+
+    // ── fit ── tiered ratio of required vs budget (Odysseus _fit_score)
+    const double budget = vramGb > 0 ? vramGb : ramGb;
+    double fitScore = 0;
+    if (budget > 0 && requiredGb <= budget) {
+        const double ratio = requiredGb / budget;
+        if (ratio <= 0.5) fitScore = 60 + (ratio / 0.5) * 40;
+        else if (ratio <= 0.8) fitScore = 100;
+        else if (ratio <= 0.9) fitScore = 70;
+        else fitScore = 50;
+    }
+
+    // ── context ── general target 4096
+    const double ctxScore = ctx >= 4096 ? 100 : (ctx >= 2048 ? 70 : 30);
+
+    const double composite = quality * 0.45 + speedScore * 0.30 + fitScore * 0.15 + ctxScore * 0.10;
+    return qBound(0, qRound(composite), 100);
+}
+
+// Parse a version number from the name so equal-score rows break ties toward the
+// newer release (Qwen3.6 > Qwen3.5). Ported from Odysseus _version_key.
+static double catalogVersionKey(const QString &name)
+{
+    if (name.isEmpty()) return 0.0;
+    QRegularExpression re(QStringLiteral("[A-Za-z](\\d+(?:\\.\\d+)?)(?![A-Za-z])"));
+    auto it = re.globalMatch(name);
+    while (it.hasNext()) {
+        const QString val = it.next().captured(1);
+        bool ok = false;
+        const double f = val.toDouble(&ok);
+        if (!ok) continue;
+        if (!val.contains(QLatin1Char('.')) && f >= 100) continue; // param count, not version
+        return f;
+    }
+    return 0.0;
 }
 
 // ── Public methods ─────────────────────────────────────────────────────────────
@@ -4035,6 +4137,10 @@ void AppController::rescanHardware()
 
 void AppController::rebuildModelRecommendations()
 {
+    if (!m_benchmarkLoaded)
+        loadBenchmarkScores();
+    maybeFetchBenchmarks();
+
     const double ramGb = m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble();
     const double vramGb = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
     const QString gpuName = m_hardwareSummary.value(QStringLiteral("gpuName")).toString();
@@ -4078,7 +4184,8 @@ void AppController::rebuildModelRecommendations()
             const double tps = runMode == QLatin1String("no_fit")
                 ? 0.0
                 : catalogSpeedTps(gpuName, activeB, requiredGb, runMode);
-            const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, fit, tps);
+            const double benchQuality = m_benchmarkQuality.value(benchmarkKey(name), -1.0);
+            const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, fit, tps, benchQuality);
 
             QString repo;
             QString fileName;
@@ -4157,12 +4264,116 @@ void AppController::rebuildModelRecommendations()
     }
 
     std::sort(rows.begin(), rows.end(), [](const QVariant &a, const QVariant &b) {
-        return a.toMap().value(QStringLiteral("score")).toInt() >
-               b.toMap().value(QStringLiteral("score")).toInt();
+        const QVariantMap ma = a.toMap();
+        const QVariantMap mb = b.toMap();
+        const int sa = ma.value(QStringLiteral("score")).toInt();
+        const int sb = mb.value(QStringLiteral("score")).toInt();
+        if (sa != sb)
+            return sa > sb;
+        // Tie → newer version first (Qwen3.6 > Qwen3.5)
+        return catalogVersionKey(ma.value(QStringLiteral("name")).toString()) >
+               catalogVersionKey(mb.value(QStringLiteral("name")).toString());
     });
 
     m_modelRecommendations = rows;
     emit modelRecommendationsChanged();
+}
+
+// ── Model quality benchmarks (Artificial Analysis Intelligence Index) ───────────
+
+// Endpoint for the weekly live refresh. Expected JSON is either our own shape
+// ({"models": {key: quality0to100}}) or an AA-style list
+// ({"data": [{"name": "...", "intelligence_index": <0..70>}]}). Any failure is
+// silently ignored — the bundled table stays in effect.
+static const char *kBenchmarkFetchUrl = "https://artificialanalysis.ai/api/v2/data/llms/models";
+
+QString AppController::benchmarkCachePath() const
+{
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    if (dir.isEmpty())
+        dir = QDir::tempPath();
+    return QDir(dir).filePath(QStringLiteral("benchmarks/aa_intelligence.json"));
+}
+
+void AppController::loadBenchmarkScores()
+{
+    m_benchmarkQuality.clear();
+
+    const auto ingest = [this](const QByteArray &bytes) {
+        const QJsonObject root = QJsonDocument::fromJson(bytes).object();
+        // Our shape: {"models": {key: quality}}
+        const QJsonObject models = root.value(QStringLiteral("models")).toObject();
+        for (auto it = models.begin(); it != models.end(); ++it) {
+            const double q = it.value().toDouble(-1);
+            if (q >= 0)
+                m_benchmarkQuality.insert(it.key().trimmed().toLower(), q);
+        }
+        // AA-style shape: {"data": [{"name", "intelligence_index"}]} — remap the
+        // 0..~70 index onto a 0..100 quality and key by the normalized name.
+        const QJsonArray data = root.value(QStringLiteral("data")).toArray();
+        for (const QJsonValue &v : data) {
+            const QJsonObject o = v.toObject();
+            const QString name = o.value(QStringLiteral("name")).toString();
+            const double idx = o.value(QStringLiteral("intelligence_index")).toDouble(-1);
+            if (name.isEmpty() || idx < 0)
+                continue;
+            m_benchmarkQuality.insert(benchmarkKey(name), qBound(0.0, idx * (100.0 / 70.0), 100.0));
+        }
+    };
+
+    // Bundled table first (offline floor)…
+    QFile bundled(QStringLiteral(":/assets/benchmarks/aa_intelligence.json"));
+    if (bundled.open(QIODevice::ReadOnly))
+        ingest(bundled.readAll());
+
+    // …then overlay the fetched cache when present (fresher data wins).
+    QFile cache(benchmarkCachePath());
+    if (cache.open(QIODevice::ReadOnly))
+        ingest(cache.readAll());
+
+    m_benchmarkLoaded = true;
+}
+
+void AppController::maybeFetchBenchmarks()
+{
+    if (m_benchmarkFetchReply)
+        return; // already in flight
+
+    // Weekly cadence: skip if the cache exists and is younger than 7 days.
+    const QFileInfo cacheInfo(benchmarkCachePath());
+    if (cacheInfo.exists() && cacheInfo.lastModified().daysTo(QDateTime::currentDateTime()) < 7)
+        return;
+
+    if (!m_nam)
+        m_nam = new QNetworkAccessManager(this);
+
+    QNetworkRequest req{QUrl(QString::fromLatin1(kBenchmarkFetchUrl))};
+    req.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("LlamaCode/1.0"));
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    m_benchmarkFetchReply = m_nam->get(req);
+
+    connect(m_benchmarkFetchReply, &QNetworkReply::finished, this, [this]() {
+        QNetworkReply *reply = m_benchmarkFetchReply;
+        m_benchmarkFetchReply = nullptr;
+        reply->deleteLater();
+        if (reply->error() != QNetworkReply::NoError)
+            return; // keep bundled table
+
+        const QByteArray bytes = reply->readAll();
+        if (QJsonDocument::fromJson(bytes).isNull())
+            return; // not JSON — ignore
+
+        // Persist to cache, then reload so the overlay takes effect immediately.
+        const QString path = benchmarkCachePath();
+        QDir().mkpath(QFileInfo(path).absolutePath());
+        QFile out(path);
+        if (out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            out.write(bytes);
+            out.close();
+            loadBenchmarkScores();
+            rebuildModelRecommendations();
+        }
+    });
 }
 
 QString AppController::modelDownloadDir() const

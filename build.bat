@@ -1,5 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
+cd /d "%~dp0"
+
+REM Usage: build.bat [Debug|Release|Both]   (default: Both)
+set CONFIGS=%1
+if "%CONFIGS%"=="" set CONFIGS=Both
 
 set QT_DIR=C:\Qt\6.8.3\msvc2022_64
 set CMAKE=%PROGRAMFILES%\CMake\bin\cmake.exe
@@ -32,7 +37,7 @@ taskkill /F /IM rc.exe             >nul 2>&1
 taskkill /F /IM qmlcachegen.exe    >nul 2>&1
 taskkill /F /IM rcc.exe            >nul 2>&1
 taskkill /F /IM moc.exe            >nul 2>&1
-timeout /t 2 /nobreak >nul
+ping -n 3 127.0.0.1 >nul 2>&1
 
 echo [INFO] Clearing stale tlogs...
 if exist build (
@@ -53,47 +58,60 @@ if exist CMakeCache.txt (
     )
 )
 
+REM VS is a multi-config generator: configure once, build per --config below.
 "%CMAKE%" .. -G "%GENERATOR%" -A x64 ^
-    -DCMAKE_PREFIX_PATH="%QT_DIR%" ^
-    -DCMAKE_BUILD_TYPE=Debug
-
-"%CMAKE%" --build . --config Debug -- /maxcpucount:4
-if errorlevel 1 (
-    echo.
-    echo === Build FAILED ===
-    pause
-    exit /b 1
-)
+    -DCMAKE_PREFIX_PATH="%QT_DIR%"
+if errorlevel 1 ( echo. & echo === Configure FAILED === & pause & exit /b 1 )
 
 cd ..
 
-set "WINDEPLOYQT=%QT_DIR%\bin\windeployqt.exe"
-set "EXE_DIR=%~dp0build\Debug"
-set "EXE_PATH=%EXE_DIR%\LlamaCode.exe"
-if not exist "%WINDEPLOYQT%" (
-    echo [ERROR] windeployqt.exe not found at %WINDEPLOYQT%
-    pause & exit /b 1
-)
-if not exist "%EXE_PATH%" (
-    echo [ERROR] Built executable not found at %EXE_PATH%
-    pause & exit /b 1
-)
+set DID_DEBUG=0
+set DID_RELEASE=0
 
-echo [INFO] Deploying Qt runtime next to LlamaCode.exe...
-"%WINDEPLOYQT%" --debug --qmldir "%~dp0qml" --no-translations --compiler-runtime "%EXE_PATH%"
-if errorlevel 1 (
-    echo.
-    echo === windeployqt FAILED ===
-    pause
-    exit /b 1
+if /I "%CONFIGS%"=="Both"    ( call :build_one Debug && call :build_one Release ) else ( call :build_one %CONFIGS% )
+if errorlevel 1 ( pause & exit /b 1 )
+
+REM ── Shortcuts ───────────────────────────────────────────────────────────────
+if "%DID_RELEASE%"=="1" (
+    echo [INFO] Updating Release shortcut...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update-shortcut.ps1" -Config Release -ShortcutName "LlamaCode" -Icon "assets\app_icon.ico"
 )
-
-echo [INFO] Copying Qt.labs.settings manually...
-xcopy /E /I /Y "%QT_DIR%\qml\Qt\labs\settings" "%EXE_DIR%\qml\Qt\labs\settings" >nul
-
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update-shortcut.ps1"
+if "%DID_DEBUG%"=="1" (
+    echo [INFO] Updating Debug shortcut...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0update-shortcut.ps1" -Config Debug -ShortcutName "LlamaCode-Debug" -Icon "assets\debug_icon.ico"
+)
 
 echo.
 echo === Build complete ===
-echo Binary: build\Debug\LlamaCode.exe
+if "%DID_RELEASE%"=="1" echo Release: build\Release\LlamaCode.exe  (shortcut: LlamaCode.lnk)
+if "%DID_DEBUG%"=="1"   echo Debug:   build\Debug\LlamaCode.exe    (shortcut: LlamaCode-Debug.lnk)
 pause
+exit /b 0
+
+REM ── Build + deploy one config ────────────────────────────────────────────────
+:build_one
+set CFG=%~1
+echo.
+echo [INFO] ===== Building %CFG% =====
+"%CMAKE%" --build build --config %CFG% -- /maxcpucount:4
+if errorlevel 1 ( echo. & echo === %CFG% Build FAILED === & exit /b 1 )
+
+set "WINDEPLOYQT=%QT_DIR%\bin\windeployqt.exe"
+set "EXE_DIR=%~dp0build\%CFG%"
+set "EXE_PATH=%EXE_DIR%\LlamaCode.exe"
+if not exist "%WINDEPLOYQT%" ( echo [ERROR] windeployqt not found & exit /b 1 )
+if not exist "%EXE_PATH%"    ( echo [ERROR] %EXE_PATH% missing & exit /b 1 )
+
+set DEPLOY_FLAG=--release
+if /I "%CFG%"=="Debug" set DEPLOY_FLAG=--debug
+
+echo [INFO] Deploying Qt runtime (%CFG%)...
+"%WINDEPLOYQT%" %DEPLOY_FLAG% --qmldir "%~dp0qml" --no-translations --compiler-runtime "%EXE_PATH%"
+if errorlevel 1 ( echo. & echo === windeployqt %CFG% FAILED === & exit /b 1 )
+
+echo [INFO] Copying Qt.labs.settings (%CFG%)...
+xcopy /E /I /Y "%QT_DIR%\qml\Qt\labs\settings" "%EXE_DIR%\qml\Qt\labs\settings" >nul
+
+if /I "%CFG%"=="Debug"   set DID_DEBUG=1
+if /I "%CFG%"=="Release" set DID_RELEASE=1
+exit /b 0

@@ -80,7 +80,8 @@ LlamaCode
     ├── model_catalog.db
     ├── profiles/{backends,models,runtimes,...}.json
     ├── services.json             ← PID state para orphan detection
-    └── chat/{index.json, *.json} ← sesiones de chat persistidas
+    ├── chat/{index.json, *.json} ← sesiones de chat persistidas
+    └── benchmarks/               ← caché del benchmark de calidad + resultados de corridas
 ```
 
 ## Diseño Multi-llama.cpp
@@ -116,6 +117,27 @@ Entidad `CatalogModel`: `id`, `rootId`, `absolutePath`, `fileName`, `sizeBytes`,
 - Infiere quant (`Q4_K_M`, `IQ3_XS`, `BF16`...) por regex
 - `isDraftCandidate`: contiene "draft"/"small" OR tamaño < 2GB
 
+## Cookbook de modelos (recomendaciones hardware-fit)
+
+`ModelRootsPage` recomienda qué modelos descargar según el hardware detectado (RAM / VRAM / GPU vía `nvidia-smi`), usando el catálogo `assets/hwfit/hf_models.json` (~900 modelos, basado en el cookbook de Odysseus).
+
+### Scoring
+
+Cada modelo recibe un score `0–100` que combina, ponderado al caso de uso *general* (calidad 0.45 / velocidad 0.30 / fit 0.15 / contexto 0.10):
+
+- **Calidad** — preferentemente un **benchmark real** (Artificial Analysis *Intelligence Index*, remapeado a 0–100); si no hay match, heurística por params + familia + bonus de arquitectura (qwen3.6 +9, qwen3.5 +8, qwen3-next +6, …) con penalización por tier de quant. Modelos coder se penalizan en el scan general para no dominar.
+- **Velocidad** — t/s estimados según ancho de banda de la GPU y params activos (MoE-aware).
+- **Fit** — ratio memoria requerida vs. presupuesto (VRAM, o RAM en CPU/offload).
+- **Contexto** — vs. target del caso de uso.
+
+Desempate por versión (Qwen3.6 > Qwen3.5).
+
+### Benchmark de calidad (Artificial Analysis)
+
+- **Tabla bundled** `assets/benchmarks/aa_intelligence.json` — piso offline, sin dependencias de red.
+- **Refresco semanal**: si la caché (`AppLocalData/LlamaCode/benchmarks/`) tiene >7 días, hace un fetch en background y la sobrescribe; ante cualquier fallo de red/JSON, queda la bundled.
+- **Matching**: `benchmarkKey()` normaliza el nombre del catálogo (saca provider, quant/formato, GGUF, `-4bit`, `instruct`/`it`/`base`…) para mapear contra la tabla.
+
 ## Diseño Multi-perfiles compuestos
 
 | Entidad | Qué define |
@@ -148,6 +170,13 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Resume automático**: retoma la última sesión al reiniciar el agente
 - **Títulos auto-generados**: actualización en tiempo real vía `session.updated` SSE
 
+## Lanzamiento del servidor (`LaunchPage`)
+
+- **Vista previa del comando** con botón *Copiar*.
+- **Iniciar servidor + agente** — levanta `llama-server` y el harness de agente.
+- **Iniciar solo servidor** — solo `llama-server`, sin agente.
+- **Endpoint OpenAI** — con el server corriendo muestra `http://<host>:<port>/v1` (read-only, seleccionable) + botón *Copiar*, para apuntar agentes externos (opencode, aider, etc.) al backend local.
+
 ## Process Lifecycle
 
 - **Windows Job Object**: todos los subprocesos (llama-server + harness) se asignan al Job Object del proceso principal. Al cerrar LlamaCode (normal o crash), los hijos mueren automáticamente.
@@ -158,18 +187,65 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 ## Stack técnico
 
 - **Qt 6.8.3** (`msvc2022_64`)
-- **Qt modules**: Core, Quick, Sql, Concurrent, Network
+- **Qt modules**: Core, Quick, Sql, Concurrent, Network, Widgets
 - **Compilador**: MSVC 2022 (VS BuildTools)
-- **CMake 3.21+**, generator: Visual Studio 17 2022
+- **CMake 3.21+**, generator: Visual Studio 17 2022 (multi-config)
 - **QML theme**: Catppuccin Mocha
 - **Persistencia**: JSON (registries/profiles/chat) + SQLite (catalog) + QSettings
 
 ## Build
 
+### Rápido (recomendado)
+
+`build.bat` mata procesos colgados, configura, compila, despliega el runtime Qt (`windeployqt`) y regenera los accesos directos. Acepta config:
+
 ```bat
-cd build
-cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:\Qt\6.8.3\msvc2022_64"
-cmake --build . --config Debug --parallel
+build.bat            REM Debug + Release (default)
+build.bat Debug      REM solo Debug
+build.bat Release    REM solo Release
+```
+
+Salidas:
+
+| Config | Binario | Acceso directo | Icono |
+|--------|---------|----------------|-------|
+| Release | `build\Release\LlamaCode.exe` (optimizado, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (llama normal) |
+| Debug | `build\Debug\LlamaCode.exe` (símbolos + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
+
+El icono rojo del Debug va embebido en el `.exe` (taskbar/explorer) vía `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake define `/dLC_DEBUG_ICON` solo en config Debug), y también en el `.lnk`.
+
+> Tras tocar código siempre recompilar — el QML va embebido en el binario vía `qt_add_qml_module`.
+
+### Manual
+
+```bat
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="C:\Qt\6.8.3\msvc2022_64"
+cmake --build build --config Release --parallel
+```
+
+### Primera instalación
+
+`install.bat` / `setup.bat` instalan Python deps + Qt 6.8.3 vía `aqtinstall` antes del primer build.
+
+## Estructura del repo
+
+```text
+LlamaCode/
+├── CMakeLists.txt          ← raíz CMake
+├── app_icon.rc             ← recurso de icono (Debug/Release condicional)
+├── build.bat / install.bat / setup.bat
+├── update-shortcut.ps1     ← genera los .lnk (parametrizable por config/icono)
+├── LlamaCode.lnk / LlamaCode-Debug.lnk
+├── src/                    ← C++ (AppController, backends de agente, core)
+├── qml/                    ← UI (Main.qml, pages/, components/)
+├── assets/
+│   ├── app_icon.ico / debug_icon.ico / app_icon.png
+│   ├── hwfit/hf_models.json          ← catálogo de modelos (cookbook)
+│   └── benchmarks/aa_intelligence.json ← scores de calidad (offline)
+├── docs/                   ← documentación (agent.md, TODO.md, plan_harness.md, ...)
+├── logs/                   ← logs de runtime/install (gitignored)
+├── tests/ + build_tests/   ← suite Qt Test
+└── build/                  ← artefactos (Debug/ + Release/, gitignored)
 ```
 
 ## Fases

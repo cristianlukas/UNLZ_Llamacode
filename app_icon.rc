@@ -1,1 +1,5 @@
+#ifdef LC_DEBUG_ICON
+IDI_APP_ICON ICON "assets/debug_icon.ico"
+#else
 IDI_APP_ICON ICON "assets/app_icon.ico"
+#endif

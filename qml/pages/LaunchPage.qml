@@ -126,7 +126,7 @@ Item {
                             if (App.serverStopping) return "Deteniendo..."
                             if (App.serverRunning) return App.l("launch.stopServer")
                             if (launchCombo.count === 0) return "Crear un perfil primero"
-                            return App.l("launch.startServer")
+                            return App.l("launch.startServerAndAgent")
                         }
                         danger: App.serverRunning && !App.serverStopping
                         secondary: App.serverStopping
@@ -143,6 +143,77 @@ Item {
                         secondary: true
                         enabled: launchCombo.currentValue !== undefined
                         onClicked: App.computeEffectiveProfile(launchCombo.currentValue)
+                    }
+                }
+
+                LcButton {
+                    text: (App.langV, App.l("launch.startServerOnly"))
+                    secondary: true
+                    Layout.fillWidth: true
+                    visible: !App.serverRunning && !App.serverStopping
+                    enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
+                    onClicked: App.startServer(launchCombo.currentValue ?? "")
+                }
+
+                // OpenAI-compatible endpoint for external agents — shown while running.
+                ColumnLayout {
+                    id: endpointBox
+                    Layout.fillWidth: true
+                    Layout.topMargin: 4
+                    spacing: 4
+                    visible: App.serverRunning
+
+                    readonly property string endpointUrl: App.serverBaseUrl + "/v1"
+
+                    Text {
+                        text: (App.langV, App.l("launch.endpointLabel"))
+                        color: Theme.textMuted
+                        font.pixelSize: 12
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 36
+                            color: Theme.inputBg
+                            border.color: Theme.borderColor
+                            border.width: 1
+                            radius: 4
+
+                            TextInput {
+                                id: endpointField
+                                anchors.fill: parent
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
+                                verticalAlignment: TextInput.AlignVCenter
+                                text: endpointBox.endpointUrl
+                                color: Theme.textPrimary
+                                font.family: "Consolas, monospace"
+                                font.pixelSize: 13
+                                readOnly: true
+                                selectByMouse: true
+                            }
+                        }
+
+                        LcButton {
+                            id: endpointCopyBtn
+                            property bool copied: false
+                            text: copied ? (App.langV, App.l("cmd.copied")) : (App.langV, App.l("cmd.copy"))
+                            secondary: true
+                            onClicked: {
+                                App.copyToClipboard(endpointField.text)
+                                endpointCopyBtn.copied = true
+                                endpointCopyTimer.start()
+                            }
+                            Timer {
+                                id: endpointCopyTimer
+                                interval: 1500
+                                onTriggered: endpointCopyBtn.copied = false
+                            }
+                        }
                     }
                 }
 

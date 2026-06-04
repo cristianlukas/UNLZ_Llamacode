@@ -56,6 +56,7 @@ if not exist "%QT_DIR%\lib\cmake\Qt6\Qt6Config.cmake" (
     if errorlevel 1 ( echo [ERROR] Failed installing aqtinstall. & pause & exit /b 1 )
     python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -O C:\Qt
     if errorlevel 1 ( echo [ERROR] Qt installation failed. & pause & exit /b 1 )
+    if exist aqtinstall.log ( if not exist logs mkdir logs & move /Y aqtinstall.log logs\ >nul )
 )
 if not exist "%QT_DIR%\lib\cmake\Qt6\Qt6Config.cmake" (
     echo [ERROR] Qt6 not found at %QT_DIR% after install attempt.

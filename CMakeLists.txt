@@ -68,6 +68,9 @@ qt_add_executable(LlamaCode
 
 if (WIN32)
     target_sources(LlamaCode PRIVATE app_icon.rc)
+    # Debug builds embed the red debug_icon.ico; Release uses app_icon.ico.
+    set_source_files_properties(app_icon.rc PROPERTIES
+        COMPILE_OPTIONS "$<$<CONFIG:Debug>:/dLC_DEBUG_ICON>")
 endif()
 
 qt_add_qml_module(LlamaCode
@@ -99,10 +102,11 @@ if (MSVC)
 endif()
 
 qt_add_resources(LlamaCode "llamacode_assets"
-    PREFIX "/assets"
+    PREFIX "/"
     FILES
         assets/app_icon.png
         assets/hwfit/hf_models.json
+        assets/benchmarks/aa_intelligence.json
 )
 
 target_include_directories(LlamaCode PRIVATE src)
