@@ -39,6 +39,14 @@
 #include <QStandardPaths>
 #include <QTextStream>
 
+static bool isSupportedImageAttachment(const QString &path)
+{
+    const QString ext = QFileInfo(path).suffix().toLower();
+    return ext == QLatin1String("png") || ext == QLatin1String("jpg")
+           || ext == QLatin1String("jpeg") || ext == QLatin1String("webp")
+           || ext == QLatin1String("gif") || ext == QLatin1String("bmp");
+}
+
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     QSettings s;
@@ -48,6 +56,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentSystemPrompt = s.value(QStringLiteral("agent/systemPrompt")).toString();
     m_agentPermRules    = s.value(QStringLiteral("agent/permRules")).toString();
     m_agentTemperature  = s.value(QStringLiteral("agent/temperature"), -1.0).toDouble();
+    m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
 
     killManagedOrphans();
     createJobObject();
@@ -952,6 +961,10 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         m_agentQueuedCount = b->queuedCount();
         emit agentQueueChanged();
     });
+    connect(b, &IAgentBackend::gitRequired, this, [this]() {
+        recheckGit();
+        emit gitRequiredForSubagents();   // la UI ofrece instalar git
+    });
     connect(b, &IAgentBackend::sessionsChanged, this, [this, b]() {
         m_agentSessions = b->sessions();
         m_opencodeSessionId = b->currentSessionId();
@@ -1427,10 +1440,20 @@ void AppController::sendToAgent(const QString &text)
 
 void AppController::sendToAgentWithAttachments(const QString &text, const QStringList &paths)
 {
-    if (text.trimmed().isEmpty() && paths.isEmpty()) return;
+    QStringList filtered;
+    for (const QString &p : paths) {
+        if (!m_serverHasVision && isSupportedImageAttachment(p)) {
+            appendAgentEvent(QStringLiteral("attachments"),
+                             QStringLiteral("Imagen omitida sin vision: %1").arg(QFileInfo(p).fileName()));
+            continue;
+        }
+        filtered.append(p);
+    }
+
+    if (text.trimmed().isEmpty() && filtered.isEmpty()) return;
     if (auto *la = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
         if (m_agentBackend->running()) {
-            la->setPendingAttachments(paths);
+            la->setPendingAttachments(filtered);
             la->sendMessage(text);
             return;
         }
@@ -1466,6 +1489,42 @@ void AppController::queueAgent(const QString &text)
 void AppController::clearAgentQueue()
 {
     if (m_agentBackend) m_agentBackend->clearQueue();
+}
+
+void AppController::recheckGit()
+{
+    const bool avail = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
+    if (avail != m_gitAvailable) { m_gitAvailable = avail; emit gitAvailableChanged(); }
+}
+
+void AppController::installGit()
+{
+    if (m_gitInstallProc) return;   // ya en curso
+#ifdef Q_OS_WIN
+    m_gitInstallProc = new QProcess(this);
+    connect(m_gitInstallProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int code, QProcess::ExitStatus) {
+        appendAgentEvent(QStringLiteral("git"),
+                         QStringLiteral("Instalación de git terminó (code %1)").arg(code));
+        m_gitInstallProc->deleteLater();
+        m_gitInstallProc = nullptr;
+        recheckGit();                 // re-detectar (puede requerir reabrir la terminal/PATH)
+        emit gitAvailableChanged();   // refrescar installingGit
+    });
+    appendAgentEvent(QStringLiteral("git"), QStringLiteral("Instalando Git vía winget…"));
+    emit gitAvailableChanged();       // installingGit = true
+    m_gitInstallProc->start(QStringLiteral("winget"),
+        {QStringLiteral("install"), QStringLiteral("--id"), QStringLiteral("Git.Git"),
+         QStringLiteral("--exact"), QStringLiteral("--source"), QStringLiteral("winget"),
+         QStringLiteral("--accept-source-agreements"), QStringLiteral("--accept-package-agreements")});
+    if (!m_gitInstallProc->waitForStarted(5000)) {
+        emit serverError(QStringLiteral("No se pudo iniciar winget para instalar Git."));
+        m_gitInstallProc->deleteLater(); m_gitInstallProc = nullptr;
+        emit gitAvailableChanged();
+    }
+#else
+    emit serverError(QStringLiteral("Instalá git con el gestor de paquetes de tu sistema."));
+#endif
 }
 
 void AppController::rollbackAgentToMessage(int msgIndex)

@@ -31,6 +31,7 @@ set(SOURCES
     src/core/agent/LlamaAgentBackend.cpp
     src/core/agent/McpClient.cpp
     src/core/agent/AgentToolRunner.cpp
+    src/core/agent/SubAgentRunner.cpp
 )
 
 set(HEADERS
@@ -55,6 +56,7 @@ set(HEADERS
     src/core/agent/LlamaAgentBackend.h
     src/core/agent/McpClient.h
     src/core/agent/AgentToolRunner.h
+    src/core/agent/SubAgentRunner.h
 )
 
 qt_add_executable(LlamaCode

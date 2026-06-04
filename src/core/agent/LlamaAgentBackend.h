@@ -11,6 +11,7 @@
 
 class QThread;
 class AgentToolRunner;
+class SubAgentRunner;
 
 // Backend propio ("llamaagent"): loop ReAct con tool-calling OpenAI contra
 // llama-server. No lanza proceso externo; ejecuta tools nativas (lectura/
@@ -67,6 +68,9 @@ public:
     // Diff unificado simple (prefijo/sufijo común; líneas +/-/ ).
     static QString makeDiff(const QString &oldText, const QString &newText);
 
+    // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
+    static QJsonArray toolSchemas();
+
     // Memoria por proyecto: ruta del archivo de memoria dentro de un cwd.
     static QString memoryFilePath(const QString &cwd);
 
@@ -85,7 +89,6 @@ private:
     void setTyping(bool typing);
 
     // Tools
-    static QJsonArray toolSchemas();                 // solo built-in
     QJsonArray buildToolSchemas() const;             // built-in + MCP (cache)
     static QString toolKind(const QString &name);    // read | write | shell | mcp
     static QStringList requiredArgs(const QString &name);
@@ -99,9 +102,21 @@ private slots:
     void onToolExecuted(const QVariantMap &result);
     void onToolStarted(const QVariantMap &info);          // run_shell async: tarjeta en vivo
     void onToolOutputChunk(const QString &callId, const QString &chunk);
+    void onSubFinished(const QString &id, const QString &result, bool ok);
+    void onSubProgress(const QString &id, const QString &note);
     void flushQueue();                 // envía el próximo mensaje encolado (si lo hay)
 
 private:
+    // Subagents (tool `task`): spawn paralelo en git worktrees aisladas.
+    void spawnTasks(const QJsonArray &taskCalls);
+    void pumpSubs();                   // lanza subs de la cola hasta el cap
+    void launchSub(const QJsonObject &call);
+    bool subsActive() const { return !m_subQueue.isEmpty() || !m_subs.isEmpty(); }
+    QString createWorktree(const QString &callId, bool &isolated);
+    QString mergeAndCleanupWorktree(const QString &callId, bool ok, bool isolated);
+    void cancelAllSubs();
+    static constexpr int kMaxParallelSubs = 3;   // subs concurrentes (no saturar el server)
+
     bool isBusy() const;               // turno/tool/compactación en curso
     void interruptForSteer();          // aborta y deja m_apiMessages consistente
     void repairDanglingToolCalls();    // cierra tool_calls sin respuesta tras abortar
@@ -235,4 +250,13 @@ private:
     struct Checkpoint { int apiLen; int msgLen; QStringList editKeys; };
     QList<Checkpoint> m_checkpoints;
     void pushCheckpoint();
+
+    // Sub-agentes en vuelo (callId → runner/worktree/branch/tarjeta). Mientras
+    // m_subsOutstanding>0 el loop principal espera a que terminen todos.
+    QHash<QString, SubAgentRunner *> m_subs;   // corriendo (callId → runner)
+    QJsonArray              m_subQueue;        // task calls esperando un slot
+    QHash<QString, QString> m_subWorktree;
+    QHash<QString, QString> m_subBranch;
+    QHash<QString, bool>    m_subIsolated;
+    QHash<QString, int>     m_subMsgIdx;
 };

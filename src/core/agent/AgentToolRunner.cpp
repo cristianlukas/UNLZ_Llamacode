@@ -58,12 +58,25 @@ static void collectFiles(const QString &rootAbs, QStringList &out, int maxFiles)
 // Traduce un glob ('*'=segmento, '**'=recursivo, '?'=1 char) a regex anclada.
 static QRegularExpression globToRegex(const QString &glob)
 {
-    QString rx = QRegularExpression::escape(glob);
-    rx.replace(QStringLiteral("\\*\\*"), QStringLiteral("\x01"));   // marcador temporal
-    rx.replace(QStringLiteral("\\*"), QStringLiteral("[^/]*"));
-    rx.replace(QStringLiteral("\x01"), QStringLiteral(".*"));
-    rx.replace(QStringLiteral("\\?"), QStringLiteral("[^/]"));
-    return QRegularExpression(QStringLiteral("^") + rx + QStringLiteral("$"));
+    // Construido a mano (NO escape: escaparía '/'). Paths rel con '/'.
+    QString rx = QStringLiteral("^");
+    const int n = glob.size();
+    for (int i = 0; i < n; ++i) {
+        const QChar c = glob.at(i);
+        if (c == QLatin1Char('*')) {
+            if (i + 1 < n && glob.at(i + 1) == QLatin1Char('*')) {
+                if (i + 2 < n && glob.at(i + 2) == QLatin1Char('/')) { rx += QStringLiteral("(?:.*/)?"); i += 2; }
+                else { rx += QStringLiteral(".*"); i += 1; }
+            } else { rx += QStringLiteral("[^/]*"); }
+        } else if (c == QLatin1Char('?')) {
+            rx += QStringLiteral("[^/]");
+        } else {
+            if (QStringLiteral(".^$+(){}[]|\\").contains(c)) rx += QLatin1Char('\\');
+            rx += c;
+        }
+    }
+    rx += QLatin1Char('$');
+    return QRegularExpression(rx);
 }
 
 AgentToolRunner::AgentToolRunner(QObject *parent) : QObject(parent) {}

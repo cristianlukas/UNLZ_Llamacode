@@ -41,6 +41,9 @@ class AppController : public QObject
     Q_PROPERTY(QString serverBaseUrl READ serverBaseUrl NOTIFY serverRunningChanged)
     // Capacidades del modelo activo. Vision = el server se lanzó con --mmproj.
     Q_PROPERTY(bool serverHasVision READ serverHasVision NOTIFY serverHasVisionChanged)
+    // git instalado (requerido por subagents para aislar en worktrees).
+    Q_PROPERTY(bool gitAvailable READ gitAvailable NOTIFY gitAvailableChanged)
+    Q_PROPERTY(bool installingGit READ installingGit NOTIFY gitAvailableChanged)
     Q_PROPERTY(bool installingOfficialBinary READ installingOfficialBinary NOTIFY installingOfficialBinaryChanged)
     Q_PROPERTY(QString officialBinaryInstallStatus READ officialBinaryInstallStatus NOTIFY officialBinaryInstallStatusChanged)
     Q_PROPERTY(QString officialBinaryInstallLog READ officialBinaryInstallLog NOTIFY officialBinaryInstallLogChanged)
@@ -204,6 +207,10 @@ public:
     // relativas, salta dirs ignorados, cap 50.
     Q_INVOKABLE QStringList agentProjectFiles(const QString &query) const;
     bool serverHasVision() const { return m_serverHasVision; }
+    bool gitAvailable() const { return m_gitAvailable; }
+    bool installingGit() const { return m_gitInstallProc != nullptr; }
+    Q_INVOKABLE void installGit();
+    Q_INVOKABLE void recheckGit();
     // Steering (interrumpe el turno y manda ya) / cola (manda al terminar).
     Q_INVOKABLE void steerAgent(const QString &text);
     Q_INVOKABLE void queueAgent(const QString &text);
@@ -262,6 +269,9 @@ signals:
     void serverRunningChanged();
     void serverReadyChanged();
     void serverHasVisionChanged();
+    void gitAvailableChanged();
+    // El agente pidió subagents pero falta git → la UI ofrece instalarlo.
+    void gitRequiredForSubagents();
     void serverLogChanged();
     void activeLaunchIdChanged();
     void effectiveProfileChanged();
@@ -323,6 +333,8 @@ private:
     bool      m_serverStopping = false;
     bool      m_serverReady    = false;
     bool      m_serverHasVision = false;
+    bool      m_gitAvailable = false;
+    QProcess *m_gitInstallProc = nullptr;
     QTimer   *m_stopKillTimer  = nullptr;
     QTimer   *m_healthPollTimer = nullptr;
     void startHealthPolling();

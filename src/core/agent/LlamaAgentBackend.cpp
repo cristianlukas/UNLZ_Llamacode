@@ -1,5 +1,8 @@
 #include "LlamaAgentBackend.h"
 #include "AgentToolRunner.h"
+#include "SubAgentRunner.h"
+
+#include <QCryptographicHash>
 
 #include <QDateTime>
 #include <QThread>
@@ -352,6 +355,7 @@ void LlamaAgentBackend::stop()
     if (m_reply) { m_reply->abort(); m_reply->deleteLater(); m_reply = nullptr; }
     m_pendingCalls = {};
     m_awaitId.clear();
+    cancelAllSubs();
     saveCurrentSession();
     persistIndex();
     // Apagar servers MCP pero mantener vivo el hilo worker (se destruye en ~).
@@ -387,6 +391,7 @@ void LlamaAgentBackend::cancelGeneration()
     // Matar el run_shell async en vuelo y cerrar su tarjeta en vivo.
     if (m_worker) QMetaObject::invokeMethod(m_worker, "cancelShell", Qt::QueuedConnection);
     finalizeLiveToolCard(true);
+    cancelAllSubs();
     // PARAR = detener todo, incluida la cola de mensajes pendientes.
     if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
 }
@@ -515,12 +520,41 @@ void LlamaAgentBackend::setThinkingEnabled(bool enabled)
 // Glob → regex anclada (mismo criterio que el worker: ** = recursivo).
 static QRegularExpression permGlobToRegex(const QString &glob)
 {
-    QString rx = QRegularExpression::escape(glob);
-    rx.replace(QStringLiteral("\\*\\*"), QStringLiteral("\x01"));
-    rx.replace(QStringLiteral("\\*"), QStringLiteral("[^/\\\\]*"));
-    rx.replace(QStringLiteral("\x01"), QStringLiteral(".*"));
-    rx.replace(QStringLiteral("\\?"), QStringLiteral("[^/\\\\]"));
-    return QRegularExpression(QStringLiteral("^") + rx + QStringLiteral("$"));
+    // Construido a mano (NO QRegularExpression::escape: escapa '/' y rompe los
+    // tokens de glob). '/' y '\' = cualquier separador. Matchea rutas rel y abs.
+    QString rx = QStringLiteral("^");
+    const int n = glob.size();
+    int i = 0;
+    while (i < n) {
+        const QChar c = glob.at(i);
+        if (c == QLatin1Char('*') && i + 1 < n && glob.at(i + 1) == QLatin1Char('*')) {
+            if (i + 2 < n && (glob.at(i + 2) == QLatin1Char('/') || glob.at(i + 2) == QLatin1Char('\\'))) {
+                rx += QStringLiteral("(?:.*[/\\\\])?");
+                i += 3;   // **/ -> cero o mas dirs
+                continue;
+            }
+            rx += QStringLiteral(".*");
+            i += 2;        // ** -> cualquier cosa
+            continue;
+        } else if (c == QLatin1Char('*')) {
+            rx += QStringLiteral("[^/\\\\]*");
+            i += 1;        // * -> segmento
+            continue;
+        } else if (c == QLatin1Char('?')) {
+            rx += QStringLiteral("[^/\\\\]");
+            i += 1;
+            continue;
+        } else if (c == QLatin1Char('/') || c == QLatin1Char('\\')) {
+            rx += QStringLiteral("[/\\\\]");
+            i += 1;        // separador: slash o backslash
+            continue;
+        }
+        if (QStringLiteral(".^$+(){}[]|").contains(c)) rx += QLatin1Char('\\');
+        rx += c;
+        i += 1;
+    }
+    rx += QLatin1Char('$');
+    return QRegularExpression(rx);
 }
 
 // Reglas: una por línea. "allow|deny|ask [kind:]<glob>". kind ∈ read|write|shell.
@@ -713,7 +747,7 @@ bool LlamaAgentBackend::isBusy() const
 {
     return m_reply || m_compactReply || m_compacting
            || !m_awaitId.isEmpty() || !m_execCallId.isEmpty()
-           || !m_pendingCalls.isEmpty();
+           || !m_pendingCalls.isEmpty() || subsActive();
 }
 
 // Encolar: si está ocupado, guarda y se enviará al terminar el turno. Si no,
@@ -777,6 +811,7 @@ void LlamaAgentBackend::interruptForSteer()
     // Matar el run_shell async en vuelo y cerrar su tarjeta en vivo.
     if (m_worker) QMetaObject::invokeMethod(m_worker, "cancelShell", Qt::QueuedConnection);
     finalizeLiveToolCard(true);
+    cancelAllSubs();
     // Cerrar la burbuja en curso (descarta si está vacía; si tenía texto parcial
     // lo deja como mensaje finalizado).
     if (m_curAsstIdx >= 0) closeAssistantBubble();
@@ -873,7 +908,9 @@ void LlamaAgentBackend::runCompletion()
         {QStringLiteral("messages"), m_apiMessages},
         {QStringLiteral("tools"), buildToolSchemas()},
         {QStringLiteral("tool_choice"), QStringLiteral("auto")},
-        {QStringLiteral("parallel_tool_calls"), false},
+        // Habilitado para que el modelo pueda lanzar varias `task` en paralelo.
+        // El loop serializa los tools normales igual (uno por onToolExecuted).
+        {QStringLiteral("parallel_tool_calls"), true},
         // Parsear tool calls del lado server puede devolver 500 si el modelo
         // emite argumentos JSON parciales durante el streaming. Lo manejamos
         // del lado cliente para tolerar errores y permitir reintentos.
@@ -1141,10 +1178,29 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 
 void LlamaAgentBackend::processPendingCalls()
 {
+    if (subsActive()) return;   // esperando que terminen los sub-agentes
+
     if (m_pendingCalls.isEmpty()) {
         // Todas las tools resueltas → re-consultar al modelo con los resultados.
         runCompletion();
         return;
+    }
+
+    // ── Subagents: extraer TODAS las tool_calls `task` y lanzarlas en paralelo.
+    {
+        QJsonArray taskCalls, rest;
+        for (const QJsonValue &v : std::as_const(m_pendingCalls)) {
+            if (v.toObject().value(QStringLiteral("function")).toObject()
+                    .value(QStringLiteral("name")).toString() == QLatin1String("task"))
+                taskCalls.append(v);
+            else
+                rest.append(v);
+        }
+        if (!taskCalls.isEmpty()) {
+            m_pendingCalls = rest;       // los no-task se procesan al terminar los subs
+            spawnTasks(taskCalls);
+            return;
+        }
     }
 
     const QJsonObject call = m_pendingCalls.first().toObject();
@@ -1166,7 +1222,8 @@ void LlamaAgentBackend::processPendingCalls()
     static const QStringList known{
         QStringLiteral("read_file"), QStringLiteral("list_dir"), QStringLiteral("grep"),
         QStringLiteral("write_file"), QStringLiteral("edit_file"),
-        QStringLiteral("glob"), QStringLiteral("run_shell"), QStringLiteral("web_fetch")};
+        QStringLiteral("glob"), QStringLiteral("run_shell"), QStringLiteral("web_fetch"),
+        QStringLiteral("task")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
@@ -1224,16 +1281,24 @@ void LlamaAgentBackend::processPendingCalls()
             ? args.value(QStringLiteral("command")).toString()
             : args.value(QStringLiteral("path")).toString();
         if (subject.isEmpty()) subject = args.value(QStringLiteral("pattern")).toString();
+        emit logAppended(QStringLiteral("[perm-eval] kind=%1 subject='%2' rules=%3\n")
+                             .arg(kind, subject).arg(m_permRules.size()));
         if (!subject.isEmpty()) {
             for (const PermRule &r : std::as_const(m_permRules)) {
+                const bool kindOk = r.kind.isEmpty() || r.kind == kind;
+                const bool rxOk = r.rx.match(subject).hasMatch();
+                emit logAppended(QStringLiteral("[perm-eval]   glob='%1' rx=[%2] valid=%3 kindOk=%4 rxOk=%5\n")
+                                     .arg(r.glob, r.rx.pattern()).arg(r.rx.isValid()).arg(kindOk).arg(rxOk));
                 if (!r.kind.isEmpty() && r.kind != kind) continue;
                 if (!r.rx.match(subject).hasMatch()) continue;
                 if (r.action == PermDeny) {
                     ++m_toolFail;
                     m_pendingCalls.removeFirst();
-                    appendToolResult(id, name, QStringLiteral(
+                    const QString denied = QStringLiteral(
                         "[permiso denegado por regla '%1': '%2' no está permitido]")
-                        .arg(r.glob, subject));
+                        .arg(r.glob, subject);
+                    appendToolCard(name, kind, false, subject, denied);
+                    appendToolResult(id, name, denied);
                     processPendingCalls();
                     return;
                 }
@@ -1459,6 +1524,236 @@ void LlamaAgentBackend::onToolOutputChunk(const QString &callId, const QString &
     }
 }
 
+// ───────────────────────────── Subagents (tool `task`) ───────────────────
+static QString runGitCap(const QStringList &args, const QString &dir, int *exitCode = nullptr)
+{
+    QProcess p;
+    p.setWorkingDirectory(dir);
+    p.start(QStringLiteral("git"), args);
+    if (!p.waitForStarted(5000)) { if (exitCode) *exitCode = -1; return QStringLiteral("git no disponible"); }
+    p.waitForFinished(20000);
+    if (exitCode) *exitCode = p.exitCode();
+    return QString::fromUtf8(p.readAllStandardOutput() + p.readAllStandardError());
+}
+
+// ¿git instalado? (cacheado). Subagents lo requieren para aislar en worktrees.
+static bool gitInstalled()
+{
+    static int cached = -1;   // -1 desconocido, 0 no, 1 sí
+    if (cached < 0)
+        cached = QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty() ? 0 : 1;
+    return cached == 1;
+}
+
+// Aísla al sub-agente en una git worktree (rama nueva desde HEAD). Inicializa el
+// repo si el cwd aún no lo es. Devuelve "" si git NO está instalado (el caller
+// pide instalarlo). isolated=true si quedó aislado.
+QString LlamaAgentBackend::createWorktree(const QString &callId, bool &isolated)
+{
+    isolated = false;
+    if (!gitInstalled()) return QString();   // → launchSub pide instalar git
+
+    const QString sid = QString(callId).remove(QRegularExpression(QStringLiteral("[^A-Za-z0-9]"))).left(10);
+    int ex = 0;
+    runGitCap({QStringLiteral("rev-parse"), QStringLiteral("--is-inside-work-tree")}, m_cwd, &ex);
+    if (ex != 0) {
+        // cwd no es repo git → inicializarlo + commit base (necesario para worktree).
+        runGitCap({QStringLiteral("init")}, m_cwd, &ex);
+        runGitCap({QStringLiteral("-c"), QStringLiteral("user.email=agent@llamacode"),
+                   QStringLiteral("-c"), QStringLiteral("user.name=llamacode"),
+                   QStringLiteral("commit"), QStringLiteral("--allow-empty"), QStringLiteral("--no-verify"),
+                   QStringLiteral("-m"), QStringLiteral("llamacode: init para subagents")}, m_cwd, &ex);
+        // Si había archivos sin trackear, snapshot inicial para que HEAD los tenga.
+        runGitCap({QStringLiteral("add"), QStringLiteral("-A")}, m_cwd);
+        runGitCap({QStringLiteral("-c"), QStringLiteral("user.email=agent@llamacode"),
+                   QStringLiteral("-c"), QStringLiteral("user.name=llamacode"),
+                   QStringLiteral("commit"), QStringLiteral("--no-verify"),
+                   QStringLiteral("-m"), QStringLiteral("llamacode: snapshot inicial")}, m_cwd, &ex);
+    }
+
+    const QString base = QDir::tempPath() + QStringLiteral("/llamacode-worktrees");
+    QDir().mkpath(base);
+    const QString path = QDir::cleanPath(base + QStringLiteral("/") + sid);
+    QDir(path).removeRecursively();
+    const QString branch = QStringLiteral("llamacode-sub/") + sid;
+    runGitCap({QStringLiteral("worktree"), QStringLiteral("prune")}, m_cwd);
+    runGitCap({QStringLiteral("worktree"), QStringLiteral("add"), QStringLiteral("-b"), branch,
+               path, QStringLiteral("HEAD")}, m_cwd, &ex);
+    if (ex != 0) return QString();   // falló crear la worktree
+    isolated = true;
+    m_subBranch.insert(callId, branch);
+    return path;
+}
+
+// Commit en la worktree + merge a la rama actual (abort si conflicto, preservando
+// la rama). Limpia worktree.
+QString LlamaAgentBackend::mergeAndCleanupWorktree(const QString &callId, bool ok, bool isolated)
+{
+    if (!isolated) return QString();
+    const QString path = m_subWorktree.value(callId);
+    const QString branch = m_subBranch.value(callId);
+    QString note;
+    bool preserveBranch = false;
+
+    if (ok && !path.isEmpty()) {
+        runGitCap({QStringLiteral("add"), QStringLiteral("-A")}, path);
+        int cex = 0;
+        runGitCap({QStringLiteral("-c"), QStringLiteral("user.email=sub@llamacode"),
+                   QStringLiteral("-c"), QStringLiteral("user.name=subagent"),
+                   QStringLiteral("commit"), QStringLiteral("--no-verify"),
+                   QStringLiteral("-m"), QStringLiteral("subagent ") + callId.left(8)}, path, &cex);
+        if (cex == 0) {
+            int mex = 0;
+            const QString mout = runGitCap({QStringLiteral("merge"), QStringLiteral("--no-edit"),
+                                            QStringLiteral("--no-ff"), branch}, m_cwd, &mex);
+            if (mex == 0) {
+                note = QStringLiteral("\n[✓ cambios del sub-agente mergeados a la rama actual]");
+            } else {
+                // Conflicto: repo LIMPIO (abort) + preservar rama para merge manual.
+                runGitCap({QStringLiteral("merge"), QStringLiteral("--abort")}, m_cwd);
+                preserveBranch = true;
+                note = QStringLiteral("\n[⚠ conflicto de merge — abortado, repo intacto. "
+                                      "Los cambios quedaron en la rama '%1': mergeala a mano.\n%2]")
+                           .arg(branch, mout.left(300));
+            }
+        } else {
+            note = QStringLiteral("\n[el sub-agente no dejó cambios]");
+        }
+    }
+    if (!path.isEmpty())
+        runGitCap({QStringLiteral("worktree"), QStringLiteral("remove"), QStringLiteral("--force"), path}, m_cwd);
+    if (!branch.isEmpty() && !preserveBranch)
+        runGitCap({QStringLiteral("branch"), QStringLiteral("-D"), branch}, m_cwd);
+    return note;
+}
+
+// Encola las task y lanza hasta kMaxParallelSubs en paralelo.
+void LlamaAgentBackend::spawnTasks(const QJsonArray &taskCalls)
+{
+    for (const QJsonValue &v : taskCalls) m_subQueue.append(v);
+    emit logAppended(QStringLiteral("[subagents: %1 encoladas (máx %2 en paralelo)]\n")
+                         .arg(taskCalls.size()).arg(kMaxParallelSubs));
+    pumpSubs();
+}
+
+// Lanza subs de la cola hasta llenar el cap. Si no queda nada activo, continúa el turno.
+void LlamaAgentBackend::pumpSubs()
+{
+    while (m_subs.size() < kMaxParallelSubs && !m_subQueue.isEmpty()) {
+        const QJsonObject call = m_subQueue.takeAt(0).toObject();
+        launchSub(call);
+    }
+    if (!subsActive()) processPendingCalls();   // todas resueltas/ inválidas → seguir
+}
+
+void LlamaAgentBackend::launchSub(const QJsonObject &call)
+{
+    const QString id = call.value(QStringLiteral("id")).toString();
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    const QString argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
+    const QJsonObject a = QJsonDocument::fromJson(argStr.toUtf8()).object();
+    const QString prompt = a.value(QStringLiteral("prompt")).toString();
+    const QString desc = a.value(QStringLiteral("description")).toString();
+
+    if (prompt.trimmed().isEmpty()) {
+        ++m_toolFail;
+        appendToolResult(id, QStringLiteral("task"), QStringLiteral("[error: 'prompt' vacío para task]"));
+        return;   // no arranca runner; pumpSubs sigue
+    }
+
+    bool isolated = false;
+    const QString wt = createWorktree(id, isolated);
+    if (wt.isEmpty()) {
+        // git no instalado (o falló la worktree) → pedir instalación, no ejecutar.
+        ++m_toolFail;
+        emit gitRequired();
+        appendToolCard(QStringLiteral("task"), QStringLiteral("task"), false,
+                       desc.isEmpty() ? prompt.left(60) : desc,
+                       QStringLiteral("[Git no está instalado. Los subagents necesitan git para "
+                                      "aislar el trabajo en una worktree. Instalá git y reintentá.]"));
+        appendToolResult(id, QStringLiteral("task"),
+                         QStringLiteral("[error: subagents requieren git instalado. Se le pidió al "
+                                        "usuario instalarlo. Resolvé la subtarea vos directamente "
+                                        "en vez de usar task.]"));
+        return;
+    }
+    m_subWorktree.insert(id, wt);
+    m_subIsolated.insert(id, isolated);
+
+    appendToolCard(QStringLiteral("task"), QStringLiteral("task"), true,
+                   desc.isEmpty() ? prompt.left(60) : desc,
+                   QStringLiteral("[worktree git aislada]\n"));
+    if (!m_messages.isEmpty()) {
+        QVariantMap card = m_messages.last().toMap();
+        card[QStringLiteral("typing")] = true;
+        m_messages[m_messages.size() - 1] = card;
+        m_subMsgIdx.insert(id, m_messages.size() - 1);
+    }
+    emit messagesChanged();
+
+    auto *sub = new SubAgentRunner(id, m_ctx.serverBaseUrl, m_ctx.modelId,
+                                   wt, prompt, m_temperature, this);
+    connect(sub, &SubAgentRunner::finished, this, &LlamaAgentBackend::onSubFinished);
+    connect(sub, &SubAgentRunner::progressed, this, &LlamaAgentBackend::onSubProgress);
+    m_subs.insert(id, sub);
+    sub->start();
+}
+
+void LlamaAgentBackend::onSubProgress(const QString &id, const QString &note)
+{
+    const int idx = m_subMsgIdx.value(id, -1);
+    if (idx < 0 || idx >= m_messages.size()) return;
+    QVariantMap card = m_messages[idx].toMap();
+    QString out = card.value(QStringLiteral("output")).toString() + note + QStringLiteral("\n");
+    if (out.size() > 16 * 1024) out = out.right(16 * 1024);
+    card[QStringLiteral("output")] = out;
+    m_messages[idx] = card;
+    emit messagesChanged();
+}
+
+void LlamaAgentBackend::onSubFinished(const QString &id, const QString &result, bool ok)
+{
+    if (!m_subs.contains(id)) return;
+    SubAgentRunner *sub = m_subs.take(id);
+    if (sub) sub->deleteLater();
+
+    const bool isolated = m_subIsolated.value(id, false);
+    const QString mergeNote = mergeAndCleanupWorktree(id, ok, isolated);
+
+    const int idx = m_subMsgIdx.value(id, -1);
+    if (idx >= 0 && idx < m_messages.size()) {
+        QVariantMap card = m_messages[idx].toMap();
+        card[QStringLiteral("typing")] = false;
+        card[QStringLiteral("ok")] = ok;
+        QString out = card.value(QStringLiteral("output")).toString()
+                      + QStringLiteral("\n") + result + mergeNote;
+        card[QStringLiteral("output")] = out.left(64 * 1024);
+        m_messages[idx] = card;
+    }
+    emit messagesChanged();
+
+    if (ok) ++m_toolOk; else ++m_toolFail;
+    appendToolResult(id, QStringLiteral("task"), (result + mergeNote).left(16 * 1024));
+
+    m_subWorktree.remove(id); m_subBranch.remove(id);
+    m_subIsolated.remove(id); m_subMsgIdx.remove(id);
+    pumpSubs();   // lanza el siguiente encolado; si no queda nada → sigue el turno
+}
+
+// Cancela y limpia todos los sub-agentes en vuelo + la cola (PARAR/interrupt/stop).
+void LlamaAgentBackend::cancelAllSubs()
+{
+    m_subQueue = QJsonArray();
+    const auto ids = m_subs.keys();
+    for (const QString &id : ids) {
+        SubAgentRunner *sub = m_subs.take(id);
+        if (sub) { disconnect(sub, nullptr, this, nullptr); sub->cancel(); sub->deleteLater(); }
+        mergeAndCleanupWorktree(id, false, m_subIsolated.value(id, false));
+        m_subWorktree.remove(id); m_subBranch.remove(id);
+        m_subIsolated.remove(id); m_subMsgIdx.remove(id);
+    }
+}
+
 void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name, const QString &content)
 {
     Q_UNUSED(name)
@@ -1480,6 +1775,7 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("edit_file")) return {QStringLiteral("path"), QStringLiteral("old_string")};
     if (name == QLatin1String("run_shell"))  return {QStringLiteral("command")};
     if (name == QLatin1String("web_fetch"))  return {QStringLiteral("url")};
+    if (name == QLatin1String("task"))       return {QStringLiteral("prompt")};
     return {};   // list_dir: path opcional
 }
 
@@ -1630,8 +1926,17 @@ void LlamaAgentBackend::finishTurn(const QString &finalText)
 // ───────────────────────────── Tools ─────────────────────────────────────
 QString LlamaAgentBackend::toolKind(const QString &name)
 {
-    if (name.startsWith(kMcpPrefix)) return QStringLiteral("mcp");
+    if (name.startsWith(kMcpPrefix)) {
+        const QString bare = name.section(QStringLiteral("__"), -1);
+        if (bare == QLatin1String("write_file") || bare == QLatin1String("edit_file")
+            || bare == QLatin1String("create_directory") || bare == QLatin1String("move_file"))
+            return QStringLiteral("write");
+        if (bare == QLatin1String("run_shell") || bare == QLatin1String("shell"))
+            return QStringLiteral("shell");
+        return QStringLiteral("read");
+    }
     if (name == QLatin1String("run_shell")) return QStringLiteral("shell");
+    if (name == QLatin1String("task")) return QStringLiteral("task");
     if (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))
         return QStringLiteral("write");
     return QStringLiteral("read");
@@ -1726,7 +2031,18 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "Para docs/referencias online."),
            QJsonObject{
                {QStringLiteral("url"), strProp(QStringLiteral("URL completa (http:// o https://)."))}},
-           QJsonArray{QStringLiteral("url")})
+           QJsonArray{QStringLiteral("url")}),
+        fn(QStringLiteral("task"),
+           QStringLiteral("Delega una SUBTAREA independiente a un sub-agente autónomo que trabaja en "
+                          "una copia aislada del proyecto (git worktree). Devuelve un resumen de lo que "
+                          "hizo y sus cambios se mergean al terminar. Podés invocar VARIAS task en el "
+                          "mismo turno para correrlas EN PARALELO. Usalo para subtareas separables "
+                          "(ej. 'implementá X en módulo A' y 'agregá tests a B'). El prompt debe ser "
+                          "autocontenido: el sub-agente NO ve esta conversación."),
+           QJsonObject{
+               {QStringLiteral("description"), strProp(QStringLiteral("Título corto de la subtarea (para la tarjeta)."))},
+               {QStringLiteral("prompt"), strProp(QStringLiteral("Instrucción completa y autocontenida para el sub-agente."))}},
+           QJsonArray{QStringLiteral("prompt")})
     };
 }
 

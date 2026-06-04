@@ -995,7 +995,7 @@ Item {
                                     // Rebobinar: descarta este turno y los siguientes
                                     // (revierte edits posteriores). Solo en mensajes del usuario.
                                     Text {
-                                        visible: delegateRoot.isUser && !App.agentRunning
+                                        visible: delegateRoot.isUser && !root.hasTypingMessage && !root.waitingApproval
                                         text: "↩ Rebobinar"
                                         color: rewindMA.containsMouse ? Theme.textPrimary : Theme.textMuted
                                         font.pixelSize: 10
@@ -1606,6 +1606,43 @@ Item {
                         danger: true
                         onClicked: App.cancelAgentGeneration()
                     }
+                }
+            }
+        }
+    }
+
+    // ── Git requerido para subagents ──────────────────────────────────────────
+    Connections {
+        target: App
+        function onGitRequiredForSubagents() { gitInstallDialog.open() }
+    }
+    Dialog {
+        id: gitInstallDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 460
+        title: "Git requerido para subagents"
+        closePolicy: Popup.CloseOnEscape
+        background: Rectangle { color: Theme.popupHeaderBg ?? Theme.baseBg; radius: 10; border.color: Theme.borderColor }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                Layout.fillWidth: true; Layout.maximumWidth: 420
+                wrapMode: Text.WordWrap; color: Theme.textPrimary; font.pixelSize: 13
+                text: App.installingGit
+                    ? "Instalando Git vía winget… (puede tardar). Cuando termine, reabrí la terminal/app si hace falta y reintentá la tarea."
+                    : "El agente quiso usar subagents (tool task) para trabajar en paralelo, pero necesita Git para aislar cada subtarea en una git worktree. ¿Instalar Git ahora?"
+            }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 10
+                Item { Layout.fillWidth: true }
+                LcButton { text: "Ahora no"; secondary: true; onClicked: gitInstallDialog.close() }
+                LcButton {
+                    text: App.installingGit ? "Instalando…" : "Instalar Git"
+                    enabled: !App.installingGit && !App.gitAvailable
+                    onClicked: App.installGit()
                 }
             }
         }
