@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
+option(BUILD_TESTS "Build unit tests (LlamaCodeTests)" OFF)
+
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick Sql Concurrent Network Widgets)
 
 qt_standard_project_setup(REQUIRES 6.4)
@@ -117,3 +119,26 @@ set_target_properties(LlamaCode PROPERTIES
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+
+# ── Tests unitarios (lógica pura del núcleo) ──
+if (BUILD_TESTS)
+    enable_testing()
+    find_package(Qt6 6.4 REQUIRED COMPONENTS Test)
+
+    qt_add_executable(LlamaCodeTests
+        tests/test_core.cpp
+        src/core/GGUFScanner.cpp
+        src/core/CatalogModel.cpp
+        src/core/ModelRoot.cpp
+        src/core/LlamaBinary.cpp
+        src/core/profiles/ProfileTypes.cpp
+        src/core/profiles/EffectiveProfileBuilder.cpp
+    )
+    if (MSVC)
+        target_compile_options(LlamaCodeTests PRIVATE /utf-8)
+    endif()
+    target_include_directories(LlamaCodeTests PRIVATE src)
+    target_link_libraries(LlamaCodeTests PRIVATE
+        Qt6::Core Qt6::Test)
+    add_test(NAME CoreTests COMMAND LlamaCodeTests)
+endif()

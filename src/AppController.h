@@ -182,6 +182,15 @@ public:
     Q_INVOKABLE void computeEffectiveProfilePreview(const QString &launchProfileId,
                                                     const QVariantMap &overrides);
     Q_INVOKABLE void clearLog();
+    // Filtra el log del server por nivel/fuente. level: "all"|"error"|"warn"|"stderr"|
+    // "stdout"|"lifecycle"|"health"|"diag". Devuelve sólo las líneas que matchean.
+    Q_INVOKABLE QString serverLogByLevel(const QString &level) const;
+    // Exporta una sesión de chat a archivo (Markdown o JSON). format: "md"|"json".
+    // Abre diálogo de guardado; devuelve la ruta escrita ("" si cancelado/error).
+    Q_INVOKABLE QString exportChatSession(const QString &id, const QString &format);
+    // Busca texto en títulos y contenido de todas las sesiones de chat. Devuelve
+    // lista de {id,title,projectName,snippet} de sesiones que matchean.
+    Q_INVOKABLE QVariantList searchChatHistory(const QString &query) const;
     Q_INVOKABLE void copyToClipboard(const QString &text);
     // Abre el explorador en la carpeta contenedora del archivo (y lo selecciona en Windows).
     Q_INVOKABLE void openContainingFolder(const QString &path);
@@ -281,6 +290,9 @@ signals:
     void officialBinaryInstallLogChanged();
     void officialBinaryInstallFinished(bool success, const QString &message, const QString &binaryPath);
     void serverError(const QString &message);
+    // Diagnóstico detectado por regex en el log del server (OOM, puerto, modelo cargado…).
+    // level: "error" | "warn" | "info".
+    void serverDiagnostic(const QString &level, const QString &message);
     void smokeTestFinished(bool passed, const QString &output);
     void languageChanged();
     void harnessStatusChanged();
@@ -309,6 +321,8 @@ signals:
 private:
     void appendLog(const QString &text);
     void appendServerEvent(const QString &source, const QString &text);
+    // Escanea líneas del server por patrones conocidos y emite serverDiagnostic.
+    void detectServerLogPatterns(const QString &text);
     void appendAgentEvent(const QString &source, const QString &text);
     QString runtimeLogDir() const;
     void rotateLogIfNeeded(const QString &path) const;

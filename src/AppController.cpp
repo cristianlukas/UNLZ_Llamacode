@@ -8,6 +8,8 @@
 #  include <signal.h>
 #endif
 #include <QProcess>
+#include <QTcpServer>
+#include <QHostAddress>
 #include <QDateTime>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -112,6 +114,46 @@ void AppController::startServer(const QString &launchProfileId)
     const QStringList args = m_effectiveProfile["effectiveArgs"].toStringList();
     const QVariantMap envMap = m_effectiveProfile["effectiveEnv"].toMap();
 
+    // Diagnóstico temprano del binario: existe, es archivo y es ejecutable.
+    {
+        QFileInfo bi(binaryPath);
+        if (binaryPath.isEmpty() || !bi.exists() || !bi.isFile()) {
+            emit serverError(QStringLiteral(
+                "El binario del perfil no existe: %1. Revisá la ruta en la página Binarios.")
+                                 .arg(binaryPath.isEmpty() ? QStringLiteral("(vacío)") : binaryPath));
+            return;
+        }
+        if (!bi.isExecutable()) {
+            emit serverError(QStringLiteral(
+                "El binario no es ejecutable: %1.").arg(binaryPath));
+            return;
+        }
+    }
+
+    // Pre-check de colisión de puerto: si está ocupado, llama-server falla al bindear
+    // y sale con error genérico. Avisamos antes con mensaje claro.
+    {
+        const int portIdx = args.indexOf(QStringLiteral("--port"));
+        const quint16 port = (portIdx >= 0 && portIdx + 1 < args.size())
+                                 ? static_cast<quint16>(args[portIdx + 1].toInt()) : 8080;
+        const int hostIdx = args.indexOf(QStringLiteral("--host"));
+        const QString host = (hostIdx >= 0 && hostIdx + 1 < args.size())
+                                 ? args[hostIdx + 1] : QStringLiteral("127.0.0.1");
+        QTcpServer probe;
+        QHostAddress addr(host);
+        if (host == QStringLiteral("0.0.0.0") || host.isEmpty())
+            addr = QHostAddress(QHostAddress::Any);
+        else if (host == QStringLiteral("localhost"))
+            addr = QHostAddress(QHostAddress::LocalHost);
+        if (!probe.listen(addr, port)) {
+            emit serverError(QStringLiteral(
+                "El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
+                                 .arg(port));
+            return;
+        }
+        probe.close();
+    }
+
     m_proc = new QProcess(this);
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
@@ -185,11 +227,12 @@ void AppController::startHealthPolling()
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             const bool ok = reply->error() == QNetworkReply::NoError && status == 200;
+            const QString errStr = reply->errorString();
             reply->deleteLater();
             if (!ok) {
                 appendServerEvent(QStringLiteral("health"),
                                   QStringLiteral("health fail status=%1 error=%2")
-                                      .arg(status).arg(reply->errorString()));
+                                      .arg(status).arg(errStr));
             }
             if (ok && !m_serverReady) {
                 m_serverReady = true;
@@ -677,7 +720,69 @@ void AppController::appendServerEvent(const QString &source, const QString &text
     if (m_log.size() > 200000) m_log = m_log.right(180000);
     appendFileLog(m_serverLogFilePath, msg);
     if (!msg.endsWith(QLatin1Char('\n'))) appendFileLog(m_serverLogFilePath, QStringLiteral("\n"));
+    if (source == QLatin1String("stdout") || source == QLatin1String("stderr"))
+        detectServerLogPatterns(text);
     emit serverLogChanged();
+}
+
+void AppController::detectServerLogPatterns(const QString &text)
+{
+    // Patrones (regex, case-insensitive). level → señal serverDiagnostic.
+    struct Pat { const char *rx; const char *level; const char *msg; };
+    static const Pat pats[] = {
+        {"out of memory|cudaMalloc failed|failed to allocate|ggml_backend.*alloc.*fail",
+         "error", "Memoria insuficiente (OOM) al cargar el modelo. Bajá ctx/gpu-layers o usá un quant menor."},
+        {"bind.*address already in use|error.*bind|failed to listen|EADDRINUSE",
+         "error", "El puerto está ocupado: el server no pudo bindear."},
+        {"unknown argument|invalid argument|error while parsing|unrecognized.*option",
+         "error", "Argumento inválido en la línea de comando del server."},
+        {"failed to load model|error loading model|unable to load model|llama_load_model_from_file.*fail",
+         "error", "No se pudo cargar el modelo (archivo corrupto, incompatible o ruta inválida)."},
+        {"all slots are idle|HTTP server is listening|model loaded|server is listening",
+         "info", "Server escuchando / modelo cargado."},
+        {"slot.*context shift|context shift|n_past.*truncat",
+         "warn", "Context shift: el prompt superó el ctx y se truncó."},
+    };
+    static QHash<QString, qint64> lastEmit;  // throttle por patrón (no spamear)
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    for (const auto &p : pats) {
+        static QHash<const char*, QRegularExpression> cache;
+        if (!cache.contains(p.rx))
+            cache.insert(p.rx, QRegularExpression(QString::fromLatin1(p.rx),
+                                                  QRegularExpression::CaseInsensitiveOption));
+        if (cache[p.rx].match(text).hasMatch()) {
+            const QString key = QString::fromLatin1(p.rx);
+            if (now - lastEmit.value(key, 0) < 3000) continue;  // máx 1 cada 3s por patrón
+            lastEmit[key] = now;
+            appendServerEvent(QStringLiteral("diag"),
+                              QStringLiteral("[%1] %2").arg(QString::fromLatin1(p.level),
+                                                            QString::fromLatin1(p.msg)));
+            emit serverDiagnostic(QString::fromLatin1(p.level), QString::fromLatin1(p.msg));
+        }
+    }
+}
+
+QString AppController::serverLogByLevel(const QString &level) const
+{
+    if (level.isEmpty() || level == QLatin1String("all")) return m_log;
+    const QStringList lines = m_log.split(QLatin1Char('\n'));
+    QStringList out;
+    for (const QString &ln : lines) {
+        if (level == QLatin1String("error")) {
+            if (ln.contains(QLatin1String("[diag] [error]")) ||
+                ln.contains(QLatin1String("/stderr]")) ||
+                ln.contains(QLatin1String("[error]"), Qt::CaseInsensitive))
+                out << ln;
+        } else if (level == QLatin1String("warn")) {
+            if (ln.contains(QLatin1String("[warn]"), Qt::CaseInsensitive)) out << ln;
+        } else {
+            // fuente exacta: stdout/stderr/lifecycle/health/diag
+            if (ln.contains(QStringLiteral("/%1]").arg(level)) ||
+                ln.contains(QStringLiteral("server/%1]").arg(level)))
+                out << ln;
+        }
+    }
+    return out.join(QLatin1Char('\n'));
 }
 
 void AppController::appendAgentEvent(const QString &source, const QString &text)
@@ -2132,6 +2237,97 @@ void AppController::loadChatSessionMessages(const QString &id)
         m_chatMessages.append(entry);
     }
     emit chatMessagesChanged();
+}
+
+QString AppController::exportChatSession(const QString &id, const QString &format)
+{
+    const QString sid = id.isEmpty() ? m_chatSessionId : id;
+    if (sid.isEmpty()) return QString();
+
+    QFile f(chatStorageDir() + QStringLiteral("/") + sid + QStringLiteral(".json"));
+    if (!f.open(QIODevice::ReadOnly)) { emit serverError(QStringLiteral("La sesión no tiene archivo guardado.")); return QString(); }
+    const QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+
+    const QString title = obj.value(QStringLiteral("title")).toString(QStringLiteral("chat"));
+    const bool asJson = (format.compare(QLatin1String("json"), Qt::CaseInsensitive) == 0);
+
+    // Nombre de archivo sugerido: título saneado.
+    QString safe = title;
+    safe.replace(QRegularExpression(QStringLiteral("[\\\\/:*?\"<>|]")), QStringLiteral("_"));
+    if (safe.trimmed().isEmpty()) safe = QStringLiteral("chat");
+    const QString ext = asJson ? QStringLiteral("json") : QStringLiteral("md");
+    const QString defName = safe + QStringLiteral(".") + ext;
+
+    const QString path = QFileDialog::getSaveFileName(
+        nullptr, QStringLiteral("Exportar conversación"),
+        QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath(defName),
+        asJson ? QStringLiteral("JSON (*.json)") : QStringLiteral("Markdown (*.md)"));
+    if (path.isEmpty()) return QString();
+
+    QByteArray out;
+    if (asJson) {
+        out = QJsonDocument(obj).toJson();
+    } else {
+        QString md = QStringLiteral("# %1\n\n").arg(title);
+        for (const QJsonValue &v : obj.value(QStringLiteral("messages")).toArray()) {
+            const QJsonObject m = v.toObject();
+            const QString role = m.value(QStringLiteral("role")).toString();
+            const QString who = role == QLatin1String("user") ? QStringLiteral("🧑 Usuario")
+                              : role == QLatin1String("assistant") ? QStringLiteral("🤖 Asistente")
+                              : role;
+            md += QStringLiteral("## %1\n\n%2\n\n").arg(who, m.value(QStringLiteral("content")).toString());
+        }
+        out = md.toUtf8();
+    }
+
+    QFile of(path);
+    if (!of.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        emit serverError(QStringLiteral("No se pudo escribir el archivo de exportación."));
+        return QString();
+    }
+    of.write(out);
+    of.close();
+    return path;
+}
+
+QVariantList AppController::searchChatHistory(const QString &query) const
+{
+    QVariantList results;
+    const QString q = query.trimmed();
+    if (q.isEmpty()) return results;
+
+    for (const QVariant &sv : m_chatSessions) {
+        const QVariantMap s = sv.toMap();
+        const QString id = s.value(QStringLiteral("id")).toString();
+        const QString title = s.value(QStringLiteral("title")).toString();
+        bool match = title.contains(q, Qt::CaseInsensitive);
+        QString snippet;
+
+        QFile f(chatStorageDir() + QStringLiteral("/") + id + QStringLiteral(".json"));
+        if (f.open(QIODevice::ReadOnly)) {
+            const QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+            for (const QJsonValue &v : obj.value(QStringLiteral("messages")).toArray()) {
+                const QString content = v.toObject().value(QStringLiteral("content")).toString();
+                const int idx = content.indexOf(q, 0, Qt::CaseInsensitive);
+                if (idx >= 0) {
+                    match = true;
+                    const int from = qMax(0, idx - 40);
+                    snippet = content.mid(from, 120).simplified();
+                    break;
+                }
+            }
+        }
+        if (match) {
+            QVariantMap r;
+            r[QStringLiteral("id")]          = id;
+            r[QStringLiteral("title")]       = title;
+            r[QStringLiteral("projectName")] = s.value(QStringLiteral("projectName"));
+            r[QStringLiteral("snippet")]     = snippet;
+            results.append(r);
+        }
+    }
+    return results;
 }
 
 void AppController::newChatSession()

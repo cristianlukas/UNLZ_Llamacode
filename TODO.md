@@ -40,15 +40,15 @@
 - [x] Matriz flag/capability por binario (`EffectiveProfileBuilder.addFlag`)
 - [x] Reglas de degradación (warning) vs bloqueo (error)
 - [x] Validar modelo/mmproj/draft antes de start
-- [ ] Validar colisión de puerto antes de start (detectado y matado al levantar agente; falta en server)
-- [ ] Diagnóstico temprano: verificar que el binario existe y es ejecutable
+- [x] Validar colisión de puerto antes de start (server: `QTcpServer::listen` probe en `startServer`; opencode: pre-kill puerto 4096)
+- [x] Diagnóstico temprano: verificar que el binario existe y es ejecutable (`QFileInfo` exists/isFile/isExecutable en `startServer`)
 
 ## P1 - Ejecución y observabilidad (parcial)
 
 - [ ] `LlamaProcessManager` dedicado (extraer de `AppController`)
 - [x] Logs en vivo stdout/stderr (en AppController + AgentPage Vista terminal)
-- [ ] Filtros de log por nivel
-- [ ] Detecciones automáticas por regex en log (OOM, port busy, modelo cargado, etc.)
+- [x] Filtros de log por nivel (`serverLogByLevel(level)` invokable: all/error/warn/stderr/stdout/lifecycle/health/diag; falta combo en UI)
+- [x] Detecciones automáticas por regex en log (`detectServerLogPatterns`: OOM, port busy, modelo cargado, arg inválido, load fail, context-shift → señal `serverDiagnostic(level,msg)`)
 - [x] Botón copiar comando
 
 ## P1 - Process lifecycle ✅
@@ -61,10 +61,10 @@
 
 ## P1 - Endpoint health
 
-- [ ] `GET /health` polling post-start
-- [ ] `POST /v1/chat/completions` test prompt mínimo
+- [x] `GET /health` polling post-start (`startHealthPolling`, intervalo 2s, set `serverReady` al 200)
+- [ ] `POST /v1/chat/completions` test prompt mínimo (existe smoke-test en benchmark, no en arranque)
 - [ ] Medir latencia first-token
-- [ ] UI de estado: iniciando / listo / error
+- [x] UI de estado: iniciando / listo / error (`serverReady`/`serverStopping`/`serverError`)
 
 ## P2 - UX de perfiles (parcial)
 
@@ -114,19 +114,24 @@
 - [x] Nueva sesión desde UI
 - [x] Stop de generación con guardado
 - [x] Indicador "⏳ Procesando..." + cursor `▌`
-- [ ] Sampling configurable por sesión (temp, top-p, etc.)
-- [ ] Export conversación (Markdown/JSON)
-- [ ] Búsqueda en historial
+- [ ] Sampling configurable por sesión (temp, top-p, etc.) — requiere plumbing en `RawChatBackend` (persistir en session JSON + pasar al payload)
+- [x] Export conversación (Markdown/JSON) (`exportChatSession(id,format)` + items en menú contextual de ChatPage)
+- [x] Búsqueda en historial (`searchChatHistory(query)` invokable: matchea título + contenido, devuelve snippet; falta panel de búsqueda en UI)
 
-## P5 - Built-in agent mínimo
+## P5 - Built-in agent nativo ✅ (`LlamaAgentBackend`, loop ReAct)
 
-- [ ] `read_file`
-- [ ] `write_file` (aprobación)
-- [ ] `list_files`
-- [ ] `search_text`
-- [ ] `apply_patch` (aprobación)
-- [ ] `run_command` (aprobación)
-- [ ] Bloqueos de seguridad por workspace
+- [x] `read_file` (offset/limit, dedup por huella)
+- [x] `write_file` (aprobación + diff + snapshot/revert)
+- [x] `edit_file` (reemplazo exacto, aprobación)
+- [x] `list_dir` (recursivo opcional)
+- [x] `grep` (regex) + `glob`
+- [x] `run_shell` (async, output en vivo, timeout, cancelación)
+- [x] `web_fetch`
+- [x] `task` (subagents paralelos en git worktrees)
+- [x] MCP stdio (tools `mcp__server__tool`)
+- [x] Bloqueos de seguridad por workspace (confinamiento cwd, permisos por patrón, plan mode)
+- [x] Checkpoint/rollback de conversación
+- [x] Imágenes al agente (detección de visión por `--mmproj`)
 
 ## P6 - Benchmarking
 
@@ -144,10 +149,12 @@
 
 ## Calidad
 
+Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Qt Test). `tests/test_core.cpp`. 17/17 pasan.
+
 - [ ] Tests `BinaryRegistry`
 - [ ] Tests `ModelRootRegistry`
-- [ ] Tests `EffectiveProfileBuilder`
-- [ ] Tests `GGUFScanner` (inferencia familia/quant)
+- [x] Tests `EffectiveProfileBuilder` (host/port, drop flag no soportado, modelo faltante = blocking)
+- [x] Tests `GGUFScanner` (inferencia familia/quant/vision/draft)
 - [ ] Tests `AppController` chat session CRUD
 
 ## Definition of Done MVP real

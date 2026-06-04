@@ -361,14 +361,6 @@ Item {
                                 renameDialog.open()
                             }
                         }
-                        MenuItem {
-                            text: "Exportar a Markdown"
-                            onTriggered: if (ctxMenu.sessionId.length > 0) App.exportChatSession(ctxMenu.sessionId, "md")
-                        }
-                        MenuItem {
-                            text: "Exportar a JSON"
-                            onTriggered: if (ctxMenu.sessionId.length > 0) App.exportChatSession(ctxMenu.sessionId, "json")
-                        }
                         MenuSeparator {}
                         MenuItem {
                             text: "Borrar chat"

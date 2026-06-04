@@ -28,7 +28,9 @@ Principio central:
 | Historial de sesiones opencode con proyectos | ✅ |
 | Process lifecycle (Job Object + PID file) | ✅ |
 | `LlamaProcessManager` dedicado | ⏳ P1 refactor |
-| Endpoint health check automático | ⏳ P1 |
+| Endpoint health check automático | ✅ (polling /health post-start) |
+| Pre-check colisión de puerto al iniciar server | ✅ |
+| Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 
 ## Objetivo
 
@@ -177,7 +179,7 @@ cmake --build . --config Debug --parallel
 3. **P2** ✅ (parcial) UX de perfiles, importador CLI
 4. **P3** ✅ Harness opencode via HTTP API + sesiones + proyectos
 5. **P4** ✅ Chat integrado streaming + historial persistente + proyectos
-6. **P5** ⏳ Built-in coding agent con aprobaciones
+6. **P5** ✅ Built-in coding agent nativo (`LlamaAgentBackend`): loop ReAct contra `llama-server`, tools (read/write/edit/grep/glob/list_dir/run_shell/web_fetch/task), MCP stdio, aprobaciones, plan mode, checkpoint/rollback, subagents paralelos en git worktrees, permisos por patrón, @-mentions, imágenes (visión)
 
 ## Benchmarking
 
