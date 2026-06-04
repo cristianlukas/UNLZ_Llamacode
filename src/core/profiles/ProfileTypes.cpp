@@ -137,7 +137,12 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.id = o["id"].toString(); p.name = o["name"].toString();
     p.backendProfileId = o["backendProfileId"].toString();
     p.modelProfileId = o["modelProfileId"].toString();
-    p.runtimePresetId = o["runtimePresetId"].toString();
+    // Normally a string id. Tolerate an inline preset object (manual edits /
+    // imports) by extracting its id so the launch still resolves its runtime.
+    if (o["runtimePresetId"].isObject())
+        p.runtimePresetId = o["runtimePresetId"].toObject()["id"].toString();
+    else
+        p.runtimePresetId = o["runtimePresetId"].toString();
     p.harnessProfileId = o["harnessProfileId"].toString();
     p.workspaceProfileId = o["workspaceProfileId"].toString();
     for (const auto &v : o["extraArgs"].toArray()) p.extraArgs.append(v.toString());

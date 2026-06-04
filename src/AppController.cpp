@@ -4540,7 +4540,16 @@ void AppController::removeBenchmarkResult(int index)
 
 void AppController::cancelBenchmark()
 {
+    if (!m_benchmarkRunning) return;
     m_benchmarkCanceled = true;
+    m_benchmarkStatus = "Cancelando...";
+    emit benchmarkStatusChanged();
+    // Abort the in-flight HTTP request (health poll / warm-up / task) so the
+    // current callback fires immediately instead of waiting for it to finish.
+    if (m_benchmarkActiveReply)
+        m_benchmarkActiveReply->abort();
+    // Tear down the server now; the chain finalizes at the next checkpoint.
+    stopServer();
 }
 
 // ── Heurísticas para benchmarks personalizados ───────────────────────────────
@@ -4910,6 +4919,7 @@ void AppController::benchmarkWaitServerReady(int attemptsLeft, int totalAttempts
                                               const QString &statusPrefix,
                                               std::function<void(bool)> onResult)
 {
+    if (m_benchmarkCanceled) { onResult(false); return; }   // bail fast on cancel
     if (attemptsLeft <= 0) { onResult(false); return; }
 
     // Surface load progress: model load can take minutes for big-ctx profiles.
@@ -4920,10 +4930,13 @@ void AppController::benchmarkWaitServerReady(int attemptsLeft, int totalAttempts
 
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
     auto *reply = m_nam->get(QNetworkRequest(QUrl(url + "/health")));
+    m_benchmarkActiveReply = reply;
     connect(reply, &QNetworkReply::finished, this, [=]() {
+        if (m_benchmarkActiveReply == reply) m_benchmarkActiveReply = nullptr;
         const bool ok = reply->error() == QNetworkReply::NoError &&
                         reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200;
         reply->deleteLater();
+        if (m_benchmarkCanceled) { onResult(false); return; }
         if (ok) { onResult(true); return; }
         QTimer::singleShot(2000, this, [=]() {
             benchmarkWaitServerReady(attemptsLeft - 1, totalAttempts, url, statusPrefix, onResult);
@@ -4959,6 +4972,7 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
         payload["stream_options"] = QJsonObject{{"include_usage", true}};
 
     auto *reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    m_benchmarkActiveReply = reply;   // so cancelBenchmark() can abort it
     const qint64 startMs = QDateTime::currentMSecsSinceEpoch();
 
     if (streaming) {
@@ -5004,6 +5018,7 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             r["tokens"]     = tokens;
             r["elapsed_ms"] = totalMs;
             r["response"]   = state->response;
+            if (m_benchmarkActiveReply == reply) m_benchmarkActiveReply = nullptr;
             reply->deleteLater();
             onDone(r);
         });
@@ -5023,6 +5038,7 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             r["elapsed_ms"] = totalMs;
             r["tokens"]     = tokens;
             r["response"]   = response;
+            if (m_benchmarkActiveReply == reply) m_benchmarkActiveReply = nullptr;
             reply->deleteLater();
             onDone(r);
         });
@@ -5132,9 +5148,23 @@ void AppController::loadBenchmarkResults()
 
 QString AppController::benchmarkRunsDir() const
 {
-    // Isolated, timestamped run folders live under <appDir>/benchmark
-    const QString dir = QCoreApplication::applicationDirPath() + "/benchmark";
+    // Isolated, timestamped run folders. Persisted under the user's app-data dir
+    // (NOT applicationDirPath — that lives inside build/ and is wiped on rebuild,
+    // which destroyed past runs). Migrates any legacy folders from the old spot.
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + "/benchmark-runs";
     QDir().mkpath(dir);
+
+    const QString legacy = QCoreApplication::applicationDirPath() + "/benchmark";
+    if (legacy != dir && QDir(legacy).exists()) {
+        const QDir ld(legacy);
+        const auto entries = ld.entryList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot);
+        for (const QString &e : entries) {
+            const QString dst = dir + "/" + e;
+            if (!QFileInfo::exists(dst))
+                QDir().rename(ld.filePath(e), dst);
+        }
+    }
     return dir;
 }
 

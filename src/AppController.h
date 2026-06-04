@@ -11,6 +11,7 @@
 #include <QVariantMap>
 #include <QJsonObject>
 #include <QHash>
+#include <QPointer>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
@@ -551,6 +552,7 @@ private:
     // Benchmark
     bool         m_benchmarkRunning  = false;
     bool         m_benchmarkCanceled = false;
+    QPointer<QNetworkReply> m_benchmarkActiveReply; // in-flight req, aborted on cancel
     int          m_benchmarkProgress = 0;
     QString      m_benchmarkStatus;
     QVariantList m_benchmarkResults;
