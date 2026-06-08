@@ -180,9 +180,21 @@ for L in kept:
     report.append((old, final))
     L["name"] = final
 
-# Prefix each profile's display name with its 1-based order number: "<n>_<name>".
-for i, L in enumerate(kept, 1):
-    L["name"] = f"{i}_{L['name']}"
+# Stable, non-repeating incremental id as "<n>_" prefix. Preserve the number a
+# profile already has (carried from its OLD name, captured before renaming);
+# assign max+1 to any profile that lacks one. Never renumber by position.
+seqre = re.compile(r"^(\d+)_")
+prior = {}            # new id -> existing seq parsed from its old name
+maxseq = 0
+for L, (old, _new) in zip(kept, report):
+    m = seqre.match(old or "")
+    if m:
+        prior[id(L)] = int(m.group(1)); maxseq = max(maxseq, int(m.group(1)))
+for L in kept:
+    s = prior.get(id(L))
+    if s is None:
+        maxseq += 1; s = maxseq
+    L["name"] = f"{s}_{L['name']}"
 
 print(f"launches: {len(launches)}  kept: {len(kept)}  removed(dups): {len(removed)}")
 print("\n--- REMOVED DUPLICATES ---")

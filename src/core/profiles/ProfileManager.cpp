@@ -7,6 +7,24 @@
 #include <QDateTime>
 #include <QTimer>
 #include <QDebug>
+#include <QRegularExpression>
+#include <algorithm>
+
+// Launch profile display names carry a stable, non-repeating incremental id as a
+// "<n>_" prefix. The number never changes for an existing profile and is never
+// reused: a new profile always takes (max existing number + 1), even across
+// deletions. These helpers parse/strip that prefix.
+namespace {
+const QRegularExpression kSeqPrefix(QStringLiteral("^(\\d+)_"));
+
+int seqOf(const QString &name) {
+    const auto m = kSeqPrefix.match(name);
+    return m.hasMatch() ? m.captured(1).toInt() : 0;
+}
+QString stripSeq(const QString &name) {
+    return QString(name).remove(kSeqPrefix);
+}
+}
 
 ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
 {
@@ -251,7 +269,11 @@ QString ProfileManager::addLaunchProfile(const QString &name,
 {
     LaunchProfile p;
     p.id = LaunchProfile::generateId();
-    p.name = name.isEmpty() ? "Launch" : name;
+    // Assign a stable, non-repeating incremental id = max existing + 1.
+    int maxSeq = 0;
+    for (const auto &x : m_launches.m_items) maxSeq = std::max(maxSeq, seqOf(x.name));
+    const QString base = stripSeq(name.isEmpty() ? QStringLiteral("Launch") : name);
+    p.name = QStringLiteral("%1_%2").arg(maxSeq + 1).arg(base);
     p.backendProfileId = backendId;
     p.modelProfileId = modelId;
     p.runtimePresetId = runtimeId;
@@ -271,7 +293,15 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
 {
     LaunchProfile p = m_launches.findById(data["id"].toString());
     if (p.id.isEmpty()) return false;
-    p.name = data.value("name", p.name).toString();
+    // Preserve this profile's stable incremental id even if the edited name
+    // drops or changes the "<n>_" prefix.
+    int seq = seqOf(p.name);
+    if (seq == 0) {
+        for (const auto &x : m_launches.m_items) seq = std::max(seq, seqOf(x.name));
+        seq += 1;
+    }
+    const QString newName = data.value("name", p.name).toString();
+    p.name = QStringLiteral("%1_%2").arg(seq).arg(stripSeq(newName));
     p.backendProfileId = data.value("backendProfileId", p.backendProfileId).toString();
     p.modelProfileId = data.value("modelProfileId", p.modelProfileId).toString();
     p.runtimePresetId = data.value("runtimePresetId", p.runtimePresetId).toString();
