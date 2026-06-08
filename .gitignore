@@ -69,3 +69,6 @@ build/Debug/LlamaCode.pdb
 LlamaCode.lnk
 LlamaCode.lnk
 /.old
+
+# Local profile storage (runtime user data, now kept in project root)
+/profiles/

@@ -6315,7 +6315,11 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     QJsonObject summary;
     summary["id"]           = id;
     summary["profileId"]    = result.value("profileId").toString();
+    // profileName is kept ONLY as a fallback for profiles that no longer exist;
+    // the history display name is resolved live by profileId at load time.
     summary["profileName"]  = result.value("profileName").toString();
+    summary["pass"]         = result.value("pass").toInt();
+    summary["passesTotal"]  = result.value("passesTotal").toInt();
     summary["mode"]         = result.value("mode").toString();
     summary["benchmarkName"] = result.value("benchmarkName").toString();
     summary["timestamp"]    = result.value("timestamp").toDouble();
@@ -6383,6 +6387,30 @@ void AppController::loadBenchmarkResults()
                     if (!m.contains(it.key()) || m.value(it.key()).toString().isEmpty())
                         m.insert(it.key(), it.value());
             }
+        }
+        // Resolve the display name LIVE from the profile ID so renaming a launch
+        // profile is reflected in benchmark history (we match by ID, not by the
+        // name stored at run time). Keep the "· pasada X/Y" suffix; fall back to
+        // the stored name when the profile no longer exists.
+        const QString pid = m.value(QStringLiteral("profileId")).toString();
+        const QString liveName = pid.isEmpty() ? QString()
+                                               : m_profiles.resolveLaunch(pid).name;
+        if (!liveName.isEmpty()) {
+            // Prefer structured pass fields; fall back to parsing the legacy
+            // "· pasada X/Y" suffix from the stored name for older rows.
+            QString suffix;
+            const int pass = m.value(QStringLiteral("pass")).toInt();
+            const int passesTotal = m.value(QStringLiteral("passesTotal")).toInt();
+            if (pass > 0 && passesTotal > 0) {
+                suffix = QStringLiteral(" · pasada %1/%2").arg(pass).arg(passesTotal);
+            } else {
+                static const QRegularExpression passRe(
+                    QStringLiteral("\\s*·\\s*pasada\\s*\\d+\\s*/\\s*\\d+\\s*$"));
+                const QString stored = m.value(QStringLiteral("profileName")).toString();
+                const auto match = passRe.match(stored);
+                if (match.hasMatch()) suffix = stored.mid(match.capturedStart());
+            }
+            m["profileName"] = liveName + suffix;
         }
         if (!existing.contains(m.value("id").toString()))
             m_benchmarkResults.append(m);

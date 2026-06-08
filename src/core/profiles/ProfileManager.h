@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QAbstractListModel>
 #include <QList>
+#include <QFileSystemWatcher>
 
 // Generic list model for a profile type
 template <typename T>
@@ -138,11 +139,15 @@ public:
 
 signals:
     void errorOccurred(const QString &message);
+    // Emitida cuando los perfiles se recargaron por un cambio externo del archivo.
+    void profilesReloaded();
 
 private:
     void load();
     void save() const;
     QString storagePath(const QString &entity) const;
+    void setupWatcher();
+    void onProfileFileChanged(const QString &path);
 
     ProfileListModel<BackendProfile>   m_backends;
     ProfileListModel<ModelProfile>     m_models;
@@ -154,4 +159,9 @@ private:
     // Set false when load() can't read an existing file (e.g. locked by another
     // instance); blocks save() so a partial/empty state can't wipe stored data.
     mutable bool m_persistAllowed = true;
+
+    // Detecta ediciones externas del archivo de perfiles para recargar y evitar
+    // que una instancia con estado viejo pise cambios hechos por fuera/otra instancia.
+    mutable QFileSystemWatcher m_watcher;
+    mutable bool m_saving = false;   // ignora los cambios provocados por nuestro propio save()
 };

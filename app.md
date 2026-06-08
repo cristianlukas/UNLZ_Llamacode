@@ -26,7 +26,13 @@ cmake --build build --config Debug --parallel
 
 Qt uses different writable locations for different registries in this app. On Cristian's machine, the important paths are:
 
-- Profiles, binary registry, model roots:
+- **Profiles (launches/backends/models/runtimes/harnesses/workspaces):**
+  `C:\Users\cristian\Documents\LlamaCode\profiles` (project root, since 2026-06-08).
+  Set in `ProfileManager::storagePath()`; override with env `LLAMACODE_PROFILES_DIR`.
+  Rolling backups + atomic writes under `profiles\.backups\`. The app rewrites
+  these files from memory on profile changes / on exit, so edit JSON ONLY while
+  the app is closed (no save-on-exit hook in `main.cpp` — reverted on user request).
+- Binary registry, model roots, model catalog (still in Roaming):
   `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode`
 - Benchmark results, benchmark runs, logs, chat/session data:
   `C:\Users\cristian\AppData\Local\LlamaCode\LlamaCode`
@@ -35,12 +41,12 @@ Important files/directories:
 
 - `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\binary_registry.json`
 - `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\model_roots.json`
-- `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\backends.json`
-- `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\models.json`
-- `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\runtimes.json`
-- `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\harnesses.json`
-- `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\workspaces.json`
-- `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\profiles\launches.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\backends.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\models.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\runtimes.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\harnesses.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\workspaces.json`
+- `C:\Users\cristian\Documents\LlamaCode\profiles\launches.json`
 - `C:\Users\cristian\AppData\Roaming\LlamaCode\LlamaCode\model_catalog.db` (NOTA: el catálogo real vive en **Roaming**, no Local. Tabla SQLite `catalog_models`.)
 - `C:\Users\cristian\AppData\Local\LlamaCode\LlamaCode\benchmarks\index.json`
 - `C:\Users\cristian\AppData\Local\LlamaCode\LlamaCode\benchmarks\custom`

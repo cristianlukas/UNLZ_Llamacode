@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QDateTime>
+#include <QTimer>
 #include <QDebug>
 
 ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
@@ -19,11 +20,40 @@ ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
         m_runtimes.add(def);
         save();
     }
+
+    setupWatcher();
 }
 
 void ProfileManager::reloadFromDisk()
 {
     load();
+    emit profilesReloaded();
+}
+
+void ProfileManager::setupWatcher()
+{
+    connect(&m_watcher, &QFileSystemWatcher::fileChanged,
+            this, &ProfileManager::onProfileFileChanged);
+    for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
+                               QStringLiteral("runtimes"), QStringLiteral("harnesses"),
+                               QStringLiteral("workspaces"), QStringLiteral("launches")}) {
+        const QString p = storagePath(ent);
+        if (QFile::exists(p)) m_watcher.addPath(p);
+    }
+}
+
+void ProfileManager::onProfileFileChanged(const QString &path)
+{
+    // Re-armar el watch: una escritura atómica (rename) o algunos editores
+    // reemplazan el archivo y el watcher pierde el path.
+    if (QFile::exists(path) && !m_watcher.files().contains(path))
+        m_watcher.addPath(path);
+
+    if (m_saving) return;   // cambio provocado por nuestro propio save(): ignorar
+
+    // Cambio externo (otra instancia / edición manual): recargar para no pisar.
+    qInfo() << "[ProfileManager] cambio externo detectado, recargando:" << path;
+    reloadFromDisk();
 }
 
 // ---- BackendProfile ----
@@ -320,6 +350,9 @@ void ProfileManager::save() const
         return;
     }
 
+    // Marca que los próximos cambios de archivo son nuestros, para no auto-recargar.
+    m_saving = true;
+
     auto saveList = [](const QString &path, const auto &items) {
         // Anti-wipe guard: never overwrite a non-empty file with an empty list.
         if (items.isEmpty()) {
@@ -393,10 +426,28 @@ void ProfileManager::save() const
     saveList(storagePath("harnesses"),  m_harnesses.m_items);
     saveList(storagePath("workspaces"), m_workspaces.m_items);
     saveList(storagePath("launches"),   m_launches.m_items);
+
+    // La escritura atómica (rename) hace que el watcher pierda los paths: re-armarlos.
+    for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
+                               QStringLiteral("runtimes"), QStringLiteral("harnesses"),
+                               QStringLiteral("workspaces"), QStringLiteral("launches")}) {
+        const QString p = storagePath(ent);
+        if (QFile::exists(p) && !m_watcher.files().contains(p)) m_watcher.addPath(p);
+    }
+    // Limpiar el flag tras drenar los eventos fileChanged de nuestro propio save().
+    QTimer::singleShot(400, const_cast<ProfileManager*>(this), [this]() { m_saving = false; });
 }
 
 QString ProfileManager::storagePath(const QString &entity) const
 {
-    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
-           + "/profiles/" + entity + ".json";
+    // Profiles live in the project root (Documents\LlamaCode\profiles) so they
+    // are easy to inspect and back up alongside the source. Overridable via the
+    // LLAMACODE_PROFILES_DIR env var; otherwise the fixed project path is used.
+    static const QString root = []() {
+        const QByteArray env = qgetenv("LLAMACODE_PROFILES_DIR");
+        if (!env.isEmpty())
+            return QString::fromLocal8Bit(env);
+        return QStringLiteral("C:/Users/cristian/Documents/LlamaCode/profiles");
+    }();
+    return root + "/" + entity + ".json";
 }
