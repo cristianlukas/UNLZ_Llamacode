@@ -171,7 +171,7 @@ Item {
                             Layout.fillWidth: true
                         }
 
-                        ComboBox {
+                        LcComboBox {
                             id: depthCombo
                             Layout.preferredWidth: 120
                             enabled: !App.researchRunning

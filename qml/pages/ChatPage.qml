@@ -893,6 +893,9 @@ Item {
                         contentY = maxY
                 }
 
+                // followBottom se actualiza en vivo con el flick nativo: si el usuario
+                // scrollea hacia arriba durante streaming, dejamos de auto-bajar.
+                onContentYChanged: followBottom = (contentY >= Math.max(0, contentHeight - height) - 2)
                 onMovementEnded: followBottom = atYEnd
                 onContentHeightChanged: if (followBottom) chatBottomTimer.restart()
                 onCountChanged: { followBottom = true; chatBottomTimer.restart() }
@@ -904,13 +907,17 @@ Item {
                     onTriggered: if (msgList.followBottom) msgList.scrollToBottom()
                 }
 
+                // Scroll de rueda suave (animado). El step nativo de ListView es
+                // minúsculo frente a contenido largo; animamos cada paso para que
+                // se sienta fluido como el dropdown de Lanzar.
+                NumberAnimation { id: chatWheelAnim; target: msgList; property: "contentY"; duration: 120; easing.type: Easing.OutCubic }
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: function(ev) {
-                        var step = ev.angleDelta.y / 120 * 90
                         var maxY = Math.max(0, msgList.contentHeight - msgList.height)
-                        msgList.contentY = Math.max(0, Math.min(maxY, msgList.contentY - step))
-                        msgList.followBottom = (msgList.contentY >= maxY - 2)
+                        var base = chatWheelAnim.running ? chatWheelAnim.to : msgList.contentY
+                        var target = Math.max(0, Math.min(maxY, base - ev.angleDelta.y / 120 * 120))
+                        chatWheelAnim.stop(); chatWheelAnim.from = msgList.contentY; chatWheelAnim.to = target; chatWheelAnim.start()
                         ev.accepted = true
                     }
                 }

@@ -223,12 +223,210 @@ AppController::AppController(QObject *parent) : QObject(parent)
     refreshResearchReports();
 }
 
+// --- Router mode (hot-swap) ---------------------------------------------
+// Convierte una lista plana de args (["--ctx-size","65536","--flash-attn","on",...])
+// en líneas de sección .ini ("ctx-size = 65536\nflash-attn = on\n").
+// Omite --host/--port (los gestiona el router) y normaliza -m/--model a "model".
+static QString argsToIniSection(const QStringList &args)
+{
+    QString out;
+    for (int i = 0; i < args.size(); ++i) {
+        QString tok = args.at(i);
+        if (!tok.startsWith(QLatin1Char('-'))) continue;        // valor suelto: ya consumido
+        QString key = tok;
+        while (key.startsWith(QLatin1Char('-'))) key.remove(0, 1);
+        if (key.isEmpty()) continue;
+        if (key == QLatin1String("m")) key = QStringLiteral("model");
+        // host/port los fija el router por sección hija; jinja va en el global
+        if (key == QLatin1String("host") || key == QLatin1String("port")
+            || key == QLatin1String("jinja") || key == QLatin1String("alias")) {
+            if (i + 1 < args.size() && !args.at(i + 1).startsWith(QLatin1Char('-'))) ++i;
+            continue;
+        }
+        QString val = QStringLiteral("true");
+        if (i + 1 < args.size() && !args.at(i + 1).startsWith(QLatin1Char('-'))) {
+            val = args.at(++i);
+        }
+        out += key + QStringLiteral(" = ") + val + QStringLiteral("\n");
+    }
+    return out;
+}
+
+static QString slugify(const QString &name)
+{
+    QString s;
+    for (const QChar &c : name) {
+        if (c.isLetterOrNumber()) s += c.toLower();
+        else if (!s.isEmpty() && s.back() != QLatin1Char('-')) s += QLatin1Char('-');
+    }
+    while (s.endsWith(QLatin1Char('-'))) s.chop(1);
+    return s.isEmpty() ? QStringLiteral("model") : s;
+}
+
+QString AppController::generateRouterPreset(const QStringList &launchProfileIds)
+{
+    if (launchProfileIds.isEmpty()) {
+        emit serverError(QStringLiteral("Router: seleccioná al menos un perfil."));
+        return {};
+    }
+
+    QString host = QStringLiteral("127.0.0.1");
+    int port = 8080;
+    QString body;
+    QStringList names;
+    QSet<QString> usedNames;
+    QString routerBinary;
+
+    for (const QString &id : launchProfileIds) {
+        const EffectiveProfileBuilder::Context ctx = buildContext(id);
+        const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+        if (!ep.isValid()) {
+            emit serverError(QStringLiteral("Router: perfil inválido (%1): %2")
+                                 .arg(id, ep.blockingErrors.join(QStringLiteral("; "))));
+            return {};
+        }
+        // El router usa un único binario; tomamos el del primer perfil y avisamos si difieren.
+        if (routerBinary.isEmpty()) {
+            routerBinary = ep.binaryPath;
+            host = ctx.backend.host.isEmpty() ? host : ctx.backend.host;
+            port = ctx.backend.port > 0 ? ctx.backend.port : port;
+        } else if (ep.binaryPath != routerBinary) {
+            appendServerEvent(QStringLiteral("lifecycle"),
+                QStringLiteral("Router: el perfil '%1' usa otro binario; se ignora, el router usa uno solo.")
+                    .arg(ctx.launch.name));
+        }
+
+        QString name = slugify(ctx.launch.name);
+        QString base = name; int n = 2;
+        while (usedNames.contains(name)) name = base + QStringLiteral("-") + QString::number(n++);
+        usedNames.insert(name);
+        names << name;
+
+        body += QStringLiteral("[") + name + QStringLiteral("]\n");
+        body += argsToIniSection(ep.effectiveArgs);
+        body += QStringLiteral("\n");
+    }
+
+    QString iniText = QStringLiteral("version = 1\n\n[*]\n");
+    iniText += QStringLiteral("host = ") + host + QStringLiteral("\n");
+    iniText += QStringLiteral("port = ") + QString::number(port) + QStringLiteral("\n");
+    iniText += QStringLiteral("jinja = true\n\n");
+    iniText += body;
+
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+                        + QStringLiteral("/profiles");
+    QDir().mkpath(dir);
+    const QString path = dir + QStringLiteral("/router_preset.ini");
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        emit serverError(QStringLiteral("Router: no pude escribir %1").arg(path));
+        return {};
+    }
+    f.write(iniText.toUtf8());
+    f.close();
+
+    m_routerModelNames = names;
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Router preset generado: %1 modelos [%2]")
+            .arg(names.size()).arg(names.join(QStringLiteral(", "))));
+    return path;
+}
+
+void AppController::setRouterActiveModel(const QString &name)
+{
+    if (m_routerActiveModel == name) return;
+    m_routerActiveModel = name;
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Router: modelo activo = %1").arg(name));
+    emit routerStateChanged();
+}
+
+void AppController::startRouter(const QStringList &launchProfileIds, int modelsMax)
+{
+    if (serverRunning()) {
+        emit serverError(QStringLiteral("Server already running. Stop it first."));
+        return;
+    }
+    // Redetectar flags del binario del primer perfil (mismo motivo que startServer).
+    {
+        const auto launch  = m_profiles.resolveLaunch(launchProfileIds.value(0));
+        const auto backend = m_profiles.resolveBackend(launch.backendProfileId);
+        if (!backend.binaryId.isEmpty())
+            m_binaries.detectCapabilitiesSync(backend.binaryId);
+    }
+
+    const QString iniPath = generateRouterPreset(launchProfileIds);
+    if (iniPath.isEmpty()) return;   // generateRouterPreset ya emitió el error
+
+    const EffectiveProfileBuilder::Context ctx0 = buildContext(launchProfileIds.first());
+    const EffectiveProfile ep0 = EffectiveProfileBuilder::build(ctx0);
+    const QString binaryPath = ep0.binaryPath;
+    const QString host = ctx0.backend.host.isEmpty() ? QStringLiteral("127.0.0.1") : ctx0.backend.host;
+    const int port = ctx0.backend.port > 0 ? ctx0.backend.port : 8080;
+
+    QFileInfo bi(binaryPath);
+    if (binaryPath.isEmpty() || !bi.exists() || !bi.isFile()) {
+        emit serverError(QStringLiteral("Router: binario inexistente: %1").arg(binaryPath));
+        return;
+    }
+
+    const QStringList args = {
+        QStringLiteral("--models-preset"), iniPath,
+        QStringLiteral("--models-max"), QString::number(modelsMax < 1 ? 1 : modelsMax),
+        QStringLiteral("--host"), host,
+        QStringLiteral("--port"), QString::number(port),
+        QStringLiteral("--jinja"),
+    };
+
+    m_proc = new QProcess(this);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("LLAMACODE_MANAGED"), QStringLiteral("1"));
+    env.insert(QStringLiteral("LLAMACODE_ROLE"),    QStringLiteral("router"));
+    env.insert(QStringLiteral("LLAMACODE_APP_PID"), QString::number(QCoreApplication::applicationPid()));
+    m_proc->setProcessEnvironment(env);
+
+    connect(m_proc, &QProcess::readyReadStandardOutput, this, [this]() {
+        appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(m_proc->readAllStandardOutput()));
+    });
+    connect(m_proc, &QProcess::readyReadStandardError, this, [this]() {
+        appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(m_proc->readAllStandardError()));
+    });
+    connect(m_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int code, QProcess::ExitStatus) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Router exited with code %1").arg(code));
+        clearServiceState(QStringLiteral("server"));
+        stopHealthPolling();
+        m_serverStopping = false;
+        m_serverReady    = false;
+        m_serverIsRouter = false;
+        m_proc->deleteLater();
+        m_proc = nullptr;
+        emit serverRunningChanged();
+        emit serverReadyChanged();
+        emit routerStateChanged();
+    });
+
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Router: %1 %2").arg(binaryPath, args.join(QLatin1Char(' '))));
+    m_proc->setProgram(binaryPath);
+    m_proc->setArguments(args);
+    if (!bi.absolutePath().isEmpty()) m_proc->setWorkingDirectory(bi.absolutePath());
+    m_serverIsRouter = true;
+    if (m_routerActiveModel.isEmpty() && !m_routerModelNames.isEmpty())
+        m_routerActiveModel = m_routerModelNames.first();
+    m_proc->start();
+    emit serverRunningChanged();
+    emit routerStateChanged();
+}
+
 void AppController::startServer(const QString &launchProfileId)
 {
     if (serverRunning()) {
         emit serverError("Server already running. Stop it first.");
         return;
     }
+    m_serverIsRouter = false;   // modo normal: un modelo por server
 
     // Repoblar flags soportados del binario justo antes de armar el perfil.
     // Si el registro quedó con flags stale/parciales, EffectiveProfileBuilder::addFlag
@@ -1519,7 +1717,7 @@ IAgentBackend *AppController::ensureChatBackend()
     AgentContext c;
     c.adapter = QStringLiteral("raw");
     c.serverBaseUrl = serverBaseUrl();
-    c.modelId = QStringLiteral("chat");
+    c.modelId = routedModelId(QStringLiteral("chat"));
     b->start(c);
     m_chatBackend = b;
     return m_chatBackend;
@@ -1593,7 +1791,7 @@ void AppController::startAgent(const QString &launchProfileId)
         c.adapter       = adapter;
         c.cwd           = (!agentCwd.isEmpty() && QFileInfo(agentCwd).isDir()) ? agentCwd : QString();
         c.serverBaseUrl = serverBaseUrl();
-        c.modelId       = ctx.catalogModel.id;
+        c.modelId       = routedModelId(ctx.catalogModel.id);
         m_agentCwdOverride.clear();
         m_activeAgentAdapter = adapter;
         m_agentInTerminal    = false;
@@ -3308,7 +3506,7 @@ void AppController::sendChatMessage(const QString &text)
     AgentContext c;
     c.adapter = QStringLiteral("raw");
     c.serverBaseUrl = serverBaseUrl();
-    c.modelId = QStringLiteral("chat");
+    c.modelId = routedModelId(QStringLiteral("chat"));
     b->stop();
     b->start(c);
     b->sendMessage(text);
@@ -3322,7 +3520,7 @@ void AppController::sendChatMessageWithAttachments(const QString &text, const QS
     AgentContext c;
     c.adapter = QStringLiteral("raw");
     c.serverBaseUrl = serverBaseUrl();
-    c.modelId = QStringLiteral("chat");
+    c.modelId = routedModelId(QStringLiteral("chat"));
     b->stop();
     b->start(c);
     if (auto *raw = qobject_cast<RawChatBackend *>(b))
@@ -5207,7 +5405,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         c.adapter       = QStringLiteral("llamaagent");
         c.cwd           = workspace;
         c.serverBaseUrl = serverBaseUrl();
-        c.modelId       = ctx.catalogModel.id;
+        c.modelId       = routedModelId(ctx.catalogModel.id);
         agent->start(c);
         agent->newSessionInProject(workspace);
         agent->setMcpServers(mergedMcp.values());
@@ -5223,6 +5421,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto turnStartMs = std::make_shared<qint64>(0);
         auto turnFirstMs = std::make_shared<qint64>(-1);
         auto turnMetrics = std::make_shared<QVariantList>();
+        auto repairAttempts = std::make_shared<int>(0);
+        auto firstAttemptScore = std::make_shared<int>(-1);
+        auto firstAttemptTotal = std::make_shared<int>(0);
+        auto timeToFirstAttempt = std::make_shared<double>(0.0);
+        const int maxRepairAttempts = 2;
         const int idleTimeoutMs = 3 * 60 * 1000;
         auto lastActivityMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
         auto peakRamMb = std::make_shared<double>(0.0);
@@ -5388,6 +5591,56 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             }
 
             const double elapsed = (QDateTime::currentMSecsSinceEpoch() - startMs) / 1000.0;
+
+            if (*firstAttemptScore < 0) {
+                *firstAttemptScore = qScore;
+                *firstAttemptTotal = qTotal;
+                *timeToFirstAttempt = elapsed;
+            }
+
+            const bool acceptanceFailed = qTotal > 0 && qScore < qTotal;
+            if (!canceled && !*timedOut && !*passFailed && acceptanceFailed
+                    && *repairAttempts < maxRepairAttempts) {
+                (*repairAttempts)++;
+                *finished = false;
+                QVariantList failedRows;
+                for (const QVariant &rv : acceptanceRows) {
+                    const QVariantMap row = rv.toMap();
+                    if (!row.value(QStringLiteral("passed")).toBool())
+                        failedRows.append(row);
+                }
+                const QString failedJson = QString::fromUtf8(
+                    QJsonDocument(QJsonArray::fromVariantList(failedRows))
+                        .toJson(QJsonDocument::Indented));
+                const QString fileList = files.isEmpty()
+                    ? QStringLiteral("(sin archivos detectados)")
+                    : files.join(QStringLiteral("\n"));
+                const QString repair = QStringLiteral(
+                    "MODO REPARACION BENCHMARK:\n"
+                    "La implementacion anterior fallo criterios de aceptacion. "
+                    "No reinicies desde cero si no hace falta: inspecciona los archivos existentes, "
+                    "corrige la causa concreta y vuelve a ejecutar/verificar los checks relevantes.\n\n"
+                    "Intento de reparacion: %1/%2\n\n"
+                    "Archivos detectados:\n%3\n\n"
+                    "Checks fallidos y salidas:\n%4\n\n"
+                    "Tareas originales:\n%5\n\n"
+                    "Al terminar, responde breve indicando que corregiste y que pruebas corriste.")
+                    .arg(*repairAttempts)
+                    .arg(maxRepairAttempts)
+                    .arg(fileList)
+                    .arg(failedJson)
+                    .arg(prompts.join(QStringLiteral("\n\n---\n\n")));
+                m_benchmarkStatus = QString("[%1/%2] %3 — reparando fallos %4/%5...")
+                    .arg(idx+1).arg(total).arg(profName)
+                    .arg(*repairAttempts).arg(maxRepairAttempts);
+                emit benchmarkStatusChanged();
+                *turnStartMs = QDateTime::currentMSecsSinceEpoch();
+                *turnFirstMs = -1;
+                *lastActivityMs = *turnStartMs;
+                agent->sendMessage(repair);
+                return;
+            }
+
             const QPair<double, double> resources = benchmarkMeasureResourcesNow();
             const double ramMb = qMax(resources.first, *peakRamMb);
             const double vramMb = qMax(resources.second, *peakVramMb);
@@ -5407,19 +5660,19 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["timestamp"]    = (double)QDateTime::currentMSecsSinceEpoch();
             result["qualityScore"] = qScore;
             result["qualityTotal"] = qTotal;
-            result["firstAttemptScore"] = qScore;
-            result["firstAttemptTotal"] = qTotal;
+            result["firstAttemptScore"] = *firstAttemptScore >= 0 ? *firstAttemptScore : qScore;
+            result["firstAttemptTotal"] = *firstAttemptScore >= 0 ? *firstAttemptTotal : qTotal;
             result["finalScore"] = qScore;
             result["finalTotal"] = qTotal;
-            result["repairAttempts"] = 0;
+            result["repairAttempts"] = *repairAttempts;
             result["avgTps"]       = tpsCount > 0 ? tpsSum / tpsCount : 0.0;
             result["avgTtftMs"]    = ttftCount > 0 ? ttftSum / ttftCount : 0.0;
             result["ramMb"]        = ramMb;
             result["vramMb"]       = vramMb;
             result["elapsedSec"]   = elapsed;
-            result["timeToFirstAttempt"] = elapsed;
+            result["timeToFirstAttempt"] = *timeToFirstAttempt > 0.0 ? *timeToFirstAttempt : elapsed;
             result["totalTime"] = elapsed;
-            result["passedAfterRepair"] = false;
+            result["passedAfterRepair"] = *repairAttempts > 0 && qTotal > 0 && qScore >= qTotal;
             result["response"]     = finalText;
             result["agentFiles"]   = files;
             result["agentMetrics"] = assistantMetrics;
@@ -5817,46 +6070,67 @@ QPair<double, double> AppController::benchmarkMeasureResourcesNow() const
     double vramMb = 0.0;
 
 #ifdef Q_OS_WIN
-    auto readTasklistRam = [&](const QStringList &filters) {
-        double total = 0.0;
-        QProcess tl;
-        QStringList taskArgs;
-        for (int i = 0; i + 1 < filters.size(); i += 2)
-            taskArgs << QStringLiteral("/FI") << QStringLiteral("%1 eq %2").arg(filters.at(i), filters.at(i + 1));
-        taskArgs << QStringLiteral("/FO") << QStringLiteral("CSV") << QStringLiteral("/NH");
-        tl.start(QStringLiteral("tasklist"), taskArgs);
-        if (tl.waitForFinished(3000)) {
-            const QString text = QString::fromLocal8Bit(tl.readAllStandardOutput());
-            for (const QString &line : text.split('\n', Qt::SkipEmptyParts)) {
-                const QString trimmed = line.trimmed();
-                if (trimmed.isEmpty()
-                        || trimmed.contains(QStringLiteral("No tasks"), Qt::CaseInsensitive)
-                        || trimmed.contains(QStringLiteral("INFO:"), Qt::CaseInsensitive)
-                        || trimmed.contains(QStringLiteral("INFORMACI"), Qt::CaseInsensitive))
-                    continue;
-                const QStringList parts = parseCsvLine(trimmed);
-                if (parts.size() >= 5) {
-                    QString mem = parts.at(4);
-                    mem.remove(QStringLiteral(" K"), Qt::CaseInsensitive);
-                    mem.remove(QStringLiteral("KB"), Qt::CaseInsensitive);
-                    mem.remove(QLatin1Char(','));
-                    mem.remove(QLatin1Char('.'));
-                    mem = mem.trimmed();
-                    bool ok = false;
-                    const double kb = mem.toDouble(&ok);
-                    if (ok)
-                        total += kb / 1024.0;
-                }
-            }
+    auto readCimRam = [&](qint64 rootPid, const QString &imageName) {
+        QProcess ps;
+        QString script;
+        if (rootPid > 0) {
+            script = QStringLiteral(
+                "$root=%1;"
+                "$procs=Get-CimInstance Win32_Process | "
+                "Select-Object ProcessId,ParentProcessId,WorkingSetSize,PageFileUsage;"
+                "$ids=[System.Collections.Generic.HashSet[int]]::new();"
+                "$queue=[System.Collections.Generic.Queue[int]]::new();"
+                "[void]$ids.Add([int]$root); $queue.Enqueue([int]$root);"
+                "while($queue.Count -gt 0){"
+                "  $p=$queue.Dequeue();"
+                "  foreach($c in $procs | Where-Object { $_.ParentProcessId -eq $p }){"
+                "    if($ids.Add([int]$c.ProcessId)){ $queue.Enqueue([int]$c.ProcessId) }"
+                "  }"
+                "}"
+                "$sel=$procs | Where-Object { $ids.Contains([int]$_.ProcessId) };"
+                "$ws=($sel | Measure-Object -Property WorkingSetSize -Sum).Sum;"
+                "$pf=($sel | Measure-Object -Property PageFileUsage -Sum).Sum;"
+                "if($null -eq $ws){$ws=0}; if($null -eq $pf){$pf=0};"
+                "[Console]::Out.WriteLine(([double]$ws/1MB).ToString([Globalization.CultureInfo]::InvariantCulture)+','+"
+                "(([double]$pf/1024).ToString([Globalization.CultureInfo]::InvariantCulture)))")
+                .arg(rootPid);
+        } else {
+            QString safeName = imageName.isEmpty()
+                ? QStringLiteral("llama-server.exe")
+                : imageName;
+            safeName.replace(QLatin1Char('\''), QStringLiteral("''"));
+            script = QStringLiteral(
+                "$name='%1';"
+                "$sel=Get-CimInstance Win32_Process | Where-Object { $_.Name -eq $name };"
+                "$ws=($sel | Measure-Object -Property WorkingSetSize -Sum).Sum;"
+                "$pf=($sel | Measure-Object -Property PageFileUsage -Sum).Sum;"
+                "if($null -eq $ws){$ws=0}; if($null -eq $pf){$pf=0};"
+                "[Console]::Out.WriteLine(([double]$ws/1MB).ToString([Globalization.CultureInfo]::InvariantCulture)+','+"
+                "(([double]$pf/1024).ToString([Globalization.CultureInfo]::InvariantCulture)))")
+                .arg(safeName);
         }
-        return total;
+        ps.start(QStringLiteral("powershell"),
+                 {QStringLiteral("-NoProfile"), QStringLiteral("-ExecutionPolicy"),
+                  QStringLiteral("Bypass"), QStringLiteral("-Command"), script});
+        if (!ps.waitForFinished(5000))
+            return 0.0;
+        const QString out = QString::fromUtf8(ps.readAllStandardOutput()).trimmed();
+        const QStringList parts = out.split(QLatin1Char(','));
+        if (parts.size() < 2)
+            return 0.0;
+        bool wsOk = false;
+        bool pfOk = false;
+        const double wsMb = parts.at(0).trimmed().toDouble(&wsOk);
+        const double privateMb = parts.at(1).trimmed().toDouble(&pfOk);
+        return qMax(wsOk ? wsMb : 0.0, pfOk ? privateMb : 0.0);
     };
+
     if (serverPid > 0)
-        ramMb = readTasklistRam({QStringLiteral("PID"), QString::number(serverPid)});
+        ramMb = readCimRam(serverPid, QString());
     if (ramMb <= 0.0 && !processName.isEmpty())
-        ramMb = readTasklistRam({QStringLiteral("IMAGENAME"), processName});
+        ramMb = readCimRam(0, processName);
     if (ramMb <= 0.0)
-        ramMb = readTasklistRam({QStringLiteral("IMAGENAME"), QStringLiteral("llama-server.exe")});
+        ramMb = readCimRam(0, QStringLiteral("llama-server.exe"));
 #endif
 
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));

@@ -12,11 +12,26 @@ Item {
     property var failureRow: ({})
     property string modeFilter: ""
     property string benchmarkFilter: ""
+    // Filtros estilo Excel por columna: { column: [valores permitidos] }. Vacío = sin filtro.
+    property var columnFilters: ({})
+    // Anchos redimensionables por columna del historial.
+    property var colW: ({
+        profile: 200, target: 58, benchmark: 100, score: 60, firstAttemptScore: 58,
+        finalScore: 58, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
+        passedAfterRepair: 68, tps: 60, ttft: 60, seconds: 70, ram: 60, vram: 60, date: 118
+    })
+    function colWidth(c) { const w = colW[c]; return (w !== undefined && w > 0) ? w : 60 }
+    function setColWidth(c, w) {
+        const m = {}; for (const k in colW) m[k] = colW[k]
+        m[c] = Math.max(40, Math.round(w)); colW = m
+    }
     property int leftPanelWidth: 280
     property int leftPanelMinWidth: 240
     property int leftPanelMaxWidth: Math.max(leftPanelMinWidth, Math.min(560, Math.max(leftPanelMinWidth, width - 520)))
+    property bool _lpRestored: false   // no persistir durante la restauración inicial
 
     onLeftPanelMaxWidthChanged: leftPanelWidth = clampLeftPanelWidth(leftPanelWidth)
+    onLeftPanelWidthChanged: if (_lpRestored) App.writeSetting("benchLeftPanelWidth", leftPanelWidth)
 
     function cycleSort(column) {
         if (sortColumn !== column) {
@@ -116,13 +131,59 @@ Item {
             if (values[i] === value) return i
         return 0
     }
+    // Texto mostrado de una celda (para agrupar/filtrar por valor, estilo Excel).
+    function columnLabel(row, column) {
+        if (column === "profile") return (row.profileName ?? "").toString()
+        if (column === "target") return benchmarkTargetLabel(row)
+        if (column === "benchmark") return benchmarkNameLabel(row)
+        if (column === "score") return scoreLabel(row, "qualityScore", "qualityTotal")
+        if (column === "firstAttemptScore") return scoreLabel(row, "firstAttemptScore", "firstAttemptTotal")
+        if (column === "finalScore") return scoreLabel(row, "finalScore", "finalTotal")
+        if (column === "repairAttempts") return String(row.repairAttempts ?? 0)
+        if (column === "timeToFirstAttempt") return secondsLabel(row.timeToFirstAttempt ?? row.elapsedSec)
+        if (column === "totalTime") return secondsLabel(row.totalTime ?? row.elapsedSec)
+        if (column === "passedAfterRepair") return (row.passedAfterRepair ?? false) ? "Sí" : "No"
+        if (column === "tps") { const v = row.avgTps ?? 0; return v > 0 ? v.toFixed(1) : "—" }
+        if (column === "ttft") { const v = row.avgTtftMs ?? 0; return v > 0 ? Math.round(v) + " ms" : "—" }
+        if (column === "seconds") return secondsLabel(row.elapsedSec)
+        if (column === "ram") { const v = row.ramMb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
+        if (column === "vram") { const v = row.vramMb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
+        if (column === "date") { const t = row.timestamp ?? 0; if (!t) return "—"; const d = new Date(t < 1e12 ? t * 1000 : t); return isNaN(d) ? String(t) : Qt.formatDate(d, "yyyy-MM-dd") }
+        return ""
+    }
+    function distinctColumnValues(column) {
+        return uniqueColumnValues(App.benchmarkResults, row => columnLabel(row, column))
+    }
+    function columnHasFilter(column) {
+        const a = columnFilters[column]
+        return a !== undefined && a.length > 0
+    }
+    function activeFilterCount() {
+        let n = 0
+        for (const k in columnFilters) if (columnFilters[k] && columnFilters[k].length > 0) n++
+        return n
+    }
+    function setColumnFilter(column, values) {
+        const cf = {}
+        for (const k in columnFilters) cf[k] = columnFilters[k]
+        if (!values || values.length === 0) delete cf[column]
+        else cf[column] = values
+        columnFilters = cf
+    }
+    function clearAllFilters() { columnFilters = ({}) }
+
     function filteredBenchmarkResults(rows) {
         const out = []
+        const cf = columnFilters
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i]
-            if (modeFilter !== "" && benchmarkTargetLabel(row) !== modeFilter) continue
-            if (benchmarkFilter !== "" && benchmarkNameLabel(row) !== benchmarkFilter) continue
-            out.push(row)
+            let ok = true
+            for (const col in cf) {
+                const allowed = cf[col]
+                if (!allowed || allowed.length === 0) continue
+                if (allowed.indexOf(columnLabel(row, col)) < 0) { ok = false; break }
+            }
+            if (ok) out.push(row)
         }
         return out
     }
@@ -163,31 +224,160 @@ Item {
     Component {
         id: sortableHeader
         Item {
+            id: hdr
             property string title: ""
             property string column: ""
             property int columnWidth: 60
             property bool fill: false
-            Layout.fillWidth: fill
-            Layout.preferredWidth: fill ? 1 : columnWidth
+            Layout.preferredWidth: root.colWidth(column)
+            Layout.minimumWidth: root.colWidth(column)
             height: 30
 
-            Text {
+            RowLayout {
                 anchors.fill: parent
-                text: title + " " + root.sortIndicator(column)
-                color: headerHover.hovered || root.sortColumn === column ? Theme.textPrimary : Theme.textSecondary
-                font.pixelSize: 11
-                elide: Text.ElideRight
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: fill ? Text.AlignLeft : Text.AlignRight
+                anchors.rightMargin: 5
+                spacing: 2
+                layoutDirection: hdr.fill ? Qt.LeftToRight : Qt.RightToLeft
+
+                // Embudo de filtro (estilo Excel). Resaltado si la columna está filtrada.
+                Text {
+                    text: "▾"
+                    color: root.columnHasFilter(hdr.column) ? Theme.accent
+                           : (funnelHover.hovered ? Theme.textPrimary : Theme.textMuted)
+                    font.pixelSize: 11
+                    font.bold: root.columnHasFilter(hdr.column)
+                    HoverHandler { id: funnelHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler { onTapped: { filterPopup.initChecked(); filterPopup.open() } }
+                }
+                // Título + indicador de orden (tap = ordenar)
+                Text {
+                    Layout.fillWidth: hdr.fill
+                    text: hdr.title + " " + root.sortIndicator(hdr.column)
+                    color: titleHover.hovered || root.sortColumn === hdr.column ? Theme.textPrimary : Theme.textSecondary
+                    font.pixelSize: 11
+                    elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: hdr.fill ? Text.AlignLeft : Text.AlignRight
+                    HoverHandler { id: titleHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler { onTapped: root.cycleSort(hdr.column) }
+                }
             }
-            HoverHandler { id: headerHover; cursorShape: Qt.PointingHandCursor }
-            TapHandler { onTapped: root.cycleSort(column) }
+
+            // Grip de redimensión (borde derecho). Arrastrar para cambiar ancho.
+            Rectangle {
+                width: 5
+                height: parent.height
+                anchors.right: parent.right
+                color: (gripHover.hovered || gripDrag.active) ? Theme.accent : "transparent"
+                HoverHandler { id: gripHover; cursorShape: Qt.SizeHorCursor }
+                DragHandler {
+                    id: gripDrag
+                    target: null
+                    property real startW: 0
+                    onActiveChanged: if (active) startW = root.colWidth(hdr.column)
+                    onTranslationChanged: root.setColWidth(hdr.column, startW + translation.x)
+                }
+            }
+
+            // Popup estilo Excel: ordenar + lista de valores con checkboxes.
+            Popup {
+                id: filterPopup
+                y: hdr.height + 2
+                width: 240
+                padding: 0
+                modal: false
+                focus: true
+                property var checked: ({})
+
+                function initChecked() {
+                    const vals = root.distinctColumnValues(hdr.column)
+                    const cur = root.columnFilters[hdr.column]
+                    const c = {}
+                    for (var i = 0; i < vals.length; i++)
+                        c[vals[i]] = (cur === undefined || cur.length === 0) ? true : (cur.indexOf(vals[i]) >= 0)
+                    checked = c
+                }
+                function setVal(v, on) {
+                    const c = {}; for (const k in checked) c[k] = checked[k]; c[v] = on; checked = c
+                }
+                function setAll(on) {
+                    const c = {}; const vals = root.distinctColumnValues(hdr.column)
+                    for (var i = 0; i < vals.length; i++) c[vals[i]] = on; checked = c
+                }
+                function apply() {
+                    const vals = root.distinctColumnValues(hdr.column)
+                    const sel = []; let all = true
+                    for (var i = 0; i < vals.length; i++) { if (checked[vals[i]]) sel.push(vals[i]); else all = false }
+                    root.setColumnFilter(hdr.column, all ? [] : sel)
+                    close()
+                }
+
+                background: Rectangle { color: Theme.inputBg; border.color: Theme.borderColor; radius: 6 }
+                contentItem: ColumnLayout {
+                    spacing: 6
+                    // Ordenar
+                    RowLayout {
+                        Layout.fillWidth: true; Layout.margins: 8; spacing: 6
+                        LcButton {
+                            text: "↑ Asc"; secondary: true; Layout.fillWidth: true
+                            onClicked: { root.sortColumn = hdr.column; root.sortDirection = 1; filterPopup.close() }
+                        }
+                        LcButton {
+                            text: "↓ Desc"; secondary: true; Layout.fillWidth: true
+                            onClicked: { root.sortColumn = hdr.column; root.sortDirection = -1; filterPopup.close() }
+                        }
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+                    // Seleccionar todo
+                    CheckBox {
+                        id: selAll
+                        Layout.leftMargin: 8
+                        text: "(Seleccionar todo)"
+                        tristate: false
+                        checked: {
+                            const vals = root.distinctColumnValues(hdr.column); let any=false, all=true
+                            for (var i=0;i<vals.length;i++){ if(filterPopup.checked[vals[i]]) any=true; else all=false }
+                            return all
+                        }
+                        onToggled: filterPopup.setAll(checked)
+                        contentItem: Text { text: selAll.text; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: selAll.indicator.width + 6; verticalAlignment: Text.AlignVCenter }
+                    }
+                    // Lista de valores
+                    ScrollView {
+                        Layout.fillWidth: true; Layout.leftMargin: 8; Layout.rightMargin: 4
+                        Layout.preferredHeight: Math.min(220, Math.max(40, root.distinctColumnValues(hdr.column).length * 26))
+                        clip: true
+                        ColumnLayout {
+                            width: parent.width; spacing: 1
+                            Repeater {
+                                model: root.distinctColumnValues(hdr.column)
+                                delegate: CheckBox {
+                                    required property string modelData
+                                    checked: filterPopup.checked[modelData] === true
+                                    onToggled: filterPopup.setVal(modelData, checked)
+                                    contentItem: Text { text: modelData; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: parent.indicator.width + 6; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
+                                }
+                            }
+                        }
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+                    RowLayout {
+                        Layout.fillWidth: true; Layout.margins: 8; spacing: 6
+                        LcButton { text: "Limpiar"; secondary: true; Layout.fillWidth: true; onClicked: { root.setColumnFilter(hdr.column, []); filterPopup.close() } }
+                        LcButton { text: "Aplicar"; Layout.fillWidth: true; onClicked: filterPopup.apply() }
+                    }
+                }
+            }
         }
     }
 
     Component.onCompleted: {
         if (App.loadBenchmarkResults) App.loadBenchmarkResults()
         if (App.loadCustomBenchmarks) App.loadCustomBenchmarks()
+        // Restaurar ancho del panel izquierdo guardado por el usuario.
+        const savedW = parseInt(App.readSetting("benchLeftPanelWidth", leftPanelWidth))
+        if (!isNaN(savedW) && savedW > 0) leftPanelWidth = clampLeftPanelWidth(savedW)
+        _lpRestored = true
     }
 
     ColumnLayout {
@@ -381,7 +571,7 @@ Item {
                         spacing: 8
                         visible: customMode.checked
 
-                        ComboBox {
+                        LcComboBox {
                             id: benchCombo
                             Layout.fillWidth: true
                             textRole: "text"
@@ -395,9 +585,9 @@ Item {
                                     arr.push({ id: "", text: "(sin benchmarks — creá uno)" })
                                 return arr
                             }
-                            onActivated: root.customId = currentValue
-                            onModelChanged: { currentIndex = Math.max(0, indexOfValue(root.customId)); root.customId = currentValue }
-                            Component.onCompleted: { currentIndex = Math.max(0, indexOfValue(root.customId)); root.customId = currentValue }
+                            onActivated: root.customId = currentValue ?? ""
+                            onModelChanged: { currentIndex = Math.max(0, indexOfValue(root.customId)); root.customId = currentValue ?? "" }
+                            Component.onCompleted: { currentIndex = Math.max(0, indexOfValue(root.customId)); root.customId = currentValue ?? "" }
                         }
 
                         RowLayout {
@@ -454,6 +644,8 @@ Item {
                             anchors { fill: parent; margins: 4 }
                             model: App.profileManager.launchProfiles
                             spacing: 2; clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+                            flickableDirection: Flickable.VerticalFlick
 
                             delegate: Item {
                                 id: pd
@@ -619,33 +811,15 @@ Item {
                         spacing: 8
 
                         Text {
-                            text: "Filtros"
-                            color: Theme.textSecondary
+                            text: "▾ por columna para filtrar/ordenar"
+                            color: Theme.textMuted
                             font.pixelSize: 11
-                            font.bold: true
-                        }
-                        ComboBox {
-                            id: modeFilterCombo
-                            Layout.preferredWidth: 150
-                            model: root.modeFilterValues()
-                            currentIndex: root.indexOfValue(model, root.modeFilter.length > 0 ? root.modeFilter : "Todos")
-                            onActivated: root.modeFilter = currentText === "Todos" ? "" : currentText
-                        }
-                        ComboBox {
-                            id: benchmarkFilterCombo
-                            Layout.preferredWidth: 230
-                            model: root.benchmarkFilterValues()
-                            currentIndex: root.indexOfValue(model, root.benchmarkFilter.length > 0 ? root.benchmarkFilter : "Todos")
-                            onActivated: root.benchmarkFilter = currentText === "Todos" ? "" : currentText
                         }
                         LcButton {
-                            text: "Limpiar"
+                            text: root.activeFilterCount() > 0 ? "Limpiar filtros (" + root.activeFilterCount() + ")" : "Limpiar filtros"
                             secondary: true
-                            enabled: root.modeFilter.length > 0 || root.benchmarkFilter.length > 0
-                            onClicked: {
-                                root.modeFilter = ""
-                                root.benchmarkFilter = ""
-                            }
+                            enabled: root.activeFilterCount() > 0
+                            onClicked: root.clearAllFilters()
                         }
                         Item { Layout.fillWidth: true }
                         Text {
@@ -664,22 +838,23 @@ Item {
                         RowLayout {
                             anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
                             spacing: 0
-                            Loader { sourceComponent: sortableHeader; Layout.fillWidth: true; onLoaded: { item.title = "Perfil"; item.column = "profile"; item.fill = true } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 58; onLoaded: { item.title = "Modo"; item.column = "target"; item.columnWidth = 58 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 100; onLoaded: { item.title = "Benchmark"; item.column = "benchmark"; item.columnWidth = 100 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 60; onLoaded: { item.title = "Score"; item.column = "score"; item.columnWidth = 60 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 58; onLoaded: { item.title = "First"; item.column = "firstAttemptScore"; item.columnWidth = 58 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 58; onLoaded: { item.title = "Final"; item.column = "finalScore"; item.columnWidth = 58 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 52; onLoaded: { item.title = "Fixes"; item.column = "repairAttempts"; item.columnWidth = 52 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 62; onLoaded: { item.title = "T First"; item.column = "timeToFirstAttempt"; item.columnWidth = 62 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 62; onLoaded: { item.title = "T Total"; item.column = "totalTime"; item.columnWidth = 62 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 68; onLoaded: { item.title = "Repaired"; item.column = "passedAfterRepair"; item.columnWidth = 68 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 60; onLoaded: { item.title = "TPS"; item.column = "tps"; item.columnWidth = 60 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 60; onLoaded: { item.title = "TTFT"; item.column = "ttft"; item.columnWidth = 60 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 70; onLoaded: { item.title = "Segundos"; item.column = "seconds"; item.columnWidth = 70 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 60; onLoaded: { item.title = "RAM"; item.column = "ram"; item.columnWidth = 60 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 60; onLoaded: { item.title = "VRAM"; item.column = "vram"; item.columnWidth = 60 } }
-                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: 118; onLoaded: { item.title = "Fecha"; item.column = "date"; item.columnWidth = 118 } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("profile"); onLoaded: { item.title = "Perfil"; item.column = "profile"; item.fill = true } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("target"); onLoaded: { item.title = "Modo"; item.column = "target" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("benchmark"); onLoaded: { item.title = "Benchmark"; item.column = "benchmark" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("score"); onLoaded: { item.title = "Score"; item.column = "score" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstAttemptScore"); onLoaded: { item.title = "First"; item.column = "firstAttemptScore" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("finalScore"); onLoaded: { item.title = "Final"; item.column = "finalScore" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("repairAttempts"); onLoaded: { item.title = "Fixes"; item.column = "repairAttempts" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("timeToFirstAttempt"); onLoaded: { item.title = "T First"; item.column = "timeToFirstAttempt" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("totalTime"); onLoaded: { item.title = "T Total"; item.column = "totalTime" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("passedAfterRepair"); onLoaded: { item.title = "Repaired"; item.column = "passedAfterRepair" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("tps"); onLoaded: { item.title = "TPS"; item.column = "tps" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ttft"); onLoaded: { item.title = "TTFT"; item.column = "ttft" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("seconds"); onLoaded: { item.title = "Segundos"; item.column = "seconds" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ram"); onLoaded: { item.title = "RAM"; item.column = "ram" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vram"); onLoaded: { item.title = "VRAM"; item.column = "vram" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("date"); onLoaded: { item.title = "Fecha"; item.column = "date" } }
+                            Item { Layout.fillWidth: true; height: 30 }
                             Item { Layout.preferredWidth: 34; height: 30 }
                         }
                     }
@@ -694,6 +869,8 @@ Item {
                         clip: true
                         model: root.visibleBenchmarkResults()
                         spacing: 2
+                        boundsBehavior: Flickable.StopAtBounds
+                        flickableDirection: Flickable.VerticalFlick
                         ScrollBar.vertical: LcScrollBar {}
 
                         // Placeholder vacío
@@ -758,21 +935,22 @@ Item {
                                 Text {
                                     text: modelData.profileName ?? ""
                                     color: Theme.textPrimary; font.pixelSize: 12
-                                    elide: Text.ElideRight; Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    Layout.preferredWidth: root.colWidth("profile")
                                 }
                                 Text {
                                     text: root.benchmarkTargetLabel(modelData)
                                     color: Theme.textMuted; font.pixelSize: 11
-                                    Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("target"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: root.benchmarkNameLabel(modelData)
                                     color: Theme.textSecondary; font.pixelSize: 11
                                     elide: Text.ElideRight
-                                    Layout.preferredWidth: 100; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("benchmark"); horizontalAlignment: Text.AlignRight
                                 }
                                 Item {
-                                    Layout.preferredWidth: 60
+                                    Layout.preferredWidth: root.colWidth("score")
                                     height: 36
                                     Text {
                                         anchors.fill: parent
@@ -809,36 +987,36 @@ Item {
                                     color: root.scoreColor(modelData, "firstAttemptScore", "firstAttemptTotal")
                                     font.pixelSize: 11
                                     font.bold: true
-                                    Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("firstAttemptScore"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: root.scoreLabel(modelData, "finalScore", "finalTotal")
                                     color: root.scoreColor(modelData, "finalScore", "finalTotal")
                                     font.pixelSize: 11
                                     font.bold: true
-                                    Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("finalScore"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: (modelData.repairAttempts ?? 0).toString()
                                     color: (modelData.repairAttempts ?? 0) > 0 ? Theme.warnText : Theme.textMuted
                                     font.pixelSize: 11
-                                    Layout.preferredWidth: 52; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("repairAttempts"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: root.secondsLabel(modelData.timeToFirstAttempt ?? modelData.elapsedSec)
                                     color: Theme.textSecondary; font.pixelSize: 10
-                                    Layout.preferredWidth: 62; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("timeToFirstAttempt"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: root.secondsLabel(modelData.totalTime ?? modelData.elapsedSec)
                                     color: Theme.textSecondary; font.pixelSize: 10
-                                    Layout.preferredWidth: 62; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("totalTime"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: (modelData.passedAfterRepair ?? false) ? "Sí" : "No"
                                     color: (modelData.passedAfterRepair ?? false) ? Theme.successText : Theme.textMuted
                                     font.pixelSize: 11
-                                    Layout.preferredWidth: 68; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("passedAfterRepair"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {
@@ -846,7 +1024,7 @@ Item {
                                         return tps > 0 ? tps.toFixed(1) : "—"
                                     }
                                     color: Theme.accent; font.pixelSize: 12
-                                    Layout.preferredWidth: 60; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("tps"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {
@@ -854,7 +1032,7 @@ Item {
                                         return ms > 0 ? ms.toFixed(0) + " ms" : "—"
                                     }
                                     color: Theme.textSecondary; font.pixelSize: 11
-                                    Layout.preferredWidth: 60; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("ttft"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {
@@ -862,7 +1040,7 @@ Item {
                                         return sec > 0 ? sec.toFixed(1) + " s" : "—"
                                     }
                                     color: Theme.textSecondary; font.pixelSize: 11
-                                    Layout.preferredWidth: 70; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("seconds"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {
@@ -870,7 +1048,7 @@ Item {
                                         return mb > 0 ? (mb / 1024).toFixed(1) + " GB" : "—"
                                     }
                                     color: Theme.textSecondary; font.pixelSize: 11
-                                    Layout.preferredWidth: 60; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("ram"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {
@@ -878,7 +1056,7 @@ Item {
                                         return mb > 0 ? mb.toFixed(0) + " MB" : "—"
                                     }
                                     color: Theme.textSecondary; font.pixelSize: 11
-                                    Layout.preferredWidth: 60; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("vram"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {
@@ -886,8 +1064,9 @@ Item {
                                         return ts > 0 ? Qt.formatDateTime(new Date(ts), "d MMM HH:mm") : ""
                                     }
                                     color: Theme.textMuted; font.pixelSize: 10
-                                    Layout.preferredWidth: 118; horizontalAlignment: Text.AlignRight
+                                    Layout.preferredWidth: root.colWidth("date"); horizontalAlignment: Text.AlignRight
                                 }
+                                Item { Layout.fillWidth: true; height: 36 }
                                 Item {
                                     Layout.preferredWidth: 34
                                     height: 36

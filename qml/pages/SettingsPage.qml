@@ -361,7 +361,7 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: 8
                                     Text { text: "Tipo"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                    ComboBox {
+                                    LcComboBox {
                                         id: typeCombo
                                         Layout.preferredWidth: 200
                                         model: [

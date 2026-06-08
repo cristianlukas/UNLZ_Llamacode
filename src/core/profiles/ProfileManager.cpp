@@ -4,6 +4,7 @@
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QDateTime>
 #include <QDebug>
 
 ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
@@ -336,12 +337,54 @@ void ProfileManager::save() const
 
         QJsonArray arr;
         for (const auto &item : items) arr.append(item.toJson());
+        const QByteArray data = QJsonDocument(arr).toJson();
         QDir().mkpath(QFileInfo(path).absolutePath());
-        QFile f(path);
-        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
-            f.write(QJsonDocument(arr).toJson());
-        else
-            qWarning() << "[ProfileManager::save] FAILED to open" << path << f.errorString();
+
+        // Rolling backup of the current on-disk file BEFORE overwriting, so any
+        // bad/lossy write is always recoverable. Keep the last N per entity.
+        QFileInfo fi(path);
+        if (fi.exists()) {
+            const QString base = fi.completeBaseName();               // e.g. "launches"
+            const QString bdir = fi.absolutePath() + "/.backups";
+            QDir().mkpath(bdir);
+            const QString stamp = QDateTime::currentDateTime().toString("yyyyMMdd-HHmmss-zzz");
+            QFile::copy(path, bdir + "/" + base + "." + stamp + ".json");
+            // Prune to the most recent 15 backups per entity (sorted by name == time).
+            QDir d(bdir);
+            QStringList olds = d.entryList(QStringList{base + ".*.json"}, QDir::Files, QDir::Name);
+            while (olds.size() > 15)
+                QFile::remove(bdir + "/" + olds.takeFirst());
+            // Warn loudly on a large count drop (possible accidental loss).
+            QFile prev(path);
+            if (prev.open(QIODevice::ReadOnly)) {
+                const int curCount = QJsonDocument::fromJson(prev.readAll()).array().size();
+                prev.close();
+                if (curCount > 5 && arr.size() < curCount / 2)
+                    qWarning() << "[ProfileManager::save] LARGE COUNT DROP" << path
+                               << curCount << "->" << arr.size()
+                               << "(backup kept in" << bdir << ")";
+            }
+        }
+
+        // Atomic write: write to a temp file, then rename over the target so a
+        // crash mid-write can never leave a truncated/corrupt profiles file.
+        const QString tmp = path + ".tmp";
+        QFile f(tmp);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            qWarning() << "[ProfileManager::save] FAILED to open temp" << tmp << f.errorString();
+            return;
+        }
+        const qint64 written = f.write(data);
+        f.flush();
+        f.close();
+        if (written != data.size()) {
+            qWarning() << "[ProfileManager::save] short write, aborting rename" << tmp;
+            QFile::remove(tmp);
+            return;
+        }
+        QFile::remove(path);                 // Windows: rename requires absent target
+        if (!QFile::rename(tmp, path))
+            qWarning() << "[ProfileManager::save] FAILED to rename" << tmp << "->" << path;
     };
 
     saveList(storagePath("backends"),   m_backends.m_items);

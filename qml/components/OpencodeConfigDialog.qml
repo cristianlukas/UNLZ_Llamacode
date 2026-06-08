@@ -218,7 +218,7 @@ Dialog {
                         RowLayout {
                             Layout.fillWidth: true; spacing: 8
                             LcTextField { id: mcpName; placeholderText: "nombre"; Layout.preferredWidth: 160 }
-                            ComboBox {
+                            LcComboBox {
                                 id: mcpType
                                 model: ["local", "remote"]
                                 Layout.preferredWidth: 110

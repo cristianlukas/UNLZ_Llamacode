@@ -71,7 +71,7 @@ Item {
             LcTextField { id: labelField; Layout.fillWidth: true; placeholderText: "Optional label" }
 
             Text { text: (App.langV, App.l("models.scanMode")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-            ComboBox {
+            LcComboBox {
                 id: scanCombo
                 Layout.fillWidth: true
                 model: ["manual", "startup", "watch"]
@@ -390,7 +390,7 @@ Item {
                             placeholderText: "Buscar modelo..."
                             onTextChanged: root.downloadSearch = text
                         }
-                        ComboBox {
+                        LcComboBox {
                             Layout.preferredWidth: 112
                             Layout.fillHeight: true
                             visible: root.modelsMode === "download"
@@ -399,7 +399,7 @@ Item {
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: parent.displayText; color: Theme.textPrimary; font.pixelSize: 11; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
                         }
-                        ComboBox {
+                        LcComboBox {
                             Layout.preferredWidth: 110
                             Layout.fillHeight: true
                             visible: root.modelsMode === "download"
@@ -408,7 +408,7 @@ Item {
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: parent.displayText; color: Theme.textPrimary; font.pixelSize: 11; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
                         }
-                        ComboBox {
+                        LcComboBox {
                             Layout.preferredWidth: 116
                             Layout.fillHeight: true
                             visible: root.modelsMode === "download"

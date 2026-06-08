@@ -38,7 +38,7 @@ Item {
 
                 Text { text: (App.langV, App.l("launch.profile")); color: Theme.textMuted; font.pixelSize: 12 }
 
-                ComboBox {
+                LcComboBox {
                     id: launchCombo
                     Layout.fillWidth: true
                     model: App.profileManager.launchProfiles
@@ -153,6 +153,126 @@ Item {
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
                     onClicked: App.startServer(launchCombo.currentValue ?? "")
+                }
+
+                // --- Router mode (hot-swap entre varios modelos) ---------------
+                Rectangle {
+                    id: routerBox
+                    Layout.fillWidth: true
+                    Layout.topMargin: 8
+                    color: Theme.inputBg
+                    radius: 8
+                    border.color: Theme.borderColor
+                    implicitHeight: routerCol.implicitHeight + 24
+                    visible: !App.serverStopping
+
+                    // profileId -> bool (selección del pool)
+                    property var pool: ({})
+                    property var rmodels: []
+
+                    Connections {
+                        target: App
+                        function onRouterStateChanged() { routerBox.rmodels = App.routerModelNames() }
+                    }
+
+                    ColumnLayout {
+                        id: routerCol
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                        spacing: 8
+
+                        Text { text: "Router (hot-swap)"; color: Theme.textPrimary; font.pixelSize: 13; font.bold: true }
+                        Text {
+                            text: App.serverIsRouter
+                                  ? "Router activo. Modelo activo abajo; chat/agente swappean al usarlo."
+                                  : "Un solo server con varios modelos, swap en ~1s. Elegí el pool:"
+                            color: Theme.textMuted; font.pixelSize: 11
+                            Layout.fillWidth: true; wrapMode: Text.WordWrap
+                        }
+
+                        // Pool: lista scrollable de checkboxes sobre los launch profiles
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 220
+                            visible: !App.serverRunning
+                            clip: true
+                            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+                            ColumnLayout {
+                                width: parent.width
+                                spacing: 2
+                                Repeater {
+                                    model: App.profileManager.launchProfiles
+                                    delegate: CheckBox {
+                                        id: poolCheck
+                                        required property string name
+                                        required property string profileId
+                                        Layout.fillWidth: true
+                                        checked: !!routerBox.pool[profileId]
+                                        onToggled: {
+                                            var p = routerBox.pool
+                                            p[profileId] = checked
+                                            routerBox.pool = p
+                                        }
+                                        contentItem: Text {
+                                            text: poolCheck.name
+                                            color: Theme.theme === "oled" ? "white" : Theme.textPrimary
+                                            font.pixelSize: 12
+                                            leftPadding: poolCheck.indicator.width + 6
+                                            verticalAlignment: Text.AlignVCenter
+                                            elide: Text.ElideRight
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            visible: !App.serverRunning
+                            text: {
+                                var n = 0
+                                for (var k in routerBox.pool) if (routerBox.pool[k]) n++
+                                return n + " perfil(es) en el pool"
+                            }
+                            color: Theme.textMuted; font.pixelSize: 11
+                        }
+
+                        LcButton {
+                            text: App.serverRunning
+                                  ? (App.serverIsRouter ? "Detener router" : "Detener server")
+                                  : "Iniciar router"
+                            danger: App.serverRunning
+                            Layout.fillWidth: true
+                            enabled: App.serverRunning || (function(){
+                                for (var k in routerBox.pool) if (routerBox.pool[k]) return true
+                                return false
+                            })()
+                            onClicked: {
+                                if (App.serverRunning) { App.stopServer(); return }
+                                var ids = []
+                                for (var k in routerBox.pool) if (routerBox.pool[k]) ids.push(k)
+                                if (ids.length > 0) App.startRouter(ids, 1)
+                            }
+                        }
+
+                        // Selector de modelo activo (visible con router corriendo)
+                        LcComboBox {
+                            id: activeModelCombo
+                            Layout.fillWidth: true
+                            visible: App.serverIsRouter && routerBox.rmodels.length > 0
+                            model: routerBox.rmodels
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text {
+                                text: activeModelCombo.displayText
+                                color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            onActivated: App.setRouterActiveModel(currentText)
+                            onModelChanged: {
+                                var a = App.routerActiveModel()
+                                for (var j = 0; j < model.length; j++) if (model[j] === a) currentIndex = j
+                            }
+                        }
+                    }
                 }
 
                 // OpenAI-compatible endpoint for external agents — shown while running.

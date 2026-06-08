@@ -312,7 +312,7 @@ Item {
                     font { pixelSize: 15; bold: true }
                 }
 
-                ComboBox {
+                LcComboBox {
                     id: profileCombo
                     Layout.preferredWidth: 200
                     model: App.profileManager.launchProfiles
@@ -438,7 +438,7 @@ Item {
                 }
 
                 // Política de aprobación de herramientas.
-                ComboBox {
+                LcComboBox {
                     id: approvalModeCombo
                     visible: resolvedAdapter === "opencode" || resolvedAdapter === "llamaagent"
                     implicitWidth: 150
@@ -1261,6 +1261,10 @@ Item {
                             contentY = maxY
                     }
 
+                    // followBottom se actualiza en vivo con cualquier cambio de
+                    // posición (flick nativo o rueda animada): si el usuario sube,
+                    // dejamos de auto-bajar durante el streaming.
+                    onContentYChanged: followBottom = (contentY >= Math.max(0, contentHeight - height) - 2)
                     onMovementEnded: followBottom = atYEnd
                     // Throttle: durante streaming el contentHeight cambia por token.
                     // Un solo callLater coalescido evita reflows en cascada.
@@ -1273,15 +1277,16 @@ Item {
                         onTriggered: if (msgList.followBottom) msgList.scrollToBottom()
                     }
 
-                    // Rueda del mouse: paso fijo grande. Por defecto el step de
-                    // ListView es minúsculo frente a un contentHeight enorme.
+                    // Rueda del mouse: scroll animado y suave (el step nativo es
+                    // minúsculo frente a un contentHeight enorme).
+                    NumberAnimation { id: agentWheelAnim; target: msgList; property: "contentY"; duration: 120; easing.type: Easing.OutCubic }
                     WheelHandler {
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                         onWheel: function(ev) {
-                            var step = ev.angleDelta.y / 120 * 90
                             var maxY = Math.max(0, msgList.contentHeight - msgList.height)
-                            msgList.contentY = Math.max(0, Math.min(maxY, msgList.contentY - step))
-                            msgList.followBottom = (msgList.contentY >= maxY - 2)
+                            var base = agentWheelAnim.running ? agentWheelAnim.to : msgList.contentY
+                            var target = Math.max(0, Math.min(maxY, base - ev.angleDelta.y / 120 * 120))
+                            agentWheelAnim.stop(); agentWheelAnim.from = msgList.contentY; agentWheelAnim.to = target; agentWheelAnim.start()
                             ev.accepted = true
                         }
                     }

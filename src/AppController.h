@@ -217,6 +217,19 @@ public:
     // Recalcula la vista previa desde valores en memoria del editor, sin persistir.
     Q_INVOKABLE void computeEffectiveProfilePreview(const QString &launchProfileId,
                                                     const QVariantMap &overrides);
+    // --- Router mode (hot-swap) -----------------------------------------
+    // Genera un .ini de presets desde varios launch profiles y lo escribe en disco.
+    // Devuelve la ruta del .ini, o cadena vacía + serverError() si algo falla.
+    Q_INVOKABLE QString generateRouterPreset(const QStringList &launchProfileIds);
+    // Arranca un único llama-server en modo router con el preset generado.
+    // El swap entre modelos se hace por el campo "model" del request (nombre de sección).
+    Q_INVOKABLE void startRouter(const QStringList &launchProfileIds, int modelsMax = 1);
+    // Nombres de sección (modelos) cargados en el router activo.
+    Q_INVOKABLE QStringList routerModelNames() const { return m_routerModelNames; }
+    // Modelo (sección) activo: chat/agente mandan este nombre como campo "model".
+    Q_INVOKABLE QString routerActiveModel() const { return m_routerActiveModel; }
+    Q_INVOKABLE void setRouterActiveModel(const QString &name);
+    Q_INVOKABLE bool serverIsRouter() const { return m_serverIsRouter; }
     Q_INVOKABLE void clearLog();
     // Filtra el log del server por nivel/fuente. level: "all"|"error"|"warn"|"stderr"|
     // "stdout"|"lifecycle"|"health"|"diag". Devuelve sólo las líneas que matchean.
@@ -361,6 +374,7 @@ signals:
     void serverLogChanged();
     void activeLaunchIdChanged();
     void effectiveProfileChanged();
+    void routerStateChanged();
     void setupStateChanged();
     void installingOfficialBinaryChanged();
     void officialBinaryInstallStatusChanged();
@@ -444,6 +458,13 @@ private:
     void startHealthPolling();
     void stopHealthPolling();
     QVariantMap m_effectiveProfile;
+    QStringList m_routerModelNames;   // secciones cargadas en el router activo
+    QString m_routerActiveModel;      // sección activa (campo "model" de los requests)
+    bool m_serverIsRouter = false;    // el m_proc actual es un router
+    // Devuelve la sección activa del router si corresponde, sino el fallback.
+    QString routedModelId(const QString &fallback) const {
+        return (m_serverIsRouter && !m_routerActiveModel.isEmpty()) ? m_routerActiveModel : fallback;
+    }
     bool m_installingOfficialBinary = false;
     QString m_officialBinaryInstallStatus;
     QString m_officialBinaryInstallLog;

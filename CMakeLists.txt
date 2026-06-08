@@ -87,6 +87,7 @@ qt_add_qml_module(LlamaCode
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
         qml/components/LcButton.qml
+        qml/components/LcComboBox.qml
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
         qml/components/LcScrollBar.qml

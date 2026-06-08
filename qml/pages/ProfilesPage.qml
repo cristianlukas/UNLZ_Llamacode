@@ -490,7 +490,7 @@ Item {
                         spacing: 10
 
                         Text { text: (App.langV, App.l("launch.profile")); color: Theme.textSecondary; font.pixelSize: 13 }
-                        ComboBox {
+                        LcComboBox {
                             id: launchCombo
                             Layout.fillWidth: true
                             model: App.profileManager.launchProfiles
@@ -754,7 +754,7 @@ Item {
                         columns: 2; rowSpacing: 8; columnSpacing: 10
 
                         Text { text: "Binary"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        ComboBox {
+                        LcComboBox {
                             id: backendBinary
                             Layout.fillWidth: true
                             model: App.binaryRegistry
@@ -782,7 +782,7 @@ Item {
 
                         Item { implicitWidth: 20 }
                         Text { text: "Main model"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        ComboBox {
+                        LcComboBox {
                             id: modelMain
                             Layout.fillWidth: true
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
@@ -792,7 +792,7 @@ Item {
 
                         CheckBox { id: mmprojCheck; checked: mmprojEnabled; onCheckedChanged: mmprojEnabled = checked; padding: 0 }
                         Text { text: "mmproj"; color: mmprojEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
-                        ComboBox {
+                        LcComboBox {
                             id: modelMmproj
                             Layout.fillWidth: true
                             enabled: mmprojEnabled; opacity: mmprojEnabled ? 1.0 : 0.4
@@ -803,7 +803,7 @@ Item {
 
                         CheckBox { id: draftCheck; checked: draftEnabled; onCheckedChanged: draftEnabled = checked; padding: 0 }
                         Text { text: "Draft model"; color: draftEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
-                        ComboBox {
+                        LcComboBox {
                             id: modelDraft
                             Layout.fillWidth: true
                             enabled: draftEnabled; opacity: draftEnabled ? 1.0 : 0.4

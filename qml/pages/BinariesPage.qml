@@ -44,7 +44,7 @@ Item {
                     Layout.fillWidth: true
                     spacing: 6
                     Text { text: (App.langV, App.l("binaries.flavor")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-                    ComboBox {
+                    LcComboBox {
                         id: flavorCombo
                         Layout.fillWidth: true
                         model: ["official", "mtp-fork", "custom"]
@@ -57,7 +57,7 @@ Item {
                     Layout.fillWidth: true
                     spacing: 6
                     Text { text: (App.langV, App.l("binaries.backend")); color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-                    ComboBox {
+                    LcComboBox {
                         id: backendCombo
                         Layout.fillWidth: true
                         model: ["cpu", "cuda", "vulkan", "metal"]
@@ -275,7 +275,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: 6
                         Text { text: "Backend"; color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-                        ComboBox {
+                        LcComboBox {
                             id: editBackendCombo
                             Layout.fillWidth: true
                             model: ["cpu", "cuda", "vulkan", "metal"]
@@ -288,7 +288,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: 6
                         Text { text: "Variante"; color: Theme.dialogLabel; font.pixelSize: 12; font.bold: true }
-                        ComboBox {
+                        LcComboBox {
                             id: editFlavorCombo
                             Layout.fillWidth: true
                             model: ["official", "mtp-fork", "custom"]
