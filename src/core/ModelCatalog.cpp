@@ -6,6 +6,8 @@
 #include <QDir>
 #include <QUuid>
 #include <QDebug>
+#include <QThread>
+#include <QFileInfo>
 
 static const char *kSchema = R"(
 CREATE TABLE IF NOT EXISTS catalog_models (
@@ -29,9 +31,34 @@ ModelCatalog::ModelCatalog(QObject *parent)
     : QAbstractListModel(parent)
     , m_connName(QUuid::createUuid().toString())
 {
-    openDb();
-    loadFromDb();
+    // Load with retry: if a previous instance still holds the DB at startup,
+    // db.open()/the query can briefly fail and leave us with an empty catalog
+    // for the whole session (→ every profile becomes "No model selected").
+    const bool dbHasData = QFileInfo(dbPath()).size() > 4096;
+    for (int attempt = 0; attempt < 10; ++attempt) {
+        openDb();
+        m_all.clear();
+        loadFromDb();
+        if (!m_all.isEmpty() || !dbHasData) break;
+        QThread::msleep(250);
+    }
     rebuildVisible();
+}
+
+int ModelCatalog::reload()
+{
+    beginResetModel();
+    const bool dbHasData = QFileInfo(dbPath()).size() > 4096;
+    for (int attempt = 0; attempt < 10; ++attempt) {
+        openDb();
+        m_all.clear();
+        loadFromDb();
+        if (!m_all.isEmpty() || !dbHasData) break;
+        QThread::msleep(250);
+    }
+    endResetModel();
+    rebuildVisible();
+    return m_all.size();
 }
 
 int ModelCatalog::rowCount(const QModelIndex &parent) const
@@ -231,21 +258,25 @@ QList<CatalogModel> ModelCatalog::allForRoot(const QString &rootId) const
     return res;
 }
 
-void ModelCatalog::openDb()
+bool ModelCatalog::openDb()
 {
-    auto db = QSqlDatabase::addDatabase("QSQLITE", m_connName);
-    db.setDatabaseName(dbPath());
     QDir().mkpath(QFileInfo(dbPath()).absolutePath());
-    if (!db.open()) {
+    auto db = QSqlDatabase::contains(m_connName)
+                  ? QSqlDatabase::database(m_connName, /*open=*/false)
+                  : QSqlDatabase::addDatabase("QSQLITE", m_connName);
+    db.setDatabaseName(dbPath());
+    if (!db.isOpen() && !db.open()) {
         qWarning() << "ModelCatalog: cannot open DB:" << db.lastError().text();
-        return;
+        return false;
     }
     QSqlQuery q(db);
+    q.exec(QStringLiteral("PRAGMA busy_timeout=3000"));
     const QStringList stmts = QString::fromUtf8(kSchema).split(';', Qt::SkipEmptyParts);
     for (const auto &s : stmts) {
         if (!s.trimmed().isEmpty())
             q.exec(s.trimmed());
     }
+    return true;
 }
 
 void ModelCatalog::loadFromDb()

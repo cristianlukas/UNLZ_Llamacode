@@ -4916,6 +4916,12 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     if (m_benchmarkRunning || profileIds.isEmpty()) return;
     const bool agentTarget = (target == QLatin1String("agent"));
 
+    // Self-heal: if the model catalog failed to load this session (e.g. the DB
+    // was briefly locked by a previous instance at startup), every profile would
+    // resolve to "No model selected" and fail. Reload before running.
+    if (m_catalog.count() == 0)
+        m_catalog.reload();
+
     m_benchmarkRunning  = true;
     m_benchmarkCanceled = false;
     m_benchmarkProgress = 0;
@@ -5024,6 +5030,10 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                             .arg(idx + 1).arg(profileIds.size()).arg(profName)
                             .arg(*startAttempts).arg(kMaxStartRetries);
                     emit benchmarkStatusChanged();
+                    // Reload the model catalog in case it failed to load (transient
+                    // DB lock) — that surfaces as "No model selected" / invalid profile.
+                    if (m_catalog.count() == 0)
+                        m_catalog.reload();
                     stopServer();
                     benchmarkKillStrayServers();
                     benchmarkWaitServerStopped(10000, [=]() {

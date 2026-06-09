@@ -35,6 +35,11 @@ public:
 
     int count() const;
 
+    // Re-open the DB and reload all rows into memory. Returns the loaded count.
+    // Used to self-heal a transient empty load (e.g. DB was briefly locked by a
+    // previous instance at startup).
+    int reload();
+
     QString filterRootId() const { return m_filterRootId; }
     void setFilterRootId(const QString &id);
 
@@ -59,7 +64,7 @@ signals:
     void filterChanged();
 
 private:
-    void openDb();
+    bool openDb();
     void loadFromDb();
     void saveToDb(const CatalogModel &m);
     void rebuildVisible();
