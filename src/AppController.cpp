@@ -5001,7 +5001,9 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         const QString profNameRaw = profData.value("name").toString();
         const QString profName    = profNameRaw.isEmpty() ? profileId : profNameRaw;
 
-        auto runProfile = [=]() {
+        auto startAttempts = std::make_shared<int>(0);
+        auto runProfile = std::make_shared<std::function<void()>>();
+        *runProfile = [=]() {
             const qint64 loadStartMs = QDateTime::currentMSecsSinceEpoch();
             m_benchmarkStatus = QString("[%1/%2] %3 — iniciando servidor...")
                 .arg(idx + 1).arg(profileIds.size()).arg(profName);
@@ -5009,23 +5011,43 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
             startServer(profileId);
             if (!serverRunning()) {
-                if (!m_benchmarkCanceled) {
-                    const double elapsed =
-                        (QDateTime::currentMSecsSinceEpoch() - loadStartMs) / 1000.0;
-                    const QString detail = benchmarkServerLogTail();
-                    for (int p = 1; p <= passes; ++p) {
-                        saveBenchmarkFailureResult(
-                            profileId, profName, p, passes, mode,
-                            agentTarget ? QStringLiteral("agent") : QStringLiteral("model"),
-                            benchmarkName, runLabel, *runDirShared,
-                            QStringLiteral("server-start"),
-                            QStringLiteral("No se pudo iniciar el servidor para esta pasada."),
-                            detail, elapsed);
-                    }
-                    (*stepsDone) += tasks.size() * passes;
-                    m_benchmarkProgress = qMin(99, (*stepsDone * 100) / qMax(1, totalSteps));
-                    emit benchmarkProgressChanged();
+                if (m_benchmarkCanceled) { (*processNext)(idx + 1); return; }
+                // Auto-recovery: a stale/leftover llama-server (holding port 8021
+                // or VRAM from a previous hung run) makes startServer fail. Clean
+                // up (stop our proc, kill stray servers, let VRAM free) and retry.
+                // The time spent in failed attempts is NOT counted toward the pass.
+                static const int kMaxStartRetries = 2;
+                if (*startAttempts < kMaxStartRetries) {
+                    (*startAttempts)++;
+                    m_benchmarkStatus =
+                        QString("[%1/%2] %3 — no arrancó; limpiando y reintentando (%4/%5)...")
+                            .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                            .arg(*startAttempts).arg(kMaxStartRetries);
+                    emit benchmarkStatusChanged();
+                    stopServer();
+                    benchmarkKillStrayServers();
+                    benchmarkWaitServerStopped(10000, [=]() {
+                        // Extra delay so the GPU fully releases VRAM before retry.
+                        QTimer::singleShot(3000, this, [=]() { (*runProfile)(); });
+                    });
+                    return;
                 }
+                // Retries exhausted → record the failure.
+                const double elapsed =
+                    (QDateTime::currentMSecsSinceEpoch() - loadStartMs) / 1000.0;
+                const QString detail = benchmarkServerLogTail();
+                for (int p = 1; p <= passes; ++p) {
+                    saveBenchmarkFailureResult(
+                        profileId, profName, p, passes, mode,
+                        agentTarget ? QStringLiteral("agent") : QStringLiteral("model"),
+                        benchmarkName, runLabel, *runDirShared,
+                        QStringLiteral("server-start"),
+                        QStringLiteral("No se pudo iniciar el servidor tras limpiar y reintentar."),
+                        detail, elapsed);
+                }
+                (*stepsDone) += tasks.size() * passes;
+                m_benchmarkProgress = qMin(99, (*stepsDone * 100) / qMax(1, totalSteps));
+                emit benchmarkProgressChanged();
                 (*processNext)(idx + 1);
                 return;
             }
@@ -5244,9 +5266,9 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
         if (serverRunning()) {
             stopServer();
-            benchmarkWaitServerStopped(8000, runProfile);
+            benchmarkWaitServerStopped(8000, [runProfile]() { (*runProfile)(); });
         } else {
-            runProfile();
+            (*runProfile)();
         }
     };
     (*processNext)(0);
@@ -5918,6 +5940,23 @@ void AppController::benchmarkWaitServerStopped(int remainingMs, std::function<vo
     QTimer::singleShot(300, this, [=]() {
         benchmarkWaitServerStopped(remainingMs - 300, onStopped);
     });
+}
+
+// Force-kill any leftover llama-server processes that survived a previous run and
+// may be holding the port / VRAM, blocking a fresh server start. Used by the
+// benchmark auto-recovery path. Synchronous and best-effort.
+void AppController::benchmarkKillStrayServers()
+{
+#ifdef Q_OS_WIN
+    QProcess::execute(QStringLiteral("taskkill"),
+                      {QStringLiteral("/F"), QStringLiteral("/T"),
+                       QStringLiteral("/IM"), QStringLiteral("llama-server.exe")});
+#else
+    QProcess::execute(QStringLiteral("pkill"),
+                      {QStringLiteral("-9"), QStringLiteral("-f"), QStringLiteral("llama-server")});
+#endif
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Auto-recovery: killed stray llama-server processes."));
 }
 
 void AppController::benchmarkRequest(const QString &url, const QString &prompt,

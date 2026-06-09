@@ -621,6 +621,7 @@ private:
                                   qint64 lastActivityMs = 0,
                                   qint64 lastLogSize = -1);
     void benchmarkWaitServerStopped(int remainingMs, std::function<void()> onStopped);
+    void benchmarkKillStrayServers();
     void benchmarkRequest(const QString &url, const QString &prompt,
                           int maxTokens, bool streaming,
                           std::function<void(QVariantMap)> onDone,
