@@ -75,3 +75,7 @@ LlamaCode.lnk
 
 # Launcher rebuild flag (transient)
 BUILD_PENDING
+
+# Runtime artifacts
+build_log.txt
+/tools/_pid.txt
