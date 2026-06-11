@@ -1,4 +1,5 @@
 #include "RawChatBackend.h"
+#include "core/DocumentExtractor.h"
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -366,11 +367,18 @@ void RawChatBackend::sendMessage(const QString &text)
                         {QStringLiteral("image_url"), QJsonObject{{QStringLiteral("url"), uri}}}
                     });
                 } else {
-                    // Documento de texto → inline.
-                    const QString doc = readTextFile(path);
+                    // Documento (txt/pdf/docx/xlsx/pptx/html/…) → markdown inline
+                    // vía DocumentExtractor (markitdown para formatos ricos).
+                    QString exErr;
+                    const QString doc = DocumentExtractor::extract(path, &exErr);
+                    const QString fn = QFileInfo(path).fileName();
                     if (!doc.isEmpty())
-                        textPart += QStringLiteral("\n\n--- %1 ---\n%2")
-                                        .arg(QFileInfo(path).fileName(), doc);
+                        textPart += QStringLiteral("\n\n--- %1 ---\n%2").arg(fn, doc);
+                    else
+                        textPart += QStringLiteral("\n\n[adjunto %1: %2]")
+                                        .arg(fn, exErr.isEmpty()
+                                                     ? QStringLiteral("sin texto extraíble")
+                                                     : exErr);
                 }
             }
             QJsonArray parts;

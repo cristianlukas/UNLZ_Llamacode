@@ -1,6 +1,7 @@
 #include "LlamaAgentBackend.h"
 #include "AgentToolRunner.h"
 #include "SubAgentRunner.h"
+#include "core/DocumentExtractor.h"
 
 #include <QCryptographicHash>
 
@@ -88,11 +89,15 @@ static QString imageDataUri(const QString &path)
 // Texto de un archivo (UTF-8), "" si binario/imagen.
 static QString readAttachText(const QString &path)
 {
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) return {};
-    const QByteArray raw = f.read(2 * 1024 * 1024);
-    if (raw.contains('\0')) return {};
-    return QString::fromUtf8(raw);
+    // Documentos (txt/pdf/docx/xlsx/pptx/html/…) → markdown vía DocumentExtractor
+    // (markitdown para formatos ricos). Las imágenes ya se manejan por visión.
+    QString err;
+    const QString doc = DocumentExtractor::extract(path, &err);
+    if (!doc.isEmpty()) return doc;
+    if (!err.isEmpty())
+        return QStringLiteral("[no se pudo extraer %1: %2]")
+                   .arg(QFileInfo(path).fileName(), err);
+    return {};
 }
 
 // Recorta la salida de una tool ANTES de meterla al contexto (m_apiMessages).

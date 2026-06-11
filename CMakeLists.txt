@@ -24,6 +24,7 @@ set(SOURCES
     src/core/CatalogModel.cpp
     src/core/ModelCatalog.cpp
     src/core/GGUFScanner.cpp
+    src/core/DocumentExtractor.cpp
     src/core/ControlApi.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
@@ -47,6 +48,7 @@ set(HEADERS
     src/core/CatalogModel.h
     src/core/ModelCatalog.h
     src/core/GGUFScanner.h
+    src/core/DocumentExtractor.h
     src/core/ControlApi.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
