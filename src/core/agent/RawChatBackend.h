@@ -3,6 +3,7 @@
 #include <QHash>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QTimer>
 
 // Backend "raw": chat directo a llama-server /v1/chat/completions (stream SSE).
 // No lanza proceso externo; usa sesiones locales en memoria.
@@ -30,6 +31,11 @@ public:
     void newSessionInProject(const QString &projectDir) override;
     void switchSession(const QString &sessionId) override;
     void renameSession(const QString &sessionId, const QString &title) override;
+    // Rebobinar: descarta el mensaje de usuario en msgIndex y todo lo posterior.
+    void rollbackToMessage(int msgIndex);
+    // Editar: reescribe el contenido del mensaje en msgIndex (user o IA) y
+    // descarta todo lo posterior.
+    void editMessage(int msgIndex, const QString &newText);
     void deleteSession(const QString &sessionId) override;
     void forkSession(const QString &sessionId) override;
     void refreshSessions() override;
@@ -78,6 +84,7 @@ private:
     QString m_answerBuf;   // content acumulado (respuesta)
     QStringList m_pendingAttachments;  // rutas a adjuntar en el próximo envío
     QStringList m_msgQueue;            // mensajes encolados (se envían al terminar)
+    QTimer *m_streamEmitTimer = nullptr;  // throttle de messagesChanged durante streaming
 
 private slots:
     void flushQueue();

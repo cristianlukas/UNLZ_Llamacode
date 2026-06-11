@@ -18,7 +18,12 @@ QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root)
         const QFileInfo info(filePath);
 
         CatalogModel m;
-        m.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        // Id DETERMINISTA por ruta absoluta (UUIDv5). Antes era QUuid::createUuid()
+        // (aleatorio por scan): cada rescan reasignaba ids y orfanaba los modelId
+        // guardados en los perfiles (→ "No model selected" en benchmark). El mismo
+        // namespace + ruta se replica en tools/relink_profiles.py para migrar perfiles.
+        static const QUuid kCatalogNs(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+        m.id = QUuid::createUuidV5(kCatalogNs, filePath.toUtf8()).toString(QUuid::WithoutBraces);
         m.rootId = root.id;
         m.absolutePath = filePath;
         m.fileName = info.fileName();

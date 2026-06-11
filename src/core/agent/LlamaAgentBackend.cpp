@@ -755,6 +755,50 @@ void LlamaAgentBackend::rollbackToMessage(int msgIndex)
     saveCurrentSession();
 }
 
+void LlamaAgentBackend::editMessage(int msgIndex, const QString &newText)
+{
+    if (!m_running) return;
+    if (isBusy()) { emit errorOccurred(QStringLiteral("No se puede editar con un turno en curso.")); return; }
+    if (msgIndex < 0 || msgIndex >= m_messages.size()) return;
+
+    // Reescribe el contenido del mensaje y descarta todo lo posterior (UI).
+    QVariantMap m = m_messages[msgIndex].toMap();
+    m[QStringLiteral("content")] = newText;
+    m[QStringLiteral("typing")] = false;
+    m_messages[msgIndex] = m;
+    while (m_messages.size() > msgIndex + 1) m_messages.removeLast();
+
+    // Rebuildea m_apiMessages: conserva los system del inicio y reconstruye los
+    // turnos como texto plano (user/assistant). Esto descarta tool_calls/tool
+    // results del contexto, pero garantiza un historial válido para el server.
+    QJsonArray neu;
+    for (const QJsonValue &v : std::as_const(m_apiMessages)) {
+        if (v.toObject().value(QStringLiteral("role")).toString() == QLatin1String("system"))
+            neu.append(v);
+        else
+            break;
+    }
+    for (const QVariant &uv : std::as_const(m_messages)) {
+        const QVariantMap um = uv.toMap();
+        const QString role = um.value(QStringLiteral("role")).toString();
+        const QString content = um.value(QStringLiteral("content")).toString();
+        if ((role == QLatin1String("user") || role == QLatin1String("assistant")) && !content.isEmpty())
+            neu.append(QJsonObject{{QStringLiteral("role"), role},
+                                   {QStringLiteral("content"), content}});
+    }
+    m_apiMessages = neu;
+
+    // Descartar checkpoints que apunten más allá del estado actual.
+    while (!m_checkpoints.isEmpty() && m_checkpoints.last().msgLen > m_messages.size())
+        m_checkpoints.removeLast();
+
+    m_curAsstIdx = -1;
+    emit logAppended(QStringLiteral("[mensaje %1 editado; contexto recortado a %2 msgs / %3 ctx]\n")
+                         .arg(msgIndex).arg(m_messages.size()).arg(m_apiMessages.size()));
+    emit messagesChanged();
+    saveCurrentSession();
+}
+
 // ¿Hay algo en vuelo? (request, compactación, tool ejecutándose o esperando
 // aprobación, o tool_calls pendientes de procesar).
 bool LlamaAgentBackend::isBusy() const
@@ -1222,8 +1266,15 @@ void LlamaAgentBackend::processPendingCalls()
     // ── Robustez: anti-loop ──────────────────────────────────────────────
     const QString sig = name + QLatin1Char('|') + argStr;
     if (++m_callCounts[sig] > kMaxSameCall) {
-        finishTurn(QStringLiteral("[corté: el modelo repitió la misma tool (%1) %2 veces]")
-                       .arg(name).arg(kMaxSameCall));
+        // No matar el turno: inyectar el aviso como tool_result y continuar.
+        // El modelo recibe el feedback y corrige solo, sin pedir "continuá".
+        ++m_toolFail;
+        m_pendingCalls.removeFirst();
+        appendToolResult(id, name,
+            QStringLiteral("[anti-loop: ya ejecutaste esta tool idéntica %1 veces "
+                           "sin progreso. NO la repitas: cambiá de enfoque, ajustá "
+                           "los args, o usá otra tool.]").arg(kMaxSameCall));
+        processPendingCalls();
         return;
     }
 
@@ -2502,11 +2553,25 @@ void LlamaAgentBackend::loadFromDisk()
     if (!f.open(QIODevice::ReadOnly)) return;
     const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
     f.close();
+    // Las corridas de benchmark crean workspaces aislados llamados
+    // "<perfil>__ws" o "<perfil>__ws_pN". Builds viejas (pre-ephemeral) las
+    // persistieron en este índice global y ensucian el sidebar del Agente.
+    // Filtrarlas al cargar y purgar el índice si había alguna.
+    static const QRegularExpression benchWs(QStringLiteral("__ws(_p\\d+)?$"));
+    bool purged = false;
     for (const QJsonValue &v : arr) {
         const QVariantMap s = v.toObject().toVariantMap();
-        if (s.value(QStringLiteral("id")).toString().isEmpty()) continue;
+        const QString sid = s.value(QStringLiteral("id")).toString();
+        if (sid.isEmpty()) continue;
+        const QString pn = s.value(QStringLiteral("projectName")).toString();
+        if (benchWs.match(pn).hasMatch()) {
+            removeSessionFile(sid);   // borrar también el .json huérfano
+            purged = true;
+            continue;
+        }
         m_sessions.append(s);
     }
+    if (purged) persistIndex();
     if (m_sessions.isEmpty()) return;
     // Cargar la primera como activa.
     const QString sid = m_sessions.first().toMap().value(QStringLiteral("id")).toString();

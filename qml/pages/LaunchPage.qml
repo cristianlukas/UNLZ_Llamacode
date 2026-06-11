@@ -41,9 +41,20 @@ Item {
                 LcComboBox {
                     id: launchCombo
                     Layout.fillWidth: true
-                    model: App.profileManager.launchProfiles
-                    textRole: "name"
-                    valueRole: "profileId"
+                    // Menú ordenado: favoritos (★) arriba; displayName = alias||name.
+                    property var launchMenu: App.profileManager.launchProfilesForMenu()
+                    Connections {
+                        target: App.profileManager
+                        function onLaunchesChanged() {
+                            const sel = launchCombo.currentValue
+                            launchCombo.launchMenu = App.profileManager.launchProfilesForMenu()
+                            const i = launchCombo.indexOfValue(sel)
+                            if (i >= 0) launchCombo.currentIndex = i
+                        }
+                    }
+                    model: launchMenu
+                    textRole: "displayName"
+                    valueRole: "id"
                     background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                     contentItem: Text {
                         text: {

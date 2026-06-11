@@ -39,6 +39,10 @@ public:
     // Rebobinar la conversación al estado previo a un mensaje de usuario (índice
     // en la lista de UI). Trunca mensajes + contexto y revierte edits posteriores.
     void rollbackToMessage(int msgIndex);
+    // Editar el texto de un mensaje (user o IA) en msgIndex y descartar todo lo
+    // posterior. Rebuildea m_apiMessages (system + turnos de texto) → pierde la
+    // estructura de tool_calls pero deja el contexto válido para continuar.
+    void editMessage(int msgIndex, const QString &newText);
 
     void newSession() override;
     void newSessionInProject(const QString &projectDir) override;

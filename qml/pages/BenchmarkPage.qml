@@ -453,7 +453,7 @@ Item {
                                 id: modelTarget
                                 text: ""
                                 checked: true
-                                onToggled: if (root._optsRestored && checked) App.writeSetting("benchTarget", "model")
+                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchTarget", "model")
                                 ButtonGroup.group: targetGroup
                                 padding: 0
                                 leftPadding: 0
@@ -477,7 +477,7 @@ Item {
                             RadioButton {
                                 id: agentTarget
                                 text: ""
-                                onToggled: if (root._optsRestored && checked) App.writeSetting("benchTarget", "agent")
+                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchTarget", "agent")
                                 ButtonGroup.group: targetGroup
                                 padding: 0
                                 leftPadding: 0
@@ -526,7 +526,7 @@ Item {
                                 id: shortMode
                                 text: ""
                                 checked: true
-                                onToggled: if (root._optsRestored && checked) App.writeSetting("benchMode", "short")
+                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "short")
                                 ButtonGroup.group: modeGroup
                                 padding: 0
                                 leftPadding: 0
@@ -552,7 +552,7 @@ Item {
                             RadioButton {
                                 id: fullMode
                                 text: ""
-                                onToggled: if (root._optsRestored && checked) App.writeSetting("benchMode", "full")
+                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "full")
                                 ButtonGroup.group: modeGroup
                                 padding: 0
                                 leftPadding: 0
@@ -578,7 +578,7 @@ Item {
                             RadioButton {
                                 id: customMode
                                 text: ""
-                                onToggled: if (root._optsRestored && checked) App.writeSetting("benchMode", "custom")
+                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "custom")
                                 ButtonGroup.group: modeGroup
                                 padding: 0
                                 leftPadding: 0
@@ -686,15 +686,24 @@ Item {
                         ListView {
                             id: profileList
                             anchors { fill: parent; margins: 4 }
-                            model: App.profileManager.launchProfiles
+                            // Menú ordenado: favoritos (★) arriba; displayName = alias||name.
+                            property var launchMenu: App.profileManager.launchProfilesForMenu()
+                            Connections {
+                                target: App.profileManager
+                                function onLaunchesChanged() {
+                                    profileList.launchMenu = App.profileManager.launchProfilesForMenu()
+                                }
+                            }
+                            model: launchMenu
                             spacing: 2; clip: true
                             boundsBehavior: Flickable.StopAtBounds
                             flickableDirection: Flickable.VerticalFlick
 
                             delegate: Item {
                                 id: pd
+                                required property var modelData
                                 width: profileList.width; height: 32
-                                property string profileId: model.profileId ?? ""
+                                property string profileId: modelData.id ?? ""
                                 property bool isSelected: root.selectedIds.indexOf(profileId) >= 0
 
                                 Rectangle {
@@ -714,7 +723,7 @@ Item {
                                     }
                                     Text {
                                         id: profileNameText
-                                        text: model.name || "(sin nombre)"
+                                        text: pd.modelData.displayName || pd.modelData.name || "(sin nombre)"
                                         color: Theme.textPrimary; font.pixelSize: 12
                                         anchors.verticalCenter: parent.verticalCenter
                                         width: profileList.width - 60; elide: Text.ElideRight

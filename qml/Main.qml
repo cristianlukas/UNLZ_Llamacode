@@ -10,7 +10,9 @@ ApplicationWindow {
     height: 760
     minimumWidth: 900
     minimumHeight: 600
-    visible: true
+    // Arranca oculta: la geometría guardada se aplica en Component.onCompleted
+    // y recién ahí mostramos, así no se ve el salto de tamaño (default→guardado).
+    visible: false
     color: Theme.windowBg
     flags: Qt.Window | Qt.FramelessWindowHint
 
@@ -162,8 +164,8 @@ ApplicationWindow {
                     BinariesPage    { id: binariesPage }
                     ChatPage        {}
                     AgentPage       {}
-                    BenchmarkPage   {}
                     ResearchPage    {}
+                    BenchmarkPage   {}
                     SettingsPage    {}
                 }
             }
@@ -593,8 +595,11 @@ ApplicationWindow {
         y = savedY
         if (savedMaximized)
             showMaximized()
+        else
+            visible = true
         restoringWindowState = false
 
+        // El escaneo pesado ya corrió en main.cpp bajo el splash → counts listos.
         if (App.needsSetup) setupPopup.open()
     }
 

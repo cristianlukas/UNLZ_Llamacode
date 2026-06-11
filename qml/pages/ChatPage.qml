@@ -10,6 +10,28 @@ Item {
     property var thinkExpanded: ({})
     property var chatAttachments: []
 
+    // ── Ancho del panel de chats (redimensionable + persistente) ─────────
+    property int chatsPanelWidth: 220
+    property int chatsPanelMin: 160
+    property int chatsPanelMax: Math.max(chatsPanelMin, Math.min(520, width - 480))
+    function clampChatsWidth(w) {
+        return Math.max(chatsPanelMin, Math.min(chatsPanelMax, Math.round(w)))
+    }
+    property int _savedChatsWidth: parseInt(App.readSetting("chatPanelWidth", "0")) || 0
+    property bool _cpRestored: false
+    function tryRestoreChatsPanel() {
+        if (_cpRestored) return
+        if (_savedChatsWidth > 0 && chatsPanelMax > chatsPanelMin) {
+            chatsPanelWidth = clampChatsWidth(_savedChatsWidth)
+            _cpRestored = true
+        }
+    }
+    onChatsPanelMaxChanged: {
+        if (!_cpRestored) tryRestoreChatsPanel()
+        else chatsPanelWidth = clampChatsWidth(chatsPanelWidth)
+    }
+    Component.onCompleted: tryRestoreChatsPanel()
+
     function fileName(p) { return p.split(/[\\/]/).pop() }
 
     // Envío normal (idle): texto + adjuntos.
@@ -118,7 +140,7 @@ Item {
 
         // ── Sessions panel ───────────────────────────────────────────────────
         Rectangle {
-            Layout.preferredWidth: 220
+            Layout.preferredWidth: root.chatsPanelWidth
             Layout.fillHeight: true
             visible: App.serverRunning
             color: Theme.surfaceBg
@@ -612,7 +634,48 @@ Item {
             }
         }
 
-        Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider; visible: App.serverRunning }
+        // ── Handle de redimensión del panel de chats ─────────────────────────
+        Item {
+            id: chatsResizeHandle
+            Layout.preferredWidth: 10
+            Layout.fillHeight: true
+            visible: App.serverRunning
+
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: chatsResizeMouse.pressed || chatsResizeHover.hovered ? 3 : 1
+                height: parent.height
+                color: chatsResizeMouse.pressed || chatsResizeHover.hovered
+                       ? Theme.accent : Theme.divider
+            }
+
+            HoverHandler {
+                id: chatsResizeHover
+                cursorShape: Qt.SplitHCursor
+            }
+
+            MouseArea {
+                id: chatsResizeMouse
+                anchors.fill: parent
+                cursorShape: Qt.SplitHCursor
+                property real pressRootX: 0
+                property int pressWidth: root.chatsPanelWidth
+                onPressed: function(mouse) {
+                    pressRootX = mapToItem(root, mouse.x, mouse.y).x
+                    pressWidth = root.chatsPanelWidth
+                }
+                onPositionChanged: function(mouse) {
+                    if (!pressed) return
+                    const currentRootX = mapToItem(root, mouse.x, mouse.y).x
+                    root.chatsPanelWidth = root.clampChatsWidth(pressWidth + currentRootX - pressRootX)
+                }
+                onReleased: {
+                    root._cpRestored = true
+                    root._savedChatsWidth = root.chatsPanelWidth
+                    App.writeSetting("chatPanelWidth", root.chatsPanelWidth)
+                }
+            }
+        }
 
         // ── Main chat area ───────────────────────────────────────────────────
         ColumnLayout {
@@ -668,9 +731,14 @@ Item {
                 Layout.fillHeight: true
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
+                flickDeceleration: 3000
+                maximumFlickVelocity: 6000
                 spacing: 4
                 topMargin: 12
                 bottomMargin: 12
+                // Mantener delegados de arriba medidos: evita que contentHeight se
+                // re-estime al subir (salto/traba) y que maxY quede inflado.
+                cacheBuffer: 4000
                 model: App.chatMessages
                 ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
@@ -732,6 +800,7 @@ Item {
                     readonly property string visibleContentRaw: root.stripThinkBlocks(content)
                     readonly property bool thinkOpen: root.thinkExpanded[msgId] === true
                     readonly property string metaLine: root.formatMeta(modelData)
+                    property bool editing: false
 
                     Rectangle {
                         id: bubbleRect
@@ -819,6 +888,7 @@ Item {
 
                             TextEdit {
                                 id: msgText
+                                visible: !delegateRoot.editing
                                 width: parent.width
                                 text: {
                                     if (delegateRoot.isTyping && delegateRoot.content.length === 0)
@@ -841,6 +911,55 @@ Item {
                                 wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
                                 readOnly: true
                                 selectByMouse: true
+                            }
+
+                            // Edición inline del mensaje (rebobina + reescribe).
+                            Column {
+                                visible: delegateRoot.editing
+                                width: parent.width
+                                spacing: 6
+                                TextArea {
+                                    id: chatEditArea
+                                    width: parent.width
+                                    wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                                    color: Theme.chatAsstText
+                                    font.family: "Segoe UI"
+                                    font.pixelSize: 13
+                                    background: Rectangle {
+                                        color: Theme.surfaceBg; radius: 6
+                                        border.color: Theme.borderColor; border.width: 1
+                                    }
+                                }
+                                Row {
+                                    layoutDirection: Qt.RightToLeft
+                                    width: parent.width
+                                    spacing: 12
+                                    Text {
+                                        text: "Guardar"
+                                        color: chatSaveMA.containsMouse ? Theme.textPrimary : Theme.accent
+                                        font.pixelSize: 11; font.bold: true
+                                        MouseArea {
+                                            id: chatSaveMA
+                                            anchors.fill: parent; hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                App.editChatMessage(index, chatEditArea.text)
+                                                delegateRoot.editing = false
+                                            }
+                                        }
+                                    }
+                                    Text {
+                                        text: "Cancelar"
+                                        color: chatCancelMA.containsMouse ? Theme.textPrimary : Theme.textMuted
+                                        font.pixelSize: 11
+                                        MouseArea {
+                                            id: chatCancelMA
+                                            anchors.fill: parent; hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: delegateRoot.editing = false
+                                        }
+                                    }
+                                }
                             }
                             Text {
                                 visible: metaLine.length > 0
@@ -873,6 +992,41 @@ Item {
                                         }
                                     }
                                 }
+                                // Rebobinar: descarta este turno y los siguientes.
+                                // Solo en mensajes del usuario y sin generación en curso.
+                                Text {
+                                    visible: delegateRoot.isUser && !App.chatGenerating && !delegateRoot.editing
+                                    text: "↩ Rebobinar"
+                                    color: rewindMA.containsMouse ? Theme.textPrimary : Theme.textMuted
+                                    font.pixelSize: 10
+                                    rightPadding: 12
+                                    MouseArea {
+                                        id: rewindMA
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: App.rollbackChatToMessage(index)
+                                    }
+                                }
+                                // Editar: reescribe el texto (de IA o usuario) y descarta lo posterior.
+                                Text {
+                                    visible: !delegateRoot.isTyping && !App.chatGenerating && !delegateRoot.editing
+                                    text: "✎ Editar"
+                                    color: editMA.containsMouse ? Theme.textPrimary : Theme.textMuted
+                                    font.pixelSize: 10
+                                    rightPadding: 12
+                                    MouseArea {
+                                        id: editMA
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            chatEditArea.text = delegateRoot.visibleContentRaw.length > 0
+                                                ? delegateRoot.visibleContentRaw : delegateRoot.content
+                                            delegateRoot.editing = true
+                                        }
+                                    }
+                                }
                             }
                         }
 
@@ -895,10 +1049,17 @@ Item {
 
                 // followBottom se actualiza en vivo con el flick nativo: si el usuario
                 // scrollea hacia arriba durante streaming, dejamos de auto-bajar.
-                onContentYChanged: followBottom = (contentY >= Math.max(0, contentHeight - height) - 2)
+                onContentYChanged: {
+                    // Clamp duro contra overscroll bajo el último mensaje. Solo en
+                    // idle: durante el streaming el contentHeight oscila y el clamp
+                    // pelearía con el auto-follow (scroll brusco).
+                    var maxY = Math.max(0, contentHeight - height)
+                    if (!App.chatGenerating && contentY > maxY) { contentY = maxY; return }
+                    followBottom = (contentY >= maxY - 2)
+                }
                 onMovementEnded: followBottom = atYEnd
                 onContentHeightChanged: if (followBottom) chatBottomTimer.restart()
-                onCountChanged: { followBottom = true; chatBottomTimer.restart() }
+                onCountChanged: if (followBottom) chatBottomTimer.restart()
                 onModelChanged: { followBottom = true; chatBottomTimer.restart() }
 
                 Timer {
@@ -910,13 +1071,17 @@ Item {
                 // Scroll de rueda suave (animado). El step nativo de ListView es
                 // minúsculo frente a contenido largo; animamos cada paso para que
                 // se sienta fluido como el dropdown de Lanzar.
-                NumberAnimation { id: chatWheelAnim; target: msgList; property: "contentY"; duration: 120; easing.type: Easing.OutCubic }
+                NumberAnimation { id: chatWheelAnim; target: msgList; property: "contentY"; duration: 90; easing.type: Easing.OutCubic }
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: function(ev) {
                         var maxY = Math.max(0, msgList.contentHeight - msgList.height)
+                        // Acumular sobre el destino de la anim en curso → spins rápidos
+                        // no se cortan. Paso por muesca ~33% del viewport (mín 120px).
                         var base = chatWheelAnim.running ? chatWheelAnim.to : msgList.contentY
-                        var target = Math.max(0, Math.min(maxY, base - ev.angleDelta.y / 120 * 120))
+                        var step = Math.max(120, msgList.height * 0.33)
+                        var target = Math.max(0, Math.min(maxY, base - (ev.angleDelta.y / 120) * step))
+                        if (target === base) { ev.accepted = true; return }
                         chatWheelAnim.stop(); chatWheelAnim.from = msgList.contentY; chatWheelAnim.to = target; chatWheelAnim.start()
                         ev.accepted = true
                     }

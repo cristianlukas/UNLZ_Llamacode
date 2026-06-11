@@ -37,6 +37,23 @@ QVariant BinaryRegistry::data(const QModelIndex &index, int role) const
     case PathValidRole:    return b.pathValid;
     case HasCapabilitiesRole: return !b.supportedFlags.isEmpty();
     case BinaryHashRole:   return b.binaryHash;
+    case DisplayLabelRole: {
+        // Si hay otro binario con el mismo nombre, agregar la carpeta padre del
+        // exe para distinguirlos (ej. "bin (cpu) · llama-mtp-b9274").
+        bool dup = false;
+        for (int i = 0; i < m_items.size(); ++i) {
+            if (i != index.row() && m_items.at(i).name == b.name) { dup = true; break; }
+        }
+        if (!dup) return b.name;
+        const QString parent = QFileInfo(b.path).absoluteDir().dirName();
+        // Subir un nivel si la carpeta inmediata es genérica ("bin").
+        QString tag = parent;
+        if (tag.compare(QStringLiteral("bin"), Qt::CaseInsensitive) == 0) {
+            const QString up = QFileInfo(QFileInfo(b.path).absolutePath()).dir().dirName();
+            if (!up.isEmpty()) tag = up + QStringLiteral("/") + parent;
+        }
+        return tag.isEmpty() ? b.name : (b.name + QStringLiteral(" · ") + tag);
+    }
     default:               return {};
     }
 }
@@ -53,6 +70,7 @@ QHash<int, QByteArray> BinaryRegistry::roleNames() const
         {PathValidRole,       "pathValid"},
         {HasCapabilitiesRole, "hasCapabilities"},
         {BinaryHashRole,      "binaryHash"},
+        {DisplayLabelRole,    "displayLabel"},
     };
 }
 
@@ -112,6 +130,28 @@ bool BinaryRegistry::update(const QString &id, const QString &name,
     return true;
 }
 
+QString BinaryRegistry::detectBackend(const QString &exePath)
+{
+    const QFileInfo fi(exePath);
+    if (!fi.exists()) return QString();
+    const QDir dir = fi.absoluteDir();
+    // Lista de archivos en la carpeta del exe (DLLs en Windows, .so en Linux).
+    const QStringList libs = dir.entryList(
+        QStringList{ QStringLiteral("*.dll"), QStringLiteral("*.so*") },
+        QDir::Files);
+    const QString joined = libs.join(QLatin1Char('|')).toLower();
+    // CUDA: ggml-cuda, cudart, cublas. Vulkan: ggml-vulkan, vulkan-1.
+    if (joined.contains(QStringLiteral("cuda")) || joined.contains(QStringLiteral("cublas")))
+        return QStringLiteral("cuda");
+    if (joined.contains(QStringLiteral("vulkan")))
+        return QStringLiteral("vulkan");
+    // Pista por ruta como respaldo (ej. ...\cuda12.4\bin\...).
+    const QString p = exePath.toLower();
+    if (p.contains(QStringLiteral("cuda"))) return QStringLiteral("cuda");
+    if (p.contains(QStringLiteral("vulkan"))) return QStringLiteral("vulkan");
+    return QString();   // desconocido: no pisar lo que haya
+}
+
 void BinaryRegistry::detectCapabilities(const QString &id)
 {
     const int idx = indexOfId(id);
@@ -131,6 +171,17 @@ void BinaryRegistry::detectCapabilities(const QString &id)
             b.supportedFlags = caps.flags;
             b.flagAliases = caps.flagAliases;
             b.pathValid = QFileInfo::exists(b.path);
+            // Auto-corregir backend mal etiquetado: si está en el default "cpu"
+            // pero hay DLLs cuda/vulkan al lado, ascender. Nunca degradar.
+            if (b.backend.isEmpty() || b.backend == QLatin1String("cpu")) {
+                const QString det = detectBackend(b.path);
+                if (!det.isEmpty() && det != QLatin1String("cpu")) {
+                    b.backend = det;
+                    if (b.name.endsWith(QStringLiteral("(cpu)")))
+                        b.name = b.name.left(b.name.size() - 5).trimmed()
+                                 + QStringLiteral(" (") + det + QStringLiteral(")");
+                }
+            }
 
             const QModelIndex mi = index(i);
             emit dataChanged(mi, mi);
@@ -157,6 +208,15 @@ bool BinaryRegistry::detectCapabilitiesSync(const QString &id)
     b.supportedFlags = caps.flags;
     b.flagAliases = caps.flagAliases;
     b.pathValid = QFileInfo::exists(b.path);
+    if (b.backend.isEmpty() || b.backend == QLatin1String("cpu")) {
+        const QString det = detectBackend(b.path);
+        if (!det.isEmpty() && det != QLatin1String("cpu")) {
+            b.backend = det;
+            if (b.name.endsWith(QStringLiteral("(cpu)")))
+                b.name = b.name.left(b.name.size() - 5).trimmed()
+                         + QStringLiteral(" (") + det + QStringLiteral(")");
+        }
+    }
 
     const QModelIndex mi = index(idx);
     emit dataChanged(mi, mi);

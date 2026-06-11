@@ -126,6 +126,11 @@ public:
     Q_INVOKABLE bool removeLaunchProfile(const QString &id);
     Q_INVOKABLE bool updateLaunchProfile(const QVariantMap &data);
     Q_INVOKABLE QVariantMap getLaunchProfile(const QString &id) const;
+    // Alias opcional (prioridad sobre name en la UI) y favorito (estrella, arriba).
+    Q_INVOKABLE void setLaunchFavorite(const QString &id, bool favorite);
+    Q_INVOKABLE void setLaunchAlias(const QString &id, const QString &alias);
+    // Perfiles ordenados para dropdowns: favoritos primero, displayName=alias||name.
+    Q_INVOKABLE QVariantList launchProfilesForMenu() const;
     Q_INVOKABLE void saveProfiles() { save(); }
     void reloadFromDisk();
 
@@ -141,6 +146,9 @@ signals:
     void errorOccurred(const QString &message);
     // Emitida cuando los perfiles se recargaron por un cambio externo del archivo.
     void profilesReloaded();
+    // Emitida cuando cambia la lista de launches (alta/baja/edición/alias/favorito)
+    // para que los dropdowns reconstruyan launchProfilesForMenu().
+    void launchesChanged();
 
 private:
     void load();

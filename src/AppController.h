@@ -279,6 +279,11 @@ public:
     Q_INVOKABLE void clearAgentQueue();
     // Rebobinar la conversación del agente al estado previo a un mensaje de usuario.
     Q_INVOKABLE void rollbackAgentToMessage(int msgIndex);
+    // Igual para el chat (RawChatBackend): trunca msgs desde ese índice.
+    Q_INVOKABLE void rollbackChatToMessage(int msgIndex);
+    // Editar el texto de un mensaje (user o IA) y descartar lo posterior.
+    Q_INVOKABLE void editAgentMessage(int msgIndex, const QString &newText);
+    Q_INVOKABLE void editChatMessage(int msgIndex, const QString &newText);
     // Aborta la generación/turno en curso sin matar el backend (botón PARAR).
     Q_INVOKABLE void cancelAgentGeneration();
     Q_INVOKABLE void approveAgentTool(const QString &id, bool always = false);
@@ -361,6 +366,9 @@ public:
     Q_INVOKABLE void openResearchReport(const QString &id);
     Q_INVOKABLE void deleteResearchReport(const QString &id);
     Q_INVOKABLE void rescanHardware();
+    // Escaneo pesado de arranque (binaries/roots/hardware/catálogo + migraciones).
+    // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
+    Q_INVOKABLE void runStartupScan();
     Q_INVOKABLE void downloadRecommendedModel(const QString &repo, const QString &fileName);
     Q_INVOKABLE void openModelRecommendation(const QString &repo);
 

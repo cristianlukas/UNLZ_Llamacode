@@ -72,3 +72,6 @@ LlamaCode.lnk
 
 # Local profile storage (runtime user data, now kept in project root)
 /profiles/
+
+# Launcher rebuild flag (transient)
+BUILD_PENDING

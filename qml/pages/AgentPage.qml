@@ -14,6 +14,27 @@ Item {
     property int idleSeconds: 0
     property var agentAttachments: []
 
+    // ── Ancho del panel de sesiones (redimensionable + persistente) ──────
+    property int sessionsPanelWidth: 220
+    property int sessionsPanelMin: 160
+    property int sessionsPanelMax: Math.max(sessionsPanelMin, Math.min(520, width - 480))
+    function clampSessionsWidth(w) {
+        return Math.max(sessionsPanelMin, Math.min(sessionsPanelMax, Math.round(w)))
+    }
+    property int _savedSessionsWidth: parseInt(App.readSetting("agentSessionsPanelWidth", "0")) || 0
+    property bool _spRestored: false
+    function tryRestoreSessionsPanel() {
+        if (_spRestored) return
+        if (_savedSessionsWidth > 0 && sessionsPanelMax > sessionsPanelMin) {
+            sessionsPanelWidth = clampSessionsWidth(_savedSessionsWidth)
+            _spRestored = true
+        }
+    }
+    onSessionsPanelMaxChanged: {
+        if (!_spRestored) tryRestoreSessionsPanel()
+        else sessionsPanelWidth = clampSessionsWidth(sessionsPanelWidth)
+    }
+
     // @-mentions: estado del autocompletar de archivos.
     property var mentionSuggestions: []
     property int mentionStart: -1      // índice del '@' en el texto
@@ -248,13 +269,12 @@ Item {
     }
 
     Component.onCompleted: {
+        tryRestoreSessionsPanel()
         // Preferir el launch activo (lanzado en "Lanzar"); si no hay, el primero.
         let target = App.activeLaunchId
         if (!target || target.length === 0) {
-            if (App.profileManager.launchProfiles.rowCount() > 0) {
-                const idx = App.profileManager.launchProfiles.index(0, 0)
-                target = App.profileManager.launchProfiles.data(idx, 257) ?? ""
-            }
+            const menu = App.profileManager.launchProfilesForMenu()
+            if (menu.length > 0) target = menu[0].id ?? ""
         }
         if (target && target.length > 0) {
             selectedLaunchId = target
@@ -315,9 +335,20 @@ Item {
                 LcComboBox {
                     id: profileCombo
                     Layout.preferredWidth: 200
-                    model: App.profileManager.launchProfiles
-                    textRole: "name"
-                    valueRole: "profileId"
+                    // Menú ordenado: favoritos (★) arriba; displayName = alias||name.
+                    property var launchMenu: App.profileManager.launchProfilesForMenu()
+                    Connections {
+                        target: App.profileManager
+                        function onLaunchesChanged() {
+                            const sel = profileCombo.currentValue
+                            profileCombo.launchMenu = App.profileManager.launchProfilesForMenu()
+                            const i = profileCombo.indexOfValue(sel)
+                            if (i >= 0) profileCombo.currentIndex = i
+                        }
+                    }
+                    model: launchMenu
+                    textRole: "displayName"
+                    valueRole: "id"
                     enabled: !App.agentRunning
                     background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                     contentItem: Text {
@@ -574,7 +605,7 @@ Item {
 
             // ── Sessions panel ───────────────────────────────────────────────
             Rectangle {
-                Layout.preferredWidth: 220
+                Layout.preferredWidth: root.sessionsPanelWidth
                 Layout.fillHeight: true
                 visible: App.agentRunning && root.currentView === 0
                 color: Theme.surfaceBg
@@ -832,7 +863,48 @@ Item {
                 }
             }
 
-            Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider; visible: App.agentRunning && root.currentView === 0 }
+            // ── Handle de redimensión del panel de sesiones ──────────────────
+            Item {
+                id: sessionsResizeHandle
+                Layout.preferredWidth: 10
+                Layout.fillHeight: true
+                visible: App.agentRunning && root.currentView === 0
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: sessionsResizeMouse.pressed || sessionsResizeHover.hovered ? 3 : 1
+                    height: parent.height
+                    color: sessionsResizeMouse.pressed || sessionsResizeHover.hovered
+                           ? Theme.accent : Theme.divider
+                }
+
+                HoverHandler {
+                    id: sessionsResizeHover
+                    cursorShape: Qt.SplitHCursor
+                }
+
+                MouseArea {
+                    id: sessionsResizeMouse
+                    anchors.fill: parent
+                    cursorShape: Qt.SplitHCursor
+                    property real pressRootX: 0
+                    property int pressWidth: root.sessionsPanelWidth
+                    onPressed: function(mouse) {
+                        pressRootX = mapToItem(root, mouse.x, mouse.y).x
+                        pressWidth = root.sessionsPanelWidth
+                    }
+                    onPositionChanged: function(mouse) {
+                        if (!pressed) return
+                        const currentRootX = mapToItem(root, mouse.x, mouse.y).x
+                        root.sessionsPanelWidth = root.clampSessionsWidth(pressWidth + currentRootX - pressRootX)
+                    }
+                    onReleased: {
+                        root._spRestored = true
+                        root._savedSessionsWidth = root.sessionsPanelWidth
+                        App.writeSetting("agentSessionsPanelWidth", root.sessionsPanelWidth)
+                    }
+                }
+            }
 
             // ── Main content area ────────────────────────────────────────────
             Item {
@@ -902,9 +974,14 @@ Item {
                     anchors.fill: parent
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
+                    flickDeceleration: 3000
+                    maximumFlickVelocity: 6000
                     spacing: 4
                     topMargin: 12
                     bottomMargin: 12
+                    // Mantener delegados de arriba medidos: evita que contentHeight
+                    // se re-estime al subir (causa del salto/traba hacia arriba).
+                    cacheBuffer: 4000
                     visible: App.agentMessages.length > 0
                     model: App.agentMessages
                     ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
@@ -926,6 +1003,7 @@ Item {
                             : (modelData.content ?? "")
                         readonly property bool isTyping: modelData.typing ?? false
                         readonly property string metaLine: root.formatMeta(modelData)
+                        property bool editing: false
 
                         Rectangle {
                             id: bubbleRect
@@ -951,6 +1029,7 @@ Item {
 
                                 TextEdit {
                                     id: msgText
+                                    visible: !delegateRoot.editing
                                     width: parent.width
                                     text: {
                                         if (delegateRoot.isTyping && delegateRoot.content.length === 0)
@@ -970,6 +1049,55 @@ Item {
                                     wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
                                     readOnly: true
                                     selectByMouse: true
+                                }
+
+                                // Edición inline del mensaje (rebobina + reescribe).
+                                Column {
+                                    visible: delegateRoot.editing
+                                    width: parent.width
+                                    spacing: 6
+                                    TextArea {
+                                        id: agentEditArea
+                                        width: parent.width
+                                        wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                                        color: Theme.chatAsstText
+                                        font.family: "Segoe UI"
+                                        font.pixelSize: 13
+                                        background: Rectangle {
+                                            color: Theme.surfaceBg; radius: 6
+                                            border.color: Theme.borderColor; border.width: 1
+                                        }
+                                    }
+                                    Row {
+                                        layoutDirection: Qt.RightToLeft
+                                        width: parent.width
+                                        spacing: 12
+                                        Text {
+                                            text: "Guardar"
+                                            color: agentSaveMA.containsMouse ? Theme.textPrimary : Theme.accent
+                                            font.pixelSize: 11; font.bold: true
+                                            MouseArea {
+                                                id: agentSaveMA
+                                                anchors.fill: parent; hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    App.editAgentMessage(index, agentEditArea.text)
+                                                    delegateRoot.editing = false
+                                                }
+                                            }
+                                        }
+                                        Text {
+                                            text: "Cancelar"
+                                            color: agentCancelMA.containsMouse ? Theme.textPrimary : Theme.textMuted
+                                            font.pixelSize: 11
+                                            MouseArea {
+                                                id: agentCancelMA
+                                                anchors.fill: parent; hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: delegateRoot.editing = false
+                                            }
+                                        }
+                                    }
                                 }
                                 Text {
                                     visible: delegateRoot.metaLine.length > 0
@@ -1006,7 +1134,7 @@ Item {
                                     // Rebobinar: descarta este turno y los siguientes
                                     // (revierte edits posteriores). Solo en mensajes del usuario.
                                     Text {
-                                        visible: delegateRoot.isUser && !root.hasTypingMessage && !root.waitingApproval
+                                        visible: delegateRoot.isUser && !root.hasTypingMessage && !root.waitingApproval && !delegateRoot.editing
                                         text: "↩ Rebobinar"
                                         color: rewindMA.containsMouse ? Theme.textPrimary : Theme.textMuted
                                         font.pixelSize: 10
@@ -1016,6 +1144,23 @@ Item {
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: App.rollbackAgentToMessage(index)
+                                        }
+                                    }
+                                    // Editar: reescribe el texto (de IA o usuario) y descarta lo posterior.
+                                    Text {
+                                        visible: !root.hasTypingMessage && !root.waitingApproval && !delegateRoot.editing
+                                        text: "✎ Editar"
+                                        color: editMA.containsMouse ? Theme.textPrimary : Theme.textMuted
+                                        font.pixelSize: 10
+                                        MouseArea {
+                                            id: editMA
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                agentEditArea.text = delegateRoot.content
+                                                delegateRoot.editing = true
+                                            }
                                         }
                                     }
                                 }
@@ -1264,12 +1409,21 @@ Item {
                     // followBottom se actualiza en vivo con cualquier cambio de
                     // posición (flick nativo o rueda animada): si el usuario sube,
                     // dejamos de auto-bajar durante el streaming.
-                    onContentYChanged: followBottom = (contentY >= Math.max(0, contentHeight - height) - 2)
+                    onContentYChanged: {
+                        // Clamp duro contra overscroll bajo el último mensaje. Solo en
+                        // idle: durante el turno el contentHeight oscila y el clamp
+                        // pelearía con el auto-follow (scroll brusco).
+                        var maxY = Math.max(0, contentHeight - height)
+                        if (!App.agentRunning && contentY > maxY) { contentY = maxY; return }
+                        followBottom = (contentY >= maxY - 2)
+                    }
                     onMovementEnded: followBottom = atYEnd
                     // Throttle: durante streaming el contentHeight cambia por token.
                     // Un solo callLater coalescido evita reflows en cascada.
                     onContentHeightChanged: if (followBottom) bottomTimer.restart()
-                    onCountChanged: { followBottom = true; bottomTimer.restart() }
+                    // Sólo re-pegar al fondo si el usuario YA estaba abajo. Si subió
+                    // a leer, un mensaje/token nuevo no lo arrastra de vuelta.
+                    onCountChanged: if (followBottom) bottomTimer.restart()
 
                     Timer {
                         id: bottomTimer
@@ -1279,13 +1433,20 @@ Item {
 
                     // Rueda del mouse: scroll animado y suave (el step nativo es
                     // minúsculo frente a un contentHeight enorme).
-                    NumberAnimation { id: agentWheelAnim; target: msgList; property: "contentY"; duration: 120; easing.type: Easing.OutCubic }
+                    NumberAnimation { id: agentWheelAnim; target: msgList; property: "contentY"; duration: 90; easing.type: Easing.OutCubic }
                     WheelHandler {
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                         onWheel: function(ev) {
                             var maxY = Math.max(0, msgList.contentHeight - msgList.height)
+                            // Acumular sobre el destino de la anim en curso (no sobre
+                            // contentY a mitad de animación) → spins rápidos no se cortan.
                             var base = agentWheelAnim.running ? agentWheelAnim.to : msgList.contentY
-                            var target = Math.max(0, Math.min(maxY, base - ev.angleDelta.y / 120 * 120))
+                            // Paso por muesca proporcional al viewport (~3 líneas reales),
+                            // mínimo 120px. angleDelta.y = 120 por muesca de rueda.
+                            var notch = ev.angleDelta.y / 120
+                            var step = Math.max(120, msgList.height * 0.33)
+                            var target = Math.max(0, Math.min(maxY, base - notch * step))
+                            if (target === base) { ev.accepted = true; return }
                             agentWheelAnim.stop(); agentWheelAnim.from = msgList.contentY; agentWheelAnim.to = target; agentWheelAnim.start()
                             ev.accepted = true
                         }

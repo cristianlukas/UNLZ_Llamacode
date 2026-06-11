@@ -18,8 +18,8 @@ Rectangle {
         { key: "nav.binaries", icon: "⚙",   serverOnly: false },
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
         { key: "agent.title",   icon: "🤖",  serverOnly: true  },
-        { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
+        { key: "nav.benchmark", icon: "📊",  serverOnly: false },
     ]
 
     ColumnLayout {

@@ -15,6 +15,7 @@ Item {
     property string runtimeNameCurrent: ""
     property bool mmprojEnabled: false
     property bool draftEnabled: false
+    property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool smokeTestRunning: false
     property string harnessAdapter: "none"
     property string harnessProfileId: ""
@@ -226,6 +227,10 @@ Item {
         const rawExtra = (lp.extraArgs ?? [])
         manualExtraArgsArea.text = formatArgsForDisplay(extractManualArgs(rawExtra))
 
+        // Alias (display) opcional + favorito del perfil.
+        root.launchFavorite = (lp.favorite === true)
+        profileAliasField.text = lp.alias ?? ""
+
         const bp = App.profileManager.getBackend(backendId)
         backendNameCurrent = bp.name ?? ""
         backendHost.text = bp.host ?? "127.0.0.1"
@@ -410,6 +415,7 @@ Item {
 
         const lpOk = App.profileManager.updateLaunchProfile({
             "id": selectedLaunchId, "name": launchCombo.displayText,
+            "alias": profileAliasField.text.trim(), "favorite": root.launchFavorite,
             "backendProfileId": effectiveBid, "modelProfileId": effectiveMid,
             "runtimePresetId": effectiveRid, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
             "harnessProfileId": resolvedHarnessId
@@ -502,6 +508,27 @@ Item {
                                 text: launchCombo.displayText.length > 0 ? launchCombo.displayText : (App.langV, App.l("common.selectPlaceholder"))
                                 color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter
                             }
+                        }
+                        // Favorito (★): se guarda al instante y manda el perfil arriba del dropdown.
+                        LcButton {
+                            text: root.launchFavorite ? "★" : "☆"
+                            secondary: true
+                            enabled: selectedLaunchId.length > 0
+                            ToolTip.visible: hovered
+                            ToolTip.text: root.launchFavorite ? "Quitar de favoritos" : "Marcar favorito"
+                            onClicked: {
+                                root.launchFavorite = !root.launchFavorite
+                                App.profileManager.setLaunchFavorite(selectedLaunchId, root.launchFavorite)
+                            }
+                        }
+                        // Alias opcional (prioridad sobre el nombre en los dropdowns).
+                        LcTextField {
+                            id: profileAliasField
+                            Layout.preferredWidth: 160
+                            placeholderText: "Alias (opcional)"
+                            enabled: selectedLaunchId.length > 0
+                            onEditingFinished: if (selectedLaunchId.length > 0)
+                                App.profileManager.setLaunchAlias(selectedLaunchId, text.trim())
                         }
                         LcButton {
                             text: {
@@ -758,7 +785,7 @@ Item {
                             id: backendBinary
                             Layout.fillWidth: true
                             model: App.binaryRegistry
-                            textRole: "name"; valueRole: "binId"
+                            textRole: "displayLabel"; valueRole: "binId"
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: backendBinary.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }

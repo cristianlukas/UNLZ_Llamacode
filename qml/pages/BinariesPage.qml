@@ -72,7 +72,15 @@ Item {
             id: fileDlg
             title: (App.langV, App.l("binaries.selectTitle"))
             nameFilters: ["Executables (*.exe *.bin *)", "All files (*)"]
-            onAccepted: pathField.text = selectedFile.toString().replace(/^file:\/\/\//, "")
+            onAccepted: {
+                pathField.text = selectedFile.toString().replace(/^file:\/\/\//, "")
+                // Auto-seleccionar backend según las DLLs junto al exe.
+                const det = App.binaryRegistry.detectBackend(pathField.text)
+                if (det.length > 0) {
+                    const i = ["cpu", "cuda", "vulkan", "metal"].indexOf(det)
+                    if (i >= 0) backendCombo.currentIndex = i
+                }
+            }
         }
     }
 

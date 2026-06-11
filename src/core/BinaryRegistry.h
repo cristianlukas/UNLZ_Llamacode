@@ -18,7 +18,8 @@ public:
         VersionHintRole,
         PathValidRole,
         HasCapabilitiesRole,
-        BinaryHashRole
+        BinaryHashRole,
+        DisplayLabelRole   // name + carpeta padre, para desambiguar duplicados
     };
 
     explicit BinaryRegistry(QObject *parent = nullptr);
@@ -44,6 +45,11 @@ public:
     Q_INVOKABLE QVariantMap get(const QString &id) const;
     Q_INVOKABLE void refresh();
     Q_INVOKABLE QStringList supportedFlags(const QString &id) const;
+
+    // Infiere el backend ("cuda"/"vulkan"/"cpu") inspeccionando las DLLs/.so
+    // que acompañan al ejecutable. Devuelve "" si no puede determinarlo.
+    // Lo usa el diálogo de Binarios al elegir un path y la detección de caps.
+    Q_INVOKABLE static QString detectBackend(const QString &exePath);
 
     LlamaBinary findById(const QString &id) const;
 

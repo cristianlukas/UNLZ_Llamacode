@@ -123,6 +123,7 @@ QString WorkspaceProfile::generateId() { return newId(); }
 QJsonObject LaunchProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
+    o["alias"] = alias; o["favorite"] = favorite;
     o["backendProfileId"] = backendProfileId;
     o["modelProfileId"] = modelProfileId;
     o["runtimePresetId"] = runtimePresetId;
@@ -135,6 +136,8 @@ QJsonObject LaunchProfile::toJson() const {
 LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     LaunchProfile p;
     p.id = o["id"].toString(); p.name = o["name"].toString();
+    p.alias = o["alias"].toString();
+    p.favorite = o["favorite"].toBool(false);
     p.backendProfileId = o["backendProfileId"].toString();
     p.modelProfileId = o["modelProfileId"].toString();
     // Normally a string id. Tolerate an inline preset object (manual edits /

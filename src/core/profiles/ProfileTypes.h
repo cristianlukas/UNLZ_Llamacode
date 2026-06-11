@@ -78,6 +78,8 @@ struct WorkspaceProfile {
 struct LaunchProfile {
     QString id;
     QString name;
+    QString alias;            // opcional; tiene prioridad sobre name en la UI
+    bool    favorite = false; // marcados con estrella y ordenados arriba
     QString backendProfileId;
     QString modelProfileId;
     QString runtimePresetId;

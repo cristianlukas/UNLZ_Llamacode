@@ -11,6 +11,10 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QtMessageHandler>
+#include <QSplashScreen>
+#include <QPixmap>
+#include <QPainter>
+#include <QWindow>
 
 static QFile s_logFile;
 static QTextStream s_logStream;
@@ -60,10 +64,34 @@ int main(int argc, char *argv[])
 
     qDebug() << "QApplication ready";
 
+    // Splash nativo: se muestra ANTES de cargar QML y cubre el escaneo pesado de
+    // arranque (runStartupScan). Se cierra cuando la ventana principal aparece.
+    QPixmap splashPix(360, 160);
+    splashPix.fill(QColor(0x1e, 0x1e, 0x22));
+    {
+        QPainter p(&splashPix);
+        QPixmap icon(":/assets/app_icon.png");
+        if (!icon.isNull())
+            p.drawPixmap((360 - 64) / 2, 28, icon.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        p.setPen(QColor(0xe0, 0xe0, 0xe0));
+        QFont f = p.font(); f.setPointSize(11); p.setFont(f);
+        p.drawText(QRect(0, 104, 360, 24), Qt::AlignCenter, "LlamaCode");
+        p.setPen(QColor(0x9a, 0x9a, 0x9a));
+        f.setPointSize(9); p.setFont(f);
+        p.drawText(QRect(0, 128, 360, 20), Qt::AlignCenter, "Cargando…");
+    }
+    QSplashScreen splash(splashPix);
+    splash.show();
+    app.processEvents();
+
     AppController controller;
     ThemeProvider theme;
 
     qDebug() << "Controllers ready";
+
+    // Escaneo pesado (binaries/roots/hardware/catálogo) con el splash visible.
+    controller.runStartupScan();
+    qDebug() << "Startup scan done";
 
     QQmlApplicationEngine engine;
 
@@ -92,6 +120,20 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty()) {
         qCritical() << "No root objects — QML load failed";
         return -1;
+    }
+
+    // Cerrar el splash cuando la ventana principal se haga visible (la geometría
+    // se restaura en Main.qml Component.onCompleted → visible=true / showMaximized).
+    if (auto *win = qobject_cast<QWindow *>(engine.rootObjects().constFirst())) {
+        if (win->isVisible()) {
+            splash.close();
+        } else {
+            QObject::connect(win, &QWindow::visibleChanged, &splash, [&splash](bool v) {
+                if (v) splash.close();
+            });
+        }
+    } else {
+        splash.close();
     }
 
     qDebug() << "QML loaded OK — entering event loop";

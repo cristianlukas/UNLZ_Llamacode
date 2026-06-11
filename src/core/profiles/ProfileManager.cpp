@@ -279,13 +279,14 @@ QString ProfileManager::addLaunchProfile(const QString &name,
     p.runtimePresetId = runtimeId;
     m_launches.add(p);
     save();
+    emit launchesChanged();
     return p.id;
 }
 
 bool ProfileManager::removeLaunchProfile(const QString &id)
 {
     bool ok = m_launches.remove(id);
-    if (ok) save();
+    if (ok) { save(); emit launchesChanged(); }
     return ok;
 }
 
@@ -302,6 +303,8 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     }
     const QString newName = data.value("name", p.name).toString();
     p.name = QStringLiteral("%1_%2").arg(seq).arg(stripSeq(newName));
+    if (data.contains("alias"))    p.alias = data.value("alias").toString();
+    if (data.contains("favorite")) p.favorite = data.value("favorite").toBool();
     p.backendProfileId = data.value("backendProfileId", p.backendProfileId).toString();
     p.modelProfileId = data.value("modelProfileId", p.modelProfileId).toString();
     p.runtimePresetId = data.value("runtimePresetId", p.runtimePresetId).toString();
@@ -309,7 +312,7 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.workspaceProfileId = data.value("workspaceProfileId", p.workspaceProfileId).toString();
     p.extraArgs = data.value("extraArgs", p.extraArgs).toStringList();
     bool ok = m_launches.update(p);
-    if (ok) save();
+    if (ok) { save(); emit launchesChanged(); }
     return ok;
 }
 
@@ -318,12 +321,53 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
     const auto p = m_launches.findById(id);
     if (p.id.isEmpty()) return {};
     return {{"id", p.id}, {"name", p.name},
+            {"alias", p.alias}, {"favorite", p.favorite},
+            {"displayName", p.alias.isEmpty() ? p.name : p.alias},
             {"backendProfileId", p.backendProfileId},
             {"modelProfileId", p.modelProfileId},
             {"runtimePresetId", p.runtimePresetId},
             {"harnessProfileId", p.harnessProfileId},
             {"workspaceProfileId", p.workspaceProfileId},
             {"extraArgs", p.extraArgs}};
+}
+
+void ProfileManager::setLaunchFavorite(const QString &id, bool favorite)
+{
+    LaunchProfile p = m_launches.findById(id);
+    if (p.id.isEmpty() || p.favorite == favorite) return;
+    p.favorite = favorite;
+    if (m_launches.update(p)) { save(); emit launchesChanged(); }
+}
+
+void ProfileManager::setLaunchAlias(const QString &id, const QString &alias)
+{
+    LaunchProfile p = m_launches.findById(id);
+    if (p.id.isEmpty() || p.alias == alias) return;
+    p.alias = alias;
+    if (m_launches.update(p)) { save(); emit launchesChanged(); }
+}
+
+// Lista de perfiles de lanzamiento para dropdowns: favoritos primero (estrella),
+// luego por id incremental; displayName = alias || name.
+QVariantList ProfileManager::launchProfilesForMenu() const
+{
+    QList<LaunchProfile> items = m_launches.m_items;
+    std::stable_sort(items.begin(), items.end(),
+        [](const LaunchProfile &a, const LaunchProfile &b) {
+            if (a.favorite != b.favorite) return a.favorite;     // favoritos arriba
+            return seqOf(a.name) < seqOf(b.name);                // luego por nº incremental
+        });
+    QVariantList out;
+    for (const auto &p : items) {
+        const QString base = p.alias.isEmpty() ? p.name : p.alias;
+        out.append(QVariantMap{
+            {"id", p.id}, {"name", p.name}, {"alias", p.alias},
+            {"favorite", p.favorite},
+            // displayName lleva la estrella para que se vea en el dropdown y en
+            // el texto seleccionado; alias tiene prioridad sobre name.
+            {"displayName", p.favorite ? QStringLiteral("★ ") + base : base}});
+    }
+    return out;
 }
 
 // ---- Resolvers ----

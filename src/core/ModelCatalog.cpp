@@ -147,6 +147,9 @@ void ModelCatalog::setFilterVisionOnly(bool v)
 
 void ModelCatalog::addOrUpdate(const CatalogModel &model)
 {
+    // El scanner ahora genera ids DETERMINISTAS por ruta (UUIDv5), así que el id
+    // entrante para un mismo archivo es siempre el mismo. Adoptarlo en match por
+    // ruta hace converger filas viejas (ids aleatorios legacy) al id estable.
     const int idx = indexOfId(model.id);
     if (idx >= 0) {
         m_all[idx] = model;
@@ -177,7 +180,7 @@ void ModelCatalog::addBatch(const QList<CatalogModel> &models)
             int pathIdx = -1;
             for (int i = 0; i < m_all.size(); ++i)
                 if (m_all[i].absolutePath == m.absolutePath) { pathIdx = i; break; }
-            if (pathIdx >= 0) m_all[pathIdx] = m;
+            if (pathIdx >= 0) m_all[pathIdx] = m;   // converge a id determinista por ruta
             else m_all.append(m);
         }
         saveToDb(m);

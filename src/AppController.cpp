@@ -23,6 +23,9 @@
 #include "core/agent/McpClient.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 #include <QDir>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -210,16 +213,66 @@ AppController::AppController(QObject *parent) : QObject(parent)
     appendFileLog(m_agentLogFilePath, QStringLiteral("\n=== session %1 ===\n")
         .arg(QDateTime::currentDateTime().toString(Qt::ISODateWithMs)));
 
-    m_binaries.refresh();
-    m_roots.refresh();
     connect(&m_binaries, &BinaryRegistry::countChanged, this, &AppController::setupStateChanged);
     connect(&m_catalog, &ModelCatalog::countChanged, this, &AppController::setupStateChanged);
+    // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
+    // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
+    // acá en el constructor y congelaba ~3s antes de mostrar la ventana.
+}
+
+void AppController::runStartupScan()
+{
+    m_binaries.refresh();
+    m_roots.refresh();
     rescanHardware();
+
+    // Diagnóstico de catálogo: comparar lo cargado en memoria contra las filas
+    // reales en el .db, para detectar fallos de carga (→ rescans con ids nuevos
+    // que orfanan los modelId de los perfiles).
+    {
+        const QString dbp = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+                            + QStringLiteral("/model_catalog.db");
+        int dbRows = -1; QString dbErr; bool opened = false;
+        {
+            const QString cn = QStringLiteral("diagcat_%1").arg(QCoreApplication::applicationPid());
+            QSqlDatabase d = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), cn);
+            d.setDatabaseName(dbp);
+            opened = d.open();
+            if (opened) {
+                QSqlQuery q(QStringLiteral("SELECT COUNT(*) FROM catalog_models"), d);
+                if (q.next()) dbRows = q.value(0).toInt(); else dbErr = q.lastError().text();
+                d.close();
+            } else {
+                dbErr = d.lastError().text();
+            }
+            QSqlDatabase::removeDatabase(cn);
+        }
+        appendServerEvent(QStringLiteral("lifecycle"),
+            QStringLiteral("catalog diag: inMemory=%1 dbRows=%2 dbOpen=%3 path=%4 err=%5 driversAvail=%6")
+                .arg(QString::number(m_catalog.count()),
+                     QString::number(dbRows),
+                     opened ? QStringLiteral("yes") : QStringLiteral("NO"),
+                     dbp,
+                     dbErr.isEmpty() ? QStringLiteral("-") : dbErr,
+                     QSqlDatabase::drivers().join(QLatin1Char(','))));
+    }
 
     // If folders are registered but no models were found yet (e.g. a root added
     // in "manual" mode), scan them once on startup so the catalog is populated.
     if (m_roots.count() > 0 && m_catalog.count() == 0)
         m_roots.scanAll();
+
+    // Migración única a ids de catálogo DETERMINISTAS (UUIDv5 por ruta). Las filas
+    // existentes traen ids aleatorios legacy; forzamos un rescan para reescribirlas
+    // con el id estable por ruta (converge en addBatch). Sin esto, scanAll sólo
+    // corre con catálogo vacío y los ids viejos nunca se actualizan.
+    if (QString(readSetting(QStringLiteral("catalog/idSchemeV5"), QString()).toString()) != QLatin1String("done")) {
+        if (m_roots.count() > 0)
+            m_roots.scanAll();
+        writeSetting(QStringLiteral("catalog/idSchemeV5"), QStringLiteral("done"));
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("catalog: migrado a ids deterministas (rescan forzado)."));
+    }
     refreshResearchReports();
 }
 
@@ -423,6 +476,9 @@ void AppController::startRouter(const QStringList &launchProfileIds, int modelsM
 void AppController::startServer(const QString &launchProfileId)
 {
     if (serverRunning()) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("startServer abort: servidor ya en ejecución (pid=%1)")
+                              .arg(m_proc ? QString::number(m_proc->processId()) : QStringLiteral("?")));
         emit serverError("Server already running. Stop it first.");
         return;
     }
@@ -445,6 +501,21 @@ void AppController::startServer(const QString &launchProfileId)
 
     if (!m_effectiveProfile.value("isValid", false).toBool()) {
         const QStringList errors = m_effectiveProfile.value("blockingErrors").toStringList();
+        // Diagnóstico: dump resolución modelo/catálogo para distinguir
+        // "catálogo vacío" vs "modelId no resuelve".
+        const auto ctx = buildContext(launchProfileId);
+        appendServerEvent(QStringLiteral("lifecycle"),
+            QStringLiteral("startServer abort: perfil inválido (%1): %2 | diag: catalogCount=%3 "
+                           "modelProfileId=%4 model.modelId=%5 catalogModel.id=%6 isAvailable=%7")
+                .arg(launchProfileId,
+                     errors.join(QStringLiteral("; ")),
+                     QString::number(m_catalog.count()),
+                     ctx.launch.modelProfileId,
+                     ctx.model.modelId,
+                     ctx.catalogModel.id,
+                     ctx.catalogModel.id.isEmpty() ? QStringLiteral("n/a")
+                                                   : (ctx.catalogModel.isAvailable ? QStringLiteral("1")
+                                                                                   : QStringLiteral("0"))));
         emit serverError("Cannot start: " + errors.join("; "));
         return;
     }
@@ -457,12 +528,17 @@ void AppController::startServer(const QString &launchProfileId)
     {
         QFileInfo bi(binaryPath);
         if (binaryPath.isEmpty() || !bi.exists() || !bi.isFile()) {
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("startServer abort: binario inexistente: %1")
+                                  .arg(binaryPath.isEmpty() ? QStringLiteral("(vacío)") : binaryPath));
             emit serverError(QStringLiteral(
                 "El binario del perfil no existe: %1. Revisá la ruta en la página Binarios.")
                                  .arg(binaryPath.isEmpty() ? QStringLiteral("(vacío)") : binaryPath));
             return;
         }
         if (!bi.isExecutable()) {
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("startServer abort: binario no ejecutable: %1").arg(binaryPath));
             emit serverError(QStringLiteral(
                 "El binario no es ejecutable: %1.").arg(binaryPath));
             return;
@@ -485,6 +561,9 @@ void AppController::startServer(const QString &launchProfileId)
         else if (host == QStringLiteral("localhost"))
             addr = QHostAddress(QHostAddress::LocalHost);
         if (!probe.listen(addr, port)) {
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("startServer abort: puerto %1 (%2) ocupado: %3")
+                                  .arg(QString::number(port), host, probe.errorString()));
             emit serverError(QStringLiteral(
                 "El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
                                  .arg(port));
@@ -2145,6 +2224,24 @@ void AppController::rollbackAgentToMessage(int msgIndex)
 {
     if (auto *la = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         la->rollbackToMessage(msgIndex);
+}
+
+void AppController::rollbackChatToMessage(int msgIndex)
+{
+    if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
+        raw->rollbackToMessage(msgIndex);
+}
+
+void AppController::editAgentMessage(int msgIndex, const QString &newText)
+{
+    if (auto *la = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        la->editMessage(msgIndex, newText);
+}
+
+void AppController::editChatMessage(int msgIndex, const QString &newText)
+{
+    if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
+        raw->editMessage(msgIndex, newText);
 }
 
 void AppController::clearAgentLog()

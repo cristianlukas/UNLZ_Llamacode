@@ -258,6 +258,33 @@ void RawChatBackend::refreshSessions()
     emit sessionsChanged();
 }
 
+void RawChatBackend::rollbackToMessage(int msgIndex)
+{
+    if (m_reply) { emit errorOccurred(QStringLiteral("No se puede rebobinar con una respuesta en curso.")); return; }
+    if (msgIndex < 0 || msgIndex >= m_messages.size()) return;
+    // Descarta este mensaje de usuario y todo lo posterior. El request se arma
+    // de m_messages, así que truncar = rebobinar el contexto.
+    while (m_messages.size() > msgIndex) m_messages.removeLast();
+    m_curAsstIdx = -1;
+    saveCurrentMessages();
+    emit messagesChanged();
+}
+
+void RawChatBackend::editMessage(int msgIndex, const QString &newText)
+{
+    if (m_reply) { emit errorOccurred(QStringLiteral("No se puede editar con una respuesta en curso.")); return; }
+    if (msgIndex < 0 || msgIndex >= m_messages.size()) return;
+    // Conserva este mensaje con el texto editado y descarta todo lo posterior.
+    QVariantMap m = m_messages[msgIndex].toMap();
+    m[QStringLiteral("content")] = newText;
+    m[QStringLiteral("typing")] = false;
+    m_messages[msgIndex] = m;
+    while (m_messages.size() > msgIndex + 1) m_messages.removeLast();
+    m_curAsstIdx = -1;
+    saveCurrentMessages();
+    emit messagesChanged();
+}
+
 void RawChatBackend::sendMessage(const QString &text)
 {
     const QString trimmed = text.trimmed();
@@ -423,14 +450,24 @@ void RawChatBackend::sendMessage(const QString &text)
                     ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
                     : 0.0;
                 m_messages[m_curAsstIdx] = asst;
-                saveCurrentMessages();
-                emit messagesChanged();
+                // NO guardar a disco por token (persistSession serializa + escribe
+                // → congelaba el hilo GUI). Se guarda al terminar. El emit se
+                // throttlea para no reconstruir todos los delegates por token.
+                if (!m_streamEmitTimer) {
+                    m_streamEmitTimer = new QTimer(this);
+                    m_streamEmitTimer->setInterval(40);
+                    m_streamEmitTimer->setSingleShot(true);
+                    connect(m_streamEmitTimer, &QTimer::timeout, this, [this]() { emit messagesChanged(); });
+                }
+                if (!m_streamEmitTimer->isActive())
+                    m_streamEmitTimer->start();
             }
         }
     });
 
     connect(m_reply, &QNetworkReply::finished, this, [this]() {
         if (!m_reply) return;
+        if (m_streamEmitTimer) m_streamEmitTimer->stop();  // el emit final va abajo
         const bool ok = m_reply->error() == QNetworkReply::NoError;
         const QString err = m_reply->errorString();
         m_reply->deleteLater();
