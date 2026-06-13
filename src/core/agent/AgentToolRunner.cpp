@@ -1,6 +1,7 @@
 #include "AgentToolRunner.h"
 #include "McpClient.h"
 #include "LlamaAgentBackend.h"   // LlamaAgentBackend::makeDiff (static)
+#include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -292,6 +293,42 @@ static float cosineSim(const QVector<float> &a, const QVector<float> &b)
     for (int i = 0; i < a.size(); ++i) { dot += double(a[i]) * b[i]; na += double(a[i]) * a[i]; nb += double(b[i]) * b[i]; }
     if (na == 0 || nb == 0) return 0.f;
     return float(dot / (std::sqrt(na) * std::sqrt(nb)));
+}
+
+// Llama /rerank (llama-server con --reranking, p.ej. Qwen3-Reranker) → score de
+// relevancia por doc, alineado al orden de 'docs'. Vector vacío si el endpoint no
+// existe o falla (el caller cae a la fusión sin reranker). "" en *err si OK.
+static QVector<float> rerankTexts(const QString &baseUrl, const QString &query,
+                                  const QStringList &docs, QString *err)
+{
+    QVector<float> out;
+    if (baseUrl.isEmpty() || docs.isEmpty()) {
+        if (err) *err = QStringLiteral("sin server/docs"); return out;
+    }
+    QJsonArray arr;
+    for (const QString &d : docs) arr.append(d);
+    const QJsonObject payload{
+        {QStringLiteral("query"), query},
+        {QStringLiteral("documents"), arr},
+        {QStringLiteral("model"), QStringLiteral("llamacode-rerank")}};
+    const QByteArray body = httpPostJson(QUrl(baseUrl + QStringLiteral("/rerank")),
+                                         QJsonDocument(payload).toJson(QJsonDocument::Compact), err);
+    if (body.isEmpty()) return out;
+    const QJsonArray results = QJsonDocument::fromJson(body).object()
+                                   .value(QStringLiteral("results")).toArray();
+    if (results.isEmpty()) {
+        if (err) *err = QStringLiteral("respuesta sin results (¿server sin --reranking?)");
+        return out;
+    }
+    out.resize(docs.size());
+    for (const QJsonValue &rv : results) {
+        const QJsonObject o = rv.toObject();
+        const int idx = o.value(QStringLiteral("index")).toInt();
+        const double score = o.value(QStringLiteral("relevance_score"))
+                                 .toDouble(o.value(QStringLiteral("score")).toDouble());
+        if (idx >= 0 && idx < out.size()) out[idx] = float(score);
+    }
+    return out;
 }
 
 AgentToolRunner::AgentToolRunner(QObject *parent) : QObject(parent) {}
@@ -747,6 +784,230 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                              .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString());
         return header + out.join(QStringLiteral("\n\n──────\n"));
     }
+    if (name == QLatin1String("hybrid_search")) {
+        // RAG HÍBRIDO: fusiona BM25 (keywords) + vectorial (embeddings) por
+        // Reciprocal Rank Fusion, y RE-RANKEA el top con /rerank si el server lo
+        // soporta. Es la mejor recuperación disponible: combiná esto antes de
+        // razonar sobre el repo. Cae a fusión sin reranker si no hay endpoint.
+        const QString query = args.value(QStringLiteral("query")).toString().trimmed();
+        if (query.isEmpty()) return QStringLiteral("[query vacía]");
+        int k = args.value(QStringLiteral("k")).toInt();
+        if (k <= 0) k = 6;
+        k = qBound(1, k, 15);
+        const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
+        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+
+        // Términos de la query para BM25.
+        QStringList terms;
+        for (const QString &t : query.toLower().split(
+                 QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_]+")), Qt::SkipEmptyParts))
+            if (t.size() >= 2 && !terms.contains(t)) terms << t;
+
+        struct Ch { QString rel; int line; QString key; QString text; double bm25; };
+        QVector<Ch> chunks;
+        const int chunkLines = 40, maxChunks = 800;
+        QStringList files;
+        collectFiles(rootAbs, files, 8000);
+        bool truncated = false;
+        for (const QString &fp : files) {
+            if (chunks.size() >= maxChunks) { truncated = true; break; }
+            QFileInfo fi(fp);
+            if (fi.size() > 1024 * 1024) continue;
+            QFile f(fp);
+            if (!f.open(QIODevice::ReadOnly)) continue;
+            const QByteArray raw = f.read(1024 * 1024);
+            if (raw.contains('\0')) continue;
+            const QStringList lines = QString::fromUtf8(raw).split(QLatin1Char('\n'));
+            const QString rel = base.relativeFilePath(fp);
+            for (int start = 0; start < lines.size() && chunks.size() < maxChunks; start += chunkLines) {
+                const QString text = lines.mid(start, chunkLines).join(QLatin1Char('\n')).trimmed();
+                if (text.size() < 16) continue;
+                const QString low = text.toLower();
+                double bm = 0; int distinct = 0;
+                for (const QString &t : terms) {
+                    int tf = low.count(t);
+                    if (tf > 0) { distinct++; bm += tf / (tf + 1.5); }
+                }
+                if (distinct > 0) {
+                    bm *= (1.0 + 0.5 * (distinct - 1));
+                    bm /= (1.0 + text.size() / 4000.0);
+                }
+                const QString key = QString::fromLatin1(
+                    QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex());
+                chunks.append({rel, start + 1, key, text, bm});
+            }
+        }
+        if (chunks.isEmpty()) return QStringLiteral("[no hay archivos de texto para indexar]");
+
+        // Ranking BM25.
+        QVector<int> byBm25(chunks.size());
+        for (int i = 0; i < chunks.size(); ++i) byBm25[i] = i;
+        std::sort(byBm25.begin(), byBm25.end(),
+                  [&](int a, int b) { return chunks[a].bm25 > chunks[b].bm25; });
+
+        // Ranking vectorial (si hay server con embeddings). Reusa el cache SQLite.
+        QVector<int> byVec;
+        QString vecErr;
+        if (!m_serverBaseUrl.isEmpty()) {
+            QSqlDatabase db = embedCacheDb();
+            QHash<QString, QVector<float>> cache;
+            if (db.isOpen()) {
+                QSqlQuery q(db);
+                q.prepare(QStringLiteral("SELECT vec FROM vecs WHERE key=?"));
+                for (const Ch &c : chunks) {
+                    if (cache.contains(c.key)) continue;
+                    q.addBindValue(c.key);
+                    if (q.exec() && q.next()) cache.insert(c.key, blobToVec(q.value(0).toByteArray()));
+                    q.finish();
+                }
+            }
+            QStringList missKeys, missTexts; QSet<QString> seen;
+            for (const Ch &c : chunks) {
+                if (cache.contains(c.key) || seen.contains(c.key)) continue;
+                seen.insert(c.key); missKeys << c.key; missTexts << c.text;
+            }
+            bool embedOk = true;
+            for (int i = 0; i < missTexts.size() && embedOk; i += 64) {
+                const QStringList batch = missTexts.mid(i, 64);
+                const QStringList bkeys = missKeys.mid(i, 64);
+                const QVector<QVector<float>> vecs = embedTexts(m_serverBaseUrl, batch, &vecErr);
+                if (vecs.isEmpty()) { embedOk = false; break; }
+                if (db.isOpen()) db.transaction();
+                for (int j = 0; j < vecs.size() && j < bkeys.size(); ++j) {
+                    cache.insert(bkeys[j], vecs[j]);
+                    if (db.isOpen()) {
+                        QSqlQuery iq(db);
+                        iq.prepare(QStringLiteral("INSERT OR REPLACE INTO vecs(key,dim,vec) VALUES(?,?,?)"));
+                        iq.addBindValue(bkeys[j]); iq.addBindValue(vecs[j].size());
+                        iq.addBindValue(vecToBlob(vecs[j])); iq.exec();
+                    }
+                }
+                if (db.isOpen()) db.commit();
+            }
+            if (embedOk) {
+                QString qerr;
+                const QVector<QVector<float>> qv = embedTexts(m_serverBaseUrl, {query}, &qerr);
+                if (!qv.isEmpty() && !qv[0].isEmpty()) {
+                    QVector<QPair<float, int>> scored;
+                    for (int i = 0; i < chunks.size(); ++i) {
+                        const QVector<float> v = cache.value(chunks[i].key);
+                        if (!v.isEmpty()) scored.append({cosineSim(qv[0], v), i});
+                    }
+                    std::sort(scored.begin(), scored.end(),
+                              [](auto &a, auto &b) { return a.first > b.first; });
+                    for (const auto &p : scored) byVec.append(p.second);
+                }
+            }
+        }
+
+        // Reciprocal Rank Fusion (k0=60). Si no hubo vectorial, queda BM25 puro.
+        const double k0 = 60.0;
+        QHash<int, double> rrf;
+        for (int r = 0; r < byBm25.size(); ++r) rrf[byBm25[r]] += 1.0 / (k0 + r + 1);
+        for (int r = 0; r < byVec.size(); ++r)  rrf[byVec[r]]  += 1.0 / (k0 + r + 1);
+        QVector<int> fused;
+        fused.reserve(rrf.size());
+        for (auto it = rrf.cbegin(); it != rrf.cend(); ++it) fused.append(it.key());
+        std::sort(fused.begin(), fused.end(),
+                  [&](int a, int b) { return rrf[a] > rrf[b]; });
+
+        // Re-rank del top (hasta 30) con el reranker del server, si está.
+        const int candN = qMin(fused.size(), 30);
+        QVector<int> finalOrder = fused;
+        QString rerankNote = byVec.isEmpty()
+            ? QStringLiteral("BM25 (sin embeddings)") : QStringLiteral("BM25+vector RRF");
+        if (candN > 1 && !m_serverBaseUrl.isEmpty()) {
+            QStringList docs;
+            for (int i = 0; i < candN; ++i) docs << chunks[fused[i]].text;
+            QString rerr;
+            const QVector<float> scores = rerankTexts(m_serverBaseUrl, query, docs, &rerr);
+            if (scores.size() == candN) {
+                QVector<int> idx(candN);
+                for (int i = 0; i < candN; ++i) idx[i] = i;
+                std::sort(idx.begin(), idx.end(),
+                          [&](int a, int b) { return scores[a] > scores[b]; });
+                finalOrder.clear();
+                for (int i = 0; i < candN; ++i) finalOrder.append(fused[idx[i]]);
+                for (int i = candN; i < fused.size(); ++i) finalOrder.append(fused[i]);
+                rerankNote += QStringLiteral(" + rerank");
+            }
+        }
+
+        QStringList outL;
+        for (int i = 0; i < finalOrder.size() && outL.size() < k; ++i) {
+            const Ch &c = chunks[finalOrder[i]];
+            outL << QStringLiteral("%1:%2\n%3").arg(c.rel).arg(c.line).arg(c.text.left(600));
+        }
+        if (ok) *ok = true;
+        const QString header = QStringLiteral("[%1 chunks · %2%3]\n\n")
+            .arg(chunks.size()).arg(rerankNote)
+            .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString());
+        return header + outL.join(QStringLiteral("\n\n──────\n"));
+    }
+    if (name == QLatin1String("verify_claims")) {
+        // Anti-alucinación: por cada afirmación, busca evidencia en el proyecto y
+        // en la memoria, y la etiqueta. NO reescribe el informe: devuelve un mapa
+        // de respaldo para que el modelo redacte con cautela citando la fuente.
+        QStringList claims;
+        const QJsonValue cv = args.value(QStringLiteral("claims"));
+        if (cv.isArray()) {
+            for (const QJsonValue &v : cv.toArray())
+                if (v.isString() && !v.toString().trimmed().isEmpty())
+                    claims << v.toString().trimmed();
+        } else {
+            for (const QString &ln : cv.toString().split(QLatin1Char('\n'), Qt::SkipEmptyParts))
+                if (!ln.trimmed().isEmpty()) claims << ln.trimmed();
+        }
+        if (claims.isEmpty()) return QStringLiteral("[verify_claims: 'claims' vacío]");
+        const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
+        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+
+        // Corpus: archivos de texto del proyecto + memoria estructurada.
+        QStringList files;
+        collectFiles(rootAbs, files, 8000);
+        const QString memAll = MemoryStore::recall(cwd, QString(), QString(), 30);
+
+        QStringList report;
+        for (const QString &claim : claims) {
+            QStringList terms;
+            for (const QString &t : claim.toLower().split(
+                     QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_]+")), Qt::SkipEmptyParts))
+                if (t.size() >= 3 && !terms.contains(t)) terms << t;
+            if (terms.isEmpty()) { report << QStringLiteral("[NO ACREDITADO] %1").arg(claim); continue; }
+
+            // Buscar la mejor cobertura de términos en un único fragmento.
+            double best = 0; QString where;
+            auto scan = [&](const QString &rel, const QString &text) {
+                const QString low = text.toLower();
+                int hit = 0;
+                for (const QString &t : terms) if (low.contains(t)) ++hit;
+                const double cov = double(hit) / terms.size();
+                if (cov > best) { best = cov; where = rel; }
+            };
+            if (!memAll.isEmpty()) scan(QStringLiteral("memoria"), memAll);
+            for (const QString &fp : files) {
+                if (best >= 0.99) break;
+                QFileInfo fi(fp);
+                if (fi.size() > 1024 * 1024) continue;
+                QFile f(fp);
+                if (!f.open(QIODevice::ReadOnly)) continue;
+                const QByteArray raw = f.read(1024 * 1024);
+                if (raw.contains('\0')) continue;
+                scan(base.relativeFilePath(fp), QString::fromUtf8(raw));
+            }
+
+            QString tag;
+            if (best >= 0.8)      tag = QStringLiteral("[ACREDITADO en %1]").arg(where);
+            else if (best >= 0.4) tag = QStringLiteral("[INFERIDO · parcial en %1]").arg(where);
+            else                  tag = QStringLiteral("[NO ACREDITADO]");
+            report << QStringLiteral("%1 %2  (cobertura %3)")
+                          .arg(tag, claim).arg(best, 0, 'f', 2);
+        }
+        if (ok) *ok = true;
+        return QStringLiteral("Verificación de evidencia (etiquetá las afirmaciones del "
+                              "informe según esto; lo no acreditado va como hipótesis):\n\n")
+               + report.join(QLatin1Char('\n'));
+    }
     if (name == QLatin1String("grep")) {
         const QString pattern = args.value(QStringLiteral("pattern")).toString();
         const QString sub = args.value(QStringLiteral("path")).toString();
@@ -885,31 +1146,46 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                    .arg(replaceAll ? occurrences : 1).arg(rel);
     }
     if (name == QLatin1String("memory")) {
-        // Memoria persistente por proyecto (.llamacode/memory.md). save = anexa una
-        // línea con timestamp; recall = devuelve todo el archivo.
+        // Memoria PERSISTENTE por capas. Hechos atómicos con metadata en
+        // .llamacode/memory.jsonl (scope/type/confidence + recall por relevancia).
+        // Mantiene el viejo memory.md (append-only) para back-compat: 'recall' sin
+        // query devuelve ambos.
         const QString action = args.value(QStringLiteral("action")).toString().trimmed().toLower();
-        const QString path = LlamaAgentBackend::memoryFilePath(cwd);
-        if (action.isEmpty() || action == QLatin1String("recall")) {
-            QFile f(path);
-            if (!f.open(QIODevice::ReadOnly)) { if (ok) *ok = true; return QStringLiteral("[memoria vacía]"); }
-            const QByteArray raw = f.read(256 * 1024);
-            if (ok) *ok = true;
-            return raw.isEmpty() ? QStringLiteral("[memoria vacía]") : QString::fromUtf8(raw);
-        }
+        const QString scope = args.value(QStringLiteral("scope")).toString();
         if (action == QLatin1String("save")) {
             const QString content = args.value(QStringLiteral("content")).toString().trimmed();
             if (content.isEmpty()) return QStringLiteral("[memory save: 'content' vacío]");
-            QDir().mkpath(QFileInfo(path).absolutePath());
-            QFile f(path);
-            if (!f.open(QIODevice::Append | QIODevice::Text))
-                return QStringLiteral("[no se pudo escribir la memoria: %1]").arg(path);
-            const QString ts = QDateTime::currentDateTime().toString(Qt::ISODate);
-            f.write((QStringLiteral("- (%1) %2\n").arg(ts, content)).toUtf8());
-            f.close();
+            const QString type = args.value(QStringLiteral("type")).toString();
+            const double conf = args.value(QStringLiteral("confidence")).toDouble();
+            const QString res = MemoryStore::save(cwd, content, scope, type, conf);
+            // Espejo en memory.md para inspección humana / compatibilidad.
+            const QString mdPath = LlamaAgentBackend::memoryFilePath(cwd);
+            QDir().mkpath(QFileInfo(mdPath).absolutePath());
+            QFile md(mdPath);
+            if (md.open(QIODevice::Append | QIODevice::Text)) {
+                md.write((QStringLiteral("- (%1) %2\n")
+                              .arg(QDateTime::currentDateTime().toString(Qt::ISODate), content)).toUtf8());
+                md.close();
+            }
             if (ok) *ok = true;
-            return QStringLiteral("[memoria guardada]");
+            return res;
         }
-        return QStringLiteral("[memory: 'action' inválida (usá 'save' o 'recall')]");
+        // recall (default): hechos estructurados (rankeados por query/scope si hay).
+        const QString query = args.value(QStringLiteral("query")).toString();
+        int k = args.value(QStringLiteral("k")).toInt();
+        const QString facts = MemoryStore::recall(cwd, query, scope, k);
+        if (ok) *ok = true;
+        // Sin query ni scope: anexar el memory.md crudo para no perder lo viejo.
+        if (query.trimmed().isEmpty() && scope.trimmed().isEmpty()) {
+            QFile f(LlamaAgentBackend::memoryFilePath(cwd));
+            if (f.open(QIODevice::ReadOnly)) {
+                const QByteArray raw = f.read(256 * 1024);
+                if (!raw.isEmpty())
+                    return facts + QStringLiteral("\n\n── memory.md (legacy) ──\n")
+                           + QString::fromUtf8(raw);
+            }
+        }
+        return facts;
     }
     if (name == QLatin1String("ask_teacher")) {
         // Consulta puntual a un modelo MÁS capaz (endpoint OpenAI-compatible aparte).

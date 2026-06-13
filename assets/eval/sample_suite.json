@@ -1,0 +1,44 @@
+{
+  "name": "Suite base Cristian",
+  "description": "Esqueleto de evaluación con tareas reales por categoría. Editá/expandí a ~30-50. El runner reutiliza el sistema de benchmark de agente (calidad/tiempo/reparaciones/VRAM) para comparar perfiles (quant, ctx, MTP, thinking, KV).",
+  "tasks": [
+    {
+      "id": "cod-001",
+      "category": "coding",
+      "prompt": "Agregá una función C++ que invierta una std::string in-place y un test mínimo. No uses librerías externas.",
+      "acceptance": ["reverse", "std::string", "test"],
+      "weight": 1
+    },
+    {
+      "id": "per-001",
+      "category": "pericial",
+      "prompt": "Redactá un párrafo de informe pericial prudente describiendo daños visibles en un vehículo a partir de fotografías, sin atribuir responsabilidad jurídica. Usá etiquetas de evidencia.",
+      "acceptance": ["[SURGE DE FOTOGRAFÍAS]", "sin atribuir responsabilidad"],
+      "weight": 2
+    },
+    {
+      "id": "sea-001",
+      "category": "search",
+      "prompt": "En el expediente adjunto, ubicá la fecha del hecho y la parte actora. Citá página.",
+      "acceptance": ["página", "fecha"],
+      "attachments": [],
+      "weight": 1
+    },
+    {
+      "id": "doc-001",
+      "category": "docs",
+      "prompt": "Resumí el documento adjunto en 5 bullets, preservando cifras y fechas.",
+      "acceptance": ["•", "fecha"],
+      "attachments": [],
+      "weight": 1
+    },
+    {
+      "id": "mm-001",
+      "category": "multimodal",
+      "prompt": "Describí el croquis adjunto y enumerá los elementos relevantes para una pericia mecánica.",
+      "acceptance": ["croquis"],
+      "attachments": [],
+      "weight": 1
+    }
+  ]
+}

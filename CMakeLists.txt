@@ -35,6 +35,8 @@ set(SOURCES
     src/core/agent/McpClient.cpp
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
+    src/core/agent/MemoryStore.cpp
+    src/core/eval/EvalSuite.cpp
 )
 
 set(HEADERS
@@ -61,6 +63,8 @@ set(HEADERS
     src/core/agent/McpClient.h
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
+    src/core/agent/MemoryStore.h
+    src/core/eval/EvalSuite.h
 )
 
 qt_add_executable(LlamaCode

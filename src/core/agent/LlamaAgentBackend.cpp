@@ -1290,6 +1290,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("glob"), QStringLiteral("run_shell"), QStringLiteral("web_fetch"),
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
+        QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
         QStringLiteral("memory"), QStringLiteral("ask_teacher"),
         QStringLiteral("task")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
@@ -1853,6 +1854,9 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("deep_research")) return {QStringLiteral("query")};
     if (name == QLatin1String("search_docs")) return {QStringLiteral("query")};
     if (name == QLatin1String("semantic_search")) return {QStringLiteral("query")};
+    if (name == QLatin1String("hybrid_search")) return {QStringLiteral("query")};
+    // verify_claims: 'claims' puede ser array → no se valida acá (toString() de un
+    // array da "" y lo rechazaría); la propia tool valida.
     if (name == QLatin1String("task"))       return {QStringLiteral("prompt")};
     if (name == QLatin1String("ask_teacher")) return {QStringLiteral("question")};
     return {};   // list_dir, memory: args opcionales
@@ -2153,15 +2157,45 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("k"), intProp(QStringLiteral("Cantidad de fragmentos (default 5, máx 15)."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
            QJsonArray{QStringLiteral("query")}),
+        fn(QStringLiteral("hybrid_search"),
+           QStringLiteral("Búsqueda HÍBRIDA (la mejor): fusiona BM25 (keywords) + vectorial "
+                          "(embeddings) por Reciprocal Rank Fusion y RE-RANKEA con el reranker del "
+                          "server si está disponible. Preferila a search_docs/semantic_search para "
+                          "recuperar contexto del repo. Cae a BM25 si no hay embeddings. "
+                          "args: query/k/path."),
+           QJsonObject{
+               {QStringLiteral("query"), strProp(QStringLiteral("Qué buscás (lenguaje natural)."))},
+               {QStringLiteral("k"), intProp(QStringLiteral("Cantidad de fragmentos (default 6, máx 15)."))},
+               {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
+           QJsonArray{QStringLiteral("query")}),
+        fn(QStringLiteral("verify_claims"),
+           QStringLiteral("Anti-alucinación: por cada afirmación busca respaldo en los archivos del "
+                          "proyecto y en la memoria, y la etiqueta [ACREDITADO]/[INFERIDO]/[NO "
+                          "ACREDITADO] con su fuente. NO reescribe nada: usá el resultado para "
+                          "redactar con cautela y marcar como hipótesis lo no acreditado. Ideal "
+                          "para informes (p.ej. periciales) antes de afirmar hechos."),
+           QJsonObject{
+               {QStringLiteral("claims"), QJsonObject{
+                   {QStringLiteral("type"), QStringLiteral("array")},
+                   {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}},
+                   {QStringLiteral("description"), QStringLiteral("Afirmaciones a verificar (también acepta texto con una por línea).")}}},
+               {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
+           QJsonArray{QStringLiteral("claims")}),
         fn(QStringLiteral("memory"),
-           QStringLiteral("Memoria PERSISTENTE del proyecto (sobrevive entre sesiones). "
-                          "action='save' anexa un hecho/decisión que querés recordar; "
-                          "action='recall' devuelve todo lo guardado. Usala para preferencias del "
-                          "usuario, decisiones de diseño y datos no obvios del repo. Recordá al inicio "
-                          "de tareas largas."),
+           QStringLiteral("Memoria PERSISTENTE por CAPAS (sobrevive entre sesiones). "
+                          "action='save' guarda un hecho atómico con metadata; "
+                          "action='recall' (default) lo recupera. scope='session|project|personal', "
+                          "type='preference|decision|fact|bug'. En recall, pasá 'query' para rankear "
+                          "por relevancia y/o 'scope' para filtrar la capa. Usala para preferencias "
+                          "del usuario, decisiones de diseño y datos no obvios del repo."),
            QJsonObject{
                {QStringLiteral("action"), strProp(QStringLiteral("'save' o 'recall' (default 'recall')."))},
-               {QStringLiteral("content"), strProp(QStringLiteral("Texto a guardar (sólo para action='save')."))}},
+               {QStringLiteral("content"), strProp(QStringLiteral("Hecho a guardar (sólo action='save')."))},
+               {QStringLiteral("scope"), strProp(QStringLiteral("Capa: 'session'|'project'|'personal' (default 'project')."))},
+               {QStringLiteral("type"), strProp(QStringLiteral("'preference'|'decision'|'fact'|'bug' (sólo save)."))},
+               {QStringLiteral("query"), strProp(QStringLiteral("Filtro por relevancia (sólo recall)."))},
+               {QStringLiteral("confidence"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                   {QStringLiteral("description"), QStringLiteral("Confianza 0..1 (sólo save, default 0.8).")}}}},
            QJsonArray{}),
         fn(QStringLiteral("ask_teacher"),
            QStringLiteral("Consultá a un modelo MÁS capaz (endpoint aparte) una sub-pregunta difícil: "
@@ -2204,6 +2238,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("grep",      "Búsqueda", "Busca una regex en el proyecto.", 100),
         mk("search_docs", "Búsqueda", "Ranking de fragmentos por keywords (semántica-lite).", 120),
         mk("semantic_search", "Búsqueda", "Búsqueda por significado vía embeddings del server.", 130),
+        mk("hybrid_search", "Búsqueda", "Híbrida BM25+vector con reranker (RAG, la mejor).", 150),
+        mk("verify_claims", "Conocimiento", "Verifica afirmaciones contra el repo/memoria (anti-alucinación).", 160),
         mk("web_search","Web", "Busca en la web (DuckDuckGo/SearXNG).", 140),
         mk("web_fetch", "Web", "Descarga una URL y devuelve su texto.", 90),
         mk("deep_research", "Web", "Investigación web multi-ángulo (dossier de fuentes).", 200),
@@ -2302,7 +2338,8 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("read_file"), QStringLiteral("list_dir"),
             QStringLiteral("grep"), QStringLiteral("glob"), QStringLiteral("web_fetch"),
             QStringLiteral("web_search"), QStringLiteral("deep_research"),
-            QStringLiteral("search_docs"), QStringLiteral("semantic_search")};
+            QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
+            QStringLiteral("hybrid_search"), QStringLiteral("verify_claims")};
         QJsonArray ro;
         for (const QJsonValue &v : toolSchemas()) {
             const QString n = v.toObject().value(QStringLiteral("function"))
