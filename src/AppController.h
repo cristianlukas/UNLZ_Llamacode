@@ -357,6 +357,10 @@ public:
     Q_INVOKABLE void loadCustomBenchmarks();
     Q_INVOKABLE QString saveCustomBenchmark(const QVariantMap &def); // returns id
     Q_INVOKABLE void deleteCustomBenchmark(const QString &id);
+    // Importa una EvalSuite JSON (src/core/eval) como custom benchmark. Devuelve
+    // el id creado, o "" si falla (motivo en lastEvalImportError()).
+    Q_INVOKABLE QString importEvalSuite(const QString &path);
+    Q_INVOKABLE QString lastEvalImportError() const { return m_lastEvalImportError; }
     Q_INVOKABLE void startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes = 1,
                                           const QString &target = QStringLiteral("model"), int timeoutSec = 0);
     Q_INVOKABLE void startResearch(const QString &topic, const QString &mode, int maxPages);
@@ -595,6 +599,7 @@ private:
     QString      m_benchmarkStatus;
     QVariantList m_benchmarkResults;
     QVariantList m_customBenchmarks;
+    QString      m_lastEvalImportError;
     QVariantMap  m_hardwareSummary;
     QVariantList m_modelRecommendations;
     QNetworkReply *m_modelDownloadReply = nullptr;

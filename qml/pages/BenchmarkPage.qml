@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import LlamaCode 1.0
 
 Item {
@@ -636,6 +637,11 @@ Item {
                                 Layout.fillWidth: true
                                 text: "Nuevo"
                                 onClicked: { editor.loadDef(null); editor.open() }
+                            }
+                            LcButton {
+                                Layout.fillWidth: true
+                                text: "Importar Eval"
+                                onClicked: evalImportDialog.open()
                             }
                             LcButton {
                                 Layout.fillWidth: true
@@ -1425,6 +1431,34 @@ Item {
     }
 
     // ── Editor de benchmark personalizado ──────────────────────────────────────
+    FileDialog {
+        id: evalImportDialog
+        title: "Importar EvalSuite (JSON)"
+        nameFilters: ["EvalSuite JSON (*.json)"]
+        onAccepted: {
+            const path = selectedFile.toString().replace(/^file:\/\/\//, "").replace(/^file:\/\//, "")
+            const id = App.importEvalSuite(decodeURIComponent(path))
+            if (id && id.length > 0) {
+                root.customId = id
+            } else {
+                importErrorDialog.text = App.lastEvalImportError()
+                importErrorDialog.open()
+            }
+        }
+    }
+
+    Dialog {
+        id: importErrorDialog
+        property alias text: importErrorLabel.text
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        title: "No se pudo importar la EvalSuite"
+        standardButtons: Dialog.Ok
+        Label { id: importErrorLabel; wrapMode: Text.WordWrap; width: 360 }
+    }
+
     Dialog {
         id: editor
         modal: true

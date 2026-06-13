@@ -21,6 +21,7 @@
 #include "core/agent/RawChatBackend.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/McpClient.h"
+#include "core/eval/EvalSuite.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
 #include <QSqlDatabase>
@@ -6644,6 +6645,47 @@ QString AppController::saveCustomBenchmark(const QVariantMap &def)
     }
     loadCustomBenchmarks();
     return id;
+}
+
+QString AppController::importEvalSuite(const QString &path)
+{
+    m_lastEvalImportError.clear();
+    QString err;
+    const EvalSuite suite = EvalSuite::loadFromFile(path, &err);
+    if (suite.isEmpty()) {
+        m_lastEvalImportError = err.isEmpty() ? QStringLiteral("suite vacía") : err;
+        return {};
+    }
+
+    // EvalSuite → schema de custom benchmark (prompts[] con acceptance.files/commands).
+    // El acceptance por substrings de EvalSuite no es auto-puntuable por el runner de
+    // agente (que valida archivos/comandos), así que se conserva como 'notes' para
+    // revisión. Las tareas de coding pueden luego enriquecerse con commands.
+    QVariantList prompts;
+    for (const EvalTask &t : suite.tasks) {
+        QVariantMap acc;
+        acc["files"] = QVariantList{};
+        acc["commands"] = QVariantList{};
+        QVariantMap p;
+        p["id"] = t.id;
+        p["prompt"] = t.prompt;
+        p["isSpeed"] = false;
+        p["maxTokens"] = 8000;
+        p["category"] = t.category;
+        p["weight"] = t.weight;
+        p["notes"] = t.acceptance.join(QStringLiteral(" · "));
+        p["attachments"] = QVariant(t.attachments);
+        p["acceptance"] = acc;
+        prompts.append(p);
+    }
+
+    QVariantMap def;
+    def["name"] = suite.name.isEmpty()
+        ? QStringLiteral("EvalSuite importada") : (QStringLiteral("Eval · ") + suite.name);
+    def["description"] = suite.description;
+    def["prompts"] = prompts;
+    def["source"] = QStringLiteral("evalsuite");
+    return saveCustomBenchmark(def);
 }
 
 void AppController::deleteCustomBenchmark(const QString &id)
