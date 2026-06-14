@@ -6949,10 +6949,17 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
 
     QString mergedSummary;
     if (ok && !bestArgs.isEmpty() && !m_autoTuneLaunchId.isEmpty()) {
-        // Fusionar bestArgs en extraArgs del launch profile, reemplazando flags
-        // previos de los mismos parámetros.
-        QVariantMap lp = m_profiles.getLaunchProfile(m_autoTuneLaunchId);
-        QStringList extra = lp.value(QStringLiteral("extraArgs")).toStringList();
+        // No sobrescribir el perfil original: clonarlo en uno nuevo "-tuned" con
+        // la mejor config fusionada en extraArgs (reemplazando flags previos de
+        // los mismos parámetros).
+        const LaunchProfile src = m_profiles.resolveLaunch(m_autoTuneLaunchId);
+        const QString srcDisplay = src.alias.isEmpty() ? src.name : src.alias;
+
+        // addLaunchProfile ya quita el prefijo "N_" y asigna uno nuevo.
+        const QString newId = m_profiles.addLaunchProfile(
+            src.name + QStringLiteral("-tuned"),
+            src.backendProfileId, src.modelProfileId, src.runtimePresetId);
+
         const QSet<QString> valueFlags = {
             QStringLiteral("-ngl"), QStringLiteral("--n-gpu-layers"), QStringLiteral("--gpu-layers"),
             QStringLiteral("-b"), QStringLiteral("--batch-size"),
@@ -6963,13 +6970,20 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
         const QSet<QString> switchFlags = {
             QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
         };
-        extra = stripFlags(extra, valueFlags, switchFlags);
+        QStringList extra = stripFlags(src.extraArgs, valueFlags, switchFlags);
         extra += bestArgs;
-        lp[QStringLiteral("extraArgs")] = extra;
-        m_profiles.updateLaunchProfile(lp);
+
+        QVariantMap np = m_profiles.getLaunchProfile(newId);
+        np[QStringLiteral("extraArgs")] = extra;
+        np[QStringLiteral("harnessProfileId")] = src.harnessProfileId;
+        np[QStringLiteral("workspaceProfileId")] = src.workspaceProfileId;
+        np[QStringLiteral("alias")] = QStringLiteral("Auto-tuned: %1").arg(srcDisplay);
+        m_profiles.updateLaunchProfile(np);
         m_profiles.saveProfiles();
+
         mergedSummary = bestArgs.join(QLatin1Char(' '));
-        m_autoTuneStatus = QStringLiteral("Auto-tune OK: %1 tok/s, calidad %2. Aplicado: %3")
+        m_autoTuneStatus = QStringLiteral("Auto-tune OK: %1 tok/s, calidad %2. "
+                                          "Perfil nuevo creado con: %3")
                                .arg(throughput, 0, 'f', 1).arg(quality, 0, 'f', 2)
                                .arg(mergedSummary);
     } else {

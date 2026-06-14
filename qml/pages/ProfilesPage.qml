@@ -544,7 +544,7 @@ Item {
                             secondary: true
                             enabled: selectedLaunchId.length > 0 && !App.serverRunning && !App.autoTuneRunning
                             ToolTip.visible: hovered
-                            ToolTip.text: "Optimiza ngl/batch/flash-attn/cache-type maximizando tok/s sin degradar calidad (gate)"
+                            ToolTip.text: "Optimiza ngl/batch/flash-attn/cache-type maximizando tok/s sin degradar calidad (gate). Crea un perfil nuevo \"-tuned\", no toca este"
                             onClicked: { saveAll(); App.startAutoTune(selectedLaunchId, 24, 0.6, 256) }
                         }
                         LcButton {
