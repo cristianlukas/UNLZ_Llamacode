@@ -24,6 +24,7 @@ set(CORE_SOURCES
     src/core/ModelCatalog.cpp
     src/core/GGUFScanner.cpp
     src/core/DocumentExtractor.cpp
+    src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
@@ -55,6 +56,7 @@ set(HEADERS
     src/core/ModelCatalog.h
     src/core/GGUFScanner.h
     src/core/DocumentExtractor.h
+    src/core/MermaidRenderer.h
     src/core/ControlApi.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
@@ -127,6 +129,7 @@ qt_add_qml_module(LlamaCode
         qml/components/LcDialog.qml
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
+        qml/components/MermaidPreviewDialog.qml
         qml/pages/AgentPage.qml
         qml/pages/BenchmarkPage.qml
         qml/pages/ResearchPage.qml
@@ -200,4 +203,5 @@ if (BUILD_TESTS)
     add_lc_test(test_master_cli         tests/test_master_cli.cpp)
     add_lc_test(test_backends_net       tests/test_backends_net.cpp)
     add_lc_test(test_appcontroller      tests/test_appcontroller.cpp)
+    add_lc_test(test_mermaid            tests/test_mermaid.cpp)
 endif()

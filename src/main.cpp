@@ -1,5 +1,6 @@
 #include "AppController.h"
 #include "core/ControlApi.h"
+#include "core/MermaidRenderer.h"
 #include "ThemeProvider.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
@@ -128,6 +129,7 @@ int main(int argc, char *argv[])
 
     AppController controller;
     ThemeProvider theme;
+    MermaidRenderer mermaid;
 
     qDebug() << "Controllers ready";
 
@@ -145,6 +147,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("App", &controller);
     engine.rootContext()->setContextProperty("Theme", &theme);
+    engine.rootContext()->setContextProperty("Mermaid", &mermaid);
 
     // Control API headless (espejo de AppController) para tests sin GUI.
     // Puerto: env LLAMACODE_CONTROL_PORT (default 8765). 0 = desactivado. Localhost.

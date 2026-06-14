@@ -10,6 +10,29 @@ Item {
     property var thinkExpanded: ({})
     property var chatAttachments: []
 
+    // ── Mermaid: paths PNG renderizados y errores, por hash de source ────
+    property var mermaidPaths: ({})
+    property var mermaidErrors: ({})
+    function mermaidUrl(p) { return "file:///" + String(p).replace(/\\/g, "/") }
+
+    Connections {
+        target: Mermaid
+        function onRenderReady(hash, path) {
+            const m = root.mermaidPaths; m[hash] = root.mermaidUrl(path); root.mermaidPaths = m
+            const e = root.mermaidErrors; if (e[hash] !== undefined) { delete e[hash]; root.mermaidErrors = e }
+        }
+        function onRenderFailed(hash, reason) {
+            const e = root.mermaidErrors; e[hash] = reason; root.mermaidErrors = e
+        }
+    }
+
+    MermaidPreviewDialog { id: mermaidPreview }
+    function openMermaidPreview(imgUrl, src) {
+        mermaidPreview.imageSource = imgUrl
+        mermaidPreview.mermaidSource = src
+        mermaidPreview.open()
+    }
+
     // ── Ancho del panel de chats (redimensionable + persistente) ─────────
     property int chatsPanelWidth: 220
     property int chatsPanelMin: 160
@@ -886,11 +909,16 @@ Item {
                                 }
                             }
 
-                            TextEdit {
-                                id: msgText
+                            // Cuerpo del mensaje. Se parte en segmentos texto /
+                            // mermaid; los diagramas se rinden a PNG vía sidecar.
+                            // Mientras tipea (o sin sidecar) se muestra todo texto.
+                            Column {
+                                id: msgBody
                                 visible: !delegateRoot.editing
                                 width: parent.width
-                                text: {
+                                spacing: 8
+
+                                readonly property string bodyText: {
                                     if (delegateRoot.isTyping && delegateRoot.content.length === 0)
                                         return "⏳ Procesando..."
                                     const base = delegateRoot.visibleContentRaw.length > 0
@@ -900,17 +928,92 @@ Item {
                                         return base + "▌"
                                     return base
                                 }
-                                color: {
-                                    if (delegateRoot.isTyping && delegateRoot.content.length === 0)
-                                        return Theme.textMuted
-                                    return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
+                                readonly property bool plainOnly: delegateRoot.isTyping || !Mermaid.available
+                                readonly property var segs: plainOnly
+                                    ? [{ "type": "text", "text": bodyText }]
+                                    : Mermaid.segments(bodyText)
+
+                                Repeater {
+                                    model: msgBody.segs
+                                    delegate: Item {
+                                        width: msgBody.width
+                                        readonly property bool isMermaid: modelData.type === "mermaid"
+                                        readonly property string segSrc: modelData.text
+                                        height: isMermaid ? mermaidWrap.height : segText.height
+
+                                        TextEdit {
+                                            id: segText
+                                            visible: !isMermaid
+                                            width: parent.width
+                                            text: isMermaid ? "" : modelData.text
+                                            color: {
+                                                if (delegateRoot.isTyping && delegateRoot.content.length === 0)
+                                                    return Theme.textMuted
+                                                return delegateRoot.isUser ? Theme.chatUserText : Theme.chatAsstText
+                                            }
+                                            font.family: "Segoe UI"
+                                            font.pixelSize: 13
+                                            font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
+                                            wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
+                                            readOnly: true
+                                            selectByMouse: true
+                                        }
+
+                                        // Diagrama mermaid: PNG renderizado (click = preview)
+                                        // o placeholder mientras rinde / si falla.
+                                        Item {
+                                            id: mermaidWrap
+                                            visible: isMermaid
+                                            width: parent.width
+                                            height: isMermaid ? (diagImg.status === Image.Ready && diagImg.source != ""
+                                                                  ? diagImg.paintedHeight + 8
+                                                                  : 40)
+                                                              : 0
+
+                                            readonly property string h: isMermaid ? Mermaid.sourceHash(segSrc) : ""
+                                            readonly property string imgUrl: isMermaid ? (root.mermaidPaths[h] ?? "") : ""
+                                            readonly property string errTxt: isMermaid ? (root.mermaidErrors[h] ?? "") : ""
+
+                                            onHChanged: tryRender()
+                                            Component.onCompleted: tryRender()
+                                            function tryRender() {
+                                                if (!isMermaid || imgUrl !== "") return
+                                                const c = Mermaid.cachedPath(segSrc)
+                                                if (c !== "") {
+                                                    const m = root.mermaidPaths; m[h] = root.mermaidUrl(c); root.mermaidPaths = m
+                                                } else if (errTxt === "") {
+                                                    Mermaid.requestRender(segSrc)
+                                                }
+                                            }
+
+                                            Image {
+                                                id: diagImg
+                                                source: mermaidWrap.imgUrl
+                                                visible: mermaidWrap.imgUrl !== ""
+                                                width: parent.width
+                                                fillMode: Image.PreserveAspectFit
+                                                horizontalAlignment: Image.AlignLeft
+                                                smooth: true
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: root.openMermaidPreview(mermaidWrap.imgUrl, mermaidWrap.segSrc)
+                                                }
+                                            }
+                                            Text {
+                                                visible: mermaidWrap.imgUrl === ""
+                                                width: parent.width
+                                                text: mermaidWrap.errTxt !== ""
+                                                    ? "⚠ Diagrama: " + mermaidWrap.errTxt
+                                                    : "⏳ Renderizando diagrama…"
+                                                color: Theme.textMuted
+                                                font.pixelSize: 12
+                                                font.italic: true
+                                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                            }
+                                        }
+                                    }
                                 }
-                                font.family: "Segoe UI"
-                                font.pixelSize: 13
-                                font.italic: delegateRoot.isTyping && delegateRoot.content.length === 0
-                                wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
-                                readOnly: true
-                                selectByMouse: true
                             }
 
                             // Edición inline del mensaje (rebobina + reescribe).
