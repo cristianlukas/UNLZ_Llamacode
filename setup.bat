@@ -64,6 +64,26 @@ if not exist "%QT_DIR%\lib\cmake\Qt6\Qt6Config.cmake" (
 )
 echo [OK] Qt6: %QT_DIR%
 
+REM --- Node.js + mermaid-cli (opcional: diagramas Mermaid en el chat) ---
+where node >nul 2>&1
+if errorlevel 1 (
+    echo [STEP] Installing Node.js LTS (para diagramas Mermaid)...
+    winget install --id OpenJS.NodeJS.LTS --exact --source winget --accept-source-agreements --accept-package-agreements
+    if errorlevel 1 ( echo [WARN] Node.js no se instalo; los diagramas Mermaid quedaran deshabilitados. )
+)
+where mmdc >nul 2>&1
+if errorlevel 1 (
+    where npm >nul 2>&1
+    if not errorlevel 1 (
+        echo [STEP] Installing mermaid-cli (mmdc) global...
+        call npm install -g @mermaid-js/mermaid-cli
+        if errorlevel 1 ( echo [WARN] mermaid-cli no se instalo; los diagramas Mermaid quedaran deshabilitados. )
+    ) else (
+        echo [WARN] npm no disponible; salteando mermaid-cli (diagramas deshabilitados).
+    )
+)
+where mmdc >nul 2>&1 && echo [OK] mermaid-cli (mmdc) disponible
+
 echo.
 echo [OK] All prerequisites ready.
 echo.

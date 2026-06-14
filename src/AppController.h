@@ -35,6 +35,8 @@ class AppController : public QObject
     Q_PROPERTY(bool         chatGenerating  READ chatGenerating  NOTIFY chatGeneratingChanged)
     Q_PROPERTY(bool         chatThinkingSupported READ chatThinkingSupported NOTIFY chatThinkingSupportedChanged)
     Q_PROPERTY(bool thinkingEnabled READ thinkingEnabled WRITE setThinkingEnabled NOTIFY thinkingChanged)
+    // Render de diagramas Mermaid en el chat (requiere sidecar mermaid-cli).
+    Q_PROPERTY(bool mermaidEnabled READ mermaidEnabled WRITE setMermaidEnabled NOTIFY mermaidEnabledChanged)
     Q_PROPERTY(bool   serverRunning   READ serverRunning   NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverStopping  READ serverStopping  NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverReady     READ serverReady     NOTIFY serverReadyChanged)
@@ -176,6 +178,8 @@ public:
     void setAgentThinkingEnabled(bool enabled);
     bool thinkingEnabled() const { return m_agentThinkingEnabled; }
     void setThinkingEnabled(bool enabled);
+    bool mermaidEnabled() const { return m_mermaidEnabled; }
+    void setMermaidEnabled(bool enabled);
     QString agentTeacherUrl()   const { return m_agentTeacherUrl; }
     QString agentTeacherModel() const { return m_agentTeacherModel; }
     QString agentTeacherKey()   const { return m_agentTeacherKey; }
@@ -458,6 +462,7 @@ signals:
     void chatGeneratingChanged();
     void chatThinkingSupportedChanged();
     void thinkingChanged();
+    void mermaidEnabledChanged();
     void agentRunningChanged();
     void agentStartingChanged();
     void agentLogChanged();
@@ -621,6 +626,7 @@ private:
     QVariantMap m_agentPendingTool;   // tool esperando aprobación ({} si ninguna)
     QString   m_agentApprovalMode = QStringLiteral("ask");  // auto | ask | manual | super
     bool      m_agentThinkingEnabled = false;   // razonamiento global (chat/agente/benchmark/research)
+    bool      m_mermaidEnabled = true;          // render de diagramas mermaid en el chat
     QStringList m_agentDisabledTools;           // tools built-in apagadas por el usuario
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;

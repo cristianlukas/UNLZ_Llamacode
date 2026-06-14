@@ -214,6 +214,59 @@ Item {
                         }
                     }
 
+                    // ── Chat / Mermaid ───────────────────────────────────────
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text {
+                            text: "CHAT"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: mermaidInner.implicitHeight + 32
+
+                            RowLayout {
+                                id: mermaidInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 3
+                                    Text {
+                                        text: "Diagramas Mermaid"
+                                        color: Theme.textPrimary
+                                        font.pixelSize: 14
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: Mermaid.available
+                                            ? "Renderiza bloques ```mermaid del chat como imagen."
+                                            : "Requiere mermaid-cli (npm i -g @mermaid-js/mermaid-cli)."
+                                        color: Theme.textMuted
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+                                }
+
+                                Switch {
+                                    checked: App.mermaidEnabled
+                                    enabled: Mermaid.available
+                                    onToggled: App.mermaidEnabled = checked
+                                }
+                            }
+                        }
+                    }
+
                     // ── GPU power limit (nvidia-smi) ─────────────────────────
                     ColumnLayout {
                         id: gpuSection

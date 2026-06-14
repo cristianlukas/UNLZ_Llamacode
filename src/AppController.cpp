@@ -194,6 +194,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentThinkingEnabled = s.value(QStringLiteral("thinking/enabled"),
                                      s.value(QStringLiteral("agent/thinkingEnabled"),
                                              s.value(QStringLiteral("chat/thinkingEnabled"), false))).toBool();
+    m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
     m_agentSystemPrompt = s.value(QStringLiteral("agent/systemPrompt")).toString();
     m_agentPermRules    = s.value(QStringLiteral("agent/permRules")).toString();
     m_agentTemperature  = s.value(QStringLiteral("agent/temperature"), -1.0).toDouble();
@@ -1930,6 +1931,14 @@ void AppController::setAgentApprovalMode(const QString &mode)
 void AppController::setAgentThinkingEnabled(bool enabled)
 {
     setThinkingEnabled(enabled);
+}
+
+void AppController::setMermaidEnabled(bool enabled)
+{
+    if (enabled == m_mermaidEnabled) return;
+    m_mermaidEnabled = enabled;
+    writeSetting(QStringLiteral("chat/mermaidEnabled"), enabled);
+    emit mermaidEnabledChanged();
 }
 
 void AppController::setThinkingEnabled(bool enabled)

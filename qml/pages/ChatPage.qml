@@ -928,7 +928,7 @@ Item {
                                         return base + "▌"
                                     return base
                                 }
-                                readonly property bool plainOnly: delegateRoot.isTyping || !Mermaid.available
+                                readonly property bool plainOnly: delegateRoot.isTyping || !Mermaid.available || !App.mermaidEnabled
                                 readonly property var segs: plainOnly
                                     ? [{ "type": "text", "text": bodyText }]
                                     : Mermaid.segments(bodyText)

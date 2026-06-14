@@ -23,7 +23,7 @@ private slots:
     void segments_caseInsensitiveLang();
     void hash_stableAndDistinct();
     void cachedPath_emptyWhenNotRendered();
-    void requestRender_failsWithoutSidecar();
+    void requestRender_emitsResult();
 };
 
 static QString segType(const QVariantList &l, int i)
@@ -95,15 +95,19 @@ void MermaidTests::cachedPath_emptyWhenNotRendered()
     QVERIFY(m.cachedPath("diagrama inexistente xyz").isEmpty());
 }
 
-void MermaidTests::requestRender_failsWithoutSidecar()
+void MermaidTests::requestRender_emitsResult()
 {
-    // En CI/test no hay mmdc → debe emitir renderFailed (o renderReady si por
-    // alguna razón ya estuviera cacheado). Sin sidecar: failed sincrónico.
-    if (qEnvironmentVariableIsSet("LLAMACODE_MMDC")) QSKIP("mmdc configurado");
+    // requestRender siempre termina en renderReady o renderFailed.
+    //  - Sin mmdc: renderFailed sincrónico.
+    //  - Con mmdc: render async (PNG) → esperar el spy.
     MermaidRenderer m;
     QSignalSpy failed(&m, &MermaidRenderer::renderFailed);
     QSignalSpy ready(&m, &MermaidRenderer::renderReady);
-    m.requestRender("graph TD;A-->B; %% test sin sidecar");
+    m.requestRender("graph TD;A-->B; %% test render");
+    if (failed.count() + ready.count() == 0) {
+        // async (sidecar presente): esperar hasta 60s a que mmdc resuelva.
+        QTRY_VERIFY_WITH_TIMEOUT(failed.count() + ready.count() >= 1, 60000);
+    }
     QVERIFY(failed.count() + ready.count() >= 1);
 }
 
