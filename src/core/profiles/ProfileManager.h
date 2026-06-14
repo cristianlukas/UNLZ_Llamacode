@@ -104,6 +104,12 @@ public:
                                         const QString &modelId, const QString &mmprojId,
                                         const QString &draftId);
     Q_INVOKABLE QVariantMap getModelProfile(const QString &id) const;
+    // Config de speculative decoding / MTP del ModelProfile (separado para no
+    // romper las firmas de add/update). Vacío/0 = no emitir.
+    Q_INVOKABLE bool setModelSpec(const QString &id, const QString &specType,
+                                  int specDraftNMax, const QString &specDraftNgl,
+                                  const QString &specDraftTypeK,
+                                  const QString &specDraftTypeV);
 
     // RuntimePreset
     Q_INVOKABLE QString addRuntimePreset(const QString &name, int ctx, int batch,

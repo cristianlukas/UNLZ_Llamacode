@@ -157,6 +157,14 @@ void ProfilesTests::manager_addModelProfile()
     const QString id = pm.addModelProfile("qwen", "cat1", "", "");
     QVERIFY(!id.isEmpty());
     QCOMPARE(pm.getModelProfile(id).value("modelId").toString(), QStringLiteral("cat1"));
+
+    // setModelSpec persiste la config MTP y getModelProfile la expone.
+    QVERIFY(pm.setModelSpec(id, "draft-mtp", 3, "all", "q8_0", "q8_0"));
+    const QVariantMap m = pm.getModelProfile(id);
+    QCOMPARE(m.value("specType").toString(), QStringLiteral("draft-mtp"));
+    QCOMPARE(m.value("specDraftNMax").toInt(), 3);
+    QCOMPARE(m.value("specDraftTypeK").toString(), QStringLiteral("q8_0"));
+
     QVERIFY(pm.removeModelProfile(id));
 }
 

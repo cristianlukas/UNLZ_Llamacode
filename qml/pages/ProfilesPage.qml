@@ -15,6 +15,7 @@ Item {
     property string runtimeNameCurrent: ""
     property bool mmprojEnabled: false
     property bool draftEnabled: false
+    property bool mtpEnabled: false
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool smokeTestRunning: false
     property string harnessAdapter: "none"
@@ -260,6 +261,9 @@ Item {
         modelMmproj.currentIndex = Math.max(0, modelMmproj.indexOfValue(mp.mmprojId ?? ""))
         draftEnabled = (mp.draftModelId ?? "").length > 0
         modelDraft.currentIndex = Math.max(0, modelDraft.indexOfValue(mp.draftModelId ?? ""))
+        mtpEnabled = (mp.specType ?? "") === "draft-mtp"
+        specNMaxField.text = ((mp.specDraftNMax ?? 0) || 0).toString()
+        specKvType.currentIndex = Math.max(0, specKvType.find(mp.specDraftTypeK ?? ""))
 
         const rt = App.profileManager.getRuntimePreset(runtimeId)
         runtimeNameCurrent = rt.name ?? ""
@@ -351,6 +355,11 @@ Item {
             "modelId": modelMain.currentValue ?? "",
             "mmprojId": mmprojEnabled ? (modelMmproj.currentValue ?? "") : "",
             "draftModelId": draftEnabled ? (modelDraft.currentValue ?? "") : "",
+            "specType": (draftEnabled && mtpEnabled) ? "draft-mtp" : "",
+            "specDraftNMax": (draftEnabled && mtpEnabled) ? (parseInt(specNMaxField.text) || 0) : 0,
+            "specDraftNgl": (draftEnabled && mtpEnabled) ? "all" : "",
+            "specDraftTypeK": (draftEnabled && mtpEnabled) ? (specKvType.currentText ?? "") : "",
+            "specDraftTypeV": (draftEnabled && mtpEnabled) ? (specKvType.currentText ?? "") : "",
             "ctx": parseInt(ctxField.text) || 4096,
             "batch": parseInt(batchField.text) || 512,
             "ubatch": parseInt(ubatchField.text) || 512,
@@ -399,6 +408,15 @@ Item {
             if (!effectiveMid || effectiveMid.length === 0) { App.serverError("No se pudo crear Model Profile."); return }
             modelProfileId = effectiveMid
         }
+        // Speculative decoding / MTP (sólo aplica con draft model).
+        const specOn = draftEnabled && mtpEnabled
+        App.profileManager.setModelSpec(
+            effectiveMid,
+            specOn ? "draft-mtp" : "",
+            specOn ? (parseInt(specNMaxField.text) || 0) : 0,
+            specOn ? "all" : "",
+            specOn ? (specKvType.currentText ?? "") : "",
+            specOn ? (specKvType.currentText ?? "") : "")
 
         // Runtime: update if exists, create if not
         let effectiveRid = runtimeId
@@ -899,6 +917,32 @@ Item {
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: modelDraft.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                        }
+
+                        // ── Speculative decoding / MTP (sólo con draft model) ──
+                        CheckBox { id: mtpCheck; checked: mtpEnabled; enabled: draftEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
+                        Text { text: "MTP (draft-mtp)"; color: (draftEnabled && mtpEnabled) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        Item { Layout.fillWidth: true; implicitHeight: 1 }
+
+                        Item { implicitWidth: 20 }
+                        Text { text: "spec n-max"; color: (draftEnabled && mtpEnabled) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        LcTextField {
+                            id: specNMaxField
+                            Layout.fillWidth: true
+                            enabled: draftEnabled && mtpEnabled; opacity: enabled ? 1.0 : 0.4
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            placeholderText: "0 = default"
+                        }
+
+                        Item { implicitWidth: 20 }
+                        Text { text: "draft KV"; color: (draftEnabled && mtpEnabled) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        LcComboBox {
+                            id: specKvType
+                            Layout.fillWidth: true
+                            enabled: draftEnabled && mtpEnabled; opacity: enabled ? 1.0 : 0.4
+                            model: ["", "f16", "q8_0"]
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: specKvType.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
                     }
                 }

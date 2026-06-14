@@ -155,12 +155,33 @@ bool ProfileManager::updateModelProfile(const QString &id, const QString &name,
     return ok;
 }
 
+bool ProfileManager::setModelSpec(const QString &id, const QString &specType,
+                                  int specDraftNMax, const QString &specDraftNgl,
+                                  const QString &specDraftTypeK,
+                                  const QString &specDraftTypeV)
+{
+    ModelProfile p = m_models.findById(id);
+    if (p.id.isEmpty()) return false;
+    p.specType = specType;
+    p.specDraftNMax = specDraftNMax > 0 ? specDraftNMax : 0;
+    p.specDraftNgl = specDraftNgl;
+    p.specDraftTypeK = specDraftTypeK;
+    p.specDraftTypeV = specDraftTypeV;
+    bool ok = m_models.update(p);
+    if (ok) save();
+    return ok;
+}
+
 QVariantMap ProfileManager::getModelProfile(const QString &id) const
 {
     const auto p = m_models.findById(id);
     if (p.id.isEmpty()) return {};
     return {{"id", p.id}, {"name", p.name}, {"modelId", p.modelId},
-            {"mmprojId", p.mmprojId}, {"draftModelId", p.draftModelId}};
+            {"mmprojId", p.mmprojId}, {"draftModelId", p.draftModelId},
+            {"specType", p.specType}, {"specDraftNMax", p.specDraftNMax},
+            {"specDraftNgl", p.specDraftNgl},
+            {"specDraftTypeK", p.specDraftTypeK},
+            {"specDraftTypeV", p.specDraftTypeV}};
 }
 
 // ---- RuntimePreset ----

@@ -1082,6 +1082,11 @@ void AppController::computeEffectiveProfilePreview(const QString &launchProfileI
     ctx.model.modelId    = overrides.value("modelId").toString();
     ctx.model.mmprojId   = overrides.value("mmprojId").toString();
     ctx.model.draftModelId = overrides.value("draftModelId").toString();
+    ctx.model.specType       = overrides.value("specType").toString();
+    ctx.model.specDraftNMax  = overrides.value("specDraftNMax", 0).toInt();
+    ctx.model.specDraftNgl   = overrides.value("specDraftNgl").toString();
+    ctx.model.specDraftTypeK = overrides.value("specDraftTypeK").toString();
+    ctx.model.specDraftTypeV = overrides.value("specDraftTypeV").toString();
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel  = m_catalog.findById(ctx.model.mmprojId);
     ctx.draftModel   = m_catalog.findById(ctx.model.draftModelId);
