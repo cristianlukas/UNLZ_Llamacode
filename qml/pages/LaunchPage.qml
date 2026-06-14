@@ -157,6 +157,80 @@ Item {
                     }
                 }
 
+                // --- Watchdog state + live VRAM meter -----------------------
+                Rectangle {
+                    Layout.fillWidth: true
+                    visible: App.serverState === "restarting" || App.serverState === "failed"
+                             || (App.serverStats.gpus !== undefined && App.serverStats.gpus.length > 0)
+                    color: Theme.inputBg
+                    radius: 8
+                    border.color: App.serverState === "failed" ? Theme.errorText
+                                  : App.serverState === "restarting" ? "#d08a2a"
+                                  : Theme.borderColor
+                    implicitHeight: statsCol.implicitHeight + 20
+
+                    ColumnLayout {
+                        id: statsCol
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                        spacing: 8
+
+                        // Watchdog state badge
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: App.serverState === "restarting" || App.serverState === "failed"
+                            spacing: 8
+                            Rectangle {
+                                width: 10; height: 10; radius: 5
+                                color: App.serverState === "failed" ? Theme.errorText : "#d08a2a"
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                color: App.serverState === "failed" ? Theme.errorText : Theme.textSecondary
+                                font.pixelSize: 12
+                                text: App.serverState === "failed"
+                                      ? "Watchdog: server crasheó repetidamente. Auto-reinicio detenido."
+                                      : "Watchdog: reiniciando server tras crash…"
+                            }
+                        }
+
+                        // Per-GPU VRAM bars
+                        Repeater {
+                            model: App.serverStats.gpus ?? []
+                            delegate: ColumnLayout {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                spacing: 2
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: "GPU " + modelData.index + " · " + modelData.name
+                                        color: Theme.textMuted; font.pixelSize: 11; elide: Text.ElideRight
+                                    }
+                                    Text {
+                                        text: Math.round(modelData.usedMb) + " / " + Math.round(modelData.totalMb) + " MB"
+                                        color: Theme.textSecondary; font.pixelSize: 11
+                                    }
+                                }
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 8; radius: 4
+                                    color: Theme.borderColor
+                                    Rectangle {
+                                        height: parent.height; radius: 4
+                                        width: parent.width * Math.min(1, modelData.pct / 100)
+                                        color: modelData.pct >= 90 ? Theme.errorText
+                                               : modelData.pct >= 75 ? "#d08a2a"
+                                               : Theme.successText
+                                        Behavior on width { NumberAnimation { duration: 300 } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 LcButton {
                     text: (App.langV, App.l("launch.startServerOnly"))
                     secondary: true

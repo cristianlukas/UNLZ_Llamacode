@@ -590,7 +590,7 @@ void AppController::startServer(const QString &launchProfileId)
         appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(m_proc->readAllStandardError()));
     });
     connect(m_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [this](int code, QProcess::ExitStatus) {
+            this, [this](int code, QProcess::ExitStatus status) {
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("Server exited with code %1").arg(code));
         if (code == -1073740791) {
@@ -598,6 +598,11 @@ void AppController::startServer(const QString &launchProfileId)
                 "llama-server crasheó (0xC0000409). Revisá el perfil de lanzamiento activo (args/runtime)."));
         }
         clearServiceState(QStringLiteral("server"));
+        // ¿Salida iniciada por el usuario (stopServer) o crash inesperado?
+        const bool userStop = m_serverStopping;
+        const bool crashed = !userStop &&
+                             (status == QProcess::CrashExit || code != 0);
+        const QString crashLaunchId = m_activeLaunchId;
         if (!m_pendingAutoAgentLaunchId.isEmpty()) {
             m_pendingAutoAgentLaunchId.clear();
             m_agentStarting = false;
@@ -605,12 +610,45 @@ void AppController::startServer(const QString &launchProfileId)
         }
         if (m_stopKillTimer) { m_stopKillTimer->stop(); m_stopKillTimer->deleteLater(); m_stopKillTimer = nullptr; }
         stopHealthPolling();
+        stopVramPolling();
         m_serverStopping = false;
         m_serverReady    = false;
         m_proc->deleteLater();
         m_proc = nullptr;
         emit serverRunningChanged();
         emit serverReadyChanged();
+
+        // Watchdog: auto-restart en crash, con backoff y tope de intentos.
+        if (crashed && !crashLaunchId.isEmpty()) {
+            if (m_serverRestartCount < kMaxServerRestarts) {
+                m_serverRestartCount++;
+                const int delayMs = 2000 * m_serverRestartCount; // 2s, 4s, 6s
+                setServerState(QStringLiteral("restarting"));
+                appendServerEvent(QStringLiteral("lifecycle"),
+                    QStringLiteral("Watchdog: reintento %1/%2 en %3ms")
+                        .arg(m_serverRestartCount).arg(kMaxServerRestarts).arg(delayMs));
+                if (!m_serverRestartTimer) {
+                    m_serverRestartTimer = new QTimer(this);
+                    m_serverRestartTimer->setSingleShot(true);
+                }
+                m_serverRestartTimer->disconnect();
+                connect(m_serverRestartTimer, &QTimer::timeout, this, [this, crashLaunchId]() {
+                    if (serverRunning()) return; // ya arrancó por otra vía
+                    startServer(crashLaunchId);
+                });
+                m_serverRestartTimer->start(delayMs);
+            } else {
+                setServerState(QStringLiteral("failed"));
+                appendServerEvent(QStringLiteral("lifecycle"),
+                    QStringLiteral("Watchdog: agotados %1 reintentos; server en estado failed.")
+                        .arg(kMaxServerRestarts));
+                emit serverError(QStringLiteral(
+                    "El servidor crasheó %1 veces seguidas. Auto-reinicio detenido. Revisá el perfil.")
+                        .arg(kMaxServerRestarts));
+            }
+        } else {
+            setServerState(QStringLiteral("stopped"));
+        }
     });
 
     // Capacidad de visión del modelo activo: el server cargó un mmproj.
@@ -633,6 +671,8 @@ void AppController::startServer(const QString &launchProfileId)
                                             ? args[portIdx + 1].toInt() : 8080;
         writeServiceState(QStringLiteral("server"), m_proc->processId(), extra);
         startHealthPolling();
+        startVramPolling();
+        setServerState(QStringLiteral("running"));
     }
     emit serverRunningChanged();
     emit serverReadyChanged();
@@ -660,6 +700,8 @@ void AppController::startHealthPolling()
             }
             if (ok && !m_serverReady) {
                 m_serverReady = true;
+                m_serverRestartCount = 0; // arrancó sano: resetear watchdog
+                setServerState(QStringLiteral("running"));
                 appendServerEvent(QStringLiteral("health"), QStringLiteral("Server ready - model loaded"));
                 emit serverReadyChanged();
                 stopHealthPolling();
@@ -751,15 +793,108 @@ void AppController::stopHealthPolling()
     }
 }
 
+void AppController::setServerState(const QString &s)
+{
+    if (m_serverState == s) return;
+    m_serverState = s;
+    emit serverStateChanged();
+}
+
+void AppController::startVramPolling()
+{
+    stopVramPolling();
+    m_vramPollTimer = new QTimer(this);
+    m_vramPollTimer->setInterval(2000);
+    connect(m_vramPollTimer, &QTimer::timeout, this, [this]() {
+        if (!serverRunning()) { stopVramPolling(); return; }
+        pollServerStats();
+    });
+    m_vramPollTimer->start();
+    pollServerStats(); // primera muestra inmediata
+}
+
+void AppController::stopVramPolling()
+{
+    if (m_vramPollTimer) {
+        m_vramPollTimer->stop();
+        m_vramPollTimer->deleteLater();
+        m_vramPollTimer = nullptr;
+    }
+    if (m_vramProc) {
+        m_vramProc->disconnect();
+        m_vramProc->kill();
+        m_vramProc->deleteLater();
+        m_vramProc = nullptr;
+    }
+    if (!m_serverStats.isEmpty()) {
+        m_serverStats.clear();
+        emit serverStatsChanged();
+    }
+}
+
+// Lee VRAM por GPU vía nvidia-smi (async, no bloquea la GUI). Publica m_serverStats:
+//   { gpus: [{index,name,totalMb,usedMb,pct}], totalMb, usedMb, pct }
+void AppController::pollServerStats()
+{
+    if (m_vramProc) return; // muestra anterior aún en curso; saltear
+    const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
+    if (nvidiaSmi.isEmpty()) return;
+    m_vramProc = new QProcess(this);
+    connect(m_vramProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int, QProcess::ExitStatus) {
+        if (!m_vramProc) return;
+        const QString text = QString::fromUtf8(m_vramProc->readAllStandardOutput());
+        m_vramProc->deleteLater();
+        m_vramProc = nullptr;
+
+        QVariantList gpus;
+        double sumTotal = 0, sumUsed = 0;
+        const QStringList lines = text.split('\n', Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            const QStringList p = line.split(QLatin1Char(','));
+            if (p.size() < 4) continue;
+            bool iOk = false, tOk = false, uOk = false;
+            const int idx = p.at(0).trimmed().toInt(&iOk);
+            const QString name = p.at(1).trimmed();
+            const double totalMb = p.at(2).trimmed().toDouble(&tOk);
+            const double usedMb  = p.at(3).trimmed().toDouble(&uOk);
+            if (!iOk || !tOk || !uOk) continue;
+            QVariantMap g;
+            g[QStringLiteral("index")]   = idx;
+            g[QStringLiteral("name")]    = name;
+            g[QStringLiteral("totalMb")] = totalMb;
+            g[QStringLiteral("usedMb")]  = usedMb;
+            g[QStringLiteral("pct")]     = totalMb > 0 ? (usedMb / totalMb * 100.0) : 0.0;
+            gpus.append(g);
+            sumTotal += totalMb;
+            sumUsed  += usedMb;
+        }
+        QVariantMap stats;
+        stats[QStringLiteral("gpus")]    = gpus;
+        stats[QStringLiteral("totalMb")] = sumTotal;
+        stats[QStringLiteral("usedMb")]  = sumUsed;
+        stats[QStringLiteral("pct")]     = sumTotal > 0 ? (sumUsed / sumTotal * 100.0) : 0.0;
+        m_serverStats = stats;
+        emit serverStatsChanged();
+    });
+    m_vramProc->start(nvidiaSmi,
+                      {QStringLiteral("--query-gpu=index,name,memory.total,memory.used"),
+                       QStringLiteral("--format=csv,noheader,nounits")});
+}
+
 void AppController::stopServer()
 {
     if (!m_proc || m_serverStopping) return;
+    // Parada explícita: cancelar watchdog para que no auto-reinicie.
+    if (m_serverRestartTimer) m_serverRestartTimer->stop();
+    m_serverRestartCount = 0;
     if (m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()) {
         m_agentStarting = false;
         m_pendingAutoAgentLaunchId.clear();
         emit agentStartingChanged();
     }
     stopHealthPolling();
+    stopVramPolling();
     m_serverReady    = false;
     m_serverStopping = true;
     if (m_serverHasVision) { m_serverHasVision = false; emit serverHasVisionChanged(); }
@@ -4265,7 +4400,9 @@ static int sizingContext(int modelMaxCtx)
 {
     const int target = 32768;
     const int hardMax = qMax(2048, modelMaxCtx);
-    return qBound(8192, qMin(target, hardMax), hardMax);
+    // Floor at 8k, but never above the model's own max (qBound asserts if min>max).
+    const int floor = qMin(8192, hardMax);
+    return qBound(floor, qMin(target, hardMax), hardMax);
 }
 
 // gpuFraction = share of the model that fits in VRAM (1.0 = fully on GPU, 0 = all

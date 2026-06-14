@@ -37,6 +37,8 @@ class AppController : public QObject
     Q_PROPERTY(bool   serverRunning   READ serverRunning   NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverStopping  READ serverStopping  NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverReady     READ serverReady     NOTIFY serverReadyChanged)
+    Q_PROPERTY(QString serverState    READ serverState     NOTIFY serverStateChanged)
+    Q_PROPERTY(QVariantMap serverStats READ serverStats    NOTIFY serverStatsChanged)
     Q_PROPERTY(QString serverLog      READ serverLog       NOTIFY serverLogChanged)
     Q_PROPERTY(QString activeLaunchId READ activeLaunchId  NOTIFY activeLaunchIdChanged)
     Q_PROPERTY(QVariantMap effectiveProfile READ effectiveProfile NOTIFY effectiveProfileChanged)
@@ -119,6 +121,8 @@ public:
     bool   serverRunning()   const { return m_proc && m_proc->state() != QProcess::NotRunning; }
     bool   serverStopping()  const { return m_serverStopping; }
     bool   serverReady()     const { return m_serverReady; }
+    QString serverState()    const { return m_serverState; }
+    QVariantMap serverStats() const { return m_serverStats; }
     QString serverLog()      const { return m_log; }
     QString activeLaunchId() const { return m_activeLaunchId; }
     QVariantMap effectiveProfile() const { return m_effectiveProfile; }
@@ -396,6 +400,8 @@ public:
 signals:
     void serverRunningChanged();
     void serverReadyChanged();
+    void serverStateChanged();
+    void serverStatsChanged();
     void serverHasVisionChanged();
     void gitAvailableChanged();
     // El agente pidió subagents pero falta git → la UI ofrece instalarlo.
@@ -493,6 +499,19 @@ private:
     QTimer   *m_healthPollTimer = nullptr;
     void startHealthPolling();
     void stopHealthPolling();
+    // Watchdog auto-restart on crash
+    QString   m_serverState = QStringLiteral("stopped"); // stopped|running|restarting|failed
+    int       m_serverRestartCount = 0;
+    QTimer   *m_serverRestartTimer = nullptr;
+    static constexpr int kMaxServerRestarts = 3;
+    void setServerState(const QString &s);
+    // Live VRAM/stats meter (nvidia-smi async poll while server runs)
+    QTimer   *m_vramPollTimer = nullptr;
+    QProcess *m_vramProc = nullptr;
+    QVariantMap m_serverStats;
+    void startVramPolling();
+    void stopVramPolling();
+    void pollServerStats();
     QVariantMap m_effectiveProfile;
     QStringList m_routerModelNames;   // secciones cargadas en el router activo
     QString m_routerActiveModel;      // sección activa (campo "model" de los requests)
