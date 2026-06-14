@@ -3211,6 +3211,19 @@ bool AppController::importFileSet(const QString &root, const QJsonObject &set, Q
 
 QString AppController::exportUserData()
 {
+    const QString defName = QStringLiteral("llamacode_backup_%1.json")
+        .arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss")));
+    const QString path = QFileDialog::getSaveFileName(
+        nullptr, QStringLiteral("Exportar datos de LlamaCode"),
+        QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath(defName),
+        QStringLiteral("JSON (*.json)"));
+    if (path.isEmpty()) return QString();
+    return exportUserDataTo(path);
+}
+
+QString AppController::exportUserDataTo(const QString &path)
+{
+    if (path.trimmed().isEmpty()) { emit serverError(QStringLiteral("Falta la ruta de exportación.")); return QString(); }
     const QString appData = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     const QString appLocal = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 
@@ -3241,14 +3254,6 @@ QString AppController::exportUserData()
         QStringLiteral("command")
     });
 
-    const QString defName = QStringLiteral("llamacode_backup_%1.json")
-        .arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss")));
-    const QString path = QFileDialog::getSaveFileName(
-        nullptr, QStringLiteral("Exportar datos de LlamaCode"),
-        QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath(defName),
-        QStringLiteral("JSON (*.json)"));
-    if (path.isEmpty()) return QString();
-
     QFile f(path);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         emit serverError(QStringLiteral("No se pudo escribir el backup: %1").arg(path));
@@ -3267,6 +3272,12 @@ QString AppController::importUserData()
         QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation),
         QStringLiteral("JSON (*.json)"));
     if (path.isEmpty()) return QString();
+    return importUserDataFrom(path);
+}
+
+QString AppController::importUserDataFrom(const QString &path)
+{
+    if (path.trimmed().isEmpty()) { emit serverError(QStringLiteral("Falta la ruta del backup.")); return QString(); }
 
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) {
@@ -3635,6 +3646,23 @@ QString AppController::exportChatSession(const QString &id, const QString &forma
         QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation)).filePath(defName),
         asJson ? QStringLiteral("JSON (*.json)") : QStringLiteral("Markdown (*.md)"));
     if (path.isEmpty()) return QString();
+    return exportChatSessionTo(sid, format, path);
+}
+
+QString AppController::exportChatSessionTo(const QString &id, const QString &format,
+                                           const QString &path)
+{
+    const QString sid = id.isEmpty() ? m_chatSessionId : id;
+    if (sid.isEmpty()) { emit serverError(QStringLiteral("No hay sesión que exportar.")); return QString(); }
+    if (path.trimmed().isEmpty()) { emit serverError(QStringLiteral("Falta la ruta de exportación.")); return QString(); }
+
+    QFile f(chatStorageDir() + QStringLiteral("/") + sid + QStringLiteral(".json"));
+    if (!f.open(QIODevice::ReadOnly)) { emit serverError(QStringLiteral("La sesión no tiene archivo guardado.")); return QString(); }
+    const QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+
+    const QString title = obj.value(QStringLiteral("title")).toString(QStringLiteral("chat"));
+    const bool asJson = (format.compare(QLatin1String("json"), Qt::CaseInsensitive) == 0);
 
     QByteArray out;
     if (asJson) {

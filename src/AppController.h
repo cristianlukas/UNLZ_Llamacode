@@ -248,6 +248,10 @@ public:
     // Exporta una sesión de chat a archivo (Markdown o JSON). format: "md"|"json".
     // Abre diálogo de guardado; devuelve la ruta escrita ("" si cancelado/error).
     Q_INVOKABLE QString exportChatSession(const QString &id, const QString &format);
+    // Variante headless: escribe directo a `path` (sin diálogo). Devuelve la ruta
+    // escrita, o "" + serverError() si falla.
+    Q_INVOKABLE QString exportChatSessionTo(const QString &id, const QString &format,
+                                            const QString &path);
     // Busca texto en títulos y contenido de todas las sesiones de chat. Devuelve
     // lista de {id,title,projectName,snippet} de sesiones que matchean.
     Q_INVOKABLE QVariantList searchChatHistory(const QString &query) const;
@@ -266,6 +270,9 @@ public:
     Q_INVOKABLE void writeSetting(const QString &key, const QVariant &value);
     Q_INVOKABLE QString exportUserData();
     Q_INVOKABLE QString importUserData();
+    // Variantes headless: ruta explícita, sin diálogo.
+    Q_INVOKABLE QString exportUserDataTo(const QString &path);
+    Q_INVOKABLE QString importUserDataFrom(const QString &path);
     Q_INVOKABLE bool wipeUserData(const QString &kind, const QString &confirmation);
     Q_INVOKABLE QVariantList wipeCategories() const;
     Q_INVOKABLE bool isHarnessInstalled(const QString &adapter) const;
