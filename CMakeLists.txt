@@ -110,9 +110,16 @@ if (WIN32)
         COMPILE_OPTIONS "$<$<CONFIG:Debug>:/dLC_DEBUG_ICON>")
 endif()
 
+# NOTE: en Linux/macOS el ejecutable se llama "LlamaCode" (sin extension) y
+# colisiona con el directorio del modulo QML cuyo URI tambien es "LlamaCode"
+# (ld: "cannot open output file LlamaCode: Is a directory"). En Windows no pasa
+# porque el binario es "LlamaCode.exe". Reubicamos el modulo bajo qml/ para
+# evitar el choque; el modulo igual se embebe via qmlcachegen + recursos, asi
+# que no se necesita en disco en runtime.
 qt_add_qml_module(LlamaCode
     URI LlamaCode
     VERSION 1.0
+    OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/qml/LlamaCode
     QML_FILES
         qml/Main.qml
         qml/pages/BinariesPage.qml

@@ -54,7 +54,7 @@ install_deps() {
         $SUDO apt-get install -y --no-install-recommends \
             git curl ca-certificates cmake ninja-build build-essential pkg-config \
             python3 python3-pip python3-venv \
-            libgl1-mesa-dev libegl1 libxkbcommon0 libxkbcommon-x11-0 \
+            libglib2.0-0 libgl1-mesa-dev libegl1 libxkbcommon0 libxkbcommon-x11-0 \
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
             libfontconfig1 libfreetype6 libdbus-1-3
@@ -63,18 +63,18 @@ install_deps() {
         $SUDO dnf install -y \
             git curl cmake ninja-build gcc-c++ make pkgconf-pkg-config \
             python3 python3-pip \
-            mesa-libGL-devel mesa-libEGL libxkbcommon libxkbcommon-x11 \
+            glib2 mesa-libGL-devel mesa-libEGL libxkbcommon libxkbcommon-x11 \
             xcb-util-cursor fontconfig freetype dbus-libs
     elif command -v pacman >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via pacman..."
         $SUDO pacman -Sy --needed --noconfirm \
             git curl cmake ninja base-devel python python-pip \
-            mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig freetype2 dbus
+            glib2 mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig freetype2 dbus
     elif command -v zypper >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via zypper..."
         $SUDO zypper install -y \
             git curl cmake ninja gcc-c++ pkg-config python3 python3-pip \
-            Mesa-libGL-devel libxkbcommon0 libxkbcommon-x11-0 \
+            libglib-2_0-0 Mesa-libGL-devel libxkbcommon0 libxkbcommon-x11-0 \
             xcb-util-cursor0 fontconfig freetype2 libdbus-1-3
     else
         c_die "Unsupported distro: install git, cmake, ninja, g++, python3 and Qt6 runtime libs manually."

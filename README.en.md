@@ -56,9 +56,19 @@ irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/boot
 curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
 ```
 
-It automatically installs: git, Python/CMake/Ninja, the C++ toolchain (MSVC v143 on
-Windows / g++ on Linux) and Qt 6 (Core, Quick, Sql, Concurrent, Network, Widgets +
-QML runtime modules). Clones into `%USERPROFILE%\LlamaCode` / `~/LlamaCode`.
+It automatically installs:
+
+- **git, CMake, Ninja, Python** and the C++ toolchain — MSVC v143 (Build Tools
+  2022) on Windows / `g++` + `build-essential` on Linux.
+- **Qt 6.8.3** via `aqtinstall` on both platforms (Windows `msvc2022_64`, Linux
+  `gcc_64`). On Linux aqt is used — **not** distro Qt packages — because the code
+  needs Qt ≥ 6.5 (`QQmlApplicationEngine::loadFromModule`) and several LTS
+  distros ship an older Qt (Ubuntu 24.04 = 6.4.2). From the distro we only pull
+  the toolchain and the system libs Qt links against (GL, xcb, glib,
+  fontconfig…).
+
+Clones into `%USERPROFILE%\LlamaCode` / `~/LlamaCode` and launches the app when
+done (unless `LC_NORUN=1`).
 
 Optional variables (set before running):
 
@@ -67,11 +77,21 @@ Optional variables (set before running):
 | `LC_DIR` | `~/LlamaCode` | isolated install folder |
 | `LC_BRANCH` | `main` | branch to clone |
 | `LC_CONFIG` | `Release` | `Release` or `Debug` |
+| `LC_QTVER` | `6.8.3` | Qt version (Linux only) |
+| `LC_QTROOT` | `~/Qt` | Qt install root (Linux only) |
 | `LC_NORUN` | (empty) | `1` = don't launch when done |
+
+Example with overrides (Linux):
+
+```bash
+LC_DIR=/opt/llamacode LC_CONFIG=Debug LC_NORUN=1 \
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh)"
+```
 
 Minimum prerequisites: **Windows** needs `winget` (App Installer from the Microsoft
 Store). **Linux** supports apt / dnf / pacman / zypper and asks for `sudo` for
-system packages.
+system packages. Validated in a clean Ubuntu 24.04 container (toolchain + aqt Qt
+6.8.3 + build).
 
 ---
 

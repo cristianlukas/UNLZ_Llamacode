@@ -56,9 +56,19 @@ irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/boot
 curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
 ```
 
-Instala automáticamente: git, Python/CMake/Ninja, toolchain C++ (MSVC v143 en
-Windows / g++ en Linux) y Qt 6 (Core, Quick, Sql, Concurrent, Network, Widgets +
-módulos QML runtime). Clona en `%USERPROFILE%\LlamaCode` / `~/LlamaCode`.
+Instala automáticamente:
+
+- **git, CMake, Ninja, Python** y el toolchain C++ — MSVC v143 (Build Tools
+  2022) en Windows / `g++` + `build-essential` en Linux.
+- **Qt 6.8.3** vía `aqtinstall` en ambas plataformas (Windows `msvc2022_64`,
+  Linux `gcc_64`). En Linux se usa aqt — **no** los paquetes Qt de la distro —
+  porque el código requiere Qt ≥ 6.5 (`QQmlApplicationEngine::loadFromModule`) y
+  varias LTS traen Qt viejo (Ubuntu 24.04 = 6.4.2). De la distro sólo salen el
+  toolchain y las libs de sistema contra las que Qt enlaza (GL, xcb, glib,
+  fontconfig…).
+
+Clona en `%USERPROFILE%\LlamaCode` / `~/LlamaCode` y al terminar lanza la app
+(salvo `LC_NORUN=1`).
 
 Variables opcionales (setear antes de correr):
 
@@ -67,11 +77,21 @@ Variables opcionales (setear antes de correr):
 | `LC_DIR` | `~/LlamaCode` | carpeta de instalación aislada |
 | `LC_BRANCH` | `main` | rama a clonar |
 | `LC_CONFIG` | `Release` | `Release` o `Debug` |
+| `LC_QTVER` | `6.8.3` | versión de Qt (sólo Linux) |
+| `LC_QTROOT` | `~/Qt` | raíz de instalación de Qt (sólo Linux) |
 | `LC_NORUN` | (vacío) | `1` = no lanzar al terminar |
+
+Ejemplo con overrides (Linux):
+
+```bash
+LC_DIR=/opt/llamacode LC_CONFIG=Debug LC_NORUN=1 \
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh)"
+```
 
 Requisitos mínimos previos: **Windows** necesita `winget` (App Installer de la
 Microsoft Store). **Linux** soporta apt / dnf / pacman / zypper y pide `sudo`
-para los paquetes de sistema.
+para los paquetes de sistema. Validado en contenedor Ubuntu 24.04 limpio
+(toolchain + aqt Qt 6.8.3 + build).
 
 ---
 
