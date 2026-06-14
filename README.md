@@ -1,4 +1,4 @@
-# LlamaCode
+# UNLZ_Llamacode
 
 ## Instalación ultra-rápida (banco de pruebas aislado)
 
@@ -8,13 +8,13 @@ aislada, compila y arranca. No requiere clonar a mano ni preparar el entorno.
 **Windows** (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/guideahon/LlamaCode/main/scripts/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
 ```
 
 **Linux** (bash):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/guideahon/LlamaCode/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
 ```
 
 Instala automáticamente: git, Python/CMake/Ninja, toolchain C++ (MSVC v143 en
@@ -36,7 +36,7 @@ para los paquetes de sistema.
 
 ---
 
-LlamaCode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
+UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
 
 Principio central:
 - La GUI **no** embebe `llama.cpp`.
@@ -207,7 +207,7 @@ Calculado contra VRAM (`nvidia-smi`) y RAM del sistema (90% utilizable como head
 
 ### Importador de perfiles desde CLI
 
-Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n-gpu-layers 99`) y LlamaCode extrae y configura automáticamente todos los parámetros reconocidos.
+Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n-gpu-layers 99`) y UNLZ_Llamacode extrae y configura automáticamente todos los parámetros reconocidos.
 
 ## Chat integrado
 
@@ -235,7 +235,7 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 
 ## Process Lifecycle
 
-- **Windows Job Object**: todos los subprocesos (llama-server + harness) se asignan al Job Object del proceso principal. Al cerrar LlamaCode (normal o crash), los hijos mueren automáticamente.
+- **Windows Job Object**: todos los subprocesos (llama-server + harness) se asignan al Job Object del proceso principal. Al cerrar UNLZ_Llamacode (normal o crash), los hijos mueren automáticamente.
 - **Env vars de trazabilidad**: `LLAMACODE_MANAGED=1`, `LLAMACODE_ROLE=server|harness-*`, `LLAMACODE_APP_PID=<pid>` en todos los procesos spawneados.
 - **PID state file** (`services.json`): al iniciar, detecta orphans de sesiones anteriores y los mata antes de levantar nuevos procesos.
 - **Stop asíncrono**: `stopServer()` no bloquea la UI. Envía `terminate()`, expone `serverStopping` property, muestra "Deteniendo..." en botón y estado. Kill forzado tras 5s si el proceso no termina.
@@ -321,7 +321,7 @@ Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, v
 
 1. Seleccionar uno o más `LaunchProfile` para comparar.
 2. Elegir modo de prueba: **Corta** (~30 s) o **Completa** (1–5 min).
-3. Ejecutar: LlamaCode lanza cada perfil en secuencia, corre los prompts, registra métricas.
+3. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
 4. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
 
 ### Modos de prueba
@@ -416,7 +416,7 @@ Detalle completo en [`docs/tuner.md`](docs/tuner.md).
 
 Código, datos y diseño tomados de otros proyectos:
 
-| Proyecto | Uso en LlamaCode | Repo / Fuente |
+| Proyecto | Uso en UNLZ_Llamacode | Repo / Fuente |
 |---|---|---|
 | **llama.cpp** | Binarios orquestados (`llama-server`), API OpenAI-compat, formato GGUF | https://github.com/ggml-org/llama.cpp |
 | **opencode** | Harness de agente externo (HTTP API + SSE); formato de config MCP `mcp{}` | https://github.com/sst/opencode |

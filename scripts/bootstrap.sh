@@ -4,7 +4,7 @@
 # Installs every dependency (git, cmake, ninja, g++, Qt6 + QML runtime modules),
 # clones the repo into an isolated folder, builds and launches.
 #
-#   curl -fsSL https://raw.githubusercontent.com/guideahon/LlamaCode/main/scripts/bootstrap.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
 #
 # Override defaults via env vars:
 #   LC_DIR=/path/to/install   (default: $HOME/LlamaCode)
@@ -14,7 +14,7 @@
 
 set -euo pipefail
 
-REPO="https://github.com/guideahon/LlamaCode.git"
+REPO="https://github.com/guideahon/UNLZ_Llamacode.git"
 DIR="${LC_DIR:-$HOME/LlamaCode}"
 BRANCH="${LC_BRANCH:-main}"
 CONFIG="${LC_CONFIG:-Release}"

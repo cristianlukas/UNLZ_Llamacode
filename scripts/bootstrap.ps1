@@ -8,7 +8,7 @@
     deploys the Qt runtime next to the binary.
 
 .EXAMPLE
-    irm https://raw.githubusercontent.com/guideahon/LlamaCode/main/scripts/bootstrap.ps1 | iex
+    irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
 
 .NOTES
     Override defaults via env vars before running:
@@ -22,7 +22,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 # ── Config ──────────────────────────────────────────────────────────────────
-$Repo    = 'https://github.com/guideahon/LlamaCode.git'
+$Repo    = 'https://github.com/guideahon/UNLZ_Llamacode.git'
 $Dir     = if ($env:LC_DIR)    { $env:LC_DIR }    else { Join-Path $env:USERPROFILE 'LlamaCode' }
 $Branch  = if ($env:LC_BRANCH) { $env:LC_BRANCH } else { 'main' }
 $Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Release' }
