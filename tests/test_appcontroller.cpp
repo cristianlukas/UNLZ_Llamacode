@@ -18,6 +18,8 @@ private slots:
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
     void exportChatSessionToMissingSessionErrors();
+    void parseGpuPowerCsvParses();
+    void parseGpuPowerCsvTolerant();
 
 private:
     QTemporaryDir m_tmp;
@@ -66,6 +68,34 @@ void AppControllerTests::exportChatSessionToMissingSessionErrors()
                                                 QStringLiteral("md"),
                                                 m_tmp.filePath(QStringLiteral("c.md")));
     QVERIFY(out.isEmpty());
+}
+
+void AppControllerTests::parseGpuPowerCsvParses()
+{
+    // index, name, limit, default, min, max, draw
+    const QString csv =
+        QStringLiteral("0, NVIDIA GeForce RTX 3090, 280.00, 350.00, 100.00, 350.00, 142.50\n");
+    const QVariantList gpus = AppController::parseGpuPowerCsv(csv);
+    QCOMPARE(gpus.size(), 1);
+    const QVariantMap g = gpus.first().toMap();
+    QCOMPARE(g.value("index").toInt(), 0);
+    QCOMPARE(g.value("name").toString(), QStringLiteral("NVIDIA GeForce RTX 3090"));
+    QCOMPARE(g.value("currentW").toDouble(), 280.0);
+    QCOMPARE(g.value("defaultW").toDouble(), 350.0);
+    QCOMPARE(g.value("minW").toDouble(), 100.0);
+    QCOMPARE(g.value("maxW").toDouble(), 350.0);
+    QCOMPARE(g.value("drawW").toDouble(), 142.5);
+}
+
+void AppControllerTests::parseGpuPowerCsvTolerant()
+{
+    // Línea basura (sin index numérico) y campo faltante → se ignoran sin romper.
+    const QString csv = QStringLiteral("garbage line\n1, GPU B, 200, 250, 90, 250\n");
+    const QVariantList gpus = AppController::parseGpuPowerCsv(csv);
+    QCOMPARE(gpus.size(), 1);
+    const QVariantMap g = gpus.first().toMap();
+    QCOMPARE(g.value("index").toInt(), 1);
+    QCOMPARE(g.value("drawW").toDouble(), 0.0);   // power.draw ausente
 }
 
 QTEST_MAIN(AppControllerTests)

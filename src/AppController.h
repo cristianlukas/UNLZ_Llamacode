@@ -408,6 +408,17 @@ public:
     Q_INVOKABLE void openResearchReport(const QString &id);
     Q_INVOKABLE void deleteResearchReport(const QString &id);
     Q_INVOKABLE void rescanHardware();
+    // ── GPU power limit (nvidia-smi) ──
+    // Estado actual por GPU: {available:bool, gpus:[{index,name,currentW,defaultW,
+    // minW,maxW,drawW}]}. Lectura síncrona (rápida, usada on-demand desde Ajustes).
+    Q_INVOKABLE QVariantMap gpuPowerInfo() const;
+    // Fija el power limit (W) en una GPU (gpuIndex<0 = todas). En Windows requiere
+    // elevación → se relanza nvidia-smi vía powershell RunAs. Devuelve "" si OK o
+    // un mensaje de error. Persiste el valor como setting global "gpuPowerLimitW".
+    Q_INVOKABLE QString setGpuPowerLimit(int watts, int gpuIndex = -1);
+    // Parser de la salida CSV de nvidia-smi (--query-gpu power.*). Estático para
+    // testear sin GPU. Devuelve lista de QVariantMap por GPU.
+    static QVariantList parseGpuPowerCsv(const QString &csv);
     // Escaneo pesado de arranque (binaries/roots/hardware/catálogo + migraciones).
     // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
     Q_INVOKABLE void runStartupScan();
@@ -529,6 +540,10 @@ private:
     void startVramPolling();
     void stopVramPolling();
     void pollServerStats();
+    // Aplica el power limit configurado al arrancar un server: usa el override del
+    // launch profile (powerLimitW>0) o, si no, el global "gpuPowerLimitW". No-op si
+    // ambos son 0 o no hay nvidia-smi. Loguea a eventos del server.
+    void applyConfiguredPowerLimit(const LaunchProfile &launch);
     QVariantMap m_effectiveProfile;
     QStringList m_routerModelNames;   // secciones cargadas en el router activo
     QString m_routerActiveModel;      // sección activa (campo "model" de los requests)

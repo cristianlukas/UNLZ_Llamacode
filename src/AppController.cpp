@@ -657,6 +657,10 @@ void AppController::startServer(const QString &launchProfileId)
 
     m_activeLaunchId = launchProfileId;
     writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);  // recordar último usado
+
+    // Power limit de GPU: override del perfil o global de Ajustes (antes de cargar
+    // el modelo, para que el server arranque ya con el límite aplicado).
+    applyConfiguredPowerLimit(m_profiles.resolveLaunch(launchProfileId));
     appendServerEvent(QStringLiteral("lifecycle"),
                       QStringLiteral("Starting: %1 %2").arg(binaryPath, args.join(' ')));
 
@@ -880,6 +884,122 @@ void AppController::pollServerStats()
     m_vramProc->start(nvidiaSmi,
                       {QStringLiteral("--query-gpu=index,name,memory.total,memory.used"),
                        QStringLiteral("--format=csv,noheader,nounits")});
+}
+
+// Parser estático: cada línea CSV es
+//   index, name, power.limit, power.default_limit, power.min_limit, power.max_limit, power.draw
+// (formato csv,noheader,nounits). Tolera campos "[N/A]" → 0.
+QVariantList AppController::parseGpuPowerCsv(const QString &csv)
+{
+    QVariantList gpus;
+    const QStringList lines = csv.split('\n', Qt::SkipEmptyParts);
+    for (const QString &line : lines) {
+        const QStringList p = line.split(QLatin1Char(','));
+        if (p.size() < 6) continue;
+        bool iOk = false;
+        const int idx = p.at(0).trimmed().toInt(&iOk);
+        if (!iOk) continue;
+        auto w = [&](int i) { return i < p.size() ? p.at(i).trimmed().toDouble() : 0.0; };
+        QVariantMap g;
+        g[QStringLiteral("index")]    = idx;
+        g[QStringLiteral("name")]     = p.at(1).trimmed();
+        g[QStringLiteral("currentW")] = w(2);
+        g[QStringLiteral("defaultW")] = w(3);
+        g[QStringLiteral("minW")]     = w(4);
+        g[QStringLiteral("maxW")]     = w(5);
+        g[QStringLiteral("drawW")]    = p.size() > 6 ? w(6) : 0.0;
+        gpus.append(g);
+    }
+    return gpus;
+}
+
+QVariantMap AppController::gpuPowerInfo() const
+{
+    QVariantMap result;
+    const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
+    if (nvidiaSmi.isEmpty()) {
+        result[QStringLiteral("available")] = false;
+        result[QStringLiteral("gpus")] = QVariantList();
+        return result;
+    }
+    QProcess p;
+    p.start(nvidiaSmi,
+            {QStringLiteral("--query-gpu=index,name,power.limit,power.default_limit,"
+                            "power.min_limit,power.max_limit,power.draw"),
+             QStringLiteral("--format=csv,noheader,nounits")});
+    QVariantList gpus;
+    if (p.waitForFinished(4000))
+        gpus = parseGpuPowerCsv(QString::fromUtf8(p.readAllStandardOutput()));
+    result[QStringLiteral("available")] = !gpus.isEmpty();
+    result[QStringLiteral("gpus")] = gpus;
+    return result;
+}
+
+QString AppController::setGpuPowerLimit(int watts, int gpuIndex)
+{
+    const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
+    if (nvidiaSmi.isEmpty())
+        return QStringLiteral("nvidia-smi no encontrado (¿GPU NVIDIA / drivers instalados?).");
+    if (watts <= 0)
+        return QStringLiteral("Valor de power limit inválido: %1 W").arg(watts);
+
+    // Persistir como setting global (re-aplicado al iniciar la app / server).
+    writeSetting(QStringLiteral("gpuPowerLimitW"), watts);
+
+    QStringList args;
+    if (gpuIndex >= 0) args << QStringLiteral("-i") << QString::number(gpuIndex);
+    args << QStringLiteral("-pl") << QString::number(watts);
+
+#ifdef Q_OS_WIN
+    // En Windows fijar el power limit requiere privilegios de administrador. Se
+    // relanza nvidia-smi elevado vía powershell Start-Process -Verb RunAs (UAC).
+    const QString argStr = QStringLiteral("'") + args.join(QStringLiteral("','")) + QStringLiteral("'");
+    const QString script = QStringLiteral(
+        "$p = Start-Process -FilePath '%1' -ArgumentList %2 -Verb RunAs -Wait -PassThru; exit $p.ExitCode")
+            .arg(nvidiaSmi, argStr);
+    QProcess ps;
+    ps.start(QStringLiteral("powershell"),
+             {QStringLiteral("-NoProfile"), QStringLiteral("-ExecutionPolicy"),
+              QStringLiteral("Bypass"), QStringLiteral("-Command"), script});
+    if (!ps.waitForFinished(30000))
+        return QStringLiteral("Timeout al aplicar power limit (UAC no respondido).");
+    if (ps.exitCode() != 0)
+        return QStringLiteral("nvidia-smi falló (¿UAC cancelado o valor fuera de rango?). "
+                              "El valor debe estar entre min/max que reporta la placa.");
+#else
+    QProcess proc;
+    proc.start(nvidiaSmi, args);
+    if (!proc.waitForFinished(15000))
+        return QStringLiteral("Timeout al aplicar power limit.");
+    if (proc.exitCode() != 0)
+        return QStringLiteral("nvidia-smi falló: %1 (¿requiere sudo o valor fuera de rango?).")
+            .arg(QString::fromUtf8(proc.readAllStandardError()).trimmed());
+#endif
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("GPU power limit fijado en %1 W%2")
+                          .arg(watts)
+                          .arg(gpuIndex >= 0 ? QStringLiteral(" (GPU %1)").arg(gpuIndex)
+                                             : QString()));
+    return QString();
+}
+
+void AppController::applyConfiguredPowerLimit(const LaunchProfile &launch)
+{
+    int watts = launch.powerLimitW;
+    if (watts <= 0)
+        watts = readSetting(QStringLiteral("gpuPowerLimitW"), 0).toInt();
+    if (watts <= 0) return;   // sin override ni global → no tocar la placa
+
+    if (QStandardPaths::findExecutable(QStringLiteral("nvidia-smi")).isEmpty()) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Power limit %1 W solicitado pero nvidia-smi no está disponible.")
+                              .arg(watts));
+        return;
+    }
+    const QString err = setGpuPowerLimit(watts, -1);
+    if (!err.isEmpty())
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("No se pudo aplicar power limit: %1").arg(err));
 }
 
 void AppController::stopServer()

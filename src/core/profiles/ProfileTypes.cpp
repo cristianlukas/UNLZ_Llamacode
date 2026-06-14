@@ -155,6 +155,7 @@ QJsonObject LaunchProfile::toJson() const {
     o["extraArgs"] = QJsonArray::fromStringList(extraArgs);
     o["envOverrides"] = mapToJson(envOverrides);
     o["master"] = master.toJson();
+    o["powerLimitW"] = powerLimitW;
     return o;
 }
 LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
@@ -175,6 +176,7 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     for (const auto &v : o["extraArgs"].toArray()) p.extraArgs.append(v.toString());
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
     p.master = MasterConfig::fromJson(o["master"].toObject());
+    p.powerLimitW = o["powerLimitW"].toInt(0);
     return p;
 }
 QString LaunchProfile::generateId() { return newId(); }

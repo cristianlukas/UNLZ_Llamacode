@@ -108,6 +108,9 @@ struct LaunchProfile {
     QStringList extraArgs;
     QMap<QString, QString> envOverrides;
     MasterConfig master;      // supervisor opcional (maestro CLI/HTTP)
+    // Límite de potencia de GPU (W) aplicado vía nvidia-smi al arrancar el server
+    // de este perfil. 0 = sin override (usa el global de Ajustes, si hay).
+    int powerLimitW = 0;
 
     QJsonObject toJson() const;
     static LaunchProfile fromJson(const QJsonObject &obj);

@@ -214,6 +214,127 @@ Item {
                         }
                     }
 
+                    // ── GPU power limit (nvidia-smi) ─────────────────────────
+                    ColumnLayout {
+                        id: gpuSection
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        property var info: ({ available: false, gpus: [] })
+                        property string msg: ""
+                        property bool msgOk: false
+                        function reload() { info = App.gpuPowerInfo() }
+                        Component.onCompleted: reload()
+
+                        Text {
+                            text: "GPU · POWER LIMIT"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: gpuInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: gpuInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                Text {
+                                    text: "Límite de potencia de la GPU (W) vía nvidia-smi. Bajarlo reduce consumo, temperatura y ruido con poca pérdida en inferencia. Se aplica al iniciar el server. Requiere admin (UAC)."
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Text {
+                                    visible: !gpuSection.info.available
+                                    text: "No se detectó nvidia-smi (¿GPU NVIDIA / drivers instalados?)."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+
+                                Repeater {
+                                    model: gpuSection.info.available ? gpuSection.info.gpus : []
+                                    delegate: ColumnLayout {
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        spacing: 8
+
+                                        Text {
+                                            text: "GPU " + modelData.index + " · " + modelData.name
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "actual " + Math.round(modelData.currentW) + " W · default " + Math.round(modelData.defaultW)
+                                                  + " W · rango " + Math.round(modelData.minW) + "–" + Math.round(modelData.maxW) + " W"
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                        }
+
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 10
+                                            Slider {
+                                                id: plSlider
+                                                Layout.fillWidth: true
+                                                from: modelData.minW
+                                                to: modelData.maxW
+                                                stepSize: 5
+                                                value: modelData.currentW
+                                            }
+                                            Text {
+                                                text: Math.round(plSlider.value) + " W"
+                                                color: Theme.textPrimary
+                                                font.pixelSize: 13
+                                                font.bold: true
+                                                Layout.preferredWidth: 60
+                                            }
+                                            LcButton {
+                                                text: "Aplicar"
+                                                onClicked: {
+                                                    var err = App.setGpuPowerLimit(Math.round(plSlider.value), modelData.index)
+                                                    gpuSection.msgOk = (err === "")
+                                                    gpuSection.msg = (err === "")
+                                                        ? ("Power limit fijado en " + Math.round(plSlider.value) + " W.")
+                                                        : err
+                                                    gpuSection.reload()
+                                                }
+                                            }
+                                            LcButton {
+                                                text: "Default"
+                                                secondary: true
+                                                onClicked: {
+                                                    var err = App.setGpuPowerLimit(Math.round(modelData.defaultW), modelData.index)
+                                                    gpuSection.msgOk = (err === "")
+                                                    gpuSection.msg = (err === "") ? "Restaurado al default." : err
+                                                    gpuSection.reload()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    visible: gpuSection.msg.length > 0
+                                    text: gpuSection.msg
+                                    color: gpuSection.msgOk ? Theme.accent : Theme.btnDangerBg
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                }
+                            }
+                        }
+                    }
+
                     // ── Integrations ─────────────────────────────────────────
                     ColumnLayout {
                         id: intgSection

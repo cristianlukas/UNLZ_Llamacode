@@ -96,6 +96,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     l.backendProfileId = "b1"; l.modelProfileId = "m1"; l.runtimePresetId = "r1";
     l.extraArgs = QStringList{"--verbose"};
     l.master.kind = "cli"; l.master.cliName = "claude";
+    l.powerLimitW = 280;
     const LaunchProfile r = LaunchProfile::fromJson(l.toJson());
     QCOMPARE(r.name, l.name);
     QCOMPARE(r.alias, l.alias);
@@ -105,6 +106,10 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.extraArgs, l.extraArgs);
     QCOMPARE(r.master.kind, QStringLiteral("cli"));
     QCOMPARE(r.master.cliName, QStringLiteral("claude"));
+    QCOMPARE(r.powerLimitW, 280);
+    // Default (campo ausente) → 0 = sin override.
+    LaunchProfile empty;
+    QCOMPARE(LaunchProfile::fromJson(empty.toJson()).powerLimitW, 0);
 }
 
 void ProfilesTests::masterConfig_jsonRoundTrip()

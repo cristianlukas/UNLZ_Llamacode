@@ -245,6 +245,7 @@ Item {
         // Alias (display) opcional + favorito del perfil.
         root.launchFavorite = (lp.favorite === true)
         profileAliasField.text = lp.alias ?? ""
+        powerLimitField.text = ((lp.powerLimitW ?? 0) > 0) ? (lp.powerLimitW).toString() : ""
 
         const bp = App.profileManager.getBackend(backendId)
         backendNameCurrent = bp.name ?? ""
@@ -443,6 +444,7 @@ Item {
         const lpOk = App.profileManager.updateLaunchProfile({
             "id": selectedLaunchId, "name": launchCombo.displayText,
             "alias": profileAliasField.text.trim(), "favorite": root.launchFavorite,
+            "powerLimitW": parseInt(powerLimitField.text) || 0,
             "backendProfileId": effectiveBid, "modelProfileId": effectiveMid,
             "runtimePresetId": effectiveRid, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
             "harnessProfileId": resolvedHarnessId,
@@ -969,6 +971,13 @@ Item {
                         LcTextField { id: cacheRamField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
                         Text { text: "cache-reuse"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheReuseField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
+                        Text { text: "power-limit (W)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        LcTextField {
+                            id: powerLimitField
+                            Layout.fillWidth: true
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            placeholderText: "0 = global"
+                        }
                     }
                 }
 
