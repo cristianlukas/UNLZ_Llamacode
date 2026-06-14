@@ -1,5 +1,41 @@
 # LlamaCode
 
+## Instalación ultra-rápida (banco de pruebas aislado)
+
+Un solo comando: instala todas las dependencias, clona el repo en una carpeta
+aislada, compila y arranca. No requiere clonar a mano ni preparar el entorno.
+
+**Windows** (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/guideahon/LlamaCode/main/scripts/bootstrap.ps1 | iex
+```
+
+**Linux** (bash):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/guideahon/LlamaCode/main/scripts/bootstrap.sh | bash
+```
+
+Instala automáticamente: git, Python/CMake/Ninja, toolchain C++ (MSVC v143 en
+Windows / g++ en Linux) y Qt 6 (Core, Quick, Sql, Concurrent, Network, Widgets +
+módulos QML runtime). Clona en `%USERPROFILE%\LlamaCode` / `~/LlamaCode`.
+
+Variables opcionales (setear antes de correr):
+
+| Var | Default | Qué hace |
+|---|---|---|
+| `LC_DIR` | `~/LlamaCode` | carpeta de instalación aislada |
+| `LC_BRANCH` | `main` | rama a clonar |
+| `LC_CONFIG` | `Release` | `Release` o `Debug` |
+| `LC_NORUN` | (vacío) | `1` = no lanzar al terminar |
+
+Requisitos mínimos previos: **Windows** necesita `winget` (App Installer de la
+Microsoft Store). **Linux** soporta apt / dnf / pacman / zypper y pide `sudo`
+para los paquetes de sistema.
+
+---
+
 LlamaCode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
 
 Principio central:
@@ -375,3 +411,19 @@ Detalle completo en [`docs/tuner.md`](docs/tuner.md).
 - Escrituras fuera de workspace: bloqueadas por defecto.
 - Comandos shell con allowlist/denylist por `WorkspaceProfile`.
 - Subprocesos tagged con env vars para auditoría y control de ciclo de vida.
+
+## Agradecimientos
+
+Código, datos y diseño tomados de otros proyectos:
+
+| Proyecto | Uso en LlamaCode | Repo / Fuente |
+|---|---|---|
+| **llama.cpp** | Binarios orquestados (`llama-server`), API OpenAI-compat, formato GGUF | https://github.com/ggml-org/llama.cpp |
+| **opencode** | Harness de agente externo (HTTP API + SSE); formato de config MCP `mcp{}` | https://github.com/sst/opencode |
+| **aider** | Harness de agente externo soportado | https://github.com/Aider-AI/aider |
+| **markitdown** | Sidecar de extracción de documentos (pdf/office → markdown) en `DocumentExtractor` | https://github.com/microsoft/markitdown |
+| **Odysseus cookbook** | Base del catálogo hardware-fit `assets/hwfit/hf_models.json` (~900 modelos) | https://github.com/TheBlokeAI/odysseus-cookbook |
+| **Artificial Analysis** | Scores de calidad bundled `assets/benchmarks/aa_intelligence.json` (Intelligence Index) | https://artificialanalysis.ai |
+| **Catppuccin (Mocha)** | Paleta del theme QML | https://github.com/catppuccin/catppuccin |
+
+> Al sumar código/datos de otro repo, agregar la fila correspondiente acá.
