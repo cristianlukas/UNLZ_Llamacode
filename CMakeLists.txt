@@ -37,6 +37,9 @@ set(SOURCES
     src/core/agent/SubAgentRunner.cpp
     src/core/agent/MemoryStore.cpp
     src/core/eval/EvalSuite.cpp
+    src/core/tuner/AutoTuner.cpp
+    src/core/tuner/TunerEngine.cpp
+    src/core/tuner/TunerWorker.cpp
 )
 
 set(HEADERS
@@ -65,6 +68,9 @@ set(HEADERS
     src/core/agent/SubAgentRunner.h
     src/core/agent/MemoryStore.h
     src/core/eval/EvalSuite.h
+    src/core/tuner/AutoTuner.h
+    src/core/tuner/TunerEngine.h
+    src/core/tuner/TunerWorker.h
 )
 
 qt_add_executable(LlamaCode

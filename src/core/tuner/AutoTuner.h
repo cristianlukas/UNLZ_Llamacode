@@ -84,8 +84,10 @@ public:
     AutoTuner(std::vector<ParamSpec> space, TunerSettings settings);
 
     // Corre la optimización. eval evalúa un candidato (lanzar servidor + medir).
-    // Devuelve el mejor trial encontrado (menor loss).
-    Trial run(const EvalFn &eval);
+    // shouldStop (opcional) se consulta antes de cada trial; si devuelve true,
+    // corta y devuelve el mejor encontrado hasta el momento. Devuelve el mejor
+    // trial (menor loss).
+    Trial run(const EvalFn &eval, const std::function<bool()> &shouldStop = {});
 
     const std::vector<Trial> &history() const { return m_history; }
     const Trial &best() const { return m_best; }

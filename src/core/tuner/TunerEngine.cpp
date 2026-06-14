@@ -222,5 +222,5 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
         return r;
     };
 
-    return tuner.run(eval);
+    return tuner.run(eval, [this]() { return m_cancel.load(); });
 }

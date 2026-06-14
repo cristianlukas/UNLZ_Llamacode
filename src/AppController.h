@@ -5,6 +5,7 @@
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/agent/IAgentBackend.h"
+#include "core/tuner/TunerWorker.h"
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
@@ -16,6 +17,8 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QFile>
+
+class QThread;
 
 class AppController : public QObject
 {
@@ -86,6 +89,9 @@ class AppController : public QObject
     Q_PROPERTY(QString benchmarkStatus READ benchmarkStatus NOTIFY benchmarkStatusChanged)
     Q_PROPERTY(QVariantList benchmarkResults READ benchmarkResults NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList customBenchmarks READ customBenchmarks NOTIFY customBenchmarksChanged)
+    Q_PROPERTY(bool autoTuneRunning READ autoTuneRunning NOTIFY autoTuneChanged)
+    Q_PROPERTY(int autoTuneProgress READ autoTuneProgress NOTIFY autoTuneChanged)
+    Q_PROPERTY(QString autoTuneStatus READ autoTuneStatus NOTIFY autoTuneChanged)
     Q_PROPERTY(bool researchRunning READ researchRunning NOTIFY researchChanged)
     Q_PROPERTY(int researchProgress READ researchProgress NOTIFY researchChanged)
     Q_PROPERTY(QString researchStatus READ researchStatus NOTIFY researchChanged)
@@ -363,6 +369,17 @@ public:
     Q_INVOKABLE QString lastEvalImportError() const { return m_lastEvalImportError; }
     Q_INVOKABLE void startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes = 1,
                                           const QString &target = QStringLiteral("model"), int timeoutSec = 0);
+    // Auto-tuning de parámetros de inferencia (AutoTuner TPE-lite + gate de
+    // calidad). Lanza llama-server por candidato en un puerto scratch, mide
+    // tok/s y calidad, y al terminar fusiona la mejor config en extraArgs del
+    // launch profile. maxTrials/qualityGate/nPredict son opcionales.
+    Q_INVOKABLE void startAutoTune(const QString &launchProfileId, int maxTrials = 24,
+                                   double qualityGate = 0.0, int nPredict = 256);
+    Q_INVOKABLE void cancelAutoTune();
+    bool autoTuneRunning() const { return m_autoTuneRunning; }
+    int autoTuneProgress() const { return m_autoTuneProgress; }
+    QString autoTuneStatus() const { return m_autoTuneStatus; }
+
     Q_INVOKABLE void startResearch(const QString &topic, const QString &mode, int maxPages);
     Q_INVOKABLE void cancelResearch();
     Q_INVOKABLE void refreshResearchReports();
@@ -427,6 +444,13 @@ signals:
     void benchmarkStatusChanged();
     void benchmarkResultsChanged();
     void customBenchmarksChanged();
+    void autoTuneChanged();
+    // Cada trial evaluado: índice/total, tok/s, calidad [0,1], resumen de flags.
+    void autoTuneTrial(int index, int total, double throughput, double quality,
+                       const QString &summary);
+    // Fin del tuning: ok=true si encontró config válida; bestArgs ya fusionados.
+    void autoTuneFinished(bool ok, const QString &bestArgs, double throughput,
+                          double quality);
     void researchChanged();
     void researchReportsChanged();
     void hardwareSummaryChanged();
@@ -600,6 +624,15 @@ private:
     QVariantList m_benchmarkResults;
     QVariantList m_customBenchmarks;
     QString      m_lastEvalImportError;
+    // Auto-tuning
+    bool         m_autoTuneRunning = false;
+    int          m_autoTuneProgress = 0;
+    QString      m_autoTuneStatus;
+    QString      m_autoTuneLaunchId;     // perfil objetivo del tuning en curso
+    QThread     *m_tuneThread = nullptr;
+    TunerWorker *m_tuneWorker = nullptr;
+    void onAutoTuneFinished(bool ok, const QStringList &bestArgs,
+                            double throughput, double quality);
     QVariantMap  m_hardwareSummary;
     QVariantList m_modelRecommendations;
     QNetworkReply *m_modelDownloadReply = nullptr;

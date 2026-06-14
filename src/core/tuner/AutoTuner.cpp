@@ -154,9 +154,10 @@ Config AutoTuner::sampleTPE()
     return out;
 }
 
-Trial AutoTuner::run(const EvalFn &eval)
+Trial AutoTuner::run(const EvalFn &eval, const std::function<bool()> &shouldStop)
 {
     for (int i = 0; i < m_settings.maxTrials; ++i) {
+        if (shouldStop && shouldStop()) break;
         const bool startup =
             static_cast<int>(m_history.size()) < m_settings.startupTrials;
         Config cfg = startup ? sampleRandom() : sampleTPE();

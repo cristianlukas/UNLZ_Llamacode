@@ -539,6 +539,20 @@ Item {
                             enabled: selectedLaunchId.length > 0 && !smokeTestRunning && !App.serverRunning
                             onClicked: { saveAll(); smokeTestRunning = true; App.smokeTestServer(selectedLaunchId) }
                         }
+                        LcButton {
+                            text: App.autoTuneRunning ? "Tuning…" : "Auto-tune"
+                            secondary: true
+                            enabled: selectedLaunchId.length > 0 && !App.serverRunning && !App.autoTuneRunning
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Optimiza ngl/batch/flash-attn/cache-type maximizando tok/s sin degradar calidad (gate)"
+                            onClicked: { saveAll(); App.startAutoTune(selectedLaunchId, 24, 0.6, 256) }
+                        }
+                        LcButton {
+                            text: "Cancelar tune"
+                            secondary: true
+                            visible: App.autoTuneRunning
+                            onClicked: App.cancelAutoTune()
+                        }
                         LcButton { text: (App.langV, App.l("profiles.new")); secondary: true; onClicked: newProfile() }
                         LcButton { text: "Importar"; secondary: true; onClicked: importDialog.open() }
                         LcButton {
@@ -560,6 +574,16 @@ Item {
                             onClicked: deleteDialog.open()
                         }
                     }
+                }
+
+                // Estado del auto-tune (progreso + mejor config aplicada).
+                Text {
+                    visible: App.autoTuneRunning || App.autoTuneStatus.length > 0
+                    Layout.fillWidth: true
+                    text: (App.autoTuneRunning ? "⏳ " : "") + App.autoTuneStatus
+                    color: Theme.textSecondary
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
                 }
 
                 LcDialog {

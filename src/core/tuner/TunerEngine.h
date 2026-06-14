@@ -16,6 +16,7 @@
 #include <QString>
 #include <QStringList>
 #include <QVector>
+#include <atomic>
 
 class QNetworkAccessManager;
 
@@ -48,6 +49,10 @@ public:
     // Corre la optimización completa (bloqueante; usa QEventLoop por trial).
     // Devuelve el mejor trial. Emite trialDone() en cada iteración.
     tuner::Trial run(const TunerJob &job);
+
+    // Pide cortar tras el trial en curso (thread-safe). El server del trial
+    // activo se mata igual al terminar la medición.
+    void cancel() { m_cancel.store(true); }
 
     // Mide un candidato contra un server YA levantado en baseUrl (sin gestionar
     // proceso). Testeable con un mock HTTP.
@@ -89,4 +94,5 @@ private:
     bool waitForReady(const QString &baseUrl, int timeoutMs);
 
     QNetworkAccessManager *m_nam = nullptr;
+    std::atomic<bool> m_cancel{false};
 };

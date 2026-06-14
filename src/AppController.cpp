@@ -6804,6 +6804,183 @@ void AppController::saveResearchReport(const QVariantMap &summary, const QString
     refreshResearchReports();
 }
 
+// ── Auto-tuning de parámetros de inferencia ─────────────────────────────────
+namespace {
+
+// Espacio de búsqueda por defecto: flags ampliamente soportados por llama-server.
+// cache-type-k/v marcados como qualityRisk: el gate de calidad impide que el
+// optimizador colapse al quant más bajo solo por velocidad.
+QVector<TunableParam> buildTuneParams()
+{
+    using tuner::ParamSpec;
+    return {
+        {ParamSpec::categorical("ngl", {"0", "20", "40", "99"}), "-ngl", false},
+        {ParamSpec::categorical("batch", {"256", "512", "1024", "2048"}), "-b", false},
+        {ParamSpec::categorical("ubatch", {"128", "256", "512"}), "-ub", false},
+        {ParamSpec::categorical("flash-attn", {"off", "on"}), "--flash-attn", true},
+        {ParamSpec::categorical("cache-type-k", {"f16", "q8_0", "q4_0"}, true),
+         "--cache-type-k", false},
+        {ParamSpec::categorical("cache-type-v", {"f16", "q8_0", "q4_0"}, true),
+         "--cache-type-v", false},
+    };
+}
+
+// Quita flags (y su valor adyacente, salvo switches) de una lista de args.
+QStringList stripFlags(const QStringList &args, const QSet<QString> &valueFlags,
+                       const QSet<QString> &switchFlags)
+{
+    QStringList out;
+    for (int i = 0; i < args.size(); ++i) {
+        const QString &a = args[i];
+        if (switchFlags.contains(a)) continue;          // switch sin valor
+        if (valueFlags.contains(a)) { ++i; continue; }  // flag + valor → saltar ambos
+        out << a;
+    }
+    return out;
+}
+
+}  // namespace
+
+void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
+                                  double qualityGate, int nPredict)
+{
+    if (m_autoTuneRunning) {
+        emit serverError(QStringLiteral("Auto-tune ya en curso."));
+        return;
+    }
+    if (serverRunning()) {
+        emit serverError(QStringLiteral("Detené el servidor antes de auto-tunear."));
+        return;
+    }
+
+    computeEffectiveProfile(launchProfileId);
+    if (!m_effectiveProfile.value(QStringLiteral("isValid"), false).toBool()) {
+        emit serverError(QStringLiteral("Perfil inválido: no se puede auto-tunear."));
+        return;
+    }
+
+    const QString binaryPath = m_effectiveProfile.value(QStringLiteral("binaryPath")).toString();
+    const QStringList effArgs = m_effectiveProfile.value(QStringLiteral("effectiveArgs")).toStringList();
+
+    QVector<TunableParam> params = buildTuneParams();
+
+    // baseArgs = args efectivos menos host/port y menos los flags que vamos a
+    // afinar (con sus aliases), para no duplicarlos.
+    const QSet<QString> valueFlags = {
+        QStringLiteral("--host"), QStringLiteral("--port"),
+        QStringLiteral("-ngl"), QStringLiteral("--n-gpu-layers"), QStringLiteral("--gpu-layers"),
+        QStringLiteral("-b"), QStringLiteral("--batch-size"),
+        QStringLiteral("-ub"), QStringLiteral("--ubatch-size"),
+        QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
+        QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
+    };
+    const QSet<QString> switchFlags = {
+        QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
+    };
+    const QStringList baseArgs = stripFlags(effArgs, valueFlags, switchFlags);
+
+    TunerJob job;
+    job.binaryPath = binaryPath;
+    job.baseArgs = baseArgs;
+    job.host = QStringLiteral("127.0.0.1");
+    job.port = 18099;  // puerto scratch, no colisiona con el server principal
+    job.evalPrompt = QStringLiteral(
+        "Write a Python function is_prime(n: int) -> bool with type hints. "
+        "Handle edge cases (n<=1, n=2). Return only code.");
+    job.nPredict = nPredict > 0 ? nPredict : 256;
+    job.acceptance = {QStringLiteral("def is_prime"), QStringLiteral("return")};
+    job.params = params;
+    job.settings.maxTrials = qMax(1, maxTrials);
+    job.settings.startupTrials = qMax(1, qMin(8, job.settings.maxTrials / 2));
+    job.settings.qualityGate = qualityGate;
+    job.settings.seed = 0;
+
+    m_autoTuneLaunchId = launchProfileId;
+    m_autoTuneRunning = true;
+    m_autoTuneProgress = 0;
+    m_autoTuneStatus = QStringLiteral("Iniciando auto-tune (%1 trials)…").arg(job.settings.maxTrials);
+    emit autoTuneChanged();
+
+    m_tuneThread = new QThread(this);
+    m_tuneWorker = new TunerWorker(job);   // sin parent: se mueve de hilo
+    m_tuneWorker->moveToThread(m_tuneThread);
+
+    connect(m_tuneThread, &QThread::started, m_tuneWorker, &TunerWorker::run);
+
+    connect(m_tuneWorker, &TunerWorker::trial, this,
+            [this](int index, int total, double tps, double quality, const QString &summary) {
+                m_autoTuneProgress = total > 0 ? (index * 100 / total) : 0;
+                m_autoTuneStatus = QStringLiteral("Trial %1/%2 — %3 tok/s, calidad %4 [%5]")
+                                       .arg(index).arg(total)
+                                       .arg(tps, 0, 'f', 1).arg(quality, 0, 'f', 2)
+                                       .arg(summary);
+                emit autoTuneChanged();
+                emit autoTuneTrial(index, total, tps, quality, summary);
+            });
+
+    connect(m_tuneWorker, &TunerWorker::finished, this,
+            [this](bool ok, const QStringList &bestArgs, double tps, double quality) {
+                onAutoTuneFinished(ok, bestArgs, tps, quality);
+            });
+
+    // Limpieza del hilo al terminar.
+    connect(m_tuneWorker, &TunerWorker::finished, m_tuneThread, &QThread::quit);
+    connect(m_tuneThread, &QThread::finished, this, [this]() {
+        if (m_tuneWorker) { m_tuneWorker->deleteLater(); m_tuneWorker = nullptr; }
+        if (m_tuneThread) { m_tuneThread->deleteLater(); m_tuneThread = nullptr; }
+    });
+
+    m_tuneThread->start();
+}
+
+void AppController::cancelAutoTune()
+{
+    if (!m_autoTuneRunning || !m_tuneWorker) return;
+    m_autoTuneStatus = QStringLiteral("Cancelando auto-tune…");
+    emit autoTuneChanged();
+    m_tuneWorker->cancel();   // setea atomic; corta tras el trial en curso
+}
+
+void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
+                                       double throughput, double quality)
+{
+    m_autoTuneRunning = false;
+    m_autoTuneProgress = 100;
+
+    QString mergedSummary;
+    if (ok && !bestArgs.isEmpty() && !m_autoTuneLaunchId.isEmpty()) {
+        // Fusionar bestArgs en extraArgs del launch profile, reemplazando flags
+        // previos de los mismos parámetros.
+        QVariantMap lp = m_profiles.getLaunchProfile(m_autoTuneLaunchId);
+        QStringList extra = lp.value(QStringLiteral("extraArgs")).toStringList();
+        const QSet<QString> valueFlags = {
+            QStringLiteral("-ngl"), QStringLiteral("--n-gpu-layers"), QStringLiteral("--gpu-layers"),
+            QStringLiteral("-b"), QStringLiteral("--batch-size"),
+            QStringLiteral("-ub"), QStringLiteral("--ubatch-size"),
+            QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
+            QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
+        };
+        const QSet<QString> switchFlags = {
+            QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
+        };
+        extra = stripFlags(extra, valueFlags, switchFlags);
+        extra += bestArgs;
+        lp[QStringLiteral("extraArgs")] = extra;
+        m_profiles.updateLaunchProfile(lp);
+        m_profiles.saveProfiles();
+        mergedSummary = bestArgs.join(QLatin1Char(' '));
+        m_autoTuneStatus = QStringLiteral("Auto-tune OK: %1 tok/s, calidad %2. Aplicado: %3")
+                               .arg(throughput, 0, 'f', 1).arg(quality, 0, 'f', 2)
+                               .arg(mergedSummary);
+    } else {
+        m_autoTuneStatus = ok ? QStringLiteral("Auto-tune sin cambios aplicables.")
+                              : QStringLiteral("Auto-tune sin config válida (¿server no arrancó?).");
+    }
+
+    emit autoTuneChanged();
+    emit autoTuneFinished(ok, mergedSummary, throughput, quality);
+}
+
 void AppController::startResearch(const QString &topic, const QString &mode, int maxPages)
 {
     const QString cleanTopic = topic.trimmed();
