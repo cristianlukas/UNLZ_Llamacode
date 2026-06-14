@@ -8,7 +8,9 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QFileInfo>
 #include <QProcess>
+#include <QProcessEnvironment>
 #include <QTimer>
 #include <QUrl>
 
@@ -102,11 +104,14 @@ double TunerEngine::scoreQuality(const QString &content, const QStringList &acce
     return static_cast<double>(hits) / acceptance.size();
 }
 
-bool TunerEngine::waitForReady(const QString &baseUrl, int timeoutMs)
+bool TunerEngine::waitForReady(const QString &baseUrl, int timeoutMs, QProcess *proc)
 {
     QElapsedTimer clock;
     clock.start();
     while (clock.elapsed() < timeoutMs) {
+        if (m_cancel.load()) return false;
+        // Si el server ya murió, no tiene sentido seguir esperando.
+        if (proc && proc->state() == QProcess::NotRunning) return false;
         QNetworkRequest req(QUrl(baseUrl + QStringLiteral("/health")));
         QNetworkReply *reply = m_nam->get(req);
         QEventLoop loop;
@@ -190,6 +195,15 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
             composeArgs(job.baseArgs, job.params, cfg, job.host, job.port);
 
         QProcess proc;
+        // Entorno: sistema + overrides (PATH/CUDA para que cargue las DLLs del
+        // backend GPU). Sin esto el server puede no usar GPU o crashear.
+        QProcessEnvironment penv = QProcessEnvironment::systemEnvironment();
+        for (auto it = job.env.constBegin(); it != job.env.constEnd(); ++it)
+            penv.insert(it.key(), it.value());
+        proc.setProcessEnvironment(penv);
+        // Working dir = carpeta del binario (resuelve DLLs adyacentes en Windows).
+        proc.setWorkingDirectory(QFileInfo(job.binaryPath).absolutePath());
+
         proc.start(job.binaryPath, args);
         if (!proc.waitForStarted(15000)) {
             emit trialDone(index, total, 0, 0, QStringLiteral("server no arrancó"));
@@ -197,11 +211,22 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
         }
 
         tuner::TrialResult r;
-        if (!waitForReady(baseUrl, job.readyTimeoutMs)) {
+        if (!waitForReady(baseUrl, job.readyTimeoutMs, &proc)) {
             r.failed = true;
         } else {
             r = evaluateAgainstUrl(baseUrl, job.evalPrompt, job.nPredict,
                                    job.acceptance, job.evalTimeoutMs);
+        }
+
+        // Capturar diagnóstico si falló (server murió o midió 0).
+        QString diag;
+        if (r.failed) {
+            const QString err = QString::fromUtf8(proc.readAllStandardError()).trimmed();
+            const QString out = QString::fromUtf8(proc.readAllStandardOutput()).trimmed();
+            const QString tail = (err + QLatin1Char('\n') + out).trimmed();
+            diag = tail.right(200);
+            if (proc.state() == QProcess::NotRunning)
+                diag = QStringLiteral("[exit %1] ").arg(proc.exitCode()) + diag;
         }
 
         proc.terminate();
@@ -218,7 +243,9 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
                                .arg(QString::fromStdString(p.spec.name),
                                     QString::fromStdString(p.spec.optionValue(it->second)));
         }
-        emit trialDone(index, total, r.throughput, r.quality, summary.trimmed());
+        QString sum = summary.trimmed();
+        if (!diag.isEmpty()) sum += QStringLiteral(" ⚠ %1").arg(diag);
+        emit trialDone(index, total, r.throughput, r.quality, sum);
         return r;
     };
 

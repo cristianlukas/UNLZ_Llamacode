@@ -13,6 +13,7 @@
 #include "AutoTuner.h"
 
 #include <QObject>
+#include <QMap>
 #include <QString>
 #include <QStringList>
 #include <QVector>
@@ -29,6 +30,7 @@ struct TunableParam {
 
 struct TunerJob {
     QString binaryPath;
+    QMap<QString, QString> env;  // overrides de entorno (CUDA/PATH para DLLs, etc.)
     QStringList baseArgs;        // args fijos (modelo, ctx, etc.) sin host/port/tuned
     QString host = QStringLiteral("127.0.0.1");
     int port = 18080;            // puerto scratch, distinto del server principal
@@ -91,7 +93,8 @@ signals:
                    const QString &summary);
 
 private:
-    bool waitForReady(const QString &baseUrl, int timeoutMs);
+    // Espera /health 200. Aborta apenas el proceso muere (server crasheó).
+    bool waitForReady(const QString &baseUrl, int timeoutMs, class QProcess *proc);
 
     QNetworkAccessManager *m_nam = nullptr;
     std::atomic<bool> m_cancel{false};

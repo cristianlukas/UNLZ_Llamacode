@@ -126,11 +126,31 @@ Entidad `CatalogModel`: `id`, `rootId`, `absolutePath`, `fileName`, `sizeBytes`,
 Cada modelo recibe un score `0–100` que combina, ponderado al caso de uso *general* (calidad 0.45 / velocidad 0.30 / fit 0.15 / contexto 0.10):
 
 - **Calidad** — preferentemente un **benchmark real** (Artificial Analysis *Intelligence Index*, remapeado a 0–100); si no hay match, heurística por params + familia + bonus de arquitectura (qwen3.6 +9, qwen3.5 +8, qwen3-next +6, …) con penalización por tier de quant. Modelos coder se penalizan en el scan general para no dominar.
-- **Velocidad** — t/s estimados según ancho de banda de la GPU y params activos (MoE-aware).
-- **Fit** — ratio memoria requerida vs. presupuesto (VRAM, o RAM en CPU/offload).
-- **Contexto** — vs. target del caso de uso.
+- **Velocidad** — t/s estimados según ancho de banda de la GPU y params activos (MoE-aware). En `partial_offload` la velocidad es un blend armónico GPU/CPU según la fracción residente en VRAM.
+- **Fit** — ratio memoria requerida vs. presupuesto.
+- **Contexto** — target moderno: 32k=100, 16k=85, 8k=70, 4k=50 (no se premia el stub de 4k).
 
 Desempate por versión (Qwen3.6 > Qwen3.5).
+
+### Estimación de memoria (`estimateCatalogMemoryGb`)
+
+Footprint = **pesos + KV cache + overhead**, dimensionado a un contexto realista, no a 4k:
+
+- **Pesos** — params **totales** (MoE guarda todos los expertos en memoria, sólo rutea un subset por token) × bytes-por-param del quant.
+- **KV cache** — escala con el modelo **completo** (todas las capas cachean K/V sin importar el ruteo MoE) y el **contexto real de sizing**, no un stub de 4k. Constante `1.5e-5 GB/token/B` ≈ KV fp16 de un modelo era-GQA (Llama3-8B @32k ≈ 4 GB).
+- **Overhead** — compute graph de llama.cpp + buffers MTP/draft (`0.7 GB + 5%` de los pesos).
+- **Contexto de sizing** (`sizingContext`) — target 32k, capeado por el ctx máx del modelo, piso 8k. Evita subestimar el costo de KV con defaults chicos.
+
+### Modos de ejecución (run mode / fit)
+
+Calculado contra VRAM (`nvidia-smi`) y RAM del sistema (90% utilizable como headroom):
+
+| Modo | Condición | Notas |
+|---|---|---|
+| `gpu` | entra en VRAM | todo en GPU |
+| `partial_offload` | no entra en VRAM, sí en VRAM+RAM | spill VRAM+RAM (llama.cpp `-ngl` parcial); `gpuFraction = vram/required` |
+| `cpu_only` | sin GPU, entra en RAM | todo en RAM |
+| `no_fit` | no entra en VRAM+RAM | — |
 
 ### Benchmark de calidad (Artificial Analysis)
 
@@ -242,7 +262,7 @@ LlamaCode/
 │   ├── app_icon.ico / debug_icon.ico / app_icon.png
 │   ├── hwfit/hf_models.json          ← catálogo de modelos (cookbook)
 │   └── benchmarks/aa_intelligence.json ← scores de calidad (offline)
-├── docs/                   ← documentación (agent.md, TODO.md, plan_harness.md, ...)
+├── docs/                   ← documentación (agent.md, TODO.md, plan_harness.md, tuner.md, ...)
 ├── logs/                   ← logs de runtime/install (gitignored)
 ├── tests/ + build_tests/   ← suite Qt Test
 └── build/                  ← artefactos (Debug/ + Release/, gitignored)
@@ -337,6 +357,17 @@ errores graves (count)
 | Q4_K_M | 80/100 | −13.0% | 38 | 2 GB | 14 GB |
 | IQ4_XS | 77/100 | −16.3% | 42 | 2 GB | 12 GB |
 | Q3_K_M | 65/100 | −29.3% | 55 | 2 GB | 9 GB |
+
+## Auto-tuning de parámetros
+
+Búsqueda automática de los flags de `llama-server` (`ngl`, `batch`, `ubatch`, `flash-attn`, `cache-type-k/v`) que maximizan **tok/s** sin degradar la **calidad**. Optimizador TPE-lite (Parzen discreto) con **gate de calidad**: a diferencia de *llama-launcher v1.3*, tunear el quant de KV cache solo por velocidad no colapsa al quant más bajo, porque la pérdida penaliza fuerte caer bajo el umbral.
+
+- Corre `N` trials en un puerto scratch (lanza/mide/mata el server por candidato, en un `QThread` aparte para no congelar la UI).
+- Mide throughput de `timings.predicted_per_second` (`/completion`) y califica la salida con substrings estilo EvalSuite.
+- Al terminar **clona** el perfil en uno nuevo `-tuned` con la mejor config en `extraArgs`; el original queda intacto.
+- UI: `ProfilesPage` → **Auto-tune** / **Cancelar tune** + estado en vivo.
+
+Detalle completo en [`docs/tuner.md`](docs/tuner.md).
 
 ## Seguridad operativa
 

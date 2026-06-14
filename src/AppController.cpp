@@ -4242,16 +4242,37 @@ static double quantBpp(const QString &quant)
     return 0.58;
 }
 
+// Footprint = weights + KV cache + compute/MTP overhead.
+//  - weights: full param count (MoE stores all experts in memory, only routes a
+//    subset per token) at the quant's bytes-per-param.
+//  - KV cache: scales with the FULL model (every layer caches K/V regardless of
+//    MoE routing), the real context window, NOT a token 4k stub. Constant
+//    ~1.5e-5 GB/token/B ≈ fp16 KV for a GQA-era model (Llama3-8B @32k ≈ 4 GB).
+//  - overhead: llama.cpp compute graph + MTP/draft buffers (~5% of weights + 0.7 GB).
 static double estimateCatalogMemoryGb(const QJsonObject &model, double paramsB, const QString &quant, int ctx)
 {
-    double activeB = paramsB;
-    const double activeRaw = model.value(QStringLiteral("active_parameters")).toDouble();
-    if (model.value(QStringLiteral("is_moe")).toBool() && activeRaw > 0)
-        activeB = activeRaw / 1000000000.0;
-    return paramsB * quantBpp(quant) + 0.000008 * activeB * qMax(1024, ctx) + 0.5;
+    Q_UNUSED(model)
+    const double weightsGb = paramsB * quantBpp(quant);
+    const double kvGb = 1.5e-5 * paramsB * qMax(2048, ctx);
+    const double overheadGb = 0.7 + weightsGb * 0.05;
+    return weightsGb + kvGb + overheadGb;
 }
 
-static double catalogSpeedTps(const QString &gpuName, double activeParamsB, double requiredGb, const QString &runMode)
+// Context used for *sizing*. Reddit feedback: don't size at a token 4k window —
+// real agent use is 16-64k. Size at a realistic target capped by the model's own
+// max, floored so tiny defaults don't understate the KV cost.
+static int sizingContext(int modelMaxCtx)
+{
+    const int target = 32768;
+    const int hardMax = qMax(2048, modelMaxCtx);
+    return qBound(8192, qMin(target, hardMax), hardMax);
+}
+
+// gpuFraction = share of the model that fits in VRAM (1.0 = fully on GPU, 0 = all
+// CPU). For partial offload the effective bandwidth is a harmonic-ish blend of GPU
+// and CPU memory speed — the CPU-resident layers gate throughput hard.
+static double catalogSpeedTps(const QString &gpuName, double activeParamsB, double requiredGb,
+                              const QString &runMode, double gpuFraction = 1.0)
 {
     double bw = 220.0;
     const QString g = gpuName.toLower();
@@ -4261,8 +4282,14 @@ static double catalogSpeedTps(const QString &gpuName, double activeParamsB, doub
     else if (g.contains(QStringLiteral("3080"))) bw = 760.0;
     else if (g.contains(QStringLiteral("3060"))) bw = 360.0;
     else if (g.contains(QStringLiteral("a6000"))) bw = 768.0;
-    if (runMode == QLatin1String("cpu_only")) bw = 70.0;
-    if (runMode == QLatin1String("cpu_offload")) bw = qMin(bw, 110.0);
+    const double cpuBw = 70.0;
+    if (runMode == QLatin1String("cpu_only")) {
+        bw = cpuBw;
+    } else if (runMode == QLatin1String("partial_offload")) {
+        // Per-token cost is dominated by the slowest tier it must stream through.
+        const double frac = qBound(0.0, gpuFraction, 1.0);
+        bw = 1.0 / (frac / qMax(bw, cpuBw) + (1.0 - frac) / cpuBw);
+    }
     const double denom = qMax(0.2, activeParamsB * qMax(0.35, requiredGb / qMax(0.2, activeParamsB)));
     return qMax(0.0, (bw / denom) * 0.55);
 }
@@ -4380,8 +4407,12 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
         else fitScore = 50;
     }
 
-    // ── context ── general target 4096
-    const double ctxScore = ctx >= 4096 ? 100 : (ctx >= 2048 ? 70 : 30);
+    // ── context ── modern agent target is 32k+, not a token 4k window
+    const double ctxScore = ctx >= 32768 ? 100
+                          : ctx >= 16384 ? 85
+                          : ctx >= 8192  ? 70
+                          : ctx >= 4096  ? 50
+                          : 30;
 
     const double composite = quality * 0.45 + speedScore * 0.30 + fitScore * 0.15 + ctxScore * 0.10;
     return qBound(0, qRound(composite), 100);
@@ -4482,7 +4513,8 @@ void AppController::rebuildModelRecommendations()
                 continue;
 
             const QString quant = m.value(QStringLiteral("quantization")).toString(QStringLiteral("Q4_K_M"));
-            const int ctx = qMax(1024, m.value(QStringLiteral("context_length")).toInt(4096));
+            const int modelMaxCtx = qMax(1024, m.value(QStringLiteral("context_length")).toInt(4096));
+            const int ctx = sizingContext(modelMaxCtx);
             const double requiredGb = estimateCatalogMemoryGb(m, paramsB, quant, ctx);
             const double activeRaw = m.value(QStringLiteral("active_parameters")).toDouble();
             const double activeB = (m.value(QStringLiteral("is_moe")).toBool() && activeRaw > 0)
@@ -4491,14 +4523,23 @@ void AppController::rebuildModelRecommendations()
 
             QString runMode;
             QString fit;
+            double gpuFraction = 1.0;  // share resident in VRAM (drives partial-offload speed)
+            // ~90% of system RAM is usable for weights; the rest is OS/app headroom.
+            const double usableRamGb = ramGb * 0.9;
             if (vramGb > 0 && requiredGb <= vramGb) {
                 runMode = QStringLiteral("gpu");
                 fit = (m.value(QStringLiteral("recommended_ram_gb")).toDouble(requiredGb) <= vramGb)
                     ? QStringLiteral("Perfecto")
                     : QStringLiteral("Bueno");
-            } else if (requiredGb <= ramGb) {
-                runMode = vramGb > 0 ? QStringLiteral("cpu_offload") : QStringLiteral("cpu_only");
-                fit = ramGb >= requiredGb * 1.2 ? QStringLiteral("Bueno") : QStringLiteral("Marginal");
+            } else if (vramGb > 0 && requiredGb <= vramGb + usableRamGb) {
+                // Spill: weights split across VRAM + system RAM (llama.cpp -ngl partial).
+                runMode = QStringLiteral("partial_offload");
+                gpuFraction = qBound(0.0, vramGb / requiredGb, 1.0);
+                fit = gpuFraction >= 0.6 ? QStringLiteral("Bueno") : QStringLiteral("Marginal");
+            } else if (vramGb <= 0 && requiredGb <= usableRamGb) {
+                runMode = QStringLiteral("cpu_only");
+                gpuFraction = 0.0;
+                fit = usableRamGb >= requiredGb * 1.2 ? QStringLiteral("Bueno") : QStringLiteral("Marginal");
             } else {
                 runMode = QStringLiteral("no_fit");
                 fit = QStringLiteral("No entra");
@@ -4507,7 +4548,7 @@ void AppController::rebuildModelRecommendations()
             const QString caps = catalogCapabilities(m);
             const double tps = runMode == QLatin1String("no_fit")
                 ? 0.0
-                : catalogSpeedTps(gpuName, activeB, requiredGb, runMode);
+                : catalogSpeedTps(gpuName, activeB, requiredGb, runMode, gpuFraction);
             const double benchQuality = m_benchmarkQuality.value(benchmarkKey(name), -1.0);
             const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, fit, tps, benchQuality);
 
@@ -4540,9 +4581,17 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("minVramGb")] = m.value(QStringLiteral("min_vram_gb")).toDouble();
             row[QStringLiteral("ctxK")] = qRound(ctx / 1000.0);
             row[QStringLiteral("context")] = ctx;
-            row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est. · %3 downloads")
-                .arg(runMode)
+            QString runLabel = runMode;
+            if (runMode == QLatin1String("gpu")) runLabel = QStringLiteral("GPU (todo en VRAM)");
+            else if (runMode == QLatin1String("partial_offload"))
+                runLabel = QStringLiteral("VRAM+RAM (%1%% en GPU)").arg(qRound(gpuFraction * 100.0));
+            else if (runMode == QLatin1String("cpu_only")) runLabel = QStringLiteral("CPU (todo en RAM)");
+            else if (runMode == QLatin1String("no_fit")) runLabel = QStringLiteral("No entra");
+            row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est. · ~%3 GB @ %4k ctx · %5 downloads")
+                .arg(runLabel)
                 .arg(QString::number(tps, 'f', 1))
+                .arg(QString::number(requiredGb, 'f', 1))
+                .arg(qRound(ctx / 1000.0))
                 .arg(qRound(m.value(QStringLiteral("hf_downloads")).toDouble()));
             row[QStringLiteral("fit")] = fit;
             row[QStringLiteral("score")] = score;
@@ -6861,6 +6910,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
 
     const QString binaryPath = m_effectiveProfile.value(QStringLiteral("binaryPath")).toString();
     const QStringList effArgs = m_effectiveProfile.value(QStringLiteral("effectiveArgs")).toStringList();
+    const QVariantMap effEnv = m_effectiveProfile.value(QStringLiteral("effectiveEnv")).toMap();
 
     QVector<TunableParam> params = buildTuneParams();
 
@@ -6881,6 +6931,8 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
 
     TunerJob job;
     job.binaryPath = binaryPath;
+    for (auto it = effEnv.begin(); it != effEnv.end(); ++it)
+        job.env.insert(it.key(), it.value().toString());
     job.baseArgs = baseArgs;
     job.host = QStringLiteral("127.0.0.1");
     job.port = 18099;  // puerto scratch, no colisiona con el server principal
