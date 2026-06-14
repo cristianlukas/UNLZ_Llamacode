@@ -96,6 +96,20 @@ bool GGUFScanner::isDraftCandidate(const QString &fileName, qint64 sizeBytes)
     return sizeBytes > 0 && sizeBytes < 2LL * 1024 * 1024 * 1024;
 }
 
+bool GGUFScanner::isDegradedQatQuant(const QString &fileName, const QString &family,
+                                     const QString &quantReal)
+{
+    const QString lower = fileName.toLower();
+    if (!lower.contains("qat")) return false;
+    if (!family.toLower().contains("gemma")) return false; // observado en Gemma4 QAT
+    if (quantReal.compare("q4_0", Qt::CaseInsensitive) != 0) return false;
+    // Dynamic quants de unsloth recuperan la calidad pese a ser q4_0 por dentro.
+    if (lower.contains("ud-") || lower.contains("ud_")
+        || lower.contains("unsloth") || lower.contains("k_xl"))
+        return false;
+    return true;
+}
+
 // ---- Parser de header GGUF (composición real de tensores) ------------------
 
 QString GGUFScanner::ggmlTypeName(quint32 t)

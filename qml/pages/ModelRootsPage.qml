@@ -468,6 +468,19 @@ Item {
                                         font.pixelSize: 11; color: Theme.textMuted
                                     }
                                     Text { text: sizeLabel; font.pixelSize: 11; color: Theme.textMuted }
+                                    // Gemma QAT q4_0 crudo: degradado en llama.cpp; preferir UD-Q4_K_XL.
+                                    Text {
+                                        visible: {
+                                            const fn = (fileName || "").toLowerCase()
+                                            if (!fn.includes("qat")) return false
+                                            if (!(family || "").toLowerCase().includes("gemma")) return false
+                                            if ((quantReal || "").toLowerCase() !== "q4_0") return false
+                                            return !(fn.includes("ud-") || fn.includes("ud_")
+                                                     || fn.includes("unsloth") || fn.includes("k_xl"))
+                                        }
+                                        text: "⚠ raw QAT → preferí UD-Q4_K_XL"
+                                        font.pixelSize: 11; color: Theme.warnText
+                                    }
                                 }
                             }
                         }

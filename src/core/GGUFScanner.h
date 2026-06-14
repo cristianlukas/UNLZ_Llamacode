@@ -33,6 +33,13 @@ public:
     static Composition readComposition(const QString &filePath, qint64 fileSizeBytes);
     static QString ggmlTypeName(quint32 t);
 
+    // True si el modelo es un Gemma QAT con quant real q4_0 "crudo" (Google-style):
+    // llama.cpp aplica scales fp16 sobre un QAT entrenado con scales bf16 → clipping
+    // de los pesos grandes → degradación (peor a partir de ~50-100k ctx). Los dynamic
+    // quants de unsloth (UD-* / *K_XL) corrigen esto, así que se excluyen.
+    static bool isDegradedQatQuant(const QString &fileName, const QString &family,
+                                   const QString &quantReal);
+
 signals:
     void progress(const QString &rootId, int found);
 };

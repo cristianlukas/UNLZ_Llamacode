@@ -1,4 +1,5 @@
 #include "EffectiveProfileBuilder.h"
+#include "../GGUFScanner.h"
 #include <QFileInfo>
 
 EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
@@ -101,6 +102,16 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
         return;
     }
     args << "--model" << model.absolutePath;
+
+    // Gemma QAT q4_0 crudo (Google-style): degradado en llama.cpp. Avisar que el
+    // dynamic quant de unsloth (UD-Q4_K_XL) rinde mejor a igual tamaño.
+    if (GGUFScanner::isDegradedQatQuant(model.fileName, model.familyHint,
+                                        model.quantReal)) {
+        warnings.append(QStringLiteral(
+            "Gemma QAT q4_0 'crudo' (%1): llama.cpp lo degrada (scales fp16 vs "
+            "bf16). Preferí el dynamic quant de unsloth (UD-Q4_K_XL).")
+            .arg(model.fileName));
+    }
 
     if (!mp.mmprojId.isEmpty()) {
         if (!mmproj.isAvailable)

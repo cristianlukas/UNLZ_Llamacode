@@ -33,6 +33,10 @@ private slots:
     void readComposition_realTensors();
     void readComposition_rejectsGarbage();
 
+    // ── GGUFScanner::isDegradedQatQuant ──
+    void degradedQat_data();
+    void degradedQat();
+
     // ── EffectiveProfileBuilder ──
     void builder_emitsHostPort();
     void builder_dropsUnsupportedFlag();
@@ -158,6 +162,30 @@ void CoreTests::readComposition_rejectsGarbage()
     f.close();
     const auto c = GGUFScanner::readComposition(path, QFileInfo(path).size());
     QVERIFY(!c.valid);
+}
+
+void CoreTests::degradedQat_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("family");
+    QTest::addColumn<QString>("quantReal");
+    QTest::addColumn<bool>("degraded");
+
+    QTest::newRow("google-raw")  << "gemma-4-E4B_q4_0-it-qat.gguf" << "gemma" << "q4_0" << true;
+    QTest::newRow("unsloth-ud")  << "gemma-4-E4B-it-qat-UD-Q4_K_XL.gguf" << "gemma" << "q4_0" << false;
+    QTest::newRow("unsloth-name")<< "gemma-4-qat-unsloth.gguf" << "gemma" << "q4_0" << false;
+    QTest::newRow("not-qat")     << "gemma-4-E4B-it-Q4_0.gguf" << "gemma" << "q4_0" << false;
+    QTest::newRow("not-gemma")   << "qwen-qat-q4_0.gguf" << "qwen" << "q4_0" << false;
+    QTest::newRow("not-q4_0")    << "gemma-qat-Q6_K.gguf" << "gemma" << "q6_k" << false;
+}
+
+void CoreTests::degradedQat()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, family);
+    QFETCH(QString, quantReal);
+    QFETCH(bool, degraded);
+    QCOMPARE(GGUFScanner::isDegradedQatQuant(file, family, quantReal), degraded);
 }
 
 // build() valida que el binario exista en disco → necesitamos un archivo real.
