@@ -2,6 +2,7 @@
 #include "McpClient.h"
 #include "LlamaAgentBackend.h"   // LlamaAgentBackend::makeDiff (static)
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
+#include "GraphStore.h"          // knowledge graph (entidades + relaciones)
 
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -1255,6 +1256,33 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             }
         }
         return facts;
+    }
+    if (name == QLatin1String("graph")) {
+        // KNOWLEDGE GRAPH: entidades + relaciones tipadas en .llamacode/graph.jsonl.
+        // action='link' (default) conecta subj-[pred]->obj; 'add_entity' crea una
+        // entidad; 'query' devuelve el vecindario de una entidad (depth 1|2).
+        const QString action = args.value(QStringLiteral("action")).toString().trimmed().toLower();
+        if (action == QLatin1String("add_entity")) {
+            const QString res = GraphStore::addEntity(
+                cwd, args.value(QStringLiteral("name")).toString(),
+                args.value(QStringLiteral("etype")).toString());
+            if (ok) *ok = true;
+            return res;
+        }
+        if (action == QLatin1String("query")) {
+            const QString res = GraphStore::query(
+                cwd, args.value(QStringLiteral("name")).toString(),
+                args.value(QStringLiteral("depth")).toInt());
+            if (ok) *ok = true;
+            return res;
+        }
+        // link (default)
+        const QString res = GraphStore::link(
+            cwd, args.value(QStringLiteral("subj")).toString(),
+            args.value(QStringLiteral("pred")).toString(),
+            args.value(QStringLiteral("obj")).toString());
+        if (ok) *ok = true;
+        return res;
     }
     if (name == QLatin1String("ask_teacher")) {
         // Consulta puntual a un modelo MÁS capaz (endpoint OpenAI-compatible aparte).

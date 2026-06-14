@@ -1322,8 +1322,8 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
         QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
-        QStringLiteral("memory"), QStringLiteral("ask_teacher"),
-        QStringLiteral("task")};
+        QStringLiteral("memory"), QStringLiteral("graph"),
+        QStringLiteral("ask_teacher"), QStringLiteral("task")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
@@ -1366,6 +1366,11 @@ void LlamaAgentBackend::processPendingCalls()
         const QString a = args.value(QStringLiteral("action")).toString().toLower();
         if (a == QLatin1String("save") || a == QLatin1String("forget"))
             kind = QStringLiteral("write");
+    }
+    // graph: 'query' (o sin action que cae en link... ) — mutan salvo query.
+    if (name == QLatin1String("graph")) {
+        const QString a = args.value(QStringLiteral("action")).toString().toLower();
+        if (a != QLatin1String("query")) kind = QStringLiteral("write");
     }
 
     // PLAN MODE: bloquear cualquier tool que mute (write/shell/mcp). Las read
@@ -2235,6 +2240,24 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("confidence"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                    {QStringLiteral("description"), QStringLiteral("Confianza 0..1 (sólo save, default 0.8).")}}}},
            QJsonArray{}),
+        fn(QStringLiteral("graph"),
+           QStringLiteral("KNOWLEDGE GRAPH del proyecto (entidades + relaciones tipadas, persiste "
+                          "entre sesiones). Complementa 'memory': ahí van hechos sueltos, acá CÓMO se "
+                          "conectan. action='link' (default) conecta subj-[pred]->obj (auto-crea las "
+                          "entidades); 'add_entity' crea una entidad con etype; 'query' devuelve el "
+                          "vecindario de una entidad (depth=1 directos, 2 incluye vecinos de vecinos). "
+                          "etype='file|module|decision|bug|person|concept'. Usalo para mapear qué "
+                          "módulo depende de cuál, qué decisión causó qué bug, quién pidió qué."),
+           QJsonObject{
+               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query'."))},
+               {QStringLiteral("subj"), strProp(QStringLiteral("Entidad origen (sólo link)."))},
+               {QStringLiteral("pred"), strProp(QStringLiteral("Predicado/relación, ej. 'depende_de' (sólo link)."))},
+               {QStringLiteral("obj"), strProp(QStringLiteral("Entidad destino (sólo link)."))},
+               {QStringLiteral("name"), strProp(QStringLiteral("Nombre de entidad (add_entity y query)."))},
+               {QStringLiteral("etype"), strProp(QStringLiteral("Tipo de entidad (sólo add_entity)."))},
+               {QStringLiteral("depth"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                   {QStringLiteral("description"), QStringLiteral("Saltos en query: 1 (default) o 2.")}}}},
+           QJsonArray{}),
         fn(QStringLiteral("ask_teacher"),
            QStringLiteral("Consultá a un modelo MÁS capaz (endpoint aparte) una sub-pregunta difícil: "
                           "diseño, algoritmo tricky, bug que no resolvés. Devuelve su respuesta. "
@@ -2284,7 +2307,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("write_file","Código",   "Crea o sobrescribe un archivo.", 90),
         mk("edit_file", "Código",   "Reemplazo exacto en un archivo existente.", 160),
         mk("run_shell", "Código",   "Ejecuta un comando de shell.", 110),
-        mk("memory",    "Conocimiento", "Memoria persistente del proyecto (save/recall).", 110),
+        mk("memory",    "Conocimiento", "Memoria persistente del proyecto (save/recall/forget).", 110),
+        mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query).", 140),
         mk("ask_teacher", "Multi-Agente", "Consulta a un modelo más capaz (endpoint aparte).", 130),
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
     };

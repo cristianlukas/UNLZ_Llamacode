@@ -36,6 +36,7 @@ set(SOURCES
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
     src/core/agent/MemoryStore.cpp
+    src/core/agent/GraphStore.cpp
     src/core/agent/MasterCli.cpp
     src/core/eval/EvalSuite.cpp
     src/core/tuner/AutoTuner.cpp
@@ -68,6 +69,7 @@ set(HEADERS
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
     src/core/agent/MemoryStore.h
+    src/core/agent/GraphStore.h
     src/core/eval/EvalSuite.h
     src/core/tuner/AutoTuner.h
     src/core/tuner/TunerEngine.h
