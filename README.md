@@ -1,4 +1,26 @@
-# UNLZ_Llamacode
+<p align="center">
+  <img src="https://github.com/JonatanBogadoUNLZ/PPS-Jonatan-Bogado/blob/9952aac097aca83a1aadfc26679fc7ec57369d82/LOGO%20AZUL%20HORIZONTAL%20-%20fondo%20transparente.png?raw=true" alt="Universidad Nacional de Lomas de Zamora — Facultad de Ingeniería" width="520">
+</p>
+
+<h1 align="center">UNLZ_Llamacode</h1>
+
+<p align="center">
+  <strong>Universidad Nacional de Lomas de Zamora — Facultad de Ingeniería</strong><br>
+  Proyecto institucional · Práctica Profesional Supervisada / Investigación aplicada
+</p>
+
+---
+
+> **Proyecto institucional de la Universidad Nacional de Lomas de Zamora (UNLZ), Facultad de Ingeniería.**
+>
+> UNLZ_Llamacode es una estación de trabajo de IA local: una app nativa de escritorio
+> (Qt/QML + C++) para **orquestar modelos `llama.cpp`**, gestionar chat con historial
+> persistente y ejecutar **agentes de código** sobre repositorios locales — todo
+> corriendo en hardware propio, sin depender de servicios en la nube.
+>
+> Se desarrolla como base de trabajo académico y de investigación, pensado para
+> docencia, experimentación con LLMs locales y trabajo de becarios/tesistas de la
+> Facultad.
 
 ## Instalación ultra-rápida (banco de pruebas aislado)
 
