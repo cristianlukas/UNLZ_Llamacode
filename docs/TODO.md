@@ -169,6 +169,11 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 - [ ] **Tests `ModelRootRegistry`** — idem.
 - [ ] **Tests `AppController` chat session CRUD** — idem (new/switch/delete/move/rename + persistencia index.json).
 
+## Memoria estilo Thoth/GraphRAG (provenance+forget+grafo+consolidación ✅, commits c099c4d/42b1084/76c1003)
+
+- [ ] **Gate de calidad sobre lo consolidado** — `consolidateMemory()` guarda hechos durables del transcript sin filtro. Reusar `verify_claims` para descartar/bajar confidence de los no acreditados contra repo+memoria antes de persistir. Hacerlo si aparece ruido en `.llamacode/memory.jsonl`.
+- [ ] **Grafo inferido automático** — que la consolidación además emita `link`s al knowledge graph (`GraphStore`) inferidos de los tool-calls reales (módulo→archivo tocado, decisión→bug). Hoy `graph link` es 100% manual.
+
 ## Definition of Done MVP real
 
 - [ ] 3+ binarios registrados y seleccionables
