@@ -92,6 +92,18 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                 }
 
+                // Transcripción parcial en vivo del turno en curso.
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.maximumWidth: 320
+                    visible: App.voicePartial.length > 0
+                    text: "“" + App.voicePartial + "”"
+                    color: Theme.textSecondary
+                    font { pixelSize: 13; italic: true }
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
                 // Medidor de nivel de micrófono (siempre visible).
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -285,6 +297,12 @@ Item {
                             Layout.fillWidth: true
                             text: String(page.cfg.vadSilenceMs || 800)
                             onEditingFinished: { page.cfg.vadSilenceMs = parseInt(text) || 800; page.save() }
+                        }
+                        Text { text: "Segmento incremental (ms)"; color: Theme.textSecondary }
+                        LcTextField {
+                            Layout.fillWidth: true
+                            text: String(page.cfg.vadSegmentMs || 350)
+                            onEditingFinished: { page.cfg.vadSegmentMs = parseInt(text) || 350; page.save() }
                         }
                         Text { text: "Auto-escuchar"; color: Theme.textSecondary }
                         Switch {

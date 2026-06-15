@@ -21,7 +21,7 @@ VoiceController::VoiceController(QObject *parent) : QObject(parent)
 
 VoiceController::~VoiceController()
 {
-    endCapture(false);
+    endCapture();
     teardownPlayback();
 }
 
@@ -76,7 +76,7 @@ void VoiceController::fail(const QString &err)
 {
     m_lastError = err;
     emit errorChanged();
-    endCapture(false);
+    endCapture();
     teardownPlayback();
     setState(Error);
 }
@@ -97,7 +97,7 @@ void VoiceController::start()
 
 void VoiceController::stop()
 {
-    endCapture(false);
+    endCapture();
     teardownPlayback();
     m_stt.cancel();
     m_tts.cancel();
@@ -133,8 +133,7 @@ void VoiceController::stopMicTest()
 
 void VoiceController::beginCapture()
 {
-    endCapture(false);
-    m_capture.clear();
+    endCapture();
     m_silenceMs = 0;
     m_peak = 0.0;
     m_monitorOnly = false;
@@ -162,7 +161,7 @@ void VoiceController::beginCapture()
     connect(m_input, &QIODevice::readyRead, this, &VoiceController::onAudioReady);
 }
 
-void VoiceController::endCapture(bool transcribe)
+void VoiceController::stopSource()
 {
     if (m_input) { disconnect(m_input, nullptr, this, nullptr); m_input = nullptr; }
     if (m_source) {
@@ -172,12 +171,18 @@ void VoiceController::endCapture(bool transcribe)
     }
     m_level = 0.0;
     emit levelChanged();
+}
 
-    if (transcribe && !m_capture.isEmpty()) {
-        setState(Transcribing);
-        m_stt.transcribe(m_capture, m_sampleRate);
-    }
-    m_capture.clear();
+void VoiceController::endCapture()
+{
+    stopSource();
+    // Reset completo del estado de stream (descarta turno en curso).
+    m_segment.clear();
+    m_segPeak = 0.0;
+    m_segSilenceMs = 0;
+    m_partial.clear();
+    m_segQueue.clear();
+    m_turnEnding = false;
 }
 
 void VoiceController::onAudioReady()
@@ -202,34 +207,87 @@ void VoiceController::onAudioReady()
         return;
     }
 
-    m_capture += chunk;
+    m_segment += chunk;
     if (lvl >= m_cfg.vadThreshold) {
         if (lvl > m_peak) m_peak = lvl;
+        if (lvl > m_segPeak) m_segPeak = lvl;
         m_silenceMs = 0;
+        m_segSilenceMs = 0;
     } else if (m_peak >= m_cfg.vadActivationLevel) {
         m_silenceMs += chunkMs;
+        m_segSilenceMs += chunkMs;
+        // Micro-pausa: cerrar segmento y transcribirlo en vivo (sin terminar turno).
+        if (m_segSilenceMs >= m_cfg.vadSegmentMs && m_segPeak >= m_cfg.vadActivationLevel)
+            flushSegment(false);
     }
 
+    // Silencio largo tras voz → fin de turno: cerrar último segmento y finalizar.
     if (turnEnded(m_peak, m_cfg.vadActivationLevel, m_silenceMs, m_cfg.vadSilenceMs))
-        endCapture(true);
+        flushSegment(true);
+}
+
+void VoiceController::flushSegment(bool finalSeg)
+{
+    // Encolar el segmento solo si tuvo voz y dura algo (>200ms) — evita fragmentos.
+    const int segMs = int((m_segment.size() / 2) * 1000.0 / m_sampleRate);
+    if (m_segPeak >= m_cfg.vadActivationLevel && segMs >= 200)
+        m_segQueue.append(m_segment);
+    m_segment.clear();
+    m_segPeak = 0.0;
+    m_segSilenceMs = 0;
+
+    if (finalSeg) {
+        m_turnEnding = true;
+        stopSource();                 // dejar de capturar; drenamos la cola de STT
+        if (m_state != Error) setState(Transcribing);
+    }
+    pumpSegments();
+}
+
+void VoiceController::pumpSegments()
+{
+    if (m_stt.busy()) return;         // un request a la vez (orden + servers seriales)
+    if (m_segQueue.isEmpty()) {
+        if (m_turnEnding) finalizeTurn();
+        return;
+    }
+    const QByteArray seg = m_segQueue.takeFirst();
+    m_stt.transcribe(seg, m_sampleRate);
+}
+
+void VoiceController::finalizeTurn()
+{
+    m_turnEnding = false;
+    const QString full = m_partial.trimmed();
+    m_partial.clear();
+    if (full.isEmpty()) {             // nada inteligible → reintentar escucha
+        if (m_cfg.autoListen) startListening();
+        else setState(Idle);
+        return;
+    }
+    setState(Thinking);
+    emit transcriptReady(full);
 }
 
 // ── STT → texto ──────────────────────────────────────────────────────────────
 
 void VoiceController::onSttDone(const QString &text)
 {
-    if (text.trimmed().isEmpty()) {     // nada inteligible → reintentar escucha
-        if (m_cfg.autoListen) startListening();
-        else setState(Idle);
-        return;
+    const QString t = text.trimmed();
+    if (!t.isEmpty()) {
+        if (!m_partial.isEmpty()) m_partial += QLatin1Char(' ');
+        m_partial += t;
+        emit partialTranscript(m_partial);
     }
-    setState(Thinking);
-    emit transcriptReady(text);
+    pumpSegments();                   // siguiente segmento, o finalizar si era el último
 }
 
 void VoiceController::onSttFailed(const QString &err)
 {
-    fail(QStringLiteral("STT: ") + err);
+    // Si ya hay texto parcial, ignorar el segmento fallido y seguir; si no, error duro
+    // (típico: server STT caído → "Conexión rechazada").
+    if (m_partial.isEmpty()) { fail(QStringLiteral("STT: ") + err); return; }
+    pumpSegments();
 }
 
 void VoiceController::notifyThinking()

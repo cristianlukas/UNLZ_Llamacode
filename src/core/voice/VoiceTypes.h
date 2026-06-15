@@ -32,6 +32,9 @@ struct VoiceConfig {
     double  vadThreshold = 0.012;
     // Silencio continuo (ms) tras voz para dar el turno por terminado.
     int     vadSilenceMs = 800;
+    // Micro-silencio (ms) que corta un segmento para transcripción incremental
+    // (texto parcial en vivo mientras hablás). Debe ser < vadSilenceMs.
+    int     vadSegmentMs = 350;
     // Energía mínima que tuvo que superarse para considerar que hubo voz.
     double  vadActivationLevel = 0.03;
     // Reanudar escucha automáticamente tras hablar la respuesta.

@@ -119,6 +119,7 @@ class AppController : public QObject
     Q_PROPERTY(bool    voiceActive READ voiceActive NOTIFY voiceStateChanged)
     Q_PROPERTY(double  voiceLevel READ voiceLevel NOTIFY voiceLevelChanged)
     Q_PROPERTY(QString voiceError READ voiceError NOTIFY voiceStateChanged)
+    Q_PROPERTY(QString voicePartial READ voicePartial NOTIFY voicePartialChanged)
 
 public:
     explicit AppController(QObject *parent = nullptr);
@@ -501,6 +502,7 @@ public:
     bool    voiceActive() const;
     double  voiceLevel() const;
     QString voiceError() const;
+    QString voicePartial() const { return m_voicePartial; }
     // Config persistida (settings "voiceConfig"); el setter aplica al controller vivo.
     Q_INVOKABLE QVariantMap voiceConfig() const;
     Q_INVOKABLE void setVoiceConfig(const QVariantMap &cfg);
@@ -519,6 +521,7 @@ public:
 signals:
     void voiceStateChanged();
     void voiceLevelChanged();
+    void voicePartialChanged();
     // Un perfil cloud necesita su API key y no se pudo resolver (ni env var ni store):
     // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
     void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
@@ -705,6 +708,7 @@ private:
     class VoiceController *m_voice = nullptr;
     bool m_charlaActive = false;
     bool m_chatWasGenerating = false;
+    QString m_voicePartial;
     void ensureVoice();                 // crea + configura el controller (lazy)
     void applyVoiceConfig();            // empuja config + keys resueltas al controller
     QString voiceConfigPath() const;

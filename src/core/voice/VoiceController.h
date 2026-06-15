@@ -6,6 +6,8 @@
 #include <QByteArray>
 #include <QPointer>
 #include <QVariantList>
+#include <QList>
+#include <QString>
 
 class QAudioSource;
 class QIODevice;
@@ -67,6 +69,8 @@ signals:
     void errorChanged();
     // Texto reconocido del usuario; AppController lo envía al backend de chat.
     void transcriptReady(const QString &text);
+    // Transcripción parcial en vivo (segmentos ya reconocidos del turno en curso).
+    void partialTranscript(const QString &text);
 
 private slots:
     void onAudioReady();
@@ -79,7 +83,11 @@ private:
     void setState(State s);
     void fail(const QString &err);
     void beginCapture();
-    void endCapture(bool transcribe);
+    void endCapture();              // tear-down de captura + reset del estado de stream
+    void stopSource();             // detiene el QAudioSource sin resetear el transcript
+    void flushSegment(bool finalSeg); // encola el segmento actual (si tuvo voz) y pumpea
+    void pumpSegments();           // transcribe el próximo segmento si STT está libre
+    void finalizeTurn();           // arma el texto final del turno y lo emite
     void playAudio(const QByteArray &audio, const QString &format);
     void teardownPlayback();
 
@@ -93,10 +101,19 @@ private:
 
     QAudioSource *m_source = nullptr;
     QPointer<QIODevice> m_input;     // device de QAudioSource (no es dueño)
-    QByteArray m_capture;            // PCM16 acumulado del turno
     int   m_sampleRate = 16000;
     int   m_silenceMs = 0;           // silencio continuo acumulado (ms)
     double m_peak = 0.0;             // máximo RMS visto en el turno (¿hubo voz?)
+
+    // Transcripción incremental (chunked): el turno se trocea en segmentos por
+    // micro-silencios; cada segmento se transcribe en orden y se acumula en
+    // m_partial (mostrado en vivo). Al silencio largo se finaliza el turno.
+    QByteArray m_segment;            // PCM16 del segmento en curso
+    double m_segPeak = 0.0;          // ¿el segmento tuvo voz?
+    int    m_segSilenceMs = 0;       // micro-silencio del segmento
+    QString m_partial;               // transcripción acumulada del turno
+    QList<QByteArray> m_segQueue;    // segmentos esperando transcripción (en orden)
+    bool   m_turnEnding = false;     // silencio largo detectado: finalizar al drenar la cola
     bool  m_monitorOnly = false;     // true durante Speaking (barge-in): no acumula
     bool  m_testMode = false;        // micTest: captura para nivel, no VAD/STT
     QString m_deviceId;              // micrófono elegido ("" = default del sistema)

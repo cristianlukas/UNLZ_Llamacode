@@ -8242,7 +8242,13 @@ void AppController::ensureVoice()
     if (m_voice) return;
     m_voice = new VoiceController(this);
     connect(m_voice, &VoiceController::transcriptReady, this, [this](const QString &text) {
+        m_voicePartial.clear();
+        emit voicePartialChanged();
         sendChatMessage(text);
+    });
+    connect(m_voice, &VoiceController::partialTranscript, this, [this](const QString &text) {
+        m_voicePartial = text;
+        emit voicePartialChanged();
     });
     connect(m_voice, &VoiceController::stateChanged, this, &AppController::voiceStateChanged);
     connect(m_voice, &VoiceController::errorChanged, this, &AppController::voiceStateChanged);
