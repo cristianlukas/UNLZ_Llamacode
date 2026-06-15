@@ -32,6 +32,11 @@ void VoiceController::setConfig(const VoiceConfig &cfg, const QString &sttKey, c
     m_tts.setConfig(cfg, ttsKey);
 }
 
+void VoiceController::setTtsPiper(const QString &binPath, const QString &modelPath)
+{
+    m_tts.setPiper(binPath, modelPath);
+}
+
 void VoiceController::setInputDevice(const QString &id)
 {
     m_deviceId = id;

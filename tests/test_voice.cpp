@@ -24,6 +24,7 @@ private slots:
     void vadTurnEnded();
     void voiceInLaunchProfile();
     void sttServerCatalog();
+    void ttsVoiceCatalog();
 };
 
 void TestVoice::configRoundTrip()
@@ -162,6 +163,22 @@ void TestVoice::sttServerCatalog()
     QVERIFY(!a.contains("-l"));
     QStringList b = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "es");
     QVERIFY(b.contains("-l")); QVERIFY(b.contains("es"));
+}
+
+void TestVoice::ttsVoiceCatalog()
+{
+    const QVariantList cat = VoiceServerManager::ttsCatalog();
+    QVERIFY(cat.size() >= 1);
+    const QVariantMap v = VoiceServerManager::ttsVoice("es_ES-davefx-medium");
+    QVERIFY(!v.isEmpty());
+    QCOMPARE(v.value("lang").toString(), QString("es"));
+    QVERIFY(VoiceServerManager::ttsModelPath("es_ES-davefx-medium").endsWith(".onnx"));
+    QVERIFY(VoiceServerManager::ttsVoice("nope").isEmpty());
+
+    // piper args: -m model -f out.
+    const QStringList a = VoiceServerManager::buildPiperArgs("v.onnx", "out.wav");
+    QVERIFY(a.contains("-m")); QVERIFY(a.contains("v.onnx"));
+    QVERIFY(a.contains("-f")); QVERIFY(a.contains("out.wav"));
 }
 
 QTEST_MAIN(TestVoice)

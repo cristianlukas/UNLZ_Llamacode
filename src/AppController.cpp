@@ -8275,6 +8275,10 @@ void AppController::applyVoiceConfig()
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
     m_voice->setConfig(c, sttKey, ttsKey);
     m_voice->setInputDevice(voiceInputDevice());
+    // TTS piper (process-mode): resolver binario + voz instalada.
+    if (c.ttsMode == QLatin1String("piper"))
+        m_voice->setTtsPiper(voicePiperPath(),
+                             VoiceServerManager::ttsModelPath(c.ttsManagedVoice));
 }
 
 QVariantList AppController::audioInputDevices() const
@@ -8361,6 +8365,41 @@ QString AppController::pickVoiceWhisperServer()
         QStringLiteral("Todos (*)"));
 #endif
     if (!p.isEmpty()) setVoiceWhisperServerPath(p);
+    return p;
+}
+
+QVariantList AppController::voiceTtsCatalog() const { return VoiceServerManager::ttsCatalog(); }
+
+bool AppController::voiceTtsVoiceInstalled(const QString &voiceId) const
+{
+    return m_voiceServers.ttsVoiceInstalled(voiceId);
+}
+
+void AppController::installVoiceTts(const QString &voiceId)
+{
+    m_voiceServers.installTtsVoice(voiceId);
+}
+
+QString AppController::voicePiperPath() const
+{
+    return readSetting(QStringLiteral("voicePiperPath")).toString();
+}
+
+void AppController::setVoicePiperPath(const QString &path)
+{
+    writeSetting(QStringLiteral("voicePiperPath"), path);
+}
+
+QString AppController::pickVoicePiper()
+{
+    const QString p = QFileDialog::getOpenFileName(
+        nullptr, QStringLiteral("Seleccionar binario piper"), QString(),
+#ifdef Q_OS_WIN
+        QStringLiteral("Ejecutables (*.exe);;Todos (*)"));
+#else
+        QStringLiteral("Todos (*)"));
+#endif
+    if (!p.isEmpty()) setVoicePiperPath(p);
     return p;
 }
 

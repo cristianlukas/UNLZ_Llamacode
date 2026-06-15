@@ -33,6 +33,10 @@ struct VoiceConfig {
     QString ttsVoice    = QStringLiteral("alloy");
     QString ttsKeyRef;
     QString ttsFormat   = QStringLiteral("wav");     // wav | mp3 | pcm
+    // Modo TTS: "http" (endpoint OpenAI-compat) o "piper" (gestionado, process-mode
+    // local: la app corre piper por turno). Con "piper" se usa ttsManagedVoice.
+    QString ttsMode = QStringLiteral("http");        // http | piper
+    QString ttsManagedVoice;                          // id de voz piper del catálogo
 
     // ── Captura / VAD (detección de fin de habla) ──
     // Umbral de energía RMS [0..1] por debajo del cual el frame es "silencio".

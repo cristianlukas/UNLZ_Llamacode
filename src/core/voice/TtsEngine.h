@@ -16,9 +16,11 @@ public:
     explicit TtsEngine(QObject *parent = nullptr);
 
     void setConfig(const VoiceConfig &cfg, const QString &resolvedKey);
+    // Rutas para modo piper (process-mode). bin vacío = buscar "piper" en PATH.
+    void setPiper(const QString &binPath, const QString &modelPath);
 
     void synthesize(const QString &text);
-    bool busy() const { return m_reply != nullptr; }
+    bool busy() const { return m_reply != nullptr || m_piper != nullptr; }
     void cancel();
 
     // ── Función pura (testeable sin red) ──
@@ -32,8 +34,13 @@ signals:
     void failed(const QString &error);
 
 private:
+    void synthesizePiper(const QString &text);
+
     VoiceConfig m_cfg;
     QString m_key;
     QNetworkAccessManager m_nam;
     QNetworkReply *m_reply = nullptr;
+    QString m_piperBin, m_piperModel;
+    class QProcess *m_piper = nullptr;
+    QString m_piperOut;          // wav temporal de salida
 };

@@ -36,6 +36,8 @@ public:
     ~VoiceController() override;
 
     void setConfig(const VoiceConfig &cfg, const QString &sttKey, const QString &ttsKey);
+    // Rutas para TTS modo piper (process-mode).
+    void setTtsPiper(const QString &binPath, const QString &modelPath);
     // Dispositivo de entrada por id (QAudioDevice::id() como string utf8). "" = default.
     void setInputDevice(const QString &id);
     // Lista de micrófonos: [{id,name,isDefault}].

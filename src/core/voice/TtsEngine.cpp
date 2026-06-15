@@ -1,9 +1,15 @@
 #include "TtsEngine.h"
+#include "VoiceServerManager.h"
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QUrl>
+#include <QProcess>
+#include <QDir>
+#include <QFile>
+#include <QStandardPaths>
+#include <QUuid>
 
 TtsEngine::TtsEngine(QObject *parent) : QObject(parent) {}
 
@@ -24,10 +30,57 @@ QByteArray TtsEngine::buildSpeechBody(const QString &model, const QString &voice
     return QJsonDocument(o).toJson(QJsonDocument::Compact);
 }
 
+void TtsEngine::setPiper(const QString &binPath, const QString &modelPath)
+{
+    m_piperBin = binPath;
+    m_piperModel = modelPath;
+}
+
+void TtsEngine::synthesizePiper(const QString &text)
+{
+    if (m_piperModel.isEmpty() || !QFile::exists(m_piperModel)) {
+        emit failed(QStringLiteral("voz piper no instalada")); return;
+    }
+    const QString tmp = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+        + QStringLiteral("/lc_tts_") + QUuid::createUuid().toString(QUuid::Id128)
+        + QStringLiteral(".wav");
+    m_piperOut = tmp;
+    QString prog = m_piperBin.isEmpty() ? QStringLiteral("piper") : m_piperBin;
+    const QStringList args = VoiceServerManager::buildPiperArgs(m_piperModel, tmp);
+
+    m_piper = new QProcess(this);
+    connect(m_piper, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
+        if (!m_piper) return;
+        m_piper->deleteLater(); m_piper = nullptr;
+        emit failed(QStringLiteral("no se pudo lanzar piper (configurá su ruta)"));
+    });
+    connect(m_piper, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this](int code, QProcess::ExitStatus) {
+        QProcess *p = m_piper; m_piper = nullptr;
+        if (p) p->deleteLater();
+        QFile f(m_piperOut);
+        if (code != 0 || !f.open(QIODevice::ReadOnly)) {
+            QFile::remove(m_piperOut);
+            emit failed(QStringLiteral("piper falló")); return;
+        }
+        const QByteArray wav = f.readAll();
+        f.close();
+        QFile::remove(m_piperOut);
+        if (wav.isEmpty()) { emit failed(QStringLiteral("piper no generó audio")); return; }
+        emit audioReady(wav, QStringLiteral("wav"));
+    });
+    m_piper->start(prog, args);
+    if (m_piper->waitForStarted(4000)) {
+        m_piper->write(text.toUtf8());
+        m_piper->closeWriteChannel();
+    }
+}
+
 void TtsEngine::synthesize(const QString &text)
 {
-    if (m_reply) { emit failed(QStringLiteral("TTS ocupado")); return; }
+    if (busy()) { emit failed(QStringLiteral("TTS ocupado")); return; }
     if (text.trimmed().isEmpty()) { emit failed(QStringLiteral("texto vacío")); return; }
+    if (m_cfg.ttsMode == QLatin1String("piper")) { synthesizePiper(text); return; }
 
     QString base = m_cfg.ttsBaseUrl;
     while (base.endsWith('/')) base.chop(1);
@@ -65,4 +118,9 @@ void TtsEngine::synthesize(const QString &text)
 void TtsEngine::cancel()
 {
     if (m_reply) m_reply->abort();
+    if (m_piper) {
+        QProcess *p = m_piper; m_piper = nullptr;
+        p->kill(); p->deleteLater();
+        if (!m_piperOut.isEmpty()) QFile::remove(m_piperOut);
+    }
 }

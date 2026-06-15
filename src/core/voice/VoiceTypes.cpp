@@ -17,6 +17,8 @@ QJsonObject VoiceConfig::toJson() const
     o["ttsVoice"]       = ttsVoice;
     o["ttsKeyRef"]      = ttsKeyRef;
     o["ttsFormat"]      = ttsFormat;
+    o["ttsMode"]        = ttsMode;
+    o["ttsManagedVoice"]= ttsManagedVoice;
     o["vadThreshold"]   = vadThreshold;
     o["vadSilenceMs"]   = vadSilenceMs;
     o["vadSegmentMs"]   = vadSegmentMs;
@@ -44,6 +46,9 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.ttsVoice    = o.value("ttsVoice").toString(c.ttsVoice);
     c.ttsKeyRef   = o.value("ttsKeyRef").toString(c.ttsKeyRef);
     c.ttsFormat   = o.value("ttsFormat").toString(c.ttsFormat);
+    c.ttsMode     = o.value("ttsMode").toString(c.ttsMode);
+    if (c.ttsMode.isEmpty()) c.ttsMode = QStringLiteral("http");
+    c.ttsManagedVoice = o.value("ttsManagedVoice").toString(c.ttsManagedVoice);
     c.vadThreshold = o.value("vadThreshold").toDouble(c.vadThreshold);
     c.vadSilenceMs = o.value("vadSilenceMs").toInt(c.vadSilenceMs);
     c.vadSegmentMs = o.value("vadSegmentMs").toInt(c.vadSegmentMs);

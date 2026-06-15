@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QUrl>
+#include <QPair>
 
 namespace {
 // Catálogo declarativo. Las URLs de modelos ggml de whisper.cpp viven en HF
@@ -27,6 +28,29 @@ const Engine kEngines[] = {
      "ggml-small.bin",
      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
      488, "/inference", 8081},
+};
+
+// Voces piper (TTS process-mode). Cada voz = .onnx + .onnx.json (rhasspy/piper-voices).
+struct Voice {
+    const char *id; const char *name; const char *lang;
+    const char *modelFile; const char *modelUrl; const char *jsonUrl; int sizeMb;
+};
+const Voice kVoices[] = {
+    {"es_ES-davefx-medium", "Español (davefx, medium)", "es",
+     "es_ES-davefx-medium.onnx",
+     "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/davefx/medium/es_ES-davefx-medium.onnx",
+     "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_ES/davefx/medium/es_ES-davefx-medium.onnx.json",
+     63},
+    {"es_MX-claude-high", "Español MX (claude, high)", "es",
+     "es_MX-claude-high.onnx",
+     "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx",
+     "https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx.json",
+     114},
+    {"en_US-amy-medium", "English US (amy, medium)", "en",
+     "en_US-amy-medium.onnx",
+     "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx",
+     "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/amy/medium/en_US-amy-medium.onnx.json",
+     63},
 };
 }
 
@@ -55,6 +79,50 @@ QVariantMap VoiceServerManager::sttEngine(const QString &id)
         if (id == QLatin1String(e.id))
             return sttCatalog().at(&e - kEngines).toMap();
     return {};
+}
+
+QVariantList VoiceServerManager::ttsCatalog()
+{
+    QVariantList out;
+    for (const Voice &v : kVoices) {
+        out.append(QVariantMap{
+            {"id", QString::fromLatin1(v.id)},
+            {"name", QString::fromUtf8(v.name)},
+            {"lang", QString::fromLatin1(v.lang)},
+            {"modelFile", QString::fromLatin1(v.modelFile)},
+            {"modelUrl", QString::fromLatin1(v.modelUrl)},
+            {"jsonUrl", QString::fromLatin1(v.jsonUrl)},
+            {"sizeMb", v.sizeMb}});
+    }
+    return out;
+}
+
+QVariantMap VoiceServerManager::ttsVoice(const QString &id)
+{
+    for (const Voice &v : kVoices)
+        if (id == QLatin1String(v.id))
+            return ttsCatalog().at(&v - kVoices).toMap();
+    return {};
+}
+
+QString VoiceServerManager::ttsModelPath(const QString &voiceId)
+{
+    const QVariantMap v = ttsVoice(voiceId);
+    if (v.isEmpty()) return {};
+    return installRoot() + QStringLiteral("/tts/") + voiceId + QStringLiteral("/")
+           + v.value("modelFile").toString();
+}
+
+bool VoiceServerManager::ttsVoiceInstalled(const QString &voiceId) const
+{
+    const QString p = ttsModelPath(voiceId);
+    // piper requiere .onnx + .onnx.json
+    return !p.isEmpty() && QFile::exists(p) && QFile::exists(p + QStringLiteral(".json"));
+}
+
+QStringList VoiceServerManager::buildPiperArgs(const QString &modelPath, const QString &outWav)
+{
+    return {QStringLiteral("-m"), modelPath, QStringLiteral("-f"), outWav};
 }
 
 QString VoiceServerManager::installRoot()
@@ -96,36 +164,66 @@ QStringList VoiceServerManager::buildWhisperArgs(const QString &modelPath, const
 
 void VoiceServerManager::installModel(const QString &engineId)
 {
-    if (m_reply) { emit installFinished(engineId, false, QStringLiteral("descarga en curso")); return; }
+    if (m_reply || !m_dlQueue.isEmpty()) {
+        emit installFinished(engineId, false, QStringLiteral("descarga en curso")); return;
+    }
     const QVariantMap e = sttEngine(engineId);
     if (e.isEmpty()) { emit installFinished(engineId, false, QStringLiteral("motor desconocido")); return; }
+    startDownloadQueue(engineId, {{ e.value("modelUrl").toString(), modelPath(engineId) }});
+}
 
-    const QString dst = modelPath(engineId);
+void VoiceServerManager::installTtsVoice(const QString &voiceId)
+{
+    if (m_reply || !m_dlQueue.isEmpty()) {
+        emit installFinished(voiceId, false, QStringLiteral("descarga en curso")); return;
+    }
+    const QVariantMap v = ttsVoice(voiceId);
+    if (v.isEmpty()) { emit installFinished(voiceId, false, QStringLiteral("voz desconocida")); return; }
+    const QString onnx = ttsModelPath(voiceId);
+    startDownloadQueue(voiceId, {
+        { v.value("modelUrl").toString(), onnx },
+        { v.value("jsonUrl").toString(),  onnx + QStringLiteral(".json") }});
+}
+
+void VoiceServerManager::startDownloadQueue(const QString &id,
+                                            const QList<QPair<QString, QString>> &files)
+{
+    m_engineId = id;
+    m_dlQueue = files;
+    m_dlTotal = files.size();
+    emit installProgress(id, 0, QStringLiteral("Descargando…"));
+    downloadNext();
+}
+
+void VoiceServerManager::downloadNext()
+{
+    if (m_dlQueue.isEmpty()) { emit installFinished(m_engineId, true, QString()); return; }
+    const auto job = m_dlQueue.first();
+    const QString url = job.first;
+    const QString dst = job.second;
     QDir().mkpath(QFileInfo(dst).absolutePath());
     m_file = new QFile(dst + QStringLiteral(".part"));
     if (!m_file->open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         delete m_file; m_file = nullptr;
-        emit installFinished(engineId, false, QStringLiteral("no se pudo escribir el modelo"));
+        m_dlQueue.clear();
+        emit installFinished(m_engineId, false, QStringLiteral("no se pudo escribir el archivo"));
         return;
     }
-    m_engineId = engineId;
-    emit installProgress(engineId, 0, QStringLiteral("Descargando modelo…"));
-
-    QNetworkRequest req(QUrl(e.value("modelUrl").toString()));
+    QNetworkRequest req((QUrl(url)));
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
                      QNetworkRequest::NoLessSafeRedirectPolicy);
     m_reply = m_nam.get(req);
+    const int doneFiles = m_dlTotal - m_dlQueue.size();
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
         if (m_file) m_file->write(m_reply->readAll());
     });
-    connect(m_reply, &QNetworkReply::downloadProgress, this, [this](qint64 r, qint64 t) {
-        const int pct = (t > 0) ? int(r * 100 / t) : 0;
-        emit installProgress(m_engineId, pct,
-            QStringLiteral("Descargando modelo… %1%").arg(pct));
+    connect(m_reply, &QNetworkReply::downloadProgress, this, [this, doneFiles](qint64 r, qint64 t) {
+        const int filePct = (t > 0) ? int(r * 100 / t) : 0;
+        const int pct = m_dlTotal > 0 ? (doneFiles * 100 + filePct) / m_dlTotal : filePct;
+        emit installProgress(m_engineId, pct, QStringLiteral("Descargando… %1%").arg(pct));
     });
-    connect(m_reply, &QNetworkReply::finished, this, [this]() {
+    connect(m_reply, &QNetworkReply::finished, this, [this, dst]() {
         QNetworkReply *r = m_reply; m_reply = nullptr;
-        const QString id = m_engineId;
         const bool ok = (r->error() == QNetworkReply::NoError);
         const QString err = r->errorString();
         if (m_file) { m_file->write(r->readAll()); m_file->close(); }
@@ -133,18 +231,24 @@ void VoiceServerManager::installModel(const QString &engineId)
         delete m_file; m_file = nullptr;
         r->deleteLater();
         if (ok && !part.isEmpty()) {
-            const QString fin = part.left(part.size() - 5); // quita ".part"
-            QFile::remove(fin);
-            if (QFile::rename(part, fin)) { emit installFinished(id, true, QString()); return; }
-            emit installFinished(id, false, QStringLiteral("no se pudo finalizar el archivo"));
+            QFile::remove(dst);
+            if (!QFile::rename(part, dst)) {
+                m_dlQueue.clear();
+                emit installFinished(m_engineId, false, QStringLiteral("no se pudo finalizar el archivo"));
+                return;
+            }
+            m_dlQueue.removeFirst();
+            downloadNext();
         } else {
             if (!part.isEmpty()) QFile::remove(part);
-            emit installFinished(id, false, ok ? QStringLiteral("descarga incompleta") : err);
+            m_dlQueue.clear();
+            emit installFinished(m_engineId, false, ok ? QStringLiteral("descarga incompleta") : err);
         }
     });
 }
 
 void VoiceServerManager::cancelInstall()
 {
+    m_dlQueue.clear();
     if (m_reply) m_reply->abort();
 }

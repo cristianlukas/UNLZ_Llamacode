@@ -530,6 +530,13 @@ public:
     Q_INVOKABLE QString voiceWhisperServerPath() const;
     Q_INVOKABLE void setVoiceWhisperServerPath(const QString &path);
     Q_INVOKABLE QString pickVoiceWhisperServer();   // diálogo de archivo; devuelve la ruta
+    // ── TTS gestionado (piper, process-mode) ──
+    Q_INVOKABLE QVariantList voiceTtsCatalog() const;
+    Q_INVOKABLE bool voiceTtsVoiceInstalled(const QString &voiceId) const;
+    Q_INVOKABLE void installVoiceTts(const QString &voiceId);
+    Q_INVOKABLE QString voicePiperPath() const;
+    Q_INVOKABLE void setVoicePiperPath(const QString &path);
+    Q_INVOKABLE QString pickVoicePiper();
 
 signals:
     void voiceStateChanged();

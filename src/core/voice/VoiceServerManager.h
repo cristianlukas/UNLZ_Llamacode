@@ -27,13 +27,20 @@ public:
     // Entrada del catálogo por id ({} si no existe).
     static QVariantMap sttEngine(const QString &id);
 
+    // Catálogo de voces TTS (piper): [{id,name,lang,modelFile,modelUrl,jsonUrl,sizeMb}].
+    static QVariantList ttsCatalog();
+    static QVariantMap ttsVoice(const QString &id);
+
     // Rutas en disco (bajo AppLocalData/LlamaCode/voice/).
     static QString installRoot();
-    static QString modelPath(const QString &engineId);   // "" si el id no está en el catálogo
+    static QString modelPath(const QString &engineId);   // STT: "" si el id no está en el catálogo
     bool modelInstalled(const QString &engineId) const;
+    static QString ttsModelPath(const QString &voiceId); // ruta del .onnx de la voz piper
+    bool ttsVoiceInstalled(const QString &voiceId) const;
 
-    // Descarga el modelo del motor (async). Emite installProgress/installFinished.
+    // Descarga del modelo STT / de la voz TTS (async). Emite installProgress/installFinished.
     void installModel(const QString &engineId);
+    void installTtsVoice(const QString &voiceId);
     void cancelInstall();
     bool installing() const { return m_reply != nullptr; }
 
@@ -43,14 +50,22 @@ public:
                                         int port, const QString &language);
     // endpointPath del motor (ej "/inference" para whisper.cpp).
     static QString endpointPath(const QString &engineId);
+    // Args de piper (process-mode): -m <model> -f <outWav> (texto por stdin).
+    static QStringList buildPiperArgs(const QString &modelPath, const QString &outWav);
 
 signals:
     void installProgress(const QString &engineId, int pct, const QString &status);
     void installFinished(const QString &engineId, bool ok, const QString &message);
 
 private:
+    // Descarga secuencial de una lista de (url, destino). Emite progreso global.
+    void startDownloadQueue(const QString &id, const QList<QPair<QString, QString>> &files);
+    void downloadNext();
+
     QNetworkAccessManager m_nam;
     QNetworkReply *m_reply = nullptr;
     QFile *m_file = nullptr;
     QString m_engineId;
+    QList<QPair<QString, QString>> m_dlQueue;  // pendientes (url, dest)
+    int m_dlTotal = 0;                          // total de archivos del job
 };

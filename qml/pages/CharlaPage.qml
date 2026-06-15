@@ -21,8 +21,9 @@ Item {
         function onVoiceInstallProgress(engineId, pct, status) { page.installPct = pct; page.installMsg = status }
         function onVoiceInstallFinished(engineId, ok, message) {
             page.installPct = -1
-            page.installMsg = ok ? "Modelo instalado ✓" : ("Error: " + message)
+            page.installMsg = ok ? "Instalado ✓" : ("Error: " + message)
             sttEngineCombo.refresh()
+            ttsVoiceCombo.refresh()
         }
     }
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
@@ -312,7 +313,66 @@ Item {
                         }
                     }
 
-                    Text { text: "Síntesis de voz (TTS)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    Text { text: "Motor TTS gestionado (piper, local)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    GridLayout {
+                        columns: 2; columnSpacing: 12; rowSpacing: 8
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+
+                        Text { text: "Modo"; color: Theme.textSecondary }
+                        LcComboBox {
+                            Layout.fillWidth: true
+                            model: ["http", "piper"]
+                            currentIndex: (page.cfg.ttsMode === "piper") ? 1 : 0
+                            onActivated: { page.cfg.ttsMode = model[currentIndex]; page.save() }
+                        }
+
+                        Text { text: "Voz piper"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" }
+                        LcComboBox {
+                            id: ttsVoiceCombo
+                            Layout.fillWidth: true
+                            visible: page.cfg.ttsMode === "piper"
+                            property var opts: App.voiceTtsCatalog()
+                            function refresh() { opts = App.voiceTtsCatalog() }
+                            textRole: "name"
+                            model: opts
+                            Component.onCompleted: {
+                                var cur = page.cfg.ttsManagedVoice || ""
+                                for (var i = 0; i < opts.length; ++i) if (opts[i].id === cur) { currentIndex = i; break }
+                            }
+                            onActivated: { page.cfg.ttsManagedVoice = opts[currentIndex].id; page.save() }
+                        }
+
+                        Text { text: "Estado voz"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            visible: page.cfg.ttsMode === "piper"
+                            Text {
+                                Layout.fillWidth: true; color: Theme.textMuted; font.pixelSize: 12
+                                text: App.voiceTtsVoiceInstalled(page.cfg.ttsManagedVoice || "") ? "Instalada ✓" : "No instalada"
+                            }
+                            LcButton {
+                                text: "Instalar voz"
+                                secondary: true
+                                visible: (page.cfg.ttsManagedVoice || "") !== "" && !App.voiceTtsVoiceInstalled(page.cfg.ttsManagedVoice || "")
+                                onClicked: App.installVoiceTts(page.cfg.ttsManagedVoice)
+                            }
+                        }
+
+                        Text { text: "Binario piper"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 6
+                            visible: page.cfg.ttsMode === "piper"
+                            LcTextField {
+                                Layout.fillWidth: true
+                                placeholderText: "ruta a piper (vacío = PATH)"
+                                text: App.voicePiperPath()
+                                onEditingFinished: App.setVoicePiperPath(text)
+                            }
+                            LcButton { text: "…"; secondary: true; onClicked: App.pickVoicePiper() }
+                        }
+                    }
+
+                    Text { text: "Síntesis de voz (TTS) — endpoint HTTP"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
                         Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
