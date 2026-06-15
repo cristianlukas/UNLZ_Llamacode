@@ -9,10 +9,13 @@ import "../components"
 Item {
     id: page
 
+    // La config de voz vive en el LaunchProfile activo (el que lanzó el server).
+    property string pid: App.activeLaunchId
     property var cfg: ({})
     property bool testing: false
-    function reload() { cfg = App.voiceConfig() }
-    function save() { App.setVoiceConfig(cfg) }
+    function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
+    function save() { if (pid.length) App.setVoiceConfig(pid, cfg) }
+    onPidChanged: reload()
     Component.onCompleted: reload()
 
     readonly property string st: App.voiceState

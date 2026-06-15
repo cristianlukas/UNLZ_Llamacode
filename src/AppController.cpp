@@ -8222,19 +8222,15 @@ void AppController::deleteResearchReport(const QString &id)
 
 // ── Modo Charla (voz-a-voz) ──────────────────────────────────────────────────
 
-QVariantMap AppController::voiceConfig() const
+QVariantMap AppController::voiceConfig(const QString &profileId) const
 {
-    const QString raw = readSetting(QStringLiteral("voiceConfig")).toString();
-    const QJsonObject o = QJsonDocument::fromJson(raw.toUtf8()).object();
-    return VoiceConfig::fromJson(o).toJson().toVariantMap();
+    return m_profiles.getLaunchVoice(profileId);
 }
 
-void AppController::setVoiceConfig(const QVariantMap &cfg)
+void AppController::setVoiceConfig(const QString &profileId, const QVariantMap &cfg)
 {
-    const VoiceConfig c = VoiceConfig::fromJson(QJsonObject::fromVariantMap(cfg));
-    writeSetting(QStringLiteral("voiceConfig"),
-                 QString::fromUtf8(QJsonDocument(c.toJson()).toJson(QJsonDocument::Compact)));
-    if (m_voice) applyVoiceConfig();
+    m_profiles.setLaunchVoice(profileId, cfg);
+    if (m_voice && profileId == m_activeLaunchId) applyVoiceConfig();
 }
 
 void AppController::ensureVoice()
@@ -8258,8 +8254,9 @@ void AppController::ensureVoice()
 void AppController::applyVoiceConfig()
 {
     if (!m_voice) return;
-    const QString raw = readSetting(QStringLiteral("voiceConfig")).toString();
-    const VoiceConfig c = VoiceConfig::fromJson(QJsonDocument::fromJson(raw.toUtf8()).object());
+    // La Charla usa la config de voz del perfil activo (el que lanzó el server).
+    const VoiceConfig c = VoiceConfig::fromJson(
+        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
     const QString sttKey = c.sttKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.sttKeyRef);
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
     m_voice->setConfig(c, sttKey, ttsKey);

@@ -5,6 +5,7 @@
 #include <QList>
 #include <QJsonObject>
 #include <QJsonArray>
+#include "core/voice/VoiceTypes.h"
 
 struct BackendProfile {
     QString id;
@@ -163,6 +164,9 @@ struct LaunchProfile {
     // Override del toggle global de automatización de browser (MCP Playwright).
     // "inherit" = usar el global de Ajustes; "on"/"off" = forzar por perfil.
     QString browserAutomation = QStringLiteral("inherit");
+    // Config del modo Charla (voz-a-voz) de este perfil: STT/TTS, servidores
+    // gestionados, VAD. La Charla usa la del perfil activo.
+    VoiceConfig voice;
 
     QJsonObject toJson() const;
     static LaunchProfile fromJson(const QJsonObject &obj);

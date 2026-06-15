@@ -419,6 +419,22 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"master", masterToVariant(p.master)}};
 }
 
+QVariantMap ProfileManager::getLaunchVoice(const QString &id) const
+{
+    const auto p = m_launches.findById(id);
+    return p.voice.toJson().toVariantMap();   // defaults si el perfil no existe
+}
+
+bool ProfileManager::setLaunchVoice(const QString &id, const QVariantMap &voiceCfg)
+{
+    LaunchProfile p = m_launches.findById(id);
+    if (p.id.isEmpty()) return false;
+    p.voice = VoiceConfig::fromJson(QJsonObject::fromVariantMap(voiceCfg));
+    const bool ok = m_launches.update(p);
+    if (ok) { save(); emit launchesChanged(); }
+    return ok;
+}
+
 void ProfileManager::setLaunchFavorite(const QString &id, bool favorite)
 {
     LaunchProfile p = m_launches.findById(id);

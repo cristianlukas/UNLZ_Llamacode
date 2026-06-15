@@ -6,6 +6,7 @@
 #include "core/voice/SttEngine.h"
 #include "core/voice/TtsEngine.h"
 #include "core/voice/VoiceController.h"
+#include "core/profiles/ProfileTypes.h"
 
 // Tests del modo Charla. Solo funciones puras (sin micrófono/red/playback):
 // round-trip de config, codec WAV/RMS, builders de request STT/TTS, lógica VAD.
@@ -20,6 +21,7 @@ private slots:
     void sttParseTranscript();
     void ttsSpeechBody();
     void vadTurnEnded();
+    void voiceInLaunchProfile();
 };
 
 void TestVoice::configRoundTrip()
@@ -122,6 +124,22 @@ void TestVoice::vadTurnEnded()
     QVERIFY(!VoiceController::turnEnded(0.10, 0.03, 500, 800));
     // Hubo voz y silencio suficiente → fin de turno.
     QVERIFY(VoiceController::turnEnded(0.10, 0.03, 900, 800));
+}
+
+void TestVoice::voiceInLaunchProfile()
+{
+    // La config de voz viaja dentro del LaunchProfile (round-trip JSON).
+    LaunchProfile p;
+    p.id = "lp1"; p.name = "1_test";
+    p.voice.sttProvider = "cloud";
+    p.voice.sttBaseUrl = "https://stt.example";
+    p.voice.ttsVoice = "nova";
+    p.voice.vadSegmentMs = 420;
+    const LaunchProfile r = LaunchProfile::fromJson(p.toJson());
+    QCOMPARE(r.voice.sttProvider, QString("cloud"));
+    QCOMPARE(r.voice.sttBaseUrl, QString("https://stt.example"));
+    QCOMPARE(r.voice.ttsVoice, QString("nova"));
+    QCOMPARE(r.voice.vadSegmentMs, 420);
 }
 
 QTEST_MAIN(TestVoice)

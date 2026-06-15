@@ -216,6 +216,7 @@ QJsonObject LaunchProfile::toJson() const {
     o["master"] = master.toJson();
     o["powerLimitW"] = powerLimitW;
     o["browserAutomation"] = browserAutomation;
+    o["voice"] = voice.toJson();
     return o;
 }
 LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
@@ -239,6 +240,7 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.powerLimitW = o["powerLimitW"].toInt(0);
     p.browserAutomation = o["browserAutomation"].toString(QStringLiteral("inherit"));
     if (p.browserAutomation.isEmpty()) p.browserAutomation = QStringLiteral("inherit");
+    p.voice = VoiceConfig::fromJson(o["voice"].toObject());
     return p;
 }
 QString LaunchProfile::generateId() { return newId(); }

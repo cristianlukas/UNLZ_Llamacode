@@ -138,6 +138,9 @@ public:
     Q_INVOKABLE bool removeLaunchProfile(const QString &id);
     Q_INVOKABLE bool updateLaunchProfile(const QVariantMap &data);
     Q_INVOKABLE QVariantMap getLaunchProfile(const QString &id) const;
+    // Config de Charla (voz) por LaunchProfile. get devuelve defaults si no hay.
+    Q_INVOKABLE QVariantMap getLaunchVoice(const QString &id) const;
+    Q_INVOKABLE bool setLaunchVoice(const QString &id, const QVariantMap &voiceCfg);
     // Alias opcional (prioridad sobre name en la UI) y favorito (estrella, arriba).
     Q_INVOKABLE void setLaunchFavorite(const QString &id, bool favorite);
     Q_INVOKABLE void setLaunchAlias(const QString &id, const QString &alias);

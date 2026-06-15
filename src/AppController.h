@@ -503,9 +503,11 @@ public:
     double  voiceLevel() const;
     QString voiceError() const;
     QString voicePartial() const { return m_voicePartial; }
-    // Config persistida (settings "voiceConfig"); el setter aplica al controller vivo.
-    Q_INVOKABLE QVariantMap voiceConfig() const;
-    Q_INVOKABLE void setVoiceConfig(const QVariantMap &cfg);
+    // Config de Charla POR LaunchProfile (vive en el perfil; la Charla usa la del
+    // perfil activo). El setter persiste en el perfil y, si es el activo, la aplica
+    // al controller vivo.
+    Q_INVOKABLE QVariantMap voiceConfig(const QString &profileId) const;
+    Q_INVOKABLE void setVoiceConfig(const QString &profileId, const QVariantMap &cfg);
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
     Q_INVOKABLE void charlaListen();  // fuerza escucha (corta el TTS si suena)
