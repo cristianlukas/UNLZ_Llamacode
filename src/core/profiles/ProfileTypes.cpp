@@ -24,6 +24,11 @@ QJsonObject BackendProfile::toJson() const {
     o["host"] = host; o["port"] = port;
     o["baseArgs"] = QJsonArray::fromStringList(baseArgs);
     o["envOverrides"] = mapToJson(envOverrides);
+    o["kind"] = kind;
+    o["cloudBaseUrl"] = cloudBaseUrl;
+    o["cloudKeyRef"] = cloudKeyRef;   // sólo el nombre de la ref, nunca el secreto
+    o["cloudModel"] = cloudModel;
+    o["cloudCtx"] = cloudCtx;
     return o;
 }
 BackendProfile BackendProfile::fromJson(const QJsonObject &o) {
@@ -34,6 +39,12 @@ BackendProfile BackendProfile::fromJson(const QJsonObject &o) {
     p.port = o["port"].toInt(8080);
     for (const auto &v : o["baseArgs"].toArray()) p.baseArgs.append(v.toString());
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
+    p.kind = o["kind"].toString("local");
+    if (p.kind.isEmpty()) p.kind = "local";
+    p.cloudBaseUrl = o["cloudBaseUrl"].toString();
+    p.cloudKeyRef = o["cloudKeyRef"].toString();
+    p.cloudModel = o["cloudModel"].toString();
+    p.cloudCtx = o["cloudCtx"].toInt(0);
     return p;
 }
 QString BackendProfile::generateId() { return newId(); }
@@ -164,6 +175,7 @@ QJsonObject LaunchProfile::toJson() const {
     o["envOverrides"] = mapToJson(envOverrides);
     o["master"] = master.toJson();
     o["powerLimitW"] = powerLimitW;
+    o["browserAutomation"] = browserAutomation;
     return o;
 }
 LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
@@ -185,6 +197,8 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
     p.master = MasterConfig::fromJson(o["master"].toObject());
     p.powerLimitW = o["powerLimitW"].toInt(0);
+    p.browserAutomation = o["browserAutomation"].toString(QStringLiteral("inherit"));
+    if (p.browserAutomation.isEmpty()) p.browserAutomation = QStringLiteral("inherit");
     return p;
 }
 QString LaunchProfile::generateId() { return newId(); }

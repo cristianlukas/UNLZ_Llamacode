@@ -8,6 +8,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "AppController.h"
+#include "core/agent/BrowserTeach.h"
 
 class AppControllerTests : public QObject
 {
@@ -20,6 +21,8 @@ private slots:
     void exportChatSessionToMissingSessionErrors();
     void parseGpuPowerCsvParses();
     void parseGpuPowerCsvTolerant();
+    void browserMcpEffectiveResolves();
+    void browserTeachSkillsLifecycle();
 
 private:
     QTemporaryDir m_tmp;
@@ -96,6 +99,59 @@ void AppControllerTests::parseGpuPowerCsvTolerant()
     const QVariantMap g = gpus.first().toMap();
     QCOMPARE(g.value("index").toInt(), 1);
     QCOMPARE(g.value("drawW").toDouble(), 0.0);   // power.draw ausente
+}
+
+void AppControllerTests::browserMcpEffectiveResolves()
+{
+    // Override "on"/"off" pisa el toggle global; "inherit" (u otro) lo hereda.
+    QVERIFY( AppController::browserMcpEffective(QStringLiteral("on"),  false));
+    QVERIFY( AppController::browserMcpEffective(QStringLiteral("on"),  true));
+    QVERIFY(!AppController::browserMcpEffective(QStringLiteral("off"), true));
+    QVERIFY(!AppController::browserMcpEffective(QStringLiteral("off"), false));
+    QVERIFY( AppController::browserMcpEffective(QStringLiteral("inherit"), true));
+    QVERIFY(!AppController::browserMcpEffective(QStringLiteral("inherit"), false));
+    QVERIFY( AppController::browserMcpEffective(QString(), true));   // vacío → hereda
+}
+
+void AppControllerTests::browserTeachSkillsLifecycle()
+{
+    // sanitize: slug seguro para filename.
+    QCOMPARE(BrowserTeach::sanitize(QStringLiteral("Login   Banco!!")),
+             QStringLiteral("login-banco"));
+    QCOMPARE(BrowserTeach::sanitize(QStringLiteral("a.b/c")), QStringLiteral("a-b-c"));
+
+    // skillPath usa el slug + .mjs dentro de skillsDir.
+    const QString path = BrowserTeach::skillPath(QStringLiteral("My Skill"));
+    QVERIFY(path.endsWith(QStringLiteral("/my-skill.mjs")));
+    QVERIFY(path.startsWith(BrowserTeach::skillsDir()));
+
+    // recordCommand: codegen con -o al path; agrega url http válida.
+    const QString rc = BrowserTeach::recordCommand(QStringLiteral("My Skill"),
+                                                   QStringLiteral("https://x.com"));
+    QVERIFY(rc.contains(QStringLiteral("playwright codegen")));
+    QVERIFY(rc.contains(QStringLiteral("my-skill.mjs")));
+    QVERIFY(rc.endsWith(QStringLiteral("https://x.com")));
+    // url no-http se ignora.
+    QVERIFY(!BrowserTeach::recordCommand(QStringLiteral("s"), QStringLiteral("ftp://x"))
+                 .contains(QStringLiteral("ftp://")));
+
+    // replayProgramArgs: {node, path}.
+    const QStringList pa = BrowserTeach::replayProgramArgs(QStringLiteral("My Skill"));
+    QCOMPARE(pa.size(), 2);
+    QCOMPARE(pa.first(), QStringLiteral("node"));
+    QVERIFY(pa.at(1).endsWith(QStringLiteral("my-skill.mjs")));
+
+    // list/has/remove sobre un .mjs real escrito a disco (skillsDir aislado por
+    // setTestModeEnabled en initTestCase).
+    QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write("// dummy\n");
+    f.close();
+    QVERIFY(BrowserTeach::hasSkill(QStringLiteral("My Skill")));
+    QVERIFY(BrowserTeach::listSkills().contains(QStringLiteral("my-skill")));
+    QVERIFY(BrowserTeach::removeSkill(QStringLiteral("My Skill")));
+    QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
 }
 
 QTEST_MAIN(AppControllerTests)

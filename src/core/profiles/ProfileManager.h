@@ -95,6 +95,12 @@ public:
                                    const QString &binaryId, const QString &host,
                                    int port, const QStringList &baseArgs);
     Q_INVOKABLE QVariantMap getBackend(const QString &id) const;
+    // Config cloud (provider OpenAI-compat externo) de un backend existente.
+    // kind: "local" (limpia cloud) | "cloud". keyRef = NOMBRE de la referencia al
+    // secreto (nunca la key). Devuelve false si no existe el id.
+    Q_INVOKABLE bool setBackendCloud(const QString &id, const QString &kind,
+                                     const QString &baseUrl, const QString &keyRef,
+                                     const QString &model, int ctx);
 
     // ModelProfile
     Q_INVOKABLE QString addModelProfile(const QString &name, const QString &modelId,

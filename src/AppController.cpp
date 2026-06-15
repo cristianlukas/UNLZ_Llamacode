@@ -1,4 +1,5 @@
 #include "AppController.h"
+#include "core/agent/BrowserTeach.h"
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
 #  define NOMINMAX
@@ -195,6 +196,11 @@ AppController::AppController(QObject *parent) : QObject(parent)
                                      s.value(QStringLiteral("agent/thinkingEnabled"),
                                              s.value(QStringLiteral("chat/thinkingEnabled"), false))).toBool();
     m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
+    m_browserAutomationEnabled = s.value(QStringLiteral("browser/automationEnabled"), false).toBool();
+    m_browserMcpCommand = s.value(QStringLiteral("browser/mcpCommand"),
+                                  QStringLiteral("npx @playwright/mcp@latest")).toString();
+    if (m_browserMcpCommand.trimmed().isEmpty())
+        m_browserMcpCommand = QStringLiteral("npx @playwright/mcp@latest");
     m_agentSystemPrompt = s.value(QStringLiteral("agent/systemPrompt")).toString();
     m_agentPermRules    = s.value(QStringLiteral("agent/permRules")).toString();
     m_agentTemperature  = s.value(QStringLiteral("agent/temperature"), -1.0).toDouble();
@@ -1580,6 +1586,12 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     return ctx;
 }
 
+QString AppController::cloudKeyRefForProfile(const QString &launchProfileId)
+{
+    const auto ctx = buildContext(launchProfileId);
+    return ctx.backend.isCloud() ? ctx.backend.cloudKeyRef.trimmed() : QString();
+}
+
 bool AppController::isHarnessInstalled(const QString &adapter) const
 {
     if (adapter == QLatin1String("none") || adapter.isEmpty()) return true;
@@ -1807,6 +1819,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         if (!proj.isEmpty())
             for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj))
                 merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        injectBrowserMcp(merged, m_activeLaunchId);
         cb->setMcpServers(merged.values());
     }
 
@@ -1939,6 +1952,125 @@ void AppController::setMermaidEnabled(bool enabled)
     m_mermaidEnabled = enabled;
     writeSetting(QStringLiteral("chat/mermaidEnabled"), enabled);
     emit mermaidEnabledChanged();
+}
+
+void AppController::setBrowserAutomationEnabled(bool enabled)
+{
+    if (enabled == m_browserAutomationEnabled) return;
+    m_browserAutomationEnabled = enabled;
+    writeSetting(QStringLiteral("browser/automationEnabled"), enabled);
+    emit browserAutomationChanged();
+    // Re-inyectar al backend agente vivo (si lo hay).
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        const QString proj = currentAgentProjectDir();
+        QMap<QString, QVariant> merged;
+        for (const QVariant &v : listMcpServers(QStringLiteral("global"), QString()))
+            merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        if (!proj.isEmpty())
+            for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj))
+                merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        injectBrowserMcp(merged, m_activeLaunchId);
+        cb->setMcpServers(merged.values());
+    }
+}
+
+void AppController::setBrowserMcpCommand(const QString &cmd)
+{
+    const QString c = cmd.trimmed().isEmpty()
+        ? QStringLiteral("npx @playwright/mcp@latest") : cmd.trimmed();
+    if (c == m_browserMcpCommand) return;
+    m_browserMcpCommand = c;
+    writeSetting(QStringLiteral("browser/mcpCommand"), c);
+    emit browserAutomationChanged();
+}
+
+// ── Browser teach: grabar/listar/borrar skills ──────────────────────────
+QStringList AppController::listBrowserSkills() const
+{
+    return BrowserTeach::listSkills();
+}
+
+bool AppController::browserSkillExists(const QString &name) const
+{
+    return BrowserTeach::hasSkill(name);
+}
+
+bool AppController::removeBrowserSkill(const QString &name)
+{
+    const bool ok = BrowserTeach::removeSkill(name);
+    if (ok) emit browserSkillsChanged();
+    return ok;
+}
+
+QString AppController::recordBrowserSkill(const QString &name, const QString &url)
+{
+    if (m_browserRecordProc)
+        return QStringLiteral("Ya hay una grabación en curso.");
+    const QString cmd = BrowserTeach::recordCommand(name, url);
+    if (cmd.isEmpty())
+        return QStringLiteral("Nombre de skill inválido.");
+
+    const QString dir = BrowserTeach::skillsDir();
+    // Asegura el runtime npm local (playwright) la primera vez: necesario para que
+    // el replay (node skill.mjs con cwd=dir) resuelva el módulo. codegen usa npx.
+    QString full;
+#ifdef Q_OS_WIN
+    full = QStringLiteral("if not exist node_modules\\playwright ( npm init -y >nul 2>&1 & npm i playwright ) & %1").arg(cmd);
+#else
+    full = QStringLiteral("[ -d node_modules/playwright ] || { npm init -y >/dev/null 2>&1; npm i playwright; }; %1").arg(cmd);
+#endif
+
+    auto *p = new QProcess(this);
+    p->setWorkingDirectory(dir);
+    connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, p](int, QProcess::ExitStatus) {
+                m_browserRecordProc = nullptr;
+                p->deleteLater();
+                emit browserSkillsChanged();
+            });
+    connect(p, &QProcess::errorOccurred, this, [this, p](QProcess::ProcessError) {
+        if (m_browserRecordProc == p) { m_browserRecordProc = nullptr; emit browserSkillsChanged(); }
+    });
+#ifdef Q_OS_WIN
+    p->start(QStringLiteral("cmd"), {QStringLiteral("/c"), full});
+#else
+    p->start(QStringLiteral("sh"), {QStringLiteral("-c"), full});
+#endif
+    if (!p->waitForStarted(8000)) {
+        p->deleteLater();
+        return QStringLiteral("No se pudo iniciar la grabación (¿Node/npx instalado?).");
+    }
+    m_browserRecordProc = p;
+    emit browserSkillsChanged();   // refleja browserRecording()=true
+    return QString();
+}
+
+// Resuelve el override por perfil sobre el toggle global e inserta el server MCP
+// "playwright" en el mapa mergeado. Nombre fijo "playwright" → si el usuario ya
+// definió uno propio con ese nombre, el suyo gana (no se pisa).
+bool AppController::browserMcpEffective(const QString &override, bool globalEnabled)
+{
+    if (override == QLatin1String("on"))  return true;
+    if (override == QLatin1String("off")) return false;
+    return globalEnabled;   // "inherit" o cualquier otro valor → toggle global
+}
+
+void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
+                                     const QString &launchId) const
+{
+    QString override = QStringLiteral("inherit");
+    if (!launchId.isEmpty()) {
+        const LaunchProfile lp = m_profiles.resolveLaunch(launchId);
+        if (!lp.id.isEmpty() && !lp.browserAutomation.isEmpty())
+            override = lp.browserAutomation;
+    }
+    if (!browserMcpEffective(override, m_browserAutomationEnabled)) return;
+    if (merged.contains(QStringLiteral("playwright"))) return;  // respeta el del usuario
+    merged.insert(QStringLiteral("playwright"), QVariantMap{
+        {QStringLiteral("name"), QStringLiteral("playwright")},
+        {QStringLiteral("type"), QStringLiteral("local")},
+        {QStringLiteral("enabled"), true},
+        {QStringLiteral("command"), m_browserMcpCommand}});
 }
 
 void AppController::setThinkingEnabled(bool enabled)
@@ -2142,10 +2274,28 @@ void AppController::startAgent(const QString &launchProfileId)
 
     // Backend propio: sin binario externo, corre dentro de la app.
     if (adapter == QLatin1String("llamaagent")) {
+        const bool cloud = ctx.backend.isCloud();
+        // Provider cloud: resolver la API key por su ref (env var → store). Si no se
+        // encuentra, pedirla a la UI y abortar el arranque (se reintenta tras setSecret).
+        QString cloudKey;
+        if (cloud) {
+            const QString ref = ctx.backend.cloudKeyRef.trimmed();
+            cloudKey = m_secrets.resolve(ref);
+            if (cloudKey.isEmpty()) {
+                m_agentStarting = false;
+                emit agentStartingChanged();
+                appendAgentEvent(QStringLiteral("lifecycle"),
+                                 QStringLiteral("Cloud: falta API key (%1) — ingresala para continuar.")
+                                     .arg(ref.isEmpty() ? QStringLiteral("sin ref") : ref));
+                emit cloudSecretRequired(launchProfileId, ref);
+                return;
+            }
+        }
         // Necesita el llama-server corriendo (usa su API OpenAI). Sin server → refused.
         // Si está corriendo pero el modelo aún carga, igual arranca: la UI muestra
         // "Modelo cargando" y el usuario espera al ready antes de enviar.
-        if (!serverRunning()) {
+        // Provider cloud: no hay server local, el agente pega directo al endpoint.
+        if (!cloud && !serverRunning()) {
             const QString msg = QStringLiteral(
                 "El harness 'LlamaAgent' necesita el servidor corriendo. Iniciá el modelo en 'Lanzar' primero.");
             appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: %1").arg(msg));
@@ -2195,8 +2345,15 @@ void AppController::startAgent(const QString &launchProfileId)
         AgentContext c;
         c.adapter       = adapter;
         c.cwd           = (!agentCwd.isEmpty() && QFileInfo(agentCwd).isDir()) ? agentCwd : QString();
-        c.serverBaseUrl = serverBaseUrl();
-        c.modelId       = routedModelId(ctx.catalogModel.id);
+        if (cloud) {
+            c.serverBaseUrl = ctx.backend.cloudBaseUrl.trimmed();
+            c.modelId       = ctx.backend.cloudModel.trimmed();
+            c.apiKey        = cloudKey;
+            c.ctxOverride   = ctx.backend.cloudCtx;
+        } else {
+            c.serverBaseUrl = serverBaseUrl();
+            c.modelId       = routedModelId(ctx.catalogModel.id);
+        }
         m_agentCwdOverride.clear();
         m_activeAgentAdapter = adapter;
         m_agentInTerminal    = false;
@@ -5983,6 +6140,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             mergedMcp.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
         for (const QVariant &v : listMcpServers(QStringLiteral("project"), workspace))
             mergedMcp.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+        injectBrowserMcp(mergedMcp, m_activeLaunchId);
         agent->setMcpServers(mergedMcp.values());
 
         AgentContext c;

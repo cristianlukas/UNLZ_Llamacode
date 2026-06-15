@@ -6,6 +6,7 @@
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
+#include "core/SecretStore.h"
 #include "core/tuner/TunerWorker.h"
 #include <QObject>
 #include <QProcess>
@@ -76,6 +77,8 @@ class AppController : public QObject
     Q_PROPERTY(QVariantMap agentPendingTool READ agentPendingTool NOTIFY agentPendingToolChanged)
     Q_PROPERTY(QString agentApprovalMode READ agentApprovalMode WRITE setAgentApprovalMode NOTIFY agentApprovalModeChanged)
     Q_PROPERTY(bool agentThinkingEnabled READ agentThinkingEnabled WRITE setAgentThinkingEnabled NOTIFY agentThinkingChanged)
+    Q_PROPERTY(bool browserAutomationEnabled READ browserAutomationEnabled WRITE setBrowserAutomationEnabled NOTIFY browserAutomationChanged)
+    Q_PROPERTY(QString browserMcpCommand READ browserMcpCommand WRITE setBrowserMcpCommand NOTIFY browserAutomationChanged)
     Q_PROPERTY(QString agentTeacherUrl   READ agentTeacherUrl   WRITE setAgentTeacherUrl   NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherModel READ agentTeacherModel WRITE setAgentTeacherModel NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
@@ -178,6 +181,19 @@ public:
     void setAgentThinkingEnabled(bool enabled);
     bool thinkingEnabled() const { return m_agentThinkingEnabled; }
     void setThinkingEnabled(bool enabled);
+    // Automatización de browser vía MCP Playwright (toggle global; override por perfil).
+    bool browserAutomationEnabled() const { return m_browserAutomationEnabled; }
+    void setBrowserAutomationEnabled(bool enabled);
+    QString browserMcpCommand() const { return m_browserMcpCommand; }
+    void setBrowserMcpCommand(const QString &cmd);
+    // ── Browser teach: grabar/listar/borrar skills reproducibles ──
+    Q_INVOKABLE QStringList listBrowserSkills() const;
+    Q_INVOKABLE bool removeBrowserSkill(const QString &name);
+    Q_INVOKABLE bool browserSkillExists(const QString &name) const;
+    // Lanza Playwright codegen: el usuario graba acciones; al cerrar el inspector
+    // se guarda el skill. "" = ok (grabación lanzada); si no, mensaje de error.
+    Q_INVOKABLE QString recordBrowserSkill(const QString &name, const QString &url);
+    Q_INVOKABLE bool browserRecording() const { return m_browserRecordProc != nullptr; }
     bool mermaidEnabled() const { return m_mermaidEnabled; }
     void setMermaidEnabled(bool enabled);
     QString agentTeacherUrl()   const { return m_agentTeacherUrl; }
@@ -287,6 +303,13 @@ public:
     Q_INVOKABLE QString masterCliInstallCommand(const QString &name) const;
     Q_INVOKABLE void startAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopAgent();
+    // --- Secretos cloud (API keys fuera del repo) ---
+    // ¿Hay key resoluble (env var o store) para esa ref?
+    Q_INVOKABLE bool hasSecret(const QString &keyRef) const { return m_secrets.has(keyRef); }
+    // Guarda/actualiza la key en el store en disco (no toca env vars). value vacío = borra.
+    Q_INVOKABLE void setSecret(const QString &keyRef, const QString &value) { m_secrets.set(keyRef, value); }
+    // keyRef del backend cloud de un perfil ("" si el backend no es cloud).
+    Q_INVOKABLE QString cloudKeyRefForProfile(const QString &launchProfileId);
     Q_INVOKABLE void sendToAgent(const QString &text);
     // Escalado manual al maestro del perfil activo. Devuelve false si no hay maestro
     // configurado o el agente no está corriendo.
@@ -349,6 +372,13 @@ public:
 
     // ── MCP servers (sobre el bloque "mcp" del config) ──
     Q_INVOKABLE QVariantList listMcpServers(const QString &scope, const QString &projectDir) const;
+    // Inserta el server MCP de Playwright en el mapa mergeado si la automatización
+    // de browser está efectivamente activa: override del LaunchProfile
+    // (browserAutomation "on"/"off") pisa el toggle global; "inherit" usa el global.
+    void injectBrowserMcp(QMap<QString, QVariant> &merged, const QString &launchId) const;
+    // Decisión pura de activación: override del perfil ("on"/"off"/"inherit") sobre
+    // el toggle global. Expuesta para test unitario.
+    static bool browserMcpEffective(const QString &override, bool globalEnabled);
     Q_INVOKABLE bool setMcpServer(const QString &scope, const QString &projectDir,
                                   const QString &name, const QVariantMap &def);
     Q_INVOKABLE bool removeMcpServer(const QString &scope, const QString &projectDir, const QString &name);
@@ -430,6 +460,9 @@ public:
     Q_INVOKABLE void openModelRecommendation(const QString &repo);
 
 signals:
+    // Un perfil cloud necesita su API key y no se pudo resolver (ni env var ni store):
+    // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
+    void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
     void serverRunningChanged();
     void serverReadyChanged();
     void serverStateChanged();
@@ -440,6 +473,8 @@ signals:
     void gitRequiredForSubagents();
     void serverLogChanged();
     void activeLaunchIdChanged();
+    void browserAutomationChanged();
+    void browserSkillsChanged();
     void effectiveProfileChanged();
     void routerStateChanged();
     void setupStateChanged();
@@ -626,12 +661,18 @@ private:
     QVariantMap m_agentPendingTool;   // tool esperando aprobación ({} si ninguna)
     QString   m_agentApprovalMode = QStringLiteral("ask");  // auto | ask | manual | super
     bool      m_agentThinkingEnabled = false;   // razonamiento global (chat/agente/benchmark/research)
+    // Automatización de browser (MCP Playwright). Toggle global; cada LaunchProfile
+    // puede forzar on/off con browserAutomation ("inherit"|"on"|"off").
+    bool      m_browserAutomationEnabled = false;
+    QString   m_browserMcpCommand = QStringLiteral("npx @playwright/mcp@latest");
+    QProcess *m_browserRecordProc = nullptr;   // codegen en curso (modo teach)
     bool      m_mermaidEnabled = true;          // render de diagramas mermaid en el chat
     QStringList m_agentDisabledTools;           // tools built-in apagadas por el usuario
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;
     MasterCli m_masterCli;                      // detección de CLIs maestro (claude/codex)
+    SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     QString   m_agentSystemPrompt;

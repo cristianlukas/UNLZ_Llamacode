@@ -47,6 +47,9 @@ fi
 # ── Toolchain + Qt runtime/link libraries (distro packages) ──────────────────
 # We install only the C++ toolchain and the system libraries that the aqt-built
 # Qt links against at build/run time -- NOT distro Qt itself.
+# libsecret (-dev) is needed by QtKeychain (Secret Service backend) to encrypt the
+# cloud API keys at rest. Without it the QtKeychain FetchContent build fails; you can
+# also skip it by configuring CMake with -DLC_USE_QTKEYCHAIN=OFF (file fallback).
 install_deps() {
     if command -v apt-get >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via apt..."
@@ -57,25 +60,26 @@ install_deps() {
             libglib2.0-0 libgl1-mesa-dev libegl1 libxkbcommon0 libxkbcommon-x11-0 \
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 \
-            libfontconfig1 libfreetype6 libdbus-1-3
+            libfontconfig1 libfreetype6 libdbus-1-3 \
+            libsecret-1-dev
     elif command -v dnf >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via dnf..."
         $SUDO dnf install -y \
             git curl cmake ninja-build gcc-c++ make pkgconf-pkg-config \
             python3 python3-pip \
             glib2 mesa-libGL-devel mesa-libEGL libxkbcommon libxkbcommon-x11 \
-            xcb-util-cursor fontconfig freetype dbus-libs
+            xcb-util-cursor fontconfig freetype dbus-libs libsecret-devel
     elif command -v pacman >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via pacman..."
         $SUDO pacman -Sy --needed --noconfirm \
             git curl cmake ninja base-devel python python-pip \
-            glib2 mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig freetype2 dbus
+            glib2 mesa libxkbcommon libxkbcommon-x11 xcb-util-cursor fontconfig freetype2 dbus libsecret
     elif command -v zypper >/dev/null 2>&1; then
         c_info "Installing toolchain + Qt runtime libs via zypper..."
         $SUDO zypper install -y \
             git curl cmake ninja gcc-c++ pkg-config python3 python3-pip \
             libglib-2_0-0 Mesa-libGL-devel libxkbcommon0 libxkbcommon-x11-0 \
-            xcb-util-cursor0 fontconfig freetype2 libdbus-1-3
+            xcb-util-cursor0 fontconfig freetype2 libdbus-1-3 libsecret-devel
     else
         c_die "Unsupported distro: install git, cmake, ninja, g++, python3 and Qt6 runtime libs manually."
     fi

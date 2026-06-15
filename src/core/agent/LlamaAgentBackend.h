@@ -173,6 +173,8 @@ private:
     void ensureSession();
     QString buildSystemPrompt() const;   // prompt base + memoria del proyecto
     void fetchContextLimit();            // n_ctx desde /props
+    // Aplica Content-Type + Authorization Bearer (si hay provider cloud con apiKey).
+    void applyHeaders(QNetworkRequest &req) const;
     // Auto-compactación vía modelo: cuando el historial se acerca al n_ctx del
     // perfil, resume el tramo intermedio con el propio LLM y lo reemplaza por un
     // mensaje de resumen, conservando system + objetivo inicial + cola reciente.

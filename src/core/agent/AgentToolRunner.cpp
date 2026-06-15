@@ -3,6 +3,7 @@
 #include "LlamaAgentBackend.h"   // LlamaAgentBackend::makeDiff (static)
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
+#include "BrowserTeach.h"        // skills de browser grabados (modo teach)
 
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -1338,6 +1339,41 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             return QStringLiteral("[ask_teacher: respuesta vacía del maestro]");
         if (ok) *ok = true;
         return QStringLiteral("[Respuesta del modelo maestro]\n") + answer;
+    }
+    // ── Browser teach: listar/reproducir skills grabados ──────────────────
+    if (name == QLatin1String("browser_skill_list")) {
+        const QStringList skills = BrowserTeach::listSkills();
+        if (ok) *ok = true;
+        if (skills.isEmpty())
+            return QStringLiteral("[sin skills de browser grabados. El usuario los graba "
+                                  "en Ajustes → Automatización de browser.]");
+        return QStringLiteral("Skills de browser disponibles:\n- ") + skills.join(QStringLiteral("\n- "));
+    }
+    if (name == QLatin1String("browser_skill_replay")) {
+        const QString skill = args.value(QStringLiteral("name")).toString();
+        if (skill.trimmed().isEmpty())
+            return QStringLiteral("[browser_skill_replay: falta 'name']");
+        if (!BrowserTeach::hasSkill(skill))
+            return QStringLiteral("[browser_skill_replay: skill no encontrado: %1. Usá "
+                                  "browser_skill_list para ver los disponibles.]").arg(skill);
+        const QStringList pa = BrowserTeach::replayProgramArgs(skill);
+        if (pa.size() < 2)
+            return QStringLiteral("[browser_skill_replay: skill inválido: %1]").arg(skill);
+        QProcess proc;
+        proc.setWorkingDirectory(BrowserTeach::skillsDir());   // resuelve 'playwright' local
+        proc.setProcessChannelMode(QProcess::MergedChannels);
+        proc.start(pa.first(), pa.mid(1));
+        if (!proc.waitForStarted(8000))
+            return QStringLiteral("[browser_skill_replay: no se pudo iniciar node. ¿Node instalado?]");
+        if (!proc.waitForFinished(180000)) {
+            proc.kill(); proc.waitForFinished(2000);
+            return QStringLiteral("[browser_skill_replay: timeout (180s) reproduciendo %1]").arg(skill);
+        }
+        const QString out = QString::fromUtf8(proc.readAll()).trimmed();
+        const bool good = proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0;
+        if (ok) *ok = good;
+        return QStringLiteral("[browser_skill_replay %1 · exit=%2]\n%3")
+                   .arg(skill).arg(proc.exitCode()).arg(out.left(8000));
     }
     // run_shell se maneja async en executeTool/startShell (no llega acá).
     return QStringLiteral("[tool desconocida: %1]").arg(name);

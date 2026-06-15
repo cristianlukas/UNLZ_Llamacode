@@ -114,6 +114,70 @@ Item {
     }
 
     // Confirmación para activar el modo "Super Agente" (acceso total al disco).
+    // Perfil cloud sin API key resoluble → pedirla y reintentar el arranque.
+    property string _pendingCloudProfile: ""
+    Connections {
+        target: App
+        function onCloudSecretRequired(launchProfileId, keyRef) {
+            root._pendingCloudProfile = launchProfileId
+            cloudKeyPrompt.keyRef = keyRef
+            cloudKeyInput.text = ""
+            cloudKeyPrompt.open()
+        }
+    }
+    Dialog {
+        id: cloudKeyPrompt
+        property string keyRef: ""
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 460
+        closePolicy: Popup.CloseOnEscape
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor; border.width: 1 }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "🔑  API key requerida"
+                font.pixelSize: 14
+                font.bold: true
+                color: Theme.textPrimary
+            }
+        }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.textSecondary; font.pixelSize: 12
+                text: "Este perfil cloud necesita la key «" + cloudKeyPrompt.keyRef + "». "
+                      + "Se guarda fuera del repo (no se commitea). Tip: también podés exportarla como variable de entorno con ese nombre."
+            }
+            LcTextField {
+                id: cloudKeyInput; Layout.fillWidth: true; echoMode: TextInput.Password; placeholderText: "sk-…"
+            }
+        }
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton { text: "Cancelar"; secondary: true; onClicked: cloudKeyPrompt.close() }
+                LcButton {
+                    text: "Guardar y arrancar"
+                    enabled: cloudKeyInput.text.length > 0 && cloudKeyPrompt.keyRef.length > 0
+                    onClicked: {
+                        App.setSecret(cloudKeyPrompt.keyRef, cloudKeyInput.text)
+                        cloudKeyPrompt.close()
+                        App.startAgent(root._pendingCloudProfile)
+                    }
+                }
+            }
+        }
+    }
+
     Dialog {
         id: superAgentDialog
         modal: true
@@ -325,7 +389,6 @@ Item {
                 anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
                 spacing: 10
 
-                Text { text: "🤖"; font.pixelSize: 16 }
                 Text {
                     text: (App.langV, App.l("agent.title"))
                     color: Theme.textPrimary

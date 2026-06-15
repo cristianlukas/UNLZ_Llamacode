@@ -13,6 +13,19 @@ struct BackendProfile {
     QStringList baseArgs;
     QMap<QString, QString> envOverrides;
 
+    // Provider del backend. "local" = llama-server propio (binaryId/host/port).
+    // "cloud" = endpoint OpenAI-compat externo (OpenAI/OpenRouter/Groq/DeepSeek…);
+    // no lanza proceso ni binario, el agente pega directo al cloudBaseUrl.
+    QString kind = "local";    // local | cloud
+    QString cloudBaseUrl;      // sin /v1, ej https://api.openai.com
+    // Nombre de la referencia al secreto (NO el secreto). El valor se resuelve vía
+    // SecretStore (env var o store en disco fuera del repo). Nunca se serializa la key.
+    QString cloudKeyRef;
+    QString cloudModel;        // nombre de modelo a enviar (ej gpt-4o, anthropic/claude-...)
+    int     cloudCtx = 0;      // n_ctx fallback (cloud no expone /props); 0 = default
+
+    bool isCloud() const { return kind == QLatin1String("cloud"); }
+
     QJsonObject toJson() const;
     static BackendProfile fromJson(const QJsonObject &obj);
     static QString generateId();
@@ -118,6 +131,9 @@ struct LaunchProfile {
     // Límite de potencia de GPU (W) aplicado vía nvidia-smi al arrancar el server
     // de este perfil. 0 = sin override (usa el global de Ajustes, si hay).
     int powerLimitW = 0;
+    // Override del toggle global de automatización de browser (MCP Playwright).
+    // "inherit" = usar el global de Ajustes; "on"/"off" = forzar por perfil.
+    QString browserAutomation = QStringLiteral("inherit");
 
     QJsonObject toJson() const;
     static LaunchProfile fromJson(const QJsonObject &obj);

@@ -116,7 +116,27 @@ QVariantMap ProfileManager::getBackend(const QString &id) const
     const auto p = m_backends.findById(id);
     if (p.id.isEmpty()) return {};
     return {{"id", p.id}, {"name", p.name}, {"binaryId", p.binaryId},
-            {"host", p.host}, {"port", p.port}, {"baseArgs", p.baseArgs}};
+            {"host", p.host}, {"port", p.port}, {"baseArgs", p.baseArgs},
+            {"kind", p.kind}, {"cloudBaseUrl", p.cloudBaseUrl},
+            {"cloudKeyRef", p.cloudKeyRef}, {"cloudModel", p.cloudModel},
+            {"cloudCtx", p.cloudCtx}};
+}
+
+bool ProfileManager::setBackendCloud(const QString &id, const QString &kind,
+                                     const QString &baseUrl, const QString &keyRef,
+                                     const QString &model, int ctx)
+{
+    BackendProfile p = m_backends.findById(id);
+    if (p.id.isEmpty()) return false;
+    p.kind = (kind == QLatin1String("cloud")) ? QStringLiteral("cloud")
+                                              : QStringLiteral("local");
+    p.cloudBaseUrl = baseUrl.trimmed();
+    p.cloudKeyRef = keyRef.trimmed();
+    p.cloudModel = model.trimmed();
+    p.cloudCtx = ctx > 0 ? ctx : 0;
+    bool ok = m_backends.update(p);
+    if (ok) save();
+    return ok;
 }
 
 // ---- ModelProfile ----
@@ -346,6 +366,8 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
         mc.timeoutSec = m.value("timeoutSec", mc.timeoutSec).toInt();
         p.master = mc;
     }
+    if (data.contains("browserAutomation"))
+        p.browserAutomation = data.value("browserAutomation").toString();
     bool ok = m_launches.update(p);
     if (ok) { save(); emit launchesChanged(); }
     return ok;
@@ -364,6 +386,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"harnessProfileId", p.harnessProfileId},
             {"workspaceProfileId", p.workspaceProfileId},
             {"extraArgs", p.extraArgs},
+            {"browserAutomation", p.browserAutomation},
             {"master", QVariantMap{
                 {"kind", p.master.kind}, {"cliName", p.master.cliName},
                 {"httpUrl", p.master.httpUrl}, {"httpModel", p.master.httpModel},

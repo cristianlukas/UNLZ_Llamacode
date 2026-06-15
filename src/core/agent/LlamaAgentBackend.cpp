@@ -186,8 +186,22 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                          .arg(QDir::toNativeSeparators(m_cwd)));
 }
 
+void LlamaAgentBackend::applyHeaders(QNetworkRequest &req) const
+{
+    req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    if (!m_ctx.apiKey.isEmpty())
+        req.setRawHeader(QByteArrayLiteral("Authorization"),
+                         QByteArrayLiteral("Bearer ") + m_ctx.apiKey.toUtf8());
+}
+
 void LlamaAgentBackend::fetchContextLimit()
 {
+    // Provider cloud: no expone /props → usar el ctx fijado en el perfil (o default).
+    if (!m_ctx.apiKey.isEmpty()) {
+        m_ctxLimit = m_ctx.ctxOverride > 0 ? m_ctx.ctxOverride : 32768;
+        emit contextUsage(0, m_ctxLimit);
+        return;
+    }
     auto *reply = m_nam->get(QNetworkRequest(QUrl(m_ctx.serverBaseUrl + QStringLiteral("/props"))));
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         reply->deleteLater();
@@ -332,6 +346,8 @@ void LlamaAgentBackend::startCompaction(int head, int keepFrom)
     QNetworkRequest req((QUrl(url)));
     req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
 
+    applyHeaders(req);
+
     m_compacting = true;
     emit logAppended(QStringLiteral("[compactando contexto vía modelo: resumiendo %1 mensajes…]\n")
                          .arg(keepFrom - head));
@@ -407,7 +423,7 @@ void LlamaAgentBackend::consolidateMemory()
 
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
     QNetworkRequest req((QUrl(url)));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    applyHeaders(req);
 
     m_consolidatedLen[sid] = n;   // marcar ya (evita re-disparos aunque falle)
     emit logAppended(QStringLiteral("[consolidando memoria: analizando %1 mensajes…]\n").arg(n));
@@ -1065,7 +1081,7 @@ void LlamaAgentBackend::runCompletion()
 
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
     QNetworkRequest req((QUrl(url)));
-    req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    applyHeaders(req);
 
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId},
@@ -1419,7 +1435,8 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
         QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
         QStringLiteral("memory"), QStringLiteral("graph"),
-        QStringLiteral("ask_teacher"), QStringLiteral("task")};
+        QStringLiteral("ask_teacher"), QStringLiteral("task"),
+        QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
@@ -1993,7 +2010,8 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     // array da "" y lo rechazaría); la propia tool valida.
     if (name == QLatin1String("task"))       return {QStringLiteral("prompt")};
     if (name == QLatin1String("ask_teacher")) return {QStringLiteral("question")};
-    return {};   // list_dir, memory: args opcionales
+    if (name == QLatin1String("browser_skill_replay")) return {QStringLiteral("name")};
+    return {};   // list_dir, memory, browser_skill_list: args opcionales
 }
 
 void LlamaAgentBackend::approveTool(const QString &id, bool always)
@@ -2373,7 +2391,21 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("description"), strProp(QStringLiteral("Título corto de la subtarea (para la tarjeta)."))},
                {QStringLiteral("prompt"), strProp(QStringLiteral("Instrucción completa y autocontenida para el sub-agente."))}},
-           QJsonArray{QStringLiteral("prompt")})
+           QJsonArray{QStringLiteral("prompt")}),
+        fn(QStringLiteral("browser_skill_list"),
+           QStringLiteral("Lista los SKILLS de browser grabados por el usuario (modo teach: "
+                          "secuencias de navegación grabadas, reproducibles). Usalo antes de "
+                          "browser_skill_replay para saber qué hay disponible."),
+           QJsonObject{},
+           QJsonArray{}),
+        fn(QStringLiteral("browser_skill_replay"),
+           QStringLiteral("Reproduce un SKILL de browser grabado (Playwright). Ejecuta la "
+                          "secuencia que el usuario grabó (login, navegación, formulario...) y "
+                          "devuelve su salida. Para tareas web repetibles ya enseñadas; para "
+                          "navegación nueva/ad-hoc usá las tools del MCP Playwright."),
+           QJsonObject{
+               {QStringLiteral("name"), strProp(QStringLiteral("Nombre del skill (ver browser_skill_list)."))}},
+           QJsonArray{QStringLiteral("name")})
     };
 }
 
@@ -2407,6 +2439,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query).", 140),
         mk("ask_teacher", "Multi-Agente", "Consulta a un modelo más capaz (endpoint aparte).", 130),
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
+        mk("browser_skill_list", "Browser", "Lista skills de browser grabados (teach).", 70),
+        mk("browser_skill_replay", "Browser", "Reproduce un skill de browser grabado (Playwright).", 100),
     };
 }
 
@@ -2529,7 +2563,8 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("grep"), QStringLiteral("glob"), QStringLiteral("web_fetch"),
             QStringLiteral("web_search"), QStringLiteral("deep_research"),
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
-            QStringLiteral("hybrid_search"), QStringLiteral("verify_claims")};
+            QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
+            QStringLiteral("browser_skill_list")};
         QJsonArray ro;
         for (const QJsonValue &v : toolSchemas()) {
             const QString n = v.toObject().value(QStringLiteral("function"))

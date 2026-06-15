@@ -265,6 +265,150 @@ Item {
                                 }
                             }
                         }
+
+                        // ── Automatización de browser (MCP Playwright) ───────
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: browserInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: browserInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Automatización de browser"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "Da al agente tools de navegador vía MCP Playwright " +
+                                                  "(navegar, click, escribir, snapshot). Requiere Node/npx. " +
+                                                  "Override on/off por perfil en Perfiles."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    Switch {
+                                        checked: App.browserAutomationEnabled
+                                        onToggled: App.browserAutomationEnabled = checked
+                                    }
+                                }
+
+                                LcTextField {
+                                    Layout.fillWidth: true
+                                    visible: App.browserAutomationEnabled
+                                    placeholderText: "Comando del server MCP"
+                                    text: App.browserMcpCommand
+                                    onEditingFinished: App.browserMcpCommand = text
+                                }
+
+                                // ── Modo teach: grabar acciones → skill reproducible ──
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor; visible: App.browserAutomationEnabled }
+
+                                ColumnLayout {
+                                    id: teachCol
+                                    Layout.fillWidth: true
+                                    visible: App.browserAutomationEnabled
+                                    spacing: 8
+
+                                    property var skills: []
+                                    function refresh() { skills = App.listBrowserSkills() }
+                                    Component.onCompleted: refresh()
+                                    Connections {
+                                        target: App
+                                        function onBrowserSkillsChanged() { teachCol.refresh() }
+                                    }
+
+                                    Text {
+                                        text: "Modo teach (grabar → reproducir)"
+                                        color: Theme.textPrimary
+                                        font.pixelSize: 13
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: "Grabá una secuencia (login, navegación, formulario) con Playwright codegen. " +
+                                              "Se guarda como skill que el agente puede reproducir con browser_skill_replay. " +
+                                              "La 1ª grabación instala Playwright (puede tardar)."
+                                        color: Theme.textMuted
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        LcTextField {
+                                            id: skillName
+                                            Layout.preferredWidth: 160
+                                            placeholderText: "Nombre del skill"
+                                        }
+                                        LcTextField {
+                                            id: skillUrl
+                                            Layout.fillWidth: true
+                                            placeholderText: "URL inicial (opcional, https://...)"
+                                        }
+                                        LcButton {
+                                            text: App.browserRecording ? "Grabando…" : "Grabar"
+                                            enabled: !App.browserRecording && skillName.text.trim().length > 0
+                                            onClicked: {
+                                                const err = App.recordBrowserSkill(skillName.text.trim(), skillUrl.text.trim())
+                                                if (err.length > 0) teachErr.text = err
+                                                else { teachErr.text = ""; skillName.text = ""; skillUrl.text = "" }
+                                            }
+                                        }
+                                    }
+                                    Text {
+                                        id: teachErr
+                                        visible: text.length > 0
+                                        color: Theme.btnDangerBg
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Repeater {
+                                        model: teachCol.skills
+                                        delegate: RowLayout {
+                                            required property var modelData
+                                            Layout.fillWidth: true
+                                            spacing: 8
+                                            Text {
+                                                text: "• " + modelData
+                                                color: Theme.textSecondary
+                                                font.pixelSize: 12
+                                                Layout.fillWidth: true
+                                                elide: Text.ElideRight
+                                            }
+                                            LcButton {
+                                                text: "Borrar"
+                                                danger: true
+                                                onClicked: App.removeBrowserSkill(modelData)
+                                            }
+                                        }
+                                    }
+                                    Text {
+                                        visible: teachCol.skills.length === 0
+                                        text: "Sin skills grabados todavía."
+                                        color: Theme.textMuted
+                                        font.pixelSize: 11
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // ── GPU power limit (nvidia-smi) ─────────────────────────

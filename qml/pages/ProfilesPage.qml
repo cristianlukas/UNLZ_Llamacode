@@ -247,12 +247,19 @@ Item {
         root.launchFavorite = (lp.favorite === true)
         profileAliasField.text = lp.alias ?? ""
         powerLimitField.text = ((lp.powerLimitW ?? 0) > 0) ? (lp.powerLimitW).toString() : ""
+        browserAutoCombo.currentIndex = Math.max(0, browserAutoCombo.indexOfValue(lp.browserAutomation ?? "inherit"))
 
         const bp = App.profileManager.getBackend(backendId)
         backendNameCurrent = bp.name ?? ""
         backendHost.text = bp.host ?? "127.0.0.1"
         backendPort.text = (bp.port ?? 8080).toString()
         backendBinary.currentIndex = Math.max(0, backendBinary.indexOfValue(bp.binaryId ?? ""))
+        backendKind.currentIndex = Math.max(0, backendKind.indexOfValue(bp.kind ?? "local"))
+        cloudBaseUrl.text = bp.cloudBaseUrl ?? ""
+        cloudKeyRef.text = bp.cloudKeyRef ?? ""
+        cloudKeyValue.text = ""   // el secreto nunca se carga desde el perfil
+        cloudModel.text = bp.cloudModel ?? ""
+        cloudCtx.text = ((bp.cloudCtx ?? 0) > 0) ? (bp.cloudCtx).toString() : ""
 
         const mp = App.profileManager.getModelProfile(modelProfileId)
         modelNameCurrent = mp.name ?? ""
@@ -395,6 +402,11 @@ Item {
             if (!effectiveBid || effectiveBid.length === 0) { App.serverError("No se pudo crear Backend."); return }
             backendId = effectiveBid
         }
+        App.profileManager.setBackendCloud(effectiveBid, backendKind.currentValue ?? "local",
+            cloudBaseUrl.text, cloudKeyRef.text, cloudModel.text, parseInt(cloudCtx.text) || 0)
+        // El secreto va al store fuera del repo (nunca al JSON del perfil).
+        if ((backendKind.currentValue ?? "local") === "cloud" && cloudKeyValue.text.length > 0)
+            App.setSecret(cloudKeyRef.text, cloudKeyValue.text)
 
         // Model: update if exists, create if not
         const mainModelId  = modelMain.currentValue  ?? ""
@@ -463,6 +475,7 @@ Item {
             "id": selectedLaunchId, "name": launchCombo.displayText,
             "alias": profileAliasField.text.trim(), "favorite": root.launchFavorite,
             "powerLimitW": parseInt(powerLimitField.text) || 0,
+            "browserAutomation": browserAutoCombo.currentValue ?? "inherit",
             "backendProfileId": effectiveBid, "modelProfileId": effectiveMid,
             "runtimePresetId": effectiveRid, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
             "harnessProfileId": resolvedHarnessId,
@@ -860,19 +873,56 @@ Item {
                         anchors.fill: parent; anchors.margins: 10
                         columns: 2; rowSpacing: 8; columnSpacing: 10
 
-                        Text { text: "Binary"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        property bool cloud: backendKind.currentValue === "cloud"
+
+                        Text { text: "Tipo"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        LcComboBox {
+                            id: backendKind
+                            Layout.fillWidth: true
+                            textRole: "text"; valueRole: "value"
+                            model: [ { text: "Local (llama-server)", value: "local" },
+                                     { text: "Cloud (OpenAI-compat: OpenAI / OpenRouter / Groq…)", value: "cloud" } ]
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: backendKind.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                        }
+
+                        Text { text: "Binary"; color: Theme.textSecondary; font.pixelSize: 12; visible: !backendGrid.cloud }
                         LcComboBox {
                             id: backendBinary
                             Layout.fillWidth: true
+                            visible: !backendGrid.cloud
                             model: App.binaryRegistry
                             textRole: "displayLabel"; valueRole: "binId"
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: backendBinary.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
-                        Text { text: "Host"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: backendHost; Layout.fillWidth: true }
-                        Text { text: "Port"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: backendPort; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
+                        Text { text: "Host"; color: Theme.textSecondary; font.pixelSize: 12; visible: !backendGrid.cloud }
+                        LcTextField { id: backendHost; Layout.fillWidth: true; visible: !backendGrid.cloud }
+                        Text { text: "Port"; color: Theme.textSecondary; font.pixelSize: 12; visible: !backendGrid.cloud }
+                        LcTextField { id: backendPort; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly; visible: !backendGrid.cloud }
+
+                        Text { text: "Base URL"; color: Theme.textSecondary; font.pixelSize: 12; visible: backendGrid.cloud }
+                        LcTextField { id: cloudBaseUrl; Layout.fillWidth: true; visible: backendGrid.cloud; placeholderText: "https://api.openai.com" }
+                        Text { text: "Var de key"; color: Theme.textSecondary; font.pixelSize: 12; visible: backendGrid.cloud }
+                        LcTextField { id: cloudKeyRef; Layout.fillWidth: true; visible: backendGrid.cloud; placeholderText: "OPENAI_API_KEY" }
+                        Text { text: "API key"; color: Theme.textSecondary; font.pixelSize: 12; visible: backendGrid.cloud }
+                        ColumnLayout {
+                            Layout.fillWidth: true; visible: backendGrid.cloud; spacing: 2
+                            LcTextField {
+                                id: cloudKeyValue; Layout.fillWidth: true; echoMode: TextInput.Password
+                                placeholderText: cloudKeyStored.visible ? "•••• ya guardada (dejá vacío)" : "sk-… (se guarda fuera del repo)"
+                            }
+                            Text {
+                                id: cloudKeyStored
+                                text: "✓ key resuelta (env var o store) — no se commitea"
+                                color: Theme.textMuted; font.pixelSize: 10
+                                visible: cloudKeyRef.text.length > 0 && App.hasSecret(cloudKeyRef.text)
+                            }
+                        }
+                        Text { text: "Modelo"; color: Theme.textSecondary; font.pixelSize: 12; visible: backendGrid.cloud }
+                        LcTextField { id: cloudModel; Layout.fillWidth: true; visible: backendGrid.cloud; placeholderText: "gpt-4o · anthropic/claude-…" }
+                        Text { text: "Ctx"; color: Theme.textSecondary; font.pixelSize: 12; visible: backendGrid.cloud }
+                        LcTextField { id: cloudCtx; Layout.fillWidth: true; visible: backendGrid.cloud; inputMethodHints: Qt.ImhDigitsOnly; placeholderText: "32768" }
                     }
                 }
 
@@ -1021,6 +1071,19 @@ Item {
                             Layout.fillWidth: true
                             inputMethodHints: Qt.ImhDigitsOnly
                             placeholderText: "0 = global"
+                        }
+                        Text { text: "browser MCP"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        ComboBox {
+                            id: browserAutoCombo
+                            Layout.fillWidth: true
+                            // value = "inherit" | "on" | "off"
+                            textRole: "label"
+                            valueRole: "value"
+                            model: [
+                                { label: "Heredar (global)", value: "inherit" },
+                                { label: "Forzar ON",        value: "on" },
+                                { label: "Forzar OFF",       value: "off" }
+                            ]
                         }
                     }
                 }

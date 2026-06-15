@@ -26,8 +26,10 @@ private slots:
     void masterConfig_jsonRoundTrip();
 
     void manager_addGetRemoveBackend();
+    void manager_setBackendCloud();
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
+    void manager_browserAutomationOverride();
     void manager_persistsAcrossInstances();
 
 private:
@@ -55,6 +57,25 @@ void ProfilesTests::backendProfile_jsonRoundTrip()
     QCOMPARE(r.port, b.port);
     QCOMPARE(r.baseArgs, b.baseArgs);
     QCOMPARE(r.envOverrides.value("CUDA_VISIBLE_DEVICES"), QStringLiteral("0"));
+    // default kind = local, sin campos cloud
+    QCOMPARE(r.kind, QStringLiteral("local"));
+    QVERIFY(!r.isCloud());
+
+    // provider cloud round-trip
+    BackendProfile c;
+    c.id = "c1"; c.kind = "cloud";
+    c.cloudBaseUrl = "https://api.openai.com";
+    c.cloudKeyRef = "OPENAI_API_KEY"; c.cloudModel = "gpt-4o"; c.cloudCtx = 16384;
+    const QJsonObject cj = c.toJson();
+    // El secreto NUNCA se serializa: sólo la referencia (nombre).
+    QVERIFY(!cj.contains("cloudApiKey"));
+    QCOMPARE(cj.value("cloudKeyRef").toString(), QStringLiteral("OPENAI_API_KEY"));
+    const BackendProfile rc = BackendProfile::fromJson(cj);
+    QVERIFY(rc.isCloud());
+    QCOMPARE(rc.cloudBaseUrl, c.cloudBaseUrl);
+    QCOMPARE(rc.cloudKeyRef, c.cloudKeyRef);
+    QCOMPARE(rc.cloudModel, c.cloudModel);
+    QCOMPARE(rc.cloudCtx, 16384);
 }
 
 void ProfilesTests::modelProfile_jsonRoundTrip()
@@ -104,7 +125,9 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     l.extraArgs = QStringList{"--verbose"};
     l.master.kind = "cli"; l.master.cliName = "claude";
     l.powerLimitW = 280;
+    l.browserAutomation = "on";
     const LaunchProfile r = LaunchProfile::fromJson(l.toJson());
+    QCOMPARE(r.browserAutomation, QStringLiteral("on"));
     QCOMPARE(r.name, l.name);
     QCOMPARE(r.alias, l.alias);
     QCOMPARE(r.favorite, l.favorite);
@@ -117,6 +140,9 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     // Default (campo ausente) → 0 = sin override.
     LaunchProfile empty;
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).powerLimitW, 0);
+    // browserAutomation ausente → default "inherit".
+    QCOMPARE(LaunchProfile::fromJson(empty.toJson()).browserAutomation,
+             QStringLiteral("inherit"));
 }
 
 void ProfilesTests::masterConfig_jsonRoundTrip()
@@ -151,6 +177,24 @@ void ProfilesTests::manager_addGetRemoveBackend()
     QVERIFY(!pm.removeBackend("nope"));
 }
 
+void ProfilesTests::manager_setBackendCloud()
+{
+    ProfileManager pm;
+    const QString id = pm.addBackend("be", "bin1", "127.0.0.1", 8080);
+    QVERIFY(pm.setBackendCloud(id, "cloud", "https://openrouter.ai/api", "OPENROUTER_KEY",
+                               "anthropic/claude-sonnet-4", 200000));
+    const QVariantMap got = pm.getBackend(id);
+    QCOMPARE(got.value("kind").toString(), QStringLiteral("cloud"));
+    QCOMPARE(got.value("cloudKeyRef").toString(), QStringLiteral("OPENROUTER_KEY"));
+    QCOMPARE(got.value("cloudBaseUrl").toString(), QStringLiteral("https://openrouter.ai/api"));
+    QCOMPARE(got.value("cloudModel").toString(), QStringLiteral("anthropic/claude-sonnet-4"));
+    QCOMPARE(got.value("cloudCtx").toInt(), 200000);
+    // volver a local limpia el flag
+    QVERIFY(pm.setBackendCloud(id, "local", "", "", "", 0));
+    QCOMPARE(pm.getBackend(id).value("kind").toString(), QStringLiteral("local"));
+    QVERIFY(!pm.setBackendCloud("nope", "cloud", "", "", "", 0));
+}
+
 void ProfilesTests::manager_addModelProfile()
 {
     ProfileManager pm;
@@ -182,6 +226,21 @@ void ProfilesTests::manager_favoriteAndAlias()
     QVERIFY(top.value("favorite").toBool());
     // displayName antepone la estrella a los favoritos; alias tiene prioridad.
     QCOMPARE(top.value("displayName").toString(), QStringLiteral("★ Alias"));
+}
+
+void ProfilesTests::manager_browserAutomationOverride()
+{
+    ProfileManager pm;
+    const QString id = pm.addLaunchProfile("BA", "b", "m", "r");
+    QVERIFY(!id.isEmpty());
+    // Default: campo ausente → "inherit".
+    QCOMPARE(pm.getLaunchProfile(id).value("browserAutomation").toString(),
+             QStringLiteral("inherit"));
+    // update/get round-trip del override.
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{
+        {"id", id}, {"browserAutomation", "off"}}));
+    QCOMPARE(pm.getLaunchProfile(id).value("browserAutomation").toString(),
+             QStringLiteral("off"));
 }
 
 void ProfilesTests::manager_persistsAcrossInstances()

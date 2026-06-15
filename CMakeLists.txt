@@ -7,8 +7,32 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
 option(BUILD_TESTS "Build unit tests (LlamaCodeTests)" OFF)
+option(LC_USE_QTKEYCHAIN "Cifrar secretos vía QtKeychain (Secret Service / WinCred / macOS Keychain)" ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick Sql Concurrent Network Widgets)
+
+# --- QtKeychain: almacenamiento de secretos respaldado por el SO, multiplataforma.
+# Se intenta find_package (system/vcpkg); si no está y la opción está ON, se baja con
+# FetchContent. Si todo falla (build offline sin paquete), se sigue sin keychain y
+# SecretStore usa su fallback (DPAPI en Windows / texto plano marcado en otros OS).
+set(LC_HAVE_QTKEYCHAIN OFF)
+if (LC_USE_QTKEYCHAIN)
+    find_package(Qt6Keychain QUIET)
+    if (NOT Qt6Keychain_FOUND)
+        include(FetchContent)
+        set(BUILD_WITH_QT6 ON CACHE BOOL "" FORCE)            # qtkeychain default es Qt5
+        set(BUILD_TEST_APPLICATION OFF CACHE BOOL "" FORCE)   # no compilar demos de qtkeychain
+        set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+        set(QTKEYCHAIN_STATIC ON CACHE BOOL "" FORCE)
+        FetchContent_Declare(qtkeychain
+            GIT_REPOSITORY https://github.com/frankosterfeld/qtkeychain.git
+            GIT_TAG 0.14.3)
+        FetchContent_MakeAvailable(qtkeychain)
+    endif()
+    if (TARGET Qt6Keychain OR TARGET qt6keychain OR Qt6Keychain_FOUND)
+        set(LC_HAVE_QTKEYCHAIN ON)
+    endif()
+endif()
 
 qt_standard_project_setup(REQUIRES 6.4)
 
@@ -26,6 +50,7 @@ set(CORE_SOURCES
     src/core/DocumentExtractor.cpp
     src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
+    src/core/SecretStore.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
@@ -38,6 +63,7 @@ set(CORE_SOURCES
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
     src/core/agent/MasterCli.cpp
+    src/core/agent/BrowserTeach.cpp
     src/core/eval/EvalSuite.cpp
     src/core/tuner/AutoTuner.cpp
     src/core/tuner/TunerEngine.cpp
@@ -71,6 +97,7 @@ set(HEADERS
     src/core/agent/SubAgentRunner.h
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
+    src/core/agent/BrowserTeach.h
     src/core/eval/EvalSuite.h
     src/core/tuner/AutoTuner.h
     src/core/tuner/TunerEngine.h
@@ -95,6 +122,28 @@ target_link_libraries(llamacode_core PUBLIC
 )
 if (MSVC)
     target_compile_options(llamacode_core PRIVATE /utf-8)
+endif()
+if (WIN32)
+    # DPAPI (CryptProtectData/CryptUnprotectData): fallback de cifrado at-rest.
+    target_link_libraries(llamacode_core PUBLIC Crypt32)
+endif()
+if (LC_HAVE_QTKEYCHAIN)
+    # El target exportado puede llamarse Qt6Keychain o qt6keychain según la fuente.
+    if (TARGET Qt6Keychain)
+        target_link_libraries(llamacode_core PUBLIC Qt6Keychain)
+    else()
+        target_link_libraries(llamacode_core PUBLIC qt6keychain)
+        # Vía FetchContent el target no exporta include dir: agregar src + build
+        # (donde queda keychain.h y el export header generado).
+        if (DEFINED qtkeychain_SOURCE_DIR)
+            target_include_directories(llamacode_core PUBLIC
+                ${qtkeychain_SOURCE_DIR} ${qtkeychain_BINARY_DIR})
+        endif()
+    endif()
+    target_compile_definitions(llamacode_core PUBLIC HAVE_QTKEYCHAIN)
+    message(STATUS "SecretStore: usando QtKeychain (cifrado respaldado por el SO)")
+else()
+    message(STATUS "SecretStore: QtKeychain no disponible → fallback DPAPI/plano")
 endif()
 
 qt_add_executable(LlamaCode
@@ -198,6 +247,7 @@ if (BUILD_TESTS)
 
     add_lc_test(test_gguf_profiles      tests/test_gguf_profiles.cpp)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
+    add_lc_test(test_secret_store       tests/test_secret_store.cpp)
     add_lc_test(test_registries         tests/test_registries.cpp)
     add_lc_test(test_catalog            tests/test_catalog.cpp)
     add_lc_test(test_capability         tests/test_capability.cpp)

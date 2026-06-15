@@ -13,6 +13,10 @@ struct AgentContext {
     QString serverBaseUrl;    // URL del llama-server (OpenAI-compatible), sin /v1
     QString modelId;          // modelo servido / alias
     QProcessEnvironment env;  // env ya armado para el proceso del harness
+    // Provider cloud (OpenAI-compat): si apiKey != "" se manda Authorization Bearer
+    // y se omite /props (el endpoint cloud no lo expone). ctxOverride fija n_ctx.
+    QString apiKey;
+    int     ctxOverride = 0;
 };
 
 // Mensaje de chat del agente (rol + contenido + estado).
