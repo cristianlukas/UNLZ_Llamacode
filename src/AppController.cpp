@@ -8324,7 +8324,14 @@ void AppController::startCharla()
     // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
     const VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
-    if (!c.sttManagedEngine.isEmpty()) startManagedStt(c);
+    if (!c.sttManagedEngine.isEmpty()) {
+        if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
+            emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
+                             .arg(c.sttManagedEngine));
+            return;     // no arrancar la escucha: el STT no funcionaría
+        }
+        startManagedStt(c);
+    }
     applyVoiceConfig();
     m_charlaActive = true;
     m_voice->start();

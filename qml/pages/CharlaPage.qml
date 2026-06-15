@@ -34,7 +34,9 @@ Item {
         }
     }
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
-    function save() { if (pid.length) App.setVoiceConfig(pid, cfg) }
+    // Persiste y REASIGNA cfg (copia) para que QML reevalúe los bindings `visible`
+    // que dependen de cfg (mutar un campo no notifica el cambio del var property).
+    function save() { if (pid.length) App.setVoiceConfig(pid, cfg); cfg = Object.assign({}, cfg) }
     onPidChanged: reload()
     Component.onCompleted: reload()
 
