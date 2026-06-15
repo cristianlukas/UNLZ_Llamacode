@@ -19,6 +19,7 @@ Rectangle {
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
         { key: "agent.title",   icon: "🤖",  serverOnly: true  },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
+        { key: "nav.tasks",     icon: "🗒",  serverOnly: false },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
     ]
@@ -74,7 +75,7 @@ Rectangle {
         ItemDelegate {
             Layout.fillWidth: true
             height: 48
-            highlighted: root.currentIndex === 9
+            highlighted: root.currentIndex === 10
             background: Rectangle {
                 color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
                 Rectangle {
@@ -90,10 +91,10 @@ Rectangle {
                 Text {
                     text: (App.langV, App.l("nav.settings"))
                     font.pixelSize: 14
-                    color: root.currentIndex === 9 ? Theme.textPrimary : Theme.textSecondary
+                    color: root.currentIndex === 10 ? Theme.textPrimary : Theme.textSecondary
                 }
             }
-            onClicked: { root.currentIndex = 9; root.pageSelected(9) }
+            onClicked: { root.currentIndex = 10; root.pageSelected(10) }
         }
 
         Text {

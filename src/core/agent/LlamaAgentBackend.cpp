@@ -2165,6 +2165,8 @@ void LlamaAgentBackend::finishTurn(const QString &finalText)
 
     saveCurrentSession();   // persistir al cerrar el turno
 
+    emit turnFinished();
+
     // Turno cerrado → si hay mensajes encolados, enviar el próximo. Async (cola)
     // para no anidar runCompletion dentro del stack del turno que recién terminó.
     if (!m_msgQueue.isEmpty())

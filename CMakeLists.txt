@@ -71,6 +71,9 @@ set(CORE_SOURCES
     src/core/voice/TtsEngine.cpp
     src/core/voice/VoiceController.cpp
     src/core/eval/EvalSuite.cpp
+    src/core/tasks/TaskStore.cpp
+    src/core/tasks/CronSchedule.cpp
+    src/core/tasks/TaskScheduler.cpp
     src/core/tuner/AutoTuner.cpp
     src/core/tuner/TunerEngine.cpp
     src/core/tuner/TunerWorker.cpp
@@ -111,6 +114,9 @@ set(HEADERS
     src/core/voice/TtsEngine.h
     src/core/voice/VoiceController.h
     src/core/eval/EvalSuite.h
+    src/core/tasks/TaskStore.h
+    src/core/tasks/CronSchedule.h
+    src/core/tasks/TaskScheduler.h
     src/core/tuner/AutoTuner.h
     src/core/tuner/TunerEngine.h
     src/core/tuner/TunerWorker.h
@@ -200,6 +206,7 @@ qt_add_qml_module(LlamaCode
         qml/components/OpencodeConfigDialog.qml
         qml/components/MermaidPreviewDialog.qml
         qml/pages/AgentPage.qml
+        qml/pages/TasksPage.qml
         qml/pages/BenchmarkPage.qml
         qml/pages/ResearchPage.qml
         qml/pages/CharlaPage.qml
@@ -278,4 +285,6 @@ if (BUILD_TESTS)
     add_lc_test(test_mermaid            tests/test_mermaid.cpp)
     add_lc_test(test_mail               tests/test_mail.cpp)
     add_lc_test(test_voice              tests/test_voice.cpp)
+    add_lc_test(test_tasks              tests/test_tasks.cpp)
+    add_lc_test(test_cron               tests/test_cron.cpp)
 endif()

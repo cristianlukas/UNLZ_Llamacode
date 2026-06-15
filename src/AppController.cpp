@@ -227,6 +227,14 @@ AppController::AppController(QObject *parent) : QObject(parent)
 
     connect(&m_binaries, &BinaryRegistry::countChanged, this, &AppController::setupStateChanged);
     connect(&m_catalog, &ModelCatalog::countChanged, this, &AppController::setupStateChanged);
+
+    // Scheduler de Tasks (cron in-app). taskDue→runTask. El toggle global persiste.
+    m_scheduler = new TaskScheduler(&m_tasks, this);
+    connect(m_scheduler, &TaskScheduler::taskDue, this, [this](const QString &id) {
+        runTask(id);
+    });
+    if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
+        m_scheduler->setEnabled(true);
     // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
     // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
     // acá en el constructor y congelaba ~3s antes de mostrar la ventana.
@@ -1908,11 +1916,14 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     connect(b, &IAgentBackend::logAppended, this, [this](const QString &chunk) {
         appendAgentEvent(QStringLiteral("backend"), chunk);
     });
+    connect(b, &IAgentBackend::turnFinished, this, &AppController::onAgentTurnFinished);
     connect(b, &IAgentBackend::runningChanged, this, [this, b]() {
         if (m_agentStarting) {
             m_agentStarting = false;
             emit agentStartingChanged();
         }
+        if (b->running() && !m_pendingScheduledTaskId.isEmpty())
+            QTimer::singleShot(0, this, [this]() { dispatchPendingScheduledTask(); });
         if (!b->running()) {
             m_activeAgentAdapter.clear();
             if (!m_agentPendingTool.isEmpty()) {
@@ -2688,6 +2699,101 @@ void AppController::sendToAgent(const QString &text)
 
     // Adapters genéricos basados en stdin (opencode usa OpencodeBackend, delegado arriba).
     m_agentProc->write((text + QLatin1Char('\n')).toUtf8());
+}
+
+void AppController::runTask(const QString &id)
+{
+    const QVariantMap task = m_tasks.get(id);
+    if (task.isEmpty()) {
+        emit serverError(QStringLiteral("Task no encontrada."));
+        return;
+    }
+
+    const bool agentUp = (m_agentBackend && m_agentBackend->running())
+                         || m_piActive
+                         || (m_agentProc && m_agentProc->state() == QProcess::Running);
+    if (agentUp) {
+        // Agente ya corriendo: usarlo tal cual, sin apagarlo.
+        m_runningTaskId = id;
+        m_tasks.markRun(id, QStringLiteral("running"));
+        sendToAgent(TaskStore::composePrompt(task));
+        return;
+    }
+
+    // No hay agente: auto-iniciar con el perfil de la Task (o el último activo),
+    // ejecutar al quedar listo y apagarlo al terminar el turno.
+    QString launchId = task.value("profileId").toString();
+    if (launchId.isEmpty()) launchId = m_activeLaunchId;
+    if (launchId.isEmpty()) {
+        m_tasks.markRun(id, QStringLiteral("error"));
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Task '%1' sin perfil y sin perfil activo: no se puede auto-iniciar el agente.").arg(id));
+        emit serverError(QStringLiteral("Task sin perfil de agente: no se pudo auto-iniciar. Asigná un perfil en la Task."));
+        return;
+    }
+
+    m_pendingScheduledTaskId = id;
+    m_pendingScheduledLaunchId = launchId;
+    m_scheduledAutoStop = true;
+    m_tasks.markRun(id, QStringLiteral("running"));
+    appendAgentEvent(QStringLiteral("lifecycle"),
+                     QStringLiteral("Auto-iniciando servidor+agente para la Task '%1'.").arg(id));
+    startServerAndAgent(launchId);
+}
+
+void AppController::dispatchPendingScheduledTask()
+{
+    if (m_pendingScheduledTaskId.isEmpty()) return;
+    if (!(m_agentBackend && m_agentBackend->running())) return;
+    const QString id = m_pendingScheduledTaskId;
+    m_pendingScheduledTaskId.clear();
+    const QVariantMap task = m_tasks.get(id);
+    if (task.isEmpty()) { m_scheduledAutoStop = false; return; }
+    m_runningTaskId = id;
+    sendToAgent(TaskStore::composePrompt(task));
+}
+
+void AppController::onAgentTurnFinished()
+{
+    if (!m_runningTaskId.isEmpty()) {
+        m_tasks.markRun(m_runningTaskId, QStringLiteral("ok"));
+        m_runningTaskId.clear();
+    }
+    if (m_scheduledAutoStop) {
+        m_scheduledAutoStop = false;
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Scheduler: Task terminada; apagando agente y servidor auto-iniciados."));
+        stopAgent();
+        stopServer();
+    }
+}
+
+void AppController::setTasksSchedulerEnabled(bool on)
+{
+    if (!m_scheduler || m_scheduler->enabled() == on) return;
+    m_scheduler->setEnabled(on);
+    QSettings().setValue(QStringLiteral("tasks/schedulerEnabled"), on);
+    emit tasksSchedulerChanged();
+}
+
+QString AppController::previewTaskPrompt(const QString &id) const
+{
+    return TaskStore::composePrompt(m_tasks.get(id));
+}
+
+QString AppController::recordTaskBrowserStep(const QString &skillName, const QString &url)
+{
+    const QString slug = TaskStore::sanitize(skillName);
+    if (slug.isEmpty()) {
+        emit serverError(QStringLiteral("Nombre de paso inválido."));
+        return {};
+    }
+    const QString err = recordBrowserSkill(slug, url);
+    if (!err.isEmpty()) {
+        emit serverError(err);
+        return {};
+    }
+    return slug;
 }
 
 void AppController::sendToAgentWithAttachments(const QString &text, const QStringList &paths)
@@ -4547,6 +4653,7 @@ static const TrEntry k_tr[] = {
     {"nav.chat",      "Chat",           "Chat",         "聊天",       "Discussion",     "Chat",           "Chat"},
     {"nav.benchmark", "Benchmark",     "Benchmark",    "基准测试",   "Benchmark",      "Benchmark",      "Benchmark"},
     {"nav.research",  "Research",       "Research",     "研究",       "Recherche",      "Ricerca",        "Recherche"},
+    {"nav.tasks",     "Tasks",          "Tasks",        "任务",       "Tâches",         "Attività",       "Aufgaben"},
     {"nav.charla",    "Charla",         "Talk",         "对话",       "Parler",         "Parla",          "Sprechen"},
     {"nav.settings",  "Configuración", "Settings",     "设置",       "Paramètres",     "Impostazioni",   "Einstellungen"},
     // Launch page

@@ -180,6 +180,7 @@ ApplicationWindow {
                     ChatPage        {}
                     AgentPage       {}
                     ResearchPage    {}
+                    TasksPage       {}
                     BenchmarkPage   {}
                     CharlaPage      {}
                     SettingsPage    {}

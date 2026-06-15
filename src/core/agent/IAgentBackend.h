@@ -72,6 +72,9 @@ public:
 
 signals:
     void runningChanged();
+    // El turno actual terminó por completo (sin tools/aprobaciones pendientes).
+    // Lo usa el scheduler de Tasks para saber cuándo apagar un agente auto-iniciado.
+    void turnFinished();
     void messagesChanged();
     // Update incremental SOLO del texto del mensaje en `index` durante streaming.
     // Permite a la UI refrescar una burbuja sin reconstruir toda la lista (evita

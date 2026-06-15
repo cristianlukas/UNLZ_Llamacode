@@ -4,6 +4,8 @@
 #include "core/ModelCatalog.h"
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
+#include "core/tasks/TaskStore.h"
+#include "core/tasks/TaskScheduler.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
 #include "core/SecretStore.h"
@@ -29,6 +31,8 @@ class AppController : public QObject
     Q_PROPERTY(ModelRootRegistry*  rootRegistry    READ rootRegistry    CONSTANT)
     Q_PROPERTY(ModelCatalog*       modelCatalog    READ modelCatalog    CONSTANT)
     Q_PROPERTY(ProfileManager*     profileManager  READ profileManager  CONSTANT)
+    Q_PROPERTY(TaskStore*          taskStore       READ taskStore       CONSTANT)
+    Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(QVariantList chatSessions    READ chatSessions    NOTIFY chatSessionsChanged)
     Q_PROPERTY(QVariantList chatMessages    READ chatMessages    NOTIFY chatMessagesChanged)
     Q_PROPERTY(QString      chatSessionId   READ chatSessionId   NOTIFY chatSessionsChanged)
@@ -123,6 +127,9 @@ public:
     ModelRootRegistry *rootRegistry()    { return &m_roots; }
     ModelCatalog      *modelCatalog()    { return &m_catalog; }
     ProfileManager    *profileManager()  { return &m_profiles; }
+    TaskStore         *taskStore()       { return &m_tasks; }
+    bool tasksSchedulerEnabled() const { return m_scheduler && m_scheduler->enabled(); }
+    void setTasksSchedulerEnabled(bool on);
 
     QVariantList chatSessions()     const { return m_chatSessions; }
     QVariantList chatMessages()     const { return m_chatMessages; }
@@ -309,6 +316,18 @@ public:
     Q_INVOKABLE QString masterCliInstallCommand(const QString &name) const;
     Q_INVOKABLE void startAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopAgent();
+
+    // ── Tasks (macros semánticas) ──
+    // Ejecuta una Task (botón manual o scheduler): compone el prompt-objetivo y lo
+    // resuelve con el agente de forma adaptativa. Si el agente ya corre lo usa; si
+    // no, auto-inicia server+agente (perfil de la Task o el activo), ejecuta al
+    // quedar listo y lo apaga al terminar. Marca lastRun en el TaskStore.
+    Q_INVOKABLE void runTask(const QString &id);
+    // Previsualiza el prompt que recibiría el agente (para el editor de Tasks).
+    Q_INVOKABLE QString previewTaskPrompt(const QString &id) const;
+    // Graba un paso de browser (Playwright codegen) y devuelve el nombre del skill
+    // generado para referenciarlo en un paso de Task. "" + serverError si falla.
+    Q_INVOKABLE QString recordTaskBrowserStep(const QString &skillName, const QString &url);
     // --- Secretos cloud (API keys fuera del repo) ---
     // ¿Hay key resoluble (env var o store) para esa ref?
     Q_INVOKABLE bool hasSecret(const QString &keyRef) const { return m_secrets.has(keyRef); }
@@ -563,6 +582,7 @@ signals:
     void hardwareSummaryChanged();
     void modelRecommendationsChanged();
     void modelDownloadChanged();
+    void tasksSchedulerChanged();
 
 private:
     void appendLog(const QString &text);
@@ -583,6 +603,18 @@ private:
     ModelCatalog      m_catalog;
     ModelRootRegistry m_roots{&m_catalog};
     ProfileManager    m_profiles;
+    TaskStore         m_tasks;
+    TaskScheduler    *m_scheduler = nullptr;
+    // Task en ejecución (para marcar lastRun ok al terminar el turno).
+    QString  m_runningTaskId;
+    // Task programada esperando que el agente auto-iniciado quede listo.
+    QString  m_pendingScheduledTaskId;
+    QString  m_pendingScheduledLaunchId;
+    // El agente fue auto-iniciado por el scheduler → apagarlo al terminar el turno.
+    bool     m_scheduledAutoStop = false;
+    void dispatchPendingScheduledTask();
+    // Maneja el fin de turno del agente (marca lastRun, apaga si fue auto-iniciado).
+    void onAgentTurnFinished();
 
     QProcess *m_proc = nullptr;
     QProcess *m_installerProc = nullptr;
