@@ -18,6 +18,13 @@ struct VoiceConfig {
     QString sttModel    = QStringLiteral("whisper-1");
     QString sttKeyRef;                               // "" salvo cloud
     QString sttLanguage = QStringLiteral("auto");    // "auto" = no enviar param
+    // Path del endpoint de transcripción. OpenAI/openedai-speech usan
+    // "/v1/audio/transcriptions"; whisper.cpp server usa "/inference".
+    QString sttEndpointPath = QStringLiteral("/v1/audio/transcriptions");
+    // Servidor gestionado por la app: si != "", al iniciar Charla se descarga
+    // (si falta) y se lanza este motor STT, fijando baseUrl/endpointPath. Id del
+    // catálogo de VoiceServerManager (ej "whisper-base").
+    QString sttManagedEngine;
 
     // ── TTS (text-to-speech) ──
     QString ttsProvider = QStringLiteral("local");  // local | cloud

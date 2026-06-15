@@ -70,6 +70,7 @@ set(CORE_SOURCES
     src/core/voice/SttEngine.cpp
     src/core/voice/TtsEngine.cpp
     src/core/voice/VoiceController.cpp
+    src/core/voice/VoiceServerManager.cpp
     src/core/eval/EvalSuite.cpp
     src/core/tasks/TaskStore.cpp
     src/core/tasks/CronSchedule.cpp
@@ -113,6 +114,7 @@ set(HEADERS
     src/core/voice/SttEngine.h
     src/core/voice/TtsEngine.h
     src/core/voice/VoiceController.h
+    src/core/voice/VoiceServerManager.h
     src/core/eval/EvalSuite.h
     src/core/tasks/TaskStore.h
     src/core/tasks/CronSchedule.h

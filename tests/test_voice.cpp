@@ -7,6 +7,7 @@
 #include "core/voice/TtsEngine.h"
 #include "core/voice/VoiceController.h"
 #include "core/profiles/ProfileTypes.h"
+#include "core/voice/VoiceServerManager.h"
 
 // Tests del modo Charla. Solo funciones puras (sin micrófono/red/playback):
 // round-trip de config, codec WAV/RMS, builders de request STT/TTS, lógica VAD.
@@ -22,6 +23,7 @@ private slots:
     void ttsSpeechBody();
     void vadTurnEnded();
     void voiceInLaunchProfile();
+    void sttServerCatalog();
 };
 
 void TestVoice::configRoundTrip()
@@ -140,6 +142,26 @@ void TestVoice::voiceInLaunchProfile()
     QCOMPARE(r.voice.sttBaseUrl, QString("https://stt.example"));
     QCOMPARE(r.voice.ttsVoice, QString("nova"));
     QCOMPARE(r.voice.vadSegmentMs, 420);
+}
+
+void TestVoice::sttServerCatalog()
+{
+    const QVariantList cat = VoiceServerManager::sttCatalog();
+    QVERIFY(cat.size() >= 1);
+    // El motor base existe y es whisper.cpp (endpoint /inference).
+    const QVariantMap base = VoiceServerManager::sttEngine("whisper-base");
+    QVERIFY(!base.isEmpty());
+    QCOMPARE(VoiceServerManager::endpointPath("whisper-base"), QString("/inference"));
+    QVERIFY(VoiceServerManager::modelPath("whisper-base").endsWith("ggml-base.bin"));
+    QVERIFY(VoiceServerManager::sttEngine("inexistente").isEmpty());
+
+    // Args de whisper-server: modelo + host + port, y -l solo si lang != auto.
+    QStringList a = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "auto");
+    QVERIFY(a.contains("-m")); QVERIFY(a.contains("m.bin"));
+    QVERIFY(a.contains("--port")); QVERIFY(a.contains("8081"));
+    QVERIFY(!a.contains("-l"));
+    QStringList b = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "es");
+    QVERIFY(b.contains("-l")); QVERIFY(b.contains("es"));
 }
 
 QTEST_MAIN(TestVoice)

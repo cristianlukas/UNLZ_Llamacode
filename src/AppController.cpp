@@ -22,6 +22,7 @@
 #include "core/agent/RawChatBackend.h"
 #include "core/voice/VoiceController.h"
 #include "core/voice/VoiceTypes.h"
+#include "core/voice/VoiceServerManager.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
@@ -192,6 +193,11 @@ static QString researchModeTitle(const QString &mode)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    // Reenviar progreso/fin de descarga de modelos STT a QML.
+    connect(&m_voiceServers, &VoiceServerManager::installProgress,
+            this, &AppController::voiceInstallProgress);
+    connect(&m_voiceServers, &VoiceServerManager::installFinished,
+            this, &AppController::voiceInstallFinished);
     QSettings s;
     m_language = s.value(QStringLiteral("language"), QStringLiteral("es")).toString();
     m_agentApprovalMode = s.value(QStringLiteral("agent/approvalMode"), QStringLiteral("ask")).toString();
@@ -8255,8 +8261,16 @@ void AppController::applyVoiceConfig()
 {
     if (!m_voice) return;
     // La Charla usa la config de voz del perfil activo (el que lanzó el server).
-    const VoiceConfig c = VoiceConfig::fromJson(
+    VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    // STT gestionado: apuntar al server local que lanza la app (whisper.cpp).
+    if (!c.sttManagedEngine.isEmpty()) {
+        const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
+        const int port = eng.value("defaultPort", 8081).toInt();
+        c.sttProvider = QStringLiteral("local");
+        c.sttBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(port);
+        c.sttEndpointPath = VoiceServerManager::endpointPath(c.sttManagedEngine);
+    }
     const QString sttKey = c.sttKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.sttKeyRef);
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
     m_voice->setConfig(c, sttKey, ttsKey);
@@ -8295,6 +8309,10 @@ void AppController::startCharla()
 {
     ensureChatBackend();   // la voz reusa el backend de chat (sesiones/stream)
     ensureVoice();
+    // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
+    const VoiceConfig c = VoiceConfig::fromJson(
+        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    if (!c.sttManagedEngine.isEmpty()) startManagedStt(c);
     applyVoiceConfig();
     m_charlaActive = true;
     m_voice->start();
@@ -8304,6 +8322,85 @@ void AppController::stopCharla()
 {
     m_charlaActive = false;
     if (m_voice) m_voice->stop();
+    stopManagedStt();
+}
+
+// ── STT gestionado (whisper.cpp) ─────────────────────────────────────────────
+
+QVariantList AppController::voiceSttCatalog() const { return VoiceServerManager::sttCatalog(); }
+
+bool AppController::voiceModelInstalled(const QString &engineId) const
+{
+    return m_voiceServers.modelInstalled(engineId);
+}
+
+void AppController::installVoiceModel(const QString &engineId)
+{
+    m_voiceServers.installModel(engineId);
+}
+
+void AppController::cancelVoiceModelInstall() { m_voiceServers.cancelInstall(); }
+
+QString AppController::voiceWhisperServerPath() const
+{
+    return readSetting(QStringLiteral("voiceWhisperServerPath")).toString();
+}
+
+void AppController::setVoiceWhisperServerPath(const QString &path)
+{
+    writeSetting(QStringLiteral("voiceWhisperServerPath"), path);
+}
+
+QString AppController::pickVoiceWhisperServer()
+{
+    const QString p = QFileDialog::getOpenFileName(
+        nullptr, QStringLiteral("Seleccionar binario whisper-server"), QString(),
+#ifdef Q_OS_WIN
+        QStringLiteral("Ejecutables (*.exe);;Todos (*)"));
+#else
+        QStringLiteral("Todos (*)"));
+#endif
+    if (!p.isEmpty()) setVoiceWhisperServerPath(p);
+    return p;
+}
+
+void AppController::startManagedStt(const VoiceConfig &c)
+{
+    stopManagedStt();
+    if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
+        emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
+                         .arg(c.sttManagedEngine));
+        return;
+    }
+    // Resolver el binario whisper-server (setting o PATH).
+    QString prog = voiceWhisperServerPath();
+    if (prog.isEmpty()) prog = QStringLiteral("whisper-server");
+    const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
+    const int port = eng.value("defaultPort", 8081).toInt();
+    const QStringList args = VoiceServerManager::buildWhisperArgs(
+        VoiceServerManager::modelPath(c.sttManagedEngine),
+        QStringLiteral("127.0.0.1"), port, c.sttLanguage);
+
+    m_sttProc = new QProcess(this);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("LLAMACODE_MANAGED"), QStringLiteral("1"));
+    env.insert(QStringLiteral("LLAMACODE_ROLE"), QStringLiteral("voice-stt"));
+    m_sttProc->setProcessEnvironment(env);
+    connect(m_sttProc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
+        emit serverError(QStringLiteral("No se pudo lanzar whisper-server. Configurá su ruta en Charla."));
+    });
+    m_sttProc->start(prog, args);
+    if (m_sttProc->waitForStarted(4000))
+        assignToJobObject(m_sttProc->processId());
+}
+
+void AppController::stopManagedStt()
+{
+    if (!m_sttProc) return;
+    m_sttProc->terminate();
+    if (!m_sttProc->waitForFinished(2000)) m_sttProc->kill();
+    m_sttProc->deleteLater();
+    m_sttProc = nullptr;
 }
 
 void AppController::charlaListen()

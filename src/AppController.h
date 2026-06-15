@@ -9,6 +9,8 @@
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
 #include "core/SecretStore.h"
+#include "core/voice/VoiceServerManager.h"
+#include "core/voice/VoiceTypes.h"
 #include "core/tuner/TunerWorker.h"
 #include <QObject>
 #include <QProcess>
@@ -519,11 +521,22 @@ public:
     // Prueba de micrófono: captura y muestra nivel sin STT/chat (ver voiceLevel).
     Q_INVOKABLE void startMicTest();
     Q_INVOKABLE void stopMicTest();
+    // ── STT gestionado (descarga + lanza whisper.cpp) ──
+    Q_INVOKABLE QVariantList voiceSttCatalog() const;
+    Q_INVOKABLE bool voiceModelInstalled(const QString &engineId) const;
+    Q_INVOKABLE void installVoiceModel(const QString &engineId);
+    Q_INVOKABLE void cancelVoiceModelInstall();
+    // Ruta del binario whisper-server (setting global; "" = buscar en PATH).
+    Q_INVOKABLE QString voiceWhisperServerPath() const;
+    Q_INVOKABLE void setVoiceWhisperServerPath(const QString &path);
+    Q_INVOKABLE QString pickVoiceWhisperServer();   // diálogo de archivo; devuelve la ruta
 
 signals:
     void voiceStateChanged();
     void voiceLevelChanged();
     void voicePartialChanged();
+    void voiceInstallProgress(const QString &engineId, int pct, const QString &status);
+    void voiceInstallFinished(const QString &engineId, bool ok, const QString &message);
     // Un perfil cloud necesita su API key y no se pudo resolver (ni env var ni store):
     // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
     void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
@@ -708,11 +721,15 @@ private:
     IAgentBackend      *m_chatBackend = nullptr;
     // Modo Charla (voz-a-voz): orquestador STT→chat→TTS. Reusa m_chatBackend.
     class VoiceController *m_voice = nullptr;
+    VoiceServerManager m_voiceServers;  // catálogo + descarga de modelos STT
+    QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
     bool m_charlaActive = false;
     bool m_chatWasGenerating = false;
     QString m_voicePartial;
     void ensureVoice();                 // crea + configura el controller (lazy)
     void applyVoiceConfig();            // empuja config + keys resueltas al controller
+    void startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
+    void stopManagedStt();
     QString voiceConfigPath() const;
     // Chat session state
     QString       m_chatProjectIdOverride;

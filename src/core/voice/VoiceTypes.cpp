@@ -9,6 +9,8 @@ QJsonObject VoiceConfig::toJson() const
     o["sttModel"]       = sttModel;
     o["sttKeyRef"]      = sttKeyRef;
     o["sttLanguage"]    = sttLanguage;
+    o["sttEndpointPath"] = sttEndpointPath;
+    o["sttManagedEngine"] = sttManagedEngine;
     o["ttsProvider"]    = ttsProvider;
     o["ttsBaseUrl"]     = ttsBaseUrl;
     o["ttsModel"]       = ttsModel;
@@ -33,6 +35,9 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.sttModel    = o.value("sttModel").toString(c.sttModel);
     c.sttKeyRef   = o.value("sttKeyRef").toString(c.sttKeyRef);
     c.sttLanguage = o.value("sttLanguage").toString(c.sttLanguage);
+    c.sttEndpointPath = o.value("sttEndpointPath").toString(c.sttEndpointPath);
+    if (c.sttEndpointPath.isEmpty()) c.sttEndpointPath = QStringLiteral("/v1/audio/transcriptions");
+    c.sttManagedEngine = o.value("sttManagedEngine").toString(c.sttManagedEngine);
     c.ttsProvider = o.value("ttsProvider").toString(c.ttsProvider);
     c.ttsBaseUrl  = o.value("ttsBaseUrl").toString(c.ttsBaseUrl);
     c.ttsModel    = o.value("ttsModel").toString(c.ttsModel);

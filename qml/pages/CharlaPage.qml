@@ -13,6 +13,18 @@ Item {
     property string pid: App.activeLaunchId
     property var cfg: ({})
     property bool testing: false
+    property int installPct: -1
+    property string installMsg: ""
+
+    Connections {
+        target: App
+        function onVoiceInstallProgress(engineId, pct, status) { page.installPct = pct; page.installMsg = status }
+        function onVoiceInstallFinished(engineId, ok, message) {
+            page.installPct = -1
+            page.installMsg = ok ? "Modelo instalado ✓" : ("Error: " + message)
+            sttEngineCombo.refresh()
+        }
+    }
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
     function save() { if (pid.length) App.setVoiceConfig(pid, cfg) }
     onPidChanged: reload()
@@ -203,6 +215,62 @@ Item {
                     spacing: 14
 
                     Item { height: 8; width: 1 }
+
+                    Text { text: "Motor STT gestionado (la app descarga y lanza)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    GridLayout {
+                        columns: 2; columnSpacing: 12; rowSpacing: 8
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+
+                        Text { text: "Motor"; color: Theme.textSecondary }
+                        LcComboBox {
+                            id: sttEngineCombo
+                            Layout.fillWidth: true
+                            property var opts: [{ id: "", name: "Manual (endpoint propio, abajo)" }].concat(App.voiceSttCatalog())
+                            function refresh() { opts = [{ id: "", name: "Manual (endpoint propio, abajo)" }].concat(App.voiceSttCatalog()) }
+                            textRole: "name"
+                            model: opts
+                            Component.onCompleted: {
+                                var cur = page.cfg.sttManagedEngine || ""
+                                for (var i = 0; i < opts.length; ++i) if (opts[i].id === cur) { currentIndex = i; break }
+                            }
+                            onActivated: { page.cfg.sttManagedEngine = opts[currentIndex].id; page.save() }
+                        }
+
+                        Text { text: "Estado"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 8
+                            visible: (page.cfg.sttManagedEngine || "") !== ""
+                            Text {
+                                Layout.fillWidth: true
+                                color: Theme.textMuted; font.pixelSize: 12
+                                text: page.installPct >= 0 ? page.installMsg
+                                      : (App.voiceModelInstalled(page.cfg.sttManagedEngine || "") ? "Instalado ✓"
+                                         : (page.installMsg.length ? page.installMsg : "No instalado"))
+                            }
+                            LcButton {
+                                text: page.installPct >= 0 ? "Cancelar" : "Instalar modelo"
+                                secondary: true
+                                visible: page.installPct >= 0 || !App.voiceModelInstalled(page.cfg.sttManagedEngine || "")
+                                onClicked: {
+                                    if (page.installPct >= 0) App.cancelVoiceModelInstall()
+                                    else App.installVoiceModel(page.cfg.sttManagedEngine)
+                                }
+                            }
+                        }
+
+                        Text { text: "Binario whisper-server"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 6
+                            visible: (page.cfg.sttManagedEngine || "") !== ""
+                            LcTextField {
+                                Layout.fillWidth: true
+                                placeholderText: "ruta a whisper-server (vacío = PATH)"
+                                text: App.voiceWhisperServerPath()
+                                onEditingFinished: App.setVoiceWhisperServerPath(text)
+                            }
+                            LcButton { text: "…"; secondary: true; onClicked: App.pickVoiceWhisperServer() }
+                        }
+                    }
 
                     Text { text: "Reconocimiento de voz (STT)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
                     GridLayout {

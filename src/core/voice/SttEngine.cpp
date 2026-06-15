@@ -60,7 +60,10 @@ void SttEngine::transcribe(const QByteArray &pcm16, int sampleRate)
 
     QString base = m_cfg.sttBaseUrl;
     while (base.endsWith('/')) base.chop(1);
-    QNetworkRequest req(QUrl(base + QStringLiteral("/v1/audio/transcriptions")));
+    QString path = m_cfg.sttEndpointPath.isEmpty()
+        ? QStringLiteral("/v1/audio/transcriptions") : m_cfg.sttEndpointPath;
+    if (!path.startsWith('/')) path.prepend('/');
+    QNetworkRequest req(QUrl(base + path));
     req.setHeader(QNetworkRequest::ContentTypeHeader,
                   "multipart/form-data; boundary=" + boundary);
     if (m_cfg.sttIsCloud() && !m_key.isEmpty())
