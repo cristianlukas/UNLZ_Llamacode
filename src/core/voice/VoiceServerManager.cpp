@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QUrl>
 #include <QPair>
+#include <QProcess>
+#include <QDirIterator>
 
 namespace {
 // Catálogo declarativo. Las URLs de modelos ggml de whisper.cpp viven en HF
@@ -251,4 +253,124 @@ void VoiceServerManager::cancelInstall()
 {
     m_dlQueue.clear();
     if (m_reply) m_reply->abort();
+}
+
+// ── Binarios ─────────────────────────────────────────────────────────────────
+
+QString VoiceServerManager::binDir()
+{
+    return installRoot() + QStringLiteral("/bin");
+}
+
+QString VoiceServerManager::defaultBinaryUrl(const QString &kind)
+{
+#if defined(Q_OS_WIN)
+    if (kind == QLatin1String("piper"))
+        return QStringLiteral("https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip");
+    if (kind == QLatin1String("whisper-server"))
+        return QStringLiteral("https://github.com/ggerganov/whisper.cpp/releases/download/v1.7.4/whisper-bin-x64.zip");
+#elif defined(Q_OS_LINUX)
+    if (kind == QLatin1String("piper"))
+        return QStringLiteral("https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz");
+    // whisper.cpp no publica binario Linux prearmado → vacío (se compila).
+#endif
+    return {};
+}
+
+void VoiceServerManager::installBinary(const QString &kind, const QString &urlOverride)
+{
+    if (m_reply || m_extractProc) {
+        emit binaryInstalled(kind, false, QString(), QStringLiteral("instalación en curso")); return;
+    }
+    const QString url = urlOverride.isEmpty() ? defaultBinaryUrl(kind) : urlOverride;
+    if (url.isEmpty()) {
+        emit binaryInstalled(kind, false, QString(),
+            QStringLiteral("sin binario prearmado para esta plataforma; configurá la ruta a mano"));
+        return;
+    }
+    const QString destDir = binDir() + QStringLiteral("/") + kind;
+    QDir(destDir).removeRecursively();
+    QDir().mkpath(destDir);
+    const bool targz = url.endsWith(QLatin1String(".tar.gz")) || url.endsWith(QLatin1String(".tgz"));
+    const QString archive = destDir + (targz ? QStringLiteral("/_dl.tar.gz") : QStringLiteral("/_dl.zip"));
+
+    m_binKind = kind;
+    m_file = new QFile(archive);
+    if (!m_file->open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        delete m_file; m_file = nullptr;
+        emit binaryInstalled(kind, false, QString(), QStringLiteral("no se pudo escribir el archivo")); return;
+    }
+    emit installProgress(kind, 0, QStringLiteral("Descargando binario…"));
+    QNetworkRequest req((QUrl(url)));
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                     QNetworkRequest::NoLessSafeRedirectPolicy);
+    m_reply = m_nam.get(req);
+    connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
+        if (m_file) m_file->write(m_reply->readAll());
+    });
+    connect(m_reply, &QNetworkReply::downloadProgress, this, [this, kind](qint64 r, qint64 t) {
+        const int pct = (t > 0) ? int(r * 90 / t) : 0;   // 0–90% descarga, 90–100 extracción
+        emit installProgress(kind, pct, QStringLiteral("Descargando binario… %1%").arg(pct));
+    });
+    connect(m_reply, &QNetworkReply::finished, this, [this, kind, archive, destDir]() {
+        QNetworkReply *r = m_reply; m_reply = nullptr;
+        const bool ok = (r->error() == QNetworkReply::NoError);
+        const QString err = r->errorString();
+        if (m_file) { m_file->write(r->readAll()); m_file->close(); delete m_file; m_file = nullptr; }
+        r->deleteLater();
+        if (!ok) { emit binaryInstalled(kind, false, QString(), err); return; }
+        emit installProgress(kind, 92, QStringLiteral("Extrayendo…"));
+        extractAndLocate(kind, archive, destDir);
+    });
+}
+
+void VoiceServerManager::extractAndLocate(const QString &kind, const QString &archive,
+                                          const QString &destDir)
+{
+    m_extractProc = new QProcess(this);
+    QString prog; QStringList args;
+#if defined(Q_OS_WIN)
+    if (archive.endsWith(QLatin1String(".zip"))) {
+        prog = QStringLiteral("powershell");
+        args << QStringLiteral("-NoProfile") << QStringLiteral("-Command")
+             << QStringLiteral("Expand-Archive -Force -LiteralPath '%1' -DestinationPath '%2'")
+                .arg(archive, destDir);
+    } else {
+        prog = QStringLiteral("tar"); args << QStringLiteral("-xf") << archive
+             << QStringLiteral("-C") << destDir;
+    }
+#else
+    prog = QStringLiteral("tar"); args << QStringLiteral("-xf") << archive
+         << QStringLiteral("-C") << destDir;
+#endif
+    connect(m_extractProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, kind, destDir, archive](int code, QProcess::ExitStatus) {
+        QProcess *p = m_extractProc; m_extractProc = nullptr;
+        if (p) p->deleteLater();
+        QFile::remove(archive);
+        if (code != 0) { emit binaryInstalled(kind, false, QString(), QStringLiteral("falló la extracción")); return; }
+        // Localizar el ejecutable extraído.
+        QStringList names;
+        if (kind == QLatin1String("piper")) names << "piper.exe" << "piper";
+        else names << "whisper-server.exe" << "server.exe" << "whisper-server" << "server";
+        QString found;
+        QDirIterator it(destDir, QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            it.next();
+            if (names.contains(it.fileName(), Qt::CaseInsensitive)) { found = it.filePath(); break; }
+        }
+        if (found.isEmpty())
+            emit binaryInstalled(kind, false, QString(),
+                QStringLiteral("descargado pero no se encontró el ejecutable en el paquete"));
+        else {
+            emit installProgress(kind, 100, QStringLiteral("Listo"));
+            emit binaryInstalled(kind, true, found, QString());
+        }
+    });
+    connect(m_extractProc, &QProcess::errorOccurred, this, [this, kind](QProcess::ProcessError) {
+        if (!m_extractProc) return;
+        m_extractProc->deleteLater(); m_extractProc = nullptr;
+        emit binaryInstalled(kind, false, QString(), QStringLiteral("no se pudo extraer (falta tar/powershell)"));
+    });
+    m_extractProc->start(prog, args);
 }

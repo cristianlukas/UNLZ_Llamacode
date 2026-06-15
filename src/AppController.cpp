@@ -198,6 +198,14 @@ AppController::AppController(QObject *parent) : QObject(parent)
             this, &AppController::voiceInstallProgress);
     connect(&m_voiceServers, &VoiceServerManager::installFinished,
             this, &AppController::voiceInstallFinished);
+    connect(&m_voiceServers, &VoiceServerManager::binaryInstalled, this,
+            [this](const QString &kind, bool ok, const QString &path, const QString &msg) {
+        if (ok) {
+            if (kind == QLatin1String("piper")) setVoicePiperPath(path);
+            else setVoiceWhisperServerPath(path);
+        }
+        emit voiceBinaryInstalled(kind, ok, ok ? path : msg);
+    });
     QSettings s;
     m_language = s.value(QStringLiteral("language"), QStringLiteral("es")).toString();
     m_agentApprovalMode = s.value(QStringLiteral("agent/approvalMode"), QStringLiteral("ask")).toString();
@@ -8401,6 +8409,16 @@ QString AppController::pickVoicePiper()
 #endif
     if (!p.isEmpty()) setVoicePiperPath(p);
     return p;
+}
+
+void AppController::installVoiceBinary(const QString &kind, const QString &urlOverride)
+{
+    m_voiceServers.installBinary(kind, urlOverride);
+}
+
+QString AppController::voiceBinaryDefaultUrl(const QString &kind) const
+{
+    return VoiceServerManager::defaultBinaryUrl(kind);
 }
 
 void AppController::startManagedStt(const VoiceConfig &c)

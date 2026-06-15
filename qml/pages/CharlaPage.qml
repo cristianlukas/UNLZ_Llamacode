@@ -15,6 +15,8 @@ Item {
     property bool testing: false
     property int installPct: -1
     property string installMsg: ""
+    property string whisperPath: App.voiceWhisperServerPath()
+    property string piperPath: App.voicePiperPath()
 
     Connections {
         target: App
@@ -24,6 +26,11 @@ Item {
             page.installMsg = ok ? "Instalado ✓" : ("Error: " + message)
             sttEngineCombo.refresh()
             ttsVoiceCombo.refresh()
+        }
+        function onVoiceBinaryInstalled(kind, ok, message) {
+            page.whisperPath = App.voiceWhisperServerPath()
+            page.piperPath = App.voicePiperPath()
+            page.installMsg = ok ? "Binario instalado ✓" : ("Error binario: " + message)
         }
     }
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
@@ -266,10 +273,11 @@ Item {
                             LcTextField {
                                 Layout.fillWidth: true
                                 placeholderText: "ruta a whisper-server (vacío = PATH)"
-                                text: App.voiceWhisperServerPath()
-                                onEditingFinished: App.setVoiceWhisperServerPath(text)
+                                text: page.whisperPath
+                                onEditingFinished: { App.setVoiceWhisperServerPath(text); page.whisperPath = text }
                             }
-                            LcButton { text: "…"; secondary: true; onClicked: App.pickVoiceWhisperServer() }
+                            LcButton { text: "Descargar"; secondary: true; onClicked: App.installVoiceBinary("whisper-server", "") }
+                            LcButton { text: "…"; secondary: true; onClicked: { App.pickVoiceWhisperServer(); page.whisperPath = App.voiceWhisperServerPath() } }
                         }
                     }
 
@@ -365,10 +373,11 @@ Item {
                             LcTextField {
                                 Layout.fillWidth: true
                                 placeholderText: "ruta a piper (vacío = PATH)"
-                                text: App.voicePiperPath()
-                                onEditingFinished: App.setVoicePiperPath(text)
+                                text: page.piperPath
+                                onEditingFinished: { App.setVoicePiperPath(text); page.piperPath = text }
                             }
-                            LcButton { text: "…"; secondary: true; onClicked: App.pickVoicePiper() }
+                            LcButton { text: "Descargar"; secondary: true; onClicked: App.installVoiceBinary("piper", "") }
+                            LcButton { text: "…"; secondary: true; onClicked: { App.pickVoicePiper(); page.piperPath = App.voicePiperPath() } }
                         }
                     }
 

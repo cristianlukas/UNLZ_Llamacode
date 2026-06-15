@@ -44,6 +44,14 @@ public:
     void cancelInstall();
     bool installing() const { return m_reply != nullptr; }
 
+    // ── Binarios (whisper-server / piper): descarga del release + extracción ──
+    // kind: "whisper-server" | "piper". URL por defecto por SO (overridable).
+    static QString defaultBinaryUrl(const QString &kind);
+    static QString binDir();
+    // Descarga el archivo (zip/tar.gz), lo extrae y localiza el ejecutable.
+    // urlOverride vacío = usar defaultBinaryUrl. Emite binaryInstalled(kind,ok,path,msg).
+    void installBinary(const QString &kind, const QString &urlOverride = QString());
+
     // ── Funciones puras (testeables) ──
     // Args de whisper-server: -m <model> --host <h> --port <p> [-l <lang>].
     static QStringList buildWhisperArgs(const QString &modelPath, const QString &host,
@@ -56,6 +64,8 @@ public:
 signals:
     void installProgress(const QString &engineId, int pct, const QString &status);
     void installFinished(const QString &engineId, bool ok, const QString &message);
+    // Fin de la instalación de un binario: path = ejecutable localizado (si ok).
+    void binaryInstalled(const QString &kind, bool ok, const QString &path, const QString &message);
 
 private:
     // Descarga secuencial de una lista de (url, destino). Emite progreso global.
@@ -68,4 +78,9 @@ private:
     QString m_engineId;
     QList<QPair<QString, QString>> m_dlQueue;  // pendientes (url, dest)
     int m_dlTotal = 0;                          // total de archivos del job
+
+    // Instalación de binarios (descarga + extracción).
+    void extractAndLocate(const QString &kind, const QString &archive, const QString &destDir);
+    QString m_binKind;
+    class QProcess *m_extractProc = nullptr;
 };

@@ -537,6 +537,10 @@ public:
     Q_INVOKABLE QString voicePiperPath() const;
     Q_INVOKABLE void setVoicePiperPath(const QString &path);
     Q_INVOKABLE QString pickVoicePiper();
+    // Auto-descarga de binarios (kind: "whisper-server"|"piper"). Al terminar OK
+    // fija la ruta correspondiente. urlOverride vacío = URL por defecto del SO.
+    Q_INVOKABLE void installVoiceBinary(const QString &kind, const QString &urlOverride = QString());
+    Q_INVOKABLE QString voiceBinaryDefaultUrl(const QString &kind) const;
 
 signals:
     void voiceStateChanged();
@@ -544,6 +548,7 @@ signals:
     void voicePartialChanged();
     void voiceInstallProgress(const QString &engineId, int pct, const QString &status);
     void voiceInstallFinished(const QString &engineId, bool ok, const QString &message);
+    void voiceBinaryInstalled(const QString &kind, bool ok, const QString &message);
     // Un perfil cloud necesita su API key y no se pudo resolver (ni env var ni store):
     // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
     void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
