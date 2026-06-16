@@ -5204,14 +5204,14 @@ static int architectureBonus(const QString &name, const QString &arch)
     return 0;
 }
 
-// Composite score ported from Odysseus services/hwfit/fit.py — quality/speed/fit/context
-// weighted at the "general" use-case (0.45/0.30/0.15/0.10). No popularity term, and
-// coder-specialised models are penalised in a general scan so they don't dominate.
+// Composite score: quality/speed/fit/context. Quality intentionally dominates so
+// a GPU with enough headroom is not filled with tiny models just because their
+// estimated tokens/s is high. No popularity term, and coder-specialised models
+// are penalised in a general scan so they don't dominate.
 static int catalogScore(const QJsonObject &model, double paramsB, double requiredGb, double ramGb, double vramGb,
-                        const QString &quant, const QString &caps, int ctx, const QString &fit, double tps,
+                        const QString &quant, const QString &caps, int ctx, const QString &runMode, double tps,
                         double benchmarkQuality)
 {
-    Q_UNUSED(fit)
     // ── quality ──
     // Prefer a real benchmark (Artificial Analysis Intelligence Index, remapped
     // to a 0-100 quality) when we have one for this model; the quant tier still
@@ -5249,8 +5249,13 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
     // ── speed ── target 40 t/s at general use case
     const double speedScore = qBound(0.0, (tps / 40.0) * 100.0, 100.0);
 
-    // ── fit ── tiered ratio of required vs budget (Odysseus _fit_score)
-    const double budget = vramGb > 0 ? vramGb : ramGb;
+    // ── fit ── tiered ratio of required vs budget. For partial offload, include
+    // usable system RAM; otherwise 7B/8B models that run fine on 8 GB NVIDIA
+    // cards get a zero fit score only because the 32k KV cache spills slightly.
+    const double usableRamGb = ramGb * 0.9;
+    const double budget = runMode == QLatin1String("partial_offload") ? (vramGb + usableRamGb)
+                        : vramGb > 0 ? vramGb
+                        : usableRamGb;
     double fitScore = 0;
     if (budget > 0 && requiredGb <= budget) {
         const double ratio = requiredGb / budget;
@@ -5258,6 +5263,8 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
         else if (ratio <= 0.8) fitScore = 100;
         else if (ratio <= 0.9) fitScore = 70;
         else fitScore = 50;
+        if (runMode == QLatin1String("partial_offload"))
+            fitScore = qMax(55.0, fitScore - 10.0);
     }
 
     // ── context ── modern agent target is 32k+, not a token 4k window
@@ -5267,7 +5274,17 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
                           : ctx >= 4096  ? 50
                           : 30;
 
-    const double composite = quality * 0.45 + speedScore * 0.30 + fitScore * 0.15 + ctxScore * 0.10;
+    double composite = quality * 0.60 + speedScore * 0.15 + fitScore * 0.15 + ctxScore * 0.10;
+    if (vramGb >= 7.0 && paramsB >= 7.0 && paramsB <= 10.0)
+        composite += 5.0; // 7B/8B Q4 is the useful sweet spot for 8 GB NVIDIA cards.
+    else if (vramGb >= 7.0 && paramsB < 4.0)
+        composite -= 3.0; // keep small/fast models available, but not as default winners.
+
+    if (runMode == QLatin1String("partial_offload") && tps < 5.0)
+        composite = qMin(composite, 68.0);
+    else if (runMode == QLatin1String("partial_offload") && tps < 10.0)
+        composite = qMin(composite, 74.0);
+
     return qBound(0, qRound(composite), 100);
 }
 
@@ -5422,7 +5439,7 @@ void AppController::rebuildModelRecommendations()
                 ? 0.0
                 : catalogSpeedTps(gpuName, activeB, requiredGb, runMode, gpuFraction);
             const double benchQuality = m_benchmarkQuality.value(benchmarkKey(name), -1.0);
-            const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, fit, tps, benchQuality);
+            const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, runMode, tps, benchQuality);
 
             QVariantMap row;
             row[QStringLiteral("name")] = name;
