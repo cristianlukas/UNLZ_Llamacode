@@ -261,6 +261,8 @@ public:
     Q_INVOKABLE void startServerAndAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void computeEffectiveProfile(const QString &launchProfileId);
+    Q_INVOKABLE QVariantMap launchPortStatus(const QString &launchProfileId);
+    Q_INVOKABLE bool setLaunchBackendPort(const QString &launchProfileId, int port);
     // Recalcula la vista previa desde valores en memoria del editor, sin persistir.
     Q_INVOKABLE void computeEffectiveProfilePreview(const QString &launchProfileId,
                                                     const QVariantMap &overrides);

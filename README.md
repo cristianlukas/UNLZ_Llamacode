@@ -414,6 +414,9 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 - **Vista previa del comando** con botón *Copiar*.
 - **Iniciar servidor + agente** — levanta `llama-server` y el harness de agente.
 - **Iniciar solo servidor** — solo `llama-server`, sin agente.
+- **Puerto ocupado** — antes de iniciar, detecta si el puerto del perfil está en
+  uso; si hay otro libre cercano, pregunta si se desea cambiar el perfil a ese
+  puerto y recién después lanza.
 - **Endpoint OpenAI** — con el server corriendo muestra `http://<host>:<port>/v1` (read-only, seleccionable) + botón *Copiar*, para apuntar agentes externos (opencode, aider, etc.) al backend local.
 
 ## Process Lifecycle

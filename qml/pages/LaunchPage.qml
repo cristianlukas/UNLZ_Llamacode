@@ -10,6 +10,94 @@ Item {
     property real minLogHeight: 120
     property bool _restored: false   // evita pisar la setting durante la carga inicial
 
+    function startWithPortCheck(withAgent) {
+        const launchId = launchCombo.currentValue ?? ""
+        if (!launchId || launchId.length === 0)
+            return
+        const st = App.launchPortStatus(launchId)
+        if (st.blocked === true && (st.suggestedPort ?? 0) > 0) {
+            portConflictDialog.launchId = launchId
+            portConflictDialog.withAgent = withAgent
+            portConflictDialog.currentPort = st.port ?? 8080
+            portConflictDialog.suggestedPort = st.suggestedPort
+            portConflictDialog.host = st.host ?? "127.0.0.1"
+            portConflictDialog.open()
+            return
+        }
+        if (withAgent)
+            App.startServerAndAgent(launchId)
+        else
+            App.startServer(launchId)
+    }
+
+    Dialog {
+        id: portConflictDialog
+        modal: true
+        width: 430
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+        closePolicy: Popup.CloseOnEscape
+
+        property string launchId: ""
+        property bool withAgent: true
+        property int currentPort: 8080
+        property int suggestedPort: 8081
+        property string host: "127.0.0.1"
+
+        background: Rectangle {
+            color: Theme.surfaceBg
+            radius: 8
+            border.color: Theme.borderColor
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                text: "Puerto ocupado"
+                color: Theme.textPrimary
+                font { pixelSize: 16; bold: true }
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "El puerto " + portConflictDialog.currentPort + " ya está en uso en " + portConflictDialog.host
+                      + ". ¿Desea cambiar al puerto " + portConflictDialog.suggestedPort + "?"
+                color: Theme.textSecondary
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Se actualizará el backend de este perfil y luego se iniciará "
+                      + (portConflictDialog.withAgent ? "el servidor + agente." : "el servidor.")
+                color: Theme.textMuted
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        footer: RowLayout {
+            spacing: 8
+            Item { Layout.fillWidth: true }
+            LcButton {
+                text: "Cancelar"
+                secondary: true
+                onClicked: portConflictDialog.close()
+            }
+            LcButton {
+                text: "Cambiar puerto"
+                onClicked: {
+                    if (App.setLaunchBackendPort(portConflictDialog.launchId, portConflictDialog.suggestedPort)) {
+                        portConflictDialog.close()
+                        if (portConflictDialog.withAgent)
+                            App.startServerAndAgent(portConflictDialog.launchId)
+                        else
+                            App.startServer(portConflictDialog.launchId)
+                    }
+                }
+            }
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
@@ -145,7 +233,7 @@ Item {
                         enabled: !App.serverStopping && launchCombo.count > 0 && (launchCombo.currentValue !== undefined || App.serverRunning)
                         onClicked: {
                             if (App.serverRunning) App.stopServer()
-                            else App.startServerAndAgent(launchCombo.currentValue ?? "")
+                            else root.startWithPortCheck(true)
                         }
                     }
 
@@ -263,7 +351,7 @@ Item {
                     Layout.fillWidth: true
                     visible: !App.serverRunning && !App.serverStopping
                     enabled: launchCombo.count > 0 && launchCombo.currentValue !== undefined
-                    onClicked: App.startServer(launchCombo.currentValue ?? "")
+                    onClicked: root.startWithPortCheck(false)
                 }
 
                 // --- Router mode (hot-swap entre varios modelos) ---------------
