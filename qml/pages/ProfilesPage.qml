@@ -156,11 +156,21 @@ Item {
         return true
     }
 
+    function createDefaultHarnessProfile(prefix) {
+        return App.profileManager.addHarness(prefix + " · LlamaAgent", "llamaagent")
+    }
+
     function newProfile() {
         const bId = App.profileManager.addBackend("Backend", "", "127.0.0.1", 8080)
         const mId = App.profileManager.addModelProfile("Model", "", "", "")
         const rId = App.profileManager.addRuntimePreset("Runtime", 4096, 512, -1, false, true)
+        const hId = createDefaultHarnessProfile("Nuevo perfil")
         const lId = App.profileManager.addLaunchProfile("Nuevo perfil", bId, mId, rId)
+        App.profileManager.updateLaunchProfile({
+            "id": lId, "name": "Nuevo perfil",
+            "backendProfileId": bId, "modelProfileId": mId, "runtimePresetId": rId,
+            "harnessProfileId": hId
+        })
         selectProfile(lId)
     }
 
@@ -226,15 +236,16 @@ Item {
             "contBatching": contBatch, "cacheType": cacheType, "parallelSlots": parallel
         })
         const lId = App.profileManager.addLaunchProfile(profileName, bId, mId, rId)
+        const hId = createDefaultHarnessProfile(profileName)
         // Put unparsed args + model path as extraArgs if needed
         const extras = extra.slice()
         if (modelPath.length > 0) extras.unshift(modelPath, '--model')
-        if (extras.length > 0)
-            App.profileManager.updateLaunchProfile({
-                "id": lId, "name": profileName,
-                "backendProfileId": bId, "modelProfileId": mId, "runtimePresetId": rId,
-                "extraArgs": extras, "envOverrides": {}
-            })
+        App.profileManager.updateLaunchProfile({
+            "id": lId, "name": profileName,
+            "backendProfileId": bId, "modelProfileId": mId, "runtimePresetId": rId,
+            "harnessProfileId": hId,
+            "extraArgs": extras, "envOverrides": {}
+        })
         selectProfile(lId)
     }
 
@@ -261,6 +272,7 @@ Item {
         App.profileManager.updateLaunchProfile({
             "id": lId, "name": (lp.name ?? "Perfil") + " (copia)",
             "backendProfileId": bId, "modelProfileId": mId, "runtimePresetId": rId,
+            "harnessProfileId": lp.harnessProfileId ?? "",
             "extraArgs": lp.extraArgs ?? [], "envOverrides": lp.envOverrides ?? {}
         })
         selectProfile(lId)

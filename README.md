@@ -294,6 +294,10 @@ Calculado contra VRAM (`nvidia-smi`) y RAM del sistema (90% utilizable como head
 | `WorkspaceProfile` | cwd / políticas / permisos de shell |
 | `LaunchProfile` | composición de los 5 anteriores + overrides |
 
+Los perfiles nuevos creados desde la UI seleccionan `LlamaAgent` como harness
+por defecto. Al duplicar un `LaunchProfile`, se conserva explícitamente la
+selección de harness del perfil original.
+
 ### Importador de perfiles desde CLI
 
 Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n-gpu-layers 99`) y UNLZ_Llamacode extrae y configura automáticamente todos los parámetros reconocidos.
