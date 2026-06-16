@@ -138,7 +138,8 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: (App.modelDownloadRunning || App.modelDownloadStatus.length > 0) ? 242 : 210
+            Layout.preferredHeight: App.modelDownloadQueue.length > 0 ? 300
+                                  : ((App.modelDownloadRunning || App.modelDownloadStatus.length > 0) ? 242 : 210)
             color: Theme.baseBg
             border.color: Theme.borderColor
             border.width: 0
@@ -243,7 +244,7 @@ Item {
                                     LcButton {
                                         text: "Download"
                                         Layout.preferredHeight: 34
-                                        enabled: !App.modelDownloadRunning && (item.downloadable ?? true)
+                                        enabled: item.downloadable ?? true
                                         onClicked: App.downloadRecommendedModel(item.repo ?? "", item.fileName ?? "")
                                     }
                                     LcButton {
@@ -260,7 +261,8 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    visible: App.modelDownloadRunning || App.modelDownloadStatus.length > 0
+                    visible: App.modelDownloadQueue.length === 0
+                             && (App.modelDownloadRunning || App.modelDownloadStatus.length > 0)
                     Layout.preferredHeight: visible ? 26 : 0
                     spacing: 8
                     ProgressBar {
@@ -285,6 +287,135 @@ Item {
                         color: App.modelDownloadRunning ? Theme.accent : Theme.textMuted
                         font.pixelSize: 11
                         elide: Text.ElideMiddle
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: App.modelDownloadQueue.length > 0
+                    Layout.preferredHeight: visible ? 74 : 0
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text {
+                            text: "Cola de descargas"
+                            color: Theme.textPrimary
+                            font { pixelSize: 12; bold: true }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: App.modelDownloadRunning ? "Descargando 1 a la vez" : "Sin descarga activa"
+                            color: Theme.textMuted
+                            font.pixelSize: 11
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+
+                    ListView {
+                        id: downloadQueueList
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 46
+                        clip: true
+                        orientation: ListView.Horizontal
+                        spacing: 8
+                        model: App.modelDownloadQueue
+
+                        delegate: Rectangle {
+                            width: Math.min(520, Math.max(360, downloadQueueList.width * 0.32))
+                            height: 46
+                            radius: 7
+                            color: (modelData.active ?? false) ? Theme.inputBg : Theme.surfaceBg
+                            border.color: (modelData.active ?? false) ? Theme.accent : Theme.borderColor
+
+                            readonly property string state: modelData.state ?? ""
+                            readonly property int progress: modelData.progress ?? 0
+                            readonly property bool active: modelData.active ?? false
+                            readonly property bool paused: state === "paused"
+                            readonly property bool movable: !active && state !== "done"
+
+                            ColumnLayout {
+                                anchors { fill: parent; margins: 7 }
+                                spacing: 4
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: modelData.fileName ?? ""
+                                        color: Theme.textPrimary
+                                        font { pixelSize: 11; bold: true }
+                                        elide: Text.ElideMiddle
+                                    }
+                                    Text {
+                                        text: paused ? "Pausada"
+                                             : state === "queued" ? "En cola"
+                                             : state === "done" ? "Lista"
+                                             : state === "error" ? "Error"
+                                             : "Activa"
+                                        color: state === "error" ? Theme.errorText
+                                             : state === "done" ? Theme.successText
+                                             : active ? Theme.accent : Theme.textMuted
+                                        font.pixelSize: 10
+                                    }
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 6
+                                        radius: 3
+                                        color: Theme.baseBg
+                                        Rectangle {
+                                            width: parent.width * (progress / 100)
+                                            height: parent.height
+                                            radius: 3
+                                            color: state === "error" ? Theme.errorText
+                                                 : state === "done" ? Theme.successText : Theme.accent
+                                        }
+                                    }
+                                    Text {
+                                        text: progress + "%"
+                                        color: Theme.textMuted
+                                        font.pixelSize: 10
+                                    }
+                                    LcButton {
+                                        text: paused || state === "error" ? "▶" : "Ⅱ"
+                                        secondary: true
+                                        implicitWidth: 30
+                                        implicitHeight: 22
+                                        visible: state !== "done"
+                                        onClicked: paused || state === "error"
+                                                   ? App.resumeModelDownload(modelData.id ?? "")
+                                                   : App.pauseModelDownload(modelData.id ?? "")
+                                    }
+                                    LcButton {
+                                        text: "↑"
+                                        secondary: true
+                                        implicitWidth: 26
+                                        implicitHeight: 22
+                                        enabled: movable && index > 0
+                                        visible: state !== "done"
+                                        onClicked: App.moveModelDownload(modelData.id ?? "", -1)
+                                    }
+                                    LcButton {
+                                        text: "↓"
+                                        secondary: true
+                                        implicitWidth: 26
+                                        implicitHeight: 22
+                                        enabled: movable && index < App.modelDownloadQueue.length - 1
+                                        visible: state !== "done"
+                                        onClicked: App.moveModelDownload(modelData.id ?? "", 1)
+                                    }
+                                    LcButton {
+                                        text: "✕"
+                                        secondary: true
+                                        implicitWidth: 28
+                                        implicitHeight: 22
+                                        onClicked: App.cancelModelDownload(modelData.id ?? "")
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -614,7 +745,7 @@ Item {
                             LcButton {
                                 text: "Download"
                                 Layout.preferredHeight: 34
-                                enabled: !App.modelDownloadRunning && (item.downloadable ?? true)
+                                enabled: item.downloadable ?? true
                                 onClicked: App.downloadRecommendedModel(item.repo ?? "", item.fileName ?? "")
                             }
                             LcButton {

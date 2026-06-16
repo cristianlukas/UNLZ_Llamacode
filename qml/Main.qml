@@ -496,9 +496,9 @@ ApplicationWindow {
                             }
                         }
                         LcButton {
-                            text: App.modelDownloadRunning ? "Descargando..." : "Descargar"
+                            text: App.modelDownloadRunning ? "Agregar a cola" : "Descargar"
                             Layout.preferredHeight: 34
-                            enabled: !App.modelDownloadRunning && (setupReco.pick.downloadable ?? true)
+                            enabled: setupReco.pick.downloadable ?? true
                             onClicked: App.downloadRecommendedModel(setupReco.pick.repo ?? "",
                                                                     setupReco.pick.fileName ?? "")
                         }

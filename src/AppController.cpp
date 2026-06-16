@@ -5814,50 +5814,178 @@ void AppController::openModelRecommendation(const QString &repo)
     QDesktopServices::openUrl(QUrl(QStringLiteral("https://huggingface.co/%1").arg(repo)));
 }
 
+QVariantMap AppController::modelDownloadItemToMap(const ModelDownloadItem &item) const
+{
+    QVariantMap m;
+    m[QStringLiteral("id")] = item.id;
+    m[QStringLiteral("repo")] = item.repo;
+    m[QStringLiteral("fileName")] = item.fileName;
+    m[QStringLiteral("path")] = item.outPath;
+    m[QStringLiteral("state")] = item.state;
+    m[QStringLiteral("status")] = item.status;
+    m[QStringLiteral("progress")] = item.progress;
+    m[QStringLiteral("receivedMb")] = item.received / 1024 / 1024;
+    m[QStringLiteral("totalMb")] = item.total / 1024 / 1024;
+    m[QStringLiteral("active")] = item.id == m_activeModelDownloadId;
+    return m;
+}
+
+QVariantList AppController::modelDownloadQueue() const
+{
+    QVariantList out;
+    for (const ModelDownloadItem &item : m_modelDownloadQueue)
+        out.append(modelDownloadItemToMap(item));
+    return out;
+}
+
+int AppController::modelDownloadIndexById(const QString &id) const
+{
+    for (int i = 0; i < m_modelDownloadQueue.size(); ++i)
+        if (m_modelDownloadQueue[i].id == id)
+            return i;
+    return -1;
+}
+
+void AppController::emitModelDownloadChanged()
+{
+    m_modelDownloadProgress = 0;
+    m_modelDownloadStatus.clear();
+    if (m_modelDownloadReply && !m_activeModelDownloadId.isEmpty()) {
+        const int idx = modelDownloadIndexById(m_activeModelDownloadId);
+        if (idx >= 0) {
+            m_modelDownloadProgress = m_modelDownloadQueue[idx].progress;
+            m_modelDownloadStatus = m_modelDownloadQueue[idx].status;
+            m_modelDownloadPath = m_modelDownloadQueue[idx].outPath;
+        }
+    } else if (!m_modelDownloadQueue.isEmpty()) {
+        const ModelDownloadItem &item = m_modelDownloadQueue.first();
+        m_modelDownloadProgress = item.progress;
+        m_modelDownloadStatus = item.status;
+        m_modelDownloadPath = item.outPath;
+    }
+    emit modelDownloadChanged();
+}
+
+void AppController::scanModelDownloadRoot()
+{
+    const QString dir = modelDownloadDir();
+    QString existingRootId;
+    for (int i = 0; i < m_roots.rowCount(); ++i) {
+        const QModelIndex mi = m_roots.index(i, 0);
+        if (QDir::cleanPath(m_roots.data(mi, ModelRootRegistry::PathRole).toString()) == QDir::cleanPath(dir)) {
+            existingRootId = m_roots.data(mi, ModelRootRegistry::IdRole).toString();
+            break;
+        }
+    }
+    if (existingRootId.isEmpty())
+        m_roots.add(dir, QStringLiteral("Modelos descargados"), QStringLiteral("startup"), {});
+    else
+        m_roots.scan(existingRootId);
+}
+
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)
 {
-    if (repo.trimmed().isEmpty() || fileName.trimmed().isEmpty() || m_modelDownloadReply)
+    const QString cleanRepo = repo.trimmed();
+    const QString cleanFile = fileName.trimmed();
+    if (cleanRepo.isEmpty() || cleanFile.isEmpty())
         return;
 
     const QString dir = modelDownloadDir();
-    const QString outPath = dir + QLatin1Char('/') + QFileInfo(fileName).fileName();
+    const QString outPath = dir + QLatin1Char('/') + QFileInfo(cleanFile).fileName();
     const QString partPath = outPath + QStringLiteral(".part");
-    const QUrl url(QStringLiteral("https://huggingface.co/%1/resolve/main/%2")
-                       .arg(repo, QString::fromLatin1(QUrl::toPercentEncoding(fileName))));
 
-    auto scanDownloadRoot = [this, dir]() {
-        QString existingRootId;
-        for (int i = 0; i < m_roots.rowCount(); ++i) {
-            const QModelIndex mi = m_roots.index(i, 0);
-            if (QDir::cleanPath(m_roots.data(mi, ModelRootRegistry::PathRole).toString()) == QDir::cleanPath(dir)) {
-                existingRootId = m_roots.data(mi, ModelRootRegistry::IdRole).toString();
-                break;
-            }
+    for (const ModelDownloadItem &item : std::as_const(m_modelDownloadQueue)) {
+        if (item.outPath == outPath) {
+            m_modelDownloadStatus = QStringLiteral("Ya está en la cola: %1").arg(QFileInfo(outPath).fileName());
+            emitModelDownloadChanged();
+            return;
         }
-        if (existingRootId.isEmpty())
-            m_roots.add(dir, QStringLiteral("Modelos descargados"), QStringLiteral("startup"), {});
-        else
-            m_roots.scan(existingRootId);
-    };
+    }
 
+    ModelDownloadItem item;
+    item.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    item.repo = cleanRepo;
+    item.fileName = cleanFile;
+    item.outPath = outPath;
+    item.partPath = partPath;
+    item.state = QStringLiteral("queued");
+    item.status = QStringLiteral("En cola: %1").arg(QFileInfo(cleanFile).fileName());
+    m_modelDownloadQueue.append(item);
+    emitModelDownloadChanged();
+    startNextModelDownload();
+}
+
+void AppController::startNextModelDownload()
+{
+    if (m_modelDownloadReply)
+        return;
+    for (int i = 0; i < m_modelDownloadQueue.size(); ++i) {
+        if (m_modelDownloadQueue[i].state == QLatin1String("queued")) {
+            startModelDownload(i);
+            return;
+        }
+    }
+    m_activeModelDownloadId.clear();
+    emitModelDownloadChanged();
+}
+
+void AppController::startModelDownload(int index)
+{
+    if (index < 0 || index >= m_modelDownloadQueue.size() || m_modelDownloadReply)
+        return;
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
 
-    if (QFileInfo::exists(outPath)) {
+    ModelDownloadItem &item = m_modelDownloadQueue[index];
+    item.pauseRequested = false;
+    item.cancelRequested = false;
+    item.progress = 0;
+    item.received = QFileInfo(item.partPath).exists() ? QFileInfo(item.partPath).size() : 0;
+    item.total = 0;
+    item.resumeOffset = 0;
+    item.state = QStringLiteral("verifying");
+    item.status = QStringLiteral("Verificando %1...").arg(QFileInfo(item.fileName).fileName());
+    m_activeModelDownloadId = item.id;
+    emitModelDownloadChanged();
+
+    const QUrl url(QStringLiteral("https://huggingface.co/%1/resolve/main/%2")
+                       .arg(item.repo, QString::fromLatin1(QUrl::toPercentEncoding(item.fileName))));
+
+    if (QFileInfo::exists(item.outPath)) {
         QNetworkRequest headReq(url);
         headReq.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
         headReq.setTransferTimeout(0);
 
-        m_modelDownloadPath = outPath;
-        m_modelDownloadProgress = 0;
-        m_modelDownloadStatus = QStringLiteral("Verificando modelo existente...");
-        emit modelDownloadChanged();
-
         m_modelDownloadReply = m_nam->head(headReq);
-        connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this, repo, fileName, outPath, partPath, scanDownloadRoot]() {
+        connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this, url]() {
             QNetworkReply *reply = m_modelDownloadReply;
             m_modelDownloadReply = nullptr;
+            const QString id = m_activeModelDownloadId;
+            const int idx = modelDownloadIndexById(id);
+            if (idx < 0) {
+                if (reply) reply->deleteLater();
+                startNextModelDownload();
+                return;
+            }
+            ModelDownloadItem &cur = m_modelDownloadQueue[idx];
 
-            const qint64 localBytes = QFileInfo(outPath).size();
+            if (cur.pauseRequested) {
+                cur.state = QStringLiteral("paused");
+                cur.status = QStringLiteral("Pausada: %1").arg(QFileInfo(cur.fileName).fileName());
+                m_activeModelDownloadId.clear();
+                emitModelDownloadChanged();
+                startNextModelDownload();
+                return;
+            }
+            if (cur.cancelRequested) {
+                QFile::remove(cur.partPath);
+                m_modelDownloadQueue.removeAt(idx);
+                m_activeModelDownloadId.clear();
+                emitModelDownloadChanged();
+                startNextModelDownload();
+                return;
+            }
+
+            const qint64 localBytes = QFileInfo(cur.outPath).size();
             const qint64 remoteBytes = reply
                 ? reply->header(QNetworkRequest::ContentLengthHeader).toLongLong()
                 : -1;
@@ -5868,66 +5996,96 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
                 reply->deleteLater();
 
             if (checkedComplete || (remoteBytes <= 0 && !suspiciousSmall)) {
-                QFile::remove(partPath);
-                m_modelDownloadProgress = 100;
-                m_modelDownloadStatus = QStringLiteral("Ya existe: %1").arg(outPath);
-                emit modelDownloadChanged();
-                scanDownloadRoot();
+                QFile::remove(cur.partPath);
+                cur.progress = 100;
+                cur.received = localBytes;
+                cur.total = remoteBytes > 0 ? remoteBytes : localBytes;
+                finishModelDownloadItem(id, QStringLiteral("done"),
+                                        QStringLiteral("Ya existe: %1").arg(cur.outPath), 100, false);
+                scanModelDownloadRoot();
                 return;
             }
 
-            QFile::remove(outPath);
-            QFile::remove(partPath);
-            m_modelDownloadProgress = 0;
-            m_modelDownloadStatus = remoteBytes > 0
+            QFile::remove(cur.outPath);
+            cur.status = remoteBytes > 0
                 ? QStringLiteral("Archivo incompleto (%1/%2 MB). Reiniciando descarga...")
                     .arg(localBytes / 1024 / 1024)
                     .arg(remoteBytes / 1024 / 1024)
                 : QStringLiteral("Archivo incompleto eliminado. Reiniciando descarga...");
-            emit modelDownloadChanged();
-            QTimer::singleShot(0, this, [this, repo, fileName]() {
-                downloadRecommendedModel(repo, fileName);
-            });
+            cur.state = QStringLiteral("queued");
+            emitModelDownloadChanged();
+            QTimer::singleShot(0, this, [this]() { startNextModelDownload(); });
         });
         return;
     }
 
-    QFile::remove(partPath);
-    auto *file = new QFile(partPath, this);
-    if (!file->open(QIODevice::WriteOnly)) {
+    const qint64 resumeOffset = QFileInfo(item.partPath).exists() ? QFileInfo(item.partPath).size() : 0;
+    auto *file = new QFile(item.partPath, this);
+    if (!file->open(resumeOffset > 0 ? (QIODevice::WriteOnly | QIODevice::Append) : QIODevice::WriteOnly)) {
         file->deleteLater();
-        emit serverError(QStringLiteral("No se pudo escribir el modelo en %1").arg(partPath));
+        finishModelDownloadItem(item.id, QStringLiteral("error"),
+                                QStringLiteral("No se pudo escribir el modelo en %1").arg(item.partPath),
+                                0, false);
         return;
     }
 
     QNetworkRequest req(url);
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setTransferTimeout(0);
+    if (resumeOffset > 0)
+        req.setRawHeader("Range", QString("bytes=%1-").arg(resumeOffset).toLatin1());
 
     m_modelDownloadFile = file;
-    m_modelDownloadPath = outPath;
-    m_modelDownloadProgress = 0;
-    m_modelDownloadStatus = QStringLiteral("Descargando %1...").arg(fileName);
-    emit modelDownloadChanged();
+    item.resumeOffset = resumeOffset;
+    item.received = resumeOffset;
+    item.state = QStringLiteral("downloading");
+    item.status = resumeOffset > 0
+        ? QStringLiteral("Reanudando %1...").arg(QFileInfo(item.fileName).fileName())
+        : QStringLiteral("Descargando %1...").arg(QFileInfo(item.fileName).fileName());
+    emitModelDownloadChanged();
 
     m_modelDownloadReply = m_nam->get(req);
+    connect(m_modelDownloadReply, &QNetworkReply::metaDataChanged, this, [this]() {
+        const int idx = modelDownloadIndexById(m_activeModelDownloadId);
+        if (idx < 0 || !m_modelDownloadReply || !m_modelDownloadFile)
+            return;
+        ModelDownloadItem &cur = m_modelDownloadQueue[idx];
+        const int status = m_modelDownloadReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (cur.resumeOffset > 0 && status == 200) {
+            // El servidor ignoró Range: reiniciar el .part para no duplicar bytes.
+            m_modelDownloadFile->resize(0);
+            cur.resumeOffset = 0;
+            cur.received = 0;
+        }
+    });
     connect(m_modelDownloadReply, &QNetworkReply::readyRead, this, [this]() {
         if (m_modelDownloadFile && m_modelDownloadReply)
             m_modelDownloadFile->write(m_modelDownloadReply->readAll());
     });
     connect(m_modelDownloadReply, &QNetworkReply::downloadProgress, this, [this](qint64 received, qint64 total) {
-        if (total > 0) {
-            m_modelDownloadProgress = qBound(0, int((received * 100) / total), 100);
-            m_modelDownloadStatus = QStringLiteral("Descargando modelo... %1/%2 MB")
-                .arg(received / 1024 / 1024).arg(total / 1024 / 1024);
-            emit modelDownloadChanged();
-        }
+        const int idx = modelDownloadIndexById(m_activeModelDownloadId);
+        if (idx < 0) return;
+        ModelDownloadItem &cur = m_modelDownloadQueue[idx];
+        const qint64 base = cur.resumeOffset;
+        const qint64 fullReceived = base + qMax<qint64>(0, received);
+        const qint64 fullTotal = total > 0 ? base + total : 0;
+        cur.received = fullReceived;
+        cur.total = fullTotal;
+        if (fullTotal > 0)
+            cur.progress = qBound(0, int((fullReceived * 100) / fullTotal), 100);
+        cur.status = fullTotal > 0
+            ? QStringLiteral("Descargando modelo... %1/%2 MB")
+                .arg(fullReceived / 1024 / 1024).arg(fullTotal / 1024 / 1024)
+            : QStringLiteral("Descargando modelo... %1 MB").arg(fullReceived / 1024 / 1024);
+        emitModelDownloadChanged();
     });
-    connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this, partPath, scanDownloadRoot]() {
+    connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this]() {
         QNetworkReply *reply = m_modelDownloadReply;
         QFile *file = m_modelDownloadFile;
         m_modelDownloadReply = nullptr;
         m_modelDownloadFile = nullptr;
+        const QString id = m_activeModelDownloadId;
+        m_activeModelDownloadId.clear();
 
         const int httpStatus = reply
             ? reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()
@@ -5943,32 +6101,135 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
         if (reply)
             reply->deleteLater();
 
+        const int idx = modelDownloadIndexById(id);
+        if (idx < 0) {
+            startNextModelDownload();
+            return;
+        }
+        const ModelDownloadItem cur = m_modelDownloadQueue[idx];
+
+        if (cur.pauseRequested) {
+            m_modelDownloadQueue[idx].state = QStringLiteral("paused");
+            m_modelDownloadQueue[idx].status = QStringLiteral("Pausada: %1").arg(QFileInfo(cur.fileName).fileName());
+            emitModelDownloadChanged();
+            startNextModelDownload();
+            return;
+        }
+        if (cur.cancelRequested) {
+            QFile::remove(cur.partPath);
+            m_modelDownloadQueue.removeAt(idx);
+            emitModelDownloadChanged();
+            startNextModelDownload();
+            return;
+        }
+
         if (!ok) {
-            QFile::remove(partPath);
-            m_modelDownloadProgress = 0;
-            m_modelDownloadStatus = QStringLiteral("Error descargando modelo: %1").arg(err);
-            emit modelDownloadChanged();
+            QFile::remove(cur.partPath);
+            finishModelDownloadItem(id, QStringLiteral("error"),
+                                    QStringLiteral("Error descargando modelo: %1").arg(err), 0, false);
             emit serverError(m_modelDownloadStatus);
             return;
         }
 
-        QFile::remove(m_modelDownloadPath);
-        if (!QFile::rename(partPath, m_modelDownloadPath)) {
-            QFile::remove(partPath);
-            m_modelDownloadProgress = 0;
-            m_modelDownloadStatus = QStringLiteral("No se pudo finalizar el modelo: %1").arg(m_modelDownloadPath);
-            emit modelDownloadChanged();
+        QFile::remove(cur.outPath);
+        if (!QFile::rename(cur.partPath, cur.outPath)) {
+            QFile::remove(cur.partPath);
+            finishModelDownloadItem(id, QStringLiteral("error"),
+                                    QStringLiteral("No se pudo finalizar el modelo: %1").arg(cur.outPath), 0, false);
             emit serverError(m_modelDownloadStatus);
             return;
         }
 
-        m_modelDownloadProgress = 100;
-        m_modelDownloadStatus = QStringLiteral("Modelo descargado: %1").arg(m_modelDownloadPath);
-        emit modelDownloadChanged();
-
-        scanDownloadRoot();
+        finishModelDownloadItem(id, QStringLiteral("done"),
+                                QStringLiteral("Modelo descargado: %1").arg(cur.outPath), 100, false);
+        scanModelDownloadRoot();
         emit setupStateChanged();
     });
+}
+
+void AppController::finishModelDownloadItem(const QString &id, const QString &state,
+                                            const QString &status, int progress, bool removePart)
+{
+    const int idx = modelDownloadIndexById(id);
+    if (idx < 0) {
+        startNextModelDownload();
+        return;
+    }
+    ModelDownloadItem &item = m_modelDownloadQueue[idx];
+    item.state = state;
+    item.status = status;
+    if (progress >= 0)
+        item.progress = progress;
+    if (removePart)
+        QFile::remove(item.partPath);
+    emitModelDownloadChanged();
+    startNextModelDownload();
+}
+
+void AppController::pauseModelDownload(const QString &id)
+{
+    const int idx = modelDownloadIndexById(id);
+    if (idx < 0) return;
+    ModelDownloadItem &item = m_modelDownloadQueue[idx];
+    if (item.id == m_activeModelDownloadId && m_modelDownloadReply) {
+        item.pauseRequested = true;
+        item.status = QStringLiteral("Pausando %1...").arg(QFileInfo(item.fileName).fileName());
+        emitModelDownloadChanged();
+        m_modelDownloadReply->abort();
+        return;
+    }
+    if (item.state == QLatin1String("queued")) {
+        item.state = QStringLiteral("paused");
+        item.status = QStringLiteral("Pausada: %1").arg(QFileInfo(item.fileName).fileName());
+        emitModelDownloadChanged();
+    }
+}
+
+void AppController::resumeModelDownload(const QString &id)
+{
+    const int idx = modelDownloadIndexById(id);
+    if (idx < 0) return;
+    ModelDownloadItem &item = m_modelDownloadQueue[idx];
+    if (item.state != QLatin1String("paused") && item.state != QLatin1String("error"))
+        return;
+    item.state = QStringLiteral("queued");
+    item.pauseRequested = false;
+    item.cancelRequested = false;
+    item.status = QStringLiteral("En cola: %1").arg(QFileInfo(item.fileName).fileName());
+    emitModelDownloadChanged();
+    startNextModelDownload();
+}
+
+void AppController::cancelModelDownload(const QString &id)
+{
+    const int idx = modelDownloadIndexById(id);
+    if (idx < 0) return;
+    ModelDownloadItem &item = m_modelDownloadQueue[idx];
+    if (item.id == m_activeModelDownloadId && m_modelDownloadReply) {
+        item.cancelRequested = true;
+        item.status = QStringLiteral("Cancelando %1...").arg(QFileInfo(item.fileName).fileName());
+        emitModelDownloadChanged();
+        m_modelDownloadReply->abort();
+        return;
+    }
+    QFile::remove(item.partPath);
+    m_modelDownloadQueue.removeAt(idx);
+    emitModelDownloadChanged();
+}
+
+void AppController::moveModelDownload(const QString &id, int delta)
+{
+    if (delta == 0) return;
+    const int idx = modelDownloadIndexById(id);
+    if (idx < 0) return;
+    const int target = qBound(0, idx + (delta < 0 ? -1 : 1), m_modelDownloadQueue.size() - 1);
+    if (idx == target) return;
+    if (m_modelDownloadQueue[idx].id == m_activeModelDownloadId
+        || m_modelDownloadQueue[target].id == m_activeModelDownloadId) {
+        return;
+    }
+    m_modelDownloadQueue.move(idx, target);
+    emitModelDownloadChanged();
 }
 
 void AppController::clearBenchmarkResults()

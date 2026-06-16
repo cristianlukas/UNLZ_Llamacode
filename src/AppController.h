@@ -120,6 +120,7 @@ class AppController : public QObject
     Q_PROPERTY(bool modelDownloadRunning READ modelDownloadRunning NOTIFY modelDownloadChanged)
     Q_PROPERTY(int modelDownloadProgress READ modelDownloadProgress NOTIFY modelDownloadChanged)
     Q_PROPERTY(QString modelDownloadStatus READ modelDownloadStatus NOTIFY modelDownloadChanged)
+    Q_PROPERTY(QVariantList modelDownloadQueue READ modelDownloadQueue NOTIFY modelDownloadChanged)
     // ── Modo Charla (voz-a-voz) ──
     Q_PROPERTY(QString voiceState READ voiceState NOTIFY voiceStateChanged)
     Q_PROPERTY(bool    voiceActive READ voiceActive NOTIFY voiceStateChanged)
@@ -245,6 +246,7 @@ public:
     bool modelDownloadRunning() const { return m_modelDownloadReply != nullptr; }
     int modelDownloadProgress() const { return m_modelDownloadProgress; }
     QString modelDownloadStatus() const { return m_modelDownloadStatus; }
+    QVariantList modelDownloadQueue() const;
 
     Q_INVOKABLE void newChatSession();
     Q_INVOKABLE void newChatSessionInProject(const QString &projectId, const QString &projectName);
@@ -506,6 +508,10 @@ public:
     // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
     Q_INVOKABLE void runStartupScan();
     Q_INVOKABLE void downloadRecommendedModel(const QString &repo, const QString &fileName);
+    Q_INVOKABLE void pauseModelDownload(const QString &id);
+    Q_INVOKABLE void resumeModelDownload(const QString &id);
+    Q_INVOKABLE void cancelModelDownload(const QString &id);
+    Q_INVOKABLE void moveModelDownload(const QString &id, int delta);
     Q_INVOKABLE void openModelRecommendation(const QString &repo);
 
     // ── Modo Charla (voz-a-voz) ──
@@ -870,11 +876,36 @@ private:
                             double throughput, double quality);
     QVariantMap  m_hardwareSummary;
     QVariantList m_modelRecommendations;
+    struct ModelDownloadItem {
+        QString id;
+        QString repo;
+        QString fileName;
+        QString outPath;
+        QString partPath;
+        QString state;   // queued | verifying | downloading | paused | done | error
+        QString status;
+        int progress = 0;
+        qint64 received = 0;
+        qint64 total = 0;
+        qint64 resumeOffset = 0;
+        bool pauseRequested = false;
+        bool cancelRequested = false;
+    };
+    QVector<ModelDownloadItem> m_modelDownloadQueue;
+    QString m_activeModelDownloadId;
     QNetworkReply *m_modelDownloadReply = nullptr;
     QFile *m_modelDownloadFile = nullptr;
     QString m_modelDownloadPath;
     int m_modelDownloadProgress = 0;
     QString m_modelDownloadStatus;
+    QVariantMap modelDownloadItemToMap(const ModelDownloadItem &item) const;
+    int modelDownloadIndexById(const QString &id) const;
+    void emitModelDownloadChanged();
+    void startNextModelDownload();
+    void startModelDownload(int index);
+    void finishModelDownloadItem(const QString &id, const QString &state, const QString &status,
+                                 int progress = -1, bool removePart = false);
+    void scanModelDownloadRoot();
     QString benchmarkStorageDir() const;
     QString customBenchmarkDir() const;   // dir holding custom benchmark definitions
     QString benchmarkRunsDir() const;     // root for isolated timestamped run folders

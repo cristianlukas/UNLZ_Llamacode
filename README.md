@@ -256,6 +256,13 @@ por carriles para que una RTX 3070/3080 de 8 GB vea recomendaciones accionables:
 Si un carril no tiene candidato usable, se completa con el siguiente mejor modelo
 del ranking que no sea duplicado.
 
+### Cola de descargas
+
+Las descargas de modelos se agregan a una cola serial. Cada item puede pausarse,
+reanudarse, reordenarse o cancelarse desde la UI. La pausa conserva el archivo
+`.part` y al reanudar intenta continuar con `Range`; si el servidor no acepta
+reanudar, reinicia la descarga parcial para no corromper el GGUF.
+
 ### Estimación de memoria (`estimateCatalogMemoryGb`)
 
 El estimador usa primero el footprint curado del catálogo (`recommended_ram_gb`) cuando existe, porque representa el tamaño operativo esperado del GGUF recomendado. Si falta ese dato, usa un fallback sintético:
