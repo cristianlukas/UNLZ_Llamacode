@@ -21,6 +21,7 @@ private slots:
     void exportChatSessionToMissingSessionErrors();
     void parseGpuPowerCsvParses();
     void parseGpuPowerCsvTolerant();
+    void ggufRecommendationCandidateFilter();
     void browserMcpEffectiveResolves();
     void browserTeachSkillsLifecycle();
 
@@ -99,6 +100,18 @@ void AppControllerTests::parseGpuPowerCsvTolerant()
     const QVariantMap g = gpus.first().toMap();
     QCOMPARE(g.value("index").toInt(), 1);
     QCOMPARE(g.value("drawW").toDouble(), 0.0);   // power.draw ausente
+}
+
+void AppControllerTests::ggufRecommendationCandidateFilter()
+{
+    QVERIFY(!AppController::isGgufRecommendationCandidate(
+        QStringLiteral("lmstudio-community/Qwen3-14B-MLX-4bit"), false, false));
+    QVERIFY(!AppController::isGgufRecommendationCandidate(
+        QStringLiteral("cyankiwi/Qwen3.5-9B-AWQ-BF16-INT4"), false, false));
+    QVERIFY(AppController::isGgufRecommendationCandidate(
+        QStringLiteral("Qwen/Qwen3.5-9B-MTP"), false, true));
+    QVERIFY(AppController::isGgufRecommendationCandidate(
+        QStringLiteral("unsloth/Qwen3.5-9B-GGUF"), false, false));
 }
 
 void AppControllerTests::browserMcpEffectiveResolves()

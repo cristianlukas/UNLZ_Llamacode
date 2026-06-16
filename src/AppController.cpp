@@ -5156,6 +5156,18 @@ static QString guessGgufFileName(const QString &repo, const QString &modelName, 
     return QStringLiteral("%1-%2.gguf").arg(base, quant.isEmpty() ? QStringLiteral("Q4_K_M") : quant);
 }
 
+bool AppController::isGgufRecommendationCandidate(const QString &name, bool isGguf,
+                                                  bool hasGgufSources)
+{
+    const QString n = name.toLower();
+    if (n.contains(QStringLiteral("mlx")))
+        return false;
+    if (n.contains(QStringLiteral("awq")) || n.contains(QStringLiteral("gptq")) ||
+        n.contains(QStringLiteral("exl2")) || n.contains(QStringLiteral("bnb")))
+        return false;
+    return hasGgufSources || isGguf || n.contains(QStringLiteral("gguf"));
+}
+
 static double quantBpp(const QString &quant)
 {
     const QString q = quant.toUpper();
@@ -5325,8 +5337,14 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
     // ── speed ── target 40 t/s at general use case
     const double speedScore = qBound(0.0, (tps / 40.0) * 100.0, 100.0);
 
-    // ── fit ── tiered ratio of required vs budget (Odysseus _fit_score)
-    const double budget = vramGb > 0 ? vramGb : ramGb;
+    // ── fit ── tiered ratio of required vs budget (Odysseus _fit_score).
+    // For partial offload, the actual budget is VRAM + usable system RAM. Treating
+    // VRAM as the only budget makes realistic 8-10B notebook picks score as 0-fit.
+    double budget = vramGb > 0 ? vramGb : ramGb;
+    if ((fit == QLatin1String("Bueno") || fit == QLatin1String("Marginal")) &&
+        vramGb > 0 && requiredGb > vramGb) {
+        budget = vramGb + ramGb * 0.9;
+    }
     double fitScore = 0;
     if (budget > 0 && requiredGb <= budget) {
         const double ratio = requiredGb / budget;
@@ -5437,6 +5455,12 @@ void AppController::rebuildModelRecommendations()
         for (const QJsonValue &value : arr) {
             const QJsonObject m = value.toObject();
             const QString name = m.value(QStringLiteral("name")).toString();
+            const QJsonArray ggufSources = m.value(QStringLiteral("gguf_sources")).toArray();
+            if (!isGgufRecommendationCandidate(name,
+                                               m.value(QStringLiteral("is_gguf")).toBool(),
+                                               !ggufSources.isEmpty())) {
+                continue;
+            }
             const double paramsB = catalogParamsB(m);
             if (name.isEmpty() || paramsB <= 0)
                 continue;
@@ -5483,7 +5507,6 @@ void AppController::rebuildModelRecommendations()
 
             QString repo;
             QString fileName;
-            const QJsonArray ggufSources = m.value(QStringLiteral("gguf_sources")).toArray();
             if (!ggufSources.isEmpty()) {
                 const QJsonObject src = ggufSources.first().toObject();
                 repo = src.value(QStringLiteral("repo")).toString();
@@ -5532,6 +5555,108 @@ void AppController::rebuildModelRecommendations()
             rows.append(row);
         }
     }
+
+    const auto hasRecommendation = [&rows](const QString &repo, const QString &fileName) {
+        for (const QVariant &v : rows) {
+            const QVariantMap row = v.toMap();
+            if (row.value(QStringLiteral("repo")).toString() == repo &&
+                row.value(QStringLiteral("fileName")).toString() == fileName)
+                return true;
+        }
+        return false;
+    };
+    const auto appendCurated = [&](const RecommendedModelDef &m) {
+        if (hasRecommendation(m.repo, m.fileName))
+            return;
+        QJsonObject model;
+        model[QStringLiteral("name")] = m.name;
+        model[QStringLiteral("architecture")] = m.family == QLatin1String("Qwen")
+            ? QStringLiteral("qwen3_5")
+            : m.family.toLower();
+        model[QStringLiteral("parameter_count")] = m.params;
+        model[QStringLiteral("parameters_raw")] = m.params.section(QLatin1Char('B'), 0, 0).toDouble() * 1000000000.0;
+        model[QStringLiteral("use_case")] = m.capabilities;
+        model[QStringLiteral("pipeline_tag")] = QStringLiteral("text-generation");
+        model[QStringLiteral("hf_downloads")] = 0;
+
+        const double paramsB = catalogParamsB(model);
+        const int ctx = m.ctxK * 1024;
+        const double requiredGb = estimateCatalogMemoryGb(model, paramsB, m.quant, ctx);
+        const QString caps = m.capabilities;
+        QString runMode;
+        QString fit;
+        double gpuFraction = 1.0;
+        const double usableRamGb = ramGb * 0.9;
+        if (vramGb > 0 && requiredGb <= vramGb) {
+            runMode = QStringLiteral("gpu");
+            fit = QStringLiteral("Perfecto");
+        } else if (vramGb > 0 && requiredGb <= vramGb + usableRamGb) {
+            runMode = QStringLiteral("partial_offload");
+            gpuFraction = qBound(0.0, vramGb / requiredGb, 1.0);
+            fit = gpuFraction >= 0.6 ? QStringLiteral("Bueno") : QStringLiteral("Marginal");
+        } else if (vramGb <= 0 && requiredGb <= usableRamGb) {
+            runMode = QStringLiteral("cpu_only");
+            gpuFraction = 0.0;
+            fit = usableRamGb >= requiredGb * 1.2 ? QStringLiteral("Bueno") : QStringLiteral("Marginal");
+        } else {
+            runMode = QStringLiteral("no_fit");
+            fit = QStringLiteral("No entra");
+        }
+        const double tps = runMode == QLatin1String("no_fit")
+            ? 0.0
+            : catalogSpeedTps(gpuName, paramsB, requiredGb, runMode, gpuFraction);
+        const int score = qMin(100, catalogScore(model, paramsB, requiredGb, ramGb, vramGb,
+                                                 m.quant, caps, ctx, fit, tps, -1.0) + 8);
+
+        QString runLabel = runMode;
+        if (runMode == QLatin1String("gpu")) runLabel = QStringLiteral("GPU (todo en VRAM)");
+        else if (runMode == QLatin1String("partial_offload"))
+            runLabel = QStringLiteral("VRAM+RAM (%1%% en GPU)").arg(qRound(gpuFraction * 100.0));
+        else if (runMode == QLatin1String("cpu_only")) runLabel = QStringLiteral("CPU (todo en RAM)");
+        else if (runMode == QLatin1String("no_fit")) runLabel = QStringLiteral("No entra");
+
+        QVariantMap row;
+        row[QStringLiteral("name")] = m.name;
+        row[QStringLiteral("repo")] = m.repo;
+        row[QStringLiteral("fileName")] = m.fileName;
+        row[QStringLiteral("family")] = m.family;
+        row[QStringLiteral("capabilities")] = m.capabilities;
+        row[QStringLiteral("useCase")] = catalogUseCase(caps);
+        row[QStringLiteral("params")] = m.params;
+        row[QStringLiteral("quant")] = m.quant;
+        row[QStringLiteral("sizeGb")] = requiredGb;
+        row[QStringLiteral("requiredGb")] = requiredGb;
+        row[QStringLiteral("minRamGb")] = m.minRamGb;
+        row[QStringLiteral("recommendedRamGb")] = m.recommendedRamGb;
+        row[QStringLiteral("minVramGb")] = m.minVramGb;
+        row[QStringLiteral("ctxK")] = m.ctxK;
+        row[QStringLiteral("context")] = ctx;
+        row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est. · ~%3 GB @ %4k ctx · curado")
+            .arg(runLabel)
+            .arg(QString::number(tps, 'f', 1))
+            .arg(QString::number(requiredGb, 'f', 1))
+            .arg(m.ctxK);
+        row[QStringLiteral("fit")] = fit;
+        row[QStringLiteral("score")] = score;
+        row[QStringLiteral("downloadable")] = true;
+        row[QStringLiteral("downloadUrl")] = QStringLiteral("https://huggingface.co/%1/resolve/main/%2?download=true")
+            .arg(m.repo, QString::fromLatin1(QUrl::toPercentEncoding(m.fileName)));
+        rows.append(row);
+    };
+
+    const QVector<RecommendedModelDef> curated = {
+        {QStringLiteral("Qwen3.5 9B"), QStringLiteral("unsloth/Qwen3.5-9B-GGUF"),
+         QStringLiteral("Qwen3.5-9B-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use"),
+         QStringLiteral("9B"), QStringLiteral("Q4_K_M"), 0, 8, 16, 6, 32, QStringLiteral("curated")},
+        {QStringLiteral("Qwen3.5 9B MTP"), QStringLiteral("unsloth/Qwen3.5-9B-MTP-GGUF"),
+         QStringLiteral("Qwen3.5-9B-MTP-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use,mtp"),
+         QStringLiteral("9.7B"), QStringLiteral("Q4_K_M"), 0, 10, 20, 7, 32, QStringLiteral("curated")},
+        {QStringLiteral("Qwen3 8B"), QStringLiteral("Qwen/Qwen3-8B-GGUF"),
+         QStringLiteral("Qwen3-8B-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use"),
+         QStringLiteral("8B"), QStringLiteral("Q4_K_M"), 0, 8, 16, 6, 32, QStringLiteral("curated")}
+    };
+    for (const RecommendedModelDef &m : curated)
+        appendCurated(m);
 
     if (rows.isEmpty()) {
         const QVector<RecommendedModelDef> fallback = {

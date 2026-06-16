@@ -495,6 +495,10 @@ public:
     // Parser de la salida CSV de nvidia-smi (--query-gpu power.*). Estático para
     // testear sin GPU. Devuelve lista de QVariantMap por GPU.
     static QVariantList parseGpuPowerCsv(const QString &csv);
+    // Filtro puro para el cookbook: la app descarga/lanza GGUF con llama.cpp, no
+    // repos MLX/AWQ/GPTQ que requieren otros runtimes.
+    static bool isGgufRecommendationCandidate(const QString &name, bool isGguf,
+                                              bool hasGgufSources);
     // Escaneo pesado de arranque (binaries/roots/hardware/catálogo + migraciones).
     // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
     Q_INVOKABLE void runStartupScan();
