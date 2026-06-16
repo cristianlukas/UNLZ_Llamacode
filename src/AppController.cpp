@@ -54,6 +54,7 @@
 #include <QStandardPaths>
 #include <QTextStream>
 #include <QThread>
+#include <QTimer>
 #include <algorithm>
 #include <cmath>
 
@@ -5654,10 +5655,11 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
 
     const QString dir = modelDownloadDir();
     const QString outPath = dir + QLatin1Char('/') + QFileInfo(fileName).fileName();
-    if (QFileInfo::exists(outPath)) {
-        m_modelDownloadProgress = 100;
-        m_modelDownloadStatus = QStringLiteral("Ya existe: %1").arg(outPath);
-        emit modelDownloadChanged();
+    const QString partPath = outPath + QStringLiteral(".part");
+    const QUrl url(QStringLiteral("https://huggingface.co/%1/resolve/main/%2")
+                       .arg(repo, QString::fromLatin1(QUrl::toPercentEncoding(fileName))));
+
+    auto scanDownloadRoot = [this, dir]() {
         QString existingRootId;
         for (int i = 0; i < m_roots.rowCount(); ++i) {
             const QModelIndex mi = m_roots.index(i, 0);
@@ -5670,19 +5672,68 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
             m_roots.add(dir, QStringLiteral("Modelos descargados"), QStringLiteral("startup"), {});
         else
             m_roots.scan(existingRootId);
-        return;
-    }
-
-    auto *file = new QFile(outPath, this);
-    if (!file->open(QIODevice::WriteOnly)) {
-        file->deleteLater();
-        emit serverError(QStringLiteral("No se pudo escribir el modelo en %1").arg(outPath));
-        return;
-    }
+    };
 
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
-    QUrl url(QStringLiteral("https://huggingface.co/%1/resolve/main/%2")
-                 .arg(repo, QString::fromLatin1(QUrl::toPercentEncoding(fileName))));
+
+    if (QFileInfo::exists(outPath)) {
+        QNetworkRequest headReq(url);
+        headReq.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+        headReq.setTransferTimeout(0);
+
+        m_modelDownloadPath = outPath;
+        m_modelDownloadProgress = 0;
+        m_modelDownloadStatus = QStringLiteral("Verificando modelo existente...");
+        emit modelDownloadChanged();
+
+        m_modelDownloadReply = m_nam->head(headReq);
+        connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this, repo, fileName, outPath, partPath, scanDownloadRoot]() {
+            QNetworkReply *reply = m_modelDownloadReply;
+            m_modelDownloadReply = nullptr;
+
+            const qint64 localBytes = QFileInfo(outPath).size();
+            const qint64 remoteBytes = reply
+                ? reply->header(QNetworkRequest::ContentLengthHeader).toLongLong()
+                : -1;
+            const bool checkedComplete = remoteBytes > 0 && localBytes >= remoteBytes;
+            const bool suspiciousSmall = localBytes > 0 && localBytes < 256LL * 1024LL * 1024LL;
+
+            if (reply)
+                reply->deleteLater();
+
+            if (checkedComplete || (remoteBytes <= 0 && !suspiciousSmall)) {
+                QFile::remove(partPath);
+                m_modelDownloadProgress = 100;
+                m_modelDownloadStatus = QStringLiteral("Ya existe: %1").arg(outPath);
+                emit modelDownloadChanged();
+                scanDownloadRoot();
+                return;
+            }
+
+            QFile::remove(outPath);
+            QFile::remove(partPath);
+            m_modelDownloadProgress = 0;
+            m_modelDownloadStatus = remoteBytes > 0
+                ? QStringLiteral("Archivo incompleto (%1/%2 MB). Reiniciando descarga...")
+                    .arg(localBytes / 1024 / 1024)
+                    .arg(remoteBytes / 1024 / 1024)
+                : QStringLiteral("Archivo incompleto eliminado. Reiniciando descarga...");
+            emit modelDownloadChanged();
+            QTimer::singleShot(0, this, [this, repo, fileName]() {
+                downloadRecommendedModel(repo, fileName);
+            });
+        });
+        return;
+    }
+
+    QFile::remove(partPath);
+    auto *file = new QFile(partPath, this);
+    if (!file->open(QIODevice::WriteOnly)) {
+        file->deleteLater();
+        emit serverError(QStringLiteral("No se pudo escribir el modelo en %1").arg(partPath));
+        return;
+    }
+
     QNetworkRequest req(url);
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setTransferTimeout(0);
@@ -5706,13 +5757,17 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
             emit modelDownloadChanged();
         }
     });
-    connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this, dir]() {
+    connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this, partPath, scanDownloadRoot]() {
         QNetworkReply *reply = m_modelDownloadReply;
         QFile *file = m_modelDownloadFile;
         m_modelDownloadReply = nullptr;
         m_modelDownloadFile = nullptr;
 
-        const bool ok = reply && reply->error() == QNetworkReply::NoError;
+        const int httpStatus = reply
+            ? reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()
+            : 0;
+        const bool httpOk = httpStatus == 0 || (httpStatus >= 200 && httpStatus < 400);
+        const bool ok = reply && reply->error() == QNetworkReply::NoError && httpOk;
         const QString err = reply ? reply->errorString() : QStringLiteral("respuesta inválida");
         if (file) {
             file->write(reply ? reply->readAll() : QByteArray());
@@ -5723,9 +5778,19 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
             reply->deleteLater();
 
         if (!ok) {
-            QFile::remove(m_modelDownloadPath);
+            QFile::remove(partPath);
             m_modelDownloadProgress = 0;
             m_modelDownloadStatus = QStringLiteral("Error descargando modelo: %1").arg(err);
+            emit modelDownloadChanged();
+            emit serverError(m_modelDownloadStatus);
+            return;
+        }
+
+        QFile::remove(m_modelDownloadPath);
+        if (!QFile::rename(partPath, m_modelDownloadPath)) {
+            QFile::remove(partPath);
+            m_modelDownloadProgress = 0;
+            m_modelDownloadStatus = QStringLiteral("No se pudo finalizar el modelo: %1").arg(m_modelDownloadPath);
             emit modelDownloadChanged();
             emit serverError(m_modelDownloadStatus);
             return;
@@ -5735,18 +5800,7 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
         m_modelDownloadStatus = QStringLiteral("Modelo descargado: %1").arg(m_modelDownloadPath);
         emit modelDownloadChanged();
 
-        QString existingRootId;
-        for (int i = 0; i < m_roots.rowCount(); ++i) {
-            const QModelIndex mi = m_roots.index(i, 0);
-            if (QDir::cleanPath(m_roots.data(mi, ModelRootRegistry::PathRole).toString()) == QDir::cleanPath(dir)) {
-                existingRootId = m_roots.data(mi, ModelRootRegistry::IdRole).toString();
-                break;
-            }
-        }
-        if (existingRootId.isEmpty())
-            m_roots.add(dir, QStringLiteral("Modelos descargados"), QStringLiteral("startup"), {});
-        else
-            m_roots.scan(existingRootId);
+        scanDownloadRoot();
         emit setupStateChanged();
     });
 }
