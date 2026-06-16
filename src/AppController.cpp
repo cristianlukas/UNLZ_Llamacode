@@ -212,6 +212,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentApprovalMode = s.value(QStringLiteral("agent/approvalMode"), QStringLiteral("ask")).toString();
     m_agentThinkingEnabled = s.value(QStringLiteral("thinking/enabled"),
                                      s.value(QStringLiteral("agent/thinkingEnabled"), false)).toBool();
+    m_chatThinkingEnabled = s.value(QStringLiteral("chat/thinkingEnabledV2"), false).toBool();
     m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
     m_browserAutomationEnabled = s.value(QStringLiteral("browser/automationEnabled"), false).toBool();
     m_browserMcpCommand = s.value(QStringLiteral("browser/mcpCommand"),
@@ -2255,11 +2256,8 @@ void AppController::setThinkingEnabled(bool enabled)
     m_agentThinkingEnabled = enabled;
     writeSetting(QStringLiteral("thinking/enabled"), enabled);
     writeSetting(QStringLiteral("agent/thinkingEnabled"), enabled);
-    writeSetting(QStringLiteral("chat/thinkingEnabled"), enabled);
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->setThinkingEnabled(enabled);
-    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
-        raw->setThinkingEnabled(enabled);
     emit agentThinkingChanged();
     emit thinkingChanged();
 }
@@ -2385,7 +2383,7 @@ IAgentBackend *AppController::ensureChatBackend()
     if (m_chatBackend) return m_chatBackend;
     auto *b = new RawChatBackend(this);
     if (auto *raw = qobject_cast<RawChatBackend *>(b)) {
-        raw->setThinkingEnabled(m_agentThinkingEnabled);
+        raw->setThinkingEnabled(m_chatThinkingEnabled);
     }
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_chatMessages = b->messages();
@@ -4638,7 +4636,12 @@ void AppController::stopChatGeneration()
 
 void AppController::setChatThinkingEnabled(bool enabled)
 {
-    setThinkingEnabled(enabled);
+    if (enabled == m_chatThinkingEnabled) return;
+    m_chatThinkingEnabled = enabled;
+    writeSetting(QStringLiteral("chat/thinkingEnabledV2"), enabled);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setThinkingEnabled(enabled);
+    emit chatThinkingChanged();
 }
 
 // ── Managed-process lifecycle ─────────────────────────────────────────────────

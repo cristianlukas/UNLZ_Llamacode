@@ -1266,9 +1266,9 @@ Item {
                             id: thinkingToggle
                             text: "Pensar"
                             visible: App.serverRunning && App.serverReady
-                            checked: App.thinkingEnabled
+                            checked: App.chatThinkingEnabled
                             enabled: !App.chatGenerating && App.serverRunning && App.serverReady
-                            onToggled: App.thinkingEnabled = checked
+                            onToggled: App.chatThinkingEnabled = checked
                             contentItem: Text {
                                 text: parent.text
                                 color: Theme.textSecondary

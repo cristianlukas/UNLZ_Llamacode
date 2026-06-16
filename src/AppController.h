@@ -41,6 +41,7 @@ class AppController : public QObject
     Q_PROPERTY(QString      chatSessionTitle READ chatSessionTitle NOTIFY chatSessionsChanged)
     Q_PROPERTY(bool         chatGenerating  READ chatGenerating  NOTIFY chatGeneratingChanged)
     Q_PROPERTY(bool         chatThinkingSupported READ chatThinkingSupported NOTIFY chatThinkingSupportedChanged)
+    Q_PROPERTY(bool chatThinkingEnabled READ chatThinkingEnabled WRITE setChatThinkingEnabled NOTIFY chatThinkingChanged)
     Q_PROPERTY(bool thinkingEnabled READ thinkingEnabled WRITE setThinkingEnabled NOTIFY thinkingChanged)
     // Render de diagramas Mermaid en el chat (requiere sidecar mermaid-cli).
     Q_PROPERTY(bool mermaidEnabled READ mermaidEnabled WRITE setMermaidEnabled NOTIFY mermaidEnabledChanged)
@@ -197,6 +198,8 @@ public:
     void setAgentThinkingEnabled(bool enabled);
     bool thinkingEnabled() const { return m_agentThinkingEnabled; }
     void setThinkingEnabled(bool enabled);
+    bool chatThinkingEnabled() const { return m_chatThinkingEnabled; }
+    void setChatThinkingEnabled(bool enabled);
     // Automatización de browser vía MCP Playwright (toggle global; override por perfil).
     bool browserAutomationEnabled() const { return m_browserAutomationEnabled; }
     void setBrowserAutomationEnabled(bool enabled);
@@ -256,7 +259,6 @@ public:
     // Si el portapapeles tiene una imagen, la guarda a temp y devuelve la ruta; "" si no.
     Q_INVOKABLE QString pasteClipboardImage();
     Q_INVOKABLE void stopChatGeneration();
-    Q_INVOKABLE void setChatThinkingEnabled(bool enabled);
     Q_INVOKABLE void startServer(const QString &launchProfileId);
     Q_INVOKABLE void startServerAndAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopServer();
@@ -587,6 +589,7 @@ signals:
     void chatMessagesChanged();
     void chatGeneratingChanged();
     void chatThinkingSupportedChanged();
+    void chatThinkingChanged();
     void thinkingChanged();
     void mermaidEnabledChanged();
     void agentRunningChanged();
@@ -754,6 +757,7 @@ private:
     QString       m_chatSessionTitle;
     bool          m_chatGenerating = false;
     bool          m_chatThinkingSupported = false;
+    bool          m_chatThinkingEnabled = false;
     void fetchChatThinkingSupport();
     QNetworkReply *m_chatReply = nullptr;
     int           m_chatAssistantIdx = -1;
@@ -780,7 +784,7 @@ private:
     QVariantList m_agentSessions;
     QVariantMap m_agentPendingTool;   // tool esperando aprobación ({} si ninguna)
     QString   m_agentApprovalMode = QStringLiteral("ask");  // auto | ask | manual | super
-    bool      m_agentThinkingEnabled = false;   // razonamiento global (chat/agente/benchmark/research)
+    bool      m_agentThinkingEnabled = false;   // razonamiento agente/benchmark/research
     // Automatización de browser (MCP Playwright). Toggle global; cada LaunchProfile
     // puede forzar on/off con browserAutomation ("inherit"|"on"|"off").
     bool      m_browserAutomationEnabled = false;
