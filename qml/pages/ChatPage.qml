@@ -830,7 +830,10 @@ Item {
                     height: bubbleRect.height + 8
 
                     readonly property bool isUser: modelData.role === "user"
-                    readonly property string content: modelData.content ?? ""
+                    readonly property bool isStreaming: index === App.chatStreamingIndex
+                    readonly property string content: isStreaming
+                        ? App.chatStreamingText
+                        : (modelData.content ?? "")
                     readonly property bool isTyping: modelData.typing ?? false
                     readonly property string msgId: (modelData.id ?? (index + "-" + modelData.role))
                     readonly property string thinkContent: root.extractThinkContent(content)

@@ -3,7 +3,6 @@
 #include <QHash>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QTimer>
 
 // Backend "raw": chat directo a llama-server /v1/chat/completions (stream SSE).
 // No lanza proceso externo; usa sesiones locales en memoria.
@@ -84,7 +83,6 @@ private:
     QString m_answerBuf;   // content acumulado (respuesta)
     QStringList m_pendingAttachments;  // rutas a adjuntar en el próximo envío
     QStringList m_msgQueue;            // mensajes encolados (se envían al terminar)
-    QTimer *m_streamEmitTimer = nullptr;  // throttle de messagesChanged durante streaming
 
 private slots:
     void flushQueue();

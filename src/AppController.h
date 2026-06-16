@@ -41,6 +41,9 @@ class AppController : public QObject
     Q_PROPERTY(QString      chatSessionTitle READ chatSessionTitle NOTIFY chatSessionsChanged)
     Q_PROPERTY(bool         chatGenerating  READ chatGenerating  NOTIFY chatGeneratingChanged)
     Q_PROPERTY(bool         chatThinkingSupported READ chatThinkingSupported NOTIFY chatThinkingSupportedChanged)
+    // Streaming incremental del chat: refresca sólo la burbuja activa, igual que Agente.
+    Q_PROPERTY(int chatStreamingIndex READ chatStreamingIndex NOTIFY chatStreamingChanged)
+    Q_PROPERTY(QString chatStreamingText READ chatStreamingText NOTIFY chatStreamingChanged)
     Q_PROPERTY(bool chatThinkingEnabled READ chatThinkingEnabled WRITE setChatThinkingEnabled NOTIFY chatThinkingChanged)
     Q_PROPERTY(bool thinkingEnabled READ thinkingEnabled WRITE setThinkingEnabled NOTIFY thinkingChanged)
     // Render de diagramas Mermaid en el chat (requiere sidecar mermaid-cli).
@@ -178,6 +181,8 @@ public:
     QVariantList agentMessages()  const { return m_agentMessages; }
     int agentStreamingIndex() const { return m_agentStreamingIndex; }
     QString agentStreamingText() const { return m_agentStreamingText; }
+    int chatStreamingIndex() const { return m_chatStreamingIndex; }
+    QString chatStreamingText() const { return m_chatStreamingText; }
     int agentQueuedCount() const { return m_agentQueuedCount; }
     int chatQueuedCount() const { return m_chatQueuedCount; }
     QVariantList agentSessions()  const { return m_agentSessions; }
@@ -587,6 +592,7 @@ signals:
     void harnessInstallFinished(bool success, const QString &adapter, const QString &message);
     void chatSessionsChanged();
     void chatMessagesChanged();
+    void chatStreamingChanged();
     void chatGeneratingChanged();
     void chatThinkingSupportedChanged();
     void chatThinkingChanged();
@@ -758,6 +764,8 @@ private:
     bool          m_chatGenerating = false;
     bool          m_chatThinkingSupported = false;
     bool          m_chatThinkingEnabled = false;
+    int           m_chatStreamingIndex = -1;
+    QString       m_chatStreamingText;
     void fetchChatThinkingSupport();
     QNetworkReply *m_chatReply = nullptr;
     int           m_chatAssistantIdx = -1;

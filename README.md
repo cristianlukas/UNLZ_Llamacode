@@ -314,6 +314,8 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   Si el modelo emite `<think>` igualmente, Chat descarta ese bloque en streaming
   y no lo guarda en el historial.
 - **Indicador "⏳ Procesando..."** mientras espera, cursor `▌` durante generación
+- **Streaming estable**: durante la generación se actualiza sólo la burbuja activa,
+  sin reconstruir toda la lista de mensajes, para evitar saltos verticales.
 - **Stop de generación** con guardado de lo recibido
 
 ## Harness de Agente (opencode)

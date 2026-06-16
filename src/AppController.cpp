@@ -2387,6 +2387,11 @@ IAgentBackend *AppController::ensureChatBackend()
     }
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_chatMessages = b->messages();
+        if (m_chatStreamingIndex != -1) {
+            m_chatStreamingIndex = -1;
+            m_chatStreamingText.clear();
+            emit chatStreamingChanged();
+        }
         bool generating = false;
         for (const QVariant &v : std::as_const(m_chatMessages)) {
             if (v.toMap().value(QStringLiteral("typing")).toBool()) {
@@ -2415,6 +2420,11 @@ IAgentBackend *AppController::ensureChatBackend()
                 m_voice->speak(reply);
             }
         }
+    });
+    connect(b, &IAgentBackend::streamingText, this, [this](int idx, const QString &content) {
+        m_chatStreamingIndex = idx;
+        m_chatStreamingText = content;
+        emit chatStreamingChanged();
     });
     connect(b, &IAgentBackend::queueChanged, this, [this, b]() {
         m_chatQueuedCount = b->queuedCount();

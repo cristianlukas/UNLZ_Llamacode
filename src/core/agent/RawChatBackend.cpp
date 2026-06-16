@@ -497,24 +497,16 @@ void RawChatBackend::sendMessage(const QString &text)
                     ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
                     : 0.0;
                 m_messages[m_curAsstIdx] = asst;
-                // NO guardar a disco por token (persistSession serializa + escribe
-                // → congelaba el hilo GUI). Se guarda al terminar. El emit se
-                // throttlea para no reconstruir todos los delegates por token.
-                if (!m_streamEmitTimer) {
-                    m_streamEmitTimer = new QTimer(this);
-                    m_streamEmitTimer->setInterval(40);
-                    m_streamEmitTimer->setSingleShot(true);
-                    connect(m_streamEmitTimer, &QTimer::timeout, this, [this]() { emit messagesChanged(); });
-                }
-                if (!m_streamEmitTimer->isActive())
-                    m_streamEmitTimer->start();
+                // No emitir messagesChanged por token: eso reconstruye el ListView
+                // completo y produce oscilación vertical. La UI actualiza sólo esta
+                // burbuja vía streamingText; la lista autoritativa se emite al final.
+                emit streamingText(m_curAsstIdx, full);
             }
         }
     });
 
     connect(m_reply, &QNetworkReply::finished, this, [this]() {
         if (!m_reply) return;
-        if (m_streamEmitTimer) m_streamEmitTimer->stop();  // el emit final va abajo
         const bool ok = m_reply->error() == QNetworkReply::NoError;
         const QString err = m_reply->errorString();
         m_reply->deleteLater();
