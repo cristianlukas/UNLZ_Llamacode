@@ -5365,7 +5365,26 @@ void AppController::rebuildModelRecommendations()
             if (name.isEmpty() || paramsB <= 0)
                 continue;
 
+            QString repo;
+            QString fileName;
+            const QJsonArray ggufSources = m.value(QStringLiteral("gguf_sources")).toArray();
+            if (!ggufSources.isEmpty()) {
+                const QJsonObject src = ggufSources.first().toObject();
+                repo = src.value(QStringLiteral("repo")).toString();
+                fileName = src.value(QStringLiteral("file")).toString();
+            }
+            const QString lowerName = name.toLower();
+            if (repo.isEmpty() && (m.value(QStringLiteral("is_gguf")).toBool() || lowerName.contains(QStringLiteral("gguf"))))
+                repo = name;
+            // This app downloads/runs llama.cpp GGUF models. Catalog entries for
+            // MLX/AWQ/GPTQ/etc. can look tiny and score well, but they are not
+            // runnable by llama.cpp on Windows/NVIDIA unless a GGUF source exists.
+            if (repo.isEmpty())
+                continue;
+
             const QString quant = m.value(QStringLiteral("quantization")).toString(QStringLiteral("Q4_K_M"));
+            if (fileName.isEmpty())
+                fileName = guessGgufFileName(repo, name, quant);
             const int modelMaxCtx = qMax(1024, m.value(QStringLiteral("context_length")).toInt(4096));
             const int ctx = sizingContext(modelMaxCtx);
             const double requiredGb = estimateCatalogMemoryGb(m, paramsB, quant, ctx);
@@ -5404,19 +5423,6 @@ void AppController::rebuildModelRecommendations()
                 : catalogSpeedTps(gpuName, activeB, requiredGb, runMode, gpuFraction);
             const double benchQuality = m_benchmarkQuality.value(benchmarkKey(name), -1.0);
             const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, fit, tps, benchQuality);
-
-            QString repo;
-            QString fileName;
-            const QJsonArray ggufSources = m.value(QStringLiteral("gguf_sources")).toArray();
-            if (!ggufSources.isEmpty()) {
-                const QJsonObject src = ggufSources.first().toObject();
-                repo = src.value(QStringLiteral("repo")).toString();
-                fileName = src.value(QStringLiteral("file")).toString();
-            }
-            if (repo.isEmpty() && (m.value(QStringLiteral("is_gguf")).toBool() || name.toLower().contains(QStringLiteral("gguf"))))
-                repo = name;
-            if (!repo.isEmpty() && fileName.isEmpty())
-                fileName = guessGgufFileName(repo, name, quant);
 
             QVariantMap row;
             row[QStringLiteral("name")] = name;
