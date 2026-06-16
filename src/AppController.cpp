@@ -5215,33 +5215,37 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
     // Prefer a real benchmark (Artificial Analysis Intelligence Index, remapped
     // to a 0-100 quality) when we have one for this model; the quant tier still
     // costs a little quality. Otherwise fall back to the param/family heuristic.
-    double quality;
+    double heuristicQuality;
+    if (paramsB < 1) heuristicQuality = 30;
+    else if (paramsB < 3) heuristicQuality = 45;
+    else if (paramsB < 7) heuristicQuality = 60;
+    else if (paramsB < 10) heuristicQuality = 75;
+    else if (paramsB < 20) heuristicQuality = 82;
+    else if (paramsB < 40) heuristicQuality = 89;
+    else heuristicQuality = 95;
+
+    const QString name = model.value(QStringLiteral("name")).toString().toLower();
+    if (name.contains(QStringLiteral("qwen"))) heuristicQuality += 2;
+    if (name.contains(QStringLiteral("deepseek"))) heuristicQuality += 3;
+    if (name.contains(QStringLiteral("llama"))) heuristicQuality += 2;
+    if (name.contains(QStringLiteral("mistral")) || name.contains(QStringLiteral("mixtral"))) heuristicQuality += 1;
+    if (name.contains(QStringLiteral("gemma"))) heuristicQuality += 1;
+
+    heuristicQuality += architectureBonus(name, model.value(QStringLiteral("architecture")).toString());
+    heuristicQuality += quantQualityPenalty(quant);
+
+    // Use-case adjustment (default scan == "general"). Coder models are useful
+    // generally but must not dominate the default list — penalise like Odysseus.
+    const QString uc = catalogUseCase(caps);
+    if (uc == QLatin1String("coding"))
+        heuristicQuality -= 10;
+
+    double quality = heuristicQuality;
     if (benchmarkQuality >= 0) {
-        quality = benchmarkQuality + quantQualityPenalty(quant);
-    } else {
-        if (paramsB < 1) quality = 30;
-        else if (paramsB < 3) quality = 45;
-        else if (paramsB < 7) quality = 60;
-        else if (paramsB < 10) quality = 75;
-        else if (paramsB < 20) quality = 82;
-        else if (paramsB < 40) quality = 89;
-        else quality = 95;
-
-        const QString name = model.value(QStringLiteral("name")).toString().toLower();
-        if (name.contains(QStringLiteral("qwen"))) quality += 2;
-        if (name.contains(QStringLiteral("deepseek"))) quality += 3;
-        if (name.contains(QStringLiteral("llama"))) quality += 2;
-        if (name.contains(QStringLiteral("mistral")) || name.contains(QStringLiteral("mixtral"))) quality += 1;
-        if (name.contains(QStringLiteral("gemma"))) quality += 1;
-
-        quality += architectureBonus(name, model.value(QStringLiteral("architecture")).toString());
-        quality += quantQualityPenalty(quant);
-
-        // Use-case adjustment (default scan == "general"). Coder models are useful
-        // generally but must not dominate the default list — penalise like Odysseus.
-        // (Benchmark path already reflects general ability, so skip there.)
-        const QString uc = catalogUseCase(caps);
-        if (uc == QLatin1String("coding")) quality -= 10;
+        // Benchmarks are a quality signal, not a veto. Keep the local hardware-fit
+        // heuristic as a floor so a small bundled AA entry does not hide an official
+        // 7B/8B Q4 model that fits cleanly in 8 GB VRAM.
+        quality = qMax(heuristicQuality, benchmarkQuality + quantQualityPenalty(quant));
     }
     quality = qBound(0.0, quality, 100.0);
 
@@ -5278,6 +5282,11 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
         composite += 5.0; // 7B/8B Q4 is the useful sweet spot for 8 GB NVIDIA cards.
     else if (vramGb >= 7.0 && paramsB < 4.0)
         composite -= 3.0; // keep small/fast models available, but not as default winners.
+
+    if (vramGb >= 7.0 && paramsB >= 7.0 && paramsB <= 10.0
+            && runMode == QLatin1String("gpu")
+            && model.value(QStringLiteral("name")).toString().startsWith(QStringLiteral("Qwen/")))
+        composite += 2.0; // prefer official Qwen 7B/8B picks over derivatives on 8 GB GPUs.
 
     if (runMode == QLatin1String("partial_offload") && tps < 5.0)
         composite = qMin(composite, 68.0);
