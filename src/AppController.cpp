@@ -211,8 +211,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_language = s.value(QStringLiteral("language"), QStringLiteral("es")).toString();
     m_agentApprovalMode = s.value(QStringLiteral("agent/approvalMode"), QStringLiteral("ask")).toString();
     m_agentThinkingEnabled = s.value(QStringLiteral("thinking/enabled"),
-                                     s.value(QStringLiteral("agent/thinkingEnabled"),
-                                             s.value(QStringLiteral("chat/thinkingEnabled"), false))).toBool();
+                                     s.value(QStringLiteral("agent/thinkingEnabled"), false)).toBool();
     m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
     m_browserAutomationEnabled = s.value(QStringLiteral("browser/automationEnabled"), false).toBool();
     m_browserMcpCommand = s.value(QStringLiteral("browser/mcpCommand"),

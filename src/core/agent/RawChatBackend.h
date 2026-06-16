@@ -70,7 +70,7 @@ private:
     QNetworkReply *m_reply = nullptr;
     bool m_running = false;
     bool m_stopping = false;
-    bool m_thinkingEnabled = true;
+    bool m_thinkingEnabled = false;
 
     QString m_sessionId;
     QString m_sessionTitle;

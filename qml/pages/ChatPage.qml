@@ -1264,10 +1264,10 @@ Item {
 
                         CheckBox {
                             id: thinkingToggle
-                            text: "Thinking"
-                            visible: App.chatThinkingSupported
+                            text: "Pensar"
+                            visible: App.serverRunning && App.serverReady
                             checked: App.thinkingEnabled
-                            enabled: !App.chatGenerating && App.chatThinkingSupported
+                            enabled: !App.chatGenerating && App.serverRunning && App.serverReady
                             onToggled: App.thinkingEnabled = checked
                             contentItem: Text {
                                 text: parent.text

@@ -307,6 +307,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Chat streaming** directo al `llama-server` vía `/v1/chat/completions` SSE
 - **Sesiones persistidas** en JSON local (`AppLocalData/LlamaCode/chat/`)
 - **Agrupadas por proyecto** (launch profile activo al crear la sesión)
+- **Thinking apagado por defecto**: Chat muestra el toggle `Pensar` cuando el
+  servidor está listo y envía `reasoning_budget=0` /
+  `chat_template_kwargs.enable_thinking=false` salvo que el usuario lo active.
 - **Indicador "⏳ Procesando..."** mientras espera, cursor `▌` durante generación
 - **Stop de generación** con guardado de lo recibido
 
