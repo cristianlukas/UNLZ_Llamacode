@@ -26,6 +26,7 @@ ApplicationWindow {
     property bool minimizeToTray: Boolean(App.readSetting("window/minimizeToTray", false))
     // Bandera para forzar salida real desde el menú del tray.
     property bool forceQuit: false
+    property bool autoCreatingInitialProfile: false
 
     function showFromTray() {
         if (Boolean(App.readSetting("window/maximized", false)))
@@ -35,6 +36,20 @@ ApplicationWindow {
         window.show()
         window.raise()
         window.requestActivate()
+    }
+
+    function maybeCreateInitialProfile() {
+        if (autoCreatingInitialProfile)
+            return
+        if (!App.hasAnyBinary || !App.hasAnyModel || App.hasAnyLaunch)
+            return
+        autoCreatingInitialProfile = true
+        const id = App.createRecommendedLaunchProfile()
+        autoCreatingInitialProfile = false
+        if (id.length > 0) {
+            errorToast.show("Perfil inicial creado.")
+            stack.currentIndex = 0
+        }
     }
 
     function saveWindowState() {
@@ -542,24 +557,19 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 spacing: 10
                 enabled: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
-                opacity: enabled ? 1.0 : (App.hasAnyLaunch ? 0.5 : 0.65)
-                LcButton {
-                    text: "Crear perfil recomendado"
-                    enabled: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
-                    onClicked: {
-                        const id = App.createRecommendedLaunchProfile()
-                        if (id.length > 0) {
-                            errorToast.show("Perfil creado.")
-                            stack.currentIndex = 0
-                        }
-                    }
+                opacity: App.hasAnyLaunch ? 0.5 : 1.0
+                BusyIndicator {
+                    running: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
+                    visible: running
+                    Layout.preferredWidth: 22
+                    Layout.preferredHeight: 22
                 }
                 Text {
                     Layout.fillWidth: true
                     text: App.hasAnyLaunch
                           ? "Listo para lanzar."
                           : (App.hasAnyBinary && App.hasAnyModel
-                             ? "Usa el binario y el GGUF disponibles para armar Backend, Model y Runtime."
+                             ? "Creando automáticamente Backend, Model, Runtime y perfil de lanzamiento."
                              : "Primero completá binario y modelo.")
                     color: Theme.textMuted
                     font.pixelSize: 12
@@ -654,6 +664,7 @@ ApplicationWindow {
 
         // El escaneo pesado ya corrió en main.cpp bajo el splash → counts listos.
         if (App.needsSetup) setupPopup.open()
+        maybeCreateInitialProfile()
     }
 
     onClosing: function(close) {
@@ -699,14 +710,17 @@ ApplicationWindow {
         target: App
         function onServerError(message) { errorToast.show(message) }
         function onSetupStateChanged() {
+            maybeCreateInitialProfile()
             if (App.needsSetup) setupPopup.open()
             else setupPopup.close()
         }
+        function onModelDownloadChanged() { maybeCreateInitialProfile() }
         function onOfficialBinaryInstallFinished(success, message, binaryPath) {
             errorToast.show(message)
             if (success && binaryPath.length > 0) {
                 stack.currentIndex = App.hasAnyModel ? 0 : 2
             }
+            maybeCreateInitialProfile()
         }
     }
     Connections {
@@ -718,7 +732,7 @@ ApplicationWindow {
     Connections {
         target: App.rootRegistry
         function onScanFinished(rootId, count) {
-            // Brief notification handled via subtitle update in page
+            maybeCreateInitialProfile()
         }
     }
 }
