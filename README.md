@@ -242,6 +242,20 @@ Cada modelo recibe un score `0–100` que combina, ponderado al caso de uso *gen
 
 Desempate por versión (Qwen3.6 > Qwen3.5).
 
+### Tarjetas destacadas
+
+La franja superior no toma ciegamente los tres primeros del ranking plano. Agrupa
+por carriles para que una RTX 3070/3080 de 8 GB vea recomendaciones accionables:
+
+- **General** — default local actual; prioriza familias recientes que entren limpias
+  en VRAM, como Qwen3 8B Q4 a 32k.
+- **Reasoning** — modelos razonadores compactos que entran en 8 GB, por ejemplo
+  DeepSeek-R1-Distill-Qwen-7B Q4.
+- **Código** — modelos instruct/code cuando el catálogo marca capacidad de coding.
+
+Si un carril no tiene candidato usable, se completa con el siguiente mejor modelo
+del ranking que no sea duplicado.
+
 ### Estimación de memoria (`estimateCatalogMemoryGb`)
 
 El estimador usa primero el footprint curado del catálogo (`recommended_ram_gb`) cuando existe, porque representa el tamaño operativo esperado del GGUF recomendado. Si falta ese dato, usa un fallback sintético:

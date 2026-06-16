@@ -44,6 +44,37 @@ Item {
         return out
     }
 
+    function featuredRecommendations() {
+        const lanes = ["General", "Reasoning", "Código"]
+        let out = []
+        function hasModel(candidate) {
+            for (let i = 0; i < out.length; ++i) {
+                if (String(out[i].name ?? "") === String(candidate.name ?? ""))
+                    return true
+            }
+            return false
+        }
+        for (let l = 0; l < lanes.length; ++l) {
+            for (let i = 0; i < App.modelRecommendations.length; ++i) {
+                const m = App.modelRecommendations[i]
+                if (String(m.recommendationLane ?? "General") !== lanes[l])
+                    continue
+                if (String(m.fit ?? "") === "No entra")
+                    continue
+                if (!hasModel(m)) {
+                    out.push(m)
+                    break
+                }
+            }
+        }
+        for (let i = 0; i < App.modelRecommendations.length && out.length < 3; ++i) {
+            const m = App.modelRecommendations[i]
+            if (String(m.fit ?? "") !== "No entra" && !hasModel(m))
+                out.push(m)
+        }
+        return out
+    }
+
     LcDialog {
         id: addDlg
         title: (App.langV, App.l("models.addRoot"))
@@ -149,7 +180,7 @@ Item {
                     spacing: 10
 
                     Repeater {
-                        model: Math.min(3, App.modelRecommendations.length)
+                        model: root.featuredRecommendations()
                         delegate: Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
@@ -157,7 +188,7 @@ Item {
                             color: Theme.surfaceBg
                             border.color: Theme.borderColor
 
-                            readonly property var item: App.modelRecommendations[index] ?? ({})
+                            readonly property var item: modelData ?? ({})
 
                             ColumnLayout {
                                 anchors.fill: parent
@@ -167,12 +198,13 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Text {
-                                        text: item.fit ?? ""
+                                        text: (item.recommendationLane ?? "General") + " · " + (item.fit ?? "")
                                         color: (item.fit ?? "") === "No entra" ? Theme.errorText
                                              : ((item.fit ?? "") === "Marginal" ? Theme.warnText : Theme.successText)
                                         font { pixelSize: 10; bold: true }
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
                                     }
-                                    Item { Layout.fillWidth: true }
                                     Text {
                                         text: (item.score ?? 0) + "/100"
                                         color: Theme.accent

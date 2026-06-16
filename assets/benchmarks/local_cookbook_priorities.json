@@ -17,16 +17,27 @@
       "label": "Hugging Face trending leaderboard spaces",
       "url": "https://huggingface.co/spaces?sort=trending&search=leader",
       "reason": "Leaderboard ecosystem signal for open, small, and low-bit model evaluation."
+    },
+    {
+      "label": "Hugging Face local open-weight 2026 guidance",
+      "url": "https://huggingface.co/blog/ngxson/make-your-own-local-llm",
+      "reason": "Current local-model guidance that treats Qwen3 8B as a practical default for local users."
+    },
+    {
+      "label": "llama.cpp VRAM sizing guide",
+      "url": "https://apxml.com/posts/ultimate-vram-guide-local-llms",
+      "reason": "Practical 8 GB VRAM sizing for Q4_K_M models around 8B-9B at 32k context."
     }
   ],
   "models": {
     "gemma 3n e4b": 92,
-    "qwen2.5 7b": 95,
+    "qwen2.5 7b": 88,
     "qwen2.5 coder 7b": 96,
     "meta llama 3.1 8b": 88,
     "meta llama 3 8b": 86,
-    "qwen3 8b": 90,
-    "deepseek r1 qwen 7b": 90,
+    "qwen3 8b": 99,
+    "qwen3.5 9b": 97,
+    "deepseek r1 qwen 7b": 94,
     "qwen2.5 coder 32b": 98,
     "mistral small 24b": 90,
     "llama 3.3 70b": 95,

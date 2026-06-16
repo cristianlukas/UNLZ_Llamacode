@@ -5305,6 +5305,10 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
             && runMode == QLatin1String("gpu")
             && model.value(QStringLiteral("name")).toString().startsWith(QStringLiteral("Qwen/")))
         composite += 2.0; // prefer official Qwen 7B/8B picks over derivatives on 8 GB GPUs.
+    if (vramGb >= 7.0 && paramsB >= 7.0 && paramsB <= 10.0
+            && runMode == QLatin1String("gpu")
+            && model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen3-8B"), Qt::CaseInsensitive))
+        composite += 2.0; // current local default: Qwen3 8B Q4 fits 8 GB VRAM cleanly at 32k.
 
     if (runMode == QLatin1String("partial_offload") && tps < 5.0)
         composite = qMin(composite, 68.0);
@@ -5330,6 +5334,18 @@ static double catalogVersionKey(const QString &name)
         return f;
     }
     return 0.0;
+}
+
+static QString recommendationLane(const QString &caps, const QString &runMode, double paramsB)
+{
+    const QString useCase = catalogUseCase(caps);
+    if (useCase == QLatin1String("coding"))
+        return QStringLiteral("Código");
+    if (useCase == QLatin1String("reasoning"))
+        return QStringLiteral("Reasoning");
+    if (runMode == QLatin1String("partial_offload") && paramsB >= 8.5 && paramsB <= 10.5)
+        return QStringLiteral("Calidad");
+    return QStringLiteral("General");
 }
 
 // ── Public methods ─────────────────────────────────────────────────────────────
@@ -5477,6 +5493,7 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("family")] = catalogFamily(name, m.value(QStringLiteral("architecture")).toString());
             row[QStringLiteral("capabilities")] = caps;
             row[QStringLiteral("useCase")] = catalogUseCase(caps);
+            row[QStringLiteral("recommendationLane")] = recommendationLane(caps, runMode, paramsB);
             row[QStringLiteral("params")] = m.value(QStringLiteral("parameter_count")).toString(QStringLiteral("%1B").arg(QString::number(paramsB, 'f', 1)));
             row[QStringLiteral("quant")] = quant;
             row[QStringLiteral("sizeGb")] = requiredGb;
@@ -5530,6 +5547,8 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("fileName")] = m.fileName;
             row[QStringLiteral("family")] = m.family;
             row[QStringLiteral("capabilities")] = m.capabilities;
+            row[QStringLiteral("useCase")] = catalogUseCase(m.capabilities);
+            row[QStringLiteral("recommendationLane")] = recommendationLane(m.capabilities, QStringLiteral("partial_offload"), 30.0);
             row[QStringLiteral("params")] = m.params;
             row[QStringLiteral("quant")] = m.quant;
             row[QStringLiteral("sizeGb")] = m.sizeGb;
