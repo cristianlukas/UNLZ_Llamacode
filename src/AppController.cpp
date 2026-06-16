@@ -273,6 +273,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
 
     connect(&m_binaries, &BinaryRegistry::countChanged, this, &AppController::setupStateChanged);
     connect(&m_catalog, &ModelCatalog::countChanged, this, &AppController::setupStateChanged);
+    connect(&m_profiles, &ProfileManager::launchesChanged, this, &AppController::setupStateChanged);
 
     // Scheduler de Tasks (cron in-app). taskDue→runTask. El toggle global persiste.
     m_scheduler = new TaskScheduler(&m_tasks, this);
@@ -5815,6 +5816,74 @@ void AppController::openModelRecommendation(const QString &repo)
 {
     if (repo.trimmed().isEmpty()) return;
     QDesktopServices::openUrl(QUrl(QStringLiteral("https://huggingface.co/%1").arg(repo)));
+}
+
+QString AppController::createRecommendedLaunchProfile()
+{
+    if (m_binaries.count() <= 0) {
+        emit serverError(QStringLiteral("Instalá o registrá un binario llama-server primero."));
+        return {};
+    }
+    if (m_catalog.count() <= 0) {
+        emit serverError(QStringLiteral("Descargá o registrá un modelo GGUF primero."));
+        return {};
+    }
+
+    const QModelIndex binIndex = m_binaries.index(0, 0);
+    const QString binaryId = m_binaries.data(binIndex, BinaryRegistry::IdRole).toString();
+    const QString binaryName = m_binaries.data(binIndex, BinaryRegistry::NameRole).toString();
+
+    QString modelId;
+    QString modelName;
+    for (int row = 0; row < m_catalog.rowCount(); ++row) {
+        const QVariantMap m = m_catalog.getAt(row);
+        if (!m.value(QStringLiteral("isAvailable"), true).toBool())
+            continue;
+        modelId = m.value(QStringLiteral("id")).toString();
+        modelName = m.value(QStringLiteral("fileName")).toString();
+        break;
+    }
+    if (binaryId.isEmpty() || modelId.isEmpty()) {
+        emit serverError(QStringLiteral("No se pudo resolver binario/modelo para crear el perfil."));
+        return {};
+    }
+
+    QString base = QFileInfo(modelName).completeBaseName();
+    base.remove(QRegularExpression(QStringLiteral("[-_](Q[0-9].*|IQ[0-9].*|BF16|F16|F32)$"),
+                                   QRegularExpression::CaseInsensitiveOption));
+    if (base.isEmpty())
+        base = QStringLiteral("Perfil local");
+
+    const QString backendId = m_profiles.addBackend(
+        QStringLiteral("%1 · Backend").arg(base),
+        binaryId,
+        QStringLiteral("127.0.0.1"),
+        8080);
+    const QString modelProfileId = m_profiles.addModelProfile(
+        QStringLiteral("%1 · Model").arg(base),
+        modelId,
+        QString(),
+        QString());
+    const QString runtimeId = m_profiles.addRuntimePreset(
+        QStringLiteral("%1 · Runtime").arg(base),
+        32768,
+        512,
+        -1,
+        true,
+        true);
+    const QString launchId = m_profiles.addLaunchProfile(base, backendId, modelProfileId, runtimeId);
+    if (launchId.isEmpty()) {
+        emit serverError(QStringLiteral("No se pudo crear el perfil de lanzamiento."));
+        return {};
+    }
+
+    writeSetting(QStringLiteral("lastLaunchId"), launchId);
+    computeEffectiveProfile(launchId);
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Perfil inicial creado: %1 con %2.").arg(base, binaryName));
+    emit setupStateChanged();
+    emit activeLaunchIdChanged();
+    return launchId;
 }
 
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)

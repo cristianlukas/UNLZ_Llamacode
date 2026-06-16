@@ -134,6 +134,7 @@ Core principle:
 | Dedicated `LlamaProcessManager` | ⏳ P1 refactor |
 | Automatic health-check endpoint | ✅ (polling /health post-start) |
 | Port-collision pre-check on server start | ✅ |
+| First-run setup popup (binary + model + profile) | ✅ |
 | Native agent (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 
 ## Goal

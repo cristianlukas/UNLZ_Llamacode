@@ -55,6 +55,7 @@ class AppController : public QObject
     Q_PROPERTY(bool needsSetup READ needsSetup NOTIFY setupStateChanged)
     Q_PROPERTY(bool hasAnyBinary READ hasAnyBinary NOTIFY setupStateChanged)
     Q_PROPERTY(bool hasAnyModel  READ hasAnyModel  NOTIFY setupStateChanged)
+    Q_PROPERTY(bool hasAnyLaunch READ hasAnyLaunch NOTIFY setupStateChanged)
     Q_PROPERTY(QString serverBaseUrl READ serverBaseUrl NOTIFY serverRunningChanged)
     // Capacidades del modelo activo. Vision = el server se lanzó con --mmproj.
     Q_PROPERTY(bool serverHasVision READ serverHasVision NOTIFY serverHasVisionChanged)
@@ -148,9 +149,10 @@ public:
     QString serverLog()      const { return m_log; }
     QString activeLaunchId() const { return m_activeLaunchId; }
     QVariantMap effectiveProfile() const { return m_effectiveProfile; }
-    bool needsSetup() const { return m_binaries.count() == 0 || m_catalog.count() == 0; }
+    bool needsSetup() const { return !hasAnyBinary() || !hasAnyModel() || !hasAnyLaunch(); }
     bool hasAnyBinary() const { return m_binaries.count() > 0; }
     bool hasAnyModel()  const { return m_catalog.count()  > 0; }
+    bool hasAnyLaunch() const { return !m_profiles.launchProfilesForMenu().isEmpty(); }
     QString serverBaseUrl() const {
         const QStringList args = m_effectiveProfile.value("effectiveArgs").toStringList();
         QString host = QStringLiteral("127.0.0.1");
@@ -502,6 +504,7 @@ public:
     // Escaneo pesado de arranque (binaries/roots/hardware/catálogo + migraciones).
     // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
     Q_INVOKABLE void runStartupScan();
+    Q_INVOKABLE QString createRecommendedLaunchProfile();
     Q_INVOKABLE void downloadRecommendedModel(const QString &repo, const QString &fileName);
     Q_INVOKABLE void openModelRecommendation(const QString &repo);
 

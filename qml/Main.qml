@@ -298,7 +298,7 @@ ApplicationWindow {
         clip: true
         closePolicy: Popup.NoAutoClose
         width: 760
-        height: 560
+        height: 640
         padding: 18
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
@@ -531,6 +531,42 @@ ApplicationWindow {
                 }
             }
 
+            // Step 3: launch profile
+            Text {
+                text: (App.hasAnyLaunch ? "✓ " : "3. ") + "Perfil de lanzamiento"
+                color: App.hasAnyLaunch ? Theme.accent : Theme.textPrimary
+                font.pixelSize: 13
+                font.bold: true
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                enabled: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
+                opacity: enabled ? 1.0 : (App.hasAnyLaunch ? 0.5 : 0.65)
+                LcButton {
+                    text: "Crear perfil recomendado"
+                    enabled: App.hasAnyBinary && App.hasAnyModel && !App.hasAnyLaunch
+                    onClicked: {
+                        const id = App.createRecommendedLaunchProfile()
+                        if (id.length > 0) {
+                            errorToast.show("Perfil creado.")
+                            stack.currentIndex = 0
+                        }
+                    }
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: App.hasAnyLaunch
+                          ? "Listo para lanzar."
+                          : (App.hasAnyBinary && App.hasAnyModel
+                             ? "Usa el binario y el GGUF disponibles para armar Backend, Model y Runtime."
+                             : "Primero completá binario y modelo.")
+                    color: Theme.textMuted
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
+                }
+            }
+
             Item { Layout.fillHeight: true }
             Text {
                 visible: App.needsSetup
@@ -669,7 +705,7 @@ ApplicationWindow {
         function onOfficialBinaryInstallFinished(success, message, binaryPath) {
             errorToast.show(message)
             if (success && binaryPath.length > 0) {
-                stack.currentIndex = 3
+                stack.currentIndex = App.hasAnyModel ? 0 : 2
             }
         }
     }

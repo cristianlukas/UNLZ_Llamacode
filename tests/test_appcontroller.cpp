@@ -7,8 +7,10 @@
 #include <QTemporaryDir>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QFileInfo>
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
+#include "core/CatalogModel.h"
 
 class AppControllerTests : public QObject
 {
@@ -22,6 +24,7 @@ private slots:
     void parseGpuPowerCsvParses();
     void parseGpuPowerCsvTolerant();
     void ggufRecommendationCandidateFilter();
+    void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
     void browserTeachSkillsLifecycle();
 
@@ -112,6 +115,45 @@ void AppControllerTests::ggufRecommendationCandidateFilter()
         QStringLiteral("Qwen/Qwen3.5-9B-MTP"), false, true));
     QVERIFY(AppController::isGgufRecommendationCandidate(
         QStringLiteral("unsloth/Qwen3.5-9B-GGUF"), false, false));
+}
+
+void AppControllerTests::createRecommendedLaunchProfileBuildsProfile()
+{
+    AppController app;
+
+    const QString exePath = m_tmp.filePath(QStringLiteral("llama-server.exe"));
+    QFile exe(exePath);
+    QVERIFY(exe.open(QIODevice::WriteOnly));
+    exe.write("fake-binary");
+    exe.close();
+    const QString binaryId = app.binaryRegistry()->add(
+        exePath, QStringLiteral("fake llama-server"), QStringLiteral("custom"),
+        QStringLiteral("cpu"), QString());
+    QVERIFY(!binaryId.isEmpty());
+
+    const QString modelPath = m_tmp.filePath(QStringLiteral("Qwen3.5-9B-Q4_K_M.gguf"));
+    QFile modelFile(modelPath);
+    QVERIFY(modelFile.open(QIODevice::WriteOnly));
+    modelFile.write("GGUF");
+    modelFile.close();
+
+    CatalogModel model;
+    model.id = QStringLiteral("setup-model");
+    model.rootId = QStringLiteral("setup-root");
+    model.absolutePath = modelPath;
+    model.fileName = QFileInfo(modelPath).fileName();
+    model.sizeBytes = QFileInfo(modelPath).size();
+    model.mtime = QFileInfo(modelPath).lastModified();
+    model.familyHint = QStringLiteral("qwen");
+    model.quantHint = QStringLiteral("Q4_K_M");
+    model.isAvailable = true;
+    app.modelCatalog()->addOrUpdate(model);
+
+    const QString launchId = app.createRecommendedLaunchProfile();
+    QVERIFY(!launchId.isEmpty());
+    QVERIFY(app.hasAnyLaunch());
+    QVERIFY(!app.needsSetup());
+    QCOMPARE(app.profileManager()->getLaunchProfile(launchId).value("id").toString(), launchId);
 }
 
 void AppControllerTests::browserMcpEffectiveResolves()

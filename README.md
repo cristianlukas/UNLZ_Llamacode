@@ -135,6 +135,7 @@ Principio central:
 | `LlamaProcessManager` dedicado | ⏳ P1 refactor |
 | Endpoint health check automático | ✅ (polling /health post-start) |
 | Pre-check colisión de puerto al iniciar server | ✅ |
+| Popup de primer inicio (binario + modelo + perfil) | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 
 ## Objetivo
