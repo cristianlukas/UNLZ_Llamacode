@@ -29,6 +29,8 @@ $Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Release' }
 $QtVer   = '6.8.3'
 $QtArch  = 'win64_msvc2022_64'
 $QtDir   = "C:\Qt\$QtVer\msvc2022_64"
+$QtAqtModules = @('qtmultimedia')
+$QtRequiredComponents = @('Core', 'Quick', 'Sql', 'Concurrent', 'Network', 'Widgets', 'Multimedia', 'Svg')
 
 function Info($m)  { Write-Host "[*] $m"  -ForegroundColor Cyan }
 function Ok($m)    { Write-Host "[OK] $m" -ForegroundColor Green }
@@ -40,6 +42,17 @@ function Refresh-Path {
     $machine = [Environment]::GetEnvironmentVariable('Path','Machine')
     $user    = [Environment]::GetEnvironmentVariable('Path','User')
     $env:Path = "$machine;$user"
+}
+
+function Get-MissingQtComponents {
+    $missing = @()
+    foreach ($component in $QtRequiredComponents) {
+        $config = Join-Path $QtDir "lib\cmake\Qt6$component\Qt6$component`Config.cmake"
+        if (-not (Test-Path $config)) {
+            $missing += $component
+        }
+    }
+    return $missing
 }
 
 Write-Host ""
@@ -99,12 +112,24 @@ $Generator = if (Test-Path "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe") 
 Ok "VS Build Tools 2022 ($Generator)"
 
 # ── Qt 6.8.3 (msvc2022_64) via aqtinstall ───────────────────────────────────
-if (-not (Test-Path "$QtDir\lib\cmake\Qt6\Qt6Config.cmake")) {
+$QtBaseConfig = "$QtDir\lib\cmake\Qt6\Qt6Config.cmake"
+if (-not (Test-Path $QtBaseConfig)) {
     Info "Installing Qt $QtVer ($QtArch) via aqtinstall..."
     python -m pip install --user --upgrade aqtinstall
-    python -m aqt install-qt windows desktop $QtVer $QtArch -O C:\Qt
+    python -m aqt install-qt windows desktop $QtVer $QtArch -O C:\Qt --modules $QtAqtModules
+} else {
+    $MissingQtComponents = @(Get-MissingQtComponents)
+    if ($MissingQtComponents.Count -gt 0) {
+        Info "Qt exists but is missing required components: $($MissingQtComponents -join ', '). Installing add-on modules..."
+        python -m pip install --user --upgrade aqtinstall
+        python -m aqt install-qt windows desktop $QtVer $QtArch -O C:\Qt --modules $QtAqtModules
+    }
 }
-if (-not (Test-Path "$QtDir\lib\cmake\Qt6\Qt6Config.cmake")) { Die "Qt6 not found at $QtDir after install." }
+if (-not (Test-Path $QtBaseConfig)) { Die "Qt6 not found at $QtDir after install." }
+$MissingQtComponents = @(Get-MissingQtComponents)
+if ($MissingQtComponents.Count -gt 0) {
+    Die "Qt6 at $QtDir is incomplete. Missing components: $($MissingQtComponents -join ', ')."
+}
 Ok "Qt6: $QtDir"
 
 # ── Clone / update ──────────────────────────────────────────────────────────

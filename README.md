@@ -69,7 +69,8 @@ Instala automáticamente:
 - **git, CMake, Ninja, Python** y el toolchain C++ — MSVC v143 (Build Tools
   2022) en Windows / `g++` + `build-essential` en Linux.
 - **Qt 6.8.3** vía `aqtinstall` en ambas plataformas (Windows `msvc2022_64`,
-  Linux `gcc_64`). En Linux se usa aqt — **no** los paquetes Qt de la distro —
+  Linux `gcc_64`), incluyendo módulos requeridos como `qtmultimedia` y `qtsvg`.
+  En Linux se usa aqt — **no** los paquetes Qt de la distro —
   porque el código requiere Qt ≥ 6.5 (`QQmlApplicationEngine::loadFromModule`) y
   varias LTS traen Qt viejo (Ubuntu 24.04 = 6.4.2). De la distro sólo salen el
   toolchain y las libs de sistema contra las que Qt enlaza (GL, xcb, glib,
@@ -407,7 +408,7 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 ## Stack técnico
 
 - **Qt 6.8.3** (`msvc2022_64`)
-- **Qt modules**: Core, Quick, Sql, Concurrent, Network, Widgets, Multimedia
+- **Qt modules**: Core, Quick, Sql, Concurrent, Network, Widgets, Multimedia, Svg
 - **Secretos**: QtKeychain (Secret Service / WinCred / Keychain) con fallback DPAPI
 - **Compilador**: MSVC 2022 (VS BuildTools)
 - **CMake 3.21+**, generator: Visual Studio 17 2022 (multi-config)
