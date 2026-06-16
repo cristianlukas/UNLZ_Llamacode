@@ -556,7 +556,7 @@ void AppController::startServer(const QString &launchProfileId)
     }
 
     const QString binaryPath = m_effectiveProfile["binaryPath"].toString();
-    const QStringList args = m_effectiveProfile["effectiveArgs"].toStringList();
+    QStringList args = m_effectiveProfile["effectiveArgs"].toStringList();
     const QVariantMap envMap = m_effectiveProfile["effectiveEnv"].toMap();
 
     // Diagnóstico temprano del binario: existe, es archivo y es ejecutable.
@@ -580,8 +580,9 @@ void AppController::startServer(const QString &launchProfileId)
         }
     }
 
-    // Pre-check de colisión de puerto: si está ocupado, llama-server falla al bindear
-    // y sale con error genérico. Avisamos antes con mensaje claro.
+    // Pre-check de colisión de puerto: si el puerto del perfil está ocupado por
+    // otra app (Steam/servicios locales/etc.), no abortar. Buscar el siguiente
+    // libre, persistirlo en el backend y arrancar con ese puerto.
     {
         const int portIdx = args.indexOf(QStringLiteral("--port"));
         const quint16 port = (portIdx >= 0 && portIdx + 1 < args.size())
@@ -595,16 +596,66 @@ void AppController::startServer(const QString &launchProfileId)
             addr = QHostAddress(QHostAddress::Any);
         else if (host == QStringLiteral("localhost"))
             addr = QHostAddress(QHostAddress::LocalHost);
-        if (!probe.listen(addr, port)) {
+
+        quint16 selectedPort = port;
+        QString firstError;
+        bool foundFreePort = false;
+        const quint32 maxPort = qMin<quint32>(65535, static_cast<quint32>(port) + 100);
+        for (quint32 candidate = port; candidate <= maxPort; ++candidate) {
+            if (probe.listen(addr, static_cast<quint16>(candidate))) {
+                selectedPort = static_cast<quint16>(candidate);
+                foundFreePort = true;
+                probe.close();
+                break;
+            }
+            if (candidate == port)
+                firstError = probe.errorString();
+        }
+
+        if (!foundFreePort) {
             appendServerEvent(QStringLiteral("lifecycle"),
-                              QStringLiteral("startServer abort: puerto %1 (%2) ocupado: %3")
-                                  .arg(QString::number(port), host, probe.errorString()));
+                              QStringLiteral("startServer abort: puertos %1-%2 (%3) ocupados: %4")
+                                  .arg(QString::number(port),
+                                       QString::number(maxPort),
+                                       host,
+                                       firstError));
             emit serverError(QStringLiteral(
-                "El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
-                                 .arg(port));
+                "El puerto %1 ya está en uso y no encontré un puerto libre hasta %2. "
+                "Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
+                                 .arg(port)
+                                 .arg(maxPort));
             return;
         }
-        probe.close();
+
+        if (selectedPort != port) {
+            if (portIdx >= 0 && portIdx + 1 < args.size())
+                args[portIdx + 1] = QString::number(selectedPort);
+            else
+                args << QStringLiteral("--port") << QString::number(selectedPort);
+
+            m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;
+            m_effectiveProfile[QStringLiteral("commandLine")] =
+                QStringLiteral("\"%1\" %2").arg(binaryPath, args.join(QLatin1Char(' ')));
+            emit effectiveProfileChanged();
+
+            const auto launch = m_profiles.resolveLaunch(launchProfileId);
+            BackendProfile backend = m_profiles.resolveBackend(launch.backendProfileId);
+            if (!backend.id.isEmpty()) {
+                m_profiles.updateBackend(backend.id, backend.name, backend.binaryId,
+                                         backend.host, selectedPort, backend.baseArgs);
+            }
+
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Puerto %1 (%2) ocupado: %3. Usando %4 y actualizando el perfil.")
+                                  .arg(QString::number(port),
+                                       host,
+                                       firstError,
+                                       QString::number(selectedPort)));
+            emit serverError(QStringLiteral(
+                "El puerto %1 estaba ocupado; actualicé el perfil para usar %2.")
+                                 .arg(port)
+                                 .arg(selectedPort));
+        }
     }
 
     m_proc = new QProcess(this);
