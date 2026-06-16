@@ -82,6 +82,17 @@ function New-LlamaCodeShortcut {
     $shortcut.Save()
 }
 
+function Stop-LlamaCodeProcesses {
+    $processNames = @('LlamaCode', 'llama-server', 'opencode', 'aider')
+    foreach ($name in $processNames) {
+        Get-Process -Name $name -ErrorAction SilentlyContinue | ForEach-Object {
+            Info "Stopping running process $($_.ProcessName) (PID $($_.Id))..."
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+    Start-Sleep -Milliseconds 800
+}
+
 Write-Host ""
 Write-Host "=== LlamaCode bootstrap (Windows) ===" -ForegroundColor Magenta
 Write-Host "Target: $Dir  branch=$Branch  config=$Config"
@@ -173,6 +184,7 @@ Ok "source ready"
 
 # ── Build ───────────────────────────────────────────────────────────────────
 $BuildDir = Join-Path $Dir 'build'
+Stop-LlamaCodeProcesses
 Info "Configuring..."
 & $CMake -S $Dir -B $BuildDir -G $Generator -A x64 -DCMAKE_PREFIX_PATH="$QtDir"
 if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
