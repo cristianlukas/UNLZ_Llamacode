@@ -57,6 +57,38 @@
 #include <algorithm>
 #include <cmath>
 
+namespace {
+QHostAddress bindAddressForHost(const QString &host)
+{
+    if (host == QLatin1String("0.0.0.0") || host.isEmpty())
+        return QHostAddress(QHostAddress::Any);
+    if (host == QLatin1String("localhost"))
+        return QHostAddress(QHostAddress::LocalHost);
+    return QHostAddress(host);
+}
+
+bool canListenOnPort(const QString &host, quint16 port, QString *error = nullptr)
+{
+    QTcpServer probe;
+    const bool ok = probe.listen(bindAddressForHost(host), port);
+    if (!ok && error)
+        *error = probe.errorString();
+    probe.close();
+    return ok;
+}
+
+int nextAvailablePort(const QString &host, int requestedPort)
+{
+    const int start = std::max(1, requestedPort + 1);
+    const int end = std::min(65535, requestedPort + 200);
+    for (int port = start; port <= end; ++port) {
+        if (canListenOnPort(host, static_cast<quint16>(port)))
+            return port;
+    }
+    return 0;
+}
+}
+
 struct ResearchHit {
     QString title;
     QString url;
@@ -588,22 +620,24 @@ void AppController::startServer(const QString &launchProfileId)
         const int hostIdx = args.indexOf(QStringLiteral("--host"));
         const QString host = (hostIdx >= 0 && hostIdx + 1 < args.size())
                                  ? args[hostIdx + 1] : QStringLiteral("127.0.0.1");
-        QTcpServer probe;
-        QHostAddress addr(host);
-        if (host == QStringLiteral("0.0.0.0") || host.isEmpty())
-            addr = QHostAddress(QHostAddress::Any);
-        else if (host == QStringLiteral("localhost"))
-            addr = QHostAddress(QHostAddress::LocalHost);
-        if (!probe.listen(addr, port)) {
+        QString listenError;
+        if (!canListenOnPort(host, port, &listenError)) {
+            const int suggestedPort = nextAvailablePort(host, port);
             appendServerEvent(QStringLiteral("lifecycle"),
                               QStringLiteral("startServer abort: puerto %1 (%2) ocupado: %3")
-                                  .arg(QString::number(port), host, probe.errorString()));
-            emit serverError(QStringLiteral(
-                "El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
-                                 .arg(port));
+                                  .arg(QString::number(port), host, listenError));
+            const bool wantsAgent = !m_pendingAutoAgentLaunchId.isEmpty();
+            if (suggestedPort > 0) {
+                emit serverPortCollision(launchProfileId, host, port, suggestedPort, wantsAgent);
+            }
+            const QString msg = suggestedPort > 0
+                ? QStringLiteral("El puerto %1 ya está en uso. Podés cambiar el perfil al puerto %2 y reintentar.")
+                      .arg(port).arg(suggestedPort)
+                : QStringLiteral("El puerto %1 ya está en uso. Cerrá el proceso que lo ocupa o cambiá el puerto del perfil.")
+                      .arg(port);
+            emit serverError(msg);
             return;
         }
-        probe.close();
     }
 
     m_proc = new QProcess(this);
@@ -796,6 +830,48 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
         emit agentStartingChanged();
         startAgent(launchId);
     }
+}
+
+bool AppController::useSuggestedServerPort(const QString &launchProfileId, int port,
+                                           bool startAgent)
+{
+    if (port <= 0 || port > 65535) {
+        emit serverError(QStringLiteral("Puerto inválido: %1.").arg(port));
+        return false;
+    }
+    if (serverRunning()) {
+        emit serverError(QStringLiteral("Server already running. Stop it first."));
+        return false;
+    }
+
+    const LaunchProfile launch = m_profiles.resolveLaunch(launchProfileId);
+    if (launch.id.isEmpty() || launch.backendProfileId.isEmpty()) {
+        emit serverError(QStringLiteral("No se pudo resolver el backend del perfil."));
+        return false;
+    }
+    const BackendProfile backend = m_profiles.resolveBackend(launch.backendProfileId);
+    if (backend.id.isEmpty()) {
+        emit serverError(QStringLiteral("No se pudo resolver el backend del perfil."));
+        return false;
+    }
+    if (!canListenOnPort(backend.host, static_cast<quint16>(port))) {
+        emit serverError(QStringLiteral("El puerto %1 también está en uso.").arg(port));
+        return false;
+    }
+    if (!m_profiles.updateBackendPort(backend.id, port)) {
+        emit serverError(QStringLiteral("No se pudo actualizar el puerto del perfil."));
+        return false;
+    }
+
+    computeEffectiveProfile(launchProfileId);
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Perfil actualizado: backend %1 usa puerto %2.")
+                          .arg(backend.name, QString::number(port)));
+    if (startAgent)
+        startServerAndAgent(launchProfileId);
+    else
+        startServer(launchProfileId);
+    return true;
 }
 
 void AppController::fetchChatThinkingSupport()

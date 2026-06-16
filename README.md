@@ -373,6 +373,9 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   corre (`serverStats`), para ver el consumo real.
 - **Diagnóstico del log**: detecta por regex OOM, colisión de puerto, modelo cargado,
   etc., y los emite como eventos con nivel.
+- **Colisión de puerto recuperable**: si el puerto del perfil está ocupado, la UI
+  ofrece un puerto libre, actualiza el `BackendProfile` y relanza usando esa misma
+  fuente de configuración.
 
 ## Otras capacidades
 

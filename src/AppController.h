@@ -259,6 +259,8 @@ public:
     Q_INVOKABLE void setChatThinkingEnabled(bool enabled);
     Q_INVOKABLE void startServer(const QString &launchProfileId);
     Q_INVOKABLE void startServerAndAgent(const QString &launchProfileId);
+    Q_INVOKABLE bool useSuggestedServerPort(const QString &launchProfileId, int port,
+                                            bool startAgent);
     Q_INVOKABLE void stopServer();
     Q_INVOKABLE void computeEffectiveProfile(const QString &launchProfileId);
     // Recalcula la vista previa desde valores en memoria del editor, sin persistir.
@@ -574,6 +576,8 @@ signals:
     void integrationsChanged();
     void integrationTestResult(const QString &id, bool ok, const QString &message);
     void serverError(const QString &message);
+    void serverPortCollision(const QString &launchProfileId, const QString &host,
+                             int requestedPort, int suggestedPort, bool startAgent);
     // Diagnóstico detectado por regex en el log del server (OOM, puerto, modelo cargado…).
     // level: "error" | "warn" | "info".
     void serverDiagnostic(const QString &level, const QString &message);
