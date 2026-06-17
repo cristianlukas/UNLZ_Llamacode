@@ -5346,6 +5346,19 @@ struct RecommendedModelDef {
     QString notes;
 };
 
+static double moeActiveParamsFromName(const QString &name, double fallbackParamsB)
+{
+    QRegularExpression re(QStringLiteral("A(\\d+(?:\\.\\d+)?)B"), QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch m = re.match(name);
+    if (m.hasMatch()) {
+        bool ok = false;
+        const double active = m.captured(1).toDouble(&ok);
+        if (ok && active > 0)
+            return active;
+    }
+    return qMin(fallbackParamsB, qMax(1.0, fallbackParamsB * 0.12));
+}
+
 static double catalogParamsB(const QJsonObject &model)
 {
     const double raw = model.value(QStringLiteral("parameters_raw")).toDouble();
@@ -5396,6 +5409,16 @@ static QString catalogCapabilities(const QJsonObject &model)
     if (combined.contains(QStringLiteral("embed"))) caps << QStringLiteral("embedding");
     if (combined.contains(QStringLiteral("chat")) || combined.contains(QStringLiteral("instruct")) || combined.contains(QStringLiteral("instruction"))) caps << QStringLiteral("chat");
     if (model.value(QStringLiteral("is_moe")).toBool() || model.value(QStringLiteral("active_parameters")).toDouble() > 0) caps << QStringLiteral("moe");
+    const QJsonArray explicitCaps = model.value(QStringLiteral("capabilities")).toArray();
+    for (const QJsonValue &v : explicitCaps) {
+        const QString cap = v.toString().toLower();
+        if (cap == QLatin1String("tool_use") || cap == QLatin1String("function_calling"))
+            caps << QStringLiteral("tool_use");
+        else if (cap == QLatin1String("vision"))
+            caps << QStringLiteral("vision");
+        else if (cap == QLatin1String("mtp"))
+            caps << QStringLiteral("mtp");
+    }
     if (caps.isEmpty()) caps << QStringLiteral("general");
     caps.removeDuplicates();
     return caps.join(QLatin1Char(','));
@@ -5407,6 +5430,7 @@ static QString catalogUseCase(const QString &caps)
     if (caps.contains(QStringLiteral("reasoning"))) return QStringLiteral("reasoning");
     if (caps.contains(QStringLiteral("vision"))) return QStringLiteral("multimodal");
     if (caps.contains(QStringLiteral("embedding"))) return QStringLiteral("embedding");
+    if (caps.contains(QStringLiteral("tool_use"))) return QStringLiteral("agentic");
     if (caps.contains(QStringLiteral("chat"))) return QStringLiteral("chat");
     return QStringLiteral("general");
 }
@@ -5705,6 +5729,8 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
     const QString uc = catalogUseCase(caps);
     if (uc == QLatin1String("coding"))
         heuristicQuality -= 10;
+    else if (uc == QLatin1String("agentic"))
+        heuristicQuality += 4;
 
     double quality = heuristicQuality;
     if (benchmarkQuality >= 0) {
@@ -5768,9 +5794,20 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
             && runMode == QLatin1String("gpu")
             && model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen3-8B"), Qt::CaseInsensitive))
         composite += 2.0; // current local default: Qwen3 8B Q4 fits 8 GB VRAM cleanly at 32k.
+    if (vramGb >= 7.0 && vramGb <= 9.5 && ramGb <= 20.0 && paramsB >= 7.0 && paramsB <= 9.0
+            && ctx >= 16384 && (caps.contains(QStringLiteral("tool_use")) || caps.contains(QStringLiteral("chat")))) {
+        composite += 7.0; // 8 GB notebooks benefit from agentic 7B/8B headroom for KV/cache.
+        if (model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen2.5-7B-Instruct"), Qt::CaseInsensitive))
+            composite += 4.0;
+        if (model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Hermes-3-Llama-3.1-8B"), Qt::CaseInsensitive))
+            composite += 3.0;
+    }
     if (vramGb > 0 && vramGb < 4.0
             && model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen3.5-2B"), Qt::CaseInsensitive))
         composite += 14.0; // tiny GPUs should see the practical 2B MTP option near the top.
+    if (vramGb >= 7.0 && vramGb <= 9.5 && ramGb <= 20.0
+            && runMode == QLatin1String("moe_active_gpu") && requiredGb > ramGb * 0.9)
+        composite -= 8.0; // keep big MoE visible, but behind lean 7B/8B picks on 16 GB RAM.
 
     if (runMode == QLatin1String("partial_offload") && tps < 5.0)
         composite = qMin(composite, 68.0);
@@ -6036,8 +6073,18 @@ void AppController::rebuildModelRecommendations()
 
         const double paramsB = catalogParamsB(model);
         const int ctx = m.ctxK * 1024;
-        const double requiredGb = estimateCatalogMemoryGb(model, paramsB, m.quant, ctx);
+        const double requiredGb = m.sizeGb > 0 ? m.sizeGb : estimateCatalogMemoryGb(model, paramsB, m.quant, ctx);
         const QString caps = m.capabilities;
+        const bool isMoe = caps.contains(QStringLiteral("moe"));
+        const double activeB = isMoe ? moeActiveParamsFromName(m.name + QLatin1Char(' ') + m.params, paramsB) : paramsB;
+        if (isMoe) {
+            model[QStringLiteral("is_moe")] = true;
+            model[QStringLiteral("active_parameters")] = activeB * 1000000000.0;
+        }
+        const double activeGpuGb = isMoe ? estimateMoeActiveGpuGb(model, activeB, m.quant, ctx) : requiredGb;
+        const bool moeActiveFitsGpu = isMoe && vramGb > 0
+            && activeGpuGb <= qMax(0.1, vramGb * 0.92)
+            && requiredGb <= vramGb + ramGb * 0.9;
         QString runMode;
         QString fit;
         double gpuFraction = 1.0;
@@ -6045,6 +6092,10 @@ void AppController::rebuildModelRecommendations()
         if (vramGb > 0 && requiredGb <= vramGb) {
             runMode = QStringLiteral("gpu");
             fit = QStringLiteral("Perfecto");
+        } else if (moeActiveFitsGpu) {
+            runMode = QStringLiteral("moe_active_gpu");
+            gpuFraction = 0.9;
+            fit = QStringLiteral("Razonable");
         } else if (vramGb > 0 && requiredGb <= vramGb + usableRamGb) {
             runMode = QStringLiteral("partial_offload");
             gpuFraction = qBound(0.0, vramGb / requiredGb, 1.0);
@@ -6057,14 +6108,17 @@ void AppController::rebuildModelRecommendations()
             runMode = QStringLiteral("no_fit");
             fit = QStringLiteral("No entra");
         }
+        const double scoreRequiredGb = runMode == QLatin1String("moe_active_gpu") ? activeGpuGb : requiredGb;
         const double tps = runMode == QLatin1String("no_fit")
             ? 0.0
-            : catalogSpeedTps(gpuName, paramsB, requiredGb, runMode, gpuFraction);
-        const int score = qMin(100, catalogScore(model, paramsB, requiredGb, ramGb, vramGb,
+            : catalogSpeedTps(gpuName, activeB, scoreRequiredGb, runMode, gpuFraction);
+        const int score = qMin(100, catalogScore(model, paramsB, scoreRequiredGb, ramGb, vramGb,
                                                  m.quant, caps, ctx, runMode, tps, -1.0, -1.0) + 8);
 
         QString runLabel = runMode;
         if (runMode == QLatin1String("gpu")) runLabel = QStringLiteral("GPU (todo en VRAM)");
+        else if (runMode == QLatin1String("moe_active_gpu"))
+            runLabel = QStringLiteral("MoE activo en GPU");
         else if (runMode == QLatin1String("partial_offload"))
             runLabel = QStringLiteral("VRAM+RAM (%1%% en GPU)").arg(qRound(gpuFraction * 100.0));
         else if (runMode == QLatin1String("cpu_only")) runLabel = QStringLiteral("CPU (todo en RAM)");
@@ -6081,16 +6135,22 @@ void AppController::rebuildModelRecommendations()
         row[QStringLiteral("quant")] = m.quant;
         row[QStringLiteral("sizeGb")] = requiredGb;
         row[QStringLiteral("requiredGb")] = requiredGb;
+        row[QStringLiteral("activeGpuGb")] = activeGpuGb;
         row[QStringLiteral("minRamGb")] = m.minRamGb;
         row[QStringLiteral("recommendedRamGb")] = m.recommendedRamGb;
         row[QStringLiteral("minVramGb")] = m.minVramGb;
         row[QStringLiteral("ctxK")] = m.ctxK;
         row[QStringLiteral("context")] = ctx;
-        row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est. · ~%3 GB @ %4k ctx · curado")
+        const QString moeNote = runMode == QLatin1String("moe_active_gpu")
+            ? QStringLiteral(" · activo ~%1 GB").arg(QString::number(activeGpuGb, 'f', 1))
+            : QString();
+        row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est.%3 · ~%4 GB @ %5k ctx · %6")
             .arg(runLabel)
             .arg(QString::number(tps, 'f', 1))
+            .arg(moeNote)
             .arg(QString::number(requiredGb, 'f', 1))
-            .arg(m.ctxK);
+            .arg(m.ctxK)
+            .arg(m.notes.isEmpty() ? QStringLiteral("curado") : m.notes);
         row[QStringLiteral("fit")] = fit;
         row[QStringLiteral("score")] = score;
         row[QStringLiteral("downloadable")] = true;
@@ -6103,6 +6163,18 @@ void AppController::rebuildModelRecommendations()
         {QStringLiteral("Qwen3.5 2B MTP"), QStringLiteral("unsloth/Qwen3.5-2B-MTP-GGUF"),
          QStringLiteral("Qwen3.5-2B-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use,mtp"),
          QStringLiteral("2B"), QStringLiteral("Q4_K_M"), 0, 2, 6, 1.2, 32, QStringLiteral("curated tiny-gpu")},
+        {QStringLiteral("Qwen2.5 7B Instruct"), QStringLiteral("bartowski/Qwen2.5-7B-Instruct-GGUF"),
+         QStringLiteral("Qwen2.5-7B-Instruct-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,tool_use"),
+         QStringLiteral("7.6B"), QStringLiteral("Q4_K_M"), 0, 5, 8, 4, 32, QStringLiteral("curated 8gb-agentic")},
+        {QStringLiteral("Hermes 3 Llama 3.1 8B"), QStringLiteral("bartowski/Hermes-3-Llama-3.1-8B-GGUF"),
+         QStringLiteral("Hermes-3-Llama-3.1-8B-IQ4_XS.gguf"), QStringLiteral("Llama"), QStringLiteral("chat,tool_use"),
+         QStringLiteral("8B"), QStringLiteral("IQ4_XS"), 4.45, 5, 8, 4, 32, QStringLiteral("curated 8gb-tool-json")},
+        {QStringLiteral("Qwen3.6 35B A3B Q3"), QStringLiteral("unsloth/Qwen3.6-35B-A3B-GGUF"),
+         QStringLiteral("Qwen3.6-35B-A3B-UD-Q3_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,tool_use,moe"),
+         QStringLiteral("35B A3B"), QStringLiteral("Q3_K_M"), 18.5, 16, 24, 8, 32, QStringLiteral("experimental moe 8gb")},
+        {QStringLiteral("Qwen3.6 35B A3B Q2"), QStringLiteral("unsloth/Qwen3.6-35B-A3B-GGUF"),
+         QStringLiteral("Qwen3.6-35B-A3B-UD-Q2_K_XL.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,tool_use,moe"),
+         QStringLiteral("35B A3B"), QStringLiteral("Q2_K_XL"), 14.5, 12, 16, 6, 32, QStringLiteral("experimental moe 8gb")},
         {QStringLiteral("Qwen3.5 9B"), QStringLiteral("unsloth/Qwen3.5-9B-GGUF"),
          QStringLiteral("Qwen3.5-9B-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use"),
          QStringLiteral("9B"), QStringLiteral("Q4_K_M"), 0, 8, 16, 6, 32, QStringLiteral("curated")},

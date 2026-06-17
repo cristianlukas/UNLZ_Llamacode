@@ -132,6 +132,11 @@ void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
                  QStringLiteral("Qwen/Qwen3.5-2B-MTP"),
                  QStringLiteral("Q4_K_M")),
              QStringLiteral("Qwen3.5-2B-Q4_K_M.gguf"));
+    QCOMPARE(AppController::recommendedGgufFileName(
+                 QStringLiteral("bartowski/Qwen2.5-7B-Instruct-GGUF"),
+                 QStringLiteral("Qwen/Qwen2.5-7B-Instruct"),
+                 QStringLiteral("Q4_K_M")),
+             QStringLiteral("Qwen2.5-7B-Instruct-Q4_K_M.gguf"));
 
     const QStringList siblings = {
         QStringLiteral("Qwen3.6-35B-A3B-UD-IQ3_S.gguf"),
@@ -142,6 +147,15 @@ void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
                  siblings,
                  QStringLiteral("Qwen3.6-35B-A3B-MTP-Q4_K_M.gguf")),
              QStringLiteral("Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"));
+    const QStringList hermesSiblings = {
+        QStringLiteral("Hermes-3-Llama-3.1-8B-Q3_K_M.gguf"),
+        QStringLiteral("Hermes-3-Llama-3.1-8B-IQ4_XS.gguf"),
+        QStringLiteral("Hermes-3-Llama-3.1-8B-Q8_0.gguf")
+    };
+    QCOMPARE(AppController::resolveRecommendedGgufFileName(
+                 hermesSiblings,
+                 QStringLiteral("Hermes-3-Llama-3.1-8B-IQ4_XS.gguf")),
+             QStringLiteral("Hermes-3-Llama-3.1-8B-IQ4_XS.gguf"));
 
     const QStringList catalogCandidates = {
         QStringLiteral(":/assets/hwfit/hf_models.json"),
