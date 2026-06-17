@@ -36,7 +36,8 @@
 ## Índice
 
 - [Instalación ultra-rápida](#instalación-ultra-rápida-banco-de-pruebas-aislado)
-- [Qué es](#qué-es) · [Estado actual](#estado-actual) · [Objetivo](#objetivo) · [Foco diferencial](#foco-diferencial)
+- [Qué es](#qué-es) · [Privacidad y datos locales](#privacidad-y-datos-locales) · [Hardware recomendado](#hardware-recomendado) · [Estado actual](#estado-actual)
+- [Objetivo](#objetivo) · [Foco diferencial](#foco-diferencial)
 - [Arquitectura](#arquitectura)
 - [Diseño Multi-llama.cpp](#diseño-multi-llamacpp) · [Multi-GGUF roots](#diseño-multi-gguf-roots) · [Multi-perfiles](#diseño-multi-perfiles-compuestos)
 - [Cookbook de modelos (hardware-fit)](#cookbook-de-modelos-recomendaciones-hardware-fit)
@@ -115,6 +116,73 @@ Principio central:
 - La GUI **orquesta binarios externos** (`llama-server.exe`, forks MTP, builds CUDA/Vulkan/CPU).
 - La GUI **compone perfiles** reutilizables sobre binarios, modelos y presets.
 - La GUI **integra harnesses de agente** (opencode) vía HTTP API nativa.
+
+## Privacidad y datos locales
+
+UNLZ_Llamacode está diseñado como estación local-first: la GUI, los perfiles, el
+catálogo de modelos, el historial de chat/agente y los procesos `llama-server`
+corren en la máquina del usuario. El proyecto también soporta integraciones
+externas opcionales; por eso la privacidad depende del perfil y de las funciones
+que se activen en cada sesión.
+
+### Qué permanece local
+
+| Dato / proceso | Ubicación o alcance | Sale de la máquina por defecto |
+|---|---|---|
+| Modelos GGUF | Carpetas registradas en Model Roots | No |
+| Perfiles y presets | `AppLocalData/LlamaCode/profiles/` | No |
+| Historial de chat | `AppLocalData/LlamaCode/chat/` | No |
+| Tasks programadas | `AppLocalData/LlamaCode/tasks/` | No |
+| Resultados de benchmark | `AppLocalData/LlamaCode/benchmarks/` | No |
+| Estado de procesos | `AppLocalData/LlamaCode/services.json` | No |
+| Secretos | SecretStore del sistema o referencias a env vars | No se guardan en JSON del repo |
+
+### Cuándo hay tráfico externo
+
+- **Descarga de modelos**: si se usa la cola de descargas, la app contacta el
+  proveedor del modelo configurado (por ejemplo Hugging Face).
+- **Backends cloud**: si un `BackendProfile` apunta a OpenAI, OpenRouter, Groq,
+  DeepSeek u otro endpoint OpenAI-compatible, los mensajes enviados a ese perfil
+  salen hacia ese servicio.
+- **Búsqueda, Deep Research y verificación web**: las consultas y URLs necesarias
+  se envían a motores de búsqueda o sitios externos cuando esas funciones están
+  habilitadas.
+- **Correo**: IMAP/POP3/SMTP conectan contra el proveedor configurado; enviar un
+  mail es una acción externa irreversible.
+- **STT/TTS cloud**: el modo Charla puede usar endpoints locales o remotos. Si se
+  configura un proveedor remoto, el audio/texto viaja a ese proveedor.
+- **Browser automation**: Playwright puede navegar sitios externos por pedido del
+  usuario o de una Task.
+
+### Nota de seguridad
+
+La API local, los procesos lanzados y los archivos de configuración viven bajo la
+cuenta del usuario del sistema operativo. Otros procesos ejecutándose con esa misma
+cuenta pueden interactuar con recursos locales si tienen permisos suficientes. Para
+trabajo sensible, usar perfiles locales, revisar los toggles de herramientas
+externas y mantener las aprobaciones activas para shell, correo, browser y acciones
+destructivas.
+
+## Hardware recomendado
+
+LlamaCode no ata el proyecto a un único modelo: indexa GGUFs compatibles con
+`llama.cpp`, estima memoria y recomienda opciones según RAM/VRAM disponible. La
+tabla sirve como punto de partida práctico; el rendimiento real depende del modelo,
+quant, contexto, batch, backend y temperatura del equipo.
+
+| Hardware disponible | Modo típico | Modelos/quant sugeridos | Contexto orientativo | Expectativa |
+|---|---|---|---|---|
+| CPU + 16 GB RAM | `cpu_only` | 3B–7B `Q4_K_M` / `Q5_K_M` | 4k–8k | Funcional para pruebas y chat liviano |
+| CPU + 32 GB RAM | `cpu_only` | 7B–14B `Q4_K_M` | 8k–16k | Mejor calidad, menor velocidad |
+| GPU 6–8 GB VRAM + 16 GB RAM | `gpu` o `partial_offload` | 7B–9B `Q4_K_M`, modelos coder compactos | 8k–16k | Buen punto de entrada para agente local |
+| GPU 12 GB VRAM + 32 GB RAM | `gpu` | 9B–14B `Q4_K_M` / `Q5_K_M` | 16k–32k | Recomendado para uso diario |
+| GPU 16 GB VRAM + 32–64 GB RAM | `gpu` | 14B–32B cuantizados, MoE chicos | 16k–32k | Agente y RAG más estables |
+| GPU 24 GB+ VRAM + 64 GB RAM | `gpu` | 32B+ cuantizados o quants altos | 32k+ | Mejor margen para contexto largo y multitarea |
+
+El modo `partial_offload` permite combinar VRAM y RAM cuando el modelo no entra
+completo en la GPU, a costa de velocidad. Para notebooks o equipos con poca
+memoria, conviene empezar con contexto 8k, `Q4_K_M` y cerrar procesos pesados antes
+de lanzar benchmarks o Deep Research.
 
 ## Estado actual
 

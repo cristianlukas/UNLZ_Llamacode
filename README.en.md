@@ -35,7 +35,8 @@
 ## Table of contents
 
 - [Ultra-fast install](#ultra-fast-install-isolated-test-bench)
-- [What it is](#what-it-is) · [Current status](#current-status) · [Goal](#goal) · [Differentiators](#differentiators)
+- [What it is](#what-it-is) · [Privacy and local data](#privacy-and-local-data) · [Recommended hardware](#recommended-hardware) · [Current status](#current-status)
+- [Goal](#goal) · [Differentiators](#differentiators)
 - [Architecture](#architecture)
 - [Multi-llama.cpp design](#multi-llamacpp-design) · [Multi-GGUF roots](#multi-gguf-roots-design) · [Composable profiles](#composable-multi-profile-design)
 - [Model cookbook (hardware-fit)](#model-cookbook-hardware-fit-recommendations)
@@ -114,6 +115,69 @@ Core principle:
 - The GUI **orchestrates external binaries** (`llama-server.exe`, MTP forks, CUDA/Vulkan/CPU builds).
 - The GUI **composes reusable profiles** over binaries, models and presets.
 - The GUI **integrates agent harnesses** (opencode) via native HTTP API.
+
+## Privacy and local data
+
+UNLZ_Llamacode is designed as a local-first workstation: the GUI, profiles, model
+catalog, chat/agent history and `llama-server` processes run on the user's machine.
+The project also supports optional external integrations, so privacy depends on the
+profile and on the features enabled for each session.
+
+### What stays local
+
+| Data / process | Location or scope | Leaves the machine by default |
+|---|---|---|
+| GGUF models | Folders registered in Model Roots | No |
+| Profiles and presets | `AppLocalData/LlamaCode/profiles/` | No |
+| Chat history | `AppLocalData/LlamaCode/chat/` | No |
+| Scheduled Tasks | `AppLocalData/LlamaCode/tasks/` | No |
+| Benchmark results | `AppLocalData/LlamaCode/benchmarks/` | No |
+| Process state | `AppLocalData/LlamaCode/services.json` | No |
+| Secrets | OS SecretStore or env-var references | Not stored in repo JSON |
+
+### When external traffic happens
+
+- **Model downloads**: if the download queue is used, the app contacts the
+  configured model provider, such as Hugging Face.
+- **Cloud backends**: if a `BackendProfile` points to OpenAI, OpenRouter, Groq,
+  DeepSeek or another OpenAI-compatible endpoint, messages sent through that
+  profile leave the machine for that service.
+- **Search, Deep Research and web verification**: required queries and URLs are
+  sent to search engines or external sites when those features are enabled.
+- **Mail**: IMAP/POP3/SMTP connect to the configured provider; sending mail is an
+  irreversible external action.
+- **Cloud STT/TTS**: Talk mode can use local or remote endpoints. If a remote
+  provider is configured, audio/text travels to that provider.
+- **Browser automation**: Playwright may navigate external sites by user request or
+  by a Task.
+
+### Security note
+
+The local API, spawned processes and configuration files live under the operating
+system user account. Other processes running as that same user may interact with
+local resources if they have enough permissions. For sensitive work, use local
+profiles, review external-tool toggles and keep approvals enabled for shell, mail,
+browser and destructive actions.
+
+## Recommended hardware
+
+LlamaCode does not bind the project to one fixed model: it indexes
+`llama.cpp`-compatible GGUFs, estimates memory and recommends options based on
+available RAM/VRAM. This table is a practical starting point; real performance
+depends on the model, quant, context, batch, backend and machine thermals.
+
+| Available hardware | Typical mode | Suggested models/quant | Rough context | Expectation |
+|---|---|---|---|---|
+| CPU + 16 GB RAM | `cpu_only` | 3B–7B `Q4_K_M` / `Q5_K_M` | 4k–8k | Functional for tests and light chat |
+| CPU + 32 GB RAM | `cpu_only` | 7B–14B `Q4_K_M` | 8k–16k | Better quality, lower speed |
+| 6–8 GB VRAM GPU + 16 GB RAM | `gpu` or `partial_offload` | 7B–9B `Q4_K_M`, compact coder models | 8k–16k | Good entry point for a local agent |
+| 12 GB VRAM GPU + 32 GB RAM | `gpu` | 9B–14B `Q4_K_M` / `Q5_K_M` | 16k–32k | Recommended for daily use |
+| 16 GB VRAM GPU + 32–64 GB RAM | `gpu` | Quantized 14B–32B, small MoE models | 16k–32k | More stable agent and RAG workflows |
+| 24 GB+ VRAM GPU + 64 GB RAM | `gpu` | Quantized 32B+ or higher quants | 32k+ | Best margin for long context and multitasking |
+
+`partial_offload` combines VRAM and RAM when the full model does not fit on the GPU,
+at the cost of speed. On notebooks or low-memory machines, start with 8k context,
+`Q4_K_M` and close heavy processes before running benchmarks or Deep Research.
 
 ## Current status
 
