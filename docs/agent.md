@@ -81,8 +81,11 @@ sendMessage
 
 ## 4. Razonamiento (thinking)
 
-- Payload incluye `reasoning_budget` (`-1` ilimitado / `0` off) y
-  `chat_template_kwargs.enable_thinking` (switch oficial Qwen3, requiere `--jinja`).
+- El modo `Pensar` se decide en el perfil efectivo del servidor con la mejor
+  estrategia compatible con el binario/modelo: `--reasoning on/off` cuando existe,
+  `--reasoning-budget` como fallback, o `--chat-template-kwargs.enable_thinking`
+  para templates Qwen/QwQ antiguos. El payload mantiene hints per-request
+  (`reasoning_budget`, `chat_template_kwargs`) sólo como compatibilidad.
 - El `reasoning_content` del stream se acumula aparte y se muestra envuelto en
   `<think>…</think>` en el bubble.
 - **Al historial de API NO va el `<think>`**: `stripThinkForContext()` lo quita antes de

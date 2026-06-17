@@ -38,6 +38,9 @@ private:
                              QStringList &args,
                              QStringList &warnings, QStringList &errors,
                              bool specDecoding = false);
+    static void applyReasoningControl(const Context &ctx,
+                                      QStringList &args,
+                                      QStringList &warnings);
 
     static void addFlag(const LlamaBinary &bin, const QString &flag,
                         const QString &value, QStringList &args,

@@ -2,6 +2,31 @@
 #include "../GGUFScanner.h"
 #include <QFileInfo>
 
+static bool supportsAnyFlag(const LlamaBinary &bin, const QString &flag)
+{
+    const QString resolved = bin.resolveFlag(flag);
+    return bin.supportedFlags.isEmpty() || bin.supportsFlag(resolved);
+}
+
+static bool isTemplateThinkingModel(const CatalogModel &model)
+{
+    const QString combined = (model.fileName + QLatin1Char(' ') + model.familyHint).toLower();
+    return combined.contains(QStringLiteral("qwen3")) ||
+           combined.contains(QStringLiteral("qwen-3")) ||
+           combined.contains(QStringLiteral("qwq"));
+}
+
+static void removeFlagWithValue(QStringList &args, const QStringList &names)
+{
+    for (int i = 0; i < args.size(); ++i) {
+        if (!names.contains(args.at(i))) continue;
+        args.removeAt(i);
+        if (i < args.size() && !args.at(i).startsWith(QLatin1Char('-')))
+            args.removeAt(i);
+        --i;
+    }
+}
+
 EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
 {
     EffectiveProfile result;
@@ -58,13 +83,7 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     if (!args.contains(QStringLiteral("--jinja")))
         args << QStringLiteral("--jinja");
 
-    // Thinking/reasoning es una decisión de arranque en llama-server actual:
-    // `chat_template_kwargs.enable_thinking=false` por request puede ser ignorado
-    // o quedar deprecado. Si el usuario apaga "Pensar", el server debe arrancar
-    // con --reasoning off para no generar tokens de razonamiento.
-    addFlag(ctx.binary, QStringLiteral("--reasoning"),
-            ctx.reasoningEnabled ? QStringLiteral("on") : QStringLiteral("off"),
-            args, result.warnings);
+    applyReasoningControl(ctx, args, result.warnings);
 
     result.effectiveArgs = args;
     result.effectiveEnv = env;
@@ -73,6 +92,56 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
                          .arg(ctx.binary.path, args.join(' '));
 
     return result;
+}
+
+void EffectiveProfileBuilder::applyReasoningControl(const Context &ctx,
+                                                    QStringList &args,
+                                                    QStringList &warnings)
+{
+    // Extra/base args may already contain a manual reasoning mode. The UI toggle
+    // is the source of truth for managed profiles, so remove contradictory forms
+    // before appending the best supported controls.
+    removeFlagWithValue(args, {
+        QStringLiteral("--reasoning"), QStringLiteral("-rea"),
+        QStringLiteral("--reasoning-budget"),
+        QStringLiteral("--chat-template-kwargs")
+    });
+
+    const QString enabled = ctx.reasoningEnabled ? QStringLiteral("on") : QStringLiteral("off");
+    const QString budget = ctx.reasoningEnabled ? QStringLiteral("-1") : QStringLiteral("0");
+    bool applied = false;
+
+    // New llama.cpp builds: this is the hard switch that changes the template
+    // state itself (`chat template, thinking = 0/1`). Prefer it when available.
+    if (supportsAnyFlag(ctx.binary, QStringLiteral("--reasoning"))) {
+        addFlag(ctx.binary, QStringLiteral("--reasoning"), enabled, args, warnings);
+        applied = true;
+    }
+
+    // Builds with reasoning budget but no hard switch: best sampler-level
+    // fallback. It may still be softer than --reasoning off for some templates.
+    if (!applied && supportsAnyFlag(ctx.binary, QStringLiteral("--reasoning-budget"))) {
+        addFlag(ctx.binary, QStringLiteral("--reasoning-budget"), budget, args, warnings);
+        applied = true;
+    }
+
+    // Qwen/QwQ-style templates in older servers expose enable_thinking through
+    // chat-template kwargs. Only use it as a fallback; current llama.cpp warns
+    // that this is deprecated in favor of --reasoning.
+    if (!applied && isTemplateThinkingModel(ctx.catalogModel) &&
+        supportsAnyFlag(ctx.binary, QStringLiteral("--chat-template-kwargs"))) {
+        const QString json = ctx.reasoningEnabled
+            ? QStringLiteral("{\"enable_thinking\":true}")
+            : QStringLiteral("{\"enable_thinking\":false}");
+        addFlag(ctx.binary, QStringLiteral("--chat-template-kwargs"), json, args, warnings);
+        applied = true;
+    }
+
+    if (!applied) {
+        warnings.append(QStringLiteral(
+            "No hard thinking control supported by this binary/model combination; "
+            "falling back to per-request hints only."));
+    }
 }
 
 void EffectiveProfileBuilder::applyBackend(const BackendProfile &bp,

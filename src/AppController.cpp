@@ -2314,8 +2314,8 @@ void AppController::setThinkingEnabled(bool enabled)
         cb->setThinkingEnabled(enabled);
     if (serverRunning()) {
         const QString msg = enabled
-            ? QStringLiteral("Pensar activado: reiniciá el servidor para arrancar llama-server con --reasoning on.")
-            : QStringLiteral("Pensar desactivado: reiniciá el servidor para arrancar llama-server con --reasoning off.");
+            ? QStringLiteral("Pensar activado: reiniciá el servidor para aplicar el modo de reasoning compatible con este binario/modelo.")
+            : QStringLiteral("Pensar desactivado: reiniciá el servidor para aplicar el apagado de reasoning compatible con este binario/modelo.");
         appendServerEvent(QStringLiteral("lifecycle"), msg);
         emit serverError(msg);
     }
