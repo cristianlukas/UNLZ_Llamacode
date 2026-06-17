@@ -60,6 +60,7 @@ set(CORE_SOURCES
     src/core/agent/McpClient.cpp
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
+    src/core/agent/AgentEventLog.cpp
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
     src/core/agent/MasterCli.cpp
@@ -105,6 +106,7 @@ set(HEADERS
     src/core/agent/McpClient.h
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
+    src/core/agent/AgentEventLog.h
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
     src/core/agent/BrowserTeach.h

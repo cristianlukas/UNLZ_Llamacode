@@ -451,6 +451,11 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
 - **MemoryStore por capas**: hechos durables extraídos de las conversaciones
   (consolidación en background al dejar una sesión) + memoria por proyecto en archivo.
 - **GraphStore**: grafo de entidades/relaciones para conocimiento estructurado.
+- **AgentEventLog**: bitácora append-only por proyecto (`.llamacode/agent_events.jsonl`)
+  con eventos tipados de turnos, tool calls, resultados, fallos y alternativas
+  rechazadas. Sirve como evidencia operacional: no reemplaza memoria ni grafo, los
+  alimenta con un rastro auditable de qué intentó el agente y por qué algo se
+  aceptó, falló o se descartó.
 - **Tools**: `hybrid_search` (búsqueda híbrida léxica+semántica), `verify_claims`
   (chequeo de afirmaciones), memoria por capas. RAG sobre el material del proyecto.
 

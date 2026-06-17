@@ -1,6 +1,7 @@
 #include "LlamaAgentBackend.h"
 #include "AgentToolRunner.h"
 #include "SubAgentRunner.h"
+#include "AgentEventLog.h"
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
 
@@ -932,6 +933,10 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         {QStringLiteral("tps"), 0.0}};
     if (!attachments.isEmpty()) userMsg[QStringLiteral("attachments")] = attachments;
     m_messages.append(userMsg);
+    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
+                          QJsonObject{{QStringLiteral("source"), QStringLiteral("user")},
+                                      {QStringLiteral("text"), text.left(4096)},
+                                      {QStringLiteral("attachments"), attachments.size()}});
 
     // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
     // inline + docs de texto inlineados); si no, string plano.
@@ -1590,6 +1595,12 @@ void LlamaAgentBackend::processPendingCalls()
     // ── Robustez: anti-loop ──────────────────────────────────────────────
     const QString sig = name + QLatin1Char('|') + argStr;
     const int sigCnt = ++m_callCounts[sig];
+    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("tool_call"),
+                          QJsonObject{{QStringLiteral("tool"), name},
+                                      {QStringLiteral("toolCallId"), id},
+                                      {QStringLiteral("toolKind"), kind},
+                                      {QStringLiteral("args"), argStr.left(8192)},
+                                      {QStringLiteral("repeatCount"), sigCnt}});
 
     // ── Escalado automático al maestro ───────────────────────────────────
     // Si el agente repite la misma tool sin progreso y el perfil habilitó escalado
@@ -1620,6 +1631,11 @@ void LlamaAgentBackend::processPendingCalls()
         // El modelo recibe el feedback y corrige solo, sin pedir "continuá".
         ++m_toolFail;
         m_pendingCalls.removeFirst();
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("anti_loop")},
+                                          {QStringLiteral("repeatCount"), sigCnt}});
         appendToolResult(id, name,
             QStringLiteral("[anti-loop: ya ejecutaste esta tool idéntica %1 veces "
                            "sin progreso. NO la repitas: cambiá de enfoque, ajustá "
@@ -1642,6 +1658,10 @@ void LlamaAgentBackend::processPendingCalls()
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("unknown_tool")}});
         appendToolResult(id, name, QStringLiteral("[error: tool desconocida '%1']").arg(name));
         processPendingCalls();
         return;
@@ -1653,6 +1673,11 @@ void LlamaAgentBackend::processPendingCalls()
     if (perr.error != QJsonParseError::NoError && !argStr.trimmed().isEmpty()) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("invalid_json_args")},
+                                          {QStringLiteral("error"), perr.errorString()}});
         appendToolResult(id, name, QStringLiteral(
             "[error: argumentos JSON inválidos (%1). Reintentá con JSON válido para %2.]")
             .arg(perr.errorString(), name));
@@ -1668,6 +1693,11 @@ void LlamaAgentBackend::processPendingCalls()
     if (!missing.isEmpty()) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("missing_args")},
+                                          {QStringLiteral("missing"), QJsonArray::fromStringList(missing)}});
         appendToolResult(id, name, QStringLiteral(
             "[error: faltan argumentos requeridos para %1: %2]")
             .arg(name, missing.join(QStringLiteral(", "))));
@@ -1698,6 +1728,11 @@ void LlamaAgentBackend::processPendingCalls()
         && kind != QLatin1String("read")) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("rejected_alternative"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("plan_mode")},
+                                          {QStringLiteral("alternative"), argStr.left(8192)}});
         appendToolResult(id, name, QStringLiteral(
             "[MODO PLAN: '%1' bloqueada (solo lectura). Proponé el cambio en texto; "
             "el usuario saldrá de plan para ejecutarlo.]").arg(name));
@@ -1729,6 +1764,12 @@ void LlamaAgentBackend::processPendingCalls()
                     const QString denied = QStringLiteral(
                         "[permiso denegado por regla '%1': '%2' no está permitido]")
                         .arg(r.glob, subject);
+                    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("rejected_alternative"),
+                                          QJsonObject{{QStringLiteral("tool"), name},
+                                                      {QStringLiteral("toolCallId"), id},
+                                                      {QStringLiteral("reason"), QStringLiteral("permission_rule")},
+                                                      {QStringLiteral("rule"), r.glob},
+                                                      {QStringLiteral("alternative"), subject}});
                     appendToolCard(name, kind, false, subject, denied);
                     appendToolResult(id, name, denied);
                     processPendingCalls();
@@ -1834,6 +1875,11 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     // Rechazo: no se ejecuta nada; resume sincrónico.
     if (response == QLatin1String("reject")) {
         ++m_toolFail;
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("rejected_alternative"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("user_rejected")},
+                                          {QStringLiteral("alternative"), m_execCommand}});
         appendToolCard(name, toolKind(name), false, m_execCommand,
                        QStringLiteral("[el usuario rechazó esta acción]"));
         m_execCommand.clear();
@@ -1861,6 +1907,14 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     QString res        = result.value(QStringLiteral("result")).toString();
     const bool isWrite = result.value(QStringLiteral("isWrite")).toBool();
     if (ok) ++m_toolOk; else ++m_toolFail;
+    AgentEventLog::append(m_cwd, m_sessionId, ok ? QStringLiteral("tool_result")
+                                                 : QStringLiteral("failure"),
+                          QJsonObject{{QStringLiteral("tool"), name},
+                                      {QStringLiteral("toolCallId"), callId},
+                                      {QStringLiteral("ok"), ok},
+                                      {QStringLiteral("isWrite"), isWrite},
+                                      {QStringLiteral("detail"), m_execCommand},
+                                      {QStringLiteral("result"), res.left(8192)}});
 
     // Read-dedup: si el modelo re-lee un archivo que ya leyó y NO cambió, no
     // reenviamos el contenido (el server reprocesa todo el prompt cada iter por
@@ -2352,6 +2406,11 @@ void LlamaAgentBackend::finishTurn(const QString &finalText)
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), finalText}});
     emit logAppended(QStringLiteral("[turn] completed (finalTextChars=%1)\n").arg(finalText.size()));
+    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("assistant_final"),
+                          QJsonObject{{QStringLiteral("chars"), finalText.size()},
+                                      {QStringLiteral("toolOk"), m_toolOk},
+                                      {QStringLiteral("toolFail"), m_toolFail},
+                                      {QStringLiteral("text"), finalText.left(4096)}});
     m_curAsstIdx = -1;
     m_pendingCalls = {};
     m_awaitId.clear();

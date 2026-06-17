@@ -6,6 +6,7 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include "core/agent/AgentEventLog.h"
 #include "core/agent/MemoryStore.h"
 #include "core/agent/GraphStore.h"
 
@@ -28,6 +29,8 @@ private slots:
     void graph_normalizesNames();
     void graph_decideKeepsRejected();
     void graph_decisionsFiltersByTopic();
+
+    void eventLog_appendTypedEvent();
 };
 
 void MemoryGraphTests::memory_saveThenRecall()
@@ -188,6 +191,23 @@ void MemoryGraphTests::graph_decisionsFiltersByTopic()
     const QString out = GraphStore::decisions(dir.path(), "storage");
     QVERIFY(out.contains("JSONL"));
     QVERIFY(!out.contains("RawChat"));  // filtrado por substring del tema
+}
+
+void MemoryGraphTests::eventLog_appendTypedEvent()
+{
+    QTemporaryDir dir;
+    const bool ok = AgentEventLog::append(
+        dir.path(), "s1", "tool_call",
+        QJsonObject{{"tool", "read_file"}, {"kind", "read"}, {"detail", "README.md"}});
+    QVERIFY(ok);
+    QFile f(AgentEventLog::jsonlPath(dir.path()));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QJsonObject o = QJsonDocument::fromJson(f.readLine()).object();
+    QCOMPARE(o.value("kind").toString(), QString("tool_call"));
+    QCOMPARE(o.value("sessionId").toString(), QString("s1"));
+    QCOMPARE(o.value("tool").toString(), QString("read_file"));
+    QVERIFY(!o.value("id").toString().isEmpty());
+    QVERIFY(!o.value("ts").toString().isEmpty());
 }
 
 QTEST_MAIN(MemoryGraphTests)
