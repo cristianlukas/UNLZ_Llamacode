@@ -304,6 +304,11 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
     if (!m_ephemeralSessions)
         loadFromDisk();     // recupera sesiones previas; activa la primera
     ensureSession();        // si no había ninguna, crea una
+    // Al reactivar esta misma instancia, las sesiones ya están en memoria:
+    // loadFromDisk()/ensureSession() no emiten señales. Republicar siempre el
+    // estado evita que el espejo de AppController quede vacío al arrancar.
+    emit sessionsChanged();
+    emit messagesChanged();
     fetchContextLimit();
     ensureWorker();         // hilo worker (persiste toda la vida del backend)
     // (Re)configurar el worker en cada start (async, no bloquea UI).
