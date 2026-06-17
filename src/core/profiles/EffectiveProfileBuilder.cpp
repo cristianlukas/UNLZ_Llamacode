@@ -2,6 +2,14 @@
 #include "../GGUFScanner.h"
 #include <QFileInfo>
 
+namespace {
+struct SamplingFlag {
+    QString canonical;
+    QStringList names;
+    QString recommended;
+};
+}
+
 static bool supportsAnyFlag(const LlamaBinary &bin, const QString &flag)
 {
     const QString resolved = bin.resolveFlag(flag);
@@ -14,6 +22,58 @@ static bool isTemplateThinkingModel(const CatalogModel &model)
     return combined.contains(QStringLiteral("qwen3")) ||
            combined.contains(QStringLiteral("qwen-3")) ||
            combined.contains(QStringLiteral("qwq"));
+}
+
+static bool isQwenCodingModel(const CatalogModel &model)
+{
+    const QString combined = (model.fileName + QLatin1Char(' ') + model.familyHint).toLower();
+    return combined.contains(QStringLiteral("qwen")) ||
+           combined.contains(QStringLiteral("qwq")) ||
+           combined.contains(QStringLiteral("coder"));
+}
+
+static QList<SamplingFlag> codingSamplingFlags()
+{
+    return {
+        {QStringLiteral("--temp"),
+         {QStringLiteral("--temp"), QStringLiteral("--temperature")},
+         QStringLiteral("0.6")},
+        {QStringLiteral("--top-p"),
+         {QStringLiteral("--top-p"), QStringLiteral("--top_p")},
+         QStringLiteral("0.95")},
+        {QStringLiteral("--top-k"),
+         {QStringLiteral("--top-k"), QStringLiteral("--top_k")},
+         QStringLiteral("20")},
+        {QStringLiteral("--min-p"),
+         {QStringLiteral("--min-p"), QStringLiteral("--min_p")},
+         QStringLiteral("0.0")},
+        {QStringLiteral("--repeat-penalty"),
+         {QStringLiteral("--repeat-penalty"), QStringLiteral("--repeat_penalty")},
+         QStringLiteral("1.0")},
+        {QStringLiteral("--presence-penalty"),
+         {QStringLiteral("--presence-penalty"), QStringLiteral("--presence_penalty")},
+         QStringLiteral("0.0")},
+    };
+}
+
+static bool hasAnyFlag(const QStringList &args, const QStringList &names)
+{
+    for (const QString &name : names) {
+        if (args.contains(name))
+            return true;
+    }
+    return false;
+}
+
+static QString valueAfterFlag(const QStringList &args, const QStringList &names)
+{
+    for (int i = 0; i < args.size(); ++i) {
+        if (!names.contains(args.at(i))) continue;
+        if (i + 1 < args.size() && !args.at(i + 1).startsWith(QLatin1Char('-')))
+            return args.at(i + 1);
+        return QString();
+    }
+    return QString();
 }
 
 static void removeFlagWithValue(QStringList &args, const QStringList &names)
@@ -84,6 +144,7 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         args << QStringLiteral("--jinja");
 
     applyReasoningControl(ctx, args, result.warnings);
+    applySamplingPolicy(ctx, args, result.warnings);
 
     result.effectiveArgs = args;
     result.effectiveEnv = env;
@@ -141,6 +202,51 @@ void EffectiveProfileBuilder::applyReasoningControl(const Context &ctx,
         warnings.append(QStringLiteral(
             "No hard thinking control supported by this binary/model combination; "
             "falling back to per-request hints only."));
+    }
+}
+
+void EffectiveProfileBuilder::applySamplingPolicy(const Context &ctx,
+                                                  QStringList &args,
+                                                  QStringList &warnings)
+{
+    if (!isQwenCodingModel(ctx.catalogModel))
+        return;
+
+    const QList<SamplingFlag> flags = codingSamplingFlags();
+    bool hasManualSampling = false;
+    for (const SamplingFlag &flag : flags) {
+        if (hasAnyFlag(args, flag.names)) {
+            hasManualSampling = true;
+            break;
+        }
+    }
+
+    if (!hasManualSampling) {
+        for (const SamplingFlag &flag : flags)
+            addFlag(ctx.binary, flag.canonical, flag.recommended, args, warnings);
+        warnings.append(QStringLiteral(
+            "Qwen/coding profile: applied conservative sampling preset "
+            "(temp 0.6, top-p 0.95, top-k 20, min-p 0.0, repeat/presence penalties neutral)."));
+        return;
+    }
+
+    for (const SamplingFlag &flag : flags) {
+        const QString configured = valueAfterFlag(args, flag.names);
+        if (configured.isEmpty())
+            continue;
+
+        bool okConfigured = false;
+        bool okRecommended = false;
+        const double configuredValue = configured.toDouble(&okConfigured);
+        const double recommendedValue = flag.recommended.toDouble(&okRecommended);
+        const bool matches = okConfigured && okRecommended
+            ? qAbs(configuredValue - recommendedValue) < 0.0001
+            : configured == flag.recommended;
+        if (!matches) {
+            warnings.append(QStringLiteral(
+                "Qwen/coding sampling: %1=%2 differs from recommended %3.")
+                .arg(flag.canonical, configured, flag.recommended));
+        }
     }
 }
 

@@ -41,6 +41,9 @@ private:
     static void applyReasoningControl(const Context &ctx,
                                       QStringList &args,
                                       QStringList &warnings);
+    static void applySamplingPolicy(const Context &ctx,
+                                    QStringList &args,
+                                    QStringList &warnings);
 
     static void addFlag(const LlamaBinary &bin, const QString &flag,
                         const QString &value, QStringList &args,

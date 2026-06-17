@@ -8,6 +8,9 @@ set(CMAKE_AUTORCC ON)
 
 option(BUILD_TESTS "Build unit tests (LlamaCodeTests)" OFF)
 option(LC_USE_QTKEYCHAIN "Cifrar secretos vía QtKeychain (Secret Service / WinCred / macOS Keychain)" ON)
+option(LC_STRICT_WARNINGS "Enable stricter compiler warnings for project targets" OFF)
+option(LC_WARNINGS_AS_ERRORS "Treat project compiler warnings as errors" OFF)
+option(LC_ENABLE_CLANG_TIDY "Run clang-tidy during C++ builds when available" OFF)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick Sql Concurrent Network Widgets Multimedia Svg)
 
@@ -147,6 +150,29 @@ target_link_libraries(llamacode_core PUBLIC
 if (MSVC)
     target_compile_options(llamacode_core PRIVATE /utf-8)
 endif()
+if (LC_STRICT_WARNINGS)
+    if (MSVC)
+        target_compile_options(llamacode_core PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(llamacode_core PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endif()
+if (LC_WARNINGS_AS_ERRORS)
+    if (MSVC)
+        target_compile_options(llamacode_core PRIVATE /WX)
+    else()
+        target_compile_options(llamacode_core PRIVATE -Werror)
+    endif()
+endif()
+if (LC_ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES clang-tidy)
+    if (CLANG_TIDY_EXE)
+        set_target_properties(llamacode_core PROPERTIES
+            CXX_CLANG_TIDY "${CLANG_TIDY_EXE};--quiet")
+    else()
+        message(WARNING "LC_ENABLE_CLANG_TIDY=ON but clang-tidy was not found")
+    endif()
+endif()
 if (WIN32)
     # DPAPI (CryptProtectData/CryptUnprotectData): fallback de cifrado at-rest.
     target_link_libraries(llamacode_core PUBLIC Crypt32)
@@ -220,6 +246,30 @@ qt_add_qml_module(LlamaCode
 
 if (MSVC)
     target_compile_options(LlamaCode PRIVATE /utf-8)
+endif()
+if (LC_STRICT_WARNINGS)
+    if (MSVC)
+        target_compile_options(LlamaCode PRIVATE /W4 /permissive-)
+    else()
+        target_compile_options(LlamaCode PRIVATE -Wall -Wextra -Wpedantic)
+    endif()
+endif()
+
+find_program(CLANG_FORMAT_EXE NAMES clang-format)
+if (CLANG_FORMAT_EXE)
+    file(GLOB_RECURSE LLAMACODE_FORMAT_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/*.cpp")
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT_EXE} -i ${LLAMACODE_FORMAT_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Formatting C++ sources with clang-format")
+    add_custom_target(format-check
+        COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${LLAMACODE_FORMAT_SOURCES}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Checking C++ source formatting with clang-format")
 endif()
 
 file(GLOB LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS

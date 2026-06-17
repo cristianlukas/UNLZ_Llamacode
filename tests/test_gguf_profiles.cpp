@@ -43,6 +43,8 @@ private slots:
     void builder_missingModelIsBlocking();
     void builder_emitsSpecFlags();
     void builder_forcesF16KvWithDraft();
+    void builder_appliesQwenCodingSamplingPreset();
+    void builder_warnsOnManualQwenSampling();
 };
 
 void CoreTests::inferFamily_data()
@@ -301,6 +303,49 @@ void CoreTests::builder_forcesF16KvWithDraft()
             if (w.contains("f16")) warned = true;
         QVERIFY(warned);
     }
+}
+
+void CoreTests::builder_appliesQwenCodingSamplingPreset()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "Qwen3.6-27B-Coder-Q5_K_M.gguf";
+    ctx.catalogModel.familyHint = "qwen";
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    const QStringList &a = ep.effectiveArgs;
+
+    int i = a.indexOf("--temp");
+    QVERIFY(i >= 0 && i + 1 < a.size());
+    QCOMPARE(a[i + 1], QStringLiteral("0.6"));
+    i = a.indexOf("--top-k");
+    QVERIFY(i >= 0 && i + 1 < a.size());
+    QCOMPARE(a[i + 1], QStringLiteral("20"));
+    i = a.indexOf("--min-p");
+    QVERIFY(i >= 0 && i + 1 < a.size());
+    QCOMPARE(a[i + 1], QStringLiteral("0.0"));
+}
+
+void CoreTests::builder_warnsOnManualQwenSampling()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "Qwen3.6-27B-Coder-Q5_K_M.gguf";
+    ctx.catalogModel.familyHint = "qwen";
+    ctx.launch.extraArgs = {"--temp 1.0 --top-k 64"};
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QCOMPARE(ep.effectiveArgs.count("--temp"), 1);
+    QCOMPARE(ep.effectiveArgs.count("--top-k"), 1);
+
+    bool tempWarn = false;
+    bool topKWarn = false;
+    for (const QString &w : ep.warnings) {
+        if (w.contains("--temp=1.0"))
+            tempWarn = true;
+        if (w.contains("--top-k=64"))
+            topKWarn = true;
+    }
+    QVERIFY(tempWarn);
+    QVERIFY(topKWarn);
 }
 
 QTEST_MAIN(CoreTests)
