@@ -1464,11 +1464,8 @@ Item {
                     property bool followBottom: true
 
                     function scrollToBottom() {
-                        // Solo BAJAR, nunca subir: durante el turno contentHeight
-                        // oscila (re-estimación de delegados altos fuera de vista).
                         var maxY = Math.max(0, contentHeight - height)
-                        if (contentY < maxY)
-                            contentY = maxY
+                        contentY = maxY
                     }
 
                     // followBottom se actualiza en vivo con cualquier cambio de
@@ -1489,11 +1486,16 @@ Item {
                     // Sólo re-pegar al fondo si el usuario YA estaba abajo. Si subió
                     // a leer, un mensaje/token nuevo no lo arrastra de vuelta.
                     onCountChanged: if (followBottom) bottomTimer.restart()
+                    onModelChanged: { followBottom = true; bottomTimer.restart() }
 
                     Timer {
                         id: bottomTimer
-                        interval: 16
-                        onTriggered: if (msgList.followBottom) msgList.scrollToBottom()
+                        interval: 0
+                        onTriggered: {
+                            if (!msgList.followBottom) return
+                            msgList.forceLayout()
+                            msgList.scrollToBottom()
+                        }
                     }
 
                     // Rueda del mouse: scroll animado y suave (el step nativo es
