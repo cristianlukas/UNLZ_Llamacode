@@ -78,12 +78,22 @@ static QString stripThinkForOutput(const QString &s)
     QString out = s;
     out.remove(QRegularExpression(QStringLiteral("<think>[\\s\\S]*?</think>"),
                                   QRegularExpression::CaseInsensitiveOption));
-    out.remove(QRegularExpression(QStringLiteral("<think>[\\s\\S]*$"),
-                                  QRegularExpression::CaseInsensitiveOption));
-    out.remove(QRegularExpression(QStringLiteral("^[\\s\\S]*?</think>"),
-                                  QRegularExpression::CaseInsensitiveOption));
-    out.remove(QRegularExpression(QStringLiteral("</?think>"),
-                                  QRegularExpression::CaseInsensitiveOption));
+    const QRegularExpression openRe(QStringLiteral("<think\\b[^>]*>"),
+                                    QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpression closeRe(QStringLiteral("</think>"),
+                                     QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatch open = openRe.match(out);
+    while (open.hasMatch()) {
+        const QRegularExpressionMatch close = closeRe.match(out, open.capturedEnd());
+        if (!close.hasMatch()) {
+            out.truncate(open.capturedStart());
+            break;
+        }
+        out.remove(open.capturedStart(), close.capturedEnd() - open.capturedStart());
+        open = openRe.match(out);
+    }
+    out.remove(closeRe);
+    out.remove(openRe);
     return out.trimmed();
 }
 
@@ -813,9 +823,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
 
     // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
     // inline + docs de texto inlineados); si no, string plano.
-    const QString apiText = m_thinkingEnabled
-        ? trimmed
-        : trimmed + QStringLiteral("\n\n/no_think");
+    const QString apiText = trimmed;
     if (attachments.isEmpty()) {
         m_apiMessages.append(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},

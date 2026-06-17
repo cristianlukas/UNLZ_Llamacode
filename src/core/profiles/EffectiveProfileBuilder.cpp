@@ -54,10 +54,17 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         args.append(ctx.binary.resolveFlag(cur));
     }
 
-    // Asegurar --jinja: necesario para que el server respete chat_template_kwargs
-    // (enable_thinking:false) y el tool-calling por template.
+    // Asegurar --jinja: necesario para tool-calling por template.
     if (!args.contains(QStringLiteral("--jinja")))
         args << QStringLiteral("--jinja");
+
+    // Thinking/reasoning es una decisión de arranque en llama-server actual:
+    // `chat_template_kwargs.enable_thinking=false` por request puede ser ignorado
+    // o quedar deprecado. Si el usuario apaga "Pensar", el server debe arrancar
+    // con --reasoning off para no generar tokens de razonamiento.
+    addFlag(ctx.binary, QStringLiteral("--reasoning"),
+            ctx.reasoningEnabled ? QStringLiteral("on") : QStringLiteral("off"),
+            args, result.warnings);
 
     result.effectiveArgs = args;
     result.effectiveEnv = env;

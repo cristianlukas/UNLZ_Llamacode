@@ -17,6 +17,7 @@ public:
         CatalogModel catalogModel;
         CatalogModel mmprojModel;
         CatalogModel draftModel;
+        bool reasoningEnabled = false;
     };
 
     static EffectiveProfile build(const Context &ctx);

@@ -1245,6 +1245,8 @@ void AppController::computeEffectiveProfilePreview(const QString &launchProfileI
     ctx.runtime.parallelSlots = overrides.value("parallelSlots", 1).toInt();
 
     ctx.launch.extraArgs = overrides.value("extraArgs").toStringList();
+    ctx.reasoningEnabled = overrides.value(QStringLiteral("thinkingEnabled"),
+                                           m_agentThinkingEnabled).toBool();
 
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
 
@@ -1806,6 +1808,7 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
     ctx.draftModel = m_catalog.findById(ctx.model.draftModelId);
+    ctx.reasoningEnabled = m_agentThinkingEnabled;
     return ctx;
 }
 
@@ -2309,6 +2312,13 @@ void AppController::setThinkingEnabled(bool enabled)
     writeSetting(QStringLiteral("agent/thinkingEnabled"), enabled);
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->setThinkingEnabled(enabled);
+    if (serverRunning()) {
+        const QString msg = enabled
+            ? QStringLiteral("Pensar activado: reiniciá el servidor para arrancar llama-server con --reasoning on.")
+            : QStringLiteral("Pensar desactivado: reiniciá el servidor para arrancar llama-server con --reasoning off.");
+        appendServerEvent(QStringLiteral("lifecycle"), msg);
+        emit serverError(msg);
+    }
     emit agentThinkingChanged();
     emit thinkingChanged();
 }
