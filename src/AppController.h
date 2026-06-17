@@ -515,6 +515,10 @@ public:
     // repos MLX/AWQ/GPTQ que requieren otros runtimes.
     static bool isGgufRecommendationCandidate(const QString &name, bool isGguf,
                                               bool hasGgufSources);
+    static QString recommendedGgufFileName(const QString &repo, const QString &modelName,
+                                           const QString &quant);
+    static QString resolveRecommendedGgufFileName(const QStringList &siblings,
+                                                  const QString &requestedFileName);
     // Escaneo pesado de arranque (binaries/roots/hardware/catálogo + migraciones).
     // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
     Q_INVOKABLE void runStartupScan();
@@ -904,12 +908,13 @@ private:
         QString fileName;
         QString outPath;
         QString partPath;
-        QString state;   // queued | verifying | downloading | paused | done | error
+        QString state;   // queued | resolving | verifying | downloading | paused | done | error
         QString status;
         int progress = 0;
         qint64 received = 0;
         qint64 total = 0;
         qint64 resumeOffset = 0;
+        bool resolvedFileName = false;
         bool pauseRequested = false;
         bool cancelRequested = false;
     };

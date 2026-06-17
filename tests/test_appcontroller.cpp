@@ -8,6 +8,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFileInfo>
+#include <QDir>
+#include <QCoreApplication>
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/CatalogModel.h"
@@ -24,6 +26,7 @@ private slots:
     void parseGpuPowerCsvParses();
     void parseGpuPowerCsvTolerant();
     void ggufRecommendationCandidateFilter();
+    void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
     void browserTeachSkillsLifecycle();
@@ -115,6 +118,58 @@ void AppControllerTests::ggufRecommendationCandidateFilter()
         QStringLiteral("Qwen/Qwen3.5-9B-MTP"), false, true));
     QVERIFY(AppController::isGgufRecommendationCandidate(
         QStringLiteral("unsloth/Qwen3.5-9B-GGUF"), false, false));
+}
+
+void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
+{
+    QCOMPARE(AppController::recommendedGgufFileName(
+                 QStringLiteral("unsloth/Qwen3.6-35B-A3B-MTP-GGUF"),
+                 QStringLiteral("Qwen/Qwen3.6-35B-A3B-MTP"),
+                 QStringLiteral("Q4_K_M")),
+             QStringLiteral("Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"));
+    QCOMPARE(AppController::recommendedGgufFileName(
+                 QStringLiteral("unsloth/Qwen3.5-2B-MTP-GGUF"),
+                 QStringLiteral("Qwen/Qwen3.5-2B-MTP"),
+                 QStringLiteral("Q4_K_M")),
+             QStringLiteral("Qwen3.5-2B-Q4_K_M.gguf"));
+
+    const QStringList siblings = {
+        QStringLiteral("Qwen3.6-35B-A3B-UD-IQ3_S.gguf"),
+        QStringLiteral("Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"),
+        QStringLiteral("Qwen3.6-35B-A3B-Q8_0.gguf")
+    };
+    QCOMPARE(AppController::resolveRecommendedGgufFileName(
+                 siblings,
+                 QStringLiteral("Qwen3.6-35B-A3B-MTP-Q4_K_M.gguf")),
+             QStringLiteral("Qwen3.6-35B-A3B-UD-Q4_K_M.gguf"));
+
+    const QStringList catalogCandidates = {
+        QStringLiteral(":/assets/hwfit/hf_models.json"),
+        QDir::current().absoluteFilePath(QStringLiteral("assets/hwfit/hf_models.json")),
+        QDir::current().absoluteFilePath(QStringLiteral("../assets/hwfit/hf_models.json")),
+        QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(QStringLiteral("../../assets/hwfit/hf_models.json"))
+    };
+    QFile catalog;
+    for (const QString &path : catalogCandidates) {
+        catalog.setFileName(path);
+        if (catalog.exists())
+            break;
+    }
+    QVERIFY(catalog.open(QIODevice::ReadOnly));
+    const QJsonArray rows = QJsonDocument::fromJson(catalog.readAll()).array();
+    bool sawTinyQwen = false;
+    for (const QJsonValue &v : rows) {
+        const QJsonObject row = v.toObject();
+        if (row.value(QStringLiteral("name")).toString() == QLatin1String("Qwen/Qwen3.5-2B-MTP")) {
+            const QJsonArray sources = row.value(QStringLiteral("gguf_sources")).toArray();
+            QVERIFY(!sources.isEmpty());
+            QCOMPARE(sources.first().toObject().value(QStringLiteral("repo")).toString(),
+                     QStringLiteral("unsloth/Qwen3.5-2B-MTP-GGUF"));
+            sawTinyQwen = true;
+            break;
+        }
+    }
+    QVERIFY(sawTinyQwen);
 }
 
 void AppControllerTests::createRecommendedLaunchProfileBuildsProfile()

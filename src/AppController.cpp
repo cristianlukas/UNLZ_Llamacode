@@ -5417,7 +5417,84 @@ static QString guessGgufFileName(const QString &repo, const QString &modelName, 
     base.remove(QRegularExpression(QStringLiteral("[-_]?GGUF$"), QRegularExpression::CaseInsensitiveOption));
     if (base.isEmpty())
         base = modelName.section(QLatin1Char('/'), -1);
-    return QStringLiteral("%1-%2.gguf").arg(base, quant.isEmpty() ? QStringLiteral("Q4_K_M") : quant);
+    const QString q = quant.isEmpty() ? QStringLiteral("Q4_K_M") : quant;
+    const bool unslothMtp = repo.contains(QStringLiteral("unsloth/"), Qt::CaseInsensitive)
+        && base.contains(QStringLiteral("-MTP"), Qt::CaseInsensitive);
+    if (unslothMtp)
+        base.remove(QRegularExpression(QStringLiteral("[-_]?MTP$"), QRegularExpression::CaseInsensitiveOption));
+    const bool unslothDynamicQwen36 = repo.contains(QStringLiteral("unsloth/"), Qt::CaseInsensitive)
+        && base.contains(QStringLiteral("Qwen3.6"), Qt::CaseInsensitive)
+        && q.startsWith(QStringLiteral("Q"), Qt::CaseInsensitive)
+        && !q.startsWith(QStringLiteral("UD-"), Qt::CaseInsensitive);
+    return QStringLiteral("%1-%2%3.gguf").arg(base, unslothDynamicQwen36 ? QStringLiteral("UD-") : QString(), q);
+}
+
+static QUrl huggingFaceResolveUrl(const QString &repo, const QString &fileName)
+{
+    return QUrl(QStringLiteral("https://huggingface.co/%1/resolve/main/%2")
+                    .arg(repo, QString::fromLatin1(QUrl::toPercentEncoding(fileName, "/"))));
+}
+
+static QUrl huggingFaceApiUrl(const QString &repo)
+{
+    return QUrl(QStringLiteral("https://huggingface.co/api/models/%1")
+                    .arg(QString::fromLatin1(QUrl::toPercentEncoding(repo, "/"))));
+}
+
+static QString requestedQuantToken(const QString &fileName)
+{
+    const QString base = QFileInfo(fileName).fileName();
+    const QRegularExpression re(QStringLiteral("(UD-)?(IQ[0-9]_[A-Z0-9]+|Q[0-9]_[A-Z](?:_[A-Z])?|Q[0-9]_[0-9]|Q[0-9]|MXFP4_MOE|NVFP4|FP4|BF16|F16|Q8_0)\\.gguf$"),
+                                QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch m = re.match(base);
+    if (m.hasMatch())
+        return m.captured(0).chopped(5).toUpper();
+    return QStringLiteral("Q4_K_M");
+}
+
+static int ggufSiblingRank(const QString &sibling, const QString &requestedFileName)
+{
+    const QString s = QFileInfo(sibling).fileName().toUpper();
+    const QString requestedBase = QFileInfo(requestedFileName).fileName().toUpper();
+    if (s == requestedBase)
+        return 0;
+
+    const QString quant = requestedQuantToken(requestedFileName);
+    QStringList preferred;
+    if (!quant.startsWith(QStringLiteral("UD-")))
+        preferred << QStringLiteral("UD-%1").arg(quant);
+    preferred << quant;
+    preferred << QStringLiteral("UD-Q4_K_M") << QStringLiteral("Q4_K_M")
+              << QStringLiteral("UD-IQ4_XS") << QStringLiteral("IQ4_XS")
+              << QStringLiteral("UD-IQ4_NL") << QStringLiteral("IQ4_NL")
+              << QStringLiteral("UD-Q4_K_S") << QStringLiteral("Q4_K_S")
+              << QStringLiteral("UD-Q3_K_M") << QStringLiteral("Q3_K_M")
+              << QStringLiteral("UD-Q5_K_M") << QStringLiteral("Q5_K_M")
+              << QStringLiteral("MXFP4_MOE");
+    preferred.removeDuplicates();
+
+    for (int i = 0; i < preferred.size(); ++i) {
+        const QString token = preferred.at(i).toUpper();
+        if (s.endsWith(QStringLiteral("-%1.GGUF").arg(token)) || s.endsWith(QStringLiteral("_%1.GGUF").arg(token)))
+            return 10 + i;
+    }
+    return s.endsWith(QStringLiteral(".GGUF")) ? 100 : 1000;
+}
+
+static QString chooseGgufSibling(const QStringList &siblings, const QString &requestedFileName)
+{
+    QString best;
+    int bestRank = 1000;
+    for (const QString &s : siblings) {
+        if (!s.endsWith(QStringLiteral(".gguf"), Qt::CaseInsensitive))
+            continue;
+        const int rank = ggufSiblingRank(s, requestedFileName);
+        if (rank < bestRank || (rank == bestRank && s.size() < best.size())) {
+            best = s;
+            bestRank = rank;
+        }
+    }
+    return best;
 }
 
 bool AppController::isGgufRecommendationCandidate(const QString &name, bool isGguf,
@@ -5430,6 +5507,18 @@ bool AppController::isGgufRecommendationCandidate(const QString &name, bool isGg
         n.contains(QStringLiteral("exl2")) || n.contains(QStringLiteral("bnb")))
         return false;
     return hasGgufSources || isGguf || n.contains(QStringLiteral("gguf"));
+}
+
+QString AppController::recommendedGgufFileName(const QString &repo, const QString &modelName,
+                                               const QString &quant)
+{
+    return guessGgufFileName(repo, modelName, quant);
+}
+
+QString AppController::resolveRecommendedGgufFileName(const QStringList &siblings,
+                                                      const QString &requestedFileName)
+{
+    return chooseGgufSibling(siblings, requestedFileName);
 }
 
 static double quantBpp(const QString &quant)
@@ -5458,6 +5547,18 @@ static double estimateCatalogMemoryGb(const QJsonObject &model, double paramsB, 
     const double kvGb = 7.5e-6 * paramsB * qMax(2048, ctx);
     const double overheadGb = 0.7 + weightsGb * 0.05;
     return weightsGb + kvGb + overheadGb;
+}
+
+static double estimateMoeActiveGpuGb(const QJsonObject &model, double activeParamsB, const QString &quant, int ctx)
+{
+    double activeGb = model.value(QStringLiteral("active_parameters")).toDouble() > 0
+        ? activeParamsB * quantBpp(quant)
+        : 0.0;
+    if (activeGb <= 0)
+        activeGb = activeParamsB * quantBpp(quant);
+    const double kvGb = 7.5e-6 * qMax(0.2, activeParamsB) * qMax(2048, ctx);
+    const double routerAndSharedGb = qMax(0.45, activeGb * 0.18);
+    return activeGb + kvGb + routerAndSharedGb;
 }
 
 // Context used for *sizing*. Reddit feedback: don't size at a token 4k window —
@@ -5493,6 +5594,10 @@ static double catalogSpeedTps(const QString &gpuName, double activeParamsB, doub
         // Per-token cost is dominated by the slowest tier it must stream through.
         const double frac = qBound(0.0, gpuFraction, 1.0);
         bw = 1.0 / (frac / qMax(bw, cpuBw) + (1.0 - frac) / cpuBw);
+    } else if (runMode == QLatin1String("moe_active_gpu")) {
+        // MoE still keeps cold experts in RAM, but token work mostly streams the
+        // active experts from VRAM.
+        bw = bw * 0.72;
     }
     const double denom = qMax(0.2, activeParamsB * qMax(0.35, requiredGb / qMax(0.2, activeParamsB)));
     return qMax(0.0, (bw / denom) * 0.55);
@@ -5617,7 +5722,8 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
     // usable system RAM; otherwise 7B/8B models that run fine on 8 GB NVIDIA
     // cards get a zero fit score only because the 32k KV cache spills slightly.
     const double usableRamGb = ramGb * 0.9;
-    const double budget = runMode == QLatin1String("partial_offload") ? (vramGb + usableRamGb)
+    const double budget = (runMode == QLatin1String("partial_offload") || runMode == QLatin1String("moe_active_gpu"))
+                        ? (runMode == QLatin1String("moe_active_gpu") ? vramGb : (vramGb + usableRamGb))
                         : vramGb > 0 ? vramGb
                         : usableRamGb;
     double fitScore = 0;
@@ -5629,6 +5735,8 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
         else fitScore = 50;
         if (runMode == QLatin1String("partial_offload"))
             fitScore = qMax(55.0, fitScore - 10.0);
+        else if (runMode == QLatin1String("moe_active_gpu"))
+            fitScore = qMax(78.0, fitScore);
     }
 
     // ── context ── modern agent target is 32k+, not a token 4k window
@@ -5660,6 +5768,9 @@ static int catalogScore(const QJsonObject &model, double paramsB, double require
             && runMode == QLatin1String("gpu")
             && model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen3-8B"), Qt::CaseInsensitive))
         composite += 2.0; // current local default: Qwen3 8B Q4 fits 8 GB VRAM cleanly at 32k.
+    if (vramGb > 0 && vramGb < 4.0
+            && model.value(QStringLiteral("name")).toString().contains(QStringLiteral("Qwen3.5-2B"), Qt::CaseInsensitive))
+        composite += 14.0; // tiny GPUs should see the practical 2B MTP option near the top.
 
     if (runMode == QLatin1String("partial_offload") && tps < 5.0)
         composite = qMin(composite, 68.0);
@@ -5804,9 +5915,14 @@ void AppController::rebuildModelRecommendations()
             const int ctx = sizingContext(modelMaxCtx);
             const double requiredGb = estimateCatalogMemoryGb(m, paramsB, quant, ctx);
             const double activeRaw = m.value(QStringLiteral("active_parameters")).toDouble();
-            const double activeB = (m.value(QStringLiteral("is_moe")).toBool() && activeRaw > 0)
+            const bool isMoe = m.value(QStringLiteral("is_moe")).toBool();
+            const double activeB = (isMoe && activeRaw > 0)
                 ? activeRaw / 1000000000.0
                 : paramsB;
+            const double activeGpuGb = isMoe ? estimateMoeActiveGpuGb(m, activeB, quant, ctx) : requiredGb;
+            const bool moeActiveFitsGpu = isMoe && vramGb > 0
+                && activeGpuGb <= qMax(0.1, vramGb * 0.92)
+                && requiredGb <= vramGb + ramGb * 0.9;
 
             QString runMode;
             QString fit;
@@ -5818,6 +5934,10 @@ void AppController::rebuildModelRecommendations()
                 fit = (m.value(QStringLiteral("recommended_ram_gb")).toDouble(requiredGb) <= vramGb)
                     ? QStringLiteral("Perfecto")
                     : QStringLiteral("Bueno");
+            } else if (moeActiveFitsGpu) {
+                runMode = QStringLiteral("moe_active_gpu");
+                gpuFraction = 0.9;
+                fit = QStringLiteral("Razonable");
             } else if (vramGb > 0 && requiredGb <= vramGb + usableRamGb) {
                 // Spill: weights split across VRAM + system RAM (llama.cpp -ngl partial).
                 runMode = QStringLiteral("partial_offload");
@@ -5833,13 +5953,14 @@ void AppController::rebuildModelRecommendations()
             }
 
             const QString caps = catalogCapabilities(m);
+            const double scoreRequiredGb = runMode == QLatin1String("moe_active_gpu") ? activeGpuGb : requiredGb;
             const double tps = runMode == QLatin1String("no_fit")
                 ? 0.0
-                : catalogSpeedTps(gpuName, activeB, requiredGb, runMode, gpuFraction);
+                : catalogSpeedTps(gpuName, activeB, scoreRequiredGb, runMode, gpuFraction);
             const QString qualityKey = benchmarkKey(name);
             const double benchQuality = m_benchmarkQuality.value(qualityKey, -1.0);
             const double cookbookPriority = m_cookbookPriority.value(qualityKey, -1.0);
-            const int score = catalogScore(m, paramsB, requiredGb, ramGb, vramGb, quant, caps, ctx, runMode, tps,
+            const int score = catalogScore(m, paramsB, scoreRequiredGb, ramGb, vramGb, quant, caps, ctx, runMode, tps,
                                            benchQuality, cookbookPriority);
 
             QVariantMap row;
@@ -5854,6 +5975,7 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("quant")] = quant;
             row[QStringLiteral("sizeGb")] = requiredGb;
             row[QStringLiteral("requiredGb")] = requiredGb;
+            row[QStringLiteral("activeGpuGb")] = activeGpuGb;
             row[QStringLiteral("minRamGb")] = m.value(QStringLiteral("min_ram_gb")).toDouble();
             row[QStringLiteral("recommendedRamGb")] = m.value(QStringLiteral("recommended_ram_gb")).toDouble();
             row[QStringLiteral("minVramGb")] = m.value(QStringLiteral("min_vram_gb")).toDouble();
@@ -5861,13 +5983,19 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("context")] = ctx;
             QString runLabel = runMode;
             if (runMode == QLatin1String("gpu")) runLabel = QStringLiteral("GPU (todo en VRAM)");
+            else if (runMode == QLatin1String("moe_active_gpu"))
+                runLabel = QStringLiteral("MoE activo en GPU");
             else if (runMode == QLatin1String("partial_offload"))
                 runLabel = QStringLiteral("VRAM+RAM (%1%% en GPU)").arg(qRound(gpuFraction * 100.0));
             else if (runMode == QLatin1String("cpu_only")) runLabel = QStringLiteral("CPU (todo en RAM)");
             else if (runMode == QLatin1String("no_fit")) runLabel = QStringLiteral("No entra");
-            row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est. · ~%3 GB @ %4k ctx · %5 downloads")
+            const QString moeNote = runMode == QLatin1String("moe_active_gpu")
+                ? QStringLiteral(" · activo ~%1 GB").arg(QString::number(activeGpuGb, 'f', 1))
+                : QString();
+            row[QStringLiteral("notes")] = QStringLiteral("%1 · %2 t/s est.%3 · ~%4 GB @ %5k ctx · %6 downloads")
                 .arg(runLabel)
                 .arg(QString::number(tps, 'f', 1))
+                .arg(moeNote)
                 .arg(QString::number(requiredGb, 'f', 1))
                 .arg(qRound(ctx / 1000.0))
                 .arg(qRound(m.value(QStringLiteral("hf_downloads")).toDouble()));
@@ -5877,7 +6005,7 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("downloadable")] = !repo.isEmpty() && !fileName.isEmpty();
             row[QStringLiteral("downloadUrl")] = (!repo.isEmpty() && !fileName.isEmpty())
                 ? QStringLiteral("https://huggingface.co/%1/resolve/main/%2?download=true")
-                    .arg(repo, QString::fromLatin1(QUrl::toPercentEncoding(fileName)))
+                    .arg(repo, QString::fromLatin1(QUrl::toPercentEncoding(fileName, "/")))
                 : QString();
             rows.append(row);
         }
@@ -5967,11 +6095,14 @@ void AppController::rebuildModelRecommendations()
         row[QStringLiteral("score")] = score;
         row[QStringLiteral("downloadable")] = true;
         row[QStringLiteral("downloadUrl")] = QStringLiteral("https://huggingface.co/%1/resolve/main/%2?download=true")
-            .arg(m.repo, QString::fromLatin1(QUrl::toPercentEncoding(m.fileName)));
+            .arg(m.repo, QString::fromLatin1(QUrl::toPercentEncoding(m.fileName, "/")));
         rows.append(row);
     };
 
     const QVector<RecommendedModelDef> curated = {
+        {QStringLiteral("Qwen3.5 2B MTP"), QStringLiteral("unsloth/Qwen3.5-2B-MTP-GGUF"),
+         QStringLiteral("Qwen3.5-2B-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use,mtp"),
+         QStringLiteral("2B"), QStringLiteral("Q4_K_M"), 0, 2, 6, 1.2, 32, QStringLiteral("curated tiny-gpu")},
         {QStringLiteral("Qwen3.5 9B"), QStringLiteral("unsloth/Qwen3.5-9B-GGUF"),
          QStringLiteral("Qwen3.5-9B-Q4_K_M.gguf"), QStringLiteral("Qwen"), QStringLiteral("chat,reasoning,tool_use"),
          QStringLiteral("9B"), QStringLiteral("Q4_K_M"), 0, 8, 16, 6, 32, QStringLiteral("curated")},
@@ -6324,6 +6455,7 @@ void AppController::downloadRecommendedModel(const QString &repo, const QString 
     item.partPath = partPath;
     item.state = QStringLiteral("queued");
     item.status = QStringLiteral("En cola: %1").arg(QFileInfo(cleanFile).fileName());
+    item.resolvedFileName = false;
     m_modelDownloadQueue.append(item);
     emitModelDownloadChanged();
     startNextModelDownload();
@@ -6356,13 +6488,100 @@ void AppController::startModelDownload(int index)
     item.received = QFileInfo(item.partPath).exists() ? QFileInfo(item.partPath).size() : 0;
     item.total = 0;
     item.resumeOffset = 0;
+
+    if (!item.resolvedFileName) {
+        item.state = QStringLiteral("resolving");
+        item.status = QStringLiteral("Buscando GGUF real en Hugging Face...");
+        m_activeModelDownloadId = item.id;
+        emitModelDownloadChanged();
+
+        QNetworkRequest apiReq(huggingFaceApiUrl(item.repo));
+        apiReq.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+        apiReq.setTransferTimeout(30000);
+        m_modelDownloadReply = m_nam->get(apiReq);
+        connect(m_modelDownloadReply, &QNetworkReply::finished, this, [this]() {
+            QNetworkReply *reply = m_modelDownloadReply;
+            m_modelDownloadReply = nullptr;
+            const QString id = m_activeModelDownloadId;
+            const int idx = modelDownloadIndexById(id);
+            if (idx < 0) {
+                if (reply) reply->deleteLater();
+                startNextModelDownload();
+                return;
+            }
+
+            ModelDownloadItem &cur = m_modelDownloadQueue[idx];
+            if (cur.pauseRequested) {
+                cur.state = QStringLiteral("paused");
+                cur.status = QStringLiteral("Pausada: %1").arg(QFileInfo(cur.fileName).fileName());
+                m_activeModelDownloadId.clear();
+                if (reply) reply->deleteLater();
+                emitModelDownloadChanged();
+                startNextModelDownload();
+                return;
+            }
+            if (cur.cancelRequested) {
+                QFile::remove(cur.partPath);
+                m_modelDownloadQueue.removeAt(idx);
+                m_activeModelDownloadId.clear();
+                if (reply) reply->deleteLater();
+                emitModelDownloadChanged();
+                startNextModelDownload();
+                return;
+            }
+
+            QStringList siblings;
+            const bool ok = reply && reply->error() == QNetworkReply::NoError;
+            if (ok) {
+                const QJsonObject root = QJsonDocument::fromJson(reply->readAll()).object();
+                const QJsonArray files = root.value(QStringLiteral("siblings")).toArray();
+                for (const QJsonValue &v : files) {
+                    const QString name = v.toObject().value(QStringLiteral("rfilename")).toString();
+                    if (!name.isEmpty())
+                        siblings.append(name);
+                }
+            }
+            const QString chosen = chooseGgufSibling(siblings, cur.fileName);
+            const QString oldFile = cur.fileName;
+            if (!chosen.isEmpty() && chosen != cur.fileName) {
+                cur.fileName = chosen;
+                cur.outPath = modelDownloadDir() + QLatin1Char('/') + QFileInfo(chosen).fileName();
+                cur.partPath = cur.outPath + QStringLiteral(".part");
+                cur.status = QStringLiteral("Archivo real: %1").arg(QFileInfo(chosen).fileName());
+            } else if (!ok) {
+                cur.status = QStringLiteral("No se pudo consultar Hugging Face; usando %1").arg(QFileInfo(cur.fileName).fileName());
+            } else {
+                cur.status = QStringLiteral("Archivo confirmado: %1").arg(QFileInfo(cur.fileName).fileName());
+            }
+            cur.resolvedFileName = true;
+            cur.state = QStringLiteral("queued");
+            m_activeModelDownloadId.clear();
+            if (reply) reply->deleteLater();
+
+            if (oldFile != cur.fileName) {
+                for (int i = 0; i < m_modelDownloadQueue.size(); ++i) {
+                    if (i != idx && m_modelDownloadQueue.at(i).outPath == cur.outPath) {
+                        cur.state = QStringLiteral("error");
+                        cur.status = QStringLiteral("Ya está en la cola: %1").arg(QFileInfo(cur.outPath).fileName());
+                        emitModelDownloadChanged();
+                        startNextModelDownload();
+                        return;
+                    }
+                }
+            }
+
+            emitModelDownloadChanged();
+            QTimer::singleShot(0, this, [this]() { startNextModelDownload(); });
+        });
+        return;
+    }
+
     item.state = QStringLiteral("verifying");
     item.status = QStringLiteral("Verificando %1...").arg(QFileInfo(item.fileName).fileName());
     m_activeModelDownloadId = item.id;
     emitModelDownloadChanged();
 
-    const QUrl url(QStringLiteral("https://huggingface.co/%1/resolve/main/%2")
-                       .arg(item.repo, QString::fromLatin1(QUrl::toPercentEncoding(item.fileName))));
+    const QUrl url = huggingFaceResolveUrl(item.repo, item.fileName);
 
     if (QFileInfo::exists(item.outPath)) {
         QNetworkRequest headReq(url);
@@ -6539,8 +6758,11 @@ void AppController::startModelDownload(int index)
 
         if (!ok) {
             QFile::remove(cur.partPath);
+            const QString detail = httpStatus > 0
+                ? QStringLiteral("%1 (HTTP %2)").arg(err).arg(httpStatus)
+                : err;
             finishModelDownloadItem(id, QStringLiteral("error"),
-                                    QStringLiteral("Error descargando modelo: %1").arg(err), 0, false);
+                                    QStringLiteral("Error descargando modelo: %1").arg(detail), 0, false);
             emit serverError(m_modelDownloadStatus);
             return;
         }
