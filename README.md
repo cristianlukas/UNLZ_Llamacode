@@ -697,5 +697,6 @@ Código, datos y diseño tomados de otros proyectos:
 | **QtKeychain** | Cifrado de secretos respaldado por el SO | https://github.com/frankosterfeld/qtkeychain |
 | **Catppuccin (Mocha)** | Paleta del theme QML | https://github.com/catppuccin/catppuccin |
 | **archex** | Ideas de pipeline de code-context en `hybrid_search`: empaquetado por presupuesto de tokens + expansión por dep-graph (vecinos vía imports/includes) | https://github.com/Mathews-Tom/archex |
+| **codehamr** | Ideas de robustez local-first para el harness: empaquetado de contexto, invariantes OpenAI-compatible, timeouts SSE por inactividad y errores autocorrectivos de tools | https://github.com/codehamr/codehamr |
 
 > Al sumar código/datos de otro repo, agregar la fila correspondiente acá.
