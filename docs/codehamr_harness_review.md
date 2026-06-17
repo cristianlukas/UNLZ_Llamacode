@@ -129,9 +129,10 @@ Prioridad de tests para LlamaCode:
 
 ## Plan recomendado
 
-1. Crear `sanitizeApiMessagesForWire()` y tests unitarios.
-2. Agregar idle watchdog de stream SSE configurable.
-3. Endurecer `edit_file` y errores de tool args truncados.
-4. Agregar kill de arbol/grupo para `run_shell`.
-5. Crear preset `Minimal local agent` en perfiles/harness UI.
-
+1. Crear `sanitizeApiMessagesForWire()` y tests unitarios. **Implementado**.
+2. Agregar idle watchdog de stream SSE configurable. **Implementado** con
+   `LLAMACODE_STREAM_IDLE_TIMEOUT` en segundos, default 3600.
+3. Endurecer `edit_file` y errores de tool args truncados. **Implementado**.
+4. Agregar kill de arbol/grupo para `run_shell`. **Parcial**: implementado en
+   Windows con `taskkill /T /F`; queda pendiente process group Unix.
+5. Crear preset `Minimal local agent` en perfiles/harness UI. **Pendiente**.

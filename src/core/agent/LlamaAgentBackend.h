@@ -10,6 +10,7 @@
 #include <QRegularExpression>
 
 class QThread;
+class QTimer;
 class AgentToolRunner;
 class SubAgentRunner;
 
@@ -112,6 +113,11 @@ public:
     // Memoria por proyecto: ruta del archivo de memoria dentro de un cwd.
     static QString memoryFilePath(const QString &cwd);
 
+    // Normaliza el historial antes de enviarlo a backends OpenAI-compatible:
+    // elimina pares assistant/tool incompletos, conserva un user de anclaje y
+    // evita system messages no iniciales.
+    static QJsonArray sanitizeApiMessagesForWire(const QJsonArray &messages);
+
     // Consolidación de memoria (background): corre 1 completion sobre el transcript
     // actual y extrae hechos durables → MemoryStore (source="consolidation"). Async,
     // fire-and-forget. Se dispara solo al dejar una sesión y puede invocarse manual.
@@ -180,6 +186,8 @@ private:
     void handleStreamData();             // parsea m_sseBuf incremental
     void handleStreamFinished(bool ok, const QString &err);
     void resetStreamState();
+    void resetStreamIdleWatchdog();
+    int streamIdleTimeoutMs() const;
 
     // Sesión + persistencia a disco (patrón RawChatBackend)
     void ensureSession();
@@ -211,6 +219,8 @@ private:
     QNetworkReply *m_consolidateReply = nullptr;     // request de consolidación de memoria
     QHash<QString, int> m_consolidatedLen;     // sessionId → nº de msgs ya consolidados (dedupe)
     QNetworkReply *m_reply = nullptr;
+    QTimer *m_streamIdleTimer = nullptr;
+    bool m_streamIdleTimedOut = false;
     bool m_running = false;
     QString m_cwd;
     QString m_approvalMode = QStringLiteral("ask");

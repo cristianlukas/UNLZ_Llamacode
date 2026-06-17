@@ -174,6 +174,118 @@ static QString toolArgumentsToString(const QJsonValue &v)
     return {};
 }
 
+static bool isToolMessage(const QJsonObject &m)
+{
+    return m.value(QStringLiteral("role")).toString() == QLatin1String("tool");
+}
+
+static bool isAssistantWithToolCalls(const QJsonObject &m)
+{
+    return m.value(QStringLiteral("role")).toString() == QLatin1String("assistant")
+           && !m.value(QStringLiteral("tool_calls")).toArray().isEmpty();
+}
+
+static QSet<QString> toolCallIds(const QJsonObject &assistant)
+{
+    QSet<QString> ids;
+    const QJsonArray calls = assistant.value(QStringLiteral("tool_calls")).toArray();
+    for (const QJsonValue &v : calls) {
+        const QString id = v.toObject().value(QStringLiteral("id")).toString();
+        if (!id.isEmpty()) ids.insert(id);
+    }
+    return ids;
+}
+
+static QJsonArray dropDanglingAssistantToolCalls(const QJsonArray &messages)
+{
+    QSet<QString> answered;
+    for (const QJsonValue &v : messages) {
+        const QJsonObject o = v.toObject();
+        if (isToolMessage(o)) {
+            const QString id = o.value(QStringLiteral("tool_call_id")).toString();
+            if (!id.isEmpty()) answered.insert(id);
+        }
+    }
+
+    QJsonArray out;
+    for (const QJsonValue &v : messages) {
+        const QJsonObject o = v.toObject();
+        if (isAssistantWithToolCalls(o)) {
+            const QSet<QString> ids = toolCallIds(o);
+            if (ids.isEmpty()) continue;
+            bool complete = true;
+            for (const QString &id : ids) {
+                if (!answered.contains(id)) { complete = false; break; }
+            }
+            if (!complete) continue;
+        }
+        out.append(v);
+    }
+    return out;
+}
+
+static QJsonArray dropOrphanToolMessages(const QJsonArray &messages)
+{
+    QSet<QString> seen;
+    QJsonArray out;
+    for (const QJsonValue &v : messages) {
+        const QJsonObject o = v.toObject();
+        if (isAssistantWithToolCalls(o))
+            seen.unite(toolCallIds(o));
+        if (isToolMessage(o)) {
+            const QString id = o.value(QStringLiteral("tool_call_id")).toString();
+            if (id.isEmpty() || !seen.contains(id))
+                continue;
+        }
+        out.append(v);
+    }
+    return out;
+}
+
+QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messages)
+{
+    if (messages.isEmpty()) return messages;
+
+    QJsonArray out = dropDanglingAssistantToolCalls(messages);
+    out = dropOrphanToolMessages(out);
+
+    bool hasUser = false;
+    for (const QJsonValue &v : out) {
+        if (v.toObject().value(QStringLiteral("role")).toString() == QLatin1String("user")) {
+            hasUser = true;
+            break;
+        }
+    }
+    if (!hasUser) {
+        for (const QJsonValue &v : messages) {
+            const QJsonObject o = v.toObject();
+            if (o.value(QStringLiteral("role")).toString() == QLatin1String("user")) {
+                QJsonArray anchored;
+                anchored.append(o);
+                for (const QJsonValue &kept : std::as_const(out))
+                    anchored.append(kept);
+                out = anchored;
+                break;
+            }
+        }
+    }
+
+    bool sawFirstSystem = false;
+    for (int i = 0; i < out.size(); ++i) {
+        QJsonObject o = out[i].toObject();
+        if (o.value(QStringLiteral("role")).toString() != QLatin1String("system"))
+            continue;
+        if (i == 0 && !sawFirstSystem) {
+            sawFirstSystem = true;
+            continue;
+        }
+        o[QStringLiteral("role")] = QStringLiteral("user");
+        out.replace(i, o);
+    }
+
+    return out;
+}
+
 LlamaAgentBackend::LlamaAgentBackend(QObject *parent) : IAgentBackend(parent)
 {
     m_nam = new QNetworkAccessManager(this);
@@ -1119,6 +1231,15 @@ void LlamaAgentBackend::runCompletion()
     // del server si llega en el chunk final).
     if (m_ctxLimit > 0) emit contextUsage(estimateApiTokens(), m_ctxLimit);
 
+    QJsonArray wireMessages = sanitizeApiMessagesForWire(m_apiMessages);
+    const QByteArray beforeWire = QJsonDocument(m_apiMessages).toJson(QJsonDocument::Compact);
+    const QByteArray afterWire = QJsonDocument(wireMessages).toJson(QJsonDocument::Compact);
+    if (afterWire != beforeWire) {
+        emit logAppended(QStringLiteral("[turn] historial saneado para wire: %1 → %2 mensajes\n")
+                             .arg(m_apiMessages.size()).arg(wireMessages.size()));
+        m_apiMessages = wireMessages;
+    }
+
     // Reserva de salida acotada al ctx del perfil (evita pedir más de lo que entra).
     const int outReserve = (m_ctxLimit > 0) ? qMin(32768, m_ctxLimit / 4) : 32768;
 
@@ -1128,7 +1249,7 @@ void LlamaAgentBackend::runCompletion()
 
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId},
-        {QStringLiteral("messages"), m_apiMessages},
+        {QStringLiteral("messages"), wireMessages},
         {QStringLiteral("tools"), buildToolSchemas()},
         {QStringLiteral("tool_choice"), QStringLiteral("auto")},
         // Habilitado para que el modelo pueda lanzar varias `task` en paralelo.
@@ -1173,17 +1294,23 @@ void LlamaAgentBackend::runCompletion()
     ensureAssistantBubble();
 
     resetStreamState();
+    m_streamIdleTimedOut = false;
     m_reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() { handleStreamData(); });
     connect(m_reply, &QNetworkReply::finished, this, [this]() {
+        if (m_streamIdleTimer) m_streamIdleTimer->stop();
         QNetworkReply *r = m_reply;
         if (!r) return;
         const bool ok = r->error() == QNetworkReply::NoError;
-        const QString err = r->errorString();
+        const QString err = m_streamIdleTimedOut
+            ? QStringLiteral("el servidor no envió datos del stream durante %1s")
+                  .arg(streamIdleTimeoutMs() / 1000)
+            : r->errorString();
         m_reply = nullptr;
         r->deleteLater();
         handleStreamFinished(ok, err);
     });
+    resetStreamIdleWatchdog();
 }
 
 void LlamaAgentBackend::resetStreamState()
@@ -1200,12 +1327,41 @@ void LlamaAgentBackend::resetStreamState()
         m_streamBase = m_messages[m_curAsstIdx].toMap().value(QStringLiteral("content")).toString();
 }
 
+int LlamaAgentBackend::streamIdleTimeoutMs() const
+{
+    const QByteArray env = qgetenv("LLAMACODE_STREAM_IDLE_TIMEOUT");
+    bool ok = false;
+    int seconds = QString::fromLatin1(env).trimmed().toInt(&ok);
+    if (!ok || seconds <= 0)
+        seconds = 3600;
+    seconds = qBound(30, seconds, 24 * 60 * 60);
+    return seconds * 1000;
+}
+
+void LlamaAgentBackend::resetStreamIdleWatchdog()
+{
+    if (!m_reply) return;
+    if (!m_streamIdleTimer) {
+        m_streamIdleTimer = new QTimer(this);
+        m_streamIdleTimer->setSingleShot(true);
+        connect(m_streamIdleTimer, &QTimer::timeout, this, [this]() {
+            if (!m_reply) return;
+            m_streamIdleTimedOut = true;
+            emit logAppended(QStringLiteral("[turn] stream sin actividad por %1s; abortando request\n")
+                                 .arg(streamIdleTimeoutMs() / 1000));
+            m_reply->abort();
+        });
+    }
+    m_streamIdleTimer->start(streamIdleTimeoutMs());
+}
+
 // Une los deltas incrementales de tool_calls (patrón OpenAI streaming): por
 // cada 'index' se acumulan id, function.name y function.arguments (string).
 void LlamaAgentBackend::handleStreamData()
 {
     if (!m_reply) return;
     m_sseBuf.append(m_reply->readAll());
+    resetStreamIdleWatchdog();
     while (true) {
         const int nl = m_sseBuf.indexOf('\n');
         if (nl < 0) break;
@@ -1348,17 +1504,19 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
         // contenido enorme que pega contra n_predict), el string queda como JSON
         // inválido/no terminado. Persistir ESE string gigante en m_apiMessages
         // envenena la sesión: el siguiente request lo reenvía y el server al
-        // renderizar el tool_call por jinja crashea (0xC0000409). Sanitizamos:
-        // si no parsea como objeto JSON, guardamos "{}" en el historial. El
-        // tool fallará abajo con "argumentos inválidos" y el modelo reintenta,
-        // pero el historial queda limpio y no tumba al server.
+        // renderizar el tool_call por jinja crashea (0xC0000409). Sanitizamos a
+        // un objeto chico que conserva la causa: el executor devolverá una
+        // instrucción autocorrectiva en vez de esconder el problema.
         QJsonParseError perr;
         QJsonDocument::fromJson(argStr.toUtf8(), &perr);
         if (perr.error != QJsonParseError::NoError && !argStr.trimmed().isEmpty()) {
             emit logAppended(QStringLiteral(
-                "[turn] tool_call con args JSON inválidos (%1, %2 chars) → saneado a {} en historial\n")
+                "[turn] tool_call con args JSON inválidos (%1, %2 chars) → saneado con _parse_error\n")
                 .arg(perr.errorString()).arg(argStr.size()));
-            argStr = QStringLiteral("{}");
+            argStr = QString::fromUtf8(QJsonDocument(QJsonObject{
+                {QStringLiteral("_parse_error"), perr.errorString()},
+                {QStringLiteral("_raw_chars"), argStr.size()}
+            }).toJson(QJsonDocument::Compact));
         }
 
         toolCalls.append(QJsonObject{

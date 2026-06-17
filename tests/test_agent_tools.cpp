@@ -25,6 +25,8 @@ private slots:
     void writeReadEditCycle();
     void confinement_blocksOutsideCwd();
     void editFile_missingFails();
+    void editFile_whitespaceNearMissExplains();
+    void parseErrorExplainsChunking();
     void grep_findsMatch();
     void glob_listsFiles();
     void runShell_echo();
@@ -93,6 +95,27 @@ void AgentToolsTests::editFile_missingFails()
                                        {"old_string", "a"}, {"new_string", "b"}});
     QVERIFY(!e.value("ok").toBool());
     QVERIFY(e.value("result").toString().contains("no existe"));
+}
+
+void AgentToolsTests::editFile_whitespaceNearMissExplains()
+{
+    call("write_file", {{"path", "indent.txt"}, {"content", "if (ok) {\n    return 1;\n}\n"}});
+    QVariantMap e = call("edit_file", {{"path", "indent.txt"},
+                                       {"old_string", "if (ok) { return 1; }"},
+                                       {"new_string", "return 2;"}});
+    QVERIFY(!e.value("ok").toBool());
+    const QString result = e.value("result").toString();
+    QVERIFY(result.contains("ignoran espacios") || result.contains("indentación"));
+}
+
+void AgentToolsTests::parseErrorExplainsChunking()
+{
+    QVariantMap e = call("write_file", {{"_parse_error", "unterminated string"},
+                                        {"_raw_chars", 120000}});
+    QVERIFY(!e.value("ok").toBool());
+    const QString result = e.value("result").toString();
+    QVERIFY(result.contains("tool_call demasiado grande"));
+    QVERIFY(result.contains("heredocs"));
 }
 
 void AgentToolsTests::grep_findsMatch()

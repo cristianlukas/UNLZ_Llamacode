@@ -92,6 +92,33 @@ static QRegularExpression globToRegex(const QString &glob)
     return QRegularExpression(rx);
 }
 
+static bool differsOnlyInWhitespace(const QString &content, const QString &needle)
+{
+    if (needle.trimmed().isEmpty()) return false;
+    auto norm = [](const QString &s) {
+        return QLatin1Char(' ') + s.simplified() + QLatin1Char(' ');
+    };
+    return norm(content).count(norm(needle)) == 1;
+}
+
+static void terminateProcessTree(QProcess *proc)
+{
+    if (!proc) return;
+#ifdef Q_OS_WIN
+    const qint64 pid = proc->processId();
+    if (pid > 0) {
+        QProcess killer;
+        killer.setProcessChannelMode(QProcess::MergedChannels);
+        killer.start(QStringLiteral("taskkill"),
+                     {QStringLiteral("/PID"), QString::number(pid),
+                      QStringLiteral("/T"), QStringLiteral("/F")});
+        killer.waitForFinished(2000);
+    }
+#endif
+    if (proc->state() != QProcess::NotRunning)
+        proc->kill();
+}
+
 // ── Helpers web (compartidos por web_fetch / web_search / deep_research) ──
 struct WebHit { QString title, url, snippet; };
 
@@ -632,6 +659,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                    const QString &cwd, QVariantMap &out, bool *ok)
 {
     if (ok) *ok = false;
+    if (args.contains(QStringLiteral("_parse_error"))) {
+        return QStringLiteral("[argumentos JSON inválidos para %1: %2. Probablemente "
+                              "el servidor truncó un tool_call demasiado grande (%3 "
+                              "chars). No repitas el mismo write_file/edit_file gigante: "
+                              "dividí la escritura en partes con run_shell y heredocs "
+                              "append, o hacé ediciones más chicas y verificá con "
+                              "read_file/grep.]")
+            .arg(name,
+                 args.value(QStringLiteral("_parse_error")).toString(),
+                 QString::number(args.value(QStringLiteral("_raw_chars")).toInt()));
+    }
     const QDir base(cwd);
     auto resolve = [&](const QString &rel) { return QDir::cleanPath(base.absoluteFilePath(rel)); };
     // En modo "Super Agente" (no confinado) se permite cualquier ruta del disco.
@@ -1352,9 +1390,15 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             return QStringLiteral("[old_string vacío: especificá el texto exacto a reemplazar]");
 
         const int occurrences = oldText.count(oldS);
-        if (occurrences == 0)
+        if (occurrences == 0) {
+            if (differsOnlyInWhitespace(oldText, oldS))
+                return QStringLiteral("[no se encontró old_string exacto en %1, pero hay "
+                                      "un bloque que coincide si se ignoran espacios/tabs/"
+                                      "saltos. Leé el archivo y copiá los bytes exactos, "
+                                      "incluyendo indentación.]").arg(rel);
             return QStringLiteral("[no se encontró old_string en %1. Copiá el texto EXACTO "
                                   "(con indentación) o leé el archivo primero.]").arg(rel);
+        }
         if (occurrences > 1 && !replaceAll)
             return QStringLiteral("[old_string aparece %1 veces en %2: agregá más contexto "
                                   "para que sea único, o usá replace_all=true.]")
@@ -1762,14 +1806,14 @@ void AgentToolRunner::onShellFinished()
 void AgentToolRunner::onShellTimeout()
 {
     if (!m_shellProc) return;
-    m_shellProc->kill();           // dispara finished() → finishShell vía bandera
+    terminateProcessTree(m_shellProc); // dispara finished() → finishShell vía bandera
     finishShell(true, false);
 }
 
 void AgentToolRunner::cancelShell()
 {
     if (!m_shellProc) return;
-    m_shellProc->kill();
+    terminateProcessTree(m_shellProc);
     finishShell(false, true);
 }
 
