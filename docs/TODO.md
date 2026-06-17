@@ -174,6 +174,18 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 - [ ] **Gate de calidad sobre lo consolidado** — `consolidateMemory()` guarda hechos durables del transcript sin filtro. Reusar `verify_claims` para descartar/bajar confidence de los no acreditados contra repo+memoria antes de persistir. Hacerlo si aparece ruido en `.llamacode/memory.jsonl`.
 - [ ] **Grafo inferido automático** — que la consolidación además emita `link`s al knowledge graph (`GraphStore`) inferidos de los tool-calls reales (módulo→archivo tocado, decisión→bug). Hoy `graph link` es 100% manual.
 
+## Backend RAG compacto opcional (LEANN)
+
+- [ ] **Evaluar LEANN como sidecar CLI/MCP opcional** — no reemplazar el buscador integrado. Mantener `hybrid_search` actual (BM25 + embeddings + RRF, presupuesto de tokens y expansión por dep-graph) como backend default y fallback sin dependencias externas.
+- [ ] **Abstracción de backend de retrieval** — permitir seleccionar por workspace `builtin` o `leann`, conservando una salida normalizada para que el agente y el empaquetado de contexto no dependan del proveedor del índice.
+- [ ] **Fusión híbrida** — combinar resultados LEANN con BM25 local mediante RRF; no depender exclusivamente del índice vectorial para símbolos, errores y frases exactas.
+- [ ] **Indexación incremental por hash** — asociar archivo/chunk a hash de contenido y recalcular sólo lo agregado o modificado. Evaluar el watcher/Merkle tree de LEANN, pero aplicar la misma invalidación también al caché SQLite integrado.
+- [ ] **Chunking AST ampliado** — evaluar el chunking de LEANN para Python, Java, C# y TypeScript y extenderlo a los lenguajes relevantes de LlamaCode. Preservar metadata de archivo, símbolo y rango de líneas para filtros y citas.
+- [ ] **Criterio de activación** — ofrecer LEANN principalmente para repositorios o colecciones grandes (documentos, chats e historiales), donde el ahorro del índice compense la latencia de recomputación y las dependencias Python/HuggingFace.
+- [ ] **Benchmark antes de integrar** — medir con 10k, 100k y 1M chunks: tamaño del índice, tiempo de build/actualización, búsqueda fría/caliente, recall@k, RAM/VRAM, latencia y comportamiento tras altas/bajas/modificaciones.
+- [ ] **Validación Windows y distribución** — comprobar instalación y ejecución nativa en las versiones soportadas de Windows antes de exponerlo en UI; definir instalación aislada, detección de capacidades, health check y mensajes de fallback.
+- [ ] **Licencia y atribución** — LEANN es MIT. Si se incorpora código o datos, registrar versión/fuente y agregar la atribución correspondiente en `README.md`; si sólo se integra como proceso externo, documentar la dependencia opcional.
+
 ## Definition of Done MVP real
 
 - [ ] 3+ binarios registrados y seleccionables
