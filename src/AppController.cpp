@@ -507,6 +507,56 @@ static ResearchReflection researchParseReflection(const QString &content)
     return reflection;
 }
 
+struct ResearchAudit {
+    bool parsed = false;
+    bool passed = false;
+    QStringList issues;
+    QString correctedReport;
+};
+
+static ResearchAudit researchParseAudit(const QString &content)
+{
+    ResearchAudit audit;
+    QString json = content.trimmed();
+    const int begin = json.indexOf(QLatin1Char('{'));
+    const int end = json.lastIndexOf(QLatin1Char('}'));
+    if (begin < 0 || end <= begin) return audit;
+    QJsonParseError error;
+    const QJsonDocument document =
+        QJsonDocument::fromJson(json.mid(begin, end - begin + 1).toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !document.isObject()) return audit;
+    const QJsonObject obj = document.object();
+    audit.parsed = true;
+    audit.passed = obj.value(QStringLiteral("passed")).toBool(false);
+    for (const QJsonValue &value : obj.value(QStringLiteral("issues")).toArray()) {
+        const QString issue = value.toString().simplified();
+        if (!issue.isEmpty()) audit.issues.append(issue);
+    }
+    audit.correctedReport = obj.value(QStringLiteral("correctedReport")).toString().trimmed();
+    return audit;
+}
+
+static bool researchEvidenceHasNumericPrice(const QString &evidence)
+{
+    static const QRegularExpression price(
+        QStringLiteral("(?i)(?:ARS\\s*\\$?|\\$)\\s*[0-9][0-9\\.\\,]{2,}|"
+                       "[0-9][0-9\\.\\,]{2,}\\s*(?:ARS|pesos)"));
+    return price.match(evidence).hasMatch();
+}
+
+static bool researchEvidenceHasAvailableStock(const QString &evidence)
+{
+    static const QRegularExpression unavailable(
+        QStringLiteral("(?i)\\b(?:sin stock|agotad[oa]|no disponible|sin existencias|"
+                       "pausad[oa]|publicaci[oó]n pausada)\\b"));
+    if (unavailable.match(evidence).hasMatch()) return false;
+    static const QRegularExpression stock(
+        QStringLiteral("(?i)\\b(?:en stock|stock disponible|hay stock|disponible|"
+                       "última unidad|ultimas? unidades|despacho\\s+"
+                       "(?:inmediato|24\\s*h))\\b"));
+    return stock.match(evidence).hasMatch();
+}
+
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     // Reenviar progreso/fin de descarga de modelos STT a QML.
@@ -1426,6 +1476,55 @@ QVariantList AppController::parseGpuPowerCsv(const QString &csv)
         gpus.append(g);
     }
     return gpus;
+}
+
+QStringList AppController::researchReportGuardrailIssues(const QString &report)
+{
+    QStringList issues;
+    const auto contains = [&report](const QString &pattern) {
+        return QRegularExpression(pattern).match(report).hasMatch();
+    };
+    if (contains(QStringLiteral(
+            "(?is)(?:RTX\\s*3090.{0,100}(?:no\\s+(?:tiene|soporta)|sin)\\s+NVLink|"
+            "NVLink.{0,100}no\\s+(?:está|esta)\\s+disponible.{0,60}3090)"))) {
+        issues << QStringLiteral(
+            "La RTX 3090 sí soporta NVLink; deben verificarse modelo, puente y software.");
+    }
+    if (contains(QStringLiteral(
+            "(?is)ProArt\\s+(?:Z790|X670E)[^\\n]{0,180}(?:x16\\s*\\+\\s*x8|x16/x8)"))) {
+        issues << QStringLiteral(
+            "Las ProArt Z790/X670E operan x8/x8 al usar sus dos slots principales, no x16+x8.");
+    }
+    if (contains(QStringLiteral(
+            "(?is)ProArt\\s+Z790[^\\n]{0,220}(?:segundo\\s+slot|slot\\s+(?:2|secundario))"
+            "[^\\n]{0,100}chipset"))) {
+        issues << QStringLiteral(
+            "El segundo slot principal de la ProArt Z790 comparte líneas del CPU; no proviene del chipset.");
+    }
+    if (contains(QStringLiteral(
+            "(?is)(?:VRM|placa\\s+madre|motherboard).{0,100}"
+            "(?:aliment|entrega\\s+de\\s+energía).{0,80}(?:GPU|RTX\\s*3090)"))) {
+        issues << QStringLiteral(
+            "El VRM de la motherboard alimenta principalmente al CPU; las GPU dependen de la PSU y sus conectores.");
+    }
+    if (contains(QStringLiteral(
+            "(?is)(?:listado|anuncio|publicaci[oó]n)\\s+activ[oa].{0,100}"
+            "(?:stock|disponible|disponibilidad\\s+confirmada)"))) {
+        issues << QStringLiteral(
+            "Una publicación activa no demuestra stock; hace falta evidencia explícita de disponibilidad.");
+    }
+    if (contains(QStringLiteral(
+            "(?is)(?:precio|rango)\\s+estimad[oa].{0,100}(?:ARS|\\$\\s*[0-9])"))) {
+        issues << QStringLiteral(
+            "No se admiten precios estimados sin una fuente o fórmula verificable.");
+    }
+    if (contains(QStringLiteral(
+            "(?is)(?:B550|B650|Z690|Z790).{0,100}(?:incompatible|inviable|incapaz)"
+            ".{0,80}(?:por\\s+el\\s+chipset|chipset)"))) {
+        issues << QStringLiteral(
+            "No se puede descartar una plataforma sólo por chipset; debe verificarse el modelo y su manual.");
+    }
+    return issues;
 }
 
 QVariantMap AppController::gpuPowerInfo() const
@@ -9945,11 +10044,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                 (hit.title + QLatin1Char(' ') + hit.snippet + QLatin1Char(' ')
                  + source.value(QStringLiteral("excerpt")).toString()).toLower();
             if (researchIsArgentinaStore(hit)
-                && (evidence.contains(QStringLiteral("$"))
-                    || evidence.contains(QStringLiteral("ars"))
-                    || evidence.contains(QStringLiteral("precio"))
-                    || evidence.contains(QStringLiteral("stock"))
-                    || evidence.contains(QStringLiteral("disponible"))))
+                && researchEvidenceHasNumericPrice(evidence)
+                && researchEvidenceHasAvailableStock(evidence))
                 ++count;
         }
         return count;
@@ -10022,10 +10118,25 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "Evaluá cada modelo por sus especificaciones verificadas: no descartes una "
             "placa sólo por pertenecer a un chipset de gama media si su ficha oficial "
             "confirma la topología requerida. Extraé y citá todos los precios y estados "
-            "de stock presentes en las fuentes, con tienda y fecha de consulta. "
+            "de stock presentes en las fuentes, con tienda y fecha de consulta. Una "
+            "publicación o página de producto activa NO prueba stock. No estimes precios "
+            "ni transformes precios internacionales a ARS salvo que cites cada dato y "
+            "muestres la fórmula. "
+            "Guardrails técnicos obligatorios: la RTX 3090 sí soporta NVLink (su uso "
+            "depende del modelo exacto, puente y software); el VRM de la motherboard "
+            "alimenta al CPU, mientras las GPU dependen de la PSU y sus conectores; "
+            "en ASUS ProArt Z790-CREATOR y X670E-CREATOR los dos slots principales "
+            "funcionan x8/x8 al poblarse juntos y toman líneas del CPU. No confundas "
+            "generación PCIe del slot con la generación negociada por la GPU. "
             "Incluí al menos una tabla comparativa de opciones comprables con modelo, "
             "socket/plataforma, slots PCIe, precio, stock, tienda, ventajas, riesgos y "
-            "veredicto. Si la evidencia comercial es insuficiente, enumerá exactamente "
+            "veredicto. Incluí una tabla de trazabilidad con afirmación, fuente, extracto "
+            "que la respalda y estado de verificación/confianza. Analizá compatibilidad "
+            "física usando posición real de slots, grosor exacto de cada GPU, gabinete, "
+            "flujo de aire y necesidad de riser o puente. Calculá el costo total de "
+            "plataforma (motherboard, CPU, RAM y, cuando corresponda, PSU, gabinete, "
+            "refrigeración y riser), y separá alternativas nuevas de usadas. "
+            "Si la evidencia comercial es insuficiente, enumerá exactamente "
             "qué búsquedas se hicieron y qué alternativas sí aparecieron, sin afirmar "
             "que no hay stock en todo el mercado. La fecha real de esta investigación "
             "es %1: no inventes fechas anteriores ni llames 'actual' a datos sin fecha. "
@@ -10044,7 +10155,10 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "para How-to pasos; para Fact-check veredictos. Cuando compares hardware, "
             "verificá en la documentación de cada modelo la topología de líneas PCIe, "
             "velocidad eléctrica de cada slot, bifurcación, separación física y demás "
-            "restricciones relevantes. Cerrá con un veredicto explícito y modelos "
+            "restricciones relevantes. Para considerar una compra resuelta exigí al "
+            "menos dos modelos técnicamente aptos, cada uno con documentación primaria, "
+            "y dos ofertas locales que tengan simultáneamente precio numérico y stock "
+            "explícitamente disponible. Cerrá con un veredicto explícito y modelos "
             "específicos respaldados por las fuentes; si falta evidencia, decilo sin "
             "convertir una suposición en recomendación.\n\n%3")
             .arg(cleanTopic, researchModeTitle(normalizedMode), dossier.left(30000));
@@ -10089,10 +10203,9 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                                  .value(QStringLiteral("content")).toString().trimmed();
             }
             if (report.isEmpty()) {
-                report = QStringLiteral("# Deep Research: %1\n\n"
-                                        "> No se pudo sintetizar con el modelo (%2). "
-                                        "Se guarda el dossier crudo.\n\n%3")
-                             .arg(cleanTopic, ok ? QStringLiteral("respuesta vacía") : err, dossier);
+                fail(QStringLiteral("No se pudo sintetizar el informe: %1")
+                         .arg(ok ? QStringLiteral("respuesta vacía") : err));
+                return;
             }
             if (ok && report.size() < 4500) {
                 fail(QStringLiteral(
@@ -10101,43 +10214,136 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                          .arg(report.size()));
                 return;
             }
-            if (!report.contains(QRegularExpression(QStringLiteral("(?im)^##?\\s+Fuentes")))) {
-                QStringList sourceAppendix;
-                for (int i = 0; i < sources->size(); ++i) {
-                    const QJsonObject source = sources->at(i).toObject();
-                    sourceAppendix << QStringLiteral("- [%1] [%2](%3)")
-                                          .arg(i + 1)
-                                          .arg(source.value(QStringLiteral("title")).toString(),
-                                               source.value(QStringLiteral("url")).toString());
+            setResearchState(true, 92, QStringLiteral("Auditando afirmaciones y evidencia..."));
+            const QStringList deterministicIssues =
+                AppController::researchReportGuardrailIssues(report);
+            const QString auditPrompt = QStringLiteral(
+                "Sos un auditor independiente. Verificá el borrador contra el dossier, "
+                "sin confiar en la conclusión del redactor. Devolvé SOLO JSON válido: "
+                "{\"passed\":true|false,\"issues\":[\"...\"],"
+                "\"correctedReport\":\"reporte Markdown completo corregido\"}. "
+                "El correctedReport siempre debe contener el informe completo, no un "
+                "parche ni comentarios. Marcá passed=true sólo si el informe final: "
+                "(1) respalda cada afirmación técnica y comercial con una fuente del "
+                "dossier; (2) no inventa precio, stock, fecha, topología o disponibilidad; "
+                "(3) distingue publicación de stock explícito; (4) incluye tabla de "
+                "trazabilidad afirmación/fuente/extracto/estado; (5) analiza compatibilidad "
+                "física y costo total de plataforma; (6) separa opciones nuevas/usadas; "
+                "(7) para compras sólo llama comprable a una oferta con precio numérico "
+                "y stock explícito. Aplicá estos hechos de control: RTX 3090 soporta "
+                "NVLink sujeto a tarjeta/puente/software; el VRM de motherboard no "
+                "alimenta las GPU; ASUS ProArt Z790-CREATOR y X670E-CREATOR usan x8/x8 "
+                "desde CPU con dos GPU. No descartes por chipset sin revisar el manual. "
+                "Si una afirmación no puede verificarse, eliminála o etiquetála como no "
+                "verificada. Problemas detectados por reglas determinísticas:\n- %1\n\n"
+                "PEDIDO:\n%2\n\nDOSSIER:\n%3\n\nBORRADOR:\n%4")
+                .arg(deterministicIssues.isEmpty()
+                         ? QStringLiteral("(ninguno)")
+                         : deterministicIssues.join(QStringLiteral("\n- ")),
+                     cleanTopic, dossier.left(26000), report.left(24000));
+            QJsonObject auditPayload{
+                {QStringLiteral("model"), QStringLiteral("research-auditor")},
+                {QStringLiteral("messages"), QJsonArray{
+                    QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                {QStringLiteral("content"), auditPrompt}}}},
+                {QStringLiteral("stream"), false},
+                {QStringLiteral("temperature"), 0.0},
+                {QStringLiteral("max_tokens"), 7500},
+                {QStringLiteral("reasoning_budget"), 0},
+                {QStringLiteral("chat_template_kwargs"),
+                 QJsonObject{{QStringLiteral("enable_thinking"), false}}}
+            };
+            QNetworkRequest auditRequest(
+                QUrl(serverBaseUrl() + QStringLiteral("/v1/chat/completions")));
+            auditRequest.setHeader(QNetworkRequest::ContentTypeHeader,
+                                   QByteArrayLiteral("application/json"));
+            auditRequest.setTransferTimeout(300000);
+            m_researchReply = m_nam->post(
+                auditRequest, QJsonDocument(auditPayload).toJson(QJsonDocument::Compact));
+            connect(m_researchReply, &QNetworkReply::finished, this, [=]() {
+                QNetworkReply *auditReply = m_researchReply;
+                m_researchReply = nullptr;
+                if (!auditReply) return;
+                const QByteArray auditRaw = auditReply->readAll();
+                const bool auditOk = auditReply->error() == QNetworkReply::NoError;
+                const QString auditError = auditReply->errorString();
+                auditReply->deleteLater();
+                if (!m_researchRunning) return;
+                if (!auditOk) {
+                    fail(QStringLiteral("Falló la auditoría independiente: %1").arg(auditError));
+                    return;
                 }
-                report += QStringLiteral("\n\n## Fuentes consultadas\n\n%1")
-                              .arg(sourceAppendix.join(QLatin1Char('\n')));
-            }
+                const QJsonArray choices = QJsonDocument::fromJson(auditRaw).object()
+                                               .value(QStringLiteral("choices")).toArray();
+                const QString auditContent =
+                    choices.isEmpty()
+                        ? QString()
+                        : choices.first().toObject()
+                              .value(QStringLiteral("message")).toObject()
+                              .value(QStringLiteral("content")).toString();
+                const ResearchAudit audit = researchParseAudit(auditContent);
+                if (!audit.parsed || audit.correctedReport.size() < 4500) {
+                    fail(QStringLiteral(
+                        "La auditoría no devolvió un informe completo y verificable."));
+                    return;
+                }
+                QString finalReport = audit.correctedReport;
+                const QStringList remainingIssues =
+                    AppController::researchReportGuardrailIssues(finalReport);
+                if (!audit.passed || !remainingIssues.isEmpty()) {
+                    QStringList issues = audit.issues;
+                    issues.append(remainingIssues);
+                    issues.removeDuplicates();
+                    fail(QStringLiteral(
+                        "El informe no superó la auditoría y no fue guardado: %1")
+                             .arg(issues.isEmpty()
+                                      ? QStringLiteral("persisten afirmaciones no verificadas")
+                                      : issues.join(QStringLiteral("; "))));
+                    return;
+                }
+                if (!finalReport.contains(
+                        QRegularExpression(QStringLiteral("(?im)^##?\\s+Fuentes")))) {
+                    QStringList sourceAppendix;
+                    for (int i = 0; i < sources->size(); ++i) {
+                        const QJsonObject source = sources->at(i).toObject();
+                        sourceAppendix << QStringLiteral("- [%1] [%2](%3)")
+                                              .arg(i + 1)
+                                              .arg(source.value(QStringLiteral("title")).toString(),
+                                                   source.value(QStringLiteral("url")).toString());
+                    }
+                    finalReport += QStringLiteral("\n\n## Fuentes consultadas\n\n%1")
+                                       .arg(sourceAppendix.join(QLatin1Char('\n')));
+                }
 
-            const double ts = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
-            const QString title = cleanTopic.left(96);
-            QVariantMap summary{
-                {QStringLiteral("id"), id},
-                {QStringLiteral("title"), title},
-                {QStringLiteral("topic"), cleanTopic},
-                {QStringLiteral("mode"), normalizedMode},
-                {QStringLiteral("modeLabel"), researchModeTitle(normalizedMode)},
-                {QStringLiteral("timestamp"), ts},
-                {QStringLiteral("sourceCount"), sources->size()},
-                {QStringLiteral("path"), researchStorageDir() + QLatin1Char('/') + id + QStringLiteral(".md")}
-            };
-            QJsonObject full{
-                {QStringLiteral("id"), id},
-                {QStringLiteral("topic"), cleanTopic},
-                {QStringLiteral("mode"), normalizedMode},
-                {QStringLiteral("timestamp"), ts},
-                {QStringLiteral("sources"), *sources},
-                {QStringLiteral("dossier"), dossier},
-                {QStringLiteral("report"), report}
-            };
-            saveResearchReport(summary, report, full);
-            setResearchState(false, 100, QStringLiteral("Reporte guardado."));
-            emit researchFinished(id, title);
+                const double ts =
+                    static_cast<double>(QDateTime::currentMSecsSinceEpoch());
+                const QString title = cleanTopic.left(96);
+                QVariantMap summary{
+                    {QStringLiteral("id"), id},
+                    {QStringLiteral("title"), title},
+                    {QStringLiteral("topic"), cleanTopic},
+                    {QStringLiteral("mode"), normalizedMode},
+                    {QStringLiteral("modeLabel"), researchModeTitle(normalizedMode)},
+                    {QStringLiteral("timestamp"), ts},
+                    {QStringLiteral("sourceCount"), sources->size()},
+                    {QStringLiteral("path"), researchStorageDir() + QLatin1Char('/')
+                                                + id + QStringLiteral(".md")}
+                };
+                QJsonObject full{
+                    {QStringLiteral("id"), id},
+                    {QStringLiteral("topic"), cleanTopic},
+                    {QStringLiteral("mode"), normalizedMode},
+                    {QStringLiteral("timestamp"), ts},
+                    {QStringLiteral("sources"), *sources},
+                    {QStringLiteral("dossier"), dossier},
+                    {QStringLiteral("auditIssues"), QJsonArray::fromStringList(audit.issues)},
+                    {QStringLiteral("report"), finalReport}
+                };
+                saveResearchReport(summary, finalReport, full);
+                setResearchState(false, 100,
+                                 QStringLiteral("Reporte auditado y guardado."));
+                emit researchFinished(id, title);
+            });
         });
     };
 
@@ -10158,7 +10364,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             if (purchaseResearch && commerceEvidenceCount() < 2) {
                 fail(QStringLiteral(
                     "La investigación no reunió al menos dos fuentes comerciales "
-                    "con precio o stock verificable. No se generó un veredicto incompleto."));
+                    "con precio numérico y stock explícitamente disponible en la misma oferta. "
+                    "No se generó un veredicto incompleto."));
                 return;
             }
             (*synthesize)();
@@ -10338,7 +10545,9 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "Hardware). Si la recomendación principal no tiene precio, buscá opciones "
             "más baratas con el mismo requisito técnico. complete sólo puede ser true "
             "si el pedido original ya puede responderse con evidencia directa y, para "
-            "compras, al menos dos opciones aptas con precio/stock verificable. "
+            "compras, al menos dos opciones técnicamente aptas respaldadas por manuales "
+            "y dos ofertas locales que contengan simultáneamente precio numérico y "
+            "stock explícitamente disponible. Una página publicada no confirma stock. "
             "No confundas productos incompatibles baratos con alternativas válidas.\n\n"
             "Pedido original:\n%1\n\nLearnings previos:\n%2\n\n"
             "Consultas ejecutadas:\n%3\n\nFuentes encontradas:\n%4")

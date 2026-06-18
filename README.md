@@ -534,13 +534,22 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   SearxNG cuando `LLAMACODE_SEARXNG_URL` está configurado. Sin SearxNG, las
   consultas se distribuyen explícitamente entre DuckDuckGo, Bing y Google HTML
   (Google puede aplicar CAPTCHA/bloqueo). Para pedidos de compra no se genera un
-  veredicto final hasta reunir al menos dos fuentes comerciales con señales
-  verificables de precio o stock; se permiten hasta tres rondas antes de fallar
+  veredicto final hasta reunir al menos dos ofertas comerciales que contengan,
+  cada una, precio numérico y disponibilidad positiva explícita; una publicación activa
+  no se interpreta como disponibilidad. Se permiten hasta tres rondas antes de fallar
   explícitamente en lugar de presentar una recomendación incompleta.
   Cada ronda produce learnings compactos con entidades, cifras, fechas y
   contradicciones; esos learnings alimentan la siguiente planificación y el
   informe final. Una reflexión supervisora decide si investigar más según las
-  preguntas pendientes. Los informes deben alcanzar profundidad mínima, incluir
+  preguntas pendientes. El borrador final pasa por una auditoría independiente que lo
+  corrige y vuelve a comprobar antes de guardarlo; si persisten errores técnicos
+  conocidos o afirmaciones sin respaldo, el reporte falla en vez de publicarse.
+  La síntesis exige trazabilidad afirmación/fuente/extracto, compatibilidad física
+  real, costo total de plataforma y separación entre opciones nuevas y usadas.
+  Las reglas determinísticas bloquean, entre otros casos, confundir publicación
+  con stock, inventar precios, atribuir la alimentación de las GPU al VRM, negar
+  NVLink en RTX 3090 o informar x16+x8 donde el manual especifica x8/x8.
+  Los informes deben alcanzar profundidad mínima, incluir
   todos los hallazgos relevantes y cerrar con un apéndice de URLs consultadas.
   Las especificaciones exactas del modelo prevalecen sobre heurísticas generales
   por chipset.

@@ -531,6 +531,9 @@ public:
     // Parser de la salida CSV de nvidia-smi (--query-gpu power.*). Estático para
     // testear sin GPU. Devuelve lista de QVariantMap por GPU.
     static QVariantList parseGpuPowerCsv(const QString &csv);
+    // Reglas determinísticas para impedir que Deep Research publique errores
+    // técnicos/comerciales conocidos aunque el modelo los redacte con confianza.
+    static QStringList researchReportGuardrailIssues(const QString &report);
     // Filtro puro para el cookbook: la app descarga/lanza GGUF con llama.cpp, no
     // repos MLX/AWQ/GPTQ que requieren otros runtimes.
     static bool isGgufRecommendationCandidate(const QString &name, bool isGguf,

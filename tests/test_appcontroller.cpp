@@ -25,6 +25,8 @@ private slots:
     void exportChatSessionToMissingSessionErrors();
     void parseGpuPowerCsvParses();
     void parseGpuPowerCsvTolerant();
+    void researchReportGuardrailsRejectKnownErrors();
+    void researchReportGuardrailsAcceptCorrectedClaims();
     void ggufRecommendationCandidateFilter();
     void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
@@ -187,6 +189,26 @@ void AppControllerTests::parseGpuPowerCsvTolerant()
     const QVariantMap g = gpus.first().toMap();
     QCOMPARE(g.value("index").toInt(), 1);
     QCOMPARE(g.value("drawW").toDouble(), 0.0);   // power.draw ausente
+}
+
+void AppControllerTests::researchReportGuardrailsRejectKnownErrors()
+{
+    const QString report = QStringLiteral(
+        "La RTX 3090 no soporta NVLink. La ProArt Z790 trabaja x16+x8 y el segundo "
+        "slot viene del chipset. Su VRM alimenta las dos GPU. El anuncio activo "
+        "confirma stock. Precio estimado: $1.500.000 ARS.");
+    const QStringList issues = AppController::researchReportGuardrailIssues(report);
+    QVERIFY(issues.size() >= 5);
+}
+
+void AppControllerTests::researchReportGuardrailsAcceptCorrectedClaims()
+{
+    const QString report = QStringLiteral(
+        "La RTX 3090 soporta NVLink sujeto al modelo, puente y software. En la "
+        "ASUS ProArt Z790-CREATOR los dos slots principales usan líneas del CPU "
+        "en x8/x8. La PSU alimenta las GPU. La publicación no confirma stock ni "
+        "precio, por lo que se marca como no verificado.");
+    QVERIFY(AppController::researchReportGuardrailIssues(report).isEmpty());
 }
 
 void AppControllerTests::ggufRecommendationCandidateFilter()
