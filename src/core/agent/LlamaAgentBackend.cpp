@@ -167,6 +167,19 @@ static QString budgetToolOutput(const QString &name, const QString &raw)
     return s;
 }
 
+static QString budgetTextToolOutput(const QString &name, const QString &raw)
+{
+    QString s = budgetToolOutput(name, raw);
+    const int cap = (name == QLatin1String("web_fetch")
+                     || name == QLatin1String("web_search")
+                     || name == QLatin1String("deep_research"))
+        ? 6000
+        : 9000;
+    if (s.size() > cap)
+        s = s.left(cap) + QStringLiteral("\n... [TOOL_RESULT truncado para modo compatible textual]");
+    return s;
+}
+
 static QString toolArgumentsToString(const QJsonValue &v)
 {
     if (v.isString()) return v.toString();
@@ -2424,10 +2437,11 @@ void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name,
 {
     Q_UNUSED(name)
     if (m_textToolFallback) {
+        const QString compact = budgetTextToolOutput(name, content);
         m_apiMessages.append(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},
             {QStringLiteral("content"), QStringLiteral("TOOL_RESULT %1 %2:\n%3")
-                                        .arg(id, name, content)}
+                                        .arg(id, name, compact)}
         });
         return;
     }

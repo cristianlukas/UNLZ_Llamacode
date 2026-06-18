@@ -144,6 +144,8 @@ void AppControllerTests::taskFailureTextDetected()
         QStringLiteral("No puedo acceder a sitios web desde este entorno.")));
     QVERIFY(AppController::taskFinalTextIndicatesFailure(
         QStringLiteral("I can't browse the website without tools.")));
+    QVERIFY(AppController::taskFinalTextIndicatesFailure(
+        QStringLiteral("[error: Error transferring http://127.0.0.1:8081/v1/chat/completions - server replied: Bad Request]")));
     QVERIFY(!AppController::taskFinalTextIndicatesFailure(
         QStringLiteral("Compra: 1230. Venta: 1250. Fuente consultada correctamente.")));
 }

@@ -3651,6 +3651,11 @@ bool AppController::taskFinalTextIndicatesFailure(const QString &text)
         QStringLiteral("unable to access"),
         QStringLiteral("cannot browse"),
         QStringLiteral("can't browse"),
+        QStringLiteral("[error:"),
+        QStringLiteral("error transferring"),
+        QStringLiteral("server replied: bad request"),
+        QStringLiteral("bad request"),
+        QStringLiteral("http 400"),
         QStringLiteral("no tools"),
         QStringLiteral("without tools")
     };

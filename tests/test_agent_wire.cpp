@@ -134,6 +134,8 @@ class FakeToolRejectingServer : public QTcpServer
 public:
     int nativeRejects = 0;
     int textRequests = 0;
+    int secondTextBodySize = 0;
+    bool secondTextBodyWasTruncated = false;
 
 protected:
     void incomingConnection(qintptr socketDescriptor) override
@@ -170,10 +172,12 @@ protected:
             ++textRequests;
             if (textRequests == 1) {
                 writeSse(sock, QStringLiteral(
-                    "TOOL_CALL {\"name\":\"list_dir\",\"arguments\":{\"path\":\".\"}}"));
+                    "TOOL_CALL {\"name\":\"read_file\",\"arguments\":{\"path\":\"big.txt\"}}"));
             } else {
                 QVERIFY(body.contains("TOOL_RESULT"));
-                writeSse(sock, QStringLiteral("FINAL: list_dir ejecutado correctamente"));
+                secondTextBodySize = body.size();
+                secondTextBodyWasTruncated = body.contains("TOOL_RESULT truncado");
+                writeSse(sock, QStringLiteral("FINAL: read_file ejecutado correctamente"));
             }
         });
         connect(sock, &QTcpSocket::disconnected, sock, &QObject::deleteLater);
@@ -214,6 +218,10 @@ void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
     QVERIFY(marker.open(QIODevice::WriteOnly));
     marker.write("ok");
     marker.close();
+    QFile big(cwd.path() + QStringLiteral("/big.txt"));
+    QVERIFY(big.open(QIODevice::WriteOnly));
+    big.write(QByteArray(50000, 'x'));
+    big.close();
 
     FakeToolRejectingServer server;
     QVERIFY(server.listen(QHostAddress::LocalHost, 0));
@@ -234,15 +242,17 @@ void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
     QTRY_VERIFY_WITH_TIMEOUT(finished.count() == 1, 10000);
     QCOMPARE(server.nativeRejects, 2);
     QCOMPARE(server.textRequests, 2);
+    QVERIFY(server.secondTextBodySize < 20000);
+    QVERIFY(server.secondTextBodyWasTruncated);
 
     bool sawTool = false;
     bool sawFinal = false;
     for (const QVariant &v : backend.messages()) {
         const QVariantMap m = v.toMap();
         if (m.value(QStringLiteral("role")).toString() == QLatin1String("toolcall")
-            && m.value(QStringLiteral("name")).toString() == QLatin1String("list_dir"))
+            && m.value(QStringLiteral("name")).toString() == QLatin1String("read_file"))
             sawTool = true;
-        if (m.value(QStringLiteral("content")).toString().contains(QStringLiteral("list_dir ejecutado")))
+        if (m.value(QStringLiteral("content")).toString().contains(QStringLiteral("read_file ejecutado")))
             sawFinal = true;
     }
     QVERIFY(sawTool);
