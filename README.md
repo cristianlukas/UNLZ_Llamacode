@@ -516,7 +516,10 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   ancho disponible y reserva una columna propia a la derecha para la scrollbar. Antes de
   buscar, el modelo genera subconsultas concretas para fuentes primarias,
   productos, comparaciones y precios; luego se priorizan fuentes técnicas y se
-  descartan portadas/categorías sin evidencia antes de consumir el cupo.
+  descartan portadas/categorías sin evidencia antes de consumir el cupo. Los
+  extractos conservan snippets y ventanas alrededor de precios, stock y datos
+  PCIe aunque aparezcan lejos del inicio del HTML; las especificaciones exactas
+  del modelo prevalecen sobre heurísticas generales por chipset.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**
   (endpoint + key), con test de conexión.
 - **ControlApi / headless**: toda feature es controlable por API local (target

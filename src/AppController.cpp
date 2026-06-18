@@ -290,6 +290,37 @@ static bool researchTextLooksUseful(const QString &text, const ResearchHit &hit)
     return navigationSignals < 3;
 }
 
+static QString researchRelevantExcerpt(const QByteArray &raw, const ResearchHit &hit)
+{
+    const QString full = researchCleanHtmlToText(QString::fromUtf8(raw));
+    QStringList chunks;
+    if (!hit.snippet.trimmed().isEmpty())
+        chunks << QStringLiteral("Resumen del buscador: %1").arg(hit.snippet.trimmed());
+    if (!full.isEmpty()) chunks << full.left(2600);
+
+    const QString lower = full.toLower();
+    const QStringList needles = {
+        QStringLiteral("$"), QStringLiteral("precio"), QStringLiteral("stock"),
+        QStringLiteral("pcie"), QStringLiteral("x8/x8"), QStringLiteral("x8 / x8"),
+        QStringLiteral("specification"), QStringLiteral("especificaciones")
+    };
+    QSet<int> usedStarts;
+    for (const QString &needle : needles) {
+        int from = 0;
+        for (int match = 0; match < 2; ++match) {
+            const int pos = lower.indexOf(needle, from);
+            if (pos < 0) break;
+            const int start = qMax(0, pos - 350);
+            if (!usedStarts.contains(start)) {
+                usedStarts.insert(start);
+                chunks << full.mid(start, 1100);
+            }
+            from = pos + needle.size();
+        }
+    }
+    return chunks.join(QStringLiteral("\n\n")).left(7000);
+}
+
 static QString researchModeTitle(const QString &mode)
 {
     if (mode == QLatin1String("product")) return QStringLiteral("Product");
@@ -9498,7 +9529,11 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "marcá contradicciones y no inventes evidencia. Priorizá documentación "
             "oficial, manuales y fichas técnicas para compatibilidad; usá tiendas y "
             "comparadores sólo para precio y disponibilidad. Respondé exactamente la "
-            "pregunta: no reemplaces una recomendación concreta por próximos pasos.");
+            "pregunta: no reemplaces una recomendación concreta por próximos pasos. "
+            "Evaluá cada modelo por sus especificaciones verificadas: no descartes una "
+            "placa sólo por pertenecer a un chipset de gama media si su ficha oficial "
+            "confirma la topología requerida. Extraé y citá todos los precios y estados "
+            "de stock presentes en las fuentes, con tienda y fecha de consulta.");
         const QString user = QStringLiteral(
             "Tema: %1\nModo: %2\n\n"
             "Usá el dossier de fuentes de abajo y devolvé un reporte Markdown con: "
@@ -9616,7 +9651,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
 
             QString text;
             if (ok && !raw.isEmpty())
-                text = researchCleanHtmlToText(QString::fromUtf8(raw)).left(4200);
+                text = researchRelevantExcerpt(raw, h);
             if (researchTextLooksUseful(text, h)) {
                 sources->append(QJsonObject{
                     {QStringLiteral("title"), h.title.isEmpty() ? h.url : h.title},
