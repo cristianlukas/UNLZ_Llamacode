@@ -133,7 +133,7 @@ private:
     // Loop
     void runCompletion();
     void processPendingCalls();     // procesa m_pendingCalls (approval/exec)
-    void finishTurn(const QString &finalText);
+    void finishTurn(const QString &finalText, bool persistFinalToApi = true);
     void appendAssistantText(const QString &text);
     void setTyping(bool typing);
 

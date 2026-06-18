@@ -16,6 +16,7 @@ private slots:
     void initTestCase();
     void dropsOrphanToolAndDemotesNonInitialSystem();
     void dropsDanglingAssistantAndAnchorsFirstUser();
+    void dropsTransportErrorAssistantMessages();
     void restartRepublishesPersistedMessages();
 };
 
@@ -88,6 +89,22 @@ void AgentWireTests::dropsDanglingAssistantAndAnchorsFirstUser()
     QCOMPARE(out[1].toObject().value(QStringLiteral("content")).toString(), QStringLiteral("original task"));
     QCOMPARE(out[2].toObject().value(QStringLiteral("role")).toString(), QStringLiteral("assistant"));
     QVERIFY(!out[2].toObject().contains(QStringLiteral("tool_calls")));
+}
+
+void AgentWireTests::dropsTransportErrorAssistantMessages()
+{
+    QJsonArray in{
+        msg(QStringLiteral("system"), QStringLiteral("base")),
+        msg(QStringLiteral("user"), QStringLiteral("Que hora es?")),
+        msg(QStringLiteral("assistant"), QStringLiteral("[error: Error transferring http://127.0.0.1:8081/v1/chat/completions - server replied: Bad Request]")),
+        msg(QStringLiteral("user"), QStringLiteral("Hola"))
+    };
+
+    const QJsonArray out = LlamaAgentBackend::sanitizeApiMessagesForWire(in);
+    QCOMPARE(out.size(), 3);
+    QCOMPARE(out[0].toObject().value(QStringLiteral("role")).toString(), QStringLiteral("system"));
+    QCOMPARE(out[1].toObject().value(QStringLiteral("content")).toString(), QStringLiteral("Que hora es?"));
+    QCOMPARE(out[2].toObject().value(QStringLiteral("content")).toString(), QStringLiteral("Hola"));
 }
 
 void AgentWireTests::restartRepublishesPersistedMessages()

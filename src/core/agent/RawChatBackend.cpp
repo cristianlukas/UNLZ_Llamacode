@@ -508,7 +508,12 @@ void RawChatBackend::sendMessage(const QString &text)
     connect(m_reply, &QNetworkReply::finished, this, [this]() {
         if (!m_reply) return;
         const bool ok = m_reply->error() == QNetworkReply::NoError;
-        const QString err = m_reply->errorString();
+        QString err = m_reply->errorString();
+        if (!ok) {
+            const QString body = QString::fromUtf8(m_reply->readAll()).trimmed();
+            if (!body.isEmpty())
+                err += QStringLiteral(" · %1").arg(body.left(1000));
+        }
         m_reply->deleteLater();
         m_reply = nullptr;
         if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {

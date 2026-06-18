@@ -247,7 +247,18 @@ QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messa
 {
     if (messages.isEmpty()) return messages;
 
-    QJsonArray out = dropDanglingAssistantToolCalls(messages);
+    QJsonArray cleaned;
+    for (const QJsonValue &v : messages) {
+        const QJsonObject o = v.toObject();
+        const QString role = o.value(QStringLiteral("role")).toString();
+        const QString content = o.value(QStringLiteral("content")).toString().trimmed();
+        if (role == QLatin1String("assistant") &&
+            content.startsWith(QStringLiteral("[error: Error transferring ")))
+            continue;
+        cleaned.append(v);
+    }
+
+    QJsonArray out = dropDanglingAssistantToolCalls(cleaned);
     out = dropOrphanToolMessages(out);
 
     bool hasUser = false;
@@ -258,7 +269,7 @@ QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messa
         }
     }
     if (!hasUser) {
-        for (const QJsonValue &v : messages) {
+        for (const QJsonValue &v : cleaned) {
             const QJsonObject o = v.toObject();
             if (o.value(QStringLiteral("role")).toString() == QLatin1String("user")) {
                 QJsonArray anchored;
@@ -375,6 +386,17 @@ static int msgTokensOf(const QJsonObject &m)
     return t + 4;   // overhead por mensaje (roles, separadores del template)
 }
 
+static int toolSchemaTokensOf(const QJsonArray &tools)
+{
+    if (tools.isEmpty()) return 0;
+
+    // Qwen/llama.cpp templates expand OpenAI tool schemas into a verbose prompt
+    // block. A raw char/4 estimate is too optimistic for 4k contexts.
+    const int jsonChars = QString::fromUtf8(
+        QJsonDocument(tools).toJson(QJsonDocument::Compact)).size();
+    return ((jsonChars + 2) / 3) + (tools.size() * 96) + 256;
+}
+
 int LlamaAgentBackend::estimateApiTokens() const
 {
     int total = 0;
@@ -409,8 +431,8 @@ bool LlamaAgentBackend::planCompaction(int &head, int &keepFrom) const
     if (n <= 4) return false;
 
     const int outReserve   = qMin(32768, m_ctxLimit / 4);
-    const int toolsReserve = (buildToolSchemas().size() ? 1500 : 0);
-    const int budget = int(m_ctxLimit * 0.90) - outReserve - toolsReserve;
+    const int toolsReserve = toolSchemaTokensOf(buildToolSchemas());
+    const int budget = qMax(256, int(m_ctxLimit * 0.90) - outReserve - toolsReserve);
     if (budget <= 0) return false;
 
     if (estimateApiTokens() <= budget) return false;
@@ -1312,10 +1334,15 @@ void LlamaAgentBackend::runCompletion()
         QNetworkReply *r = m_reply;
         if (!r) return;
         const bool ok = r->error() == QNetworkReply::NoError;
-        const QString err = m_streamIdleTimedOut
+        QString err = m_streamIdleTimedOut
             ? QStringLiteral("el servidor no envió datos del stream durante %1s")
                   .arg(streamIdleTimeoutMs() / 1000)
             : r->errorString();
+        if (!ok) {
+            const QString body = QString::fromUtf8(r->readAll()).trimmed();
+            if (!body.isEmpty())
+                err += QStringLiteral(" · %1").arg(body.left(1000));
+        }
         m_reply = nullptr;
         r->deleteLater();
         handleStreamFinished(ok, err);
@@ -1486,7 +1513,10 @@ void LlamaAgentBackend::handleStreamData()
 
 void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 {
-    if (!ok) { finishTurn(QStringLiteral("[error: %1]").arg(err)); return; }
+    if (!ok) {
+        finishTurn(QStringLiteral("[error: %1]").arg(err), false);
+        return;
+    }
 
     // Quitar el indicador "⏳ preparando…" de tool en streaming: dejar el bubble
     // con el contenido REAL del modelo antes de cerrarlo/finalizarlo. Sin esto el
@@ -2388,7 +2418,7 @@ void LlamaAgentBackend::setTyping(bool typing)
     emit messagesChanged();
 }
 
-void LlamaAgentBackend::finishTurn(const QString &finalText)
+void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalToApi)
 {
     // Si hay texto final pero la burbuja se cerró tras una tool, abrir una nueva.
     if (!finalText.isEmpty() && m_curAsstIdx < 0)
@@ -2406,7 +2436,7 @@ void LlamaAgentBackend::finishTurn(const QString &finalText)
         m_messages[m_curAsstIdx] = m;
         emit messagesChanged();
     }
-    if (!finalText.isEmpty())
+    if (persistFinalToApi && !finalText.isEmpty())
         m_apiMessages.append(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), finalText}});
