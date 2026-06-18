@@ -708,6 +708,10 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Cada ejecución prepara una sesión limpia del agente antes de enviar el prompt,
   para no heredar historial previo ni disparar compactaciones por conversaciones
   ajenas a la automatización.
+- Si `llama-server` rechaza el primer request OpenAI-compatible con HTTP 400, el
+  agente reintenta una vez en modo compatible sin campos opcionales del payload,
+  conservando mensajes y tools para no marcar la Task como fallida por diferencias
+  de soporte entre builds.
 - Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
   la Task no se marca como finalizada hasta completar esa verificación.

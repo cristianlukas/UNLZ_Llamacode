@@ -1275,10 +1275,6 @@ void LlamaAgentBackend::runCompletion()
     // Reserva de salida acotada al ctx del perfil (evita pedir más de lo que entra).
     const int outReserve = (m_ctxLimit > 0) ? qMin(32768, m_ctxLimit / 4) : 32768;
 
-    const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
-    QNetworkRequest req((QUrl(url)));
-    applyHeaders(req);
-
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId},
         {QStringLiteral("messages"), wireMessages},
@@ -1312,9 +1308,6 @@ void LlamaAgentBackend::runCompletion()
     payload.insert(QStringLiteral("chat_template_kwargs"),
                    QJsonObject{{QStringLiteral("enable_thinking"), m_thinkingEnabled}});
 
-    emit logAppended(QStringLiteral("[turn] requesting completion (iter=%1, msgs=%2, stream)\n")
-                         .arg(m_turnIters).arg(m_apiMessages.size()));
-
     // Crear la burbuja del asistente (typing) ANTES de disparar el request, no
     // recién al primer token. En turnos de follow-up (tras una tool) la burbuja
     // previa quedó cerrada, así que durante el hueco "request enviado → primer
@@ -1325,11 +1318,32 @@ void LlamaAgentBackend::runCompletion()
     // sólo tool-calls (sin texto), closeAssistantBubble descarta la burbuja vacía.
     ensureAssistantBubble();
 
+    emit logAppended(QStringLiteral("[turn] requesting completion (iter=%1, msgs=%2, stream)\n")
+                         .arg(m_turnIters).arg(m_apiMessages.size()));
+    postCompletionRequest(payload, false);
+}
+
+void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, bool compatibilityMode)
+{
+    if (!m_running) return;
+    const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
+    QNetworkRequest req((QUrl(url)));
+    applyHeaders(req);
+
+    if (compatibilityMode) {
+        payload.remove(QStringLiteral("parallel_tool_calls"));
+        payload.remove(QStringLiteral("parse_tool_calls"));
+        payload.remove(QStringLiteral("stream_options"));
+        payload.remove(QStringLiteral("cache_prompt"));
+        payload.remove(QStringLiteral("reasoning_budget"));
+        payload.remove(QStringLiteral("chat_template_kwargs"));
+    }
+
     resetStreamState();
     m_streamIdleTimedOut = false;
     m_reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() { handleStreamData(); });
-    connect(m_reply, &QNetworkReply::finished, this, [this]() {
+    connect(m_reply, &QNetworkReply::finished, this, [this, payload, compatibilityMode]() {
         if (m_streamIdleTimer) m_streamIdleTimer->stop();
         QNetworkReply *r = m_reply;
         if (!r) return;
@@ -1338,13 +1352,20 @@ void LlamaAgentBackend::runCompletion()
             ? QStringLiteral("el servidor no envió datos del stream durante %1s")
                   .arg(streamIdleTimeoutMs() / 1000)
             : r->errorString();
+        QString body;
         if (!ok) {
-            const QString body = QString::fromUtf8(r->readAll()).trimmed();
+            body = QString::fromUtf8(r->readAll()).trimmed();
             if (!body.isEmpty())
                 err += QStringLiteral(" · %1").arg(body.left(1000));
         }
+        const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         m_reply = nullptr;
         r->deleteLater();
+        if (!ok && !compatibilityMode && status == 400) {
+            emit logAppended(QStringLiteral("[turn] server rechazó payload completo (400); reintentando modo compatible sin campos opcionales\n"));
+            postCompletionRequest(payload, true);
+            return;
+        }
         handleStreamFinished(ok, err);
     });
     resetStreamIdleWatchdog();

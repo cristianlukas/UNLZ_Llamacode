@@ -134,6 +134,7 @@ public:
 private:
     // Loop
     void runCompletion();
+    void postCompletionRequest(QJsonObject payload, bool compatibilityMode);
     void processPendingCalls();     // procesa m_pendingCalls (approval/exec)
     void finishTurn(const QString &finalText, bool persistFinalToApi = true);
     void appendAssistantText(const QString &text);
