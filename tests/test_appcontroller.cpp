@@ -30,6 +30,7 @@ private slots:
     void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
     void browserTeachSkillsLifecycle();
+    void readResearchReportPrependsLegacyTopic();
 
 private:
     QTemporaryDir m_tmp;
@@ -78,6 +79,31 @@ void AppControllerTests::exportChatSessionToMissingSessionErrors()
                                                 QStringLiteral("md"),
                                                 m_tmp.filePath(QStringLiteral("c.md")));
     QVERIFY(out.isEmpty());
+}
+
+void AppControllerTests::readResearchReportPrependsLegacyTopic()
+{
+    AppController app;
+    const QString id = QStringLiteral("legacy-research-report");
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/research");
+    QVERIFY(QDir().mkpath(dir));
+
+    QFile md(dir + QLatin1Char('/') + id + QStringLiteral(".md"));
+    QVERIFY(md.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    md.write("# Reporte\n\nContenido");
+    md.close();
+
+    QFile json(dir + QLatin1Char('/') + id + QStringLiteral(".json"));
+    QVERIFY(json.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    json.write(QJsonDocument(QJsonObject{
+        {QStringLiteral("topic"), QStringLiteral("Consulta completa del usuario")}
+    }).toJson());
+    json.close();
+
+    const QString report = app.readResearchReport(id);
+    QVERIFY(report.startsWith(QStringLiteral(
+        "# Consulta original\n\nConsulta completa del usuario\n\n---\n\n# Reporte")));
 }
 
 void AppControllerTests::parseGpuPowerCsvParses()

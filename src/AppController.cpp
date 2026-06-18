@@ -9053,9 +9053,16 @@ void AppController::saveResearchReport(const QVariantMap &summary, const QString
     const QString id = summary.value(QStringLiteral("id")).toString();
     if (id.isEmpty()) return;
 
+    const QString topic = summary.value(QStringLiteral("topic")).toString().trimmed();
+    QString persistedMarkdown = markdown;
+    if (!topic.isEmpty()) {
+        persistedMarkdown = QStringLiteral("# Consulta original\n\n%1\n\n---\n\n%2")
+                                .arg(topic, markdown);
+    }
+
     QFile md(dir + QLatin1Char('/') + id + QStringLiteral(".md"));
     if (md.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        md.write(markdown.toUtf8());
+        md.write(persistedMarkdown.toUtf8());
 
     QFile json(dir + QLatin1Char('/') + id + QStringLiteral(".json"));
     if (json.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -9633,7 +9640,16 @@ QString AppController::readResearchReport(const QString &id) const
     if (id.trimmed().isEmpty()) return QString();
     QFile f(researchStorageDir() + QLatin1Char('/') + id + QStringLiteral(".md"));
     if (!f.open(QIODevice::ReadOnly)) return QString();
-    return QString::fromUtf8(f.readAll());
+    const QString markdown = QString::fromUtf8(f.readAll());
+    if (markdown.startsWith(QStringLiteral("# Consulta original\n")))
+        return markdown;
+
+    QFile metadata(researchStorageDir() + QLatin1Char('/') + id + QStringLiteral(".json"));
+    if (!metadata.open(QIODevice::ReadOnly)) return markdown;
+    const QString topic = QJsonDocument::fromJson(metadata.readAll()).object()
+                              .value(QStringLiteral("topic")).toString().trimmed();
+    if (topic.isEmpty()) return markdown;
+    return QStringLiteral("# Consulta original\n\n%1\n\n---\n\n%2").arg(topic, markdown);
 }
 
 void AppController::openResearchReport(const QString &id)
