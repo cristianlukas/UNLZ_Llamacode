@@ -528,6 +528,11 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   fuentes útiles y puede ampliarse hasta dieciséis; la síntesis exige tablas de
   alternativas comprables, precio, stock, tienda y limitaciones verificadas. El
   botón de inicio permanece deshabilitado hasta que modelo y agente estén listos.
+  La búsqueda se ejecuta en dos rondas: tras la primera, el modelo analiza vacíos,
+  candidatos omitidos y conclusiones débiles, y genera consultas de seguimiento
+  por producto para tiendas, comparadores, manuales y foros técnicos. Se usa
+  SearxNG cuando `LLAMACODE_SEARXNG_URL` está configurado (permitiendo agregar
+  Google/Bing según esa instancia); sin él, el fallback es DuckDuckGo HTML.
   Las especificaciones exactas del modelo prevalecen sobre heurísticas generales
   por chipset.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**

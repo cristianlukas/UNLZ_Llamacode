@@ -9663,6 +9663,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     auto sourceTexts = std::make_shared<QStringList>();
     auto sources = std::make_shared<QJsonArray>();
     auto searchLogs = std::make_shared<QStringList>();
+    auto fetchedUrls = std::make_shared<QSet<QString>>();
+    auto refinementRound = std::make_shared<int>(0);
     auto addHit = [hits](const ResearchHit &h) {
         if (h.url.isEmpty()) return;
         for (const ResearchHit &existing : std::as_const(*hits))
@@ -9685,6 +9687,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     auto fetchNext = std::make_shared<std::function<void(int)>>();
     auto searchNext = std::make_shared<std::function<void(int)>>();
     auto planQueries = std::make_shared<std::function<void()>>();
+    auto refineQueries = std::make_shared<std::function<void()>>();
 
     *synthesize = [=]() {
         setResearchState(true, 82, QStringLiteral("Sintetizando reporte..."));
@@ -9817,9 +9820,15 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     };
 
     *fetchNext = [=](int index) {
-        if (sources->size() >= maxPages || index >= hits->size()) {
+        const int firstPassTarget = qMax(4, maxPages / 2);
+        if ((*refinementRound == 0 && sources->size() >= firstPassTarget)
+            || sources->size() >= maxPages || index >= hits->size()) {
             if (sources->isEmpty()) {
                 fail(QStringLiteral("No se pudieron descargar fuentes útiles."));
+                return;
+            }
+            if (*refinementRound == 0) {
+                (*refineQueries)();
                 return;
             }
             (*synthesize)();
@@ -9827,6 +9836,11 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         }
 
         const ResearchHit h = hits->at(index);
+        if (fetchedUrls->contains(h.url)) {
+            (*fetchNext)(index + 1);
+            return;
+        }
+        fetchedUrls->insert(h.url);
         setResearchState(true, 35 + (sources->size() * 45 / qMax(1, maxPages)),
                          QStringLiteral("Validando fuente %1/%2...")
                              .arg(index + 1).arg(hits->size()));
@@ -9921,19 +9935,99 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                         addHit({o.value(QStringLiteral("title")).toString(),
                                 o.value(QStringLiteral("url")).toString(),
                                 o.value(QStringLiteral("content")).toString()});
-                        if (hits->size() >= 60) break;
+                        if (hits->size() >= 120) break;
                     }
                 } else {
                     const QVector<ResearchHit> parsed = researchParseDdg(QString::fromUtf8(raw), 10);
                     for (const ResearchHit &h : parsed) {
                         addHit(h);
-                        if (hits->size() >= 60) break;
+                        if (hits->size() >= 120) break;
                     }
                 }
             }
             searchLogs->append(QStringLiteral("- \"%1\" -> %2 new result(s)")
                                    .arg(query).arg(hits->size() - addedBefore));
             (*searchNext)(index + 1);
+        });
+    };
+
+    *refineQueries = [=]() {
+        *refinementRound = 1;
+        setResearchState(true, 48, QStringLiteral(
+            "Analizando vacíos y preparando búsquedas de seguimiento..."));
+
+        QString evidence;
+        for (int i = 0; i < sources->size(); ++i) {
+            const QJsonObject source = sources->at(i).toObject();
+            evidence += QStringLiteral("[%1] %2\nURL: %3\nResumen: %4\n\n")
+                            .arg(i + 1)
+                            .arg(source.value(QStringLiteral("title")).toString(),
+                                 source.value(QStringLiteral("url")).toString(),
+                                 source.value(QStringLiteral("snippet")).toString());
+        }
+        const QString prompt = QStringLiteral(
+            "Actuá como investigador que revisa una primera ronda incompleta. Generá "
+            "entre 6 y 10 consultas web NUEVAS y específicas para cubrir vacíos, "
+            "contradecir conclusiones prematuras y encontrar alternativas que la "
+            "primera ronda omitió. Extraé nombres concretos de productos mencionados "
+            "y buscá cada candidato por separado: precio, stock, Argentina, manual y "
+            "experiencias reales. Incluí consultas para foros y comunidades "
+            "(Reddit, LinusTechTips, Level1Techs, Tom's Hardware), comparadores y "
+            "tiendas locales. Si una recomendación principal no tiene precio, generá "
+            "consultas para hallar competidores más baratos que cumplan el mismo "
+            "requisito técnico. No repitas las consultas ya ejecutadas. Devolvé sólo "
+            "un array JSON de strings.\n\nPedido original:\n%1\n\n"
+            "Consultas ejecutadas:\n%2\n\nFuentes encontradas:\n%3")
+            .arg(cleanTopic, queries->join(QStringLiteral("\n")), evidence.left(12000));
+        QJsonObject payload{
+            {QStringLiteral("model"), QStringLiteral("research-refiner")},
+            {QStringLiteral("messages"), QJsonArray{
+                QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                            {QStringLiteral("content"), prompt}}}},
+            {QStringLiteral("stream"), false},
+            {QStringLiteral("temperature"), 0.15},
+            {QStringLiteral("max_tokens"), 700},
+            {QStringLiteral("reasoning_budget"), 0},
+            {QStringLiteral("chat_template_kwargs"),
+             QJsonObject{{QStringLiteral("enable_thinking"), false}}}
+        };
+        QNetworkRequest req(QUrl(serverBaseUrl() + QStringLiteral("/v1/chat/completions")));
+        req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+        req.setTransferTimeout(90000);
+        m_researchReply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
+        connect(m_researchReply, &QNetworkReply::finished, this, [=]() {
+            QNetworkReply *reply = m_researchReply;
+            m_researchReply = nullptr;
+            if (!reply) return;
+            const QByteArray raw = reply->readAll();
+            const bool ok = reply->error() == QNetworkReply::NoError;
+            reply->deleteLater();
+            if (!m_researchRunning) return;
+
+            const int searchStart = queries->size();
+            if (ok) {
+                const QJsonArray choices = QJsonDocument::fromJson(raw).object()
+                                               .value(QStringLiteral("choices")).toArray();
+                if (!choices.isEmpty()) {
+                    const QString content = choices.first().toObject()
+                                                .value(QStringLiteral("message")).toObject()
+                                                .value(QStringLiteral("content")).toString();
+                    const QStringList refined = researchParsePlannedQueries(content);
+                    for (const QString &query : refined)
+                        if (!queries->contains(query)) queries->append(query);
+                }
+            }
+            const QStringList forumFallback = {
+                cleanTopic + QStringLiteral(" Reddit dual GPU motherboard"),
+                cleanTopic + QStringLiteral(" Level1Techs forum"),
+                cleanTopic + QStringLiteral(" alternativas precio Argentina"),
+                cleanTopic + QStringLiteral(" site:hardgamers.com.ar"),
+            };
+            for (const QString &query : forumFallback)
+                if (!queries->contains(query)) queries->append(query);
+            searchLogs->append(QStringLiteral("- Segunda ronda: %1 consultas nuevas")
+                                   .arg(queries->size() - searchStart));
+            (*searchNext)(searchStart);
         });
     };
 
@@ -9946,6 +10040,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "ubicación pedida. Si pide comprar en Argentina, incluí al menos tres "
             "consultas orientadas a comercios argentinos, precios en ARS, MercadoLibre "
             "y comparadores locales; buscá modelos concretos, no sólo categorías. "
+            "Incluí al menos una consulta de foros/comunidades con experiencias reales. "
             "No repitas el pedido completo. Devolvé únicamente un "
             "array JSON de strings, sin Markdown.\n\nPedido: %1").arg(cleanTopic);
         QJsonObject payload{
