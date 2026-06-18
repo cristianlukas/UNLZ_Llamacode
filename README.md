@@ -523,6 +523,11 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   extractos conservan snippets y ventanas alrededor de precios, stock y datos
   PCIe aunque aparezcan lejos del inicio del HTML; para compras en Argentina se
   priorizan además páginas de producto locales, precios en ARS y stock actual.
+  Las fuentes comerciales y oficiales se intercalan para que ninguna categoría
+  consuma por sí sola el cupo de páginas. La profundidad automática usa diez
+  fuentes útiles y puede ampliarse hasta dieciséis; la síntesis exige tablas de
+  alternativas comprables, precio, stock, tienda y limitaciones verificadas. El
+  botón de inicio permanece deshabilitado hasta que modelo y agente estén listos.
   Las especificaciones exactas del modelo prevalecen sobre heurísticas generales
   por chipset.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**

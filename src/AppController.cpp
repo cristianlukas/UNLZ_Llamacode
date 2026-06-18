@@ -293,10 +293,71 @@ static int researchHitScore(const ResearchHit &hit)
     return score;
 }
 
+static bool researchIsArgentinaStore(const ResearchHit &hit)
+{
+    const QString host = QUrl(hit.url).host().toLower();
+    return host.endsWith(QStringLiteral(".com.ar"))
+           || host.contains(QStringLiteral("mercadolibre"))
+           || host.contains(QStringLiteral("hardgamers"))
+           || host.contains(QStringLiteral("compragamer"))
+           || host.contains(QStringLiteral("fullh4rd"))
+           || host.contains(QStringLiteral("gearsstore"))
+           || host.contains(QStringLiteral("maximus"))
+           || host.contains(QStringLiteral("venex"));
+}
+
+static bool researchIsOfficialHardwareSource(const ResearchHit &hit)
+{
+    const QString host = QUrl(hit.url).host().toLower();
+    return host.contains(QStringLiteral("asus.com"))
+           || host.contains(QStringLiteral("msi.com"))
+           || host.contains(QStringLiteral("gigabyte.com"))
+           || host.contains(QStringLiteral("asrock.com"))
+           || host.contains(QStringLiteral("amd.com"))
+           || host.contains(QStringLiteral("intel.com"))
+           || host.contains(QStringLiteral("nvidia.com"));
+}
+
+static void researchDiversifyHits(QVector<ResearchHit> *hits)
+{
+    if (!hits) return;
+    std::stable_sort(hits->begin(), hits->end(),
+                     [](const ResearchHit &a, const ResearchHit &b) {
+                         return researchHitScore(a) > researchHitScore(b);
+                     });
+
+    QVector<ResearchHit> local;
+    QVector<ResearchHit> official;
+    QVector<ResearchHit> other;
+    for (const ResearchHit &hit : std::as_const(*hits)) {
+        if (researchIsArgentinaStore(hit)) local.append(hit);
+        else if (researchIsOfficialHardwareSource(hit)) official.append(hit);
+        else other.append(hit);
+    }
+
+    QVector<ResearchHit> diversified;
+    diversified.reserve(hits->size());
+    const int lanes = qMax(local.size(), official.size());
+    for (int i = 0; i < lanes; ++i) {
+        if (i < local.size()) diversified.append(local.at(i));
+        if (i < official.size()) diversified.append(official.at(i));
+    }
+    diversified += other;
+    *hits = diversified;
+}
+
 static bool researchTextLooksUseful(const QString &text, const ResearchHit &hit)
 {
     const QString simplified = text.simplified();
-    if (simplified.size() < 500) return false;
+    const QString commerceEvidence =
+        (hit.title + QLatin1Char(' ') + hit.snippet + QLatin1Char(' ') + simplified).toLower();
+    const bool hasCommerceEvidence =
+        researchIsArgentinaStore(hit)
+        && (commerceEvidence.contains(QStringLiteral("precio"))
+            || commerceEvidence.contains(QStringLiteral("stock"))
+            || commerceEvidence.contains(QStringLiteral("$"))
+            || commerceEvidence.contains(QStringLiteral("ars")));
+    if (simplified.size() < (hasCommerceEvidence ? 100 : 500)) return false;
     const QString lower = simplified.left(2500).toLower();
     const QString path = QUrl(hit.url).path();
     if ((path.isEmpty() || path == QLatin1String("/"))
@@ -9551,13 +9612,14 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         emit serverError(QStringLiteral("Ya hay una investigación en curso."));
         return;
     }
-    if (!serverRunning() || !serverReady()) {
-        emit serverError(QStringLiteral("Deep Research necesita el servidor listo para sintetizar el reporte."));
+    if (!serverRunning() || !serverReady() || !agentRunning() || agentStarting()) {
+        emit serverError(QStringLiteral(
+            "Deep Research necesita que el modelo y el agente hayan terminado de iniciar."));
         return;
     }
 
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
-    maxPages = qBound(2, maxPages <= 0 ? 6 : maxPages, 10);
+    maxPages = qBound(4, maxPages <= 0 ? 10 : maxPages, 16);
 
     const QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     const QString normalizedMode = mode.trimmed().isEmpty() ? QStringLiteral("auto") : mode.trimmed();
@@ -9610,21 +9672,35 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         dossier += QStringLiteral("## Extracts\n%1\n").arg(sourceTexts->join(QStringLiteral("\n\n")));
 
         const QString sys = QStringLiteral(
-            "Sos un investigador técnico. Sintetizá fuentes web en español. "
+            "Sos un investigador técnico senior y analista de compras. Producí una "
+            "investigación extensa, concreta y accionable en español; no una respuesta "
+            "breve ni genérica. "
             "Separá hechos confirmados de inferencias, citá fuentes como [1], [2], "
             "marcá contradicciones y no inventes evidencia. Priorizá documentación "
             "oficial, manuales y fichas técnicas para compatibilidad; usá tiendas y "
-            "comparadores sólo para precio y disponibilidad. Respondé exactamente la "
+            "comparadores para precio y disponibilidad. Para una compra, identificá "
+            "primero múltiples modelos técnicamente aptos y después buscá cuáles están "
+            "realmente publicados o disponibles en el país solicitado. No recomiendes "
+            "como opción principal un producto sin stock o sin precio si existe una "
+            "alternativa comprable respaldada por las fuentes. Respondé exactamente la "
             "pregunta: no reemplaces una recomendación concreta por próximos pasos. "
             "Evaluá cada modelo por sus especificaciones verificadas: no descartes una "
             "placa sólo por pertenecer a un chipset de gama media si su ficha oficial "
             "confirma la topología requerida. Extraé y citá todos los precios y estados "
-            "de stock presentes en las fuentes, con tienda y fecha de consulta.");
+            "de stock presentes en las fuentes, con tienda y fecha de consulta. "
+            "Incluí al menos una tabla comparativa de opciones comprables con modelo, "
+            "socket/plataforma, slots PCIe, precio, stock, tienda, ventajas, riesgos y "
+            "veredicto. Si la evidencia comercial es insuficiente, enumerá exactamente "
+            "qué búsquedas se hicieron y qué alternativas sí aparecieron, sin afirmar "
+            "que no hay stock en todo el mercado.");
         const QString user = QStringLiteral(
             "Tema: %1\nModo: %2\n\n"
             "Usá el dossier de fuentes de abajo y devolvé un reporte Markdown con: "
-            "Resumen ejecutivo, Hallazgos clave, Evidencia, Riesgos/limitaciones, "
-            "Próximos pasos. Para Product/Compare agregá matriz de recomendación; "
+            "Resumen ejecutivo, Hallazgos clave, Evidencia, Precios y stock, Matriz de "
+            "recomendación, Riesgos/limitaciones y Próximos pasos. El reporte debe "
+            "desarrollar la evidencia disponible con detalle suficiente y evitar "
+            "conclusiones absolutas basadas en pocas tiendas. Para Product/Compare "
+            "agregá matriz de recomendación; "
             "para How-to pasos; para Fact-check veredictos. Cuando compares hardware, "
             "verificá en la documentación de cada modelo la topología de líneas PCIe, "
             "velocidad eléctrica de cada slot, bifurcación, separación física y demás "
@@ -9642,7 +9718,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                             {QStringLiteral("content"), user}}}},
             {QStringLiteral("stream"), false},
             {QStringLiteral("temperature"), 0.2},
-            {QStringLiteral("max_tokens"), 2200},
+            {QStringLiteral("max_tokens"), 4200},
             {QStringLiteral("cache_prompt"), true}
         };
         payload.insert(QStringLiteral("reasoning_budget"), m_agentThinkingEnabled ? -1 : 0);
@@ -9651,7 +9727,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
 
         QNetworkRequest req(QUrl(serverBaseUrl() + QStringLiteral("/v1/chat/completions")));
         req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
-        req.setTransferTimeout(180000);
+        req.setTransferTimeout(300000);
         m_researchReply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
         connect(m_researchReply, &QNetworkReply::finished, this, [=]() {
             QNetworkReply *reply = m_researchReply;
@@ -9736,8 +9812,11 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             if (!m_researchRunning) return;
 
             QString text;
-            if (ok && !raw.isEmpty())
+            if (ok && !raw.isEmpty()) {
                 text = researchRelevantExcerpt(raw, h);
+            } else if (!h.snippet.trimmed().isEmpty()) {
+                text = QStringLiteral("Resumen del buscador: %1").arg(h.snippet.trimmed());
+            }
             if (researchTextLooksUseful(text, h)) {
                 sources->append(QJsonObject{
                     {QStringLiteral("title"), h.title.isEmpty() ? h.url : h.title},
@@ -9759,10 +9838,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                 fail(QStringLiteral("No se encontraron resultados para la investigación."));
                 return;
             }
-            std::stable_sort(hits->begin(), hits->end(),
-                             [](const ResearchHit &a, const ResearchHit &b) {
-                                 return researchHitScore(a) > researchHitScore(b);
-                             });
+            researchDiversifyHits(hits.get());
             (*fetchNext)(0);
             return;
         }

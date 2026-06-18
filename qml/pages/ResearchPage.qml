@@ -9,6 +9,8 @@ Item {
     property string selectedReportId: ""
     property string selectedReportText: ""
     property string researchMode: "auto"
+    readonly property bool researchBackendReady:
+        App.serverRunning && App.serverReady && App.agentRunning && !App.agentStarting
 
     function modeLabel(mode) {
         if (mode === "product") return "Product"
@@ -184,10 +186,10 @@ Item {
                             Layout.preferredWidth: 120
                             enabled: !App.researchRunning
                             model: [
-                                { label: "Auto", value: 6 },
-                                { label: "Light", value: 4 },
-                                { label: "Deep", value: 8 },
-                                { label: "Max", value: 10 }
+                                { label: "Auto", value: 10 },
+                                { label: "Light", value: 6 },
+                                { label: "Deep", value: 12 },
+                                { label: "Max", value: 16 }
                             ]
                             textRole: "label"
                             valueRole: "value"
@@ -233,16 +235,20 @@ Item {
                             text: App.researchRunning ? "Cancelar" : "Start"
                             danger: App.researchRunning
                             enabled: App.researchRunning
-                                || (App.serverRunning && App.serverReady && topicInput.text.trim().length > 0)
+                                || (root.researchBackendReady && topicInput.text.trim().length > 0)
                             onClicked: App.researchRunning ? App.cancelResearch() : root.start()
                         }
                     }
 
                     Text {
                         Layout.fillWidth: true
-                        text: App.serverRunning && App.serverReady
-                            ? "Usa el modelo local activo para sintetizar."
-                            : "Iniciá un modelo en Lanzar para sintetizar reportes."
+                        text: root.researchBackendReady
+                            ? "Modelo y agente listos para investigar."
+                            : App.agentStarting || (App.serverRunning && !App.serverReady)
+                                ? "Esperando que terminen de iniciar el modelo y el agente…"
+                                : App.serverRunning && App.serverReady
+                                    ? "Iniciá el agente para habilitar Deep Research."
+                                    : "Iniciá el modelo y el agente en Lanzar."
                         color: Theme.textMuted
                         font.pixelSize: 11
                         wrapMode: Text.WordWrap
