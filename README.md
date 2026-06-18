@@ -696,6 +696,10 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
   la Task no se marca como finalizada hasta completar esa verificación.
+- La finalización del turno no equivale por sí sola a éxito: si el objetivo
+  requiere una fuente externa (web, browser, archivos, comandos, etc.) y no hubo
+  uso de herramientas, o si la respuesta final declara que no pudo acceder/usar
+  herramientas/completar, la Task se marca como `error`.
 - Al terminar, la UI muestra popup de resumen salvo que `silentUnlessError` esté
   activo y el resultado sea correcto. En errores siempre muestra popup. El popup
   incluye **Ver trabajo**, que abre la traza de esa corrida: prompts enviados,

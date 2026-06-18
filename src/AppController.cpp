@@ -3336,13 +3336,120 @@ void AppController::onAgentTurnFinished()
             sendToAgent(post);
             return;
         }
-        const QString summary = (m_runningTaskPhase == QLatin1String("verificando"))
-                                    ? QStringLiteral("Task ejecutada y postprompt de verificación completado.")
-                                    : QStringLiteral("Task ejecutada correctamente.");
-        finishRunningTask(QStringLiteral("ok"), summary);
+        const QVariantMap task = m_tasks.get(m_runningTaskId);
+        const QString finalText = latestAgentAssistantText().trimmed();
+        const QString work = m_agentLog.mid(m_runningTaskLogStart);
+        const bool usedTool = work.contains(QStringLiteral("[turn] model requested"))
+                              || work.contains(QStringLiteral("[tool]"))
+                              || work.contains(QStringLiteral("tool_call"))
+                              || work.contains(QStringLiteral("tool_result"));
+
+        QString status = QStringLiteral("ok");
+        QString summary;
+        if (finalText.isEmpty()) {
+            status = QStringLiteral("error");
+            summary = QStringLiteral("La Task terminó sin respuesta final del agente.");
+        } else if (taskFinalTextIndicatesFailure(finalText)) {
+            status = QStringLiteral("error");
+            summary = QStringLiteral("El agente terminó, pero declaró que no pudo completar la Task: %1").arg(finalText.left(700));
+        } else if (taskRequiresToolEvidence(task) && !usedTool) {
+            status = QStringLiteral("error");
+            summary = QStringLiteral("La Task requería consultar o operar externamente, pero el agente no ejecutó ninguna herramienta. Respuesta final: %1").arg(finalText.left(700));
+        } else {
+            summary = (m_runningTaskPhase == QLatin1String("verificando"))
+                          ? QStringLiteral("Task ejecutada y postprompt de verificación completado. Resultado: %1").arg(finalText.left(700))
+                          : QStringLiteral("Task ejecutada correctamente. Resultado: %1").arg(finalText.left(700));
+        }
+        finishRunningTask(status, summary);
     }
     if (m_restartThinkingAfterResponse)
         restartActiveLaunchForThinking(m_restartThinkingWithAgent, false);
+}
+
+QString AppController::latestAgentAssistantText() const
+{
+    for (int i = m_agentMessages.size() - 1; i >= 0; --i) {
+        const QVariantMap msg = m_agentMessages.at(i).toMap();
+        if (msg.value(QStringLiteral("role")).toString() != QLatin1String("assistant"))
+            continue;
+        const QString content = msg.value(QStringLiteral("content")).toString().trimmed();
+        if (!content.isEmpty())
+            return content;
+    }
+    return {};
+}
+
+bool AppController::taskFinalTextIndicatesFailure(const QString &text)
+{
+    const QString t = text.toLower();
+    static const QStringList markers{
+        QStringLiteral("no puedo acceder"),
+        QStringLiteral("no pude acceder"),
+        QStringLiteral("no tengo acceso"),
+        QStringLiteral("no tengo herramientas"),
+        QStringLiteral("no dispongo de herramientas"),
+        QStringLiteral("no puedo navegar"),
+        QStringLiteral("no pude navegar"),
+        QStringLiteral("no puedo abrir"),
+        QStringLiteral("no pude abrir"),
+        QStringLiteral("no puedo consultar"),
+        QStringLiteral("no pude consultar"),
+        QStringLiteral("no se pudo completar"),
+        QStringLiteral("no pude completar"),
+        QStringLiteral("no puedo completar"),
+        QStringLiteral("cannot access"),
+        QStringLiteral("can't access"),
+        QStringLiteral("unable to access"),
+        QStringLiteral("cannot browse"),
+        QStringLiteral("can't browse"),
+        QStringLiteral("no tools"),
+        QStringLiteral("without tools")
+    };
+    for (const QString &marker : markers) {
+        if (t.contains(marker))
+            return true;
+    }
+    return false;
+}
+
+bool AppController::taskRequiresToolEvidence(const QVariantMap &task)
+{
+    QString hay = task.value(QStringLiteral("name")).toString()
+                  + QLatin1Char('\n')
+                  + task.value(QStringLiteral("description")).toString()
+                  + QLatin1Char('\n')
+                  + task.value(QStringLiteral("prePrompt")).toString();
+    const QVariantList steps = task.value(QStringLiteral("steps")).toList();
+    for (const QVariant &v : steps) {
+        const QVariantMap s = v.toMap();
+        hay += QLatin1Char('\n') + s.value(QStringLiteral("kind")).toString();
+        hay += QLatin1Char('\n') + s.value(QStringLiteral("intent")).toString();
+        hay += QLatin1Char('\n') + s.value(QStringLiteral("ref")).toString();
+    }
+    hay = hay.toLower();
+    static const QStringList markers{
+        QStringLiteral("http://"),
+        QStringLiteral("https://"),
+        QStringLiteral("www."),
+        QStringLiteral("browser"),
+        QStringLiteral("naveg"),
+        QStringLiteral("abrí "),
+        QStringLiteral("abri "),
+        QStringLiteral("abrir "),
+        QStringLiteral("entrá"),
+        QStringLiteral("entra "),
+        QStringLiteral("ingres"),
+        QStringLiteral("busc"),
+        QStringLiteral("consult"),
+        QStringLiteral("cotiz"),
+        QStringLiteral("precio"),
+        QStringLiteral("web")
+    };
+    for (const QString &marker : markers) {
+        if (hay.contains(marker))
+            return true;
+    }
+    return false;
 }
 
 void AppController::finishRunningTask(const QString &status, const QString &summary)
@@ -3354,6 +3461,11 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     appendAgentEvent(QStringLiteral("task"),
                      QStringLiteral("Task '%1' finalizada con estado '%2'. %3").arg(name, status, summary));
     QString work = m_agentLog.mid(m_runningTaskLogStart);
+    const QString finalText = latestAgentAssistantText().trimmed();
+    if (!finalText.isEmpty()) {
+        if (!work.endsWith(QLatin1Char('\n'))) work += QLatin1Char('\n');
+        work += QStringLiteral("[respuesta final]\n%1\n").arg(finalText);
+    }
     if (work.trimmed().isEmpty())
         work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
     m_taskWorkLogs.insert(id, work);

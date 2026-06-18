@@ -30,6 +30,8 @@ private slots:
     void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
     void browserTeachSkillsLifecycle();
+    void taskFailureTextDetected();
+    void taskRequiresToolEvidenceForWebObjective();
     void readResearchReportPrependsLegacyTopic();
     void researchReportsExposeFormattedDate();
 
@@ -132,6 +134,31 @@ void AppControllerTests::researchReportsExposeFormattedDate()
     QVERIFY(!reports.isEmpty());
     QCOMPARE(reports.first().toMap().value(QStringLiteral("dateLabel")).toString(),
              QStringLiteral("18/06/2026 11:30"));
+}
+
+void AppControllerTests::taskFailureTextDetected()
+{
+    QVERIFY(AppController::taskFinalTextIndicatesFailure(
+        QStringLiteral("No puedo acceder a sitios web desde este entorno.")));
+    QVERIFY(AppController::taskFinalTextIndicatesFailure(
+        QStringLiteral("I can't browse the website without tools.")));
+    QVERIFY(!AppController::taskFinalTextIndicatesFailure(
+        QStringLiteral("Compra: 1230. Venta: 1250. Fuente consultada correctamente.")));
+}
+
+void AppControllerTests::taskRequiresToolEvidenceForWebObjective()
+{
+    const QVariantMap webTask{
+        {QStringLiteral("name"), QStringLiteral("Extraer cotización")},
+        {QStringLiteral("description"), QStringLiteral("Entrá a https://dolarhoy.com/ y traé compra y venta")}
+    };
+    QVERIFY(AppController::taskRequiresToolEvidence(webTask));
+
+    const QVariantMap localTask{
+        {QStringLiteral("name"), QStringLiteral("Resumir nota")},
+        {QStringLiteral("description"), QStringLiteral("Escribí un resumen corto del texto dado")}
+    };
+    QVERIFY(!AppController::taskRequiresToolEvidence(localTask));
 }
 
 void AppControllerTests::parseGpuPowerCsvParses()

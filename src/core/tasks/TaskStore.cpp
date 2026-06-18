@@ -222,7 +222,11 @@ QString TaskStore::composePrompt(const QVariantMap &task)
                           "Entendé QUÉ se busca y POR QUÉ en cada paso. Si un botón, "
                           "elemento o archivo cambió de lugar o de nombre, adaptate y "
                           "logrueá el objetivo igual usando tus herramientas. Si algo "
-                          "es ambiguo o riesgoso, explicá qué hiciste al terminar.");
+                          "es ambiguo o riesgoso, explicá qué hiciste al terminar. "
+                          "Si el objetivo requiere consultar una web, ejecutar comandos, "
+                          "leer archivos o usar otra fuente externa, usá herramientas y "
+                          "no respondas de memoria. Si no podés usar herramientas o no "
+                          "podés verificar el dato, decilo explícitamente como error.");
     return out.join(QLatin1Char('\n'));
 }
 

@@ -359,6 +359,8 @@ public:
     // quedar listo y lo apaga al terminar. Marca lastRun en el TaskStore.
     Q_INVOKABLE void runTask(const QString &id);
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
+    static bool taskFinalTextIndicatesFailure(const QString &text);
+    static bool taskRequiresToolEvidence(const QVariantMap &task);
     // Previsualiza el prompt que recibiría el agente (para el editor de Tasks).
     Q_INVOKABLE QString previewTaskPrompt(const QString &id) const;
     // Graba un paso de browser (Playwright codegen) y devuelve el nombre del skill
@@ -716,6 +718,7 @@ private:
     // Maneja el fin de turno del agente (marca lastRun, apaga si fue auto-iniciado).
     void onAgentTurnFinished();
     void finishRunningTask(const QString &status, const QString &summary);
+    QString latestAgentAssistantText() const;
 
     QProcess *m_proc = nullptr;
     QProcess *m_installerProc = nullptr;
