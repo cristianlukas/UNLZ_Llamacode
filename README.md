@@ -692,8 +692,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
   la Task no se marca como finalizada hasta completar esa verificación.
 - Al terminar, la UI muestra popup de resumen salvo que `silentUnlessError` esté
-  activo y el resultado sea correcto. En errores siempre muestra popup con opción
-  de reintentar, que relanza la Task completa y luego vuelve a ejecutar el
+  activo y el resultado sea correcto. En errores siempre muestra popup. El popup
+  incluye **Ver trabajo**, que abre la traza de esa corrida: prompts enviados,
+  eventos del agente, tool calls/resultados, errores y respuesta final cuando el
+  backend los emite.
+- La opción **Reintentar** relanza la Task completa y luego vuelve a ejecutar el
   postprompt si estaba configurado.
 - Sin perfil asignable → marca `lastRun = "error"`.
 

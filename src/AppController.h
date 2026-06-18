@@ -358,6 +358,7 @@ public:
     // no, auto-inicia server+agente (perfil de la Task o el activo), ejecuta al
     // quedar listo y lo apaga al terminar. Marca lastRun en el TaskStore.
     Q_INVOKABLE void runTask(const QString &id);
+    Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
     // Previsualiza el prompt que recibiría el agente (para el editor de Tasks).
     Q_INVOKABLE QString previewTaskPrompt(const QString &id) const;
     // Graba un paso de browser (Playwright codegen) y devuelve el nombre del skill
@@ -703,7 +704,9 @@ private:
     QString  m_runningTaskName;
     QString  m_runningTaskPhase;
     QString  m_runningTaskPostPrompt;
+    qsizetype m_runningTaskLogStart = 0;
     bool     m_runningTaskSilentUnlessError = false;
+    QHash<QString, QString> m_taskWorkLogs;
     // Task programada esperando que el agente auto-iniciado quede listo.
     QString  m_pendingScheduledTaskId;
     QString  m_pendingScheduledLaunchId;

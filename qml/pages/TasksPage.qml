@@ -516,6 +516,12 @@ Item {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                 spacing: 10
                 LcButton {
+                    text: "Ver trabajo"
+                    secondary: true
+                    enabled: resultDialog.taskId.length > 0
+                    onClicked: workDialog.openFor(resultDialog.taskId, resultDialog.taskName)
+                }
+                LcButton {
                     text: "Reintentar"
                     secondary: true
                     enabled: !App.taskRunning
@@ -545,6 +551,115 @@ Item {
                 color: Theme.textSecondary
                 font.pixelSize: 12
                 wrapMode: Text.Wrap
+            }
+        }
+    }
+
+    Popup {
+        id: workDialog
+        modal: true
+        parent: Overlay.overlay
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(980, Math.max(640, root.width - 120))
+        height: Math.min(760, Math.max(520, root.height - 100))
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 0
+
+        property string taskId: ""
+        property string taskName: ""
+        property string workText: ""
+
+        function openFor(id, name) {
+            taskId = id
+            taskName = name || id
+            workText = App.taskRunWorkLog(id)
+            open()
+        }
+
+        background: Rectangle {
+            color: Theme.popupBg
+            radius: 12
+            border.color: Theme.popupBorderColor
+            border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        contentItem: ColumnLayout {
+            spacing: 0
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Text {
+                    anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                    text: "Trabajo de la Task"
+                    font { pixelSize: 14; bold: true }
+                    color: Theme.textPrimary
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.margins: 18
+                spacing: 10
+                Text {
+                    Layout.fillWidth: true
+                    text: workDialog.taskName
+                    color: Theme.textPrimary
+                    font { pixelSize: 13; bold: true }
+                    wrapMode: Text.Wrap
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: "Traza registrada: prompts enviados, eventos del agente, llamadas/resultados de tools, errores y respuesta final cuando el backend los emite."
+                    color: Theme.textMuted
+                    font.pixelSize: 11
+                    wrapMode: Text.Wrap
+                }
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    TextArea {
+                        text: workDialog.workText
+                        readOnly: true
+                        selectByMouse: true
+                        wrapMode: TextArea.Wrap
+                        color: Theme.textPrimary
+                        font.family: "Consolas"
+                        font.pixelSize: 11
+                        background: Rectangle {
+                            radius: 6
+                            color: Theme.inputBg
+                            border.color: Theme.inputBorderColor
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Row {
+                    anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                    spacing: 10
+                    LcButton {
+                        text: "Copiar"
+                        secondary: true
+                        enabled: workDialog.workText.length > 0
+                        onClicked: App.copyToClipboard(workDialog.workText)
+                    }
+                    LcButton { text: "Cerrar"; onClicked: workDialog.close() }
+                }
             }
         }
     }

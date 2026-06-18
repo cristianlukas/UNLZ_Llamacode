@@ -3235,6 +3235,7 @@ void AppController::sendToAgent(const QString &text)
 {
     if (text.trimmed().isEmpty()) return;
     if (m_agentBackend && m_agentBackend->running()) {
+        appendAgentEvent(QStringLiteral("input"), QStringLiteral("> %1").arg(text));
         m_agentBackend->sendMessage(text);
         return;
     }
@@ -3275,7 +3276,9 @@ void AppController::runTask(const QString &id)
     m_runningTaskName = name;
     m_runningTaskPhase = QStringLiteral("ejecutando");
     m_runningTaskPostPrompt = TaskStore::composePostPrompt(task);
+    m_runningTaskLogStart = m_agentLog.size();
     m_runningTaskSilentUnlessError = task.value(QStringLiteral("silentUnlessError"), false).toBool();
+    appendAgentEvent(QStringLiteral("task"), QStringLiteral("Iniciando Task '%1' (%2).").arg(name, id));
     m_tasks.markRun(id, QStringLiteral("running"), QStringLiteral("Ejecutando Task..."));
     emit taskRunStateChanged();
 
@@ -3348,11 +3351,18 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     const QString id = m_runningTaskId;
     const QString name = m_runningTaskName;
     const bool silent = m_runningTaskSilentUnlessError;
+    appendAgentEvent(QStringLiteral("task"),
+                     QStringLiteral("Task '%1' finalizada con estado '%2'. %3").arg(name, status, summary));
+    QString work = m_agentLog.mid(m_runningTaskLogStart);
+    if (work.trimmed().isEmpty())
+        work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
+    m_taskWorkLogs.insert(id, work);
     m_tasks.markRun(id, status, summary);
     m_runningTaskId.clear();
     m_runningTaskName.clear();
     m_runningTaskPhase.clear();
     m_runningTaskPostPrompt.clear();
+    m_runningTaskLogStart = 0;
     m_runningTaskSilentUnlessError = false;
     emit taskRunStateChanged();
     emit taskRunFinished(id, name, status, summary, silent);
@@ -3363,6 +3373,30 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         stopAgent();
         stopServer();
     }
+}
+
+QString AppController::taskRunWorkLog(const QString &id) const
+{
+    const QString work = m_taskWorkLogs.value(id);
+    if (!work.trimmed().isEmpty())
+        return work;
+
+    const QVariantMap task = m_tasks.get(id);
+    if (task.isEmpty())
+        return QStringLiteral("No hay una Task con ese id.");
+
+    const QString status = task.value(QStringLiteral("lastRunStatus")).toString();
+    const QString summary = task.value(QStringLiteral("lastRunSummary")).toString();
+    if (status.isEmpty() && summary.isEmpty())
+        return QStringLiteral("Todavía no hay una ejecución registrada para esta Task.");
+
+    QString out;
+    out += QStringLiteral("Task: %1\n").arg(task.value(QStringLiteral("name")).toString());
+    out += QStringLiteral("Estado: %1\n").arg(status.isEmpty() ? QStringLiteral("desconocido") : status);
+    if (!summary.isEmpty())
+        out += QStringLiteral("Resumen: %1\n").arg(summary);
+    out += QStringLiteral("\nLa traza detallada de esta ejecución no está disponible en memoria. Ejecutá la Task de nuevo y usá \"Ver trabajo\" al terminar.");
+    return out;
 }
 
 void AppController::setTasksSchedulerEnabled(bool on)
