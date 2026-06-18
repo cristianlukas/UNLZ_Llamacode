@@ -35,6 +35,10 @@ class AppController : public QObject
     Q_PROPERTY(ProfileManager*     profileManager  READ profileManager  CONSTANT)
     Q_PROPERTY(TaskStore*          taskStore       READ taskStore       CONSTANT)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
+    Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
+    Q_PROPERTY(QString runningTaskId READ runningTaskId NOTIFY taskRunStateChanged)
+    Q_PROPERTY(QString runningTaskName READ runningTaskName NOTIFY taskRunStateChanged)
+    Q_PROPERTY(QString runningTaskPhase READ runningTaskPhase NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantList chatSessions    READ chatSessions    NOTIFY chatSessionsChanged)
     Q_PROPERTY(QVariantList chatMessages    READ chatMessages    NOTIFY chatMessagesChanged)
     Q_PROPERTY(QString      chatSessionId   READ chatSessionId   NOTIFY chatSessionsChanged)
@@ -141,6 +145,10 @@ public:
     TaskStore         *taskStore()       { return &m_tasks; }
     bool tasksSchedulerEnabled() const { return m_scheduler && m_scheduler->enabled(); }
     void setTasksSchedulerEnabled(bool on);
+    bool taskRunning() const { return !m_runningTaskId.isEmpty(); }
+    QString runningTaskId() const { return m_runningTaskId; }
+    QString runningTaskName() const { return m_runningTaskName; }
+    QString runningTaskPhase() const { return m_runningTaskPhase; }
 
     QVariantList chatSessions()     const { return m_chatSessions; }
     QVariantList chatMessages()     const { return m_chatMessages; }
@@ -665,6 +673,9 @@ signals:
     void modelRecommendationsChanged();
     void modelDownloadChanged();
     void tasksSchedulerChanged();
+    void taskRunStateChanged();
+    void taskRunFinished(const QString &id, const QString &name, const QString &status,
+                         const QString &summary, bool silentUnlessError);
 
 private:
     void appendLog(const QString &text);
@@ -689,6 +700,10 @@ private:
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
     QString  m_runningTaskId;
+    QString  m_runningTaskName;
+    QString  m_runningTaskPhase;
+    QString  m_runningTaskPostPrompt;
+    bool     m_runningTaskSilentUnlessError = false;
     // Task programada esperando que el agente auto-iniciado quede listo.
     QString  m_pendingScheduledTaskId;
     QString  m_pendingScheduledLaunchId;
@@ -697,6 +712,7 @@ private:
     void dispatchPendingScheduledTask();
     // Maneja el fin de turno del agente (marca lastRun, apaga si fue auto-iniciado).
     void onAgentTurnFinished();
+    void finishRunningTask(const QString &status, const QString &summary);
 
     QProcess *m_proc = nullptr;
     QProcess *m_installerProc = nullptr;

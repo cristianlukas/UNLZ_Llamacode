@@ -38,7 +38,11 @@ public:
         CreatedAtRole,
         UpdatedAtRole,
         LastRunAtRole,
-        LastRunStatusRole   // "" | "ok" | "error" | "running"
+        LastRunStatusRole,  // "" | "ok" | "error" | "running"
+        LastRunSummaryRole,
+        PrePromptRole,
+        PostPromptRole,
+        SilentUnlessErrorRole
     };
 
     explicit TaskStore(QObject *parent = nullptr);
@@ -60,7 +64,7 @@ public:
     Q_INVOKABLE QString duplicate(const QString &id);
     Q_INVOKABLE void refresh();
     // Marca el resultado de una corrida (actualiza lastRunAt/lastRunStatus).
-    Q_INVOKABLE void markRun(const QString &id, const QString &status);
+    Q_INVOKABLE void markRun(const QString &id, const QString &status, const QString &summary = QString());
 
     // Nombre → slug seguro / id. minúsculas [a-z0-9_-].
     static QString sanitize(const QString &name);
@@ -68,6 +72,7 @@ public:
     // Compone el prompt-objetivo que recibe el agente. PURA y testeable: arma el
     // objetivo + los pasos de referencia + la consigna de adaptación.
     static QString composePrompt(const QVariantMap &task);
+    static QString composePostPrompt(const QVariantMap &task);
 
     // (de)serialización pura (sin disco).
     static QJsonObject toJson(const QVariantMap &task);

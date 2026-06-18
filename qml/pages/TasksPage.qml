@@ -18,6 +18,9 @@ Item {
             const t = App.taskStore.get(id)
             nameField.text = t.name || ""
             descField.text = t.description || ""
+            prePromptField.text = t.prePrompt || ""
+            postPromptField.text = t.postPrompt || ""
+            silentUnlessError.checked = t.silentUnlessError || false
             cronField.text = t.scheduleCron || ""
             schedEnabled.checked = t.scheduleEnabled || false
             const steps = t.steps || []
@@ -29,6 +32,9 @@ Item {
         } else {
             nameField.text = ""
             descField.text = ""
+            prePromptField.text = ""
+            postPromptField.text = ""
+            silentUnlessError.checked = false
             cronField.text = ""
             schedEnabled.checked = false
             profileCombo.currentIndex = 0
@@ -117,7 +123,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.leftMargin: 24
                         Layout.rightMargin: 24
-                        Layout.preferredHeight: 78
+                        Layout.preferredHeight: 88
                         radius: 8
                         color: Theme.surfaceBg
                         border.color: Theme.borderColor
@@ -152,10 +158,17 @@ Item {
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                 }
+                                Text {
+                                    visible: App.runningTaskId === taskId
+                                    text: App.runningTaskPhase === "verificando" ? "Verificando con postprompt..." : "Ejecutando..."
+                                    color: Theme.accent
+                                    font.pixelSize: 11
+                                }
                             }
 
                             LcButton {
-                                text: "▶ Ejecutar"
+                                text: App.runningTaskId === taskId ? "Ejecutando..." : "▶ Ejecutar"
+                                enabled: !App.taskRunning
                                 onClicked: App.runTask(taskId)
                             }
                             LcButton {
@@ -180,184 +193,275 @@ Item {
     ListModel { id: stepsModel }
 
     // ── Editor de Task ──
-    LcDialog {
+    Popup {
         id: editor
-        title: root.editId.length > 0 ? "Editar Task" : "Nueva Task"
-        implicitWidth: 700
-        implicitHeight: 600
+        modal: true
+        parent: Overlay.overlay
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(760, Math.max(520, root.width - 80))
+        height: Math.min(760, Math.max(520, root.height - 80))
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 0
 
-        onAccepted: {
+        function saveAndClose() {
             App.taskStore.save(root.editId, {
                 name: nameField.text,
                 description: descField.text,
+                prePrompt: prePromptField.text,
+                postPrompt: postPromptField.text,
+                silentUnlessError: silentUnlessError.checked,
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
                 scheduleEnabled: schedEnabled.checked,
                 scheduleCron: cronField.text
             })
+            close()
         }
 
-        contentItem: ScrollView {
-            clip: true
-            ColumnLayout {
-                width: editor.availableWidth
-                spacing: 10
+        background: Rectangle {
+            color: Theme.popupBg
+            radius: 12
+            border.color: Theme.popupBorderColor
+            border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
 
-                Text { text: "Nombre"; color: Theme.textSecondary; font.pixelSize: 12 }
-                LcTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Ej: Extraer cotización del dólar" }
-
-                Text { text: "Objetivo (qué se busca y por qué)"; color: Theme.textSecondary; font.pixelSize: 12 }
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 80
-                    TextArea {
-                        id: descField
-                        wrapMode: TextArea.Wrap
-                        color: Theme.textPrimary
-                        placeholderText: "Describí el objetivo en lenguaje natural. El agente lo usa para adaptarse."
-                        background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
-                    }
+        contentItem: ColumnLayout {
+            spacing: 0
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Text {
+                    anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                    text: root.editId.length > 0 ? "Editar Task" : "Nueva Task"
+                    font { pixelSize: 14; bold: true }
+                    color: Theme.textPrimary
                 }
+            }
 
-                Text { text: "Perfil del agente (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
-                LcComboBox {
-                    id: profileCombo
-                    Layout.fillWidth: true
-                    textRole: "name"
-                    valueRole: "profileId"
-                    property string selectedProfileId: currentValue || ""
-                    model: App.profileManager
-                    function selectProfile(pid) {
-                        for (var i = 0; i < count; ++i) {
-                            if (App.profileManager.data(App.profileManager.index(i,0), 0x0101) === pid) { currentIndex = i; return }
-                        }
-                        currentIndex = 0
-                    }
-                }
+            ScrollView {
+                id: editorScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ColumnLayout {
+                    width: Math.max(0, editorScroll.width - 36)
+                    spacing: 10
+                    x: 18
+                    Item { Layout.preferredHeight: 6; Layout.fillWidth: true }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text { text: "Pasos de referencia"; color: Theme.textSecondary; font.pixelSize: 12; Layout.fillWidth: true }
-                    LcButton {
-                        text: "+ Paso"
-                        secondary: true
-                        onClicked: stepsModel.append({ kind: "instruction", intent: "", ref: "" })
-                    }
-                }
+                    Text { text: "Nombre"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Ej: Extraer cotización del dólar" }
 
-                Repeater {
-                    model: stepsModel
-                    delegate: Rectangle {
+                    Text { text: "Objetivo (qué se busca y por qué)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    ScrollView {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 88
-                        radius: 6
-                        color: Theme.inputBg
-                        border.color: Theme.borderColor
-                        ColumnLayout {
-                            anchors { fill: parent; margins: 8 }
-                            spacing: 6
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-                                LcComboBox {
-                                    Layout.preferredWidth: 140
-                                    model: ["instruction", "browser", "shell", "mail", "desktop"]
-                                    currentIndex: Math.max(0, model.indexOf(stepsModel.get(index).kind))
-                                    onActivated: stepsModel.setProperty(index, "kind", currentText)
+                        Layout.preferredHeight: 80
+                        TextArea {
+                            id: descField
+                            wrapMode: TextArea.Wrap
+                            color: Theme.textPrimary
+                            placeholderText: "Describí el objetivo en lenguaje natural. El agente lo usa para adaptarse."
+                            background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
+                        }
+                    }
+
+                    Text { text: "Preprompt opcional"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 72
+                        TextArea {
+                            id: prePromptField
+                            wrapMode: TextArea.Wrap
+                            color: Theme.textPrimary
+                            placeholderText: "Contexto o reglas previas antes de ejecutar la Task."
+                            background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
+                        }
+                    }
+
+                    Text { text: "Postprompt opcional"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 72
+                        TextArea {
+                            id: postPromptField
+                            wrapMode: TextArea.Wrap
+                            color: Theme.textPrimary
+                            placeholderText: "Chequeo posterior, validación o resumen que el agente debe hacer al terminar."
+                            background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
+                        }
+                    }
+
+                    CheckBox {
+                        id: silentUnlessError
+                        text: "Ejecutar en silencio salvo error"
+                        contentItem: Text {
+                            text: silentUnlessError.text
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            leftPadding: silentUnlessError.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Text { text: "Perfil del agente (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcComboBox {
+                        id: profileCombo
+                        Layout.fillWidth: true
+                        textRole: "name"
+                        valueRole: "profileId"
+                        property string selectedProfileId: currentValue || ""
+                        model: App.profileManager
+                        function selectProfile(pid) {
+                            const idx = indexOfValue(pid)
+                            currentIndex = idx >= 0 ? idx : 0
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text { text: "Pasos de referencia"; color: Theme.textSecondary; font.pixelSize: 12; Layout.fillWidth: true }
+                        LcButton {
+                            text: "+ Paso"
+                            secondary: true
+                            onClicked: stepsModel.append({ kind: "instruction", intent: "", ref: "" })
+                        }
+                    }
+
+                    Repeater {
+                        model: stepsModel
+                        delegate: Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 88
+                            radius: 6
+                            color: Theme.inputBg
+                            border.color: Theme.borderColor
+                            ColumnLayout {
+                                anchors { fill: parent; margins: 8 }
+                                spacing: 6
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    LcComboBox {
+                                        Layout.preferredWidth: 140
+                                        model: ["instruction", "browser", "shell", "mail", "desktop"]
+                                        currentIndex: Math.max(0, model.indexOf(stepsModel.get(index).kind))
+                                        onActivated: stepsModel.setProperty(index, "kind", currentText)
+                                    }
+                                    LcTextField {
+                                        Layout.fillWidth: true
+                                        text: model.intent
+                                        placeholderText: "Qué hacer en este paso (intención)"
+                                        onTextChanged: stepsModel.setProperty(index, "intent", text)
+                                    }
+                                    LcButton {
+                                        text: "⏺ Browser"
+                                        secondary: true
+                                        visible: model.kind === "browser"
+                                        onClicked: {
+                                            const slug = App.recordTaskBrowserStep(nameField.text + "-" + (index + 1),
+                                                                                   model.ref.length > 0 ? model.ref : "https://")
+                                            if (slug.length > 0) stepsModel.setProperty(index, "ref", slug)
+                                        }
+                                    }
+                                    LcButton {
+                                        text: "✕"
+                                        secondary: true
+                                        onClicked: stepsModel.remove(index)
+                                    }
                                 }
                                 LcTextField {
                                     Layout.fillWidth: true
-                                    text: model.intent
-                                    placeholderText: "Qué hacer en este paso (intención)"
-                                    onTextChanged: stepsModel.setProperty(index, "intent", text)
+                                    text: model.ref
+                                    placeholderText: "Referencia (URL, comando, nombre de skill grabado...)"
+                                    onTextChanged: stepsModel.setProperty(index, "ref", text)
                                 }
-                                LcButton {
-                                    text: "⏺ Browser"
-                                    secondary: true
-                                    visible: model.kind === "browser"
-                                    onClicked: {
-                                        const slug = App.recordTaskBrowserStep(nameField.text + "-" + (index + 1),
-                                                                               model.ref.length > 0 ? model.ref : "https://")
-                                        if (slug.length > 0) stepsModel.setProperty(index, "ref", slug)
-                                    }
-                                }
-                                LcButton {
-                                    text: "✕"
-                                    secondary: true
-                                    onClicked: stepsModel.remove(index)
-                                }
-                            }
-                            LcTextField {
-                                Layout.fillWidth: true
-                                text: model.ref
-                                placeholderText: "Referencia (URL, comando, nombre de skill grabado…)"
-                                onTextChanged: stepsModel.setProperty(index, "ref", text)
                             }
                         }
                     }
-                }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-                    CheckBox {
-                        id: schedEnabled
-                        text: "Programar (cron)"
-                        contentItem: Text {
-                            text: schedEnabled.text; color: Theme.textSecondary; font.pixelSize: 12
-                            leftPadding: schedEnabled.indicator.width + 6; verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-                    LcTextField {
+                    RowLayout {
                         Layout.fillWidth: true
-                        id: cronField
-                        enabled: schedEnabled.checked
-                        placeholderText: "0 9 * * *  (min hora día mes díaSem)"
-                    }
-                }
-
-                Text {
-                    visible: schedEnabled.checked
-                    Layout.fillWidth: true
-                    wrapMode: Text.Wrap
-                    color: Theme.textMuted
-                    font.pixelSize: 11
-                    text: "Formato: min hora díaMes mes díaSem. Ej: «0 9 * * *» = 9:00 todos los días · "
-                        + "«*/15 9-17 * * 1-5» = cada 15 min, 9-17h, lun-vie · «0 0 1 * *» = día 1 de cada mes. "
-                        + "Domingo = 0 o 7."
-                }
-
-                LcButton {
-                    text: "Previsualizar prompt del agente"
-                    secondary: true
-                    onClicked: {
-                        // Guarda temporalmente para componer con datos actuales.
-                        previewArea.text = App.taskStore.count >= 0
-                            ? composePreview() : ""
-                        previewBox.visible = true
-                    }
-                }
-                Rectangle {
-                    id: previewBox
-                    visible: false
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 140
-                    radius: 6
-                    color: Theme.inputBg
-                    border.color: Theme.borderColor
-                    ScrollView {
-                        anchors { fill: parent; margins: 8 }
-                        TextArea {
-                            id: previewArea
-                            readOnly: true
-                            wrapMode: TextArea.Wrap
-                            color: Theme.textSecondary
-                            font { family: "Consolas"; pixelSize: 12 }
-                            background: null
+                        spacing: 10
+                        CheckBox {
+                            id: schedEnabled
+                            text: "Programar (cron)"
+                            contentItem: Text {
+                                text: schedEnabled.text; color: Theme.textSecondary; font.pixelSize: 12
+                                leftPadding: schedEnabled.indicator.width + 6; verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                        LcTextField {
+                            Layout.fillWidth: true
+                            id: cronField
+                            enabled: schedEnabled.checked
+                            placeholderText: "0 9 * * *  (min hora dia mes diaSem)"
                         }
                     }
+
+                    Text {
+                        visible: schedEnabled.checked
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        text: "Formato: min hora diaMes mes diaSem. Ej: 0 9 * * * = 9:00 todos los dias · "
+                            + "*/15 9-17 * * 1-5 = cada 15 min, 9-17h, lun-vie · 0 0 1 * * = dia 1 de cada mes. "
+                            + "Domingo = 0 o 7."
+                    }
+
+                    LcButton {
+                        text: "Previsualizar prompt del agente"
+                        secondary: true
+                        onClicked: {
+                            previewArea.text = composePreview()
+                            previewBox.visible = true
+                        }
+                    }
+                    Rectangle {
+                        id: previewBox
+                        visible: false
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 140
+                        radius: 6
+                        color: Theme.inputBg
+                        border.color: Theme.borderColor
+                        ScrollView {
+                            anchors { fill: parent; margins: 8 }
+                            TextArea {
+                                id: previewArea
+                                readOnly: true
+                                wrapMode: TextArea.Wrap
+                                color: Theme.textSecondary
+                                font { family: "Consolas"; pixelSize: 12 }
+                                background: null
+                            }
+                        }
+                    }
+                    Item { Layout.preferredHeight: 8; Layout.fillWidth: true }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Row {
+                    anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                    spacing: 10
+                    LcButton { text: "Cancelar"; secondary: true; onClicked: editor.close() }
+                    LcButton { text: "Guardar"; onClicked: editor.saveAndClose() }
                 }
             }
         }
@@ -366,6 +470,7 @@ Item {
     // Compone una vista previa local equivalente a TaskStore::composePrompt.
     function composePreview() {
         let out = "Ejecutá la siguiente Task guardada de forma autónoma.\n"
+        if (prePromptField.text) out += "\nPreprompt operativo:\n" + prePromptField.text + "\n"
         if (nameField.text) out += "Task: " + nameField.text + "\n"
         if (descField.text) out += "Objetivo: " + descField.text + "\n"
         if (stepsModel.count > 0) {
@@ -376,7 +481,72 @@ Item {
             }
         }
         out += "\nIMPORTANTE: los pasos son una guía, no un guion literal. Entendé QUÉ se busca y POR QUÉ; si algo cambió de lugar, adaptate y logrueá el objetivo igual."
+        if (postPromptField.text) out += "\n\nPostprompt de verificación posterior:\n" + postPromptField.text
         return out
+    }
+
+    Connections {
+        target: App
+        function onTaskRunFinished(id, name, status, summary, silentUnlessError) {
+            if (silentUnlessError && status !== "error")
+                return
+            resultDialog.taskId = id
+            resultDialog.taskName = name || id
+            resultDialog.status = status
+            resultDialog.summary = summary
+            resultDialog.open()
+        }
+    }
+
+    LcDialog {
+        id: resultDialog
+        title: status === "error" ? "Task con error" : "Task finalizada"
+        property string taskId: ""
+        property string taskName: ""
+        property string status: ""
+        property string summary: ""
+        implicitWidth: 520
+        footer: Rectangle {
+            color: Theme.popupHeaderBg
+            height: 56
+            radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Reintentar"
+                    secondary: true
+                    enabled: !App.taskRunning
+                    onClicked: { resultDialog.close(); App.runTask(resultDialog.taskId) }
+                }
+                LcButton { text: "Cerrar"; onClicked: resultDialog.close() }
+            }
+        }
+        contentItem: ColumnLayout {
+            spacing: 8
+            Text {
+                Layout.fillWidth: true
+                text: resultDialog.taskName
+                color: Theme.textPrimary
+                font { pixelSize: 14; bold: true }
+                wrapMode: Text.Wrap
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Estado: " + (resultDialog.status === "ok" ? "correcto" : resultDialog.status)
+                color: resultDialog.status === "error" ? Theme.errorText : Theme.accent
+                font.pixelSize: 12
+            }
+            Text {
+                Layout.fillWidth: true
+                text: resultDialog.summary || "Sin resumen disponible."
+                color: Theme.textSecondary
+                font.pixelSize: 12
+                wrapMode: Text.Wrap
+            }
+        }
     }
 
     LcDialog {

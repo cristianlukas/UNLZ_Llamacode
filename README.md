@@ -658,13 +658,20 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 ### Modelo de datos (`TaskStore`)
 
 - `id`, `name`, `description` (el objetivo), `profileId` (perfil de agente opcional).
+- `prePrompt` y `postPrompt` opcionales: instrucciones agénticas antes de ejecutar
+  la Task y una verificación posterior (por ejemplo, chequear que la salida tenga
+  evidencia suficiente o pedir una validación del resultado).
 - `steps[]`: cada paso `{kind, intent, ref}` con `kind` ∈
   `instruction|browser|shell|mail|desktop`. Los pasos `browser` graban un skill
   reproducible vía Playwright codegen (reusa el modo *teach* del browser).
-- `scheduleEnabled` / `scheduleCron`, `lastRunAt` / `lastRunStatus`.
+- `silentUnlessError`: ejecuta sin popup cuando termina bien; si falla, muestra el
+  error. Con el modo desactivado, toda ejecución manual muestra un resumen final.
+- `scheduleEnabled` / `scheduleCron`, `lastRunAt` / `lastRunStatus` /
+  `lastRunSummary`.
 - Persistencia JSON en `AppLocalData/LlamaCode/tasks/tasks.json`.
 - `composePrompt()` arma el prompt-objetivo con la consigna explícita de que los
-  pasos son **guía, no guion literal** (replay adaptativo).
+  pasos son **guía, no guion literal** (replay adaptativo), incluyendo el
+  `prePrompt` cuando existe.
 
 ### Ejecución (manual o programada)
 
@@ -673,10 +680,18 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Si el **agente ya corre**, lo usa tal cual (no lo apaga).
 - Si **no hay agente**, auto-inicia servidor + agente (perfil de la Task o el
   activo), ejecuta al quedar listo y **lo apaga** al terminar el turno.
+- Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
+  `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
+  la Task no se marca como finalizada hasta completar esa verificación.
+- Al terminar, la UI muestra popup de resumen salvo que `silentUnlessError` esté
+  activo y el resultado sea correcto. En errores siempre muestra popup con opción
+  de reintentar, que relanza la Task completa y luego vuelve a ejecutar el
+  postprompt si estaba configurado.
 - Sin perfil asignable → marca `lastRun = "error"`.
 
 El cierre del ciclo se apoya en la señal `IAgentBackend::turnFinished` (emitida al
-completar el turno), que marca `lastRun = "ok"` y apaga el agente auto-iniciado.
+completar cada turno), que marca `lastRun = "ok"` al completar la fase final y
+apaga el agente auto-iniciado.
 
 ### Scheduler cron (`CronSchedule` + `TaskScheduler`)
 

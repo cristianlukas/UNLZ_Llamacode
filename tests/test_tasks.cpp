@@ -12,6 +12,7 @@ private slots:
     void initTestCase();
     void jsonRoundTrip();
     void composePrompt_includesGoalStepsAndAdaptation();
+    void composePrompt_includesPreAndPostPrompts();
     void sanitize_slug();
     void crud_persistsAcrossInstances();
     void duplicate_clonesWithNewId();
@@ -26,6 +27,8 @@ static QVariantMap sampleTask()
     return QVariantMap{
         {"id", "t1"}, {"name", "Cotización dólar"}, {"description", "extraer la cotización"},
         {"profileId", "p1"}, {"scheduleEnabled", true}, {"scheduleCron", "0 9 * * *"},
+        {"prePrompt", "Usá browser si hace falta."}, {"postPrompt", "Verificá que el valor tenga compra y venta."},
+        {"silentUnlessError", true},
         {"steps", steps}
     };
 }
@@ -43,10 +46,25 @@ void TasksTests::jsonRoundTrip()
     QCOMPARE(out.value("profileId").toString(), QStringLiteral("p1"));
     QCOMPARE(out.value("scheduleEnabled").toBool(), true);
     QCOMPARE(out.value("scheduleCron").toString(), QStringLiteral("0 9 * * *"));
+    QCOMPARE(out.value("prePrompt").toString(), QStringLiteral("Usá browser si hace falta."));
+    QCOMPARE(out.value("postPrompt").toString(), QStringLiteral("Verificá que el valor tenga compra y venta."));
+    QCOMPARE(out.value("silentUnlessError").toBool(), true);
     const QVariantList steps = out.value("steps").toList();
     QCOMPARE(steps.size(), 2);
     QCOMPARE(steps.at(0).toMap().value("kind").toString(), QStringLiteral("browser"));
     QCOMPARE(steps.at(0).toMap().value("ref").toString(), QStringLiteral("https://x"));
+}
+
+void TasksTests::composePrompt_includesPreAndPostPrompts()
+{
+    const QVariantMap task = sampleTask();
+    const QString p = TaskStore::composePrompt(task);
+    QVERIFY(p.contains(QStringLiteral("Preprompt operativo")));
+    QVERIFY(p.contains(QStringLiteral("Usá browser si hace falta.")));
+
+    const QString post = TaskStore::composePostPrompt(task);
+    QVERIFY(post.contains(QStringLiteral("Postprompt de verificación")));
+    QVERIFY(post.contains(QStringLiteral("Verificá que el valor tenga compra y venta.")));
 }
 
 void TasksTests::composePrompt_includesGoalStepsAndAdaptation()
@@ -106,8 +124,9 @@ void TasksTests::markRun_updatesStatus()
 {
     TaskStore s;
     const QString id = s.save({}, sampleTask());
-    s.markRun(id, QStringLiteral("ok"));
+    s.markRun(id, QStringLiteral("ok"), QStringLiteral("terminó bien"));
     QCOMPARE(s.get(id).value("lastRunStatus").toString(), QStringLiteral("ok"));
+    QCOMPARE(s.get(id).value("lastRunSummary").toString(), QStringLiteral("terminó bien"));
     QVERIFY(!s.get(id).value("lastRunAt").toString().isEmpty());
     s.remove(id);
 }

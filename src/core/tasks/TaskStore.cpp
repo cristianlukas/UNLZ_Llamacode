@@ -36,6 +36,10 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case UpdatedAtRole:       return t.value("updatedAt");
     case LastRunAtRole:       return t.value("lastRunAt");
     case LastRunStatusRole:   return t.value("lastRunStatus");
+    case LastRunSummaryRole:  return t.value("lastRunSummary");
+    case PrePromptRole:       return t.value("prePrompt");
+    case PostPromptRole:      return t.value("postPrompt");
+    case SilentUnlessErrorRole: return t.value("silentUnlessError", false);
     default:                  return {};
     }
 }
@@ -55,6 +59,10 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { UpdatedAtRole,       "updatedAt" },
         { LastRunAtRole,       "lastRunAt" },
         { LastRunStatusRole,   "lastRunStatus" },
+        { LastRunSummaryRole,  "lastRunSummary" },
+        { PrePromptRole,       "prePrompt" },
+        { PostPromptRole,      "postPrompt" },
+        { SilentUnlessErrorRole, "silentUnlessError" },
     };
 }
 
@@ -84,6 +92,9 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["name"]            = def.value("name", t.value("name"));
     t["description"]     = def.value("description", t.value("description"));
     t["profileId"]       = def.value("profileId", t.value("profileId"));
+    t["prePrompt"]       = def.value("prePrompt", t.value("prePrompt"));
+    t["postPrompt"]      = def.value("postPrompt", t.value("postPrompt"));
+    t["silentUnlessError"] = def.value("silentUnlessError", t.value("silentUnlessError", false));
     t["steps"]           = def.value("steps", t.value("steps", QVariantList{}));
     t["scheduleEnabled"] = def.value("scheduleEnabled", t.value("scheduleEnabled", false));
     t["scheduleCron"]    = def.value("scheduleCron", t.value("scheduleCron"));
@@ -147,12 +158,14 @@ QString TaskStore::duplicate(const QString &id)
     return save({}, t);
 }
 
-void TaskStore::markRun(const QString &id, const QString &status)
+void TaskStore::markRun(const QString &id, const QString &status, const QString &summary)
 {
     const int row = indexOfId(id);
     if (row < 0) return;
     m_items[row]["lastRunStatus"] = status;
     m_items[row]["lastRunAt"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    if (!summary.isEmpty())
+        m_items[row]["lastRunSummary"] = summary;
     const QModelIndex mi = index(row);
     emit dataChanged(mi, mi);
     save();
@@ -175,6 +188,12 @@ QString TaskStore::composePrompt(const QVariantMap &task)
     const QString desc = task.value("description").toString().trimmed();
 
     out << QStringLiteral("Ejecutá la siguiente Task guardada de forma autónoma.");
+    const QString pre = task.value("prePrompt").toString().trimmed();
+    if (!pre.isEmpty()) {
+        out << QString();
+        out << QStringLiteral("Preprompt operativo:");
+        out << pre;
+    }
     if (!name.isEmpty())
         out << QStringLiteral("Task: %1").arg(name);
     if (!desc.isEmpty())
@@ -207,6 +226,18 @@ QString TaskStore::composePrompt(const QVariantMap &task)
     return out.join(QLatin1Char('\n'));
 }
 
+QString TaskStore::composePostPrompt(const QVariantMap &task)
+{
+    const QString post = task.value("postPrompt").toString().trimmed();
+    if (post.isEmpty()) return {};
+    QStringList out;
+    out << QStringLiteral("Postprompt de verificación de la Task recién ejecutada.");
+    out << QStringLiteral("Revisá el resultado anterior con criterio agéntico. Si detectás un problema, explicá el error concreto y qué habría que corregir; si está correcto, resumí la evidencia de éxito.");
+    out << QString();
+    out << post;
+    return out.join(QLatin1Char('\n'));
+}
+
 QJsonObject TaskStore::toJson(const QVariantMap &task)
 {
     QJsonObject o;
@@ -214,12 +245,16 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["name"]            = task.value("name").toString();
     o["description"]     = task.value("description").toString();
     o["profileId"]       = task.value("profileId").toString();
+    o["prePrompt"]       = task.value("prePrompt").toString();
+    o["postPrompt"]      = task.value("postPrompt").toString();
+    o["silentUnlessError"] = task.value("silentUnlessError", false).toBool();
     o["scheduleEnabled"] = task.value("scheduleEnabled", false).toBool();
     o["scheduleCron"]    = task.value("scheduleCron").toString();
     o["createdAt"]       = task.value("createdAt").toString();
     o["updatedAt"]       = task.value("updatedAt").toString();
     o["lastRunAt"]       = task.value("lastRunAt").toString();
     o["lastRunStatus"]   = task.value("lastRunStatus").toString();
+    o["lastRunSummary"]  = task.value("lastRunSummary").toString();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -241,12 +276,16 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["name"]            = obj.value("name").toString();
     t["description"]     = obj.value("description").toString();
     t["profileId"]       = obj.value("profileId").toString();
+    t["prePrompt"]       = obj.value("prePrompt").toString();
+    t["postPrompt"]      = obj.value("postPrompt").toString();
+    t["silentUnlessError"] = obj.value("silentUnlessError").toBool(false);
     t["scheduleEnabled"] = obj.value("scheduleEnabled").toBool(false);
     t["scheduleCron"]    = obj.value("scheduleCron").toString();
     t["createdAt"]       = obj.value("createdAt").toString();
     t["updatedAt"]       = obj.value("updatedAt").toString();
     t["lastRunAt"]       = obj.value("lastRunAt").toString();
     t["lastRunStatus"]   = obj.value("lastRunStatus").toString();
+    t["lastRunSummary"]  = obj.value("lastRunSummary").toString();
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

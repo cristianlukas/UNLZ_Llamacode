@@ -2309,6 +2309,8 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
             emit agentStartingChanged();
         }
         appendAgentEvent(QStringLiteral("error"), m);
+        if (!m_runningTaskId.isEmpty())
+            finishRunningTask(QStringLiteral("error"), m);
         emit serverError(m);
     });
     connect(b, &IAgentBackend::toolApprovalNeeded, this, [this](const QVariantMap &toolCall) {
@@ -3173,17 +3175,34 @@ void AppController::runTask(const QString &id)
     const QVariantMap task = m_tasks.get(id);
     if (task.isEmpty()) {
         emit serverError(QStringLiteral("Task no encontrada."));
+        emit taskRunFinished(id, QString(), QStringLiteral("error"),
+                             QStringLiteral("Task no encontrada."), false);
         return;
     }
+
+    if (!m_runningTaskId.isEmpty()) {
+        emit serverError(QStringLiteral("Ya hay una Task en ejecución."));
+        emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(), QStringLiteral("error"),
+                             QStringLiteral("Ya hay una Task en ejecución."), false);
+        return;
+    }
+
+    const QString name = task.value(QStringLiteral("name")).toString();
+    const QString prompt = TaskStore::composePrompt(task);
+    m_runningTaskId = id;
+    m_runningTaskName = name;
+    m_runningTaskPhase = QStringLiteral("ejecutando");
+    m_runningTaskPostPrompt = TaskStore::composePostPrompt(task);
+    m_runningTaskSilentUnlessError = task.value(QStringLiteral("silentUnlessError"), false).toBool();
+    m_tasks.markRun(id, QStringLiteral("running"), QStringLiteral("Ejecutando Task..."));
+    emit taskRunStateChanged();
 
     const bool agentUp = (m_agentBackend && m_agentBackend->running())
                          || m_piActive
                          || (m_agentProc && m_agentProc->state() == QProcess::Running);
     if (agentUp) {
         // Agente ya corriendo: usarlo tal cual, sin apagarlo.
-        m_runningTaskId = id;
-        m_tasks.markRun(id, QStringLiteral("running"));
-        sendToAgent(TaskStore::composePrompt(task));
+        sendToAgent(prompt);
         return;
     }
 
@@ -3192,17 +3211,17 @@ void AppController::runTask(const QString &id)
     QString launchId = task.value("profileId").toString();
     if (launchId.isEmpty()) launchId = m_activeLaunchId;
     if (launchId.isEmpty()) {
-        m_tasks.markRun(id, QStringLiteral("error"));
         appendAgentEvent(QStringLiteral("lifecycle"),
                          QStringLiteral("Task '%1' sin perfil y sin perfil activo: no se puede auto-iniciar el agente.").arg(id));
-        emit serverError(QStringLiteral("Task sin perfil de agente: no se pudo auto-iniciar. Asigná un perfil en la Task."));
+        const QString msg = QStringLiteral("Task sin perfil de agente: no se pudo auto-iniciar. Asigná un perfil en la Task.");
+        finishRunningTask(QStringLiteral("error"), msg);
+        emit serverError(msg);
         return;
     }
 
     m_pendingScheduledTaskId = id;
     m_pendingScheduledLaunchId = launchId;
     m_scheduledAutoStop = true;
-    m_tasks.markRun(id, QStringLiteral("running"));
     appendAgentEvent(QStringLiteral("lifecycle"),
                      QStringLiteral("Auto-iniciando servidor+agente para la Task '%1'.").arg(id));
     startServerAndAgent(launchId);
@@ -3216,16 +3235,45 @@ void AppController::dispatchPendingScheduledTask()
     m_pendingScheduledTaskId.clear();
     const QVariantMap task = m_tasks.get(id);
     if (task.isEmpty()) { m_scheduledAutoStop = false; return; }
-    m_runningTaskId = id;
     sendToAgent(TaskStore::composePrompt(task));
 }
 
 void AppController::onAgentTurnFinished()
 {
     if (!m_runningTaskId.isEmpty()) {
-        m_tasks.markRun(m_runningTaskId, QStringLiteral("ok"));
-        m_runningTaskId.clear();
+        if (!m_runningTaskPostPrompt.isEmpty() && m_runningTaskPhase != QLatin1String("verificando")) {
+            m_runningTaskPhase = QStringLiteral("verificando");
+            const QString post = m_runningTaskPostPrompt;
+            m_runningTaskPostPrompt.clear();
+            m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
+                            QStringLiteral("Ejecutando postprompt de verificación..."));
+            emit taskRunStateChanged();
+            sendToAgent(post);
+            return;
+        }
+        const QString summary = (m_runningTaskPhase == QLatin1String("verificando"))
+                                    ? QStringLiteral("Task ejecutada y postprompt de verificación completado.")
+                                    : QStringLiteral("Task ejecutada correctamente.");
+        finishRunningTask(QStringLiteral("ok"), summary);
     }
+    if (m_restartThinkingAfterResponse)
+        restartActiveLaunchForThinking(m_restartThinkingWithAgent, false);
+}
+
+void AppController::finishRunningTask(const QString &status, const QString &summary)
+{
+    if (m_runningTaskId.isEmpty()) return;
+    const QString id = m_runningTaskId;
+    const QString name = m_runningTaskName;
+    const bool silent = m_runningTaskSilentUnlessError;
+    m_tasks.markRun(id, status, summary);
+    m_runningTaskId.clear();
+    m_runningTaskName.clear();
+    m_runningTaskPhase.clear();
+    m_runningTaskPostPrompt.clear();
+    m_runningTaskSilentUnlessError = false;
+    emit taskRunStateChanged();
+    emit taskRunFinished(id, name, status, summary, silent);
     if (m_scheduledAutoStop) {
         m_scheduledAutoStop = false;
         appendAgentEvent(QStringLiteral("lifecycle"),
@@ -3233,8 +3281,6 @@ void AppController::onAgentTurnFinished()
         stopAgent();
         stopServer();
     }
-    if (m_restartThinkingAfterResponse)
-        restartActiveLaunchForThinking(m_restartThinkingWithAgent, false);
 }
 
 void AppController::setTasksSchedulerEnabled(bool on)
