@@ -531,8 +531,12 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   La búsqueda se ejecuta en dos rondas: tras la primera, el modelo analiza vacíos,
   candidatos omitidos y conclusiones débiles, y genera consultas de seguimiento
   por producto para tiendas, comparadores, manuales y foros técnicos. Se usa
-  SearxNG cuando `LLAMACODE_SEARXNG_URL` está configurado (permitiendo agregar
-  Google/Bing según esa instancia); sin él, el fallback es DuckDuckGo HTML.
+  SearxNG cuando `LLAMACODE_SEARXNG_URL` está configurado. Sin SearxNG, las
+  consultas se distribuyen explícitamente entre DuckDuckGo, Bing y Google HTML
+  (Google puede aplicar CAPTCHA/bloqueo). Para pedidos de compra no se genera un
+  veredicto final hasta reunir al menos dos fuentes comerciales con señales
+  verificables de precio o stock; se permiten hasta tres rondas antes de fallar
+  explícitamente en lugar de presentar una recomendación incompleta.
   Las especificaciones exactas del modelo prevalecen sobre heurísticas generales
   por chipset.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**

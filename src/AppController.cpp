@@ -203,6 +203,49 @@ static QVector<ResearchHit> researchParseDdg(const QString &html, int count)
     return hits;
 }
 
+static QVector<ResearchHit> researchParseBing(const QString &html, int count)
+{
+    QVector<ResearchHit> hits;
+    QRegularExpression blockRe(
+        QStringLiteral("(?is)<li[^>]+class=\"[^\"]*b_algo[^\"]*\"[^>]*>(.*?)</li>"));
+    QRegularExpression linkRe(
+        QStringLiteral("(?is)<h2[^>]*>\\s*<a[^>]+href=\"([^\"]+)\"[^>]*>(.*?)</a>"));
+    QRegularExpression snippetRe(
+        QStringLiteral("(?is)<p[^>]*>(.*?)</p>"));
+    auto blocks = blockRe.globalMatch(html);
+    while (blocks.hasNext() && hits.size() < count) {
+        const QString block = blocks.next().captured(1);
+        const auto link = linkRe.match(block);
+        if (!link.hasMatch()) continue;
+        ResearchHit hit;
+        hit.url = link.captured(1);
+        hit.title = researchCleanHtmlToText(link.captured(2));
+        const auto snippet = snippetRe.match(block);
+        if (snippet.hasMatch()) hit.snippet = researchCleanHtmlToText(snippet.captured(1));
+        if (hit.url.startsWith(QLatin1String("http"))) hits.append(hit);
+    }
+    return hits;
+}
+
+static QVector<ResearchHit> researchParseGoogle(const QString &html, int count)
+{
+    QVector<ResearchHit> hits;
+    QRegularExpression linkRe(
+        QStringLiteral("(?is)<a[^>]+href=\"(?:/url\\?q=)?(https?[^\"&]+)[^\"]*\"[^>]*>\\s*"
+                       "(?:<[^>]+>)*([^<]{4,200})"));
+    auto links = linkRe.globalMatch(html);
+    while (links.hasNext() && hits.size() < count) {
+        const auto match = links.next();
+        ResearchHit hit;
+        hit.url = QUrl::fromPercentEncoding(match.captured(1).toUtf8());
+        hit.title = researchCleanHtmlToText(match.captured(2));
+        const QString host = QUrl(hit.url).host().toLower();
+        if (host.contains(QStringLiteral("google.")) || hit.title.isEmpty()) continue;
+        hits.append(hit);
+    }
+    return hits;
+}
+
 static QStringList researchQueriesFor(const QString &topic, const QString &mode)
 {
     QStringList queries;
@@ -9777,6 +9820,31 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     auto searchLogs = std::make_shared<QStringList>();
     auto fetchedUrls = std::make_shared<QSet<QString>>();
     auto refinementRound = std::make_shared<int>(0);
+    const bool purchaseResearch =
+        cleanTopic.contains(QRegularExpression(
+            QStringLiteral("(?i)compr|precio|stock|motherboard|placa madre|gpu|rtx")));
+    const int sourceLimit = qMin(24, maxPages + 6);
+    auto commerceEvidenceCount = [sources]() {
+        int count = 0;
+        for (const QJsonValue &value : *sources) {
+            const QJsonObject source = value.toObject();
+            const ResearchHit hit{
+                source.value(QStringLiteral("title")).toString(),
+                source.value(QStringLiteral("url")).toString(),
+                source.value(QStringLiteral("snippet")).toString()};
+            const QString evidence =
+                (hit.title + QLatin1Char(' ') + hit.snippet + QLatin1Char(' ')
+                 + source.value(QStringLiteral("excerpt")).toString()).toLower();
+            if (researchIsArgentinaStore(hit)
+                && (evidence.contains(QStringLiteral("$"))
+                    || evidence.contains(QStringLiteral("ars"))
+                    || evidence.contains(QStringLiteral("precio"))
+                    || evidence.contains(QStringLiteral("stock"))
+                    || evidence.contains(QStringLiteral("disponible"))))
+                ++count;
+        }
+        return count;
+    };
     auto addHit = [hits](const ResearchHit &h) {
         if (h.url.isEmpty()) return;
         for (const ResearchHit &existing : std::as_const(*hits))
@@ -9841,7 +9909,9 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "socket/plataforma, slots PCIe, precio, stock, tienda, ventajas, riesgos y "
             "veredicto. Si la evidencia comercial es insuficiente, enumerá exactamente "
             "qué búsquedas se hicieron y qué alternativas sí aparecieron, sin afirmar "
-            "que no hay stock en todo el mercado.");
+            "que no hay stock en todo el mercado. La fecha real de esta investigación "
+            "es %1: no inventes fechas anteriores ni llames 'actual' a datos sin fecha.")
+            .arg(QDate::currentDate().toString(QStringLiteral("dd/MM/yyyy")));
         const QString user = QStringLiteral(
             "Tema: %1\nModo: %2\n\n"
             "Usá el dossier de fuentes de abajo y devolvé un reporte Markdown con: "
@@ -9934,13 +10004,21 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     *fetchNext = [=](int index) {
         const int firstPassTarget = qMax(4, maxPages / 2);
         if ((*refinementRound == 0 && sources->size() >= firstPassTarget)
-            || sources->size() >= maxPages || index >= hits->size()) {
+            || sources->size() >= sourceLimit || index >= hits->size()) {
             if (sources->isEmpty()) {
                 fail(QStringLiteral("No se pudieron descargar fuentes útiles."));
                 return;
             }
-            if (*refinementRound == 0) {
+            if (*refinementRound == 0
+                || (purchaseResearch && *refinementRound < 2
+                    && commerceEvidenceCount() < 2)) {
                 (*refineQueries)();
+                return;
+            }
+            if (purchaseResearch && commerceEvidenceCount() < 2) {
+                fail(QStringLiteral(
+                    "La investigación no reunió al menos dos fuentes comerciales "
+                    "con precio o stock verificable. No se generó un veredicto incompleto."));
                 return;
             }
             (*synthesize)();
@@ -9981,7 +10059,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                 sources->append(QJsonObject{
                     {QStringLiteral("title"), h.title.isEmpty() ? h.url : h.title},
                     {QStringLiteral("url"), h.url},
-                    {QStringLiteral("snippet"), h.snippet}
+                    {QStringLiteral("snippet"), h.snippet},
+                    {QStringLiteral("excerpt"), text.left(3000)}
                 });
                 sourceTexts->append(QStringLiteral("### [%1] %2\n%3")
                                         .arg(sources->size())
@@ -10004,8 +10083,12 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         }
 
         const QString query = queries->at(index);
+        const QStringList directEngines = {
+            QStringLiteral("duckduckgo"), QStringLiteral("bing"), QStringLiteral("google")};
+        const QString directEngine = directEngines.at(index % directEngines.size());
         setResearchState(true, 5 + (index * 25 / qMax(1, queries->size())),
-                         QStringLiteral("Buscando: %1").arg(query.left(80)));
+                         QStringLiteral("Buscando en %1: %2")
+                             .arg(directEngine, query.left(70)));
 
         const QString searxng = qEnvironmentVariable("LLAMACODE_SEARXNG_URL").trimmed();
         QUrl url;
@@ -10016,6 +10099,21 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             QUrlQuery q;
             q.addQueryItem(QStringLiteral("q"), query);
             q.addQueryItem(QStringLiteral("format"), QStringLiteral("json"));
+            url.setQuery(q);
+        } else if (directEngine == QLatin1String("bing")) {
+            url = QUrl(QStringLiteral("https://www.bing.com/search"));
+            QUrlQuery q;
+            q.addQueryItem(QStringLiteral("q"), query);
+            q.addQueryItem(QStringLiteral("setlang"), QStringLiteral("es-AR"));
+            q.addQueryItem(QStringLiteral("cc"), QStringLiteral("ar"));
+            url.setQuery(q);
+        } else if (directEngine == QLatin1String("google")) {
+            url = QUrl(QStringLiteral("https://www.google.com/search"));
+            QUrlQuery q;
+            q.addQueryItem(QStringLiteral("q"), query);
+            q.addQueryItem(QStringLiteral("hl"), QStringLiteral("es"));
+            q.addQueryItem(QStringLiteral("gl"), QStringLiteral("ar"));
+            q.addQueryItem(QStringLiteral("num"), QStringLiteral("10"));
             url.setQuery(q);
         } else {
             url = QUrl(QStringLiteral("https://html.duckduckgo.com/html/"));
@@ -10050,21 +10148,30 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                         if (hits->size() >= 120) break;
                     }
                 } else {
-                    const QVector<ResearchHit> parsed = researchParseDdg(QString::fromUtf8(raw), 10);
+                    const QString html = QString::fromUtf8(raw);
+                    QVector<ResearchHit> parsed;
+                    if (directEngine == QLatin1String("bing"))
+                        parsed = researchParseBing(html, 10);
+                    else if (directEngine == QLatin1String("google"))
+                        parsed = researchParseGoogle(html, 10);
+                    else
+                        parsed = researchParseDdg(html, 10);
                     for (const ResearchHit &h : parsed) {
                         addHit(h);
                         if (hits->size() >= 120) break;
                     }
                 }
             }
-            searchLogs->append(QStringLiteral("- \"%1\" -> %2 new result(s)")
-                                   .arg(query).arg(hits->size() - addedBefore));
+            const QString engineLabel = searxng.isEmpty() ? directEngine : QStringLiteral("searxng");
+            searchLogs->append(QStringLiteral("- [%1] \"%2\" -> %3 new result(s)")
+                                   .arg(engineLabel, query)
+                                   .arg(hits->size() - addedBefore));
             (*searchNext)(index + 1);
         });
     };
 
     *refineQueries = [=]() {
-        *refinementRound = 1;
+        ++(*refinementRound);
         setResearchState(true, 48, QStringLiteral(
             "Analizando vacíos y preparando búsquedas de seguimiento..."));
 
