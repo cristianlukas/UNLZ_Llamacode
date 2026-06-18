@@ -720,7 +720,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Si `llama-server` rechaza el primer request OpenAI-compatible con HTTP 400, el
   agente reintenta una vez en modo compatible sin campos opcionales del payload,
   conservando mensajes y tools para no marcar la Task como fallida por diferencias
-  de soporte entre builds.
+  de soporte entre builds. Si esa variante también falla porque la build no
+  acepta `tools` nativo, cambia automáticamente a un protocolo textual headless:
+  el modelo pide `TOOL_CALL {...}`, la app ejecuta la misma tool interna y devuelve
+  `TOOL_RESULT` para continuar el loop sin depender del soporte OpenAI tools del
+  servidor.
 - Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
   la Task no se marca como finalizada hasta completar esa verificación.

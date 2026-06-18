@@ -83,6 +83,7 @@ public:
 
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
+    static QJsonObject textToolCallFromContent(const QString &content);
 
     // Catálogo de tools built-in con metadata para la UI de habilitar/deshabilitar:
     // lista de {name, group, description, approxTokens}. El orden define el de la UI.
@@ -132,9 +133,12 @@ public:
     bool isBusy() const;               // turno/tool/compactación en curso
 
 private:
+    enum CompletionMode { NativeFull, NativeCompat, TextTools };
+
     // Loop
     void runCompletion();
-    void postCompletionRequest(QJsonObject payload, bool compatibilityMode);
+    void postCompletionRequest(QJsonObject payload, CompletionMode mode);
+    QJsonObject buildTextToolPayload(const QJsonObject &nativePayload) const;
     void processPendingCalls();     // procesa m_pendingCalls (approval/exec)
     void finishTurn(const QString &finalText, bool persistFinalToApi = true);
     void appendAssistantText(const QString &text);
@@ -224,6 +228,7 @@ private:
     QTimer *m_streamIdleTimer = nullptr;
     bool m_streamIdleTimedOut = false;
     bool m_running = false;
+    bool m_textToolFallback = false;       // server no acepta OpenAI tools nativo
     QString m_cwd;
     QString m_approvalMode = QStringLiteral("ask");
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)

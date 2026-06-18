@@ -175,6 +175,43 @@ static QString toolArgumentsToString(const QJsonValue &v)
     return {};
 }
 
+static QString extractBalancedJsonObject(const QString &s, int start)
+{
+    int depth = 0;
+    bool inString = false;
+    bool escape = false;
+    int objectStart = -1;
+    for (int i = qMax(0, start); i < s.size(); ++i) {
+        const QChar ch = s.at(i);
+        if (objectStart < 0) {
+            if (ch == QLatin1Char('{')) {
+                objectStart = i;
+                depth = 1;
+            }
+            continue;
+        }
+        if (inString) {
+            if (escape) {
+                escape = false;
+            } else if (ch == QLatin1Char('\\')) {
+                escape = true;
+            } else if (ch == QLatin1Char('"')) {
+                inString = false;
+            }
+            continue;
+        }
+        if (ch == QLatin1Char('"')) {
+            inString = true;
+        } else if (ch == QLatin1Char('{')) {
+            ++depth;
+        } else if (ch == QLatin1Char('}')) {
+            if (--depth == 0)
+                return s.mid(objectStart, i - objectStart + 1);
+        }
+    }
+    return {};
+}
+
 static bool isToolMessage(const QJsonObject &m)
 {
     return m.value(QStringLiteral("role")).toString() == QLatin1String("tool");
@@ -1320,17 +1357,71 @@ void LlamaAgentBackend::runCompletion()
 
     emit logAppended(QStringLiteral("[turn] requesting completion (iter=%1, msgs=%2, stream)\n")
                          .arg(m_turnIters).arg(m_apiMessages.size()));
-    postCompletionRequest(payload, false);
+    postCompletionRequest(m_textToolFallback ? buildTextToolPayload(payload) : payload,
+                          m_textToolFallback ? TextTools : NativeFull);
 }
 
-void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, bool compatibilityMode)
+QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePayload) const
+{
+    QJsonArray messages = nativePayload.value(QStringLiteral("messages")).toArray();
+
+    QStringList tools;
+    const QJsonArray schemas = buildToolSchemas();
+    for (const QJsonValue &v : schemas) {
+        const QJsonObject fn = v.toObject().value(QStringLiteral("function")).toObject();
+        const QString name = fn.value(QStringLiteral("name")).toString();
+        if (name.isEmpty()) continue;
+        const QJsonArray required = fn.value(QStringLiteral("parameters")).toObject()
+                                        .value(QStringLiteral("required")).toArray();
+        QStringList reqs;
+        for (const QJsonValue &rv : required) reqs << rv.toString();
+        tools << (reqs.isEmpty()
+                  ? name
+                  : QStringLiteral("%1(%2)").arg(name, reqs.join(QStringLiteral(", "))));
+    }
+
+    const QString protocol = QStringLiteral(
+        "MODO COMPATIBLE SIN TOOL-CALLING NATIVO.\n"
+        "El servidor local rechazo el payload OpenAI tools, pero la app puede ejecutar "
+        "tools si las pedis por texto.\n"
+        "Tools disponibles: %1.\n"
+        "Para usar una tool respondé SOLO una línea con este formato exacto:\n"
+        "TOOL_CALL {\"name\":\"web_fetch\",\"arguments\":{\"url\":\"https://example.com\"}}\n"
+        "No agregues explicación junto al TOOL_CALL. La app ejecutará la tool y te "
+        "devolverá TOOL_RESULT como mensaje del usuario. Luego continuá. Cuando el "
+        "objetivo esté cumplido, respondé normalmente con el resultado final.")
+        .arg(tools.join(QStringLiteral("; ")));
+
+    if (!messages.isEmpty()
+        && messages.first().toObject().value(QStringLiteral("role")).toString() == QLatin1String("system")) {
+        QJsonObject first = messages.first().toObject();
+        first[QStringLiteral("content")] =
+            first.value(QStringLiteral("content")).toString() + QStringLiteral("\n\n") + protocol;
+        messages[0] = first;
+    } else {
+        messages.prepend(QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
+                                     {QStringLiteral("content"), protocol}});
+    }
+
+    QJsonObject payload{
+        {QStringLiteral("model"), nativePayload.value(QStringLiteral("model"))},
+        {QStringLiteral("messages"), messages},
+        {QStringLiteral("max_tokens"), nativePayload.value(QStringLiteral("max_tokens"))},
+        {QStringLiteral("stream"), true}
+    };
+    if (nativePayload.contains(QStringLiteral("temperature")))
+        payload.insert(QStringLiteral("temperature"), nativePayload.value(QStringLiteral("temperature")));
+    return payload;
+}
+
+void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMode mode)
 {
     if (!m_running) return;
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
     QNetworkRequest req((QUrl(url)));
     applyHeaders(req);
 
-    if (compatibilityMode) {
+    if (mode == NativeCompat) {
         payload.remove(QStringLiteral("parallel_tool_calls"));
         payload.remove(QStringLiteral("parse_tool_calls"));
         payload.remove(QStringLiteral("stream_options"));
@@ -1343,7 +1434,7 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, bool compatib
     m_streamIdleTimedOut = false;
     m_reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() { handleStreamData(); });
-    connect(m_reply, &QNetworkReply::finished, this, [this, payload, compatibilityMode]() {
+    connect(m_reply, &QNetworkReply::finished, this, [this, payload, mode]() {
         if (m_streamIdleTimer) m_streamIdleTimer->stop();
         QNetworkReply *r = m_reply;
         if (!r) return;
@@ -1361,9 +1452,15 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, bool compatib
         const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         m_reply = nullptr;
         r->deleteLater();
-        if (!ok && !compatibilityMode && status == 400) {
+        if (!ok && mode == NativeFull && status == 400) {
             emit logAppended(QStringLiteral("[turn] server rechazó payload completo (400); reintentando modo compatible sin campos opcionales\n"));
-            postCompletionRequest(payload, true);
+            postCompletionRequest(payload, NativeCompat);
+            return;
+        }
+        if (!ok && mode == NativeCompat && status == 400) {
+            emit logAppended(QStringLiteral("[turn] server rechazó OpenAI tools (400); reintentando protocolo textual de tools headless\n"));
+            m_textToolFallback = true;
+            postCompletionRequest(buildTextToolPayload(payload), TextTools);
             return;
         }
         handleStreamFinished(ok, err);
@@ -1593,6 +1690,22 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // El historial de API NO lleva <think> (solo display lo lleva).
     const QString apiContent = stripThinkForContext(m_streamContent);
 
+    if (toolCalls.isEmpty() && m_textToolFallback) {
+        const QJsonObject textCall = textToolCallFromContent(apiContent);
+        if (!textCall.isEmpty()) {
+            if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
+                QVariantMap m = m_messages[m_curAsstIdx].toMap();
+                m[QStringLiteral("content")] = QString();
+                m_messages[m_curAsstIdx] = m;
+            }
+            closeAssistantBubble();
+            m_apiMessages.append(QJsonObject{
+                {QStringLiteral("role"), QStringLiteral("assistant")},
+                {QStringLiteral("content"), apiContent}});
+            toolCalls.append(textCall);
+        }
+    }
+
     if (toolCalls.isEmpty()) {
         if (!apiContent.isEmpty())
             m_apiMessages.append(QJsonObject{
@@ -1606,10 +1719,12 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // Cerrar la burbuja de texto previa: las tools van como tarjetas aparte y el
     // próximo texto del modelo abrirá una burbuja nueva.
     closeAssistantBubble();
-    m_apiMessages.append(QJsonObject{
-        {QStringLiteral("role"), QStringLiteral("assistant")},
-        {QStringLiteral("content"), apiContent},
-        {QStringLiteral("tool_calls"), toolCalls}});
+    if (!m_textToolFallback) {
+        m_apiMessages.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("assistant")},
+            {QStringLiteral("content"), apiContent},
+            {QStringLiteral("tool_calls"), toolCalls}});
+    }
     m_pendingCalls = toolCalls;
     processPendingCalls();
 }
@@ -2308,6 +2423,14 @@ void LlamaAgentBackend::cancelAllSubs()
 void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name, const QString &content)
 {
     Q_UNUSED(name)
+    if (m_textToolFallback) {
+        m_apiMessages.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("user")},
+            {QStringLiteral("content"), QStringLiteral("TOOL_RESULT %1 %2:\n%3")
+                                        .arg(id, name, content)}
+        });
+        return;
+    }
     m_apiMessages.append(QJsonObject{
         {QStringLiteral("role"), QStringLiteral("tool")},
         {QStringLiteral("tool_call_id"), id},
@@ -2337,6 +2460,44 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("ask_teacher")) return {QStringLiteral("question")};
     if (name == QLatin1String("browser_skill_replay")) return {QStringLiteral("name")};
     return {};   // list_dir, memory, browser_skill_list: args opcionales
+}
+
+QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
+{
+    const QRegularExpression marker(QStringLiteral("\\bTOOL_CALL\\b\\s*:?\\s*"),
+                                    QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch m = marker.match(content);
+    if (!m.hasMatch()) return {};
+
+    const QString json = extractBalancedJsonObject(content, m.capturedEnd());
+    if (json.isEmpty()) return {};
+
+    QJsonParseError perr;
+    const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
+    if (perr.error != QJsonParseError::NoError || obj.isEmpty()) return {};
+
+    const QString name = obj.value(QStringLiteral("name")).toString(
+        obj.value(QStringLiteral("tool")).toString()).trimmed();
+    if (name.isEmpty()) return {};
+
+    QJsonValue argsValue = obj.value(QStringLiteral("arguments"));
+    if (argsValue.isUndefined()) argsValue = obj.value(QStringLiteral("args"));
+    QJsonObject args = argsValue.toObject();
+    if (argsValue.isString()) {
+        QJsonParseError argErr;
+        args = QJsonDocument::fromJson(argsValue.toString().toUtf8(), &argErr).object();
+        if (argErr.error != QJsonParseError::NoError) args = {};
+    }
+
+    return QJsonObject{
+        {QStringLiteral("id"), QStringLiteral("textcall_%1").arg(QUuid::createUuid().toString(QUuid::Id128))},
+        {QStringLiteral("type"), QStringLiteral("function")},
+        {QStringLiteral("function"), QJsonObject{
+            {QStringLiteral("name"), name},
+            {QStringLiteral("arguments"),
+             QString::fromUtf8(QJsonDocument(args).toJson(QJsonDocument::Compact))}
+        }}
+    };
 }
 
 void LlamaAgentBackend::approveTool(const QString &id, bool always)

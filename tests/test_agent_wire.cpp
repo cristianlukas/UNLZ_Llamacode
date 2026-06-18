@@ -6,6 +6,8 @@
 #include <QJsonObject>
 #include <QSignalSpy>
 #include <QStandardPaths>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <QTemporaryDir>
 #include "core/agent/LlamaAgentBackend.h"
 
@@ -17,6 +19,8 @@ private slots:
     void dropsOrphanToolAndDemotesNonInitialSystem();
     void dropsDanglingAssistantAndAnchorsFirstUser();
     void dropsTransportErrorAssistantMessages();
+    void parsesTextToolCallFallback();
+    void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void restartRepublishesPersistedMessages();
 };
 
@@ -105,6 +109,145 @@ void AgentWireTests::dropsTransportErrorAssistantMessages()
     QCOMPARE(out[0].toObject().value(QStringLiteral("role")).toString(), QStringLiteral("system"));
     QCOMPARE(out[1].toObject().value(QStringLiteral("content")).toString(), QStringLiteral("Que hora es?"));
     QCOMPARE(out[2].toObject().value(QStringLiteral("content")).toString(), QStringLiteral("Hola"));
+}
+
+void AgentWireTests::parsesTextToolCallFallback()
+{
+    const QString content = QStringLiteral(
+        "TOOL_CALL {\"name\":\"web_fetch\",\"arguments\":{\"url\":\"https://dolarhoy.com/\"}}");
+
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+    QVERIFY(!call.isEmpty());
+    QVERIFY(call.value(QStringLiteral("id")).toString().startsWith(QStringLiteral("textcall_")));
+    QCOMPARE(call.value(QStringLiteral("type")).toString(), QStringLiteral("function"));
+
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("web_fetch"));
+
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
+}
+
+class FakeToolRejectingServer : public QTcpServer
+{
+public:
+    int nativeRejects = 0;
+    int textRequests = 0;
+
+protected:
+    void incomingConnection(qintptr socketDescriptor) override
+    {
+        auto *sock = new QTcpSocket(this);
+        sock->setSocketDescriptor(socketDescriptor);
+        auto *buf = new QByteArray;
+        connect(sock, &QTcpSocket::readyRead, this, [this, sock, buf]() {
+            buf->append(sock->readAll());
+            const int headerEnd = buf->indexOf("\r\n\r\n");
+            if (headerEnd < 0) return;
+            const QByteArray headers = buf->left(headerEnd);
+            int contentLength = 0;
+            for (const QByteArray &line : headers.split('\n')) {
+                const QByteArray trimmed = line.trimmed();
+                if (trimmed.toLower().startsWith("content-length:"))
+                    contentLength = trimmed.mid(15).trimmed().toInt();
+            }
+            if (buf->size() < headerEnd + 4 + contentLength) return;
+
+            const QByteArray firstLine = headers.split('\n').value(0).trimmed();
+            const QByteArray body = buf->mid(headerEnd + 4, contentLength);
+            if (firstLine.startsWith("GET /props")) {
+                writeJson(sock, QByteArrayLiteral("{\"n_ctx\":4096}"));
+                return;
+            }
+            if (body.contains("\"tools\"")) {
+                ++nativeRejects;
+                writeRaw(sock, QByteArrayLiteral(
+                    "HTTP/1.1 400 Bad Request\r\nContent-Length: 23\r\nConnection: close\r\n\r\nnative tools rejected"));
+                return;
+            }
+
+            ++textRequests;
+            if (textRequests == 1) {
+                writeSse(sock, QStringLiteral(
+                    "TOOL_CALL {\"name\":\"list_dir\",\"arguments\":{\"path\":\".\"}}"));
+            } else {
+                QVERIFY(body.contains("TOOL_RESULT"));
+                writeSse(sock, QStringLiteral("FINAL: list_dir ejecutado correctamente"));
+            }
+        });
+        connect(sock, &QTcpSocket::disconnected, sock, &QObject::deleteLater);
+    }
+
+private:
+    static void writeJson(QTcpSocket *sock, const QByteArray &json)
+    {
+        writeRaw(sock, QByteArrayLiteral("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ")
+                       + QByteArray::number(json.size())
+                       + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + json);
+    }
+
+    static void writeSse(QTcpSocket *sock, const QString &content)
+    {
+        const QByteArray escaped = QString(content).replace("\\", "\\\\").replace("\"", "\\\"").toUtf8();
+        const QByteArray payload = QByteArrayLiteral("data: {\"choices\":[{\"delta\":{\"content\":\"")
+                                   + escaped + QByteArrayLiteral("\"}}]}\n\n")
+                                   + QByteArrayLiteral("data: [DONE]\n\n");
+        writeRaw(sock, QByteArrayLiteral("HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nContent-Length: ")
+                       + QByteArray::number(payload.size())
+                       + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + payload);
+    }
+
+    static void writeRaw(QTcpSocket *sock, const QByteArray &data)
+    {
+        sock->write(data);
+        sock->flush();
+        sock->disconnectFromHost();
+    }
+};
+
+void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
+{
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    QFile marker(cwd.path() + QStringLiteral("/marker.txt"));
+    QVERIFY(marker.open(QIODevice::WriteOnly));
+    marker.write("ok");
+    marker.close();
+
+    FakeToolRejectingServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    ctx.modelId = QStringLiteral("test-model");
+    ctx.ctxOverride = 4096;
+
+    LlamaAgentBackend backend;
+    backend.setEphemeralSessions(true);
+    backend.start(ctx);
+    QSignalSpy finished(&backend, &LlamaAgentBackend::turnFinished);
+    backend.sendMessage(QStringLiteral("Listá el directorio actual usando tools."));
+
+    QTRY_VERIFY_WITH_TIMEOUT(finished.count() == 1, 10000);
+    QCOMPARE(server.nativeRejects, 2);
+    QCOMPARE(server.textRequests, 2);
+
+    bool sawTool = false;
+    bool sawFinal = false;
+    for (const QVariant &v : backend.messages()) {
+        const QVariantMap m = v.toMap();
+        if (m.value(QStringLiteral("role")).toString() == QLatin1String("toolcall")
+            && m.value(QStringLiteral("name")).toString() == QLatin1String("list_dir"))
+            sawTool = true;
+        if (m.value(QStringLiteral("content")).toString().contains(QStringLiteral("list_dir ejecutado")))
+            sawFinal = true;
+    }
+    QVERIFY(sawTool);
+    QVERIFY(sawFinal);
+    backend.stop();
 }
 
 void AgentWireTests::restartRepublishesPersistedMessages()
