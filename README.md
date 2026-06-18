@@ -513,15 +513,18 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   (en Windows se relanza elevado), global o por perfil.
 - **Deep Research**: investigación multi-consulta y multi-página con reportes
   persistidos; al finalizar actualiza la lista, selecciona el reporte nuevo y
-  muestra una notificación automáticamente. La consulta original queda visible
-  y persistida como encabezado antes del reporte. El visor ajusta el texto al
+  muestra una notificación automáticamente. La lista y el contenido muestran la
+  fecha local del reporte. La consulta original queda visible y persistida como
+  encabezado antes del reporte. El visor ajusta el texto al
   ancho disponible y reserva una columna propia a la derecha para la scrollbar. Antes de
   buscar, el modelo genera subconsultas concretas para fuentes primarias,
   productos, comparaciones y precios; luego se priorizan fuentes técnicas y se
   descartan portadas/categorías sin evidencia antes de consumir el cupo. Los
   extractos conservan snippets y ventanas alrededor de precios, stock y datos
-  PCIe aunque aparezcan lejos del inicio del HTML; las especificaciones exactas
-  del modelo prevalecen sobre heurísticas generales por chipset.
+  PCIe aunque aparezcan lejos del inicio del HTML; para compras en Argentina se
+  priorizan además páginas de producto locales, precios en ARS y stock actual.
+  Las especificaciones exactas del modelo prevalecen sobre heurísticas generales
+  por chipset.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**
   (endpoint + key), con test de conexión.
 - **ControlApi / headless**: toda feature es controlable por API local (target

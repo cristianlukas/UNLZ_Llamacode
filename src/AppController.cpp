@@ -216,7 +216,9 @@ static QStringList researchQueriesFor(const QString &topic, const QString &mode)
     if (hardwarePurchase) {
         queries << topic + QStringLiteral(" PCIe x8 x8 specification manual");
         queries << topic + QStringLiteral(" modelos recomendados compatibilidad dual GPU");
-        queries << topic + QStringLiteral(" precio stock Argentina comprar");
+        queries << topic + QStringLiteral(" precio stock Argentina comprar ARS");
+        queries << topic + QStringLiteral(" site:com.ar precio stock");
+        queries << topic + QStringLiteral(" MercadoLibre Argentina precio");
     }
     if (mode == QLatin1String("compare")) {
         queries << topic + QStringLiteral(" comparison benchmarks alternatives");
@@ -236,7 +238,7 @@ static QStringList researchQueriesFor(const QString &topic, const QString &mode)
         queries << topic + QStringLiteral(" price availability Argentina");
     }
     queries.removeDuplicates();
-    return queries.mid(0, hardwarePurchase ? 6 : 4);
+    return queries.mid(0, hardwarePurchase ? 8 : 4);
 }
 
 static int researchHitScore(const ResearchHit &hit)
@@ -247,11 +249,23 @@ static int researchHitScore(const ResearchHit &hit)
     const QString haystack = (hit.title + QLatin1Char(' ') + hit.snippet + QLatin1Char(' ')
                               + path).toLower();
     int score = 0;
+    const bool argentinaStore =
+        host.endsWith(QStringLiteral(".com.ar"))
+        || host.endsWith(QStringLiteral(".com"))
+               && (host.contains(QStringLiteral("mercadolibre"))
+                   || host.contains(QStringLiteral("hardgamers")))
+        || host.contains(QStringLiteral("compragamer"))
+        || host.contains(QStringLiteral("fullh4rd"))
+        || host.contains(QStringLiteral("gearsstore"))
+        || host.contains(QStringLiteral("maximus"))
+        || host.contains(QStringLiteral("venex"));
     if (host.contains(QStringLiteral("asus.com"))
         || host.contains(QStringLiteral("msi.com"))
         || host.contains(QStringLiteral("gigabyte.com"))
         || host.contains(QStringLiteral("asrock.com")))
         score += 80;
+    if (argentinaStore)
+        score += 85;
     if (haystack.contains(QStringLiteral("manual"))
         || haystack.contains(QStringLiteral("specification"))
         || haystack.contains(QStringLiteral("specifications"))
@@ -263,8 +277,15 @@ static int researchHitScore(const ResearchHit &hit)
         score += 25;
     if (haystack.contains(QStringLiteral("precio"))
         || haystack.contains(QStringLiteral("stock"))
-        || haystack.contains(QStringLiteral("comprar")))
+        || haystack.contains(QStringLiteral("comprar"))
+        || haystack.contains(QStringLiteral("ars"))
+        || haystack.contains(QStringLiteral("$")))
         score += 20;
+    if (argentinaStore
+        && (haystack.contains(QStringLiteral("precio"))
+            || haystack.contains(QStringLiteral("$"))
+            || haystack.contains(QStringLiteral("stock"))))
+        score += 35;
     if (path.isEmpty() || path == QLatin1String("/")) score -= 60;
     if (haystack.contains(QStringLiteral("categoria"))
         || haystack.contains(QStringLiteral("category")))
@@ -9197,8 +9218,16 @@ void AppController::refreshResearchReports()
             return a.value(QStringLiteral("timestamp")).toDouble()
                    > b.value(QStringLiteral("timestamp")).toDouble();
         });
-        for (const QJsonObject &o : objs)
-            out.append(o.toVariantMap());
+        for (const QJsonObject &o : objs) {
+            QVariantMap report = o.toVariantMap();
+            const qint64 timestamp =
+                static_cast<qint64>(o.value(QStringLiteral("timestamp")).toDouble());
+            if (timestamp > 0) {
+                const QDateTime dt = QDateTime::fromMSecsSinceEpoch(timestamp).toLocalTime();
+                report[QStringLiteral("dateLabel")] = dt.toString(QStringLiteral("dd/MM/yyyy HH:mm"));
+            }
+            out.append(report);
+        }
     }
     m_researchReports = out;
     emit researchReportsChanged();
@@ -9212,10 +9241,21 @@ void AppController::saveResearchReport(const QVariantMap &summary, const QString
     if (id.isEmpty()) return;
 
     const QString topic = summary.value(QStringLiteral("topic")).toString().trimmed();
+    const qint64 timestamp =
+        static_cast<qint64>(summary.value(QStringLiteral("timestamp")).toDouble());
+    const QString dateLabel = timestamp > 0
+        ? QDateTime::fromMSecsSinceEpoch(timestamp).toLocalTime()
+              .toString(QStringLiteral("dd/MM/yyyy HH:mm"))
+        : QString();
     QString persistedMarkdown = markdown;
     if (!topic.isEmpty()) {
-        persistedMarkdown = QStringLiteral("# Consulta original\n\n%1\n\n---\n\n%2")
-                                .arg(topic, markdown);
+        persistedMarkdown = QStringLiteral("# Consulta original\n\n%1\n\n%2---\n\n%3")
+                                .arg(topic,
+                                     dateLabel.isEmpty()
+                                         ? QString()
+                                         : QStringLiteral("**Fecha del reporte:** %1\n\n")
+                                               .arg(dateLabel),
+                                     markdown);
     }
 
     QFile md(dir + QLatin1Char('/') + id + QStringLiteral(".md"));
@@ -9774,7 +9814,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                         if (hits->size() >= 60) break;
                     }
                 } else {
-                    const QVector<ResearchHit> parsed = researchParseDdg(QString::fromUtf8(raw), 6);
+                    const QVector<ResearchHit> parsed = researchParseDdg(QString::fromUtf8(raw), 10);
                     for (const ResearchHit &h : parsed) {
                         addHit(h);
                         if (hits->size() >= 60) break;
@@ -9793,7 +9833,10 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "Generá entre 5 y 8 consultas web cortas y concretas para investigar el "
             "pedido siguiente. Cubrí por separado: documentación o fuentes primarias, "
             "modelos/nombres concretos, comparaciones técnicas y precio/stock en la "
-            "ubicación pedida. No repitas el pedido completo. Devolvé únicamente un "
+            "ubicación pedida. Si pide comprar en Argentina, incluí al menos tres "
+            "consultas orientadas a comercios argentinos, precios en ARS, MercadoLibre "
+            "y comparadores locales; buscá modelos concretos, no sólo categorías. "
+            "No repitas el pedido completo. Devolvé únicamente un "
             "array JSON de strings, sin Markdown.\n\nPedido: %1").arg(cleanTopic);
         QJsonObject payload{
             {QStringLiteral("model"), QStringLiteral("research-planner")},

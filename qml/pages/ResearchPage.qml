@@ -335,6 +335,9 @@ Item {
                                     Layout.fillWidth: true
                                     text: (modelData.modeLabel ?? root.modeLabel(modelData.mode ?? "auto"))
                                         + " · " + (modelData.sourceCount ?? 0) + " fuentes"
+                                        + ((modelData.dateLabel ?? "").length
+                                            ? " · " + modelData.dateLabel
+                                            : "")
                                     color: Theme.textMuted
                                     font.pixelSize: 10
                                     elide: Text.ElideRight

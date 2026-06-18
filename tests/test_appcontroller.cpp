@@ -31,6 +31,7 @@ private slots:
     void browserMcpEffectiveResolves();
     void browserTeachSkillsLifecycle();
     void readResearchReportPrependsLegacyTopic();
+    void researchReportsExposeFormattedDate();
 
 private:
     QTemporaryDir m_tmp;
@@ -104,6 +105,33 @@ void AppControllerTests::readResearchReportPrependsLegacyTopic()
     const QString report = app.readResearchReport(id);
     QVERIFY(report.startsWith(QStringLiteral(
         "# Consulta original\n\nConsulta completa del usuario\n\n---\n\n# Reporte")));
+}
+
+void AppControllerTests::researchReportsExposeFormattedDate()
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/research");
+    QVERIFY(QDir().mkpath(dir));
+    const qint64 timestamp =
+        QDateTime(QDate(2026, 6, 18), QTime(11, 30)).toMSecsSinceEpoch();
+
+    QFile index(dir + QStringLiteral("/index.json"));
+    QVERIFY(index.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    index.write(QJsonDocument(QJsonArray{
+        QJsonObject{
+            {QStringLiteral("id"), QStringLiteral("dated-report")},
+            {QStringLiteral("title"), QStringLiteral("Reporte con fecha")},
+            {QStringLiteral("timestamp"), static_cast<double>(timestamp)}
+        }
+    }).toJson());
+    index.close();
+
+    AppController app;
+    app.refreshResearchReports();
+    const QVariantList reports = app.researchReports();
+    QVERIFY(!reports.isEmpty());
+    QCOMPARE(reports.first().toMap().value(QStringLiteral("dateLabel")).toString(),
+             QStringLiteral("18/06/2026 11:30"));
 }
 
 void AppControllerTests::parseGpuPowerCsvParses()
