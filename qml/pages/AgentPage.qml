@@ -1575,15 +1575,23 @@ Item {
                     // estimación de positionViewAtEnd oscila (salta arriba/abajo).
                     property bool followBottom: true
 
+                    function minContentY() {
+                        return isFinite(originY) ? originY : 0
+                    }
+
+                    function maxContentY() {
+                        return minContentY() + Math.max(0, contentHeight - height)
+                    }
+
                     function scrollToBottom() {
-                        var maxY = Math.max(0, contentHeight - height)
-                        contentY = maxY
+                        contentY = maxContentY()
                     }
 
                     function normalizeViewport() {
-                        var maxY = Math.max(0, contentHeight - height)
-                        if (!isFinite(contentY) || contentY < 0) {
-                            contentY = 0
+                        var minY = minContentY()
+                        var maxY = maxContentY()
+                        if (!isFinite(contentY) || contentY < minY) {
+                            contentY = minY
                             return
                         }
                         if (contentY > maxY)
@@ -1597,9 +1605,10 @@ Item {
                         // Clamp duro cuando no hay streaming. agentRunning no sirve
                         // como condición: el agente queda activo mientras se restaura
                         // una sesión y Qt recalcula varias veces las alturas.
-                        var maxY = Math.max(0, contentHeight - height)
+                        var minY = minContentY()
+                        var maxY = maxContentY()
                         if (!root.hasTypingMessage
-                                && (!isFinite(contentY) || contentY < 0 || contentY > maxY)) {
+                                && (!isFinite(contentY) || contentY < minY || contentY > maxY)) {
                             normalizeViewport()
                             return
                         }
@@ -1625,8 +1634,7 @@ Item {
                         // un contentY grande puede quedar fuera del nuevo contenido y
                         // dejar el viewport completamente negro.
                         if (count === 0) {
-                            agentWheelAnim.stop()
-                            contentY = 0
+                            contentY = minContentY()
                             followBottom = true
                             return
                         }
@@ -1635,8 +1643,7 @@ Item {
                         viewportSettleTimer.restart()
                     }
                     onModelChanged: {
-                        agentWheelAnim.stop()
-                        contentY = 0
+                        contentY = minContentY()
                         followBottom = true
                         bottomTimer.restart()
                         viewportSettleTimer.restart()
@@ -1665,23 +1672,17 @@ Item {
                         }
                     }
 
-                    // Rueda del mouse: scroll animado y suave (el step nativo es
-                    // minúsculo frente a un contentHeight enorme).
-                    NumberAnimation { id: agentWheelAnim; target: msgList; property: "contentY"; duration: 90; easing.type: Easing.OutCubic }
+                    // Scroll 1:1 para touchpad y por líneas para rueda. No animar
+                    // contentY: reiniciar una animación por cada evento acumula
+                    // destinos obsoletos mientras ListView recalcula delegates altos.
                     WheelHandler {
                         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                         onWheel: function(ev) {
-                            var maxY = Math.max(0, msgList.contentHeight - msgList.height)
-                            // Acumular sobre el destino de la anim en curso (no sobre
-                            // contentY a mitad de animación) → spins rápidos no se cortan.
-                            var base = agentWheelAnim.running ? agentWheelAnim.to : msgList.contentY
-                            // Paso por muesca proporcional al viewport (~3 líneas reales),
-                            // mínimo 120px. angleDelta.y = 120 por muesca de rueda.
-                            var notch = ev.angleDelta.y / 120
-                            var step = Math.max(120, msgList.height * 0.33)
-                            var target = Math.max(0, Math.min(maxY, base - notch * step))
-                            if (target === base) { ev.accepted = true; return }
-                            agentWheelAnim.stop(); agentWheelAnim.from = msgList.contentY; agentWheelAnim.to = target; agentWheelAnim.start()
+                            var minY = msgList.minContentY()
+                            var maxY = msgList.maxContentY()
+                            var pixelY = ev.pixelDelta.y
+                            var delta = pixelY !== 0 ? pixelY : (ev.angleDelta.y / 120) * 72
+                            msgList.contentY = Math.max(minY, Math.min(maxY, msgList.contentY - delta))
                             ev.accepted = true
                         }
                     }

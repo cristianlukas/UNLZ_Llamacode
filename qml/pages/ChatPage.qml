@@ -1265,11 +1265,19 @@ Item {
                 // evitar oscilación con delegates de altura variable.
                 property bool followBottom: true
 
+                function minContentY() {
+                    return isFinite(originY) ? originY : 0
+                }
+
+                function maxContentY() {
+                    return minContentY() + Math.max(0, contentHeight - height)
+                }
+
                 function scrollToBottom() {
                     // Solo BAJAR, nunca subir: durante el streaming contentHeight
                     // oscila (re-estimación de delegados altos fuera de vista). Si
                     // siguiéramos esa oscilación hacia arriba, la vista saltaría.
-                    var maxY = Math.max(0, contentHeight - height)
+                    var maxY = maxContentY()
                     if (contentY < maxY)
                         contentY = maxY
                 }
@@ -1280,7 +1288,9 @@ Item {
                     // Clamp duro contra overscroll bajo el último mensaje. Solo en
                     // idle: durante el streaming el contentHeight oscila y el clamp
                     // pelearía con el auto-follow (scroll brusco).
-                    var maxY = Math.max(0, contentHeight - height)
+                    var minY = minContentY()
+                    var maxY = maxContentY()
+                    if (!App.chatGenerating && contentY < minY) { contentY = minY; return }
                     if (!App.chatGenerating && contentY > maxY) { contentY = maxY; return }
                     followBottom = (contentY >= maxY - 2)
                 }
@@ -1295,21 +1305,17 @@ Item {
                     onTriggered: if (msgList.followBottom) msgList.scrollToBottom()
                 }
 
-                // Scroll de rueda suave (animado). El step nativo de ListView es
-                // minúsculo frente a contenido largo; animamos cada paso para que
-                // se sienta fluido como el dropdown de Lanzar.
-                NumberAnimation { id: chatWheelAnim; target: msgList; property: "contentY"; duration: 90; easing.type: Easing.OutCubic }
+                // Scroll 1:1 para touchpad y por líneas para rueda. El movimiento
+                // directo evita que animaciones sucesivas peleen con el layout de
+                // mensajes de altura variable.
                 WheelHandler {
                     acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                     onWheel: function(ev) {
-                        var maxY = Math.max(0, msgList.contentHeight - msgList.height)
-                        // Acumular sobre el destino de la anim en curso → spins rápidos
-                        // no se cortan. Paso por muesca ~33% del viewport (mín 120px).
-                        var base = chatWheelAnim.running ? chatWheelAnim.to : msgList.contentY
-                        var step = Math.max(120, msgList.height * 0.33)
-                        var target = Math.max(0, Math.min(maxY, base - (ev.angleDelta.y / 120) * step))
-                        if (target === base) { ev.accepted = true; return }
-                        chatWheelAnim.stop(); chatWheelAnim.from = msgList.contentY; chatWheelAnim.to = target; chatWheelAnim.start()
+                        var minY = msgList.minContentY()
+                        var maxY = msgList.maxContentY()
+                        var pixelY = ev.pixelDelta.y
+                        var delta = pixelY !== 0 ? pixelY : (ev.angleDelta.y / 120) * 72
+                        msgList.contentY = Math.max(minY, Math.min(maxY, msgList.contentY - delta))
                         ev.accepted = true
                     }
                 }
