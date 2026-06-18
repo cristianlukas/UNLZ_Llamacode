@@ -220,8 +220,9 @@ static QStringList researchQueriesFor(const QString &topic, const QString &mode)
         queries << topic + QStringLiteral(" source evidence fact check");
         queries << topic + QStringLiteral(" controversy correction");
     } else {
-        queries << topic + QStringLiteral(" official docs latest");
-        queries << topic + QStringLiteral(" analysis risks limitations");
+        queries << topic + QStringLiteral(" official specifications manual");
+        queries << topic + QStringLiteral(" review comparison limitations");
+        queries << topic + QStringLiteral(" price availability Argentina");
     }
     queries.removeDuplicates();
     return queries.mid(0, 4);
@@ -9404,13 +9405,21 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         const QString sys = QStringLiteral(
             "Sos un investigador técnico. Sintetizá fuentes web en español. "
             "Separá hechos confirmados de inferencias, citá fuentes como [1], [2], "
-            "marcá contradicciones y no inventes evidencia.");
+            "marcá contradicciones y no inventes evidencia. Priorizá documentación "
+            "oficial, manuales y fichas técnicas para compatibilidad; usá tiendas y "
+            "comparadores sólo para precio y disponibilidad. Respondé exactamente la "
+            "pregunta: no reemplaces una recomendación concreta por próximos pasos.");
         const QString user = QStringLiteral(
             "Tema: %1\nModo: %2\n\n"
             "Usá el dossier de fuentes de abajo y devolvé un reporte Markdown con: "
             "Resumen ejecutivo, Hallazgos clave, Evidencia, Riesgos/limitaciones, "
             "Próximos pasos. Para Product/Compare agregá matriz de recomendación; "
-            "para How-to pasos; para Fact-check veredictos.\n\n%3")
+            "para How-to pasos; para Fact-check veredictos. Cuando compares hardware, "
+            "verificá en la documentación de cada modelo la topología de líneas PCIe, "
+            "velocidad eléctrica de cada slot, bifurcación, separación física y demás "
+            "restricciones relevantes. Cerrá con un veredicto explícito y modelos "
+            "específicos respaldados por las fuentes; si falta evidencia, decilo sin "
+            "convertir una suposición en recomendación.\n\n%3")
             .arg(cleanTopic, researchModeTitle(normalizedMode), dossier.left(30000));
 
         QJsonObject payload{
@@ -9482,6 +9491,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             };
             saveResearchReport(summary, report, full);
             setResearchState(false, 100, QStringLiteral("Reporte guardado."));
+            emit researchFinished(id, title);
         });
     };
 
@@ -9533,7 +9543,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     };
 
     *searchNext = [=](int index) {
-        if (index >= queries.size() || hits->size() >= maxPages) {
+        if (index >= queries.size()) {
             if (hits->isEmpty()) {
                 fail(QStringLiteral("No se encontraron resultados para la investigación."));
                 return;
@@ -9586,13 +9596,13 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                         addHit({o.value(QStringLiteral("title")).toString(),
                                 o.value(QStringLiteral("url")).toString(),
                                 o.value(QStringLiteral("content")).toString()});
-                        if (hits->size() >= maxPages) break;
+                        if (hits->size() >= maxPages * 3) break;
                     }
                 } else {
                     const QVector<ResearchHit> parsed = researchParseDdg(QString::fromUtf8(raw), 6);
                     for (const ResearchHit &h : parsed) {
                         addHit(h);
-                        if (hits->size() >= maxPages) break;
+                        if (hits->size() >= maxPages * 3) break;
                     }
                 }
             }

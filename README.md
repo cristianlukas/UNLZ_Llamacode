@@ -509,7 +509,9 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   preset `.ini`; el chat/agente conmutan por el campo `model` del request.
 - **GPU power limit**: fija el límite de potencia (W) por GPU vía `nvidia-smi`
   (en Windows se relanza elevado), global o por perfil.
-- **Deep Research**: investigación multi-página con reportes persistidos.
+- **Deep Research**: investigación multi-consulta y multi-página con reportes
+  persistidos; al finalizar actualiza la lista, selecciona el reporte nuevo y
+  muestra una notificación automáticamente.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**
   (endpoint + key), con test de conexión.
 - **ControlApi / headless**: toda feature es controlable por API local (target

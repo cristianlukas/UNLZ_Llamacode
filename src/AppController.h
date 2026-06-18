@@ -660,6 +660,7 @@ signals:
                           double quality);
     void researchChanged();
     void researchReportsChanged();
+    void researchFinished(const QString &id, const QString &title);
     void hardwareSummaryChanged();
     void modelRecommendationsChanged();
     void modelDownloadChanged();

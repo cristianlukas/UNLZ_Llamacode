@@ -277,7 +277,7 @@ ApplicationWindow {
         onPressed: window.startResize(Qt.BottomEdge | Qt.RightEdge)
     }
 
-    // Global error toast
+    // Global status/error toast
     Popup {
         id: errorToast
         parent: Overlay.overlay
@@ -287,17 +287,23 @@ ApplicationWindow {
         modal: false
 
         property string message: ""
-        function show(msg) { message = msg; open(); closeTimer.start() }
+        property bool success: false
+        function show(msg, ok) {
+            message = msg
+            success = ok ?? false
+            open()
+            closeTimer.restart()
+        }
 
         background: Rectangle {
-            color: Theme.errorBg; radius: 8
-            border.color: Theme.errorBorder; border.width: 1
+            color: errorToast.success ? Theme.surfaceBg : Theme.errorBg; radius: 8
+            border.color: errorToast.success ? Theme.accent : Theme.errorBorder; border.width: 1
         }
 
         Text {
             anchors.centerIn: parent
             text: errorToast.message
-            color: Theme.errorText; font.pixelSize: 13
+            color: errorToast.success ? Theme.textPrimary : Theme.errorText; font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             width: parent.width - 24
@@ -841,6 +847,9 @@ ApplicationWindow {
     Connections {
         target: App
         function onServerError(message) { errorToast.show(message) }
+        function onResearchFinished(id, title) {
+            errorToast.show("Investigación terminada: " + title, true)
+        }
         function onSetupStateChanged() {
             maybeCreateInitialProfile()
             if (App.needsSetup) setupPopup.open()

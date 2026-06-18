@@ -32,6 +32,14 @@ Item {
 
     Component.onCompleted: App.refreshResearchReports()
 
+    Connections {
+        target: App
+        function onResearchFinished(id, title) {
+            App.refreshResearchReports()
+            root.selectReport(id)
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
