@@ -12,6 +12,8 @@ Item {
     function openEditor(id) {
         editId = id
         stepsModel.clear()
+        previewBox.visible = false
+        previewArea.text = ""
         if (id.length > 0) {
             const t = App.taskStore.get(id)
             nameField.text = t.name || ""
@@ -64,14 +66,18 @@ Item {
                 spacing: 10
                 Switch {
                     id: schedSwitch
+                    text: ""
+                    Layout.preferredWidth: 44
+                    Layout.alignment: Qt.AlignVCenter
                     checked: App.tasksSchedulerEnabled
                     onToggled: App.tasksSchedulerEnabled = checked
-                    contentItem: Text {
-                        text: "Scheduler cron " + (App.tasksSchedulerEnabled ? "activo" : "apagado")
-                        color: App.tasksSchedulerEnabled ? Theme.accent : Theme.textSecondary
-                        font.pixelSize: 12; verticalAlignment: Text.AlignVCenter
-                        leftPadding: schedSwitch.indicator.width + 8
-                    }
+                }
+                Text {
+                    text: "Scheduler cron " + (App.tasksSchedulerEnabled ? "activo" : "apagado")
+                    color: App.tasksSchedulerEnabled ? Theme.accent : Theme.textSecondary
+                    font.pixelSize: 12
+                    verticalAlignment: Text.AlignVCenter
+                    Layout.alignment: Qt.AlignVCenter
                 }
                 Text {
                     Layout.fillWidth: true
@@ -115,6 +121,8 @@ Item {
                         radius: 8
                         color: Theme.surfaceBg
                         border.color: Theme.borderColor
+                        property string taskId: model.id || ""
+                        property string taskName: model.name || ""
 
                         RowLayout {
                             anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
@@ -148,17 +156,17 @@ Item {
 
                             LcButton {
                                 text: "▶ Ejecutar"
-                                onClicked: App.runTask(model.id)
+                                onClicked: App.runTask(taskId)
                             }
                             LcButton {
                                 text: "Editar"
                                 secondary: true
-                                onClicked: root.openEditor(model.id)
+                                onClicked: root.openEditor(taskId)
                             }
                             LcButton {
                                 text: "✕"
                                 secondary: true
-                                onClicked: { delConfirm.taskId = model.id; delConfirm.taskName = model.name; delConfirm.open() }
+                                onClicked: { delConfirm.taskId = taskId; delConfirm.taskName = taskName; delConfirm.open() }
                             }
                         }
                     }
