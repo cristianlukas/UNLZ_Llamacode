@@ -207,6 +207,17 @@ static QStringList researchQueriesFor(const QString &topic, const QString &mode)
 {
     QStringList queries;
     queries << topic;
+    const QString lower = topic.toLower();
+    const bool hardwarePurchase =
+        lower.contains(QStringLiteral("motherboard"))
+        || lower.contains(QStringLiteral("placa madre"))
+        || lower.contains(QStringLiteral("gpu"))
+        || lower.contains(QStringLiteral("rtx"));
+    if (hardwarePurchase) {
+        queries << topic + QStringLiteral(" PCIe x8 x8 specification manual");
+        queries << topic + QStringLiteral(" modelos recomendados compatibilidad dual GPU");
+        queries << topic + QStringLiteral(" precio stock Argentina comprar");
+    }
     if (mode == QLatin1String("compare")) {
         queries << topic + QStringLiteral(" comparison benchmarks alternatives");
         queries << topic + QStringLiteral(" pros cons limitations");
@@ -225,7 +236,58 @@ static QStringList researchQueriesFor(const QString &topic, const QString &mode)
         queries << topic + QStringLiteral(" price availability Argentina");
     }
     queries.removeDuplicates();
-    return queries.mid(0, 4);
+    return queries.mid(0, hardwarePurchase ? 6 : 4);
+}
+
+static int researchHitScore(const ResearchHit &hit)
+{
+    const QUrl url(hit.url);
+    const QString host = url.host().toLower();
+    const QString path = url.path().toLower();
+    const QString haystack = (hit.title + QLatin1Char(' ') + hit.snippet + QLatin1Char(' ')
+                              + path).toLower();
+    int score = 0;
+    if (host.contains(QStringLiteral("asus.com"))
+        || host.contains(QStringLiteral("msi.com"))
+        || host.contains(QStringLiteral("gigabyte.com"))
+        || host.contains(QStringLiteral("asrock.com")))
+        score += 80;
+    if (haystack.contains(QStringLiteral("manual"))
+        || haystack.contains(QStringLiteral("specification"))
+        || haystack.contains(QStringLiteral("specifications"))
+        || haystack.contains(QStringLiteral("support")))
+        score += 35;
+    if (haystack.contains(QStringLiteral("pcie"))
+        || haystack.contains(QStringLiteral("x8/x8"))
+        || haystack.contains(QStringLiteral("dual gpu")))
+        score += 25;
+    if (haystack.contains(QStringLiteral("precio"))
+        || haystack.contains(QStringLiteral("stock"))
+        || haystack.contains(QStringLiteral("comprar")))
+        score += 20;
+    if (path.isEmpty() || path == QLatin1String("/")) score -= 60;
+    if (haystack.contains(QStringLiteral("categoria"))
+        || haystack.contains(QStringLiteral("category")))
+        score -= 30;
+    return score;
+}
+
+static bool researchTextLooksUseful(const QString &text, const ResearchHit &hit)
+{
+    const QString simplified = text.simplified();
+    if (simplified.size() < 500) return false;
+    const QString lower = simplified.left(2500).toLower();
+    const QString path = QUrl(hit.url).path();
+    if ((path.isEmpty() || path == QLatin1String("/"))
+        && !lower.contains(QStringLiteral("specification"))
+        && !lower.contains(QStringLiteral("precio")))
+        return false;
+    const int navigationSignals =
+        lower.count(QStringLiteral("iniciar sesión"))
+        + lower.count(QStringLiteral("crear cuenta"))
+        + lower.count(QStringLiteral("menú"))
+        + lower.count(QStringLiteral("categorías"));
+    return navigationSignals < 3;
 }
 
 static QString researchModeTitle(const QString &mode)
@@ -9503,8 +9565,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     };
 
     *fetchNext = [=](int index) {
-        const int wanted = qMin(maxPages, hits->size());
-        if (index >= wanted) {
+        if (sources->size() >= maxPages || index >= hits->size()) {
             if (sources->isEmpty()) {
                 fail(QStringLiteral("No se pudieron descargar fuentes útiles."));
                 return;
@@ -9514,8 +9575,9 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         }
 
         const ResearchHit h = hits->at(index);
-        setResearchState(true, 35 + (index * 45 / qMax(1, wanted)),
-                         QStringLiteral("Leyendo fuente %1/%2...").arg(index + 1).arg(wanted));
+        setResearchState(true, 35 + (sources->size() * 45 / qMax(1, maxPages)),
+                         QStringLiteral("Validando fuente %1/%2...")
+                             .arg(index + 1).arg(hits->size()));
         QNetworkRequest req(QUrl(h.url));
         req.setHeader(QNetworkRequest::UserAgentHeader, QByteArrayLiteral("Mozilla/5.0 LlamaCode/0.1"));
         req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
@@ -9534,7 +9596,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             QString text;
             if (ok && !raw.isEmpty())
                 text = researchCleanHtmlToText(QString::fromUtf8(raw)).left(4200);
-            if (!text.trimmed().isEmpty()) {
+            if (researchTextLooksUseful(text, h)) {
                 sources->append(QJsonObject{
                     {QStringLiteral("title"), h.title.isEmpty() ? h.url : h.title},
                     {QStringLiteral("url"), h.url},
@@ -9555,6 +9617,10 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                 fail(QStringLiteral("No se encontraron resultados para la investigación."));
                 return;
             }
+            std::stable_sort(hits->begin(), hits->end(),
+                             [](const ResearchHit &a, const ResearchHit &b) {
+                                 return researchHitScore(a) > researchHitScore(b);
+                             });
             (*fetchNext)(0);
             return;
         }
@@ -9603,13 +9669,13 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                         addHit({o.value(QStringLiteral("title")).toString(),
                                 o.value(QStringLiteral("url")).toString(),
                                 o.value(QStringLiteral("content")).toString()});
-                        if (hits->size() >= maxPages * 3) break;
+                        if (hits->size() >= 60) break;
                     }
                 } else {
                     const QVector<ResearchHit> parsed = researchParseDdg(QString::fromUtf8(raw), 6);
                     for (const ResearchHit &h : parsed) {
                         addHit(h);
-                        if (hits->size() >= maxPages * 3) break;
+                        if (hits->size() >= 60) break;
                     }
                 }
             }

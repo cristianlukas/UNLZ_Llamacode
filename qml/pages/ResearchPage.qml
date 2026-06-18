@@ -378,12 +378,15 @@ Item {
                 color: Theme.baseBg
 
                 ScrollView {
+                    id: reportScroll
                     anchors.fill: parent
                     anchors.margins: 18
+                    contentWidth: availableWidth
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                     ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                     TextEdit {
-                        width: parent.width
+                        width: reportScroll.availableWidth
                         text: root.selectedReportText.length > 0
                             ? root.selectedReportText
                             : "Seleccioná un reporte para previsualizarlo."

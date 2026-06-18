@@ -512,7 +512,9 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 - **Deep Research**: investigación multi-consulta y multi-página con reportes
   persistidos; al finalizar actualiza la lista, selecciona el reporte nuevo y
   muestra una notificación automáticamente. La consulta original queda visible
-  y persistida como encabezado antes del reporte.
+  y persistida como encabezado antes del reporte. El visor ajusta el texto al
+  ancho disponible; la búsqueda prioriza fuentes técnicas concretas y descarta
+  portadas/categorías sin evidencia antes de consumir el cupo de páginas.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**
   (endpoint + key), con test de conexión.
 - **ControlApi / headless**: toda feature es controlable por API local (target
