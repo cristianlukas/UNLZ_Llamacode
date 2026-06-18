@@ -373,17 +373,24 @@ Item {
             Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider }
 
             Rectangle {
+                id: reportPane
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 color: Theme.baseBg
 
                 ScrollView {
                     id: reportScroll
-                    anchors.fill: parent
-                    anchors.margins: 18
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        left: parent.left
+                        right: reportBar.left
+                        margins: 18
+                        rightMargin: 8
+                    }
                     contentWidth: availableWidth
                     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                    ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
+                    ScrollBar.vertical: reportBar
 
                     TextEdit {
                         width: reportScroll.availableWidth
@@ -396,6 +403,18 @@ Item {
                         readOnly: true
                         selectByMouse: true
                     }
+                }
+
+                LcScrollBar {
+                    id: reportBar
+                    parent: reportPane
+                    anchors {
+                        top: parent.top
+                        bottom: parent.bottom
+                        right: parent.right
+                        margins: 4
+                    }
+                    policy: ScrollBar.AsNeeded
                 }
             }
         }

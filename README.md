@@ -513,8 +513,10 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   persistidos; al finalizar actualiza la lista, selecciona el reporte nuevo y
   muestra una notificación automáticamente. La consulta original queda visible
   y persistida como encabezado antes del reporte. El visor ajusta el texto al
-  ancho disponible; la búsqueda prioriza fuentes técnicas concretas y descarta
-  portadas/categorías sin evidencia antes de consumir el cupo de páginas.
+  ancho disponible y reserva una columna propia para la scrollbar. Antes de
+  buscar, el modelo genera subconsultas concretas para fuentes primarias,
+  productos, comparaciones y precios; luego se priorizan fuentes técnicas y se
+  descartan portadas/categorías sin evidencia antes de consumir el cupo.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**
   (endpoint + key), con test de conexión.
 - **ControlApi / headless**: toda feature es controlable por API local (target

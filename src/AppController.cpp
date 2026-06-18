@@ -299,6 +299,25 @@ static QString researchModeTitle(const QString &mode)
     return QStringLiteral("Auto");
 }
 
+static QStringList researchParsePlannedQueries(const QString &content)
+{
+    QString json = content.trimmed();
+    const int begin = json.indexOf(QLatin1Char('['));
+    const int end = json.lastIndexOf(QLatin1Char(']'));
+    if (begin < 0 || end <= begin) return {};
+    json = json.mid(begin, end - begin + 1);
+
+    QStringList queries;
+    const QJsonArray arr = QJsonDocument::fromJson(json.toUtf8()).array();
+    for (const QJsonValue &value : arr) {
+        const QString query = value.toString().simplified();
+        if (query.size() >= 8 && query.size() <= 180 && !queries.contains(query))
+            queries.append(query);
+        if (queries.size() >= 8) break;
+    }
+    return queries;
+}
+
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     // Reenviar progreso/fin de descarga de modelos STT a QML.
@@ -9425,7 +9444,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
 
     const QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     const QString normalizedMode = mode.trimmed().isEmpty() ? QStringLiteral("auto") : mode.trimmed();
-    const QStringList queries = researchQueriesFor(cleanTopic, normalizedMode);
+    auto queries = std::make_shared<QStringList>(
+        researchQueriesFor(cleanTopic, normalizedMode));
     auto hits = std::make_shared<QVector<ResearchHit>>();
     auto sourceTexts = std::make_shared<QStringList>();
     auto sources = std::make_shared<QJsonArray>();
@@ -9451,6 +9471,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     auto synthesize = std::make_shared<std::function<void()>>();
     auto fetchNext = std::make_shared<std::function<void(int)>>();
     auto searchNext = std::make_shared<std::function<void(int)>>();
+    auto planQueries = std::make_shared<std::function<void()>>();
 
     *synthesize = [=]() {
         setResearchState(true, 82, QStringLiteral("Sintetizando reporte..."));
@@ -9612,7 +9633,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     };
 
     *searchNext = [=](int index) {
-        if (index >= queries.size()) {
+        if (index >= queries->size()) {
             if (hits->isEmpty()) {
                 fail(QStringLiteral("No se encontraron resultados para la investigación."));
                 return;
@@ -9625,8 +9646,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             return;
         }
 
-        const QString query = queries.at(index);
-        setResearchState(true, 5 + (index * 25 / qMax(1, queries.size())),
+        const QString query = queries->at(index);
+        setResearchState(true, 5 + (index * 25 / qMax(1, queries->size())),
                          QStringLiteral("Buscando: %1").arg(query.left(80)));
 
         const QString searxng = qEnvironmentVariable("LLAMACODE_SEARXNG_URL").trimmed();
@@ -9685,7 +9706,61 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         });
     };
 
-    (*searchNext)(0);
+    *planQueries = [=]() {
+        setResearchState(true, 2, QStringLiteral("Planificando búsquedas específicas..."));
+        const QString prompt = QStringLiteral(
+            "Generá entre 5 y 8 consultas web cortas y concretas para investigar el "
+            "pedido siguiente. Cubrí por separado: documentación o fuentes primarias, "
+            "modelos/nombres concretos, comparaciones técnicas y precio/stock en la "
+            "ubicación pedida. No repitas el pedido completo. Devolvé únicamente un "
+            "array JSON de strings, sin Markdown.\n\nPedido: %1").arg(cleanTopic);
+        QJsonObject payload{
+            {QStringLiteral("model"), QStringLiteral("research-planner")},
+            {QStringLiteral("messages"), QJsonArray{
+                QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                            {QStringLiteral("content"), prompt}}}},
+            {QStringLiteral("stream"), false},
+            {QStringLiteral("temperature"), 0.1},
+            {QStringLiteral("max_tokens"), 400},
+            {QStringLiteral("reasoning_budget"), 0},
+            {QStringLiteral("chat_template_kwargs"),
+             QJsonObject{{QStringLiteral("enable_thinking"), false}}}
+        };
+        QNetworkRequest req(QUrl(serverBaseUrl() + QStringLiteral("/v1/chat/completions")));
+        req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+        req.setTransferTimeout(60000);
+        m_researchReply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
+        connect(m_researchReply, &QNetworkReply::finished, this, [=]() {
+            QNetworkReply *reply = m_researchReply;
+            m_researchReply = nullptr;
+            if (!reply) return;
+            const QByteArray raw = reply->readAll();
+            const bool ok = reply->error() == QNetworkReply::NoError;
+            reply->deleteLater();
+            if (!m_researchRunning) return;
+
+            if (ok) {
+                const QJsonArray choices = QJsonDocument::fromJson(raw).object()
+                                               .value(QStringLiteral("choices")).toArray();
+                if (!choices.isEmpty()) {
+                    const QString content = choices.first().toObject()
+                                                .value(QStringLiteral("message")).toObject()
+                                                .value(QStringLiteral("content")).toString();
+                    const QStringList planned = researchParsePlannedQueries(content);
+                    if (planned.size() >= 3) {
+                        *queries = planned;
+                        const QStringList fallback =
+                            researchQueriesFor(cleanTopic, normalizedMode);
+                        for (const QString &query : fallback)
+                            if (!queries->contains(query)) queries->append(query);
+                    }
+                }
+            }
+            (*searchNext)(0);
+        });
+    };
+
+    (*planQueries)();
 }
 
 void AppController::cancelResearch()
