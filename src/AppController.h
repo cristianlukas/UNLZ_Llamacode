@@ -36,6 +36,7 @@ class AppController : public QObject
     Q_PROPERTY(TaskStore*          taskStore       READ taskStore       CONSTANT)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
+    Q_PROPERTY(bool canRunTask READ canRunTask NOTIFY taskRunAvailabilityChanged)
     Q_PROPERTY(QString runningTaskId READ runningTaskId NOTIFY taskRunStateChanged)
     Q_PROPERTY(QString runningTaskName READ runningTaskName NOTIFY taskRunStateChanged)
     Q_PROPERTY(QString runningTaskPhase READ runningTaskPhase NOTIFY taskRunStateChanged)
@@ -146,6 +147,7 @@ public:
     bool tasksSchedulerEnabled() const { return m_scheduler && m_scheduler->enabled(); }
     void setTasksSchedulerEnabled(bool on);
     bool taskRunning() const { return !m_runningTaskId.isEmpty(); }
+    bool canRunTask() const;
     QString runningTaskId() const { return m_runningTaskId; }
     QString runningTaskName() const { return m_runningTaskName; }
     QString runningTaskPhase() const { return m_runningTaskPhase; }
@@ -677,6 +679,7 @@ signals:
     void modelDownloadChanged();
     void tasksSchedulerChanged();
     void taskRunStateChanged();
+    void taskRunAvailabilityChanged();
     void taskRunFinished(const QString &id, const QString &name, const QString &status,
                          const QString &summary, bool silentUnlessError);
 
@@ -719,6 +722,8 @@ private:
     void onAgentTurnFinished();
     void finishRunningTask(const QString &status, const QString &summary);
     QString latestAgentAssistantText() const;
+    bool agentBackendBusy() const;
+    void prepareTaskAgentSession();
 
     QProcess *m_proc = nullptr;
     QProcess *m_installerProc = nullptr;

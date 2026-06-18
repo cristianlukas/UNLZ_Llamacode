@@ -697,6 +697,12 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Si el **agente ya corre**, lo usa tal cual (no lo apaga).
 - Si **no hay agente**, auto-inicia servidor + agente (perfil de la Task o el
   activo), ejecuta al quedar listo y **lo apaga** al terminar el turno.
+- El botón de ejecutar queda deshabilitado mientras servidor/agente están
+  cargando, el servidor aún no está `ready`, el agente está ocupado o ya hay una
+  Task en curso.
+- Cada ejecución prepara una sesión limpia del agente antes de enviar el prompt,
+  para no heredar historial previo ni disparar compactaciones por conversaciones
+  ajenas a la automatización.
 - Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
   la Task no se marca como finalizada hasta completar esa verificación.

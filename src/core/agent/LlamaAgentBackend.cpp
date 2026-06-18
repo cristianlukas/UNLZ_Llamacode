@@ -3068,6 +3068,16 @@ void LlamaAgentBackend::newSession()
     ensureSession();        // crea sesión nueva + system prompt + persiste
 }
 
+void LlamaAgentBackend::newTaskSession()
+{
+    saveCurrentSession();
+    m_sessionId.clear();
+    m_messages.clear();
+    m_apiMessages = {};
+    m_curAsstIdx = -1;
+    ensureSession();
+}
+
 void LlamaAgentBackend::newSessionInProject(const QString &projectDir)
 {
     if (!projectDir.isEmpty() && QFileInfo(projectDir).isDir()) m_cwd = projectDir;

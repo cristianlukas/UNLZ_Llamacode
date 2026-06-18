@@ -167,8 +167,12 @@ Item {
                             }
 
                             LcButton {
-                                text: App.runningTaskId === taskId ? "Ejecutando..." : "▶ Ejecutar"
-                                enabled: !App.taskRunning
+                                text: App.runningTaskId === taskId
+                                      ? "Ejecutando..."
+                                      : (!App.canRunTask && (App.agentStarting || (App.serverRunning && !App.serverReady))
+                                         ? "Cargando..."
+                                         : "▶ Ejecutar")
+                                enabled: App.canRunTask
                                 onClicked: App.runTask(taskId)
                             }
                             LcButton {

@@ -527,6 +527,11 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(&m_binaries, &BinaryRegistry::countChanged, this, &AppController::setupStateChanged);
     connect(&m_catalog, &ModelCatalog::countChanged, this, &AppController::setupStateChanged);
     connect(&m_profiles, &ProfileManager::launchesChanged, this, &AppController::setupStateChanged);
+    connect(this, &AppController::taskRunStateChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::agentStartingChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::agentRunningChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::serverRunningChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::serverReadyChanged, this, &AppController::taskRunAvailabilityChanged);
 
     // Scheduler de Tasks (cron in-app). taskDue→runTask. El toggle global persiste.
     m_scheduler = new TaskScheduler(&m_tasks, this);
@@ -2384,6 +2389,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
             emit agentStreamingChanged();
         }
         emit agentMessagesChanged();
+        emit taskRunAvailabilityChanged();
     });
     // Streaming incremental: refresca SÓLO la burbuja activa, sin re-bindear toda
     // la lista (evita re-instanciar todos los delegates por token).
@@ -2409,7 +2415,10 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     connect(b, &IAgentBackend::logAppended, this, [this](const QString &chunk) {
         appendAgentEvent(QStringLiteral("backend"), chunk);
     });
-    connect(b, &IAgentBackend::turnFinished, this, &AppController::onAgentTurnFinished);
+    connect(b, &IAgentBackend::turnFinished, this, [this]() {
+        onAgentTurnFinished();
+        emit taskRunAvailabilityChanged();
+    });
     connect(b, &IAgentBackend::runningChanged, this, [this, b]() {
         if (m_agentStarting) {
             m_agentStarting = false;
@@ -3296,6 +3305,51 @@ void AppController::sendToAgent(const QString &text)
     m_agentProc->write((text + QLatin1Char('\n')).toUtf8());
 }
 
+bool AppController::agentBackendBusy() const
+{
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        return cb->isBusy();
+    return false;
+}
+
+bool AppController::canRunTask() const
+{
+    if (!m_runningTaskId.isEmpty())
+        return false;
+    if (agentStarting())
+        return false;
+    if (m_serverStopping)
+        return false;
+    if (serverRunning() && !m_serverReady)
+        return false;
+    if (agentBackendBusy())
+        return false;
+    return true;
+}
+
+void AppController::prepareTaskAgentSession()
+{
+    if (m_agentBackend && m_agentBackend->running()) {
+        if (!agentBackendBusy()) {
+            if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+                cb->newTaskSession();
+            else
+                m_agentBackend->newSession();
+        }
+        m_agentMessages = m_agentBackend->messages();
+        emit agentMessagesChanged();
+    } else if (m_piActive) {
+        const QString sessDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+                                + QStringLiteral("/pi-sessions");
+        QDir().mkpath(sessDir);
+        m_piSessionPath = sessDir + QStringLiteral("/llamacode-task-")
+                          + QString::number(QDateTime::currentMSecsSinceEpoch()) + QStringLiteral(".json");
+        m_agentMessages.clear();
+        m_currentAssistantIdx = -1;
+        emit agentMessagesChanged();
+    }
+}
+
 void AppController::runTask(const QString &id)
 {
     const QVariantMap task = m_tasks.get(id);
@@ -3310,6 +3364,14 @@ void AppController::runTask(const QString &id)
         emit serverError(QStringLiteral("Ya hay una Task en ejecución."));
         emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(), QStringLiteral("error"),
                              QStringLiteral("Ya hay una Task en ejecución."), false);
+        return;
+    }
+
+    if (!canRunTask()) {
+        const QString msg = QStringLiteral("Esperá a que el servidor/agente termine de cargar o finalice el turno actual antes de ejecutar una Task.");
+        emit serverError(msg);
+        emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(), QStringLiteral("error"),
+                             msg, task.value(QStringLiteral("silentUnlessError"), false).toBool());
         return;
     }
 
@@ -3329,7 +3391,11 @@ void AppController::runTask(const QString &id)
                          || m_piActive
                          || (m_agentProc && m_agentProc->state() == QProcess::Running);
     if (agentUp) {
-        // Agente ya corriendo: usarlo tal cual, sin apagarlo.
+        // Agente ya corriendo: aislar la Task en una sesión limpia para no
+        // heredar historial/compactación de una charla anterior.
+        prepareTaskAgentSession();
+        m_runningTaskLogStart = m_agentLog.size();
+        appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
         sendToAgent(prompt);
         return;
     }
@@ -3359,10 +3425,18 @@ void AppController::dispatchPendingScheduledTask()
 {
     if (m_pendingScheduledTaskId.isEmpty()) return;
     if (!(m_agentBackend && m_agentBackend->running())) return;
+    if (agentBackendBusy()) {
+        QTimer::singleShot(250, this, [this]() { dispatchPendingScheduledTask(); });
+        return;
+    }
     const QString id = m_pendingScheduledTaskId;
     m_pendingScheduledTaskId.clear();
     const QVariantMap task = m_tasks.get(id);
     if (task.isEmpty()) { m_scheduledAutoStop = false; return; }
+    prepareTaskAgentSession();
+    m_runningTaskLogStart = m_agentLog.size();
+    appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.")
+                     .arg(task.value(QStringLiteral("name")).toString()));
     sendToAgent(TaskStore::composePrompt(task));
 }
 

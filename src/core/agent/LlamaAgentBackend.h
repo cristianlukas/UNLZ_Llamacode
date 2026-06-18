@@ -46,6 +46,7 @@ public:
     void editMessage(int msgIndex, const QString &newText);
 
     void newSession() override;
+    void newTaskSession();
     void newSessionInProject(const QString &projectDir) override;
     void switchSession(const QString &sessionId) override;
     void renameSession(const QString &sessionId, const QString &title) override;
@@ -128,6 +129,7 @@ public:
     QString currentProjectDir() const override { return m_cwd; }
     QVariantList messages() const override { return m_messages; }
     QVariantList sessions() const override { return m_sessions; }
+    bool isBusy() const;               // turno/tool/compactación en curso
 
 private:
     // Loop
@@ -166,7 +168,6 @@ private:
     void cancelAllSubs();
     static constexpr int kMaxParallelSubs = 3;   // subs concurrentes (no saturar el server)
 
-    bool isBusy() const;               // turno/tool/compactación en curso
     void interruptForSteer();          // aborta y deja m_apiMessages consistente
     void repairDanglingToolCalls();    // cierra tool_calls sin respuesta tras abortar
     void finalizeLiveToolCard(bool cancelled);  // cierra tarjeta run_shell en vivo
