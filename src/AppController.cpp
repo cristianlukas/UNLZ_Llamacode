@@ -474,6 +474,39 @@ static QStringList researchParsePlannedQueries(const QString &content)
     return queries;
 }
 
+struct ResearchReflection {
+    QStringList learnings;
+    QStringList followUpQueries;
+    QStringList unresolved;
+    bool complete = false;
+};
+
+static ResearchReflection researchParseReflection(const QString &content)
+{
+    ResearchReflection reflection;
+    QString json = content.trimmed();
+    const int begin = json.indexOf(QLatin1Char('{'));
+    const int end = json.lastIndexOf(QLatin1Char('}'));
+    if (begin < 0 || end <= begin) return reflection;
+    const QJsonObject obj =
+        QJsonDocument::fromJson(json.mid(begin, end - begin + 1).toUtf8()).object();
+    auto readStrings = [](const QJsonArray &array, int limit) {
+        QStringList out;
+        for (const QJsonValue &value : array) {
+            const QString text = value.toString().simplified();
+            if (!text.isEmpty() && !out.contains(text)) out.append(text);
+            if (out.size() >= limit) break;
+        }
+        return out;
+    };
+    reflection.learnings = readStrings(obj.value(QStringLiteral("learnings")).toArray(), 12);
+    reflection.followUpQueries =
+        readStrings(obj.value(QStringLiteral("followUpQueries")).toArray(), 10);
+    reflection.unresolved = readStrings(obj.value(QStringLiteral("unresolved")).toArray(), 8);
+    reflection.complete = obj.value(QStringLiteral("complete")).toBool(false);
+    return reflection;
+}
+
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     // Reenviar progreso/fin de descarga de modelos STT a QML.
@@ -9894,6 +9927,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     auto searchLogs = std::make_shared<QStringList>();
     auto fetchedUrls = std::make_shared<QSet<QString>>();
     auto refinementRound = std::make_shared<int>(0);
+    auto learnings = std::make_shared<QStringList>();
+    auto unresolvedQuestions = std::make_shared<QStringList>();
     const bool purchaseResearch =
         cleanTopic.contains(QRegularExpression(
             QStringLiteral("(?i)compr|precio|stock|motherboard|placa madre|gpu|rtx")));
@@ -9959,6 +9994,15 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
         dossier += QStringLiteral("# Dossier: %1\n\n").arg(cleanTopic);
         dossier += QStringLiteral("Mode: %1\n\n").arg(researchModeTitle(normalizedMode));
         dossier += QStringLiteral("## Search log\n%1\n\n").arg(searchLogs->join(QLatin1Char('\n')));
+        dossier += QStringLiteral("## Learnings compressed\n%1\n\n")
+                       .arg(learnings->isEmpty()
+                                ? QStringLiteral("(sin compresión intermedia)")
+                                : QStringLiteral("- ") + learnings->join(QStringLiteral("\n- ")));
+        dossier += QStringLiteral("## Unresolved questions\n%1\n\n")
+                       .arg(unresolvedQuestions->isEmpty()
+                                ? QStringLiteral("(ninguna)")
+                                : QStringLiteral("- ")
+                                      + unresolvedQuestions->join(QStringLiteral("\n- ")));
         dossier += QStringLiteral("## Sources\n%1\n\n").arg(sourceLines.join(QLatin1Char('\n')));
         dossier += QStringLiteral("## Extracts\n%1\n").arg(sourceTexts->join(QStringLiteral("\n\n")));
 
@@ -9984,14 +10028,17 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             "veredicto. Si la evidencia comercial es insuficiente, enumerá exactamente "
             "qué búsquedas se hicieron y qué alternativas sí aparecieron, sin afirmar "
             "que no hay stock en todo el mercado. La fecha real de esta investigación "
-            "es %1: no inventes fechas anteriores ni llames 'actual' a datos sin fecha.")
+            "es %1: no inventes fechas anteriores ni llames 'actual' a datos sin fecha. "
+            "Usá primero los learnings comprimidos y luego los extractos como respaldo. "
+            "No omitas un learning y no ocultes preguntas no resueltas.")
             .arg(QDate::currentDate().toString(QStringLiteral("dd/MM/yyyy")));
         const QString user = QStringLiteral(
             "Tema: %1\nModo: %2\n\n"
             "Usá el dossier de fuentes de abajo y devolvé un reporte Markdown con: "
             "Resumen ejecutivo, Hallazgos clave, Evidencia, Precios y stock, Matriz de "
             "recomendación, Riesgos/limitaciones y Próximos pasos. El reporte debe "
-            "desarrollar la evidencia disponible con detalle suficiente y evitar "
+            "tener profundidad equivalente a por lo menos tres páginas, incorporar "
+            "todos los learnings relevantes, desarrollar la evidencia con detalle y evitar "
             "conclusiones absolutas basadas en pocas tiendas. Para Product/Compare "
             "agregá matriz de recomendación; "
             "para How-to pasos; para Fact-check veredictos. Cuando compares hardware, "
@@ -10011,7 +10058,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                             {QStringLiteral("content"), user}}}},
             {QStringLiteral("stream"), false},
             {QStringLiteral("temperature"), 0.2},
-            {QStringLiteral("max_tokens"), 4200},
+            {QStringLiteral("max_tokens"), 6500},
             {QStringLiteral("cache_prompt"), true}
         };
         payload.insert(QStringLiteral("reasoning_budget"), m_agentThinkingEnabled ? -1 : 0);
@@ -10046,6 +10093,25 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                                         "> No se pudo sintetizar con el modelo (%2). "
                                         "Se guarda el dossier crudo.\n\n%3")
                              .arg(cleanTopic, ok ? QStringLiteral("respuesta vacía") : err, dossier);
+            }
+            if (ok && report.size() < 4500) {
+                fail(QStringLiteral(
+                    "El modelo devolvió un informe demasiado breve para Deep Research "
+                    "(%1 caracteres). No se guardó como investigación completa.")
+                         .arg(report.size()));
+                return;
+            }
+            if (!report.contains(QRegularExpression(QStringLiteral("(?im)^##?\\s+Fuentes")))) {
+                QStringList sourceAppendix;
+                for (int i = 0; i < sources->size(); ++i) {
+                    const QJsonObject source = sources->at(i).toObject();
+                    sourceAppendix << QStringLiteral("- [%1] [%2](%3)")
+                                          .arg(i + 1)
+                                          .arg(source.value(QStringLiteral("title")).toString(),
+                                               source.value(QStringLiteral("url")).toString());
+                }
+                report += QStringLiteral("\n\n## Fuentes consultadas\n\n%1")
+                              .arg(sourceAppendix.join(QLatin1Char('\n')));
             }
 
             const double ts = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
@@ -10247,31 +10313,39 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
     *refineQueries = [=]() {
         ++(*refinementRound);
         setResearchState(true, 48, QStringLiteral(
-            "Analizando vacíos y preparando búsquedas de seguimiento..."));
+            "Comprimiendo hallazgos y reflexionando sobre vacíos..."));
 
         QString evidence;
         for (int i = 0; i < sources->size(); ++i) {
             const QJsonObject source = sources->at(i).toObject();
-            evidence += QStringLiteral("[%1] %2\nURL: %3\nResumen: %4\n\n")
+            evidence += QStringLiteral("[%1] %2\nURL: %3\nResumen: %4\nExtracto: %5\n\n")
                             .arg(i + 1)
                             .arg(source.value(QStringLiteral("title")).toString(),
                                  source.value(QStringLiteral("url")).toString(),
-                                 source.value(QStringLiteral("snippet")).toString());
+                                 source.value(QStringLiteral("snippet")).toString(),
+                                 source.value(QStringLiteral("excerpt")).toString().left(1800));
         }
         const QString prompt = QStringLiteral(
-            "Actuá como investigador que revisa una primera ronda incompleta. Generá "
-            "entre 6 y 10 consultas web NUEVAS y específicas para cubrir vacíos, "
-            "contradecir conclusiones prematuras y encontrar alternativas que la "
-            "primera ronda omitió. Extraé nombres concretos de productos mencionados "
-            "y buscá cada candidato por separado: precio, stock, Argentina, manual y "
-            "experiencias reales. Incluí consultas para foros y comunidades "
-            "(Reddit, LinusTechTips, Level1Techs, Tom's Hardware), comparadores y "
-            "tiendas locales. Si una recomendación principal no tiene precio, generá "
-            "consultas para hallar competidores más baratos que cumplan el mismo "
-            "requisito técnico. No repitas las consultas ya ejecutadas. Devolvé sólo "
-            "un array JSON de strings.\n\nPedido original:\n%1\n\n"
-            "Consultas ejecutadas:\n%2\n\nFuentes encontradas:\n%3")
-            .arg(cleanTopic, queries->join(QStringLiteral("\n")), evidence.left(12000));
+            "Actuá como supervisor de investigación. Revisá esta ronda y devolvé sólo "
+            "un objeto JSON con esta forma exacta: "
+            "{\"learnings\":[...],\"followUpQueries\":[...],\"unresolved\":[...],"
+            "\"complete\":false}. "
+            "learnings: 5-12 hallazgos únicos, densos y verificables que preserven "
+            "nombres de productos, cifras, fechas, precios, stock y contradicciones. "
+            "followUpQueries: 6-10 consultas NUEVAS, específicas y no redundantes para "
+            "cubrir unresolved; buscá cada producto candidato por separado en tiendas, "
+            "comparadores, manuales y foros (Reddit, LinusTechTips, Level1Techs, Tom's "
+            "Hardware). Si la recomendación principal no tiene precio, buscá opciones "
+            "más baratas con el mismo requisito técnico. complete sólo puede ser true "
+            "si el pedido original ya puede responderse con evidencia directa y, para "
+            "compras, al menos dos opciones aptas con precio/stock verificable. "
+            "No confundas productos incompatibles baratos con alternativas válidas.\n\n"
+            "Pedido original:\n%1\n\nLearnings previos:\n%2\n\n"
+            "Consultas ejecutadas:\n%3\n\nFuentes encontradas:\n%4")
+            .arg(cleanTopic,
+                 learnings->join(QStringLiteral("\n")),
+                 queries->join(QStringLiteral("\n")),
+                 evidence.left(22000));
         QJsonObject payload{
             {QStringLiteral("model"), QStringLiteral("research-refiner")},
             {QStringLiteral("messages"), QJsonArray{
@@ -10279,7 +10353,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                             {QStringLiteral("content"), prompt}}}},
             {QStringLiteral("stream"), false},
             {QStringLiteral("temperature"), 0.15},
-            {QStringLiteral("max_tokens"), 700},
+            {QStringLiteral("max_tokens"), 1400},
             {QStringLiteral("reasoning_budget"), 0},
             {QStringLiteral("chat_template_kwargs"),
              QJsonObject{{QStringLiteral("enable_thinking"), false}}}
@@ -10298,6 +10372,7 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             if (!m_researchRunning) return;
 
             const int searchStart = queries->size();
+            ResearchReflection reflection;
             if (ok) {
                 const QJsonArray choices = QJsonDocument::fromJson(raw).object()
                                                .value(QStringLiteral("choices")).toArray();
@@ -10305,8 +10380,11 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                     const QString content = choices.first().toObject()
                                                 .value(QStringLiteral("message")).toObject()
                                                 .value(QStringLiteral("content")).toString();
-                    const QStringList refined = researchParsePlannedQueries(content);
-                    for (const QString &query : refined)
+                    reflection = researchParseReflection(content);
+                    for (const QString &learning : reflection.learnings)
+                        if (!learnings->contains(learning)) learnings->append(learning);
+                    *unresolvedQuestions = reflection.unresolved;
+                    for (const QString &query : reflection.followUpQueries)
                         if (!queries->contains(query)) queries->append(query);
                 }
             }
@@ -10318,9 +10396,19 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
             };
             for (const QString &query : forumFallback)
                 if (!queries->contains(query)) queries->append(query);
-            searchLogs->append(QStringLiteral("- Segunda ronda: %1 consultas nuevas")
+            searchLogs->append(QStringLiteral(
+                "- Reflexión %1: %2 learnings, %3 pendientes, %4 consultas nuevas")
+                                   .arg(*refinementRound)
+                                   .arg(learnings->size())
+                                   .arg(unresolvedQuestions->size())
                                    .arg(queries->size() - searchStart));
-            (*searchNext)(searchStart);
+            const bool evidenceComplete =
+                !purchaseResearch || commerceEvidenceCount() >= 2;
+            if (reflection.complete && evidenceComplete) {
+                (*synthesize)();
+            } else {
+                (*searchNext)(searchStart);
+            }
         });
     };
 

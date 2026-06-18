@@ -537,6 +537,11 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   veredicto final hasta reunir al menos dos fuentes comerciales con señales
   verificables de precio o stock; se permiten hasta tres rondas antes de fallar
   explícitamente en lugar de presentar una recomendación incompleta.
+  Cada ronda produce learnings compactos con entidades, cifras, fechas y
+  contradicciones; esos learnings alimentan la siguiente planificación y el
+  informe final. Una reflexión supervisora decide si investigar más según las
+  preguntas pendientes. Los informes deben alcanzar profundidad mínima, incluir
+  todos los hallazgos relevantes y cerrar con un apéndice de URLs consultadas.
   Las especificaciones exactas del modelo prevalecen sobre heurísticas generales
   por chipset.
 - **Integrations**: registro unificado de **MCP Tool Servers** + **API services**
@@ -859,5 +864,8 @@ Código, datos y diseño tomados de otros proyectos:
 | **Catppuccin (Mocha)** | Paleta del theme QML | https://github.com/catppuccin/catppuccin |
 | **archex** | Ideas de pipeline de code-context en `hybrid_search`: empaquetado por presupuesto de tokens + expansión por dep-graph (vecinos vía imports/includes). Revisión: [`docs/archex_context_review.md`](docs/archex_context_review.md) | https://github.com/Mathews-Tom/archex |
 | **codehamr** | Ideas de robustez local-first para el harness: empaquetado de contexto, invariantes OpenAI-compatible, timeouts SSE por inactividad y errores autocorrectivos de tools | https://github.com/codehamr/codehamr |
+| **dzhng/deep-research** | Patrón breadth/depth, learnings compactos, consultas con objetivo y seguimiento recursivo | https://github.com/dzhng/deep-research |
+| **LangChain Open Deep Research** | Separación supervisor/investigador, reflexión, compresión intermedia, límites de iteración y validación antes del informe | https://github.com/langchain-ai/open_deep_research |
+| **Tongyi DeepResearch** | Ideas de investigación de horizonte largo, test-time scaling, resumen de contexto y búsqueda agentic iterativa | https://github.com/Alibaba-NLP/DeepResearch |
 
 > Al sumar código/datos de otro repo, agregar la fila correspondiente acá.
