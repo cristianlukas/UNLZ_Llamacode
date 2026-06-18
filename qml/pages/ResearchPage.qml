@@ -378,22 +378,35 @@ Item {
                 Layout.fillHeight: true
                 color: Theme.baseBg
 
-                ScrollView {
-                    id: reportScroll
+                Flickable {
+                    id: reportFlick
                     anchors {
                         top: parent.top
                         bottom: parent.bottom
                         left: parent.left
-                        right: reportBar.left
+                        right: parent.right
                         margins: 18
-                        rightMargin: 8
+                        rightMargin: 26
                     }
-                    contentWidth: availableWidth
-                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-                    ScrollBar.vertical: reportBar
+                    clip: true
+                    contentWidth: width
+                    contentHeight: reportText.implicitHeight
+                    boundsBehavior: Flickable.StopAtBounds
+                    ScrollBar.vertical: LcScrollBar {
+                        parent: reportPane
+                        anchors {
+                            top: parent.top
+                            bottom: parent.bottom
+                            right: parent.right
+                            margins: 4
+                        }
+                        policy: ScrollBar.AsNeeded
+                    }
 
                     TextEdit {
-                        width: reportScroll.availableWidth
+                        id: reportText
+                        width: reportFlick.width
+                        height: implicitHeight
                         text: root.selectedReportText.length > 0
                             ? root.selectedReportText
                             : "Seleccioná un reporte para previsualizarlo."
@@ -403,18 +416,6 @@ Item {
                         readOnly: true
                         selectByMouse: true
                     }
-                }
-
-                LcScrollBar {
-                    id: reportBar
-                    parent: reportPane
-                    anchors {
-                        top: parent.top
-                        bottom: parent.bottom
-                        right: parent.right
-                        margins: 4
-                    }
-                    policy: ScrollBar.AsNeeded
                 }
             }
         }
