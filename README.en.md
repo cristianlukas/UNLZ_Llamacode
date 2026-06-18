@@ -55,13 +55,13 @@ folder, builds and launches. No manual clone or environment prep required.
 **Windows** (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
 ```
 
 **Linux** (bash):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
 ```
 
 It automatically installs:
@@ -96,7 +96,7 @@ Example with overrides (Linux):
 
 ```bash
 LC_DIR=/opt/llamacode LC_CONFIG=Debug LC_NORUN=1 \
-  bash -c "$(curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh)"
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.sh)"
 ```
 
 Minimum prerequisites: **Windows** needs `winget` (App Installer from the Microsoft

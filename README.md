@@ -56,13 +56,13 @@ aislada, compila y arranca. No requiere clonar a mano ni preparar el entorno.
 **Windows** (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
 ```
 
 **Linux** (bash):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.sh | bash
 ```
 
 Instala automáticamente:
@@ -97,7 +97,7 @@ Ejemplo con overrides (Linux):
 
 ```bash
 LC_DIR=/opt/llamacode LC_CONFIG=Debug LC_NORUN=1 \
-  bash -c "$(curl -fsSL https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.sh)"
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.sh)"
 ```
 
 Requisitos mínimos previos: **Windows** necesita `winget` (App Installer de la
