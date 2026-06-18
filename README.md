@@ -151,6 +151,8 @@ que se activen en cada sesión.
   mail es una acción externa irreversible.
 - **STT/TTS cloud**: el modo Charla puede usar endpoints locales o remotos. Si se
   configura un proveedor remoto, el audio/texto viaja a ese proveedor.
+- **STT local gestionado**: si al iniciar Charla falta el modelo de voz configurado,
+  la app solicita confirmación para descargarlo o permite posponer la descarga.
 - **Browser automation**: Playwright puede navegar sitios externos por pedido del
   usuario o de una Task.
 

@@ -34,6 +34,15 @@ Item {
         }
     }
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
+    function startOrPromptModelDownload() {
+        const engineId = page.cfg.sttManagedEngine || ""
+        if (engineId.length > 0 && !App.voiceModelInstalled(engineId)) {
+            missingSttModelDialog.engineId = engineId
+            missingSttModelDialog.open()
+            return
+        }
+        App.startCharla()
+    }
     // Persiste y REASIGNA cfg (copia) para que QML reevalúe los bindings `visible`
     // que dependen de cfg (mutar un campo no notifica el cambio del var property).
     function save() { if (pid.length) App.setVoiceConfig(pid, cfg); cfg = Object.assign({}, cfg) }
@@ -187,7 +196,7 @@ Item {
                         enabled: !page.testing
                         onClicked: {
                             if (App.voiceActive) App.stopCharla()
-                            else App.startCharla()
+                            else page.startOrPromptModelDownload()
                         }
                     }
                     LcButton {
@@ -469,6 +478,46 @@ Item {
                     }
 
                     Item { height: 16; width: 1 }
+                }
+            }
+        }
+    }
+
+    LcDialog {
+        id: missingSttModelDialog
+        property string engineId: ""
+        title: "Modelo de voz requerido"
+        width: Math.min(480, page.width - 48)
+
+        contentItem: Text {
+            width: 440
+            text: "El modelo STT necesario para reconocer tu voz no está instalado.\n\n¿Desea descargar el binario ahora?"
+            color: Theme.textPrimary
+            font.pixelSize: 14
+            wrapMode: Text.WordWrap
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg
+            height: 56
+            radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Más tarde"
+                    secondary: true
+                    onClicked: missingSttModelDialog.close()
+                }
+                LcButton {
+                    text: "Descargar"
+                    onClicked: {
+                        const engineId = missingSttModelDialog.engineId
+                        missingSttModelDialog.close()
+                        App.installVoiceModel(engineId)
+                    }
                 }
             }
         }
