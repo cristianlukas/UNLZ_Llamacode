@@ -3,6 +3,7 @@
 // aislamiento de disco (QStandardPaths test mode).
 
 #include <QtTest>
+#include <functional>
 #include "core/tasks/TaskStore.h"
 
 class TasksTests : public QObject
@@ -22,6 +23,8 @@ private slots:
     void loop_jsonRoundTrip();
     void loop_decideStopsAndRepeats();
     void loop_composeGoalPrompt();
+    void loop_runsExactlyMaxIterationsWhenGoalNeverMet();
+    void loop_stopsEarlyWhenGoalMet();
 };
 
 static QVariantMap sampleTask()
@@ -241,6 +244,47 @@ void TasksTests::loop_composeGoalPrompt()
     // Sin goal → sin prompt aunque esté habilitado.
     task["loopGoal"] = QString();
     QVERIFY(TaskStore::composeLoopGoalPrompt(task).isEmpty());
+}
+
+// Simula el driver del bucle de AppController::onAgentTurnFinished usando la
+// decisión pura: cuenta cuántas veces correría el cuerpo. `verdictAt(iter)`
+// devuelve el veredicto del goal-check tras la iteración `iter` (1-based).
+static int simulateLoopBodyRuns(const QVariantMap &task,
+                                std::function<QString(int)> verdictAt)
+{
+    int iteration = 1;               // la 1ª corrida del cuerpo cuenta como iter 1
+    int bodyRuns = 1;
+    for (;;) {
+        const QString verdict = verdictAt(iteration);
+        const auto d = TaskStore::decideLoop(task, iteration, QStringLiteral("ok"), verdict);
+        if (!d.repeat) break;
+        iteration++;
+        bodyRuns++;
+    }
+    return bodyRuns;
+}
+
+void TasksTests::loop_runsExactlyMaxIterationsWhenGoalNeverMet()
+{
+    QVariantMap task = sampleTask();
+    task["loopEnabled"] = true;
+    task["loopMaxIterations"] = 4;
+    const int runs = simulateLoopBodyRuns(task,
+        [](int) { return QStringLiteral("GOAL_NOT_MET sigue faltando"); });
+    QCOMPARE(runs, 4);   // ni 3 (corte temprano) ni 5 (off-by-one)
+}
+
+void TasksTests::loop_stopsEarlyWhenGoalMet()
+{
+    QVariantMap task = sampleTask();
+    task["loopEnabled"] = true;
+    task["loopMaxIterations"] = 10;
+    // Objetivo recién cumplido tras la 3ª corrida.
+    const int runs = simulateLoopBodyRuns(task, [](int iter) {
+        return iter >= 3 ? QStringLiteral("GOAL_MET listo")
+                         : QStringLiteral("GOAL_NOT_MET");
+    });
+    QCOMPARE(runs, 3);
 }
 
 QTEST_MAIN(TasksTests)
