@@ -93,6 +93,17 @@ public:
     // Se excluyen de buildToolSchemas() → no se ofrecen al modelo (ahorra contexto).
     void setDisabledTools(const QStringList &names);
 
+    // Permisos de filesystem por Task (no persisten; aplican a la corrida actual).
+    //   scope = "project" → confinado al cwd (default)
+    //           "folder"  → confinado al cwd + las `folders` indicadas
+    //           "full"    → sin confinamiento (todo el disco)
+    void setTaskScope(const QString &scope, const QStringList &folders);
+    // Restaura el confinamiento según el modo de aprobación persistido y limpia roots.
+    void clearTaskScope();
+    // Auto-aprueba todas las tools (salvo email_send gateado) durante una Task, sin
+    // tocar la preferencia persistida (m_approvalMode).
+    void setTaskAutoApprove(bool on);
+
     // Config del modelo maestro (tool ask_teacher). Se reenvía al worker.
     void setTeacherConfig(const QString &url, const QString &model, const QString &key);
     // Config de maestro tipo CLI (claude-code / codex). Se reenvía al worker.
@@ -231,6 +242,7 @@ private:
     bool m_textToolFallback = false;       // server no acepta OpenAI tools nativo
     QString m_cwd;
     QString m_approvalMode = QStringLiteral("ask");
+    bool    m_taskAutoApprove = false;   // override temporal durante una Task
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;

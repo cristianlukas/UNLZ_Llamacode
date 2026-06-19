@@ -76,8 +76,10 @@ set(CORE_SOURCES
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
     src/core/eval/EvalSuite.cpp
+    src/core/ToolCallingSupport.cpp
     src/core/tasks/TaskStore.cpp
     src/core/tasks/CronSchedule.cpp
+    src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
     src/core/tuner/AutoTuner.cpp
     src/core/tuner/TunerEngine.cpp
@@ -121,8 +123,10 @@ set(HEADERS
     src/core/voice/VoiceController.h
     src/core/voice/VoiceServerManager.h
     src/core/eval/EvalSuite.h
+    src/core/ToolCallingSupport.h
     src/core/tasks/TaskStore.h
     src/core/tasks/CronSchedule.h
+    src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
     src/core/tuner/AutoTuner.h
     src/core/tuner/TunerEngine.h
@@ -231,6 +235,7 @@ qt_add_qml_module(LlamaCode
         qml/components/NavBar.qml
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
+        qml/components/ToolSupportBanner.qml
         qml/components/LcButton.qml
         qml/components/LcComboBox.qml
         qml/components/LcTextField.qml
@@ -372,4 +377,5 @@ if (BUILD_TESTS)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)
+    add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
 endif()

@@ -35,6 +35,9 @@ public:
         StepCountRole,
         ScheduleEnabledRole,
         ScheduleCronRole,
+        ScheduleSpecRole,   // QVariantMap del builder amigable (ver TaskSchedule)
+        PermScopeRole,      // "project" | "folder" | "full"
+        PermFoldersRole,    // QVariantList de rutas absolutas (scope "folder")
         CreatedAtRole,
         UpdatedAtRole,
         LastRunAtRole,

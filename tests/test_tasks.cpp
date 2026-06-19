@@ -11,6 +11,8 @@ class TasksTests : public QObject
 private slots:
     void initTestCase();
     void jsonRoundTrip();
+    void jsonRoundTrip_permsAndScheduleSpec();
+    void composePrompt_mentionsAllowedFolder();
     void composePrompt_includesGoalStepsAndAdaptation();
     void composePrompt_includesPreAndPostPrompts();
     void sanitize_slug();
@@ -53,6 +55,38 @@ void TasksTests::jsonRoundTrip()
     QCOMPARE(steps.size(), 2);
     QCOMPARE(steps.at(0).toMap().value("kind").toString(), QStringLiteral("browser"));
     QCOMPARE(steps.at(0).toMap().value("ref").toString(), QStringLiteral("https://x"));
+}
+
+void TasksTests::jsonRoundTrip_permsAndScheduleSpec()
+{
+    QVariantMap in = sampleTask();
+    in["permScope"] = QStringLiteral("folder");
+    in["permFolders"] = QVariantList{QStringLiteral("C:/Users/X/PruebasIA"),
+                                     QStringLiteral("D:/Datos")};
+    in["scheduleSpec"] = QVariantMap{{"mode", "weekly"}, {"hour", 9}, {"minute", 30},
+                                     {"weekdays", QVariantList{1, 3}}};
+    const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(in));
+    QCOMPARE(out.value("permScope").toString(), QStringLiteral("folder"));
+    QCOMPARE(out.value("permFolders").toStringList().size(), 2);
+    QCOMPARE(out.value("permFolders").toStringList().at(0), QStringLiteral("C:/Users/X/PruebasIA"));
+    const QVariantMap spec = out.value("scheduleSpec").toMap();
+    QCOMPARE(spec.value("mode").toString(), QStringLiteral("weekly"));
+    QCOMPARE(spec.value("hour").toInt(), 9);
+    QCOMPARE(spec.value("weekdays").toList().size(), 2);
+
+    // Default seguro cuando el JSON no trae permScope.
+    const QVariantMap legacy = TaskStore::fromJson(TaskStore::toJson(sampleTask()));
+    QCOMPARE(legacy.value("permScope").toString(), QStringLiteral("project"));
+}
+
+void TasksTests::composePrompt_mentionsAllowedFolder()
+{
+    QVariantMap task = sampleTask();
+    task["permScope"] = QStringLiteral("folder");
+    task["permFolders"] = QVariantList{QStringLiteral("C:/Users/X/PruebasIA")};
+    const QString p = TaskStore::composePrompt(task);
+    QVERIFY(p.contains(QStringLiteral("C:/Users/X/PruebasIA")));
+    QVERIFY(p.contains(QStringLiteral("permitida")));
 }
 
 void TasksTests::composePrompt_includesPreAndPostPrompts()

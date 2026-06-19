@@ -403,6 +403,14 @@ AgentToolRunner::AgentToolRunner(QObject *parent) : QObject(parent) {}
 AgentToolRunner::~AgentToolRunner() { shutdown(); }
 
 void AgentToolRunner::setConfined(bool confined) { m_confined = confined; }
+void AgentToolRunner::setAllowedRoots(const QStringList &roots)
+{
+    m_allowedRoots.clear();
+    for (const QString &r : roots) {
+        const QString c = QDir::cleanPath(r.trimmed());
+        if (!c.isEmpty()) m_allowedRoots << c;
+    }
+}
 void AgentToolRunner::setServerBaseUrl(const QString &url) { m_serverBaseUrl = url; }
 void AgentToolRunner::setMailAccounts(const QVariantList &accounts) { m_mailAccounts = accounts; }
 void AgentToolRunner::setTeacherConfig(const QString &url, const QString &model, const QString &key)
@@ -673,11 +681,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     const QDir base(cwd);
     auto resolve = [&](const QString &rel) { return QDir::cleanPath(base.absoluteFilePath(rel)); };
     // En modo "Super Agente" (no confinado) se permite cualquier ruta del disco.
-    auto inProject = [&](const QString &abs) {
-        if (!m_confined) return true;
-        const QString root = QDir::cleanPath(base.absolutePath());
+    auto underRoot = [&](const QString &abs, const QString &root) {
         return abs == root || abs.startsWith(root + QStringLiteral("/"))
                || abs.startsWith(root + QStringLiteral("\\"));
+    };
+    auto inProject = [&](const QString &abs) {
+        if (!m_confined) return true;
+        if (underRoot(abs, QDir::cleanPath(base.absolutePath()))) return true;
+        // Carpetas extra autorizadas por la Task (scope "folder").
+        for (const QString &root : m_allowedRoots)
+            if (underRoot(abs, root)) return true;
+        return false;
     };
 
     if (name == QLatin1String("read_file")) {

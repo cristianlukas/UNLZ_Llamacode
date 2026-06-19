@@ -32,6 +32,9 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case StepCountRole:       return t.value("steps").toList().size();
     case ScheduleEnabledRole: return t.value("scheduleEnabled", false);
     case ScheduleCronRole:    return t.value("scheduleCron");
+    case ScheduleSpecRole:    return t.value("scheduleSpec");
+    case PermScopeRole:       return t.value("permScope", QStringLiteral("project"));
+    case PermFoldersRole:     return t.value("permFolders");
     case CreatedAtRole:       return t.value("createdAt");
     case UpdatedAtRole:       return t.value("updatedAt");
     case LastRunAtRole:       return t.value("lastRunAt");
@@ -55,6 +58,9 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { StepCountRole,       "stepCount" },
         { ScheduleEnabledRole, "scheduleEnabled" },
         { ScheduleCronRole,    "scheduleCron" },
+        { ScheduleSpecRole,    "scheduleSpec" },
+        { PermScopeRole,       "permScope" },
+        { PermFoldersRole,     "permFolders" },
         { CreatedAtRole,       "createdAt" },
         { UpdatedAtRole,       "updatedAt" },
         { LastRunAtRole,       "lastRunAt" },
@@ -98,6 +104,9 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["steps"]           = def.value("steps", t.value("steps", QVariantList{}));
     t["scheduleEnabled"] = def.value("scheduleEnabled", t.value("scheduleEnabled", false));
     t["scheduleCron"]    = def.value("scheduleCron", t.value("scheduleCron"));
+    t["scheduleSpec"]    = def.value("scheduleSpec", t.value("scheduleSpec", QVariantMap{}));
+    t["permScope"]       = def.value("permScope", t.value("permScope", QStringLiteral("project")));
+    t["permFolders"]     = def.value("permFolders", t.value("permFolders", QVariantList{}));
     t["updatedAt"]       = now;
 
     QString outId;
@@ -199,6 +208,16 @@ QString TaskStore::composePrompt(const QVariantMap &task)
     if (!desc.isEmpty())
         out << QStringLiteral("Objetivo: %1").arg(desc);
 
+    const QString permScope = task.value("permScope", QStringLiteral("project")).toString();
+    if (permScope == QLatin1String("folder")) {
+        const QStringList folders = task.value("permFolders").toStringList();
+        if (!folders.isEmpty())
+            out << QStringLiteral("Carpeta(s) de trabajo permitida(s) (escribí y leé acá, "
+                                  "usá rutas absolutas): %1").arg(folders.join(QStringLiteral(", ")));
+    } else if (permScope == QLatin1String("full")) {
+        out << QStringLiteral("Tenés acceso a todo el disco; usá la ruta absoluta que indique el objetivo.");
+    }
+
     const QVariantList steps = task.value("steps").toList();
     if (!steps.isEmpty()) {
         out << QString();
@@ -254,6 +273,9 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["silentUnlessError"] = task.value("silentUnlessError", false).toBool();
     o["scheduleEnabled"] = task.value("scheduleEnabled", false).toBool();
     o["scheduleCron"]    = task.value("scheduleCron").toString();
+    o["scheduleSpec"]    = QJsonObject::fromVariantMap(task.value("scheduleSpec").toMap());
+    o["permScope"]       = task.value("permScope", QStringLiteral("project")).toString();
+    o["permFolders"]     = QJsonArray::fromStringList(task.value("permFolders").toStringList());
     o["createdAt"]       = task.value("createdAt").toString();
     o["updatedAt"]       = task.value("updatedAt").toString();
     o["lastRunAt"]       = task.value("lastRunAt").toString();
@@ -285,6 +307,15 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["silentUnlessError"] = obj.value("silentUnlessError").toBool(false);
     t["scheduleEnabled"] = obj.value("scheduleEnabled").toBool(false);
     t["scheduleCron"]    = obj.value("scheduleCron").toString();
+    t["scheduleSpec"]    = obj.value("scheduleSpec").toObject().toVariantMap();
+    t["permScope"]       = obj.contains("permScope") ? obj.value("permScope").toString()
+                                                     : QStringLiteral("project");
+    {
+        QVariantList folders;
+        for (const QJsonValue &fv : obj.value("permFolders").toArray())
+            folders.append(fv.toString());
+        t["permFolders"] = folders;
+    }
     t["createdAt"]       = obj.value("createdAt").toString();
     t["updatedAt"]       = obj.value("updatedAt").toString();
     t["lastRunAt"]       = obj.value("lastRunAt").toString();

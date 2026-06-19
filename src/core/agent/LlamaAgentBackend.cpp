@@ -4,6 +4,7 @@
 #include "AgentEventLog.h"
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
+#include "core/ToolCallingSupport.h"
 
 #include <QJsonArray>
 
@@ -420,6 +421,10 @@ void LlamaAgentBackend::fetchContextLimit()
                        .toObject().value(QStringLiteral("n_ctx")).toInt(-1);
         if (nctx < 0) nctx = root.value(QStringLiteral("n_ctx")).toInt(-1);
         if (nctx > 0) { m_ctxLimit = nctx; emit contextUsage(0, m_ctxLimit); }
+        // chat_template: señal directa de si el GGUF sabe emitir tool calls.
+        const QString tmpl = root.value(QStringLiteral("chat_template")).toString();
+        emit chatTemplateDetected(!tmpl.isEmpty(),
+                                  ToolCallingSupport::templateMentionsTools(tmpl));
     });
 }
 
@@ -975,6 +980,31 @@ void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
         }
     }
 }
+
+void LlamaAgentBackend::setTaskScope(const QString &scope, const QStringList &folders)
+{
+    if (!m_worker) return;
+    const bool full = (scope == QLatin1String("full"));
+    QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
+                              Q_ARG(bool, !full));
+    const QStringList roots = (scope == QLatin1String("folder")) ? folders : QStringList{};
+    QMetaObject::invokeMethod(m_worker, "setAllowedRoots", Qt::QueuedConnection,
+                              Q_ARG(QStringList, roots));
+    emit logAppended(QStringLiteral("[task scope: %1%2]\n")
+                         .arg(scope, roots.isEmpty() ? QString()
+                                                     : QStringLiteral(" → ") + roots.join(QStringLiteral(", "))));
+}
+
+void LlamaAgentBackend::clearTaskScope()
+{
+    if (!m_worker) return;
+    QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
+                              Q_ARG(bool, m_approvalMode != QLatin1String("super")));
+    QMetaObject::invokeMethod(m_worker, "setAllowedRoots", Qt::QueuedConnection,
+                              Q_ARG(QStringList, QStringList{}));
+}
+
+void LlamaAgentBackend::setTaskAutoApprove(bool on) { m_taskAutoApprove = on; }
 
 // ───────────────────────────── Conversación ──────────────────────────────
 void LlamaAgentBackend::sendMessage(const QString &text)
@@ -1970,7 +2000,8 @@ void LlamaAgentBackend::processPendingCalls()
         }
     }
 
-    const bool autoAll  = (m_approvalMode == QLatin1String("auto")
+    const bool autoAll  = (m_taskAutoApprove                              // Task en curso: auto-aprobar
+                           || m_approvalMode == QLatin1String("auto")
                            || m_approvalMode == QLatin1String("super")
                            || m_approvalMode == QLatin1String("plan"));   // plan = todo read → auto
     const bool autoRead = (m_approvalMode == QLatin1String("ask") && kind == QLatin1String("read"));

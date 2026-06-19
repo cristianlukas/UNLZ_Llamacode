@@ -748,6 +748,16 @@ Item {
             }
         }
 
+        // Aviso de tool-calling del perfil activo (cookbook + chat-template).
+        ToolSupportBanner {
+            Layout.fillWidth: true
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.topMargin: 8
+            visible: App.agentRunning && App.activeProfileToolSupport !== "supported"
+            support: App.activeProfileToolSupport
+        }
+
         // ── Body ─────────────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true

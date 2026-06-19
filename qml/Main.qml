@@ -180,6 +180,21 @@ ApplicationWindow {
                     onPageSelected: function(idx) { stack.currentIndex = idx }
                 }
 
+                // Si la página activa queda inhabilitada (se apagó server/agente),
+                // volver a Lanzar. Tasks (7) exige agente; el resto serverOnly, server.
+                Connections {
+                    target: App
+                    function guard() {
+                        const i = stack.currentIndex
+                        const serverOnly = (i === 4 || i === 5 || i === 6 || i === 7 || i === 9)
+                        const agentOnly = (i === 7)
+                        if ((serverOnly && !App.serverRunning) || (agentOnly && !App.agentRunning))
+                            stack.currentIndex = 0
+                    }
+                    function onServerRunningChanged() { guard() }
+                    function onAgentRunningChanged() { guard() }
+                }
+
                 Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider }
 
                 StackLayout {

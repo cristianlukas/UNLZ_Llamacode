@@ -91,4 +91,8 @@ signals:
     void contextUsage(int used, int limit);
     // El agente quiso usar subagents (tool `task`) pero git no está instalado.
     void gitRequired();
+    // Resultado de inspeccionar el chat-template del modelo (vía /props de
+    // llama-server): si respondió y si la plantilla referencia tools. Lo usa
+    // AppController para advertir si el perfil activo no soporta tool-calling.
+    void chatTemplateDetected(bool haveTemplate, bool supportsTools);
 };

@@ -1,6 +1,7 @@
 #include "TaskScheduler.h"
 #include "TaskStore.h"
 #include "CronSchedule.h"
+#include "TaskSchedule.h"
 #include <QTimer>
 
 TaskScheduler::TaskScheduler(TaskStore *store, QObject *parent)
@@ -34,6 +35,13 @@ QStringList TaskScheduler::dueTaskIds(const QVariantList &tasks, const QDateTime
     for (const QVariant &tv : tasks) {
         const QVariantMap t = tv.toMap();
         if (!t.value("scheduleEnabled", false).toBool()) continue;
+        // Modelo amigable (scheduleSpec) tiene prioridad; si no, cron crudo legacy.
+        const QVariantMap spec = t.value("scheduleSpec").toMap();
+        if (TaskSchedule::isValid(spec)) {
+            if (TaskSchedule::matches(spec, now))
+                due << t.value("id").toString();
+            continue;
+        }
         const QString cron = t.value("scheduleCron").toString().trimmed();
         if (cron.isEmpty()) continue;
         const CronSchedule cs = CronSchedule::parse(cron);

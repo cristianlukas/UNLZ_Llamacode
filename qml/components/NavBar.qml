@@ -23,7 +23,7 @@ Rectangle {
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
         { key: "agent.title",   icon: "🤖",  serverOnly: true  },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
-        { key: "nav.tasks",     icon: "🗒",  serverOnly: false },
+        { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
     ]
@@ -50,7 +50,8 @@ Rectangle {
                 Layout.fillWidth: true
                 height: 48
                 highlighted: root.currentIndex === index
-                enabled: !modelData.serverOnly || App.serverRunning
+                enabled: (!modelData.serverOnly || App.serverRunning)
+                         && (!modelData.agentOnly || App.agentRunning)
                 opacity: enabled ? 1.0 : 0.35
                 background: Rectangle {
                     color: parent.highlighted ? Theme.highlight : (parent.hovered && parent.enabled ? Theme.hoverBg : "transparent")

@@ -6,6 +6,7 @@
 #include <QList>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QStringList>
 
 class McpClient;
 class QProcess;
@@ -32,6 +33,9 @@ public slots:
                      const QString &argsJson, const QString &cwd);
     // Confinamiento al cwd. false = "Super Agente" (acceso a todo el disco).
     void setConfined(bool confined);
+    // Carpetas extra permitidas además del cwd (scope "folder" de una Task). Rutas
+    // absolutas; vacío = solo el cwd. Sin efecto si !m_confined (acceso total).
+    void setAllowedRoots(const QStringList &roots);
     // URL base del llama-server (para /v1/embeddings en semantic_search).
     void setServerBaseUrl(const QString &url);
     // Cuentas de correo (con password ya resuelto) para email_send/list/read.
@@ -73,6 +77,7 @@ private:
 
     QList<McpClient *> m_mcp;
     bool m_confined = true;
+    QStringList m_allowedRoots;   // carpetas extra permitidas (scope "folder")
     QString m_serverBaseUrl;
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)

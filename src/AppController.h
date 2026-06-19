@@ -77,6 +77,9 @@ class AppController : public QObject
     Q_PROPERTY(QString language READ language WRITE setLanguage NOTIFY languageChanged)
     Q_PROPERTY(int langV READ langV NOTIFY languageChanged)
     Q_PROPERTY(bool agentRunning      READ agentRunning      NOTIFY agentRunningChanged)
+    // Soporte de tool-calling del perfil activo: "supported"|"unsupported"|"unknown".
+    // Derivado del cookbook (hf_models.json) + chat-template del GGUF (/props).
+    Q_PROPERTY(QString activeProfileToolSupport READ activeProfileToolSupport NOTIFY activeProfileToolSupportChanged)
     Q_PROPERTY(QString agentLog       READ agentLog          NOTIFY agentLogChanged)
     Q_PROPERTY(bool agentStarting     READ agentStarting     NOTIFY agentStartingChanged)
     Q_PROPERTY(QVariantList agentMessages  READ agentMessages  NOTIFY agentMessagesChanged)
@@ -193,6 +196,7 @@ public:
         return m_agentInTerminal ? (m_agentPid != 0) : (m_agentProc && m_agentProc->state() != QProcess::NotRunning);
     }
     bool agentStarting() const { return m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty(); }
+    QString activeProfileToolSupport() const { return m_activeProfileToolSupport; }
     QString agentLog() const { return m_agentLog; }
     QVariantList agentMessages()  const { return m_agentMessages; }
     int agentStreamingIndex() const { return m_agentStreamingIndex; }
@@ -652,6 +656,7 @@ signals:
     void mermaidEnabledChanged();
     void agentRunningChanged();
     void agentStartingChanged();
+    void activeProfileToolSupportChanged();
     void agentLogChanged();
     void agentMessagesChanged();
     void agentStreamingChanged();
@@ -732,6 +737,9 @@ private:
     QString latestAgentAssistantText() const;
     bool agentBackendBusy() const;
     void prepareTaskAgentSession();
+    // Aplica/limpia permisos de filesystem + auto-aprobación de tools de una Task.
+    void applyTaskAgentPermissions(const QVariantMap &task);
+    void clearTaskAgentPermissions();
 
     QProcess *m_proc = nullptr;
     QProcess *m_installerProc = nullptr;
@@ -800,6 +808,11 @@ private:
     QString   m_agentLog;
     QString   m_agentLogFilePath;
     bool      m_agentStarting = false;
+    // Soporte de tool-calling del perfil activo (cookbook + chat-template).
+    QString   m_activeProfileToolSupport = QStringLiteral("unknown");
+    bool      m_toolTemplateHave = false;       // /props respondió con chat_template
+    bool      m_toolTemplateSupports = false;   // y ese template menciona tools
+    void recomputeToolSupport();
     QString   m_activeAgentAdapter;
     QString   m_agentCwdOverride;   // directory for next/current agent start
     QString   m_pendingAgentLaunchId; // used when restarting for project change

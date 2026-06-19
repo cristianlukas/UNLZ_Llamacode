@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import LlamaCode 1.0
 
 Item {
@@ -14,6 +15,7 @@ Item {
         stepsModel.clear()
         previewBox.visible = false
         previewArea.text = ""
+        permFoldersModel.clear()
         if (id.length > 0) {
             const t = App.taskStore.get(id)
             nameField.text = t.name || ""
@@ -23,6 +25,8 @@ Item {
             silentUnlessError.checked = t.silentUnlessError || false
             cronField.text = t.scheduleCron || ""
             schedEnabled.checked = t.scheduleEnabled || false
+            loadScheduleSpec(t.scheduleSpec || {}, t.scheduleCron || "")
+            loadPermissions(t.permScope || "project", t.permFolders || [])
             const steps = t.steps || []
             for (var i = 0; i < steps.length; ++i)
                 stepsModel.append({ kind: steps[i].kind || "instruction",
@@ -37,9 +41,94 @@ Item {
             silentUnlessError.checked = false
             cronField.text = ""
             schedEnabled.checked = false
+            loadScheduleSpec({}, "")
+            loadPermissions("project", [])
             profileCombo.currentIndex = 0
         }
         editor.open()
+    }
+
+    // ── Permisos ──
+    function loadPermissions(scope, folders) {
+        const idx = scope === "folder" ? 1 : (scope === "full" ? 2 : 0)
+        permScopeCombo.currentIndex = idx
+        permFoldersModel.clear()
+        for (var i = 0; i < (folders ? folders.length : 0); ++i)
+            permFoldersModel.append({ path: folders[i] })
+    }
+    function collectPermScope() {
+        return ["project", "folder", "full"][permScopeCombo.currentIndex] || "project"
+    }
+    function collectPermFolders() {
+        const arr = []
+        for (var i = 0; i < permFoldersModel.count; ++i)
+            arr.push(permFoldersModel.get(i).path)
+        return arr
+    }
+
+    // ── Schedule builder ──
+    // Modos: 0 Diario · 1 Semanal · 2 Mensual · 3 Cada N meses · 4 Avanzado (cron)
+    function loadScheduleSpec(spec, cronFallback) {
+        const mode = (spec && spec.mode) ? spec.mode : (cronFallback ? "cron" : "daily")
+        const modeIdx = { daily: 0, weekly: 1, monthly: 2, everyNMonths: 3, cron: 4 }[mode]
+        freqCombo.currentIndex = modeIdx === undefined ? 0 : modeIdx
+        schedHour.value = spec && spec.hour !== undefined ? spec.hour : 9
+        schedMinute.value = spec && spec.minute !== undefined ? spec.minute : 0
+        for (var d = 0; d < 7; ++d)
+            weekdayChecks.itemAt(d).checked = spec && spec.weekdays ? (spec.weekdays.indexOf(d) >= 0) : (d === 1)
+        monthlyKindCombo.currentIndex = (spec && spec.monthlyKind === "nthWeekday") ? 1 : 0
+        monthDaySpin.value = spec && spec.monthDay ? spec.monthDay : 1
+        nthCombo.currentIndex = spec && spec.nth ? (spec.nth - 1) : 0
+        nthWeekdayCombo.currentIndex = spec && spec.nthWeekday !== undefined ? spec.nthWeekday : 1
+        everyNSpin.value = spec && spec.everyN ? spec.everyN : 2
+        startMonthSpin.value = spec && spec.startMonth ? spec.startMonth : 1
+    }
+    function buildScheduleSpec() {
+        const mode = ["daily", "weekly", "monthly", "everyNMonths", "cron"][freqCombo.currentIndex]
+        if (mode === "cron") return { mode: "cron", cron: cronField.text }
+        const s = { mode: mode, hour: schedHour.value, minute: schedMinute.value }
+        if (mode === "weekly") {
+            const wd = []
+            for (var d = 0; d < 7; ++d) if (weekdayChecks.itemAt(d).checked) wd.push(d)
+            s.weekdays = wd
+        } else if (mode === "monthly") {
+            if (monthlyKindCombo.currentIndex === 1) {
+                s.monthlyKind = "nthWeekday"
+                s.nth = nthCombo.currentIndex + 1
+                s.nthWeekday = nthWeekdayCombo.currentIndex
+            } else {
+                s.monthlyKind = "date"
+                s.monthDay = monthDaySpin.value
+            }
+        } else if (mode === "everyNMonths") {
+            s.everyN = everyNSpin.value
+            s.monthDay = monthDaySpin.value
+            s.startMonth = startMonthSpin.value
+        }
+        return s
+    }
+
+    // Resumen legible del schedule para la fila de la lista (espejo de TaskSchedule::describe).
+    function scheduleSummary(spec, cron) {
+        if (!spec || !spec.mode) return cron || "cron"
+        const dn = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+        const hh = ("0" + (spec.hour || 0)).slice(-2) + ":" + ("0" + (spec.minute || 0)).slice(-2)
+        if (spec.mode === "cron") return "cron · " + (spec.cron || cron || "")
+        if (spec.mode === "daily") return "Diario · " + hh
+        if (spec.mode === "weekly") {
+            const days = (spec.weekdays || []).map(function(d) { return dn[d] })
+            return "Semanal · " + days.join(", ") + " · " + hh
+        }
+        if (spec.mode === "monthly") {
+            if (spec.monthlyKind === "nthWeekday") {
+                const ord = ["", "primer", "segundo", "tercer", "cuarto", "último"]
+                return "Mensual · " + ord[spec.nth || 1] + " " + dn[spec.nthWeekday || 0] + " · " + hh
+            }
+            return "Mensual · día " + (spec.monthDay || 1) + " · " + hh
+        }
+        if (spec.mode === "everyNMonths")
+            return "Cada " + (spec.everyN || 1) + " mes(es) · día " + (spec.monthDay || 1) + " · " + hh
+        return cron || "cron"
     }
 
     function collectSteps() {
@@ -94,6 +183,15 @@ Item {
                 }
             }
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
+        }
+
+        // Aviso de tool-calling del perfil activo (deriva del cookbook + chat-template).
+        ToolSupportBanner {
+            Layout.fillWidth: true
+            Layout.leftMargin: 24
+            Layout.rightMargin: 24
+            Layout.topMargin: 12
+            support: App.activeProfileToolSupport
         }
 
         ScrollView {
@@ -153,7 +251,7 @@ Item {
                                 }
                                 Text {
                                     text: model.stepCount + " paso(s)"
-                                        + (model.scheduleEnabled ? "  ·  ⏱ " + (model.scheduleCron || "cron") : "")
+                                        + (model.scheduleEnabled ? "  ·  ⏱ " + root.scheduleSummary(model.scheduleSpec, model.scheduleCron) : "")
                                         + (model.lastRunStatus ? "  ·  última: " + model.lastRunStatus : "")
                                     color: Theme.textMuted
                                     font.pixelSize: 11
@@ -195,6 +293,13 @@ Item {
     }
 
     ListModel { id: stepsModel }
+    ListModel { id: permFoldersModel }
+
+    FolderDialog {
+        id: permFolderDlg
+        title: "Elegir carpeta permitida para la Task"
+        onAccepted: permFoldersModel.append({ path: selectedFolder.toString().replace("file:///", "") })
+    }
 
     // ── Editor de Task ──
     Popup {
@@ -218,7 +323,10 @@ Item {
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
                 scheduleEnabled: schedEnabled.checked,
-                scheduleCron: cronField.text
+                scheduleCron: cronField.text,
+                scheduleSpec: root.buildScheduleSpec(),
+                permScope: root.collectPermScope(),
+                permFolders: root.collectPermFolders()
             })
             close()
         }
@@ -392,34 +500,178 @@ Item {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
-                    RowLayout {
+                    // ── Permisos de acceso ──
+                    Text { text: "Permisos de acceso a archivos"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcComboBox {
+                        id: permScopeCombo
                         Layout.fillWidth: true
-                        spacing: 10
-                        CheckBox {
-                            id: schedEnabled
-                            text: "Programar (cron)"
-                            contentItem: Text {
-                                text: schedEnabled.text; color: Theme.textSecondary; font.pixelSize: 12
-                                leftPadding: schedEnabled.indicator.width + 6; verticalAlignment: Text.AlignVCenter
-                            }
-                        }
-                        LcTextField {
-                            Layout.fillWidth: true
-                            id: cronField
-                            enabled: schedEnabled.checked
-                            placeholderText: "0 9 * * *  (min hora dia mes diaSem)"
-                        }
+                        model: ["Solo el proyecto (seguro)", "Una o varias carpetas específicas", "Toda la PC"]
                     }
-
                     Text {
-                        visible: schedEnabled.checked
                         Layout.fillWidth: true
                         wrapMode: Text.Wrap
                         color: Theme.textMuted
                         font.pixelSize: 11
-                        text: "Formato: min hora diaMes mes diaSem. Ej: 0 9 * * * = 9:00 todos los dias · "
-                            + "*/15 9-17 * * 1-5 = cada 15 min, 9-17h, lun-vie · 0 0 1 * * = dia 1 de cada mes. "
-                            + "Domingo = 0 o 7."
+                        text: permScopeCombo.currentIndex === 2
+                              ? "El agente podrá leer y escribir en cualquier ruta del disco. Usalo solo si confiás en la Task."
+                              : (permScopeCombo.currentIndex === 1
+                                 ? "El agente podrá leer/escribir dentro de las carpetas elegidas (además del proyecto)."
+                                 : "El agente queda confinado a la carpeta de trabajo del perfil/agente.")
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: permScopeCombo.currentIndex === 1
+                        spacing: 6
+                        Repeater {
+                            model: permFoldersModel
+                            delegate: RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: model.path
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 12
+                                    elide: Text.ElideMiddle
+                                }
+                                LcButton { text: "✕"; secondary: true; onClicked: permFoldersModel.remove(index) }
+                            }
+                        }
+                        LcButton {
+                            text: "+ Agregar carpeta…"
+                            secondary: true
+                            onClicked: permFolderDlg.open()
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+
+                    // ── Programación ──
+                    CheckBox {
+                        id: schedEnabled
+                        text: "Programar ejecución automática"
+                        contentItem: Text {
+                            text: schedEnabled.text; color: Theme.textSecondary; font.pixelSize: 12
+                            leftPadding: schedEnabled.indicator.width + 6; verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: schedEnabled.checked
+                        spacing: 8
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+                            Text { text: "Frecuencia"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                            LcComboBox {
+                                id: freqCombo
+                                Layout.fillWidth: true
+                                model: ["Diario", "Semanal", "Mensual", "Cada N meses", "Avanzado (cron)"]
+                            }
+                        }
+
+                        // Hora (todas las frecuencias menos cron)
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: freqCombo.currentIndex !== 4
+                            spacing: 10
+                            Text { text: "Hora"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                            SpinBox { id: schedHour; from: 0; to: 23; value: 9; editable: true }
+                            Text { text: ":"; color: Theme.textSecondary }
+                            SpinBox { id: schedMinute; from: 0; to: 59; value: 0; editable: true }
+                        }
+
+                        // Semanal: días
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: freqCombo.currentIndex === 1
+                            spacing: 6
+                            Text { text: "Días"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                            Repeater {
+                                id: weekdayChecks
+                                model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+                                delegate: CheckBox {
+                                    property bool checkedProxy: checked
+                                    text: modelData
+                                    contentItem: Text {
+                                        text: modelData; color: Theme.textSecondary; font.pixelSize: 11
+                                        leftPadding: parent.indicator.width + 3; verticalAlignment: Text.AlignVCenter
+                                    }
+                                }
+                            }
+                        }
+
+                        // Mensual
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: freqCombo.currentIndex === 2
+                            spacing: 10
+                            Text { text: "Cuándo"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                            LcComboBox {
+                                id: monthlyKindCombo
+                                Layout.preferredWidth: 150
+                                model: ["Por fecha (día N)", "Por posición"]
+                            }
+                            SpinBox {
+                                id: monthDaySpin
+                                visible: monthlyKindCombo.currentIndex === 0 || freqCombo.currentIndex === 3
+                                from: 1; to: 31; value: 1; editable: true
+                            }
+                            LcComboBox {
+                                id: nthCombo
+                                visible: monthlyKindCombo.currentIndex === 1 && freqCombo.currentIndex === 2
+                                Layout.preferredWidth: 110
+                                model: ["primer", "segundo", "tercer", "cuarto", "último"]
+                            }
+                            LcComboBox {
+                                id: nthWeekdayCombo
+                                visible: monthlyKindCombo.currentIndex === 1 && freqCombo.currentIndex === 2
+                                Layout.preferredWidth: 90
+                                model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+                            }
+                        }
+
+                        // Cada N meses
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: freqCombo.currentIndex === 3
+                            spacing: 10
+                            Text { text: "Cada"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                            SpinBox { id: everyNSpin; from: 1; to: 24; value: 2; editable: true }
+                            Text { text: "mes(es), desde el mes"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            SpinBox { id: startMonthSpin; from: 1; to: 12; value: 1; editable: true }
+                        }
+
+                        // Avanzado (cron)
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            visible: freqCombo.currentIndex === 4
+                            spacing: 4
+                            LcTextField {
+                                id: cronField
+                                Layout.fillWidth: true
+                                placeholderText: "0 9 * * *  (min hora dia mes diaSem)"
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                wrapMode: Text.Wrap
+                                color: Theme.textMuted
+                                font.pixelSize: 11
+                                text: "Formato: min hora diaMes mes diaSem. Ej: 0 9 * * * = 9:00 todos los días · "
+                                    + "*/15 9-17 * * 1-5 = cada 15 min, 9-17h, lun-vie. Domingo = 0 o 7."
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.Wrap
+                            color: Theme.textMuted
+                            font.pixelSize: 11
+                            text: "El scheduler solo dispara mientras la app está abierta y con server+agente encendidos."
+                        }
                     }
 
                     LcButton {

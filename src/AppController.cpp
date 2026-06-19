@@ -29,6 +29,7 @@
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
+#include "core/ToolCallingSupport.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
 #include <QSqlDatabase>
@@ -1208,6 +1209,11 @@ void AppController::startServer(const QString &launchProfileId)
     emit serverRunningChanged();
     emit serverReadyChanged();
     emit activeLaunchIdChanged();
+    // Cambió el modelo activo → resetear la señal de template y recomputar el aviso
+    // de tool-calling (el /props del nuevo server la actualizará al conectar).
+    m_toolTemplateHave = false;
+    m_toolTemplateSupports = false;
+    recomputeToolSupport();
 }
 
 void AppController::startHealthPolling()
@@ -2604,6 +2610,11 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         if (limit > 0) m_agentContextLimit = limit;
         emit agentContextChanged();
     });
+    connect(b, &IAgentBackend::chatTemplateDetected, this, [this](bool have, bool tools) {
+        m_toolTemplateHave = have;
+        m_toolTemplateSupports = tools;
+        recomputeToolSupport();
+    });
 
     b->setApprovalPolicy(m_agentApprovalMode);
     b->setPermissionRules(m_agentPermRules);
@@ -3460,6 +3471,34 @@ bool AppController::agentBackendBusy() const
     return false;
 }
 
+void AppController::recomputeToolSupport()
+{
+    // Cookbook embebido (hf_models.json) cacheado una sola vez.
+    static QJsonArray cookbook = []() {
+        QFile f(QStringLiteral(":/assets/hwfit/hf_models.json"));
+        if (!f.open(QIODevice::ReadOnly)) return QJsonArray{};
+        return QJsonDocument::fromJson(f.readAll()).array();
+    }();
+
+    // Nombre del modelo del launch activo: filename del GGUF (mejor para matchear),
+    // si no el modelId, si no el modelo cloud.
+    QString modelName;
+    if (!m_activeLaunchId.isEmpty()) {
+        const auto ctx = buildContext(m_activeLaunchId);
+        modelName = ctx.catalogModel.fileName;
+        if (modelName.isEmpty()) modelName = ctx.model.modelId;
+    }
+
+    const auto cook = ToolCallingSupport::fromCookbook(modelName, cookbook);
+    const auto combined = ToolCallingSupport::combine(cook, m_toolTemplateHave,
+                                                      m_toolTemplateSupports);
+    const QString next = ToolCallingSupport::toString(combined);
+    if (next != m_activeProfileToolSupport) {
+        m_activeProfileToolSupport = next;
+        emit activeProfileToolSupportChanged();
+    }
+}
+
 bool AppController::canRunTask() const
 {
     if (!m_runningTaskId.isEmpty())
@@ -3469,6 +3508,10 @@ bool AppController::canRunTask() const
     if (m_serverStopping)
         return false;
     if (serverRunning() && !m_serverReady)
+        return false;
+    // Las Tasks requieren server+agente vivos (sin auto-inicio): la sección está
+    // grisada hasta entonces, igual que Chat/Agente.
+    if (!serverRunning() || !agentRunning())
         return false;
     if (agentBackendBusy())
         return false;
@@ -3532,41 +3575,48 @@ void AppController::runTask(const QString &id)
     m_runningTaskLogStart = m_agentLog.size();
     m_runningTaskSilentUnlessError = task.value(QStringLiteral("silentUnlessError"), false).toBool();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Iniciando Task '%1' (%2).").arg(name, id));
-    m_tasks.markRun(id, QStringLiteral("running"), QStringLiteral("Ejecutando Task..."));
-    emit taskRunStateChanged();
 
+    // Las Tasks requieren server+agente encendidos (la sección está grisada en el
+    // NavBar hasta que lo estén). Sin agente: error claro, sin auto-inicio.
     const bool agentUp = (m_agentBackend && m_agentBackend->running())
                          || m_piActive
                          || (m_agentProc && m_agentProc->state() == QProcess::Running);
-    if (agentUp) {
-        // Agente ya corriendo: aislar la Task en una sesión limpia para no
-        // heredar historial/compactación de una charla anterior.
-        prepareTaskAgentSession();
-        m_runningTaskLogStart = m_agentLog.size();
-        appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
-        sendToAgent(prompt);
-        return;
-    }
-
-    // No hay agente: auto-iniciar con el perfil de la Task (o el último activo),
-    // ejecutar al quedar listo y apagarlo al terminar el turno.
-    QString launchId = task.value("profileId").toString();
-    if (launchId.isEmpty()) launchId = m_activeLaunchId;
-    if (launchId.isEmpty()) {
-        appendAgentEvent(QStringLiteral("lifecycle"),
-                         QStringLiteral("Task '%1' sin perfil y sin perfil activo: no se puede auto-iniciar el agente.").arg(id));
-        const QString msg = QStringLiteral("Task sin perfil de agente: no se pudo auto-iniciar. Asigná un perfil en la Task.");
+    if (!agentUp) {
+        const QString msg = QStringLiteral("Encendé el servidor y el agente antes de ejecutar una Task.");
         finishRunningTask(QStringLiteral("error"), msg);
         emit serverError(msg);
         return;
     }
 
-    m_pendingScheduledTaskId = id;
-    m_pendingScheduledLaunchId = launchId;
-    m_scheduledAutoStop = true;
-    appendAgentEvent(QStringLiteral("lifecycle"),
-                     QStringLiteral("Auto-iniciando servidor+agente para la Task '%1'.").arg(id));
-    startServerAndAgent(launchId);
+    m_tasks.markRun(id, QStringLiteral("running"), QStringLiteral("Ejecutando Task..."));
+    emit taskRunStateChanged();
+
+    // Permisos de filesystem de la Task + auto-aprobar tools para que no frene.
+    applyTaskAgentPermissions(task);
+
+    // Aislar la Task en una sesión limpia para no heredar historial/compactación.
+    prepareTaskAgentSession();
+    m_runningTaskLogStart = m_agentLog.size();
+    appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
+    sendToAgent(prompt);
+}
+
+void AppController::applyTaskAgentPermissions(const QVariantMap &task)
+{
+    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!cb) return;
+    const QString scope = task.value(QStringLiteral("permScope"), QStringLiteral("project")).toString();
+    const QStringList folders = task.value(QStringLiteral("permFolders")).toStringList();
+    cb->setTaskScope(scope, folders);
+    cb->setTaskAutoApprove(true);
+}
+
+void AppController::clearTaskAgentPermissions()
+{
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        cb->setTaskAutoApprove(false);
+        cb->clearTaskScope();
+    }
 }
 
 void AppController::dispatchPendingScheduledTask()
@@ -3740,6 +3790,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
     m_taskWorkLogs.insert(id, work);
     m_tasks.markRun(id, status, summary);
+    clearTaskAgentPermissions();   // restaura confinamiento y aprobación normales
     m_runningTaskId.clear();
     m_runningTaskName.clear();
     m_runningTaskPhase.clear();
@@ -6424,26 +6475,10 @@ static double catalogSpeedTps(const QString &gpuName, double activeParamsB, doub
 // prefix, strip quant/format suffixes (AWQ, FP8, GGUF, Q4_K_M, -4bit…) and
 // role tags (instruct/it/base/thinking…), collapse separators to single spaces.
 // Must mirror the key shape used in assets/benchmarks/aa_intelligence.json.
+// Normalización compartida con ToolCallingSupport (mismo home público, misma lógica).
 static QString benchmarkKey(const QString &rawName)
 {
-    QString s = rawName.section(QLatin1Char('/'), -1).toLower();
-    const auto strip = [&s](const QString &pat) {
-        s.remove(QRegularExpression(pat, QRegularExpression::CaseInsensitiveOption));
-    };
-    // GGUF k-quant tiers (q4_k_m, q5_k, q8_0, iq4_xs…)
-    strip(QStringLiteral("[-_.]?(q[0-9](_k(_[a-z])?|_[0-9])?|iq[0-9][a-z0-9]*)\\b"));
-    // Prequantized / float formats, with optional bit-width
-    strip(QStringLiteral("[-_.]?(awq|gptq|gguf|mlx|exl2|bnb|nvfp4|mxfp4|fp4|fp8|fp16|bf16|f16|f32|int4|int8|w4a16|w8a8|w8a16|nf4)([-_]?[0-9]{1,2}(bit)?)?\\b"));
-    // Bare bit-width tags (4bit, 8bit)
-    strip(QStringLiteral("[-_.]?[0-9]{1,2}bit\\b"));
-    // Date-stamp tokens (2507, 2501, 2512…)
-    strip(QStringLiteral("[-_.]?2[0-9]{3}\\b"));
-    // Role / variant tags
-    strip(QStringLiteral("[-_](instruct|it|base|chat|thinking|reasoning|captioner|preview|distill|hf|mtp)\\b"));
-    // Collapse separators
-    s.replace(QRegularExpression(QStringLiteral("[-_/]")), QStringLiteral(" "));
-    s.replace(QRegularExpression(QStringLiteral("\\s+")), QStringLiteral(" "));
-    return s.trimmed();
+    return ToolCallingSupport::normalizeKey(rawName);
 }
 
 // Quality penalty per quant tier — ported from Odysseus services/hwfit/models.py

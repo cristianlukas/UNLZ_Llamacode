@@ -24,6 +24,8 @@ private slots:
 
     void writeReadEditCycle();
     void confinement_blocksOutsideCwd();
+    void allowedRoots_permitExtraFolder();
+    void unconfined_permitsAnyPath();
     void editFile_missingFails();
     void editFile_whitespaceNearMissExplains();
     void parseErrorExplainsChunking();
@@ -87,6 +89,40 @@ void AgentToolsTests::confinement_blocksOutsideCwd()
     QVERIFY(!w.value("ok").toBool());
     QVERIFY(w.value("result").toString().contains("fuera del proyecto"));
     QVERIFY(!QFile::exists(QDir(m_dir.path()).filePath("../escape.txt")));
+}
+
+void AgentToolsTests::allowedRoots_permitExtraFolder()
+{
+    // Una carpeta extra autorizada (scope "folder" de una Task) permite escribir
+    // ahí con ruta absoluta; otra ruta fuera de cwd y de los roots sigue bloqueada.
+    QTemporaryDir extra;
+    QVERIFY(extra.isValid());
+    m_runner->setConfined(true);
+    m_runner->setAllowedRoots({extra.path()});
+
+    const QString okPath = QDir(extra.path()).filePath("out.txt");
+    QVariantMap w = call("write_file", {{"path", okPath}, {"content", "dolar"}});
+    QVERIFY(w.value("ok").toBool());
+    QVERIFY(QFile::exists(okPath));
+
+    QVariantMap blocked = call("write_file", {{"path", "../escape.txt"}, {"content", "x"}});
+    QVERIFY(!blocked.value("ok").toBool());
+    QVERIFY(blocked.value("result").toString().contains("fuera del proyecto"));
+
+    m_runner->setAllowedRoots({});   // limpiar para no afectar otros tests
+}
+
+void AgentToolsTests::unconfined_permitsAnyPath()
+{
+    // Scope "full" (toda la PC): sin confinamiento, cualquier ruta válida pasa.
+    QTemporaryDir other;
+    QVERIFY(other.isValid());
+    m_runner->setConfined(false);
+    const QString p = QDir(other.path()).filePath("anywhere.txt");
+    QVariantMap w = call("write_file", {{"path", p}, {"content", "ok"}});
+    QVERIFY(w.value("ok").toBool());
+    QVERIFY(QFile::exists(p));
+    m_runner->setConfined(true);
 }
 
 void AgentToolsTests::editFile_missingFails()
