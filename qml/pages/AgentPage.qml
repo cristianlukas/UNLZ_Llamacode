@@ -611,7 +611,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: "ctx " + App.agentContextUsed + "/" + App.agentContextLimit
-                        color: Theme.textSecondary; font { pixelSize: 11; family: "Consolas,monospace" }
+                        color: Theme.textSecondary; font { pixelSize: 11; family: Theme.codeFont }
                     }
                 }
 
@@ -1401,7 +1401,7 @@ Item {
                                               + (diffCard.diffLines > 0 ? "  · " + diffCard.diffLines + " líneas" : "")
                                               + (diffCard.reverted ? "  · revertido" : "")
                                         color: diffCard.reverted ? Theme.textMuted : Theme.textPrimary
-                                        font { family: "Consolas,monospace"; pixelSize: 12; bold: true }
+                                        font { family: Theme.codeFont; pixelSize: 12; bold: true }
                                         elide: Text.ElideMiddle
                                         MouseArea {
                                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1447,7 +1447,7 @@ Item {
                                         // sin layout costoso en cada rebuild del ListView.
                                         text: diffCard.expanded ? (modelData.diff ?? "") : ""
                                         color: Theme.textSecondary
-                                        font { family: "Consolas,monospace"; pixelSize: 11 }
+                                        font { family: Theme.codeFont; pixelSize: 11 }
                                         wrapMode: TextEdit.NoWrap
                                         readOnly: true; selectByMouse: true
                                         opacity: diffCard.reverted ? 0.5 : 1.0
@@ -1499,7 +1499,7 @@ Item {
                                         text: toolCard.toolName
                                               + (toolCard.command.length > 0 ? "  " + toolCard.command : "")
                                         color: Theme.textPrimary
-                                        font { family: "Consolas,monospace"; pixelSize: 12; bold: true }
+                                        font { family: Theme.codeFont; pixelSize: 12; bold: true }
                                         elide: Text.ElideRight
                                         MouseArea {
                                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
@@ -1558,7 +1558,7 @@ Item {
                                                  + toolCard.output)
                                               : ""
                                         color: Theme.textSecondary
-                                        font { family: "Consolas,monospace"; pixelSize: 11 }
+                                        font { family: Theme.codeFont; pixelSize: 11 }
                                         wrapMode: TextEdit.NoWrap
                                         readOnly: true; selectByMouse: true
                                     }
@@ -1744,7 +1744,7 @@ Item {
                                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
                                 text: approvalCard.tool.detail ?? ""
                                 color: Theme.textSecondary
-                                font { family: "Consolas,monospace"; pixelSize: 12 }
+                                font { family: Theme.codeFont; pixelSize: 12 }
                                 wrapMode: TextEdit.WrapAnywhere
                                 readOnly: true; selectByMouse: true
                             }
@@ -1769,7 +1769,7 @@ Item {
                                     width: parent.width
                                     text: approvalCard.tool.diff ?? ""
                                     color: Theme.textSecondary
-                                    font { family: "Consolas,monospace"; pixelSize: 11 }
+                                    font { family: Theme.codeFont; pixelSize: 11 }
                                     wrapMode: TextEdit.NoWrap
                                     readOnly: true; selectByMouse: true
                                 }
@@ -1853,7 +1853,7 @@ Item {
                                 readOnly: true
                                 text: App.agentLog
                                 color: Theme.textSecondary
-                                font { family: "Consolas,monospace"; pixelSize: 12 }
+                                font { family: Theme.codeFont; pixelSize: 12 }
                                 wrapMode: TextArea.WrapAnywhere
                                 background: null
                                 selectByMouse: true
@@ -1869,7 +1869,7 @@ Item {
                                 anchors { verticalCenter: parent.verticalCenter; left: parent.left; leftMargin: 12 }
                                 text: "native log: " + App.agentNativeLogDir(resolvedAdapter)
                                 color: Theme.textMuted
-                                font { family: "Consolas,monospace"; pixelSize: 10 }
+                                font { family: Theme.codeFont; pixelSize: 10 }
                                 elide: Text.ElideLeft; width: parent.width - 24
                             }
                         }
@@ -2018,7 +2018,7 @@ Item {
                                         anchors { left: parent.left; right: parent.right
                                                   verticalCenter: parent.verticalCenter; margins: 8 }
                                         text: "📄 " + modelData
-                                        color: Theme.textPrimary; font { family: "Consolas,monospace"; pixelSize: 11 }
+                                        color: Theme.textPrimary; font { family: Theme.codeFont; pixelSize: 11 }
                                         elide: Text.ElideMiddle
                                     }
                                     MouseArea {
@@ -2406,7 +2406,7 @@ Item {
                         id: agentTuningSystem
                         placeholderText: "p.ej. priorizá cambios mínimos, corré tests antes de terminar, no toques archivos de config…"
                         color: Theme.textPrimary; placeholderTextColor: Theme.textMuted
-                        font { family: "Consolas,monospace"; pixelSize: 12 }
+                        font { family: Theme.codeFont; pixelSize: 12 }
                         wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
                         background: null; padding: 10; selectByMouse: true
                     }
@@ -2441,7 +2441,7 @@ Item {
                         placeholderText: "allow|deny|ask  [read:|write:|shell:]<glob>\n"
                             + "deny **/.env\ndeny write:**/secrets/**\nallow write:src/**\nask shell:rm *"
                         color: Theme.textPrimary; placeholderTextColor: Theme.textMuted
-                        font { family: "Consolas,monospace"; pixelSize: 12 }
+                        font { family: Theme.codeFont; pixelSize: 12 }
                         wrapMode: TextArea.NoWrap
                         background: null; padding: 10; selectByMouse: true
                     }
@@ -2514,7 +2514,7 @@ Item {
                     placeholderText: "Convenciones, comandos de build/test, arquitectura, do/don't del proyecto…"
                     color: Theme.textPrimary
                     placeholderTextColor: Theme.textMuted
-                    font { family: "Consolas,monospace"; pixelSize: 12 }
+                    font { family: Theme.codeFont; pixelSize: 12 }
                     wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
                     background: null
                     padding: 10

@@ -23,7 +23,7 @@ Rectangle {
             Layout.fillWidth: true
             Text {
                 text: "$ "
-                font { family: "Consolas,monospace"; pixelSize: 13 }
+                font { family: Theme.codeFont; pixelSize: 13 }
                 color: Theme.successText
             }
             Text {
@@ -33,7 +33,7 @@ Rectangle {
                     const _lang = App.langV
                     return root.commandLine.length > 0 ? root.commandLine : App.l("cmd.noProfile")
                 }
-                font { family: "Consolas,monospace"; pixelSize: 13 }
+                font { family: Theme.codeFont; pixelSize: 13 }
                 color: root.commandLine.length > 0 ? Theme.textPrimary : Theme.textMuted
                 wrapMode: Text.WrapAnywhere
                 maximumLineCount: 5

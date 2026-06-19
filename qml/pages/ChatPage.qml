@@ -1005,7 +1005,7 @@ Item {
                                         width: parent.width
                                         text: delegateRoot.thinkContent
                                         color: Theme.textMuted
-                                        font.family: "Consolas,monospace"
+                                        font.family: Theme.codeFont
                                         font.pixelSize: 12
                                         wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
                                         readOnly: true

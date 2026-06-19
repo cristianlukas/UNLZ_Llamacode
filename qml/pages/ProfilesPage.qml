@@ -771,7 +771,7 @@ Item {
                                     readOnly: true
                                     text: smokeTestResultDialog.output
                                     color: smokeTestResultDialog.passed ? Theme.successText : Theme.errorText
-                                    font { family: "Consolas,monospace"; pixelSize: 11 }
+                                    font { family: Theme.codeFont; pixelSize: 11 }
                                     wrapMode: TextArea.WrapAnywhere
                                     background: null
                                 }
@@ -907,7 +907,7 @@ Item {
                                     placeholderText: "./llama-server --model /ruta/al/modelo.gguf --ctx-size 8192 --port 8080 --n-gpu-layers 99 --flash-attn"
                                     color: Theme.textPrimary
                                     placeholderTextColor: Theme.textMuted
-                                    font { family: "Consolas,monospace"; pixelSize: 12 }
+                                    font { family: Theme.codeFont; pixelSize: 12 }
                                     wrapMode: TextArea.WrapAnywhere
                                     background: null
                                     padding: 10

@@ -527,7 +527,7 @@ Item {
                                 verticalAlignment: TextInput.AlignVCenter
                                 text: endpointBox.endpointUrl
                                 color: Theme.textPrimary
-                                font.family: "Consolas, monospace"
+                                font.family: Theme.codeFont
                                 font.pixelSize: 13
                                 readOnly: true
                                 selectByMouse: true
@@ -666,7 +666,7 @@ Item {
                             readOnly: true
                             text: App.serverLog
                             color: Theme.textSecondary
-                            font { family: "Consolas,monospace"; pixelSize: 12 }
+                            font { family: Theme.codeFont; pixelSize: 12 }
                             wrapMode: TextArea.WrapAnywhere
                             background: null
                             onTextChanged: cursorPosition = text.length

@@ -134,6 +134,141 @@ Item {
                         }
                     }
 
+                    // ── Temas custom ─────────────────────────────────────────
+                    ColumnLayout {
+                        id: customSection
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        property var list: Theme.customThemes
+                        Connections {
+                            target: Theme
+                            function onCustomThemesChanged() { customSection.list = Theme.customThemes }
+                        }
+
+                        Text {
+                            text: "TEMAS CUSTOM"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: customInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: customInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                Text {
+                                    text: "Creá tus propios temas: elegí acento, fondo, primer plano, contraste y fuentes. Se guardan y los podés retomar cuando quieras."
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 3
+                                    rowSpacing: 8
+                                    columnSpacing: 8
+
+                                    Repeater {
+                                        model: customSection.list
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            Layout.fillWidth: true
+                                            height: 74
+                                            radius: 8
+                                            color: modelData.background || Theme.inputBg
+                                            border.width: Theme.currentCustomId === modelData.id ? 2 : 1
+                                            border.color: Theme.currentCustomId === modelData.id
+                                                ? Theme.accent : Theme.divider
+
+                                            ColumnLayout {
+                                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                                                spacing: 6
+                                                RowLayout {
+                                                    Layout.fillWidth: true
+                                                    spacing: 6
+                                                    Rectangle {
+                                                        width: 14; height: 14; radius: 7
+                                                        color: modelData.accent || "#888"
+                                                        border.color: "#80000000"
+                                                    }
+                                                    Text {
+                                                        text: modelData.name || "(sin nombre)"
+                                                        color: modelData.foreground || Theme.textPrimary
+                                                        font.pixelSize: 12
+                                                        font.bold: true
+                                                        elide: Text.ElideRight
+                                                        Layout.fillWidth: true
+                                                    }
+                                                }
+                                                RowLayout {
+                                                    spacing: 6
+                                                    Layout.fillWidth: true
+                                                    LcButton {
+                                                        text: "Editar"
+                                                        secondary: true
+                                                        implicitHeight: 26
+                                                        onClicked: themeEditor.openEdit(modelData)
+                                                    }
+                                                    LcButton {
+                                                        text: "✕"
+                                                        danger: true
+                                                        implicitHeight: 26
+                                                        onClicked: Theme.deleteCustomTheme(modelData.id)
+                                                    }
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                z: -1
+                                                onClicked: Theme.applyCustomTheme(modelData.id)
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 74
+                                        radius: 8
+                                        color: Theme.inputBg
+                                        border.color: Theme.divider
+                                        border.width: 1
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "＋ Nuevo tema"
+                                            color: Theme.textSecondary
+                                            font.pixelSize: 13
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: themeEditor.openNew()
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    visible: customSection.list.length === 0
+                                    text: "Sin temas custom todavía."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                }
+                            }
+                        }
+                    }
+
                     // ── Language ─────────────────────────────────────────────
                     ColumnLayout {
                         Layout.fillWidth: true
@@ -939,7 +1074,7 @@ Item {
                                                                 color: Theme.textPrimary
                                                                 font.pixelSize: 13
                                                                 font.bold: true
-                                                                font.family: "monospace"
+                                                                font.family: Theme.codeFont
                                                             }
                                                             Text {
                                                                 text: "~" + modelData.approxTokens
@@ -1354,6 +1489,188 @@ Item {
                                 }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Editor de tema custom ───────────────────────────────────────────────
+    LcDialog {
+        id: themeEditor
+        title: "Editor de tema"
+        standardButtons: Dialog.NoButton
+        width: Math.min(520, root.width - 48)
+
+        property string editId: ""
+        property string baseTheme: "dark"
+        property bool translucent: false
+
+        function loadDef(def) {
+            editId = def.id || ""
+            nameField.text = def.name || ""
+            baseTheme = def.base || "dark"
+            baseCombo.currentIndex = baseCombo.indexOfValue(baseTheme)
+            accentField.text = def.accent || ""
+            bgField.text = def.background || ""
+            fgField.text = def.foreground || ""
+            uiFontField.text = def.uiFont || ""
+            codeFontField.text = def.codeFont || ""
+            contrastSlider.value = def.contrast !== undefined ? def.contrast : 30
+            translucent = def.translucent === true
+        }
+        function openNew() { loadDef(Theme.defaultCustomDef("dark")); open() }
+        function openEdit(def) { loadDef(def); open() }
+        function collect() {
+            return {
+                "id": editId,
+                "name": nameField.text.trim(),
+                "base": baseCombo.currentValue,
+                "accent": accentField.text.trim(),
+                "background": bgField.text.trim(),
+                "foreground": fgField.text.trim(),
+                "uiFont": uiFontField.text.trim(),
+                "codeFont": codeFontField.text.trim(),
+                "contrast": Math.round(contrastSlider.value),
+                "translucent": themeEditor.translucent
+            }
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+
+            LcTextField {
+                id: nameField
+                Layout.fillWidth: true
+                placeholderText: "Nombre del tema"
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Text { text: "Base"; color: Theme.textSecondary; font.pixelSize: 12 }
+                LcComboBox {
+                    id: baseCombo
+                    Layout.preferredWidth: 160
+                    model: [
+                        { label: "Oscuro", value: "dark" },
+                        { label: "Claro",  value: "light" },
+                        { label: "OLED",   value: "oled" },
+                    ]
+                    textRole: "label"
+                    valueRole: "value"
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: "Define estados (error/ok) y overlay."
+                    color: Theme.textMuted; font.pixelSize: 11
+                    wrapMode: Text.WordWrap
+                }
+            }
+
+            // Pickers de color: hex + swatch.
+            Repeater {
+                model: [
+                    { lbl: "Acento",          fld: "accent" },
+                    { lbl: "Fondo",           fld: "background" },
+                    { lbl: "Primer plano",    fld: "foreground" },
+                ]
+                delegate: RowLayout {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text {
+                        text: modelData.lbl
+                        color: Theme.textSecondary
+                        font.pixelSize: 12
+                        Layout.preferredWidth: 110
+                    }
+                    Rectangle {
+                        width: 28; height: 28; radius: 6
+                        border.color: Theme.divider
+                        color: {
+                            var t = modelData.fld === "accent" ? accentField.text
+                                  : modelData.fld === "background" ? bgField.text : fgField.text
+                            return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(t) ? t : "transparent"
+                        }
+                    }
+                    LcTextField {
+                        Layout.fillWidth: true
+                        placeholderText: "#RRGGBB"
+                        text: modelData.fld === "accent" ? accentField.text
+                            : modelData.fld === "background" ? bgField.text : fgField.text
+                        onTextChanged: {
+                            if (modelData.fld === "accent") accentField.text = text
+                            else if (modelData.fld === "background") bgField.text = text
+                            else fgField.text = text
+                        }
+                    }
+                }
+            }
+            // Campos reales (ocultos) que sostienen el estado de color.
+            LcTextField { id: accentField; visible: false }
+            LcTextField { id: bgField; visible: false }
+            LcTextField { id: fgField; visible: false }
+
+            LcTextField {
+                id: uiFontField
+                Layout.fillWidth: true
+                placeholderText: "Fuente de la interfaz (ej. Inter)"
+            }
+            LcTextField {
+                id: codeFontField
+                Layout.fillWidth: true
+                placeholderText: "Fuente de código (ej. JetBrains Mono)"
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Text { text: "Barra lateral translúcida"; color: Theme.textPrimary; font.pixelSize: 13; Layout.fillWidth: true }
+                Switch {
+                    checked: themeEditor.translucent
+                    onToggled: themeEditor.translucent = checked
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Text { text: "Contraste"; color: Theme.textPrimary; font.pixelSize: 13 }
+                Slider {
+                    id: contrastSlider
+                    Layout.fillWidth: true
+                    from: 0; to: 100; stepSize: 1
+                    value: 30
+                }
+                Text {
+                    text: Math.round(contrastSlider.value)
+                    color: Theme.textSecondary; font.pixelSize: 13
+                    Layout.preferredWidth: 30
+                }
+            }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg
+            height: 56
+            radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: (App.langV, App.l("common.cancel"))
+                    secondary: true
+                    onClicked: themeEditor.close()
+                }
+                LcButton {
+                    text: "Guardar y aplicar"
+                    onClicked: {
+                        var id = Theme.saveCustomTheme(themeEditor.collect())
+                        Theme.applyCustomTheme(id)
+                        themeEditor.close()
                     }
                 }
             }

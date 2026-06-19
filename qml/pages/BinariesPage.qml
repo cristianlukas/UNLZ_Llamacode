@@ -415,7 +415,7 @@ Item {
                     model: binData.supportedFlags ?? []
                     delegate: Text {
                         text: modelData
-                        font { family: "Consolas,monospace"; pixelSize: 12 }
+                        font { family: Theme.codeFont; pixelSize: 12 }
                         color: Theme.textSecondary
                         height: 20
                     }

@@ -6,7 +6,11 @@ import LlamaCode 1.0
 Rectangle {
     id: root
     width: 200
-    color: Theme.navBg
+    // Translúcida (tema custom): baja el alpha del fondo para dejar ver la ventana.
+    readonly property color navBase: Theme.navBg
+    color: Theme.sidebarTranslucent
+        ? Qt.rgba(navBase.r, navBase.g, navBase.b, 0.8)
+        : navBase
 
     property int currentIndex: 0
     signal pageSelected(int index)
