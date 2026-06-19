@@ -61,6 +61,7 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case LoopEnabledRole:       return t.value("loopEnabled", false);
     case LoopGoalRole:          return t.value("loopGoal");
     case LoopMaxIterationsRole: return t.value("loopMaxIterations", 5);
+    case VerifyProfileIdRole:   return t.value("verifyProfileId");
     default:                  return {};
     }
 }
@@ -105,6 +106,7 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { LoopEnabledRole,       "loopEnabled" },
         { LoopGoalRole,          "loopGoal" },
         { LoopMaxIterationsRole, "loopMaxIterations" },
+        { VerifyProfileIdRole,   "verifyProfileId" },
     };
 }
 
@@ -166,6 +168,7 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["loopGoal"]        = def.value("loopGoal", t.value("loopGoal"));
     t["loopMaxIterations"] = qBound(1, def.value("loopMaxIterations",
                                        t.value("loopMaxIterations", 5)).toInt(), 100);
+    t["verifyProfileId"] = def.value("verifyProfileId", t.value("verifyProfileId"));
     t["updatedAt"]       = now;
 
     QString outId;
@@ -369,6 +372,14 @@ QString TaskStore::composeLoopGoalPrompt(const QVariantMap &task)
     return out.join(QLatin1Char('\n'));
 }
 
+QString TaskStore::verifyProfileFor(const QVariantMap &task, const QString &execProfileId)
+{
+    const QString verify = task.value("verifyProfileId").toString().trimmed();
+    if (verify.isEmpty() || verify == execProfileId.trimmed())
+        return {};
+    return verify;
+}
+
 QJsonObject TaskStore::toJson(const QVariantMap &task)
 {
     QJsonObject o;
@@ -407,6 +418,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["loopEnabled"]     = task.value("loopEnabled", false).toBool();
     o["loopGoal"]        = task.value("loopGoal").toString();
     o["loopMaxIterations"] = task.value("loopMaxIterations", 5).toInt();
+    o["verifyProfileId"] = task.value("verifyProfileId").toString();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -469,6 +481,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["loopEnabled"]     = obj.value("loopEnabled").toBool(false);
     t["loopGoal"]        = obj.value("loopGoal").toString();
     t["loopMaxIterations"] = qBound(1, obj.value("loopMaxIterations").toInt(5), 100);
+    t["verifyProfileId"] = obj.value("verifyProfileId").toString();
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

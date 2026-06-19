@@ -25,6 +25,7 @@ private slots:
     void loop_composeGoalPrompt();
     void loop_runsExactlyMaxIterationsWhenGoalNeverMet();
     void loop_stopsEarlyWhenGoalMet();
+    void verifyProfile_routesOnlyWhenSetAndDifferent();
 };
 
 static QVariantMap sampleTask()
@@ -285,6 +286,24 @@ void TasksTests::loop_stopsEarlyWhenGoalMet()
                          : QStringLiteral("GOAL_NOT_MET");
     });
     QCOMPARE(runs, 3);
+}
+
+void TasksTests::verifyProfile_routesOnlyWhenSetAndDifferent()
+{
+    QVariantMap task = sampleTask();
+    // Sin verifyProfileId → no rutea.
+    QVERIFY(TaskStore::verifyProfileFor(task, QStringLiteral("exec")).isEmpty());
+
+    task["verifyProfileId"] = QStringLiteral("strong");
+    QCOMPARE(TaskStore::verifyProfileFor(task, QStringLiteral("exec")),
+             QStringLiteral("strong"));
+    // Igual al de ejecución → no hay nada que cambiar.
+    QVERIFY(TaskStore::verifyProfileFor(task, QStringLiteral("strong")).isEmpty());
+
+    // Roundtrip persiste el campo.
+    task["verifyProfileId"] = QStringLiteral("p-verify");
+    const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(task));
+    QCOMPARE(out.value("verifyProfileId").toString(), QStringLiteral("p-verify"));
 }
 
 QTEST_MAIN(TasksTests)

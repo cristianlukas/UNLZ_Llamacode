@@ -780,6 +780,12 @@ private:
     // Escanea líneas del server por patrones conocidos y emite serverDiagnostic.
     void detectServerLogPatterns(const QString &text);
     void appendAgentEvent(const QString &source, const QString &text);
+    // Verify-phase swap: manda `prompt` al agente, cambiando antes el modelo a
+    // `targetLaunchId` si difiere del activo (reinicia server+agente; sesión
+    // nueva). `freshSession` limpia la sesión cuando NO hay swap. Si targetLaunchId
+    // está vacío o coincide con el activo, manda directo.
+    void sendForPhaseProfile(const QString &targetLaunchId, const QString &prompt,
+                             bool freshSession);
     QString runtimeLogDir() const;
     void rotateLogIfNeeded(const QString &path) const;
     void appendFileLog(const QString &path, const QString &line) const;
@@ -812,6 +818,15 @@ private:
     // entre iteraciones y decide si re-disparar el cuerpo (ver TaskStore::decideLoop).
     bool     m_runningTaskLoopEnabled = false;
     int      m_runningTaskLoopIteration = 0;
+    // Routing multi-modelo (verify-phase swap): perfil de ejecución vs perfil de
+    // verificación del goal-check. Si difieren, el goal-check del bucle corre en
+    // el modelo de verificación (sesión nueva: se auto-verifica con herramientas)
+    // y el cuerpo vuelve al de ejecución. Vacío m_runningTaskVerifyLaunchId = sin
+    // routing (comportamiento normal).
+    QString  m_runningTaskExecLaunchId;
+    QString  m_runningTaskVerifyLaunchId;
+    QString  m_pendingSwapPrompt;        // prompt a mandar cuando el swap termina
+    bool     m_pendingSwapFreshSession = false;  // limpiar sesión antes de mandar
     QHash<QString, QString> m_taskWorkLogs;
     // Task programada esperando que el agente auto-iniciado quede listo.
     QString  m_pendingScheduledTaskId;

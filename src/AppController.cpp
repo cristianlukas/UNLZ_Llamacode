@@ -2954,6 +2954,52 @@ void AppController::restartActiveLaunchForThinking(bool withAgent, bool cancelAc
     stopServer();
 }
 
+void AppController::sendForPhaseProfile(const QString &targetLaunchId,
+                                       const QString &prompt, bool freshSession)
+{
+    // Sin routing (o ya estamos en el perfil correcto): mandar directo.
+    if (targetLaunchId.isEmpty() || targetLaunchId == m_activeLaunchId) {
+        if (freshSession) {
+            prepareTaskAgentSession();
+            m_runningTaskLogStart = m_agentLog.size();
+        }
+        sendToAgent(prompt);
+        return;
+    }
+
+    // Swap de modelo: reinicia server+agente al perfil destino y, cuando el
+    // agente quede arriba, manda el prompt en la sesión nueva (un agente nuevo ya
+    // arranca limpio, así que `freshSession` es implícito acá).
+    appendAgentEvent(QStringLiteral("task"),
+                     QStringLiteral("Routing: cambiando al modelo de verificación '%1'…")
+                         .arg(targetLaunchId));
+    m_pendingSwapPrompt = prompt;
+    m_pendingSwapFreshSession = false;
+
+    auto *conn = new QMetaObject::Connection;
+    *conn = connect(this, &AppController::agentRunningChanged, this, [this, conn]() {
+        if (!agentRunning()) return;                 // esperar a que el agente arranque
+        if (m_pendingSwapPrompt.isEmpty()) { disconnect(*conn); delete conn; return; }
+        disconnect(*conn); delete conn;
+        const QString p = m_pendingSwapPrompt;
+        m_pendingSwapPrompt.clear();
+        m_runningTaskLogStart = m_agentLog.size();
+        sendToAgent(p);
+    });
+
+    auto startNew = [this, targetLaunchId]() { startServerAndAgent(targetLaunchId); };
+    if (!serverRunning()) { QTimer::singleShot(0, this, startNew); return; }
+    auto *srvConn = new QMetaObject::Connection;
+    *srvConn = connect(this, &AppController::serverRunningChanged, this,
+                       [this, srvConn, startNew]() {
+        if (serverRunning() || m_serverStopping) return;
+        disconnect(*srvConn); delete srvConn;
+        QTimer::singleShot(0, this, startNew);
+    });
+    if (agentRunning() || m_agentStarting) stopAgent();
+    stopServer();
+}
+
 void AppController::setAgentTeacherUrl(const QString &url)
 {
     if (url == m_agentTeacherUrl) return;
@@ -3664,6 +3710,10 @@ void AppController::runTask(const QString &id)
     m_runningTaskLoopEnabled = task.value(QStringLiteral("loopEnabled"), false).toBool()
                                && !TaskStore::composeLoopGoalPrompt(task).isEmpty();
     m_runningTaskLoopIteration = 1;   // esta primera corrida del cuerpo cuenta como iteración 1
+    // Routing verify-phase: el cuerpo corre en el modelo activo; el goal-check del
+    // bucle puede correr en otro (si verifyProfileId difiere). Ver sendForPhaseProfile.
+    m_runningTaskExecLaunchId = m_activeLaunchId;
+    m_runningTaskVerifyLaunchId = TaskStore::verifyProfileFor(task, m_activeLaunchId);
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Iniciando Task '%1' (%2).").arg(name, id));
 
     // Las Tasks requieren server+agente encendidos (la sección está grisada en el
@@ -3818,9 +3868,10 @@ void AppController::onAgentTurnFinished()
                     prompt += AutomationRunner::augmentPrompt(loopTask,
                         AutomationArtifactStore::manifest(artId),
                         AutomationArtifactStore::recipe(artId));
-                prepareTaskAgentSession();   // sesión limpia por iteración
-                m_runningTaskLogStart = m_agentLog.size();
-                sendToAgent(prompt);
+                // Routing: volver al modelo de ejecución para la próxima iteración
+                // del cuerpo (swap-back si el goal-check corrió en otro modelo).
+                // Sesión limpia por iteración.
+                sendForPhaseProfile(m_runningTaskExecLaunchId, prompt, true);
                 return;
             }
             finishRunningTask(QStringLiteral("ok"),
@@ -3862,7 +3913,9 @@ void AppController::onAgentTurnFinished()
                 m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
                                 QStringLiteral("Evaluando objetivo del bucle..."));
                 emit taskRunStateChanged();
-                sendToAgent(goalPrompt);
+                // Routing: el goal-check corre en el modelo de verificación si está
+                // configurado (sesión nueva; se auto-verifica con herramientas).
+                sendForPhaseProfile(m_runningTaskVerifyLaunchId, goalPrompt, false);
                 return;
             }
         }
@@ -3994,6 +4047,9 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskSilentUnlessError = false;
     m_runningTaskLoopEnabled = false;
     m_runningTaskLoopIteration = 0;
+    m_runningTaskExecLaunchId.clear();
+    m_runningTaskVerifyLaunchId.clear();
+    m_pendingSwapPrompt.clear();
     emit taskRunStateChanged();
     emit taskRunFinished(id, name, status, summary, silent);
     if (m_scheduledAutoStop) {

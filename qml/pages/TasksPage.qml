@@ -39,6 +39,8 @@ Item {
             timeoutSec.value = t.timeoutSec || 300
             maxActions.value = t.maxActions || 50
             maxRetries.value = t.maxRetries === undefined ? 2 : t.maxRetries
+            verifyOtherModel.checked = !!(t.verifyProfileId)
+            verifyProfileCombo.selectProfile(t.verifyProfileId || "")
             loadPermissions(t.permScope || "project", t.permFolders || [])
             const steps = t.steps || []
             for (var i = 0; i < steps.length; ++i)
@@ -60,6 +62,8 @@ Item {
             timeoutSec.value = 300
             maxActions.value = 50
             maxRetries.value = 2
+            verifyOtherModel.checked = false
+            verifyProfileCombo.currentIndex = 0
             loadPermissions("project", [])
             profileCombo.currentIndex = 0
         }
@@ -727,6 +731,7 @@ Item {
                 loopEnabled: loopEnabled.checked,
                 loopGoal: loopGoalField.text,
                 loopMaxIterations: loopMaxIterations.value,
+                verifyProfileId: verifyOtherModel.checked ? verifyProfileCombo.selectedProfileId : "",
                 executionMode: ["agent", "desktop", "browserBackground"][executionMode.currentIndex],
                 approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
                 timeoutSec: timeoutSec.value,
@@ -870,6 +875,31 @@ Item {
                     LcComboBox {
                         id: profileCombo
                         Layout.fillWidth: true
+                        textRole: "name"
+                        valueRole: "profileId"
+                        property string selectedProfileId: currentValue || ""
+                        model: App.profileManager
+                        function selectProfile(pid) {
+                            const idx = indexOfValue(pid)
+                            currentIndex = idx >= 0 ? idx : 0
+                        }
+                    }
+
+                    CheckBox {
+                        id: verifyOtherModel
+                        text: "Verificar con otro modelo (routing por fase)"
+                        contentItem: Text {
+                            text: verifyOtherModel.text
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            leftPadding: verifyOtherModel.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    LcComboBox {
+                        id: verifyProfileCombo
+                        Layout.fillWidth: true
+                        visible: verifyOtherModel.checked
                         textRole: "name"
                         valueRole: "profileId"
                         property string selectedProfileId: currentValue || ""

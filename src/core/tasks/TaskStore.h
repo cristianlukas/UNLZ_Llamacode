@@ -63,8 +63,14 @@ public:
         AutomationStatusRole,
         LoopEnabledRole,        // bool: correr en bucle hasta cumplir el objetivo
         LoopGoalRole,           // condición de éxito en lenguaje natural
-        LoopMaxIterationsRole   // techo de iteraciones (corta el bucle sí o sí)
+        LoopMaxIterationsRole,  // techo de iteraciones (corta el bucle sí o sí)
+        VerifyProfileIdRole     // perfil opcional para la fase de verificación/goal-check
     };
+
+    // Routing multi-modelo (fase verify): perfil a usar para la verificación
+    // (postprompt / goal-check del bucle). PURA. Devuelve el verifyProfileId si
+    // está seteado y difiere del de ejecución; "" si no hay que cambiar de modelo.
+    static QString verifyProfileFor(const QVariantMap &task, const QString &execProfileId);
 
     // Decisión PURA de si el bucle debe correr otra vez. Sin disco ni estado.
     // `iteration` = nº de corridas ya completadas (1-based). `lastStatus` es el
