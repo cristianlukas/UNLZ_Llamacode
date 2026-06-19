@@ -594,6 +594,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentTeacherModel = s.value(QStringLiteral("agent/teacherModel")).toString();
     m_agentTeacherKey   = s.value(QStringLiteral("agent/teacherKey")).toString();
     m_mailAutoSend      = s.value(QStringLiteral("agent/mailAutoSend"), false).toBool();
+    m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
     m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
 
     killManagedOrphans();
@@ -682,6 +683,21 @@ void AppController::runStartupScan()
                           QStringLiteral("catalog: migrado a ids deterministas (rescan forzado)."));
     }
     refreshResearchReports();
+
+    // Auto-arrancar el agente al abrir la app si el toggle está activo. Mantiene el
+    // server+agente calientes para que las Tasks programadas (cron) disparen a horario
+    // sin la latencia de levantar el modelo. Usa el último perfil lanzado.
+    if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
+        const QString launchId = readSetting(QStringLiteral("lastLaunchId"), QString()).toString();
+        if (!launchId.isEmpty()) {
+            appendAgentEvent(QStringLiteral("lifecycle"),
+                             QStringLiteral("Auto-inicio del agente al abrir la app (tasks por horario)."));
+            startServerAndAgent(launchId);
+        } else {
+            appendAgentEvent(QStringLiteral("lifecycle"),
+                             QStringLiteral("Auto-inicio del agente pedido pero no hay último perfil; se omite."));
+        }
+    }
 }
 
 // --- Router mode (hot-swap) ---------------------------------------------
@@ -3763,6 +3779,14 @@ QString AppController::taskRunWorkLog(const QString &id) const
         out += QStringLiteral("Resumen: %1\n").arg(summary);
     out += QStringLiteral("\nLa traza detallada de esta ejecución no está disponible en memoria. Ejecutá la Task de nuevo y usá \"Ver trabajo\" al terminar.");
     return out;
+}
+
+void AppController::setAutoStartAgentOnLaunch(bool on)
+{
+    if (m_autoStartAgentOnLaunch == on) return;
+    m_autoStartAgentOnLaunch = on;
+    QSettings().setValue(QStringLiteral("agent/autoStartOnLaunch"), on);
+    emit autoStartAgentOnLaunchChanged();
 }
 
 void AppController::setTasksSchedulerEnabled(bool on)

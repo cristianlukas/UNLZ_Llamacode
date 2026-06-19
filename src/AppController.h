@@ -99,6 +99,7 @@ class AppController : public QObject
     Q_PROPERTY(QString agentTeacherModel READ agentTeacherModel WRITE setAgentTeacherModel NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
     Q_PROPERTY(bool mailAutoSend READ mailAutoSend WRITE setMailAutoSend NOTIFY mailAutoSendChanged)
+    Q_PROPERTY(bool autoStartAgentOnLaunch READ autoStartAgentOnLaunch WRITE setAutoStartAgentOnLaunch NOTIFY autoStartAgentOnLaunchChanged)
     Q_PROPERTY(int agentContextUsed READ agentContextUsed NOTIFY agentContextChanged)
     Q_PROPERTY(int agentContextLimit READ agentContextLimit NOTIFY agentContextChanged)
     Q_PROPERTY(QString agentSystemPrompt READ agentSystemPrompt WRITE setAgentSystemPrompt NOTIFY agentTuningChanged)
@@ -459,6 +460,9 @@ public:
     Q_INVOKABLE QString testMailAccount(const QString &name) const;
     bool mailAutoSend() const { return m_mailAutoSend; }
     void setMailAutoSend(bool on);
+
+    bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
+    void setAutoStartAgentOnLaunch(bool on);
     // Cuentas con el password resuelto (para inyectar al backend del agente).
     QVariantList mailAccountsResolved() const;
 
@@ -660,6 +664,7 @@ signals:
     void agentToolsChanged();
     void agentTeacherChanged();
     void mailAutoSendChanged();
+    void autoStartAgentOnLaunchChanged();
     void agentContextChanged();
     void agentTuningChanged();
     void benchmarkRunningChanged();
@@ -877,6 +882,7 @@ private:
     MasterCli m_masterCli;                      // detección de CLIs maestro (claude/codex)
     SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     bool        m_mailAutoSend = false;          // permitir email_send sin aprobación
+    bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     QString   m_agentSystemPrompt;

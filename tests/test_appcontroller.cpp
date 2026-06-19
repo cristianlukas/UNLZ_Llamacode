@@ -36,6 +36,7 @@ private slots:
     void taskRequiresToolEvidenceForWebObjective();
     void readResearchReportPrependsLegacyTopic();
     void researchReportsExposeFormattedDate();
+    void autoStartAgentOnLaunchPersists();
 
 private:
     QTemporaryDir m_tmp;
@@ -45,6 +46,10 @@ void AppControllerTests::initTestCase()
 {
     // Aísla AppData/AppLocalData a una ubicación de test.
     QStandardPaths::setTestModeEnabled(true);
+    // QTEST_MAIN no setea org/app name; sin ellos QSettings no persiste. Igualamos
+    // a lo que usa la app (main.cpp) para que el round-trip de settings funcione.
+    QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
+    QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
     QVERIFY(m_tmp.isValid());
 }
 
@@ -136,6 +141,25 @@ void AppControllerTests::researchReportsExposeFormattedDate()
     QVERIFY(!reports.isEmpty());
     QCOMPARE(reports.first().toMap().value(QStringLiteral("dateLabel")).toString(),
              QStringLiteral("18/06/2026 11:30"));
+}
+
+void AppControllerTests::autoStartAgentOnLaunchPersists()
+{
+    {
+        AppController app;
+        QVERIFY(!app.autoStartAgentOnLaunch());   // default off
+        QSignalSpy spy(&app, &AppController::autoStartAgentOnLaunchChanged);
+        app.setAutoStartAgentOnLaunch(true);
+        QCOMPARE(spy.count(), 1);
+        QVERIFY(app.autoStartAgentOnLaunch());
+        // set idéntico no re-emite.
+        app.setAutoStartAgentOnLaunch(true);
+        QCOMPARE(spy.count(), 1);
+    }
+    // Persiste entre instancias (QSettings).
+    AppController app2;
+    QVERIFY(app2.autoStartAgentOnLaunch());
+    app2.setAutoStartAgentOnLaunch(false);   // restaurar para no contaminar otros tests
 }
 
 void AppControllerTests::taskFailureTextDetected()
