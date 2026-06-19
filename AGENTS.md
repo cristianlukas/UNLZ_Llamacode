@@ -12,6 +12,7 @@ Instrucciones para agentes que trabajen en este repo.
   compile para validar o entregar cambios, verificar que ese ejecutable se actualizó.
 - Mantener sincronizada la identidad visual por configuración: Debug debe usar `assets/debug_icon.ico` (llama roja) tanto en el `.exe`, acceso directo, ventana principal y splash; Release debe usar `assets/app_icon.ico`. La selección en C++ y recursos debe depender de `LC_DEBUG_ICON`, no de `QT_DEBUG`.
 - Para perfiles locales Qwen/coding, preferir sampling conservador: `--temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0`. No subir creatividad sin justificarlo.
+- Mantener la entrada `nav.tasks` de `qml/components/NavBar.qml` con `serverOnly: true`; Tasks requiere un servidor activo y no debe mostrarse como navegación disponible sin servidor.
 - No revertir cambios ajenos. Si el working tree ya esta sucio, trabajar alrededor de esos cambios y reportar que archivos se tocaron.
 - Para operaciones de GitHub en este proyecto, antes de hacer commit, pull, push,
   abrir PR, consultar issues o cualquier operación contra GitHub, cambiar/verificar
