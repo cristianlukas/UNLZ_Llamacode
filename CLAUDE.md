@@ -48,10 +48,11 @@ Reglas:
 | LogTriage (barrido de errores) | `tests/test_logtriage.cpp` |
 
 ### Pendiente de cobertura
-Los backends de red con stream SSE real (RawChatBackend/LlamaAgentBackend/
-OpencodeBackend/McpClient sendMessage, tool-call extraction) necesitan un stub
-HTTP de `/v1/chat/completions` y `/v1/embeddings`. Hoy se cubre el ciclo de
-sesiones/persistencia sin red. Al tocar esos paths, agregar el stub.
+Stub HTTP ya disponible: `SseStubServer` en `tests/test_backends_net.cpp` cubre
+el stream SSE de `/v1/chat/completions` para RawChatBackend (acumulación de deltas
++ error HTTP). Falta extender a: tool-call extraction (LlamaAgentBackend), `/props`
+(chat-template detect), `/v1/embeddings`, y el ciclo bucle+swap de Loops end-to-end
+vía AppController. Reusar `SseStubServer` (devolver `tool_calls` en el delta).
 
 ## Build
 - **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
