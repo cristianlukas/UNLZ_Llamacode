@@ -811,10 +811,14 @@ ApplicationWindow {
         height = restoredH
         x = savedX
         y = savedY
-        if (savedMaximized)
+        const startHidden = StartedWithWindows && window.minimizeToTray
+        if (startHidden) {
+            visible = false
+        } else if (savedMaximized) {
             showMaximized()
-        else
+        } else {
             visible = true
+        }
         restoringWindowState = false
 
         // El escaneo pesado ya corrió en main.cpp bajo el splash → counts listos.

@@ -37,6 +37,8 @@ private slots:
     void readResearchReportPrependsLegacyTopic();
     void researchReportsExposeFormattedDate();
     void autoStartAgentOnLaunchPersists();
+    void windowsStartupCommandQuotesExecutable();
+    void startupHiddenRequiresBothFlags();
 
 private:
     QTemporaryDir m_tmp;
@@ -405,6 +407,21 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(BrowserTeach::listSkills().contains(QStringLiteral("my-skill")));
     QVERIFY(BrowserTeach::removeSkill(QStringLiteral("My Skill")));
     QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
+}
+
+void AppControllerTests::windowsStartupCommandQuotesExecutable()
+{
+    QCOMPARE(AppController::windowsStartupCommand(
+                 QStringLiteral("C:/Program Files/LlamaCode/LlamaCode.exe")),
+             QStringLiteral("\"C:\\Program Files\\LlamaCode\\LlamaCode.exe\" --startup"));
+}
+
+void AppControllerTests::startupHiddenRequiresBothFlags()
+{
+    QVERIFY(AppController::shouldStartHidden(true, true));
+    QVERIFY(!AppController::shouldStartHidden(true, false));
+    QVERIFY(!AppController::shouldStartHidden(false, true));
+    QVERIFY(!AppController::shouldStartHidden(false, false));
 }
 
 QTEST_MAIN(AppControllerTests)

@@ -416,6 +416,40 @@ Item {
                                         Layout.fillWidth: true
                                         spacing: 3
                                         Text {
+                                            text: (App.langV, App.l("settings.startWithWindows"))
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: (App.langV, App.l("settings.startWithWindowsDesc"))
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    Switch {
+                                        checked: App.startWithWindowsEnabled()
+                                        onToggled: {
+                                            const error = App.setStartWithWindowsEnabled(checked)
+                                            if (error.length > 0)
+                                                checked = App.startWithWindowsEnabled()
+                                        }
+                                    }
+                                }
+
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
                                             text: "Iniciar el agente al abrir la app"
                                             color: Theme.textPrimary
                                             font.pixelSize: 14

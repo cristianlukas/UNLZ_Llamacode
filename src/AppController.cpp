@@ -5011,6 +5011,51 @@ void AppController::writeSetting(const QString &key, const QVariant &value)
     s.setValue(key, value);
 }
 
+QString AppController::windowsStartupCommand(const QString &executablePath)
+{
+    QString nativePath = QDir::toNativeSeparators(executablePath);
+    nativePath.replace(QLatin1Char('"'), QStringLiteral("\\\""));
+    return QStringLiteral("\"%1\" --startup").arg(nativePath);
+}
+
+bool AppController::shouldStartHidden(bool startedWithWindows, bool minimizeToTray)
+{
+    return startedWithWindows && minimizeToTray;
+}
+
+bool AppController::startWithWindowsEnabled() const
+{
+#ifdef Q_OS_WIN
+    QSettings runKey(
+        QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+        QSettings::NativeFormat);
+    return !runKey.value(QStringLiteral("LlamaCode")).toString().trimmed().isEmpty();
+#else
+    return false;
+#endif
+}
+
+QString AppController::setStartWithWindowsEnabled(bool enabled)
+{
+#ifdef Q_OS_WIN
+    QSettings runKey(
+        QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+        QSettings::NativeFormat);
+    if (enabled)
+        runKey.setValue(QStringLiteral("LlamaCode"),
+                        windowsStartupCommand(QCoreApplication::applicationFilePath()));
+    else
+        runKey.remove(QStringLiteral("LlamaCode"));
+    runKey.sync();
+    if (runKey.status() != QSettings::NoError)
+        return QStringLiteral("No se pudo actualizar el inicio automático de Windows.");
+#else
+    Q_UNUSED(enabled);
+    return QStringLiteral("El inicio automático sólo está disponible en Windows.");
+#endif
+    return QString();
+}
+
 void AppController::checkForUpdates()
 {
     if (m_updateReply)
@@ -6224,6 +6269,8 @@ static const TrEntry k_tr[] = {
     {"settings.system",     "Sistema",         "System",                "系统",           "Système",           "Sistema",              "System"},
     {"settings.minimizeToTray", "Minimizar a la bandeja", "Minimize to tray", "最小化到托盘", "Réduire dans la barre", "Riduci a icona", "In Infobereich minimieren"},
     {"settings.minimizeToTrayDesc", "Al cerrar, la app se oculta en los íconos de notificación en vez de cerrarse. Click derecho en el ícono para abrirla o salir.", "On close, the app hides in the notification tray instead of quitting. Right-click the icon to reopen or quit.", "关闭时，应用会隐藏到通知托盘而不是退出。右键单击图标可重新打开或退出。", "À la fermeture, l'application se réduit dans la zone de notification au lieu de quitter. Clic droit sur l'icône pour rouvrir ou quitter.", "Alla chiusura, l'app si nasconde nell'area di notifica invece di uscire. Clic destro sull'icona per riaprire o uscire.", "Beim Schließen wird die App im Infobereich versteckt statt beendet. Rechtsklick auf das Symbol zum Öffnen oder Beenden."},
+    {"settings.startWithWindows", "Iniciar con Windows", "Start with Windows", "随 Windows 启动", "Démarrer avec Windows", "Avvia con Windows", "Mit Windows starten"},
+    {"settings.startWithWindowsDesc", "Abre LlamaCode al iniciar sesión. Si «Minimizar a la bandeja» está activo, inicia oculto en el área de notificación.", "Opens LlamaCode when you sign in. If “Minimize to tray” is enabled, it starts hidden in the notification area.", "登录时打开 LlamaCode。如果启用“最小化到托盘”，应用将隐藏启动。", "Ouvre LlamaCode à la connexion. Si « Réduire dans la barre » est activé, l'application démarre masquée.", "Apre LlamaCode all'accesso. Se «Riduci a icona» è attivo, si avvia nascosto nell'area di notifica.", "Öffnet LlamaCode bei der Anmeldung. Wenn „In Infobereich minimieren“ aktiv ist, startet die App ausgeblendet."},
     {"tray.open",           "Abrir",           "Open",                  "打开",           "Ouvrir",            "Apri",                 "Öffnen"},
     {"tray.quit",           "Salir",           "Quit",                  "退出",           "Quitter",           "Esci",                 "Beenden"},
 };

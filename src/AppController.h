@@ -354,6 +354,10 @@ public:
     Q_INVOKABLE QString lf(const QString &key, const QString &arg1) const { return l(key).arg(arg1); }
     Q_INVOKABLE QVariant readSetting(const QString &key, const QVariant &defaultValue = QVariant()) const;
     Q_INVOKABLE void writeSetting(const QString &key, const QVariant &value);
+    Q_INVOKABLE bool startWithWindowsEnabled() const;
+    Q_INVOKABLE QString setStartWithWindowsEnabled(bool enabled);
+    static QString windowsStartupCommand(const QString &executablePath);
+    static bool shouldStartHidden(bool startedWithWindows, bool minimizeToTray);
     Q_INVOKABLE QString exportUserData();
     Q_INVOKABLE QString importUserData();
     // Variantes headless: ruta explícita, sin diálogo.

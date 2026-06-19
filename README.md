@@ -560,6 +560,9 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 - **EvalSuite**: evaluación reproducible de modelos (importable como benchmark custom).
 - **Mermaid**: render de diagramas en el chat (sidecar mermaid-cli).
 - **Multi-idioma**: UI en español, inglés, chino, francés, italiano y alemán.
+- **Inicio con Windows**: toggle en Configuración que registra el autoarranque por
+  usuario; si también está activo **Minimizar a la bandeja**, el inicio automático
+  abre la app oculta en el área de notificación.
 - **Export/Import/Wipe** de datos de usuario por categorías.
 
 ## Lanzamiento del servidor (`LaunchPage`)
