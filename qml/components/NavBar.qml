@@ -23,7 +23,7 @@ Rectangle {
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
         { key: "agent.title",   icon: "🤖",  serverOnly: true  },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
-        { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true },
+        { key: "nav.tasks",     icon: "🗒",  serverOnly: false },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
     ]
