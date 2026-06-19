@@ -2,8 +2,8 @@
 
 ## Testing policy (OBLIGATORIA)
 
-> ⚠️ EN PAUSA desde 2026-06-18: política vigente = build SOLO Release, sin tests.
-> Ver sección "Build". Lo de abajo no aplica hasta que se reactive.
+> ✅ VIGENTE desde 2026-06-18: build Release + tests, sin Debug.
+> Ver sección "Build". Esta política aplica.
 
 Toda feature nueva o cambio de comportamiento DEBE llegar con su test (unit +
 integration cuando aplique). Sin test = incompleto.
@@ -55,9 +55,9 @@ HTTP de `/v1/chat/completions` y `/v1/embeddings`. Hoy se cubre el ciclo de
 sesiones/persistencia sin red. Al tocar esos paths, agregar el stub.
 
 ## Build
-- **Política actual (desde 2026-06-18): build SOLO de Release, sin tests.** No
-  correr `tests.bat` ni el gate de ctest antes de commitear. La sección "Testing
-  policy (OBLIGATORIA)" de arriba queda en pausa hasta nuevo aviso.
+- **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
+  Compilar solo Release (no Debug) y correr `tests.bat` + el gate de ctest antes
+  de commitear. La sección "Testing policy (OBLIGATORIA)" de arriba está vigente.
 - App: `build.bat [Debug|Release|Both]` (tiene `pause`; correr con `< nul` para no colgar).
 - Tests: `tests.bat [Debug|Release]` (sin `pause`).
 - La lógica core vive en la lib estática `llamacode_core`; el app y los tests linkean contra ella.
