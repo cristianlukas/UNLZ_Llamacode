@@ -58,6 +58,9 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case MaxActionsRole:        return t.value("maxActions", 50);
     case MaxRetriesRole:        return t.value("maxRetries", 2);
     case AutomationStatusRole:  return t.value("automationStatus", QStringLiteral("untrained"));
+    case LoopEnabledRole:       return t.value("loopEnabled", false);
+    case LoopGoalRole:          return t.value("loopGoal");
+    case LoopMaxIterationsRole: return t.value("loopMaxIterations", 5);
     default:                  return {};
     }
 }
@@ -99,8 +102,14 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { MaxActionsRole,        "maxActions" },
         { MaxRetriesRole,        "maxRetries" },
         { AutomationStatusRole,  "automationStatus" },
+        { LoopEnabledRole,       "loopEnabled" },
+        { LoopGoalRole,          "loopGoal" },
+        { LoopMaxIterationsRole, "loopMaxIterations" },
     };
 }
+
+const QString TaskStore::kGoalMetMarker    = QStringLiteral("GOAL_MET");
+const QString TaskStore::kGoalNotMetMarker = QStringLiteral("GOAL_NOT_MET");
 
 QString TaskStore::sanitize(const QString &name)
 {
@@ -153,6 +162,10 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["maxRetries"]      = qBound(0, def.value("maxRetries", t.value("maxRetries", 2)).toInt(), 10);
     t["automationStatus"] = def.value("automationStatus",
                                       t.value("automationStatus", QStringLiteral("untrained")));
+    t["loopEnabled"]     = def.value("loopEnabled", t.value("loopEnabled", false));
+    t["loopGoal"]        = def.value("loopGoal", t.value("loopGoal"));
+    t["loopMaxIterations"] = qBound(1, def.value("loopMaxIterations",
+                                       t.value("loopMaxIterations", 5)).toInt(), 100);
     t["updatedAt"]       = now;
 
     QString outId;
@@ -307,6 +320,55 @@ QString TaskStore::composePostPrompt(const QVariantMap &task)
     return out.join(QLatin1Char('\n'));
 }
 
+TaskStore::LoopDecision TaskStore::decideLoop(const QVariantMap &task, int iteration,
+                                              const QString &lastStatus,
+                                              const QString &lastSummary)
+{
+    if (!task.value("loopEnabled", false).toBool())
+        return { false, QStringLiteral("bucle deshabilitado") };
+
+    // No insistir sobre una corrida que terminó en error: el bucle reintenta
+    // hacia un objetivo, no enmascara fallas duras de ejecución.
+    if (lastStatus == QLatin1String("error"))
+        return { false, QStringLiteral("se detuvo por error en la corrida") };
+
+    // El agente declaró el objetivo cumplido. GOAL_NOT_MET contiene GOAL_MET como
+    // subcadena, así que descartamos primero el negativo.
+    const QString sum = lastSummary.toUpper();
+    if (!sum.contains(kGoalNotMetMarker) && sum.contains(kGoalMetMarker))
+        return { false, QStringLiteral("objetivo cumplido") };
+
+    const int maxIter = qBound(1, task.value("loopMaxIterations", 5).toInt(), 100);
+    if (iteration >= maxIter)
+        return { false, QStringLiteral("se alcanzó el máximo de iteraciones (%1)").arg(maxIter) };
+
+    return { true, QStringLiteral("objetivo no cumplido, reintentando (iteración %1/%2)")
+                       .arg(iteration + 1).arg(maxIter) };
+}
+
+QString TaskStore::composeLoopGoalPrompt(const QVariantMap &task)
+{
+    if (!task.value("loopEnabled", false).toBool())
+        return {};
+    const QString goal = task.value("loopGoal").toString().trimmed();
+    if (goal.isEmpty())
+        return {};
+
+    QStringList out;
+    out << QStringLiteral("Evaluá si el objetivo del bucle ya se cumplió tras la corrida anterior.");
+    out << QStringLiteral("Objetivo de éxito del bucle: %1").arg(goal);
+    out << QString();
+    out << QStringLiteral("Verificá con tus herramientas (no respondas de memoria). "
+                          "Respondé en la PRIMERA línea EXACTAMENTE uno de estos marcadores:");
+    out << QStringLiteral("  %1   — el objetivo está cumplido, no hace falta repetir.")
+               .arg(kGoalMetMarker);
+    out << QStringLiteral("  %1 — el objetivo todavía NO se cumplió; habrá otra iteración.")
+               .arg(kGoalNotMetMarker);
+    out << QStringLiteral("Luego, en las líneas siguientes, explicá brevemente la evidencia "
+                          "y, si falta, qué conviene ajustar en la próxima iteración.");
+    return out.join(QLatin1Char('\n'));
+}
+
 QJsonObject TaskStore::toJson(const QVariantMap &task)
 {
     QJsonObject o;
@@ -342,6 +404,9 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["maxActions"]      = task.value("maxActions", 50).toInt();
     o["maxRetries"]      = task.value("maxRetries", 2).toInt();
     o["automationStatus"] = task.value("automationStatus", QStringLiteral("untrained")).toString();
+    o["loopEnabled"]     = task.value("loopEnabled", false).toBool();
+    o["loopGoal"]        = task.value("loopGoal").toString();
+    o["loopMaxIterations"] = task.value("loopMaxIterations", 5).toInt();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -401,6 +466,9 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["automationStatus"] = obj.value("automationStatus").toString(
         t.value("teachArtifactId").toString().isEmpty()
             ? QStringLiteral("untrained") : QStringLiteral("ready"));
+    t["loopEnabled"]     = obj.value("loopEnabled").toBool(false);
+    t["loopGoal"]        = obj.value("loopGoal").toString();
+    t["loopMaxIterations"] = qBound(1, obj.value("loopMaxIterations").toInt(5), 100);
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

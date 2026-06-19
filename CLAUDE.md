@@ -10,7 +10,8 @@ Reglas:
   `add_lc_test(<area> tests/test_<area>.cpp)` (helper ya definido, sección
   `if (BUILD_TESTS)`).
 - Antes de commitear: correr `tests.bat` (configura `BUILD_TESTS=ON`, compila en
-  `build_tests/`, corre `ctest`). Build + 13 tests verdes = gate. No commitear en rojo.
+  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 26;
+  ver `add_lc_test` en `CMakeLists.txt`). No commitear en rojo. Atajo: `/gate`.
 - Un executable por subsistema (QtTest = 1 `QTEST_MAIN` por binario).
 
 ### Convenciones de tests

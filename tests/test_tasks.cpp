@@ -19,6 +19,9 @@ private slots:
     void crud_persistsAcrossInstances();
     void duplicate_clonesWithNewId();
     void markRun_updatesStatus();
+    void loop_jsonRoundTrip();
+    void loop_decideStopsAndRepeats();
+    void loop_composeGoalPrompt();
 };
 
 static QVariantMap sampleTask()
@@ -173,6 +176,71 @@ void TasksTests::markRun_updatesStatus()
     QCOMPARE(s.get(id).value("lastRunSummary").toString(), QStringLiteral("terminó bien"));
     QVERIFY(!s.get(id).value("lastRunAt").toString().isEmpty());
     s.remove(id);
+}
+
+void TasksTests::loop_jsonRoundTrip()
+{
+    QVariantMap in = sampleTask();
+    in["loopEnabled"] = true;
+    in["loopGoal"] = QStringLiteral("todos los tests en verde");
+    in["loopMaxIterations"] = 7;
+    const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(in));
+    QCOMPARE(out.value("loopEnabled").toBool(), true);
+    QCOMPARE(out.value("loopGoal").toString(), QStringLiteral("todos los tests en verde"));
+    QCOMPARE(out.value("loopMaxIterations").toInt(), 7);
+
+    // Default seguro para JSON legacy sin campos de loop.
+    const QVariantMap legacy = TaskStore::fromJson(TaskStore::toJson(sampleTask()));
+    QCOMPARE(legacy.value("loopEnabled").toBool(), false);
+    QCOMPARE(legacy.value("loopMaxIterations").toInt(), 5);
+}
+
+void TasksTests::loop_decideStopsAndRepeats()
+{
+    QVariantMap task = sampleTask();
+
+    // Loop apagado → nunca repite.
+    QVERIFY(!TaskStore::decideLoop(task, 1, QStringLiteral("ok"), QString()).repeat);
+
+    task["loopEnabled"] = true;
+    task["loopMaxIterations"] = 3;
+
+    // Objetivo no cumplido y bajo el techo → repite.
+    auto d = TaskStore::decideLoop(task, 1, QStringLiteral("ok"), QStringLiteral("GOAL_NOT_MET faltan 2"));
+    QVERIFY(d.repeat);
+
+    // Objetivo cumplido → corta.
+    QVERIFY(!TaskStore::decideLoop(task, 1, QStringLiteral("ok"),
+                                   QStringLiteral("GOAL_MET todo verde")).repeat);
+
+    // GOAL_NOT_MET contiene GOAL_MET como subcadena: NO debe contar como cumplido.
+    QVERIFY(TaskStore::decideLoop(task, 1, QStringLiteral("ok"),
+                                  QStringLiteral("GOAL_NOT_MET")).repeat);
+
+    // Techo alcanzado → corta aunque no esté cumplido.
+    QVERIFY(!TaskStore::decideLoop(task, 3, QStringLiteral("ok"),
+                                   QStringLiteral("GOAL_NOT_MET")).repeat);
+
+    // Error en la corrida → corta, no insiste.
+    QVERIFY(!TaskStore::decideLoop(task, 1, QStringLiteral("error"),
+                                   QStringLiteral("GOAL_NOT_MET")).repeat);
+}
+
+void TasksTests::loop_composeGoalPrompt()
+{
+    QVariantMap task = sampleTask();
+    QVERIFY(TaskStore::composeLoopGoalPrompt(task).isEmpty());   // loop apagado
+
+    task["loopEnabled"] = true;
+    task["loopGoal"] = QStringLiteral("la pizza está horneada");
+    const QString p = TaskStore::composeLoopGoalPrompt(task);
+    QVERIFY(p.contains(QStringLiteral("la pizza está horneada")));
+    QVERIFY(p.contains(TaskStore::kGoalMetMarker));
+    QVERIFY(p.contains(TaskStore::kGoalNotMetMarker));
+
+    // Sin goal → sin prompt aunque esté habilitado.
+    task["loopGoal"] = QString();
+    QVERIFY(TaskStore::composeLoopGoalPrompt(task).isEmpty());
 }
 
 QTEST_MAIN(TasksTests)

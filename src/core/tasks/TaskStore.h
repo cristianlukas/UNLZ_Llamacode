@@ -60,8 +60,27 @@ public:
         TimeoutSecRole,
         MaxActionsRole,
         MaxRetriesRole,
-        AutomationStatusRole
+        AutomationStatusRole,
+        LoopEnabledRole,        // bool: correr en bucle hasta cumplir el objetivo
+        LoopGoalRole,           // condición de éxito en lenguaje natural
+        LoopMaxIterationsRole   // techo de iteraciones (corta el bucle sí o sí)
     };
+
+    // Decisión PURA de si el bucle debe correr otra vez. Sin disco ni estado.
+    // `iteration` = nº de corridas ya completadas (1-based). `lastStatus` es el
+    // status final de la última corrida ("ok"/"error"/...). `lastSummary` es la
+    // salida del chequeo de objetivo (puede contener el marcador GOAL_MET).
+    struct LoopDecision { bool repeat; QString reason; };
+    static LoopDecision decideLoop(const QVariantMap &task, int iteration,
+                                   const QString &lastStatus, const QString &lastSummary);
+
+    // Marcadores que el agente debe emitir al evaluar el objetivo del bucle.
+    static const QString kGoalMetMarker;      // "GOAL_MET"
+    static const QString kGoalNotMetMarker;   // "GOAL_NOT_MET"
+
+    // Prompt PURO que pide al agente verificar si el objetivo del bucle se
+    // cumplió y responder con el marcador correspondiente. Vacío si no hay loop.
+    static QString composeLoopGoalPrompt(const QVariantMap &task);
 
     explicit TaskStore(QObject *parent = nullptr);
 

@@ -3653,6 +3653,9 @@ void AppController::runTask(const QString &id)
     m_runningTaskPostPrompt = TaskStore::composePostPrompt(task);
     m_runningTaskLogStart = m_agentLog.size();
     m_runningTaskSilentUnlessError = task.value(QStringLiteral("silentUnlessError"), false).toBool();
+    m_runningTaskLoopEnabled = task.value(QStringLiteral("loopEnabled"), false).toBool()
+                               && !TaskStore::composeLoopGoalPrompt(task).isEmpty();
+    m_runningTaskLoopIteration = 1;   // esta primera corrida del cuerpo cuenta como iteración 1
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Iniciando Task '%1' (%2).").arg(name, id));
 
     // Las Tasks requieren server+agente encendidos (la sección está grisada en el
@@ -3785,6 +3788,39 @@ void AppController::onAgentTurnFinished()
             sendToAgent(post);
             return;
         }
+        // Volvemos de un turno de chequeo de objetivo del bucle: el texto final
+        // trae el veredicto (GOAL_MET / GOAL_NOT_MET). Decidimos repetir o cortar.
+        if (m_runningTaskPhase == QLatin1String("loop-check")) {
+            const QVariantMap loopTask = m_tasks.get(m_runningTaskId);
+            const QString verdict = latestAgentAssistantText().trimmed();
+            const TaskStore::LoopDecision d =
+                TaskStore::decideLoop(loopTask, m_runningTaskLoopIteration,
+                                      QStringLiteral("ok"), verdict);
+            if (d.repeat) {
+                m_runningTaskLoopIteration++;
+                appendAgentEvent(QStringLiteral("task"),
+                                 QStringLiteral("Bucle: %1").arg(d.reason));
+                m_runningTaskPhase = QStringLiteral("ejecutando");
+                m_runningTaskPostPrompt = TaskStore::composePostPrompt(loopTask);
+                m_tasks.markRun(m_runningTaskId, QStringLiteral("running"), d.reason);
+                emit taskRunStateChanged();
+                QString prompt = TaskStore::composePrompt(loopTask);
+                const QString artId = loopTask.value(QStringLiteral("teachArtifactId")).toString();
+                if (!artId.isEmpty())
+                    prompt += AutomationRunner::augmentPrompt(loopTask,
+                        AutomationArtifactStore::manifest(artId),
+                        AutomationArtifactStore::recipe(artId));
+                prepareTaskAgentSession();   // sesión limpia por iteración
+                m_runningTaskLogStart = m_agentLog.size();
+                sendToAgent(prompt);
+                return;
+            }
+            finishRunningTask(QStringLiteral("ok"),
+                              QStringLiteral("Bucle finalizado: %1. %2")
+                                  .arg(d.reason, verdict.left(500)));
+            return;
+        }
+
         const QVariantMap task = m_tasks.get(m_runningTaskId);
         const QString finalText = latestAgentAssistantText().trimmed();
         const QString work = m_agentLog.mid(m_runningTaskLogStart);
@@ -3808,6 +3844,19 @@ void AppController::onAgentTurnFinished()
             summary = (m_runningTaskPhase == QLatin1String("verificando"))
                           ? QStringLiteral("Task ejecutada y postprompt de verificación completado. Resultado: %1").arg(finalText.left(700))
                           : QStringLiteral("Task ejecutada correctamente. Resultado: %1").arg(finalText.left(700));
+        }
+        // Cuerpo OK + bucle activo → lanzar el chequeo de objetivo en vez de
+        // cerrar. El turno siguiente entra por la rama "loop-check" de arriba.
+        if (status == QLatin1String("ok") && m_runningTaskLoopEnabled) {
+            const QString goalPrompt = TaskStore::composeLoopGoalPrompt(task);
+            if (!goalPrompt.isEmpty()) {
+                m_runningTaskPhase = QStringLiteral("loop-check");
+                m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
+                                QStringLiteral("Evaluando objetivo del bucle..."));
+                emit taskRunStateChanged();
+                sendToAgent(goalPrompt);
+                return;
+            }
         }
         finishRunningTask(status, summary);
     }
@@ -3935,6 +3984,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskPostPrompt.clear();
     m_runningTaskLogStart = 0;
     m_runningTaskSilentUnlessError = false;
+    m_runningTaskLoopEnabled = false;
+    m_runningTaskLoopIteration = 0;
     emit taskRunStateChanged();
     emit taskRunFinished(id, name, status, summary, silent);
     if (m_scheduledAutoStop) {

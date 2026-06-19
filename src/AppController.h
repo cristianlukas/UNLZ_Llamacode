@@ -802,6 +802,11 @@ private:
     QString  m_runningTaskPostPrompt;
     qsizetype m_runningTaskLogStart = 0;
     bool     m_runningTaskSilentUnlessError = false;
+    // Estado del bucle "correr hasta cumplir objetivo" (feature Loops). El
+    // contador cuenta corridas del cuerpo ya completadas; el goal-check corre
+    // entre iteraciones y decide si re-disparar el cuerpo (ver TaskStore::decideLoop).
+    bool     m_runningTaskLoopEnabled = false;
+    int      m_runningTaskLoopIteration = 0;
     QHash<QString, QString> m_taskWorkLogs;
     // Task programada esperando que el agente auto-iniciado quede listo.
     QString  m_pendingScheduledTaskId;

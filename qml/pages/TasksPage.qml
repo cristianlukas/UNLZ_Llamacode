@@ -31,6 +31,9 @@ Item {
             prePromptField.text = t.prePrompt || ""
             postPromptField.text = t.postPrompt || ""
             silentUnlessError.checked = t.silentUnlessError || false
+            loopEnabled.checked = t.loopEnabled || false
+            loopGoalField.text = t.loopGoal || ""
+            loopMaxIterations.value = t.loopMaxIterations || 5
             executionMode.currentIndex = Math.max(0, ["agent", "desktop", "browserBackground"].indexOf(t.executionMode || "agent"))
             approvalPolicy.currentIndex = Math.max(0, ["always", "sensitive", "autonomous"].indexOf(t.approvalPolicy || "sensitive"))
             timeoutSec.value = t.timeoutSec || 300
@@ -49,6 +52,9 @@ Item {
             prePromptField.text = ""
             postPromptField.text = ""
             silentUnlessError.checked = false
+            loopEnabled.checked = false
+            loopGoalField.text = ""
+            loopMaxIterations.value = 5
             executionMode.currentIndex = 0
             approvalPolicy.currentIndex = 1
             timeoutSec.value = 300
@@ -718,6 +724,9 @@ Item {
                 prePrompt: prePromptField.text,
                 postPrompt: postPromptField.text,
                 silentUnlessError: silentUnlessError.checked,
+                loopEnabled: loopEnabled.checked,
+                loopGoal: loopGoalField.text,
+                loopMaxIterations: loopMaxIterations.value,
                 executionMode: ["agent", "desktop", "browserBackground"][executionMode.currentIndex],
                 approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
                 timeoutSec: timeoutSec.value,
@@ -819,6 +828,41 @@ Item {
                             font.pixelSize: 12
                             leftPadding: silentUnlessError.indicator.width + 6
                             verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    CheckBox {
+                        id: loopEnabled
+                        text: "Correr en bucle hasta cumplir un objetivo"
+                        contentItem: Text {
+                            text: loopEnabled.text
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            leftPadding: loopEnabled.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+                        visible: loopEnabled.checked
+                        Text { text: "Objetivo de éxito del bucle"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 60
+                            TextArea {
+                                id: loopGoalField
+                                wrapMode: TextArea.Wrap
+                                color: Theme.textPrimary
+                                placeholderText: "Condición que el agente verifica entre iteraciones (ej: 'todos los tests en verde')."
+                                background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
+                            }
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Text { text: "Máx. iteraciones"; color: Theme.textSecondary; font.pixelSize: 11 }
+                            SpinBox { id: loopMaxIterations; from: 1; to: 100; value: 5; editable: true }
                         }
                     }
 
