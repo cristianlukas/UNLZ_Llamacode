@@ -49,6 +49,10 @@ public:
     bool renameProject(const QString &oldName, const QString &newName);
     void setThinkingEnabled(bool enabled) { m_thinkingEnabled = enabled; }
     void setPendingAttachments(const QStringList &paths) { m_pendingAttachments = paths; }
+    // Salida estructurada: grammar GBNF o JSON schema (string JSON). Vacío = libre.
+    void setStructuredOutput(const QString &grammar, const QString &jsonSchema) {
+        m_grammar = grammar; m_jsonSchema = jsonSchema;
+    }
 
 private:
     QString storageDir() const;
@@ -70,6 +74,8 @@ private:
     bool m_running = false;
     bool m_stopping = false;
     bool m_thinkingEnabled = false;
+    QString m_grammar;       // GBNF (passthrough a llama-server)
+    QString m_jsonSchema;    // JSON schema (string) → response_format
 
     QString m_sessionId;
     QString m_sessionTitle;

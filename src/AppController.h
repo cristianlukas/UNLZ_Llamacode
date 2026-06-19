@@ -9,12 +9,14 @@
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
 #include "core/SecretStore.h"
+#include "core/gateway/LlmGateway.h"
 #include "core/voice/VoiceServerManager.h"
 #include "core/voice/VoiceTypes.h"
 #include "core/tuner/TunerWorker.h"
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QVariantMap>
 #include <QJsonObject>
 #include <QHash>
@@ -103,6 +105,15 @@ class AppController : public QObject
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
     Q_PROPERTY(bool mailAutoSend READ mailAutoSend WRITE setMailAutoSend NOTIFY mailAutoSendChanged)
     Q_PROPERTY(bool autoStartAgentOnLaunch READ autoStartAgentOnLaunch WRITE setAutoStartAgentOnLaunch NOTIFY autoStartAgentOnLaunchChanged)
+    // Gateway (proxy Anthropic/OpenAI + auto-load por modelo).
+    Q_PROPERTY(bool    gatewayEnabled  READ gatewayEnabled  WRITE setGatewayEnabled  NOTIFY gatewayChanged)
+    Q_PROPERTY(bool    gatewayRunning  READ gatewayRunning  NOTIFY gatewayChanged)
+    Q_PROPERTY(int     gatewayPort     READ gatewayPort     WRITE setGatewayPort     NOTIFY gatewayChanged)
+    Q_PROPERTY(QString gatewayApiKey   READ gatewayApiKey   WRITE setGatewayApiKey   NOTIFY gatewayChanged)
+    Q_PROPERTY(int     gatewayKeepN    READ gatewayKeepN    WRITE setGatewayKeepN    NOTIFY gatewayChanged)
+    Q_PROPERTY(bool    gatewayAutoSwap READ gatewayAutoSwap WRITE setGatewayAutoSwap NOTIFY gatewayChanged)
+    // Idle auto-stop del server (libera VRAM tras N minutos sin uso; 0 = off).
+    Q_PROPERTY(int     idleAutoStopMin READ idleAutoStopMin WRITE setIdleAutoStopMin NOTIFY idleAutoStopChanged)
     Q_PROPERTY(int agentContextUsed READ agentContextUsed NOTIFY agentContextChanged)
     Q_PROPERTY(int agentContextLimit READ agentContextLimit NOTIFY agentContextChanged)
     Q_PROPERTY(QString agentSystemPrompt READ agentSystemPrompt WRITE setAgentSystemPrompt NOTIFY agentTuningChanged)
@@ -467,6 +478,34 @@ public:
 
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
     void setAutoStartAgentOnLaunch(bool on);
+
+    // Gateway
+    bool    gatewayEnabled() const { return m_gatewayEnabled; }
+    void    setGatewayEnabled(bool on);
+    bool    gatewayRunning() const { return m_gateway && m_gateway->listening(); }
+    int     gatewayPort() const { return m_gatewayPort; }
+    void    setGatewayPort(int p);
+    QString gatewayApiKey() const { return m_gatewayApiKey; }
+    void    setGatewayApiKey(const QString &k);
+    int     gatewayKeepN() const { return m_gatewayKeepN; }
+    void    setGatewayKeepN(int n);
+    bool    gatewayAutoSwap() const { return m_gatewayAutoSwap; }
+    void    setGatewayAutoSwap(bool on);
+    Q_INVOKABLE void startGateway();
+    Q_INVOKABLE void stopGateway();
+    Q_INVOKABLE QString gatewayBaseUrl() const;
+    Q_INVOKABLE QString launchClaudeCode();   // exec `claude` apuntando al gateway
+
+    // Idle auto-stop
+    int  idleAutoStopMin() const { return m_idleAutoStopMin; }
+    void setIdleAutoStopMin(int minutes);
+    void bumpActivity();   // marca actividad → reinicia el watchdog idle
+    // Decisión pura (testeable): ¿parar por inactividad?
+    static bool shouldIdleStop(bool serverRunning, bool busy, int idleMin,
+                               qint64 idleElapsedMs);
+
+    // Salida estructurada del chat (GBNF / JSON schema).
+    Q_INVOKABLE void chatSetStructuredOutput(const QString &grammar, const QString &jsonSchema);
     // Cuentas con el password resuelto (para inyectar al backend del agente).
     QVariantList mailAccountsResolved() const;
 
@@ -670,6 +709,8 @@ signals:
     void agentTeacherChanged();
     void mailAutoSendChanged();
     void autoStartAgentOnLaunchChanged();
+    void gatewayChanged();
+    void idleAutoStopChanged();
     void agentContextChanged();
     void agentTuningChanged();
     void benchmarkRunningChanged();
@@ -896,6 +937,23 @@ private:
     SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     bool        m_mailAutoSend = false;          // permitir email_send sin aprobación
     bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
+
+    // Gateway (proxy Anthropic/OpenAI + auto-load)
+    LlmGateway *m_gateway = nullptr;
+    bool        m_gatewayEnabled = false;
+    int         m_gatewayPort = 8088;
+    QString     m_gatewayApiKey;
+    int         m_gatewayKeepN = 4;
+    bool        m_gatewayAutoSwap = true;
+
+    // Idle auto-stop
+    int         m_idleAutoStopMin = 0;        // 0 = desactivado
+    QTimer     *m_idleTimer = nullptr;
+    QElapsedTimer m_lastActivity;
+    void        startIdleWatchdog();
+    void        stopIdleWatchdog();
+    void        wireGatewayHooks();
+    void        gatewayEnsureModel(const QString &name);
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     QString   m_agentSystemPrompt;

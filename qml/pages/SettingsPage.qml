@@ -435,6 +435,176 @@ Item {
                                         onToggled: App.autoStartAgentOnLaunch = checked
                                     }
                                 }
+
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Auto-stop por inactividad"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "Descarga el modelo y libera VRAM tras N minutos sin chat/agente/API. 0 = nunca."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    SpinBox {
+                                        from: 0; to: 1440; stepSize: 5
+                                        value: App.idleAutoStopMin
+                                        onValueModified: App.idleAutoStopMin = value
+                                        textFromValue: function(v) { return v === 0 ? "off" : v + " min" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Gateway / API (Anthropic + auto-load) ────────────────
+                    ColumnLayout {
+                        id: gatewaySection
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text {
+                            text: "GATEWAY · API"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: gwInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: gwInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Gateway de modelos"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: "Proxy con endpoint Anthropic /v1/messages (para Claude Code) y auto-load: el request nombra un modelo y se carga solo. " + (App.gatewayRunning ? ("Activo en " + App.gatewayBaseUrl()) : "Apagado.")
+                                            color: App.gatewayRunning ? Theme.accent : Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    Switch {
+                                        checked: App.gatewayEnabled
+                                        onToggled: App.gatewayEnabled = checked
+                                    }
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 8
+                                    Text { text: "Puerto"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                                    SpinBox {
+                                        from: 1024; to: 65535
+                                        value: App.gatewayPort
+                                        editable: true
+                                        onValueModified: App.gatewayPort = value
+                                    }
+                                    Text { text: "keep hot"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    SpinBox {
+                                        from: 1; to: 8
+                                        value: App.gatewayKeepN
+                                        onValueModified: App.gatewayKeepN = value
+                                    }
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 8
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: "Auto-load del modelo pedido"; color: Theme.textPrimary; font.pixelSize: 13 }
+                                        Text {
+                                            text: "Si el request nombra otro modelo, lo carga (swap del activo)."
+                                            color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                                        }
+                                    }
+                                    Switch {
+                                        checked: App.gatewayAutoSwap
+                                        onToggled: App.gatewayAutoSwap = checked
+                                    }
+                                }
+
+                                LcTextField {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    placeholderText: "API key (opcional, para exponer en LAN)"
+                                    text: App.gatewayApiKey
+                                    echoMode: TextInput.Password
+                                    onEditingFinished: App.gatewayApiKey = text
+                                }
+
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor; visible: App.gatewayEnabled }
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 8
+                                    LcButton {
+                                        text: "Lanzar Claude Code en mi GPU"
+                                        onClicked: {
+                                            var err = App.launchClaudeCode()
+                                            gwMsg.text = err.length === 0
+                                                ? "Claude Code lanzado contra " + App.gatewayBaseUrl()
+                                                : err
+                                            gwMsg.ok = err.length === 0
+                                        }
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                }
+                                Text {
+                                    id: gwMsg
+                                    property bool ok: false
+                                    visible: text.length > 0
+                                    text: ""
+                                    color: ok ? Theme.accent : Theme.btnDangerBg
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                }
+                                Text {
+                                    visible: App.gatewayEnabled
+                                    text: "Manual: ANTHROPIC_BASE_URL=" + App.gatewayBaseUrl() + "  ·  endpoints OpenAI /v1/chat/completions y Anthropic /v1/messages."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                }
                             }
                         }
                     }

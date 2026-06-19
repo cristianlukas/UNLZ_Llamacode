@@ -53,6 +53,7 @@ set(CORE_SOURCES
     src/core/DocumentExtractor.cpp
     src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
+    src/core/gateway/LlmGateway.cpp
     src/core/SecretStore.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
@@ -100,6 +101,7 @@ set(HEADERS
     src/core/DocumentExtractor.h
     src/core/MermaidRenderer.h
     src/core/ControlApi.h
+    src/core/gateway/LlmGateway.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h
@@ -378,4 +380,5 @@ if (BUILD_TESTS)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
+    add_lc_test(test_gateway            tests/test_gateway.cpp)
 endif()

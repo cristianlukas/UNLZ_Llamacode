@@ -596,6 +596,12 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentTeacherKey   = s.value(QStringLiteral("agent/teacherKey")).toString();
     m_mailAutoSend      = s.value(QStringLiteral("agent/mailAutoSend"), false).toBool();
     m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
+    m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
+    m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
+    m_gatewayApiKey  = s.value(QStringLiteral("gateway/apiKey")).toString();
+    m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
+    m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
+    m_idleAutoStopMin = s.value(QStringLiteral("server/idleAutoStopMin"), 0).toInt();
     m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
 
     killManagedOrphans();
@@ -625,6 +631,28 @@ AppController::AppController(QObject *parent) : QObject(parent)
     });
     if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
         m_scheduler->setEnabled(true);
+
+    // Gateway (proxy Anthropic/OpenAI + auto-load). Se arranca on-demand.
+    m_gateway = new LlmGateway(this);
+    wireGatewayHooks();
+    if (m_gatewayEnabled) startGateway();
+
+    // Idle auto-stop watchdog: chequea inactividad y para el server para liberar VRAM.
+    m_lastActivity.start();
+    m_idleTimer = new QTimer(this);
+    m_idleTimer->setInterval(30000);   // chequeo cada 30s
+    connect(m_idleTimer, &QTimer::timeout, this, [this]() {
+        if (shouldIdleStop(serverRunning(), agentBackendBusy() || m_chatGenerating,
+                           m_idleAutoStopMin, m_lastActivity.elapsed())) {
+            appendServerEvent(QStringLiteral("lifecycle"),
+                QStringLiteral("Idle auto-stop: %1 min sin uso, parando server.").arg(m_idleAutoStopMin));
+            stopServer();
+        }
+    });
+    if (m_idleAutoStopMin > 0) m_idleTimer->start();
+    // Cualquier inicio de generación o arranque de server cuenta como actividad.
+    connect(this, &AppController::serverReadyChanged, this, [this]() { bumpActivity(); });
+    connect(this, &AppController::chatGeneratingChanged, this, [this]() { bumpActivity(); });
     // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
     // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
     // acá en el constructor y congelaba ~3s antes de mostrar la ventana.
@@ -3838,6 +3866,193 @@ void AppController::setAutoStartAgentOnLaunch(bool on)
     m_autoStartAgentOnLaunch = on;
     QSettings().setValue(QStringLiteral("agent/autoStartOnLaunch"), on);
     emit autoStartAgentOnLaunchChanged();
+}
+
+// ── Gateway ──────────────────────────────────────────────────────────────────
+void AppController::wireGatewayHooks()
+{
+    if (!m_gateway) return;
+    LlmGateway::Hooks h;
+    h.baseUrl      = [this]() { return serverBaseUrl(); };
+    h.ready        = [this]() { return serverReady(); };
+    h.currentModel = [this]() {
+        return m_profiles.resolveLaunch(m_activeLaunchId).name;
+    };
+    h.modelNames   = [this]() {
+        QStringList names;
+        for (const QVariant &v : m_profiles.launchProfilesForMenu()) {
+            const QString n = v.toMap().value(QStringLiteral("name")).toString();
+            if (!n.isEmpty()) names << n;
+        }
+        return names;
+    };
+    h.ensureModel  = [this](const QString &name) { gatewayEnsureModel(name); };
+    h.activity     = [this]() { bumpActivity(); };
+    m_gateway->setHooks(h);
+    m_gateway->setKeepN(m_gatewayKeepN);
+    m_gateway->setAutoSwap(m_gatewayAutoSwap);
+    m_gateway->setApiKey(m_gatewayApiKey);
+}
+
+void AppController::gatewayEnsureModel(const QString &name)
+{
+    // Mapear nombre de modelo → launch profile y arrancar si no es el activo.
+    QString launchId;
+    for (const QVariant &v : m_profiles.launchProfilesForMenu()) {
+        const QVariantMap m = v.toMap();
+        if (m.value(QStringLiteral("name")).toString().compare(name, Qt::CaseInsensitive) == 0) {
+            launchId = m.value(QStringLiteral("id")).toString();
+            break;
+        }
+    }
+    if (launchId.isEmpty()) return;
+    if (launchId == m_activeLaunchId && serverRunning()) return;
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Gateway: auto-load del modelo '%1'.").arg(name));
+    if (serverRunning()) stopServer();
+    startServerAndAgent(launchId);
+}
+
+void AppController::startGateway()
+{
+    if (!m_gateway) { m_gateway = new LlmGateway(this); wireGatewayHooks(); }
+    if (m_gateway->listening()) return;
+    if (m_gateway->start(static_cast<quint16>(m_gatewayPort))) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+            QStringLiteral("Gateway escuchando en %1").arg(gatewayBaseUrl()));
+    } else {
+        emit serverError(QStringLiteral("No pude abrir el gateway en el puerto %1.").arg(m_gatewayPort));
+    }
+    emit gatewayChanged();
+}
+
+void AppController::stopGateway()
+{
+    if (m_gateway) m_gateway->stop();
+    emit gatewayChanged();
+}
+
+QString AppController::gatewayBaseUrl() const
+{
+    return QStringLiteral("http://127.0.0.1:%1").arg(m_gatewayPort);
+}
+
+void AppController::setGatewayEnabled(bool on)
+{
+    if (m_gatewayEnabled == on) return;
+    m_gatewayEnabled = on;
+    QSettings().setValue(QStringLiteral("gateway/enabled"), on);
+    if (on) startGateway(); else stopGateway();
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayPort(int p)
+{
+    if (p <= 0 || p > 65535 || m_gatewayPort == p) return;
+    m_gatewayPort = p;
+    QSettings().setValue(QStringLiteral("gateway/port"), p);
+    if (m_gateway && m_gateway->listening()) { stopGateway(); startGateway(); }
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayApiKey(const QString &k)
+{
+    if (m_gatewayApiKey == k) return;
+    m_gatewayApiKey = k;
+    QSettings().setValue(QStringLiteral("gateway/apiKey"), k);
+    if (m_gateway) m_gateway->setApiKey(k);
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayKeepN(int n)
+{
+    n = qMax(1, n);
+    if (m_gatewayKeepN == n) return;
+    m_gatewayKeepN = n;
+    QSettings().setValue(QStringLiteral("gateway/keepN"), n);
+    if (m_gateway) m_gateway->setKeepN(n);
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayAutoSwap(bool on)
+{
+    if (m_gatewayAutoSwap == on) return;
+    m_gatewayAutoSwap = on;
+    QSettings().setValue(QStringLiteral("gateway/autoSwap"), on);
+    if (m_gateway) m_gateway->setAutoSwap(on);
+    emit gatewayChanged();
+}
+
+QString AppController::launchClaudeCode()
+{
+    if (!m_gateway || !m_gateway->listening()) {
+        if (m_gatewayEnabled) startGateway();
+        else { setGatewayEnabled(true); }
+    }
+    if (!m_gateway || !m_gateway->listening())
+        return QStringLiteral("No pude arrancar el gateway.");
+
+    const QString exe = QStandardPaths::findExecutable(QStringLiteral("claude"));
+    if (exe.isEmpty())
+        return QStringLiteral("No encontré 'claude' en el PATH. Instalá Claude Code primero.");
+
+    const QString model = m_profiles.resolveLaunch(m_activeLaunchId).name;
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("ANTHROPIC_BASE_URL"), gatewayBaseUrl());
+    env.insert(QStringLiteral("ANTHROPIC_AUTH_TOKEN"),
+               m_gatewayApiKey.isEmpty() ? QStringLiteral("local") : m_gatewayApiKey);
+    if (!model.isEmpty())
+        env.insert(QStringLiteral("ANTHROPIC_MODEL"), model);
+
+    auto *proc = new QProcess(this);
+    proc->setProcessEnvironment(env);
+    proc->setProgram(exe);
+#ifdef Q_OS_WIN
+    // Abrir en una consola nueva para que Claude Code sea interactivo.
+    proc->setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments *args) {
+        args->flags |= CREATE_NEW_CONSOLE;
+    });
+#endif
+    if (!proc->startDetached()) {
+        proc->deleteLater();
+        return QStringLiteral("No pude lanzar 'claude'.");
+    }
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Claude Code lanzado contra el gateway (%1).").arg(gatewayBaseUrl()));
+    return {};
+}
+
+// ── Idle auto-stop ───────────────────────────────────────────────────────────
+bool AppController::shouldIdleStop(bool serverRunning, bool busy, int idleMin,
+                                   qint64 idleElapsedMs)
+{
+    if (idleMin <= 0 || !serverRunning || busy) return false;
+    return idleElapsedMs >= static_cast<qint64>(idleMin) * 60000;
+}
+
+void AppController::bumpActivity()
+{
+    m_lastActivity.restart();
+}
+
+void AppController::startIdleWatchdog()  { if (m_idleTimer) m_idleTimer->start(); }
+void AppController::stopIdleWatchdog()   { if (m_idleTimer) m_idleTimer->stop(); }
+
+void AppController::setIdleAutoStopMin(int minutes)
+{
+    minutes = qMax(0, minutes);
+    if (m_idleAutoStopMin == minutes) return;
+    m_idleAutoStopMin = minutes;
+    QSettings().setValue(QStringLiteral("server/idleAutoStopMin"), minutes);
+    bumpActivity();
+    if (minutes > 0) startIdleWatchdog(); else stopIdleWatchdog();
+    emit idleAutoStopChanged();
+}
+
+void AppController::chatSetStructuredOutput(const QString &grammar, const QString &jsonSchema)
+{
+    if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
+        raw->setStructuredOutput(grammar, jsonSchema);
 }
 
 void AppController::setTasksSchedulerEnabled(bool on)
