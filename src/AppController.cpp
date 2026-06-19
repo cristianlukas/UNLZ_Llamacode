@@ -1,5 +1,8 @@
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
+#include "core/automation/AutomationArtifactStore.h"
+#include "core/automation/AutomationRunner.h"
+#include "core/automation/DesktopAutomationBackend.h"
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
 #  define NOMINMAX
@@ -560,6 +563,20 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    connect(&m_teachRecorder, &TeachSessionRecorder::changed,
+            this, &AppController::teachChanged);
+    connect(&m_teachRecorder, &TeachSessionRecorder::finished, this,
+            [this](const QString &artifactId) {
+        const QVariantMap manifest = AutomationArtifactStore::manifest(artifactId);
+        const QString taskId = manifest.value(QStringLiteral("taskId")).toString();
+        QVariantMap task = m_tasks.get(taskId);
+        if (task.isEmpty()) return;
+        task[QStringLiteral("teachArtifactId")] = artifactId;
+        task[QStringLiteral("teachFormatVersion")] = AutomationArtifactStore::FormatVersion;
+        task[QStringLiteral("trainedAt")] = manifest.value(QStringLiteral("trainedAt"));
+        task[QStringLiteral("automationStatus")] = QStringLiteral("ready");
+        m_tasks.save(taskId, task);
+    });
     // Reenviar progreso/fin de descarga de modelos STT a QML.
     connect(&m_voiceServers, &VoiceServerManager::installProgress,
             this, &AppController::voiceInstallProgress);
@@ -596,6 +613,12 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentTeacherKey   = s.value(QStringLiteral("agent/teacherKey")).toString();
     m_mailAutoSend      = s.value(QStringLiteral("agent/mailAutoSend"), false).toBool();
     m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
+    m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
+    m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
+    m_gatewayApiKey  = s.value(QStringLiteral("gateway/apiKey")).toString();
+    m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
+    m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
+    m_idleAutoStopMin = s.value(QStringLiteral("server/idleAutoStopMin"), 0).toInt();
     m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
 
     killManagedOrphans();
@@ -625,6 +648,28 @@ AppController::AppController(QObject *parent) : QObject(parent)
     });
     if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
         m_scheduler->setEnabled(true);
+
+    // Gateway (proxy Anthropic/OpenAI + auto-load). Se arranca on-demand.
+    m_gateway = new LlmGateway(this);
+    wireGatewayHooks();
+    if (m_gatewayEnabled) startGateway();
+
+    // Idle auto-stop watchdog: chequea inactividad y para el server para liberar VRAM.
+    m_lastActivity.start();
+    m_idleTimer = new QTimer(this);
+    m_idleTimer->setInterval(30000);   // chequeo cada 30s
+    connect(m_idleTimer, &QTimer::timeout, this, [this]() {
+        if (shouldIdleStop(serverRunning(), agentBackendBusy() || m_chatGenerating,
+                           m_idleAutoStopMin, m_lastActivity.elapsed())) {
+            appendServerEvent(QStringLiteral("lifecycle"),
+                QStringLiteral("Idle auto-stop: %1 min sin uso, parando server.").arg(m_idleAutoStopMin));
+            stopServer();
+        }
+    });
+    if (m_idleAutoStopMin > 0) m_idleTimer->start();
+    // Cualquier inicio de generación o arranque de server cuenta como actividad.
+    connect(this, &AppController::serverReadyChanged, this, [this]() { bumpActivity(); });
+    connect(this, &AppController::chatGeneratingChanged, this, [this]() { bumpActivity(); });
     // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
     // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
     // acá en el constructor y congelaba ~3s antes de mostrar la ventana.
@@ -3566,8 +3611,38 @@ void AppController::runTask(const QString &id)
         return;
     }
 
+    const QString validation = AutomationRunner::validateTask(task, m_serverHasVision);
+    if (!validation.isEmpty()) {
+        emit serverError(validation);
+        emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(),
+                             QStringLiteral("error"), validation,
+                             task.value(QStringLiteral("silentUnlessError"), false).toBool());
+        return;
+    }
+    if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")
+        && !DesktopAutomationBackend::interactiveSessionAvailable()) {
+        m_tasks.markRun(id, QStringLiteral("waiting_for_session"),
+                        QStringLiteral("Esperando una sesión de Windows interactiva."));
+        QTimer::singleShot(30000, this, [this, id]() {
+            const QVariantMap waiting = m_tasks.get(id);
+            if (waiting.value(QStringLiteral("lastRunStatus")).toString()
+                == QLatin1String("waiting_for_session"))
+                runTask(id);
+        });
+        emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(),
+                             QStringLiteral("waiting_for_session"),
+                             QStringLiteral("La sesión está bloqueada; se reintentará desde el scheduler."),
+                             true);
+        return;
+    }
+
     const QString name = task.value(QStringLiteral("name")).toString();
-    const QString prompt = TaskStore::composePrompt(task);
+    QString prompt = TaskStore::composePrompt(task);
+    const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
+    if (!artifactId.isEmpty())
+        prompt += AutomationRunner::augmentPrompt(task,
+            AutomationArtifactStore::manifest(artifactId),
+            AutomationArtifactStore::recipe(artifactId));
     m_runningTaskId = id;
     m_runningTaskName = name;
     m_runningTaskPhase = QStringLiteral("ejecutando");
@@ -3608,7 +3683,9 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     const QString scope = task.value(QStringLiteral("permScope"), QStringLiteral("project")).toString();
     const QStringList folders = task.value(QStringLiteral("permFolders")).toStringList();
     cb->setTaskScope(scope, folders);
-    cb->setTaskAutoApprove(true);
+    const QString policy = task.value(QStringLiteral("approvalPolicy"),
+                                      QStringLiteral("sensitive")).toString();
+    cb->setTaskAutoApprove(policy == QLatin1String("autonomous"));
 }
 
 void AppController::clearTaskAgentPermissions()
@@ -3635,7 +3712,13 @@ void AppController::dispatchPendingScheduledTask()
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.")
                      .arg(task.value(QStringLiteral("name")).toString()));
-    sendToAgent(TaskStore::composePrompt(task));
+    QString prompt = TaskStore::composePrompt(task);
+    const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
+    if (!artifactId.isEmpty())
+        prompt += AutomationRunner::augmentPrompt(task,
+            AutomationArtifactStore::manifest(artifactId),
+            AutomationArtifactStore::recipe(artifactId));
+    sendToAgent(prompt);
 }
 
 void AppController::onAgentTurnFinished()
@@ -3838,6 +3921,193 @@ void AppController::setAutoStartAgentOnLaunch(bool on)
     m_autoStartAgentOnLaunch = on;
     QSettings().setValue(QStringLiteral("agent/autoStartOnLaunch"), on);
     emit autoStartAgentOnLaunchChanged();
+}
+
+// ── Gateway ──────────────────────────────────────────────────────────────────
+void AppController::wireGatewayHooks()
+{
+    if (!m_gateway) return;
+    LlmGateway::Hooks h;
+    h.baseUrl      = [this]() { return serverBaseUrl(); };
+    h.ready        = [this]() { return serverReady(); };
+    h.currentModel = [this]() {
+        return m_profiles.resolveLaunch(m_activeLaunchId).name;
+    };
+    h.modelNames   = [this]() {
+        QStringList names;
+        for (const QVariant &v : m_profiles.launchProfilesForMenu()) {
+            const QString n = v.toMap().value(QStringLiteral("name")).toString();
+            if (!n.isEmpty()) names << n;
+        }
+        return names;
+    };
+    h.ensureModel  = [this](const QString &name) { gatewayEnsureModel(name); };
+    h.activity     = [this]() { bumpActivity(); };
+    m_gateway->setHooks(h);
+    m_gateway->setKeepN(m_gatewayKeepN);
+    m_gateway->setAutoSwap(m_gatewayAutoSwap);
+    m_gateway->setApiKey(m_gatewayApiKey);
+}
+
+void AppController::gatewayEnsureModel(const QString &name)
+{
+    // Mapear nombre de modelo → launch profile y arrancar si no es el activo.
+    QString launchId;
+    for (const QVariant &v : m_profiles.launchProfilesForMenu()) {
+        const QVariantMap m = v.toMap();
+        if (m.value(QStringLiteral("name")).toString().compare(name, Qt::CaseInsensitive) == 0) {
+            launchId = m.value(QStringLiteral("id")).toString();
+            break;
+        }
+    }
+    if (launchId.isEmpty()) return;
+    if (launchId == m_activeLaunchId && serverRunning()) return;
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Gateway: auto-load del modelo '%1'.").arg(name));
+    if (serverRunning()) stopServer();
+    startServerAndAgent(launchId);
+}
+
+void AppController::startGateway()
+{
+    if (!m_gateway) { m_gateway = new LlmGateway(this); wireGatewayHooks(); }
+    if (m_gateway->listening()) return;
+    if (m_gateway->start(static_cast<quint16>(m_gatewayPort))) {
+        appendServerEvent(QStringLiteral("lifecycle"),
+            QStringLiteral("Gateway escuchando en %1").arg(gatewayBaseUrl()));
+    } else {
+        emit serverError(QStringLiteral("No pude abrir el gateway en el puerto %1.").arg(m_gatewayPort));
+    }
+    emit gatewayChanged();
+}
+
+void AppController::stopGateway()
+{
+    if (m_gateway) m_gateway->stop();
+    emit gatewayChanged();
+}
+
+QString AppController::gatewayBaseUrl() const
+{
+    return QStringLiteral("http://127.0.0.1:%1").arg(m_gatewayPort);
+}
+
+void AppController::setGatewayEnabled(bool on)
+{
+    if (m_gatewayEnabled == on) return;
+    m_gatewayEnabled = on;
+    QSettings().setValue(QStringLiteral("gateway/enabled"), on);
+    if (on) startGateway(); else stopGateway();
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayPort(int p)
+{
+    if (p <= 0 || p > 65535 || m_gatewayPort == p) return;
+    m_gatewayPort = p;
+    QSettings().setValue(QStringLiteral("gateway/port"), p);
+    if (m_gateway && m_gateway->listening()) { stopGateway(); startGateway(); }
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayApiKey(const QString &k)
+{
+    if (m_gatewayApiKey == k) return;
+    m_gatewayApiKey = k;
+    QSettings().setValue(QStringLiteral("gateway/apiKey"), k);
+    if (m_gateway) m_gateway->setApiKey(k);
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayKeepN(int n)
+{
+    n = qMax(1, n);
+    if (m_gatewayKeepN == n) return;
+    m_gatewayKeepN = n;
+    QSettings().setValue(QStringLiteral("gateway/keepN"), n);
+    if (m_gateway) m_gateway->setKeepN(n);
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayAutoSwap(bool on)
+{
+    if (m_gatewayAutoSwap == on) return;
+    m_gatewayAutoSwap = on;
+    QSettings().setValue(QStringLiteral("gateway/autoSwap"), on);
+    if (m_gateway) m_gateway->setAutoSwap(on);
+    emit gatewayChanged();
+}
+
+QString AppController::launchClaudeCode()
+{
+    if (!m_gateway || !m_gateway->listening()) {
+        if (m_gatewayEnabled) startGateway();
+        else { setGatewayEnabled(true); }
+    }
+    if (!m_gateway || !m_gateway->listening())
+        return QStringLiteral("No pude arrancar el gateway.");
+
+    const QString exe = QStandardPaths::findExecutable(QStringLiteral("claude"));
+    if (exe.isEmpty())
+        return QStringLiteral("No encontré 'claude' en el PATH. Instalá Claude Code primero.");
+
+    const QString model = m_profiles.resolveLaunch(m_activeLaunchId).name;
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("ANTHROPIC_BASE_URL"), gatewayBaseUrl());
+    env.insert(QStringLiteral("ANTHROPIC_AUTH_TOKEN"),
+               m_gatewayApiKey.isEmpty() ? QStringLiteral("local") : m_gatewayApiKey);
+    if (!model.isEmpty())
+        env.insert(QStringLiteral("ANTHROPIC_MODEL"), model);
+
+    auto *proc = new QProcess(this);
+    proc->setProcessEnvironment(env);
+    proc->setProgram(exe);
+#ifdef Q_OS_WIN
+    // Abrir en una consola nueva para que Claude Code sea interactivo.
+    proc->setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments *args) {
+        args->flags |= CREATE_NEW_CONSOLE;
+    });
+#endif
+    if (!proc->startDetached()) {
+        proc->deleteLater();
+        return QStringLiteral("No pude lanzar 'claude'.");
+    }
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Claude Code lanzado contra el gateway (%1).").arg(gatewayBaseUrl()));
+    return {};
+}
+
+// ── Idle auto-stop ───────────────────────────────────────────────────────────
+bool AppController::shouldIdleStop(bool serverRunning, bool busy, int idleMin,
+                                   qint64 idleElapsedMs)
+{
+    if (idleMin <= 0 || !serverRunning || busy) return false;
+    return idleElapsedMs >= static_cast<qint64>(idleMin) * 60000;
+}
+
+void AppController::bumpActivity()
+{
+    m_lastActivity.restart();
+}
+
+void AppController::startIdleWatchdog()  { if (m_idleTimer) m_idleTimer->start(); }
+void AppController::stopIdleWatchdog()   { if (m_idleTimer) m_idleTimer->stop(); }
+
+void AppController::setIdleAutoStopMin(int minutes)
+{
+    minutes = qMax(0, minutes);
+    if (m_idleAutoStopMin == minutes) return;
+    m_idleAutoStopMin = minutes;
+    QSettings().setValue(QStringLiteral("server/idleAutoStopMin"), minutes);
+    bumpActivity();
+    if (minutes > 0) startIdleWatchdog(); else stopIdleWatchdog();
+    emit idleAutoStopChanged();
+}
+
+void AppController::chatSetStructuredOutput(const QString &grammar, const QString &jsonSchema)
+{
+    if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
+        raw->setStructuredOutput(grammar, jsonSchema);
 }
 
 void AppController::setTasksSchedulerEnabled(bool on)
@@ -4794,6 +5064,166 @@ void AppController::writeSetting(const QString &key, const QVariant &value)
 {
     QSettings s;
     s.setValue(key, value);
+}
+
+QVariantList AppController::automationScreens() const
+{
+    return DesktopAutomationBackend::screens();
+}
+
+QVariantList AppController::automationWindows() const
+{
+    return DesktopAutomationBackend::windows();
+}
+
+QString AppController::startDesktopTeach(const QString &taskId, const QString &scopeKind,
+                                         const QString &scopeTargetId)
+{
+    QVariantMap task = m_tasks.get(taskId);
+    if (task.isEmpty()) return QStringLiteral("Guardá la Task antes de iniciar Teach.");
+    task[QStringLiteral("executionMode")] = QStringLiteral("desktop");
+    const QVariantMap scope = DesktopAutomationBackend::targetInfo(scopeKind, scopeTargetId);
+    if (scope.isEmpty()) return QStringLiteral("El alcance elegido no está disponible.");
+    task[QStringLiteral("scopeKind")] = scopeKind;
+    task[QStringLiteral("scopeTargetId")] = scopeTargetId;
+    task[QStringLiteral("scopeLabel")] = scope.value(QStringLiteral("label"));
+    task[QStringLiteral("scopeWidth")] = scope.value(QStringLiteral("width"));
+    task[QStringLiteral("scopeHeight")] = scope.value(QStringLiteral("height"));
+    task[QStringLiteral("scopeDpi")] = scope.value(QStringLiteral("dpi"), 96.0);
+    task[QStringLiteral("automationStatus")] = QStringLiteral("recording");
+    m_tasks.save(taskId, task);
+    return m_teachRecorder.startDesktop(task, scopeKind, scopeTargetId);
+}
+
+QString AppController::startBrowserTeach(const QString &taskId, const QString &url)
+{
+    QVariantMap task = m_tasks.get(taskId);
+    if (task.isEmpty()) return QStringLiteral("Guardá la Task antes de iniciar Teach.");
+    task[QStringLiteral("executionMode")] = QStringLiteral("browserBackground");
+    task[QStringLiteral("automationStatus")] = QStringLiteral("recording");
+    m_tasks.save(taskId, task);
+    const QString recorderError = m_teachRecorder.startBrowser(task, url);
+    if (!recorderError.isEmpty()) return recorderError;
+    const QString processError = recordBrowserSkill(taskId, url);
+    if (!processError.isEmpty()) {
+        m_teachRecorder.cancel();
+        return processError;
+    }
+    return {};
+}
+
+void AppController::pauseTeach(bool paused)
+{
+    m_teachRecorder.setPaused(paused);
+}
+
+void AppController::addTeachNote(const QString &note)
+{
+    m_teachRecorder.addNote(note);
+}
+
+QString AppController::finishTeach()
+{
+    return m_teachRecorder.finish();
+}
+
+void AppController::cancelTeach()
+{
+    m_teachRecorder.cancel();
+}
+
+QVariantList AppController::automationTimeline(const QString &artifactId) const
+{
+    return AutomationArtifactStore::timeline(artifactId);
+}
+
+QString AppController::importBrowserSkillAsTask(const QString &skillName)
+{
+    QVariantMap task{
+        {QStringLiteral("name"), QStringLiteral("Browser: %1").arg(skillName)},
+        {QStringLiteral("description"), QStringLiteral("Reproducir y adaptar el flujo de navegador enseñado.")},
+        {QStringLiteral("executionMode"), QStringLiteral("browserBackground")},
+        {QStringLiteral("approvalPolicy"), QStringLiteral("sensitive")},
+        {QStringLiteral("steps"), QVariantList{
+             QVariantMap{{QStringLiteral("kind"), QStringLiteral("browser")},
+                         {QStringLiteral("intent"), QStringLiteral("Ejecutar el flujo enseñado")},
+                         {QStringLiteral("ref"), skillName}}}}};
+    const QString id = m_tasks.save({}, task);
+    task = m_tasks.get(id);
+    const QString artifactId = AutomationArtifactStore::importBrowserSkill(skillName, task);
+    if (artifactId.isEmpty()) {
+        m_tasks.remove(id);
+        return {};
+    }
+    task[QStringLiteral("teachArtifactId")] = artifactId;
+    task[QStringLiteral("teachFormatVersion")] = AutomationArtifactStore::FormatVersion;
+    task[QStringLiteral("trainedAt")] =
+        AutomationArtifactStore::manifest(artifactId).value(QStringLiteral("trainedAt"));
+    task[QStringLiteral("automationStatus")] = QStringLiteral("ready");
+    m_tasks.save(id, task);
+    return id;
+}
+
+bool AppController::removeAutomationEvidence(const QString &artifactId,
+                                             const QString &fileName)
+{
+    return AutomationArtifactStore::removeEvidence(artifactId, fileName);
+}
+
+void AppController::stopAutomation()
+{
+    if (m_teachRecorder.state() == QLatin1String("recording")
+        || m_teachRecorder.state() == QLatin1String("paused"))
+        m_teachRecorder.cancel();
+    if (!m_runningTaskId.isEmpty()) {
+        if (m_agentBackend) m_agentBackend->cancelGeneration();
+        finishRunningTask(QStringLiteral("cancelled"), QStringLiteral("Automatización detenida por el usuario."));
+    }
+}
+
+QString AppController::windowsStartupCommand(const QString &executablePath)
+{
+    QString nativePath = QDir::toNativeSeparators(executablePath);
+    nativePath.replace(QLatin1Char('"'), QStringLiteral("\\\""));
+    return QStringLiteral("\"%1\" --startup").arg(nativePath);
+}
+
+bool AppController::shouldStartHidden(bool startedWithWindows, bool minimizeToTray)
+{
+    return startedWithWindows && minimizeToTray;
+}
+
+bool AppController::startWithWindowsEnabled() const
+{
+#ifdef Q_OS_WIN
+    QSettings runKey(
+        QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+        QSettings::NativeFormat);
+    return !runKey.value(QStringLiteral("LlamaCode")).toString().trimmed().isEmpty();
+#else
+    return false;
+#endif
+}
+
+QString AppController::setStartWithWindowsEnabled(bool enabled)
+{
+#ifdef Q_OS_WIN
+    QSettings runKey(
+        QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+        QSettings::NativeFormat);
+    if (enabled)
+        runKey.setValue(QStringLiteral("LlamaCode"),
+                        windowsStartupCommand(QCoreApplication::applicationFilePath()));
+    else
+        runKey.remove(QStringLiteral("LlamaCode"));
+    runKey.sync();
+    if (runKey.status() != QSettings::NoError)
+        return QStringLiteral("No se pudo actualizar el inicio automático de Windows.");
+#else
+    Q_UNUSED(enabled);
+    return QStringLiteral("El inicio automático sólo está disponible en Windows.");
+#endif
+    return QString();
 }
 
 void AppController::checkForUpdates()
@@ -6009,6 +6439,8 @@ static const TrEntry k_tr[] = {
     {"settings.system",     "Sistema",         "System",                "系统",           "Système",           "Sistema",              "System"},
     {"settings.minimizeToTray", "Minimizar a la bandeja", "Minimize to tray", "最小化到托盘", "Réduire dans la barre", "Riduci a icona", "In Infobereich minimieren"},
     {"settings.minimizeToTrayDesc", "Al cerrar, la app se oculta en los íconos de notificación en vez de cerrarse. Click derecho en el ícono para abrirla o salir.", "On close, the app hides in the notification tray instead of quitting. Right-click the icon to reopen or quit.", "关闭时，应用会隐藏到通知托盘而不是退出。右键单击图标可重新打开或退出。", "À la fermeture, l'application se réduit dans la zone de notification au lieu de quitter. Clic droit sur l'icône pour rouvrir ou quitter.", "Alla chiusura, l'app si nasconde nell'area di notifica invece di uscire. Clic destro sull'icona per riaprire o uscire.", "Beim Schließen wird die App im Infobereich versteckt statt beendet. Rechtsklick auf das Symbol zum Öffnen oder Beenden."},
+    {"settings.startWithWindows", "Iniciar con Windows", "Start with Windows", "随 Windows 启动", "Démarrer avec Windows", "Avvia con Windows", "Mit Windows starten"},
+    {"settings.startWithWindowsDesc", "Abre LlamaCode al iniciar sesión. Si «Minimizar a la bandeja» está activo, inicia oculto en el área de notificación.", "Opens LlamaCode when you sign in. If “Minimize to tray” is enabled, it starts hidden in the notification area.", "登录时打开 LlamaCode。如果启用“最小化到托盘”，应用将隐藏启动。", "Ouvre LlamaCode à la connexion. Si « Réduire dans la barre » est activé, l'application démarre masquée.", "Apre LlamaCode all'accesso. Se «Riduci a icona» è attivo, si avvia nascosto nell'area di notifica.", "Öffnet LlamaCode bei der Anmeldung. Wenn „In Infobereich minimieren“ aktiv ist, startet die App ausgeblendet."},
     {"tray.open",           "Abrir",           "Open",                  "打开",           "Ouvrir",            "Apri",                 "Öffnen"},
     {"tray.quit",           "Salir",           "Quit",                  "退出",           "Quitter",           "Esci",                 "Beenden"},
 };

@@ -9,6 +9,8 @@ Item {
 
     // Estado del editor (dialog). editId vacío = creando.
     property string editId: ""
+    property string teachTaskId: ""
+    property var teachTargets: []
 
     function openEditor(id) {
         editId = id
@@ -23,6 +25,11 @@ Item {
             prePromptField.text = t.prePrompt || ""
             postPromptField.text = t.postPrompt || ""
             silentUnlessError.checked = t.silentUnlessError || false
+            executionMode.currentIndex = Math.max(0, ["agent", "desktop", "browserBackground"].indexOf(t.executionMode || "agent"))
+            approvalPolicy.currentIndex = Math.max(0, ["always", "sensitive", "autonomous"].indexOf(t.approvalPolicy || "sensitive"))
+            timeoutSec.value = t.timeoutSec || 300
+            maxActions.value = t.maxActions || 50
+            maxRetries.value = t.maxRetries === undefined ? 2 : t.maxRetries
             cronField.text = t.scheduleCron || ""
             schedEnabled.checked = t.scheduleEnabled || false
             loadScheduleSpec(t.scheduleSpec || {}, t.scheduleCron || "")
@@ -39,6 +46,11 @@ Item {
             prePromptField.text = ""
             postPromptField.text = ""
             silentUnlessError.checked = false
+            executionMode.currentIndex = 0
+            approvalPolicy.currentIndex = 1
+            timeoutSec.value = 300
+            maxActions.value = 50
+            maxRetries.value = 2
             cronField.text = ""
             schedEnabled.checked = false
             loadScheduleSpec({}, "")
@@ -154,6 +166,47 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
+            Layout.preferredHeight: 50
+            color: Theme.navBg
+            RowLayout {
+                anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
+                spacing: 8
+                Text {
+                    Layout.fillWidth: true
+                    text: "Teach aprende una demostración y guarda una receta adaptable, no coordenadas rígidas."
+                    color: Theme.textMuted
+                    font.pixelSize: 11
+                    elide: Text.ElideRight
+                }
+                LcButton {
+                    text: "Enseñar escritorio"
+                    secondary: true
+                    onClicked: {
+                        root.teachTaskId = ""
+                        teachMode.currentIndex = 0
+                        teachPopup.open()
+                    }
+                }
+                LcButton {
+                    text: "Enseñar navegador"
+                    secondary: true
+                    onClicked: {
+                        root.teachTaskId = ""
+                        teachMode.currentIndex = 1
+                        teachPopup.open()
+                    }
+                }
+                LcButton {
+                    text: "Importar skill"
+                    secondary: true
+                    onClicked: importPopup.open()
+                }
+            }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
             Layout.preferredHeight: 40
             color: Theme.navBg
             RowLayout {
@@ -251,6 +304,9 @@ Item {
                                 }
                                 Text {
                                     text: model.stepCount + " paso(s)"
+                                        + "  ·  " + (model.executionMode === "desktop" ? "Escritorio"
+                                                       : (model.executionMode === "browserBackground" ? "Browser background" : "Agente"))
+                                        + (model.automationStatus ? "  ·  " + model.automationStatus : "")
                                         + (model.scheduleEnabled ? "  ·  ⏱ " + root.scheduleSummary(model.scheduleSpec, model.scheduleCron) : "")
                                         + (model.lastRunStatus ? "  ·  última: " + model.lastRunStatus : "")
                                     color: Theme.textMuted
@@ -272,6 +328,21 @@ Item {
                                          : "▶ Ejecutar")
                                 enabled: App.canRunTask
                                 onClicked: App.runTask(taskId)
+                            }
+                            LcButton {
+                                text: model.teachArtifactId ? "Reentrenar" : "Teach"
+                                secondary: true
+                                onClicked: {
+                                    root.teachTaskId = taskId
+                                    teachMode.currentIndex = model.executionMode === "browserBackground" ? 1 : 0
+                                    teachPopup.open()
+                                }
+                            }
+                            LcButton {
+                                text: "Detener"
+                                secondary: true
+                                visible: App.runningTaskId === taskId
+                                onClicked: App.stopAutomation()
                             }
                             LcButton {
                                 text: "Editar"
@@ -301,6 +372,206 @@ Item {
         onAccepted: permFoldersModel.append({ path: selectedFolder.toString().replace("file:///", "") })
     }
 
+    Popup {
+        id: teachPopup
+        modal: true
+        parent: Overlay.overlay
+        width: Math.min(680, root.width - 80)
+        height: Math.min(620, root.height - 80)
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 18
+        onOpened: {
+            teachError.text = ""
+            teachNote.text = ""
+            teachTaskCombo.currentIndex = root.teachTaskId.length > 0
+                ? teachTaskCombo.indexOfValue(root.teachTaskId) : 0
+            refreshTargets()
+        }
+        function refreshTargets() {
+            root.teachTargets = scopeKind.currentIndex === 0
+                ? App.automationScreens() : App.automationWindows()
+            targetCombo.currentIndex = root.teachTargets.length > 0 ? 0 : -1
+        }
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor
+        }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text {
+                text: "Modo Teach"
+                color: Theme.textPrimary
+                font { pixelSize: 16; bold: true }
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Mostrá la tarea y agregá notas. La automatización guardará evidencia y una receta semántica adaptable."
+                wrapMode: Text.Wrap
+                color: Theme.textMuted
+                font.pixelSize: 11
+            }
+            Text { text: "Automatización"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcComboBox {
+                id: teachTaskCombo
+                Layout.fillWidth: true
+                model: App.taskStore
+                textRole: "name"
+                valueRole: "id"
+            }
+            Text { text: "Modalidad"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcComboBox {
+                id: teachMode
+                Layout.fillWidth: true
+                model: ["Escritorio foreground", "Navegador background"]
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                visible: teachMode.currentIndex === 0
+                LcComboBox {
+                    id: scopeKind
+                    Layout.preferredWidth: 150
+                    model: ["Pantalla", "Ventana"]
+                    onActivated: teachPopup.refreshTargets()
+                }
+                LcComboBox {
+                    id: targetCombo
+                    Layout.fillWidth: true
+                    model: root.teachTargets
+                    textRole: "label"
+                    valueRole: "id"
+                }
+                LcButton { text: "Actualizar"; secondary: true; onClicked: teachPopup.refreshTargets() }
+            }
+            LcTextField {
+                id: teachUrl
+                Layout.fillWidth: true
+                visible: teachMode.currentIndex === 1
+                placeholderText: "URL inicial (https://...)"
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+            Text {
+                text: "Estado: " + App.teachState
+                color: App.teachState === "failed" ? Theme.btnDangerBg : Theme.accent
+                font.pixelSize: 12
+            }
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                model: App.teachTimeline
+                delegate: Text {
+                    width: ListView.view.width
+                    text: (index + 1) + ". [" + (modelData.kind || "paso") + "] "
+                          + (modelData.intent || "")
+                    color: Theme.textSecondary
+                    font.pixelSize: 11
+                    wrapMode: Text.Wrap
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                LcTextField {
+                    id: teachNote
+                    Layout.fillWidth: true
+                    placeholderText: "Nota sobre lo que estás haciendo…"
+                }
+                LcButton {
+                    text: "Agregar nota"
+                    secondary: true
+                    enabled: teachNote.text.trim().length > 0
+                    onClicked: { App.addTeachNote(teachNote.text); teachNote.text = "" }
+                }
+            }
+            Text {
+                id: teachError
+                Layout.fillWidth: true
+                visible: text.length > 0 || App.teachError.length > 0
+                text: text.length > 0 ? text : App.teachError
+                color: Theme.btnDangerBg
+                wrapMode: Text.Wrap
+                font.pixelSize: 11
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                LcButton {
+                    text: "Iniciar"
+                    visible: App.teachState !== "recording" && App.teachState !== "paused"
+                    enabled: teachTaskCombo.currentValue && (teachMode.currentIndex === 1 || targetCombo.currentIndex >= 0)
+                    onClicked: {
+                        const err = teachMode.currentIndex === 0
+                            ? App.startDesktopTeach(teachTaskCombo.currentValue,
+                                scopeKind.currentIndex === 0 ? "screen" : "window",
+                                targetCombo.currentValue)
+                            : App.startBrowserTeach(teachTaskCombo.currentValue, teachUrl.text)
+                        teachError.text = err
+                    }
+                }
+                LcButton {
+                    text: App.teachState === "paused" ? "Continuar" : "Pausar"
+                    secondary: true
+                    visible: App.teachState === "recording" || App.teachState === "paused"
+                    onClicked: App.pauseTeach(App.teachState !== "paused")
+                }
+                LcButton {
+                    text: "Finalizar"
+                    visible: App.teachState === "recording" || App.teachState === "paused"
+                    onClicked: {
+                        const artifact = App.finishTeach()
+                        if (artifact.length > 0) teachPopup.close()
+                    }
+                }
+                LcButton {
+                    text: "Cancelar"
+                    secondary: true
+                    onClicked: { App.cancelTeach(); teachPopup.close() }
+                }
+            }
+        }
+    }
+
+    Popup {
+        id: importPopup
+        modal: true
+        parent: Overlay.overlay
+        width: 460
+        height: 300
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 18
+        property var skills: []
+        onOpened: { skills = App.listBrowserSkills(); importError.text = "" }
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        contentItem: ColumnLayout {
+            Text { text: "Importar skill Playwright"; color: Theme.textPrimary; font { pixelSize: 15; bold: true } }
+            Text {
+                Layout.fillWidth: true
+                text: "Crea una Task de navegador background sin modificar el skill existente."
+                color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.Wrap
+            }
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                model: importPopup.skills
+                delegate: RowLayout {
+                    width: ListView.view.width
+                    Text { Layout.fillWidth: true; text: modelData; color: Theme.textSecondary }
+                    LcButton {
+                        text: "Importar"
+                        onClicked: {
+                            const id = App.importBrowserSkillAsTask(modelData)
+                            if (id.length > 0) importPopup.close()
+                            else importError.text = "No se pudo importar el skill."
+                        }
+                    }
+                }
+            }
+            Text { id: importError; color: Theme.btnDangerBg; font.pixelSize: 11 }
+            LcButton { text: "Cerrar"; secondary: true; onClicked: importPopup.close() }
+        }
+    }
+
     // ── Editor de Task ──
     Popup {
         id: editor
@@ -320,6 +591,11 @@ Item {
                 prePrompt: prePromptField.text,
                 postPrompt: postPromptField.text,
                 silentUnlessError: silentUnlessError.checked,
+                executionMode: ["agent", "desktop", "browserBackground"][executionMode.currentIndex],
+                approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
+                timeoutSec: timeoutSec.value,
+                maxActions: maxActions.value,
+                maxRetries: maxRetries.value,
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
                 scheduleEnabled: schedEnabled.checked,
@@ -434,6 +710,40 @@ Item {
                             const idx = indexOfValue(pid)
                             currentIndex = idx >= 0 ? idx : 0
                         }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Text { text: "Modo de ejecución"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            LcComboBox {
+                                id: executionMode
+                                Layout.fillWidth: true
+                                model: ["Agente general", "Escritorio foreground", "Navegador background"]
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Text { text: "Aprobaciones"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            LcComboBox {
+                                id: approvalPolicy
+                                Layout.fillWidth: true
+                                model: ["Confirmar siempre", "Sólo acciones sensibles", "Autónoma"]
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        Text { text: "Timeout (s)"; color: Theme.textSecondary; font.pixelSize: 11 }
+                        SpinBox { id: timeoutSec; from: 30; to: 3600; value: 300; editable: true }
+                        Text { text: "Máx. acciones"; color: Theme.textSecondary; font.pixelSize: 11 }
+                        SpinBox { id: maxActions; from: 1; to: 500; value: 50; editable: true }
+                        Text { text: "Reintentos"; color: Theme.textSecondary; font.pixelSize: 11 }
+                        SpinBox { id: maxRetries; from: 0; to: 10; value: 2; editable: true }
                     }
 
                     RowLayout {

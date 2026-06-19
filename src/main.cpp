@@ -68,6 +68,8 @@ int main(int argc, char *argv[])
     qDebug() << "=== LlamaCode starting ===" << QDateTime::currentDateTime().toString();
 
     QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
+    const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
 
 #ifdef Q_OS_WIN
     // Identidad de taskbar explícita: sin esto Windows no asocia el icono a la
@@ -151,6 +153,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Theme", &theme);
     engine.rootContext()->setContextProperty("Mermaid", &mermaid);
     engine.rootContext()->setContextProperty("AppIconSource", appIconSource);
+    engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);
 
     // Control API headless (espejo de AppController) para tests sin GUI.
     // Puerto: env LLAMACODE_CONTROL_PORT (default 8765). 0 = desactivado. Localhost.
@@ -180,6 +183,10 @@ int main(int argc, char *argv[])
             win->setIcon(appIcon);
             splash.close();
         } else {
+            if (AppController::shouldStartHidden(
+                    startedWithWindows,
+                    controller.readSetting(QStringLiteral("window/minimizeToTray"), false).toBool()))
+                splash.close();
             QObject::connect(win, &QWindow::visibleChanged, &splash, [win, appIcon, &splash](bool v) {
                 if (!v)
                     return;

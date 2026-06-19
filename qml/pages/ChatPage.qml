@@ -844,6 +844,31 @@ Item {
                             verticalAlignment: Text.AlignVCenter
                         }
                     }
+                    // Salida estructurada: fuerza JSON válido (GBNF) en la respuesta.
+                    CheckBox {
+                        id: jsonModeCheck
+                        visible: App.serverRunning && App.serverReady
+                        text: "JSON"
+                        checked: false
+                        onToggled: App.chatSetStructuredOutput(
+                            checked ? "root   ::= object\n" +
+                                      "value  ::= object | array | string | number | (\"true\" | \"false\" | \"null\") ws\n" +
+                                      "object ::= \"{\" ws ( string \":\" ws value (\",\" ws string \":\" ws value)* )? \"}\" ws\n" +
+                                      "array  ::= \"[\" ws ( value (\",\" ws value)* )? \"]\" ws\n" +
+                                      "string ::= \"\\\"\" ( [^\"\\\\] | \"\\\\\" . )* \"\\\"\" ws\n" +
+                                      "number ::= \"-\"? ([0-9] | [1-9] [0-9]*) (\".\" [0-9]+)? ([eE] [-+]? [0-9]+)? ws\n" +
+                                      "ws ::= [ \\t\\n]*\n"
+                                    : "", "")
+                        contentItem: Text {
+                            text: jsonModeCheck.text
+                            color: Theme.textPrimary
+                            font.pixelSize: 12
+                            leftPadding: jsonModeCheck.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Fuerza al modelo a responder con JSON válido (GBNF grammar)."
+                    }
                 }
             }
 

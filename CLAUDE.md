@@ -52,9 +52,9 @@ HTTP de `/v1/chat/completions` y `/v1/embeddings`. Hoy se cubre el ciclo de
 sesiones/persistencia sin red. Al tocar esos paths, agregar el stub.
 
 ## Build
-- **Política actual (desde 2026-06-18): build SOLO de Release, con tests.** No
-  buildear Debug; correr el gate de tests (`tests.bat` + ctest) antes de
-  commitear, según la "Testing policy (OBLIGATORIA)" de arriba.
+- **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
+  Compilar solo Release (no Debug) y correr `tests.bat` + el gate de ctest antes
+  de commitear. La sección "Testing policy (OBLIGATORIA)" de arriba está vigente.
 - App: `build.bat [Debug|Release|Both]` (tiene `pause`; correr con `< nul` para no colgar).
 - Tests: `tests.bat [Debug|Release]` (sin `pause`).
 - La lógica core vive en la lib estática `llamacode_core`; el app y los tests linkean contra ella.

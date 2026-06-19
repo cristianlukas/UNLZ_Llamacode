@@ -4,6 +4,8 @@
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
+#include "core/automation/DesktopAutomationBackend.h"
+#include "core/automation/AutomationArtifactStore.h"
 #include "core/mail/MailClient.h" // tools email_send/list/read
 
 #include <QCryptographicHash>
@@ -12,6 +14,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QEventLoop>
@@ -677,6 +680,77 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             .arg(name,
                  args.value(QStringLiteral("_parse_error")).toString(),
                  QString::number(args.value(QStringLiteral("_raw_chars")).toInt()));
+    }
+    if (name == QLatin1String("desktop_observe")) {
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(
+            QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        const QString dir = AutomationArtifactStore::rootDir()
+                            + QStringLiteral("/runtime-observations");
+        QDir().mkpath(dir);
+        const QString path = dir + QStringLiteral("/observe-%1.jpg")
+            .arg(QDateTime::currentMSecsSinceEpoch());
+        QString error;
+        const QString saved = DesktopAutomationBackend::saveCapture(kind, target, path, &error);
+        if (saved.isEmpty()) return QStringLiteral("[desktop_observe: %1]").arg(error);
+        const QImage image(saved);
+        if (ok) *ok = true;
+        return QStringLiteral(
+            "[desktop_observe]\nimage_path=%1\nwidth=%2\nheight=%3\n"
+            "La captura es la observación actual; comparala con la evidencia Teach antes de actuar.")
+            .arg(saved).arg(image.width()).arg(image.height());
+    }
+    if (name == QLatin1String("desktop_click")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::click(
+            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("x")).toDouble(),
+            args.value(QStringLiteral("y")).toDouble(), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_click: ok]")
+                    : QStringLiteral("[desktop_click: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_type")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::typeText(
+            args.value(QStringLiteral("text")).toString(), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_type: ok]")
+                    : QStringLiteral("[desktop_type: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_key")) {
+        QString error;
+        QStringList modifiers;
+        for (const QJsonValue &v : args.value(QStringLiteral("modifiers")).toArray())
+            modifiers << v.toString();
+        const bool good = DesktopAutomationBackend::pressKey(
+            args.value(QStringLiteral("key")).toString(), modifiers, &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_key: ok]")
+                    : QStringLiteral("[desktop_key: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_scroll")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::scroll(
+            args.value(QStringLiteral("delta")).toInt(-120), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_scroll: ok]")
+                    : QStringLiteral("[desktop_scroll: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_focus")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::focusWindow(
+            args.value(QStringLiteral("target_id")).toString(), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_focus: ok]")
+                    : QStringLiteral("[desktop_focus: %1]").arg(error);
+    }
+    if (name == QLatin1String("desktop_wait")) {
+        const int ms = qBound(50, args.value(QStringLiteral("ms")).toInt(500), 10000);
+        QThread::msleep(static_cast<unsigned long>(ms));
+        if (ok) *ok = true;
+        return QStringLiteral("[desktop_wait: %1 ms]").arg(ms);
     }
     const QDir base(cwd);
     auto resolve = [&](const QString &rel) { return QDir::cleanPath(base.absoluteFilePath(rel)); };

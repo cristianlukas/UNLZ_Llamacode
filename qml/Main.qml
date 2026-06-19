@@ -20,7 +20,10 @@ ApplicationWindow {
     property color frameBorderColor: active ? Theme.frameBorderActive : Theme.frameBorderInact
     property color frameBgColor: Theme.baseBg
     property color titleBarColor: Theme.titleBg
-    property int resizeHandleSize: 8
+    // Los laterales deben ser más angostos que los scrollbars (14 px) para no
+    // interceptar su thumb. Las esquinas conservan un área amplia y cómoda.
+    property int sideResizeHandleSize: 3
+    property int cornerResizeHandleSize: 8
     property bool restoringWindowState: true
     // Minimizar a la bandeja de notificación al cerrar (en vez de salir).
     property bool minimizeToTray: Boolean(App.readSetting("window/minimizeToTray", false))
@@ -223,7 +226,7 @@ ApplicationWindow {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: window.resizeHandleSize
+        width: window.sideResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeHorCursor
         onPressed: window.startResize(Qt.LeftEdge)
@@ -232,7 +235,7 @@ ApplicationWindow {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: window.resizeHandleSize
+        width: window.sideResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeHorCursor
         onPressed: window.startResize(Qt.RightEdge)
@@ -241,7 +244,7 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: window.resizeHandleSize
+        height: window.sideResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeVerCursor
         onPressed: window.startResize(Qt.TopEdge)
@@ -250,7 +253,7 @@ ApplicationWindow {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: window.resizeHandleSize
+        height: window.sideResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeVerCursor
         onPressed: window.startResize(Qt.BottomEdge)
@@ -258,8 +261,8 @@ ApplicationWindow {
     MouseArea {
         anchors.left: parent.left
         anchors.top: parent.top
-        width: window.resizeHandleSize
-        height: window.resizeHandleSize
+        width: window.cornerResizeHandleSize
+        height: window.cornerResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeFDiagCursor
         onPressed: window.startResize(Qt.TopEdge | Qt.LeftEdge)
@@ -267,8 +270,8 @@ ApplicationWindow {
     MouseArea {
         anchors.right: parent.right
         anchors.top: parent.top
-        width: window.resizeHandleSize
-        height: window.resizeHandleSize
+        width: window.cornerResizeHandleSize
+        height: window.cornerResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeBDiagCursor
         onPressed: window.startResize(Qt.TopEdge | Qt.RightEdge)
@@ -276,8 +279,8 @@ ApplicationWindow {
     MouseArea {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        width: window.resizeHandleSize
-        height: window.resizeHandleSize
+        width: window.cornerResizeHandleSize
+        height: window.cornerResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeBDiagCursor
         onPressed: window.startResize(Qt.BottomEdge | Qt.LeftEdge)
@@ -285,8 +288,8 @@ ApplicationWindow {
     MouseArea {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        width: window.resizeHandleSize
-        height: window.resizeHandleSize
+        width: window.cornerResizeHandleSize
+        height: window.cornerResizeHandleSize
         hoverEnabled: true
         cursorShape: Qt.SizeFDiagCursor
         onPressed: window.startResize(Qt.BottomEdge | Qt.RightEdge)
@@ -808,10 +811,14 @@ ApplicationWindow {
         height = restoredH
         x = savedX
         y = savedY
-        if (savedMaximized)
+        const startHidden = StartedWithWindows && window.minimizeToTray
+        if (startHidden) {
+            visible = false
+        } else if (savedMaximized) {
             showMaximized()
-        else
+        } else {
             visible = true
+        }
         restoringWindowState = false
 
         // El escaneo pesado ya corrió en main.cpp bajo el splash → counts listos.
@@ -832,7 +839,7 @@ ApplicationWindow {
     // Click izquierdo o doble click restaura; botón derecho da menú Abrir/Salir.
     Platform.SystemTrayIcon {
         id: trayIcon
-        visible: window.minimizeToTray
+        visible: window.minimizeToTray || App.teachState === "recording" || App.teachState === "paused"
         icon.source: AppIconSource
         tooltip: "UNLZ_Llamacode"
         onActivated: function(reason) {
@@ -844,6 +851,21 @@ ApplicationWindow {
             Platform.MenuItem {
                 text: (App.langV, App.l("tray.open"))
                 onTriggered: window.showFromTray()
+            }
+            Platform.MenuItem {
+                visible: App.teachState === "recording" || App.teachState === "paused"
+                text: App.teachState === "paused" ? "Continuar Teach" : "Pausar Teach"
+                onTriggered: App.pauseTeach(App.teachState !== "paused")
+            }
+            Platform.MenuItem {
+                visible: App.teachState === "recording" || App.teachState === "paused"
+                text: "Finalizar Teach"
+                onTriggered: App.finishTeach()
+            }
+            Platform.MenuItem {
+                visible: App.teachState === "recording" || App.teachState === "paused"
+                text: "Cancelar Teach"
+                onTriggered: App.cancelTeach()
             }
             Platform.MenuItem { separator: true }
             Platform.MenuItem {

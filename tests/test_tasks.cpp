@@ -31,6 +31,12 @@ static QVariantMap sampleTask()
         {"profileId", "p1"}, {"scheduleEnabled", true}, {"scheduleCron", "0 9 * * *"},
         {"prePrompt", "Usá browser si hace falta."}, {"postPrompt", "Verificá que el valor tenga compra y venta."},
         {"silentUnlessError", true},
+        {"executionMode", "browserBackground"}, {"approvalPolicy", "sensitive"},
+        {"teachArtifactId", "artifact-1"}, {"teachFormatVersion", 1},
+        {"scopeKind", "screen"}, {"scopeTargetId", "0"}, {"scopeLabel", "Pantalla 1"},
+        {"scopeWidth", 1920}, {"scopeHeight", 1080}, {"scopeDpi", 96.0},
+        {"timeoutSec", 300}, {"maxActions", 50}, {"maxRetries", 2},
+        {"automationStatus", "ready"},
         {"steps", steps}
     };
 }
@@ -51,6 +57,10 @@ void TasksTests::jsonRoundTrip()
     QCOMPARE(out.value("prePrompt").toString(), QStringLiteral("Usá browser si hace falta."));
     QCOMPARE(out.value("postPrompt").toString(), QStringLiteral("Verificá que el valor tenga compra y venta."));
     QCOMPARE(out.value("silentUnlessError").toBool(), true);
+    QCOMPARE(out.value("executionMode").toString(), QStringLiteral("browserBackground"));
+    QCOMPARE(out.value("approvalPolicy").toString(), QStringLiteral("sensitive"));
+    QCOMPARE(out.value("teachArtifactId").toString(), QStringLiteral("artifact-1"));
+    QCOMPARE(out.value("maxActions").toInt(), 50);
     const QVariantList steps = out.value("steps").toList();
     QCOMPARE(steps.size(), 2);
     QCOMPARE(steps.at(0).toMap().value("kind").toString(), QStringLiteral("browser"));

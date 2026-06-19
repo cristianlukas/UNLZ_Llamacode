@@ -453,6 +453,19 @@ void RawChatBackend::sendMessage(const QString &text)
     tmplKw.insert(QStringLiteral("enable_thinking"), m_thinkingEnabled);
     payload.insert(QStringLiteral("chat_template_kwargs"), tmplKw);
 
+    // Salida estructurada (GBNF grammar o JSON schema). Passthrough a llama-server.
+    if (!m_grammar.trimmed().isEmpty()) {
+        payload.insert(QStringLiteral("grammar"), m_grammar);
+    } else if (!m_jsonSchema.trimmed().isEmpty()) {
+        const QJsonDocument sd = QJsonDocument::fromJson(m_jsonSchema.toUtf8());
+        if (sd.isObject()) {
+            payload.insert(QStringLiteral("response_format"), QJsonObject{
+                {QStringLiteral("type"), QStringLiteral("json_schema")},
+                {QStringLiteral("json_schema"), QJsonObject{{QStringLiteral("schema"), sd.object()}}}
+            });
+        }
+    }
+
     m_sseBuf.clear();
     m_reasonBuf.clear();
     m_answerBuf.clear();

@@ -45,7 +45,22 @@ public:
         LastRunSummaryRole,
         PrePromptRole,
         PostPromptRole,
-        SilentUnlessErrorRole
+        SilentUnlessErrorRole,
+        ExecutionModeRole,
+        ApprovalPolicyRole,
+        TeachArtifactIdRole,
+        TeachFormatVersionRole,
+        TrainedAtRole,
+        ScopeKindRole,
+        ScopeTargetIdRole,
+        ScopeLabelRole,
+        ScopeWidthRole,
+        ScopeHeightRole,
+        ScopeDpiRole,
+        TimeoutSecRole,
+        MaxActionsRole,
+        MaxRetriesRole,
+        AutomationStatusRole
     };
 
     explicit TaskStore(QObject *parent = nullptr);

@@ -423,11 +423,33 @@ for the agent. Per-provider presets (Gmail/Outlook/custom). The password goes to
 SecretStore (`mail/<name>`), never to JSON. `email_send` requires approval unless
 *auto-send* is enabled (sending mail is an irreversible external action).
 
+## Teach automations: desktop and browser
+
+The **Automations** section now provides two Teach targets:
+
+- **Foreground desktop (Windows):** the user selects a screen or window, demonstrates
+  the workflow and adds text notes. Events, normalized coordinates, screenshots and
+  checks are stored as a semantic recipe. A vision-capable agent observes, performs
+  one mouse/keyboard action and observes again instead of blindly replaying input.
+- **Background browser:** Playwright records the demonstration and preserves the
+  script and evidence. The Task uses browser tools to adapt selectors and verify
+  the intended result, normally headless with a hidden-browser fallback.
+
+Teach creation and management live in **Automations**; Settings only keeps the
+technical Playwright MCP toggle and command. Legacy Playwright skills remain
+available and can be imported without modification.
+
+Versioned artifacts are stored under
+`AppLocalData/LlamaCode/automations/<id>/`. Desktop Tasks require a vision profile
+and an interactive Windows session. Locked sessions wait; UAC, the lock screen and
+secure desktop are never controlled. Notes and logs redact password/token/API-key
+patterns. Each Task has an approval policy and bounded timeout/action/retry limits.
+
 ## Browser automation (Playwright)
 
 A global toggle + per-profile override (`browserAutomation` inherit/on/off) that
-injects the **Playwright MCP** into the agent's tool set. **Teach mode**: the user
-records actions with Playwright codegen and they're saved as **replayable skills**
+injects the **Playwright MCP** into the agent's tool set. Browser Teach is managed
+from Automations and stores **replayable semantic recipes**
 that Tasks can re-run.
 
 ## Attachments (documents + vision)
