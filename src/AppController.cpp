@@ -1,5 +1,8 @@
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
+#include "core/automation/AutomationArtifactStore.h"
+#include "core/automation/AutomationRunner.h"
+#include "core/automation/DesktopAutomationBackend.h"
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
 #  define NOMINMAX
@@ -560,6 +563,20 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    connect(&m_teachRecorder, &TeachSessionRecorder::changed,
+            this, &AppController::teachChanged);
+    connect(&m_teachRecorder, &TeachSessionRecorder::finished, this,
+            [this](const QString &artifactId) {
+        const QVariantMap manifest = AutomationArtifactStore::manifest(artifactId);
+        const QString taskId = manifest.value(QStringLiteral("taskId")).toString();
+        QVariantMap task = m_tasks.get(taskId);
+        if (task.isEmpty()) return;
+        task[QStringLiteral("teachArtifactId")] = artifactId;
+        task[QStringLiteral("teachFormatVersion")] = AutomationArtifactStore::FormatVersion;
+        task[QStringLiteral("trainedAt")] = manifest.value(QStringLiteral("trainedAt"));
+        task[QStringLiteral("automationStatus")] = QStringLiteral("ready");
+        m_tasks.save(taskId, task);
+    });
     // Reenviar progreso/fin de descarga de modelos STT a QML.
     connect(&m_voiceServers, &VoiceServerManager::installProgress,
             this, &AppController::voiceInstallProgress);
@@ -3594,8 +3611,38 @@ void AppController::runTask(const QString &id)
         return;
     }
 
+    const QString validation = AutomationRunner::validateTask(task, m_serverHasVision);
+    if (!validation.isEmpty()) {
+        emit serverError(validation);
+        emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(),
+                             QStringLiteral("error"), validation,
+                             task.value(QStringLiteral("silentUnlessError"), false).toBool());
+        return;
+    }
+    if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")
+        && !DesktopAutomationBackend::interactiveSessionAvailable()) {
+        m_tasks.markRun(id, QStringLiteral("waiting_for_session"),
+                        QStringLiteral("Esperando una sesión de Windows interactiva."));
+        QTimer::singleShot(30000, this, [this, id]() {
+            const QVariantMap waiting = m_tasks.get(id);
+            if (waiting.value(QStringLiteral("lastRunStatus")).toString()
+                == QLatin1String("waiting_for_session"))
+                runTask(id);
+        });
+        emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(),
+                             QStringLiteral("waiting_for_session"),
+                             QStringLiteral("La sesión está bloqueada; se reintentará desde el scheduler."),
+                             true);
+        return;
+    }
+
     const QString name = task.value(QStringLiteral("name")).toString();
-    const QString prompt = TaskStore::composePrompt(task);
+    QString prompt = TaskStore::composePrompt(task);
+    const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
+    if (!artifactId.isEmpty())
+        prompt += AutomationRunner::augmentPrompt(task,
+            AutomationArtifactStore::manifest(artifactId),
+            AutomationArtifactStore::recipe(artifactId));
     m_runningTaskId = id;
     m_runningTaskName = name;
     m_runningTaskPhase = QStringLiteral("ejecutando");
@@ -3636,7 +3683,9 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     const QString scope = task.value(QStringLiteral("permScope"), QStringLiteral("project")).toString();
     const QStringList folders = task.value(QStringLiteral("permFolders")).toStringList();
     cb->setTaskScope(scope, folders);
-    cb->setTaskAutoApprove(true);
+    const QString policy = task.value(QStringLiteral("approvalPolicy"),
+                                      QStringLiteral("sensitive")).toString();
+    cb->setTaskAutoApprove(policy == QLatin1String("autonomous"));
 }
 
 void AppController::clearTaskAgentPermissions()
@@ -3663,7 +3712,13 @@ void AppController::dispatchPendingScheduledTask()
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.")
                      .arg(task.value(QStringLiteral("name")).toString()));
-    sendToAgent(TaskStore::composePrompt(task));
+    QString prompt = TaskStore::composePrompt(task);
+    const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
+    if (!artifactId.isEmpty())
+        prompt += AutomationRunner::augmentPrompt(task,
+            AutomationArtifactStore::manifest(artifactId),
+            AutomationArtifactStore::recipe(artifactId));
+    sendToAgent(prompt);
 }
 
 void AppController::onAgentTurnFinished()
@@ -5009,6 +5064,121 @@ void AppController::writeSetting(const QString &key, const QVariant &value)
 {
     QSettings s;
     s.setValue(key, value);
+}
+
+QVariantList AppController::automationScreens() const
+{
+    return DesktopAutomationBackend::screens();
+}
+
+QVariantList AppController::automationWindows() const
+{
+    return DesktopAutomationBackend::windows();
+}
+
+QString AppController::startDesktopTeach(const QString &taskId, const QString &scopeKind,
+                                         const QString &scopeTargetId)
+{
+    QVariantMap task = m_tasks.get(taskId);
+    if (task.isEmpty()) return QStringLiteral("Guardá la Task antes de iniciar Teach.");
+    task[QStringLiteral("executionMode")] = QStringLiteral("desktop");
+    const QVariantMap scope = DesktopAutomationBackend::targetInfo(scopeKind, scopeTargetId);
+    if (scope.isEmpty()) return QStringLiteral("El alcance elegido no está disponible.");
+    task[QStringLiteral("scopeKind")] = scopeKind;
+    task[QStringLiteral("scopeTargetId")] = scopeTargetId;
+    task[QStringLiteral("scopeLabel")] = scope.value(QStringLiteral("label"));
+    task[QStringLiteral("scopeWidth")] = scope.value(QStringLiteral("width"));
+    task[QStringLiteral("scopeHeight")] = scope.value(QStringLiteral("height"));
+    task[QStringLiteral("scopeDpi")] = scope.value(QStringLiteral("dpi"), 96.0);
+    task[QStringLiteral("automationStatus")] = QStringLiteral("recording");
+    m_tasks.save(taskId, task);
+    return m_teachRecorder.startDesktop(task, scopeKind, scopeTargetId);
+}
+
+QString AppController::startBrowserTeach(const QString &taskId, const QString &url)
+{
+    QVariantMap task = m_tasks.get(taskId);
+    if (task.isEmpty()) return QStringLiteral("Guardá la Task antes de iniciar Teach.");
+    task[QStringLiteral("executionMode")] = QStringLiteral("browserBackground");
+    task[QStringLiteral("automationStatus")] = QStringLiteral("recording");
+    m_tasks.save(taskId, task);
+    const QString recorderError = m_teachRecorder.startBrowser(task, url);
+    if (!recorderError.isEmpty()) return recorderError;
+    const QString processError = recordBrowserSkill(taskId, url);
+    if (!processError.isEmpty()) {
+        m_teachRecorder.cancel();
+        return processError;
+    }
+    return {};
+}
+
+void AppController::pauseTeach(bool paused)
+{
+    m_teachRecorder.setPaused(paused);
+}
+
+void AppController::addTeachNote(const QString &note)
+{
+    m_teachRecorder.addNote(note);
+}
+
+QString AppController::finishTeach()
+{
+    return m_teachRecorder.finish();
+}
+
+void AppController::cancelTeach()
+{
+    m_teachRecorder.cancel();
+}
+
+QVariantList AppController::automationTimeline(const QString &artifactId) const
+{
+    return AutomationArtifactStore::timeline(artifactId);
+}
+
+QString AppController::importBrowserSkillAsTask(const QString &skillName)
+{
+    QVariantMap task{
+        {QStringLiteral("name"), QStringLiteral("Browser: %1").arg(skillName)},
+        {QStringLiteral("description"), QStringLiteral("Reproducir y adaptar el flujo de navegador enseñado.")},
+        {QStringLiteral("executionMode"), QStringLiteral("browserBackground")},
+        {QStringLiteral("approvalPolicy"), QStringLiteral("sensitive")},
+        {QStringLiteral("steps"), QVariantList{
+             QVariantMap{{QStringLiteral("kind"), QStringLiteral("browser")},
+                         {QStringLiteral("intent"), QStringLiteral("Ejecutar el flujo enseñado")},
+                         {QStringLiteral("ref"), skillName}}}}};
+    const QString id = m_tasks.save({}, task);
+    task = m_tasks.get(id);
+    const QString artifactId = AutomationArtifactStore::importBrowserSkill(skillName, task);
+    if (artifactId.isEmpty()) {
+        m_tasks.remove(id);
+        return {};
+    }
+    task[QStringLiteral("teachArtifactId")] = artifactId;
+    task[QStringLiteral("teachFormatVersion")] = AutomationArtifactStore::FormatVersion;
+    task[QStringLiteral("trainedAt")] =
+        AutomationArtifactStore::manifest(artifactId).value(QStringLiteral("trainedAt"));
+    task[QStringLiteral("automationStatus")] = QStringLiteral("ready");
+    m_tasks.save(id, task);
+    return id;
+}
+
+bool AppController::removeAutomationEvidence(const QString &artifactId,
+                                             const QString &fileName)
+{
+    return AutomationArtifactStore::removeEvidence(artifactId, fileName);
+}
+
+void AppController::stopAutomation()
+{
+    if (m_teachRecorder.state() == QLatin1String("recording")
+        || m_teachRecorder.state() == QLatin1String("paused"))
+        m_teachRecorder.cancel();
+    if (!m_runningTaskId.isEmpty()) {
+        if (m_agentBackend) m_agentBackend->cancelGeneration();
+        finishRunningTask(QStringLiteral("cancelled"), QStringLiteral("Automatización detenida por el usuario."));
+    }
 }
 
 QString AppController::windowsStartupCommand(const QString &executablePath)

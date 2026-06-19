@@ -480,11 +480,39 @@ Cliente minimalista SMTP (enviar) + IMAP/POP3 (recibir) sobre sockets, con tools
 va a SecretStore (`mail/<name>`), nunca al JSON. `email_send` pide aprobación salvo
 que se active *auto-send* (enviar correo es acción externa irreversible).
 
+## Automatizaciones Teach: escritorio y browser
+
+La sección **Automatizaciones** incorpora un modo Teach multimodal con dos destinos:
+
+- **Escritorio foreground (Windows):** el usuario elige una pantalla o ventana,
+  demuestra el flujo y agrega notas. Se guardan eventos, coordenadas normalizadas,
+  capturas y verificaciones como una receta semántica. Al ejecutar, el agente con
+  visión observa, actúa con mouse/teclado y vuelve a observar; no hace replay ciego.
+- **Browser background:** Playwright registra la demostración y conserva script,
+  selectores y evidencia. La Task se ejecuta con las tools de navegador, reinterpreta
+  la intención cuando cambia la interfaz y verifica el resultado. El destino normal
+  es headless, con fallback a navegador oculto cuando el sitio lo requiere.
+
+Teach vive en **Automatizaciones**. Configuración conserva únicamente el toggle y
+comando técnico del MCP Playwright. Los skills Playwright anteriores se pueden
+importar sin modificarlos.
+
+Los artefactos se guardan versionados en
+`AppLocalData/LlamaCode/automations/<id>/` (`manifest.json`, `recipe.json`,
+`evidence/` y `browser.mjs` opcional). Las Tasks desktop requieren un perfil con
+visión (`--mmproj`) y una sesión Windows interactiva; si la sesión está bloqueada,
+la ejecución queda esperando. UAC, pantalla de bloqueo y escritorio seguro nunca
+se controlan. Las notas y logs redactan patrones de password/token/API key.
+
+Cada Task define política de aprobación (`always`, `sensitive`, `autonomous`) y
+límites de tiempo, acciones y reintentos. El default es confirmar acciones
+sensibles.
+
 ## Automatización de browser (Playwright)
 
 Toggle global + override por perfil (`browserAutomation` inherit/on/off) que inyecta
-el **MCP de Playwright** en el set de tools del agente. **Modo teach**: el usuario
-graba acciones con Playwright codegen y se guardan como **skills reproducibles** que
+el **MCP de Playwright** en el set de tools del agente. El Teach de browser se
+gestiona desde Automatizaciones y guarda **recetas reproducibles** que
 las Tasks pueden reejecutar.
 
 ## Adjuntos (documentos + visión)

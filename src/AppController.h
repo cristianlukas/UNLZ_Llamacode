@@ -13,6 +13,7 @@
 #include "core/voice/VoiceServerManager.h"
 #include "core/voice/VoiceTypes.h"
 #include "core/tuner/TunerWorker.h"
+#include "core/automation/TeachSessionRecorder.h"
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
@@ -100,6 +101,9 @@ class AppController : public QObject
     Q_PROPERTY(bool agentThinkingEnabled READ agentThinkingEnabled WRITE setAgentThinkingEnabled NOTIFY agentThinkingChanged)
     Q_PROPERTY(bool browserAutomationEnabled READ browserAutomationEnabled WRITE setBrowserAutomationEnabled NOTIFY browserAutomationChanged)
     Q_PROPERTY(QString browserMcpCommand READ browserMcpCommand WRITE setBrowserMcpCommand NOTIFY browserAutomationChanged)
+    Q_PROPERTY(QString teachState READ teachState NOTIFY teachChanged)
+    Q_PROPERTY(QString teachError READ teachError NOTIFY teachChanged)
+    Q_PROPERTY(QVariantList teachTimeline READ teachTimeline NOTIFY teachChanged)
     Q_PROPERTY(QString agentTeacherUrl   READ agentTeacherUrl   WRITE setAgentTeacherUrl   NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherModel READ agentTeacherModel WRITE setAgentTeacherModel NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
@@ -388,6 +392,23 @@ public:
     // Graba un paso de browser (Playwright codegen) y devuelve el nombre del skill
     // generado para referenciarlo en un paso de Task. "" + serverError si falla.
     Q_INVOKABLE QString recordTaskBrowserStep(const QString &skillName, const QString &url);
+    Q_INVOKABLE QVariantList automationScreens() const;
+    Q_INVOKABLE QVariantList automationWindows() const;
+    Q_INVOKABLE QString startDesktopTeach(const QString &taskId, const QString &scopeKind,
+                                          const QString &scopeTargetId);
+    Q_INVOKABLE QString startBrowserTeach(const QString &taskId, const QString &url);
+    Q_INVOKABLE void pauseTeach(bool paused);
+    Q_INVOKABLE void addTeachNote(const QString &note);
+    Q_INVOKABLE QString finishTeach();
+    Q_INVOKABLE void cancelTeach();
+    Q_INVOKABLE QVariantList automationTimeline(const QString &artifactId) const;
+    Q_INVOKABLE QString importBrowserSkillAsTask(const QString &skillName);
+    Q_INVOKABLE bool removeAutomationEvidence(const QString &artifactId,
+                                              const QString &fileName);
+    Q_INVOKABLE void stopAutomation();
+    QString teachState() const { return m_teachRecorder.state(); }
+    QString teachError() const { return m_teachRecorder.error(); }
+    QVariantList teachTimeline() const { return m_teachRecorder.timeline(); }
     // --- Secretos cloud (API keys fuera del repo) ---
     // ¿Hay key resoluble (env var o store) para esa ref?
     Q_INVOKABLE bool hasSecret(const QString &keyRef) const { return m_secrets.has(keyRef); }
@@ -670,6 +691,7 @@ signals:
     void activeLaunchIdChanged();
     void browserAutomationChanged();
     void browserSkillsChanged();
+    void teachChanged();
     void effectiveProfileChanged();
     void routerStateChanged();
     void setupStateChanged();
@@ -932,6 +954,7 @@ private:
     bool      m_browserAutomationEnabled = false;
     QString   m_browserMcpCommand = QStringLiteral("npx @playwright/mcp@latest");
     QProcess *m_browserRecordProc = nullptr;   // codegen en curso (modo teach)
+    TeachSessionRecorder m_teachRecorder;
     bool      m_mermaidEnabled = true;          // render de diagramas mermaid en el chat
     QStringList m_agentDisabledTools;           // tools built-in apagadas por el usuario
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat

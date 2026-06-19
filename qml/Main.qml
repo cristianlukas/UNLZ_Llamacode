@@ -839,7 +839,7 @@ ApplicationWindow {
     // Click izquierdo o doble click restaura; botón derecho da menú Abrir/Salir.
     Platform.SystemTrayIcon {
         id: trayIcon
-        visible: window.minimizeToTray
+        visible: window.minimizeToTray || App.teachState === "recording" || App.teachState === "paused"
         icon.source: AppIconSource
         tooltip: "UNLZ_Llamacode"
         onActivated: function(reason) {
@@ -851,6 +851,21 @@ ApplicationWindow {
             Platform.MenuItem {
                 text: (App.langV, App.l("tray.open"))
                 onTriggered: window.showFromTray()
+            }
+            Platform.MenuItem {
+                visible: App.teachState === "recording" || App.teachState === "paused"
+                text: App.teachState === "paused" ? "Continuar Teach" : "Pausar Teach"
+                onTriggered: App.pauseTeach(App.teachState !== "paused")
+            }
+            Platform.MenuItem {
+                visible: App.teachState === "recording" || App.teachState === "paused"
+                text: "Finalizar Teach"
+                onTriggered: App.finishTeach()
+            }
+            Platform.MenuItem {
+                visible: App.teachState === "recording" || App.teachState === "paused"
+                text: "Cancelar Teach"
+                onTriggered: App.cancelTeach()
             }
             Platform.MenuItem { separator: true }
             Platform.MenuItem {

@@ -82,6 +82,10 @@ set(CORE_SOURCES
     src/core/tasks/CronSchedule.cpp
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
+    src/core/automation/DesktopAutomationBackend.cpp
+    src/core/automation/AutomationArtifactStore.cpp
+    src/core/automation/TeachSessionRecorder.cpp
+    src/core/automation/AutomationRunner.cpp
     src/core/tuner/AutoTuner.cpp
     src/core/tuner/TunerEngine.cpp
     src/core/tuner/TunerWorker.cpp
@@ -130,6 +134,10 @@ set(HEADERS
     src/core/tasks/CronSchedule.h
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
+    src/core/automation/DesktopAutomationBackend.h
+    src/core/automation/AutomationArtifactStore.h
+    src/core/automation/TeachSessionRecorder.h
+    src/core/automation/AutomationRunner.h
     src/core/tuner/AutoTuner.h
     src/core/tuner/TunerEngine.h
     src/core/tuner/TunerWorker.h
@@ -153,6 +161,9 @@ target_link_libraries(llamacode_core PUBLIC
     Qt6::Multimedia
     Qt6::Svg
 )
+if (WIN32)
+    target_link_libraries(llamacode_core PUBLIC Wtsapi32)
+endif()
 if (MSVC)
     target_compile_options(llamacode_core PRIVATE /utf-8)
 endif()
@@ -377,6 +388,7 @@ if (BUILD_TESTS)
     add_lc_test(test_mail               tests/test_mail.cpp)
     add_lc_test(test_voice              tests/test_voice.cpp)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
+    add_lc_test(test_automation         tests/test_automation.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)

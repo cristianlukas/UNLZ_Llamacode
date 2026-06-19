@@ -43,6 +43,21 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case PrePromptRole:       return t.value("prePrompt");
     case PostPromptRole:      return t.value("postPrompt");
     case SilentUnlessErrorRole: return t.value("silentUnlessError", false);
+    case ExecutionModeRole:     return t.value("executionMode", QStringLiteral("agent"));
+    case ApprovalPolicyRole:    return t.value("approvalPolicy", QStringLiteral("sensitive"));
+    case TeachArtifactIdRole:   return t.value("teachArtifactId");
+    case TeachFormatVersionRole:return t.value("teachFormatVersion", 1);
+    case TrainedAtRole:         return t.value("trainedAt");
+    case ScopeKindRole:         return t.value("scopeKind", QStringLiteral("screen"));
+    case ScopeTargetIdRole:     return t.value("scopeTargetId");
+    case ScopeLabelRole:        return t.value("scopeLabel");
+    case ScopeWidthRole:        return t.value("scopeWidth", 0);
+    case ScopeHeightRole:       return t.value("scopeHeight", 0);
+    case ScopeDpiRole:          return t.value("scopeDpi", 96.0);
+    case TimeoutSecRole:        return t.value("timeoutSec", 300);
+    case MaxActionsRole:        return t.value("maxActions", 50);
+    case MaxRetriesRole:        return t.value("maxRetries", 2);
+    case AutomationStatusRole:  return t.value("automationStatus", QStringLiteral("untrained"));
     default:                  return {};
     }
 }
@@ -69,6 +84,21 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { PrePromptRole,       "prePrompt" },
         { PostPromptRole,      "postPrompt" },
         { SilentUnlessErrorRole, "silentUnlessError" },
+        { ExecutionModeRole,     "executionMode" },
+        { ApprovalPolicyRole,    "approvalPolicy" },
+        { TeachArtifactIdRole,   "teachArtifactId" },
+        { TeachFormatVersionRole,"teachFormatVersion" },
+        { TrainedAtRole,         "trainedAt" },
+        { ScopeKindRole,         "scopeKind" },
+        { ScopeTargetIdRole,     "scopeTargetId" },
+        { ScopeLabelRole,        "scopeLabel" },
+        { ScopeWidthRole,        "scopeWidth" },
+        { ScopeHeightRole,       "scopeHeight" },
+        { ScopeDpiRole,          "scopeDpi" },
+        { TimeoutSecRole,        "timeoutSec" },
+        { MaxActionsRole,        "maxActions" },
+        { MaxRetriesRole,        "maxRetries" },
+        { AutomationStatusRole,  "automationStatus" },
     };
 }
 
@@ -107,6 +137,22 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["scheduleSpec"]    = def.value("scheduleSpec", t.value("scheduleSpec", QVariantMap{}));
     t["permScope"]       = def.value("permScope", t.value("permScope", QStringLiteral("project")));
     t["permFolders"]     = def.value("permFolders", t.value("permFolders", QVariantList{}));
+    t["executionMode"]   = def.value("executionMode", t.value("executionMode", QStringLiteral("agent")));
+    t["approvalPolicy"]  = def.value("approvalPolicy", t.value("approvalPolicy", QStringLiteral("sensitive")));
+    t["teachArtifactId"] = def.value("teachArtifactId", t.value("teachArtifactId"));
+    t["teachFormatVersion"] = def.value("teachFormatVersion", t.value("teachFormatVersion", 1));
+    t["trainedAt"]       = def.value("trainedAt", t.value("trainedAt"));
+    t["scopeKind"]       = def.value("scopeKind", t.value("scopeKind", QStringLiteral("screen")));
+    t["scopeTargetId"]   = def.value("scopeTargetId", t.value("scopeTargetId"));
+    t["scopeLabel"]      = def.value("scopeLabel", t.value("scopeLabel"));
+    t["scopeWidth"]      = def.value("scopeWidth", t.value("scopeWidth", 0));
+    t["scopeHeight"]     = def.value("scopeHeight", t.value("scopeHeight", 0));
+    t["scopeDpi"]        = def.value("scopeDpi", t.value("scopeDpi", 96.0));
+    t["timeoutSec"]      = qBound(30, def.value("timeoutSec", t.value("timeoutSec", 300)).toInt(), 3600);
+    t["maxActions"]      = qBound(1, def.value("maxActions", t.value("maxActions", 50)).toInt(), 500);
+    t["maxRetries"]      = qBound(0, def.value("maxRetries", t.value("maxRetries", 2)).toInt(), 10);
+    t["automationStatus"] = def.value("automationStatus",
+                                      t.value("automationStatus", QStringLiteral("untrained")));
     t["updatedAt"]       = now;
 
     QString outId;
@@ -281,6 +327,21 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["lastRunAt"]       = task.value("lastRunAt").toString();
     o["lastRunStatus"]   = task.value("lastRunStatus").toString();
     o["lastRunSummary"]  = task.value("lastRunSummary").toString();
+    o["executionMode"]   = task.value("executionMode", QStringLiteral("agent")).toString();
+    o["approvalPolicy"]  = task.value("approvalPolicy", QStringLiteral("sensitive")).toString();
+    o["teachArtifactId"] = task.value("teachArtifactId").toString();
+    o["teachFormatVersion"] = task.value("teachFormatVersion", 1).toInt();
+    o["trainedAt"]       = task.value("trainedAt").toString();
+    o["scopeKind"]       = task.value("scopeKind", QStringLiteral("screen")).toString();
+    o["scopeTargetId"]   = task.value("scopeTargetId").toString();
+    o["scopeLabel"]      = task.value("scopeLabel").toString();
+    o["scopeWidth"]      = task.value("scopeWidth", 0).toInt();
+    o["scopeHeight"]     = task.value("scopeHeight", 0).toInt();
+    o["scopeDpi"]        = task.value("scopeDpi", 96.0).toDouble();
+    o["timeoutSec"]      = task.value("timeoutSec", 300).toInt();
+    o["maxActions"]      = task.value("maxActions", 50).toInt();
+    o["maxRetries"]      = task.value("maxRetries", 2).toInt();
+    o["automationStatus"] = task.value("automationStatus", QStringLiteral("untrained")).toString();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -321,6 +382,25 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["lastRunAt"]       = obj.value("lastRunAt").toString();
     t["lastRunStatus"]   = obj.value("lastRunStatus").toString();
     t["lastRunSummary"]  = obj.value("lastRunSummary").toString();
+    t["executionMode"]   = obj.contains("executionMode")
+        ? obj.value("executionMode").toString() : QStringLiteral("agent");
+    t["approvalPolicy"]  = obj.contains("approvalPolicy")
+        ? obj.value("approvalPolicy").toString() : QStringLiteral("sensitive");
+    t["teachArtifactId"] = obj.value("teachArtifactId").toString();
+    t["teachFormatVersion"] = obj.value("teachFormatVersion").toInt(1);
+    t["trainedAt"]       = obj.value("trainedAt").toString();
+    t["scopeKind"]       = obj.value("scopeKind").toString(QStringLiteral("screen"));
+    t["scopeTargetId"]   = obj.value("scopeTargetId").toString();
+    t["scopeLabel"]      = obj.value("scopeLabel").toString();
+    t["scopeWidth"]      = obj.value("scopeWidth").toInt(0);
+    t["scopeHeight"]     = obj.value("scopeHeight").toInt(0);
+    t["scopeDpi"]        = obj.value("scopeDpi").toDouble(96.0);
+    t["timeoutSec"]      = qBound(30, obj.value("timeoutSec").toInt(300), 3600);
+    t["maxActions"]      = qBound(1, obj.value("maxActions").toInt(50), 500);
+    t["maxRetries"]      = qBound(0, obj.value("maxRetries").toInt(2), 10);
+    t["automationStatus"] = obj.value("automationStatus").toString(
+        t.value("teachArtifactId").toString().isEmpty()
+            ? QStringLiteral("untrained") : QStringLiteral("ready"));
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {
