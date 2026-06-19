@@ -7,11 +7,17 @@ import LlamaCode 1.0
 Item {
     id: root
 
-    // Estado del editor (dialog). editId vacío = creando.
+    // tab 0 = Procesos (definiciones) · tab 1 = Automatizaciones (proceso + horario)
+    property int currentTab: 0
+
+    // Editor de Proceso (definición). editId vacío = creando.
     property string editId: ""
+    // Editor de Automatización. autoEditId vacío = creando.
+    property string autoEditId: ""
     property string teachTaskId: ""
     property var teachTargets: []
 
+    // ── Editor de Proceso ──
     function openEditor(id) {
         editId = id
         stepsModel.clear()
@@ -30,9 +36,6 @@ Item {
             timeoutSec.value = t.timeoutSec || 300
             maxActions.value = t.maxActions || 50
             maxRetries.value = t.maxRetries === undefined ? 2 : t.maxRetries
-            cronField.text = t.scheduleCron || ""
-            schedEnabled.checked = t.scheduleEnabled || false
-            loadScheduleSpec(t.scheduleSpec || {}, t.scheduleCron || "")
             loadPermissions(t.permScope || "project", t.permFolders || [])
             const steps = t.steps || []
             for (var i = 0; i < steps.length; ++i)
@@ -51,13 +54,28 @@ Item {
             timeoutSec.value = 300
             maxActions.value = 50
             maxRetries.value = 2
-            cronField.text = ""
-            schedEnabled.checked = false
-            loadScheduleSpec({}, "")
             loadPermissions("project", [])
             profileCombo.currentIndex = 0
         }
         editor.open()
+    }
+
+    // ── Editor de Automatización ──
+    function openAutoEditor(id) {
+        autoEditId = id
+        if (id.length > 0) {
+            const a = App.automationStore.get(id)
+            autoNameField.text = a.name || ""
+            autoProcessCombo.selectProcess(a.processId || "")
+            autoSilent.checked = a.silentUnlessError || false
+            loadScheduleSpec(a.scheduleSpec || {}, a.scheduleCron || "")
+        } else {
+            autoNameField.text = ""
+            autoProcessCombo.currentIndex = 0
+            autoSilent.checked = false
+            loadScheduleSpec({}, "")
+        }
+        autoEditor.open()
     }
 
     // ── Permisos ──
@@ -78,7 +96,7 @@ Item {
         return arr
     }
 
-    // ── Schedule builder ──
+    // ── Schedule builder (vive en el editor de Automatización) ──
     // Modos: 0 Diario · 1 Semanal · 2 Mensual · 3 Cada N meses · 4 Avanzado (cron)
     function loadScheduleSpec(spec, cronFallback) {
         const mode = (spec && spec.mode) ? spec.mode : (cronFallback ? "cron" : "daily")
@@ -94,6 +112,7 @@ Item {
         nthWeekdayCombo.currentIndex = spec && spec.nthWeekday !== undefined ? spec.nthWeekday : 1
         everyNSpin.value = spec && spec.everyN ? spec.everyN : 2
         startMonthSpin.value = spec && spec.startMonth ? spec.startMonth : 1
+        cronField.text = (spec && spec.mode === "cron" && spec.cron) ? spec.cron : (cronFallback || "")
     }
     function buildScheduleSpec() {
         const mode = ["daily", "weekly", "monthly", "everyNMonths", "cron"][freqCombo.currentIndex]
@@ -143,6 +162,16 @@ Item {
         return cron || "cron"
     }
 
+    function processName(pid) {
+        const p = App.taskStore.get(pid)
+        return (p && p.name) ? p.name : "(proceso eliminado)"
+    }
+
+    function processTypeLabel(mode) {
+        return mode === "desktop" ? "Escritorio foreground"
+             : (mode === "browserBackground" ? "Navegador background" : "Prompt (agente)")
+    }
+
     function collectSteps() {
         const arr = []
         for (var i = 0; i < stepsModel.count; ++i) {
@@ -159,42 +188,46 @@ Item {
         PageHeader {
             Layout.fillWidth: true
             title: (App.langV, App.l("nav.tasks"))
-            subtitle: App.taskStore.count + " task(s) · macros que el agente ejecuta y adapta"
-            actionLabel: "Nueva Task"
-            onActionClicked: root.openEditor("")
+            subtitle: root.currentTab === 0
+                ? App.taskStore.count + " proceso(s) · definiciones reutilizables que el agente ejecuta y adapta"
+                : App.automationStore.count + " automatización(es) · procesos programados con fecha/hora"
+            action2Label: root.currentTab === 0 ? "Enseñar tarea" : ""
+            actionLabel: root.currentTab === 0 ? "Nuevo proceso" : "Nueva automatización"
+            onAction2Clicked: {
+                root.teachTaskId = ""
+                teachMode.currentIndex = 0
+                teachPopup.open()
+            }
+            onActionClicked: {
+                if (root.currentTab === 0) root.openEditor("")
+                else root.openAutoEditor("")
+            }
         }
 
+        TabBar {
+            id: tabs
+            Layout.fillWidth: true
+            currentIndex: root.currentTab
+            onCurrentIndexChanged: root.currentTab = currentIndex
+            TabButton { text: "Procesos" }
+            TabButton { text: "Automatizaciones" }
+        }
+
+        // Barra de herramientas de Procesos (teach / importar skill).
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 50
+            visible: root.currentTab === 0
             color: Theme.navBg
             RowLayout {
                 anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
                 spacing: 8
                 Text {
                     Layout.fillWidth: true
-                    text: "Teach aprende una demostración y guarda una receta adaptable, no coordenadas rígidas."
+                    text: "Un proceso define el objetivo, perfil, modo y permisos. Teach aprende una demostración como receta adaptable. Programalos en la pestaña Automatizaciones."
                     color: Theme.textMuted
                     font.pixelSize: 11
                     elide: Text.ElideRight
-                }
-                LcButton {
-                    text: "Enseñar escritorio"
-                    secondary: true
-                    onClicked: {
-                        root.teachTaskId = ""
-                        teachMode.currentIndex = 0
-                        teachPopup.open()
-                    }
-                }
-                LcButton {
-                    text: "Enseñar navegador"
-                    secondary: true
-                    onClicked: {
-                        root.teachTaskId = ""
-                        teachMode.currentIndex = 1
-                        teachPopup.open()
-                    }
                 }
                 LcButton {
                     text: "Importar skill"
@@ -205,9 +238,11 @@ Item {
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
         }
 
+        // Toggle del scheduler (pestaña Automatizaciones).
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
+            visible: root.currentTab === 1
             color: Theme.navBg
             RowLayout {
                 anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
@@ -229,7 +264,7 @@ Item {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: "Dispara las Tasks programadas mientras la app esté abierta. Si el agente ya corre lo usa; si no, lo auto-inicia, ejecuta y lo apaga al terminar."
+                    text: "Dispara las Automatizaciones programadas mientras la app esté abierta. Si el agente ya corre lo usa; si no, lo auto-inicia, ejecuta y lo apaga al terminar."
                     color: Theme.textMuted
                     font.pixelSize: 11
                     elide: Text.ElideRight
@@ -247,9 +282,11 @@ Item {
             support: App.activeProfileToolSupport
         }
 
+        // ── Lista de Procesos ──
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            visible: root.currentTab === 0
             clip: true
             contentWidth: availableWidth
 
@@ -263,7 +300,7 @@ Item {
                 Text {
                     visible: App.taskStore.count === 0
                     Layout.leftMargin: 24
-                    text: "No hay Tasks todavía. Creá una: definí un objetivo en lenguaje natural\ny pasos de referencia; el agente los ejecuta y se adapta si algo cambió."
+                    text: "No hay procesos todavía. Creá uno: definí un objetivo en lenguaje natural\ny pasos de referencia; el agente los ejecuta y se adapta si algo cambió."
                     color: Theme.textMuted
                     font.pixelSize: 13
                 }
@@ -304,10 +341,8 @@ Item {
                                 }
                                 Text {
                                     text: model.stepCount + " paso(s)"
-                                        + "  ·  " + (model.executionMode === "desktop" ? "Escritorio"
-                                                       : (model.executionMode === "browserBackground" ? "Browser background" : "Agente"))
+                                        + "  ·  " + root.processTypeLabel(model.executionMode)
                                         + (model.automationStatus ? "  ·  " + model.automationStatus : "")
-                                        + (model.scheduleEnabled ? "  ·  ⏱ " + root.scheduleSummary(model.scheduleSpec, model.scheduleCron) : "")
                                         + (model.lastRunStatus ? "  ·  última: " + model.lastRunStatus : "")
                                     color: Theme.textMuted
                                     font.pixelSize: 11
@@ -361,6 +396,98 @@ Item {
                 Item { Layout.fillHeight: true; Layout.fillWidth: true }
             }
         }
+
+        // ── Lista de Automatizaciones ──
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: root.currentTab === 1
+            clip: true
+            contentWidth: availableWidth
+
+            ColumnLayout {
+                width: parent.width
+                spacing: 10
+                anchors { topMargin: 16; leftMargin: 24; rightMargin: 24 }
+
+                Item { Layout.preferredHeight: 8; Layout.fillWidth: true }
+
+                Text {
+                    visible: App.automationStore.count === 0
+                    Layout.leftMargin: 24
+                    text: App.taskStore.count === 0
+                        ? "Primero creá un proceso en la pestaña Procesos. Luego volvé acá\npara programarlo con su fecha/hora."
+                        : "No hay automatizaciones todavía. Creá una: elegí un proceso existente\ny programá cuándo debe ejecutarse."
+                    color: Theme.textMuted
+                    font.pixelSize: 13
+                }
+
+                Repeater {
+                    model: App.automationStore
+                    delegate: Rectangle {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 24
+                        Layout.rightMargin: 24
+                        Layout.preferredHeight: 88
+                        radius: 8
+                        color: Theme.surfaceBg
+                        border.color: Theme.borderColor
+                        property string autoId: model.id || ""
+                        property string autoName: model.name || ""
+                        property string linkedProcessId: model.processId || ""
+
+                        RowLayout {
+                            anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
+                            spacing: 12
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 3
+                                Text {
+                                    text: model.name || "(sin nombre)"
+                                    color: Theme.textPrimary
+                                    font { pixelSize: 15; bold: true }
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                                Text {
+                                    text: "Proceso: " + root.processName(linkedProcessId)
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                                Text {
+                                    text: (model.scheduleEnabled ? "⏱ " : "⏸ apagada · ")
+                                        + root.scheduleSummary(model.scheduleSpec, model.scheduleCron)
+                                        + (model.lastRunStatus ? "  ·  última: " + model.lastRunStatus : "")
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                }
+                            }
+
+                            LcButton {
+                                text: "▶ Ejecutar"
+                                enabled: App.canRunTask
+                                onClicked: App.runAutomation(autoId)
+                            }
+                            LcButton {
+                                text: "Editar"
+                                secondary: true
+                                onClicked: root.openAutoEditor(autoId)
+                            }
+                            LcButton {
+                                text: "✕"
+                                secondary: true
+                                onClicked: { delAutoConfirm.autoId = autoId; delAutoConfirm.autoName = autoName; delAutoConfirm.open() }
+                            }
+                        }
+                    }
+                }
+
+                Item { Layout.fillHeight: true; Layout.fillWidth: true }
+            }
+        }
     }
 
     ListModel { id: stepsModel }
@@ -368,7 +495,7 @@ Item {
 
     FolderDialog {
         id: permFolderDlg
-        title: "Elegir carpeta permitida para la Task"
+        title: "Elegir carpeta permitida para el proceso"
         onAccepted: permFoldersModel.append({ path: selectedFolder.toString().replace("file:///", "") })
     }
 
@@ -400,18 +527,18 @@ Item {
         contentItem: ColumnLayout {
             spacing: 10
             Text {
-                text: "Modo Teach"
+                text: "Enseñar tarea"
                 color: Theme.textPrimary
                 font { pixelSize: 16; bold: true }
             }
             Text {
                 Layout.fillWidth: true
-                text: "Mostrá la tarea y agregá notas. La automatización guardará evidencia y una receta semántica adaptable."
+                text: "Elegí la modalidad (escritorio foreground o navegador background), mostrá la tarea y agregá notas. Se guarda como un proceso con receta semántica adaptable."
                 wrapMode: Text.Wrap
                 color: Theme.textMuted
                 font.pixelSize: 11
             }
-            Text { text: "Automatización"; color: Theme.textSecondary; font.pixelSize: 12 }
+            Text { text: "Proceso"; color: Theme.textSecondary; font.pixelSize: 12 }
             LcComboBox {
                 id: teachTaskCombo
                 Layout.fillWidth: true
@@ -547,7 +674,7 @@ Item {
             Text { text: "Importar skill Playwright"; color: Theme.textPrimary; font { pixelSize: 15; bold: true } }
             Text {
                 Layout.fillWidth: true
-                text: "Crea una Task de navegador background sin modificar el skill existente."
+                text: "Crea un proceso de navegador background sin modificar el skill existente."
                 color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.Wrap
             }
             ListView {
@@ -572,7 +699,7 @@ Item {
         }
     }
 
-    // ── Editor de Task ──
+    // ── Editor de Proceso ──
     Popup {
         id: editor
         modal: true
@@ -598,9 +725,6 @@ Item {
                 maxRetries: maxRetries.value,
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
-                scheduleEnabled: schedEnabled.checked,
-                scheduleCron: cronField.text,
-                scheduleSpec: root.buildScheduleSpec(),
                 permScope: root.collectPermScope(),
                 permFolders: root.collectPermFolders()
             })
@@ -626,7 +750,7 @@ Item {
                 Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
                 Text {
                     anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
-                    text: root.editId.length > 0 ? "Editar Task" : "Nueva Task"
+                    text: root.editId.length > 0 ? "Editar proceso" : "Nuevo proceso"
                     font { pixelSize: 14; bold: true }
                     color: Theme.textPrimary
                 }
@@ -668,7 +792,7 @@ Item {
                             id: prePromptField
                             wrapMode: TextArea.Wrap
                             color: Theme.textPrimary
-                            placeholderText: "Contexto o reglas previas antes de ejecutar la Task."
+                            placeholderText: "Contexto o reglas previas antes de ejecutar el proceso."
                             background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
                         }
                     }
@@ -717,11 +841,11 @@ Item {
                         spacing: 10
                         ColumnLayout {
                             Layout.fillWidth: true
-                            Text { text: "Modo de ejecución"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            Text { text: "Tipo de proceso"; color: Theme.textSecondary; font.pixelSize: 12 }
                             LcComboBox {
                                 id: executionMode
                                 Layout.fillWidth: true
-                                model: ["Agente general", "Escritorio foreground", "Navegador background"]
+                                model: ["Prompt (agente)", "Escritorio foreground", "Navegador background"]
                             }
                         }
                         ColumnLayout {
@@ -823,7 +947,7 @@ Item {
                         color: Theme.textMuted
                         font.pixelSize: 11
                         text: permScopeCombo.currentIndex === 2
-                              ? "El agente podrá leer y escribir en cualquier ruta del disco. Usalo solo si confiás en la Task."
+                              ? "El agente podrá leer y escribir en cualquier ruta del disco. Usalo solo si confiás en el proceso."
                               : (permScopeCombo.currentIndex === 1
                                  ? "El agente podrá leer/escribir dentro de las carpetas elegidas (además del proyecto)."
                                  : "El agente queda confinado a la carpeta de trabajo del perfil/agente.")
@@ -856,133 +980,6 @@ Item {
                     }
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
-
-                    // ── Programación ──
-                    CheckBox {
-                        id: schedEnabled
-                        text: "Programar ejecución automática"
-                        contentItem: Text {
-                            text: schedEnabled.text; color: Theme.textSecondary; font.pixelSize: 12
-                            leftPadding: schedEnabled.indicator.width + 6; verticalAlignment: Text.AlignVCenter
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        visible: schedEnabled.checked
-                        spacing: 8
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 10
-                            Text { text: "Frecuencia"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                            LcComboBox {
-                                id: freqCombo
-                                Layout.fillWidth: true
-                                model: ["Diario", "Semanal", "Mensual", "Cada N meses", "Avanzado (cron)"]
-                            }
-                        }
-
-                        // Hora (todas las frecuencias menos cron)
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: freqCombo.currentIndex !== 4
-                            spacing: 10
-                            Text { text: "Hora"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                            SpinBox { id: schedHour; from: 0; to: 23; value: 9; editable: true }
-                            Text { text: ":"; color: Theme.textSecondary }
-                            SpinBox { id: schedMinute; from: 0; to: 59; value: 0; editable: true }
-                        }
-
-                        // Semanal: días
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: freqCombo.currentIndex === 1
-                            spacing: 6
-                            Text { text: "Días"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                            Repeater {
-                                id: weekdayChecks
-                                model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-                                delegate: CheckBox {
-                                    property bool checkedProxy: checked
-                                    text: modelData
-                                    contentItem: Text {
-                                        text: modelData; color: Theme.textSecondary; font.pixelSize: 11
-                                        leftPadding: parent.indicator.width + 3; verticalAlignment: Text.AlignVCenter
-                                    }
-                                }
-                            }
-                        }
-
-                        // Mensual
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: freqCombo.currentIndex === 2
-                            spacing: 10
-                            Text { text: "Cuándo"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                            LcComboBox {
-                                id: monthlyKindCombo
-                                Layout.preferredWidth: 150
-                                model: ["Por fecha (día N)", "Por posición"]
-                            }
-                            SpinBox {
-                                id: monthDaySpin
-                                visible: monthlyKindCombo.currentIndex === 0 || freqCombo.currentIndex === 3
-                                from: 1; to: 31; value: 1; editable: true
-                            }
-                            LcComboBox {
-                                id: nthCombo
-                                visible: monthlyKindCombo.currentIndex === 1 && freqCombo.currentIndex === 2
-                                Layout.preferredWidth: 110
-                                model: ["primer", "segundo", "tercer", "cuarto", "último"]
-                            }
-                            LcComboBox {
-                                id: nthWeekdayCombo
-                                visible: monthlyKindCombo.currentIndex === 1 && freqCombo.currentIndex === 2
-                                Layout.preferredWidth: 90
-                                model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-                            }
-                        }
-
-                        // Cada N meses
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: freqCombo.currentIndex === 3
-                            spacing: 10
-                            Text { text: "Cada"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
-                            SpinBox { id: everyNSpin; from: 1; to: 24; value: 2; editable: true }
-                            Text { text: "mes(es), desde el mes"; color: Theme.textSecondary; font.pixelSize: 12 }
-                            SpinBox { id: startMonthSpin; from: 1; to: 12; value: 1; editable: true }
-                        }
-
-                        // Avanzado (cron)
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            visible: freqCombo.currentIndex === 4
-                            spacing: 4
-                            LcTextField {
-                                id: cronField
-                                Layout.fillWidth: true
-                                placeholderText: "0 9 * * *  (min hora dia mes diaSem)"
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                wrapMode: Text.Wrap
-                                color: Theme.textMuted
-                                font.pixelSize: 11
-                                text: "Formato: min hora diaMes mes diaSem. Ej: 0 9 * * * = 9:00 todos los días · "
-                                    + "*/15 9-17 * * 1-5 = cada 15 min, 9-17h, lun-vie. Domingo = 0 o 7."
-                            }
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            wrapMode: Text.Wrap
-                            color: Theme.textMuted
-                            font.pixelSize: 11
-                            text: "El scheduler solo dispara mientras la app está abierta y con server+agente encendidos."
-                        }
-                    }
 
                     LcButton {
                         text: "Previsualizar prompt del agente"
@@ -1033,11 +1030,255 @@ Item {
         }
     }
 
+    // ── Editor de Automatización ──
+    Popup {
+        id: autoEditor
+        modal: true
+        parent: Overlay.overlay
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(680, Math.max(480, root.width - 100))
+        height: Math.min(640, Math.max(440, root.height - 100))
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 0
+
+        function saveAndClose() {
+            if (!autoProcessCombo.currentValue) { autoError.text = "Elegí un proceso."; return }
+            App.automationStore.save(root.autoEditId, {
+                name: autoNameField.text.length > 0 ? autoNameField.text
+                        : root.processName(autoProcessCombo.currentValue),
+                processId: autoProcessCombo.currentValue,
+                scheduleEnabled: autoSchedEnabled.checked,
+                scheduleCron: freqCombo.currentIndex === 4 ? cronField.text : "",
+                scheduleSpec: root.buildScheduleSpec(),
+                silentUnlessError: autoSilent.checked
+            })
+            close()
+        }
+
+        background: Rectangle {
+            color: Theme.popupBg
+            radius: 12
+            border.color: Theme.popupBorderColor
+            border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        contentItem: ColumnLayout {
+            spacing: 0
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Text {
+                    anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                    text: root.autoEditId.length > 0 ? "Editar automatización" : "Nueva automatización"
+                    font { pixelSize: 14; bold: true }
+                    color: Theme.textPrimary
+                }
+            }
+
+            ScrollView {
+                id: autoScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ColumnLayout {
+                    width: Math.max(0, autoScroll.width - 36)
+                    spacing: 10
+                    x: 18
+                    Item { Layout.preferredHeight: 6; Layout.fillWidth: true }
+
+                    Text { text: "Proceso a ejecutar"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcComboBox {
+                        id: autoProcessCombo
+                        Layout.fillWidth: true
+                        model: App.taskStore
+                        textRole: "name"
+                        valueRole: "id"
+                        function selectProcess(pid) {
+                            const idx = indexOfValue(pid)
+                            currentIndex = idx >= 0 ? idx : 0
+                        }
+                    }
+
+                    Text { text: "Nombre de la automatización (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        id: autoNameField
+                        Layout.fillWidth: true
+                        placeholderText: "Por defecto toma el nombre del proceso"
+                    }
+
+                    CheckBox {
+                        id: autoSchedEnabled
+                        checked: true
+                        text: "Programación activa"
+                        contentItem: Text {
+                            text: autoSchedEnabled.text; color: Theme.textSecondary; font.pixelSize: 12
+                            leftPadding: autoSchedEnabled.indicator.width + 6; verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    CheckBox {
+                        id: autoSilent
+                        text: "Ejecutar en silencio salvo error"
+                        contentItem: Text {
+                            text: autoSilent.text; color: Theme.textSecondary; font.pixelSize: 12
+                            leftPadding: autoSilent.indicator.width + 6; verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+                        Text { text: "Frecuencia"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                        LcComboBox {
+                            id: freqCombo
+                            Layout.fillWidth: true
+                            model: ["Diario", "Semanal", "Mensual", "Cada N meses", "Avanzado (cron)"]
+                        }
+                    }
+
+                    // Hora (todas las frecuencias menos cron)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: freqCombo.currentIndex !== 4
+                        spacing: 10
+                        Text { text: "Hora"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                        SpinBox { id: schedHour; from: 0; to: 23; value: 9; editable: true }
+                        Text { text: ":"; color: Theme.textSecondary }
+                        SpinBox { id: schedMinute; from: 0; to: 59; value: 0; editable: true }
+                    }
+
+                    // Semanal: días
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: freqCombo.currentIndex === 1
+                        spacing: 6
+                        Text { text: "Días"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                        Repeater {
+                            id: weekdayChecks
+                            model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+                            delegate: CheckBox {
+                                property bool checkedProxy: checked
+                                text: modelData
+                                contentItem: Text {
+                                    text: modelData; color: Theme.textSecondary; font.pixelSize: 11
+                                    leftPadding: parent.indicator.width + 3; verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+                        }
+                    }
+
+                    // Mensual
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: freqCombo.currentIndex === 2
+                        spacing: 10
+                        Text { text: "Cuándo"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                        LcComboBox {
+                            id: monthlyKindCombo
+                            Layout.preferredWidth: 150
+                            model: ["Por fecha (día N)", "Por posición"]
+                        }
+                        SpinBox {
+                            id: monthDaySpin
+                            visible: monthlyKindCombo.currentIndex === 0 || freqCombo.currentIndex === 3
+                            from: 1; to: 31; value: 1; editable: true
+                        }
+                        LcComboBox {
+                            id: nthCombo
+                            visible: monthlyKindCombo.currentIndex === 1 && freqCombo.currentIndex === 2
+                            Layout.preferredWidth: 110
+                            model: ["primer", "segundo", "tercer", "cuarto", "último"]
+                        }
+                        LcComboBox {
+                            id: nthWeekdayCombo
+                            visible: monthlyKindCombo.currentIndex === 1 && freqCombo.currentIndex === 2
+                            Layout.preferredWidth: 90
+                            model: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+                        }
+                    }
+
+                    // Cada N meses
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: freqCombo.currentIndex === 3
+                        spacing: 10
+                        Text { text: "Cada"; color: Theme.textSecondary; font.pixelSize: 12; Layout.preferredWidth: 90 }
+                        SpinBox { id: everyNSpin; from: 1; to: 24; value: 2; editable: true }
+                        Text { text: "mes(es), desde el mes"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        SpinBox { id: startMonthSpin; from: 1; to: 12; value: 1; editable: true }
+                    }
+
+                    // Avanzado (cron)
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: freqCombo.currentIndex === 4
+                        spacing: 4
+                        LcTextField {
+                            id: cronField
+                            Layout.fillWidth: true
+                            placeholderText: "0 9 * * *  (min hora dia mes diaSem)"
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.Wrap
+                            color: Theme.textMuted
+                            font.pixelSize: 11
+                            text: "Formato: min hora diaMes mes diaSem. Ej: 0 9 * * * = 9:00 todos los días · "
+                                + "*/15 9-17 * * 1-5 = cada 15 min, 9-17h, lun-vie. Domingo = 0 o 7."
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        text: "El scheduler solo dispara mientras la app está abierta y con server+agente encendidos."
+                    }
+                    Text {
+                        id: autoError
+                        Layout.fillWidth: true
+                        visible: text.length > 0
+                        text: ""
+                        color: Theme.btnDangerBg
+                        font.pixelSize: 11
+                        wrapMode: Text.Wrap
+                    }
+                    Item { Layout.preferredHeight: 8; Layout.fillWidth: true }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Row {
+                    anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                    spacing: 10
+                    LcButton { text: "Cancelar"; secondary: true; onClicked: autoEditor.close() }
+                    LcButton { text: "Guardar"; onClicked: autoEditor.saveAndClose() }
+                }
+            }
+        }
+    }
+
     // Compone una vista previa local equivalente a TaskStore::composePrompt.
     function composePreview() {
-        let out = "Ejecutá la siguiente Task guardada de forma autónoma.\n"
+        let out = "Ejecutá el siguiente proceso guardado de forma autónoma.\n"
         if (prePromptField.text) out += "\nPreprompt operativo:\n" + prePromptField.text + "\n"
-        if (nameField.text) out += "Task: " + nameField.text + "\n"
+        if (nameField.text) out += "Proceso: " + nameField.text + "\n"
         if (descField.text) out += "Objetivo: " + descField.text + "\n"
         if (stepsModel.count > 0) {
             out += "\nPasos de referencia (grabados en una corrida previa):\n"
@@ -1066,7 +1307,7 @@ Item {
 
     LcDialog {
         id: resultDialog
-        title: status === "error" ? "Task con error" : "Task finalizada"
+        title: status === "error" ? "Proceso con error" : "Proceso finalizado"
         property string taskId: ""
         property string taskName: ""
         property string status: ""
@@ -1162,7 +1403,7 @@ Item {
                 Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
                 Text {
                     anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
-                    text: "Trabajo de la Task"
+                    text: "Trabajo del proceso"
                     font { pixelSize: 14; bold: true }
                     color: Theme.textPrimary
                 }
@@ -1232,13 +1473,28 @@ Item {
 
     LcDialog {
         id: delConfirm
-        title: "Eliminar Task"
+        title: "Eliminar proceso"
         property string taskId: ""
         property string taskName: ""
         implicitWidth: 420
         onAccepted: App.taskStore.remove(taskId)
         contentItem: Text {
-            text: "¿Eliminar la Task \"" + delConfirm.taskName + "\"? No se puede deshacer."
+            text: "¿Eliminar el proceso \"" + delConfirm.taskName + "\"? Las automatizaciones que lo usen quedarán sin proceso. No se puede deshacer."
+            color: Theme.textPrimary
+            wrapMode: Text.Wrap
+            padding: 8
+        }
+    }
+
+    LcDialog {
+        id: delAutoConfirm
+        title: "Eliminar automatización"
+        property string autoId: ""
+        property string autoName: ""
+        implicitWidth: 420
+        onAccepted: App.automationStore.remove(autoId)
+        contentItem: Text {
+            text: "¿Eliminar la automatización \"" + delAutoConfirm.autoName + "\"? El proceso enlazado no se borra. No se puede deshacer."
             color: Theme.textPrimary
             wrapMode: Text.Wrap
             padding: 8

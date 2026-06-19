@@ -5,6 +5,7 @@
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/tasks/TaskStore.h"
+#include "core/tasks/AutomationStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
@@ -37,6 +38,7 @@ class AppController : public QObject
     Q_PROPERTY(ModelCatalog*       modelCatalog    READ modelCatalog    CONSTANT)
     Q_PROPERTY(ProfileManager*     profileManager  READ profileManager  CONSTANT)
     Q_PROPERTY(TaskStore*          taskStore       READ taskStore       CONSTANT)
+    Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
     Q_PROPERTY(bool canRunTask READ canRunTask NOTIFY taskRunAvailabilityChanged)
@@ -163,6 +165,7 @@ public:
     ModelCatalog      *modelCatalog()    { return &m_catalog; }
     ProfileManager    *profileManager()  { return &m_profiles; }
     TaskStore         *taskStore()       { return &m_tasks; }
+    AutomationStore   *automationStore() { return &m_automations; }
     bool tasksSchedulerEnabled() const { return m_scheduler && m_scheduler->enabled(); }
     void setTasksSchedulerEnabled(bool on);
     bool taskRunning() const { return !m_runningTaskId.isEmpty(); }
@@ -384,6 +387,9 @@ public:
     // no, auto-inicia server+agente (perfil de la Task o el activo), ejecuta al
     // quedar listo y lo apaga al terminar. Marca lastRun en el TaskStore.
     Q_INVOKABLE void runTask(const QString &id);
+    // Ejecuta la Automatización `automationId`: resuelve el proceso enlazado y lo
+    // corre vía runTask, marcando el resultado también en el AutomationStore.
+    Q_INVOKABLE void runAutomation(const QString &automationId);
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
     static bool taskFinalTextIndicatesFailure(const QString &text);
     static bool taskRequiresToolEvidence(const QVariantMap &task);
@@ -783,9 +789,14 @@ private:
     ModelRootRegistry m_roots{&m_catalog};
     ProfileManager    m_profiles;
     TaskStore         m_tasks;
+    AutomationStore   m_automations;
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
     QString  m_runningTaskId;
+    // Automatización que disparó la corrida actual (si vino del scheduler/UI de
+    // automatizaciones). Permite marcar su lastRun al terminar. Vacío = corrida
+    // directa de un proceso.
+    QString  m_runningAutomationId;
     QString  m_runningTaskName;
     QString  m_runningTaskPhase;
     QString  m_runningTaskPostPrompt;
@@ -801,6 +812,9 @@ private:
     // Maneja el fin de turno del agente (marca lastRun, apaga si fue auto-iniciado).
     void onAgentTurnFinished();
     void finishRunningTask(const QString &status, const QString &summary);
+    // Una vez al arranque: por cada Proceso con scheduleEnabled (modelo viejo
+    // pre-split) crea una Automatización enlazada si aún no existe ninguna.
+    void migrateLegacySchedulesToAutomations();
     QString latestAgentAssistantText() const;
     bool agentBackendBusy() const;
     void prepareTaskAgentSession();

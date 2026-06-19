@@ -1,10 +1,10 @@
 #include "TaskScheduler.h"
-#include "TaskStore.h"
+#include "AutomationStore.h"
 #include "CronSchedule.h"
 #include "TaskSchedule.h"
 #include <QTimer>
 
-TaskScheduler::TaskScheduler(TaskStore *store, QObject *parent)
+TaskScheduler::TaskScheduler(AutomationStore *store, QObject *parent)
     : QObject(parent), m_store(store)
 {
     m_timer = new QTimer(this);
@@ -58,7 +58,7 @@ void TaskScheduler::evaluate(const QDateTime &now)
         const QString key = id + QLatin1Char('@') + minuteKey;
         if (m_fired.contains(key)) continue;
         m_fired.insert(key);
-        emit taskDue(id);
+        emit automationDue(id);
     }
     // Poda: conserva solo el minuto actual (claves viejas ya no se repiten).
     if (m_fired.size() > 256) {

@@ -641,10 +641,14 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(this, &AppController::serverRunningChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::serverReadyChanged, this, &AppController::taskRunAvailabilityChanged);
 
-    // Scheduler de Tasks (cron in-app). taskDue→runTask. El toggle global persiste.
-    m_scheduler = new TaskScheduler(&m_tasks, this);
-    connect(m_scheduler, &TaskScheduler::taskDue, this, [this](const QString &id) {
-        runTask(id);
+    // Migración: Procesos legacy con schedule embebido → Automatización enlazada.
+    migrateLegacySchedulesToAutomations();
+
+    // Scheduler de Automatizaciones (cron in-app). automationDue→runAutomation.
+    // El toggle global persiste.
+    m_scheduler = new TaskScheduler(&m_automations, this);
+    connect(m_scheduler, &TaskScheduler::automationDue, this, [this](const QString &id) {
+        runAutomation(id);
     });
     if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
         m_scheduler->setEnabled(true);
@@ -3676,6 +3680,53 @@ void AppController::runTask(const QString &id)
     sendToAgent(prompt);
 }
 
+void AppController::runAutomation(const QString &automationId)
+{
+    const QVariantMap au = m_automations.get(automationId);
+    if (au.isEmpty()) {
+        emit serverError(QStringLiteral("Automatización no encontrada."));
+        return;
+    }
+    const QString processId = au.value(QStringLiteral("processId")).toString();
+    if (m_tasks.get(processId).isEmpty()) {
+        m_automations.markRun(automationId, QStringLiteral("error"),
+                              QStringLiteral("El proceso enlazado ya no existe."));
+        emit serverError(QStringLiteral("El proceso enlazado a la automatización ya no existe."));
+        return;
+    }
+    // runTask marcará lastRun en el proceso; finishRunningTask propaga al
+    // AutomationStore vía m_runningAutomationId.
+    m_runningAutomationId = automationId;
+    m_automations.markRun(automationId, QStringLiteral("running"), QStringLiteral("Ejecutando..."));
+    runTask(processId);
+    // Si runTask abortó temprano (no pudo arrancar) ya limpió m_runningTaskId; en
+    // ese caso el estado de la automatización quedó marcado por finishRunningTask
+    // sólo si llegó a correr. Resguardo: si no quedó nada corriendo, soltá el id.
+    if (m_runningTaskId.isEmpty())
+        m_runningAutomationId.clear();
+}
+
+void AppController::migrateLegacySchedulesToAutomations()
+{
+    for (const QVariant &tv : m_tasks.all()) {
+        const QVariantMap t = tv.toMap();
+        if (!t.value(QStringLiteral("scheduleEnabled"), false).toBool()) continue;
+        const QString pid = t.value(QStringLiteral("id")).toString();
+        bool exists = false;
+        for (const QVariant &av : m_automations.all())
+            if (av.toMap().value(QStringLiteral("processId")).toString() == pid) { exists = true; break; }
+        if (exists) continue;
+        m_automations.save({}, {
+            { QStringLiteral("name"), t.value(QStringLiteral("name")) },
+            { QStringLiteral("processId"), pid },
+            { QStringLiteral("scheduleEnabled"), true },
+            { QStringLiteral("scheduleCron"), t.value(QStringLiteral("scheduleCron")) },
+            { QStringLiteral("scheduleSpec"), t.value(QStringLiteral("scheduleSpec")) },
+            { QStringLiteral("silentUnlessError"), t.value(QStringLiteral("silentUnlessError"), false) },
+        });
+    }
+}
+
 void AppController::applyTaskAgentPermissions(const QVariantMap &task)
 {
     auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
@@ -3873,6 +3924,10 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
     m_taskWorkLogs.insert(id, work);
     m_tasks.markRun(id, status, summary);
+    if (!m_runningAutomationId.isEmpty()) {
+        m_automations.markRun(m_runningAutomationId, status, summary);
+        m_runningAutomationId.clear();
+    }
     clearTaskAgentPermissions();   // restaura confinamiento y aprobación normales
     m_runningTaskId.clear();
     m_runningTaskName.clear();

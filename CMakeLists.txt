@@ -79,6 +79,7 @@ set(CORE_SOURCES
     src/core/eval/EvalSuite.cpp
     src/core/ToolCallingSupport.cpp
     src/core/tasks/TaskStore.cpp
+    src/core/tasks/AutomationStore.cpp
     src/core/tasks/CronSchedule.cpp
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
@@ -131,6 +132,7 @@ set(HEADERS
     src/core/eval/EvalSuite.h
     src/core/ToolCallingSupport.h
     src/core/tasks/TaskStore.h
+    src/core/tasks/AutomationStore.h
     src/core/tasks/CronSchedule.h
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
@@ -390,6 +392,7 @@ if (BUILD_TESTS)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
     add_lc_test(test_automation         tests/test_automation.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)
+    add_lc_test(test_automation_store   tests/test_automation_store.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
     add_lc_test(test_gateway            tests/test_gateway.cpp)
