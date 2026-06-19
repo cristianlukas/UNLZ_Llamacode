@@ -81,9 +81,11 @@ int main(int argc, char *argv[])
     // con el icono embebido en el .exe (app_icon.rc).
 #ifdef LC_DEBUG_ICON
     const QString appIconSource = QStringLiteral("qrc:/assets/debug_icon.ico");
+    const QString trayIconSource = appIconSource;
     const QIcon appIcon(QStringLiteral(":/assets/debug_icon.ico"));
 #else
     const QString appIconSource = QStringLiteral("qrc:/assets/app_icon.ico");
+    const QString trayIconSource = QStringLiteral("qrc:/assets/tray_icon.png");
     const QIcon appIcon(QStringLiteral(":/assets/app_icon.ico"));
 #endif
     app.setWindowIcon(appIcon);
@@ -153,6 +155,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Theme", &theme);
     engine.rootContext()->setContextProperty("Mermaid", &mermaid);
     engine.rootContext()->setContextProperty("AppIconSource", appIconSource);
+    engine.rootContext()->setContextProperty("TrayIconSource", trayIconSource);
     engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);
 
     // Control API headless (espejo de AppController) para tests sin GUI.

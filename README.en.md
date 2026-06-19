@@ -528,6 +528,9 @@ Outputs:
 
 The Debug red icon is embedded in the `.exe` (taskbar/explorer) via `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake defines `/dLC_DEBUG_ICON` only in Debug config), and also in the `.lnk`.
 
+The notification area uses `assets/tray_icon.png` only in Release. Debug keeps
+using `assets/debug_icon.ico` in the tray as well.
+
 > After touching code, always rebuild — the QML is embedded in the binary via `qt_add_qml_module`.
 
 ### Manual
@@ -553,7 +556,7 @@ LlamaCode/
 ├── src/                    ← C++ (AppController, agent backends, core)
 ├── qml/                    ← UI (Main.qml, pages/, components/)
 ├── assets/
-│   ├── app_icon.ico / debug_icon.ico / app_icon.png
+│   ├── app_icon.ico / debug_icon.ico / app_icon.png / tray_icon.png
 │   ├── hwfit/hf_models.json          ← model catalog (cookbook)
 │   └── benchmarks/aa_intelligence.json ← quality scores (offline)
 ├── docs/                   ← documentation (agent.md, TODO.md, plan_harness.md, tuner.md, ...)

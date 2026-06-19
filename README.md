@@ -651,6 +651,10 @@ Esta selección debe depender de la configuración de LlamaCode mediante
 `LC_DEBUG_ICON`, no de `QT_DEBUG`: Qt puede ser una build Release aunque la app
 se compile en Debug.
 
+El área de notificación usa `assets/tray_icon.png` únicamente en Release. Debug
+conserva `assets/debug_icon.ico` también en el tray para mantener su identidad
+visual diferenciada.
+
 > Tras tocar código siempre recompilar — el QML va embebido en el binario vía `qt_add_qml_module`.
 
 ### Manual
@@ -686,7 +690,7 @@ LlamaCode/
 ├── src/                    ← C++ (AppController, backends de agente, core)
 ├── qml/                    ← UI (Main.qml, pages/, components/)
 ├── assets/
-│   ├── app_icon.ico / debug_icon.ico / app_icon.png
+│   ├── app_icon.ico / debug_icon.ico / app_icon.png / tray_icon.png
 │   ├── hwfit/hf_models.json          ← catálogo de modelos (cookbook)
 │   └── benchmarks/aa_intelligence.json ← scores de calidad (offline)
 ├── docs/                   ← documentación (agent.md, TODO.md, plan_harness.md, tuner.md, ...)

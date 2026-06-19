@@ -840,7 +840,7 @@ ApplicationWindow {
     Platform.SystemTrayIcon {
         id: trayIcon
         visible: window.minimizeToTray || App.teachState === "recording" || App.teachState === "paused"
-        icon.source: AppIconSource
+        icon.source: TrayIconSource
         tooltip: "UNLZ_Llamacode"
         onActivated: function(reason) {
             if (reason === Platform.SystemTrayIcon.Trigger

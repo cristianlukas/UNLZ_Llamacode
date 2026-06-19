@@ -78,6 +78,7 @@ set(CORE_SOURCES
     src/core/voice/VoiceServerManager.cpp
     src/core/eval/EvalSuite.cpp
     src/core/ToolCallingSupport.cpp
+    src/core/diag/LogTriage.cpp
     src/core/tasks/TaskStore.cpp
     src/core/tasks/AutomationStore.cpp
     src/core/tasks/CronSchedule.cpp
@@ -306,6 +307,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/app_icon.png
         assets/app_icon.ico
         assets/debug_icon.ico
+        assets/tray_icon.png
         assets/update/latest.json
         assets/hwfit/hf_models.json
         assets/benchmarks/aa_intelligence.json
@@ -396,4 +398,5 @@ if (BUILD_TESTS)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
     add_lc_test(test_gateway            tests/test_gateway.cpp)
+    add_lc_test(test_logtriage          tests/test_logtriage.cpp)
 endif()

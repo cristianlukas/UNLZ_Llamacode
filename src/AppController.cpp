@@ -33,6 +33,7 @@
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
 #include "core/ToolCallingSupport.h"
+#include "core/diag/LogTriage.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
 #include <QSqlDatabase>
@@ -2268,6 +2269,13 @@ QString AppController::serverLogByLevel(const QString &level) const
         }
     }
     return out.join(QLatin1Char('\n'));
+}
+
+QString AppController::triageServerLog(int maxGroups) const
+{
+    // Barre tanto el log del server (crashes de llama-server) como el del agente.
+    const QString combined = m_log + QLatin1Char('\n') + m_agentLog;
+    return LogTriage::summarize(combined, maxGroups);
 }
 
 void AppController::appendAgentEvent(const QString &source, const QString &text)

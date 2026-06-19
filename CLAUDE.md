@@ -10,7 +10,7 @@ Reglas:
   `add_lc_test(<area> tests/test_<area>.cpp)` (helper ya definido, sección
   `if (BUILD_TESTS)`).
 - Antes de commitear: correr `tests.bat` (configura `BUILD_TESTS=ON`, compila en
-  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 26;
+  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 27;
   ver `add_lc_test` en `CMakeLists.txt`). No commitear en rojo. Atajo: `/gate`.
 - Un executable por subsistema (QtTest = 1 `QTEST_MAIN` por binario).
 
@@ -45,6 +45,7 @@ Reglas:
 | AgentToolRunner (tools nativas) | `tests/test_agent_tools.cpp` |
 | MasterCli | `tests/test_master_cli.cpp` |
 | RawChatBackend (sesiones/persistencia) | `tests/test_backends_net.cpp` |
+| LogTriage (barrido de errores) | `tests/test_logtriage.cpp` |
 
 ### Pendiente de cobertura
 Los backends de red con stream SSE real (RawChatBackend/LlamaAgentBackend/

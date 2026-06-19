@@ -334,6 +334,11 @@ public:
     // Filtra el log del server por nivel/fuente. level: "all"|"error"|"warn"|"stderr"|
     // "stdout"|"lifecycle"|"health"|"diag". Devuelve sólo las líneas que matchean.
     Q_INVOKABLE QString serverLogByLevel(const QString &level) const;
+    // Barrido de errores: agrupa las líneas de error del log del server + del
+    // agente en firmas distintas con su conteo (ver LogTriage). Resumen corto
+    // para alimentar un Proceso "barrido de errores" en bucle. Vacío = sin
+    // errores. Reachable headless vía ControlApi.
+    Q_INVOKABLE QString triageServerLog(int maxGroups = 10) const;
     // Exporta una sesión de chat a archivo (Markdown o JSON). format: "md"|"json".
     // Abre diálogo de guardado; devuelve la ruta escrita ("" si cancelado/error).
     Q_INVOKABLE QString exportChatSession(const QString &id, const QString &format);
