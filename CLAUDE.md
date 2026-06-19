@@ -2,9 +2,6 @@
 
 ## Testing policy (OBLIGATORIA)
 
-> ✅ VIGENTE desde 2026-06-18: build Release + tests, sin Debug.
-> Ver sección "Build". Esta política aplica.
-
 Toda feature nueva o cambio de comportamiento DEBE llegar con su test (unit +
 integration cuando aplique). Sin test = incompleto.
 
