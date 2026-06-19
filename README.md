@@ -596,9 +596,7 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 `build.bat` mata procesos colgados, configura, compila, despliega el runtime Qt (`windeployqt`) y regenera los accesos directos. Acepta config y la opción `NOPAUSE` para ejecución automatizada:
 
 ```bat
-build.bat Both NOPAUSE     REM Debug + Release, recomendado para entregar cambios
-build.bat Debug NOPAUSE    REM solo Debug
-build.bat Release NOPAUSE  REM solo Release
+build.bat Release NOPAUSE  REM configuración usada para validar y entregar cambios
 ```
 
 Para subir la versión de la app y del flag de actualización:
@@ -613,7 +611,7 @@ Salidas:
 | Config | Binario | Acceso directo | Icono |
 |--------|---------|----------------|-------|
 | Release | `build\Release\LlamaCode.exe` (optimizado, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (llama normal) |
-| Debug | `build\Debug\LlamaCode.exe` (símbolos + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
+| Debug | `build\Debug\LlamaCode.exe` (compilación manual opcional) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
 
 El icono rojo del Debug va embebido en el `.exe` (taskbar/explorer) vía
 `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake define `LC_DEBUG_ICON` solo en
@@ -633,7 +631,7 @@ cmake --build build --config Release --parallel
 
 ### Calidad de código
 
-- `tests.bat Debug` configura `build_tests`, compila y corre toda la suite Qt Test.
+- `tests.bat Release` configura `build_tests`, compila y corre toda la suite Qt Test.
 - Si `clang-format` está instalado, CMake expone los targets `format` y
   `format-check` usando `.clang-format`.
 - `LC_STRICT_WARNINGS=ON` activa `/W4 /permissive-` en MSVC o
