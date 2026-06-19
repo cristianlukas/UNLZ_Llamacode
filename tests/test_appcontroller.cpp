@@ -10,9 +10,56 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QCoreApplication>
+#include <QTimer>
+#include <QSignalSpy>
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
+#include "core/agent/IAgentBackend.h"
+#include "core/tasks/TaskStore.h"
 #include "core/CatalogModel.h"
+
+// Backend de agente fake para ejercitar el ciclo del bucle de Tasks sin un
+// llama-server real. Cada sendMessage responde un texto scripteado y, async,
+// emite messagesChanged + turnFinished (async para no recursar dentro de
+// sendToAgent). El goal-check se detecta por el prompt; devuelve veredictos en
+// secuencia (GOAL_NOT_MET → otra iteración; GOAL_MET → corta).
+class FakeAgentBackend : public IAgentBackend
+{
+    Q_OBJECT
+public:
+    explicit FakeAgentBackend(QObject *parent = nullptr) : IAgentBackend(parent) {}
+
+    QString adapter() const override { return QStringLiteral("llamaagent"); }
+    bool running() const override { return m_running; }
+    void start(const AgentContext &) override { m_running = true; emit runningChanged(); }
+    void stop() override { m_running = false; emit runningChanged(); }
+    void newSession() override { m_msgs.clear(); }   // sesión limpia por iteración
+    QVariantList messages() const override { return m_msgs; }
+
+    void sendMessage(const QString &text) override
+    {
+        QString reply;
+        if (text.contains(QStringLiteral("objetivo del bucle"))) {
+            reply = m_verdicts.isEmpty() ? QStringLiteral("GOAL_MET") : m_verdicts.takeFirst();
+        } else {
+            ++m_bodyRuns;
+            reply = QStringLiteral("trabajo realizado %1").arg(m_bodyRuns);
+        }
+        m_msgs.append(QVariantMap{{QStringLiteral("role"), QStringLiteral("assistant")},
+                                  {QStringLiteral("content"), reply}});
+        emit messagesChanged();
+        QTimer::singleShot(0, this, [this]() { emit turnFinished(); });
+    }
+
+    void setVerdicts(const QStringList &v) { m_verdicts = v; }
+    int bodyRuns() const { return m_bodyRuns; }
+
+private:
+    bool m_running = false;
+    int m_bodyRuns = 0;
+    QStringList m_verdicts;
+    QVariantList m_msgs;
+};
 
 class AppControllerTests : public QObject
 {
@@ -39,10 +86,28 @@ private slots:
     void autoStartAgentOnLaunchPersists();
     void windowsStartupCommandQuotesExecutable();
     void startupHiddenRequiresBothFlags();
+    void loopTaskRunsBodyUntilGoalMet();
+    void loopTaskStopsAtMaxIterations();
 
 private:
     QTemporaryDir m_tmp;
+    QString makeLoopTask(AppController &app, const QString &name, int maxIter);
 };
+
+QString AppControllerTests::makeLoopTask(AppController &app, const QString &name, int maxIter)
+{
+    // Task local (sin keywords web → no exige evidencia de tool), en bucle, sin
+    // postprompt ni verifyProfile (sin swap de modelo).
+    const QVariantMap def{
+        {QStringLiteral("name"), name},
+        {QStringLiteral("description"), QStringLiteral("Escribí un resumen del texto dado")},
+        {QStringLiteral("executionMode"), QStringLiteral("agent")},
+        {QStringLiteral("loopEnabled"), true},
+        {QStringLiteral("loopGoal"), QStringLiteral("el resumen quedó completo")},
+        {QStringLiteral("loopMaxIterations"), maxIter}
+    };
+    return app.taskStore()->save(QString(), def);
+}
 
 void AppControllerTests::initTestCase()
 {
@@ -422,6 +487,49 @@ void AppControllerTests::startupHiddenRequiresBothFlags()
     QVERIFY(!AppController::shouldStartHidden(true, false));
     QVERIFY(!AppController::shouldStartHidden(false, true));
     QVERIFY(!AppController::shouldStartHidden(false, false));
+}
+
+void AppControllerTests::loopTaskRunsBodyUntilGoalMet()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    fake->setVerdicts({QStringLiteral("GOAL_NOT_MET falta"), QStringLiteral("GOAL_MET listo")});
+    app.setTestAgentBackend(fake);
+
+    const QString id = makeLoopTask(app, QStringLiteral("Loop hasta goal"), 5);
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+
+    for (int i = 0; i < 100 && fin.isEmpty(); ++i)
+        QTest::qWait(10);
+
+    QVERIFY(!fin.isEmpty());
+    const QList<QVariant> args = fin.takeFirst();
+    QCOMPARE(args.at(2).toString(), QStringLiteral("ok"));   // status final
+    // Cuerpo corrió 2 veces (iter1 GOAL_NOT_MET → iter2 GOAL_MET).
+    QCOMPARE(fake->bodyRuns(), 2);
+}
+
+void AppControllerTests::loopTaskStopsAtMaxIterations()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    // Nunca cumple → debe cortar por techo de iteraciones.
+    fake->setVerdicts({QStringLiteral("GOAL_NOT_MET"), QStringLiteral("GOAL_NOT_MET"),
+                       QStringLiteral("GOAL_NOT_MET"), QStringLiteral("GOAL_NOT_MET")});
+    app.setTestAgentBackend(fake);
+
+    const QString id = makeLoopTask(app, QStringLiteral("Loop sin fin"), 3);
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+
+    for (int i = 0; i < 100 && fin.isEmpty(); ++i)
+        QTest::qWait(10);
+
+    QVERIFY(!fin.isEmpty());
+    QCOMPARE(fake->bodyRuns(), 3);   // exactamente maxIter corridas del cuerpo
 }
 
 QTEST_MAIN(AppControllerTests)

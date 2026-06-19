@@ -392,6 +392,11 @@ public:
     // no, auto-inicia server+agente (perfil de la Task o el activo), ejecuta al
     // quedar listo y lo apaga al terminar. Marca lastRun en el TaskStore.
     Q_INVOKABLE void runTask(const QString &id);
+    // Test seams (solo para tests; no usar desde la app). Permiten ejercitar el
+    // ciclo del bucle de Tasks sin un llama-server real: inyectar un backend de
+    // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
+    void setTestAgentBackend(IAgentBackend *b);
+    Q_INVOKABLE void runTaskBodyForTest(const QString &id);
     // Ejecuta la Automatización `automationId`: resuelve el proceso enlazado y lo
     // corre vía runTask, marcando el resultado también en el AutomationStore.
     Q_INVOKABLE void runAutomation(const QString &automationId);
@@ -779,6 +784,7 @@ private:
     void appendServerEvent(const QString &source, const QString &text);
     // Escanea líneas del server por patrones conocidos y emite serverDiagnostic.
     void detectServerLogPatterns(const QString &text);
+    void launchTaskBody(const QString &id, const QVariantMap &task);
     void appendAgentEvent(const QString &source, const QString &text);
     // Verify-phase swap: manda `prompt` al agente, cambiando antes el modelo a
     // `targetLaunchId` si difiere del activo (reinicia server+agente; sesión

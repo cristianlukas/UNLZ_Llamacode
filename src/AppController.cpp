@@ -3694,6 +3694,15 @@ void AppController::runTask(const QString &id)
         return;
     }
 
+    launchTaskBody(id, task);
+}
+
+// Arranca el cuerpo de una Task: setea el estado de corrida, inicializa el bucle
+// y manda el primer prompt. Separado de runTask (que hace el gating de
+// server/agente) para poder ejercitar el ciclo del bucle en tests sin un
+// llama-server real (ver runTaskBodyForTest). NO repite los chequeos de gating.
+void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
+{
     const QString name = task.value(QStringLiteral("name")).toString();
     QString prompt = TaskStore::composePrompt(task);
     const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
@@ -3739,6 +3748,29 @@ void AppController::runTask(const QString &id)
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
     sendToAgent(prompt);
+}
+
+void AppController::setTestAgentBackend(IAgentBackend *b)
+{
+    // Solo tests: cablea las señales mínimas que el ciclo de Tasks necesita
+    // (mensajes + fin de turno + error) y deja el backend como el activo.
+    m_agentBackend = b;
+    connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
+        m_agentMessages = b->messages();
+        emit agentMessagesChanged();
+    });
+    connect(b, &IAgentBackend::turnFinished, this, [this]() { onAgentTurnFinished(); });
+    connect(b, &IAgentBackend::errorOccurred, this, [this](const QString &m) {
+        if (!m_runningTaskId.isEmpty())
+            finishRunningTask(QStringLiteral("error"), m);
+    });
+}
+
+void AppController::runTaskBodyForTest(const QString &id)
+{
+    const QVariantMap task = m_tasks.get(id);
+    if (!task.isEmpty())
+        launchTaskBody(id, task);
 }
 
 void AppController::runAutomation(const QString &automationId)
