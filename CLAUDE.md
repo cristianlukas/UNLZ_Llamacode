@@ -52,10 +52,12 @@ Stub HTTP ya disponible: `SseStubServer` en `tests/test_backends_net.cpp` cubre
 el stream SSE de `/v1/chat/completions` para RawChatBackend (acumulación de deltas
 + error HTTP). El ciclo del bucle de Loops (sin swap) se cubre en
 `tests/test_appcontroller.cpp` con `FakeAgentBackend` + `setTestAgentBackend` +
-`runTaskBodyForTest` (body→goal-check→repeat→GOAL_MET / corte por maxIter). Falta:
-tool-call extraction (LlamaAgentBackend), `/props` (chat-template), `/v1/embeddings`,
-y el swap de modelo verify-phase end-to-end (spawnea server real, no stubbeable).
-Reusar `SseStubServer` (devolver `tool_calls` en el delta).
+`runTaskBodyForTest` (body→goal-check→repeat→GOAL_MET / corte por maxIter). El
+ensamblado de tool_calls en streaming se cubre en `tests/test_agent_wire.cpp`
+(`LlamaAgentBackend::mergeToolCallDelta`, pura). Falta: `/props` (chat-template),
+`/v1/embeddings`, y el swap de modelo verify-phase end-to-end (el swap recrea el
+backend vía `ensureAgentBackend`, así que no es stubbeable sin un harness cloud
+completo; queda como QA manual). Reusar `SseStubServer`.
 
 ## Build
 - **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
