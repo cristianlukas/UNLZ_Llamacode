@@ -85,6 +85,12 @@ public:
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);
 
+    // Une los deltas incrementales de tool_calls (streaming OpenAI) en el
+    // acumulador `acc` (index → {id,name,arguments}). id/name se setean cuando
+    // llegan; arguments se concatena chunk a chunk. PURA → unit-testeable.
+    static void mergeToolCallDelta(QHash<int, QJsonObject> &acc,
+                                   const QJsonArray &deltaToolCalls);
+
     // Catálogo de tools built-in con metadata para la UI de habilitar/deshabilitar:
     // lista de {name, group, description, approxTokens}. El orden define el de la UI.
     static QVariantList toolCatalog();

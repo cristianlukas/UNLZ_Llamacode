@@ -22,6 +22,8 @@ private slots:
     void parsesTextToolCallFallback();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void restartRepublishesPersistedMessages();
+    void mergeToolCallDelta_assemblesAcrossChunks();
+    void mergeToolCallDelta_parallelCallsByIndex();
 };
 
 void AgentWireTests::initTestCase()
@@ -315,6 +317,61 @@ void AgentWireTests::restartRepublishesPersistedMessages()
 
     backend.stop();
     QDir(store).removeRecursively();
+}
+
+// Helper: arma un delta de tool_calls como el que manda el server en streaming.
+static QJsonArray tcDelta(int index, const QJsonObject &fn,
+                          const QString &id = QString())
+{
+    QJsonObject tc{{QStringLiteral("index"), index},
+                   {QStringLiteral("function"), fn}};
+    if (!id.isEmpty()) tc.insert(QStringLiteral("id"), id);
+    return QJsonArray{tc};
+}
+
+void AgentWireTests::mergeToolCallDelta_assemblesAcrossChunks()
+{
+    QHash<int, QJsonObject> acc;
+    // Chunk 1: id + name. Chunk 2 y 3: arguments parciales (se concatenan).
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(0, QJsonObject{{QStringLiteral("name"), QStringLiteral("read_file")}},
+                QStringLiteral("call_1")));
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(0, QJsonObject{{QStringLiteral("arguments"), QStringLiteral("{\"path\":\"")}}));
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(0, QJsonObject{{QStringLiteral("arguments"), QStringLiteral("x.txt\"}")}}));
+
+    QCOMPARE(acc.size(), 1);
+    const QJsonObject call = acc.value(0);
+    QCOMPARE(call.value(QStringLiteral("id")).toString(), QStringLiteral("call_1"));
+    QCOMPARE(call.value(QStringLiteral("name")).toString(), QStringLiteral("read_file"));
+    QCOMPARE(call.value(QStringLiteral("arguments")).toString(),
+             QStringLiteral("{\"path\":\"x.txt\"}"));
+    // Los arguments deben parsear a JSON válido tras el ensamblado.
+    const QJsonDocument args = QJsonDocument::fromJson(
+        call.value(QStringLiteral("arguments")).toString().toUtf8());
+    QVERIFY(args.isObject());
+    QCOMPARE(args.object().value(QStringLiteral("path")).toString(), QStringLiteral("x.txt"));
+}
+
+void AgentWireTests::mergeToolCallDelta_parallelCallsByIndex()
+{
+    QHash<int, QJsonObject> acc;
+    // Dos tool_calls paralelas (index 0 y 1) intercaladas en el stream.
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(0, QJsonObject{{QStringLiteral("name"), QStringLiteral("grep")}}, QStringLiteral("a")));
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(1, QJsonObject{{QStringLiteral("name"), QStringLiteral("list_dir")}}, QStringLiteral("b")));
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(0, QJsonObject{{QStringLiteral("arguments"), QStringLiteral("{\"q\":1}")}}));
+    LlamaAgentBackend::mergeToolCallDelta(acc,
+        tcDelta(1, QJsonObject{{QStringLiteral("arguments"), QStringLiteral("{\"p\":2}")}}));
+
+    QCOMPARE(acc.size(), 2);
+    QCOMPARE(acc.value(0).value(QStringLiteral("name")).toString(), QStringLiteral("grep"));
+    QCOMPARE(acc.value(0).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"q\":1}"));
+    QCOMPARE(acc.value(1).value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
+    QCOMPARE(acc.value(1).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"p\":2}"));
 }
 
 QTEST_MAIN(AgentWireTests)

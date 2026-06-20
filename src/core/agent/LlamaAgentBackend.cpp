@@ -1553,6 +1553,26 @@ void LlamaAgentBackend::resetStreamIdleWatchdog()
     m_streamIdleTimer->start(streamIdleTimeoutMs());
 }
 
+void LlamaAgentBackend::mergeToolCallDelta(QHash<int, QJsonObject> &acc,
+                                          const QJsonArray &deltaToolCalls)
+{
+    for (const QJsonValue &tv : deltaToolCalls) {
+        const QJsonObject tc = tv.toObject();
+        const int idx = tc.value(QStringLiteral("index")).toInt(0);
+        QJsonObject a = acc.value(idx);
+        if (tc.contains(QStringLiteral("id")))
+            a[QStringLiteral("id")] = tc.value(QStringLiteral("id")).toString();
+        const QJsonObject fn = tc.value(QStringLiteral("function")).toObject();
+        if (fn.contains(QStringLiteral("name")))
+            a[QStringLiteral("name")] = fn.value(QStringLiteral("name")).toString();
+        if (fn.contains(QStringLiteral("arguments")))
+            a[QStringLiteral("arguments")] =
+                a.value(QStringLiteral("arguments")).toString()
+                + fn.value(QStringLiteral("arguments")).toString();
+        acc.insert(idx, a);
+    }
+}
+
 // Une los deltas incrementales de tool_calls (patrón OpenAI streaming): por
 // cada 'index' se acumulan id, function.name y function.arguments (string).
 void LlamaAgentBackend::handleStreamData()
@@ -1595,22 +1615,7 @@ void LlamaAgentBackend::handleStreamData()
             m_streamReason += delta.value(QStringLiteral("reasoning_content")).toString();
         m_streamContent += delta.value(QStringLiteral("content")).toString();
 
-        const QJsonArray tcs = delta.value(QStringLiteral("tool_calls")).toArray();
-        for (const QJsonValue &tv : tcs) {
-            const QJsonObject tc = tv.toObject();
-            const int idx = tc.value(QStringLiteral("index")).toInt(0);
-            QJsonObject acc = m_streamToolCalls.value(idx);
-            if (tc.contains(QStringLiteral("id")))
-                acc[QStringLiteral("id")] = tc.value(QStringLiteral("id")).toString();
-            const QJsonObject fn = tc.value(QStringLiteral("function")).toObject();
-            if (fn.contains(QStringLiteral("name")))
-                acc[QStringLiteral("name")] = fn.value(QStringLiteral("name")).toString();
-            if (fn.contains(QStringLiteral("arguments")))
-                acc[QStringLiteral("arguments")] =
-                    acc.value(QStringLiteral("arguments")).toString()
-                    + fn.value(QStringLiteral("arguments")).toString();
-            m_streamToolCalls.insert(idx, acc);
-        }
+        mergeToolCallDelta(m_streamToolCalls, delta.value(QStringLiteral("tool_calls")).toArray());
 
         // Progreso de tool_calls en streaming. Cuando el modelo está generando
         // una tool (p.ej. write_file con un archivo grande), los tokens llegan
