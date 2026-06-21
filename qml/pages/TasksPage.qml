@@ -200,9 +200,9 @@ Item {
             title: (App.langV, App.l("nav.tasks"))
             subtitle: root.currentTab === 0
                 ? App.taskStore.count + " proceso(s) · definiciones reutilizables que el agente ejecuta y adapta"
-                : App.automationStore.count + " automatización(es) · procesos programados con fecha/hora"
+                : App.automationStore.count + " programación(es) · procesos programados con fecha/hora"
             action2Label: root.currentTab === 0 ? "Enseñar tarea" : ""
-            actionLabel: root.currentTab === 0 ? "Nuevo proceso" : "Nueva automatización"
+            actionLabel: root.currentTab === 0 ? "Nuevo proceso" : "Nueva programación"
             onAction2Clicked: {
                 root.teachTaskId = ""
                 teachMode.currentIndex = 0
@@ -214,13 +214,46 @@ Item {
             }
         }
 
-        TabBar {
-            id: tabs
+        // Selector de pestañas (segmented control). Respeta el tema activo.
+        Rectangle {
             Layout.fillWidth: true
-            currentIndex: root.currentTab
-            onCurrentIndexChanged: root.currentTab = currentIndex
-            TabButton { text: "Procesos" }
-            TabButton { text: "Automatizaciones" }
+            Layout.preferredHeight: 48
+            color: Theme.navBg
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
+
+            Row {
+                anchors { left: parent.left; leftMargin: 24; verticalCenter: parent.verticalCenter }
+                spacing: 6
+
+                Repeater {
+                    model: ["Procesos", "Programaciones"]
+                    delegate: Rectangle {
+                        width: tabLabel.implicitWidth + 32
+                        height: 34
+                        radius: 8
+                        property bool active: root.currentTab === index
+                        color: active ? Theme.accent
+                                      : (tabMouse.containsMouse ? Theme.surfaceBg : "transparent")
+                        border.color: active ? Theme.accent : Theme.borderColor
+                        border.width: active ? 0 : 1
+
+                        Text {
+                            id: tabLabel
+                            anchors.centerIn: parent
+                            text: modelData
+                            font { pixelSize: 13; bold: parent.active }
+                            color: parent.active ? Theme.btnPrimaryText : Theme.textSecondary
+                        }
+                        MouseArea {
+                            id: tabMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.currentTab = index
+                        }
+                    }
+                }
+            }
         }
 
         // Barra de herramientas de Procesos (teach / importar skill).
@@ -234,7 +267,7 @@ Item {
                 spacing: 8
                 Text {
                     Layout.fillWidth: true
-                    text: "Un proceso define el objetivo, perfil, modo y permisos. Teach aprende una demostración como receta adaptable. Programalos en la pestaña Automatizaciones."
+                    text: "Un proceso define el objetivo, perfil, modo y permisos. Teach aprende una demostración como receta adaptable. Programalos en la pestaña Programaciones."
                     color: Theme.textMuted
                     font.pixelSize: 11
                     elide: Text.ElideRight
@@ -274,7 +307,7 @@ Item {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: "Dispara las Automatizaciones programadas mientras la app esté abierta. Si el agente ya corre lo usa; si no, lo auto-inicia, ejecuta y lo apaga al terminar."
+                    text: "Dispara las Programaciones mientras la app esté abierta. Si el agente ya corre lo usa; si no, lo auto-inicia, ejecuta y lo apaga al terminar."
                     color: Theme.textMuted
                     font.pixelSize: 11
                     elide: Text.ElideRight
@@ -390,6 +423,11 @@ Item {
                                 onClicked: App.stopAutomation()
                             }
                             LcButton {
+                                text: "Historial"
+                                secondary: true
+                                onClicked: historyDialog.openFor(taskId, taskName)
+                            }
+                            LcButton {
                                 text: "Editar"
                                 secondary: true
                                 onClicked: root.openEditor(taskId)
@@ -427,7 +465,7 @@ Item {
                     Layout.leftMargin: 24
                     text: App.taskStore.count === 0
                         ? "Primero creá un proceso en la pestaña Procesos. Luego volvé acá\npara programarlo con su fecha/hora."
-                        : "No hay automatizaciones todavía. Creá una: elegí un proceso existente\ny programá cuándo debe ejecutarse."
+                        : "No hay programaciones todavía. Creá una: elegí un proceso existente\ny programá cuándo debe ejecutarse."
                     color: Theme.textMuted
                     font.pixelSize: 13
                 }
@@ -480,6 +518,11 @@ Item {
                                 text: "▶ Ejecutar"
                                 enabled: App.canRunTask
                                 onClicked: App.runAutomation(autoId)
+                            }
+                            LcButton {
+                                text: "Historial"
+                                secondary: true
+                                onClicked: historyDialog.openFor(autoId, autoName)
                             }
                             LcButton {
                                 text: "Editar"
@@ -1149,7 +1192,7 @@ Item {
                 Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
                 Text {
                     anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
-                    text: root.autoEditId.length > 0 ? "Editar automatización" : "Nueva automatización"
+                    text: root.autoEditId.length > 0 ? "Editar programación" : "Nueva programación"
                     font { pixelSize: 14; bold: true }
                     color: Theme.textPrimary
                 }
@@ -1545,6 +1588,200 @@ Item {
         }
     }
 
+    // ── Historial de corridas (Proceso o Programación) ──
+    Popup {
+        id: historyDialog
+        modal: true
+        parent: Overlay.overlay
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(980, Math.max(640, root.width - 120))
+        height: Math.min(760, Math.max(520, root.height - 100))
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 0
+
+        property string ownerId: ""
+        property string ownerName: ""
+        property var runs: []
+        property int selectedRun: -1
+
+        function fmt(iso) {
+            if (!iso) return "—"
+            const d = new Date(iso)
+            return isNaN(d.getTime()) ? iso : Qt.formatDateTime(d, "yyyy-MM-dd HH:mm:ss")
+        }
+        function statusColor(s) {
+            return s === "error" ? Theme.errorText : (s === "ok" ? Theme.accent : Theme.textSecondary)
+        }
+        function openFor(id, name) {
+            ownerId = id
+            ownerName = name || id
+            runs = App.runHistory(id)
+            selectedRun = runs.length > 0 ? 0 : -1
+            open()
+        }
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        contentItem: ColumnLayout {
+            spacing: 0
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Text {
+                    anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                    text: "Historial · " + historyDialog.ownerName
+                    font { pixelSize: 14; bold: true }
+                    color: Theme.textPrimary
+                    elide: Text.ElideRight
+                    width: parent.width - 44
+                }
+            }
+
+            Text {
+                visible: historyDialog.runs.length === 0
+                Layout.fillWidth: true
+                Layout.margins: 20
+                text: "Todavía no hay corridas registradas. Ejecutá el proceso/programación y su inicio, estado y reporte completo quedarán acá."
+                color: Theme.textMuted
+                font.pixelSize: 13
+                wrapMode: Text.Wrap
+            }
+
+            RowLayout {
+                visible: historyDialog.runs.length > 0
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.margins: 14
+                spacing: 12
+
+                // Lista de corridas.
+                Rectangle {
+                    Layout.preferredWidth: 280
+                    Layout.fillHeight: true
+                    radius: 8
+                    color: Theme.inputBg
+                    border.color: Theme.inputBorderColor
+                    ListView {
+                        anchors { fill: parent; margins: 6 }
+                        clip: true
+                        model: historyDialog.runs
+                        delegate: Rectangle {
+                            width: ListView.view.width
+                            height: 56
+                            radius: 6
+                            color: index === historyDialog.selectedRun ? Theme.surfaceBg : "transparent"
+                            ColumnLayout {
+                                anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                                spacing: 2
+                                Text {
+                                    text: historyDialog.fmt(modelData.startedAt)
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 12
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                                Text {
+                                    text: (modelData.status === "ok" ? "correcto"
+                                          : (modelData.status || "—"))
+                                          + "  ·  " + (modelData.source === "programacion" ? "programada" : "manual")
+                                    color: historyDialog.statusColor(modelData.status)
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: historyDialog.selectedRun = index
+                            }
+                        }
+                    }
+                }
+
+                // Detalle de la corrida seleccionada.
+                ColumnLayout {
+                    id: detailCol
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 8
+                    property var run: historyDialog.selectedRun >= 0
+                                      ? historyDialog.runs[historyDialog.selectedRun] : null
+
+                    Text {
+                        Layout.fillWidth: true
+                        visible: detailCol.run !== null
+                        text: detailCol.run
+                              ? ("Inicio: " + historyDialog.fmt(detailCol.run.startedAt)
+                                 + "   ·   Fin: " + historyDialog.fmt(detailCol.run.finishedAt)
+                                 + "   ·   Estado: " + (detailCol.run.status === "ok" ? "correcto" : (detailCol.run.status || "—")))
+                              : ""
+                        color: Theme.textSecondary
+                        font.pixelSize: 12
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: detailCol.run !== null && !!detailCol.run.summary
+                        text: detailCol.run ? ("Resumen: " + detailCol.run.summary) : ""
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        wrapMode: Text.Wrap
+                    }
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        TextArea {
+                            text: detailCol.run ? (detailCol.run.log || "Sin traza registrada.") : ""
+                            readOnly: true
+                            selectByMouse: true
+                            wrapMode: TextArea.Wrap
+                            color: Theme.textPrimary
+                            font.family: "Consolas"
+                            font.pixelSize: 11
+                            background: Rectangle {
+                                radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Row {
+                    anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                    spacing: 10
+                    LcButton {
+                        text: "Copiar reporte"
+                        secondary: true
+                        enabled: historyDialog.selectedRun >= 0
+                        onClicked: {
+                            const r = historyDialog.runs[historyDialog.selectedRun]
+                            if (r) App.copyToClipboard(r.log || "")
+                        }
+                    }
+                    LcButton { text: "Cerrar"; onClicked: historyDialog.close() }
+                }
+            }
+        }
+    }
+
     LcDialog {
         id: delConfirm
         title: "Eliminar proceso"
@@ -1562,13 +1799,13 @@ Item {
 
     LcDialog {
         id: delAutoConfirm
-        title: "Eliminar automatización"
+        title: "Eliminar programación"
         property string autoId: ""
         property string autoName: ""
         implicitWidth: 420
         onAccepted: App.automationStore.remove(autoId)
         contentItem: Text {
-            text: "¿Eliminar la automatización \"" + delAutoConfirm.autoName + "\"? El proceso enlazado no se borra. No se puede deshacer."
+            text: "¿Eliminar la programación \"" + delAutoConfirm.autoName + "\"? El proceso enlazado no se borra. No se puede deshacer."
             color: Theme.textPrimary
             wrapMode: Text.Wrap
             padding: 8

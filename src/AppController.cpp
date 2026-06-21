@@ -3712,6 +3712,7 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
             AutomationArtifactStore::recipe(artifactId));
     m_runningTaskId = id;
     m_runningTaskName = name;
+    m_runningTaskStartedAt = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     m_runningTaskPhase = QStringLiteral("ejecutando");
     m_runningTaskPostPrompt = TaskStore::composePostPrompt(task);
     m_runningTaskLogStart = m_agentLog.size();
@@ -4066,13 +4067,30 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
     m_taskWorkLogs.insert(id, work);
     m_tasks.markRun(id, status, summary);
+
+    // Historial: registrar la corrida bajo el Proceso y, si vino de una
+    // Programación, también bajo ésta (así ambas pestañas muestran su historial).
+    QVariantMap rec{
+        { QStringLiteral("startedAt"),  m_runningTaskStartedAt },
+        { QStringLiteral("finishedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate) },
+        { QStringLiteral("status"),     status },
+        { QStringLiteral("summary"),    summary },
+        { QStringLiteral("log"),        work },
+        { QStringLiteral("source"),     m_runningAutomationId.isEmpty()
+                                            ? QStringLiteral("manual")
+                                            : QStringLiteral("programacion") },
+        { QStringLiteral("automationId"), m_runningAutomationId },
+    };
+    m_runHistory.append(id, rec);
     if (!m_runningAutomationId.isEmpty()) {
         m_automations.markRun(m_runningAutomationId, status, summary);
+        m_runHistory.append(m_runningAutomationId, rec);
         m_runningAutomationId.clear();
     }
     clearTaskAgentPermissions();   // restaura confinamiento y aprobación normales
     m_runningTaskId.clear();
     m_runningTaskName.clear();
+    m_runningTaskStartedAt.clear();
     m_runningTaskPhase.clear();
     m_runningTaskPostPrompt.clear();
     m_runningTaskLogStart = 0;
@@ -4091,6 +4109,11 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         stopAgent();
         stopServer();
     }
+}
+
+QVariantList AppController::runHistory(const QString &ownerId) const
+{
+    return m_runHistory.history(ownerId);
 }
 
 QString AppController::taskRunWorkLog(const QString &id) const

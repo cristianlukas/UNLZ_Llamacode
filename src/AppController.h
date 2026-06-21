@@ -6,6 +6,7 @@
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/tasks/TaskStore.h"
 #include "core/tasks/AutomationStore.h"
+#include "core/tasks/RunHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
@@ -401,6 +402,8 @@ public:
     // corre vía runTask, marcando el resultado también en el AutomationStore.
     Q_INVOKABLE void runAutomation(const QString &automationId);
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
+    // Historial de corridas de un Proceso o Programación (más nuevo primero).
+    Q_INVOKABLE QVariantList runHistory(const QString &ownerId) const;
     static bool taskFinalTextIndicatesFailure(const QString &text);
     static bool taskRequiresToolEvidence(const QVariantMap &task);
     // Previsualiza el prompt que recibiría el agente (para el editor de Tasks).
@@ -834,6 +837,9 @@ private:
     QString  m_pendingSwapPrompt;        // prompt a mandar cuando el swap termina
     bool     m_pendingSwapFreshSession = false;  // limpiar sesión antes de mandar
     QHash<QString, QString> m_taskWorkLogs;
+    RunHistoryStore  m_runHistory;
+    // Inicio de la corrida actual (para registrar el historial al terminar).
+    QString  m_runningTaskStartedAt;
     // Task programada esperando que el agente auto-iniciado quede listo.
     QString  m_pendingScheduledTaskId;
     QString  m_pendingScheduledLaunchId;
