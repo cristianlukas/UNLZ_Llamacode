@@ -10,6 +10,12 @@ Item {
     // tab 0 = Procesos (definiciones) · tab 1 = Automatizaciones (proceso + horario)
     property int currentTab: 0
 
+    // El agente está arrancando o el server/modelo todavía no quedó listo. Mismo
+    // criterio que AgentPage: hasta que esté listo no se puede ejecutar nada y el
+    // aviso de tool-calling sería un falso positivo.
+    readonly property bool agentLoading: App.agentStarting
+                                         || (App.agentRunning && (!App.serverRunning || !App.serverReady))
+
     // Editor de Proceso (definición). editId vacío = creando.
     property string editId: ""
     // Editor de Automatización. autoEditId vacío = creando.
@@ -317,11 +323,14 @@ Item {
         }
 
         // Aviso de tool-calling del perfil activo (deriva del cookbook + chat-template).
+        // Mientras el agente está cargando el cookbook/chat-template todavía no está
+        // resuelto: el aviso daría un falso positivo, así que se oculta (ver overlay).
         ToolSupportBanner {
             Layout.fillWidth: true
             Layout.leftMargin: 24
             Layout.rightMargin: 24
             Layout.topMargin: 12
+            visible: !root.agentLoading
             support: App.activeProfileToolSupport
         }
 
@@ -539,6 +548,44 @@ Item {
                 }
 
                 Item { Layout.fillHeight: true; Layout.fillWidth: true }
+            }
+        }
+    }
+
+    // Overlay "Cargando agente" — mismo patrón que AgentPage. Mientras el agente
+    // arranca, tapa la lista para evitar ejecutar/leer estado inconsistente.
+    Rectangle {
+        anchors.centerIn: parent
+        z: 50
+        visible: root.agentLoading
+        radius: 10
+        color: Theme.surfaceBg
+        border.color: Theme.borderColor
+        implicitWidth: tasksLoadingRow.implicitWidth + 32
+        implicitHeight: tasksLoadingRow.implicitHeight + 24
+        Row {
+            id: tasksLoadingRow
+            anchors.centerIn: parent
+            spacing: 10
+            Rectangle {
+                width: 10; height: 10; radius: 5
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.warnText
+                SequentialAnimation on opacity {
+                    running: parent.parent.visible
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.3; duration: 600 }
+                    NumberAnimation { to: 1.0; duration: 600 }
+                }
+            }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: App.agentStarting
+                    ? "Iniciando agente..."
+                    : !App.serverRunning
+                    ? "Servidor no disponible. Iniciá el modelo en Lanzar."
+                    : "Cargando modelo..."
+                color: Theme.textSecondary; font.pixelSize: 14
             }
         }
     }
