@@ -612,9 +612,11 @@ Item {
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         padding: 18
+        // Reentrenar un proceso existente (botón "Teach" de la card) vs crear uno
+        // nuevo (botón "Enseñar tarea" del header). Enseñar = crear proceso.
+        property bool isNewProcess: root.teachTaskId.length === 0
         onOpened: {
             teachError.text = ""
-            teachNote.text = ""
             teachName.text = ""
             teachObjective.text = ""
             refreshTargets()
@@ -642,12 +644,6 @@ Item {
                 color: Theme.textMuted
                 font.pixelSize: 11
             }
-
-            // Reentrenar un proceso existente (botón "Teach" de la card) vs crear
-            // uno nuevo (botón "Enseñar tarea" del header). Enseñar = crear proceso,
-            // por eso en el caso nuevo NO se pide elegir un proceso: se pide nombre
-            // + objetivo y se crea al Iniciar.
-            property bool isNewProcess: root.teachTaskId.length === 0
 
             // Reentrenamiento: el proceso ya existe, solo se muestra cuál.
             Text {
@@ -730,20 +726,6 @@ Item {
                     color: Theme.textSecondary
                     font.pixelSize: 11
                     wrapMode: Text.Wrap
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                LcTextField {
-                    id: teachNote
-                    Layout.fillWidth: true
-                    placeholderText: "Nota sobre lo que estás haciendo…"
-                }
-                LcButton {
-                    text: "Agregar nota"
-                    secondary: true
-                    enabled: teachNote.text.trim().length > 0
-                    onClicked: { App.addTeachNote(teachNote.text); teachNote.text = "" }
                 }
             }
             Text {

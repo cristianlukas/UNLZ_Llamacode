@@ -51,8 +51,12 @@ Rectangle {
                 Layout.fillWidth: true
                 height: 48
                 highlighted: root.currentIndex === index
+                // agentOnly: permite entrar también mientras el agente ARRANCA
+                // (App.agentStarting) → la página muestra su popup "Iniciando agente"
+                // con los botones deshabilitados, igual que Agente. Solo queda
+                // grisada si el agente no fue iniciado en absoluto.
                 enabled: (!modelData.serverOnly || App.serverRunning)
-                         && (!modelData.agentOnly || App.agentRunning)
+                         && (!modelData.agentOnly || App.agentRunning || App.agentStarting)
                 opacity: enabled ? 1.0 : 0.35
                 background: Rectangle {
                     color: parent.highlighted ? Theme.highlight : (parent.hovered && parent.enabled ? Theme.hoverBg : "transparent")

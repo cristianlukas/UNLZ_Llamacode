@@ -191,7 +191,10 @@ ApplicationWindow {
                         const i = stack.currentIndex
                         const serverOnly = (i === 4 || i === 5 || i === 6 || i === 7 || i === 8)
                         const agentOnly = (i === 7)
-                        if ((serverOnly && !App.serverRunning) || (agentOnly && !App.agentRunning))
+                        // No expulsar mientras el agente arranca (agentStarting): la
+                        // página muestra su popup de carga. Solo si no hay agente.
+                        if ((serverOnly && !App.serverRunning)
+                            || (agentOnly && !App.agentRunning && !App.agentStarting))
                             stack.currentIndex = 0
                     }
                     function onServerRunningChanged() { guard() }
