@@ -655,6 +655,12 @@ El área de notificación usa `assets/tray_icon.png` únicamente en Release. Deb
 conserva `assets/debug_icon.ico` también en el tray para mantener su identidad
 visual diferenciada.
 
+Los accesos directos generados por `update-shortcut.ps1` escriben
+`AppUserModelID = LlamaCode.Desktop.App`, el mismo que fija el proceso en
+Windows. Si ya existe un acceso pineado en la taskbar apuntando al mismo
+`build\<Config>\LlamaCode.exe`, el script también lo actualiza para que Windows
+agrupe la ventana abierta con el icono pineado.
+
 > Tras tocar código siempre recompilar — el QML va embebido en el binario vía `qt_add_qml_module`.
 
 ### Manual
