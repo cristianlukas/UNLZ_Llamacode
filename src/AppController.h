@@ -664,6 +664,8 @@ public:
     // "Instalar ambos": baja binarios+modelos+mmproj+drafters de todos los extras
     // y deja activo el primero (coding).
     Q_INVOKABLE void acceptShowcase();
+    // Instala UN solo perfil del showcase (coding o general) sin bajar el otro.
+    Q_INVOKABLE void acceptShowcaseOne(const QString &launchId);
     // Inyecta el resumen de hardware (solo para tests headless).
     Q_INVOKABLE void setHardwareSummaryForTest(double vramGb, double ramGb,
                                                const QString &gpuName);

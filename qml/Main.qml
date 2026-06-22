@@ -361,7 +361,11 @@ ApplicationWindow {
                 font.bold: true
             }
             Text {
-                text: (App.langV, App.l("setup.description"))
+                // Al repetir el asistente (ya hay binarios/modelos) el texto de
+                // "no hay binarios ni modelos" sería falso: mostrar uno neutro.
+                text: (App.langV, App.needsSetup
+                    ? App.l("setup.description")
+                    : "Reinstalá o cambiá de perfil recomendado cuando quieras.")
                 color: Theme.textSecondary
                 Layout.fillWidth: true
                 Layout.preferredWidth: setupPopup.availableWidth
@@ -377,6 +381,12 @@ ApplicationWindow {
             // Depende de hardwareSummary para re-evaluar tras un rescan.
             readonly property var sysPick: (App.hardwareSummary, App.recommendedSystemProfile())
             readonly property var showcase: (App.hardwareSummary, App.recommendedShowcase())
+            function showcaseId(tag) {
+                for (var i = 0; i < showcase.length; i++)
+                    if ((showcase[i].displayName || "").indexOf(tag) >= 0)
+                        return showcase[i].launchId
+                return ""
+            }
 
             // ── Showcase 24GB: instalar MAX-Q (coding) + FAST-GEMMA (general) ──
             Rectangle {
@@ -412,10 +422,24 @@ ApplicationWindow {
                         Layout.topMargin: 4
                         spacing: 10
                         LcButton {
-                            text: "Instalar ambos — descargar todo"
+                            text: "Instalar ambos"
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning
                             onClicked: App.acceptShowcase()
+                        }
+                        LcButton {
+                            text: "Sólo Coding"
+                            secondary: true
+                            Layout.preferredHeight: 34
+                            enabled: !App.modelDownloadRunning && showcaseId("[coding]").length > 0
+                            onClicked: App.acceptShowcaseOne(showcaseId("[coding]"))
+                        }
+                        LcButton {
+                            text: "Sólo General"
+                            secondary: true
+                            Layout.preferredHeight: 34
+                            enabled: !App.modelDownloadRunning && showcaseId("[general]").length > 0
+                            onClicked: App.acceptShowcaseOne(showcaseId("[general]"))
                         }
                         LcButton {
                             text: "No, gracias"

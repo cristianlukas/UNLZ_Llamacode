@@ -8194,6 +8194,37 @@ void AppController::acceptShowcase()
     emit setupStateChanged();
 }
 
+void AppController::acceptShowcaseOne(const QString &launchId)
+{
+    QJsonObject entry;
+    for (const QJsonValue &v : readSystemProfilesBundle())
+        if (v.toObject().value(QStringLiteral("id")).toString() == launchId) { entry = v.toObject(); break; }
+    if (entry.isEmpty()) return;
+
+    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
+                        || gpu.contains("rtx") || gpu.contains("gtx");
+    bool hasMtp = false;
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const LlamaBinary b = m_binaries.findById(
+            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
+        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
+        if (!b.path.isEmpty() && QFileInfo::exists(b.path)
+            && (t.contains("mtp") || t.contains("beellama"))) { hasMtp = true; break; }
+    }
+    const bool needsMtp = entry.value(QStringLiteral("mtp")).toObject().value(QStringLiteral("enabled")).toBool()
+                          || entry.value(QStringLiteral("requiresMtpBinary")).toBool();
+    if (needsMtp && nvidia && !hasMtp) installMtpBinary();
+    else if (resolveSystemBinaryId().isEmpty()) installOfficialBinary();
+
+    enqueueSystemProfileAssets(entry);
+    m_pendingSystemLaunchId = launchId;
+    writeSetting(QStringLiteral("lastLaunchId"), launchId);
+    emit activeLaunchIdChanged();
+    emit setupStateChanged();
+}
+
 void AppController::acceptSystemProfile(const QString &launchId)
 {
     QJsonObject entry;
