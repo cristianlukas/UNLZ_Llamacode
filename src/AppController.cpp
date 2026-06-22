@@ -8070,8 +8070,7 @@ QVariantMap AppController::recommendedSystemProfile() const
     double bestVram = -1.0;
     for (const QJsonValue &v : arr) {
         const QJsonObject o = v.toObject();
-        const QString tier = o.value("tier").toString();
-        if (tier.startsWith("MAX") || tier.startsWith("FAST")) continue;
+        if (o.value("extra").toBool()) continue;   // extras (showcase) no auto-recomendados
         const double minV = o.value("minVramGb").toDouble();
         const double minR = o.value("minRamGb").toDouble();
         if (minR > ram + 0.5) continue;
@@ -8142,10 +8141,8 @@ void AppController::acceptSystemProfile(const QString &launchId)
             installMtpBinary();                          // FAST-GEMMA (DFlash) requiere beellama
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
-            const QString tier = e.value("tier").toString();
-            if ((tier.startsWith("MAX") || tier.startsWith("FAST"))
-                && e.value("id").toString() != launchId)
-                enqueueSystemProfileAssets(e);
+            if (e.value("extra").toBool() && e.value("id").toString() != launchId)
+                enqueueSystemProfileAssets(e);   // showcase 24GB (Qwen MAX / Gemma DFlash)
         }
     }
 
