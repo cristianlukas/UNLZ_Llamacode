@@ -62,7 +62,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 8);                        // 16/12-MoE/8-Gemma/4/2/0 + MAX Q + FAST GEMMA
+    QCOMPARE(sys, 10);                       // 16/12-MoE/8-Gemma/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: el tier 16GB lleva mmproj (multimodal); el 4GB no (VRAM ajustada).
