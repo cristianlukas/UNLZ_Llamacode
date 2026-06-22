@@ -50,6 +50,7 @@ void TestVoice::configRoundTrip()
     QCOMPARE(r.sttKeyRef, QString("voice/openai"));
     QCOMPARE(r.sttLanguage, QString("es"));
     QCOMPARE(r.ttsVoice, QString("nova"));
+    QCOMPARE(r.ttsMode, QString("piper"));
     QCOMPARE(r.ttsFormat, QString("mp3"));
     QCOMPARE(r.vadSilenceMs, 1200);
     QCOMPARE(r.bargeIn, false);
@@ -173,6 +174,9 @@ void TestVoice::voiceBinaryUrls()
     QVERIFY(whisperUrl.startsWith("https://github.com/ggml-org/whisper.cpp/"));
     QVERIFY(whisperUrl.contains("/releases/latest/download/"));
     QVERIFY(whisperUrl.endsWith("/whisper-bin-x64.zip"));
+    const QString piperUrl = VoiceServerManager::defaultBinaryUrl("piper");
+    QVERIFY(piperUrl.startsWith("https://github.com/rhasspy/piper/releases/download/"));
+    QVERIFY(piperUrl.endsWith("/piper_windows_amd64.zip"));
 #endif
 }
 

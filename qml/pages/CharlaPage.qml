@@ -36,8 +36,12 @@ Item {
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
     function startOrPromptModelDownload() {
         const engineId = page.cfg.sttManagedEngine || ""
+        const voiceId = page.cfg.ttsManagedVoice || "es_ES-davefx-medium"
         if (engineId.length > 0
-                && (!App.voiceModelInstalled(engineId) || !App.voiceWhisperServerAvailable())) {
+                && (!App.voiceModelInstalled(engineId)
+                    || !App.voiceWhisperServerAvailable()
+                    || !App.voiceTtsVoiceInstalled(voiceId)
+                    || !App.voicePiperAvailable())) {
             missingSttModelDialog.engineId = engineId
             missingSttModelDialog.open()
             return
@@ -494,7 +498,7 @@ Item {
         contentItem: Text {
             width: missingSttModelDialog.availableWidth
             height: missingSttModelDialog.availableHeight
-            text: "Faltan componentes locales para reconocer tu voz.\n\n¿Desea descargar y configurar automáticamente el modelo STT y whisper-server?"
+            text: "Faltan componentes locales para conversar por voz.\n\n¿Desea descargar y configurar automáticamente STT, whisper-server, Piper y una voz en español?"
             color: Theme.textPrimary
             font.pixelSize: 14
             wrapMode: Text.WordWrap

@@ -452,8 +452,10 @@ NavBar (reusa el backend de chat: sesiones e historial incluidos).
 - **Barge-in**: interrumpir el TTS al detectar voz nueva. Máquina de estados
   `escuchando → transcribiendo → pensando → hablando` con auto-escucha opcional.
 - Al iniciar con STT gestionado, si falta el modelo o `whisper-server`, Charla
-  ofrece instalar ambos en secuencia y guarda automáticamente la ruta del
-  ejecutable. La escucha no comienza hasta que los dos prerrequisitos estén listos.
+  ofrece instalar en secuencia el modelo, `whisper-server`, Piper y una voz en
+  español, guardando automáticamente las rutas. Los perfiles sin configuración
+  TTS explícita usan Piper gestionado en lugar de asumir un servidor HTTP en 8082.
+  La escucha no comienza hasta que los prerrequisitos estén listos.
   En Windows, el binario se obtiene desde el asset x64 del último release oficial
   de `ggml-org/whisper.cpp`, evitando depender de una versión retirada.
 

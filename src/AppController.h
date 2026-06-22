@@ -721,6 +721,7 @@ public:
     Q_INVOKABLE bool voiceTtsVoiceInstalled(const QString &voiceId) const;
     Q_INVOKABLE void installVoiceTts(const QString &voiceId);
     Q_INVOKABLE QString voicePiperPath() const;
+    Q_INVOKABLE bool voicePiperAvailable() const;
     Q_INVOKABLE void setVoicePiperPath(const QString &path);
     Q_INVOKABLE QString pickVoicePiper();
     // Auto-descarga de binarios (kind: "whisper-server"|"piper"). Al terminar OK
@@ -1013,6 +1014,7 @@ private:
     void ensureVoice();                 // crea + configura el controller (lazy)
     void applyVoiceConfig();            // empuja config + keys resueltas al controller
     bool startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
+    void continueVoicePrerequisitesInstall();
     void stopManagedStt();
     QString voiceConfigPath() const;
     // Chat session state

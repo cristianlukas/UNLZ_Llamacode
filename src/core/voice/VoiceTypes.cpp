@@ -47,7 +47,7 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.ttsKeyRef   = o.value("ttsKeyRef").toString(c.ttsKeyRef);
     c.ttsFormat   = o.value("ttsFormat").toString(c.ttsFormat);
     c.ttsMode     = o.value("ttsMode").toString(c.ttsMode);
-    if (c.ttsMode.isEmpty()) c.ttsMode = QStringLiteral("http");
+    if (c.ttsMode.isEmpty()) c.ttsMode = QStringLiteral("piper");
     c.ttsManagedVoice = o.value("ttsManagedVoice").toString(c.ttsManagedVoice);
     c.vadThreshold = o.value("vadThreshold").toDouble(c.vadThreshold);
     c.vadSilenceMs = o.value("vadSilenceMs").toInt(c.vadSilenceMs);

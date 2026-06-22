@@ -587,16 +587,14 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(&m_voiceServers, &VoiceServerManager::installFinished, this,
             [this](const QString &engineId, bool ok, const QString &message) {
         emit voiceInstallFinished(engineId, ok, message);
-        if (engineId != m_pendingVoicePrerequisitesEngine) return;
+        if (m_pendingVoicePrerequisitesEngine.isEmpty()) return;
+        if (engineId != m_pendingVoicePrerequisitesEngine
+            && engineId != QLatin1String("es_ES-davefx-medium")) return;
         if (!ok) {
             m_pendingVoicePrerequisitesEngine.clear();
             return;
         }
-        if (!voiceWhisperServerAvailable()) {
-            m_voiceServers.installBinary(QStringLiteral("whisper-server"));
-        } else {
-            m_pendingVoicePrerequisitesEngine.clear();
-        }
+        continueVoicePrerequisitesInstall();
     });
     connect(&m_voiceServers, &VoiceServerManager::binaryInstalled, this,
             [this](const QString &kind, bool ok, const QString &path, const QString &msg) {
@@ -604,9 +602,11 @@ AppController::AppController(QObject *parent) : QObject(parent)
             if (kind == QLatin1String("piper")) setVoicePiperPath(path);
             else setVoiceWhisperServerPath(path);
         }
-        if (kind == QLatin1String("whisper-server"))
-            m_pendingVoicePrerequisitesEngine.clear();
         emit voiceBinaryInstalled(kind, ok, ok ? path : msg);
+        if (!m_pendingVoicePrerequisitesEngine.isEmpty()) {
+            if (!ok) m_pendingVoicePrerequisitesEngine.clear();
+            else continueVoicePrerequisitesInstall();
+        }
     });
     QSettings s;
     m_language = s.value(QStringLiteral("language"), QStringLiteral("es")).toString();
@@ -11944,7 +11944,9 @@ void AppController::deleteResearchReport(const QString &id)
 
 QVariantMap AppController::voiceConfig(const QString &profileId) const
 {
-    return m_profiles.getLaunchVoice(profileId);
+    const VoiceConfig config = VoiceConfig::fromJson(
+        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(profileId)));
+    return config.toJson().toVariantMap();
 }
 
 void AppController::setVoiceConfig(const QString &profileId, const QVariantMap &cfg)
@@ -12030,6 +12032,15 @@ void AppController::startCharla()
     // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
     const VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    if (c.ttsMode == QLatin1String("piper")) {
+        const QString voiceId = c.ttsManagedVoice.isEmpty()
+            ? QStringLiteral("es_ES-davefx-medium") : c.ttsManagedVoice;
+        if (!m_voiceServers.ttsVoiceInstalled(voiceId) || !voicePiperAvailable()) {
+            emit serverError(QStringLiteral(
+                "Piper o su voz no están instalados. Instalalos desde Charla."));
+            return;
+        }
+    }
     if (!c.sttManagedEngine.isEmpty()) {
         if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
             emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
@@ -12073,6 +12084,13 @@ void AppController::installVoicePrerequisites(const QString &engineId)
 {
     if (engineId.isEmpty()) return;
     m_pendingVoicePrerequisitesEngine = engineId;
+    continueVoicePrerequisitesInstall();
+}
+
+void AppController::continueVoicePrerequisitesInstall()
+{
+    const QString engineId = m_pendingVoicePrerequisitesEngine;
+    if (engineId.isEmpty()) return;
     if (!m_voiceServers.modelInstalled(engineId)) {
         m_voiceServers.installModel(engineId);
         return;
@@ -12081,7 +12099,20 @@ void AppController::installVoicePrerequisites(const QString &engineId)
         m_voiceServers.installBinary(QStringLiteral("whisper-server"));
         return;
     }
+    const QString voiceId = QStringLiteral("es_ES-davefx-medium");
+    if (!m_voiceServers.ttsVoiceInstalled(voiceId)) {
+        m_voiceServers.installTtsVoice(voiceId);
+        return;
+    }
+    if (!voicePiperAvailable()) {
+        m_voiceServers.installBinary(QStringLiteral("piper"));
+        return;
+    }
     m_pendingVoicePrerequisitesEngine.clear();
+    QVariantMap cfg = voiceConfig(m_activeLaunchId);
+    cfg[QStringLiteral("ttsMode")] = QStringLiteral("piper");
+    cfg[QStringLiteral("ttsManagedVoice")] = voiceId;
+    setVoiceConfig(m_activeLaunchId, cfg);
     emit voiceInstallFinished(engineId, true, QString());
 }
 
@@ -12134,6 +12165,15 @@ void AppController::installVoiceTts(const QString &voiceId)
 QString AppController::voicePiperPath() const
 {
     return readSetting(QStringLiteral("voicePiperPath")).toString();
+}
+
+bool AppController::voicePiperAvailable() const
+{
+    const QString configured = voicePiperPath().trimmed();
+    if (!configured.isEmpty())
+        return QFileInfo(configured).isFile()
+               || !QStandardPaths::findExecutable(configured).isEmpty();
+    return !QStandardPaths::findExecutable(QStringLiteral("piper")).isEmpty();
 }
 
 void AppController::setVoicePiperPath(const QString &path)

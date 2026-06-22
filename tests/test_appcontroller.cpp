@@ -80,6 +80,7 @@ private slots:
     void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
+    void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
@@ -109,6 +110,15 @@ void AppControllerTests::voiceWhisperServerAvailabilityUsesConfiguredPath()
     app.setVoiceWhisperServerPath(executable.fileName());
     QVERIFY(app.voiceWhisperServerAvailable());
     app.setVoiceWhisperServerPath(QString());
+}
+
+void AppControllerTests::legacyVoiceConfigDefaultsToManagedPiper()
+{
+    AppController app;
+    const QVariantMap cfg = app.voiceConfig(QStringLiteral("missing-profile"));
+    QCOMPARE(cfg.value(QStringLiteral("ttsMode")).toString(), QStringLiteral("piper"));
+    QCOMPARE(cfg.value(QStringLiteral("ttsManagedVoice")).toString(),
+             QStringLiteral("es_ES-davefx-medium"));
 }
 
 QString AppControllerTests::makeLoopTask(AppController &app, const QString &name, int maxIter)
