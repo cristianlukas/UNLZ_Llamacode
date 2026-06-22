@@ -2388,28 +2388,42 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     // catálogo, ligar por NOMBRE DE ARCHIVO contra cualquier root escaneado. Así
     // el perfil funciona aunque el gguf esté en otra carpeta que la del download.
     if (ctx.launch.system && ctx.catalogModel.id.isEmpty()) {
-        auto byFile = [this](const QString &fn) -> CatalogModel {
-            if (fn.isEmpty()) return {};
-            for (int r = 0; r < m_catalog.rowCount(); ++r) {
-                const QVariantMap m = m_catalog.getAt(r);
+        // Todos los catalogados disponibles con ese nombre de archivo.
+        auto matches = [this](const QString &fn) -> QList<CatalogModel> {
+            QList<CatalogModel> r;
+            if (fn.isEmpty()) return r;
+            for (int i = 0; i < m_catalog.rowCount(); ++i) {
+                const QVariantMap m = m_catalog.getAt(i);
                 if (m.value(QStringLiteral("fileName")).toString() == fn
                     && m.value(QStringLiteral("isAvailable"), true).toBool())
-                    return m_catalog.findById(m.value(QStringLiteral("id")).toString());
+                    r << m_catalog.findById(m.value(QStringLiteral("id")).toString());
             }
-            return {};
+            return r;
         };
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
             if (e.value(QStringLiteral("id")).toString() != ctx.launch.id) continue;
             const QJsonObject mo = e.value(QStringLiteral("model")).toObject();
-            const CatalogModel cm = byFile(mo.value(QStringLiteral("file")).toString());
-            if (!cm.id.isEmpty()) { ctx.catalogModel = cm; ctx.model.modelId = cm.id; }
-            const CatalogModel mm = byFile(mo.value(QStringLiteral("mmprojFile")).toString());
-            if (!mm.id.isEmpty()) { ctx.mmprojModel = mm; ctx.model.mmprojId = mm.id; }
-            const QString df = e.value(QStringLiteral("draftModel")).toObject()
-                                   .value(QStringLiteral("file")).toString();
-            const CatalogModel dm = byFile(df);
-            if (!dm.id.isEmpty()) { ctx.draftModel = dm; ctx.model.draftModelId = dm.id; }
+            const QString hint = e.value(QStringLiteral("folder")).toString();
+            // Modelo: preferir la copia cuya carpeta coincide con el folder del bundle.
+            const QList<CatalogModel> mc = matches(mo.value(QStringLiteral("file")).toString());
+            CatalogModel cm;
+            for (const CatalogModel &c : mc)
+                if (!hint.isEmpty() && c.absolutePath.contains(hint)) { cm = c; break; }
+            if (cm.id.isEmpty() && !mc.isEmpty()) cm = mc.first();
+            if (cm.id.isEmpty()) break;
+            ctx.catalogModel = cm; ctx.model.modelId = cm.id;
+            const QString dir = QFileInfo(cm.absolutePath).path();
+            // mmproj: SOLO de la misma carpeta que el modelo (mmproj-F16.gguf es un
+            // nombre genérico compartido por muchos modelos → no agarrar el de otro).
+            for (const CatalogModel &c : matches(mo.value(QStringLiteral("mmprojFile")).toString()))
+                if (QFileInfo(c.absolutePath).path() == dir) {
+                    ctx.mmprojModel = c; ctx.model.mmprojId = c.id; break;
+                }
+            // draft: nombre de archivo específico (no genérico).
+            const QList<CatalogModel> dl = matches(
+                e.value(QStringLiteral("draftModel")).toObject().value(QStringLiteral("file")).toString());
+            if (!dl.isEmpty()) { ctx.draftModel = dl.first(); ctx.model.draftModelId = dl.first().id; }
             break;
         }
     }
