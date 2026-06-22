@@ -62,14 +62,14 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 12);                       // 9 vram-* + 8GB-Gemma + MAX Q + FAST GEMMA
+    QCOMPARE(sys, 9);                        // 24/16/12-MoE/8-Gemma/4/2/0 + MAX Q + FAST GEMMA
     QVERIFY(pm.isSystemLaunch("sys-vram-24"));
     QVERIFY(!anySysId.isEmpty());
-    // Visión: el tier 16GB lleva mmproj (multimodal); el 8GB no (VRAM ajustada).
+    // Visión: el tier 16GB lleva mmproj (multimodal); el 4GB no (VRAM ajustada).
     const QString mp16 = pm.getLaunchProfile("sys-vram-16").value("modelProfileId").toString();
     QVERIFY(!pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
-    const QString mp8 = pm.getLaunchProfile("sys-vram-8").value("modelProfileId").toString();
-    QVERIFY(pm.getModelProfile(mp8).value("mmprojId").toString().isEmpty());
+    const QString mp4 = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
+    QVERIFY(pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
@@ -89,24 +89,24 @@ void SystemProfilesTests::manager_systemNotPersisted()
 void SystemProfilesTests::manager_immutable()
 {
     ProfileManager pm;
-    QVERIFY(!pm.removeLaunchProfile("sys-vram-12"));
-    QVERIFY(!pm.updateLaunchProfile(QVariantMap{{"id", "sys-vram-12"}, {"name", "hack"}}));
-    pm.setLaunchFavorite("sys-vram-12", true);
-    QVERIFY(!pm.getLaunchProfile("sys-vram-12").value("favorite").toBool());
-    pm.setLaunchAlias("sys-vram-12", "hack");
-    QCOMPARE(pm.getLaunchProfile("sys-vram-12").value("alias").toString(), QStringLiteral("12GB"));
+    QVERIFY(!pm.removeLaunchProfile("sys-vram-12-moe"));
+    QVERIFY(!pm.updateLaunchProfile(QVariantMap{{"id", "sys-vram-12-moe"}, {"name", "hack"}}));
+    pm.setLaunchFavorite("sys-vram-12-moe", true);
+    QVERIFY(!pm.getLaunchProfile("sys-vram-12-moe").value("favorite").toBool());
+    pm.setLaunchAlias("sys-vram-12-moe", "hack");
+    QCOMPARE(pm.getLaunchProfile("sys-vram-12-moe").value("alias").toString(), QStringLiteral("12GB-MoE"));
 }
 
 void SystemProfilesTests::manager_duplicateMakesEditableCopy()
 {
     ProfileManager pm;
-    const QString dup = pm.duplicateLaunchProfile("sys-vram-12");
+    const QString dup = pm.duplicateLaunchProfile("sys-vram-12-moe");
     QVERIFY(!dup.isEmpty());
     QVERIFY(!pm.isSystemLaunch(dup));
     // La copia ES editable (rename/fav OK).
     QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", dup}, {"name", "mio"}}));
     // backing clonado: ids distintos a los del perfil de sistema.
-    const QVariantMap src = pm.getLaunchProfile("sys-vram-12");
+    const QVariantMap src = pm.getLaunchProfile("sys-vram-12-moe");
     const QVariantMap cp = pm.getLaunchProfile(dup);
     QVERIFY(cp.value("modelProfileId").toString() != src.value("modelProfileId").toString());
     QVERIFY(cp.value("runtimePresetId").toString() != src.value("runtimePresetId").toString());
@@ -115,13 +115,13 @@ void SystemProfilesTests::manager_duplicateMakesEditableCopy()
 void SystemProfilesTests::manager_modelIdIsDeterministic()
 {
     ProfileManager pm;
-    const QString mpId = pm.getLaunchProfile("sys-vram-12").value("modelProfileId").toString();
+    const QString mpId = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
     const QString modelId = pm.getModelProfile(mpId).value("modelId").toString();
     const QString modelsDir =
         QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
     const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
     const QString expect = QUuid::createUuidV5(
-        ns, QString(modelsDir + "/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf").toUtf8()).toString(QUuid::WithoutBraces);
+        ns, QString(modelsDir + "/Qwen3.5-4B/Qwen3.5-4B-Q4_K_M.gguf").toUtf8()).toString(QUuid::WithoutBraces);
     QCOMPARE(modelId, expect);
 }
 
@@ -150,7 +150,7 @@ void SystemProfilesTests::controller_recommendsClosestTier()
              QStringLiteral("sys-vram-24"));
     app.setHardwareSummaryForTest(10.0, 32.0, QStringLiteral("NVIDIA"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
-             QStringLiteral("sys-vram-8"));
+             QStringLiteral("sys-vram-8-gemma"));
     app.setHardwareSummaryForTest(5.0, 16.0, QStringLiteral("NVIDIA"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
              QStringLiteral("sys-vram-4"));
