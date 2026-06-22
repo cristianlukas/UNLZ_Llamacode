@@ -26,6 +26,7 @@ Rectangle {
         { key: "nav.tasks",     icon: "🗒",  serverOnly: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
+        { key: "nav.downloads", icon: "⬇",   serverOnly: false },
     ]
 
     ColumnLayout {
@@ -80,7 +81,7 @@ Rectangle {
         ItemDelegate {
             Layout.fillWidth: true
             height: 48
-            highlighted: root.currentIndex === 10
+            highlighted: root.currentIndex === 11
             background: Rectangle {
                 color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
                 Rectangle {
@@ -96,10 +97,10 @@ Rectangle {
                 Text {
                     text: (App.langV, App.l("nav.settings"))
                     font.pixelSize: 14
-                    color: root.currentIndex === 10 ? Theme.textPrimary : Theme.textSecondary
+                    color: root.currentIndex === 11 ? Theme.textPrimary : Theme.textSecondary
                 }
             }
-            onClicked: { root.currentIndex = 10; root.pageSelected(10) }
+            onClicked: { root.currentIndex = 11; root.pageSelected(11) }
         }
 
         Text {

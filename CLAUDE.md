@@ -46,6 +46,7 @@ Reglas:
 | MasterCli | `tests/test_master_cli.cpp` |
 | RawChatBackend (sesiones/persistencia) | `tests/test_backends_net.cpp` |
 | LogTriage (barrido de errores) | `tests/test_logtriage.cpp` |
+| DownloadHistoryStore (historial de descargas) | `tests/test_download_history.cpp` |
 
 ### Pendiente de cobertura
 Stub HTTP ya disponible: `SseStubServer` en `tests/test_backends_net.cpp` cubre

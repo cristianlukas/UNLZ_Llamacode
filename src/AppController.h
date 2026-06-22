@@ -7,6 +7,7 @@
 #include "core/tasks/TaskStore.h"
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/RunHistoryStore.h"
+#include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
@@ -149,6 +150,7 @@ class AppController : public QObject
     Q_PROPERTY(int modelDownloadProgress READ modelDownloadProgress NOTIFY modelDownloadChanged)
     Q_PROPERTY(QString modelDownloadStatus READ modelDownloadStatus NOTIFY modelDownloadChanged)
     Q_PROPERTY(QVariantList modelDownloadQueue READ modelDownloadQueue NOTIFY modelDownloadChanged)
+    Q_PROPERTY(QVariantList downloadHistory READ downloadHistory NOTIFY downloadHistoryChanged)
     // ── Modo Charla (voz-a-voz) ──
     Q_PROPERTY(QString voiceState READ voiceState NOTIFY voiceStateChanged)
     Q_PROPERTY(bool    voiceActive READ voiceActive NOTIFY voiceStateChanged)
@@ -285,6 +287,8 @@ public:
     int modelDownloadProgress() const { return m_modelDownloadProgress; }
     QString modelDownloadStatus() const { return m_modelDownloadStatus; }
     QVariantList modelDownloadQueue() const;
+    QVariantList downloadHistory() const { return m_downloadHistory.history(); }
+    Q_INVOKABLE void clearDownloadHistory() { m_downloadHistory.clear(); }
 
     Q_INVOKABLE void newChatSession();
     Q_INVOKABLE void newChatSessionInProject(const QString &projectId, const QString &projectName);
@@ -813,6 +817,9 @@ signals:
     void hardwareSummaryChanged();
     void modelRecommendationsChanged();
     void modelDownloadChanged();
+    void downloadHistoryChanged();
+    // Pedido a la UI de abrir la sección "Descargas" (p.ej. al instalar deps).
+    void navigateToDownloads();
     void tasksSchedulerChanged();
     void taskRunStateChanged();
     void taskRunAvailabilityChanged();
@@ -875,6 +882,7 @@ private:
     bool     m_pendingSwapFreshSession = false;  // limpiar sesión antes de mandar
     QHash<QString, QString> m_taskWorkLogs;
     RunHistoryStore  m_runHistory;
+    DownloadHistoryStore m_downloadHistory;
     // Inicio de la corrida actual (para registrar el historial al terminar).
     QString  m_runningTaskStartedAt;
     // Task programada esperando que el agente auto-iniciado quede listo.

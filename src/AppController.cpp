@@ -578,6 +578,9 @@ AppController::AppController(QObject *parent) : QObject(parent)
         task[QStringLiteral("automationStatus")] = QStringLiteral("ready");
         m_tasks.save(taskId, task);
     });
+    // El historial de descargas notifica a QML cuando cambia.
+    connect(&m_downloadHistory, &DownloadHistoryStore::changed,
+            this, &AppController::downloadHistoryChanged);
     // Reenviar progreso/fin de descarga de modelos STT a QML.
     connect(&m_voiceServers, &VoiceServerManager::installProgress,
             this, &AppController::voiceInstallProgress);
@@ -2079,6 +2082,16 @@ try {
         emit officialBinaryInstallStatusChanged();
         emit setupStateChanged();
         emit officialBinaryInstallFinished(ok, message, installedPath);
+        m_downloadHistory.append({
+            {QStringLiteral("kind"), QStringLiteral("binary")},
+            {QStringLiteral("name"), m_installSourceLabel == QLatin1String("beellama")
+                                         ? QStringLiteral("llama-server (MTP/beellama)")
+                                         : QStringLiteral("llama-server (oficial)")},
+            {QStringLiteral("repo"), m_installSourceRepo},
+            {QStringLiteral("path"), installedPath},
+            {QStringLiteral("state"), ok ? QStringLiteral("done") : QStringLiteral("error")},
+            {QStringLiteral("detail"), ok ? QStringLiteral("Binario instalado") : message},
+        });
     });
 
     m_installerProc->start("powershell", {"-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script});
@@ -6587,6 +6600,7 @@ static const TrEntry k_tr[] = {
     {"nav.research",  "Investigación",  "Research",     "研究",       "Recherche",      "Ricerca",        "Recherche"},
     {"nav.tasks",     "Automatizaciones","Tasks",        "任务",       "Tâches",         "Attività",       "Aufgaben"},
     {"nav.charla",    "Charla",         "Talk",         "对话",       "Parler",         "Parla",          "Sprechen"},
+    {"nav.downloads", "Descargas",      "Downloads",    "下载",       "Téléchargements","Download",       "Downloads"},
     {"nav.settings",  "Configuración", "Settings",     "设置",       "Paramètres",     "Impostazioni",   "Einstellungen"},
     // Launch page
     {"launch.title",       "Lanzar",          "Launch",          "启动",       "Lancer",          "Avvia",               "Starten"},
@@ -8223,6 +8237,7 @@ void AppController::acceptShowcase()
         emit activeLaunchIdChanged();
     }
     emit setupStateChanged();
+    emit navigateToDownloads();
 }
 
 void AppController::acceptShowcaseOne(const QString &launchId)
@@ -8254,6 +8269,7 @@ void AppController::acceptShowcaseOne(const QString &launchId)
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
     emit activeLaunchIdChanged();
     emit setupStateChanged();
+    emit navigateToDownloads();
 }
 
 void AppController::acceptSystemProfile(const QString &launchId)
@@ -8307,6 +8323,7 @@ void AppController::acceptSystemProfile(const QString &launchId)
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
     emit activeLaunchIdChanged();
     emit setupStateChanged();
+    emit navigateToDownloads();   // abrir la sección Descargas para ver el progreso
 }
 
 // Encola modelo + mmproj + draft de un perfil de sistema (cada uno a su subdir).
@@ -8738,6 +8755,18 @@ void AppController::finishModelDownloadItem(const QString &id, const QString &st
         item.progress = progress;
     if (removePart)
         QFile::remove(item.partPath);
+    // Registrar en el historial las descargas que terminan (ok o error).
+    if (state == QLatin1String("done") || state == QLatin1String("error")) {
+        m_downloadHistory.append({
+            {QStringLiteral("kind"), QStringLiteral("model")},
+            {QStringLiteral("name"), QFileInfo(item.fileName).fileName()},
+            {QStringLiteral("repo"), item.repo},
+            {QStringLiteral("path"), item.outPath},
+            {QStringLiteral("state"), state},
+            {QStringLiteral("detail"), status},
+            {QStringLiteral("sizeMb"), double(item.total) / 1024.0 / 1024.0},
+        });
+    }
     emitModelDownloadChanged();
     startNextModelDownload();
 }

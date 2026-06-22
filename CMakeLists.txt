@@ -79,6 +79,7 @@ set(CORE_SOURCES
     src/core/eval/EvalSuite.cpp
     src/core/ToolCallingSupport.cpp
     src/core/diag/LogTriage.cpp
+    src/core/downloads/DownloadHistoryStore.cpp
     src/core/tasks/TaskStore.cpp
     src/core/tasks/AutomationStore.cpp
     src/core/tasks/RunHistoryStore.cpp
@@ -133,6 +134,7 @@ set(HEADERS
     src/core/voice/VoiceServerManager.h
     src/core/eval/EvalSuite.h
     src/core/ToolCallingSupport.h
+    src/core/downloads/DownloadHistoryStore.h
     src/core/tasks/TaskStore.h
     src/core/tasks/AutomationStore.h
     src/core/tasks/RunHistoryStore.h
@@ -266,6 +268,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/BenchmarkPage.qml
         qml/pages/ResearchPage.qml
         qml/pages/CharlaPage.qml
+        qml/pages/DownloadsPage.qml
         qml/pages/SettingsPage.qml
 )
 
@@ -400,6 +403,7 @@ if (BUILD_TESTS)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_automation_store   tests/test_automation_store.cpp)
     add_lc_test(test_run_history        tests/test_run_history.cpp)
+    add_lc_test(test_download_history   tests/test_download_history.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
     add_lc_test(test_gateway            tests/test_gateway.cpp)

@@ -196,6 +196,8 @@ ApplicationWindow {
                     }
                     function onServerRunningChanged() { guard() }
                     function onAgentRunningChanged() { guard() }
+                    // Al instalar dependencias, abrir la sección Descargas (índice 10).
+                    function onNavigateToDownloads() { stack.currentIndex = 10 }
                 }
 
                 Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider }
@@ -216,6 +218,7 @@ ApplicationWindow {
                     TasksPage       {}
                     CharlaPage      {}
                     BenchmarkPage   {}
+                    DownloadsPage   {}
                     SettingsPage    {}
                 }
             }
