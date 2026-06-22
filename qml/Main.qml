@@ -391,14 +391,22 @@ ApplicationWindow {
                 return ""
             }
 
-            // ── Showcase 24GB: instalar MAX-Q (coding) + FAST-GEMMA (general) ──
+            // ── Perfil recomendado por hardware ─────────────────────────
+            // Card única y adaptativa: en placas de 24GB+ ofrece el showcase
+            // (MAX-Q coding + FAST-GEMMA general); en el resto, el tier de
+            // sistema ≤ VRAM (el más cercano por debajo). Sin showcase ni tier
+            // (no debería pasar) la card no se muestra.
             Rectangle {
+                id: recCard
                 Layout.fillWidth: true
                 Layout.preferredHeight: scCol.implicitHeight + 24
-                visible: showcase.length > 0 && !fastStartDismissed
+                visible: !fastStartDismissed
+                         && (showcase.length > 0 || (sysPick.launchId ?? "").length > 0)
                 radius: 8
                 color: Theme.surfaceBg
                 border.color: Theme.accent
+
+                readonly property bool isShowcase: showcase.length > 0
 
                 ColumnLayout {
                     id: scCol
@@ -406,12 +414,15 @@ ApplicationWindow {
                     anchors.margins: 12
                     spacing: 6
                     Text {
-                        text: "★ Perfiles recomendados para tu computadora (24GB)"
+                        text: recCard.isShowcase
+                              ? "★ Perfiles recomendados para tu computadora"
+                              : "★ Perfil recomendado para tu computadora"
                         color: Theme.textPrimary
                         font { pixelSize: 14; bold: true }
                     }
+                    // Showcase 24GB: lista de ambos perfiles.
                     Repeater {
-                        model: showcase
+                        model: recCard.isShowcase ? showcase : []
                         Text {
                             Layout.fillWidth: true
                             text: "• " + (modelData.displayName ?? "")
@@ -420,12 +431,23 @@ ApplicationWindow {
                             wrapMode: Text.WordWrap
                         }
                     }
+                    // Tier único recomendado (≤ VRAM).
+                    Text {
+                        Layout.fillWidth: true
+                        visible: !recCard.isShowcase
+                        text: (sysPick.displayName ?? "")
+                        color: Theme.textPrimary
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.topMargin: 4
                         spacing: 10
+                        // Showcase: instalar ambos / coding / general.
                         LcButton {
                             text: "Instalar ambos"
+                            visible: recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning
                             onClicked: App.acceptShowcase()
@@ -433,6 +455,7 @@ ApplicationWindow {
                         LcButton {
                             text: "Sólo Coding"
                             secondary: true
+                            visible: recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning && showcaseId("[coding]").length > 0
                             onClicked: App.acceptShowcaseOne(showcaseId("[coding]"))
@@ -440,9 +463,18 @@ ApplicationWindow {
                         LcButton {
                             text: "Sólo General"
                             secondary: true
+                            visible: recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning && showcaseId("[general]").length > 0
                             onClicked: App.acceptShowcaseOne(showcaseId("[general]"))
+                        }
+                        // Tier único: instalar y usar.
+                        LcButton {
+                            text: "Instalar y usar"
+                            visible: !recCard.isShowcase
+                            Layout.preferredHeight: 34
+                            enabled: !App.modelDownloadRunning
+                            onClicked: App.acceptSystemProfile(sysPick.launchId ?? "")
                         }
                         LcButton {
                             text: "No, gracias"
@@ -459,66 +491,6 @@ ApplicationWindow {
                             Layout.preferredWidth: 150; from: 0; to: 100
                             value: App.modelDownloadProgress
                         }
-                        Text {
-                            Layout.fillWidth: true
-                            text: App.modelDownloadStatus
-                            color: App.modelDownloadRunning ? Theme.accent : Theme.textMuted
-                            font.pixelSize: 11
-                            elide: Text.ElideMiddle
-                        }
-                    }
-                }
-            }
-
-            // Perfil único recomendado (placas que NO son de 24GB): el tier ≤ VRAM.
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: fastCol.implicitHeight + 24
-                visible: !fastStartDismissed && showcase.length === 0
-                         && (sysPick.launchId ?? "").length > 0
-                radius: 8
-                color: Theme.surfaceBg
-                border.color: Theme.accent
-
-                ColumnLayout {
-                    id: fastCol
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 6
-                    Text {
-                        text: "⚡ Perfil recomendado para tu computadora"
-                        color: Theme.textPrimary
-                        font { pixelSize: 14; bold: true }
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        text: (sysPick.displayName ?? "")
-                        color: Theme.textPrimary
-                        font.pixelSize: 13
-                        wrapMode: Text.WordWrap
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.topMargin: 4
-                        spacing: 10
-                        LcButton {
-                            text: "Instalar y usar"
-                            Layout.preferredHeight: 34
-                            enabled: !App.modelDownloadRunning
-                            onClicked: App.acceptSystemProfile(sysPick.launchId ?? "")
-                        }
-                        LcButton {
-                            text: "No, gracias"
-                            secondary: true
-                            Layout.preferredHeight: 34
-                            onClicked: fastStartDismissed = true
-                        }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        visible: App.modelDownloadRunning || App.modelDownloadStatus.length > 0
-                        spacing: 8
-                        ProgressBar { Layout.preferredWidth: 150; from: 0; to: 100; value: App.modelDownloadProgress }
                         Text {
                             Layout.fillWidth: true
                             text: App.modelDownloadStatus
