@@ -18,10 +18,11 @@ P = lambda f: "profiles/" + f
 
 # alias -> nuevos valores. ctx/ngl/batch van a runtime; ctx tambien a extraArgs (gana).
 FIXES = {
-    "vram-4-qwen4b":    dict(ctx=8192, ngl=24, batch=256),
-    "vram-4-qwen4b-q5": dict(ctx=8192, ngl=22, batch=256),
-    "vram-2-qwen2b":    dict(ctx=4096, ngl=18, batch=128),
-    "vram-0-cpu-35a3b": dict(drop_mtp=True),  # CPU: sin MTP (gguf no-MTP)
+    "vram-4-qwen4b":    dict(ctx=8192, ngl=18, batch=256),
+    "vram-4-qwen4b-q5": dict(ctx=8192, ngl=16, batch=256),
+    "vram-2-qwen2b":    dict(ctx=3072, ngl=8,  batch=64),
+    # CPU puro: sin MTP + ocultar GPU (CUDA_VISIBLE_DEVICES=-1) -> 0 VRAM real
+    "vram-0-cpu-35a3b": dict(drop_mtp=True, env={"CUDA_VISIBLE_DEVICES": "-1"}),
 }
 
 def set_extra_ctx(ea, ctx):
@@ -48,11 +49,13 @@ def main():
         if not f:
             continue
         ea = x["extraArgs"]
+        if f.get("env"):
+            x.setdefault("envOverrides", {}).update(f["env"])
         if f.get("drop_mtp"):
             drop_pair(ea, "--spec-type"); drop_pair(ea, "--spec-draft-n-max")
             m = mp.get(x["modelProfileId"])
             if m: m["specType"] = ""
-            changed.append((x["alias"], "sin MTP (fix crash CPU)"))
+            changed.append((x["alias"], "sin MTP + env %s" % (f.get("env") or "")))
             continue
         r = rt[x["runtimePresetId"]]
         r["ctx"] = f["ctx"]; r["gpuLayers"] = f["ngl"]
