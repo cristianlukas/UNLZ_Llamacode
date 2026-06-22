@@ -6,7 +6,7 @@
     "displayName": "Sistema · 24GB · Qwen3.6-27B Q4",
     "minVramGb": 24, "minRamGb": 16, "cpuOk": false,
     "folder": "Qwen3.6-27B",
-    "model": { "repo": "unsloth/Qwen3.6-27B-GGUF", "file": "Qwen3.6-27B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
+    "model": { "repo": "unsloth/Qwen3.6-27B-GGUF", "file": "Qwen3.6-27B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "unsloth/Qwen3.6-27B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
     "runtime": { "ctx": 262000, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
     "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","262000","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
     "mtp": { "enabled": false, "args": [] }
@@ -128,7 +128,7 @@
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false,
     "requiresMtpBinary": true,
     "folder": "Gemma-4-31B",
-    "model": { "repo": "unsloth/gemma-4-31B-it-GGUF", "file": "gemma-4-31B-it-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
+    "model": { "repo": "unsloth/gemma-4-31B-it-GGUF", "file": "gemma-4-31B-it-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "unsloth/gemma-4-31B-it-GGUF", "mmprojFile": "mmproj-F16.gguf" },
     "draftModel": { "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF", "file": "gemma4-31b-it-dflash-Q5_K_M.gguf", "folder": "Gemma-4-31B-DFlash" },
     "spec": { "type": "dflash", "draftNgl": "all" },
     "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q8_0", "flashAttn": true },
