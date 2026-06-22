@@ -9,14 +9,27 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QDir>
 #include <QStandardPaths>
 #include <QUuid>
 #include <QCoreApplication>
 #include "core/profiles/ProfileManager.h"
 #include "AppController.h"
 
-static const char *kBundle =
-    "C:/Users/cristian/Documents/LlamaCode/assets/system_profiles.json";
+// Bundle resuelto relativo al repo (ctest corre con WORKING_DIRECTORY = source dir).
+static QString bundlePath()
+{
+    const QStringList candidates = {
+        QDir::current().absoluteFilePath(QStringLiteral("assets/system_profiles.json")),
+        QDir::current().absoluteFilePath(QStringLiteral("../assets/system_profiles.json")),
+        QDir(QCoreApplication::applicationDirPath())
+            .absoluteFilePath(QStringLiteral("../../assets/system_profiles.json")),
+    };
+    for (const QString &c : candidates)
+        if (QFile::exists(c))
+            return c;
+    return candidates.first();
+}
 
 class SystemProfilesTests : public QObject
 {
@@ -46,8 +59,9 @@ void SystemProfilesTests::initTestCase()
     QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
     QVERIFY(m_dir.isValid());
     qputenv("LLAMACODE_PROFILES_DIR", m_dir.path().toLocal8Bit());
-    QVERIFY2(QFile::exists(QString::fromLatin1(kBundle)), "falta assets/system_profiles.json");
-    qputenv("LLAMACODE_SYSTEM_PROFILES", QByteArray(kBundle));
+    const QString bundle = bundlePath();
+    QVERIFY2(QFile::exists(bundle), "falta assets/system_profiles.json");
+    qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
 }
 
 void SystemProfilesTests::manager_loadsSystemProfiles()
