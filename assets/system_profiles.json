@@ -150,7 +150,7 @@
       "enabled": false,
       "args": []
     },
-    "binaryKind": "official"
+    "binaryKind": "gemma4"
   },
   {
     "id": "sys-vram-16",

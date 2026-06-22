@@ -314,14 +314,14 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
     }
 
     if (!mp.mmprojId.isEmpty()) {
-        if (!mmproj.isAvailable)
+        if (!mmproj.isAvailable || mmproj.absolutePath.isEmpty())
             warnings.append("mmproj model unavailable, vision disabled.");
         else
             addFlag(bin, "--mmproj", mmproj.absolutePath, args, warnings);
     }
 
     if (!mp.draftModelId.isEmpty()) {
-        if (!draft.isAvailable) {
+        if (!draft.isAvailable || draft.absolutePath.isEmpty()) {
             warnings.append("Draft model unavailable, speculative decoding disabled.");
         } else {
             // beellama (MTP/DFlash con draft separado) usa --spec-draft-model;

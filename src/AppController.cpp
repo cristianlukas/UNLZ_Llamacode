@@ -8135,8 +8135,7 @@ QString AppController::systemProfileBinaryKind(const QString &launchId) const
 
 QString AppController::resolveSystemBinaryId(const QString &kind) const
 {
-    const bool wantBee = (kind == QLatin1String("beellama"));
-    QString firstId, beeId, officialId;
+    QString firstId, beeId, officialId, gemmaId;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
@@ -8147,8 +8146,12 @@ QString AppController::resolveSystemBinaryId(const QString &kind) const
         const bool isBee = tag.contains("beellama") || tag.contains("mtp");
         if (isBee) { if (beeId.isEmpty()) beeId = bid; }
         else       { if (officialId.isEmpty()) officialId = bid; }       // official / gemma / etc
+        if (gemmaId.isEmpty() && tag.contains("gemma")) gemmaId = bid;
     }
-    if (wantBee) return !beeId.isEmpty() ? beeId : firstId;
+    if (kind == QLatin1String("beellama"))
+        return !beeId.isEmpty() ? beeId : firstId;
+    if (kind == QLatin1String("gemma4"))                                  // gemma4-assistant
+        return !gemmaId.isEmpty() ? gemmaId : (!officialId.isEmpty() ? officialId : firstId);
     // "official": gemma4-assistant y demás NO corren en beellama → preferir no-bee.
     return !officialId.isEmpty() ? officialId : firstId;
 }
