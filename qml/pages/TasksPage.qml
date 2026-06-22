@@ -524,7 +524,11 @@ Item {
                             }
 
                             LcButton {
-                                text: "▶ Ejecutar"
+                                text: App.runningTaskId === linkedProcessId
+                                      ? "Ejecutando..."
+                                      : (!App.canRunTask && (App.agentStarting || (App.serverRunning && !App.serverReady))
+                                         ? "Cargando..."
+                                         : "▶ Ejecutar")
                                 enabled: App.canRunTask
                                 onClicked: App.runAutomation(autoId)
                             }
@@ -611,8 +615,8 @@ Item {
         onOpened: {
             teachError.text = ""
             teachNote.text = ""
-            teachTaskCombo.currentIndex = root.teachTaskId.length > 0
-                ? teachTaskCombo.indexOfValue(root.teachTaskId) : 0
+            teachName.text = ""
+            teachObjective.text = ""
             refreshTargets()
         }
         function refreshTargets() {
@@ -633,24 +637,56 @@ Item {
             }
             Text {
                 Layout.fillWidth: true
-                text: "Elegí la modalidad (escritorio foreground o navegador background), mostrá la tarea y agregá notas. Se guarda como un proceso con receta semántica adaptable."
+                text: "Elegí la modalidad, mostrá la tarea paso a paso y al finalizar se guarda como un proceso con receta semántica adaptable."
                 wrapMode: Text.Wrap
                 color: Theme.textMuted
                 font.pixelSize: 11
             }
-            Text { text: "Proceso"; color: Theme.textSecondary; font.pixelSize: 12 }
-            LcComboBox {
-                id: teachTaskCombo
-                Layout.fillWidth: true
-                model: App.taskStore
-                textRole: "name"
-                valueRole: "id"
+
+            // Reentrenar un proceso existente (botón "Teach" de la card) vs crear
+            // uno nuevo (botón "Enseñar tarea" del header). Enseñar = crear proceso,
+            // por eso en el caso nuevo NO se pide elegir un proceso: se pide nombre
+            // + objetivo y se crea al Iniciar.
+            property bool isNewProcess: root.teachTaskId.length === 0
+
+            // Reentrenamiento: el proceso ya existe, solo se muestra cuál.
+            Text {
+                visible: !teachPopup.isNewProcess
+                text: "Reentrenando: " + root.processName(root.teachTaskId)
+                color: Theme.textSecondary; font.pixelSize: 12
             }
+
+            // Nuevo proceso: nombre + objetivo.
+            Text { visible: teachPopup.isNewProcess; text: "Nombre del proceso"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                id: teachName
+                visible: teachPopup.isNewProcess
+                Layout.fillWidth: true
+                placeholderText: "Ej: Extraer cotización del dólar"
+            }
+            Text { visible: teachPopup.isNewProcess; text: "Objetivo de la tarea"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                id: teachObjective
+                visible: teachPopup.isNewProcess
+                Layout.fillWidth: true
+                placeholderText: "Qué tiene que lograr el agente al ejecutar este proceso"
+            }
+
             Text { text: "Modalidad"; color: Theme.textSecondary; font.pixelSize: 12 }
             LcComboBox {
                 id: teachMode
                 Layout.fillWidth: true
                 model: ["Escritorio foreground", "Navegador background"]
+            }
+            // Explicación de cada modalidad.
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                color: Theme.textMuted
+                font.pixelSize: 11
+                text: teachMode.currentIndex === 0
+                    ? "Escritorio foreground: el agente controla tu pantalla real (mouse y teclado). Ocupa la PC mientras corre — no la uses en paralelo. Sirve para apps de escritorio o flujos que no son solo web."
+                    : "Navegador background: corre en un navegador headless por detrás, sin tomar tu pantalla. Podés seguir usando la PC mientras se ejecuta. Sirve para tareas 100% web (abrir una URL, extraer datos, completar formularios)."
             }
             RowLayout {
                 Layout.fillWidth: true
@@ -725,13 +761,34 @@ Item {
                 LcButton {
                     text: "Iniciar"
                     visible: App.teachState !== "recording" && App.teachState !== "paused"
-                    enabled: teachTaskCombo.currentValue && (teachMode.currentIndex === 1 || targetCombo.currentIndex >= 0)
+                    enabled: (teachPopup.isNewProcess
+                                ? teachObjective.text.trim().length > 0
+                                : root.teachTaskId.length > 0)
+                             && (teachMode.currentIndex === 1 || targetCombo.currentIndex >= 0)
                     onClicked: {
+                        // Enseñar = crear el proceso. Si es nuevo, se guarda ahora con
+                        // nombre + objetivo + modalidad y se usa su id para grabar.
+                        let pid = root.teachTaskId
+                        if (teachPopup.isNewProcess) {
+                            pid = App.taskStore.save("", {
+                                "name": teachName.text.trim().length > 0
+                                    ? teachName.text.trim()
+                                    : (teachObjective.text.trim().substring(0, 60) || "Tarea enseñada"),
+                                "description": teachObjective.text.trim(),
+                                "prePrompt": teachObjective.text.trim(),
+                                "executionMode": teachMode.currentIndex === 0 ? "desktop" : "browserBackground"
+                            })
+                            if (!pid || pid.length === 0) {
+                                teachError.text = "No se pudo crear el proceso."
+                                return
+                            }
+                            root.teachTaskId = pid
+                        }
                         const err = teachMode.currentIndex === 0
-                            ? App.startDesktopTeach(teachTaskCombo.currentValue,
+                            ? App.startDesktopTeach(pid,
                                 scopeKind.currentIndex === 0 ? "screen" : "window",
                                 targetCombo.currentValue)
-                            : App.startBrowserTeach(teachTaskCombo.currentValue, teachUrl.text)
+                            : App.startBrowserTeach(pid, teachUrl.text)
                         teachError.text = err
                     }
                 }

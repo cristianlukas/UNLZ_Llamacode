@@ -22,6 +22,7 @@ private slots:
     void parsesTextToolCallFallback();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void restartRepublishesPersistedMessages();
+    void taskSessionIsEphemeralAndRestoresPrevious();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
 };
@@ -314,6 +315,67 @@ void AgentWireTests::restartRepublishesPersistedMessages()
     QVERIFY(sessionsSpy.count() >= 1);
     QCOMPARE(backend.messages().first().toMap().value(QStringLiteral("content")).toString(),
              QStringLiteral("mensaje persistido"));
+
+    backend.stop();
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::taskSessionIsEphemeralAndRestoresPrevious()
+{
+    // Regresión: correr una Task/Automatización NO debe dejar su sesión en el
+    // panel "Agente". La sesión de la Task es efímera (no listada, no persistida)
+    // y al terminar se restaura la sesión del usuario.
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QVERIFY(QDir().mkpath(store));
+
+    const QString sessionId = QStringLiteral("user-session");
+    QFile indexFile(store + QStringLiteral("/index.json"));
+    QVERIFY(indexFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    indexFile.write(QJsonDocument(QJsonArray{QJsonObject{
+        {QStringLiteral("id"), sessionId},
+        {QStringLiteral("title"), QStringLiteral("Del usuario")},
+        {QStringLiteral("created"), 1.0}
+    }}).toJson());
+    indexFile.close();
+
+    QFile sessionFile(store + QStringLiteral("/") + sessionId + QStringLiteral(".json"));
+    QVERIFY(sessionFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    sessionFile.write(QJsonDocument(QJsonObject{
+        {QStringLiteral("id"), sessionId},
+        {QStringLiteral("title"), QStringLiteral("Del usuario")},
+        {QStringLiteral("messages"), QJsonArray{QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("assistant")},
+            {QStringLiteral("content"), QStringLiteral("mensaje del usuario")}
+        }}},
+        {QStringLiteral("api"), QJsonArray{}}
+    }).toJson());
+    sessionFile.close();
+
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:1");
+    ctx.modelId = QStringLiteral("test-model");
+
+    LlamaAgentBackend backend;
+    backend.start(ctx);
+    const int listedBefore = backend.sessions().size();
+    QCOMPARE(listedBefore, 1);
+
+    // Arranca la sesión efímera de la Task: no debe sumarse al panel.
+    backend.newTaskSession();
+    QCOMPARE(backend.sessions().size(), listedBefore);
+
+    // Termina la Task: se restaura la sesión del usuario con sus mensajes.
+    backend.endTaskSession();
+    QCOMPARE(backend.sessions().size(), listedBefore);
+    QVERIFY(!backend.messages().isEmpty());
+    QCOMPARE(backend.messages().first().toMap().value(QStringLiteral("content")).toString(),
+             QStringLiteral("mensaje del usuario"));
 
     backend.stop();
     QDir(store).removeRecursively();

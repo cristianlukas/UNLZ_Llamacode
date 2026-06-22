@@ -22,7 +22,8 @@ Item {
     property bool mtpEnabled: false
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool smokeTestRunning: false
-    property string harnessAdapter: "none"
+    // Política: siempre LlamaAgent. Sin selector de harness; sin "none"/"opencode".
+    property string harnessAdapter: "llamaagent"
     property string harnessProfileId: ""
 
     // ── Maestro (supervisor): cadena de fallbacks ─────────────────
@@ -265,12 +266,8 @@ Item {
         modelProfileId = lp.modelProfileId ?? ""
         runtimeId = lp.runtimePresetId ?? ""
         harnessProfileId = lp.harnessProfileId ?? ""
-        if (harnessProfileId.length > 0) {
-            const hp = App.profileManager.getHarness(harnessProfileId)
-            harnessAdapter = hp.adapter ?? "none"
-        } else {
-            harnessAdapter = "none"
-        }
+        // Siempre LlamaAgent: perfiles viejos con "none"/"opencode" se normalizan.
+        harnessAdapter = "llamaagent"
         const rawExtra = (lp.extraArgs ?? [])
         manualExtraArgsArea.text = formatArgsForDisplay(extractManualArgs(rawExtra))
 
@@ -580,12 +577,17 @@ Item {
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
                     radius: 8
-                    implicitHeight: topRow.implicitHeight + 20
+                    implicitHeight: topCol.implicitHeight + 20
 
-                    RowLayout {
-                        id: topRow
+                    ColumnLayout {
+                        id: topCol
                         anchors.fill: parent
                         anchors.margins: 10
+                        spacing: 10
+
+                        RowLayout {
+                        id: topRow
+                        Layout.fillWidth: true
                         spacing: 10
 
                         Text { text: (App.langV, App.l("launch.profile")); color: Theme.textSecondary; font.pixelSize: 13 }
@@ -634,6 +636,11 @@ Item {
                             onEditingFinished: if (selectedLaunchId.length > 0 && !selectedIsSystem)
                                 App.profileManager.setLaunchAlias(selectedLaunchId, text.trim())
                         }
+                        }
+
+                        Flow {
+                        Layout.fillWidth: true
+                        spacing: 8
                         LcButton {
                             text: {
                                 const _lang = App.langV
@@ -688,6 +695,7 @@ Item {
                             danger: true
                             enabled: selectedLaunchId.length > 0 && !selectedIsSystem
                             onClicked: deleteDialog.open()
+                        }
                         }
                     }
                 }
@@ -1152,7 +1160,11 @@ Item {
                     CheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                 }
 
-                // ── Harness ──────────────────────────────────────────────────
+                // ── Agente ───────────────────────────────────────────────────
+                // Política: todo perfil usa el agente nativo LlamaAgent. No hay
+                // selector de harness (se quitaron "Ninguno" y "Opencode"). Si el
+                // usuario no quiere agente, usa el modo Chat. LlamaAgent es backend
+                // interno (sin binario), así que siempre está disponible.
                 Rectangle {
                     Layout.fillWidth: true
                     color: Theme.surfaceBg
@@ -1160,130 +1172,36 @@ Item {
                     radius: 8
                     implicitHeight: harnessCol.implicitHeight + 20
 
-                    ColumnLayout {
+                    RowLayout {
                         id: harnessCol
                         anchors { fill: parent; margins: 12 }
                         spacing: 10
 
-                        Text {
-                            text: (App.langV, App.l("harness.title"))
-                            color: Theme.textSecondary
-                            font.pixelSize: 12
-                        }
-
-                        // Selección por tarjetas (sin dropdown).
-
-                        RowLayout {
+                        Text { text: "🛠"; font.pixelSize: 18 }
+                        ColumnLayout {
+                            spacing: 2
                             Layout.fillWidth: true
-                            spacing: 8
-
-                            Repeater {
-                                model: [
-                                    { adapter: "none",      label: (App.langV, App.l("harness.none")),  icon: "—" },
-                                    { adapter: "opencode",  label: "Opencode",   icon: "🔮" },
-                                    { adapter: "llamaagent", label: "LlamaAgent", icon: "🛠" },
-                                    // Ocultos por ahora — reactivar agregando al modelo:
-                                    // { adapter: "raw",       label: "Raw Chat",   icon: "💬" },
-                                    // { adapter: "smallcode", label: "Smallcode",  icon: "🧩" },
-                                    // { adapter: "pi",        label: "Pi",         icon: "🥧" },
-                                ]
-
-                                delegate: Rectangle {
-                                    Layout.fillWidth: true
-                                    height: modelData.adapter === "none" ? 52 : 82
-                                    radius: 8
-                                    color: harnessAdapter === modelData.adapter ? Theme.highlight : Theme.inputBg
-                                    border.color: harnessAdapter === modelData.adapter ? Theme.accent : Theme.borderColor
-                                    border.width: harnessAdapter === modelData.adapter ? 2 : 1
-                                    clip: true
-
-                                    // install status for non-none options
-                                    readonly property bool isInstalled: modelData.adapter === "none"
-                                        ? true
-                                        : (App.harnessCheckV, App.isHarnessInstalled(modelData.adapter))
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: harnessAdapter = modelData.adapter
-                                    }
-
-                                    ColumnLayout {
-                                        anchors { fill: parent; margins: 8 }
-                                        spacing: 4
-
-                                        Row {
-                                            spacing: 6
-                                            Layout.fillWidth: true
-                                            Text { text: modelData.icon; font.pixelSize: 16 }
-                                            Text {
-                                                text: modelData.label
-                                                color: Theme.textPrimary
-                                                font { pixelSize: 13; bold: true }
-                                                anchors.verticalCenter: parent.verticalCenter
-                                            }
-                                        }
-
-                                        // install status row (non-none only)
-                                        RowLayout {
-                                            visible: modelData.adapter !== "none"
-                                            Layout.fillWidth: true
-                                            spacing: 6
-
-                                            Rectangle {
-                                                width: 7; height: 7; radius: 4
-                                                color: parent.visible
-                                                    ? (isInstalled ? Theme.successText : Theme.errorText)
-                                                    : "transparent"
-                                            }
-                                            Text {
-                                                text: {
-                                                    const _lang = App.langV
-                                                    if (!parent.visible) return ""
-                                                    return isInstalled
-                                                        ? App.l("harness.installed")
-                                                        : App.l("harness.notInstalled")
-                                                }
-                                                color: isInstalled ? Theme.successText : Theme.textMuted
-                                                font.pixelSize: 11
-                                                Layout.fillWidth: true
-                                            }
-
-                                            LcButton {
-                                                visible: modelData.adapter !== "none" && !isInstalled
-                                                text: {
-                                                    const _lang = App.langV
-                                                    return App.installingHarness
-                                                        ? App.l("harness.installing")
-                                                        : App.l("harness.install")
-                                                }
-                                                enabled: !App.installingHarness
-                                                onClicked: App.installHarness(modelData.adapter)
-                                                implicitHeight: 26
-                                            }
-                                        }
-                                    }
-                                }
+                            Text {
+                                text: "Agente: LlamaAgent"
+                                color: Theme.textPrimary
+                                font { pixelSize: 13; bold: true }
+                            }
+                            Text {
+                                text: "Agente nativo, siempre activo. Para usar sin agente, abrí el modo Chat."
+                                color: Theme.textMuted
+                                font.pixelSize: 11
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
                             }
                         }
-
-                        // install status message
-                        Text {
-                            visible: App.harnessInstallStatus.length > 0
-                            text: App.harnessInstallStatus
-                            color: Theme.textMuted
-                            font.pixelSize: 11
-                            Layout.fillWidth: true
-                            wrapMode: Text.WrapAnywhere
-                        }
-
-                        Connections {
-                            target: App
-                            function onHarnessInstallFinished(success, adapter, message) {
-                                if (success && harnessAdapter === adapter) {
-                                    // auto-save on successful install
-                                    saveAll()
-                                }
+                        Row {
+                            spacing: 6
+                            Rectangle { width: 7; height: 7; radius: 4; color: Theme.successText; anchors.verticalCenter: parent.verticalCenter }
+                            Text {
+                                text: (App.langV, App.l("harness.installed"))
+                                color: Theme.successText
+                                font.pixelSize: 11
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                         }
                     }

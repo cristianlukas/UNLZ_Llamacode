@@ -91,6 +91,8 @@ private slots:
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
     void loopTaskStopsAtMaxIterations();
+    void earlyFailureRecordedInHistory();
+    void harnessAdapterNormalizesToLlamaAgent();
 
 private:
     QTemporaryDir m_tmp;
@@ -557,6 +559,38 @@ void AppControllerTests::loopTaskStopsAtMaxIterations()
 
     QVERIFY(!fin.isEmpty());
     QCOMPARE(fake->bodyRuns(), 3);   // exactamente maxIter corridas del cuerpo
+}
+
+void AppControllerTests::earlyFailureRecordedInHistory()
+{
+    AppController app;
+    // Sin agente: canRunTask() es false → runTask falla en el gating ANTES de
+    // arrancar el cuerpo. Antes esto no dejaba rastro; ahora debe quedar una
+    // corrida con estado error en el historial del Proceso.
+    const QString id = makeLoopTask(app, QStringLiteral("Falla temprana"), 3);
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+
+    app.runTask(id);
+
+    QVERIFY(!fin.isEmpty());
+    QCOMPARE(fin.takeFirst().at(2).toString(), QStringLiteral("error"));
+
+    const QVariantList hist = app.runHistory(id);
+    QCOMPARE(hist.size(), 1);
+    QCOMPARE(hist.first().toMap().value(QStringLiteral("status")).toString(),
+             QStringLiteral("error"));
+}
+
+void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
+{
+    // Política: todo perfil usa LlamaAgent. "none"/vacío/"opencode" → "llamaagent".
+    QCOMPARE(AppController::normalizeHarnessAdapter(QString()), QStringLiteral("llamaagent"));
+    QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("  ")), QStringLiteral("llamaagent"));
+    QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("none")), QStringLiteral("llamaagent"));
+    QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("opencode")), QStringLiteral("llamaagent"));
+    // Respeta llamaagent y raw (modo Chat).
+    QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("llamaagent")), QStringLiteral("llamaagent"));
+    QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("raw")), QStringLiteral("raw"));
 }
 
 QTEST_MAIN(AppControllerTests)

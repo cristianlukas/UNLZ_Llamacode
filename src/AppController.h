@@ -378,6 +378,9 @@ public:
     Q_INVOKABLE QString setStartWithWindowsEnabled(bool enabled);
     static QString windowsStartupCommand(const QString &executablePath);
     static bool shouldStartHidden(bool startedWithWindows, bool minimizeToTray);
+    // Normaliza el adapter de harness: "none"/""/"opencode" → "llamaagent" (todo
+    // perfil usa el agente nativo). "raw" (Chat) se respeta.
+    static QString normalizeHarnessAdapter(const QString &adapter);
     Q_INVOKABLE QString exportUserData();
     Q_INVOKABLE QString importUserData();
     // Variantes headless: ruta explícita, sin diálogo.
@@ -901,6 +904,12 @@ private:
     // Maneja el fin de turno del agente (marca lastRun, apaga si fue auto-iniciado).
     void onAgentTurnFinished();
     void finishRunningTask(const QString &status, const QString &summary);
+    // Registra en el historial una corrida que falló ANTES de arrancar el cuerpo
+    // (gating/validación). finishRunningTask sólo graba lo que llegó a correr, así
+    // que sin esto los errores tempranos no aparecían en Historial. Marca estado
+    // de error en el Proceso (y la Programación si vino de una) y appendea el
+    // registro a ambos owners.
+    void recordEarlyFailure(const QString &processId, const QString &summary);
     // Una vez al arranque: por cada Proceso con scheduleEnabled (modelo viejo
     // pre-split) crea una Automatización enlazada si aún no existe ninguna.
     void migrateLegacySchedulesToAutomations();

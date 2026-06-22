@@ -2399,6 +2399,17 @@ QVariantList AppController::buildMasterChain(const MasterConfig &mc)
 
 static QJsonArray readSystemProfilesBundle();   // def más abajo (mismo TU)
 
+QString AppController::normalizeHarnessAdapter(const QString &adapter)
+{
+    // Política: todo perfil usa el agente nativo LlamaAgent. Perfiles viejos sin
+    // harness ("none"/vacío) o con Opencode (descontinuado) se normalizan a
+    // llamaagent. "raw" (modo Chat) se respeta. Sin agente = el usuario va a Chat.
+    const QString a = adapter.trimmed();
+    if (a.isEmpty() || a == QLatin1String("none") || a == QLatin1String("opencode"))
+        return QStringLiteral("llamaagent");
+    return a;
+}
+
 EffectiveProfileBuilder::Context AppController::buildContext(const QString &launchProfileId)
 {
     EffectiveProfileBuilder::Context ctx;
@@ -2407,6 +2418,11 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.model = m_profiles.resolveModelProfile(ctx.launch.modelProfileId);
     ctx.runtime = m_profiles.resolveRuntime(ctx.launch.runtimePresetId);
     ctx.harness = m_profiles.resolveHarness(ctx.launch.harnessProfileId);
+    // Política: todo perfil usa el agente nativo LlamaAgent. Si el perfil no tiene
+    // harness (perfiles viejos con "none") o tenía Opencode (descontinuado), se
+    // fuerza a llamaagent. Sin agente = el usuario va a modo Chat, no a un perfil
+    // sin harness. Cubre perfiles existentes sin necesidad de re-guardarlos.
+    ctx.harness.adapter = normalizeHarnessAdapter(ctx.harness.adapter);
     ctx.workspace = m_profiles.resolveWorkspace(ctx.launch.workspaceProfileId);
     // Perfil de sistema: backend sin binaryId fijo → resolver el mejor instalado
     // (MTP si hay NVIDIA, si no official). Así el mismo perfil bundled corre en
@@ -3801,6 +3817,7 @@ void AppController::runTask(const QString &id)
 
     if (!canRunTask()) {
         const QString msg = QStringLiteral("Esperá a que el servidor/agente termine de cargar o finalice el turno actual antes de ejecutar una Task.");
+        recordEarlyFailure(id, msg);
         emit serverError(msg);
         emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(), QStringLiteral("error"),
                              msg, task.value(QStringLiteral("silentUnlessError"), false).toBool());
@@ -3809,6 +3826,7 @@ void AppController::runTask(const QString &id)
 
     const QString validation = AutomationRunner::validateTask(task, m_serverHasVision);
     if (!validation.isEmpty()) {
+        recordEarlyFailure(id, validation);
         emit serverError(validation);
         emit taskRunFinished(id, task.value(QStringLiteral("name")).toString(),
                              QStringLiteral("error"), validation,
@@ -4226,6 +4244,10 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         m_runningAutomationId.clear();
     }
     clearTaskAgentPermissions();   // restaura confinamiento y aprobación normales
+    // Cierra la sesión efímera de la Task y restaura la sesión del usuario, así el
+    // panel "Agente" no muestra la corrida de la Automatización como sesión propia.
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->endTaskSession();
     m_runningTaskId.clear();
     m_runningTaskName.clear();
     m_runningTaskStartedAt.clear();
@@ -4247,6 +4269,32 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         stopAgent();
         stopServer();
     }
+}
+
+void AppController::recordEarlyFailure(const QString &processId, const QString &summary)
+{
+    const QString now = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    QVariantMap rec{
+        { QStringLiteral("startedAt"),  now },
+        { QStringLiteral("finishedAt"), now },
+        { QStringLiteral("status"),     QStringLiteral("error") },
+        { QStringLiteral("summary"),    summary },
+        { QStringLiteral("log"),        summary },
+        { QStringLiteral("source"),     m_runningAutomationId.isEmpty()
+                                            ? QStringLiteral("manual")
+                                            : QStringLiteral("programacion") },
+        { QStringLiteral("automationId"), m_runningAutomationId },
+    };
+    if (!processId.isEmpty()) {
+        m_tasks.markRun(processId, QStringLiteral("error"), summary);
+        m_runHistory.append(processId, rec);
+    }
+    if (!m_runningAutomationId.isEmpty()) {
+        m_automations.markRun(m_runningAutomationId, QStringLiteral("error"), summary);
+        m_runHistory.append(m_runningAutomationId, rec);
+        m_runningAutomationId.clear();
+    }
+    emit taskRunStateChanged();
 }
 
 QVariantList AppController::runHistory(const QString &ownerId) const

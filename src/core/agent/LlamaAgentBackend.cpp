@@ -765,7 +765,10 @@ void LlamaAgentBackend::ensureSession()
     s.created = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
     s.projectDir = m_cwd;
     s.projectName = QFileInfo(m_cwd).fileName();
-    m_sessions.prepend(s.toMap());
+    // Las sesiones efímeras (Tasks/Automatizaciones, sub-agentes) NO se listan ni
+    // persisten: corren aisladas y no deben aparecer en el panel de Sesiones.
+    if (!m_ephemeralSessions)
+        m_sessions.prepend(s.toMap());
 
     m_apiMessages = QJsonArray{ QJsonObject{
         {QStringLiteral("role"), QStringLiteral("system")},
@@ -3349,12 +3352,41 @@ void LlamaAgentBackend::newSession()
 
 void LlamaAgentBackend::newTaskSession()
 {
+    // La Task/Automatización corre en una sesión EFÍMERA y aislada: no se lista
+    // en el panel de Sesiones ni se persiste. Se guarda la sesión real del
+    // usuario y se recuerda para restaurarla al terminar (endTaskSession), así
+    // volver a "Agente" no muestra la corrida de la Task como sesión propia.
     saveCurrentSession();
+    m_preTaskSessionId = m_sessionId;
+    m_preTaskEphemeral = m_ephemeralSessions;
+    m_ephemeralSessions = true;
     m_sessionId.clear();
     m_messages.clear();
     m_apiMessages = {};
     m_curAsstIdx = -1;
     ensureSession();
+}
+
+void LlamaAgentBackend::endTaskSession()
+{
+    // Descarta la sesión efímera de la Task y restaura la sesión del usuario
+    // previa. No persiste ni consolida la sesión de la Task (m_sessionId vacío
+    // antes de setCurrentSession → saveCurrentSession es no-op).
+    m_ephemeralSessions = m_preTaskEphemeral;
+    const QString prev = m_preTaskSessionId;
+    m_preTaskSessionId.clear();
+    m_sessionId.clear();
+    m_messages.clear();
+    m_apiMessages = {};
+    m_curAsstIdx = -1;
+    m_readFingerprints.clear();
+    m_checkpoints.clear();
+    if (!prev.isEmpty())
+        setCurrentSession(prev);
+    else
+        ensureSession();
+    emit sessionsChanged();
+    emit messagesChanged();
 }
 
 void LlamaAgentBackend::newSessionInProject(const QString &projectDir)

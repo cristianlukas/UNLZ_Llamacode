@@ -358,19 +358,22 @@ Item {
     }
 
     function resolveHarness(launchId) {
+        // Política: todo perfil usa el agente nativo LlamaAgent. Perfiles viejos sin
+        // harness ("none") o con Opencode se normalizan a llamaagent (espeja
+        // AppController::normalizeHarnessAdapter para que la UI no quede grisada).
         if (!launchId || launchId.length === 0) {
-            resolvedAdapter = "none"; resolvedAdapterLabel = ""; return
+            resolvedAdapter = "llamaagent"; resolvedAdapterLabel = "LlamaAgent"; return
         }
         const lp = App.profileManager.getLaunchProfile(launchId)
         const harnessId = lp.harnessProfileId ?? ""
-        if (harnessId.length > 0) {
-            const hp = App.profileManager.getHarness(harnessId)
-            resolvedAdapter = hp.adapter ?? "none"
-            // Mostrar el nombre visible del harness (ej. "LlamaAgent"), no el id interno.
-            resolvedAdapterLabel = (hp.name && hp.name.length > 0) ? hp.name : (hp.adapter ?? "")
-        } else {
-            resolvedAdapter = "none"; resolvedAdapterLabel = ""
-        }
+        let a = ""
+        if (harnessId.length > 0)
+            a = App.profileManager.getHarness(harnessId).adapter ?? ""
+        a = (a || "").trim()
+        if (a === "" || a === "none" || a === "opencode")
+            a = "llamaagent"
+        resolvedAdapter = a
+        resolvedAdapterLabel = a === "llamaagent" ? "LlamaAgent" : a
     }
 
     function estimateTokens(text) {

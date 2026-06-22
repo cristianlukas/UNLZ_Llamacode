@@ -47,6 +47,8 @@ public:
 
     void newSession() override;
     void newTaskSession();
+    // Cierra la sesión efímera de la Task y restaura la sesión previa del usuario.
+    void endTaskSession();
     void newSessionInProject(const QString &projectDir) override;
     void switchSession(const QString &sessionId) override;
     void renameSession(const QString &sessionId, const QString &title) override;
@@ -302,6 +304,9 @@ private:
     QString m_sessionTitle;
     QVariantList m_sessions;
     bool m_ephemeralSessions = false;
+    // Estado para restaurar la sesión del usuario tras una Task efímera.
+    QString m_preTaskSessionId;
+    bool m_preTaskEphemeral = false;
     QVariantList m_messages;        // para UI: {role, content, typing}
     int m_curAsstIdx = -1;
 
