@@ -36,7 +36,8 @@ Item {
     function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
     function startOrPromptModelDownload() {
         const engineId = page.cfg.sttManagedEngine || ""
-        if (engineId.length > 0 && !App.voiceModelInstalled(engineId)) {
+        if (engineId.length > 0
+                && (!App.voiceModelInstalled(engineId) || !App.voiceWhisperServerAvailable())) {
             missingSttModelDialog.engineId = engineId
             missingSttModelDialog.open()
             return
@@ -493,7 +494,7 @@ Item {
         contentItem: Text {
             width: missingSttModelDialog.availableWidth
             height: missingSttModelDialog.availableHeight
-            text: "El modelo STT necesario para reconocer tu voz no está instalado.\n\n¿Desea descargar el binario ahora?"
+            text: "Faltan componentes locales para reconocer tu voz.\n\n¿Desea descargar y configurar automáticamente el modelo STT y whisper-server?"
             color: Theme.textPrimary
             font.pixelSize: 14
             wrapMode: Text.WordWrap
@@ -519,7 +520,7 @@ Item {
                     onClicked: {
                         const engineId = missingSttModelDialog.engineId
                         missingSttModelDialog.close()
-                        App.installVoiceModel(engineId)
+                        App.installVoicePrerequisites(engineId)
                     }
                 }
             }

@@ -5,6 +5,7 @@
 #include <QtTest>
 #include <QStandardPaths>
 #include <QTemporaryDir>
+#include <QTemporaryFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFileInfo>
@@ -78,6 +79,7 @@ private slots:
     void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
+    void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void browserTeachSkillsLifecycle();
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
@@ -93,6 +95,21 @@ private:
     QTemporaryDir m_tmp;
     QString makeLoopTask(AppController &app, const QString &name, int maxIter);
 };
+
+void AppControllerTests::voiceWhisperServerAvailabilityUsesConfiguredPath()
+{
+    AppController app;
+    const QString missing = QDir::temp().filePath(QStringLiteral("missing-whisper-server.exe"));
+    QFile::remove(missing);
+    app.setVoiceWhisperServerPath(missing);
+    QVERIFY(!app.voiceWhisperServerAvailable());
+
+    QTemporaryFile executable(QDir::temp().filePath(QStringLiteral("whisper-server-XXXXXX.exe")));
+    QVERIFY(executable.open());
+    app.setVoiceWhisperServerPath(executable.fileName());
+    QVERIFY(app.voiceWhisperServerAvailable());
+    app.setVoiceWhisperServerPath(QString());
+}
 
 QString AppControllerTests::makeLoopTask(AppController &app, const QString &name, int maxIter)
 {

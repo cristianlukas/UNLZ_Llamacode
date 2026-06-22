@@ -451,6 +451,9 @@ NavBar (reusa el backend de chat: sesiones e historial incluidos).
   en vivo. Botón *Probar micrófono* para validar entrada sin servidor.
 - **Barge-in**: interrumpir el TTS al detectar voz nueva. Máquina de estados
   `escuchando → transcribiendo → pensando → hablando` con auto-escucha opcional.
+- Al iniciar con STT gestionado, si falta el modelo o `whisper-server`, Charla
+  ofrece instalar ambos en secuencia y guarda automáticamente la ruta del
+  ejecutable. La escucha no comienza hasta que los dos prerrequisitos estén listos.
 
 ## Memoria, RAG y verificación
 

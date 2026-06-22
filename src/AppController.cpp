@@ -584,14 +584,28 @@ AppController::AppController(QObject *parent) : QObject(parent)
     // Reenviar progreso/fin de descarga de modelos STT a QML.
     connect(&m_voiceServers, &VoiceServerManager::installProgress,
             this, &AppController::voiceInstallProgress);
-    connect(&m_voiceServers, &VoiceServerManager::installFinished,
-            this, &AppController::voiceInstallFinished);
+    connect(&m_voiceServers, &VoiceServerManager::installFinished, this,
+            [this](const QString &engineId, bool ok, const QString &message) {
+        emit voiceInstallFinished(engineId, ok, message);
+        if (engineId != m_pendingVoicePrerequisitesEngine) return;
+        if (!ok) {
+            m_pendingVoicePrerequisitesEngine.clear();
+            return;
+        }
+        if (!voiceWhisperServerAvailable()) {
+            m_voiceServers.installBinary(QStringLiteral("whisper-server"));
+        } else {
+            m_pendingVoicePrerequisitesEngine.clear();
+        }
+    });
     connect(&m_voiceServers, &VoiceServerManager::binaryInstalled, this,
             [this](const QString &kind, bool ok, const QString &path, const QString &msg) {
         if (ok) {
             if (kind == QLatin1String("piper")) setVoicePiperPath(path);
             else setVoiceWhisperServerPath(path);
         }
+        if (kind == QLatin1String("whisper-server"))
+            m_pendingVoicePrerequisitesEngine.clear();
         emit voiceBinaryInstalled(kind, ok, ok ? path : msg);
     });
     QSettings s;
@@ -12022,7 +12036,12 @@ void AppController::startCharla()
                              .arg(c.sttManagedEngine));
             return;     // no arrancar la escucha: el STT no funcionaría
         }
-        startManagedStt(c);
+        if (!voiceWhisperServerAvailable()) {
+            emit serverError(QStringLiteral(
+                "whisper-server no está instalado. Instalalo desde Charla."));
+            return;
+        }
+        if (!startManagedStt(c)) return;
     }
     applyVoiceConfig();
     m_charlaActive = true;
@@ -12050,11 +12069,36 @@ void AppController::installVoiceModel(const QString &engineId)
     m_voiceServers.installModel(engineId);
 }
 
+void AppController::installVoicePrerequisites(const QString &engineId)
+{
+    if (engineId.isEmpty()) return;
+    m_pendingVoicePrerequisitesEngine = engineId;
+    if (!m_voiceServers.modelInstalled(engineId)) {
+        m_voiceServers.installModel(engineId);
+        return;
+    }
+    if (!voiceWhisperServerAvailable()) {
+        m_voiceServers.installBinary(QStringLiteral("whisper-server"));
+        return;
+    }
+    m_pendingVoicePrerequisitesEngine.clear();
+    emit voiceInstallFinished(engineId, true, QString());
+}
+
 void AppController::cancelVoiceModelInstall() { m_voiceServers.cancelInstall(); }
 
 QString AppController::voiceWhisperServerPath() const
 {
     return readSetting(QStringLiteral("voiceWhisperServerPath")).toString();
+}
+
+bool AppController::voiceWhisperServerAvailable() const
+{
+    const QString configured = voiceWhisperServerPath().trimmed();
+    if (!configured.isEmpty())
+        return QFileInfo(configured).isFile()
+               || !QStandardPaths::findExecutable(configured).isEmpty();
+    return !QStandardPaths::findExecutable(QStringLiteral("whisper-server")).isEmpty();
 }
 
 void AppController::setVoiceWhisperServerPath(const QString &path)
@@ -12120,13 +12164,13 @@ QString AppController::voiceBinaryDefaultUrl(const QString &kind) const
     return VoiceServerManager::defaultBinaryUrl(kind);
 }
 
-void AppController::startManagedStt(const VoiceConfig &c)
+bool AppController::startManagedStt(const VoiceConfig &c)
 {
     stopManagedStt();
     if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
         emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
                          .arg(c.sttManagedEngine));
-        return;
+        return false;
     }
     // Resolver el binario whisper-server (setting o PATH).
     QString prog = voiceWhisperServerPath();
@@ -12146,8 +12190,13 @@ void AppController::startManagedStt(const VoiceConfig &c)
         emit serverError(QStringLiteral("No se pudo lanzar whisper-server. Configurá su ruta en Charla."));
     });
     m_sttProc->start(prog, args);
-    if (m_sttProc->waitForStarted(4000))
+    if (m_sttProc->waitForStarted(4000)) {
         assignToJobObject(m_sttProc->processId());
+        return true;
+    }
+    m_sttProc->deleteLater();
+    m_sttProc = nullptr;
+    return false;
 }
 
 void AppController::stopManagedStt()

@@ -709,9 +709,11 @@ public:
     Q_INVOKABLE QVariantList voiceSttCatalog() const;
     Q_INVOKABLE bool voiceModelInstalled(const QString &engineId) const;
     Q_INVOKABLE void installVoiceModel(const QString &engineId);
+    Q_INVOKABLE void installVoicePrerequisites(const QString &engineId);
     Q_INVOKABLE void cancelVoiceModelInstall();
     // Ruta del binario whisper-server (setting global; "" = buscar en PATH).
     Q_INVOKABLE QString voiceWhisperServerPath() const;
+    Q_INVOKABLE bool voiceWhisperServerAvailable() const;
     Q_INVOKABLE void setVoiceWhisperServerPath(const QString &path);
     Q_INVOKABLE QString pickVoiceWhisperServer();   // diálogo de archivo; devuelve la ruta
     // ── TTS gestionado (piper, process-mode) ──
@@ -1004,12 +1006,13 @@ private:
     class VoiceController *m_voice = nullptr;
     VoiceServerManager m_voiceServers;  // catálogo + descarga de modelos STT
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
+    QString m_pendingVoicePrerequisitesEngine;
     bool m_charlaActive = false;
     bool m_chatWasGenerating = false;
     QString m_voicePartial;
     void ensureVoice();                 // crea + configura el controller (lazy)
     void applyVoiceConfig();            // empuja config + keys resueltas al controller
-    void startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
+    bool startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
     void stopManagedStt();
     QString voiceConfigPath() const;
     // Chat session state
