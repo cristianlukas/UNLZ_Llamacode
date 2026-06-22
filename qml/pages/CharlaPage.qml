@@ -487,14 +487,17 @@ Item {
         id: missingSttModelDialog
         property string engineId: ""
         title: "Modelo de voz requerido"
-        width: Math.min(480, page.width - 48)
+        width: Math.min(520, page.width - 48)
+        height: 220
 
         contentItem: Text {
-            width: 440
+            width: missingSttModelDialog.availableWidth
+            height: missingSttModelDialog.availableHeight
             text: "El modelo STT necesario para reconocer tu voz no está instalado.\n\n¿Desea descargar el binario ahora?"
             color: Theme.textPrimary
             font.pixelSize: 14
             wrapMode: Text.WordWrap
+            verticalAlignment: Text.AlignVCenter
         }
 
         footer: Rectangle {
