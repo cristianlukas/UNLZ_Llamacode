@@ -2435,12 +2435,36 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
             if (cm.id.isEmpty()) break;
             ctx.catalogModel = cm; ctx.model.modelId = cm.id;
             const QString dir = QFileInfo(cm.absolutePath).path();
-            // mmproj: SOLO de la misma carpeta que el modelo (mmproj-F16.gguf es un
-            // nombre genérico compartido por muchos modelos → no agarrar el de otro).
-            for (const CatalogModel &c : matches(mo.value(QStringLiteral("mmprojFile")).toString()))
-                if (QFileInfo(c.absolutePath).path() == dir) {
-                    ctx.mmprojModel = c; ctx.model.mmprojId = c.id; break;
+            const QString mmFile = mo.value(QStringLiteral("mmprojFile")).toString();
+            if (!mmFile.isEmpty()) {
+                // 1) mmproj con el nombre exacto en la MISMA carpeta del modelo.
+                for (const CatalogModel &c : matches(mmFile))
+                    if (QFileInfo(c.absolutePath).path() == dir) {
+                        ctx.mmprojModel = c; ctx.model.mmprojId = c.id; break;
+                    }
+                // 2) Si no, cualquier mmproj de la MISMA FAMILIA (nombre contiene el
+                //    stem del modelo, ej "Qwen3.6-27B") — evita agarrar el de otro
+                //    modelo (p.ej. Chandra-OCR/mmproj-F16.gguf).
+                if (ctx.mmprojModel.id.isEmpty()) {
+                    QString stem = QFileInfo(cm.fileName).completeBaseName();
+                    static const QRegularExpression cut(
+                        QStringLiteral("[-_.](IQ?\\d.*|Q\\d.*|UD[-_].*|BF16|F16|F32|MTP|mtp).*$"),
+                        QRegularExpression::CaseInsensitiveOption);
+                    stem.remove(cut);
+                    if (stem.size() >= 4) {
+                        for (int i = 0; i < m_catalog.rowCount(); ++i) {
+                            const QVariantMap m = m_catalog.getAt(i);
+                            const QString fn = m.value(QStringLiteral("fileName")).toString();
+                            if (fn.contains(QStringLiteral("mmproj"), Qt::CaseInsensitive)
+                                && fn.contains(stem, Qt::CaseInsensitive)
+                                && m.value(QStringLiteral("isAvailable"), true).toBool()) {
+                                ctx.mmprojModel = m_catalog.findById(m.value(QStringLiteral("id")).toString());
+                                ctx.model.mmprojId = ctx.mmprojModel.id; break;
+                            }
+                        }
+                    }
                 }
+            }
             // draft: nombre de archivo específico (no genérico).
             const QList<CatalogModel> dl = matches(
                 e.value(QStringLiteral("draftModel")).toObject().value(QStringLiteral("file")).toString());
