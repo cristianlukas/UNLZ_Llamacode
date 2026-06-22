@@ -62,8 +62,8 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 9);                        // 24/16/12-MoE/8-Gemma/4/2/0 + MAX Q + FAST GEMMA
-    QVERIFY(pm.isSystemLaunch("sys-vram-24"));
+    QCOMPARE(sys, 8);                        // 16/12-MoE/8-Gemma/4/2/0 + MAX Q + FAST GEMMA
+    QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: el tier 16GB lleva mmproj (multimodal); el 4GB no (VRAM ajustada).
     const QString mp16 = pm.getLaunchProfile("sys-vram-16").value("modelProfileId").toString();
@@ -79,11 +79,11 @@ void SystemProfilesTests::manager_systemNotPersisted()
     QFile f(m_dir.path() + "/launches.json");
     if (f.open(QIODevice::ReadOnly)) {
         const QByteArray raw = f.readAll();
-        QVERIFY(!raw.contains("sys-vram-24"));
+        QVERIFY(!raw.contains("sys-vram-16"));
     }
     // Y al reconstruir, los de sistema reaparecen del bundle.
     ProfileManager pm2;
-    QVERIFY(pm2.isSystemLaunch("sys-vram-24"));
+    QVERIFY(pm2.isSystemLaunch("sys-vram-16"));
 }
 
 void SystemProfilesTests::manager_immutable()
@@ -147,7 +147,7 @@ void SystemProfilesTests::controller_recommendsClosestTier()
     AppController app;
     app.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
-             QStringLiteral("sys-vram-24"));
+             QStringLiteral("sys-vram-16"));
     app.setHardwareSummaryForTest(10.0, 32.0, QStringLiteral("NVIDIA"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
              QStringLiteral("sys-vram-8-gemma"));

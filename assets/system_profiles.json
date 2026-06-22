@@ -1,116 +1,452 @@
 [
   {
-    "id": "sys-vram-24",
-    "tier": "24GB",
-    "order": 1,
-    "displayName": "Sistema · 24GB · Qwen3.6-27B Q4",
-    "minVramGb": 24, "minRamGb": 16, "cpuOk": false,
-    "folder": "Qwen3.6-27B",
-    "model": { "repo": "unsloth/Qwen3.6-27B-GGUF", "file": "Qwen3.6-27B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "unsloth/Qwen3.6-27B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
-    "runtime": { "ctx": 262000, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","262000","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
-    "mtp": { "enabled": false, "args": [] }
-  },
-  {
     "id": "sys-vram-16",
     "tier": "16GB",
     "order": 2,
-    "displayName": "Sistema · 16GB · Qwen3.6-35B-A3B MoE Q4",
-    "minVramGb": 16, "minRamGb": 32, "cpuOk": false,
+    "displayName": "[coding] 16GB · Qwen3.6-35B-A3B MoE Q4",
+    "minVramGb": 16,
+    "minRamGb": 32,
+    "cpuOk": false,
     "folder": "Qwen3.6-35B-A3B",
-    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
-    "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--parallel","1","--cache-type-v","q4_0","--n-cpu-moe","18","--reasoning","off"],
-    "mtp": { "enabled": false, "args": [] }
+    "model": {
+      "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf",
+      "quant": "IQ4_XS",
+      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "32768",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--n-cpu-moe",
+      "18",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
   },
   {
     "id": "sys-vram-12-moe",
     "tier": "12GB-MoE",
     "order": 3,
-    "displayName": "Sistema · 12GB-MoE · Qwen3.6-35B-A3B Q4",
-    "minVramGb": 12, "minRamGb": 32, "cpuOk": false,
+    "displayName": "[coding] 12GB-MoE · Qwen3.6-35B-A3B Q4",
+    "minVramGb": 12,
+    "minRamGb": 32,
+    "cpuOk": false,
     "folder": "Qwen3.6-35B-A3B",
-    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
-    "runtime": { "ctx": 16384, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","16384","--parallel","1","--cache-type-v","q4_0","--n-cpu-moe","24","--reasoning","off"],
-    "mtp": { "enabled": false, "args": [] }
+    "model": {
+      "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf",
+      "quant": "IQ4_XS",
+      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
+    },
+    "runtime": {
+      "ctx": 16384,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "16384",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--n-cpu-moe",
+      "24",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
   },
   {
     "id": "sys-vram-8-gemma",
     "tier": "8GB-Gemma",
     "order": 6,
-    "displayName": "Sistema · 8GB · Gemma 4 12B Q4 (casi-fp)",
-    "minVramGb": 8, "minRamGb": 16, "cpuOk": false,
+    "displayName": "[general] 8GB · Gemma 4 12B Q4 (casi-fp)",
+    "minVramGb": 8,
+    "minRamGb": 16,
+    "cpuOk": false,
     "folder": "gemma-4-12b",
-    "model": { "repo": "unsloth/gemma-4-12b-it-GGUF", "file": "gemma-4-12b-it-UD-Q4_K_XL.gguf", "quant": "UD-Q4_K_XL", "mmprojRepo": "", "mmprojFile": "" },
-    "runtime": { "ctx": 12288, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","12288","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
+    "model": {
+      "repo": "unsloth/gemma-4-12b-it-GGUF",
+      "file": "gemma-4-12b-it-UD-Q4_K_XL.gguf",
+      "quant": "UD-Q4_K_XL",
+      "mmprojRepo": "",
+      "mmprojFile": ""
+    },
+    "runtime": {
+      "ctx": 12288,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "1.0",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "64",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "12288",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
     "comment": "Gemma 4 12B dynamic Q4 (unsloth UD, no el QAT crudo que llama.cpp degrada). ~7.4GB @12k. Texto (mmproj no entra en 8GB).",
-    "mtp": { "enabled": false, "args": [] }
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
   },
   {
     "id": "sys-vram-4",
     "tier": "4GB",
     "order": 6,
-    "displayName": "Sistema · 4GB · Qwen3.5-4B Q4",
-    "minVramGb": 4, "minRamGb": 8, "cpuOk": false,
+    "displayName": "[general] 4GB · Qwen3.5-4B Q4",
+    "minVramGb": 4,
+    "minRamGb": 8,
+    "cpuOk": false,
     "folder": "Qwen3.5-4B",
-    "model": { "repo": "unsloth/Qwen3.5-4B-MTP-GGUF", "file": "Qwen3.5-4B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
-    "runtime": { "ctx": 8192, "gpuLayers": 14, "batch": 256, "ubatch": 256, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","8192","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
-    "mtp": { "enabled": true, "args": ["--spec-type","draft-mtp","--spec-draft-n-max","3"] }
+    "model": {
+      "repo": "unsloth/Qwen3.5-4B-MTP-GGUF",
+      "file": "Qwen3.5-4B-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "",
+      "mmprojFile": ""
+    },
+    "runtime": {
+      "ctx": 8192,
+      "gpuLayers": 14,
+      "batch": 256,
+      "ubatch": 256,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "8192",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "3"
+      ]
+    }
   },
   {
     "id": "sys-vram-2",
     "tier": "2GB",
     "order": 8,
-    "displayName": "Sistema · 2GB · Qwen3.5-2B Q4",
-    "minVramGb": 2, "minRamGb": 8, "cpuOk": false,
+    "displayName": "[general] 2GB · Qwen3.5-2B Q4",
+    "minVramGb": 2,
+    "minRamGb": 8,
+    "cpuOk": false,
     "folder": "Qwen3.5-2B",
-    "model": { "repo": "unsloth/Qwen3.5-2B-MTP-GGUF", "file": "Qwen3.5-2B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
-    "runtime": { "ctx": 3072, "gpuLayers": 8, "batch": 64, "ubatch": 64, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","3072","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
-    "mtp": { "enabled": true, "args": ["--spec-type","draft-mtp","--spec-draft-n-max","3"] }
+    "model": {
+      "repo": "unsloth/Qwen3.5-2B-MTP-GGUF",
+      "file": "Qwen3.5-2B-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "",
+      "mmprojFile": ""
+    },
+    "runtime": {
+      "ctx": 3072,
+      "gpuLayers": 8,
+      "batch": 64,
+      "ubatch": 64,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "3072",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "3"
+      ]
+    }
   },
   {
     "id": "sys-vram-0",
     "tier": "0GB",
     "order": 9,
-    "displayName": "Sistema · 0GB CPU · Qwen3.6-35B-A3B Q4",
-    "minVramGb": 0, "minRamGb": 32, "cpuOk": true,
+    "displayName": "[general] 0GB CPU · Qwen3.6-35B-A3B Q4",
+    "minVramGb": 0,
+    "minRamGb": 32,
+    "cpuOk": true,
     "folder": "Qwen3.6-35B-A3B-CPU",
-    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
-    "runtime": { "ctx": 32768, "gpuLayers": 0, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
-    "env": { "CUDA_VISIBLE_DEVICES": "-1" },
-    "mtp": { "enabled": false, "args": [] }
+    "model": {
+      "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "file": "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "",
+      "mmprojFile": ""
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 0,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "32768",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
+    "env": {
+      "CUDA_VISIBLE_DEVICES": "-1"
+    },
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
   },
   {
     "id": "sys-maxq",
     "tier": "MAX-Q",
     "order": 10,
-    "displayName": "Sistema · MAX Q · Qwen3.6-27B MTP+NGRAM+mmproj",
-    "minVramGb": 24, "minRamGb": 32, "cpuOk": false,
+    "displayName": "[coding] MAX Q · Qwen3.6-27B MTP+NGRAM+mmproj",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
     "folder": "Qwen3.6-27B-MTP-IQ4_XS",
-    "model": { "repo": "unsloth/Qwen3.6-27B-GGUF", "file": "Qwen3.6-27B-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "unsloth/Qwen3.6-27B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
-    "runtime": { "ctx": 262000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
-    "extraArgs": ["--cache-type-v","q4_0","--temp","0.60","--top-p","0.95","--top-k","20","--no-context-shift","--metrics","--no-warmup","--cache-ram","32768","--cache-reuse","512","--jinja","--threads-batch","8","--predict","4096","--min-p","0.0","--parallel","1","--ctx-size","262000","--reasoning","off"],
-    "mtp": { "enabled": false, "args": [] }
+    "model": {
+      "repo": "unsloth/Qwen3.6-27B-GGUF",
+      "file": "Qwen3.6-27B-IQ4_XS.gguf",
+      "quant": "IQ4_XS",
+      "mmprojRepo": "unsloth/Qwen3.6-27B-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
+    },
+    "runtime": {
+      "ctx": 262000,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
+      "threads": 8,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": true,
+      "mmap": false
+    },
+    "extraArgs": [
+      "--cache-type-v",
+      "q4_0",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--cache-ram",
+      "32768",
+      "--cache-reuse",
+      "512",
+      "--jinja",
+      "--threads-batch",
+      "8",
+      "--predict",
+      "4096",
+      "--min-p",
+      "0.0",
+      "--parallel",
+      "1",
+      "--ctx-size",
+      "262000",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
   },
   {
     "id": "sys-fastgemma",
     "tier": "FAST-GEMMA",
     "order": 11,
-    "displayName": "Sistema · FAST GEMMA · Gemma4-31B DFlash",
-    "minVramGb": 24, "minRamGb": 32, "cpuOk": false,
+    "displayName": "[general] FAST GEMMA · Gemma4-31B DFlash",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
     "requiresMtpBinary": true,
     "folder": "Gemma-4-31B",
-    "model": { "repo": "unsloth/gemma-4-31B-it-GGUF", "file": "gemma-4-31B-it-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "unsloth/gemma-4-31B-it-GGUF", "mmprojFile": "mmproj-F16.gguf" },
-    "draftModel": { "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF", "file": "gemma4-31b-it-dflash-Q5_K_M.gguf", "folder": "Gemma-4-31B-DFlash" },
-    "spec": { "type": "dflash", "draftNgl": "all" },
-    "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q8_0", "flashAttn": true },
-    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--cache-type-v","q8_0","--parallel","1","--spec-dflash-cross-ctx","1024","--reasoning","off"],
+    "model": {
+      "repo": "unsloth/gemma-4-31B-it-GGUF",
+      "file": "gemma-4-31B-it-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "unsloth/gemma-4-31B-it-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
+    },
+    "draftModel": {
+      "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF",
+      "file": "gemma4-31b-it-dflash-Q5_K_M.gguf",
+      "folder": "Gemma-4-31B-DFlash"
+    },
+    "spec": {
+      "type": "dflash",
+      "draftNgl": "all"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q8_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "1.0",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "64",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "32768",
+      "--cache-type-v",
+      "q8_0",
+      "--parallel",
+      "1",
+      "--spec-dflash-cross-ctx",
+      "1024",
+      "--reasoning",
+      "off"
+    ],
     "comment": "DFlash = target gemma-4-31B + draft DFlash. Requiere binario beellama (build MTP).",
-    "mtp": { "enabled": false, "args": [] }
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
   }
 ]
