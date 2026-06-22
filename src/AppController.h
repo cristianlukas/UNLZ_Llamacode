@@ -661,6 +661,12 @@ public:
     // Showcase de tope (24GB): perfiles "extra" (MAX-Q coding + FAST-GEMMA general)
     // que el hardware puede correr. Vacío si la VRAM no alcanza.
     Q_INVOKABLE QVariantList recommendedShowcase() const;
+    // Menú de lanzamiento para la UI: como ProfileManager::launchProfilesForMenu pero
+    // (a) oculta perfiles de sistema cuya VRAM mínima supera la del equipo, y
+    // (b) agrega "ready" (modelo+binario presentes) y "minVram" a cada item.
+    Q_INVOKABLE QVariantList launchMenu();
+    // True si el perfil de sistema tiene modelo y binario listos para lanzar.
+    Q_INVOKABLE bool systemProfileReady(const QString &launchId);
     // "Instalar ambos": baja binarios+modelos+mmproj+drafters de todos los extras
     // y deja activo el primero (coding).
     Q_INVOKABLE void acceptShowcase();

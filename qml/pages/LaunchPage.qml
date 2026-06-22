@@ -27,6 +27,44 @@ Item {
         }
     }
 
+    // Perfil de sistema seleccionado sin modelo/binario: ofrecer instalar deps.
+    Dialog {
+        id: depsDialog
+        property string launchId: ""
+        property string profileName: ""
+        modal: true
+        width: 460
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+        title: "Faltan dependencias"
+        standardButtons: Dialog.NoButton
+        background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.borderColor }
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 420
+                text: "Al perfil «" + depsDialog.profileName + "» le faltan modelos o binarios.\n¿Descargar e instalar las dependencias?"
+                color: Theme.textPrimary
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: 10
+                LcButton {
+                    text: "Instalar dependencias"
+                    onClicked: { App.acceptSystemProfile(depsDialog.launchId); depsDialog.close() }
+                }
+                LcButton {
+                    text: "Cerrar"
+                    secondary: true
+                    onClicked: depsDialog.close()
+                }
+            }
+        }
+    }
+
     function startWithPortCheck(withAgent) {
         const launchId = launchCombo.currentValue ?? ""
         if (!launchId || launchId.length === 0)
@@ -149,16 +187,28 @@ Item {
                 LcComboBox {
                     id: launchCombo
                     Layout.fillWidth: true
-                    // Menú ordenado: favoritos (★) arriba; displayName = alias - name.
-                    property var launchMenu: App.profileManager.launchProfilesForMenu()
+                    // Menú filtrado por hardware: oculta perfiles de sistema de más
+                    // VRAM que el equipo; marca "ready" (modelo+binario presentes).
+                    property var launchMenu: App.launchMenu()
+                    function refreshMenu() {
+                        const sel = launchCombo.currentValue
+                        launchCombo.launchMenu = App.launchMenu()
+                        const i = launchCombo.indexOfValue(sel)
+                        if (i >= 0) launchCombo.currentIndex = i
+                    }
+                    function itemById(id) {
+                        for (var i = 0; i < launchMenu.length; i++)
+                            if (launchMenu[i].id === id) return launchMenu[i]
+                        return null
+                    }
                     Connections {
                         target: App.profileManager
-                        function onLaunchesChanged() {
-                            const sel = launchCombo.currentValue
-                            launchCombo.launchMenu = App.profileManager.launchProfilesForMenu()
-                            const i = launchCombo.indexOfValue(sel)
-                            if (i >= 0) launchCombo.currentIndex = i
-                        }
+                        function onLaunchesChanged() { launchCombo.refreshMenu() }
+                    }
+                    Connections {
+                        target: App
+                        // tras descargar deps / escanear, recomputar ready.
+                        function onSetupStateChanged() { launchCombo.refreshMenu() }
                     }
                     model: launchMenu
                     textRole: "displayName"
@@ -172,12 +222,32 @@ Item {
                         color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10
                         verticalAlignment: Text.AlignVCenter
                     }
-                    onCurrentValueChanged: {
-                        if (currentValue) {
-                            App.computeEffectiveProfile(currentValue)
-                            // Recordar el último perfil usado (no durante la carga inicial).
-                            if (root._restored) App.writeSetting("lastLaunchId", currentValue)
+                    // Items no-ready (faltan deps) grisados.
+                    delegate: ItemDelegate {
+                        width: launchCombo.width
+                        highlighted: launchCombo.highlightedIndex === index
+                        opacity: (modelData.ready === false) ? 0.45 : 1.0
+                        contentItem: Text {
+                            text: (modelData.displayName || "")
+                                  + (modelData.ready === false ? "  (faltan deps)" : "")
+                            color: Theme.theme === "oled" ? "white" : Theme.textPrimary
+                            font.pixelSize: 13; leftPadding: 6; elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
                         }
+                        background: Rectangle { color: highlighted ? Theme.borderColor : Theme.inputBg }
+                    }
+                    onCurrentValueChanged: {
+                        if (!currentValue) return
+                        const it = itemById(currentValue)
+                        if (it && it.ready === false) {
+                            // Perfil de sistema sin modelo/binario: ofrecer instalar deps.
+                            depsDialog.launchId = currentValue
+                            depsDialog.profileName = it.displayName || ""
+                            depsDialog.open()
+                            return
+                        }
+                        App.computeEffectiveProfile(currentValue)
+                        if (root._restored) App.writeSetting("lastLaunchId", currentValue)
                     }
 
                     // Al abrir la app, restaurar el último perfil de lanzamiento usado.

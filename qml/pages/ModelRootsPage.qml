@@ -136,6 +136,80 @@ Item {
             onActionClicked: if (!App.rootRegistry.scanning) addDlg.open()
         }
 
+        // ── Perfiles de sistema recomendados para esta computadora ──
+        // Mismo auto-instalador rápido que el asistente (baja modelos+binarios).
+        Rectangle {
+            id: recCard
+            Layout.fillWidth: true
+            Layout.preferredHeight: recCol.implicitHeight + 24
+            readonly property var showcase: (App.hardwareSummary, App.recommendedShowcase())
+            readonly property var sysPick: (App.hardwareSummary, App.recommendedSystemProfile())
+            function showcaseId(tag) {
+                for (var i = 0; i < showcase.length; i++)
+                    if ((showcase[i].displayName || "").indexOf(tag) >= 0) return showcase[i].launchId
+                return ""
+            }
+            visible: showcase.length > 0 || (sysPick.launchId ?? "").length > 0
+            radius: 8
+            color: Theme.surfaceBg
+            border.color: Theme.accent
+
+            ColumnLayout {
+                id: recCol
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 6
+                Text {
+                    text: "★ Perfiles recomendados para tu computadora"
+                    color: Theme.textPrimary
+                    font { pixelSize: 14; bold: true }
+                }
+                Repeater {
+                    model: recCard.showcase
+                    Text {
+                        Layout.fillWidth: true
+                        text: "• " + (modelData.displayName || "")
+                        color: Theme.textSecondary; font.pixelSize: 12; wrapMode: Text.WordWrap
+                    }
+                }
+                Text {
+                    visible: recCard.showcase.length === 0
+                    Layout.fillWidth: true
+                    text: (recCard.sysPick.displayName ?? "")
+                    color: Theme.textSecondary; font.pixelSize: 12; wrapMode: Text.WordWrap
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 4
+                    spacing: 10
+                    LcButton {
+                        visible: recCard.showcase.length > 0
+                        text: "Instalar ambos"
+                        enabled: !App.modelDownloadRunning
+                        onClicked: App.acceptShowcase()
+                    }
+                    LcButton {
+                        visible: recCard.showcase.length > 0
+                        text: "Sólo Coding"; secondary: true
+                        enabled: !App.modelDownloadRunning && recCard.showcaseId("[coding]").length > 0
+                        onClicked: App.acceptShowcaseOne(recCard.showcaseId("[coding]"))
+                    }
+                    LcButton {
+                        visible: recCard.showcase.length > 0
+                        text: "Sólo General"; secondary: true
+                        enabled: !App.modelDownloadRunning && recCard.showcaseId("[general]").length > 0
+                        onClicked: App.acceptShowcaseOne(recCard.showcaseId("[general]"))
+                    }
+                    LcButton {
+                        visible: recCard.showcase.length === 0
+                        text: "Instalar y usar"
+                        enabled: !App.modelDownloadRunning && (recCard.sysPick.launchId ?? "").length > 0
+                        onClicked: App.acceptSystemProfile(recCard.sysPick.launchId)
+                    }
+                }
+            }
+        }
+
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: App.modelDownloadQueue.length > 0 ? 300

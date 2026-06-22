@@ -8145,6 +8145,37 @@ QVariantMap AppController::recommendedSystemProfile() const
     };
 }
 
+bool AppController::systemProfileReady(const QString &launchId)
+{
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(buildContext(launchId));
+    return ep.isValid();   // sin blockingErrors = binario + modelo presentes
+}
+
+QVariantList AppController::launchMenu()
+{
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    QHash<QString, double> minV;
+    for (const QJsonValue &v : readSystemProfilesBundle()) {
+        const QJsonObject e = v.toObject();
+        minV.insert(e.value(QStringLiteral("id")).toString(),
+                    e.value(QStringLiteral("minVramGb")).toDouble());
+    }
+    QVariantList out;
+    for (const QVariant &it : m_profiles.launchProfilesForMenu()) {
+        QVariantMap m = it.toMap();
+        if (m.value(QStringLiteral("system")).toBool()) {
+            const double mv = minV.value(m.value(QStringLiteral("id")).toString(), 0.0);
+            if (vram > 0.0 && mv > vram + 0.01) continue;   // ocultar los de más VRAM
+            m[QStringLiteral("minVram")] = mv;
+            m[QStringLiteral("ready")] = systemProfileReady(m.value(QStringLiteral("id")).toString());
+        } else {
+            m[QStringLiteral("ready")] = true;
+        }
+        out.append(m);
+    }
+    return out;
+}
+
 QVariantList AppController::recommendedShowcase() const
 {
     const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
