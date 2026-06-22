@@ -94,7 +94,7 @@ void SystemProfilesTests::manager_immutable()
     pm.setLaunchFavorite("sys-vram-12-moe", true);
     QVERIFY(!pm.getLaunchProfile("sys-vram-12-moe").value("favorite").toBool());
     pm.setLaunchAlias("sys-vram-12-moe", "hack");
-    QCOMPARE(pm.getLaunchProfile("sys-vram-12-moe").value("alias").toString(), QStringLiteral("12GB-MoE"));
+    QCOMPARE(pm.getLaunchProfile("sys-vram-12-moe").value("alias").toString(), QStringLiteral("12GB"));
 }
 
 void SystemProfilesTests::manager_duplicateMakesEditableCopy()

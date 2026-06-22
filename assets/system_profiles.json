@@ -56,7 +56,7 @@
     "id": "sys-vram-12-moe",
     "tier": "12GB-MoE",
     "order": 3,
-    "displayName": "[coding] 12GB-MoE · Qwen3.6-35B-A3B Q4",
+    "displayName": "[coding] 12GB · Qwen3.6-35B-A3B Q4",
     "minVramGb": 12,
     "minRamGb": 32,
     "cpuOk": false,

@@ -625,7 +625,8 @@ void ProfileManager::loadSystemProfiles()
         LaunchProfile lp;
         lp.id = id; lp.system = true;
         lp.name = o.value("displayName").toString();
-        lp.alias = o.value("tier").toString();
+        // Alias = solo la VRAM (ej "12GB"), sin sufijos MoE/Gemma/Qwen.
+        lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
         lp.favorite = false;
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
