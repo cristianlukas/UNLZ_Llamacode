@@ -1196,6 +1196,8 @@ private:
     // (evita colisión de nombres genéricos como mmproj-F16.gguf entre repos).
     void enqueueModelDownload(const QString &repo, const QString &fileName,
                               const QString &subdir);
+    // Encola modelo + mmproj + draft de un perfil de sistema (cada uno a su subdir).
+    void enqueueSystemProfileAssets(const class QJsonObject &entry);
 
     // Model quality benchmarks (Artificial Analysis Intelligence Index).
     // Bundled table is the offline fallback; a weekly live fetch overlays it.

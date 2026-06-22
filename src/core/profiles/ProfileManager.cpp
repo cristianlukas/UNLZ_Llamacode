@@ -598,6 +598,17 @@ void ProfileManager::loadSystemProfiles()
         const QString mmFile = mo.value("mmprojFile").toString();
         if (!mmFile.isEmpty())
             mp.mmprojId = detId(modelsDir + "/" + subdir + mmFile);
+        // Draft model (speculative decoding, p.ej. DFlash de Gemma): subcarpeta
+        // propia. specType/draftNgl desde el bloque "spec".
+        const QJsonObject draft = o.value("draftModel").toObject();
+        if (!draft.isEmpty()) {
+            const QString dFolder = draft.value("folder").toString();
+            const QString dSub = dFolder.isEmpty() ? QString() : (dFolder + "/");
+            mp.draftModelId = detId(modelsDir + "/" + dSub + draft.value("file").toString());
+            const QJsonObject spec = o.value("spec").toObject();
+            mp.specType = spec.value("type").toString();
+            mp.specDraftNgl = spec.value("draftNgl").toString();
+        }
         sysModel.append(mp);
 
         BackendProfile be;

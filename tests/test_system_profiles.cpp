@@ -29,6 +29,7 @@ private slots:
     void manager_immutable();
     void manager_duplicateMakesEditableCopy();
     void manager_modelIdIsDeterministic();
+    void manager_fastGemmaDflashWired();
 
     void controller_recommendsClosestTier();
     void controller_recommendsCpuWhenNoGpu();
@@ -122,6 +123,23 @@ void SystemProfilesTests::manager_modelIdIsDeterministic()
     const QString expect = QUuid::createUuidV5(
         ns, QString(modelsDir + "/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf").toUtf8()).toString(QUuid::WithoutBraces);
     QCOMPARE(modelId, expect);
+}
+
+void SystemProfilesTests::manager_fastGemmaDflashWired()
+{
+    ProfileManager pm;
+    // FAST GEMMA: DFlash = target + draft + specType "dflash" (inmutable).
+    const QString mpId = pm.getLaunchProfile("sys-fastgemma").value("modelProfileId").toString();
+    const QVariantMap mp = pm.getModelProfile(mpId);
+    QCOMPARE(mp.value("specType").toString(), QStringLiteral("dflash"));
+    QVERIFY(!mp.value("draftModelId").toString().isEmpty());
+    QVERIFY(!mp.value("modelId").toString().isEmpty());
+    // No se puede editar el original; sí su duplicado (copia editable).
+    QVERIFY(!pm.updateLaunchProfile(QVariantMap{{"id","sys-fastgemma"},{"name","x"}}));
+    const QString dup = pm.duplicateLaunchProfile("sys-fastgemma");
+    QVERIFY(!dup.isEmpty());
+    QVERIFY(!pm.isSystemLaunch(dup));
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id",dup},{"name","mi-gemma"}}));
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()

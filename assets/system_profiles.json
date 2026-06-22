@@ -124,13 +124,16 @@
     "id": "sys-fastgemma",
     "tier": "FAST-GEMMA",
     "order": 11,
-    "displayName": "Sistema · FAST GEMMA · Gemma4-31B Q4 D2",
+    "displayName": "Sistema · FAST GEMMA · Gemma4-31B DFlash",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false,
-    "folder": "Gemma4-31B",
-    "model": { "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF", "file": "gemma4-31b-it-dflash-Q5_K_M.gguf", "quant": "Q5_K_M", "mmprojRepo": "", "mmprojFile": "" },
+    "requiresMtpBinary": true,
+    "folder": "Gemma-4-31B",
+    "model": { "repo": "unsloth/gemma-4-31B-it-GGUF", "file": "gemma-4-31B-it-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
+    "draftModel": { "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF", "file": "gemma4-31b-it-dflash-Q5_K_M.gguf", "folder": "Gemma-4-31B-DFlash" },
+    "spec": { "type": "dflash", "draftNgl": "all" },
     "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q8_0", "flashAttn": true },
-    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--cache-type-v","q8_0","--parallel","1","--reasoning","off"],
-    "comment": "gguf DFlash: requiere binario beellama (build MTP). DFlash de 2 modelos no se auto-configura; corre sin spec.",
+    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--cache-type-v","q8_0","--parallel","1","--spec-dflash-cross-ctx","1024","--reasoning","off"],
+    "comment": "DFlash = target gemma-4-31B + draft DFlash. Requiere binario beellama (build MTP).",
     "mtp": { "enabled": false, "args": [] }
   }
 ]

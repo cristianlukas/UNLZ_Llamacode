@@ -8123,13 +8123,40 @@ void AppController::acceptSystemProfile(const QString &launchId)
         const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
         if (t.contains("mtp") || t.contains("beellama")) { hasMtp = true; break; }
     }
-    if (entry.value("mtp").toObject().value("enabled").toBool() && nvidia && !hasMtp)
-        installMtpBinary();                              // perfil con MTP + NVIDIA → build MTP
+    // ¿El perfil necesita el build MTP/beellama? (MTP propio o DFlash via requiresMtpBinary)
+    const bool needsMtp = entry.value("mtp").toObject().value("enabled").toBool()
+                          || entry.value("requiresMtpBinary").toBool();
+    if (needsMtp && nvidia && !hasMtp)
+        installMtpBinary();                              // perfil MTP/DFlash + NVIDIA → beellama
     else if (resolveSystemBinaryId().isEmpty())
         installOfficialBinary();                         // si no hay ningún binario
 
-    // Modelo (+mmproj) al subdir del tier; al terminar el scan, se activa solo.
+    // Modelo (+mmproj+draft) al subdir del tier; al terminar el scan, se activa solo.
     m_pendingSystemLaunchId = launchId;
+    enqueueSystemProfileAssets(entry);
+
+    // Máquina tope (24GB VRAM): además dejar listos MAX-Q y FAST-GEMMA (modelos +
+    // draft + beellama) para que el usuario los pueda usar sin más descargas.
+    if (vram >= 23.5) {
+        if (needsMtp == false && nvidia && !hasMtp)
+            installMtpBinary();                          // FAST-GEMMA (DFlash) requiere beellama
+        for (const QJsonValue &v : readSystemProfilesBundle()) {
+            const QJsonObject e = v.toObject();
+            const QString tier = e.value("tier").toString();
+            if ((tier.startsWith("MAX") || tier.startsWith("FAST"))
+                && e.value("id").toString() != launchId)
+                enqueueSystemProfileAssets(e);
+        }
+    }
+
+    writeSetting(QStringLiteral("lastLaunchId"), launchId);
+    emit activeLaunchIdChanged();
+    emit setupStateChanged();
+}
+
+// Encola modelo + mmproj + draft de un perfil de sistema (cada uno a su subdir).
+void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
+{
     const QString folder = entry.value("folder").toString();
     const QJsonObject mo = entry.value("model").toObject();
     enqueueModelDownload(mo.value("repo").toString(), mo.value("file").toString(), folder);
@@ -8137,10 +8164,10 @@ void AppController::acceptSystemProfile(const QString &launchId)
     const QString mmFile = mo.value("mmprojFile").toString();
     if (!mmRepo.isEmpty() && !mmFile.isEmpty())
         enqueueModelDownload(mmRepo, mmFile, folder);
-
-    writeSetting(QStringLiteral("lastLaunchId"), launchId);
-    emit activeLaunchIdChanged();
-    emit setupStateChanged();
+    const QJsonObject draft = entry.value("draftModel").toObject();
+    if (!draft.isEmpty())
+        enqueueModelDownload(draft.value("repo").toString(), draft.value("file").toString(),
+                             draft.value("folder").toString());
 }
 
 void AppController::maybeActivatePendingSystemProfile()
@@ -8153,6 +8180,8 @@ void AppController::maybeActivatePendingSystemProfile()
     if (cat.id.isEmpty() || !cat.isAvailable) return;   // todavía no escaneado
     if (!model.mmprojId.isEmpty() && m_catalog.findById(model.mmprojId).id.isEmpty())
         return;                                          // falta mmproj
+    if (!model.draftModelId.isEmpty() && m_catalog.findById(model.draftModelId).id.isEmpty())
+        return;                                          // falta draft (DFlash)
 
     const QString id = m_pendingSystemLaunchId;
     m_pendingSystemLaunchId.clear();
