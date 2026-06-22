@@ -1,8 +1,136 @@
 [
   {
+    "id": "sys-maxq",
+    "tier": "24GB-Qwen",
+    "order": 1,
+    "extra": true,
+    "displayName": "[coding] 24GB · Qwen3.6-27B (calidad máxima)",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.6-27B-MTP-IQ4_XS",
+    "model": {
+      "repo": "unsloth/Qwen3.6-27B-GGUF",
+      "file": "Qwen3.6-27B-IQ4_XS.gguf",
+      "quant": "IQ4_XS",
+      "mmprojRepo": "unsloth/Qwen3.6-27B-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
+    },
+    "runtime": {
+      "ctx": 262000,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
+      "threads": 8,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": true,
+      "mmap": false
+    },
+    "extraArgs": [
+      "--cache-type-v",
+      "q4_0",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--cache-ram",
+      "32768",
+      "--cache-reuse",
+      "512",
+      "--jinja",
+      "--threads-batch",
+      "8",
+      "--predict",
+      "4096",
+      "--min-p",
+      "0.0",
+      "--parallel",
+      "1",
+      "--ctx-size",
+      "262000",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
+  },
+  {
+    "id": "sys-fastgemma",
+    "tier": "24GB-Gemma",
+    "extra": true,
+    "order": 2,
+    "displayName": "[general] 24GB · Gemma4-31B (DFlash)",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "requiresMtpBinary": true,
+    "folder": "Gemma-4-31B",
+    "model": {
+      "repo": "unsloth/gemma-4-31B-it-GGUF",
+      "file": "gemma-4-31B-it-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "unsloth/gemma-4-31B-it-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
+    },
+    "draftModel": {
+      "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF",
+      "file": "gemma4-31b-it-dflash-Q5_K_M.gguf",
+      "folder": "Gemma-4-31B-DFlash"
+    },
+    "spec": {
+      "type": "dflash",
+      "draftNgl": "all"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "kv": "q8_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "1.0",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "64",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "32768",
+      "--cache-type-v",
+      "q8_0",
+      "--parallel",
+      "1",
+      "--spec-dflash-cross-ctx",
+      "1024",
+      "--reasoning",
+      "off"
+    ],
+    "comment": "DFlash = target gemma-4-31B + draft DFlash. Requiere binario beellama (build MTP).",
+    "mtp": {
+      "enabled": false,
+      "args": []
+    }
+  },
+  {
     "id": "sys-vram-16",
     "tier": "16GB",
-    "order": 2,
+    "order": 3,
     "displayName": "[coding] 16GB · Qwen3.6-35B-A3B MoE Q4",
     "minVramGb": 16,
     "minRamGb": 32,
@@ -55,7 +183,7 @@
   {
     "id": "sys-vram-12-moe",
     "tier": "12GB-MoE",
-    "order": 3,
+    "order": 4,
     "displayName": "[coding] 12GB · Qwen3.6-35B-A3B Q4",
     "minVramGb": 12,
     "minRamGb": 32,
@@ -108,7 +236,7 @@
   {
     "id": "sys-vram-8-gemma",
     "tier": "8GB-Gemma",
-    "order": 6,
+    "order": 5,
     "displayName": "[general] 8GB · Gemma 4 12B Q4 (casi-fp)",
     "minVramGb": 8,
     "minRamGb": 16,
@@ -216,7 +344,7 @@
   {
     "id": "sys-vram-2",
     "tier": "2GB",
-    "order": 8,
+    "order": 7,
     "displayName": "[general] 2GB · Qwen3.5-2B Q4",
     "minVramGb": 2,
     "minRamGb": 8,
@@ -272,7 +400,7 @@
   {
     "id": "sys-vram-0",
     "tier": "0GB",
-    "order": 9,
+    "order": 8,
     "displayName": "[general] 0GB CPU · Qwen3.6-35B-A3B Q4",
     "minVramGb": 0,
     "minRamGb": 32,
@@ -318,134 +446,6 @@
     "env": {
       "CUDA_VISIBLE_DEVICES": "-1"
     },
-    "mtp": {
-      "enabled": false,
-      "args": []
-    }
-  },
-  {
-    "id": "sys-maxq",
-    "tier": "24GB-Qwen",
-    "order": 10,
-    "extra": true,
-    "displayName": "[coding] 24GB · Qwen3.6-27B (calidad máxima)",
-    "minVramGb": 24,
-    "minRamGb": 32,
-    "cpuOk": false,
-    "folder": "Qwen3.6-27B-MTP-IQ4_XS",
-    "model": {
-      "repo": "unsloth/Qwen3.6-27B-GGUF",
-      "file": "Qwen3.6-27B-IQ4_XS.gguf",
-      "quant": "IQ4_XS",
-      "mmprojRepo": "unsloth/Qwen3.6-27B-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
-    },
-    "runtime": {
-      "ctx": 262000,
-      "gpuLayers": 999,
-      "batch": 512,
-      "ubatch": 64,
-      "threads": 8,
-      "kv": "q4_0",
-      "flashAttn": true,
-      "mlock": true,
-      "mmap": false
-    },
-    "extraArgs": [
-      "--cache-type-v",
-      "q4_0",
-      "--temp",
-      "0.60",
-      "--top-p",
-      "0.95",
-      "--top-k",
-      "20",
-      "--no-context-shift",
-      "--metrics",
-      "--no-warmup",
-      "--cache-ram",
-      "32768",
-      "--cache-reuse",
-      "512",
-      "--jinja",
-      "--threads-batch",
-      "8",
-      "--predict",
-      "4096",
-      "--min-p",
-      "0.0",
-      "--parallel",
-      "1",
-      "--ctx-size",
-      "262000",
-      "--reasoning",
-      "off"
-    ],
-    "mtp": {
-      "enabled": false,
-      "args": []
-    }
-  },
-  {
-    "id": "sys-fastgemma",
-    "tier": "24GB-Gemma",
-    "extra": true,
-    "order": 11,
-    "displayName": "[general] 24GB · Gemma4-31B (DFlash)",
-    "minVramGb": 24,
-    "minRamGb": 32,
-    "cpuOk": false,
-    "requiresMtpBinary": true,
-    "folder": "Gemma-4-31B",
-    "model": {
-      "repo": "unsloth/gemma-4-31B-it-GGUF",
-      "file": "gemma-4-31B-it-Q4_K_M.gguf",
-      "quant": "Q4_K_M",
-      "mmprojRepo": "unsloth/gemma-4-31B-it-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
-    },
-    "draftModel": {
-      "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF",
-      "file": "gemma4-31b-it-dflash-Q5_K_M.gguf",
-      "folder": "Gemma-4-31B-DFlash"
-    },
-    "spec": {
-      "type": "dflash",
-      "draftNgl": "all"
-    },
-    "runtime": {
-      "ctx": 32768,
-      "gpuLayers": 999,
-      "batch": 512,
-      "ubatch": 512,
-      "kv": "q8_0",
-      "flashAttn": true
-    },
-    "extraArgs": [
-      "--temp",
-      "1.0",
-      "--top-p",
-      "0.95",
-      "--top-k",
-      "64",
-      "--min-p",
-      "0.0",
-      "--no-context-shift",
-      "--metrics",
-      "--no-warmup",
-      "--jinja",
-      "--ctx-size",
-      "32768",
-      "--cache-type-v",
-      "q8_0",
-      "--parallel",
-      "1",
-      "--spec-dflash-cross-ctx",
-      "1024",
-      "--reasoning",
-      "off"
-    ],
-    "comment": "DFlash = target gemma-4-31B + draft DFlash. Requiere binario beellama (build MTP).",
     "mtp": {
       "enabled": false,
       "args": []

@@ -2362,6 +2362,8 @@ QVariantList AppController::buildMasterChain(const MasterConfig &mc)
     return chain;
 }
 
+static QJsonArray readSystemProfilesBundle();   // def más abajo (mismo TU)
+
 EffectiveProfileBuilder::Context AppController::buildContext(const QString &launchProfileId)
 {
     EffectiveProfileBuilder::Context ctx;
@@ -2381,6 +2383,36 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
     ctx.draftModel = m_catalog.findById(ctx.model.draftModelId);
+
+    // Perfil de sistema: si el id determinista (por ruta esperada) no está en el
+    // catálogo, ligar por NOMBRE DE ARCHIVO contra cualquier root escaneado. Así
+    // el perfil funciona aunque el gguf esté en otra carpeta que la del download.
+    if (ctx.launch.system && ctx.catalogModel.id.isEmpty()) {
+        auto byFile = [this](const QString &fn) -> CatalogModel {
+            if (fn.isEmpty()) return {};
+            for (int r = 0; r < m_catalog.rowCount(); ++r) {
+                const QVariantMap m = m_catalog.getAt(r);
+                if (m.value(QStringLiteral("fileName")).toString() == fn
+                    && m.value(QStringLiteral("isAvailable"), true).toBool())
+                    return m_catalog.findById(m.value(QStringLiteral("id")).toString());
+            }
+            return {};
+        };
+        for (const QJsonValue &v : readSystemProfilesBundle()) {
+            const QJsonObject e = v.toObject();
+            if (e.value(QStringLiteral("id")).toString() != ctx.launch.id) continue;
+            const QJsonObject mo = e.value(QStringLiteral("model")).toObject();
+            const CatalogModel cm = byFile(mo.value(QStringLiteral("file")).toString());
+            if (!cm.id.isEmpty()) { ctx.catalogModel = cm; ctx.model.modelId = cm.id; }
+            const CatalogModel mm = byFile(mo.value(QStringLiteral("mmprojFile")).toString());
+            if (!mm.id.isEmpty()) { ctx.mmprojModel = mm; ctx.model.mmprojId = mm.id; }
+            const QString df = e.value(QStringLiteral("draftModel")).toObject()
+                                   .value(QStringLiteral("file")).toString();
+            const CatalogModel dm = byFile(df);
+            if (!dm.id.isEmpty()) { ctx.draftModel = dm; ctx.model.draftModelId = dm.id; }
+            break;
+        }
+    }
     ctx.reasoningEnabled = m_launchThinkingEnabled;
     return ctx;
 }
@@ -8047,14 +8079,15 @@ QString AppController::resolveSystemBinaryId() const
         const QModelIndex ix = m_binaries.index(r, 0);
         const QString bid = m_binaries.data(ix, BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
-        if (firstId.isEmpty()) firstId = bid;
         const LlamaBinary b = m_binaries.findById(bid);
+        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;   // solo binarios válidos
+        if (firstId.isEmpty()) firstId = bid;
         const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
         if (mtpId.isEmpty() && (tag.contains("mtp") || tag.contains("beellama")))
             mtpId = bid;
     }
-    if (nvidia && !mtpId.isEmpty()) return mtpId;   // MTP si hay NVIDIA y build MTP
-    return firstId;                                  // si no, el primero disponible
+    if (nvidia && !mtpId.isEmpty()) return mtpId;   // MTP si hay NVIDIA y build MTP válido
+    return firstId;                                  // si no, el primero válido
 }
 
 QVariantMap AppController::recommendedSystemProfile() const
