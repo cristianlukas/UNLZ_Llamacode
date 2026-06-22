@@ -238,16 +238,17 @@ Item {
                     }
                     onCurrentValueChanged: {
                         if (!currentValue) return
+                        // Recomputar SIEMPRE para que la vista previa refleje ESTE perfil
+                        // (si no, queda el comando del perfil anterior = preview stale).
+                        App.computeEffectiveProfile(currentValue)
+                        if (root._restored) App.writeSetting("lastLaunchId", currentValue)
                         const it = itemById(currentValue)
                         if (it && it.ready === false) {
                             // Perfil de sistema sin modelo/binario: ofrecer instalar deps.
                             depsDialog.launchId = currentValue
                             depsDialog.profileName = it.displayName || ""
                             depsDialog.open()
-                            return
                         }
-                        App.computeEffectiveProfile(currentValue)
-                        if (root._restored) App.writeSetting("lastLaunchId", currentValue)
                     }
 
                     // Al abrir la app, restaurar el último perfil de lanzamiento usado.
