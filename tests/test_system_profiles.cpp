@@ -64,6 +64,11 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QCOMPARE(sys, 11);                       // 9 vram-* + MAX Q + FAST GEMMA
     QVERIFY(pm.isSystemLaunch("sys-vram-24"));
     QVERIFY(!anySysId.isEmpty());
+    // Visión: el tier 16GB lleva mmproj (multimodal); el 8GB no (VRAM ajustada).
+    const QString mp16 = pm.getLaunchProfile("sys-vram-16").value("modelProfileId").toString();
+    QVERIFY(!pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
+    const QString mp8 = pm.getLaunchProfile("sys-vram-8").value("modelProfileId").toString();
+    QVERIFY(pm.getModelProfile(mp8).value("mmprojId").toString().isEmpty());
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
@@ -115,7 +120,7 @@ void SystemProfilesTests::manager_modelIdIsDeterministic()
         QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
     const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
     const QString expect = QUuid::createUuidV5(
-        ns, QString(modelsDir + "/Qwen3.5-9B-Q4_K_M.gguf").toUtf8()).toString(QUuid::WithoutBraces);
+        ns, QString(modelsDir + "/Qwen3.5-9B/Qwen3.5-9B-Q4_K_M.gguf").toUtf8()).toString(QUuid::WithoutBraces);
     QCOMPARE(modelId, expect);
 }
 

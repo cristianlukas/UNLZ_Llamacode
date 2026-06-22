@@ -561,11 +561,14 @@ void ProfileManager::loadSystemProfiles()
         const QJsonObject o = v.toObject();
         const QString id = o.value("id").toString();
         if (id.isEmpty()) continue;
+        const QString folder = o.value("folder").toString();
         const QJsonObject mo = o.value("model").toObject();
         const QString file = mo.value("file").toString();
-        // El dir de descarga es plano (modelDownloadDir/<file>): el id det debe
-        // computarse con esa misma ruta para ligar tras el scan.
-        const QString modelPath = modelsDir + "/" + file;
+        // Descarga por subcarpeta (modelDownloadDir/<folder>/<file>): evita colisión
+        // de nombres genéricos (p.ej. mmproj-F16.gguf de varios repos). El id det
+        // se computa con esa misma ruta para ligar tras el scan recursivo.
+        const QString subdir = folder.isEmpty() ? QString() : (folder + "/");
+        const QString modelPath = modelsDir + "/" + subdir + file;
 
         const QJsonObject ro = o.value("runtime").toObject();
         RuntimePreset rt;
@@ -589,7 +592,7 @@ void ProfileManager::loadSystemProfiles()
         mp.modelId = detId(modelPath);
         const QString mmFile = mo.value("mmprojFile").toString();
         if (!mmFile.isEmpty())
-            mp.mmprojId = detId(modelsDir + "/" + mmFile);
+            mp.mmprojId = detId(modelsDir + "/" + subdir + mmFile);
         sysModel.append(mp);
 
         BackendProfile be;

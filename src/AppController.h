@@ -354,6 +354,9 @@ public:
     // Abre el explorador en la carpeta contenedora del archivo (y lo selecciona en Windows).
     Q_INVOKABLE void openContainingFolder(const QString &path);
     Q_INVOKABLE void installOfficialBinary();
+    // Instala el build MTP (Anbeeld/beellama.cpp, DFlash/MTP) — solo Windows CUDA.
+    // Para perfiles de sistema en máquinas NVIDIA: habilita los flags MTP.
+    Q_INVOKABLE void installMtpBinary();
     Q_INVOKABLE void cancelOfficialBinaryInstall();
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
@@ -872,6 +875,12 @@ private:
 
     QProcess *m_proc = nullptr;
     QProcess *m_installerProc = nullptr;
+    // Fuente del instalador de binarios (parametriza installOfficialBinary):
+    // repo GitHub + etiqueta (kind en el registro) + si exige CUDA (MTP build).
+    QString m_installSourceRepo  = QStringLiteral("ggml-org/llama.cpp");
+    QString m_installSourceLabel = QStringLiteral("official");
+    bool    m_installRequireCuda = false;
+    void startBinaryInstall();   // cuerpo común (antes en installOfficialBinary)
     QProcess *m_smokeTestProc = nullptr;
     QTimer   *m_smokeTestTimer = nullptr;
     QString   m_smokeTestLog;
@@ -1183,6 +1192,10 @@ private:
     // Tras un scan: si el modelo del perfil de sistema pendiente ya está en el
     // catálogo, lo activa (lastLaunchId + effective) y limpia el pendiente.
     void maybeActivatePendingSystemProfile();
+    // Encola una descarga de modelo en un subdir opcional de modelDownloadDir
+    // (evita colisión de nombres genéricos como mmproj-F16.gguf entre repos).
+    void enqueueModelDownload(const QString &repo, const QString &fileName,
+                              const QString &subdir);
 
     // Model quality benchmarks (Artificial Analysis Intelligence Index).
     // Bundled table is the offline fallback; a weekly live fetch overlays it.

@@ -1841,6 +1841,23 @@ void AppController::openContainingFolder(const QString &path)
 
 void AppController::installOfficialBinary()
 {
+    m_installSourceRepo = QStringLiteral("ggml-org/llama.cpp");
+    m_installSourceLabel = QStringLiteral("official");
+    m_installRequireCuda = false;
+    startBinaryInstall();
+}
+
+void AppController::installMtpBinary()
+{
+    // Build MTP/DFlash (Anbeeld/beellama.cpp). Solo Windows CUDA: requiere NVIDIA.
+    m_installSourceRepo = QStringLiteral("Anbeeld/beellama.cpp");
+    m_installSourceLabel = QStringLiteral("beellama");
+    m_installRequireCuda = true;
+    startBinaryInstall();
+}
+
+void AppController::startBinaryInstall()
+{
     if (m_installingOfficialBinary || m_installerProc) {
         emit serverError("Binary install already in progress.");
         return;
@@ -1855,8 +1872,9 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 try {
     $headers = @{ 'User-Agent' = 'LlamaCode' }
-    Write-Output 'STATUS: Consultando release latest de llama.cpp...'
-    $api = 'https://api.github.com/repos/ggml-org/llama.cpp/releases/latest'
+    $requireCuda = '%3'
+    Write-Output 'STATUS: Consultando release latest de %2...'
+    $api = 'https://api.github.com/repos/%2/releases/latest'
     $rel = Invoke-RestMethod -Uri $api -Headers $headers
     $tag = [string]$rel.tag_name
     $assets = @($rel.assets)
@@ -1864,11 +1882,15 @@ try {
     $hasNvidia = $false
     try { $null = Get-Command nvidia-smi -ErrorAction Stop; $hasNvidia = $true } catch {}
     if ($hasNvidia) {
-        $pick = $assets | Where-Object { $_.name -match 'bin-win-cuda.*x64.*\.zip$' -and $_.name -notmatch '^cudart-' } | Select-Object -First 1
+        $pick = $assets | Where-Object { $_.name -match 'bin-win-cuda.*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1
     }
-    if (-not $pick) { $pick = $assets | Where-Object { $_.name -match 'bin-win-(avx2|cpu|openblas).*x64.*\.zip$' -and $_.name -notmatch '^cudart-' } | Select-Object -First 1 }
-    if (-not $pick) { $pick = $assets | Where-Object { $_.name -match 'win.*x64.*\.zip$' -and $_.name -notmatch '^cudart-' } | Select-Object -First 1 }
-    if (-not $pick) { throw 'No suitable Windows x64 binary asset found in latest release.' }
+    if ($requireCuda -eq '1') {
+        if (-not $pick) { throw 'No CUDA Windows x64 build found (este binario MTP requiere NVIDIA/CUDA).' }
+    } else {
+        if (-not $pick) { $pick = $assets | Where-Object { $_.name -match 'bin-win-(avx2|cpu|openblas).*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1 }
+        if (-not $pick) { $pick = $assets | Where-Object { $_.name -match 'win.*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1 }
+        if (-not $pick) { throw 'No suitable Windows x64 binary asset found in latest release.' }
+    }
 
     Write-Output ('STATUS: Descargando asset ' + $pick.name + ' ...')
     $dest = '%1'
@@ -1889,7 +1911,7 @@ try {
     Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
     if ($pick.name -match 'cuda-([0-9.]+)-x64\.zip$') {
         $cudaVer = $Matches[1]
-        $rtRx = '^cudart-.*cuda-' + [regex]::Escape($cudaVer) + '-x64\.zip$'
+        $rtRx = 'cudart-.*cuda-' + [regex]::Escape($cudaVer) + '-x64\.zip$'
         $cudart = $assets | Where-Object { $_.name -match $rtRx } | Select-Object -First 1
         if ($cudart) {
             Write-Output ('STATUS: Descargando runtime CUDA ' + $cudart.name + ' ...')
@@ -1910,7 +1932,9 @@ try {
     Write-Output ('ERROR: ' + $_.Exception.Message)
     exit 1
 }
-)PS").arg(QDir::toNativeSeparators(toolsDir).replace("'", "''"));
+)PS").arg(QDir::toNativeSeparators(toolsDir).replace("'", "''"))
+       .arg(m_installSourceRepo)
+       .arg(m_installRequireCuda ? QStringLiteral("1") : QStringLiteral("0"));
 
     m_installerProc = new QProcess(this);
     m_installingOfficialBinary = true;
@@ -1997,15 +2021,18 @@ try {
                 // en uno previo), así que el catálogo es append-only y necesita que
                 // cada entrada sea identificable.
                 const QString tag = releaseTag.isEmpty() ? QStringLiteral("latest") : releaseTag;
-                const QString name = releaseTag.isEmpty()
-                    ? QStringLiteral("llama-server (official latest)")
-                    : QStringLiteral("llama-server (official %1)").arg(releaseTag);
+                // Etiqueta legible según la fuente; "beellama" en el nombre permite
+                // que resolveSystemBinaryId lo elija como build MTP en máquinas NVIDIA.
+                const QString srcName = (m_installSourceLabel == QLatin1String("beellama"))
+                    ? QStringLiteral("beellama MTP") : QStringLiteral("official");
+                const QString name = QStringLiteral("llama-server (%1 %2)")
+                    .arg(srcName, releaseTag.isEmpty() ? QStringLiteral("latest") : releaseTag);
                 QString backend = BinaryRegistry::detectBackend(installedPath);
                 if (backend.isEmpty()) backend = QStringLiteral("cpu");
-                const QString id = m_binaries.add(installedPath, name, "official", backend, tag);
+                const QString id = m_binaries.add(installedPath, name, m_installSourceLabel, backend, tag);
                 if (!id.isEmpty()) {
                     ok = true;
-                    message = "Official llama.cpp binary installed and registered.";
+                    message = QStringLiteral("%1 binary installed and registered.").arg(srcName);
                 }
             }
         }
@@ -8076,19 +8103,34 @@ void AppController::acceptSystemProfile(const QString &launchId)
         emit serverError(QStringLiteral("Perfil de sistema desconocido: %1").arg(launchId));
         return;
     }
-    // Binario: si no hay ninguno instalado, instalar el oficial (elige CUDA/CPU).
-    // Si ya hay (incl. MTP), resolveSystemBinaryId lo usará al lanzar.
-    if (resolveSystemBinaryId().isEmpty())
-        installOfficialBinary();
+    // Binario: MTP si hay NVIDIA (y no hay ya un build MTP), si no el oficial.
+    // resolveSystemBinaryId prefiere el MTP cuando exista; sirve para detectar si ya
+    // hay uno. Las descargas son async; el server se lanza después con lo instalado.
+    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
+                        || gpu.contains("rtx") || gpu.contains("gtx");
+    bool hasMtp = false;
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const LlamaBinary b = m_binaries.findById(
+            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
+        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
+        if (t.contains("mtp") || t.contains("beellama")) { hasMtp = true; break; }
+    }
+    if (entry.value("mtp").toObject().value("enabled").toBool() && nvidia && !hasMtp)
+        installMtpBinary();                              // perfil con MTP + NVIDIA → build MTP
+    else if (resolveSystemBinaryId().isEmpty())
+        installOfficialBinary();                         // si no hay ningún binario
 
-    // Modelo (+mmproj) al dir gestionado; al terminar el scan, se activa solo.
+    // Modelo (+mmproj) al subdir del tier; al terminar el scan, se activa solo.
     m_pendingSystemLaunchId = launchId;
+    const QString folder = entry.value("folder").toString();
     const QJsonObject mo = entry.value("model").toObject();
-    downloadRecommendedModel(mo.value("repo").toString(), mo.value("file").toString());
+    enqueueModelDownload(mo.value("repo").toString(), mo.value("file").toString(), folder);
     const QString mmRepo = mo.value("mmprojRepo").toString();
     const QString mmFile = mo.value("mmprojFile").toString();
     if (!mmRepo.isEmpty() && !mmFile.isEmpty())
-        downloadRecommendedModel(mmRepo, mmFile);
+        enqueueModelDownload(mmRepo, mmFile, folder);
 
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
     emit activeLaunchIdChanged();
@@ -8126,12 +8168,22 @@ void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,
 
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)
 {
+    enqueueModelDownload(repo, fileName, QString());
+}
+
+void AppController::enqueueModelDownload(const QString &repo, const QString &fileName,
+                                        const QString &subdir)
+{
     const QString cleanRepo = repo.trimmed();
     const QString cleanFile = fileName.trimmed();
     if (cleanRepo.isEmpty() || cleanFile.isEmpty())
         return;
 
-    const QString dir = modelDownloadDir();
+    QString dir = modelDownloadDir();
+    if (!subdir.trimmed().isEmpty()) {
+        dir += QLatin1Char('/') + subdir.trimmed();
+        QDir().mkpath(dir);
+    }
     const QString outPath = dir + QLatin1Char('/') + QFileInfo(cleanFile).fileName();
     const QString partPath = outPath + QStringLiteral(".part");
 

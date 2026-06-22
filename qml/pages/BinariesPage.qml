@@ -108,6 +108,15 @@ Item {
             onActionClicked: addDlg.open()
         }
 
+        // Build MTP (Anbeeld/beellama.cpp): DFlash/MTP, solo Windows CUDA. Habilita
+        // los flags de speculative decoding de los perfiles de sistema en NVIDIA.
+        LcButton {
+            text: App.installingOfficialBinary ? "Descargando…" : "Instalar build MTP (NVIDIA · beellama)"
+            secondary: true
+            enabled: !App.installingOfficialBinary
+            onClicked: App.installMtpBinary()
+        }
+
         // download progress banner
         RowLayout {
             id: downloadBanner

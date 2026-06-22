@@ -18,7 +18,7 @@
     "displayName": "Sistema · 16GB · Qwen3.6-35B-A3B MoE Q4",
     "minVramGb": 16, "minRamGb": 32, "cpuOk": false,
     "folder": "Qwen3.6-35B-A3B",
-    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "", "mmprojFile": "" },
+    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
     "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
     "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--parallel","1","--cache-type-v","q4_0","--n-cpu-moe","18","--reasoning","off"],
     "mtp": { "enabled": false, "args": [] }
@@ -30,7 +30,7 @@
     "displayName": "Sistema · 12GB-MoE · Qwen3.6-35B-A3B Q4",
     "minVramGb": 12, "minRamGb": 32, "cpuOk": false,
     "folder": "Qwen3.6-35B-A3B",
-    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "", "mmprojFile": "" },
+    "model": { "repo": "unsloth/Qwen3.6-35B-A3B-GGUF", "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf", "quant": "IQ4_XS", "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
     "runtime": { "ctx": 16384, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
     "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","16384","--parallel","1","--cache-type-v","q4_0","--n-cpu-moe","24","--reasoning","off"],
     "mtp": { "enabled": false, "args": [] }
@@ -42,7 +42,7 @@
     "displayName": "Sistema · 12GB · Qwen3.5-9B Q4",
     "minVramGb": 12, "minRamGb": 16, "cpuOk": false,
     "folder": "Qwen3.5-9B",
-    "model": { "repo": "unsloth/Qwen3.5-9B-GGUF", "file": "Qwen3.5-9B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
+    "model": { "repo": "unsloth/Qwen3.5-9B-GGUF", "file": "Qwen3.5-9B-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "unsloth/Qwen3.5-9B-GGUF", "mmprojFile": "mmproj-F16.gguf" },
     "runtime": { "ctx": 262144, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
     "extraArgs": ["--temp","0.60","--top-p","0.95","--top-k","20","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","262144","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
     "mtp": { "enabled": false, "args": [] }
