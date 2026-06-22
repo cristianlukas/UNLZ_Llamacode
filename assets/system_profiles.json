@@ -60,8 +60,20 @@
     ],
     "mtp": {
       "enabled": true,
-      "args": ["--spec-type","draft-mtp,ngram-mod","--spec-draft-n-max","3","--spec-ngram-mod-n-match","24","--spec-ngram-mod-n-min","16","--spec-ngram-mod-n-max","32"]
-    }
+      "args": [
+        "--spec-type",
+        "draft-mtp,ngram-mod",
+        "--spec-draft-n-max",
+        "3",
+        "--spec-ngram-mod-n-match",
+        "24",
+        "--spec-ngram-mod-n-min",
+        "16",
+        "--spec-ngram-mod-n-max",
+        "32"
+      ]
+    },
+    "binaryKind": "beellama"
   },
   {
     "id": "sys-fastgemma",
@@ -137,7 +149,8 @@
     "mtp": {
       "enabled": false,
       "args": []
-    }
+    },
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-16",
@@ -190,7 +203,8 @@
     "mtp": {
       "enabled": false,
       "args": []
-    }
+    },
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-12-moe",
@@ -243,7 +257,8 @@
     "mtp": {
       "enabled": false,
       "args": []
-    }
+    },
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-8-gemma",
@@ -295,7 +310,8 @@
     "mtp": {
       "enabled": false,
       "args": []
-    }
+    },
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-4",
@@ -351,19 +367,60 @@
         "--spec-draft-n-max",
         "3"
       ]
-    }
+    },
+    "binaryKind": "beellama"
   },
   {
     "id": "sys-vram-4-gemma",
     "tier": "4GB-Gemma",
     "displayName": "[general] 4GB · Gemma 4 E4B (QAT, multimodal)",
-    "minVramGb": 4, "minRamGb": 8, "cpuOk": false,
+    "minVramGb": 4,
+    "minRamGb": 8,
+    "cpuOk": false,
     "folder": "gemma-4-E4B",
-    "model": { "repo": "unsloth/gemma-4-E4B-it-GGUF", "file": "gemma-4-E4B-it-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
-    "runtime": { "ctx": 8192, "gpuLayers": 20, "batch": 256, "ubatch": 256, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","8192","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
+    "model": {
+      "repo": "unsloth/gemma-4-E4B-it-GGUF",
+      "file": "gemma-4-E4B-it-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "",
+      "mmprojFile": ""
+    },
+    "runtime": {
+      "ctx": 8192,
+      "gpuLayers": 20,
+      "batch": 256,
+      "ubatch": 256,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "1.0",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "64",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "8192",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
     "comment": "Gemma 4 E4B QAT (~4GB). Offload parcial para entrar en 4GB; re-medir.",
-    "mtp": { "enabled": false, "args": [] }
+    "mtp": {
+      "enabled": false,
+      "args": []
+    },
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-2",
@@ -419,19 +476,60 @@
         "--spec-draft-n-max",
         "3"
       ]
-    }
+    },
+    "binaryKind": "beellama"
   },
   {
     "id": "sys-vram-2-gemma",
     "tier": "2GB-Gemma",
     "displayName": "[general] 2GB · Gemma 4 E2B (QAT, multimodal)",
-    "minVramGb": 2, "minRamGb": 8, "cpuOk": false,
+    "minVramGb": 2,
+    "minRamGb": 8,
+    "cpuOk": false,
     "folder": "gemma-4-E2B",
-    "model": { "repo": "unsloth/gemma-4-E2B-it-GGUF", "file": "gemma-4-E2B-it-Q4_K_M.gguf", "quant": "Q4_K_M", "mmprojRepo": "", "mmprojFile": "" },
-    "runtime": { "ctx": 4096, "gpuLayers": 14, "batch": 64, "ubatch": 64, "kv": "q4_0", "flashAttn": true },
-    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","4096","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
+    "model": {
+      "repo": "unsloth/gemma-4-E2B-it-GGUF",
+      "file": "gemma-4-E2B-it-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "mmprojRepo": "",
+      "mmprojFile": ""
+    },
+    "runtime": {
+      "ctx": 4096,
+      "gpuLayers": 14,
+      "batch": 64,
+      "ubatch": 64,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "1.0",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "64",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--ctx-size",
+      "4096",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
     "comment": "Gemma 4 E2B QAT (~2.9GB). Offload parcial para entrar en 2GB; re-medir.",
-    "mtp": { "enabled": false, "args": [] }
+    "mtp": {
+      "enabled": false,
+      "args": []
+    },
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-0",
@@ -485,6 +583,7 @@
     "mtp": {
       "enabled": false,
       "args": []
-    }
+    },
+    "binaryKind": "official"
   }
 ]

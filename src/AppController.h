@@ -1220,9 +1220,14 @@ private:
     void benchmarkMeasureResources(std::function<void(double ramMb, double vramMb)> onDone);
     QString modelDownloadDir() const;
     void rebuildModelRecommendations();
-    // Mejor binario instalado para perfiles de sistema: prefiere MTP (nombre/back
-    // "mtp"/"beellama") si hay NVIDIA; si no, el primero disponible. "" si ninguno.
-    QString resolveSystemBinaryId() const;
+    // kind: "beellama" (ngram-mod / Qwen NextN MTP) | "official"/"" (gemma4-assistant
+    // y el resto). Elige un binario válido del tipo pedido; fallback al mejor disponible.
+    QString resolveSystemBinaryId(const QString &kind = QString()) const;
+    // binaryKind del perfil de sistema (del bundle); "official" si no se especifica.
+    QString systemProfileBinaryKind(const QString &launchId) const;
+    // Instala el binario del tipo pedido si falta (beellama→installMtpBinary,
+    // official→installOfficialBinary). beellama es CUDA-only: sin NVIDIA cae a official.
+    void ensureSystemBinary(const QString &kind);
     // Para acceptSystemProfile: perfil de sistema pendiente de bind tras descarga.
     QString m_pendingSystemLaunchId;
     bool    m_pendingSystemStartAgent = false;

@@ -2399,7 +2399,7 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     // cualquier máquina sin persistir un path de binario.
     QString binId = ctx.backend.binaryId;
     if (binId.isEmpty() && ctx.launch.system)
-        binId = resolveSystemBinaryId();
+        binId = resolveSystemBinaryId(systemProfileBinaryKind(ctx.launch.id));
     ctx.binary = m_binaries.findById(binId);
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
@@ -8103,27 +8103,54 @@ static QJsonArray readSystemProfilesBundle()
     return QJsonDocument::fromJson(f.readAll()).array();
 }
 
-QString AppController::resolveSystemBinaryId() const
+void AppController::ensureSystemBinary(const QString &kind)
 {
+    bool hasBee = false, hasOfficial = false;
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const LlamaBinary b = m_binaries.findById(
+            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
+        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;
+        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
+        if (t.contains("beellama") || t.contains("mtp")) hasBee = true; else hasOfficial = true;
+    }
     const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
     const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
     const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
                         || gpu.contains("rtx") || gpu.contains("gtx");
-    QString firstId;
-    QString mtpId;
+    if (kind == QLatin1String("beellama")) {
+        if (!hasBee && nvidia) installMtpBinary();          // ngram-mod / Qwen MTP
+        else if (!hasBee && !hasOfficial) installOfficialBinary();
+    } else {                                                 // "official": gemma4-assistant, etc
+        if (!hasOfficial) installOfficialBinary();
+    }
+}
+
+QString AppController::systemProfileBinaryKind(const QString &launchId) const
+{
+    for (const QJsonValue &v : readSystemProfilesBundle())
+        if (v.toObject().value(QStringLiteral("id")).toString() == launchId)
+            return v.toObject().value(QStringLiteral("binaryKind")).toString(QStringLiteral("official"));
+    return QStringLiteral("official");
+}
+
+QString AppController::resolveSystemBinaryId(const QString &kind) const
+{
+    const bool wantBee = (kind == QLatin1String("beellama"));
+    QString firstId, beeId, officialId;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
-        const QModelIndex ix = m_binaries.index(r, 0);
-        const QString bid = m_binaries.data(ix, BinaryRegistry::IdRole).toString();
+        const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
-        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;   // solo binarios válidos
+        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;     // solo válidos
         if (firstId.isEmpty()) firstId = bid;
         const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
-        if (mtpId.isEmpty() && (tag.contains("mtp") || tag.contains("beellama")))
-            mtpId = bid;
+        const bool isBee = tag.contains("beellama") || tag.contains("mtp");
+        if (isBee) { if (beeId.isEmpty()) beeId = bid; }
+        else       { if (officialId.isEmpty()) officialId = bid; }       // official / gemma / etc
     }
-    if (nvidia && !mtpId.isEmpty()) return mtpId;   // MTP si hay NVIDIA y build MTP válido
-    return firstId;                                  // si no, el primero válido
+    if (wantBee) return !beeId.isEmpty() ? beeId : firstId;
+    // "official": gemma4-assistant y demás NO corren en beellama → preferir no-bee.
+    return !officialId.isEmpty() ? officialId : firstId;
 }
 
 QVariantMap AppController::recommendedSystemProfile() const
@@ -8218,19 +8245,10 @@ QVariantList AppController::recommendedShowcase() const
 
 void AppController::acceptShowcase()
 {
-    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
-    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
-    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
-                        || gpu.contains("rtx") || gpu.contains("gtx");
-    bool hasMtp = false;
-    for (int r = 0; r < m_binaries.rowCount(); ++r) {
-        const LlamaBinary b = m_binaries.findById(
-            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
-        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
-        if (!b.path.isEmpty() && QFileInfo::exists(b.path)
-            && (t.contains("mtp") || t.contains("beellama"))) { hasMtp = true; break; }
-    }
-    if (nvidia && !hasMtp) installMtpBinary();   // ambos extras necesitan beellama
+    // Los dos extras usan binarios distintos: MAX-Q→beellama (ngram), FAST-GEMMA→
+    // official (gemma4-assistant). Instalar ambos si faltan.
+    ensureSystemBinary(QStringLiteral("beellama"));
+    ensureSystemBinary(QStringLiteral("official"));
 
     QString firstId;
     for (const QJsonValue &v : readSystemProfilesBundle()) {
@@ -8256,23 +8274,7 @@ void AppController::acceptShowcaseOne(const QString &launchId)
         if (v.toObject().value(QStringLiteral("id")).toString() == launchId) { entry = v.toObject(); break; }
     if (entry.isEmpty()) return;
 
-    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
-    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
-    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
-                        || gpu.contains("rtx") || gpu.contains("gtx");
-    bool hasMtp = false;
-    for (int r = 0; r < m_binaries.rowCount(); ++r) {
-        const LlamaBinary b = m_binaries.findById(
-            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
-        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
-        if (!b.path.isEmpty() && QFileInfo::exists(b.path)
-            && (t.contains("mtp") || t.contains("beellama"))) { hasMtp = true; break; }
-    }
-    const bool needsMtp = entry.value(QStringLiteral("mtp")).toObject().value(QStringLiteral("enabled")).toBool()
-                          || entry.value(QStringLiteral("requiresMtpBinary")).toBool();
-    if (needsMtp && nvidia && !hasMtp) installMtpBinary();
-    else if (resolveSystemBinaryId().isEmpty()) installOfficialBinary();
-
+    ensureSystemBinary(entry.value(QStringLiteral("binaryKind")).toString(QStringLiteral("official")));
     enqueueSystemProfileAssets(entry);
     m_pendingSystemLaunchId = launchId;
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
@@ -8302,42 +8304,25 @@ void AppController::acceptSystemProfileImpl(const QString &launchId, bool startW
         emit serverError(QStringLiteral("Perfil de sistema desconocido: %1").arg(launchId));
         return;
     }
-    // Binario: MTP si hay NVIDIA (y no hay ya un build MTP), si no el oficial.
-    // resolveSystemBinaryId prefiere el MTP cuando exista; sirve para detectar si ya
-    // hay uno. Las descargas son async; el server se lanza después con lo instalado.
-    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
+    // Binario según el tipo del perfil (beellama: ngram/Qwen-MTP; official: gemma4-
+    // assistant y resto). Descargas async; el server se lanza con lo instalado.
     const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
-    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
-                        || gpu.contains("rtx") || gpu.contains("gtx");
-    bool hasMtp = false;
-    for (int r = 0; r < m_binaries.rowCount(); ++r) {
-        const LlamaBinary b = m_binaries.findById(
-            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
-        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
-        if (t.contains("mtp") || t.contains("beellama")) { hasMtp = true; break; }
-    }
-    // ¿El perfil necesita el build MTP/beellama? (MTP propio o DFlash via requiresMtpBinary)
-    const bool needsMtp = entry.value("mtp").toObject().value("enabled").toBool()
-                          || entry.value("requiresMtpBinary").toBool();
-    if (needsMtp && nvidia && !hasMtp)
-        installMtpBinary();                              // perfil MTP/DFlash + NVIDIA → beellama
-    else if (resolveSystemBinaryId().isEmpty())
-        installOfficialBinary();                         // si no hay ningún binario
+    ensureSystemBinary(entry.value("binaryKind").toString(QStringLiteral("official")));
 
     // Modelo (+mmproj+draft) al subdir del tier; al terminar el scan, se activa solo.
     m_pendingSystemLaunchId = launchId;
     m_pendingSystemStartAgent = startWhenReady;
     enqueueSystemProfileAssets(entry);
 
-    // Máquina tope (24GB VRAM): además dejar listos MAX-Q y FAST-GEMMA (modelos +
-    // draft + beellama) para que el usuario los pueda usar sin más descargas.
+    // Máquina tope (24GB VRAM): además dejar listos MAX-Q y FAST-GEMMA (cada uno con
+    // su binario y assets) para usarlos sin más descargas.
     if (vram >= 23.5) {
-        if (needsMtp == false && nvidia && !hasMtp)
-            installMtpBinary();                          // FAST-GEMMA (DFlash) requiere beellama
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
-            if (e.value("extra").toBool() && e.value("id").toString() != launchId)
-                enqueueSystemProfileAssets(e);   // showcase 24GB (Qwen MAX / Gemma DFlash)
+            if (e.value("extra").toBool() && e.value("id").toString() != launchId) {
+                ensureSystemBinary(e.value("binaryKind").toString(QStringLiteral("official")));
+                enqueueSystemProfileAssets(e);
+            }
         }
     }
 
