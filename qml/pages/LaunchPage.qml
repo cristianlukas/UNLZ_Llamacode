@@ -530,6 +530,8 @@ Item {
                                   ? (App.serverIsRouter ? "Detener router" : "Detener server")
                                   : "Iniciar router"
                             danger: App.serverRunning
+                            // Acción secundaria: el celeste se reserva para "servidor + agente".
+                            secondary: !App.serverRunning
                             Layout.fillWidth: true
                             enabled: App.serverRunning || (function(){
                                 for (var k in routerBox.pool) if (routerBox.pool[k]) return true
