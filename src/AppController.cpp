@@ -8244,6 +8244,7 @@ void AppController::acceptShowcase()
         writeSetting(QStringLiteral("lastLaunchId"), firstId);
         emit activeLaunchIdChanged();
     }
+    maybeActivatePendingSystemProfile();          // activa ya si todo estaba presente
     emit setupStateChanged();
     emit navigateToDownloads();
 }
@@ -8276,6 +8277,7 @@ void AppController::acceptShowcaseOne(const QString &launchId)
     m_pendingSystemLaunchId = launchId;
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
     emit activeLaunchIdChanged();
+    maybeActivatePendingSystemProfile();          // activa ya si todo estaba presente
     emit setupStateChanged();
     emit navigateToDownloads();
 }
@@ -8351,15 +8353,28 @@ void AppController::acceptSystemProfileImpl(const QString &launchId, bool startW
 // Encola modelo + mmproj + draft de un perfil de sistema (cada uno a su subdir).
 void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
 {
+    // No re-descargar lo que ya está en el catálogo (mismo nombre de archivo en
+    // cualquier root escaneado, p.ej. D:/Models). buildContext liga por filename.
+    auto have = [this](const QString &fn) {
+        if (fn.isEmpty()) return true;
+        for (int i = 0; i < m_catalog.rowCount(); ++i) {
+            const QVariantMap m = m_catalog.getAt(i);
+            if (m.value(QStringLiteral("fileName")).toString() == fn
+                && m.value(QStringLiteral("isAvailable"), true).toBool())
+                return true;
+        }
+        return false;
+    };
     const QString folder = entry.value("folder").toString();
     const QJsonObject mo = entry.value("model").toObject();
-    enqueueModelDownload(mo.value("repo").toString(), mo.value("file").toString(), folder);
+    if (!have(mo.value("file").toString()))
+        enqueueModelDownload(mo.value("repo").toString(), mo.value("file").toString(), folder);
     const QString mmRepo = mo.value("mmprojRepo").toString();
     const QString mmFile = mo.value("mmprojFile").toString();
-    if (!mmRepo.isEmpty() && !mmFile.isEmpty())
+    if (!mmRepo.isEmpty() && !mmFile.isEmpty() && !have(mmFile))
         enqueueModelDownload(mmRepo, mmFile, folder);
     const QJsonObject draft = entry.value("draftModel").toObject();
-    if (!draft.isEmpty())
+    if (!draft.isEmpty() && !have(draft.value("file").toString()))
         enqueueModelDownload(draft.value("repo").toString(), draft.value("file").toString(),
                              draft.value("folder").toString());
 }
@@ -8369,15 +8384,10 @@ void AppController::maybeActivatePendingSystemProfile()
     if (m_pendingSystemLaunchId.isEmpty()) return;
     const LaunchProfile launch = m_profiles.resolveLaunch(m_pendingSystemLaunchId);
     if (launch.id.isEmpty()) { m_pendingSystemLaunchId.clear(); return; }
-    const ModelProfile model = m_profiles.resolveModelProfile(launch.modelProfileId);
-    const CatalogModel cat = m_catalog.findById(model.modelId);
-    if (cat.id.isEmpty() || !cat.isAvailable) return;   // todavía no escaneado
-    if (!model.mmprojId.isEmpty() && m_catalog.findById(model.mmprojId).id.isEmpty())
-        return;                                          // falta mmproj
-    if (!model.draftModelId.isEmpty() && m_catalog.findById(model.draftModelId).id.isEmpty())
-        return;                                          // falta draft (DFlash)
+    // Listo si el effective resuelve modelo+binario (incluye ligado por filename
+    // contra cualquier root, no solo el id determinista del download).
     if (!systemProfileReady(m_pendingSystemLaunchId))
-        return;                                          // falta binario u otra dependencia
+        return;                                          // faltan deps todavía
 
     const QString id = m_pendingSystemLaunchId;
     const bool startAgent = m_pendingSystemStartAgent;
