@@ -268,7 +268,7 @@ QString VoiceServerManager::defaultBinaryUrl(const QString &kind)
     if (kind == QLatin1String("piper"))
         return QStringLiteral("https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip");
     if (kind == QLatin1String("whisper-server"))
-        return QStringLiteral("https://github.com/ggerganov/whisper.cpp/releases/download/v1.7.4/whisper-bin-x64.zip");
+        return QStringLiteral("https://github.com/ggml-org/whisper.cpp/releases/latest/download/whisper-bin-x64.zip");
 #elif defined(Q_OS_LINUX)
     if (kind == QLatin1String("piper"))
         return QStringLiteral("https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz");

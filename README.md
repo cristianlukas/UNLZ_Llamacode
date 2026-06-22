@@ -454,6 +454,8 @@ NavBar (reusa el backend de chat: sesiones e historial incluidos).
 - Al iniciar con STT gestionado, si falta el modelo o `whisper-server`, Charla
   ofrece instalar ambos en secuencia y guarda automáticamente la ruta del
   ejecutable. La escucha no comienza hasta que los dos prerrequisitos estén listos.
+  En Windows, el binario se obtiene desde el asset x64 del último release oficial
+  de `ggml-org/whisper.cpp`, evitando depender de una versión retirada.
 
 ## Memoria, RAG y verificación
 

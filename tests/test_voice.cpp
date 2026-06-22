@@ -24,6 +24,7 @@ private slots:
     void vadTurnEnded();
     void voiceInLaunchProfile();
     void sttServerCatalog();
+    void voiceBinaryUrls();
     void ttsVoiceCatalog();
 };
 
@@ -163,6 +164,16 @@ void TestVoice::sttServerCatalog()
     QVERIFY(!a.contains("-l"));
     QStringList b = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "es");
     QVERIFY(b.contains("-l")); QVERIFY(b.contains("es"));
+}
+
+void TestVoice::voiceBinaryUrls()
+{
+#ifdef Q_OS_WIN
+    const QString whisperUrl = VoiceServerManager::defaultBinaryUrl("whisper-server");
+    QVERIFY(whisperUrl.startsWith("https://github.com/ggml-org/whisper.cpp/"));
+    QVERIFY(whisperUrl.contains("/releases/latest/download/"));
+    QVERIFY(whisperUrl.endsWith("/whisper-bin-x64.zip"));
+#endif
 }
 
 void TestVoice::ttsVoiceCatalog()
