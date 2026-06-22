@@ -342,6 +342,11 @@ reanudarse, reordenarse o cancelarse desde la UI. La pausa conserva el archivo
 `.part` y al reanudar intenta continuar con `Range`; si el servidor no acepta
 reanudar, reinicia la descarga parcial para no corromper el GGUF.
 
+El botón **Instalar y usar** de los perfiles recomendados por hardware selecciona
+el perfil correspondiente en **Lanzar**. Si sus dependencias ya están presentes,
+inicia directamente **Iniciar servidor + agente**; si falta modelo o binario, abre
+**Descargas**, espera el escaneo de catálogo/binarios y arranca al quedar listo.
+
 ### Estimación de memoria (`estimateCatalogMemoryGb`)
 
 El estimador usa primero el footprint curado del catálogo (`recommended_ram_gb`) cuando existe, porque representa el tamaño operativo esperado del GGUF recomendado. Si falta ese dato, usa un fallback sintético:

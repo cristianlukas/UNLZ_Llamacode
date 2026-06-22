@@ -662,6 +662,9 @@ public:
     // Acepta un perfil de sistema: asegura binario (MTP si hay NVIDIA, si no
     // official), baja el modelo (+mmproj) al dir gestionado, escanea y lo activa.
     Q_INVOKABLE void acceptSystemProfile(const QString &launchId);
+    // Igual que acceptSystemProfile, pero al quedar listo selecciona y arranca
+    // servidor + agente. Usado por botones "Instalar y usar".
+    Q_INVOKABLE void installAndUseSystemProfile(const QString &launchId);
     // Showcase de tope (24GB): perfiles "extra" (MAX-Q coding + FAST-GEMMA general)
     // que el hardware puede correr. Vacío si la VRAM no alcanza.
     Q_INVOKABLE QVariantList recommendedShowcase() const;
@@ -818,6 +821,7 @@ signals:
     void modelRecommendationsChanged();
     void modelDownloadChanged();
     void downloadHistoryChanged();
+    void launchProfileSelected(const QString &launchProfileId);
     // Pedido a la UI de abrir la sección "Descargas" (p.ej. al instalar deps).
     void navigateToDownloads();
     void tasksSchedulerChanged();
@@ -1178,6 +1182,7 @@ private:
     void finishModelDownloadItem(const QString &id, const QString &state, const QString &status,
                                  int progress = -1, bool removePart = false);
     void scanModelDownloadRoot();
+    void acceptSystemProfileImpl(const QString &launchId, bool startWhenReady);
     QString benchmarkStorageDir() const;
     QString customBenchmarkDir() const;   // dir holding custom benchmark definitions
     void seedBundledCustomBenchmarks() const;
@@ -1220,6 +1225,7 @@ private:
     QString resolveSystemBinaryId() const;
     // Para acceptSystemProfile: perfil de sistema pendiente de bind tras descarga.
     QString m_pendingSystemLaunchId;
+    bool    m_pendingSystemStartAgent = false;
     // Tras un scan: si el modelo del perfil de sistema pendiente ya está en el
     // catálogo, lo activa (lastLaunchId + effective) y limpia el pendiente.
     void maybeActivatePendingSystemProfile();

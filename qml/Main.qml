@@ -390,6 +390,12 @@ ApplicationWindow {
                         return showcase[i].launchId
                 return ""
             }
+            function recommendedProfileLabel() {
+                const name = sysPick.displayName ?? ""
+                if (name.length > 0) return name
+                const tier = sysPick.tier ?? ""
+                return tier.length > 0 ? ("Perfil " + tier) : ""
+            }
 
             // ── Perfil recomendado por hardware ─────────────────────────
             // Card única y adaptativa: en placas de 24GB+ ofrece el showcase
@@ -435,9 +441,9 @@ ApplicationWindow {
                     Text {
                         Layout.fillWidth: true
                         visible: !recCard.isShowcase
-                        text: (sysPick.displayName ?? "")
+                        text: "Perfil recomendado: " + recommendedProfileLabel()
                         color: Theme.textPrimary
-                        font.pixelSize: 13
+                        font { pixelSize: 13; bold: true }
                         wrapMode: Text.WordWrap
                     }
                     RowLayout {
@@ -474,7 +480,7 @@ ApplicationWindow {
                             visible: !recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning
-                            onClicked: App.acceptSystemProfile(sysPick.launchId ?? "")
+                            onClicked: App.installAndUseSystemProfile(sysPick.launchId ?? "")
                         }
                         LcButton {
                             text: "No, gracias"

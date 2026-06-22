@@ -637,7 +637,13 @@ AppController::AppController(QObject *parent) : QObject(parent)
         .arg(QDateTime::currentDateTime().toString(Qt::ISODateWithMs)));
 
     connect(&m_binaries, &BinaryRegistry::countChanged, this, &AppController::setupStateChanged);
+    connect(&m_binaries, &BinaryRegistry::countChanged, this, [this]() {
+        maybeActivatePendingSystemProfile();
+    });
     connect(&m_catalog, &ModelCatalog::countChanged, this, &AppController::setupStateChanged);
+    connect(&m_catalog, &ModelCatalog::countChanged, this, [this]() {
+        maybeActivatePendingSystemProfile();
+    });
     connect(&m_profiles, &ProfileManager::launchesChanged, this, &AppController::setupStateChanged);
     connect(this, &AppController::taskRunStateChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentStartingChanged, this, &AppController::taskRunAvailabilityChanged);
@@ -2081,6 +2087,8 @@ try {
         emit installingOfficialBinaryChanged();
         emit officialBinaryInstallStatusChanged();
         emit setupStateChanged();
+        if (ok)
+            maybeActivatePendingSystemProfile();
         emit officialBinaryInstallFinished(ok, message, installedPath);
         m_downloadHistory.append({
             {QStringLiteral("kind"), QStringLiteral("binary")},
@@ -8274,6 +8282,16 @@ void AppController::acceptShowcaseOne(const QString &launchId)
 
 void AppController::acceptSystemProfile(const QString &launchId)
 {
+    acceptSystemProfileImpl(launchId, false);
+}
+
+void AppController::installAndUseSystemProfile(const QString &launchId)
+{
+    acceptSystemProfileImpl(launchId, true);
+}
+
+void AppController::acceptSystemProfileImpl(const QString &launchId, bool startWhenReady)
+{
     QJsonObject entry;
     for (const QJsonValue &v : readSystemProfilesBundle()) {
         if (v.toObject().value("id").toString() == launchId) { entry = v.toObject(); break; }
@@ -8306,6 +8324,7 @@ void AppController::acceptSystemProfile(const QString &launchId)
 
     // Modelo (+mmproj+draft) al subdir del tier; al terminar el scan, se activa solo.
     m_pendingSystemLaunchId = launchId;
+    m_pendingSystemStartAgent = startWhenReady;
     enqueueSystemProfileAssets(entry);
 
     // Máquina tope (24GB VRAM): además dejar listos MAX-Q y FAST-GEMMA (modelos +
@@ -8321,9 +8340,12 @@ void AppController::acceptSystemProfile(const QString &launchId)
     }
 
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
+    emit launchProfileSelected(launchId);
     emit activeLaunchIdChanged();
     emit setupStateChanged();
     emit navigateToDownloads();   // abrir la sección Descargas para ver el progreso
+    scanModelDownloadRoot();
+    maybeActivatePendingSystemProfile();
 }
 
 // Encola modelo + mmproj + draft de un perfil de sistema (cada uno a su subdir).
@@ -8354,15 +8376,22 @@ void AppController::maybeActivatePendingSystemProfile()
         return;                                          // falta mmproj
     if (!model.draftModelId.isEmpty() && m_catalog.findById(model.draftModelId).id.isEmpty())
         return;                                          // falta draft (DFlash)
+    if (!systemProfileReady(m_pendingSystemLaunchId))
+        return;                                          // falta binario u otra dependencia
 
     const QString id = m_pendingSystemLaunchId;
+    const bool startAgent = m_pendingSystemStartAgent;
     m_pendingSystemLaunchId.clear();
+    m_pendingSystemStartAgent = false;
     writeSetting(QStringLiteral("lastLaunchId"), id);
     computeEffectiveProfile(id);
     appendServerEvent(QStringLiteral("lifecycle"),
                       QStringLiteral("Perfil de sistema activado: %1.").arg(launch.name));
+    emit launchProfileSelected(id);
     emit setupStateChanged();
     emit activeLaunchIdChanged();
+    if (startAgent)
+        startServerAndAgent(id);
 }
 
 void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,

@@ -204,7 +204,7 @@ Item {
                         visible: recCard.showcase.length === 0
                         text: "Instalar y usar"
                         enabled: !App.modelDownloadRunning && (recCard.sysPick.launchId ?? "").length > 0
-                        onClicked: App.acceptSystemProfile(recCard.sysPick.launchId)
+                        onClicked: App.installAndUseSystemProfile(recCard.sysPick.launchId)
                     }
                 }
             }

@@ -196,6 +196,15 @@ Item {
                         const i = launchCombo.indexOfValue(sel)
                         if (i >= 0) launchCombo.currentIndex = i
                     }
+                    function selectLaunchProfile(id) {
+                        if (!id || id.length === 0) return
+                        launchCombo.launchMenu = App.launchMenu()
+                        const i = launchCombo.indexOfValue(id)
+                        if (i >= 0) {
+                            launchCombo.currentIndex = i
+                            App.computeEffectiveProfile(id)
+                        }
+                    }
                     function itemById(id) {
                         for (var i = 0; i < launchMenu.length; i++)
                             if (launchMenu[i].id === id) return launchMenu[i]
@@ -209,6 +218,9 @@ Item {
                         target: App
                         // tras descargar deps / escanear, recomputar ready.
                         function onSetupStateChanged() { launchCombo.refreshMenu() }
+                        function onLaunchProfileSelected(launchProfileId) {
+                            launchCombo.selectLaunchProfile(launchProfileId)
+                        }
                     }
                     model: launchMenu
                     textRole: "displayName"

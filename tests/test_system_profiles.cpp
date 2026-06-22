@@ -45,6 +45,7 @@ private slots:
     void manager_fastGemmaDflashWired();
 
     void controller_recommendsClosestTier();
+    void controller_recommendedTierIncludesDisplayName();
     void controller_recommendsCpuWhenNoGpu();
     void controller_noneWhenBelowMinimum();
 
@@ -168,6 +169,16 @@ void SystemProfilesTests::controller_recommendsClosestTier()
     app.setHardwareSummaryForTest(5.0, 16.0, QStringLiteral("NVIDIA"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
              QStringLiteral("sys-vram-4"));
+}
+
+void SystemProfilesTests::controller_recommendedTierIncludesDisplayName()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(8.0, 32.0, QStringLiteral("NVIDIA GeForce RTX 3070"));
+    const QVariantMap pick = app.recommendedSystemProfile();
+    QCOMPARE(pick.value("launchId").toString(), QStringLiteral("sys-vram-8-gemma"));
+    QCOMPARE(pick.value("displayName").toString(),
+             QStringLiteral("[general] 8GB · Gemma 4 12B Q4 (casi-fp)"));
 }
 
 void SystemProfilesTests::controller_recommendsCpuWhenNoGpu()
