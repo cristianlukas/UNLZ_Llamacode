@@ -85,6 +85,10 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QVERIFY(!pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
     const QString mp4 = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
     QVERIFY(pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
+    // El tier 8GB Gemma ahora tiene visión: mmproj presente (offload a CPU via
+    // --no-mmproj-offload para no exceder los 8GB).
+    const QString mp8 = pm.getLaunchProfile("sys-vram-8-gemma").value("modelProfileId").toString();
+    QVERIFY(!pm.getModelProfile(mp8).value("mmprojId").toString().isEmpty());
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
@@ -178,7 +182,7 @@ void SystemProfilesTests::controller_recommendedTierIncludesDisplayName()
     const QVariantMap pick = app.recommendedSystemProfile();
     QCOMPARE(pick.value("launchId").toString(), QStringLiteral("sys-vram-8-gemma"));
     QCOMPARE(pick.value("displayName").toString(),
-             QStringLiteral("[general] 8GB · Gemma 4 12B Q4 (casi-fp)"));
+             QStringLiteral("[general] 8GB · Gemma 4 12B Q4 (visión)"));
 }
 
 void SystemProfilesTests::controller_recommendsCpuWhenNoGpu()

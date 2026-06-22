@@ -256,7 +256,7 @@
     "id": "sys-vram-8-gemma",
     "tier": "8GB-Gemma",
     "order": 5,
-    "displayName": "[general] 8GB · Gemma 4 12B Q4 (casi-fp)",
+    "displayName": "[general] 8GB · Gemma 4 12B Q4 (visión)",
     "minVramGb": 8,
     "minRamGb": 16,
     "cpuOk": false,
@@ -265,11 +265,11 @@
       "repo": "unsloth/gemma-4-12b-it-GGUF",
       "file": "gemma-4-12b-it-UD-Q4_K_XL.gguf",
       "quant": "UD-Q4_K_XL",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/gemma-4-12b-it-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
     },
     "runtime": {
-      "ctx": 12288,
+      "ctx": 8192,
       "gpuLayers": 999,
       "batch": 512,
       "ubatch": 512,
@@ -293,10 +293,11 @@
       "1",
       "--cache-type-v",
       "q4_0",
+      "--no-mmproj-offload",
       "--reasoning",
       "off"
     ],
-    "comment": "Gemma 4 12B dynamic Q4 (unsloth UD, no el QAT crudo que llama.cpp degrada). ~7.4GB @12k. Texto (mmproj no entra en 8GB).",
+    "comment": "Gemma 4 12B dynamic Q4 (unsloth UD) + visión. El modelo va 100% a GPU (~7.4GB); el mmproj se mantiene en CPU (--no-mmproj-offload) para no exceder los 8GB. ctx bajado 12288→8192 para dejar margen a los buffers de visión.",
     "mtp": {
       "enabled": false,
       "args": []
