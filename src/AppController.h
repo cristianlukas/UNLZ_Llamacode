@@ -658,6 +658,12 @@ public:
     // Acepta un perfil de sistema: asegura binario (MTP si hay NVIDIA, si no
     // official), baja el modelo (+mmproj) al dir gestionado, escanea y lo activa.
     Q_INVOKABLE void acceptSystemProfile(const QString &launchId);
+    // Showcase de tope (24GB): perfiles "extra" (MAX-Q coding + FAST-GEMMA general)
+    // que el hardware puede correr. Vacío si la VRAM no alcanza.
+    Q_INVOKABLE QVariantList recommendedShowcase() const;
+    // "Instalar ambos": baja binarios+modelos+mmproj+drafters de todos los extras
+    // y deja activo el primero (coding).
+    Q_INVOKABLE void acceptShowcase();
     // Inyecta el resumen de hardware (solo para tests headless).
     Q_INVOKABLE void setHardwareSummaryForTest(double vramGb, double ramGb,
                                                const QString &gpuName);

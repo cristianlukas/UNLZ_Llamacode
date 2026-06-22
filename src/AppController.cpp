@@ -8145,6 +8145,55 @@ QVariantMap AppController::recommendedSystemProfile() const
     };
 }
 
+QVariantList AppController::recommendedShowcase() const
+{
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const double ram  = m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble();
+    QVariantList out;
+    if (vram < 23.5) return out;   // showcase solo para placas de 24GB+
+    for (const QJsonValue &v : readSystemProfilesBundle()) {
+        const QJsonObject e = v.toObject();
+        if (!e.value(QStringLiteral("extra")).toBool()) continue;
+        if (e.value(QStringLiteral("minRamGb")).toDouble() > ram + 0.5) continue;
+        out.append(QVariantMap{
+            {"launchId", e.value(QStringLiteral("id")).toString()},
+            {"displayName", e.value(QStringLiteral("displayName")).toString()},
+        });
+    }
+    return out;
+}
+
+void AppController::acceptShowcase()
+{
+    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
+                        || gpu.contains("rtx") || gpu.contains("gtx");
+    bool hasMtp = false;
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const LlamaBinary b = m_binaries.findById(
+            m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString());
+        const QString t = (b.name + QLatin1Char(' ') + b.path).toLower();
+        if (!b.path.isEmpty() && QFileInfo::exists(b.path)
+            && (t.contains("mtp") || t.contains("beellama"))) { hasMtp = true; break; }
+    }
+    if (nvidia && !hasMtp) installMtpBinary();   // ambos extras necesitan beellama
+
+    QString firstId;
+    for (const QJsonValue &v : readSystemProfilesBundle()) {
+        const QJsonObject e = v.toObject();
+        if (!e.value(QStringLiteral("extra")).toBool()) continue;
+        if (firstId.isEmpty()) firstId = e.value(QStringLiteral("id")).toString();
+        enqueueSystemProfileAssets(e);
+    }
+    if (!firstId.isEmpty()) {
+        m_pendingSystemLaunchId = firstId;        // el coding queda activo al terminar
+        writeSetting(QStringLiteral("lastLaunchId"), firstId);
+        emit activeLaunchIdChanged();
+    }
+    emit setupStateChanged();
+}
+
 void AppController::acceptSystemProfile(const QString &launchId)
 {
     QJsonObject entry;

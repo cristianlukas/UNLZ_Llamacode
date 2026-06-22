@@ -376,6 +376,72 @@ ApplicationWindow {
             property bool fastStartDismissed: false
             // Depende de hardwareSummary para re-evaluar tras un rescan.
             readonly property var sysPick: (App.hardwareSummary, App.recommendedSystemProfile())
+            readonly property var showcase: (App.hardwareSummary, App.recommendedShowcase())
+
+            // ── Showcase 24GB: instalar MAX-Q (coding) + FAST-GEMMA (general) ──
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: scCol.implicitHeight + 24
+                visible: showcase.length > 0 && !fastStartDismissed
+                radius: 8
+                color: Theme.surfaceBg
+                border.color: Theme.accent
+
+                ColumnLayout {
+                    id: scCol
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 6
+                    Text {
+                        text: "★ Perfiles de 24GB recomendados (calibrados)"
+                        color: Theme.textPrimary
+                        font { pixelSize: 14; bold: true }
+                    }
+                    Repeater {
+                        model: showcase
+                        Text {
+                            Layout.fillWidth: true
+                            text: "• " + (modelData.displayName ?? "")
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 4
+                        spacing: 10
+                        LcButton {
+                            text: "Instalar ambos — descargar todo"
+                            Layout.preferredHeight: 34
+                            enabled: !App.modelDownloadRunning
+                            onClicked: App.acceptShowcase()
+                        }
+                        LcButton {
+                            text: "No, gracias"
+                            secondary: true
+                            Layout.preferredHeight: 34
+                            onClicked: fastStartDismissed = true
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: App.modelDownloadRunning || App.modelDownloadStatus.length > 0
+                        spacing: 8
+                        ProgressBar {
+                            Layout.preferredWidth: 150; from: 0; to: 100
+                            value: App.modelDownloadProgress
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: App.modelDownloadStatus
+                            color: App.modelDownloadRunning ? Theme.accent : Theme.textMuted
+                            font.pixelSize: 11
+                            elide: Text.ElideMiddle
+                        }
+                    }
+                }
+            }
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: fastCol.implicitHeight + 24
