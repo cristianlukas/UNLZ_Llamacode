@@ -312,6 +312,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/tray_icon.png
         assets/update/latest.json
         assets/hwfit/hf_models.json
+        assets/system_profiles.json
         assets/benchmarks/aa_intelligence.json
         assets/benchmarks/local_cookbook_priorities.json
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}
@@ -376,6 +377,7 @@ if (BUILD_TESTS)
 
     add_lc_test(test_gguf_profiles      tests/test_gguf_profiles.cpp)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
+    add_lc_test(test_system_profiles    tests/test_system_profiles.cpp)
     add_lc_test(test_secret_store       tests/test_secret_store.cpp)
     add_lc_test(test_registries         tests/test_registries.cpp)
     add_lc_test(test_catalog            tests/test_catalog.cpp)

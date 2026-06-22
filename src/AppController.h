@@ -644,6 +644,17 @@ public:
     Q_INVOKABLE void moveModelDownload(const QString &id, int delta);
     Q_INVOKABLE void openModelRecommendation(const QString &repo);
 
+    // ── Perfiles de sistema (fast start por hardware) ──
+    // Perfil de sistema recomendado: el tier más cercano ≤ hardware (VRAM/RAM).
+    // Devuelve {} si no hay perfiles de sistema. Incluye campos del modelo a bajar.
+    Q_INVOKABLE QVariantMap recommendedSystemProfile() const;
+    // Acepta un perfil de sistema: asegura binario (MTP si hay NVIDIA, si no
+    // official), baja el modelo (+mmproj) al dir gestionado, escanea y lo activa.
+    Q_INVOKABLE void acceptSystemProfile(const QString &launchId);
+    // Inyecta el resumen de hardware (solo para tests headless).
+    Q_INVOKABLE void setHardwareSummaryForTest(double vramGb, double ramGb,
+                                               const QString &gpuName);
+
     // ── Modo Charla (voz-a-voz) ──
     QString voiceState() const;
     bool    voiceActive() const;
@@ -1164,6 +1175,14 @@ private:
     void benchmarkMeasureResources(std::function<void(double ramMb, double vramMb)> onDone);
     QString modelDownloadDir() const;
     void rebuildModelRecommendations();
+    // Mejor binario instalado para perfiles de sistema: prefiere MTP (nombre/back
+    // "mtp"/"beellama") si hay NVIDIA; si no, el primero disponible. "" si ninguno.
+    QString resolveSystemBinaryId() const;
+    // Para acceptSystemProfile: perfil de sistema pendiente de bind tras descarga.
+    QString m_pendingSystemLaunchId;
+    // Tras un scan: si el modelo del perfil de sistema pendiente ya está en el
+    // catálogo, lo activa (lastLaunchId + effective) y limpia el pendiente.
+    void maybeActivatePendingSystemProfile();
 
     // Model quality benchmarks (Artificial Analysis Intelligence Index).
     // Bundled table is the offline fallback; a weekly live fetch overlays it.

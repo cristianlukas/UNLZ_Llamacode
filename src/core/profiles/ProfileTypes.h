@@ -7,8 +7,13 @@
 #include <QJsonArray>
 #include "core/voice/VoiceTypes.h"
 
+// Flag runtime-only en cada struct: perfil de SISTEMA (bundled desde
+// assets/system_profiles.json). Inmutable (no se borra/edita/renombra) y NO se
+// persiste a disco — se reconstruye del bundle en cada arranque. Default false
+// (todo lo que viene del disco es de usuario). No se serializa en toJson/fromJson.
 struct BackendProfile {
     QString id;
+    bool system = false;
     QString name;
     QString binaryId;
     QString host = "127.0.0.1";
@@ -36,6 +41,7 @@ struct BackendProfile {
 
 struct ModelProfile {
     QString id;
+    bool system = false;
     QString name;
     QString modelId;
     QString mmprojId;
@@ -55,6 +61,7 @@ struct ModelProfile {
 
 struct RuntimePreset {
     QString id;
+    bool system = false;
     QString name;
     int ctx = 4096;
     int batch = 512;
@@ -75,6 +82,7 @@ struct RuntimePreset {
 
 struct HarnessProfile {
     QString id;
+    bool system = false;
     QString name;
     QString adapter;  // "none", "opencode", "aider", "llamaagent"
     QStringList args;
@@ -87,6 +95,7 @@ struct HarnessProfile {
 
 struct WorkspaceProfile {
     QString id;
+    bool system = false;
     QString name;
     QString cwd;
     QStringList allowedPaths;
@@ -147,6 +156,7 @@ struct MasterConfig {
 
 struct LaunchProfile {
     QString id;
+    bool    system = false;   // perfil de sistema (bundled, inmutable, no persistido)
     QString name;
     QString alias;            // opcional; tiene prioridad sobre name en la UI
     bool    favorite = false; // marcados con estrella y ordenados arriba

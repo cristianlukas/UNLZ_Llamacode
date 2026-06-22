@@ -2344,7 +2344,13 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.runtime = m_profiles.resolveRuntime(ctx.launch.runtimePresetId);
     ctx.harness = m_profiles.resolveHarness(ctx.launch.harnessProfileId);
     ctx.workspace = m_profiles.resolveWorkspace(ctx.launch.workspaceProfileId);
-    ctx.binary = m_binaries.findById(ctx.backend.binaryId);
+    // Perfil de sistema: backend sin binaryId fijo → resolver el mejor instalado
+    // (MTP si hay NVIDIA, si no official). Así el mismo perfil bundled corre en
+    // cualquier máquina sin persistir un path de binario.
+    QString binId = ctx.backend.binaryId;
+    if (binId.isEmpty() && ctx.launch.system)
+        binId = resolveSystemBinaryId();
+    ctx.binary = m_binaries.findById(binId);
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
     ctx.draftModel = m_catalog.findById(ctx.model.draftModelId);
@@ -7985,6 +7991,139 @@ QString AppController::createRecommendedLaunchProfile()
     return launchId;
 }
 
+// Lee el bundle de perfiles de sistema (env override para tests, si no el qrc).
+static QJsonArray readSystemProfilesBundle()
+{
+    const QByteArray env = qgetenv("LLAMACODE_SYSTEM_PROFILES");
+    const QString src = !env.isEmpty() ? QString::fromLocal8Bit(env)
+                                       : QStringLiteral(":/assets/system_profiles.json");
+    QFile f(src);
+    if (!f.open(QIODevice::ReadOnly)) return {};
+    return QJsonDocument::fromJson(f.readAll()).array();
+}
+
+QString AppController::resolveSystemBinaryId() const
+{
+    const QString gpu = m_hardwareSummary.value(QStringLiteral("gpuName")).toString().toLower();
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
+                        || gpu.contains("rtx") || gpu.contains("gtx");
+    QString firstId;
+    QString mtpId;
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const QModelIndex ix = m_binaries.index(r, 0);
+        const QString bid = m_binaries.data(ix, BinaryRegistry::IdRole).toString();
+        if (bid.isEmpty()) continue;
+        if (firstId.isEmpty()) firstId = bid;
+        const LlamaBinary b = m_binaries.findById(bid);
+        const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
+        if (mtpId.isEmpty() && (tag.contains("mtp") || tag.contains("beellama")))
+            mtpId = bid;
+    }
+    if (nvidia && !mtpId.isEmpty()) return mtpId;   // MTP si hay NVIDIA y build MTP
+    return firstId;                                  // si no, el primero disponible
+}
+
+QVariantMap AppController::recommendedSystemProfile() const
+{
+    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const double ram  = m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble();
+    const QJsonArray arr = readSystemProfilesBundle();
+
+    // Mejor tier "igual o inferior": mayor minVramGb que cumpla VRAM y RAM. Si no
+    // hay GPU (vram<=0), elegir el tier CPU (cpuOk). MAX-Q/FAST-GEMMA quedan fuera
+    // de la recomendación auto (son extras de tope), solo tiers vram-*.
+    QJsonObject best;
+    double bestVram = -1.0;
+    for (const QJsonValue &v : arr) {
+        const QJsonObject o = v.toObject();
+        const QString tier = o.value("tier").toString();
+        if (tier.startsWith("MAX") || tier.startsWith("FAST")) continue;
+        const double minV = o.value("minVramGb").toDouble();
+        const double minR = o.value("minRamGb").toDouble();
+        if (minR > ram + 0.5) continue;
+        if (vram <= 0.0) {
+            if (!o.value("cpuOk").toBool()) continue;
+        } else if (minV > vram + 0.01) {
+            continue;
+        }
+        if (minV > bestVram) { bestVram = minV; best = o; }
+    }
+    if (best.isEmpty()) return {};
+
+    const QJsonObject mo = best.value("model").toObject();
+    return QVariantMap{
+        {"launchId", best.value("id").toString()},
+        {"tier", best.value("tier").toString()},
+        {"displayName", best.value("displayName").toString()},
+        {"minVramGb", best.value("minVramGb").toDouble()},
+        {"minRamGb", best.value("minRamGb").toDouble()},
+        {"repo", mo.value("repo").toString()},
+        {"file", mo.value("file").toString()},
+        {"quant", mo.value("quant").toString()},
+        {"mmprojRepo", mo.value("mmprojRepo").toString()},
+        {"mmprojFile", mo.value("mmprojFile").toString()},
+    };
+}
+
+void AppController::acceptSystemProfile(const QString &launchId)
+{
+    QJsonObject entry;
+    for (const QJsonValue &v : readSystemProfilesBundle()) {
+        if (v.toObject().value("id").toString() == launchId) { entry = v.toObject(); break; }
+    }
+    if (entry.isEmpty()) {
+        emit serverError(QStringLiteral("Perfil de sistema desconocido: %1").arg(launchId));
+        return;
+    }
+    // Binario: si no hay ninguno instalado, instalar el oficial (elige CUDA/CPU).
+    // Si ya hay (incl. MTP), resolveSystemBinaryId lo usará al lanzar.
+    if (resolveSystemBinaryId().isEmpty())
+        installOfficialBinary();
+
+    // Modelo (+mmproj) al dir gestionado; al terminar el scan, se activa solo.
+    m_pendingSystemLaunchId = launchId;
+    const QJsonObject mo = entry.value("model").toObject();
+    downloadRecommendedModel(mo.value("repo").toString(), mo.value("file").toString());
+    const QString mmRepo = mo.value("mmprojRepo").toString();
+    const QString mmFile = mo.value("mmprojFile").toString();
+    if (!mmRepo.isEmpty() && !mmFile.isEmpty())
+        downloadRecommendedModel(mmRepo, mmFile);
+
+    writeSetting(QStringLiteral("lastLaunchId"), launchId);
+    emit activeLaunchIdChanged();
+    emit setupStateChanged();
+}
+
+void AppController::maybeActivatePendingSystemProfile()
+{
+    if (m_pendingSystemLaunchId.isEmpty()) return;
+    const LaunchProfile launch = m_profiles.resolveLaunch(m_pendingSystemLaunchId);
+    if (launch.id.isEmpty()) { m_pendingSystemLaunchId.clear(); return; }
+    const ModelProfile model = m_profiles.resolveModelProfile(launch.modelProfileId);
+    const CatalogModel cat = m_catalog.findById(model.modelId);
+    if (cat.id.isEmpty() || !cat.isAvailable) return;   // todavía no escaneado
+    if (!model.mmprojId.isEmpty() && m_catalog.findById(model.mmprojId).id.isEmpty())
+        return;                                          // falta mmproj
+
+    const QString id = m_pendingSystemLaunchId;
+    m_pendingSystemLaunchId.clear();
+    writeSetting(QStringLiteral("lastLaunchId"), id);
+    computeEffectiveProfile(id);
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Perfil de sistema activado: %1.").arg(launch.name));
+    emit setupStateChanged();
+    emit activeLaunchIdChanged();
+}
+
+void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,
+                                             const QString &gpuName)
+{
+    m_hardwareSummary[QStringLiteral("vramGb")] = vramGb;
+    m_hardwareSummary[QStringLiteral("ramGb")] = ramGb;
+    m_hardwareSummary[QStringLiteral("gpuName")] = gpuName;
+}
+
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)
 {
     const QString cleanRepo = repo.trimmed();
@@ -8193,6 +8332,7 @@ void AppController::startModelDownload(int index)
                 finishModelDownloadItem(id, QStringLiteral("done"),
                                         QStringLiteral("Ya existe: %1").arg(cur.outPath), 100, false);
                 scanModelDownloadRoot();
+                maybeActivatePendingSystemProfile();
                 return;
             }
 
@@ -8336,6 +8476,7 @@ void AppController::startModelDownload(int index)
         finishModelDownloadItem(id, QStringLiteral("done"),
                                 QStringLiteral("Modelo descargado: %1").arg(cur.outPath), 100, false);
         scanModelDownloadRoot();
+        maybeActivatePendingSystemProfile();
         emit setupStateChanged();
     });
 }

@@ -8,6 +8,8 @@
 #include <QTimer>
 #include <QDebug>
 #include <QRegularExpression>
+#include <QUuid>
+#include <QJsonObject>
 #include <algorithm>
 
 // Launch profile display names carry a stable, non-repeating incremental id as a
@@ -39,12 +41,17 @@ ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
         save();
     }
 
+    // Perfiles de sistema (bundled, inmutables): se anteponen en memoria y NO se
+    // persisten. Cargar después del seed/save para no escribirlos al disco.
+    loadSystemProfiles();
+
     setupWatcher();
 }
 
 void ProfileManager::reloadFromDisk()
 {
     load();
+    loadSystemProfiles();   // re-anteponer perfiles de sistema (load() los pisa)
     emit profilesReloaded();
 }
 
@@ -92,6 +99,7 @@ QString ProfileManager::addBackend(const QString &name, const QString &binaryId,
 
 bool ProfileManager::removeBackend(const QString &id)
 {
+    if (m_backends.findById(id).system) return false;
     bool ok = m_backends.remove(id);
     if (ok) save();
     return ok;
@@ -102,7 +110,7 @@ bool ProfileManager::updateBackend(const QString &id, const QString &name,
                                     int port, const QStringList &baseArgs)
 {
     BackendProfile p = m_backends.findById(id);
-    if (p.id.isEmpty()) return false;
+    if (p.id.isEmpty() || p.system) return false;
     p.name = name; p.binaryId = binaryId;
     p.host = host; p.port = port;
     p.baseArgs = baseArgs;
@@ -169,6 +177,7 @@ QString ProfileManager::addModelProfile(const QString &name, const QString &mode
 
 bool ProfileManager::removeModelProfile(const QString &id)
 {
+    if (m_models.findById(id).system) return false;
     bool ok = m_models.remove(id);
     if (ok) save();
     return ok;
@@ -179,7 +188,7 @@ bool ProfileManager::updateModelProfile(const QString &id, const QString &name,
                                          const QString &draftId)
 {
     ModelProfile p = m_models.findById(id);
-    if (p.id.isEmpty()) return false;
+    if (p.id.isEmpty() || p.system) return false;
     p.name = name; p.modelId = modelId;
     p.mmprojId = mmprojId; p.draftModelId = draftId;
     bool ok = m_models.update(p);
@@ -193,7 +202,7 @@ bool ProfileManager::setModelSpec(const QString &id, const QString &specType,
                                   const QString &specDraftTypeV)
 {
     ModelProfile p = m_models.findById(id);
-    if (p.id.isEmpty()) return false;
+    if (p.id.isEmpty() || p.system) return false;
     p.specType = specType;
     p.specDraftNMax = specDraftNMax > 0 ? specDraftNMax : 0;
     p.specDraftNgl = specDraftNgl;
@@ -236,6 +245,7 @@ QString ProfileManager::addRuntimePreset(const QString &name, int ctx, int batch
 
 bool ProfileManager::removeRuntimePreset(const QString &id)
 {
+    if (m_runtimes.findById(id).system) return false;
     bool ok = m_runtimes.remove(id);
     if (ok) save();
     return ok;
@@ -244,7 +254,7 @@ bool ProfileManager::removeRuntimePreset(const QString &id)
 bool ProfileManager::updateRuntimePreset(const QVariantMap &data)
 {
     RuntimePreset p = m_runtimes.findById(data["id"].toString());
-    if (p.id.isEmpty()) return false;
+    if (p.id.isEmpty() || p.system) return false;
     p.name = data.value("name", p.name).toString();
     p.ctx = data.value("ctx", p.ctx).toInt();
     p.batch = data.value("batch", p.batch).toInt();
@@ -338,6 +348,10 @@ QString ProfileManager::addLaunchProfile(const QString &name,
 
 bool ProfileManager::removeLaunchProfile(const QString &id)
 {
+    if (m_launches.findById(id).system) {
+        emit errorOccurred(QStringLiteral("Perfil de sistema: solo lectura (duplicalo para editar)."));
+        return false;
+    }
     bool ok = m_launches.remove(id);
     if (ok) { save(); emit launchesChanged(); }
     return ok;
@@ -347,6 +361,10 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
 {
     LaunchProfile p = m_launches.findById(data["id"].toString());
     if (p.id.isEmpty()) return false;
+    if (p.system) {
+        emit errorOccurred(QStringLiteral("Perfil de sistema: solo lectura (duplicalo para editar)."));
+        return false;
+    }
     // Preserve this profile's stable incremental id even if the edited name
     // drops or changes the "<n>_" prefix.
     int seq = seqOf(p.name);
@@ -423,6 +441,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
             {"alias", p.alias}, {"favorite", p.favorite},
+            {"system", p.system},
             {"displayName", displayName},
             {"backendProfileId", p.backendProfileId},
             {"modelProfileId", p.modelProfileId},
@@ -443,7 +462,7 @@ QVariantMap ProfileManager::getLaunchVoice(const QString &id) const
 bool ProfileManager::setLaunchVoice(const QString &id, const QVariantMap &voiceCfg)
 {
     LaunchProfile p = m_launches.findById(id);
-    if (p.id.isEmpty()) return false;
+    if (p.id.isEmpty() || p.system) return false;
     p.voice = VoiceConfig::fromJson(QJsonObject::fromVariantMap(voiceCfg));
     const bool ok = m_launches.update(p);
     if (ok) { save(); emit launchesChanged(); }
@@ -453,7 +472,7 @@ bool ProfileManager::setLaunchVoice(const QString &id, const QVariantMap &voiceC
 void ProfileManager::setLaunchFavorite(const QString &id, bool favorite)
 {
     LaunchProfile p = m_launches.findById(id);
-    if (p.id.isEmpty() || p.favorite == favorite) return;
+    if (p.id.isEmpty() || p.system || p.favorite == favorite) return;
     p.favorite = favorite;
     if (m_launches.update(p)) { save(); emit launchesChanged(); }
 }
@@ -461,7 +480,7 @@ void ProfileManager::setLaunchFavorite(const QString &id, bool favorite)
 void ProfileManager::setLaunchAlias(const QString &id, const QString &alias)
 {
     LaunchProfile p = m_launches.findById(id);
-    if (p.id.isEmpty() || p.alias == alias) return;
+    if (p.id.isEmpty() || p.system || p.alias == alias) return;
     p.alias = alias;
     if (m_launches.update(p)) { save(); emit launchesChanged(); }
 }
@@ -483,7 +502,7 @@ QVariantList ProfileManager::launchProfilesForMenu() const
             : QStringLiteral("%1 - %2").arg(p.alias, p.name);
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
-            {"favorite", p.favorite},
+            {"favorite", p.favorite}, {"system", p.system},
             // displayName lleva la estrella para que se vea en el dropdown y en
             // el texto seleccionado; si hay alias se muestra junto al nombre real.
             {"displayName", p.favorite ? QStringLiteral("★ ") + base : base}});
@@ -499,6 +518,155 @@ RuntimePreset    ProfileManager::resolveRuntime(const QString &id)     const { r
 HarnessProfile   ProfileManager::resolveHarness(const QString &id)     const { return m_harnesses.findById(id); }
 WorkspaceProfile ProfileManager::resolveWorkspace(const QString &id)   const { return m_workspaces.findById(id); }
 LaunchProfile    ProfileManager::resolveLaunch(const QString &id)      const { return m_launches.findById(id); }
+
+// ---- Perfiles de sistema (bundled) ----
+
+bool ProfileManager::isSystemLaunch(const QString &id) const
+{
+    return m_launches.findById(id).system;
+}
+
+void ProfileManager::loadSystemProfiles()
+{
+    // Fuente: env override (tests) o el recurso qrc empaquetado.
+    QByteArray raw;
+    const QByteArray envPath = qgetenv("LLAMACODE_SYSTEM_PROFILES");
+    QString src = !envPath.isEmpty() ? QString::fromLocal8Bit(envPath)
+                                     : QStringLiteral(":/assets/system_profiles.json");
+    QFile f(src);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << "[ProfileManager] no pude abrir system_profiles:" << src;
+        return;
+    }
+    raw = f.readAll();
+    const QJsonArray arr = QJsonDocument::fromJson(raw).array();
+    if (arr.isEmpty()) return;
+
+    // modelId DETERMINISTA por ruta (igual que GGUFScanner.cpp): liga el perfil al
+    // gguf cuando exista en <AppLocalData>/models/<folder>/<file>.
+    static const QUuid kNs(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    const QString modelsDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        + QStringLiteral("/models");
+    auto detId = [](const QString &path) {
+        return QUuid::createUuidV5(kNs, path.toUtf8()).toString(QUuid::WithoutBraces);
+    };
+
+    QList<BackendProfile> sysBe;
+    QList<ModelProfile>   sysModel;
+    QList<RuntimePreset>  sysRt;
+    QList<LaunchProfile>  sysLaunch;
+
+    for (const QJsonValue &v : arr) {
+        const QJsonObject o = v.toObject();
+        const QString id = o.value("id").toString();
+        if (id.isEmpty()) continue;
+        const QJsonObject mo = o.value("model").toObject();
+        const QString file = mo.value("file").toString();
+        // El dir de descarga es plano (modelDownloadDir/<file>): el id det debe
+        // computarse con esa misma ruta para ligar tras el scan.
+        const QString modelPath = modelsDir + "/" + file;
+
+        const QJsonObject ro = o.value("runtime").toObject();
+        RuntimePreset rt;
+        rt.id = QStringLiteral("sysrt-") + id; rt.system = true;
+        rt.name = o.value("displayName").toString() + QStringLiteral(" · rt");
+        rt.ctx = ro.value("ctx").toInt(4096);
+        rt.batch = ro.value("batch").toInt(512);
+        rt.ubatch = ro.value("ubatch").toInt(512);
+        rt.threads = ro.value("threads").toInt(-1);
+        rt.gpuLayers = ro.value("gpuLayers").toInt(-1);
+        rt.flashAttention = ro.value("flashAttn").toBool(true);
+        rt.mmap = ro.value("mmap").toBool(true);
+        rt.mlock = ro.value("mlock").toBool(false);
+        rt.contBatching = true;
+        rt.cacheType = ro.value("kv").toString(QStringLiteral("f16"));
+        sysRt.append(rt);
+
+        ModelProfile mp;
+        mp.id = QStringLiteral("sysmodel-") + id; mp.system = true;
+        mp.name = o.value("displayName").toString() + QStringLiteral(" · model");
+        mp.modelId = detId(modelPath);
+        const QString mmFile = mo.value("mmprojFile").toString();
+        if (!mmFile.isEmpty())
+            mp.mmprojId = detId(modelsDir + "/" + mmFile);
+        sysModel.append(mp);
+
+        BackendProfile be;
+        be.id = QStringLiteral("sysbe-") + id; be.system = true;
+        be.name = o.value("displayName").toString() + QStringLiteral(" · backend");
+        be.binaryId = QString();   // resuelto al construir el comando (AppController)
+        be.host = QStringLiteral("127.0.0.1");
+        be.port = 8021;
+        sysBe.append(be);
+
+        LaunchProfile lp;
+        lp.id = id; lp.system = true;
+        lp.name = o.value("displayName").toString();
+        lp.alias = o.value("tier").toString();
+        lp.favorite = false;
+        lp.backendProfileId = be.id;
+        lp.modelProfileId = mp.id;
+        lp.runtimePresetId = rt.id;
+        QStringList extra;
+        for (const QJsonValue &a : o.value("extraArgs").toArray()) extra << a.toString();
+        const QJsonObject mtp = o.value("mtp").toObject();
+        if (mtp.value("enabled").toBool())
+            for (const QJsonValue &a : mtp.value("args").toArray()) extra << a.toString();
+        lp.extraArgs = extra;
+        const QJsonObject env = o.value("env").toObject();
+        for (auto it = env.begin(); it != env.end(); ++it)
+            lp.envOverrides.insert(it.key(), it.value().toString());
+        sysLaunch.append(lp);
+    }
+
+    // Anteponer (sistema primero) sin pisar lo de usuario.
+    auto prepend = [](auto &model, const auto &sys) {
+        auto items = sys;            // copia (system primero)
+        items.append(model.m_items); // luego usuario
+        model.setItems(items);
+    };
+    prepend(m_backends, sysBe);
+    prepend(m_models,   sysModel);
+    prepend(m_runtimes, sysRt);
+    prepend(m_launches, sysLaunch);
+}
+
+QString ProfileManager::duplicateLaunchProfile(const QString &id)
+{
+    const LaunchProfile src = m_launches.findById(id);
+    if (src.id.isEmpty()) return {};
+
+    // Clonar backing a entradas nuevas EDITABLES (system=false, ids frescos).
+    BackendProfile be = m_backends.findById(src.backendProfileId);
+    be.id = BackendProfile::generateId(); be.system = false;
+    if (!be.name.isEmpty()) m_backends.add(be);
+
+    ModelProfile mp = m_models.findById(src.modelProfileId);
+    mp.id = ModelProfile::generateId(); mp.system = false;
+    if (!mp.name.isEmpty()) m_models.add(mp);
+
+    RuntimePreset rt = m_runtimes.findById(src.runtimePresetId);
+    rt.id = RuntimePreset::generateId(); rt.system = false;
+    if (!rt.name.isEmpty()) m_runtimes.add(rt);
+
+    LaunchProfile lp = src;
+    lp.id = LaunchProfile::generateId();
+    lp.system = false;
+    lp.favorite = false;
+    if (!be.name.isEmpty()) lp.backendProfileId = be.id;
+    if (!mp.name.isEmpty()) lp.modelProfileId = mp.id;
+    if (!rt.name.isEmpty()) lp.runtimePresetId = rt.id;
+    int maxSeq = 0;
+    for (const auto &x : m_launches.m_items) maxSeq = std::max(maxSeq, seqOf(x.name));
+    lp.name = QStringLiteral("%1_%2 (copia)").arg(maxSeq + 1).arg(stripSeq(src.name));
+    lp.alias = src.alias.isEmpty() ? QString() : src.alias + QStringLiteral("-copia");
+    m_launches.add(lp);
+
+    save();
+    emit launchesChanged();
+    return lp.id;
+}
 
 // ---- Persistence ----
 
@@ -615,12 +783,18 @@ void ProfileManager::save() const
             qWarning() << "[ProfileManager::save] FAILED to rename" << tmp << "->" << path;
     };
 
-    saveList(storagePath("backends"),   m_backends.m_items);
-    saveList(storagePath("models"),     m_models.m_items);
-    saveList(storagePath("runtimes"),   m_runtimes.m_items);
-    saveList(storagePath("harnesses"),  m_harnesses.m_items);
-    saveList(storagePath("workspaces"), m_workspaces.m_items);
-    saveList(storagePath("launches"),   m_launches.m_items);
+    // Filtrar perfiles de SISTEMA: no se persisten (se reconstruyen del bundle).
+    auto userOnly = [](const auto &items) {
+        std::decay_t<decltype(items)> out;
+        for (const auto &x : items) if (!x.system) out.append(x);
+        return out;
+    };
+    saveList(storagePath("backends"),   userOnly(m_backends.m_items));
+    saveList(storagePath("models"),     userOnly(m_models.m_items));
+    saveList(storagePath("runtimes"),   userOnly(m_runtimes.m_items));
+    saveList(storagePath("harnesses"),  userOnly(m_harnesses.m_items));
+    saveList(storagePath("workspaces"), userOnly(m_workspaces.m_items));
+    saveList(storagePath("launches"),   userOnly(m_launches.m_items));
 
     // La escritura atómica (rename) hace que el watcher pierda los paths: re-armarlos.
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),

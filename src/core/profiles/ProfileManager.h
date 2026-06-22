@@ -10,7 +10,7 @@ template <typename T>
 class ProfileListModel : public QAbstractListModel
 {
 public:
-    enum Roles { IdRole = Qt::UserRole + 1, NameRole, DataRole };
+    enum Roles { IdRole = Qt::UserRole + 1, NameRole, DataRole, SystemRole };
 
     explicit ProfileListModel(QObject *parent = nullptr) : QAbstractListModel(parent) {}
 
@@ -20,13 +20,14 @@ public:
     QVariant data(const QModelIndex &idx, int role = Qt::DisplayRole) const override {
         if (!idx.isValid() || idx.row() >= m_items.size()) return {};
         switch (role) {
-        case IdRole:   return m_items[idx.row()].id;
-        case NameRole: return m_items[idx.row()].name;
-        default:       return {};
+        case IdRole:     return m_items[idx.row()].id;
+        case NameRole:   return m_items[idx.row()].name;
+        case SystemRole: return m_items[idx.row()].system;
+        default:         return {};
         }
     }
     QHash<int, QByteArray> roleNames() const override {
-        return {{IdRole, "profileId"}, {NameRole, "name"}};
+        return {{IdRole, "profileId"}, {NameRole, "name"}, {SystemRole, "system"}};
     }
 
     void setItems(const QList<T> &items) {
@@ -138,6 +139,12 @@ public:
                                          const QString &runtimeId);
     Q_INVOKABLE bool removeLaunchProfile(const QString &id);
     Q_INVOKABLE bool updateLaunchProfile(const QVariantMap &data);
+    // Duplica un launch (incl. de sistema) a una copia EDITABLE de usuario:
+    // clona backend/model/runtime/workspace a entradas nuevas (system=false) e ids
+    // frescos. Devuelve el id del nuevo launch, o "" si no existe el origen.
+    Q_INVOKABLE QString duplicateLaunchProfile(const QString &id);
+    // True si el launch es de sistema (solo lectura).
+    Q_INVOKABLE bool isSystemLaunch(const QString &id) const;
     Q_INVOKABLE QVariantMap getLaunchProfile(const QString &id) const;
     // Config de Charla (voz) por LaunchProfile. get devuelve defaults si no hay.
     Q_INVOKABLE QVariantMap getLaunchVoice(const QString &id) const;
@@ -168,6 +175,10 @@ signals:
 
 private:
     void load();
+    // Carga assets/system_profiles.json (qrc o env LLAMACODE_SYSTEM_PROFILES) y
+    // antepone perfiles de sistema (system=true) a las listas en memoria. No se
+    // persisten: se reconstruyen en cada arranque.
+    void loadSystemProfiles();
     void save() const;
     QString storagePath(const QString &entity) const;
     void setupWatcher();

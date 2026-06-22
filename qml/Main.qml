@@ -371,6 +371,82 @@ ApplicationWindow {
                 font.pixelSize: 13
             }
 
+            // ── Inicio rápido: perfil de sistema recomendado por hardware ──
+            // Un clic baja modelo + binario del tier más cercano (≤ HW) y lo activa.
+            property bool fastStartDismissed: false
+            // Depende de hardwareSummary para re-evaluar tras un rescan.
+            readonly property var sysPick: (App.hardwareSummary, App.recommendedSystemProfile())
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: fastCol.implicitHeight + 24
+                visible: !App.hasAnyModel && !fastStartDismissed
+                         && (sysPick.launchId ?? "").length > 0
+                radius: 8
+                color: Theme.surfaceBg
+                border.color: Theme.accent
+
+                ColumnLayout {
+                    id: fastCol
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 6
+                    Text {
+                        text: "⚡ Inicio rápido recomendado para tu hardware"
+                        color: Theme.textPrimary
+                        font { pixelSize: 14; bold: true }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: (sysPick.displayName ?? "")
+                        color: Theme.textPrimary
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: (sysPick.file ?? "") + "  ·  " + (sysPick.quant ?? "")
+                              + "  ·  min " + (sysPick.minVramGb ?? 0) + "GB VRAM / "
+                              + (sysPick.minRamGb ?? 0) + "GB RAM"
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        elide: Text.ElideRight
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 4
+                        spacing: 10
+                        LcButton {
+                            text: "Aceptar — descargar e instalar"
+                            Layout.preferredHeight: 34
+                            enabled: !App.modelDownloadRunning
+                            onClicked: App.acceptSystemProfile(sysPick.launchId ?? "")
+                        }
+                        LcButton {
+                            text: "No, gracias — crear perfil avanzado"
+                            secondary: true
+                            Layout.preferredHeight: 34
+                            onClicked: fastStartDismissed = true
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: App.modelDownloadRunning || App.modelDownloadStatus.length > 0
+                        spacing: 8
+                        ProgressBar {
+                            Layout.preferredWidth: 150; from: 0; to: 100
+                            value: App.modelDownloadProgress
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: App.modelDownloadStatus
+                            color: App.modelDownloadRunning ? Theme.accent : Theme.textMuted
+                            font.pixelSize: 11
+                            elide: Text.ElideMiddle
+                        }
+                    }
+                }
+            }
+
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
             // Step 1: binary

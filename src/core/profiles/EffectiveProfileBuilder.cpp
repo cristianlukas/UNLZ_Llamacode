@@ -134,8 +134,23 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         for (const QString &t : tokens)
             extraTokens.append(t);
     }
-    for (const QString &cur : extraTokens) {
+    for (int i = 0; i < extraTokens.size(); ++i) {
+        const QString &cur = extraTokens.at(i);
         if (!cur.startsWith(u'-')) { args.append(cur); continue; }
+        // Flags de speculative/MTP/ngram: si el binario NO los soporta (p.ej.
+        // fallback a llama.cpp oficial sin MTP), descartarlos junto con su valor
+        // para no romper el arranque. Solo si el binario declara supportedFlags.
+        const bool isSpec = cur.startsWith(QStringLiteral("--spec-"))
+                            || cur.startsWith(QStringLiteral("--ngram-"))
+                            || cur.startsWith(QStringLiteral("--draft-"));
+        if (isSpec && !ctx.binary.supportedFlags.isEmpty()
+            && !ctx.binary.supportsFlag(ctx.binary.resolveFlag(cur))) {
+            result.warnings.append(QStringLiteral("Flag %1 no soportado por el binario; "
+                                                  "omitido (sin MTP).").arg(cur));
+            if (i + 1 < extraTokens.size() && !extraTokens.at(i + 1).startsWith(u'-'))
+                ++i;   // saltar el valor asociado
+            continue;
+        }
         args.append(ctx.binary.resolveFlag(cur));
     }
 

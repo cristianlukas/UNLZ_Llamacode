@@ -7,6 +7,10 @@ Item {
     id: root
 
     property string selectedLaunchId: ""
+    // Perfil de SISTEMA seleccionado: inmutable (solo lectura). Se puede duplicar
+    // para editar, pero no guardar/borrar/renombrar el original.
+    readonly property bool selectedIsSystem:
+        selectedLaunchId.length > 0 && App.profileManager.isSystemLaunch(selectedLaunchId)
     property string backendId: ""
     property string modelProfileId: ""
     property string runtimeId: ""
@@ -247,31 +251,9 @@ Item {
 
     function duplicateProfile() {
         if (!selectedLaunchId || selectedLaunchId.length === 0) return
-        const lp = App.profileManager.getLaunchProfile(selectedLaunchId)
-        const bp = App.profileManager.getBackend(lp.backendProfileId ?? "")
-        const mp = App.profileManager.getModelProfile(lp.modelProfileId ?? "")
-        const rt = App.profileManager.getRuntimePreset(lp.runtimePresetId ?? "")
-
-        const bId = App.profileManager.addBackend(bp.name ?? "Backend", bp.binaryId ?? "", bp.host ?? "127.0.0.1", bp.port ?? 8080)
-        const mId = App.profileManager.addModelProfile(mp.name ?? "Model", mp.modelId ?? "", mp.mmprojId ?? "", mp.draftModelId ?? "")
-        const rId = App.profileManager.addRuntimePreset(rt.name ?? "Runtime", rt.ctx ?? 4096, rt.batch ?? 512, rt.gpuLayers ?? -1, rt.flashAttention ?? false, rt.contBatching ?? true)
-        App.profileManager.updateRuntimePreset({
-            "id": rId, "name": rt.name ?? "Runtime",
-            "ctx": rt.ctx ?? 4096, "batch": rt.batch ?? 512, "ubatch": rt.ubatch ?? 512,
-            "threads": rt.threads ?? -1, "gpuLayers": rt.gpuLayers ?? -1,
-            "flashAttention": rt.flashAttention ?? false, "mmap": rt.mmap ?? true,
-            "mlock": rt.mlock ?? false, "contBatching": rt.contBatching ?? true,
-            "cacheType": rt.cacheType ?? "f16", "parallelSlots": rt.parallelSlots ?? 1
-        })
-
-        const lId = App.profileManager.addLaunchProfile((lp.name ?? "Perfil") + " (copia)", bId, mId, rId)
-        App.profileManager.updateLaunchProfile({
-            "id": lId, "name": (lp.name ?? "Perfil") + " (copia)",
-            "backendProfileId": bId, "modelProfileId": mId, "runtimePresetId": rId,
-            "harnessProfileId": lp.harnessProfileId ?? "",
-            "extraArgs": lp.extraArgs ?? [], "envOverrides": lp.envOverrides ?? {}
-        })
-        selectProfile(lId)
+        // Clon profundo (incl. perfiles de sistema → copia editable de usuario).
+        const lId = App.profileManager.duplicateLaunchProfile(selectedLaunchId)
+        if (lId && lId.length > 0) selectProfile(lId)
     }
 
     function loadLaunch() {
@@ -635,7 +617,7 @@ Item {
                         LcButton {
                             text: root.launchFavorite ? "★" : "☆"
                             secondary: true
-                            enabled: selectedLaunchId.length > 0
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
                             ToolTip.visible: hovered
                             ToolTip.text: root.launchFavorite ? "Quitar de favoritos" : "Marcar favorito"
                             onClicked: {
@@ -648,8 +630,8 @@ Item {
                             id: profileAliasField
                             Layout.preferredWidth: 160
                             placeholderText: "Alias (opcional)"
-                            enabled: selectedLaunchId.length > 0
-                            onEditingFinished: if (selectedLaunchId.length > 0)
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
+                            onEditingFinished: if (selectedLaunchId.length > 0 && !selectedIsSystem)
                                 App.profileManager.setLaunchAlias(selectedLaunchId, text.trim())
                         }
                         LcButton {
@@ -658,13 +640,13 @@ Item {
                                 return smokeTestRunning ? App.l("profiles.smokeTesting") : App.l("profiles.smokeTest")
                             }
                             secondary: true
-                            enabled: selectedLaunchId.length > 0 && !smokeTestRunning && !App.serverRunning
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem && !smokeTestRunning && !App.serverRunning
                             onClicked: { saveAll(); smokeTestRunning = true; App.smokeTestServer(selectedLaunchId) }
                         }
                         LcButton {
                             text: App.autoTuneRunning ? "Tuning…" : "Auto-tune"
                             secondary: true
-                            enabled: selectedLaunchId.length > 0 && !App.serverRunning && !App.autoTuneRunning
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem && !App.serverRunning && !App.autoTuneRunning
                             ToolTip.visible: hovered
                             ToolTip.text: "Optimiza ngl/batch/flash-attn/cache-type maximizando tok/s sin degradar calidad. Usa PPL si encuentra llama-perplexity. Crea un perfil nuevo \"-tuned\""
                             onClicked: { saveAll(); App.startAutoTune(selectedLaunchId, 24, 0.6, 256, "auto") }
@@ -672,7 +654,7 @@ Item {
                         LcButton {
                             text: "Tune CPU"
                             secondary: true
-                            enabled: selectedLaunchId.length > 0 && !App.serverRunning && !App.autoTuneRunning
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem && !App.serverRunning && !App.autoTuneRunning
                             ToolTip.visible: hovered
                             ToolTip.text: "Fuerza -ngl 0 y optimiza threads/batch/ubatch/cache para inferencia CPU-only"
                             onClicked: { saveAll(); App.startAutoTune(selectedLaunchId, 24, 0.6, 256, "cpu") }
@@ -692,7 +674,7 @@ Item {
                         }
                         LcButton {
                             text: (App.langV, App.l("profiles.rename")); secondary: true
-                            enabled: selectedLaunchId.length > 0
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
                             onClicked: {
                                 const lp = App.profileManager.getLaunchProfile(selectedLaunchId)
                                 renameField.text = lp.name ?? ""
@@ -700,14 +682,24 @@ Item {
                             }
                         }
                         LcButton { text: (App.langV, App.l("profiles.cancel")); secondary: true; onClicked: loadLaunch() }
-                        LcButton { text: (App.langV, App.l("profiles.save")); onClicked: saveAll() }
+                        LcButton { text: (App.langV, App.l("profiles.save")); enabled: !selectedIsSystem; onClicked: saveAll() }
                         LcButton {
                             text: (App.langV, App.l("profiles.delete"))
                             danger: true
-                            enabled: selectedLaunchId.length > 0
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
                             onClicked: deleteDialog.open()
                         }
                     }
+                }
+
+                // Aviso: perfil de SISTEMA (solo lectura). Duplicar para editar.
+                Text {
+                    visible: selectedIsSystem
+                    Layout.fillWidth: true
+                    text: "🔒 Perfil de sistema (solo lectura). Usá \"" + App.l("profiles.duplicate") + "\" para crear una copia editable."
+                    color: Theme.textSecondary
+                    font.pixelSize: 12
+                    wrapMode: Text.WordWrap
                 }
 
                 // Estado del auto-tune (progreso + mejor config aplicada).
