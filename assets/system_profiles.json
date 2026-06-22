@@ -60,6 +60,19 @@
     "mtp": { "enabled": false, "args": [] }
   },
   {
+    "id": "sys-vram-8-gemma",
+    "tier": "8GB-Gemma",
+    "order": 6,
+    "displayName": "Sistema · 8GB · Gemma 4 12B Q4 (casi-fp)",
+    "minVramGb": 8, "minRamGb": 16, "cpuOk": false,
+    "folder": "gemma-4-12b",
+    "model": { "repo": "unsloth/gemma-4-12b-it-GGUF", "file": "gemma-4-12b-it-UD-Q4_K_XL.gguf", "quant": "UD-Q4_K_XL", "mmprojRepo": "", "mmprojFile": "" },
+    "runtime": { "ctx": 12288, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
+    "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","12288","--parallel","1","--cache-type-v","q4_0","--reasoning","off"],
+    "comment": "Gemma 4 12B dynamic Q4 (unsloth UD, no el QAT crudo que llama.cpp degrada). ~7.4GB @12k. Texto (mmproj no entra en 8GB).",
+    "mtp": { "enabled": false, "args": [] }
+  },
+  {
     "id": "sys-vram-4",
     "tier": "4GB",
     "order": 6,
