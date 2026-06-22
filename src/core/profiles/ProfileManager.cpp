@@ -545,9 +545,14 @@ void ProfileManager::loadSystemProfiles()
     // modelId DETERMINISTA por ruta (igual que GGUFScanner.cpp): liga el perfil al
     // gguf cuando exista en <AppLocalData>/models/<folder>/<file>.
     static const QUuid kNs(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
-    const QString modelsDir =
-        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-        + QStringLiteral("/models");
+    // Dir de modelos gestionado. Override por env LLAMACODE_MODELS_DIR (reusar una
+    // librería existente sin re-descargar); DEBE coincidir con AppController::
+    // modelDownloadDir() para que el id det ligue tras el scan.
+    const QByteArray envModels = qgetenv("LLAMACODE_MODELS_DIR");
+    const QString modelsDir = !envModels.isEmpty()
+        ? QString::fromLocal8Bit(envModels)
+        : QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+              + QStringLiteral("/models");
     auto detId = [](const QString &path) {
         return QUuid::createUuidV5(kNs, path.toUtf8()).toString(QUuid::WithoutBraces);
     };

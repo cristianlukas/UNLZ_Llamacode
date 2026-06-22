@@ -7869,8 +7869,14 @@ void AppController::maybeFetchBenchmarks()
 
 QString AppController::modelDownloadDir() const
 {
-    QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-                  + QStringLiteral("/models");
+    // Override por env LLAMACODE_MODELS_DIR: reusar una librería de modelos
+    // existente (sin re-descargar). DEBE coincidir con ProfileManager::
+    // loadSystemProfiles() para que el id det de los perfiles de sistema ligue.
+    const QByteArray env = qgetenv("LLAMACODE_MODELS_DIR");
+    QString dir = !env.isEmpty()
+        ? QString::fromLocal8Bit(env)
+        : QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+              + QStringLiteral("/models");
     QDir().mkpath(dir);
     return dir;
 }
