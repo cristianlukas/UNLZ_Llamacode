@@ -189,7 +189,7 @@ ApplicationWindow {
                     target: App
                     function guard() {
                         const i = stack.currentIndex
-                        const serverOnly = (i === 4 || i === 5 || i === 6 || i === 7 || i === 9)
+                        const serverOnly = (i === 4 || i === 5 || i === 6 || i === 7 || i === 8)
                         const agentOnly = (i === 7)
                         if ((serverOnly && !App.serverRunning) || (agentOnly && !App.agentRunning))
                             stack.currentIndex = 0
@@ -214,8 +214,8 @@ ApplicationWindow {
                     AgentPage       {}
                     ResearchPage    {}
                     TasksPage       {}
-                    BenchmarkPage   {}
                     CharlaPage      {}
+                    BenchmarkPage   {}
                     SettingsPage    {}
                 }
             }
