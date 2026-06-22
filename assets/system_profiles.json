@@ -130,6 +130,7 @@
     "model": { "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF", "file": "gemma4-31b-it-dflash-Q5_K_M.gguf", "quant": "Q5_K_M", "mmprojRepo": "", "mmprojFile": "" },
     "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 512, "ubatch": 512, "kv": "q8_0", "flashAttn": true },
     "extraArgs": ["--temp","1.0","--top-p","0.95","--top-k","64","--min-p","0.0","--no-context-shift","--metrics","--no-warmup","--jinja","--ctx-size","32768","--cache-type-v","q8_0","--parallel","1","--reasoning","off"],
-    "mtp": { "enabled": true, "args": ["--spec-type","draft-mtp","--spec-draft-n-max","2"] }
+    "comment": "gguf DFlash: requiere binario beellama (build MTP). DFlash de 2 modelos no se auto-configura; corre sin spec.",
+    "mtp": { "enabled": false, "args": [] }
   }
 ]
