@@ -403,7 +403,7 @@ ApplicationWindow {
                     anchors.margins: 12
                     spacing: 6
                     Text {
-                        text: "★ Perfiles de 24GB recomendados (calibrados)"
+                        text: "★ Perfiles recomendados para tu computadora (24GB)"
                         color: Theme.textPrimary
                         font { pixelSize: 14; bold: true }
                     }
@@ -469,7 +469,9 @@ ApplicationWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: fastCol.implicitHeight + 24
-                visible: !App.hasAnyModel && !fastStartDismissed
+                // Mostrar siempre que haya recomendación (incl. al Repetir asistente);
+                // en placas 24GB se muestra el showcase, así que acá se oculta.
+                visible: !fastStartDismissed && showcase.length === 0
                          && (sysPick.launchId ?? "").length > 0
                 radius: 8
                 color: Theme.surfaceBg
@@ -481,7 +483,7 @@ ApplicationWindow {
                     anchors.margins: 12
                     spacing: 6
                     Text {
-                        text: "⚡ Inicio rápido recomendado para tu hardware"
+                        text: "⚡ Perfil recomendado para tu computadora"
                         color: Theme.textPrimary
                         font { pixelSize: 14; bold: true }
                     }
@@ -773,6 +775,13 @@ ApplicationWindow {
                 text: (App.langV, App.l("setup.tip"))
                 color: Theme.textMuted
                 font.pixelSize: 12
+            }
+            LcButton {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 4
+                text: "Cerrar asistente"
+                secondary: true
+                onClicked: setupPopup.close()
             }
         }
     }
