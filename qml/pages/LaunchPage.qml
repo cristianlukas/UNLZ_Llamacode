@@ -126,6 +126,9 @@ Item {
                 const _lang = App.langV
                 return App.serverRunning ? App.l("launch.running") : App.l("launch.stopped")
             }
+            // Re-abrir el asistente inicial (si se canceló por error el setup).
+            actionLabel: "Repetir asistente inicial"
+            onActionClicked: App.requestShowSetup()
         }
 
         RowLayout {

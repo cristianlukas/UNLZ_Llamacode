@@ -646,6 +646,10 @@ public:
     Q_INVOKABLE void cancelModelDownload(const QString &id);
     Q_INVOKABLE void moveModelDownload(const QString &id, int delta);
     Q_INVOKABLE void openModelRecommendation(const QString &repo);
+    // Re-mostrar el asistente inicial (setup) desde la UI.
+    Q_INVOKABLE void requestShowSetup() { emit showSetupRequested(); }
+    // Emite secondInstanceLaunched (lo llama main.cpp al detectar otra instancia).
+    Q_INVOKABLE void notifySecondInstance() { emit secondInstanceLaunched(); }
 
     // ── Perfiles de sistema (fast start por hardware) ──
     // Perfil de sistema recomendado: el tier más cercano ≤ hardware (VRAM/RAM).
@@ -713,6 +717,11 @@ signals:
     // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
     void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
     void serverRunningChanged();
+    // Otra instancia intentó abrirse (single-instance): la UI restaura/enfoca la
+    // ventana existente en vez de abrir una nueva.
+    void secondInstanceLaunched();
+    // Pedido de re-mostrar el asistente inicial (botón "Repetir asistente").
+    void showSetupRequested();
     void serverReadyChanged();
     void serverStateChanged();
     void serverStatsChanged();

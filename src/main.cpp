@@ -19,6 +19,8 @@
 #include <QLabel>
 #include <QScreen>
 #include <QGuiApplication>
+#include <QLocalServer>
+#include <QLocalSocket>
 
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
@@ -71,6 +73,23 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
 
+    // ── Instancia única ──
+    // Si ya hay una instancia (incluida la del tray), pedirle que se muestre y salir,
+    // en vez de abrir una segunda (que duplicaría el botón en la taskbar).
+    const QString kInstanceKey = QStringLiteral("LlamaCode-single-instance");
+    {
+        QLocalSocket probe;
+        probe.connectToServer(kInstanceKey);
+        if (probe.waitForConnected(250)) {
+            probe.write("raise");
+            probe.flush();
+            probe.waitForBytesWritten(500);
+            probe.disconnectFromServer();
+            qDebug() << "Otra instancia ya está corriendo — la enfoco y salgo.";
+            return 0;
+        }
+    }
+
 #ifdef Q_OS_WIN
     // Identidad de taskbar explícita: sin esto Windows no asocia el icono a la
     // ventana frameless y muestra el icono genérico (splash y app).
@@ -115,7 +134,10 @@ int main(int argc, char *argv[])
     // Qt::SplashScreen no aplica el icono al botón de taskbar (queda genérico).
     // Una ventana frameless común sí lo usa, igual que la ventana principal.
     QWidget splash;
-    splash.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    // Qt::Tool → el splash NO crea su propio botón en la taskbar (antes aparecía
+    // un botón extra "sin icono" hasta que la ventana principal lo reemplazaba).
+    // Así durante el arranque hay un solo ícono: el de la ventana principal.
+    splash.setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::Tool);
     splash.setWindowIcon(appIcon);
     splash.setFixedSize(360, 160);
     splash.setAttribute(Qt::WA_DeleteOnClose, false);
@@ -136,6 +158,20 @@ int main(int argc, char *argv[])
     AppController controller;
     ThemeProvider theme;
     MermaidRenderer mermaid;
+
+    // Servidor de instancia única: cuando otra instancia intente abrirse, recibe
+    // su "raise" y le pide a la UI que restaure/enfoque la ventana existente.
+    QLocalServer::removeServer(kInstanceKey);   // limpiar socket huérfano de un crash
+    auto *instanceServer = new QLocalServer(&app);
+    if (instanceServer->listen(kInstanceKey)) {
+        QObject::connect(instanceServer, &QLocalServer::newConnection, &controller, [instanceServer, &controller]() {
+            if (QLocalSocket *c = instanceServer->nextPendingConnection()) {
+                c->disconnectFromServer();
+                c->deleteLater();
+            }
+            controller.notifySecondInstance();
+        });
+    }
 
     qDebug() << "Controllers ready";
 

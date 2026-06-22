@@ -980,6 +980,10 @@ ApplicationWindow {
             if (App.updateAvailable)
                 updatePopup.open()
         }
+        // Otra instancia intentó abrirse → restaurar/enfocar esta ventana.
+        function onSecondInstanceLaunched() { showFromTray() }
+        // Botón "Repetir asistente inicial".
+        function onShowSetupRequested() { setupPopup.open() }
     }
     Connections {
         target: App.binaryRegistry
