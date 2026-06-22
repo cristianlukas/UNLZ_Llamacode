@@ -466,6 +466,67 @@ ApplicationWindow {
                     }
                 }
             }
+
+            // Perfil único recomendado (placas que NO son de 24GB): el tier ≤ VRAM.
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: fastCol.implicitHeight + 24
+                visible: !fastStartDismissed && showcase.length === 0
+                         && (sysPick.launchId ?? "").length > 0
+                radius: 8
+                color: Theme.surfaceBg
+                border.color: Theme.accent
+
+                ColumnLayout {
+                    id: fastCol
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 6
+                    Text {
+                        text: "⚡ Perfil recomendado para tu computadora"
+                        color: Theme.textPrimary
+                        font { pixelSize: 14; bold: true }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: (sysPick.displayName ?? "")
+                        color: Theme.textPrimary
+                        font.pixelSize: 13
+                        wrapMode: Text.WordWrap
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 4
+                        spacing: 10
+                        LcButton {
+                            text: "Instalar y usar"
+                            Layout.preferredHeight: 34
+                            enabled: !App.modelDownloadRunning
+                            onClicked: App.acceptSystemProfile(sysPick.launchId ?? "")
+                        }
+                        LcButton {
+                            text: "No, gracias"
+                            secondary: true
+                            Layout.preferredHeight: 34
+                            onClicked: fastStartDismissed = true
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: App.modelDownloadRunning || App.modelDownloadStatus.length > 0
+                        spacing: 8
+                        ProgressBar { Layout.preferredWidth: 150; from: 0; to: 100; value: App.modelDownloadProgress }
+                        Text {
+                            Layout.fillWidth: true
+                            text: App.modelDownloadStatus
+                            color: App.modelDownloadRunning ? Theme.accent : Theme.textMuted
+                            font.pixelSize: 11
+                            elide: Text.ElideMiddle
+                        }
+                    }
+                }
+            }
+
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
             // Step 1: binary
