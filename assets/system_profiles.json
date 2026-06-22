@@ -83,9 +83,9 @@
       "mmprojFile": ""
     },
     "draftModel": {
-      "repo": "unsloth/gemma-4-31B-it-qat-GGUF",
-      "file": "mtp-gemma-4-31B-it.gguf",
-      "folder": "gemma-4-31B-it-qat"
+      "repo": "Simplepotat/gemma-4-31b-it-qat-q4_0-assistant-gguf",
+      "file": "gemma-4-31b-it-qat-q4_0-assistant.gguf",
+      "folder": "gemma-4-31b-it-qat-assistant-MTP"
     },
     "spec": {
       "type": "draft-mtp",
@@ -112,6 +112,7 @@
       "64",
       "--min-p",
       "0.0",
+      "--context-shift",
       "--metrics",
       "--no-warmup",
       "--jinja",
@@ -132,7 +133,7 @@
       "--reasoning",
       "off"
     ],
-    "comment": "= FAST-GEMMA calibrado: gemma-4-31B QAT (UD-Q4_K_XL) + draft MTP assistant (mtp-gemma-4-31B-it) via draft-mtp + jinja tools-fixed. Requiere beellama.",
+    "comment": "= FAST-GEMMA calibrado: gemma-4-31B QAT (UD-Q4_K_XL) + draft qat-q4_0-assistant (Simplepotat) via draft-mtp + jinja tools-fixed. Requiere beellama.",
     "mtp": {
       "enabled": false,
       "args": []
