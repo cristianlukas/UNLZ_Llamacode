@@ -611,6 +611,7 @@ void ProfileManager::loadSystemProfiles()
             const QJsonObject spec = o.value("spec").toObject();
             mp.specType = spec.value("type").toString();
             mp.specDraftNgl = spec.value("draftNgl").toString();
+            mp.specDraftNMax = spec.value("draftNMax").toInt(0);
         }
         sysModel.append(mp);
 
@@ -636,6 +637,23 @@ void ProfileManager::loadSystemProfiles()
         const QJsonObject mtp = o.value("mtp").toObject();
         if (mtp.value("enabled").toBool())
             for (const QJsonValue &a : mtp.value("args").toArray()) extra << a.toString();
+        // Chat-template bundleado (ej fix de tool-calling de Gemma4): extraer del qrc
+        // a una ruta estable y pasar --chat-template-file con esa ruta.
+        const QString tpl = o.value("chatTemplate").toString();
+        if (!tpl.isEmpty()) {
+            const QString dstDir =
+                QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                + QStringLiteral("/chat-templates");
+            QDir().mkpath(dstDir);
+            const QString dst = dstDir + "/" + tpl;
+            QFile src(QStringLiteral(":/assets/chat-templates/") + tpl);
+            if (!QFile::exists(dst) && src.open(QIODevice::ReadOnly)) {
+                QFile out(dst);
+                if (out.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    out.write(src.readAll());
+            }
+            if (QFile::exists(dst)) extra << QStringLiteral("--chat-template-file") << dst;
+        }
         lp.extraArgs = extra;
         const QJsonObject env = o.value("env").toObject();
         for (auto it = env.begin(); it != env.end(); ++it)

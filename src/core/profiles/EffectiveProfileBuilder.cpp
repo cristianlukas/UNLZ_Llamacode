@@ -110,11 +110,11 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     // Speculative decoding activo: hay draft model resuelto. Con MTP, un KV-cache
     // cuantizado (q4_0/q8_0) colapsa el draft acceptance ~a 0 (necesita f16); ver
     // reportes de comunidad sobre Gemma4 QAT+MTP. Forzamos f16 y avisamos.
-    // El force-f16 del KV aplica a MTP (draft acceptance muere con KV cuantizado),
-    // NO a DFlash (validado con q8_0). Por eso dflash queda fuera de specDecoding.
+    // El force-f16 del KV solo aplica al spec-decoding "plano" (sin specType). Con
+    // MTP/DFlash (perfiles calibrados que fijan KV q8/q4) se respeta el KV elegido.
     const bool specDecoding =
         !ctx.model.draftModelId.isEmpty() && ctx.draftModel.isAvailable
-        && ctx.model.specType != QLatin1String("dflash");
+        && ctx.model.specType.isEmpty();
     applyRuntime(ctx.runtime, ctx.binary, args, result.warnings,
                  result.blockingErrors, specDecoding);
 
@@ -324,8 +324,9 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
         if (!draft.isAvailable) {
             warnings.append("Draft model unavailable, speculative decoding disabled.");
         } else {
-            // DFlash (beellama) usa --spec-draft-model; el resto --draft-model.
-            const QString draftFlag = (mp.specType == QLatin1String("dflash"))
+            // beellama (MTP/DFlash con draft separado) usa --spec-draft-model;
+            // el spec-decoding plano de llama.cpp usa --draft-model.
+            const QString draftFlag = !mp.specType.isEmpty()
                 ? QStringLiteral("--spec-draft-model") : QStringLiteral("--draft-model");
             addFlag(bin, draftFlag, draft.absolutePath, args, warnings);
             // Flags de speculative decoding / MTP. Solo se emiten los seteados;

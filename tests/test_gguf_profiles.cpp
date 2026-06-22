@@ -266,7 +266,8 @@ void CoreTests::builder_emitsSpecFlags()
 
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     const QStringList &a = ep.effectiveArgs;
-    QVERIFY(a.contains("--draft-model"));
+    // Con specType seteado (MTP/DFlash, beellama) el draft va por --spec-draft-model.
+    QVERIFY(a.contains("--spec-draft-model"));
     int i = a.indexOf("--spec-type");
     QVERIFY(i >= 0 && a[i + 1] == "draft-mtp");
     i = a.indexOf("--spec-draft-n-max");

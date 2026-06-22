@@ -68,35 +68,40 @@
     "tier": "24GB-Gemma",
     "extra": true,
     "order": 2,
-    "displayName": "[general] 24GB · Gemma4-31B (DFlash)",
+    "displayName": "[general] 24GB · Gemma4-31B QAT (MTP)",
     "minVramGb": 24,
     "minRamGb": 32,
     "cpuOk": false,
     "requiresMtpBinary": true,
-    "folder": "Gemma-4-31B",
+    "folder": "gemma-4-31B-it-qat",
+    "chatTemplate": "gemma4-tools-fixed.jinja",
     "model": {
-      "repo": "unsloth/gemma-4-31B-it-GGUF",
-      "file": "gemma-4-31B-it-Q4_K_M.gguf",
-      "quant": "Q4_K_M",
-      "mmprojRepo": "unsloth/gemma-4-31B-it-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "repo": "unsloth/gemma-4-31B-it-qat-GGUF",
+      "file": "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf",
+      "quant": "UD-Q4_K_XL",
+      "mmprojRepo": "",
+      "mmprojFile": ""
     },
     "draftModel": {
-      "repo": "Anbeeld/gemma-4-31B-it-DFlash-GGUF",
-      "file": "gemma4-31b-it-dflash-Q5_K_M.gguf",
-      "folder": "Gemma-4-31B-DFlash"
+      "repo": "unsloth/gemma-4-31B-it-qat-GGUF",
+      "file": "mtp-gemma-4-31B-it.gguf",
+      "folder": "gemma-4-31B-it-qat"
     },
     "spec": {
-      "type": "dflash",
-      "draftNgl": "all"
+      "type": "draft-mtp",
+      "draftNgl": "all",
+      "draftNMax": 2
     },
     "runtime": {
       "ctx": 32768,
       "gpuLayers": 999,
       "batch": 512,
-      "ubatch": 512,
+      "ubatch": 64,
+      "threads": 8,
       "kv": "q8_0",
-      "flashAttn": true
+      "flashAttn": true,
+      "mlock": true,
+      "mmap": false
     },
     "extraArgs": [
       "--temp",
@@ -107,7 +112,6 @@
       "64",
       "--min-p",
       "0.0",
-      "--no-context-shift",
       "--metrics",
       "--no-warmup",
       "--jinja",
@@ -115,14 +119,20 @@
       "32768",
       "--cache-type-v",
       "q8_0",
+      "--threads-batch",
+      "8",
+      "--cache-reuse",
+      "512",
+      "--predict",
+      "4096",
+      "--spec-draft-n-min",
+      "0.75",
       "--parallel",
       "1",
-      "--spec-dflash-cross-ctx",
-      "1024",
       "--reasoning",
       "off"
     ],
-    "comment": "DFlash = target gemma-4-31B + draft DFlash. Requiere binario beellama (build MTP).",
+    "comment": "= FAST-GEMMA calibrado: gemma-4-31B QAT (UD-Q4_K_XL) + draft MTP assistant (mtp-gemma-4-31B-it) via draft-mtp + jinja tools-fixed. Requiere beellama.",
     "mtp": {
       "enabled": false,
       "args": []

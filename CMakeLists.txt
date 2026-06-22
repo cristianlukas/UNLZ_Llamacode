@@ -316,6 +316,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/update/latest.json
         assets/hwfit/hf_models.json
         assets/system_profiles.json
+        assets/chat-templates/gemma4-tools-fixed.jinja
         assets/benchmarks/aa_intelligence.json
         assets/benchmarks/local_cookbook_priorities.json
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}

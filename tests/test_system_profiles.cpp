@@ -146,7 +146,7 @@ void SystemProfilesTests::manager_fastGemmaDflashWired()
     // FAST GEMMA: DFlash = target + draft + specType "dflash" (inmutable).
     const QString mpId = pm.getLaunchProfile("sys-fastgemma").value("modelProfileId").toString();
     const QVariantMap mp = pm.getModelProfile(mpId);
-    QCOMPARE(mp.value("specType").toString(), QStringLiteral("dflash"));
+    QCOMPARE(mp.value("specType").toString(), QStringLiteral("draft-mtp"));
     QVERIFY(!mp.value("draftModelId").toString().isEmpty());
     QVERIFY(!mp.value("modelId").toString().isEmpty());
     // No se puede editar el original; sí su duplicado (copia editable).
