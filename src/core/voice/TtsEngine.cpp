@@ -36,6 +36,16 @@ void TtsEngine::setPiper(const QString &binPath, const QString &modelPath)
     m_piperModel = modelPath;
 }
 
+bool TtsEngine::piperAvailable() const
+{
+    QString modelPath = m_piperModel;
+    if (modelPath.isEmpty())
+        modelPath = VoiceServerManager::ttsModelPath(
+            m_cfg.ttsManagedVoice.isEmpty() ? QStringLiteral("es_ES-davefx-medium")
+                                            : m_cfg.ttsManagedVoice);
+    return !modelPath.isEmpty() && QFile::exists(modelPath);
+}
+
 void TtsEngine::synthesizePiper(const QString &text)
 {
     QString modelPath = m_piperModel;
@@ -97,11 +107,15 @@ void TtsEngine::synthesize(const QString &text)
     const QByteArray body = buildSpeechBody(m_cfg.ttsModel, m_cfg.ttsVoice, text, m_cfg.ttsFormat);
     const QString fmt = m_cfg.ttsFormat;
     m_reply = m_nam.post(req, body);
-    connect(m_reply, &QNetworkReply::finished, this, [this, fmt]() {
+    connect(m_reply, &QNetworkReply::finished, this, [this, fmt, text]() {
         QNetworkReply *r = m_reply;
         m_reply = nullptr;
         r->deleteLater();
         if (r->error() != QNetworkReply::NoError) {
+            // Endpoint HTTP caído (típico: nada escuchando en ttsBaseUrl). Si hay
+            // una voz piper local instalada, sintetizar con piper en vez de fallar
+            // (Ingi Charla local-first: la voz sigue andando sin servidor TTS).
+            if (piperAvailable()) { synthesizePiper(text); return; }
             emit failed(r->errorString());
             return;
         }

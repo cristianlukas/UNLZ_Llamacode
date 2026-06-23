@@ -1,4 +1,6 @@
 #include <QtTest>
+#include <QDir>
+#include <QTemporaryFile>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include "core/voice/VoiceTypes.h"
@@ -21,7 +23,9 @@ private slots:
     void sttMultipart();
     void sttParseTranscript();
     void ttsSpeechBody();
+    void ttsPiperAvailability();
     void vadTurnEnded();
+    void ttsSentenceSplit();
     void voiceInLaunchProfile();
     void sttServerCatalog();
     void voiceBinaryUrls();
@@ -122,6 +126,21 @@ void TestVoice::ttsSpeechBody()
     QCOMPARE(o.value("response_format").toString(), QString("wav"));
 }
 
+void TestVoice::ttsPiperAvailability()
+{
+    // Fallback HTTP→piper: piperAvailable() refleja si el modelo .onnx existe.
+    TtsEngine eng;
+    const QString missing = QDir::temp().filePath("lc-no-such-voice.onnx");
+    QFile::remove(missing);
+    eng.setPiper(QString(), missing);
+    QVERIFY(!eng.piperAvailable());
+
+    QTemporaryFile voice(QDir::temp().filePath("lc-voice-XXXXXX.onnx"));
+    QVERIFY(voice.open());
+    eng.setPiper(QString(), voice.fileName());
+    QVERIFY(eng.piperAvailable());
+}
+
 void TestVoice::vadTurnEnded()
 {
     // Sin voz (peak bajo): nunca termina aunque haya silencio.
@@ -130,6 +149,32 @@ void TestVoice::vadTurnEnded()
     QVERIFY(!VoiceController::turnEnded(0.10, 0.03, 500, 800));
     // Hubo voz y silencio suficiente → fin de turno.
     QVERIFY(VoiceController::turnEnded(0.10, 0.03, 900, 800));
+}
+
+void TestVoice::ttsSentenceSplit()
+{
+    // Texto corto (< minLen): un solo chunk.
+    QCOMPARE(VoiceController::splitSentences("Hola.", 40),
+             QStringList{QStringLiteral("Hola.")});
+
+    // Varias oraciones largas: se separan por cierre (.!?) superando minLen.
+    const QString t = QStringLiteral(
+        "Voy a abrir el navegador ahora mismo para vos. "
+        "Después busco la página que pediste. ¿Te parece bien así?");
+    const QStringList parts = VoiceController::splitSentences(t, 20);
+    QCOMPARE(parts.size(), 3);
+    QVERIFY(parts.first().startsWith("Voy a abrir"));
+    QVERIFY(parts.last().endsWith("?"));
+
+    // Fragmentos cortos se acumulan hasta superar minLen (no spawnea por "Sí.").
+    // Ningún cierre intermedio alcanza minLen → todo queda en un solo chunk.
+    const QStringList merged = VoiceController::splitSentences(
+        QStringLiteral("Sí. No. Tal vez. Lo voy a pensar con calma un rato."), 30);
+    QCOMPARE(merged.size(), 1);
+
+    // Solo espacios → sin chunks. Texto sin puntuación final → un chunk.
+    QVERIFY(VoiceController::splitSentences("   ", 40).isEmpty());
+    QCOMPARE(VoiceController::splitSentences("texto sin puntuacion final largo", 40).size(), 1);
 }
 
 void TestVoice::voiceInLaunchProfile()

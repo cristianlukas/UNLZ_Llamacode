@@ -7,6 +7,8 @@
 #include <QPointer>
 #include <QVariantList>
 #include <QList>
+#include <QPair>
+#include <QStringList>
 #include <QString>
 
 class QAudioSource;
@@ -56,6 +58,13 @@ public:
     static bool turnEnded(double peakLevel, double activationLevel,
                           int silenceAccumMs, int silenceMs);
 
+    // ── Función pura (testeable) ──
+    // Trocea la respuesta en oraciones para TTS por chunks: se sintetiza la
+    // primera oración apenas se cierra (audio rápido) mientras se generan las
+    // siguientes. Acumula hasta un cierre de oración (.!?…\n) que supere minLen
+    // para no spawnear piper por fragmentos minúsculos. Devuelve >=1 chunk.
+    static QStringList splitSentences(const QString &text, int minLen = 40);
+
 public slots:
     void start();          // arranca la sesión de charla (entra en Listening)
     void stop();           // corta todo y vuelve a Idle
@@ -92,6 +101,8 @@ private:
     void finalizeTurn();           // arma el texto final del turno y lo emite
     void playAudio(const QByteArray &audio, const QString &format);
     void teardownPlayback();
+    void pumpTts();        // sintetiza la próxima oración pendiente si TTS está libre
+    void playNextClip();   // reproduce el próximo clip de audio ya sintetizado
 
     VoiceConfig m_cfg;
     State m_state = Idle;
@@ -123,4 +134,11 @@ private:
     QMediaPlayer *m_player = nullptr;
     QAudioOutput *m_audioOut = nullptr;
     QBuffer *m_playBuf = nullptr;
+
+    // TTS por chunks (streaming de oraciones): cola de oraciones pendientes de
+    // sintetizar + cola de clips ya sintetizados esperando reproducción. Permite
+    // empezar a hablar tras la primera oración mientras se generan las demás.
+    QStringList m_ttsQueue;                          // oraciones pendientes
+    QList<QPair<QByteArray, QString>> m_audioQueue;  // {audio, formato} a reproducir
+    bool m_playing = false;                          // hay un clip sonando
 };

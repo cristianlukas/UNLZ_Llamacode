@@ -23,6 +23,10 @@ public:
     bool busy() const { return m_reply != nullptr || m_piper != nullptr; }
     void cancel();
 
+    // ¿Hay una voz piper local instalada (modelo .onnx presente)? Fallback cuando
+    // el endpoint TTS HTTP no responde. Público para test.
+    bool piperAvailable() const;
+
     // ── Función pura (testeable sin red) ──
     // Body JSON del request /v1/audio/speech.
     static QByteArray buildSpeechBody(const QString &model, const QString &voice,

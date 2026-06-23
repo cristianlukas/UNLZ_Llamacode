@@ -104,6 +104,9 @@ void VoiceController::stop()
 {
     endCapture();
     teardownPlayback();
+    m_ttsQueue.clear();
+    m_audioQueue.clear();
+    m_playing = false;
     m_stt.cancel();
     m_tts.cancel();
     m_testMode = false;
@@ -113,6 +116,9 @@ void VoiceController::stop()
 void VoiceController::startListening()
 {
     teardownPlayback();            // barge-in: cortar cualquier TTS sonando
+    m_ttsQueue.clear();            // descartar oraciones/clips pendientes del turno
+    m_audioQueue.clear();
+    m_playing = false;
     m_tts.cancel();
     m_testMode = false;
     beginCapture();
@@ -303,6 +309,25 @@ void VoiceController::notifyThinking()
 
 // ── TTS → audio → playback ───────────────────────────────────────────────────
 
+QStringList VoiceController::splitSentences(const QString &text, int minLen)
+{
+    QStringList out;
+    QString cur;
+    for (const QChar c : text) {
+        cur.append(c);
+        const bool end = (c == QLatin1Char('.') || c == QLatin1Char('!')
+                          || c == QLatin1Char('?') || c == QChar(0x2026)
+                          || c == QLatin1Char('\n'));
+        if (end && cur.trimmed().size() >= minLen) {
+            out << cur.trimmed();
+            cur.clear();
+        }
+    }
+    if (!cur.trimmed().isEmpty()) out << cur.trimmed();
+    if (out.isEmpty() && !text.trimmed().isEmpty()) out << text.trimmed();
+    return out;
+}
+
 void VoiceController::speak(const QString &text)
 {
     if (m_state == Idle || m_state == Error) return;  // charla no activa
@@ -310,13 +335,34 @@ void VoiceController::speak(const QString &text)
         if (m_cfg.autoListen) startListening();
         return;
     }
+    // TTS por chunks: trocear en oraciones y sintetizar la primera ya; las demás
+    // se generan mientras suena la anterior (arranca a hablar mucho antes).
+    m_ttsQueue = splitSentences(text);
+    m_audioQueue.clear();
+    m_playing = false;
     setState(Speaking);
-    m_tts.synthesize(text);
+    pumpTts();
+}
+
+void VoiceController::pumpTts()
+{
+    if (m_tts.busy() || m_ttsQueue.isEmpty()) return;
+    m_tts.synthesize(m_ttsQueue.takeFirst());
 }
 
 void VoiceController::onTtsAudio(const QByteArray &audio, const QString &format)
 {
-    playAudio(audio, format);
+    m_audioQueue.append(qMakePair(audio, format));
+    pumpTts();                 // adelantar la síntesis de la próxima oración
+    if (!m_playing) playNextClip();
+}
+
+void VoiceController::playNextClip()
+{
+    if (m_audioQueue.isEmpty()) return;
+    const auto clip = m_audioQueue.takeFirst();
+    m_playing = true;
+    playAudio(clip.first, clip.second);
 }
 
 void VoiceController::onTtsFailed(const QString &err)
@@ -341,6 +387,12 @@ void VoiceController::playAudio(const QByteArray &audio, const QString &format)
             [this](QMediaPlayer::MediaStatus st) {
         if (st == QMediaPlayer::EndOfMedia) {
             teardownPlayback();
+            m_playing = false;
+            // ¿Más clips ya sintetizados? Reproducir el siguiente.
+            if (!m_audioQueue.isEmpty()) { playNextClip(); return; }
+            // ¿Quedan oraciones por sintetizar (o una síntesis en vuelo)? Esperar
+            // a que llegue su audio (onTtsAudio reanuda la reproducción).
+            if (!m_ttsQueue.isEmpty() || m_tts.busy()) return;
             if (m_state == Speaking) {
                 if (m_cfg.autoListen) startListening();
                 else setState(Idle);
@@ -350,8 +402,9 @@ void VoiceController::playAudio(const QByteArray &audio, const QString &format)
     connect(m_player, &QMediaPlayer::errorOccurred, this,
             [this](QMediaPlayer::Error, const QString &es) { fail(QStringLiteral("playback: ") + es); });
 
-    // Barge-in: monitorear el micrófono mientras hablamos.
-    if (m_cfg.bargeIn) {
+    // Barge-in: monitorear el micrófono mientras hablamos. Solo iniciar la captura
+    // una vez (no por cada clip del streaming de oraciones).
+    if (m_cfg.bargeIn && !m_source) {
         beginCapture();
         m_monitorOnly = true;
         if (m_state != Error) setState(Speaking);
