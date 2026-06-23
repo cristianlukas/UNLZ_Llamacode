@@ -107,6 +107,16 @@ QVariantMap VoiceServerManager::ttsVoice(const QString &id)
     return {};
 }
 
+QString VoiceServerManager::defaultTtsVoiceForLang(const QString &lang)
+{
+    const QString base = QStringLiteral("es_ES-davefx-medium");
+    if (lang.isEmpty()) return base;
+    for (const Voice &v : kVoices)
+        if (lang == QLatin1String(v.lang))
+            return QString::fromLatin1(v.id);
+    return base;     // sin voz para ese idioma → español base
+}
+
 QString VoiceServerManager::ttsModelPath(const QString &voiceId)
 {
     const QVariantMap v = ttsVoice(voiceId);

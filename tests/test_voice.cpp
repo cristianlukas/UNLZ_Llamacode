@@ -33,6 +33,7 @@ private slots:
     void voiceBinaryUrls();
     void managedBinaryLookup();
     void ttsVoiceCatalog();
+    void ttsVoiceForLang();
 };
 
 void TestVoice::configRoundTrip()
@@ -278,6 +279,16 @@ void TestVoice::ttsVoiceCatalog()
     const QStringList a = VoiceServerManager::buildPiperArgs("v.onnx", "out.wav");
     QVERIFY(a.contains("-m")); QVERIFY(a.contains("v.onnx"));
     QVERIFY(a.contains("-f")); QVERIFY(a.contains("out.wav"));
+}
+
+void TestVoice::ttsVoiceForLang()
+{
+    // Voz piper por idioma de la app: es→española, en→inglesa, idioma sin voz o
+    // vacío → cae a la española base.
+    QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang("es"), QString("es_ES-davefx-medium"));
+    QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang("en"), QString("en_US-amy-medium"));
+    QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang("zh"), QString("es_ES-davefx-medium"));
+    QCOMPARE(VoiceServerManager::defaultTtsVoiceForLang(QString()), QString("es_ES-davefx-medium"));
 }
 
 QTEST_MAIN(TestVoice)

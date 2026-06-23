@@ -1030,6 +1030,9 @@ private:
     QString m_voicePartial;
     void ensureVoice();                 // crea + configura el controller (lazy)
     void applyVoiceConfig();            // empuja config + keys resueltas al controller
+    // Fuerza STT (whisper) y voz piper (TTS) al idioma de la app (m_language), así
+    // Ingi Charla no mezcla idiomas por mala detección de whisper en auto.
+    void applyAppLanguageToVoice(VoiceConfig &c) const;
     bool startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
     void continueVoicePrerequisitesInstall();
     void stopManagedStt();

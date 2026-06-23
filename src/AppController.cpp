@@ -12035,12 +12035,27 @@ void AppController::ensureVoice()
     connect(m_voice, &VoiceController::levelChanged, this, &AppController::voiceLevelChanged);
 }
 
+void AppController::applyAppLanguageToVoice(VoiceConfig &c) const
+{
+    const QString lang = m_language.isEmpty() ? QStringLiteral("es") : m_language;
+    // Whisper: fijar el idioma al de la app (evita auto-detección errónea en
+    // frases cortas, que es lo que hacía responder en otro idioma).
+    c.sttLanguage = lang;
+    // Piper: si la voz elegida no es del idioma de la app, usar la voz por
+    // defecto de ese idioma (misma voz si ya coincide, ej es_MX se respeta).
+    const QString voiceLang =
+        VoiceServerManager::ttsVoice(c.ttsManagedVoice).value(QStringLiteral("lang")).toString();
+    if (voiceLang != lang)
+        c.ttsManagedVoice = VoiceServerManager::defaultTtsVoiceForLang(lang);
+}
+
 void AppController::applyVoiceConfig()
 {
     if (!m_voice) return;
     // La Charla usa la config de voz del perfil activo (el que lanzó el server).
     VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    applyAppLanguageToVoice(c);
     // STT gestionado: apuntar al server local que lanza la app (whisper.cpp).
     if (!c.sttManagedEngine.isEmpty()) {
         const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
@@ -12108,8 +12123,9 @@ void AppController::startCharla()
     ensureChatBackend();   // la voz reusa el backend de chat (sesiones/stream)
     ensureVoice();
     // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
-    const VoiceConfig c = VoiceConfig::fromJson(
+    VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    applyAppLanguageToVoice(c);
     if (c.ttsMode == QLatin1String("piper")) {
         const QString voiceId = c.ttsManagedVoice.isEmpty()
             ? QStringLiteral("es_ES-davefx-medium") : c.ttsManagedVoice;

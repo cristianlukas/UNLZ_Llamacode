@@ -30,6 +30,9 @@ public:
     // Catálogo de voces TTS (piper): [{id,name,lang,modelFile,modelUrl,jsonUrl,sizeMb}].
     static QVariantList ttsCatalog();
     static QVariantMap ttsVoice(const QString &id);
+    // Voz piper por defecto para un código de idioma (es/en/...). Si no hay voz
+    // para ese idioma, cae a la voz española base. Pura (testeable).
+    static QString defaultTtsVoiceForLang(const QString &lang);
 
     // Rutas en disco (bajo AppLocalData/LlamaCode/voice/).
     static QString installRoot();
