@@ -127,6 +127,13 @@ QStringList VoiceServerManager::buildPiperArgs(const QString &modelPath, const Q
     return {QStringLiteral("-m"), modelPath, QStringLiteral("-f"), outWav};
 }
 
+QStringList VoiceServerManager::buildPiperResidentArgs(const QString &modelPath, const QString &outDir)
+{
+    return {QStringLiteral("-m"), modelPath,
+            QStringLiteral("--json-input"),
+            QStringLiteral("--output_dir"), outDir};
+}
+
 QString VoiceServerManager::installRoot()
 {
     const QString base = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);

@@ -46,11 +46,148 @@ bool TtsEngine::piperAvailable() const
     return !modelPath.isEmpty() && QFile::exists(modelPath);
 }
 
-void TtsEngine::synthesizePiper(const QString &text)
+QByteArray TtsEngine::buildPiperJsonLine(const QString &text, const QString &outFile)
+{
+    QJsonObject o;
+    o["text"] = text;
+    o["output_file"] = outFile;
+    return QJsonDocument(o).toJson(QJsonDocument::Compact) + '\n';
+}
+
+QString TtsEngine::resolvePiperModel() const
 {
     QString modelPath = m_piperModel;
     if (modelPath.isEmpty())
         modelPath = VoiceServerManager::ttsModelPath(QStringLiteral("es_ES-davefx-medium"));
+    return modelPath;
+}
+
+QString TtsEngine::resolvePiperProg() const
+{
+    QString prog = m_piperBin;
+    if (prog.isEmpty()) prog = VoiceServerManager::installedBinaryPath(QStringLiteral("piper"));
+    if (prog.isEmpty()) prog = QStringLiteral("piper");
+    return prog;
+}
+
+// Lanza (o reusa) el proceso piper residente en modo --json-input. Mantiene el
+// modelo .onnx + eSpeak cargados entre turnos: la latencia dominante de piper era
+// recargar el modelo en cada spawn. Devuelve true si hay un proceso vivo listo.
+bool TtsEngine::ensurePiperResident()
+{
+    if (m_piperProc && m_piperProc->state() == QProcess::Running
+        && m_piperResidentModel == resolvePiperModel())
+        return true;
+    // Modelo cambió o proceso muerto: reiniciar limpio.
+    tearDownPiperResident();
+
+    const QString modelPath = resolvePiperModel();
+    if (modelPath.isEmpty() || !QFile::exists(modelPath)) return false;
+
+    const QString outDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    const QStringList args = VoiceServerManager::buildPiperResidentArgs(modelPath, outDir);
+
+    m_piperProc = new QProcess(this);
+    m_piperProc->setProcessChannelMode(QProcess::SeparateChannels);
+    m_piperResidentModel = modelPath;
+
+    connect(m_piperProc, &QProcess::readyReadStandardOutput, this, [this]() {
+        if (!m_piperProc) return;
+        m_piperStdoutBuf += m_piperProc->readAllStandardOutput();
+        // Piper imprime la ruta del wav escrito (una línea por turno). Al llegar
+        // una línea completa, el archivo ya está cerrado y listo.
+        int nl;
+        while ((nl = m_piperStdoutBuf.indexOf('\n')) >= 0) {
+            const QByteArray line = m_piperStdoutBuf.left(nl).trimmed();
+            m_piperStdoutBuf.remove(0, nl + 1);
+            if (line.isEmpty()) continue;
+            if (m_piperPending) finalizePiperTurn(m_piperPendingOut);
+        }
+    });
+    auto onDead = [this]() {
+        // El residente murió. Si había un turno en vuelo, reintentar con spawn
+        // per-call (fallback) para no perder la respuesta.
+        const bool hadPending = m_piperPending;
+        const QString pendingText = m_piperPendingText;
+        tearDownPiperResident();
+        if (hadPending) {
+            m_piperPending = false;
+            if (!pendingText.isEmpty()) synthesizePiperOnce(pendingText);
+            else emit failed(QStringLiteral("piper residente murió"));
+        }
+    };
+    connect(m_piperProc, &QProcess::errorOccurred, this,
+            [onDead](QProcess::ProcessError) { onDead(); });
+    connect(m_piperProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [onDead](int, QProcess::ExitStatus) { onDead(); });
+
+    m_piperProc->start(resolvePiperProg(), args);
+    if (!m_piperProc->waitForStarted(4000)) {
+        tearDownPiperResident();
+        return false;
+    }
+    return true;
+}
+
+void TtsEngine::tearDownPiperResident()
+{
+    if (m_piperProc) {
+        QProcess *p = m_piperProc;
+        m_piperProc = nullptr;
+        p->disconnect(this);
+        p->kill();
+        p->deleteLater();
+    }
+    m_piperResidentModel.clear();
+    m_piperStdoutBuf.clear();
+    // No tocamos m_piperPending acá: el caller decide reintentar o fallar.
+}
+
+void TtsEngine::finalizePiperTurn(const QString &outPath)
+{
+    m_piperPending = false;
+    m_piperPendingText.clear();
+    m_piperPendingOut.clear();
+    QFile f(outPath);
+    if (!f.open(QIODevice::ReadOnly)) { emit failed(QStringLiteral("piper no generó audio")); return; }
+    const QByteArray wav = f.readAll();
+    f.close();
+    QFile::remove(outPath);
+    if (wav.isEmpty()) { emit failed(QStringLiteral("piper no generó audio")); return; }
+    emit audioReady(wav, QStringLiteral("wav"));
+}
+
+// Modo piper local: intenta el proceso residente (modelo cargado una sola vez).
+// Si no se puede levantar, cae al spawn per-call.
+void TtsEngine::synthesizePiper(const QString &text)
+{
+    if (resolvePiperModel().isEmpty() || !QFile::exists(resolvePiperModel())) {
+        emit failed(QStringLiteral("voz piper no instalada")); return;
+    }
+    if (ensurePiperResident()) {
+        const QString outPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+            + QStringLiteral("/lc_tts_") + QUuid::createUuid().toString(QUuid::Id128)
+            + QStringLiteral(".wav");
+        m_piperPending = true;
+        m_piperPendingOut = outPath;
+        m_piperPendingText = text;
+        const qint64 n = m_piperProc->write(buildPiperJsonLine(text, outPath));
+        if (n < 0) {
+            // Escritura falló: residente roto, fallback per-call.
+            m_piperPending = false; m_piperPendingText.clear(); m_piperPendingOut.clear();
+            tearDownPiperResident();
+            synthesizePiperOnce(text);
+        }
+        return;
+    }
+    synthesizePiperOnce(text);
+}
+
+// Fallback: un proceso piper por llamada (recarga el modelo cada vez). Se usa si
+// el residente no arranca o muere.
+void TtsEngine::synthesizePiperOnce(const QString &text)
+{
+    const QString modelPath = resolvePiperModel();
     if (modelPath.isEmpty() || !QFile::exists(modelPath)) {
         emit failed(QStringLiteral("voz piper no instalada")); return;
     }
@@ -58,9 +195,7 @@ void TtsEngine::synthesizePiper(const QString &text)
         + QStringLiteral("/lc_tts_") + QUuid::createUuid().toString(QUuid::Id128)
         + QStringLiteral(".wav");
     m_piperOut = tmp;
-    QString prog = m_piperBin;
-    if (prog.isEmpty()) prog = VoiceServerManager::installedBinaryPath(QStringLiteral("piper"));
-    if (prog.isEmpty()) prog = QStringLiteral("piper");
+    const QString prog = resolvePiperProg();
     const QStringList args = VoiceServerManager::buildPiperArgs(modelPath, tmp);
 
     m_piper = new QProcess(this);
@@ -142,4 +277,13 @@ void TtsEngine::cancel()
         p->kill(); p->deleteLater();
         if (!m_piperOut.isEmpty()) QFile::remove(m_piperOut);
     }
+    // Turno residente en vuelo: descartarlo y matar el proceso (se relanza en el
+    // próximo synthesize). Evita mezclar audio de un turno cancelado.
+    if (m_piperPending) {
+        if (!m_piperPendingOut.isEmpty()) QFile::remove(m_piperPendingOut);
+        m_piperPending = false;
+        m_piperPendingText.clear();
+        m_piperPendingOut.clear();
+    }
+    tearDownPiperResident();
 }

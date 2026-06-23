@@ -23,6 +23,8 @@ private slots:
     void sttMultipart();
     void sttParseTranscript();
     void ttsSpeechBody();
+    void ttsPiperJsonLine();
+    void ttsPiperResidentArgs();
     void ttsPiperAvailability();
     void vadTurnEnded();
     void ttsSentenceSplit();
@@ -124,6 +126,36 @@ void TestVoice::ttsSpeechBody()
     QCOMPARE(o.value("voice").toString(), QString("alloy"));
     QCOMPARE(o.value("input").toString(), QString("hola"));
     QCOMPARE(o.value("response_format").toString(), QString("wav"));
+}
+
+void TestVoice::ttsPiperJsonLine()
+{
+    // Línea JSON para piper residente (--json-input): un objeto por línea, con
+    // text + output_file, terminado en '\n'.
+    const QByteArray line = TtsEngine::buildPiperJsonLine("hola mundo", "C:/tmp/a.wav");
+    QVERIFY(line.endsWith('\n'));
+    const QJsonObject o = QJsonDocument::fromJson(line.trimmed()).object();
+    QCOMPARE(o.value("text").toString(), QString("hola mundo"));
+    QCOMPARE(o.value("output_file").toString(), QString("C:/tmp/a.wav"));
+
+    // Caracteres especiales se escapan (sigue siendo una sola línea JSON válida).
+    const QByteArray line2 = TtsEngine::buildPiperJsonLine("a\nb \"x\"", "o.wav");
+    QCOMPARE(line2.count('\n'), 1);   // solo el terminador
+    const QJsonObject o2 = QJsonDocument::fromJson(line2.trimmed()).object();
+    QCOMPARE(o2.value("text").toString(), QString("a\nb \"x\""));
+}
+
+void TestVoice::ttsPiperResidentArgs()
+{
+    // Args del piper residente: -m <model> --json-input --output_dir <dir>.
+    const QStringList a = VoiceServerManager::buildPiperResidentArgs("v.onnx", "C:/tmp");
+    QVERIFY(a.contains("-m")); QVERIFY(a.contains("v.onnx"));
+    QVERIFY(a.contains("--json-input"));
+    const int idx = a.indexOf("--output_dir");
+    QVERIFY(idx >= 0);
+    QCOMPARE(a.value(idx + 1), QString("C:/tmp"));
+    // No usa -f (eso es el modo per-call/fallback).
+    QVERIFY(!a.contains("-f"));
 }
 
 void TestVoice::ttsPiperAvailability()

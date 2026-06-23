@@ -62,6 +62,11 @@ public:
     static QString endpointPath(const QString &engineId);
     // Args de piper (process-mode): -m <model> -f <outWav> (texto por stdin).
     static QStringList buildPiperArgs(const QString &modelPath, const QString &outWav);
+    // Args de piper residente (streaming): -m <model> --json-input --output_dir
+    // <dir>. Lee una línea JSON por turno y escribe un wav por línea sin recargar
+    // el modelo. Cada línea JSON lleva su propio output_file (ver
+    // TtsEngine::buildPiperJsonLine).
+    static QStringList buildPiperResidentArgs(const QString &modelPath, const QString &outDir);
 
 signals:
     void installProgress(const QString &engineId, int pct, const QString &status);
