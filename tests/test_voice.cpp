@@ -25,6 +25,7 @@ private slots:
     void voiceInLaunchProfile();
     void sttServerCatalog();
     void voiceBinaryUrls();
+    void managedBinaryLookup();
     void ttsVoiceCatalog();
 };
 
@@ -178,6 +179,12 @@ void TestVoice::voiceBinaryUrls()
     QVERIFY(piperUrl.startsWith("https://github.com/rhasspy/piper/releases/download/"));
     QVERIFY(piperUrl.endsWith("/piper_windows_amd64.zip"));
 #endif
+}
+
+void TestVoice::managedBinaryLookup()
+{
+    const QString path = VoiceServerManager::installedBinaryPath("unknown-kind");
+    QVERIFY(path.isEmpty());
 }
 
 void TestVoice::ttsVoiceCatalog()

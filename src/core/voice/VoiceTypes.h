@@ -17,7 +17,7 @@ struct VoiceConfig {
     QString sttBaseUrl  = QStringLiteral("http://127.0.0.1:8081");
     QString sttModel    = QStringLiteral("whisper-1");
     QString sttKeyRef;                               // "" salvo cloud
-    QString sttLanguage = QStringLiteral("auto");    // "auto" = no enviar param
+    QString sttLanguage = QStringLiteral("es");      // "auto" = no enviar param
     // Path del endpoint de transcripción. OpenAI/openedai-speech usan
     // "/v1/audio/transcriptions"; whisper.cpp server usa "/inference".
     QString sttEndpointPath = QStringLiteral("/v1/audio/transcriptions");

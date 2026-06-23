@@ -4118,6 +4118,12 @@ void AppController::onAgentTurnFinished()
         }
         finishRunningTask(status, summary);
     }
+    // Ingi Charla con agente: hablar la respuesta final del turno (TTS). Solo en
+    // charla interactiva (sin Task corriendo) y si el turno se ruteó al agente.
+    if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()) {
+        const QString reply = latestAgentAssistantText().trimmed();
+        if (!reply.isEmpty()) m_voice->speak(reply);
+    }
     if (m_restartThinkingAfterResponse)
         restartActiveLaunchForThinking(m_restartThinkingWithAgent, false);
 }
@@ -6701,7 +6707,7 @@ static const TrEntry k_tr[] = {
     {"nav.benchmark", "Benchmark",     "Benchmark",    "基准测试",   "Benchmark",      "Benchmark",      "Benchmark"},
     {"nav.research",  "Investigación",  "Research",     "研究",       "Recherche",      "Ricerca",        "Recherche"},
     {"nav.tasks",     "Automatizaciones","Tasks",        "任务",       "Tâches",         "Attività",       "Aufgaben"},
-    {"nav.charla",    "Charla",         "Talk",         "对话",       "Parler",         "Parla",          "Sprechen"},
+    {"nav.charla",    "Ingi Charla",    "Ingi Talk",    "对话",       "Ingi Parler",    "Ingi Parla",     "Ingi Sprechen"},
     {"nav.downloads", "Descargas",      "Downloads",    "下载",       "Téléchargements","Download",       "Downloads"},
     {"nav.settings",  "Configuración", "Settings",     "设置",       "Paramètres",     "Impostazioni",   "Einstellungen"},
     // Launch page
@@ -12018,7 +12024,7 @@ void AppController::ensureVoice()
     connect(m_voice, &VoiceController::transcriptReady, this, [this](const QString &text) {
         m_voicePartial.clear();
         emit voicePartialChanged();
-        sendChatMessage(text);
+        dispatchCharlaTranscript(text);
     });
     connect(m_voice, &VoiceController::partialTranscript, this, [this](const QString &text) {
         m_voicePartial = text;
@@ -12067,6 +12073,22 @@ void AppController::setVoiceInputDevice(const QString &id)
 {
     writeSetting(QStringLiteral("voiceInputDevice"), id);
     if (m_voice) m_voice->setInputDevice(id);
+}
+
+bool AppController::dispatchCharlaTranscript(const QString &text)
+{
+    // Ingi Charla: si hay un agente corriendo (con computer-use/visión de las
+    // pantallas), el turno va al agente para que opere la PC (clic, teclado,
+    // instalar, etc.). Si no, fallback al chat backend (voz-a-voz simple).
+    if (m_agentBackend && m_agentBackend->running()) {
+        m_charlaUseAgent = true;
+        if (m_voice) m_voice->notifyThinking();
+        sendToAgent(text);
+        return true;
+    }
+    m_charlaUseAgent = false;
+    sendChatMessage(text);
+    return false;
 }
 
 void AppController::startMicTest()

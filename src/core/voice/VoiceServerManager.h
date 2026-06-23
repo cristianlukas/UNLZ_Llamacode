@@ -48,6 +48,8 @@ public:
     // kind: "whisper-server" | "piper". URL por defecto por SO (overridable).
     static QString defaultBinaryUrl(const QString &kind);
     static QString binDir();
+    // Localiza un binario ya extraído dentro del directorio administrado.
+    static QString installedBinaryPath(const QString &kind);
     // Descarga el archivo (zip/tar.gz), lo extrae y localiza el ejecutable.
     // urlOverride vacío = usar defaultBinaryUrl. Emite binaryInstalled(kind,ok,path,msg).
     void installBinary(const QString &kind, const QString &urlOverride = QString());

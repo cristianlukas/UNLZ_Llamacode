@@ -437,10 +437,14 @@ pegan directo al `cloudBaseUrl` con el modelo configurado.
   WinCred / macOS Keychain) y, si no está disponible, fallback **DPAPI** en Windows.
 - Aplica igual a los maestros HTTP, cuentas de correo y proveedores de voz.
 
-## Modo Charla (voz-a-voz)
+## Modo Ingi Charla (voz-a-voz + agente)
 
-Hablar con la IA y escuchar la respuesta, manos libres. Sección **🎙 Charla** en la
-NavBar (reusa el backend de chat: sesiones e historial incluidos).
+Ingi, tu ingeniero asistente: hablá y él se encarga de usar tu computadora por vos.
+Sección **🎙 Ingi Charla** en la NavBar. Si hay un **agente corriendo** (con visión
+de las pantallas y computer-use), el turno de voz va al agente, que opera la PC
+—clic, teclado, instalar programas, etc.— y te contesta hablando. Si no hay agente,
+hace fallback a voz-a-voz simple sobre el backend de chat (sesiones e historial
+incluidos).
 
 - **STT y TTS** van por endpoints **OpenAI-compat** (`/v1/audio/transcriptions`,
   `/v1/audio/speech`). Una sola ruta de código: **local** (whisper.cpp server,

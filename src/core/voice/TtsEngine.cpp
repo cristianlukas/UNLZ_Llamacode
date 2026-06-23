@@ -38,15 +38,20 @@ void TtsEngine::setPiper(const QString &binPath, const QString &modelPath)
 
 void TtsEngine::synthesizePiper(const QString &text)
 {
-    if (m_piperModel.isEmpty() || !QFile::exists(m_piperModel)) {
+    QString modelPath = m_piperModel;
+    if (modelPath.isEmpty())
+        modelPath = VoiceServerManager::ttsModelPath(QStringLiteral("es_ES-davefx-medium"));
+    if (modelPath.isEmpty() || !QFile::exists(modelPath)) {
         emit failed(QStringLiteral("voz piper no instalada")); return;
     }
     const QString tmp = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
         + QStringLiteral("/lc_tts_") + QUuid::createUuid().toString(QUuid::Id128)
         + QStringLiteral(".wav");
     m_piperOut = tmp;
-    QString prog = m_piperBin.isEmpty() ? QStringLiteral("piper") : m_piperBin;
-    const QStringList args = VoiceServerManager::buildPiperArgs(m_piperModel, tmp);
+    QString prog = m_piperBin;
+    if (prog.isEmpty()) prog = VoiceServerManager::installedBinaryPath(QStringLiteral("piper"));
+    if (prog.isEmpty()) prog = QStringLiteral("piper");
+    const QStringList args = VoiceServerManager::buildPiperArgs(modelPath, tmp);
 
     m_piper = new QProcess(this);
     connect(m_piper, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {

@@ -277,6 +277,21 @@ QString VoiceServerManager::defaultBinaryUrl(const QString &kind)
     return {};
 }
 
+QString VoiceServerManager::installedBinaryPath(const QString &kind)
+{
+    const QString destDir = binDir() + QStringLiteral("/") + kind;
+    QStringList names;
+    if (kind == QLatin1String("piper")) names << "piper.exe" << "piper";
+    else names << "whisper-server.exe" << "server.exe" << "whisper-server" << "server";
+    QDirIterator it(destDir, QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        it.next();
+        if (names.contains(it.fileName(), Qt::CaseInsensitive))
+            return it.filePath();
+    }
+    return {};
+}
+
 void VoiceServerManager::installBinary(const QString &kind, const QString &urlOverride)
 {
     if (m_reply || m_extractProc) {
@@ -350,15 +365,7 @@ void VoiceServerManager::extractAndLocate(const QString &kind, const QString &ar
         QFile::remove(archive);
         if (code != 0) { emit binaryInstalled(kind, false, QString(), QStringLiteral("falló la extracción")); return; }
         // Localizar el ejecutable extraído.
-        QStringList names;
-        if (kind == QLatin1String("piper")) names << "piper.exe" << "piper";
-        else names << "whisper-server.exe" << "server.exe" << "whisper-server" << "server";
-        QString found;
-        QDirIterator it(destDir, QDir::Files, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            it.next();
-            if (names.contains(it.fileName(), Qt::CaseInsensitive)) { found = it.filePath(); break; }
-        }
+        const QString found = installedBinaryPath(kind);
         if (found.isEmpty())
             emit binaryInstalled(kind, false, QString(),
                 QStringLiteral("descargado pero no se encontró el ejecutable en el paquete"));

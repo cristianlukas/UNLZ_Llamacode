@@ -379,10 +379,14 @@ chat/agent hit the `cloudBaseUrl` directly with the configured model.
   Service / WinCred / macOS Keychain) with a **DPAPI** fallback on Windows.
 - Applies equally to HTTP masters, mail accounts and voice providers.
 
-## Talk mode (voice-to-voice)
+## Ingi Talk mode (voice-to-voice + agent)
 
-Speak to the AI and hear the answer, hands-free. A **🎙 Talk** section in the NavBar
-(reuses the chat backend: sessions and history included).
+Ingi, your assistant engineer: speak and it drives your computer for you. A
+**🎙 Ingi Talk** section in the NavBar. If an **agent is running** (with screen
+vision and computer-use), the voice turn goes to the agent, which operates the PC
+—click, keyboard, install programs, etc.— and answers back by voice. Otherwise it
+falls back to plain voice-to-voice over the chat backend (sessions and history
+included).
 
 - **STT and TTS** go through **OpenAI-compat** endpoints (`/v1/audio/transcriptions`,
   `/v1/audio/speech`). A single code path: **local** (whisper.cpp server,

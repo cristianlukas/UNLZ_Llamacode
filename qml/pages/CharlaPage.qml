@@ -69,7 +69,7 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        PageHeader { title: "🎙  Charla"; subtitle: "Conversación por voz, 100% local u opcionalmente cloud" }
+        PageHeader { title: "🎙  Ingi Charla"; subtitle: "Ingi, tu ingeniero asistente: hablá y él usa tu computadora por vos (clic, teclado, instalar programas, mirar tus pantallas)" }
 
         RowLayout {
             Layout.fillWidth: true

@@ -408,6 +408,11 @@ public:
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
     void setTestAgentBackend(IAgentBackend *b);
     Q_INVOKABLE void runTaskBodyForTest(const QString &id);
+    // Ingi Charla: rutea un transcript de voz. Si hay agente corriendo lo manda al
+    // agente (computer-use/visión) y devuelve true; si no, al chat backend (false).
+    // Público para tests (el lambda de transcriptReady delega acá).
+    bool dispatchCharlaTranscript(const QString &text);
+    bool charlaUseAgentForTest() const { return m_charlaUseAgent; }
     // Ejecuta la Automatización `automationId`: resuelve el proceso enlazado y lo
     // corre vía runTask, marcando el resultado también en el AutomationStore.
     Q_INVOKABLE void runAutomation(const QString &automationId);
@@ -1018,6 +1023,9 @@ private:
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
     QString m_pendingVoicePrerequisitesEngine;
     bool m_charlaActive = false;
+    // Ingi Charla: el turno actual se ruteó al agente (computer-use/visión) en vez
+    // del chat backend. Decide quién habla la respuesta final (onAgentTurnFinished).
+    bool m_charlaUseAgent = false;
     bool m_chatWasGenerating = false;
     QString m_voicePartial;
     void ensureVoice();                 // crea + configura el controller (lazy)

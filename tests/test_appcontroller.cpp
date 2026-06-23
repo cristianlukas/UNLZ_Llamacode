@@ -93,6 +93,7 @@ private slots:
     void loopTaskStopsAtMaxIterations();
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
+    void charlaTranscriptRoutesToAgentWhenRunning();
 
 private:
     QTemporaryDir m_tmp;
@@ -559,6 +560,26 @@ void AppControllerTests::loopTaskStopsAtMaxIterations()
 
     QVERIFY(!fin.isEmpty());
     QCOMPARE(fake->bodyRuns(), 3);   // exactamente maxIter corridas del cuerpo
+}
+
+void AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+
+    // Ingi Charla con agente corriendo: el transcript de voz va al agente
+    // (computer-use/visión), no al chat backend.
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("abrí el navegador")));
+    QVERIFY(app.charlaUseAgentForTest());
+    QCOMPARE(fake->bodyRuns(), 1);   // el agente recibió el mensaje
+
+    // Agente detenido: NO rutea al agente (no más mensajes al fake). La rama de
+    // fallback a chat se ejercita en QA manual (requiere server real).
+    fake->stop();
+    QCOMPARE(fake->bodyRuns(), 1);
+    QVERIFY(!(app.charlaUseAgentForTest() && fake->running()));
 }
 
 void AppControllerTests::earlyFailureRecordedInHistory()
