@@ -3449,6 +3449,14 @@ void AppController::startAgent(const QString &launchProfileId)
         m_agentInTerminal    = false;
         m_currentAssistantIdx = -1;
         b->start(c);
+        // start() de LlamaAgent es SÍNCRONO: al volver el backend ya quedó running.
+        // Normalmente runningChanged baja m_agentStarting, pero si el backend se
+        // reusa (kill + relaunch) esa transición puede no observarse y el popup
+        // "Iniciando agente" queda trabado. Bajar el flag explícitamente acá.
+        if (m_agentStarting && b->running()) {
+            m_agentStarting = false;
+            emit agentStartingChanged();
+        }
         // start() restaura la sesión de forma síncrona. No vaciar antes el mirror:
         // ese estado intermedio deja al ListView con el contentY de un historial
         // largo pero sin delegates, y puede terminar mostrando un viewport negro.
