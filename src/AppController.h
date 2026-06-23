@@ -1026,6 +1026,9 @@ private:
     // Ingi Charla: el turno actual se ruteó al agente (computer-use/visión) en vez
     // del chat backend. Decide quién habla la respuesta final (onAgentTurnFinished).
     bool m_charlaUseAgent = false;
+    // Burbuja del agente que se está hablando en vivo (streaming incremental de TTS
+    // en Charla). -1 = ninguna. Se pasa a VoiceController::speakFlush al cerrar.
+    int m_charlaStreamBubble = -1;
     bool m_chatWasGenerating = false;
     QString m_voicePartial;
     void ensureVoice();                 // crea + configura el controller (lazy)

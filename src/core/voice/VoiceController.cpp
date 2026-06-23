@@ -1,5 +1,6 @@
 #include "VoiceController.h"
 #include "AudioCodec.h"
+#include <QRegularExpression>
 
 #include <QAudioSource>
 #include <QAudioFormat>
@@ -107,6 +108,8 @@ void VoiceController::stop()
     m_ttsQueue.clear();
     m_audioQueue.clear();
     m_playing = false;
+    m_streamBubble = -1;
+    m_streamConsumed = 0;
     m_stt.cancel();
     m_tts.cancel();
     m_testMode = false;
@@ -119,6 +122,8 @@ void VoiceController::startListening()
     m_ttsQueue.clear();            // descartar oraciones/clips pendientes del turno
     m_audioQueue.clear();
     m_playing = false;
+    m_streamBubble = -1;           // resetear streaming incremental del turno previo
+    m_streamConsumed = 0;
     m_tts.cancel();
     m_testMode = false;
     beginCapture();
@@ -328,6 +333,27 @@ QStringList VoiceController::splitSentences(const QString &text, int minLen)
     return out;
 }
 
+QStringList VoiceController::splitCompleteSentences(const QString &text, int minLen, int *consumed)
+{
+    QStringList out;
+    QString cur;
+    int consumedLen = 0;
+    for (int i = 0; i < text.size(); ++i) {
+        const QChar c = text.at(i);
+        cur.append(c);
+        const bool end = (c == QLatin1Char('.') || c == QLatin1Char('!')
+                          || c == QLatin1Char('?') || c == QChar(0x2026)
+                          || c == QLatin1Char('\n'));
+        if (end && cur.trimmed().size() >= minLen) {
+            out << cur.trimmed();
+            cur.clear();
+            consumedLen = i + 1;       // todo hasta acá ya formó oraciones cerradas
+        }
+    }
+    if (consumed) *consumed = consumedLen;   // el resto (fragmento incompleto) se acumula
+    return out;
+}
+
 void VoiceController::speak(const QString &text)
 {
     if (m_state == Idle || m_state == Error) return;  // charla no activa
@@ -337,11 +363,84 @@ void VoiceController::speak(const QString &text)
     }
     // TTS por chunks: trocear en oraciones y sintetizar la primera ya; las demás
     // se generan mientras suena la anterior (arranca a hablar mucho antes).
+    m_streamBubble = -1;
+    m_streamConsumed = 0;
     m_ttsQueue = splitSentences(text);
     m_audioQueue.clear();
     m_playing = false;
     setState(Speaking);
     pumpTts();
+}
+
+QString VoiceController::sanitizeForSpeech(const QString &s)
+{
+    QString out = s;
+    // Bloques <think>…</think> cerrados.
+    out.remove(QRegularExpression(QStringLiteral("<think>[\\s\\S]*?</think>"),
+                                  QRegularExpression::CaseInsensitiveOption));
+    // <think> abierto sin cerrar (razonamiento aún streameando): cortar desde ahí.
+    const QRegularExpression openRe(QStringLiteral("<think\\b[^>]*>"),
+                                    QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch open = openRe.match(out);
+    if (open.hasMatch()) out.truncate(open.capturedStart());
+    // Indicador transitorio de preparación de tool: descartar líneas con ⏳.
+    if (out.contains(QChar(0x23F3))) {
+        QStringList keep;
+        const QStringList lines = out.split(QLatin1Char('\n'));
+        for (const QString &ln : lines)
+            if (!ln.contains(QChar(0x23F3))) keep << ln;
+        out = keep.join(QLatin1Char('\n'));
+    }
+    return out.trimmed();
+}
+
+void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
+{
+    if (m_state == Idle || m_state == Error) return;  // charla no activa
+    // El usuario está hablando (barge-in / próximo turno): no hablar encima aunque
+    // sigan llegando deltas del agente del turno anterior.
+    if (m_state == Listening || m_state == Transcribing) return;
+    const QString fullText = sanitizeForSpeech(rawText);
+    // Nueva burbuja del agente (narración intermedia o respuesta final): resetear
+    // el puntero de consumidos. No tocamos las colas: lo ya encolado sigue sonando.
+    if (bubbleId != m_streamBubble) {
+        m_streamBubble = bubbleId;
+        m_streamConsumed = 0;
+    }
+    if (m_streamConsumed > fullText.size()) m_streamConsumed = 0;   // texto se acortó
+    const QString pending = fullText.mid(m_streamConsumed);
+    int consumed = 0;
+    const QStringList sents = splitCompleteSentences(pending, 40, &consumed);
+    if (sents.isEmpty()) return;          // todavía no cerró ninguna oración nueva
+    m_streamConsumed += consumed;
+    if (m_state != Speaking) setState(Speaking);
+    m_ttsQueue += sents;
+    pumpTts();                            // onTtsAudio arranca la reproducción
+}
+
+void VoiceController::speakFlush(int bubbleId, const QString &rawText)
+{
+    if (m_state == Idle || m_state == Error) return;
+    if (m_state == Listening || m_state == Transcribing) return;  // user hablando
+    const QString fullText = sanitizeForSpeech(rawText);
+    // Encolar el fragmento final que quedó sin terminador (la última oración de la
+    // respuesta del agente suele no cerrar con punto antes de finalizar el turno).
+    int start = (bubbleId == m_streamBubble) ? m_streamConsumed : 0;
+    if (start > fullText.size()) start = 0;
+    const QString tail = fullText.mid(start).trimmed();
+    m_streamBubble = -1;
+    m_streamConsumed = 0;
+    if (!tail.isEmpty()) {
+        if (m_state != Speaking) setState(Speaking);
+        m_ttsQueue += splitSentences(tail);
+        pumpTts();
+        return;
+    }
+    // Nada que hablar y nada en vuelo → retomar escucha (o quedar Idle).
+    if (m_ttsQueue.isEmpty() && m_audioQueue.isEmpty() && !m_playing && !m_tts.busy()) {
+        if (m_cfg.autoListen) startListening();
+        else if (m_state == Speaking) setState(Idle);
+    }
 }
 
 void VoiceController::pumpTts()

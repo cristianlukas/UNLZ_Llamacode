@@ -65,6 +65,19 @@ public:
     // para no spawnear piper por fragmentos minúsculos. Devuelve >=1 chunk.
     static QStringList splitSentences(const QString &text, int minLen = 40);
 
+    // ── Función pura (testeable) — variante para streaming incremental ──
+    // Devuelve solo las oraciones YA cerradas (terminador .!?…\n que superó
+    // minLen); deja el fragmento final incompleto sin emitir. *consumed = cantidad
+    // de chars consumidos (prefijo que formó oraciones completas); el resto
+    // (text.mid(consumed)) se sigue acumulando hasta cerrarse. Permite hablar la
+    // respuesta del agente mientras se genera, sin esperar el fin del turno.
+    static QStringList splitCompleteSentences(const QString &text, int minLen, int *consumed);
+
+    // Limpia el texto en vivo del agente para TTS: quita bloques <think>…</think>
+    // (cerrados y el abierto-sin-cerrar, razonamiento en vuelo) y el indicador
+    // transitorio "⏳ preparando tool…". Devuelve solo lo hablable. Pura.
+    static QString sanitizeForSpeech(const QString &s);
+
 public slots:
     void start();          // arranca la sesión de charla (entra en Listening)
     void stop();           // corta todo y vuelve a Idle
@@ -72,6 +85,13 @@ public slots:
     void micTest();        // captura solo para ver nivel (sin STT/chat); probar micrófono
     void stopMicTest();
     void speak(const QString &text);   // habla un texto (lo invoca AppController al cerrar turno)
+    // Streaming incremental: habla las oraciones ya cerradas del texto acumulado
+    // del agente (bubbleId identifica la burbuja; al cambiar, resetea el puntero).
+    // Arranca a hablar apenas hay una oración, en paralelo a la generación/tools.
+    void speakStreaming(int bubbleId, const QString &fullText);
+    // Cierre del turno: encola el fragmento final que quedó sin terminador y
+    // resetea el estado de streaming. Si no quedaba nada, retoma escucha.
+    void speakFlush(int bubbleId, const QString &fullText);
     void notifyThinking();             // el LLM empezó a generar
 
 signals:
@@ -141,4 +161,9 @@ private:
     QStringList m_ttsQueue;                          // oraciones pendientes
     QList<QPair<QByteArray, QString>> m_audioQueue;  // {audio, formato} a reproducir
     bool m_playing = false;                          // hay un clip sonando
+
+    // Estado del streaming incremental (modo agente): burbuja en curso y cuántos
+    // chars de su texto ya se encolaron como oraciones completas.
+    int m_streamBubble = -1;
+    int m_streamConsumed = 0;
 };

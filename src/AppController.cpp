@@ -2762,6 +2762,14 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         m_agentStreamingIndex = idx;
         m_agentStreamingText  = content;
         emit agentStreamingChanged();
+        // Ingi Charla con agente: hablar la respuesta a medida que se genera
+        // (oración por oración), en paralelo a la generación y los tool-calls. El
+        // usuario escucha la primera frase enseguida en vez de esperar todo el
+        // turno. VoiceController sanitiza <think>/indicadores y trocea.
+        if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()) {
+            m_charlaStreamBubble = idx;
+            m_voice->speakStreaming(idx, content);
+        }
     });
     connect(b, &IAgentBackend::queueChanged, this, [this, b]() {
         m_agentQueuedCount = b->queuedCount();
@@ -4118,11 +4126,14 @@ void AppController::onAgentTurnFinished()
         }
         finishRunningTask(status, summary);
     }
-    // Ingi Charla con agente: hablar la respuesta final del turno (TTS). Solo en
-    // charla interactiva (sin Task corriendo) y si el turno se ruteó al agente.
+    // Ingi Charla con agente: cerrar el TTS del turno. La respuesta ya se fue
+    // hablando en vivo (speakStreaming durante streamingText); acá solo se encola
+    // el fragmento final que quedó sin terminador. Si por algún motivo no hubo
+    // streaming (idx -1), speakFlush habla el texto completo igual.
     if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty()) {
         const QString reply = latestAgentAssistantText().trimmed();
-        if (!reply.isEmpty()) m_voice->speak(reply);
+        if (!reply.isEmpty()) m_voice->speakFlush(m_charlaStreamBubble, reply);
+        m_charlaStreamBubble = -1;
     }
     if (m_restartThinkingAfterResponse)
         restartActiveLaunchForThinking(m_restartThinkingWithAgent, false);

@@ -28,6 +28,8 @@ private slots:
     void ttsPiperAvailability();
     void vadTurnEnded();
     void ttsSentenceSplit();
+    void ttsStreamingSentences();
+    void ttsSanitizeForSpeech();
     void voiceInLaunchProfile();
     void sttServerCatalog();
     void voiceBinaryUrls();
@@ -208,6 +210,64 @@ void TestVoice::ttsSentenceSplit()
     // Solo espacios → sin chunks. Texto sin puntuación final → un chunk.
     QVERIFY(VoiceController::splitSentences("   ", 40).isEmpty());
     QCOMPARE(VoiceController::splitSentences("texto sin puntuacion final largo", 40).size(), 1);
+}
+
+void TestVoice::ttsStreamingSentences()
+{
+    // Solo emite oraciones YA cerradas; el fragmento incompleto queda sin consumir.
+    int consumed = -1;
+    QStringList s = VoiceController::splitCompleteSentences(
+        QStringLiteral("Voy a abrir el navegador ahora. Después busc"), 20, &consumed);
+    QCOMPARE(s, QStringList{QStringLiteral("Voy a abrir el navegador ahora.")});
+    // consumed apunta justo después de la oración cerrada; el resto se reacumula.
+    QCOMPARE(QStringLiteral("Voy a abrir el navegador ahora. Después busc").mid(consumed),
+             QStringLiteral(" Después busc"));
+
+    // Sin ningún cierre que supere minLen → nada emitido, consumed 0.
+    consumed = -1;
+    QVERIFY(VoiceController::splitCompleteSentences(QStringLiteral("hola"), 20, &consumed).isEmpty());
+    QCOMPARE(consumed, 0);
+
+    // Simulación de streaming incremental: alimentar prefijos crecientes y juntar
+    // lo emitido debe reconstruir el texto sin duplicar ni perder oraciones.
+    const QString finalText = QStringLiteral(
+        "Abro el navegador para vos. Busco la página pedida. ¿Algo más?");
+    const QList<int> cuts = {10, 28, 45, 55, int(finalText.size())};
+    int off = 0;                      // chars ya consumidos (como m_streamConsumed)
+    QStringList spoken;
+    for (int cut : cuts) {
+        const QString accumulated = finalText.left(cut);   // texto recibido hasta ahora
+        int c = 0;
+        spoken += VoiceController::splitCompleteSentences(accumulated.mid(off), 20, &c);
+        off += c;
+    }
+    // Cola final (sin terminador "?" cerrado por minLen quizá) se encola al flush.
+    const QString tail = finalText.mid(off).trimmed();
+    if (!tail.isEmpty()) spoken += VoiceController::splitSentences(tail);
+    // Reconstrucción: las dos primeras oraciones y la pregunta final, en orden.
+    QCOMPARE(spoken.size(), 3);
+    QVERIFY(spoken.at(0).startsWith("Abro el navegador"));
+    QVERIFY(spoken.at(1).startsWith("Busco la página"));
+    QVERIFY(spoken.last().endsWith("?"));
+}
+
+void TestVoice::ttsSanitizeForSpeech()
+{
+    // Bloque <think> cerrado: se quita, queda solo la respuesta.
+    QCOMPARE(VoiceController::sanitizeForSpeech(
+                 QStringLiteral("<think>razono esto</think>\nHola, abro el navegador.")),
+             QStringLiteral("Hola, abro el navegador."));
+    // <think> abierto sin cerrar (razonamiento en vuelo): cortar desde ahí.
+    QCOMPARE(VoiceController::sanitizeForSpeech(
+                 QStringLiteral("Dale. <think>todavía pensando")),
+             QStringLiteral("Dale."));
+    // Indicador transitorio de tool ⏳: se descarta esa línea, queda el texto.
+    QCOMPARE(VoiceController::sanitizeForSpeech(
+                 QStringLiteral("Abro el navegador.\n⏳ preparando `open_url`… (~12 tokens generados)")),
+             QStringLiteral("Abro el navegador."));
+    // Texto limpio pasa intacto (modo chat sin thinking).
+    QCOMPARE(VoiceController::sanitizeForSpeech(QStringLiteral("Listo, ya está.")),
+             QStringLiteral("Listo, ya está."));
 }
 
 void TestVoice::voiceInLaunchProfile()
