@@ -85,8 +85,8 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QVERIFY(!pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
     const QString mp4 = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
     QVERIFY(pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
-    // El tier 8GB Gemma ahora tiene visión: mmproj presente (offload a CPU via
-    // --no-mmproj-offload para no exceder los 8GB).
+    // El tier 8GB Gemma tiene visión (gemma4uv): mmproj presente, offload a CPU via
+    // --no-mmproj-offload. Requiere llama-server b9496+ en runtime.
     const QString mp8 = pm.getLaunchProfile("sys-vram-8-gemma").value("modelProfileId").toString();
     QVERIFY(!pm.getModelProfile(mp8).value("mmprojId").toString().isEmpty());
 }

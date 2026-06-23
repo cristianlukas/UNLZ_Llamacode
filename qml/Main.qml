@@ -459,7 +459,7 @@ ApplicationWindow {
                             visible: recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning
-                            onClicked: App.acceptShowcase()
+                            onClicked: { App.acceptShowcase(); setupPopup.close() }
                         }
                         LcButton {
                             text: "Sólo Coding"
@@ -467,7 +467,7 @@ ApplicationWindow {
                             visible: recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning && showcaseId("[coding]").length > 0
-                            onClicked: App.acceptShowcaseOne(showcaseId("[coding]"))
+                            onClicked: { App.acceptShowcaseOne(showcaseId("[coding]")); setupPopup.close() }
                         }
                         LcButton {
                             text: "Sólo General"
@@ -475,15 +475,17 @@ ApplicationWindow {
                             visible: recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning && showcaseId("[general]").length > 0
-                            onClicked: App.acceptShowcaseOne(showcaseId("[general]"))
+                            onClicked: { App.acceptShowcaseOne(showcaseId("[general]")); setupPopup.close() }
                         }
-                        // Tier único: instalar y usar.
+                        // Tier único: instalar y usar. Cierra el diálogo para que se
+                        // vea Descargas/Lanzar (acceptSystemProfileImpl navega allí);
+                        // si no, el modal modal quedaba tapando todo y parecía no hacer nada.
                         LcButton {
                             text: "Instalar y usar"
                             visible: !recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning
-                            onClicked: App.installAndUseSystemProfile(sysPick.launchId ?? "")
+                            onClicked: { App.installAndUseSystemProfile(sysPick.launchId ?? ""); setupPopup.close() }
                         }
                         LcButton {
                             text: "No, gracias"

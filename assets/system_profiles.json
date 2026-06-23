@@ -297,7 +297,7 @@
       "--reasoning",
       "off"
     ],
-    "comment": "Gemma 4 12B dynamic Q4 (unsloth UD) + visión. El modelo va 100% a GPU (~7.4GB); el mmproj se mantiene en CPU (--no-mmproj-offload) para no exceder los 8GB. ctx bajado 12288→8192 para dejar margen a los buffers de visión.",
+    "comment": "Gemma 4 12B dynamic Q4 (unsloth UD) + vision (gemma4uv). Modelo 100% en GPU (~7.4GB); mmproj en CPU (--no-mmproj-offload) para no exceder 8GB. ctx 12288->8192 por margen. REQUIERE llama-server build b9496+ (gemma4uv); builds viejos crashean con 'unknown projector type: gemma4uv' -> reinstalar binario official latest.",
     "mtp": {
       "enabled": false,
       "args": []
