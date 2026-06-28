@@ -76,6 +76,11 @@ Item {
                                         ]
 
                                         delegate: Rectangle {
+                                            id: themeSwatch
+                                            // Color de los 3 puntos de muestra; el Repeater interno
+                                            // (model: 3) sombrea modelData con el índice, así que se
+                                            // captura acá el dotColor del tema.
+                                            property color dotColor: modelData.dotColor
                                             Layout.fillWidth: true
                                             height: 70
                                             radius: 8
@@ -108,7 +113,7 @@ Item {
                                                         model: 3
                                                         Rectangle {
                                                             width: 7; height: 7; radius: 4
-                                                            color: modelData.dotColor
+                                                            color: themeSwatch.dotColor
                                                         }
                                                     }
                                                 }

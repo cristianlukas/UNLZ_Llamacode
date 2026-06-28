@@ -1210,7 +1210,7 @@ Item {
                                         color: delHover.containsMouse ? Theme.errorText : "transparent"
                                         border.color: delHover.containsMouse ? Theme.errorText : Theme.divider
                                         border.width: 1
-                                        visible: rowHover.containsMouse || delHover.containsMouse
+                                        visible: Boolean(rowHover.containsMouse || delHover.containsMouse)
                                         Text {
                                             anchors.centerIn: parent
                                             text: "✕"; font.pixelSize: 12
@@ -1398,7 +1398,7 @@ Item {
         title: "Fallo de benchmark"
 
         background: Rectangle {
-            color: Theme.cardBg
+            color: Theme.popupBg
             radius: 8
             border.color: Theme.borderColor
         }

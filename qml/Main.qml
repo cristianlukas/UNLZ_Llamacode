@@ -356,6 +356,7 @@ ApplicationWindow {
         }
 
         contentItem: ColumnLayout {
+            id: setupCol
             width: setupPopup.availableWidth
             height: setupPopup.availableHeight
             spacing: 12
@@ -409,13 +410,13 @@ ApplicationWindow {
                 id: recCard
                 Layout.fillWidth: true
                 Layout.preferredHeight: scCol.implicitHeight + 24
-                visible: !fastStartDismissed
-                         && (showcase.length > 0 || (sysPick.launchId ?? "").length > 0)
+                visible: !setupCol.fastStartDismissed
+                         && (setupCol.showcase.length > 0 || (setupCol.sysPick.launchId ?? "").length > 0)
                 radius: 8
                 color: Theme.surfaceBg
                 border.color: Theme.accent
 
-                readonly property bool isShowcase: showcase.length > 0
+                readonly property bool isShowcase: setupCol.showcase.length > 0
 
                 ColumnLayout {
                     id: scCol
@@ -431,7 +432,7 @@ ApplicationWindow {
                     }
                     // Showcase 24GB: lista de ambos perfiles.
                     Repeater {
-                        model: recCard.isShowcase ? showcase : []
+                        model: recCard.isShowcase ? setupCol.showcase : []
                         Text {
                             Layout.fillWidth: true
                             text: "• " + (modelData.displayName ?? "")
@@ -444,7 +445,7 @@ ApplicationWindow {
                     Text {
                         Layout.fillWidth: true
                         visible: !recCard.isShowcase
-                        text: "Perfil recomendado: " + recommendedProfileLabel()
+                        text: "Perfil recomendado: " + setupCol.recommendedProfileLabel()
                         color: Theme.textPrimary
                         font { pixelSize: 13; bold: true }
                         wrapMode: Text.WordWrap
@@ -466,16 +467,16 @@ ApplicationWindow {
                             secondary: true
                             visible: recCard.isShowcase
                             Layout.preferredHeight: 34
-                            enabled: !App.modelDownloadRunning && showcaseId("[coding]").length > 0
-                            onClicked: { App.acceptShowcaseOne(showcaseId("[coding]")); setupPopup.close() }
+                            enabled: !App.modelDownloadRunning && setupCol.showcaseId("[coding]").length > 0
+                            onClicked: { App.acceptShowcaseOne(setupCol.showcaseId("[coding]")); setupPopup.close() }
                         }
                         LcButton {
                             text: "Sólo General"
                             secondary: true
                             visible: recCard.isShowcase
                             Layout.preferredHeight: 34
-                            enabled: !App.modelDownloadRunning && showcaseId("[general]").length > 0
-                            onClicked: { App.acceptShowcaseOne(showcaseId("[general]")); setupPopup.close() }
+                            enabled: !App.modelDownloadRunning && setupCol.showcaseId("[general]").length > 0
+                            onClicked: { App.acceptShowcaseOne(setupCol.showcaseId("[general]")); setupPopup.close() }
                         }
                         // Tier único: instalar y usar. Cierra el diálogo para que se
                         // vea Descargas/Lanzar (acceptSystemProfileImpl navega allí);
@@ -485,13 +486,13 @@ ApplicationWindow {
                             visible: !recCard.isShowcase
                             Layout.preferredHeight: 34
                             enabled: !App.modelDownloadRunning
-                            onClicked: { App.installAndUseSystemProfile(sysPick.launchId ?? ""); setupPopup.close() }
+                            onClicked: { App.installAndUseSystemProfile(setupCol.sysPick.launchId ?? ""); setupPopup.close() }
                         }
                         LcButton {
                             text: "No, gracias"
                             secondary: true
                             Layout.preferredHeight: 34
-                            onClicked: fastStartDismissed = true
+                            onClicked: setupCol.fastStartDismissed = true
                         }
                     }
                     RowLayout {
