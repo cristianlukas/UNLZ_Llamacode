@@ -61,7 +61,8 @@ void ProfileManager::setupWatcher()
             this, &ProfileManager::onProfileFileChanged);
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                QStringLiteral("runtimes"), QStringLiteral("harnesses"),
-                               QStringLiteral("workspaces"), QStringLiteral("launches")}) {
+                               QStringLiteral("workspaces"), QStringLiteral("launches"),
+                               QStringLiteral("agent_profiles")}) {
         const QString p = storagePath(ent);
         if (QFile::exists(p)) m_watcher.addPath(p);
     }
@@ -381,6 +382,7 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.runtimePresetId = data.value("runtimePresetId", p.runtimePresetId).toString();
     p.harnessProfileId = data.value("harnessProfileId", p.harnessProfileId).toString();
     p.workspaceProfileId = data.value("workspaceProfileId", p.workspaceProfileId).toString();
+    p.agentProfileId = data.value("agentProfileId", p.agentProfileId).toString();
     p.extraArgs = data.value("extraArgs", p.extraArgs).toStringList();
     if (data.contains("master")) {
         const QVariantMap m = data.value("master").toMap();
@@ -448,6 +450,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"runtimePresetId", p.runtimePresetId},
             {"harnessProfileId", p.harnessProfileId},
             {"workspaceProfileId", p.workspaceProfileId},
+            {"agentProfileId", p.agentProfileId},
             {"extraArgs", p.extraArgs},
             {"browserAutomation", p.browserAutomation},
             {"master", masterToVariant(p.master)}};
@@ -513,6 +516,96 @@ QVariantList ProfileManager::launchProfilesForMenu() const
     return out;
 }
 
+// ---- AgentProfile ----
+
+static QVariantMap agentProfileToVariant(const AgentProfile &p)
+{
+    return {{"id", p.id}, {"name", p.name}, {"system", p.system},
+            {"enabledTools", p.enabledTools}, {"directives", p.directives},
+            {"approvalMode", p.approvalMode}, {"thinking", p.thinking},
+            {"temperature", p.temperature}, {"systemExtra", p.systemExtra}};
+}
+
+QString ProfileManager::addAgentProfile(const QString &name)
+{
+    AgentProfile p;
+    p.id = AgentProfile::generateId();
+    p.name = name.isEmpty() ? QStringLiteral("Perfil de agente") : name;
+    // Arranca como copia del preset por defecto (Intermedio) para no quedar vacío.
+    for (const AgentProfile &preset : AgentProfile::systemPresets())
+        if (preset.id == AgentProfile::defaultPresetId()) {
+            p.enabledTools = preset.enabledTools;
+            p.directives = preset.directives;
+            p.approvalMode = preset.approvalMode;
+            p.thinking = preset.thinking;
+            break;
+        }
+    m_agentProfiles.add(p);
+    save();
+    return p.id;
+}
+
+bool ProfileManager::removeAgentProfile(const QString &id)
+{
+    if (m_agentProfiles.findById(id).system) {
+        emit errorOccurred(QStringLiteral("Perfil de agente de sistema: solo lectura (duplicalo para editar)."));
+        return false;
+    }
+    bool ok = m_agentProfiles.remove(id);
+    if (ok) save();
+    return ok;
+}
+
+bool ProfileManager::updateAgentProfile(const QVariantMap &data)
+{
+    AgentProfile p = m_agentProfiles.findById(data["id"].toString());
+    if (p.id.isEmpty()) return false;
+    if (p.system) {
+        emit errorOccurred(QStringLiteral("Perfil de agente de sistema: solo lectura (duplicalo para editar)."));
+        return false;
+    }
+    if (data.contains("name"))         p.name = data.value("name").toString();
+    if (data.contains("enabledTools")) p.enabledTools = data.value("enabledTools").toStringList();
+    if (data.contains("directives"))   p.directives = data.value("directives").toStringList();
+    if (data.contains("approvalMode")) p.approvalMode = data.value("approvalMode").toString();
+    if (data.contains("thinking"))     p.thinking = data.value("thinking").toBool();
+    if (data.contains("temperature"))  p.temperature = data.value("temperature").toDouble();
+    if (data.contains("systemExtra"))  p.systemExtra = data.value("systemExtra").toString();
+    bool ok = m_agentProfiles.update(p);
+    if (ok) save();
+    return ok;
+}
+
+QString ProfileManager::duplicateAgentProfile(const QString &id)
+{
+    const AgentProfile src = m_agentProfiles.findById(id);
+    if (src.id.isEmpty()) return {};
+    AgentProfile p = src;
+    p.id = AgentProfile::generateId();
+    p.system = false;
+    p.name = src.name + QStringLiteral(" (copia)");
+    m_agentProfiles.add(p);
+    save();
+    return p.id;
+}
+
+bool ProfileManager::isSystemAgentProfile(const QString &id) const
+{
+    return m_agentProfiles.findById(id).system;
+}
+
+QVariantMap ProfileManager::getAgentProfile(const QString &id) const
+{
+    const auto p = m_agentProfiles.findById(id);
+    if (p.id.isEmpty()) return {};
+    return agentProfileToVariant(p);
+}
+
+AgentProfile ProfileManager::resolveAgentProfile(const QString &id) const
+{
+    return m_agentProfiles.findById(id);
+}
+
 // ---- Resolvers ----
 
 BackendProfile   ProfileManager::resolveBackend(const QString &id)    const { return m_backends.findById(id); }
@@ -531,6 +624,15 @@ bool ProfileManager::isSystemLaunch(const QString &id) const
 
 void ProfileManager::loadSystemProfiles()
 {
+    // Perfiles de agente de sistema (Básico/Intermedio/Avanzado/Máximo): definidos
+    // en código (AgentProfile::systemPresets), inmutables, no se persisten. Se
+    // anteponen a los de usuario en cada arranque.
+    {
+        QList<AgentProfile> items = AgentProfile::systemPresets();
+        items.append(m_agentProfiles.m_items);
+        m_agentProfiles.setItems(items);
+    }
+
     // Fuente: env override (tests) o el recurso qrc empaquetado.
     QByteArray raw;
     const QByteArray envPath = qgetenv("LLAMACODE_SYSTEM_PROFILES");
@@ -738,6 +840,7 @@ void ProfileManager::load()
     loadList(storagePath("harnesses"),  m_harnesses,  &HarnessProfile::fromJson);
     loadList(storagePath("workspaces"), m_workspaces, &WorkspaceProfile::fromJson);
     loadList(storagePath("launches"),   m_launches,   &LaunchProfile::fromJson);
+    loadList(storagePath("agent_profiles"), m_agentProfiles, &AgentProfile::fromJson);
 
     // Only allow persistence once we've loaded cleanly. If any existing file
     // failed to load, block all saves so a partial/empty in-memory state can
@@ -836,11 +939,13 @@ void ProfileManager::save() const
     saveList(storagePath("harnesses"),  userOnly(m_harnesses.m_items));
     saveList(storagePath("workspaces"), userOnly(m_workspaces.m_items));
     saveList(storagePath("launches"),   userOnly(m_launches.m_items));
+    saveList(storagePath("agent_profiles"), userOnly(m_agentProfiles.m_items));
 
     // La escritura atómica (rename) hace que el watcher pierda los paths: re-armarlos.
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                QStringLiteral("runtimes"), QStringLiteral("harnesses"),
-                               QStringLiteral("workspaces"), QStringLiteral("launches")}) {
+                               QStringLiteral("workspaces"), QStringLiteral("launches"),
+                               QStringLiteral("agent_profiles")}) {
         const QString p = storagePath(ent);
         if (QFile::exists(p) && !m_watcher.files().contains(p)) m_watcher.addPath(p);
     }

@@ -870,6 +870,24 @@ Item {
                         ToolTip.visible: hovered
                         ToolTip.text: "Fuerza al modelo a responder con JSON válido (GBNF grammar)."
                     }
+                    // Persona Diseño: sesga al modelo a emitir artifacts visuales
+                    // (bloques mermaid/svg) que se rinden inline.
+                    CheckBox {
+                        id: personaDesignerCheck
+                        visible: App.serverRunning && App.serverReady
+                        text: "Diseño"
+                        checked: App.chatPersonaDesigner
+                        onToggled: App.chatPersonaDesigner = checked
+                        contentItem: Text {
+                            text: personaDesignerCheck.text
+                            color: Theme.textPrimary
+                            font.pixelSize: 12
+                            leftPadding: personaDesignerCheck.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Sesga al modelo a responder con diagramas (mermaid) y gráficos (svg) que se rinden inline."
+                    }
                 }
             }
 

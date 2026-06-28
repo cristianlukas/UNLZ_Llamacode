@@ -107,6 +107,30 @@ struct WorkspaceProfile {
     static QString generateId();
 };
 
+// Perfil de Agente: set de capacidades (tools) + directivas (secciones del system
+// prompt) + ajustes (approval/thinking/temperatura/instrucciones extra). Registro
+// global; los LaunchProfile y el modo agente lo referencian por id. Los 4 presets
+// (Básico/Intermedio/Avanzado/Máximo) son de sistema (system=true, inmutables).
+struct AgentProfile {
+    QString id;
+    bool system = false;
+    QString name;
+    QStringList enabledTools;       // nombres de LlamaAgentBackend::toolCatalog() ON
+    QStringList directives;         // claves de directiveCatalog() ON
+    QString approvalMode = "ask";   // auto | ask | manual | super | plan
+    bool thinking = false;
+    double temperature = -1.0;      // -1 = heredar del modelo/perfil
+    QString systemExtra;            // instrucciones extra opcionales
+
+    QJsonObject toJson() const;
+    static AgentProfile fromJson(const QJsonObject &obj);
+    static QString generateId();
+    // Los 4 presets de sistema (orden: Básico, Intermedio, Avanzado, Máximo).
+    // ids estables ("agent-basico"…) para que los launch los referencien.
+    static QList<AgentProfile> systemPresets();
+    static QString defaultPresetId();   // "agent-intermedio"
+};
+
 // Un nivel de la cadena de fallbacks del maestro. El agente local escala el
 // problema al primero; si ese también falla, al siguiente, y así hasta agotar
 // la lista (ver tool ask_teacher). Ordenados de primero a último.
@@ -165,6 +189,9 @@ struct LaunchProfile {
     QString runtimePresetId;
     QString harnessProfileId;
     QString workspaceProfileId;
+    // Perfil de agente por defecto al iniciar el modo agente con este launch.
+    // Vacío = usar el preset por defecto (AgentProfile::defaultPresetId()).
+    QString agentProfileId;
     QStringList extraArgs;
     QMap<QString, QString> envOverrides;
     MasterConfig master;      // supervisor opcional (maestro CLI/HTTP)

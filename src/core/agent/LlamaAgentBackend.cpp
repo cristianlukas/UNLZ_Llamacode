@@ -859,6 +859,66 @@ QString LlamaAgentBackend::projectContextSection()
         "esta tarea.\n\n");
 }
 
+QString LlamaAgentBackend::efficiencySection()
+{
+    return QStringLiteral(
+        "EFICIENCIA (importante): Resolvé la tarea en la MENOR cantidad de pasos/tool "
+        "calls posible. Hacé lo justo que pidió el usuario, sin sobre-ingeniería ni "
+        "features extra. Para CREAR un archivo: write_file UNA vez. Para MODIFICAR un "
+        "archivo existente usá edit_file (reemplazo puntual de un fragmento), NO "
+        "reescribas todo el archivo con write_file: es mucho más lento. Para leer "
+        "archivos grandes usá read_file con offset/limit. Buscá con grep (regex) y "
+        "glob. No "
+        "verifiques de más: no re-leas ni re-ejecutes pruebas que ya pasaron, no "
+        "corras el mismo comando varias veces. Una sola verificación rápida alcanza si "
+        "hace falta. Cuando la tarea está hecha, terminá: no sigas iterando.\n\n");
+}
+
+QString LlamaAgentBackend::styleSection()
+{
+    return QStringLiteral(
+        "ESTILO: respondé en fragmentos técnicos concisos. Sin relleno, sin "
+        "cortesías, sin repetir lo que ya dijiste o lo que es obvio del código. "
+        "Preferí listas y comandos antes que prosa. No expliques lo que vas a hacer "
+        "antes de hacerlo: usá la tool directamente. El texto que generás también "
+        "cuesta tiempo (generación local lenta): cada palabra de más es latencia.");
+}
+
+QVariantList LlamaAgentBackend::directiveCatalog()
+{
+    auto mk = [](const char *key, const char *name, const char *desc) {
+        return QVariant(QVariantMap{
+            {QStringLiteral("key"), QString::fromUtf8(key)},
+            {QStringLiteral("name"), QString::fromUtf8(name)},
+            {QStringLiteral("description"), QString::fromUtf8(desc)}});
+    };
+    return {
+        mk("discipline", "Anti-regresión",
+           "No romper lo existente: blast radius, cambio mínimo, preservar contratos, verificar al terminar."),
+        mk("testNet", "Red de tests",
+           "Por cada feature/cambio dejar un test caja-negra con el runner del proyecto y correr el suite."),
+        mk("projectContext", "Contexto del proyecto",
+           "Entender el porqué antes de tocar, revisar co-cambios por git y dejar memoria de lo durable."),
+        mk("efficiency", "Eficiencia",
+           "Resolver en la menor cantidad de pasos/tool calls; sin sobre-ingeniería ni verificación de más."),
+        mk("style", "Estilo conciso",
+           "Respuestas en fragmentos técnicos concisos, sin relleno ni cortesías; listas y comandos."),
+    };
+}
+
+void LlamaAgentBackend::setDirectives(const QStringList &keys)
+{
+    m_directives = QSet<QString>(keys.cbegin(), keys.cend());
+    m_directivesSet = true;
+    if (!m_apiMessages.isEmpty()) {
+        QJsonObject sys = m_apiMessages.first().toObject();
+        if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
+            sys[QStringLiteral("content")] = buildSystemPrompt();
+            m_apiMessages.replace(0, sys);
+        }
+    }
+}
+
 QString LlamaAgentBackend::buildSystemPrompt() const
 {
 #ifdef Q_OS_WIN
@@ -885,18 +945,15 @@ QString LlamaAgentBackend::buildSystemPrompt() const
         "Sos un agente de coding. Sistema operativo: %1. Directorio de trabajo "
         "(cwd): %2. Tenés herramientas para leer/escribir archivos, listar, buscar y "
         "ejecutar comandos de shell. Usá las tools cuando necesites información real; "
-        "no inventes contenido de archivos. %3 %4 Respondé en el idioma del usuario.\n\n"
-        "EFICIENCIA (importante): Resolvé la tarea en la MENOR cantidad de pasos/tool "
-        "calls posible. Hacé lo justo que pidió el usuario, sin sobre-ingeniería ni "
-        "features extra. Para CREAR un archivo: write_file UNA vez. Para MODIFICAR un "
-        "archivo existente usá edit_file (reemplazo puntual de un fragmento), NO "
-        "reescribas todo el archivo con write_file: es mucho más lento. Para leer "
-        "archivos grandes usá read_file con offset/limit. Buscá con grep (regex) y "
-        "glob. No "
-        "verifiques de más: no re-leas ni re-ejecutes pruebas que ya pasaron, no "
-        "corras el mismo comando varias veces. Una sola verificación rápida alcanza si "
-        "hace falta. Cuando la tarea está hecha, terminá: no sigas iterando.\n\n")
+        "no inventes contenido de archivos. %3 %4 Respondé en el idioma del usuario.\n\n")
         .arg(os, QDir::toNativeSeparators(m_cwd), scope, shell);
+
+    // Directiva activa: sin setear (m_directivesSet=false) = TODAS, para no
+    // regresionar; con perfil aplicado, solo las elegidas.
+    auto dirOn = [this](const char *key) {
+        return !m_directivesSet || m_directives.contains(QString::fromLatin1(key));
+    };
+    if (dirOn("efficiency")) base += efficiencySection();
 
     if (m_approvalMode == QLatin1String("plan"))
         base += QStringLiteral(
@@ -905,16 +962,10 @@ QString LlamaAgentBackend::buildSystemPrompt() const
             "(pasos, archivos a tocar, riesgos). write_file/edit_file/run_shell están "
             "deshabilitadas.\n\n");
 
-    base += developmentDisciplineSection();
-    base += testSafetyNetSection();
-    base += projectContextSection();
-
-    base += QStringLiteral(
-        "ESTILO: respondé en fragmentos técnicos concisos. Sin relleno, sin "
-        "cortesías, sin repetir lo que ya dijiste o lo que es obvio del código. "
-        "Preferí listas y comandos antes que prosa. No expliques lo que vas a hacer "
-        "antes de hacerlo: usá la tool directamente. El texto que generás también "
-        "cuesta tiempo (generación local lenta): cada palabra de más es latencia.");
+    if (dirOn("discipline"))     base += developmentDisciplineSection();
+    if (dirOn("testNet"))        base += testSafetyNetSection();
+    if (dirOn("projectContext")) base += projectContextSection();
+    if (dirOn("style"))          base += styleSection();
 
     // Memoria por proyecto: .llamacode/memory.md o AGENTS.md (lo que exista).
     QString mem;

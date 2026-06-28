@@ -99,6 +99,23 @@ public:
     // testeable. La consume buildSystemPrompt().
     static QString projectContextSection();
 
+    // Secciones de eficiencia (menos pasos/tool calls) y estilo (respuestas
+    // concisas). Antes inline en buildSystemPrompt; extraídas para poder
+    // habilitarlas/deshabilitarlas por directiva. Puras y testeables.
+    static QString efficiencySection();
+    static QString styleSection();
+
+    // Catálogo de DIRECTIVAS del system prompt para la UI de toggles: lista de
+    // {key, name, description}. Las keys (discipline/testNet/projectContext/
+    // efficiency/style) son la fuente de verdad para buildSystemPrompt y el editor
+    // de perfiles de agente. El orden define el de la UI.
+    static QVariantList directiveCatalog();
+
+    // Directivas habilitadas (keys de directiveCatalog). Vacío/sin setear =
+    // TODAS activas (comportamiento histórico, no regresiona). Refresca el system
+    // prompt si ya hay sesión.
+    void setDirectives(const QStringList &keys);
+
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);
@@ -270,6 +287,10 @@ private:
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;
+    // Directivas del system prompt ON (keys de directiveCatalog). Sin setear
+    // (m_directivesSet=false) = todas activas (no regresiona el comportamiento).
+    QSet<QString> m_directives;
+    bool    m_directivesSet = false;
 
     QStringList m_pendingAttachments;  // adjuntos para el próximo sendMessage
 

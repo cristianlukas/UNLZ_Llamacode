@@ -614,6 +614,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentThinkingEnabled = s.value(QStringLiteral("thinking/enabled"),
                                      s.value(QStringLiteral("agent/thinkingEnabled"), false)).toBool();
     m_chatThinkingEnabled = s.value(QStringLiteral("chat/thinkingEnabledV2"), false).toBool();
+    m_chatPersonaDesigner = s.value(QStringLiteral("chat/personaDesigner"), false).toBool();
     m_launchThinkingEnabled = s.value(QStringLiteral("thinking/serverEnabled"),
                                       m_agentThinkingEnabled).toBool();
     m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
@@ -2854,6 +2855,9 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setMailAutoSend(m_mailAutoSend);
     }
     m_agentBackend = b;
+    // El perfil de agente activo (capacidades + directivas + ajustes) tiene la
+    // última palabra: sobreescribe los sets globales recién aplicados.
+    applyActiveAgentProfile();
     return b;
 }
 
@@ -3293,6 +3297,7 @@ IAgentBackend *AppController::ensureChatBackend()
     auto *b = new RawChatBackend(this);
     if (auto *raw = qobject_cast<RawChatBackend *>(b)) {
         raw->setThinkingEnabled(m_chatThinkingEnabled);
+        raw->setPersonaDesigner(m_chatPersonaDesigner);
     }
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_chatMessages = b->messages();
@@ -4553,6 +4558,16 @@ void AppController::chatSetStructuredOutput(const QString &grammar, const QStrin
 {
     if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
         raw->setStructuredOutput(grammar, jsonSchema);
+}
+
+void AppController::setChatPersonaDesigner(bool enabled)
+{
+    if (enabled == m_chatPersonaDesigner) return;
+    m_chatPersonaDesigner = enabled;
+    QSettings().setValue(QStringLiteral("chat/personaDesigner"), enabled);
+    if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
+        raw->setPersonaDesigner(enabled);
+    emit chatPersonaDesignerChanged();
 }
 
 void AppController::setTasksSchedulerEnabled(bool on)

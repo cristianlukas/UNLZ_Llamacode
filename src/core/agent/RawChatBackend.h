@@ -1,6 +1,7 @@
 #pragma once
 #include "IAgentBackend.h"
 #include <QHash>
+#include <QJsonArray>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 
@@ -49,6 +50,14 @@ public:
     bool renameProject(const QString &oldName, const QString &newName);
     void setThinkingEnabled(bool enabled) { m_thinkingEnabled = enabled; }
     void setPendingAttachments(const QStringList &paths) { m_pendingAttachments = paths; }
+    // Persona "Diseño": sesga al modelo a responder con artifacts visuales
+    // (bloques ```mermaid / ```svg) que la UI rinde inline.
+    void setPersonaDesigner(bool enabled) { m_personaDesigner = enabled; }
+
+    // System prompt de la persona Diseño (público para test).
+    static QString designerSystemPrompt();
+    // Mensajes de sistema a prepender al request, según flags. Pura/testeable.
+    static QJsonArray buildSystemPreamble(bool thinkingEnabled, bool designerPersona);
     // Salida estructurada: grammar GBNF o JSON schema (string JSON). Vacío = libre.
     void setStructuredOutput(const QString &grammar, const QString &jsonSchema) {
         m_grammar = grammar; m_jsonSchema = jsonSchema;
@@ -74,6 +83,7 @@ private:
     bool m_running = false;
     bool m_stopping = false;
     bool m_thinkingEnabled = false;
+    bool m_personaDesigner = false;
     QString m_grammar;       // GBNF (passthrough a llama-server)
     QString m_jsonSchema;    // JSON schema (string) → response_format
 

@@ -77,6 +77,7 @@ class ProfileManager : public QObject
     Q_PROPERTY(QAbstractListModel* harnessProfiles READ harnessProfiles CONSTANT)
     Q_PROPERTY(QAbstractListModel* workspaceProfiles READ workspaceProfiles CONSTANT)
     Q_PROPERTY(QAbstractListModel* launchProfiles  READ launchProfiles  CONSTANT)
+    Q_PROPERTY(QAbstractListModel* agentProfiles   READ agentProfiles   CONSTANT)
 
 public:
     explicit ProfileManager(QObject *parent = nullptr);
@@ -87,6 +88,7 @@ public:
     QAbstractListModel *harnessProfiles()   { return &m_harnesses; }
     QAbstractListModel *workspaceProfiles() { return &m_workspaces; }
     QAbstractListModel *launchProfiles()    { return &m_launches; }
+    QAbstractListModel *agentProfiles()     { return &m_agentProfiles; }
 
     // BackendProfile
     Q_INVOKABLE QString addBackend(const QString &name, const QString &binaryId,
@@ -154,6 +156,16 @@ public:
     Q_INVOKABLE void setLaunchAlias(const QString &id, const QString &alias);
     // Perfiles ordenados para dropdowns: favoritos primero, displayName=alias - name.
     Q_INVOKABLE QVariantList launchProfilesForMenu() const;
+    // AgentProfile (perfiles de agente: capacidades + directivas + ajustes)
+    Q_INVOKABLE QString addAgentProfile(const QString &name);
+    Q_INVOKABLE bool removeAgentProfile(const QString &id);
+    Q_INVOKABLE bool updateAgentProfile(const QVariantMap &data);
+    // Duplica un perfil de agente (incl. de sistema) a una copia EDITABLE de usuario.
+    Q_INVOKABLE QString duplicateAgentProfile(const QString &id);
+    Q_INVOKABLE bool isSystemAgentProfile(const QString &id) const;
+    Q_INVOKABLE QVariantMap getAgentProfile(const QString &id) const;
+    AgentProfile resolveAgentProfile(const QString &id) const;
+
     Q_INVOKABLE void saveProfiles() { save(); }
     void reloadFromDisk();
 
@@ -190,6 +202,7 @@ private:
     ProfileListModel<HarnessProfile>   m_harnesses;
     ProfileListModel<WorkspaceProfile> m_workspaces;
     ProfileListModel<LaunchProfile>    m_launches;
+    ProfileListModel<AgentProfile>     m_agentProfiles;
 
     // Set false when load() can't read an existing file (e.g. locked by another
     // instance); blocks save() so a partial/empty state can't wipe stored data.

@@ -11,6 +11,8 @@
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QJsonArray>
+#include <QJsonObject>
 #include "core/agent/RawChatBackend.h"
 #include "core/agent/AgentTypes.h"
 
@@ -79,6 +81,10 @@ private slots:
     void persistsAcrossRestart();
     void stream_accumulatesAssistantContent();
     void stream_reportsErrorOnHttp500();
+    void preamble_emptyWhenThinkingNoPersona();
+    void preamble_thinkingOffAddsNoThinkSystem();
+    void preamble_designerAddsPersonaFirst();
+    void designerPrompt_mentionsArtifactFences();
 
 private:
     AgentContext ctx(const QString &cwd);
@@ -231,6 +237,44 @@ void BackendsNetTests::stream_reportsErrorOnHttp500()
         errSpy.wait(100);
 
     QVERIFY(!errSpy.isEmpty());
+}
+
+static QString sysContent(const QJsonArray &a, int i)
+{ return a.at(i).toObject().value(QStringLiteral("content")).toString(); }
+
+void BackendsNetTests::preamble_emptyWhenThinkingNoPersona()
+{
+    // thinking ON + sin persona → sin mensajes de sistema.
+    const QJsonArray a = RawChatBackend::buildSystemPreamble(true, false);
+    QCOMPARE(a.size(), 0);
+}
+
+void BackendsNetTests::preamble_thinkingOffAddsNoThinkSystem()
+{
+    const QJsonArray a = RawChatBackend::buildSystemPreamble(false, false);
+    QCOMPARE(a.size(), 1);
+    QCOMPARE(a.at(0).toObject().value(QStringLiteral("role")).toString(), QString("system"));
+    QVERIFY(sysContent(a, 0).contains(QStringLiteral("<think>")));
+}
+
+void BackendsNetTests::preamble_designerAddsPersonaFirst()
+{
+    // persona + thinking OFF → 2 system; persona va PRIMERO.
+    const QJsonArray a = RawChatBackend::buildSystemPreamble(false, true);
+    QCOMPARE(a.size(), 2);
+    QVERIFY(sysContent(a, 0).contains(QStringLiteral("DISEÑO")));
+    QVERIFY(sysContent(a, 1).contains(QStringLiteral("<think>")));
+    // persona + thinking ON → solo la persona.
+    const QJsonArray b = RawChatBackend::buildSystemPreamble(true, true);
+    QCOMPARE(b.size(), 1);
+    QVERIFY(sysContent(b, 0).contains(QStringLiteral("DISEÑO")));
+}
+
+void BackendsNetTests::designerPrompt_mentionsArtifactFences()
+{
+    const QString p = RawChatBackend::designerSystemPrompt();
+    QVERIFY(p.contains(QStringLiteral("```mermaid")));
+    QVERIFY(p.contains(QStringLiteral("```svg")));
 }
 
 QTEST_MAIN(BackendsNetTests)

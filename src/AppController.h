@@ -57,6 +57,7 @@ class AppController : public QObject
     Q_PROPERTY(int chatStreamingIndex READ chatStreamingIndex NOTIFY chatStreamingChanged)
     Q_PROPERTY(QString chatStreamingText READ chatStreamingText NOTIFY chatStreamingChanged)
     Q_PROPERTY(bool chatThinkingEnabled READ chatThinkingEnabled WRITE setChatThinkingEnabled NOTIFY chatThinkingChanged)
+    Q_PROPERTY(bool chatPersonaDesigner READ chatPersonaDesigner WRITE setChatPersonaDesigner NOTIFY chatPersonaDesignerChanged)
     Q_PROPERTY(bool thinkingEnabled READ thinkingEnabled WRITE setThinkingEnabled NOTIFY thinkingChanged)
     // Render de diagramas Mermaid en el chat (requiere sidecar mermaid-cli).
     Q_PROPERTY(bool mermaidEnabled READ mermaidEnabled WRITE setMermaidEnabled NOTIFY mermaidEnabledChanged)
@@ -103,6 +104,7 @@ class AppController : public QObject
     Q_PROPERTY(QVariantMap agentPendingTool READ agentPendingTool NOTIFY agentPendingToolChanged)
     Q_PROPERTY(QString agentApprovalMode READ agentApprovalMode WRITE setAgentApprovalMode NOTIFY agentApprovalModeChanged)
     Q_PROPERTY(bool agentThinkingEnabled READ agentThinkingEnabled WRITE setAgentThinkingEnabled NOTIFY agentThinkingChanged)
+    Q_PROPERTY(QString activeAgentProfileId READ activeAgentProfileId WRITE setActiveAgentProfileId NOTIFY activeAgentProfileChanged)
     Q_PROPERTY(bool browserAutomationEnabled READ browserAutomationEnabled WRITE setBrowserAutomationEnabled NOTIFY browserAutomationChanged)
     Q_PROPERTY(QString browserMcpCommand READ browserMcpCommand WRITE setBrowserMcpCommand NOTIFY browserAutomationChanged)
     Q_PROPERTY(QString teachState READ teachState NOTIFY teachChanged)
@@ -246,6 +248,8 @@ public:
     void setThinkingEnabled(bool enabled);
     bool chatThinkingEnabled() const { return m_chatThinkingEnabled; }
     void setChatThinkingEnabled(bool enabled);
+    bool chatPersonaDesigner() const { return m_chatPersonaDesigner; }
+    void setChatPersonaDesigner(bool enabled);
     // Automatización de browser vía MCP Playwright (toggle global; override por perfil).
     bool browserAutomationEnabled() const { return m_browserAutomationEnabled; }
     void setBrowserAutomationEnabled(bool enabled);
@@ -504,6 +508,13 @@ public:
     // Catálogo con metadata + estado enabled, para la UI de toggles.
     Q_INVOKABLE QVariantList agentToolCatalog() const;
     Q_INVOKABLE void setAgentToolEnabled(const QString &name, bool enabled);
+    // ── Perfiles de agente (capacidades + directivas como toggles) ──
+    // Catálogo de directivas del system prompt para la UI (passthrough al backend).
+    Q_INVOKABLE QVariantList agentDirectiveCatalog() const;
+    // id del perfil de agente activo (override vivo del modo agente). Resolución:
+    // override de sesión → agentProfileId del launch activo → preset por defecto.
+    QString activeAgentProfileId() const;
+    void setActiveAgentProfileId(const QString &id);
     Q_INVOKABLE QString pickDirectory(const QString &title = QString());
     Q_INVOKABLE void changeAgentProject(const QString &directory);
     Q_INVOKABLE QString currentAgentProjectDir() const;
@@ -794,6 +805,7 @@ signals:
     void chatGeneratingChanged();
     void chatThinkingSupportedChanged();
     void chatThinkingChanged();
+    void chatPersonaDesignerChanged();
     void thinkingChanged();
     void mermaidEnabledChanged();
     void agentRunningChanged();
@@ -809,6 +821,7 @@ signals:
     void agentApprovalModeChanged();
     void agentThinkingChanged();
     void agentToolsChanged();
+    void activeAgentProfileChanged();
     void agentTeacherChanged();
     void mailAutoSendChanged();
     void autoStartAgentOnLaunchChanged();
@@ -1053,6 +1066,7 @@ private:
     bool          m_chatGenerating = false;
     bool          m_chatThinkingSupported = false;
     bool          m_chatThinkingEnabled = false;
+    bool          m_chatPersonaDesigner = false;
     int           m_chatStreamingIndex = -1;
     QString       m_chatStreamingText;
     void fetchChatThinkingSupport();
@@ -1094,6 +1108,13 @@ private:
     TeachSessionRecorder m_teachRecorder;
     bool      m_mermaidEnabled = true;          // render de diagramas mermaid en el chat
     QStringList m_agentDisabledTools;           // tools built-in apagadas por el usuario
+    // Perfil de agente activo (override vivo del modo agente). Vacío = resolver
+    // desde el launch activo / preset por defecto. No se persiste (es de sesión).
+    QString   m_activeAgentProfileId;
+    // Resuelve el id efectivo (override → launch activo → preset por defecto) y
+    // aplica capacidades+directivas+ajustes del perfil al backend del agente.
+    QString   resolveAgentProfileId() const;
+    void      applyActiveAgentProfile();
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;

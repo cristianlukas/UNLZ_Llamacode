@@ -138,6 +138,64 @@ WorkspaceProfile WorkspaceProfile::fromJson(const QJsonObject &o) {
 }
 QString WorkspaceProfile::generateId() { return newId(); }
 
+// ---- AgentProfile ----
+QJsonObject AgentProfile::toJson() const {
+    QJsonObject o;
+    o["id"] = id; o["name"] = name;
+    o["enabledTools"] = QJsonArray::fromStringList(enabledTools);
+    o["directives"] = QJsonArray::fromStringList(directives);
+    o["approvalMode"] = approvalMode;
+    o["thinking"] = thinking;
+    o["temperature"] = temperature;
+    o["systemExtra"] = systemExtra;
+    return o;
+}
+AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
+    AgentProfile p;
+    p.id = o["id"].toString(); p.name = o["name"].toString();
+    for (const auto &v : o["enabledTools"].toArray()) p.enabledTools.append(v.toString());
+    for (const auto &v : o["directives"].toArray()) p.directives.append(v.toString());
+    p.approvalMode = o["approvalMode"].toString("ask");
+    if (p.approvalMode.isEmpty()) p.approvalMode = "ask";
+    p.thinking = o["thinking"].toBool(false);
+    p.temperature = o["temperature"].toDouble(-1.0);
+    p.systemExtra = o["systemExtra"].toString();
+    return p;
+}
+QString AgentProfile::generateId() { return newId(); }
+QString AgentProfile::defaultPresetId() { return QStringLiteral("agent-intermedio"); }
+
+// Los 4 presets de sistema. enabledTools/directives con el token "*" = TODO el
+// catálogo (se expande al aplicar; así "Máximo" sigue al catálogo si crece).
+QList<AgentProfile> AgentProfile::systemPresets() {
+    auto mk = [](const QString &id, const QString &name, const QStringList &tools,
+                 const QStringList &dirs, const QString &approval, bool think) {
+        AgentProfile p;
+        p.id = id; p.system = true; p.name = name;
+        p.enabledTools = tools; p.directives = dirs;
+        p.approvalMode = approval; p.thinking = think; p.temperature = -1.0;
+        return p;
+    };
+    const QStringList coreTools{
+        "read_file", "list_dir", "glob", "grep", "write_file", "edit_file", "run_shell"};
+    QStringList interTools = coreTools;
+    interTools << "search_docs" << "memory" << "code_hotspots";
+    QStringList advTools = interTools;
+    advTools << "web_search" << "web_fetch" << "semantic_search"
+             << "hybrid_search" << "verify_claims" << "graph";
+    return {
+        mk("agent-basico",     "Básico",     coreTools,  {},
+           "ask", false),
+        mk("agent-intermedio", "Intermedio", interTools, {"discipline"},
+           "ask", false),
+        mk("agent-avanzado",   "Avanzado",   advTools,
+           {"discipline", "testNet", "projectContext", "efficiency", "style"},
+           "ask", true),
+        mk("agent-maximo",     "Máximo",     {"*"}, {"*"},
+           "super", true),
+    };
+}
+
 // ---- MasterFallback ----
 QJsonObject MasterFallback::toJson() const {
     QJsonObject o;
@@ -211,6 +269,7 @@ QJsonObject LaunchProfile::toJson() const {
     o["runtimePresetId"] = runtimePresetId;
     o["harnessProfileId"] = harnessProfileId;
     o["workspaceProfileId"] = workspaceProfileId;
+    o["agentProfileId"] = agentProfileId;
     o["extraArgs"] = QJsonArray::fromStringList(extraArgs);
     o["envOverrides"] = mapToJson(envOverrides);
     o["master"] = master.toJson();
@@ -234,6 +293,7 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
         p.runtimePresetId = o["runtimePresetId"].toString();
     p.harnessProfileId = o["harnessProfileId"].toString();
     p.workspaceProfileId = o["workspaceProfileId"].toString();
+    p.agentProfileId = o["agentProfileId"].toString();
     for (const auto &v : o["extraArgs"].toArray()) p.extraArgs.append(v.toString());
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
     p.master = MasterConfig::fromJson(o["master"].toObject());

@@ -19,6 +19,39 @@ static int estimateTokens(const QString &text)
     return (n + 3) / 4; // aproximación simple chars/4
 }
 
+QString RawChatBackend::designerSystemPrompt()
+{
+    return QStringLiteral(
+        "Sos un asistente con foco en DISEÑO Y VISUALIZACIÓN. Cuando la respuesta "
+        "se entienda mejor visual, NO la describas en prosa: generala como artifact "
+        "que la UI rinde inline.\n"
+        "- Diagramas (flujos, secuencia, arquitectura, gantt, ER, estados): bloque "
+        "```mermaid con sintaxis Mermaid válida.\n"
+        "- Gráficos, mockups de UI, iconos, ilustraciones, charts: bloque ```svg "
+        "con un SVG completo y autocontenido (sin scripts ni refs de red).\n"
+        "Cerrá siempre el bloque (```). Acompañá con 1-2 líneas de texto, no más. "
+        "Si el pedido es puramente textual (código, explicación), respondé normal.");
+}
+
+QJsonArray RawChatBackend::buildSystemPreamble(bool thinkingEnabled, bool designerPersona)
+{
+    QJsonArray msgs;
+    if (designerPersona) {
+        msgs.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("system")},
+            {QStringLiteral("content"), designerSystemPrompt()}
+        });
+    }
+    if (!thinkingEnabled) {
+        msgs.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("system")},
+            {QStringLiteral("content"),
+             QStringLiteral("Responde solo con la respuesta final. No incluyas razonamiento interno ni etiquetas <think> o </think>.")}
+        });
+    }
+    return msgs;
+}
+
 // Quita bloques <think>...</think> (razonamiento) del texto antes de reenviarlo
 // al modelo: el thinking es solo para mostrar, no debe contaminar el contexto.
 static QString stripThinkForContext(const QString &s)
@@ -368,14 +401,7 @@ void RawChatBackend::sendMessage(const QString &text)
     emit sessionsChanged();
     emit messagesChanged();
 
-    QJsonArray reqMsgs;
-    if (!m_thinkingEnabled) {
-        reqMsgs.append(QJsonObject{
-            {QStringLiteral("role"), QStringLiteral("system")},
-            {QStringLiteral("content"),
-             QStringLiteral("Responde solo con la respuesta final. No incluyas razonamiento interno ni etiquetas <think> o </think>.")}
-        });
-    }
+    QJsonArray reqMsgs = buildSystemPreamble(m_thinkingEnabled, m_personaDesigner);
     int lastUserIdx = -1;
     for (int i = 0; i < m_messages.size(); ++i) {
         if (m_messages[i].toMap().value(QStringLiteral("role")).toString() == QLatin1String("user"))
