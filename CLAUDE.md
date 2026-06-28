@@ -43,6 +43,8 @@ Reglas:
 | EvalSuite | `tests/test_eval.cpp` |
 | ControlApi | `tests/test_control_api.cpp` |
 | AgentToolRunner (tools nativas) | `tests/test_agent_tools.cpp` |
+| LlamaAgentBackend (system prompt: discipline/test-net/contexto) | `tests/test_agent_wire.cpp` |
+| HotspotAnalyzer (archivos riesgosos: churn+autores+sin test) | `tests/test_hotspots.cpp` |
 | MasterCli | `tests/test_master_cli.cpp` |
 | RawChatBackend (sesiones/persistencia) | `tests/test_backends_net.cpp` |
 | LogTriage (barrido de errores) | `tests/test_logtriage.cpp` |

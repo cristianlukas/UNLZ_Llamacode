@@ -849,6 +849,9 @@ QString LlamaAgentBackend::projectContextSection()
         "- Co-cambios: archivos que cambian juntos suelen estar acoplados aunque no "
         "haya import visible. Si tocás uno, mirá con `git log --name-only` qué otros "
         "cambian con él y revisalos.\n"
+        "- Antes de una tanda de cambios, la tool code_hotspots te dice qué archivos "
+        "son frágiles (mucho churn git y SIN test): son los que más probablemente "
+        "escondan una regresión. Reforzá esos con tests antes de tocarlos.\n"
         "- Dejá memoria: cuando descubras o decidas algo durable y NO obvio (por qué "
         "existe un patrón, una restricción, un acoplamiento, una decisión de diseño), "
         "anotá 1-2 líneas en .llamacode/memory.md para que la próxima sesión arranque "
@@ -2853,6 +2856,17 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("pattern"), strProp(QStringLiteral("Patrón glob. '*'=segmento, '**'=recursivo, '?'=1 char."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio base opcional."))}},
            QJsonArray{QStringLiteral("pattern")}),
+        fn(QStringLiteral("code_hotspots"),
+           QStringLiteral("Lista los archivos MÁS RIESGOSOS del repo combinando historial git "
+                          "(cuántos commits lo tocaron, cuántos autores) con cobertura de test. "
+                          "Devuelve un score 1-10 por archivo y el motivo. Usalo ANTES de una "
+                          "tanda de cambios para saber qué archivos son frágiles (mucho churn y "
+                          "SIN test = donde más probable que metas una regresión). Requiere repo git."),
+           QJsonObject{
+               {QStringLiteral("top"), intProp(QStringLiteral("Cuántos archivos devolver. Default 20."))},
+               {QStringLiteral("min_commits"), intProp(QStringLiteral("Ignora archivos con menos commits. Default 2."))},
+               {QStringLiteral("since_days"), intProp(QStringLiteral("Ventana del historial en días. Default 0 = todo."))}},
+           QJsonArray{}),
         fn(QStringLiteral("write_file"), QStringLiteral("Escribe (crea/sobrescribe) un archivo de texto. "
                           "Para CAMBIOS PUNTUALES en un archivo existente preferí edit_file (mucho más rápido)."),
            QJsonObject{
@@ -3148,6 +3162,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("list_dir",  "Archivos", "Lista archivos y carpetas.", 80),
         mk("glob",      "Archivos", "Lista archivos por patrón glob.", 110),
         mk("grep",      "Búsqueda", "Busca una regex en el proyecto.", 100),
+        mk("code_hotspots", "Búsqueda", "Archivos riesgosos: churn git + autores + sin test (score 1-10).", 140),
         mk("search_docs", "Búsqueda", "Ranking de fragmentos por keywords (semántica-lite).", 120),
         mk("semantic_search", "Búsqueda", "Búsqueda por significado vía embeddings del server.", 130),
         mk("hybrid_search", "Búsqueda", "Híbrida BM25+vector con reranker (RAG, la mejor).", 150),

@@ -4,6 +4,7 @@
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
+#include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/mail/MailClient.h" // tools email_send/list/read
@@ -1428,6 +1429,20 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (ok) *ok = true;
         return matches.isEmpty() ? QStringLiteral("[sin coincidencias]")
                                  : matches.join(QLatin1Char('\n'));
+    }
+    if (name == QLatin1String("code_hotspots")) {
+        HotspotAnalyzer::Options opts;
+        if (args.contains(QStringLiteral("top")))
+            opts.topN = qBound(1, args.value(QStringLiteral("top")).toInt(20), 200);
+        if (args.contains(QStringLiteral("min_commits")))
+            opts.minCommits = qMax(1, args.value(QStringLiteral("min_commits")).toInt(2));
+        if (args.contains(QStringLiteral("since_days")))
+            opts.sinceDays = qMax(0, args.value(QStringLiteral("since_days")).toInt(0));
+        QString err;
+        const auto hs = HotspotAnalyzer::analyzeRepo(base.absolutePath(), opts, &err);
+        if (!err.isEmpty()) return QStringLiteral("[code_hotspots: %1]").arg(err);
+        if (ok) *ok = true;
+        return HotspotAnalyzer::formatReport(hs);
     }
     if (name == QLatin1String("write_file")) {
         const QString rel = args.value(QStringLiteral("path")).toString();

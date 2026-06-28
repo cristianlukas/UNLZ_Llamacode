@@ -69,6 +69,7 @@ set(CORE_SOURCES
     src/core/agent/GraphStore.cpp
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
+    src/core/agent/HotspotAnalyzer.cpp
     src/core/mail/MailClient.cpp
     src/core/voice/VoiceTypes.cpp
     src/core/voice/AudioCodec.cpp
@@ -125,6 +126,7 @@ set(HEADERS
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
     src/core/agent/BrowserTeach.h
+    src/core/agent/HotspotAnalyzer.h
     src/core/mail/MailClient.h
     src/core/voice/VoiceTypes.h
     src/core/voice/AudioCodec.h
@@ -393,6 +395,7 @@ if (BUILD_TESTS)
     add_lc_test(test_control_api        tests/test_control_api.cpp)
     add_lc_test(test_agent_tools        tests/test_agent_tools.cpp)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)
+    add_lc_test(test_hotspots           tests/test_hotspots.cpp)
     add_lc_test(test_master_cli         tests/test_master_cli.cpp)
     add_lc_test(test_backends_net       tests/test_backends_net.cpp)
     add_lc_test(test_appcontroller      tests/test_appcontroller.cpp)
