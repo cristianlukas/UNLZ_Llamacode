@@ -21,6 +21,11 @@ private slots:
     void index_extractsImports();
     void index_idempotent();
     void index_langFilter();
+    void graphStore_removeRelationsBySubject();
+    void graphStore_entityNames();
+    void reindex_dropsStaleEdges();
+    void incremental_freshFallsBackToFull();
+    void incremental_mtimeReindexesChanged();
 
 private:
     // Escribe un archivo bajo dir.path() (creando subcarpetas) con 'content'.
@@ -120,6 +125,78 @@ void CodeGraphTests::index_langFilter()
     const QString content = QString::fromUtf8(f.readAll());
     QVERIFY(content.contains("cppFn"));
     QVERIFY(!content.contains("pyFn"));
+}
+
+void CodeGraphTests::graphStore_removeRelationsBySubject()
+{
+    QTemporaryDir dir;
+    GraphStore::link(dir.path(), "fileA", "defines", "symX");
+    GraphStore::link(dir.path(), "fileA", "imports", "fileB");
+    GraphStore::link(dir.path(), "fileB", "defines", "symY");
+
+    const int removed = GraphStore::removeRelationsBySubject(dir.path(), "fileA");
+    QCOMPARE(removed, 2);   // las dos de fileA
+
+    const QString a = GraphStore::query(dir.path(), "fileA", 1);
+    QVERIFY(a.contains("sin relaciones"));   // fileA quedó sin edges
+    const QString b = GraphStore::query(dir.path(), "fileB", 1);
+    QVERIFY(b.contains("symY"));             // fileB intacto
+}
+
+void CodeGraphTests::graphStore_entityNames()
+{
+    QTemporaryDir dir;
+    GraphStore::addEntity(dir.path(), "src/foo.cpp", "file");
+    GraphStore::addEntity(dir.path(), "Foo", "concept");
+    const QStringList files = GraphStore::entityNames(dir.path(), "file");
+    QCOMPARE(files.size(), 1);
+    QCOMPARE(files.first(), QString("src/foo.cpp"));
+}
+
+void CodeGraphTests::reindex_dropsStaleEdges()
+{
+    QTemporaryDir dir;
+    writeFile(dir.path(), "mod.cpp", "void alphaFn() {}\n");
+    CodeGraphIndexer::build(dir.path(), {}, nullptr);
+    QVERIFY(GraphStore::query(dir.path(), "mod.cpp", 1).contains("alphaFn"));
+
+    // Reescribir: alphaFn desaparece, aparece betaFn.
+    writeFile(dir.path(), "mod.cpp", "void betaFn() {}\n");
+    CodeGraphIndexer::reindexFiles(dir.path(), QStringList{QStringLiteral("mod.cpp")},
+                                   {}, nullptr);
+    const QString out = GraphStore::query(dir.path(), "mod.cpp", 1);
+    QVERIFY(out.contains("betaFn"));
+    QVERIFY(!out.contains("alphaFn"));   // edge viejo borrado
+}
+
+void CodeGraphTests::incremental_freshFallsBackToFull()
+{
+    QTemporaryDir dir;
+    writeFile(dir.path(), "a.cpp", "void aFn() {}\n");
+    writeFile(dir.path(), "b.cpp", "void bFn() {}\n");
+    // Sin estado previo → build completo.
+    const CodeGraphIndexer::Stats st = CodeGraphIndexer::buildIncremental(dir.path(), {}, nullptr);
+    QCOMPARE(st.files, 2);
+    QVERIFY(GraphStore::query(dir.path(), "a.cpp", 1).contains("aFn"));
+}
+
+void CodeGraphTests::incremental_mtimeReindexesChanged()
+{
+    QTemporaryDir dir;   // no es repo git → camino mtime
+    writeFile(dir.path(), "x.cpp", "void oldFn() {}\n");
+    writeFile(dir.path(), "y.cpp", "void yFn() {}\n");
+    CodeGraphIndexer::build(dir.path(), {}, nullptr);   // deja estado (ts=ahora)
+
+    // Cruzar el límite de segundo del marcador y modificar sólo x.cpp.
+    QTest::qWait(1100);
+    writeFile(dir.path(), "x.cpp", "void newFn() {}\n");
+
+    QString report;
+    CodeGraphIndexer::buildIncremental(dir.path(), {}, &report);
+    QVERIFY(report.contains("incremental"));
+    const QString out = GraphStore::query(dir.path(), "x.cpp", 1);
+    QVERIFY(out.contains("newFn"));
+    QVERIFY(!out.contains("oldFn"));   // re-extraído, edge viejo borrado
 }
 
 QTEST_MAIN(CodeGraphTests)

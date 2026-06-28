@@ -2,10 +2,14 @@
 
 #include "GraphStore.h"
 
+#include <QDateTime>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QHash>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
 #include <QRegularExpression>
 #include <QSet>
 
@@ -57,7 +61,6 @@ bool isNoiseSymbol(const QString &s)
 }
 
 // Extrae los símbolos (clases/funciones) de 'text' según la familia 'lang'.
-// Regex conservadora por lenguaje; deduplica por nombre. Cap a 'maxSyms'.
 QStringList extractSymbols(const QString &lang, const QString &text, int maxSyms)
 {
     QStringList out;
@@ -77,7 +80,6 @@ QStringList extractSymbols(const QString &lang, const QString &text, int maxSyms
     if (lang == QLatin1String("cpp")) {
         static const QRegularExpression reType(
             QStringLiteral("\\b(?:class|struct)\\s+(\\w+)"));
-        // Definición de función/método: tipo de retorno + nombre( ... ) {  (con cuerpo).
         static const QRegularExpression reFunc(
             QStringLiteral("(?m)^[A-Za-z_][\\w:\\*&<>,\\s]*?\\b(\\w+)\\s*\\([^;{}]*\\)\\s*"
                            "(?:const\\s*)?(?:noexcept\\s*)?(?:override\\s*)?\\{"));
@@ -98,7 +100,6 @@ QStringList extractSymbols(const QString &lang, const QString &text, int maxSyms
         runRe(reArrow);
     } else if (lang == QLatin1String("qml")) {
         static const QRegularExpression reFn(QStringLiteral("\\bfunction\\s+(\\w+)"));
-        // ids declarados: 'id: foo'
         static const QRegularExpression reId(
             QStringLiteral("(?m)^\\s*id\\s*:\\s*(\\w+)"));
         runRe(reFn);
@@ -107,9 +108,8 @@ QStringList extractSymbols(const QString &lang, const QString &text, int maxSyms
     return out;
 }
 
-// Extrae referencias de import/include como basenames normalizados (sin ext, en
-// minúscula). Equivalente al expandidor de dep-graph de hybrid_search; lo
-// replicamos acá para que el indexador sea autónomo (no toca AgentToolRunner).
+// Extrae referencias de import/include como basenames normalizados (sin ext,
+// minúscula). Mismo criterio que el dep-graph de hybrid_search; autónomo acá.
 QSet<QString> extractImportRefs(const QString &text)
 {
     QSet<QString> refs;
@@ -144,6 +144,153 @@ QSet<QString> extractImportRefs(const QString &text)
     return refs;
 }
 
+constexpr int kMaxFiles = 5000;
+constexpr int kMaxSymsPerFile = 80;
+
+QSet<QString> wantSet(const QStringList &langs)
+{
+    QSet<QString> w;
+    for (const QString &l : langs) {
+        const QString v = l.trimmed().toLower();
+        if (!v.isEmpty()) w.insert(v);
+    }
+    return w;
+}
+
+// Índice basename(sin ext, minúscula) → rel de TODOS los archivos soportados del
+// repo. Sólo nombres (no lee contenido): resuelve los imports por basename.
+void collectByBase(const QString &rootAbs, const QSet<QString> &wantLang,
+                   QHash<QString, QString> &byBase)
+{
+    QDir base(rootAbs);
+    QStringList stack{rootAbs};
+    int n = 0;
+    while (!stack.isEmpty() && n < kMaxFiles) {
+        QDir d(stack.takeLast());
+        const auto entries = d.entryInfoList(
+            QDir::NoDotAndDotDot | QDir::Files | QDir::Dirs, QDir::Name);
+        for (const QFileInfo &fi : entries) {
+            if (fi.isDir()) {
+                if (!isIgnoredDir(fi.fileName())) stack << fi.absoluteFilePath();
+                continue;
+            }
+            const QString lang = langOf(fi.suffix());
+            if (lang.isEmpty()) continue;
+            if (!wantLang.isEmpty() && !wantLang.contains(lang)) continue;
+            const QString b = fi.completeBaseName().toLower();
+            const QString rel = base.relativeFilePath(fi.absoluteFilePath());
+            if (!b.isEmpty() && !byBase.contains(b)) byBase.insert(b, rel);
+            if (++n >= kMaxFiles) break;
+        }
+    }
+}
+
+// Acumula entidades + relaciones de UN archivo (ya leído). Devuelve cuántos
+// símbolos distintos aportó (para stats).
+void emitDoc(const QString &rel, const QString &lang, const QString &text,
+             const QHash<QString, QString> &byBase,
+             QVector<QPair<QString, QString>> &entities,
+             QVector<GraphStore::Triple> &relations,
+             QSet<QString> &distinctSyms)
+{
+    entities.append({rel, QStringLiteral("file")});
+    for (const QString &sym : extractSymbols(lang, text, kMaxSymsPerFile)) {
+        entities.append({sym, QStringLiteral("concept")});
+        relations.append({rel, QStringLiteral("defines"), sym});
+        distinctSyms.insert(sym);
+    }
+    const QString selfBase = QFileInfo(rel).completeBaseName().toLower();
+    for (const QString &refb : extractImportRefs(text)) {
+        if (refb == selfBase) continue;
+        const QString target = byBase.value(refb);
+        if (target.isEmpty() || target == rel) continue;
+        relations.append({rel, QStringLiteral("imports"), target});
+    }
+}
+
+// --- Estado para el incremental (.llamacode/graph.state) -------------------
+QString statePath(const QString &cwd)
+{
+    return QDir::cleanPath(cwd + QStringLiteral("/.llamacode/graph.state"));
+}
+
+void readState(const QString &cwd, QString *head, QDateTime *ts)
+{
+    QFile f(statePath(cwd));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+    const QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+    if (head) *head = o.value(QStringLiteral("head")).toString();
+    if (ts) *ts = QDateTime::fromString(o.value(QStringLiteral("ts")).toString(), Qt::ISODate);
+}
+
+void writeState(const QString &cwd, const QString &head)
+{
+    const QString path = statePath(cwd);
+    QDir().mkpath(QFileInfo(path).absolutePath());
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return;
+    const QJsonObject o{
+        {QStringLiteral("head"), head},
+        {QStringLiteral("ts"), QDateTime::currentDateTime().toString(Qt::ISODate)}};
+    f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+    f.close();
+}
+
+// --- git (best-effort; vacío si no es repo git) ----------------------------
+QString runGit(const QString &rootAbs, const QStringList &args, bool *ok)
+{
+    QProcess p;
+    p.setWorkingDirectory(rootAbs);
+    p.start(QStringLiteral("git"), args);
+    if (!p.waitForStarted(3000) || !p.waitForFinished(8000)) {
+        if (ok) *ok = false;
+        return QString();
+    }
+    if (ok) *ok = (p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0);
+    return QString::fromUtf8(p.readAllStandardOutput());
+}
+
+QString gitHead(const QString &rootAbs)
+{
+    bool ok = false;
+    const QString out = runGit(rootAbs, {QStringLiteral("rev-parse"), QStringLiteral("HEAD")}, &ok);
+    return ok ? out.trimmed() : QString();
+}
+
+// Cambios desde 'sinceHead' (diff de commits) + working tree (status). Llena
+// 'changed' (A/M/R) y 'deleted' (D). Devuelve false si git no está disponible.
+bool gitChanges(const QString &rootAbs, const QString &sinceHead,
+                QSet<QString> &changed, QSet<QString> &deleted)
+{
+    bool ok = false;
+    auto ingest = [&](const QString &out) {
+        const auto lines = out.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        for (const QString &ln : lines) {
+            const QString l = ln.trimmed();
+            if (l.isEmpty()) continue;
+            const QChar st = l.at(0);
+            // path = último campo separado por whitespace (R: "old new").
+            const QString path = l.section(QRegularExpression(QStringLiteral("\\s+")), -1);
+            if (path.isEmpty()) continue;
+            if (st == QLatin1Char('D')) deleted.insert(path);
+            else changed.insert(path);
+        }
+    };
+    if (!sinceHead.isEmpty()) {
+        const QString d = runGit(rootAbs,
+            {QStringLiteral("diff"), QStringLiteral("--name-status"),
+             sinceHead, QStringLiteral("HEAD")}, &ok);
+        if (!ok) return false;
+        ingest(d);
+    }
+    const QString s = runGit(rootAbs,
+        {QStringLiteral("status"), QStringLiteral("--porcelain")}, &ok);
+    if (!ok) return false;
+    ingest(s);
+    return true;
+}
+
 }  // namespace
 
 namespace CodeGraphIndexer {
@@ -153,19 +300,12 @@ Stats build(const QString &rootCwd, const QStringList &langs, QString *report)
     Stats st;
     const QString rootAbs = QDir(rootCwd).absolutePath();
     QDir base(rootAbs);
+    const QSet<QString> wantLang = wantSet(langs);
 
-    // Set de lenguajes pedido (vacío = todos). Normalizado a minúscula.
-    QSet<QString> wantLang;
-    for (const QString &l : langs) {
-        const QString v = l.trimmed().toLower();
-        if (!v.isEmpty()) wantLang.insert(v);
-    }
-
-    // 1. Recolectar archivos soportados (cap defensivo).
-    constexpr int kMaxFiles = 5000;
-    struct Indexed { QString rel; QString lang; QString text; };
-    QList<Indexed> docs;
-    QHash<QString, QString> byBase;   // basename(sin ext, lower) -> rel (para imports)
+    // 1. Recolectar archivos soportados (cap defensivo) + índice de basenames.
+    struct Doc { QString rel, lang, text; };
+    QList<Doc> docs;
+    QHash<QString, QString> byBase;
 
     QStringList stack{rootAbs};
     while (!stack.isEmpty() && docs.size() < kMaxFiles) {
@@ -183,7 +323,7 @@ Stats build(const QString &rootCwd, const QStringList &langs, QString *report)
 
             QFile f(fi.absoluteFilePath());
             if (!f.open(QIODevice::ReadOnly)) continue;
-            const QString text = QString::fromUtf8(f.read(512 * 1024));  // cap por archivo
+            const QString text = QString::fromUtf8(f.read(512 * 1024));
             f.close();
 
             const QString rel = base.relativeFilePath(fi.absoluteFilePath());
@@ -198,34 +338,17 @@ Stats build(const QString &rootCwd, const QStringList &langs, QString *report)
     QVector<QPair<QString, QString>> entities;
     QVector<GraphStore::Triple> relations;
     QSet<QString> distinctSyms;
-    constexpr int kMaxSymsPerFile = 80;
-
-    for (const Indexed &doc : docs) {
-        entities.append({doc.rel, QStringLiteral("file")});
-
-        for (const QString &sym : extractSymbols(doc.lang, doc.text, kMaxSymsPerFile)) {
-            entities.append({sym, QStringLiteral("concept")});
-            relations.append({doc.rel, QStringLiteral("defines"), sym});
-            distinctSyms.insert(sym);
-        }
-
-        QSet<QString> selfBase;
-        selfBase.insert(QFileInfo(doc.rel).completeBaseName().toLower());
-        for (const QString &refb : extractImportRefs(doc.text)) {
-            if (selfBase.contains(refb)) continue;        // no auto-import
-            const QString target = byBase.value(refb);
-            if (target.isEmpty() || target == doc.rel) continue;
-            relations.append({doc.rel, QStringLiteral("imports"), target});
-        }
-    }
+    for (const Doc &doc : docs)
+        emitDoc(doc.rel, doc.lang, doc.text, byBase, entities, relations, distinctSyms);
 
     st.files = docs.size();
     st.symbols = distinctSyms.size();
 
-    // 3. Volcado masivo (una sola pasada de escritura).
+    // 3. Volcado masivo (una sola pasada de escritura) + estado para incremental.
     int addedEnt = 0, addedRel = 0;
     GraphStore::addBatch(rootCwd, entities, relations, &addedEnt, &addedRel);
     st.edges = addedRel;
+    writeState(rootCwd, gitHead(rootAbs));
 
     if (report) {
         *report = QStringLiteral(
@@ -233,6 +356,124 @@ Stats build(const QString &rootCwd, const QStringList &langs, QString *report)
             "+%4 relaciones (defines/imports) en .llamacode/graph.jsonl]\n"
             "Consultá el mapa con la tool 'graph' (action='query', name=<archivo o símbolo>).")
             .arg(st.files).arg(st.symbols).arg(addedEnt).arg(addedRel);
+    }
+    return st;
+}
+
+Stats reindexFiles(const QString &rootCwd, const QStringList &relFiles,
+                   const QStringList &langs, QString *report)
+{
+    Stats st;
+    const QString rootAbs = QDir(rootCwd).absolutePath();
+    QDir base(rootAbs);
+    const QSet<QString> wantLang = wantSet(langs);
+
+    QHash<QString, QString> byBase;
+    collectByBase(rootAbs, wantLang, byBase);
+
+    QVector<QPair<QString, QString>> entities;
+    QVector<GraphStore::Triple> relations;
+    QSet<QString> distinctSyms;
+
+    for (const QString &relRaw : relFiles) {
+        const QString rel = relRaw.trimmed();
+        if (rel.isEmpty()) continue;
+        const QString abs = base.absoluteFilePath(rel);
+        const QFileInfo fi(abs);
+        const QString lang = langOf(fi.suffix());
+        if (lang.isEmpty()) continue;
+        if (!wantLang.isEmpty() && !wantLang.contains(lang)) continue;
+        if (!fi.exists()) continue;
+
+        QFile f(abs);
+        if (!f.open(QIODevice::ReadOnly)) continue;
+        const QString text = QString::fromUtf8(f.read(512 * 1024));
+        f.close();
+
+        // Borrar edges viejos de este archivo ANTES de re-extraer (los símbolos/
+        // imports eliminados desaparecen; el resto del grafo es append-only).
+        GraphStore::removeRelationsBySubject(rootCwd, rel);
+        emitDoc(rel, lang, text, byBase, entities, relations, distinctSyms);
+        st.files++;
+    }
+
+    st.symbols = distinctSyms.size();
+    int addedEnt = 0, addedRel = 0;
+    if (!entities.isEmpty() || !relations.isEmpty())
+        GraphStore::addBatch(rootCwd, entities, relations, &addedEnt, &addedRel);
+    st.edges = addedRel;
+
+    if (report) {
+        *report = QStringLiteral(
+            "[code_graph reindex: %1 archivos · %2 símbolos · +%3 relaciones nuevas]")
+            .arg(st.files).arg(st.symbols).arg(addedRel);
+    }
+    return st;
+}
+
+Stats buildIncremental(const QString &rootCwd, const QStringList &langs, QString *report)
+{
+    const QString rootAbs = QDir(rootCwd).absolutePath();
+
+    QString prevHead;
+    QDateTime prevTs;
+    readState(rootCwd, &prevHead, &prevTs);
+
+    // Sin baseline → pasada completa (que además deja el estado).
+    if (!QFile::exists(statePath(rootCwd)) || (prevHead.isEmpty() && !prevTs.isValid()))
+        return build(rootCwd, langs, report);
+
+    const QSet<QString> wantLang = wantSet(langs);
+    QSet<QString> changed, deleted;
+
+    const QString headNow = gitHead(rootAbs);
+    bool usedGit = false;
+    if (!headNow.isEmpty()) {
+        usedGit = gitChanges(rootAbs, prevHead, changed, deleted);
+    }
+    if (!usedGit) {
+        // Fallback mtime: archivos soportados modificados después del último índice.
+        QDir base(rootAbs);
+        QStringList stack{rootAbs};
+        int n = 0;
+        while (!stack.isEmpty() && n < kMaxFiles) {
+            QDir d(stack.takeLast());
+            const auto entries = d.entryInfoList(
+                QDir::NoDotAndDotDot | QDir::Files | QDir::Dirs, QDir::Name);
+            for (const QFileInfo &fi : entries) {
+                if (fi.isDir()) {
+                    if (!isIgnoredDir(fi.fileName())) stack << fi.absoluteFilePath();
+                    continue;
+                }
+                const QString lang = langOf(fi.suffix());
+                if (lang.isEmpty()) continue;
+                if (!wantLang.isEmpty() && !wantLang.contains(lang)) continue;
+                ++n;
+                if (prevTs.isValid() && fi.lastModified() <= prevTs) continue;
+                changed.insert(base.relativeFilePath(fi.absoluteFilePath()));
+            }
+        }
+        // Archivos borrados: entidades 'file' cuyo archivo ya no existe.
+        for (const QString &fileRel : GraphStore::entityNames(rootCwd, QStringLiteral("file"))) {
+            if (!QFileInfo::exists(base.absoluteFilePath(fileRel)))
+                deleted.insert(fileRel);
+        }
+    }
+
+    // Purgar edges de archivos borrados.
+    for (const QString &del : deleted)
+        GraphStore::removeRelationsBySubject(rootCwd, del);
+
+    Stats st = reindexFiles(rootCwd, QStringList(changed.cbegin(), changed.cend()),
+                            langs, nullptr);
+    writeState(rootCwd, headNow);
+
+    if (report) {
+        *report = QStringLiteral(
+            "[code_graph incremental (%1): %2 archivos reindexados · %3 borrados · "
+            "%4 símbolos · +%5 relaciones nuevas]")
+            .arg(usedGit ? QStringLiteral("git") : QStringLiteral("mtime"))
+            .arg(st.files).arg(deleted.size()).arg(st.symbols).arg(st.edges);
     }
     return st;
 }

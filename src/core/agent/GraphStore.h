@@ -48,6 +48,18 @@ QString addBatch(const QString &cwd,
                  const QVector<Triple> &relations,
                  int *addedEnt = nullptr, int *addedRel = nullptr);
 
+// Borra (reescribe el JSONL) TODAS las relaciones cuyo SUBJ sea 'subjName'
+// (entidad por nombre normalizado). Para el reindexado incremental de
+// [[CodeGraphIndexer]]: limpia los edges viejos de un archivo antes de
+// re-extraerlos, así un símbolo/import eliminado DESAPARECE del grafo (el resto
+// es append-only). Entidades y decisiones quedan intactas. Devuelve cuántas borró.
+int removeRelationsBySubject(const QString &cwd, const QString &subjName);
+
+// Nombres de las entidades de un 'etype' dado (ej. "file"). Para que el
+// indexador incremental detecte archivos borrados (entidad cuyo archivo ya no
+// existe) sin re-parsear el JSONL afuera.
+QStringList entityNames(const QString &cwd, const QString &etype);
+
 // Consulta el vecindario de una entidad por nombre. depth=1 (default) o 2
 // (graph expansion: incluye vecinos de vecinos). Devuelve markdown.
 QString query(const QString &cwd, const QString &name, int depth);

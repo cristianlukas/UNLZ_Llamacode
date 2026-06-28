@@ -213,6 +213,61 @@ QString addBatch(const QString &cwd,
     return QStringLiteral("[graph batch: +%1 entidades, +%2 relaciones]").arg(nE).arg(nR);
 }
 
+int removeRelationsBySubject(const QString &cwd, const QString &subjName)
+{
+    const QString nm = subjName.trimmed();
+    if (nm.isEmpty()) return 0;
+    const QString path = jsonlPath(cwd);
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return 0;
+
+    const QString sid = entId(nm);
+    QByteArray kept;
+    int removed = 0;
+    while (!f.atEnd()) {
+        const QByteArray raw = f.readLine();
+        const QByteArray l = raw.trimmed();
+        if (l.isEmpty()) continue;
+        const QJsonObject o = QJsonDocument::fromJson(l).object();
+        if (o.value(QStringLiteral("kind")).toString() == QLatin1String("relation")
+            && o.value(QStringLiteral("subj")).toString() == sid) {
+            ++removed;
+            continue;   // dropear
+        }
+        kept += l;
+        kept += '\n';
+    }
+    f.close();
+    if (removed == 0) return 0;   // nada que reescribir
+
+    QFile w(path);
+    if (!w.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+        return 0;
+    w.write(kept);
+    w.close();
+    return removed;
+}
+
+QStringList entityNames(const QString &cwd, const QString &etype)
+{
+    QStringList out;
+    QFile f(jsonlPath(cwd));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return out;
+    const QString want = norm(etype);
+    while (!f.atEnd()) {
+        const QByteArray l = f.readLine().trimmed();
+        if (l.isEmpty()) continue;
+        const QJsonObject o = QJsonDocument::fromJson(l).object();
+        if (o.value(QStringLiteral("kind")).toString() != QLatin1String("entity"))
+            continue;
+        if (!want.isEmpty() && o.value(QStringLiteral("etype")).toString() != want)
+            continue;
+        out << o.value(QStringLiteral("name")).toString();
+    }
+    f.close();
+    return out;
+}
+
 QString query(const QString &cwd, const QString &name, int depth)
 {
     if (depth <= 0) depth = 1;

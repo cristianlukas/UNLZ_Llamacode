@@ -1698,7 +1698,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 langs = lv.toString().split(QLatin1Char(','), Qt::SkipEmptyParts);
             }
             QString report;
-            CodeGraphIndexer::build(cwd, langs, &report);
+            // 'files' explícito → reindexa esa lista. Si no, 'incremental' reindexa
+            // sólo lo cambiado (git/mtime); por defecto, pasada completa.
+            QStringList files;
+            const QJsonValue fv = args.value(QStringLiteral("files"));
+            if (fv.isArray()) {
+                for (const QJsonValue &v : fv.toArray()) files << v.toString();
+            } else if (fv.isString() && !fv.toString().trimmed().isEmpty()) {
+                files = fv.toString().split(QLatin1Char(','), Qt::SkipEmptyParts);
+            }
+            if (!files.isEmpty())
+                CodeGraphIndexer::reindexFiles(cwd, files, langs, &report);
+            else if (args.value(QStringLiteral("incremental")).toBool(false))
+                CodeGraphIndexer::buildIncremental(cwd, langs, &report);
+            else
+                CodeGraphIndexer::build(cwd, langs, &report);
             if (ok) *ok = true;
             return report;
         }

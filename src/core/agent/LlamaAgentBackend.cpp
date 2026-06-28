@@ -3122,10 +3122,15 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "símbolos (clases/funciones) e imports/includes como relaciones "
                           "file-[defines]->símbolo y file-[imports]->file (determinista, sin LLM). "
                           "Corré 'index' UNA vez en un repo grande sin mapear y después usá 'query' "
-                          "para navegar en vez de re-leer archivos (contexto barato)."),
+                          "para navegar en vez de re-leer archivos (contexto barato). Para mantener "
+                          "el mapa vivo sin re-escanear todo: 'index' con incremental=true reindexa "
+                          "sólo lo cambiado desde la última pasada (git/mtime, borra edges viejos); o "
+                          "pasá 'files' (lista) para refrescar archivos puntuales tras editarlos."),
            QJsonObject{
                {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'decide' | 'decisions' | 'index'."))},
                {QStringLiteral("langs"), strProp(QStringLiteral("index: lenguajes a indexar (CSV, ej. 'cpp,qml'). Vacío = cpp/qml/js/ts/py."))},
+               {QStringLiteral("incremental"), boolProp(QStringLiteral("index: reindexar sólo lo cambiado desde la última pasada (default false = todo)."))},
+               {QStringLiteral("files"), strProp(QStringLiteral("index: lista de rutas a reindexar puntualmente (CSV). Ignora incremental."))},
                {QStringLiteral("subj"), strProp(QStringLiteral("Entidad origen (sólo link)."))},
                {QStringLiteral("pred"), strProp(QStringLiteral("Predicado/relación, ej. 'depende_de' (sólo link)."))},
                {QStringLiteral("obj"), strProp(QStringLiteral("Entidad destino (sólo link)."))},
