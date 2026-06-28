@@ -836,6 +836,26 @@ QString LlamaAgentBackend::testSafetyNetSection()
         "configurar tests.\n\n");
 }
 
+QString LlamaAgentBackend::projectContextSection()
+{
+    return QStringLiteral(
+        "CONTEXTO DEL PROYECTO (entendé el porqué, dejá memoria): no leés el código "
+        "una vez y listo; entendé cómo encaja antes de tocarlo.\n"
+        "- Asumí intención: si una parte parece rara, redundante o un workaround, "
+        "probablemente está así a propósito. Buscá el PORQUÉ antes de cambiarla: "
+        "comentarios cercanos, `git log`/`git blame` del archivo, y la memoria del "
+        "proyecto (.llamacode/memory.md o AGENTS.md). NO 'arregles' un workaround "
+        "deliberado sin entender la razón: lo volverías a romper.\n"
+        "- Co-cambios: archivos que cambian juntos suelen estar acoplados aunque no "
+        "haya import visible. Si tocás uno, mirá con `git log --name-only` qué otros "
+        "cambian con él y revisalos.\n"
+        "- Dejá memoria: cuando descubras o decidas algo durable y NO obvio (por qué "
+        "existe un patrón, una restricción, un acoplamiento, una decisión de diseño), "
+        "anotá 1-2 líneas en .llamacode/memory.md para que la próxima sesión arranque "
+        "sabiéndolo y no lo deshaga. No anotes lo obvio del código ni lo efímero de "
+        "esta tarea.\n\n");
+}
+
 QString LlamaAgentBackend::buildSystemPrompt() const
 {
 #ifdef Q_OS_WIN
@@ -884,6 +904,7 @@ QString LlamaAgentBackend::buildSystemPrompt() const
 
     base += developmentDisciplineSection();
     base += testSafetyNetSection();
+    base += projectContextSection();
 
     base += QStringLiteral(
         "ESTILO: respondé en fragmentos técnicos concisos. Sin relleno, sin "

@@ -93,6 +93,12 @@ public:
     // correr el suite. Pura y testeable. La consume buildSystemPrompt().
     static QString testSafetyNetSection();
 
+    // Sección del system prompt sobre contexto del proyecto: entender el PORQUÉ
+    // antes de tocar (no romper workarounds deliberados), revisar co-cambios por
+    // git, y dejar las decisiones durables en .llamacode/memory.md. Pura y
+    // testeable. La consume buildSystemPrompt().
+    static QString projectContextSection();
+
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);

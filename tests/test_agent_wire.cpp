@@ -27,6 +27,7 @@ private slots:
     void mergeToolCallDelta_parallelCallsByIndex();
     void developmentDisciplineSection_coversRegressionGuards();
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
+    void projectContextSection_coversIntentAndMemory();
 };
 
 void AgentWireTests::initTestCase()
@@ -488,6 +489,30 @@ void AgentWireTests::testSafetyNetSection_coversRunnerDetectionAndQuality()
     QVERIFY(g.contains(QStringLiteral("smoke"), Qt::CaseInsensitive));
 
     QVERIFY(g.endsWith(QStringLiteral("\n\n")));   // separa de la sección siguiente
+}
+
+void AgentWireTests::projectContextSection_coversIntentAndMemory()
+{
+    // Regresión: la guía de contexto de proyecto debe seguir en el prompt y cubrir
+    // sus pilares (entender el porqué, co-cambios por git, dejar memoria durable).
+    const QString g = LlamaAgentBackend::projectContextSection();
+    QVERIFY(!g.trimmed().isEmpty());
+
+    // Pilar 1: entender el porqué via git history antes de tocar; no romper workarounds.
+    QVERIFY(g.contains(QStringLiteral("git blame"))
+            || g.contains(QStringLiteral("git log")));
+    QVERIFY(g.contains(QStringLiteral("workaround"), Qt::CaseInsensitive));
+    // Pilar 2: co-cambios / acoplamiento sin import visible.
+    QVERIFY(g.contains(QStringLiteral("Co-cambios"), Qt::CaseInsensitive)
+            || g.contains(QStringLiteral("acopl"), Qt::CaseInsensitive));
+    // Pilar 3: dejar decisiones durables en el archivo de memoria del proyecto.
+    QVERIFY(g.contains(QStringLiteral(".llamacode/memory.md")));
+    QVERIFY(g.contains(QStringLiteral("durable"), Qt::CaseInsensitive));
+    // El archivo citado debe coincidir con el real que carga buildSystemPrompt.
+    QVERIFY(g.contains(LlamaAgentBackend::memoryFilePath(QStringLiteral("x"))
+                       .section(QLatin1Char('/'), -2)));   // ".llamacode/memory.md"
+
+    QVERIFY(g.endsWith(QStringLiteral("\n\n")));
 }
 
 QTEST_MAIN(AgentWireTests)
