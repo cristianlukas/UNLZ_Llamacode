@@ -48,6 +48,9 @@ private slots:
     void controller_recommendedTierIncludesDisplayName();
     void controller_recommendsCpuWhenNoGpu();
     void controller_noneWhenBelowMinimum();
+    void controller_showcase8gbOffersGemmaAndQwen();
+    void controller_showcase24gbUnchanged();
+    void controller_showcaseEmptyWhenNoSiblings();
 
 private:
     QTemporaryDir m_dir;
@@ -77,7 +80,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 10);                       // 16/12-MoE/8-Gemma/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
+    QCOMPARE(sys, 11);                       // 16/12-MoE/8-Gemma/8-QwenAgent/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: el tier 16GB lleva mmproj (multimodal); el 4GB no (VRAM ajustada).
@@ -198,6 +201,52 @@ void SystemProfilesTests::controller_noneWhenBelowMinimum()
     AppController app;
     app.setHardwareSummaryForTest(0.0, 4.0, QStringLiteral("sin GPU"));   // 4GB RAM < 32 del CPU tier
     QVERIFY(app.recommendedSystemProfile().isEmpty());
+}
+
+// A 8GB el showcase ofrece elegir: Gemma 12B (visión) vs Qwen3.5 9B (agente),
+// o ambos. recommendedSystemProfile sigue siendo el Gemma (default por orden).
+void SystemProfilesTests::controller_showcase8gbOffersGemmaAndQwen()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(8.0, 32.0, QStringLiteral("NVIDIA GeForce RTX 3070"));
+
+    // El recomendado único (tier ≤VRAM, no-extra, primero por orden) = Gemma.
+    QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
+             QStringLiteral("sys-vram-8-gemma"));
+
+    const QVariantList sc = app.recommendedShowcase();
+    QCOMPARE(sc.size(), 2);
+    QStringList ids, labels;
+    for (const QVariant &v : sc) {
+        ids   << v.toMap().value("launchId").toString();
+        labels << v.toMap().value("label").toString();
+    }
+    QVERIFY(ids.contains("sys-vram-8-gemma"));
+    QVERIFY(ids.contains("sys-vram-8-qwen-agent"));
+    QVERIFY(labels.contains("Visión"));
+    QVERIFY(labels.contains("Agente"));
+}
+
+// El showcase de 24GB (MAX-Q coding + FAST-GEMMA general) sigue intacto tras
+// generalizar el mecanismo por showcaseGroup.
+void SystemProfilesTests::controller_showcase24gbUnchanged()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(24.0, 64.0, QStringLiteral("NVIDIA GeForce RTX 4090"));
+    const QVariantList sc = app.recommendedShowcase();
+    QCOMPARE(sc.size(), 2);
+    QStringList ids;
+    for (const QVariant &v : sc) ids << v.toMap().value("launchId").toString();
+    QVERIFY(ids.contains("sys-maxq"));
+    QVERIFY(ids.contains("sys-fastgemma"));
+}
+
+// Un tier sin grupo de showcase (ej. 4GB) no ofrece "uno/otro/ambos".
+void SystemProfilesTests::controller_showcaseEmptyWhenNoSiblings()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(5.0, 16.0, QStringLiteral("NVIDIA"));
+    QVERIFY(app.recommendedShowcase().isEmpty());
 }
 
 QTEST_MAIN(SystemProfilesTests)

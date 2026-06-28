@@ -144,11 +144,6 @@ Item {
             Layout.preferredHeight: recCol.implicitHeight + 24
             readonly property var showcase: (App.hardwareSummary, App.recommendedShowcase())
             readonly property var sysPick: (App.hardwareSummary, App.recommendedSystemProfile())
-            function showcaseId(tag) {
-                for (var i = 0; i < showcase.length; i++)
-                    if ((showcase[i].displayName || "").indexOf(tag) >= 0) return showcase[i].launchId
-                return ""
-            }
             visible: showcase.length > 0 || (sysPick.launchId ?? "").length > 0
             radius: 8
             color: Theme.surfaceBg
@@ -188,17 +183,13 @@ Item {
                         enabled: !App.modelDownloadRunning
                         onClicked: App.acceptShowcase()
                     }
-                    LcButton {
-                        visible: recCard.showcase.length > 0
-                        text: "Sólo Coding"; secondary: true
-                        enabled: !App.modelDownloadRunning && recCard.showcaseId("[coding]").length > 0
-                        onClicked: App.acceptShowcaseOne(recCard.showcaseId("[coding]"))
-                    }
-                    LcButton {
-                        visible: recCard.showcase.length > 0
-                        text: "Sólo General"; secondary: true
-                        enabled: !App.modelDownloadRunning && recCard.showcaseId("[general]").length > 0
-                        onClicked: App.acceptShowcaseOne(recCard.showcaseId("[general]"))
+                    Repeater {
+                        model: recCard.showcase
+                        LcButton {
+                            text: "Sólo " + (modelData.label || modelData.displayName || ""); secondary: true
+                            enabled: !App.modelDownloadRunning && (modelData.launchId || "").length > 0
+                            onClicked: App.acceptShowcaseOne(modelData.launchId)
+                        }
                     }
                     LcButton {
                         visible: recCard.showcase.length === 0

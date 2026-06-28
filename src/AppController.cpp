@@ -8468,35 +8468,68 @@ QVariantList AppController::launchMenu()
 
 QVariantList AppController::recommendedShowcase() const
 {
+    // Showcase = grupo de perfiles "elegí uno/otro/ambos" para el hardware actual.
+    // - 24GB+: el grupo "top24" (MAX-Q coding + FAST-GEMMA general), por VRAM.
+    // - resto: el showcaseGroup del tier recomendado (≤VRAM). Hoy "vram8" ofrece
+    //   Gemma 12B (visión) vs Qwen3.5 9B (agente, 32k). Sin grupo o con <2
+    //   candidatos no es un showcase (cae a la card de tier único).
     const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
     const double ram  = m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble();
+    const QJsonArray arr = readSystemProfilesBundle();
+
+    QString group;
+    if (vram >= 23.5) {
+        group = QStringLiteral("top24");
+    } else {
+        const QString recId = recommendedSystemProfile().value(QStringLiteral("launchId")).toString();
+        if (recId.isEmpty()) return {};
+        for (const QJsonValue &v : arr)
+            if (v.toObject().value(QStringLiteral("id")).toString() == recId) {
+                group = v.toObject().value(QStringLiteral("showcaseGroup")).toString();
+                break;
+            }
+    }
+    if (group.isEmpty()) return {};
+
     QVariantList out;
-    if (vram < 23.5) return out;   // showcase solo para placas de 24GB+
-    for (const QJsonValue &v : readSystemProfilesBundle()) {
+    for (const QJsonValue &v : arr) {
         const QJsonObject e = v.toObject();
-        if (!e.value(QStringLiteral("extra")).toBool()) continue;
+        if (e.value(QStringLiteral("showcaseGroup")).toString() != group) continue;
         if (e.value(QStringLiteral("minRamGb")).toDouble() > ram + 0.5) continue;
+        // top24 ya está gateado por vram>=23.5 (sus extras declaran minVramGb=24);
+        // para el resto, respetar el techo de VRAM del candidato.
+        const double minV = e.value(QStringLiteral("minVramGb")).toDouble();
+        if (group != QLatin1String("top24") && vram > 0.0 && minV > vram + 0.01) continue;
         out.append(QVariantMap{
             {"launchId", e.value(QStringLiteral("id")).toString()},
             {"displayName", e.value(QStringLiteral("displayName")).toString()},
+            {"label", e.value(QStringLiteral("showcaseLabel")).toString()},
         });
     }
+    if (out.size() < 2) return {};   // un solo candidato no es "elegí uno/otro/ambos"
     return out;
 }
 
 void AppController::acceptShowcase()
 {
-    // Los dos extras usan binarios distintos: MAX-Q→beellama (ngram), FAST-GEMMA→
-    // official (gemma4-assistant). Instalar ambos si faltan.
-    ensureSystemBinary(QStringLiteral("beellama"));
-    ensureSystemBinary(QStringLiteral("official"));
+    // Instalar TODO el grupo de showcase recomendado (cada perfil con su binario:
+    // MAX-Q→beellama, FAST-GEMMA→gemma4(official), 8GB Gemma/Qwen→official). El
+    // primero del grupo queda activo al terminar.
+    const QVariantList sc = recommendedShowcase();
+    if (sc.isEmpty()) return;
+    const QJsonArray arr = readSystemProfilesBundle();
 
     QString firstId;
-    for (const QJsonValue &v : readSystemProfilesBundle()) {
-        const QJsonObject e = v.toObject();
-        if (!e.value(QStringLiteral("extra")).toBool()) continue;
-        if (firstId.isEmpty()) firstId = e.value(QStringLiteral("id")).toString();
-        enqueueSystemProfileAssets(e);
+    for (const QVariant &it : sc) {
+        const QString id = it.toMap().value(QStringLiteral("launchId")).toString();
+        for (const QJsonValue &v : arr) {
+            const QJsonObject e = v.toObject();
+            if (e.value(QStringLiteral("id")).toString() != id) continue;
+            ensureSystemBinary(e.value(QStringLiteral("binaryKind")).toString(QStringLiteral("official")));
+            enqueueSystemProfileAssets(e);
+            if (firstId.isEmpty()) firstId = id;
+            break;
+        }
     }
     if (!firstId.isEmpty()) {
         m_pendingSystemLaunchId = firstId;        // el coding queda activo al terminar

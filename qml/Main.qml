@@ -388,12 +388,6 @@ ApplicationWindow {
             // Depende de hardwareSummary para re-evaluar tras un rescan.
             readonly property var sysPick: (App.hardwareSummary, App.recommendedSystemProfile())
             readonly property var showcase: (App.hardwareSummary, App.recommendedShowcase())
-            function showcaseId(tag) {
-                for (var i = 0; i < showcase.length; i++)
-                    if ((showcase[i].displayName || "").indexOf(tag) >= 0)
-                        return showcase[i].launchId
-                return ""
-            }
             function recommendedProfileLabel() {
                 const name = sysPick.displayName ?? ""
                 if (name.length > 0) return name
@@ -462,21 +456,17 @@ ApplicationWindow {
                             enabled: !App.modelDownloadRunning
                             onClicked: { App.acceptShowcase(); setupPopup.close() }
                         }
-                        LcButton {
-                            text: "Sólo Coding"
-                            secondary: true
-                            visible: recCard.isShowcase
-                            Layout.preferredHeight: 34
-                            enabled: !App.modelDownloadRunning && setupCol.showcaseId("[coding]").length > 0
-                            onClicked: { App.acceptShowcaseOne(setupCol.showcaseId("[coding]")); setupPopup.close() }
-                        }
-                        LcButton {
-                            text: "Sólo General"
-                            secondary: true
-                            visible: recCard.isShowcase
-                            Layout.preferredHeight: 34
-                            enabled: !App.modelDownloadRunning && setupCol.showcaseId("[general]").length > 0
-                            onClicked: { App.acceptShowcaseOne(setupCol.showcaseId("[general]")); setupPopup.close() }
+                        // Un botón "Sólo <label>" por perfil del grupo (Coding/General
+                        // a 24GB; Visión/Agente a 8GB). Data-driven desde el showcase.
+                        Repeater {
+                            model: recCard.isShowcase ? setupCol.showcase : []
+                            LcButton {
+                                text: "Sólo " + (modelData.label || modelData.displayName || "")
+                                secondary: true
+                                Layout.preferredHeight: 34
+                                enabled: !App.modelDownloadRunning && (modelData.launchId || "").length > 0
+                                onClicked: { App.acceptShowcaseOne(modelData.launchId); setupPopup.close() }
+                            }
                         }
                         // Tier único: instalar y usar. Cierra el diálogo para que se
                         // vea Descargas/Lanzar (acceptSystemProfileImpl navega allí);
