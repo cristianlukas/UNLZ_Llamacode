@@ -20,6 +20,7 @@ Dialog {
     // API: setear antes de open().
     property string imageSource: ""
     property string mermaidSource: ""
+    property bool isSvg: false   // define extensión/filtro al guardar la fuente
 
     onOpened: { zoom = 1.0; img.x = 0; img.y = 0 }
     property real zoom: 1.0
@@ -73,6 +74,22 @@ Dialog {
             LcButton {
                 text: "Copiar fuente"; secondary: true
                 onClicked: { copyHelper.text = root.mermaidSource; copyHelper.selectAll(); copyHelper.copy() }
+            }
+            LcButton {
+                text: "Guardar PNG"; secondary: true
+                onClicked: {
+                    const p = App.pickSavePath("diagrama.png", "PNG (*.png)")
+                    if (p.length > 0) Mermaid.exportPng(root.mermaidSource, p)
+                }
+            }
+            LcButton {
+                text: "Guardar fuente"; secondary: true
+                onClicked: {
+                    const name = root.isSvg ? "diagrama.svg" : "diagrama.mmd"
+                    const filt = root.isSvg ? "SVG (*.svg)" : "Mermaid (*.mmd)"
+                    const p = App.pickSavePath(name, filt)
+                    if (p.length > 0) Mermaid.exportSource(root.mermaidSource, p)
+                }
             }
             LcButton { text: "Cerrar"; onClicked: root.close() }
         }

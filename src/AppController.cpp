@@ -1834,6 +1834,15 @@ void AppController::copyToClipboard(const QString &text)
     QGuiApplication::clipboard()->setText(text);
 }
 
+QString AppController::pickSavePath(const QString &suggestedName, const QString &filter)
+{
+    const QString base = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    return QFileDialog::getSaveFileName(
+        nullptr, QStringLiteral("Guardar"),
+        QDir(base).filePath(suggestedName),
+        filter.isEmpty() ? QStringLiteral("Todos (*.*)") : filter);
+}
+
 void AppController::openContainingFolder(const QString &path)
 {
     if (path.trimmed().isEmpty()) return;

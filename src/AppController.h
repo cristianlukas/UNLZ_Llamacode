@@ -355,6 +355,9 @@ public:
     // lista de {id,title,projectName,snippet} de sesiones que matchean.
     Q_INVOKABLE QVariantList searchChatHistory(const QString &query) const;
     Q_INVOKABLE void copyToClipboard(const QString &text);
+    // Diálogo "Guardar como": devuelve la ruta elegida (sugerencia en Documentos)
+    // o "" si se canceló. filter estilo Qt: "PNG (*.png)".
+    Q_INVOKABLE QString pickSavePath(const QString &suggestedName, const QString &filter);
     // Abre el explorador en la carpeta contenedora del archivo (y lo selecciona en Windows).
     Q_INVOKABLE void openContainingFolder(const QString &path);
     Q_INVOKABLE void installOfficialBinary();

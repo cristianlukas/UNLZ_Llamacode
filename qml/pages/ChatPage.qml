@@ -111,9 +111,10 @@ Item {
     }
 
     MermaidPreviewDialog { id: mermaidPreview }
-    function openMermaidPreview(imgUrl, src) {
+    function openMermaidPreview(imgUrl, src, isSvg) {
         mermaidPreview.imageSource = imgUrl
         mermaidPreview.mermaidSource = src
+        mermaidPreview.isSvg = isSvg === true
         mermaidPreview.open()
     }
 
@@ -1143,7 +1144,7 @@ Item {
                                                 MouseArea {
                                                     anchors.fill: parent
                                                     cursorShape: Qt.PointingHandCursor
-                                                    onClicked: root.openMermaidPreview(mermaidWrap.imgUrl, mermaidWrap.segSrc)
+                                                    onClicked: root.openMermaidPreview(mermaidWrap.imgUrl, mermaidWrap.segSrc, isSvg)
                                                 }
                                             }
                                             Text {
