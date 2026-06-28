@@ -38,6 +38,8 @@ public slots:
     void setAllowedRoots(const QStringList &roots);
     // URL base del llama-server (para /v1/embeddings en semantic_search).
     void setServerBaseUrl(const QString &url);
+    // Sesión activa del agente: la tool recent_actions filtra el event-log por ella.
+    void setSessionId(const QString &sessionId);
     // Cuentas de correo (con password ya resuelto) para email_send/list/read.
     void setMailAccounts(const QVariantList &accounts);
     // Config del modelo maestro (tool ask_teacher). Vacío = usar env vars.
@@ -79,6 +81,7 @@ private:
     bool m_confined = true;
     QStringList m_allowedRoots;   // carpetas extra permitidas (scope "folder")
     QString m_serverBaseUrl;
+    QString m_sessionId;           // sesión activa (filtro de recent_actions)
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)
     // Maestro CLI (claude-code / codex). m_masterKind: "none"|"http"|"cli".

@@ -14,6 +14,7 @@
 #include <QDir>
 #include <QFile>
 #include "core/agent/AgentToolRunner.h"
+#include "core/agent/AgentEventLog.h"
 
 class AgentToolsTests : public QObject
 {
@@ -33,6 +34,8 @@ private slots:
     void glob_listsFiles();
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
+    void recentActions_tailsEventLogForSession();
+    void desktopWindows_returnsStructuredInventory();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -204,6 +207,47 @@ void AgentToolsTests::hybridSearch_depGraphAndBudget()
     QVERIFY(res.contains("~"));                   // header con ~N tok (budget activo)
     QVERIFY(res.contains("dep-graph"));           // footer de vecinos
     QVERIFY(res.contains("util.h"));              // vecino vía #include
+}
+
+void AgentToolsTests::recentActions_tailsEventLogForSession()
+{
+    // Sembrar el event-log del cwd con eventos de DOS sesiones. recent_actions con
+    // la sesión "S1" debe traer sólo lo de S1 (filtrado por sessionId del runner).
+    AgentEventLog::append(m_dir.path(), QStringLiteral("S1"), QStringLiteral("tool_call"),
+                          {{QStringLiteral("tool"), QStringLiteral("read_file")}});
+    AgentEventLog::append(m_dir.path(), QStringLiteral("S2"), QStringLiteral("tool_call"),
+                          {{QStringLiteral("tool"), QStringLiteral("OTRA_SESION")}});
+    AgentEventLog::append(m_dir.path(), QStringLiteral("S1"), QStringLiteral("failure"),
+                          {{QStringLiteral("tool"), QStringLiteral("run_shell")},
+                           {QStringLiteral("ok"), false},
+                           {QStringLiteral("reason"), QStringLiteral("anti_loop")}});
+
+    m_runner->setSessionId(QStringLiteral("S1"));
+    QVariantMap r = call("recent_actions", {{"count", 10}});
+    QVERIFY(r.value("ok").toBool());
+    const QString out = r.value("result").toString();
+    QVERIFY(out.contains(QStringLiteral("read_file")));
+    QVERIFY(out.contains(QStringLiteral("run_shell")));
+    QVERIFY(out.contains(QStringLiteral("FALLO")));        // el evento failure se marca
+    QVERIFY(out.contains(QStringLiteral("anti_loop")));    // reason arrastrado
+    QVERIFY(!out.contains(QStringLiteral("OTRA_SESION"))); // S2 filtrada
+
+    // Sesión sin eventos → mensaje claro, ok igual (no es un error de tool).
+    m_runner->setSessionId(QStringLiteral("VACIA"));
+    QVariantMap empty = call("recent_actions", {});
+    QVERIFY(empty.value("ok").toBool());
+    QVERIFY(empty.value("result").toString().contains(QStringLiteral("sin eventos")));
+}
+
+void AgentToolsTests::desktopWindows_returnsStructuredInventory()
+{
+    // No depende de qué ventanas haya: el tool siempre resuelve ok y devuelve un
+    // encabezado coherente (lista estructurada o aviso de "sin ventanas").
+    QVariantMap r = call("desktop_windows", {});
+    QVERIFY(r.value("ok").toBool());
+    const QString out = r.value("result").toString();
+    QVERIFY(out.contains(QStringLiteral("desktop_windows")));
+    QVERIFY(out.contains(QStringLiteral("ventana")));
 }
 
 QTEST_MAIN(AgentToolsTests)

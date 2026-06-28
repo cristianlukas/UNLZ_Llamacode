@@ -4,6 +4,7 @@
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
+#include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -416,6 +417,7 @@ void AgentToolRunner::setAllowedRoots(const QStringList &roots)
     }
 }
 void AgentToolRunner::setServerBaseUrl(const QString &url) { m_serverBaseUrl = url; }
+void AgentToolRunner::setSessionId(const QString &sessionId) { m_sessionId = sessionId; }
 void AgentToolRunner::setMailAccounts(const QVariantList &accounts) { m_mailAccounts = accounts; }
 void AgentToolRunner::setTeacherConfig(const QString &url, const QString &model, const QString &key)
 {
@@ -681,6 +683,40 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             .arg(name,
                  args.value(QStringLiteral("_parse_error")).toString(),
                  QString::number(args.value(QStringLiteral("_raw_chars")).toInt()));
+    }
+    if (name == QLatin1String("recent_actions")) {
+        // Tail del propio rastro operacional (tool_calls/results/fallos) para que el
+        // modelo relea qué intentó y qué falló, y se auto-corrija (loop log+tail).
+        const int n = args.value(QStringLiteral("count")).toInt(20);
+        const QString out = AgentEventLog::tail(cwd, m_sessionId, n);
+        if (ok) *ok = true;
+        return out;
+    }
+    if (name == QLatin1String("desktop_windows")) {
+        // Inventario estructurado de ventanas (título + pid + geometría). Estado
+        // barato para orientarse y elegir un objetivo SIN gastar una captura (la
+        // imagen queda como fallback vía desktop_observe).
+        const QVariantList wins = DesktopAutomationBackend::windows();
+        QStringList lines;
+        for (const QVariant &v : wins) {
+            const QVariantMap w = v.toMap();
+            lines << QStringLiteral("id=%1  pid=%2  %3x%4@(%5,%6)  \"%7\"")
+                         .arg(w.value(QStringLiteral("id")).toString(),
+                              w.value(QStringLiteral("pid")).toString())
+                         .arg(w.value(QStringLiteral("width")).toInt())
+                         .arg(w.value(QStringLiteral("height")).toInt())
+                         .arg(w.value(QStringLiteral("x")).toInt())
+                         .arg(w.value(QStringLiteral("y")).toInt())
+                         .arg(w.value(QStringLiteral("label")).toString());
+            if (lines.size() >= 60) break;
+        }
+        if (ok) *ok = true;
+        if (lines.isEmpty())
+            return QStringLiteral("[desktop_windows: no hay ventanas visibles "
+                                  "(¿sesión sin escritorio interactivo?)]");
+        return QStringLiteral("[desktop_windows: %1 ventana(s) visible(s)]\n"
+                              "Usá el id con scope_kind='window' en desktop_observe/click.\n%2")
+            .arg(lines.size()).arg(lines.join(QLatin1Char('\n')));
     }
     if (name == QLatin1String("desktop_observe")) {
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(

@@ -405,6 +405,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(bool, m_approvalMode != QLatin1String("super")));
     QMetaObject::invokeMethod(m_worker, "setServerBaseUrl", Qt::QueuedConnection,
                               Q_ARG(QString, m_ctx.serverBaseUrl));
+    QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
+                              Q_ARG(QString, m_sessionId));
     QMetaObject::invokeMethod(m_worker, "setTeacherConfig", Qt::QueuedConnection,
                               Q_ARG(QString, m_teacherUrl), Q_ARG(QString, m_teacherModel),
                               Q_ARG(QString, m_teacherKey));
@@ -2036,6 +2038,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("memory"), QStringLiteral("graph"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
+        QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
@@ -3170,6 +3173,22 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("name"), strProp(QStringLiteral("Nombre del skill (ver browser_skill_list)."))}},
            QJsonArray{QStringLiteral("name")}),
+        fn(QStringLiteral("recent_actions"),
+           QStringLiteral("Relee tu propio rastro reciente (tool_calls, resultados y FALLOS de "
+                          "esta sesión) para auto-corregirte: ver qué intentaste, qué se repitió "
+                          "sin progreso y qué falló, antes de reintentar. Útil cuando algo no "
+                          "avanza o perdés el hilo en una tarea larga."),
+           QJsonObject{
+               {QStringLiteral("count"), intProp(QStringLiteral("Cuántos eventos traer (default 20, máx 200)."))}},
+           QJsonArray{}),
+        fn(QStringLiteral("desktop_windows"),
+           QStringLiteral("Inventario ESTRUCTURADO de ventanas visibles (id, título, pid, "
+                          "geometría) — estado barato para orientarte y elegir un objetivo SIN "
+                          "gastar una captura. Usá el id devuelto con scope_kind='window' en "
+                          "desktop_observe/desktop_click. La captura (desktop_observe) queda como "
+                          "fallback cuando necesitás VER el contenido."),
+           QJsonObject{},
+           QJsonArray{}),
         fn(QStringLiteral("desktop_observe"),
            QStringLiteral("Captura el alcance de escritorio enseñado. Usala antes y después "
                           "de cada acción; devuelve la ruta de la observación actual."),
@@ -3282,6 +3301,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
         mk("browser_skill_list", "Browser", "Lista skills de browser grabados (teach).", 70),
         mk("browser_skill_replay", "Browser", "Reproduce un skill de browser grabado (Playwright).", 100),
+        mk("recent_actions", "Conocimiento", "Relee tu rastro reciente (tool_calls/fallos) para auto-corregirte.", 90),
+        mk("desktop_windows", "Escritorio", "Inventario estructurado de ventanas (barato, sin captura).", 80),
         mk("desktop_observe", "Escritorio", "Captura el alcance visual enseñado.", 90),
         mk("desktop_click", "Escritorio", "Click visual con coordenadas normalizadas.", 100),
         mk("desktop_type", "Escritorio", "Escribe en el control enfocado.", 80),
@@ -3673,6 +3694,8 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
     saveCurrentSession();   // vuelca la sesión actual antes de cambiar
     consolidateMemory();    // extraer hechos durables de la sesión saliente
     m_sessionId = sessionId;
+    if (m_worker) QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
+                                            Q_ARG(QString, m_sessionId));
     m_curAsstIdx = -1;
     m_messages.clear();
     m_apiMessages = {};
