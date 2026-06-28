@@ -111,6 +111,14 @@ public:
     static QString efficiencySection();
     static QString styleSection();
 
+    // Sección "Frugalidad (Honey)": reduce lo que el modelo EMITE. Código
+    // YAGNI-first (parar en el primer escalón que funciona, sin scaffolding
+    // especulativo), respuesta-primero sin narrar, y handoffs agente↔agente
+    // densos (clave:valor compacto, no JSON pretty). Pura y testeable. Apaga por
+    // defecto vía catálogo (off-by-default), distinta de style/efficiency. La
+    // consume buildSystemPrompt().
+    static QString honeySection();
+
     // Catálogo de DIRECTIVAS del system prompt para la UI de toggles: lista de
     // {key, name, description}. Las keys (discipline/testNet/projectContext/
     // efficiency/style) son la fuente de verdad para buildSystemPrompt y el editor

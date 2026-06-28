@@ -916,6 +916,21 @@ QString LlamaAgentBackend::styleSection()
         "cuesta tiempo (generación local lenta): cada palabra de más es latencia.");
 }
 
+QString LlamaAgentBackend::honeySection()
+{
+    return QStringLiteral(
+        "FRUGALIDAD (Honey): reducí lo que GENERÁS, no lo que el usuario pidió.\n"
+        "- Código YAGNI-first: parar en el primer escalón que funciona (stdlib, "
+        "idioma nativo, una dependencia que ya está, una línea, el bloque mínimo). "
+        "Nada de scaffolding 'por si después': sin abstracciones, parámetros, "
+        "branches ni handlers especulativos que nadie pidió.\n"
+        "- Respuesta-primero: la respuesta o el resultado va primero; sin preámbulo, "
+        "sin narrar el código que ya se lee solo, sin hedging.\n"
+        "- Handoffs densos: cuando le pasás trabajo a otro agente (supervisor, "
+        "sub-tarea), usá clave:valor compacto en líneas, NO JSON pretty-printed ni "
+        "prosa. Mismos datos, la mitad de tokens.\n\n");
+}
+
 QVariantList LlamaAgentBackend::directiveCatalog()
 {
     auto mk = [](const char *key, const char *name, const char *desc) {
@@ -935,6 +950,8 @@ QVariantList LlamaAgentBackend::directiveCatalog()
            "Resolver en la menor cantidad de pasos/tool calls; sin sobre-ingeniería ni verificación de más."),
         mk("style", "Estilo conciso",
            "Respuestas en fragmentos técnicos concisos, sin relleno ni cortesías; listas y comandos."),
+        mk("honey", "Frugalidad (Honey)",
+           "Reduce lo que el modelo emite: código YAGNI sin scaffolding especulativo, respuesta-primero y handoffs agente↔agente densos. Off por defecto (opt-in)."),
     };
 }
 
@@ -998,6 +1015,10 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     if (dirOn("testNet"))        base += testSafetyNetSection();
     if (dirOn("projectContext")) base += projectContextSection();
     if (dirOn("style"))          base += styleSection();
+    // Honey es opt-in puro: NO entra en el default "todas on" (m_directivesSet
+    // false) porque es agresivo y en modelos chicos locales puede recortar el
+    // razonamiento. Sólo si el perfil la elige explícitamente.
+    if (m_directives.contains(QStringLiteral("honey"))) base += honeySection();
 
     // Memoria por proyecto: .llamacode/memory.md o AGENTS.md (lo que exista).
     QString mem;

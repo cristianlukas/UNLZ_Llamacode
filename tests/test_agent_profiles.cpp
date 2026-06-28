@@ -28,6 +28,7 @@ private slots:
     void directiveCatalog_hasAllKeys();
     void setDirectives_gatesSystemPrompt();
     void setDirectives_defaultIncludesAll();
+    void honey_isOptInOnly();
     void manager_crudAndPersistence();
     void manager_systemPresetsImmutable();
 
@@ -125,7 +126,7 @@ void AgentProfilesTests::directiveCatalog_hasAllKeys()
     QStringList keys;
     for (const QVariant &v : cat) keys << v.toMap().value("key").toString();
     for (const QString &k : {"discipline", "testNet", "projectContext",
-                             "efficiency", "style"})
+                             "efficiency", "style", "honey"})
         QVERIFY2(keys.contains(k), qPrintable("falta directiva " + k));
     // Cada item tiene name + description no vacíos (para la UI de toggles).
     for (const QVariant &v : cat) {
@@ -171,6 +172,26 @@ void AgentProfilesTests::setDirectives_defaultIncludesAll()
     QVERIFY(sp.contains(QStringLiteral("CONTEXTO DEL PROYECTO")));
     QVERIFY(sp.contains(QStringLiteral("ESTILO:")));
     QVERIFY(sp.contains(QStringLiteral("EFICIENCIA")));
+}
+
+// Honey (frugalidad) es opt-in PURO: a diferencia del resto, NO se incluye en el
+// default "todas las directivas on" (sin setDirectives). Es agresiva y en modelos
+// chicos locales puede recortar el razonamiento, así que sólo aparece si el perfil
+// la elige explícitamente.
+void AgentProfilesTests::honey_isOptInOnly()
+{
+    LlamaAgentBackend be;
+    // Default (sin setDirectives): NINGUNA sección Honey, aunque el resto esté on.
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
+
+    // Catálogo completo explícito tampoco la trae si no se nombra honey.
+    be.setDirectives(QStringList{"discipline", "testNet", "projectContext",
+                                 "efficiency", "style"});
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
+
+    // Elegida explícitamente: presente.
+    be.setDirectives(QStringList{"honey"});
+    QVERIFY(be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
 }
 
 void AgentProfilesTests::manager_crudAndPersistence()
