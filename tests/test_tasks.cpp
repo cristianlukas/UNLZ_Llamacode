@@ -25,6 +25,7 @@ private slots:
     void loop_composeGoalPrompt();
     void loop_runsExactlyMaxIterationsWhenGoalNeverMet();
     void loop_stopsEarlyWhenGoalMet();
+    void loop_composeProgressCarriesPriorVerdict();
     void verifyProfile_routesOnlyWhenSetAndDifferent();
 };
 
@@ -286,6 +287,29 @@ void TasksTests::loop_stopsEarlyWhenGoalMet()
                          : QStringLiteral("GOAL_NOT_MET");
     });
     QCOMPARE(runs, 3);
+}
+
+void TasksTests::loop_composeProgressCarriesPriorVerdict()
+{
+    // Sin veredicto → sin preámbulo (1ª corrida no arrastra nada).
+    QVERIFY(TaskStore::composeLoopProgress(QString(), 0).isEmpty());
+    QVERIFY(TaskStore::composeLoopProgress(QStringLiteral("   "), 1).isEmpty());
+
+    // Veredicto típico: marcador en la 1ª línea + evidencia/qué ajustar debajo.
+    const QString verdict = QStringLiteral(
+        "GOAL_NOT_MET faltó adjuntar el PDF\n"
+        "Ya completé el login y llegué al formulario; falta subir el archivo.");
+    const QString p = TaskStore::composeLoopProgress(verdict, 2);
+    QVERIFY(!p.isEmpty());
+    // El marcador NO se arrastra (es ruido de control), la evidencia SÍ.
+    QVERIFY(!p.contains(TaskStore::kGoalNotMetMarker));
+    QVERIFY(p.contains(QStringLiteral("faltó adjuntar el PDF")));
+    QVERIFY(p.contains(QStringLiteral("falta subir el archivo")));
+    QVERIFY(p.contains(QStringLiteral("2")));                 // nº de iteraciones hechas
+    QVERIFY(p.contains(QStringLiteral("DESDE este estado")));  // instrucción de resume
+
+    // Veredicto que es SÓLO el marcador → no aporta nota → vacío.
+    QVERIFY(TaskStore::composeLoopProgress(TaskStore::kGoalNotMetMarker, 1).isEmpty());
 }
 
 void TasksTests::verifyProfile_routesOnlyWhenSetAndDifferent()

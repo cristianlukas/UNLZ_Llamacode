@@ -88,6 +88,14 @@ public:
     // cumplió y responder con el marcador correspondiente. Vacío si no hay loop.
     static QString composeLoopGoalPrompt(const QVariantMap &task);
 
+    // Memoria de progreso (checkpoint) entre iteraciones del bucle. Cada iteración
+    // corre en sesión LIMPIA → el agente pierde lo aprendido. Esta función toma el
+    // veredicto de la verificación previa (empieza con GOAL_NOT_MET + evidencia/qué
+    // ajustar), le saca el marcador y arma un preámbulo para que la próxima corrida
+    // RESUMA desde ese estado en vez de re-arrancar de cero. `completedIterations` =
+    // nº de corridas del cuerpo ya hechas. Vacío si no hay nota útil. PURA.
+    static QString composeLoopProgress(const QString &priorVerdict, int completedIterations);
+
     explicit TaskStore(QObject *parent = nullptr);
 
     // QAbstractListModel

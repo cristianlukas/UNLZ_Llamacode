@@ -44,6 +44,7 @@ public:
             reply = m_verdicts.isEmpty() ? QStringLiteral("GOAL_MET") : m_verdicts.takeFirst();
         } else {
             ++m_bodyRuns;
+            m_lastBodyPrompt = text;
             reply = QStringLiteral("trabajo realizado %1").arg(m_bodyRuns);
         }
         m_msgs.append(QVariantMap{{QStringLiteral("role"), QStringLiteral("assistant")},
@@ -54,11 +55,13 @@ public:
 
     void setVerdicts(const QStringList &v) { m_verdicts = v; }
     int bodyRuns() const { return m_bodyRuns; }
+    QString lastBodyPrompt() const { return m_lastBodyPrompt; }
 
 private:
     bool m_running = false;
     int m_bodyRuns = 0;
     QStringList m_verdicts;
+    QString m_lastBodyPrompt;
     QVariantList m_msgs;
 };
 
@@ -481,6 +484,13 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(rc.contains(QStringLiteral("playwright codegen")));
     QVERIFY(rc.contains(QStringLiteral("my-skill.mjs")));
     QVERIFY(rc.endsWith(QStringLiteral("https://x.com")));
+    // Perfil persistente: codegen graba con --user-data-dir al dir del skill, así el
+    // replay reusa el login. El dir vive bajo skillsDir()/profiles/<slug>.
+    const QString prof = BrowserTeach::profileDir(QStringLiteral("My Skill"));
+    QVERIFY(prof.endsWith(QStringLiteral("/profiles/my-skill")));
+    QVERIFY(prof.startsWith(BrowserTeach::skillsDir()));
+    QVERIFY(rc.contains(QStringLiteral("--user-data-dir=\"") + prof + QLatin1Char('"')));
+    QVERIFY(BrowserTeach::profileDir(QStringLiteral("!!!")).isEmpty());   // sin slug → vacío
     // url no-http se ignora.
     QVERIFY(!BrowserTeach::recordCommand(QStringLiteral("s"), QStringLiteral("ftp://x"))
                  .contains(QStringLiteral("ftp://")));
@@ -539,6 +549,10 @@ void AppControllerTests::loopTaskRunsBodyUntilGoalMet()
     QCOMPARE(args.at(2).toString(), QStringLiteral("ok"));   // status final
     // Cuerpo corrió 2 veces (iter1 GOAL_NOT_MET → iter2 GOAL_MET).
     QCOMPARE(fake->bodyRuns(), 2);
+    // Checkpoint/resume: el cuerpo de la iteración 2 recibió el progreso del
+    // veredicto previo ("falta") para retomar desde ahí, no arrancar de cero.
+    QVERIFY(fake->lastBodyPrompt().contains(QStringLiteral("Progreso acumulado")));
+    QVERIFY(fake->lastBodyPrompt().contains(QStringLiteral("falta")));
 }
 
 void AppControllerTests::loopTaskStopsAtMaxIterations()

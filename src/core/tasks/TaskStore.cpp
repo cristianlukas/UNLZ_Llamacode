@@ -372,6 +372,33 @@ QString TaskStore::composeLoopGoalPrompt(const QVariantMap &task)
     return out.join(QLatin1Char('\n'));
 }
 
+QString TaskStore::composeLoopProgress(const QString &priorVerdict, int completedIterations)
+{
+    QString note = priorVerdict.trimmed();
+    if (note.isEmpty()) return {};
+
+    // Sacar el/los marcador(es) GOAL_* de la primera línea (la verificación los pone
+    // ahí); el resto de esa línea + las siguientes son la evidencia/qué ajustar.
+    const int nl = note.indexOf(QLatin1Char('\n'));
+    QString firstLine = (nl < 0) ? note : note.left(nl);
+    const QString restLines = (nl < 0) ? QString() : note.mid(nl + 1);
+    firstLine.remove(kGoalNotMetMarker, Qt::CaseInsensitive);
+    firstLine.remove(kGoalMetMarker, Qt::CaseInsensitive);
+    note = (firstLine.trimmed() + QLatin1Char('\n') + restLines).trimmed();
+    if (note.isEmpty()) return {};
+
+    if (note.size() > 1500) note = note.left(1500) + QStringLiteral("…");
+
+    QStringList out;
+    out << QStringLiteral("Progreso acumulado del bucle (ya completaste %1 iteración(es)). "
+                          "Estado al final de la verificación previa:")
+               .arg(qMax(1, completedIterations));
+    out << note;
+    out << QStringLiteral("Continuá DESDE este estado: NO rehagas lo ya logrado; "
+                          "concentrate en lo que la verificación marcó como pendiente.");
+    return out.join(QLatin1Char('\n'));
+}
+
 QString TaskStore::verifyProfileFor(const QVariantMap &task, const QString &execProfileId)
 {
     const QString verify = task.value("verifyProfileId").toString().trimmed();

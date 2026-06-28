@@ -4171,6 +4171,7 @@ void AppController::onAgentTurnFinished()
                 TaskStore::decideLoop(loopTask, m_runningTaskLoopIteration,
                                       QStringLiteral("ok"), verdict);
             if (d.repeat) {
+                const int completed = m_runningTaskLoopIteration;
                 m_runningTaskLoopIteration++;
                 appendAgentEvent(QStringLiteral("task"),
                                  QStringLiteral("Bucle: %1").arg(d.reason));
@@ -4184,6 +4185,11 @@ void AppController::onAgentTurnFinished()
                     prompt += AutomationRunner::augmentPrompt(loopTask,
                         AutomationArtifactStore::manifest(artId),
                         AutomationArtifactStore::recipe(artId));
+                // Checkpoint/resume: cargar el progreso del veredicto previo para que
+                // la próxima corrida (sesión limpia) retome desde donde quedó.
+                const QString progress = TaskStore::composeLoopProgress(verdict, completed);
+                if (!progress.isEmpty())
+                    prompt += QStringLiteral("\n\n") + progress;
                 // Routing: volver al modelo de ejecución para la próxima iteración
                 // del cuerpo (swap-back si el goal-check corrió en otro modelo).
                 // Sesión limpia por iteración.
