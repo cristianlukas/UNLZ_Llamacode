@@ -1256,6 +1256,9 @@ void AppController::startServer(const QString &launchProfileId)
     // Capacidad de visión del modelo activo: el server cargó un mmproj.
     const bool vision = args.contains(QStringLiteral("--mmproj"));
     if (vision != m_serverHasVision) { m_serverHasVision = vision; emit serverHasVisionChanged(); }
+    // El backend agente inyecta capturas (desktop_observe) al contexto sólo si hay visión.
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setVisionAvailable(vision);
 
     m_activeLaunchId = launchProfileId;
     writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);  // recordar último usado
@@ -2853,6 +2856,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
         cb->setMailAccounts(mailAccountsResolved());
         cb->setMailAutoSend(m_mailAutoSend);
+        cb->setVisionAvailable(m_serverHasVision);
     }
     m_agentBackend = b;
     // El perfil de agente activo (capacidades + directivas + ajustes) tiene la
@@ -9848,6 +9852,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         agent->setPermissionRules(m_agentPermRules);
         agent->setAgentTuning(m_agentSystemPrompt, temp);
         agent->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
+        agent->setVisionAvailable(m_serverHasVision);
         agent->setDisabledTools({}); // por defecto: todas las tools (escribir/probar)
         // NIVEL del agente: si se eligió un perfil, aplicá sus capacidades +
         // directivas + thinking (para comparar justo a ese nivel). La aprobación

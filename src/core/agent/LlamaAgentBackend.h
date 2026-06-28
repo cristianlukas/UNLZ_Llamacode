@@ -70,6 +70,12 @@ public:
     // Adjuntos (imágenes/docs) a incluir en el PRÓXIMO sendMessage (modelo VL).
     void setPendingAttachments(const QStringList &paths) { m_pendingAttachments = paths; }
 
+    // Capacidad de visión del server activo (mmproj cargado). Cuando una tool
+    // devuelve una captura (desktop_observe / browser screenshot), si hay visión
+    // la imagen se inyecta en el contexto como mensaje user con image_url, así el
+    // modelo VE el resultado que pidió observar (loop de debug visual recursivo).
+    void setVisionAvailable(bool v) { m_visionReady = v; }
+
     // Servers MCP (stdio) a usar. Cada entrada: {name, command, type, enabled}.
     // Se relanzan en start(). Sus tools se inyectan con prefijo mcp__<server>__<tool>.
     void setMcpServers(const QVariantList &servers);
@@ -129,6 +135,11 @@ public:
     // llegan; arguments se concatena chunk a chunk. PURA → unit-testeable.
     static void mergeToolCallDelta(QHash<int, QJsonObject> &acc,
                                    const QJsonArray &deltaToolCalls);
+
+    // Arma el mensaje user multimodal con las capturas observadas por las tools
+    // (data-URIs ya codificadas). Devuelve un QJsonObject role=user con content =
+    // [text, image_url...]. Objeto vacío si no hay imágenes. PURA → unit-testeable.
+    static QJsonObject buildObservationMessage(const QStringList &imageDataUris);
 
     // Catálogo de tools built-in con metadata para la UI de habilitar/deshabilitar:
     // lista de {name, group, description, approxTokens}. El orden define el de la UI.
@@ -285,6 +296,11 @@ private:
     bool m_streamIdleTimedOut = false;
     bool m_running = false;
     bool m_textToolFallback = false;       // server no acepta OpenAI tools nativo
+    bool m_visionReady = false;            // server cargó mmproj (ve imágenes)
+    // Capturas devueltas por tools en el turno de tools en curso (data-URIs). Se
+    // vuelcan como mensaje user multimodal cuando se resuelven TODAS las tools del
+    // turno (no interleavear entre tool_results → rompería el contrato OpenAI).
+    QStringList m_pendingObservations;
     QString m_cwd;
     QString m_approvalMode = QStringLiteral("ask");
     bool    m_taskAutoApprove = false;   // override temporal durante una Task

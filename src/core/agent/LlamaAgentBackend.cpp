@@ -117,6 +117,33 @@ static QString imageDataUri(const QString &path)
     return QStringLiteral("data:%1;base64,%2").arg(mime, QString::fromLatin1(f.readAll().toBase64()));
 }
 
+// Arma el mensaje user multimodal con las capturas observadas (data-URIs ya
+// codificadas). content = [text, image_url...]. Objeto vacío si no hay imágenes.
+QJsonObject LlamaAgentBackend::buildObservationMessage(const QStringList &imageDataUris)
+{
+    QJsonArray parts;
+    int n = 0;
+    for (const QString &uri : imageDataUris) {
+        if (uri.isEmpty()) continue;
+        parts.append(QJsonObject{
+            {QStringLiteral("type"), QStringLiteral("image_url")},
+            {QStringLiteral("image_url"), QJsonObject{{QStringLiteral("url"), uri}}}});
+        ++n;
+    }
+    if (n == 0) return {};
+    QJsonArray content;
+    content.append(QJsonObject{
+        {QStringLiteral("type"), QStringLiteral("text")},
+        {QStringLiteral("text"), n == 1
+            ? QStringLiteral("Captura de la observación que pediste. Mirala y decidí el "
+                             "próximo paso a partir de lo que VES, no de suposiciones.")
+            : QStringLiteral("Capturas de las observaciones que pediste (%1). Miralas y "
+                             "decidí el próximo paso a partir de lo que VES.").arg(n)}});
+    for (const QJsonValue &p : parts) content.append(p);
+    return QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                       {QStringLiteral("content"), content}};
+}
+
 // Texto de un archivo (UTF-8), "" si binario/imagen.
 static QString readAttachText(const QString &path)
 {
@@ -1221,6 +1248,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     m_turnIters = 0;
     m_callCounts.clear();
     m_escalatedSigs.clear();
+    m_pendingObservations.clear();   // descartar capturas de un turno previo abortado
     runCompletion();
 }
 
@@ -1908,6 +1936,14 @@ void LlamaAgentBackend::processPendingCalls()
     if (subsActive()) return;   // esperando que terminen los sub-agentes
 
     if (m_pendingCalls.isEmpty()) {
+        // Todas las tools resueltas. Si alguna devolvió una captura, inyectarla
+        // ahora como mensaje user multimodal (después de TODOS los tool_results,
+        // para no romper el contrato OpenAI tool_call→tool_result).
+        if (!m_pendingObservations.isEmpty()) {
+            const QJsonObject obs = buildObservationMessage(m_pendingObservations);
+            if (!obs.isEmpty()) m_apiMessages.append(obs);
+            m_pendingObservations.clear();
+        }
         // Todas las tools resueltas → re-consultar al modelo con los resultados.
         runCompletion();
         return;
@@ -1999,7 +2035,13 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
         QStringLiteral("memory"), QStringLiteral("graph"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
-        QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay")};
+        QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
+        QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
+        QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
+        QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
+        QStringLiteral("desktop_wait"),
+        QStringLiteral("email_accounts"), QStringLiteral("email_send"),
+        QStringLiteral("email_list"), QStringLiteral("email_read")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
@@ -2318,6 +2360,16 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
 
     // Al contexto va la versión acotada (salvo que ya sea un stub de dedup).
     appendToolResult(callId, name, dedup ? res : budgetToolOutput(name, res));
+
+    // Captura visual (desktop_observe / screenshots): si el server tiene visión,
+    // encolar la imagen para inyectarla al contexto al cerrar el turno de tools.
+    // Así el modelo VE lo que pidió observar (loop de debug visual recursivo).
+    const QString imagePath = result.value(QStringLiteral("imagePath")).toString();
+    if (!imagePath.isEmpty() && m_visionReady && !m_textToolFallback) {
+        const QString uri = imageDataUri(imagePath);
+        if (!uri.isEmpty()) m_pendingObservations << uri;
+    }
+
     processPendingCalls();
 }
 

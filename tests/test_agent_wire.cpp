@@ -25,6 +25,8 @@ private slots:
     void taskSessionIsEphemeralAndRestoresPrevious();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
+    void buildObservationMessage_wrapsImagesAsUserMultimodal();
+    void buildObservationMessage_emptyWhenNoImages();
     void developmentDisciplineSection_coversRegressionGuards();
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
     void projectContextSection_coversIntentAndMemory();
@@ -437,6 +439,39 @@ void AgentWireTests::mergeToolCallDelta_parallelCallsByIndex()
     QCOMPARE(acc.value(0).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"q\":1}"));
     QCOMPARE(acc.value(1).value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
     QCOMPARE(acc.value(1).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"p\":2}"));
+}
+
+void AgentWireTests::buildObservationMessage_wrapsImagesAsUserMultimodal()
+{
+    // Una captura (desktop_observe) → mensaje role=user con content multimodal:
+    // [texto, image_url]. El image_url lleva la data-URI tal cual.
+    const QString uriA = QStringLiteral("data:image/jpeg;base64,AAAA");
+    const QString uriB = QStringLiteral("data:image/png;base64,BBBB");
+    const QJsonObject m = LlamaAgentBackend::buildObservationMessage({uriA, QString(), uriB});
+
+    QCOMPARE(m.value(QStringLiteral("role")).toString(), QStringLiteral("user"));
+    const QJsonArray content = m.value(QStringLiteral("content")).toArray();
+    // 1 bloque de texto + 2 imágenes (el "" se descarta).
+    QCOMPARE(content.size(), 3);
+    QCOMPARE(content.at(0).toObject().value(QStringLiteral("type")).toString(),
+             QStringLiteral("text"));
+    QVERIFY(!content.at(0).toObject().value(QStringLiteral("text")).toString().isEmpty());
+
+    QStringList urls;
+    for (int i = 1; i < content.size(); ++i) {
+        const QJsonObject part = content.at(i).toObject();
+        QCOMPARE(part.value(QStringLiteral("type")).toString(), QStringLiteral("image_url"));
+        urls << part.value(QStringLiteral("image_url")).toObject()
+                    .value(QStringLiteral("url")).toString();
+    }
+    QCOMPARE(urls, QStringList({uriA, uriB}));   // orden preservado, "" omitido
+}
+
+void AgentWireTests::buildObservationMessage_emptyWhenNoImages()
+{
+    // Sin imágenes válidas → objeto vacío (el loop no inyecta nada).
+    QVERIFY(LlamaAgentBackend::buildObservationMessage({}).isEmpty());
+    QVERIFY(LlamaAgentBackend::buildObservationMessage({QString(), QString()}).isEmpty());
 }
 
 void AgentWireTests::developmentDisciplineSection_coversRegressionGuards()

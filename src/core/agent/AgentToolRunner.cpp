@@ -695,6 +695,9 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString saved = DesktopAutomationBackend::saveCapture(kind, target, path, &error);
         if (saved.isEmpty()) return QStringLiteral("[desktop_observe: %1]").arg(error);
         const QImage image(saved);
+        // Path de la captura para que el loop la inyecte como imagen al contexto
+        // (el modelo VE la observación que pidió, no sólo su ruta en texto).
+        out[QStringLiteral("imagePath")] = saved;
         if (ok) *ok = true;
         return QStringLiteral(
             "[desktop_observe]\nimage_path=%1\nwidth=%2\nheight=%3\n"
