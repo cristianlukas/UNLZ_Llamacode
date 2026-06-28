@@ -34,6 +34,7 @@ private slots:
     void glob_listsFiles();
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
+    void hybridSearch_compactReturnsSpans();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
     void desktopControls_invalidWindowErrorsCleanly();
@@ -208,6 +209,26 @@ void AgentToolsTests::hybridSearch_depGraphAndBudget()
     QVERIFY(res.contains("~"));                   // header con ~N tok (budget activo)
     QVERIFY(res.contains("dep-graph"));           // footer de vecinos
     QVERIFY(res.contains("util.h"));              // vecino vía #include
+}
+
+// compact=true (estilo FastContext): devuelve la cita span 'rel:Lini-Lfin' + un
+// preview de 1 línea, SIN volcar el cuerpo del chunk. Provenance precisa, barato.
+void AgentToolsTests::hybridSearch_compactReturnsSpans()
+{
+    call("write_file", {{"path", "blob.cpp"},
+                        {"content", "// line one\n"
+                                    "// line two\n"
+                                    "int FASTCTX_marker = 42;\n"
+                                    "// SECRETBODY should not be dumped\n"}});
+
+    QVariantMap h = call("hybrid_search", {{"query", "FASTCTX_marker"},
+                                           {"compact", true},
+                                           {"expand_graph", false}});
+    QVERIFY(h.value("ok").toBool());
+    const QString res = h.value("result").toString();
+    QVERIFY(res.contains("blob.cpp:1-"));         // cita span 'rel:Lini-Lfin'
+    QVERIFY(!res.contains("SECRETBODY"));         // cuerpo NO volcado (sólo preview 1ª línea)
+    QVERIFY(!res.contains("──────"));             // sin separador de bloques de cuerpo
 }
 
 void AgentToolsTests::recentActions_tailsEventLogForSession()

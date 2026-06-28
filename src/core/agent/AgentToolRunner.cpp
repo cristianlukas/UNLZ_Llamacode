@@ -1203,7 +1203,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                  QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_]+")), Qt::SkipEmptyParts))
             if (t.size() >= 2 && !terms.contains(t)) terms << t;
 
-        struct Ch { QString rel; int line; QString key; QString text; double bm25; };
+        struct Ch { QString rel; int line; int endLine; QString key; QString text; double bm25; };
         QVector<Ch> chunks;
         const int chunkLines = 40, maxChunks = 800;
         QStringList files;
@@ -1220,6 +1220,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             const QStringList lines = QString::fromUtf8(raw).split(QLatin1Char('\n'));
             const QString rel = base.relativeFilePath(fp);
             for (int start = 0; start < lines.size() && chunks.size() < maxChunks; start += chunkLines) {
+                const int segLines = qMin(chunkLines, lines.size() - start);
                 const QString text = lines.mid(start, chunkLines).join(QLatin1Char('\n')).trimmed();
                 if (text.size() < 16) continue;
                 const QString low = text.toLower();
@@ -1234,7 +1235,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 }
                 const QString key = QString::fromLatin1(
                     QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex());
-                chunks.append({rel, start + 1, key, text, bm});
+                chunks.append({rel, start + 1, start + segLines, key, text, bm});
             }
         }
         if (chunks.isEmpty()) return QStringLiteral("[no hay archivos de texto para indexar]");
@@ -1337,20 +1338,37 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         // se llena hasta el presupuesto (≈ chars/4) en vez de un k fijo. Devolver
         // contexto pre-presupuestado evita reventar la ventana del modelo local.
         const int tokenBudget = args.value(QStringLiteral("token_budget")).toInt();
+        // Modo compacto (estilo FastContext): en vez de volcar el cuerpo del chunk al
+        // contexto del solver, devolver sólo la cita span 'rel:Lini-Lfin' + un preview
+        // de 1 línea. El agente principal lee después los spans que le interesan con
+        // read_file. Ahorra tokens de exploración manteniendo provenance precisa.
+        const bool compact = args.value(QStringLiteral("compact")).toBool(false);
         QStringList outL;
         QStringList outFiles;            // archivos ya incluidos (para el dep-graph)
         int usedTok = 0;
         for (int i = 0; i < finalOrder.size(); ++i) {
             const Ch &c = chunks[finalOrder[i]];
-            const QString seg = c.text.left(600);
-            const int tok = seg.size() / 4 + 8;
+            QString entry;
+            if (compact) {
+                // Preview = primera línea no vacía del chunk, recortada.
+                QString preview;
+                for (const QString &ln : c.text.split(QLatin1Char('\n'))) {
+                    const QString t = ln.trimmed();
+                    if (!t.isEmpty()) { preview = t.left(80); break; }
+                }
+                entry = QStringLiteral("%1:%2-%3  %4")
+                            .arg(c.rel).arg(c.line).arg(c.endLine).arg(preview);
+            } else {
+                entry = QStringLiteral("%1:%2\n%3").arg(c.rel).arg(c.line).arg(c.text.left(600));
+            }
+            const int tok = entry.size() / 4 + 8;
             if (tokenBudget > 0) {
                 if (!outL.isEmpty() && usedTok + tok > tokenBudget) break;
                 usedTok += tok;
             } else if (outL.size() >= k) {
                 break;
             }
-            outL << QStringLiteral("%1:%2\n%3").arg(c.rel).arg(c.line).arg(seg);
+            outL << entry;
             if (!outFiles.contains(c.rel)) outFiles << c.rel;
         }
 
@@ -1392,7 +1410,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             .arg(chunks.size()).arg(rerankNote)
             .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString())
             .arg(tokenBudget > 0 ? QStringLiteral(" · ~%1 tok").arg(usedTok) : QString());
-        return header + outL.join(QStringLiteral("\n\n──────\n")) + graphFooter;
+        return header + outL.join(compact ? QStringLiteral("\n")
+                                          : QStringLiteral("\n\n──────\n")) + graphFooter;
     }
     if (name == QLatin1String("verify_claims")) {
         // Anti-alucinación: por cada afirmación, busca evidencia en el proyecto y
