@@ -88,6 +88,11 @@ public:
     // unit-testeable y reusable. La consume buildSystemPrompt().
     static QString developmentDisciplineSection();
 
+    // Sección del system prompt con la "red de tests": detectar el runner del
+    // proyecto, escribir un test caja-negra por cada feature/cambio, registrarlo y
+    // correr el suite. Pura y testeable. La consume buildSystemPrompt().
+    static QString testSafetyNetSection();
+
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);

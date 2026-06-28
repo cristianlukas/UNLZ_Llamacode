@@ -26,6 +26,7 @@ private slots:
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
     void developmentDisciplineSection_coversRegressionGuards();
+    void testSafetyNetSection_coversRunnerDetectionAndQuality();
 };
 
 void AgentWireTests::initTestCase()
@@ -460,6 +461,33 @@ void AgentWireTests::developmentDisciplineSection_coversRegressionGuards()
     // pero la sección es lo que se concatena tal cual → testear la sección cubre
     // el contenido shippeado. El cableado se verifica por inspección de start().
     QVERIFY(g.endsWith(QStringLiteral("\n\n")));   // separador para no pegarse al ESTILO
+}
+
+void AgentWireTests::testSafetyNetSection_coversRunnerDetectionAndQuality()
+{
+    // Regresión: la guía de "red de tests" debe seguir en el system prompt y
+    // cubrir sus pilares. Si se borra/vacía o pierde un pilar, este test cae.
+    const QString g = LlamaAgentBackend::testSafetyNetSection();
+    QVERIFY(!g.trimmed().isEmpty());
+
+    // Pilar 1: detectar el runner que ya usa el proyecto (varios ecosistemas).
+    QVERIFY(g.contains(QStringLiteral("runner"), Qt::CaseInsensitive));
+    QVERIFY(g.contains(QStringLiteral("package.json")));
+    QVERIFY(g.contains(QStringLiteral("ctest")));
+    QVERIFY(g.contains(QStringLiteral("pytest")));
+    // Pilar 2: test caja-negra, NO asserts triviales (el reclamo del thread).
+    QVERIFY(g.contains(QStringLiteral("caja-negra"), Qt::CaseInsensitive)
+            || g.contains(QStringLiteral("caja negra"), Qt::CaseInsensitive));
+    QVERIFY(g.contains(QStringLiteral("trivial"), Qt::CaseInsensitive));
+    // Pilar 3: registrar el test para que el runner lo levante solo.
+    QVERIFY(g.contains(QStringLiteral("Registr"), Qt::CaseInsensitive));
+    // Pilar 4: correr el suite y no entregar en rojo.
+    QVERIFY(g.contains(QStringLiteral("suite"), Qt::CaseInsensitive));
+    QVERIFY(g.contains(QStringLiteral("rojo"), Qt::CaseInsensitive));
+    // Pilar 5: fallback cuando el proyecto no tiene tests (no meter framework pesado).
+    QVERIFY(g.contains(QStringLiteral("smoke"), Qt::CaseInsensitive));
+
+    QVERIFY(g.endsWith(QStringLiteral("\n\n")));   // separa de la sección siguiente
 }
 
 QTEST_MAIN(AgentWireTests)

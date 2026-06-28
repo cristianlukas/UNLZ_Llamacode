@@ -812,6 +812,30 @@ QString LlamaAgentBackend::developmentDisciplineSection()
         "final (qué tocaste y qué podría impactar).\n\n");
 }
 
+QString LlamaAgentBackend::testSafetyNetSection()
+{
+    return QStringLiteral(
+        "RED DE TESTS (atrapar regresiones): tu defensa contra romper flujos viejos "
+        "son los tests del proyecto. Por cada feature o cambio de comportamiento, "
+        "dejá un test que lo cubra y corré el suite.\n"
+        "- Detectá el runner que YA usa el proyecto antes de inventar uno. Buscá, en "
+        "este orden, lo que exista: scripts test en package.json (npm/pnpm/yarn "
+        "test), tests.bat o test.sh en la raíz, CMake + ctest, pytest/pyproject/tox, "
+        "go test ./..., cargo test, gradle/maven test, target test en Makefile. Usá "
+        "ESE comando. NO instales un framework nuevo si ya hay uno.\n"
+        "- Test caja-negra: alimentá input real y asertá el output esperado. NADA de "
+        "asserts triviales (assert(true), 1==1, ni tests que reimplementan la función "
+        "que prueban). Cubrí el camino feliz + al menos un caso borde o de error.\n"
+        "- Registralo donde el runner lo levante solo (carpeta tests/, sufijo "
+        "*_test/_spec, alta en CMake/índice, etc.) para que corra siempre, no solo a "
+        "mano.\n"
+        "- Corré el suite UNA vez al terminar. Verde = listo. Rojo = arreglá antes de "
+        "cerrar; no entregues en rojo.\n"
+        "- Si el proyecto NO tiene tests: no metas un framework pesado sin permiso. "
+        "Hacé un smoke check mínimo (ejecutá el flujo y verificá la salida) y ofrecé "
+        "configurar tests.\n\n");
+}
+
 QString LlamaAgentBackend::buildSystemPrompt() const
 {
 #ifdef Q_OS_WIN
@@ -859,6 +883,7 @@ QString LlamaAgentBackend::buildSystemPrompt() const
             "deshabilitadas.\n\n");
 
     base += developmentDisciplineSection();
+    base += testSafetyNetSection();
 
     base += QStringLiteral(
         "ESTILO: respondé en fragmentos técnicos concisos. Sin relleno, sin "
