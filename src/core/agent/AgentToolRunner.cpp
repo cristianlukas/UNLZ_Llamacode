@@ -3,6 +3,7 @@
 #include "LlamaAgentBackend.h"   // LlamaAgentBackend::makeDiff (static)
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
+#include "CodeGraphIndexer.h"     // graph action='index': repo→GraphStore determinista
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
 #include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
@@ -1685,6 +1686,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 args.value(QStringLiteral("etype")).toString());
             if (ok) *ok = true;
             return res;
+        }
+        if (action == QLatin1String("index")) {
+            // Pasada determinista repo→grafo (símbolos + imports). 'langs' opcional
+            // (CSV o array) acota lenguajes; vacío = cpp/qml/js/ts/py.
+            QStringList langs;
+            const QJsonValue lv = args.value(QStringLiteral("langs"));
+            if (lv.isArray()) {
+                for (const QJsonValue &v : lv.toArray()) langs << v.toString();
+            } else if (lv.isString()) {
+                langs = lv.toString().split(QLatin1Char(','), Qt::SkipEmptyParts);
+            }
+            QString report;
+            CodeGraphIndexer::build(cwd, langs, &report);
+            if (ok) *ok = true;
+            return report;
         }
         if (action == QLatin1String("query")) {
             const QString res = GraphStore::query(

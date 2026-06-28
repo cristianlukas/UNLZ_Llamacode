@@ -881,6 +881,9 @@ QString LlamaAgentBackend::projectContextSection()
         "- Antes de una tanda de cambios, la tool code_hotspots te dice qué archivos "
         "son frágiles (mucho churn git y SIN test): son los que más probablemente "
         "escondan una regresión. Reforzá esos con tests antes de tocarlos.\n"
+        "- Repo grande que no conocés: corré `graph` action='index' UNA vez (mapea "
+        "símbolos e imports, determinista y barato) y después navegá con `graph` "
+        "action='query' en vez de re-leer archivos para entender cómo se conecta todo.\n"
         "- Dejá memoria: cuando descubras o decidas algo durable y NO obvio (por qué "
         "existe un patrón, una restricción, un acoplamiento, una decisión de diseño), "
         "anotá 1-2 líneas en .llamacode/memory.md para que la próxima sesión arranque "
@@ -3114,9 +3117,15 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "action='decide' registra una decisión (topic+chosen+reason) conservando las "
                           "alternativas RECHAZADAS con su motivo (audit trail, no se borran); "
                           "'decisions' devuelve ese log (topic vacío = todas). Registrá las decisiones "
-                          "de diseño no triviales con sus rechazos para no re-evaluarlas después."),
+                          "de diseño no triviales con sus rechazos para no re-evaluarlas después. "
+                          "action='index' SIEMBRA el grafo automáticamente: recorre el repo y extrae "
+                          "símbolos (clases/funciones) e imports/includes como relaciones "
+                          "file-[defines]->símbolo y file-[imports]->file (determinista, sin LLM). "
+                          "Corré 'index' UNA vez en un repo grande sin mapear y después usá 'query' "
+                          "para navegar en vez de re-leer archivos (contexto barato)."),
            QJsonObject{
-               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'decide' | 'decisions'."))},
+               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'decide' | 'decisions' | 'index'."))},
+               {QStringLiteral("langs"), strProp(QStringLiteral("index: lenguajes a indexar (CSV, ej. 'cpp,qml'). Vacío = cpp/qml/js/ts/py."))},
                {QStringLiteral("subj"), strProp(QStringLiteral("Entidad origen (sólo link)."))},
                {QStringLiteral("pred"), strProp(QStringLiteral("Predicado/relación, ej. 'depende_de' (sólo link)."))},
                {QStringLiteral("obj"), strProp(QStringLiteral("Entidad destino (sólo link)."))},
@@ -3316,7 +3325,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("edit_file", "Código",   "Reemplazo exacto en un archivo existente.", 160),
         mk("run_shell", "Código",   "Ejecuta un comando de shell.", 110),
         mk("memory",    "Conocimiento", "Memoria persistente del proyecto (save/recall/forget).", 110),
-        mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query).", 140),
+        mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query/index).", 150),
         mk("ask_teacher", "Multi-Agente", "Consulta a un modelo más capaz (endpoint aparte).", 130),
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
         mk("browser_skill_list", "Browser", "Lista skills de browser grabados (teach).", 70),

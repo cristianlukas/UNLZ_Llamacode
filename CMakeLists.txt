@@ -67,6 +67,7 @@ set(CORE_SOURCES
     src/core/agent/AgentEventLog.cpp
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
+    src/core/agent/CodeGraphIndexer.cpp
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
     src/core/agent/HotspotAnalyzer.cpp
@@ -125,6 +126,7 @@ set(HEADERS
     src/core/agent/AgentEventLog.h
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
+    src/core/agent/CodeGraphIndexer.h
     src/core/agent/BrowserTeach.h
     src/core/agent/HotspotAnalyzer.h
     src/core/mail/MailClient.h
@@ -393,6 +395,7 @@ if (BUILD_TESTS)
     add_lc_test(test_capability         tests/test_capability.cpp)
     add_lc_test(test_document_extractor tests/test_document_extractor.cpp)
     add_lc_test(test_memory_graph       tests/test_memory_graph.cpp)
+    add_lc_test(test_code_graph         tests/test_code_graph.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
     add_lc_test(test_eval               tests/test_eval.cpp)
     add_lc_test(test_control_api        tests/test_control_api.cpp)

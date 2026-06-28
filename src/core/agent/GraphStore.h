@@ -34,6 +34,20 @@ QString addEntity(const QString &cwd, const QString &name, const QString &etype)
 QString link(const QString &cwd, const QString &subj, const QString &pred,
              const QString &obj);
 
+// Una relación tipada para inserción masiva.
+struct Triple { QString subj, pred, obj; };
+
+// INSERCIÓN MASIVA: vuelca muchas entidades+relaciones en UNA pasada (lee el
+// grafo existente una sola vez para deduplicar, después appende todo). Pensado
+// para el indexador determinista [[CodeGraphIndexer]]: evita el O(N²) de llamar
+// addEntity/link uno por uno (cada uno reabre y reescanea el archivo).
+// 'entities' = (name, etype); las relaciones auto-crean sus entidades por nombre.
+// Llena *addedEnt/*addedRel (nuevos, sin contar los ya existentes) si != nullptr.
+QString addBatch(const QString &cwd,
+                 const QVector<QPair<QString, QString>> &entities,
+                 const QVector<Triple> &relations,
+                 int *addedEnt = nullptr, int *addedRel = nullptr);
+
 // Consulta el vecindario de una entidad por nombre. depth=1 (default) o 2
 // (graph expansion: incluye vecinos de vecinos). Devuelve markdown.
 QString query(const QString &cwd, const QString &name, int depth);

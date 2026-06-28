@@ -135,6 +135,84 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
     return QStringLiteral("[relación creada · %1 -[%2]-> %3]").arg(s, norm(p), o);
 }
 
+QString addBatch(const QString &cwd,
+                 const QVector<QPair<QString, QString>> &entities,
+                 const QVector<Triple> &relations,
+                 int *addedEnt, int *addedRel)
+{
+    const QString path = jsonlPath(cwd);
+    QDir().mkpath(QFileInfo(path).absolutePath());
+
+    // 1. Una sola lectura: junta los ids de entidades/relaciones ya presentes.
+    QSet<QString> haveEnt, haveRel;
+    {
+        QFile f(path);
+        if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            while (!f.atEnd()) {
+                const QByteArray l = f.readLine().trimmed();
+                if (l.isEmpty()) continue;
+                const QJsonObject o = QJsonDocument::fromJson(l).object();
+                const QString k = o.value(QStringLiteral("kind")).toString();
+                if (k == QLatin1String("entity"))
+                    haveEnt.insert(o.value(QStringLiteral("id")).toString());
+                else if (k == QLatin1String("relation"))
+                    haveRel.insert(o.value(QStringLiteral("id")).toString());
+            }
+            f.close();
+        }
+    }
+
+    // 2. Un solo Append con todo lo nuevo (dedupe contra lo existente y dentro
+    //    del propio lote vía los sets, que vamos engordando a medida que escribimos).
+    QFile f(path);
+    if (!f.open(QIODevice::Append | QIODevice::Text))
+        return QStringLiteral("[graph batch: no se pudo abrir %1]").arg(path);
+
+    const QString ts = QDateTime::currentDateTime().toString(Qt::ISODate);
+    int nE = 0, nR = 0;
+    auto writeEnt = [&](const QString &name, const QString &etype) {
+        const QString nm = name.trimmed();
+        if (nm.isEmpty()) return;
+        const QString id = entId(nm);
+        if (haveEnt.contains(id)) return;
+        haveEnt.insert(id);
+        const QJsonObject o{
+            {QStringLiteral("kind"), QStringLiteral("entity")},
+            {QStringLiteral("id"), id},
+            {QStringLiteral("name"), nm},
+            {QStringLiteral("etype"), normType(etype)},
+            {QStringLiteral("ts"), ts}};
+        f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+        f.write("\n");
+        ++nE;
+    };
+    for (const auto &e : entities) writeEnt(e.first, e.second);
+    for (const Triple &t : relations) {
+        const QString s = t.subj.trimmed(), p = t.pred.trimmed(), o = t.obj.trimmed();
+        if (s.isEmpty() || p.isEmpty() || o.isEmpty()) continue;
+        writeEnt(s, QString());   // auto-crea las entidades referidas (dedupe interno)
+        writeEnt(o, QString());
+        const QString sid = entId(s), oid = entId(o), rid = relId(sid, p, oid);
+        if (haveRel.contains(rid)) continue;
+        haveRel.insert(rid);
+        const QJsonObject ro{
+            {QStringLiteral("kind"), QStringLiteral("relation")},
+            {QStringLiteral("id"), rid},
+            {QStringLiteral("subj"), sid},
+            {QStringLiteral("pred"), norm(p)},
+            {QStringLiteral("obj"), oid},
+            {QStringLiteral("ts"), ts}};
+        f.write(QJsonDocument(ro).toJson(QJsonDocument::Compact));
+        f.write("\n");
+        ++nR;
+    }
+    f.close();
+
+    if (addedEnt) *addedEnt = nE;
+    if (addedRel) *addedRel = nR;
+    return QStringLiteral("[graph batch: +%1 entidades, +%2 relaciones]").arg(nE).arg(nR);
+}
+
 QString query(const QString &cwd, const QString &name, int depth)
 {
     if (depth <= 0) depth = 1;
