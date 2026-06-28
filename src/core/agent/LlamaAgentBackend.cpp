@@ -791,6 +791,27 @@ QString LlamaAgentBackend::memoryFilePath(const QString &cwd)
     return QDir::cleanPath(cwd + QStringLiteral("/.llamacode/memory.md"));
 }
 
+QString LlamaAgentBackend::developmentDisciplineSection()
+{
+    return QStringLiteral(
+        "NO ROMPER LO EXISTENTE (regresiones): cuando modifiques código que ya "
+        "existe, el objetivo es agregar/cambiar lo pedido SIN romper flujos que ya "
+        "andaban.\n"
+        "- Blast radius primero: antes de editar una función/símbolo, buscá quién la "
+        "usa (grep del nombre) y leé esos call sites. No edites a ciegas.\n"
+        "- Cambio mínimo y local: tocá SOLO lo necesario. No reescribas, renombres ni "
+        "reformatees código no relacionado. No cambies firmas, APIs públicas ni el "
+        "comportamiento actual salvo que la tarea lo pida explícitamente.\n"
+        "- Preservá contratos: si una función ya devuelve/hace algo, los casos que ya "
+        "funcionaban deben seguir igual. Mantené compatibilidad hacia atrás.\n"
+        "- Verificá al terminar (esta verificación SÍ vale): si el proyecto tiene "
+        "tests o un script de build/test (tests.bat, ctest, npm test, etc.) corrélo "
+        "UNA vez después del cambio. Si no hay tests, al menos compilá. Si el cambio "
+        "es de comportamiento y no había test que lo cubra, agregá uno.\n"
+        "- Si tu cambio podría afectar OTRO flujo, decilo explícito en el resumen "
+        "final (qué tocaste y qué podría impactar).\n\n");
+}
+
 QString LlamaAgentBackend::buildSystemPrompt() const
 {
 #ifdef Q_OS_WIN
@@ -836,6 +857,8 @@ QString LlamaAgentBackend::buildSystemPrompt() const
             "leer/buscar. Investigá lo necesario y entregá un PLAN claro y accionable "
             "(pasos, archivos a tocar, riesgos). write_file/edit_file/run_shell están "
             "deshabilitadas.\n\n");
+
+    base += developmentDisciplineSection();
 
     base += QStringLiteral(
         "ESTILO: respondé en fragmentos técnicos concisos. Sin relleno, sin "

@@ -83,6 +83,11 @@ public:
     // Diff unificado simple (prefijo/sufijo común; líneas +/-/ ).
     static QString makeDiff(const QString &oldText, const QString &newText);
 
+    // Sección del system prompt con la disciplina anti-regresión (blast radius,
+    // cambios mínimos, correr tests al tocar código existente). Pública y pura →
+    // unit-testeable y reusable. La consume buildSystemPrompt().
+    static QString developmentDisciplineSection();
+
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);

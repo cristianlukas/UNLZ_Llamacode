@@ -25,6 +25,7 @@ private slots:
     void taskSessionIsEphemeralAndRestoresPrevious();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
+    void developmentDisciplineSection_coversRegressionGuards();
 };
 
 void AgentWireTests::initTestCase()
@@ -434,6 +435,31 @@ void AgentWireTests::mergeToolCallDelta_parallelCallsByIndex()
     QCOMPARE(acc.value(0).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"q\":1}"));
     QCOMPARE(acc.value(1).value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
     QCOMPARE(acc.value(1).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"p\":2}"));
+}
+
+void AgentWireTests::developmentDisciplineSection_coversRegressionGuards()
+{
+    // Regresión: la guía anti-regresión debe seguir presente en el system prompt.
+    // Si alguien la borra/vacía, este test cae. Verificamos los 4 pilares:
+    // blast radius, cambio mínimo, preservar contratos, verificar/tests.
+    const QString g = LlamaAgentBackend::developmentDisciplineSection();
+    QVERIFY(!g.trimmed().isEmpty());
+
+    // Pilar 1: conocer quién usa el código antes de tocarlo (blast radius).
+    QVERIFY(g.contains(QStringLiteral("Blast radius"), Qt::CaseInsensitive));
+    QVERIFY(g.contains(QStringLiteral("grep")));
+    // Pilar 2: cambio mínimo, no tocar lo no relacionado.
+    QVERIFY(g.contains(QStringLiteral("mínimo"), Qt::CaseInsensitive));
+    // Pilar 3: preservar comportamiento/contratos existentes.
+    QVERIFY(g.contains(QStringLiteral("comportamiento"), Qt::CaseInsensitive)
+            || g.contains(QStringLiteral("contrato"), Qt::CaseInsensitive));
+    // Pilar 4: correr tests/compilar al terminar.
+    QVERIFY(g.contains(QStringLiteral("test"), Qt::CaseInsensitive));
+
+    // Cableado: buildSystemPrompt() la incluye. No es accesible directo (privada),
+    // pero la sección es lo que se concatena tal cual → testear la sección cubre
+    // el contenido shippeado. El cableado se verifica por inspección de start().
+    QVERIFY(g.endsWith(QStringLiteral("\n\n")));   // separador para no pegarse al ESTILO
 }
 
 QTEST_MAIN(AgentWireTests)
