@@ -653,6 +653,23 @@ Item {
                         leftPadding: 10; verticalAlignment: Text.AlignVCenter
                     }
                 }
+                // Perfil de agente activo (capacidades + directivas). Override vivo
+                // de la sesión; no pisa el del perfil de lanzamiento.
+                LcComboBox {
+                    id: agentProfileCombo
+                    visible: resolvedAdapter === "llamaagent"
+                    implicitWidth: 150
+                    model: App.profileManager.agentProfiles
+                    textRole: "name"; valueRole: "profileId"
+                    currentIndex: Math.max(0, indexOfValue(App.activeAgentProfileId))
+                    onActivated: App.activeAgentProfileId = currentValue
+                    background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                    contentItem: Text {
+                        text: "🤖 " + agentProfileCombo.displayText
+                        color: Theme.textPrimary; font.pixelSize: 12
+                        leftPadding: 10; verticalAlignment: Text.AlignVCenter
+                    }
+                }
                 CheckBox {
                     id: agentThinkingCheck
                     visible: resolvedAdapter === "llamaagent"

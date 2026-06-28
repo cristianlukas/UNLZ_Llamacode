@@ -116,6 +116,10 @@ public:
     // prompt si ya hay sesión.
     void setDirectives(const QStringList &keys);
 
+    // Hook de test: expone el system prompt construido (buildSystemPrompt es
+    // privada). Permite verificar el gating por directiva sin arrancar una sesión.
+    QString systemPromptForTest() const { return buildSystemPrompt(); }
+
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);

@@ -1068,53 +1068,182 @@ Item {
                         }
                     }
 
-                    // ── Agent Tools ──────────────────────────────────────────
+                    // ── Perfiles de agente (capacidades + directivas) ────────
                     ColumnLayout {
-                        id: toolsSection
+                        id: agentProfilesSection
                         Layout.fillWidth: true
                         spacing: 10
 
-                        property var items: []
-                        property var groups: []
-                        property int enabledTokens: 0
+                        // Copia de trabajo del perfil en edición. enabledTools/
+                        // directives son arrays JS; "*" = todo (presets de sistema).
+                        property var edit: ({ id: "", name: "", system: false,
+                                              enabledTools: [], directives: [],
+                                              approvalMode: "ask", thinking: false,
+                                              temperature: -1, systemExtra: "" })
+                        property var toolGroups: []     // agrupado por categoría
+                        property var directiveItems: [] // catálogo de directivas
                         property int enabledCount: 0
+                        property int enabledTokens: 0
+                        readonly property bool isSystem: edit.system === true
 
-                        function reload() {
+                        function allToolNames() {
+                            var list = App.agentToolCatalog(), out = []
+                            for (var i = 0; i < list.length; ++i) out.push(list[i].name)
+                            return out
+                        }
+                        function allDirectiveKeys() {
+                            var cat = App.agentDirectiveCatalog(), out = []
+                            for (var i = 0; i < cat.length; ++i) out.push(cat[i].key)
+                            return out
+                        }
+                        function isToolOn(name) {
+                            return edit.enabledTools.indexOf("*") >= 0
+                                || edit.enabledTools.indexOf(name) >= 0
+                        }
+                        function isDirOn(key) {
+                            return edit.directives.indexOf("*") >= 0
+                                || edit.directives.indexOf(key) >= 0
+                        }
+                        function setToolOn(name, on) {
+                            var arr = edit.enabledTools.slice()
+                            if (arr.indexOf("*") >= 0) arr = allToolNames()   // expandir antes de editar
+                            var i = arr.indexOf(name)
+                            if (on && i < 0) arr.push(name)
+                            else if (!on && i >= 0) arr.splice(i, 1)
+                            edit.enabledTools = arr
+                            recount()
+                        }
+                        function setDirOn(key, on) {
+                            var arr = edit.directives.slice()
+                            if (arr.indexOf("*") >= 0) arr = allDirectiveKeys()
+                            var i = arr.indexOf(key)
+                            if (on && i < 0) arr.push(key)
+                            else if (!on && i >= 0) arr.splice(i, 1)
+                            edit.directives = arr
+                        }
+                        function recount() {
+                            var list = App.agentToolCatalog(), cnt = 0, tok = 0
+                            for (var i = 0; i < list.length; ++i)
+                                if (isToolOn(list[i].name)) { cnt += 1; tok += list[i].approxTokens }
+                            enabledCount = cnt; enabledTokens = tok
+                        }
+                        function rebuildGroups() {
                             var list = App.agentToolCatalog()
-                            var order = [], byGroup = {}, tok = 0, cnt = 0
+                            var order = [], byGroup = {}
                             for (var i = 0; i < list.length; ++i) {
                                 var t = list[i]
                                 if (byGroup[t.group] === undefined) { byGroup[t.group] = []; order.push(t.group) }
                                 byGroup[t.group].push(t)
-                                if (t.enabled) { tok += t.approxTokens; cnt += 1 }
                             }
                             var g = []
-                            for (var k = 0; k < order.length; ++k) {
-                                var name = order[k], tools = byGroup[name], on = 0
-                                for (var j = 0; j < tools.length; ++j) if (tools[j].enabled) on += 1
-                                g.push({ name: name, tools: tools, on: on, total: tools.length })
-                            }
-                            items = list; groups = g; enabledTokens = tok; enabledCount = cnt
+                            for (var k = 0; k < order.length; ++k)
+                                g.push({ name: order[k], tools: byGroup[order[k]] })
+                            toolGroups = g
+                            directiveItems = App.agentDirectiveCatalog()
+                            recount()
                         }
-                        Component.onCompleted: reload()
-                        Connections {
-                            target: App
-                            function onAgentToolsChanged() { toolsSection.reload() }
+                        function selectProfile(id) {
+                            var p = App.profileManager.getAgentProfile(id)
+                            if (!p || !p.id) return
+                            edit = { id: p.id, name: p.name, system: p.system === true,
+                                     enabledTools: (p.enabledTools || []).slice(),
+                                     directives: (p.directives || []).slice(),
+                                     approvalMode: p.approvalMode || "ask",
+                                     thinking: p.thinking === true,
+                                     temperature: (p.temperature === undefined ? -1 : p.temperature),
+                                     systemExtra: p.systemExtra || "" }
+                            apNameField.text = edit.name
+                            extraField.text = edit.systemExtra
+                            tempField.text = edit.temperature >= 0 ? String(edit.temperature) : ""
+                            approvalCombo.currentIndex = Math.max(0, approvalCombo.indexOfValue(edit.approvalMode))
+                            rebuildGroups()  // recrea delegates → switches re-evaluan checked
+                        }
+                        function save() {
+                            if (isSystem) return
+                            App.profileManager.updateAgentProfile({
+                                "id": edit.id,
+                                "name": apNameField.text.trim().length ? apNameField.text.trim() : edit.name,
+                                "enabledTools": edit.enabledTools,
+                                "directives": edit.directives,
+                                "approvalMode": approvalCombo.currentValue || "ask",
+                                "thinking": thinkingSwitch.checked,
+                                "temperature": (tempField.text.trim().length && !isNaN(parseFloat(tempField.text)))
+                                               ? parseFloat(tempField.text) : -1,
+                                "systemExtra": extraField.text
+                            })
+                            App.profileManager.saveProfiles()
+                        }
+
+                        Component.onCompleted: {
+                            // Arrancar editando el perfil activo resuelto.
+                            var id = App.activeAgentProfileId
+                            var idx = profileSelector.indexOfValue(id)
+                            if (idx >= 0) profileSelector.currentIndex = idx
+                            selectProfile(id)
                         }
 
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: "AGENT TOOLS"
+                                text: "PERFILES DE AGENTE"
                                 color: Theme.accent
                                 font.pixelSize: 11
                                 font.bold: true
                             }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: toolsSection.enabledCount + " on · ~" + toolsSection.enabledTokens + " tok"
+                                text: agentProfilesSection.enabledCount + " tools · ~"
+                                      + agentProfilesSection.enabledTokens + " tok"
                                 color: Theme.textMuted
                                 font.pixelSize: 11
+                            }
+                        }
+
+                        // Selector de perfil + acciones.
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            LcComboBox {
+                                id: profileSelector
+                                Layout.fillWidth: true
+                                model: App.profileManager.agentProfiles
+                                textRole: "name"; valueRole: "profileId"
+                                onActivated: agentProfilesSection.selectProfile(currentValue)
+                                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                contentItem: Text { text: profileSelector.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            }
+                            LcButton {
+                                text: "Nuevo"
+                                secondary: true
+                                onClicked: {
+                                    var id = App.profileManager.addAgentProfile("Nuevo perfil")
+                                    var idx = profileSelector.indexOfValue(id)
+                                    if (idx >= 0) profileSelector.currentIndex = idx
+                                    agentProfilesSection.selectProfile(id)
+                                }
+                            }
+                            LcButton {
+                                text: "Duplicar"
+                                secondary: true
+                                enabled: agentProfilesSection.edit.id.length > 0
+                                onClicked: {
+                                    var id = App.profileManager.duplicateAgentProfile(agentProfilesSection.edit.id)
+                                    if (!id) return
+                                    var idx = profileSelector.indexOfValue(id)
+                                    if (idx >= 0) profileSelector.currentIndex = idx
+                                    agentProfilesSection.selectProfile(id)
+                                }
+                            }
+                            LcButton {
+                                text: "Eliminar"
+                                danger: true
+                                enabled: agentProfilesSection.edit.id.length > 0 && !agentProfilesSection.isSystem
+                                onClicked: {
+                                    App.profileManager.removeAgentProfile(agentProfilesSection.edit.id)
+                                    profileSelector.currentIndex = 0
+                                    agentProfilesSection.selectProfile(
+                                        profileSelector.currentValue || App.activeAgentProfileId)
+                                }
                             }
                         }
 
@@ -1123,44 +1252,145 @@ Item {
                             color: Theme.surfaceBg
                             border.color: Theme.borderColor
                             radius: 10
-                            implicitHeight: toolsInner.implicitHeight + 32
+                            implicitHeight: profInner.implicitHeight + 32
 
                             ColumnLayout {
-                                id: toolsInner
+                                id: profInner
                                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
                                 spacing: 14
 
+                                // Aviso para perfiles de sistema (solo lectura).
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    visible: agentProfilesSection.isSystem
+                                    color: Theme.inputBg
+                                    border.color: Theme.warnText
+                                    radius: 8
+                                    implicitHeight: sysNote.implicitHeight + 16
+                                    Text {
+                                        id: sysNote
+                                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 10 }
+                                        text: "Perfil de sistema (solo lectura). Duplicalo para crear una copia editable."
+                                        color: Theme.warnText
+                                        font.pixelSize: 12
+                                        wrapMode: Text.WordWrap
+                                    }
+                                }
+
+                                // Ajustes generales del perfil.
+                                GridLayout {
+                                    Layout.fillWidth: true
+                                    columns: 2
+                                    rowSpacing: 8
+                                    columnSpacing: 10
+                                    enabled: !agentProfilesSection.isSystem
+
+                                    Text { text: "Nombre"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: apNameField; Layout.fillWidth: true }
+
+                                    Text { text: "Aprobación"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcComboBox {
+                                        id: approvalCombo
+                                        Layout.fillWidth: true
+                                        textRole: "label"; valueRole: "key"
+                                        model: [
+                                            { key: "auto",   label: "Aprobar todo" },
+                                            { key: "ask",    label: "Pedir escritura" },
+                                            { key: "manual", label: "Pedir todo" },
+                                            { key: "super",  label: "Super Agente ⚠" },
+                                            { key: "plan",   label: "Plan (solo lectura)" }
+                                        ]
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: approvalCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+
+                                    Text { text: "Razonar"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    Switch {
+                                        id: thinkingSwitch
+                                        checked: agentProfilesSection.edit.thinking
+                                    }
+
+                                    Text { text: "Temperatura"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: tempField; Layout.fillWidth: true; placeholderText: "vacío = heredar del modelo" }
+
+                                    Text { text: "Instrucciones extra"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: extraField; Layout.fillWidth: true; placeholderText: "opcional, se añade al system prompt" }
+                                }
+
+                                // ── Directivas ──
                                 Text {
-                                    text: "Habilitá o deshabilitá las tools que se ofrecen al modelo. Apagar las que no usás ahorra contexto (clave en modelos locales chicos)."
+                                    text: "DIRECTIVAS (system prompt)"
+                                    color: Theme.accent
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                }
+                                Repeater {
+                                    model: agentProfilesSection.directiveItems
+                                    delegate: Rectangle {
+                                        required property var modelData
+                                        Layout.fillWidth: true
+                                        radius: 8
+                                        color: Theme.inputBg
+                                        border.color: Theme.borderColor
+                                        implicitHeight: dRow.implicitHeight + 16
+                                        opacity: agentProfilesSection.isSystem ? 0.6 : 1.0
+
+                                        RowLayout {
+                                            id: dRow
+                                            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 10 }
+                                            spacing: 8
+                                            ColumnLayout {
+                                                Layout.fillWidth: true
+                                                spacing: 2
+                                                Text {
+                                                    text: modelData.name
+                                                    color: Theme.textPrimary
+                                                    font.pixelSize: 13
+                                                    font.bold: true
+                                                }
+                                                Text {
+                                                    text: modelData.description
+                                                    color: Theme.textMuted
+                                                    font.pixelSize: 11
+                                                    wrapMode: Text.WordWrap
+                                                    Layout.fillWidth: true
+                                                }
+                                            }
+                                            Switch {
+                                                enabled: !agentProfilesSection.isSystem
+                                                checked: agentProfilesSection.isDirOn(modelData.key)
+                                                onToggled: agentProfilesSection.setDirOn(modelData.key, checked)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // ── Capacidades (tools) ──
+                                Text {
+                                    text: "CAPACIDADES (tools)"
+                                    color: Theme.accent
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: "Apagar las que no usás ahorra contexto (clave en modelos locales chicos)."
                                     color: Theme.textSecondary
                                     font.pixelSize: 12
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                 }
-
                                 Repeater {
-                                    model: toolsSection.groups
+                                    model: agentProfilesSection.toolGroups
                                     delegate: ColumnLayout {
                                         required property var modelData
                                         Layout.fillWidth: true
                                         spacing: 6
-
-                                        RowLayout {
-                                            Layout.fillWidth: true
-                                            Text {
-                                                text: modelData.name
-                                                color: Theme.textPrimary
-                                                font.pixelSize: 13
-                                                font.bold: true
-                                            }
-                                            Item { Layout.fillWidth: true }
-                                            Text {
-                                                text: modelData.on + "/" + modelData.total
-                                                color: Theme.textMuted
-                                                font.pixelSize: 11
-                                            }
+                                        Text {
+                                            text: modelData.name
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 13
+                                            font.bold: true
                                         }
-
                                         Repeater {
                                             model: modelData.tools
                                             delegate: Rectangle {
@@ -1170,12 +1400,12 @@ Item {
                                                 color: Theme.inputBg
                                                 border.color: Theme.borderColor
                                                 implicitHeight: tRow.implicitHeight + 16
+                                                opacity: agentProfilesSection.isSystem ? 0.6 : 1.0
 
                                                 RowLayout {
                                                     id: tRow
                                                     anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 10 }
                                                     spacing: 8
-
                                                     ColumnLayout {
                                                         Layout.fillWidth: true
                                                         spacing: 2
@@ -1203,13 +1433,21 @@ Item {
                                                         }
                                                     }
                                                     Switch {
-                                                        checked: modelData.enabled
-                                                        onToggled: App.setAgentToolEnabled(modelData.name, checked)
+                                                        enabled: !agentProfilesSection.isSystem
+                                                        checked: agentProfilesSection.isToolOn(modelData.name)
+                                                        onToggled: agentProfilesSection.setToolOn(modelData.name, checked)
                                                     }
                                                 }
                                             }
                                         }
                                     }
+                                }
+
+                                LcButton {
+                                    text: "Guardar perfil"
+                                    Layout.alignment: Qt.AlignRight
+                                    enabled: !agentProfilesSection.isSystem && agentProfilesSection.edit.id.length > 0
+                                    onClicked: agentProfilesSection.save()
                                 }
                             }
                         }

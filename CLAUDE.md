@@ -34,6 +34,7 @@ Reglas:
 |---|---|
 | GGUFScanner, EffectiveProfileBuilder | `tests/test_gguf_profiles.cpp` |
 | ProfileTypes, ProfileManager | `tests/test_profiles.cpp` |
+| AgentProfile (perfiles de agente: capacidades+directivas, presets, gating system prompt) | `tests/test_agent_profiles.cpp` |
 | LlamaBinary, ModelRoot, BinaryRegistry, ModelRootRegistry | `tests/test_registries.cpp` |
 | CatalogModel, ModelCatalog | `tests/test_catalog.cpp` |
 | CapabilityDetector | `tests/test_capability.cpp` |

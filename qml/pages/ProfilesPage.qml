@@ -25,6 +25,8 @@ Item {
     // Política: siempre LlamaAgent. Sin selector de harness; sin "none"/"opencode".
     property string harnessAdapter: "llamaagent"
     property string harnessProfileId: ""
+    // Perfil de agente por defecto de este launch (capacidades + directivas).
+    property string agentProfileId: ""
 
     // ── Maestro (supervisor): cadena de fallbacks ─────────────────
     property string masterEscalation: "manual"  // manual | auto | both
@@ -266,6 +268,8 @@ Item {
         modelProfileId = lp.modelProfileId ?? ""
         runtimeId = lp.runtimePresetId ?? ""
         harnessProfileId = lp.harnessProfileId ?? ""
+        agentProfileId = lp.agentProfileId ?? ""
+        agentProfileCombo.currentIndex = Math.max(0, agentProfileCombo.indexOfValue(agentProfileId))
         // Siempre LlamaAgent: perfiles viejos con "none"/"opencode" se normalizan.
         harnessAdapter = "llamaagent"
         const rawExtra = (lp.extraArgs ?? [])
@@ -504,6 +508,7 @@ Item {
             "backendProfileId": effectiveBid, "modelProfileId": effectiveMid,
             "runtimePresetId": effectiveRid, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
             "harnessProfileId": resolvedHarnessId,
+            "agentProfileId": agentProfileCombo.currentValue ?? "",
             "master": {
                 "fallbacks": masterChainToArray(),
                 "escalation": masterEscalation,
@@ -1172,36 +1177,65 @@ Item {
                     radius: 8
                     implicitHeight: harnessCol.implicitHeight + 20
 
-                    RowLayout {
+                    ColumnLayout {
                         id: harnessCol
                         anchors { fill: parent; margins: 12 }
                         spacing: 10
 
-                        Text { text: "🛠"; font.pixelSize: 18 }
-                        ColumnLayout {
-                            spacing: 2
+                        RowLayout {
                             Layout.fillWidth: true
-                            Text {
-                                text: "Agente: LlamaAgent"
-                                color: Theme.textPrimary
-                                font { pixelSize: 13; bold: true }
-                            }
-                            Text {
-                                text: "Agente nativo, siempre activo. Para usar sin agente, abrí el modo Chat."
-                                color: Theme.textMuted
-                                font.pixelSize: 11
-                                wrapMode: Text.WordWrap
+                            spacing: 10
+                            Text { text: "🛠"; font.pixelSize: 18 }
+                            ColumnLayout {
+                                spacing: 2
                                 Layout.fillWidth: true
+                                Text {
+                                    text: "Agente: LlamaAgent"
+                                    color: Theme.textPrimary
+                                    font { pixelSize: 13; bold: true }
+                                }
+                                Text {
+                                    text: "Agente nativo, siempre activo. Para usar sin agente, abrí el modo Chat."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                }
+                            }
+                            Row {
+                                spacing: 6
+                                Rectangle { width: 7; height: 7; radius: 4; color: Theme.successText; anchors.verticalCenter: parent.verticalCenter }
+                                Text {
+                                    text: (App.langV, App.l("harness.installed"))
+                                    color: Theme.successText
+                                    font.pixelSize: 11
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
                         }
-                        Row {
-                            spacing: 6
-                            Rectangle { width: 7; height: 7; radius: 4; color: Theme.successText; anchors.verticalCenter: parent.verticalCenter }
+
+                        // Perfil de agente por defecto (capacidades + directivas).
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
                             Text {
-                                text: (App.langV, App.l("harness.installed"))
-                                color: Theme.successText
-                                font.pixelSize: 11
-                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Perfil de agente"
+                                color: Theme.textSecondary
+                                font.pixelSize: 12
+                                Layout.preferredWidth: 110
+                            }
+                            LcComboBox {
+                                id: agentProfileCombo
+                                Layout.fillWidth: true
+                                model: App.profileManager.agentProfiles
+                                textRole: "name"; valueRole: "profileId"
+                                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                contentItem: Text { text: agentProfileCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            }
+                            Text {
+                                text: "Se editan en Ajustes › Perfiles de agente"
+                                color: Theme.textMuted
+                                font.pixelSize: 10
                             }
                         }
                     }

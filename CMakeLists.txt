@@ -383,6 +383,7 @@ if (BUILD_TESTS)
 
     add_lc_test(test_gguf_profiles      tests/test_gguf_profiles.cpp)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
+    add_lc_test(test_agent_profiles     tests/test_agent_profiles.cpp)
     add_lc_test(test_system_profiles    tests/test_system_profiles.cpp)
     add_lc_test(test_secret_store       tests/test_secret_store.cpp)
     add_lc_test(test_registries         tests/test_registries.cpp)

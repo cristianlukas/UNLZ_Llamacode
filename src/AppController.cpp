@@ -2858,6 +2858,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     // El perfil de agente activo (capacidades + directivas + ajustes) tiene la
     // última palabra: sobreescribe los sets globales recién aplicados.
     applyActiveAgentProfile();
+    emit activeAgentProfileChanged();   // el dropdown refleja el id resuelto
     return b;
 }
 
@@ -3242,6 +3243,92 @@ void AppController::setAgentToolEnabled(const QString &name, bool enabled)
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->setDisabledTools(m_agentDisabledTools);   // efectivo en el próximo turno
     emit agentToolsChanged();
+}
+
+QVariantList AppController::agentDirectiveCatalog() const
+{
+    return LlamaAgentBackend::directiveCatalog();
+}
+
+QString AppController::activeAgentProfileId() const
+{
+    return resolveAgentProfileId();
+}
+
+// Resolución: override vivo del modo agente → agentProfileId del launch activo →
+// preset por defecto (Intermedio). Valida que el id exista en el registro.
+QString AppController::resolveAgentProfileId() const
+{
+    auto exists = [this](const QString &id) {
+        return !id.isEmpty() && !m_profiles.resolveAgentProfile(id).id.isEmpty();
+    };
+    if (exists(m_activeAgentProfileId)) return m_activeAgentProfileId;
+    if (!m_activeLaunchId.isEmpty()) {
+        const LaunchProfile lp = m_profiles.resolveLaunch(m_activeLaunchId);
+        if (exists(lp.agentProfileId)) return lp.agentProfileId;
+    }
+    if (exists(AgentProfile::defaultPresetId())) return AgentProfile::defaultPresetId();
+    return {};
+}
+
+void AppController::setActiveAgentProfileId(const QString &id)
+{
+    if (id == m_activeAgentProfileId) return;
+    m_activeAgentProfileId = id;
+    applyActiveAgentProfile();
+    emit activeAgentProfileChanged();
+}
+
+// Traduce el perfil activo (enabledTools/directives + ajustes) a los setters del
+// backend del agente. enabledTools/directives con "*" = todo el catálogo.
+void AppController::applyActiveAgentProfile()
+{
+    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!cb) return;
+    const AgentProfile ap = m_profiles.resolveAgentProfile(resolveAgentProfileId());
+    if (ap.id.isEmpty()) return;
+
+    // Capacidades → disabledTools (complemento del catálogo). "*" = todas ON.
+    QStringList disabled;
+    if (!ap.enabledTools.contains(QStringLiteral("*"))) {
+        const QSet<QString> on(ap.enabledTools.cbegin(), ap.enabledTools.cend());
+        for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+            const QString name = v.toMap().value(QStringLiteral("name")).toString();
+            if (!on.contains(name)) disabled << name;
+        }
+    }
+    cb->setDisabledTools(disabled);
+
+    // Directivas. "*" = todas las del catálogo.
+    QStringList dirs = ap.directives;
+    if (dirs.contains(QStringLiteral("*"))) {
+        dirs.clear();
+        for (const QVariant &v : LlamaAgentBackend::directiveCatalog())
+            dirs << v.toMap().value(QStringLiteral("key")).toString();
+    }
+    cb->setDirectives(dirs);
+
+    // Razonamiento / aprobación / tuning: el perfil manda (sin persistir; son de
+    // sesión). Actualizar los espejos para que la UI (checkbox/combo) coincida.
+    if (m_agentThinkingEnabled != ap.thinking) {
+        m_agentThinkingEnabled = ap.thinking;
+        emit agentThinkingChanged();
+    }
+    cb->setThinkingEnabled(ap.thinking);
+
+    const QString approval = ap.approvalMode.isEmpty() ? QStringLiteral("ask") : ap.approvalMode;
+    if (m_agentApprovalMode != approval) {
+        m_agentApprovalMode = approval;
+        emit agentApprovalModeChanged();
+    }
+    cb->setApprovalPolicy(approval);
+
+    const QString sysExtra = ap.systemExtra.trimmed().isEmpty() ? m_agentSystemPrompt
+                                                                : ap.systemExtra;
+    const double temp = ap.temperature >= 0.0
+        ? ap.temperature
+        : (m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
+    cb->setAgentTuning(sysExtra, temp);
 }
 
 void AppController::approveAgentTool(const QString &id, bool always)
