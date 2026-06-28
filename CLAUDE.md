@@ -63,6 +63,22 @@ ensamblado de tool_calls en streaming se cubre en `tests/test_agent_wire.cpp`
 backend vía `ensureAgentBackend`, así que no es stubbeable sin un harness cloud
 completo; queda como QA manual). Reusar `SseStubServer`.
 
+### QA manual pendiente (sin test automatizado)
+Necesitan una sesión de escritorio interactiva con ventanas vivas (no
+reproducible en headless/CI), así que sólo se cubre el path de error en
+`tests/test_agent_tools.cpp`. La lógica real es **QA manual**:
+- **UI Automation** (`DesktopAutomationBackend::controls` / `clickElement`, tools
+  `desktop_controls` / `desktop_click_element`): abrir Notepad → `desktop_windows`
+  para el id de ventana → `desktop_controls` lista los controles → tomar el
+  `controlId` de un botón (ej. menú "Archivo"/"Guardar") → `desktop_click_element`
+  lo invoca. Verificar que el clic semántico (patrón Invoke) acciona el control.
+- **desktop_observe → visión**: con un perfil con `--mmproj`, confirmar que la
+  captura se inyecta como `image_url` y el modelo la describe (el agente VE lo que
+  observa). Sin mmproj no se inyecta (gateado por `setVisionAvailable`).
+- **Browser teach persistente**: grabar un skill con login (`--user-data-dir` en
+  `browser_skills/profiles/<slug>`), cerrar, reproducir → la sesión sigue logueada
+  (no re-pide credenciales).
+
 ## Build
 - **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
   Compilar solo Release (no Debug) y correr `tests.bat` + el gate de ctest antes
