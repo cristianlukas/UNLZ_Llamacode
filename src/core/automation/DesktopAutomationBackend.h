@@ -29,4 +29,19 @@ public:
                          QString *error = nullptr);
     static bool scroll(int delta, QString *error = nullptr);
     static QVariantMap cursorState();
+
+    // ── UI Automation: el escritorio como árbol de controles (DOM-aware) ──
+    // Enumera los controles (control-view) descendientes de una ventana: nombre,
+    // rol, geometría, habilitado e invocable. `windowTargetId` = id hex de la
+    // ventana (ver windows()). `query` filtra por substring del nombre (vacío =
+    // todos). `max` acota la cantidad. Devuelve filas {controlId,name,role,x,y,
+    // width,height,enabled,invokable}. controlId = RuntimeId serializado, estable
+    // dentro de la vida de la ventana → usalo con clickElement. Sólo Windows.
+    static QVariantList controls(const QString &windowTargetId, const QString &query,
+                                 int max, QString *error = nullptr);
+    // Click sobre un control por su controlId (de controls()): si expone el patrón
+    // Invoke lo invoca (más robusto que pixel); si no, clickea el centro de su
+    // bounding rect. Sólo Windows.
+    static bool clickElement(const QString &windowTargetId, const QString &controlId,
+                             QString *error = nullptr);
 };

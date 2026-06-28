@@ -2039,6 +2039,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
         QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
+        QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
@@ -3189,6 +3190,25 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "fallback cuando necesitás VER el contenido."),
            QJsonObject{},
            QJsonArray{}),
+        fn(QStringLiteral("desktop_controls"),
+           QStringLiteral("Árbol de CONTROLES de una ventana vía UI Automation (DOM del "
+                          "escritorio): nombre, rol, geometría e invocable de cada control. "
+                          "Elegí el control por NOMBRE y operalo con desktop_click_element — "
+                          "más robusto que clickear por pixel. target_id = id de ventana "
+                          "(desktop_windows). 'query' filtra por substring del nombre."),
+           QJsonObject{
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana (ver desktop_windows)."))},
+               {QStringLiteral("query"), strProp(QStringLiteral("Filtro por nombre (substring, opcional)."))},
+               {QStringLiteral("max"), intProp(QStringLiteral("Máximo de controles (default 120)."))}},
+           QJsonArray{QStringLiteral("target_id")}),
+        fn(QStringLiteral("desktop_click_element"),
+           QStringLiteral("Clickea un control por su controlId (de desktop_controls): usa el "
+                          "patrón Invoke si existe (clic semántico), si no clickea el centro "
+                          "del control. Pasá el mismo target_id de la ventana."),
+           QJsonObject{
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana."))},
+               {QStringLiteral("control_id"), strProp(QStringLiteral("controlId devuelto por desktop_controls."))}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id")}),
         fn(QStringLiteral("desktop_observe"),
            QStringLiteral("Captura el alcance de escritorio enseñado. Usala antes y después "
                           "de cada acción; devuelve la ruta de la observación actual."),
@@ -3303,6 +3323,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("browser_skill_replay", "Browser", "Reproduce un skill de browser grabado (Playwright).", 100),
         mk("recent_actions", "Conocimiento", "Relee tu rastro reciente (tool_calls/fallos) para auto-corregirte.", 90),
         mk("desktop_windows", "Escritorio", "Inventario estructurado de ventanas (barato, sin captura).", 80),
+        mk("desktop_controls", "Escritorio", "Árbol de controles de una ventana (UIA, DOM-aware).", 150),
+        mk("desktop_click_element", "Escritorio", "Click a un control por nombre/id (UIA), no por pixel.", 110),
         mk("desktop_observe", "Escritorio", "Captura el alcance visual enseñado.", 90),
         mk("desktop_click", "Escritorio", "Click visual con coordenadas normalizadas.", 100),
         mk("desktop_type", "Escritorio", "Escribe en el control enfocado.", 80),

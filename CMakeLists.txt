@@ -171,7 +171,9 @@ target_link_libraries(llamacode_core PUBLIC
     Qt6::Svg
 )
 if (WIN32)
-    target_link_libraries(llamacode_core PUBLIC Wtsapi32)
+    # Wtsapi32: sesión interactiva. Ole32/OleAut32: COM + BSTR para UI Automation
+    # (árbol de controles del escritorio, DesktopAutomationBackend::controls).
+    target_link_libraries(llamacode_core PUBLIC Wtsapi32 Ole32 OleAut32)
 endif()
 if (MSVC)
     target_compile_options(llamacode_core PRIVATE /utf-8)

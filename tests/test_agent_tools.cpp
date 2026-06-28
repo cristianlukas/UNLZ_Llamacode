@@ -36,6 +36,7 @@ private slots:
     void hybridSearch_depGraphAndBudget();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
+    void desktopControls_invalidWindowErrorsCleanly();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -248,6 +249,22 @@ void AgentToolsTests::desktopWindows_returnsStructuredInventory()
     const QString out = r.value("result").toString();
     QVERIFY(out.contains(QStringLiteral("desktop_windows")));
     QVERIFY(out.contains(QStringLiteral("ventana")));
+}
+
+void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
+{
+    // Sin una ventana real no podemos enumerar UIA de forma determinista, pero el
+    // dispatch + validación de target SÍ: un id de ventana inválido falla limpio
+    // (no crashea, no cuelga) por ambas tools del árbol de controles.
+    QVariantMap c = call("desktop_controls", {{"target_id", "zzznothex"}});
+    QVERIFY(!c.value("ok").toBool());
+    QVERIFY(c.value("result").toString().contains(QStringLiteral("desktop_controls")));
+    QVERIFY(c.value("result").toString().contains(QStringLiteral("no encontrada")));
+
+    QVariantMap k = call("desktop_click_element",
+                         {{"target_id", "zzznothex"}, {"control_id", "1.2.3"}});
+    QVERIFY(!k.value("ok").toBool());
+    QVERIFY(k.value("result").toString().startsWith(QStringLiteral("[desktop_click_element:")));
 }
 
 QTEST_MAIN(AgentToolsTests)

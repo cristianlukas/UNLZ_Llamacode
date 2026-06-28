@@ -718,6 +718,48 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                               "Usá el id con scope_kind='window' en desktop_observe/click.\n%2")
             .arg(lines.size()).arg(lines.join(QLatin1Char('\n')));
     }
+    if (name == QLatin1String("desktop_controls")) {
+        // Árbol de controles (UIA) de una ventana: nombre+rol+geometría+invocable.
+        // DOM-aware: el modelo elige un control por NOMBRE, no por pixel.
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        const QString query = args.value(QStringLiteral("query")).toString();
+        const int max = args.value(QStringLiteral("max")).toInt(120);
+        QString error;
+        const QVariantList rows = DesktopAutomationBackend::controls(target, query, max, &error);
+        if (rows.isEmpty() && !error.isEmpty())
+            return QStringLiteral("[desktop_controls: %1]").arg(error);
+        QStringList lines;
+        for (const QVariant &v : rows) {
+            const QVariantMap c = v.toMap();
+            lines << QStringLiteral("controlId=%1  [%2]%3%4  %5x%6@(%7,%8)  \"%9\"")
+                         .arg(c.value(QStringLiteral("controlId")).toString(),
+                              c.value(QStringLiteral("role")).toString(),
+                              c.value(QStringLiteral("invokable")).toBool() ? QStringLiteral(" invoke") : QString(),
+                              c.value(QStringLiteral("enabled")).toBool() ? QString() : QStringLiteral(" disabled"))
+                         .arg(c.value(QStringLiteral("width")).toInt())
+                         .arg(c.value(QStringLiteral("height")).toInt())
+                         .arg(c.value(QStringLiteral("x")).toInt())
+                         .arg(c.value(QStringLiteral("y")).toInt())
+                         .arg(c.value(QStringLiteral("name")).toString());
+        }
+        if (ok) *ok = true;
+        if (lines.isEmpty())
+            return QStringLiteral("[desktop_controls: 0 controles con nombre%1]")
+                .arg(query.trimmed().isEmpty() ? QString()
+                                               : QStringLiteral(" para \"%1\"").arg(query));
+        return QStringLiteral("[desktop_controls: %1 control(es)]\n"
+                              "Usá el controlId con desktop_click_element (mismo target_id).\n%2")
+            .arg(lines.size()).arg(lines.join(QLatin1Char('\n')));
+    }
+    if (name == QLatin1String("desktop_click_element")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::clickElement(
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("control_id")).toString(), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_click_element: ok]")
+                    : QStringLiteral("[desktop_click_element: %1]").arg(error);
+    }
     if (name == QLatin1String("desktop_observe")) {
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(
             QStringLiteral("screen"));

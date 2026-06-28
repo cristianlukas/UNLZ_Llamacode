@@ -10,6 +10,7 @@
 #ifdef Q_OS_WIN
 #  define NOMINMAX
 #  include <windows.h>
+#  include <uiautomation.h>   // árbol de controles del escritorio (UI Automation)
 #endif
 
 namespace {
@@ -86,6 +87,70 @@ void sendKey(WORD vk, bool down)
     input.ki.wVk = vk;
     input.ki.dwFlags = down ? 0 : KEYEVENTF_KEYUP;
     SendInput(1, &input, sizeof(INPUT));
+}
+
+// ── UI Automation helpers ────────────────────────────────────────────────────
+
+// CoInitialize per-hilo (mejor-esfuerzo). UIA corre en el worker thread; si la
+// sesión ya estaba en STA, CoInitializeEx devuelve RPC_E_CHANGED_MODE y NO
+// uninicializamos (COM sigue usable). Sólo balanceamos lo que abrimos.
+struct ComGuard
+{
+    bool owned = false;
+    ComGuard() { owned = SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)); }
+    ~ComGuard() { if (owned) CoUninitialize(); }
+};
+
+QString uiaControlTypeName(CONTROLTYPEID t)
+{
+    switch (t) {
+    case UIA_ButtonControlTypeId:      return QStringLiteral("button");
+    case UIA_EditControlTypeId:        return QStringLiteral("edit");
+    case UIA_TextControlTypeId:        return QStringLiteral("text");
+    case UIA_CheckBoxControlTypeId:    return QStringLiteral("checkbox");
+    case UIA_RadioButtonControlTypeId: return QStringLiteral("radio");
+    case UIA_ComboBoxControlTypeId:    return QStringLiteral("combobox");
+    case UIA_ListControlTypeId:        return QStringLiteral("list");
+    case UIA_ListItemControlTypeId:    return QStringLiteral("listitem");
+    case UIA_MenuItemControlTypeId:    return QStringLiteral("menuitem");
+    case UIA_TabItemControlTypeId:     return QStringLiteral("tabitem");
+    case UIA_HyperlinkControlTypeId:   return QStringLiteral("link");
+    case UIA_ImageControlTypeId:       return QStringLiteral("image");
+    case UIA_TreeItemControlTypeId:    return QStringLiteral("treeitem");
+    case UIA_TabControlTypeId:         return QStringLiteral("tabs");
+    case UIA_ToolBarControlTypeId:     return QStringLiteral("toolbar");
+    case UIA_GroupControlTypeId:       return QStringLiteral("group");
+    case UIA_PaneControlTypeId:        return QStringLiteral("pane");
+    case UIA_WindowControlTypeId:      return QStringLiteral("window");
+    default: return QStringLiteral("control(%1)").arg(static_cast<int>(t));
+    }
+}
+
+// RuntimeId (SAFEARRAY de LONG) → "a.b.c". Estable mientras viva el elemento.
+QString uiaRuntimeId(IUIAutomationElement *el)
+{
+    SAFEARRAY *psa = nullptr;
+    if (FAILED(el->GetRuntimeId(&psa)) || !psa) return QString();
+    LONG lb = 0, ub = -1;
+    SafeArrayGetLBound(psa, 1, &lb);
+    SafeArrayGetUBound(psa, 1, &ub);
+    QStringList parts;
+    for (LONG i = lb; i <= ub; ++i) {
+        LONG v = 0;
+        if (SUCCEEDED(SafeArrayGetElement(psa, &i, &v)))
+            parts << QString::number(static_cast<int>(v));
+    }
+    SafeArrayDestroy(psa);
+    return parts.join(QLatin1Char('.'));
+}
+
+QString uiaName(IUIAutomationElement *el)
+{
+    BSTR b = nullptr;
+    if (FAILED(el->get_CurrentName(&b)) || !b) return QString();
+    const QString s = QString::fromWCharArray(b, static_cast<int>(SysStringLen(b)));
+    SysFreeString(b);
+    return s;
 }
 #endif
 }
@@ -316,4 +381,202 @@ QVariantMap DesktopAutomationBackend::cursorState()
 {
     const QPoint p = QCursor::pos();
     return {{QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}};
+}
+
+QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
+                                                const QString &query, int max, QString *error)
+{
+#ifdef Q_OS_WIN
+    bool ok = false;
+    HWND hwnd = reinterpret_cast<HWND>(windowTargetId.toULongLong(&ok, 16));
+    if (!ok || !hwnd || !IsWindow(hwnd)) {
+        if (error) *error = QStringLiteral("Ventana no encontrada.");
+        return {};
+    }
+    if (max <= 0) max = 120;
+    if (max > 400) max = 400;
+
+    ComGuard com;
+    IUIAutomation *uia = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IUIAutomation, reinterpret_cast<void **>(&uia))) || !uia) {
+        if (error) *error = QStringLiteral("UI Automation no disponible.");
+        return {};
+    }
+    IUIAutomationElement *root = nullptr;
+    IUIAutomationTreeWalker *walker = nullptr;
+    if (FAILED(uia->ElementFromHandle(hwnd, &root)) || !root
+        || FAILED(uia->get_ControlViewWalker(&walker)) || !walker) {
+        if (root) root->Release();
+        uia->Release();
+        if (error) *error = QStringLiteral("No se pudo abrir la ventana en UIA.");
+        return {};
+    }
+
+    const QString needle = query.trimmed().toLower();
+    struct Node { IUIAutomationElement *el; int depth; };
+    QList<Node> queue;
+    auto enqueueChildren = [&](IUIAutomationElement *parent, int depth) {
+        if (depth > 14) return;
+        IUIAutomationElement *child = nullptr;
+        if (FAILED(walker->GetFirstChildElement(parent, &child))) return;
+        while (child) {
+            queue.append({child, depth});
+            IUIAutomationElement *next = nullptr;
+            walker->GetNextSiblingElement(child, &next);
+            child = next;
+        }
+    };
+
+    QVariantList out;
+    enqueueChildren(root, 1);
+    int visited = 0;
+    while (!queue.isEmpty() && out.size() < max && visited < 3000) {
+        const Node n = queue.takeFirst();
+        IUIAutomationElement *el = n.el;
+        ++visited;
+
+        const QString name = uiaName(el);
+        CONTROLTYPEID ct = 0;
+        el->get_CurrentControlType(&ct);
+        BOOL enabled = FALSE;
+        el->get_CurrentIsEnabled(&enabled);
+        RECT rc{};
+        el->get_CurrentBoundingRectangle(&rc);
+        BOOL invokable = FALSE;
+        IUnknown *pat = nullptr;
+        if (SUCCEEDED(el->GetCurrentPattern(UIA_InvokePatternId, &pat)) && pat) {
+            invokable = TRUE;
+            pat->Release();
+        }
+
+        // Incluir sólo controles útiles: con nombre o invocables. Filtrar por query.
+        const bool interesting = !name.trimmed().isEmpty() || invokable;
+        if (interesting && (needle.isEmpty() || name.toLower().contains(needle))) {
+            out.append(QVariantMap{
+                {QStringLiteral("controlId"), uiaRuntimeId(el)},
+                {QStringLiteral("name"), name.simplified().left(120)},
+                {QStringLiteral("role"), uiaControlTypeName(ct)},
+                {QStringLiteral("x"), static_cast<int>(rc.left)},
+                {QStringLiteral("y"), static_cast<int>(rc.top)},
+                {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
+                {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)},
+                {QStringLiteral("enabled"), static_cast<bool>(enabled)},
+                {QStringLiteral("invokable"), static_cast<bool>(invokable)}});
+        }
+        enqueueChildren(el, n.depth + 1);
+        el->Release();
+    }
+    for (const Node &n : queue) n.el->Release();
+    walker->Release();
+    root->Release();
+    uia->Release();
+    return out;
+#else
+    Q_UNUSED(windowTargetId) Q_UNUSED(query) Q_UNUSED(max)
+    if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
+    return {};
+#endif
+}
+
+bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
+                                            const QString &controlId, QString *error)
+{
+#ifdef Q_OS_WIN
+    if (!interactiveSessionAvailable()) {
+        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
+        return false;
+    }
+    bool ok = false;
+    HWND hwnd = reinterpret_cast<HWND>(windowTargetId.toULongLong(&ok, 16));
+    if (!ok || !hwnd || !IsWindow(hwnd)) {
+        if (error) *error = QStringLiteral("Ventana no encontrada.");
+        return false;
+    }
+    if (controlId.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("controlId vacío.");
+        return false;
+    }
+    focusWindow(windowTargetId, nullptr);   // traer al frente (mejor-esfuerzo)
+
+    ComGuard com;
+    IUIAutomation *uia = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IUIAutomation, reinterpret_cast<void **>(&uia))) || !uia) {
+        if (error) *error = QStringLiteral("UI Automation no disponible.");
+        return false;
+    }
+    IUIAutomationElement *root = nullptr;
+    IUIAutomationTreeWalker *walker = nullptr;
+    if (FAILED(uia->ElementFromHandle(hwnd, &root)) || !root
+        || FAILED(uia->get_ControlViewWalker(&walker)) || !walker) {
+        if (root) root->Release();
+        uia->Release();
+        if (error) *error = QStringLiteral("No se pudo abrir la ventana en UIA.");
+        return false;
+    }
+
+    struct Node { IUIAutomationElement *el; int depth; };
+    QList<Node> queue;
+    auto enqueueChildren = [&](IUIAutomationElement *parent, int depth) {
+        if (depth > 14) return;
+        IUIAutomationElement *child = nullptr;
+        if (FAILED(walker->GetFirstChildElement(parent, &child))) return;
+        while (child) {
+            queue.append({child, depth});
+            IUIAutomationElement *next = nullptr;
+            walker->GetNextSiblingElement(child, &next);
+            child = next;
+        }
+    };
+
+    bool done = false, success = false;
+    enqueueChildren(root, 1);
+    int visited = 0;
+    while (!queue.isEmpty() && !done && visited < 3000) {
+        const Node n = queue.takeFirst();
+        IUIAutomationElement *el = n.el;
+        ++visited;
+        if (uiaRuntimeId(el) == controlId) {
+            done = true;
+            // Preferir el patrón Invoke (clic semántico, robusto); si no, clic al
+            // centro del bounding rect.
+            IUIAutomationInvokePattern *inv = nullptr;
+            if (SUCCEEDED(el->GetCurrentPatternAs(UIA_InvokePatternId,
+                              IID_IUIAutomationInvokePattern, reinterpret_cast<void **>(&inv)))
+                && inv) {
+                success = SUCCEEDED(inv->Invoke());
+                inv->Release();
+            } else {
+                RECT rc{};
+                el->get_CurrentBoundingRectangle(&rc);
+                if (rc.right > rc.left && rc.bottom > rc.top) {
+                    SetCursorPos((rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2);
+                    INPUT inputs[2]{};
+                    inputs[0].type = inputs[1].type = INPUT_MOUSE;
+                    inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                    inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                    success = SendInput(2, inputs, sizeof(INPUT)) == 2;
+                } else if (error) {
+                    *error = QStringLiteral("El control no es invocable ni tiene área clickeable.");
+                }
+            }
+        } else {
+            enqueueChildren(el, n.depth + 1);
+        }
+        el->Release();
+    }
+    for (const Node &n : queue) n.el->Release();
+    walker->Release();
+    root->Release();
+    uia->Release();
+
+    if (!done && error) *error = QStringLiteral("No se encontró el control (¿cambió la ventana? "
+                                                "re-listá con desktop_controls).");
+    return success;
+#else
+    Q_UNUSED(windowTargetId) Q_UNUSED(controlId)
+    if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
+    return false;
+#endif
 }
