@@ -603,8 +603,12 @@ public:
     Q_INVOKABLE bool writeOpencodeCommand(const QString &scope, const QString &projectDir,
                                           const QString &name, const QString &content);
     Q_INVOKABLE bool deleteOpencodeCommand(const QString &scope, const QString &projectDir, const QString &name);
+    // agentProfileId: solo aplica al target "agent" — fija el NIVEL del agente
+    // (capacidades + directivas) para una comparación justa. Vacío = todas las
+    // tools (comportamiento histórico del benchmark).
     Q_INVOKABLE void startBenchmark(const QStringList &profileIds, const QString &mode, int passes = 1,
-                                    const QString &target = QStringLiteral("model"), int timeoutSec = 0);
+                                    const QString &target = QStringLiteral("model"), int timeoutSec = 0,
+                                    const QString &agentProfileId = QString());
     Q_INVOKABLE void cancelBenchmark();
     Q_INVOKABLE void openBenchmarkFolder(const QString &path);
     Q_INVOKABLE void clearBenchmarkResults();
@@ -620,7 +624,8 @@ public:
     Q_INVOKABLE QString importEvalSuite(const QString &path);
     Q_INVOKABLE QString lastEvalImportError() const { return m_lastEvalImportError; }
     Q_INVOKABLE void startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes = 1,
-                                          const QString &target = QStringLiteral("model"), int timeoutSec = 0);
+                                          const QString &target = QStringLiteral("model"), int timeoutSec = 0,
+                                          const QString &agentProfileId = QString());
     // Auto-tuning de parámetros de inferencia (AutoTuner TPE-lite + gate de
     // calidad). Lanza llama-server por candidato en un puerto scratch, mide
     // tok/s y calidad, y al terminar fusiona la mejor config en extraArgs del
@@ -1115,6 +1120,10 @@ private:
     // aplica capacidades+directivas+ajustes del perfil al backend del agente.
     QString   resolveAgentProfileId() const;
     void      applyActiveAgentProfile();
+    // Aplica solo capacidades (enabledTools→disabledTools, expandiendo "*") +
+    // directivas + thinking de un perfil a un backend dado. NO toca approval ni
+    // tuning (los maneja el caller). Reusado por el agente vivo y el benchmark.
+    void      applyAgentProfileCaps(class LlamaAgentBackend *cb, const AgentProfile &ap);
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;
@@ -1189,6 +1198,11 @@ private:
     QPointer<IAgentBackend> m_benchmarkAgent;       // dedicated headless agent (agent target)
     int          m_benchmarkProgress = 0;
     QString      m_benchmarkStatus;
+    // Perfil de agente elegido para el target "agent" (NIVEL del agente). Vacío =
+    // todas las tools. El nombre se guarda en cada resultado para el historial.
+    QString      m_benchmarkAgentProfileId;
+    QString      m_benchmarkAgentProfileName;
+    void         setBenchmarkAgentProfile(const QString &agentProfileId);
     QVariantList m_benchmarkResults;
     QVariantList m_customBenchmarks;
     QString      m_lastEvalImportError;

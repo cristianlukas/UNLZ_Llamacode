@@ -24,6 +24,7 @@ private slots:
 
     void agentProfile_jsonRoundTrip();
     void systemPresets_shape();
+    void presets_levelsRestrictCapabilities();
     void directiveCatalog_hasAllKeys();
     void setDirectives_gatesSystemPrompt();
     void setDirectives_defaultIncludesAll();
@@ -92,6 +93,30 @@ void AgentProfilesTests::systemPresets_shape()
     QCOMPARE(ps[3].directives, QStringList{QStringLiteral("*")});
     QCOMPARE(ps[3].approvalMode, QStringLiteral("super"));
     QVERIFY(ps[3].thinking);
+}
+
+// Garantía clave para el benchmark por NIVEL: distintos niveles = distintas
+// capacidades, así una comparación a "Básico" está realmente más restringida que
+// a "Máximo". Si un preset deja de restringir, la comparación deja de ser justa.
+void AgentProfilesTests::presets_levelsRestrictCapabilities()
+{
+    const QList<AgentProfile> ps = AgentProfile::systemPresets();
+    const AgentProfile basico = ps[0];
+    const AgentProfile avanzado = ps[2];
+    const AgentProfile maximo = ps[3];
+
+    // Básico NO trae web ni búsqueda avanzada (debe estar acotado).
+    QVERIFY(!basico.enabledTools.contains(QStringLiteral("web_search")));
+    QVERIFY(!basico.enabledTools.contains(QStringLiteral("hybrid_search")));
+    QVERIFY(!basico.enabledTools.contains(QStringLiteral("*")));
+
+    // Avanzado SÍ las trae → estrictamente más capaz que Básico.
+    QVERIFY(avanzado.enabledTools.contains(QStringLiteral("web_search")));
+    QVERIFY(avanzado.enabledTools.size() > basico.enabledTools.size());
+
+    // Máximo = "*" (todo el catálogo): cubre cualquier tool built-in.
+    QVERIFY(maximo.enabledTools.contains(QStringLiteral("*")));
+    QVERIFY(!LlamaAgentBackend::toolCatalog().isEmpty());
 }
 
 void AgentProfilesTests::directiveCatalog_hasAllKeys()

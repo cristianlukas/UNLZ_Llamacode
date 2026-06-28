@@ -20,7 +20,7 @@ Item {
     property var columnFilters: ({})
     // Anchos redimensionables por columna del historial.
     property var colW: ({
-        profile: 200, target: 58, benchmark: 100, score: 60, firstAttemptScore: 58,
+        profile: 200, target: 58, agentProfile: 96, benchmark: 100, score: 60, firstAttemptScore: 58,
         finalScore: 58, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
         passedAfterRepair: 68, tps: 60, ttft: 60, seconds: 70, ram: 60, vram: 60, date: 118
     })
@@ -81,6 +81,7 @@ Item {
     function sortValue(row, column) {
         if (column === "profile") return (row.profileName ?? "").toString().toLowerCase()
         if (column === "target") return benchmarkTargetLabel(row).toLowerCase()
+        if (column === "agentProfile") return (row.agentProfileName ?? "").toString().toLowerCase()
         if (column === "benchmark") return benchmarkNameLabel(row).toLowerCase()
         if (column === "score") {
             const total = row.qualityTotal ?? 0
@@ -152,6 +153,7 @@ Item {
     function columnLabel(row, column) {
         if (column === "profile") return (row.profileName ?? "").toString()
         if (column === "target") return benchmarkTargetLabel(row)
+        if (column === "agentProfile") { const n = (row.agentProfileName ?? "").toString(); return n.length ? n : "—" }
         if (column === "benchmark") return benchmarkNameLabel(row)
         if (column === "score") return scoreLabel(row, "qualityScore", "qualityTotal")
         if (column === "firstAttemptScore") return scoreLabel(row, "firstAttemptScore", "firstAttemptTotal")
@@ -493,6 +495,29 @@ Item {
                                 font.pixelSize: 12
                             }
                         }
+                    }
+
+                    // Nivel del agente (perfil): solo aplica al objetivo Agente.
+                    // Fija capacidades + directivas para comparar al mismo nivel.
+                    Text {
+                        text: "NIVEL DEL AGENTE"
+                        color: Theme.textSecondary
+                        font.pixelSize: 10; font.bold: true
+                        visible: agentTarget.checked
+                    }
+                    LcComboBox {
+                        id: agentProfileCombo
+                        Layout.fillWidth: true
+                        visible: agentTarget.checked
+                        model: App.profileManager.agentProfiles
+                        textRole: "name"; valueRole: "profileId"
+                        currentIndex: {
+                            const saved = App.readSetting("benchAgentProfile", App.activeAgentProfileId)
+                            return Math.max(0, indexOfValue(saved))
+                        }
+                        onActivated: App.writeSetting("benchAgentProfile", currentValue)
+                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        contentItem: Text { text: "🤖 " + agentProfileCombo.displayText; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: 8; verticalAlignment: Text.AlignVCenter }
                     }
 
                     CheckBox {
@@ -841,10 +866,12 @@ Item {
                                 } else if (customMode.checked) {
                                     if (root.customId !== "")
                                         App.startCustomBenchmark(root.selectedIds, root.customId, passesSpin.value,
-                                                                 agentTarget.checked ? "agent" : "model", timeoutSpin.value)
+                                                                 agentTarget.checked ? "agent" : "model", timeoutSpin.value,
+                                                                 agentTarget.checked ? agentProfileCombo.currentValue : "")
                                 } else {
                                     App.startBenchmark(root.selectedIds, shortMode.checked ? "short" : "full", passesSpin.value,
-                                                       agentTarget.checked ? "agent" : "model", timeoutSpin.value)
+                                                       agentTarget.checked ? "agent" : "model", timeoutSpin.value,
+                                                       agentTarget.checked ? agentProfileCombo.currentValue : "")
                                 }
                             }
                         }
@@ -939,6 +966,7 @@ Item {
                             spacing: 0
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("profile"); onLoaded: { item.title = "Perfil"; item.column = "profile"; item.fill = true } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("target"); onLoaded: { item.title = "Modo"; item.column = "target" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("agentProfile"); onLoaded: { item.title = "Nivel"; item.column = "agentProfile" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("benchmark"); onLoaded: { item.title = "Benchmark"; item.column = "benchmark" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("score"); onLoaded: { item.title = "Score"; item.column = "score" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstAttemptScore"); onLoaded: { item.title = "First"; item.column = "firstAttemptScore" } }
@@ -1041,6 +1069,12 @@ Item {
                                     text: root.benchmarkTargetLabel(modelData)
                                     color: Theme.textMuted; font.pixelSize: 11
                                     Layout.preferredWidth: root.colWidth("target"); horizontalAlignment: Text.AlignRight
+                                }
+                                Text {
+                                    text: root.columnLabel(modelData, "agentProfile")
+                                    color: Theme.textMuted; font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                    Layout.preferredWidth: root.colWidth("agentProfile"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: root.benchmarkNameLabel(modelData)

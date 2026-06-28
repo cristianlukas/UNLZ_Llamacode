@@ -3281,14 +3281,11 @@ void AppController::setActiveAgentProfileId(const QString &id)
 
 // Traduce el perfil activo (enabledTools/directives + ajustes) a los setters del
 // backend del agente. enabledTools/directives con "*" = todo el catálogo.
-void AppController::applyActiveAgentProfile()
+// Capacidades (tools) + directivas + thinking de un perfil → backend. Sin tocar
+// approval/tuning. Expande el sentinel "*" (todo el catálogo).
+void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProfile &ap)
 {
-    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
     if (!cb) return;
-    const AgentProfile ap = m_profiles.resolveAgentProfile(resolveAgentProfileId());
-    if (ap.id.isEmpty()) return;
-
-    // Capacidades → disabledTools (complemento del catálogo). "*" = todas ON.
     QStringList disabled;
     if (!ap.enabledTools.contains(QStringLiteral("*"))) {
         const QSet<QString> on(ap.enabledTools.cbegin(), ap.enabledTools.cend());
@@ -3299,7 +3296,6 @@ void AppController::applyActiveAgentProfile()
     }
     cb->setDisabledTools(disabled);
 
-    // Directivas. "*" = todas las del catálogo.
     QStringList dirs = ap.directives;
     if (dirs.contains(QStringLiteral("*"))) {
         dirs.clear();
@@ -3307,6 +3303,17 @@ void AppController::applyActiveAgentProfile()
             dirs << v.toMap().value(QStringLiteral("key")).toString();
     }
     cb->setDirectives(dirs);
+    cb->setThinkingEnabled(ap.thinking);
+}
+
+void AppController::applyActiveAgentProfile()
+{
+    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!cb) return;
+    const AgentProfile ap = m_profiles.resolveAgentProfile(resolveAgentProfileId());
+    if (ap.id.isEmpty()) return;
+
+    applyAgentProfileCaps(cb, ap);
 
     // Razonamiento / aprobación / tuning: el perfil manda (sin persistir; son de
     // sesión). Actualizar los espejos para que la UI (checkbox/combo) coincida.
@@ -3314,7 +3321,6 @@ void AppController::applyActiveAgentProfile()
         m_agentThinkingEnabled = ap.thinking;
         emit agentThinkingChanged();
     }
-    cb->setThinkingEnabled(ap.thinking);
 
     const QString approval = ap.approvalMode.isEmpty() ? QStringLiteral("ask") : ap.approvalMode;
     if (m_agentApprovalMode != approval) {
@@ -9252,17 +9258,29 @@ static QVector<BenchTaskDef> buildCustomBenchTasks(const QVariantList &custom)
     return t;
 }
 
+// Fija el perfil de agente del benchmark (NIVEL del agente) y cachea su nombre
+// para el historial. "" = todas las tools (comportamiento histórico).
+void AppController::setBenchmarkAgentProfile(const QString &agentProfileId)
+{
+    m_benchmarkAgentProfileId = agentProfileId.trimmed();
+    m_benchmarkAgentProfileName = m_benchmarkAgentProfileId.isEmpty()
+        ? QString()
+        : m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId).name;
+}
+
 void AppController::startBenchmark(const QStringList &profileIds, const QString &mode, int passes,
-                                   const QString &target, int timeoutSec)
+                                   const QString &target, int timeoutSec, const QString &agentProfileId)
 {
     m_benchHardTimeoutSec = qMax(0, timeoutSec);
+    setBenchmarkAgentProfile(agentProfileId);
     runBenchmarkInternal(profileIds, mode, {}, QStringLiteral("standard"), qMax(1, passes), target);
 }
 
 void AppController::startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes,
-                                         const QString &target, int timeoutSec)
+                                         const QString &target, int timeoutSec, const QString &agentProfileId)
 {
     m_benchHardTimeoutSec = qMax(0, timeoutSec);
+    setBenchmarkAgentProfile(agentProfileId);
     QVariantMap def;
     for (const QVariant &v : std::as_const(m_customBenchmarks)) {
         const QVariantMap m = v.toMap();
@@ -9342,6 +9360,9 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         QJsonObject meta;
         meta["label"]      = runLabel;
         meta["mode"]       = mode;
+        meta["target"]     = target;
+        meta["agentProfileId"]   = m_benchmarkAgentProfileId;
+        meta["agentProfileName"] = m_benchmarkAgentProfileName;
         meta["startedAt"]  = QDateTime::currentDateTime().toString(Qt::ISODate);
         meta["timestamp"]  = (double)QDateTime::currentMSecsSinceEpoch();
         QJsonArray profArr;
@@ -9823,11 +9844,18 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         m_benchmarkAgent = agent;
         agent->setEphemeralSessions(true);
         agent->setThinkingEnabled(m_agentThinkingEnabled);
-        agent->setApprovalPolicy(QStringLiteral("super"));   // auto-approve every tool
+        agent->setApprovalPolicy(QStringLiteral("super"));   // auto-approve every tool (headless)
         agent->setPermissionRules(m_agentPermRules);
         agent->setAgentTuning(m_agentSystemPrompt, temp);
         agent->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
-        agent->setDisabledTools({}); // benchmark agent must be able to write/test files
+        agent->setDisabledTools({}); // por defecto: todas las tools (escribir/probar)
+        // NIVEL del agente: si se eligió un perfil, aplicá sus capacidades +
+        // directivas + thinking (para comparar justo a ese nivel). La aprobación
+        // queda en "super" igual: el benchmark es headless y no puede pedir permisos.
+        if (!m_benchmarkAgentProfileId.isEmpty()) {
+            const AgentProfile ap = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+            if (!ap.id.isEmpty()) applyAgentProfileCaps(agent, ap);
+        }
 
         QMap<QString, QVariant> mergedMcp;
         for (const QVariant &v : listMcpServers(QStringLiteral("global"), QString()))
@@ -10114,6 +10142,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["passesTotal"]  = passes;
             result["mode"]         = mode;
             result["target"]       = QStringLiteral("agent");
+            result["agentProfileId"]   = m_benchmarkAgentProfileId;
+            result["agentProfileName"] = m_benchmarkAgentProfileName;
             result["benchmarkName"] = (mode == QLatin1String("short") ? QStringLiteral("Corta")
                                       : mode == QLatin1String("full") ? QStringLiteral("Completa")
                                       : runLabel);
@@ -10731,6 +10761,9 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("passesTotal")] = passes;
     result[QStringLiteral("mode")] = mode;
     result[QStringLiteral("target")] = target;
+    // Nivel del agente (vacío para target model / sin perfil elegido).
+    result[QStringLiteral("agentProfileId")] = m_benchmarkAgentProfileId;
+    result[QStringLiteral("agentProfileName")] = m_benchmarkAgentProfileName;
     result[QStringLiteral("benchmarkName")] = benchmarkName;
     result[QStringLiteral("timestamp")] = (double)QDateTime::currentMSecsSinceEpoch();
     result[QStringLiteral("qualityScore")] = 0;
@@ -10812,6 +10845,8 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["ramMb"]        = result.value("ramMb").toDouble();
     summary["vramMb"]       = result.value("vramMb").toDouble();
     summary["target"]       = result.value("target").toString();
+    summary["agentProfileId"]   = result.value("agentProfileId").toString();
+    summary["agentProfileName"] = result.value("agentProfileName").toString();
     summary["runLabel"]     = result.value("runLabel").toString();
     summary["runDir"]       = result.value("runDir").toString();
     summary["workspace"]    = result.value("workspace").toString();
