@@ -119,6 +119,14 @@ public:
     // consume buildSystemPrompt().
     static QString honeySection();
 
+    // Sección "Anti-sesgo": endurece el razonamiento contra pattern-matching.
+    // Basar la respuesta en las premisas DADAS; "usual/standard/typical/classical"
+    // es señal de sesgo (re-examinar); responder una vez cumplida la premisa
+    // primaria sin re-derivar checks ya pasados. Opt-in puro (off-by-default),
+    // distinta de efficiency (que ataca el sobre-pensar por el lado de pasos).
+    // La consume buildSystemPrompt().
+    static QString antiBiasSection();
+
     // Catálogo de DIRECTIVAS del system prompt para la UI de toggles: lista de
     // {key, name, description}. Las keys (discipline/testNet/projectContext/
     // efficiency/style) son la fuente de verdad para buildSystemPrompt y el editor

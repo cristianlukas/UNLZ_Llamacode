@@ -325,6 +325,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/chat-templates/gemma4-tools-fixed.jinja
         assets/benchmarks/aa_intelligence.json
         assets/benchmarks/local_cookbook_priorities.json
+        assets/eval/reasoning_bias.json
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}
 )
 
@@ -398,6 +399,9 @@ if (BUILD_TESTS)
     add_lc_test(test_code_graph         tests/test_code_graph.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
     add_lc_test(test_eval               tests/test_eval.cpp)
+    # Ruta de la suite bundleada para validar el JSON real (no sólo el sample inline).
+    target_compile_definitions(test_eval PRIVATE
+        LC_REASONING_BIAS_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/reasoning_bias.json")
     add_lc_test(test_control_api        tests/test_control_api.cpp)
     add_lc_test(test_agent_tools        tests/test_agent_tools.cpp)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)

@@ -3,6 +3,7 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QSet>
 #include "core/eval/EvalSuite.h"
 
 class EvalTests : public QObject
@@ -13,6 +14,7 @@ private slots:
     void categories_uniqueInOrder();
     void invalidJson_returnsEmptyWithError();
     void loadFromFile_roundTrip();
+    void reasoningBiasSuite_isValid();
 };
 
 static QByteArray sampleJson()
@@ -70,6 +72,40 @@ void EvalTests::loadFromFile_roundTrip()
     const EvalSuite s = EvalSuite::loadFromFile(path, &err);
     QVERIFY2(err.isEmpty(), qPrintable(err));
     QCOMPARE(s.tasks.size(), 3);
+}
+
+// La suite anti-sesgo bundleada (assets/eval/reasoning_bias.json) debe parsear
+// limpia y tener forma sana: trampas con respuesta esperada, controles que son el
+// par mínimo de las trampas, y categorías reasoning/normal/chat. Es la red de
+// regresión de la directiva antiBias.
+void EvalTests::reasoningBiasSuite_isValid()
+{
+#ifdef LC_REASONING_BIAS_JSON
+    QString err;
+    const EvalSuite s = EvalSuite::loadFromFile(QStringLiteral(LC_REASONING_BIAS_JSON), &err);
+    QVERIFY2(err.isEmpty(), qPrintable(err));
+    QVERIFY(!s.isEmpty());
+    QVERIFY(s.tasks.size() >= 20);
+    // Categorías esperadas presentes.
+    const QStringList cats = s.categories();
+    for (const QString &c : {"reasoning", "normal", "chat"})
+        QVERIFY2(cats.contains(c), qPrintable("falta categoría " + c));
+    // Ids únicos; toda tarea reasoning/normal trae al menos un substring esperado
+    // (las chat son de eval manual y pueden ir sin acceptance).
+    QSet<QString> ids;
+    for (const EvalTask &t : s.tasks) {
+        QVERIFY2(!ids.contains(t.id), qPrintable("id duplicado " + t.id));
+        ids.insert(t.id);
+        QVERIFY(!t.prompt.isEmpty());
+        if (t.category == QLatin1String("reasoning") || t.category == QLatin1String("normal"))
+            QVERIFY2(!t.acceptance.isEmpty(), qPrintable("sin acceptance: " + t.id));
+    }
+    // Par mínimo trampa↔control: la trampa de la rueda pinchada y su gemelo.
+    QVERIFY(ids.contains(QStringLiteral("trap-flat-tyre")));
+    QVERIFY(ids.contains(QStringLiteral("ctrl-two-shops")));
+#else
+    QSKIP("LC_REASONING_BIAS_JSON no definido");
+#endif
 }
 
 QTEST_MAIN(EvalTests)

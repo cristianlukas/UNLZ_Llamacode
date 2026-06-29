@@ -29,6 +29,7 @@ private slots:
     void setDirectives_gatesSystemPrompt();
     void setDirectives_defaultIncludesAll();
     void honey_isOptInOnly();
+    void antiBias_isOptInOnly();
     void manager_crudAndPersistence();
     void manager_systemPresetsImmutable();
 
@@ -126,7 +127,7 @@ void AgentProfilesTests::directiveCatalog_hasAllKeys()
     QStringList keys;
     for (const QVariant &v : cat) keys << v.toMap().value("key").toString();
     for (const QString &k : {"discipline", "testNet", "projectContext",
-                             "efficiency", "style", "honey"})
+                             "efficiency", "style", "honey", "antiBias"})
         QVERIFY2(keys.contains(k), qPrintable("falta directiva " + k));
     // Cada item tiene name + description no vacíos (para la UI de toggles).
     for (const QVariant &v : cat) {
@@ -197,6 +198,29 @@ void AgentProfilesTests::honey_isOptInOnly()
     // Elegida explícitamente: presente.
     be.setDirectives(QStringList{"honey"});
     QVERIFY(be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
+}
+
+// Anti-sesgo es opt-in PURO como honey: endurece el razonamiento pero alarga el
+// prompt y en modelos chicos puede inducir trap-paranoia, así que NO entra en el
+// default "todas on" ni en el sentinel "*"; sólo si el perfil la nombra.
+void AgentProfilesTests::antiBias_isOptInOnly()
+{
+    LlamaAgentBackend be;
+    // Default (sin setDirectives): ausente, aunque el resto esté on.
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("ANTI-SESGO")));
+
+    // Catálogo completo explícito sin nombrarla: ausente.
+    be.setDirectives(QStringList{"discipline", "testNet", "projectContext",
+                                 "efficiency", "style"});
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("ANTI-SESGO")));
+
+    // Sentinel "*" (preset Máximo): tampoco la trae.
+    be.setDirectives(QStringList{"*"});
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("ANTI-SESGO")));
+
+    // Elegida explícitamente: presente.
+    be.setDirectives(QStringList{"antiBias"});
+    QVERIFY(be.systemPromptForTest().contains(QStringLiteral("ANTI-SESGO")));
 }
 
 void AgentProfilesTests::manager_crudAndPersistence()

@@ -933,6 +933,23 @@ QString LlamaAgentBackend::honeySection()
         "prosa. Mismos datos, la mitad de tokens.\n\n");
 }
 
+QString LlamaAgentBackend::antiBiasSection()
+{
+    return QStringLiteral(
+        "ANTI-SESGO (razonamiento): basá la respuesta ESTRICTAMENTE en las premisas "
+        "dadas, no en una pregunta parecida que hayas visto antes. ¿Cuál es la "
+        "intención real del usuario? Leé la consigna palabra por palabra y no agregues "
+        "supuestos.\n"
+        "- Si te encontrás pensando 'lo usual', 'lo estándar', 'lo típico' o 'el "
+        "clásico', es sesgo: ese análisis queda ANULADO y hay que re-examinar desde la "
+        "consigna literal.\n"
+        "- Buscá el mejor resultado que cumpla la premisa primaria del usuario y que "
+        "ninguna restricción EXPLÍCITA prohíba (no inventes restricciones que no están "
+        "escritas).\n"
+        "- Respondé apenas se cumple la premisa primaria; no re-derives un check que ya "
+        "pasaste ni sobre-pienses una tarea trivial.\n\n");
+}
+
 QVariantList LlamaAgentBackend::directiveCatalog()
 {
     auto mk = [](const char *key, const char *name, const char *desc) {
@@ -954,6 +971,8 @@ QVariantList LlamaAgentBackend::directiveCatalog()
            "Respuestas en fragmentos técnicos concisos, sin relleno ni cortesías; listas y comandos."),
         mk("honey", "Frugalidad (Honey)",
            "Reduce lo que el modelo emite: código YAGNI sin scaffolding especulativo, respuesta-primero y handoffs agente↔agente densos. Off por defecto (opt-in)."),
+        mk("antiBias", "Anti-sesgo",
+           "Endurece el razonamiento: basar la respuesta en las premisas dadas, tratar 'usual/estándar/típico/clásico' como sesgo a re-examinar, responder al cumplir la premisa sin sobre-pensar. Off por defecto (opt-in)."),
     };
 }
 
@@ -1026,6 +1045,10 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     // false) porque es agresivo y en modelos chicos locales puede recortar el
     // razonamiento. Sólo si el perfil la elige explícitamente.
     if (m_directives.contains(QStringLiteral("honey"))) base += honeySection();
+    // Anti-sesgo: opt-in puro como honey. Endurece el razonamiento pero alarga el
+    // prompt; en modelos chicos puede inducir trap-paranoia, así que sólo si el
+    // perfil la elige explícitamente (no entra en el default "todas on").
+    if (m_directives.contains(QStringLiteral("antiBias"))) base += antiBiasSection();
 
     // Memoria por proyecto: .llamacode/memory.md o AGENTS.md (lo que exista).
     QString mem;
