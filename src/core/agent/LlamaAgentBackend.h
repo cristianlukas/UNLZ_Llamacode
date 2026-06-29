@@ -80,6 +80,12 @@ public:
     // Se relanzan en start(). Sus tools se inyectan con prefijo mcp__<server>__<tool>.
     void setMcpServers(const QVariantList &servers);
 
+    // Gating de las tools MCP en el contexto (independiente de qué servers corren).
+    // false = buildToolSchemas NO inyecta las tools MCP descubiertas → ahorra el
+    // payload de schemas MCP por request. Lo setea el perfil de agente (mcpEnabled):
+    // las tools MCP no están en toolCatalog(), así que enabledTools no las apaga.
+    void setMcpToolsEnabled(bool on) { m_mcpToolsEnabled = on; }
+
     // Cuentas de correo (con password resuelto) para las tools email_*. Se
     // reenvían al worker. mailAutoSend=true permite que email_send NO pida
     // aprobación (default false: enviar correo es acción externa irreversible).
@@ -364,6 +370,7 @@ private:
     QVariantList m_mailAccounts;     // cuentas de correo (password resuelto)
     bool         m_mailAutoSend = false; // permitir email_send sin aprobación
     QVariantList m_mcpTools;         // cache de tool-defs MCP del worker {server,name,description,schema}
+    bool         m_mcpToolsEnabled = true; // false = no inyectar tools MCP (perfil mcpEnabled)
 
     // Worker thread para ejecución de tools (nativas + MCP).
     QThread *m_workerThread = nullptr;

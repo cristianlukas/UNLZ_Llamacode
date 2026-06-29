@@ -27,7 +27,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDir>
+#include <algorithm>
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/profiles/ProfileTypes.h"
 
 class AgentContextBudgetTests : public QObject
 {
@@ -36,7 +38,9 @@ private slots:
     void defaultDirectivesAreAllOn_silentBloat();
     void perDirectiveContribution_bisect();
     void projectMemoryInjection_cost();
+    void perBuiltinTool_byteRanking();
     void mcpToolSchemas_cost();
+    void leanChatPreset_cutsToolBudget();
     void maxQ_beforeVsNow_regressionIsRecoverable();
 
 private:
@@ -167,6 +171,42 @@ void AgentContextBudgetTests::projectMemoryInjection_cost()
              qPrintable(QStringLiteral("memoria sólo sumó %1 bytes").arg(withMem - noMem)));
 }
 
+// PASO 3b — Ranking por tool built-in: cuántos bytes pesa el schema de CADA tool.
+// El payload built-in (22 KB) creció commit a commit (code_graph, hybrid_search,
+// desktop, browser, research…). Esto muestra cuáles son las más gordas para saber
+// qué recortar primero en un perfil al límite.
+void AgentContextBudgetTests::perBuiltinTool_byteRanking()
+{
+    const QJsonArray schemas = LlamaAgentBackend::toolSchemas();
+    QVERIFY(!schemas.isEmpty());
+
+    struct Row { QString name; int bytes; };
+    QVector<Row> rows;
+    int total = 0;
+    for (const QJsonValue &v : schemas) {
+        const QJsonObject fn = v.toObject().value("function").toObject();
+        const int b = QJsonDocument(v.toObject()).toJson(QJsonDocument::Compact).size();
+        rows.push_back({fn.value("name").toString(), b});
+        total += b;
+    }
+    std::sort(rows.begin(), rows.end(),
+              [](const Row &a, const Row &b) { return a.bytes > b.bytes; });
+
+    qInfo() << "tools built-in:" << rows.size() << "· total" << total << "bytes";
+    const int top = qMin(10, rows.size());
+    for (int i = 0; i < top; ++i)
+        qInfo().noquote() << QStringLiteral("  %1. %2 — %3 bytes")
+            .arg(i + 1, 2).arg(rows[i].name, -22).arg(rows[i].bytes);
+
+    // El ranking debe estar bien formado: cada tool aporta bytes, el total cuadra
+    // y la más gorda pesa bastante más que la mediana (señala buenos candidatos a
+    // recortar). Sin números frágiles: sólo invariantes.
+    for (const Row &r : rows) QVERIFY(r.bytes > 0);
+    const int median = rows[rows.size() / 2].bytes;
+    QVERIFY2(rows.first().bytes > median * 2,
+             "la tool más gorda debería superar holgadamente a la mediana");
+}
+
 // PASO 4 — Schemas de tools MCP: 37 tools (filesystem+playwright) se serializan en
 // el request. Medimos su costo vs sólo las built-in. Es config del usuario, no una
 // regresión del harness, pero es el otro gran consumidor de contexto en MAX-Q.
@@ -196,6 +236,51 @@ void AgentContextBudgetTests::mcpToolSchemas_cost()
     QVERIFY2(withMcpBytes - builtinBytes > 3000,
              qPrintable(QStringLiteral("37 MCP sólo sumaron %1 bytes")
                             .arg(withMcpBytes - builtinBytes)));
+}
+
+// PASO 4b — El fix de un toque: el preset "Chat liviano" (agent-chat) recorta el
+// payload de tools de forma masiva. Aplica el preset igual que applyAgentProfileCaps
+// (disabled = catálogo − enabledTools, mcpEnabled=false) y compara contra "Máximo"
+// (todo el catálogo + 37 MCP). Esto prueba que el preset es la palanca real.
+void AgentContextBudgetTests::leanChatPreset_cutsToolBudget()
+{
+    const QVariantList mcp = syntheticMcpTools();
+
+    // Traduce un AgentProfile a los setters del backend (espejo de
+    // AppController::applyAgentProfileCaps) y devuelve los bytes de tool schemas.
+    auto toolBytesFor = [&](const AgentProfile &ap) {
+        LlamaAgentBackend be;
+        be.setMcpToolsForTest(mcp);
+        QStringList disabled;
+        if (!ap.enabledTools.contains(QStringLiteral("*"))) {
+            const QSet<QString> on(ap.enabledTools.cbegin(), ap.enabledTools.cend());
+            for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+                const QString n = v.toMap().value(QStringLiteral("name")).toString();
+                if (!on.contains(n)) disabled << n;
+            }
+        }
+        be.setDisabledTools(disabled);
+        be.setMcpToolsEnabled(ap.mcpEnabled);
+        return QJsonDocument(be.toolSchemasForTest()).toJson(QJsonDocument::Compact).size();
+    };
+
+    const QList<AgentProfile> ps = AgentProfile::systemPresets();
+    auto byId = [&](const QString &id) {
+        for (const AgentProfile &p : ps) if (p.id == id) return p;
+        return AgentProfile{};
+    };
+    const int chatBytes   = toolBytesFor(byId(QStringLiteral("agent-chat")));
+    const int maximoBytes = toolBytesFor(byId(QStringLiteral("agent-maximo")));
+
+    qInfo() << "tool schemas · Chat liviano:" << chatBytes << "bytes";
+    qInfo() << "tool schemas · Máximo (+37 MCP):" << maximoBytes << "bytes";
+    qInfo() << "recorte del preset Chat:" << (maximoBytes - chatBytes) << "bytes";
+
+    // El preset Chat debe quedar MUY por debajo de Máximo: apaga la mayoría de las
+    // built-in y todo MCP. Es el fix de un toque para MAX-Q.
+    QVERIFY2(chatBytes * 3 < maximoBytes,
+             qPrintable(QStringLiteral("Chat=%1 no es <<< Máximo=%2")
+                            .arg(chatBytes).arg(maximoBytes)));
 }
 
 // PASO 5 — El veredicto: reconstruye el contexto de MAX-Q "antes" (secciones no

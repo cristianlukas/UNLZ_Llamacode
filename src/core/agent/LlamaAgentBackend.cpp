@@ -3558,7 +3558,9 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
     }
 
     QJsonArray all = toolSchemas();
-    for (const QVariant &v : m_mcpTools) {
+    // Tools MCP: sólo si el perfil las habilita. No están en toolCatalog(), así que
+    // enabledTools/setDisabledTools no las puede apagar — el gate es éste.
+    for (const QVariant &v : (m_mcpToolsEnabled ? m_mcpTools : QVariantList{})) {
         const QVariantMap t = v.toMap();
         QJsonObject params = QJsonDocument::fromJson(
             t.value(QStringLiteral("schema")).toString().toUtf8()).object();

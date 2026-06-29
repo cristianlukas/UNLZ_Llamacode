@@ -16,6 +16,8 @@
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/agent/IAgentBackend.h"
+#include "core/agent/LlamaAgentBackend.h"
+#include "core/profiles/ProfileTypes.h"
 #include "core/tasks/TaskStore.h"
 #include "core/CatalogModel.h"
 
@@ -97,6 +99,7 @@ private slots:
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
     void charlaTranscriptRoutesToAgentWhenRunning();
+    void agentLevels_contextBudgetLadder();
 
 private:
     QTemporaryDir m_tmp;
@@ -626,6 +629,86 @@ void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
     // Respeta llamaagent y raw (modo Chat).
     QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("llamaagent")), QStringLiteral("llamaagent"));
     QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("raw")), QStringLiteral("raw"));
+}
+
+// Niveles de agente = escalera de presupuesto de contexto. Ejercita los 5 presets
+// con la traducción REAL (applyAgentProfileCaps) sobre un LlamaAgentBackend con 37
+// tools MCP inyectadas, y mide el contexto efectivo (system prompt + tool schemas)
+// por nivel. Garantías:
+//   - escalera monótona: Chat < Básico < Intermedio < Avanzado < Máximo.
+//   - Chat es el único con MCP off → sin tools mcp__ en el schema.
+//   - Máximo ("*") NO arrastra las opt-in puras (honey/antiBias): regresión que se
+//     coló al sumar antiBias al catálogo; acá queda pinchada.
+void AppControllerTests::agentLevels_contextBudgetLadder()
+{
+    AppController app;
+
+    // 37 tools MCP sintéticas (14 filesystem + 23 playwright), como en producción.
+    QVariantList mcp;
+    auto mkTool = [](const QString &server, const QString &name) {
+        return QVariant(QVariantMap{
+            {"server", server}, {"name", name},
+            {"description", QStringLiteral("Tool %1 del MCP %2.").arg(name, server)},
+            {"schema", QStringLiteral("{\"type\":\"object\",\"properties\":"
+                "{\"path\":{\"type\":\"string\"},\"opts\":{\"type\":\"object\"}}}")}});
+    };
+    for (int i = 0; i < 14; ++i) mcp << mkTool("filesystem", QStringLiteral("fs_%1").arg(i));
+    for (int i = 0; i < 23; ++i) mcp << mkTool("playwright", QStringLiteral("pw_%1").arg(i));
+
+    auto budgetFor = [&](const AgentProfile &ap, bool *hasMcp, QString *sysOut) {
+        LlamaAgentBackend be;
+        be.setMcpToolsForTest(mcp);
+        app.applyAgentProfileCapsForTest(&be, ap);   // traducción REAL de la app
+        const QString sys = be.systemPromptForTest();
+        const QJsonArray tools = be.toolSchemasForTest();
+        if (sysOut) *sysOut = sys;
+        if (hasMcp) {
+            *hasMcp = false;
+            for (const QJsonValue &v : tools) {
+                const QString n = v.toObject().value("function").toObject().value("name").toString();
+                if (n.startsWith(QStringLiteral("mcp__"))) { *hasMcp = true; break; }
+            }
+        }
+        const int toolBytes = QJsonDocument(tools).toJson(QJsonDocument::Compact).size();
+        return sys.toUtf8().size() + toolBytes;
+    };
+
+    const QList<AgentProfile> ps = AgentProfile::systemPresets();
+    auto byId = [&](const QString &id) {
+        for (const AgentProfile &p : ps) if (p.id == id) return p;
+        return AgentProfile{};
+    };
+
+    bool chatMcp = true, maxMcp = false;
+    QString chatSys, maxSys;
+    const int chat   = budgetFor(byId(QStringLiteral("agent-chat")),       &chatMcp, &chatSys);
+    const int basico = budgetFor(byId(QStringLiteral("agent-basico")),     nullptr, nullptr);
+    const int inter  = budgetFor(byId(QStringLiteral("agent-intermedio")), nullptr, nullptr);
+    const int avanz  = budgetFor(byId(QStringLiteral("agent-avanzado")),   nullptr, nullptr);
+    const int maximo = budgetFor(byId(QStringLiteral("agent-maximo")),     &maxMcp, &maxSys);
+
+    qInfo() << "presupuesto por nivel (system+tools, bytes):";
+    qInfo() << "  Chat liviano:" << chat;
+    qInfo() << "  Básico:" << basico;
+    qInfo() << "  Intermedio:" << inter;
+    qInfo() << "  Avanzado:" << avanz;
+    qInfo() << "  Máximo (+37 MCP):" << maximo;
+
+    // Escalera monótona estricta.
+    QVERIFY2(chat < basico,   qPrintable(QStringLiteral("Chat %1 !< Básico %2").arg(chat).arg(basico)));
+    QVERIFY2(basico < inter,  qPrintable(QStringLiteral("Básico %1 !< Intermedio %2").arg(basico).arg(inter)));
+    QVERIFY2(inter < avanz,   qPrintable(QStringLiteral("Intermedio %1 !< Avanzado %2").arg(inter).arg(avanz)));
+    QVERIFY2(avanz < maximo,  qPrintable(QStringLiteral("Avanzado %1 !< Máximo %2").arg(avanz).arg(maximo)));
+
+    // Chat: único sin MCP. Máximo: con MCP.
+    QVERIFY2(!chatMcp, "Chat liviano no debería inyectar tools MCP");
+    QVERIFY2(maxMcp, "Máximo debería inyectar tools MCP");
+
+    // Opt-in puras NO entran por el sentinel "*" de Máximo.
+    QVERIFY2(!maxSys.contains(QStringLiteral("ANTI-SESGO")),
+             "Máximo arrastró antiBias por '*' (debe ser opt-in puro)");
+    QVERIFY2(!maxSys.contains(QStringLiteral("FRUGALIDAD (Honey)")),
+             "Máximo arrastró honey por '*' (debe ser opt-in puro)");
 }
 
 QTEST_MAIN(AppControllerTests)

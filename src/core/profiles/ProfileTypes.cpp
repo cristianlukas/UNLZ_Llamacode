@@ -148,6 +148,7 @@ QJsonObject AgentProfile::toJson() const {
     o["thinking"] = thinking;
     o["temperature"] = temperature;
     o["systemExtra"] = systemExtra;
+    o["mcpEnabled"] = mcpEnabled;
     return o;
 }
 AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
@@ -160,6 +161,7 @@ AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
     p.thinking = o["thinking"].toBool(false);
     p.temperature = o["temperature"].toDouble(-1.0);
     p.systemExtra = o["systemExtra"].toString();
+    p.mcpEnabled = o["mcpEnabled"].toBool(true);   // legacy sin la clave = MCP on
     return p;
 }
 QString AgentProfile::generateId() { return newId(); }
@@ -169,21 +171,29 @@ QString AgentProfile::defaultPresetId() { return QStringLiteral("agent-intermedi
 // catálogo (se expande al aplicar; así "Máximo" sigue al catálogo si crece).
 QList<AgentProfile> AgentProfile::systemPresets() {
     auto mk = [](const QString &id, const QString &name, const QStringList &tools,
-                 const QStringList &dirs, const QString &approval, bool think) {
+                 const QStringList &dirs, const QString &approval, bool think,
+                 bool mcp = true) {
         AgentProfile p;
         p.id = id; p.system = true; p.name = name;
         p.enabledTools = tools; p.directives = dirs;
         p.approvalMode = approval; p.thinking = think; p.temperature = -1.0;
+        p.mcpEnabled = mcp;
         return p;
     };
     const QStringList coreTools{
         "read_file", "list_dir", "glob", "grep", "write_file", "edit_file", "run_shell"};
+    // Chat liviano: el set MÍNIMO para chatear/codear. Sin MCP, sin directivas: el
+    // contexto por request queda chico (clave en perfiles al límite de VRAM como los
+    // de ctx enorme, donde cada KB de tools/prompt alarga la atención por token).
+    const QStringList chatTools{"read_file", "list_dir", "grep", "write_file", "edit_file"};
     QStringList interTools = coreTools;
     interTools << "search_docs" << "memory" << "code_hotspots";
     QStringList advTools = interTools;
     advTools << "web_search" << "web_fetch" << "semantic_search"
              << "hybrid_search" << "verify_claims" << "graph";
     return {
+        mk("agent-chat",       "Chat liviano", chatTools,  {},
+           "ask", false, /*mcp=*/false),
         mk("agent-basico",     "Básico",     coreTools,  {},
            "ask", false),
         mk("agent-intermedio", "Intermedio", interTools, {"discipline"},

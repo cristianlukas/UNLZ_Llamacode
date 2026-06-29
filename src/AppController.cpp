@@ -3302,20 +3302,25 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
 
     QStringList dirs = ap.directives;
     if (dirs.contains(QStringLiteral("*"))) {
-        // Expandir "*" a todo el catálogo MENOS honey: es opt-in literal (agresiva,
-        // puede recortar el razonamiento en modelos chicos). Ni siquiera Máximo la
-        // trae implícita; hay que nombrarla. Coincide con isDirOn/setDirOn (QML) y
-        // con el gateo de buildSystemPrompt.
-        const bool hadHoney = dirs.contains(QStringLiteral("honey"));
+        // Expandir "*" a todo el catálogo MENOS las opt-in puras (honey, antiBias):
+        // son agresivas (recortan/alargan el razonamiento) y ni siquiera Máximo las
+        // trae implícitas; hay que nombrarlas. Coincide con isDirOn/setDirOn (QML) y
+        // con el gateo literal de buildSystemPrompt.
+        static const QSet<QString> optInPure{
+            QStringLiteral("honey"), QStringLiteral("antiBias")};
+        QStringList keep;
+        for (const QString &k : optInPure)
+            if (dirs.contains(k)) keep << k;
         dirs.clear();
         for (const QVariant &v : LlamaAgentBackend::directiveCatalog()) {
             const QString k = v.toMap().value(QStringLiteral("key")).toString();
-            if (k != QLatin1String("honey")) dirs << k;
+            if (!optInPure.contains(k)) dirs << k;
         }
-        if (hadHoney) dirs << QStringLiteral("honey");
+        dirs << keep;
     }
     cb->setDirectives(dirs);
     cb->setThinkingEnabled(ap.thinking);
+    cb->setMcpToolsEnabled(ap.mcpEnabled);
 }
 
 void AppController::applyActiveAgentProfile()

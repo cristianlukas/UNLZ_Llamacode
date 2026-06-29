@@ -1,6 +1,6 @@
 // Unit tests de Perfiles de Agente:
 //   - AgentProfile: serialización JSON ida/vuelta.
-//   - systemPresets(): los 4 presets (Básico/Intermedio/Avanzado/Máximo), sus
+//   - systemPresets(): los 5 presets (Chat/Básico/Intermedio/Avanzado/Máximo), sus
 //     ids estables, capas acumulativas de tools y el sentinel "*" de Máximo.
 //   - LlamaAgentBackend::directiveCatalog() + setDirectives() → buildSystemPrompt
 //     incluye/excluye cada sección (gating por directiva); default = todas.
@@ -12,6 +12,7 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QJsonObject>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
 #include "core/agent/LlamaAgentBackend.h"
@@ -30,6 +31,7 @@ private slots:
     void setDirectives_defaultIncludesAll();
     void honey_isOptInOnly();
     void antiBias_isOptInOnly();
+    void mcpEnabled_roundTrips();
     void manager_crudAndPersistence();
     void manager_systemPresetsImmutable();
 
@@ -67,34 +69,55 @@ void AgentProfilesTests::agentProfile_jsonRoundTrip()
 void AgentProfilesTests::systemPresets_shape()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    QCOMPARE(ps.size(), 4);
+    QCOMPARE(ps.size(), 5);
 
-    // ids estables y orden Básico → Intermedio → Avanzado → Máximo.
-    QCOMPARE(ps[0].id, QStringLiteral("agent-basico"));
-    QCOMPARE(ps[1].id, QStringLiteral("agent-intermedio"));
-    QCOMPARE(ps[2].id, QStringLiteral("agent-avanzado"));
-    QCOMPARE(ps[3].id, QStringLiteral("agent-maximo"));
+    // Orden: Chat liviano → Básico → Intermedio → Avanzado → Máximo.
+    QCOMPARE(ps[0].id, QStringLiteral("agent-chat"));
+    QCOMPARE(ps[1].id, QStringLiteral("agent-basico"));
+    QCOMPARE(ps[2].id, QStringLiteral("agent-intermedio"));
+    QCOMPARE(ps[3].id, QStringLiteral("agent-avanzado"));
+    QCOMPARE(ps[4].id, QStringLiteral("agent-maximo"));
     QCOMPARE(AgentProfile::defaultPresetId(), QStringLiteral("agent-intermedio"));
 
     for (const AgentProfile &p : ps) QVERIFY(p.system);
 
+    auto byId = [&](const QString &id) {
+        for (const AgentProfile &p : ps) if (p.id == id) return p;
+        return AgentProfile{};
+    };
+    const AgentProfile chat   = byId(QStringLiteral("agent-chat"));
+    const AgentProfile basico = byId(QStringLiteral("agent-basico"));
+    const AgentProfile inter  = byId(QStringLiteral("agent-intermedio"));
+    const AgentProfile avanz  = byId(QStringLiteral("agent-avanzado"));
+    const AgentProfile maximo = byId(QStringLiteral("agent-maximo"));
+
+    // Chat liviano: set mínimo, SIN directivas y SIN MCP (presupuesto chico). Es el
+    // único preset con mcpEnabled=false; todos los demás traen MCP (default true).
+    QVERIFY(chat.enabledTools.contains(QStringLiteral("read_file")));
+    QVERIFY(chat.enabledTools.contains(QStringLiteral("edit_file")));
+    QVERIFY(chat.directives.isEmpty());
+    QVERIFY(!chat.mcpEnabled);
+    QVERIFY(chat.enabledTools.size() < basico.enabledTools.size());
+    for (const AgentProfile &p : {basico, inter, avanz, maximo})
+        QVERIFY2(p.mcpEnabled, qPrintable(p.id + " debería traer MCP"));
+
     // Básico: core de archivos/código, sin directivas.
-    QVERIFY(ps[0].enabledTools.contains(QStringLiteral("read_file")));
-    QVERIFY(ps[0].enabledTools.contains(QStringLiteral("run_shell")));
-    QVERIFY(ps[0].directives.isEmpty());
+    QVERIFY(basico.enabledTools.contains(QStringLiteral("read_file")));
+    QVERIFY(basico.enabledTools.contains(QStringLiteral("run_shell")));
+    QVERIFY(basico.directives.isEmpty());
 
     // Capas acumulativas: Intermedio ⊇ Básico; Avanzado ⊇ Intermedio.
-    for (const QString &t : ps[0].enabledTools) QVERIFY(ps[1].enabledTools.contains(t));
-    for (const QString &t : ps[1].enabledTools) QVERIFY(ps[2].enabledTools.contains(t));
-    QVERIFY(ps[1].directives.contains(QStringLiteral("discipline")));
-    QVERIFY(ps[2].directives.contains(QStringLiteral("testNet")));
-    QVERIFY(ps[2].thinking);
+    for (const QString &t : basico.enabledTools) QVERIFY(inter.enabledTools.contains(t));
+    for (const QString &t : inter.enabledTools) QVERIFY(avanz.enabledTools.contains(t));
+    QVERIFY(inter.directives.contains(QStringLiteral("discipline")));
+    QVERIFY(avanz.directives.contains(QStringLiteral("testNet")));
+    QVERIFY(avanz.thinking);
 
     // Máximo: sentinel "*" = todo el catálogo, super + thinking.
-    QCOMPARE(ps[3].enabledTools, QStringList{QStringLiteral("*")});
-    QCOMPARE(ps[3].directives, QStringList{QStringLiteral("*")});
-    QCOMPARE(ps[3].approvalMode, QStringLiteral("super"));
-    QVERIFY(ps[3].thinking);
+    QCOMPARE(maximo.enabledTools, QStringList{QStringLiteral("*")});
+    QCOMPARE(maximo.directives, QStringList{QStringLiteral("*")});
+    QCOMPARE(maximo.approvalMode, QStringLiteral("super"));
+    QVERIFY(maximo.thinking);
 }
 
 // Garantía clave para el benchmark por NIVEL: distintos niveles = distintas
@@ -103,9 +126,13 @@ void AgentProfilesTests::systemPresets_shape()
 void AgentProfilesTests::presets_levelsRestrictCapabilities()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    const AgentProfile basico = ps[0];
-    const AgentProfile avanzado = ps[2];
-    const AgentProfile maximo = ps[3];
+    auto byId = [&](const QString &id) {
+        for (const AgentProfile &p : ps) if (p.id == id) return p;
+        return AgentProfile{};
+    };
+    const AgentProfile basico = byId(QStringLiteral("agent-basico"));
+    const AgentProfile avanzado = byId(QStringLiteral("agent-avanzado"));
+    const AgentProfile maximo = byId(QStringLiteral("agent-maximo"));
 
     // Básico NO trae web ni búsqueda avanzada (debe estar acotado).
     QVERIFY(!basico.enabledTools.contains(QStringLiteral("web_search")));
@@ -221,6 +248,25 @@ void AgentProfilesTests::antiBias_isOptInOnly()
     // Elegida explícitamente: presente.
     be.setDirectives(QStringList{"antiBias"});
     QVERIFY(be.systemPromptForTest().contains(QStringLiteral("ANTI-SESGO")));
+}
+
+// mcpEnabled persiste por JSON y default es true para perfiles legacy (sin la
+// clave) → no regresiona perfiles guardados antes de la feature.
+void AgentProfilesTests::mcpEnabled_roundTrips()
+{
+    AgentProfile p;
+    p.id = QStringLiteral("x"); p.name = QStringLiteral("X");
+    p.mcpEnabled = false;
+    const AgentProfile back = AgentProfile::fromJson(p.toJson());
+    QVERIFY(!back.mcpEnabled);
+
+    AgentProfile q;
+    q.mcpEnabled = true;
+    QVERIFY(AgentProfile::fromJson(q.toJson()).mcpEnabled);
+
+    // Legacy: JSON sin la clave mcpEnabled → default true (MCP on, histórico).
+    QJsonObject legacy{{"id", "y"}, {"name", "Y"}};
+    QVERIFY(AgentProfile::fromJson(legacy).mcpEnabled);
 }
 
 void AgentProfilesTests::manager_crudAndPersistence()

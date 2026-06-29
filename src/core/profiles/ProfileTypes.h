@@ -121,12 +121,15 @@ struct AgentProfile {
     bool thinking = false;
     double temperature = -1.0;      // -1 = heredar del modelo/perfil
     QString systemExtra;            // instrucciones extra opcionales
+    bool mcpEnabled = true;         // false = no inyectar tools MCP (ahorra contexto;
+                                    // las tools MCP NO están en toolCatalog, así que
+                                    // enabledTools no las puede apagar — esto sí)
 
     QJsonObject toJson() const;
     static AgentProfile fromJson(const QJsonObject &obj);
     static QString generateId();
-    // Los 4 presets de sistema (orden: Básico, Intermedio, Avanzado, Máximo).
-    // ids estables ("agent-basico"…) para que los launch los referencien.
+    // Los presets de sistema (orden: Chat liviano, Básico, Intermedio, Avanzado,
+    // Máximo). ids estables ("agent-basico"…) para que los launch los referencien.
     static QList<AgentProfile> systemPresets();
     static QString defaultPresetId();   // "agent-intermedio"
 };

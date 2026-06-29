@@ -415,6 +415,11 @@ public:
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
     void setTestAgentBackend(IAgentBackend *b);
     Q_INVOKABLE void runTaskBodyForTest(const QString &id);
+    // Aplica las capacidades de un perfil de agente al backend (tools/directivas/
+    // thinking/MCP) usando la MISMA traducción que la app. Test seam para medir el
+    // presupuesto de contexto por NIVEL sin duplicar la lógica de mapeo.
+    void applyAgentProfileCapsForTest(class LlamaAgentBackend *cb, const AgentProfile &ap)
+    { applyAgentProfileCaps(cb, ap); }
     // Ingi Charla: rutea un transcript de voz. Si hay agente corriendo lo manda al
     // agente (computer-use/visión) y devuelve true; si no, al chat backend (false).
     // Público para tests (el lambda de transcriptReady delega acá).
