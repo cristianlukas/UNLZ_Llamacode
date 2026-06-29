@@ -416,6 +416,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(int, m_masterTimeoutS));
     QMetaObject::invokeMethod(m_worker, "setMasterChain", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_masterChain));
+    QMetaObject::invokeMethod(m_worker, "setHoneyHandoff", Qt::QueuedConnection,
+                              Q_ARG(bool, m_directives.contains(QStringLiteral("honey"))));
     QMetaObject::invokeMethod(m_worker, "setMailAccounts", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mailAccounts));
     QMetaObject::invokeMethod(m_worker, "initServers", Qt::QueuedConnection,
@@ -959,6 +961,11 @@ void LlamaAgentBackend::setDirectives(const QStringList &keys)
 {
     m_directives = QSet<QString>(keys.cbegin(), keys.cend());
     m_directivesSet = true;
+    // Propagar honey al worker: cambia el formato de respuesta del maestro
+    // (ask_teacher) a denso clave:valor. Los sub-agentes lo reciben en launchSub.
+    if (m_worker)
+        QMetaObject::invokeMethod(m_worker, "setHoneyHandoff", Qt::QueuedConnection,
+                                  Q_ARG(bool, m_directives.contains(QStringLiteral("honey"))));
     if (!m_apiMessages.isEmpty()) {
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
@@ -2613,7 +2620,8 @@ void LlamaAgentBackend::launchSub(const QJsonObject &call)
     emit messagesChanged();
 
     auto *sub = new SubAgentRunner(id, m_ctx.serverBaseUrl, m_ctx.modelId,
-                                   wt, prompt, m_temperature, this);
+                                   wt, prompt, m_temperature,
+                                   m_directives.contains(QStringLiteral("honey")), this);
     connect(sub, &SubAgentRunner::finished, this, &LlamaAgentBackend::onSubFinished);
     connect(sub, &SubAgentRunner::progressed, this, &LlamaAgentBackend::onSubProgress);
     m_subs.insert(id, sub);

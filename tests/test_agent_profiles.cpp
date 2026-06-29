@@ -189,6 +189,11 @@ void AgentProfilesTests::honey_isOptInOnly()
                                  "efficiency", "style"});
     QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
 
+    // El sentinel "*" (preset Máximo = todo el catálogo) TAMPOCO la trae: honey
+    // se nombra o no está. Garantiza que ningún preset de sistema la incluya.
+    be.setDirectives(QStringList{"*"});
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
+
     // Elegida explícitamente: presente.
     be.setDirectives(QStringList{"honey"});
     QVERIFY(be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));

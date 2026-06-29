@@ -3302,9 +3302,17 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
 
     QStringList dirs = ap.directives;
     if (dirs.contains(QStringLiteral("*"))) {
+        // Expandir "*" a todo el catálogo MENOS honey: es opt-in literal (agresiva,
+        // puede recortar el razonamiento en modelos chicos). Ni siquiera Máximo la
+        // trae implícita; hay que nombrarla. Coincide con isDirOn/setDirOn (QML) y
+        // con el gateo de buildSystemPrompt.
+        const bool hadHoney = dirs.contains(QStringLiteral("honey"));
         dirs.clear();
-        for (const QVariant &v : LlamaAgentBackend::directiveCatalog())
-            dirs << v.toMap().value(QStringLiteral("key")).toString();
+        for (const QVariant &v : LlamaAgentBackend::directiveCatalog()) {
+            const QString k = v.toMap().value(QStringLiteral("key")).toString();
+            if (k != QLatin1String("honey")) dirs << k;
+        }
+        if (hadHoney) dirs << QStringLiteral("honey");
     }
     cb->setDirectives(dirs);
     cb->setThinkingEnabled(ap.thinking);

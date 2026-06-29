@@ -1106,6 +1106,10 @@ Item {
                                 || edit.enabledTools.indexOf(name) >= 0
                         }
                         function isDirOn(key) {
+                            // honey es opt-in LITERAL: no lo implica el sentinel "*"
+                            // (Máximo) — hay que nombrarlo. Coincide con el gateo del
+                            // backend (buildSystemPrompt sólo lo activa por contains).
+                            if (key === "honey") return edit.directives.indexOf("honey") >= 0
                             return edit.directives.indexOf("*") >= 0
                                 || edit.directives.indexOf(key) >= 0
                         }
@@ -1120,7 +1124,10 @@ Item {
                         }
                         function setDirOn(key, on) {
                             var arr = edit.directives.slice()
-                            if (arr.indexOf("*") >= 0) arr = allDirectiveKeys()
+                            // Expandir "*" SIN honey: no se debe activar al desmarcar
+                            // otra directiva de un preset Máximo (honey = opt-in literal).
+                            if (arr.indexOf("*") >= 0)
+                                arr = allDirectiveKeys().filter(function(k){ return k !== "honey" })
                             var i = arr.indexOf(key)
                             if (on && i < 0) arr.push(key)
                             else if (!on && i >= 0) arr.splice(i, 1)

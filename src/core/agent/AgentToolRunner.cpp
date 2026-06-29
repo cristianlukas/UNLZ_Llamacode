@@ -441,6 +441,26 @@ void AgentToolRunner::setMasterChain(const QVariantList &chain)
     m_masterChain = chain;
 }
 
+void AgentToolRunner::setHoneyHandoff(bool on)
+{
+    m_honeyHandoff = on;
+}
+
+QString AgentToolRunner::masterSystemPrompt(bool honey)
+{
+    if (honey)
+        // Handoff denso (frugalidad): el maestro responde el mínimo accionable en
+        // clave:valor, sin prosa ni JSON pretty. Mismo contenido, ~mitad de tokens.
+        return QStringLiteral(
+            "Sos un experto sénior asistiendo a otro agente de código. Respondé en "
+            "formato DENSO clave:valor, una línea por dato (ej. cause: ..., fix: ..., "
+            "files: a.cpp:42, b.h). Sin prosa, sin preámbulo, sin JSON pretty. Sólo "
+            "lo accionable.");
+    return QStringLiteral(
+        "Sos un experto sénior asistiendo a otro agente de código. "
+        "Respondé conciso, correcto y accionable.");
+}
+
 // Invoca claude-code / codex en modo no-interactivo, bloqueante. cwd = proyecto.
 QString AgentToolRunner::runMasterCli(const QString &cliName, const QString &cliPath,
                                       bool applyEdits, int timeoutSec,
@@ -508,9 +528,7 @@ QString AgentToolRunner::runHttpTeacher(const QString &url, const QString &model
         userMsg = QStringLiteral("Contexto:\n%1\n\nPregunta:\n%2").arg(context, question);
     const QJsonArray msgs{
         QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
-                    {QStringLiteral("content"), QStringLiteral(
-                         "Sos un experto sénior asistiendo a otro agente de código. "
-                         "Respondé conciso, correcto y accionable.")}},
+                    {QStringLiteral("content"), masterSystemPrompt(m_honeyHandoff)}},
         QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
                     {QStringLiteral("content"), userMsg}}};
     const QJsonObject payload{
@@ -1806,9 +1824,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             userMsg = QStringLiteral("Contexto:\n%1\n\nPregunta:\n%2").arg(context, question);
         const QJsonArray msgs{
             QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
-                        {QStringLiteral("content"), QStringLiteral(
-                             "Sos un experto sénior asistiendo a otro agente de código. "
-                             "Respondé conciso, correcto y accionable.")}},
+                        {QStringLiteral("content"), masterSystemPrompt(m_honeyHandoff)}},
             QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
                         {QStringLiteral("content"), userMsg}}};
         const QJsonObject payload{

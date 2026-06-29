@@ -20,13 +20,19 @@ class SubAgentRunner : public QObject
 public:
     SubAgentRunner(const QString &id, const QString &serverBaseUrl, const QString &modelId,
                    const QString &cwd, const QString &taskPrompt,
-                   double temperature, QObject *parent = nullptr);
+                   double temperature, bool honey = false, QObject *parent = nullptr);
     ~SubAgentRunner() override;
 
     QString id() const { return m_id; }
     QString cwd() const { return m_cwd; }
     void start();
     void cancel();
+
+    // System prompt del sub-agente. Pura y estática → unit-testeable. honey=true
+    // suma la directiva de frugalidad (código YAGNI, respuesta-primero, salida
+    // mínima) para que el sub-árbol entero emita menos. Se propaga desde la
+    // directiva 'honey' del perfil del agente principal.
+    static QString systemPrompt(const QString &cwd, bool honey);
 
 signals:
     void progressed(const QString &id, const QString &note);   // tool/avance (para tarjeta en vivo)
@@ -47,6 +53,7 @@ private:
     QString m_cwd;
     QString m_taskPrompt;
     double  m_temperature = -1.0;
+    bool    m_honey = false;
 
     QNetworkAccessManager *m_nam = nullptr;
     QNetworkReply *m_reply = nullptr;

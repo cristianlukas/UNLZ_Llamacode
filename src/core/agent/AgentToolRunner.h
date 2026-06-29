@@ -53,6 +53,11 @@ public slots:
     // cliPath, httpUrl, httpModel, httpKey, applyEdits, timeoutSec, label.
     // Si la cadena está vacía, ask_teacher usa la config legacy/env.
     void setMasterChain(const QVariantList &chain);
+    // Frugalidad "honey" en handoffs inter-agente: cuando está ON, el system
+    // prompt del maestro (ask_teacher) le pide responder en formato denso
+    // clave:valor en vez de prosa. Se propaga desde la directiva 'honey' del
+    // perfil de agente. No cambia QUÉ se pregunta, sólo el formato de respuesta.
+    void setHoneyHandoff(bool on);
     // Mata el run_shell en curso (cancelación real desde PARAR/steer).
     void cancelShell();
     void shutdown();
@@ -73,6 +78,11 @@ private slots:
 private:
     QString runNative(const QString &name, const QJsonObject &args,
                       const QString &cwd, QVariantMap &out, bool *ok);
+public:
+    // System prompt del maestro para los handoffs de ask_teacher. Pura y estática
+    // → unit-testeable. honey=true pide respuesta densa clave:valor (frugalidad).
+    static QString masterSystemPrompt(bool honey);
+private:
     void startShell(const QString &callId, const QString &command,
                     const QString &cwd, int timeoutS);
     void finishShell(bool timedOut, bool cancelled);
@@ -90,6 +100,7 @@ private:
     bool    m_masterApplyEdits = true;
     int     m_masterTimeoutS = 300;
     QVariantList m_masterChain;   // cadena de fallbacks resuelta (ver setMasterChain)
+    bool    m_honeyHandoff = false;  // directiva honey: respuesta densa del maestro
     // Ejecuta el CLI maestro de forma bloqueante (worker thread). Devuelve stdout
     // o un mensaje [ask_teacher: ...] de error.
     QString runMasterCli(const QString &cliName, const QString &cliPath, bool applyEdits,

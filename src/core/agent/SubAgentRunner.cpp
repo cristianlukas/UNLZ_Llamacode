@@ -18,11 +18,31 @@ static QString subArgsToString(const QJsonValue &v)
 
 SubAgentRunner::SubAgentRunner(const QString &id, const QString &serverBaseUrl,
                                const QString &modelId, const QString &cwd,
-                               const QString &taskPrompt, double temperature, QObject *parent)
+                               const QString &taskPrompt, double temperature,
+                               bool honey, QObject *parent)
     : QObject(parent), m_id(id), m_serverBaseUrl(serverBaseUrl), m_modelId(modelId),
-      m_cwd(cwd), m_taskPrompt(taskPrompt), m_temperature(temperature)
+      m_cwd(cwd), m_taskPrompt(taskPrompt), m_temperature(temperature), m_honey(honey)
 {
     m_nam = new QNetworkAccessManager(this);
+}
+
+QString SubAgentRunner::systemPrompt(const QString &cwd, bool honey)
+{
+    QString sys = QStringLiteral(
+        "Sos un sub-agente de coding autónomo. Trabajás en una copia aislada del "
+        "proyecto (git worktree) en: %1. Tenés tools para leer/escribir/editar "
+        "archivos, listar, buscar (grep/glob) y ejecutar shell, todas confinadas a "
+        "esa carpeta. Resolvé la subtarea encomendada de forma completa y autónoma "
+        "(no pidas permisos, no preguntes). Cuando termines, respondé con un RESUMEN "
+        "conciso de qué hiciste y qué archivos cambiaste. Sé directo.")
+        .arg(cwd);
+    if (honey)
+        sys += QStringLiteral(
+            "\n\nFRUGALIDAD (honey): emití lo mínimo. Código YAGNI: parar en el "
+            "primer escalón que funciona, sin scaffolding especulativo. "
+            "Respuesta-primero, sin narrar lo que ya se lee en el código. El RESUMEN "
+            "final en clave:valor compacto (files: ..., changes: ...), no prosa.");
+    return sys;
 }
 
 SubAgentRunner::~SubAgentRunner()
@@ -51,14 +71,7 @@ void SubAgentRunner::start()
     connect(m_worker, &AgentToolRunner::toolExecuted, this, &SubAgentRunner::onToolExecuted);
     m_workerThread->start();
 
-    const QString sys = QStringLiteral(
-        "Sos un sub-agente de coding autónomo. Trabajás en una copia aislada del "
-        "proyecto (git worktree) en: %1. Tenés tools para leer/escribir/editar "
-        "archivos, listar, buscar (grep/glob) y ejecutar shell, todas confinadas a "
-        "esa carpeta. Resolvé la subtarea encomendada de forma completa y autónoma "
-        "(no pidas permisos, no preguntes). Cuando termines, respondé con un RESUMEN "
-        "conciso de qué hiciste y qué archivos cambiaste. Sé directo.")
-        .arg(m_cwd);
+    const QString sys = systemPrompt(m_cwd, m_honey);
 
     m_messages = QJsonArray{
         QJsonObject{{QStringLiteral("role"), QStringLiteral("system")}, {QStringLiteral("content"), sys}},

@@ -15,6 +15,7 @@
 #include <QFile>
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/AgentEventLog.h"
+#include "core/agent/SubAgentRunner.h"
 
 class AgentToolsTests : public QObject
 {
@@ -38,6 +39,7 @@ private slots:
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
     void desktopControls_invalidWindowErrorsCleanly();
+    void honeyHandoff_densifiesMasterAndSubPrompts();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -286,6 +288,31 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
                          {{"target_id", "zzznothex"}, {"control_id", "1.2.3"}});
     QVERIFY(!k.value("ok").toBool());
     QVERIFY(k.value("result").toString().startsWith(QStringLiteral("[desktop_click_element:")));
+}
+
+// Handoffs densos (directiva honey): los helpers puros que arman el system prompt
+// del maestro (ask_teacher) y del sub-agente cambian a formato denso clave:valor
+// cuando honey está ON, y conservan el formato normal cuando está OFF. No cambian
+// QUÉ se pide, sólo el formato → quality-neutral, ahorro de tokens en el handoff.
+void AgentToolsTests::honeyHandoff_densifiesMasterAndSubPrompts()
+{
+    // Maestro OFF: prosa normal, sin pedir clave:valor.
+    const QString mOff = AgentToolRunner::masterSystemPrompt(false);
+    QVERIFY(mOff.contains(QStringLiteral("conciso")));
+    QVERIFY(!mOff.contains(QStringLiteral("clave:valor")));
+    // Maestro ON: pide formato denso clave:valor.
+    const QString mOn = AgentToolRunner::masterSystemPrompt(true);
+    QVERIFY(mOn.contains(QStringLiteral("clave:valor")));
+    QVERIFY(mOn.contains(QStringLiteral("Sin prosa")));
+
+    // Sub-agente: el cwd siempre aparece; honey suma la sección de frugalidad.
+    const QString sOff = SubAgentRunner::systemPrompt(QStringLiteral("C:/ws"), false);
+    QVERIFY(sOff.contains(QStringLiteral("C:/ws")));
+    QVERIFY(!sOff.contains(QStringLiteral("FRUGALIDAD")));
+    const QString sOn = SubAgentRunner::systemPrompt(QStringLiteral("C:/ws"), true);
+    QVERIFY(sOn.contains(QStringLiteral("C:/ws")));
+    QVERIFY(sOn.contains(QStringLiteral("FRUGALIDAD (honey)")));
+    QVERIFY(sOn.contains(QStringLiteral("YAGNI")));
 }
 
 QTEST_MAIN(AgentToolsTests)
