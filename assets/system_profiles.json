@@ -330,7 +330,8 @@
       "enabled": false,
       "args": []
     },
-    "binaryKind": "official"
+    "binaryKind": "official",
+    "binaryPin": "b9842"
   },
   {
     "id": "sys-vram-8-gemma",
