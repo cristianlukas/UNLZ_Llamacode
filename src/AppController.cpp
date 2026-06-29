@@ -3117,11 +3117,14 @@ void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
     }
     if (!browserMcpEffective(override, m_browserAutomationEnabled)) return;
     if (merged.contains(QStringLiteral("playwright"))) return;  // respeta el del usuario
+    // Headless por defecto: el navegador de automatización ("Navegador background")
+    // corre por detrás sin robar el foco con una ventana. El teach/record usa su
+    // propio path (BrowserTeach, node) y no pasa por acá.
     merged.insert(QStringLiteral("playwright"), QVariantMap{
         {QStringLiteral("name"), QStringLiteral("playwright")},
         {QStringLiteral("type"), QStringLiteral("local")},
         {QStringLiteral("enabled"), true},
-        {QStringLiteral("command"), m_browserMcpCommand}});
+        {QStringLiteral("command"), AutomationRunner::headlessBrowserCommand(m_browserMcpCommand)}});
 }
 
 void AppController::setThinkingEnabled(bool enabled)
@@ -4029,13 +4032,18 @@ void AppController::prepareTaskAgentSession()
 
 void AppController::runTask(const QString &id)
 {
-    const QVariantMap task = m_tasks.get(id);
+    QVariantMap task = m_tasks.get(id);
     if (task.isEmpty()) {
         emit serverError(QStringLiteral("Task no encontrada."));
         emit taskRunFinished(id, QString(), QStringLiteral("error"),
                              QStringLiteral("Task no encontrada."), false);
         return;
     }
+    // El modo "auto" decide superficie (escritorio vs navegador) en cada corrida.
+    // Resolvemos sobre la copia local (no se persiste) para que la validación, el
+    // gating de sesión y el cuerpo vean una superficie concreta. El store sigue
+    // guardando "auto" y se reevalúa la próxima vez.
+    task[QStringLiteral("executionMode")] = AutomationRunner::resolveExecutionMode(task);
 
     if (!m_runningTaskId.isEmpty()) {
         emit serverError(QStringLiteral("Ya hay una Task en ejecución."));

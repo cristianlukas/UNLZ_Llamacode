@@ -12,6 +12,8 @@ private slots:
     void sensitiveActionClassification();
     void desktopRequiresVisionAndTraining();
     void limitsAreClamped();
+    void autoModeRoutesBySurface();
+    void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
 };
 
@@ -54,6 +56,50 @@ void AutomationTests::limitsAreClamped()
     QCOMPARE(limits.value("timeoutSec").toInt(), 30);
     QCOMPARE(limits.value("maxActions").toInt(), 500);
     QCOMPARE(limits.value("maxRetries").toInt(), 0);
+}
+
+void AutomationTests::autoModeRoutesBySurface()
+{
+    using R = AutomationRunner;
+    // "auto" sin pasos de escritorio → web (browserBackground).
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{{"executionMode", "auto"}}),
+             QStringLiteral("browserBackground"));
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{
+                 {"executionMode", "auto"},
+                 {"steps", QVariantList{QVariantMap{{"kind", "browser"}}}}}),
+             QStringLiteral("browserBackground"));
+    // "auto" con algún paso de escritorio → escritorio.
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{
+                 {"executionMode", "auto"},
+                 {"steps", QVariantList{QVariantMap{{"kind", "browser"}},
+                                        QVariantMap{{"kind", "desktop"}}}}}),
+             QStringLiteral("desktop"));
+    // Modos concretos pasan tal cual.
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{{"executionMode", "desktop"}}),
+             QStringLiteral("desktop"));
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{{"executionMode", "browserBackground"}}),
+             QStringLiteral("browserBackground"));
+    // Legacy/vacío caen en "auto" (→ web por defecto, sin pasos de escritorio).
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{{"executionMode", "agent"}}),
+             QStringLiteral("browserBackground"));
+    QCOMPARE(R::resolveExecutionMode(QVariantMap{}),
+             QStringLiteral("browserBackground"));
+}
+
+void AutomationTests::headlessBrowserCommandForcesHeadless()
+{
+    using R = AutomationRunner;
+    // El MCP de Playwright por defecto se fuerza headless.
+    QCOMPARE(R::headlessBrowserCommand(QStringLiteral("npx @playwright/mcp@latest")),
+             QStringLiteral("npx @playwright/mcp@latest --headless"));
+    // Si ya hay un flag explícito, se respeta (no se duplica).
+    QCOMPARE(R::headlessBrowserCommand(QStringLiteral("npx @playwright/mcp@latest --headless")),
+             QStringLiteral("npx @playwright/mcp@latest --headless"));
+    QCOMPARE(R::headlessBrowserCommand(QStringLiteral("npx @playwright/mcp@latest --headed")),
+             QStringLiteral("npx @playwright/mcp@latest --headed"));
+    // MCP de terceros no se toca.
+    QCOMPARE(R::headlessBrowserCommand(QStringLiteral("node mi-mcp.js")),
+             QStringLiteral("node mi-mcp.js"));
 }
 
 void AutomationTests::artifactsRoundTripAndRedactSecrets()

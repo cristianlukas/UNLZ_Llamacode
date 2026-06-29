@@ -509,6 +509,13 @@ La sección **Automatizaciones** incorpora un modo Teach multimodal con dos dest
   la intención cuando cambia la interfaz y verifica el resultado. El destino normal
   es headless, con fallback a navegador oculto cuando el sitio lo requiere.
 
+Cada proceso tiene un **Tipo de proceso**: *Escritorio foreground*, *Navegador
+background* o **Auto**. En *Auto* el sistema decide la superficie al ejecutar de
+forma determinista: si la automatización tiene algún paso de escritorio corre como
+foreground; si no, como navegador background (headless, sin robar el foco). El MCP
+de Playwright se fuerza a `--headless` por defecto para que el navegador no tome la
+pantalla; un `--headed`/`--headless` explícito en el comando se respeta.
+
 Teach vive en **Automatizaciones**. Configuración conserva únicamente el toggle y
 comando técnico del MCP Playwright. Los skills Playwright anteriores se pueden
 importar sin modificarlos.

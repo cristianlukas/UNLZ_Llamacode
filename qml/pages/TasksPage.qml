@@ -40,7 +40,7 @@ Item {
             loopEnabled.checked = t.loopEnabled || false
             loopGoalField.text = t.loopGoal || ""
             loopMaxIterations.value = t.loopMaxIterations || 5
-            executionMode.currentIndex = Math.max(0, ["agent", "desktop", "browserBackground"].indexOf(t.executionMode || "agent"))
+            executionMode.currentIndex = Math.max(0, ["auto", "desktop", "browserBackground"].indexOf(t.executionMode || "auto"))
             approvalPolicy.currentIndex = Math.max(0, ["always", "sensitive", "autonomous"].indexOf(t.approvalPolicy || "sensitive"))
             timeoutSec.value = t.timeoutSec || 300
             maxActions.value = t.maxActions || 50
@@ -185,7 +185,7 @@ Item {
 
     function processTypeLabel(mode) {
         return mode === "desktop" ? "Escritorio foreground"
-             : (mode === "browserBackground" ? "Navegador background" : "Prompt (agente)")
+             : (mode === "browserBackground" ? "Navegador background" : "Auto")
     }
 
     function collectSteps() {
@@ -861,7 +861,7 @@ Item {
                 loopGoal: loopGoalField.text,
                 loopMaxIterations: loopMaxIterations.value,
                 verifyProfileId: verifyOtherModel.checked ? verifyProfileCombo.selectedProfileId : "",
-                executionMode: ["agent", "desktop", "browserBackground"][executionMode.currentIndex],
+                executionMode: ["auto", "desktop", "browserBackground"][executionMode.currentIndex],
                 approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
                 timeoutSec: timeoutSec.value,
                 maxActions: maxActions.value,
@@ -1048,7 +1048,7 @@ Item {
                             LcComboBox {
                                 id: executionMode
                                 Layout.fillWidth: true
-                                model: ["Prompt (agente)", "Escritorio foreground", "Navegador background"]
+                                model: ["Auto", "Escritorio foreground", "Navegador background"]
                             }
                         }
                         ColumnLayout {
@@ -1060,6 +1060,19 @@ Item {
                                 model: ["Confirmar siempre", "Sólo acciones sensibles", "Autónoma"]
                             }
                         }
+                    }
+
+                    // Aclara qué hace cada tipo de proceso (en especial "Auto").
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        text: executionMode.currentIndex === 0
+                            ? "Auto: el sistema elige la superficie al ejecutar. Si la automatización tiene pasos de escritorio corre como Escritorio foreground; si no, como Navegador background (headless, sin robar el foco)."
+                            : (executionMode.currentIndex === 1
+                                ? "Escritorio foreground: controla tu pantalla real (mouse y teclado). Ocupa la PC mientras corre."
+                                : "Navegador background: corre en un navegador headless por detrás, sin tomar tu pantalla. Para tareas 100% web.")
                     }
 
                     RowLayout {

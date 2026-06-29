@@ -43,7 +43,7 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case PrePromptRole:       return t.value("prePrompt");
     case PostPromptRole:      return t.value("postPrompt");
     case SilentUnlessErrorRole: return t.value("silentUnlessError", false);
-    case ExecutionModeRole:     return t.value("executionMode", QStringLiteral("agent"));
+    case ExecutionModeRole:     return t.value("executionMode", QStringLiteral("auto"));
     case ApprovalPolicyRole:    return t.value("approvalPolicy", QStringLiteral("sensitive"));
     case TeachArtifactIdRole:   return t.value("teachArtifactId");
     case TeachFormatVersionRole:return t.value("teachFormatVersion", 1);
@@ -148,7 +148,7 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["scheduleSpec"]    = def.value("scheduleSpec", t.value("scheduleSpec", QVariantMap{}));
     t["permScope"]       = def.value("permScope", t.value("permScope", QStringLiteral("project")));
     t["permFolders"]     = def.value("permFolders", t.value("permFolders", QVariantList{}));
-    t["executionMode"]   = def.value("executionMode", t.value("executionMode", QStringLiteral("agent")));
+    t["executionMode"]   = def.value("executionMode", t.value("executionMode", QStringLiteral("auto")));
     t["approvalPolicy"]  = def.value("approvalPolicy", t.value("approvalPolicy", QStringLiteral("sensitive")));
     t["teachArtifactId"] = def.value("teachArtifactId", t.value("teachArtifactId"));
     t["teachFormatVersion"] = def.value("teachFormatVersion", t.value("teachFormatVersion", 1));
@@ -427,7 +427,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["lastRunAt"]       = task.value("lastRunAt").toString();
     o["lastRunStatus"]   = task.value("lastRunStatus").toString();
     o["lastRunSummary"]  = task.value("lastRunSummary").toString();
-    o["executionMode"]   = task.value("executionMode", QStringLiteral("agent")).toString();
+    o["executionMode"]   = task.value("executionMode", QStringLiteral("auto")).toString();
     o["approvalPolicy"]  = task.value("approvalPolicy", QStringLiteral("sensitive")).toString();
     o["teachArtifactId"] = task.value("teachArtifactId").toString();
     o["teachFormatVersion"] = task.value("teachFormatVersion", 1).toInt();
@@ -487,7 +487,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["lastRunStatus"]   = obj.value("lastRunStatus").toString();
     t["lastRunSummary"]  = obj.value("lastRunSummary").toString();
     t["executionMode"]   = obj.contains("executionMode")
-        ? obj.value("executionMode").toString() : QStringLiteral("agent");
+        ? obj.value("executionMode").toString() : QStringLiteral("auto");
     t["approvalPolicy"]  = obj.contains("approvalPolicy")
         ? obj.value("approvalPolicy").toString() : QStringLiteral("sensitive");
     t["teachArtifactId"] = obj.value("teachArtifactId").toString();

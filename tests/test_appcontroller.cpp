@@ -137,7 +137,7 @@ QString AppControllerTests::makeLoopTask(AppController &app, const QString &name
     const QVariantMap def{
         {QStringLiteral("name"), name},
         {QStringLiteral("description"), QStringLiteral("Escribí un resumen del texto dado")},
-        {QStringLiteral("executionMode"), QStringLiteral("agent")},
+        {QStringLiteral("executionMode"), QStringLiteral("auto")},
         {QStringLiteral("loopEnabled"), true},
         {QStringLiteral("loopGoal"), QStringLiteral("el resumen quedó completo")},
         {QStringLiteral("loopMaxIterations"), maxIter}

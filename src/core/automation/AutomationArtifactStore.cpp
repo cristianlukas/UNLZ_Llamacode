@@ -57,7 +57,7 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
         {QStringLiteral("taskId"), task.value(QStringLiteral("id"))},
         {QStringLiteral("name"), task.value(QStringLiteral("name"))},
         {QStringLiteral("objective"), task.value(QStringLiteral("description"))},
-        {QStringLiteral("executionMode"), task.value(QStringLiteral("executionMode"), QStringLiteral("agent"))},
+        {QStringLiteral("executionMode"), task.value(QStringLiteral("executionMode"), QStringLiteral("auto"))},
         {QStringLiteral("approvalPolicy"), task.value(QStringLiteral("approvalPolicy"), QStringLiteral("sensitive"))},
         {QStringLiteral("scope"), scope},
         {QStringLiteral("requiresVision"), task.value(QStringLiteral("executionMode")) == QLatin1String("desktop")},

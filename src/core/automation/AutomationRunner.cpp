@@ -15,7 +15,7 @@ bool AutomationRunner::isSensitiveAction(const QString &intent)
 
 QString AutomationRunner::validateTask(const QVariantMap &task, bool hasVision)
 {
-    const QString mode = task.value(QStringLiteral("executionMode"), QStringLiteral("agent")).toString();
+    const QString mode = task.value(QStringLiteral("executionMode"), QStringLiteral("auto")).toString();
     if (mode == QLatin1String("desktop") && !hasVision)
         return QStringLiteral("Esta automatización de escritorio requiere un perfil con visión (--mmproj).");
     if (mode == QLatin1String("desktop")
@@ -32,11 +32,42 @@ QVariantMap AutomationRunner::limits(const QVariantMap &task)
         {QStringLiteral("maxRetries"), qBound(0, task.value(QStringLiteral("maxRetries"), 2).toInt(), 10)}};
 }
 
+QString AutomationRunner::resolveExecutionMode(const QVariantMap &task)
+{
+    const QString mode = task.value(QStringLiteral("executionMode"), QStringLiteral("auto")).toString();
+    if (mode == QLatin1String("desktop") || mode == QLatin1String("browserBackground"))
+        return mode;
+    // "auto" (o legacy "agent"/"prompt"/vacío): el sistema elige la superficie.
+    // Señal fuerte y determinista: el tipo de los pasos. Cualquier paso de
+    // escritorio implica controlar la pantalla real → "desktop". Si no, la tarea
+    // es web → "browserBackground".
+    const QVariantList steps = task.value(QStringLiteral("steps")).toList();
+    for (const QVariant &value : steps)
+        if (value.toMap().value(QStringLiteral("kind")).toString() == QLatin1String("desktop"))
+            return QStringLiteral("desktop");
+    return QStringLiteral("browserBackground");
+}
+
+QString AutomationRunner::headlessBrowserCommand(const QString &command)
+{
+    const QString c = command.trimmed();
+    if (c.isEmpty()) return c;
+    // Respeta una elección explícita del usuario.
+    if (c.contains(QLatin1String("--headless")) || c.contains(QLatin1String("--headed")))
+        return c;
+    // Sólo el MCP de Playwright: no tocamos comandos MCP de terceros.
+    if (!c.contains(QLatin1String("@playwright/mcp")) && !c.contains(QLatin1String("playwright-mcp")))
+        return c;
+    return c + QStringLiteral(" --headless");
+}
+
 QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,
                                         const QVariantMap &recipe)
 {
-    const QString mode = task.value(QStringLiteral("executionMode"), QStringLiteral("agent")).toString();
-    if (mode == QLatin1String("agent")) return {};
+    // El bloque de receta sólo tiene sentido con una superficie concreta; los
+    // callers ya gatean por teachArtifactId, así que el modo siempre resuelve a
+    // "desktop"/"browserBackground".
+    const QString mode = resolveExecutionMode(task);
     QString out = QStringLiteral(
         "\n\nMODO DE AUTOMATIZACIÓN: %1.\n"
         "Usá la receta enseñada como evidencia semántica, no como replay rígido. "
