@@ -161,6 +161,14 @@ public:
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);
 
+    // Texto VISIBLE de una respuesta del modelo según "Pensar". Con Pensar ON deja
+    // el content tal cual (la UI muestra <think>). Con Pensar OFF quita los bloques
+    // <think>…</think>; pero si el modelo metió TODA la respuesta dentro de <think>
+    // (Qwen con thinking off suele hacerlo) y al quitar quedaría vacío, RESCATA el
+    // texto interno en vez de mostrar una burbuja vacía: silencio es peor que
+    // verboso, y era la causa de los saludos "sin respuesta". PURA → unit-testeable.
+    static QString visibleAnswer(const QString &content, bool thinkingEnabled);
+
     // Une los deltas incrementales de tool_calls (streaming OpenAI) en el
     // acumulador `acc` (index → {id,name,arguments}). id/name se setean cuando
     // llegan; arguments se concatena chunk a chunk. PURA → unit-testeable.

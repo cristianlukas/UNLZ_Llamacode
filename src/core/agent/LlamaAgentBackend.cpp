@@ -99,6 +99,19 @@ static QString stripThinkForOutput(const QString &s)
     return out.trimmed();
 }
 
+QString LlamaAgentBackend::visibleAnswer(const QString &content, bool thinkingEnabled)
+{
+    if (thinkingEnabled) return content;
+    const QString stripped = stripThinkForOutput(content);
+    if (!stripped.isEmpty()) return stripped;
+    // El modelo metió TODO dentro de <think> y no dejó respuesta afuera: rescatar el
+    // interior (sin las etiquetas) para no mostrar una burbuja vacía.
+    QString inner = content;
+    inner.remove(QRegularExpression(QStringLiteral("</?think\\b[^>]*>"),
+                                    QRegularExpression::CaseInsensitiveOption));
+    return inner.trimmed();
+}
+
 static const QString kMcpPrefix = QStringLiteral("mcp__");
 
 // Data-URI base64 si el archivo es imagen soportada por mmproj; "" si no.
@@ -1844,24 +1857,31 @@ void LlamaAgentBackend::handleStreamData()
         QString full = m_streamBase;
         if (m_thinkingEnabled && !m_streamReason.isEmpty())
             full += QStringLiteral("<think>") + m_streamReason + QStringLiteral("</think>\n");
-        full += m_thinkingEnabled ? m_streamContent : stripThinkForOutput(m_streamContent);
+        full += visibleAnswer(m_streamContent, m_thinkingEnabled);
+        // Chars acumulados de args de tool en streaming. Cuando el modelo genera una
+        // tool (p.ej. write_file con un archivo grande) los tokens llegan como
+        // delta.tool_calls.arguments, NO como content. Hay que contarlos para el
+        // medidor de tokens/tps; sin esto la UI mostraba "0 tokens / 0 tps" y parecía
+        // colgada durante toda la generación de la tool.
+        int totalArgChars = 0;
+        QString firstToolName;
+        if (toolStreaming) {
+            const QList<int> ks = m_streamToolCalls.keys();
+            for (int k : ks) {
+                const QJsonObject tc = m_streamToolCalls.value(k);
+                totalArgChars += tc.value(QStringLiteral("arguments")).toString().size();
+                if (firstToolName.isEmpty())
+                    firstToolName = tc.value(QStringLiteral("name")).toString();
+            }
+        }
         // Indicador transitorio mientras se generan args de tool (sin texto aún).
         // Se limpia en handleStreamFinished antes de cerrar/finalizar el bubble,
         // así no queda pegado en el chat ni envenena m_streamContent.
         if (toolStreaming && m_streamContent.isEmpty()) {
-            int argChars = 0;
-            QString toolName;
-            const QList<int> ks = m_streamToolCalls.keys();
-            for (int k : ks) {
-                const QJsonObject tc = m_streamToolCalls.value(k);
-                argChars += tc.value(QStringLiteral("arguments")).toString().size();
-                if (toolName.isEmpty())
-                    toolName = tc.value(QStringLiteral("name")).toString();
-            }
-            if (toolName.isEmpty()) toolName = QStringLiteral("tool");
+            const QString toolName = firstToolName.isEmpty() ? QStringLiteral("tool") : firstToolName;
             if (!full.isEmpty()) full += QLatin1Char('\n');
             full += QStringLiteral("⏳ preparando `%1`… (~%2 tokens generados)")
-                        .arg(toolName).arg((argChars + 3) / 4);
+                        .arg(toolName).arg((totalArgChars + 3) / 4);
         }
         if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
             QVariantMap m = m_messages[m_curAsstIdx].toMap();
@@ -1871,7 +1891,12 @@ void LlamaAgentBackend::handleStreamData()
                 m[QStringLiteral("genStartMs")] =
                     static_cast<double>(QDateTime::currentMSecsSinceEpoch());
             m[QStringLiteral("content")] = full;
-            m[QStringLiteral("tokens")] = estimateTokens(full);
+            // Tokens generados REALES = content + razonamiento (si se muestra) + args
+            // de tool. No usar estimateTokens(full): incluiría base/indicador y NO los
+            // args (que viajan aparte). Así el contador avanza aunque sólo haya tool.
+            const int genChars = m_streamContent.size()
+                + (m_thinkingEnabled ? m_streamReason.size() : 0) + totalArgChars;
+            m[QStringLiteral("tokens")] = (genChars + 3) / 4;
             m_messages[m_curAsstIdx] = m;
             // Throttle a ~30 fps. Durante el stream NO emitimos messagesChanged
             // (reconstruye todo el ListView por cada token → jank). Mandamos sólo
@@ -1902,7 +1927,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
         QString clean = m_streamBase;
         if (m_thinkingEnabled && !m_streamReason.isEmpty())
             clean += QStringLiteral("<think>") + m_streamReason + QStringLiteral("</think>\n");
-        clean += m_thinkingEnabled ? m_streamContent : stripThinkForOutput(m_streamContent);
+        clean += visibleAnswer(m_streamContent, m_thinkingEnabled);
         QVariantMap m = m_messages[m_curAsstIdx].toMap();
         m[QStringLiteral("content")] = clean;
         m_messages[m_curAsstIdx] = m;
@@ -2892,6 +2917,10 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
     // Si hay texto final pero la burbuja se cerró tras una tool, abrir una nueva.
     if (!finalText.isEmpty() && m_curAsstIdx < 0)
         ensureAssistantBubble();
+    // Largo REAL mostrado al usuario. En el path de streaming finishTurn se llama con
+    // finalText vacío (la burbuja ya tiene el texto), así que loguear finalText.size()
+    // daba SIEMPRE 0 y parecía "respuesta vacía" cuando no lo era. Medir la burbuja.
+    int shownChars = finalText.size();
     if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
         QVariantMap m = m_messages[m_curAsstIdx].toMap();
         QString cur = m.value(QStringLiteral("content")).toString();
@@ -2903,15 +2932,16 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
         m[QStringLiteral("typing")]  = false;
         finalizeMsgMetrics(m, m_genTokens, m_genMs);
         m_messages[m_curAsstIdx] = m;
+        shownChars = cur.size();
         emit messagesChanged();
     }
     if (persistFinalToApi && !finalText.isEmpty())
         m_apiMessages.append(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), finalText}});
-    emit logAppended(QStringLiteral("[turn] completed (finalTextChars=%1)\n").arg(finalText.size()));
+    emit logAppended(QStringLiteral("[turn] completed (finalTextChars=%1)\n").arg(shownChars));
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("assistant_final"),
-                          QJsonObject{{QStringLiteral("chars"), finalText.size()},
+                          QJsonObject{{QStringLiteral("chars"), shownChars},
                                       {QStringLiteral("toolOk"), m_toolOk},
                                       {QStringLiteral("toolFail"), m_toolFail},
                                       {QStringLiteral("text"), finalText.left(4096)}});

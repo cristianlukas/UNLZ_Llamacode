@@ -447,6 +447,10 @@ Item {
         function onAgentPendingToolChanged() { root.markActivity() }
         function onAgentLogChanged() { root.markActivity() }
         function onAgentRunningChanged() { root.markActivity() }
+        // El streaming (texto Y args de tool) emite agentStreamingChanged en cada
+        // delta pero NO messagesChanged: sin esto el badge marcaba "Sin actividad"
+        // mientras el modelo generaba una tool grande (parecía colgado).
+        function onAgentStreamingChanged() { root.markActivity() }
     }
 
     Timer {

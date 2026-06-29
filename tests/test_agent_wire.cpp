@@ -25,6 +25,7 @@ private slots:
     void taskSessionIsEphemeralAndRestoresPrevious();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
+    void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
     void buildObservationMessage_wrapsImagesAsUserMultimodal();
     void buildObservationMessage_emptyWhenNoImages();
     void developmentDisciplineSection_coversRegressionGuards();
@@ -439,6 +440,31 @@ void AgentWireTests::mergeToolCallDelta_parallelCallsByIndex()
     QCOMPARE(acc.value(0).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"q\":1}"));
     QCOMPARE(acc.value(1).value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
     QCOMPARE(acc.value(1).value(QStringLiteral("arguments")).toString(), QStringLiteral("{\"p\":2}"));
+}
+
+// visibleAnswer: con Pensar OFF quita <think>…</think>, PERO si el modelo metió
+// toda la respuesta dentro de <think> (Qwen con thinking off) rescata el interior
+// en vez de devolver vacío — esa era la causa de los saludos sin respuesta.
+void AgentWireTests::visibleAnswer_stripsThinkButSalvagesWhenEmpty()
+{
+    using B = LlamaAgentBackend;
+    // Caso normal: think + respuesta afuera → queda sólo la respuesta.
+    QCOMPARE(B::visibleAnswer(QStringLiteral("<think>razono</think>Hola!"), false),
+             QStringLiteral("Hola!"));
+    // Caso bug: TODO dentro de think, nada afuera → no devolver vacío, rescatar.
+    QCOMPARE(B::visibleAnswer(QStringLiteral("<think>Hola, ¿qué tal?</think>"), false),
+             QStringLiteral("Hola, ¿qué tal?"));
+    // Think sin cerrar (cortado por n_predict) y sin texto afuera → rescatar interior.
+    QCOMPARE(B::visibleAnswer(QStringLiteral("<think>respuesta cortada"), false),
+             QStringLiteral("respuesta cortada"));
+    // Pensar ON: deja el content tal cual (la UI muestra el <think>).
+    QCOMPARE(B::visibleAnswer(QStringLiteral("<think>r</think>R"), true),
+             QStringLiteral("<think>r</think>R"));
+    // Texto sin think: intacto.
+    QCOMPARE(B::visibleAnswer(QStringLiteral("respuesta directa"), false),
+             QStringLiteral("respuesta directa"));
+    // Realmente vacío (sólo etiquetas) → vacío, no inventa.
+    QVERIFY(B::visibleAnswer(QStringLiteral("<think></think>"), false).isEmpty());
 }
 
 void AgentWireTests::buildObservationMessage_wrapsImagesAsUserMultimodal()
