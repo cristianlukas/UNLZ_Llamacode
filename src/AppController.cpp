@@ -10114,10 +10114,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // queda en "super" igual: el benchmark es headless y no puede pedir permisos.
         if (!m_benchmarkAgentProfileId.isEmpty()) {
             const AgentProfile ap = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
-            if (!ap.id.isEmpty()) {
+            if (!ap.id.isEmpty())
                 applyAgentProfileCaps(agent, ap);
-                agent->setThinkingEnabled(ap.thinking);
-            }
         }
 
         QMap<QString, QVariant> mergedMcp;
