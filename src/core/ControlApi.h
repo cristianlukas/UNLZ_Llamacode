@@ -10,10 +10,18 @@ class QTcpSocket;
 // para tests automatizados. Sólo escucha en localhost.
 //
 // Endpoints:
-//   GET  /methods            → lista de métodos invocables + propiedades (JSON)
-//   GET  /prop?name=X        → valor de la propiedad X (JSON)
-//   POST /invoke {method,args}→ invoca método en AppController; {ok,result}
-//   GET  /health             → {ok:true}
+//   GET  /              → índice de uso autodescriptivo (igual que /help)
+//   GET  /help          → endpoints, formato de request/response y ejemplos
+//   GET  /health        → {ok:true}
+//   GET  /methods       → métodos invocables + propiedades + sub-targets (JSON)
+//   GET  /prop?name=X   → {name,value} de la propiedad X
+//   POST /setprop {name,value}    → escribe una propiedad; {ok:true}
+//   POST /invoke {method,args}    → invoca un método; {ok:true, result?}
+//
+// Descubrimiento: ante un nombre desconocido (propiedad, método o target) la
+// respuesta de error incluye la lista `available` de nombres válidos, así un
+// cliente (IA o persona) puede corregir sin leer el código. Empezá por GET /help
+// y GET /methods.
 //
 // Targeting de sub-objetos: todo endpoint acepta un `target` (query param en GET,
 // campo JSON en POST) con una ruta de propiedades QObject* separadas por punto,
@@ -37,6 +45,7 @@ private:
     // Resuelve una ruta de props QObject* (dot-separated) desde m_target. Ruta
     // vacía = m_target. Devuelve nullptr si algún segmento no es un QObject* válido.
     QObject *resolveTarget(const QString &path) const;
+    QByteArray jsonHelp() const;
     QByteArray jsonMethods(const QString &targetPath) const;
     QByteArray jsonProperty(QObject *target, const QString &name) const;
     QByteArray setProperty(QObject *target, const QByteArray &jsonBody, bool *ok) const;

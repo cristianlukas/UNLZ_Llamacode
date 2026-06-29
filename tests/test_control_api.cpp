@@ -49,6 +49,11 @@ private slots:
     void setChildProperty();
     void invokeChildMethod();
     void unknownTargetErrors();
+    void helpIndexDescribesEndpoints();
+    void unknownPropertyListsAvailable();
+    void unknownMethodListsAvailable();
+    void wrongArityListsValidArgCounts();
+    void unknownTargetListsAvailable();
 
 private:
     QJsonObject request(const QByteArray &method, const QString &path,
@@ -188,6 +193,57 @@ void ControlApiTests::unknownTargetErrors()
     const QJsonObject o = request("POST", "/invoke",
                                   R"({"target":"nope","method":"greet","args":["x"]})");
     QVERIFY(o.contains("error"));
+}
+
+// GET / y /help devuelven un índice autodescriptivo con los endpoints.
+void ControlApiTests::helpIndexDescribesEndpoints()
+{
+    for (const QString &path : {QStringLiteral("/"), QStringLiteral("/help")}) {
+        const QJsonObject o = request("GET", path);
+        QVERIFY2(o.value("service").toString().contains("ControlApi"),
+                 qPrintable("sin service en " + path));
+        const QJsonObject ep = o.value("endpoints").toObject();
+        QVERIFY(ep.contains("GET /health"));
+        QVERIFY(ep.contains("POST /invoke"));
+        QVERIFY(o.value("exampleFlow").toArray().size() > 0);
+    }
+}
+
+// Propiedad desconocida → error con 'available' = nombres válidos (descubrimiento).
+void ControlApiTests::unknownPropertyListsAvailable()
+{
+    const QJsonObject o = request("GET", "/prop?name=nope");
+    QVERIFY(o.contains("error"));
+    QVERIFY2(o.value("available").toArray().contains(QJsonValue(QStringLiteral("counter"))),
+             "el error debería listar 'counter' como propiedad válida");
+}
+
+// Método desconocido → error con 'available' = "nombre/aridad".
+void ControlApiTests::unknownMethodListsAvailable()
+{
+    const QJsonObject o = request("POST", "/invoke", R"({"method":"nope","args":[]})");
+    QVERIFY(o.contains("error"));
+    QVERIFY2(o.value("available").toArray().contains(QJsonValue(QStringLiteral("addNums/2"))),
+             "el error debería listar 'addNums/2'");
+}
+
+// Método existente pero con aridad equivocada → 'validArgCounts' (no 'available').
+void ControlApiTests::wrongArityListsValidArgCounts()
+{
+    const QJsonObject o = request("POST", "/invoke", R"({"method":"addNums","args":[1]})");
+    QVERIFY(o.contains("error"));
+    QVERIFY(o.value("error").toString().contains("aridad"));
+    QVERIFY(o.value("validArgCounts").toArray().contains(QJsonValue(2)));
+}
+
+// Target desconocido → error con 'available' = sub-targets navegables.
+void ControlApiTests::unknownTargetListsAvailable()
+{
+    const QJsonObject o = request("POST", "/invoke",
+                                  R"({"target":"nope","method":"greet","args":["x"]})");
+    QVERIFY(o.contains("error"));
+    QVERIFY2(o.value("available").toArray().contains(QJsonValue(QStringLiteral("child"))),
+             "el error debería listar 'child' como target válido");
 }
 
 QTEST_MAIN(ControlApiTests)
