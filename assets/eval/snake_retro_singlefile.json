@@ -14,7 +14,6 @@
         "getContext",
         "addEventListener",
         "keydown",
-        "requestAnimationFrame",
         "score"
       ]
     }

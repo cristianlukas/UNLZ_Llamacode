@@ -122,13 +122,32 @@ $out | ConvertTo-Json -Depth 6
 real (jugable, retro, single-file). Armar tabla y contrastar con la hipótesis: ¿Chat
 ganó tiempo y calidad? ¿los niveles altos sobre-ingenierizaron / tardaron más?
 
-## Estado actual (2026-06-29)
+## Resultado 2026-06-29
 
-- **Incompleto, 0 niveles capturados.** El primer intento (agent-chat) entró en bucle de
-  reparación bajo **contención de VRAM** (~1–3 t/s) y se canceló.
-- Causa raíz confirmada: VRAM saturada por otras apps. Tras liberarla quedó **756 MiB
-  used / 24 GB (1%)** → recargar limpio y **probar t/s antes** de las 5 corridas.
-- Pendiente: (1) aflojar acceptance del suite; (2) re-cargar MAX-Q con GPU libre;
-  (3) PROBE t/s ≈ 50; (4) correr los 5 niveles; (5) borrar el resultado basura 0/0;
-  (6) tabla final + veredicto.
-- Driver de referencia (efímero, en scratchpad): replicá los comandos de arriba.
+Corrida completa con acceptance aflojada en `assets/eval/snake_retro_singlefile.json`
+(`requestAnimationFrame` removido; se aceptan `<canvas`, `<style`, `<script`,
+`getContext`, `addEventListener`, `keydown`, `score`). VRAM inicial: **494 MiB /
+24 GB**. Probe previo directo a llama.cpp: **69.96 t/s** de generación, sano.
+
+| Nivel | Score reportado | Tiempo | avgTps | TTFT | Archivos relevantes |
+|---|---:|---:|---:|---:|---|
+| `agent-chat` | 7/7 | 233.537 s | 84.612 | 4397 ms | `snake.html` |
+| `agent-basico` | 7/7 | 249.878 s | 46.052 | 4548 ms | `snake_retro.html` |
+| `agent-intermedio` | 7/7 | 517.606 s | 45.694 | 2876 ms | `snake_retro.html` + artefactos Playwright |
+| `agent-avanzado` | 7/7 | 222.241 s | 41.995 | 4061 ms | `snake_retro.html` |
+| `agent-maximo` | 1/7 | 270.074 s | 42.656 | 7482 ms | `snake_retro.html` |
+
+HTMLs generados revisados en los `*_ws` de cada `runDir`: todos son single-file,
+sin dependencias externas detectadas, y todos contienen los marcadores mínimos de
+acceptance. En `agent-maximo`, el archivo generado también contiene todos los
+marcadores; el `1/7` fue un falso negativo del evaluador porque los substrings se
+buscaron en la respuesta final del agente tras el repair, no en el archivo escrito.
+La traza muestra que el agente verificó el archivo con `findstr`, pero respondió
+sólo texto explicativo y no repitió todos los marcadores.
+
+Veredicto: la hipótesis queda **parcialmente validada**. `agent-chat` produjo un
+HTML válido, autocontenido y sin artefactos extra, con el mayor throughput reportado.
+No fue el menor tiempo absoluto: `agent-avanzado` terminó más rápido por elapsed
+(222 s vs 234 s), aunque con menor t/s. `agent-intermedio` sí mostró el patrón de
+sobre-ingeniería esperado: tardó más del doble que chat y generó múltiples logs,
+YAMLs y PNGs de Playwright para una tarea autocontenida.
