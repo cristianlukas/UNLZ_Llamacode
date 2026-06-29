@@ -142,6 +142,15 @@ public:
     // privada). Permite verificar el gating por directiva sin arrancar una sesión.
     QString systemPromptForTest() const { return buildSystemPrompt(); }
 
+    // Hooks de test para medir el PRESUPUESTO DE CONTEXTO que el harness inyecta
+    // (system prompt + schemas de tools con MCP + memoria de proyecto) sin una
+    // sesión viva. Sirven para bisecar qué toggle infla el contexto (lo que en un
+    // perfil al límite de VRAM como MAX-Q tira el decode a swap). No tocan estado
+    // de runtime: setean caches/campos que normalmente llena el worker.
+    QJsonArray toolSchemasForTest() const { return buildToolSchemas(); }
+    void setMcpToolsForTest(const QVariantList &tools) { m_mcpTools = tools; }
+    void setCwdForTest(const QString &dir) { m_cwd = dir; }
+
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);
