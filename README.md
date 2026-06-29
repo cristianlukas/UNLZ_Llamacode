@@ -617,6 +617,9 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 - **Puerto ocupado** — antes de iniciar, detecta si el puerto del perfil está en
   uso; si hay otro libre cercano, pregunta si se desea cambiar el perfil a ese
   puerto y recién después lanza.
+- **VRAM insuficiente** — antes de iniciar un perfil GPU, estima si el GGUF +
+  contexto entran en la VRAM libre actual. Si no entra limpio, muestra una alerta
+  porque Windows puede usar memoria compartida y degradar fuertemente los TPS.
 - **Endpoint OpenAI** — con el server corriendo muestra `http://<host>:<port>/v1` (read-only, seleccionable) + botón *Copiar*, para apuntar agentes externos (opencode, aider, etc.) al backend local.
 
 ## Process Lifecycle

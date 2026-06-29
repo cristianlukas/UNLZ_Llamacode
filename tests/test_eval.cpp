@@ -4,6 +4,7 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QSet>
+#include "AppController.h"
 #include "core/eval/EvalSuite.h"
 
 class EvalTests : public QObject
@@ -16,6 +17,7 @@ private slots:
     void loadFromFile_roundTrip();
     void reasoningBiasSuite_isValid();
     void snakeSuite_isValid();
+    void agentAcceptance_scoresGeneratedFiles();
 };
 
 static QByteArray sampleJson()
@@ -129,6 +131,52 @@ void EvalTests::snakeSuite_isValid()
 #else
     QSKIP("LC_SNAKE_SUITE_JSON no definido");
 #endif
+}
+
+void EvalTests::agentAcceptance_scoresGeneratedFiles()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    QFile html(dir.filePath("snake_retro.html"));
+    QVERIFY(html.open(QIODevice::WriteOnly | QIODevice::Text));
+    html.write(R"(<html><head><style></style></head><body>
+<canvas id="game"></canvas>
+<script>
+const ctx = document.getElementById('game').getContext('2d');
+document.addEventListener('keydown', () => {});
+let score = 0;
+</script>
+</body></html>)");
+    html.close();
+
+    QVariantMap acceptance;
+    acceptance["expectSubstrings"] = QVariantList{
+        QStringLiteral("<canvas"),
+        QStringLiteral("<style"),
+        QStringLiteral("<script"),
+        QStringLiteral("getContext"),
+        QStringLiteral("addEventListener"),
+        QStringLiteral("keydown"),
+        QStringLiteral("score"),
+    };
+    QVariantMap task;
+    task["id"] = QStringLiteral("snake-singlefile");
+    task["acceptance"] = acceptance;
+
+    const QVariantMap scored = AppController::scoreAgentBenchmarkAcceptanceForTest(
+        dir.path(),
+        QStringLiteral("Creé snake_retro.html y lo verifiqué."),
+        QVariantList{task},
+        QStringList{QStringLiteral("snake_retro.html")});
+
+    QCOMPARE(scored.value(QStringLiteral("score")).toInt(), 7);
+    QCOMPARE(scored.value(QStringLiteral("total")).toInt(), 7);
+    const QVariantList rows = scored.value(QStringLiteral("rows")).toList();
+    QCOMPARE(rows.size(), 7);
+    for (const QVariant &row : rows)
+        QVERIFY2(row.toMap().value(QStringLiteral("passed")).toBool(),
+                 qPrintable(row.toMap().value(QStringLiteral("name")).toString()));
 }
 
 QTEST_MAIN(EvalTests)

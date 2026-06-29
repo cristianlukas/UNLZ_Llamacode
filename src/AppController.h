@@ -322,6 +322,7 @@ public:
                                          const QString &restartMode);
     Q_INVOKABLE void computeEffectiveProfile(const QString &launchProfileId);
     Q_INVOKABLE QVariantMap launchPortStatus(const QString &launchProfileId);
+    Q_INVOKABLE QVariantMap launchVramFitStatus(const QString &launchProfileId);
     Q_INVOKABLE bool setLaunchBackendPort(const QString &launchProfileId, int port);
     // Recalcula la vista previa desde valores en memoria del editor, sin persistir.
     Q_INVOKABLE void computeEffectiveProfilePreview(const QString &launchProfileId,
@@ -760,6 +761,11 @@ public:
     // fija la ruta correspondiente. urlOverride vacío = URL por defecto del SO.
     Q_INVOKABLE void installVoiceBinary(const QString &kind, const QString &urlOverride = QString());
     Q_INVOKABLE QString voiceBinaryDefaultUrl(const QString &kind) const;
+
+    static QVariantMap scoreAgentBenchmarkAcceptanceForTest(const QString &workspace,
+                                                            const QString &finalText,
+                                                            const QVariantList &benchTasks,
+                                                            const QStringList &files);
 
 signals:
     void voiceStateChanged();

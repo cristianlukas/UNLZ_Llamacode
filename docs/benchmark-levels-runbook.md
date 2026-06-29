@@ -129,13 +129,13 @@ Corrida completa con acceptance aflojada en `assets/eval/snake_retro_singlefile.
 `getContext`, `addEventListener`, `keydown`, `score`). VRAM inicial: **494 MiB /
 24 GB**. Probe previo directo a llama.cpp: **69.96 t/s** de generación, sano.
 
-| Nivel | Score reportado | Tiempo | avgTps | TTFT | Archivos relevantes |
-|---|---:|---:|---:|---:|---|
-| `agent-chat` | 7/7 | 233.537 s | 84.612 | 4397 ms | `snake.html` |
-| `agent-basico` | 7/7 | 249.878 s | 46.052 | 4548 ms | `snake_retro.html` |
-| `agent-intermedio` | 7/7 | 517.606 s | 45.694 | 2876 ms | `snake_retro.html` + artefactos Playwright |
-| `agent-avanzado` | 7/7 | 222.241 s | 41.995 | 4061 ms | `snake_retro.html` |
-| `agent-maximo` | 1/7 | 270.074 s | 42.656 | 7482 ms | `snake_retro.html` |
+| Nivel | Score original | Score corregido esperado | Tiempo | avgTps | TTFT | Archivos relevantes |
+|---|---:|---:|---:|---:|---:|---|
+| `agent-chat` | 7/7 | 7/7 | 233.537 s | 84.612 | 4397 ms | `snake.html` |
+| `agent-basico` | 7/7 | 7/7 | 249.878 s | 46.052 | 4548 ms | `snake_retro.html` |
+| `agent-intermedio` | 7/7 | 7/7 | 517.606 s | 45.694 | 2876 ms | `snake_retro.html` + artefactos Playwright |
+| `agent-avanzado` | 7/7 | 7/7 | 222.241 s | 41.995 | 4061 ms | `snake_retro.html` |
+| `agent-maximo` | 1/7 | 7/7 | 270.074 s | 42.656 | 7482 ms | `snake_retro.html` |
 
 HTMLs generados revisados en los `*_ws` de cada `runDir`: todos son single-file,
 sin dependencias externas detectadas, y todos contienen los marcadores mínimos de
@@ -145,9 +145,22 @@ buscaron en la respuesta final del agente tras el repair, no en el archivo escri
 La traza muestra que el agente verificó el archivo con `findstr`, pero respondió
 sólo texto explicativo y no repitió todos los marcadores.
 
-Veredicto: la hipótesis queda **parcialmente validada**. `agent-chat` produjo un
-HTML válido, autocontenido y sin artefactos extra, con el mayor throughput reportado.
-No fue el menor tiempo absoluto: `agent-avanzado` terminó más rápido por elapsed
-(222 s vs 234 s), aunque con menor t/s. `agent-intermedio` sí mostró el patrón de
-sobre-ingeniería esperado: tardó más del doble que chat y generó múltiples logs,
-YAMLs y PNGs de Playwright para una tarea autocontenida.
+Análisis de métricas: el `avgTps` reportado no es `tokens / elapsedSec`; es el
+promedio de TPS de mensajes del backend. El tiempo total incluye carga de agente,
+tool calls, escrituras, verificaciones y repairs. Por eso `agent-chat` puede mostrar
+casi el doble de `avgTps` que `agent-basico` pero tiempos parecidos: chat generó
+~7844 tokens en ~90 s de generación efectiva, mientras básico generó ~4472 tokens
+en ~79 s de generación efectiva y el resto fue overhead/repair. Además, todos los
+niveles tuvieron `firstAttemptScore=1/7` por el bug de scoring contra la respuesta;
+los tiempos de esta corrida están inflados por reparaciones que no correspondían.
+
+Artefactos para revisión manual: `docs/benchmark-levels-artifacts/2026-06-29/`,
+con `agent-chat/`, `agent-basico/`, `agent-intermedio/`, `agent-avanzado/` y
+`agent-maximo/`. Cada carpeta contiene `snake.html`, `result.json` y `metadata.json`.
+
+Veredicto ajustado: con scoring corregido, los cinco niveles generaron un HTML
+válido y autocontenido para la acceptance mínima. La hipótesis de que `agent-chat`
+gana siempre en tiempo/calidad **no queda validada** por esta corrida: `agent-avanzado`
+fue el menor elapsed y todos los HTML pasan los checks mínimos. Sí queda evidencia
+de sobre-uso de herramientas en `agent-intermedio`, que tardó más del doble y dejó
+artefactos Playwright para una tarea autocontenida.

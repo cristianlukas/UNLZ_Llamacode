@@ -15,6 +15,13 @@ Item {
     property int pendingPortSuggested: 0
     property bool pendingPortStartAgent: false
 
+    function startProfile(launchId, withAgent) {
+        if (withAgent)
+            App.startServerAndAgent(launchId)
+        else
+            App.startServer(launchId)
+    }
+
     Connections {
         target: App
         function onServerPortCollision(launchProfileId, host, requestedPort, suggestedPort, startAgent) {
@@ -69,6 +76,20 @@ Item {
         const launchId = launchCombo.currentValue ?? ""
         if (!launchId || launchId.length === 0)
             return
+        const vf = App.launchVramFitStatus(launchId)
+        if (vf.warning === true) {
+            vramWarningDialog.launchId = launchId
+            vramWarningDialog.withAgent = withAgent
+            vramWarningDialog.message = vf.message || ""
+            vramWarningDialog.freeGb = vf.freeGb ?? 0
+            vramWarningDialog.requiredGb = vf.requiredGb ?? 0
+            vramWarningDialog.open()
+            return
+        }
+        startAfterVramCheck(launchId, withAgent)
+    }
+
+    function startAfterVramCheck(launchId, withAgent) {
         const st = App.launchPortStatus(launchId)
         if (st.blocked === true && (st.suggestedPort ?? 0) > 0) {
             portConflictDialog.launchId = launchId
@@ -79,10 +100,68 @@ Item {
             portConflictDialog.open()
             return
         }
-        if (withAgent)
-            App.startServerAndAgent(launchId)
-        else
-            App.startServer(launchId)
+        startProfile(launchId, withAgent)
+    }
+
+    Dialog {
+        id: vramWarningDialog
+        modal: true
+        width: 500
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+        closePolicy: Popup.CloseOnEscape
+
+        property string launchId: ""
+        property bool withAgent: true
+        property string message: ""
+        property real freeGb: 0
+        property real requiredGb: 0
+
+        background: Rectangle {
+            color: Theme.surfaceBg
+            radius: 8
+            border.color: Theme.errorText
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                text: "VRAM insuficiente para este perfil"
+                color: Theme.textPrimary
+                font { pixelSize: 16; bold: true }
+            }
+            Text {
+                Layout.fillWidth: true
+                text: vramWarningDialog.message
+                color: Theme.textSecondary
+                font.pixelSize: 13
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                Layout.fillWidth: true
+                text: "Recomendación: cerrá apps que usen GPU o elegí un perfil con menor contexto/modelo. Continuar puede hacer que el servidor cargue en memoria compartida y decodifique a pocos tokens por segundo."
+                color: Theme.textMuted
+                font.pixelSize: 12
+                wrapMode: Text.WordWrap
+            }
+        }
+
+        footer: RowLayout {
+            spacing: 8
+            Item { Layout.fillWidth: true }
+            LcButton {
+                text: "Cancelar"
+                secondary: true
+                onClicked: vramWarningDialog.close()
+            }
+            LcButton {
+                text: "Continuar igual"
+                onClicked: {
+                    vramWarningDialog.close()
+                    root.startAfterVramCheck(vramWarningDialog.launchId, vramWarningDialog.withAgent)
+                }
+            }
+        }
     }
 
     Dialog {
@@ -143,10 +222,7 @@ Item {
                 onClicked: {
                     if (App.setLaunchBackendPort(portConflictDialog.launchId, portConflictDialog.suggestedPort)) {
                         portConflictDialog.close()
-                        if (portConflictDialog.withAgent)
-                            App.startServerAndAgent(portConflictDialog.launchId)
-                        else
-                            App.startServer(portConflictDialog.launchId)
+                        root.startProfile(portConflictDialog.launchId, portConflictDialog.withAgent)
                     }
                 }
             }

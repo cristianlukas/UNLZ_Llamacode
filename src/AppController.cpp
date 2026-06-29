@@ -1066,6 +1066,95 @@ bool AppController::setLaunchBackendPort(const QString &launchProfileId, int por
     return ok;
 }
 
+QVariantMap AppController::launchVramFitStatus(const QString &launchProfileId)
+{
+    QVariantMap out;
+    out[QStringLiteral("warning")] = false;
+    out[QStringLiteral("supported")] = false;
+
+    const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
+    if (nvidiaSmi.isEmpty())
+        return out;
+
+    computeEffectiveProfile(launchProfileId);
+    if (!m_effectiveProfile.value(QStringLiteral("isValid"), false).toBool())
+        return out;
+
+    const QStringList args = m_effectiveProfile.value(QStringLiteral("effectiveArgs")).toStringList();
+    bool gpuRequested = false;
+    const int nglIdx = args.indexOf(QStringLiteral("--n-gpu-layers"));
+    if (nglIdx >= 0 && nglIdx + 1 < args.size()) {
+        gpuRequested = args.at(nglIdx + 1).toInt() != 0;
+    } else if (args.contains(QStringLiteral("-ngl"))) {
+        const int shortIdx = args.indexOf(QStringLiteral("-ngl"));
+        gpuRequested = shortIdx + 1 < args.size() && args.at(shortIdx + 1).toInt() != 0;
+    }
+    if (!gpuRequested)
+        return out;
+
+    QProcess p;
+    p.start(nvidiaSmi,
+            {QStringLiteral("--query-gpu=memory.free,memory.total"),
+             QStringLiteral("--format=csv,noheader,nounits")});
+    if (!p.waitForFinished(3000))
+        return out;
+    const QString firstLine = QString::fromUtf8(p.readAllStandardOutput())
+                                  .split(QLatin1Char('\n'), Qt::SkipEmptyParts)
+                                  .value(0)
+                                  .trimmed();
+    const QStringList mem = firstLine.split(QLatin1Char(','));
+    if (mem.size() < 2)
+        return out;
+    bool freeOk = false;
+    bool totalOk = false;
+    const double freeGb = mem.at(0).trimmed().toDouble(&freeOk) / 1024.0;
+    const double totalGb = mem.at(1).trimmed().toDouble(&totalOk) / 1024.0;
+    if (!freeOk || !totalOk || totalGb <= 0.0)
+        return out;
+
+    QString modelPath;
+    for (int i = 0; i + 1 < args.size(); ++i) {
+        if (args.at(i) == QLatin1String("--model") || args.at(i) == QLatin1String("-m")) {
+            modelPath = args.at(i + 1);
+            break;
+        }
+    }
+    QFileInfo modelInfo(modelPath);
+    if (!modelInfo.exists())
+        return out;
+
+    int ctx = 4096;
+    for (int i = 0; i + 1 < args.size(); ++i) {
+        if (args.at(i) == QLatin1String("--ctx-size") || args.at(i) == QLatin1String("-c")) {
+            bool ok = false;
+            const int v = args.at(i + 1).toInt(&ok);
+            if (ok && v > 0) ctx = v;
+        }
+    }
+
+    const double weightsGb = modelInfo.size() / 1024.0 / 1024.0 / 1024.0;
+    const double kvAndGraphGb = 0.7 + weightsGb * 0.05 + ctx * 0.000025;
+    const double requiredGb = weightsGb + kvAndGraphGb;
+    const double headroomGb = 0.75;
+    const bool warn = freeGb + 0.01 < requiredGb + headroomGb;
+
+    out[QStringLiteral("supported")] = true;
+    out[QStringLiteral("warning")] = warn;
+    out[QStringLiteral("freeGb")] = freeGb;
+    out[QStringLiteral("totalGb")] = totalGb;
+    out[QStringLiteral("requiredGb")] = requiredGb;
+    out[QStringLiteral("headroomGb")] = headroomGb;
+    out[QStringLiteral("modelGb")] = weightsGb;
+    out[QStringLiteral("ctx")] = ctx;
+    out[QStringLiteral("message")] = warn
+        ? QStringLiteral("Este perfil estima %1 GB de VRAM y ahora hay %2 GB libres de %3 GB. Si no entra completo en VRAM, Windows puede mover parte a memoria compartida y los TPS van a caer muy por debajo de lo esperado.")
+              .arg(QString::number(requiredGb + headroomGb, 'f', 1),
+                   QString::number(freeGb, 'f', 1),
+                   QString::number(totalGb, 'f', 1))
+        : QStringLiteral("VRAM suficiente para el perfil.");
+    return out;
+}
+
 void AppController::startServer(const QString &launchProfileId)
 {
     if (serverRunning()) {
@@ -9762,6 +9851,85 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     (*processNext)(0);
 }
 
+QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &workspace,
+                                                                const QString &finalText,
+                                                                const QVariantList &benchTasks,
+                                                                const QStringList &files)
+{
+    QVariantList rows;
+    int score = 0;
+    int total = 0;
+
+    QString searchable = finalText;
+    const QDir ws(workspace);
+    for (const QString &rel : files) {
+        const QString cleanRel = QDir::cleanPath(rel);
+        if (cleanRel.startsWith(QStringLiteral("..")))
+            continue;
+        QFileInfo fi(ws.filePath(cleanRel));
+        if (!fi.exists() || !fi.isFile() || fi.size() > 2 * 1024 * 1024)
+            continue;
+        QFile f(fi.absoluteFilePath());
+        if (f.open(QIODevice::ReadOnly))
+            searchable += QStringLiteral("\n") + QString::fromUtf8(f.readAll());
+    }
+    const QString hay = searchable.toLower();
+
+    for (const QVariant &tv : benchTasks) {
+        const QVariantMap task = tv.toMap();
+        const QString taskId = task.value(QStringLiteral("id")).toString();
+        const QVariantMap acceptance = task.value(QStringLiteral("acceptance")).toMap();
+        if (acceptance.isEmpty())
+            continue;
+
+        const QVariantList expectedFiles = acceptance.value(QStringLiteral("files")).toList();
+        for (const QVariant &fv : expectedFiles) {
+            const QString rel = fv.toString().trimmed();
+            if (rel.isEmpty())
+                continue;
+            const bool ok = QFileInfo(ws.filePath(rel)).exists();
+            QVariantMap row;
+            row[QStringLiteral("taskId")] = taskId;
+            row[QStringLiteral("type")] = QStringLiteral("file");
+            row[QStringLiteral("name")] = rel;
+            row[QStringLiteral("passed")] = ok;
+            row[QStringLiteral("output")] = ok
+                ? QStringLiteral("Archivo encontrado.")
+                : QStringLiteral("Archivo esperado no encontrado.");
+            rows.append(row);
+            total++;
+            if (ok)
+                score++;
+        }
+
+        const QVariantList expectSubs = acceptance.value(QStringLiteral("expectSubstrings")).toList();
+        for (const QVariant &sv : expectSubs) {
+            const QString needle = sv.toString().trimmed();
+            if (needle.isEmpty())
+                continue;
+            const bool ok = hay.contains(needle.toLower());
+            QVariantMap row;
+            row[QStringLiteral("taskId")] = taskId;
+            row[QStringLiteral("type")] = QStringLiteral("substring");
+            row[QStringLiteral("name")] = needle;
+            row[QStringLiteral("passed")] = ok;
+            row[QStringLiteral("output")] = ok
+                ? QStringLiteral("Texto presente en la respuesta o archivos generados.")
+                : QStringLiteral("Texto esperado ausente en la respuesta y archivos generados.");
+            rows.append(row);
+            total++;
+            if (ok)
+                score++;
+        }
+    }
+
+    QVariantMap out;
+    out[QStringLiteral("score")] = score;
+    out[QStringLiteral("total")] = total;
+    out[QStringLiteral("rows")] = rows;
+    return out;
+}
+
 void AppController::runAgentBenchmark(const QString &profileId, const QString &profName,
                                      int idx, int total, const QVariantList &benchTasks,
                                      int passes, const QString &mode, const QString &runLabel,
@@ -10057,33 +10225,21 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 }
             }
 
-            // Acceptance criteria from custom benchmark definitions.
-            QVariantList acceptanceRows;
-            int qScore = 0, qTotal = 0;
+            // Acceptance criteria from custom benchmark definitions. In agent
+            // mode, substring acceptance must inspect the generated files too:
+            // the final chat response is only a summary.
+            const QVariantMap fileTextScore =
+                scoreAgentBenchmarkAcceptanceForTest(workspace, finalText, benchTasks, files);
+            QVariantList acceptanceRows =
+                fileTextScore.value(QStringLiteral("rows")).toList();
+            int qScore = fileTextScore.value(QStringLiteral("score")).toInt();
+            int qTotal = fileTextScore.value(QStringLiteral("total")).toInt();
             for (const QVariant &tv : benchTasks) {
                 const QVariantMap task = tv.toMap();
                 const QString taskId = task.value(QStringLiteral("id")).toString();
                 const QVariantMap acceptance = task.value(QStringLiteral("acceptance")).toMap();
                 if (acceptance.isEmpty())
                     continue;
-
-                const QVariantList expectedFiles = acceptance.value(QStringLiteral("files")).toList();
-                for (const QVariant &fv : expectedFiles) {
-                    const QString rel = fv.toString().trimmed();
-                    if (rel.isEmpty()) continue;
-                    const bool ok = QFileInfo(QDir(workspace).filePath(rel)).exists();
-                    QVariantMap row;
-                    row[QStringLiteral("taskId")] = taskId;
-                    row[QStringLiteral("type")] = QStringLiteral("file");
-                    row[QStringLiteral("name")] = rel;
-                    row[QStringLiteral("passed")] = ok;
-                    row[QStringLiteral("output")] = ok
-                        ? QStringLiteral("Archivo encontrado.")
-                        : QStringLiteral("Archivo esperado no encontrado.");
-                    acceptanceRows.append(row);
-                    qTotal++;
-                    if (ok) qScore++;
-                }
 
                 const QVariantList commands = acceptance.value(QStringLiteral("commands")).toList();
                 for (const QVariant &cv : commands) {
@@ -10093,28 +10249,6 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     acceptanceRows.append(row);
                     qTotal++;
                     if (row.value(QStringLiteral("passed")).toBool()) qScore++;
-                }
-
-                // Substrings esperados en la respuesta del agente (EvalSuite: tareas
-                // de texto sin archivos/comandos, p.ej. periciales/docs). Match
-                // case-insensitive sobre finalText.
-                const QVariantList expectSubs = acceptance.value(QStringLiteral("expectSubstrings")).toList();
-                const QString hay = finalText.toLower();
-                for (const QVariant &sv : expectSubs) {
-                    const QString needle = sv.toString().trimmed();
-                    if (needle.isEmpty()) continue;
-                    const bool ok = hay.contains(needle.toLower());
-                    QVariantMap row;
-                    row[QStringLiteral("taskId")] = taskId;
-                    row[QStringLiteral("type")] = QStringLiteral("substring");
-                    row[QStringLiteral("name")] = needle;
-                    row[QStringLiteral("passed")] = ok;
-                    row[QStringLiteral("output")] = ok
-                        ? QStringLiteral("Texto presente en la respuesta.")
-                        : QStringLiteral("Texto esperado ausente en la respuesta.");
-                    acceptanceRows.append(row);
-                    qTotal++;
-                    if (ok) qScore++;
                 }
             }
 
