@@ -416,6 +416,9 @@ public:
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
     void setTestAgentBackend(IAgentBackend *b);
     Q_INVOKABLE void runTaskBodyForTest(const QString &id);
+    // binaryPin del perfil de sistema (del bundle): substring de nombre/ruta del
+    // build a fijar (ej. "b9842"). Vacío = sin pin. Público (headless/test).
+    Q_INVOKABLE QString systemProfileBinaryPin(const QString &launchId) const;
     // Aplica las capacidades de un perfil de agente al backend (tools/directivas/
     // MCP; thinking viene del checkbox global) usando la MISMA traducción que la app. Test seam para medir el
     // presupuesto de contexto por NIVEL sin duplicar la lógica de mapeo.
@@ -1302,6 +1305,10 @@ private:
     QString resolveSystemBinaryId(const QString &kind = QString()) const;
     // binaryKind del perfil de sistema (del bundle); "official" si no se especifica.
     QString systemProfileBinaryKind(const QString &launchId) const;
+    // Id del binario instalado que matchea el binaryPin del perfil (primer válido
+    // cuyo nombre+ruta contiene el pin). Vacío si no hay pin o no hay match válido
+    // → el caller cae al resolveSystemBinaryId por kind.
+    QString pinnedSystemBinaryId(const QString &launchId) const;
     // Instala el binario del tipo pedido si falta (beellama→installMtpBinary,
     // official→installOfficialBinary). beellama es CUDA-only: sin NVIDIA cae a official.
     void ensureSystemBinary(const QString &kind);

@@ -2530,8 +2530,15 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     // (MTP si hay NVIDIA, si no official). Así el mismo perfil bundled corre en
     // cualquier máquina sin persistir un path de binario.
     QString binId = ctx.backend.binaryId;
-    if (binId.isEmpty() && ctx.launch.system)
-        binId = resolveSystemBinaryId(systemProfileBinaryKind(ctx.launch.id));
+    if (binId.isEmpty() && ctx.launch.system) {
+        // Pin explícito por build (binaryPin del bundle) tiene prioridad: permite
+        // fijar UN perfil a un binario concreto (ej. b9842 para arquitecturas que
+        // los builds viejos no cargan) sin tocar el resto de perfiles "official".
+        // Si el pin no matchea ningún binario instalado, cae al kind habitual.
+        binId = pinnedSystemBinaryId(ctx.launch.id);
+        if (binId.isEmpty())
+            binId = resolveSystemBinaryId(systemProfileBinaryKind(ctx.launch.id));
+    }
     ctx.binary = m_binaries.findById(binId);
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
@@ -3428,7 +3435,6 @@ void AppController::applyActiveAgentProfile()
     // Aprobación / tuning: el perfil manda (sin persistir; son de sesión).
     // Thinking queda a cargo del checkbox global y se respeta aunque el perfil sea
     // Máximo.
-
     const QString approval = ap.approvalMode.isEmpty() ? QStringLiteral("ask") : ap.approvalMode;
     if (m_agentApprovalMode != approval) {
         m_agentApprovalMode = approval;
@@ -8477,6 +8483,29 @@ QString AppController::systemProfileBinaryKind(const QString &launchId) const
         if (v.toObject().value(QStringLiteral("id")).toString() == launchId)
             return v.toObject().value(QStringLiteral("binaryKind")).toString(QStringLiteral("official"));
     return QStringLiteral("official");
+}
+
+QString AppController::systemProfileBinaryPin(const QString &launchId) const
+{
+    for (const QJsonValue &v : readSystemProfilesBundle())
+        if (v.toObject().value(QStringLiteral("id")).toString() == launchId)
+            return v.toObject().value(QStringLiteral("binaryPin")).toString().trimmed();
+    return {};
+}
+
+QString AppController::pinnedSystemBinaryId(const QString &launchId) const
+{
+    const QString pin = systemProfileBinaryPin(launchId).toLower();
+    if (pin.isEmpty()) return {};
+    // Primer binario instalado y válido cuyo nombre+ruta contiene el pin.
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
+        if (bid.isEmpty()) continue;
+        const LlamaBinary b = m_binaries.findById(bid);
+        if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;
+        if ((b.name + QLatin1Char(' ') + b.path).toLower().contains(pin)) return bid;
+    }
+    return {};   // pin sin binario válido → caller cae al kind
 }
 
 QString AppController::resolveSystemBinaryId(const QString &kind) const

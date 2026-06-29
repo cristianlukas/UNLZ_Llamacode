@@ -98,6 +98,7 @@ private slots:
     void loopTaskStopsAtMaxIterations();
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
+    void systemProfileBinaryPinReadsBundle();
     void charlaTranscriptRoutesToAgentWhenRunning();
     void agentLevels_contextBudgetLadder();
 
@@ -709,6 +710,30 @@ void AppControllerTests::agentLevels_contextBudgetLadder()
              "Máximo arrastró antiBias por '*' (debe ser opt-in puro)");
     QVERIFY2(!maxSys.contains(QStringLiteral("FRUGALIDAD (Honey)")),
              "Máximo arrastró honey por '*' (debe ser opt-in puro)");
+}
+
+// binaryPin del bundle de perfiles de sistema: permite fijar UN perfil a un
+// build concreto (substring de nombre/ruta) sin tocar el resto. Acá se ejercita
+// la lectura del campo desde el bundle (vía override LLAMACODE_SYSTEM_PROFILES);
+// el match contra el registro de binarios reusa el mismo loop que resolveSystemBinaryId.
+void AppControllerTests::systemProfileBinaryPinReadsBundle()
+{
+    const QString bundle = m_tmp.filePath(QStringLiteral("sysprof_pin.json"));
+    QFile f(bundle);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write(R"([
+      {"id":"pinned","binaryKind":"official","binaryPin":"b9842"},
+      {"id":"nopin","binaryKind":"official"}
+    ])");
+    f.close();
+    qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
+
+    AppController app;
+    QCOMPARE(app.systemProfileBinaryPin(QStringLiteral("pinned")), QStringLiteral("b9842"));
+    QVERIFY(app.systemProfileBinaryPin(QStringLiteral("nopin")).isEmpty());
+    QVERIFY(app.systemProfileBinaryPin(QStringLiteral("unknown")).isEmpty());
+
+    qunsetenv("LLAMACODE_SYSTEM_PROFILES");
 }
 
 QTEST_MAIN(AppControllerTests)

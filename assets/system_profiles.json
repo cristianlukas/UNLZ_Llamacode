@@ -277,7 +277,8 @@
       "enabled": false,
       "args": []
     },
-    "binaryKind": "official"
+    "binaryKind": "official",
+    "binaryPin": "b9842"
   },
   {
     "id": "sys-vram-12-moe",
