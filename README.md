@@ -404,7 +404,8 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   `chat_template_kwargs.enable_thinking=false` salvo que el usuario lo active.
   Si el modelo emite `<think>` igualmente, Chat descarta ese bloque en streaming
   y no lo guarda en el historial.
-- **Indicador "⏳ Procesando..."** mientras espera, cursor `▌` durante generación
+- **Indicador de fase** mientras espera (`Pensando...`, ejecución de tools,
+  escritura/lectura de archivos, aprobación pendiente), cursor `▌` durante generación
 - **Streaming estable**: durante la generación se actualiza sólo la burbuja activa,
   sin reconstruir toda la lista de mensajes, para evitar saltos verticales.
 - **Stop de generación** con guardado de lo recibido
@@ -413,12 +414,16 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real
+- **Estado visible del turno**: la burbuja activa muestra si el agente está
+  pensando, ejecutando una herramienta, escribiendo/leyendo archivos o esperando
+  aprobación, para que las acciones largas no parezcan un bloqueo silencioso.
 - **Thinking real por servidor**: el toggle `Pensar` del agente se aplica al
   arranque de `llama-server` con la mejor estrategia compatible con el binario y
   el modelo: `--reasoning on/off` en builds actuales, `--reasoning-budget` como
   fallback, o `--chat-template-kwargs {"enable_thinking":...}` en templates Qwen
   antiguos. Cambiarlo con el servidor ya iniciado requiere reiniciar el servidor
-  para que el modelo deje de generar tokens de razonamiento.
+  para que el modelo deje de generar tokens de razonamiento. Los perfiles de
+  agente, incluido **Máximo**, no activan `Pensar` si el checkbox está apagado.
 - **Vista terminal**: log raw para debug
 - **Sesiones opencode**: historial persistido en opencode DB, agrupado por directorio/proyecto
 - **Resume automático**: retoma la última sesión al reiniciar el agente

@@ -3377,8 +3377,9 @@ void AppController::setActiveAgentProfileId(const QString &id)
 
 // Traduce el perfil activo (enabledTools/directives + ajustes) a los setters del
 // backend del agente. enabledTools/directives con "*" = todo el catálogo.
-// Capacidades (tools) + directivas + thinking de un perfil → backend. Sin tocar
-// approval/tuning. Expande el sentinel "*" (todo el catálogo).
+// Capacidades (tools) + directivas de un perfil → backend. El estado de thinking
+// lo controla el checkbox global de la app; un preset no debe activarlo solo.
+// Sin tocar approval/tuning. Expande el sentinel "*" (todo el catálogo).
 void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProfile &ap)
 {
     if (!cb) return;
@@ -3411,7 +3412,7 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
         dirs << keep;
     }
     cb->setDirectives(dirs);
-    cb->setThinkingEnabled(ap.thinking);
+    cb->setThinkingEnabled(m_agentThinkingEnabled);
     cb->setMcpToolsEnabled(ap.mcpEnabled);
 }
 
@@ -3424,12 +3425,9 @@ void AppController::applyActiveAgentProfile()
 
     applyAgentProfileCaps(cb, ap);
 
-    // Razonamiento / aprobación / tuning: el perfil manda (sin persistir; son de
-    // sesión). Actualizar los espejos para que la UI (checkbox/combo) coincida.
-    if (m_agentThinkingEnabled != ap.thinking) {
-        m_agentThinkingEnabled = ap.thinking;
-        emit agentThinkingChanged();
-    }
+    // Aprobación / tuning: el perfil manda (sin persistir; son de sesión).
+    // Thinking queda a cargo del checkbox global y se respeta aunque el perfil sea
+    // Máximo.
 
     const QString approval = ap.approvalMode.isEmpty() ? QStringLiteral("ask") : ap.approvalMode;
     if (m_agentApprovalMode != approval) {
@@ -10087,7 +10085,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // queda en "super" igual: el benchmark es headless y no puede pedir permisos.
         if (!m_benchmarkAgentProfileId.isEmpty()) {
             const AgentProfile ap = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
-            if (!ap.id.isEmpty()) applyAgentProfileCaps(agent, ap);
+            if (!ap.id.isEmpty()) {
+                applyAgentProfileCaps(agent, ap);
+                agent->setThinkingEnabled(ap.thinking);
+            }
         }
 
         QMap<QString, QVariant> mergedMcp;

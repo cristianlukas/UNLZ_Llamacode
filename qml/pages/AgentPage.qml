@@ -1228,7 +1228,7 @@ Item {
                                     width: parent.width
                                     text: {
                                         if (delegateRoot.isTyping && delegateRoot.visibleContent.length === 0)
-                                            return "⏳ Procesando..."
+                                            return (modelData.status ?? "Pensando...") + "  "
                                         if (delegateRoot.isTyping)
                                             return delegateRoot.visibleContent + "▌"
                                         return delegateRoot.visibleContent

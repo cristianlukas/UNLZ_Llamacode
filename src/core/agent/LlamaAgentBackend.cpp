@@ -1307,6 +1307,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         {QStringLiteral("role"), QStringLiteral("assistant")},
         {QStringLiteral("content"), QString()},
         {QStringLiteral("typing"), true},
+        {QStringLiteral("status"), QStringLiteral("Pensando...")},
         {QStringLiteral("createdAt"), static_cast<double>(nowMs)},
         {QStringLiteral("elapsedMs"), 0},
         {QStringLiteral("tokens"), 0},
@@ -1620,6 +1621,8 @@ void LlamaAgentBackend::runCompletion()
     // "PARAR" y se ve el indicador de generación. Si la respuesta resulta ser
     // sólo tool-calls (sin texto), closeAssistantBubble descarta la burbuja vacía.
     ensureAssistantBubble();
+    setAssistantStatus(m_turnIters <= 1 ? QStringLiteral("Pensando...")
+                                        : QStringLiteral("Revisando resultados..."));
 
     emit logAppended(QStringLiteral("[turn] requesting completion (iter=%1, msgs=%2, stream)\n")
                          .arg(m_turnIters).arg(m_apiMessages.size()));
@@ -2053,6 +2056,8 @@ void LlamaAgentBackend::processPendingCalls()
     QString kind           = toolKind(name);
     const QString id       = call.value(QStringLiteral("id")).toString();
     QString argStr         = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
+    ensureAssistantBubble();
+    setAssistantStatus(toolStatusText(name, kind));
 
     // ── Robustez: anti-loop ──────────────────────────────────────────────
     const QString sig = name + QLatin1Char('|') + argStr;
@@ -2321,6 +2326,8 @@ void LlamaAgentBackend::processPendingCalls()
         {QStringLiteral("detail"),    detail},
         {QStringLiteral("diff"),      diff}
     });
+    ensureAssistantBubble();
+    setAssistantStatus(QStringLiteral("Esperando aprobación para %1...").arg(name));
     emit logAppended(QStringLiteral("[tool] waiting approval for %1\n").arg(name));
 }
 
@@ -2362,6 +2369,8 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     // Ejecución en el worker (no bloquea UI). Resume en onToolExecuted().
     ensureWorker();
     m_execCallId = id;
+    ensureAssistantBubble();
+    setAssistantStatus(toolStatusText(name, toolKind(name), m_execCommand));
     QMetaObject::invokeMethod(m_worker, "executeTool", Qt::QueuedConnection,
                               Q_ARG(QString, id), Q_ARG(QString, name),
                               Q_ARG(QString, argStr), Q_ARG(QString, m_cwd));
@@ -2837,6 +2846,7 @@ void LlamaAgentBackend::ensureAssistantBubble()
         {QStringLiteral("role"), QStringLiteral("assistant")},
         {QStringLiteral("content"), QString()},
         {QStringLiteral("typing"), true},
+        {QStringLiteral("status"), QStringLiteral("Pensando...")},
         {QStringLiteral("createdAt"), static_cast<double>(nowMs)},
         {QStringLiteral("elapsedMs"), 0},
         {QStringLiteral("tokens"), 0},
@@ -2855,6 +2865,7 @@ void LlamaAgentBackend::closeAssistantBubble()
             m_messages.removeAt(m_curAsstIdx);
         } else {
             m[QStringLiteral("typing")] = false;
+            m.remove(QStringLiteral("status"));
             // Finalizar métricas: en modo agente esta es la vía habitual de cierre
             // (la respuesta va seguida de tool calls), así que el cálculo de
             // tiempo/tps debe hacerse aquí igual que en finishTurn/setTyping.
@@ -2887,6 +2898,48 @@ void LlamaAgentBackend::appendToolCard(const QString &name, const QString &kind,
     emit messagesChanged();
 }
 
+void LlamaAgentBackend::setAssistantStatus(const QString &status)
+{
+    if (m_curAsstIdx < 0 || m_curAsstIdx >= m_messages.size()) return;
+    QVariantMap m = m_messages[m_curAsstIdx].toMap();
+    if (!m.value(QStringLiteral("typing")).toBool()) return;
+    if (!m.value(QStringLiteral("content")).toString().isEmpty()) return;
+    if (m.value(QStringLiteral("status")).toString() == status) return;
+    m[QStringLiteral("status")] = status;
+    m_messages[m_curAsstIdx] = m;
+    emit messagesChanged();
+}
+
+QString LlamaAgentBackend::toolStatusText(const QString &name, const QString &kind,
+                                          const QString &detail)
+{
+    QString action;
+    if (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))
+        action = QStringLiteral("Escribiendo archivo");
+    else if (name == QLatin1String("run_shell"))
+        action = QStringLiteral("Ejecutando comando");
+    else if (name == QLatin1String("read_file"))
+        action = QStringLiteral("Leyendo archivo");
+    else if (name == QLatin1String("list_dir") || name == QLatin1String("glob")
+             || name == QLatin1String("grep"))
+        action = QStringLiteral("Buscando en el proyecto");
+    else if (name.startsWith(kMcpPrefix))
+        action = QStringLiteral("Usando MCP");
+    else if (kind == QLatin1String("write"))
+        action = QStringLiteral("Aplicando cambio");
+    else if (kind == QLatin1String("shell"))
+        action = QStringLiteral("Ejecutando comando");
+    else
+        action = QStringLiteral("Usando herramienta");
+
+    QString tail = detail.trimmed();
+    if (tail.size() > 90)
+        tail = tail.left(87) + QStringLiteral("...");
+    if (!tail.isEmpty())
+        return QStringLiteral("%1: %2").arg(action, tail);
+    return QStringLiteral("%1: %2...").arg(action, name);
+}
+
 void LlamaAgentBackend::appendAssistantText(const QString &text)
 {
     if (m_curAsstIdx < 0 || m_curAsstIdx >= m_messages.size()) return;
@@ -2896,6 +2949,7 @@ void LlamaAgentBackend::appendAssistantText(const QString &text)
         m[QStringLiteral("genStartMs")] =
             static_cast<double>(QDateTime::currentMSecsSinceEpoch());
     m[QStringLiteral("content")] = content;
+    m.remove(QStringLiteral("status"));
     finalizeMsgMetrics(m);
     m_messages[m_curAsstIdx] = m;
     emit messagesChanged();
@@ -2906,8 +2960,10 @@ void LlamaAgentBackend::setTyping(bool typing)
     if (m_curAsstIdx < 0 || m_curAsstIdx >= m_messages.size()) return;
     QVariantMap m = m_messages[m_curAsstIdx].toMap();
     m[QStringLiteral("typing")] = typing;
-    if (!typing)
+    if (!typing) {
+        m.remove(QStringLiteral("status"));
         finalizeMsgMetrics(m);
+    }
     m_messages[m_curAsstIdx] = m;
     emit messagesChanged();
 }
@@ -2930,6 +2986,7 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
         }
         m[QStringLiteral("content")] = cur;
         m[QStringLiteral("typing")]  = false;
+        m.remove(QStringLiteral("status"));
         finalizeMsgMetrics(m, m_genTokens, m_genMs);
         m_messages[m_curAsstIdx] = m;
         shownChars = cur.size();

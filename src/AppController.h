@@ -417,7 +417,7 @@ public:
     void setTestAgentBackend(IAgentBackend *b);
     Q_INVOKABLE void runTaskBodyForTest(const QString &id);
     // Aplica las capacidades de un perfil de agente al backend (tools/directivas/
-    // thinking/MCP) usando la MISMA traducción que la app. Test seam para medir el
+    // MCP; thinking viene del checkbox global) usando la MISMA traducción que la app. Test seam para medir el
     // presupuesto de contexto por NIVEL sin duplicar la lógica de mapeo.
     void applyAgentProfileCapsForTest(class LlamaAgentBackend *cb, const AgentProfile &ap)
     { applyAgentProfileCaps(cb, ap); }
@@ -1132,7 +1132,7 @@ private:
     QString   resolveAgentProfileId() const;
     void      applyActiveAgentProfile();
     // Aplica solo capacidades (enabledTools→disabledTools, expandiendo "*") +
-    // directivas + thinking de un perfil a un backend dado. NO toca approval ni
+    // directivas de un perfil a un backend dado. NO toca approval ni
     // tuning (los maneja el caller). Reusado por el agente vivo y el benchmark.
     void      applyAgentProfileCaps(class LlamaAgentBackend *cb, const AgentProfile &ap);
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat

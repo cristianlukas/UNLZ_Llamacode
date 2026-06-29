@@ -293,6 +293,9 @@ private:
     // Tarjeta separada para una ejecución de tool (nombre, comando, salida).
     void appendToolCard(const QString &name, const QString &kind, bool ok,
                         const QString &command, const QString &output);
+    void setAssistantStatus(const QString &status);
+    static QString toolStatusText(const QString &name, const QString &kind,
+                                  const QString &detail = QString());
 
     // Streaming SSE (igual patrón que RawChatBackend)
     void handleStreamData();             // parsea m_sseBuf incremental

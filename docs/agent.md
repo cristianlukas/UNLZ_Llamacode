@@ -44,7 +44,7 @@ filesystem / shell / grep / servers MCP
   `n_ctx` del server vía `/props`.
 - `stop()`: aborta el reply en curso, persiste la sesión + índice, baja `m_running`.
 - `sendMessage(text)`: agrega el mensaje user a `m_messages` (UI) y `m_apiMessages` (API),
-  crea el bubble assistant (typing), resetea contadores de turno y arranca `runCompletion()`.
+  crea el bubble assistant (typing + `status` visible), resetea contadores de turno y arranca `runCompletion()`.
 
 ---
 
@@ -66,6 +66,9 @@ sendMessage
                        └─ runCompletion()  (vuelve a consultar al modelo con el resultado)
 ```
 
+- La burbuja activa mantiene un `status` visible mientras no hay tokens de texto:
+  `Pensando...`, `Revisando resultados...`, ejecución de tool, lectura/escritura o
+  aprobación pendiente. Así el usuario ve qué está pasando durante acciones largas.
 - **Streaming** (`stream:true`): el parser SSE (igual patrón que `RawChatBackend`) lee
   `data: {…}` por línea. Los `tool_calls` llegan en **fragmentos por `index`**: se mergean
   `id`, `function.name` y se concatena `function.arguments` hasta el `finished`, donde se
@@ -91,8 +94,9 @@ sendMessage
 - **Al historial de API NO va el `<think>`**: `stripThinkForContext()` lo quita antes de
   guardar el mensaje assistant en `m_apiMessages` (si no, el modelo se "ceba" razonando y
   rompe el tool-calling).
-- Toggle: `setThinkingEnabled(bool)` (default on). `AppController` lo lee de
-  `agent/thinkingEnabled`.
+- Toggle: `setThinkingEnabled(bool)` (default off). `AppController` lo lee de
+  `agent/thinkingEnabled` y lo trata como fuente de verdad: los perfiles de agente
+  no fuerzan thinking si el checkbox está apagado.
 
 ---
 
