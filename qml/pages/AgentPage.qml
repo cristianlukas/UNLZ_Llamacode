@@ -895,7 +895,7 @@ Item {
                         Layout.fillHeight: true
                         clip: true
                         model: App.agentSessions
-                        ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
+                        ScrollBar.vertical: LcScrollBar { id: sessionsScrollBar; policy: ScrollBar.AsNeeded }
 
                         section.property: "projectName"
                         section.criteria: ViewSection.FullString
@@ -928,7 +928,10 @@ Item {
                             }
 
                             RowLayout {
-                                anchors { fill: parent; leftMargin: 8; rightMargin: 6 }
+                                // Reservar ancho del scrollbar cuando está visible para que
+                                // no se superponga con el botón "+".
+                                anchors { fill: parent; leftMargin: 8
+                                          rightMargin: 6 + (sessionsScrollBar.visible ? sessionsScrollBar.width : 0) }
                                 spacing: 4
                                 Text { text: "📁"; font.pixelSize: 10 }
                                 Text {
