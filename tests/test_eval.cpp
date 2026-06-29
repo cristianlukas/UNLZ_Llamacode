@@ -15,6 +15,7 @@ private slots:
     void invalidJson_returnsEmptyWithError();
     void loadFromFile_roundTrip();
     void reasoningBiasSuite_isValid();
+    void snakeSuite_isValid();
 };
 
 static QByteArray sampleJson()
@@ -105,6 +106,28 @@ void EvalTests::reasoningBiasSuite_isValid()
     QVERIFY(ids.contains(QStringLiteral("ctrl-two-shops")));
 #else
     QSKIP("LC_REASONING_BIAS_JSON no definido");
+#endif
+}
+
+// Suite Snake retro single-file (assets/eval/snake_retro_singlefile.json): la
+// tarea autocontenida para comparar NIVELES de agente. Debe parsear y traer la
+// tarea con su acceptance (substrings que prueban un Snake jugable en un HTML).
+void EvalTests::snakeSuite_isValid()
+{
+#ifdef LC_SNAKE_SUITE_JSON
+    QString err;
+    const EvalSuite s = EvalSuite::loadFromFile(QStringLiteral(LC_SNAKE_SUITE_JSON), &err);
+    QVERIFY2(err.isEmpty(), qPrintable(err));
+    QVERIFY(!s.isEmpty());
+    QCOMPARE(s.tasks.size(), 1);
+    const EvalTask &t = s.tasks.first();
+    QCOMPARE(t.category, QStringLiteral("coding"));
+    QVERIFY(t.prompt.contains(QStringLiteral("SNAKE")));
+    // Acceptance cubre los marcadores de un Snake jugable en un único HTML.
+    for (const QString &need : {"<canvas", "getContext", "keydown", "score"})
+        QVERIFY2(t.acceptance.contains(need), qPrintable("falta acceptance " + need));
+#else
+    QSKIP("LC_SNAKE_SUITE_JSON no definido");
 #endif
 }
 
