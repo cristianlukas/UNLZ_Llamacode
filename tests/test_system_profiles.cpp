@@ -80,7 +80,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 11);                       // 16/12-MoE/8-Gemma/8-QwenAgent/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
+    QCOMPARE(sys, 12);                       // 20/16/12-MoE/8-Gemma/8-QwenAgent/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: el tier 16GB lleva mmproj (multimodal); el 4GB no (VRAM ajustada).
@@ -167,9 +167,15 @@ void SystemProfilesTests::manager_fastGemmaDflashWired()
 void SystemProfilesTests::controller_recommendsClosestTier()
 {
     AppController app;
+    // 24GB: maxq/fastgemma son extra (showcase), así que el mejor tier no-extra
+    // ≤VRAM es el de 20GB (Qwen3.6-27B dense).
     app.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
-             QStringLiteral("sys-vram-16"));
+             QStringLiteral("sys-vram-20"));
+    // RTX 3080 20GB: tier dedicado 27B dense.
+    app.setHardwareSummaryForTest(20.0, 64.0, QStringLiteral("NVIDIA GeForce RTX 3080"));
+    QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
+             QStringLiteral("sys-vram-20"));
     app.setHardwareSummaryForTest(10.0, 32.0, QStringLiteral("NVIDIA"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
              QStringLiteral("sys-vram-8-gemma"));
