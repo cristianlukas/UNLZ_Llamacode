@@ -258,6 +258,24 @@ QString gitHead(const QString &rootAbs)
     return ok ? out.trimmed() : QString();
 }
 
+// HEAD sólo si rootAbs ES el toplevel del repo. Si rootAbs es un subdirectorio
+// de un repo más grande (p.ej. un cwd dentro de otro checkout, o un temp dir
+// bajo $HOME que resulta ser un repo), `git diff/status` devuelven rutas
+// relativas al toplevel —no a rootCwd—, que no matchean el grafo (indexado
+// relativo a rootCwd) y dejarían cambios sin reindexar. Devolver vacío en ese
+// caso fuerza el camino mtime, que sí es relativo a rootCwd.
+QString gitHeadIfToplevel(const QString &rootAbs)
+{
+    bool ok = false;
+    const QString top = runGit(rootAbs,
+        {QStringLiteral("rev-parse"), QStringLiteral("--show-toplevel")}, &ok);
+    if (!ok) return QString();
+    if (QDir::cleanPath(top.trimmed()).compare(QDir::cleanPath(rootAbs),
+                                               Qt::CaseInsensitive) != 0)
+        return QString();
+    return gitHead(rootAbs);
+}
+
 // Cambios desde 'sinceHead' (diff de commits) + working tree (status). Llena
 // 'changed' (A/M/R) y 'deleted' (D). Devuelve false si git no está disponible.
 bool gitChanges(const QString &rootAbs, const QString &sinceHead,
@@ -348,7 +366,7 @@ Stats build(const QString &rootCwd, const QStringList &langs, QString *report)
     int addedEnt = 0, addedRel = 0;
     GraphStore::addBatch(rootCwd, entities, relations, &addedEnt, &addedRel);
     st.edges = addedRel;
-    writeState(rootCwd, gitHead(rootAbs));
+    writeState(rootCwd, gitHeadIfToplevel(rootAbs));
 
     if (report) {
         *report = QStringLiteral(
@@ -426,7 +444,7 @@ Stats buildIncremental(const QString &rootCwd, const QStringList &langs, QString
     const QSet<QString> wantLang = wantSet(langs);
     QSet<QString> changed, deleted;
 
-    const QString headNow = gitHead(rootAbs);
+    const QString headNow = gitHeadIfToplevel(rootAbs);
     bool usedGit = false;
     if (!headNow.isEmpty()) {
         usedGit = gitChanges(rootAbs, prevHead, changed, deleted);

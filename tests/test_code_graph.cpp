@@ -9,6 +9,7 @@
 #include <QTemporaryDir>
 #include <QDir>
 #include <QFile>
+#include <QProcess>
 #include "core/agent/GraphStore.h"
 #include "core/agent/CodeGraphIndexer.h"
 
@@ -26,6 +27,7 @@ private slots:
     void reindex_dropsStaleEdges();
     void incremental_freshFallsBackToFull();
     void incremental_mtimeReindexesChanged();
+    void incremental_gitSubdirUsesMtime();
 
 private:
     // Escribe un archivo bajo dir.path() (creando subcarpetas) con 'content'.
@@ -197,6 +199,36 @@ void CodeGraphTests::incremental_mtimeReindexesChanged()
     const QString out = GraphStore::query(dir.path(), "x.cpp", 1);
     QVERIFY(out.contains("newFn"));
     QVERIFY(!out.contains("oldFn"));   // re-extraído, edge viejo borrado
+}
+
+void CodeGraphTests::incremental_gitSubdirUsesMtime()
+{
+    // Repro del bug: rootCwd es un SUBDIR de un repo git más grande. `git
+    // diff/status` devuelven rutas relativas al toplevel del repo (no a
+    // rootCwd), que no matchean el grafo (indexado relativo a rootCwd). El
+    // indexador debe caer al camino mtime y reindexar igual.
+    QTemporaryDir repo;
+    {
+        QProcess p;
+        p.setWorkingDirectory(repo.path());
+        p.start(QStringLiteral("git"), {QStringLiteral("init")});
+        if (!p.waitForStarted(3000) || !p.waitForFinished(8000)
+            || p.exitStatus() != QProcess::NormalExit || p.exitCode() != 0)
+            QSKIP("git no disponible");
+    }
+    const QString sub = QDir(repo.path()).absoluteFilePath(QStringLiteral("proj"));
+    writeFile(sub, "x.cpp", "void oldFn() {}\n");
+    CodeGraphIndexer::build(sub, {}, nullptr);
+
+    QTest::qWait(1100);
+    writeFile(sub, "x.cpp", "void newFn() {}\n");
+
+    QString report;
+    CodeGraphIndexer::buildIncremental(sub, {}, &report);
+    QVERIFY2(report.contains("mtime"), qPrintable(report));   // no camino git
+    const QString out = GraphStore::query(sub, "x.cpp", 1);
+    QVERIFY(out.contains("newFn"));
+    QVERIFY(!out.contains("oldFn"));
 }
 
 QTEST_MAIN(CodeGraphTests)
