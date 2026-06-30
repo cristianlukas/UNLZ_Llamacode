@@ -1626,8 +1626,8 @@ void LlamaAgentBackend::runCompletion()
 
     emit logAppended(QStringLiteral("[turn] requesting completion (iter=%1, msgs=%2, stream)\n")
                          .arg(m_turnIters).arg(m_apiMessages.size()));
-    postCompletionRequest(m_textToolFallback ? buildTextToolPayload(payload) : payload,
-                          m_textToolFallback ? TextTools : NativeFull);
+    postCompletionRequest(usingTextTools() ? buildTextToolPayload(payload) : payload,
+                          usingTextTools() ? TextTools : NativeFull);
 }
 
 QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePayload) const
@@ -1976,7 +1976,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // El historial de API NO lleva <think> (solo display lo lleva).
     const QString apiContent = stripThinkForContext(m_streamContent);
 
-    if (toolCalls.isEmpty() && m_textToolFallback) {
+    if (toolCalls.isEmpty() && usingTextTools()) {
         const QJsonObject textCall = textToolCallFromContent(apiContent);
         if (!textCall.isEmpty()) {
             if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
@@ -2005,7 +2005,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // Cerrar la burbuja de texto previa: las tools van como tarjetas aparte y el
     // próximo texto del modelo abrirá una burbuja nueva.
     closeAssistantBubble();
-    if (!m_textToolFallback) {
+    if (!usingTextTools()) {
         m_apiMessages.append(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), apiContent},

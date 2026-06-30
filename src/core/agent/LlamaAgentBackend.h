@@ -76,6 +76,12 @@ public:
     // modelo VE el resultado que pidió observar (loop de debug visual recursivo).
     void setVisionAvailable(bool v) { m_visionReady = v; }
 
+    // Forzar el protocolo textual de tools (TOOL_CALL por texto) desde el primer
+    // request, sin esperar el 400 del server. Lo activa AppController cuando el
+    // tool-calling del modelo activo es "unsupported" (chat-template del GGUF sin
+    // tools, ej. Gemma): así el modelo igual puede operar tools vía texto.
+    void setForceTextTools(bool v) { m_forceTextTools = v; }
+
     // Servers MCP (stdio) a usar. Cada entrada: {name, command, type, enabled}.
     // Se relanzan en start(). Sus tools se inyectan con prefijo mcp__<server>__<tool>.
     void setMcpServers(const QVariantList &servers);
@@ -337,8 +343,12 @@ private:
     QTimer *m_streamIdleTimer = nullptr;
     bool m_streamIdleTimedOut = false;
     bool m_running = false;
-    bool m_textToolFallback = false;       // server no acepta OpenAI tools nativo
+    bool m_textToolFallback = false;       // server rechazó OpenAI tools nativo (400)
+    bool m_forceTextTools = false;         // modelo sin tool-template → texto desde el inicio
     bool m_visionReady = false;            // server cargó mmproj (ve imágenes)
+    // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
+    // server o por gating proactivo de AppController para modelos "unsupported").
+    bool usingTextTools() const { return m_textToolFallback || m_forceTextTools; }
     // Capturas devueltas por tools en el turno de tools en curso (data-URIs). Se
     // vuelcan como mensaje user multimodal cuando se resuelven TODAS las tools del
     // turno (no interleavear entre tool_results → rompería el contrato OpenAI).

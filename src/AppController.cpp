@@ -2953,6 +2953,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setMailAccounts(mailAccountsResolved());
         cb->setMailAutoSend(m_mailAutoSend);
         cb->setVisionAvailable(m_serverHasVision);
+        cb->setForceTextTools(m_activeProfileToolSupport == QLatin1String("unsupported"));
     }
     m_agentBackend = b;
     // El perfil de agente activo (capacidades + directivas + ajustes) tiene la
@@ -3990,6 +3991,11 @@ void AppController::recomputeToolSupport()
         m_activeProfileToolSupport = next;
         emit activeProfileToolSupportChanged();
     }
+    // Modelo sin tool-calling nativo (ej. Gemma: chat-template del GGUF sin tools)
+    // → activar el protocolo textual de tools en el backend para que igual pueda
+    // operar herramientas (clave para automatizaciones de escritorio).
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setForceTextTools(next == QLatin1String("unsupported"));
 }
 
 bool AppController::canRunTask() const
