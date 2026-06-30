@@ -1889,6 +1889,7 @@ Item {
         implicitWidth: 420
         onAccepted: App.taskStore.remove(taskId)
         contentItem: Text {
+            width: delConfirm.availableWidth   // sin esto el texto no envuelve → diálogo deforme
             text: "¿Eliminar el proceso \"" + delConfirm.taskName + "\"? Las automatizaciones que lo usen quedarán sin proceso. No se puede deshacer."
             color: Theme.textPrimary
             wrapMode: Text.Wrap
@@ -1904,6 +1905,7 @@ Item {
         implicitWidth: 420
         onAccepted: App.automationStore.remove(autoId)
         contentItem: Text {
+            width: delAutoConfirm.availableWidth   // sin esto el texto no envuelve → diálogo deforme
             text: "¿Eliminar la programación \"" + delAutoConfirm.autoName + "\"? El proceso enlazado no se borra. No se puede deshacer."
             color: Theme.textPrimary
             wrapMode: Text.Wrap
