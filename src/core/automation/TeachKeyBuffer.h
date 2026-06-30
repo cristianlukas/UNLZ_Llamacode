@@ -36,3 +36,29 @@ public:
 private:
     QString m_text;
 };
+
+// Distingue un tap "solo" de la tecla Windows (abre/cierra el menú Inicio) de su
+// uso como modificador en un atajo (Win+R). La tecla Win es ambas cosas: en un
+// hook de keydown no alcanza con verla, hay que esperar el release y saber si en
+// el medio se usó en combo. Pura y testeable (sin SO).
+class WinTapTracker
+{
+public:
+    // Win keydown: empieza a observar un posible tap solo.
+    void down() { m_down = true; m_combo = false; }
+    // Otra tecla pulsada con Win sostenida → fue modificador, no tap solo.
+    void markCombo() { if (m_down) m_combo = true; }
+    // Win keyup: devuelve true si correspondió a un tap solo (emitir [key WIN]).
+    bool up()
+    {
+        const bool lone = m_down && !m_combo;
+        m_down = false;
+        m_combo = false;
+        return lone;
+    }
+    void reset() { m_down = false; m_combo = false; }
+
+private:
+    bool m_down = false;
+    bool m_combo = false;
+};

@@ -19,6 +19,7 @@ private slots:
     void keyBufferAccumulatesTextIntoTypeStep();
     void keyBufferFlushesTextBeforeNamedKey();
     void keyBufferEmitsShortcutWithModifiers();
+    void winTapDistinguishesLoneTapFromShortcut();
 };
 
 void AutomationTests::initTestCase()
@@ -168,6 +169,27 @@ void AutomationTests::keyBufferEmitsShortcutWithModifiers()
     QCOMPARE(step.value("key").toString(), QStringLiteral("R"));
     QCOMPARE(step.value("modifiers").toStringList(), QStringList{QStringLiteral("WIN")});
     QCOMPARE(step.value("intent").toString(), QStringLiteral("Tecla WIN+R"));
+}
+
+void AutomationTests::winTapDistinguishesLoneTapFromShortcut()
+{
+    WinTapTracker t;
+    // Tap solo: down → up sin combo → es tap (abre menú Inicio).
+    t.down();
+    QVERIFY(t.up());
+    // up sin down previo → no es tap.
+    QVERIFY(!t.up());
+    // Win+R: down → markCombo (al pulsar R) → up NO es tap solo.
+    t.down();
+    t.markCombo();
+    QVERIFY(!t.up());
+    // Tras un combo, el estado se reinicia: un nuevo tap solo vuelve a contar.
+    t.down();
+    QVERIFY(t.up());
+    // markCombo sin down no arma nada → el próximo down/up es tap limpio.
+    t.markCombo();
+    t.down();
+    QVERIFY(t.up());
 }
 
 QTEST_MAIN(AutomationTests)

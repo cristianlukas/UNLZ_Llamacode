@@ -47,9 +47,10 @@ private:
     void emitKeySteps(const QVariantList &steps);
 #ifdef Q_OS_WIN
 public:
-    // Invocada por el hook global de teclado (callback file-static en el .cpp).
-    // Pública para no exponer tipos de windows.h en este header.
+    // Invocadas por el hook global de teclado (callback file-static en el .cpp).
+    // Públicas para no exponer tipos de windows.h en este header.
     void onKeyDown(quint32 vkCode, quint32 scanCode);
+    void onKeyUp(quint32 vkCode);
 private:
     void installKeyHook();
     void removeKeyHook();
@@ -71,4 +72,5 @@ private:
     bool m_leftDown = false;
     bool m_rightDown = false;
     TeachKeyBuffer m_keys;
+    WinTapTracker m_winTap;
 };

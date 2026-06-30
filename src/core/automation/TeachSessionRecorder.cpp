@@ -55,10 +55,12 @@ TeachSessionRecorder *g_activeRecorder = nullptr;
 
 LRESULT CALLBACK teachKeyboardProc(int code, WPARAM wParam, LPARAM lParam)
 {
-    if (code == HC_ACTION && g_activeRecorder
-        && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+    if (code == HC_ACTION && g_activeRecorder) {
         const auto *kb = reinterpret_cast<const KBDLLHOOKSTRUCT *>(lParam);
-        g_activeRecorder->onKeyDown(kb->vkCode, kb->scanCode);
+        if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+            g_activeRecorder->onKeyDown(kb->vkCode, kb->scanCode);
+        else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP)
+            g_activeRecorder->onKeyUp(kb->vkCode);
     }
     return CallNextHookEx(nullptr, code, wParam, lParam);
 }
@@ -78,6 +80,7 @@ void TeachSessionRecorder::reset()
     removeKeyHook();
 #endif
     m_keys.clear();
+    m_winTap.reset();
     m_error.clear();
     m_events.clear();
     m_evidence.clear();
@@ -254,6 +257,7 @@ void TeachSessionRecorder::cancel()
     removeKeyHook();
 #endif
     m_keys.clear();
+    m_winTap.reset();
     m_state = QStringLiteral("cancelled");
     emit changed();
 }
@@ -302,12 +306,19 @@ void TeachSessionRecorder::onKeyDown(quint32 vk, quint32 scan)
 {
     if (m_state != QLatin1String("recording")) return;
 
+    // La tecla Win es modificador (Win+R) Y tecla independiente (tap → menú
+    // Inicio). En keydown sólo arrancamos el seguimiento; el paso [key WIN] de un
+    // tap solo se decide en el keyup (ver onKeyUp), para no duplicar con Win+X.
+    if (vk == VK_LWIN || vk == VK_RWIN) {
+        m_winTap.down();
+        return;
+    }
+
     // Modificadores y toggles solos: no generan un paso propio.
     switch (vk) {
     case VK_SHIFT: case VK_LSHIFT: case VK_RSHIFT:
     case VK_CONTROL: case VK_LCONTROL: case VK_RCONTROL:
     case VK_MENU: case VK_LMENU: case VK_RMENU:
-    case VK_LWIN: case VK_RWIN:
     case VK_CAPITAL: case VK_NUMLOCK: case VK_SCROLL:
         return;
     default: break;
@@ -322,6 +333,7 @@ void TeachSessionRecorder::onKeyDown(quint32 vk, quint32 scan)
 
     // Atajo (Ctrl/Alt/Win + algo): vaciar texto y emitir [key] con modificadores.
     if (ctrl || alt || win) {
+        if (win) m_winTap.markCombo();   // Win se usó en combo → su keyup no es tap solo
         QStringList mods;
         if (ctrl) mods << QStringLiteral("CTRL");
         if (alt)  mods << QStringLiteral("ALT");
@@ -351,5 +363,13 @@ void TeachSessionRecorder::onKeyDown(quint32 vk, quint32 scan)
         const QChar c(static_cast<ushort>(buf[i]));
         if (c.isPrint()) m_keys.feedChar(c);
     }
+}
+
+void TeachSessionRecorder::onKeyUp(quint32 vk)
+{
+    if (m_state != QLatin1String("recording")) return;
+    // Sólo la tecla Win necesita el keyup: un tap solo (sin combo) → [key WIN].
+    if ((vk == VK_LWIN || vk == VK_RWIN) && m_winTap.up())
+        emitKeySteps(m_keys.feedKey(QStringLiteral("WIN")));
 }
 #endif
