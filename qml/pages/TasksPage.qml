@@ -1888,12 +1888,13 @@ Item {
         property string taskName: ""
         implicitWidth: 420
         onAccepted: App.taskStore.remove(taskId)
-        contentItem: Text {
-            width: delConfirm.availableWidth   // sin esto el texto no envuelve → diálogo deforme
-            text: "¿Eliminar el proceso \"" + delConfirm.taskName + "\"? Las automatizaciones que lo usen quedarán sin proceso. No se puede deshacer."
-            color: Theme.textPrimary
-            wrapMode: Text.Wrap
-            padding: 8
+        contentItem: ColumnLayout {
+            Text {
+                Layout.fillWidth: true   // un Text suelto como contentItem no toma ancho → cuerpo invisible
+                text: "¿Eliminar el proceso \"" + delConfirm.taskName + "\"? Las automatizaciones que lo usen quedarán sin proceso. No se puede deshacer."
+                color: Theme.textPrimary
+                wrapMode: Text.WordWrap
+            }
         }
     }
 
@@ -1904,12 +1905,13 @@ Item {
         property string autoName: ""
         implicitWidth: 420
         onAccepted: App.automationStore.remove(autoId)
-        contentItem: Text {
-            width: delAutoConfirm.availableWidth   // sin esto el texto no envuelve → diálogo deforme
-            text: "¿Eliminar la programación \"" + delAutoConfirm.autoName + "\"? El proceso enlazado no se borra. No se puede deshacer."
-            color: Theme.textPrimary
-            wrapMode: Text.Wrap
-            padding: 8
+        contentItem: ColumnLayout {
+            Text {
+                Layout.fillWidth: true   // un Text suelto como contentItem no toma ancho → cuerpo invisible
+                text: "¿Eliminar la programación \"" + delAutoConfirm.autoName + "\"? El proceso enlazado no se borra. No se puede deshacer."
+                color: Theme.textPrimary
+                wrapMode: Text.WordWrap
+            }
         }
     }
 }
