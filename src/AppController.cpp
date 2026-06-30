@@ -1147,10 +1147,11 @@ QVariantMap AppController::launchVramFitStatus(const QString &launchProfileId)
     out[QStringLiteral("modelGb")] = weightsGb;
     out[QStringLiteral("ctx")] = ctx;
     out[QStringLiteral("message")] = warn
-        ? QStringLiteral("Este perfil estima %1 GB de VRAM y ahora hay %2 GB libres de %3 GB. Si no entra completo en VRAM, Windows puede mover parte a memoria compartida y los TPS van a caer muy por debajo de lo esperado.")
-              .arg(QString::number(requiredGb + headroomGb, 'f', 1),
+        ? QStringLiteral("Este perfil estima ~%1 GB de VRAM y ahora hay %2 GB libres de %3 GB: el margen es muy ajustado (se recomienda ~%4 GB de cabecera). Si otra app toma VRAM o el modelo crece con el contexto, Windows puede mover parte a memoria compartida y los TPS van a caer muy por debajo de lo esperado.")
+              .arg(QString::number(requiredGb, 'f', 1),
                    QString::number(freeGb, 'f', 1),
-                   QString::number(totalGb, 'f', 1))
+                   QString::number(totalGb, 'f', 1),
+                   QString::number(headroomGb, 'f', 1))
         : QStringLiteral("VRAM suficiente para el perfil.");
     return out;
 }
@@ -2953,7 +2954,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setMailAccounts(mailAccountsResolved());
         cb->setMailAutoSend(m_mailAutoSend);
         cb->setVisionAvailable(m_serverHasVision);
-        cb->setForceTextTools(m_activeProfileToolSupport == QLatin1String("unsupported"));
+        cb->setForceTextTools(m_activeProfileToolSupport != QLatin1String("supported"));
     }
     m_agentBackend = b;
     // El perfil de agente activo (capacidades + directivas + ajustes) tiene la
@@ -3991,11 +3992,13 @@ void AppController::recomputeToolSupport()
         m_activeProfileToolSupport = next;
         emit activeProfileToolSupportChanged();
     }
-    // Modelo sin tool-calling nativo (ej. Gemma: chat-template del GGUF sin tools)
-    // → activar el protocolo textual de tools en el backend para que igual pueda
-    // operar herramientas (clave para automatizaciones de escritorio).
+    // Salvo que el tool-calling nativo esté CONFIRMADO ("supported"), usar el
+    // protocolo textual de tools: cubre "unsupported" (chat-template sin tools,
+    // ej. Gemma) y "unknown" (no se pudo confirmar — p.ej. /props sin chat_template).
+    // El protocolo textual funciona con cualquier modelo que siga instrucciones, así
+    // que es el default seguro para que las herramientas REALMENTE se ejecuten.
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
-        cb->setForceTextTools(next == QLatin1String("unsupported"));
+        cb->setForceTextTools(next != QLatin1String("supported"));
 }
 
 bool AppController::canRunTask() const

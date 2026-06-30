@@ -110,6 +110,10 @@ Item {
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         closePolicy: Popup.CloseOnEscape
+        leftPadding: 22
+        rightPadding: 22
+        topPadding: 20
+        bottomPadding: 16
 
         property string launchId: ""
         property bool withAgent: true
@@ -146,19 +150,25 @@ Item {
             }
         }
 
-        footer: RowLayout {
-            spacing: 8
-            Item { Layout.fillWidth: true }
-            LcButton {
-                text: "Cancelar"
-                secondary: true
-                onClicked: vramWarningDialog.close()
-            }
-            LcButton {
-                text: "Continuar igual"
-                onClicked: {
-                    vramWarningDialog.close()
-                    root.startAfterVramCheck(vramWarningDialog.launchId, vramWarningDialog.withAgent)
+        footer: Item {
+            implicitHeight: 58
+            RowLayout {
+                anchors {
+                    right: parent.right; bottom: parent.bottom
+                    rightMargin: 22; bottomMargin: 16
+                }
+                spacing: 8
+                LcButton {
+                    text: "Cancelar"
+                    secondary: true
+                    onClicked: vramWarningDialog.close()
+                }
+                LcButton {
+                    text: "Continuar igual"
+                    onClicked: {
+                        vramWarningDialog.close()
+                        root.startAfterVramCheck(vramWarningDialog.launchId, vramWarningDialog.withAgent)
+                    }
                 }
             }
         }
