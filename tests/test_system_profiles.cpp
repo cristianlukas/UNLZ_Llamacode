@@ -89,9 +89,13 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     const QString mp4 = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
     QVERIFY(pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
     // El tier 8GB Gemma tiene visión (gemma4uv): mmproj presente, offload a CPU via
-    // --no-mmproj-offload. Requiere llama-server b9496+ en runtime.
+    // --no-mmproj-offload. Requiere llama-server b9496+ en runtime. Q3_K_XL deja
+    // margen para MTP self-draft (mtp-gemma-4-12b-it.gguf, --spec-type draft-mtp).
     const QString mp8 = pm.getLaunchProfile("sys-vram-8-gemma").value("modelProfileId").toString();
-    QVERIFY(!pm.getModelProfile(mp8).value("mmprojId").toString().isEmpty());
+    const QVariantMap m8 = pm.getModelProfile(mp8);
+    QVERIFY(!m8.value("mmprojId").toString().isEmpty());
+    QCOMPARE(m8.value("specType").toString(), QStringLiteral("draft-mtp"));
+    QVERIFY(!m8.value("draftModelId").toString().isEmpty());
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
@@ -191,7 +195,7 @@ void SystemProfilesTests::controller_recommendedTierIncludesDisplayName()
     const QVariantMap pick = app.recommendedSystemProfile();
     QCOMPARE(pick.value("launchId").toString(), QStringLiteral("sys-vram-8-gemma"));
     QCOMPARE(pick.value("displayName").toString(),
-             QStringLiteral("[general] 8GB · Gemma 4 12B Q4 (visión)"));
+             QStringLiteral("[general] 8GB · Gemma 4 12B Q3 (visión, MTP)"));
 }
 
 void SystemProfilesTests::controller_recommendsCpuWhenNoGpu()
