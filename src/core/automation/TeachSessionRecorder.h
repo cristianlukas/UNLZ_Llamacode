@@ -6,6 +6,8 @@
 #include <QTimer>
 #include <QVariantList>
 
+#include "TeachKeyBuffer.h"
+
 class TeachSessionRecorder : public QObject
 {
     Q_OBJECT
@@ -39,6 +41,20 @@ private:
     void appendEvent(const QVariantMap &event, bool captureEvidence);
     QString captureEvidence();
     void reset();
+    // Vacía el texto pendiente del buffer de teclado como un paso [type].
+    void flushKeys();
+    // Redacta los pasos [type] y los appendea a la timeline (con evidencia).
+    void emitKeySteps(const QVariantList &steps);
+#ifdef Q_OS_WIN
+public:
+    // Invocada por el hook global de teclado (callback file-static en el .cpp).
+    // Pública para no exponer tipos de windows.h en este header.
+    void onKeyDown(quint32 vkCode, quint32 scanCode);
+private:
+    void installKeyHook();
+    void removeKeyHook();
+    void *m_keyHook = nullptr;   // HHOOK opaco (sin incluir windows.h en el header)
+#endif
 
     QString m_state = QStringLiteral("idle");
     QString m_error;
@@ -54,4 +70,5 @@ private:
     QPoint m_lastCursor;
     bool m_leftDown = false;
     bool m_rightDown = false;
+    TeachKeyBuffer m_keys;
 };

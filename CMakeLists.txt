@@ -90,6 +90,7 @@ set(CORE_SOURCES
     src/core/tasks/TaskScheduler.cpp
     src/core/automation/DesktopAutomationBackend.cpp
     src/core/automation/AutomationArtifactStore.cpp
+    src/core/automation/TeachKeyBuffer.cpp
     src/core/automation/TeachSessionRecorder.cpp
     src/core/automation/AutomationRunner.cpp
     src/core/tuner/AutoTuner.cpp
@@ -147,6 +148,7 @@ set(HEADERS
     src/core/tasks/TaskScheduler.h
     src/core/automation/DesktopAutomationBackend.h
     src/core/automation/AutomationArtifactStore.h
+    src/core/automation/TeachKeyBuffer.h
     src/core/automation/TeachSessionRecorder.h
     src/core/automation/AutomationRunner.h
     src/core/tuner/AutoTuner.h
