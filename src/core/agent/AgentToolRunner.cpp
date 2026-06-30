@@ -839,6 +839,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return good ? QStringLiteral("[desktop_scroll: ok]")
                     : QStringLiteral("[desktop_scroll: %1]").arg(error);
     }
+    if (name == QLatin1String("desktop_launch")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::launchApp(
+            args.value(QStringLiteral("app")).toString(),
+            args.value(QStringLiteral("args")).toString(), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_launch: ok — la app se está abriendo. "
+                                     "Esperá (desktop_wait) y verificá con desktop_windows/desktop_observe "
+                                     "antes de escribir o clickear.]")
+                    : QStringLiteral("[desktop_launch: %1]").arg(error);
+    }
     if (name == QLatin1String("desktop_focus")) {
         QString error;
         const bool good = DesktopAutomationBackend::focusWindow(

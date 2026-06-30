@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QProcess>
 #include <QScreen>
 #include <QWindow>
 
@@ -253,6 +254,34 @@ bool DesktopAutomationBackend::interactiveSessionAvailable()
     return available != FALSE;
 #else
     return true;
+#endif
+}
+
+bool DesktopAutomationBackend::launchApp(const QString &app, const QString &args, QString *error)
+{
+    const QString program = app.trimmed();
+    if (program.isEmpty()) {
+        if (error) *error = QStringLiteral("Falta el nombre de la app a lanzar.");
+        return false;
+    }
+#ifdef Q_OS_WIN
+    // `start "" <app> <args>` vía cmd: lanza DESPRENDIDO (cmd sale al instante) y
+    // resuelve apps del PATH, rutas .exe y verbos del shell (calc, notepad,
+    // ms-settings:, etc.). startDetached no bloquea ni hereda los pipes → el turno
+    // no queda colgado como con run_shell sobre una app GUI.
+    QStringList argv{QStringLiteral("/c"), QStringLiteral("start"), QString(), program};
+    const QString extra = args.trimmed();
+    if (!extra.isEmpty()) argv << extra;
+    const bool ok = QProcess::startDetached(QStringLiteral("cmd"), argv);
+    if (!ok && error) *error = QStringLiteral("No se pudo lanzar: %1").arg(program);
+    return ok;
+#else
+    QStringList argv;
+    const QString extra = args.trimmed();
+    if (!extra.isEmpty()) argv = extra.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+    const bool ok = QProcess::startDetached(program, argv);
+    if (!ok && error) *error = QStringLiteral("No se pudo lanzar: %1").arg(program);
+    return ok;
 #endif
 }
 

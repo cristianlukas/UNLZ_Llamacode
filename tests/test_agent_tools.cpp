@@ -39,6 +39,7 @@ private slots:
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
     void desktopControls_invalidWindowErrorsCleanly();
+    void desktopLaunch_emptyAppErrorsCleanly();
     void honeyHandoff_densifiesMasterAndSubPrompts();
 
 private:
@@ -288,6 +289,16 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
                          {{"target_id", "zzznothex"}, {"control_id", "1.2.3"}});
     QVERIFY(!k.value("ok").toBool());
     QVERIFY(k.value("result").toString().startsWith(QStringLiteral("[desktop_click_element:")));
+}
+
+void AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()
+{
+    // No lanzamos una app real (abriría una ventana en la máquina de test): sólo el
+    // path de error. app vacío → falla limpio, sin colgar ni abrir nada. El lanzado
+    // real (detached) es QA manual, como el resto de la automatización de escritorio.
+    QVariantMap r = call("desktop_launch", {{"app", "   "}});
+    QVERIFY(!r.value("ok").toBool());
+    QVERIFY(r.value("result").toString().startsWith(QStringLiteral("[desktop_launch:")));
 }
 
 // Handoffs densos (directiva honey): los helpers puros que arman el system prompt

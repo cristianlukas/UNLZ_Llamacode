@@ -21,6 +21,11 @@ public:
     static QPoint denormalizePoint(const QPointF &normalized, const QRect &bounds);
 
     static bool interactiveSessionAvailable();
+    // Lanza una app DESPRENDIDA (no bloquea, no hereda pipes): a diferencia de
+    // run_shell, lanzar una app GUI (calc, notepad, ms-settings:, una ruta .exe)
+    // acá vuelve al instante y no cuelga el turno esperando que el proceso termine.
+    // `app` = programa/comando/verbo del shell; `args` = argumentos extra (opcional).
+    static bool launchApp(const QString &app, const QString &args, QString *error = nullptr);
     static bool focusWindow(const QString &targetId, QString *error = nullptr);
     static bool click(const QString &kind, const QString &targetId, double x, double y,
                       QString *error = nullptr);

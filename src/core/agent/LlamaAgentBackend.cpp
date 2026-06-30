@@ -2127,7 +2127,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
-        QStringLiteral("desktop_wait"),
+        QStringLiteral("desktop_wait"), QStringLiteral("desktop_launch"),
         QStringLiteral("email_accounts"), QStringLiteral("email_send"),
         QStringLiteral("email_list"), QStringLiteral("email_read")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
@@ -3397,6 +3397,17 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Desplaza la rueda del mouse; -120 baja, 120 sube."),
            QJsonObject{{QStringLiteral("delta"), intProp(QStringLiteral("Delta de rueda."))}},
            QJsonArray{}),
+        fn(QStringLiteral("desktop_launch"),
+           QStringLiteral("Abre una app del escritorio DESPRENDIDA (no bloquea). USÁ ESTO para "
+                          "abrir programas (calc, notepad, una ruta .exe, un verbo del shell como "
+                          "ms-settings:) en vez de run_shell: run_shell se cuelga esperando que una "
+                          "app GUI termine. Tras lanzar, esperá (desktop_wait) y verificá con "
+                          "desktop_windows/desktop_observe antes de escribir (desktop_type) o "
+                          "clickear. 'args' es opcional (argumentos extra)."),
+           QJsonObject{
+               {QStringLiteral("app"), strProp(QStringLiteral("Programa/comando a abrir (ej. 'calc', 'notepad', ruta .exe)."))},
+               {QStringLiteral("args"), strProp(QStringLiteral("Argumentos extra (opcional)."))}},
+           QJsonArray{QStringLiteral("app")}),
         fn(QStringLiteral("desktop_focus"),
            QStringLiteral("Enfoca/restaura una ventana enseñada."),
            QJsonObject{{QStringLiteral("target_id"), strProp(QStringLiteral("Id de ventana."))}},
@@ -3488,6 +3499,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_scroll", "Escritorio", "Desplaza el escritorio.", 70),
         mk("desktop_focus", "Escritorio", "Enfoca una ventana.", 70),
         mk("desktop_wait", "Escritorio", "Espera antes de observar.", 60),
+        mk("desktop_launch", "Escritorio", "Abre una app desprendida (no bloquea como run_shell).", 95),
         mk("email_accounts", "Correo", "Lista las cuentas de correo configuradas.", 60),
         mk("email_send", "Correo", "Envía un correo (SMTP). Requiere aprobación por defecto.", 150),
         mk("email_list", "Correo", "Lista correos recientes (IMAP/POP3).", 130),
