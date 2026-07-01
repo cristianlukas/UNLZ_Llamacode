@@ -160,6 +160,8 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 ## Pendientes deferidos (jun-2026) — backend/infra listo, falta lo anotado
 
 - [ ] **LlamaProcessManager dedicado** — extraer ciclo de vida de proceso de `AppController` a clase propia. Refactor arquitectónico grande, alto riesgo, bajo ROI ahora. No empezado.
+- [ ] **ControlApi `reqId` estable** — inspirado en la revision de Omnix (`docs/omnix_review.md`): aceptar `reqId` por body/query/header (`x-req-id`/`reqid`), generarlo si falta y devolverlo en respuestas/errores/logs para correlacionar Tasks, agente, benchmark y operaciones largas.
+- [ ] **Scheduler de operaciones auxiliares** — separar del `TaskScheduler` cron una cola interna por clases de trabajo (`interactive_text`, `voice`, `document`, `retrieval`, `verification`, `benchmark`, mantenimiento), con prioridad para chat/agente y estado consultable por ControlApi.
 - [ ] **Sampling por sesión (chat)** — temp/top-p/top-k por sesión. Plumbing: persistir en session JSON + pasar al payload de `RawChatBackend::runCompletion`. UI: panel en ChatPage.
 - [ ] **Panel UI de búsqueda en historial** — invokable `searchChatHistory(query)` ya existe; falta campo de búsqueda + lista de resultados (snippet→switchChatSession) en ChatPage.
 - [ ] **Combo UI de filtro de log por nivel** — invokable `serverLogByLevel(level)` ya existe; falta selector (all/error/warn/stderr/stdout/lifecycle/health/diag) en la vista de log del server.

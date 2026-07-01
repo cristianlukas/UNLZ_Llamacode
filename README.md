@@ -956,6 +956,7 @@ Código, datos y diseño tomados de otros proyectos:
 | **dzhng/deep-research** | Patrón breadth/depth, learnings compactos, consultas con objetivo y seguimiento recursivo | https://github.com/dzhng/deep-research |
 | **LangChain Open Deep Research** | Separación supervisor/investigador, reflexión, compresión intermedia, límites de iteración y validación antes del informe | https://github.com/langchain-ai/open_deep_research |
 | **Tongyi DeepResearch** | Ideas de investigación de horizonte largo, test-time scaling, resumen de contexto y búsqueda agentic iterativa | https://github.com/Alibaba-NLP/DeepResearch |
+| **Omnix** | Ideas de API local multimodal, `reqId` de correlación, modo headless y separación de colas texto/operaciones auxiliares. Revisión: [`docs/omnix_review.md`](docs/omnix_review.md) | https://github.com/LoanLemon/Omnix |
 | **Honey (I Shrunk the AI)** | _Inspiración conceptual_ (no se toma código): la directiva opt-in "Frugalidad (honey)" del agente — código YAGNI, respuesta-primero y handoffs agente↔agente densos clave:valor en vez de JSON | https://github.com/Green-PT/honey-for-devs |
 
 > Al sumar código/datos de otro repo, agregar la fila correspondiente acá.
