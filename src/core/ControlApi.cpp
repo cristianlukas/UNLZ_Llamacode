@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QUrlQuery>
+#include <QUuid>
 #include <QVariant>
 
 ControlApi::ControlApi(QObject *target, QObject *parent)
@@ -40,10 +41,16 @@ void ControlApi::onNewConnection()
             if (hdrEnd < 0) return;
             const QByteArray headers = data.left(hdrEnd);
             int contentLen = 0;
+            QHash<QByteArray, QByteArray> headerMap;
             const QList<QByteArray> lines = headers.split('\n');
             for (const QByteArray &l : lines) {
-                if (l.toLower().startsWith("content-length:"))
-                    contentLen = l.mid(l.indexOf(':') + 1).trimmed().toInt();
+                const int colon = l.indexOf(':');
+                if (colon <= 0) continue;
+                const QByteArray name = l.left(colon).trimmed().toLower();
+                const QByteArray value = l.mid(colon + 1).trimmed();
+                headerMap.insert(name, value);
+                if (name == "content-length")
+                    contentLen = value.toInt();
             }
             const QByteArray body = data.mid(hdrEnd + 4);
             if (body.size() < contentLen) return;   // esperar resto
@@ -53,7 +60,7 @@ void ControlApi::onNewConnection()
             if (parts.size() < 2) { sock->disconnectFromHost(); return; }
             const QByteArray method = parts.at(0);
             const QString path = QString::fromUtf8(parts.at(1));
-            handleRequest(sock, method, path, body.left(contentLen));
+            handleRequest(sock, method, path, body.left(contentLen), headerMap);
         });
         connect(sock, &QTcpSocket::disconnected, sock, &QObject::deleteLater);
     }
@@ -75,11 +82,13 @@ static QJsonArray childTargets(QObject *obj);
 static QByteArray errorJson(const QString &msg, const QString &availKey, const QJsonArray &avail);
 
 void ControlApi::handleRequest(QTcpSocket *sock, const QByteArray &method,
-                               const QString &path, const QByteArray &body)
+                               const QString &path, const QByteArray &body,
+                               const QHash<QByteArray, QByteArray> &headers)
 {
     QByteArray resp;
     const QString p = path.section('?', 0, 0);
     const QUrlQuery query(path.section('?', 1));
+    const QString reqId = requestIdFor(path, body, headers);
     // target: query param (GET) o campo JSON (POST). Ruta de QObject* hijos.
     QString targetPath = query.queryItemValue(QStringLiteral("target"));
     if (method == "POST" && targetPath.isEmpty())
@@ -94,32 +103,58 @@ void ControlApi::handleRequest(QTcpSocket *sock, const QByteArray &method,
     };
 
     if (p == QLatin1String("/") || p == QLatin1String("/help")) {
-        resp = httpResponse(200, jsonHelp());
+        resp = httpResponse(200, withRequestId(jsonHelp(), reqId));
     } else if (p == QLatin1String("/health")) {
-        resp = httpResponse(200, "{\"ok\":true}");
+        resp = httpResponse(200, withRequestId("{\"ok\":true}", reqId));
     } else if (p == QLatin1String("/methods")) {
-        resp = httpResponse(200, jsonMethods(targetPath));
+        resp = httpResponse(200, withRequestId(jsonMethods(targetPath), reqId));
     } else if (p == QLatin1String("/prop")) {
         QObject *t = resolveTarget(targetPath);
-        resp = t ? httpResponse(200, jsonProperty(t, query.queryItemValue(QStringLiteral("name"))))
-                 : httpResponse(400, unknownTarget());
+        resp = t ? httpResponse(200, withRequestId(jsonProperty(t, query.queryItemValue(QStringLiteral("name"))), reqId))
+                 : httpResponse(400, withRequestId(unknownTarget(), reqId));
     } else if (p == QLatin1String("/setprop") && method == "POST") {
         bool ok = false;
         QObject *t = resolveTarget(targetPath);
         const QByteArray out = t ? setProperty(t, body, &ok) : unknownTarget();
-        resp = httpResponse(ok ? 200 : 400, out);
+        resp = httpResponse(ok ? 200 : 400, withRequestId(out, reqId));
     } else if (p == QLatin1String("/invoke") && method == "POST") {
         bool ok = false;
         QObject *t = resolveTarget(targetPath);
         const QByteArray out = t ? invokeMethod(t, body, &ok) : unknownTarget();
-        resp = httpResponse(ok ? 200 : 400, out);
+        resp = httpResponse(ok ? 200 : 400, withRequestId(out, reqId));
     } else {
-        resp = httpResponse(404, "{\"error\":\"endpoint desconocido; probá GET /help\"}");
+        resp = httpResponse(404, withRequestId("{\"error\":\"endpoint desconocido; probá GET /help\"}", reqId));
     }
 
     sock->write(resp);
     sock->flush();
     sock->disconnectFromHost();
+}
+
+QString ControlApi::requestIdFor(const QString &path, const QByteArray &body,
+                                 const QHash<QByteArray, QByteArray> &headers)
+{
+    const QUrlQuery query(path.section('?', 1));
+    QString reqId = query.queryItemValue(QStringLiteral("reqId")).trimmed();
+    if (reqId.isEmpty())
+        reqId = QString::fromUtf8(headers.value("x-req-id")).trimmed();
+    if (reqId.isEmpty())
+        reqId = QString::fromUtf8(headers.value("reqid")).trimmed();
+    if (reqId.isEmpty() && !body.isEmpty())
+        reqId = QJsonDocument::fromJson(body).object()
+                    .value(QStringLiteral("reqId")).toString().trimmed();
+    if (reqId.isEmpty())
+        reqId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    return reqId;
+}
+
+QByteArray ControlApi::withRequestId(const QByteArray &json, const QString &reqId)
+{
+    QJsonObject o = QJsonDocument::fromJson(json).object();
+    o.insert(QStringLiteral("reqId"), reqId);
+    if (o.contains(QStringLiteral("error")) && !o.contains(QStringLiteral("ok")))
+        o.insert(QStringLiteral("ok"), false);
+    return QJsonDocument(o).toJson(QJsonDocument::Compact);
 }
 
 QObject *ControlApi::resolveTarget(const QString &path) const

@@ -59,12 +59,11 @@ para endurecer automatizacion local y multitarea.
 
 ## Pendientes concretos
 
-- Definir formato minimo de respuesta ControlApi v1:
+- [x] Definir formato minimo de respuesta ControlApi v1:
   `{"ok":true,"reqId":"...","result":...}` y
   `{"ok":false,"reqId":"...","error":"...","available":[...]}`.
 - Agregar `reqId` a los logs de ejecucion de Tasks y agente.
-- Disenar `AuxiliaryJobScheduler` con colas, prioridad, cancelacion y estado
+- [x] Disenar `AuxiliaryJobScheduler` con colas, prioridad, cancelacion y estado
   consultable por ControlApi.
 - Documentar compatibilidad de API services externos para endpoints tipo Omnix,
   sin prometer soporte nativo de Transformers.js/WebGPU.
-

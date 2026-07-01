@@ -34,6 +34,9 @@ $env:LLAMACODE_CONTROL_PORT = "8765"   # o dejar default
 | POST | `/invoke` | `{method, args:[...]}` | `{ok:true, result?}` |
 
 - `Content-Type: application/json`. CORS abierto (`Access-Control-Allow-Origin: *`).
+- Toda respuesta incluye `reqId`. El cliente puede enviarlo como `?reqId=...`,
+  campo JSON `reqId`, header `x-req-id` o header `reqid`; si falta, la app genera
+  uno y lo devuelve. Los errores agregan `ok:false` sin perder `error`/`available`.
 - `args` se convierten al tipo de cada parámetro (QString/bool/int/double/QStringList/QVariantMap…).
   Para un parámetro `QStringList`, pasá un array JSON: `"args":[["a","b"]]`.
 - El match de método es por **nombre + aridad** (cantidad de args).

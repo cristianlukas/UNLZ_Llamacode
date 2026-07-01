@@ -53,6 +53,7 @@ set(CORE_SOURCES
     src/core/DocumentExtractor.cpp
     src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
+    src/core/AuxiliaryJobScheduler.cpp
     src/core/gateway/LlmGateway.cpp
     src/core/SecretStore.cpp
     src/core/profiles/ProfileTypes.cpp
@@ -112,6 +113,7 @@ set(HEADERS
     src/core/DocumentExtractor.h
     src/core/MermaidRenderer.h
     src/core/ControlApi.h
+    src/core/AuxiliaryJobScheduler.h
     src/core/gateway/LlmGateway.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
@@ -408,6 +410,7 @@ if (BUILD_TESTS)
         LC_REASONING_BIAS_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/reasoning_bias.json"
         LC_SNAKE_SUITE_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/snake_retro_singlefile.json")
     add_lc_test(test_control_api        tests/test_control_api.cpp)
+    add_lc_test(test_auxiliary_job_scheduler tests/test_auxiliary_job_scheduler.cpp)
     add_lc_test(test_agent_tools        tests/test_agent_tools.cpp)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)
     add_lc_test(test_hotspots           tests/test_hotspots.cpp)

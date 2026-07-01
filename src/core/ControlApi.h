@@ -1,9 +1,16 @@
 #pragma once
+#include <QHash>
 #include <QObject>
 #include <QHostAddress>
+#include <QString>
 
 class QTcpServer;
 class QTcpSocket;
+
+struct ControlApiRequestContext
+{
+    QString reqId;
+};
 
 // Control API HTTP headless: espeja TODO AppController vía meta-object
 // (Q_INVOKABLE + Q_PROPERTY ya expuestos a QML). Permite manejar la app sin GUI
@@ -41,7 +48,11 @@ private slots:
 
 private:
     void handleRequest(QTcpSocket *sock, const QByteArray &method,
-                       const QString &path, const QByteArray &body);
+                       const QString &path, const QByteArray &body,
+                       const QHash<QByteArray, QByteArray> &headers);
+    static QString requestIdFor(const QString &path, const QByteArray &body,
+                                const QHash<QByteArray, QByteArray> &headers);
+    static QByteArray withRequestId(const QByteArray &json, const QString &reqId);
     // Resuelve una ruta de props QObject* (dot-separated) desde m_target. Ruta
     // vacía = m_target. Devuelve nullptr si algún segmento no es un QObject* válido.
     QObject *resolveTarget(const QString &path) const;

@@ -54,6 +54,10 @@ private slots:
     void unknownMethodListsAvailable();
     void wrongArityListsValidArgCounts();
     void unknownTargetListsAvailable();
+    void requestIdFromQuery();
+    void requestIdFromHeader();
+    void requestIdFromBody();
+    void requestIdGeneratedWhenMissing();
 
 private:
     QJsonObject request(const QByteArray &method, const QString &path,
@@ -100,6 +104,42 @@ QJsonObject ControlApiTests::request(const QByteArray &method, const QString &pa
     }
     req += "Connection: close\r\n\r\n";
     req += body;
+
+    auto responseComplete = [&]() -> bool {
+        const int hdr = resp.indexOf("\r\n\r\n");
+        if (hdr < 0) return false;
+        int clen = 0;
+        for (const QByteArray &l : resp.left(hdr).split('\n'))
+            if (l.toLower().startsWith("content-length:"))
+                clen = l.mid(l.indexOf(':') + 1).trimmed().toInt();
+        return resp.size() - (hdr + 4) >= clen;
+    };
+
+    QElapsedTimer timer; timer.start();
+    bool sent = false;
+    while (timer.elapsed() < 3000 && !responseComplete()) {
+        if (!sent && sock.state() == QAbstractSocket::ConnectedState) {
+            sock.write(req); sock.flush(); sent = true;
+        }
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    }
+    const int hdr = resp.indexOf("\r\n\r\n");
+    if (hdr < 0) return {};
+    return QJsonDocument::fromJson(resp.mid(hdr + 4)).object();
+}
+
+static QJsonObject requestWithHeader(quint16 port, const QByteArray &method, const QString &path,
+                                     const QByteArray &headerName, const QByteArray &headerValue)
+{
+    QByteArray resp;
+    QTcpSocket sock;
+    QObject::connect(&sock, &QTcpSocket::readyRead, [&] { resp += sock.readAll(); });
+    sock.connectToHost(QHostAddress::LocalHost, port);
+
+    QByteArray req = method + " " + path.toUtf8() + " HTTP/1.1\r\n";
+    req += "Host: localhost\r\n";
+    req += headerName + ": " + headerValue + "\r\n";
+    req += "Connection: close\r\n\r\n";
 
     auto responseComplete = [&]() -> bool {
         const int hdr = resp.indexOf("\r\n\r\n");
@@ -244,6 +284,32 @@ void ControlApiTests::unknownTargetListsAvailable()
     QVERIFY(o.contains("error"));
     QVERIFY2(o.value("available").toArray().contains(QJsonValue(QStringLiteral("child"))),
              "el error debería listar 'child' como target válido");
+}
+
+void ControlApiTests::requestIdFromQuery()
+{
+    const QJsonObject o = request("GET", "/health?reqId=query-123");
+    QCOMPARE(o.value("reqId").toString(), QStringLiteral("query-123"));
+}
+
+void ControlApiTests::requestIdFromHeader()
+{
+    const QJsonObject o = requestWithHeader(m_port, "GET", "/health", "x-req-id", "hdr-123");
+    QCOMPARE(o.value("reqId").toString(), QStringLiteral("hdr-123"));
+}
+
+void ControlApiTests::requestIdFromBody()
+{
+    const QJsonObject o = request("POST", "/invoke",
+                                  R"({"reqId":"body-123","method":"addNums","args":[1,2]})");
+    QCOMPARE(o.value("reqId").toString(), QStringLiteral("body-123"));
+    QCOMPARE(o.value("result").toInt(), 3);
+}
+
+void ControlApiTests::requestIdGeneratedWhenMissing()
+{
+    const QJsonObject o = request("GET", "/health");
+    QVERIFY(!o.value("reqId").toString().isEmpty());
 }
 
 QTEST_MAIN(ControlApiTests)
