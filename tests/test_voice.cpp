@@ -19,6 +19,7 @@ class TestVoice : public QObject
 private slots:
     void configRoundTrip();
     void wavHeaderAndExtract();
+    void wavPcm16FormatParse();
     void rmsLevels();
     void sttMultipart();
     void sttParseTranscript();
@@ -83,6 +84,31 @@ void TestVoice::wavHeaderAndExtract()
     QCOMPARE(AudioCodec::wavExtractPcm(wav), pcm);
     // Entrada no-WAV: se devuelve tal cual.
     QCOMPARE(AudioCodec::wavExtractPcm(pcm), pcm);
+}
+
+void TestVoice::wavPcm16FormatParse()
+{
+    // WAV PCM16 propio: se parsea rate/canales (habilita el path QAudioSink).
+    const QByteArray wav = AudioCodec::pcm16ToWav(QByteArray(200, '\1'), 22050, 1);
+    int rate = 0, ch = 0;
+    QVERIFY(AudioCodec::wavPcm16Format(wav, &rate, &ch));
+    QCOMPARE(rate, 22050);
+    QCOMPARE(ch, 1);
+
+    // Estéreo 48k.
+    const QByteArray wav2 = AudioCodec::pcm16ToWav(QByteArray(400, '\1'), 48000, 2);
+    QVERIFY(AudioCodec::wavPcm16Format(wav2, &rate, &ch));
+    QCOMPARE(rate, 48000);
+    QCOMPARE(ch, 2);
+
+    // No-WAV → false (cae al path QMediaPlayer).
+    QVERIFY(!AudioCodec::wavPcm16Format(QByteArray("no soy wav"), &rate, &ch));
+    // WAV con formato no-PCM (float=3) → false.
+    QByteArray f32 = wav;
+    f32[20] = 3; f32[21] = 0;
+    QVERIFY(!AudioCodec::wavPcm16Format(f32, &rate, &ch));
+    // Header truncado → false, sin crash.
+    QVERIFY(!AudioCodec::wavPcm16Format(wav.left(16), &rate, &ch));
 }
 
 void TestVoice::rmsLevels()
@@ -249,6 +275,13 @@ void TestVoice::ttsStreamingSentences()
     QVERIFY(spoken.at(0).startsWith("Abro el navegador"));
     QVERIFY(spoken.at(1).startsWith("Busco la página"));
     QVERIFY(spoken.last().endsWith("?"));
+
+    // Primera oración del turno: umbral corto (12) → arranca a hablar con una
+    // confirmación breve sin esperar 40 chars.
+    consumed = 0;
+    s = VoiceController::splitCompleteSentences(
+        QStringLiteral("Ok, lo hago. Ahora abro el nav"), 12, &consumed);
+    QCOMPARE(s, QStringList{QStringLiteral("Ok, lo hago.")});
 }
 
 void TestVoice::ttsSanitizeForSpeech()

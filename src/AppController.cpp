@@ -3539,7 +3539,9 @@ IAgentBackend *AppController::ensureChatBackend()
                         if (!c.trimmed().isEmpty()) reply = c;
                     }
                 }
-                m_voice->speak(reply);
+                // La respuesta ya se fue hablando en vivo (speakStreaming abajo);
+                // acá solo se encola el fragmento final sin terminador.
+                m_voice->speakFlush(m_charlaStreamBubble, reply);
             }
         }
         if (!generating && wasGenerating && m_restartThinkingAfterResponse)
@@ -3549,6 +3551,12 @@ IAgentBackend *AppController::ensureChatBackend()
         m_chatStreamingIndex = idx;
         m_chatStreamingText = content;
         emit chatStreamingChanged();
+        // Ingi Charla (voz-a-voz sin agente): hablar la respuesta a medida que se
+        // genera, oración por oración, en vez de esperar el turno completo.
+        if (m_voice && m_charlaActive && !m_charlaUseAgent) {
+            m_charlaStreamBubble = idx;
+            m_voice->speakStreaming(idx, content);
+        }
     });
     connect(b, &IAgentBackend::queueChanged, this, [this, b]() {
         m_chatQueuedCount = b->queuedCount();

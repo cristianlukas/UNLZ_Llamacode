@@ -9,6 +9,7 @@
 #include <QIODevice>
 #include <QMediaPlayer>
 #include <QAudioOutput>
+#include <QAudioSink>
 #include <QBuffer>
 #include <QUrl>
 
@@ -409,8 +410,11 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     }
     if (m_streamConsumed > fullText.size()) m_streamConsumed = 0;   // texto se acortó
     const QString pending = fullText.mid(m_streamConsumed);
+    // Primera oración del turno: umbral corto (arrancar a hablar YA con un "Ok."
+    // o "Dale."); las siguientes usan 40 para no spawnear TTS por fragmentos.
+    const int minLen = (m_streamConsumed == 0) ? 12 : 40;
     int consumed = 0;
-    const QStringList sents = splitCompleteSentences(pending, 40, &consumed);
+    const QStringList sents = splitCompleteSentences(pending, minLen, &consumed);
     if (sents.isEmpty()) return;          // todavía no cerró ninguna oración nueva
     m_streamConsumed += consumed;
     if (m_state != Speaking) setState(Speaking);
@@ -469,8 +473,70 @@ void VoiceController::onTtsFailed(const QString &err)
     fail(QStringLiteral("TTS: ") + err);
 }
 
+void VoiceController::onClipFinished()
+{
+    m_playing = false;
+    // ¿Más clips ya sintetizados? Reproducir el siguiente.
+    if (!m_audioQueue.isEmpty()) { playNextClip(); return; }
+    // ¿Quedan oraciones por sintetizar (o una síntesis en vuelo)? Esperar a que
+    // llegue su audio (onTtsAudio reanuda la reproducción).
+    if (!m_ttsQueue.isEmpty() || m_tts.busy()) return;
+    teardownPlayback();
+    if (m_state == Speaking) {
+        if (m_cfg.autoListen) startListening();
+        else setState(Idle);
+    }
+}
+
+void VoiceController::playPcm(const QByteArray &pcm, int sampleRate, int channels)
+{
+    // Limpiar solo el path QMediaPlayer; el sink se reusa entre oraciones.
+    if (m_player) { m_player->stop(); m_player->deleteLater(); m_player = nullptr; }
+    if (m_audioOut) { m_audioOut->deleteLater(); m_audioOut = nullptr; }
+    if (m_sink && (m_sinkRate != sampleRate || m_sinkChannels != channels))
+        teardownSink();
+    if (m_playBuf) { m_playBuf->close(); m_playBuf->deleteLater(); m_playBuf = nullptr; }
+
+    m_playBuf = new QBuffer(this);
+    m_playBuf->setData(pcm);
+    m_playBuf->open(QIODevice::ReadOnly);
+
+    if (!m_sink) {
+        QAudioFormat fmt;
+        fmt.setSampleRate(sampleRate);
+        fmt.setChannelCount(channels);
+        fmt.setSampleFormat(QAudioFormat::Int16);
+        m_sink = new QAudioSink(fmt, this);
+        m_sinkRate = sampleRate;
+        m_sinkChannels = channels;
+        connect(m_sink, &QAudioSink::stateChanged, this, [this](QAudio::State st) {
+            // IdleState = buffer drenado → clip terminado.
+            if (st == QAudio::IdleState && m_playing) onClipFinished();
+            else if (st == QAudio::StoppedState && m_sink
+                     && m_sink->error() != QAudio::NoError)
+                fail(QStringLiteral("playback: error de salida de audio"));
+        });
+    } else {
+        m_sink->stop();
+    }
+
+    if (m_cfg.bargeIn && !m_source) {
+        beginCapture();
+        m_monitorOnly = true;
+        if (m_state != Error) setState(Speaking);
+    }
+    m_sink->start(m_playBuf);
+}
+
 void VoiceController::playAudio(const QByteArray &audio, const QString &format)
 {
+    // WAV PCM16 (piper y la mayoría de servers TTS locales): directo a QAudioSink.
+    int rate = 0, ch = 0;
+    if (format == QLatin1String("wav") && AudioCodec::wavPcm16Format(audio, &rate, &ch)) {
+        playPcm(AudioCodec::wavExtractPcm(audio), rate, ch);
+        return;
+    }
+
     teardownPlayback();
 
     m_playBuf = new QBuffer(this);
@@ -484,19 +550,7 @@ void VoiceController::playAudio(const QByteArray &audio, const QString &format)
 
     connect(m_player, &QMediaPlayer::mediaStatusChanged, this,
             [this](QMediaPlayer::MediaStatus st) {
-        if (st == QMediaPlayer::EndOfMedia) {
-            teardownPlayback();
-            m_playing = false;
-            // ¿Más clips ya sintetizados? Reproducir el siguiente.
-            if (!m_audioQueue.isEmpty()) { playNextClip(); return; }
-            // ¿Quedan oraciones por sintetizar (o una síntesis en vuelo)? Esperar
-            // a que llegue su audio (onTtsAudio reanuda la reproducción).
-            if (!m_ttsQueue.isEmpty() || m_tts.busy()) return;
-            if (m_state == Speaking) {
-                if (m_cfg.autoListen) startListening();
-                else setState(Idle);
-            }
-        }
+        if (st == QMediaPlayer::EndOfMedia) onClipFinished();
     });
     connect(m_player, &QMediaPlayer::errorOccurred, this,
             [this](QMediaPlayer::Error, const QString &es) { fail(QStringLiteral("playback: ") + es); });
@@ -511,9 +565,23 @@ void VoiceController::playAudio(const QByteArray &audio, const QString &format)
     m_player->play();
 }
 
+void VoiceController::teardownSink()
+{
+    if (m_sink) {
+        QAudioSink *s = m_sink;
+        m_sink = nullptr;          // antes de stop(): evita re-entrar por stateChanged
+        s->disconnect(this);
+        s->stop();
+        s->deleteLater();
+    }
+    m_sinkRate = 0;
+    m_sinkChannels = 0;
+}
+
 void VoiceController::teardownPlayback()
 {
     if (m_player) { m_player->stop(); m_player->deleteLater(); m_player = nullptr; }
     if (m_audioOut) { m_audioOut->deleteLater(); m_audioOut = nullptr; }
+    teardownSink();
     if (m_playBuf) { m_playBuf->close(); m_playBuf->deleteLater(); m_playBuf = nullptr; }
 }

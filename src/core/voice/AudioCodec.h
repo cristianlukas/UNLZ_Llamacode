@@ -13,6 +13,11 @@ QByteArray pcm16ToWav(const QByteArray &pcm, int sampleRate, int channels = 1);
 // Si no parece WAV, devuelve la entrada tal cual.
 QByteArray wavExtractPcm(const QByteArray &wav);
 
+// Lee el chunk "fmt " de un WAV. Devuelve true solo si es PCM lineal de 16 bits
+// (lo que produce piper y lo que QAudioSink puede reproducir directo, sin pasar
+// por el pipeline de QMediaPlayer). sampleRate/channels salen por puntero.
+bool wavPcm16Format(const QByteArray &wav, int *sampleRate, int *channels);
+
 // RMS normalizado [0..1] de un bloque PCM16. 0 si está vacío.
 double rms(const int16_t *samples, int count);
 

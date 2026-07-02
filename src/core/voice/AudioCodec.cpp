@@ -57,6 +57,34 @@ QByteArray wavExtractPcm(const QByteArray &wav)
     return {};
 }
 
+bool wavPcm16Format(const QByteArray &wav, int *sampleRate, int *channels)
+{
+    if (wav.size() < 12 || !wav.startsWith("RIFF") || wav.mid(8, 4) != "WAVE")
+        return false;
+    int pos = 12;
+    while (pos + 8 <= wav.size()) {
+        const QByteArray id = wav.mid(pos, 4);
+        const quint32 sz = qFromLittleEndian<quint32>(
+            reinterpret_cast<const uchar *>(wav.constData() + pos + 4));
+        pos += 8;
+        if (id == "fmt ") {
+            if (sz < 16 || pos + 16 > wav.size()) return false;
+            const uchar *p = reinterpret_cast<const uchar *>(wav.constData() + pos);
+            const quint16 audioFmt = qFromLittleEndian<quint16>(p);
+            const quint16 ch       = qFromLittleEndian<quint16>(p + 2);
+            const quint32 rate     = qFromLittleEndian<quint32>(p + 4);
+            const quint16 bits     = qFromLittleEndian<quint16>(p + 14);
+            if (audioFmt != 1 || bits != 16 || ch == 0 || rate == 0) return false;
+            if (sampleRate) *sampleRate = int(rate);
+            if (channels)   *channels = int(ch);
+            return true;
+        }
+        pos += int(sz);
+        if (sz & 1) ++pos;
+    }
+    return false;
+}
+
 double rms(const int16_t *samples, int count)
 {
     if (count <= 0 || !samples) return 0.0;

@@ -15,6 +15,7 @@ class QAudioSource;
 class QIODevice;
 class QMediaPlayer;
 class QAudioOutput;
+class QAudioSink;
 class QBuffer;
 
 // Orquestador del modo "Charla" (voz-a-voz):
@@ -120,7 +121,13 @@ private:
     void pumpSegments();           // transcribe el próximo segmento si STT está libre
     void finalizeTurn();           // arma el texto final del turno y lo emite
     void playAudio(const QByteArray &audio, const QString &format);
+    // Path rápido: WAV PCM16 (piper/whisper-speech) directo a QAudioSink, sin el
+    // pipeline de QMediaPlayer (que en Windows arma MediaFoundation por clip).
+    // El sink se reusa entre oraciones del mismo turno → sin gap entre clips.
+    void playPcm(const QByteArray &pcm, int sampleRate, int channels);
+    void onClipFinished();   // continuación común: próximo clip / fin de turno
     void teardownPlayback();
+    void teardownSink();
     void pumpTts();        // sintetiza la próxima oración pendiente si TTS está libre
     void playNextClip();   // reproduce el próximo clip de audio ya sintetizado
 
@@ -154,6 +161,9 @@ private:
     QMediaPlayer *m_player = nullptr;
     QAudioOutput *m_audioOut = nullptr;
     QBuffer *m_playBuf = nullptr;
+    QAudioSink *m_sink = nullptr;    // path PCM16 directo (reusado entre clips)
+    int m_sinkRate = 0;
+    int m_sinkChannels = 0;
 
     // TTS por chunks (streaming de oraciones): cola de oraciones pendientes de
     // sintetizar + cola de clips ya sintetizados esperando reproducción. Permite
