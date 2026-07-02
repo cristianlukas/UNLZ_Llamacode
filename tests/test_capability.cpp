@@ -13,6 +13,7 @@ private slots:
     void parse_stripsAnsi();
     void parse_legacyDraftAlias();
     void parse_ignoresDescriptionContinuation();
+    void parse_probeCapturesVersionKvAndSpecTypes();
 };
 
 void CapabilityTests::parse_extractsLongFlags()
@@ -60,6 +61,20 @@ void CapabilityTests::parse_ignoresDescriptionContinuation()
     const auto cap = CapabilityDetector::parse(help);
     QVERIFY(cap.hasFlag("--host"));
     QVERIFY(!cap.hasFlag("--not-a-flag"));
+}
+
+void CapabilityTests::parse_probeCapturesVersionKvAndSpecTypes()
+{
+    const QString version = "version: b9761 commit abcdef0\n";
+    const QString help =
+        "  --cache-type-k TYPE       KV cache type\n"
+        "  --spec-type [none|draft|nextn] speculative mode\n";
+    const auto cap = CapabilityDetector::parseProbeOutput(version, help);
+    QVERIFY(cap.success);
+    QCOMPARE(cap.version, QStringLiteral("b9761 commit abcdef0"));
+    QVERIFY(cap.kvTypes.contains(QStringLiteral("q8_0")));
+    QVERIFY(cap.hasFlag(QStringLiteral("spec-type:none")));
+    QVERIFY(cap.hasFlag(QStringLiteral("spec-type:nextn")));
 }
 
 QTEST_MAIN(CapabilityTests)

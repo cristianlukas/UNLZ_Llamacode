@@ -117,6 +117,108 @@ Item {
             onClicked: App.installMtpBinary()
         }
 
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 150
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.topMargin: 8
+            color: Theme.surfaceBg
+            border.color: Theme.borderColor
+            radius: 6
+            clip: true
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 8
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text {
+                        text: "Catálogo de motores"
+                        color: Theme.textPrimary
+                        font.pixelSize: 14
+                        font.bold: true
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Instalá official/MTP o compilá forks llama-server desde source cuando no hay prebuilt."
+                        color: Theme.textMuted
+                        font.pixelSize: 12
+                        elide: Text.ElideRight
+                    }
+                }
+
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    orientation: ListView.Horizontal
+                    spacing: 10
+                    clip: true
+                    model: App.engineCatalog
+                    ScrollBar.horizontal: LcScrollBar {}
+                    delegate: Rectangle {
+                        width: 300
+                        height: 96
+                        color: Theme.inputBg
+                        border.color: modelData.recommended ? Theme.accent : Theme.borderColor
+                        radius: 6
+
+                        property var firstVariant: (modelData.variants && modelData.variants.length > 0)
+                                                   ? modelData.variants[0] : ({})
+                        property bool sourceBuild: firstVariant.buildFromSource ?? false
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            spacing: 6
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: modelData.name + (modelData.recommended ? " · recomendado" : "")
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                }
+                                Text {
+                                    text: modelData.support
+                                    color: modelData.support === "stable" ? Theme.successText : Theme.warnText
+                                    font.pixelSize: 11
+                                }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.compatible
+                                      ? modelData.description
+                                      : (modelData.incompatibleReason || modelData.description)
+                                color: modelData.compatible ? Theme.textSecondary : Theme.errorText
+                                font.pixelSize: 11
+                                elide: Text.ElideRight
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: sourceBuild ? "Build from source" : (firstVariant.label || "Prebuilt / manual")
+                                    color: Theme.textMuted
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                }
+                                LcButton {
+                                    text: sourceBuild ? "Compilar" : "Instalar"
+                                    secondary: !modelData.recommended
+                                    enabled: !App.installingOfficialBinary && modelData.compatible
+                                    onClicked: App.installCatalogEngine(modelData.id)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // download progress banner
         RowLayout {
             id: downloadBanner

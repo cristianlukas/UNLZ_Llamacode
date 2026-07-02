@@ -273,13 +273,27 @@ Entidad `LlamaBinary`:
 - `id`, `name`, `path`, `flavor` (`official`, `mtp-fork`, `custom`)
 - `backend` (`cuda`, `vulkan`, `cpu`, `metal`)
 - `versionHint` (texto libre)
-- `supportedFlags`, `conflictingFlags`, `flagAliases`
+- `supportedFlags`, `kvTypes`, `conflictingFlags`, `flagAliases`
 - `envDefaults`, `workingDirectory`, `binaryHash` (SHA256 primer 1MB)
 - `pathValid` (validado en runtime)
 
+### Engine Catalog
+
+La página **Binarios** incluye un catálogo curado de motores y forks:
+
+- `llama.cpp` oficial y `beellama`/MTP mantienen instalación automática desde
+  releases cuando hay prebuilt compatible.
+- Forks como `ik_llama.cpp` o `TurboQuant` se muestran con compatibilidad por
+  plataforma/GPU y, cuando no publican prebuilts útiles, ofrecen build-from-source
+  guiado para producir `llama-server` y registrarlo en `BinaryRegistry`.
+- Motores con contrato distinto (`KoboldCpp`, `llamafile`) quedan catalogados como
+  opciones experimentales/manuales hasta que el launcher soporte su ciclo completo.
+
 ### Capabilities Matrix
 
-Cada binario mantiene flags soportados, aliases y conflictos. `EffectiveProfileBuilder.addFlag()` degrada con `warning` o emite `blockingError` según criticidad.
+Cada binario mantiene flags soportados, aliases, tipos KV detectados y conflictos.
+El probe ejecuta `--version` y `--help`, extrae valores de `--spec-type` como
+pseudo-flags (`spec-type:nextn`, etc.) y persiste la versión real. `EffectiveProfileBuilder.addFlag()` degrada con `warning` o emite `blockingError` según criticidad.
 
 ## Diseño Multi-GGUF roots
 
@@ -980,5 +994,6 @@ Código, datos y diseño tomados de otros proyectos:
 | **Tongyi DeepResearch** | Ideas de investigación de horizonte largo, test-time scaling, resumen de contexto y búsqueda agentic iterativa | https://github.com/Alibaba-NLP/DeepResearch |
 | **Omnix** | Ideas de API local multimodal, `reqId` de correlación, modo headless y separación de colas texto/operaciones auxiliares. Revisión: [`docs/omnix_review.md`](docs/omnix_review.md) | https://github.com/LoanLemon/Omnix |
 | **Honey (I Shrunk the AI)** | _Inspiración conceptual_ (no se toma código): la directiva opt-in "Frugalidad (honey)" del agente — código YAGNI, respuesta-primero y handoffs agente↔agente densos clave:valor en vez de JSON | https://github.com/Green-PT/honey-for-devs |
+| **TurboLLM** | Inspiración de diseño para catálogo de motores/forks, compatibilidad por hardware, probe enriquecido y build-from-source guiado para forks sin prebuilts. No se copia código por su licencia source-available. | https://github.com/mohitsoni48/TurboLLM |
 
 > Al sumar código/datos de otro repo, agregar la fila correspondiente acá.

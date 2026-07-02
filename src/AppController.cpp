@@ -1986,6 +1986,257 @@ void AppController::installMtpBinary()
     startBinaryInstall();
 }
 
+void AppController::installCatalogEngine(const QString &engineId)
+{
+    const EngineCatalogEntry e = EngineCatalog::entry(engineId);
+    if (e.id.isEmpty()) {
+        emit serverError(QStringLiteral("Motor desconocido en el catálogo: %1").arg(engineId));
+        return;
+    }
+    if (e.id == QLatin1String("llama.cpp")) {
+        installOfficialBinary();
+        return;
+    }
+    if (e.id == QLatin1String("beellama")) {
+        installMtpBinary();
+        return;
+    }
+
+    const HardwareSignals hw = EngineCatalog::detectHardware();
+    for (const EngineVariant &v : e.variants) {
+        QString reason;
+        if (v.buildFromSource && EngineCatalog::isVariantCompatible(v, hw, &reason)) {
+            startSourceBuildInstall(e);
+            return;
+        }
+    }
+
+    emit serverError(QStringLiteral("%1 está catalogado, pero esta build todavía no tiene instalador automático para ese tipo de motor. Usá \"Agregar\" y registrá el binario compatible.").arg(e.name));
+}
+
+void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry)
+{
+    if (m_installingOfficialBinary || m_installerProc) {
+        emit serverError("Binary install already in progress.");
+        return;
+    }
+
+#ifndef Q_OS_WIN
+    emit serverError(QStringLiteral("El build-from-source guiado está habilitado primero en Windows/CUDA. Repo: %1").arg(entry.homepage));
+    return;
+#else
+    const QString appData = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    const QString toolsDir = appData + "/tools/source-builds";
+    QDir().mkpath(toolsDir);
+
+    const QString repoUrl = entry.homepage;
+    const QString slug = EngineCatalog::buildDirName(entry.repo);
+    const QString flavor = entry.flavor;
+    const QString displayName = entry.name;
+
+    const QString script = QStringLiteral(R"PS(
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+try {
+    $repo = '%1'
+    $slug = '%2'
+    $root = '%3'
+    $buildRoot = Join-Path $root $slug
+    $src = Join-Path $buildRoot 'src'
+    $build = Join-Path $buildRoot 'build'
+    Write-Output ('STATUS: Verificando toolchain para compilar ' + $repo + ' ...')
+    foreach ($cmd in @('git','cmake')) {
+        if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) { throw ($cmd + ' no está en PATH.') }
+    }
+    if (-not (Get-Command nvcc -ErrorAction SilentlyContinue)) { throw 'CUDA Toolkit (nvcc) no está en PATH.' }
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    if (-not (Test-Path $vswhere)) { throw 'No encuentro vswhere.exe. Instalá Visual Studio Build Tools con Desktop development with C++.' }
+    $vcvars = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Auxiliary\Build\vcvarsall.bat | Select-Object -First 1
+    if (-not $vcvars -or -not (Test-Path $vcvars)) { throw 'No encuentro vcvarsall.bat para MSVC x64.' }
+
+    if (Test-Path $buildRoot) { Remove-Item -LiteralPath $buildRoot -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
+    Write-Output ('STATUS: Clonando ' + $repo + ' ...')
+    git clone --depth 1 $repo $src
+    if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
+    $commit = (git -C $src rev-parse --short HEAD).Trim()
+
+    Write-Output 'STATUS: Configurando CMake CUDA Release...'
+    $bat = Join-Path $buildRoot '_llamacode_build.bat'
+    $ninja = Get-Command ninja -ErrorAction SilentlyContinue
+    $generator = if ($ninja) { 'Ninja' } else { 'NMake Makefiles' }
+    @"
+@echo off
+call "$vcvars" x64
+if errorlevel 1 exit /b 1
+cmake -G "$generator" -S "$src" -B "$build" -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
+if errorlevel 1 exit /b 1
+cmake --build "$build" -j --target llama-server
+exit /b %errorlevel%
+"@ | Set-Content -Encoding ASCII -LiteralPath $bat
+    cmd.exe /c $bat
+    if ($LASTEXITCODE -ne 0) { throw 'cmake build falló. Revisá el log completo.' }
+
+    $exe = Get-ChildItem -Path $buildRoot -Recurse -Filter 'llama-server.exe' |
+           Where-Object { $_.FullName -notmatch '\\CMakeFiles\\' } |
+           Select-Object -First 1
+    if (-not $exe) { throw 'llama-server.exe no apareció tras compilar.' }
+
+    $nvcc = (Get-Command nvcc).Source
+    $cudaBin = Split-Path -Parent $nvcc
+    $cudaDirs = @($cudaBin, (Join-Path $cudaBin 'x64')) | Where-Object { Test-Path $_ }
+    $copied = 0
+    foreach ($dir in $cudaDirs) {
+        foreach ($dll in Get-ChildItem -Path $dir -File -ErrorAction SilentlyContinue) {
+            if ($dll.Name -match '^(cudart64_|cublas64_|cublaslt64_|nvrtc64_|nvrtc-builtins64_|nvjitlink_).*\.dll$') {
+                Copy-Item -LiteralPath $dll.FullName -Destination $exe.DirectoryName -Force -ErrorAction SilentlyContinue
+                $copied++
+            }
+        }
+    }
+    if ($copied -gt 0) { Write-Output ('STATUS: Copiadas DLL CUDA runtime: ' + $copied) }
+    if ($commit) { Write-Output ('TAG: source-' + $commit) }
+    Write-Output 'STATUS: Registrando binario compilado...'
+    Write-Output $exe.FullName
+} catch {
+    Write-Output ('ERROR: ' + $_.Exception.Message)
+    exit 1
+}
+)PS").arg(QString(repoUrl).replace("'", "''"),
+          QString(slug).replace("'", "''"),
+          QDir::toNativeSeparators(toolsDir).replace("'", "''"));
+
+    m_installSourceRepo = entry.repo;
+    m_installSourceLabel = flavor;
+    m_installRequireCuda = false;
+    m_installerProc = new QProcess(this);
+    m_installingOfficialBinary = true;
+    m_cancelingOfficialBinaryInstall = false;
+    m_timeoutOfficialBinaryInstall = false;
+    m_lastInstallProgressAt = QDateTime::currentDateTimeUtc();
+    m_officialBinaryInstallStatus = QStringLiteral("Preparando build de %1...").arg(displayName);
+    m_officialBinaryInstallLog.clear();
+    emit installingOfficialBinaryChanged();
+    emit officialBinaryInstallStatusChanged();
+    emit officialBinaryInstallLogChanged();
+
+    if (!m_installWatchdog) {
+        m_installWatchdog = new QTimer(this);
+        m_installWatchdog->setInterval(5000);
+        connect(m_installWatchdog, &QTimer::timeout, this, [this]() {
+            if (!m_installingOfficialBinary || !m_installerProc)
+                return;
+            if (m_lastInstallProgressAt.secsTo(QDateTime::currentDateTimeUtc()) > 900) {
+                m_timeoutOfficialBinaryInstall = true;
+                m_officialBinaryInstallStatus = "Sin avance por 15 minutos. Cancelando instalación...";
+                emit officialBinaryInstallStatusChanged();
+                m_installerProc->kill();
+            }
+        });
+    }
+    m_installWatchdog->start();
+
+    connect(m_installerProc, &QProcess::readyReadStandardOutput, this, [this]() {
+        const QString chunk = QString::fromUtf8(m_installerProc->readAllStandardOutput());
+        if (!chunk.trimmed().isEmpty())
+            m_lastInstallProgressAt = QDateTime::currentDateTimeUtc();
+        if (!chunk.isEmpty()) {
+            m_officialBinaryInstallLog.append(chunk);
+            emit officialBinaryInstallLogChanged();
+        }
+        const QStringList lines = chunk.split('\n', Qt::SkipEmptyParts);
+        for (const QString &rawLine : lines) {
+            const QString line = rawLine.trimmed();
+            if (line.startsWith("STATUS: ")) {
+                m_officialBinaryInstallStatus = line.mid(8).trimmed();
+                emit officialBinaryInstallStatusChanged();
+            }
+        }
+    });
+    connect(m_installerProc, &QProcess::readyReadStandardError, this, [this]() {
+        const QString chunk = QString::fromUtf8(m_installerProc->readAllStandardError());
+        if (!chunk.trimmed().isEmpty())
+            m_lastInstallProgressAt = QDateTime::currentDateTimeUtc();
+        if (!chunk.isEmpty()) {
+            m_officialBinaryInstallLog.append(chunk);
+            emit officialBinaryInstallLogChanged();
+        }
+    });
+
+    connect(m_installerProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this, displayName](int exitCode, QProcess::ExitStatus) {
+        const QString stdOut = m_officialBinaryInstallLog;
+        bool ok = false;
+        QString installedPath;
+        QString releaseTag;
+        QString message;
+        if (exitCode == 0) {
+            const QStringList lines = stdOut.split('\n', Qt::SkipEmptyParts);
+            for (int i = lines.size() - 1; i >= 0; --i) {
+                const QString t = lines[i].trimmed();
+                if (t.startsWith("TAG:")) {
+                    if (releaseTag.isEmpty()) releaseTag = t.mid(4).trimmed();
+                    continue;
+                }
+                if (!t.startsWith("STATUS:") && !t.startsWith("ERROR:") && !t.isEmpty()
+                    && installedPath.isEmpty()) {
+                    installedPath = t;
+                }
+            }
+            if (QFileInfo::exists(installedPath)) {
+                QString backend = BinaryRegistry::detectBackend(installedPath);
+                if (backend.isEmpty()) backend = QStringLiteral("cuda");
+                const QString name = QStringLiteral("%1 (%2)")
+                    .arg(displayName, releaseTag.isEmpty() ? QStringLiteral("source") : releaseTag);
+                const QString id = m_binaries.add(installedPath, name, m_installSourceLabel, backend, releaseTag);
+                if (!id.isEmpty()) {
+                    m_binaries.detectCapabilities(id);
+                    ok = true;
+                    message = QStringLiteral("%1 compilado y registrado.").arg(displayName);
+                }
+            }
+        }
+        if (!ok) {
+            if (m_cancelingOfficialBinaryInstall) message = "Build cancelado por el usuario.";
+            else if (m_timeoutOfficialBinaryInstall) message = "Build cancelado por timeout.";
+            else {
+                message = "Build automático falló.";
+                const QStringList outLines = stdOut.split('\n', Qt::SkipEmptyParts);
+                for (const QString &line : outLines) {
+                    const QString t = line.trimmed();
+                    if (t.startsWith("ERROR: ")) {
+                        message += " " + t.mid(7).trimmed();
+                        break;
+                    }
+                }
+            }
+        }
+
+        m_installerProc->deleteLater();
+        m_installerProc = nullptr;
+        if (m_installWatchdog) m_installWatchdog->stop();
+        m_installingOfficialBinary = false;
+        m_officialBinaryInstallStatus = ok ? "Build completado." : message;
+        m_cancelingOfficialBinaryInstall = false;
+        m_timeoutOfficialBinaryInstall = false;
+        emit installingOfficialBinaryChanged();
+        emit officialBinaryInstallStatusChanged();
+        emit setupStateChanged();
+        emit officialBinaryInstallFinished(ok, message, installedPath);
+        m_downloadHistory.append({
+            {QStringLiteral("kind"), QStringLiteral("binary")},
+            {QStringLiteral("name"), displayName},
+            {QStringLiteral("repo"), m_installSourceRepo},
+            {QStringLiteral("path"), installedPath},
+            {QStringLiteral("state"), ok ? QStringLiteral("done") : QStringLiteral("error")},
+            {QStringLiteral("detail"), ok ? QStringLiteral("Build source completado") : message},
+        });
+    });
+
+    m_installerProc->start("powershell", {"-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script});
+#endif
+}
+
 void AppController::startBinaryInstall()
 {
     if (m_installingOfficialBinary || m_installerProc) {

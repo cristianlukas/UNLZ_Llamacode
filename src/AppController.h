@@ -1,5 +1,6 @@
 #pragma once
 #include "core/BinaryRegistry.h"
+#include "core/EngineCatalog.h"
 #include "core/ModelRootRegistry.h"
 #include "core/ModelCatalog.h"
 #include "core/profiles/ProfileManager.h"
@@ -147,6 +148,7 @@ class AppController : public QObject
     Q_PROPERTY(QString researchStatus READ researchStatus NOTIFY researchChanged)
     Q_PROPERTY(QVariantList researchReports READ researchReports NOTIFY researchReportsChanged)
     Q_PROPERTY(QVariantMap hardwareSummary READ hardwareSummary NOTIFY hardwareSummaryChanged)
+    Q_PROPERTY(QVariantList engineCatalog READ engineCatalog NOTIFY hardwareSummaryChanged)
     Q_PROPERTY(QVariantList modelRecommendations READ modelRecommendations NOTIFY modelRecommendationsChanged)
     Q_PROPERTY(bool modelDownloadRunning READ modelDownloadRunning NOTIFY modelDownloadChanged)
     Q_PROPERTY(int modelDownloadProgress READ modelDownloadProgress NOTIFY modelDownloadChanged)
@@ -286,6 +288,7 @@ public:
     QString researchStatus() const { return m_researchStatus; }
     QVariantList researchReports() const { return m_researchReports; }
     QVariantMap hardwareSummary() const { return m_hardwareSummary; }
+    QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::detectHardware()); }
     QVariantList modelRecommendations() const { return m_modelRecommendations; }
     bool modelDownloadRunning() const { return m_modelDownloadReply != nullptr; }
     int modelDownloadProgress() const { return m_modelDownloadProgress; }
@@ -369,6 +372,7 @@ public:
     // Instala el build MTP (Anbeeld/beellama.cpp, DFlash/MTP) — solo Windows CUDA.
     // Para perfiles de sistema en máquinas NVIDIA: habilita los flags MTP.
     Q_INVOKABLE void installMtpBinary();
+    Q_INVOKABLE void installCatalogEngine(const QString &engineId);
     Q_INVOKABLE void cancelOfficialBinaryInstall();
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
@@ -969,6 +973,7 @@ private:
     QString m_installSourceLabel = QStringLiteral("official");
     bool    m_installRequireCuda = false;
     void startBinaryInstall();   // cuerpo común (antes en installOfficialBinary)
+    void startSourceBuildInstall(const EngineCatalogEntry &entry);
     QProcess *m_smokeTestProc = nullptr;
     QTimer   *m_smokeTestTimer = nullptr;
     QString   m_smokeTestLog;

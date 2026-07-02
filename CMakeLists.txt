@@ -45,6 +45,7 @@ set(CORE_SOURCES
     src/core/LlamaBinary.cpp
     src/core/BinaryRegistry.cpp
     src/core/CapabilityDetector.cpp
+    src/core/EngineCatalog.cpp
     src/core/ModelRoot.cpp
     src/core/ModelRootRegistry.cpp
     src/core/CatalogModel.cpp
@@ -105,6 +106,7 @@ set(HEADERS
     src/core/LlamaBinary.h
     src/core/BinaryRegistry.h
     src/core/CapabilityDetector.h
+    src/core/EngineCatalog.h
     src/core/ModelRoot.h
     src/core/ModelRootRegistry.h
     src/core/CatalogModel.h
@@ -400,6 +402,7 @@ if (BUILD_TESTS)
     add_lc_test(test_registries         tests/test_registries.cpp)
     add_lc_test(test_catalog            tests/test_catalog.cpp)
     add_lc_test(test_capability         tests/test_capability.cpp)
+    add_lc_test(test_engine_catalog     tests/test_engine_catalog.cpp)
     add_lc_test(test_document_extractor tests/test_document_extractor.cpp)
     add_lc_test(test_memory_graph       tests/test_memory_graph.cpp)
     add_lc_test(test_code_graph         tests/test_code_graph.cpp)
