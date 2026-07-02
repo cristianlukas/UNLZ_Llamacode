@@ -689,7 +689,10 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_idleTimer = new QTimer(this);
     m_idleTimer->setInterval(30000);   // chequeo cada 30s
     connect(m_idleTimer, &QTimer::timeout, this, [this]() {
-        if (shouldIdleStop(serverRunning(), agentBackendBusy() || m_chatGenerating,
+        // Ingi Charla activa cuenta como uso: matar el server entre turnos de voz
+        // destruye el KV cache → el próximo turno paga minutos de prefill en frío.
+        if (shouldIdleStop(serverRunning(),
+                           agentBackendBusy() || m_chatGenerating || m_charlaActive,
                            m_idleAutoStopMin, m_lastActivity.elapsed())) {
             appendServerEvent(QStringLiteral("lifecycle"),
                 QStringLiteral("Idle auto-stop: %1 min sin uso, parando server.").arg(m_idleAutoStopMin));

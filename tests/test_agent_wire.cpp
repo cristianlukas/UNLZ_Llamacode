@@ -28,6 +28,7 @@ private slots:
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
     void buildWarmupPayload_prefillsWithoutGenerating();
+    void trimStaleImages_keepsOnlyLatestCapture();
     void buildObservationMessage_wrapsImagesAsUserMultimodal();
     void buildObservationMessage_emptyWhenNoImages();
     void developmentDisciplineSection_coversRegressionGuards();
@@ -615,6 +616,51 @@ void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
         msgs, tools, QStringLiteral("local"), -1.0, false);
     QVERIFY(!p2.contains(QStringLiteral("temperature")));
     QCOMPARE(p2.value(QStringLiteral("reasoning_budget")).toInt(), 0);
+}
+
+void AgentWireTests::trimStaleImages_keepsOnlyLatestCapture()
+{
+    auto imgMsg = [](const QString &txt, const QString &uri) {
+        return QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("user")},
+            {QStringLiteral("content"), QJsonArray{
+                QJsonObject{{QStringLiteral("type"), QStringLiteral("text")},
+                            {QStringLiteral("text"), txt}},
+                QJsonObject{{QStringLiteral("type"), QStringLiteral("image_url")},
+                            {QStringLiteral("image_url"),
+                             QJsonObject{{QStringLiteral("url"), uri}}}}}}};
+    };
+    const QJsonArray in{
+        msg(QStringLiteral("system"), QStringLiteral("sys")),
+        imgMsg(QStringLiteral("captura 1"), QStringLiteral("data:1")),
+        msg(QStringLiteral("assistant"), QStringLiteral("veo la pantalla")),
+        imgMsg(QStringLiteral("captura 2"), QStringLiteral("data:2")),
+    };
+
+    const QJsonArray out = LlamaAgentBackend::trimStaleImages(in, 1);
+    QCOMPARE(out.size(), 4);
+    // Captura vieja: image_url reemplazada por placeholder de texto.
+    const QJsonArray parts1 = out[1].toObject().value(QStringLiteral("content")).toArray();
+    for (const QJsonValue &p : parts1)
+        QVERIFY(p.toObject().value(QStringLiteral("type")).toString() != QLatin1String("image_url"));
+    QVERIFY(parts1.last().toObject().value(QStringLiteral("text")).toString()
+                .contains(QStringLiteral("omitida")));
+    // El texto original del mensaje se conserva.
+    QCOMPARE(parts1.first().toObject().value(QStringLiteral("text")).toString(),
+             QStringLiteral("captura 1"));
+    // Última captura: intacta.
+    const QJsonArray parts3 = out[3].toObject().value(QStringLiteral("content")).toArray();
+    QCOMPARE(parts3.last().toObject().value(QStringLiteral("type")).toString(),
+             QStringLiteral("image_url"));
+    // Mensajes sin imagen: intactos (content string no se toca).
+    QCOMPARE(out[2].toObject().value(QStringLiteral("content")).toString(),
+             QStringLiteral("veo la pantalla"));
+
+    // keepLast=0: ninguna imagen sobrevive (pre-append de una captura nueva).
+    const QJsonArray none = LlamaAgentBackend::trimStaleImages(in, 0);
+    const QJsonArray p3 = none[3].toObject().value(QStringLiteral("content")).toArray();
+    for (const QJsonValue &p : p3)
+        QVERIFY(p.toObject().value(QStringLiteral("type")).toString() != QLatin1String("image_url"));
 }
 
 void AgentWireTests::buildObservationMessage_wrapsImagesAsUserMultimodal()

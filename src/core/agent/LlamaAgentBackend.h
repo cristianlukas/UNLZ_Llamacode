@@ -233,6 +233,13 @@ public:
     // evita system messages no iniciales.
     static QJsonArray sanitizeApiMessagesForWire(const QJsonArray &messages);
 
+    // Poda de capturas viejas (pura, testeable): conserva las imágenes solo en los
+    // últimos `keepLast` mensajes que las tengan; en los anteriores reemplaza cada
+    // image_url por un texto "[captura omitida]". Cada screenshot son miles de
+    // tokens de prefill con mmproj — una sesión con varias desktop_observe
+    // acumulaba prompts de 50k+ tokens (minutos de prefill en frío).
+    static QJsonArray trimStaleImages(const QJsonArray &messages, int keepLast = 1);
+
     // Payload de precalentamiento del prompt-cache (pura, testeable): mismo
     // prefijo que un turno real pero max_tokens=1, stream=false, cache_prompt=true.
     static QJsonObject buildWarmupPayload(const QJsonArray &wireMessages,

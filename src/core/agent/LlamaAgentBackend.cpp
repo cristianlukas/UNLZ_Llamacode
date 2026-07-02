@@ -1550,6 +1550,51 @@ void LlamaAgentBackend::repairDanglingToolCalls()
                              QStringLiteral("[interrumpido por el usuario]"));
 }
 
+QJsonArray LlamaAgentBackend::trimStaleImages(const QJsonArray &messages, int keepLast)
+{
+    // Índices (desde el final) de mensajes que contienen image_url.
+    auto hasImage = [](const QJsonObject &m) {
+        const QJsonValue c = m.value(QStringLiteral("content"));
+        if (!c.isArray()) return false;
+        const QJsonArray parts = c.toArray();
+        for (const QJsonValue &p : parts)
+            if (p.toObject().value(QStringLiteral("type")).toString()
+                    == QLatin1String("image_url"))
+                return true;
+        return false;
+    };
+    QJsonArray out;
+    // Recorrer de atrás hacia adelante para saber cuáles son los últimos keepLast.
+    QList<int> imageIdx;
+    for (int i = messages.size() - 1; i >= 0; --i)
+        if (hasImage(messages.at(i).toObject())) imageIdx.append(i);
+    for (int i = 0; i < messages.size(); ++i) {
+        QJsonObject m = messages.at(i).toObject();
+        const int fromEnd = imageIdx.indexOf(i);   // posición entre los con-imagen
+        if (fromEnd < 0 || fromEnd < keepLast) { out.append(m); continue; }
+        // Mensaje con imagen vieja: reemplazar las partes image_url por texto.
+        QJsonArray parts = m.value(QStringLiteral("content")).toArray();
+        QJsonArray np;
+        bool stripped = false;
+        for (const QJsonValue &pv : parts) {
+            const QJsonObject p = pv.toObject();
+            if (p.value(QStringLiteral("type")).toString() == QLatin1String("image_url")) {
+                stripped = true;
+                continue;
+            }
+            np.append(p);
+        }
+        if (stripped)
+            np.append(QJsonObject{
+                {QStringLiteral("type"), QStringLiteral("text")},
+                {QStringLiteral("text"),
+                 QStringLiteral("[captura de pantalla omitida: desactualizada; pedí otra si la necesitás]")}});
+        m[QStringLiteral("content")] = np;
+        out.append(m);
+    }
+    return out;
+}
+
 // Payload del warmup (pura, testeable): mismo prefijo que un turno real
 // (messages+tools+kwargs de template) pero sin generar (max_tokens=1, sin stream).
 QJsonObject LlamaAgentBackend::buildWarmupPayload(const QJsonArray &wireMessages,
@@ -1587,6 +1632,8 @@ void LlamaAgentBackend::prefillWarmup()
         || !m_awaitId.isEmpty())
         return;
     ensureSession();
+    // Misma poda que runCompletion: el prefijo cacheado debe coincidir byte a byte.
+    m_apiMessages = trimStaleImages(m_apiMessages, 1);
     const QJsonArray wire = sanitizeApiMessagesForWire(m_apiMessages);
     if (wire.isEmpty()) return;
 
@@ -1645,6 +1692,11 @@ void LlamaAgentBackend::runCompletion()
     // Reflejar uso de contexto estimado en la UI (se actualiza con 'usage' real
     // del server si llega en el chunk final).
     if (m_ctxLimit > 0) emit contextUsage(estimateApiTokens(), m_ctxLimit);
+
+    // Poda persistente de capturas viejas: solo la última imagen queda en el
+    // historial (las anteriores → placeholder de texto). Sin esto, sesiones con
+    // varias desktop_observe acumulaban 50k+ tokens de prompt (minutos de prefill).
+    m_apiMessages = trimStaleImages(m_apiMessages, 1);
 
     QJsonArray wireMessages = sanitizeApiMessagesForWire(m_apiMessages);
     const QByteArray beforeWire = QJsonDocument(m_apiMessages).toJson(QJsonDocument::Compact);
