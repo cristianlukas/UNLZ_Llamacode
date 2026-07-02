@@ -4246,9 +4246,24 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
                                       QStringLiteral("sensitive")).toString();
     cb->setTaskAutoApprove(policy == QLatin1String("autonomous"));
     if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")) {
+        const AgentProfile ap = m_profiles.resolveAgentProfile(resolveAgentProfileId());
+        QStringList disabled;
+        if (!ap.enabledTools.contains(QStringLiteral("*"))) {
+            const QSet<QString> on(ap.enabledTools.cbegin(), ap.enabledTools.cend());
+            const QStringList desktopTools = AutomationRunner::desktopToolNames();
+            const QSet<QString> desktopOn(desktopTools.cbegin(), desktopTools.cend());
+            for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+                const QString name = v.toMap().value(QStringLiteral("name")).toString();
+                if (!on.contains(name) && !desktopOn.contains(name)) disabled << name;
+            }
+        }
+        for (const QString &name : AutomationRunner::desktopSuppressedToolNames())
+            if (!disabled.contains(name)) disabled << name;
+        cb->setDisabledTools(disabled);
         // Desktop foreground opera apps nativas con las tools desktop_*.
         // Si MCP sigue inyectado, el modelo puede elegir Playwright y "verificar"
-        // un browser inexistente en vez de observar la pantalla real.
+        // un browser inexistente en vez de observar la pantalla real. run_shell
+        // también queda fuera para evitar sustitutos que no demuestran la GUI.
         cb->setMcpToolsEnabled(false);
     }
 }

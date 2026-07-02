@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 #include <QVariantMap>
 
 class AutomationRunner
@@ -24,4 +25,10 @@ public:
     // Respeta un --headed/--headless explícito del usuario y sólo toca el MCP de
     // Playwright (la superficie que controlamos).
     static QString headlessBrowserCommand(const QString &command);
+
+    // Política de tools para escritorio foreground: estas tools deben estar
+    // disponibles aunque el perfil activo sea liviano, y las suprimidas no deben
+    // usarse como sustituto de la GUI.
+    static QStringList desktopToolNames();
+    static QStringList desktopSuppressedToolNames();
 };

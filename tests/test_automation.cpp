@@ -15,6 +15,7 @@ private slots:
     void limitsAreClamped();
     void autoModeRoutesBySurface();
     void desktopPromptPrefersNativeTools();
+    void desktopToolPolicyForcesGuiTools();
     void browserPromptUsesForegroundTeachEvidence();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
@@ -105,6 +106,20 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("Superficie: escritorio foreground nativo")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_observe")));
     QVERIFY(prompt.contains(QStringLiteral("No uses Playwright ni browser_snapshot")));
+    QVERIFY(prompt.contains(QStringLiteral("No reemplaces la operación de GUI por run_shell")));
+    QVERIFY(prompt.contains(QStringLiteral("no las leas con read_file")));
+}
+
+void AutomationTests::desktopToolPolicyForcesGuiTools()
+{
+    const QStringList tools = AutomationRunner::desktopToolNames();
+    QVERIFY(tools.contains(QStringLiteral("desktop_observe")));
+    QVERIFY(tools.contains(QStringLiteral("desktop_launch")));
+    QVERIFY(tools.contains(QStringLiteral("desktop_key")));
+    QVERIFY(tools.contains(QStringLiteral("desktop_type")));
+    QVERIFY(!tools.contains(QStringLiteral("run_shell")));
+    QCOMPARE(AutomationRunner::desktopSuppressedToolNames(),
+             QStringList{QStringLiteral("run_shell")});
 }
 
 void AutomationTests::browserPromptUsesForegroundTeachEvidence()
