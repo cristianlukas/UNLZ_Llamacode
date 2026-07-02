@@ -78,6 +78,7 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
         {QStringLiteral("prompt"), task.value(QStringLiteral("prePrompt"))},
         {QStringLiteral("steps"), steps},
         {QStringLiteral("evidence"), evidence},
+        {QStringLiteral("learnings"), QVariantList{}},
         {QStringLiteral("successCriteria"), task.value(QStringLiteral("postPrompt"))}};
     if (!writeJson(dir + QStringLiteral("/manifest.json"), manifest)
         || !writeJson(dir + QStringLiteral("/recipe.json"), recipe))
@@ -116,6 +117,35 @@ QString AutomationArtifactStore::importBrowserSkill(const QString &skillName, co
     browserTask[QStringLiteral("executionMode")] = QStringLiteral("browserBackground");
     return create(browserTask, QVariantMap{{QStringLiteral("kind"), QStringLiteral("browser")}},
                   events, {}, BrowserTeach::skillPath(skillName));
+}
+
+bool AutomationArtifactStore::appendLearning(const QString &id, const QString &summary,
+                                             const QString &log)
+{
+    QVariantMap r = recipe(id);
+    if (r.isEmpty()) return false;
+    QVariantList learnings = r.value(QStringLiteral("learnings")).toList();
+    const QString cleanSummary = redact(summary).simplified().left(900);
+    if (cleanSummary.isEmpty()) return false;
+    QStringList toolSignals;
+    const QString safeLog = redact(log);
+    static const QStringList markers{
+        QStringLiteral("desktop_click_element"), QStringLiteral("desktop_controls"),
+        QStringLiteral("desktop_observe"), QStringLiteral("desktop_windows"),
+        QStringLiteral("mcp__playwright"), QStringLiteral("browser_"),
+        QStringLiteral("run_shell")};
+    for (const QString &marker : markers)
+        if (safeLog.contains(marker) && !toolSignals.contains(marker)) toolSignals << marker;
+    QVariantMap item{
+        {QStringLiteral("at"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {QStringLiteral("summary"), cleanSummary},
+        {QStringLiteral("toolSignals"), toolSignals},
+        {QStringLiteral("note"), QStringLiteral("Aprendizaje generado automáticamente tras una ejecución exitosa; úsalo como guía semántica, no como replay rígido.")}};
+    learnings.append(item);
+    while (learnings.size() > 12) learnings.removeFirst();
+    r[QStringLiteral("learnings")] = learnings;
+    r[QStringLiteral("updatedAt")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
 }
 
 bool AutomationArtifactStore::removeEvidence(const QString &id, const QString &fileName)

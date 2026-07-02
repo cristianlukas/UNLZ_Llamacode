@@ -83,9 +83,11 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "para navegador web y no pueden observar aplicaciones nativas de Windows.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(
-            "Superficie: navegador background. Usá las tools de browser/Playwright para "
-            "navegar y verificar páginas web; no controles el escritorio real salvo que "
-            "el objetivo lo pida explícitamente.\n");
+            "Superficie: navegador background al ejecutar. El Teach se grabó con un "
+            "browser foreground de Playwright y evidencia visual por acción para entender "
+            "la intención del usuario. Usá las tools de browser/Playwright para navegar y "
+            "verificar páginas web; adaptá selectores, textos y posiciones si la interfaz "
+            "cambió.\n");
     }
     out += QStringLiteral("Artefacto: %1\n").arg(manifest.value(QStringLiteral("id")).toString());
     const QVariantList steps = recipe.value(QStringLiteral("steps")).toList();
@@ -98,7 +100,28 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             out += QStringLiteral(" (referencia normalizada %1,%2)")
                        .arg(step.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
                        .arg(step.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
+        if (step.contains(QStringLiteral("evidence")))
+            out += QStringLiteral(" (captura: evidence/%1)")
+                       .arg(step.value(QStringLiteral("evidence")).toString());
         out += QLatin1Char('\n');
+    }
+    const QVariantList learnings = recipe.value(QStringLiteral("learnings")).toList();
+    if (!learnings.isEmpty()) {
+        out += QStringLiteral("Aprendizajes auto-actualizados de corridas previas:\n");
+        int n = 0;
+        for (const QVariant &value : learnings) {
+            const QVariantMap item = value.toMap();
+            const QString summary = item.value(QStringLiteral("summary")).toString().trimmed();
+            if (summary.isEmpty()) continue;
+            out += QStringLiteral("- %1\n").arg(summary.left(700));
+            if (++n >= 6) break;
+        }
+        out += QStringLiteral("Si durante esta corrida la interfaz cambió y lográs completar el objetivo, "
+                              "explicá en la respuesta final qué adaptación funcionó para que el Teach "
+                              "pueda actualizarse.\n");
+    } else {
+        out += QStringLiteral("Si la interfaz cambió y aun así lográs completar el objetivo, "
+                              "documentá en la respuesta final qué adaptación funcionó para auto-actualizar el Teach.\n");
     }
     const QVariantMap l = limits(task);
     out += QStringLiteral("Límites: %1 acciones, %2 segundos, %3 reintentos.\n")

@@ -15,8 +15,10 @@ private slots:
     void limitsAreClamped();
     void autoModeRoutesBySurface();
     void desktopPromptPrefersNativeTools();
+    void browserPromptUsesForegroundTeachEvidence();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
+    void artifactLearningsAppendAndPrompt();
     void keyBufferAccumulatesTextIntoTypeStep();
     void keyBufferFlushesTextBeforeNamedKey();
     void keyBufferEmitsShortcutWithModifiers();
@@ -105,6 +107,19 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("No uses Playwright ni browser_snapshot")));
 }
 
+void AutomationTests::browserPromptUsesForegroundTeachEvidence()
+{
+    const QString prompt = AutomationRunner::augmentPrompt(
+        QVariantMap{{"executionMode", "browserBackground"}},
+        QVariantMap{{"id", "web-demo"}},
+        QVariantMap{{"steps", QVariantList{
+            QVariantMap{{"kind", "click"}, {"intent", "Click login"},
+                        {"x", 0.4}, {"y", 0.2}, {"evidence", "0002.jpg"}}}}});
+    QVERIFY(prompt.contains(QStringLiteral("browser foreground de Playwright")));
+    QVERIFY(prompt.contains(QStringLiteral("captura: evidence/0002.jpg")));
+    QVERIFY(prompt.contains(QStringLiteral("adaptá selectores")));
+}
+
 void AutomationTests::headlessBrowserCommandForcesHeadless()
 {
     using R = AutomationRunner;
@@ -136,6 +151,31 @@ void AutomationTests::artifactsRoundTripAndRedactSecrets()
     const QVariantList timeline = AutomationArtifactStore::timeline(id);
     QCOMPARE(timeline.size(), 1);
     QVERIFY(timeline.first().toMap().value("text").toString().contains(QStringLiteral("[REDACTED]")));
+    QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::artifactLearningsAppendAndPrompt()
+{
+    QVariantMap task{{"id", "learn-demo"}, {"name", "Demo"},
+                     {"description", "Completar login"},
+                     {"executionMode", "browserBackground"}};
+    const QString id = AutomationArtifactStore::create(
+        task, QVariantMap{{"kind", "screen"}, {"targetId", "0"}},
+        QVariantList{QVariantMap{{"kind", "browser"}, {"intent", "Abrir login"}}}, {});
+    QCOMPARE(id, QStringLiteral("learn-demo"));
+    QVERIFY(AutomationArtifactStore::appendLearning(
+        id,
+        QStringLiteral("La interfaz movió Login a Acceder y se completó con el selector nuevo."),
+        QStringLiteral("[tool] mcp__playwright__browser_click ok")));
+    const QVariantList learnings = AutomationArtifactStore::recipe(id)
+                                       .value(QStringLiteral("learnings")).toList();
+    QCOMPARE(learnings.size(), 1);
+    const QString prompt = AutomationRunner::augmentPrompt(
+        QVariantMap{{"executionMode", "browserBackground"}},
+        AutomationArtifactStore::manifest(id),
+        AutomationArtifactStore::recipe(id));
+    QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
+    QVERIFY(prompt.contains(QStringLiteral("selector nuevo")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

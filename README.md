@@ -509,10 +509,20 @@ La sección **Automatizaciones** incorpora un modo Teach multimodal con dos dest
   demuestra el flujo y agrega notas. Se guardan eventos, coordenadas normalizadas,
   capturas y verificaciones como una receta semántica. Al ejecutar, el agente con
   visión observa, actúa con mouse/teclado y vuelve a observar; no hace replay ciego.
-- **Browser background:** Playwright registra la demostración y conserva script,
-  selectores y evidencia. La Task se ejecuta con las tools de navegador, reinterpreta
+- **Browser background:** el modo Teach abre Playwright/codegen en **foreground**
+  para que el usuario muestre el flujo real. Además del script y los selectores,
+  LlamaCode toma evidencia visual del escritorio durante clicks, teclas y notas,
+  de modo que el agente entienda la intención y el estado de pantalla, no sólo una
+  lista de eventos. La Task se ejecuta luego con las tools de navegador, reinterpreta
   la intención cuando cambia la interfaz y verifica el resultado. El destino normal
   es headless, con fallback a navegador oculto cuando el sitio lo requiere.
+
+Los artefactos Teach son auto-actualizables: si durante una ejecución la interfaz
+cambió y el agente igual logra completar el objetivo, registra un aprendizaje en
+el `recipe.json` del proceso con el resumen de la adaptación y señales de tools
+usadas. Las corridas siguientes reciben esos aprendizajes como contexto semántico
+para mejorar la adaptación, tanto en escritorio foreground como en navegador
+background.
 
 Cada proceso tiene un **Tipo de proceso**: *Escritorio foreground*, *Navegador
 background* o **Auto**. En *Auto* el sistema decide la superficie al ejecutar de
@@ -792,6 +802,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   teclado). Durante esa ejecución no se inyectan tools MCP de Playwright, porque
   Playwright sólo puede observar/controlar navegador web y no aplicaciones
   nativas de Windows.
+- En modo **Navegador background**, el Teach se graba con browser foreground de
+  Playwright y evidencia visual por acción; la ejecución posterior usa esa receta
+  como guía semántica junto con las tools de navegador. Si la página cambia y el
+  agente logra resolverlo, el artefacto Teach guarda el aprendizaje para próximas
+  corridas.
 - Si `llama-server` rechaza el primer request OpenAI-compatible con HTTP 400, el
   agente reintenta una vez en modo compatible sin campos opcionales del payload,
   conservando mensajes y tools para no marcar la Task como fallida por diferencias

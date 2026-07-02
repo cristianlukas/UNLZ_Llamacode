@@ -129,13 +129,19 @@ QString TeachSessionRecorder::startBrowser(const QVariantMap &task, const QStrin
         return QStringLiteral("La Task necesita un nombre válido.");
     m_task = task;
     m_mode = QStringLiteral("browserBackground");
-    m_scopeKind = QStringLiteral("browser");
-    m_scopeId = url;
+    m_scopeKind = QStringLiteral("screen");
+    m_scopeId = QStringLiteral("0");
     m_clock.start();
+    m_lastCursor = QCursor::pos();
     m_state = QStringLiteral("recording");
     appendEvent({{QStringLiteral("kind"), QStringLiteral("browser")},
-                 {QStringLiteral("intent"), QStringLiteral("Demostración Playwright instrumentada")},
-                 {QStringLiteral("ref"), url}}, false);
+                 {QStringLiteral("intent"), QStringLiteral("Inicio de demostración web en browser foreground con Playwright codegen y evidencia visual")},
+                 {QStringLiteral("ref"), url},
+                 {QStringLiteral("surface"), QStringLiteral("browserForegroundTeach")}}, true);
+    m_timer.start();
+#ifdef Q_OS_WIN
+    installKeyHook();   // capturar tipeo del usuario mientras usa el browser de codegen
+#endif
     emit changed();
     return {};
 }
@@ -148,7 +154,9 @@ void TeachSessionRecorder::setPaused(bool paused)
         m_timer.stop();
     } else if (!paused && m_state == QLatin1String("paused")) {
         m_state = QStringLiteral("recording");
-        if (m_mode == QLatin1String("desktop")) m_timer.start();
+        if (m_mode == QLatin1String("desktop")
+            || m_mode == QLatin1String("browserBackground"))
+            m_timer.start();
     }
     emit changed();
 }
@@ -164,7 +172,8 @@ void TeachSessionRecorder::addNote(const QString &note)
 
 QString TeachSessionRecorder::captureEvidence()
 {
-    if (m_mode != QLatin1String("desktop")) return {};
+    if (m_mode != QLatin1String("desktop")
+        && m_mode != QLatin1String("browserBackground")) return {};
     const QString tempId = m_task.value(QStringLiteral("id")).toString();
     const QString dir = AutomationArtifactStore::artifactDir(tempId)
                         + QStringLiteral("/evidence");
@@ -204,14 +213,20 @@ void TeachSessionRecorder::sampleDesktop()
         flushKeys();   // el texto tipeado va ANTES del próximo click
         const QPointF p = DesktopAutomationBackend::normalizePoint(cursor, bounds);
         appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
-                     {QStringLiteral("intent"), QStringLiteral("Click izquierdo")},
+                     {QStringLiteral("intent"), m_mode == QLatin1String("browserBackground")
+                          ? QStringLiteral("Click izquierdo en navegador foreground")
+                          : QStringLiteral("Click izquierdo")},
+                     {QStringLiteral("surface"), m_mode},
                      {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}}, true);
     }
     if (right && !m_rightDown && bounds.contains(cursor)) {
         flushKeys();
         const QPointF p = DesktopAutomationBackend::normalizePoint(cursor, bounds);
         appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
-                     {QStringLiteral("intent"), QStringLiteral("Click derecho")},
+                     {QStringLiteral("intent"), m_mode == QLatin1String("browserBackground")
+                          ? QStringLiteral("Click derecho en navegador foreground")
+                          : QStringLiteral("Click derecho")},
+                     {QStringLiteral("surface"), m_mode},
                      {QStringLiteral("button"), QStringLiteral("right")},
                      {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}}, true);
     }
@@ -236,7 +251,8 @@ QString TeachSessionRecorder::finish()
     const QVariantMap scope{
         {QStringLiteral("kind"), m_scopeKind},
         {QStringLiteral("targetId"), m_scopeId},
-        {QStringLiteral("target"), DesktopAutomationBackend::targetInfo(m_scopeKind, m_scopeId)}};
+        {QStringLiteral("target"), DesktopAutomationBackend::targetInfo(m_scopeKind, m_scopeId)},
+        {QStringLiteral("logicalSurface"), m_mode}};
     QString browserScript;
     if (m_mode == QLatin1String("browserBackground")
         && BrowserTeach::hasSkill(m_task.value(QStringLiteral("id")).toString()))

@@ -4502,6 +4502,11 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     if (work.trimmed().isEmpty())
         work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
     m_taskWorkLogs.insert(id, work);
+    if (status == QLatin1String("ok")) {
+        const QString artifactId = m_tasks.get(id).value(QStringLiteral("teachArtifactId")).toString();
+        if (!artifactId.isEmpty())
+            AutomationArtifactStore::appendLearning(artifactId, summary, work);
+    }
     m_tasks.markRun(id, status, summary);
 
     // Historial: registrar la corrida bajo el Proceso y, si vino de una

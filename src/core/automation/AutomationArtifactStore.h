@@ -16,6 +16,7 @@ public:
     static QVariantMap recipe(const QString &id);
     static QVariantList timeline(const QString &id);
     static QString importBrowserSkill(const QString &skillName, const QVariantMap &task);
+    static bool appendLearning(const QString &id, const QString &summary, const QString &log);
     static bool removeEvidence(const QString &id, const QString &fileName);
     static QString redact(const QString &text);
 };
