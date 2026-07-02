@@ -801,9 +801,9 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   las tools nativas `desktop_*` (ventanas, controles UIA, captura, mouse y
   teclado). Durante esa ejecución no se inyectan tools MCP de Playwright, porque
   Playwright sólo puede observar/controlar navegador web y no aplicaciones
-  nativas de Windows. La ejecución fuerza la disponibilidad de `desktop_*` aunque
-  el perfil activo sea liviano, y suprime `run_shell` como sustituto para evitar
-  que una Task de escritorio se resuelva por consola en vez de demostrar la GUI.
+  nativas de Windows. Las Automatizaciones corren con todas las tools built-in
+  disponibles aunque el perfil activo sea liviano; la verificación de una Task de
+  escritorio debe apoyarse en `desktop_*`.
 - En modo **Navegador background**, el Teach se graba con browser foreground de
   Playwright y evidencia visual por acción; la ejecución posterior usa esa receta
   como guía semántica junto con las tools de navegador. Si la página cambia y el

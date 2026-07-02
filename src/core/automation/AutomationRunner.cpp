@@ -77,11 +77,6 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_launch")};
 }
 
-QStringList AutomationRunner::desktopSuppressedToolNames()
-{
-    return {QStringLiteral("run_shell")};
-}
-
 QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,
                                         const QVariantMap &recipe)
 {
@@ -102,9 +97,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "desktop_click_element, desktop_launch, desktop_wait) para operar y verificar "
             "la pantalla real. No uses Playwright ni browser_snapshot: esas tools son sólo "
             "para navegador web y no pueden observar aplicaciones nativas de Windows. "
-            "No reemplaces la operación de GUI por run_shell. Las capturas evidence/*.jpg "
-            "son evidencia histórica de Teach; no las leas con read_file, verificá el "
-            "estado actual con desktop_observe/desktop_windows.\n");
+            "Podés usar cualquier otra tool disponible cuando aporte contexto o diagnóstico, "
+            "pero verificá la GUI con desktop_observe/desktop_windows. Las capturas "
+            "evidence/*.jpg son evidencia histórica de Teach; no las leas con read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(
             "Superficie: navegador background al ejecutar. El Teach se grabó con un "

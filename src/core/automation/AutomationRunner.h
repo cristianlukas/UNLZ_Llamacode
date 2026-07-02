@@ -26,9 +26,7 @@ public:
     // Playwright (la superficie que controlamos).
     static QString headlessBrowserCommand(const QString &command);
 
-    // Política de tools para escritorio foreground: estas tools deben estar
-    // disponibles aunque el perfil activo sea liviano, y las suprimidas no deben
-    // usarse como sustituto de la GUI.
+    // Tools mínimas esperadas para escritorio foreground. Automatizaciones no las
+    // usan para recortar el catálogo: el agente corre con todas las built-in.
     static QStringList desktopToolNames();
-    static QStringList desktopSuppressedToolNames();
 };
