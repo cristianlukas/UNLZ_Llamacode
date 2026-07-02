@@ -28,6 +28,7 @@
 #include "core/voice/VoiceController.h"
 #include "core/voice/VoiceTypes.h"
 #include "core/voice/VoiceServerManager.h"
+#include "core/voice/CharlaTuning.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
@@ -702,6 +703,12 @@ AppController::AppController(QObject *parent) : QObject(parent)
     if (m_idleAutoStopMin > 0) m_idleTimer->start();
     // Cualquier inicio de generación o arranque de server cuenta como actividad.
     connect(this, &AppController::serverReadyChanged, this, [this]() { bumpActivity(); });
+    // Charla tune: si el relanzamiento con mejoras de voz terminó, arrancar la
+    // charla automáticamente (el usuario ya la había pedido).
+    connect(this, &AppController::serverReadyChanged, this, [this]() {
+        if (m_charlaStartAfterRelaunch && serverReady())
+            startCharla();
+    });
     connect(this, &AppController::chatGeneratingChanged, this, [this]() { bumpActivity(); });
     // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
     // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
@@ -1209,6 +1216,21 @@ void AppController::startServer(const QString &launchProfileId)
 
     const QString binaryPath = m_effectiveProfile["binaryPath"].toString();
     QStringList args = m_effectiveProfile["effectiveArgs"].toStringList();
+    // Overrides temporales para Ingi Charla (no persisten en el perfil): se
+    // aplican solo en este launch, pedidos vía applyCharlaTuneAndStartCharla.
+    if (m_charlaTuneOnNextLaunch) {
+        m_charlaTuneOnNextLaunch = false;
+        const auto recs = CharlaTuning::recommend(
+            args, m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
+        if (!recs.isEmpty()) {
+            args = CharlaTuning::apply(args, recs);
+            QStringList desc;
+            for (const auto &c : recs) desc << c.flag + QLatin1Char('=') + c.recommended;
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Charla tune aplicado: %1").arg(desc.join(QStringLiteral(" "))));
+            m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;  // serverBaseUrl etc.
+        }
+    }
     const QVariantMap envMap = m_effectiveProfile["effectiveEnv"].toMap();
     m_serverGpuRequested = false;
     const int nglIdx = args.indexOf(QStringLiteral("--n-gpu-layers"));
@@ -12826,6 +12848,14 @@ void AppController::stopMicTest()
 
 void AppController::startCharla()
 {
+    // Checkbox "siempre aplicar mejoras de charla": si el perfil activo todavía
+    // tiene recomendaciones pendientes, relanzar con overrides y volver acá.
+    if (charlaAutoTune() && !m_charlaStartAfterRelaunch
+        && !charlaTuneRecommendations().isEmpty()) {
+        applyCharlaTuneAndStartCharla();
+        return;
+    }
+    m_charlaStartAfterRelaunch = false;
     ensureChatBackend();   // la voz reusa el backend de chat (sesiones/stream)
     ensureVoice();
     // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
@@ -12869,6 +12899,49 @@ void AppController::startCharla()
         raw->setThinkingEnabled(false);
     m_charlaActive = true;
     m_voice->start();
+}
+
+QVariantList AppController::charlaTuneRecommendations() const
+{
+    const QStringList args =
+        m_effectiveProfile.value(QStringLiteral("effectiveArgs")).toStringList();
+    if (args.isEmpty()) return {};   // sin perfil lanzado no hay qué tunear
+    return CharlaTuning::toVariantList(CharlaTuning::recommend(
+        args, m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble()));
+}
+
+bool AppController::charlaAutoTune() const
+{
+    return readSetting(QStringLiteral("charlaAutoTune")).toBool();
+}
+
+void AppController::setCharlaAutoTune(bool on)
+{
+    writeSetting(QStringLiteral("charlaAutoTune"), on);
+}
+
+void AppController::applyCharlaTuneAndStartCharla()
+{
+    const QString launchId = m_activeLaunchId;
+    if (launchId.isEmpty()) { startCharla(); return; }
+    qInfo().noquote() << QStringLiteral("[charla] tune: relanzando perfil con mejoras de voz");
+    m_charlaTuneOnNextLaunch = true;
+    m_charlaStartAfterRelaunch = true;
+    const bool withAgent = agentRunning();
+    auto startAgain = [this, launchId, withAgent]() {
+        if (withAgent) startServerAndAgent(launchId);
+        else startServer(launchId);
+    };
+    if (!serverRunning()) { QTimer::singleShot(0, this, startAgain); return; }
+    auto *conn = new QMetaObject::Connection;
+    *conn = connect(this, &AppController::serverRunningChanged, this,
+                    [this, conn, startAgain]() {
+        if (serverRunning() || m_serverStopping) return;
+        disconnect(*conn);
+        delete conn;
+        QTimer::singleShot(0, this, startAgain);
+    });
+    stopServer();
 }
 
 void AppController::stopCharla()

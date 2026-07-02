@@ -8,6 +8,7 @@
 #include "core/voice/SttEngine.h"
 #include "core/voice/TtsEngine.h"
 #include "core/voice/VoiceController.h"
+#include "core/voice/CharlaTuning.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/voice/VoiceServerManager.h"
 
@@ -29,6 +30,7 @@ private slots:
     void ttsPiperAvailability();
     void vadTurnEnded();
     void turnFailedIdleIsNoop();
+    void charlaTuningRecommendations();
     void ttsSentenceSplit();
     void ttsStreamingSentences();
     void ttsSanitizeForSpeech();
@@ -212,6 +214,47 @@ void TestVoice::turnFailedIdleIsNoop()
     vc.notifyTurnFailed(QStringLiteral("server caído"));
     QCOMPARE(vc.state(), VoiceController::Idle);
     QVERIFY(vc.lastError().isEmpty());
+}
+
+void TestVoice::charlaTuningRecommendations()
+{
+    // Perfil estilo MAX-Q: ubatch 64, ctx 262k, predict 4096, con cache-reuse.
+    const QStringList maxq{
+        "--ctx-size", "262000", "--batch-size", "512", "--ubatch-size", "64",
+        "--cache-reuse", "512", "--predict", "4096"};
+    const auto recs = CharlaTuning::recommend(maxq, 24.0);
+    QStringList flags;
+    for (const auto &c : recs) flags << c.flag;
+    QVERIFY(flags.contains("--ubatch-size"));   // 64 → 512
+    QVERIFY(flags.contains("--batch-size"));    // 512 → 2048
+    QVERIFY(flags.contains("--ctx-size"));      // 262k → 32768
+    QVERIFY(flags.contains("--predict"));       // 4096 → 1024
+    QVERIFY(!flags.contains("--cache-reuse"));  // ya lo tiene
+
+    // apply: reemplaza valores existentes sin duplicar flags.
+    const QStringList tuned = CharlaTuning::apply(maxq, recs);
+    QCOMPARE(CharlaTuning::argValue(tuned, "--ubatch-size"), QString("512"));
+    QCOMPARE(CharlaTuning::argValue(tuned, "--ctx-size"), QString("32768"));
+    QCOMPARE(tuned.count("--ubatch-size"), 1);
+    // Args tuneados → sin nuevas recomendaciones (no re-pregunta en loop).
+    QVERIFY(CharlaTuning::recommend(tuned, 24.0).isEmpty());
+
+    // VRAM chica (2GB): no subir batches (compute buffers no entran); pero
+    // cache-reuse ausente y predict sin tope sí se recomiendan.
+    const QStringList tiny{"--ctx-size", "3072", "--batch-size", "64", "--ubatch-size", "64"};
+    const auto recsTiny = CharlaTuning::recommend(tiny, 2.0);
+    QStringList tinyFlags;
+    for (const auto &c : recsTiny) tinyFlags << c.flag;
+    QVERIFY(!tinyFlags.contains("--ubatch-size"));
+    QVERIFY(!tinyFlags.contains("--batch-size"));
+    QVERIFY(tinyFlags.contains("--cache-reuse"));
+    QVERIFY(tinyFlags.contains("--predict"));
+
+    // Perfil ya óptimo para voz: nada que recomendar (no molesta con popup).
+    const QStringList good{
+        "--ctx-size", "32768", "--batch-size", "2048", "--ubatch-size", "512",
+        "--cache-reuse", "512", "--predict", "1024"};
+    QVERIFY(CharlaTuning::recommend(good, 24.0).isEmpty());
 }
 
 void TestVoice::vadTurnEnded()

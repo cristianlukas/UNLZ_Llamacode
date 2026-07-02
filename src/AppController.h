@@ -737,6 +737,14 @@ public:
     Q_INVOKABLE void setVoiceConfig(const QString &profileId, const QVariantMap &cfg);
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
+    // Tuning del perfil activo para voz: cambios recomendados (vacío = perfil ya
+    // óptimo), aplicar+relanzar el server con overrides temporales (NO persiste
+    // el perfil) y arrancar la charla al quedar listo. charlaAutoTune = aplicar
+    // siempre sin preguntar (checkbox del popup).
+    Q_INVOKABLE QVariantList charlaTuneRecommendations() const;
+    Q_INVOKABLE void applyCharlaTuneAndStartCharla();
+    Q_INVOKABLE bool charlaAutoTune() const;
+    Q_INVOKABLE void setCharlaAutoTune(bool on);
     Q_INVOKABLE void charlaListen();  // fuerza escucha (corta el TTS si suena)
     // Micrófonos disponibles: [{id,name,isDefault}].
     Q_INVOKABLE QVariantList audioInputDevices() const;
@@ -1064,6 +1072,8 @@ private:
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
     QString m_pendingVoicePrerequisitesEngine;
     bool m_charlaActive = false;
+    bool m_charlaTuneOnNextLaunch = false;  // startServer aplica overrides de voz
+    bool m_charlaStartAfterRelaunch = false; // arrancar charla al serverReady
     // Ingi Charla: el turno actual se ruteó al agente (computer-use/visión) en vez
     // del chat backend. Decide quién habla la respuesta final (onAgentTurnFinished).
     bool m_charlaUseAgent = false;

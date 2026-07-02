@@ -80,6 +80,7 @@ set(CORE_SOURCES
     src/core/voice/TtsEngine.cpp
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
+    src/core/voice/CharlaTuning.cpp
     src/core/eval/EvalSuite.cpp
     src/core/ToolCallingSupport.cpp
     src/core/diag/LogTriage.cpp

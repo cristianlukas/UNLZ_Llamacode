@@ -73,6 +73,15 @@ Item {
             missingSttModelDialog.open()
             return
         }
+        // Perfil activo con ajustes recomendados para voz: ofrecer aplicarlos
+        // (relanza el server con overrides temporales). Con auto-tune activado,
+        // App.startCharla() los aplica solo sin preguntar.
+        var recs = App.charlaTuneRecommendations()
+        if (recs.length > 0 && !App.charlaAutoTune()) {
+            charlaTuneDialog.recs = recs
+            charlaTuneDialog.open()
+            return
+        }
         App.startCharla()
     }
     // Persiste y REASIGNA cfg (copia) para que QML reevalúe los bindings `visible`
@@ -524,6 +533,70 @@ Item {
                     }
 
                     Item { height: 16; width: 1 }
+                }
+            }
+        }
+    }
+
+    LcDialog {
+        id: charlaTuneDialog
+        property var recs: []
+        title: "Mejoras para modo de voz"
+        width: Math.min(620, page.width - 48)
+        height: Math.min(190 + recs.length * 26 + 70, page.height - 48)
+
+        contentItem: ColumnLayout {
+            width: charlaTuneDialog.availableWidth
+            spacing: 10
+            Text {
+                Layout.fillWidth: true
+                text: "¿Desea aplicar las mejoras para un modo de voz? (no hacerlo puede generar mucho delay)\n\nSe relanza el perfil activo con estos ajustes SOLO para esta sesión (el perfil guardado no se modifica):"
+                color: Theme.textPrimary; font.pixelSize: 14; wrapMode: Text.WordWrap
+            }
+            Repeater {
+                model: charlaTuneDialog.recs
+                delegate: Text {
+                    Layout.fillWidth: true
+                    text: "• " + modelData.flag + ": "
+                          + (modelData.current.length ? modelData.current : "(sin fijar)")
+                          + " → " + modelData.recommended + " — " + modelData.reason
+                    color: Theme.textSecondary; font.pixelSize: 12; wrapMode: Text.WordWrap
+                }
+            }
+            CheckBox {
+                id: tuneAlwaysCb
+                text: "Siempre que se entre a ingi-charla, recargar el perfil con las mejoras para charla"
+                checked: false
+                contentItem: Text {
+                    text: tuneAlwaysCb.text; color: Theme.textPrimary; font.pixelSize: 12
+                    wrapMode: Text.WordWrap; leftPadding: tuneAlwaysCb.indicator.width + 6
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+            Item { Layout.fillHeight: true }
+        }
+
+        footer: Rectangle {
+            color: Theme.popupHeaderBg
+            height: 56
+            radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Continuar sin cambios"
+                    secondary: true
+                    onClicked: { charlaTuneDialog.close(); App.startCharla() }
+                }
+                LcButton {
+                    text: "Aplicar y relanzar"
+                    onClicked: {
+                        App.setCharlaAutoTune(tuneAlwaysCb.checked)
+                        charlaTuneDialog.close()
+                        App.applyCharlaTuneAndStartCharla()
+                    }
                 }
             }
         }
