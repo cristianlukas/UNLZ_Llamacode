@@ -313,6 +313,22 @@ void VoiceController::notifyThinking()
         setState(Thinking);
 }
 
+void VoiceController::notifyTurnFailed(const QString &err)
+{
+    if (m_state == Idle || m_state == Error) return;
+    m_lastError = err;
+    emit errorChanged();
+    teardownPlayback();
+    m_ttsQueue.clear();
+    m_audioQueue.clear();
+    m_playing = false;
+    m_streamBubble = -1;
+    m_streamConsumed = 0;
+    // Reintentable: volver a escuchar (el error queda visible en lastError).
+    if (m_cfg.autoListen) startListening();
+    else { endCapture(); setState(Idle); }
+}
+
 // ── TTS → audio → playback ───────────────────────────────────────────────────
 
 QStringList VoiceController::splitSentences(const QString &text, int minLen)

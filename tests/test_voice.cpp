@@ -28,6 +28,7 @@ private slots:
     void ttsPiperResidentArgs();
     void ttsPiperAvailability();
     void vadTurnEnded();
+    void turnFailedIdleIsNoop();
     void ttsSentenceSplit();
     void ttsStreamingSentences();
     void ttsSanitizeForSpeech();
@@ -200,6 +201,17 @@ void TestVoice::ttsPiperAvailability()
     QVERIFY(voice.open());
     eng.setPiper(QString(), voice.fileName());
     QVERIFY(eng.piperAvailable());
+}
+
+void TestVoice::turnFailedIdleIsNoop()
+{
+    // Con la charla inactiva (Idle), un error de backend no debe activar nada
+    // ni tocar lastError (evita "escuchando" fantasma fuera de la charla).
+    VoiceController vc;
+    QCOMPARE(vc.state(), VoiceController::Idle);
+    vc.notifyTurnFailed(QStringLiteral("server caído"));
+    QCOMPARE(vc.state(), VoiceController::Idle);
+    QVERIFY(vc.lastError().isEmpty());
 }
 
 void TestVoice::vadTurnEnded()

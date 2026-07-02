@@ -94,6 +94,10 @@ public slots:
     // resetea el estado de streaming. Si no quedaba nada, retoma escucha.
     void speakFlush(int bubbleId, const QString &fullText);
     void notifyThinking();             // el LLM empezó a generar
+    // El turno del backend falló (server LLM caído, error de red...). Sin esto la
+    // charla quedaba clavada en "pensando" para siempre. Muestra el error y, si
+    // autoListen, retoma la escucha para poder reintentar hablando.
+    void notifyTurnFailed(const QString &err);
 
 signals:
     void stateChanged();

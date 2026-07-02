@@ -2929,6 +2929,9 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         if (!m_runningTaskId.isEmpty())
             finishRunningTask(QStringLiteral("error"), m);
         emit serverError(m);
+        // Ingi Charla con agente: cortar el "pensando" y retomar escucha.
+        if (m_voice && m_charlaActive && m_charlaUseAgent && m_runningTaskId.isEmpty())
+            m_voice->notifyTurnFailed(m);
     });
     connect(b, &IAgentBackend::toolApprovalNeeded, this, [this](const QVariantMap &toolCall) {
         m_agentPendingTool = toolCall;
@@ -3574,6 +3577,9 @@ IAgentBackend *AppController::ensureChatBackend()
     });
     connect(b, &IAgentBackend::errorOccurred, this, [this](const QString &m) {
         emit serverError(m);
+        // Charla: no dejar la voz clavada en "pensando" si el turno falló.
+        if (m_voice && m_charlaActive && !m_charlaUseAgent)
+            m_voice->notifyTurnFailed(m);
     });
 
     AgentContext c;
@@ -12533,11 +12539,17 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
     // instalar, etc.). Si no, fallback al chat backend (voz-a-voz simple).
     if (m_agentBackend && m_agentBackend->running()) {
         m_charlaUseAgent = true;
+        // Charla es conversación hablada: sin razonamiento <think> (genera
+        // segundos de tokens que no se hablan). Se restaura en stopCharla.
+        if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+            lb->setThinkingEnabled(false);
         if (m_voice) m_voice->notifyThinking();
         sendToAgent(text);
         return true;
     }
     m_charlaUseAgent = false;
+    if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
+        raw->setThinkingEnabled(false);
     sendChatMessage(text);
     return false;
 }
@@ -12585,6 +12597,12 @@ void AppController::startCharla()
         if (!startManagedStt(c)) return;
     }
     applyVoiceConfig();
+    // Sin thinking en charla desde el arranque: así el prefill del warmup usa el
+    // mismo template (enable_thinking=false) que el turno real → cache válido.
+    if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        lb->setThinkingEnabled(false);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setThinkingEnabled(false);
     m_charlaActive = true;
     m_voice->start();
 }
@@ -12594,6 +12612,11 @@ void AppController::stopCharla()
     m_charlaActive = false;
     if (m_voice) m_voice->stop();
     stopManagedStt();
+    // Restaurar el thinking configurado (la charla lo fuerza a off por turno).
+    if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        lb->setThinkingEnabled(m_agentThinkingEnabled);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setThinkingEnabled(m_chatThinkingEnabled);
 }
 
 // ── STT gestionado (whisper.cpp) ─────────────────────────────────────────────
@@ -12656,9 +12679,15 @@ QString AppController::voiceWhisperServerPath() const
 bool AppController::voiceWhisperServerAvailable() const
 {
     const QString configured = voiceWhisperServerPath().trimmed();
-    if (!configured.isEmpty())
-        return QFileInfo(configured).isFile()
-               || !QStandardPaths::findExecutable(configured).isEmpty();
+    if (!configured.isEmpty()
+        && (QFileInfo(configured).isFile()
+            || !QStandardPaths::findExecutable(configured).isEmpty()))
+        return true;
+    // Setting vacío o apuntando a un binario borrado: buscar la instalación
+    // gestionada (AppLocalData/voice/bin) antes de rendirse. Sin esto, "Iniciar
+    // charla" pedía re-instalar aunque el binario ya estuviera descargado.
+    if (!VoiceServerManager::installedBinaryPath(QStringLiteral("whisper-server")).isEmpty())
+        return true;
     return !QStandardPaths::findExecutable(QStringLiteral("whisper-server")).isEmpty();
 }
 
@@ -12700,9 +12729,13 @@ QString AppController::voicePiperPath() const
 bool AppController::voicePiperAvailable() const
 {
     const QString configured = voicePiperPath().trimmed();
-    if (!configured.isEmpty())
-        return QFileInfo(configured).isFile()
-               || !QStandardPaths::findExecutable(configured).isEmpty();
+    if (!configured.isEmpty()
+        && (QFileInfo(configured).isFile()
+            || !QStandardPaths::findExecutable(configured).isEmpty()))
+        return true;
+    // Fallback a la instalación gestionada (mismo criterio que TtsEngine).
+    if (!VoiceServerManager::installedBinaryPath(QStringLiteral("piper")).isEmpty())
+        return true;
     return !QStandardPaths::findExecutable(QStringLiteral("piper")).isEmpty();
 }
 
@@ -12742,8 +12775,10 @@ bool AppController::startManagedStt(const VoiceConfig &c)
                          .arg(c.sttManagedEngine));
         return false;
     }
-    // Resolver el binario whisper-server (setting o PATH).
-    QString prog = voiceWhisperServerPath();
+    // Resolver el binario whisper-server (setting → instalación gestionada → PATH).
+    QString prog = voiceWhisperServerPath().trimmed();
+    if (prog.isEmpty() || !QFileInfo(prog).isFile())
+        prog = VoiceServerManager::installedBinaryPath(QStringLiteral("whisper-server"));
     if (prog.isEmpty()) prog = QStringLiteral("whisper-server");
     const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
     const int port = eng.value("defaultPort", 8081).toInt();
