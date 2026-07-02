@@ -36,6 +36,7 @@
 #include "core/diag/LogTriage.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
+#include <QDebug>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -12543,6 +12544,7 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
         // segundos de tokens que no se hablan). Se restaura en stopCharla.
         if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
             lb->setThinkingEnabled(false);
+        qInfo().noquote() << QStringLiteral("[charla] turno → AGENTE (%1 chars)").arg(text.size());
         if (m_voice) m_voice->notifyThinking();
         sendToAgent(text);
         return true;
@@ -12550,6 +12552,8 @@ bool AppController::dispatchCharlaTranscript(const QString &text)
     m_charlaUseAgent = false;
     if (auto *raw = qobject_cast<RawChatBackend *>(ensureChatBackend()))
         raw->setThinkingEnabled(false);
+    qInfo().noquote() << QStringLiteral("[charla] turno → CHAT (%1 chars, server=%2)")
+                             .arg(text.size()).arg(serverBaseUrl());
     sendChatMessage(text);
     return false;
 }
@@ -12596,6 +12600,12 @@ void AppController::startCharla()
         }
         if (!startManagedStt(c)) return;
     }
+    qInfo().noquote() << QStringLiteral(
+        "[charla] start: stt=%1(managed=%2) tts=%3(voz=%4) llm=%5 agente=%6")
+        .arg(c.sttProvider, c.sttManagedEngine, c.ttsMode, c.ttsManagedVoice,
+             serverBaseUrl(),
+             (m_agentBackend && m_agentBackend->running()) ? QStringLiteral("sí")
+                                                           : QStringLiteral("no"));
     applyVoiceConfig();
     // Sin thinking en charla desde el arranque: así el prefill del warmup usa el
     // mismo template (enable_thinking=false) que el turno real → cache válido.
@@ -12794,6 +12804,8 @@ bool AppController::startManagedStt(const VoiceConfig &c)
     connect(m_sttProc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
         emit serverError(QStringLiteral("No se pudo lanzar whisper-server. Configurá su ruta en Charla."));
     });
+    qInfo().noquote() << QStringLiteral("[charla] whisper-server: lanzando %1 (puerto %2)")
+                             .arg(prog).arg(port);
     m_sttProc->start(prog, args);
     if (m_sttProc->waitForStarted(4000)) {
         assignToJobObject(m_sttProc->processId());

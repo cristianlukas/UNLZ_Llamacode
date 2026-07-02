@@ -24,6 +24,7 @@
 #include <QUuid>
 #include <QPointer>
 #include <QRegularExpression>
+#include <QDebug>
 
 static int estimateTokens(const QString &text)
 {
@@ -1606,8 +1607,18 @@ void LlamaAgentBackend::prefillWarmup()
     m_warmupReply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     emit logAppended(QStringLiteral("[warmup] prefill del prompt-cache (msgs=%1)\n")
                          .arg(wire.size()));
-    connect(m_warmupReply, &QNetworkReply::finished, this, [this]() {
+    qInfo().noquote() << QStringLiteral("[charla] warmup: prefill enviado (msgs=%1, url=%2)")
+                             .arg(wire.size()).arg(url);
+    const qint64 t0 = QDateTime::currentMSecsSinceEpoch();
+    connect(m_warmupReply, &QNetworkReply::finished, this, [this, t0]() {
         if (!m_warmupReply) return;
+        const bool ok = (m_warmupReply->error() == QNetworkReply::NoError);
+        qInfo().noquote() << QStringLiteral("[charla] warmup: %1 en %2 ms%3")
+                                 .arg(ok ? QStringLiteral("listo") : QStringLiteral("FALLÓ"))
+                                 .arg(QDateTime::currentMSecsSinceEpoch() - t0)
+                                 .arg(ok ? QString()
+                                         : QStringLiteral(" (") + m_warmupReply->errorString()
+                                               + QLatin1Char(')'));
         m_warmupReply->deleteLater();
         m_warmupReply = nullptr;      // resultado descartado; solo importa el KV
     });

@@ -10,6 +10,8 @@
 #include <QFile>
 #include <QStandardPaths>
 #include <QUuid>
+#include <QFileInfo>
+#include <QDebug>
 
 TtsEngine::TtsEngine(QObject *parent) : QObject(parent) {}
 
@@ -109,6 +111,8 @@ bool TtsEngine::ensurePiperResident()
         // per-call (fallback) para no perder la respuesta.
         const bool hadPending = m_piperPending;
         const QString pendingText = m_piperPendingText;
+        qWarning().noquote() << QStringLiteral("[charla] piper: residente murió (pendiente=%1)")
+                                    .arg(hadPending);
         tearDownPiperResident();
         if (hadPending) {
             m_piperPending = false;
@@ -121,8 +125,12 @@ bool TtsEngine::ensurePiperResident()
     connect(m_piperProc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [onDead](int, QProcess::ExitStatus) { onDead(); });
 
+    qInfo().noquote() << QStringLiteral("[charla] piper: lanzando residente (%1, modelo=%2)")
+                             .arg(resolvePiperProg(), QFileInfo(modelPath).fileName());
     m_piperProc->start(resolvePiperProg(), args);
     if (!m_piperProc->waitForStarted(4000)) {
+        qWarning().noquote() << QStringLiteral("[charla] piper: residente NO arrancó (%1)")
+                                    .arg(m_piperProc ? m_piperProc->errorString() : QString());
         tearDownPiperResident();
         return false;
     }
@@ -187,6 +195,7 @@ void TtsEngine::synthesizePiper(const QString &text)
 // el residente no arranca o muere.
 void TtsEngine::synthesizePiperOnce(const QString &text)
 {
+    qInfo().noquote() << QStringLiteral("[charla] piper: fallback per-call (recarga modelo — lento)");
     const QString modelPath = resolvePiperModel();
     if (modelPath.isEmpty() || !QFile::exists(modelPath)) {
         emit failed(QStringLiteral("voz piper no instalada")); return;
@@ -250,6 +259,8 @@ void TtsEngine::synthesize(const QString &text)
             // Endpoint HTTP caído (típico: nada escuchando en ttsBaseUrl). Si hay
             // una voz piper local instalada, sintetizar con piper en vez de fallar
             // (Ingi Charla local-first: la voz sigue andando sin servidor TTS).
+            qWarning().noquote() << QStringLiteral("[charla] TTS http falló (%1); piper local=%2")
+                                        .arg(r->errorString()).arg(piperAvailable());
             if (piperAvailable()) { synthesizePiper(text); return; }
             emit failed(r->errorString());
             return;

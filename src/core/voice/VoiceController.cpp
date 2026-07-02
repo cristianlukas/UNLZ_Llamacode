@@ -1,6 +1,7 @@
 #include "VoiceController.h"
 #include "AudioCodec.h"
 #include <QRegularExpression>
+#include <QDebug>
 
 #include <QAudioSource>
 #include <QAudioFormat>
@@ -59,9 +60,9 @@ QVariantList VoiceController::inputDevices()
     return out;
 }
 
-QString VoiceController::stateStr() const
+QString VoiceController::stateName(State s)
 {
-    switch (m_state) {
+    switch (s) {
     case Idle:         return QStringLiteral("idle");
     case Listening:    return QStringLiteral("listening");
     case Transcribing: return QStringLiteral("transcribing");
@@ -72,15 +73,27 @@ QString VoiceController::stateStr() const
     return QStringLiteral("idle");
 }
 
+QString VoiceController::stateStr() const
+{
+    return stateName(m_state);
+}
+
 void VoiceController::setState(State s)
 {
     if (m_state == s) return;
+    // Timeline del pipeline en el log central: cada transición con el tiempo que
+    // duró el estado anterior (diagnóstico de dónde se va la latencia).
+    qInfo().noquote() << QStringLiteral("[charla] estado %1 → %2 (%3 ms en %1)")
+                             .arg(stateName(m_state), stateName(s),
+                                  QString::number(m_tState.isValid() ? m_tState.elapsed() : 0));
+    m_tState.restart();
     m_state = s;
     emit stateChanged();
 }
 
 void VoiceController::fail(const QString &err)
 {
+    qWarning().noquote() << QStringLiteral("[charla] FALLO: %1 (estado=%2)").arg(err, stateStr());
     m_lastError = err;
     emit errorChanged();
     endCapture();
@@ -167,6 +180,8 @@ void VoiceController::beginCapture()
             if (QString::fromUtf8(d.id()) == m_deviceId) { dev = d; break; }
     }
     if (dev.isNull()) { fail(QStringLiteral("no hay micrófono disponible")); return; }
+    qInfo().noquote() << QStringLiteral("[charla] captura: mic='%1' 16kHz mono (monitorOnly=%2)")
+                             .arg(dev.description()).arg(m_monitorOnly);
     // Pedimos siempre 16k/mono/Int16 (lo que espera STT); el backend resamplea.
     m_source = new QAudioSource(dev, fmt, this);
     connect(m_source, &QAudioSource::stateChanged, this, [this](QAudio::State st) {
@@ -219,8 +234,11 @@ void VoiceController::onAudioReady()
 
     // Modo monitor (durante Speaking): solo detectar barge-in, no acumular.
     if (m_monitorOnly) {
-        if (m_cfg.bargeIn && lvl >= m_cfg.vadActivationLevel * 1.6)
+        if (m_cfg.bargeIn && lvl >= m_cfg.vadActivationLevel * 1.6) {
+            qInfo().noquote() << QStringLiteral("[charla] barge-in: usuario interrumpió (nivel=%1)")
+                                     .arg(lvl, 0, 'f', 3);
             startListening();
+        }
         return;
     }
 
@@ -247,8 +265,16 @@ void VoiceController::flushSegment(bool finalSeg)
 {
     // Encolar el segmento solo si tuvo voz y dura algo (>200ms) — evita fragmentos.
     const int segMs = int((m_segment.size() / 2) * 1000.0 / m_sampleRate);
-    if (m_segPeak >= m_cfg.vadActivationLevel && segMs >= 200)
+    if (m_segPeak >= m_cfg.vadActivationLevel && segMs >= 200) {
         m_segQueue.append(m_segment);
+        qInfo().noquote() << QStringLiteral("[charla] VAD: segmento %1 ms (peak=%2, final=%3, cola=%4)")
+                                 .arg(segMs).arg(m_segPeak, 0, 'f', 3)
+                                 .arg(finalSeg).arg(m_segQueue.size());
+    } else if (finalSeg && m_segQueue.isEmpty() && m_partial.isEmpty()) {
+        qInfo().noquote() << QStringLiteral("[charla] VAD: turno sin voz útil (seg=%1 ms, peak=%2 < act=%3)")
+                                 .arg(segMs).arg(m_segPeak, 0, 'f', 3)
+                                 .arg(m_cfg.vadActivationLevel, 0, 'f', 3);
+    }
     m_segment.clear();
     m_segPeak = 0.0;
     m_segSilenceMs = 0;
@@ -269,6 +295,10 @@ void VoiceController::pumpSegments()
         return;
     }
     const QByteArray seg = m_segQueue.takeFirst();
+    m_tStt.restart();
+    qInfo().noquote() << QStringLiteral("[charla] STT: enviando segmento (%1 ms de audio, quedan %2)")
+                             .arg(int((seg.size() / 2) * 1000.0 / m_sampleRate))
+                             .arg(m_segQueue.size());
     m_stt.transcribe(seg, m_sampleRate);
 }
 
@@ -282,6 +312,10 @@ void VoiceController::finalizeTurn()
         else setState(Idle);
         return;
     }
+    m_tTurn.restart();
+    m_turnFirstAudio = false;
+    qInfo().noquote() << QStringLiteral("[charla] turno del usuario: \"%1\" (%2 chars)")
+                             .arg(full.left(120)).arg(full.size());
     setState(Thinking);
     emit transcriptReady(full);
 }
@@ -291,6 +325,9 @@ void VoiceController::finalizeTurn()
 void VoiceController::onSttDone(const QString &text)
 {
     const QString t = text.trimmed();
+    qInfo().noquote() << QStringLiteral("[charla] STT: ok en %1 ms → \"%2\"")
+                             .arg(m_tStt.isValid() ? m_tStt.elapsed() : 0)
+                             .arg(t.left(80));
     if (!t.isEmpty()) {
         if (!m_partial.isEmpty()) m_partial += QLatin1Char(' ');
         m_partial += t;
@@ -301,6 +338,9 @@ void VoiceController::onSttDone(const QString &text)
 
 void VoiceController::onSttFailed(const QString &err)
 {
+    qWarning().noquote() << QStringLiteral("[charla] STT: fallo en %1 ms: %2 (parcial=%3 chars)")
+                                .arg(m_tStt.isValid() ? m_tStt.elapsed() : 0)
+                                .arg(err).arg(m_partial.size());
     // Si ya hay texto parcial, ignorar el segmento fallido y seguir; si no, error duro
     // (típico: server STT caído → "Conexión rechazada").
     if (m_partial.isEmpty()) { fail(QStringLiteral("STT: ") + err); return; }
@@ -316,6 +356,8 @@ void VoiceController::notifyThinking()
 void VoiceController::notifyTurnFailed(const QString &err)
 {
     if (m_state == Idle || m_state == Error) return;
+    qWarning().noquote() << QStringLiteral("[charla] turno FALLÓ (estado=%1): %2")
+                                .arg(stateStr(), err);
     m_lastError = err;
     emit errorChanged();
     teardownPlayback();
@@ -433,6 +475,8 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     const QStringList sents = splitCompleteSentences(pending, minLen, &consumed);
     if (sents.isEmpty()) return;          // todavía no cerró ninguna oración nueva
     m_streamConsumed += consumed;
+    qInfo().noquote() << QStringLiteral("[charla] stream: +%1 oración(es) (bubble=%2, consumido=%3)")
+                             .arg(sents.size()).arg(bubbleId).arg(m_streamConsumed);
     if (m_state != Speaking) setState(Speaking);
     m_ttsQueue += sents;
     pumpTts();                            // onTtsAudio arranca la reproducción
@@ -466,11 +510,24 @@ void VoiceController::speakFlush(int bubbleId, const QString &rawText)
 void VoiceController::pumpTts()
 {
     if (m_tts.busy() || m_ttsQueue.isEmpty()) return;
-    m_tts.synthesize(m_ttsQueue.takeFirst());
+    const QString sent = m_ttsQueue.takeFirst();
+    m_tTts.restart();
+    qInfo().noquote() << QStringLiteral("[charla] TTS: sintetizando %1 chars (cola=%2)")
+                             .arg(sent.size()).arg(m_ttsQueue.size());
+    m_tts.synthesize(sent);
 }
 
 void VoiceController::onTtsAudio(const QByteArray &audio, const QString &format)
 {
+    qInfo().noquote() << QStringLiteral("[charla] TTS: audio listo en %1 ms (%2 KB, %3)")
+                             .arg(m_tTts.isValid() ? m_tTts.elapsed() : 0)
+                             .arg(audio.size() / 1024).arg(format);
+    if (!m_turnFirstAudio && m_tTurn.isValid()) {
+        m_turnFirstAudio = true;
+        // Métrica clave: fin del habla del usuario → primer audio de respuesta.
+        qInfo().noquote() << QStringLiteral("[charla] LATENCIA turno→primer audio: %1 ms")
+                                 .arg(m_tTurn.elapsed());
+    }
     m_audioQueue.append(qMakePair(audio, format));
     pumpTts();                 // adelantar la síntesis de la próxima oración
     if (!m_playing) playNextClip();
@@ -518,6 +575,8 @@ void VoiceController::playPcm(const QByteArray &pcm, int sampleRate, int channel
     m_playBuf->open(QIODevice::ReadOnly);
 
     if (!m_sink) {
+        qInfo().noquote() << QStringLiteral("[charla] playback: QAudioSink nuevo (%1 Hz, %2 ch)")
+                                 .arg(sampleRate).arg(channels);
         QAudioFormat fmt;
         fmt.setSampleRate(sampleRate);
         fmt.setChannelCount(channels);
@@ -553,6 +612,8 @@ void VoiceController::playAudio(const QByteArray &audio, const QString &format)
         return;
     }
 
+    qInfo().noquote() << QStringLiteral("[charla] playback: QMediaPlayer (%1, %2 KB)")
+                             .arg(format).arg(audio.size() / 1024);
     teardownPlayback();
 
     m_playBuf = new QBuffer(this);

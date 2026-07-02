@@ -10,6 +10,7 @@
 #include <QPair>
 #include <QStringList>
 #include <QString>
+#include <QElapsedTimer>
 
 class QAudioSource;
 class QIODevice;
@@ -47,6 +48,7 @@ public:
     static QVariantList inputDevices();
 
     QString stateStr() const;
+    static QString stateName(State s);   // nombre legible (logs/UI)
     bool active() const { return m_state != Idle && m_state != Error; }
     double level() const { return m_level; }
     QString lastError() const { return m_lastError; }
@@ -180,4 +182,12 @@ private:
     // chars de su texto ya se encolaron como oraciones completas.
     int m_streamBubble = -1;
     int m_streamConsumed = 0;
+
+    // Timers de diagnóstico (logs [charla]): duración de cada estado, del request
+    // STT en vuelo, de la síntesis TTS en vuelo, y del gap fin-de-habla→primer audio.
+    QElapsedTimer m_tState;
+    QElapsedTimer m_tStt;
+    QElapsedTimer m_tTts;
+    QElapsedTimer m_tTurn;         // arranca al finalizar el habla del usuario
+    bool m_turnFirstAudio = false; // ya se logueó el primer audio del turno
 };

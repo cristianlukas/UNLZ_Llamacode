@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QUrl>
+#include <QDebug>
 
 SttEngine::SttEngine(QObject *parent) : QObject(parent) {}
 
@@ -74,13 +75,24 @@ void SttEngine::transcribe(const QByteArray &pcm16, int sampleRate)
         QNetworkReply *r = m_reply;
         m_reply = nullptr;
         r->deleteLater();
+        const int http = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         if (r->error() != QNetworkReply::NoError) {
+            // Cuerpo del error (los servers suelen mandar detalle JSON útil).
+            const QByteArray body = r->readAll().left(300);
+            qWarning().noquote() << QStringLiteral("[charla] STT http %1 %2: %3 | %4")
+                                        .arg(http).arg(r->url().toString(),
+                                                       r->errorString(),
+                                                       QString::fromUtf8(body));
             emit failed(r->errorString());
             return;
         }
-        const QString text = parseTranscript(r->readAll());
-        if (text.isEmpty()) emit failed(QStringLiteral("transcripción vacía"));
-        else emit transcribed(text);
+        const QByteArray raw = r->readAll();
+        const QString text = parseTranscript(raw);
+        if (text.isEmpty()) {
+            qWarning().noquote() << QStringLiteral("[charla] STT respuesta sin texto (http %1): %2")
+                                        .arg(http).arg(QString::fromUtf8(raw.left(300)));
+            emit failed(QStringLiteral("transcripción vacía"));
+        } else emit transcribed(text);
     });
 }
 
