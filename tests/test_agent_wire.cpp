@@ -27,6 +27,7 @@ private slots:
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
+    void buildWarmupPayload_prefillsWithoutGenerating();
     void buildObservationMessage_wrapsImagesAsUserMultimodal();
     void buildObservationMessage_emptyWhenNoImages();
     void developmentDisciplineSection_coversRegressionGuards();
@@ -585,6 +586,35 @@ void AgentWireTests::visibleAnswer_stripsThinkButSalvagesWhenEmpty()
              QStringLiteral("respuesta directa"));
     // Realmente vacío (sólo etiquetas) → vacío, no inventa.
     QVERIFY(B::visibleAnswer(QStringLiteral("<think></think>"), false).isEmpty());
+}
+
+void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
+{
+    const QJsonArray msgs{
+        msg(QStringLiteral("system"), QStringLiteral("sys prompt")),
+        msg(QStringLiteral("user"), QStringLiteral("turno previo"))
+    };
+    const QJsonArray tools{QJsonObject{{QStringLiteral("type"), QStringLiteral("function")}}};
+
+    const QJsonObject p = LlamaAgentBackend::buildWarmupPayload(
+        msgs, tools, QStringLiteral("local"), 0.7, true);
+
+    // Prefijo idéntico al turno real: messages+tools+kwargs de template.
+    QCOMPARE(p.value(QStringLiteral("messages")).toArray(), msgs);
+    QCOMPARE(p.value(QStringLiteral("tools")).toArray(), tools);
+    QCOMPARE(p.value(QStringLiteral("temperature")).toDouble(), 0.7);
+    QCOMPARE(p.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .value(QStringLiteral("enable_thinking")).toBool(), true);
+    // Pero SIN generar: 1 token, sin stream, y con cache_prompt para el KV.
+    QCOMPARE(p.value(QStringLiteral("max_tokens")).toInt(), 1);
+    QCOMPARE(p.value(QStringLiteral("stream")).toBool(), false);
+    QCOMPARE(p.value(QStringLiteral("cache_prompt")).toBool(), true);
+
+    // Temperatura negativa (no seteada) → no se manda; thinking off → budget 0.
+    const QJsonObject p2 = LlamaAgentBackend::buildWarmupPayload(
+        msgs, tools, QStringLiteral("local"), -1.0, false);
+    QVERIFY(!p2.contains(QStringLiteral("temperature")));
+    QCOMPARE(p2.value(QStringLiteral("reasoning_budget")).toInt(), 0);
 }
 
 void AgentWireTests::buildObservationMessage_wrapsImagesAsUserMultimodal()

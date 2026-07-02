@@ -744,6 +744,10 @@ void LlamaAgentBackend::stop()
         cr->disconnect(this); cr->abort(); cr->deleteLater();
     }
     m_compacting = false;
+    if (m_warmupReply) {
+        QNetworkReply *wr = m_warmupReply; m_warmupReply = nullptr;
+        wr->disconnect(this); wr->abort(); wr->deleteLater();
+    }
     if (m_consolidateReply) {
         QNetworkReply *cr = m_consolidateReply; m_consolidateReply = nullptr;
         cr->disconnect(this); cr->abort(); cr->deleteLater();
@@ -1543,6 +1547,70 @@ void LlamaAgentBackend::repairDanglingToolCalls()
         if (!id.isEmpty())
             appendToolResult(id, QString(),
                              QStringLiteral("[interrumpido por el usuario]"));
+}
+
+// Payload del warmup (pura, testeable): mismo prefijo que un turno real
+// (messages+tools+kwargs de template) pero sin generar (max_tokens=1, sin stream).
+QJsonObject LlamaAgentBackend::buildWarmupPayload(const QJsonArray &wireMessages,
+                                                  const QJsonArray &tools,
+                                                  const QString &modelId,
+                                                  double temperature,
+                                                  bool thinkingEnabled)
+{
+    QJsonObject payload{
+        {QStringLiteral("model"), modelId},
+        {QStringLiteral("messages"), wireMessages},
+        {QStringLiteral("tools"), tools},
+        {QStringLiteral("tool_choice"), QStringLiteral("auto")},
+        {QStringLiteral("parallel_tool_calls"), true},
+        {QStringLiteral("parse_tool_calls"), false},
+        {QStringLiteral("max_tokens"), 1},
+        {QStringLiteral("stream"), false},
+        {QStringLiteral("cache_prompt"), true}
+    };
+    if (temperature >= 0.0) payload.insert(QStringLiteral("temperature"), temperature);
+    payload.insert(QStringLiteral("reasoning_budget"), thinkingEnabled ? -1 : 0);
+    payload.insert(QStringLiteral("chat_template_kwargs"),
+                   QJsonObject{{QStringLiteral("enable_thinking"), thinkingEnabled}});
+    return payload;
+}
+
+// Precalienta el prompt-cache del server: mismo prefijo que el próximo turno
+// (system+tools+historial, SIN el mensaje nuevo del usuario) con max_tokens=1 y
+// cache_prompt=true. llama.cpp reusa el KV por prefijo más largo → cuando llegue
+// el turno real solo evalúa el sufijo nuevo. Fire-and-forget: el resultado se
+// descarta. Lo dispara Ingi Charla al detectar que el usuario empezó a hablar.
+void LlamaAgentBackend::prefillWarmup()
+{
+    if (!m_running || m_reply || m_warmupReply || m_compactReply || m_compacting
+        || !m_awaitId.isEmpty())
+        return;
+    ensureSession();
+    const QJsonArray wire = sanitizeApiMessagesForWire(m_apiMessages);
+    if (wire.isEmpty()) return;
+
+    QJsonObject payload = buildWarmupPayload(
+        wire, buildToolSchemas(),
+        m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId,
+        m_temperature, m_thinkingEnabled);
+    if (usingTextTools()) {
+        payload = buildTextToolPayload(payload);
+        payload[QStringLiteral("max_tokens")] = 1;
+        payload[QStringLiteral("stream")] = false;
+        payload[QStringLiteral("cache_prompt")] = true;
+    }
+
+    const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
+    QNetworkRequest req((QUrl(url)));
+    applyHeaders(req);
+    m_warmupReply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    emit logAppended(QStringLiteral("[warmup] prefill del prompt-cache (msgs=%1)\n")
+                         .arg(wire.size()));
+    connect(m_warmupReply, &QNetworkReply::finished, this, [this]() {
+        if (!m_warmupReply) return;
+        m_warmupReply->deleteLater();
+        m_warmupReply = nullptr;      // resultado descartado; solo importa el KV
+    });
 }
 
 void LlamaAgentBackend::runCompletion()

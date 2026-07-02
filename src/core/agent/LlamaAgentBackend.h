@@ -30,6 +30,7 @@ public:
     void start(const AgentContext &ctx) override;
     void stop() override;
     void sendMessage(const QString &text) override;
+    void prefillWarmup() override;
     void cancelGeneration() override;
     void steerMessage(const QString &text) override;
     void queueMessage(const QString &text) override;
@@ -232,6 +233,14 @@ public:
     // evita system messages no iniciales.
     static QJsonArray sanitizeApiMessagesForWire(const QJsonArray &messages);
 
+    // Payload de precalentamiento del prompt-cache (pura, testeable): mismo
+    // prefijo que un turno real pero max_tokens=1, stream=false, cache_prompt=true.
+    static QJsonObject buildWarmupPayload(const QJsonArray &wireMessages,
+                                          const QJsonArray &tools,
+                                          const QString &modelId,
+                                          double temperature,
+                                          bool thinkingEnabled);
+
     // Consolidación de memoria (background): corre 1 completion sobre el transcript
     // actual y extrae hechos durables → MemoryStore (source="consolidation"). Async,
     // fire-and-forget. Se dispara solo al dejar una sesión y puede invocarse manual.
@@ -336,6 +345,7 @@ private:
     AgentContext m_ctx;
     QNetworkAccessManager *m_nam = nullptr;
     QNetworkReply *m_compactReply = nullptr;   // request de resumen (compactación)
+    QNetworkReply *m_warmupReply = nullptr;    // prefill del prompt-cache (charla)
     bool m_compacting = false;                 // compactación en curso
     QNetworkReply *m_consolidateReply = nullptr;     // request de consolidación de memoria
     QHash<QString, int> m_consolidatedLen;     // sessionId → nº de msgs ya consolidados (dedupe)

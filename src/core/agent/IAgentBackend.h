@@ -24,6 +24,12 @@ public:
     // Conversación
     virtual void sendMessage(const QString &text) = 0;
     virtual void cancelGeneration() {}
+    // Precalentamiento del prompt-cache: pide al server que prefil-ee el prefijo
+    // estable (system+tools+historial) SIN generar respuesta, para que el próximo
+    // sendMessage solo evalúe el sufijo nuevo. Lo dispara Ingi Charla cuando el
+    // usuario empieza a hablar (el LLM "piensa" mientras el usuario habla).
+    // Default: no-op (backends cloud no lo necesitan / no exponen KV cache).
+    virtual void prefillWarmup() {}
     // Steering: interrumpe el turno/generación en curso (cancela tools/aprobación
     // pendientes) y envía `text` como turno nuevo de inmediato. Default: si no hay
     // soporte específico, equivale a enviar normal.

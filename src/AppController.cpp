@@ -12444,6 +12444,14 @@ void AppController::ensureVoice()
         emit voicePartialChanged();
     });
     connect(m_voice, &VoiceController::stateChanged, this, &AppController::voiceStateChanged);
+    // Al empezar a escuchar, precalentar el prompt-cache del LLM que va a recibir
+    // el turno: el server prefil-ea system+tools+historial MIENTRAS el usuario
+    // habla, y el "pensando" real solo evalúa el texto nuevo. Fire-and-forget.
+    connect(m_voice, &VoiceController::stateChanged, this, [this]() {
+        if (!m_charlaActive || m_voice->state() != VoiceController::Listening) return;
+        if (m_agentBackend && m_agentBackend->running()) m_agentBackend->prefillWarmup();
+        else if (m_chatBackend) m_chatBackend->prefillWarmup();
+    });
     connect(m_voice, &VoiceController::errorChanged, this, &AppController::voiceStateChanged);
     connect(m_voice, &VoiceController::levelChanged, this, &AppController::voiceLevelChanged);
 }

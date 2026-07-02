@@ -14,26 +14,53 @@ Item {
     property var cfg: ({})
     property bool testing: false
     property int installPct: -1
-    property string installMsg: ""
+    property string installMsg: ""       // instalación de modelo STT (whisper)
+    property int voiceInstallPct: -1
+    property string voiceInstallMsg: ""  // instalación de voz piper (TTS)
+    property string binMsgWhisper: ""
+    property string binMsgPiper: ""
     property string whisperPath: App.voiceWhisperServerPath()
     property string piperPath: App.voicePiperPath()
 
+    // Las descargas de STT (modelo whisper) y TTS (voz piper) comparten señales;
+    // rutear el feedback a la sección correcta según el id (antes todo caía en
+    // "Estado" del STT y parecía que el botón de piper instalaba whisper).
+    function isTtsVoiceId(id) {
+        var o = App.voiceTtsCatalog()
+        for (var i = 0; i < o.length; ++i) if (o[i].id === id) return true
+        return false
+    }
     Connections {
         target: App
-        function onVoiceInstallProgress(engineId, pct, status) { page.installPct = pct; page.installMsg = status }
+        function onVoiceInstallProgress(engineId, pct, status) {
+            if (page.isTtsVoiceId(engineId)) { page.voiceInstallPct = pct; page.voiceInstallMsg = status }
+            else { page.installPct = pct; page.installMsg = status }
+        }
         function onVoiceInstallFinished(engineId, ok, message) {
-            page.installPct = -1
-            page.installMsg = ok ? "Instalado ✓" : ("Error: " + message)
+            if (page.isTtsVoiceId(engineId)) {
+                page.voiceInstallPct = -1
+                page.voiceInstallMsg = ok ? "Instalada ✓" : ("Error: " + message)
+            } else {
+                page.installPct = -1
+                page.installMsg = ok ? "Instalado ✓" : ("Error: " + message)
+            }
             sttEngineCombo.refresh()
             ttsVoiceCombo.refresh()
         }
         function onVoiceBinaryInstalled(kind, ok, message) {
             page.whisperPath = App.voiceWhisperServerPath()
             page.piperPath = App.voicePiperPath()
-            page.installMsg = ok ? "Binario instalado ✓" : ("Error binario: " + message)
+            var msg = ok ? "Binario instalado ✓" : ("Error binario: " + message)
+            if (kind === "piper") page.binMsgPiper = msg
+            else page.binMsgWhisper = msg
         }
     }
-    function reload() { cfg = pid.length ? App.voiceConfig(pid) : ({}) }
+    function reload() {
+        cfg = pid.length ? App.voiceConfig(pid) : ({})
+        // Voz por defecto si el perfil guardó vacío (el runtime usa la default del
+        // idioma igual; sin esto la UI mostraba "No instalada" sin botón).
+        if (!cfg.ttsManagedVoice) cfg.ttsManagedVoice = "es_ES-davefx-medium"
+    }
     function startOrPromptModelDownload() {
         const engineId = page.cfg.sttManagedEngine || ""
         const voiceId = page.cfg.ttsManagedVoice || "es_ES-davefx-medium"
@@ -295,6 +322,11 @@ Item {
                             LcButton { text: "Descargar"; secondary: true; onClicked: App.installVoiceBinary("whisper-server", "") }
                             LcButton { text: "…"; secondary: true; onClicked: { App.pickVoiceWhisperServer(); page.whisperPath = App.voiceWhisperServerPath() } }
                         }
+                        Item { visible: page.binMsgWhisper.length > 0; width: 1; height: 1 }
+                        Text {
+                            visible: page.binMsgWhisper.length > 0
+                            text: page.binMsgWhisper; color: Theme.textMuted; font.pixelSize: 12
+                        }
                     }
 
                     Text {
@@ -377,12 +409,16 @@ Item {
                             visible: page.cfg.ttsMode === "piper"
                             Text {
                                 Layout.fillWidth: true; color: Theme.textMuted; font.pixelSize: 12
-                                text: App.voiceTtsVoiceInstalled(page.cfg.ttsManagedVoice || "") ? "Instalada ✓" : "No instalada"
+                                text: page.voiceInstallPct >= 0 ? page.voiceInstallMsg
+                                      : (App.voiceTtsVoiceInstalled(page.cfg.ttsManagedVoice || "") ? "Instalada ✓"
+                                         : (page.voiceInstallMsg.length ? page.voiceInstallMsg : "No instalada"))
                             }
                             LcButton {
                                 text: "Instalar voz"
                                 secondary: true
-                                visible: (page.cfg.ttsManagedVoice || "") !== "" && !App.voiceTtsVoiceInstalled(page.cfg.ttsManagedVoice || "")
+                                visible: page.voiceInstallPct < 0
+                                         && (page.cfg.ttsManagedVoice || "") !== ""
+                                         && !App.voiceTtsVoiceInstalled(page.cfg.ttsManagedVoice || "")
                                 onClicked: App.installVoiceTts(page.cfg.ttsManagedVoice)
                             }
                         }
@@ -399,6 +435,11 @@ Item {
                             }
                             LcButton { text: "Descargar"; secondary: true; onClicked: App.installVoiceBinary("piper", "") }
                             LcButton { text: "…"; secondary: true; onClicked: { App.pickVoicePiper(); page.piperPath = App.voicePiperPath() } }
+                        }
+                        Item { visible: page.binMsgPiper.length > 0; width: 1; height: 1 }
+                        Text {
+                            visible: page.binMsgPiper.length > 0
+                            text: page.binMsgPiper; color: Theme.textMuted; font.pixelSize: 12
                         }
                     }
 
