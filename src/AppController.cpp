@@ -3116,7 +3116,8 @@ bool AppController::browserMcpEffective(const QString &override, bool globalEnab
 }
 
 void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
-                                     const QString &launchId) const
+                                     const QString &launchId,
+                                     bool foreground) const
 {
     QString override = QStringLiteral("inherit");
     if (!launchId.isEmpty()) {
@@ -3126,14 +3127,17 @@ void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
     }
     if (!browserMcpEffective(override, m_browserAutomationEnabled)) return;
     if (merged.contains(QStringLiteral("playwright"))) return;  // respeta el del usuario
-    // Headless por defecto: el navegador de automatización ("Navegador background")
-    // corre por detrás sin robar el foco con una ventana. El teach/record usa su
-    // propio path (BrowserTeach, node) y no pasa por acá.
+    // Headless por defecto para "Navegador background"; foreground/headed cuando
+    // la superficie elegida es Escritorio foreground y el agente puede necesitar
+    // browser visible junto con apps nativas.
+    const QString command = foreground
+        ? AutomationRunner::foregroundBrowserCommand(m_browserMcpCommand)
+        : AutomationRunner::headlessBrowserCommand(m_browserMcpCommand);
     merged.insert(QStringLiteral("playwright"), QVariantMap{
         {QStringLiteral("name"), QStringLiteral("playwright")},
         {QStringLiteral("type"), QStringLiteral("local")},
         {QStringLiteral("enabled"), true},
-        {QStringLiteral("command"), AutomationRunner::headlessBrowserCommand(m_browserMcpCommand)}});
+        {QStringLiteral("command"), command}});
 }
 
 void AppController::setThinkingEnabled(bool enabled)
@@ -4249,12 +4253,19 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     // independientemente del perfil de agente activo. El perfil puede ser liviano
     // para chat diario, pero una Task necesita poder adaptarse.
     cb->setDisabledTools({});
-    if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")) {
-        // Desktop foreground opera apps nativas con las tools desktop_*.
-        // Si MCP sigue inyectado, el modelo puede elegir Playwright y "verificar"
-        // un browser inexistente en vez de observar la pantalla real.
-        cb->setMcpToolsEnabled(false);
-    }
+    cb->setMcpToolsEnabled(true);
+
+    const bool desktop = task.value(QStringLiteral("executionMode")).toString()
+                         == QLatin1String("desktop");
+    const QString proj = currentAgentProjectDir();
+    QMap<QString, QVariant> merged;
+    for (const QVariant &v : listMcpServers(QStringLiteral("global"), QString()))
+        merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+    if (!proj.isEmpty())
+        for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj))
+            merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
+    injectBrowserMcp(merged, m_activeLaunchId, desktop);
+    cb->setMcpServers(merged.values());
 }
 
 void AppController::clearTaskAgentPermissions()

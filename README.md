@@ -528,8 +528,9 @@ Cada proceso tiene un **Tipo de proceso**: *Escritorio foreground*, *Navegador
 background* o **Auto**. En *Auto* el sistema decide la superficie al ejecutar de
 forma determinista: si la automatización tiene algún paso de escritorio corre como
 foreground; si no, como navegador background (headless, sin robar el foco). El MCP
-de Playwright se fuerza a `--headless` por defecto para que el navegador no tome la
-pantalla; un `--headed`/`--headless` explícito en el comando se respeta.
+de Playwright se fuerza a `--headless` por defecto en navegador background; en
+escritorio foreground se inyecta `--headed` para que el browser sea visible y
+controlable junto con el resto de la pantalla.
 
 Teach vive en **Automatizaciones**. Configuración conserva únicamente el toggle y
 comando técnico del MCP Playwright. Los skills Playwright anteriores se pueden
@@ -799,11 +800,10 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   ajenas a la automatización.
 - En modo **Escritorio foreground**, la corrida opera sobre la pantalla real con
   las tools nativas `desktop_*` (ventanas, controles UIA, captura, mouse y
-  teclado). Durante esa ejecución no se inyectan tools MCP de Playwright, porque
-  Playwright sólo puede observar/controlar navegador web y no aplicaciones
-  nativas de Windows. Las Automatizaciones corren con todas las tools built-in
-  disponibles aunque el perfil activo sea liviano; la verificación de una Task de
-  escritorio debe apoyarse en `desktop_*`.
+  teclado) y también mantiene Playwright disponible en foreground/headed para
+  flujos web que formen parte de la misma automatización. Playwright no reemplaza
+  `desktop_*` para aplicaciones nativas de Windows. Las Automatizaciones corren
+  con todas las tools built-in disponibles aunque el perfil activo sea liviano.
 - En modo **Navegador background**, el Teach se graba con browser foreground de
   Playwright y evidencia visual por acción; la ejecución posterior usa esa receta
   como guía semántica junto con las tools de navegador. Si la página cambia y el

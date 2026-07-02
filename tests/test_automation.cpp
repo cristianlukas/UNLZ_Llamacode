@@ -105,7 +105,7 @@ void AutomationTests::desktopPromptPrefersNativeTools()
             QVariantMap{{"kind", "type"}, {"intent", "Escribir: \"2+2\""}}}}});
     QVERIFY(prompt.contains(QStringLiteral("Superficie: escritorio foreground nativo")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_observe")));
-    QVERIFY(prompt.contains(QStringLiteral("No uses Playwright ni browser_snapshot")));
+    QVERIFY(prompt.contains(QStringLiteral("Playwright está disponible en foreground/headed")));
     QVERIFY(prompt.contains(QStringLiteral("Podés usar cualquier otra tool disponible")));
     QVERIFY(prompt.contains(QStringLiteral("no las leas con read_file")));
 }
@@ -146,6 +146,12 @@ void AutomationTests::headlessBrowserCommandForcesHeadless()
              QStringLiteral("npx @playwright/mcp@latest --headed"));
     // MCP de terceros no se toca.
     QCOMPARE(R::headlessBrowserCommand(QStringLiteral("node mi-mcp.js")),
+             QStringLiteral("node mi-mcp.js"));
+    QCOMPARE(R::foregroundBrowserCommand(QStringLiteral("npx @playwright/mcp@latest")),
+             QStringLiteral("npx @playwright/mcp@latest --headed"));
+    QCOMPARE(R::foregroundBrowserCommand(QStringLiteral("npx @playwright/mcp@latest --headless")),
+             QStringLiteral("npx @playwright/mcp@latest --headed"));
+    QCOMPARE(R::foregroundBrowserCommand(QStringLiteral("node mi-mcp.js")),
              QStringLiteral("node mi-mcp.js"));
 }
 

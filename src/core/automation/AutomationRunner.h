@@ -25,6 +25,7 @@ public:
     // Respeta un --headed/--headless explícito del usuario y sólo toca el MCP de
     // Playwright (la superficie que controlamos).
     static QString headlessBrowserCommand(const QString &command);
+    static QString foregroundBrowserCommand(const QString &command);
 
     // Tools mínimas esperadas para escritorio foreground. Automatizaciones no las
     // usan para recortar el catálogo: el agente corre con todas las built-in.

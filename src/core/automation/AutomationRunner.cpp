@@ -61,6 +61,22 @@ QString AutomationRunner::headlessBrowserCommand(const QString &command)
     return c + QStringLiteral(" --headless");
 }
 
+QString AutomationRunner::foregroundBrowserCommand(const QString &command)
+{
+    QString c = command.trimmed();
+    if (c.isEmpty()) return c;
+    if (!c.contains(QLatin1String("@playwright/mcp")) && !c.contains(QLatin1String("playwright-mcp")))
+        return c;
+    c.replace(QStringLiteral(" --headless"), QString());
+    c.replace(QStringLiteral("--headless "), QString());
+    c.replace(QStringLiteral("--headless"), QString());
+    while (c.contains(QStringLiteral("  "))) c.replace(QStringLiteral("  "), QStringLiteral(" "));
+    c = c.trimmed();
+    if (!c.contains(QLatin1String("--headed")))
+        c += QStringLiteral(" --headed");
+    return c;
+}
+
 QStringList AutomationRunner::desktopToolNames()
 {
     return {
@@ -95,8 +111,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "Superficie: escritorio foreground nativo. Usá las tools desktop_* "
             "(desktop_windows, desktop_observe, desktop_key, desktop_type, desktop_click, "
             "desktop_click_element, desktop_launch, desktop_wait) para operar y verificar "
-            "la pantalla real. No uses Playwright ni browser_snapshot: esas tools son sólo "
-            "para navegador web y no pueden observar aplicaciones nativas de Windows. "
+            "la pantalla real. Playwright está disponible en foreground/headed para flujos web "
+            "dentro de la misma automatización, pero no reemplaza desktop_* para aplicaciones "
+            "nativas de Windows. "
             "Podés usar cualquier otra tool disponible cuando aporte contexto o diagnóstico, "
             "pero verificá la GUI con desktop_observe/desktop_windows. Las capturas "
             "evidence/*.jpg son evidencia histórica de Teach; no las leas con read_file.\n");
