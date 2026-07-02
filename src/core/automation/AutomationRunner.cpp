@@ -74,6 +74,19 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
         "Observá antes de cada acción, ejecutá una sola acción, volvé a observar y "
         "verificá progreso. Detenete si no podés verificar el objetivo.\n")
         .arg(mode);
+    if (mode == QLatin1String("desktop")) {
+        out += QStringLiteral(
+            "Superficie: escritorio foreground nativo. Usá las tools desktop_* "
+            "(desktop_windows, desktop_observe, desktop_key, desktop_type, desktop_click, "
+            "desktop_click_element, desktop_launch, desktop_wait) para operar y verificar "
+            "la pantalla real. No uses Playwright ni browser_snapshot: esas tools son sólo "
+            "para navegador web y no pueden observar aplicaciones nativas de Windows.\n");
+    } else if (mode == QLatin1String("browserBackground")) {
+        out += QStringLiteral(
+            "Superficie: navegador background. Usá las tools de browser/Playwright para "
+            "navegar y verificar páginas web; no controles el escritorio real salvo que "
+            "el objetivo lo pida explícitamente.\n");
+    }
     out += QStringLiteral("Artefacto: %1\n").arg(manifest.value(QStringLiteral("id")).toString());
     const QVariantList steps = recipe.value(QStringLiteral("steps")).toList();
     for (const QVariant &value : steps) {

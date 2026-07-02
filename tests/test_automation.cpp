@@ -14,6 +14,7 @@ private slots:
     void desktopRequiresVisionAndTraining();
     void limitsAreClamped();
     void autoModeRoutesBySurface();
+    void desktopPromptPrefersNativeTools();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void keyBufferAccumulatesTextIntoTypeStep();
@@ -89,6 +90,19 @@ void AutomationTests::autoModeRoutesBySurface()
              QStringLiteral("browserBackground"));
     QCOMPARE(R::resolveExecutionMode(QVariantMap{}),
              QStringLiteral("browserBackground"));
+}
+
+void AutomationTests::desktopPromptPrefersNativeTools()
+{
+    const QString prompt = AutomationRunner::augmentPrompt(
+        QVariantMap{{"executionMode", "desktop"}},
+        QVariantMap{{"id", "calc-demo"}},
+        QVariantMap{{"steps", QVariantList{
+            QVariantMap{{"kind", "key"}, {"intent", "Tecla WIN"}},
+            QVariantMap{{"kind", "type"}, {"intent", "Escribir: \"2+2\""}}}}});
+    QVERIFY(prompt.contains(QStringLiteral("Superficie: escritorio foreground nativo")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_observe")));
+    QVERIFY(prompt.contains(QStringLiteral("No uses Playwright ni browser_snapshot")));
 }
 
 void AutomationTests::headlessBrowserCommandForcesHeadless()

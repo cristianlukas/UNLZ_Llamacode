@@ -4237,6 +4237,12 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     const QString policy = task.value(QStringLiteral("approvalPolicy"),
                                       QStringLiteral("sensitive")).toString();
     cb->setTaskAutoApprove(policy == QLatin1String("autonomous"));
+    if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")) {
+        // Desktop foreground opera apps nativas con las tools desktop_*.
+        // Si MCP sigue inyectado, el modelo puede elegir Playwright y "verificar"
+        // un browser inexistente en vez de observar la pantalla real.
+        cb->setMcpToolsEnabled(false);
+    }
 }
 
 void AppController::clearTaskAgentPermissions()
@@ -4244,6 +4250,7 @@ void AppController::clearTaskAgentPermissions()
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
         cb->setTaskAutoApprove(false);
         cb->clearTaskScope();
+        applyActiveAgentProfile();
     }
 }
 

@@ -787,6 +787,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Cada ejecución prepara una sesión limpia del agente antes de enviar el prompt,
   para no heredar historial previo ni disparar compactaciones por conversaciones
   ajenas a la automatización.
+- En modo **Escritorio foreground**, la corrida opera sobre la pantalla real con
+  las tools nativas `desktop_*` (ventanas, controles UIA, captura, mouse y
+  teclado). Durante esa ejecución no se inyectan tools MCP de Playwright, porque
+  Playwright sólo puede observar/controlar navegador web y no aplicaciones
+  nativas de Windows.
 - Si `llama-server` rechaza el primer request OpenAI-compatible con HTTP 400, el
   agente reintenta una vez en modo compatible sin campos opcionales del payload,
   conservando mensajes y tools para no marcar la Task como fallida por diferencias
