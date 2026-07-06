@@ -551,7 +551,7 @@ public:
     // de browser está efectivamente activa: override del LaunchProfile
     // (browserAutomation "on"/"off") pisa el toggle global; "inherit" usa el global.
     void injectBrowserMcp(QMap<QString, QVariant> &merged, const QString &launchId,
-                          bool foreground = false) const;
+                          bool foreground = false, bool taskNeedsBrowser = true) const;
     // Decisión pura de activación: override del perfil ("on"/"off"/"inherit") sobre
     // el toggle global. Expuesta para test unitario.
     static bool browserMcpEffective(const QString &override, bool globalEnabled);

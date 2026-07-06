@@ -127,6 +127,24 @@ bool AutomationArtifactStore::appendLearning(const QString &id, const QString &s
     QVariantList learnings = r.value(QStringLiteral("learnings")).toList();
     const QString cleanSummary = redact(summary).simplified().left(900);
     if (cleanSummary.isEmpty()) return false;
+
+    // Dedup: una Task que corre bien siempre genera el MISMO resumen de éxito
+    // ("¡Tarea completada! 2+2=4..."). Sin dedup, cada corrida apila un learning
+    // casi idéntico (hasta 12) que augmentPrompt reinyecta en cada prompt futuro
+    // → bloat que crece sin fin y frena el proc del primer turno. Firma
+    // normalizada (sin dígitos/puntuación/emoji): si ya existe un learning con la
+    // misma firma, no agregamos otro. Las adaptaciones reales (UI cambió) tienen
+    // texto distinto → firma distinta → sí se guardan.
+    auto signature = [](const QString &s) {
+        static const QRegularExpression nonAlpha(
+            QStringLiteral("[^\\p{L} ]"), QRegularExpression::UseUnicodePropertiesOption);
+        return QString(s).toLower().remove(nonAlpha).simplified().left(160);
+    };
+    const QString newSig = signature(cleanSummary);
+    for (const QVariant &v : learnings) {
+        if (signature(v.toMap().value(QStringLiteral("summary")).toString()) == newSig)
+            return true;   // repetido: no-op silencioso (no es error)
+    }
     QStringList toolSignals;
     const QString safeLog = redact(log);
     static const QStringList markers{

@@ -197,6 +197,26 @@ void AutomationTests::artifactLearningsAppendAndPrompt()
     const QVariantList learnings = AutomationArtifactStore::recipe(id)
                                        .value(QStringLiteral("learnings")).toList();
     QCOMPARE(learnings.size(), 1);
+
+    // Dedup: partiendo del learning previo (login), un resumen de éxito nuevo
+    // distinto se guarda (→2); su repetición casi idéntica (sólo cambian números/
+    // emoji/puntuación) NO apila otro (→sigue 2); una adaptación con texto
+    // distinto SÍ (→3).
+    QVERIFY(AutomationArtifactStore::appendLearning(
+        id, QStringLiteral("¡Tarea completada! La calculadora muestra 2+2 = 4."),
+        QStringLiteral("[tool] desktop_type ok")));
+    QCOMPARE(AutomationArtifactStore::recipe(id)
+                 .value(QStringLiteral("learnings")).toList().size(), 2);   // distinto del login → guarda
+    QVERIFY(AutomationArtifactStore::appendLearning(
+        id, QStringLiteral("Tarea completada :) la calculadora muestra 5+5 = 10"),
+        QStringLiteral("[tool] desktop_type ok")));
+    QCOMPARE(AutomationArtifactStore::recipe(id)
+                 .value(QStringLiteral("learnings")).toList().size(), 2);   // firma igual → sin duplicar
+    QVERIFY(AutomationArtifactStore::appendLearning(
+        id, QStringLiteral("La UI movió el visor a otro control; leí el resultado por desktop_controls."),
+        QStringLiteral("[tool] desktop_controls ok")));
+    QCOMPARE(AutomationArtifactStore::recipe(id)
+                 .value(QStringLiteral("learnings")).toList().size(), 3);   // texto distinto → sí guarda
     const QString prompt = AutomationRunner::augmentPrompt(
         QVariantMap{{"executionMode", "browserBackground"}},
         AutomationArtifactStore::manifest(id),

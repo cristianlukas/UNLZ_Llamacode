@@ -3416,7 +3416,7 @@ bool AppController::browserMcpEffective(const QString &override, bool globalEnab
 
 void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
                                      const QString &launchId,
-                                     bool foreground) const
+                                     bool foreground, bool taskNeedsBrowser) const
 {
     QString override = QStringLiteral("inherit");
     if (!launchId.isEmpty()) {
@@ -3425,6 +3425,12 @@ void AppController::injectBrowserMcp(QMap<QString, QVariant> &merged,
             override = lp.browserAutomation;
     }
     if (!browserMcpEffective(override, m_browserAutomationEnabled)) return;
+    // Perf: una automatización de ESCRITORIO foreground cuyo Teach no grabó
+    // ningún paso web no necesita el MCP de Playwright. Levantarlo igual cuesta
+    // el arranque de npx (a veces "initialize sin respuesta") y, si conecta,
+    // mete ~23 tool schemas inútiles al prompt → primer turno más lento. Sólo se
+    // omite en modo foreground/escritorio; el "on" explícito del perfil manda.
+    if (foreground && !taskNeedsBrowser && override != QLatin1String("on")) return;
     if (merged.contains(QStringLiteral("playwright"))) return;  // respeta el del usuario
     // Headless por defecto para "Navegador background"; foreground/headed cuando
     // la superficie elegida es Escritorio foreground y el agente puede necesitar
@@ -4566,7 +4572,26 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     if (!proj.isEmpty())
         for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj))
             merged.insert(v.toMap().value(QStringLiteral("name")).toString(), v);
-    injectBrowserMcp(merged, m_activeLaunchId, desktop);
+    // ¿El Teach de esta automatización involucra la web? Si ninguna receta tiene
+    // pasos de browser/web, un flujo de puro escritorio no necesita Playwright
+    // (ver injectBrowserMcp: se ahorra su arranque + tools inútiles). En modo
+    // browserBackground siempre se necesita.
+    bool taskNeedsBrowser = !desktop;
+    if (desktop) {
+        const QString artId = task.value(QStringLiteral("teachArtifactId")).toString();
+        if (!artId.isEmpty()) {
+            const QVariantList steps = AutomationArtifactStore::recipe(artId)
+                                           .value(QStringLiteral("steps")).toList();
+            for (const QVariant &s : steps) {
+                const QString k = s.toMap().value(QStringLiteral("kind")).toString();
+                if (k == QLatin1String("browser") || k == QLatin1String("web")) {
+                    taskNeedsBrowser = true;
+                    break;
+                }
+            }
+        }
+    }
+    injectBrowserMcp(merged, m_activeLaunchId, desktop, taskNeedsBrowser);
     cb->setMcpServers(merged.values());
 }
 
