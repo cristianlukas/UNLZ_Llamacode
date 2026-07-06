@@ -159,16 +159,33 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
         out += QLatin1Char('\n');
     }
     const QVariantList learnings = recipe.value(QStringLiteral("learnings")).toList();
-    if (!learnings.isEmpty()) {
-        out += QStringLiteral("Aprendizajes auto-actualizados de corridas previas:\n");
-        int n = 0;
-        for (const QVariant &value : learnings) {
-            const QVariantMap item = value.toMap();
-            const QString summary = item.value(QStringLiteral("summary")).toString().trimmed();
-            if (summary.isEmpty()) continue;
-            out += QStringLiteral("- %1\n").arg(summary.left(700));
-            if (++n >= 6) break;
+    // Dedup en el prompt: artefactos viejos ya acumularon varios learnings de
+    // éxito casi idénticos (antes del dedup en appendLearning). Colapsarlos acá
+    // por firma normalizada evita reinyectar el mismo texto N veces. Recorremos
+    // de lo más RECIENTE a lo más viejo (adaptaciones nuevas primero) y cortamos
+    // en 4 distintos: prompt más chico → primer turno más rápido.
+    auto signature = [](const QString &s) {
+        QString t;
+        for (const QChar &c : s) {
+            if (c.isLetter()) t += c.toLower();
+            else if (c.isSpace() && !t.endsWith(QLatin1Char(' '))) t += QLatin1Char(' ');
         }
+        return t.trimmed().left(160);
+    };
+    QStringList seenSig, picked;
+    for (int i = learnings.size() - 1; i >= 0 && picked.size() < 4; --i) {
+        const QString summary = learnings.at(i).toMap()
+                                    .value(QStringLiteral("summary")).toString().trimmed();
+        if (summary.isEmpty()) continue;
+        const QString sig = signature(summary);
+        if (seenSig.contains(sig)) continue;
+        seenSig << sig;
+        picked << summary.left(700);
+    }
+    if (!picked.isEmpty()) {
+        out += QStringLiteral("Aprendizajes auto-actualizados de corridas previas:\n");
+        for (const QString &p : picked)
+            out += QStringLiteral("- %1\n").arg(p);
         out += QStringLiteral("Si durante esta corrida la interfaz cambió y lográs completar el objetivo, "
                               "explicá en la respuesta final qué adaptación funcionó para que el Teach "
                               "pueda actualizarse.\n");

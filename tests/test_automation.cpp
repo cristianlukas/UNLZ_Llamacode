@@ -20,6 +20,7 @@ private slots:
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
+    void promptDedupsRepeatedLearnings();
     void keyBufferAccumulatesTextIntoTypeStep();
     void keyBufferFlushesTextBeforeNamedKey();
     void keyBufferEmitsShortcutWithModifiers();
@@ -224,6 +225,24 @@ void AutomationTests::artifactLearningsAppendAndPrompt()
     QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
     QVERIFY(prompt.contains(QStringLiteral("selector nuevo")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::promptDedupsRepeatedLearnings()
+{
+    // Artefacto viejo con 3 learnings de éxito casi idénticos (misma firma
+    // normalizada, sólo cambian números/emoji). augmentPrompt debe colapsarlos a
+    // UN bullet (el más reciente), no reinyectar el mismo texto 3 veces.
+    QVariantMap recipe;
+    recipe[QStringLiteral("steps")] = QVariantList{};
+    recipe[QStringLiteral("learnings")] = QVariantList{
+        QVariantMap{{QStringLiteral("summary"), QStringLiteral("Tarea completada: 2+2 = 4.")}},
+        QVariantMap{{QStringLiteral("summary"), QStringLiteral("Tarea completada :) 3+3 = 6")}},
+        QVariantMap{{QStringLiteral("summary"), QStringLiteral("Tarea completada! 9+9 = 18")}}};
+    const QString prompt = AutomationRunner::augmentPrompt(
+        QVariantMap{{"executionMode", "desktop"}}, QVariantMap{{"id", "x"}}, recipe);
+    QCOMPARE(prompt.count(QStringLiteral("Aprendizajes auto-actualizados")), 1);
+    QCOMPARE(prompt.count(QStringLiteral("- Tarea completada")), 1);   // un solo bullet
+    QVERIFY(prompt.contains(QStringLiteral("9+9 = 18")));              // el más reciente
 }
 
 void AutomationTests::keyBufferAccumulatesTextIntoTypeStep()
