@@ -62,7 +62,7 @@
       "enabled": true,
       "args": [
         "--spec-type",
-        "draft-mtp,ngram-mod",
+        "mtp",
         "--spec-draft-n-max",
         "3",
         "--spec-ngram-mod-n-match",
@@ -214,7 +214,7 @@
       "enabled": true,
       "args": [
         "--spec-type",
-        "draft-mtp,ngram-mod",
+        "mtp",
         "--spec-draft-n-max",
         "3",
         "--spec-ngram-mod-n-match",
