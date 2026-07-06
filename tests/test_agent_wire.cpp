@@ -34,6 +34,7 @@ private slots:
     void developmentDisciplineSection_coversRegressionGuards();
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
     void projectContextSection_coversIntentAndMemory();
+    void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
 };
 
 void AgentWireTests::initTestCase()
@@ -770,6 +771,35 @@ void AgentWireTests::projectContextSection_coversIntentAndMemory()
                        .section(QLatin1Char('/'), -2)));   // ".llamacode/memory.md"
 
     QVERIFY(g.endsWith(QStringLiteral("\n\n")));
+}
+
+void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
+{
+    // Regresión: el playbook de escritorio debe guiar el camino rápido (teclado)
+    // y la verificación por TEXTO sin visión, para no flailar con capturas ciegas
+    // (bug: "sumar 2+2 en la calculadora" tardaba y nunca completaba).
+    const QString novis = LlamaAgentBackend::desktopPlaybookSection(false);
+    QVERIFY(!novis.trimmed().isEmpty());
+
+    // Pilar 1: abrir con desktop_launch, no run_shell.
+    QVERIFY(novis.contains(QStringLiteral("desktop_launch")));
+    // Pilar 2: camino rápido por teclado con el ejemplo concreto de la calculadora.
+    QVERIFY(novis.contains(QStringLiteral("desktop_type")));
+    QVERIFY(novis.contains(QStringLiteral("2+2")));
+    // Pilar 3: verificar por texto vía desktop_controls (UIA), no por captura.
+    QVERIFY(novis.contains(QStringLiteral("desktop_controls")));
+    // Pilar 4: sin visión, NO usar desktop_observe (evita el loop ciego).
+    QVERIFY(novis.contains(QStringLiteral("desktop_observe")));
+    QVERIFY(novis.contains(QStringLiteral("loop"), Qt::CaseInsensitive));
+    QVERIFY(novis.endsWith(QStringLiteral("\n\n")));
+
+    // Con visión, sí se ofrece desktop_observe como recurso extra.
+    const QString vis = LlamaAgentBackend::desktopPlaybookSection(true);
+    QVERIFY(vis.contains(QStringLiteral("mmproj")));
+    QVERIFY(vis.contains(QStringLiteral("desktop_observe")));
+    // La variante sin visión debe advertir explícitamente que NO puede ver.
+    QVERIFY(novis.contains(QStringLiteral("NO")) );
+    QVERIFY(novis != vis);
 }
 
 QTEST_MAIN(AgentWireTests)

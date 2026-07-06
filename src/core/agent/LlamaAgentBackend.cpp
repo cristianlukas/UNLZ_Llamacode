@@ -936,6 +936,45 @@ QString LlamaAgentBackend::styleSection()
         "cuesta tiempo (generación local lenta): cada palabra de más es latencia.");
 }
 
+QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
+{
+    QString s = QStringLiteral(
+        "AUTOMATIZACIÓN DE ESCRITORIO (apps nativas de Windows): seguí este "
+        "camino, es el más rápido y confiable.\n"
+        "1) Abrir: desktop_launch con la app (ej. 'calc', 'notepad'). NO uses "
+        "run_shell para apps GUI (se cuelga).\n"
+        "2) Esperar y ubicar: desktop_wait ~800 ms, después desktop_windows para "
+        "tomar el id de la ventana. Una sola vez; no repitas el inventario en loop.\n"
+        "3) Teclado primero (camino rápido): para apps que se manejan con teclado "
+        "(calculadora, notepad, campos de texto) NO clickees botones. Enfocá con "
+        "desktop_focus <id> y escribí con desktop_type. Ej. sumar 2+2 en la "
+        "calculadora: desktop_type \"2+2\" y después desktop_key \"=\" (o ENTER). "
+        "Fin. desktop_type/desktop_key van a la ventana en foco.\n"
+        "4) Botones sin equivalente de teclado: desktop_controls <id> lista los "
+        "controles por NOMBRE (árbol UIA, sin captura); tomá el controlId y "
+        "accionalo con desktop_click_element. Clic semántico por nombre, NO por "
+        "pixel.\n"
+        "5) VERIFICAR el resultado: leé el estado con desktop_controls — el texto "
+        "de los controles (ej. el visor de la calculadora) trae el valor en su "
+        "nombre, sin necesidad de visión. ");
+    if (visionReady) {
+        s += QStringLiteral(
+            "Este perfil tiene visión (--mmproj): también podés usar desktop_observe "
+            "para VER la pantalla cuando el texto UIA no alcance.\n");
+    } else {
+        s += QStringLiteral(
+            "Este perfil NO tiene visión (sin --mmproj): desktop_observe saca una "
+            "captura que NO podés ver, así que NO la uses para leer números ni para "
+            "verificar — entrarías en un loop ciego. Verificá siempre por texto con "
+            "desktop_controls.\n");
+    }
+    s += QStringLiteral(
+        "Regla anti-loop: una acción, una verificación por texto, terminá. Si algo "
+        "no avanza, cambiá de enfoque (teclado ↔ desktop_controls); no repitas la "
+        "misma tool sin cambios.\n\n");
+    return s;
+}
+
 QString LlamaAgentBackend::honeySection()
 {
     return QStringLiteral(
@@ -1057,6 +1096,11 @@ QString LlamaAgentBackend::buildSystemPrompt() const
 
     if (dirOn("discipline"))     base += developmentDisciplineSection();
     if (dirOn("testNet"))        base += testSafetyNetSection();
+    // Playbook de escritorio: sólo si las tools desktop_* están disponibles
+    // (no deshabilitadas por el perfil). Sin esto el modelo flailea con capturas
+    // ciegas al operar apps nativas (ej. "sumar 2+2 en la calculadora").
+    if (!m_disabledTools.contains(QStringLiteral("desktop_launch")))
+        base += desktopPlaybookSection(m_visionReady);
     if (dirOn("projectContext")) base += projectContextSection();
     if (dirOn("style"))          base += styleSection();
     // Honey es opt-in puro: NO entra en el default "todas on" (m_directivesSet
@@ -3482,7 +3526,9 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "escritorio): nombre, rol, geometría e invocable de cada control. "
                           "Elegí el control por NOMBRE y operalo con desktop_click_element — "
                           "más robusto que clickear por pixel. target_id = id de ventana "
-                          "(desktop_windows). 'query' filtra por substring del nombre."),
+                          "(desktop_windows). 'query' filtra por substring del nombre. "
+                          "También sirve para VERIFICAR sin visión: el texto de los controles "
+                          "(ej. el visor de la calculadora) trae el valor en su nombre."),
            QJsonObject{
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana (ver desktop_windows)."))},
                {QStringLiteral("query"), strProp(QStringLiteral("Filtro por nombre (substring, opcional)."))},
@@ -3513,11 +3559,15 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}}},
            QJsonArray{QStringLiteral("target_id"), QStringLiteral("x"), QStringLiteral("y")}),
         fn(QStringLiteral("desktop_type"),
-           QStringLiteral("Escribe texto en el control enfocado del escritorio."),
+           QStringLiteral("Escribe texto en la VENTANA EN FOCO del escritorio (enfocá antes con "
+                          "desktop_focus). Camino RÁPIDO para apps con teclado: calculadora "
+                          "(ej. desktop_type \"2+2\" y luego desktop_key \"=\"), notepad, campos "
+                          "de texto. Más rápido y confiable que clickear botones uno a uno."),
            QJsonObject{{QStringLiteral("text"), strProp(QStringLiteral("Texto a escribir."))}},
            QJsonArray{QStringLiteral("text")}),
         fn(QStringLiteral("desktop_key"),
-           QStringLiteral("Presiona una tecla o combinación en el escritorio."),
+           QStringLiteral("Presiona una tecla o combinación en la ventana en foco (ENTER, TAB, "
+                          "'=', etc.). Complementa desktop_type para confirmar/ejecutar."),
            QJsonObject{
                {QStringLiteral("key"), strProp(QStringLiteral("ENTER, TAB, ESC, F1..F12 o carácter."))},
                {QStringLiteral("modifiers"), QJsonObject{

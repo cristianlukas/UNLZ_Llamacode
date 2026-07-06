@@ -124,6 +124,14 @@ public:
     static QString efficiencySection();
     static QString styleSection();
 
+    // Playbook de AUTOMATIZACIÓN DE ESCRITORIO: guía concreta para operar apps
+    // nativas de Windows con las tools desktop_* sin flailar. Camino rápido por
+    // teclado (calc/notepad), verificación por TEXTO (desktop_controls/UIA) en vez
+    // de capturas cuando no hay visión, y clic semántico por nombre. 'visionReady'
+    // adapta si puede usar desktop_observe para VER. Pura y testeable. La consume
+    // buildSystemPrompt() sólo si las tools de escritorio están habilitadas.
+    static QString desktopPlaybookSection(bool visionReady);
+
     // Sección "Frugalidad (Honey)": reduce lo que el modelo EMITE. Código
     // YAGNI-first (parar en el primer escalón que funciona, sin scaffolding
     // especulativo), respuesta-primero sin narrar, y handoffs agente↔agente
