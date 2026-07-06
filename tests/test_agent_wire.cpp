@@ -911,6 +911,13 @@ void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
     for (const QJsonValue &v : stop)
         if (v.toString() == QStringLiteral("<tool_call|>")) hasClose = true;
     QVERIFY2(hasClose, "stop debe incluir el cierre <tool_call|>");
+
+    // (c) el protocolo instruye NO razonar/usar <think> (evita el turno vacío que
+    // rompía la Task 2+2 tras desktop_focus).
+    const QString sysContent = p.value(QStringLiteral("messages")).toArray()
+                                   .first().toObject().value(QStringLiteral("content")).toString();
+    QVERIFY(sysContent.contains(QStringLiteral("<think>")));
+    QVERIFY(sysContent.contains(QStringLiteral("Nunca respondas vacío")));
 }
 
 QTEST_MAIN(AgentWireTests)

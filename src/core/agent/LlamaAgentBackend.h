@@ -458,6 +458,7 @@ private:
 
     // Estado de streaming del turno en curso.
     QByteArray m_sseBuf;
+    QByteArray m_streamErrBody;     // body crudo de una respuesta 4xx/5xx (no SSE) para diagnóstico
     QString    m_streamBase;        // contenido del bubble al iniciar el stream (se le concatena)
     QString    m_streamContent;     // delta.content acumulado
     QString    m_streamReason;      // delta.reasoning_content acumulado
@@ -469,6 +470,7 @@ private:
 
     // Robustez (Etapa 7)
     int m_turnIters = 0;                 // completions consumidas en el turno actual
+    int m_emptyTextRetries = 0;          // reintentos por turno text-tools vacío (nudge)
     QHash<QString, int> m_callCounts;    // firma de tool_call → veces vista (anti-loop)
     int m_toolOk = 0;                    // salud: tools exitosas en la sesión
     int m_toolFail = 0;                  // salud: tools con error/inválidas

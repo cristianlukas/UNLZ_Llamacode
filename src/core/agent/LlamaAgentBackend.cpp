@@ -1372,6 +1372,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     emit messagesChanged();
 
     m_turnIters = 0;
+    m_emptyTextRetries = 0;
     m_callCounts.clear();
     m_escalatedSigs.clear();
     m_pendingObservations.clear();   // descartar capturas de un turno previo abortado
@@ -1838,7 +1839,9 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
         "Tools disponibles: %1.\n"
         "Para usar una tool respondé SOLO una línea con este formato exacto:\n"
         "TOOL_CALL {\"name\":\"web_fetch\",\"arguments\":{\"url\":\"https://example.com\"}}\n"
-        "No agregues explicación junto al TOOL_CALL. La app ejecutará la tool y te "
+        "No agregues explicación junto al TOOL_CALL. NO razones en voz alta ni uses "
+        "etiquetas <think>: tu PRIMERA línea debe ser el TOOL_CALL (o el resultado "
+        "final si ya terminaste). Nunca respondas vacío. La app ejecutará la tool y te "
         "devolverá TOOL_RESULT como mensaje del usuario. Luego continuá. Cuando el "
         "objetivo esté cumplido, respondé normalmente con el resultado final.")
         .arg(tools.join(QStringLiteral("; ")));
@@ -1912,6 +1915,9 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
         QString body;
         if (!ok) {
             body = QString::fromUtf8(r->readAll()).trimmed();
+            // En streaming el body ya lo drenó handleStreamData; recuperarlo de ahí.
+            if (body.isEmpty() && !m_streamErrBody.isEmpty())
+                body = QString::fromUtf8(m_streamErrBody).trimmed();
             if (!body.isEmpty())
                 err += QStringLiteral(" · %1").arg(body.left(1000));
         }
@@ -1944,6 +1950,7 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
 void LlamaAgentBackend::resetStreamState()
 {
     m_sseBuf.clear();
+    m_streamErrBody.clear();
     m_streamContent.clear();
     m_streamReason.clear();
     m_streamToolCalls.clear();
@@ -2008,6 +2015,15 @@ void LlamaAgentBackend::mergeToolCallDelta(QHash<int, QJsonObject> &acc,
 void LlamaAgentBackend::handleStreamData()
 {
     if (!m_reply) return;
+    // Respuesta de error (4xx/5xx): NO es SSE, es un JSON de error de una sola vez.
+    // Si lo parseáramos como stream, las líneas sin "data: " se descartan y el
+    // motivo del fallo se pierde. Lo acumulamos crudo para loguearlo en finished.
+    const int status = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (status >= 400) {
+        m_streamErrBody.append(m_reply->readAll());
+        resetStreamIdleWatchdog();
+        return;
+    }
     m_sseBuf.append(m_reply->readAll());
     resetStreamIdleWatchdog();
     while (true) {
@@ -2197,6 +2213,29 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     }
 
     if (toolCalls.isEmpty()) {
+        // Turno text-tools VACÍO: ni tool-call parseable ni respuesta visible (el
+        // modelo se fue en <think> o cortó por stop sin emitir nada útil). Sin esto
+        // la Task muere "sin respuesta final" a mitad de camino (bug 2+2: tras
+        // desktop_focus el modelo devolvía vacío y la automatización terminaba en
+        // error). Un nudge correctivo lo hace re-emitir la próxima acción; acotado
+        // para no loopear.
+        static constexpr int kMaxEmptyTextRetries = 2;
+        if (usingTextTools() && apiContent.trimmed().isEmpty()
+            && m_emptyTextRetries < kMaxEmptyTextRetries) {
+            ++m_emptyTextRetries;
+            emit logAppended(QStringLiteral("[turn] respuesta vacía en modo text-tools; "
+                                            "nudge para re-emitir acción (%1/%2)\n")
+                                 .arg(m_emptyTextRetries).arg(kMaxEmptyTextRetries));
+            closeAssistantBubble();
+            m_apiMessages.append(QJsonObject{
+                {QStringLiteral("role"), QStringLiteral("user")},
+                {QStringLiteral("content"),
+                 QStringLiteral("No emitiste ninguna acción. NO razones ni uses <think>: "
+                                "respondé SOLO una línea con el próximo TOOL_CALL para avanzar "
+                                "el objetivo (o el resultado final si ya terminaste).")}});
+            runCompletion();
+            return;
+        }
         if (!apiContent.isEmpty())
             m_apiMessages.append(QJsonObject{
                 {QStringLiteral("role"), QStringLiteral("assistant")},
@@ -2204,6 +2243,8 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
         finishTurn(QString());   // bubble ya tiene el texto; solo finalizar.
         return;
     }
+    // Hubo acción/respuesta: resetear el contador de reintentos por vacío.
+    m_emptyTextRetries = 0;
 
     emit logAppended(QStringLiteral("[turn] model requested %1 tool call(s)\n").arg(toolCalls.size()));
     // Cerrar la burbuja de texto previa: las tools van como tarjetas aparte y el
