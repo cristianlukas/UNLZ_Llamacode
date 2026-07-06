@@ -84,6 +84,7 @@ private slots:
     void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
     void browserMcpEffectiveResolves();
+    void pendingAgentClearsStartingWhenAlreadyRunning();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
@@ -598,6 +599,32 @@ void AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()
     fake->stop();
     QCOMPARE(fake->bodyRuns(), 1);
     QVERIFY(!(app.charlaUseAgentForTest() && fake->running()));
+}
+
+// Regresión "16GB trabado en Iniciando agente": tras un swap/restart de server
+// puede quedar un agente vivo. El ready-branch NO debe relanzarlo, pero SÍ bajar
+// m_agentStarting; si no, el popup "Iniciando agente" queda trabado para siempre.
+void AppControllerTests::pendingAgentClearsStartingWhenAlreadyRunning()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});          // agente ya corriendo (sobrevivió al swap)
+    app.setTestAgentBackend(fake);
+    QVERIFY(app.agentRunning());
+
+    // Estado previo: startServerAndAgent dejó el arranque del agente pendiente
+    // y prendió el flag "Iniciando agente".
+    app.setPendingAutoAgentForTest(QStringLiteral("sys-vram-16"));
+    QVERIFY(app.agentStartingFlagForTest());
+
+    // Server queda listo → dispara el ready-branch.
+    app.triggerPendingAgentForTest();
+
+    // No se relanza (mismo agente sigue vivo) pero el flag baja y el pending se
+    // consume: nada queda trabado.
+    QVERIFY(!app.agentStartingFlagForTest());
+    QVERIFY(app.pendingAutoAgentForTest().isEmpty());
+    QVERIFY(app.agentRunning());
 }
 
 void AppControllerTests::earlyFailureRecordedInHistory()

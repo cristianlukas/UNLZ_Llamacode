@@ -1436,14 +1436,7 @@ void AppController::startHealthPolling()
                 emit serverReadyChanged();
                 stopHealthPolling();
                 fetchChatThinkingSupport();
-                if (!m_pendingAutoAgentLaunchId.isEmpty() && !agentRunning()) {
-                    const QString launchId = m_pendingAutoAgentLaunchId;
-                    m_pendingAutoAgentLaunchId.clear();
-                    emit agentStartingChanged();
-                    appendAgentEvent(QStringLiteral("lifecycle"),
-                                     QStringLiteral("Servidor listo; iniciando agente del perfil."));
-                    startAgent(launchId);
-                }
+                maybeStartPendingAgentOnReady();
             }
         });
     });
@@ -1464,6 +1457,15 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
         return;
     }
 
+    // Vamos a arrancar un server nuevo para este perfil. Si quedó un agente vivo
+    // de una corrida anterior (p.ej. tras un swap/restart de server, u otro
+    // perfil), hay que reiniciarlo: apunta al modelId/routing viejos y, peor, el
+    // ready-branch de startHealthPolling no lo relanza (guard !agentRunning()),
+    // dejando el popup "Iniciando agente" trabado para siempre. Teardown acá →
+    // el health-ready lo arranca limpio contra el server nuevo.
+    if (hasAgent && (agentRunning() || m_agentStarting))
+        stopAgent();
+
     m_pendingAutoAgentLaunchId = hasAgent ? launchProfileId : QString();
     if (hasAgent) {
         m_agentStarting = true;
@@ -1483,11 +1485,28 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
         return;
     }
 
-    if (m_serverReady && !m_pendingAutoAgentLaunchId.isEmpty() && !agentRunning()) {
-        const QString launchId = m_pendingAutoAgentLaunchId;
-        m_pendingAutoAgentLaunchId.clear();
+    if (m_serverReady)
+        maybeStartPendingAgentOnReady();
+}
+
+// Arranca el agente diferido al quedar listo el server. Si el agente ya está
+// vivo (p.ej. teardown async de un swap todavía no observado) NO relanza, pero
+// igual baja m_agentStarting: si no, el popup "Iniciando agente" queda trabado.
+void AppController::maybeStartPendingAgentOnReady()
+{
+    if (m_pendingAutoAgentLaunchId.isEmpty()) return;
+    const QString launchId = m_pendingAutoAgentLaunchId;
+    m_pendingAutoAgentLaunchId.clear();
+    if (!agentRunning()) {
         emit agentStartingChanged();
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Servidor listo; iniciando agente del perfil."));
         startAgent(launchId);
+    } else if (m_agentStarting) {
+        m_agentStarting = false;
+        emit agentStartingChanged();
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Servidor listo; el agente ya estaba activo."));
     }
 }
 

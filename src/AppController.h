@@ -433,6 +433,14 @@ public:
     // Público para tests (el lambda de transcriptReady delega acá).
     bool dispatchCharlaTranscript(const QString &text);
     bool charlaUseAgentForTest() const { return m_charlaUseAgent; }
+    // Regresión "Iniciando agente" trabado tras swap/restart de server: arma el
+    // estado previo (pending + starting) y dispara el ready-branch. Con un agente
+    // ya corriendo debe bajar el flag sin relanzar.
+    void setPendingAutoAgentForTest(const QString &launchId)
+    { m_pendingAutoAgentLaunchId = launchId; m_agentStarting = true; }
+    void triggerPendingAgentForTest() { maybeStartPendingAgentOnReady(); }
+    bool agentStartingFlagForTest() const { return m_agentStarting; }
+    QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
     // Ejecuta la Automatización `automationId`: resuelve el proceso enlazado y lo
     // corre vía runTask, marcando el resultado también en el AutomationStore.
     Q_INVOKABLE void runAutomation(const QString &automationId);
@@ -1003,6 +1011,11 @@ private:
     QTimer   *m_healthPollTimer = nullptr;
     void startHealthPolling();
     void stopHealthPolling();
+    // Arranque diferido del agente cuando el server queda listo. Si quedó un
+    // agente vivo (teardown async no observado) NO relanza, pero baja
+    // m_agentStarting para no dejar "Iniciando agente" trabado. Compartido por
+    // el ready-branch del health-poll y el arranque síncrono de startServerAndAgent.
+    void maybeStartPendingAgentOnReady();
     // Watchdog auto-restart on crash
     QString   m_serverState = QStringLiteral("stopped"); // stopped|running|restarting|failed
     int       m_serverRestartCount = 0;
