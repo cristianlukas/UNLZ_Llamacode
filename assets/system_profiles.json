@@ -93,8 +93,8 @@
       "repo": "unsloth/gemma-4-31B-it-qat-GGUF",
       "file": "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf",
       "quant": "UD-Q4_K_XL",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/gemma-4-31B-it-qat-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
     },
     "draftModel": {
       "repo": "Simplepotat/gemma-4-31b-it-qat-q4_0-assistant-gguf",
@@ -514,8 +514,8 @@
       "repo": "unsloth/gemma-4-E4B-it-GGUF",
       "file": "gemma-4-E4B-it-Q4_K_M.gguf",
       "quant": "Q4_K_M",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/gemma-4-E4B-it-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
     },
     "runtime": {
       "ctx": 8192,
@@ -543,9 +543,10 @@
       "--cache-type-v",
       "q4_0",
       "--reasoning",
-      "off"
+      "off",
+      "--no-mmproj-offload"
     ],
-    "comment": "Gemma 4 E4B QAT (~4GB). Offload parcial para entrar en 4GB; re-medir.",
+    "comment": "Gemma 4 E4B QAT (~4GB). Offload parcial para entrar en 4GB; re-medir. mmproj F16 en CPU (--no-mmproj-offload) para no comer VRAM.",
     "mtp": {
       "enabled": false,
       "args": []
@@ -619,8 +620,8 @@
       "repo": "unsloth/gemma-4-E2B-it-GGUF",
       "file": "gemma-4-E2B-it-Q4_K_M.gguf",
       "quant": "Q4_K_M",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/gemma-4-E2B-it-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
     },
     "runtime": {
       "ctx": 4096,
@@ -648,9 +649,10 @@
       "--cache-type-v",
       "q4_0",
       "--reasoning",
-      "off"
+      "off",
+      "--no-mmproj-offload"
     ],
-    "comment": "Gemma 4 E2B QAT (~2.9GB). Offload parcial para entrar en 2GB; re-medir.",
+    "comment": "Gemma 4 E2B QAT (~2.9GB). Offload parcial para entrar en 2GB; re-medir. mmproj F16 en CPU (--no-mmproj-offload) para no comer VRAM.",
     "mtp": {
       "enabled": false,
       "args": []
@@ -670,8 +672,8 @@
       "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
       "file": "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
       "quant": "Q4_K_M",
-      "mmprojRepo": "",
-      "mmprojFile": ""
+      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF",
+      "mmprojFile": "mmproj-F16.gguf"
     },
     "runtime": {
       "ctx": 32768,
