@@ -1146,7 +1146,7 @@ QVariantMap AppController::launchVramFitStatus(const QString &launchProfileId)
     const double weightsGb = modelInfo.size() / 1024.0 / 1024.0 / 1024.0;
     const double kvAndGraphGb = 0.7 + weightsGb * 0.05 + ctx * 0.000025;
     const double requiredGb = weightsGb + kvAndGraphGb;
-    const double headroomGb = 0.75;
+    const double headroomGb = 0.2;
     const bool warn = freeGb + 0.01 < requiredGb + headroomGb;
 
     out[QStringLiteral("supported")] = true;
