@@ -14,6 +14,7 @@ private slots:
     void desktopRequiresVisionAndTraining();
     void limitsAreClamped();
     void autoModeRoutesBySurface();
+    void recipeWebStepDetection();
     void desktopPromptPrefersNativeTools();
     void desktopToolPolicyKeepsGuiToolsAvailable();
     void browserPromptUsesForegroundTeachEvidence();
@@ -94,6 +95,20 @@ void AutomationTests::autoModeRoutesBySurface()
              QStringLiteral("browserBackground"));
     QCOMPARE(R::resolveExecutionMode(QVariantMap{}),
              QStringLiteral("browserBackground"));
+}
+
+void AutomationTests::recipeWebStepDetection()
+{
+    using R = AutomationRunner;
+    // Puro escritorio (teclado/UIA) → sin pasos web → no necesita browser/MCP.
+    QVERIFY(!R::recipeHasWebStep(QVariantList{
+        QVariantMap{{"kind", "key"}}, QVariantMap{{"kind", "type"}},
+        QVariantMap{{"kind", "desktop"}}, QVariantMap{{"kind", "click"}}}));
+    QVERIFY(!R::recipeHasWebStep(QVariantList{}));
+    // Cualquier paso browser/web → sí necesita el MCP de navegador.
+    QVERIFY(R::recipeHasWebStep(QVariantList{
+        QVariantMap{{"kind", "type"}}, QVariantMap{{"kind", "browser"}}}));
+    QVERIFY(R::recipeHasWebStep(QVariantList{QVariantMap{{"kind", "web"}}}));
 }
 
 void AutomationTests::desktopPromptPrefersNativeTools()

@@ -2,12 +2,19 @@
 
 #include <QString>
 #include <QStringList>
+#include <QVariantList>
 #include <QVariantMap>
 
 class AutomationRunner
 {
 public:
     static bool isSensitiveAction(const QString &intent);
+
+    // ¿La receta grabó algún paso web (browser)? Una automatización de puro
+    // escritorio (teclado/UIA) no lo hace → no necesita el MCP de navegador ni,
+    // en general, ningún MCP: sólo las tools nativas desktop_*. Sirve para no
+    // inflar el prompt con esquemas de tools inútiles en perfiles de n_ctx chico.
+    static bool recipeHasWebStep(const QVariantList &steps);
     static QString validateTask(const QVariantMap &task, bool hasVision);
     static QVariantMap limits(const QVariantMap &task);
     static QString augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,

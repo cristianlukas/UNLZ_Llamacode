@@ -4561,7 +4561,6 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     // independientemente del perfil de agente activo. El perfil puede ser liviano
     // para chat diario, pero una Task necesita poder adaptarse.
     cb->setDisabledTools({});
-    cb->setMcpToolsEnabled(true);
 
     const bool desktop = task.value(QStringLiteral("executionMode")).toString()
                          == QLatin1String("desktop");
@@ -4579,20 +4578,24 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     bool taskNeedsBrowser = !desktop;
     if (desktop) {
         const QString artId = task.value(QStringLiteral("teachArtifactId")).toString();
-        if (!artId.isEmpty()) {
-            const QVariantList steps = AutomationArtifactStore::recipe(artId)
-                                           .value(QStringLiteral("steps")).toList();
-            for (const QVariant &s : steps) {
-                const QString k = s.toMap().value(QStringLiteral("kind")).toString();
-                if (k == QLatin1String("browser") || k == QLatin1String("web")) {
-                    taskNeedsBrowser = true;
-                    break;
-                }
-            }
-        }
+        if (!artId.isEmpty())
+            taskNeedsBrowser = AutomationRunner::recipeHasWebStep(
+                AutomationArtifactStore::recipe(artId).value(QStringLiteral("steps")).toList());
     }
-    injectBrowserMcp(merged, m_activeLaunchId, desktop, taskNeedsBrowser);
-    cb->setMcpServers(merged.values());
+    // Automatización de PURO escritorio (teclado/UIA, sin pasos web): sólo necesita
+    // las tools nativas desktop_*. Cargar filesystem/playwright infla el prompt con
+    // sus esquemas de tools y, en perfiles de n_ctx chico (16384), colapsa el budget
+    // de compactación → compacta al pedo y arranca lento. Sin MCP: prompt chico, sin
+    // compactación innecesaria, primer turno más rápido. Cualquier otra Task
+    // (browserBackground, o desktop con pasos web) mantiene MCP completo.
+    const bool pureDesktop = desktop && !taskNeedsBrowser;
+    cb->setMcpToolsEnabled(!pureDesktop);
+    if (pureDesktop) {
+        cb->setMcpServers({});
+    } else {
+        injectBrowserMcp(merged, m_activeLaunchId, desktop, taskNeedsBrowser);
+        cb->setMcpServers(merged.values());
+    }
 }
 
 void AppController::clearTaskAgentPermissions()

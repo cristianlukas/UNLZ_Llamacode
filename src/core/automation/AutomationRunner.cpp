@@ -13,6 +13,16 @@ bool AutomationRunner::isSensitiveAction(const QString &intent)
     return false;
 }
 
+bool AutomationRunner::recipeHasWebStep(const QVariantList &steps)
+{
+    for (const QVariant &s : steps) {
+        const QString k = s.toMap().value(QStringLiteral("kind")).toString();
+        if (k == QLatin1String("browser") || k == QLatin1String("web"))
+            return true;
+    }
+    return false;
+}
+
 QString AutomationRunner::validateTask(const QVariantMap &task, bool hasVision)
 {
     const QString mode = task.value(QStringLiteral("executionMode"), QStringLiteral("auto")).toString();
