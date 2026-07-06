@@ -179,6 +179,9 @@ public:
     bool planCompactionForTest(int &head, int &keepFrom) const {
         return planCompaction(head, keepFrom);
     }
+    QJsonObject buildTextToolPayloadForTest(const QJsonObject &nativePayload) const {
+        return buildTextToolPayload(nativePayload);
+    }
 
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();

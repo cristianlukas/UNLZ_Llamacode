@@ -1854,11 +1854,26 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
                                      {QStringLiteral("content"), protocol}});
     }
 
+    // Backstop de generación: en modo texto, un tool-call es UNA línea corta. Sin
+    // límite el modelo puede rambear hasta max_tokens (con ctx/4=2048 en un perfil
+    // de 8k eso son ~5 min de generación local → la Task parecía colgada). Capamos
+    // a un valor holgado para un tool-call o una respuesta final corta, sin
+    // estrangular una respuesta de chat legítima.
+    int maxTok = nativePayload.value(QStringLiteral("max_tokens")).toInt(2048);
+    maxTok = qBound(256, maxTok, 1536);
+
     QJsonObject payload{
         {QStringLiteral("model"), nativePayload.value(QStringLiteral("model"))},
         {QStringLiteral("messages"), messages},
-        {QStringLiteral("max_tokens"), nativePayload.value(QStringLiteral("max_tokens"))},
-        {QStringLiteral("stream"), true}
+        {QStringLiteral("max_tokens"), maxTok},
+        {QStringLiteral("stream"), true},
+        // Cortar apenas el modelo cierra el tool-call. Algunos modelos (Gemma)
+        // escupen su formato nativo <|tool_call>call:x{...}<tool_call|> y SIGUEN
+        // generando después del cierre (ramble hasta max_tokens). Parar en los
+        // marcadores de cierre corta al instante; el parser no necesita el cierre.
+        {QStringLiteral("stop"), QJsonArray{
+            QStringLiteral("<tool_call|>"), QStringLiteral("<|tool_call|>"),
+            QStringLiteral("</tool_call>"), QStringLiteral("<end_of_turn>")}}
     };
     if (nativePayload.contains(QStringLiteral("temperature")))
         payload.insert(QStringLiteral("temperature"), nativePayload.value(QStringLiteral("temperature")));

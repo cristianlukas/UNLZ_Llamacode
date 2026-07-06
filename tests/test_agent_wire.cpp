@@ -37,6 +37,7 @@ private slots:
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
     void parsesNativeToolCallLeakFallback();
     void textToolsModeDoesNotDoubleReserveToolBudget();
+    void textToolPayloadCapsGenerationAndStopsAtToolCall();
 };
 
 void AgentWireTests::initTestCase()
@@ -879,6 +880,37 @@ void AgentWireTests::textToolsModeDoesNotDoubleReserveToolBudget()
     textBe.setApiMessagesForTest(buildHistory());
     QVERIFY2(!textBe.planCompactionForTest(head, keepFrom),
              "modo text-tools: el mismo historial NO debe disparar compactación");
+}
+
+void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
+{
+    // Regresión del bug "sumar 2+2": tras arreglar parser y compactación, la Task
+    // avanzaba hasta desktop_focus pero el turno siguiente colgaba ~5 min. El
+    // modelo (Gemma) escupía su formato nativo <|tool_call>...<tool_call|> y SEGUÍA
+    // generando hasta max_tokens (ctx/4 = 2048 → ~5 min de decode local). El payload
+    // text-tools debe (a) capar max_tokens y (b) traer stop en los marcadores de
+    // cierre para cortar apenas se emite el tool-call.
+    LlamaAgentBackend be;
+    QJsonObject nativePayload{
+        {QStringLiteral("model"), QStringLiteral("local")},
+        {QStringLiteral("messages"), QJsonArray{
+            QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
+                        {QStringLiteral("content"), QStringLiteral("sys")}}}},
+        {QStringLiteral("max_tokens"), 2048}};
+
+    const QJsonObject p = be.buildTextToolPayloadForTest(nativePayload);
+
+    // (a) max_tokens capado (no los 2048 originales que causaban el ramble largo).
+    QVERIFY(p.value(QStringLiteral("max_tokens")).toInt() <= 1536);
+    QVERIFY(p.value(QStringLiteral("max_tokens")).toInt() >= 256);
+
+    // (b) stop cubre el marcador de cierre nativo que vimos en el log.
+    const QJsonArray stop = p.value(QStringLiteral("stop")).toArray();
+    QVERIFY(!stop.isEmpty());
+    bool hasClose = false;
+    for (const QJsonValue &v : stop)
+        if (v.toString() == QStringLiteral("<tool_call|>")) hasClose = true;
+    QVERIFY2(hasClose, "stop debe incluir el cierre <tool_call|>");
 }
 
 QTEST_MAIN(AgentWireTests)
