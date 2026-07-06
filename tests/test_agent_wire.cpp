@@ -35,6 +35,7 @@ private slots:
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
     void projectContextSection_coversIntentAndMemory();
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
+    void parsesNativeToolCallLeakFallback();
 };
 
 void AgentWireTests::initTestCase()
@@ -140,6 +141,43 @@ void AgentWireTests::parsesTextToolCallFallback()
     const QJsonObject args = QJsonDocument::fromJson(
         fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
     QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
+}
+
+void AgentWireTests::parsesNativeToolCallLeakFallback()
+{
+    // Regresión del bug "sumar 2+2": modelos como Gemma filtran su formato NATIVO
+    // de tool-call como texto (<|tool_call>call:NAME{args}<tool_call|>). El nombre
+    // va en call:NAME y los args en un objeto JSON aparte (puede ser {}). El parser
+    // debe reconocerlo; antes veía el {} vacío, no encontraba "name" y la tool
+    // nunca se ejecutaba (la Task terminaba "ok" sin operar la app).
+
+    // Args vacíos: desktop_windows sin parámetros.
+    {
+        const QString content = QStringLiteral("<|tool_call>call:desktop_windows{}<tool_call|>");
+        const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+        QVERIFY(!call.isEmpty());
+        const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+        QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("desktop_windows"));
+    }
+
+    // Con args: desktop_type con texto.
+    {
+        const QString content = QStringLiteral(
+            "<|tool_call>call:desktop_type{\"text\":\"2+2\"}<tool_call|>");
+        const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+        QVERIFY(!call.isEmpty());
+        const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+        QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("desktop_type"));
+        const QJsonObject args = QJsonDocument::fromJson(
+            fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+        QCOMPARE(args.value(QStringLiteral("text")).toString(), QStringLiteral("2+2"));
+    }
+
+    // Prosa con "call:" pero sin el token nativo → NO debe disparar tool call.
+    {
+        const QString content = QStringLiteral("Ya hice la call: desktop_windows manualmente.");
+        QVERIFY(LlamaAgentBackend::textToolCallFromContent(content).isEmpty());
+    }
 }
 
 class FakeToolRejectingServer : public QTcpServer

@@ -2960,30 +2960,69 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
 
 QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
 {
+    // El nombre y los args de la tool pueden venir en dos formatos:
+    //  (a) El que instruimos en buildTextToolPayload:
+    //        TOOL_CALL {"name":"x","arguments":{...}}
+    //  (b) El formato NATIVO que filtran algunos modelos (ej. Gemma) cuando su
+    //      chat-template escupe sus tokens de tool-call como texto:
+    //        <|tool_call>call:x{...}<tool_call|>
+    //      Acá el nombre va en `call:x` y los args son un objeto JSON aparte
+    //      (puede ser {}). El parser viejo sólo cubría (a) y descartaba (b)
+    //      porque el {} no traía "name" → la tool nunca se ejecutaba y la
+    //      llamada se filtraba como texto final (bug: "sumar 2+2" terminaba
+    //      "ok" sin operar la calculadora).
+    QString name;
+    QJsonObject args;
+    bool haveName = false;
+
+    // Formato (a): marcador TOOL_CALL + objeto JSON con name/tool.
     const QRegularExpression marker(QStringLiteral("\\bTOOL_CALL\\b\\s*:?\\s*"),
                                     QRegularExpression::CaseInsensitiveOption);
     const QRegularExpressionMatch m = marker.match(content);
-    if (!m.hasMatch()) return {};
-
-    const QString json = extractBalancedJsonObject(content, m.capturedEnd());
-    if (json.isEmpty()) return {};
-
-    QJsonParseError perr;
-    const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
-    if (perr.error != QJsonParseError::NoError || obj.isEmpty()) return {};
-
-    const QString name = obj.value(QStringLiteral("name")).toString(
-        obj.value(QStringLiteral("tool")).toString()).trimmed();
-    if (name.isEmpty()) return {};
-
-    QJsonValue argsValue = obj.value(QStringLiteral("arguments"));
-    if (argsValue.isUndefined()) argsValue = obj.value(QStringLiteral("args"));
-    QJsonObject args = argsValue.toObject();
-    if (argsValue.isString()) {
-        QJsonParseError argErr;
-        args = QJsonDocument::fromJson(argsValue.toString().toUtf8(), &argErr).object();
-        if (argErr.error != QJsonParseError::NoError) args = {};
+    if (m.hasMatch()) {
+        const QString json = extractBalancedJsonObject(content, m.capturedEnd());
+        if (!json.isEmpty()) {
+            QJsonParseError perr;
+            const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
+            if (perr.error == QJsonParseError::NoError && !obj.isEmpty()) {
+                name = obj.value(QStringLiteral("name")).toString(
+                    obj.value(QStringLiteral("tool")).toString()).trimmed();
+                if (!name.isEmpty()) {
+                    haveName = true;
+                    QJsonValue argsValue = obj.value(QStringLiteral("arguments"));
+                    if (argsValue.isUndefined()) argsValue = obj.value(QStringLiteral("args"));
+                    args = argsValue.toObject();
+                    if (argsValue.isString()) {
+                        QJsonParseError argErr;
+                        args = QJsonDocument::fromJson(argsValue.toString().toUtf8(), &argErr).object();
+                        if (argErr.error != QJsonParseError::NoError) args = {};
+                    }
+                }
+            }
+        }
     }
+
+    // Formato (b): sólo si el texto trae el token nativo `tool_call` (evita
+    // falsos positivos con prosa que use "call:"). Nombre en `call:NAME`, args
+    // en el primer objeto JSON que le siga (opcional).
+    if (!haveName && content.contains(QStringLiteral("tool_call"), Qt::CaseInsensitive)) {
+        const QRegularExpression callRe(
+            QStringLiteral("\\bcall\\s*:\\s*([A-Za-z_][A-Za-z0-9_]*)"),
+            QRegularExpression::CaseInsensitiveOption);
+        const QRegularExpressionMatch cm = callRe.match(content);
+        if (cm.hasMatch()) {
+            name = cm.captured(1).trimmed();
+            haveName = !name.isEmpty();
+            const QString json = extractBalancedJsonObject(content, cm.capturedEnd());
+            if (!json.isEmpty()) {
+                QJsonParseError perr;
+                const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
+                if (perr.error == QJsonParseError::NoError) args = obj;
+            }
+        }
+    }
+
+    if (!haveName) return {};
 
     return QJsonObject{
         {QStringLiteral("id"), QStringLiteral("textcall_%1").arg(QUuid::createUuid().toString(QUuid::Id128))},
