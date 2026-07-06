@@ -105,9 +105,17 @@ void AutomationTests::desktopPromptPrefersNativeTools()
             QVariantMap{{"kind", "type"}, {"intent", "Escribir: \"2+2\""}}}}});
     QVERIFY(prompt.contains(QStringLiteral("Superficie: escritorio foreground nativo")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_observe")));
-    QVERIFY(prompt.contains(QStringLiteral("Playwright está disponible en foreground/headed")));
-    QVERIFY(prompt.contains(QStringLiteral("Podés usar cualquier otra tool disponible")));
+    QVERIFY(prompt.contains(QStringLiteral("Playwright headed")));
     QVERIFY(prompt.contains(QStringLiteral("no las leas con read_file")));
+    // Regresión del bug "sumar 2+2": el modelo se colgaba repitiendo
+    // desktop_windows/desktop_observe sin nunca escribir. El prompt debe empujar
+    // el camino rápido por teclado, verificación por texto y una regla anti-loop.
+    QVERIFY(prompt.contains(QStringLiteral("CAMINO RÁPIDO")));
+    QVERIFY(prompt.contains(QStringLiteral("TECLADO primero")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_type")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
+    QVERIFY(prompt.contains(QStringLiteral("ANTI-LOOP")));
+    QVERIFY(prompt.contains(QStringLiteral("NO repitas desktop_windows")));
 }
 
 void AutomationTests::desktopToolPolicyKeepsGuiToolsAvailable()

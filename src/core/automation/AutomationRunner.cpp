@@ -103,20 +103,37 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
     QString out = QStringLiteral(
         "\n\nMODO DE AUTOMATIZACIÓN: %1.\n"
         "Usá la receta enseñada como evidencia semántica, no como replay rígido. "
-        "Observá antes de cada acción, ejecutá una sola acción, volvé a observar y "
-        "verificá progreso. Detenete si no podés verificar el objetivo.\n")
+        "Ejecutá una acción por vez y verificá el progreso por el medio más barato "
+        "disponible (texto/estructura antes que captura). Detenete si no podés "
+        "verificar el objetivo.\n")
         .arg(mode);
     if (mode == QLatin1String("desktop")) {
         out += QStringLiteral(
-            "Superficie: escritorio foreground nativo. Usá las tools desktop_* "
-            "(desktop_windows, desktop_observe, desktop_key, desktop_type, desktop_click, "
-            "desktop_click_element, desktop_launch, desktop_wait) para operar y verificar "
-            "la pantalla real. Playwright está disponible en foreground/headed para flujos web "
-            "dentro de la misma automatización, pero no reemplaza desktop_* para aplicaciones "
-            "nativas de Windows. "
-            "Podés usar cualquier otra tool disponible cuando aporte contexto o diagnóstico, "
-            "pero verificá la GUI con desktop_observe/desktop_windows. Las capturas "
-            "evidence/*.jpg son evidencia histórica de Teach; no las leas con read_file.\n");
+            "Superficie: escritorio foreground nativo. Usá las tools desktop_* para operar y "
+            "verificar la pantalla real.\n"
+            "CAMINO RÁPIDO (seguilo, evita el loop de observar):\n"
+            "1) desktop_launch <app> (ej. 'calc'). NO uses run_shell para apps GUI.\n"
+            "2) desktop_wait ~800 ms y UNA sola desktop_windows para tomar el id de la "
+            "ventana. NO repitas desktop_windows: si la ventana ya aparece, avanzá YA a "
+            "escribir. Repetir el inventario sin actuar es el error a evitar.\n"
+            "3) TECLADO primero: para apps con teclado (calculadora, notepad, campos de "
+            "texto) NO clickees botones ni observes. desktop_focus <id> y escribí con "
+            "desktop_type. Ej. sumar 2+2: desktop_focus <id>, desktop_type \"2+2\", "
+            "desktop_key \"=\" (o ENTER). Listo.\n"
+            "4) Botones sin equivalente de teclado: desktop_controls <id> (árbol UIA por "
+            "NOMBRE, sin captura) → desktop_click_element por controlId. NO por pixel.\n"
+            "5) VERIFICAR: leé el estado con desktop_controls — el texto de los controles "
+            "(ej. el visor de la calculadora) trae el valor en su nombre, SIN captura. "
+            "desktop_observe (captura) es último recurso; sin visión NO podés leer la "
+            "imagen, así que no la uses para verificar (entrás en loop ciego).\n"
+            "ANTI-LOOP: una acción → una verificación por texto → terminá. Si una tool se "
+            "repite sin progreso, cambiá de enfoque (teclado ↔ desktop_controls), no la "
+            "reintentes igual. Los pasos [type]/[key]/[click] de la receta son la INTENCIÓN "
+            "(qué escribir/accionar); traducilos a desktop_type/desktop_key/desktop_controls "
+            "sobre la ventana de la app, no al menú Inicio. Playwright headed está para "
+            "flujos web dentro de la automatización, no reemplaza desktop_* en apps nativas. "
+            "Las capturas evidence/*.jpg son evidencia histórica de Teach; no las leas con "
+            "read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(
             "Superficie: navegador background al ejecutar. El Teach se grabó con un "

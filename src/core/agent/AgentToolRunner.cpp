@@ -846,8 +846,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             args.value(QStringLiteral("args")).toString(), &error);
         if (ok) *ok = good;
         return good ? QStringLiteral("[desktop_launch: ok — la app se está abriendo. "
-                                     "Esperá (desktop_wait) y verificá con desktop_windows/desktop_observe "
-                                     "antes de escribir o clickear.]")
+                                     "desktop_wait ~800ms y UNA desktop_windows para el id. "
+                                     "Después, si la app se maneja con teclado (calc, notepad), "
+                                     "desktop_focus <id> + desktop_type; NO repitas desktop_windows "
+                                     "ni observes en loop.]")
                     : QStringLiteral("[desktop_launch: %1]").arg(error);
     }
     if (name == QLatin1String("desktop_focus")) {
