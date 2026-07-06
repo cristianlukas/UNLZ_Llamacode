@@ -1918,13 +1918,20 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
         const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
         m_reply = nullptr;
         r->deleteLater();
+        // Cuerpo del 400: es la razón real por la que el server rechaza el payload
+        // (template sin tools, schema que rompe el grammar, binario viejo…). Sin
+        // esto el fallback funcionaba pero la causa raíz quedaba invisible.
+        const QString why = body.isEmpty() ? QString()
+                                           : QStringLiteral(" · motivo: %1").arg(body.left(400));
         if (!ok && mode == NativeFull && status == 400) {
-            emit logAppended(QStringLiteral("[turn] server rechazó payload completo (400); reintentando modo compatible sin campos opcionales\n"));
+            emit logAppended(QStringLiteral("[turn] server rechazó payload completo (400); "
+                                            "reintentando modo compatible sin campos opcionales%1\n").arg(why));
             postCompletionRequest(payload, NativeCompat);
             return;
         }
         if (!ok && mode == NativeCompat && status == 400) {
-            emit logAppended(QStringLiteral("[turn] server rechazó OpenAI tools (400); reintentando protocolo textual de tools headless\n"));
+            emit logAppended(QStringLiteral("[turn] server rechazó OpenAI tools (400); "
+                                            "reintentando protocolo textual de tools headless%1\n").arg(why));
             m_textToolFallback = true;
             postCompletionRequest(buildTextToolPayload(payload), TextTools);
             return;
