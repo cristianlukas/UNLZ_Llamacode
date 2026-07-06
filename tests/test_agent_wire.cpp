@@ -37,6 +37,7 @@ private slots:
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
     void parsesNativeToolCallLeakFallback();
     void textToolsModeDoesNotDoubleReserveToolBudget();
+    void compactionStallCounterTracksProgress();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
 };
 
@@ -880,6 +881,39 @@ void AgentWireTests::textToolsModeDoesNotDoubleReserveToolBudget()
     textBe.setApiMessagesForTest(buildHistory());
     QVERIFY2(!textBe.planCompactionForTest(head, keepFrom),
              "modo text-tools: el mismo historial NO debe disparar compactación");
+}
+
+void AgentWireTests::compactionStallCounterTracksProgress()
+{
+    // Regresión del loop infinito de compactación (12GB, n_ctx=16384): cuando el
+    // tramo compactable es chico y lo pesado es el head protegido (system+objetivo),
+    // el resumen no baja tokens (2678→2678) y runCompletion recompactaba sin fin.
+    // El contador de estancamiento sube cuando un pase NO reduce y se resetea
+    // cuando sí; runCompletion corta al llegar a 2 (no lo ejercitamos acá porque
+    // requiere red, pero sí la contabilidad que lo gobierna).
+    auto history = []() {
+        QJsonArray m;
+        m.append(QJsonObject{{"role", "system"}, {"content", QString(400, 'x')}});
+        m.append(QJsonObject{{"role", "user"},   {"content", QString(400, 'y')}});
+        m.append(QJsonObject{{"role", "assistant"}, {"content", QString(1000, 'a')}});
+        m.append(QJsonObject{{"role", "user"},      {"content", QString(1000, 'b')}});
+        return m;
+    };
+    LlamaAgentBackend be;
+    be.setCtxLimitForTest(8192);
+
+    // Resumen tan grande como lo removido → sin reducción → stall sube.
+    be.setApiMessagesForTest(history());
+    be.applyCompactionForTest(2, 4, QString(2000, 'z'));
+    QCOMPARE(be.compactStallForTest(), 1);
+    be.setApiMessagesForTest(history());
+    be.applyCompactionForTest(2, 4, QString(2000, 'z'));
+    QCOMPARE(be.compactStallForTest(), 2);   // 2 → runCompletion deja de compactar
+
+    // Resumen chico → reduce de verdad → resetea el contador.
+    be.setApiMessagesForTest(history());
+    be.applyCompactionForTest(2, 4, QStringLiteral("ok"));
+    QCOMPARE(be.compactStallForTest(), 0);
 }
 
 void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()

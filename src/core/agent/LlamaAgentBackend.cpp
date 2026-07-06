@@ -587,6 +587,13 @@ void LlamaAgentBackend::applyCompaction(int head, int keepFrom, const QString &s
 
     m_apiMessages = neu;
     const int after = estimateApiTokens();
+    // Anti-loop: si el resumen no redujo tokens de forma apreciable (el tramo
+    // compactable es chico y lo pesado es el head protegido: system+objetivo),
+    // contá el intento fallido. Tras 2 seguidos, runCompletion deja de compactar
+    // y sigue: el prompt igual entra en n_ctx real (el "over budget" es una
+    // reserva conservadora, no un overflow del server).
+    if (after < before - 8) m_compactStall = 0;
+    else ++m_compactStall;
     emit logAppended(QStringLiteral("[compactación %1: %2 msgs · ~%3→%4 tok (n_ctx=%5)]\n")
                          .arg(summarized ? QStringLiteral("vía modelo") : QStringLiteral("poda"))
                          .arg(dropped).arg(before).arg(after).arg(m_ctxLimit));
@@ -1299,6 +1306,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         return;
     }
     ensureSession();
+    m_compactStall = 0;   // nuevo turno de usuario → reintentar compactar si hiciera falta
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
     // Contenido a mostrar en la UI: texto + chips de adjuntos.
@@ -1732,7 +1740,19 @@ void LlamaAgentBackend::runCompletion()
     // compactar, dispara el resumen async y reanuda runCompletion() al terminar.
     {
         int head = 0, keepFrom = 0;
-        if (planCompaction(head, keepFrom)) { startCompaction(head, keepFrom); return; }
+        if (m_compactStall < 2 && planCompaction(head, keepFrom)) {
+            startCompaction(head, keepFrom); return;
+        }
+        if (m_compactStall >= 2 && planCompaction(head, keepFrom)) {
+            // Compactar no reduce más (head protegido pesado + budget conservador).
+            // No entrar en loop infinito: seguir con el contexto actual, que igual
+            // entra en n_ctx real. Log una sola vez por racha.
+            if (m_compactStall == 2) {
+                ++m_compactStall;   // marcar avisado (>=3) para no repetir el log
+                emit logAppended(QStringLiteral(
+                    "[compactación sin progreso; sigo con el contexto actual (entra en n_ctx)]\n"));
+            }
+        }
     }
 
     if (++m_turnIters > kMaxTurnIters) {

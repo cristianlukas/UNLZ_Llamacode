@@ -179,6 +179,11 @@ public:
     bool planCompactionForTest(int &head, int &keepFrom) const {
         return planCompaction(head, keepFrom);
     }
+    // Anti-loop de compactación: aplicar el tramo y leer el contador de estancamiento.
+    void applyCompactionForTest(int head, int keepFrom, const QString &summary) {
+        applyCompaction(head, keepFrom, summary);
+    }
+    int compactStallForTest() const { return m_compactStall; }
     QJsonObject buildTextToolPayloadForTest(const QJsonObject &nativePayload) const {
         return buildTextToolPayload(nativePayload);
     }
@@ -373,6 +378,8 @@ private:
     QNetworkReply *m_compactReply = nullptr;   // request de resumen (compactación)
     QNetworkReply *m_warmupReply = nullptr;    // prefill del prompt-cache (charla)
     bool m_compacting = false;                 // compactación en curso
+    int  m_compactStall = 0;                   // compactaciones consecutivas sin reducir tokens
+                                               // (anti-loop: si no baja, dejar de compactar)
     QNetworkReply *m_consolidateReply = nullptr;     // request de consolidación de memoria
     QHash<QString, int> m_consolidatedLen;     // sessionId → nº de msgs ya consolidados (dedupe)
     QNetworkReply *m_reply = nullptr;
