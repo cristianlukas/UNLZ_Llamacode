@@ -25,6 +25,10 @@ if not exist "%QT_DIR%\lib\cmake\Qt6\Qt6Config.cmake" (
     goto :failed
 )
 
+REM Cada build sube la version +0.0.1 (patch) antes de configurar/compilar.
+call "%~dp0bump-patch.bat"
+if errorlevel 1 ( goto :failed )
+
 echo [INFO] Killing LlamaCode and managed children...
 taskkill /F /IM LlamaCode.exe      >nul 2>&1
 taskkill /F /IM llama-server.exe   >nul 2>&1
