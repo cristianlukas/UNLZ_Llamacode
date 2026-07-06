@@ -36,6 +36,7 @@ private slots:
     void projectContextSection_coversIntentAndMemory();
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
     void parsesNativeToolCallLeakFallback();
+    void textToolsModeDoesNotDoubleReserveToolBudget();
 };
 
 void AgentWireTests::initTestCase()
@@ -838,6 +839,46 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
     // La variante sin visión debe advertir explícitamente que NO puede ver.
     QVERIFY(novis.contains(QStringLiteral("NO")) );
     QVERIFY(novis != vis);
+}
+
+void AgentWireTests::textToolsModeDoesNotDoubleReserveToolBudget()
+{
+    // Regresión del bug "sumar 2+2": con n_ctx chico (8192) y en modo text-tools
+    // (fallback headless), la compactación disparaba en CADA turno porque el budget
+    // reservaba el esquema OpenAI completo de tools (~miles de tok) que en ese modo
+    // NO se manda como payload (va embebido por nombre en el system prompt, ya
+    // contado). Resultado: se resumía el historial cada 1-2 tools y la Task se
+    // rompía tras 4-5 acciones. Con el fix, el mismo historial NO gatilla
+    // compactación en modo text-tools, pero SÍ en modo nativo (donde el esquema
+    // realmente ocupa contexto).
+    auto buildHistory = []() {
+        QJsonArray msgs;
+        msgs.append(QJsonObject{{"role", "system"}, {"content", QString(400, 'x')}});
+        msgs.append(QJsonObject{{"role", "user"}, {"content", QString(400, 'y')}});
+        // ~3000 tokens de cuerpo (≈12k chars) repartidos en varios turnos.
+        for (int i = 0; i < 6; ++i) {
+            msgs.append(QJsonObject{{"role", "assistant"}, {"content", QString(1000, 'a')}});
+            msgs.append(QJsonObject{{"role", "user"}, {"content", QString(1000, 'b')}});
+        }
+        return msgs;
+    };
+
+    int head = 0, keepFrom = 0;
+
+    // Modo nativo: el esquema de tools SÍ reserva contexto → budget chico → compacta.
+    LlamaAgentBackend nativeBe;
+    nativeBe.setCtxLimitForTest(8192);
+    nativeBe.setApiMessagesForTest(buildHistory());
+    QVERIFY2(nativeBe.planCompactionForTest(head, keepFrom),
+             "modo nativo: con el esquema de tools reservado, este historial debe compactar");
+
+    // Modo text-tools: no se reserva el esquema → budget amplio → NO compacta.
+    LlamaAgentBackend textBe;
+    textBe.setForceTextTools(true);
+    textBe.setCtxLimitForTest(8192);
+    textBe.setApiMessagesForTest(buildHistory());
+    QVERIFY2(!textBe.planCompactionForTest(head, keepFrom),
+             "modo text-tools: el mismo historial NO debe disparar compactación");
 }
 
 QTEST_MAIN(AgentWireTests)

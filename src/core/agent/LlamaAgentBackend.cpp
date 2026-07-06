@@ -531,7 +531,14 @@ bool LlamaAgentBackend::planCompaction(int &head, int &keepFrom) const
     if (n <= 4) return false;
 
     const int outReserve   = qMin(32768, m_ctxLimit / 4);
-    const int toolsReserve = toolSchemaTokensOf(buildToolSchemas());
+    // En modo text-tools (fallback headless) las tools NO viajan como payload
+    // `tools` aparte: van embebidas por NOMBRE en el system prompt, y eso ya lo
+    // cuenta estimateApiTokens() vía message[0]. Reservar acá el esquema OpenAI
+    // completo (~miles de tokens) sería doble conteo y colapsaría el budget →
+    // compactación en CADA turno (bug: la Task se rompía tras 4-5 tools). Sólo
+    // reservamos el esquema cuando efectivamente se manda como payload nativo.
+    const int toolsReserve = usingTextTools() ? 0
+                                              : toolSchemaTokensOf(buildToolSchemas());
     const int budget = qMax(256, int(m_ctxLimit * 0.90) - outReserve - toolsReserve);
     if (budget <= 0) return false;
 

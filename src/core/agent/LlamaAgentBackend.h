@@ -171,6 +171,14 @@ public:
     QJsonArray toolSchemasForTest() const { return buildToolSchemas(); }
     void setMcpToolsForTest(const QVariantList &tools) { m_mcpTools = tools; }
     void setCwdForTest(const QString &dir) { m_cwd = dir; }
+    // Hooks para testear planCompaction (decide si compactar según budget). El
+    // budget depende de si las tools viajan como payload nativo (reservan tokens)
+    // o embebidas en texto (modo text-tools → no reservan). Ver test_agent_wire.
+    void setCtxLimitForTest(int n) { m_ctxLimit = n; }
+    void setApiMessagesForTest(const QJsonArray &m) { m_apiMessages = m; }
+    bool planCompactionForTest(int &head, int &keepFrom) const {
+        return planCompaction(head, keepFrom);
+    }
 
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
