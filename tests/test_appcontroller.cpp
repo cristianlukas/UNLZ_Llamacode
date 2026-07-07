@@ -83,6 +83,7 @@ private slots:
     void ggufRecommendationCandidateFilter();
     void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
+    void createRecommendedLaunchProfileReusesExistingMenuProfile();
     void browserMcpEffectiveResolves();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
@@ -422,6 +423,14 @@ void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
 
 void AppControllerTests::createRecommendedLaunchProfileBuildsProfile()
 {
+    const QByteArray oldSystemProfiles = qgetenv("LLAMACODE_SYSTEM_PROFILES");
+    const QString emptySystemProfiles = m_tmp.filePath(QStringLiteral("empty-system-profiles.json"));
+    {
+        QFile f(emptySystemProfiles);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("[]");
+    }
+    qputenv("LLAMACODE_SYSTEM_PROFILES", QFile::encodeName(emptySystemProfiles));
     AppController app;
 
     const QString exePath = m_tmp.filePath(QStringLiteral("llama-server.exe"));
@@ -458,6 +467,22 @@ void AppControllerTests::createRecommendedLaunchProfileBuildsProfile()
     QVERIFY(app.hasAnyLaunch());
     QVERIFY(!app.needsSetup());
     QCOMPARE(app.profileManager()->getLaunchProfile(launchId).value("id").toString(), launchId);
+    if (oldSystemProfiles.isEmpty())
+        qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+    else
+        qputenv("LLAMACODE_SYSTEM_PROFILES", oldSystemProfiles);
+}
+
+void AppControllerTests::createRecommendedLaunchProfileReusesExistingMenuProfile()
+{
+    AppController app;
+    const int before = app.profileManager()->launchProfiles()->rowCount();
+    QVERIFY(before > 0);
+
+    const QString launchId = app.createRecommendedLaunchProfile();
+    QVERIFY(!launchId.isEmpty());
+    QCOMPARE(app.profileManager()->launchProfiles()->rowCount(), before);
+    QCOMPARE(app.readSetting(QStringLiteral("lastLaunchId"), QString()).toString(), launchId);
 }
 
 void AppControllerTests::browserMcpEffectiveResolves()

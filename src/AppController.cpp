@@ -8795,6 +8795,22 @@ void AppController::scanModelDownloadRoot()
 
 QString AppController::createRecommendedLaunchProfile()
 {
+    const QVariantList existingLaunches = m_profiles.launchProfilesForMenu();
+    if (!existingLaunches.isEmpty()) {
+        const QString id = existingLaunches.first().toMap().value(QStringLiteral("id")).toString();
+        const LaunchProfile lp = m_profiles.resolveLaunch(id);
+        if (!lp.id.isEmpty()) {
+            writeSetting(QStringLiteral("lastLaunchId"), id);
+            computeEffectiveProfile(id);
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Perfil existente reutilizado; no se crea perfil inicial: %1.")
+                                  .arg(lp.name));
+            emit setupStateChanged();
+            emit activeLaunchIdChanged();
+            return id;
+        }
+    }
+
     if (m_binaries.count() <= 0) {
         emit serverError(QStringLiteral("Instalá o registrá un binario llama-server primero."));
         return {};
@@ -8823,8 +8839,7 @@ QString AppController::createRecommendedLaunchProfile()
         return {};
     }
 
-    const QVariantList launches = m_profiles.launchProfilesForMenu();
-    for (const QVariant &value : launches) {
+    for (const QVariant &value : existingLaunches) {
         const QString id = value.toMap().value(QStringLiteral("id")).toString();
         const LaunchProfile lp = m_profiles.resolveLaunch(id);
         if (lp.id.isEmpty() || lp.system)

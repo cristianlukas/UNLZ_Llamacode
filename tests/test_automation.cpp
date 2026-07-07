@@ -128,6 +128,7 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("CAMINO RÁPIDO")));
     QVERIFY(prompt.contains(QStringLiteral("TECLADO primero")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_type")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_type \"2+2=\"")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
     QVERIFY(prompt.contains(QStringLiteral("ANTI-LOOP")));
     QVERIFY(prompt.contains(QStringLiteral("NO repitas desktop_windows")));

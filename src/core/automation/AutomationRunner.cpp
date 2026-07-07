@@ -125,6 +125,7 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "2) desktop_wait ~800 ms y UNA sola desktop_windows. NO repitas desktop_windows; "
             "si aparece la ventana, enfocá y actuá.\n"
             "3) TECLADO primero: desktop_focus <id>, desktop_type texto, desktop_key ENTER/=.\n"
+            "Para cálculos cortos, escribí TODO junto: desktop_type \"2+2=\"; no lo partas.\n"
             "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId.\n"
             "5) Verificá con desktop_controls; desktop_observe es último recurso.\n"
             "ANTI-LOOP: una acción -> una verificación por texto -> terminá. Los pasos "
