@@ -369,6 +369,7 @@ public:
     // Abre el explorador en la carpeta contenedora del archivo (y lo selecciona en Windows).
     Q_INVOKABLE void openContainingFolder(const QString &path);
     Q_INVOKABLE void installOfficialBinary();
+    Q_INVOKABLE void installRequiredBinaryForProfile(const QString &launchProfileId);
     // Instala el build MTP (Anbeeld/beellama.cpp, DFlash/MTP) — solo Windows CUDA.
     // Para perfiles de sistema en máquinas NVIDIA: habilita los flags MTP.
     Q_INVOKABLE void installMtpBinary();
@@ -377,7 +378,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.9"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.11"); }
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
@@ -987,6 +988,7 @@ private:
     // repo GitHub + etiqueta (kind en el registro) + si exige CUDA (MTP build).
     QString m_installSourceRepo  = QStringLiteral("ggml-org/llama.cpp");
     QString m_installSourceLabel = QStringLiteral("official");
+    QString m_installReleaseTag;
     bool    m_installRequireCuda = false;
     void startBinaryInstall();   // cuerpo común (antes en installOfficialBinary)
     void startSourceBuildInstall(const EngineCatalogEntry &entry);

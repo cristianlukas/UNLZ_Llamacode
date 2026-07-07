@@ -2014,6 +2014,22 @@ void AppController::installOfficialBinary()
 {
     m_installSourceRepo = QStringLiteral("ggml-org/llama.cpp");
     m_installSourceLabel = QStringLiteral("official");
+    m_installReleaseTag.clear();
+    m_installRequireCuda = false;
+    startBinaryInstall();
+}
+
+void AppController::installRequiredBinaryForProfile(const QString &launchProfileId)
+{
+    const QString pin = systemProfileBinaryPin(launchProfileId).trimmed();
+    if (pin.isEmpty()) {
+        installOfficialBinary();
+        return;
+    }
+
+    m_installSourceRepo = QStringLiteral("ggml-org/llama.cpp");
+    m_installSourceLabel = QStringLiteral("official");
+    m_installReleaseTag = pin;
     m_installRequireCuda = false;
     startBinaryInstall();
 }
@@ -2023,6 +2039,7 @@ void AppController::installMtpBinary()
     // Build MTP/DFlash (Anbeeld/beellama.cpp). Solo Windows CUDA: requiere NVIDIA.
     m_installSourceRepo = QStringLiteral("Anbeeld/beellama.cpp");
     m_installSourceLabel = QStringLiteral("beellama");
+    m_installReleaseTag.clear();
     m_installRequireCuda = true;
     startBinaryInstall();
 }
@@ -2295,9 +2312,32 @@ $ProgressPreference = 'SilentlyContinue'
 try {
     $headers = @{ 'User-Agent' = 'LlamaCode' }
     $requireCuda = '%3'
-    Write-Output 'STATUS: Consultando release latest de %2...'
-    $api = 'https://api.github.com/repos/%2/releases/latest'
-    $rel = Invoke-RestMethod -Uri $api -Headers $headers
+    $tagRequest = '%4'
+    $repo = '%2'
+    $tagLabel = if ([string]::IsNullOrWhiteSpace($tagRequest)) { 'latest' } else { $tagRequest }
+    Write-Output ('STATUS: Consultando release ' + $tagLabel + ' de ' + $repo + '...')
+    $api = if ([string]::IsNullOrWhiteSpace($tagRequest)) {
+        'https://api.github.com/repos/' + $repo + '/releases/latest'
+    } else {
+        'https://api.github.com/repos/' + $repo + '/releases/tags/' + $tagRequest
+    }
+    try {
+        $rel = Invoke-RestMethod -Uri $api -Headers $headers
+    } catch {
+        if ([string]::IsNullOrWhiteSpace($tagRequest)) { throw }
+        Write-Output ('STATUS: GitHub API no disponible (' + $_.Exception.Message + '); uso URLs directas del release ' + $tagRequest + '.')
+        $base = 'https://github.com/' + $repo + '/releases/download/' + $tagRequest + '/'
+        $rel = [pscustomobject]@{
+            tag_name = $tagRequest
+            assets = @(
+                [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-cuda-12.4-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-cuda-12.4-x64.zip' },
+                [pscustomobject]@{ name = 'cudart-llama-bin-win-cuda-12.4-x64.zip'; browser_download_url = $base + 'cudart-llama-bin-win-cuda-12.4-x64.zip' },
+                [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-cuda-13.3-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-cuda-13.3-x64.zip' },
+                [pscustomobject]@{ name = 'cudart-llama-bin-win-cuda-13.3-x64.zip'; browser_download_url = $base + 'cudart-llama-bin-win-cuda-13.3-x64.zip' },
+                [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-avx2-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-avx2-x64.zip' }
+            )
+        }
+    }
     $tag = [string]$rel.tag_name
     $assets = @($rel.assets)
     $pick = $null
@@ -2356,7 +2396,8 @@ try {
 }
 )PS").arg(QDir::toNativeSeparators(toolsDir).replace("'", "''"))
        .arg(m_installSourceRepo)
-       .arg(m_installRequireCuda ? QStringLiteral("1") : QStringLiteral("0"));
+       .arg(m_installRequireCuda ? QStringLiteral("1") : QStringLiteral("0"))
+       .arg(m_installReleaseTag);
 
     m_installerProc = new QProcess(this);
     m_installingOfficialBinary = true;

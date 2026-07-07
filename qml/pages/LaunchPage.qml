@@ -432,6 +432,16 @@ Item {
                         enabled: launchCombo.currentValue !== undefined
                         onClicked: App.computeEffectiveProfile(launchCombo.currentValue)
                     }
+
+                    LcButton {
+                        text: App.installingOfficialBinary ? "Actualizando binario…" : "Actualizar binario requerido"
+                        secondary: true
+                        visible: launchCombo.currentValue !== undefined
+                                 && App.effectiveProfile !== undefined
+                                 && (App.effectiveProfile.blockingErrors ?? []).length > 0
+                        enabled: visible && !App.installingOfficialBinary && !App.serverRunning && !App.serverStopping
+                        onClicked: App.installRequiredBinaryForProfile(launchCombo.currentValue)
+                    }
                 }
 
                 // --- Watchdog state + live VRAM meter -----------------------
