@@ -294,10 +294,10 @@ void CoreTests::builder_dropsGemmaDraftOnOldBinary()
 
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     const QStringList &a = ep.effectiveArgs;
+    QVERIFY(!ep.blockingErrors.isEmpty());
     QVERIFY(!a.contains("--spec-draft-model"));
     QVERIFY(!a.contains("--spec-draft-n-max"));
     QVERIFY(!a.contains("--spec-draft-ngl"));
-    QVERIFY(!ep.warnings.isEmpty());
 }
 
 // Spec decoding activo + KV cache cuantizado → forzar f16 (no emitir el flag) y

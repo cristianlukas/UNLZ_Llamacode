@@ -343,9 +343,10 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
             warnings.append("Draft model unavailable, speculative decoding disabled.");
         } else if (mp.specType == QLatin1String("draft-mtp")
                    && !supportsGemma4AssistantDraft(bin)) {
-            warnings.append(QStringLiteral(
-                "Draft MTP disabled: binary '%1' is older than b9763 and cannot "
-                "load gemma4-assistant draft models. Update llama-server to enable MTP.")
+            errors.append(QStringLiteral(
+                "Este perfil requiere llama-server b9763 o superior para cargar "
+                "draft MTP gemma4-assistant. El binario actual es '%1'. "
+                "Actualizá el binario compatible del perfil antes de iniciar.")
                 .arg(bin.versionHint.isEmpty() ? bin.path : bin.versionHint));
         } else {
             // beellama (MTP/DFlash con draft separado) usa --spec-draft-model;
