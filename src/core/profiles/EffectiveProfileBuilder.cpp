@@ -333,7 +333,7 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
 
     if (!mp.mmprojId.isEmpty()) {
         if (!mmproj.isAvailable || mmproj.absolutePath.isEmpty())
-            warnings.append("mmproj model unavailable, vision disabled.");
+            warnings.append("mmproj opcional no disponible; visión desactivada.");
         else
             addFlag(bin, "--mmproj", mmproj.absolutePath, args, warnings);
     }

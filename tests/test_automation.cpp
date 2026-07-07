@@ -11,7 +11,7 @@ private slots:
     void initTestCase();
     void normalizedCoordinatesScaleAcrossResolutions();
     void sensitiveActionClassification();
-    void desktopRequiresVisionAndTraining();
+    void desktopRequiresTraining();
     void limitsAreClamped();
     void autoModeRoutesBySurface();
     void recipeWebStepDetection();
@@ -51,13 +51,12 @@ void AutomationTests::sensitiveActionClassification()
     QVERIFY(!AutomationRunner::isSensitiveAction(QStringLiteral("Abrir la calculadora")));
 }
 
-void AutomationTests::desktopRequiresVisionAndTraining()
+void AutomationTests::desktopRequiresTraining()
 {
     QVariantMap task{{"executionMode", "desktop"}};
-    QVERIFY(AutomationRunner::validateTask(task, false).contains(QStringLiteral("visión")));
-    QVERIFY(AutomationRunner::validateTask(task, true).contains(QStringLiteral("enseñada")));
+    QVERIFY(AutomationRunner::validateTask(task, false).contains(QStringLiteral("enseñada")));
     task["teachArtifactId"] = QStringLiteral("demo");
-    QVERIFY(AutomationRunner::validateTask(task, true).isEmpty());
+    QVERIFY(AutomationRunner::validateTask(task, false).isEmpty());
 }
 
 void AutomationTests::limitsAreClamped()

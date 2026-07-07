@@ -552,10 +552,10 @@ importar sin modificarlos.
 
 Los artefactos se guardan versionados en
 `AppLocalData/LlamaCode/automations/<id>/` (`manifest.json`, `recipe.json`,
-`evidence/` y `browser.mjs` opcional). Las Tasks desktop requieren un perfil con
-visión (`--mmproj`) y una sesión Windows interactiva; si la sesión está bloqueada,
-la ejecución queda esperando. UAC, pantalla de bloqueo y escritorio seguro nunca
-se controlan. Las notas y logs redactan patrones de password/token/API key.
+`evidence/` y `browser.mjs` opcional). Las Tasks desktop requieren una sesión
+Windows interactiva y un artefacto enseñado; si la sesión está bloqueada, la
+ejecución queda esperando. UAC, pantalla de bloqueo y escritorio seguro nunca se
+controlan. Las notas y logs redactan patrones de password/token/API key.
 
 Cada Task define política de aprobación (`always`, `sensitive`, `autonomous`) y
 límites de tiempo, acciones y reintentos. El default es confirmar acciones

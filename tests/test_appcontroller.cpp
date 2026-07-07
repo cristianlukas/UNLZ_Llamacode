@@ -454,6 +454,7 @@ void AppControllerTests::createRecommendedLaunchProfileBuildsProfile()
 
     const QString launchId = app.createRecommendedLaunchProfile();
     QVERIFY(!launchId.isEmpty());
+    QCOMPARE(app.createRecommendedLaunchProfile(), launchId);
     QVERIFY(app.hasAnyLaunch());
     QVERIFY(!app.needsSetup());
     QCOMPARE(app.profileManager()->getLaunchProfile(launchId).value("id").toString(), launchId);

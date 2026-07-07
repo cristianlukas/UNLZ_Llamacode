@@ -25,9 +25,8 @@ bool AutomationRunner::recipeHasWebStep(const QVariantList &steps)
 
 QString AutomationRunner::validateTask(const QVariantMap &task, bool hasVision)
 {
+    Q_UNUSED(hasVision)
     const QString mode = task.value(QStringLiteral("executionMode"), QStringLiteral("auto")).toString();
-    if (mode == QLatin1String("desktop") && !hasVision)
-        return QStringLiteral("Esta automatización de escritorio requiere un perfil con visión (--mmproj).");
     if (mode == QLatin1String("desktop")
         && task.value(QStringLiteral("teachArtifactId")).toString().isEmpty())
         return QStringLiteral("La automatización de escritorio todavía no fue enseñada.");

@@ -45,6 +45,7 @@
 #include <QFileInfo>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QHash>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QUrl>
@@ -662,6 +663,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
         maybeActivatePendingSystemProfile();
     });
     connect(&m_profiles, &ProfileManager::launchesChanged, this, &AppController::setupStateChanged);
+    cleanupDuplicateInitialLaunchProfiles();
     connect(this, &AppController::taskRunStateChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentStartingChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentRunningChanged, this, &AppController::taskRunAvailabilityChanged);
@@ -8821,6 +8823,25 @@ QString AppController::createRecommendedLaunchProfile()
         return {};
     }
 
+    const QVariantList launches = m_profiles.launchProfilesForMenu();
+    for (const QVariant &value : launches) {
+        const QString id = value.toMap().value(QStringLiteral("id")).toString();
+        const LaunchProfile lp = m_profiles.resolveLaunch(id);
+        if (lp.id.isEmpty() || lp.system)
+            continue;
+        const BackendProfile be = m_profiles.resolveBackend(lp.backendProfileId);
+        const ModelProfile mp = m_profiles.resolveModelProfile(lp.modelProfileId);
+        if (be.binaryId == binaryId && mp.modelId == modelId) {
+            writeSetting(QStringLiteral("lastLaunchId"), id);
+            computeEffectiveProfile(id);
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Perfil inicial existente reutilizado: %1.").arg(lp.name));
+            emit setupStateChanged();
+            emit activeLaunchIdChanged();
+            return id;
+        }
+    }
+
     QString base = QFileInfo(modelName).completeBaseName();
     base.remove(QRegularExpression(QStringLiteral("[-_](Q[0-9].*|IQ[0-9].*|BF16|F16|F32)$"),
                                    QRegularExpression::CaseInsensitiveOption));
@@ -8857,6 +8878,64 @@ QString AppController::createRecommendedLaunchProfile()
     emit setupStateChanged();
     emit activeLaunchIdChanged();
     return launchId;
+}
+
+void AppController::cleanupDuplicateInitialLaunchProfiles()
+{
+    QHash<QString, QString> keepByKey;
+    QHash<QString, QString> replacementByRemovedId;
+    QStringList removeIds;
+
+    const QVariantList launches = m_profiles.launchProfilesForMenu();
+    for (const QVariant &value : launches) {
+        const QString id = value.toMap().value(QStringLiteral("id")).toString();
+        const LaunchProfile lp = m_profiles.resolveLaunch(id);
+        if (lp.id.isEmpty() || lp.system || lp.favorite || !lp.alias.isEmpty())
+            continue;
+        if (!lp.extraArgs.isEmpty() || !lp.harnessProfileId.isEmpty()
+            || !lp.workspaceProfileId.isEmpty() || !lp.agentProfileId.isEmpty())
+            continue;
+
+        const BackendProfile be = m_profiles.resolveBackend(lp.backendProfileId);
+        const ModelProfile mp = m_profiles.resolveModelProfile(lp.modelProfileId);
+        if (be.binaryId.isEmpty() || mp.modelId.isEmpty())
+            continue;
+
+        QString baseName = lp.name;
+        baseName.remove(QRegularExpression(QStringLiteral("^\\d+_")));
+        const QString key = be.binaryId + QLatin1Char('|') + mp.modelId + QLatin1Char('|') + baseName;
+        const QString keptId = keepByKey.value(key);
+        if (keptId.isEmpty()) {
+            keepByKey.insert(key, lp.id);
+            continue;
+        }
+        replacementByRemovedId.insert(lp.id, keptId);
+        removeIds.append(lp.id);
+    }
+
+    if (removeIds.isEmpty())
+        return;
+
+    const QString lastLaunchId = readSetting(QStringLiteral("lastLaunchId"), QString()).toString();
+    const QString replacement = replacementByRemovedId.value(lastLaunchId);
+    if (!replacement.isEmpty())
+        writeSetting(QStringLiteral("lastLaunchId"), replacement);
+
+    int removed = 0;
+    for (const QString &id : removeIds) {
+        if (m_profiles.removeLaunchProfile(id))
+            ++removed;
+    }
+
+    if (removed <= 0)
+        return;
+
+    if (!replacement.isEmpty())
+        computeEffectiveProfile(replacement);
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Perfiles iniciales duplicados limpiados: %1.").arg(removed));
+    emit setupStateChanged();
+    emit activeLaunchIdChanged();
 }
 
 // Lee el bundle de perfiles de sistema (env override para tests, si no el qrc).

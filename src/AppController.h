@@ -378,7 +378,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.12"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.14"); }
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
@@ -899,6 +899,7 @@ signals:
                          const QString &summary, bool silentUnlessError);
 
 private:
+    void cleanupDuplicateInitialLaunchProfiles();
     void appendLog(const QString &text);
     void appendServerEvent(const QString &source, const QString &text);
     // Escanea líneas del server por patrones conocidos y emite serverDiagnostic.
