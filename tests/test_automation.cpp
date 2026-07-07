@@ -22,6 +22,7 @@ private slots:
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
     void promptDedupsRepeatedLearnings();
+    void desktopPromptKeepsVerboseRecipesCompact();
     void keyBufferAccumulatesTextIntoTypeStep();
     void keyBufferFlushesTextBeforeNamedKey();
     void keyBufferEmitsShortcutWithModifiers();
@@ -120,8 +121,7 @@ void AutomationTests::desktopPromptPrefersNativeTools()
             QVariantMap{{"kind", "type"}, {"intent", "Escribir: \"2+2\""}}}}});
     QVERIFY(prompt.contains(QStringLiteral("Superficie: escritorio foreground nativo")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_observe")));
-    QVERIFY(prompt.contains(QStringLiteral("Playwright headed")));
-    QVERIFY(prompt.contains(QStringLiteral("no las leas con read_file")));
+    QVERIFY(prompt.contains(QStringLiteral("No leas")));
     // Regresión del bug "sumar 2+2": el modelo se colgaba repitiendo
     // desktop_windows/desktop_observe sin nunca escribir. El prompt debe empujar
     // el camino rápido por teclado, verificación por texto y una regla anti-loop.
@@ -152,7 +152,7 @@ void AutomationTests::browserPromptUsesForegroundTeachEvidence()
             QVariantMap{{"kind", "click"}, {"intent", "Click login"},
                         {"x", 0.4}, {"y", 0.2}, {"evidence", "0002.jpg"}}}}});
     QVERIFY(prompt.contains(QStringLiteral("browser foreground de Playwright")));
-    QVERIFY(prompt.contains(QStringLiteral("captura: evidence/0002.jpg")));
+    QVERIFY(!prompt.contains(QStringLiteral("captura: evidence/0002.jpg")));
     QVERIFY(prompt.contains(QStringLiteral("adaptá selectores")));
 }
 
@@ -237,7 +237,7 @@ void AutomationTests::artifactLearningsAppendAndPrompt()
         AutomationArtifactStore::manifest(id),
         AutomationArtifactStore::recipe(id));
     QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
-    QVERIFY(prompt.contains(QStringLiteral("selector nuevo")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 
@@ -257,6 +257,34 @@ void AutomationTests::promptDedupsRepeatedLearnings()
     QCOMPARE(prompt.count(QStringLiteral("Aprendizajes auto-actualizados")), 1);
     QCOMPARE(prompt.count(QStringLiteral("- Tarea completada")), 1);   // un solo bullet
     QVERIFY(prompt.contains(QStringLiteral("9+9 = 18")));              // el más reciente
+}
+
+void AutomationTests::desktopPromptKeepsVerboseRecipesCompact()
+{
+    QVariantList steps;
+    for (int i = 0; i < 24; ++i) {
+        steps << QVariantMap{
+            {QStringLiteral("kind"), QStringLiteral("type")},
+            {QStringLiteral("intent"), QStringLiteral("Paso verbose %1: escribir texto largo para simular una receta enseñada con mucha evidencia y notas repetidas que no deben inflar el prompt.").arg(i)},
+            {QStringLiteral("evidence"), QStringLiteral("%1.jpg").arg(i, 4, 10, QLatin1Char('0'))}};
+    }
+    const QString longSummary = QStringLiteral(
+        "Task ejecutada correctamente. Resultado: la calculadora muestra Se muestra 4. "
+        "Resumen largo con pasos, tool calls, ids de ventana y explicación repetida para simular "
+        "aprendizajes acumulados en recipe.json que antes empujaban perfiles 8k fuera de contexto. ");
+    QVariantList learnings;
+    for (int i = 0; i < 8; ++i)
+        learnings << QVariantMap{{QStringLiteral("summary"), longSummary.repeated(8)}};
+
+    const QString prompt = AutomationRunner::augmentPrompt(
+        QVariantMap{{"executionMode", "desktop"}},
+        QVariantMap{{"id", "sumar-2-2"}},
+        QVariantMap{{"steps", steps}, {"learnings", learnings}});
+
+    QVERIFY(prompt.contains(QStringLiteral("CAMINO RÁPIDO")));
+    QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
+    QVERIFY(!prompt.contains(QStringLiteral("captura: evidence/")));
+    QVERIFY2(prompt.size() < 7000, qPrintable(QStringLiteral("prompt chars=%1").arg(prompt.size())));
 }
 
 void AutomationTests::keyBufferAccumulatesTextIntoTypeStep()
