@@ -378,7 +378,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.11"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.12"); }
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
@@ -1343,6 +1343,9 @@ private:
     // Instala el binario del tipo pedido si falta (beellama→installMtpBinary,
     // official→installOfficialBinary). beellama es CUDA-only: sin NVIDIA cae a official.
     void ensureSystemBinary(const QString &kind);
+    // Igual que ensureSystemBinary, pero respeta binaryPin del perfil de sistema:
+    // si el pin falta, instala exactamente ese release aunque exista otro official.
+    void ensureSystemProfileBinary(const QJsonObject &entry);
     // Para acceptSystemProfile: perfil de sistema pendiente de bind tras descarga.
     QString m_pendingSystemLaunchId;
     bool    m_pendingSystemStartAgent = false;

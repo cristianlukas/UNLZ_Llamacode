@@ -8892,6 +8892,19 @@ void AppController::ensureSystemBinary(const QString &kind)
     }
 }
 
+void AppController::ensureSystemProfileBinary(const QJsonObject &entry)
+{
+    const QString launchId = entry.value(QStringLiteral("id")).toString();
+    const QString pin = entry.value(QStringLiteral("binaryPin")).toString().trimmed();
+    if (!pin.isEmpty()) {
+        if (pinnedSystemBinaryId(launchId).isEmpty())
+            installRequiredBinaryForProfile(launchId);
+        return;
+    }
+
+    ensureSystemBinary(entry.value(QStringLiteral("binaryKind")).toString(QStringLiteral("official")));
+}
+
 QString AppController::systemProfileBinaryKind(const QString &launchId) const
 {
     for (const QJsonValue &v : readSystemProfilesBundle())
@@ -9077,7 +9090,7 @@ void AppController::acceptShowcase()
         for (const QJsonValue &v : arr) {
             const QJsonObject e = v.toObject();
             if (e.value(QStringLiteral("id")).toString() != id) continue;
-            ensureSystemBinary(e.value(QStringLiteral("binaryKind")).toString(QStringLiteral("official")));
+            ensureSystemProfileBinary(e);
             enqueueSystemProfileAssets(e);
             if (firstId.isEmpty()) firstId = id;
             break;
@@ -9100,7 +9113,7 @@ void AppController::acceptShowcaseOne(const QString &launchId)
         if (v.toObject().value(QStringLiteral("id")).toString() == launchId) { entry = v.toObject(); break; }
     if (entry.isEmpty()) return;
 
-    ensureSystemBinary(entry.value(QStringLiteral("binaryKind")).toString(QStringLiteral("official")));
+    ensureSystemProfileBinary(entry);
     enqueueSystemProfileAssets(entry);
     m_pendingSystemLaunchId = launchId;
     writeSetting(QStringLiteral("lastLaunchId"), launchId);
@@ -9133,7 +9146,7 @@ void AppController::acceptSystemProfileImpl(const QString &launchId, bool startW
     // Binario según el tipo del perfil (beellama: ngram/Qwen-MTP; official: gemma4-
     // assistant y resto). Descargas async; el server se lanza con lo instalado.
     const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
-    ensureSystemBinary(entry.value("binaryKind").toString(QStringLiteral("official")));
+    ensureSystemProfileBinary(entry);
 
     // Modelo (+mmproj+draft) al subdir del tier; al terminar el scan, se activa solo.
     m_pendingSystemLaunchId = launchId;
@@ -9146,7 +9159,7 @@ void AppController::acceptSystemProfileImpl(const QString &launchId, bool startW
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
             if (e.value("extra").toBool() && e.value("id").toString() != launchId) {
-                ensureSystemBinary(e.value("binaryKind").toString(QStringLiteral("official")));
+                ensureSystemProfileBinary(e);
                 enqueueSystemProfileAssets(e);
             }
         }
