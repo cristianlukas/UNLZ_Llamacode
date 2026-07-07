@@ -35,7 +35,7 @@ QString AutomationRunner::validateTask(const QVariantMap &task, bool hasVision)
     return {};
 }
 
-bool AutomationRunner::calculatorResultMismatch(const QVariantMap &task, const QString &workLog,
+bool AutomationRunner::arithmeticResultMismatch(const QVariantMap &task, const QString &workLog,
                                                 QString *message)
 {
     if (message)
@@ -47,11 +47,37 @@ bool AutomationRunner::calculatorResultMismatch(const QVariantMap &task, const Q
     if (!taskText.contains(QStringLiteral("calculadora")))
         return false;
 
-    static const QRegularExpression sumRe(QStringLiteral("(\\d+)\\s*\\+\\s*(\\d+)"));
-    const QRegularExpressionMatch sumMatch = sumRe.match(taskText);
-    if (!sumMatch.hasMatch())
+    static const QRegularExpression exprRe(
+        QStringLiteral("(-?\\d+(?:[\\.,]\\d+)?)\\s*([+\\-*/x×÷])\\s*(-?\\d+(?:[\\.,]\\d+)?)"));
+    const QRegularExpressionMatch exprMatch = exprRe.match(taskText);
+    if (!exprMatch.hasMatch())
         return false;
-    const int expected = sumMatch.captured(1).toInt() + sumMatch.captured(2).toInt();
+
+    auto number = [](QString value, bool *ok) {
+        return value.replace(QLatin1Char(','), QLatin1Char('.')).toDouble(ok);
+    };
+    bool aOk = false;
+    bool bOk = false;
+    const double a = number(exprMatch.captured(1), &aOk);
+    const double b = number(exprMatch.captured(3), &bOk);
+    if (!aOk || !bOk)
+        return false;
+
+    const QString op = exprMatch.captured(2);
+    double expected = 0.0;
+    if (op == QLatin1String("+")) {
+        expected = a + b;
+    } else if (op == QLatin1String("-")) {
+        expected = a - b;
+    } else if (op == QLatin1String("*") || op == QLatin1String("x") || op == QLatin1String("×")) {
+        expected = a * b;
+    } else if (op == QLatin1String("/") || op == QLatin1String("÷")) {
+        if (qFuzzyIsNull(b))
+            return false;
+        expected = a / b;
+    } else {
+        return false;
+    }
 
     static const QRegularExpression displayRe(
         QStringLiteral("Se muestra\\s+(-?\\d+(?:[\\.,]\\d+)?)"),
@@ -66,14 +92,14 @@ bool AutomationRunner::calculatorResultMismatch(const QVariantMap &task, const Q
     const QString normalized = QString(lastDisplay).replace(QLatin1Char(','), QLatin1Char('.'));
     bool ok = false;
     const double actual = normalized.toDouble(&ok);
-    if (!ok || qFuzzyCompare(actual + 1.0, double(expected) + 1.0))
+    if (!ok || qAbs(actual - expected) < 0.001)
         return false;
 
     if (message) {
         *message = QStringLiteral("La verificación de Calculadora contradice el objetivo: "
                                   "el visor actual dice %1, pero se esperaba %2. "
                                   "No se acepta historial viejo como éxito.")
-                       .arg(lastDisplay, QString::number(expected));
+                       .arg(lastDisplay, QString::number(expected, 'g', 12));
     }
     return true;
 }
@@ -170,8 +196,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "2) desktop_wait ~800 ms y UNA sola desktop_windows. NO repitas desktop_windows; "
             "si aparece la ventana, enfocá y actuá.\n"
             "3) TECLADO primero: desktop_focus <id>, desktop_type texto, desktop_key ENTER/=.\n"
-            "Para cálculos cortos: primero limpiá con desktop_key ESC, después escribí TODO junto "
-            "con desktop_type \"2+2=\"; no lo partas y no presiones ENTER después del '='.\n"
+            "Para cálculos cortos: primero limpiá con desktop_key ESC, después detectá la "
+            "expresión del objetivo y escribila completa con '=' en una sola llamada "
+            "(desktop_type \"<expresión>=\"); no la partas ni presiones ENTER después.\n"
             "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId.\n"
             "5) Verificá con desktop_controls usando el visor ACTUAL ('Se muestra X'); "
             "no aceptes Historial/Memoria como resultado final.\n"

@@ -128,7 +128,7 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("CAMINO RÁPIDO")));
     QVERIFY(prompt.contains(QStringLiteral("TECLADO primero")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_type")));
-    QVERIFY(prompt.contains(QStringLiteral("desktop_type \"2+2=\"")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_type \"<expresión>=\"")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_key ESC")));
     QVERIFY(prompt.contains(QStringLiteral("visor ACTUAL")));
     QVERIFY(prompt.contains(QStringLiteral("Historial")));
@@ -157,12 +157,26 @@ void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
         "controlId=1 [text] \"Se muestra 6\"\n"
         "controlId=2 [text] \"2 + 2= 4\"\n");
     QString message;
-    QVERIFY(AutomationRunner::calculatorResultMismatch(task, badLog, &message));
+    QVERIFY(AutomationRunner::arithmeticResultMismatch(task, badLog, &message));
     QVERIFY(message.contains(QStringLiteral("visor actual dice 6")));
     QVERIFY(message.contains(QStringLiteral("esperaba 4")));
 
     const QString goodLog = QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 4\"\n");
-    QVERIFY(!AutomationRunner::calculatorResultMismatch(task, goodLog));
+    QVERIFY(!AutomationRunner::arithmeticResultMismatch(task, goodLog));
+
+    const QVariantMap otherSum{
+        {QStringLiteral("name"), QStringLiteral("sumar 3 + 3")},
+        {QStringLiteral("description"), QStringLiteral("sumar 3+3 en la calculadora de windows")}};
+    QVERIFY(!AutomationRunner::arithmeticResultMismatch(
+        otherSum, QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 6\"\n")));
+    QVERIFY(AutomationRunner::arithmeticResultMismatch(
+        otherSum, QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 4\"\n")));
+
+    const QVariantMap product{
+        {QStringLiteral("name"), QStringLiteral("multiplicar 3 x 4")},
+        {QStringLiteral("description"), QStringLiteral("hacer 3 x 4 en la calculadora")}};
+    QVERIFY(!AutomationRunner::arithmeticResultMismatch(
+        product, QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 12\"\n")));
 }
 
 void AutomationTests::browserPromptUsesForegroundTeachEvidence()

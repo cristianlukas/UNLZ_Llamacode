@@ -16,7 +16,7 @@ public:
     // inflar el prompt con esquemas de tools inútiles en perfiles de n_ctx chico.
     static bool recipeHasWebStep(const QVariantList &steps);
     static QString validateTask(const QVariantMap &task, bool hasVision);
-    static bool calculatorResultMismatch(const QVariantMap &task, const QString &workLog,
+    static bool arithmeticResultMismatch(const QVariantMap &task, const QString &workLog,
                                          QString *message = nullptr);
     static QVariantMap limits(const QVariantMap &task);
     static QString augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,

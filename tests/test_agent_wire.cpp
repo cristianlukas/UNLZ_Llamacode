@@ -824,9 +824,10 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
 
     // Pilar 1: abrir con desktop_launch, no run_shell.
     QVERIFY(novis.contains(QStringLiteral("desktop_launch")));
-    // Pilar 2: camino rápido por teclado con el ejemplo concreto de la calculadora.
+    // Pilar 2: camino rápido por teclado generalizable para calculadora.
     QVERIFY(novis.contains(QStringLiteral("desktop_type")));
-    QVERIFY(novis.contains(QStringLiteral("2+2")));
+    QVERIFY(novis.contains(QStringLiteral("<expresión>=")));
+    QVERIFY(novis.contains(QStringLiteral("desktop_key ESC")));
     // Pilar 3: verificar por texto vía desktop_controls (UIA), no por captura.
     QVERIFY(novis.contains(QStringLiteral("desktop_controls")));
     // Pilar 4: sin visión, NO usar desktop_observe (evita el loop ciego).

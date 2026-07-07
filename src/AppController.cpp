@@ -4747,7 +4747,7 @@ void AppController::onAgentTurnFinished()
         } else if (taskRequiresToolEvidence(task) && !usedTool) {
             status = QStringLiteral("error");
             summary = QStringLiteral("La Task requería consultar o operar externamente, pero el agente no ejecutó ninguna herramienta. Respuesta final: %1").arg(finalText.left(700));
-        } else if (QString mismatch; AutomationRunner::calculatorResultMismatch(task, work, &mismatch)) {
+        } else if (QString mismatch; AutomationRunner::arithmeticResultMismatch(task, work, &mismatch)) {
             status = QStringLiteral("error");
             summary = mismatch;
         } else {
