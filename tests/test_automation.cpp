@@ -17,6 +17,7 @@ private slots:
     void recipeWebStepDetection();
     void desktopPromptPrefersNativeTools();
     void desktopToolPolicyKeepsGuiToolsAvailable();
+    void calculatorMismatchRejectsHistoryFalsePositive();
     void browserPromptUsesForegroundTeachEvidence();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
@@ -118,9 +119,8 @@ void AutomationTests::desktopPromptPrefersNativeTools()
         QVariantMap{{"id", "calc-demo"}},
         QVariantMap{{"steps", QVariantList{
             QVariantMap{{"kind", "key"}, {"intent", "Tecla WIN"}},
-            QVariantMap{{"kind", "type"}, {"intent", "Escribir: \"2+2\""}}}}});
+    QVariantMap{{"kind", "type"}, {"intent", "Escribir: \"2+2\""}}}}});
     QVERIFY(prompt.contains(QStringLiteral("Superficie: escritorio foreground nativo")));
-    QVERIFY(prompt.contains(QStringLiteral("desktop_observe")));
     QVERIFY(prompt.contains(QStringLiteral("No leas")));
     // Regresión del bug "sumar 2+2": el modelo se colgaba repitiendo
     // desktop_windows/desktop_observe sin nunca escribir. El prompt debe empujar
@@ -129,6 +129,9 @@ void AutomationTests::desktopPromptPrefersNativeTools()
     QVERIFY(prompt.contains(QStringLiteral("TECLADO primero")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_type")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_type \"2+2=\"")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_key ESC")));
+    QVERIFY(prompt.contains(QStringLiteral("visor ACTUAL")));
+    QVERIFY(prompt.contains(QStringLiteral("Historial")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
     QVERIFY(prompt.contains(QStringLiteral("ANTI-LOOP")));
     QVERIFY(prompt.contains(QStringLiteral("NO repitas desktop_windows")));
@@ -142,6 +145,24 @@ void AutomationTests::desktopToolPolicyKeepsGuiToolsAvailable()
     QVERIFY(tools.contains(QStringLiteral("desktop_key")));
     QVERIFY(tools.contains(QStringLiteral("desktop_type")));
     QVERIFY(!tools.contains(QStringLiteral("run_shell")));
+}
+
+void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
+{
+    const QVariantMap task{
+        {QStringLiteral("name"), QStringLiteral("sumar 2 + 2")},
+        {QStringLiteral("description"), QStringLiteral("sumar 2+2 en la calculadora de windows")}};
+    const QString badLog = QStringLiteral(
+        "[desktop_controls: 3 control(es)]\n"
+        "controlId=1 [text] \"Se muestra 6\"\n"
+        "controlId=2 [text] \"2 + 2= 4\"\n");
+    QString message;
+    QVERIFY(AutomationRunner::calculatorResultMismatch(task, badLog, &message));
+    QVERIFY(message.contains(QStringLiteral("visor actual dice 6")));
+    QVERIFY(message.contains(QStringLiteral("esperaba 4")));
+
+    const QString goodLog = QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 4\"\n");
+    QVERIFY(!AutomationRunner::calculatorResultMismatch(task, goodLog));
 }
 
 void AutomationTests::browserPromptUsesForegroundTeachEvidence()

@@ -962,15 +962,17 @@ QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
         "3) Teclado primero (camino rápido): para apps que se manejan con teclado "
         "(calculadora, notepad, campos de texto) NO clickees botones. Enfocá con "
         "desktop_focus <id> y escribí con desktop_type. Ej. sumar 2+2 en la "
-        "calculadora: desktop_type \"2+2\" y después desktop_key \"=\" (o ENTER). "
-        "Fin. desktop_type/desktop_key van a la ventana en foco.\n"
+        "calculadora: primero desktop_key ESC para limpiar, después desktop_type "
+        "\"2+2=\" en una sola acción. No lo partas y no presiones ENTER después "
+        "del '='. Fin. desktop_type/desktop_key van a la ventana en foco.\n"
         "4) Botones sin equivalente de teclado: desktop_controls <id> lista los "
         "controles por NOMBRE (árbol UIA, sin captura); tomá el controlId y "
         "accionalo con desktop_click_element. Clic semántico por nombre, NO por "
         "pixel.\n"
         "5) VERIFICAR el resultado: leé el estado con desktop_controls — el texto "
-        "de los controles (ej. el visor de la calculadora) trae el valor en su "
-        "nombre, sin necesidad de visión. ");
+        "de los controles (ej. el visor ACTUAL de la calculadora, 'Se muestra X') "
+        "trae el valor en su nombre, sin necesidad de visión. No aceptes "
+        "Historial/Memoria como resultado final. ");
     if (visionReady) {
         s += QStringLiteral(
             "Este perfil tiene visión (--mmproj): también podés usar desktop_observe "

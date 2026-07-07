@@ -1,5 +1,7 @@
 #include "AutomationRunner.h"
 
+#include <QRegularExpression>
+
 bool AutomationRunner::isSensitiveAction(const QString &intent)
 {
     const QString s = intent.toLower();
@@ -31,6 +33,49 @@ QString AutomationRunner::validateTask(const QVariantMap &task, bool hasVision)
         && task.value(QStringLiteral("teachArtifactId")).toString().isEmpty())
         return QStringLiteral("La automatización de escritorio todavía no fue enseñada.");
     return {};
+}
+
+bool AutomationRunner::calculatorResultMismatch(const QVariantMap &task, const QString &workLog,
+                                                QString *message)
+{
+    if (message)
+        message->clear();
+
+    const QString taskText = (task.value(QStringLiteral("name")).toString()
+                              + QLatin1Char('\n')
+                              + task.value(QStringLiteral("description")).toString()).toLower();
+    if (!taskText.contains(QStringLiteral("calculadora")))
+        return false;
+
+    static const QRegularExpression sumRe(QStringLiteral("(\\d+)\\s*\\+\\s*(\\d+)"));
+    const QRegularExpressionMatch sumMatch = sumRe.match(taskText);
+    if (!sumMatch.hasMatch())
+        return false;
+    const int expected = sumMatch.captured(1).toInt() + sumMatch.captured(2).toInt();
+
+    static const QRegularExpression displayRe(
+        QStringLiteral("Se muestra\\s+(-?\\d+(?:[\\.,]\\d+)?)"),
+        QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatchIterator it = displayRe.globalMatch(workLog);
+    QString lastDisplay;
+    while (it.hasNext())
+        lastDisplay = it.next().captured(1);
+    if (lastDisplay.isEmpty())
+        return false;
+
+    const QString normalized = QString(lastDisplay).replace(QLatin1Char(','), QLatin1Char('.'));
+    bool ok = false;
+    const double actual = normalized.toDouble(&ok);
+    if (!ok || qFuzzyCompare(actual + 1.0, double(expected) + 1.0))
+        return false;
+
+    if (message) {
+        *message = QStringLiteral("La verificación de Calculadora contradice el objetivo: "
+                                  "el visor actual dice %1, pero se esperaba %2. "
+                                  "No se acepta historial viejo como éxito.")
+                       .arg(lastDisplay, QString::number(expected));
+    }
+    return true;
 }
 
 QVariantMap AutomationRunner::limits(const QVariantMap &task)
@@ -125,9 +170,11 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "2) desktop_wait ~800 ms y UNA sola desktop_windows. NO repitas desktop_windows; "
             "si aparece la ventana, enfocá y actuá.\n"
             "3) TECLADO primero: desktop_focus <id>, desktop_type texto, desktop_key ENTER/=.\n"
-            "Para cálculos cortos, escribí TODO junto: desktop_type \"2+2=\"; no lo partas.\n"
+            "Para cálculos cortos: primero limpiá con desktop_key ESC, después escribí TODO junto "
+            "con desktop_type \"2+2=\"; no lo partas y no presiones ENTER después del '='.\n"
             "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId.\n"
-            "5) Verificá con desktop_controls; desktop_observe es último recurso.\n"
+            "5) Verificá con desktop_controls usando el visor ACTUAL ('Se muestra X'); "
+            "no aceptes Historial/Memoria como resultado final.\n"
             "ANTI-LOOP: una acción -> una verificación por texto -> terminá. Los pasos "
             "[type]/[key]/[click] son intención; traducilos a desktop_* sobre la app. "
             "No leas evidence/*.jpg con read_file.\n");
