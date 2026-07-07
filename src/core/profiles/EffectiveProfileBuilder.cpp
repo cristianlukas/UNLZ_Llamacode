@@ -329,10 +329,9 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
             const QString draftFlag = !mp.specType.isEmpty()
                 ? QStringLiteral("--spec-draft-model") : QStringLiteral("--draft-model");
             addFlag(bin, draftFlag, draft.absolutePath, args, warnings);
-            // Flags de speculative decoding / MTP. Solo se emiten los seteados;
-            // vacío/0 = default del binario.
-            if (!mp.specType.isEmpty())
-                addFlag(bin, "--spec-type", mp.specType, args, warnings);
+            // Flags de speculative decoding. En llama.cpp actual --spec-type
+            // selecciona modos sin draft model (ngram-*); con --spec-draft-model
+            // el tipo lo define el propio draft GGUF.
             if (mp.specDraftNMax > 0)
                 addFlag(bin, "--spec-draft-n-max",
                         QString::number(mp.specDraftNMax), args, warnings);

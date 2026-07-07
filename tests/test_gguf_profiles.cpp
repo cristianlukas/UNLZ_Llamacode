@@ -266,11 +266,12 @@ void CoreTests::builder_emitsSpecFlags()
 
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     const QStringList &a = ep.effectiveArgs;
-    // Con specType seteado (MTP/DFlash, beellama) el draft va por --spec-draft-model.
+    // Con specType seteado (MTP/DFlash) el draft va por --spec-draft-model.
+    // --spec-type es sólo para modos sin draft model (ngram-*); emitir
+    // "draft-mtp" rompe llama-server actual.
     QVERIFY(a.contains("--spec-draft-model"));
-    int i = a.indexOf("--spec-type");
-    QVERIFY(i >= 0 && a[i + 1] == "draft-mtp");
-    i = a.indexOf("--spec-draft-n-max");
+    QVERIFY(!a.contains("--spec-type"));
+    int i = a.indexOf("--spec-draft-n-max");
     QVERIFY(i >= 0 && a[i + 1] == "3");
     i = a.indexOf("--spec-draft-ngl");
     QVERIFY(i >= 0 && a[i + 1] == "all");
