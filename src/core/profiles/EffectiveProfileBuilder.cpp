@@ -1,6 +1,7 @@
 #include "EffectiveProfileBuilder.h"
 #include "../GGUFScanner.h"
 #include <QFileInfo>
+#include <QRegularExpression>
 
 namespace {
 struct SamplingFlag {
@@ -85,6 +86,23 @@ static void removeFlagWithValue(QStringList &args, const QStringList &names)
             args.removeAt(i);
         --i;
     }
+}
+
+static int llamaCppBuildNumber(const LlamaBinary &bin)
+{
+    const QString haystack = (bin.versionHint + QLatin1Char(' ') + bin.name
+                              + QLatin1Char(' ') + bin.path).toLower();
+    const QRegularExpression re(QStringLiteral("\\bb(\\d{4,})\\b"));
+    const QRegularExpressionMatch m = re.match(haystack);
+    if (!m.hasMatch())
+        return 0;
+    return m.captured(1).toInt();
+}
+
+static bool supportsGemma4AssistantDraft(const LlamaBinary &bin)
+{
+    const int build = llamaCppBuildNumber(bin);
+    return build == 0 || build >= 9763;
 }
 
 EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
@@ -323,6 +341,12 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
     if (!mp.draftModelId.isEmpty()) {
         if (!draft.isAvailable || draft.absolutePath.isEmpty()) {
             warnings.append("Draft model unavailable, speculative decoding disabled.");
+        } else if (mp.specType == QLatin1String("draft-mtp")
+                   && !supportsGemma4AssistantDraft(bin)) {
+            warnings.append(QStringLiteral(
+                "Draft MTP disabled: binary '%1' is older than b9763 and cannot "
+                "load gemma4-assistant draft models. Update llama-server to enable MTP.")
+                .arg(bin.versionHint.isEmpty() ? bin.path : bin.versionHint));
         } else {
             // beellama (MTP/DFlash con draft separado) usa --spec-draft-model;
             // el spec-decoding plano de llama.cpp usa --draft-model.

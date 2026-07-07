@@ -42,6 +42,7 @@ private slots:
     void builder_dropsUnsupportedFlag();
     void builder_missingModelIsBlocking();
     void builder_emitsSpecFlags();
+    void builder_dropsGemmaDraftOnOldBinary();
     void builder_forcesF16KvWithDraft();
     void builder_appliesQwenCodingSamplingPreset();
     void builder_warnsOnManualQwenSampling();
@@ -277,6 +278,26 @@ void CoreTests::builder_emitsSpecFlags()
     QVERIFY(i >= 0 && a[i + 1] == "all");
     QVERIFY(a.contains("--spec-draft-type-k"));
     QVERIFY(a.contains("--spec-draft-type-v"));
+}
+
+void CoreTests::builder_dropsGemmaDraftOnOldBinary()
+{
+    auto ctx = makeCtx();
+    ctx.binary.versionHint = "b9045";
+    ctx.model.draftModelId = "d1";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMax = 3;
+    ctx.model.specDraftNgl = "all";
+    ctx.draftModel.id = "d1";
+    ctx.draftModel.isAvailable = true;
+    ctx.draftModel.absolutePath = "C:/models/mtp-gemma-4-12b-it.gguf";
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    const QStringList &a = ep.effectiveArgs;
+    QVERIFY(!a.contains("--spec-draft-model"));
+    QVERIFY(!a.contains("--spec-draft-n-max"));
+    QVERIFY(!a.contains("--spec-draft-ngl"));
+    QVERIFY(!ep.warnings.isEmpty());
 }
 
 // Spec decoding activo + KV cache cuantizado → forzar f16 (no emitir el flag) y
