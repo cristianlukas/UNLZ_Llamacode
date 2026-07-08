@@ -2494,6 +2494,25 @@ void LlamaAgentBackend::processPendingCalls()
             return;
         }
     }
+    if (name == QLatin1String("desktop_key")
+        && redundantDesktopConfirmKey(m_lastDesktopTool, m_lastDesktopTypeText,
+                                      args.value(QStringLiteral("key")).toString())) {
+        ++m_toolFail;
+        m_pendingCalls.removeFirst();
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("redundant_desktop_confirm_key")},
+                                          {QStringLiteral("previousType"), m_lastDesktopTypeText},
+                                          {QStringLiteral("key"), args.value(QStringLiteral("key")).toString()}});
+        appendToolResult(id, name, QStringLiteral(
+            "[desktop_key bloqueado: la última desktop_type ya terminó con '=' (%1). "
+            "No presiones ENTER/= otra vez porque Calculadora repite la operación. "
+            "Verificá ahora con desktop_controls y el visor ACTUAL ('Se muestra X').]")
+            .arg(m_lastDesktopTypeText.left(80)));
+        processPendingCalls();
+        return;
+    }
 
     // ── Robustez: validación de args requeridos ──────────────────────────
     QStringList missing;
@@ -2686,6 +2705,10 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     if (m_execCommand.isEmpty()) m_execCommand = a.value(QStringLiteral("pattern")).toString();
     if (m_execCommand.isEmpty() && name == QLatin1String("desktop_launch"))
         m_execCommand = a.value(QStringLiteral("app")).toString().trimmed().toLower();
+    if (m_execCommand.isEmpty() && name == QLatin1String("desktop_type"))
+        m_execCommand = a.value(QStringLiteral("text")).toString();
+    if (m_execCommand.isEmpty() && name == QLatin1String("desktop_key"))
+        m_execCommand = a.value(QStringLiteral("key")).toString().trimmed();
 
     // Rechazo: no se ejecuta nada; resume sincrónico.
     if (response == QLatin1String("reject")) {
@@ -2727,6 +2750,11 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     if (name.startsWith(QLatin1String("desktop_"))) {
         m_lastDesktopTool = name;
         m_lastDesktopResult = res;
+    }
+    if (name == QLatin1String("desktop_type") && ok) {
+        m_lastDesktopTypeText = m_execCommand;
+    } else if (name.startsWith(QLatin1String("desktop_")) && name != QLatin1String("desktop_controls")) {
+        m_lastDesktopTypeText.clear();
     }
     if (ok && name == QLatin1String("desktop_launch") && !m_execCommand.trimmed().isEmpty())
         m_desktopLaunchApps.insert(m_execCommand.trimmed().toLower());
@@ -3131,6 +3159,21 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("desktop_type")) return {QStringLiteral("text")};
     if (name == QLatin1String("desktop_key")) return {QStringLiteral("key")};
     return {};   // list_dir, memory, browser_skill_list: args opcionales
+}
+
+bool LlamaAgentBackend::redundantDesktopConfirmKey(const QString &previousTool,
+                                                   const QString &previousTypeText,
+                                                   const QString &key)
+{
+    if (previousTool != QLatin1String("desktop_type"))
+        return false;
+    const QString typed = previousTypeText.trimmed();
+    if (typed.isEmpty() || !typed.endsWith(QLatin1Char('=')))
+        return false;
+    const QString k = key.trimmed().toLower();
+    return k == QLatin1String("=")
+           || k == QLatin1String("enter")
+           || k == QLatin1String("return");
 }
 
 QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)

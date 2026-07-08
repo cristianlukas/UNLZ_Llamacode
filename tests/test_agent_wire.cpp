@@ -35,6 +35,7 @@ private slots:
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
     void projectContextSection_coversIntentAndMemory();
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
+    void desktopConfirmKeyBlockedAfterTypeEquals();
     void parsesNativeToolCallLeakFallback();
     void textToolsModeDoesNotDoubleReserveToolBudget();
     void compactionStallCounterTracksProgress();
@@ -842,6 +843,20 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
     // La variante sin visión debe advertir explícitamente que NO puede ver.
     QVERIFY(novis.contains(QStringLiteral("NO")) );
     QVERIFY(novis != vis);
+}
+
+void AgentWireTests::desktopConfirmKeyBlockedAfterTypeEquals()
+{
+    QVERIFY(LlamaAgentBackend::redundantDesktopConfirmKey(
+        QStringLiteral("desktop_type"), QStringLiteral("2+2="), QStringLiteral("ENTER")));
+    QVERIFY(LlamaAgentBackend::redundantDesktopConfirmKey(
+        QStringLiteral("desktop_type"), QStringLiteral("2+2="), QStringLiteral("=")));
+    QVERIFY(!LlamaAgentBackend::redundantDesktopConfirmKey(
+        QStringLiteral("desktop_type"), QStringLiteral("2+2"), QStringLiteral("ENTER")));
+    QVERIFY(!LlamaAgentBackend::redundantDesktopConfirmKey(
+        QStringLiteral("desktop_focus"), QStringLiteral("2+2="), QStringLiteral("ENTER")));
+    QVERIFY(!LlamaAgentBackend::redundantDesktopConfirmKey(
+        QStringLiteral("desktop_type"), QStringLiteral("hola="), QStringLiteral("TAB")));
 }
 
 void AgentWireTests::textToolsModeDoesNotDoubleReserveToolBudget()

@@ -835,6 +835,9 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   `recent_actions`, `ask_teacher`) para caber en perfiles 8k y evitar fallback
   textual innecesario. Las tools de click devuelven `trace` con `pointer` y
   `target` para que el agente pueda validar qué accionó.
+  Si una entrada de teclado ya incluye la acción final (por ejemplo
+  `desktop_type "2+2="`), el runner bloquea una tecla de confirmación redundante
+  (`ENTER`/`=`) para evitar que Calculadora repita la última operación.
 - En modo **Navegador background**, el Teach se graba con browser foreground de
   Playwright y evidencia visual por acción; la ejecución posterior usa esa receta
   como guía semántica junto con las tools de navegador. Si la página cambia y el

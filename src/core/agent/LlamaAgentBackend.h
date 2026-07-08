@@ -131,6 +131,9 @@ public:
     // adapta si puede usar desktop_observe para VER. Pura y testeable. La consume
     // buildSystemPrompt() sólo si las tools de escritorio están habilitadas.
     static QString desktopPlaybookSection(bool visionReady);
+    static bool redundantDesktopConfirmKey(const QString &previousTool,
+                                           const QString &previousTypeText,
+                                           const QString &key);
 
     // Sección "Frugalidad (Honey)": reduce lo que el modelo EMITE. Código
     // YAGNI-first (parar en el primer escalón que funciona, sin scaffolding
@@ -484,6 +487,7 @@ private:
     int m_ctxLimit = -1;                 // n_ctx del server (vía /props)
     QString m_lastDesktopTool;           // última tool desktop_* ejecutada (nudge text-tools)
     QString m_lastDesktopResult;
+    QString m_lastDesktopTypeText;        // última entrada por desktop_type (guardrail teclado)
     QSet<QString> m_desktopLaunchApps;   // apps ya lanzadas en la sesión/Task actual
     // Tope de seguridad MUY alto: no cortar trabajo legítimo. El loop infinito
     // real lo frena kMaxSameCall (misma tool + mismos args repetidos). Que el
