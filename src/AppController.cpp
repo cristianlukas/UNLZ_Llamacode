@@ -2867,7 +2867,7 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.harness.adapter = normalizeHarnessAdapter(ctx.harness.adapter);
     ctx.workspace = m_profiles.resolveWorkspace(ctx.launch.workspaceProfileId);
     // Perfil de sistema: backend sin binaryId fijo → resolver el mejor instalado
-    // (MTP si hay NVIDIA, si no official). Así el mismo perfil bundled corre en
+    // según el tipo declarado por el bundle. Así el mismo perfil bundled corre en
     // cualquier máquina sin persistir un path de binario.
     QString binId = ctx.backend.binaryId;
     if (binId.isEmpty() && ctx.launch.system) {
@@ -2880,6 +2880,10 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
             binId = resolveSystemBinaryId(systemProfileBinaryKind(ctx.launch.id));
     }
     ctx.binary = m_binaries.findById(binId);
+    if (ctx.launch.system && systemProfileBinaryKind(ctx.launch.id) == QLatin1String("cpu")
+        && !ctx.binary.id.isEmpty() && ctx.binary.backend != QLatin1String("cpu")) {
+        ctx.binary = {};
+    }
     ctx.catalogModel = m_catalog.findById(ctx.model.modelId);
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
     ctx.draftModel = m_catalog.findById(ctx.model.draftModelId);
@@ -8996,7 +9000,19 @@ void AppController::ensureSystemBinary(const QString &kind)
     const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
     const bool nvidia = vram > 0 || gpu.contains("nvidia") || gpu.contains("geforce")
                         || gpu.contains("rtx") || gpu.contains("gtx");
-    if (kind == QLatin1String("beellama")) {
+    if (kind == QLatin1String("cpu")) {
+        bool hasCpu = false;
+        for (int r = 0; r < m_binaries.rowCount(); ++r) {
+            const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
+            const LlamaBinary b = m_binaries.findById(bid);
+            if (!b.path.isEmpty() && QFileInfo::exists(b.path) && b.backend == QLatin1String("cpu")) {
+                hasCpu = true;
+                break;
+            }
+        }
+        if (!hasCpu)
+            installOfficialBinary();
+    } else if (kind == QLatin1String("beellama")) {
         if (!hasBee && nvidia) installMtpBinary();          // ngram-mod / Qwen MTP
         else if (!hasBee && !hasOfficial) installOfficialBinary();
     } else {                                                 // "official": gemma4-assistant, etc
@@ -9050,19 +9066,25 @@ QString AppController::pinnedSystemBinaryId(const QString &launchId) const
 
 QString AppController::resolveSystemBinaryId(const QString &kind) const
 {
-    QString firstId, beeId, officialId, gemmaId;
+    QString firstId, beeId, officialId, gemmaId, cpuId;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
         if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;     // solo válidos
         if (firstId.isEmpty()) firstId = bid;
+        if (b.backend == QLatin1String("cpu")) {
+            if (cpuId.isEmpty()) cpuId = bid;
+            continue;
+        }
         const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
         const bool isBee = tag.contains("beellama") || tag.contains("mtp");
         if (isBee) { if (beeId.isEmpty()) beeId = bid; }
         else       { if (officialId.isEmpty()) officialId = bid; }       // official / gemma / etc
         if (gemmaId.isEmpty() && tag.contains("gemma")) gemmaId = bid;
     }
+    if (kind == QLatin1String("cpu"))
+        return cpuId;
     if (kind == QLatin1String("beellama"))
         return !beeId.isEmpty() ? beeId : firstId;
     if (kind == QLatin1String("gemma4"))                                  // gemma4-assistant

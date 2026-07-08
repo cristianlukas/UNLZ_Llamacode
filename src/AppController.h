@@ -378,7 +378,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.20"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.21"); }
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
@@ -442,6 +442,13 @@ public:
     void triggerPendingAgentForTest() { maybeStartPendingAgentOnReady(); }
     bool agentStartingFlagForTest() const { return m_agentStarting; }
     QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
+    QVariantMap resolvedSystemBinaryForTest(const QString &launchId)
+    {
+        const auto ctx = buildContext(launchId);
+        return {{QStringLiteral("id"), ctx.binary.id},
+                {QStringLiteral("backend"), ctx.binary.backend},
+                {QStringLiteral("path"), ctx.binary.path}};
+    }
     // Ejecuta la Automatización `automationId`: resuelve el proceso enlazado y lo
     // corre vía runTask, marcando el resultado también en el AutomationStore.
     Q_INVOKABLE void runAutomation(const QString &automationId);
@@ -1332,8 +1339,9 @@ private:
     void benchmarkMeasureResources(std::function<void(double ramMb, double vramMb)> onDone);
     QString modelDownloadDir() const;
     void rebuildModelRecommendations();
-    // kind: "beellama" (ngram-mod / Qwen NextN MTP) | "official"/"" (gemma4-assistant
-    // y el resto). Elige un binario válido del tipo pedido; fallback al mejor disponible.
+    // kind: "cpu" | "beellama" (ngram-mod / Qwen NextN MTP) | "official"/""
+    // (gemma4-assistant y el resto). Elige un binario válido del tipo pedido;
+    // cpu no cae a GPU, para evitar crashear perfiles 0GB con builds CUDA.
     QString resolveSystemBinaryId(const QString &kind = QString()) const;
     // binaryKind del perfil de sistema (del bundle); "official" si no se especifica.
     QString systemProfileBinaryKind(const QString &launchId) const;
@@ -1341,8 +1349,8 @@ private:
     // cuyo nombre+ruta contiene el pin). Vacío si no hay pin o no hay match válido
     // → el caller cae al resolveSystemBinaryId por kind.
     QString pinnedSystemBinaryId(const QString &launchId) const;
-    // Instala el binario del tipo pedido si falta (beellama→installMtpBinary,
-    // official→installOfficialBinary). beellama es CUDA-only: sin NVIDIA cae a official.
+    // Instala el binario del tipo pedido si falta (cpu/official→installOfficialBinary,
+    // beellama→installMtpBinary). beellama es CUDA-only: sin NVIDIA cae a official.
     void ensureSystemBinary(const QString &kind);
     // Igual que ensureSystemBinary, pero respeta binaryPin del perfil de sistema:
     // si el pin falta, instala exactamente ese release aunque exista otro official.

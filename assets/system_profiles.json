@@ -692,7 +692,7 @@
       "enabled": false,
       "args": []
     },
-    "binaryKind": "official",
+    "binaryKind": "cpu",
     "comment": "Fallback CPU para Automatizaciones: Qwen3.5 4B Q4 con ctx 8k y batch bajo. Evita el 35B/32k en CPU, que puede quedar minutos sin emitir la primera tool."
   }
 ]

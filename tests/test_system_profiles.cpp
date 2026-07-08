@@ -268,6 +268,18 @@ void SystemProfilesTests::manager_smallProfilesAreConservative()
     QCOMPARE(cpuRt.value("gpuLayers").toInt(), 0);
     QVERIFY2(!cpuRt.value("flashAttention").toBool(),
              "El fallback CPU no debe depender de flash-attn");
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    bool sawCpuKind = false;
+    for (const QJsonValue &v : QJsonDocument::fromJson(bundle.readAll()).array()) {
+        const QJsonObject o = v.toObject();
+        if (o.value(QStringLiteral("id")).toString() != QStringLiteral("sys-vram-0"))
+            continue;
+        sawCpuKind = true;
+        QCOMPARE(o.value(QStringLiteral("binaryKind")).toString(), QStringLiteral("cpu"));
+    }
+    QVERIFY(sawCpuKind);
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()

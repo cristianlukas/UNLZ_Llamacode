@@ -21,6 +21,20 @@
 #include "core/tasks/TaskStore.h"
 #include "core/CatalogModel.h"
 
+static QString systemProfilesBundlePath()
+{
+    const QStringList candidates = {
+        QDir::current().absoluteFilePath(QStringLiteral("assets/system_profiles.json")),
+        QDir::current().absoluteFilePath(QStringLiteral("../assets/system_profiles.json")),
+        QDir(QCoreApplication::applicationDirPath())
+            .absoluteFilePath(QStringLiteral("../../assets/system_profiles.json")),
+    };
+    for (const QString &candidate : candidates)
+        if (QFile::exists(candidate))
+            return candidate;
+    return candidates.first();
+}
+
 // Backend de agente fake para ejercitar el ciclo del bucle de Tasks sin un
 // llama-server real. Cada sendMessage responde un texto scripteado y, async,
 // emite messagesChanged + turnFinished (async para no recursar dentro de
@@ -101,6 +115,7 @@ private slots:
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
+    void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
     void agentLevels_contextBudgetLadder();
 
@@ -787,6 +802,55 @@ void AppControllerTests::systemProfileBinaryPinReadsBundle()
     QVERIFY(app.systemProfileBinaryPin(QStringLiteral("unknown")).isEmpty());
 
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+void AppControllerTests::cpuSystemProfileRequiresCpuBinary()
+{
+    const QByteArray oldSystemProfiles = qgetenv("LLAMACODE_SYSTEM_PROFILES");
+    const QString bundle = systemProfilesBundlePath();
+    QVERIFY2(QFile::exists(bundle), qPrintable(bundle));
+    qputenv("LLAMACODE_SYSTEM_PROFILES", QFile::encodeName(bundle));
+
+    AppController app;
+    while (app.binaryRegistry()->rowCount() > 0) {
+        const QString id = app.binaryRegistry()
+                               ->data(app.binaryRegistry()->index(0, 0), BinaryRegistry::IdRole)
+                               .toString();
+        QVERIFY(app.binaryRegistry()->remove(id));
+    }
+
+    const QString cudaPath = m_tmp.filePath(QStringLiteral("llama-cuda.exe"));
+    QFile cuda(cudaPath);
+    QVERIFY(cuda.open(QIODevice::WriteOnly));
+    cuda.write("fake-cuda");
+    cuda.close();
+    const QString cudaId = app.binaryRegistry()->add(
+        cudaPath, QStringLiteral("llama-server cuda b9045"),
+        QStringLiteral("official"), QStringLiteral("cuda"), QStringLiteral("b9045"));
+    QVERIFY(!cudaId.isEmpty());
+
+    const QVariantMap cudaOnly = app.resolvedSystemBinaryForTest(QStringLiteral("sys-vram-0"));
+    QVERIFY2(cudaOnly.value(QStringLiteral("id")).toString().isEmpty(),
+             "El perfil 0GB CPU no debe caer a un binario CUDA si falta CPU.");
+
+    const QString cpuPath = m_tmp.filePath(QStringLiteral("llama-cpu.exe"));
+    QFile cpu(cpuPath);
+    QVERIFY(cpu.open(QIODevice::WriteOnly));
+    cpu.write("fake-cpu");
+    cpu.close();
+    const QString cpuId = app.binaryRegistry()->add(
+        cpuPath, QStringLiteral("llama-server cpu"),
+        QStringLiteral("official"), QStringLiteral("cpu"), QStringLiteral("cpu"));
+    QVERIFY(!cpuId.isEmpty());
+
+    const QVariantMap withCpu = app.resolvedSystemBinaryForTest(QStringLiteral("sys-vram-0"));
+    QCOMPARE(withCpu.value(QStringLiteral("id")).toString(), cpuId);
+    QCOMPARE(withCpu.value(QStringLiteral("backend")).toString(), QStringLiteral("cpu"));
+
+    if (oldSystemProfiles.isEmpty())
+        qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+    else
+        qputenv("LLAMACODE_SYSTEM_PROFILES", oldSystemProfiles);
 }
 
 QTEST_MAIN(AppControllerTests)

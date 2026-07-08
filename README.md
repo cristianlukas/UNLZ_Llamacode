@@ -557,8 +557,10 @@ capturas visuales.
 
 El perfil de sistema **0GB CPU** es un fallback operativo para automatizaciones,
 no un showcase de calidad máxima: usa Qwen3.5 4B Q4, contexto 8k y batches bajos
-sin capas GPU. Perfiles más grandes en CPU pueden tardar demasiado en emitir la
-primera tool y dejar una Task sin progreso.
+sin capas GPU. Además requiere un binario registrado como backend `cpu`: si sólo
+hay builds CUDA instaladas, la app debe pedir instalar un binario compatible en
+vez de lanzar CUDA con `--n-gpu-layers 0`. Perfiles más grandes en CPU pueden
+tardar demasiado en emitir la primera tool y dejar una Task sin progreso.
 
 Cuando un perfil de sistema declara speculative decoding con `draft-mtp`, el
 `draftModel` es una dependencia obligatoria: el instalador lo encola junto con el
