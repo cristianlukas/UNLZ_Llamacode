@@ -482,6 +482,8 @@ private:
     int m_toolOk = 0;                    // salud: tools exitosas en la sesión
     int m_toolFail = 0;                  // salud: tools con error/inválidas
     int m_ctxLimit = -1;                 // n_ctx del server (vía /props)
+    QString m_lastDesktopTool;           // última tool desktop_* ejecutada (nudge text-tools)
+    QString m_lastDesktopResult;
     // Tope de seguridad MUY alto: no cortar trabajo legítimo. El loop infinito
     // real lo frena kMaxSameCall (misma tool + mismos args repetidos). Que el
     // agente haga tantas iteraciones como necesite.

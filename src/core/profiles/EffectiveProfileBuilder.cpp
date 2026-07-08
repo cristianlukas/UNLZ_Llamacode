@@ -166,8 +166,10 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
                             || cur.startsWith(QStringLiteral("--draft-"));
         if (isSpec && !ctx.binary.supportedFlags.isEmpty()
             && !ctx.binary.supportsFlag(ctx.binary.resolveFlag(cur))) {
-            result.warnings.append(QStringLiteral("Flag %1 no soportado por el binario; "
-                                                  "omitido (sin MTP).").arg(cur));
+            result.blockingErrors.append(QStringLiteral(
+                "Este perfil requiere la capacidad %1, pero el binario actual no la soporta. "
+                "Actualizá o elegí un binario compatible antes de iniciar.")
+                .arg(cur));
             if (i + 1 < extraTokens.size() && !extraTokens.at(i + 1).startsWith(u'-'))
                 ++i;   // saltar el valor asociado
             continue;

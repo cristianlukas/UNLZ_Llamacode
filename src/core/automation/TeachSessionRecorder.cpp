@@ -8,6 +8,33 @@
 #include <QDir>
 #include <QFileInfo>
 
+namespace {
+QVariantMap pointerTrace(const QPoint &absolute, const QPointF &normalized,
+                         const QString &button)
+{
+    return QVariantMap{
+        {QStringLiteral("button"), button},
+        {QStringLiteral("clickCount"), 1},
+        {QStringLiteral("xAbs"), absolute.x()},
+        {QStringLiteral("yAbs"), absolute.y()},
+        {QStringLiteral("xNorm"), normalized.x()},
+        {QStringLiteral("yNorm"), normalized.y()}};
+}
+
+QVariantMap targetTrace(const QString &surface, const QString &scopeKind,
+                        const QString &scopeId, const QRect &bounds)
+{
+    return QVariantMap{
+        {QStringLiteral("surface"), surface},
+        {QStringLiteral("scopeKind"), scopeKind},
+        {QStringLiteral("targetId"), scopeId},
+        {QStringLiteral("x"), bounds.x()},
+        {QStringLiteral("y"), bounds.y()},
+        {QStringLiteral("width"), bounds.width()},
+        {QStringLiteral("height"), bounds.height()}};
+}
+}  // namespace
+
 #ifdef Q_OS_WIN
 #  define NOMINMAX
 #  include <windows.h>
@@ -137,6 +164,11 @@ QString TeachSessionRecorder::startBrowser(const QVariantMap &task, const QStrin
     appendEvent({{QStringLiteral("kind"), QStringLiteral("browser")},
                  {QStringLiteral("intent"), QStringLiteral("Inicio de demostración web en browser foreground con Playwright codegen y evidencia visual")},
                  {QStringLiteral("ref"), url},
+                 {QStringLiteral("target"), QVariantMap{
+                     {QStringLiteral("surface"), QStringLiteral("browser")},
+                     {QStringLiteral("mode"), QStringLiteral("foregroundTeach")},
+                     {QStringLiteral("driver"), QStringLiteral("playwright-codegen")},
+                     {QStringLiteral("url"), url}}},
                  {QStringLiteral("surface"), QStringLiteral("browserForegroundTeach")}}, true);
     m_timer.start();
 #ifdef Q_OS_WIN
@@ -213,11 +245,14 @@ void TeachSessionRecorder::sampleDesktop()
         flushKeys();   // el texto tipeado va ANTES del próximo click
         const QPointF p = DesktopAutomationBackend::normalizePoint(cursor, bounds);
         appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
-                     {QStringLiteral("intent"), m_mode == QLatin1String("browserBackground")
-                          ? QStringLiteral("Click izquierdo en navegador foreground")
-                          : QStringLiteral("Click izquierdo")},
-                     {QStringLiteral("surface"), m_mode},
-                     {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}}, true);
+                      {QStringLiteral("intent"), m_mode == QLatin1String("browserBackground")
+                           ? QStringLiteral("Click izquierdo en navegador foreground")
+                           : QStringLiteral("Click izquierdo")},
+                      {QStringLiteral("surface"), m_mode},
+                      {QStringLiteral("button"), QStringLiteral("left")},
+                      {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()},
+                      {QStringLiteral("pointer"), pointerTrace(cursor, p, QStringLiteral("left"))},
+                      {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
     }
     if (right && !m_rightDown && bounds.contains(cursor)) {
         flushKeys();
@@ -228,7 +263,9 @@ void TeachSessionRecorder::sampleDesktop()
                           : QStringLiteral("Click derecho")},
                      {QStringLiteral("surface"), m_mode},
                      {QStringLiteral("button"), QStringLiteral("right")},
-                     {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}}, true);
+                     {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()},
+                     {QStringLiteral("pointer"), pointerTrace(cursor, p, QStringLiteral("right"))},
+                     {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
     }
     m_leftDown = left;
     m_rightDown = right;

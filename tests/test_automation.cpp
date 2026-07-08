@@ -19,6 +19,7 @@ private slots:
     void desktopToolPolicyKeepsGuiToolsAvailable();
     void calculatorMismatchRejectsHistoryFalsePositive();
     void browserPromptUsesForegroundTeachEvidence();
+    void actionTraceSurvivesRecipeAndPrompt();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -172,6 +173,13 @@ void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
     QVERIFY(AutomationRunner::arithmeticResultMismatch(
         otherSum, QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 4\"\n")));
 
+    QString missingDisplayMessage;
+    QVERIFY(AutomationRunner::arithmeticResultMismatch(
+        otherSum,
+        QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"3 + 3= 6\"\n"),
+        &missingDisplayMessage));
+    QVERIFY(missingDisplayMessage.contains(QStringLiteral("falta el visor actual")));
+
     const QVariantMap product{
         {QStringLiteral("name"), QStringLiteral("multiplicar 3 x 4")},
         {QStringLiteral("description"), QStringLiteral("hacer 3 x 4 en la calculadora")}};
@@ -190,6 +198,43 @@ void AutomationTests::browserPromptUsesForegroundTeachEvidence()
     QVERIFY(prompt.contains(QStringLiteral("browser foreground de Playwright")));
     QVERIFY(!prompt.contains(QStringLiteral("captura: evidence/0002.jpg")));
     QVERIFY(prompt.contains(QStringLiteral("adaptá selectores")));
+}
+
+void AutomationTests::actionTraceSurvivesRecipeAndPrompt()
+{
+    QVariantMap task{{"id", "trace-demo"}, {"name", "Trace"},
+                     {"description", "Clickear Guardar"},
+                     {"executionMode", "desktop"}};
+    const QVariantMap click{
+        {QStringLiteral("kind"), QStringLiteral("click")},
+        {QStringLiteral("intent"), QStringLiteral("Click en Guardar")},
+        {QStringLiteral("button"), QStringLiteral("left")},
+        {QStringLiteral("x"), 0.25},
+        {QStringLiteral("y"), 0.75},
+        {QStringLiteral("pointer"), QVariantMap{
+            {QStringLiteral("button"), QStringLiteral("left")},
+            {QStringLiteral("xAbs"), 100},
+            {QStringLiteral("yAbs"), 200},
+            {QStringLiteral("xNorm"), 0.25},
+            {QStringLiteral("yNorm"), 0.75}}},
+        {QStringLiteral("target"), QVariantMap{
+            {QStringLiteral("surface"), QStringLiteral("desktop")},
+            {QStringLiteral("role"), QStringLiteral("button")},
+            {QStringLiteral("name"), QStringLiteral("Guardar")}}}};
+    const QString id = AutomationArtifactStore::create(
+        task, QVariantMap{{"kind", "window"}, {"targetId", "abc"}}, QVariantList{click}, {});
+    const QVariantMap stored = AutomationArtifactStore::recipe(id)
+                                  .value(QStringLiteral("steps")).toList().first().toMap();
+    QCOMPARE(stored.value(QStringLiteral("pointer")).toMap().value(QStringLiteral("xAbs")).toInt(), 100);
+    QCOMPARE(stored.value(QStringLiteral("target")).toMap().value(QStringLiteral("name")).toString(),
+             QStringLiteral("Guardar"));
+
+    const QString prompt = AutomationRunner::augmentPrompt(
+        task, AutomationArtifactStore::manifest(id), AutomationArtifactStore::recipe(id));
+    QVERIFY(prompt.contains(QStringLiteral("botón left")));
+    QVERIFY(prompt.contains(QStringLiteral("target button \"Guardar\"")));
+    QVERIFY(prompt.contains(QStringLiteral("trace con pointer/target")));
+    QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 
 void AutomationTests::headlessBrowserCommandForcesHeadless()

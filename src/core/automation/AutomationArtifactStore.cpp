@@ -112,6 +112,12 @@ QString AutomationArtifactStore::importBrowserSkill(const QString &skillName, co
         QVariantMap{{QStringLiteral("kind"), QStringLiteral("browser")},
                     {QStringLiteral("intent"), QStringLiteral("Reproducir y adaptar la demostración importada")},
                     {QStringLiteral("ref"), skillName},
+                    {QStringLiteral("target"), QVariantMap{
+                        {QStringLiteral("surface"), QStringLiteral("browser")},
+                        {QStringLiteral("mode"), QStringLiteral("backgroundExecution")},
+                        {QStringLiteral("driver"), QStringLiteral("playwright")},
+                        {QStringLiteral("skill"), skillName},
+                        {QStringLiteral("script"), BrowserTeach::skillPath(skillName)}}},
                     {QStringLiteral("verification"), QStringLiteral("Verificar el objetivo de la Task")}}};
     QVariantMap browserTask = task;
     browserTask[QStringLiteral("executionMode")] = QStringLiteral("browserBackground");

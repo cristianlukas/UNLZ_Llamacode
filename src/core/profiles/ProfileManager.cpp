@@ -624,6 +624,20 @@ bool ProfileManager::isSystemLaunch(const QString &id) const
 
 void ProfileManager::loadSystemProfiles()
 {
+    auto stripSystem = [](auto &model) {
+        std::decay_t<decltype(model.m_items)> userItems;
+        for (const auto &item : model.m_items) {
+            if (!item.system)
+                userItems.append(item);
+        }
+        model.setItems(userItems);
+    };
+    stripSystem(m_backends);
+    stripSystem(m_models);
+    stripSystem(m_runtimes);
+    stripSystem(m_launches);
+    stripSystem(m_agentProfiles);
+
     // Perfiles de agente de sistema (Básico/Intermedio/Avanzado/Máximo): definidos
     // en código (AgentProfile::systemPresets), inmutables, no se persisten. Se
     // anteponen a los de usuario en cada arranque.

@@ -86,8 +86,14 @@ bool AutomationRunner::arithmeticResultMismatch(const QVariantMap &task, const Q
     QString lastDisplay;
     while (it.hasNext())
         lastDisplay = it.next().captured(1);
-    if (lastDisplay.isEmpty())
-        return false;
+    if (lastDisplay.isEmpty()) {
+        if (message) {
+            *message = QStringLiteral("No se pudo verificar la Calculadora: falta el visor "
+                                      "actual ('Se muestra X') en desktop_controls. "
+                                      "No se acepta Historial/Memoria como resultado final.");
+        }
+        return true;
+    }
 
     const QString normalized = QString(lastDisplay).replace(QLatin1Char(','), QLatin1Char('.'));
     bool ok = false;
@@ -202,6 +208,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId.\n"
             "5) Verificá con desktop_controls usando el visor ACTUAL ('Se muestra X'); "
             "no aceptes Historial/Memoria como resultado final.\n"
+            "Cada tool de click devuelve trace con pointer/target; usalo para validar "
+            "qué se accionó. Preferí target semántico (controlId/selector) y dejá "
+            "coordenadas sólo como respaldo o diagnóstico.\n"
             "ANTI-LOOP: una acción -> una verificación por texto -> terminá. Los pasos "
             "[type]/[key]/[click] son intención; traducilos a desktop_* sobre la app. "
             "No leas evidence/*.jpg con read_file.\n");
@@ -211,7 +220,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "browser foreground de Playwright y evidencia visual por acción para entender "
             "la intención del usuario. Usá las tools de browser/Playwright para navegar y "
             "verificar páginas web; adaptá selectores, textos y posiciones si la interfaz "
-            "cambió.\n");
+            "cambió. Tratá selector/control como target primario; coordenadas de mouse "
+            "son respaldo cuando no haya selector confiable. Registrá y validá cada click "
+            "contra la salida/trace de la tool o el snapshot posterior.\n");
     }
     out += QStringLiteral("Artefacto: %1\n").arg(manifest.value(QStringLiteral("id")).toString());
     const QVariantList steps = recipe.value(QStringLiteral("steps")).toList();
@@ -224,6 +235,14 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             out += QStringLiteral(" (referencia normalizada %1,%2)")
                        .arg(step.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
                        .arg(step.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
+        const QString button = step.value(QStringLiteral("button")).toString();
+        if (!button.isEmpty())
+            out += QStringLiteral(" (botón %1)").arg(button);
+        const QVariantMap target = step.value(QStringLiteral("target")).toMap();
+        const QString role = target.value(QStringLiteral("role")).toString();
+        const QString name = target.value(QStringLiteral("name")).toString();
+        if (!role.isEmpty() || !name.isEmpty())
+            out += QStringLiteral(" (target %1 \"%2\")").arg(role, name.left(80));
         out += QLatin1Char('\n');
     }
     const QVariantList learnings = recipe.value(QStringLiteral("learnings")).toList();

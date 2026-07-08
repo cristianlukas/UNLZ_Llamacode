@@ -772,12 +772,15 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_click_element")) {
         QString error;
+        QVariantMap trace;
         const bool good = DesktopAutomationBackend::clickElement(
             args.value(QStringLiteral("target_id")).toString(),
-            args.value(QStringLiteral("control_id")).toString(), &error);
+            args.value(QStringLiteral("control_id")).toString(), &error, &trace);
         if (ok) *ok = good;
-        return good ? QStringLiteral("[desktop_click_element: ok]")
-                    : QStringLiteral("[desktop_click_element: %1]").arg(error);
+        if (!good) return QStringLiteral("[desktop_click_element: %1]").arg(error);
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_click_element: ok]\ntrace=%1").arg(json);
     }
     if (name == QLatin1String("desktop_observe")) {
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(
@@ -803,14 +806,19 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_click")) {
         QString error;
+        QVariantMap trace;
         const bool good = DesktopAutomationBackend::click(
             args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
             args.value(QStringLiteral("target_id")).toString(),
             args.value(QStringLiteral("x")).toDouble(),
-            args.value(QStringLiteral("y")).toDouble(), &error);
+            args.value(QStringLiteral("y")).toDouble(),
+            args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
+            &error, &trace);
         if (ok) *ok = good;
-        return good ? QStringLiteral("[desktop_click: ok]")
-                    : QStringLiteral("[desktop_click: %1]").arg(error);
+        if (!good) return QStringLiteral("[desktop_click: %1]").arg(error);
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_click: ok]\ntrace=%1").arg(json);
     }
     if (name == QLatin1String("desktop_type")) {
         QString error;
@@ -1895,8 +1903,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString out = QString::fromUtf8(proc.readAll()).trimmed();
         const bool good = proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0;
         if (ok) *ok = good;
-        return QStringLiteral("[browser_skill_replay %1 · exit=%2]\n%3")
-                   .arg(skill).arg(proc.exitCode()).arg(out.left(8000));
+        const QVariantMap trace{
+            {QStringLiteral("surface"), QStringLiteral("browser")},
+            {QStringLiteral("action"), QStringLiteral("skill_replay")},
+            {QStringLiteral("target"), QVariantMap{
+                {QStringLiteral("driver"), QStringLiteral("playwright")},
+                {QStringLiteral("mode"), QStringLiteral("backgroundExecution")},
+                {QStringLiteral("skill"), skill},
+                {QStringLiteral("script"), pa.value(1)}}},
+            {QStringLiteral("result"), QVariantMap{
+                {QStringLiteral("exitCode"), proc.exitCode()},
+                {QStringLiteral("ok"), good}}}};
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[browser_skill_replay %1 · exit=%2]\ntrace=%3\n%4")
+                   .arg(skill).arg(proc.exitCode()).arg(json, out.left(8000));
     }
     if (name == QLatin1String("email_accounts")) {
         if (ok) *ok = true;

@@ -520,16 +520,19 @@ que se active *auto-send* (enviar correo es acción externa irreversible).
 La sección **Automatizaciones** incorpora un modo Teach multimodal con dos destinos:
 
 - **Escritorio foreground (Windows):** el usuario elige una pantalla o ventana,
-  demuestra el flujo y agrega notas. Se guardan eventos, coordenadas normalizadas,
-  capturas y verificaciones como una receta semántica. Al ejecutar, el agente con
-  visión observa, actúa con mouse/teclado y vuelve a observar; no hace replay ciego.
+  demuestra el flujo y agrega notas. Se guardan eventos, `pointer` (posición
+  absoluta y normalizada, botón, cantidad de clicks), `target` (alcance/ventana o
+  control cuando está disponible), capturas y verificaciones como una receta
+  semántica. Al ejecutar, el agente prioriza controles/targets semánticos,
+  usa coordenadas sólo como respaldo y valida cada acción con la salida `trace`.
 - **Browser background:** el modo Teach abre Playwright/codegen en **foreground**
-  para que el usuario muestre el flujo real. Además del script y los selectores,
-  LlamaCode toma evidencia visual del escritorio durante clicks, teclas y notas,
-  de modo que el agente entienda la intención y el estado de pantalla, no sólo una
-  lista de eventos. La Task se ejecuta luego con las tools de navegador, reinterpreta
-  la intención cuando cambia la interfaz y verifica el resultado. El destino normal
-  es headless, con fallback a navegador oculto cuando el sitio lo requiere.
+  para que el usuario muestre el flujo real. Además del script, selectores y
+  metadatos `target` de Playwright, LlamaCode toma evidencia visual del escritorio
+  durante clicks, teclas y notas, de modo que el agente entienda la intención y el
+  estado de pantalla, no sólo una lista de eventos. La Task se ejecuta luego con
+  las tools de navegador, reinterpreta la intención cuando cambia la interfaz y
+  verifica el resultado. El destino normal es headless, con fallback a navegador
+  oculto cuando el sitio lo requiere.
 
 Los artefactos Teach son auto-actualizables: si durante una ejecución la interfaz
 cambió y el agente igual logra completar el objetivo, registra un aprendizaje en
@@ -818,6 +821,8 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   flujos web que formen parte de la misma automatización. Playwright no reemplaza
   `desktop_*` para aplicaciones nativas de Windows. Las Automatizaciones corren
   con todas las tools built-in disponibles aunque el perfil activo sea liviano.
+  Las tools de click devuelven `trace` con `pointer` y `target` para que el agente
+  pueda validar qué accionó.
 - En modo **Navegador background**, el Teach se graba con browser foreground de
   Playwright y evidencia visual por acción; la ejecución posterior usa esa receta
   como guía semántica junto con las tools de navegador. Si la página cambia y el

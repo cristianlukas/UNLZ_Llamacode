@@ -28,7 +28,8 @@ public:
     static bool launchApp(const QString &app, const QString &args, QString *error = nullptr);
     static bool focusWindow(const QString &targetId, QString *error = nullptr);
     static bool click(const QString &kind, const QString &targetId, double x, double y,
-                      QString *error = nullptr);
+                      const QString &button = QStringLiteral("left"),
+                      QString *error = nullptr, QVariantMap *trace = nullptr);
     static bool typeText(const QString &text, QString *error = nullptr);
     static bool pressKey(const QString &key, const QStringList &modifiers = {},
                          QString *error = nullptr);
@@ -48,5 +49,5 @@ public:
     // Invoke lo invoca (más robusto que pixel); si no, clickea el centro de su
     // bounding rect. Sólo Windows.
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
-                             QString *error = nullptr);
+                             QString *error = nullptr, QVariantMap *trace = nullptr);
 };

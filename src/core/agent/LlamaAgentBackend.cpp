@@ -2250,12 +2250,35 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
                                             "nudge para re-emitir acción (%1/%2)\n")
                                  .arg(m_emptyTextRetries).arg(kMaxEmptyTextRetries));
             closeAssistantBubble();
+            QString guidance = QStringLiteral(
+                "No emitiste ninguna acción. NO razones ni uses <think>: "
+                "respondé SOLO una línea con el próximo TOOL_CALL para avanzar "
+                "el objetivo (o el resultado final si ya terminaste).");
+            if (m_lastDesktopTool == QLatin1String("desktop_focus")) {
+                guidance += QStringLiteral(
+                    "\nÚltimo estado: desktop_focus salió ok. Si la app acepta teclado, "
+                    "ahora escribí la entrada completa con desktop_type; no vuelvas a "
+                    "desktop_windows ni observes.");
+            } else if (m_lastDesktopTool == QLatin1String("desktop_type")) {
+                guidance += QStringLiteral(
+                    "\nÚltimo estado: desktop_type salió ok. Si la entrada ya incluía la "
+                    "acción final (por ejemplo '='), verificá con desktop_controls; si no, "
+                    "emití la tecla faltante con desktop_key.");
+            } else if (m_lastDesktopTool == QLatin1String("desktop_key")) {
+                guidance += QStringLiteral(
+                    "\nÚltimo estado: desktop_key salió ok. Verificá el estado actual con "
+                    "desktop_controls, no repitas la tecla a ciegas.");
+            } else if (m_lastDesktopTool == QLatin1String("desktop_windows")) {
+                guidance += QStringLiteral(
+                    "\nÚltimo estado: ya tenés el inventario de ventanas. Elegí el id de la "
+                    "ventana objetivo y seguí con desktop_focus; no repitas desktop_windows.");
+            }
+            if (!m_lastDesktopResult.isEmpty())
+                guidance += QStringLiteral("\nResultado de la última tool:\n%1")
+                                .arg(m_lastDesktopResult.left(1200));
             m_apiMessages.append(QJsonObject{
                 {QStringLiteral("role"), QStringLiteral("user")},
-                {QStringLiteral("content"),
-                 QStringLiteral("No emitiste ninguna acción. NO razones ni uses <think>: "
-                                "respondé SOLO una línea con el próximo TOOL_CALL para avanzar "
-                                "el objetivo (o el resultado final si ya terminaste).")}});
+                {QStringLiteral("content"), guidance}});
             runCompletion();
             return;
         }
@@ -2655,6 +2678,10 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     QString res        = result.value(QStringLiteral("result")).toString();
     const bool isWrite = result.value(QStringLiteral("isWrite")).toBool();
     if (ok) ++m_toolOk; else ++m_toolFail;
+    if (name.startsWith(QLatin1String("desktop_"))) {
+        m_lastDesktopTool = name;
+        m_lastDesktopResult = res;
+    }
     AgentEventLog::append(m_cwd, m_sessionId, ok ? QStringLiteral("tool_result")
                                                  : QStringLiteral("failure"),
                           QJsonObject{{QStringLiteral("tool"), name},
@@ -3683,13 +3710,18 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonArray{QStringLiteral("target_id")}),
         fn(QStringLiteral("desktop_click"),
            QStringLiteral("Hace click en coordenadas NORMALIZADAS 0..1 dentro del alcance. "
-                          "Observá primero y no uses coordenadas como replay ciego."),
-           QJsonObject{
-               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
-               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
-               {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
-               {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}}},
-           QJsonArray{QStringLiteral("target_id"), QStringLiteral("x"), QStringLiteral("y")}),
+                          "Acepta button='left'|'right'|'middle' y devuelve trace con "
+                          "pointer/target. Observá primero y no uses coordenadas como replay ciego."),
+            QJsonObject{
+                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+                {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+                {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
+                {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
+                {QStringLiteral("button"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("string")},
+                    {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}},
+                    {QStringLiteral("description"), QStringLiteral("Botón de mouse; default left.")}}}},
+            QJsonArray{QStringLiteral("target_id"), QStringLiteral("x"), QStringLiteral("y")}),
         fn(QStringLiteral("desktop_type"),
            QStringLiteral("Escribe texto en la VENTANA EN FOCO del escritorio (enfocá antes con "
                           "desktop_focus). Camino RÁPIDO para apps con teclado: calculadora "

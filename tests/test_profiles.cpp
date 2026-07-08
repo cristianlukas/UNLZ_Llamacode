@@ -32,6 +32,7 @@ private slots:
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
     void manager_browserAutomationOverride();
+    void manager_systemProfilesReloadIdempotent();
     void manager_persistsAcrossInstances();
 
 private:
@@ -299,6 +300,23 @@ void ProfilesTests::manager_browserAutomationOverride()
         {"id", id}, {"browserAutomation", "off"}}));
     QCOMPARE(pm.getLaunchProfile(id).value("browserAutomation").toString(),
              QStringLiteral("off"));
+}
+
+void ProfilesTests::manager_systemProfilesReloadIdempotent()
+{
+    ProfileManager pm;
+    const int launchCount = pm.launchProfiles()->rowCount();
+    const int modelCount = pm.modelProfiles()->rowCount();
+    const int runtimeCount = pm.runtimePresets()->rowCount();
+    const int backendCount = pm.backendProfiles()->rowCount();
+    const int agentCount = pm.agentProfiles()->rowCount();
+
+    pm.reloadFromDisk();
+    QCOMPARE(pm.launchProfiles()->rowCount(), launchCount);
+    QCOMPARE(pm.modelProfiles()->rowCount(), modelCount);
+    QCOMPARE(pm.runtimePresets()->rowCount(), runtimeCount);
+    QCOMPARE(pm.backendProfiles()->rowCount(), backendCount);
+    QCOMPARE(pm.agentProfiles()->rowCount(), agentCount);
 }
 
 void ProfilesTests::manager_persistsAcrossInstances()

@@ -308,7 +308,8 @@ bool DesktopAutomationBackend::focusWindow(const QString &targetId, QString *err
 }
 
 bool DesktopAutomationBackend::click(const QString &kind, const QString &targetId,
-                                     double x, double y, QString *error)
+                                     double x, double y, const QString &button,
+                                     QString *error, QVariantMap *trace)
 {
     if (!interactiveSessionAvailable()) {
         if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
@@ -323,13 +324,41 @@ bool DesktopAutomationBackend::click(const QString &kind, const QString &targetI
     if (kind == QLatin1String("window") && !focusWindow(targetId, error)) return false;
     const QPoint p = denormalizePoint(QPointF(x, y), bounds);
     SetCursorPos(p.x(), p.y());
+    const QString b = button.trimmed().toLower();
+    const bool right = b == QLatin1String("right");
+    const bool middle = b == QLatin1String("middle");
     INPUT inputs[2]{};
     inputs[0].type = inputs[1].type = INPUT_MOUSE;
-    inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-    inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    inputs[0].mi.dwFlags = right ? MOUSEEVENTF_RIGHTDOWN
+                         : middle ? MOUSEEVENTF_MIDDLEDOWN
+                                  : MOUSEEVENTF_LEFTDOWN;
+    inputs[1].mi.dwFlags = right ? MOUSEEVENTF_RIGHTUP
+                         : middle ? MOUSEEVENTF_MIDDLEUP
+                                  : MOUSEEVENTF_LEFTUP;
+    if (trace) {
+        *trace = QVariantMap{
+            {QStringLiteral("surface"), QStringLiteral("desktop")},
+            {QStringLiteral("action"), QStringLiteral("click")},
+            {QStringLiteral("pointer"), QVariantMap{
+                {QStringLiteral("button"), right ? QStringLiteral("right")
+                                      : middle ? QStringLiteral("middle")
+                                               : QStringLiteral("left")},
+                {QStringLiteral("clickCount"), 1},
+                {QStringLiteral("xAbs"), p.x()},
+                {QStringLiteral("yAbs"), p.y()},
+                {QStringLiteral("xNorm"), x},
+                {QStringLiteral("yNorm"), y}}},
+            {QStringLiteral("target"), QVariantMap{
+                {QStringLiteral("scopeKind"), kind},
+                {QStringLiteral("targetId"), targetId},
+                {QStringLiteral("x"), bounds.x()},
+                {QStringLiteral("y"), bounds.y()},
+                {QStringLiteral("width"), bounds.width()},
+                {QStringLiteral("height"), bounds.height()}}}};
+    }
     return SendInput(2, inputs, sizeof(INPUT)) == 2;
 #else
-    Q_UNUSED(x) Q_UNUSED(y)
+    Q_UNUSED(x) Q_UNUSED(y) Q_UNUSED(button) Q_UNUSED(trace)
     if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
     return false;
 #endif
@@ -509,7 +538,8 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
 }
 
 bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
-                                            const QString &controlId, QString *error)
+                                            const QString &controlId, QString *error,
+                                            QVariantMap *trace)
 {
 #ifdef Q_OS_WIN
     if (!interactiveSessionAvailable()) {
@@ -568,6 +598,20 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
         ++visited;
         if (uiaRuntimeId(el) == controlId) {
             done = true;
+            const QString name = uiaName(el).simplified().left(120);
+            CONTROLTYPEID ct = 0;
+            el->get_CurrentControlType(&ct);
+            RECT rc{};
+            el->get_CurrentBoundingRectangle(&rc);
+            const QVariantMap targetTrace{
+                {QStringLiteral("windowTargetId"), windowTargetId},
+                {QStringLiteral("controlId"), controlId},
+                {QStringLiteral("name"), name},
+                {QStringLiteral("role"), uiaControlTypeName(ct)},
+                {QStringLiteral("x"), static_cast<int>(rc.left)},
+                {QStringLiteral("y"), static_cast<int>(rc.top)},
+                {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
+                {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)}};
             // Preferir el patrón Invoke (clic semántico, robusto); si no, clic al
             // centro del bounding rect.
             IUIAutomationInvokePattern *inv = nullptr;
@@ -576,16 +620,36 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
                 && inv) {
                 success = SUCCEEDED(inv->Invoke());
                 inv->Release();
+                if (trace) {
+                    *trace = QVariantMap{
+                        {QStringLiteral("surface"), QStringLiteral("desktop")},
+                        {QStringLiteral("action"), QStringLiteral("click_element")},
+                        {QStringLiteral("target"), targetTrace},
+                        {QStringLiteral("pointer"), QVariantMap{
+                            {QStringLiteral("button"), QStringLiteral("semantic-invoke")},
+                            {QStringLiteral("clickCount"), 1}}}};
+                }
             } else {
-                RECT rc{};
-                el->get_CurrentBoundingRectangle(&rc);
                 if (rc.right > rc.left && rc.bottom > rc.top) {
-                    SetCursorPos((rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2);
+                    const int cx = (rc.left + rc.right) / 2;
+                    const int cy = (rc.top + rc.bottom) / 2;
+                    SetCursorPos(cx, cy);
                     INPUT inputs[2]{};
                     inputs[0].type = inputs[1].type = INPUT_MOUSE;
                     inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
                     inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
                     success = SendInput(2, inputs, sizeof(INPUT)) == 2;
+                    if (trace) {
+                        *trace = QVariantMap{
+                            {QStringLiteral("surface"), QStringLiteral("desktop")},
+                            {QStringLiteral("action"), QStringLiteral("click_element")},
+                            {QStringLiteral("target"), targetTrace},
+                            {QStringLiteral("pointer"), QVariantMap{
+                                {QStringLiteral("button"), QStringLiteral("left")},
+                                {QStringLiteral("clickCount"), 1},
+                                {QStringLiteral("xAbs"), cx},
+                                {QStringLiteral("yAbs"), cy}}}};
+                    }
                 } else if (error) {
                     *error = QStringLiteral("El control no es invocable ni tiene área clickeable.");
                 }
@@ -604,7 +668,7 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
                                                 "re-listá con desktop_controls).");
     return success;
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(controlId)
+    Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(trace)
     if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
     return false;
 #endif
