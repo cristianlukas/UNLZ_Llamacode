@@ -549,6 +549,12 @@ de Playwright se fuerza a `--headless` por defecto en navegador background; en
 escritorio foreground se inyecta `--headed` para que el browser sea visible y
 controlable junto con el resto de la pantalla.
 
+Los perfiles de sistema priorizan automatizaciones robustas por texto/tools:
+no cargan `mmproj` salvo que el perfil sea explícitamente de visión. Para flujos
+como Calculadora, archivos, shell, desarrollo o extracción web, el agente valida
+con `desktop_controls`, Playwright, filesystem o comandos en vez de depender de
+capturas visuales.
+
 Teach vive en **Automatizaciones**. Configuración conserva únicamente el toggle y
 comando técnico del MCP Playwright. Los skills Playwright anteriores se pueden
 importar sin modificarlos.
@@ -819,10 +825,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   las tools nativas `desktop_*` (ventanas, controles UIA, captura, mouse y
   teclado) y también mantiene Playwright disponible en foreground/headed para
   flujos web que formen parte de la misma automatización. Playwright no reemplaza
-  `desktop_*` para aplicaciones nativas de Windows. Las Automatizaciones corren
-  con todas las tools built-in disponibles aunque el perfil activo sea liviano.
-  Las tools de click devuelven `trace` con `pointer` y `target` para que el agente
-  pueda validar qué accionó.
+  `desktop_*` para aplicaciones nativas de Windows. Las Automatizaciones de
+  escritorio puro recortan el catálogo al set necesario (`desktop_*`,
+  `recent_actions`, `ask_teacher`) para caber en perfiles 8k y evitar fallback
+  textual innecesario. Las tools de click devuelven `trace` con `pointer` y
+  `target` para que el agente pueda validar qué accionó.
 - En modo **Navegador background**, el Teach se graba con browser foreground de
   Playwright y evidencia visual por acción; la ejecución posterior usa esa receta
   como guía semántica junto con las tools de navegador. Si la página cambia y el

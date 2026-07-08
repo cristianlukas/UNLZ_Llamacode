@@ -15,9 +15,7 @@
     "model": {
       "repo": "unsloth/Qwen3.6-27B-MTP-GGUF",
       "file": "Qwen3.6-27B-IQ4_XS.gguf",
-      "quant": "IQ4_XS",
-      "mmprojRepo": "unsloth/Qwen3.6-27B-MTP-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "IQ4_XS"
     },
     "runtime": {
       "ctx": 262000,
@@ -92,9 +90,7 @@
     "model": {
       "repo": "unsloth/gemma-4-31B-it-qat-GGUF",
       "file": "gemma-4-31B-it-qat-UD-Q4_K_XL.gguf",
-      "quant": "UD-Q4_K_XL",
-      "mmprojRepo": "unsloth/gemma-4-31B-it-qat-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "UD-Q4_K_XL"
     },
     "draftModel": {
       "repo": "Simplepotat/gemma-4-31b-it-qat-q4_0-assistant-gguf",
@@ -156,7 +152,7 @@
     "id": "sys-vram-20",
     "tier": "20GB-Qwen",
     "order": 3,
-    "displayName": "[coding] 20GB · Qwen3.6-27B IQ4_XS (visión, MTP)",
+    "displayName": "[coding] 20GB · Qwen3.6-27B IQ4_XS (MTP)",
     "minVramGb": 20,
     "minRamGb": 32,
     "cpuOk": false,
@@ -165,9 +161,7 @@
     "model": {
       "repo": "unsloth/Qwen3.6-27B-MTP-GGUF",
       "file": "Qwen3.6-27B-IQ4_XS.gguf",
-      "quant": "IQ4_XS",
-      "mmprojRepo": "unsloth/Qwen3.6-27B-MTP-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "IQ4_XS"
     },
     "runtime": {
       "ctx": 131072,
@@ -205,11 +199,10 @@
       "16384",
       "--cache-reuse",
       "512",
-      "--no-mmproj-offload",
       "--reasoning",
       "off"
     ],
-    "comment": "Qwen3.6-27B dense IQ4_XS (~14GB) 100% en GPU + visión (mmproj F16 en CPU via --no-mmproj-offload, libera VRAM) + MTP draft (beellama). ctx 131072 con q4_0 KV (k+v); --cache-ram 16384 spillea KV a RAM si excede los 20GB (caso RTX 3080 20GB; ver r/LocalLLM Qwen3.6-27B@3080-20GB que llega a 210k con quant FFN-IQ3 + cache-ram). Re-medir fit/ctx real en GPU de 20GB (QA). Reusa el gguf del tier 24GB (mismo folder/file -> no re-descarga).",
+    "comment": "Qwen3.6-27B dense IQ4_XS (~14GB) 100% en GPU + MTP draft (beellama). ctx 131072 con q4_0 KV (k+v); --cache-ram 16384 spillea KV a RAM si excede los 20GB (caso RTX 3080 20GB; ver r/LocalLLM Qwen3.6-27B@3080-20GB que llega a 210k con quant FFN-IQ3 + cache-ram). Re-medir fit/ctx real en GPU de 20GB (QA). Reusa el gguf del tier 24GB (mismo folder/file -> no re-descarga). Sin mmproj: las automatizaciones de agente verifican por tools/texto y no deben cargar visión salvo perfil vision dedicado.",
     "mtp": {
       "enabled": true,
       "args": [
@@ -239,9 +232,7 @@
     "model": {
       "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
       "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf",
-      "quant": "IQ4_XS",
-      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "IQ4_XS"
     },
     "runtime": {
       "ctx": 32768,
@@ -292,9 +283,7 @@
     "model": {
       "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
       "file": "Qwen3.6-35B-A3B-UD-IQ4_XS.gguf",
-      "quant": "IQ4_XS",
-      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "IQ4_XS"
     },
     "runtime": {
       "ctx": 16384,
@@ -492,20 +481,15 @@
       "off"
     ],
     "mtp": {
-      "enabled": true,
-      "args": [
-        "--spec-type",
-        "draft-mtp",
-        "--spec-draft-n-max",
-        "3"
-      ]
+      "enabled": false,
+      "args": []
     },
-    "binaryKind": "beellama"
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-4-gemma",
     "tier": "4GB-Gemma",
-    "displayName": "[general] 4GB · Gemma 4 E4B (QAT, multimodal)",
+    "displayName": "[general] 4GB · Gemma 4 E4B QAT",
     "minVramGb": 4,
     "minRamGb": 8,
     "cpuOk": false,
@@ -513,15 +497,13 @@
     "model": {
       "repo": "unsloth/gemma-4-E4B-it-GGUF",
       "file": "gemma-4-E4B-it-Q4_K_M.gguf",
-      "quant": "Q4_K_M",
-      "mmprojRepo": "unsloth/gemma-4-E4B-it-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "Q4_K_M"
     },
     "runtime": {
       "ctx": 8192,
-      "gpuLayers": 20,
-      "batch": 256,
-      "ubatch": 256,
+      "gpuLayers": 12,
+      "batch": 128,
+      "ubatch": 128,
       "kv": "q4_0",
       "flashAttn": true
     },
@@ -543,10 +525,9 @@
       "--cache-type-v",
       "q4_0",
       "--reasoning",
-      "off",
-      "--no-mmproj-offload"
+      "off"
     ],
-    "comment": "Gemma 4 E4B QAT (~4GB). Offload parcial para entrar en 4GB; re-medir. mmproj F16 en CPU (--no-mmproj-offload) para no comer VRAM.",
+    "comment": "Gemma 4 E4B QAT (~4GB). Perfil conservador para 4GB: batch bajo y offload parcial, pero ctx 8k para que Automatizaciones tenga espacio de prompt/tools. Sin mmproj por defecto: las automatizaciones verifican por tools/texto y cargar visión aumenta RAM/prompt sin aportar al flujo.",
     "mtp": {
       "enabled": false,
       "args": []
@@ -570,7 +551,7 @@
       "mmprojFile": ""
     },
     "runtime": {
-      "ctx": 3072,
+      "ctx": 8192,
       "gpuLayers": 8,
       "batch": 64,
       "ubatch": 64,
@@ -598,20 +579,15 @@
       "off"
     ],
     "mtp": {
-      "enabled": true,
-      "args": [
-        "--spec-type",
-        "draft-mtp",
-        "--spec-draft-n-max",
-        "3"
-      ]
+      "enabled": false,
+      "args": []
     },
-    "binaryKind": "beellama"
+    "binaryKind": "official"
   },
   {
     "id": "sys-vram-2-gemma",
     "tier": "2GB-Gemma",
-    "displayName": "[general] 2GB · Gemma 4 E2B (QAT, multimodal)",
+    "displayName": "[general] 2GB · Gemma 4 E2B QAT",
     "minVramGb": 2,
     "minRamGb": 8,
     "cpuOk": false,
@@ -619,13 +595,11 @@
     "model": {
       "repo": "unsloth/gemma-4-E2B-it-GGUF",
       "file": "gemma-4-E2B-it-Q4_K_M.gguf",
-      "quant": "Q4_K_M",
-      "mmprojRepo": "unsloth/gemma-4-E2B-it-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "Q4_K_M"
     },
     "runtime": {
-      "ctx": 4096,
-      "gpuLayers": 14,
+      "ctx": 8192,
+      "gpuLayers": 8,
       "batch": 64,
       "ubatch": 64,
       "kv": "q4_0",
@@ -649,10 +623,9 @@
       "--cache-type-v",
       "q4_0",
       "--reasoning",
-      "off",
-      "--no-mmproj-offload"
+      "off"
     ],
-    "comment": "Gemma 4 E2B QAT (~2.9GB). Offload parcial para entrar en 2GB; re-medir. mmproj F16 en CPU (--no-mmproj-offload) para no comer VRAM.",
+    "comment": "Gemma 4 E2B QAT (~2.9GB). Perfil conservador para GPUs chicas: offload parcial, batch bajo y ctx 8k para Automatizaciones. Sin mmproj por defecto.",
     "mtp": {
       "enabled": false,
       "args": []
@@ -671,9 +644,7 @@
     "model": {
       "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
       "file": "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
-      "quant": "Q4_K_M",
-      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-GGUF",
-      "mmprojFile": "mmproj-F16.gguf"
+      "quant": "Q4_K_M"
     },
     "runtime": {
       "ctx": 32768,

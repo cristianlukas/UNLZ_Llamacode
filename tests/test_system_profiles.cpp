@@ -43,6 +43,8 @@ private slots:
     void manager_duplicateMakesEditableCopy();
     void manager_modelIdIsDeterministic();
     void manager_fastGemmaDflashWired();
+    void manager_systemProfilesAvoidAccidentalVisionAndMtp();
+    void manager_smallProfilesAreConservative();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -83,9 +85,11 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QCOMPARE(sys, 12);                       // 20/16/12-MoE/8-Gemma/8-QwenAgent/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
-    // Visión: el tier 16GB lleva mmproj (multimodal); el 4GB no (VRAM ajustada).
+    // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
+    // Qwen/coding y Gemma chicos no deben cargar projector para una automatización
+    // textual: aumenta memoria/prompt y no ayuda a desktop_controls.
     const QString mp16 = pm.getLaunchProfile("sys-vram-16").value("modelProfileId").toString();
-    QVERIFY(!pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
+    QVERIFY(pm.getModelProfile(mp16).value("mmprojId").toString().isEmpty());
     const QString mp4 = pm.getLaunchProfile("sys-vram-4").value("modelProfileId").toString();
     QVERIFY(pm.getModelProfile(mp4).value("mmprojId").toString().isEmpty());
     // El tier 8GB Gemma tiene visión (gemma4uv): mmproj presente, offload a CPU via
@@ -166,6 +170,58 @@ void SystemProfilesTests::manager_fastGemmaDflashWired()
     QVERIFY(!dup.isEmpty());
     QVERIFY(!pm.isSystemLaunch(dup));
     QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id",dup},{"name","mi-gemma"}}));
+}
+
+void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
+{
+    ProfileManager pm;
+    auto *m = pm.launchProfiles();
+    for (int r = 0; r < m->rowCount(); ++r) {
+        const QModelIndex idx = m->index(r);
+        if (!m->data(idx, ProfileListModel<LaunchProfile>::SystemRole).toBool())
+            continue;
+        const QString launchId = m->data(idx, ProfileListModel<LaunchProfile>::IdRole).toString();
+        const QVariantMap launch = pm.getLaunchProfile(launchId);
+        const QVariantMap model = pm.getModelProfile(launch.value("modelProfileId").toString());
+        const QString name = launch.value("name").toString().toLower();
+        const bool isVisionProfile = name.contains(QStringLiteral("visión"))
+                                     || name.contains(QStringLiteral("vision"));
+        if (!isVisionProfile) {
+            QVERIFY2(model.value("mmprojId").toString().isEmpty(),
+                     qPrintable(QStringLiteral("%1 carga mmproj sin ser perfil de visión")
+                                    .arg(launchId)));
+        }
+
+        const bool hasSpec = !model.value("specType").toString().isEmpty()
+                             || model.value("specDraftNMax").toInt() > 0;
+        if (hasSpec) {
+            QVERIFY2(!model.value("draftModelId").toString().isEmpty(),
+                     qPrintable(QStringLiteral("%1 declara speculative/MTP sin draftModel")
+                                    .arg(launchId)));
+        }
+    }
+}
+
+void SystemProfilesTests::manager_smallProfilesAreConservative()
+{
+    ProfileManager pm;
+    const auto assertRt = [&](const QString &launchId, int expectedCtx, int maxBatch, int maxLayers) {
+        const QVariantMap launch = pm.getLaunchProfile(launchId);
+        const QVariantMap rt = pm.getRuntimePreset(launch.value("runtimePresetId").toString());
+        QCOMPARE(rt.value("ctx").toInt(), expectedCtx);
+        QVERIFY2(rt.value("ctx").toInt() >= 8192,
+                 qPrintable(QStringLiteral("%1 ctx=%2").arg(launchId).arg(rt.value("ctx").toInt())));
+        QVERIFY2(rt.value("batch").toInt() <= maxBatch,
+                 qPrintable(QStringLiteral("%1 batch=%2").arg(launchId).arg(rt.value("batch").toInt())));
+        QVERIFY2(rt.value("ubatch").toInt() <= maxBatch,
+                 qPrintable(QStringLiteral("%1 ubatch=%2").arg(launchId).arg(rt.value("ubatch").toInt())));
+        QVERIFY2(rt.value("gpuLayers").toInt() <= maxLayers,
+                 qPrintable(QStringLiteral("%1 gpuLayers=%2")
+                                .arg(launchId).arg(rt.value("gpuLayers").toInt())));
+    };
+    assertRt(QStringLiteral("sys-vram-4-gemma"), 8192, 128, 12);
+    assertRt(QStringLiteral("sys-vram-2-gemma"), 8192, 64, 8);
+    assertRt(QStringLiteral("sys-vram-2"), 8192, 64, 8);
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()
