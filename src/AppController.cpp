@@ -2018,6 +2018,7 @@ void AppController::installOfficialBinary()
     m_installSourceLabel = QStringLiteral("official");
     m_installReleaseTag.clear();
     m_installRequireCuda = false;
+    m_installRequireCpu = false;
     startBinaryInstall();
 }
 
@@ -2033,6 +2034,7 @@ void AppController::installRequiredBinaryForProfile(const QString &launchProfile
     m_installSourceLabel = QStringLiteral("official");
     m_installReleaseTag = pin;
     m_installRequireCuda = false;
+    m_installRequireCpu = false;
     startBinaryInstall();
 }
 
@@ -2043,6 +2045,7 @@ void AppController::installMtpBinary()
     m_installSourceLabel = QStringLiteral("beellama");
     m_installReleaseTag.clear();
     m_installRequireCuda = true;
+    m_installRequireCpu = false;
     startBinaryInstall();
 }
 
@@ -2315,6 +2318,7 @@ try {
     $headers = @{ 'User-Agent' = 'LlamaCode' }
     $requireCuda = '%3'
     $tagRequest = '%4'
+    $requireCpu = '%5'
     $repo = '%2'
     $tagLabel = if ([string]::IsNullOrWhiteSpace($tagRequest)) { 'latest' } else { $tagRequest }
     Write-Output ('STATUS: Consultando release ' + $tagLabel + ' de ' + $repo + '...')
@@ -2326,8 +2330,19 @@ try {
     try {
         $rel = Invoke-RestMethod -Uri $api -Headers $headers
     } catch {
-        if ([string]::IsNullOrWhiteSpace($tagRequest)) { throw }
-        Write-Output ('STATUS: GitHub API no disponible (' + $_.Exception.Message + '); uso URLs directas del release ' + $tagRequest + '.')
+        $apiErr = $_.Exception.Message
+        if ([string]::IsNullOrWhiteSpace($tagRequest)) {
+            Write-Output ('STATUS: GitHub API no disponible (' + $apiErr + '); consulto página pública de releases.')
+            try {
+                $html = Invoke-WebRequest -Uri ('https://github.com/' + $repo + '/releases') -Headers $headers -UseBasicParsing
+                $m = [regex]::Match($html.Content, '/releases/tag/(b[0-9]+)')
+                if (-not $m.Success) { throw 'No pude detectar el tag latest desde la página de releases.' }
+                $tagRequest = $m.Groups[1].Value
+            } catch {
+                throw ('GitHub API no disponible (' + $apiErr + ') y fallback HTML falló: ' + $_.Exception.Message)
+            }
+        }
+        Write-Output ('STATUS: Uso URLs directas del release ' + $tagRequest + '.')
         $base = 'https://github.com/' + $repo + '/releases/download/' + $tagRequest + '/'
         $rel = [pscustomobject]@{
             tag_name = $tagRequest
@@ -2336,7 +2351,8 @@ try {
                 [pscustomobject]@{ name = 'cudart-llama-bin-win-cuda-12.4-x64.zip'; browser_download_url = $base + 'cudart-llama-bin-win-cuda-12.4-x64.zip' },
                 [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-cuda-13.3-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-cuda-13.3-x64.zip' },
                 [pscustomobject]@{ name = 'cudart-llama-bin-win-cuda-13.3-x64.zip'; browser_download_url = $base + 'cudart-llama-bin-win-cuda-13.3-x64.zip' },
-                [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-avx2-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-avx2-x64.zip' }
+                [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-avx2-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-avx2-x64.zip' },
+                [pscustomobject]@{ name = 'llama-' + $tagRequest + '-bin-win-cpu-x64.zip'; browser_download_url = $base + 'llama-' + $tagRequest + '-bin-win-cpu-x64.zip' }
             )
         }
     }
@@ -2345,12 +2361,16 @@ try {
     $pick = $null
     $hasNvidia = $false
     try { $null = Get-Command nvidia-smi -ErrorAction Stop; $hasNvidia = $true } catch {}
-    if ($hasNvidia) {
+    if ($requireCpu -ne '1' -and $hasNvidia) {
         $pick = $assets | Where-Object { $_.name -match 'bin-win-cuda.*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1
     }
     if ($requireCuda -eq '1') {
         if (-not $pick) { throw 'No CUDA Windows x64 build found (este binario MTP requiere NVIDIA/CUDA).' }
     } else {
+        if ($requireCpu -eq '1') {
+            $pick = $assets | Where-Object { $_.name -match 'bin-win-(avx2|cpu|openblas).*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1
+            if (-not $pick) { throw 'No CPU Windows x64 build found.' }
+        }
         if (-not $pick) { $pick = $assets | Where-Object { $_.name -match 'bin-win-(avx2|cpu|openblas).*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1 }
         if (-not $pick) { $pick = $assets | Where-Object { $_.name -match 'win.*x64.*\.zip$' -and $_.name -notmatch 'cudart-' } | Select-Object -First 1 }
         if (-not $pick) { throw 'No suitable Windows x64 binary asset found in latest release.' }
@@ -2399,7 +2419,8 @@ try {
 )PS").arg(QDir::toNativeSeparators(toolsDir).replace("'", "''"))
        .arg(m_installSourceRepo)
        .arg(m_installRequireCuda ? QStringLiteral("1") : QStringLiteral("0"))
-       .arg(m_installReleaseTag);
+       .arg(m_installReleaseTag)
+       .arg(m_installRequireCpu ? QStringLiteral("1") : QStringLiteral("0"));
 
     m_installerProc = new QProcess(this);
     m_installingOfficialBinary = true;
@@ -9010,8 +9031,14 @@ void AppController::ensureSystemBinary(const QString &kind)
                 break;
             }
         }
-        if (!hasCpu)
-            installOfficialBinary();
+        if (!hasCpu) {
+            m_installSourceRepo = QStringLiteral("ggml-org/llama.cpp");
+            m_installSourceLabel = QStringLiteral("official");
+            m_installReleaseTag.clear();
+            m_installRequireCuda = false;
+            m_installRequireCpu = true;
+            startBinaryInstall();
+        }
     } else if (kind == QLatin1String("beellama")) {
         if (!hasBee && nvidia) installMtpBinary();          // ngram-mod / Qwen MTP
         else if (!hasBee && !hasOfficial) installOfficialBinary();
