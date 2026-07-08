@@ -158,6 +158,14 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     for (int i = 0; i < extraTokens.size(); ++i) {
         const QString &cur = extraTokens.at(i);
         if (!cur.startsWith(u'-')) { args.append(cur); continue; }
+        if (cur == QLatin1String("--spec-type") && i + 1 < extraTokens.size()
+            && extraTokens.at(i + 1).contains(QStringLiteral("draft"), Qt::CaseInsensitive)
+            && ctx.model.draftModelId.isEmpty()) {
+            result.blockingErrors.append(QStringLiteral(
+                "Este perfil declara %1 %2, pero no tiene draftModel asociado. "
+                "Corregí el perfil o instalá un perfil actualizado que declare y descargue el draft.")
+                .arg(cur, extraTokens.at(i + 1)));
+        }
         // Flags de speculative/MTP/ngram: si el binario NO los soporta (p.ej.
         // fallback a llama.cpp oficial sin MTP), descartarlos junto con su valor
         // para no romper el arranque. Solo si el binario declara supportedFlags.
@@ -342,7 +350,9 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
 
     if (!mp.draftModelId.isEmpty()) {
         if (!draft.isAvailable || draft.absolutePath.isEmpty()) {
-            warnings.append("Draft model unavailable, speculative decoding disabled.");
+            errors.append(QStringLiteral(
+                "Draft model unavailable: este perfil declara speculative/MTP con draft, "
+                "pero el draft no está instalado. Instalá las dependencias del perfil antes de iniciar."));
         } else if (mp.specType == QLatin1String("draft-mtp")
                    && !supportsGemma4AssistantDraft(bin)) {
             errors.append(QStringLiteral(

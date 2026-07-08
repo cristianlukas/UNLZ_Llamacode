@@ -44,6 +44,7 @@ private slots:
     void manager_modelIdIsDeterministic();
     void manager_fastGemmaDflashWired();
     void manager_systemProfilesAvoidAccidentalVisionAndMtp();
+    void bundle_draftMtpAlwaysDeclaresDraftModel();
     void manager_smallProfilesAreConservative();
 
     void controller_recommendsClosestTier();
@@ -199,6 +200,37 @@ void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
                      qPrintable(QStringLiteral("%1 declara speculative/MTP sin draftModel")
                                     .arg(launchId)));
         }
+    }
+}
+
+void SystemProfilesTests::bundle_draftMtpAlwaysDeclaresDraftModel()
+{
+    QFile f(bundlePath());
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
+    QVERIFY(!arr.isEmpty());
+    for (const QJsonValue &value : arr) {
+        const QJsonObject entry = value.toObject();
+        const QString id = entry.value(QStringLiteral("id")).toString();
+        QStringList specTokens;
+        const QJsonObject mtp = entry.value(QStringLiteral("mtp")).toObject();
+        if (mtp.value(QStringLiteral("enabled")).toBool()) {
+            for (const QJsonValue &arg : mtp.value(QStringLiteral("args")).toArray())
+                specTokens << arg.toString();
+        }
+        for (const QJsonValue &arg : entry.value(QStringLiteral("extraArgs")).toArray())
+            specTokens << arg.toString();
+        const QJsonObject spec = entry.value(QStringLiteral("spec")).toObject();
+        const bool declaresDraftMtp =
+            spec.value(QStringLiteral("type")).toString().contains(QStringLiteral("draft"), Qt::CaseInsensitive)
+            || specTokens.contains(QStringLiteral("draft-mtp"), Qt::CaseInsensitive);
+        if (!declaresDraftMtp)
+            continue;
+        const QJsonObject draft = entry.value(QStringLiteral("draftModel")).toObject();
+        QVERIFY2(!draft.value(QStringLiteral("repo")).toString().isEmpty()
+                     && !draft.value(QStringLiteral("file")).toString().isEmpty(),
+                 qPrintable(QStringLiteral("%1 declara draft-mtp pero no draftModel repo/file")
+                                .arg(id)));
     }
 }
 

@@ -42,6 +42,8 @@ private slots:
     void builder_dropsUnsupportedFlag();
     void builder_missingModelIsBlocking();
     void builder_emitsSpecFlags();
+    void builder_missingDraftIsBlocking();
+    void builder_rawDraftMtpRequiresDraftModel();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_forcesF16KvWithDraft();
     void builder_appliesQwenCodingSamplingPreset();
@@ -278,6 +280,44 @@ void CoreTests::builder_emitsSpecFlags()
     QVERIFY(i >= 0 && a[i + 1] == "all");
     QVERIFY(a.contains("--spec-draft-type-k"));
     QVERIFY(a.contains("--spec-draft-type-v"));
+}
+
+void CoreTests::builder_missingDraftIsBlocking()
+{
+    auto ctx = makeCtx();
+    ctx.model.draftModelId = "d1";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMax = 3;
+    ctx.model.specDraftNgl = "all";
+    ctx.draftModel = CatalogModel{};
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(!ep.blockingErrors.isEmpty());
+    bool mentionsDraft = false;
+    for (const QString &e : ep.blockingErrors)
+        if (e.contains(QStringLiteral("Draft model"), Qt::CaseInsensitive))
+            mentionsDraft = true;
+    QVERIFY2(mentionsDraft, qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--spec-draft-model")));
+}
+
+void CoreTests::builder_rawDraftMtpRequiresDraftModel()
+{
+    auto ctx = makeCtx();
+    ctx.launch.extraArgs = {
+        QStringLiteral("--spec-type"),
+        QStringLiteral("draft-mtp"),
+        QStringLiteral("--spec-draft-n-max"),
+        QStringLiteral("3")
+    };
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(!ep.blockingErrors.isEmpty());
+    bool mentionsProfileDraft = false;
+    for (const QString &e : ep.blockingErrors)
+        if (e.contains(QStringLiteral("draftModel"), Qt::CaseInsensitive))
+            mentionsProfileDraft = true;
+    QVERIFY2(mentionsProfileDraft, qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
 }
 
 void CoreTests::builder_dropsGemmaDraftOnOldBinary()

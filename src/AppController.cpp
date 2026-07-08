@@ -9310,6 +9310,27 @@ void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
     if (!mmRepo.isEmpty() && !mmFile.isEmpty() && !have(mmFile))
         enqueueModelDownload(mmRepo, mmFile, folder);
     const QJsonObject draft = entry.value("draftModel").toObject();
+    QStringList specTokens;
+    const QJsonObject mtp = entry.value(QStringLiteral("mtp")).toObject();
+    if (mtp.value(QStringLiteral("enabled")).toBool()) {
+        for (const QJsonValue &arg : mtp.value(QStringLiteral("args")).toArray())
+            specTokens << arg.toString();
+    }
+    for (const QJsonValue &arg : entry.value(QStringLiteral("extraArgs")).toArray())
+        specTokens << arg.toString();
+    const QJsonObject spec = entry.value(QStringLiteral("spec")).toObject();
+    const bool requiresDraft =
+        spec.value(QStringLiteral("type")).toString().contains(QStringLiteral("draft"), Qt::CaseInsensitive)
+        || specTokens.contains(QStringLiteral("draft-mtp"), Qt::CaseInsensitive);
+    if (requiresDraft
+        && (draft.value("repo").toString().isEmpty()
+            || draft.value("file").toString().isEmpty())) {
+        emit serverError(QStringLiteral(
+            "Perfil de sistema inválido: %1 declara draft-MTP pero no define draftModel. "
+            "Actualizá los perfiles de sistema antes de instalar.")
+            .arg(entry.value("displayName").toString(entry.value("id").toString())));
+        return;
+    }
     if (!draft.isEmpty() && !have(draft.value("file").toString()))
         enqueueModelDownload(draft.value("repo").toString(), draft.value("file").toString(),
                              draft.value("folder").toString());

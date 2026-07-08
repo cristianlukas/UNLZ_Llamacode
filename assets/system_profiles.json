@@ -481,10 +481,15 @@
       "off"
     ],
     "mtp": {
-      "enabled": false,
-      "args": []
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "mtp",
+        "--spec-draft-n-max",
+        "3"
+      ]
     },
-    "binaryKind": "official"
+    "binaryKind": "beellama"
   },
   {
     "id": "sys-vram-4-gemma",
@@ -579,10 +584,15 @@
       "off"
     ],
     "mtp": {
-      "enabled": false,
-      "args": []
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "mtp",
+        "--spec-draft-n-max",
+        "3"
+      ]
     },
-    "binaryKind": "official"
+    "binaryKind": "beellama"
   },
   {
     "id": "sys-vram-2-gemma",

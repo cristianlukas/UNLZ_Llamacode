@@ -555,6 +555,11 @@ como Calculadora, archivos, shell, desarrollo o extracción web, el agente valid
 con `desktop_controls`, Playwright, filesystem o comandos en vez de depender de
 capturas visuales.
 
+Cuando un perfil de sistema declara speculative decoding con `draft-mtp`, el
+`draftModel` es una dependencia obligatoria: el instalador lo encola junto con el
+modelo principal y el launcher bloquea el arranque si el draft falta. MTP sin
+draft separado sólo se permite en perfiles que usan `--spec-type mtp`.
+
 Teach vive en **Automatizaciones**. Configuración conserva únicamente el toggle y
 comando técnico del MCP Playwright. Los skills Playwright anteriores se pueden
 importar sin modificarlos.
