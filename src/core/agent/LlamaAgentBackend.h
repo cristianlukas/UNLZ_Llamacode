@@ -484,6 +484,7 @@ private:
     int m_ctxLimit = -1;                 // n_ctx del server (vía /props)
     QString m_lastDesktopTool;           // última tool desktop_* ejecutada (nudge text-tools)
     QString m_lastDesktopResult;
+    QSet<QString> m_desktopLaunchApps;   // apps ya lanzadas en la sesión/Task actual
     // Tope de seguridad MUY alto: no cortar trabajo legítimo. El loop infinito
     // real lo frena kMaxSameCall (misma tool + mismos args repetidos). Que el
     // agente haga tantas iteraciones como necesite.

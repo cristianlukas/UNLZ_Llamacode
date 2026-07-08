@@ -4600,11 +4600,6 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     const QString policy = task.value(QStringLiteral("approvalPolicy"),
                                       QStringLiteral("sensitive")).toString();
     cb->setTaskAutoApprove(policy == QLatin1String("autonomous"));
-    // Automatizaciones corren con máxima capacidad de tools built-in,
-    // independientemente del perfil de agente activo. El perfil puede ser liviano
-    // para chat diario, pero una Task necesita poder adaptarse.
-    cb->setDisabledTools({});
-
     const bool desktop = task.value(QStringLiteral("executionMode")).toString()
                          == QLatin1String("desktop");
     const QString proj = currentAgentProjectDir();
@@ -4632,6 +4627,26 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     // compactación innecesaria, primer turno más rápido. Cualquier otra Task
     // (browserBackground, o desktop con pasos web) mantiene MCP completo.
     const bool pureDesktop = desktop && !taskNeedsBrowser;
+    // Automatizaciones corren con máxima capacidad salvo cuando el Teach demuestra
+    // un flujo de escritorio puro. En perfiles 8k, inyectar todo el catálogo
+    // built-in + schemas de desktop alcanza para exceder n_ctx y fuerza el fallback
+    // textual, que es menos estable. Para escritorio puro dejamos sólo las tools
+    // necesarias para operar/verificar la UI real y diagnosticar loops.
+    if (pureDesktop) {
+        const QStringList desktopTools = AutomationRunner::desktopToolNames();
+        QSet<QString> keep(desktopTools.cbegin(), desktopTools.cend());
+        keep.insert(QStringLiteral("recent_actions"));
+        keep.insert(QStringLiteral("ask_teacher"));
+        QStringList disabled;
+        for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+            const QString tool = v.toMap().value(QStringLiteral("name")).toString();
+            if (!keep.contains(tool))
+                disabled << tool;
+        }
+        cb->setDisabledTools(disabled);
+    } else {
+        cb->setDisabledTools({});
+    }
     cb->setMcpToolsEnabled(!pureDesktop);
     if (pureDesktop) {
         cb->setMcpServers({});

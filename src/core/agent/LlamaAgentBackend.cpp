@@ -1386,6 +1386,8 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     m_emptyTextRetries = 0;
     m_callCounts.clear();
     m_escalatedSigs.clear();
+    if (!m_taskAutoApprove)
+        m_desktopLaunchApps.clear();
     m_pendingObservations.clear();   // descartar capturas de un turno previo abortado
     runCompletion();
 }
@@ -1739,9 +1741,12 @@ void LlamaAgentBackend::runCompletion()
     if (!m_running) return;
     if (m_compacting) return;                    // esperando el resumen; se reanuda al terminar
 
-    // Auto-compactación vía modelo ANTES de contar la iteración: si hay tramo a
-    // compactar, dispara el resumen async y reanuda runCompletion() al terminar.
-    {
+    // Auto-compactación vía modelo ANTES de contar la iteración. En Tasks
+    // autónomas cortas (desktop/browser) la compactación intermedia degrada el
+    // estado operativo: resume justo después de tools como desktop_windows/focus
+    // y modelos chicos pierden qué ventana/acción sigue. Ahí preferimos mantener
+    // el rastro literal y apoyarnos en el catálogo recortado de tools.
+    if (!m_taskAutoApprove) {
         int head = 0, keepFrom = 0;
         if (m_compactStall < 2 && planCompaction(head, keepFrom)) {
             startCompaction(head, keepFrom); return;
@@ -2437,6 +2442,24 @@ void LlamaAgentBackend::processPendingCalls()
     QJsonParseError perr;
     const QJsonObject args = QJsonDocument::fromJson(argStr.toUtf8(), &perr).object();
     if (perr.error != QJsonParseError::NoError && !argStr.trimmed().isEmpty()) {
+        if (name == QLatin1String("desktop_launch") && !m_desktopLaunchApps.isEmpty()) {
+            ++m_toolFail;
+            m_pendingCalls.removeFirst();
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  QJsonObject{{QStringLiteral("tool"), name},
+                                              {QStringLiteral("toolCallId"), id},
+                                              {QStringLiteral("reason"), QStringLiteral("invalid_json_args_after_launch")},
+                                              {QStringLiteral("error"), perr.errorString()}});
+            const QStringList launched = m_desktopLaunchApps.values();
+            appendToolResult(id, name, QStringLiteral(
+                "[desktop_launch bloqueado: ya lanzaste app(s) en esta Task (%1). "
+                "No abras otra instancia. Usá desktop_windows una sola vez para tomar "
+                "el id de la ventana existente, luego desktop_focus y continuá con "
+                "desktop_type/desktop_controls.]")
+                .arg(launched.join(QStringLiteral(", "))));
+            processPendingCalls();
+            return;
+        }
         ++m_toolFail;
         m_pendingCalls.removeFirst();
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
@@ -2449,6 +2472,27 @@ void LlamaAgentBackend::processPendingCalls()
             .arg(perr.errorString(), name));
         processPendingCalls();
         return;
+    }
+
+    if (name == QLatin1String("desktop_launch")) {
+        const QString app = args.value(QStringLiteral("app")).toString().trimmed().toLower();
+        if (!app.isEmpty() && m_desktopLaunchApps.contains(app)) {
+            ++m_toolFail;
+            m_pendingCalls.removeFirst();
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  QJsonObject{{QStringLiteral("tool"), name},
+                                              {QStringLiteral("toolCallId"), id},
+                                              {QStringLiteral("reason"), QStringLiteral("duplicate_desktop_launch")},
+                                              {QStringLiteral("app"), app}});
+            appendToolResult(id, name, QStringLiteral(
+                "[desktop_launch bloqueado: '%1' ya fue lanzada en esta Task. "
+                "No abras otra instancia. Continuá con la ventana existente: "
+                "desktop_windows si aún no tenés id, desktop_focus si ya lo tenés, "
+                "y después desktop_type/desktop_controls para completar y verificar.]")
+                .arg(app));
+            processPendingCalls();
+            return;
+        }
     }
 
     // ── Robustez: validación de args requeridos ──────────────────────────
@@ -2640,6 +2684,8 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     m_execCommand = a.value(QStringLiteral("command")).toString();
     if (m_execCommand.isEmpty()) m_execCommand = a.value(QStringLiteral("path")).toString();
     if (m_execCommand.isEmpty()) m_execCommand = a.value(QStringLiteral("pattern")).toString();
+    if (m_execCommand.isEmpty() && name == QLatin1String("desktop_launch"))
+        m_execCommand = a.value(QStringLiteral("app")).toString().trimmed().toLower();
 
     // Rechazo: no se ejecuta nada; resume sincrónico.
     if (response == QLatin1String("reject")) {
@@ -2682,6 +2728,8 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
         m_lastDesktopTool = name;
         m_lastDesktopResult = res;
     }
+    if (ok && name == QLatin1String("desktop_launch") && !m_execCommand.trimmed().isEmpty())
+        m_desktopLaunchApps.insert(m_execCommand.trimmed().toLower());
     AgentEventLog::append(m_cwd, m_sessionId, ok ? QStringLiteral("tool_result")
                                                  : QStringLiteral("failure"),
                           QJsonObject{{QStringLiteral("tool"), name},
@@ -3075,6 +3123,13 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("task"))       return {QStringLiteral("prompt")};
     if (name == QLatin1String("ask_teacher")) return {QStringLiteral("question")};
     if (name == QLatin1String("browser_skill_replay")) return {QStringLiteral("name")};
+    if (name == QLatin1String("desktop_launch")) return {QStringLiteral("app")};
+    if (name == QLatin1String("desktop_focus")) return {QStringLiteral("target_id")};
+    if (name == QLatin1String("desktop_controls")) return {QStringLiteral("target_id")};
+    if (name == QLatin1String("desktop_click_element"))
+        return {QStringLiteral("target_id"), QStringLiteral("control_id")};
+    if (name == QLatin1String("desktop_type")) return {QStringLiteral("text")};
+    if (name == QLatin1String("desktop_key")) return {QStringLiteral("key")};
     return {};   // list_dir, memory, browser_skill_list: args opcionales
 }
 
@@ -4092,6 +4147,7 @@ void LlamaAgentBackend::newSession()
     m_messages.clear();
     m_apiMessages = {};
     m_curAsstIdx = -1;
+    m_desktopLaunchApps.clear();
     ensureSession();        // crea sesión nueva + system prompt + persiste
 }
 
@@ -4109,6 +4165,7 @@ void LlamaAgentBackend::newTaskSession()
     m_messages.clear();
     m_apiMessages = {};
     m_curAsstIdx = -1;
+    m_desktopLaunchApps.clear();
     ensureSession();
 }
 
@@ -4124,6 +4181,7 @@ void LlamaAgentBackend::endTaskSession()
     m_messages.clear();
     m_apiMessages = {};
     m_curAsstIdx = -1;
+    m_desktopLaunchApps.clear();
     m_readFingerprints.clear();
     m_checkpoints.clear();
     if (!prev.isEmpty())
