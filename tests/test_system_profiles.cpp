@@ -254,6 +254,20 @@ void SystemProfilesTests::manager_smallProfilesAreConservative()
     assertRt(QStringLiteral("sys-vram-4-gemma"), 8192, 128, 12);
     assertRt(QStringLiteral("sys-vram-2-gemma"), 8192, 64, 8);
     assertRt(QStringLiteral("sys-vram-2"), 8192, 64, 8);
+    assertRt(QStringLiteral("sys-vram-0"), 8192, 128, 0);
+
+    const QVariantMap cpuLaunch = pm.getLaunchProfile(QStringLiteral("sys-vram-0"));
+    const QVariantMap cpuRt = pm.getRuntimePreset(cpuLaunch.value("runtimePresetId").toString());
+    const QVariantMap cpuModel = pm.getModelProfile(cpuLaunch.value("modelProfileId").toString());
+    const QString modelsDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
+    const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    const QString expect = QUuid::createUuidV5(
+        ns, QString(modelsDir + "/Qwen3.5-4B/Qwen3.5-4B-Q4_K_M.gguf").toUtf8()).toString(QUuid::WithoutBraces);
+    QCOMPARE(cpuModel.value("modelId").toString(), expect);
+    QCOMPARE(cpuRt.value("gpuLayers").toInt(), 0);
+    QVERIFY2(!cpuRt.value("flashAttention").toBool(),
+             "El fallback CPU no debe depender de flash-attn");
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()
@@ -297,7 +311,7 @@ void SystemProfilesTests::controller_recommendsCpuWhenNoGpu()
 void SystemProfilesTests::controller_noneWhenBelowMinimum()
 {
     AppController app;
-    app.setHardwareSummaryForTest(0.0, 4.0, QStringLiteral("sin GPU"));   // 4GB RAM < 32 del CPU tier
+    app.setHardwareSummaryForTest(0.0, 4.0, QStringLiteral("sin GPU"));   // 4GB RAM < 16 del CPU tier
     QVERIFY(app.recommendedSystemProfile().isEmpty());
 }
 

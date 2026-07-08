@@ -555,6 +555,11 @@ como Calculadora, archivos, shell, desarrollo o extracción web, el agente valid
 con `desktop_controls`, Playwright, filesystem o comandos en vez de depender de
 capturas visuales.
 
+El perfil de sistema **0GB CPU** es un fallback operativo para automatizaciones,
+no un showcase de calidad máxima: usa Qwen3.5 4B Q4, contexto 8k y batches bajos
+sin capas GPU. Perfiles más grandes en CPU pueden tardar demasiado en emitir la
+primera tool y dejar una Task sin progreso.
+
 Cuando un perfil de sistema declara speculative decoding con `draft-mtp`, el
 `draftModel` es una dependencia obligatoria: el instalador lo encola junto con el
 modelo principal y el launcher bloquea el arranque si el draft falta. MTP sin

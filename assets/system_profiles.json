@@ -646,23 +646,24 @@
     "id": "sys-vram-0",
     "tier": "0GB",
     "order": 8,
-    "displayName": "[general] 0GB CPU · Qwen3.6-35B-A3B Q4",
+    "displayName": "[general] 0GB CPU · Qwen3.5-4B Q4",
     "minVramGb": 0,
-    "minRamGb": 32,
+    "minRamGb": 16,
     "cpuOk": true,
-    "folder": "Qwen3.6-35B-A3B-CPU",
+    "folder": "Qwen3.5-4B",
     "model": {
-      "repo": "unsloth/Qwen3.6-35B-A3B-GGUF",
-      "file": "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
+      "repo": "unsloth/Qwen3.5-4B-MTP-GGUF",
+      "file": "Qwen3.5-4B-Q4_K_M.gguf",
       "quant": "Q4_K_M"
     },
     "runtime": {
-      "ctx": 32768,
+      "ctx": 8192,
       "gpuLayers": 0,
-      "batch": 512,
-      "ubatch": 512,
+      "batch": 128,
+      "ubatch": 128,
+      "threads": 8,
       "kv": "q4_0",
-      "flashAttn": true
+      "flashAttn": false
     },
     "extraArgs": [
       "--temp",
@@ -691,6 +692,7 @@
       "enabled": false,
       "args": []
     },
-    "binaryKind": "official"
+    "binaryKind": "official",
+    "comment": "Fallback CPU para Automatizaciones: Qwen3.5 4B Q4 con ctx 8k y batch bajo. Evita el 35B/32k en CPU, que puede quedar minutos sin emitir la primera tool."
   }
 ]
