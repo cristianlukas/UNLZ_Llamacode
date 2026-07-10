@@ -1,4 +1,5 @@
 #include "LlamaAgentBackend.h"
+#include "core/automation/AutomationRunner.h"
 #include "AgentToolRunner.h"
 #include "SubAgentRunner.h"
 #include "AgentEventLog.h"
@@ -2823,6 +2824,20 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
 
     // Al contexto va la versión acotada (salvo que ya sea un stub de dedup).
     appendToolResult(callId, name, dedup ? res : budgetToolOutput(name, res));
+
+    // Una Task de calculadora ya terminó materialmente cuando el visor UIA
+    // confirma el resultado de la expresión recién escrita. No pedir otra
+    // completion sólo para que el modelo redacte "listo": en modelos locales esa
+    // ronda puede tardar decenas de segundos y deja la UI en "Ejecutando...".
+    if (m_taskAutoApprove && ok && name == QLatin1String("desktop_controls")
+        && m_pendingCalls.isEmpty()) {
+        QString summary;
+        if (AutomationRunner::verifiedArithmeticResult(m_lastDesktopTypeText, res, &summary)) {
+            emit logAppended(QStringLiteral("[turn] cierre determinista: resultado aritmético verificado por UIA\n"));
+            finishTurn(summary);
+            return;
+        }
+    }
 
     // Captura visual (desktop_observe / screenshots): si el server tiene visión,
     // encolar la imagen para inyectarla al contexto al cerrar el turno de tools.

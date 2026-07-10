@@ -727,7 +727,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                          .arg(w.value(QStringLiteral("x")).toInt())
                          .arg(w.value(QStringLiteral("y")).toInt())
                          .arg(w.value(QStringLiteral("label")).toString());
-            if (lines.size() >= 60) break;
+            // El orden sigue el Z-order de Windows: las ventanas relevantes están
+            // primero. Un inventario enorme se reinyecta al LLM y agrega segundos
+            // de prefill sin mejorar la elección del target.
+            if (lines.size() >= 16) break;
         }
         if (ok) *ok = true;
         if (lines.isEmpty())

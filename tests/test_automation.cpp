@@ -18,6 +18,7 @@ private slots:
     void desktopPromptPrefersNativeTools();
     void desktopToolPolicyKeepsGuiToolsAvailable();
     void calculatorMismatchRejectsHistoryFalsePositive();
+    void verifiedCalculatorResultClosesDeterministically();
     void browserPromptUsesForegroundTeachEvidence();
     void actionTraceSurvivesRecipeAndPrompt();
     void headlessBrowserCommandForcesHeadless();
@@ -185,6 +186,25 @@ void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
         {QStringLiteral("description"), QStringLiteral("hacer 3 x 4 en la calculadora")}};
     QVERIFY(!AutomationRunner::arithmeticResultMismatch(
         product, QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 12\"\n")));
+}
+
+void AutomationTests::verifiedCalculatorResultClosesDeterministically()
+{
+    QString summary;
+    QVERIFY(AutomationRunner::verifiedArithmeticResult(
+        QStringLiteral("2+2="),
+        QStringLiteral("[desktop_controls]\ncontrolId=10 [text] \"Se muestra 4\""),
+        &summary));
+    QVERIFY(summary.contains(QStringLiteral("2+2")));
+    QVERIFY(summary.contains(QStringLiteral("4")));
+
+    // Un valor viejo del historial no alcanza y un visor contradictorio tampoco.
+    QVERIFY(!AutomationRunner::verifiedArithmeticResult(
+        QStringLiteral("2+2="), QStringLiteral("[listitem] \"2 + 2= 4\"")));
+    QVERIFY(!AutomationRunner::verifiedArithmeticResult(
+        QStringLiteral("2+2="), QStringLiteral("[text] \"Se muestra 6\"")));
+    QVERIFY(!AutomationRunner::verifiedArithmeticResult(
+        QStringLiteral("1/0="), QStringLiteral("[text] \"Se muestra 0\"")));
 }
 
 void AutomationTests::browserPromptUsesForegroundTeachEvidence()

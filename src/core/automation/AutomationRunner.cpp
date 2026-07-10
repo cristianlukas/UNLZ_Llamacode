@@ -2,6 +2,46 @@
 
 #include <QRegularExpression>
 
+namespace {
+
+bool parseArithmetic(const QString &text, double *expected)
+{
+    static const QRegularExpression exprRe(
+        QStringLiteral("(-?\\d+(?:[\\.,]\\d+)?)\\s*([+\\-*/x×÷])\\s*(-?\\d+(?:[\\.,]\\d+)?)"));
+    const QRegularExpressionMatch match = exprRe.match(text.toLower());
+    if (!match.hasMatch()) return false;
+    auto number = [](QString value, bool *ok) {
+        return value.replace(QLatin1Char(','), QLatin1Char('.')).toDouble(ok);
+    };
+    bool aOk = false, bOk = false;
+    const double a = number(match.captured(1), &aOk);
+    const double b = number(match.captured(3), &bOk);
+    if (!aOk || !bOk) return false;
+    const QString op = match.captured(2);
+    if (op == QLatin1String("+")) *expected = a + b;
+    else if (op == QLatin1String("-")) *expected = a - b;
+    else if (op == QLatin1String("*") || op == QLatin1String("x") || op == QLatin1String("×"))
+        *expected = a * b;
+    else if (op == QLatin1String("/") || op == QLatin1String("÷")) {
+        if (qFuzzyIsNull(b)) return false;
+        *expected = a / b;
+    } else return false;
+    return true;
+}
+
+QString lastCalculatorDisplay(const QString &text)
+{
+    static const QRegularExpression displayRe(
+        QStringLiteral("Se muestra\\s+(-?\\d+(?:[\\.,]\\d+)?)"),
+        QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatchIterator it = displayRe.globalMatch(text);
+    QString value;
+    while (it.hasNext()) value = it.next().captured(1);
+    return value;
+}
+
+} // namespace
+
 bool AutomationRunner::isSensitiveAction(const QString &intent)
 {
     const QString s = intent.toLower();
@@ -47,45 +87,10 @@ bool AutomationRunner::arithmeticResultMismatch(const QVariantMap &task, const Q
     if (!taskText.contains(QStringLiteral("calculadora")))
         return false;
 
-    static const QRegularExpression exprRe(
-        QStringLiteral("(-?\\d+(?:[\\.,]\\d+)?)\\s*([+\\-*/x×÷])\\s*(-?\\d+(?:[\\.,]\\d+)?)"));
-    const QRegularExpressionMatch exprMatch = exprRe.match(taskText);
-    if (!exprMatch.hasMatch())
-        return false;
-
-    auto number = [](QString value, bool *ok) {
-        return value.replace(QLatin1Char(','), QLatin1Char('.')).toDouble(ok);
-    };
-    bool aOk = false;
-    bool bOk = false;
-    const double a = number(exprMatch.captured(1), &aOk);
-    const double b = number(exprMatch.captured(3), &bOk);
-    if (!aOk || !bOk)
-        return false;
-
-    const QString op = exprMatch.captured(2);
     double expected = 0.0;
-    if (op == QLatin1String("+")) {
-        expected = a + b;
-    } else if (op == QLatin1String("-")) {
-        expected = a - b;
-    } else if (op == QLatin1String("*") || op == QLatin1String("x") || op == QLatin1String("×")) {
-        expected = a * b;
-    } else if (op == QLatin1String("/") || op == QLatin1String("÷")) {
-        if (qFuzzyIsNull(b))
-            return false;
-        expected = a / b;
-    } else {
+    if (!parseArithmetic(taskText, &expected))
         return false;
-    }
-
-    static const QRegularExpression displayRe(
-        QStringLiteral("Se muestra\\s+(-?\\d+(?:[\\.,]\\d+)?)"),
-        QRegularExpression::CaseInsensitiveOption);
-    QRegularExpressionMatchIterator it = displayRe.globalMatch(workLog);
-    QString lastDisplay;
-    while (it.hasNext())
-        lastDisplay = it.next().captured(1);
+    const QString lastDisplay = lastCalculatorDisplay(workLog);
     if (lastDisplay.isEmpty()) {
         if (message) {
             *message = QStringLiteral("No se pudo verificar la Calculadora: falta el visor "
@@ -106,6 +111,25 @@ bool AutomationRunner::arithmeticResultMismatch(const QVariantMap &task, const Q
                                   "el visor actual dice %1, pero se esperaba %2. "
                                   "No se acepta historial viejo como éxito.")
                        .arg(lastDisplay, QString::number(expected, 'g', 12));
+    }
+    return true;
+}
+
+bool AutomationRunner::verifiedArithmeticResult(const QString &typedExpression,
+                                                const QString &controlsOutput,
+                                                QString *summary)
+{
+    if (summary) summary->clear();
+    double expected = 0.0;
+    if (!parseArithmetic(typedExpression, &expected)) return false;
+    const QString display = lastCalculatorDisplay(controlsOutput);
+    if (display.isEmpty()) return false;
+    bool ok = false;
+    const double actual = QString(display).replace(QLatin1Char(','), QLatin1Char('.')).toDouble(&ok);
+    if (!ok || qAbs(actual - expected) >= 0.001) return false;
+    if (summary) {
+        *summary = QStringLiteral("Automatización completada: Calculadora verificó %1 = %2 en el visor actual.")
+                       .arg(typedExpression.trimmed().remove(QLatin1Char('=')), display);
     }
     return true;
 }

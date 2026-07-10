@@ -18,6 +18,12 @@ public:
     static QString validateTask(const QVariantMap &task, bool hasVision);
     static bool arithmeticResultMismatch(const QVariantMap &task, const QString &workLog,
                                          QString *message = nullptr);
+    // Detecta una operación aritmética escrita en Calculadora y confirma que el
+    // visor UIA actual coincide. Se usa para cerrar Tasks simples apenas
+    // desktop_controls aporta evidencia suficiente, sin otra inferencia LLM.
+    static bool verifiedArithmeticResult(const QString &typedExpression,
+                                         const QString &controlsOutput,
+                                         QString *summary = nullptr);
     static QVariantMap limits(const QVariantMap &task);
     static QString augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,
                                  const QVariantMap &recipe);
