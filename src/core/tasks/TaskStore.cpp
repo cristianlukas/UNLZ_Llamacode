@@ -538,8 +538,23 @@ void TaskStore::load()
     if (!f.open(QIODevice::ReadOnly)) return;
     const QJsonDocument doc = QJsonDocument::fromJson(f.readAll());
     f.close();
-    for (const QJsonValue &v : doc.array())
-        m_items.append(fromJson(v.toObject()));
+    bool recoveredInterruptedRun = false;
+    for (const QJsonValue &v : doc.array()) {
+        QVariantMap task = fromJson(v.toObject());
+        // `running` sólo es válido dentro de la vida del AppController que lanzó
+        // la corrida. Si estamos cargando desde disco, aquella instancia ya no
+        // existe: convertir el estado huérfano evita botones eternamente en
+        // "Ejecutando..." después de crash, cierre o rebuild.
+        if (task.value(QStringLiteral("lastRunStatus")).toString()
+            == QLatin1String("running")) {
+            task[QStringLiteral("lastRunStatus")] = QStringLiteral("error");
+            task[QStringLiteral("lastRunSummary")] = QStringLiteral(
+                "La ejecución anterior fue interrumpida al cerrarse o reiniciarse LlamaCode.");
+            recoveredInterruptedRun = true;
+        }
+        m_items.append(task);
+    }
+    if (recoveredInterruptedRun) save();
 }
 
 void TaskStore::save() const

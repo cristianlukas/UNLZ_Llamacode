@@ -878,6 +878,9 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   backend los emite.
 - La opción **Reintentar** relanza la Task completa y luego vuelve a ejecutar el
   postprompt si estaba configurado.
+- Al iniciar, cualquier estado `running` persistido por un cierre, crash o rebuild
+  anterior se recupera como ejecución interrumpida; ninguna Task queda mostrando
+  `Ejecutando...` de forma permanente tras reiniciar la aplicación.
 - Sin perfil asignable → marca `lastRun = "error"`.
 
 El cierre del ciclo se apoya en la señal `IAgentBackend::turnFinished` (emitida al

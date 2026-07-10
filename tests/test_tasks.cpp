@@ -20,6 +20,7 @@ private slots:
     void crud_persistsAcrossInstances();
     void duplicate_clonesWithNewId();
     void markRun_updatesStatus();
+    void reload_recoversOrphanRunningStatus();
     void loop_jsonRoundTrip();
     void loop_decideStopsAndRepeats();
     void loop_composeGoalPrompt();
@@ -181,6 +182,24 @@ void TasksTests::markRun_updatesStatus()
     QCOMPARE(s.get(id).value("lastRunSummary").toString(), QStringLiteral("terminó bien"));
     QVERIFY(!s.get(id).value("lastRunAt").toString().isEmpty());
     s.remove(id);
+}
+
+void TasksTests::reload_recoversOrphanRunningStatus()
+{
+    QString id;
+    {
+        TaskStore s;
+        id = s.save({}, sampleTask());
+        s.markRun(id, QStringLiteral("running"), QStringLiteral("Ejecutando Task..."));
+        QCOMPARE(s.get(id).value("lastRunStatus").toString(), QStringLiteral("running"));
+    }
+    {
+        TaskStore reloaded;
+        const QVariantMap task = reloaded.get(id);
+        QCOMPARE(task.value("lastRunStatus").toString(), QStringLiteral("error"));
+        QVERIFY(task.value("lastRunSummary").toString().contains(QStringLiteral("interrumpida")));
+        reloaded.remove(id);
+    }
 }
 
 void TasksTests::loop_jsonRoundTrip()
