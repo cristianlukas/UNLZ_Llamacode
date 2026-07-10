@@ -862,12 +862,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
   la Task no se marca como finalizada hasta completar esa verificación.
-- En operaciones aritméticas simples de Calculadora, si `desktop_controls`
-  confirma que el visor actual coincide con la expresión escrita, la Task se
-  cierra de forma determinista sin gastar otra inferencia sólo para redactar el
-  resumen final. Además, Calculadora se pre-abre y enfoca en paralelo al primer
-  prefill del agente para que un perfil CPU no deje la pantalla sin reacción
-  durante decenas de segundos.
+- Para cualquier automatización de escritorio enseñada, el prefijo seguro de
+  teclado de la receta (por ejemplo `WIN → nombre de app → ENTER`) se
+  reproduce en paralelo al primer prefill: no hay nombres de aplicaciones
+  hardcodeados. Si el objetivo es sensible (mensajes, correo, envíos), el
+  warm-start se detiene después de abrir la app y deja la acción al agente.
 - La finalización del turno no equivale por sí sola a éxito: si el objetivo
   requiere una fuente externa (web, browser, archivos, comandos, etc.) y no hubo
   uso de herramientas, o si la respuesta final declara que no pudo acceder/usar

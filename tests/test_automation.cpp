@@ -18,8 +18,7 @@ private slots:
     void desktopPromptPrefersNativeTools();
     void desktopToolPolicyKeepsGuiToolsAvailable();
     void calculatorMismatchRejectsHistoryFalsePositive();
-    void verifiedCalculatorResultClosesDeterministically();
-    void calculatorTaskPrelaunchIsNarrowAndSafe();
+    void desktopWarmStartUsesTeachWithoutHardcodedApps();
     void browserPromptUsesForegroundTeachEvidence();
     void actionTraceSurvivesRecipeAndPrompt();
     void headlessBrowserCommandForcesHeadless();
@@ -189,40 +188,31 @@ void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
         product, QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 12\"\n")));
 }
 
-void AutomationTests::verifiedCalculatorResultClosesDeterministically()
+void AutomationTests::desktopWarmStartUsesTeachWithoutHardcodedApps()
 {
-    QString summary;
-    QVERIFY(AutomationRunner::verifiedArithmeticResult(
-        QStringLiteral("2+2="),
-        QStringLiteral("[desktop_controls]\ncontrolId=10 [text] \"Se muestra 4\""),
-        &summary));
-    QVERIFY(summary.contains(QStringLiteral("2+2")));
-    QVERIFY(summary.contains(QStringLiteral("4")));
+    const QVariantMap recipe{{"steps", QVariantList{
+        QVariantMap{{"kind", "start"}, {"atMs", 0}},
+        QVariantMap{{"kind", "key"}, {"key", "WIN"}, {"atMs", 100}},
+        QVariantMap{{"kind", "type"}, {"text", "cualquier app"}, {"atMs", 300}},
+        QVariantMap{{"kind", "key"}, {"key", "ENTER"}, {"atMs", 350}},
+        QVariantMap{{"kind", "type"}, {"text", "dato"}, {"atMs", 1200}},
+        QVariantMap{{"kind", "key"}, {"key", "ENTER"}, {"atMs", 1250}},
+        QVariantMap{{"kind", "click"}, {"atMs", 1400}}}}};
+    const QVariantMap normal{{"executionMode", "desktop"}, {"name", "probar app"}};
+    const QVariantList allKeyboard = AutomationRunner::safeDesktopWarmStart(normal, recipe);
+    QCOMPARE(allKeyboard.size(), 5);
+    QCOMPARE(allKeyboard.at(1).toMap().value("text").toString(), QStringLiteral("cualquier app"));
 
-    // Un valor viejo del historial no alcanza y un visor contradictorio tampoco.
-    QVERIFY(!AutomationRunner::verifiedArithmeticResult(
-        QStringLiteral("2+2="), QStringLiteral("[listitem] \"2 + 2= 4\"")));
-    QVERIFY(!AutomationRunner::verifiedArithmeticResult(
-        QStringLiteral("2+2="), QStringLiteral("[text] \"Se muestra 6\"")));
-    QVERIFY(!AutomationRunner::verifiedArithmeticResult(
-        QStringLiteral("1/0="), QStringLiteral("[text] \"Se muestra 0\"")));
-}
+    // Objetivo sensible: abre la app enseñada pero no escribe/envía el contenido.
+    const QVariantMap sensitive{{"executionMode", "desktop"},
+                                {"name", "enviar mensaje por WhatsApp"}};
+    QCOMPARE(AutomationRunner::safeDesktopWarmStart(sensitive, recipe).size(), 3);
 
-void AutomationTests::calculatorTaskPrelaunchIsNarrowAndSafe()
-{
-    QCOMPARE(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
-                 {"executionMode", "desktop"}, {"name", "sumar 2 + 2"},
-                 {"description", "usar la calculadora de Windows"}}),
-             QStringLiteral("calc"));
-    QVERIFY(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
-                {"executionMode", "browserBackground"}, {"name", "sumar 2 + 2"},
-                {"description", "usar la calculadora"}}).isEmpty());
-    QVERIFY(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
-                {"executionMode", "desktop"}, {"name", "abrir notas"},
-                {"description", "escribir algo"}}).isEmpty());
-    QVERIFY(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
-                {"executionMode", "desktop"}, {"name", "abrir calculadora"},
-                {"description", "mirarla"}}).isEmpty());
+    QVERIFY(AutomationRunner::safeDesktopWarmStart(
+        QVariantMap{{"executionMode", "browserBackground"}}, recipe).isEmpty());
+    QVERIFY(AutomationRunner::safeDesktopWarmStart(
+        normal, QVariantMap{{"steps", QVariantList{
+            QVariantMap{{"kind", "key"}, {"key", "ENTER"}}}}}).isEmpty());
 }
 
 void AutomationTests::browserPromptUsesForegroundTeachEvidence()

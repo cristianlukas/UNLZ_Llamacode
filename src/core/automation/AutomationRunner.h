@@ -18,15 +18,12 @@ public:
     static QString validateTask(const QVariantMap &task, bool hasVision);
     static bool arithmeticResultMismatch(const QVariantMap &task, const QString &workLog,
                                          QString *message = nullptr);
-    // Detecta una operación aritmética escrita en Calculadora y confirma que el
-    // visor UIA actual coincide. Se usa para cerrar Tasks simples apenas
-    // desktop_controls aporta evidencia suficiente, sin otra inferencia LLM.
-    static bool verifiedArithmeticResult(const QString &typedExpression,
-                                         const QString &controlsOutput,
-                                         QString *summary = nullptr);
-    // App nativa inequívoca que puede abrirse en paralelo al primer prefill del
-    // agente. Vacío cuando el objetivo no es suficientemente específico.
-    static QString safeDesktopPrelaunchApp(const QVariantMap &task);
+    // Prefijo Teach de teclado que puede reproducirse mientras el agente hace su
+    // primer prefill. Es genérico (WIN/type/ENTER, etc.), corta ante mouse o pasos
+    // no representables y, si el objetivo es sensible, sólo conserva el primer
+    // lanzamiento de app. Cada fila mantiene key/text/atMs.
+    static QVariantList safeDesktopWarmStart(const QVariantMap &task,
+                                             const QVariantMap &recipe);
     static QVariantMap limits(const QVariantMap &task);
     static QString augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,
                                  const QVariantMap &recipe);

@@ -4543,33 +4543,35 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
 
-    // Fast-start reversible: el primer prefill de un modelo CPU puede tardar
-    // ~50 s. Si la Task pide inequívocamente una operación en Calculadora, abrirla
-    // ya y enfocarla en paralelo; el agente conserva el control semántico y hace
-    // la escritura/verificación normal cuando termina de pensar.
-    const QString prelaunchApp = AutomationRunner::safeDesktopPrelaunchApp(task);
-    if (!prelaunchApp.isEmpty()) {
-        QString launchError;
-        if (DesktopAutomationBackend::launchApp(prelaunchApp, {}, &launchError)) {
-            appendAgentEvent(QStringLiteral("task"),
-                             QStringLiteral("Pre-apertura inmediata: %1.").arg(prelaunchApp));
-            QTimer::singleShot(700, this, [this, prelaunchApp, id]() {
+    // Warm-start Teach genérico: reproducir en paralelo el prefijo seguro de
+    // teclado grabado (normalmente WIN → nombre de app → ENTER, y para objetivos
+    // no sensibles más teclas hasta el primer mouse). No conoce nombres de apps:
+    // sirve igual para WhatsApp, Mail, Configuración o cualquier launcher enseñado.
+    const QVariantMap recipe = artifactId.isEmpty()
+        ? QVariantMap{} : AutomationArtifactStore::recipe(artifactId);
+    const QVariantList warmSteps = AutomationRunner::safeDesktopWarmStart(task, recipe);
+    if (!warmSteps.isEmpty()) {
+        const qint64 baseAt = warmSteps.first().toMap().value(QStringLiteral("atMs")).toLongLong();
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Warm-start Teach: %1 acción(es) seguras en paralelo.")
+                             .arg(warmSteps.size()));
+        for (const QVariant &value : warmSteps) {
+            const QVariantMap step = value.toMap();
+            const int delay = qBound(0, static_cast<int>(
+                step.value(QStringLiteral("atMs")).toLongLong() - baseAt), 8000);
+            QTimer::singleShot(delay, this, [this, id, step]() {
                 if (m_runningTaskId != id) return;
-                const QString labelNeedle = prelaunchApp == QLatin1String("calc")
-                    ? QStringLiteral("calculadora") : prelaunchApp.toLower();
-                for (const QVariant &value : DesktopAutomationBackend::windows()) {
-                    const QVariantMap window = value.toMap();
-                    if (!window.value(QStringLiteral("label")).toString().toLower()
-                             .contains(labelNeedle))
-                        continue;
-                    DesktopAutomationBackend::focusWindow(
-                        window.value(QStringLiteral("id")).toString(), nullptr);
-                    break;
-                }
+                QString error;
+                if (step.value(QStringLiteral("kind")).toString() == QLatin1String("key"))
+                    DesktopAutomationBackend::pressKey(
+                        step.value(QStringLiteral("key")).toString(), {}, &error);
+                else
+                    DesktopAutomationBackend::typeText(
+                        step.value(QStringLiteral("text")).toString(), &error);
+                if (!error.isEmpty())
+                    appendAgentEvent(QStringLiteral("task"),
+                                     QStringLiteral("Warm-start omitido: %1").arg(error));
             });
-        } else {
-            appendAgentEvent(QStringLiteral("task"),
-                             QStringLiteral("Pre-apertura falló: %1.").arg(launchError));
         }
     }
     sendToAgent(prompt);

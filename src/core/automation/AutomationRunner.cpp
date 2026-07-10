@@ -1,6 +1,7 @@
 #include "AutomationRunner.h"
 
 #include <QRegularExpression>
+#include <QSet>
 
 namespace {
 
@@ -115,38 +116,47 @@ bool AutomationRunner::arithmeticResultMismatch(const QVariantMap &task, const Q
     return true;
 }
 
-bool AutomationRunner::verifiedArithmeticResult(const QString &typedExpression,
-                                                const QString &controlsOutput,
-                                                QString *summary)
-{
-    if (summary) summary->clear();
-    double expected = 0.0;
-    if (!parseArithmetic(typedExpression, &expected)) return false;
-    const QString display = lastCalculatorDisplay(controlsOutput);
-    if (display.isEmpty()) return false;
-    bool ok = false;
-    const double actual = QString(display).replace(QLatin1Char(','), QLatin1Char('.')).toDouble(&ok);
-    if (!ok || qAbs(actual - expected) >= 0.001) return false;
-    if (summary) {
-        *summary = QStringLiteral("Automatización completada: Calculadora verificó %1 = %2 en el visor actual.")
-                       .arg(typedExpression.trimmed().remove(QLatin1Char('=')), display);
-    }
-    return true;
-}
-
-QString AutomationRunner::safeDesktopPrelaunchApp(const QVariantMap &task)
+QVariantList AutomationRunner::safeDesktopWarmStart(const QVariantMap &task,
+                                                    const QVariantMap &recipe)
 {
     if (task.value(QStringLiteral("executionMode")).toString() != QLatin1String("desktop"))
         return {};
-    const QString text = (task.value(QStringLiteral("name")).toString()
-                          + QLatin1Char('\n')
-                          + task.value(QStringLiteral("description")).toString()).toLower();
-    double ignored = 0.0;
-    // Sólo el caso inequívoco y reversible: una operación aritmética que pide
-    // explícitamente Calculadora. No inferimos otras apps desde texto libre.
-    if (text.contains(QStringLiteral("calculadora")) && parseArithmetic(text, &ignored))
-        return QStringLiteral("calc");
-    return {};
+    const QVariantList taught = recipe.value(QStringLiteral("steps")).toList();
+    QVariantList out;
+    bool sawWin = false, sawTypeAfterWin = false, launched = false;
+    const QString intent = task.value(QStringLiteral("name")).toString()
+                           + QLatin1Char(' ') + task.value(QStringLiteral("description")).toString();
+    const bool sensitive = isSensitiveAction(intent)
+        || intent.contains(QStringLiteral("whatsapp"), Qt::CaseInsensitive)
+        || intent.contains(QStringLiteral("correo"), Qt::CaseInsensitive)
+        || intent.contains(QStringLiteral("mensaje"), Qt::CaseInsensitive);
+    static const QSet<QString> safeKeys{
+        QStringLiteral("WIN"), QStringLiteral("ENTER"), QStringLiteral("ESC"),
+        QStringLiteral("TAB"), QStringLiteral("UP"), QStringLiteral("DOWN"),
+        QStringLiteral("LEFT"), QStringLiteral("RIGHT")};
+
+    for (const QVariant &value : taught) {
+        const QVariantMap step = value.toMap();
+        const QString kind = step.value(QStringLiteral("kind")).toString();
+        if (kind == QLatin1String("start")) continue;
+        if (kind != QLatin1String("key") && kind != QLatin1String("type")) break;
+        if (sensitive && launched) break;
+        if (kind == QLatin1String("key")) {
+            const QString key = step.value(QStringLiteral("key")).toString().toUpper();
+            if (!safeKeys.contains(key)) break;
+            if (out.isEmpty() && key != QLatin1String("WIN")) break;
+            sawWin = sawWin || key == QLatin1String("WIN");
+            if (sawWin && sawTypeAfterWin && key == QLatin1String("ENTER")) launched = true;
+        } else {
+            const QString text = step.value(QStringLiteral("text")).toString();
+            if (text.isEmpty() || !sawWin) break;
+            sawTypeAfterWin = true;
+        }
+        out.append(step);
+    }
+    // Sin una secuencia completa de lanzamiento no hacemos replay parcial: evita
+    // dejar abierto Inicio o texto escrito en la ventana equivocada.
+    return launched ? out : QVariantList{};
 }
 
 QVariantMap AutomationRunner::limits(const QVariantMap &task)
