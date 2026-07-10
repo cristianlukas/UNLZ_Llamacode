@@ -865,7 +865,9 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - En operaciones aritméticas simples de Calculadora, si `desktop_controls`
   confirma que el visor actual coincide con la expresión escrita, la Task se
   cierra de forma determinista sin gastar otra inferencia sólo para redactar el
-  resumen final.
+  resumen final. Además, Calculadora se pre-abre y enfoca en paralelo al primer
+  prefill del agente para que un perfil CPU no deje la pantalla sin reacción
+  durante decenas de segundos.
 - La finalización del turno no equivale por sí sola a éxito: si el objetivo
   requiere una fuente externa (web, browser, archivos, comandos, etc.) y no hubo
   uso de herramientas, o si la respuesta final declara que no pudo acceder/usar

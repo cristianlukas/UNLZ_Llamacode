@@ -134,6 +134,21 @@ bool AutomationRunner::verifiedArithmeticResult(const QString &typedExpression,
     return true;
 }
 
+QString AutomationRunner::safeDesktopPrelaunchApp(const QVariantMap &task)
+{
+    if (task.value(QStringLiteral("executionMode")).toString() != QLatin1String("desktop"))
+        return {};
+    const QString text = (task.value(QStringLiteral("name")).toString()
+                          + QLatin1Char('\n')
+                          + task.value(QStringLiteral("description")).toString()).toLower();
+    double ignored = 0.0;
+    // Sólo el caso inequívoco y reversible: una operación aritmética que pide
+    // explícitamente Calculadora. No inferimos otras apps desde texto libre.
+    if (text.contains(QStringLiteral("calculadora")) && parseArithmetic(text, &ignored))
+        return QStringLiteral("calc");
+    return {};
+}
+
 QVariantMap AutomationRunner::limits(const QVariantMap &task)
 {
     return {

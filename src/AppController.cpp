@@ -4542,6 +4542,36 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     prepareTaskAgentSession();
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
+
+    // Fast-start reversible: el primer prefill de un modelo CPU puede tardar
+    // ~50 s. Si la Task pide inequívocamente una operación en Calculadora, abrirla
+    // ya y enfocarla en paralelo; el agente conserva el control semántico y hace
+    // la escritura/verificación normal cuando termina de pensar.
+    const QString prelaunchApp = AutomationRunner::safeDesktopPrelaunchApp(task);
+    if (!prelaunchApp.isEmpty()) {
+        QString launchError;
+        if (DesktopAutomationBackend::launchApp(prelaunchApp, {}, &launchError)) {
+            appendAgentEvent(QStringLiteral("task"),
+                             QStringLiteral("Pre-apertura inmediata: %1.").arg(prelaunchApp));
+            QTimer::singleShot(700, this, [this, prelaunchApp, id]() {
+                if (m_runningTaskId != id) return;
+                const QString labelNeedle = prelaunchApp == QLatin1String("calc")
+                    ? QStringLiteral("calculadora") : prelaunchApp.toLower();
+                for (const QVariant &value : DesktopAutomationBackend::windows()) {
+                    const QVariantMap window = value.toMap();
+                    if (!window.value(QStringLiteral("label")).toString().toLower()
+                             .contains(labelNeedle))
+                        continue;
+                    DesktopAutomationBackend::focusWindow(
+                        window.value(QStringLiteral("id")).toString(), nullptr);
+                    break;
+                }
+            });
+        } else {
+            appendAgentEvent(QStringLiteral("task"),
+                             QStringLiteral("Pre-apertura falló: %1.").arg(launchError));
+        }
+    }
     sendToAgent(prompt);
 }
 

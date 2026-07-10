@@ -19,6 +19,7 @@ private slots:
     void desktopToolPolicyKeepsGuiToolsAvailable();
     void calculatorMismatchRejectsHistoryFalsePositive();
     void verifiedCalculatorResultClosesDeterministically();
+    void calculatorTaskPrelaunchIsNarrowAndSafe();
     void browserPromptUsesForegroundTeachEvidence();
     void actionTraceSurvivesRecipeAndPrompt();
     void headlessBrowserCommandForcesHeadless();
@@ -205,6 +206,23 @@ void AutomationTests::verifiedCalculatorResultClosesDeterministically()
         QStringLiteral("2+2="), QStringLiteral("[text] \"Se muestra 6\"")));
     QVERIFY(!AutomationRunner::verifiedArithmeticResult(
         QStringLiteral("1/0="), QStringLiteral("[text] \"Se muestra 0\"")));
+}
+
+void AutomationTests::calculatorTaskPrelaunchIsNarrowAndSafe()
+{
+    QCOMPARE(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
+                 {"executionMode", "desktop"}, {"name", "sumar 2 + 2"},
+                 {"description", "usar la calculadora de Windows"}}),
+             QStringLiteral("calc"));
+    QVERIFY(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
+                {"executionMode", "browserBackground"}, {"name", "sumar 2 + 2"},
+                {"description", "usar la calculadora"}}).isEmpty());
+    QVERIFY(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
+                {"executionMode", "desktop"}, {"name", "abrir notas"},
+                {"description", "escribir algo"}}).isEmpty());
+    QVERIFY(AutomationRunner::safeDesktopPrelaunchApp(QVariantMap{
+                {"executionMode", "desktop"}, {"name", "abrir calculadora"},
+                {"description", "mirarla"}}).isEmpty());
 }
 
 void AutomationTests::browserPromptUsesForegroundTeachEvidence()

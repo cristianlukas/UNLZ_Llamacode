@@ -24,6 +24,9 @@ public:
     static bool verifiedArithmeticResult(const QString &typedExpression,
                                          const QString &controlsOutput,
                                          QString *summary = nullptr);
+    // App nativa inequívoca que puede abrirse en paralelo al primer prefill del
+    // agente. Vacío cuando el objetivo no es suficientemente específico.
+    static QString safeDesktopPrelaunchApp(const QVariantMap &task);
     static QVariantMap limits(const QVariantMap &task);
     static QString augmentPrompt(const QVariantMap &task, const QVariantMap &manifest,
                                  const QVariantMap &recipe);
