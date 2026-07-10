@@ -295,7 +295,40 @@ bool DesktopAutomationBackend::focusWindow(const QString &targetId, QString *err
         return false;
     }
     if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
-    if (!SetForegroundWindow(hwnd)) {
+    ShowWindow(hwnd, SW_SHOW);
+
+    // SetForegroundWindow puede rechazar una llamada válida por las reglas de
+    // foreground-lock de Windows (muy común cuando la ventana fue abierta por
+    // `cmd /c start`, como Calculadora). Primero probamos el camino barato. Si
+    // falla, enlazamos temporalmente las colas de input del proceso actual, la
+    // ventana foreground y el target; así BringWindowToTop/SetFocus operan en el
+    // mismo grupo de input sin dejar hilos adjuntos después de esta función.
+    if (GetForegroundWindow() == hwnd || SetForegroundWindow(hwnd)) return true;
+
+    const DWORD currentThread = GetCurrentThreadId();
+    const HWND foreground = GetForegroundWindow();
+    const DWORD foregroundThread = foreground
+        ? GetWindowThreadProcessId(foreground, nullptr) : 0;
+    const DWORD targetThread = GetWindowThreadProcessId(hwnd, nullptr);
+    const bool attachedForeground = foregroundThread != 0
+        && foregroundThread != currentThread
+        && AttachThreadInput(currentThread, foregroundThread, TRUE);
+    const bool attachedTarget = targetThread != 0
+        && targetThread != currentThread && targetThread != foregroundThread
+        && AttachThreadInput(currentThread, targetThread, TRUE);
+
+    BringWindowToTop(hwnd);
+    SetActiveWindow(hwnd);
+    SetFocus(hwnd);
+    const bool requested = SetForegroundWindow(hwnd) != FALSE;
+    const bool focused = requested || GetForegroundWindow() == hwnd;
+
+    if (attachedTarget)
+        AttachThreadInput(currentThread, targetThread, FALSE);
+    if (attachedForeground)
+        AttachThreadInput(currentThread, foregroundThread, FALSE);
+
+    if (!focused) {
         if (error) *error = QStringLiteral("Windows no permitió enfocar la ventana.");
         return false;
     }
