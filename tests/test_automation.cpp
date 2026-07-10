@@ -203,10 +203,11 @@ void AutomationTests::desktopWarmStartUsesTeachWithoutHardcodedApps()
     QCOMPARE(allKeyboard.size(), 5);
     QCOMPARE(allKeyboard.at(1).toMap().value("text").toString(), QStringLiteral("cualquier app"));
 
-    // Objetivo sensible: abre la app enseñada pero no escribe/envía el contenido.
+    // El contenido no se reinterpreta: si el usuario enseñó la secuencia, se
+    // reproduce igual aunque el texto mencione WhatsApp o enviar un mensaje.
     const QVariantMap sensitive{{"executionMode", "desktop"},
                                 {"name", "enviar mensaje por WhatsApp"}};
-    QCOMPARE(AutomationRunner::safeDesktopWarmStart(sensitive, recipe).size(), 3);
+    QCOMPARE(AutomationRunner::safeDesktopWarmStart(sensitive, recipe).size(), 5);
 
     QVERIFY(AutomationRunner::safeDesktopWarmStart(
         QVariantMap{{"executionMode", "browserBackground"}}, recipe).isEmpty());

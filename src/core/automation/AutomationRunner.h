@@ -19,9 +19,9 @@ public:
     static bool arithmeticResultMismatch(const QVariantMap &task, const QString &workLog,
                                          QString *message = nullptr);
     // Prefijo Teach de teclado que puede reproducirse mientras el agente hace su
-    // primer prefill. Es genérico (WIN/type/ENTER, etc.), corta ante mouse o pasos
-    // no representables y, si el objetivo es sensible, sólo conserva el primer
-    // lanzamiento de app. Cada fila mantiene key/text/atMs.
+    // primer prefill. Es genérico (WIN/type/ENTER, etc.) y corta sólo ante mouse o
+    // pasos no representables; no reinterpreta el contenido elegido por el
+    // usuario. Cada fila mantiene key/text/atMs.
     static QVariantList safeDesktopWarmStart(const QVariantMap &task,
                                              const QVariantMap &recipe);
     static QVariantMap limits(const QVariantMap &task);

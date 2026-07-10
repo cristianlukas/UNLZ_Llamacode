@@ -124,12 +124,6 @@ QVariantList AutomationRunner::safeDesktopWarmStart(const QVariantMap &task,
     const QVariantList taught = recipe.value(QStringLiteral("steps")).toList();
     QVariantList out;
     bool sawWin = false, sawTypeAfterWin = false, launched = false;
-    const QString intent = task.value(QStringLiteral("name")).toString()
-                           + QLatin1Char(' ') + task.value(QStringLiteral("description")).toString();
-    const bool sensitive = isSensitiveAction(intent)
-        || intent.contains(QStringLiteral("whatsapp"), Qt::CaseInsensitive)
-        || intent.contains(QStringLiteral("correo"), Qt::CaseInsensitive)
-        || intent.contains(QStringLiteral("mensaje"), Qt::CaseInsensitive);
     static const QSet<QString> safeKeys{
         QStringLiteral("WIN"), QStringLiteral("ENTER"), QStringLiteral("ESC"),
         QStringLiteral("TAB"), QStringLiteral("UP"), QStringLiteral("DOWN"),
@@ -140,7 +134,6 @@ QVariantList AutomationRunner::safeDesktopWarmStart(const QVariantMap &task,
         const QString kind = step.value(QStringLiteral("kind")).toString();
         if (kind == QLatin1String("start")) continue;
         if (kind != QLatin1String("key") && kind != QLatin1String("type")) break;
-        if (sensitive && launched) break;
         if (kind == QLatin1String("key")) {
             const QString key = step.value(QStringLiteral("key")).toString().toUpper();
             if (!safeKeys.contains(key)) break;

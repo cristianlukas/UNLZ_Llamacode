@@ -865,8 +865,10 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - Para cualquier automatización de escritorio enseñada, el prefijo seguro de
   teclado de la receta (por ejemplo `WIN → nombre de app → ENTER`) se
   reproduce en paralelo al primer prefill: no hay nombres de aplicaciones
-  hardcodeados. Si el objetivo es sensible (mensajes, correo, envíos), el
-  warm-start se detiene después de abrir la app y deja la acción al agente.
+  hardcodeados ni clasificación del contenido como sensible: se respeta la
+  secuencia que el usuario decidió enseñar. El replay rápido corta sólo al llegar
+  a una acción todavía no soportada por este prefijo estructurado (por ejemplo un
+  click); desde allí el agente continúa, verifica y se adapta.
 - La finalización del turno no equivale por sí sola a éxito: si el objetivo
   requiere una fuente externa (web, browser, archivos, comandos, etc.) y no hubo
   uso de herramientas, o si la respuesta final declara que no pudo acceder/usar
