@@ -4061,6 +4061,11 @@ void AppController::startAgent(const QString &launchProfileId)
         } else {
             c.serverBaseUrl = serverBaseUrl();
             c.modelId       = routedModelId(ctx.catalogModel.id);
+            c.ctxOverride   = ctx.runtime.ctx;
+            c.parallelSlots = qMax(1, ctx.runtime.parallelSlots);
+            c.vramTotalMb   = m_serverStats.value(QStringLiteral("totalMb")).toDouble();
+            const double usedMb = m_serverStats.value(QStringLiteral("usedMb")).toDouble();
+            c.vramFreeMb    = c.vramTotalMb > 0.0 ? qMax(0.0, c.vramTotalMb - usedMb) : 0.0;
         }
         m_agentCwdOverride.clear();
         m_activeAgentAdapter = adapter;

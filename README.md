@@ -212,6 +212,11 @@ de lanzar benchmarks o Deep Research.
 | Detector de nueva versión (flag remoto + popup con changelog) | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 
+La delegación multi-agente ajusta automáticamente su concurrencia al perfil activo:
+respeta los slots de `llama-server`, reduce el fan-out con contextos largos y aplica
+límites conservadores según la VRAM detectada. Un perfil de un solo slot conserva
+la delegación, pero ejecuta los sub-agentes secuencialmente.
+
 ## Objetivo
 
 Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de código con chat integrado e historial persistente.

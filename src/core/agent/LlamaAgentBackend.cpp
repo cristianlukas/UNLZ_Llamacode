@@ -2987,15 +2987,17 @@ QString LlamaAgentBackend::mergeAndCleanupWorktree(const QString &callId, bool o
 void LlamaAgentBackend::spawnTasks(const QJsonArray &taskCalls)
 {
     for (const QJsonValue &v : taskCalls) m_subQueue.append(v);
+    const int limit = subagentLimit();
     emit logAppended(QStringLiteral("[subagents: %1 encoladas (máx %2 en paralelo)]\n")
-                         .arg(taskCalls.size()).arg(kMaxParallelSubs));
+                         .arg(taskCalls.size()).arg(limit));
     pumpSubs();
 }
 
 // Lanza subs de la cola hasta llenar el cap. Si no queda nada activo, continúa el turno.
 void LlamaAgentBackend::pumpSubs()
 {
-    while (m_subs.size() < kMaxParallelSubs && !m_subQueue.isEmpty()) {
+    const int limit = subagentLimit();
+    while (m_subs.size() < limit && !m_subQueue.isEmpty()) {
         const QJsonObject call = m_subQueue.takeAt(0).toObject();
         launchSub(call);
     }
@@ -3159,6 +3161,41 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("desktop_type")) return {QStringLiteral("text")};
     if (name == QLatin1String("desktop_key")) return {QStringLiteral("key")};
     return {};   // list_dir, memory, browser_skill_list: args opcionales
+}
+
+int LlamaAgentBackend::adaptiveSubagentLimit(int parallelSlots, int ctxTokens,
+                                             double vramTotalMb, double vramFreeMb)
+{
+    // Un perfil de un slot todavía puede delegar, pero lo hará secuencialmente.
+    int limit = qBound(1, parallelSlots, kAbsoluteMaxParallelSubs);
+
+    // Contextos largos multiplican el KV vivo por secuencia. Estos cortes son
+    // deliberadamente conservadores y funcionan también sin telemetría de GPU.
+    if (ctxTokens >= 131072) limit = qMin(limit, 1);
+    else if (ctxTokens >= 65536) limit = qMin(limit, 2);
+    else if (ctxTokens >= 32768) limit = qMin(limit, 3);
+
+    // Tier de hardware: evita llenar todos los slots en GPUs chicas aunque el
+    // perfil haya sido importado con un --parallel demasiado optimista.
+    if (vramTotalMb > 0.0) {
+        if (vramTotalMb < 8192.0) limit = qMin(limit, 1);
+        else if (vramTotalMb < 12288.0) limit = qMin(limit, 2);
+        else if (vramTotalMb < 20480.0) limit = qMin(limit, 3);
+        else if (vramTotalMb < 32768.0) limit = qMin(limit, 4);
+
+        // Sólo recortar por headroom cuando queda extremadamente poco. El modelo
+        // y el KV suelen estar ya reservados, por eso no usamos porcentajes altos.
+        if (vramFreeMb > 0.0 && vramFreeMb < 384.0) limit = 1;
+        else if (vramFreeMb > 0.0 && vramFreeMb < 768.0) limit = qMin(limit, 2);
+    }
+    return qMax(1, limit);
+}
+
+int LlamaAgentBackend::subagentLimit() const
+{
+    return adaptiveSubagentLimit(m_ctx.parallelSlots,
+                                 m_ctx.ctxOverride > 0 ? m_ctx.ctxOverride : m_ctxLimit,
+                                 m_ctx.vramTotalMb, m_ctx.vramFreeMb);
 }
 
 bool LlamaAgentBackend::redundantDesktopConfirmKey(const QString &previousTool,

@@ -40,6 +40,7 @@ private slots:
     void textToolsModeDoesNotDoubleReserveToolBudget();
     void compactionStallCounterTracksProgress();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
+    void adaptiveSubagentLimit_respectsProfileContextAndVram();
 };
 
 void AgentWireTests::initTestCase()
@@ -968,6 +969,23 @@ void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
                                    .first().toObject().value(QStringLiteral("content")).toString();
     QVERIFY(sysContent.contains(QStringLiteral("<think>")));
     QVERIFY(sysContent.contains(QStringLiteral("Nunca respondas vacío")));
+}
+
+void AgentWireTests::adaptiveSubagentLimit_respectsProfileContextAndVram()
+{
+    using B = LlamaAgentBackend;
+    QCOMPARE(B::adaptiveSubagentLimit(1, 8192, 24576), 1);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 24576), 4);
+    QCOMPARE(B::adaptiveSubagentLimit(8, 8192, 49152), 5); // hard safety cap
+    QCOMPARE(B::adaptiveSubagentLimit(4, 131072, 49152), 1);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 65536, 49152), 2);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 32768, 49152), 3);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 6144), 1);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 10240), 2);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 24576, 300), 1);
+    QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 24576, 700), 2);
+    // Sin telemetría no inventa una restricción: manda el perfil configurado.
+    QCOMPARE(B::adaptiveSubagentLimit(3, 8192, 0), 3);
 }
 
 QTEST_MAIN(AgentWireTests)

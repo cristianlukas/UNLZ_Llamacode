@@ -214,6 +214,11 @@ public:
     // [text, image_url...]. Objeto vacío si no hay imágenes. PURA → unit-testeable.
     static QJsonObject buildObservationMessage(const QStringList &imageDataUris);
 
+    // Cap adaptativo para sub-agentes: combina slots reales del perfil, contexto
+    // por secuencia y VRAM. Público/puro para pruebas y UI futura.
+    static int adaptiveSubagentLimit(int parallelSlots, int ctxTokens,
+                                     double vramTotalMb, double vramFreeMb = 0.0);
+
     // Catálogo de tools built-in con metadata para la UI de habilitar/deshabilitar:
     // lista de {name, group, description, approxTokens}. El orden define el de la UI.
     static QVariantList toolCatalog();
@@ -326,7 +331,8 @@ private:
     QString createWorktree(const QString &callId, bool &isolated);
     QString mergeAndCleanupWorktree(const QString &callId, bool ok, bool isolated);
     void cancelAllSubs();
-    static constexpr int kMaxParallelSubs = 3;   // subs concurrentes (no saturar el server)
+    int subagentLimit() const;
+    static constexpr int kAbsoluteMaxParallelSubs = 5;
 
     void interruptForSteer();          // aborta y deja m_apiMessages consistente
     void repairDanglingToolCalls();    // cierra tool_calls sin respuesta tras abortar
