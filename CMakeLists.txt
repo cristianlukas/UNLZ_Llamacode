@@ -60,6 +60,7 @@ set(CORE_SOURCES
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
+    src/core/profiles/ProfileHealthChecker.cpp
     src/core/agent/OpencodeBackend.cpp
     src/core/agent/RawChatBackend.cpp
     src/core/agent/LlamaAgentBackend.cpp
@@ -121,6 +122,7 @@ set(HEADERS
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h
+    src/core/profiles/ProfileHealthChecker.h
     src/core/agent/AgentTypes.h
     src/core/agent/IAgentBackend.h
     src/core/agent/OpencodeBackend.h
@@ -395,6 +397,7 @@ if (BUILD_TESTS)
     endfunction()
 
     add_lc_test(test_gguf_profiles      tests/test_gguf_profiles.cpp)
+    add_lc_test(test_profile_health     tests/test_profile_health.cpp)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
     add_lc_test(test_agent_profiles     tests/test_agent_profiles.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)

@@ -1,4 +1,5 @@
 #include "AppController.h"
+#include "core/profiles/ProfileHealthChecker.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
@@ -13481,3 +13482,21 @@ QString AppController::voiceState() const { return m_voice ? m_voice->stateStr()
 bool    AppController::voiceActive() const { return m_voice && m_voice->active(); }
 double  AppController::voiceLevel() const { return m_voice ? m_voice->level() : 0.0; }
 QString AppController::voiceError() const { return m_voice ? m_voice->lastError() : QString(); }
+
+QVariantList AppController::profileHealth()
+{
+    return ProfileHealthChecker::checkAllAsVariant(&m_profiles, &m_binaries, &m_catalog);
+}
+
+QVariantMap AppController::profileHealthSummary()
+{
+    int errors = 0, warnings = 0;
+    for (const HealthIssue &i : ProfileHealthChecker::checkAll(&m_profiles, &m_binaries, &m_catalog)) {
+        if (i.severity == QLatin1String("error")) ++errors;
+        else ++warnings;
+    }
+    QVariantMap m;
+    m["errors"] = errors;
+    m["warnings"] = warnings;
+    return m;
+}

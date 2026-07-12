@@ -199,6 +199,11 @@ public:
     bool hasAnyBinary() const { return m_binaries.count() > 0; }
     bool hasAnyModel()  const { return m_catalog.count()  > 0; }
     bool hasAnyLaunch() const { return !m_profiles.launchProfilesForMenu().isEmpty(); }
+    // Salud de perfiles: lista de issues (severity/entity/code/message/fix) de todos
+    // los launches. Vacío = todo sano. Expuesto a QML y headless (ControlApi).
+    Q_INVOKABLE QVariantList profileHealth();
+    // Resumen para badges: {errors, warnings} (conteo de issues por severity).
+    Q_INVOKABLE QVariantMap profileHealthSummary();
     QString serverBaseUrl() const {
         const QStringList args = m_effectiveProfile.value("effectiveArgs").toStringList();
         QString host = QStringLiteral("127.0.0.1");
