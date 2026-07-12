@@ -83,6 +83,8 @@ QJsonObject RuntimePreset::toJson() const {
     o["flashAttention"] = flashAttention; o["mmap"] = mmap;
     o["mlock"] = mlock; o["contBatching"] = contBatching;
     o["cacheType"] = cacheType; o["parallelSlots"] = parallelSlots;
+    if (!tensorOverrides.isEmpty())
+        o["tensorOverrides"] = QJsonArray::fromStringList(tensorOverrides);
     return o;
 }
 RuntimePreset RuntimePreset::fromJson(const QJsonObject &o) {
@@ -96,6 +98,10 @@ RuntimePreset RuntimePreset::fromJson(const QJsonObject &o) {
     p.contBatching = o["contBatching"].toBool(true);
     p.cacheType = o["cacheType"].toString("f16");
     p.parallelSlots = o["parallelSlots"].toInt(1);
+    for (const auto &v : o["tensorOverrides"].toArray()) {
+        const QString s = v.toString().trimmed();
+        if (!s.isEmpty()) p.tensorOverrides.append(s);
+    }
     return p;
 }
 QString RuntimePreset::generateId() { return newId(); }

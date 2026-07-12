@@ -49,6 +49,9 @@ private slots:
     void builder_forcesF16KvWithDraft();
     void builder_appliesQwenCodingSamplingPreset();
     void builder_warnsOnManualQwenSampling();
+    void builder_emitsTensorOverrides();
+    void builder_warnsOnMalformedTensorOverride();
+    void runtimePreset_roundtripsTensorOverrides();
 };
 
 void CoreTests::inferFamily_data()
@@ -438,6 +441,47 @@ void CoreTests::builder_warnsOnManualQwenSampling()
     }
     QVERIFY(tempWarn);
     QVERIFY(topKWarn);
+}
+
+// Role-aware per-tensor quant: cada spec válido se emite como --override-tensor.
+void CoreTests::builder_emitsTensorOverrides()
+{
+    auto ctx = makeCtx();
+    ctx.runtime.tensorOverrides = {"ffn_.*=Q4_K", "attn_.*=Q8_0"};
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    const QStringList &a = ep.effectiveArgs;
+    QCOMPARE(a.count("--override-tensor"), 2);
+    int i = a.indexOf("--override-tensor");
+    QVERIFY(i >= 0 && i + 1 < a.size());
+    QCOMPARE(a[i + 1], QStringLiteral("ffn_.*=Q4_K"));
+}
+
+// Spec sin '=' se descarta con warning, sin emitir el flag.
+void CoreTests::builder_warnsOnMalformedTensorOverride()
+{
+    auto ctx = makeCtx();
+    ctx.runtime.tensorOverrides = {"ffn_only_no_type", "  ", "ffn_.*=Q4_K"};
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QCOMPARE(ep.effectiveArgs.count("--override-tensor"), 1);
+    bool warned = false;
+    for (const QString &w : ep.warnings)
+        if (w.contains("ffn_only_no_type")) warned = true;
+    QVERIFY(warned);
+}
+
+// Persistencia: tensorOverrides sobrevive toJson→fromJson; entries vacías se filtran.
+void CoreTests::runtimePreset_roundtripsTensorOverrides()
+{
+    RuntimePreset p;
+    p.tensorOverrides = {"ffn_.*=Q4_K", "  ", "attn_.*=Q8_0"};
+    const RuntimePreset r = RuntimePreset::fromJson(p.toJson());
+    QCOMPARE(r.tensorOverrides.size(), 2);
+    QCOMPARE(r.tensorOverrides[0], QStringLiteral("ffn_.*=Q4_K"));
+    QCOMPARE(r.tensorOverrides[1], QStringLiteral("attn_.*=Q8_0"));
+
+    // Vacío no debe escribir la key.
+    RuntimePreset empty;
+    QVERIFY(!empty.toJson().contains("tensorOverrides"));
 }
 
 QTEST_MAIN(CoreTests)

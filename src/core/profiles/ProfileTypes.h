@@ -74,6 +74,11 @@ struct RuntimePreset {
     bool contBatching = true;
     QString cacheType = "f16";
     int parallelSlots = 1;
+    // Role-aware per-tensor quant. Cada entry = un spec de --override-tensor de
+    // llama.cpp ("<regex>=<type>", ej "ffn_.*=Q4_K"). Mantener attention/output
+    // en alta precisión y bajar sólo MLP → mejor cosine a igual tamaño que un
+    // quant uniforme. Vacío = sin overrides.
+    QStringList tensorOverrides;
 
     QJsonObject toJson() const;
     static RuntimePreset fromJson(const QJsonObject &obj);

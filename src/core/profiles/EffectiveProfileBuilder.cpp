@@ -424,6 +424,20 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
             addFlag(bin, "--cache-type-k", rt.cacheType, args, warnings);
         }
     }
+
+    // Role-aware per-tensor quant: un --override-tensor por spec.
+    for (const QString &spec : rt.tensorOverrides) {
+        const QString s = spec.trimmed();
+        if (s.isEmpty())
+            continue;
+        if (!s.contains('=')) {
+            warnings.append(QStringLiteral(
+                "Ignoring malformed tensor override '%1' (expected '<regex>=<type>').")
+                .arg(s));
+            continue;
+        }
+        addFlag(bin, "--override-tensor", s, args, warnings);
+    }
 }
 
 void EffectiveProfileBuilder::addFlag(const LlamaBinary &bin, const QString &flag,

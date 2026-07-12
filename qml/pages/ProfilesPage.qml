@@ -28,6 +28,23 @@ Item {
     // Perfil de agente por defecto de este launch (capacidades + directivas).
     property string agentProfileId: ""
 
+    // ── Salud de perfiles (health-check) ──────────────────────────
+    // Lista de issues {severity,launchId,entity,code,message,fix} de todos los
+    // launches. Se refresca al entrar y ante cambios de la lista de launches.
+    property var healthIssues: []
+    property int healthErrors: 0
+    property int healthWarnings: 0
+    function refreshHealth() {
+        healthIssues = App.profileHealth()
+        const s = App.profileHealthSummary()
+        healthErrors = s.errors ?? 0
+        healthWarnings = s.warnings ?? 0
+    }
+    function launchName(id) {
+        const lp = App.profileManager.getLaunchProfile(id)
+        return (lp && lp.name && lp.name.length > 0) ? lp.name : id
+    }
+
     // ── Maestro (supervisor): cadena de fallbacks ─────────────────
     property string masterEscalation: "manual"  // manual | auto | both
     property int    masterAutoAfterFails: 3
@@ -313,6 +330,7 @@ Item {
         gpuLayersField.text = (rt.gpuLayers ?? -1).toString()
         parallelSlotsField.text = (rt.parallelSlots ?? 1).toString()
         cacheTypeField.text = rt.cacheType ?? "f16"
+        tensorOverridesField.text = (rt.tensorOverrides ?? []).join(", ")
         flashAttnCheck.checked = rt.flashAttention ?? false
         mmapCheck.checked = rt.mmap ?? true
         mlockCheck.checked = rt.mlock ?? false
@@ -405,6 +423,7 @@ Item {
             "contBatching": contBatchCheck.checked,
             "cacheType": cacheTypeField.text,
             "parallelSlots": parseInt(parallelSlotsField.text) || 1,
+            "tensorOverrides": tensorOverridesField.text.split(/[,\n]/).map(s => s.trim()).filter(s => s.length > 0),
             "extraArgs": collectExtraArgs(binId)
         })
     }
@@ -468,7 +487,8 @@ Item {
             "gpuLayers": parseInt(gpuLayersField.text), "flashAttention": flashAttnCheck.checked,
             "mmap": mmapCheck.checked, "mlock": mlockCheck.checked,
             "contBatching": contBatchCheck.checked, "cacheType": cacheTypeField.text,
-            "parallelSlots": parseInt(parallelSlotsField.text)
+            "parallelSlots": parseInt(parallelSlotsField.text),
+            "tensorOverrides": tensorOverridesField.text.split(/[,\n]/).map(s => s.trim()).filter(s => s.length > 0)
         }
         if (!App.profileManager.updateRuntimePreset(rtData)) {
             effectiveRid = App.profileManager.addRuntimePreset(
@@ -576,6 +596,86 @@ Item {
                 id: editorCol
                 anchors { left: parent.left; right: parent.right; top: parent.top }
                 spacing: 12
+
+                Component.onCompleted: root.refreshHealth()
+                Connections {
+                    target: App.profileManager
+                    function onLaunchesChanged() { root.refreshHealth() }
+                    function onProfilesReloaded() { root.refreshHealth() }
+                }
+
+                // ── Banner de salud de perfiles ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    radius: 8
+                    property bool healthy: root.healthIssues.length === 0
+                    color: healthy ? Theme.surfaceBg
+                         : (root.healthErrors > 0 ? Qt.rgba(Theme.errorText.r, Theme.errorText.g, Theme.errorText.b, 0.08)
+                                                  : Qt.rgba(Theme.warnText.r, Theme.warnText.g, Theme.warnText.b, 0.08))
+                    border.color: healthy ? Theme.borderColor
+                         : (root.healthErrors > 0 ? Theme.errorText : Theme.warnText)
+                    implicitHeight: healthCol.implicitHeight + 20
+
+                    ColumnLayout {
+                        id: healthCol
+                        anchors.fill: parent
+                        anchors.margins: 10
+                        spacing: 8
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+                            Text {
+                                text: parent.parent.healthy ? "✓" : (root.healthErrors > 0 ? "✕" : "!")
+                                color: parent.parent.healthy ? Theme.successText
+                                     : (root.healthErrors > 0 ? Theme.errorText : Theme.warnText)
+                                font.pixelSize: 16; font.bold: true
+                            }
+                            Text {
+                                text: parent.parent.healthy
+                                    ? "Todos los perfiles están sanos"
+                                    : (root.healthErrors + " error(es), " + root.healthWarnings + " aviso(s)")
+                                color: Theme.textPrimary; font.pixelSize: 14; font.bold: true
+                            }
+                            Item { Layout.fillWidth: true }
+                            LcButton {
+                                text: "Revisar salud"
+                                onClicked: root.refreshHealth()
+                            }
+                        }
+
+                        Repeater {
+                            model: root.healthIssues
+                            delegate: RowLayout {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                spacing: 8
+                                Rectangle {
+                                    Layout.alignment: Qt.AlignTop
+                                    width: 8; height: 8; radius: 4
+                                    y: 5
+                                    color: modelData.severity === "error" ? Theme.errorText : Theme.warnText
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: root.launchName(modelData.launchId) + " — " + modelData.message
+                                        color: Theme.textPrimary; font.pixelSize: 13
+                                        wrapMode: Text.WordWrap
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: "→ " + modelData.fix
+                                        color: Theme.textSecondary; font.pixelSize: 12
+                                        wrapMode: Text.WordWrap
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Rectangle {
                     Layout.fillWidth: true
@@ -1107,6 +1207,11 @@ Item {
                         LcTextField { id: parallelSlotsField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
                         Text { text: "cacheType"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheTypeField; Layout.fillWidth: true }
+                        Text { text: "tensorOverrides"; color: Theme.textSecondary; font.pixelSize: 12 }
+                        LcTextField {
+                            id: tensorOverridesField; Layout.fillWidth: true
+                            placeholderText: "ffn_.*=Q4_K, attn_.*=Q8_0"
+                        }
                     }
                 }
 
