@@ -25,9 +25,27 @@ if not exist "%QT_DIR%\lib\cmake\Qt6\Qt6Config.cmake" (
     exit /b 1
 )
 
+REM ── Encolamiento inteligente entre sesiones paralelas ────────────────────────
+REM Si ya hay un build EN CURSO con la misma fuente, adopto su resultado (REUSE)
+REM en vez de recompilar. Si es otra fuente, espero mi turno. Ver build_coord.ps1.
+set COORD=powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1"
+set HELD_LOCK=0
+%COORD% -Lane build -Action acquire
+set COORD_RC=%errorlevel%
+if "%COORD_RC%"=="10" (
+    echo [INFO] Build compartido en curso completado OK -> reusando artefactos, no recompilo.
+    echo === Build complete (reused) ===
+    exit /b 0
+)
+if not "%COORD_RC%"=="0" (
+    echo [ERROR] No pude coordinar el build (rc=%COORD_RC%).
+    exit /b 1
+)
+set HELD_LOCK=1
+
 REM Cada build sube la version +0.0.1 (patch) antes de configurar/compilar.
 call "%~dp0bump-patch.bat"
-if errorlevel 1 ( exit /b 1 )
+if errorlevel 1 ( goto :done_fail )
 
 echo [INFO] Killing LlamaCode and managed children...
 taskkill /F /IM LlamaCode.exe      >nul 2>&1
@@ -67,7 +85,7 @@ if exist CMakeCache.txt (
 REM VS is a multi-config generator: configure once, build per --config below.
 "%CMAKE%" .. -G "%GENERATOR%" -A x64 ^
     -DCMAKE_PREFIX_PATH="%QT_DIR%"
-if errorlevel 1 ( echo. & echo === Configure FAILED === & exit /b 1 )
+if errorlevel 1 ( echo. & echo === Configure FAILED === & cd .. & goto :done_fail )
 
 cd ..
 
@@ -75,7 +93,7 @@ set DID_DEBUG=0
 set DID_RELEASE=0
 
 if /I "%CONFIGS%"=="Both"    ( call :build_one Debug && call :build_one Release ) else ( call :build_one %CONFIGS% )
-if errorlevel 1 ( exit /b 1 )
+if errorlevel 1 ( goto :done_fail )
 
 REM ── Shortcuts ───────────────────────────────────────────────────────────────
 if "%DID_RELEASE%"=="1" (
@@ -91,7 +109,15 @@ echo.
 echo === Build complete ===
 if "%DID_RELEASE%"=="1" echo Release: build\Release\LlamaCode.exe  (shortcut: LlamaCode.lnk)
 if "%DID_DEBUG%"=="1"   echo Debug:   build\Debug\LlamaCode.exe    (shortcut: LlamaCode-Debug.lnk)
+goto :done_ok
+
+REM ── Liberacion del lock coordinado ───────────────────────────────────────────
+:done_ok
+if "%HELD_LOCK%"=="1" %COORD% -Lane build -Action release -Result OK
 exit /b 0
+:done_fail
+if "%HELD_LOCK%"=="1" %COORD% -Lane build -Action release -Result FAIL
+exit /b 1
 
 REM ── Build + deploy one config ────────────────────────────────────────────────
 :build_one

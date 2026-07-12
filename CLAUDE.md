@@ -86,3 +86,18 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
 - App: `build.bat [Debug|Release|Both]` (tiene `pause`; correr con `< nul` para no colgar).
 - Tests: `tests.bat [Debug|Release]` (sin `pause`).
 - La lógica core vive en la lib estática `llamacode_core`; el app y los tests linkean contra ella.
+
+### Encolamiento inteligente de builds (sesiones paralelas)
+Varias IAs/CI pueden correr `build.bat` / `build_auto.bat` / `tests.bat` a la vez.
+`build_coord.ps1` serializa por **lane** (`build` y `tests` tienen locks separados,
+corren en paralelo entre sí) con un lock atómico (`.buildlock/`, gitignored):
+- Si NO hay build en curso → tomás el lock (OWNER), bumpeás versión y compilás.
+- Si ya hay uno en curso con la **misma fuente** (fingerprint = hash de
+  `src/ qml/ tests/ CMakeLists.txt` con los triples semver neutralizados, para
+  que el auto-bump no cuente) → esperás y **adoptás su resultado** (REUSE, no
+  recompilás). Si ese build compartido falló, reintentás propio.
+- Si es **otra fuente** → esperás tu turno (QUEUE).
+- Locks muertos (guardian PID caído) o vencidos (`StaleSec`) se roban solos.
+- El "owner" real es un proceso *guardian* oculto (su vida == el lock); `release`
+  lo mata. Así el PID sí prueba vida (el powershell que hace `acquire` muere ya).
+- Test: `powershell -File tests\test_build_coord.ps1` (fuera de ctest; infra PS/bat).
