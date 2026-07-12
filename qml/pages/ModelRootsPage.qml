@@ -711,6 +711,14 @@ Item {
                                         font.pixelSize: 11; color: Theme.textMuted
                                     }
                                     Text { text: sizeLabel; font.pixelSize: 11; color: Theme.textMuted }
+                                    Text {
+                                        visible: trainedContext > 0
+                                        text: (architecture || "GGUF") + " · ctx entrenado "
+                                              + (trainedContext >= 1024
+                                                 ? Math.round(trainedContext / 1024) + "k"
+                                                 : trainedContext)
+                                        font.pixelSize: 11; color: Theme.textMuted
+                                    }
                                     // Gemma QAT q4_0 crudo: degradado en llama.cpp; preferir UD-Q4_K_XL.
                                     Text {
                                         visible: {

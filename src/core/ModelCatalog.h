@@ -26,6 +26,9 @@ public:
         TensorBreakdownRole,
         BpwRole,
         QuantMismatchRole,
+        ArchitectureRole,
+        ParameterCountRole,
+        TrainedContextRole,
         IsVisionCandidateRole,
         IsDraftCandidateRole,
         IsAvailableRole

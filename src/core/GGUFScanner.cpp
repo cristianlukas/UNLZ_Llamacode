@@ -5,6 +5,7 @@
 #include <QUuid>
 #include <QRegularExpression>
 #include <QStringList>
+#include <limits>
 
 GGUFScanner::GGUFScanner(QObject *parent) : QObject(parent) {}
 
@@ -45,6 +46,9 @@ QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root)
             m.quantMismatch =
                 !m.quantReal.isEmpty() && m.quantHint != "unknown"
                 && m.quantHint.compare(m.quantReal, Qt::CaseInsensitive) != 0;
+            m.architecture = comp.architecture;
+            m.parameterCount = comp.parameterCount;
+            m.trainedContext = comp.trainedContext;
         }
 
         m.isVisionCandidate = isVisionCandidate(info.fileName());
@@ -176,7 +180,26 @@ struct LeReader {
     }
     void skip(qint64 k) { if (need(k)) i += k; }
     void skipStr() { quint64 len = u64(); skip(qint64(len)); }
+    QString str() {
+        const quint64 len = u64();
+        if (len > quint64(std::numeric_limits<qint64>::max()) || !need(qint64(len)))
+            return {};
+        const QString value = QString::fromUtf8(reinterpret_cast<const char *>(p + i),
+                                                qsizetype(len));
+        i += qint64(len);
+        return value;
+    }
 };
+
+bool readUnsignedMeta(LeReader &r, quint32 type, quint64 &value) {
+    switch (type) {
+    case 0: value = r.need(1) ? r.p[r.i++] : 0; return r.ok;
+    case 2: if (!r.need(2)) return false; value = quint64(r.p[r.i]) | (quint64(r.p[r.i+1]) << 8); r.i += 2; return true;
+    case 4: value = r.u32(); return r.ok;
+    case 10: value = r.u64(); return r.ok;
+    default: return false;
+    }
+}
 
 // Tamaño en bytes de un valor escalar de metadata GGUF por type-id.
 qint64 ggufScalarSize(quint32 t) {
@@ -245,11 +268,24 @@ GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
     const quint64 kvCount = r.u64();
     if (tensorCount == 0 || tensorCount > 100000) return c;
 
-    // Saltar metadata KV.
+    // Leer los metadatos útiles y saltar el resto. Las claves de contexto son
+    // específicas de arquitectura (llama.context_length, qwen*.context_length…).
     for (quint64 k = 0; k < kvCount && r.ok; ++k) {
-        r.skipStr();                 // key
+        const QString key = r.str();
         quint32 vt = r.u32();        // value type
-        skipMetaValue(r, vt);
+        if (key == QLatin1String("general.architecture") && vt == 8) {
+            c.architecture = r.str();
+        } else if (key == QLatin1String("general.parameter_count")) {
+            quint64 value = 0;
+            if (readUnsignedMeta(r, vt, value)) c.parameterCount = qint64(qMin(value, quint64(std::numeric_limits<qint64>::max())));
+            else skipMetaValue(r, vt);
+        } else if (key.endsWith(QLatin1String(".context_length"))) {
+            quint64 value = 0;
+            if (readUnsignedMeta(r, vt, value)) c.trainedContext = int(qMin(value, quint64(std::numeric_limits<int>::max())));
+            else skipMetaValue(r, vt);
+        } else {
+            skipMetaValue(r, vt);
+        }
     }
     if (!r.ok) return c;
 

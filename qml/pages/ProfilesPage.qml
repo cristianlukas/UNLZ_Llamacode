@@ -1078,7 +1078,23 @@ Item {
                         columns: 4; rowSpacing: 8; columnSpacing: 10
 
                         Text { text: "ctx"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: ctxField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            LcTextField { id: ctxField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
+                            LcButton {
+                                text: "Sugerir"
+                                secondary: true
+                                enabled: modelMain.currentValue !== undefined && modelMain.currentValue !== ""
+                                onClicked: {
+                                    const m = App.modelCatalog.get(modelMain.currentValue)
+                                    const trained = Number(m.trainedContext || 0)
+                                    if (trained > 0)
+                                        ctxField.text = String(Math.min(trained, 32768))
+                                }
+                                ToolTip.visible: hovered
+                                ToolTip.text: "Usa hasta 32k sin superar el contexto entrenado del GGUF. No se aplica automáticamente."
+                            }
+                        }
                         Text { text: "batch"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: batchField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
                         Text { text: "ubatch"; color: Theme.textSecondary; font.pixelSize: 12 }

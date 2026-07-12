@@ -31,6 +31,7 @@ private slots:
 
     // ── GGUFScanner::readComposition (parser binario) ──
     void readComposition_realTensors();
+    void readComposition_metadata();
     void readComposition_rejectsGarbage();
 
     // ── GGUFScanner::isDegradedQatQuant ──
@@ -112,6 +113,15 @@ void putStr(QByteArray &b, const QByteArray &s) {
     putU64(b, quint64(s.size()));
     b.append(s);
 }
+void putMetaString(QByteArray &b, const QByteArray &key, const QByteArray &value) {
+    putStr(b, key); putU32(b, 8); putStr(b, value);
+}
+void putMetaU32(QByteArray &b, const QByteArray &key, quint32 value) {
+    putStr(b, key); putU32(b, 4); putU32(b, value);
+}
+void putMetaU64(QByteArray &b, const QByteArray &key, quint64 value) {
+    putStr(b, key); putU32(b, 10); putU64(b, value);
+}
 // Escribe un tensor info: name, n_dims, dims[], type, offset.
 void putTensor(QByteArray &b, const QByteArray &name,
                const QList<quint64> &dims, quint32 type) {
@@ -156,6 +166,25 @@ void CoreTests::readComposition_realTensors()
     QVERIFY(c.totalElements == 3051000);
     QVERIFY(c.bpw > 0.0);
     QVERIFY(c.breakdown().contains("q4_0:2"));
+}
+
+void CoreTests::readComposition_metadata()
+{
+    QByteArray b;
+    putU32(b, 0x46554747u); putU32(b, 3);
+    putU64(b, 1); putU64(b, 3);
+    putMetaString(b, "general.architecture", "qwen2");
+    putMetaU64(b, "general.parameter_count", 7000000000ULL);
+    putMetaU32(b, "qwen2.context_length", 131072);
+    putTensor(b, "token_embd.weight", {1024, 1024}, 2);
+    const QString path = QDir(QDir::tempPath()).filePath("metadata-fixture.gguf");
+    QFile f(path); QVERIFY(f.open(QIODevice::WriteOnly)); f.write(b); f.close();
+
+    const auto c = GGUFScanner::readComposition(path, QFileInfo(path).size());
+    QVERIFY(c.valid);
+    QCOMPARE(c.architecture, QStringLiteral("qwen2"));
+    QCOMPARE(c.parameterCount, 7000000000LL);
+    QCOMPARE(c.trainedContext, 131072);
 }
 
 void CoreTests::readComposition_rejectsGarbage()

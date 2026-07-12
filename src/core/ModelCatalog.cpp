@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS catalog_models (
     tensor_breakdown TEXT,
     bpw REAL NOT NULL DEFAULT 0,
     quant_mismatch INTEGER NOT NULL DEFAULT 0,
+    architecture TEXT,
+    parameter_count INTEGER NOT NULL DEFAULT 0,
+    trained_context INTEGER NOT NULL DEFAULT 0,
     is_vision_candidate INTEGER NOT NULL DEFAULT 0,
     is_draft_candidate INTEGER NOT NULL DEFAULT 0,
     sha256 TEXT,
@@ -90,6 +93,9 @@ QVariant ModelCatalog::data(const QModelIndex &index, int role) const
     case TensorBreakdownRole:  return m->tensorBreakdown;
     case BpwRole:              return m->bpw;
     case QuantMismatchRole:    return m->quantMismatch;
+    case ArchitectureRole:     return m->architecture;
+    case ParameterCountRole:   return m->parameterCount;
+    case TrainedContextRole:   return m->trainedContext;
     case IsVisionCandidateRole: return m->isVisionCandidate;
     case IsDraftCandidateRole:  return m->isDraftCandidate;
     case IsAvailableRole:      return m->isAvailable;
@@ -113,6 +119,9 @@ QHash<int, QByteArray> ModelCatalog::roleNames() const
         {TensorBreakdownRole,   "tensorBreakdown"},
         {BpwRole,               "bpw"},
         {QuantMismatchRole,     "quantMismatch"},
+        {ArchitectureRole,      "architecture"},
+        {ParameterCountRole,    "parameterCount"},
+        {TrainedContextRole,    "trainedContext"},
         {IsVisionCandidateRole, "isVision"},
         {IsDraftCandidateRole,  "isDraft"},
         {IsAvailableRole,       "isAvailable"},
@@ -250,6 +259,8 @@ QVariantMap ModelCatalog::get(const QString &id) const
         {"quant", m.quantHint}, {"quantReal", m.quantReal},
         {"tensorBreakdown", m.tensorBreakdown}, {"bpw", m.bpw},
         {"quantMismatch", m.quantMismatch}, {"isVision", m.isVisionCandidate},
+        {"architecture", m.architecture}, {"parameterCount", m.parameterCount},
+        {"trainedContext", m.trainedContext},
         {"isDraft", m.isDraftCandidate}, {"isAvailable", m.isAvailable}
     };
 }
@@ -299,7 +310,10 @@ bool ModelCatalog::openDb()
              "ALTER TABLE catalog_models ADD COLUMN quant_real TEXT",
              "ALTER TABLE catalog_models ADD COLUMN tensor_breakdown TEXT",
              "ALTER TABLE catalog_models ADD COLUMN bpw REAL NOT NULL DEFAULT 0",
-             "ALTER TABLE catalog_models ADD COLUMN quant_mismatch INTEGER NOT NULL DEFAULT 0" }) {
+             "ALTER TABLE catalog_models ADD COLUMN quant_mismatch INTEGER NOT NULL DEFAULT 0",
+             "ALTER TABLE catalog_models ADD COLUMN architecture TEXT",
+             "ALTER TABLE catalog_models ADD COLUMN parameter_count INTEGER NOT NULL DEFAULT 0",
+             "ALTER TABLE catalog_models ADD COLUMN trained_context INTEGER NOT NULL DEFAULT 0" }) {
         q.exec(QString::fromUtf8(alter));
     }
     return true;
@@ -311,7 +325,8 @@ void ModelCatalog::loadFromDb()
     QSqlQuery q("SELECT id, root_id, absolute_path, file_name, size_bytes, mtime, "
                 "family_hint, quant_hint, is_vision_candidate, is_draft_candidate, "
                 "sha256, is_available, quant_real, tensor_breakdown, bpw, "
-                "quant_mismatch FROM catalog_models", db);
+                "quant_mismatch, architecture, parameter_count, trained_context "
+                "FROM catalog_models", db);
     while (q.next()) {
         CatalogModel m;
         m.id = q.value(0).toString();
@@ -330,6 +345,9 @@ void ModelCatalog::loadFromDb()
         m.tensorBreakdown = q.value(13).toString();
         m.bpw = q.value(14).toDouble();
         m.quantMismatch = q.value(15).toBool();
+        m.architecture = q.value(16).toString();
+        m.parameterCount = q.value(17).toLongLong();
+        m.trainedContext = q.value(18).toInt();
         m_all.append(m);
     }
 }
@@ -342,8 +360,9 @@ void ModelCatalog::saveToDb(const CatalogModel &m)
         INSERT OR REPLACE INTO catalog_models
         (id, root_id, absolute_path, file_name, size_bytes, mtime,
          family_hint, quant_hint, is_vision_candidate, is_draft_candidate,
-         sha256, is_available, quant_real, tensor_breakdown, bpw, quant_mismatch)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         sha256, is_available, quant_real, tensor_breakdown, bpw, quant_mismatch,
+         architecture, parameter_count, trained_context)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     )");
     q.addBindValue(m.id);
     q.addBindValue(m.rootId);
@@ -361,6 +380,9 @@ void ModelCatalog::saveToDb(const CatalogModel &m)
     q.addBindValue(m.tensorBreakdown);
     q.addBindValue(m.bpw);
     q.addBindValue(m.quantMismatch ? 1 : 0);
+    q.addBindValue(m.architecture);
+    q.addBindValue(m.parameterCount);
+    q.addBindValue(m.trainedContext);
     if (!q.exec())
         qWarning() << "saveToDb failed:" << q.lastError().text();
 }

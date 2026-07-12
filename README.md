@@ -308,7 +308,7 @@ Entidad `ModelRoot`: `id`, `path`, `label`, `scanMode` (manual/startup/watch), `
 
 ### Catálogo de modelos (SQLite)
 
-Entidad `CatalogModel`: `id`, `rootId`, `absolutePath`, `fileName`, `sizeBytes`, `mtime`, `familyHint`, `quantHint`, `isVisionCandidate`, `isDraftCandidate`, `isAvailable`, `sha256`.
+Entidad `CatalogModel`: `id`, `rootId`, `absolutePath`, `fileName`, `sizeBytes`, `mtime`, `familyHint`, `quantHint`, `architecture`, `parameterCount`, `trainedContext`, `isVisionCandidate`, `isDraftCandidate`, `isAvailable`, `sha256`. Arquitectura, parámetros y contexto máximo entrenado se leen directamente del header GGUF durante el escaneo y quedan disponibles en el catálogo/UI para recomendaciones seguras sin alterar perfiles configurados manualmente.
 
 ### GGUFScanner
 

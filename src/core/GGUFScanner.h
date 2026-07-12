@@ -28,6 +28,9 @@ public:
         qint64 totalElements = 0;
         QString dominantQuant;              // dtype cuantizado con más elementos
         double bpw = 0.0;                   // file_size*8 / totalElements
+        QString architecture;               // general.architecture
+        qint64 parameterCount = 0;           // general.parameter_count
+        int trainedContext = 0;              // *.context_length
         QString breakdown() const;          // "q4_0:265, q6_k:1, f32:392"
     };
     static Composition readComposition(const QString &filePath, qint64 fileSizeBytes);
