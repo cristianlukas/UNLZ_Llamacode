@@ -36,6 +36,7 @@ private slots:
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
     void hybridSearch_compactReturnsSpans();
+    void repoSlice_defaultsToCompactEvidence();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
     void desktopControls_invalidWindowErrorsCleanly();
@@ -232,6 +233,24 @@ void AgentToolsTests::hybridSearch_compactReturnsSpans()
     QVERIFY(res.contains("blob.cpp:1-"));         // cita span 'rel:Lini-Lfin'
     QVERIFY(!res.contains("SECRETBODY"));         // cuerpo NO volcado (sólo preview 1ª línea)
     QVERIFY(!res.contains("──────"));             // sin separador de bloques de cuerpo
+}
+
+void AgentToolsTests::repoSlice_defaultsToCompactEvidence()
+{
+    call("write_file", {{"path", "auth.cpp"},
+                        {"content", "// first preview REPOSLICE_MARKER\n"
+                                    "void authenticate_user() {}\n"
+                                    "// BODY_MUST_STAY_OUT\n"}});
+
+    const QVariantMap hit = call("repo_slice", {{"query", "REPOSLICE_MARKER"},
+                                                 {"expand_graph", false}});
+    QVERIFY(hit.value("ok").toBool());
+    const QString result = hit.value("result").toString();
+    QVERIFY(result.contains("repo_slice"));
+    QVERIFY(result.contains(QRegularExpression(QStringLiteral("auth\\.cpp:\\d+-\\d+"))));
+    QVERIFY(result.contains("REPOSLICE_MARKER"));
+    QVERIFY(!result.contains("BODY_MUST_STAY_OUT"));
+    QVERIFY(!result.contains("──────"));
 }
 
 void AgentToolsTests::recentActions_tailsEventLogForSession()

@@ -17,6 +17,7 @@ public:
         PathRole,
         LabelRole,
         ScanModeRole,
+        KindRole,
         EnabledRole,
         PriorityRole,
         TagsRole,

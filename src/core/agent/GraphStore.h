@@ -31,8 +31,15 @@ QString jsonlPath(const QString &cwd);
 QString addEntity(const QString &cwd, const QString &name, const QString &etype);
 
 // Crea una relación subj -[pred]-> obj (auto-crea las entidades por nombre).
+// Cada relación se clasifica en un TIPO cerrado (REQUIRES/ENABLES/IMPLEMENTS/
+// DEFINES/CALLS/IMPORTS/RELATES_TO) para no confundir dependencia dura con
+// asociación blanda. 'edgeType' vacío = inferir del verbo 'pred'.
+// PROVENANCE + CONFIANZA: 'prov' = origen del edge (llm|indexer|user); 'conf' =
+// [0,1] o <0 → null (unreviewed, NO significa incorrecto). Un edge inferido por
+// el LLM entra unreviewed; el indexador determinista entra conf=1 prov=indexer.
 QString link(const QString &cwd, const QString &subj, const QString &pred,
-             const QString &obj);
+             const QString &obj, const QString &edgeType = QString(),
+             double conf = -1.0, const QString &prov = QStringLiteral("llm"));
 
 // Una relación tipada para inserción masiva.
 struct Triple { QString subj, pred, obj; };
@@ -43,10 +50,14 @@ struct Triple { QString subj, pred, obj; };
 // addEntity/link uno por uno (cada uno reabre y reescanea el archivo).
 // 'entities' = (name, etype); las relaciones auto-crean sus entidades por nombre.
 // Llena *addedEnt/*addedRel (nuevos, sin contar los ya existentes) si != nullptr.
+// 'prov'/'conf' se aplican a TODAS las relaciones del lote (el indexador
+// determinista pasa prov="indexer" conf=1.0: edges verificados, no inferidos).
 QString addBatch(const QString &cwd,
                  const QVector<QPair<QString, QString>> &entities,
                  const QVector<Triple> &relations,
-                 int *addedEnt = nullptr, int *addedRel = nullptr);
+                 int *addedEnt = nullptr, int *addedRel = nullptr,
+                 const QString &prov = QStringLiteral("indexer"),
+                 double conf = 1.0);
 
 // Borra (reescribe el JSONL) TODAS las relaciones cuyo SUBJ sea 'subjName'
 // (entidad por nombre normalizado). Para el reindexado incremental de

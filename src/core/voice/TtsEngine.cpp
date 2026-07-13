@@ -56,6 +56,74 @@ QByteArray TtsEngine::buildPiperJsonLine(const QString &text, const QString &out
     return QJsonDocument(o).toJson(QJsonDocument::Compact) + '\n';
 }
 
+QStringList TtsEngine::buildQwenArgs(const VoiceConfig &c, const QString &text,
+                                     const QString &outFile)
+{
+    QStringList a{QStringLiteral("-m"), c.qwenModelDir,
+                  QStringLiteral("-t"), text,
+                  QStringLiteral("-o"), outFile,
+                  QStringLiteral("-l"), c.qwenLanguage.isEmpty() ? QStringLiteral("es") : c.qwenLanguage};
+    if (!c.qwenModelName.isEmpty()) a << QStringLiteral("--model-name") << c.qwenModelName;
+    if (!c.qwenSpeakerEmbedding.isEmpty()) a << QStringLiteral("--speaker-embedding") << c.qwenSpeakerEmbedding;
+    else if (!c.qwenReferenceWav.isEmpty()) {
+        a << QStringLiteral("--reference") << c.qwenReferenceWav;
+        if (!c.qwenReferenceText.isEmpty()) a << QStringLiteral("--reference-text") << c.qwenReferenceText;
+    } else if (!c.qwenSpeaker.isEmpty()) a << QStringLiteral("--speaker") << c.qwenSpeaker;
+    if (!c.qwenInstruction.isEmpty()) a << QStringLiteral("--instruct") << c.qwenInstruction;
+    if (c.qwenThreads > 0) a << QStringLiteral("--threads") << QString::number(c.qwenThreads);
+    return a;
+}
+
+void TtsEngine::fallbackFrom(const QString &failedMode, const QString &text, const QString &error)
+{
+    const QString fallback = m_cfg.ttsFallbackMode;
+    qWarning().noquote() << QStringLiteral("[charla] TTS %1 falló: %2; fallback=%3")
+                                .arg(failedMode, error, fallback);
+    if (fallback == QLatin1String("piper") && failedMode != QLatin1String("piper") && piperAvailable()) {
+        synthesizePiper(text);
+        return;
+    }
+    emit failed(error);
+}
+
+void TtsEngine::synthesizeQwen(const QString &text)
+{
+    QString prog = m_cfg.qwenBinaryPath.trimmed();
+    if (prog.isEmpty()) prog = QStringLiteral("qwen3-tts-cli");
+    if (m_cfg.qwenModelDir.trimmed().isEmpty()) {
+        fallbackFrom(QStringLiteral("qwen3"), text, QStringLiteral("configurá la carpeta de modelos Qwen3-TTS"));
+        return;
+    }
+    m_qwenOut = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+        + QStringLiteral("/lc_qwen_tts_") + QUuid::createUuid().toString(QUuid::Id128) + QStringLiteral(".wav");
+    m_qwen = new QProcess(this);
+    m_qwen->setProcessChannelMode(QProcess::SeparateChannels);
+    connect(m_qwen, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, text](int code, QProcess::ExitStatus status) {
+        QProcess *p = m_qwen; m_qwen = nullptr;
+        const QString detail = p ? QString::fromUtf8(p->readAllStandardError()).trimmed() : QString();
+        if (p) p->deleteLater();
+        QFile f(m_qwenOut);
+        if (status != QProcess::NormalExit || code != 0 || !f.open(QIODevice::ReadOnly)) {
+            QFile::remove(m_qwenOut);
+            fallbackFrom(QStringLiteral("qwen3"), text,
+                         detail.isEmpty() ? QStringLiteral("Qwen3-TTS no generó audio") : detail);
+            return;
+        }
+        const QByteArray wav = f.readAll(); f.close(); QFile::remove(m_qwenOut);
+        if (wav.isEmpty()) { fallbackFrom(QStringLiteral("qwen3"), text, QStringLiteral("audio Qwen3-TTS vacío")); return; }
+        emit audioReady(wav, QStringLiteral("wav"));
+    });
+    connect(m_qwen, &QProcess::errorOccurred, this, [this, text](QProcess::ProcessError) {
+        if (!m_qwen) return;
+        const QString err = m_qwen->errorString();
+        m_qwen->deleteLater(); m_qwen = nullptr;
+        QFile::remove(m_qwenOut);
+        fallbackFrom(QStringLiteral("qwen3"), text, QStringLiteral("no se pudo lanzar Qwen3-TTS: %1").arg(err));
+    });
+    m_qwen->start(prog, buildQwenArgs(m_cfg, text, m_qwenOut));
+}
+
 QString TtsEngine::resolvePiperModel() const
 {
     QString modelPath = m_piperModel;
@@ -240,6 +308,7 @@ void TtsEngine::synthesize(const QString &text)
     if (busy()) { emit failed(QStringLiteral("TTS ocupado")); return; }
     if (text.trimmed().isEmpty()) { emit failed(QStringLiteral("texto vacío")); return; }
     if (m_cfg.ttsMode == QLatin1String("piper")) { synthesizePiper(text); return; }
+    if (m_cfg.ttsMode == QLatin1String("qwen3")) { synthesizeQwen(text); return; }
 
     QString base = m_cfg.ttsBaseUrl;
     while (base.endsWith('/')) base.chop(1);
@@ -287,6 +356,11 @@ void TtsEngine::cancel()
         QProcess *p = m_piper; m_piper = nullptr;
         p->kill(); p->deleteLater();
         if (!m_piperOut.isEmpty()) QFile::remove(m_piperOut);
+    }
+    if (m_qwen) {
+        QProcess *p = m_qwen; m_qwen = nullptr;
+        p->kill(); p->deleteLater();
+        if (!m_qwenOut.isEmpty()) QFile::remove(m_qwenOut);
     }
     // Turno residente en vuelo: descartarlo y matar el proceso (se relanza en el
     // próximo synthesize). Evita mezclar audio de un turno cancelado.

@@ -226,16 +226,20 @@ void AgentContextBudgetTests::mcpToolSchemas_cost()
     qInfo() << "tool schemas + 37 MCP:" << withMcpBytes << "bytes";
     qInfo() << "costo de 37 tools MCP:" << (withMcpBytes - builtinBytes) << "bytes";
 
-    // Las 37 tools deben aparecer en el schema y sumar varios KB.
+    // Lazy discovery mantiene el catálogo completo fuera del request y expone
+    // sólo dos meta-tools con costo constante.
     int mcpCount = 0;
     for (const QJsonValue &v : withMcp) {
         const QString n = v.toObject().value("function").toObject().value("name").toString();
         if (n.startsWith(QStringLiteral("mcp__"))) ++mcpCount;
     }
-    QCOMPARE(mcpCount, 37);
-    QVERIFY2(withMcpBytes - builtinBytes > 3000,
-             qPrintable(QStringLiteral("37 MCP sólo sumaron %1 bytes")
-                            .arg(withMcpBytes - builtinBytes)));
+    QCOMPARE(mcpCount, 2);
+    QVERIFY(withMcpBytes - builtinBytes < 3000);
+    QStringList names;
+    for (const QJsonValue &v : withMcp)
+        names << v.toObject().value("function").toObject().value("name").toString();
+    QVERIFY(names.contains(QStringLiteral("mcp_search_tools")));
+    QVERIFY(names.contains(QStringLiteral("mcp_call_tool")));
 }
 
 // PASO 4b — El fix de un toque: el preset "Chat liviano" (agent-chat) recorta el

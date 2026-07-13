@@ -39,13 +39,44 @@ private slots:
     void parsesNativeToolCallLeakFallback();
     void textToolsModeDoesNotDoubleReserveToolBudget();
     void compactionStallCounterTracksProgress();
+    void failureSpiralDetectsEquivalentErrorsAndResetsOnProgress();
+    void streamRepetitionDetectsLongTripleBlockOnly();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
+    void isDestructiveAction_gatesShellDesktopMemory();
 };
 
 void AgentWireTests::initTestCase()
 {
     QStandardPaths::setTestModeEnabled(true);
+}
+
+void AgentWireTests::failureSpiralDetectsEquivalentErrorsAndResetsOnProgress()
+{
+    LlamaAgentBackend be;
+    const QString e1 = QStringLiteral("C:/work/a.cpp:123: fatal error: header not found");
+    const QString e2 = QStringLiteral("C:/work/b.cpp:987: fatal error: header not found");
+    QCOMPARE(LlamaAgentBackend::failureFingerprint(QStringLiteral("run_shell"), e1),
+             LlamaAgentBackend::failureFingerprint(QStringLiteral("run_shell"), e2));
+    QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e1));
+    QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e2));
+    QVERIFY(be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e1));
+    QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), true, false,
+                                         QStringLiteral("build ok")));
+    QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e1));
+}
+
+void AgentWireTests::streamRepetitionDetectsLongTripleBlockOnly()
+{
+    const QString prefix = QStringLiteral("Análisis previo. ");
+    const QString block = QStringLiteral(
+        "Necesito revisar el componente correcto antes de volver a editar el archivo; "
+        "primero comprobaré el error y después cambiaré de estrategia. ");
+    const QString loop = prefix + block + block + block;
+    QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(loop), prefix.size());
+    QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(prefix + block + block), -1);
+    QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(
+                 QStringLiteral("sí sí sí"), 3, 80), -1);
 }
 
 static QJsonObject msg(const QString &role, const QString &content)
@@ -986,6 +1017,56 @@ void AgentWireTests::adaptiveSubagentLimit_respectsProfileContextAndVram()
     QCOMPARE(B::adaptiveSubagentLimit(4, 8192, 24576, 700), 2);
     // Sin telemetría no inventa una restricción: manda el perfil configurado.
     QCOMPARE(B::adaptiveSubagentLimit(3, 8192, 0), 3);
+}
+
+void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
+{
+    using B = LlamaAgentBackend;
+    auto shell = [](const QString &cmd) {
+        return QJsonObject{{QStringLiteral("command"), cmd}};
+    };
+
+    // ── Shell destructivo → true ──────────────────────────────────────────
+    QVERIFY(B::isDestructiveAction("run_shell", shell("rm -rf build/")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("rm -fr /tmp/x")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("del /s /q C:\\data")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("rmdir /s foo")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("format C:")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("dd if=/dev/zero of=/dev/sda")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("git push --force origin main")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("git reset --hard HEAD~3")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("shutdown /s /t 0")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("DROP TABLE users")));
+    QVERIFY(B::isDestructiveAction("run_shell", shell("echo ok; rm -rf .")));
+    // MCP-prefijado también clasifica por el nombre bare.
+    QVERIFY(B::isDestructiveAction("mcp__fs__run_shell", shell("rm -rf x")));
+
+    // ── Shell benigno → false ─────────────────────────────────────────────
+    QVERIFY(!B::isDestructiveAction("run_shell", shell("ls -la")));
+    QVERIFY(!B::isDestructiveAction("run_shell", shell("git push origin main")));
+    QVERIFY(!B::isDestructiveAction("run_shell", shell("npm test")));
+    QVERIFY(!B::isDestructiveAction("run_shell", shell("grep -rf pattern src")));
+
+    // ── Desktop click destructivo → true / benigno → false ────────────────
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("name"), QStringLiteral("Eliminar archivo")}}));
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("name"), QStringLiteral("Delete")}}));
+    QVERIFY(!B::isDestructiveAction("desktop_click_element",
+                                    QJsonObject{{QStringLiteral("name"), QStringLiteral("Guardar")}}));
+
+    // ── Memory / graph delete → true; lectura → false ─────────────────────
+    QVERIFY(B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("forget")}}));
+    QVERIFY(B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("prune")}}));
+    QVERIFY(!B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("prune")},
+                                                          {QStringLiteral("dry_run"), true}}));
+    QVERIFY(!B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("recall")}}));
+    QVERIFY(B::isDestructiveAction("graph", QJsonObject{{QStringLiteral("action"), QStringLiteral("delete")}}));
+    QVERIFY(!B::isDestructiveAction("graph", QJsonObject{{QStringLiteral("action"), QStringLiteral("query")}}));
+
+    // ── Tools no cubiertas → false ────────────────────────────────────────
+    QVERIFY(!B::isDestructiveAction("read_file", QJsonObject{{QStringLiteral("path"), QStringLiteral("x")}}));
+    QVERIFY(!B::isDestructiveAction("write_file", QJsonObject{{QStringLiteral("path"), QStringLiteral("x")}}));
 }
 
 QTEST_MAIN(AgentWireTests)

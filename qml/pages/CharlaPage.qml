@@ -398,7 +398,21 @@ Item {
                         }
                     }
 
-                    Text { text: "Motor TTS gestionado (piper, local)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    Text { text: "Motor TTS (automático o manual)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    Rectangle {
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        implicitHeight: capabilityText.implicitHeight + 18
+                        radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
+                        property var cap: App.charlaAgentCapability()
+                        Text {
+                            id: capabilityText
+                            anchors.fill: parent; anchors.margins: 9
+                            wrapMode: Text.WordWrap; color: Theme.textSecondary; font.pixelSize: 12
+                            text: "Capacidad del agente: " + (parent.cap.level || "desconocida")
+                                  + " — " + (parent.cap.reason || "")
+                                  + (parent.cap.requireSupervisor ? " · Se escalarán tareas complejas al supervisor." : "")
+                        }
+                    }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
                         Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
@@ -406,16 +420,32 @@ Item {
                         Text { text: "Modo"; color: Theme.textSecondary }
                         LcComboBox {
                             Layout.fillWidth: true
-                            model: ["http", "piper"]
-                            currentIndex: (page.cfg.ttsMode === "piper") ? 1 : 0
+                            model: ["auto", "piper", "qwen3", "http"]
+                            currentIndex: Math.max(0, model.indexOf(page.cfg.ttsMode || "auto"))
                             onActivated: { page.cfg.ttsMode = model[currentIndex]; page.save() }
                         }
 
-                        Text { text: "Voz piper"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" }
+                        Text { text: "Recomendación"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "auto" }
+                        Text {
+                            Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.textMuted
+                            visible: page.cfg.ttsMode === "auto"
+                            property var rec: App.recommendedVoiceTts(App.activeLaunchId)
+                            text: (rec.mode || "-") + " — " + (rec.reason || "")
+                        }
+
+                        Text { text: "Fallback"; color: Theme.textSecondary }
+                        LcComboBox {
+                            Layout.fillWidth: true
+                            model: ["piper", "http", "none"]
+                            currentIndex: Math.max(0, model.indexOf(page.cfg.ttsFallbackMode || "piper"))
+                            onActivated: { page.cfg.ttsFallbackMode = model[currentIndex]; page.save() }
+                        }
+
+                        Text { text: "Voz piper"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" || page.cfg.ttsMode === "auto" }
                         LcComboBox {
                             id: ttsVoiceCombo
                             Layout.fillWidth: true
-                            visible: page.cfg.ttsMode === "piper"
+                            visible: page.cfg.ttsMode === "piper" || page.cfg.ttsMode === "auto"
                             property var opts: App.voiceTtsCatalog()
                             function refresh() { opts = App.voiceTtsCatalog() }
                             textRole: "name"
@@ -427,10 +457,10 @@ Item {
                             onActivated: { page.cfg.ttsManagedVoice = opts[currentIndex].id; page.save() }
                         }
 
-                        Text { text: "Estado voz"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" }
+                        Text { text: "Estado voz"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" || page.cfg.ttsMode === "auto" }
                         RowLayout {
                             Layout.fillWidth: true; spacing: 8
-                            visible: page.cfg.ttsMode === "piper"
+                            visible: page.cfg.ttsMode === "piper" || page.cfg.ttsMode === "auto"
                             Text {
                                 Layout.fillWidth: true; color: Theme.textMuted; font.pixelSize: 12
                                 text: page.voiceInstallPct >= 0 ? page.voiceInstallMsg
@@ -447,10 +477,10 @@ Item {
                             }
                         }
 
-                        Text { text: "Binario piper"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" }
+                        Text { text: "Binario piper"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "piper" || page.cfg.ttsMode === "auto" }
                         RowLayout {
                             Layout.fillWidth: true; spacing: 6
-                            visible: page.cfg.ttsMode === "piper"
+                            visible: page.cfg.ttsMode === "piper" || page.cfg.ttsMode === "auto"
                             LcTextField {
                                 Layout.fillWidth: true
                                 placeholderText: "ruta a piper (vacío = PATH)"
@@ -468,14 +498,42 @@ Item {
                     }
 
                     Text {
-                        text: "Síntesis de voz (TTS) — endpoint HTTP"
-                        color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true }
-                        visible: page.cfg.ttsMode !== "piper"
+                        text: "Qwen3-TTS local (GGUF, clonación opcional)"
+                        color: Theme.textPrimary
+                        Layout.leftMargin: 24
+                        font.pixelSize: 15
+                        font.bold: true
+                        visible: page.cfg.ttsMode === "qwen3" || page.cfg.ttsMode === "auto"
                     }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
                         Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
-                        visible: page.cfg.ttsMode !== "piper"
+                        visible: page.cfg.ttsMode === "qwen3" || page.cfg.ttsMode === "auto"
+                        Text { text: "Binario"; color: Theme.textSecondary }
+                        LcTextField { Layout.fillWidth: true; placeholderText: "qwen3-tts-cli.exe o PATH"; text: page.cfg.qwenBinaryPath || ""; onEditingFinished: { page.cfg.qwenBinaryPath = text; page.save() } }
+                        Text { text: "Carpeta modelos"; color: Theme.textSecondary }
+                        LcTextField { Layout.fillWidth: true; placeholderText: "carpeta con GGUFs Qwen3-TTS"; text: page.cfg.qwenModelDir || ""; onEditingFinished: { page.cfg.qwenModelDir = text; page.save() } }
+                        Text { text: "Modelo"; color: Theme.textSecondary }
+                        LcComboBox { Layout.fillWidth: true; model: ["qwen-talker-0.6b-base-Q8_0.gguf", "qwen-talker-1.7b-base-Q8_0.gguf", "qwen-talker-1.7b-customvoice-Q8_0.gguf"]; currentIndex: Math.max(0, model.indexOf(page.cfg.qwenModelName || model[0])); onActivated: { page.cfg.qwenModelName = model[currentIndex]; page.save() } }
+                        Text { text: "Embedding de voz"; color: Theme.textSecondary }
+                        LcTextField { Layout.fillWidth: true; placeholderText: "speaker.json (opcional)"; text: page.cfg.qwenSpeakerEmbedding || ""; onEditingFinished: { page.cfg.qwenSpeakerEmbedding = text; page.save() } }
+                        Text { text: "WAV referencia"; color: Theme.textSecondary }
+                        LcTextField { Layout.fillWidth: true; placeholderText: "voz.wav (alternativa al embedding)"; text: page.cfg.qwenReferenceWav || ""; onEditingFinished: { page.cfg.qwenReferenceWav = text; page.save() } }
+                        Text { text: "Transcripción referencia"; color: Theme.textSecondary }
+                        LcTextField { Layout.fillWidth: true; text: page.cfg.qwenReferenceText || ""; onEditingFinished: { page.cfg.qwenReferenceText = text; page.save() } }
+                        Text { text: "Instrucción de estilo"; color: Theme.textSecondary }
+                        LcTextField { Layout.fillWidth: true; placeholderText: "tono calmo, docente..."; text: page.cfg.qwenInstruction || ""; onEditingFinished: { page.cfg.qwenInstruction = text; page.save() } }
+                    }
+
+                    Text {
+                        text: "Síntesis de voz (TTS) — endpoint HTTP"
+                        color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true }
+                        visible: page.cfg.ttsMode === "http"
+                    }
+                    GridLayout {
+                        columns: 2; columnSpacing: 12; rowSpacing: 8
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        visible: page.cfg.ttsMode === "http"
 
                         Text { text: "Proveedor"; color: Theme.textSecondary }
                         LcComboBox {

@@ -1,4 +1,5 @@
 #include "AppController.h"
+#include "core/OllamaImporter.h"
 #include "core/profiles/ProfileHealthChecker.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -30,6 +31,8 @@
 #include "core/voice/VoiceTypes.h"
 #include "core/voice/VoiceServerManager.h"
 #include "core/voice/CharlaTuning.h"
+#include "core/voice/TtsPolicy.h"
+#include "core/voice/VoiceAgentPolicy.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
@@ -635,6 +638,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentTeacherModel = s.value(QStringLiteral("agent/teacherModel")).toString();
     m_agentTeacherKey   = s.value(QStringLiteral("agent/teacherKey")).toString();
     m_mailAutoSend      = s.value(QStringLiteral("agent/mailAutoSend"), false).toBool();
+    m_hitlDestructive   = s.value(QStringLiteral("agent/hitlDestructive"), true).toBool();
     m_desktopIndicatorVisible = s.value(QStringLiteral("agent/desktopIndicatorVisible"), true).toBool();
     m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
     m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
@@ -2805,6 +2809,101 @@ QString AppController::triageServerLog(int maxGroups) const
     return LogTriage::summarize(combined, maxGroups);
 }
 
+QVariantMap AppController::doctor() const
+{
+    QVariantMap out;
+    QStringList issues;
+
+    out[QStringLiteral("version")] = version();
+
+    // ── Binarios ──
+    QVariantList bins;
+    for (int i = 0; i < m_binaries.count(); ++i) {
+        const QModelIndex mi = m_binaries.index(i);
+        const QString path = m_binaries.data(mi, BinaryRegistry::PathRole).toString();
+        const bool valid = m_binaries.data(mi, BinaryRegistry::PathValidRole).toBool();
+        QVariantMap b;
+        b[QStringLiteral("name")]    = m_binaries.data(mi, BinaryRegistry::NameRole).toString();
+        b[QStringLiteral("backend")] = m_binaries.data(mi, BinaryRegistry::BackendRole).toString();
+        b[QStringLiteral("path")]    = path;
+        b[QStringLiteral("exists")]  = valid;
+        bins.append(b);
+        if (!valid)
+            issues.append(QStringLiteral("Binario faltante: %1").arg(path));
+    }
+    out[QStringLiteral("binaries")] = bins;
+    out[QStringLiteral("binaryCount")] = m_binaries.count();
+    if (m_binaries.count() == 0)
+        issues.append(QStringLiteral("No hay binarios llama.cpp registrados"));
+
+    // ── Model roots ──
+    QVariantList roots;
+    for (int i = 0; i < m_roots.count(); ++i) {
+        const QModelIndex mi = m_roots.index(i);
+        const bool online = m_roots.data(mi, ModelRootRegistry::IsOnlineRole).toBool();
+        const QString path = m_roots.data(mi, ModelRootRegistry::PathRole).toString();
+        QVariantMap r;
+        r[QStringLiteral("label")]  = m_roots.data(mi, ModelRootRegistry::LabelRole).toString();
+        r[QStringLiteral("path")]   = path;
+        r[QStringLiteral("kind")]   = m_roots.data(mi, ModelRootRegistry::KindRole).toString();
+        r[QStringLiteral("online")] = online;
+        roots.append(r);
+        if (!online)
+            issues.append(QStringLiteral("Carpeta de modelos offline: %1").arg(path));
+    }
+    out[QStringLiteral("roots")] = roots;
+
+    // ── Catálogo / hardware / git ──
+    out[QStringLiteral("modelCount")] = m_catalog.count();
+    if (m_catalog.count() == 0)
+        issues.append(QStringLiteral("No hay modelos GGUF en el catálogo"));
+    if (!hasAnyLaunch())
+        issues.append(QStringLiteral("No hay perfiles de lanzamiento configurados"));
+
+    out[QStringLiteral("hardware")] = m_hardwareSummary;
+    out[QStringLiteral("gitAvailable")] = m_gitAvailable;
+    if (!m_gitAvailable)
+        issues.append(QStringLiteral("git no disponible (requerido por subagents)"));
+
+    // ── Gateway / server ──
+    QVariantMap gw;
+    gw[QStringLiteral("enabled")] = m_gatewayEnabled;
+    gw[QStringLiteral("running")] = gatewayRunning();
+    gw[QStringLiteral("port")]    = m_gatewayPort;
+    out[QStringLiteral("gateway")] = gw;
+
+    QVariantMap srv;
+    srv[QStringLiteral("running")] = serverRunning();
+    srv[QStringLiteral("state")]   = m_serverState;
+    out[QStringLiteral("server")] = srv;
+
+    out[QStringLiteral("needsSetup")] = needsSetup();
+    out[QStringLiteral("issues")] = issues;
+    out[QStringLiteral("ok")] = issues.isEmpty();
+    return out;
+}
+
+QString AppController::ollamaDefaultStore() const
+{
+    return OllamaImporter::defaultStoreDir();
+}
+
+bool AppController::ollamaStoreAvailable() const
+{
+    return OllamaImporter::looksLikeStore(OllamaImporter::defaultStoreDir());
+}
+
+QString AppController::importOllamaModels(const QString &dir)
+{
+    const QString store = dir.isEmpty() ? OllamaImporter::defaultStoreDir()
+                                        : QDir::cleanPath(dir);
+    if (!OllamaImporter::looksLikeStore(store))
+        return QString();
+    // add() re-detecta el scheme; pasamos ruta física + label "Ollama".
+    return m_roots.add(QStringLiteral("ollama://") + store, QStringLiteral("Ollama"),
+                       QStringLiteral("manual"), QStringList{});
+}
+
 void AppController::appendAgentEvent(const QString &source, const QString &text)
 {
     const QString ts = QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss.zzz"));
@@ -3346,6 +3445,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
         cb->setMailAccounts(mailAccountsResolved());
         cb->setMailAutoSend(m_mailAutoSend);
+        cb->setHitlDestructive(m_hitlDestructive);
         cb->setVisionAvailable(m_serverHasVision);
         cb->setForceTextTools(m_activeProfileToolSupport != QLatin1String("supported"));
     }
@@ -5830,14 +5930,6 @@ QString AppController::testMailAccount(const QString &name) const
 {
     for (const QVariant &v : listMailAccounts()) {
         const QVariantMap m = v.toMap();
-void AppController::setDesktopIndicatorVisible(bool on)
-{
-    if (on == m_desktopIndicatorVisible) return;
-    m_desktopIndicatorVisible = on;
-    writeSetting(QStringLiteral("agent/desktopIndicatorVisible"), on);
-    emit desktopIndicatorChanged();
-}
-
         if (m.value(QStringLiteral("name")).toString() != name) continue;
         MailClient::Account a = mailAccountFromMap(m);
         a.password = m_secrets.resolve(QStringLiteral("mail/") + name);
@@ -5858,6 +5950,24 @@ void AppController::setMailAutoSend(bool on)
     if (LlamaAgentBackend *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->setMailAutoSend(on);
     emit mailAutoSendChanged();
+}
+
+void AppController::setHitlDestructive(bool on)
+{
+    if (on == m_hitlDestructive) return;
+    m_hitlDestructive = on;
+    writeSetting(QStringLiteral("agent/hitlDestructive"), on);
+    if (LlamaAgentBackend *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setHitlDestructive(on);
+    emit hitlDestructiveChanged();
+}
+
+void AppController::setDesktopIndicatorVisible(bool on)
+{
+    if (on == m_desktopIndicatorVisible) return;
+    m_desktopIndicatorVisible = on;
+    writeSetting(QStringLiteral("agent/desktopIndicatorVisible"), on);
+    emit desktopIndicatorChanged();
 }
 
 void AppController::pushMailAccountsToAgent()
@@ -13215,6 +13325,39 @@ void AppController::ensureVoice()
     connect(m_voice, &VoiceController::levelChanged, this, &AppController::voiceLevelChanged);
 }
 
+QVariantMap AppController::recommendedVoiceTts(const QString &profileId) const
+{
+    const VoiceConfig c = VoiceConfig::fromJson(QJsonObject::fromVariantMap(
+        m_profiles.getLaunchVoice(profileId.isEmpty() ? m_activeLaunchId : profileId)));
+    QString qwenProg = c.qwenBinaryPath.trimmed();
+    const bool qwenReady = !c.qwenModelDir.trimmed().isEmpty()
+        && ((!qwenProg.isEmpty() && QFileInfo(qwenProg).isFile())
+            || (!qwenProg.isEmpty() && !QStandardPaths::findExecutable(qwenProg).isEmpty())
+            || (qwenProg.isEmpty() && !QStandardPaths::findExecutable(QStringLiteral("qwen3-tts-cli")).isEmpty()));
+    const bool piperReady = voicePiperAvailable()
+        && m_voiceServers.ttsVoiceInstalled(c.ttsManagedVoice);
+    const double totalVram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    const double liveTotal = m_serverStats.value(QStringLiteral("totalMb")).toDouble();
+    const double liveUsed = m_serverStats.value(QStringLiteral("usedMb")).toDouble();
+    const double freeVram = liveTotal > 0.0 ? qMax(0.0, liveTotal - liveUsed) / 1024.0 : 0.0;
+    return TtsPolicy::recommend(c, totalVram,
+                                m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble(),
+                                freeVram, qwenReady, piperReady);
+}
+
+QVariantMap AppController::charlaAgentCapability() const
+{
+    const QStringList args = m_effectiveProfile.value(QStringLiteral("effectiveArgs")).toStringList();
+    QString model;
+    int i = args.indexOf(QStringLiteral("--model"));
+    if (i < 0) i = args.indexOf(QStringLiteral("-m"));
+    if (i >= 0 && i + 1 < args.size()) model = QFileInfo(args.at(i + 1)).fileName();
+    const bool tools = m_agentBackend && m_agentBackend->running();
+    const LaunchProfile launch = m_profiles.resolveLaunch(m_activeLaunchId);
+    const bool supervisor = launch.master.isConfigured();
+    return VoiceAgentPolicy::assess(model, tools, supervisor);
+}
+
 void AppController::toggleDictation()
 {
     if (m_dictationActive) {
@@ -13255,6 +13398,13 @@ void AppController::applyVoiceConfig()
     VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
     applyAppLanguageToVoice(c);
+    if (c.ttsMode == QLatin1String("auto") && c.ttsAutoConfigure) {
+        const QVariantMap rec = recommendedVoiceTts(m_activeLaunchId);
+        c.ttsMode = rec.value(QStringLiteral("mode")).toString();
+        c.qwenModelName = rec.value(QStringLiteral("qwenModelName"), c.qwenModelName).toString();
+        qInfo().noquote() << QStringLiteral("[charla] TTS auto → %1 (%2)")
+                                 .arg(c.ttsMode, rec.value(QStringLiteral("reason")).toString());
+    }
     // STT gestionado: apuntar al server local que lanza la app (whisper.cpp).
     if (!c.sttManagedEngine.isEmpty()) {
         const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
@@ -13268,7 +13418,7 @@ void AppController::applyVoiceConfig()
     m_voice->setConfig(c, sttKey, ttsKey);
     m_voice->setInputDevice(voiceInputDevice());
     // TTS piper (process-mode): resolver binario + voz instalada.
-    if (c.ttsMode == QLatin1String("piper"))
+    if (c.ttsMode == QLatin1String("piper") || c.ttsFallbackMode == QLatin1String("piper"))
         m_voice->setTtsPiper(voicePiperPath(),
                              VoiceServerManager::ttsModelPath(c.ttsManagedVoice));
 }
@@ -13342,7 +13492,10 @@ void AppController::startCharla()
     VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
     applyAppLanguageToVoice(c);
-    if (c.ttsMode == QLatin1String("piper")) {
+    QString effectiveTtsMode = c.ttsMode;
+    if (effectiveTtsMode == QLatin1String("auto"))
+        effectiveTtsMode = recommendedVoiceTts(m_activeLaunchId).value(QStringLiteral("mode")).toString();
+    if (effectiveTtsMode == QLatin1String("piper")) {
         const QString voiceId = c.ttsManagedVoice.isEmpty()
             ? QStringLiteral("es_ES-davefx-medium") : c.ttsManagedVoice;
         if (!m_voiceServers.ttsVoiceInstalled(voiceId) || !voicePiperAvailable()) {
@@ -13350,6 +13503,10 @@ void AppController::startCharla()
                 "Piper o su voz no están instalados. Instalalos desde Charla."));
             return;
         }
+    }
+    if (effectiveTtsMode == QLatin1String("qwen3") && c.qwenModelDir.trimmed().isEmpty()) {
+        emit serverError(QStringLiteral("Configurá la carpeta de modelos Qwen3-TTS desde Charla."));
+        return;
     }
     if (!c.sttManagedEngine.isEmpty()) {
         if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {

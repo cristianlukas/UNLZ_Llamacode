@@ -1,4 +1,5 @@
 #include "GGUFScanner.h"
+#include "OllamaImporter.h"
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
@@ -9,53 +10,85 @@
 
 GGUFScanner::GGUFScanner(QObject *parent) : QObject(parent) {}
 
+namespace {
+
+// Construye un CatalogModel para un GGUF. `filePath` es la ruta física del blob/
+// archivo; `displayName` es el nombre a mostrar/inferir (nombre de archivo para
+// roots de disco, "model:tag" para blobs de Ollama, que no tienen extensión).
+CatalogModel buildCatalogModel(const ModelRoot &root, const QString &filePath,
+                               const QString &displayName)
+{
+    const QFileInfo info(filePath);
+
+    CatalogModel m;
+    // Id DETERMINISTA por ruta absoluta (UUIDv5). Antes era QUuid::createUuid()
+    // (aleatorio por scan): cada rescan reasignaba ids y orfanaba los modelId
+    // guardados en los perfiles (→ "No model selected" en benchmark). El mismo
+    // namespace + ruta se replica en tools/relink_profiles.py para migrar perfiles.
+    static const QUuid kCatalogNs(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    m.id = QUuid::createUuidV5(kCatalogNs, filePath.toUtf8()).toString(QUuid::WithoutBraces);
+    m.rootId = root.id;
+    m.absolutePath = filePath;
+    m.fileName = displayName;
+    m.sizeBytes = info.size();
+    m.mtime = info.lastModified();
+    m.familyHint = GGUFScanner::inferFamily(displayName);
+    m.quantHint = GGUFScanner::inferQuant(displayName);
+
+    // Composición real de tensores: el nombre de archivo miente (Google "Q4_0"
+    // trae Q6_K/F16; unsloth "Q4_K_XL" es casi todo Q4_0). Clasificamos por el
+    // contenido real y marcamos mismatch para avisar en UI.
+    const GGUFScanner::Composition comp =
+        GGUFScanner::readComposition(filePath, info.size());
+    if (comp.valid) {
+        m.quantReal = comp.dominantQuant;
+        m.tensorBreakdown = comp.breakdown();
+        m.bpw = comp.bpw;
+        m.quantMismatch =
+            !m.quantReal.isEmpty() && m.quantHint != "unknown"
+                && m.quantHint.compare(m.quantReal, Qt::CaseInsensitive) != 0;
+        m.architecture = comp.architecture;
+        m.parameterCount = comp.parameterCount;
+        m.trainedContext = comp.trainedContext;
+    }
+
+    m.isVisionCandidate = GGUFScanner::isVisionCandidate(displayName);
+    m.isDraftCandidate = GGUFScanner::isDraftCandidate(displayName, info.size());
+    m.isAvailable = true;
+    return m;
+}
+
+} // namespace
+
 QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root)
 {
     QList<CatalogModel> results;
+
+    // Store de Ollama: los pesos son blobs sin extensión, resueltos vía manifests.
+    if (root.kind == QLatin1String("ollama")) {
+        const QList<OllamaImporter::Entry> entries = OllamaImporter::scan(root.path);
+        for (const OllamaImporter::Entry &e : entries) {
+            results.append(buildCatalogModel(root, e.blobPath, e.name));
+            emit progress(root.id, results.size());
+            // Modelo multimodal: el projector (mmproj) entra como entrada aparte,
+            // marcada como candidata de visión para poder emparejar --mmproj.
+            if (!e.mmprojPath.isEmpty()) {
+                CatalogModel mm = buildCatalogModel(root, e.mmprojPath,
+                                                    e.name + QStringLiteral(" (mmproj)"));
+                mm.isVisionCandidate = true;
+                results.append(mm);
+                emit progress(root.id, results.size());
+            }
+        }
+        return results;
+    }
 
     QDirIterator it(root.path, {"*.gguf", "*.GGUF"},
                     QDir::Files, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {
         const QString filePath = it.next();
-        const QFileInfo info(filePath);
-
-        CatalogModel m;
-        // Id DETERMINISTA por ruta absoluta (UUIDv5). Antes era QUuid::createUuid()
-        // (aleatorio por scan): cada rescan reasignaba ids y orfanaba los modelId
-        // guardados en los perfiles (→ "No model selected" en benchmark). El mismo
-        // namespace + ruta se replica en tools/relink_profiles.py para migrar perfiles.
-        static const QUuid kCatalogNs(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
-        m.id = QUuid::createUuidV5(kCatalogNs, filePath.toUtf8()).toString(QUuid::WithoutBraces);
-        m.rootId = root.id;
-        m.absolutePath = filePath;
-        m.fileName = info.fileName();
-        m.sizeBytes = info.size();
-        m.mtime = info.lastModified();
-        m.familyHint = inferFamily(info.fileName());
-        m.quantHint = inferQuant(info.fileName());
-
-        // Composición real de tensores: el nombre de archivo miente (Google "Q4_0"
-        // trae Q6_K/F16; unsloth "Q4_K_XL" es casi todo Q4_0). Clasificamos por el
-        // contenido real y marcamos mismatch para avisar en UI.
-        const Composition comp = readComposition(filePath, info.size());
-        if (comp.valid) {
-            m.quantReal = comp.dominantQuant;
-            m.tensorBreakdown = comp.breakdown();
-            m.bpw = comp.bpw;
-            m.quantMismatch =
-                !m.quantReal.isEmpty() && m.quantHint != "unknown"
-                && m.quantHint.compare(m.quantReal, Qt::CaseInsensitive) != 0;
-            m.architecture = comp.architecture;
-            m.parameterCount = comp.parameterCount;
-            m.trainedContext = comp.trainedContext;
-        }
-
-        m.isVisionCandidate = isVisionCandidate(info.fileName());
-        m.isDraftCandidate = isDraftCandidate(info.fileName(), info.size());
-        m.isAvailable = true;
-
-        results.append(m);
+        results.append(buildCatalogModel(root, filePath, QFileInfo(filePath).fileName()));
         emit progress(root.id, results.size());
     }
 

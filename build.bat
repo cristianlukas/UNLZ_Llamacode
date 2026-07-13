@@ -29,16 +29,17 @@ REM ── Encolamiento inteligente entre sesiones paralelas ──────�
 REM Si otra sesion (IA/CI) ya esta compilando la misma fuente, adopto su
 REM resultado (REUSE) en vez de recompilar; si es otra fuente, espero turno.
 set COORD=powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1"
+for /f %%P in ('powershell -NoProfile -Command "$p=(Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId; (Get-CimInstance Win32_Process -Filter ('ProcessId=' + $p)).ParentProcessId"') do set COORD_OWNER_PID=%%P
 set HELD_LOCK=0
-%COORD% -Lane build -Action acquire
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action acquire -OwnerPid %COORD_OWNER_PID%
 set COORD_RC=%errorlevel%
 if "%COORD_RC%"=="10" (
     echo [INFO] Build compartido en curso completado OK -^> reusando artefactos.
-    echo === Build complete (reused) ===
+    echo === Build complete ^(reused^) ===
     goto :success
 )
 if not "%COORD_RC%"=="0" (
-    echo [ERROR] No pude coordinar el build (rc=%COORD_RC%).
+    echo [ERROR] No pude coordinar el build ^(rc=%COORD_RC%^).
     goto :failed
 )
 set HELD_LOCK=1
@@ -146,11 +147,11 @@ if /I "%CFG%"=="Release" set DID_RELEASE=1
 exit /b 0
 
 :failed
-if "%HELD_LOCK%"=="1" %COORD% -Lane build -Action release -Result FAIL
+if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action release -Result FAIL -OwnerPid %COORD_OWNER_PID%
 if "%NO_PAUSE%"=="0" pause
 exit /b 1
 
 :success
-if "%HELD_LOCK%"=="1" %COORD% -Lane build -Action release -Result OK
+if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action release -Result OK -OwnerPid %COORD_OWNER_PID%
 if "%NO_PAUSE%"=="0" pause
 exit /b 0

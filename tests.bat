@@ -22,16 +22,17 @@ REM ── Encolamiento inteligente entre sesiones paralelas ──────�
 REM Lane 'tests' (lock separado del app build, corren en paralelo). Si ya hay una
 REM corrida de tests EN CURSO con la misma fuente, adopto su resultado (REUSE).
 set COORD=powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1"
+for /f %%P in ('powershell -NoProfile -Command "$p=(Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId; (Get-CimInstance Win32_Process -Filter ('ProcessId=' + $p)).ParentProcessId"') do set COORD_OWNER_PID=%%P
 set HELD_LOCK=0
-%COORD% -Lane tests -Action acquire
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action acquire -OwnerPid %COORD_OWNER_PID%
 set COORD_RC=%errorlevel%
 if "%COORD_RC%"=="10" (
     echo [INFO] Tests compartidos en curso pasaron OK -> reuso resultado, no recompilo.
-    echo === All tests passed (reused) ===
+    echo === All tests passed ^(reused^) ===
     exit /b 0
 )
 if not "%COORD_RC%"=="0" (
-    echo [ERROR] No pude coordinar los tests (rc=%COORD_RC%).
+    echo [ERROR] No pude coordinar los tests ^(rc=%COORD_RC%^).
     exit /b 1
 )
 set HELD_LOCK=1
@@ -64,8 +65,8 @@ echo === All tests passed ===
 goto :done_ok
 
 :done_ok
-if "%HELD_LOCK%"=="1" %COORD% -Lane tests -Action release -Result OK
+if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action release -Result OK -OwnerPid %COORD_OWNER_PID%
 exit /b 0
 :done_fail
-if "%HELD_LOCK%"=="1" %COORD% -Lane tests -Action release -Result FAIL
+if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action release -Result FAIL -OwnerPid %COORD_OWNER_PID%
 exit /b 1

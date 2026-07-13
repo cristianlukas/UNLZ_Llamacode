@@ -1,5 +1,7 @@
 #include "AgentToolRunner.h"
 #include "McpClient.h"
+#include <QRegularExpression>
+#include <algorithm>
 #include "LlamaAgentBackend.h"   // LlamaAgentBackend::makeDiff (static)
 #include "MemoryStore.h"         // memoria por capas (hechos atómicos)
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
@@ -663,7 +665,53 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
     bool ok = false;
     QString result;
 
-    if (name.startsWith(kMcpPrefix)) {
+    if (name == QLatin1String("mcp_search_tools")) {
+        const QString query = args.value(QStringLiteral("query")).toString().trimmed().toLower();
+        const QString serverFilter = args.value(QStringLiteral("server")).toString().trimmed();
+        const int limit = qBound(1, args.value(QStringLiteral("limit")).toInt(5), 10);
+        struct Match { int score; QString name; QString description; QJsonObject schema; };
+        QList<Match> matches;
+        const QStringList terms = query.split(QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_-]+")), Qt::SkipEmptyParts);
+        for (McpClient *c : std::as_const(m_mcp)) {
+            if (!serverFilter.isEmpty() && c->serverName().compare(serverFilter, Qt::CaseInsensitive) != 0)
+                continue;
+            for (const McpClient::ToolDef &t : c->tools()) {
+                const QString full = kMcpPrefix + c->serverName() + QStringLiteral("__") + t.name;
+                const QString hay = (full + QLatin1Char(' ') + t.description).toLower();
+                int score = query.isEmpty() ? 0 : (hay.contains(query) ? 100 : 0);
+                for (const QString &term : terms) if (hay.contains(term)) score += 10;
+                if (score > 0) matches.append({score, full, t.description, t.inputSchema});
+            }
+        }
+        std::sort(matches.begin(), matches.end(), [](const Match &a, const Match &b) {
+            return a.score != b.score ? a.score > b.score : a.name < b.name;
+        });
+        QJsonArray found;
+        for (int i = 0; i < qMin(limit, matches.size()); ++i)
+            found.append(QJsonObject{{"name", matches[i].name}, {"description", matches[i].description},
+                                     {"inputSchema", matches[i].schema}});
+        result = QString::fromUtf8(QJsonDocument(QJsonObject{{"tools", found}, {"matched", found.size()}}).toJson(QJsonDocument::Compact));
+        ok = true;
+    } else if (name == QLatin1String("mcp_call_tool")) {
+        const QString target = args.value(QStringLiteral("name")).toString();
+        const QJsonObject inner = args.value(QStringLiteral("arguments")).toObject();
+        if (!target.startsWith(kMcpPrefix)) {
+            result = QStringLiteral("[mcp: nombre inválido; usá el nombre exacto devuelto por mcp_search_tools]");
+        } else {
+            const QString rest = target.mid(kMcpPrefix.size());
+            const int sep = rest.indexOf(QStringLiteral("__"));
+            McpClient *client = nullptr;
+            QString bare;
+            if (sep >= 0) {
+                const QString server = rest.left(sep); bare = rest.mid(sep + 2);
+                for (McpClient *c : std::as_const(m_mcp)) if (c->serverName() == server) { client = c; break; }
+            }
+            bool exists = false;
+            if (client) for (const McpClient::ToolDef &t : client->tools()) if (t.name == bare) { exists = true; break; }
+            if (!exists) result = QStringLiteral("[mcp: server/tool no encontrado: %1]").arg(target);
+            else result = client->callTool(bare, inner, &ok);
+        }
+    } else if (name.startsWith(kMcpPrefix)) {
         // mcp__<server>__<tool>
         const QString rest = name.mid(kMcpPrefix.size());
         const int sep = rest.indexOf(QStringLiteral("__"));
@@ -1226,11 +1274,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                              .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString());
         return header + out.join(QStringLiteral("\n\n──────\n"));
     }
-    if (name == QLatin1String("hybrid_search")) {
+    if (name == QLatin1String("hybrid_search") || name == QLatin1String("repo_slice")) {
         // RAG HÍBRIDO: fusiona BM25 (keywords) + vectorial (embeddings) por
         // Reciprocal Rank Fusion, y RE-RANKEA el top con /rerank si el server lo
         // soporta. Es la mejor recuperación disponible: combiná esto antes de
         // razonar sobre el repo. Cae a fusión sin reranker si no hay endpoint.
+        const bool repoSlice = name == QLatin1String("repo_slice");
         const QString query = args.value(QStringLiteral("query")).toString().trimmed();
         if (query.isEmpty()) return QStringLiteral("[query vacía]");
         int k = args.value(QStringLiteral("k")).toInt();
@@ -1384,7 +1433,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         // contexto del solver, devolver sólo la cita span 'rel:Lini-Lfin' + un preview
         // de 1 línea. El agente principal lee después los spans que le interesan con
         // read_file. Ahorra tokens de exploración manteniendo provenance precisa.
-        const bool compact = args.value(QStringLiteral("compact")).toBool(false);
+        // repo_slice es el contrato pre-edición: devuelve evidencia navegable por
+        // defecto. hybrid_search conserva su salida histórica con cuerpos.
+        const bool compact = args.contains(QStringLiteral("compact"))
+            ? args.value(QStringLiteral("compact")).toBool() : repoSlice;
         QStringList outL;
         QStringList outFiles;            // archivos ya incluidos (para el dep-graph)
         int usedTok = 0;
@@ -1448,7 +1500,9 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         }
 
         if (ok) *ok = true;
-        const QString header = QStringLiteral("[%1 chunks · %2%3%4]\n\n")
+        const QString header = (repoSlice
+            ? QStringLiteral("[repo_slice · evidencia previa a edición · %1 chunks · %2%3%4]\n\n")
+            : QStringLiteral("[%1 chunks · %2%3%4]\n\n"))
             .arg(chunks.size()).arg(rerankNote)
             .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString())
             .arg(tokenBudget > 0 ? QStringLiteral(" · ~%1 tok").arg(usedTok) : QString());
@@ -1689,7 +1743,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             const QString type = args.value(QStringLiteral("type")).toString();
             const double conf = args.value(QStringLiteral("confidence")).toDouble();
             const QString source = args.value(QStringLiteral("source")).toString();
-            const QString res = MemoryStore::save(cwd, content, scope, type, conf, source);
+            const double importance = args.value(QStringLiteral("importance")).toDouble();
+            const double surprise = args.value(QStringLiteral("surprise")).toDouble();
+            const QString verification = args.value(QStringLiteral("verification")).toString();
+            const QString supersedes = args.value(QStringLiteral("supersedes")).toString();
+            const QString res = MemoryStore::save(cwd, content, scope, type, conf, source,
+                                                  importance, surprise, verification, supersedes);
             // Espejo en memory.md para inspección humana / compatibilidad.
             const QString mdPath = LlamaAgentBackend::memoryFilePath(cwd);
             QDir().mkpath(QFileInfo(mdPath).absolutePath());
@@ -1809,11 +1868,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             if (ok) *ok = true;
             return res;
         }
-        // link (default)
+        // link (default). Edge inferido por el LLM: entra unreviewed (conf<0)
+        // salvo que el modelo pase 'confidence' explícito. 'edge_type' opcional
+        // fuerza la taxonomía (REQUIRES/ENABLES/…); vacío = se infiere del pred.
+        const double linkConf = args.contains(QStringLiteral("confidence"))
+            ? args.value(QStringLiteral("confidence")).toDouble() : -1.0;
         const QString res = GraphStore::link(
             cwd, args.value(QStringLiteral("subj")).toString(),
             args.value(QStringLiteral("pred")).toString(),
-            args.value(QStringLiteral("obj")).toString());
+            args.value(QStringLiteral("obj")).toString(),
+            args.value(QStringLiteral("edge_type")).toString(),
+            linkConf, QStringLiteral("llm"));
         if (ok) *ok = true;
         return res;
     }

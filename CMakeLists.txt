@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.28 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.30 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -51,6 +51,7 @@ set(CORE_SOURCES
     src/core/CatalogModel.cpp
     src/core/ModelCatalog.cpp
     src/core/GGUFScanner.cpp
+    src/core/OllamaImporter.cpp
     src/core/DocumentExtractor.cpp
     src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
@@ -79,6 +80,8 @@ set(CORE_SOURCES
     src/core/voice/AudioCodec.cpp
     src/core/voice/SttEngine.cpp
     src/core/voice/TtsEngine.cpp
+    src/core/voice/TtsPolicy.cpp
+    src/core/voice/VoiceAgentPolicy.cpp
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
     src/core/voice/CharlaTuning.cpp
@@ -114,6 +117,7 @@ set(HEADERS
     src/core/CatalogModel.h
     src/core/ModelCatalog.h
     src/core/GGUFScanner.h
+    src/core/OllamaImporter.h
     src/core/DocumentExtractor.h
     src/core/MermaidRenderer.h
     src/core/ControlApi.h
@@ -142,6 +146,8 @@ set(HEADERS
     src/core/voice/AudioCodec.h
     src/core/voice/SttEngine.h
     src/core/voice/TtsEngine.h
+    src/core/voice/TtsPolicy.h
+    src/core/voice/VoiceAgentPolicy.h
     src/core/voice/VoiceController.h
     src/core/voice/VoiceServerManager.h
     src/core/eval/EvalSuite.h

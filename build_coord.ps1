@@ -17,8 +17,9 @@
   cuente como cambio de fuente (si contara, cada sharer creería ver un árbol
   distinto y recompilaría al pedo).
 
-  Locks muertos (PID inexistente) se roban. TTL de seguridad por si un owner
-  crashea sin liberar.
+  Locks muertos se roban de inmediato usando la identidad del proceso real que
+  ejecuta el .bat (PID + hora de creación, para resistir reutilización de PID).
+  No usa procesos guardianes ni sleeps como señal de vida.
 
   Uso:
     powershell ... build_coord.ps1 -Lane build  -Action acquire [-TimeoutSec 1800]
@@ -28,8 +29,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)][ValidateSet('build','tests')] [string]$Lane,
-    [Parameter(Mandatory=$true)][ValidateSet('acquire','release','fingerprint')] [string]$Action,
+    [Parameter(Mandatory=$true)][ValidateSet('acquire','release','fingerprint','status')] [string]$Action,
     [ValidateSet('OK','FAIL')] [string]$Result = 'OK',
+    [int]$OwnerPid = 0,
     [int]$TimeoutSec = 1800,
     [int]$StaleSec   = 3600
 )
@@ -76,6 +78,25 @@ function Test-Alive([int]$procId) {
     try { return [bool](Get-Process -Id $procId -ErrorAction Stop) } catch { return $false }
 }
 
+function Get-ProcessIdentity([int]$procId) {
+    if (-not $procId) { return $null }
+    try {
+        $p = Get-Process -Id $procId -ErrorAction Stop
+        return [pscustomobject]@{
+            pid = $p.Id
+            startedUtc = $p.StartTime.ToUniversalTime().ToString('o')
+        }
+    } catch { return $null }
+}
+
+function Test-OwnerAlive($owner) {
+    if (-not $owner -or -not $owner.ownerPid -or -not $owner.ownerStartedUtc) {
+        return $false # formato legacy/guardían: stale por diseño
+    }
+    $live = Get-ProcessIdentity ([int]$owner.ownerPid)
+    return $live -and $live.startedUtc -eq [string]$owner.ownerStartedUtc
+}
+
 function Read-Owner {
     if (-not (Test-Path $ownerJson)) { return $null }
     try { return Get-Content -Raw $ownerJson | ConvertFrom-Json } catch { return $null }
@@ -93,12 +114,27 @@ if ($Action -eq 'fingerprint') {
     exit 0
 }
 
+if ($Action -eq 'status') {
+    $owner = Read-Owner
+    if (-not $owner) { Log 'FREE'; exit 0 }
+    $alive = Test-OwnerAlive $owner
+    Log ("{0} owner={1} fingerprint={2} started={3}" -f `
+         $(if ($alive) {'BUSY'} else {'STALE'}), $owner.ownerPid,
+         $owner.fingerprint, $owner.startedUtc)
+    exit $(if ($alive) {10} else {11})
+}
+
 New-Item -ItemType Directory -Force -Path $lockRoot  | Out-Null
 New-Item -ItemType Directory -Force -Path $resultDir | Out-Null
 
 # --- release -----------------------------------------------------------------
 if ($Action -eq 'release') {
     $me = Read-Owner
+    if (-not $me) { Log 'release ignorado: lock inexistente'; exit 0 }
+    if (-not $OwnerPid -or [int]$me.ownerPid -ne $OwnerPid) {
+        Log ("release rechazado: caller={0}, owner={1}" -f $OwnerPid, $me.ownerPid)
+        exit 1
+    }
     if ($me -and $me.fingerprint) {
         # Publica el resultado para que los sharers en espera lo adopten.
         $rp = Result-Path $me.fingerprint
@@ -107,8 +143,6 @@ if ($Action -eq 'release') {
                 Set-Content -Path $rp -Encoding ASCII
         } catch {}
     }
-    # Mata al guardian que mantenia vivo el lock.
-    if ($me -and $me.pid) { try { Stop-Process -Id ([int]$me.pid) -Force -ErrorAction Stop } catch {} }
     Remove-Lock
     Log ("released ({0})" -f $Result)
     exit 0
@@ -116,6 +150,8 @@ if ($Action -eq 'release') {
 
 # --- acquire -----------------------------------------------------------------
 $myFp   = Get-Fingerprint
+$myOwner = Get-ProcessIdentity $OwnerPid
+if (-not $myOwner) { Log ("OwnerPid inválido o muerto: {0}" -f $OwnerPid); exit 1 }
 $deadline = (Get-Date).AddSeconds($TimeoutSec)
 Log ("fingerprint {0}" -f $myFp)
 
@@ -128,25 +164,20 @@ while ($true) {
     catch { $got = $false }
 
     if ($got) {
-        # El proceso que corre 'acquire' termina enseguida y el .bat sigue, asi que
-        # su PID NO sirve como prueba de vida del lock. Lanzo un "guardian" oculto
-        # cuya vida == el lock: 'release' lo mata; si el .bat crashea, el guardian
-        # se autoexpira a los StaleSec y el lock queda robable. Su PID es el owner.
-        $guardian = Start-Process -FilePath 'powershell' -PassThru -WindowStyle Hidden `
-            -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',("Start-Sleep -Seconds {0}" -f $StaleSec)
         # Borro cualquier resultado viejo de esta fuente ANTES de publicar owner.json,
         # asi un sharer que entre despues no adopta un resultado stale de una corrida
         # anterior en vez de esperar la mia.
         Remove-Item -Force (Result-Path $myFp) -ErrorAction SilentlyContinue
         $owner = [ordered]@{
-            pid         = $guardian.Id
+            ownerPid    = $myOwner.pid
+            ownerStartedUtc = $myOwner.startedUtc
             host        = $env:COMPUTERNAME
             fingerprint = $myFp
             phase       = 'building'
             startedUtc  = (Get-Date).ToUniversalTime().ToString('o')
         }
         ($owner | ConvertTo-Json -Compress) | Set-Content -Path $ownerJson -Encoding ASCII
-        Log ('OWNER (lock tomado, guardian pid={0}) -> compilando' -f $guardian.Id)
+        Log ('OWNER (lock tomado, pid={0}) -> compilando' -f $myOwner.pid)
         exit 0
     }
 
@@ -162,8 +193,10 @@ while ($true) {
     $started = $null
     try { $started = [datetime]::Parse($owner.startedUtc).ToUniversalTime() } catch {}
     $expired = $started -and ((Get-Date).ToUniversalTime() - $started).TotalSeconds -gt $StaleSec
-    if (-not (Test-Alive ([int]$owner.pid)) -or $expired) {
-        Log ("robando lock stale (pid={0}, expired={1})" -f $owner.pid, $expired)
+    $ownerDead = -not (Test-OwnerAlive $owner)
+    if ($ownerDead -or $expired) {
+        Log ("robando lock stale (owner={0}, ownerDead={1}, expired={2})" `
+             -f $owner.ownerPid, $ownerDead, $expired)
         Remove-Lock
         Start-Sleep -Milliseconds 200
         continue

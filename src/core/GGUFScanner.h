@@ -11,7 +11,8 @@ class GGUFScanner : public QObject
 public:
     explicit GGUFScanner(QObject *parent = nullptr);
 
-    // Synchronous scan — call from thread pool
+    // Synchronous scan — call from thread pool. Rutea por root.kind:
+    // "ollama" → blobs del store de Ollama; cualquier otro → *.gguf en disco.
     QList<CatalogModel> scan(const ModelRoot &root);
 
     // Inferencia pura sobre el nombre de archivo (públicas para tests).

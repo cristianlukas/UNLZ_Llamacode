@@ -691,7 +691,9 @@ void LlamaAgentBackend::consolidateMemory()
         "obvios del repo, bugs conocidos. NO incluyas pasos efímeros, charla, ni cosas "
         "deducibles leyendo el código. Respondé SOLO con un array JSON; cada item: "
         "{\"content\":string, \"scope\":\"project\"|\"personal\", "
-        "\"type\":\"preference\"|\"decision\"|\"fact\"|\"bug\", \"confidence\":0..1}. "
+        "\"type\":\"preference\"|\"decision\"|\"fact\"|\"bug\", \"confidence\":0..1, "
+        "\"importance\":0..1, \"surprise\":0..1, "
+        "\"verification\":\"user\"|\"test\"|\"tool\"|\"inferred\"}. "
         "Si no hay nada durable, respondé []. Máximo 10 items, cada content una sola frase.");
 
     QJsonObject payload{
@@ -744,7 +746,10 @@ void LlamaAgentBackend::consolidateMemory()
                               f.value(QStringLiteral("scope")).toString(QStringLiteral("project")),
                               f.value(QStringLiteral("type")).toString(QStringLiteral("fact")),
                               f.value(QStringLiteral("confidence")).toDouble(0.6),
-                              QStringLiteral("consolidation"));
+                              QStringLiteral("consolidation"),
+                              f.value(QStringLiteral("importance")).toDouble(0.0),
+                              f.value(QStringLiteral("surprise")).toDouble(0.0),
+                              f.value(QStringLiteral("verification")).toString(QStringLiteral("inferred")));
             if (++saved >= 10) break;
         }
         if (saved > 0)
@@ -1131,7 +1136,12 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     // perfil la elige explícitamente (no entra en el default "todas on").
     if (m_directives.contains(QStringLiteral("antiBias"))) base += antiBiasSection();
 
-    // Memoria por proyecto: .llamacode/memory.md o AGENTS.md (lo que exista).
+    // Memoria estructurada: inyectar un conjunto acotado de hechos vigentes.
+    const QString structuredMem = MemoryStore::recall(m_cwd, QString(), QString(), 12);
+    if (!structuredMem.startsWith(QLatin1Char('[')))
+        base += QStringLiteral("\n\n--- Memoria estructurada relevante ---\n") + structuredMem;
+
+    // Memoria legacy/instrucciones: .llamacode/memory.md o AGENTS.md.
     QString mem;
     for (const QString &cand : {memoryFilePath(m_cwd),
                                 QDir::cleanPath(m_cwd + QStringLiteral("/AGENTS.md"))}) {
@@ -1984,6 +1994,7 @@ void LlamaAgentBackend::resetStreamState()
     m_streamErrBody.clear();
     m_streamContent.clear();
     m_streamReason.clear();
+    m_streamRepetitionDetected = false;
     m_streamToolCalls.clear();
     m_genTokens = 0;
     m_genMs = 0.0;
@@ -2092,6 +2103,30 @@ void LlamaAgentBackend::handleStreamData()
             m_streamReason += delta.value(QStringLiteral("reasoning_content")).toString();
         m_streamContent += delta.value(QStringLiteral("content")).toString();
 
+        // Loop dentro de UNA generación: algunos modelos repiten un párrafo hasta
+        // agotar n_predict, por lo que el anti-loop de tool calls nunca llega a
+        // observarlo. Exigimos tres copias exactas de un bloque largo para evitar
+        // cortar listas, código corto o énfasis legítimo.
+        if (!m_streamRepetitionDetected) {
+            QString *candidate = !m_streamContent.isEmpty() ? &m_streamContent
+                                                             : &m_streamReason;
+            const int repeatedAt = repeatedSuffixStart(*candidate);
+            if (repeatedAt >= 0) {
+                const int repeatedLen = candidate->size() - repeatedAt;
+                candidate->truncate(repeatedAt + repeatedLen / 3);
+                *candidate += QStringLiteral(
+                    "\n\n[generación detenida: el modelo repitió el mismo bloque tres veces]");
+                m_streamRepetitionDetected = true;
+                emit logAppended(QStringLiteral(
+                    "[anti-loop] repetición textual detectada durante el stream; abortando generación\n"));
+                AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                      QJsonObject{{QStringLiteral("reason"),
+                                                   QStringLiteral("stream_repetition")},
+                                                  {QStringLiteral("repeatedChars"), repeatedLen}});
+                if (m_reply) m_reply->abort();
+            }
+        }
+
         mergeToolCallDelta(m_streamToolCalls, delta.value(QStringLiteral("tool_calls")).toArray());
 
         // Progreso de tool_calls en streaming. Cuando el modelo está generando
@@ -2168,7 +2203,7 @@ void LlamaAgentBackend::handleStreamData()
 
 void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 {
-    if (!ok) {
+    if (!ok && !m_streamRepetitionDetected) {
         finishTurn(QStringLiteral("[error: %1]").arg(err), false);
         return;
     }
@@ -2417,7 +2452,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("glob"), QStringLiteral("run_shell"), QStringLiteral("web_fetch"),
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
-        QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
+        QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
         QStringLiteral("memory"), QStringLiteral("graph"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
@@ -2428,7 +2463,8 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
         QStringLiteral("desktop_wait"), QStringLiteral("desktop_launch"),
         QStringLiteral("email_accounts"), QStringLiteral("email_send"),
-        QStringLiteral("email_list"), QStringLiteral("email_read")};
+        QStringLiteral("email_list"), QStringLiteral("email_read"),
+        QStringLiteral("mcp_search_tools"), QStringLiteral("mcp_call_tool")};
     if (!known.contains(name) && !name.startsWith(kMcpPrefix)) {
         ++m_toolFail;
         m_pendingCalls.removeFirst();
@@ -2553,6 +2589,12 @@ void LlamaAgentBackend::processPendingCalls()
         if (a != QLatin1String("query") && a != QLatin1String("decisions"))
             kind = QStringLiteral("write");
     }
+    // La envoltura lazy no debe esconder la política del tool MCP real. Buscar es
+    // lectura; al llamar, clasificamos y evaluamos guardrails con nombre/args internos.
+    if (name == QLatin1String("mcp_search_tools"))
+        kind = QStringLiteral("read");
+    if (name == QLatin1String("mcp_call_tool"))
+        kind = toolKind(args.value(QStringLiteral("name")).toString());
 
     // PLAN MODE: bloquear cualquier tool que mute (write/shell/mcp). Las read
     // ya están filtradas del schema, pero defendemos por si el modelo igual la pide.
@@ -2630,7 +2672,20 @@ void LlamaAgentBackend::processPendingCalls()
     const bool emailGated = (kind == QLatin1String("email") && !m_mailAutoSend);
     const bool emailAuto  = (kind == QLatin1String("email") && m_mailAutoSend);
 
-    if (!forceAsk && !emailGated && (autoAll || autoRead || always || emailAuto)) {
+    // Guardrail Zero-Autonomy: acción destructiva/irreversible fuerza aprobación
+    // humana aunque el modo sea auto o haya Task auto-approve. Excepción: "super"
+    // (autonomía total). Análogo a emailGated pero cross-kind.
+    const QString guardName = name == QLatin1String("mcp_call_tool")
+                                  ? args.value(QStringLiteral("name")).toString() : name;
+    const QJsonObject guardArgs = name == QLatin1String("mcp_call_tool")
+                                      ? args.value(QStringLiteral("arguments")).toObject() : args;
+    const bool destructiveGated = (m_hitlDestructive
+                                   && m_approvalMode != QLatin1String("super")
+                                   && isDestructiveAction(guardName, guardArgs));
+    if (destructiveGated)
+        emit logAppended(QStringLiteral("[guardrail] '%1' es destructiva → aprobación requerida\n").arg(name));
+
+    if (!forceAsk && !emailGated && !destructiveGated && (autoAll || autoRead || always || emailAuto)) {
         emit logAppended(QStringLiteral("[tool] auto-approving %1\n").arg(name));
         approveAndContinue(call.value(QStringLiteral("id")).toString(), QStringLiteral("once"));
         return;
@@ -2754,6 +2809,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
+    const bool failureSpiral = recordToolOutcome(name, ok, isWrite, res);
     if (name.startsWith(QLatin1String("desktop_"))) {
         m_lastDesktopTool = name;
         m_lastDesktopResult = res;
@@ -2829,7 +2885,21 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     }
 
     // Al contexto va la versión acotada (salvo que ya sea un stub de dedup).
-    appendToolResult(callId, name, dedup ? res : budgetToolOutput(name, res));
+    QString contextResult = dedup ? res : budgetToolOutput(name, res);
+    if (failureSpiral) {
+        contextResult += QStringLiteral(
+            "\n[anti-loop: %1 ejecuciones consecutivas terminaron con el mismo "
+            "problema aunque hayan cambiado los comandos o argumentos. No sigas "
+            "probando variantes a ciegas: releé el error, comprobá la causa raíz "
+            "y cambiá de estrategia.]").arg(kFailureSpiralThreshold);
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), callId},
+                                          {QStringLiteral("reason"), QStringLiteral("failure_spiral")},
+                                          {QStringLiteral("repeatCount"), m_equivalentFailures},
+                                          {QStringLiteral("fingerprint"), m_failureFingerprint}});
+    }
+    appendToolResult(callId, name, contextResult);
 
     // Captura visual (desktop_observe / screenshots): si el server tiene visión,
     // encolar la imagen para inyectarla al contexto al cerrar el turno de tools.
@@ -2841,6 +2911,64 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     }
 
     processPendingCalls();
+}
+
+int LlamaAgentBackend::repeatedSuffixStart(const QString &text, int repeats,
+                                           int minBlockChars)
+{
+    if (repeats < 2 || minBlockChars < 1 || text.size() < repeats * minBlockChars)
+        return -1;
+    const int maxBlock = qMin(2048, text.size() / repeats);
+    // Buscar de mayor a menor conserva la unidad semántica más amplia (párrafo)
+    // cuando también existen subcadenas periódicas dentro de ella.
+    for (int block = maxBlock; block >= minBlockChars; --block) {
+        const int start = text.size() - repeats * block;
+        const QStringView unit(text.constData() + start, block);
+        bool same = true;
+        for (int copy = 1; copy < repeats; ++copy) {
+            if (QStringView(text.constData() + start + copy * block, block) != unit) {
+                same = false;
+                break;
+            }
+        }
+        if (same) return start;
+    }
+    return -1;
+}
+
+QString LlamaAgentBackend::failureFingerprint(const QString &tool, const QString &result)
+{
+    QString normalized = result.toLower().trimmed();
+    normalized.replace(QRegularExpression(QStringLiteral("[a-z]:[/\\\\][^\\r\\n:]+")),
+                       QStringLiteral("<path>"));
+    normalized.replace(QRegularExpression(QStringLiteral("(?:[/\\\\][^\\s:]+){2,}")),
+                       QStringLiteral("<path>"));
+    normalized.replace(QRegularExpression(QStringLiteral("\\b(?:0x[0-9a-f]+|\\d+)\\b")),
+                       QStringLiteral("#"));
+    normalized.replace(QRegularExpression(QStringLiteral("\\s+")), QStringLiteral(" "));
+    // La cola suele contener la causa; acotarla evita que logs previos distintos
+    // oculten un error final idéntico.
+    normalized = normalized.right(2048);
+    return tool.section(QLatin1Char('_'), 0, 0) + QLatin1Char('|')
+        + QString::fromLatin1(QCryptographicHash::hash(normalized.toUtf8(),
+                                                       QCryptographicHash::Sha256).toHex());
+}
+
+bool LlamaAgentBackend::recordToolOutcome(const QString &tool, bool ok, bool isWrite,
+                                          const QString &result)
+{
+    if (ok || isWrite) {
+        m_failureFingerprint.clear();
+        m_equivalentFailures = 0;
+        return false;
+    }
+    const QString fp = failureFingerprint(tool, result);
+    if (fp == m_failureFingerprint) ++m_equivalentFailures;
+    else {
+        m_failureFingerprint = fp;
+        m_equivalentFailures = 1;
+    }
+    return m_equivalentFailures == kFailureSpiralThreshold;
 }
 
 // run_shell async: arranca → crear tarjeta "en vivo" (typing) con el comando.
@@ -3141,6 +3269,8 @@ void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name,
 
 QStringList LlamaAgentBackend::requiredArgs(const QString &name)
 {
+    if (name == QLatin1String("mcp_search_tools")) return {QStringLiteral("query")};
+    if (name == QLatin1String("mcp_call_tool")) return {QStringLiteral("name")};
     if (name == QLatin1String("read_file"))  return {QStringLiteral("path")};
     if (name == QLatin1String("grep"))       return {QStringLiteral("pattern")};
     if (name == QLatin1String("glob"))       return {QStringLiteral("pattern")};
@@ -3155,6 +3285,7 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("search_docs")) return {QStringLiteral("query")};
     if (name == QLatin1String("semantic_search")) return {QStringLiteral("query")};
     if (name == QLatin1String("hybrid_search")) return {QStringLiteral("query")};
+    if (name == QLatin1String("repo_slice")) return {QStringLiteral("query")};
     // verify_claims: 'claims' puede ser array → no se valida acá (toString() de un
     // array da "" y lo rechazaría); la propia tool valida.
     if (name == QLatin1String("task"))       return {QStringLiteral("prompt")};
@@ -3504,6 +3635,8 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
 // ───────────────────────────── Tools ─────────────────────────────────────
 QString LlamaAgentBackend::toolKind(const QString &name)
 {
+    if (name == QLatin1String("mcp_search_tools") || name == QLatin1String("mcp_call_tool"))
+        return QStringLiteral("mcp");
     if (name.startsWith(kMcpPrefix)) {
         const QString bare = name.section(QStringLiteral("__"), -1);
         if (bare == QLatin1String("write_file") || bare == QLatin1String("edit_file")
@@ -3519,6 +3652,87 @@ QString LlamaAgentBackend::toolKind(const QString &name)
         return QStringLiteral("write");
     if (name == QLatin1String("email_send")) return QStringLiteral("email");
     return QStringLiteral("read");
+}
+
+bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObject &args,
+                                            const QString &desktopControlsText)
+{
+    const QString bare = name.startsWith(kMcpPrefix)
+                             ? name.section(QStringLiteral("__"), -1)
+                             : name;
+
+    // ── Shell destructivo ─────────────────────────────────────────────────
+    if (bare == QLatin1String("run_shell") || bare == QLatin1String("shell")) {
+        const QString cmd = args.value(QStringLiteral("command")).toString();
+        // Regex case-insensitive de comandos irreversibles habituales (win + posix).
+        static const QRegularExpression rx(
+            QStringLiteral(
+                "(?:^|[;&|]|\\s)(?:"
+                "rm\\s+(?:-[a-z]*\\s+)*-[a-z]*(?:r[a-z]*f|f[a-z]*r)[a-z]*|" // rm -rf / rm -fr
+                "del\\s+/|erase\\s+/|rmdir\\s+/s|rd\\s+/s|"                 // del /s, rmdir /s
+                "format\\b|mkfs|dd\\s+if=|"                                  // format, mkfs, dd
+                "git\\s+push\\s+.*(?:--force|-f)\\b|"                        // git push --force
+                "git\\s+(?:reset\\s+--hard|clean\\s+-[a-z]*f)|"             // git reset --hard / clean -f
+                "shutdown\\b|reboot\\b|"                                     // apagado
+                "drop\\s+(?:table|database)|truncate\\s+table|"             // SQL destructivo
+                ">\\s*/dev/sd|:\\s*>|>\\s*/dev/null\\s+2>&1\\s*;\\s*rm"      // wipes varios
+                ")"),
+            QRegularExpression::CaseInsensitiveOption);
+        if (rx.match(cmd).hasMatch()) return true;
+        return false;
+    }
+
+    // ── Desktop click sobre control destructivo ───────────────────────────
+    // desktop_click_element recibe un control_id opaco (no un label). Resolvemos
+    // el nombre del control desde la salida cacheada del último desktop_controls,
+    // que lista una línea por control: 'controlId=<id> [role]...  "<name>"'.
+    // desktop_click (coords x/y a ciegas) no expone label → no clasificable acá.
+    if (bare == QLatin1String("desktop_click_element")) {
+        const QString cid = args.value(QStringLiteral("control_id")).toString();
+        QString label = args.value(QStringLiteral("name")).toString();
+        if (label.isEmpty() && !cid.isEmpty() && !desktopControlsText.isEmpty()) {
+            const auto lines = desktopControlsText.split(QLatin1Char('\n'));
+            for (const QString &ln : lines) {
+                if (!ln.startsWith(QLatin1String("controlId=")) ) continue;
+                // Match exacto del id hasta el primer espacio.
+                const QString idPart = ln.mid(10).section(QLatin1Char(' '), 0, 0);
+                if (idPart != cid) continue;
+                // El nombre es el último tramo entrecomillado de la línea.
+                const int q1 = ln.indexOf(QLatin1Char('"'));
+                const int q2 = ln.lastIndexOf(QLatin1Char('"'));
+                if (q1 >= 0 && q2 > q1) label = ln.mid(q1 + 1, q2 - q1 - 1);
+                break;
+            }
+        }
+        const QString s = label.toLower();
+        if (s.isEmpty()) return false;
+        static const QStringList markers{
+            QStringLiteral("delete"), QStringLiteral("eliminar"), QStringLiteral("borrar"),
+            QStringLiteral("format"), QStringLiteral("formatear"), QStringLiteral("wipe"),
+            QStringLiteral("uninstall"), QStringLiteral("desinstalar"),
+            QStringLiteral("factory reset"), QStringLiteral("restablecer"),
+            QStringLiteral("vaciar"), QStringLiteral("empty trash"), QStringLiteral("shred")};
+        for (const QString &m : markers)
+            if (s.contains(m)) return true;
+        return false;
+    }
+
+    // ── Memory / DB delete ────────────────────────────────────────────────
+    if (bare == QLatin1String("memory")) {
+        const QString a = args.value(QStringLiteral("action")).toString().toLower();
+        if (a == QLatin1String("forget")) return true;
+        if (a == QLatin1String("prune") && !args.value(QStringLiteral("dry_run")).toBool(false))
+            return true;
+        return false;
+    }
+    if (bare == QLatin1String("graph")) {
+        const QString a = args.value(QStringLiteral("action")).toString().toLower();
+        if (a == QLatin1String("delete") || a == QLatin1String("forget")
+            || a == QLatin1String("prune"))
+            return true;
+    }
+
+    return false;
 }
 
 QJsonArray LlamaAgentBackend::toolSchemas()
@@ -3682,6 +3896,20 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("compact"), boolProp(QStringLiteral("Devolver sólo citas 'rel:Lini-Lfin' + preview, sin cuerpo. Ahorra tokens de exploración. Default false."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
            QJsonArray{QStringLiteral("query")}),
+        fn(QStringLiteral("repo_slice"),
+           QStringLiteral("Prepara evidencia compacta ANTES DE EDITAR: rankea el repo con "
+                          "BM25+embeddings/RRF/reranker cuando están disponibles y devuelve "
+                          "archivo:Lini-Lfin, preview y vecinos del dep-graph. Usala al comenzar "
+                          "una tarea de código y después leé sólo los spans relevantes. Cae a "
+                          "BM25 local sin server."),
+           QJsonObject{
+               {QStringLiteral("query"), strProp(QStringLiteral("Objetivo concreto de la tarea o bug."))},
+               {QStringLiteral("k"), intProp(QStringLiteral("Resultados si token_budget=0 (default 6, máx 15)."))},
+               {QStringLiteral("token_budget"), intProp(QStringLiteral("Presupuesto aproximado de tokens."))},
+               {QStringLiteral("expand_graph"), boolProp(QStringLiteral("Incluir vecinos por imports/includes. Default true."))},
+               {QStringLiteral("compact"), boolProp(QStringLiteral("Sólo citas+rango+preview. Default true."))},
+               {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio opcional."))}},
+           QJsonArray{QStringLiteral("query")}),
         fn(QStringLiteral("verify_claims"),
            QStringLiteral("Anti-alucinación: por cada afirmación busca respaldo en los archivos del "
                           "proyecto y en la memoria, y la etiqueta [ACREDITADO]/[INFERIDO]/[NO "
@@ -3719,6 +3947,12 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("mode"), strProp(QStringLiteral("forget/prune: 'stale' (default, conserva historial) o 'delete'."))},
                {QStringLiteral("confidence"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                    {QStringLiteral("description"), QStringLiteral("Confianza 0..1 (sólo save, default 0.8).")}}},
+               {QStringLiteral("importance"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                   {QStringLiteral("description"), QStringLiteral("Importancia durable 0..1; alta para reglas y decisiones críticas.")}}},
+               {QStringLiteral("surprise"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                   {QStringLiteral("description"), QStringLiteral("Sorpresa 0..1; alta si corrige o contradice una suposición previa.")}}},
+               {QStringLiteral("verification"), strProp(QStringLiteral("Origen de verificación: 'user'|'test'|'tool'|'inferred'."))},
+               {QStringLiteral("supersedes"), strProp(QStringLiteral("Id del recuerdo anterior que este hecho reemplaza."))},
                {QStringLiteral("max_keep"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                    {QStringLiteral("description"), QStringLiteral("prune: máximo de hechos a conservar por capa (default 50).")}}},
                {QStringLiteral("dry_run"), QJsonObject{{QStringLiteral("type"), QStringLiteral("boolean")},
@@ -3962,6 +4196,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("search_docs", "Búsqueda", "Ranking de fragmentos por keywords (semántica-lite).", 120),
         mk("semantic_search", "Búsqueda", "Búsqueda por significado vía embeddings del server.", 130),
         mk("hybrid_search", "Búsqueda", "Híbrida BM25+vector con reranker (RAG, la mejor).", 150),
+        mk("repo_slice", "Búsqueda", "Slice compacto con evidencia previo a editar.", 150),
         mk("verify_claims", "Conocimiento", "Verifica afirmaciones contra el repo/memoria (anti-alucinación).", 160),
         mk("web_search","Web", "Busca en la web (DuckDuckGo/SearXNG).", 140),
         mk("web_fetch", "Web", "Descarga una URL y devuelve su texto.", 90),
@@ -4108,7 +4343,9 @@ void LlamaAgentBackend::onServersReady(const QVariantList &toolDefs)
     emit logAppended(QStringLiteral("[mcp] %1 tool(s) descubiertas\n").arg(toolDefs.size()));
 }
 
-// Built-in + tools MCP (cache de m_mcpTools, prefijo mcp__<server>__<tool>).
+// Built-in + catálogo MCP lazy. El catálogo completo queda fuera del contexto:
+// el modelo descubre schemas puntuales con mcp_search_tools y los invoca mediante
+// mcp_call_tool. Esto mantiene plano el costo aunque se conecten muchos servers.
 QJsonArray LlamaAgentBackend::buildToolSchemas() const
 {
     // Filtra del array las tools deshabilitadas por el usuario (built-in y MCP).
@@ -4132,7 +4369,7 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("grep"), QStringLiteral("glob"), QStringLiteral("web_fetch"),
             QStringLiteral("web_search"), QStringLiteral("deep_research"),
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
-            QStringLiteral("hybrid_search"), QStringLiteral("verify_claims"),
+            QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
             QStringLiteral("browser_skill_list")};
         QJsonArray ro;
         for (const QJsonValue &v : toolSchemas()) {
@@ -4144,24 +4381,27 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
     }
 
     QJsonArray all = toolSchemas();
-    // Tools MCP: sólo si el perfil las habilita. No están en toolCatalog(), así que
-    // enabledTools/setDisabledTools no las puede apagar — el gate es éste.
-    for (const QVariant &v : (m_mcpToolsEnabled ? m_mcpTools : QVariantList{})) {
-        const QVariantMap t = v.toMap();
-        QJsonObject params = QJsonDocument::fromJson(
-            t.value(QStringLiteral("schema")).toString().toUtf8()).object();
-        if (params.isEmpty())
-            params = QJsonObject{{QStringLiteral("type"), QStringLiteral("object")},
-                                 {QStringLiteral("properties"), QJsonObject{}}};
-        all.append(QJsonObject{
-            {QStringLiteral("type"), QStringLiteral("function")},
-            {QStringLiteral("function"), QJsonObject{
-                {QStringLiteral("name"), kMcpPrefix + t.value(QStringLiteral("server")).toString()
-                                          + QStringLiteral("__") + t.value(QStringLiteral("name")).toString()},
-                {QStringLiteral("description"), t.value(QStringLiteral("description")).toString()},
-                {QStringLiteral("parameters"), params}
-            }}
-        });
+    if (m_mcpToolsEnabled && !m_mcpTools.isEmpty()) {
+        const QJsonObject searchProperties{
+            {"query", QJsonObject{{"type", "string"}, {"description", "Qué capacidad necesitás"}}},
+            {"server", QJsonObject{{"type", "string"}, {"description", "Filtro opcional por servidor"}}},
+            {"limit", QJsonObject{{"type", "integer"}, {"minimum", 1}, {"maximum", 10}, {"default", 5}}}};
+        const QJsonObject searchParameters{{"type", "object"}, {"properties", searchProperties},
+                                           {"required", QJsonArray{"query"}}, {"additionalProperties", false}};
+        all.append(QJsonObject{{"type", "function"}, {"function", QJsonObject{
+            {"name", "mcp_search_tools"},
+            {"description", "Busca tools MCP por intención. Llamala antes de mcp_call_tool; devuelve nombres exactos y schemas de entrada."},
+            {"parameters", searchParameters}}}});
+
+        const QJsonObject callProperties{
+            {"name", QJsonObject{{"type", "string"}}},
+            {"arguments", QJsonObject{{"type", "object"}, {"additionalProperties", true}}}};
+        const QJsonObject callParameters{{"type", "object"}, {"properties", callProperties},
+                                         {"required", QJsonArray{"name"}}, {"additionalProperties", false}};
+        all.append(QJsonObject{{"type", "function"}, {"function", QJsonObject{
+            {"name", "mcp_call_tool"},
+            {"description", "Ejecuta una tool MCP descubierta previamente. Copiá el nombre exacto y anidá sus parámetros dentro de arguments."},
+            {"parameters", callParameters}}}});
     }
     return dropDisabled(all);
 }

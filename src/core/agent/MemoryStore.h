@@ -22,7 +22,10 @@ QString jsonlPath(const QString &cwd);
 // nombre de sesión/tarea, archivo, "user", etc.); opcional. Cada hecho recibe
 // un 'id' corto estable. Devuelve un mensaje de estado para la tool.
 QString save(const QString &cwd, const QString &content, const QString &scope,
-             const QString &type, double confidence, const QString &source);
+             const QString &type, double confidence, const QString &source,
+             double importance = 0.0, double surprise = 0.0,
+             const QString &verification = QString(),
+             const QString &supersedes = QString());
 
 // Recupera hechos NO obsoletos. Si query != "", rankea por solapamiento de
 // keywords + sesgo por confianza y recencia; si scope != "", filtra por capa.

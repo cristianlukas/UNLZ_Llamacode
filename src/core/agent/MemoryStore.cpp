@@ -61,7 +61,9 @@ QString jsonlPath(const QString &cwd)
 }
 
 QString save(const QString &cwd, const QString &content, const QString &scope,
-             const QString &type, double confidence, const QString &source)
+             const QString &type, double confidence, const QString &source,
+             double importance, double surprise, const QString &verification,
+             const QString &supersedes)
 {
     const QString text = content.trimmed();
     if (text.isEmpty()) return QStringLiteral("[memory save: 'content' vacío]");
@@ -79,9 +81,42 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
         {QStringLiteral("confidence"), qBound(0.0, confidence <= 0.0 ? 0.8 : confidence, 1.0)},
         {QStringLiteral("source"), source.trimmed().isEmpty() ? QStringLiteral("agent")
                                                               : source.trimmed()},
+        {QStringLiteral("importance"), qBound(0.0, importance, 1.0)},
+        {QStringLiteral("surprise"), qBound(0.0, surprise, 1.0)},
+        {QStringLiteral("verification"), verification.trimmed().isEmpty()
+             ? QStringLiteral("inferred") : verification.trimmed().toLower()},
+        {QStringLiteral("useCount"), 0},
         {QStringLiteral("ts"), ts}};
+    if (!supersedes.trimmed().isEmpty())
+        fact.insert(QStringLiteral("supersedes"), supersedes.trimmed());
 
     QFile f(path);
+    // Supersesión explícita: conservar audit trail, pero impedir que la versión
+    // reemplazada vuelva a recuperarse junto con la corrección.
+    if (!supersedes.trimmed().isEmpty() && f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QVector<QJsonObject> rows;
+        bool changed = false;
+        while (!f.atEnd()) {
+            const QJsonObject row = QJsonDocument::fromJson(f.readLine().trimmed()).object();
+            if (row.isEmpty()) continue;
+            QJsonObject updated = row;
+            if (row.value(QStringLiteral("id")).toString() == supersedes.trimmed()
+                && !row.value(QStringLiteral("stale")).toBool(false)) {
+                updated.insert(QStringLiteral("stale"), true);
+                updated.insert(QStringLiteral("supersededBy"), id);
+                changed = true;
+            }
+            rows.append(updated);
+        }
+        f.close();
+        if (changed && f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            for (const QJsonObject &row : std::as_const(rows)) {
+                f.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
+                f.write("\n");
+            }
+            f.close();
+        }
+    }
     if (!f.open(QIODevice::Append | QIODevice::Text))
         return QStringLiteral("[no se pudo escribir la memoria: %1]").arg(path);
     f.write(QJsonDocument(fact).toJson(QJsonDocument::Compact));
@@ -127,7 +162,13 @@ QString recall(const QString &cwd, const QString &query, const QString &scope, i
             if (hits == 0) continue;                    // sin query-match → descartar
             score = double(hits) / qterms.size();
         }
-        score += 0.05 * o.value(QStringLiteral("confidence")).toDouble(0.8);
+        score += 0.08 * o.value(QStringLiteral("confidence")).toDouble(0.8);
+        score += 0.14 * o.value(QStringLiteral("importance")).toDouble(0.0);
+        score += 0.10 * o.value(QStringLiteral("surprise")).toDouble(0.0);
+        const QString verification = o.value(QStringLiteral("verification")).toString();
+        if (verification == QLatin1String("user") || verification == QLatin1String("test")
+            || verification == QLatin1String("tool"))
+            score += 0.08;
         // Recencia: decae con la antigüedad (media vida ~30 días).
         const QDateTime ts = QDateTime::fromString(
             o.value(QStringLiteral("ts")).toString(), Qt::ISODate);
@@ -237,6 +278,8 @@ double typeWeight(const QString &t)
 double factValue(const QJsonObject &o)
 {
     const double conf = o.value(QStringLiteral("confidence")).toDouble(0.8);
+    const double importance = o.value(QStringLiteral("importance")).toDouble(0.0);
+    const double surprise = o.value(QStringLiteral("surprise")).toDouble(0.0);
     double rec = 0.5;
     const QDateTime ts = QDateTime::fromString(
         o.value(QStringLiteral("ts")).toString(), Qt::ISODate);
@@ -244,8 +287,14 @@ double factValue(const QJsonObject &o)
         const double days = ts.daysTo(QDateTime::currentDateTime());
         rec = std::pow(0.5, qMax(0.0, days) / 30.0);   // media vida 30 días
     }
-    return typeWeight(o.value(QStringLiteral("type")).toString())
-           * (0.4 + 0.6 * conf) * (0.4 + 0.6 * rec);
+    const QString type = o.value(QStringLiteral("type")).toString();
+    const QString verification = o.value(QStringLiteral("verification")).toString();
+    if ((type == QLatin1String("preference") || type == QLatin1String("decision"))
+        && (verification == QLatin1String("user") || verification == QLatin1String("test")
+            || verification == QLatin1String("tool")))
+        rec = qMax(rec, 0.85);
+    return typeWeight(type) * (0.4 + 0.6 * conf) * (0.4 + 0.6 * rec)
+           + 0.25 * importance + 0.15 * surprise;
 }
 
 // COSTO MDL: largo del content normalizado a un "presupuesto" de ~240 chars.

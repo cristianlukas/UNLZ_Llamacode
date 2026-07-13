@@ -60,7 +60,8 @@ void CodeGraphTests::addBatch_insertsAndDedupes()
 
     const QString out = GraphStore::query(dir.path(), "Foo", 1);
     QVERIFY(out.contains("Bar"));
-    QVERIFY(out.contains("defines"));
+    QVERIFY(out.contains("DEFINES"));                    // edge tipado (pred 'defines' → DEFINES)
+    QVERIFY(out.contains("conf=1") && out.contains("indexer"));  // indexador determinista: verificado
 }
 
 void CodeGraphTests::index_extractsSymbols()
@@ -80,7 +81,7 @@ void CodeGraphTests::index_extractsSymbols()
     const QString out = GraphStore::query(dir.path(), "src/widget.cpp", 1);
     QVERIFY(out.contains("Widget"));
     QVERIFY(out.contains("doStuff"));
-    QVERIFY(out.contains("defines"));
+    QVERIFY(out.contains("DEFINES"));
     QVERIFY(report.contains("code_graph"));
 }
 
@@ -95,7 +96,7 @@ void CodeGraphTests::index_extractsImports()
 
     // alpha.cpp importa beta (resuelto por basename → src/beta.h).
     const QString out = GraphStore::query(dir.path(), "src/alpha.cpp", 1);
-    QVERIFY(out.contains("imports"));
+    QVERIFY(out.contains("IMPORTS"));
     QVERIFY(out.contains("beta.h"));
 }
 

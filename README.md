@@ -217,6 +217,20 @@ de lanzar benchmarks o Deep Research.
 | Detector de nueva versión (flag remoto + popup con changelog) | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 
+El agente nativo combina dos guardas anti-loop: bloquea llamadas idénticas después
+de tres repeticiones y detecta espirales de fallos equivalentes aunque el modelo
+cambie comandos o argumentos. Un éxito o una escritura comprobable reinicia la
+racha, reduciendo falsos positivos cuando existe progreso real.
+También vigila el stream de cada generación: si un bloque largo se repite tres
+veces consecutivas, conserva una copia, detiene esa generación y registra
+`stream_repetition`. Esto cubre loops de razonamiento/respuesta que ocurren antes
+de que el modelo llegue a solicitar una herramienta.
+
+Las integraciones MCP usan descubrimiento lazy: el catálogo completo permanece en
+el worker y el modelo recibe sólo `mcp_search_tools` y `mcp_call_tool`. La búsqueda
+devuelve bajo demanda los schemas relevantes, evitando reenviar todas las
+definiciones en cada turno y manteniendo plano el costo de contexto al sumar servers.
+
 La delegación multi-agente ajusta automáticamente su concurrencia al perfil activo:
 respeta los slots de `llama-server`, reduce el fan-out con contextos largos y aplica
 límites conservadores según la VRAM detectada. Un perfil de un solo slot conserva
@@ -482,6 +496,18 @@ incluidos).
   `/v1/audio/speech`). Una sola ruta de código: **local** (whisper.cpp server,
   openedai-speech, piper-http en localhost, sin key) o **cloud** (URL remota +
   keyRef). Configurable por separado para STT y TTS.
+- **TTS multimotor**: cada perfil puede fijar HTTP, Piper o `qwen3-tts.cpp`, o
+  dejarlo en `auto`. La selección automática considera RAM, VRAM total/libre y
+  motores instalados: prioriza Qwen3-TTS 1.7B/0.6B cuando hay margen y conserva
+  Piper para equipos chicos o cuando conviene reservar VRAM para el LLM. Qwen3
+  admite GGUF, embedding de hablante, WAV+transcripción de referencia y una
+  instrucción de estilo; si falla puede caer a Piper sin perder el turno.
+- **Guarda de capacidad agentic**: Charla clasifica el modelo activo por tamaño y
+  arquitectura. Los dense menores de 4B se reservan para conversación/comandos
+  acotados; 4B–7B se consideran agentes básicos y 7B+ el piso conservador para
+  tools. Los MoE se muestran por parámetros totales/activos y se recomienda medir
+  el costo de expertos en RAM. Si hay maestro configurado, los niveles no confiables
+  indican escalado para tareas complejas en vez de ocultar el modelo al usuario.
 - **Captura** PCM16 mono 16 kHz (`QAudioSource`) con **VAD por energía RMS** (fin de
   turno por silencio configurable), **selección de micrófono** y **medidor de nivel**
   en vivo. Botón *Probar micrófono* para validar entrada sin servidor.
@@ -504,7 +530,15 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
 
 - **MemoryStore por capas**: hechos durables extraídos de las conversaciones
   (consolidación en background al dejar una sesión) + memoria por proyecto en archivo.
+  Los hechos estructurados vigentes se inyectan de forma acotada al iniciar el
+  agente y pueden registrar importancia, sorpresa, verificación y supersesión. El
+  ranking y la poda priorizan correcciones, reglas y decisiones verificadas sin
+  romper memorias JSONL creadas por versiones anteriores.
 - **GraphStore**: grafo de entidades/relaciones para conocimiento estructurado.
+- **Repo slice previo a edición**: `repo_slice` combina el ranking híbrido local
+  con citas `archivo:Lini-Lfin`, previews y vecinos por imports/includes. El agente
+  obtiene evidencia compacta antes de abrir cuerpos completos; funciona con BM25
+  sin servidor de embeddings y acepta presupuesto de tokens.
 - **AgentEventLog**: bitácora append-only por proyecto (`.llamacode/agent_events.jsonl`)
   con eventos tipados de turnos, tool calls, resultados, fallos y alternativas
   rechazadas. Sirve como evidencia operacional: no reemplaza memoria ni grafo, los
@@ -1021,6 +1055,13 @@ Detalle completo en [`docs/tuner.md`](docs/tuner.md).
 
 ## Seguridad operativa
 
+Los builds y tests paralelos se serializan por lane mediante `build_coord.ps1`.
+El lock identifica al proceso `.bat` propietario por PID y hora de creación; si
+ese proceso termina o el PID es reutilizado, la siguiente corrida roba el lock
+inmediatamente. No se usan procesos `Start-Sleep` como señal de actividad y un
+proceso ajeno no puede publicar ni liberar el resultado del propietario. El estado
+se consulta con `build_coord.ps1 -Lane build|tests -Action status`.
+
 - Nada destructivo sin aprobación explícita.
 - Escrituras fuera de workspace: bloqueadas por defecto.
 - Comandos shell con allowlist/denylist por `WorkspaceProfile`.
@@ -1050,5 +1091,6 @@ Código, datos y diseño tomados de otros proyectos:
 | **Omnix** | Ideas de API local multimodal, `reqId` de correlación, modo headless y separación de colas texto/operaciones auxiliares. Revisión: [`docs/omnix_review.md`](docs/omnix_review.md) | https://github.com/LoanLemon/Omnix |
 | **Honey (I Shrunk the AI)** | _Inspiración conceptual_ (no se toma código): la directiva opt-in "Frugalidad (honey)" del agente — código YAGNI, respuesta-primero y handoffs agente↔agente densos clave:valor en vez de JSON | https://github.com/Green-PT/honey-for-devs |
 | **TurboLLM** | Inspiración de diseño para catálogo de motores/forks, compatibilidad por hardware, probe enriquecido y build-from-source guiado para forks sin prebuilts. No se copia código por su licencia source-available. | https://github.com/mohitsoni48/TurboLLM |
+| **OpenModel** | Ideas (no se copia código): ingesta de modelos ya descargados por Ollama vía scheme `ollama://` (reusa los blobs GGUF sin re-descargar) y un diagnóstico consolidado estilo `om doctor` (binarios/roots/catálogo/hardware/git/gateway + issues accionables) | https://github.com/wundercorp/openmodel |
 
 > Al sumar código/datos de otro repo, agregar la fila correspondiente acá.

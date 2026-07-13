@@ -5,9 +5,8 @@
       powershell -NoProfile -ExecutionPolicy Bypass -File tests\test_build_coord.ps1
   Exit 0 = todo verde.
 
-  Cubre: fingerprint estable ante bump semver, OWNER exclusivo, robo de lock
-  muerto, SHARE/REUSE (mismo fingerprint -> exit 10) y QUEUE (otro fingerprint
-  -> nadie reusa).
+  Cubre: fingerprint estable, OWNER exclusivo, robo inmediato al morir el dueño,
+  rechazo de release ajeno, SHARE/REUSE y lanes independientes.
 #>
 $ErrorActionPreference = 'Stop'
 $root   = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -16,13 +15,6 @@ $lock   = Join-Path $root '.buildlock'
 $fails  = 0
 function Ok($cond,$msg){ if($cond){Write-Host "  PASS $msg"}else{Write-Host "  FAIL $msg" -Foreground Red; $script:fails++} }
 function Clean(){ if(Test-Path $lock){ Remove-Item -Recurse -Force $lock -ErrorAction SilentlyContinue } }
-# Mata guardianes huerfanos de corridas previas (sleepers) para aislar el test.
-function KillGuardians(){
-    Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
-        Where-Object { $_.CommandLine -like '*Start-Sleep -Seconds*' } |
-        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-}
-KillGuardians
 Clean
 
 # Corre acquire en background y devuelve el objeto Process (con out redirigido).
@@ -30,7 +22,7 @@ function StartAcquire($lane,$out,$timeout=60){
     $of = Join-Path $lock $out
     $rf = "$of.rc"
     New-Item -ItemType Directory -Force -Path $lock | Out-Null
-    $cmd = "& '$coord' -Lane $lane -Action acquire -TimeoutSec $timeout; Set-Content -Path '$rf' -Value `$LASTEXITCODE"
+    $cmd = "& '$coord' -Lane $lane -Action acquire -OwnerPid `$PID -TimeoutSec $timeout; Set-Content -Path '$rf' -Value `$LASTEXITCODE"
     return Start-Process powershell -PassThru -WindowStyle Hidden -RedirectStandardOutput $of `
         -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',$cmd
 }
@@ -41,7 +33,7 @@ function ReadRC($proc,$out){
     for($i=0;$i -lt 20 -and -not (Test-Path $rf);$i++){ Start-Sleep -Milliseconds 100 }
     if(Test-Path $rf){ return [int]((Get-Content -Raw $rf).Trim()) } else { return $null }
 }
-function Release($lane,$res='OK'){ & $coord -Lane $lane -Action release -Result $res | Out-Null }
+function Release($lane,$res='OK'){ & $coord -Lane $lane -Action release -Result $res -OwnerPid $PID | Out-Null }
 
 Write-Host "== test 1: fingerprint estable ante bump semver =="
 $fp = (& $coord -Lane build -Action fingerprint).Trim()
@@ -57,7 +49,7 @@ Ok ($fpA -eq $fpB) "solo cambia un triple semver -> mismo fingerprint (bump no i
 
 Write-Host "== test 2: OWNER exclusivo + REUSE (share) =="
 Clean
-& $coord -Lane build -Action acquire | Out-Null     # A: OWNER (guardian queda vivo)
+& $coord -Lane build -Action acquire -OwnerPid $PID | Out-Null
 Ok (Test-Path (Join-Path $lock 'build.lock')) "lock creado por A"
 $b = StartAcquire 'build' '_b.txt' 60                # B: mismo fp -> debe esperar
 Start-Sleep -Seconds 3
@@ -72,7 +64,7 @@ Write-Host "== test 3: robo de lock muerto =="
 Clean
 New-Item -ItemType Directory -Force -Path (Join-Path $lock 'build.lock') | Out-Null
 # owner.json con PID inexistente y viejo
-$dead = [ordered]@{ pid=999999; host='x'; fingerprint=$fp; phase='building'; startedUtc=(Get-Date).ToUniversalTime().ToString('o') }
+$dead = [ordered]@{ ownerPid=999999; ownerStartedUtc='2000-01-01T00:00:00Z'; host='x'; fingerprint=$fp; phase='building'; startedUtc=(Get-Date).ToUniversalTime().ToString('o') }
 ($dead | ConvertTo-Json -Compress) | Set-Content (Join-Path $lock 'build.lock\owner.json') -Encoding ASCII
 $c = StartAcquire 'build' '_c.txt' 30                # debe robar y volverse OWNER
 $crc = ReadRC $c '_c.txt'
@@ -83,12 +75,20 @@ Release 'build' 'OK'
 
 Write-Host "== test 4: lanes independientes (build vs tests) =="
 Clean
-& $coord -Lane build -Action acquire | Out-Null
+& $coord -Lane build -Action acquire -OwnerPid $PID | Out-Null
 $t = StartAcquire 'tests' '_t.txt' 30                # otra lane -> NO debe bloquearse
 $trc = ReadRC $t '_t.txt'
 Ok ($trc -eq 0) "lane tests toma OWNER en paralelo a lane build; actual=$trc"
 Release 'build' 'OK'
 Release 'tests' 'OK'
+
+Write-Host "== test 5: release ajeno rechazado =="
+Clean
+& $coord -Lane build -Action acquire -OwnerPid $PID | Out-Null
+& $coord -Lane build -Action release -Result OK -OwnerPid 999999 | Out-Null
+Ok ($LASTEXITCODE -eq 1) "otro PID no puede liberar el lock"
+Ok (Test-Path (Join-Path $lock 'build.lock')) "lock sigue presente tras release ajeno"
+Release 'build' 'OK'
 
 Clean
 Write-Host ""

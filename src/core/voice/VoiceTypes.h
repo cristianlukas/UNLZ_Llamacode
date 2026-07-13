@@ -33,10 +33,22 @@ struct VoiceConfig {
     QString ttsVoice    = QStringLiteral("alloy");
     QString ttsKeyRef;
     QString ttsFormat   = QStringLiteral("wav");     // wav | mp3 | pcm
-    // Modo TTS: "http" (endpoint OpenAI-compat) o "piper" (gestionado, process-mode
-    // local: la app corre piper por turno). Con "piper" se usa ttsManagedVoice.
-    QString ttsMode = QStringLiteral("piper");       // http | piper
+    // Modo TTS: auto elige según hardware/disponibilidad; http usa un endpoint
+    // OpenAI-compatible; piper y qwen3 son procesos locales.
+    QString ttsMode = QStringLiteral("auto");        // auto | http | piper | qwen3
     QString ttsManagedVoice = QStringLiteral("es_ES-davefx-medium");
+    QString ttsFallbackMode = QStringLiteral("piper"); // none | http | piper
+    QString qwenBinaryPath;                          // qwen3-tts-cli[.exe]
+    QString qwenModelDir;                            // carpeta con GGUFs del runtime
+    QString qwenModelName = QStringLiteral("qwen-talker-0.6b-base-Q8_0.gguf");
+    QString qwenSpeakerEmbedding;                    // JSON/bin extraído previamente
+    QString qwenReferenceWav;                        // alternativa: clonación desde WAV
+    QString qwenReferenceText;                       // mejora el modo ICL
+    QString qwenSpeaker;                             // CustomVoice speaker
+    QString qwenInstruction;                         // estilo/tono
+    QString qwenLanguage = QStringLiteral("es");
+    int qwenThreads = 0;                             // 0 = cores físicos/default motor
+    bool ttsAutoConfigure = true;
 
     // ── Captura / VAD (detección de fin de habla) ──
     // Umbral de energía RMS [0..1] por debajo del cual el frame es "silencio".

@@ -115,6 +115,7 @@ class AppController : public QObject
     Q_PROPERTY(QString agentTeacherModel READ agentTeacherModel WRITE setAgentTeacherModel NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
     Q_PROPERTY(bool mailAutoSend READ mailAutoSend WRITE setMailAutoSend NOTIFY mailAutoSendChanged)
+    Q_PROPERTY(bool hitlDestructive READ hitlDestructive WRITE setHitlDestructive NOTIFY hitlDestructiveChanged)
     Q_PROPERTY(bool desktopIndicatorVisible READ desktopIndicatorVisible WRITE setDesktopIndicatorVisible NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(bool desktopAgentActive READ desktopAgentActive NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(QString desktopAgentAction READ desktopAgentAction NOTIFY desktopIndicatorChanged)
@@ -388,7 +389,20 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.28"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.30"); }
+    // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
+    // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
+    // lista `issues` de problemas accionables. Reachable headless vía ControlApi
+    // (GET /invoke?method=doctor). Pensado para triage rápido sin abrir la GUI.
+    Q_INVOKABLE QVariantMap doctor() const;
+    // ── Ingesta de modelos de Ollama ──
+    // Store de Ollama por defecto ($OLLAMA_MODELS o ~/.ollama/models).
+    Q_INVOKABLE QString ollamaDefaultStore() const;
+    // ¿Hay un store de Ollama detectable en el dir por defecto? (gate del botón UI).
+    Q_INVOKABLE bool ollamaStoreAvailable() const;
+    // Registra un ModelRoot kind="ollama" (dir vacío = store por defecto) y lo
+    // escanea. Devuelve el rootId, o "" si no hay store en esa ruta. Headless.
+    Q_INVOKABLE QString importOllamaModels(const QString &dir = QString());
     bool updateAvailable() const { return m_updateAvailable; }
     QVariantMap updateInfo() const { return m_updateInfo; }
     Q_INVOKABLE void checkForUpdates();
@@ -588,11 +602,13 @@ public:
     Q_INVOKABLE QString testMailAccount(const QString &name) const;
     bool mailAutoSend() const { return m_mailAutoSend; }
     void setMailAutoSend(bool on);
-
+    bool hitlDestructive() const { return m_hitlDestructive; }
+    void setHitlDestructive(bool on);
     bool desktopIndicatorVisible() const { return m_desktopIndicatorVisible; }
     void setDesktopIndicatorVisible(bool on);
     bool desktopAgentActive() const { return m_desktopAgentActive; }
     QString desktopAgentAction() const { return m_desktopAgentAction; }
+
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
     void setAutoStartAgentOnLaunch(bool on);
 
@@ -774,6 +790,8 @@ public:
     // al controller vivo.
     Q_INVOKABLE QVariantMap voiceConfig(const QString &profileId) const;
     Q_INVOKABLE void setVoiceConfig(const QString &profileId, const QVariantMap &cfg);
+    Q_INVOKABLE QVariantMap recommendedVoiceTts(const QString &profileId) const;
+    Q_INVOKABLE QVariantMap charlaAgentCapability() const;
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
     Q_INVOKABLE void toggleDictation();
@@ -896,10 +914,11 @@ signals:
     void agentApprovalModeChanged();
     void agentThinkingChanged();
     void agentToolsChanged();
-    void desktopIndicatorChanged();
     void activeAgentProfileChanged();
     void agentTeacherChanged();
     void mailAutoSendChanged();
+    void hitlDestructiveChanged();
+    void desktopIndicatorChanged();
     void autoStartAgentOnLaunchChanged();
     void gatewayChanged();
     void idleAutoStopChanged();
@@ -1211,12 +1230,13 @@ private:
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;
-    bool        m_desktopIndicatorVisible = true;
-    bool        m_desktopAgentActive = false;
-    QString     m_desktopAgentAction;
     MasterCli m_masterCli;                      // detección de CLIs maestro (claude/codex)
     SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     bool        m_mailAutoSend = false;          // permitir email_send sin aprobación
+    bool        m_hitlDestructive = true;        // guardrail Zero-Autonomy (destructivas → aprobación salvo super)
+    bool        m_desktopIndicatorVisible = true;
+    bool        m_desktopAgentActive = false;
+    QString     m_desktopAgentAction;
     bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
 
     // Gateway (proxy Anthropic/OpenAI + auto-load)

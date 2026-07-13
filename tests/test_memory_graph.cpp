@@ -6,6 +6,8 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QCryptographicHash>
+#include <QFile>
 #include "core/agent/AgentEventLog.h"
 #include "core/agent/MemoryStore.h"
 #include "core/agent/GraphStore.h"
@@ -22,9 +24,13 @@ private slots:
     void memory_pruneBudget();
     void memory_pruneRedundant();
     void memory_pruneDryRun();
+    void memory_metadataAffectsRanking();
+    void memory_newFieldsArePersisted();
+    void memory_supersedesHidesOldFact();
 
     void graph_addEntityAndQuery();
     void graph_linkRelation();
+    void graph_typedEdgesAndProvenance();
     void graph_queryDepth2();
     void graph_normalizesNames();
     void graph_decideKeepsRejected();
@@ -128,6 +134,45 @@ void MemoryGraphTests::memory_pruneDryRun()
     QCOMPARE(out.count(QStringLiteral("unico")), 4);
 }
 
+void MemoryGraphTests::memory_metadataAffectsRanking()
+{
+    QTemporaryDir dir;
+    MemoryStore::save(dir.path(), "regla vulkan rutinaria", "project", "fact", 0.8, "agent");
+    MemoryStore::save(dir.path(), "regla vulkan corregida", "project", "decision", 0.8, "user",
+                      1.0, 1.0, "user");
+    const QString out = MemoryStore::recall(dir.path(), "regla vulkan", "project", 1);
+    QVERIFY(out.contains("corregida"));
+}
+
+void MemoryGraphTests::memory_newFieldsArePersisted()
+{
+    QTemporaryDir dir;
+    MemoryStore::save(dir.path(), "usar siempre Release", "project", "decision", 1.0, "user",
+                      0.95, 0.9, "user", "old-id");
+    QFile f(MemoryStore::jsonlPath(dir.path()));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QJsonObject o = QJsonDocument::fromJson(f.readLine()).object();
+    QCOMPARE(o.value("importance").toDouble(), 0.95);
+    QCOMPARE(o.value("surprise").toDouble(), 0.9);
+    QCOMPARE(o.value("verification").toString(), QString("user"));
+    QCOMPARE(o.value("supersedes").toString(), QString("old-id"));
+}
+
+void MemoryGraphTests::memory_supersedesHidesOldFact()
+{
+    QTemporaryDir dir;
+    MemoryStore::save(dir.path(), "usar siempre Debug", "project", "decision", 1.0, "user");
+    QFile f(MemoryStore::jsonlPath(dir.path()));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QString oldId = QJsonDocument::fromJson(f.readLine()).object().value("id").toString();
+    f.close();
+    MemoryStore::save(dir.path(), "usar siempre Release", "project", "decision", 1.0, "user",
+                      1.0, 1.0, "user", oldId);
+    const QString out = MemoryStore::recall(dir.path(), "usar siempre", "project", 10);
+    QVERIFY(out.contains("Release"));
+    QVERIFY(!out.contains("Debug"));
+}
+
 void MemoryGraphTests::graph_addEntityAndQuery()
 {
     QTemporaryDir dir;
@@ -143,7 +188,51 @@ void MemoryGraphTests::graph_linkRelation()
     GraphStore::link(dir.path(), "AppController", "usa", "ProfileManager");
     const QString out = GraphStore::query(dir.path(), "AppController", 1);
     QVERIFY(out.contains("ProfileManager"));
-    QVERIFY(out.contains("usa"));
+    QVERIFY(out.contains("REQUIRES"));                  // 'usa' → tipo REQUIRES
+    QVERIFY(out.contains("unreviewed"));                // edge del agente: sin revisar por defecto
+}
+
+// Typed edges + provenance + confianza (patrón CKG): el edge inferido por el LLM
+// entra unreviewed y se distingue del determinista; edge_type fuerza taxonomía;
+// query ordena verificados antes que unreviewed; relaciones viejas sin los campos
+// se leen igual (back-compat) infiriendo el tipo del pred.
+void MemoryGraphTests::graph_typedEdgesAndProvenance()
+{
+    QTemporaryDir dir;
+    // edge_type explícito + confianza → verificado.
+    GraphStore::link(dir.path(), "A", "rel", "B", "IMPLEMENTS", 0.9,
+                     QStringLiteral("user"));
+    // edge del agente sin conf → unreviewed.
+    GraphStore::link(dir.path(), "A", "toca", "C");
+    const QString out = GraphStore::query(dir.path(), "A", 1);
+    QVERIFY(out.contains("IMPLEMENTS"));                // taxonomía forzada gana
+    QVERIFY(out.contains("conf=0.9") && out.contains("user"));
+    QVERIFY(out.contains("unreviewed"));               // el segundo edge
+    // Orden: el verificado (B) aparece antes que el unreviewed (C).
+    QVERIFY(out.indexOf('B') < out.indexOf('C'));
+
+    // Back-compat: relación vieja SIN etype/conf/prov se lee y tipa por el pred.
+    // Mismo id de entidad que usa el store (sha1 del nombre normalizado, hex[0:8]).
+    auto eid = [](const QString &name) {
+        const QByteArray h = QCryptographicHash::hash(
+            name.trimmed().toLower().toUtf8(), QCryptographicHash::Sha1);
+        return QStringLiteral("e_") + QString::fromLatin1(h.toHex().left(8));
+    };
+    const QString path = GraphStore::jsonlPath(dir.path());
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::Append | QIODevice::Text));
+    const QString legId = eid("legacy.cpp"), depId = eid("dep.h");
+    f.write(QStringLiteral("{\"kind\":\"entity\",\"id\":\"%1\",\"name\":\"legacy.cpp\","
+            "\"etype\":\"file\",\"ts\":\"2025-01-01\"}\n").arg(legId).toUtf8());
+    f.write(QStringLiteral("{\"kind\":\"entity\",\"id\":\"%1\",\"name\":\"dep.h\","
+            "\"etype\":\"file\",\"ts\":\"2025-01-01\"}\n").arg(depId).toUtf8());
+    f.write(QStringLiteral("{\"kind\":\"relation\",\"id\":\"r_old1\",\"subj\":\"%1\","
+            "\"pred\":\"imports\",\"obj\":\"%2\",\"ts\":\"2025-01-01\"}\n")
+            .arg(legId, depId).toUtf8());
+    f.close();
+    const QString leg = GraphStore::query(dir.path(), "legacy.cpp", 1);
+    QVERIFY(leg.contains("IMPORTS"));                  // etype inferido del pred viejo
+    QVERIFY(leg.contains("unreviewed"));              // conf ausente → unreviewed
 }
 
 void MemoryGraphTests::graph_queryDepth2()

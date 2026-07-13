@@ -19,6 +19,10 @@
 #include "core/BinaryRegistry.h"
 #include "core/ModelRootRegistry.h"
 #include "core/ModelCatalog.h"
+#include "core/OllamaImporter.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 static QString writeFakeFile(const QString &path, const QByteArray &data = "x")
 {
@@ -45,7 +49,33 @@ private slots:
 
     void modelRootRegistry_addRemove();
     void modelRootRegistry_scanFindsGguf();
+
+    void ollamaImporter_resolveScheme();
+    void ollamaImporter_scanFindsBlobs();
+    void ollamaImporter_extractsProjector();
+    void modelRootRegistry_ollamaSchemeIngests();
 };
+
+// Arma un store de Ollama falso: un manifest JSON con una capa "model" que
+// apunta a un blob presente en blobs/. Devuelve el directorio del store.
+static QString makeFakeOllamaStore(const QString &root, const QString &model,
+                                   const QString &tag)
+{
+    const QString digestHex = "1111111111111111111111111111111111111111111111111111111111111111";
+    const QString blobPath = root + "/blobs/sha256-" + digestHex;
+    writeFakeFile(blobPath, "GGUF-fake-weights");
+
+    QJsonObject modelLayer{
+        {"mediaType", "application/vnd.ollama.image.model"},
+        {"digest", "sha256:" + digestHex},
+        {"size", 17}
+    };
+    QJsonObject manifest{{"layers", QJsonArray{modelLayer}}};
+    const QString manifestPath =
+        root + "/manifests/registry.ollama.ai/library/" + model + "/" + tag;
+    writeFakeFile(manifestPath, QJsonDocument(manifest).toJson());
+    return root;
+}
 
 void RegistriesTests::llamaBinary_flagsAndAlias()
 {
@@ -170,6 +200,69 @@ void RegistriesTests::modelRootRegistry_scanFindsGguf()
     reg.scan(id);
     QVERIFY(spy.wait(5000) || spy.count() > 0);
     QVERIFY(cat.count() >= 1);  // el .gguf entró al catálogo
+}
+
+void RegistriesTests::ollamaImporter_resolveScheme()
+{
+    // "ollama://" (sin dir) → store por defecto (no vacío).
+    QVERIFY(!OllamaImporter::resolveStoreDir("ollama://").isEmpty());
+    // "ollama://<dir>" → ese dir.
+    QCOMPARE(OllamaImporter::resolveStoreDir("ollama://C:/x/models"),
+             QStringLiteral("C:/x/models"));
+    // No-scheme → vacío (no es un root de Ollama).
+    QVERIFY(OllamaImporter::resolveStoreDir("C:/models").isEmpty());
+}
+
+void RegistriesTests::ollamaImporter_scanFindsBlobs()
+{
+    QTemporaryDir dir;
+    const QString store = makeFakeOllamaStore(dir.path(), "tinyllama", "latest");
+    QVERIFY(OllamaImporter::looksLikeStore(store));
+
+    const QList<OllamaImporter::Entry> entries = OllamaImporter::scan(store);
+    QCOMPARE(entries.size(), 1);
+    QCOMPARE(entries.first().name, QStringLiteral("tinyllama:latest"));
+    QVERIFY(entries.first().blobPath.contains("sha256-"));
+    QCOMPARE(entries.first().sizeBytes, qint64(17));
+}
+
+void RegistriesTests::ollamaImporter_extractsProjector()
+{
+    QTemporaryDir dir;
+    const QString modelHex(64, QLatin1Char('b'));
+    const QString projHex(64, QLatin1Char('c'));
+    writeFakeFile(dir.path() + "/blobs/sha256-" + modelHex, "GGUF-model");
+    writeFakeFile(dir.path() + "/blobs/sha256-" + projHex, "GGUF-mmproj");
+
+    QJsonObject modelLayer{{"mediaType", "application/vnd.ollama.image.model"},
+                           {"digest", "sha256:" + modelHex}, {"size", 10}};
+    QJsonObject projLayer{{"mediaType", "application/vnd.ollama.image.projector"},
+                          {"digest", "sha256:" + projHex}, {"size", 11}};
+    QJsonObject manifest{{"layers", QJsonArray{modelLayer, projLayer}}};
+    writeFakeFile(dir.path() + "/manifests/registry.ollama.ai/library/llava/7b",
+                  QJsonDocument(manifest).toJson());
+
+    const QList<OllamaImporter::Entry> entries = OllamaImporter::scan(dir.path());
+    QCOMPARE(entries.size(), 1);
+    QCOMPARE(entries.first().name, QStringLiteral("llava:7b"));
+    QVERIFY(entries.first().mmprojPath.contains("sha256-" + projHex));
+}
+
+void RegistriesTests::modelRootRegistry_ollamaSchemeIngests()
+{
+    QTemporaryDir dir;
+    const QString store = makeFakeOllamaStore(dir.path(), "qwen2.5", "3b");
+    ModelCatalog cat;
+    ModelRootRegistry reg(&cat);
+    // El scheme ollama:// resuelve al dir del store y marca kind="ollama".
+    const QString id = reg.add("ollama://" + store, "", "manual", QStringList{});
+    QVERIFY(!id.isEmpty());
+    QCOMPARE(reg.get(id).value("kind").toString(), QStringLiteral("ollama"));
+
+    QSignalSpy spy(&reg, &ModelRootRegistry::scanFinished);
+    reg.scan(id);
+    QVERIFY(spy.wait(5000) || spy.count() > 0);
+    QVERIFY(cat.count() >= 1);  // el blob de Ollama entró al catálogo
 }
 
 QTEST_MAIN(RegistriesTests)

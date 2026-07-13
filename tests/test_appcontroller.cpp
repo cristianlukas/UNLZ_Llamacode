@@ -20,6 +20,10 @@
 #include "core/profiles/ProfileTypes.h"
 #include "core/tasks/TaskStore.h"
 #include "core/CatalogModel.h"
+#include "core/ModelCatalog.h"
+#include "core/ModelRootRegistry.h"
+#include "core/OllamaImporter.h"
+#include <QJsonArray>
 
 static QString systemProfilesBundlePath()
 {
@@ -119,6 +123,8 @@ private slots:
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
     void agentLevels_contextBudgetLadder();
+    void doctorReportsStructureAndIssues();
+    void importOllamaModelsIngestsStore();
 
 private:
     QTemporaryDir m_tmp;
@@ -144,7 +150,7 @@ void AppControllerTests::legacyVoiceConfigDefaultsToManagedPiper()
 {
     AppController app;
     const QVariantMap cfg = app.voiceConfig(QStringLiteral("missing-profile"));
-    QCOMPARE(cfg.value(QStringLiteral("ttsMode")).toString(), QStringLiteral("piper"));
+    QCOMPARE(cfg.value(QStringLiteral("ttsMode")).toString(), QStringLiteral("auto"));
     QCOMPARE(cfg.value(QStringLiteral("ttsManagedVoice")).toString(),
              QStringLiteral("es_ES-davefx-medium"));
 }
@@ -903,6 +909,63 @@ void AppControllerTests::cpuSystemProfileRequiresCpuBinary()
         qunsetenv("LLAMACODE_SYSTEM_PROFILES");
     else
         qputenv("LLAMACODE_SYSTEM_PROFILES", oldSystemProfiles);
+}
+
+void AppControllerTests::doctorReportsStructureAndIssues()
+{
+    AppController app;
+    const QVariantMap d = app.doctor();
+
+    // Claves consolidadas presentes.
+    for (const char *k : {"version", "binaries", "roots", "modelCount",
+                          "hardware", "gitAvailable", "gateway", "server",
+                          "issues", "ok"})
+        QVERIFY2(d.contains(QString::fromLatin1(k)), k);
+
+    QCOMPARE(d.value(QStringLiteral("version")).toString(), app.version());
+    QVERIFY(d.value(QStringLiteral("issues")).toList().size() >= 0);
+    // ok == (sin issues): coherencia interna del reporte.
+    QCOMPARE(d.value(QStringLiteral("ok")).toBool(),
+             d.value(QStringLiteral("issues")).toList().isEmpty());
+    // Entorno de test limpio: sin binarios ni modelos → debe reportar issues.
+    if (app.binaryRegistry()->count() == 0)
+        QVERIFY(!d.value(QStringLiteral("ok")).toBool());
+}
+
+void AppControllerTests::importOllamaModelsIngestsStore()
+{
+    // Store de Ollama falso: manifest + blob presente.
+    QTemporaryDir store;
+    const QString digestHex(64, QLatin1Char('a'));
+    const QString blob = store.path() + "/blobs/sha256-" + digestHex;
+    QDir().mkpath(QFileInfo(blob).absolutePath());
+    { QFile f(blob); QVERIFY(f.open(QIODevice::WriteOnly)); f.write("GGUF-fake"); }
+    const QString manifest = store.path()
+        + "/manifests/registry.ollama.ai/library/phi3/mini";
+    QDir().mkpath(QFileInfo(manifest).absolutePath());
+    {
+        QJsonObject layer{{"mediaType", "application/vnd.ollama.image.model"},
+                          {"digest", "sha256:" + digestHex}, {"size", 9}};
+        QJsonObject m{{"layers", QJsonArray{layer}}};
+        QFile f(manifest); QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write(QJsonDocument(m).toJson());
+    }
+
+    AppController app;
+    const int before = app.modelCatalog()->count();
+    const QString id = app.importOllamaModels(store.path());
+    QVERIFY(!id.isEmpty());
+    QCOMPARE(app.rootRegistry()->get(id).value("kind").toString(),
+             QStringLiteral("ollama"));
+
+    // add() escanea sincrónicamente en un thread; bombear hasta que aparezca.
+    QSignalSpy spy(app.rootRegistry(), &ModelRootRegistry::scanFinished);
+    if (app.modelCatalog()->count() == before)
+        spy.wait(5000);
+    QVERIFY(app.modelCatalog()->count() > before);
+
+    // Ruta inexistente → sin ingesta.
+    QVERIFY(app.importOllamaModels(QDir::temp().filePath("no-such-ollama-xyz")).isEmpty());
 }
 
 QTEST_MAIN(AppControllerTests)

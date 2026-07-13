@@ -2,6 +2,7 @@
 #include "VoiceTypes.h"
 #include <QObject>
 #include <QByteArray>
+#include <QStringList>
 #include <QNetworkAccessManager>
 
 class QNetworkReply;
@@ -22,7 +23,7 @@ public:
     void synthesize(const QString &text);
     // Ocupado = hay un request en vuelo (HTTP, spawn per-call, o turno pendiente
     // en el piper residente). El proceso residente vivo NO cuenta como ocupado.
-    bool busy() const { return m_reply != nullptr || m_piper != nullptr || m_piperPending; }
+    bool busy() const { return m_reply != nullptr || m_piper != nullptr || m_qwen != nullptr || m_piperPending; }
     void cancel();
 
     // ¿Hay una voz piper local instalada (modelo .onnx presente)? Fallback cuando
@@ -37,6 +38,8 @@ public:
     // "output_file":...}\n. Piper sintetiza la línea y escribe el wav sin recargar
     // el modelo.
     static QByteArray buildPiperJsonLine(const QString &text, const QString &outFile);
+    static QStringList buildQwenArgs(const VoiceConfig &cfg, const QString &text,
+                                     const QString &outFile);
 
 signals:
     // audio crudo + formato ("wav"|"mp3"|"pcm").
@@ -51,6 +54,8 @@ private:
     void finalizePiperTurn(const QString &outPath);  // lee wav y emite audioReady
     QString resolvePiperModel() const;
     QString resolvePiperProg() const;
+    void synthesizeQwen(const QString &text);
+    void fallbackFrom(const QString &failedMode, const QString &text, const QString &error);
 
     VoiceConfig m_cfg;
     QString m_key;
@@ -59,6 +64,8 @@ private:
     QString m_piperBin, m_piperModel;
     class QProcess *m_piper = nullptr;   // spawn per-call (fallback)
     QString m_piperOut;                  // wav temporal de salida (per-call)
+    class QProcess *m_qwen = nullptr;
+    QString m_qwenOut;
 
     // Piper residente: proceso vivo en modo --json-input. Un turno a la vez
     // (VoiceController serializa vía busy()).

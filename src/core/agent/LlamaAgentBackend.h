@@ -99,6 +99,20 @@ public:
     void setMailAccounts(const QVariantList &accounts);
     void setMailAutoSend(bool on) { m_mailAutoSend = on; }
 
+    // Guardrail "Zero-Autonomy": si una tool es destructiva/irreversible (borrado
+    // recursivo, format, drop de DB, memory forget/prune, click de escritorio sobre
+    // un control delete/eliminar/format), fuerza aprobación humana AUNQUE el modo sea
+    // auto o haya Task auto-approve. Excepción: modo "super" (autonomía total). ON por
+    // defecto. Es el mismo mecanismo que el gate de email_send.
+    void setHitlDestructive(bool on) { m_hitlDestructive = on; }
+    // Clasificador puro (testeable): true si (name,args) representa una acción
+    // destructiva/irreversible según las heurísticas de shell/desktop/memory.
+    // desktopControlsText = salida cacheada del último desktop_controls (formato
+    // 'controlId=<id> [role]... "<name>"' por línea); se usa para resolver el
+    // control_id de un desktop_click_element a su nombre y decidir si es destructivo.
+    static bool isDestructiveAction(const QString &name, const QJsonObject &args,
+                                    const QString &desktopControlsText = QString());
+
     // Diff unificado simple (prefijo/sufijo común; líneas +/-/ ).
     static QString makeDiff(const QString &oldText, const QString &newText);
 
@@ -187,6 +201,13 @@ public:
         applyCompaction(head, keepFrom, summary);
     }
     int compactStallForTest() const { return m_compactStall; }
+    static QString failureFingerprint(const QString &tool, const QString &result);
+    static int repeatedSuffixStart(const QString &text, int repeats = 3,
+                                   int minBlockChars = 80);
+    bool recordToolOutcomeForTest(const QString &tool, bool ok, bool isWrite,
+                                  const QString &result) {
+        return recordToolOutcome(tool, ok, isWrite, result);
+    }
     QJsonObject buildTextToolPayloadForTest(const QJsonObject &nativePayload) const {
         return buildTextToolPayload(nativePayload);
     }
@@ -341,6 +362,8 @@ private:
 private:
     void approveAndContinue(const QString &id, const QString &response); // once|always|reject
     void appendToolResult(const QString &id, const QString &name, const QString &content);
+    bool recordToolOutcome(const QString &tool, bool ok, bool isWrite,
+                           const QString &result);
     // Burbuja de asistente: crear/cerrar por iteración para no apilar texto LLM
     // con las tarjetas de tools.
     void ensureAssistantBubble();
@@ -442,6 +465,7 @@ private:
     QVariantList m_mcpConfig;        // config de servers MCP (de AppController)
     QVariantList m_mailAccounts;     // cuentas de correo (password resuelto)
     bool         m_mailAutoSend = false; // permitir email_send sin aprobación
+    bool         m_hitlDestructive = true; // guardrail Zero-Autonomy (ver setHitlDestructive)
     QVariantList m_mcpTools;         // cache de tool-defs MCP del worker {server,name,description,schema}
     bool         m_mcpToolsEnabled = true; // false = no inyectar tools MCP (perfil mcpEnabled)
 
@@ -478,6 +502,7 @@ private:
     QString    m_streamBase;        // contenido del bubble al iniciar el stream (se le concatena)
     QString    m_streamContent;     // delta.content acumulado
     QString    m_streamReason;      // delta.reasoning_content acumulado
+    bool m_streamRepetitionDetected = false; // loop textual cortado durante generación
     QHash<int, QJsonObject> m_streamToolCalls; // index → {id,name,arguments} mergeado
 
     QJsonArray m_apiMessages;       // conversación real para la API (incluye tool/assistant tool_calls)
@@ -488,6 +513,8 @@ private:
     int m_turnIters = 0;                 // completions consumidas en el turno actual
     int m_emptyTextRetries = 0;          // reintentos por turno text-tools vacío (nudge)
     QHash<QString, int> m_callCounts;    // firma de tool_call → veces vista (anti-loop)
+    QString m_failureFingerprint;        // error normalizado de la racha actual
+    int m_equivalentFailures = 0;        // fallos consecutivos equivalentes
     int m_toolOk = 0;                    // salud: tools exitosas en la sesión
     int m_toolFail = 0;                  // salud: tools con error/inválidas
     int m_ctxLimit = -1;                 // n_ctx del server (vía /props)
@@ -500,6 +527,7 @@ private:
     // agente haga tantas iteraciones como necesite.
     static constexpr int kMaxTurnIters = 1000;
     static constexpr int kMaxSameCall  = 3;
+    static constexpr int kFailureSpiralThreshold = 3;
 
     // Aprobación en curso (1 tool a la vez)
     QString m_awaitId;              // id del tool_call esperando respuesta ("" = ninguno)

@@ -7,6 +7,8 @@
 #include "core/voice/AudioCodec.h"
 #include "core/voice/SttEngine.h"
 #include "core/voice/TtsEngine.h"
+#include "core/voice/TtsPolicy.h"
+#include "core/voice/VoiceAgentPolicy.h"
 #include "core/voice/VoiceController.h"
 #include "core/voice/CharlaTuning.h"
 #include "core/profiles/ProfileTypes.h"
@@ -28,6 +30,8 @@ private slots:
     void ttsPiperJsonLine();
     void ttsPiperResidentArgs();
     void ttsPiperAvailability();
+    void ttsQwenArgsAndPolicy();
+    void voiceAgentCapabilityPolicy();
     void vadTurnEnded();
     void turnFailedIdleIsNoop();
     void charlaTuningRecommendations();
@@ -41,6 +45,37 @@ private slots:
     void ttsVoiceCatalog();
     void ttsVoiceForLang();
 };
+
+void TestVoice::ttsQwenArgsAndPolicy()
+{
+    VoiceConfig c;
+    c.qwenModelDir = "C:/models/qwen";
+    c.qwenModelName = "qwen-talker-0.6b-base-Q8_0.gguf";
+    c.qwenSpeakerEmbedding = "C:/voices/profe.json";
+    c.qwenInstruction = "tono docente";
+    const QStringList a = TtsEngine::buildQwenArgs(c, "Hola", "out.wav");
+    QVERIFY(a.contains("--model-name"));
+    QVERIFY(a.contains("--speaker-embedding"));
+    QVERIFY(a.contains("--instruct"));
+
+    QCOMPARE(TtsPolicy::recommend(c, 8.0, 32.0, 7.5, true, true)
+                 .value("mode").toString(), QString("qwen3"));
+    QCOMPARE(TtsPolicy::recommend(c, 8.0, 16.0, 1.0, true, true)
+                 .value("mode").toString(), QString("piper"));
+    QCOMPARE(TtsPolicy::recommend(c, 0.0, 8.0, 0.0, false, false)
+                 .value("mode").toString(), QString("http"));
+}
+
+void TestVoice::voiceAgentCapabilityPolicy()
+{
+    QVERIFY(!VoiceAgentPolicy::assess("Qwen3.5-2B-Q8.gguf", true, true)
+                 .value("trustedForTools").toBool());
+    QVERIFY(VoiceAgentPolicy::assess("Qwen3.5-9B-Q5_K_M.gguf", true, false)
+                .value("trustedForTools").toBool());
+    const QVariantMap moe = VoiceAgentPolicy::assess("Qwen3.6-35B-A3B-Q4.gguf", true, false);
+    QVERIFY(moe.value("moe").toBool());
+    QCOMPARE(moe.value("activeParamsB").toDouble(), 3.0);
+}
 
 void TestVoice::configRoundTrip()
 {
@@ -64,7 +99,7 @@ void TestVoice::configRoundTrip()
     QCOMPARE(r.sttKeyRef, QString("voice/openai"));
     QCOMPARE(r.sttLanguage, QString("es"));
     QCOMPARE(r.ttsVoice, QString("nova"));
-    QCOMPARE(r.ttsMode, QString("piper"));
+    QCOMPARE(r.ttsMode, QString("auto"));
     QCOMPARE(r.ttsFormat, QString("mp3"));
     QCOMPARE(r.vadSilenceMs, 1200);
     QCOMPARE(r.bargeIn, false);

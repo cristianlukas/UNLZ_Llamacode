@@ -12,6 +12,7 @@
 #include <QSet>
 #include <QStringList>
 #include <QVector>
+#include <algorithm>
 
 namespace {
 
@@ -25,6 +26,47 @@ QString normType(const QString &t)
         QStringLiteral("bug"), QStringLiteral("person"), QStringLiteral("concept"),
         QStringLiteral("other")};
     return ok.contains(v) ? v : QStringLiteral("concept");
+}
+
+// Taxonomía CERRADA de tipos de arista. El 'pred' libre (verbo) se conserva como
+// label humano, pero cada relación se clasifica en uno de estos tipos para que el
+// agente NO trate una relación blanda ("relates_to") como una dependencia dura
+// ("requires"). Idea del CKG (typed edges): separar dependencia de asociación.
+QString normEdge(const QString &edgeType, const QString &pred)
+{
+    static const QSet<QString> ok{
+        QStringLiteral("REQUIRES"), QStringLiteral("ENABLES"),
+        QStringLiteral("IMPLEMENTS"), QStringLiteral("DEFINES"),
+        QStringLiteral("CALLS"), QStringLiteral("IMPORTS"),
+        QStringLiteral("RELATES_TO")};
+    const QString explicitT = edgeType.trimmed().toUpper();
+    if (ok.contains(explicitT)) return explicitT;
+
+    // Inferir del verbo libre.
+    const QString p = norm(pred);
+    if (p.contains(QLatin1String("requir")) || p.contains(QLatin1String("depend"))
+        || p.contains(QLatin1String("needs")) || p == QLatin1String("necesita")
+        || p == QLatin1String("usa") || p == QLatin1String("uses"))
+        return QStringLiteral("REQUIRES");
+    if (p.contains(QLatin1String("enable")) || p.contains(QLatin1String("provide"))
+        || p.contains(QLatin1String("habilita")))
+        return QStringLiteral("ENABLES");
+    if (p.contains(QLatin1String("implement")))
+        return QStringLiteral("IMPLEMENTS");
+    if (p.contains(QLatin1String("defin")))
+        return QStringLiteral("DEFINES");
+    if (p.contains(QLatin1String("call")) || p.contains(QLatin1String("invoke")))
+        return QStringLiteral("CALLS");
+    if (p.contains(QLatin1String("import")))
+        return QStringLiteral("IMPORTS");
+    return QStringLiteral("RELATES_TO");
+}
+
+// conf<0 → JSON null (unreviewed, NO = wrong). Si no, número acotado a [0,1].
+QJsonValue confVal(double conf)
+{
+    if (conf < 0.0) return QJsonValue(QJsonValue::Null);
+    return QJsonValue(qBound(0.0, conf, 1.0));
 }
 
 // id estable de entidad: hash del nombre normalizado (mismo nombre → mismo id).
@@ -97,7 +139,8 @@ QString addEntity(const QString &cwd, const QString &name, const QString &etype)
 }
 
 QString link(const QString &cwd, const QString &subj, const QString &pred,
-             const QString &obj)
+             const QString &obj, const QString &edgeType, double conf,
+             const QString &prov)
 {
     const QString s = subj.trimmed(), p = pred.trimmed(), o = obj.trimmed();
     if (s.isEmpty() || p.isEmpty() || o.isEmpty())
@@ -125,23 +168,30 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
         f.close();
     }
 
+    const QString et = normEdge(edgeType, p);
     appendObj(path, QJsonObject{
         {QStringLiteral("kind"), QStringLiteral("relation")},
         {QStringLiteral("id"), rid},
         {QStringLiteral("subj"), sid},
         {QStringLiteral("pred"), norm(p)},
         {QStringLiteral("obj"), oid},
+        {QStringLiteral("etype"), et},
+        {QStringLiteral("conf"), confVal(conf)},
+        {QStringLiteral("prov"), prov.trimmed().isEmpty() ? QStringLiteral("llm")
+                                                          : prov.trimmed()},
         {QStringLiteral("ts"), QDateTime::currentDateTime().toString(Qt::ISODate)}});
-    return QStringLiteral("[relación creada · %1 -[%2]-> %3]").arg(s, norm(p), o);
+    return QStringLiteral("[relación creada · %1 -[%2]-> %3]").arg(s, et, o);
 }
 
 QString addBatch(const QString &cwd,
                  const QVector<QPair<QString, QString>> &entities,
                  const QVector<Triple> &relations,
-                 int *addedEnt, int *addedRel)
+                 int *addedEnt, int *addedRel, const QString &prov, double conf)
 {
     const QString path = jsonlPath(cwd);
     QDir().mkpath(QFileInfo(path).absolutePath());
+    const QString provTag = prov.trimmed().isEmpty() ? QStringLiteral("indexer")
+                                                     : prov.trimmed();
 
     // 1. Una sola lectura: junta los ids de entidades/relaciones ya presentes.
     QSet<QString> haveEnt, haveRel;
@@ -201,6 +251,9 @@ QString addBatch(const QString &cwd,
             {QStringLiteral("subj"), sid},
             {QStringLiteral("pred"), norm(p)},
             {QStringLiteral("obj"), oid},
+            {QStringLiteral("etype"), normEdge(QString(), p)},
+            {QStringLiteral("conf"), confVal(conf)},
+            {QStringLiteral("prov"), provTag},
             {QStringLiteral("ts"), ts}};
         f.write(QJsonDocument(ro).toJson(QJsonDocument::Compact));
         f.write("\n");
@@ -281,7 +334,8 @@ QString query(const QString &cwd, const QString &name, int depth)
 
     // Cargar entidades y relaciones en memoria (grafos chicos).
     QHash<QString, QString> idToName;          // entId -> nombre
-    struct Rel { QString subj, pred, obj; };
+    // conf<0 → unreviewed (campo ausente en relaciones viejas: back-compat).
+    struct Rel { QString subj, pred, obj, etype, prov; double conf; };
     QVector<Rel> rels;
     while (!f.atEnd()) {
         const QByteArray l = f.readLine().trimmed();
@@ -291,10 +345,17 @@ QString query(const QString &cwd, const QString &name, int depth)
         if (kind == QLatin1String("entity"))
             idToName.insert(o.value(QStringLiteral("id")).toString(),
                             o.value(QStringLiteral("name")).toString());
-        else if (kind == QLatin1String("relation"))
-            rels.append({o.value(QStringLiteral("subj")).toString(),
-                         o.value(QStringLiteral("pred")).toString(),
-                         o.value(QStringLiteral("obj")).toString()});
+        else if (kind == QLatin1String("relation")) {
+            const QString pr = o.value(QStringLiteral("pred")).toString();
+            // etype ausente (relación vieja) → inferir del pred.
+            QString et = o.value(QStringLiteral("etype")).toString();
+            if (et.isEmpty()) et = normEdge(QString(), pr);
+            const QJsonValue cv = o.value(QStringLiteral("conf"));
+            const double c = cv.isDouble() ? cv.toDouble() : -1.0;   // null/ausente → -1
+            rels.append({o.value(QStringLiteral("subj")).toString(), pr,
+                         o.value(QStringLiteral("obj")).toString(), et,
+                         o.value(QStringLiteral("prov")).toString(), c});
+        }
     }
     f.close();
 
@@ -307,23 +368,33 @@ QString query(const QString &cwd, const QString &name, int depth)
     };
 
     // BFS hasta 'depth' saltos; recolecta aristas tocadas.
+    struct Edge { double conf; QString line; };
     QSet<QString> frontier{startId}, visited{startId};
-    QStringList lines;
+    QVector<Edge> edges;
     QSet<QString> seenEdge;
     for (int d = 0; d < depth; ++d) {
         QSet<QString> next;
         for (const Rel &r : rels) {
-            QString hub, other; bool outgoing;
-            if (frontier.contains(r.subj)) { hub = r.subj; other = r.obj; outgoing = true; }
-            else if (frontier.contains(r.obj)) { hub = r.obj; other = r.subj; outgoing = false; }
+            QString other; bool outgoing;
+            if (frontier.contains(r.subj)) { other = r.obj; outgoing = true; }
+            else if (frontier.contains(r.obj)) { other = r.subj; outgoing = false; }
             else continue;
 
             const QString edgeKey = r.subj + r.pred + r.obj;
             if (!seenEdge.contains(edgeKey)) {
                 seenEdge.insert(edgeKey);
-                lines << (outgoing
-                    ? QStringLiteral("- %1 -[%2]-> %3").arg(nameOf(r.subj), r.pred, nameOf(r.obj))
-                    : QStringLiteral("- %1 -[%2]-> %3 (entrante)").arg(nameOf(r.subj), r.pred, nameOf(r.obj)));
+                // Marca de confianza/origen: unreviewed si conf<0 (NO = incorrecto),
+                // si no muestra el score. Evita que el agente trate una inferencia
+                // del LLM como hecho verificado.
+                const QString tag = r.conf < 0.0
+                    ? QStringLiteral(" [unreviewed·%1]").arg(r.prov.isEmpty()
+                        ? QStringLiteral("llm") : r.prov)
+                    : QStringLiteral(" [conf=%1·%2]").arg(r.conf, 0, 'g', 2)
+                        .arg(r.prov.isEmpty() ? QStringLiteral("indexer") : r.prov);
+                edges.append({r.conf,
+                    QStringLiteral("- %1 -[%2]-> %3%4%5").arg(
+                        nameOf(r.subj), r.etype, nameOf(r.obj),
+                        outgoing ? QString() : QStringLiteral(" (entrante)"), tag)});
             }
             if (!visited.contains(other)) { next.insert(other); visited.insert(other); }
         }
@@ -331,8 +402,17 @@ QString query(const QString &cwd, const QString &name, int depth)
         if (frontier.isEmpty()) break;
     }
 
-    if (lines.isEmpty())
+    if (edges.isEmpty())
         return QStringLiteral("[entidad '%1' sin relaciones]").arg(nm);
+
+    // Ordenar: verificados (conf alta) primero, unreviewed (conf<0) al final.
+    std::stable_sort(edges.begin(), edges.end(), [](const Edge &a, const Edge &b) {
+        const double ca = a.conf < 0.0 ? -1.0 : a.conf;
+        const double cb = b.conf < 0.0 ? -1.0 : b.conf;
+        return ca > cb;
+    });
+    QStringList lines;
+    for (const Edge &e : edges) lines << e.line;
     return QStringLiteral("Vecindario de '%1' (depth=%2):\n").arg(nm).arg(depth)
            + lines.join(QLatin1Char('\n'));
 }
