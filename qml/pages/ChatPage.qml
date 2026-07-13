@@ -911,6 +911,11 @@ Item {
                 model: App.chatMessages
                 ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
+                // Scroll inicial al fondo una sola vez (contexto del ListView, no del
+                // delegate: evita ReferenceError cuando un delegate reciclado corre el
+                // Qt.callLater diferido).
+                Component.onCompleted: { followBottom = true; Qt.callLater(scrollToBottom) }
+
                 Text {
                     anchors.centerIn: parent
                     visible: App.chatMessages.length === 0 && !(App.serverRunning && !App.serverReady)
@@ -1301,8 +1306,6 @@ Item {
                         property bool justCopied: false
                         Timer { id: chatCopyResetTimer; interval: 1500; onTriggered: bubbleRect.justCopied = false }
                     }
-
-                    Component.onCompleted: { msgList.followBottom = true; Qt.callLater(() => { msgList.scrollToBottom() }) }
                 }
 
                 // Auto-scroll por contentY directo (no positionViewAtEnd) para
