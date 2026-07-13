@@ -738,15 +738,20 @@ void AppController::runStartupScan()
         int dbRows = -1; QString dbErr; bool opened = false;
         {
             const QString cn = QStringLiteral("diagcat_%1").arg(QCoreApplication::applicationPid());
-            QSqlDatabase d = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), cn);
-            d.setDatabaseName(dbp);
-            opened = d.open();
-            if (opened) {
-                QSqlQuery q(QStringLiteral("SELECT COUNT(*) FROM catalog_models"), d);
-                if (q.next()) dbRows = q.value(0).toInt(); else dbErr = q.lastError().text();
-                d.close();
-            } else {
-                dbErr = d.lastError().text();
+            // La QSqlDatabase y toda QSqlQuery deben destruirse ANTES de
+            // removeDatabase, si no Qt avisa "connection still in use". Por eso el
+            // objeto `d` (y `q`) viven en un scope interno que cierra antes.
+            {
+                QSqlDatabase d = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), cn);
+                d.setDatabaseName(dbp);
+                opened = d.open();
+                if (opened) {
+                    QSqlQuery q(QStringLiteral("SELECT COUNT(*) FROM catalog_models"), d);
+                    if (q.next()) dbRows = q.value(0).toInt(); else dbErr = q.lastError().text();
+                    d.close();
+                } else {
+                    dbErr = d.lastError().text();
+                }
             }
             QSqlDatabase::removeDatabase(cn);
         }
