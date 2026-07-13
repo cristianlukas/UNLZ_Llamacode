@@ -682,12 +682,21 @@ public:
     int autoTuneProgress() const { return m_autoTuneProgress; }
     QString autoTuneStatus() const { return m_autoTuneStatus; }
 
-    Q_INVOKABLE void startResearch(const QString &topic, const QString &mode, int maxPages);
+    Q_INVOKABLE void startResearch(const QString &topic, const QString &mode, int maxPages,
+                                   const QString &workspaceId = QString(),
+                                   const QString &workspaceName = QString());
     Q_INVOKABLE void cancelResearch();
     Q_INVOKABLE void refreshResearchReports();
     Q_INVOKABLE QString readResearchReport(const QString &id) const;
     Q_INVOKABLE void openResearchReport(const QString &id);
     Q_INVOKABLE void deleteResearchReport(const QString &id);
+    // Exporta un workspace (proyecto compatible) como JSON portable con manifiesto,
+    // chats e investigaciones. No incluye secretos ni embeddings regenerables.
+    Q_INVOKABLE QString exportWorkspace(const QString &workspaceId,
+                                        const QString &workspaceName);
+    Q_INVOKABLE QString exportWorkspaceTo(const QString &workspaceId,
+                                          const QString &workspaceName,
+                                          const QString &path);
     Q_INVOKABLE void rescanHardware();
     // ── GPU power limit (nvidia-smi) ──
     // Estado actual por GPU: {available:bool, gpus:[{index,name,currentW,defaultW,

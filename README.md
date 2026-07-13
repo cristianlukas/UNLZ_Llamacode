@@ -232,6 +232,9 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
 - **Multi-GGUF roots**: indexar varias carpetas/discos de modelos.
 - **Multi-perfiles compuestos**: mezclar `Backend + Model + Runtime + Harness + Workspace`.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
+- **Workspaces portables**: los proyectos también pueden asociar investigaciones y
+  exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,
+  chats y reportes. Secretos y embeddings regenerables quedan excluidos.
 - **Agente integrado**: opencode via HTTP API sin subproceso por mensaje, con sesiones y proyectos.
 
 ## Arquitectura

@@ -12324,7 +12324,9 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
     emit autoTuneFinished(ok, mergedSummary, throughput, quality);
 }
 
-void AppController::startResearch(const QString &topic, const QString &mode, int maxPages)
+void AppController::startResearch(const QString &topic, const QString &mode, int maxPages,
+                                  const QString &workspaceId,
+                                  const QString &workspaceName)
 {
     const QString cleanTopic = topic.trimmed();
     if (cleanTopic.isEmpty()) return;
@@ -12651,6 +12653,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                     {QStringLiteral("modeLabel"), researchModeTitle(normalizedMode)},
                     {QStringLiteral("timestamp"), ts},
                     {QStringLiteral("sourceCount"), sources->size()},
+                    {QStringLiteral("workspaceId"), workspaceId.trimmed()},
+                    {QStringLiteral("workspaceName"), workspaceName.trimmed()},
                     {QStringLiteral("path"), researchStorageDir() + QLatin1Char('/')
                                                 + id + QStringLiteral(".md")}
                 };
@@ -12659,6 +12663,8 @@ void AppController::startResearch(const QString &topic, const QString &mode, int
                     {QStringLiteral("topic"), cleanTopic},
                     {QStringLiteral("mode"), normalizedMode},
                     {QStringLiteral("timestamp"), ts},
+                    {QStringLiteral("workspaceId"), workspaceId.trimmed()},
+                    {QStringLiteral("workspaceName"), workspaceName.trimmed()},
                     {QStringLiteral("sources"), *sources},
                     {QStringLiteral("dossier"), dossier},
                     {QStringLiteral("auditIssues"), QJsonArray::fromStringList(audit.issues)},
@@ -13065,6 +13071,99 @@ void AppController::deleteResearchReport(const QString &id)
     if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
         f.write(QJsonDocument(kept).toJson(QJsonDocument::Indented));
     refreshResearchReports();
+}
+
+QString AppController::exportWorkspace(const QString &workspaceId,
+                                       const QString &workspaceName)
+{
+    const QString safeName = workspaceName.trimmed().isEmpty()
+        ? QStringLiteral("workspace")
+        : workspaceName.trimmed();
+    QString fileName = safeName;
+    fileName.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9._-]+")),
+                     QStringLiteral("_"));
+    const QString path = pickSavePath(fileName + QStringLiteral(".llamacode-workspace.json"),
+                                      QStringLiteral("LlamaCode Workspace (*.llamacode-workspace.json);;JSON (*.json)"));
+    if (path.isEmpty()) return QString();
+    return exportWorkspaceTo(workspaceId, workspaceName, path);
+}
+
+QString AppController::exportWorkspaceTo(const QString &workspaceId,
+                                         const QString &workspaceName,
+                                         const QString &path)
+{
+    const QString id = workspaceId.trimmed();
+    if (id.isEmpty()) {
+        emit serverError(QStringLiteral("Seleccioná un workspace para exportar."));
+        return QString();
+    }
+    if (path.trimmed().isEmpty()) {
+        emit serverError(QStringLiteral("Falta la ruta de exportación del workspace."));
+        return QString();
+    }
+
+    QJsonArray chats;
+    QFile chatIndex(chatStorageDir() + QStringLiteral("/index.json"));
+    if (chatIndex.open(QIODevice::ReadOnly)) {
+        const QJsonArray entries = QJsonDocument::fromJson(chatIndex.readAll()).array();
+        for (const QJsonValue &entry : entries) {
+            const QJsonObject summary = entry.toObject();
+            if (summary.value(QStringLiteral("projectId")).toString() != id) continue;
+            const QString sessionId = summary.value(QStringLiteral("id")).toString();
+            QFile session(chatStorageDir() + QLatin1Char('/') + sessionId
+                          + QStringLiteral(".json"));
+            QJsonObject item{{QStringLiteral("summary"), summary}};
+            if (session.open(QIODevice::ReadOnly))
+                item.insert(QStringLiteral("session"),
+                            QJsonDocument::fromJson(session.readAll()).object());
+            chats.append(item);
+        }
+    }
+
+    QJsonArray reports;
+    QFile researchIndex(researchStorageDir() + QStringLiteral("/index.json"));
+    if (researchIndex.open(QIODevice::ReadOnly)) {
+        const QJsonArray entries = QJsonDocument::fromJson(researchIndex.readAll()).array();
+        for (const QJsonValue &entry : entries) {
+            const QJsonObject summary = entry.toObject();
+            if (summary.value(QStringLiteral("workspaceId")).toString() != id) continue;
+            const QString reportId = summary.value(QStringLiteral("id")).toString();
+            QFile md(researchStorageDir() + QLatin1Char('/') + reportId
+                     + QStringLiteral(".md"));
+            QFile metadata(researchStorageDir() + QLatin1Char('/') + reportId
+                           + QStringLiteral(".json"));
+            QJsonObject item{{QStringLiteral("summary"), summary}};
+            if (md.open(QIODevice::ReadOnly))
+                item.insert(QStringLiteral("markdown"), QString::fromUtf8(md.readAll()));
+            if (metadata.open(QIODevice::ReadOnly))
+                item.insert(QStringLiteral("metadata"),
+                            QJsonDocument::fromJson(metadata.readAll()).object());
+            reports.append(item);
+        }
+    }
+
+    const QJsonObject bundle{
+        {QStringLiteral("format"), QStringLiteral("llamacode-workspace")},
+        {QStringLiteral("version"), 1},
+        {QStringLiteral("exportedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)},
+        {QStringLiteral("workspace"), QJsonObject{
+             {QStringLiteral("id"), id},
+             {QStringLiteral("name"), workspaceName.trimmed()}}},
+        {QStringLiteral("contents"), QJsonObject{
+             {QStringLiteral("chats"), chats},
+             {QStringLiteral("researchReports"), reports}}},
+        {QStringLiteral("excluded"), QJsonArray{
+             QStringLiteral("secrets"), QStringLiteral("embeddings")}}
+    };
+    QFile output(path);
+    if (!output.open(QIODevice::WriteOnly | QIODevice::Truncate)
+        || output.write(QJsonDocument(bundle).toJson(QJsonDocument::Indented)) < 0) {
+        emit serverError(QStringLiteral("No se pudo exportar el workspace."));
+        return QString();
+    }
+    emit serverError(QStringLiteral("Workspace exportado: %1")
+                         .arg(QDir::toNativeSeparators(path)));
+    return path;
 }
 
 // ── Modo Charla (voz-a-voz) ──────────────────────────────────────────────────

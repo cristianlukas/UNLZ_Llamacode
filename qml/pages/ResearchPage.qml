@@ -9,6 +9,7 @@ Item {
     property string selectedReportId: ""
     property string selectedReportText: ""
     property string researchMode: "auto"
+    property var workspaceOptions: [{ projectId: "", projectName: "Sin workspace" }]
     readonly property bool researchBackendReady:
         App.serverRunning && App.serverReady && App.agentRunning && !App.agentStarting
 
@@ -23,7 +24,11 @@ Item {
     function start() {
         const topic = topicInput.text.trim()
         if (topic.length === 0) return
-        App.startResearch(topic, researchMode, depthCombo.currentValue ?? 6)
+        const workspace = workspaceCombo.currentIndex >= 0
+            ? workspaceOptions[workspaceCombo.currentIndex]
+            : workspaceOptions[0]
+        App.startResearch(topic, researchMode, depthCombo.currentValue ?? 6,
+                          workspace.projectId ?? "", workspace.projectName ?? "")
         topicInput.text = ""
     }
 
@@ -32,7 +37,17 @@ Item {
         selectedReportText = selectedReportId.length > 0 ? App.readResearchReport(selectedReportId) : ""
     }
 
-    Component.onCompleted: App.refreshResearchReports()
+    function refreshWorkspaces() {
+        const items = [{ projectId: "", projectName: "Sin workspace" }]
+        const projects = App.chatProjects()
+        for (let i = 0; i < projects.length; ++i) items.push(projects[i])
+        workspaceOptions = items
+    }
+
+    Component.onCompleted: {
+        refreshWorkspaces()
+        App.refreshResearchReports()
+    }
 
     Connections {
         target: App
@@ -54,6 +69,11 @@ Item {
                 : "Investigación web, síntesis local y reportes persistentes"
             action2Label: selectedReportId.length > 0 ? "Abrir .md" : ""
             onAction2Clicked: App.openResearchReport(selectedReportId)
+            actionLabel: workspaceCombo.currentIndex > 0 ? "Exportar workspace" : ""
+            onActionClicked: {
+                const workspace = workspaceOptions[workspaceCombo.currentIndex]
+                App.exportWorkspace(workspace.projectId ?? "", workspace.projectName ?? "")
+            }
         }
 
         RowLayout {
@@ -109,6 +129,31 @@ Item {
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    Text {
+                        text: "WORKSPACE"
+                        color: Theme.textSecondary
+                        font.pixelSize: 10
+                        font.bold: true
+                    }
+
+                    LcComboBox {
+                        id: workspaceCombo
+                        Layout.fillWidth: true
+                        enabled: !App.researchRunning
+                        model: root.workspaceOptions
+                        textRole: "projectName"
+                        valueRole: "projectId"
+                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        contentItem: Text {
+                            text: workspaceCombo.displayText
+                            color: Theme.textPrimary
+                            font.pixelSize: 12
+                            leftPadding: 8
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
                         }
                     }
 
@@ -310,8 +355,12 @@ Item {
                         }
 
                         delegate: Rectangle {
+                            readonly property bool belongsToWorkspace:
+                                (modelData.workspaceId ?? "")
+                                === (root.workspaceOptions[workspaceCombo.currentIndex].projectId ?? "")
                             width: reportsList.width
-                            height: 66
+                            height: belongsToWorkspace ? 66 : 0
+                            visible: belongsToWorkspace
                             color: (modelData.id ?? "") === root.selectedReportId
                                 ? Theme.highlight
                                 : (reportHover.containsMouse ? Theme.hoverBg : "transparent")
@@ -341,6 +390,9 @@ Item {
                                     Layout.fillWidth: true
                                     text: (modelData.modeLabel ?? root.modeLabel(modelData.mode ?? "auto"))
                                         + " · " + (modelData.sourceCount ?? 0) + " fuentes"
+                                        + ((modelData.workspaceName ?? "").length
+                                            ? " · " + modelData.workspaceName
+                                            : "")
                                         + ((modelData.dateLabel ?? "").length
                                             ? " · " + modelData.dateLabel
                                             : "")

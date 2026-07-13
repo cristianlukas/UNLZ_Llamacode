@@ -107,6 +107,7 @@ private slots:
     void taskRequiresToolEvidenceForWebObjective();
     void readResearchReportPrependsLegacyTopic();
     void researchReportsExposeFormattedDate();
+    void exportWorkspaceIncludesChatsAndResearch();
     void autoStartAgentOnLaunchPersists();
     void windowsStartupCommandQuotesExecutable();
     void startupHiddenRequiresBothFlags();
@@ -262,6 +263,57 @@ void AppControllerTests::researchReportsExposeFormattedDate()
     QVERIFY(!reports.isEmpty());
     QCOMPARE(reports.first().toMap().value(QStringLiteral("dateLabel")).toString(),
              QStringLiteral("18/06/2026 11:30"));
+}
+
+void AppControllerTests::exportWorkspaceIncludesChatsAndResearch()
+{
+    const QString appLocal =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    const QString chatDir = appLocal + QStringLiteral("/chat");
+    const QString researchDir = appLocal + QStringLiteral("/research");
+    QVERIFY(QDir().mkpath(chatDir));
+    QVERIFY(QDir().mkpath(researchDir));
+
+    const QString workspaceId = QStringLiteral("workspace-export-test");
+    QFile chatIndex(chatDir + QStringLiteral("/index.json"));
+    QVERIFY(chatIndex.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    chatIndex.write(QJsonDocument(QJsonArray{QJsonObject{
+        {QStringLiteral("id"), QStringLiteral("workspace-chat")},
+        {QStringLiteral("title"), QStringLiteral("Chat incluido")},
+        {QStringLiteral("projectId"), workspaceId},
+        {QStringLiteral("projectName"), QStringLiteral("Tesis")}}}).toJson());
+    chatIndex.close();
+    QFile chat(chatDir + QStringLiteral("/workspace-chat.json"));
+    QVERIFY(chat.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    chat.write(QJsonDocument(QJsonObject{{QStringLiteral("messages"), QJsonArray{}}}).toJson());
+    chat.close();
+
+    QFile researchIndex(researchDir + QStringLiteral("/index.json"));
+    QVERIFY(researchIndex.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    researchIndex.write(QJsonDocument(QJsonArray{QJsonObject{
+        {QStringLiteral("id"), QStringLiteral("workspace-report")},
+        {QStringLiteral("title"), QStringLiteral("Reporte incluido")},
+        {QStringLiteral("workspaceId"), workspaceId},
+        {QStringLiteral("workspaceName"), QStringLiteral("Tesis")}}}).toJson());
+    researchIndex.close();
+    QFile report(researchDir + QStringLiteral("/workspace-report.md"));
+    QVERIFY(report.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    report.write("# Reporte");
+    report.close();
+
+    AppController app;
+    const QString path = m_tmp.filePath(QStringLiteral("workspace.json"));
+    QCOMPARE(app.exportWorkspaceTo(workspaceId, QStringLiteral("Tesis"), path), path);
+    QFile bundle(path);
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonObject root = QJsonDocument::fromJson(bundle.readAll()).object();
+    QCOMPARE(root.value(QStringLiteral("format")).toString(),
+             QStringLiteral("llamacode-workspace"));
+    const QJsonObject contents = root.value(QStringLiteral("contents")).toObject();
+    QCOMPARE(contents.value(QStringLiteral("chats")).toArray().size(), 1);
+    QCOMPARE(contents.value(QStringLiteral("researchReports")).toArray().size(), 1);
+    QVERIFY(root.value(QStringLiteral("excluded")).toArray()
+                .contains(QStringLiteral("secrets")));
 }
 
 void AppControllerTests::autoStartAgentOnLaunchPersists()
