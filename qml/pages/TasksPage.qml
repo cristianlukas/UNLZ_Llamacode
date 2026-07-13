@@ -1908,6 +1908,56 @@ Item {
                         font.pixelSize: 11
                         wrapMode: Text.Wrap
                     }
+                    // Run-report por paso: qué herramientas corrió y con qué resultado.
+                    Text {
+                        Layout.fillWidth: true
+                        visible: detailCol.run && detailCol.run.report && detailCol.run.report.length > 0
+                        text: "Pasos ejecutados"
+                        color: Theme.textSecondary
+                        font.pixelSize: 12
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        visible: detailCol.run && detailCol.run.report && detailCol.run.report.length > 0
+                        Layout.preferredHeight: Math.min(140, 8 + reportCol.implicitHeight)
+                        radius: 6
+                        color: Theme.inputBg
+                        border.color: Theme.inputBorderColor
+                        ScrollView {
+                            anchors { fill: parent; margins: 4 }
+                            clip: true
+                            ColumnLayout {
+                                id: reportCol
+                                width: parent.width
+                                spacing: 2
+                                Repeater {
+                                    model: detailCol.run ? detailCol.run.report : []
+                                    delegate: RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        Text {
+                                            text: (modelData.ok ? "✓" : "✗")
+                                            color: modelData.ok ? Theme.accent : Theme.errorText
+                                            font.pixelSize: 12
+                                        }
+                                        Text {
+                                            text: modelData.n + ". " + modelData.tool
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 11
+                                            font.family: "Consolas"
+                                        }
+                                        Text {
+                                            text: modelData.summary || ""
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     ScrollView {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
