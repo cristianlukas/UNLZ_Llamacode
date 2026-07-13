@@ -394,7 +394,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.35"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.36"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -966,6 +966,11 @@ private:
     void detectServerLogPatterns(const QString &text);
     void launchTaskBody(const QString &id, const QVariantMap &task);
     void onTriggerPathChanged(const QString &path);
+    // Reproducción fiel: arranca/avanza el player determinista de pasos de escritorio.
+    // Devuelve false si no hay pasos mecánicos (→ el caller usa el replay adaptativo).
+    bool startDesktopReplay(const QString &id, const QString &artifactId);
+    void playNextReplayStep();
+    void finishDesktopReplay();
     void registerHotkeys();          // (re)registra los atajos globales de las Tasks
 public:
     void onHotkeyPressed(int hotkeyId);   // llamado por el filtro de eventos nativos
@@ -999,6 +1004,14 @@ private:
     // eventos nativos (opaco para no meter windows.h en el header) traduce WM_HOTKEY.
     QHash<int, QString> m_hotkeyTaskIds;
     void *m_hotkeyFilter = nullptr;
+    // Reproducción fiel (determinista) de un Teach de escritorio: se ejecutan los
+    // pasos grabados (key/type/click/stroke) tal cual con DesktopAutomationBackend,
+    // sin pasar por el modelo → un dibujo sale igual. El agente sólo verifica al final.
+    QVariantList m_replaySteps;
+    int          m_replayIndex = 0;
+    QString      m_replayScopeKind;
+    QString      m_replayScopeId;
+    QString      m_replayTaskId;
     AutomationStore   m_automations;
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).

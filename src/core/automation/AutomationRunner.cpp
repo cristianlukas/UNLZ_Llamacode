@@ -559,6 +559,37 @@ QVariantMap AutomationRunner::parseHotkey(const QString &spec)
                        {QStringLiteral("key"), key}};
 }
 
+QVariantList AutomationRunner::desktopReplaySteps(const QVariantMap &recipe)
+{
+    QVariantList out;
+    for (const QVariant &sv : recipe.value(QStringLiteral("steps")).toList()) {
+        const QVariantMap s = sv.toMap();
+        const QString kind = s.value(QStringLiteral("kind")).toString();
+        if (kind == QLatin1String("key")) {
+            out << QVariantMap{{QStringLiteral("kind"), kind},
+                               {QStringLiteral("atMs"), s.value(QStringLiteral("atMs"))},
+                               {QStringLiteral("key"), s.value(QStringLiteral("key"))},
+                               {QStringLiteral("modifiers"), s.value(QStringLiteral("modifiers"))}};
+        } else if (kind == QLatin1String("type")) {
+            out << QVariantMap{{QStringLiteral("kind"), kind},
+                               {QStringLiteral("atMs"), s.value(QStringLiteral("atMs"))},
+                               {QStringLiteral("text"), s.value(QStringLiteral("text"))}};
+        } else if (kind == QLatin1String("click")) {
+            out << QVariantMap{{QStringLiteral("kind"), kind},
+                               {QStringLiteral("atMs"), s.value(QStringLiteral("atMs"))},
+                               {QStringLiteral("x"), s.value(QStringLiteral("x"))},
+                               {QStringLiteral("y"), s.value(QStringLiteral("y"))},
+                               {QStringLiteral("button"), s.value(QStringLiteral("button"), QStringLiteral("left"))}};
+        } else if (kind == QLatin1String("stroke")) {
+            out << QVariantMap{{QStringLiteral("kind"), kind},
+                               {QStringLiteral("atMs"), s.value(QStringLiteral("atMs"))},
+                               {QStringLiteral("button"), s.value(QStringLiteral("button"), QStringLiteral("left"))},
+                               {QStringLiteral("points"), s.value(QStringLiteral("points"))}};
+        }
+    }
+    return out;
+}
+
 QVariantList AutomationRunner::buildRunReport(const QVariantList &agentMessages)
 {
     QVariantList steps;

@@ -26,6 +26,7 @@ private slots:
     void assertStepRendersInPrompt();
     void runReportFromToolMessages();
     void hotkeyParseAndTriggers();
+    void desktopReplayStepsFiltersMechanical();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -332,6 +333,28 @@ void AutomationTests::assertStepRendersInPrompt()
     QVERIFY(prompt.contains(QStringLiteral("desktop_assert")));
     QVERIFY(prompt.contains(QStringLiteral("TOTAL 42")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::desktopReplayStepsFiltersMechanical()
+{
+    // desktopReplaySteps deja sólo key/type/click/stroke en orden (descarta start/
+    // verification/note) para la reproducción fiel determinista.
+    const QVariantMap recipe{{"steps", QVariantList{
+        QVariantMap{{"kind", "start"}},
+        QVariantMap{{"kind", "key"}, {"key", "WIN"}, {"atMs", 10}},
+        QVariantMap{{"kind", "type"}, {"text", "paint"}, {"atMs", 200}},
+        QVariantMap{{"kind", "stroke"}, {"atMs", 900}, {"button", "left"},
+                    {"points", QVariantList{QVariantMap{{"x", 0.1}, {"y", 0.1}},
+                                            QVariantMap{{"x", 0.5}, {"y", 0.5}}}}},
+        QVariantMap{{"kind", "verification"}}}}};
+    const QVariantList out = AutomationRunner::desktopReplaySteps(recipe);
+    QCOMPARE(out.size(), 3);   // key, type, stroke (sin start/verification)
+    QCOMPARE(out.at(0).toMap().value("kind").toString(), QStringLiteral("key"));
+    QCOMPARE(out.at(2).toMap().value("kind").toString(), QStringLiteral("stroke"));
+    QCOMPARE(out.at(2).toMap().value("points").toList().size(), 2);
+    // Sin pasos mecánicos → vacío (el caller cae al replay adaptativo).
+    QVERIFY(AutomationRunner::desktopReplaySteps(
+        QVariantMap{{"steps", QVariantList{QVariantMap{{"kind", "verification"}}}}}).isEmpty());
 }
 
 void AutomationTests::hotkeyParseAndTriggers()

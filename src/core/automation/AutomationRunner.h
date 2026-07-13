@@ -72,6 +72,13 @@ public:
     // válidos: CTRL/ALT/SHIFT/WIN; key: una letra/dígito o F1..F12. Pura, sin Win32.
     static QVariantMap parseHotkey(const QString &spec);
 
+    // ── Reproducción fiel (determinista) de un Teach de escritorio ──────────────
+    // De los pasos de la receta deja sólo los mecánicos reproducibles (key/type/
+    // click/stroke), en orden, con su atMs. El player los ejecuta tal cual con
+    // DesktopAutomationBackend (sin pasar por el modelo) → un dibujo sale igual.
+    // Pura. Devuelve {} si no hay pasos mecánicos (→ replay adaptativo por el agente).
+    static QVariantList desktopReplaySteps(const QVariantMap &recipe);
+
     // Run-report por paso: a partir de los mensajes del agente (role=="toolcall")
     // arma la lista de pasos {n, tool, ok, summary} para auditar qué herramientas
     // corrió el run y con qué resultado. Pura. ok=false si el output trae un marcador

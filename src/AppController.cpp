@@ -4863,6 +4863,16 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
 
+    // Reproducción fiel (determinista): si es un Teach de escritorio con pasos
+    // mecánicos grabados (incluye trazos/dibujo), los reproducimos tal cual sin
+    // pasar por el modelo. El agente sólo verifica al final (postprompt). Esto
+    // hace que un dibujo en Paint salga igual (el replay adaptativo no lo lograba).
+    if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")
+        && !artifactId.isEmpty()
+        && startDesktopReplay(id, artifactId)) {
+        return;   // el player agenda los pasos y, al terminar, verifica/cierra
+    }
+
     // Warm-start Teach genérico: reproducir en paralelo el prefijo seguro de
     // teclado grabado (normalmente WIN → nombre de app → ENTER, y para objetivos
     // no sensibles más teclas hasta el primer mouse). No conoce nombres de apps:
@@ -4895,6 +4905,98 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
         }
     }
     sendToAgent(prompt);
+}
+
+bool AppController::startDesktopReplay(const QString &id, const QString &artifactId)
+{
+    const QVariantMap recipe = AutomationArtifactStore::recipe(artifactId);
+    const QVariantList steps = AutomationRunner::desktopReplaySteps(recipe);
+    if (steps.isEmpty()) return false;   // sin pasos mecánicos → replay adaptativo
+
+    // Alcance grabado (los click/stroke están normalizados a él). Suele ser la
+    // pantalla completa; los key/type no lo usan.
+    const QVariantMap scope = AutomationArtifactStore::manifest(artifactId)
+                                  .value(QStringLiteral("scope")).toMap();
+    m_replayScopeKind = scope.value(QStringLiteral("kind"), QStringLiteral("screen")).toString();
+    m_replayScopeId = scope.value(QStringLiteral("targetId"), QStringLiteral("0")).toString();
+    m_replaySteps = steps;
+    m_replayIndex = 0;
+    m_replayTaskId = id;
+
+    m_tasks.markRun(id, QStringLiteral("running"),
+                    QStringLiteral("Reproducción fiel: %1 pasos.").arg(steps.size()));
+    appendAgentEvent(QStringLiteral("task"),
+                     QStringLiteral("Reproducción fiel (determinista): %1 pasos grabados.")
+                         .arg(steps.size()));
+    emit taskRunStateChanged();
+    playNextReplayStep();
+    return true;
+}
+
+void AppController::playNextReplayStep()
+{
+    if (m_replayTaskId.isEmpty() || m_runningTaskId != m_replayTaskId) return;   // cancelada
+    if (m_replayIndex >= m_replaySteps.size()) { finishDesktopReplay(); return; }
+
+    const QVariantMap step = m_replaySteps.at(m_replayIndex).toMap();
+    const QString kind = step.value(QStringLiteral("kind")).toString();
+    QString error;
+    if (kind == QLatin1String("key")) {
+        QStringList mods;
+        for (const QVariant &m : step.value(QStringLiteral("modifiers")).toList())
+            mods << m.toString();
+        DesktopAutomationBackend::pressKey(step.value(QStringLiteral("key")).toString(), mods, &error);
+    } else if (kind == QLatin1String("type")) {
+        DesktopAutomationBackend::typeText(step.value(QStringLiteral("text")).toString(), &error);
+    } else if (kind == QLatin1String("click")) {
+        DesktopAutomationBackend::click(m_replayScopeKind, m_replayScopeId,
+                                        step.value(QStringLiteral("x")).toDouble(),
+                                        step.value(QStringLiteral("y")).toDouble(),
+                                        step.value(QStringLiteral("button")).toString(), &error);
+    } else if (kind == QLatin1String("stroke")) {
+        DesktopAutomationBackend::stroke(m_replayScopeKind, m_replayScopeId,
+                                         step.value(QStringLiteral("points")).toList(),
+                                         step.value(QStringLiteral("button")).toString(), 8, &error);
+    }
+    if (!error.isEmpty())
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Reproducción: paso %1 (%2) → %3")
+                             .arg(m_replayIndex + 1).arg(kind, error));
+
+    // Programar el próximo paso respetando el hueco temporal grabado (acotado),
+    // así se respeta el ritmo (p.ej. esperar a que abra Paint) sin sleeps largos.
+    const int cur = m_replayIndex;
+    m_replayIndex++;
+    int gap = 120;
+    if (m_replayIndex < m_replaySteps.size()) {
+        const qint64 a = m_replaySteps.at(cur).toMap().value(QStringLiteral("atMs")).toLongLong();
+        const qint64 b = m_replaySteps.at(m_replayIndex).toMap().value(QStringLiteral("atMs")).toLongLong();
+        gap = qBound(80, static_cast<int>(b - a), 4000);
+    }
+    QTimer::singleShot(gap, this, [this]() { playNextReplayStep(); });
+}
+
+void AppController::finishDesktopReplay()
+{
+    const QString id = m_replayTaskId;
+    const int n = m_replaySteps.size();
+    m_replaySteps.clear();
+    m_replayIndex = 0;
+    m_replayTaskId.clear();
+    if (m_runningTaskId != id) return;
+
+    // Verificación por el agente si hay postprompt; si no, cerramos como ok.
+    if (!m_runningTaskPostPrompt.isEmpty()) {
+        m_runningTaskPhase = QStringLiteral("verificando");
+        const QString post = m_runningTaskPostPrompt;
+        m_runningTaskPostPrompt.clear();
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Reproducción fiel completada (%1 pasos); verificando.").arg(n));
+        sendToAgent(post);
+        return;
+    }
+    finishRunningTask(QStringLiteral("ok"),
+                      QStringLiteral("Reproducción fiel completada: %1 pasos ejecutados.").arg(n));
 }
 
 void AppController::setTestAgentBackend(IAgentBackend *b)
@@ -5339,6 +5441,9 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskExecLaunchId.clear();
     m_runningTaskVerifyLaunchId.clear();
     m_pendingSwapPrompt.clear();
+    m_replaySteps.clear();
+    m_replayIndex = 0;
+    m_replayTaskId.clear();
     if (m_desktopTaskIndicatorActive) {
         m_desktopTaskIndicatorActive = false;
         m_desktopAgentActive = false;
