@@ -389,7 +389,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.30"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.31"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -608,6 +608,7 @@ public:
     void setDesktopIndicatorVisible(bool on);
     bool desktopAgentActive() const { return m_desktopAgentActive; }
     QString desktopAgentAction() const { return m_desktopAgentAction; }
+    Q_INVOKABLE QVariantMap desktopCursorState() const;
 
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
     void setAutoStartAgentOnLaunch(bool on);
@@ -1236,6 +1237,7 @@ private:
     bool        m_hitlDestructive = true;        // guardrail Zero-Autonomy (destructivas → aprobación salvo super)
     bool        m_desktopIndicatorVisible = true;
     bool        m_desktopAgentActive = false;
+    bool        m_desktopTaskIndicatorActive = false;
     QString     m_desktopAgentAction;
     bool        m_autoStartAgentOnLaunch = false; // arrancar agente al abrir la app (tasks por horario)
 

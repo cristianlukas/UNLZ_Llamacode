@@ -67,6 +67,51 @@ ApplicationWindow {
         }
     }
 
+    // Señal inequívoca sobre el escritorio real: reborde global y aro que sigue
+    // al puntero. Ambas superficies ignoran input y comparten el toggle existente.
+    Window {
+        id: desktopControlBorder
+        property var screens: Qt.application.screens
+        property real leftEdge: {
+            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.min(v, screens[i].virtualX); return v
+        }
+        property real topEdge: {
+            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.min(v, screens[i].virtualY); return v
+        }
+        property real rightEdge: {
+            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.max(v, screens[i].virtualX + screens[i].width); return v
+        }
+        property real bottomEdge: {
+            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.max(v, screens[i].virtualY + screens[i].height); return v
+        }
+        x: leftEdge; y: topEdge; width: rightEdge - leftEdge; height: bottomEdge - topEdge
+        visible: App.desktopIndicatorVisible && App.desktopAgentActive
+        color: "transparent"
+        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
+        Rectangle { anchors.fill: parent; color: "transparent"; border.width: 5; border.color: Theme.accent }
+    }
+
+    Window {
+        id: desktopCursorIndicator
+        property point cursorPosition: Qt.point(0, 0)
+        width: 38; height: 38
+        x: cursorPosition.x - width / 2; y: cursorPosition.y - height / 2
+        visible: App.desktopIndicatorVisible && App.desktopAgentActive
+        color: "transparent"
+        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
+        Rectangle {
+            anchors.fill: parent; radius: width / 2; color: "transparent"
+            border.width: 4; border.color: Theme.accent
+        }
+        Timer {
+            interval: 33; repeat: true; running: desktopCursorIndicator.visible
+            onTriggered: {
+                const p = App.desktopCursorState()
+                desktopCursorIndicator.cursorPosition = Qt.point(p.x, p.y)
+            }
+        }
+    }
+
     function showFromTray() {
         if (Boolean(App.readSetting("window/maximized", false)))
             window.showMaximized()

@@ -3409,7 +3409,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     });
     connect(b, &IAgentBackend::desktopActivityChanged, this,
             [this](bool active, const QString &tool, const QString &detail) {
-        m_desktopAgentActive = active;
+        m_desktopAgentActive = active || m_desktopTaskIndicatorActive;
         if (active) {
             static const QHash<QString, QString> labels{
                 {QStringLiteral("desktop_observe"), QStringLiteral("Observando")},
@@ -3427,7 +3427,8 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
             if (!detail.isEmpty() && tool == QLatin1String("desktop_launch"))
                 m_desktopAgentAction += QStringLiteral(": ") + detail.left(48);
         } else {
-            m_desktopAgentAction.clear();
+            m_desktopAgentAction = m_desktopTaskIndicatorActive
+                ? QStringLiteral("Automatización en curso") : QString();
         }
         emit desktopIndicatorChanged();
     });
@@ -4654,6 +4655,13 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     // bucle puede correr en otro (si verifyProfileId difiere). Ver sendForPhaseProfile.
     m_runningTaskExecLaunchId = m_activeLaunchId;
     m_runningTaskVerifyLaunchId = TaskStore::verifyProfileFor(task, m_activeLaunchId);
+    m_desktopTaskIndicatorActive =
+        task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop");
+    if (m_desktopTaskIndicatorActive) {
+        m_desktopAgentActive = true;
+        m_desktopAgentAction = QStringLiteral("Automatización en curso");
+        emit desktopIndicatorChanged();
+    }
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Iniciando Task '%1' (%2).").arg(name, id));
 
     // Las Tasks requieren server+agente encendidos (la sección está grisada en el
@@ -4938,7 +4946,17 @@ void AppController::onAgentTurnFinished()
 
         const QVariantMap task = m_tasks.get(m_runningTaskId);
         const QString finalText = latestAgentAssistantText().trimmed();
-        const QString work = m_agentLog.mid(m_runningTaskLogStart);
+        QString work = m_agentLog.mid(m_runningTaskLogStart);
+        // Los resultados completos viven en las tarjetas del chat; el log técnico
+        // sólo garantiza que la tool fue llamada. Incorporarlos a la evidencia
+        // determinista evita rechazar un desktop_controls correcto.
+        for (const QVariant &value : std::as_const(m_agentMessages)) {
+            const QVariantMap message = value.toMap();
+            if (message.value(QStringLiteral("role")).toString() != QLatin1String("toolcall")
+                || !message.value(QStringLiteral("name")).toString().startsWith(QLatin1String("desktop_")))
+                continue;
+            work += QLatin1Char('\n') + message.value(QStringLiteral("output")).toString();
+        }
         const bool usedTool = work.contains(QStringLiteral("[turn] model requested"))
                               || work.contains(QStringLiteral("[tool]"))
                               || work.contains(QStringLiteral("tool_call"))
@@ -5144,6 +5162,12 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskExecLaunchId.clear();
     m_runningTaskVerifyLaunchId.clear();
     m_pendingSwapPrompt.clear();
+    if (m_desktopTaskIndicatorActive) {
+        m_desktopTaskIndicatorActive = false;
+        m_desktopAgentActive = false;
+        m_desktopAgentAction.clear();
+        emit desktopIndicatorChanged();
+    }
     emit taskRunStateChanged();
     emit taskRunFinished(id, name, status, summary, silent);
     if (m_scheduledAutoStop) {
@@ -5153,6 +5177,11 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         stopAgent();
         stopServer();
     }
+}
+
+QVariantMap AppController::desktopCursorState() const
+{
+    return DesktopAutomationBackend::cursorState();
 }
 
 void AppController::recordEarlyFailure(const QString &processId, const QString &summary)

@@ -166,6 +166,13 @@ void AutomationTests::calculatorMismatchRejectsHistoryFalsePositive()
     const QString goodLog = QStringLiteral("[desktop_controls]\ncontrolId=1 [text] \"Se muestra 4\"\n");
     QVERIFY(!AutomationRunner::arithmeticResultMismatch(task, goodLog));
 
+    // Regresión: el resultado puede venir de la salida de la tarjeta de tool y
+    // no del log técnico del backend.
+    const QString toolCardEvidence = QStringLiteral(
+        "[turn] model requested 1 tool call(s)\n"
+        "desktop_controls output: controlId=1 [text] \"Se muestra 4\"");
+    QVERIFY(!AutomationRunner::arithmeticResultMismatch(task, toolCardEvidence));
+
     const QVariantMap otherSum{
         {QStringLiteral("name"), QStringLiteral("sumar 3 + 3")},
         {QStringLiteral("description"), QStringLiteral("sumar 3+3 en la calculadora de windows")}};
