@@ -1322,6 +1322,14 @@ Item {
                                         checked: agentProfilesSection.edit.thinking
                                     }
 
+                                    Text { text: "Indicador de escritorio"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    Switch {
+                                        checked: App.desktopIndicatorVisible
+                                        onToggled: App.desktopIndicatorVisible = checked
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Muestra una señal siempre visible mientras la IA controla mouse, teclado o ventanas."
+                                    }
+
                                     Text { text: "Temperatura"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcTextField { id: tempField; Layout.fillWidth: true; placeholderText: "vacío = heredar del modelo" }
 

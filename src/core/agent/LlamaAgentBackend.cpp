@@ -754,6 +754,7 @@ void LlamaAgentBackend::consolidateMemory()
 
 void LlamaAgentBackend::stop()
 {
+    emit desktopActivityChanged(false, QString(), QString());
     if (m_compactReply) {
         QNetworkReply *cr = m_compactReply; m_compactReply = nullptr;
         cr->disconnect(this); cr->abort(); cr->deleteLater();
@@ -786,6 +787,7 @@ void LlamaAgentBackend::stop()
 
 void LlamaAgentBackend::cancelGeneration()
 {
+    emit desktopActivityChanged(false, QString(), QString());
     if (m_compactReply) {
         QNetworkReply *cr = m_compactReply;
         m_compactReply = nullptr;
@@ -1563,6 +1565,7 @@ void LlamaAgentBackend::interruptForSteer()
     m_awaitId.clear();
     m_awaitCall = {};
     m_execCallId.clear();   // ignora resultado tardío de una tool en vuelo
+    emit desktopActivityChanged(false, QString(), QString());
     setTyping(false);
 }
 
@@ -2729,6 +2732,8 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     // Ejecución en el worker (no bloquea UI). Resume en onToolExecuted().
     ensureWorker();
     m_execCallId = id;
+    if (name.startsWith(QLatin1String("desktop_")))
+        emit desktopActivityChanged(true, name, m_execCommand);
     ensureAssistantBubble();
     setAssistantStatus(toolStatusText(name, toolKind(name), m_execCommand));
     QMetaObject::invokeMethod(m_worker, "executeTool", Qt::QueuedConnection,
@@ -2746,6 +2751,8 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     const bool ok      = result.value(QStringLiteral("ok")).toBool();
     QString res        = result.value(QStringLiteral("result")).toString();
     const bool isWrite = result.value(QStringLiteral("isWrite")).toBool();
+    if (name.startsWith(QLatin1String("desktop_")))
+        emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
     if (name.startsWith(QLatin1String("desktop_"))) {
         m_lastDesktopTool = name;

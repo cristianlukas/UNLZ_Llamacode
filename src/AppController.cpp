@@ -635,6 +635,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentTeacherModel = s.value(QStringLiteral("agent/teacherModel")).toString();
     m_agentTeacherKey   = s.value(QStringLiteral("agent/teacherKey")).toString();
     m_mailAutoSend      = s.value(QStringLiteral("agent/mailAutoSend"), false).toBool();
+    m_desktopIndicatorVisible = s.value(QStringLiteral("agent/desktopIndicatorVisible"), true).toBool();
     m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
     m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
     m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
@@ -3302,6 +3303,30 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         m_agentPendingTool = toolCall;
         emit agentPendingToolChanged();
     });
+    connect(b, &IAgentBackend::desktopActivityChanged, this,
+            [this](bool active, const QString &tool, const QString &detail) {
+        m_desktopAgentActive = active;
+        if (active) {
+            static const QHash<QString, QString> labels{
+                {QStringLiteral("desktop_observe"), QStringLiteral("Observando")},
+                {QStringLiteral("desktop_click"), QStringLiteral("Haciendo clic")},
+                {QStringLiteral("desktop_click_element"), QStringLiteral("Activando un control")},
+                {QStringLiteral("desktop_type"), QStringLiteral("Escribiendo")},
+                {QStringLiteral("desktop_key"), QStringLiteral("Usando el teclado")},
+                {QStringLiteral("desktop_scroll"), QStringLiteral("Desplazando")},
+                {QStringLiteral("desktop_launch"), QStringLiteral("Abriendo una aplicación")},
+                {QStringLiteral("desktop_focus"), QStringLiteral("Cambiando de ventana")},
+                {QStringLiteral("desktop_controls"), QStringLiteral("Leyendo controles")},
+                {QStringLiteral("desktop_windows"), QStringLiteral("Buscando ventanas")},
+                {QStringLiteral("desktop_wait"), QStringLiteral("Esperando la interfaz")}};
+            m_desktopAgentAction = labels.value(tool, QStringLiteral("Usando el escritorio"));
+            if (!detail.isEmpty() && tool == QLatin1String("desktop_launch"))
+                m_desktopAgentAction += QStringLiteral(": ") + detail.left(48);
+        } else {
+            m_desktopAgentAction.clear();
+        }
+        emit desktopIndicatorChanged();
+    });
     connect(b, &IAgentBackend::contextUsage, this, [this](int used, int limit) {
         m_agentContextUsed = used;
         if (limit > 0) m_agentContextLimit = limit;
@@ -5805,6 +5830,14 @@ QString AppController::testMailAccount(const QString &name) const
 {
     for (const QVariant &v : listMailAccounts()) {
         const QVariantMap m = v.toMap();
+void AppController::setDesktopIndicatorVisible(bool on)
+{
+    if (on == m_desktopIndicatorVisible) return;
+    m_desktopIndicatorVisible = on;
+    writeSetting(QStringLiteral("agent/desktopIndicatorVisible"), on);
+    emit desktopIndicatorChanged();
+}
+
         if (m.value(QStringLiteral("name")).toString() != name) continue;
         MailClient::Account a = mailAccountFromMap(m);
         a.password = m_secrets.resolve(QStringLiteral("mail/") + name);

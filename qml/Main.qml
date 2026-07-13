@@ -31,6 +31,42 @@ ApplicationWindow {
     property bool forceQuit: false
     property bool autoCreatingInitialProfile: false
 
+    Window {
+        id: desktopAgentIndicator
+        width: 310
+        height: 54
+        x: Screen.desktopAvailableWidth - width - 18
+        y: 18
+        visible: App.desktopIndicatorVisible && App.desktopAgentActive
+        color: "transparent"
+        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
+        Rectangle {
+            anchors.fill: parent
+            radius: 14
+            color: Theme.popupBg
+            border.width: 2
+            border.color: Theme.accent
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 11
+                spacing: 10
+                Rectangle {
+                    width: 12; height: 12; radius: 6; color: Theme.accent
+                    SequentialAnimation on opacity {
+                        running: desktopAgentIndicator.visible; loops: Animation.Infinite
+                        NumberAnimation { to: 0.35; duration: 650 }
+                        NumberAnimation { to: 1; duration: 650 }
+                    }
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true; spacing: 1
+                    Text { text: "La IA está usando el escritorio"; color: Theme.textPrimary; font.bold: true; font.pixelSize: 12 }
+                    Text { text: App.desktopAgentAction; color: Theme.textSecondary; font.pixelSize: 11; elide: Text.ElideRight; Layout.fillWidth: true }
+                }
+            }
+        }
+    }
+
     function showFromTray() {
         if (Boolean(App.readSetting("window/maximized", false)))
             window.showMaximized()

@@ -92,6 +92,9 @@ signals:
     void sessionsChanged();
     void logAppended(const QString &chunk);
     void toolApprovalNeeded(const QVariantMap &toolCall);
+    // Actividad de control del escritorio para indicadores de privacidad/UI.
+    // active=false marca el fin incluso cuando la tool falla.
+    void desktopActivityChanged(bool active, const QString &tool, const QString &detail);
     void errorOccurred(const QString &message);
     // Uso de contexto del último turno: tokens usados / límite (n_ctx). -1 = desconocido.
     void contextUsage(int used, int limit);

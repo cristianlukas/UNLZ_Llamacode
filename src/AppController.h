@@ -115,6 +115,9 @@ class AppController : public QObject
     Q_PROPERTY(QString agentTeacherModel READ agentTeacherModel WRITE setAgentTeacherModel NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
     Q_PROPERTY(bool mailAutoSend READ mailAutoSend WRITE setMailAutoSend NOTIFY mailAutoSendChanged)
+    Q_PROPERTY(bool desktopIndicatorVisible READ desktopIndicatorVisible WRITE setDesktopIndicatorVisible NOTIFY desktopIndicatorChanged)
+    Q_PROPERTY(bool desktopAgentActive READ desktopAgentActive NOTIFY desktopIndicatorChanged)
+    Q_PROPERTY(QString desktopAgentAction READ desktopAgentAction NOTIFY desktopIndicatorChanged)
     Q_PROPERTY(bool autoStartAgentOnLaunch READ autoStartAgentOnLaunch WRITE setAutoStartAgentOnLaunch NOTIFY autoStartAgentOnLaunchChanged)
     // Gateway (proxy Anthropic/OpenAI + auto-load por modelo).
     Q_PROPERTY(bool    gatewayEnabled  READ gatewayEnabled  WRITE setGatewayEnabled  NOTIFY gatewayChanged)
@@ -584,6 +587,10 @@ public:
     bool mailAutoSend() const { return m_mailAutoSend; }
     void setMailAutoSend(bool on);
 
+    bool desktopIndicatorVisible() const { return m_desktopIndicatorVisible; }
+    void setDesktopIndicatorVisible(bool on);
+    bool desktopAgentActive() const { return m_desktopAgentActive; }
+    QString desktopAgentAction() const { return m_desktopAgentAction; }
     bool autoStartAgentOnLaunch() const { return m_autoStartAgentOnLaunch; }
     void setAutoStartAgentOnLaunch(bool on);
 
@@ -874,6 +881,7 @@ signals:
     void agentApprovalModeChanged();
     void agentThinkingChanged();
     void agentToolsChanged();
+    void desktopIndicatorChanged();
     void activeAgentProfileChanged();
     void agentTeacherChanged();
     void mailAutoSendChanged();
@@ -1186,6 +1194,9 @@ private:
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;
+    bool        m_desktopIndicatorVisible = true;
+    bool        m_desktopAgentActive = false;
+    QString     m_desktopAgentAction;
     MasterCli m_masterCli;                      // detección de CLIs maestro (claude/codex)
     SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     bool        m_mailAutoSend = false;          // permitir email_send sin aprobación
