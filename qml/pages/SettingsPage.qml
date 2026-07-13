@@ -1337,6 +1337,27 @@ Item {
                                     LcTextField { id: extraField; Layout.fillWidth: true; placeholderText: "opcional, se añade al system prompt" }
                                 }
 
+                                // Guardrail global (no per-perfil): acciones destructivas
+                                // requieren aprobación humana aun en modo auto. En "Super
+                                // Agente" no aplica (autonomía total).
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text { text: "Guardrail de acciones destructivas"; color: Theme.textPrimary; font.pixelSize: 13 }
+                                        Text {
+                                            text: "Fuerza aprobación humana antes de acciones irreversibles (borrado recursivo, format, git push --force, DROP de DB, borrar memoria, clicks de escritorio delete/eliminar), incluso en modo automático y en sub-agentes. No aplica en Super Agente."
+                                            color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                                        }
+                                    }
+                                    Switch {
+                                        checked: App.hitlDestructive
+                                        onToggled: App.hitlDestructive = checked
+                                    }
+                                }
+
                                 // ── Directivas ──
                                 Text {
                                     text: "DIRECTIVAS (system prompt)"

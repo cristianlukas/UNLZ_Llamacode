@@ -28,6 +28,13 @@ public:
     void start();
     void cancel();
 
+    // Guardrail Zero-Autonomy en el sub-agente: como corre headless (sin HITL), no
+    // puede pedir aprobación. Con el guardrail ON, una tool destructiva/irreversible
+    // se RECHAZA de plano (no se ejecuta) y se le devuelve al sub-agente un mensaje
+    // para que difiera la acción al agente principal. ON por defecto; lo propaga el
+    // agente principal desde su propio m_hitlDestructive. Sin efecto en modo super.
+    void setHitlDestructive(bool on) { m_hitlDestructive = on; }
+
     // System prompt del sub-agente. Pura y estática → unit-testeable. honey=true
     // suma la directiva de frugalidad (código YAGNI, respuesta-primero, salida
     // mínima) para que el sub-árbol entero emita menos. Se propaga desde la
@@ -43,6 +50,11 @@ private slots:
 
 private:
     void runCompletion();
+    // Despacha el tool_call `call` al worker, salvo que el guardrail lo clasifique
+    // destructivo: en ese caso NO ejecuta, inyecta un tool result de rechazo y sigue
+    // con el resto del turno. Devuelve true si despachó (hay que esperar el worker),
+    // false si lo bloqueó (ya avanzó al siguiente).
+    bool dispatchCall(const QJsonObject &call);
     void handleStreamData();
     void handleStreamFinished(bool ok, const QString &err);
     void finishUp(const QString &result, bool ok);
@@ -54,6 +66,7 @@ private:
     QString m_taskPrompt;
     double  m_temperature = -1.0;
     bool    m_honey = false;
+    bool    m_hitlDestructive = true;   // guardrail: rechazar destructivas (headless)
 
     QNetworkAccessManager *m_nam = nullptr;
     QNetworkReply *m_reply = nullptr;

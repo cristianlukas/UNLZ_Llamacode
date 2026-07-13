@@ -200,17 +200,47 @@ void SubAgentRunner::handleStreamFinished(bool ok, const QString &err)
         {QStringLiteral("tool_calls"), toolCalls}});
     m_pendingCalls = toolCalls;
 
-    // Ejecutar el primer tool_call (secuencial dentro del sub-agente).
-    const QJsonObject call = m_pendingCalls.first().toObject();
+    // Ejecutar el primer tool_call (secuencial dentro del sub-agente). Si el
+    // guardrail lo bloquea, dispatchCall avanza solo hasta despachar/terminar.
+    while (!m_pendingCalls.isEmpty()) {
+        if (dispatchCall(m_pendingCalls.first().toObject())) return;  // esperando worker
+        m_pendingCalls.removeFirst();                                 // bloqueado → siguiente
+    }
+    runCompletion();
+}
+
+bool SubAgentRunner::dispatchCall(const QJsonObject &call)
+{
     const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
     const QString name = fn.value(QStringLiteral("name")).toString();
     const QString id = call.value(QStringLiteral("id")).toString();
     const QString argStr = subArgsToString(fn.value(QStringLiteral("arguments")));
+
+    // Guardrail: el sub-agente no tiene HITL → rechazar destructivas de plano.
+    if (m_hitlDestructive) {
+        QJsonParseError perr;
+        const QJsonObject args =
+            QJsonDocument::fromJson(argStr.toUtf8(), &perr).object();
+        if (LlamaAgentBackend::isDestructiveAction(name, args)) {
+            emit progressed(m_id, QStringLiteral("⛔ %1 (bloqueada: destructiva)").arg(name));
+            m_messages.append(QJsonObject{
+                {QStringLiteral("role"), QStringLiteral("tool")},
+                {QStringLiteral("tool_call_id"), id},
+                {QStringLiteral("content"), QStringLiteral(
+                    "[guardrail: '%1' es una acción destructiva/irreversible y está "
+                    "prohibida dentro de un sub-agente (no hay aprobación humana). "
+                    "NO la ejecutes. Reportá al agente principal que esta acción "
+                    "requiere confirmación y dejá que él la maneje.]").arg(name)}});
+            return false;   // bloqueada; el caller avanza al siguiente
+        }
+    }
+
     emit progressed(m_id, QStringLiteral("🔧 %1").arg(name));
     m_execCallId = id;
     QMetaObject::invokeMethod(m_worker, "executeTool", Qt::QueuedConnection,
                               Q_ARG(QString, id), Q_ARG(QString, name),
                               Q_ARG(QString, argStr), Q_ARG(QString, m_cwd));
+    return true;
 }
 
 void SubAgentRunner::onToolExecuted(const QVariantMap &result)
@@ -227,19 +257,10 @@ void SubAgentRunner::onToolExecuted(const QVariantMap &result)
         {QStringLiteral("content"), res}});
 
     if (!m_pendingCalls.isEmpty()) m_pendingCalls.removeFirst();
-    if (!m_pendingCalls.isEmpty()) {
-        // Siguiente tool del mismo turno.
-        const QJsonObject call = m_pendingCalls.first().toObject();
-        const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
-        const QString name = fn.value(QStringLiteral("name")).toString();
-        const QString id = call.value(QStringLiteral("id")).toString();
-        const QString argStr = subArgsToString(fn.value(QStringLiteral("arguments")));
-        emit progressed(m_id, QStringLiteral("🔧 %1").arg(name));
-        m_execCallId = id;
-        QMetaObject::invokeMethod(m_worker, "executeTool", Qt::QueuedConnection,
-                                  Q_ARG(QString, id), Q_ARG(QString, name),
-                                  Q_ARG(QString, argStr), Q_ARG(QString, m_cwd));
-        return;
+    // Siguiente tool del mismo turno (saltando las que el guardrail bloquee).
+    while (!m_pendingCalls.isEmpty()) {
+        if (dispatchCall(m_pendingCalls.first().toObject())) return;  // esperando worker
+        m_pendingCalls.removeFirst();
     }
     runCompletion();   // re-consultar con los resultados
 }

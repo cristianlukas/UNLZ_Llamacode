@@ -1770,6 +1770,28 @@ Item {
                             }
                         }
 
+                        // Banner del guardrail Zero-Autonomy: acción destructiva/irreversible
+                        // frenada aun en modo automático. Sólo visible cuando reason=="destructive".
+                        Rectangle {
+                            Layout.fillWidth: true
+                            visible: (approvalCard.tool.reason ?? "") === "destructive"
+                            color: Qt.rgba(Theme.errorText.r, Theme.errorText.g, Theme.errorText.b, 0.12)
+                            border.color: Theme.errorText; radius: 6
+                            implicitHeight: destructiveWarn.implicitHeight + 12
+                            RowLayout {
+                                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
+                                spacing: 6
+                                Text { text: "⚠"; font.pixelSize: 14; color: Theme.errorText }
+                                Text {
+                                    id: destructiveWarn
+                                    Layout.fillWidth: true
+                                    text: "Acción destructiva/irreversible: el guardrail exige tu aprobación aunque el modo sea automático."
+                                    color: Theme.errorText; font { pixelSize: 11; bold: true }
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+                        }
+
                         Rectangle {
                             Layout.fillWidth: true
                             visible: (approvalCard.tool.detail ?? "").length > 0

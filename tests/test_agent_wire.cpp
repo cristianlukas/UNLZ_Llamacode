@@ -1055,6 +1055,28 @@ void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
     QVERIFY(!B::isDestructiveAction("desktop_click_element",
                                     QJsonObject{{QStringLiteral("name"), QStringLiteral("Guardar")}}));
 
+    // ── Desktop: resolución control_id → nombre vía texto de desktop_controls ──
+    // Formato real del worker: 'controlId=<id>  [role]...  "<name>"' por línea.
+    const QString controls =
+        QStringLiteral("[desktop_controls: 2 control(es)]\n"
+                       "Usá el controlId con desktop_click_element (mismo target_id).\n"
+                       "controlId=42-7  [Button] invoke  80x24@(10,10)  \"Eliminar\"\n"
+                       "controlId=42-8  [Button] invoke  80x24@(10,40)  \"Guardar\"");
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("control_id"), QStringLiteral("42-7")}},
+                                   controls));
+    QVERIFY(!B::isDestructiveAction("desktop_click_element",
+                                    QJsonObject{{QStringLiteral("control_id"), QStringLiteral("42-8")}},
+                                    controls));
+    // Sin texto de controles no puede resolver el label → no gatea (fail-open acá;
+    // el gate del loop igual pasa m_lastDesktopResult real).
+    QVERIFY(!B::isDestructiveAction("desktop_click_element",
+                                    QJsonObject{{QStringLiteral("control_id"), QStringLiteral("42-7")}}));
+    // Id que no matchea ninguna línea → no gatea.
+    QVERIFY(!B::isDestructiveAction("desktop_click_element",
+                                    QJsonObject{{QStringLiteral("control_id"), QStringLiteral("99-9")}},
+                                    controls));
+
     // ── Memory / graph delete → true; lectura → false ─────────────────────
     QVERIFY(B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("forget")}}));
     QVERIFY(B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("prune")}}));

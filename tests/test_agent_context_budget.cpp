@@ -227,11 +227,14 @@ void AgentContextBudgetTests::mcpToolSchemas_cost()
     qInfo() << "costo de 37 tools MCP:" << (withMcpBytes - builtinBytes) << "bytes";
 
     // Lazy discovery mantiene el catálogo completo fuera del request y expone
-    // sólo dos meta-tools con costo constante.
+    // sólo dos meta-tools (mcp_search_tools / mcp_call_tool). Contamos por prefijo
+    // "mcp_": si el descubrimiento lazy fallara y se filtraran las tools crudas
+    // (mcp__<server>__<tool>, que también empiezan con "mcp_"), el conteo se
+    // dispararía muy por encima de 2 → la aserción lo detecta.
     int mcpCount = 0;
     for (const QJsonValue &v : withMcp) {
         const QString n = v.toObject().value("function").toObject().value("name").toString();
-        if (n.startsWith(QStringLiteral("mcp__"))) ++mcpCount;
+        if (n.startsWith(QStringLiteral("mcp_"))) ++mcpCount;
     }
     QCOMPARE(mcpCount, 2);
     QVERIFY(withMcpBytes - builtinBytes < 3000);

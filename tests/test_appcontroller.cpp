@@ -793,7 +793,10 @@ void AppControllerTests::agentLevels_contextBudgetLadder()
             *hasMcp = false;
             for (const QJsonValue &v : tools) {
                 const QString n = v.toObject().value("function").toObject().value("name").toString();
-                if (n.startsWith(QStringLiteral("mcp__"))) { *hasMcp = true; break; }
+                // Lazy discovery expone las meta-tools mcp_search_tools / mcp_call_tool
+                // (prefijo "mcp_"); las tools crudas serían mcp__<server>__<tool>. Ambas
+                // matchean "mcp_" → basta para detectar que MCP está inyectado.
+                if (n.startsWith(QStringLiteral("mcp_"))) { *hasMcp = true; break; }
             }
         }
         const int toolBytes = QJsonDocument(tools).toJson(QJsonDocument::Compact).size();

@@ -1118,6 +1118,16 @@ QString LlamaAgentBackend::buildSystemPrompt() const
             "(pasos, archivos a tocar, riesgos). write_file/edit_file/run_shell están "
             "deshabilitadas.\n\n");
 
+    if (m_hitlDestructive && !super)
+        base += QStringLiteral(
+            "GUARDRAIL DE ACCIONES DESTRUCTIVAS: las acciones irreversibles (borrado "
+            "recursivo, format, git push --force / reset --hard, DROP/TRUNCATE de DB, "
+            "borrar memoria) SIEMPRE requieren aprobación humana explícita, aun en modo "
+            "automático — no es un error, es una pausa esperada. Preferí alternativas no "
+            "destructivas (mover a papelera en vez de borrar, rama nueva en vez de "
+            "--force). Si necesitás una acción destructiva, ejecutá la tool igual y "
+            "esperá la aprobación del usuario; no intentes evadir el freno.\n\n");
+
     if (dirOn("discipline"))     base += developmentDisciplineSection();
     if (dirOn("testNet"))        base += testSafetyNetSection();
     // Playbook de escritorio: sólo si las tools desktop_* están disponibles
@@ -2681,7 +2691,7 @@ void LlamaAgentBackend::processPendingCalls()
                                       ? args.value(QStringLiteral("arguments")).toObject() : args;
     const bool destructiveGated = (m_hitlDestructive
                                    && m_approvalMode != QLatin1String("super")
-                                   && isDestructiveAction(guardName, guardArgs));
+                                   && isDestructiveAction(guardName, guardArgs, m_lastDesktopResult));
     if (destructiveGated)
         emit logAppended(QStringLiteral("[guardrail] '%1' es destructiva → aprobación requerida\n").arg(name));
 
@@ -2736,7 +2746,12 @@ void LlamaAgentBackend::processPendingCalls()
         {QStringLiteral("kind"),      kind},
         {QStringLiteral("title"),     name},
         {QStringLiteral("detail"),    detail},
-        {QStringLiteral("diff"),      diff}
+        {QStringLiteral("diff"),      diff},
+        // Motivo del freno: el guardrail Zero-Autonomy tiene prioridad en el card
+        // (una destructiva puede además ser write). "" = aprobación normal.
+        {QStringLiteral("reason"),    destructiveGated ? QStringLiteral("destructive")
+                                    : emailGated       ? QStringLiteral("email")
+                                                       : QString()}
     });
     ensureAssistantBubble();
     setAssistantStatus(QStringLiteral("Esperando aprobación para %1...").arg(name));
@@ -3187,6 +3202,9 @@ void LlamaAgentBackend::launchSub(const QJsonObject &call)
     auto *sub = new SubAgentRunner(id, m_ctx.serverBaseUrl, m_ctx.modelId,
                                    wt, prompt, m_temperature,
                                    m_directives.contains(QStringLiteral("honey")), this);
+    // Propagar el guardrail: en modo super el agente principal ya no gatea nada,
+    // así que tampoco lo imponemos al sub-árbol (autonomía total, coherente).
+    sub->setHitlDestructive(m_hitlDestructive && m_approvalMode != QLatin1String("super"));
     connect(sub, &SubAgentRunner::finished, this, &LlamaAgentBackend::onSubFinished);
     connect(sub, &SubAgentRunner::progressed, this, &LlamaAgentBackend::onSubProgress);
     m_subs.insert(id, sub);
@@ -3986,6 +4004,9 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("subj"), strProp(QStringLiteral("Entidad origen (sólo link)."))},
                {QStringLiteral("pred"), strProp(QStringLiteral("Predicado/relación, ej. 'depende_de' (sólo link)."))},
                {QStringLiteral("obj"), strProp(QStringLiteral("Entidad destino (sólo link)."))},
+               {QStringLiteral("edge_type"), strProp(QStringLiteral("link: tipo de arista (REQUIRES|ENABLES|IMPLEMENTS|DEFINES|CALLS|IMPORTS|RELATES_TO). Vacío = se infiere del pred. Usá REQUIRES para dependencia dura, RELATES_TO para asociación blanda."))},
+               {QStringLiteral("confidence"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                   {QStringLiteral("description"), QStringLiteral("link: confianza [0,1] del edge. Omitir si no estás seguro → queda 'unreviewed' (revisable después, NO significa incorrecto).")}}},
                {QStringLiteral("name"), strProp(QStringLiteral("Nombre de entidad (add_entity y query)."))},
                {QStringLiteral("etype"), strProp(QStringLiteral("Tipo de entidad (sólo add_entity)."))},
                {QStringLiteral("depth"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
