@@ -71,6 +71,15 @@ int removeRelationsBySubject(const QString &cwd, const QString &subjName);
 // existe) sin re-parsear el JSONL afuera.
 QStringList entityNames(const QString &cwd, const QString &etype);
 
+// REVISIÓN de un edge existente (colaboración/auditoría): sube su 'conf' y marca
+// su 'prov' (default "user") — convierte un edge unreviewed del LLM en verificado.
+// Con drop=true en cambio TACHA ese edge puntual (edge equivocado). Ubica la
+// relación por (subj,pred,obj) normalizados; reescribe el JSONL. Devuelve estado.
+QString reviewRelation(const QString &cwd, const QString &subj, const QString &pred,
+                       const QString &obj, double conf,
+                       const QString &prov = QStringLiteral("user"),
+                       bool drop = false);
+
 // Consulta el vecindario de una entidad por nombre. depth=1 (default) o 2
 // (graph expansion: incluye vecinos de vecinos). Devuelve markdown.
 QString query(const QString &cwd, const QString &name, int depth);

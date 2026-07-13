@@ -1868,6 +1868,20 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             if (ok) *ok = true;
             return res;
         }
+        if (action == QLatin1String("verify")) {
+            // Revisión/corrección de un edge existente: sube conf (default 1.0) y
+            // marca prov=user, o lo tacha con drop=true.
+            const double vconf = args.contains(QStringLiteral("confidence"))
+                ? args.value(QStringLiteral("confidence")).toDouble() : 1.0;
+            const QString res = GraphStore::reviewRelation(
+                cwd, args.value(QStringLiteral("subj")).toString(),
+                args.value(QStringLiteral("pred")).toString(),
+                args.value(QStringLiteral("obj")).toString(), vconf,
+                QStringLiteral("user"),
+                args.value(QStringLiteral("drop")).toBool(false));
+            if (ok) *ok = true;
+            return res;
+        }
         // link (default). Edge inferido por el LLM: entra unreviewed (conf<0)
         // salvo que el modelo pase 'confidence' explícito. 'edge_type' opcional
         // fuerza la taxonomía (REQUIRES/ENABLES/…); vacío = se infiere del pred.

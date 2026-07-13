@@ -3997,7 +3997,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "sólo lo cambiado desde la última pasada (git/mtime, borra edges viejos); o "
                           "pasá 'files' (lista) para refrescar archivos puntuales tras editarlos."),
            QJsonObject{
-               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'decide' | 'decisions' | 'index'."))},
+               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'verify' | 'decide' | 'decisions' | 'index'."))},
                {QStringLiteral("langs"), strProp(QStringLiteral("index: lenguajes a indexar (CSV, ej. 'cpp,qml'). Vacío = cpp/qml/js/ts/py."))},
                {QStringLiteral("incremental"), boolProp(QStringLiteral("index: reindexar sólo lo cambiado desde la última pasada (default false = todo)."))},
                {QStringLiteral("files"), strProp(QStringLiteral("index: lista de rutas a reindexar puntualmente (CSV). Ignora incremental."))},
@@ -4006,7 +4006,8 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("obj"), strProp(QStringLiteral("Entidad destino (sólo link)."))},
                {QStringLiteral("edge_type"), strProp(QStringLiteral("link: tipo de arista (REQUIRES|ENABLES|IMPLEMENTS|DEFINES|CALLS|IMPORTS|RELATES_TO). Vacío = se infiere del pred. Usá REQUIRES para dependencia dura, RELATES_TO para asociación blanda."))},
                {QStringLiteral("confidence"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
-                   {QStringLiteral("description"), QStringLiteral("link: confianza [0,1] del edge. Omitir si no estás seguro → queda 'unreviewed' (revisable después, NO significa incorrecto).")}}},
+                   {QStringLiteral("description"), QStringLiteral("confianza [0,1] del edge (link y verify). En link: omitir si no estás seguro → 'unreviewed'. En verify: sube la confianza del edge (default 1.0).")}}},
+               {QStringLiteral("drop"), boolProp(QStringLiteral("verify: true tacha (borra) ese edge puntual en vez de revisarlo (edge equivocado). Ubica el edge por subj/pred/obj."))},
                {QStringLiteral("name"), strProp(QStringLiteral("Nombre de entidad (add_entity y query)."))},
                {QStringLiteral("etype"), strProp(QStringLiteral("Tipo de entidad (sólo add_entity)."))},
                {QStringLiteral("depth"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},

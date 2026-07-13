@@ -183,6 +183,56 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
     return QStringLiteral("[relación creada · %1 -[%2]-> %3]").arg(s, et, o);
 }
 
+QString reviewRelation(const QString &cwd, const QString &subj, const QString &pred,
+                       const QString &obj, double conf, const QString &prov, bool drop)
+{
+    const QString s = subj.trimmed(), p = pred.trimmed(), o = obj.trimmed();
+    if (s.isEmpty() || p.isEmpty() || o.isEmpty())
+        return QStringLiteral("[graph verify: subj/pred/obj requeridos]");
+
+    const QString path = jsonlPath(cwd);
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return QStringLiteral("[grafo vacío]");
+
+    const QString rid = relId(entId(s), p, entId(o));
+    const QString provTag = prov.trimmed().isEmpty() ? QStringLiteral("user")
+                                                     : prov.trimmed();
+    QByteArray out;
+    bool hit = false;
+    while (!f.atEnd()) {
+        const QByteArray l = f.readLine().trimmed();
+        if (l.isEmpty()) continue;
+        QJsonObject ro = QJsonDocument::fromJson(l).object();
+        if (ro.value(QStringLiteral("kind")).toString() == QLatin1String("relation")
+            && ro.value(QStringLiteral("id")).toString() == rid) {
+            hit = true;
+            if (drop) continue;   // tachar: no lo re-escribimos
+            ro.insert(QStringLiteral("conf"), confVal(conf));
+            ro.insert(QStringLiteral("prov"), provTag);
+            out += QJsonDocument(ro).toJson(QJsonDocument::Compact);
+            out += '\n';
+            continue;
+        }
+        out += l;
+        out += '\n';
+    }
+    f.close();
+    if (!hit)
+        return QStringLiteral("[graph verify: no existe el edge %1 -[%2]-> %3]").arg(s, p, o);
+
+    QFile w(path);
+    if (!w.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+        return QStringLiteral("[graph verify: no se pudo reescribir %1]").arg(path);
+    w.write(out);
+    w.close();
+    if (drop)
+        return QStringLiteral("[edge tachado · %1 -[%2]-> %3]").arg(s, p, o);
+    return QStringLiteral("[edge revisado · %1 -[%2]-> %3 · conf=%4 prov=%5]")
+        .arg(s, p, o).arg(conf < 0 ? QStringLiteral("null") : QString::number(conf, 'g', 2),
+                          provTag);
+}
+
 QString addBatch(const QString &cwd,
                  const QVector<QPair<QString, QString>> &entities,
                  const QVector<Triple> &relations,

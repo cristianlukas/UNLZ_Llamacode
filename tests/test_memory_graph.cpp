@@ -31,6 +31,7 @@ private slots:
     void graph_addEntityAndQuery();
     void graph_linkRelation();
     void graph_typedEdgesAndProvenance();
+    void graph_verifyAndDropEdge();
     void graph_queryDepth2();
     void graph_normalizesNames();
     void graph_decideKeepsRejected();
@@ -233,6 +234,33 @@ void MemoryGraphTests::graph_typedEdgesAndProvenance()
     const QString leg = GraphStore::query(dir.path(), "legacy.cpp", 1);
     QVERIFY(leg.contains("IMPORTS"));                  // etype inferido del pred viejo
     QVERIFY(leg.contains("unreviewed"));              // conf ausente → unreviewed
+}
+
+void MemoryGraphTests::graph_verifyAndDropEdge()
+{
+    QTemporaryDir dir;
+    // Edge del agente entra unreviewed.
+    GraphStore::link(dir.path(), "X", "toca", "Y");
+    QVERIFY(GraphStore::query(dir.path(), "X", 1).contains("unreviewed"));
+
+    // verify sube conf + marca prov=user → deja de ser unreviewed.
+    const QString v = GraphStore::reviewRelation(dir.path(), "X", "toca", "Y", 0.8);
+    QVERIFY(v.contains("revisado"));
+    const QString q = GraphStore::query(dir.path(), "X", 1);
+    QVERIFY(!q.contains("unreviewed"));
+    QVERIFY(q.contains("conf=0.8") && q.contains("user"));
+
+    // Edge inexistente → error, no crash.
+    QVERIFY(GraphStore::reviewRelation(dir.path(), "X", "nada", "Z", 1.0)
+                .contains("no existe"));
+
+    // drop tacha el edge puntual (Y desaparece del vecindario).
+    GraphStore::link(dir.path(), "X", "usa", "W");
+    const QString d = GraphStore::reviewRelation(dir.path(), "X", "toca", "Y", 0, "user", true);
+    QVERIFY(d.contains("tachado"));
+    const QString q2 = GraphStore::query(dir.path(), "X", 1);
+    QVERIFY(!q2.contains("Y"));    // edge tachado
+    QVERIFY(q2.contains("W"));     // el otro edge intacto
 }
 
 void MemoryGraphTests::graph_queryDepth2()
