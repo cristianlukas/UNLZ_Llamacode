@@ -25,6 +25,7 @@ private slots:
     void datasetParseAndVariableExpansion();
     void assertStepRendersInPrompt();
     void runReportFromToolMessages();
+    void hotkeyParseAndTriggers();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -331,6 +332,31 @@ void AutomationTests::assertStepRendersInPrompt()
     QVERIFY(prompt.contains(QStringLiteral("desktop_assert")));
     QVERIFY(prompt.contains(QStringLiteral("TOTAL 42")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::hotkeyParseAndTriggers()
+{
+    using R = AutomationRunner;
+    // Parse válido: modificador(es) + tecla.
+    const QVariantMap ok = R::parseHotkey(QStringLiteral("ctrl+alt+R"));
+    QVERIFY(ok.value("valid").toBool());
+    QCOMPARE(ok.value("key").toString(), QStringLiteral("R"));
+    QCOMPARE(ok.value("mods").toStringList(), (QStringList{"CTRL", "ALT"}));
+    // F-key con Win.
+    QVERIFY(R::parseHotkey(QStringLiteral("WIN+F5")).value("valid").toBool());
+    // Inválidos: sin modificador, sin tecla, tecla basura.
+    QVERIFY(!R::parseHotkey(QStringLiteral("R")).value("valid").toBool());
+    QVERIFY(!R::parseHotkey(QStringLiteral("CTRL")).value("valid").toBool());
+    QVERIFY(!R::parseHotkey(QStringLiteral("CTRL+F99")).value("valid").toBool());
+
+    // hotkeyTriggers: filtra por triggerType + hotkey válido.
+    const QVariantList tasks{
+        QVariantMap{{"id", "a"}, {"triggerType", "hotkey"}, {"triggerHotkey", "CTRL+ALT+R"}},
+        QVariantMap{{"id", "b"}, {"triggerType", "hotkey"}, {"triggerHotkey", "sinmods"}},  // inválido
+        QVariantMap{{"id", "c"}, {"triggerType", "manual"}}};
+    const QVariantList trg = R::hotkeyTriggers(tasks);
+    QCOMPARE(trg.size(), 1);
+    QCOMPARE(trg.first().toMap().value("id").toString(), QStringLiteral("a"));
 }
 
 void AutomationTests::runReportFromToolMessages()

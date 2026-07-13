@@ -65,6 +65,13 @@ public:
     // o carpeta se dispara la Task. Pura (no toca disco). Debounce acotado 0..60000.
     static QVariantList fileWatchTriggers(const QVariantList &tasks);
 
+    // Filas {id, hotkey} de las Tasks con triggerType=="hotkey" y un triggerHotkey
+    // no vacío. Alimenta el registro global de atajos (RegisterHotKey). Pura.
+    static QVariantList hotkeyTriggers(const QVariantList &tasks);
+    // Parsea "CTRL+ALT+R" → {valid, mods:[CTRL,ALT,...], key:"R"}. Modificadores
+    // válidos: CTRL/ALT/SHIFT/WIN; key: una letra/dígito o F1..F12. Pura, sin Win32.
+    static QVariantMap parseHotkey(const QString &spec);
+
     // Run-report por paso: a partir de los mensajes del agente (role=="toolcall")
     // arma la lista de pasos {n, tool, ok, summary} para auditar qué herramientas
     // corrió el run y con qué resultado. Pura. ok=false si el output trae un marcador

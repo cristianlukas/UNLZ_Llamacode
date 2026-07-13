@@ -48,6 +48,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
+#include <QAbstractNativeEventFilter>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QHash>
@@ -4579,8 +4580,94 @@ void AppController::prepareTaskAgentSession()
     }
 }
 
+#ifdef Q_OS_WIN
+// Filtro de eventos nativos: traduce WM_HOTKEY (atajo global) al AppController.
+class HotkeyEventFilter : public QAbstractNativeEventFilter
+{
+public:
+    explicit HotkeyEventFilter(AppController *c) : ctrl(c) {}
+    bool nativeEventFilter(const QByteArray &, void *message, qintptr *) override
+    {
+        const MSG *m = static_cast<MSG *>(message);
+        if (m && m->message == WM_HOTKEY && ctrl)
+            ctrl->onHotkeyPressed(static_cast<int>(m->wParam));
+        return false;   // no consumir: dejar seguir el mensaje
+    }
+    AppController *ctrl = nullptr;
+};
+
+namespace {
+// Nombre de tecla → VK para RegisterHotKey (letras/dígitos directos; F1..F24).
+UINT hotkeyVk(const QString &key)
+{
+    if (key.size() == 1) {
+        const QChar c = key.at(0).toUpper();
+        if ((c >= QLatin1Char('A') && c <= QLatin1Char('Z'))
+            || (c >= QLatin1Char('0') && c <= QLatin1Char('9')))
+            return static_cast<UINT>(c.unicode());
+    }
+    if (key.size() >= 2 && key.at(0).toUpper() == QLatin1Char('F')) {
+        bool ok = false;
+        const int n = key.mid(1).toInt(&ok);
+        if (ok && n >= 1 && n <= 24) return VK_F1 + (n - 1);
+    }
+    return 0;
+}
+}  // namespace
+#endif
+
+void AppController::registerHotkeys()
+{
+#ifdef Q_OS_WIN
+    if (!m_hotkeyFilter) {
+        auto *f = new HotkeyEventFilter(this);
+        qApp->installNativeEventFilter(f);
+        m_hotkeyFilter = f;
+    }
+    // Desregistrar los previos.
+    for (auto it = m_hotkeyTaskIds.constBegin(); it != m_hotkeyTaskIds.constEnd(); ++it)
+        UnregisterHotKey(nullptr, it.key());
+    m_hotkeyTaskIds.clear();
+
+    int nextId = 0xB000;   // rango propio para no chocar con otros atajos del proceso
+    for (const QVariant &tr : AutomationRunner::hotkeyTriggers(m_tasks.all())) {
+        const QVariantMap m = tr.toMap();
+        const QVariantMap parsed = AutomationRunner::parseHotkey(
+            m.value(QStringLiteral("hotkey")).toString());
+        if (!parsed.value(QStringLiteral("valid")).toBool()) continue;
+        UINT mods = MOD_NOREPEAT;
+        for (const QString &mod : parsed.value(QStringLiteral("mods")).toStringList()) {
+            if (mod == QLatin1String("CTRL")) mods |= MOD_CONTROL;
+            else if (mod == QLatin1String("ALT")) mods |= MOD_ALT;
+            else if (mod == QLatin1String("SHIFT")) mods |= MOD_SHIFT;
+            else if (mod == QLatin1String("WIN")) mods |= MOD_WIN;
+        }
+        const UINT vk = hotkeyVk(parsed.value(QStringLiteral("key")).toString());
+        if (!vk) continue;
+        const int hkId = nextId++;
+        if (RegisterHotKey(nullptr, hkId, mods, vk)) {
+            m_hotkeyTaskIds.insert(hkId, m.value(QStringLiteral("id")).toString());
+        } else {
+            appendAgentEvent(QStringLiteral("task"),
+                             QStringLiteral("No se pudo registrar el atajo '%1' (¿lo usa otra app?).")
+                                 .arg(m.value(QStringLiteral("hotkey")).toString()));
+        }
+    }
+#endif
+}
+
+void AppController::onHotkeyPressed(int hotkeyId)
+{
+    const QString id = m_hotkeyTaskIds.value(hotkeyId);
+    if (id.isEmpty()) return;
+    appendAgentEvent(QStringLiteral("task"),
+                     QStringLiteral("Trigger hotkey: corriendo la Task."));
+    if (m_runningTaskId.isEmpty()) runTask(id);
+}
+
 void AppController::rebuildTaskTriggers()
 {
+    registerHotkeys();   // los atajos globales se rearman junto con el watcher
     if (!m_taskWatcher) {
         m_taskWatcher = new QFileSystemWatcher(this);
         connect(m_taskWatcher, &QFileSystemWatcher::fileChanged,

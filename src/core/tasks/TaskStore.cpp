@@ -183,6 +183,7 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["triggerType"]     = def.value("triggerType", t.value("triggerType", QStringLiteral("manual")));
     t["triggerPath"]     = def.value("triggerPath", t.value("triggerPath"));
     t["triggerDebounceMs"] = def.value("triggerDebounceMs", t.value("triggerDebounceMs", 1500));
+    t["triggerHotkey"]   = def.value("triggerHotkey", t.value("triggerHotkey"));
     t["updatedAt"]       = now;
 
     QString outId;
@@ -467,6 +468,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["triggerType"]     = task.value("triggerType", QStringLiteral("manual")).toString();
     o["triggerPath"]     = task.value("triggerPath").toString();
     o["triggerDebounceMs"] = task.value("triggerDebounceMs", 1500).toInt();
+    o["triggerHotkey"]   = task.value("triggerHotkey").toString();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -537,6 +539,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["triggerType"]     = obj.value("triggerType").toString(QStringLiteral("manual"));
     t["triggerPath"]     = obj.value("triggerPath").toString();
     t["triggerDebounceMs"] = obj.value("triggerDebounceMs").toInt(1500);
+    t["triggerHotkey"]   = obj.value("triggerHotkey").toString();
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

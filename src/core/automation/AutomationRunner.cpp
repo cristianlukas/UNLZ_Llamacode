@@ -515,6 +515,50 @@ QVariantList AutomationRunner::fileWatchTriggers(const QVariantList &tasks)
     return out;
 }
 
+QVariantList AutomationRunner::hotkeyTriggers(const QVariantList &tasks)
+{
+    QVariantList out;
+    for (const QVariant &tv : tasks) {
+        const QVariantMap t = tv.toMap();
+        if (t.value(QStringLiteral("triggerType")).toString() != QLatin1String("hotkey"))
+            continue;
+        const QString hk = t.value(QStringLiteral("triggerHotkey")).toString().trimmed();
+        const QString id = t.value(QStringLiteral("id")).toString();
+        if (hk.isEmpty() || id.isEmpty()) continue;
+        if (!parseHotkey(hk).value(QStringLiteral("valid")).toBool()) continue;
+        out << QVariantMap{{QStringLiteral("id"), id}, {QStringLiteral("hotkey"), hk}};
+    }
+    return out;
+}
+
+QVariantMap AutomationRunner::parseHotkey(const QString &spec)
+{
+    QStringList mods;
+    QString key;
+    const QStringList parts = spec.toUpper().split(QLatin1Char('+'), Qt::SkipEmptyParts);
+    for (const QString &raw : parts) {
+        const QString p = raw.trimmed();
+        if (p == QLatin1String("CTRL") || p == QLatin1String("CONTROL")) mods << QStringLiteral("CTRL");
+        else if (p == QLatin1String("ALT")) mods << QStringLiteral("ALT");
+        else if (p == QLatin1String("SHIFT")) mods << QStringLiteral("SHIFT");
+        else if (p == QLatin1String("WIN") || p == QLatin1String("META")) mods << QStringLiteral("WIN");
+        else if (!p.isEmpty()) key = p;   // la última no-modificadora es la tecla
+    }
+    mods.removeDuplicates();
+    bool validKey = false;
+    if (key.size() == 1 && (key.at(0).isLetterOrNumber())) validKey = true;
+    else if (key.size() >= 2 && key.at(0) == QLatin1Char('F')) {
+        bool ok = false;
+        const int n = key.mid(1).toInt(&ok);
+        validKey = ok && n >= 1 && n <= 24;
+    }
+    // Un atajo global necesita al menos un modificador + una tecla válida.
+    const bool valid = validKey && !mods.isEmpty();
+    return QVariantMap{{QStringLiteral("valid"), valid},
+                       {QStringLiteral("mods"), mods},
+                       {QStringLiteral("key"), key}};
+}
+
 QVariantList AutomationRunner::buildRunReport(const QVariantList &agentMessages)
 {
     QVariantList steps;

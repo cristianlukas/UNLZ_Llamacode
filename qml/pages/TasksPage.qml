@@ -48,9 +48,10 @@ Item {
             datasetInlineField.text = t.datasetInline || ""
             datasetFormatCombo.currentIndex = Math.max(0, ["", "csv", "json"].indexOf((t.datasetFormat || "").toLowerCase()))
             datasetOnErrorCombo.currentIndex = (t.datasetOnError === "abort") ? 1 : 0
-            triggerTypeCombo.currentIndex = (t.triggerType === "fileWatch") ? 1 : 0
+            triggerTypeCombo.currentIndex = (t.triggerType === "fileWatch") ? 1 : ((t.triggerType === "hotkey") ? 2 : 0)
             triggerPathField.text = t.triggerPath || ""
             triggerDebounce.value = t.triggerDebounceMs === undefined ? 1500 : t.triggerDebounceMs
+            triggerHotkeyField.text = t.triggerHotkey || ""
             verifyOtherModel.checked = !!(t.verifyProfileId)
             verifyProfileCombo.selectProfile(t.verifyProfileId || "")
             loadPermissions(t.permScope || "project", t.permFolders || [])
@@ -80,6 +81,7 @@ Item {
             triggerTypeCombo.currentIndex = 0
             triggerPathField.text = ""
             triggerDebounce.value = 1500
+            triggerHotkeyField.text = ""
             verifyOtherModel.checked = false
             verifyProfileCombo.currentIndex = 0
             loadPermissions("project", [])
@@ -881,9 +883,10 @@ Item {
                 datasetInline: datasetInlineField.text,
                 datasetFormat: ["", "csv", "json"][datasetFormatCombo.currentIndex],
                 datasetOnError: ["continue", "abort"][datasetOnErrorCombo.currentIndex],
-                triggerType: ["manual", "fileWatch"][triggerTypeCombo.currentIndex],
+                triggerType: ["manual", "fileWatch", "hotkey"][triggerTypeCombo.currentIndex],
                 triggerPath: triggerPathField.text,
                 triggerDebounceMs: triggerDebounce.value,
+                triggerHotkey: triggerHotkeyField.text,
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
                 permScope: root.collectPermScope(),
@@ -1139,7 +1142,7 @@ Item {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 12
-                        ComboBox { id: triggerTypeCombo; model: ["Manual", "Al cambiar un archivo/carpeta"] }
+                        ComboBox { id: triggerTypeCombo; model: ["Manual", "Al cambiar un archivo/carpeta", "Con un atajo de teclado"] }
                         SpinBox {
                             id: triggerDebounce
                             visible: triggerTypeCombo.currentIndex === 1
@@ -1155,6 +1158,13 @@ Item {
                         Layout.fillWidth: true
                         visible: triggerTypeCombo.currentIndex === 1
                         placeholderText: "Ruta absoluta del archivo o carpeta a vigilar"
+                        color: Theme.textPrimary
+                    }
+                    TextField {
+                        id: triggerHotkeyField
+                        Layout.fillWidth: true
+                        visible: triggerTypeCombo.currentIndex === 2
+                        placeholderText: "Atajo global, ej. CTRL+ALT+R (modificador + tecla)"
                         color: Theme.textPrimary
                     }
 

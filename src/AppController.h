@@ -394,7 +394,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.32"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.35"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -966,6 +966,10 @@ private:
     void detectServerLogPatterns(const QString &text);
     void launchTaskBody(const QString &id, const QVariantMap &task);
     void onTriggerPathChanged(const QString &path);
+    void registerHotkeys();          // (re)registra los atajos globales de las Tasks
+public:
+    void onHotkeyPressed(int hotkeyId);   // llamado por el filtro de eventos nativos
+private:
     void appendAgentEvent(const QString &source, const QString &text);
     // Verify-phase swap: manda `prompt` al agente, cambiando antes el modelo a
     // `targetLaunchId` si difiere del activo (reinicia server+agente; sesión
@@ -991,6 +995,10 @@ private:
     // con debounce por Task (evita ráfagas de eventos de guardado).
     QFileSystemWatcher *m_taskWatcher = nullptr;
     QHash<QString, qint64> m_triggerLastFire;   // id de Task → epoch ms del último disparo
+    // Atajos globales (RegisterHotKey): id de atajo Win32 → id de Task. El filtro de
+    // eventos nativos (opaco para no meter windows.h en el header) traduce WM_HOTKEY.
+    QHash<int, QString> m_hotkeyTaskIds;
+    void *m_hotkeyFilter = nullptr;
     AutomationStore   m_automations;
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
