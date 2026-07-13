@@ -27,6 +27,10 @@ public:
     QString startBrowser(const QVariantMap &task, const QString &url);
     void setPaused(bool paused);
     void addNote(const QString &note);
+    // Marca una aserción verificable en la timeline: "acá debe aparecer <expectText>".
+    // Se graba como paso [assert] anclado al control bajo el cursor → el replay lo
+    // reproduce con desktop_assert (objetivo comprobable, no opinable).
+    void addAssertion(const QString &expectText);
     QString finish();
     void cancel();
 

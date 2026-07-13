@@ -928,3 +928,71 @@ QVariantMap DesktopAutomationBackend::waitFor(const QString &windowTargetId,
     return QVariantMap{{QStringLiteral("found"), false}};
 #endif
 }
+
+QVariantMap DesktopAutomationBackend::assertCondition(const QString &windowTargetId,
+                                                      const QString &windowTitle,
+                                                      const QString &query, const QString &role,
+                                                      const QString &expectText, int timeoutMs,
+                                                      QString *error)
+{
+#ifdef Q_OS_WIN
+    const QString want = expectText.trimmed();
+    // Sin texto esperado → aserción de existencia: reusa waitFor.
+    if (want.isEmpty()) {
+        QString err;
+        const QVariantMap r = waitFor(windowTargetId, windowTitle, query, role, timeoutMs, &err);
+        const bool pass = r.value(QStringLiteral("found")).toBool();
+        if (!pass && error) *error = err;
+        return QVariantMap{{QStringLiteral("pass"), pass},
+                           {QStringLiteral("elapsedMs"), r.value(QStringLiteral("elapsedMs"))},
+                           {QStringLiteral("detail"), pass
+                                ? QStringLiteral("Condición de existencia cumplida.")
+                                : QStringLiteral("No apareció la ventana/control esperado.")}};
+    }
+    // Con texto esperado → escanear controles buscando el texto en el nombre.
+    const int budget = qBound(0, timeoutMs, 60000);
+    const QString needle = want.toLower();
+    QElapsedTimer clock;
+    clock.start();
+    do {
+        QStringList winIds;
+        const QString explicitId = windowTargetId.trimmed();
+        if (!explicitId.isEmpty()) {
+            winIds << explicitId;
+        } else if (!windowTitle.trimmed().isEmpty()) {
+            const QString t = windowTitle.trimmed().toLower();
+            for (const QVariant &w : windows())
+                if (w.toMap().value(QStringLiteral("label")).toString().toLower().contains(t))
+                    winIds << w.toMap().value(QStringLiteral("id")).toString();
+        } else {
+            for (const QVariant &w : windows())
+                winIds << w.toMap().value(QStringLiteral("id")).toString();
+        }
+        for (const QString &wid : winIds) {
+            for (const QVariant &c : controls(wid, want, 400, nullptr)) {
+                if (c.toMap().value(QStringLiteral("name")).toString().toLower().contains(needle)) {
+                    return QVariantMap{{QStringLiteral("pass"), true},
+                                       {QStringLiteral("elapsedMs"), static_cast<int>(clock.elapsed())},
+                                       {QStringLiteral("windowId"), wid},
+                                       {QStringLiteral("detail"),
+                                        QStringLiteral("Texto \"%1\" presente.").arg(want.left(80))}};
+                }
+            }
+        }
+        if (clock.elapsed() >= budget) break;
+        Sleep(200);
+    } while (clock.elapsed() < budget);
+
+    if (error) *error = QStringLiteral("El texto \"%1\" no apareció en %2 ms.")
+                            .arg(want.left(80)).arg(budget);
+    return QVariantMap{{QStringLiteral("pass"), false},
+                       {QStringLiteral("elapsedMs"), static_cast<int>(clock.elapsed())},
+                       {QStringLiteral("detail"),
+                        QStringLiteral("Texto \"%1\" NO encontrado.").arg(want.left(80))}};
+#else
+    Q_UNUSED(windowTargetId) Q_UNUSED(windowTitle) Q_UNUSED(query)
+    Q_UNUSED(role) Q_UNUSED(expectText) Q_UNUSED(timeoutMs)
+    if (error) *error = QStringLiteral("Disponible sólo en Windows.");
+    return QVariantMap{{QStringLiteral("pass"), false}};
+#endif
+}

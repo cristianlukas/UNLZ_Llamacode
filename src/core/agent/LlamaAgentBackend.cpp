@@ -2472,7 +2472,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("desktop_stroke"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_wait_for"),
-        QStringLiteral("desktop_focus"),
+        QStringLiteral("desktop_assert"), QStringLiteral("desktop_focus"),
         QStringLiteral("desktop_wait"), QStringLiteral("desktop_launch"),
         QStringLiteral("email_accounts"), QStringLiteral("email_send"),
         QStringLiteral("email_list"), QStringLiteral("email_read"),
@@ -4198,6 +4198,21 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("role"), strProp(QStringLiteral("Rol del control: button/edit/text/... (opcional)."))},
                {QStringLiteral("timeout_ms"), intProp(QStringLiteral("Máximo a esperar (default 8000, tope 60000)."))}},
            QJsonArray{}),
+        fn(QStringLiteral("desktop_assert"),
+           QStringLiteral("VERIFICA una condición comprobable y devuelve PASS/FAIL (no una "
+                          "opinión). Usalo al final de una Task o tras un paso clave para "
+                          "confirmar el objetivo. Casos: 'expect_text' → pasa si ese texto "
+                          "aparece en algún control (de la ventana 'target_id'/'window_title', o "
+                          "de cualquiera si no se indica); o 'query'/'role'/'window_title' → pasa "
+                          "si existe esa ventana/control. Espera hasta 'timeout_ms'."),
+           QJsonObject{
+               {QStringLiteral("expect_text"), strProp(QStringLiteral("Texto que debe estar presente (opcional)."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de ventana donde verificar (opcional)."))},
+               {QStringLiteral("window_title"), strProp(QStringLiteral("Substring del título de ventana (opcional)."))},
+               {QStringLiteral("query"), strProp(QStringLiteral("Substring del nombre de control a existir (opcional)."))},
+               {QStringLiteral("role"), strProp(QStringLiteral("Rol del control esperado (opcional)."))},
+               {QStringLiteral("timeout_ms"), intProp(QStringLiteral("Máximo a esperar (default 4000, tope 60000)."))}},
+           QJsonArray{}),
         fn(QStringLiteral("email_accounts"),
            QStringLiteral("Lista las cuentas de correo configuradas por el usuario (nombre + "
                           "dirección, sin contraseñas). Usalo para saber qué cuentas hay antes "
@@ -4284,6 +4299,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_focus", "Escritorio", "Enfoca una ventana.", 70),
         mk("desktop_wait", "Escritorio", "Espera antes de observar.", 60),
         mk("desktop_wait_for", "Escritorio", "Espera una condición (ventana/control) sin dormir fijo.", 85),
+        mk("desktop_assert", "Escritorio", "Verifica una condición comprobable (PASS/FAIL).", 88),
         mk("desktop_launch", "Escritorio", "Abre una app desprendida (no bloquea como run_shell).", 95),
         mk("email_accounts", "Correo", "Lista las cuentas de correo configuradas.", 60),
         mk("email_send", "Correo", "Envía un correo (SMTP). Requiere aprobación por defecto.", 150),

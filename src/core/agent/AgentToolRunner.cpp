@@ -937,6 +937,24 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                               .arg(error.isEmpty() ? QStringLiteral("no encontrado") : error, json);
         return QStringLiteral("[desktop_wait_for: ok]\n%1").arg(json);
     }
+    if (name == QLatin1String("desktop_assert")) {
+        QString error;
+        const QVariantMap res = DesktopAutomationBackend::assertCondition(
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("window_title")).toString(),
+            args.value(QStringLiteral("query")).toString(),
+            args.value(QStringLiteral("role")).toString(),
+            args.value(QStringLiteral("expect_text")).toString(),
+            args.value(QStringLiteral("timeout_ms")).toInt(4000),
+            &error);
+        const bool pass = res.value(QStringLiteral("pass")).toBool();
+        if (ok) *ok = pass;
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(res)).toJson(QJsonDocument::Compact));
+        return pass ? QStringLiteral("[desktop_assert: PASS]\n%1").arg(json)
+                    : QStringLiteral("[desktop_assert: FAIL] %1\n%2")
+                          .arg(error.isEmpty() ? QStringLiteral("condición no cumplida") : error, json);
+    }
     if (name == QLatin1String("desktop_launch")) {
         QString error;
         const bool good = DesktopAutomationBackend::launchApp(

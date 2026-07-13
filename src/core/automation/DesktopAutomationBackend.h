@@ -74,4 +74,15 @@ public:
     static QVariantMap waitFor(const QString &windowTargetId, const QString &windowTitle,
                                const QString &query, const QString &role, int timeoutMs,
                                QString *error = nullptr);
+
+    // Aserción verificable para el replay/RPA: comprueba una condición y devuelve
+    // {pass:bool, detail}. Casos (poll hasta timeout):
+    //  - expectText no vacío → pasa si algún control (de la ventana target, o de
+    //    cualquier ventana si no se da target) tiene ese texto en su nombre.
+    //  - si no, delega en waitFor (existencia de ventana por título / control por
+    //    query/role). Es el primitivo que hace el objetivo comprobable, no opinable.
+    static QVariantMap assertCondition(const QString &windowTargetId, const QString &windowTitle,
+                                       const QString &query, const QString &role,
+                                       const QString &expectText, int timeoutMs,
+                                       QString *error = nullptr);
 };

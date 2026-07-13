@@ -324,6 +324,12 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
                          {{"window_title", "ventana-que-no-existe-zzz"}, {"timeout_ms", 200}});
     QVERIFY(!w.value("ok").toBool());
     QVERIFY(w.value("result").toString().startsWith(QStringLiteral("[desktop_wait_for:")));
+
+    // desktop_assert: un texto inexistente con timeout corto → FAIL limpio, ok=false.
+    QVariantMap a = call("desktop_assert",
+                         {{"expect_text", "texto-que-no-existe-zzz"}, {"timeout_ms", 200}});
+    QVERIFY(!a.value("ok").toBool());
+    QVERIFY(a.value("result").toString().startsWith(QStringLiteral("[desktop_assert: FAIL")));
 }
 
 void AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()

@@ -224,6 +224,7 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_focus"),
         QStringLiteral("desktop_wait"),
         QStringLiteral("desktop_wait_for"),
+        QStringLiteral("desktop_assert"),
         QStringLiteral("desktop_launch")};
 }
 
@@ -268,6 +269,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "Cada paso trae un 'target' con name/role/controlId del control real bajo el "
             "cursor: preferí re-localizarlo (desktop_controls + desktop_click_element por "
             "ese name/role) y dejá las coordenadas sólo como respaldo. "
+            "VERIFICACIÓN: un paso [assert] es una condición que DEBE cumplirse; reproducilo "
+            "con desktop_assert (PASS/FAIL). Cerrá la Task con un desktop_assert del objetivo "
+            "en vez de declarar éxito de memoria. "
             "No leas evidence/*.jpg con read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(
@@ -312,6 +316,13 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
                               .arg(last.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
             }
             out += QStringLiteral(" (points=%1)").arg(coords.join(QLatin1Char(' ')));
+        }
+        // Aserción: emitir el texto esperado para reproducirla con desktop_assert.
+        if (step.value(QStringLiteral("kind")).toString() == QLatin1String("assert")) {
+            const QString expect = step.value(QStringLiteral("expectText")).toString();
+            if (!expect.isEmpty())
+                out += QStringLiteral(" (verificá con desktop_assert expect_text=\"%1\")")
+                           .arg(expect.left(120));
         }
         const QVariantMap target = step.value(QStringLiteral("target")).toMap();
         const QString role = target.value(QStringLiteral("role")).toString();

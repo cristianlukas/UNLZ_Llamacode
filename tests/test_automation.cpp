@@ -23,6 +23,7 @@ private slots:
     void actionTraceSurvivesRecipeAndPrompt();
     void strokePointsSurviveRecipeAndPrompt();
     void datasetParseAndVariableExpansion();
+    void assertStepRendersInPrompt();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -306,6 +307,28 @@ void AutomationTests::strokePointsSurviveRecipeAndPrompt()
     QVERIFY(prompt.contains(QStringLiteral("[0.400,0.600]")));   // último punto
     // El prompt de escritorio ofrece la sincronización por condición.
     QVERIFY(prompt.contains(QStringLiteral("desktop_wait_for")));
+    QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::assertStepRendersInPrompt()
+{
+    // Un paso [assert] grabado en Teach debe salir en el prompt con su texto
+    // esperado y la instrucción de reproducirlo con desktop_assert.
+    QVariantMap task{{"id", "assert-demo"}, {"name", "Verif"},
+                     {"description", "Confirmar total"},
+                     {"executionMode", "desktop"}};
+    const QVariantMap assertStep{
+        {QStringLiteral("kind"), QStringLiteral("assert")},
+        {QStringLiteral("intent"), QStringLiteral("Verificar que aparezca: \"TOTAL 42\"")},
+        {QStringLiteral("expectText"), QStringLiteral("TOTAL 42")}};
+    const QString id = AutomationArtifactStore::create(
+        task, QVariantMap{{"kind", "window"}, {"targetId", "abc"}}, QVariantList{assertStep}, {});
+
+    const QString prompt = AutomationRunner::augmentPrompt(
+        task, AutomationArtifactStore::manifest(id), AutomationArtifactStore::recipe(id));
+    QVERIFY(prompt.contains(QStringLiteral("[assert]")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_assert")));
+    QVERIFY(prompt.contains(QStringLiteral("TOTAL 42")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

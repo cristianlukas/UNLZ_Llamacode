@@ -207,6 +207,23 @@ void TeachSessionRecorder::addNote(const QString &note)
                  {QStringLiteral("intent"), clean}}, true);
 }
 
+void TeachSessionRecorder::addAssertion(const QString &expectText)
+{
+    if (m_state != QLatin1String("recording") && m_state != QLatin1String("paused")) return;
+    const QString clean = AutomationArtifactStore::redact(expectText.trimmed());
+    if (clean.isEmpty()) return;
+    QVariantMap ev{
+        {QStringLiteral("kind"), QStringLiteral("assert")},
+        {QStringLiteral("intent"), QStringLiteral("Verificar que aparezca: \"%1\"").arg(clean)},
+        {QStringLiteral("expectText"), clean}};
+#ifdef Q_OS_WIN
+    const QVariantMap control = DesktopAutomationBackend::controlAtPoint(QCursor::pos());
+    if (!control.value(QStringLiteral("windowId")).toString().isEmpty())
+        ev[QStringLiteral("target")] = control;
+#endif
+    appendEvent(ev, true);
+}
+
 QString TeachSessionRecorder::captureEvidence()
 {
     if (m_mode != QLatin1String("desktop")
