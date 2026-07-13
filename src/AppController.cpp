@@ -3419,6 +3419,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
                 {QStringLiteral("desktop_type"), QStringLiteral("Escribiendo")},
                 {QStringLiteral("desktop_key"), QStringLiteral("Usando el teclado")},
                 {QStringLiteral("desktop_scroll"), QStringLiteral("Desplazando")},
+                {QStringLiteral("desktop_wait_for"), QStringLiteral("Esperando una condición")},
                 {QStringLiteral("desktop_launch"), QStringLiteral("Abriendo una aplicación")},
                 {QStringLiteral("desktop_focus"), QStringLiteral("Cambiando de ventana")},
                 {QStringLiteral("desktop_controls"), QStringLiteral("Leyendo controles")},

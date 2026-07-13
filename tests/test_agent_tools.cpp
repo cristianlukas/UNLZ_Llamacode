@@ -317,6 +317,13 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
     QVariantMap s = call("desktop_stroke",
                          {{"target_id", "0"}, {"scope_kind", "screen"}, {"points", pts}});
     QVERIFY(s.value("result").toString().startsWith(QStringLiteral("[desktop_stroke:")));
+
+    // desktop_wait_for: dispatch + timeout. Un título de ventana inexistente con
+    // timeout corto → found:false, sin colgar, con prefijo [desktop_wait_for:.
+    QVariantMap w = call("desktop_wait_for",
+                         {{"window_title", "ventana-que-no-existe-zzz"}, {"timeout_ms", 200}});
+    QVERIFY(!w.value("ok").toBool());
+    QVERIFY(w.value("result").toString().startsWith(QStringLiteral("[desktop_wait_for:")));
 }
 
 void AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()

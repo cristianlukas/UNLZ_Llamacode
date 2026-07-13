@@ -303,6 +303,8 @@ void AutomationTests::strokePointsSurviveRecipeAndPrompt()
     QVERIFY(prompt.contains(QStringLiteral("points=")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_stroke")));
     QVERIFY(prompt.contains(QStringLiteral("[0.400,0.600]")));   // último punto
+    // El prompt de escritorio ofrece la sincronización por condición.
+    QVERIFY(prompt.contains(QStringLiteral("desktop_wait_for")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

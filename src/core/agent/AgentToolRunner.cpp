@@ -920,6 +920,23 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return good ? QStringLiteral("[desktop_scroll: ok]")
                     : QStringLiteral("[desktop_scroll: %1]").arg(error);
     }
+    if (name == QLatin1String("desktop_wait_for")) {
+        QString error;
+        const QVariantMap res = DesktopAutomationBackend::waitFor(
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("window_title")).toString(),
+            args.value(QStringLiteral("query")).toString(),
+            args.value(QStringLiteral("role")).toString(),
+            args.value(QStringLiteral("timeout_ms")).toInt(8000),
+            &error);
+        const bool found = res.value(QStringLiteral("found")).toBool();
+        if (ok) *ok = found;
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(res)).toJson(QJsonDocument::Compact));
+        if (!found) return QStringLiteral("[desktop_wait_for: %1]\n%2")
+                              .arg(error.isEmpty() ? QStringLiteral("no encontrado") : error, json);
+        return QStringLiteral("[desktop_wait_for: ok]\n%1").arg(json);
+    }
     if (name == QLatin1String("desktop_launch")) {
         QString error;
         const bool good = DesktopAutomationBackend::launchApp(

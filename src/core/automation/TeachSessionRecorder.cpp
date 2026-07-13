@@ -111,6 +111,7 @@ void TeachSessionRecorder::reset()
     m_strokeActive = false;
     m_strokePoints.clear();
     m_strokeMaxDist = 0;
+    m_strokeControl.clear();
     m_leftDown = m_rightDown = false;
     m_error.clear();
     m_events.clear();
@@ -256,6 +257,9 @@ void TeachSessionRecorder::sampleDesktop()
         m_strokeButton = left ? QStringLiteral("left") : QStringLiteral("right");
         m_strokeStartAbs = cursor;
         m_strokeMaxDist = 0;
+        // Anclar el gesto al control UIA bajo el cursor (name/role/automationId +
+        // ventana): en el replay se re-localiza el control aunque la UI se movió.
+        m_strokeControl = DesktopAutomationBackend::controlAtPoint(cursor);
         const QPointF p = DesktopAutomationBackend::normalizePoint(cursor, bounds);
         m_strokePoints = QVariantList{QVariantMap{{QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}}};
     }
@@ -276,6 +280,16 @@ void TeachSessionRecorder::sampleDesktop()
         const QPointF start = m_strokePoints.isEmpty() ? QPointF()
             : QPointF(m_strokePoints.first().toMap().value(QStringLiteral("x")).toDouble(),
                       m_strokePoints.first().toMap().value(QStringLiteral("y")).toDouble());
+        // target = geometría del alcance + ancla semántica del control (si UIA lo dio).
+        QVariantMap target = targetTrace(m_mode, m_scopeKind, m_scopeId, bounds);
+        const QString ctlName = m_strokeControl.value(QStringLiteral("name")).toString();
+        if (!ctlName.isEmpty() || !m_strokeControl.value(QStringLiteral("controlId")).toString().isEmpty()) {
+            target[QStringLiteral("name")] = ctlName;
+            target[QStringLiteral("role")] = m_strokeControl.value(QStringLiteral("role"));
+            target[QStringLiteral("controlId")] = m_strokeControl.value(QStringLiteral("controlId"));
+            target[QStringLiteral("automationId")] = m_strokeControl.value(QStringLiteral("automationId"));
+            target[QStringLiteral("windowId")] = m_strokeControl.value(QStringLiteral("windowId"));
+        }
         if (m_strokeMaxDist >= 8 && m_strokePoints.size() >= 2) {
             appendEvent({{QStringLiteral("kind"), QStringLiteral("stroke")},
                          {QStringLiteral("intent"), QStringLiteral("Arrastrar con botón %1 (traza de %2 puntos)")
@@ -284,7 +298,7 @@ void TeachSessionRecorder::sampleDesktop()
                          {QStringLiteral("button"), btn},
                          {QStringLiteral("x"), start.x()}, {QStringLiteral("y"), start.y()},
                          {QStringLiteral("points"), m_strokePoints},
-                         {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
+                         {QStringLiteral("target"), target}}, true);
         } else {
             appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
                          {QStringLiteral("intent"), btn == QLatin1String("right")
@@ -293,7 +307,7 @@ void TeachSessionRecorder::sampleDesktop()
                          {QStringLiteral("button"), btn},
                          {QStringLiteral("x"), start.x()}, {QStringLiteral("y"), start.y()},
                          {QStringLiteral("pointer"), pointerTrace(m_strokeStartAbs, start, btn)},
-                         {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
+                         {QStringLiteral("target"), target}}, true);
         }
         m_strokePoints.clear();
     }

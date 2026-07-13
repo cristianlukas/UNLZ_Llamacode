@@ -58,4 +58,20 @@ public:
     // bounding rect. Sólo Windows.
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
                              QString *error = nullptr, QVariantMap *trace = nullptr);
+
+    // Control UIA bajo un punto absoluto de pantalla. Lo usa el grabador Teach para
+    // anclar cada click/stroke a un control semántico (name/role/controlId + la
+    // ventana dueña) en vez de sólo coordenadas → replay robusto ante reflow de UI.
+    // Devuelve {} si no hay elemento o UIA no está. Sólo Windows.
+    static QVariantMap controlAtPoint(const QPoint &absolute);
+
+    // Espera (poll) hasta que exista una condición o venza el timeout. Sincroniza
+    // el replay sin sleeps fijos. Un caso por parámetros:
+    //  - windowTitle no vacío → espera una ventana cuyo título contenga el texto.
+    //  - windowTargetId + (query|role) → espera un control (name contiene query,
+    //    role coincide) dentro de esa ventana.
+    // Devuelve {found:bool, elapsedMs, ...datos del match}. Sólo Windows.
+    static QVariantMap waitFor(const QString &windowTargetId, const QString &windowTitle,
+                               const QString &query, const QString &role, int timeoutMs,
+                               QString *error = nullptr);
 };

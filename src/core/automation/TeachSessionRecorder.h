@@ -78,6 +78,7 @@ private:
     QVariantList m_strokePoints;   // {x,y} normalizados
     QPoint m_strokeStartAbs;
     int m_strokeMaxDist = 0;       // desplazamiento máximo en px desde el inicio
+    QVariantMap m_strokeControl;   // control UIA bajo el cursor al apretar (ancla semántica)
     TeachKeyBuffer m_keys;
     WinTapTracker m_winTap;
 };

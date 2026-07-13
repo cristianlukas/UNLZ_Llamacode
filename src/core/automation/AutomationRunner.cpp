@@ -219,6 +219,7 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_scroll"),
         QStringLiteral("desktop_focus"),
         QStringLiteral("desktop_wait"),
+        QStringLiteral("desktop_wait_for"),
         QStringLiteral("desktop_launch")};
 }
 
@@ -258,6 +259,11 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "[type]/[key]/[click] son intención; traducilos a desktop_* sobre la app. "
             "Un paso [stroke] es un ARRASTRE continuo (dibujo/pintura/swipe): reproducilo "
             "con desktop_stroke pasando sus 'points' (no lo partas en clicks). "
+            "SINCRONIZACIÓN: en vez de desktop_wait con ms fijos, usá desktop_wait_for para "
+            "esperar la ventana/control antes de actuar (más robusto ante latencia). "
+            "Cada paso trae un 'target' con name/role/controlId del control real bajo el "
+            "cursor: preferí re-localizarlo (desktop_controls + desktop_click_element por "
+            "ese name/role) y dejá las coordenadas sólo como respaldo. "
             "No leas evidence/*.jpg con read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(

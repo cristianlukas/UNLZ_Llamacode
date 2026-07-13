@@ -2471,7 +2471,8 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
         QStringLiteral("desktop_stroke"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
-        QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
+        QStringLiteral("desktop_scroll"), QStringLiteral("desktop_wait_for"),
+        QStringLiteral("desktop_focus"),
         QStringLiteral("desktop_wait"), QStringLiteral("desktop_launch"),
         QStringLiteral("email_accounts"), QStringLiteral("email_send"),
         QStringLiteral("email_list"), QStringLiteral("email_read"),
@@ -4183,6 +4184,20 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Espera brevemente antes de volver a observar."),
            QJsonObject{{QStringLiteral("ms"), intProp(QStringLiteral("Milisegundos, máximo 10000."))}},
            QJsonArray{}),
+        fn(QStringLiteral("desktop_wait_for"),
+           QStringLiteral("Espera (poll) hasta que aparezca una CONDICIÓN, sin dormir un tiempo "
+                          "fijo. PREFERILO sobre desktop_wait: sincroniza el replay ante latencia "
+                          "de la UI. Casos: (a) 'window_title' → espera a que exista una ventana "
+                          "con ese título; (b) 'target_id' + 'query'/'role' → espera a que aparezca "
+                          "un control (nombre contiene query, rol coincide) en esa ventana. "
+                          "Devuelve found + datos del match (usá su windowId/controlId después)."),
+           QJsonObject{
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de ventana donde esperar el control (opcional)."))},
+               {QStringLiteral("window_title"), strProp(QStringLiteral("Substring del título de ventana a esperar (opcional)."))},
+               {QStringLiteral("query"), strProp(QStringLiteral("Substring del nombre del control a esperar (opcional)."))},
+               {QStringLiteral("role"), strProp(QStringLiteral("Rol del control: button/edit/text/... (opcional)."))},
+               {QStringLiteral("timeout_ms"), intProp(QStringLiteral("Máximo a esperar (default 8000, tope 60000)."))}},
+           QJsonArray{}),
         fn(QStringLiteral("email_accounts"),
            QStringLiteral("Lista las cuentas de correo configuradas por el usuario (nombre + "
                           "dirección, sin contraseñas). Usalo para saber qué cuentas hay antes "
@@ -4268,6 +4283,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_scroll", "Escritorio", "Desplaza el escritorio.", 70),
         mk("desktop_focus", "Escritorio", "Enfoca una ventana.", 70),
         mk("desktop_wait", "Escritorio", "Espera antes de observar.", 60),
+        mk("desktop_wait_for", "Escritorio", "Espera una condición (ventana/control) sin dormir fijo.", 85),
         mk("desktop_launch", "Escritorio", "Abre una app desprendida (no bloquea como run_shell).", 95),
         mk("email_accounts", "Correo", "Lista las cuentas de correo configuradas.", 60),
         mk("email_send", "Correo", "Envía un correo (SMTP). Requiere aprobación por defecto.", 150),

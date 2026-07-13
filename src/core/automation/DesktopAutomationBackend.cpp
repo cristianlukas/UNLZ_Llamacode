@@ -1,6 +1,7 @@
 #include "DesktopAutomationBackend.h"
 
 #include <QCursor>
+#include <QElapsedTimer>
 #include <QDir>
 #include <QFileInfo>
 #include <QGuiApplication>
@@ -153,6 +154,51 @@ QString uiaName(IUIAutomationElement *el)
     const QString s = QString::fromWCharArray(b, static_cast<int>(SysStringLen(b)));
     SysFreeString(b);
     return s;
+}
+
+// Resumen semántico de un elemento UIA: name/role/controlId/geometría + la HWND
+// de la ventana de nivel superior que lo contiene (para re-anclarlo al reproducir).
+QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
+{
+    const QString name = uiaName(el);
+    CONTROLTYPEID ct = 0;
+    el->get_CurrentControlType(&ct);
+    RECT rc{};
+    el->get_CurrentBoundingRectangle(&rc);
+    BOOL enabled = FALSE;
+    el->get_CurrentIsEnabled(&enabled);
+    BOOL invokable = FALSE;
+    IUnknown *pat = nullptr;
+    if (SUCCEEDED(el->GetCurrentPattern(UIA_InvokePatternId, &pat)) && pat) {
+        invokable = TRUE;
+        pat->Release();
+    }
+    // AutomationId: id estable definido por el dev de la app (mejor ancla que name).
+    QString automationId;
+    BSTR aid = nullptr;
+    if (SUCCEEDED(el->get_CurrentAutomationId(&aid)) && aid) {
+        automationId = QString::fromWCharArray(aid, static_cast<int>(SysStringLen(aid)));
+        SysFreeString(aid);
+    }
+    // HWND de la ventana top-level dueña del control.
+    QString windowId;
+    UIA_HWND h = nullptr;
+    if (uia && SUCCEEDED(el->get_CurrentNativeWindowHandle(&h)) && h) {
+        HWND top = GetAncestor(reinterpret_cast<HWND>(h), GA_ROOT);
+        if (top) windowId = QString::number(reinterpret_cast<quintptr>(top), 16);
+    }
+    return QVariantMap{
+        {QStringLiteral("controlId"), uiaRuntimeId(el)},
+        {QStringLiteral("automationId"), automationId},
+        {QStringLiteral("name"), name.simplified().left(120)},
+        {QStringLiteral("role"), uiaControlTypeName(ct)},
+        {QStringLiteral("windowId"), windowId},
+        {QStringLiteral("x"), static_cast<int>(rc.left)},
+        {QStringLiteral("y"), static_cast<int>(rc.top)},
+        {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
+        {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)},
+        {QStringLiteral("enabled"), static_cast<bool>(enabled)},
+        {QStringLiteral("invokable"), static_cast<bool>(invokable)}};
 }
 #endif
 }
@@ -796,5 +842,89 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
     Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(trace)
     if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
     return false;
+#endif
+}
+
+QVariantMap DesktopAutomationBackend::controlAtPoint(const QPoint &absolute)
+{
+#ifdef Q_OS_WIN
+    ComGuard com;
+    IUIAutomation *uia = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IUIAutomation, reinterpret_cast<void **>(&uia))) || !uia)
+        return {};
+    POINT pt{absolute.x(), absolute.y()};
+    IUIAutomationElement *el = nullptr;
+    QVariantMap info;
+    if (SUCCEEDED(uia->ElementFromPoint(pt, &el)) && el) {
+        info = uiaElementInfo(uia, el);
+        el->Release();
+    }
+    uia->Release();
+    return info;
+#else
+    Q_UNUSED(absolute)
+    return {};
+#endif
+}
+
+QVariantMap DesktopAutomationBackend::waitFor(const QString &windowTargetId,
+                                              const QString &windowTitle, const QString &query,
+                                              const QString &role, int timeoutMs, QString *error)
+{
+#ifdef Q_OS_WIN
+    const int budget = qBound(0, timeoutMs, 60000);
+    const QString title = windowTitle.trimmed().toLower();
+    const QString needle = query.trimmed().toLower();
+    const QString wantRole = role.trimmed().toLower();
+    QElapsedTimer clock;
+    clock.start();
+    do {
+        // Resolver ventana: por id explícito o buscando por título.
+        QString windowId = windowTargetId.trimmed();
+        QString foundTitle;
+        if (windowId.isEmpty() && !title.isEmpty()) {
+            for (const QVariant &w : windows()) {
+                const QVariantMap row = w.toMap();
+                if (row.value(QStringLiteral("label")).toString().toLower().contains(title)) {
+                    windowId = row.value(QStringLiteral("id")).toString();
+                    foundTitle = row.value(QStringLiteral("label")).toString();
+                    break;
+                }
+            }
+        }
+        if (!windowId.isEmpty()) {
+            // Sólo esperábamos la ventana (sin query/role) → listo.
+            if (needle.isEmpty() && wantRole.isEmpty()) {
+                return QVariantMap{{QStringLiteral("found"), true},
+                                   {QStringLiteral("elapsedMs"), static_cast<int>(clock.elapsed())},
+                                   {QStringLiteral("windowId"), windowId},
+                                   {QStringLiteral("title"), foundTitle}};
+            }
+            // Esperar un control dentro de la ventana.
+            for (const QVariant &c : controls(windowId, query, 400, nullptr)) {
+                const QVariantMap row = c.toMap();
+                if (!wantRole.isEmpty()
+                    && row.value(QStringLiteral("role")).toString().toLower() != wantRole)
+                    continue;
+                QVariantMap hit = row;
+                hit[QStringLiteral("found")] = true;
+                hit[QStringLiteral("elapsedMs")] = static_cast<int>(clock.elapsed());
+                hit[QStringLiteral("windowId")] = windowId;
+                return hit;
+            }
+        }
+        if (clock.elapsed() >= budget) break;
+        Sleep(200);
+    } while (clock.elapsed() < budget);
+
+    if (error) *error = QStringLiteral("Timeout: la condición no se cumplió en %1 ms.").arg(budget);
+    return QVariantMap{{QStringLiteral("found"), false},
+                       {QStringLiteral("elapsedMs"), static_cast<int>(clock.elapsed())}};
+#else
+    Q_UNUSED(windowTargetId) Q_UNUSED(windowTitle) Q_UNUSED(query)
+    Q_UNUSED(role) Q_UNUSED(timeoutMs)
+    if (error) *error = QStringLiteral("Disponible sólo en Windows.");
+    return QVariantMap{{QStringLiteral("found"), false}};
 #endif
 }
