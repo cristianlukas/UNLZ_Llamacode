@@ -407,8 +407,8 @@ Item {
             "modelId": modelMain.currentValue ?? "",
             "mmprojId": mmprojEnabled ? (modelMmproj.currentValue ?? "") : "",
             "draftModelId": draftEnabled ? (modelDraft.currentValue ?? "") : "",
-            "specType": (draftEnabled && mtpEnabled) ? "draft-mtp" : "",
-            "specDraftNMax": (draftEnabled && mtpEnabled) ? (parseInt(specNMaxField.text) || 0) : 0,
+            "specType": mtpEnabled ? "draft-mtp" : "",
+            "specDraftNMax": mtpEnabled ? (parseInt(specNMaxField.text) || 0) : 0,
             "specDraftNgl": (draftEnabled && mtpEnabled) ? "all" : "",
             "specDraftTypeK": (draftEnabled && mtpEnabled) ? (specKvType.currentText ?? "") : "",
             "specDraftTypeV": (draftEnabled && mtpEnabled) ? (specKvType.currentText ?? "") : "",
@@ -468,8 +468,8 @@ Item {
             if (!effectiveMid || effectiveMid.length === 0) { App.serverError("No se pudo crear Model Profile."); return }
             modelProfileId = effectiveMid
         }
-        // Speculative decoding / MTP (sólo aplica con draft model).
-        const specOn = draftEnabled && mtpEnabled
+        // MTP admite draft separado o cabezal autocontenido en el GGUF principal.
+        const specOn = mtpEnabled
         App.profileManager.setModelSpec(
             effectiveMid,
             specOn ? "draft-mtp" : "",
@@ -1138,17 +1138,17 @@ Item {
                             contentItem: Text { text: modelDraft.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
 
-                        // ── Speculative decoding / MTP (sólo con draft model) ──
-                        CheckBox { id: mtpCheck; checked: mtpEnabled; enabled: draftEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
-                        Text { text: "MTP (draft-mtp)"; color: (draftEnabled && mtpEnabled) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        // ── Speculative decoding / MTP (draft separado o embebido) ──
+                        CheckBox { id: mtpCheck; checked: mtpEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
+                        Text { text: draftEnabled ? "MTP (draft-mtp)" : "MTP autocontenido"; color: mtpEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         Item { implicitWidth: 20 }
-                        Text { text: "spec n-max"; color: (draftEnabled && mtpEnabled) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        Text { text: "spec n-max"; color: mtpEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
                         LcTextField {
                             id: specNMaxField
                             Layout.fillWidth: true
-                            enabled: draftEnabled && mtpEnabled; opacity: enabled ? 1.0 : 0.4
+                            enabled: mtpEnabled; opacity: enabled ? 1.0 : 0.4
                             inputMethodHints: Qt.ImhDigitsOnly
                             placeholderText: "0 = default"
                         }

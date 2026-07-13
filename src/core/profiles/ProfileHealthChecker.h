@@ -46,6 +46,7 @@ public:
         bool         modelRefFound = false;   // modelProfileId existe
         ModelProfile model;
         bool         modelFileExists = false; // el .gguf del modelo está en disco
+        QString      modelFileName;           // para detectar MTP autocontenido
 
         bool mmprojFileExists = false;
         bool draftFileExists = false;

@@ -572,10 +572,12 @@ hay builds CUDA instaladas, la app debe pedir instalar un binario compatible en
 vez de lanzar CUDA con `--n-gpu-layers 0`. Perfiles más grandes en CPU pueden
 tardar demasiado en emitir la primera tool y dejar una Task sin progreso.
 
-Cuando un perfil de sistema declara speculative decoding con `draft-mtp`, el
-`draftModel` es una dependencia obligatoria: el instalador lo encola junto con el
-modelo principal y el launcher bloquea el arranque si el draft falta. MTP sin
-draft separado sólo se permite en perfiles que usan `--spec-type mtp`.
+Cuando un perfil declara speculative decoding con `draft-mtp`, puede usar un
+`draftModel` separado o un cabezal MTP autocontenido. Este último se detecta de
+forma conservadora por el marcador `MTP` del GGUF principal y se lanza con
+`--spec-type draft-mtp`; si no se cumple ninguna de las dos condiciones, el
+launcher bloquea el arranque. El instalador encola los drafts separados junto con
+el modelo principal.
 
 Teach vive en **Automatizaciones**. Configuración conserva únicamente el toggle y
 comando técnico del MCP Playwright. Los skills Playwright anteriores se pueden

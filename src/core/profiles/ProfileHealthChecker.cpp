@@ -2,6 +2,7 @@
 #include "ProfileManager.h"
 #include "../BinaryRegistry.h"
 #include "../ModelCatalog.h"
+#include "MtpDetection.h"
 
 QVariantMap HealthIssue::toMap() const
 {
@@ -105,7 +106,10 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
             out << mk("warning", id, "draft", "draft-file-missing",
                       "El modelo draft (spec decoding) no está en disco.",
                       "Re-escanear o descargar el draft, o desactivar spec.");
-        if (r.modelRefFound && !r.model.specType.isEmpty() && r.model.draftModelId.isEmpty())
+        const bool selfContainedMtp = r.model.specType == QLatin1String("draft-mtp")
+            && MtpDetection::isSelfContained(r.modelFileName);
+        if (r.modelRefFound && !r.model.specType.isEmpty()
+            && r.model.draftModelId.isEmpty() && !selfContainedMtp)
             out << mk("warning", id, "draft", "spec-without-draft",
                       "Speculative decoding activado sin modelo draft.",
                       "Asignar un draft o limpiar specType.");
@@ -161,7 +165,10 @@ QList<HealthIssue> ProfileHealthChecker::checkAll(ProfileManager *profiles,
             r.model = profiles->resolveModelProfile(launch.modelProfileId);
             r.modelRefFound = !r.model.id.isEmpty();
             if (r.modelRefFound) {
-                r.modelFileExists  = fileExists(r.model.modelId);
+                const CatalogModel mainModel = catalog
+                    ? catalog->findById(r.model.modelId) : CatalogModel{};
+                r.modelFileExists  = !mainModel.id.isEmpty() && mainModel.isAvailable;
+                r.modelFileName = mainModel.fileName;
                 r.mmprojFileExists = fileExists(r.model.mmprojId);
                 r.draftFileExists  = fileExists(r.model.draftModelId);
             }

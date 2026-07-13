@@ -9,6 +9,7 @@
 #include "core/GGUFScanner.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/profiles/ProfileTypes.h"
+#include "core/profiles/MtpDetection.h"
 #include "core/LlamaBinary.h"
 #include "core/CatalogModel.h"
 
@@ -45,6 +46,7 @@ private slots:
     void builder_emitsSpecFlags();
     void builder_missingDraftIsBlocking();
     void builder_rawDraftMtpRequiresDraftModel();
+    void builder_emitsSelfContainedMtpFlags();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_forcesF16KvWithDraft();
     void builder_appliesQwenCodingSamplingPreset();
@@ -102,6 +104,8 @@ void CoreTests::draftCandidate()
     QVERIFY(GGUFScanner::isDraftCandidate("qwen-0.5b-draft-Q4.gguf", 400LL * 1024 * 1024));
     QVERIFY(GGUFScanner::isDraftCandidate("tiny.gguf", 1LL * 1024 * 1024 * 1024));
     QVERIFY(!GGUFScanner::isDraftCandidate("Qwen2.5-32B-Q5_K_M.gguf", 20LL * 1024 * 1024 * 1024));
+    QVERIFY(MtpDetection::isSelfContained("ThinkingCap-Qwen3.6-27B-Q3_K_M-MTP.gguf"));
+    QVERIFY(!MtpDetection::isSelfContained("Qwen3.6-27B-Q3_K_M.gguf"));
 }
 
 // ── Helpers para construir un GGUF sintético en disco ──────────────────────
@@ -350,6 +354,22 @@ void CoreTests::builder_rawDraftMtpRequiresDraftModel()
         if (e.contains(QStringLiteral("draftModel"), Qt::CaseInsensitive))
             mentionsProfileDraft = true;
     QVERIFY2(mentionsProfileDraft, qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+}
+
+void CoreTests::builder_emitsSelfContainedMtpFlags()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "ThinkingCap-Qwen3.6-27B-Q3_K_M-MTP.gguf";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMax = 3;
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(ep.blockingErrors.isEmpty());
+    const int type = ep.effectiveArgs.indexOf("--spec-type");
+    QVERIFY(type >= 0 && ep.effectiveArgs.value(type + 1) == "draft-mtp");
+    const int nmax = ep.effectiveArgs.indexOf("--spec-draft-n-max");
+    QVERIFY(nmax >= 0 && ep.effectiveArgs.value(nmax + 1) == "3");
+    QVERIFY(!ep.effectiveArgs.contains("--spec-draft-model"));
 }
 
 void CoreTests::builder_dropsGemmaDraftOnOldBinary()

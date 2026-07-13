@@ -1,4 +1,5 @@
 #include "EffectiveProfileBuilder.h"
+#include "MtpDetection.h"
 #include "../GGUFScanner.h"
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -160,7 +161,8 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         if (!cur.startsWith(u'-')) { args.append(cur); continue; }
         if (cur == QLatin1String("--spec-type") && i + 1 < extraTokens.size()
             && extraTokens.at(i + 1).contains(QStringLiteral("draft"), Qt::CaseInsensitive)
-            && ctx.model.draftModelId.isEmpty()) {
+            && ctx.model.draftModelId.isEmpty()
+            && !MtpDetection::isSelfContained(ctx.catalogModel.fileName)) {
             result.blockingErrors.append(QStringLiteral(
                 "Este perfil declara %1 %2, pero no tiene draftModel asociado. "
                 "Corregí el perfil o instalá un perfil actualizado que declare y descargue el draft.")
@@ -348,7 +350,14 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
             addFlag(bin, "--mmproj", mmproj.absolutePath, args, warnings);
     }
 
-    if (!mp.draftModelId.isEmpty()) {
+    const bool selfContainedMtp = mp.specType == QLatin1String("draft-mtp")
+        && mp.draftModelId.isEmpty()
+        && MtpDetection::isSelfContained(model.fileName);
+    if (selfContainedMtp) {
+        addFlag(bin, "--spec-type", "draft-mtp", args, warnings);
+        if (mp.specDraftNMax > 0)
+            addFlag(bin, "--spec-draft-n-max", QString::number(mp.specDraftNMax), args, warnings);
+    } else if (!mp.draftModelId.isEmpty()) {
         if (!draft.isAvailable || draft.absolutePath.isEmpty()) {
             errors.append(QStringLiteral(
                 "Draft model unavailable: este perfil declara speculative/MTP con draft, "
