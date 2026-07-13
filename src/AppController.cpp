@@ -8901,11 +8901,22 @@ void AppController::maybeFetchBenchmarks()
     if (cacheInfo.exists() && cacheInfo.lastModified().daysTo(QDateTime::currentDateTime()) < 7)
         return;
 
+    // La API de Artificial Analysis (v2) exige API key (header x-api-key). Sin key
+    // el request SIEMPRE devuelve 401 ("Host requires authentication") — inútil y
+    // ruidoso. Si no hay key configurada (setting benchmarks/aaApiKey o env
+    // AA_API_KEY), no disparamos el fetch: se usa la tabla bundled.
+    QString aaKey = readSetting(QStringLiteral("benchmarks/aaApiKey"), QString()).toString().trimmed();
+    if (aaKey.isEmpty())
+        aaKey = QString::fromLocal8Bit(qgetenv("AA_API_KEY")).trimmed();
+    if (aaKey.isEmpty())
+        return;
+
     if (!m_nam)
         m_nam = new QNetworkAccessManager(this);
 
     QNetworkRequest req{QUrl(QString::fromLatin1(kBenchmarkFetchUrl))};
     req.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("LlamaCode/1.0"));
+    req.setRawHeader(QByteArrayLiteral("x-api-key"), aaKey.toUtf8());
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     m_benchmarkFetchReply = m_nam->get(req);
 
