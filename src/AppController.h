@@ -999,6 +999,14 @@ private:
     // entre iteraciones y decide si re-disparar el cuerpo (ver TaskStore::decideLoop).
     bool     m_runningTaskLoopEnabled = false;
     int      m_runningTaskLoopIteration = 0;
+    // Data-driven (RPA por lote): mismo flujo, una corrida del cuerpo por fila del
+    // dataset. m_dataTaskId marca qué Task está iterando (evita re-resolver el
+    // dataset en cada relanzamiento); m_dataRows son las filas resueltas; el índice
+    // apunta a la fila en curso. La fila actual se sustituye ({{var}}) en el prompt.
+    QString      m_dataTaskId;
+    QVariantList m_dataRows;
+    int          m_dataIndex = 0;
+    QVariantMap  m_runningTaskRow;   // fila en curso (para expandir postprompt/loop)
     // Routing multi-modelo (verify-phase swap): perfil de ejecución vs perfil de
     // verificación del goal-check. Si difieren, el goal-check del bucle corre en
     // el modelo de verificación (sesión nueva: se auto-verifica con herramientas)

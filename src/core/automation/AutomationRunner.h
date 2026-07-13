@@ -45,4 +45,17 @@ public:
     // Tools mínimas esperadas para escritorio foreground. Automatizaciones no las
     // usan para recortar el catálogo: el agente corre con todas las built-in.
     static QStringList desktopToolNames();
+
+    // ── Data-driven (RPA por lote): el mismo flujo, datos distintos ──────────────
+    // Sustituye {{clave}} (con o sin espacios) por el valor de esa clave en la fila.
+    // Claves no presentes se dejan intactas. Case-insensitive en la clave.
+    static QString expandVariables(const QString &text, const QVariantMap &row);
+    // Parsea un dataset a filas (cada fila = mapa columna→valor). `format`:
+    // "json" (array de objetos), "csv" (primera fila = encabezados), o vacío para
+    // autodetectar (empieza con '['/'{' → json; si no → csv). Pura (no toca disco).
+    static QVariantList parseDataset(const QString &raw, const QString &format = QString());
+    // Resuelve las filas del dataset de una Task: prioridad datasetRows (lista ya
+    // parseada) > datasetInline+datasetFormat (texto) > datasetPath (archivo).
+    // Devuelve {} si la Task no tiene dataset. Acota a 1000 filas.
+    static QVariantList datasetRows(const QVariantMap &task);
 };

@@ -1,5 +1,9 @@
 #include "AutomationRunner.h"
 
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QSet>
 
@@ -357,4 +361,126 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
                .arg(l.value(QStringLiteral("timeoutSec")).toInt())
                .arg(l.value(QStringLiteral("maxRetries")).toInt());
     return out;
+}
+
+QString AutomationRunner::expandVariables(const QString &text, const QVariantMap &row)
+{
+    if (row.isEmpty() || !text.contains(QLatin1String("{{"))) return text;
+    // Índice case-insensitive de la fila (los encabezados del usuario pueden
+    // diferir en mayúsculas del {{placeholder}}).
+    QHash<QString, QString> lut;
+    for (auto it = row.constBegin(); it != row.constEnd(); ++it)
+        lut.insert(it.key().trimmed().toLower(), it.value().toString());
+    static const QRegularExpression ph(QStringLiteral("\\{\\{\\s*([^{}]+?)\\s*\\}\\}"));
+    QString out;
+    out.reserve(text.size());
+    int last = 0;
+    auto matches = ph.globalMatch(text);
+    while (matches.hasNext()) {
+        const QRegularExpressionMatch m = matches.next();
+        out += text.mid(last, m.capturedStart() - last);
+        const QString key = m.captured(1).trimmed().toLower();
+        out += lut.contains(key) ? lut.value(key) : m.captured(0);  // clave ausente: intacto
+        last = m.capturedEnd();
+    }
+    out += text.mid(last);
+    return out;
+}
+
+namespace {
+// Parser CSV mínimo con comillas dobles (RFC-4180-lite): campos entre "", ""→"
+// literal, comas y saltos dentro de comillas respetados.
+QStringList parseCsvLine(const QString &line)
+{
+    QStringList fields;
+    QString cur;
+    bool inQuotes = false;
+    for (int i = 0; i < line.size(); ++i) {
+        const QChar c = line.at(i);
+        if (inQuotes) {
+            if (c == QLatin1Char('"')) {
+                if (i + 1 < line.size() && line.at(i + 1) == QLatin1Char('"')) { cur += c; ++i; }
+                else inQuotes = false;
+            } else cur += c;
+        } else if (c == QLatin1Char('"')) {
+            inQuotes = true;
+        } else if (c == QLatin1Char(',')) {
+            fields << cur; cur.clear();
+        } else {
+            cur += c;
+        }
+    }
+    fields << cur;
+    return fields;
+}
+}  // namespace
+
+QVariantList AutomationRunner::parseDataset(const QString &raw, const QString &format)
+{
+    const QString trimmed = raw.trimmed();
+    if (trimmed.isEmpty()) return {};
+    QString fmt = format.trimmed().toLower();
+    if (fmt.isEmpty())
+        fmt = (trimmed.startsWith(QLatin1Char('[')) || trimmed.startsWith(QLatin1Char('{')))
+                  ? QStringLiteral("json") : QStringLiteral("csv");
+
+    QVariantList rows;
+    if (fmt == QLatin1String("json")) {
+        const QJsonDocument doc = QJsonDocument::fromJson(trimmed.toUtf8());
+        const QJsonArray arr = doc.isArray() ? doc.array()
+                             : (doc.isObject() ? QJsonArray{doc.object()} : QJsonArray{});
+        for (const QJsonValue &v : arr) {
+            if (!v.isObject()) continue;
+            QVariantMap row;
+            const QJsonObject o = v.toObject();
+            for (auto it = o.constBegin(); it != o.constEnd(); ++it)
+                row.insert(it.key(), it.value().toVariant());
+            if (!row.isEmpty()) rows << row;
+        }
+        return rows;
+    }
+    // CSV: primera línea no vacía = encabezados.
+    const QStringList lines = trimmed.split(QRegularExpression(QStringLiteral("\r\n|\n|\r")));
+    QStringList headers;
+    for (const QString &line : lines) {
+        if (line.trimmed().isEmpty()) continue;
+        const QStringList cells = parseCsvLine(line);
+        if (headers.isEmpty()) {
+            for (const QString &h : cells) headers << h.trimmed();
+            continue;
+        }
+        QVariantMap row;
+        for (int i = 0; i < headers.size() && i < cells.size(); ++i)
+            row.insert(headers.at(i), cells.at(i));
+        if (!row.isEmpty()) rows << row;
+    }
+    return rows;
+}
+
+QVariantList AutomationRunner::datasetRows(const QVariantMap &task)
+{
+    QVariantList rows;
+    const QVariantList inlineRows = task.value(QStringLiteral("datasetRows")).toList();
+    if (!inlineRows.isEmpty()) {
+        for (const QVariant &v : inlineRows)
+            if (v.canConvert<QVariantMap>()) rows << v.toMap();
+    } else {
+        const QString inlineText = task.value(QStringLiteral("datasetInline")).toString();
+        const QString fmt = task.value(QStringLiteral("datasetFormat")).toString();
+        if (!inlineText.trimmed().isEmpty()) {
+            rows = parseDataset(inlineText, fmt);
+        } else {
+            const QString path = task.value(QStringLiteral("datasetPath")).toString().trimmed();
+            if (!path.isEmpty()) {
+                QFile f(path);
+                if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    const QString detected = fmt.isEmpty() && path.toLower().endsWith(QLatin1String(".json"))
+                                                 ? QStringLiteral("json") : fmt;
+                    rows = parseDataset(QString::fromUtf8(f.readAll()), detected);
+                }
+            }
+        }
+    }
+    if (rows.size() > 1000) rows = rows.mid(0, 1000);   // cota de seguridad
+    return rows;
 }

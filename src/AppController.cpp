@@ -4637,17 +4637,38 @@ void AppController::runTask(const QString &id)
 void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
 {
     const QString name = task.value(QStringLiteral("name")).toString();
+
+    // Data-driven: resolver el dataset una sola vez (al arrancar la Task, no en cada
+    // relanzamiento por fila). La fila en curso sustituye {{var}} en todo el prompt.
+    if (m_dataTaskId != id) {
+        m_dataRows = AutomationRunner::datasetRows(task);
+        m_dataIndex = 0;
+        m_dataTaskId = m_dataRows.isEmpty() ? QString() : id;
+    }
+    const bool dataDriven = (m_dataTaskId == id) && m_dataIndex < m_dataRows.size();
+    m_runningTaskRow = dataDriven ? m_dataRows.at(m_dataIndex).toMap() : QVariantMap{};
+
     QString prompt = TaskStore::composePrompt(task);
     const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
     if (!artifactId.isEmpty())
         prompt += AutomationRunner::augmentPrompt(task,
             AutomationArtifactStore::manifest(artifactId),
             AutomationArtifactStore::recipe(artifactId));
+    if (dataDriven) {
+        prompt = AutomationRunner::expandVariables(prompt, m_runningTaskRow);
+        QStringList kv;
+        for (auto it = m_runningTaskRow.constBegin(); it != m_runningTaskRow.constEnd(); ++it)
+            kv << QStringLiteral("%1=%2").arg(it.key(), it.value().toString().left(40));
+        prompt += QStringLiteral("\n\nDATOS DE ESTA FILA (fila %1 de %2): %3\n"
+                                 "Usá estos valores concretos para completar el objetivo.")
+                      .arg(m_dataIndex + 1).arg(m_dataRows.size()).arg(kv.join(QStringLiteral(", ")));
+    }
     m_runningTaskId = id;
     m_runningTaskName = name;
     m_runningTaskStartedAt = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     m_runningTaskPhase = QStringLiteral("ejecutando");
-    m_runningTaskPostPrompt = TaskStore::composePostPrompt(task);
+    m_runningTaskPostPrompt = AutomationRunner::expandVariables(
+        TaskStore::composePostPrompt(task), m_runningTaskRow);
     m_runningTaskLogStart = m_agentLog.size();
     m_runningTaskSilentUnlessError = task.value(QStringLiteral("silentUnlessError"), false).toBool();
     m_runningTaskLoopEnabled = task.value(QStringLiteral("loopEnabled"), false).toBool()
@@ -5172,6 +5193,31 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     }
     emit taskRunStateChanged();
     emit taskRunFinished(id, name, status, summary, silent);
+
+    // Data-driven: si esta corrida fue una fila del dataset y quedan más, relanzar
+    // el cuerpo con la siguiente fila (cada fila = una corrida/registro propio).
+    if (m_dataTaskId == id && m_dataIndex + 1 < m_dataRows.size()) {
+        m_dataIndex++;
+        QVariantMap next = m_tasks.get(id);
+        if (!next.isEmpty()) {
+            next[QStringLiteral("executionMode")] = AutomationRunner::resolveExecutionMode(next);
+            appendAgentEvent(QStringLiteral("task"),
+                             QStringLiteral("Dataset: fila %1 de %2.")
+                                 .arg(m_dataIndex + 1).arg(m_dataRows.size()));
+            QTimer::singleShot(0, this, [this, id, next]() {
+                if (m_runningTaskId.isEmpty() && m_dataTaskId == id) launchTaskBody(id, next);
+            });
+            return;   // no apagamos server/agente entre filas
+        }
+    }
+    // Fin del lote (o corrida sin dataset): limpiar el estado data-driven.
+    if (m_dataTaskId == id) {
+        m_dataTaskId.clear();
+        m_dataRows.clear();
+        m_dataIndex = 0;
+    }
+    m_runningTaskRow.clear();
+
     if (m_scheduledAutoStop) {
         m_scheduledAutoStop = false;
         appendAgentEvent(QStringLiteral("lifecycle"),

@@ -22,6 +22,7 @@ private slots:
     void browserPromptUsesForegroundTeachEvidence();
     void actionTraceSurvivesRecipeAndPrompt();
     void strokePointsSurviveRecipeAndPrompt();
+    void datasetParseAndVariableExpansion();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -306,6 +307,34 @@ void AutomationTests::strokePointsSurviveRecipeAndPrompt()
     // El prompt de escritorio ofrece la sincronización por condición.
     QVERIFY(prompt.contains(QStringLiteral("desktop_wait_for")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::datasetParseAndVariableExpansion()
+{
+    using R = AutomationRunner;
+    // CSV con encabezados + comillas dobles con coma interna.
+    const QVariantList csv = R::parseDataset(
+        QStringLiteral("nombre,ciudad\nAna,\"La Plata, BA\"\nBeto,Rosario"));
+    QCOMPARE(csv.size(), 2);
+    QCOMPARE(csv.at(0).toMap().value("nombre").toString(), QStringLiteral("Ana"));
+    QCOMPARE(csv.at(0).toMap().value("ciudad").toString(), QStringLiteral("La Plata, BA"));
+
+    // JSON autodetectado (empieza con '[').
+    const QVariantList json = R::parseDataset(
+        QStringLiteral("[{\"a\":\"1\",\"b\":\"x\"},{\"a\":\"2\",\"b\":\"y\"}]"));
+    QCOMPARE(json.size(), 2);
+    QCOMPARE(json.at(1).toMap().value("a").toString(), QStringLiteral("2"));
+
+    // Sustitución {{var}}: case-insensitive, con espacios, y clave ausente intacta.
+    const QVariantMap row{{"nombre", "Ana"}, {"Edad", "30"}};
+    QCOMPARE(R::expandVariables(QStringLiteral("Hola {{nombre}}, {{ EDAD }} años {{falta}}"), row),
+             QStringLiteral("Hola Ana, 30 años {{falta}}"));
+
+    // datasetRows resuelve desde datasetInline + format.
+    const QVariantMap task{{"datasetInline", "k\nv1\nv2\nv3"}, {"datasetFormat", "csv"}};
+    QCOMPARE(R::datasetRows(task).size(), 3);
+    // Sin dataset → vacío.
+    QVERIFY(R::datasetRows(QVariantMap{{"name", "x"}}).isEmpty());
 }
 
 void AutomationTests::headlessBrowserCommandForcesHeadless()

@@ -117,6 +117,7 @@ private slots:
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
     void loopTaskStopsAtMaxIterations();
+    void dataDrivenTaskRunsBodyPerRow();
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
@@ -678,6 +679,37 @@ void AppControllerTests::loopTaskStopsAtMaxIterations()
 
     QVERIFY(!fin.isEmpty());
     QCOMPARE(fake->bodyRuns(), 3);   // exactamente maxIter corridas del cuerpo
+}
+
+void AppControllerTests::dataDrivenTaskRunsBodyPerRow()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+
+    // Task con dataset CSV de 2 filas y {{var}} en la descripción: el cuerpo corre
+    // una vez por fila y el prompt de cada corrida trae los valores sustituidos.
+    const QVariantMap def{
+        {QStringLiteral("name"), QStringLiteral("Saludo por lote")},
+        {QStringLiteral("description"), QStringLiteral("Saludá a {{nombre}} de {{edad}} años")},
+        {QStringLiteral("executionMode"), QStringLiteral("auto")},
+        {QStringLiteral("datasetInline"), QStringLiteral("nombre,edad\nAna,30\nBeto,40")},
+        {QStringLiteral("datasetFormat"), QStringLiteral("csv")}};
+    const QString id = app.taskStore()->save(QString(), def);
+
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+
+    for (int i = 0; i < 200 && fin.count() < 2; ++i)
+        QTest::qWait(10);
+
+    QCOMPARE(fake->bodyRuns(), 2);              // una corrida del cuerpo por fila
+    QCOMPARE(fin.count(), 2);                   // cada fila = un registro/finished
+    // La última corrida sustituyó la 2da fila (Beto/40), sin dejar el placeholder.
+    QVERIFY(fake->lastBodyPrompt().contains(QStringLiteral("Beto")));
+    QVERIFY(fake->lastBodyPrompt().contains(QStringLiteral("40")));
+    QVERIFY(!fake->lastBodyPrompt().contains(QStringLiteral("{{nombre}}")));
 }
 
 void AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()
