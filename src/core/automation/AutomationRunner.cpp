@@ -213,6 +213,7 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_click_element"),
         QStringLiteral("desktop_observe"),
         QStringLiteral("desktop_click"),
+        QStringLiteral("desktop_stroke"),
         QStringLiteral("desktop_type"),
         QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"),
@@ -255,6 +256,8 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "coordenadas sólo como respaldo o diagnóstico.\n"
             "ANTI-LOOP: una acción -> una verificación por texto -> terminá. Los pasos "
             "[type]/[key]/[click] son intención; traducilos a desktop_* sobre la app. "
+            "Un paso [stroke] es un ARRASTRE continuo (dibujo/pintura/swipe): reproducilo "
+            "con desktop_stroke pasando sus 'points' (no lo partas en clicks). "
             "No leas evidence/*.jpg con read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {
         out += QStringLiteral(
@@ -280,6 +283,26 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
         const QString button = step.value(QStringLiteral("button")).toString();
         if (!button.isEmpty())
             out += QStringLiteral(" (botón %1)").arg(button);
+        // Traza: emitir los puntos normalizados para que el modelo los pase tal cual
+        // a desktop_stroke (submuestreados si son muchos, para no inflar el prompt).
+        if (step.value(QStringLiteral("kind")).toString() == QLatin1String("stroke")) {
+            const QVariantList pts = step.value(QStringLiteral("points")).toList();
+            const int stride = pts.size() > 40 ? (pts.size() + 39) / 40 : 1;
+            QStringList coords;
+            for (int i = 0; i < pts.size(); i += stride) {
+                const QVariantMap p = pts.at(i).toMap();
+                coords << QStringLiteral("[%1,%2]")
+                              .arg(p.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
+                              .arg(p.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
+            }
+            if (stride > 1 && !pts.isEmpty()) {   // asegurar el último punto
+                const QVariantMap last = pts.last().toMap();
+                coords << QStringLiteral("[%1,%2]")
+                              .arg(last.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
+                              .arg(last.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
+            }
+            out += QStringLiteral(" (points=%1)").arg(coords.join(QLatin1Char(' ')));
+        }
         const QVariantMap target = step.value(QStringLiteral("target")).toMap();
         const QString role = target.value(QStringLiteral("role")).toString();
         const QString name = target.value(QStringLiteral("name")).toString();

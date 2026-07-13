@@ -6,6 +6,7 @@
 #include <QGuiApplication>
 #include <QProcess>
 #include <QScreen>
+#include <QVector>
 #include <QWindow>
 
 #ifdef Q_OS_WIN
@@ -392,6 +393,97 @@ bool DesktopAutomationBackend::click(const QString &kind, const QString &targetI
     return SendInput(2, inputs, sizeof(INPUT)) == 2;
 #else
     Q_UNUSED(x) Q_UNUSED(y) Q_UNUSED(button) Q_UNUSED(trace)
+    if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
+    return false;
+#endif
+}
+
+bool DesktopAutomationBackend::stroke(const QString &kind, const QString &targetId,
+                                      const QVariantList &points, const QString &button,
+                                      int holdMs, QString *error, QVariantMap *trace)
+{
+    if (!interactiveSessionAvailable()) {
+        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
+        return false;
+    }
+    if (points.size() < 2) {
+        if (error) *error = QStringLiteral("Una traza necesita al menos 2 puntos.");
+        return false;
+    }
+    const QRect bounds = targetBounds(kind, targetId);
+    if (!bounds.isValid()) {
+        if (error) *error = QStringLiteral("Alcance visual no disponible.");
+        return false;
+    }
+#ifdef Q_OS_WIN
+    if (kind == QLatin1String("window") && !focusWindow(targetId, error)) return false;
+    const QString b = button.trimmed().toLower();
+    const bool right = b == QLatin1String("right");
+    const bool middle = b == QLatin1String("middle");
+    const DWORD downFlag = right ? MOUSEEVENTF_RIGHTDOWN
+                         : middle ? MOUSEEVENTF_MIDDLEDOWN : MOUSEEVENTF_LEFTDOWN;
+    const DWORD upFlag   = right ? MOUSEEVENTF_RIGHTUP
+                         : middle ? MOUSEEVENTF_MIDDLEUP : MOUSEEVENTF_LEFTUP;
+
+    // Puntos normalizados → absolutos.
+    QVector<QPoint> abs;
+    abs.reserve(points.size());
+    for (const QVariant &v : points) {
+        const QVariantMap m = v.toMap();
+        abs << denormalizePoint(QPointF(m.value(QStringLiteral("x")).toDouble(),
+                                        m.value(QStringLiteral("y")).toDouble()), bounds);
+    }
+
+    auto mouseFlag = [](DWORD flag) {
+        INPUT in{};
+        in.type = INPUT_MOUSE;
+        in.mi.dwFlags = flag;
+        SendInput(1, &in, sizeof(INPUT));
+    };
+    const int hold = qBound(0, holdMs, 200);
+
+    SetCursorPos(abs.first().x(), abs.first().y());
+    Sleep(10);
+    mouseFlag(downFlag);
+    Sleep(hold);
+    // Interpolar cada segmento: pasos de ~4px para que la línea salga continua
+    // aunque los puntos grabados vengan cada 80ms (muy espaciados en un swipe).
+    for (int i = 1; i < abs.size(); ++i) {
+        const QPoint a = abs.at(i - 1), c = abs.at(i);
+        const int dist = qMax(qAbs(c.x() - a.x()), qAbs(c.y() - a.y()));
+        const int steps = qBound(1, dist / 4, 400);
+        for (int s = 1; s <= steps; ++s) {
+            const int x = a.x() + (c.x() - a.x()) * s / steps;
+            const int y = a.y() + (c.y() - a.y()) * s / steps;
+            SetCursorPos(x, y);
+            if (hold) Sleep(hold);
+        }
+    }
+    mouseFlag(upFlag);
+
+    if (trace) {
+        *trace = QVariantMap{
+            {QStringLiteral("surface"), QStringLiteral("desktop")},
+            {QStringLiteral("action"), QStringLiteral("stroke")},
+            {QStringLiteral("pointer"), QVariantMap{
+                {QStringLiteral("button"), right ? QStringLiteral("right")
+                                      : middle ? QStringLiteral("middle") : QStringLiteral("left")},
+                {QStringLiteral("points"), static_cast<int>(points.size())},
+                {QStringLiteral("xAbsStart"), abs.first().x()},
+                {QStringLiteral("yAbsStart"), abs.first().y()},
+                {QStringLiteral("xAbsEnd"), abs.last().x()},
+                {QStringLiteral("yAbsEnd"), abs.last().y()}}},
+            {QStringLiteral("target"), QVariantMap{
+                {QStringLiteral("scopeKind"), kind},
+                {QStringLiteral("targetId"), targetId},
+                {QStringLiteral("x"), bounds.x()},
+                {QStringLiteral("y"), bounds.y()},
+                {QStringLiteral("width"), bounds.width()},
+                {QStringLiteral("height"), bounds.height()}}}};
+    }
+    return true;
+#else
+    Q_UNUSED(button) Q_UNUSED(holdMs) Q_UNUSED(trace)
     if (error) *error = QStringLiteral("Control de escritorio disponible sólo en Windows.");
     return false;
 #endif

@@ -3414,6 +3414,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
             static const QHash<QString, QString> labels{
                 {QStringLiteral("desktop_observe"), QStringLiteral("Observando")},
                 {QStringLiteral("desktop_click"), QStringLiteral("Haciendo clic")},
+                {QStringLiteral("desktop_stroke"), QStringLiteral("Dibujando")},
                 {QStringLiteral("desktop_click_element"), QStringLiteral("Activando un control")},
                 {QStringLiteral("desktop_type"), QStringLiteral("Escribiendo")},
                 {QStringLiteral("desktop_key"), QStringLiteral("Usando el teclado")},

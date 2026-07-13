@@ -871,6 +871,28 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[desktop_click: ok]\ntrace=%1").arg(json);
     }
+    if (name == QLatin1String("desktop_stroke")) {
+        QString error;
+        QVariantMap trace;
+        QVariantList points;
+        for (const QJsonValue &v : args.value(QStringLiteral("points")).toArray()) {
+            const QJsonObject o = v.toObject();
+            points << QVariantMap{{QStringLiteral("x"), o.value(QStringLiteral("x")).toDouble()},
+                                  {QStringLiteral("y"), o.value(QStringLiteral("y")).toDouble()}};
+        }
+        const bool good = DesktopAutomationBackend::stroke(
+            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+            args.value(QStringLiteral("target_id")).toString(),
+            points,
+            args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
+            args.value(QStringLiteral("hold_ms")).toInt(8),
+            &error, &trace);
+        if (ok) *ok = good;
+        if (!good) return QStringLiteral("[desktop_stroke: %1]").arg(error);
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_stroke: ok]\ntrace=%1").arg(json);
+    }
     if (name == QLatin1String("desktop_type")) {
         QString error;
         const bool good = DesktopAutomationBackend::typeText(

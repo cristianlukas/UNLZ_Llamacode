@@ -108,6 +108,10 @@ void TeachSessionRecorder::reset()
 #endif
     m_keys.clear();
     m_winTap.reset();
+    m_strokeActive = false;
+    m_strokePoints.clear();
+    m_strokeMaxDist = 0;
+    m_leftDown = m_rightDown = false;
     m_error.clear();
     m_events.clear();
     m_evidence.clear();
@@ -241,31 +245,57 @@ void TeachSessionRecorder::sampleDesktop()
     const QVariantMap info = DesktopAutomationBackend::targetInfo(m_scopeKind, m_scopeId);
     const QRect bounds(info.value(QStringLiteral("x")).toInt(), info.value(QStringLiteral("y")).toInt(),
                        info.value(QStringLiteral("width")).toInt(), info.value(QStringLiteral("height")).toInt());
-    if (left && !m_leftDown && bounds.contains(cursor)) {
-        flushKeys();   // el texto tipeado va ANTES del próximo click
+    const bool pressed = left || right;
+    const bool wasPressed = m_leftDown || m_rightDown;
+
+    // ── Presión inicial: arrancar el seguimiento de traza (aún no sabemos si es
+    //    un click puntual o un arrastre; se decide al soltar por distancia). ──
+    if (pressed && !wasPressed && bounds.contains(cursor)) {
+        flushKeys();   // el texto tipeado va ANTES del próximo gesto
+        m_strokeActive = true;
+        m_strokeButton = left ? QStringLiteral("left") : QStringLiteral("right");
+        m_strokeStartAbs = cursor;
+        m_strokeMaxDist = 0;
         const QPointF p = DesktopAutomationBackend::normalizePoint(cursor, bounds);
-        appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
-                      {QStringLiteral("intent"), m_mode == QLatin1String("browserBackground")
-                           ? QStringLiteral("Click izquierdo en navegador foreground")
-                           : QStringLiteral("Click izquierdo")},
-                      {QStringLiteral("surface"), m_mode},
-                      {QStringLiteral("button"), QStringLiteral("left")},
-                      {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()},
-                      {QStringLiteral("pointer"), pointerTrace(cursor, p, QStringLiteral("left"))},
-                      {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
+        m_strokePoints = QVariantList{QVariantMap{{QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}}};
     }
-    if (right && !m_rightDown && bounds.contains(cursor)) {
-        flushKeys();
-        const QPointF p = DesktopAutomationBackend::normalizePoint(cursor, bounds);
-        appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
-                     {QStringLiteral("intent"), m_mode == QLatin1String("browserBackground")
-                          ? QStringLiteral("Click derecho en navegador foreground")
-                          : QStringLiteral("Click derecho")},
-                     {QStringLiteral("surface"), m_mode},
-                     {QStringLiteral("button"), QStringLiteral("right")},
-                     {QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()},
-                     {QStringLiteral("pointer"), pointerTrace(cursor, p, QStringLiteral("right"))},
-                     {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
+    // ── Botón sostenido moviéndose: muestrear la trayectoria. ──
+    else if (pressed && wasPressed && m_strokeActive) {
+        const QPoint clamped(qBound(bounds.left(), cursor.x(), bounds.right()),
+                             qBound(bounds.top(), cursor.y(), bounds.bottom()));
+        const int d = qMax(qAbs(clamped.x() - m_strokeStartAbs.x()),
+                           qAbs(clamped.y() - m_strokeStartAbs.y()));
+        m_strokeMaxDist = qMax(m_strokeMaxDist, d);
+        const QPointF p = DesktopAutomationBackend::normalizePoint(clamped, bounds);
+        m_strokePoints << QVariantMap{{QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}};
+    }
+    // ── Soltar: cerrar el gesto como [stroke] (si arrastró) o [click] (puntual). ──
+    else if (!pressed && wasPressed && m_strokeActive) {
+        m_strokeActive = false;
+        const QString btn = m_strokeButton;
+        const QPointF start = m_strokePoints.isEmpty() ? QPointF()
+            : QPointF(m_strokePoints.first().toMap().value(QStringLiteral("x")).toDouble(),
+                      m_strokePoints.first().toMap().value(QStringLiteral("y")).toDouble());
+        if (m_strokeMaxDist >= 8 && m_strokePoints.size() >= 2) {
+            appendEvent({{QStringLiteral("kind"), QStringLiteral("stroke")},
+                         {QStringLiteral("intent"), QStringLiteral("Arrastrar con botón %1 (traza de %2 puntos)")
+                              .arg(btn).arg(m_strokePoints.size())},
+                         {QStringLiteral("surface"), m_mode},
+                         {QStringLiteral("button"), btn},
+                         {QStringLiteral("x"), start.x()}, {QStringLiteral("y"), start.y()},
+                         {QStringLiteral("points"), m_strokePoints},
+                         {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
+        } else {
+            appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
+                         {QStringLiteral("intent"), btn == QLatin1String("right")
+                              ? QStringLiteral("Click derecho") : QStringLiteral("Click izquierdo")},
+                         {QStringLiteral("surface"), m_mode},
+                         {QStringLiteral("button"), btn},
+                         {QStringLiteral("x"), start.x()}, {QStringLiteral("y"), start.y()},
+                         {QStringLiteral("pointer"), pointerTrace(m_strokeStartAbs, start, btn)},
+                         {QStringLiteral("target"), targetTrace(m_mode, m_scopeKind, m_scopeId, bounds)}}, true);
+        }
+        m_strokePoints.clear();
     }
     m_leftDown = left;
     m_rightDown = right;

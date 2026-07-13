@@ -2469,6 +2469,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
+        QStringLiteral("desktop_stroke"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"), QStringLiteral("desktop_focus"),
         QStringLiteral("desktop_wait"), QStringLiteral("desktop_launch"),
@@ -4120,6 +4121,29 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                     {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}},
                     {QStringLiteral("description"), QStringLiteral("Botón de mouse; default left.")}}}},
             QJsonArray{QStringLiteral("target_id"), QStringLiteral("x"), QStringLiteral("y")}),
+        fn(QStringLiteral("desktop_stroke"),
+           QStringLiteral("Arrastra el mouse por una TRAZA continua (dibujar en Paint, pintar, "
+                          "sliders, gestos/swipes): aprieta el botón en el primer punto, recorre "
+                          "la secuencia y suelta en el último. Puntos NORMALIZADOS 0..1 en el "
+                          "alcance. Interpola para que la línea salga continua. Usá esto en vez "
+                          "de varios desktop_click cuando el usuario dibujó o arrastró."),
+            QJsonObject{
+                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+                {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+                {QStringLiteral("points"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("array")},
+                    {QStringLiteral("description"), QStringLiteral("Lista de {x,y} normalizados 0..1 (mínimo 2).")},
+                    {QStringLiteral("items"), QJsonObject{
+                        {QStringLiteral("type"), QStringLiteral("object")},
+                        {QStringLiteral("properties"), QJsonObject{
+                            {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
+                            {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}}}}}}}},
+                {QStringLiteral("button"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("string")},
+                    {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}},
+                    {QStringLiteral("description"), QStringLiteral("Botón; default left.")}}},
+                {QStringLiteral("hold_ms"), intProp(QStringLiteral("Pausa por segmento en ms (default 8)."))}},
+            QJsonArray{QStringLiteral("target_id"), QStringLiteral("points")}),
         fn(QStringLiteral("desktop_type"),
            QStringLiteral("Escribe texto en la VENTANA EN FOCO del escritorio (enfocá antes con "
                           "desktop_focus). Camino RÁPIDO para apps con teclado: calculadora "
@@ -4238,6 +4262,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_click_element", "Escritorio", "Click a un control por nombre/id (UIA), no por pixel.", 110),
         mk("desktop_observe", "Escritorio", "Captura el alcance visual enseñado.", 90),
         mk("desktop_click", "Escritorio", "Click visual con coordenadas normalizadas.", 100),
+        mk("desktop_stroke", "Escritorio", "Arrastra una traza continua (dibujar/pintar/swipe).", 95),
         mk("desktop_type", "Escritorio", "Escribe en el control enfocado.", 80),
         mk("desktop_key", "Escritorio", "Presiona teclas o combinaciones.", 90),
         mk("desktop_scroll", "Escritorio", "Desplaza el escritorio.", 70),

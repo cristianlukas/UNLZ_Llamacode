@@ -10,6 +10,7 @@
 #include <QTemporaryDir>
 #include <QSignalSpy>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QDir>
 #include <QFile>
@@ -308,6 +309,14 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
                          {{"target_id", "zzznothex"}, {"control_id", "1.2.3"}});
     QVERIFY(!k.value("ok").toBool());
     QVERIFY(k.value("result").toString().startsWith(QStringLiteral("[desktop_click_element:")));
+
+    // desktop_stroke: dispatch + parseo de 'points' (array de {x,y}) SÍ; la
+    // ejecución real (arrastre en pantalla) es QA manual. En headless falla limpio
+    // (sesión bloqueada o pocos puntos) con prefijo [desktop_stroke:], sin crashear.
+    QJsonArray pts{QJsonObject{{"x", 0.1}, {"y", 0.1}}, QJsonObject{{"x", 0.5}, {"y", 0.5}}};
+    QVariantMap s = call("desktop_stroke",
+                         {{"target_id", "0"}, {"scope_kind", "screen"}, {"points", pts}});
+    QVERIFY(s.value("result").toString().startsWith(QStringLiteral("[desktop_stroke:")));
 }
 
 void AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()

@@ -30,6 +30,14 @@ public:
     static bool click(const QString &kind, const QString &targetId, double x, double y,
                       const QString &button = QStringLiteral("left"),
                       QString *error = nullptr, QVariantMap *trace = nullptr);
+    // Traza continua (Paint, sliders, gestos): apretar el botón en el primer punto,
+    // arrastrar por la secuencia y soltar en el último. `points` = lista de {x,y}
+    // NORMALIZADOS 0..1 dentro del alcance (mínimo 2). Interpola segmentos para que
+    // la línea salga continua aunque los puntos vengan espaciados. `holdMs` = pausa
+    // por segmento (default ~8ms). Sólo Windows.
+    static bool stroke(const QString &kind, const QString &targetId,
+                       const QVariantList &points, const QString &button = QStringLiteral("left"),
+                       int holdMs = 8, QString *error = nullptr, QVariantMap *trace = nullptr);
     static bool typeText(const QString &text, QString *error = nullptr);
     static bool pressKey(const QString &key, const QStringList &modifiers = {},
                          QString *error = nullptr);

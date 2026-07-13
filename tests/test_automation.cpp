@@ -21,6 +21,7 @@ private slots:
     void desktopWarmStartUsesTeachWithoutHardcodedApps();
     void browserPromptUsesForegroundTeachEvidence();
     void actionTraceSurvivesRecipeAndPrompt();
+    void strokePointsSurviveRecipeAndPrompt();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -270,6 +271,38 @@ void AutomationTests::actionTraceSurvivesRecipeAndPrompt()
     QVERIFY(prompt.contains(QStringLiteral("botón left")));
     QVERIFY(prompt.contains(QStringLiteral("target button \"Guardar\"")));
     QVERIFY(prompt.contains(QStringLiteral("trace con pointer/target")));
+    QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::strokePointsSurviveRecipeAndPrompt()
+{
+    // Un trazo (dibujar en Paint) se graba como paso [stroke] con su lista de
+    // puntos normalizados; deben sobrevivir el round-trip del artefacto y salir
+    // en el prompt como points= para que el modelo los pase a desktop_stroke.
+    QVariantMap task{{"id", "stroke-demo"}, {"name", "Dibujar"},
+                     {"description", "Pintar una línea"},
+                     {"executionMode", "desktop"}};
+    QVariantList points;
+    for (int i = 0; i <= 4; ++i)
+        points << QVariantMap{{"x", 0.1 * i}, {"y", 0.2 + 0.1 * i}};
+    const QVariantMap stroke{
+        {QStringLiteral("kind"), QStringLiteral("stroke")},
+        {QStringLiteral("intent"), QStringLiteral("Arrastrar con botón left (traza de 5 puntos)")},
+        {QStringLiteral("button"), QStringLiteral("left")},
+        {QStringLiteral("x"), 0.0}, {QStringLiteral("y"), 0.2},
+        {QStringLiteral("points"), points}};
+    const QString id = AutomationArtifactStore::create(
+        task, QVariantMap{{"kind", "window"}, {"targetId", "abc"}}, QVariantList{stroke}, {});
+    const QVariantMap stored = AutomationArtifactStore::recipe(id)
+                                  .value(QStringLiteral("steps")).toList().first().toMap();
+    QCOMPARE(stored.value(QStringLiteral("points")).toList().size(), 5);
+
+    const QString prompt = AutomationRunner::augmentPrompt(
+        task, AutomationArtifactStore::manifest(id), AutomationArtifactStore::recipe(id));
+    QVERIFY(prompt.contains(QStringLiteral("[stroke]")));
+    QVERIFY(prompt.contains(QStringLiteral("points=")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_stroke")));
+    QVERIFY(prompt.contains(QStringLiteral("[0.400,0.600]")));   // último punto
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

@@ -71,6 +71,13 @@ private:
     QPoint m_lastCursor;
     bool m_leftDown = false;
     bool m_rightDown = false;
+    // Traza en curso (botón apretado moviéndose): puntos NORMALIZADOS muestreados.
+    // Si al soltar recorrió más que un umbral → paso [stroke]; si no → [click].
+    bool m_strokeActive = false;
+    QString m_strokeButton;
+    QVariantList m_strokePoints;   // {x,y} normalizados
+    QPoint m_strokeStartAbs;
+    int m_strokeMaxDist = 0;       // desplazamiento máximo en px desde el inicio
     TeachKeyBuffer m_keys;
     WinTapTracker m_winTap;
 };
