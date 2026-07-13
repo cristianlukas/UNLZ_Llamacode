@@ -13089,6 +13089,14 @@ void AppController::ensureVoice()
     connect(m_voice, &VoiceController::transcriptReady, this, [this](const QString &text) {
         m_voicePartial.clear();
         emit voicePartialChanged();
+        if (m_dictationActive) {
+            m_dictationText = text;
+            m_dictationActive = false;
+            QGuiApplication::clipboard()->setText(text);
+            emit dictationChanged();
+            m_voice->stop();
+            return;
+        }
         dispatchCharlaTranscript(text);
     });
     connect(m_voice, &VoiceController::partialTranscript, this, [this](const QString &text) {
@@ -13106,6 +13114,25 @@ void AppController::ensureVoice()
     });
     connect(m_voice, &VoiceController::errorChanged, this, &AppController::voiceStateChanged);
     connect(m_voice, &VoiceController::levelChanged, this, &AppController::voiceLevelChanged);
+}
+
+void AppController::toggleDictation()
+{
+    if (m_dictationActive) {
+        if (m_voice) m_voice->finishTurn();
+        return;
+    }
+    if (m_charlaActive) return;
+    ensureVoice();
+    applyVoiceConfig();
+    VoiceConfig c = VoiceConfig::fromJson(
+        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    applyAppLanguageToVoice(c);
+    if (!c.sttManagedEngine.isEmpty() && !startManagedStt(c)) return;
+    m_dictationText.clear();
+    m_dictationActive = true;
+    emit dictationChanged();
+    m_voice->start();
 }
 
 void AppController::applyAppLanguageToVoice(VoiceConfig &c) const

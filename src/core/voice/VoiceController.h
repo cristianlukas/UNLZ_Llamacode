@@ -83,6 +83,7 @@ public:
 
 public slots:
     void start();          // arranca la sesión de charla (entra en Listening)
+    void finishTurn();     // cierra captura y transcribe lo acumulado
     void stop();           // corta todo y vuelve a Idle
     void startListening(); // fuerza escucha (corta TTS si suena)
     void micTest();        // captura solo para ver nivel (sin STT/chat); probar micrófono

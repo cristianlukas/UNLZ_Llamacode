@@ -251,6 +251,21 @@ Item {
                     }
                 }
                 LcButton {
+                    Layout.fillWidth: true
+                    text: App.dictationActive ? "Detener dictado y copiar" : "Iniciar dictado literal"
+                    secondary: true
+                    enabled: !App.voiceActive || App.dictationActive
+                    onClicked: App.toggleDictation()
+                }
+                Text {
+                    Layout.fillWidth: true
+                    visible: App.dictationActive || App.dictationText.length > 0
+                    text: App.dictationActive
+                          ? "Hablá y volvé a pulsar para terminar. El resultado queda en el portapapeles."
+                          : "Copiado: “" + App.dictationText + "”"
+                    color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap
+                }
+                LcButton {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Hablar ahora"
                     secondary: true

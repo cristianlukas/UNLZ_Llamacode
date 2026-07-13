@@ -484,6 +484,9 @@ incluidos).
   en vivo. Botón *Probar micrófono* para validar entrada sin servidor.
 - **Barge-in**: interrumpir el TTS al detectar voz nueva. Máquina de estados
   `escuchando → transcribiendo → pensando → hablando` con auto-escucha opcional.
+- **Dictado literal**: reutiliza el STT configurado sin enviar el texto al LLM ni
+  reescribir la intención; al detenerlo deja la transcripción en el portapapeles
+  para pegarla en terminales, editores o cualquier otra aplicación.
 - Al iniciar con STT gestionado, si falta el modelo o `whisper-server`, Charla
   ofrece instalar en secuencia el modelo, `whisper-server`, Piper y una voz en
   español, guardando automáticamente las rutas. Los perfiles sin configuración

@@ -164,6 +164,8 @@ class AppController : public QObject
     Q_PROPERTY(double  voiceLevel READ voiceLevel NOTIFY voiceLevelChanged)
     Q_PROPERTY(QString voiceError READ voiceError NOTIFY voiceStateChanged)
     Q_PROPERTY(QString voicePartial READ voicePartial NOTIFY voicePartialChanged)
+    Q_PROPERTY(bool dictationActive READ dictationActive NOTIFY dictationChanged)
+    Q_PROPERTY(QString dictationText READ dictationText NOTIFY dictationChanged)
     Q_PROPERTY(bool updateAvailable READ updateAvailable NOTIFY updateCheckChanged)
     Q_PROPERTY(QVariantMap updateInfo READ updateInfo NOTIFY updateCheckChanged)
 
@@ -765,6 +767,9 @@ public:
     Q_INVOKABLE void setVoiceConfig(const QString &profileId, const QVariantMap &cfg);
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
+    Q_INVOKABLE void toggleDictation();
+    bool dictationActive() const { return m_dictationActive; }
+    QString dictationText() const { return m_dictationText; }
     // Tuning del perfil activo para voz: cambios recomendados (vacío = perfil ya
     // óptimo), aplicar+relanzar el server con overrides temporales (NO persiste
     // el perfil) y arrancar la charla al quedar listo. charlaAutoTune = aplicar
@@ -815,6 +820,7 @@ signals:
     void voiceStateChanged();
     void voiceLevelChanged();
     void voicePartialChanged();
+    void dictationChanged();
     void voiceInstallProgress(const QString &engineId, int pct, const QString &status);
     void voiceInstallFinished(const QString &engineId, bool ok, const QString &message);
     void voiceBinaryInstalled(const QString &kind, bool ok, const QString &message);
@@ -1119,6 +1125,8 @@ private:
     int m_charlaStreamBubble = -1;
     bool m_chatWasGenerating = false;
     QString m_voicePartial;
+    bool m_dictationActive = false;
+    QString m_dictationText;
     void ensureVoice();                 // crea + configura el controller (lazy)
     void applyVoiceConfig();            // empuja config + keys resueltas al controller
     // Fuerza STT (whisper) y voz piper (TTS) al idioma de la app (m_language), así

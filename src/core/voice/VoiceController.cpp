@@ -115,6 +115,12 @@ void VoiceController::start()
     startListening();
 }
 
+void VoiceController::finishTurn()
+{
+    if (m_state == Listening && !m_testMode && !m_monitorOnly)
+        flushSegment(true);
+}
+
 void VoiceController::stop()
 {
     endCapture();
