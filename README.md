@@ -159,7 +159,7 @@ que se activen en cada sesión.
   (UI Automation), usa captura visual sólo cuando aporta información y verifica el
   resultado después de actuar. Mientras controla ventanas, mouse o teclado se
   muestra durante toda la automatización un indicador siempre visible, un reborde
-  sobre el escritorio y un aro alrededor del puntero; el conjunto puede ocultarse
+  independiente en cada monitor y un aro alrededor del puntero; el conjunto puede ocultarse
   desde Configuración > perfiles de agente > Indicador de escritorio.
 
 ### Nota de seguridad

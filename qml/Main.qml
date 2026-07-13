@@ -67,28 +67,20 @@ ApplicationWindow {
         }
     }
 
-    // Señal inequívoca sobre el escritorio real: reborde global y aro que sigue
-    // al puntero. Ambas superficies ignoran input y comparten el toggle existente.
-    Window {
-        id: desktopControlBorder
-        property var screens: Qt.application.screens
-        property real leftEdge: {
-            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.min(v, screens[i].virtualX); return v
+    // Una superficie independiente por pantalla evita que el contorno trate el
+    // escritorio virtual entero como un único rectángulo en setups multimonitor.
+    Instantiator {
+        model: Qt.application.screens
+        delegate: Window {
+            required property var modelData
+            screen: modelData
+            x: modelData.virtualX; y: modelData.virtualY
+            width: modelData.width; height: modelData.height
+            visible: App.desktopIndicatorVisible && App.desktopAgentActive
+            color: "transparent"
+            flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
+            Rectangle { anchors.fill: parent; color: "transparent"; border.width: 5; border.color: Theme.accent }
         }
-        property real topEdge: {
-            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.min(v, screens[i].virtualY); return v
-        }
-        property real rightEdge: {
-            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.max(v, screens[i].virtualX + screens[i].width); return v
-        }
-        property real bottomEdge: {
-            var v = 0; for (var i = 0; i < screens.length; ++i) v = Math.max(v, screens[i].virtualY + screens[i].height); return v
-        }
-        x: leftEdge; y: topEdge; width: rightEdge - leftEdge; height: bottomEdge - topEdge
-        visible: App.desktopIndicatorVisible && App.desktopAgentActive
-        color: "transparent"
-        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput
-        Rectangle { anchors.fill: parent; color: "transparent"; border.width: 5; border.color: Theme.accent }
     }
 
     Window {
