@@ -64,4 +64,10 @@ public:
     // triggerPath no vacío. Alimenta el QFileSystemWatcher: al cambiar ese archivo
     // o carpeta se dispara la Task. Pura (no toca disco). Debounce acotado 0..60000.
     static QVariantList fileWatchTriggers(const QVariantList &tasks);
+
+    // Run-report por paso: a partir de los mensajes del agente (role=="toolcall")
+    // arma la lista de pasos {n, tool, ok, summary} para auditar qué herramientas
+    // corrió el run y con qué resultado. Pura. ok=false si el output trae un marcador
+    // de error ([<tool>: <msg>] con FAIL/error) — heurística barata, no infalible.
+    static QVariantList buildRunReport(const QVariantList &agentMessages);
 };

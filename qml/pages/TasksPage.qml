@@ -45,6 +45,12 @@ Item {
             timeoutSec.value = t.timeoutSec || 300
             maxActions.value = t.maxActions || 50
             maxRetries.value = t.maxRetries === undefined ? 2 : t.maxRetries
+            datasetInlineField.text = t.datasetInline || ""
+            datasetFormatCombo.currentIndex = Math.max(0, ["", "csv", "json"].indexOf((t.datasetFormat || "").toLowerCase()))
+            datasetOnErrorCombo.currentIndex = (t.datasetOnError === "abort") ? 1 : 0
+            triggerTypeCombo.currentIndex = (t.triggerType === "fileWatch") ? 1 : 0
+            triggerPathField.text = t.triggerPath || ""
+            triggerDebounce.value = t.triggerDebounceMs === undefined ? 1500 : t.triggerDebounceMs
             verifyOtherModel.checked = !!(t.verifyProfileId)
             verifyProfileCombo.selectProfile(t.verifyProfileId || "")
             loadPermissions(t.permScope || "project", t.permFolders || [])
@@ -68,6 +74,12 @@ Item {
             timeoutSec.value = 300
             maxActions.value = 50
             maxRetries.value = 2
+            datasetInlineField.text = ""
+            datasetFormatCombo.currentIndex = 0
+            datasetOnErrorCombo.currentIndex = 0
+            triggerTypeCombo.currentIndex = 0
+            triggerPathField.text = ""
+            triggerDebounce.value = 1500
             verifyOtherModel.checked = false
             verifyProfileCombo.currentIndex = 0
             loadPermissions("project", [])
@@ -866,6 +878,12 @@ Item {
                 timeoutSec: timeoutSec.value,
                 maxActions: maxActions.value,
                 maxRetries: maxRetries.value,
+                datasetInline: datasetInlineField.text,
+                datasetFormat: ["", "csv", "json"][datasetFormatCombo.currentIndex],
+                datasetOnError: ["continue", "abort"][datasetOnErrorCombo.currentIndex],
+                triggerType: ["manual", "fileWatch"][triggerTypeCombo.currentIndex],
+                triggerPath: triggerPathField.text,
+                triggerDebounceMs: triggerDebounce.value,
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
                 permScope: root.collectPermScope(),
@@ -1084,6 +1102,60 @@ Item {
                         SpinBox { id: maxActions; from: 1; to: 500; value: 50; editable: true }
                         Text { text: "Reintentos"; color: Theme.textSecondary; font.pixelSize: 11 }
                         SpinBox { id: maxRetries; from: 0; to: 10; value: 2; editable: true }
+                    }
+
+                    // ── Datos por lote (RPA data-driven): mismo flujo, una corrida
+                    //    por fila, con {{variable}} sustituido por los valores. ──
+                    Text { text: "Datos por lote (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        text: "Pegá CSV (1ra fila = encabezados) o JSON (array de objetos). El proceso corre una vez por fila; usá {{columna}} en objetivo/preprompt para inyectar los valores."
+                    }
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 90
+                        TextArea {
+                            id: datasetInlineField
+                            placeholderText: "nombre,ciudad\nAna,La Plata\nBeto,Rosario"
+                            wrapMode: TextEdit.NoWrap
+                            color: Theme.textPrimary
+                            font.family: "Consolas, monospace"
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        Text { text: "Formato"; color: Theme.textSecondary; font.pixelSize: 11 }
+                        ComboBox { id: datasetFormatCombo; model: ["Auto", "CSV", "JSON"] }
+                        Text { text: "Si una fila falla"; color: Theme.textSecondary; font.pixelSize: 11 }
+                        ComboBox { id: datasetOnErrorCombo; model: ["Seguir con la próxima", "Cortar el lote"] }
+                    }
+
+                    // ── Disparador (arranque desatendido) ──
+                    Text { text: "Disparador"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        ComboBox { id: triggerTypeCombo; model: ["Manual", "Al cambiar un archivo/carpeta"] }
+                        SpinBox {
+                            id: triggerDebounce
+                            visible: triggerTypeCombo.currentIndex === 1
+                            from: 0; to: 60000; stepSize: 500; value: 1500; editable: true
+                        }
+                        Text {
+                            visible: triggerTypeCombo.currentIndex === 1
+                            text: "ms debounce"; color: Theme.textMuted; font.pixelSize: 11
+                        }
+                    }
+                    TextField {
+                        id: triggerPathField
+                        Layout.fillWidth: true
+                        visible: triggerTypeCombo.currentIndex === 1
+                        placeholderText: "Ruta absoluta del archivo o carpeta a vigilar"
+                        color: Theme.textPrimary
                     }
 
                     RowLayout {

@@ -5227,6 +5227,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
                                             ? QStringLiteral("manual")
                                             : QStringLiteral("programacion") },
         { QStringLiteral("automationId"), m_runningAutomationId },
+        { QStringLiteral("report"),       AutomationRunner::buildRunReport(m_agentMessages) },
     };
     m_runHistory.append(id, rec);
     if (!m_runningAutomationId.isEmpty()) {

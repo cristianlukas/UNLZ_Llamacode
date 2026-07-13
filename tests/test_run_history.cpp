@@ -35,12 +35,20 @@ void RunHistoryTests::jsonRoundTrip()
     const QVariantMap in{
         {"runId", "r1"}, {"ownerId", "proc-a"}, {"startedAt", "2024-01-01T09:00:00"},
         {"finishedAt", "2024-01-01T09:05:00"}, {"status", "ok"}, {"summary", "listo"},
-        {"source", "manual"}, {"automationId", ""}, {"log", "traza completa\nlinea 2"}
+        {"source", "manual"}, {"automationId", ""}, {"log", "traza completa\nlinea 2"},
+        {"report", QVariantList{
+            QVariantMap{{"n", 1}, {"tool", "desktop_launch"}, {"ok", true}, {"summary", "ok"}},
+            QVariantMap{{"n", 2}, {"tool", "desktop_assert"}, {"ok", false}, {"summary", "FAIL"}}}}
     };
     const QVariantMap out = RunHistoryStore::fromJson(RunHistoryStore::toJson(in));
     QCOMPARE(out.value("runId").toString(), QStringLiteral("r1"));
     QCOMPARE(out.value("status").toString(), QStringLiteral("ok"));
     QCOMPARE(out.value("log").toString(), QStringLiteral("traza completa\nlinea 2"));
+    // El run-report por paso sobrevive el round-trip.
+    const QVariantList rep = out.value("report").toList();
+    QCOMPARE(rep.size(), 2);
+    QCOMPARE(rep.at(1).toMap().value("tool").toString(), QStringLiteral("desktop_assert"));
+    QCOMPARE(rep.at(1).toMap().value("ok").toBool(), false);
 }
 
 void RunHistoryTests::append_persistsAndOrdersNewestFirst()

@@ -33,6 +33,8 @@ QJsonObject RunHistoryStore::toJson(const QVariantMap &r)
     o["source"]      = r.value("source").toString();
     o["automationId"]= r.value("automationId").toString();
     o["log"]         = r.value("log").toString();
+    // Run-report por paso (auditoría): lista de {n,tool,ok,summary} de las tools.
+    o["report"]      = QJsonArray::fromVariantList(r.value("report").toList());
     return o;
 }
 
@@ -48,6 +50,7 @@ QVariantMap RunHistoryStore::fromJson(const QJsonObject &obj)
     r["source"]      = obj.value("source").toString();
     r["automationId"]= obj.value("automationId").toString();
     r["log"]         = obj.value("log").toString();
+    r["report"]      = obj.value("report").toArray().toVariantList();
     return r;
 }
 

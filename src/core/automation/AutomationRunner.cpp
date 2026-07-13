@@ -514,3 +514,28 @@ QVariantList AutomationRunner::fileWatchTriggers(const QVariantList &tasks)
     }
     return out;
 }
+
+QVariantList AutomationRunner::buildRunReport(const QVariantList &agentMessages)
+{
+    QVariantList steps;
+    int n = 0;
+    for (const QVariant &mv : agentMessages) {
+        const QVariantMap m = mv.toMap();
+        if (m.value(QStringLiteral("role")).toString() != QLatin1String("toolcall")) continue;
+        const QString tool = m.value(QStringLiteral("name")).toString();
+        const QString output = m.value(QStringLiteral("output")).toString();
+        const QString low = output.toLower();
+        // Heurística de fallo: marcadores típicos en la salida de las tools nativas.
+        const bool bad = low.contains(QStringLiteral(": fail"))
+                         || low.contains(QStringLiteral(": error"))
+                         || low.contains(QStringLiteral("[error"))
+                         || low.contains(QStringLiteral("no encontrad"))
+                         || low.contains(QStringLiteral("timeout"));
+        steps << QVariantMap{
+            {QStringLiteral("n"), ++n},
+            {QStringLiteral("tool"), tool},
+            {QStringLiteral("ok"), !bad},
+            {QStringLiteral("summary"), output.simplified().left(300)}};
+    }
+    return steps;
+}

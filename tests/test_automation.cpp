@@ -24,6 +24,7 @@ private slots:
     void strokePointsSurviveRecipeAndPrompt();
     void datasetParseAndVariableExpansion();
     void assertStepRendersInPrompt();
+    void runReportFromToolMessages();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -330,6 +331,24 @@ void AutomationTests::assertStepRendersInPrompt()
     QVERIFY(prompt.contains(QStringLiteral("desktop_assert")));
     QVERIFY(prompt.contains(QStringLiteral("TOTAL 42")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::runReportFromToolMessages()
+{
+    // Del hilo de mensajes del agente, buildRunReport queda sólo con los toolcall
+    // y marca ok=false cuando el output trae un marcador de error.
+    const QVariantList msgs{
+        QVariantMap{{"role", "assistant"}, {"content", "voy a abrir"}},
+        QVariantMap{{"role", "toolcall"}, {"name", "desktop_launch"}, {"output", "[desktop_launch: ok]"}},
+        QVariantMap{{"role", "toolcall"}, {"name", "desktop_assert"},
+                    {"output", "[desktop_assert: FAIL] el texto no apareció"}},
+    };
+    const QVariantList rep = AutomationRunner::buildRunReport(msgs);
+    QCOMPARE(rep.size(), 2);   // sólo los 2 toolcall
+    QCOMPARE(rep.at(0).toMap().value("tool").toString(), QStringLiteral("desktop_launch"));
+    QCOMPARE(rep.at(0).toMap().value("ok").toBool(), true);
+    QCOMPARE(rep.at(1).toMap().value("ok").toBool(), false);   // FAIL → ok=false
+    QCOMPARE(rep.at(1).toMap().value("n").toInt(), 2);
 }
 
 void AutomationTests::datasetParseAndVariableExpansion()
