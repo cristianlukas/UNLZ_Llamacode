@@ -32,6 +32,7 @@
 #include <QFile>
 
 class QThread;
+class QFileSystemWatcher;
 
 class AppController : public QObject
 {
@@ -181,6 +182,10 @@ public:
     AutomationStore   *automationStore() { return &m_automations; }
     bool tasksSchedulerEnabled() const { return m_scheduler && m_scheduler->enabled(); }
     void setTasksSchedulerEnabled(bool on);
+    // Reconstruye el QFileSystemWatcher desde las Tasks con triggerType=fileWatch.
+    // Idempotente; llamar tras cambios en las Tasks. Expuesto para tests.
+    Q_INVOKABLE void rebuildTaskTriggers();
+    Q_INVOKABLE QStringList watchedTriggerPaths() const;
     bool taskRunning() const { return !m_runningTaskId.isEmpty(); }
     bool canRunTask() const;
     QString runningTaskId() const { return m_runningTaskId; }
@@ -960,6 +965,7 @@ private:
     // Escanea líneas del server por patrones conocidos y emite serverDiagnostic.
     void detectServerLogPatterns(const QString &text);
     void launchTaskBody(const QString &id, const QVariantMap &task);
+    void onTriggerPathChanged(const QString &path);
     void appendAgentEvent(const QString &source, const QString &text);
     // Verify-phase swap: manda `prompt` al agente, cambiando antes el modelo a
     // `targetLaunchId` si difiere del activo (reinicia server+agente; sesión
@@ -981,6 +987,10 @@ private:
     ModelRootRegistry m_roots{&m_catalog};
     ProfileManager    m_profiles;
     TaskStore         m_tasks;
+    // Watcher de triggers fileWatch: mapea cada path vigilado → ids de Task a correr,
+    // con debounce por Task (evita ráfagas de eventos de guardado).
+    QFileSystemWatcher *m_taskWatcher = nullptr;
+    QHash<QString, qint64> m_triggerLastFire;   // id de Task → epoch ms del último disparo
     AutomationStore   m_automations;
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
@@ -1007,6 +1017,14 @@ private:
     QVariantList m_dataRows;
     int          m_dataIndex = 0;
     QVariantMap  m_runningTaskRow;   // fila en curso (para expandir postprompt/loop)
+    // On-error/reintentos (RPA robusto): reintenta el cuerpo ante fallo hasta
+    // maxRetries antes de darlo por perdido; el lote data-driven sigue o corta según
+    // datasetOnError. m_pendingRetry marca que el próximo launch es un reintento (no
+    // resetea el contador ni avanza de fila).
+    int          m_attemptRetry = 0;
+    int          m_attemptRetryMax = 0;
+    bool         m_pendingRetry = false;
+    QString      m_datasetOnError = QStringLiteral("continue");
     // Routing multi-modelo (verify-phase swap): perfil de ejecución vs perfil de
     // verificación del goal-check. Si difieren, el goal-check del bucle corre en
     // el modelo de verificación (sesión nueva: se auto-verifica con herramientas)

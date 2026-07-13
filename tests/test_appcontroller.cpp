@@ -19,6 +19,7 @@
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/tasks/TaskStore.h"
+#include "core/automation/AutomationRunner.h"
 #include "core/CatalogModel.h"
 #include "core/ModelCatalog.h"
 #include "core/ModelRootRegistry.h"
@@ -65,7 +66,8 @@ public:
         } else {
             ++m_bodyRuns;
             m_lastBodyPrompt = text;
-            reply = QStringLiteral("trabajo realizado %1").arg(m_bodyRuns);
+            reply = m_bodyReplies.isEmpty() ? QStringLiteral("trabajo realizado %1").arg(m_bodyRuns)
+                                            : m_bodyReplies.takeFirst();
         }
         m_msgs.append(QVariantMap{{QStringLiteral("role"), QStringLiteral("assistant")},
                                   {QStringLiteral("content"), reply}});
@@ -74,6 +76,7 @@ public:
     }
 
     void setVerdicts(const QStringList &v) { m_verdicts = v; }
+    void setBodyReplies(const QStringList &r) { m_bodyReplies = r; }
     int bodyRuns() const { return m_bodyRuns; }
     QString lastBodyPrompt() const { return m_lastBodyPrompt; }
 
@@ -81,6 +84,7 @@ private:
     bool m_running = false;
     int m_bodyRuns = 0;
     QStringList m_verdicts;
+    QStringList m_bodyReplies;
     QString m_lastBodyPrompt;
     QVariantList m_msgs;
 };
@@ -118,6 +122,9 @@ private slots:
     void loopTaskRunsBodyUntilGoalMet();
     void loopTaskStopsAtMaxIterations();
     void dataDrivenTaskRunsBodyPerRow();
+    void taskRetriesBodyOnFailure();
+    void datasetAbortStopsOnError();
+    void fileWatchTriggerRegistersPath();
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
@@ -710,6 +717,93 @@ void AppControllerTests::dataDrivenTaskRunsBodyPerRow()
     QVERIFY(fake->lastBodyPrompt().contains(QStringLiteral("Beto")));
     QVERIFY(fake->lastBodyPrompt().contains(QStringLiteral("40")));
     QVERIFY(!fake->lastBodyPrompt().contains(QStringLiteral("{{nombre}}")));
+}
+
+void AppControllerTests::taskRetriesBodyOnFailure()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    // 1er cuerpo declara fallo → reintento → 2do cuerpo ok.
+    fake->setBodyReplies({QStringLiteral("no pude completar la tarea"),
+                          QStringLiteral("listo, hecho")});
+    app.setTestAgentBackend(fake);
+
+    const QVariantMap def{
+        {QStringLiteral("name"), QStringLiteral("Con reintento")},
+        {QStringLiteral("description"), QStringLiteral("Tarea local")},
+        {QStringLiteral("executionMode"), QStringLiteral("auto")},
+        {QStringLiteral("maxRetries"), 2}};
+    const QString id = app.taskStore()->save(QString(), def);
+
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+    // Reintento asíncrono: esperar los 2 finished (1er fallo + relanzamiento ok).
+    for (int i = 0; i < 300 && fin.count() < 2; ++i) QTest::qWait(10);
+
+    QCOMPARE(fake->bodyRuns(), 2);                       // falló, reintentó
+    QCOMPARE(fin.count(), 2);
+    QCOMPARE(fin.at(0).at(2).toString(), QStringLiteral("error"));   // 1er intento falló
+    QCOMPARE(fin.at(1).at(2).toString(), QStringLiteral("ok"));      // reintento ok
+}
+
+void AppControllerTests::datasetAbortStopsOnError()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);   // sin bodyReplies → siempre "trabajo realizado N"
+
+    // 2 filas, sin reintentos, política abort. Forzamos fallo con un objetivo que
+    // exige herramientas web (taskRequiresToolEvidence) y el fake no ejecuta ninguna
+    // → la fila 1 falla → el lote se corta (fila 2 no corre).
+    const QVariantMap def{
+        {QStringLiteral("name"), QStringLiteral("Lote abortable")},
+        {QStringLiteral("description"), QStringLiteral("Buscá en internet {{q}} y resumí")},
+        {QStringLiteral("executionMode"), QStringLiteral("auto")},
+        {QStringLiteral("maxRetries"), 0},
+        {QStringLiteral("datasetInline"), QStringLiteral("q\nuno\ndos")},
+        {QStringLiteral("datasetFormat"), QStringLiteral("csv")},
+        {QStringLiteral("datasetOnError"), QStringLiteral("abort")}};
+    const QString id = app.taskStore()->save(QString(), def);
+
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+    for (int i = 0; i < 200 && fin.isEmpty(); ++i) QTest::qWait(10);
+    QTest::qWait(60);   // dar chance a un (indebido) avance de fila
+
+    QVERIFY(!fin.isEmpty());
+    QCOMPARE(fin.first().at(2).toString(), QStringLiteral("error"));
+    QCOMPARE(fake->bodyRuns(), 1);   // abort: la 2da fila NO se ejecuta
+}
+
+void AppControllerTests::fileWatchTriggerRegistersPath()
+{
+    AppController app;
+    // Archivo real a vigilar (el watcher sólo agrega paths existentes).
+    QTemporaryFile f(QDir::temp().filePath(QStringLiteral("trigger-XXXXXX.txt")));
+    QVERIFY(f.open());
+    f.write("x"); f.flush();
+    const QString path = QFileInfo(f.fileName()).absoluteFilePath();
+
+    const QVariantMap def{
+        {QStringLiteral("name"), QStringLiteral("Watch")},
+        {QStringLiteral("description"), QStringLiteral("Corre al cambiar el archivo")},
+        {QStringLiteral("triggerType"), QStringLiteral("fileWatch")},
+        {QStringLiteral("triggerPath"), path}};
+    app.taskStore()->save(QString(), def);
+    app.rebuildTaskTriggers();
+
+    QVERIFY(app.watchedTriggerPaths().contains(path));
+
+    // Pura: fileWatchTriggers filtra por triggerType y path no vacío. (La DB de tasks
+    // puede tener triggers de corridas previas → verificamos que EL NUESTRO esté.)
+    const QVariantList trg = AutomationRunner::fileWatchTriggers(app.taskStore()->all());
+    QVERIFY(!trg.isEmpty());
+    bool found = false;
+    for (const QVariant &v : trg)
+        if (v.toMap().value("path").toString() == path) found = true;
+    QVERIFY(found);
 }
 
 void AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()

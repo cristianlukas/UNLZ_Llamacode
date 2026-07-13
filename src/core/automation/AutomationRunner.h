@@ -58,4 +58,10 @@ public:
     // parseada) > datasetInline+datasetFormat (texto) > datasetPath (archivo).
     // Devuelve {} si la Task no tiene dataset. Acota a 1000 filas.
     static QVariantList datasetRows(const QVariantMap &task);
+
+    // ── Triggers (arranque desatendido) ─────────────────────────────────────────
+    // Filas {id, path, debounceMs} de las Tasks con triggerType=="fileWatch" y un
+    // triggerPath no vacío. Alimenta el QFileSystemWatcher: al cambiar ese archivo
+    // o carpeta se dispara la Task. Pura (no toca disco). Debounce acotado 0..60000.
+    static QVariantList fileWatchTriggers(const QVariantList &tasks);
 };

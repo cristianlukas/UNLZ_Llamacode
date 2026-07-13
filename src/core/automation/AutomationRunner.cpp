@@ -495,3 +495,22 @@ QVariantList AutomationRunner::datasetRows(const QVariantMap &task)
     if (rows.size() > 1000) rows = rows.mid(0, 1000);   // cota de seguridad
     return rows;
 }
+
+QVariantList AutomationRunner::fileWatchTriggers(const QVariantList &tasks)
+{
+    QVariantList out;
+    for (const QVariant &tv : tasks) {
+        const QVariantMap t = tv.toMap();
+        if (t.value(QStringLiteral("triggerType")).toString() != QLatin1String("fileWatch"))
+            continue;
+        const QString path = t.value(QStringLiteral("triggerPath")).toString().trimmed();
+        const QString id = t.value(QStringLiteral("id")).toString();
+        if (path.isEmpty() || id.isEmpty()) continue;
+        out << QVariantMap{
+            {QStringLiteral("id"), id},
+            {QStringLiteral("path"), path},
+            {QStringLiteral("debounceMs"),
+             qBound(0, t.value(QStringLiteral("triggerDebounceMs"), 1500).toInt(), 60000)}};
+    }
+    return out;
+}

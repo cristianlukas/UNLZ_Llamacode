@@ -47,6 +47,7 @@
 #include <QSqlError>
 #include <QDir>
 #include <QFileInfo>
+#include <QFileSystemWatcher>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QHash>
@@ -687,6 +688,13 @@ AppController::AppController(QObject *parent) : QObject(parent)
     });
     if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
         m_scheduler->setEnabled(true);
+
+    // Triggers fileWatch: (re)armar el watcher al cambiar las Tasks y una vez al inicio.
+    connect(&m_tasks, &QAbstractItemModel::dataChanged, this, [this]() { rebuildTaskTriggers(); });
+    connect(&m_tasks, &QAbstractItemModel::modelReset, this, [this]() { rebuildTaskTriggers(); });
+    connect(&m_tasks, &QAbstractItemModel::rowsInserted, this, [this]() { rebuildTaskTriggers(); });
+    connect(&m_tasks, &QAbstractItemModel::rowsRemoved, this, [this]() { rebuildTaskTriggers(); });
+    rebuildTaskTriggers();
 
     // Gateway (proxy Anthropic/OpenAI + auto-load). Se arranca on-demand.
     m_gateway = new LlmGateway(this);
@@ -4571,6 +4579,56 @@ void AppController::prepareTaskAgentSession()
     }
 }
 
+void AppController::rebuildTaskTriggers()
+{
+    if (!m_taskWatcher) {
+        m_taskWatcher = new QFileSystemWatcher(this);
+        connect(m_taskWatcher, &QFileSystemWatcher::fileChanged,
+                this, [this](const QString &p) { onTriggerPathChanged(p); });
+        connect(m_taskWatcher, &QFileSystemWatcher::directoryChanged,
+                this, [this](const QString &p) { onTriggerPathChanged(p); });
+    }
+    const QStringList prev = m_taskWatcher->files() + m_taskWatcher->directories();
+    if (!prev.isEmpty()) m_taskWatcher->removePaths(prev);
+    QStringList paths;
+    for (const QVariant &tr : AutomationRunner::fileWatchTriggers(m_tasks.all())) {
+        const QString p = tr.toMap().value(QStringLiteral("path")).toString();
+        if (QFileInfo::exists(p) && !paths.contains(p)) paths << p;
+    }
+    if (!paths.isEmpty()) m_taskWatcher->addPaths(paths);
+}
+
+QStringList AppController::watchedTriggerPaths() const
+{
+    if (!m_taskWatcher) return {};
+    return m_taskWatcher->files() + m_taskWatcher->directories();
+}
+
+void AppController::onTriggerPathChanged(const QString &path)
+{
+    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+    for (const QVariant &tr : AutomationRunner::fileWatchTriggers(m_tasks.all())) {
+        const QVariantMap m = tr.toMap();
+        if (m.value(QStringLiteral("path")).toString() != path) continue;
+        const QString id = m.value(QStringLiteral("id")).toString();
+        const int debounce = m.value(QStringLiteral("debounceMs")).toInt();
+        // Debounce por Task: ignora ráfagas de eventos de guardado dentro de la ventana.
+        if (nowMs - m_triggerLastFire.value(id, 0) < debounce) continue;
+        m_triggerLastFire.insert(id, nowMs);
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Trigger fileWatch: '%1' cambió; corriendo la Task.").arg(path));
+        QTimer::singleShot(debounce, this, [this, id, path]() {
+            // Algunos editores recrean el archivo (borrar+crear): re-vigilar si el
+            // watcher lo perdió, y no correr si ya hay una Task en curso.
+            if (m_taskWatcher && QFileInfo::exists(path)
+                && !m_taskWatcher->files().contains(path)
+                && !m_taskWatcher->directories().contains(path))
+                m_taskWatcher->addPath(path);
+            if (m_runningTaskId.isEmpty()) runTask(id);
+        });
+    }
+}
+
 void AppController::runTask(const QString &id)
 {
     QVariantMap task = m_tasks.get(id);
@@ -4648,6 +4706,13 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     }
     const bool dataDriven = (m_dataTaskId == id) && m_dataIndex < m_dataRows.size();
     m_runningTaskRow = dataDriven ? m_dataRows.at(m_dataIndex).toMap() : QVariantMap{};
+
+    // On-error/reintentos: en un intento nuevo (no reintento) reseteo el contador.
+    if (!m_pendingRetry) m_attemptRetry = 0;
+    m_pendingRetry = false;
+    m_attemptRetryMax = qBound(0, task.value(QStringLiteral("maxRetries"), 2).toInt(), 10);
+    m_datasetOnError = task.value(QStringLiteral("datasetOnError"),
+                                  QStringLiteral("continue")).toString();
 
     QString prompt = TaskStore::composePrompt(task);
     const QString artifactId = task.value(QStringLiteral("teachArtifactId")).toString();
@@ -5194,6 +5259,43 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     }
     emit taskRunStateChanged();
     emit taskRunFinished(id, name, status, summary, silent);
+
+    // On-error: reintentar el cuerpo (misma fila) hasta maxRetries antes de rendirse.
+    if (status == QLatin1String("error") && m_attemptRetry < m_attemptRetryMax) {
+        m_attemptRetry++;
+        m_pendingRetry = true;
+        QVariantMap again = m_tasks.get(id);
+        if (!again.isEmpty()) {
+            again[QStringLiteral("executionMode")] = AutomationRunner::resolveExecutionMode(again);
+            appendAgentEvent(QStringLiteral("task"),
+                             QStringLiteral("Reintento %1 de %2 tras un fallo.")
+                                 .arg(m_attemptRetry).arg(m_attemptRetryMax));
+            QTimer::singleShot(0, this, [this, id, again]() {
+                if (m_runningTaskId.isEmpty()) launchTaskBody(id, again);
+            });
+            return;
+        }
+    }
+    m_pendingRetry = false;
+
+    // On-error del lote: una fila que falló definitivamente con política "abort"
+    // corta el batch (no procesa las filas restantes).
+    if (status == QLatin1String("error") && m_dataTaskId == id
+        && m_datasetOnError == QLatin1String("abort")) {
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Lote abortado: la fila %1 falló y la política es 'abort'.")
+                             .arg(m_dataIndex + 1));
+        m_dataTaskId.clear();
+        m_dataRows.clear();
+        m_dataIndex = 0;
+        m_runningTaskRow.clear();
+        if (m_scheduledAutoStop) {
+            m_scheduledAutoStop = false;
+            stopAgent();
+            stopServer();
+        }
+        return;
+    }
 
     // Data-driven: si esta corrida fue una fila del dataset y quedan más, relanzar
     // el cuerpo con la siguiente fila (cada fila = una corrida/registro propio).

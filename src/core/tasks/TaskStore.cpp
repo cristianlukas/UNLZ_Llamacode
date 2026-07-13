@@ -174,6 +174,15 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["datasetInline"]   = def.value("datasetInline", t.value("datasetInline"));
     t["datasetFormat"]   = def.value("datasetFormat", t.value("datasetFormat"));
     t["datasetPath"]     = def.value("datasetPath", t.value("datasetPath"));
+    // On-error del lote data-driven: "continue" (sigue con la próxima fila) o
+    // "abort" (corta el lote). maxRetries (arriba) ya rige los reintentos por fila.
+    t["datasetOnError"]  = def.value("datasetOnError",
+                                     t.value("datasetOnError", QStringLiteral("continue")));
+    // Trigger de arranque desatendido: "manual" (default) o "fileWatch" (corre al
+    // cambiar triggerPath, con debounce). Cron sigue en scheduleEnabled/scheduleCron.
+    t["triggerType"]     = def.value("triggerType", t.value("triggerType", QStringLiteral("manual")));
+    t["triggerPath"]     = def.value("triggerPath", t.value("triggerPath"));
+    t["triggerDebounceMs"] = def.value("triggerDebounceMs", t.value("triggerDebounceMs", 1500));
     t["updatedAt"]       = now;
 
     QString outId;
@@ -454,6 +463,10 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["datasetInline"]   = task.value("datasetInline").toString();
     o["datasetFormat"]   = task.value("datasetFormat").toString();
     o["datasetPath"]     = task.value("datasetPath").toString();
+    o["datasetOnError"]  = task.value("datasetOnError", QStringLiteral("continue")).toString();
+    o["triggerType"]     = task.value("triggerType", QStringLiteral("manual")).toString();
+    o["triggerPath"]     = task.value("triggerPath").toString();
+    o["triggerDebounceMs"] = task.value("triggerDebounceMs", 1500).toInt();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -520,6 +533,10 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["datasetInline"]   = obj.value("datasetInline").toString();
     t["datasetFormat"]   = obj.value("datasetFormat").toString();
     t["datasetPath"]     = obj.value("datasetPath").toString();
+    t["datasetOnError"]  = obj.value("datasetOnError").toString(QStringLiteral("continue"));
+    t["triggerType"]     = obj.value("triggerType").toString(QStringLiteral("manual"));
+    t["triggerPath"]     = obj.value("triggerPath").toString();
+    t["triggerDebounceMs"] = obj.value("triggerDebounceMs").toInt(1500);
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {
