@@ -77,6 +77,7 @@ WORD keyCode(const QString &key)
         {"SPACE", VK_SPACE}, {"UP", VK_UP}, {"DOWN", VK_DOWN},
         {"LEFT", VK_LEFT}, {"RIGHT", VK_RIGHT}, {"HOME", VK_HOME},
         {"END", VK_END}, {"PAGEDOWN", VK_NEXT}, {"PAGEUP", VK_PRIOR},
+        {"WIN", VK_LWIN}, {"LWIN", VK_LWIN}, {"RWIN", VK_RWIN}, {"META", VK_LWIN},
         {"F1", VK_F1}, {"F2", VK_F2}, {"F3", VK_F3}, {"F4", VK_F4},
         {"F5", VK_F5}, {"F6", VK_F6}, {"F7", VK_F7}, {"F8", VK_F8},
         {"F9", VK_F9}, {"F10", VK_F10}, {"F11", VK_F11}, {"F12", VK_F12}};

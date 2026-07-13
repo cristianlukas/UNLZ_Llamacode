@@ -4922,6 +4922,8 @@ bool AppController::startDesktopReplay(const QString &id, const QString &artifac
     m_replaySteps = steps;
     m_replayIndex = 0;
     m_replayTaskId = id;
+    m_replayReport.clear();
+    m_replayErrors = 0;
 
     m_tasks.markRun(id, QStringLiteral("running"),
                     QStringLiteral("Reproducción fiel: %1 pasos.").arg(steps.size()));
@@ -4941,27 +4943,44 @@ void AppController::playNextReplayStep()
     const QVariantMap step = m_replaySteps.at(m_replayIndex).toMap();
     const QString kind = step.value(QStringLiteral("kind")).toString();
     QString error;
+    bool ok = false;
+    QString detail = kind;
     if (kind == QLatin1String("key")) {
         QStringList mods;
         for (const QVariant &m : step.value(QStringLiteral("modifiers")).toList())
             mods << m.toString();
-        DesktopAutomationBackend::pressKey(step.value(QStringLiteral("key")).toString(), mods, &error);
+        const QString key = step.value(QStringLiteral("key")).toString();
+        detail = mods.isEmpty() ? QStringLiteral("key %1").arg(key)
+                                : QStringLiteral("key %1+%2").arg(mods.join('+'), key);
+        ok = DesktopAutomationBackend::pressKey(key, mods, &error);
     } else if (kind == QLatin1String("type")) {
-        DesktopAutomationBackend::typeText(step.value(QStringLiteral("text")).toString(), &error);
+        detail = QStringLiteral("type \"%1\"").arg(step.value(QStringLiteral("text")).toString().left(40));
+        ok = DesktopAutomationBackend::typeText(step.value(QStringLiteral("text")).toString(), &error);
     } else if (kind == QLatin1String("click")) {
-        DesktopAutomationBackend::click(m_replayScopeKind, m_replayScopeId,
+        detail = QStringLiteral("click %1,%2")
+                     .arg(step.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
+                     .arg(step.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
+        ok = DesktopAutomationBackend::click(m_replayScopeKind, m_replayScopeId,
                                         step.value(QStringLiteral("x")).toDouble(),
                                         step.value(QStringLiteral("y")).toDouble(),
                                         step.value(QStringLiteral("button")).toString(), &error);
     } else if (kind == QLatin1String("stroke")) {
-        DesktopAutomationBackend::stroke(m_replayScopeKind, m_replayScopeId,
+        const int np = step.value(QStringLiteral("points")).toList().size();
+        detail = QStringLiteral("stroke %1 pts").arg(np);
+        ok = DesktopAutomationBackend::stroke(m_replayScopeKind, m_replayScopeId,
                                          step.value(QStringLiteral("points")).toList(),
                                          step.value(QStringLiteral("button")).toString(), 8, &error);
     }
-    if (!error.isEmpty())
-        appendAgentEvent(QStringLiteral("task"),
-                         QStringLiteral("Reproducción: paso %1 (%2) → %3")
-                             .arg(m_replayIndex + 1).arg(kind, error));
+    if (!ok) m_replayErrors++;
+    m_replayReport << QVariantMap{
+        {QStringLiteral("n"), m_replayIndex + 1},
+        {QStringLiteral("tool"), detail},
+        {QStringLiteral("ok"), ok},
+        {QStringLiteral("summary"), ok ? QStringLiteral("ok") : error}};
+    appendAgentEvent(QStringLiteral("task"),
+                     QStringLiteral("Reproducción paso %1/%2: %3 → %4")
+                         .arg(m_replayIndex + 1).arg(m_replaySteps.size())
+                         .arg(detail, ok ? QStringLiteral("ok") : error));
 
     // Programar el próximo paso respetando el hueco temporal grabado (acotado),
     // así se respeta el ritmo (p.ej. esperar a que abra Paint) sin sleeps largos.
@@ -4971,7 +4990,7 @@ void AppController::playNextReplayStep()
     if (m_replayIndex < m_replaySteps.size()) {
         const qint64 a = m_replaySteps.at(cur).toMap().value(QStringLiteral("atMs")).toLongLong();
         const qint64 b = m_replaySteps.at(m_replayIndex).toMap().value(QStringLiteral("atMs")).toLongLong();
-        gap = qBound(80, static_cast<int>(b - a), 4000);
+        gap = qBound(80, static_cast<int>(b - a), 8000);   // permite la espera de apertura de app
     }
     QTimer::singleShot(gap, this, [this]() { playNextReplayStep(); });
 }
@@ -4980,23 +4999,32 @@ void AppController::finishDesktopReplay()
 {
     const QString id = m_replayTaskId;
     const int n = m_replaySteps.size();
+    const int errs = m_replayErrors;
     m_replaySteps.clear();
     m_replayIndex = 0;
     m_replayTaskId.clear();
     if (m_runningTaskId != id) return;
 
-    // Verificación por el agente si hay postprompt; si no, cerramos como ok.
-    if (!m_runningTaskPostPrompt.isEmpty()) {
+    // Estado honesto: si algún paso mecánico falló (p.ej. no se pudo abrir la app,
+    // sesión bloqueada), la reproducción NO fue exitosa aunque haya "terminado".
+    const bool allOk = errs == 0;
+    const QString summary = allOk
+        ? QStringLiteral("Reproducción fiel completada: %1 pasos ejecutados.").arg(n)
+        : QStringLiteral("Reproducción fiel con fallos: %1 de %2 pasos fallaron "
+                         "(revisá los Pasos ejecutados). Nada garantiza el objetivo.")
+              .arg(errs).arg(n);
+
+    // Verificación por el agente si hay postprompt Y no hubo errores mecánicos
+    // (verificar algo que no se ejecutó no tiene sentido).
+    if (allOk && !m_runningTaskPostPrompt.isEmpty()) {
         m_runningTaskPhase = QStringLiteral("verificando");
         const QString post = m_runningTaskPostPrompt;
         m_runningTaskPostPrompt.clear();
-        appendAgentEvent(QStringLiteral("task"),
-                         QStringLiteral("Reproducción fiel completada (%1 pasos); verificando.").arg(n));
+        appendAgentEvent(QStringLiteral("task"), summary + QStringLiteral(" Verificando."));
         sendToAgent(post);
         return;
     }
-    finishRunningTask(QStringLiteral("ok"),
-                      QStringLiteral("Reproducción fiel completada: %1 pasos ejecutados.").arg(n));
+    finishRunningTask(allOk ? QStringLiteral("ok") : QStringLiteral("error"), summary);
 }
 
 void AppController::setTestAgentBackend(IAgentBackend *b)
@@ -5416,7 +5444,9 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
                                             ? QStringLiteral("manual")
                                             : QStringLiteral("programacion") },
         { QStringLiteral("automationId"), m_runningAutomationId },
-        { QStringLiteral("report"),       AutomationRunner::buildRunReport(m_agentMessages) },
+        { QStringLiteral("report"),       m_replayReport.isEmpty()
+                                              ? AutomationRunner::buildRunReport(m_agentMessages)
+                                              : m_replayReport },
     };
     m_runHistory.append(id, rec);
     if (!m_runningAutomationId.isEmpty()) {
@@ -5444,6 +5474,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_replaySteps.clear();
     m_replayIndex = 0;
     m_replayTaskId.clear();
+    m_replayReport.clear();
+    m_replayErrors = 0;
     if (m_desktopTaskIndicatorActive) {
         m_desktopTaskIndicatorActive = false;
         m_desktopAgentActive = false;

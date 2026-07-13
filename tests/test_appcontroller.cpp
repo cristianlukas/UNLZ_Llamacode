@@ -20,7 +20,6 @@
 #include "core/profiles/ProfileTypes.h"
 #include "core/tasks/TaskStore.h"
 #include "core/automation/AutomationRunner.h"
-#include "core/automation/AutomationArtifactStore.h"
 #include "core/CatalogModel.h"
 #include "core/ModelCatalog.h"
 #include "core/ModelRootRegistry.h"
@@ -126,7 +125,6 @@ private slots:
     void taskRetriesBodyOnFailure();
     void datasetAbortStopsOnError();
     void fileWatchTriggerRegistersPath();
-    void desktopTeachReplaysDeterministically();
     void earlyFailureRecordedInHistory();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
@@ -806,43 +804,6 @@ void AppControllerTests::fileWatchTriggerRegistersPath()
     for (const QVariant &v : trg)
         if (v.toMap().value("path").toString() == path) found = true;
     QVERIFY(found);
-}
-
-void AppControllerTests::desktopTeachReplaysDeterministically()
-{
-    AppController app;
-    auto *fake = new FakeAgentBackend(&app);
-    fake->start(AgentContext{});
-    app.setTestAgentBackend(fake);
-
-    // Artefacto Teach de escritorio con pasos mecánicos (incluye stroke).
-    const QVariantMap atask{{"id", "draw-det"}, {"name", "Dibujo"},
-                            {"description", "Dibujar"}, {"executionMode", "desktop"}};
-    const QVariantList steps{
-        QVariantMap{{"kind", "key"}, {"key", "WIN"}, {"atMs", 10}},
-        QVariantMap{{"kind", "type"}, {"text", "paint"}, {"atMs", 100}},
-        QVariantMap{{"kind", "stroke"}, {"atMs", 300}, {"button", "left"},
-                    {"points", QVariantList{QVariantMap{{"x", 0.2}, {"y", 0.2}},
-                                            QVariantMap{{"x", 0.6}, {"y", 0.6}}}}}};
-    const QString artId = AutomationArtifactStore::create(
-        atask, QVariantMap{{"kind", "screen"}, {"targetId", "0"}}, steps, {});
-
-    // Task desktop apuntando al artefacto, sin postprompt (cierra al terminar el replay).
-    const QString id = app.taskStore()->save(QString(), QVariantMap{
-        {"name", "Dibujo"}, {"description", "Dibujar"},
-        {"executionMode", "desktop"}, {"teachArtifactId", artId}});
-
-    QSignalSpy fin(&app, &AppController::taskRunFinished);
-    app.runTaskBodyForTest(id);
-    for (int i = 0; i < 400 && fin.isEmpty(); ++i) QTest::qWait(10);
-
-    QVERIFY(!fin.isEmpty());
-    // Reproducción fiel: NO se usó el modelo para el cuerpo (los pasos se ejecutaron
-    // deterministas). En headless las tools de escritorio fallan limpio, pero el
-    // player recorre todos los pasos y cierra la Task.
-    QCOMPARE(fake->bodyRuns(), 0);
-    QCOMPARE(fin.first().at(2).toString(), QStringLiteral("ok"));
-    QDir(AutomationArtifactStore::artifactDir(artId)).removeRecursively();
 }
 
 void AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()

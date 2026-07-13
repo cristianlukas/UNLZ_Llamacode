@@ -394,7 +394,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.36"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.37"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -1012,6 +1012,8 @@ private:
     QString      m_replayScopeKind;
     QString      m_replayScopeId;
     QString      m_replayTaskId;
+    QVariantList m_replayReport;   // {n,tool,ok,summary} por paso (auditoría honesta)
+    int          m_replayErrors = 0;
     AutomationStore   m_automations;
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
