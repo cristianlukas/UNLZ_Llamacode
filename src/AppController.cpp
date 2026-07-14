@@ -4868,10 +4868,14 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     // pasar por el modelo. El agente sólo verifica al final (postprompt). Esto
     // hace que un dibujo en Paint salga igual (el replay adaptativo no lo lograba).
     if (task.value(QStringLiteral("executionMode")).toString() == QLatin1String("desktop")
+        && task.value(QStringLiteral("trainingType"), QStringLiteral("literal")).toString()
+               == QLatin1String("literal")
         && !artifactId.isEmpty()
         && startDesktopReplay(id, artifactId)) {
         return;   // el player agenda los pasos y, al terminar, verifica/cierra
     }
+    // trainingType=="adaptive": cae al path del agente (augmentPrompt) → entiende
+    // título+descripción+teach y decide cada paso (más robusto, más pesado).
 
     // Warm-start Teach genérico: reproducir en paralelo el prefijo seguro de
     // teclado grabado (normalmente WIN → nombre de app → ENTER, y para objetivos

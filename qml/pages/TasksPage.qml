@@ -42,6 +42,7 @@ Item {
             loopMaxIterations.value = t.loopMaxIterations || 5
             executionMode.currentIndex = Math.max(0, ["auto", "desktop", "browserBackground"].indexOf(t.executionMode || "auto"))
             approvalPolicy.currentIndex = Math.max(0, ["always", "sensitive", "autonomous"].indexOf(t.approvalPolicy || "sensitive"))
+            trainingType.currentIndex = (t.trainingType === "adaptive") ? 1 : 0
             timeoutSec.value = t.timeoutSec || 300
             maxActions.value = t.maxActions || 50
             maxRetries.value = t.maxRetries === undefined ? 2 : t.maxRetries
@@ -72,6 +73,7 @@ Item {
             loopMaxIterations.value = 5
             executionMode.currentIndex = 0
             approvalPolicy.currentIndex = 1
+            trainingType.currentIndex = 0
             timeoutSec.value = 300
             maxActions.value = 50
             maxRetries.value = 2
@@ -877,6 +879,7 @@ Item {
                 verifyProfileId: verifyOtherModel.checked ? verifyProfileCombo.selectedProfileId : "",
                 executionMode: ["auto", "desktop", "browserBackground"][executionMode.currentIndex],
                 approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
+                trainingType: ["literal", "adaptive"][trainingType.currentIndex],
                 timeoutSec: timeoutSec.value,
                 maxActions: maxActions.value,
                 maxRetries: maxRetries.value,
@@ -1081,6 +1084,26 @@ Item {
                                 model: ["Confirmar siempre", "Sólo acciones sensibles", "Autónoma"]
                             }
                         }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Text { text: "Tipo de entrenamiento"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            LcComboBox {
+                                id: trainingType
+                                Layout.fillWidth: true
+                                model: ["Copia literal tal cual", "Indicaciones generales"]
+                            }
+                        }
+                    }
+
+                    // Explica los dos modos de reproducción del Teach.
+                    Text {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        text: trainingType.currentIndex === 0
+                            ? "Copia literal: reproduce los pasos grabados EXACTO (teclado y trazos), sin pensar. Rápido y liviano; ideal para dibujos/secuencias fijas. Requiere que la app quede como al grabar."
+                            : "Indicaciones generales: el agente entiende el título, la descripción y el Teach como una GUÍA, y decide cada paso adaptándose a la interfaz actual. Más robusto si algo cambió, pero más pesado (la IA piensa cada paso)."
                     }
 
                     // Aclara qué hace cada tipo de proceso (en especial "Auto").

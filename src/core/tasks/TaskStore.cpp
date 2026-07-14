@@ -184,6 +184,10 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["triggerPath"]     = def.value("triggerPath", t.value("triggerPath"));
     t["triggerDebounceMs"] = def.value("triggerDebounceMs", t.value("triggerDebounceMs", 1500));
     t["triggerHotkey"]   = def.value("triggerHotkey", t.value("triggerHotkey"));
+    // Tipo de entrenamiento del replay: "literal" (reproducción determinista, tal
+    // cual el Teach; liviano) o "adaptive" (el agente entiende título+descripción+
+    // teach y decide cada paso; robusto ante cambios de UI, más pesado).
+    t["trainingType"]    = def.value("trainingType", t.value("trainingType", QStringLiteral("literal")));
     t["updatedAt"]       = now;
 
     QString outId;
@@ -469,6 +473,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["triggerPath"]     = task.value("triggerPath").toString();
     o["triggerDebounceMs"] = task.value("triggerDebounceMs", 1500).toInt();
     o["triggerHotkey"]   = task.value("triggerHotkey").toString();
+    o["trainingType"]    = task.value("trainingType", QStringLiteral("literal")).toString();
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -540,6 +545,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["triggerPath"]     = obj.value("triggerPath").toString();
     t["triggerDebounceMs"] = obj.value("triggerDebounceMs").toInt(1500);
     t["triggerHotkey"]   = obj.value("triggerHotkey").toString();
+    t["trainingType"]    = obj.value("trainingType").toString(QStringLiteral("literal"));
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

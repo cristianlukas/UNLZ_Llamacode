@@ -70,6 +70,12 @@ void TasksTests::jsonRoundTrip()
     QCOMPARE(out.value("approvalPolicy").toString(), QStringLiteral("sensitive"));
     QCOMPARE(out.value("teachArtifactId").toString(), QStringLiteral("artifact-1"));
     QCOMPARE(out.value("maxActions").toInt(), 50);
+    // Tipo de entrenamiento: default "literal"; y round-trip de "adaptive".
+    QCOMPARE(out.value("trainingType").toString(), QStringLiteral("literal"));
+    QVariantMap adaptive = in;
+    adaptive["trainingType"] = QStringLiteral("adaptive");
+    QCOMPARE(TaskStore::fromJson(TaskStore::toJson(adaptive)).value("trainingType").toString(),
+             QStringLiteral("adaptive"));
     const QVariantList steps = out.value("steps").toList();
     QCOMPARE(steps.size(), 2);
     QCOMPARE(steps.at(0).toMap().value("kind").toString(), QStringLiteral("browser"));
