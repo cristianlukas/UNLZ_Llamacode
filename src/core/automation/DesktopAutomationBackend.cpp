@@ -181,12 +181,25 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
         automationId = QString::fromWCharArray(aid, static_cast<int>(SysStringLen(aid)));
         SysFreeString(aid);
     }
-    // HWND de la ventana top-level dueña del control.
-    QString windowId;
+    // HWND de la ventana top-level dueña del control + su título y rectángulo:
+    // permiten re-anclar en el replay contra la ventana ACTUAL (robusto a que la
+    // ventana esté en otra posición/tamaño que al grabar).
+    QString windowId, windowLabel;
+    int winX = 0, winY = 0, winW = 0, winH = 0;
     UIA_HWND h = nullptr;
     if (uia && SUCCEEDED(el->get_CurrentNativeWindowHandle(&h)) && h) {
         HWND top = GetAncestor(reinterpret_cast<HWND>(h), GA_ROOT);
-        if (top) windowId = QString::number(reinterpret_cast<quintptr>(top), 16);
+        if (top) {
+            windowId = QString::number(reinterpret_cast<quintptr>(top), 16);
+            wchar_t title[512]{};
+            GetWindowTextW(top, title, 511);
+            windowLabel = QString::fromWCharArray(title).trimmed();
+            RECT wr{};
+            if (GetWindowRect(top, &wr)) {
+                winX = wr.left; winY = wr.top;
+                winW = wr.right - wr.left; winH = wr.bottom - wr.top;
+            }
+        }
     }
     return QVariantMap{
         {QStringLiteral("controlId"), uiaRuntimeId(el)},
@@ -194,6 +207,9 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
         {QStringLiteral("name"), name.simplified().left(120)},
         {QStringLiteral("role"), uiaControlTypeName(ct)},
         {QStringLiteral("windowId"), windowId},
+        {QStringLiteral("windowLabel"), windowLabel},
+        {QStringLiteral("winX"), winX}, {QStringLiteral("winY"), winY},
+        {QStringLiteral("winWidth"), winW}, {QStringLiteral("winHeight"), winH},
         {QStringLiteral("x"), static_cast<int>(rc.left)},
         {QStringLiteral("y"), static_cast<int>(rc.top)},
         {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},

@@ -306,6 +306,12 @@ void TeachSessionRecorder::sampleDesktop()
             target[QStringLiteral("controlId")] = m_strokeControl.value(QStringLiteral("controlId"));
             target[QStringLiteral("automationId")] = m_strokeControl.value(QStringLiteral("automationId"));
             target[QStringLiteral("windowId")] = m_strokeControl.value(QStringLiteral("windowId"));
+            // Ancla de ventana (título + rect al grabar) para re-mapear en el replay.
+            target[QStringLiteral("windowLabel")] = m_strokeControl.value(QStringLiteral("windowLabel"));
+            target[QStringLiteral("winX")] = m_strokeControl.value(QStringLiteral("winX"));
+            target[QStringLiteral("winY")] = m_strokeControl.value(QStringLiteral("winY"));
+            target[QStringLiteral("winWidth")] = m_strokeControl.value(QStringLiteral("winWidth"));
+            target[QStringLiteral("winHeight")] = m_strokeControl.value(QStringLiteral("winHeight"));
         }
         if (m_strokeMaxDist >= 8 && m_strokePoints.size() >= 2) {
             appendEvent({{QStringLiteral("kind"), QStringLiteral("stroke")},

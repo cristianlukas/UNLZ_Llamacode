@@ -579,13 +579,41 @@ QVariantList AutomationRunner::desktopReplaySteps(const QVariantMap &recipe)
                                {QStringLiteral("atMs"), s.value(QStringLiteral("atMs"))},
                                {QStringLiteral("x"), s.value(QStringLiteral("x"))},
                                {QStringLiteral("y"), s.value(QStringLiteral("y"))},
-                               {QStringLiteral("button"), s.value(QStringLiteral("button"), QStringLiteral("left"))}};
+                               {QStringLiteral("button"), s.value(QStringLiteral("button"), QStringLiteral("left"))},
+                               {QStringLiteral("target"), s.value(QStringLiteral("target"))}};
         } else if (kind == QLatin1String("stroke")) {
             out << QVariantMap{{QStringLiteral("kind"), kind},
                                {QStringLiteral("atMs"), s.value(QStringLiteral("atMs"))},
                                {QStringLiteral("button"), s.value(QStringLiteral("button"), QStringLiteral("left"))},
-                               {QStringLiteral("points"), s.value(QStringLiteral("points"))}};
+                               {QStringLiteral("points"), s.value(QStringLiteral("points"))},
+                               {QStringLiteral("target"), s.value(QStringLiteral("target"))}};
         }
+    }
+    return out;
+}
+
+QVariantList AutomationRunner::reanchorPointsToWindow(const QVariantList &points,
+                                                      const QVariantMap &scope,
+                                                      const QVariantMap &win)
+{
+    const double sx = scope.value(QStringLiteral("x")).toDouble();
+    const double sy = scope.value(QStringLiteral("y")).toDouble();
+    const double sw = scope.value(QStringLiteral("width")).toDouble();
+    const double sh = scope.value(QStringLiteral("height")).toDouble();
+    const double wx = win.value(QStringLiteral("x")).toDouble();
+    const double wy = win.value(QStringLiteral("y")).toDouble();
+    const double ww = win.value(QStringLiteral("width")).toDouble();
+    const double wh = win.value(QStringLiteral("height")).toDouble();
+    if (sw <= 0 || sh <= 0 || ww <= 0 || wh <= 0) return points;   // datos incompletos: sin cambio
+    QVariantList out;
+    out.reserve(points.size());
+    for (const QVariant &pv : points) {
+        const QVariantMap p = pv.toMap();
+        const double absX = sx + p.value(QStringLiteral("x")).toDouble() * sw;
+        const double absY = sy + p.value(QStringLiteral("y")).toDouble() * sh;
+        out << QVariantMap{
+            {QStringLiteral("x"), qBound(0.0, (absX - wx) / ww, 1.0)},
+            {QStringLiteral("y"), qBound(0.0, (absY - wy) / wh, 1.0)}};
     }
     return out;
 }

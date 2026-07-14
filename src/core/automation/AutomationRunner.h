@@ -79,6 +79,14 @@ public:
     // Pura. Devuelve {} si no hay pasos mecánicos (→ replay adaptativo por el agente).
     static QVariantList desktopReplaySteps(const QVariantMap &recipe);
 
+    // Re-ancla puntos a una ventana: convierte puntos normalizados al ALCANCE grabado
+    // (p.ej. la pantalla) en puntos normalizados a la VENTANA en la que ocurrieron
+    // (usando el rect de la ventana al grabar). El replay los denormaliza contra la
+    // ventana ACTUAL → el trazo cae en el mismo lugar aunque la ventana se movió/
+    // redimensionó. scope/win = {x,y,width,height} en píxeles. Pura.
+    static QVariantList reanchorPointsToWindow(const QVariantList &points,
+                                               const QVariantMap &scope, const QVariantMap &win);
+
     // Run-report por paso: a partir de los mensajes del agente (role=="toolcall")
     // arma la lista de pasos {n, tool, ok, summary} para auditar qué herramientas
     // corrió el run y con qué resultado. Pura. ok=false si el output trae un marcador

@@ -4956,20 +4956,52 @@ void AppController::playNextReplayStep()
     } else if (kind == QLatin1String("type")) {
         detail = QStringLiteral("type \"%1\"").arg(step.value(QStringLiteral("text")).toString().left(40));
         ok = DesktopAutomationBackend::typeText(step.value(QStringLiteral("text")).toString(), &error);
-    } else if (kind == QLatin1String("click")) {
-        detail = QStringLiteral("click %1,%2")
-                     .arg(step.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
-                     .arg(step.value(QStringLiteral("y")).toDouble(), 0, 'f', 3);
-        ok = DesktopAutomationBackend::click(m_replayScopeKind, m_replayScopeId,
-                                        step.value(QStringLiteral("x")).toDouble(),
-                                        step.value(QStringLiteral("y")).toDouble(),
-                                        step.value(QStringLiteral("button")).toString(), &error);
-    } else if (kind == QLatin1String("stroke")) {
-        const int np = step.value(QStringLiteral("points")).toList().size();
-        detail = QStringLiteral("stroke %1 pts").arg(np);
-        ok = DesktopAutomationBackend::stroke(m_replayScopeKind, m_replayScopeId,
-                                         step.value(QStringLiteral("points")).toList(),
-                                         step.value(QStringLiteral("button")).toString(), 8, &error);
+    } else if (kind == QLatin1String("click") || kind == QLatin1String("stroke")) {
+        // Ancla de ventana: si el paso guardó la ventana (título + rect al grabar) y
+        // esa ventana existe ahora, re-mapeamos los puntos a la ventana ACTUAL y
+        // operamos con scope=window → el trazo cae en el mismo lugar aunque la
+        // ventana se movió/redimensionó. Si no, caemos al alcance grabado (pantalla).
+        const QVariantMap target = step.value(QStringLiteral("target")).toMap();
+        const QString winLabel = target.value(QStringLiteral("windowLabel")).toString();
+        QString scopeKind = m_replayScopeKind, scopeId = m_replayScopeId;
+        QVariantList points = step.value(QStringLiteral("points")).toList();
+        if (kind == QLatin1String("click"))
+            points = QVariantList{QVariantMap{{QStringLiteral("x"), step.value(QStringLiteral("x"))},
+                                              {QStringLiteral("y"), step.value(QStringLiteral("y"))}}};
+        QString anchored;
+        if (!winLabel.isEmpty() && target.value(QStringLiteral("winWidth")).toInt() > 0) {
+            QString curId;
+            for (const QVariant &w : DesktopAutomationBackend::windows()) {
+                const QVariantMap row = w.toMap();
+                if (row.value(QStringLiteral("label")).toString() == winLabel) {
+                    curId = row.value(QStringLiteral("id")).toString(); break;
+                }
+            }
+            if (!curId.isEmpty()) {
+                const QVariantMap scopeRect = DesktopAutomationBackend::targetInfo(m_replayScopeKind, m_replayScopeId);
+                const QVariantMap recWin{{QStringLiteral("x"), target.value(QStringLiteral("winX"))},
+                                         {QStringLiteral("y"), target.value(QStringLiteral("winY"))},
+                                         {QStringLiteral("width"), target.value(QStringLiteral("winWidth"))},
+                                         {QStringLiteral("height"), target.value(QStringLiteral("winHeight"))}};
+                points = AutomationRunner::reanchorPointsToWindow(points, scopeRect, recWin);
+                scopeKind = QStringLiteral("window");
+                scopeId = curId;
+                anchored = QStringLiteral(" [ventana '%1']").arg(winLabel.left(30));
+            }
+        }
+        const QString button = step.value(QStringLiteral("button"), QStringLiteral("left")).toString();
+        if (kind == QLatin1String("click")) {
+            const QVariantMap p0 = points.value(0).toMap();
+            detail = QStringLiteral("click %1,%2%3")
+                         .arg(p0.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
+                         .arg(p0.value(QStringLiteral("y")).toDouble(), 0, 'f', 3).arg(anchored);
+            ok = DesktopAutomationBackend::click(scopeKind, scopeId,
+                                            p0.value(QStringLiteral("x")).toDouble(),
+                                            p0.value(QStringLiteral("y")).toDouble(), button, &error);
+        } else {
+            detail = QStringLiteral("stroke %1 pts%2").arg(points.size()).arg(anchored);
+            ok = DesktopAutomationBackend::stroke(scopeKind, scopeId, points, button, 8, &error);
+        }
     }
     if (!ok) m_replayErrors++;
     m_replayReport << QVariantMap{

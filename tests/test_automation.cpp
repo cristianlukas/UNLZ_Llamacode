@@ -27,6 +27,7 @@ private slots:
     void runReportFromToolMessages();
     void hotkeyParseAndTriggers();
     void desktopReplayStepsFiltersMechanical();
+    void reanchorPointsToWindowMapsCoords();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -333,6 +334,25 @@ void AutomationTests::assertStepRendersInPrompt()
     QVERIFY(prompt.contains(QStringLiteral("desktop_assert")));
     QVERIFY(prompt.contains(QStringLiteral("TOTAL 42")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::reanchorPointsToWindowMapsCoords()
+{
+    // Alcance = pantalla 1000x1000. Ventana grabada en (200,200) de 400x400.
+    // Un punto al centro de pantalla (0.5,0.5 → abs 500,500) cae en la fracción
+    // (500-200)/400 = 0.75 dentro de la ventana → así el replay lo denormaliza
+    // contra la ventana ACTUAL (esté donde esté).
+    const QVariantMap scope{{"x", 0}, {"y", 0}, {"width", 1000}, {"height", 1000}};
+    const QVariantMap win{{"x", 200}, {"y", 200}, {"width", 400}, {"height", 400}};
+    const QVariantList pts{QVariantMap{{"x", 0.5}, {"y", 0.5}}};
+    const QVariantList out = AutomationRunner::reanchorPointsToWindow(pts, scope, win);
+    QCOMPARE(out.size(), 1);
+    QCOMPARE(out.first().toMap().value("x").toDouble(), 0.75);
+    QCOMPARE(out.first().toMap().value("y").toDouble(), 0.75);
+    // Datos incompletos (win sin tamaño) → devuelve los puntos sin cambio.
+    const QVariantList same = AutomationRunner::reanchorPointsToWindow(
+        pts, scope, QVariantMap{{"x", 0}, {"y", 0}});
+    QCOMPARE(same.first().toMap().value("x").toDouble(), 0.5);
 }
 
 void AutomationTests::desktopReplayStepsFiltersMechanical()
