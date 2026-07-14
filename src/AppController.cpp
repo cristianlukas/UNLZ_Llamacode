@@ -5040,23 +5040,36 @@ void AppController::finishDesktopReplay()
     // Estado honesto: si algún paso mecánico falló (p.ej. no se pudo abrir la app,
     // sesión bloqueada), la reproducción NO fue exitosa aunque haya "terminado".
     const bool allOk = errs == 0;
-    const QString summary = allOk
-        ? QStringLiteral("Reproducción fiel completada: %1 pasos ejecutados.").arg(n)
-        : QStringLiteral("Reproducción fiel con fallos: %1 de %2 pasos fallaron "
-                         "(revisá los Pasos ejecutados). Nada garantiza el objetivo.")
-              .arg(errs).arg(n);
 
-    // Verificación por el agente si hay postprompt Y no hubo errores mecánicos
-    // (verificar algo que no se ejecutó no tiene sentido).
-    if (allOk && !m_runningTaskPostPrompt.isEmpty()) {
-        m_runningTaskPhase = QStringLiteral("verificando");
-        const QString post = m_runningTaskPostPrompt;
-        m_runningTaskPostPrompt.clear();
-        appendAgentEvent(QStringLiteral("task"), summary + QStringLiteral(" Verificando."));
-        sendToAgent(post);
+    // Si algún paso mecánico falló, ni intentamos verificar: es error.
+    if (!allOk) {
+        finishRunningTask(QStringLiteral("error"),
+                          QStringLiteral("Reproducción fiel con fallos: %1 de %2 pasos fallaron "
+                                         "(revisá los Pasos ejecutados).").arg(errs).arg(n));
         return;
     }
-    finishRunningTask(allOk ? QStringLiteral("ok") : QStringLiteral("error"), summary);
+
+    // Ejecutar los pasos NO garantiza el objetivo (Paint pudo no dibujar). El agente
+    // DEBE verificar el resultado observando la pantalla, no asumir éxito. Usamos el
+    // postprompt si hay; si no, sintetizamos una verificación desde el objetivo.
+    const QVariantMap t = m_tasks.get(id);
+    const QString objective = t.value(QStringLiteral("description")).toString().trimmed();
+    QString verify = m_runningTaskPostPrompt;
+    m_runningTaskPostPrompt.clear();
+    if (verify.isEmpty()) {
+        verify = QStringLiteral(
+            "Se acaba de reproducir una automatización de escritorio de forma determinista "
+            "(se ejecutaron %1 pasos: teclado y trazos de mouse). Objetivo: \"%2\".\n"
+            "VERIFICÁ el resultado REAL observando la pantalla con desktop_observe (y/o "
+            "desktop_controls). NO asumas éxito por haber ejecutado los pasos. Si el objetivo "
+            "se cumplió, resumí la evidencia visible. Si NO se cumplió, o no podés verificarlo "
+            "(p.ej. sin visión disponible), declaralo explícitamente como error — no digas que "
+            "salió bien sin confirmarlo.").arg(n).arg(objective);
+    }
+    m_runningTaskPhase = QStringLiteral("verificando");
+    appendAgentEvent(QStringLiteral("task"),
+                     QStringLiteral("Reproducción fiel completada (%1 pasos); el agente verifica el resultado.").arg(n));
+    sendToAgent(verify);
 }
 
 void AppController::setTestAgentBackend(IAgentBackend *b)

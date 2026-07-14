@@ -497,17 +497,28 @@ bool DesktopAutomationBackend::stroke(const QString &kind, const QString &target
                                         m.value(QStringLiteral("y")).toDouble()), bounds);
     }
 
-    auto mouseFlag = [](DWORD flag) {
+    // Movimiento por SendInput con MOUSEEVENTF_MOVE|ABSOLUTE (no SetCursorPos): las
+    // apps de dibujo (Paint) SÓLO registran el arrastre si el movimiento llega como
+    // eventos de mouse reales entre el down y el up. SetCursorPos no genera ese
+    // stream y el trazo no se dibuja. Coordenadas absolutas 0..65535 sobre el
+    // escritorio virtual (multi-monitor).
+    const int vsX = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    const int vsY = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    const int vsW = qMax(1, GetSystemMetrics(SM_CXVIRTUALSCREEN) - 1);
+    const int vsH = qMax(1, GetSystemMetrics(SM_CYVIRTUALSCREEN) - 1);
+    auto sendMove = [&](const QPoint &pt, DWORD extra) {
         INPUT in{};
         in.type = INPUT_MOUSE;
-        in.mi.dwFlags = flag;
+        in.mi.dx = static_cast<LONG>((pt.x() - vsX) * 65535.0 / vsW);
+        in.mi.dy = static_cast<LONG>((pt.y() - vsY) * 65535.0 / vsH);
+        in.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK | extra;
         SendInput(1, &in, sizeof(INPUT));
     };
-    const int hold = qBound(0, holdMs, 200);
+    const int hold = qBound(1, holdMs, 200);
 
-    SetCursorPos(abs.first().x(), abs.first().y());
-    Sleep(10);
-    mouseFlag(downFlag);
+    sendMove(abs.first(), 0);            // posicionar
+    Sleep(15);
+    sendMove(abs.first(), downFlag);     // apretar en el primer punto
     Sleep(hold);
     // Interpolar cada segmento: pasos de ~4px para que la línea salga continua
     // aunque los puntos grabados vengan cada 80ms (muy espaciados en un swipe).
@@ -518,11 +529,11 @@ bool DesktopAutomationBackend::stroke(const QString &kind, const QString &target
         for (int s = 1; s <= steps; ++s) {
             const int x = a.x() + (c.x() - a.x()) * s / steps;
             const int y = a.y() + (c.y() - a.y()) * s / steps;
-            SetCursorPos(x, y);
-            if (hold) Sleep(hold);
+            sendMove(QPoint(x, y), 0);
+            Sleep(hold);
         }
     }
-    mouseFlag(upFlag);
+    sendMove(abs.last(), upFlag);        // soltar
 
     if (trace) {
         *trace = QVariantMap{
