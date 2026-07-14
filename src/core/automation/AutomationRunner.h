@@ -87,6 +87,11 @@ public:
     static QVariantList reanchorPointsToWindow(const QVariantList &points,
                                                const QVariantMap &scope, const QVariantMap &win);
 
+    // ¿El título de ventana grabado y el actual son la misma app? Igualdad exacta, o
+    // mismo sufijo de app (texto tras el último " - "/" — "/": "), así "Sin título -
+    // Paint" matchea "Sin guardar - Paint" aunque cambió la parte del documento. Pura.
+    static bool windowTitleMatches(const QString &recorded, const QString &current);
+
     // Run-report por paso: a partir de los mensajes del agente (role=="toolcall")
     // arma la lista de pasos {n, tool, ok, summary} para auditar qué herramientas
     // corrió el run y con qué resultado. Pura. ok=false si el output trae un marcador

@@ -4973,7 +4973,8 @@ void AppController::playNextReplayStep()
             QString curId;
             for (const QVariant &w : DesktopAutomationBackend::windows()) {
                 const QVariantMap row = w.toMap();
-                if (row.value(QStringLiteral("label")).toString() == winLabel) {
+                if (AutomationRunner::windowTitleMatches(
+                        winLabel, row.value(QStringLiteral("label")).toString())) {
                     curId = row.value(QStringLiteral("id")).toString(); break;
                 }
             }

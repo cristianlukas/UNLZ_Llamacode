@@ -592,6 +592,24 @@ QVariantList AutomationRunner::desktopReplaySteps(const QVariantMap &recipe)
     return out;
 }
 
+bool AutomationRunner::windowTitleMatches(const QString &recorded, const QString &current)
+{
+    const QString r = recorded.trimmed();
+    const QString c = current.trimmed();
+    if (r.isEmpty() || c.isEmpty()) return false;
+    if (r.compare(c, Qt::CaseInsensitive) == 0) return true;
+    auto appSuffix = [](const QString &s) {
+        int best = -1;
+        for (const QString &sep : {QStringLiteral(" - "), QStringLiteral(" — "), QStringLiteral(": ")}) {
+            const int i = s.lastIndexOf(sep);
+            if (i >= 0) best = qMax(best, i + sep.size());
+        }
+        return (best >= 0 ? s.mid(best) : s).trimmed();
+    };
+    const QString rs = appSuffix(r), cs = appSuffix(c);
+    return !rs.isEmpty() && rs.compare(cs, Qt::CaseInsensitive) == 0;
+}
+
 QVariantList AutomationRunner::reanchorPointsToWindow(const QVariantList &points,
                                                       const QVariantMap &scope,
                                                       const QVariantMap &win)

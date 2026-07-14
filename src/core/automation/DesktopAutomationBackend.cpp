@@ -889,6 +889,27 @@ QVariantMap DesktopAutomationBackend::controlAtPoint(const QPoint &absolute)
         el->Release();
     }
     uia->Release();
+
+    // Ancla de ventana por WindowFromPoint (independiente de UIA): la mayoría de los
+    // controles (lienzo de Paint, etc.) NO tienen HWND propio, así que el campo de
+    // ventana de uiaElementInfo queda vacío. WindowFromPoint + GA_ROOT siempre da la
+    // ventana top-level bajo el cursor → título + rect para re-anclar en el replay.
+    HWND top = WindowFromPoint(pt);
+    if (top) top = GetAncestor(top, GA_ROOT);
+    if (top && IsWindow(top)) {
+        wchar_t title[512]{};
+        GetWindowTextW(top, title, 511);
+        const QString label = QString::fromWCharArray(title).trimmed();
+        RECT wr{};
+        if (!label.isEmpty() && GetWindowRect(top, &wr)) {
+            info[QStringLiteral("windowId")] = QString::number(reinterpret_cast<quintptr>(top), 16);
+            info[QStringLiteral("windowLabel")] = label;
+            info[QStringLiteral("winX")] = static_cast<int>(wr.left);
+            info[QStringLiteral("winY")] = static_cast<int>(wr.top);
+            info[QStringLiteral("winWidth")] = static_cast<int>(wr.right - wr.left);
+            info[QStringLiteral("winHeight")] = static_cast<int>(wr.bottom - wr.top);
+        }
+    }
     return info;
 #else
     Q_UNUSED(absolute)

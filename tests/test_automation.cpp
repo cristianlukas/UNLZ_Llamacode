@@ -28,6 +28,7 @@ private slots:
     void hotkeyParseAndTriggers();
     void desktopReplayStepsFiltersMechanical();
     void reanchorPointsToWindowMapsCoords();
+    void windowTitleMatchesByAppSuffix();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -334,6 +335,16 @@ void AutomationTests::assertStepRendersInPrompt()
     QVERIFY(prompt.contains(QStringLiteral("desktop_assert")));
     QVERIFY(prompt.contains(QStringLiteral("TOTAL 42")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::windowTitleMatchesByAppSuffix()
+{
+    using R = AutomationRunner;
+    QVERIFY(R::windowTitleMatches("Sin título - Paint", "Sin título - Paint"));   // exacto
+    QVERIFY(R::windowTitleMatches("Sin título - Paint", "Sin guardar - Paint"));  // mismo app
+    QVERIFY(R::windowTitleMatches("doc1.txt: Bloc de notas", "doc2.txt: Bloc de notas"));
+    QVERIFY(!R::windowTitleMatches("Sin título - Paint", "Documento - Word"));    // otra app
+    QVERIFY(!R::windowTitleMatches("", "Paint"));                                 // vacío
 }
 
 void AutomationTests::reanchorPointsToWindowMapsCoords()
