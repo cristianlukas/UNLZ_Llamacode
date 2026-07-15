@@ -1456,7 +1456,9 @@ void AppController::startServer(const QString &launchProfileId)
         cb->setVisionAvailable(vision);
 
     m_activeLaunchId = launchProfileId;
-    writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);  // recordar último usado
+    // No modificar lastLaunchId acá: startServer también lo invocan Tasks,
+    // verificadores, benchmarks, Charla y el watchdog. La preferencia restaurada
+    // pertenece a la selección explícita de la UI, no al último swap interno.
 
     // Power limit de GPU: override del perfil o global de Ajustes (antes de cargar
     // el modelo, para que el server arranque ya con el límite aplicado).

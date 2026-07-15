@@ -514,6 +514,9 @@ Item {
                         selectedLaunchId = currentValue ?? ""
                         resolveHarness(selectedLaunchId)
                     }
+                    onActivated: {
+                        if (currentValue) App.writeSetting("lastLaunchId", currentValue)
+                    }
                 }
 
                 Rectangle {

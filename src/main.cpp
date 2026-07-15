@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     app.setWindowIcon(appIcon);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.47");
+    app.setApplicationVersion("0.1.48");
 
     qDebug() << "QApplication ready";
 

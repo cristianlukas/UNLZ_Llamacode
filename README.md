@@ -634,6 +634,11 @@ como Calculadora, archivos, shell, desarrollo o extracción web, el agente valid
 con `desktop_controls`, Playwright, filesystem o comandos en vez de depender de
 capturas visuales.
 
+La selección de perfil que se restaura al abrir la aplicación representa la
+última elección explícita del usuario en Lanzar o Agente. Los cambios temporales
+de modelo realizados por Tasks, verificación, benchmarks, Charla o el watchdog no
+sobrescriben esa preferencia.
+
 El perfil de sistema **0GB CPU** es un fallback operativo para automatizaciones,
 no un showcase de calidad máxima: usa Qwen3.5 4B Q4, contexto 8k y batches bajos
 sin capas GPU. Además requiere un binario registrado como backend `cpu`: si sólo
