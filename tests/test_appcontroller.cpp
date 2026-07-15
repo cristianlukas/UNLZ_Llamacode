@@ -113,6 +113,7 @@ private slots:
     void browserTeachSkillsLifecycle();
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
+    void deterministicReplayCountsAsToolEvidence();
     void readResearchReportPrependsLegacyTopic();
     void researchReportsExposeFormattedDate();
     void exportWorkspaceIncludesChatsAndResearch();
@@ -374,6 +375,18 @@ void AppControllerTests::taskRequiresToolEvidenceForWebObjective()
         {QStringLiteral("description"), QStringLiteral("Escribí un resumen corto del texto dado")}
     };
     QVERIFY(!AppController::taskRequiresToolEvidence(localTask));
+}
+
+void AppControllerTests::deterministicReplayCountsAsToolEvidence()
+{
+    QVERIFY(!AppController::taskHasToolEvidence(QString(), {}));
+    QVERIFY(!AppController::taskHasToolEvidence(QString(), QVariantList{
+        QVariantMap{{"tool", "verificación visual por IA"}, {"ok", true}}}));
+    QVERIFY(!AppController::taskHasToolEvidence(QString(), QVariantList{
+        QVariantMap{{"tool", "stroke 10 pts"}, {"ok", false}}}));
+    QVERIFY(AppController::taskHasToolEvidence(QString(), QVariantList{
+        QVariantMap{{"tool", "stroke 10 pts"}, {"ok", true}}}));
+    QVERIFY(AppController::taskHasToolEvidence(QStringLiteral("[tool] desktop_controls"), {}));
 }
 
 void AppControllerTests::parseGpuPowerCsvParses()

@@ -5466,10 +5466,7 @@ void AppController::onAgentTurnFinished()
                 continue;
             work += QLatin1Char('\n') + message.value(QStringLiteral("output")).toString();
         }
-        const bool usedTool = work.contains(QStringLiteral("[turn] model requested"))
-                              || work.contains(QStringLiteral("[tool]"))
-                              || work.contains(QStringLiteral("tool_call"))
-                              || work.contains(QStringLiteral("tool_result"));
+        const bool usedTool = taskHasToolEvidence(work, m_replayReport);
 
         QString status = QStringLiteral("ok");
         QString summary;
@@ -5606,6 +5603,27 @@ bool AppController::taskRequiresToolEvidence(const QVariantMap &task)
     };
     for (const QString &marker : markers) {
         if (hay.contains(marker))
+            return true;
+    }
+    return false;
+}
+
+bool AppController::taskHasToolEvidence(const QString &workLog,
+                                        const QVariantList &replayReport)
+{
+    if (workLog.contains(QStringLiteral("[turn] model requested"))
+        || workLog.contains(QStringLiteral("[tool]"))
+        || workLog.contains(QStringLiteral("tool_call"))
+        || workLog.contains(QStringLiteral("tool_result")))
+        return true;
+
+    // El player nativo ya operó el escritorio fuera del turno del modelo. Contar
+    // sólo pasos realmente exitosos; una fila puramente informativa no alcanza.
+    for (const QVariant &value : replayReport) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("ok")).toBool()
+            && row.value(QStringLiteral("tool")).toString()
+                   != QStringLiteral("verificación visual por IA"))
             return true;
     }
     return false;
