@@ -92,6 +92,12 @@ public:
     // Paint" matchea "Sin guardar - Paint" aunque cambió la parte del documento. Pura.
     static bool windowTitleMatches(const QString &recorded, const QString &current);
 
+    // Estado maximizado del Teach. Las recetas nuevas lo guardan explícitamente;
+    // para recetas legacy se infiere sólo cuando la ventana cubría casi todo el
+    // alcance grabado. Devuelve {known,maximized}.
+    static QVariantMap recordedWindowState(const QVariantMap &target,
+                                           const QVariantMap &scope);
+
     // Run-report por paso: a partir de los mensajes del agente (role=="toolcall")
     // arma la lista de pasos {n, tool, ok, summary} para auditar qué herramientas
     // corrió el run y con qué resultado. Pura. ok=false si el output trae un marcador

@@ -610,6 +610,22 @@ bool AutomationRunner::windowTitleMatches(const QString &recorded, const QString
     return !rs.isEmpty() && rs.compare(cs, Qt::CaseInsensitive) == 0;
 }
 
+QVariantMap AutomationRunner::recordedWindowState(const QVariantMap &target,
+                                                   const QVariantMap &scope)
+{
+    if (target.contains(QStringLiteral("windowMaximized")))
+        return {{QStringLiteral("known"), true},
+                {QStringLiteral("maximized"), target.value(QStringLiteral("windowMaximized")).toBool()}};
+
+    const double sw = scope.value(QStringLiteral("width")).toDouble();
+    const double sh = scope.value(QStringLiteral("height")).toDouble();
+    const double ww = target.value(QStringLiteral("winWidth")).toDouble();
+    const double wh = target.value(QStringLiteral("winHeight")).toDouble();
+    if (sw > 0 && sh > 0 && ww > 0 && wh > 0 && ww / sw >= 0.94 && wh / sh >= 0.90)
+        return {{QStringLiteral("known"), true}, {QStringLiteral("maximized"), true}};
+    return {{QStringLiteral("known"), false}};
+}
+
 QVariantList AutomationRunner::reanchorPointsToWindow(const QVariantList &points,
                                                       const QVariantMap &scope,
                                                       const QVariantMap &win)

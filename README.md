@@ -590,10 +590,16 @@ de aplicación, resolución, idioma, tema o ubicación de controles.
   visible: sus clicks se excluyen de la receta y se oculta antes de tomar la
   captura final limpia. El mouse se muestrea a frecuencia de pantalla para no
   perder selecciones rápidas. En reproducción literal, LlamaCode captura el
+  estado de ventana de cada gesto (incluido maximizado/restaurado) y lo repone
+  antes de transformar coordenadas; las recetas anteriores infieren únicamente
+  el caso maximizado cuando la geometría registrada cubría casi todo el alcance.
+  Así el replay conserva el contexto espacial enseñado en cualquier aplicación.
+  Luego LlamaCode captura el
   resultado y entrega ambas imágenes al modelo con visión junto con el objetivo y
   la aplicación usada. El agente compara su significado, ignora diferencias
   transitorias, y si el objetivo todavía no se cumple usa `desktop_*` para corregir
-  y volver a observar antes de finalizar. No se aplican reglas visuales específicas
+  y volver a observar antes de finalizar, con un presupuesto finito de corrección
+  para terminar con error verificable en vez de iterar indefinidamente. No se aplican reglas visuales específicas
   de una aplicación ni se exige igualdad exacta de píxeles.
 - **Browser background:** el modo Teach abre Playwright/codegen en **foreground**
   para que el usuario muestre el flujo real. Además del script, selectores y

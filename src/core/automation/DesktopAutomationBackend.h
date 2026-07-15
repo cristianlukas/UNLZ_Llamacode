@@ -27,6 +27,10 @@ public:
     // `app` = programa/comando/verbo del shell; `args` = argumentos extra (opcional).
     static bool launchApp(const QString &app, const QString &args, QString *error = nullptr);
     static bool focusWindow(const QString &targetId, QString *error = nullptr);
+    // Restaura el estado visual enseñado antes de reproducir gestos anclados.
+    // Es genérico para cualquier ventana Win32; no depende de la aplicación.
+    static bool setWindowMaximized(const QString &targetId, bool maximized,
+                                   QString *error = nullptr);
     static bool click(const QString &kind, const QString &targetId, double x, double y,
                       const QString &button = QStringLiteral("left"),
                       QString *error = nullptr, QVariantMap *trace = nullptr);

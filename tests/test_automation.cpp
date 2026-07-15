@@ -29,6 +29,7 @@ private slots:
     void desktopReplayStepsFiltersMechanical();
     void reanchorPointsToWindowMapsCoords();
     void windowTitleMatchesByAppSuffix();
+    void recordedWindowStateSupportsExplicitAndLegacyRecipes();
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
@@ -345,6 +346,25 @@ void AutomationTests::windowTitleMatchesByAppSuffix()
     QVERIFY(R::windowTitleMatches("doc1.txt: Bloc de notas", "doc2.txt: Bloc de notas"));
     QVERIFY(!R::windowTitleMatches("Sin título - Paint", "Documento - Word"));    // otra app
     QVERIFY(!R::windowTitleMatches("", "Paint"));                                 // vacío
+}
+
+void AutomationTests::recordedWindowStateSupportsExplicitAndLegacyRecipes()
+{
+    using R = AutomationRunner;
+    const QVariantMap scope{{"x", 0}, {"y", 0}, {"width", 2560}, {"height", 1440}};
+    QVariantMap explicitRestored{{"windowMaximized", false}, {"winWidth", 2500}, {"winHeight", 1400}};
+    QVariantMap state = R::recordedWindowState(explicitRestored, scope);
+    QVERIFY(state.value("known").toBool());
+    QVERIFY(!state.value("maximized").toBool());
+
+    state = R::recordedWindowState(
+        QVariantMap{{"winWidth", 2576}, {"winHeight", 1408}}, scope);
+    QVERIFY(state.value("known").toBool());
+    QVERIFY(state.value("maximized").toBool());
+
+    state = R::recordedWindowState(
+        QVariantMap{{"winWidth", 900}, {"winHeight", 700}}, scope);
+    QVERIFY(!state.value("known").toBool());
 }
 
 void AutomationTests::reanchorPointsToWindowMapsCoords()

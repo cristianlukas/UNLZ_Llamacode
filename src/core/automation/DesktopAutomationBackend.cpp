@@ -63,7 +63,9 @@ BOOL CALLBACK collectWindow(HWND hwnd, LPARAM param)
         {QStringLiteral("x"), static_cast<int>(r.left)},
         {QStringLiteral("y"), static_cast<int>(r.top)},
         {QStringLiteral("width"), static_cast<int>(r.right - r.left)},
-        {QStringLiteral("height"), static_cast<int>(r.bottom - r.top)}});
+        {QStringLiteral("height"), static_cast<int>(r.bottom - r.top)},
+        {QStringLiteral("maximized"), IsZoomed(hwnd) != FALSE},
+        {QStringLiteral("minimized"), IsIconic(hwnd) != FALSE}});
     return TRUE;
 }
 
@@ -908,12 +910,35 @@ QVariantMap DesktopAutomationBackend::controlAtPoint(const QPoint &absolute)
             info[QStringLiteral("winY")] = static_cast<int>(wr.top);
             info[QStringLiteral("winWidth")] = static_cast<int>(wr.right - wr.left);
             info[QStringLiteral("winHeight")] = static_cast<int>(wr.bottom - wr.top);
+            info[QStringLiteral("windowMaximized")] = IsZoomed(top) != FALSE;
         }
     }
     return info;
 #else
     Q_UNUSED(absolute)
     return {};
+#endif
+}
+
+bool DesktopAutomationBackend::setWindowMaximized(const QString &targetId, bool maximized,
+                                                   QString *error)
+{
+#ifdef Q_OS_WIN
+    bool parsed = false;
+    const quintptr raw = targetId.toULongLong(&parsed, 16);
+    HWND hwnd = parsed ? reinterpret_cast<HWND>(raw) : nullptr;
+    if (!hwnd || !IsWindow(hwnd)) {
+        if (error) *error = QStringLiteral("La ventana ya no está disponible.");
+        return false;
+    }
+    if ((IsZoomed(hwnd) != FALSE) != maximized)
+        ShowWindow(hwnd, maximized ? SW_MAXIMIZE : SW_RESTORE);
+    if (IsIconic(hwnd)) ShowWindow(hwnd, maximized ? SW_MAXIMIZE : SW_RESTORE);
+    return focusWindow(targetId, error);
+#else
+    Q_UNUSED(targetId) Q_UNUSED(maximized)
+    if (error) *error = QStringLiteral("Control de ventanas disponible sólo en Windows.");
+    return false;
 #endif
 }
 

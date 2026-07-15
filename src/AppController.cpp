@@ -3475,6 +3475,18 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     });
     connect(b, &IAgentBackend::desktopActivityChanged, this,
             [this](bool active, const QString &tool, const QString &detail) {
+        if (active && m_runningTaskPhase == QLatin1String("verificando")
+            && ++m_visualVerificationDesktopActions > 20) {
+            const QString taskId = m_runningTaskId;
+            QTimer::singleShot(0, this, [this, taskId]() {
+                if (m_runningTaskId != taskId
+                    || m_runningTaskPhase != QLatin1String("verificando")) return;
+                if (m_agentBackend) m_agentBackend->cancelGeneration();
+                finishRunningTask(QStringLiteral("error"),
+                    QStringLiteral("La corrección visual superó el límite de 20 acciones de "
+                                   "escritorio sin poder verificar el objetivo."));
+            });
+        }
         m_desktopAgentActive = active || m_desktopTaskIndicatorActive;
         if (active) {
             static const QHash<QString, QString> labels{
@@ -5031,6 +5043,7 @@ void AppController::playNextReplayStep()
             points = QVariantList{QVariantMap{{QStringLiteral("x"), step.value(QStringLiteral("x"))},
                                               {QStringLiteral("y"), step.value(QStringLiteral("y"))}}};
         QString anchored;
+        bool windowStateOk = true;
         if (!winLabel.isEmpty() && target.value(QStringLiteral("winWidth")).toInt() > 0) {
             QString curId;
             for (const QVariant &w : DesktopAutomationBackend::windows()) {
@@ -5042,6 +5055,17 @@ void AppController::playNextReplayStep()
             }
             if (!curId.isEmpty()) {
                 const QVariantMap scopeRect = DesktopAutomationBackend::targetInfo(m_replayScopeKind, m_replayScopeId);
+                const QVariantMap recordedState =
+                    AutomationRunner::recordedWindowState(target, scopeRect);
+                if (recordedState.value(QStringLiteral("known")).toBool()) {
+                    QString stateError;
+                    if (!DesktopAutomationBackend::setWindowMaximized(
+                            curId, recordedState.value(QStringLiteral("maximized")).toBool(),
+                            &stateError)) {
+                        error = stateError;
+                        windowStateOk = false;
+                    }
+                }
                 const QVariantMap recWin{{QStringLiteral("x"), target.value(QStringLiteral("winX"))},
                                          {QStringLiteral("y"), target.value(QStringLiteral("winY"))},
                                          {QStringLiteral("width"), target.value(QStringLiteral("winWidth"))},
@@ -5049,7 +5073,8 @@ void AppController::playNextReplayStep()
                 points = AutomationRunner::reanchorPointsToWindow(points, scopeRect, recWin);
                 scopeKind = QStringLiteral("window");
                 scopeId = curId;
-                anchored = QStringLiteral(" [ventana '%1']").arg(winLabel.left(30));
+                anchored = QStringLiteral(" [ventana '%1', estado Teach restaurado]")
+                               .arg(winLabel.left(30));
             }
         }
         const QString button = step.value(QStringLiteral("button"), QStringLiteral("left")).toString();
@@ -5058,12 +5083,13 @@ void AppController::playNextReplayStep()
             detail = QStringLiteral("click %1,%2%3")
                          .arg(p0.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
                          .arg(p0.value(QStringLiteral("y")).toDouble(), 0, 'f', 3).arg(anchored);
-            ok = DesktopAutomationBackend::click(scopeKind, scopeId,
+            ok = windowStateOk && DesktopAutomationBackend::click(scopeKind, scopeId,
                                             p0.value(QStringLiteral("x")).toDouble(),
                                             p0.value(QStringLiteral("y")).toDouble(), button, &error);
         } else {
             detail = QStringLiteral("stroke %1 pts%2").arg(points.size()).arg(anchored);
-            ok = DesktopAutomationBackend::stroke(scopeKind, scopeId, points, button, 8, &error);
+            ok = windowStateOk
+                && DesktopAutomationBackend::stroke(scopeKind, scopeId, points, button, 8, &error);
         }
     }
     if (!ok) m_replayErrors++;
@@ -5169,11 +5195,13 @@ void AppController::finishDesktopReplay()
             "diferencias irrelevantes como reloj, cursor, animaciones o indicadores de LlamaCode. "
             "No exijas igualdad de píxeles. Si el resultado actual no cumple, usá las tools "
             "desktop_* para corregirlo de forma autónoma, observá nuevamente la pantalla y repetí "
-            "hasta cumplir o encontrar un error real. Sólo declaralo completado cuando puedas "
+            "con un máximo de 20 acciones de escritorio; si no alcanza, terminá con error en vez "
+            "de iterar indefinidamente. Sólo declaralo completado cuando puedas "
             "describir evidencia visual concreta del resultado corregido. Si no podés verificarlo "
             "o corregirlo, declaralo explícitamente como error.")
                 .arg(objective, appContext);
         m_runningTaskPostPrompt.clear();
+        m_visualVerificationDesktopActions = 0;
         m_runningTaskPhase = QStringLiteral("verificando");
         sendToAgentWithAttachments(visualPrompt, {referencePath, actualPath});
         return;
@@ -5638,6 +5666,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskName.clear();
     m_runningTaskStartedAt.clear();
     m_runningTaskPhase.clear();
+    m_visualVerificationDesktopActions = 0;
     m_runningTaskPostPrompt.clear();
     m_runningTaskLogStart = 0;
     m_runningTaskSilentUnlessError = false;

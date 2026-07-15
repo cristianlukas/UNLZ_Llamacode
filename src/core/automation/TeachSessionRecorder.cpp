@@ -325,13 +325,18 @@ void TeachSessionRecorder::sampleDesktop()
             target[QStringLiteral("role")] = m_strokeControl.value(QStringLiteral("role"));
             target[QStringLiteral("controlId")] = m_strokeControl.value(QStringLiteral("controlId"));
             target[QStringLiteral("automationId")] = m_strokeControl.value(QStringLiteral("automationId"));
+        }
+        // La ventana existe aunque el punto no exponga un control UIA (canvas,
+        // renderers y apps legacy). Guardar siempre su geometría y estado.
+        if (!m_strokeControl.value(QStringLiteral("windowLabel")).toString().isEmpty()) {
             target[QStringLiteral("windowId")] = m_strokeControl.value(QStringLiteral("windowId"));
-            // Ancla de ventana (título + rect al grabar) para re-mapear en el replay.
             target[QStringLiteral("windowLabel")] = m_strokeControl.value(QStringLiteral("windowLabel"));
             target[QStringLiteral("winX")] = m_strokeControl.value(QStringLiteral("winX"));
             target[QStringLiteral("winY")] = m_strokeControl.value(QStringLiteral("winY"));
             target[QStringLiteral("winWidth")] = m_strokeControl.value(QStringLiteral("winWidth"));
             target[QStringLiteral("winHeight")] = m_strokeControl.value(QStringLiteral("winHeight"));
+            target[QStringLiteral("windowMaximized")] =
+                m_strokeControl.value(QStringLiteral("windowMaximized"));
         }
         if (m_strokeMaxDist >= 8 && m_strokePoints.size() >= 2) {
             appendEvent({{QStringLiteral("kind"), QStringLiteral("stroke")},
