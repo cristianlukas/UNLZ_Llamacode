@@ -80,6 +80,15 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
         {QStringLiteral("evidence"), evidence},
         {QStringLiteral("learnings"), QVariantList{}},
         {QStringLiteral("successCriteria"), task.value(QStringLiteral("postPrompt"))}};
+    // La captura del paso verification es la referencia visual canónica del
+    // resultado enseñado (no una captura intermedia de una acción).
+    for (auto it = steps.crbegin(); it != steps.crend(); ++it) {
+        const QVariantMap step = it->toMap();
+        if (step.value(QStringLiteral("kind")).toString() == QLatin1String("verification")) {
+            recipe[QStringLiteral("finalReference")] = step.value(QStringLiteral("evidence"));
+            break;
+        }
+    }
     if (!writeJson(dir + QStringLiteral("/manifest.json"), manifest)
         || !writeJson(dir + QStringLiteral("/recipe.json"), recipe))
         return {};

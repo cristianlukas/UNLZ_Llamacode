@@ -48,6 +48,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
+#include <QEventLoop>
 #include <QAbstractNativeEventFilter>
 #include <QRegularExpression>
 #include <QSettings>
@@ -4926,6 +4927,7 @@ bool AppController::startDesktopReplay(const QString &id, const QString &artifac
     m_replaySteps = steps;
     m_replayIndex = 0;
     m_replayTaskId = id;
+    m_replayArtifactId = artifactId;
     m_replayReport.clear();
     m_replayErrors = 0;
 
@@ -5035,11 +5037,13 @@ void AppController::playNextReplayStep()
 void AppController::finishDesktopReplay()
 {
     const QString id = m_replayTaskId;
+    const QString artifactId = m_replayArtifactId;
     const int n = m_replaySteps.size();
     const int errs = m_replayErrors;
     m_replaySteps.clear();
     m_replayIndex = 0;
     m_replayTaskId.clear();
+    m_replayArtifactId.clear();
     if (m_runningTaskId != id) return;
 
     // Estado honesto: si algún paso mecánico falló (p.ej. no se pudo abrir la app,
@@ -5051,6 +5055,71 @@ void AppController::finishDesktopReplay()
         finishRunningTask(QStringLiteral("error"),
                           QStringLiteral("Reproducción fiel con fallos: %1 de %2 pasos fallaron "
                                          "(revisá los Pasos ejecutados).").arg(errs).arg(n));
+        return;
+    }
+
+    // Verificación visual general: el modelo recibe la referencia enseñada y el
+    // estado actual. Puede entender la aplicación/objetivo, corregir con desktop_*
+    // y volver a observar dentro del mismo turno; no usamos thresholds por píxel
+    // ni reglas específicas de Paint/colores.
+    const QVariantMap recipe = AutomationArtifactStore::recipe(artifactId);
+    const QString refName = recipe.value(QStringLiteral("finalReference")).toString();
+    if (!refName.isEmpty()) {
+        if (!m_serverHasVision) {
+            finishRunningTask(QStringLiteral("error"),
+                QStringLiteral("La Task requiere comparar visualmente el resultado con el Teach, "
+                               "pero el perfil activo no tiene visión."));
+            return;
+        }
+        const QString artifactDir = AutomationArtifactStore::artifactDir(artifactId);
+        const QString referencePath = artifactDir + QStringLiteral("/evidence/") + refName;
+        const QString actualPath = artifactDir + QStringLiteral("/latest-replay-result.jpg");
+        // Ocultar temporalmente nuestros indicadores para que ninguna señal de
+        // privacidad forme parte de la imagen que debe interpretar el modelo.
+        const bool indicatorWasActive = m_desktopAgentActive;
+        m_desktopAgentActive = false;
+        emit desktopIndicatorChanged();
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        QString captureError;
+        const QString captured = DesktopAutomationBackend::saveCapture(
+            m_replayScopeKind, m_replayScopeId, actualPath, &captureError);
+        m_desktopAgentActive = indicatorWasActive;
+        emit desktopIndicatorChanged();
+        if (captured.isEmpty() || !QFileInfo::exists(referencePath)) {
+            finishRunningTask(QStringLiteral("error"),
+                QStringLiteral("No se pudo preparar la comparación visual final: %1")
+                    .arg(captureError));
+            return;
+        }
+        m_replayReport << QVariantMap{{QStringLiteral("n"), n + 1},
+            {QStringLiteral("tool"), QStringLiteral("verificación visual por IA")},
+            {QStringLiteral("ok"), true},
+            {QStringLiteral("summary"), QStringLiteral("referencia y resultado adjuntados al agente")}};
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Referencia final Teach y resultado actual enviados al agente con visión."));
+
+        const QVariantMap manifest = AutomationArtifactStore::manifest(artifactId);
+        const QString appContext = manifest.value(QStringLiteral("scope")).toMap()
+                                       .value(QStringLiteral("target")).toMap()
+                                       .value(QStringLiteral("label")).toString();
+        const QVariantMap t = m_tasks.get(id);
+        const QString objective = t.value(QStringLiteral("description")).toString().trimmed();
+        const QString visualPrompt = QStringLiteral(
+            "VERIFICACIÓN VISUAL OBLIGATORIA DE AUTOMATIZACIÓN DE ESCRITORIO.\n"
+            "Objetivo: \"%1\". Aplicación/superficie enseñada: \"%2\".\n"
+            "Adjunto 1 = resultado final correcto del Teach.\n"
+            "Adjunto 2 = resultado actual producido por la reproducción.\n"
+            "Compará ambas imágenes semánticamente según el objetivo y la aplicación; ignorá "
+            "diferencias irrelevantes como reloj, cursor, animaciones o indicadores de LlamaCode. "
+            "No exijas igualdad de píxeles. Si el resultado actual no cumple, usá las tools "
+            "desktop_* para corregirlo de forma autónoma, observá nuevamente la pantalla y repetí "
+            "hasta cumplir o encontrar un error real. Sólo declaralo completado cuando puedas "
+            "describir evidencia visual concreta del resultado corregido. Si no podés verificarlo "
+            "o corregirlo, declaralo explícitamente como error.")
+                .arg(objective, appContext);
+        m_runningTaskPostPrompt.clear();
+        m_runningTaskPhase = QStringLiteral("verificando");
+        sendToAgentWithAttachments(visualPrompt, {referencePath, actualPath});
         return;
     }
 
@@ -5524,6 +5593,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_replaySteps.clear();
     m_replayIndex = 0;
     m_replayTaskId.clear();
+    m_replayArtifactId.clear();
     m_replayReport.clear();
     m_replayErrors = 0;
     if (m_desktopTaskIndicatorActive) {

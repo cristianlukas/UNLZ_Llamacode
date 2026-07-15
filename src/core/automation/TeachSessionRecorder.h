@@ -75,6 +75,7 @@ private:
     QPoint m_lastCursor;
     bool m_leftDown = false;
     bool m_rightDown = false;
+    bool m_ignoreGesture = false;  // clicks sobre controles flotantes de LlamaCode
     // Traza en curso (botón apretado moviéndose): puntos NORMALIZADOS muestreados.
     // Si al soltar recorrió más que un umbral → paso [stroke]; si no → [click].
     bool m_strokeActive = false;

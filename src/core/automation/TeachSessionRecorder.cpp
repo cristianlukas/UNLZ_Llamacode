@@ -96,7 +96,9 @@ LRESULT CALLBACK teachKeyboardProc(int code, WPARAM wParam, LPARAM lParam)
 
 TeachSessionRecorder::TeachSessionRecorder(QObject *parent) : QObject(parent)
 {
-    m_timer.setInterval(80);
+    // 80 ms perdía clicks rápidos (p.ej. elegir un color en Paint). 16 ms sigue
+    // siendo barato y cubre prácticamente un frame de una pantalla a 60 Hz.
+    m_timer.setInterval(16);
     connect(&m_timer, &QTimer::timeout, this, &TeachSessionRecorder::sampleDesktop);
 }
 
@@ -112,6 +114,7 @@ void TeachSessionRecorder::reset()
     m_strokePoints.clear();
     m_strokeMaxDist = 0;
     m_strokeControl.clear();
+    m_ignoreGesture = false;
     m_leftDown = m_rightDown = false;
     m_error.clear();
     m_events.clear();
@@ -265,6 +268,23 @@ void TeachSessionRecorder::sampleDesktop()
                        info.value(QStringLiteral("width")).toInt(), info.value(QStringLiteral("height")).toInt());
     const bool pressed = left || right;
     const bool wasPressed = m_leftDown || m_rightDown;
+
+    // El botón flotante de stop (y cualquier ventana propia) es control del
+    // recorder, no parte de la demostración. Ignorar el gesto completo evita que
+    // aparezca como último click de la receta.
+    if (pressed && !wasPressed) {
+        HWND hit = GetAncestor(WindowFromPoint(POINT{cursor.x(), cursor.y()}), GA_ROOT);
+        DWORD pid = 0;
+        if (hit) GetWindowThreadProcessId(hit, &pid);
+        m_ignoreGesture = pid == GetCurrentProcessId();
+    }
+    if (m_ignoreGesture) {
+        if (!pressed) m_ignoreGesture = false;
+        m_leftDown = left;
+        m_rightDown = right;
+        m_lastCursor = cursor;
+        return;
+    }
 
     // ── Presión inicial: arrancar el seguimiento de traza (aún no sabemos si es
     //    un click puntual o un arrastre; se decide al soltar por distancia). ──

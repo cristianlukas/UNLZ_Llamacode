@@ -488,14 +488,18 @@ void AutomationTests::artifactsRoundTripAndRedactSecrets()
                      {"executionMode", "desktop"}, {"approvalPolicy", "sensitive"}};
     const QVariantList events{
         QVariantMap{{"kind", "note"}, {"text", "password=secreto"},
-                    {"intent", "Ingresar datos"}}};
+                    {"intent", "Ingresar datos"}},
+        QVariantMap{{"kind", "verification"}, {"intent", "Verificar resultado"},
+                    {"evidence", "final.jpg"}}};
     const QString id = AutomationArtifactStore::create(
         task, QVariantMap{{"kind", "screen"}, {"targetId", "0"}}, events, {});
     QCOMPARE(id, QStringLiteral("demo-automation"));
     QCOMPARE(AutomationArtifactStore::manifest(id).value("formatVersion").toInt(), 1);
     const QVariantList timeline = AutomationArtifactStore::timeline(id);
-    QCOMPARE(timeline.size(), 1);
+    QCOMPARE(timeline.size(), 2);
     QVERIFY(timeline.first().toMap().value("text").toString().contains(QStringLiteral("[REDACTED]")));
+    QCOMPARE(AutomationArtifactStore::recipe(id).value("finalReference").toString(),
+             QStringLiteral("final.jpg"));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

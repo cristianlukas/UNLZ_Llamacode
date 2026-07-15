@@ -576,6 +576,15 @@ La sección **Automatizaciones** incorpora un modo Teach multimodal con dos dest
   control cuando está disponible), capturas y verificaciones como una receta
   semántica. Al ejecutar, el agente prioriza controles/targets semánticos,
   usa coordenadas sólo como respaldo y valida cada acción con la salida `trace`.
+  Durante la demostración hay un botón flotante **Detener grabación** siempre
+  visible: sus clicks se excluyen de la receta y se oculta antes de tomar la
+  captura final limpia. El mouse se muestrea a frecuencia de pantalla para no
+  perder selecciones rápidas. En reproducción literal, LlamaCode captura el
+  resultado y entrega ambas imágenes al modelo con visión junto con el objetivo y
+  la aplicación usada. El agente compara su significado, ignora diferencias
+  transitorias, y si el objetivo todavía no se cumple usa `desktop_*` para corregir
+  y volver a observar antes de finalizar. No se aplican reglas visuales específicas
+  de una aplicación ni se exige igualdad exacta de píxeles.
 - **Browser background:** el modo Teach abre Playwright/codegen en **foreground**
   para que el usuario muestre el flujo real. Además del script, selectores y
   metadatos `target` de Playwright, LlamaCode toma evidencia visual del escritorio
