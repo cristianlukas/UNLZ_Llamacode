@@ -5481,7 +5481,10 @@ void AppController::onAgentTurnFinished()
         } else if (taskRequiresToolEvidence(task) && !usedTool) {
             status = QStringLiteral("error");
             summary = QStringLiteral("La Task requería consultar o operar externamente, pero el agente no ejecutó ninguna herramienta. Respuesta final: %1").arg(finalText.left(700));
-        } else if (QString mismatch; AutomationRunner::arithmeticResultMismatch(task, work, &mismatch)) {
+        } else if (QString mismatch;
+                   !(m_runningTaskPhase == QLatin1String("verificando")
+                     && taskHasVisualComparison(m_replayReport))
+                   && AutomationRunner::arithmeticResultMismatch(task, work, &mismatch)) {
             status = QStringLiteral("error");
             summary = mismatch;
         } else {
@@ -5626,6 +5629,18 @@ bool AppController::taskHasToolEvidence(const QString &workLog,
         if (row.value(QStringLiteral("ok")).toBool()
             && row.value(QStringLiteral("tool")).toString()
                    != QStringLiteral("verificación visual por IA"))
+            return true;
+    }
+    return false;
+}
+
+bool AppController::taskHasVisualComparison(const QVariantList &replayReport)
+{
+    for (const QVariant &value : replayReport) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("ok")).toBool()
+            && row.value(QStringLiteral("tool")).toString()
+                   == QStringLiteral("verificación visual por IA"))
             return true;
     }
     return false;

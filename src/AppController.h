@@ -395,7 +395,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.48"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.49"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -490,6 +490,7 @@ public:
     // Una reproducción determinista exitosa también es evidencia de operación:
     // el verificador visual no necesita llamar otra tool si ambas imágenes cumplen.
     static bool taskHasToolEvidence(const QString &workLog, const QVariantList &replayReport);
+    static bool taskHasVisualComparison(const QVariantList &replayReport);
     // Previsualiza el prompt que recibiría el agente (para el editor de Tasks).
     Q_INVOKABLE QString previewTaskPrompt(const QString &id) const;
     // Graba un paso de browser (Playwright codegen) y devuelve el nombre del skill

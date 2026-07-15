@@ -603,7 +603,9 @@ de aplicación, resolución, idioma, tema o ubicación de controles.
   de una aplicación ni se exige igualdad exacta de píxeles.
   Los pasos exitosos ejecutados por el reproductor nativo cuentan como evidencia
   de herramientas: si la comparación visual confirma el objetivo, no se exige una
-  llamada redundante a `desktop_*` durante el turno del modelo.
+  llamada redundante a `desktop_*` durante el turno del modelo ni una segunda
+  validación estructural incompatible con esa evidencia. Un veredicto visual
+  positivo cierra la corrida sin reintentar sobre un estado ya completado.
 - **Browser background:** el modo Teach abre Playwright/codegen en **foreground**
   para que el usuario muestre el flujo real. Además del script, selectores y
   metadatos `target` de Playwright, LlamaCode toma evidencia visual del escritorio

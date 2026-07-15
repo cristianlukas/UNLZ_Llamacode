@@ -114,6 +114,7 @@ private slots:
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
     void deterministicReplayCountsAsToolEvidence();
+    void visualComparisonIsRecognizedSeparately();
     void readResearchReportPrependsLegacyTopic();
     void researchReportsExposeFormattedDate();
     void exportWorkspaceIncludesChatsAndResearch();
@@ -387,6 +388,17 @@ void AppControllerTests::deterministicReplayCountsAsToolEvidence()
     QVERIFY(AppController::taskHasToolEvidence(QString(), QVariantList{
         QVariantMap{{"tool", "stroke 10 pts"}, {"ok", true}}}));
     QVERIFY(AppController::taskHasToolEvidence(QStringLiteral("[tool] desktop_controls"), {}));
+}
+
+void AppControllerTests::visualComparisonIsRecognizedSeparately()
+{
+    QVERIFY(!AppController::taskHasVisualComparison({}));
+    QVERIFY(!AppController::taskHasVisualComparison(QVariantList{
+        QVariantMap{{"tool", "verificación visual por IA"}, {"ok", false}}}));
+    QVERIFY(!AppController::taskHasVisualComparison(QVariantList{
+        QVariantMap{{"tool", "desktop_controls"}, {"ok", true}}}));
+    QVERIFY(AppController::taskHasVisualComparison(QVariantList{
+        QVariantMap{{"tool", "verificación visual por IA"}, {"ok", true}}}));
 }
 
 void AppControllerTests::parseGpuPowerCsvParses()
