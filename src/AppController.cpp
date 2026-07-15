@@ -21,6 +21,10 @@
 #include <QGuiApplication>
 #include <QApplication>
 #include <QWidget>
+#include <QPushButton>
+#include <QHBoxLayout>
+#include <QScreen>
+#include <QCursor>
 #include <QImage>
 #include <QImageReader>
 #include <QMimeData>
@@ -575,7 +579,10 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     connect(&m_teachRecorder, &TeachSessionRecorder::changed,
-            this, &AppController::teachChanged);
+            this, [this]() {
+        updateTeachStopOverlay();
+        emit teachChanged();
+    });
     connect(&m_teachRecorder, &TeachSessionRecorder::finished, this,
             [this](const QString &artifactId) {
         const QVariantMap manifest = AutomationArtifactStore::manifest(artifactId);
@@ -731,6 +738,55 @@ AppController::AppController(QObject *parent) : QObject(parent)
     // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
     // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
     // acá en el constructor y congelaba ~3s antes de mostrar la ventana.
+}
+
+void AppController::updateTeachStopOverlay()
+{
+    const bool active = m_teachRecorder.state() == QLatin1String("recording")
+                        || m_teachRecorder.state() == QLatin1String("paused");
+    if (!active) {
+        if (m_teachStopOverlay) m_teachStopOverlay->hide();
+        return;
+    }
+    if (!m_teachStopOverlay) {
+        auto *overlay = new QWidget(nullptr, Qt::Tool | Qt::FramelessWindowHint
+                                             | Qt::WindowStaysOnTopHint);
+        overlay->setObjectName(QStringLiteral("llamacodeTeachStopOverlay"));
+        overlay->setWindowTitle(QStringLiteral("LlamaCode Teach Controls"));
+        overlay->setAttribute(Qt::WA_TranslucentBackground);
+        overlay->setFixedSize(210, 58);
+        auto *layout = new QHBoxLayout(overlay);
+        layout->setContentsMargins(3, 3, 3, 3);
+        auto *stop = new QPushButton(QStringLiteral("■  Detener grabación"), overlay);
+        stop->setCursor(Qt::PointingHandCursor);
+        stop->setStyleSheet(QStringLiteral(
+            "QPushButton { background:#25283a; color:#f2f2f2; border:2px solid #e05f65; "
+            "border-radius:12px; padding:12px 18px; font:600 13px 'Segoe UI'; }"
+            "QPushButton:hover { background:#34384f; border-color:#ff767d; }"
+            "QPushButton:pressed { background:#1c1e2b; }"));
+        layout->addWidget(stop);
+        connect(stop, &QPushButton::clicked, this, [this]() {
+            // Pausar primero impide que el click del propio stop entre a la receta.
+            m_teachRecorder.setPaused(true);
+            if (m_teachStopOverlay) m_teachStopOverlay->hide();
+            QTimer::singleShot(250, this, [this]() { finishTeach(); });
+        });
+        connect(this, &QObject::destroyed, overlay, &QObject::deleteLater);
+        m_teachStopOverlay = overlay;
+    }
+    QScreen *screen = QGuiApplication::screenAt(QCursor::pos());
+    if (!screen) screen = QGuiApplication::primaryScreen();
+    if (screen) {
+        const QRect area = screen->availableGeometry();
+        m_teachStopOverlay->move(area.right() - m_teachStopOverlay->width() - 20,
+                                 area.top() + 20);
+    }
+    m_teachStopOverlay->show();
+    m_teachStopOverlay->raise();
+#ifdef Q_OS_WIN
+    SetWindowPos(reinterpret_cast<HWND>(m_teachStopOverlay->winId()), HWND_TOPMOST,
+                 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+#endif
 }
 
 void AppController::runStartupScan()

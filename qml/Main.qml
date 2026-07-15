@@ -104,40 +104,6 @@ ApplicationWindow {
         }
     }
 
-    // Stop accesible sin volver a la ventana principal. Se oculta y deja pasar
-    // dos frames antes de capturar la referencia final, para no contaminarla.
-    Window {
-        id: teachStopOverlay
-        property bool stopping: false
-        title: "LlamaCode Teach Controls"
-        width: 190; height: 52
-        x: Screen.virtualX + Screen.width - width - 24
-        y: Screen.virtualY + 24
-        visible: (App.teachState === "recording" || App.teachState === "paused") && !stopping
-        color: "transparent"
-        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-        Rectangle {
-            anchors.fill: parent; radius: 12; color: Theme.popupBg
-            border.width: 2; border.color: Theme.btnDangerBg
-            Text { anchors.centerIn: parent; text: "■  Detener grabación"; color: Theme.textPrimary; font.bold: true }
-            MouseArea {
-                anchors.fill: parent; cursorShape: Qt.PointingHandCursor
-                onPressed: {
-                    App.pauseTeach(true)
-                    teachStopOverlay.stopping = true
-                    finishTeachDelay.restart()
-                }
-            }
-        }
-        Timer {
-            id: finishTeachDelay; interval: 250; repeat: false
-            onTriggered: {
-                App.finishTeach()
-                teachStopOverlay.stopping = false
-            }
-        }
-    }
-
     function showFromTray() {
         if (Boolean(App.readSetting("window/maximized", false)))
             window.showMaximized()

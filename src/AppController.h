@@ -33,6 +33,7 @@
 
 class QThread;
 class QFileSystemWatcher;
+class QWidget;
 
 class AppController : public QObject
 {
@@ -394,7 +395,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.43"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.44"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -971,6 +972,7 @@ private:
     bool startDesktopReplay(const QString &id, const QString &artifactId);
     void playNextReplayStep();
     void finishDesktopReplay();
+    void updateTeachStopOverlay();
     void registerHotkeys();          // (re)registra los atajos globales de las Tasks
 public:
     void onHotkeyPressed(int hotkeyId);   // llamado por el filtro de eventos nativos
@@ -1265,6 +1267,7 @@ private:
     QString   m_browserMcpCommand = QStringLiteral("npx @playwright/mcp@latest");
     QProcess *m_browserRecordProc = nullptr;   // codegen en curso (modo teach)
     TeachSessionRecorder m_teachRecorder;
+    QPointer<QWidget> m_teachStopOverlay;
     bool      m_mermaidEnabled = true;          // render de diagramas mermaid en el chat
     QStringList m_agentDisabledTools;           // tools built-in apagadas por el usuario
     // Perfil de agente activo (override vivo del modo agente). Vacío = resolver
