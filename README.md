@@ -570,6 +570,16 @@ que se active *auto-send* (enviar correo es acción externa irreversible).
 
 La sección **Automatizaciones** incorpora un modo Teach multimodal con dos destinos:
 
+El motor se diseña como una capacidad **general de control de la PC**, no como una
+colección de macros o excepciones por aplicación. Las mejoras deben funcionar en
+cualquier app mediante intención, contexto de la superficie, UI Automation,
+targets semánticos, visión y evidencia verificable. No se deben hardcodear nombres
+de aplicaciones, colores, botones, textos, layouts o coordenadas de un ejemplo
+particular dentro del comportamiento general. Paint, Calculadora u otros casos
+concretos sirven como pruebas de regresión; nunca como supuestos arquitectónicos.
+Una solución se considera generalizable si conserva su comportamiento al cambiar
+de aplicación, resolución, idioma, tema o ubicación de controles.
+
 - **Escritorio foreground (Windows):** el usuario elige una pantalla o ventana,
   demuestra el flujo y agrega notas. Se guardan eventos, `pointer` (posición
   absoluta y normalizada, botón, cantidad de clicks), `target` (alcance/ventana o

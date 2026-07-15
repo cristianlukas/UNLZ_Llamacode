@@ -23,3 +23,12 @@ Instrucciones para agentes que trabajen en este repo.
   GitHub y reportar el bloqueo.
 - Si hay repo git disponible, al terminar hacer commit y push de los cambios propios, salvo que el usuario indique lo contrario o haya un bloqueo real.
 - Mantener los cambios acotados. Evitar refactors amplios si no son necesarios para la tarea.
+- Diseñar **Automatizaciones/Teach como control general de la PC**, capaz de operar
+  cualquier aplicación. No hardcodear nombres de apps, colores, botones, layouts,
+  coordenadas, textos ni heurísticas excesivamente específicas de un caso observado
+  cuando la mejora pertenece al motor general. Preferir UI Automation, targets
+  semánticos, visión, evidencia, contexto de la aplicación y adaptación mediante
+  tools. Un caso concreto (Paint, Calculadora, navegador, etc.) puede y debe usarse
+  como prueba de regresión, pero no debe definir la implementación ni perjudicar
+  otras aplicaciones. Antes de aceptar una solución, preguntarse si sigue siendo
+  válida al cambiar de app, resolución, idioma, tema y distribución de controles.
