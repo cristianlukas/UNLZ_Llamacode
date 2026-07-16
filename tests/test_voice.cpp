@@ -10,6 +10,8 @@
 #include "core/voice/TtsPolicy.h"
 #include "core/voice/VoiceAgentPolicy.h"
 #include "core/voice/VoiceController.h"
+#include "core/voice/VadEngine.h"
+#include "core/voice/TurnDetector.h"
 #include "core/voice/CharlaTuning.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/voice/VoiceServerManager.h"
@@ -33,6 +35,12 @@ private slots:
     void ttsQwenArgsAndPolicy();
     void voiceAgentCapabilityPolicy();
     void vadTurnEnded();
+    void vadAdaptiveNoiseFloor();
+    void vadHysteresisHangover();
+    void vadIgnoresIsolatedClick();
+    void vadTuningFromConfig();
+    void turnDetectorClassify();
+    void turnDetectorSilence();
     void turnFailedIdleIsNoop();
     void charlaTuningRecommendations();
     void ttsSentenceSplit();
@@ -300,6 +308,150 @@ void TestVoice::vadTurnEnded()
     QVERIFY(!VoiceController::turnEnded(0.10, 0.03, 500, 800));
     // Hubo voz y silencio suficiente → fin de turno.
     QVERIFY(VoiceController::turnEnded(0.10, 0.03, 900, 800));
+}
+
+// El piso de ruido se calibra solo: un mic ruidoso (RMS de fondo 0.02, por
+// encima del vadThreshold fijo de 0.012) NO es voz para el VAD adaptativo, pero
+// sí lo era para el umbral fijo — ahí el turno no cerraba nunca.
+void TestVoice::vadAdaptiveNoiseFloor()
+{
+    VadEngine vad;
+    for (int i = 0; i < 100; ++i) vad.push(0.02, 20);
+    QVERIFY(!vad.speaking());
+    QVERIFY(!vad.sawSpeech());
+    QVERIFY(qAbs(vad.noiseFloor() - 0.02) < 0.005);
+
+    // El umbral fijo viejo (0.012) habría dado voz con este mismo ruido.
+    QVERIFY(0.02 >= VoiceConfig().vadThreshold);
+
+    // Voz real (3× el piso): abre tras onsetFrames.
+    vad.push(0.10, 20);
+    vad.push(0.10, 20);
+    QVERIFY(vad.speaking());
+    QVERIFY(vad.sawSpeech());
+
+    // Con mic bajo el piso también se adapta: 0.006 de fondo y voz a 0.025
+    // (por debajo del vadActivationLevel fijo de 0.03) igual se detecta.
+    VadEngine quiet;
+    for (int i = 0; i < 100; ++i) quiet.push(0.002, 20);
+    quiet.push(0.025, 20);
+    quiet.push(0.025, 20);
+    QVERIFY(quiet.speaking());
+    QVERIFY(0.025 < VoiceConfig().vadActivationLevel);
+}
+
+// Histéresis: se sale de voz por debajo de offFactor×piso, no de onFactor×piso.
+// Hangover: la voz se sostiene hangoverMs tras el último frame fuerte.
+void TestVoice::vadHysteresisHangover()
+{
+    VadTuning t;
+    t.hangoverMs = 200;
+    VadEngine vad(t);
+    for (int i = 0; i < 50; ++i) vad.push(0.01, 20);  // piso ≈ 0.01
+    vad.push(0.10, 20); vad.push(0.10, 20);
+    QVERIFY(vad.speaking());
+
+    // Nivel entre offTh (0.018) y onTh (0.03): sigue siendo voz (histéresis),
+    // el hangover se recarga y no cae por más frames que pasen.
+    for (int i = 0; i < 50; ++i) vad.push(0.025, 20);
+    QVERIFY(vad.speaking());
+
+    // Silencio real: aguanta el hangover (200 ms = 10 frames) y recién ahí corta.
+    for (int i = 0; i < 5; ++i) vad.push(0.005, 20);
+    QVERIFY(vad.speaking());
+    for (int i = 0; i < 8; ++i) vad.push(0.005, 20);
+    QVERIFY(!vad.speaking());
+    QVERIFY(vad.sawSpeech());   // el turno igual recuerda que hubo voz
+}
+
+// Un frame fuerte aislado (golpe de teclado) no abre turno ni ensucia el piso.
+void TestVoice::vadIgnoresIsolatedClick()
+{
+    VadEngine vad;
+    for (int i = 0; i < 50; ++i) vad.push(0.01, 20);
+    const double floorBefore = vad.noiseFloor();
+
+    vad.push(0.6, 20);            // click: 1 frame, onsetFrames exige 2
+    QVERIFY(!vad.speaking());
+    QVERIFY(!vad.sawSpeech());
+    QCOMPARE(vad.noiseFloor(), floorBefore);   // el pico no entra al piso
+
+    vad.push(0.01, 20);
+    vad.push(0.6, 20);            // otro click aislado: la racha se reinició
+    QVERIFY(!vad.speaking());
+
+    // reset() borra el piso y el "hubo voz".
+    vad.push(0.6, 20);
+    QVERIFY(vad.speaking());
+    vad.reset();
+    QVERIFY(!vad.speaking());
+    QVERIFY(!vad.sawSpeech());
+}
+
+void TestVoice::vadTuningFromConfig()
+{
+    VoiceConfig c;
+    c.vadThreshold = 0.012;
+    c.vadSegmentMs = 350;
+    const VadTuning t = VoiceController::vadTuningFor(c);
+    // vadThreshold pasa a piso absoluto (mitad: es suelo, no umbral).
+    QCOMPARE(t.absFloor, 0.006);
+    QVERIFY(t.offFactor < t.onFactor);          // histéresis
+    QVERIFY(t.hangoverMs <= c.vadSegmentMs / 2); // no se traga el corte de segmento
+
+    // Segmentos cortos recortan el hangover.
+    c.vadSegmentMs = 100;
+    QVERIFY(VoiceController::vadTuningFor(c).hangoverMs <= 50);
+}
+
+void TestVoice::turnDetectorClassify()
+{
+    using namespace TurnDetector;
+    // Terminadores → cerrado.
+    QCOMPARE(classify(QStringLiteral("dale, hacelo.")), Complete);
+    QCOMPARE(classify(QStringLiteral("¿cuánto falta?")), Complete);
+    // Sin puntuación (whisper tiny no puntúa) pero frase plena → cerrado.
+    QCOMPARE(classify(QStringLiteral("abrime el log de ayer")), Complete);
+
+    // Colgado: conjunción, preposición, artículo, muletilla, coma.
+    QCOMPARE(classify(QStringLiteral("quiero que busques el log y")), Incomplete);
+    QCOMPARE(classify(QStringLiteral("compilá esto para")), Incomplete);
+    QCOMPARE(classify(QStringLiteral("mirá el")), Incomplete);
+    QCOMPARE(classify(QStringLiteral("necesito que revises eh")), Incomplete);
+    QCOMPARE(classify(QStringLiteral("primero el build,")), Incomplete);
+    QCOMPARE(classify(QStringLiteral("open the file and")), Incomplete);
+    // Acentos normalizados contra la lista.
+    QCOMPARE(classify(QStringLiteral("ordená la lista según")), Incomplete);
+
+    // Ambiguo: vacío o una sola palabra plena.
+    QCOMPARE(classify(QString()), Unknown);
+    QCOMPARE(classify(QStringLiteral("   ")), Unknown);
+    QCOMPARE(classify(QStringLiteral("compilá")), Unknown);
+}
+
+void TestVoice::turnDetectorSilence()
+{
+    using namespace TurnDetector;
+    const int base = 800;
+    // Sin parcial todavía → el base sin tocar.
+    QCOMPARE(requiredSilenceMs(QString(), base), base);
+    // Una palabra suelta: ambiguo → base.
+    QCOMPARE(requiredSilenceMs(QStringLiteral("compilá"), base), base);
+
+    // Frase cerrada → corta antes (menos latencia).
+    const int done = requiredSilenceMs(QStringLiteral("dale, hacelo."), base);
+    QVERIFY(done < base);
+    QVERIFY(done >= EndpointTuning().minMs);
+
+    // Frase colgada → espera más (no cortar a la persona pensando).
+    const int hang = requiredSilenceMs(QStringLiteral("quiero que busques el log y"), base);
+    QVERIFY(hang > base);
+    QVERIFY(hang <= EndpointTuning().maxMs);
+
+    // Clamps: base absurdo no se va de rango.
+    QVERIFY(requiredSilenceMs(QStringLiteral("listo."), 100) <= 100);
+    QVERIFY(requiredSilenceMs(QStringLiteral("y"), 9000) <= EndpointTuning().maxMs);
+    QCOMPARE(requiredSilenceMs(QStringLiteral("listo."), 0), 0);
 }
 
 void TestVoice::ttsSentenceSplit()

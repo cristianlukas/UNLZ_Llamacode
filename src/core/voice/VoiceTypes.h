@@ -60,6 +60,14 @@ struct VoiceConfig {
     int     vadSegmentMs = 350;
     // Energía mínima que tuvo que superarse para considerar que hubo voz.
     double  vadActivationLevel = 0.03;
+    // VAD adaptativo (VadEngine): umbral relativo al ruido de fondo medido en
+    // vivo, con histéresis y hangover. false = umbral fijo (vadThreshold /
+    // vadActivationLevel), el comportamiento viejo.
+    bool    vadAdaptive = true;
+    // Endpointing semántico (TurnDetector): el silencio exigido para cerrar el
+    // turno se ajusta según cómo quedó el transcript parcial (cerrado → cortar
+    // antes; colgado en "y…"/"porque…" → esperar más). false = vadSilenceMs fijo.
+    bool    smartTurn = true;
     // Reanudar escucha automáticamente tras hablar la respuesta.
     bool    autoListen = true;
     // Cortar el TTS si el usuario empieza a hablar (barge-in).

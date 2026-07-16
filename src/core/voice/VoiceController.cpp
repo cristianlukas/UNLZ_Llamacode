@@ -2,6 +2,7 @@
 #include "AudioCodec.h"
 #include <QRegularExpression>
 #include <QDebug>
+#include <algorithm>
 
 #include <QAudioSource>
 #include <QAudioFormat>
@@ -107,6 +108,17 @@ bool VoiceController::turnEnded(double peakLevel, double activationLevel,
     return peakLevel >= activationLevel && silenceAccumMs >= silenceMs;
 }
 
+VadTuning VoiceController::vadTuningFor(const VoiceConfig &cfg)
+{
+    VadTuning t;
+    // El viejo vadThreshold pasa a piso absoluto: en un cuarto muy silencioso el
+    // piso medido tiende a 0 y el umbral relativo dejaría pasar cualquier cosa.
+    if (cfg.vadThreshold > 0.0) t.absFloor = cfg.vadThreshold * 0.5;
+    // El hangover no puede tragarse el corte de segmento (transcripción en vivo).
+    if (cfg.vadSegmentMs > 0) t.hangoverMs = std::min(t.hangoverMs, cfg.vadSegmentMs / 2);
+    return t;
+}
+
 // ── Ciclo de vida ──────────────────────────────────────────────────────────
 
 void VoiceController::start()
@@ -173,6 +185,8 @@ void VoiceController::beginCapture()
     m_silenceMs = 0;
     m_peak = 0.0;
     m_monitorOnly = false;
+    m_vad.setTuning(vadTuningFor(m_cfg));
+    m_vad.reset();   // el piso de ruido se re-mide por captura (mic/entorno pueden cambiar)
 
     QAudioFormat fmt;
     fmt.setSampleRate(m_sampleRate);
@@ -217,6 +231,7 @@ void VoiceController::endCapture()
     // Reset completo del estado de stream (descarta turno en curso).
     m_segment.clear();
     m_segPeak = 0.0;
+    m_segVoice = false;
     m_segSilenceMs = 0;
     m_partial.clear();
     m_segQueue.clear();
@@ -235,43 +250,74 @@ void VoiceController::onAudioReady()
 
     const int chunkMs = int((chunk.size() / 2) * 1000.0 / m_sampleRate);
 
+    // Alimentar siempre el VAD adaptativo: aun en testMode/monitorOnly el piso
+    // de ruido sigue aprendiendo, así que al volver a escuchar ya está calibrado.
+    const VadEngine::Frame vf = m_vad.push(lvl, chunkMs);
+    // El VAD adaptativo mide contra el ruido de fondo; el legacy contra umbrales
+    // fijos de config. Misma decisión (¿este frame es voz?), dos formas de sacarla.
+    const bool speech   = m_cfg.vadAdaptive ? vf.speech : (lvl >= m_cfg.vadThreshold);
+    const bool sawVoice = m_cfg.vadAdaptive ? m_vad.sawSpeech()
+                                            : (m_peak >= m_cfg.vadActivationLevel);
+
     // Modo prueba de micrófono: solo nivel, sin VAD ni STT.
     if (m_testMode) return;
 
     // Modo monitor (durante Speaking): solo detectar barge-in, no acumular.
     if (m_monitorOnly) {
-        if (m_cfg.bargeIn && lvl >= m_cfg.vadActivationLevel * 1.6) {
-            qInfo().noquote() << QStringLiteral("[charla] barge-in: usuario interrumpió (nivel=%1)")
-                                     .arg(lvl, 0, 'f', 3);
+        const bool interrupt = m_cfg.vadAdaptive ? vf.onset
+                                                 : (lvl >= m_cfg.vadActivationLevel * 1.6);
+        if (m_cfg.bargeIn && interrupt) {
+            qInfo().noquote() << QStringLiteral("[charla] barge-in: usuario interrumpió (nivel=%1, piso=%2)")
+                                     .arg(lvl, 0, 'f', 3).arg(vf.floor, 0, 'f', 4);
             startListening();
         }
         return;
     }
 
     m_segment += chunk;
-    if (lvl >= m_cfg.vadThreshold) {
+    if (speech) {
         if (lvl > m_peak) m_peak = lvl;
         if (lvl > m_segPeak) m_segPeak = lvl;
+        m_segVoice = true;
         m_silenceMs = 0;
         m_segSilenceMs = 0;
-    } else if (m_peak >= m_cfg.vadActivationLevel) {
+    } else if (sawVoice) {
         m_silenceMs += chunkMs;
         m_segSilenceMs += chunkMs;
         // Micro-pausa: cerrar segmento y transcribirlo en vivo (sin terminar turno).
-        if (m_segSilenceMs >= m_cfg.vadSegmentMs && m_segPeak >= m_cfg.vadActivationLevel)
+        if (m_segSilenceMs >= m_cfg.vadSegmentMs && segmentHadVoice())
             flushSegment(false);
     }
 
+    // Cuánto silencio exige cerrar el turno. Con smartTurn el umbral depende de
+    // cómo quedó el parcial ya transcripto (frase cerrada → cortar antes; colgada
+    // en "y…"/"porque…" → darle tiempo a seguir).
+    const int needSilence = m_cfg.smartTurn
+        ? TurnDetector::requiredSilenceMs(m_partial, m_cfg.vadSilenceMs)
+        : m_cfg.vadSilenceMs;
+
     // Silencio largo tras voz → fin de turno: cerrar último segmento y finalizar.
-    if (turnEnded(m_peak, m_cfg.vadActivationLevel, m_silenceMs, m_cfg.vadSilenceMs))
+    const bool ended = m_cfg.vadAdaptive
+        ? (sawVoice && m_silenceMs >= needSilence)
+        : turnEnded(m_peak, m_cfg.vadActivationLevel, m_silenceMs, needSilence);
+    if (ended) {
+        if (needSilence != m_cfg.vadSilenceMs)
+            qInfo().noquote() << QStringLiteral("[charla] endpoint: corte a %1 ms (base %2, parcial=\"%3\")")
+                                     .arg(needSilence).arg(m_cfg.vadSilenceMs).arg(m_partial.right(40));
         flushSegment(true);
+    }
+}
+
+bool VoiceController::segmentHadVoice() const
+{
+    return m_cfg.vadAdaptive ? m_segVoice : (m_segPeak >= m_cfg.vadActivationLevel);
 }
 
 void VoiceController::flushSegment(bool finalSeg)
 {
     // Encolar el segmento solo si tuvo voz y dura algo (>200ms) — evita fragmentos.
     const int segMs = int((m_segment.size() / 2) * 1000.0 / m_sampleRate);
-    if (m_segPeak >= m_cfg.vadActivationLevel && segMs >= 200) {
+    if (segmentHadVoice() && segMs >= 200) {
         m_segQueue.append(m_segment);
         qInfo().noquote() << QStringLiteral("[charla] VAD: segmento %1 ms (peak=%2, final=%3, cola=%4)")
                                  .arg(segMs).arg(m_segPeak, 0, 'f', 3)
@@ -283,6 +329,7 @@ void VoiceController::flushSegment(bool finalSeg)
     }
     m_segment.clear();
     m_segPeak = 0.0;
+    m_segVoice = false;
     m_segSilenceMs = 0;
 
     if (finalSeg) {

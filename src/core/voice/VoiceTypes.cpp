@@ -35,6 +35,8 @@ QJsonObject VoiceConfig::toJson() const
     o["vadSilenceMs"]   = vadSilenceMs;
     o["vadSegmentMs"]   = vadSegmentMs;
     o["vadActivationLevel"] = vadActivationLevel;
+    o["vadAdaptive"]    = vadAdaptive;
+    o["smartTurn"]      = smartTurn;
     o["autoListen"]     = autoListen;
     o["bargeIn"]        = bargeIn;
     return o;
@@ -77,6 +79,8 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.vadSilenceMs = o.value("vadSilenceMs").toInt(c.vadSilenceMs);
     c.vadSegmentMs = o.value("vadSegmentMs").toInt(c.vadSegmentMs);
     c.vadActivationLevel = o.value("vadActivationLevel").toDouble(c.vadActivationLevel);
+    c.vadAdaptive = o.value("vadAdaptive").toBool(c.vadAdaptive);
+    c.smartTurn   = o.value("smartTurn").toBool(c.smartTurn);
     c.autoListen  = o.value("autoListen").toBool(c.autoListen);
     c.bargeIn     = o.value("bargeIn").toBool(c.bargeIn);
     return c;

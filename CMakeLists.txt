@@ -82,6 +82,8 @@ set(CORE_SOURCES
     src/core/voice/TtsEngine.cpp
     src/core/voice/TtsPolicy.cpp
     src/core/voice/VoiceAgentPolicy.cpp
+    src/core/voice/VadEngine.cpp
+    src/core/voice/TurnDetector.cpp
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
     src/core/voice/CharlaTuning.cpp
@@ -148,6 +150,8 @@ set(HEADERS
     src/core/voice/TtsEngine.h
     src/core/voice/TtsPolicy.h
     src/core/voice/VoiceAgentPolicy.h
+    src/core/voice/VadEngine.h
+    src/core/voice/TurnDetector.h
     src/core/voice/VoiceController.h
     src/core/voice/VoiceServerManager.h
     src/core/eval/EvalSuite.h

@@ -2,6 +2,8 @@
 #include "VoiceTypes.h"
 #include "SttEngine.h"
 #include "TtsEngine.h"
+#include "VadEngine.h"
+#include "TurnDetector.h"
 #include <QObject>
 #include <QByteArray>
 #include <QPointer>
@@ -58,8 +60,15 @@ public:
     // ── Función pura de VAD (testeable) ──
     // Decide si el turno terminó: hubo voz (peak>=activation) y luego silencio
     // continuo >= silenceMs. silenceAccumMs es el silencio acumulado hasta ahora.
+    // Path legacy (VoiceConfig.vadAdaptive=false); con VAD adaptativo la decisión
+    // la toma VadEngine + TurnDetector.
     static bool turnEnded(double peakLevel, double activationLevel,
                           int silenceAccumMs, int silenceMs);
+
+    // ── Función pura (testeable) ──
+    // Traduce la config de voz al tuning del VAD adaptativo. vadThreshold pasa a
+    // ser el piso absoluto (suelo del umbral relativo), no el umbral en sí.
+    static VadTuning vadTuningFor(const VoiceConfig &cfg);
 
     // ── Función pura (testeable) ──
     // Trocea la respuesta en oraciones para TTS por chunks: se sintetiza la
@@ -121,6 +130,7 @@ private slots:
 private:
     void setState(State s);
     void fail(const QString &err);
+    bool segmentHadVoice() const;   // ¿el segmento en curso tuvo voz? (adaptativo o legacy)
     void beginCapture();
     void endCapture();              // tear-down de captura + reset del estado de stream
     void stopSource();             // detiene el QAudioSource sin resetear el transcript
@@ -151,12 +161,14 @@ private:
     int   m_sampleRate = 16000;
     int   m_silenceMs = 0;           // silencio continuo acumulado (ms)
     double m_peak = 0.0;             // máximo RMS visto en el turno (¿hubo voz?)
+    VadEngine m_vad;                 // VAD adaptativo (activo si cfg.vadAdaptive)
 
     // Transcripción incremental (chunked): el turno se trocea en segmentos por
     // micro-silencios; cada segmento se transcribe en orden y se acumula en
     // m_partial (mostrado en vivo). Al silencio largo se finaliza el turno.
     QByteArray m_segment;            // PCM16 del segmento en curso
-    double m_segPeak = 0.0;          // ¿el segmento tuvo voz?
+    double m_segPeak = 0.0;          // ¿el segmento tuvo voz? (path legacy)
+    bool   m_segVoice = false;       // ídem, según el VAD adaptativo
     int    m_segSilenceMs = 0;       // micro-silencio del segmento
     QString m_partial;               // transcripción acumulada del turno
     QList<QByteArray> m_segQueue;    // segmentos esperando transcripción (en orden)
