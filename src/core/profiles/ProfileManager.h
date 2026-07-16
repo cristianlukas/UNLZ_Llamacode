@@ -162,6 +162,13 @@ public:
     Q_INVOKABLE bool updateAgentProfile(const QVariantMap &data);
     // Duplica un perfil de agente (incl. de sistema) a una copia EDITABLE de usuario.
     Q_INVOKABLE QString duplicateAgentProfile(const QString &id);
+    // Analiza una consigna sin llamar a otro modelo y propone un perfil especializado
+    // sólo cuando difiere materialmente del activo. La aplicación crea una copia;
+    // nunca modifica el perfil de origen.
+    Q_INVOKABLE QVariantMap recommendAgentProfile(const QString &prompt,
+                                                  const QString &currentProfileId) const;
+    Q_INVOKABLE QString createRecommendedAgentProfile(const QString &sourceProfileId,
+                                                       const QString &taskKind);
     Q_INVOKABLE bool isSystemAgentProfile(const QString &id) const;
     Q_INVOKABLE QVariantMap getAgentProfile(const QString &id) const;
     AgentProfile resolveAgentProfile(const QString &id) const;

@@ -13,6 +13,7 @@ Item {
     property double lastAgentActivityMs: Date.now()
     property int idleSeconds: 0
     property var agentAttachments: []
+    property string lastProfileSuggestionKind: ""
 
     // ── Ancho del panel de sesiones (redimensionable + persistente) ──────
     property int sessionsPanelWidth: 220
@@ -75,16 +76,31 @@ Item {
         root.mentionStart = -1
         mentionPopup.close()
     }
-    // Envío normal (idle): incluye adjuntos si los hay.
+    function sendAgentNow(text, attachments) {
+        if (attachments.length > 0)
+            App.sendToAgentWithAttachments(text, attachments)
+        else
+            App.sendToAgent(text)
+        agentInput.text = ""
+        root.agentAttachments = []
+    }
+
+    // Envío normal (idle): antes ofrece una copia optimizada cuando la consigna
+    // difiere materialmente del perfil activo. Nunca cambia el original solo.
     function agentSend() {
         const t = agentInput.text.trim()
         if (t.length === 0 && root.agentAttachments.length === 0) return
-        if (root.agentAttachments.length > 0)
-            App.sendToAgentWithAttachments(t, root.agentAttachments)
-        else
-            App.sendToAgent(t)
-        agentInput.text = ""
-        root.agentAttachments = []
+        const recommendation = App.profileManager.recommendAgentProfile(t, App.activeAgentProfileId)
+        if (recommendation && recommendation.kind
+                && recommendation.kind !== root.lastProfileSuggestionKind) {
+            root.lastProfileSuggestionKind = recommendation.kind
+            profileSuggestionDialog.recommendation = recommendation
+            profileSuggestionDialog.pendingText = t
+            profileSuggestionDialog.pendingAttachments = root.agentAttachments.slice()
+            profileSuggestionDialog.open()
+            return
+        }
+        sendAgentNow(t, root.agentAttachments.slice())
     }
 
     readonly property bool waitingApproval: (App.agentPendingTool.id ?? "").length > 0
@@ -172,6 +188,73 @@ Item {
                         App.setSecret(cloudKeyPrompt.keyRef, cloudKeyInput.text)
                         cloudKeyPrompt.close()
                         App.startAgent(root._pendingCloudProfile)
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: profileSuggestionDialog
+        property var recommendation: ({})
+        property string pendingText: ""
+        property var pendingAttachments: []
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 500
+        closePolicy: Popup.CloseOnEscape
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "Perfil recomendado: " + (profileSuggestionDialog.recommendation.label || "optimizado")
+                color: Theme.textPrimary; font { pixelSize: 14; bold: true }
+            }
+        }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                color: Theme.textSecondary; font.pixelSize: 12
+                text: profileSuggestionDialog.recommendation.reason || ""
+            }
+            Text {
+                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                color: Theme.textMuted; font.pixelSize: 11
+                text: "Se creará una copia editable del perfil actual: temperatura "
+                      + profileSuggestionDialog.recommendation.temperature
+                      + " · " + profileSuggestionDialog.recommendation.toolCount + " tools · razonamiento "
+                      + (profileSuggestionDialog.recommendation.thinking ? "activo" : "desactivado")
+                      + ". El perfil original no cambia."
+            }
+        }
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 54; radius: 12
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                spacing: 10
+                LcButton {
+                    text: "Ahora no"
+                    secondary: true
+                    onClicked: {
+                        profileSuggestionDialog.close()
+                        root.sendAgentNow(profileSuggestionDialog.pendingText,
+                                          profileSuggestionDialog.pendingAttachments)
+                    }
+                }
+                LcButton {
+                    text: "Crear copia y usar"
+                    onClicked: {
+                        const id = App.profileManager.createRecommendedAgentProfile(
+                            App.activeAgentProfileId, profileSuggestionDialog.recommendation.kind)
+                        if (id) App.activeAgentProfileId = id
+                        profileSuggestionDialog.close()
+                        root.sendAgentNow(profileSuggestionDialog.pendingText,
+                                          profileSuggestionDialog.pendingAttachments)
                     }
                 }
             }

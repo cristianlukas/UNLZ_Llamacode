@@ -34,6 +34,7 @@ private slots:
     void mcpEnabled_roundTrips();
     void manager_crudAndPersistence();
     void manager_systemPresetsImmutable();
+    void manager_recommendsAndClonesTaskProfile();
 
 private:
     QTemporaryDir m_dir;
@@ -330,6 +331,32 @@ void AgentProfilesTests::manager_systemPresetsImmutable()
     QVERIFY(!dupId.isEmpty());
     QVERIFY(!pm.isSystemAgentProfile(dupId));
     QVERIFY(pm.updateAgentProfile(QVariantMap{{"id", dupId}, {"name", "editable"}}));
+}
+
+void AgentProfilesTests::manager_recommendsAndClonesTaskProfile()
+{
+    ProfileManager pm;
+    const QVariantMap rec = pm.recommendAgentProfile(
+        QStringLiteral("Investigá fuentes y verificá las afirmaciones del informe"),
+        QStringLiteral("agent-basico"));
+    QCOMPARE(rec.value("kind").toString(), QStringLiteral("research"));
+    QVERIFY(rec.value("thinking").toBool());
+    QVERIFY(rec.value("mcpEnabled").toBool());
+
+    const QString id = pm.createRecommendedAgentProfile(
+        QStringLiteral("agent-basico"), rec.value("kind").toString());
+    QVERIFY(!id.isEmpty());
+    QVERIFY(!pm.isSystemAgentProfile(id));
+    const QVariantMap clone = pm.getAgentProfile(id);
+    QVERIFY(clone.value("name").toString().contains(QStringLiteral("Investigación")));
+    QCOMPARE(clone.value("temperature").toDouble(), 0.35);
+    QVERIFY(clone.value("enabledTools").toStringList().contains(QStringLiteral("verify_claims")));
+
+    // Una copia ya optimizada no vuelve a ofrecer exactamente lo mismo.
+    QVERIFY(pm.recommendAgentProfile(
+        QStringLiteral("Research con fuentes"), id).isEmpty());
+    // Una charla sin señal suficiente no dispara sugerencias intrusivas.
+    QVERIFY(pm.recommendAgentProfile(QStringLiteral("Hola"), id).isEmpty());
 }
 
 QTEST_MAIN(AgentProfilesTests)

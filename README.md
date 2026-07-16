@@ -244,6 +244,13 @@ respeta los slots de `llama-server`, reduce el fan-out con contextos largos y ap
 límites conservadores según la VRAM detectada. Un perfil de un solo slot conserva
 la delegación, pero ejecuta los sub-agentes secuencialmente.
 
+En modo Agente, la consigna se clasifica localmente antes del envío. Cuando otra
+configuración resulta materialmente más adecuada (código preciso, investigación,
+planificación, creatividad o tarea rápida), la UI ofrece crear y activar una copia
+del perfil actual con temperatura, razonamiento, directivas y tools ajustados. La
+sugerencia es explicable y opcional: nunca modifica el perfil original ni cambia
+la configuración sin confirmación, y al rechazarla el mensaje se envía normalmente.
+
 ## Objetivo
 
 Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de código con chat integrado e historial persistente.

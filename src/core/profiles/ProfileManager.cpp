@@ -523,7 +523,118 @@ static QVariantMap agentProfileToVariant(const AgentProfile &p)
     return {{"id", p.id}, {"name", p.name}, {"system", p.system},
             {"enabledTools", p.enabledTools}, {"directives", p.directives},
             {"approvalMode", p.approvalMode}, {"thinking", p.thinking},
-            {"temperature", p.temperature}, {"systemExtra", p.systemExtra}};
+            {"temperature", p.temperature}, {"systemExtra", p.systemExtra},
+            {"mcpEnabled", p.mcpEnabled}};
+}
+
+namespace {
+struct AgentTaskPreset {
+    QString kind;
+    QString label;
+    QString reason;
+    QStringList tools;
+    QStringList directives;
+    double temperature;
+    bool thinking;
+    bool mcp;
+};
+
+AgentTaskPreset taskPreset(const QString &kind)
+{
+    const QStringList core{"read_file", "list_dir", "glob", "grep", "write_file",
+                           "edit_file", "run_shell"};
+    if (kind == QLatin1String("research"))
+        return {kind, QStringLiteral("Investigación"),
+                QStringLiteral("Conviene razonar, buscar fuentes y verificar afirmaciones."),
+                core + QStringList{"search_docs", "memory", "web_search", "web_fetch",
+                                   "semantic_search", "hybrid_search", "verify_claims", "graph"},
+                {"discipline", "testNet", "projectContext", "efficiency", "style"},
+                0.35, true, true};
+    if (kind == QLatin1String("planning"))
+        return {kind, QStringLiteral("Planificación"),
+                QStringLiteral("La tarea pide análisis y un plan cuidadoso con pocas herramientas."),
+                {"read_file", "list_dir", "glob", "grep", "search_docs", "memory", "code_hotspots"},
+                {"discipline", "projectContext", "efficiency", "style"}, 0.3, true, false};
+    if (kind == QLatin1String("creative"))
+        return {kind, QStringLiteral("Creatividad"),
+                QStringLiteral("Una temperatura moderadamente mayor ayuda a explorar alternativas."),
+                {"read_file", "list_dir", "grep", "write_file", "edit_file"},
+                {"style", "efficiency"}, 0.75, false, false};
+    if (kind == QLatin1String("quick"))
+        return {kind, QStringLiteral("Tarea rápida"),
+                QStringLiteral("Un perfil liviano reduce contexto y latencia innecesarios."),
+                {"read_file", "list_dir", "grep", "write_file", "edit_file"}, {}, 0.4, false, false};
+    return {QStringLiteral("coding"), QStringLiteral("Código preciso"),
+            QStringLiteral("El cambio se beneficia de sampling conservador, herramientas de código y pruebas."),
+            core + QStringList{"search_docs", "memory", "code_hotspots"},
+            {"discipline", "testNet", "projectContext", "efficiency", "style"},
+            0.6, true, false};
+}
+
+bool hasAny(const QString &text, const QStringList &needles)
+{
+    for (const QString &needle : needles)
+        if (text.contains(needle)) return true;
+    return false;
+}
+
+QString classifyAgentTask(const QString &prompt)
+{
+    const QString p = prompt.toLower();
+    if (hasAny(p, {"investig", "research", "fuentes", "source", "verific", "compará",
+                   "compara", "estado del arte", "deep dive"}))
+        return QStringLiteral("research");
+    if (hasAny(p, {"planific", "diseñá un plan", "diseña un plan", "arquitectura",
+                   "estrategia", "roadmap", "analizá", "analiza", "review", "revisá"}))
+        return QStringLiteral("planning");
+    if (hasAny(p, {"creativ", "brainstorm", "ideas", "cuento", "poema", "eslogan",
+                   "nombre para", "alternativas originales"}))
+        return QStringLiteral("creative");
+    if (p.size() < 90 && hasAny(p, {"explicá", "explica", "resumí", "resume", "qué es",
+                                    "que es", "traducí", "traduce"}))
+        return QStringLiteral("quick");
+    if (hasAny(p, {"código", "codigo", "bug", "error", "test", "implement", "refactor",
+                   "compil", "archivo", "función", "funcion", "clase", "repo"}))
+        return QStringLiteral("coding");
+    return {};
+}
+}
+
+QVariantMap ProfileManager::recommendAgentProfile(const QString &prompt,
+                                                   const QString &currentProfileId) const
+{
+    const QString kind = classifyAgentTask(prompt.trimmed());
+    const AgentProfile current = m_agentProfiles.findById(currentProfileId);
+    if (kind.isEmpty() || current.id.isEmpty()) return {};
+    const AgentTaskPreset preset = taskPreset(kind);
+    const bool same = current.enabledTools == preset.tools
+        && current.directives == preset.directives
+        && qAbs(current.temperature - preset.temperature) < 0.001
+        && current.thinking == preset.thinking && current.mcpEnabled == preset.mcp;
+    if (same) return {};
+    return {{"kind", preset.kind}, {"label", preset.label}, {"reason", preset.reason},
+            {"temperature", preset.temperature}, {"thinking", preset.thinking},
+            {"toolCount", preset.tools.size()}, {"mcpEnabled", preset.mcp}};
+}
+
+QString ProfileManager::createRecommendedAgentProfile(const QString &sourceProfileId,
+                                                        const QString &taskKind)
+{
+    const AgentProfile source = m_agentProfiles.findById(sourceProfileId);
+    if (source.id.isEmpty()) return {};
+    const AgentTaskPreset preset = taskPreset(taskKind);
+    AgentProfile p = source;
+    p.id = AgentProfile::generateId();
+    p.system = false;
+    p.name = source.name + QStringLiteral(" · ") + preset.label;
+    p.enabledTools = preset.tools;
+    p.directives = preset.directives;
+    p.temperature = preset.temperature;
+    p.thinking = preset.thinking;
+    p.mcpEnabled = preset.mcp;
+    m_agentProfiles.add(p);
+    save();
+    return p.id;
 }
 
 QString ProfileManager::addAgentProfile(const QString &name)
@@ -571,6 +682,7 @@ bool ProfileManager::updateAgentProfile(const QVariantMap &data)
     if (data.contains("thinking"))     p.thinking = data.value("thinking").toBool();
     if (data.contains("temperature"))  p.temperature = data.value("temperature").toDouble();
     if (data.contains("systemExtra"))  p.systemExtra = data.value("systemExtra").toString();
+    if (data.contains("mcpEnabled"))   p.mcpEnabled = data.value("mcpEnabled").toBool();
     bool ok = m_agentProfiles.update(p);
     if (ok) save();
     return ok;
