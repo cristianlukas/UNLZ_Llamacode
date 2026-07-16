@@ -101,3 +101,51 @@ corren en paralelo entre sí) con un lock atómico (`.buildlock/`, gitignored):
 - El "owner" real es un proceso *guardian* oculto (su vida == el lock); `release`
   lo mata. Así el PID sí prueba vida (el powershell que hace `acquire` muere ya).
 - Test: `powershell -File tests\test_build_coord.ps1` (fuera de ctest; infra PS/bat).
+### Sesiones paralelas: worktree por tarea (preferido)
+Si vas a hacer **más de una mejora a la vez**, no compartas el working tree:
+```
+powershell -File worktree.ps1 -Action new    -Name <tarea>   # ../LlamaCode-<tarea>, rama session/<tarea>
+powershell -File worktree.ps1 -Action list
+powershell -File worktree.ps1 -Action remove -Name <tarea> [-Force]
+```
+Cada worktree tiene su propio `build/`, `build_tests/` y `.buildlock/` (gitignored
+root-anchored) → compilan en paralelo sin pisarse, y `git add` nunca mezcla hunks
+de otra tarea. Comparte el object store: crearlo son segundos. Costo: el primer
+build del worktree es full. `remove` sin `-Force` frena si hay cambios sin commitear.
+
+**Por qué importa:** `build_coord.ps1` serializa *quién compila*, NO *qué fuente hay
+en disco*. Con un tree compartido, la otra sesión edita `src/` mientras vos compilás
+→ "error de compilación que no es mío", hunks ajenos en `CMakeLists.txt`, gate verde
+que no corrió sobre tu fuente. Ningún lock lo arregla: la edición pasa fuera del lock.
+
+### Hooks de convivencia (`tools/session_guard.ps1`)
+`worktree.ps1` y `build_coord.ps1` son opt-in — hay que *acordarse*. Los hooks los
+corre el harness solo, así que son el único punto donde esto se aplica sin
+disciplina. Enganchados en `.claude/settings.json` (checkeado al repo):
+- **SessionStart** → si el tree ya tiene trabajo sin commitear, lo lista y sugiere
+  el worktree. Informativo.
+- **PreToolUse(Edit|Write)** → claim por archivo en `.buildlock/claims/`. Si otra
+  sesión viva (claim < 90 min) tocó ese archivo, **avisa** — no bloquea: un claim
+  stale no debe trabar trabajo legítimo, y un choque de edición se arregla con un
+  merge.
+- **PreToolUse(Bash|PowerShell)** → **BLOQUEA** git de alcance global
+  (`checkout/restore .`, `reset --hard`, `clean -fd`, `stash`, `add -A`/`.`) si hay
+  trabajo sin commitear. Es el único caso irreversible. La forma **por path**
+  (`git checkout -- src/foo.cpp`, `git add <path>`) pasa siempre: es la salida
+  recomendada, no puede caer en el guard.
+
+Test: `powershell -File tests\test_session_guard.ps1` (fuera de ctest, infra PS).
+
+**Regla: los scripts de infra PS son ASCII puro** (`build_coord.ps1`,
+`worktree.ps1`, `tools/session_guard.ps1`). Windows PowerShell 5.1 lee un `.ps1`
+sin BOM como ANSI; un carácter UTF-8 dentro de un **string** se decodifica mal y
+puede terminarlo (el em-dash `—` = `E2 80 94` → en CP1252 el `0x94` es `”`, que PS
+toma como comilla de cierre → ParserError y el hook muere entero). En comentarios
+sólo se ve feo; en strings rompe. El test 0 de `test_session_guard.ps1` lo fija.
+
+- **Tree compartido en movimiento** (defensa, no cura — la cura es el worktree):
+  `acquire` re-fingerprintea tras `-MutationCheckMs` (1200ms, 0 = off) y avisa si
+  la fuente está cambiando *antes* de gastar minutos de MSBuild; `release`
+  revalida el fingerprint y, si cambió durante el build, publica **DIRTY** en vez
+  de OK (exit 12) → nadie adopta por REUSE un artefacto de otra fuente, y los
+  `.bat` gritan que el binario/gate no es confiable.

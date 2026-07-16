@@ -1098,6 +1098,15 @@ inmediatamente. No se usan procesos `Start-Sleep` como señal de actividad y un
 proceso ajeno no puede publicar ni liberar el resultado del propietario. El estado
 se consulta con `build_coord.ps1 -Lane build|tests -Action status`.
 
+Ese lock serializa *quién compila*, no *qué fuente hay en disco*: si dos sesiones
+comparten el working tree, la otra puede editar `src/` mientras compilás. Para
+trabajar en varias mejoras a la vez, aislá cada una en su worktree —
+`worktree.ps1 -Action new -Name <tarea>` crea `../LlamaCode-<tarea>` con rama
+`session/<tarea>` y sus propios `build/`, `build_tests/` y `.buildlock/`. Si igual
+compartís el tree, `build_coord.ps1` avisa cuando la fuente se mueve durante un
+`acquire` y marca el resultado **DIRTY** al liberar (nadie lo adopta por REUSE, y
+el `.bat` avisa que el binario o el gate no corresponden a la fuente).
+
 - Nada destructivo sin aprobación explícita.
 - Escrituras fuera de workspace: bloqueadas por defecto.
 - Comandos shell con allowlist/denylist por `WorkspaceProfile`.

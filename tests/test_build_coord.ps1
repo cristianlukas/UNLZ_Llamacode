@@ -1,12 +1,13 @@
 <#
-  test_build_coord.ps1 — regresion del encolamiento inteligente (build_coord.ps1).
+  test_build_coord.ps1 - regresion del encolamiento inteligente (build_coord.ps1).
 
   No corre en ctest (es infra de build en PS/batch, no C++). Correr a mano:
       powershell -NoProfile -ExecutionPolicy Bypass -File tests\test_build_coord.ps1
   Exit 0 = todo verde.
 
-  Cubre: fingerprint estable, OWNER exclusivo, robo inmediato al morir el dueño,
-  rechazo de release ajeno, SHARE/REUSE y lanes independientes.
+  Cubre: fingerprint estable, OWNER exclusivo, robo inmediato al morir el dueno,
+  rechazo de release ajeno, SHARE/REUSE, lanes independientes, deteccion de
+  fuente mutando (acquire) y publicacion DIRTY (release). Ademas worktree.ps1.
 #>
 $ErrorActionPreference = 'Stop'
 $root   = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
@@ -18,11 +19,13 @@ function Clean(){ if(Test-Path $lock){ Remove-Item -Recurse -Force $lock -ErrorA
 Clean
 
 # Corre acquire en background y devuelve el objeto Process (con out redirigido).
-function StartAcquire($lane,$out,$timeout=60){
+# MutationCheckMs 0 por default: el chequeo de mutacion agrega latencia y solo lo
+# quiere el test que lo ejercita.
+function StartAcquire($lane,$out,$timeout=60,$mutMs=0){
     $of = Join-Path $lock $out
     $rf = "$of.rc"
     New-Item -ItemType Directory -Force -Path $lock | Out-Null
-    $cmd = "& '$coord' -Lane $lane -Action acquire -OwnerPid `$PID -TimeoutSec $timeout; Set-Content -Path '$rf' -Value `$LASTEXITCODE"
+    $cmd = "& '$coord' -Lane $lane -Action acquire -OwnerPid `$PID -TimeoutSec $timeout -MutationCheckMs $mutMs; Set-Content -Path '$rf' -Value `$LASTEXITCODE"
     return Start-Process powershell -PassThru -WindowStyle Hidden -RedirectStandardOutput $of `
         -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-Command',$cmd
 }
@@ -33,6 +36,11 @@ function ReadRC($proc,$out){
     for($i=0;$i -lt 20 -and -not (Test-Path $rf);$i++){ Start-Sleep -Milliseconds 100 }
     if(Test-Path $rf){ return [int]((Get-Content -Raw $rf).Trim()) } else { return $null }
 }
+function Acquire($lane,$mutMs=0){ & $coord -Lane $lane -Action acquire -OwnerPid $PID -MutationCheckMs $mutMs | Out-Null }
+# git de limpieza: que falle es esperable (rama/worktree inexistente). Con
+# $ErrorActionPreference='Stop' el stderr de un exe nativo aborta el script, asi
+# que lo tragamos explicitamente.
+function GitQuiet(){ $ErrorActionPreference='Continue'; & git @args 2>&1 | Out-Null; $global:LASTEXITCODE = 0 }
 function Release($lane,$res='OK'){ & $coord -Lane $lane -Action release -Result $res -OwnerPid $PID | Out-Null }
 
 Write-Host "== test 1: fingerprint estable ante bump semver =="
@@ -49,7 +57,7 @@ Ok ($fpA -eq $fpB) "solo cambia un triple semver -> mismo fingerprint (bump no i
 
 Write-Host "== test 2: OWNER exclusivo + REUSE (share) =="
 Clean
-& $coord -Lane build -Action acquire -OwnerPid $PID | Out-Null
+Acquire 'build'
 Ok (Test-Path (Join-Path $lock 'build.lock')) "lock creado por A"
 $b = StartAcquire 'build' '_b.txt' 60                # B: mismo fp -> debe esperar
 Start-Sleep -Seconds 3
@@ -75,7 +83,7 @@ Release 'build' 'OK'
 
 Write-Host "== test 4: lanes independientes (build vs tests) =="
 Clean
-& $coord -Lane build -Action acquire -OwnerPid $PID | Out-Null
+Acquire 'build'
 $t = StartAcquire 'tests' '_t.txt' 30                # otra lane -> NO debe bloquearse
 $trc = ReadRC $t '_t.txt'
 Ok ($trc -eq 0) "lane tests toma OWNER en paralelo a lane build; actual=$trc"
@@ -84,11 +92,94 @@ Release 'tests' 'OK'
 
 Write-Host "== test 5: release ajeno rechazado =="
 Clean
-& $coord -Lane build -Action acquire -OwnerPid $PID | Out-Null
+Acquire 'build'
 & $coord -Lane build -Action release -Result OK -OwnerPid 999999 | Out-Null
 Ok ($LASTEXITCODE -eq 1) "otro PID no puede liberar el lock"
 Ok (Test-Path (Join-Path $lock 'build.lock')) "lock sigue presente tras release ajeno"
 Release 'build' 'OK'
+
+Write-Host "== test 6: release DIRTY si la fuente cambia durante el build =="
+Clean
+$probe = Join-Path $root 'tests\_dirty_probe.tmp'
+Remove-Item $probe -Force -ErrorAction SilentlyContinue
+Acquire 'build'                                      # A toma el lock con fp1
+$fp1 = (& $coord -Lane build -Action fingerprint).Trim()
+# Otra sesion edita el tree mientras A "compila" (cambio no-semver -> fp distinto).
+'contenido nuevo de otra sesion' | Set-Content $probe -Encoding ASCII
+& $coord -Lane build -Action release -Result OK -OwnerPid $PID | Out-Null
+Ok ($LASTEXITCODE -eq 12) "release avisa DIRTY (exit 12) cuando la fuente cambio; actual=$LASTEXITCODE"
+$rp = Join-Path $lock ("results\build.{0}.txt" -f $fp1)
+$pub = if(Test-Path $rp){ (Get-Content -Raw $rp).Trim() } else { '<sin archivo>' }
+Ok ($pub -like 'DIRTY|*') "publica DIRTY, no OK -> nadie lo adopta por REUSE (actual='$pub')"
+Remove-Item $probe -Force -ErrorAction SilentlyContinue
+
+Write-Host "== test 7: un sharer NO adopta un resultado DIRTY =="
+Clean
+Remove-Item $probe -Force -ErrorAction SilentlyContinue
+Acquire 'build'                                      # A: OWNER con fp1
+$d = StartAcquire 'build' '_d.txt' 60                # B: mismo fp -> espera a A
+Start-Sleep -Seconds 3
+Ok (-not $d.HasExited) "B espera el resultado de A"
+'otra sesion escribiendo' | Set-Content $probe -Encoding ASCII   # el tree se mueve
+& $coord -Lane build -Action release -Result OK -OwnerPid $PID | Out-Null  # -> DIRTY
+$drc  = ReadRC $d '_d.txt'
+$dout = Get-Content -Raw (Join-Path $lock '_d.txt')
+Ok ($drc -eq 0) "B NO reusa (no exit 10): toma OWNER y compila lo suyo; actual=$drc"
+Ok ($dout -match 'DIRTY') "B loguea por que descarto el build compartido"
+Release 'build' 'OK'
+Remove-Item $probe -Force -ErrorAction SilentlyContinue
+
+Write-Host "== test 8: acquire detecta la fuente mutando bajo sus pies =="
+Clean
+Remove-Item $probe -Force -ErrorAction SilentlyContinue
+# acquire con ventana de mutacion de 4s; escribo el tree dentro de esa ventana.
+$e = StartAcquire 'build' '_e.txt' 30 4000
+Start-Sleep -Milliseconds 1500
+'otra sesion escribiendo durante el acquire' | Set-Content $probe -Encoding ASCII
+$erc  = ReadRC $e '_e.txt'
+$eout = Get-Content -Raw (Join-Path $lock '_e.txt')
+Ok ($erc -eq 0) "sigue siendo OWNER (avisa, no aborta el build); actual=$erc"
+Ok ($eout -match 'ADVERTENCIA: la fuente esta cambiando') "avisa ANTES de compilar"
+Remove-Item $probe -Force -ErrorAction SilentlyContinue
+
+Write-Host "== test 9: worktree.ps1 (aislamiento por sesion) =="
+$wt   = Join-Path $root 'worktree.ps1'
+$name = 'zz-coord-selftest'
+$wtPath = Join-Path (Split-Path -Parent $root) "LlamaCode-$name"
+# Limpieza defensiva por si una corrida anterior murio a la mitad.
+if (Test-Path $wtPath) { GitQuiet -C $root worktree remove --force $wtPath }
+GitQuiet -C $root branch -D "session/$name"
+
+& $wt -Action new -Name 'Nombre Invalido' 2>&1 | Out-Null
+Ok ($LASTEXITCODE -eq 1) "rechaza -Name invalido (no kebab-case)"
+
+$newOut = (& $wt -Action new -Name $name 2>&1) -join "`n"
+Ok ($LASTEXITCODE -eq 0) "crea el worktree; actual=$LASTEXITCODE"
+Ok (Test-Path $wtPath) "el directorio del worktree existe"
+$listOut = (& $wt -Action list 2>&1) -join "`n"
+Ok ($listOut -match [regex]::Escape("LlamaCode-$name")) "aparece en -Action list"
+
+# El lock del worktree nuevo es propio: no colisiona con el del tree principal.
+# OJO: el worktree se crea desde HEAD, asi que su build_coord.ps1 es el COMMITEADO
+# (puede no tener flags que todavia estan sin commitear). No le pases parametros
+# nuevos aca: lo que se prueba es el aislamiento del lock, que no depende de eso.
+Acquire 'build'
+$wtLock = Join-Path $wtPath '.buildlock\build.lock'
+& (Join-Path $wtPath 'build_coord.ps1') -Lane build -Action acquire -OwnerPid $PID | Out-Null
+Ok ($LASTEXITCODE -eq 0) "el worktree toma OWNER en paralelo al tree principal; actual=$LASTEXITCODE"
+Ok (Test-Path $wtLock) "usa su propio .buildlock (aislado, no el del tree principal)"
+& (Join-Path $wtPath 'build_coord.ps1') -Lane build -Action release -Result OK -OwnerPid $PID | Out-Null
+Release 'build' 'OK'
+
+# remove sin -Force debe frenar si hay trabajo sin commitear.
+'trabajo sin commitear' | Set-Content (Join-Path $wtPath 'tests\_wt_probe.tmp') -Encoding ASCII
+& $wt -Action remove -Name $name 2>&1 | Out-Null
+Ok ($LASTEXITCODE -eq 1) "remove sin -Force frena si hay cambios sin commitear"
+Ok (Test-Path $wtPath) "y no borra nada"
+& $wt -Action remove -Name $name -Force 2>&1 | Out-Null
+Ok ($LASTEXITCODE -eq 0) "remove -Force limpia; actual=$LASTEXITCODE"
+Ok (-not (Test-Path $wtPath)) "el directorio del worktree ya no existe"
+GitQuiet -C $root branch -D "session/$name"
 
 Clean
 Write-Host ""

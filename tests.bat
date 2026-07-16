@@ -65,8 +65,23 @@ echo === All tests passed ===
 goto :done_ok
 
 :done_ok
-if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action release -Result OK -OwnerPid %COORD_OWNER_PID%
+if "%HELD_LOCK%"=="1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action release -Result OK -OwnerPid %COORD_OWNER_PID%
+    if errorlevel 12 call :warn_dirty
+)
 exit /b 0
 :done_fail
-if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action release -Result FAIL -OwnerPid %COORD_OWNER_PID%
+if "%HELD_LOCK%"=="1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane tests -Action release -Result FAIL -OwnerPid %COORD_OWNER_PID%
+    if errorlevel 12 call :warn_dirty
+)
 exit /b 1
+
+REM La fuente cambio mientras corrian los tests: otra sesion edito el working tree.
+:warn_dirty
+echo.
+echo [WARN] La fuente cambio DURANTE la corrida ^(otra sesion edito el tree^).
+echo [WARN] El gate NO es confiable: los tests no corrieron sobre la fuente que
+echo [WARN] estas por commitear. Volve a correr tests.bat con el tree quieto, o
+echo [WARN] aislate: powershell -File worktree.ps1 -Action new -Name ^<tarea^>
+exit /b 0

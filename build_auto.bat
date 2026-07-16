@@ -114,11 +114,26 @@ goto :done_ok
 
 REM ── Liberacion del lock coordinado ───────────────────────────────────────────
 :done_ok
-if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action release -Result OK -OwnerPid %COORD_OWNER_PID%
+if "%HELD_LOCK%"=="1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action release -Result OK -OwnerPid %COORD_OWNER_PID%
+    if errorlevel 12 call :warn_dirty
+)
 exit /b 0
 :done_fail
-if "%HELD_LOCK%"=="1" powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action release -Result FAIL -OwnerPid %COORD_OWNER_PID%
+if "%HELD_LOCK%"=="1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0build_coord.ps1" -Lane build -Action release -Result FAIL -OwnerPid %COORD_OWNER_PID%
+    if errorlevel 12 call :warn_dirty
+)
 exit /b 1
+
+REM La fuente cambio mientras compilabamos: otra sesion edito el working tree.
+:warn_dirty
+echo.
+echo [WARN] La fuente cambio DURANTE el build ^(otra sesion edito el tree^).
+echo [WARN] El binario no corresponde a la fuente con la que arranco el build,
+echo [WARN] y un error de compilacion puede ser de la otra sesion, no tuyo.
+echo [WARN] Para aislarte: powershell -File worktree.ps1 -Action new -Name ^<tarea^>
+exit /b 0
 
 REM ── Build + deploy one config ────────────────────────────────────────────────
 :build_one
