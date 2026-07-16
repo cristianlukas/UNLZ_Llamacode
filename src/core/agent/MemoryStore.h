@@ -12,7 +12,8 @@
 //   - "session"  : contexto de la sesión actual (volátil semánticamente).
 //   - "project"  : reglas, arquitectura, decisiones, paths, bugs del repo.
 //   - "personal" : preferencias/estilo del usuario (transversal a proyectos).
-// type: preference | decision | fact | bug | other.
+// type: preference | decision | fact | bug | skill | other. `skill` representa
+// un procedimiento reutilizable aprendido tras resolver una dificultad real.
 namespace MemoryStore {
 
 // Ruta del JSONL estructurado para un cwd dado.

@@ -59,10 +59,12 @@ void AgentWireTests::failureSpiralDetectsEquivalentErrorsAndResetsOnProgress()
     QCOMPARE(LlamaAgentBackend::failureFingerprint(QStringLiteral("run_shell"), e1),
              LlamaAgentBackend::failureFingerprint(QStringLiteral("run_shell"), e2));
     QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e1));
+    QVERIFY(!be.recoveryLearningEligibleForTest());
     QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e2));
     QVERIFY(be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e1));
     QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), true, false,
                                          QStringLiteral("build ok")));
+    QVERIFY(be.recoveryLearningEligibleForTest());
     QVERIFY(!be.recordToolOutcomeForTest(QStringLiteral("run_shell"), false, false, e1));
 }
 

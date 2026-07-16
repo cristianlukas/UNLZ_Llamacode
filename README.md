@@ -227,6 +227,13 @@ veces consecutivas, conserva una copia, detiene esa generación y registra
 `stream_repetition`. Esto cubre loops de razonamiento/respuesta que ocurren antes
 de que el modelo llegue a solicitar una herramienta.
 
+Cuando un turno encuentra fallos de herramientas, cambia de estrategia y finalmente
+progresa con éxito, el agente ejecuta una reflexión breve en segundo plano y conserva
+la técnica generalizable como memoria de tipo `skill`. La habilidad incluye el
+síntoma o precondición, la estrategia útil y su verificación; evita guardar intentos
+fallidos como receta, secretos, rutas absolutas o detalles efímeros. Estas habilidades
+quedan en la memoria estructurada del proyecto y se recuperan en sesiones futuras.
+
 Las integraciones MCP usan descubrimiento lazy: el catálogo completo permanece en
 el worker y el modelo recibe sólo `mcp_search_tools` y `mcp_call_tool`. La búsqueda
 devuelve bajo demanda los schemas relevantes, evitando reenviar todas las

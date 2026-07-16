@@ -663,7 +663,7 @@ void LlamaAgentBackend::startCompaction(int head, int keepFrom)
     });
 }
 
-void LlamaAgentBackend::consolidateMemory()
+void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
 {
     // Consolidación de background: extrae hechos DURABLES del transcript actual y
     // los guarda en la memoria estructurada (source="consolidation"). Captura por la
@@ -684,17 +684,26 @@ void LlamaAgentBackend::consolidateMemory()
         convo += serializeMsgForSummary(m_apiMessages[i].toObject());
     if (convo.trimmed().isEmpty()) return;
 
-    const QString sys = QStringLiteral(
+    QString sys = QStringLiteral(
         "Sos un consolidador de memoria de un agente de coding. Leé la conversación y "
         "extraé SOLO hechos DURABLES que sirvan en futuras sesiones de ESTE proyecto: "
         "preferencias del usuario, decisiones de diseño tomadas, convenciones, datos no "
         "obvios del repo, bugs conocidos. NO incluyas pasos efímeros, charla, ni cosas "
         "deducibles leyendo el código. Respondé SOLO con un array JSON; cada item: "
         "{\"content\":string, \"scope\":\"project\"|\"personal\", "
-        "\"type\":\"preference\"|\"decision\"|\"fact\"|\"bug\", \"confidence\":0..1, "
+        "\"type\":\"preference\"|\"decision\"|\"fact\"|\"bug\"|\"skill\", \"confidence\":0..1, "
         "\"importance\":0..1, \"surprise\":0..1, "
         "\"verification\":\"user\"|\"test\"|\"tool\"|\"inferred\"}. "
         "Si no hay nada durable, respondé []. Máximo 10 items, cada content una sola frase.");
+    if (recoveredSkill) {
+        sys += QStringLiteral(
+            " Este turno tuvo fallos de herramientas y luego progreso exitoso antes de "
+            "terminar. Extraé como máximo 3 items type=\"skill\" que expliquen la habilidad "
+            "reutilizable aprendida: precondición o síntoma, estrategia que finalmente "
+            "funcionó y cómo verificarla. Generalizá sólo cuando la evidencia lo permita; "
+            "no copies intentos fallidos como receta, rutas absolutas, secretos ni datos "
+            "efímeros. Para estos items usá verification=\"tool\".");
+    }
 
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId},
@@ -746,7 +755,9 @@ void LlamaAgentBackend::consolidateMemory()
                               f.value(QStringLiteral("scope")).toString(QStringLiteral("project")),
                               f.value(QStringLiteral("type")).toString(QStringLiteral("fact")),
                               f.value(QStringLiteral("confidence")).toDouble(0.6),
-                              QStringLiteral("consolidation"),
+                              f.value(QStringLiteral("type")).toString() == QLatin1String("skill")
+                                  ? QStringLiteral("recovery_learning")
+                                  : QStringLiteral("consolidation"),
                               f.value(QStringLiteral("importance")).toDouble(0.0),
                               f.value(QStringLiteral("surprise")).toDouble(0.0),
                               f.value(QStringLiteral("verification")).toString(QStringLiteral("inferred")));
@@ -1407,6 +1418,8 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     m_turnIters = 0;
     m_emptyTextRetries = 0;
     m_callCounts.clear();
+    m_turnHadDifficulty = false;
+    m_turnRecovered = false;
     m_escalatedSigs.clear();
     if (!m_taskAutoApprove)
         m_desktopLaunchApps.clear();
@@ -2974,6 +2987,8 @@ QString LlamaAgentBackend::failureFingerprint(const QString &tool, const QString
 bool LlamaAgentBackend::recordToolOutcome(const QString &tool, bool ok, bool isWrite,
                                           const QString &result)
 {
+    if (!ok) m_turnHadDifficulty = true;
+    else if (m_turnHadDifficulty) m_turnRecovered = true;
     if (ok || isWrite) {
         m_failureFingerprint.clear();
         m_equivalentFailures = 0;
@@ -3643,6 +3658,12 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
                              .arg(qRound(100.0 * m_toolOk / total)));
 
     saveCurrentSession();   // persistir al cerrar el turno
+
+    // Aprendizaje por recuperación, inspirado en el patrón de skills de Hermes:
+    // sólo reflexiona cuando hubo dificultad real + progreso posterior + cierre
+    // del turno. La consolidación es async y no demora la respuesta al usuario.
+    if (m_turnHadDifficulty && m_turnRecovered)
+        consolidateMemory(true);
 
     emit turnFinished();
 

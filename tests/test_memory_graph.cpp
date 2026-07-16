@@ -26,6 +26,7 @@ private slots:
     void memory_pruneDryRun();
     void memory_metadataAffectsRanking();
     void memory_newFieldsArePersisted();
+    void memory_skillTypeIsPersistedAndRecalled();
     void memory_supersedesHidesOldFact();
 
     void graph_addEntityAndQuery();
@@ -157,6 +158,22 @@ void MemoryGraphTests::memory_newFieldsArePersisted()
     QCOMPARE(o.value("surprise").toDouble(), 0.9);
     QCOMPARE(o.value("verification").toString(), QString("user"));
     QCOMPARE(o.value("supersedes").toString(), QString("old-id"));
+}
+
+void MemoryGraphTests::memory_skillTypeIsPersistedAndRecalled()
+{
+    QTemporaryDir dir;
+    MemoryStore::save(dir.path(),
+                      "si UI Automation no expone el control, usar OCR y verificar después",
+                      "project", "skill", 0.9, "recovery_learning",
+                      0.9, 0.8, "tool");
+    QFile f(MemoryStore::jsonlPath(dir.path()));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QJsonObject row = QJsonDocument::fromJson(f.readLine()).object();
+    QCOMPARE(row.value("type").toString(), QString("skill"));
+    QCOMPARE(row.value("source").toString(), QString("recovery_learning"));
+    QVERIFY(MemoryStore::recall(dir.path(), "OCR control", "project", 5)
+                .contains(QStringLiteral("[project/skill")));
 }
 
 void MemoryGraphTests::memory_supersedesHidesOldFact()

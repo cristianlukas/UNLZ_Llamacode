@@ -208,6 +208,9 @@ public:
                                   const QString &result) {
         return recordToolOutcome(tool, ok, isWrite, result);
     }
+    bool recoveryLearningEligibleForTest() const {
+        return m_turnHadDifficulty && m_turnRecovered;
+    }
     QJsonObject buildTextToolPayloadForTest(const QJsonObject &nativePayload) const {
         return buildTextToolPayload(nativePayload);
     }
@@ -304,7 +307,7 @@ public:
     // Consolidación de memoria (background): corre 1 completion sobre el transcript
     // actual y extrae hechos durables → MemoryStore (source="consolidation"). Async,
     // fire-and-forget. Se dispara solo al dejar una sesión y puede invocarse manual.
-    void consolidateMemory();
+    void consolidateMemory(bool recoveredSkill = false);
 
     QString currentSessionId() const override { return m_sessionId; }
     QString currentSessionTitle() const override { return m_sessionTitle; }
@@ -515,6 +518,8 @@ private:
     QHash<QString, int> m_callCounts;    // firma de tool_call → veces vista (anti-loop)
     QString m_failureFingerprint;        // error normalizado de la racha actual
     int m_equivalentFailures = 0;        // fallos consecutivos equivalentes
+    bool m_turnHadDifficulty = false;    // hubo al menos una tool fallida en este turno
+    bool m_turnRecovered = false;        // luego hubo progreso exitoso comprobable
     int m_toolOk = 0;                    // salud: tools exitosas en la sesión
     int m_toolFail = 0;                  // salud: tools con error/inválidas
     int m_ctxLimit = -1;                 // n_ctx del server (vía /props)

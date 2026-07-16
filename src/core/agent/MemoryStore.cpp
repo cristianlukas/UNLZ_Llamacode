@@ -28,6 +28,7 @@ QString normType(const QString &t)
     const QString v = t.trimmed().toLower();
     static const QSet<QString> ok{QStringLiteral("preference"), QStringLiteral("decision"),
                                   QStringLiteral("fact"), QStringLiteral("bug"),
+                                  QStringLiteral("skill"),
                                   QStringLiteral("other")};
     return ok.contains(v) ? v : QStringLiteral("fact");
 }
@@ -269,6 +270,7 @@ namespace {
 double typeWeight(const QString &t)
 {
     if (t == QLatin1String("decision") || t == QLatin1String("preference")) return 1.0;
+    if (t == QLatin1String("skill")) return 0.95;
     if (t == QLatin1String("bug")) return 0.9;
     if (t == QLatin1String("fact")) return 0.7;
     return 0.5;   // other
@@ -289,7 +291,8 @@ double factValue(const QJsonObject &o)
     }
     const QString type = o.value(QStringLiteral("type")).toString();
     const QString verification = o.value(QStringLiteral("verification")).toString();
-    if ((type == QLatin1String("preference") || type == QLatin1String("decision"))
+    if ((type == QLatin1String("preference") || type == QLatin1String("decision")
+         || type == QLatin1String("skill"))
         && (verification == QLatin1String("user") || verification == QLatin1String("test")
             || verification == QLatin1String("tool")))
         rec = qMax(rec, 0.85);
