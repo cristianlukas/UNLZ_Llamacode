@@ -176,6 +176,10 @@ void AgentWireTests::parsesTextToolCallFallback()
     const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
     QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("web_fetch"));
 
+    // `arguments` viaja como string JSON (spec OpenAI), NO como objeto: los
+    // perfiles cloud lo exigen así, y para los locales llama.cpp lo deserializa
+    // solo antes de renderizar el chat-template de Gemma4 (func_args_not_string).
+    QVERIFY(fn.value(QStringLiteral("arguments")).isString());
     const QJsonObject args = QJsonDocument::fromJson(
         fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
     QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
