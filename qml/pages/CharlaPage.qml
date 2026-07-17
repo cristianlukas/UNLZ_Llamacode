@@ -605,6 +605,69 @@ Item {
                         }
                     }
 
+                    Text { text: "Cursor por voz (accesibilidad)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
+                    ColumnLayout {
+                        id: cursorOcrSection
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        spacing: 8
+
+                        // Estado del OCR de Windows. Se consulta al abrir la página y
+                        // al togglear (no es binding: levantar el motor cuesta).
+                        property var ocr: ({ available: false, detail: "" })
+                        function refreshOcr() { ocr = App.ocrStatus() }
+                        Component.onCompleted: refreshOcr()
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            Text { text: "Mover el cursor por voz"; color: Theme.textSecondary }
+                            Item { Layout.fillWidth: true }
+                            Switch {
+                                // Default OFF: activarlo hace que Charla capture la
+                                // pantalla para leerla. Es decisión del usuario.
+                                checked: page.cfg.cursorOcr === true
+                                onToggled: {
+                                    page.cfg.cursorOcr = checked
+                                    page.save()
+                                    // Re-chequear al prender: si falta el paquete de
+                                    // idioma hay que decirlo ACÁ, no cuando el usuario
+                                    // hable y no pase nada.
+                                    if (checked) cursorOcrSection.refreshOcr()
+                                }
+                            }
+                        }
+                        // Sin OCR el toggle no hace nada: avisarlo con la instrucción
+                        // para resolverlo. El mensaje se re-chequea solo (el motor
+                        // reintenta), así que instalar el paquete y volver acá alcanza.
+                        Text {
+                            Layout.fillWidth: true
+                            visible: page.cfg.cursorOcr === true
+                            wrapMode: Text.WordWrap
+                            font.pixelSize: 12
+                            color: cursorOcrSection.ocr.available ? Theme.textSecondary : Theme.errorText
+                            text: cursorOcrSection.ocr.detail || ""
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            text: "Decí \"clic en Guardar\", \"doble clic en Documentos\", \"clic derecho en " +
+                                  "Escritorio\" o \"mové el cursor a Aceptar\" y el cursor va al texto que se ve " +
+                                  "en pantalla. Sólo actúa si la frase EMPIEZA con la orden; el resto sigue " +
+                                  "siendo conversación normal."
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            text: "Con esto activo, cada orden captura la pantalla y la lee con el OCR de " +
+                                  "Windows. La captura se procesa en memoria y se descarta: no se guarda ni " +
+                                  "se envía a ningún lado."
+                        }
+                    }
+
                     Item { height: 16; width: 1 }
                 }
             }

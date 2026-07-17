@@ -5,6 +5,7 @@
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
 #include "core/ToolCallingSupport.h"
+#include "core/automation/FuzzyMatch.h"
 
 #include <QJsonArray>
 
@@ -3331,6 +3332,8 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("desktop_controls")) return {QStringLiteral("target_id")};
     if (name == QLatin1String("desktop_click_element"))
         return {QStringLiteral("target_id"), QStringLiteral("control_id")};
+    if (name == QLatin1String("desktop_click_text"))
+        return {QStringLiteral("target_id"), QStringLiteral("text")};
     if (name == QLatin1String("desktop_type")) return {QStringLiteral("text")};
     if (name == QLatin1String("desktop_key")) return {QStringLiteral("key")};
     return {};   // list_dir, memory, browser_skill_list: args opcionales
@@ -3724,28 +3727,10 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
     }
 
     // ── Desktop click sobre control destructivo ───────────────────────────
-    // desktop_click_element recibe un control_id opaco (no un label). Resolvemos
-    // el nombre del control desde la salida cacheada del último desktop_controls,
-    // que lista una línea por control: 'controlId=<id> [role]...  "<name>"'.
-    // desktop_click (coords x/y a ciegas) no expone label → no clasificable acá.
-    if (bare == QLatin1String("desktop_click_element")) {
-        const QString cid = args.value(QStringLiteral("control_id")).toString();
-        QString label = args.value(QStringLiteral("name")).toString();
-        if (label.isEmpty() && !cid.isEmpty() && !desktopControlsText.isEmpty()) {
-            const auto lines = desktopControlsText.split(QLatin1Char('\n'));
-            for (const QString &ln : lines) {
-                if (!ln.startsWith(QLatin1String("controlId=")) ) continue;
-                // Match exacto del id hasta el primer espacio.
-                const QString idPart = ln.mid(10).section(QLatin1Char(' '), 0, 0);
-                if (idPart != cid) continue;
-                // El nombre es el último tramo entrecomillado de la línea.
-                const int q1 = ln.indexOf(QLatin1Char('"'));
-                const int q2 = ln.lastIndexOf(QLatin1Char('"'));
-                if (q1 >= 0 && q2 > q1) label = ln.mid(q1 + 1, q2 - q1 - 1);
-                break;
-            }
-        }
-        const QString s = label.toLower();
+    // Marcadores compartidos por los dos caminos que llegan a un click con label
+    // (UIA y OCR): el mismo botón tiene que gatear igual sin importar por dónde se
+    // lo alcanzó.
+    auto desktopLabelIsDestructive = [](const QString &s) {
         if (s.isEmpty()) return false;
         static const QStringList markers{
             QStringLiteral("delete"), QStringLiteral("eliminar"), QStringLiteral("borrar"),
@@ -3756,7 +3741,54 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
         for (const QString &m : markers)
             if (s.contains(m)) return true;
         return false;
+    };
+
+    // desktop_click_element recibe un control_id normalmente opaco (un RuntimeId).
+    // Resolvemos el nombre del control desde la salida cacheada del último
+    // desktop_controls, que lista una línea por control:
+    // 'controlId=<id> [role]...  "<name>"'.
+    // desktop_click (coords x/y a ciegas) no expone label → no clasificable acá.
+    if (bare == QLatin1String("desktop_click_element")) {
+        const QString cid = args.value(QStringLiteral("control_id")).toString();
+        QString label = args.value(QStringLiteral("name")).toString();
+        // Candidatos a clasificar. Se evalúan TODOS y alcanza con que uno sea
+        // destructivo: ante ambigüedad conviene pedir aprobación de más, no de menos.
+        QStringList labels;
+        QStringList cachedNames;
+        if (!cid.isEmpty() && !desktopControlsText.isEmpty()) {
+            const auto lines = desktopControlsText.split(QLatin1Char('\n'));
+            for (const QString &ln : lines) {
+                if (!ln.startsWith(QLatin1String("controlId=")) ) continue;
+                // El nombre es el último tramo entrecomillado de la línea.
+                const int q1 = ln.indexOf(QLatin1Char('"'));
+                const int q2 = ln.lastIndexOf(QLatin1Char('"'));
+                const QString nm = (q1 >= 0 && q2 > q1) ? ln.mid(q1 + 1, q2 - q1 - 1) : QString();
+                cachedNames << nm;
+                // Match exacto del id hasta el primer espacio.
+                if (ln.mid(10).section(QLatin1Char(' '), 0, 0) == cid && label.isEmpty())
+                    label = nm;
+            }
+        }
+        if (!label.isEmpty()) labels << label;
+        // clickElement acepta un NOMBRE cuando el id no existe (resuelve por
+        // matching difuso). Entonces el propio control_id puede ser el label, y el
+        // control al que va a parar es el que ese matching elija: clasificar ambos,
+        // o el gate se saltearía justo cuando el modelo escribe "Eliminar todo".
+        if (label.isEmpty() && !cid.isEmpty()) {
+            labels << cid;
+            const FuzzyMatch::Match m = FuzzyMatch::extractOne(cid, cachedNames);
+            if (m.ok()) labels << cachedNames.at(m.index);
+        }
+        const QString s = labels.join(QLatin1Char(' ')).toLower();
+        if (s.isEmpty()) return false;
+        return desktopLabelIsDestructive(s);
     }
+
+    // desktop_click_text clickea un texto leído por OCR: el propio `text` ES el
+    // label, así que se clasifica igual. Sin esto, el mismo botón "Eliminar" que
+    // gatea vía UIA pasaría libre sólo por haberse llegado por OCR.
+    if (bare == QLatin1String("desktop_click_text"))
+        return desktopLabelIsDestructive(args.value(QStringLiteral("text")).toString().toLower());
 
     // ── Memory / DB delete ────────────────────────────────────────────────
     if (bare == QLatin1String("memory")) {
@@ -4120,8 +4152,22 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "del control. Pasá el mismo target_id de la ventana."),
            QJsonObject{
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana."))},
-               {QStringLiteral("control_id"), strProp(QStringLiteral("controlId devuelto por desktop_controls."))}},
+               {QStringLiteral("control_id"), strProp(QStringLiteral(
+                    "controlId devuelto por desktop_controls. Si no lo tenés a mano podés "
+                    "pasar el nombre visible del control y se resuelve por parecido, pero "
+                    "el controlId es exacto: preferilo siempre."))}},
            QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id")}),
+        fn(QStringLiteral("desktop_click_text"),
+           QStringLiteral("ÚLTIMO RECURSO: clickea un texto LEÍDO de la pantalla por OCR. "
+                          "Usalo SÓLO si desktop_controls no devuelve el control (apps que "
+                          "no exponen su árbol: canvas, juegos, algunas Electron). Es a "
+                          "ciegas: no sabe si lo que lee es un botón. Si desktop_controls "
+                          "lista el control, usá desktop_click_element — es exacto."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la pantalla o ventana."))},
+               {QStringLiteral("text"), strProp(QStringLiteral("Texto visible a clickear."))}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("text")}),
         fn(QStringLiteral("desktop_observe"),
            QStringLiteral("Captura el alcance de escritorio enseñado. Usala antes y después "
                           "de cada acción; devuelve la ruta de la observación actual."),

@@ -1074,10 +1074,40 @@ void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
     // el gate del loop igual pasa m_lastDesktopResult real).
     QVERIFY(!B::isDestructiveAction("desktop_click_element",
                                     QJsonObject{{QStringLiteral("control_id"), QStringLiteral("42-7")}}));
-    // Id que no matchea ninguna línea → no gatea.
+    // Id que no matchea ninguna línea ni ningún nombre → no gatea.
     QVERIFY(!B::isDestructiveAction("desktop_click_element",
                                     QJsonObject{{QStringLiteral("control_id"), QStringLiteral("99-9")}},
                                     controls));
+
+    // ── control_id que en realidad es un NOMBRE ───────────────────────────
+    // clickElement resuelve por parecido cuando el id no existe, así que un
+    // control_id="Eliminar" SÍ termina clickeando el botón destructivo. El gate
+    // tiene que verlo: si sólo mirara el id exacto, el label quedaría vacío y la
+    // acción pasaría como benigna sin aprobación humana.
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("control_id"), QStringLiteral("Eliminar")}},
+                                   controls));
+    // Con las variantes que el modelo suele escribir (acelerador, elipsis, tildes).
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("control_id"), QStringLiteral("&Eliminar...")}},
+                                   controls));
+    // Aun sin cache de controles: el propio nombre alcanza para clasificarlo.
+    QVERIFY(B::isDestructiveAction("desktop_click_element",
+                                   QJsonObject{{QStringLiteral("control_id"), QStringLiteral("Eliminar todo")}}));
+    // Nombre benigno sigue sin gatear (el fix no vuelve todo destructivo).
+    QVERIFY(!B::isDestructiveAction("desktop_click_element",
+                                    QJsonObject{{QStringLiteral("control_id"), QStringLiteral("Guardar")}},
+                                    controls));
+
+    // ── desktop_click_text (OCR) gatea igual que el path UIA ──────────────
+    // El texto pedido ES el label. Llegar al botón por OCR en vez de por UIA no
+    // puede ser una forma de saltear la aprobación humana.
+    QVERIFY(B::isDestructiveAction("desktop_click_text",
+                                   QJsonObject{{QStringLiteral("text"), QStringLiteral("Eliminar")}}));
+    QVERIFY(B::isDestructiveAction("desktop_click_text",
+                                   QJsonObject{{QStringLiteral("text"), QStringLiteral("Vaciar papelera")}}));
+    QVERIFY(!B::isDestructiveAction("desktop_click_text",
+                                    QJsonObject{{QStringLiteral("text"), QStringLiteral("Guardar")}}));
 
     // ── Memory / graph delete → true; lectura → false ─────────────────────
     QVERIFY(B::isDestructiveAction("memory", QJsonObject{{QStringLiteral("action"), QStringLiteral("forget")}}));

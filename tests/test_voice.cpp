@@ -13,6 +13,7 @@
 #include "core/voice/VadEngine.h"
 #include "core/voice/TurnDetector.h"
 #include "core/voice/CharlaTuning.h"
+#include "core/voice/VoiceCursorCommand.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/voice/VoiceServerManager.h"
 
@@ -23,6 +24,8 @@ class TestVoice : public QObject
     Q_OBJECT
 private slots:
     void configRoundTrip();
+    void cursorCommandParsesOrders();
+    void cursorCommandIgnoresConversation();
     void wavHeaderAndExtract();
     void wavPcm16FormatParse();
     void rmsLevels();
@@ -85,6 +88,69 @@ void TestVoice::voiceAgentCapabilityPolicy()
     QCOMPARE(moe.value("activeParamsB").toDouble(), 3.0);
 }
 
+void TestVoice::cursorCommandParsesOrders()
+{
+    using namespace VoiceCursorCommand;
+    auto p = [](const char *s) { return parse(QString::fromUtf8(s)); };
+
+    QCOMPARE(p("clic en Guardar").kind, Kind::Click);
+    QCOMPARE(p("clic en Guardar").target, QStringLiteral("Guardar"));
+    // El STT no pone tildes de forma confiable y dice "click" tanto como "clic".
+    QCOMPARE(p("click en Guardar").kind, Kind::Click);
+    QCOMPARE(p("clíc en Guardar").kind, Kind::Click);
+    QCOMPARE(p("hacer clic en Guardar").kind, Kind::Click);
+    QCOMPARE(p("apretar en Aceptar").kind, Kind::Click);
+
+    // Los específicos ganan sobre el genérico "clic".
+    QCOMPARE(p("doble clic en Documentos").kind, Kind::DoubleClick);
+    QCOMPARE(p("doble clic en Documentos").target, QStringLiteral("Documentos"));
+    QCOMPARE(p("clic derecho en Escritorio").kind, Kind::RightClick);
+    QCOMPARE(p("clic derecho en Escritorio").target, QStringLiteral("Escritorio"));
+
+    QCOMPARE(p("mover a Guardar").kind, Kind::Move);
+    QCOMPARE(p("mové el cursor a Guardar").kind, Kind::Move);
+    QCOMPARE(p("mové el cursor a Guardar").target, QStringLiteral("Guardar"));
+    // Voseo con tilde: la clase tiene que sustituir la vocal ("mov[ée]"), no
+    // sumarse a ella. Es un error de dedo fácil que deja la orden muda.
+    QCOMPARE(p("move a Guardar").kind, Kind::Move);
+    QCOMPARE(p("llevá el cursor a Aceptar").kind, Kind::Move);
+    QCOMPARE(p("llevá el cursor a Aceptar").target, QStringLiteral("Aceptar"));
+    QCOMPARE(p("andá a Cancelar").kind, Kind::Move);
+    QCOMPARE(p("cursor a Guardar").kind, Kind::Move);
+
+    // El artículo + sustantivo de UI se descartan: en pantalla dice "Guardar".
+    QCOMPARE(p("clic en el botón Guardar").target, QStringLiteral("Guardar"));
+    QCOMPARE(p("clic en la pestaña Inicio").target, QStringLiteral("Inicio"));
+    // Puntuación de cierre del STT.
+    QCOMPARE(p("clic en Guardar.").target, QStringLiteral("Guardar"));
+    // Destino multi-palabra se preserva entero.
+    QCOMPARE(p("clic en Guardar como").target, QStringLiteral("Guardar como"));
+}
+
+void TestVoice::cursorCommandIgnoresConversation()
+{
+    using namespace VoiceCursorCommand;
+    auto p = [](const char *s) { return parse(QString::fromUtf8(s)); };
+
+    // LO MÁS IMPORTANTE de este parser: Charla es una CONVERSACIÓN. Mencionar un
+    // clic al pasar no puede secuestrar el turno y mover el mouse — tiene que ir
+    // al LLM como cualquier otra frase.
+    QCOMPARE(p("no sé si hacer clic en Guardar, ¿vos qué opinás?").kind, Kind::None);
+    QCOMPARE(p("¿tendría que hacer clic en Guardar?").kind, Kind::None);
+    QCOMPARE(p("me explicás qué pasa si hago clic en Guardar").kind, Kind::None);
+    QCOMPARE(p("ayer hice clic en Guardar y se colgó").kind, Kind::None);
+
+    // Charla normal, sin verbo de cursor.
+    QCOMPARE(p("hola, ¿cómo andás?").kind, Kind::None);
+    QCOMPARE(p("guardá el archivo").kind, Kind::None);
+    QCOMPARE(p("").kind, Kind::None);
+
+    // Verbo de cursor sin destino: no alcanza para actuar.
+    QCOMPARE(p("clic en").kind, Kind::None);
+    QCOMPARE(p("clic en el botón").kind, Kind::None);
+    QVERIFY(!p("mover a").ok());
+}
+
 void TestVoice::configRoundTrip()
 {
     VoiceConfig c;
@@ -99,8 +165,14 @@ void TestVoice::configRoundTrip()
     c.ttsFormat = "mp3";
     c.vadSilenceMs = 1200;
     c.bargeIn = false;
+    c.cursorOcr = true;
 
     const VoiceConfig r = VoiceConfig::fromJson(c.toJson());
+    QCOMPARE(r.cursorOcr, true);
+    // Default OFF, y un JSON sin la clave NO lo enciende: actualizar la app no
+    // puede estrenar la captura de pantalla sin que el usuario la pida.
+    QCOMPARE(VoiceConfig().cursorOcr, false);
+    QCOMPARE(VoiceConfig::fromJson(QJsonObject{{"enabled", true}}).cursorOcr, false);
     QCOMPARE(r.enabled, true);
     QCOMPARE(r.sttProvider, QString("cloud"));
     QVERIFY(r.sttIsCloud());

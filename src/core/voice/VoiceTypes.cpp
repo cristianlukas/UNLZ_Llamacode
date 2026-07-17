@@ -39,6 +39,7 @@ QJsonObject VoiceConfig::toJson() const
     o["smartTurn"]      = smartTurn;
     o["autoListen"]     = autoListen;
     o["bargeIn"]        = bargeIn;
+    o["cursorOcr"]      = cursorOcr;
     return o;
 }
 
@@ -83,5 +84,8 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.smartTurn   = o.value("smartTurn").toBool(c.smartTurn);
     c.autoListen  = o.value("autoListen").toBool(c.autoListen);
     c.bargeIn     = o.value("bargeIn").toBool(c.bargeIn);
+    // Sin la clave queda en false (el default del struct): un config viejo NO
+    // estrena la captura de pantalla por actualizar la app.
+    c.cursorOcr   = o.value("cursorOcr").toBool(c.cursorOcr);
     return c;
 }

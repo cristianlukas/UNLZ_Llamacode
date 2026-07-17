@@ -395,7 +395,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.50"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.51"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -461,8 +461,22 @@ public:
     { applyAgentProfileCaps(cb, ap); }
     // Ingi Charla: rutea un transcript de voz. Si hay agente corriendo lo manda al
     // agente (computer-use/visión) y devuelve true; si no, al chat backend (false).
+    // Excepción: si es una orden de cursor por voz (ver tryVoiceCursorCommand) se
+    // resuelve local y devuelve false SIN mandar nada a ningún backend — el bool
+    // sólo distingue agente de chat, así que acá "false" es "no fue al agente".
     // Público para tests (el lambda de transcriptReady delega acá).
     bool dispatchCharlaTranscript(const QString &text);
+    // Cursor por voz vía OCR (VoiceConfig::cursorOcr, off por defecto). Si el
+    // transcript es una orden de cursor la ejecuta y devuelve true (el turno NO
+    // llega al LLM); si no, false y sigue el ruteo normal. Público para tests.
+    bool tryVoiceCursorCommand(const QString &text);
+    void setVoiceCursorOcrForTest(bool on) { m_voiceCursorOcr = on; }
+    // Estado del OCR de Windows para la UI: {available, language, detail}. Sin
+    // esto, prender el toggle de cursor por voz en una máquina sin paquete de
+    // idioma OCR falla mudo — el usuario sólo se entera al hablarle y recibir un
+    // error. Q_INVOKABLE (no property): levantar el motor no es gratis, así que se
+    // consulta cuando la UI lo necesita, no en cada repintado.
+    Q_INVOKABLE QVariantMap ocrStatus() const;
     bool charlaUseAgentForTest() const { return m_charlaUseAgent; }
     // Regresión "Iniciando agente" trabado tras swap/restart de server: arma el
     // estado previo (pending + starting) y dispara el ready-branch. Con un agente
@@ -1206,6 +1220,7 @@ private:
     // Ingi Charla: el turno actual se ruteó al agente (computer-use/visión) en vez
     // del chat backend. Decide quién habla la respuesta final (onAgentTurnFinished).
     bool m_charlaUseAgent = false;
+    bool m_voiceCursorOcr = false;   // espejo de VoiceConfig::cursorOcr (opt-in)
     // Burbuja del agente que se está hablando en vivo (streaming incremental de TTS
     // en Charla). -1 = ninguna. Se pasa a VoiceController::speakFlush al cerrar.
     int m_charlaStreamBubble = -1;

@@ -10,8 +10,10 @@ Reglas:
   `add_lc_test(<area> tests/test_<area>.cpp)` (helper ya definido, sección
   `if (BUILD_TESTS)`).
 - Antes de commitear: correr `tests.bat` (configura `BUILD_TESTS=ON`, compila en
-  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 27;
+  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 39;
   ver `add_lc_test` en `CMakeLists.txt`). No commitear en rojo. Atajo: `/gate`.
+  Verde NO alcanza: si el coordinador imprime `[WARN] ... DIRTY`, los tests NO
+  corrieron sobre tu fuente y el resultado no vale. Volvé a correrlo.
 - Un executable por subsistema (QtTest = 1 `QTEST_MAIN` por binario).
 
 ### Convenciones de tests
@@ -50,6 +52,9 @@ Reglas:
 | RawChatBackend (sesiones/persistencia) | `tests/test_backends_net.cpp` |
 | LogTriage (barrido de errores) | `tests/test_logtriage.cpp` |
 | DownloadHistoryStore (historial de descargas) | `tests/test_download_history.cpp` |
+| FuzzyMatch (matching difuso de nombres de control) | `tests/test_fuzzy_match.cpp` |
+| OcrTextLocator (ubicar texto OCR en pantalla) | `tests/test_ocr_locator.cpp` |
+| VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
 
 ### Pendiente de cobertura
 Stub HTTP ya disponible: `SseStubServer` en `tests/test_backends_net.cpp` cubre
@@ -78,6 +83,17 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
 - **Browser teach persistente**: grabar un skill con login (`--user-data-dir` en
   `browser_skills/profiles/<slug>`), cerrar, reproducir → la sesión sigue logueada
   (no re-pide credenciales).
+- **OCR** (`OcrEngine` vía Windows.Media.Ocr): necesita pantalla real + paquete de
+  idioma OCR instalado en Windows. La lógica pura (`OcrTextLocator`) sí tiene test;
+  el motor no. Verificar: (a) `desktop_click_text` acierta en una app que
+  `desktop_controls` no expone; (b) **con escalado de pantalla al 150%** el clic cae
+  en el texto y no corrido — es el bug clásico de estos proyectos, y la corrección
+  vive sólo en `DesktopAutomationBackend::readText`; (c) en multi-monitor con el
+  cursor en el secundario, la orden opera esa pantalla.
+- **Cursor por voz** (`cursorOcr` en Charla, off por defecto): activarlo en
+  Charla → decir "clic en Guardar" mueve/clickea; decir "no sé si hacer clic en
+  Guardar" NO actúa y va al LLM. Con dos textos iguales en pantalla debe negarse
+  por ambigüedad en vez de adivinar.
 
 ## Build
 - **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**
@@ -87,20 +103,6 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
 - Tests: `tests.bat [Debug|Release]` (sin `pause`).
 - La lógica core vive en la lib estática `llamacode_core`; el app y los tests linkean contra ella.
 
-### Encolamiento inteligente de builds (sesiones paralelas)
-Varias IAs/CI pueden correr `build.bat` / `build_auto.bat` / `tests.bat` a la vez.
-`build_coord.ps1` serializa por **lane** (`build` y `tests` tienen locks separados,
-corren en paralelo entre sí) con un lock atómico (`.buildlock/`, gitignored):
-- Si NO hay build en curso → tomás el lock (OWNER), bumpeás versión y compilás.
-- Si ya hay uno en curso con la **misma fuente** (fingerprint = hash de
-  `src/ qml/ tests/ CMakeLists.txt` con los triples semver neutralizados, para
-  que el auto-bump no cuente) → esperás y **adoptás su resultado** (REUSE, no
-  recompilás). Si ese build compartido falló, reintentás propio.
-- Si es **otra fuente** → esperás tu turno (QUEUE).
-- Locks muertos (guardian PID caído) o vencidos (`StaleSec`) se roban solos.
-- El "owner" real es un proceso *guardian* oculto (su vida == el lock); `release`
-  lo mata. Así el PID sí prueba vida (el powershell que hace `acquire` muere ya).
-- Test: `powershell -File tests\test_build_coord.ps1` (fuera de ctest; infra PS/bat).
 ### Sesiones paralelas: worktree por tarea (preferido)
 Si vas a hacer **más de una mejora a la vez**, no compartas el working tree:
 ```
@@ -143,9 +145,23 @@ puede terminarlo (el em-dash `—` = `E2 80 94` → en CP1252 el `0x94` es `”`
 toma como comilla de cierre → ParserError y el hook muere entero). En comentarios
 sólo se ve feo; en strings rompe. El test 0 de `test_session_guard.ps1` lo fija.
 
+### Encolamiento inteligente de builds (sesiones paralelas)
+Varias IAs/CI pueden correr `build.bat` / `build_auto.bat` / `tests.bat` a la vez.
+`build_coord.ps1` serializa por **lane** (`build` y `tests` tienen locks separados,
+corren en paralelo entre sí) con un lock atómico (`.buildlock/`, gitignored):
+- Si NO hay build en curso → tomás el lock (OWNER), bumpeás versión y compilás.
+- Si ya hay uno en curso con la **misma fuente** (fingerprint = hash de
+  `src/ qml/ tests/ CMakeLists.txt` con los triples semver neutralizados, para
+  que el auto-bump no cuente) → esperás y **adoptás su resultado** (REUSE, no
+  recompilás). Si ese build compartido falló, reintentás propio.
+- Si es **otra fuente** → esperás tu turno (QUEUE).
+- Locks muertos (guardian PID caído) o vencidos (`StaleSec`) se roban solos.
 - **Tree compartido en movimiento** (defensa, no cura — la cura es el worktree):
   `acquire` re-fingerprintea tras `-MutationCheckMs` (1200ms, 0 = off) y avisa si
   la fuente está cambiando *antes* de gastar minutos de MSBuild; `release`
   revalida el fingerprint y, si cambió durante el build, publica **DIRTY** en vez
   de OK (exit 12) → nadie adopta por REUSE un artefacto de otra fuente, y los
   `.bat` gritan que el binario/gate no es confiable.
+- El "owner" real es un proceso *guardian* oculto (su vida == el lock); `release`
+  lo mata. Así el PID sí prueba vida (el powershell que hace `acquire` muere ya).
+- Test: `powershell -File tests\test_build_coord.ps1` (fuera de ctest; infra PS/bat).

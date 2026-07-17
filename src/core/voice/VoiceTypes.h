@@ -73,6 +73,14 @@ struct VoiceConfig {
     // Cortar el TTS si el usuario empieza a hablar (barge-in).
     bool    bargeIn = true;
 
+    // ── Cursor por voz vía OCR (accesibilidad) ──
+    // OFF por defecto, y a propósito: cuando está activo, cada frase que empieza
+    // con un verbo de cursor ("clic en Guardar") dispara una captura de TODA la
+    // pantalla para OCRearla. Eso no es lo que alguien espera de un modo de charla
+    // sin haberlo pedido. Se OCRea en RAM y se descarta (nunca va a disco), pero
+    // la decisión de mirar la pantalla es del usuario, no nuestra.
+    bool    cursorOcr = false;
+
     bool sttIsCloud() const { return sttProvider == QLatin1String("cloud"); }
     bool ttsIsCloud() const { return ttsProvider == QLatin1String("cloud"); }
 

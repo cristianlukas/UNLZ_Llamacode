@@ -1,5 +1,9 @@
 #include "DesktopAutomationBackend.h"
 
+#include "FuzzyMatch.h"
+#include "OcrEngine.h"
+#include "OcrTextLocator.h"
+
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QDir>
@@ -742,6 +746,13 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
                                             const QString &controlId, QString *error,
                                             QVariantMap *trace)
 {
+    return clickElementInternal(windowTargetId, controlId, /*allowFuzzy=*/true, error, trace);
+}
+
+bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetId,
+                                                    const QString &controlId, bool allowFuzzy,
+                                                    QString *error, QVariantMap *trace)
+{
 #ifdef Q_OS_WIN
     if (!interactiveSessionAvailable()) {
         if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
@@ -807,6 +818,7 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
             const QVariantMap targetTrace{
                 {QStringLiteral("windowTargetId"), windowTargetId},
                 {QStringLiteral("controlId"), controlId},
+                {QStringLiteral("matchedBy"), QStringLiteral("controlId")},
                 {QStringLiteral("name"), name},
                 {QStringLiteral("role"), uiaControlTypeName(ct)},
                 {QStringLiteral("x"), static_cast<int>(rc.left)},
@@ -865,14 +877,136 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
     root->Release();
     uia->Release();
 
+    // Fallback: el id no existe. Tratarlo como NOMBRE y resolverlo por matching
+    // difuso contra los controles vivos de la ventana. Cubre el caso común de que
+    // el modelo mande "Guardar como" en vez del RuntimeId, y el de un id viejo tras
+    // un reflow. Una sola re-entrada (allowFuzzy=false) y el id ya es exacto.
+    if (!done && allowFuzzy) {
+        const QVariantList all = controls(windowTargetId, QString(), 3000, nullptr);
+        QStringList names;
+        names.reserve(all.size());
+        for (const QVariant &v : all)
+            names << v.toMap().value(QStringLiteral("name")).toString();
+        const FuzzyMatch::Match m = FuzzyMatch::extractOne(controlId, names);
+        const QString resolved = m.ok()
+            ? all.at(m.index).toMap().value(QStringLiteral("controlId")).toString()
+            : QString();
+        if (!resolved.isEmpty() && resolved != controlId) {
+            if (!clickElementInternal(windowTargetId, resolved, /*allowFuzzy=*/false,
+                                      error, trace))
+                return false;
+            if (trace) {
+                QVariantMap t = trace->value(QStringLiteral("target")).toMap();
+                t[QStringLiteral("matchedBy")] = QStringLiteral("fuzzy-name");
+                t[QStringLiteral("matchScore")] = m.score;
+                t[QStringLiteral("requested")] = controlId;
+                (*trace)[QStringLiteral("target")] = t;
+            }
+            return true;
+        }
+    }
+
     if (!done && error) *error = QStringLiteral("No se encontró el control (¿cambió la ventana? "
                                                 "re-listá con desktop_controls).");
     return success;
 #else
-    Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(trace)
+    Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(allowFuzzy) Q_UNUSED(trace)
     if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
     return false;
 #endif
+}
+
+QList<OcrLine> DesktopAutomationBackend::readText(const QString &kind, const QString &targetId,
+                                                  QString *error)
+{
+    if (error) error->clear();
+    const QRect bounds = targetBounds(kind, targetId);
+    if (!bounds.isValid()) {
+        if (error) *error = QStringLiteral("El alcance visual ya no está disponible.");
+        return {};
+    }
+    const QImage image = capture(kind, targetId, error);
+    if (image.isNull()) return {};
+    QList<OcrLine> lines = OcrEngine::recognize(image, error);
+    if (lines.isEmpty()) return lines;
+
+    // Escala device→lógico deducida de la captura real, no de un devicePixelRatio
+    // consultado aparte: si algo cambia (monitor distinto, escalado raro), el
+    // tamaño del bitmap ya lo refleja y la cuenta se corrige sola.
+    const double sx = image.width()  > 0 ? double(bounds.width())  / image.width()  : 1.0;
+    const double sy = image.height() > 0 ? double(bounds.height()) / image.height() : 1.0;
+    for (OcrLine &line : lines) {
+        for (OcrWord &w : line.words) {
+            w.rect = QRect(bounds.x() + qRound(w.rect.x() * sx),
+                           bounds.y() + qRound(w.rect.y() * sy),
+                           qRound(w.rect.width()  * sx),
+                           qRound(w.rect.height() * sy));
+        }
+    }
+    return lines;
+}
+
+bool DesktopAutomationBackend::clickText(const QString &kind, const QString &targetId,
+                                         const QString &text, const QString &button,
+                                         int clickCount, QString *error, QVariantMap *trace)
+{
+    if (error) error->clear();
+    if (text.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Texto vacío.");
+        return false;
+    }
+    const QRect bounds = targetBounds(kind, targetId);
+    const QList<OcrLine> lines = readText(kind, targetId, error);
+    if (lines.isEmpty()) {
+        if (error && error->isEmpty())
+            *error = QStringLiteral("No se leyó ningún texto en pantalla.");
+        return false;
+    }
+    const QList<OcrTextLocator::Hit> hits = OcrTextLocator::findAll(lines, text);
+    if (hits.isEmpty()) {
+        if (error) *error = QStringLiteral("No se encontró \"%1\" en pantalla.").arg(text);
+        return false;
+    }
+    // Ambigüedad → NO adivinar. Dos coincidencias casi igual de buenas significa
+    // que el pedido no identifica un único destino; clickear una al azar puede
+    // apretar cualquier cosa. Mejor devolver las opciones y que se precise.
+    if (hits.size() >= 2 && hits.at(0).score - hits.at(1).score < 5) {
+        if (error) {
+            QStringList opts;
+            for (const auto &h : hits) {
+                if (opts.size() >= 4) break;
+                opts << QStringLiteral("\"%1\" en (%2,%3)")
+                            .arg(h.text).arg(h.rect.center().x()).arg(h.rect.center().y());
+            }
+            *error = QStringLiteral("\"%1\" es ambiguo: %2 coincidencias parecidas (%3). "
+                                    "Precisá el texto o usá desktop_click con coordenadas.")
+                         .arg(text).arg(hits.size()).arg(opts.join(QStringLiteral(", ")));
+        }
+        return false;
+    }
+
+    const OcrTextLocator::Hit &hit = hits.first();
+    // Reusar click() con coords normalizadas: la conversión a píxeles reales y el
+    // envío del input ya están resueltos y probados ahí.
+    const QPointF norm = normalizePoint(hit.center(), bounds);
+    // Doble clic = dos clics seguidos: Windows los une si caen dentro de su
+    // tiempo de doble clic, y SendInput consecutivo lo cumple de sobra.
+    const int times = qBound(1, clickCount, 2);
+    for (int i = 0; i < times; ++i)
+        if (!click(kind, targetId, norm.x(), norm.y(), button, error, trace))
+            return false;
+    if (trace) {
+        QVariantMap t = trace->value(QStringLiteral("target")).toMap();
+        t[QStringLiteral("matchedBy")] = QStringLiteral("ocr-text");
+        t[QStringLiteral("matchScore")] = hit.score;
+        t[QStringLiteral("requested")] = text;
+        t[QStringLiteral("readText")] = hit.text;
+        (*trace)[QStringLiteral("target")] = t;
+        QVariantMap p = trace->value(QStringLiteral("pointer")).toMap();
+        p[QStringLiteral("clickCount")] = times;
+        (*trace)[QStringLiteral("pointer")] = p;
+    }
+    return true;
 }
 
 QVariantMap DesktopAutomationBackend::controlAtPoint(const QPoint &absolute)

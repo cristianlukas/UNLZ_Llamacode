@@ -833,6 +833,20 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[desktop_click_element: ok]\ntrace=%1").arg(json);
     }
+    if (name == QLatin1String("desktop_click_text")) {
+        QString error;
+        QVariantMap trace;
+        const bool good = DesktopAutomationBackend::clickText(
+            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("text")).toString(),
+            QStringLiteral("left"), 1, &error, &trace);
+        if (ok) *ok = good;
+        if (!good) return QStringLiteral("[desktop_click_text: %1]").arg(error);
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_click_text: ok]\ntrace=%1").arg(json);
+    }
     if (name == QLatin1String("desktop_observe")) {
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(
             QStringLiteral("screen"));

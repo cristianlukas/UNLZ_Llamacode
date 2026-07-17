@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.50 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.51 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -77,6 +77,7 @@ set(CORE_SOURCES
     src/core/agent/HotspotAnalyzer.cpp
     src/core/mail/MailClient.cpp
     src/core/voice/VoiceTypes.cpp
+    src/core/voice/VoiceCursorCommand.cpp
     src/core/voice/AudioCodec.cpp
     src/core/voice/SttEngine.cpp
     src/core/voice/TtsEngine.cpp
@@ -98,6 +99,9 @@ set(CORE_SOURCES
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
     src/core/automation/DesktopAutomationBackend.cpp
+    src/core/automation/FuzzyMatch.cpp
+    src/core/automation/OcrEngine.cpp
+    src/core/automation/OcrTextLocator.cpp
     src/core/automation/AutomationArtifactStore.cpp
     src/core/automation/TeachKeyBuffer.cpp
     src/core/automation/TeachSessionRecorder.cpp
@@ -194,7 +198,10 @@ target_link_libraries(llamacode_core PUBLIC
 if (WIN32)
     # Wtsapi32: sesión interactiva. Ole32/OleAut32: COM + BSTR para UI Automation
     # (árbol de controles del escritorio, DesktopAutomationBackend::controls).
-    target_link_libraries(llamacode_core PUBLIC Wtsapi32 Ole32 OleAut32)
+    # RuntimeObject: activación WinRT (RoGetActivationFactory / RoOriginate...)
+    # que usa C++/WinRT en OcrEngine (Windows.Media.Ocr). Es la variante para apps
+    # de escritorio; windowsapp.lib es el paraguas de UWP y acá no corresponde.
+    target_link_libraries(llamacode_core PUBLIC Wtsapi32 Ole32 OleAut32 RuntimeObject)
 endif()
 if (MSVC)
     target_compile_options(llamacode_core PRIVATE /utf-8)
@@ -447,4 +454,6 @@ if (BUILD_TESTS)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)
     add_lc_test(test_gateway            tests/test_gateway.cpp)
     add_lc_test(test_logtriage          tests/test_logtriage.cpp)
+    add_lc_test(test_fuzzy_match        tests/test_fuzzy_match.cpp)
+    add_lc_test(test_ocr_locator        tests/test_ocr_locator.cpp)
 endif()

@@ -132,6 +132,8 @@ private slots:
     void systemProfileBinaryPinReadsBundle();
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
+    void charlaCursorOcrIsOptInAndDoesNotHijackChat();
+    void ocrStatusAlwaysExplainsItself();
     void agentLevels_contextBudgetLadder();
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
@@ -849,6 +851,49 @@ void AppControllerTests::charlaTranscriptRoutesToAgentWhenRunning()
     fake->stop();
     QCOMPARE(fake->bodyRuns(), 1);
     QVERIFY(!(app.charlaUseAgentForTest() && fake->running()));
+}
+
+void AppControllerTests::charlaCursorOcrIsOptInAndDoesNotHijackChat()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+
+    // Apagado (default): ni siquiera una orden de cursor explícita se intercepta.
+    // Es la garantía de que actualizar la app no estrena la captura de pantalla.
+    QVERIFY(!app.tryVoiceCursorCommand(QStringLiteral("clic en Guardar")));
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("clic en Guardar")));
+    QCOMPARE(fake->bodyRuns(), 1);   // fue al agente, como cualquier frase
+
+    // Encendido: una frase que NO es orden de cursor sigue yendo al LLM. Charla es
+    // una conversación; mencionar un clic no puede secuestrar el turno.
+    app.setVoiceCursorOcrForTest(true);
+    QVERIFY(!app.tryVoiceCursorCommand(QStringLiteral("¿tendría que hacer clic en Guardar?")));
+    QVERIFY(!app.tryVoiceCursorCommand(QStringLiteral("hola, ¿cómo andás?")));
+    QVERIFY(app.dispatchCharlaTranscript(QStringLiteral("hola, ¿cómo andás?")));
+    QCOMPARE(fake->bodyRuns(), 2);
+    // La ejecución real de una orden (OCR + clic) es QA manual: necesita pantalla
+    // viva y paquete de idioma OCR. Ver CLAUDE.md.
+}
+
+void AppControllerTests::ocrStatusAlwaysExplainsItself()
+{
+    AppController app;
+    const QVariantMap st = app.ocrStatus();
+    // El contrato vale en cualquier máquina, haya OCR o no: la UI SIEMPRE tiene
+    // algo que mostrar. Un `detail` vacío dejaría el toggle fallando mudo, que es
+    // justo lo que este map existe para evitar.
+    QVERIFY(st.contains(QStringLiteral("available")));
+    QVERIFY(st.contains(QStringLiteral("detail")));
+    QVERIFY(!st.value(QStringLiteral("detail")).toString().isEmpty());
+    // Con OCR se nombra el idioma (si el motor quedó en otro idioma que la UI, los
+    // labels con tildes se leen mal: hay que poder verlo). Sin OCR, el mensaje
+    // tiene que decir cómo resolverlo, no sólo que no hay.
+    if (st.value(QStringLiteral("available")).toBool())
+        QVERIFY(!st.value(QStringLiteral("language")).toString().isEmpty());
+    else
+        QVERIFY(st.value(QStringLiteral("detail")).toString().contains(QStringLiteral("OCR")));
 }
 
 // Regresión "16GB trabado en Iniciando agente": tras un swap/restart de server

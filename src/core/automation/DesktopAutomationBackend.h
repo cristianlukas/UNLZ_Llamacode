@@ -1,6 +1,9 @@
 #pragma once
 
+#include "OcrTypes.h"
+
 #include <QImage>
+#include <QList>
 #include <QPointF>
 #include <QRect>
 #include <QString>
@@ -60,8 +63,33 @@ public:
     // Click sobre un control por su controlId (de controls()): si expone el patrón
     // Invoke lo invoca (más robusto que pixel); si no, clickea el centro de su
     // bounding rect. Sólo Windows.
+    //
+    // Si el controlId no existe (el modelo pasó un NOMBRE en vez del RuntimeId, o
+    // la ventana hizo reflow y el id quedó viejo), reintenta resolviéndolo como
+    // nombre por matching difuso sobre los controles de la ventana. Sigue siendo
+    // UIA: el fallback afloja la comparación del nombre, no adivina píxeles. El
+    // trace anota matchedBy=fuzzy-name + matchScore cuando pasa por ahí.
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
                              QString *error = nullptr, QVariantMap *trace = nullptr);
+
+    // ── OCR: leer el texto que se VE (último recurso, apps que UIA no expone) ──
+    // Captura el alcance, lo pasa por OcrEngine y devuelve las líneas con sus rects
+    // ya traducidos a coords LÓGICAS ABSOLUTAS de pantalla. Acá vive —una sola vez—
+    // la corrección de escalado: el factor sale de comparar el tamaño real de la
+    // captura (device px) contra el del alcance (lógicos), así sale bien con
+    // cualquier DPI y en multi-monitor sin hardcodear nada.
+    // La captura se OCRea en RAM y se descarta: nunca toca el disco.
+    static QList<OcrLine> readText(const QString &kind, const QString &targetId,
+                                   QString *error = nullptr);
+
+    // Clickea el texto visible que mejor matchee `text`. Preferí SIEMPRE
+    // clickElement (UIA): esto es para cuando el árbol no expone el control.
+    // Si hay dos coincidencias igual de buenas NO adivina: falla pidiendo precisión
+    // (clickear "el primero" de dos botones iguales es una moneda al aire).
+    // `clickCount` 2 = doble clic (dos clics seguidos dentro del tiempo del sistema).
+    static bool clickText(const QString &kind, const QString &targetId, const QString &text,
+                          const QString &button = QStringLiteral("left"), int clickCount = 1,
+                          QString *error = nullptr, QVariantMap *trace = nullptr);
 
     // Control UIA bajo un punto absoluto de pantalla. Lo usa el grabador Teach para
     // anclar cada click/stroke a un control semántico (name/role/controlId + la
@@ -89,4 +117,10 @@ public:
                                        const QString &query, const QString &role,
                                        const QString &expectText, int timeoutMs,
                                        QString *error = nullptr);
+
+private:
+    // `allowFuzzy` corta la recursión: el reintento por nombre resuelve un
+    // controlId exacto y re-entra con false, así nunca hay más de un rebote.
+    static bool clickElementInternal(const QString &windowTargetId, const QString &controlId,
+                                     bool allowFuzzy, QString *error, QVariantMap *trace);
 };

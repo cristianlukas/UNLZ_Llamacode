@@ -5,6 +5,8 @@
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
 #include "core/automation/DesktopAutomationBackend.h"
+#include "core/automation/OcrEngine.h"
+#include "core/automation/OcrTextLocator.h"
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
 #  define NOMINMAX
@@ -37,6 +39,7 @@
 #include "core/voice/CharlaTuning.h"
 #include "core/voice/TtsPolicy.h"
 #include "core/voice/VoiceAgentPolicy.h"
+#include "core/voice/VoiceCursorCommand.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
@@ -14078,6 +14081,7 @@ void AppController::applyVoiceConfig()
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
     m_voice->setConfig(c, sttKey, ttsKey);
     m_voice->setInputDevice(voiceInputDevice());
+    m_voiceCursorOcr = c.cursorOcr;
     // TTS piper (process-mode): resolver binario + voz instalada.
     if (c.ttsMode == QLatin1String("piper") || c.ttsFallbackMode == QLatin1String("piper"))
         m_voice->setTtsPiper(voicePiperPath(),
@@ -14100,8 +14104,91 @@ void AppController::setVoiceInputDevice(const QString &id)
     if (m_voice) m_voice->setInputDevice(id);
 }
 
+QVariantMap AppController::ocrStatus() const
+{
+    const bool ok = OcrEngine::available();
+    const QString name = OcrEngine::languageName();
+    return QVariantMap{
+        {QStringLiteral("available"), ok},
+        {QStringLiteral("language"), name},
+        {QStringLiteral("languageTag"), OcrEngine::languageTag()},
+        {QStringLiteral("detail"), ok
+            // Decir el idioma importa: si el motor quedó en inglés y tu UI está en
+            // español, los labels con tildes se leen mal y el síntoma es "a veces
+            // no encuentra el botón". Mostrarlo hace diagnosticable ese caso.
+            ? tr("OCR de Windows listo, leyendo en %1.").arg(name)
+            : tr("Windows no tiene ningún paquete de idioma OCR instalado, así que "
+                 "no se puede leer la pantalla. Instalalo en Configuración → Hora e "
+                 "idioma → Idioma y región → (tu idioma) → Opciones de idioma → OCR.")}};
+}
+
+bool AppController::tryVoiceCursorCommand(const QString &text)
+{
+    if (!m_voiceCursorOcr) return false;
+    const VoiceCursorCommand::Command cmd = VoiceCursorCommand::parse(text);
+    if (!cmd.ok()) return false;   // no es una orden de cursor → que siga al LLM
+
+    auto reply = [this](const QString &msg) {
+        if (m_voice) m_voice->speak(msg);
+    };
+    if (!OcrEngine::available()) {
+        reply(tr("No hay OCR disponible: falta el paquete de idioma de Windows."));
+        return true;
+    }
+    // La pantalla donde ya está el cursor: es la que el usuario está mirando. Los
+    // ids de screens() son el índice, así que el índice ES el target.
+    const QVariantList screens = DesktopAutomationBackend::screens();
+    if (screens.isEmpty()) {
+        reply(tr("No hay pantalla disponible."));
+        return true;
+    }
+    const QPoint cursor = QCursor::pos();
+    QString target = screens.first().toMap().value(QStringLiteral("id")).toString();
+    for (const QVariant &v : screens) {
+        const QVariantMap s = v.toMap();
+        const QRect g(s.value(QStringLiteral("x")).toInt(), s.value(QStringLiteral("y")).toInt(),
+                      s.value(QStringLiteral("width")).toInt(),
+                      s.value(QStringLiteral("height")).toInt());
+        if (g.contains(cursor)) {
+            target = s.value(QStringLiteral("id")).toString();
+            break;
+        }
+    }
+
+    QString error;
+    if (cmd.kind == VoiceCursorCommand::Kind::Move) {
+        const QList<OcrLine> lines = DesktopAutomationBackend::readText(
+            QStringLiteral("screen"), target, &error);
+        const auto hit = OcrTextLocator::find(lines, cmd.target);
+        if (!hit.ok()) {
+            reply(error.isEmpty() ? tr("No encontré \"%1\" en pantalla.").arg(cmd.target) : error);
+            return true;
+        }
+        QCursor::setPos(hit.center());
+        reply(tr("Listo."));
+        return true;
+    }
+
+    const bool right = cmd.kind == VoiceCursorCommand::Kind::RightClick;
+    const int times = cmd.kind == VoiceCursorCommand::Kind::DoubleClick ? 2 : 1;
+    QVariantMap trace;
+    if (!DesktopAutomationBackend::clickText(
+            QStringLiteral("screen"), target, cmd.target,
+            right ? QStringLiteral("right") : QStringLiteral("left"), times, &error, &trace)) {
+        // El error de clickText ya explica el caso (no encontrado / ambiguo) y se
+        // habla tal cual: por voz es la única devolución que el usuario recibe.
+        reply(error);
+        return true;
+    }
+    reply(tr("Listo."));
+    return true;
+}
+
 bool AppController::dispatchCharlaTranscript(const QString &text)
 {
+    // Comando de cursor por voz (opt-in): se resuelve local y NO va al LLM.
+    if (tryVoiceCursorCommand(text)) return false;
+
     // Ingi Charla: si hay un agente corriendo (con computer-use/visión de las
     // pantallas), el turno va al agente para que opere la PC (clic, teclado,
     // instalar, etc.). Si no, fallback al chat backend (voz-a-voz simple).
