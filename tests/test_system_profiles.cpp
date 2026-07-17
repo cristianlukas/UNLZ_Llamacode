@@ -10,6 +10,8 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QStandardPaths>
 #include <QUuid>
 #include <QCoreApplication>
@@ -45,6 +47,7 @@ private slots:
     void manager_fastGemmaDflashWired();
     void manager_systemProfilesAvoidAccidentalVisionAndMtp();
     void bundle_draftMtpAlwaysDeclaresDraftModel();
+    void bundle_gemma4TemplateKeepsLlamaCppMarkers();
     void manager_smallProfilesAreConservative();
 
     void controller_recommendsClosestTier();
@@ -371,6 +374,43 @@ void SystemProfilesTests::controller_showcaseEmptyWhenNoSiblings()
     AppController app;
     app.setHardwareSummaryForTest(5.0, 16.0, QStringLiteral("NVIDIA"));
     QVERIFY(app.recommendedShowcase().isEmpty());
+}
+
+// El chat-template de Gemma4 no es un archivo cualquiera: llama.cpp lo clasifica
+// leyendo su TEXTO. Busca "'<|tool_call>call:'" para tomar el path nativo
+// (peg-gemma4) en vez del parseo genérico, y el comentario "OpenAI Chat
+// Completions:" para decidir que NO es una versión vieja que necesite
+// workarounds de compatibilidad. Un reemplazo desde upstream que pierda
+// cualquiera de los dos degrada el tool-calling en silencio: el server arranca,
+// responde 200, y sólo se nota porque el modelo llama peor a las tools.
+// Además el archivo está duplicado (qrc bundle + copia versionada que usan los
+// perfiles de usuario vía --chat-template-file): deben ser idénticos.
+void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
+{
+    const QDir repo = QFileInfo(bundlePath()).dir();   // .../assets
+    const QString bundled = repo.absoluteFilePath(
+        QStringLiteral("chat-templates/gemma4-tools-fixed.jinja"));
+    QFile f(bundled);
+    QVERIFY2(f.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("no se pudo abrir %1").arg(bundled)));
+    const QString tpl = QString::fromUtf8(f.readAll());
+    f.close();
+
+    QVERIFY2(tpl.contains(QStringLiteral("'<|tool_call>call:'")),
+             "sin este literal llama.cpp no toma el path nativo peg-gemma4");
+    QVERIFY2(tpl.contains(QStringLiteral("OpenAI Chat Completions:")),
+             "sin este comentario llama.cpp trata el template como outdated");
+
+    // La copia del repo root (a la que apuntan los perfiles de usuario) no puede
+    // divergir de la bundleada en el qrc.
+    const QString rootCopy = QDir(repo.absoluteFilePath(QStringLiteral("..")))
+                                 .absoluteFilePath(QStringLiteral("chat-templates/gemma4-tools-fixed.jinja"));
+    QFile g(rootCopy);
+    QVERIFY2(g.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("no se pudo abrir %1").arg(rootCopy)));
+    const QString rootTpl = QString::fromUtf8(g.readAll());
+    g.close();
+    QCOMPARE(rootTpl, tpl);
 }
 
 QTEST_MAIN(SystemProfilesTests)
