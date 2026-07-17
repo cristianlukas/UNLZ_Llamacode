@@ -2390,18 +2390,20 @@ void LlamaAgentBackend::processPendingCalls()
         return;
     }
 
-    // ── Subagents: extraer TODAS las tool_calls `task` y lanzarlas en paralelo.
+    // ── Subagents: extraer TODAS las tool_calls que se resuelven con un sub-agente
+    // (`task` → rol Coding, `deep_research` → rol Web) y lanzarlas en paralelo.
     {
         QJsonArray taskCalls, rest;
         for (const QJsonValue &v : std::as_const(m_pendingCalls)) {
-            if (v.toObject().value(QStringLiteral("function")).toObject()
-                    .value(QStringLiteral("name")).toString() == QLatin1String("task"))
+            const QString n = v.toObject().value(QStringLiteral("function")).toObject()
+                                  .value(QStringLiteral("name")).toString();
+            if (n == QLatin1String("task") || n == QLatin1String("deep_research"))
                 taskCalls.append(v);
             else
                 rest.append(v);
         }
         if (!taskCalls.isEmpty()) {
-            m_pendingCalls = rest;       // los no-task se procesan al terminar los subs
+            m_pendingCalls = rest;       // el resto se procesa al terminar los subs
             spawnTasks(taskCalls);
             return;
         }
@@ -3166,7 +3168,10 @@ void LlamaAgentBackend::pumpSubs()
     const int limit = subagentLimit();
     while (m_subs.size() < limit && !m_subQueue.isEmpty()) {
         const QJsonObject call = m_subQueue.takeAt(0).toObject();
-        launchSub(call);
+        const QString n = call.value(QStringLiteral("function")).toObject()
+                              .value(QStringLiteral("name")).toString();
+        if (n == QLatin1String("deep_research")) launchResearch(call);
+        else                                     launchSub(call);
     }
     if (!subsActive()) processPendingCalls();   // todas resueltas/ inválidas → seguir
 }
@@ -3204,6 +3209,7 @@ void LlamaAgentBackend::launchSub(const QJsonObject &call)
     }
     m_subWorktree.insert(id, wt);
     m_subIsolated.insert(id, isolated);
+    m_subToolName.insert(id, QStringLiteral("task"));
 
     appendToolCard(QStringLiteral("task"), QStringLiteral("task"), true,
                    desc.isEmpty() ? prompt.left(60) : desc,
@@ -3222,6 +3228,95 @@ void LlamaAgentBackend::launchSub(const QJsonObject &call)
     // Propagar el guardrail: en modo super el agente principal ya no gatea nada,
     // así que tampoco lo imponemos al sub-árbol (autonomía total, coherente).
     sub->setHitlDestructive(m_hitlDestructive && m_approvalMode != QLatin1String("super"));
+    connect(sub, &SubAgentRunner::finished, this, &LlamaAgentBackend::onSubFinished);
+    connect(sub, &SubAgentRunner::progressed, this, &LlamaAgentBackend::onSubProgress);
+    m_subs.insert(id, sub);
+    sub->start();
+}
+
+// ─────────────────────── deep_research (sub-agente rol Web) ──────────────
+void LlamaAgentBackend::setResearchEndpoint(const QString &baseUrl, const QString &modelId)
+{
+    m_researchBaseUrl = baseUrl.trimmed();
+    m_researchModelId = modelId.trimmed();
+}
+
+LlamaAgentBackend::Endpoint
+LlamaAgentBackend::resolveResearchEndpoint(const QString &ovBaseUrl, const QString &ovModelId,
+                                           const QString &defBaseUrl, const QString &defModelId)
+{
+    // Sin override → el mismo server/modelo del agente principal. Un override de
+    // baseUrl sin modelId es válido (otro server, su modelo por defecto); un
+    // modelId sin baseUrl también (mismo server, otro modelo cargado).
+    Endpoint e;
+    e.baseUrl = ovBaseUrl.trimmed().isEmpty() ? defBaseUrl : ovBaseUrl.trimmed();
+    e.modelId = ovModelId.trimmed().isEmpty() ? defModelId : ovModelId.trimmed();
+    return e;
+}
+
+QString LlamaAgentBackend::researchPrompt(const QString &query, const QStringList &angles,
+                                          int maxPages)
+{
+    QString p = QStringLiteral("Investigá y respondé: %1\n").arg(query);
+    if (!angles.isEmpty())
+        p += QStringLiteral("\nÁngulos sugeridos (cubrilos todos):\n· %1\n")
+                 .arg(angles.join(QStringLiteral("\n· ")));
+    p += QStringLiteral("\nAbrí alrededor de %1 páginas. Terminá con el informe en markdown.")
+             .arg(qBound(1, maxPages, 10));
+    return p;
+}
+
+void LlamaAgentBackend::launchResearch(const QJsonObject &call)
+{
+    const QString id = call.value(QStringLiteral("id")).toString();
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    const QString argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
+    const QJsonObject a = QJsonDocument::fromJson(argStr.toUtf8()).object();
+    const QString query = a.value(QStringLiteral("query")).toString().trimmed();
+
+    if (query.isEmpty()) {
+        ++m_toolFail;
+        appendToolResult(id, QStringLiteral("deep_research"),
+                         QStringLiteral("[error: 'query' vacía para deep_research]"));
+        return;   // no arranca runner; pumpSubs sigue
+    }
+
+    QStringList angles;
+    const QJsonArray av = a.value(QStringLiteral("angles")).toArray();
+    for (const QJsonValue &v : av) {
+        const QString s = v.toString().trimmed();
+        if (!s.isEmpty()) angles << s;
+    }
+    if (angles.size() > 4) angles = angles.mid(0, 4);
+    int maxPages = a.value(QStringLiteral("max_pages")).toInt();
+    if (maxPages <= 0) maxPages = 5;
+
+    // Sin worktree: el rol Web no escribe nada. El cwd es un temp vacío para que
+    // el worker confinado no tenga el proyecto a mano ni siquiera por accidente.
+    const QString wd = QDir::cleanPath(QDir::tempPath() + QStringLiteral("/llamacode-research/")
+                                       + QString(id).remove(QRegularExpression(
+                                             QStringLiteral("[^A-Za-z0-9]"))).left(10));
+    QDir().mkpath(wd);
+    m_subWorktree.insert(id, wd);
+    m_subIsolated.insert(id, false);   // → mergeAndCleanupWorktree no hace nada
+    m_subToolName.insert(id, QStringLiteral("deep_research"));
+
+    appendToolCard(QStringLiteral("deep_research"), QStringLiteral("web"), true, query,
+                   QStringLiteral("[sub-agente de investigación]\n"));
+    if (!m_messages.isEmpty()) {
+        QVariantMap card = m_messages.last().toMap();
+        card[QStringLiteral("typing")] = true;
+        m_messages[m_messages.size() - 1] = card;
+        m_subMsgIdx.insert(id, m_messages.size() - 1);
+    }
+    emit messagesChanged();
+
+    const Endpoint ep = resolveResearchEndpoint(m_researchBaseUrl, m_researchModelId,
+                                                m_ctx.serverBaseUrl, m_ctx.modelId);
+    auto *sub = new SubAgentRunner(id, ep.baseUrl, ep.modelId, wd,
+                                   researchPrompt(query, angles, maxPages), m_temperature,
+                                   m_directives.contains(QStringLiteral("honey")), this);
+    sub->setRole(SubAgentRunner::Role::Web);
     connect(sub, &SubAgentRunner::finished, this, &LlamaAgentBackend::onSubFinished);
     connect(sub, &SubAgentRunner::progressed, this, &LlamaAgentBackend::onSubProgress);
     m_subs.insert(id, sub);
@@ -3262,10 +3357,14 @@ void LlamaAgentBackend::onSubFinished(const QString &id, const QString &result, 
     emit messagesChanged();
 
     if (ok) ++m_toolOk; else ++m_toolFail;
-    appendToolResult(id, QStringLiteral("task"), (result + mergeNote).left(16 * 1024));
+    // El nombre real importa: en modo textual el tool result se rotula con él y el
+    // cap de output depende de la tool (deep_research recorta distinto que task).
+    appendToolResult(id, m_subToolName.value(id, QStringLiteral("task")),
+                     (result + mergeNote).left(16 * 1024));
 
     m_subWorktree.remove(id); m_subBranch.remove(id);
     m_subIsolated.remove(id); m_subMsgIdx.remove(id);
+    m_subToolName.remove(id);
     pumpSubs();   // lanza el siguiente encolado; si no queda nada → sigue el turno
 }
 
@@ -3280,6 +3379,7 @@ void LlamaAgentBackend::cancelAllSubs()
         mergeAndCleanupWorktree(id, false, m_subIsolated.value(id, false));
         m_subWorktree.remove(id); m_subBranch.remove(id);
         m_subIsolated.remove(id); m_subMsgIdx.remove(id);
+        m_subToolName.remove(id);
     }
 }
 
@@ -3887,10 +3987,12 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("count"), intProp(QStringLiteral("Cantidad de resultados (default 5, máx 10)."))}},
            QJsonArray{QStringLiteral("query")}),
         fn(QStringLiteral("deep_research"),
-           QStringLiteral("Investigación web profunda: busca por varios ángulos, descarga las mejores "
-                          "páginas y devuelve un DOSSIER (fuentes numeradas + contenido limpio) para que "
-                          "VOS lo sintetices citando [n]. Usalo para preguntas que requieren cruzar varias "
-                          "fuentes. Pasá 'angles' con sub-consultas distintas para mejor cobertura."),
+           QStringLiteral("Investigación web profunda: delega en un sub-agente que busca por varios "
+                          "ángulos, lee las mejores páginas y te devuelve un INFORME en markdown ya "
+                          "sintetizado, con las fuentes citadas por número [n]. Las páginas crudas no "
+                          "pasan por tu contexto: sólo el informe. Usalo para preguntas que requieren "
+                          "cruzar varias fuentes (para una sola página, usá web_fetch). Pasá 'angles' "
+                          "con sub-consultas distintas para mejor cobertura."),
            QJsonObject{
                {QStringLiteral("query"), strProp(QStringLiteral("Pregunta/tema a investigar."))},
                {QStringLiteral("angles"), QJsonObject{
@@ -4297,7 +4399,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("verify_claims", "Conocimiento", "Verifica afirmaciones contra el repo/memoria (anti-alucinación).", 160),
         mk("web_search","Web", "Busca en la web (DuckDuckGo/SearXNG).", 140),
         mk("web_fetch", "Web", "Descarga una URL y devuelve su texto.", 90),
-        mk("deep_research", "Web", "Investigación web multi-ángulo (dossier de fuentes).", 200),
+        mk("deep_research", "Web", "Investigación web multi-ángulo (sub-agente, informe citado).", 200),
         mk("write_file","Código",   "Crea o sobrescribe un archivo.", 90),
         mk("edit_file", "Código",   "Reemplazo exacto en un archivo existente.", 160),
         mk("run_shell", "Código",   "Ejecuta un comando de shell.", 110),

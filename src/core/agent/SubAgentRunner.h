@@ -14,10 +14,18 @@ class AgentToolRunner;
 // el mismo llama-server, con su propio worker de tools confinado a `cwd` (una
 // git worktree aislada). Lo usa la tool `task` del agente principal para delegar
 // subtareas en paralelo. Emite finished(result) al terminar.
+//
+// Rol: define qué tools ve el sub-agente y con qué system prompt arranca.
+//  · Coding — toolset completo, worktree git, hasta 40 iteraciones (tool `task`).
+//  · Web    — SOLO web_search/web_fetch, sin worktree (no escribe nada), pocas
+//             iteraciones. Lo usa `deep_research`: las páginas descargadas mueren
+//             acá y al agente principal sólo le vuelve el informe sintetizado.
 class SubAgentRunner : public QObject
 {
     Q_OBJECT
 public:
+    enum class Role { Coding, Web };
+
     SubAgentRunner(const QString &id, const QString &serverBaseUrl, const QString &modelId,
                    const QString &cwd, const QString &taskPrompt,
                    double temperature, bool honey = false, QObject *parent = nullptr);
@@ -25,6 +33,9 @@ public:
 
     QString id() const { return m_id; }
     QString cwd() const { return m_cwd; }
+    // Setear ANTES de start(); define toolset + system prompt + tope de iteraciones.
+    void setRole(Role r) { m_role = r; }
+    Role role() const { return m_role; }
     void start();
     void cancel();
 
@@ -40,6 +51,21 @@ public:
     // mínima) para que el sub-árbol entero emita menos. Se propaga desde la
     // directiva 'honey' del perfil del agente principal.
     static QString systemPrompt(const QString &cwd, bool honey);
+
+    // System prompt del rol Web (investigación). Pura y estática → unit-testeable.
+    static QString webSystemPrompt(bool honey);
+
+    // Filtra un array de schemas OpenAI-style dejando sólo las tools en `allowed`.
+    // Pura y estática → unit-testeable. `allowed` vacío = pasa todo.
+    static QJsonArray filterToolSchemas(const QJsonArray &all, const QStringList &allowed);
+
+    // Tools que ve cada rol. Vacío = todas (Coding).
+    static QStringList toolsForRole(Role r);
+
+    // Tope de iteraciones del loop ReAct según rol. Web es corto a propósito:
+    // buscar+fetchear+sintetizar no necesita 40 vueltas, y un tope bajo acota el
+    // costo de un sub-agente que se va por las ramas.
+    static int maxItersForRole(Role r);
 
 signals:
     void progressed(const QString &id, const QString &note);   // tool/avance (para tarjeta en vivo)
@@ -66,6 +92,7 @@ private:
     QString m_taskPrompt;
     double  m_temperature = -1.0;
     bool    m_honey = false;
+    Role    m_role = Role::Coding;
     bool    m_hitlDestructive = true;   // guardrail: rechazar destructivas (headless)
 
     QNetworkAccessManager *m_nam = nullptr;
@@ -84,5 +111,4 @@ private:
 
     int  m_iters = 0;
     bool m_done = false;
-    static constexpr int kMaxIters = 40;
 };

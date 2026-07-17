@@ -10,6 +10,7 @@
 #include <QTcpSocket>
 #include <QTemporaryDir>
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/agent/SubAgentRunner.h"
 
 class AgentWireTests : public QObject
 {
@@ -44,6 +45,10 @@ private slots:
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
     void isDestructiveAction_gatesShellDesktopMemory();
+    void webRole_seesOnlyWebToolsAndShorterLoop();
+    void webSystemPrompt_demandsCitedSelfContainedReport();
+    void researchPrompt_carriesAnglesAndPageBudget();
+    void resolveResearchEndpoint_defaultsToMainServerNoSecondGpu();
 };
 
 void AgentWireTests::initTestCase()
@@ -1091,6 +1096,101 @@ void AgentWireTests::isDestructiveAction_gatesShellDesktopMemory()
     // ── Tools no cubiertas → false ────────────────────────────────────────
     QVERIFY(!B::isDestructiveAction("read_file", QJsonObject{{QStringLiteral("path"), QStringLiteral("x")}}));
     QVERIFY(!B::isDestructiveAction("write_file", QJsonObject{{QStringLiteral("path"), QStringLiteral("x")}}));
+}
+
+// El rol Web es el límite real del sub-agente de investigación: ve web_search y
+// web_fetch y NADA más (ni run_shell ni write_file ni task), y corta en pocas
+// vueltas. Si el filtro se rompe, un sub-agente de investigación podría escribir
+// en disco o recursar en subagents.
+void AgentWireTests::webRole_seesOnlyWebToolsAndShorterLoop()
+{
+    using R = SubAgentRunner;
+    const QJsonArray all = LlamaAgentBackend::toolSchemas();
+    QVERIFY(all.size() > 2);
+
+    const QJsonArray web = R::filterToolSchemas(all, R::toolsForRole(R::Role::Web));
+    QStringList names;
+    for (const QJsonValue &v : web)
+        names << v.toObject().value(QStringLiteral("function")).toObject()
+                     .value(QStringLiteral("name")).toString();
+    names.sort();
+    QCOMPARE(names, QStringList({QStringLiteral("web_fetch"), QStringLiteral("web_search")}));
+
+    // Coding conserva el toolset completo (lista vacía = sin filtro).
+    QVERIFY(R::toolsForRole(R::Role::Coding).isEmpty());
+    QCOMPARE(R::filterToolSchemas(all, R::toolsForRole(R::Role::Coding)).size(), all.size());
+
+    QCOMPARE(R::maxItersForRole(R::Role::Web), 12);
+    QCOMPARE(R::maxItersForRole(R::Role::Coding), 40);
+}
+
+// El informe es lo único que vuelve al agente principal: el prompt tiene que
+// pedir respuesta + fuentes citadas y decir que las páginas no viajan.
+void AgentWireTests::webSystemPrompt_demandsCitedSelfContainedReport()
+{
+    const QString sys = SubAgentRunner::webSystemPrompt(false);
+    QVERIFY(sys.contains(QStringLiteral("web_search")));
+    QVERIFY(sys.contains(QStringLiteral("web_fetch")));
+    QVERIFY(sys.contains(QStringLiteral("## Fuentes")));
+    QVERIFY(sys.contains(QStringLiteral("[n]")));
+    QVERIFY(sys.contains(QStringLiteral("no ve las páginas")));
+    QVERIFY(!sys.contains(QStringLiteral("honey")));
+
+    const QString honey = SubAgentRunner::webSystemPrompt(true);
+    QVERIFY(honey.contains(QStringLiteral("FRUGALIDAD")));
+    QVERIFY(honey.startsWith(sys));   // honey sólo agrega
+}
+
+void AgentWireTests::researchPrompt_carriesAnglesAndPageBudget()
+{
+    using B = LlamaAgentBackend;
+    const QString p = B::researchPrompt(QStringLiteral("¿Qué es SearXNG?"),
+                                        {QStringLiteral("privacidad"), QStringLiteral("self-host")}, 3);
+    QVERIFY(p.contains(QStringLiteral("¿Qué es SearXNG?")));
+    QVERIFY(p.contains(QStringLiteral("privacidad")));
+    QVERIFY(p.contains(QStringLiteral("self-host")));
+    QVERIFY(p.contains(QStringLiteral("3 páginas")));
+
+    // Sin ángulos no inventa una sección vacía.
+    const QString bare = B::researchPrompt(QStringLiteral("tema"), {}, 5);
+    QVERIFY(!bare.contains(QStringLiteral("Ángulos")));
+    QVERIFY(bare.contains(QStringLiteral("5 páginas")));
+
+    // max_pages fuera de rango se acota (no se le pide abrir 500 páginas).
+    QVERIFY(B::researchPrompt(QStringLiteral("t"), {}, 99).contains(QStringLiteral("10 páginas")));
+    QVERIFY(B::researchPrompt(QStringLiteral("t"), {}, 0).contains(QStringLiteral("1 páginas")));
+}
+
+// Sin override, el sub-agente corre en el MISMO server/modelo que el principal:
+// una segunda GPU es opcional, no un requisito para tener deep_research.
+void AgentWireTests::resolveResearchEndpoint_defaultsToMainServerNoSecondGpu()
+{
+    using B = LlamaAgentBackend;
+    const QString mainUrl = QStringLiteral("http://127.0.0.1:8080");
+    const QString mainModel = QStringLiteral("gemma-27b");
+
+    B::Endpoint e = B::resolveResearchEndpoint({}, {}, mainUrl, mainModel);
+    QCOMPARE(e.baseUrl, mainUrl);
+    QCOMPARE(e.modelId, mainModel);
+
+    // Whitespace no cuenta como override.
+    e = B::resolveResearchEndpoint(QStringLiteral("  "), QStringLiteral("\t"), mainUrl, mainModel);
+    QCOMPARE(e.baseUrl, mainUrl);
+    QCOMPARE(e.modelId, mainModel);
+
+    // Override completo: otra GPU/server.
+    e = B::resolveResearchEndpoint(QStringLiteral("http://127.0.0.1:9090"),
+                                   QStringLiteral("qwen-3b"), mainUrl, mainModel);
+    QCOMPARE(e.baseUrl, QStringLiteral("http://127.0.0.1:9090"));
+    QCOMPARE(e.modelId, QStringLiteral("qwen-3b"));
+
+    // Override parcial: cada campo cae por separado.
+    e = B::resolveResearchEndpoint(QStringLiteral("http://127.0.0.1:9090"), {}, mainUrl, mainModel);
+    QCOMPARE(e.baseUrl, QStringLiteral("http://127.0.0.1:9090"));
+    QCOMPARE(e.modelId, mainModel);
+    e = B::resolveResearchEndpoint({}, QStringLiteral("qwen-3b"), mainUrl, mainModel);
+    QCOMPARE(e.baseUrl, mainUrl);
+    QCOMPARE(e.modelId, QStringLiteral("qwen-3b"));
 }
 
 QTEST_MAIN(AgentWireTests)

@@ -219,6 +219,20 @@ public:
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);
 
+    // Prompt del sub-agente de investigación (deep_research). Pura y estática →
+    // unit-testeable.
+    static QString researchPrompt(const QString &query, const QStringList &angles, int maxPages);
+
+    // Endpoint del sub-agente de investigación. Por defecto corre en el MISMO
+    // server/modelo que el agente principal (no hace falta una segunda GPU: la
+    // ganancia es el aislamiento de contexto, no el paralelismo de hardware). Si
+    // el perfil define un override, se usa ese. PURA → unit-testeable.
+    struct Endpoint { QString baseUrl; QString modelId; };
+    static Endpoint resolveResearchEndpoint(const QString &ovBaseUrl, const QString &ovModelId,
+                                            const QString &defBaseUrl, const QString &defModelId);
+    // Override opcional (vacío = mismo server/modelo que el agente principal).
+    void setResearchEndpoint(const QString &baseUrl, const QString &modelId);
+
     // Texto VISIBLE de una respuesta del modelo según "Pensar". Con Pensar ON deja
     // el content tal cual (la UI muestra <think>). Con Pensar OFF quita los bloques
     // <think>…</think>; pero si el modelo metió TODA la respuesta dentro de <think>
@@ -351,6 +365,9 @@ private:
     void spawnTasks(const QJsonArray &taskCalls);
     void pumpSubs();                   // lanza subs de la cola hasta el cap
     void launchSub(const QJsonObject &call);
+    // deep_research: sub-agente rol Web (sin worktree — no escribe nada). Comparte
+    // la cola/cap de subs con `task`.
+    void launchResearch(const QJsonObject &call);
     bool subsActive() const { return !m_subQueue.isEmpty() || !m_subs.isEmpty(); }
     QString createWorktree(const QString &callId, bool &isolated);
     QString mergeAndCleanupWorktree(const QString &callId, bool ok, bool isolated);
@@ -566,4 +583,9 @@ private:
     QHash<QString, QString> m_subBranch;
     QHash<QString, bool>    m_subIsolated;
     QHash<QString, int>     m_subMsgIdx;
+    QHash<QString, QString> m_subToolName;     // callId → tool que lo lanzó (task|deep_research)
+
+    // Override de endpoint para deep_research (vacío = mismo que el principal).
+    QString m_researchBaseUrl;
+    QString m_researchModelId;
 };

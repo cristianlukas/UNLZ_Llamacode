@@ -78,6 +78,13 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
 - **Browser teach persistente**: grabar un skill con login (`--user-data-dir` en
   `browser_skills/profiles/<slug>`), cerrar, reproducir → la sesión sigue logueada
   (no re-pide credenciales).
+- **deep_research (sub-agente rol Web)**: la lógica pura (rol/toolset/prompt/
+  endpoint) tiene test en `tests/test_agent_wire.cpp`; el loop real necesita web
+  viva. Verificar: (a) vuelve un INFORME con `## Fuentes` citadas, no el dossier
+  crudo, y las páginas descargadas NO aparecen en el contexto del agente principal;
+  (b) con `LLAMACODE_SEARXNG_URL` seteado las búsquedas salen por SearXNG;
+  (c) si el modelo del sub-agente pide una tool fuera del rol (write_file, run_shell)
+  se rechaza y el loop sigue.
 
 ## Build
 - **Política actual (desde 2026-06-18): build Release + tests, sin Debug.**

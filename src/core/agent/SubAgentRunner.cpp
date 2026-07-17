@@ -45,6 +45,59 @@ QString SubAgentRunner::systemPrompt(const QString &cwd, bool honey)
     return sys;
 }
 
+QString SubAgentRunner::webSystemPrompt(bool honey)
+{
+    QString sys = QStringLiteral(
+        "Sos un sub-agente de INVESTIGACIÓN WEB. Tenés exactamente dos tools: "
+        "web_search (buscar) y web_fetch (descargar una URL y leer su texto). No "
+        "tenés acceso al proyecto ni podés escribir archivos ni ejecutar comandos: "
+        "tu único trabajo es investigar y redactar.\n\n"
+        "Método:\n"
+        "1. Buscá con web_search por varios ángulos distintos del tema (no repitas "
+        "la misma consulta reformulada).\n"
+        "2. Abrí con web_fetch las páginas que valgan la pena. Priorizá fuentes "
+        "primarias (docs oficiales, repos, papers) sobre agregadores.\n"
+        "3. Si las fuentes se contradicen, decilo explícitamente en vez de elegir "
+        "una en silencio.\n\n"
+        "Cuando termines, respondé con un INFORME en markdown:\n"
+        "· Una respuesta directa a la pregunta, arriba de todo.\n"
+        "· El detalle que la sostiene, citando las fuentes por número [n].\n"
+        "· Una sección '## Fuentes' con la lista numerada (título — URL).\n"
+        "· Lo que NO pudiste averiguar, si quedó algo abierto.\n\n"
+        "El informe es lo único que vuelve: quien te llamó no ve las páginas que "
+        "abriste. Todo lo que importe tiene que estar en el informe. No afirmes "
+        "nada que no venga de una fuente que abriste.");
+    if (honey)
+        sys += QStringLiteral(
+            "\n\nFRUGALIDAD (honey): informe corto y denso. Sin preámbulo, sin "
+            "narrar el proceso de búsqueda. Respuesta-primero.");
+    return sys;
+}
+
+QStringList SubAgentRunner::toolsForRole(Role r)
+{
+    if (r == Role::Web)
+        return {QStringLiteral("web_search"), QStringLiteral("web_fetch")};
+    return {};   // Coding: toolset completo
+}
+
+int SubAgentRunner::maxItersForRole(Role r)
+{
+    return r == Role::Web ? 12 : 40;
+}
+
+QJsonArray SubAgentRunner::filterToolSchemas(const QJsonArray &all, const QStringList &allowed)
+{
+    if (allowed.isEmpty()) return all;
+    QJsonArray out;
+    for (const QJsonValue &v : all) {
+        const QString name = v.toObject().value(QStringLiteral("function")).toObject()
+                                 .value(QStringLiteral("name")).toString();
+        if (allowed.contains(name)) out.append(v);
+    }
+    return out;
+}
+
 SubAgentRunner::~SubAgentRunner()
 {
     if (m_reply) { m_reply->abort(); m_reply->deleteLater(); m_reply = nullptr; }
@@ -71,7 +124,8 @@ void SubAgentRunner::start()
     connect(m_worker, &AgentToolRunner::toolExecuted, this, &SubAgentRunner::onToolExecuted);
     m_workerThread->start();
 
-    const QString sys = systemPrompt(m_cwd, m_honey);
+    const QString sys = m_role == Role::Web ? webSystemPrompt(m_honey)
+                                            : systemPrompt(m_cwd, m_honey);
 
     m_messages = QJsonArray{
         QJsonObject{{QStringLiteral("role"), QStringLiteral("system")}, {QStringLiteral("content"), sys}},
@@ -91,12 +145,13 @@ void SubAgentRunner::cancel()
 void SubAgentRunner::runCompletion()
 {
     if (m_done) return;
-    if (++m_iters > kMaxIters) { finishUp(m_lastAssistantText + QStringLiteral("\n[corte: límite de iteraciones]"), false); return; }
+    if (++m_iters > maxItersForRole(m_role)) { finishUp(m_lastAssistantText + QStringLiteral("\n[corte: límite de iteraciones]"), false); return; }
 
     QJsonObject payload{
         {QStringLiteral("model"), m_modelId.isEmpty() ? QStringLiteral("local") : m_modelId},
         {QStringLiteral("messages"), m_messages},
-        {QStringLiteral("tools"), LlamaAgentBackend::toolSchemas()},
+        {QStringLiteral("tools"), filterToolSchemas(LlamaAgentBackend::toolSchemas(),
+                                                    toolsForRole(m_role))},
         {QStringLiteral("tool_choice"), QStringLiteral("auto")},
         {QStringLiteral("parallel_tool_calls"), false},
         {QStringLiteral("parse_tool_calls"), false},
@@ -215,6 +270,21 @@ bool SubAgentRunner::dispatchCall(const QJsonObject &call)
     const QString name = fn.value(QStringLiteral("name")).toString();
     const QString id = call.value(QStringLiteral("id")).toString();
     const QString argStr = subArgsToString(fn.value(QStringLiteral("arguments")));
+
+    // Gating por rol: filtrar el schema no alcanza — un modelo chico igual puede
+    // inventar un nombre de tool que no le pasamos. El rol es el límite real.
+    const QStringList allowed = toolsForRole(m_role);
+    if (!allowed.isEmpty() && !allowed.contains(name)) {
+        emit progressed(m_id, QStringLiteral("⛔ %1 (fuera del rol)").arg(name));
+        m_messages.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("tool")},
+            {QStringLiteral("tool_call_id"), id},
+            {QStringLiteral("content"), QStringLiteral(
+                "[rol: '%1' no existe para vos. Tus únicas tools son: %2. "
+                "Seguí con esas y terminá con el informe.]")
+                 .arg(name, allowed.join(QStringLiteral(", ")))}});
+        return false;   // bloqueada; el caller avanza al siguiente
+    }
 
     // Guardrail: el sub-agente no tiene HITL → rechazar destructivas de plano.
     if (m_hitlDestructive) {
