@@ -68,6 +68,29 @@ ensamblado de tool_calls en streaming se cubre en `tests/test_agent_wire.cpp`
 backend vía `ensureAgentBackend`, así que no es stubbeable sin un harness cloud
 completo; queda como QA manual). Reusar `SseStubServer`.
 
+### Chat-template de Gemma4 (`chat-templates/gemma4-tools-fixed.jinja`)
+Es el `chat_template.jinja` **oficial de Google** (no un template propio): al
+actualizarlo, copiarlo tal cual de `google/gemma-4-31B-it` en HF. Está duplicado
+(bundle qrc en `assets/` + copia del repo root que usan los perfiles de usuario
+vía `--chat-template-file`); `bundle_gemma4TemplateKeepsLlamaCppMarkers`
+(`tests/test_system_profiles.cpp`) exige que no diverjan y que sobrevivan los dos
+marcadores por los que **llama.cpp clasifica el template leyendo su texto**:
+`'<|tool_call>call:'` (si falta, no toma el path nativo `peg-gemma4`) y el
+comentario `OpenAI Chat Completions:` (si falta, lo trata como outdated y le
+aplica workarounds). Perderlos degrada el tool-calling en silencio: el server
+levanta y responde 200 igual.
+
+Dos cosas que parecen bugs del template y NO lo son (medidas contra server real,
+llama.cpp mainline y beellama v0.3.2):
+- **`arguments` como string** (spec OpenAI): el template hace `raise_exception`
+  si recibe un string, lo que invita a mandar un objeto. Sería un error: los
+  perfiles cloud exigen string, y llama.cpp ya lo deserializa antes de renderizar
+  (`func_args_not_string`). Lo fija `parsesTextToolCallFallback`.
+- **La rama `image`/`image_url` del template es código muerto** bajo llama.cpp:
+  convierte las partes de imagen en un `media_marker` propio (`<__media_XXX__>`)
+  ANTES del jinja (`common/chat.cpp`). No "arreglarla": no se ejecuta. Sin
+  `--mmproj` el server corta con 500 antes de llegar.
+
 ### QA manual pendiente (sin test automatizado)
 Necesitan una sesión de escritorio interactiva con ventanas vivas (no
 reproducible en headless/CI), así que sólo se cubre el path de error en
