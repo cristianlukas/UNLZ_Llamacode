@@ -106,6 +106,13 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
 - **Browser teach persistente**: grabar un skill con login (`--user-data-dir` en
   `browser_skills/profiles/<slug>`), cerrar, reproducir → la sesión sigue logueada
   (no re-pide credenciales).
+- **Recetas de Teach viejas en monitor escalado**: las grabadas ANTES de `ef70ea3`
+  en un monitor a 125/150% quedaron con datos malos horneados (ancla UIA equivocada
+  en scope=screen; coords normalizadas mal en scope=window, que mezclaba el bounds
+  físico de GetWindowRect con un cursor lógico). El fix de coords no las repara:
+  **regrabarlas**. Las grabadas a 100% están bien. Toda coordenada del backend es
+  FISICA — ver el comentario de `physicalRectForOrigin` en
+  `DesktopAutomationBackend.cpp`.
 - **OCR / coordenadas** — hay harness, no hace falta ojo humano:
   `build_tests\Release\qa_ocr_probe.exe [texto]` (se compila con `tests.bat` pero
   NO está en ctest: necesita escritorio vivo + paquete de idioma OCR). Cruza
