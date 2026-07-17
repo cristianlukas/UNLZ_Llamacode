@@ -164,12 +164,51 @@ $oSame = RunGuard 'edit-claim' @{ session_id='sess-Q'; tool_name='Edit'; tool_in
 Ok ($oSame -match 'OJO') "el mismo path si detecta el choque"
 
 Write-Host "== test 5: edit-claim ignora claims stale (sesion muerta no traba a nadie) =="
-Get-ChildItem $claimDir -Filter 'sess-A__*' -File | ForEach-Object {
+# Autocontenido a proposito: antes dependia de claims que dejaba el test 4, y
+# cuando el 4c empezo a limpiar el registry el test paso a verificar NADA (no
+# habia claim stale que ignorar, asi que "no avisa" salia solo). Un test que pasa
+# por vacio es peor que no tenerlo. De ahi el control positivo primero.
+if (Test-Path $claimDir) { Remove-Item -Recurse -Force $claimDir -ErrorAction SilentlyContinue }
+RunGuard 'edit-claim' @{ session_id='sess-OLD'; tool_name='Edit'; tool_input=@{ file_path=$target } } | Out-Null
+$ctrl = RunGuard 'edit-claim' @{ session_id='sess-C'; tool_name='Edit'; tool_input=@{ file_path=$target } }
+Ok ($ctrl -match 'OJO') "control positivo: con el claim FRESCO si avisa (el setup sirve)"
+
+# Ahora envejezco el claim de sess-OLD y saco el de sess-C: lo unico que cambia
+# es la edad, asi que si ahora no avisa, es por la edad y no por vacio.
+Get-ChildItem $claimDir -Filter 'sess-OLD__*' -File | ForEach-Object {
     $_.LastWriteTime = (Get-Date).AddMinutes(-120)   # mas viejo que $staleMin (90)
 }
-Get-ChildItem $claimDir -Filter 'sess-B__*' -File | Remove-Item -Force
-$o5 = RunGuard 'edit-claim' @{ session_id='sess-C'; tool_name='Edit'; tool_input=@{ file_path=$target } }
+Get-ChildItem $claimDir -Filter 'sess-C__*' -File | Remove-Item -Force
+$o5 = RunGuard 'edit-claim' @{ session_id='sess-D'; tool_name='Edit'; tool_input=@{ file_path=$target } }
 Ok (-not ($o5 -match 'OJO')) "claim de hace 2h no genera aviso"
+
+Write-Host "== test 5b: -Mode status muestra quien toca que, y los solapamientos =="
+# status es para humanos: no lee stdin y no emite JSON.
+function RunStatus() {
+    $out = (& powershell -NoProfile -ExecutionPolicy Bypass -File $guard -Mode status 2>&1) | Out-String
+    return [pscustomobject]@{ rc = $LASTEXITCODE; out = $out.Trim() }
+}
+if (Test-Path $claimDir) { Remove-Item -Recurse -Force $claimDir -ErrorAction SilentlyContinue }
+$s0 = RunStatus
+Ok ($s0.out -match 'ninguna')  "sin claims: dice que no hay sesiones activas"
+Ok ($s0.rc -eq 0)              "sin claims: exit 0; actual=$($s0.rc)"
+
+# Dos sesiones distintas, archivos distintos -> actividad pero sin solapamiento.
+RunGuard 'edit-claim' @{ session_id='sess-M'; tool_name='Edit'; tool_input=@{ file_path=$target } } | Out-Null
+RunGuard 'edit-claim' @{ session_id='sess-N'; tool_name='Edit'; tool_input=@{ file_path=$other } }  | Out-Null
+$s1 = RunStatus
+Ok ($s1.out -match 'sess-M' -and $s1.out -match 'sess-N') "lista las dos sesiones"
+Ok ($s1.out -match 'LlamaAgentBackend\.cpp')              "muestra el archivo de cada una"
+Ok ($s1.out -notmatch 'C:\\Users')                        "paths relativos al repo, no absolutos"
+Ok ($s1.rc -eq 0)                                         "sin solapamiento: exit 0; actual=$($s1.rc)"
+
+# Ahora si: las dos sobre el MISMO archivo.
+RunGuard 'edit-claim' @{ session_id='sess-N'; tool_name='Edit'; tool_input=@{ file_path=$target } } | Out-Null
+$s2 = RunStatus
+Ok ($s2.rc -eq 1) "con solapamiento: exit 1 (accionable para un script); actual=$($s2.rc)"
+$ovl = ($s2.out -split '== Solapamientos')[1]
+Ok ($ovl -match 'LlamaAgentBackend\.cpp') "nombra el archivo solapado"
+Ok ($ovl -match 'sess-M' -and $ovl -match 'sess-N') "nombra a las dos sesiones que lo tienen"
 
 Write-Host "== test 6: session-start avisa si el tree ya tiene trabajo en curso =="
 $o6 = RunGuard 'session-start' @{ session_id='sess-D' }

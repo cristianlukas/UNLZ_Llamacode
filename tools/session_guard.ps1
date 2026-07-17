@@ -29,10 +29,19 @@
 
   Contrato de hooks: el input llega por stdin como JSON; la salida es JSON por
   stdout. Exit 0 siempre (un hook que revienta no debe romper la sesion).
+
+  Y un modo para humanos (NO va en settings.json, no lee stdin, imprime texto):
+
+    -Mode status          Quien esta tocando que, ahora. Sale del mismo registry
+                          de claims que llena edit-claim. Lo importante no es la
+                          lista de sesiones sino los SOLAPAMIENTOS: un archivo
+                          reclamado por dos sesiones vivas es un merge esperando.
+                          Exit 0 = sin solapamientos; 1 = hay solapamientos.
+                              powershell -File tools\session_guard.ps1 -Mode status
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$true)][ValidateSet('session-start','edit-claim','git-guard')] [string]$Mode
+    [Parameter(Mandatory=$true)][ValidateSet('session-start','edit-claim','git-guard','status')] [string]$Mode
 )
 
 # Un hook nunca debe tumbar la sesion: ante cualquier sorpresa, salir en silencio.
@@ -91,6 +100,72 @@ function Emit-Deny([string]$reason) {
            permissionDecision       = 'deny'
            permissionDecisionReason = $reason
        } } | ConvertTo-Json -Depth 5 -Compress | Write-Output
+}
+
+# =============================================================================
+if ($Mode -eq 'status') {
+    # El claim guarda el path completo como contenido y el mtime hace de heartbeat.
+    $claims = @()
+    if (Test-Path $claimDir) {
+        $claims = @(Get-ChildItem $claimDir -Filter '*.claim' -File -ErrorAction SilentlyContinue |
+            Where-Object { ((Get-Date) - $_.LastWriteTime).TotalMinutes -lt $staleMin } |
+            ForEach-Object {
+                $sid = ($_.Name -split '__')[0]
+                [pscustomobject]@{
+                    sid  = $sid
+                    file = (Get-Content -Raw $_.FullName -ErrorAction SilentlyContinue).Trim()
+                    mins = [int]((Get-Date) - $_.LastWriteTime).TotalMinutes
+                }
+            } | Where-Object { $_.file })
+    }
+
+    Write-Output "== Sesiones activas (claims de menos de $staleMin min) =="
+    if (-not $claims) {
+        Write-Output "  (ninguna: nadie edito nada recientemente en este tree)"
+    }
+    foreach ($g in ($claims | Group-Object sid | Sort-Object { ($_.Group | Measure-Object mins -Minimum).Minimum })) {
+        $last = ($g.Group | Measure-Object mins -Minimum).Minimum
+        $tag  = if ($g.Name -eq $env:CLAUDE_SESSION_ID) { ' (yo)' } else { '' }
+        Write-Output ("  {0}{1} - {2} archivo(s), ultimo toque hace {3} min" -f $g.Name, $tag, $g.Group.Count, $last)
+        foreach ($c in ($g.Group | Sort-Object mins)) {
+            $rel = $c.file
+            if ($rel.ToLower().StartsWith($root.ToLower())) { $rel = $rel.Substring($root.Length).TrimStart('\','/') }
+            Write-Output ("      {0}  (hace {1} min)" -f $rel, $c.mins)
+        }
+    }
+
+    # Lo unico verdaderamente accionable: el mismo archivo en dos manos vivas.
+    $overlaps = @($claims | Group-Object file | Where-Object { ($_.Group | Select-Object -ExpandProperty sid -Unique).Count -gt 1 })
+    Write-Output ""
+    Write-Output "== Solapamientos (mismo archivo, dos sesiones vivas) =="
+    if (-not $overlaps) {
+        Write-Output "  (ninguno)"
+    }
+    foreach ($o in $overlaps) {
+        $rel = $o.Name
+        if ($rel.ToLower().StartsWith($root.ToLower())) { $rel = $rel.Substring($root.Length).TrimStart('\','/') }
+        $who = ($o.Group | Select-Object -ExpandProperty sid -Unique) -join ', '
+        Write-Output ("  {0}" -f $rel)
+        Write-Output ("      lo tienen: {0}" -f $who)
+    }
+
+    # Contexto: lanes de build y estado del tree.
+    Write-Output ""
+    Write-Output "== Lanes =="
+    foreach ($lane in @('build','tests')) {
+        $coord = Join-Path $root 'build_coord.ps1'
+        $out = (& powershell -NoProfile -ExecutionPolicy Bypass -File $coord -Lane $lane -Action status 2>&1 | Out-String).Trim()
+        Write-Output ("  {0}" -f $out)
+    }
+    $dirty = Get-DirtyPaths
+    Write-Output ""
+    Write-Output ("== Tree: {0} archivo(s) sin commitear ==" -f $dirty.Count)
+    if ($overlaps) {
+        Write-Output ""
+        Write-Output "Hay solapamientos: coordinen, o aislate con"
+        Write-Output "  powershell -File worktree.ps1 -Action new -Name <tarea>"
+    }
+    exit $(if ($overlaps) { 1 } else { 0 })
 }
 
 # =============================================================================

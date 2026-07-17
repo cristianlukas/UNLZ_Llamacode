@@ -159,6 +159,14 @@ disciplina. Enganchados en `.claude/settings.json` (checkeado al repo):
   (`git checkout -- src/foo.cpp`, `git add <path>`) pasa siempre: es la salida
   recomendada, no puede caer en el guard.
 
+Ver quién está tocando qué **ahora** (mismo registry, para humanos):
+```
+powershell -File tools\session_guard.ps1 -Mode status
+```
+Lista sesiones activas con sus archivos, el estado de las lanes, y lo único
+accionable: los **solapamientos** (mismo archivo en dos sesiones vivas). Exit 1 si
+hay solapamientos, 0 si no.
+
 Test: `powershell -File tests\test_session_guard.ps1` (fuera de ctest, infra PS).
 
 **Regla: los scripts de infra PS son ASCII puro** (`build_coord.ps1`,
