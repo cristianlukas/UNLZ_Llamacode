@@ -14142,7 +14142,9 @@ bool AppController::tryVoiceCursorCommand(const QString &text)
         reply(tr("No hay pantalla disponible."));
         return true;
     }
-    const QPoint cursor = QCursor::pos();
+    // Físico: screens() reporta geometría física, así que el punto con el que se
+    // compara tiene que estar en el mismo espacio (QCursor::pos() es lógico).
+    const QPoint cursor = DesktopAutomationBackend::cursorPosPhysical();
     QString target = screens.first().toMap().value(QStringLiteral("id")).toString();
     for (const QVariant &v : screens) {
         const QVariantMap s = v.toMap();
@@ -14164,7 +14166,9 @@ bool AppController::tryVoiceCursorCommand(const QString &text)
             reply(error.isEmpty() ? tr("No encontré \"%1\" en pantalla.").arg(cmd.target) : error);
             return true;
         }
-        QCursor::setPos(hit.center());
+        // moveCursor (SetCursorPos), no QCursor::setPos(): el hit viene en píxeles
+        // físicos y QCursor los interpreta como lógicos.
+        DesktopAutomationBackend::moveCursor(hit.center());
         reply(tr("Listo."));
         return true;
     }

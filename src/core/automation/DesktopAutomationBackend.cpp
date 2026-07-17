@@ -21,16 +21,83 @@
 #endif
 
 namespace {
+
+#ifdef Q_OS_WIN
+// Rect FISICO del monitor que arranca en `origin`, o {} si no hay.
+//
+// Por qué existe: TODA la automatización de escritorio habla en píxeles FISICOS
+// —SetCursorPos, SendInput y UIAutomation::ElementFromPoint lo son—, y
+// GetWindowRect (que usa el scope "window") también. Pero QScreen::geometry()
+// devuelve píxeles LOGICOS de Qt (físicos ÷ devicePixelRatio). En un monitor al
+// 150% los dos espacios NO coinciden, así que mezclarlos manda el clic a otro
+// lado. Medido con tests/qa_ocr_probe sobre 3 monitores (100/125/150%): con
+// coords lógicas el acuerdo OCR↔UIA caía a 10% en el de 150%; con físicas, 75%.
+//
+// Se empareja por ORIGEN: el orden de EnumDisplayMonitors no coincide con el de
+// QGuiApplication::screens(), y QScreen::name() da el nombre comercial ("27Q17"),
+// no el device ("\\.\DISPLAY6"). El origen sí coincide entre ambos mundos; lo que
+// difiere es el tamaño.
+QRect physicalRectForOrigin(const QPoint &origin)
+{
+    struct Ctx { QPoint want; QRect found; } ctx{origin, QRect()};
+    EnumDisplayMonitors(nullptr, nullptr,
+        [](HMONITOR hm, HDC, LPRECT, LPARAM lp) -> BOOL {
+            auto *c = reinterpret_cast<Ctx *>(lp);
+            MONITORINFO mi{};
+            mi.cbSize = sizeof(mi);
+            if (GetMonitorInfoW(hm, &mi) && mi.rcMonitor.left == c->want.x()
+                && mi.rcMonitor.top == c->want.y()) {
+                c->found = QRect(mi.rcMonitor.left, mi.rcMonitor.top,
+                                 mi.rcMonitor.right - mi.rcMonitor.left,
+                                 mi.rcMonitor.bottom - mi.rcMonitor.top);
+            }
+            return TRUE;
+        }, reinterpret_cast<LPARAM>(&ctx));
+    return ctx.found;
+}
+
+#endif
+
+// Geometría de un QScreen en píxeles FISICOS. Fallback a la lógica si Windows no
+// reporta el monitor (o fuera de Windows): con dpr=1 son idénticas.
+QRect screenPhysicalGeometryOf(QScreen *screen)
+{
+    if (!screen) return {};
+    const QRect logical = screen->geometry();
+#ifdef Q_OS_WIN
+    const QRect phys = physicalRectForOrigin(logical.topLeft());
+    return phys.isValid() ? phys : logical;
+#else
+    return logical;
+#endif
+}
+
+// La pantalla que contiene un punto FISICO. No sirve QGuiApplication::screenAt():
+// ese espera un punto lógico y en monitores escalados devolvería la equivocada.
+QScreen *screenForPhysicalPoint(const QPoint &p)
+{
+    for (QScreen *s : QGuiApplication::screens())
+        if (screenPhysicalGeometryOf(s).contains(p)) return s;
+    return QGuiApplication::primaryScreen();
+}
+
+// Alcance de un target en píxeles FISICOS, el único espacio que entienden las
+// APIs de input de Windows. El scope "window" ya lo estaba (GetWindowRect); el
+// scope "screen" devolvía lógicos y por eso clickeaba corrido en monitores
+// escalados.
 QRect targetBounds(const QString &kind, const QString &targetId)
 {
     if (kind == QLatin1String("screen")) {
         const auto list = QGuiApplication::screens();
         bool ok = false;
         const int index = targetId.toInt(&ok);
-        if (ok && index >= 0 && index < list.size()) return list.at(index)->geometry();
-        for (QScreen *screen : list)
-            if (screen->name() == targetId) return screen->geometry();
-        return QGuiApplication::primaryScreen() ? QGuiApplication::primaryScreen()->geometry() : QRect();
+        QScreen *found = nullptr;
+        if (ok && index >= 0 && index < list.size()) found = list.at(index);
+        if (!found)
+            for (QScreen *screen : list)
+                if (screen->name() == targetId) { found = screen; break; }
+        if (!found) found = QGuiApplication::primaryScreen();
+        return screenPhysicalGeometryOf(found);
     }
 #ifdef Q_OS_WIN
     bool ok = false;
@@ -232,7 +299,10 @@ QVariantList DesktopAutomationBackend::screens()
     const auto list = QGuiApplication::screens();
     for (int i = 0; i < list.size(); ++i) {
         QScreen *s = list.at(i);
-        const QRect r = s->geometry();
+        // FISICO, igual que windows() (GetWindowRect): las dos listas alimentan los
+        // mismos clics, así que tienen que hablar el mismo idioma. Con lógicos, un
+        // monitor al 150% reportaba 1280x720 y los clics caían corridos.
+        const QRect r = screenPhysicalGeometryOf(s);
         out.append(QVariantMap{
             {QStringLiteral("id"), QString::number(i)},
             {QStringLiteral("kind"), QStringLiteral("screen")},
@@ -270,20 +340,26 @@ QVariantMap DesktopAutomationBackend::targetInfo(const QString &kind, const QStr
 QImage DesktopAutomationBackend::capture(const QString &kind, const QString &targetId, QString *error)
 {
     if (error) error->clear();
-    const QRect bounds = targetBounds(kind, targetId);
+    const QRect bounds = targetBounds(kind, targetId);   // FISICO
     if (!bounds.isValid()) {
         if (error) *error = QStringLiteral("El alcance visual ya no está disponible.");
         return {};
     }
-    QScreen *screen = QGuiApplication::screenAt(bounds.center());
-    if (!screen) screen = QGuiApplication::primaryScreen();
+    QScreen *screen = screenForPhysicalPoint(bounds.center());
     if (!screen) {
         if (error) *error = QStringLiteral("No hay una pantalla disponible.");
         return {};
     }
-    const QRect sg = screen->geometry();
-    const QPixmap pix = screen->grabWindow(0, bounds.x() - sg.x(), bounds.y() - sg.y(),
-                                           bounds.width(), bounds.height());
+    // grabWindow() recibe coords LOGICAS relativas a la pantalla, pero `bounds` es
+    // físico: hay que convertir. (Antes se le pasaba el rect físico de
+    // GetWindowRect tal cual, así que capturar una ventana en un monitor escalado
+    // agarraba la región equivocada.) La captura vuelve en píxeles de dispositivo,
+    // o sea del tamaño físico de `bounds` → readText() la mapea 1:1.
+    const QRect sp = screenPhysicalGeometryOf(screen);
+    const double dpr = screen->devicePixelRatio() > 0 ? screen->devicePixelRatio() : 1.0;
+    const QPixmap pix = screen->grabWindow(0,
+        qRound((bounds.x() - sp.x()) / dpr), qRound((bounds.y() - sp.y()) / dpr),
+        qRound(bounds.width() / dpr), qRound(bounds.height() / dpr));
     if (pix.isNull() && error) *error = QStringLiteral("No se pudo capturar el escritorio.");
     return pix.toImage();
 }
@@ -642,8 +718,31 @@ bool DesktopAutomationBackend::scroll(int delta, QString *error)
 
 QVariantMap DesktopAutomationBackend::cursorState()
 {
-    const QPoint p = QCursor::pos();
+    const QPoint p = cursorPosPhysical();
     return {{QStringLiteral("x"), p.x()}, {QStringLiteral("y"), p.y()}};
+}
+
+bool DesktopAutomationBackend::moveCursor(const QPoint &physical)
+{
+#ifdef Q_OS_WIN
+    return SetCursorPos(physical.x(), physical.y());
+#else
+    QCursor::setPos(physical);
+    return true;
+#endif
+}
+
+QPoint DesktopAutomationBackend::cursorPosPhysical()
+{
+#ifdef Q_OS_WIN
+    // GetCursorPos, no QCursor::pos(): éste devuelve lógicos de Qt y todo el resto
+    // del stack (SetCursorPos, UIA, los bounds de los targets) habla en físicos.
+    // Mezclarlos hacía que Teach anclara el control equivocado en un monitor
+    // escalado, y que el replay clickeara corrido.
+    POINT p{};
+    if (GetCursorPos(&p)) return QPoint(p.x, p.y);
+#endif
+    return QCursor::pos();
 }
 
 QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,

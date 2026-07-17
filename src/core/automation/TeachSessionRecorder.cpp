@@ -142,7 +142,7 @@ QString TeachSessionRecorder::startDesktop(const QVariantMap &task,
     m_scopeKind = scopeKind;
     m_scopeId = scopeId;
     m_clock.start();
-    m_lastCursor = QCursor::pos();
+    m_lastCursor = DesktopAutomationBackend::cursorPosPhysical();
     m_state = QStringLiteral("recording");
     appendEvent({{QStringLiteral("kind"), QStringLiteral("start")},
                  {QStringLiteral("intent"), QStringLiteral("Inicio de demostración de escritorio")}}, true);
@@ -167,7 +167,7 @@ QString TeachSessionRecorder::startBrowser(const QVariantMap &task, const QStrin
     m_scopeKind = QStringLiteral("screen");
     m_scopeId = QStringLiteral("0");
     m_clock.start();
-    m_lastCursor = QCursor::pos();
+    m_lastCursor = DesktopAutomationBackend::cursorPosPhysical();
     m_state = QStringLiteral("recording");
     appendEvent({{QStringLiteral("kind"), QStringLiteral("browser")},
                  {QStringLiteral("intent"), QStringLiteral("Inicio de demostración web en browser foreground con Playwright codegen y evidencia visual")},
@@ -220,7 +220,8 @@ void TeachSessionRecorder::addAssertion(const QString &expectText)
         {QStringLiteral("intent"), QStringLiteral("Verificar que aparezca: \"%1\"").arg(clean)},
         {QStringLiteral("expectText"), clean}};
 #ifdef Q_OS_WIN
-    const QVariantMap control = DesktopAutomationBackend::controlAtPoint(QCursor::pos());
+    const QVariantMap control = DesktopAutomationBackend::controlAtPoint(
+        DesktopAutomationBackend::cursorPosPhysical());
     if (!control.value(QStringLiteral("windowId")).toString().isEmpty())
         ev[QStringLiteral("target")] = control;
 #endif
@@ -259,7 +260,7 @@ void TeachSessionRecorder::appendEvent(const QVariantMap &source, bool capture)
 void TeachSessionRecorder::sampleDesktop()
 {
     if (m_state != QLatin1String("recording")) return;
-    const QPoint cursor = QCursor::pos();
+    const QPoint cursor = DesktopAutomationBackend::cursorPosPhysical();
 #ifdef Q_OS_WIN
     const bool left = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
     const bool right = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;

@@ -456,4 +456,17 @@ if (BUILD_TESTS)
     add_lc_test(test_logtriage          tests/test_logtriage.cpp)
     add_lc_test(test_fuzzy_match        tests/test_fuzzy_match.cpp)
     add_lc_test(test_ocr_locator        tests/test_ocr_locator.cpp)
+
+    # Harness de QA manual del OCR: se compila pero NO se registra en ctest (a
+    # propósito: necesita escritorio vivo + paquete de idioma, y en headless daría
+    # rojo por el entorno, no por el código). Correr a mano con una app abierta.
+    # Ver "QA manual pendiente" en CLAUDE.md.
+    qt_add_executable(qa_ocr_probe tests/qa_ocr_probe.cpp)
+    set_target_properties(qa_ocr_probe PROPERTIES WIN32_EXECUTABLE FALSE)
+    if (MSVC)
+        target_compile_options(qa_ocr_probe PRIVATE /utf-8)
+        target_link_options(qa_ocr_probe PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
+    endif()
+    target_include_directories(qa_ocr_probe PRIVATE src tests)
+    target_link_libraries(qa_ocr_probe PRIVATE llamacode_core)
 endif()

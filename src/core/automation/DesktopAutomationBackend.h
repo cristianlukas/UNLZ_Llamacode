@@ -51,6 +51,16 @@ public:
     static bool scroll(int delta, QString *error = nullptr);
     static QVariantMap cursorState();
 
+    // Posición del cursor en píxeles FISICOS — el espacio en el que hablan TODAS
+    // las coordenadas de este backend (bounds de targets, controlAtPoint, readText,
+    // click). QCursor::pos() devuelve lógicos de Qt y NO sirve acá: en un monitor
+    // escalado los dos espacios difieren y el punto termina en otro lado.
+    static QPoint cursorPosPhysical();
+
+    // Mueve el cursor a un punto FISICO (par de cursorPosPhysical). QCursor::setPos
+    // no sirve: interpreta el punto como lógico.
+    static bool moveCursor(const QPoint &physical);
+
     // ── UI Automation: el escritorio como árbol de controles (DOM-aware) ──
     // Enumera los controles (control-view) descendientes de una ventana: nombre,
     // rol, geometría, habilitado e invocable. `windowTargetId` = id hex de la

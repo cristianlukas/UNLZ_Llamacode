@@ -106,13 +106,15 @@ reproducible en headless/CI), así que sólo se cubre el path de error en
 - **Browser teach persistente**: grabar un skill con login (`--user-data-dir` en
   `browser_skills/profiles/<slug>`), cerrar, reproducir → la sesión sigue logueada
   (no re-pide credenciales).
-- **OCR** (`OcrEngine` vía Windows.Media.Ocr): necesita pantalla real + paquete de
-  idioma OCR instalado en Windows. La lógica pura (`OcrTextLocator`) sí tiene test;
-  el motor no. Verificar: (a) `desktop_click_text` acierta en una app que
-  `desktop_controls` no expone; (b) **con escalado de pantalla al 150%** el clic cae
-  en el texto y no corrido — es el bug clásico de estos proyectos, y la corrección
-  vive sólo en `DesktopAutomationBackend::readText`; (c) en multi-monitor con el
-  cursor en el secundario, la orden opera esa pantalla.
+- **OCR / coordenadas** — hay harness, no hace falta ojo humano:
+  `build_tests\Release\qa_ocr_probe.exe [texto]` (se compila con `tests.bat` pero
+  NO está en ctest: necesita escritorio vivo + paquete de idioma OCR). Cruza
+  `readText()` contra UIA: si el OCR ubica "Archivo" en (x,y) y
+  `controlAtPoint(x,y)` dice "Archivo", dos fuentes independientes coinciden.
+  Imprime el acuerdo por pantalla y sale 0 si todas dan >=70%.
+  **Correrlo con una app con menús abierta en un monitor ESCALADO (125/150%)**: a
+  100% lógico y físico coinciden y taparían cualquier error de espacio de coords.
+  Así se cazó el bug de `targetBounds` (acuerdo 10% en el monitor al 150%, hoy 97%).
 - **Cursor por voz** (`cursorOcr` en Charla, off por defecto): activarlo en
   Charla → decir "clic en Guardar" mueve/clickea; decir "no sé si hacer clic en
   Guardar" NO actúa y va al LLM. Con dos textos iguales en pantalla debe negarse
