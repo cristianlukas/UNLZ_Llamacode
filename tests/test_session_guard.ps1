@@ -103,6 +103,33 @@ $other = Join-Path $root 'src\core\agent\SubAgentRunner.cpp'
 $o4 = RunGuard 'edit-claim' @{ session_id='sess-B'; tool_name='Edit'; tool_input=@{ file_path=$other } }
 Ok (-not ($o4 -match 'OJO')) "archivo distinto: sin aviso (el claim es por archivo, no por sesion)"
 
+Write-Host "== test 4b: el consejo aplica al archivo que tenes enfrente =="
+# Dentro del repo: git/worktree son la salida. Fuera (ej. la carpeta de memoria):
+# hablar de worktrees es ruido, y un guard que dice pavadas se ignora.
+$memFile = 'C:\Users\cristian\.claude\projects\demo\memory\alguna-memoria.md'
+RunGuard 'edit-claim' @{ session_id='sess-X'; tool_name='Edit'; tool_input=@{ file_path=$memFile } } | Out-Null
+$oOut = (RunGuard 'edit-claim' @{ session_id='sess-Y'; tool_name='Edit'; tool_input=@{ file_path=$memFile } } |
+         ConvertFrom-Json).hookSpecificOutput.additionalContext
+Ok ($oOut -match 'OJO: otra sesion edito')  "avisa igual fuera del repo (el choque es real)"
+Ok (-not ($oOut -match 'worktree'))         "fuera del repo NO sugiere worktree"
+Ok (-not ($oOut -match 'git checkout'))     "fuera del repo NO habla de git checkout"
+$inOut = (RunGuard 'edit-claim' @{ session_id='sess-Y'; tool_name='Edit'; tool_input=@{ file_path=$target } } |
+          ConvertFrom-Json).hookSpecificOutput.additionalContext
+Ok ($inOut -match 'worktree')                "dentro del repo SI sugiere worktree"
+
+Write-Host "== test 4c: el claim es por path completo, no por el final del nombre =="
+# Truncar el path hacia dizq (los ultimos N chars) hace colisionar archivos con el
+# mismo final: a/x/CLAUDE.md vs b/y/CLAUDE.md eran el MISMO claim -> avisos de
+# choques inexistentes. Con hash del path completo, no.
+if (Test-Path $claimDir) { Remove-Item -Recurse -Force $claimDir -ErrorAction SilentlyContinue }
+$p1 = Join-Path $root 'CLAUDE.md'
+$p2 = Join-Path $root 'research_sub\CLAUDE.md'   # mismo basename, otro archivo
+RunGuard 'edit-claim' @{ session_id='sess-P'; tool_name='Edit'; tool_input=@{ file_path=$p1 } } | Out-Null
+$oCol = RunGuard 'edit-claim' @{ session_id='sess-Q'; tool_name='Edit'; tool_input=@{ file_path=$p2 } }
+Ok (-not ($oCol -match 'OJO')) "dos CLAUDE.md en dirs distintos no colisionan"
+$oSame = RunGuard 'edit-claim' @{ session_id='sess-Q'; tool_name='Edit'; tool_input=@{ file_path=$p1 } }
+Ok ($oSame -match 'OJO') "el mismo path si detecta el choque"
+
 Write-Host "== test 5: edit-claim ignora claims stale (sesion muerta no traba a nadie) =="
 Get-ChildItem $claimDir -Filter 'sess-A__*' -File | ForEach-Object {
     $_.LastWriteTime = (Get-Date).AddMinutes(-120)   # mas viejo que $staleMin (90)

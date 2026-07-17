@@ -108,12 +108,21 @@ if ($Mode -eq 'edit-claim') {
 
     New-Item -ItemType Directory -Force -Path $claimDir | Out-Null
 
+    # Los claims vencidos no los mira nadie pero el dir crece para siempre: podo
+    # de paso. Barato (decenas de archivos) y evita tener que limpiar a mano.
+    Get-ChildItem $claimDir -Filter '*.claim' -File -ErrorAction SilentlyContinue |
+        Where-Object { ((Get-Date) - $_.LastWriteTime).TotalMinutes -ge ($staleMin * 2) } |
+        Remove-Item -Force -ErrorAction SilentlyContinue
+
     # Un claim por (sesion, archivo). El nombre codifica ambos; el mtime es el
     # heartbeat (no hay PID confiable de la sesion, y no hace falta: lo unico que
     # importa es si alguien la toco recientemente).
-    $key   = [regex]::Replace($file, '[^A-Za-z0-9]', '_')
-    if ($key.Length -gt 80) { $key = $key.Substring($key.Length - 80) }
-    $mine  = Join-Path $claimDir ("{0}__{1}.claim" -f $sid, $key)
+    # Hash del path completo, no los ultimos 80 chars: truncar hace colisionar
+    # archivos con el mismo final (a/x/CLAUDE.md vs b/y/CLAUDE.md), o sea avisos
+    # de choques que no existen.
+    $md5  = [Security.Cryptography.MD5]::Create()
+    $key  = ([BitConverter]::ToString($md5.ComputeHash([Text.Encoding]::UTF8.GetBytes($file.ToLower()))) -replace '-','').Substring(0,16)
+    $mine = Join-Path $claimDir ("{0}__{1}.claim" -f $sid, $key)
 
     # ?Alguna otra sesion viva reclamo este mismo archivo?
     $others = @(Get-ChildItem $claimDir -Filter ("*__{0}.claim" -f $key) -File -ErrorAction SilentlyContinue |
@@ -124,13 +133,24 @@ if ($Mode -eq 'edit-claim') {
 
     if ($others.Count -gt 0) {
         $ago = [int]((Get-Date) - ($others | Sort-Object LastWriteTime -Descending)[0].LastWriteTime).TotalMinutes
-        $rel = $file
-        if ($rel.StartsWith($root)) { $rel = $rel.Substring($root.Length).TrimStart('\','/') }
+        $inRepo = $file.ToLower().StartsWith($root.ToLower())
+        $rel = if ($inRepo) { $file.Substring($root.Length).TrimStart('\','/') } else { $file }
+
+        # El consejo tiene que aplicar al archivo que tenes enfrente. Un choque en
+        # la carpeta de memoria (o en cualquier cosa fuera del repo) es real y vale
+        # avisarlo, pero hablarle de 'git checkout' o de worktrees es ruido - y un
+        # guard que dice pavadas se ignora, o sea deja de proteger.
+        $tail = if ($inRepo) {
+            "Antes de escribir: releelo (puede haber cambiado en disco desde tu ultimo Read).`n" +
+            "Al commitear, stagea solo TUS hunks; no revertas con 'git checkout -- $rel'`n" +
+            "(te llevas lo suyo). Para trabajar tranquilo:`n" +
+            "  powershell -File worktree.ps1 -Action new -Name <tarea>"
+        } else {
+            "Esta fuera del repo: no hay historial que te cubra si lo pisas. Releelo`n" +
+            "antes de escribir y suma lo tuyo en vez de reescribir el archivo entero."
+        }
         Emit-Context ("[session-guard] OJO: otra sesion edito '$rel' hace ~${ago} min y sigue activa.`n" +
-                      "Vas a pisar o mezclar su trabajo. Antes de escribir: releelo (puede haber cambiado`n" +
-                      "en disco desde tu ultimo Read), commitea solo TUS hunks, y no revertas con`n" +
-                      "'git checkout -- $rel' (te llevas lo suyo). Para trabajar tranquilo:`n" +
-                      "  powershell -File worktree.ps1 -Action new -Name <tarea>")
+                      "Vas a pisar o mezclar su trabajo. $tail")
     }
     exit 0
 }
