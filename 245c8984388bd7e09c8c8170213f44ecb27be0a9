@@ -1,0 +1,22 @@
+CORRECCION del mensaje de este commit.
+
+El punto sobre vision es FALSO. Decia que el fork viejo "perdia el marcador
+<|image|>" en content-parts image_url por matchear solo type=='image'. No es
+asi bajo llama.cpp: convierte las partes de imagen en un media_marker propio
+(<__media_XXX__>) ANTES de renderizar el jinja (common/chat.cpp), de modo que
+esa rama del template es codigo muerto. Medido despues, con /apply-template +
+--mmproj sobre gemma-4-31B QAT: el template viejo y el oficial rinden un prompt
+IDENTICO para una imagen. Sin --mmproj el server corta con 500 antes.
+
+El error salio de leer el diff del template y de un harness jinja2 que renderiza
+el template directo, sin el preprocesado de llama.cpp: describe bien el template
+y mal la produccion.
+
+Lo demas del mensaje se sostiene y esta medido contra server real:
+- preserve_thinking: el fork lo ignoraba, el oficial lo honra (verificado viejo
+  vs nuevo con chat_template_kwargs).
+- primer <|channel>thought tras tool_response.
+- arguments sigue viajando como string JSON.
+
+El cambio en si (adoptar el template oficial) sigue siendo correcto; lo que
+estaba mal era una de las razones que lo justificaban.
