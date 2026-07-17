@@ -48,13 +48,28 @@ function Git-Run() {
     return [pscustomobject]@{ rc = $LASTEXITCODE; out = ($out | Out-String).Trim() }
 }
 
+# Como Git-Run pero devuelve las lineas crudas, SIN Trim() global. Para
+# --porcelain el Trim() es destructivo: el formato es 'XY <path>' y X puede ser un
+# espacio (' M CMakeLists.txt'), asi que trimear el blob entero le come el espacio
+# a la PRIMERA linea y despues el parser se lleva puesta la primera letra del path
+# ('CMakeLists.txt' -> 'MakeLists.txt').
+function Git-Lines() {
+    $ErrorActionPreference = 'Continue'
+    $out = & git -C $root @args 2>&1
+    if ($LASTEXITCODE -ne 0) { return @() }
+    return @($out | ForEach-Object { [string]$_ })
+}
+
 # Archivos con cambios sin commitear (tracked + untracked), como lista de paths.
 function Get-DirtyPaths() {
-    $r = Git-Run status --porcelain
-    if ($r.rc -ne 0 -or -not $r.out) { return @() }
-    return @($r.out -split "`n" | ForEach-Object {
+    return @(Git-Lines status --porcelain | ForEach-Object {
         $line = $_.TrimEnd()
-        if ($line.Length -gt 3) { $line.Substring(3).Trim().Trim('"') }
+        if ($line -match '^(..)\s(.+)$') {
+            $p = $Matches[2].Trim().Trim('"')
+            # Renombres vienen como 'old -> new': nos interesa el destino.
+            if ($p -match '\s->\s(.+)$') { $p = $Matches[1].Trim().Trim('"') }
+            $p
+        }
     } | Where-Object { $_ })
 }
 
@@ -176,7 +191,40 @@ if ($Mode -eq 'git-guard') {
         @{ rx = '\bgit\s+stash\b(?![^|;&]*\b(list|show)\b)';  what = 'git stash (se lleva los cambios de TODAS las sesiones)' },
         @{ rx = "\bgit\s+add\s+[^|;&]*(-A\b|--all\b|$dot)";   what = 'git add -A/. (stagea trabajo de otras sesiones)' }
     )
-    $hit = $patterns | Where-Object { $cmd -match $_.rx } | Select-Object -First 1
+    # Matchear el TEXTO del comando bloquea cosas que solo NOMBRAN el comando sin
+    # ejecutarlo: un echo, un grep, documentacion, un JSON con 'git stash' adentro.
+    # Eso es exactamente lo que hace que un guard se termine desactivando. Asi que
+    # antes de bloquear, exigimos que el 'git' este de verdad en posicion de
+    # comando y fuera de comillas.
+
+    # ?El indice cae dentro de un string entrecomillado?
+    function Test-Quoted([string]$s, [int]$i) {
+        $inS = $false; $inD = $false
+        for ($k = 0; $k -lt $i -and $k -lt $s.Length; $k++) {
+            $c = $s[$k]
+            if     ($c -eq "'" -and -not $inD) { $inS = -not $inS }
+            elseif ($c -eq '"' -and -not $inS) { $inD = -not $inD }
+        }
+        return ($inS -or $inD)
+    }
+    # ?Esta 'git' donde arranca un comando, y no como argumento de otro?
+    # ('echo git stash' no ejecuta nada; 'foo && git stash' si.)
+    function Test-CommandPos([string]$s, [int]$i) {
+        $k = $i - 1
+        while ($k -ge 0 -and [char]::IsWhiteSpace($s[$k])) { $k-- }
+        if ($k -lt 0) { return $true }
+        return ([string]$s[$k] -in @(';', '|', '&', '(', '{', '`', "`n"))
+    }
+
+    $hit = $null
+    foreach ($p in $patterns) {
+        foreach ($m in [regex]::Matches($cmd, $p.rx)) {
+            if (-not (Test-Quoted $cmd $m.Index) -and (Test-CommandPos $cmd $m.Index)) {
+                $hit = $p; break
+            }
+        }
+        if ($hit) { break }
+    }
     if (-not $hit) { exit 0 }
 
     # Sin trabajo ajeno en riesgo, no hay nada que proteger: dejalo pasar.

@@ -47,13 +47,35 @@ Write-Host "== test 1: fingerprint estable ante bump semver =="
 $fp = (& $coord -Lane build -Action fingerprint).Trim()
 Ok ($fp.Length -eq 32) "fingerprint 32 chars ($fp)"
 # Simula bump: escribo un archivo temporal en tests/ con un triple semver, recomputo.
-$tmp = Join-Path $root 'tests\_fp_probe.tmp'
+$tmp = Join-Path $root 'tests\_fp_probe.cpp'
 'version 1.2.3'  | Set-Content $tmp -Encoding ASCII
 $fpA = (& $coord -Lane build -Action fingerprint).Trim()
 'version 9.9.9'  | Set-Content $tmp -Encoding ASCII
 $fpB = (& $coord -Lane build -Action fingerprint).Trim()
 Remove-Item $tmp -Force
 Ok ($fpA -eq $fpB) "solo cambia un triple semver -> mismo fingerprint (bump no invalida)"
+
+Write-Host "== test 1b: el fingerprint ignora lo que no puede afectar al build =="
+# tests/ tiene infra PowerShell (este mismo archivo) que CMake ni mira. Si contara
+# en el fingerprint, editarla invalida un gate de C++ en curso -> DIRTY falso. Y un
+# DIRTY falso ensena a ignorar los DIRTY de verdad.
+$fpBase = (& $coord -Lane build -Action fingerprint).Trim()
+$psProbe = Join-Path $root 'tests\_ignored_probe.ps1'
+'Write-Host "infra, no fuente"' | Set-Content $psProbe -Encoding ASCII
+$fpPs = (& $coord -Lane build -Action fingerprint).Trim()
+Remove-Item $psProbe -Force
+Ok ($fpPs -eq $fpBase) "tocar un .ps1 en tests/ NO cambia el fingerprint"
+$mdProbe = Join-Path $root 'tests\_ignored_probe.md'
+'# notas' | Set-Content $mdProbe -Encoding ASCII
+$fpMd = (& $coord -Lane build -Action fingerprint).Trim()
+Remove-Item $mdProbe -Force
+Ok ($fpMd -eq $fpBase) "tocar un .md en tests/ NO cambia el fingerprint"
+# ...pero la fuente de verdad si tiene que contar (si no, DIRTY nunca salta).
+$cppProbe = Join-Path $root 'tests\_counted_probe.cpp'
+'int probe() { return 1; }' | Set-Content $cppProbe -Encoding ASCII
+$fpCpp = (& $coord -Lane build -Action fingerprint).Trim()
+Remove-Item $cppProbe -Force
+Ok ($fpCpp -ne $fpBase) "tocar un .cpp SI cambia el fingerprint"
 
 Write-Host "== test 2: OWNER exclusivo + REUSE (share) =="
 Clean
@@ -100,7 +122,7 @@ Release 'build' 'OK'
 
 Write-Host "== test 6: release DIRTY si la fuente cambia durante el build =="
 Clean
-$probe = Join-Path $root 'tests\_dirty_probe.tmp'
+$probe = Join-Path $root 'tests\_dirty_probe.cpp'
 Remove-Item $probe -Force -ErrorAction SilentlyContinue
 Acquire 'build'                                      # A toma el lock con fp1
 $fp1 = (& $coord -Lane build -Action fingerprint).Trim()

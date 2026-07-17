@@ -80,7 +80,7 @@ exit /b 1
 REM La fuente cambio mientras corrian los tests: otra sesion edito el working tree.
 :warn_dirty
 echo.
-echo [WARN] La fuente cambio DURANTE la corrida ^(otra sesion edito el tree^).
+echo [WARN] La fuente cambio DURANTE la corrida ^(otra sesion, o vos mismo^).
 echo [WARN] El gate NO es confiable: los tests no corrieron sobre la fuente que
 echo [WARN] estas por commitear. Volve a correr tests.bat con el tree quieto, o
 echo [WARN] aislate: powershell -File worktree.ps1 -Action new -Name ^<tarea^>

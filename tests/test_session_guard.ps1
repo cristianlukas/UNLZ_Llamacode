@@ -75,6 +75,39 @@ foreach ($c in @(
     Ok (-not ($o -match 'deny')) "deja pasar: $c"
 }
 
+Write-Host "== test 2b: MENCIONAR el comando no es EJECUTARLO =="
+# Se me colo en la primera version: el guard matcheaba el texto, asi que bloqueaba
+# un benchmark que llevaba 'git stash' dentro de un JSON. Nombrar != ejecutar, y
+# bloquear por nombrar es lo que hace que alguien termine apagando el guard.
+foreach ($c in @(
+    'echo "git stash" > notas.txt',                              # lo escribe, no lo corre
+    "echo 'no uses git reset --hard aca'",
+    'grep -rn "git checkout ." docs/',                           # lo busca
+    'python bench.py --payload ''{"cmd":"git stash"}''',         # dato dentro de JSON
+    'echo git add -A'                                            # argumento de echo
+)) {
+    $o = GitGuard $c
+    Ok (-not ($o -match 'deny')) "no bloquea (solo lo menciona): $c"
+}
+# ...pero encadenado SI se ejecuta, y ahi hay que frenarlo.
+foreach ($c in @(
+    'cd /d C:\repo && git stash',
+    'echo hola; git reset --hard HEAD',
+    'npm test || git checkout .'
+)) {
+    $o = GitGuard $c
+    Ok ($o -match 'deny') "bloquea (se ejecuta encadenado): $c"
+}
+
+Write-Host "== test 2c: la lista de archivos sucios sale entera =="
+# El Trim() del blob de 'git status --porcelain' le comia el espacio a la PRIMERA
+# linea (formato 'XY <path>', X puede ser espacio) y el parser se llevaba la
+# primera letra del path: CMakeLists.txt -> MakeLists.txt.
+$reason2 = (GitGuard 'git stash' | ConvertFrom-Json).hookSpecificOutput.permissionDecisionReason
+$real = @(& git -C $root status --porcelain | ForEach-Object { if($_ -match '^(..)\s(.+)$'){ $Matches[2].Trim().Trim('"') } })
+$first = $real | Select-Object -First 1
+Ok ($reason2 -match [regex]::Escape($first)) "el primer path aparece completo ('$first')"
+
 Write-Host "== test 3: git-guard explica como seguir =="
 # Asertar sobre el JSON crudo da falsos negativos: ConvertTo-Json escapa '<' como
 # < y codifica los saltos como '\n'. El consumidor parsea el JSON, asi que lo

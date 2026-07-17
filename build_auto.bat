@@ -129,7 +129,7 @@ exit /b 1
 REM La fuente cambio mientras compilabamos: otra sesion edito el working tree.
 :warn_dirty
 echo.
-echo [WARN] La fuente cambio DURANTE el build ^(otra sesion edito el tree^).
+echo [WARN] La fuente cambio DURANTE el build ^(otra sesion, o vos mismo^).
 echo [WARN] El binario no corresponde a la fuente con la que arranco el build,
 echo [WARN] y un error de compilacion puede ser de la otra sesion, no tuyo.
 echo [WARN] Para aislarte: powershell -File worktree.ps1 -Action new -Name ^<tarea^>

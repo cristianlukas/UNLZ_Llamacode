@@ -61,12 +61,21 @@ $resultDir= Join-Path $lockRoot 'results'
 function Log([string]$m) { Write-Host ("[coord:{0}] {1}" -f $Lane, $m) }
 
 # --- fingerprint de la fuente (semver neutralizado) --------------------------
+# Extensiones que NO pueden afectar el build/ctest de C++ aunque vivan en
+# src/ qml/ tests/. Sin esto, editar tests\test_build_coord.ps1 (infra PowerShell,
+# que ni CMake mira) invalida el gate de C++ que esta corriendo: DIRTY falso, y un
+# DIRTY falso ensena a ignorar los DIRTY de verdad. Blacklist y no whitelist a
+# proposito: excluir de mas seria un DIRTY que NO salta (verde mentiroso), que es
+# el error caro; incluir de mas solo cuesta un re-run.
+$script:FpIgnoreExt = @('.ps1', '.md', '.log', '.tmp', '.claim', '.bat')
+
 function Get-Fingerprint {
     $targets = @('src','qml','tests') | ForEach-Object { Join-Path $root $_ }
     $files = @()
     foreach ($t in $targets) {
         if (Test-Path $t) {
-            $files += Get-ChildItem -Path $t -Recurse -File -ErrorAction SilentlyContinue
+            $files += Get-ChildItem -Path $t -Recurse -File -ErrorAction SilentlyContinue |
+                      Where-Object { $FpIgnoreExt -notcontains $_.Extension.ToLower() }
         }
     }
     $cmake = Join-Path $root 'CMakeLists.txt'
@@ -158,8 +167,12 @@ if ($Action -eq 'release') {
         $fpNow = Get-Fingerprint
         $dirty = ($fpNow -ne [string]$me.fingerprint)
         if ($dirty) {
-            Log ("DIRTY: la fuente cambio durante el build ({0} -> {1}); otra sesion" -f $me.fingerprint, $fpNow)
-            Log  '       edito el working tree. El artefacto/gate NO es confiable.'
+            # No acusar a "otra sesion": el DIRTY puede ser tuyo (editar mientras
+            # compilas es lo mas comun de todo). Decir quien fue sin saberlo hace
+            # que el aviso se lea como ruido y se ignore.
+            Log ("DIRTY: la fuente cambio durante el build ({0} -> {1})." -f $me.fingerprint, $fpNow)
+            Log  '       Alguien edito el tree mientras corria: otra sesion, o vos mismo.'
+            Log  '       El artefacto/gate NO corresponde a esta fuente.'
         }
         # Publica el resultado para que los sharers en espera lo adopten. Solo un
         # OK limpio es adoptable; DIRTY/FAIL los manda a compilar lo suyo.
