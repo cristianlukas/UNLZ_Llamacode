@@ -34,6 +34,10 @@ public:
     // Es genérico para cualquier ventana Win32; no depende de la aplicación.
     static bool setWindowMaximized(const QString &targetId, bool maximized,
                                    QString *error = nullptr);
+    // Ajusta sólo el tamaño exterior de una ventana restaurada, preservando su
+    // posición. Evita repetir SetWindowPos cuando ya coincide (tolerancia DPI).
+    static bool setWindowSize(const QString &targetId, int width, int height,
+                              QString *error = nullptr);
     static bool click(const QString &kind, const QString &targetId, double x, double y,
                       const QString &button = QStringLiteral("left"),
                       QString *error = nullptr, QVariantMap *trace = nullptr);

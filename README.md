@@ -157,7 +157,10 @@ que se activen en cada sesión.
   usuario o de una Task.
 - **Control del escritorio**: el agente prioriza controles semánticos de Windows
   (UI Automation), usa captura visual sólo cuando aporta información y verifica el
-  resultado después de actuar. Mientras controla ventanas, mouse o teclado se
+  resultado después de actuar. Teach conserva la geometría de la ventana objetivo
+  y Play restaura su estado maximizado o su tamaño exterior antes de reproducir
+  gestos, evitando que un cambio accidental de tamaño desplace dibujos y clicks.
+  Mientras controla ventanas, mouse o teclado se
   muestra durante toda la automatización un indicador siempre visible, un reborde
   independiente en cada monitor y un aro alrededor del puntero; el conjunto puede ocultarse
   desde Configuración > perfiles de agente > Indicador de escritorio.

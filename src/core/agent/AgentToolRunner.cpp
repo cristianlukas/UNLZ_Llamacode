@@ -990,6 +990,16 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return good ? QStringLiteral("[desktop_focus: ok]")
                     : QStringLiteral("[desktop_focus: %1]").arg(error);
     }
+    if (name == QLatin1String("desktop_resize")) {
+        QString error;
+        const bool good = DesktopAutomationBackend::setWindowSize(
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("width")).toInt(),
+            args.value(QStringLiteral("height")).toInt(), &error);
+        if (ok) *ok = good;
+        return good ? QStringLiteral("[desktop_resize: ok]")
+                    : QStringLiteral("[desktop_resize: %1]").arg(error);
+    }
     if (name == QLatin1String("desktop_wait")) {
         const int ms = qBound(50, args.value(QStringLiteral("ms")).toInt(500), 10000);
         QThread::msleep(static_cast<unsigned long>(ms));

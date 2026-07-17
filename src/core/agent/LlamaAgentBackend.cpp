@@ -3329,6 +3329,8 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("browser_skill_replay")) return {QStringLiteral("name")};
     if (name == QLatin1String("desktop_launch")) return {QStringLiteral("app")};
     if (name == QLatin1String("desktop_focus")) return {QStringLiteral("target_id")};
+    if (name == QLatin1String("desktop_resize"))
+        return {QStringLiteral("target_id"), QStringLiteral("width"), QStringLiteral("height")};
     if (name == QLatin1String("desktop_controls")) return {QStringLiteral("target_id")};
     if (name == QLatin1String("desktop_click_element"))
         return {QStringLiteral("target_id"), QStringLiteral("control_id")};
@@ -4247,6 +4249,14 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Enfoca/restaura una ventana enseñada."),
            QJsonObject{{QStringLiteral("target_id"), strProp(QStringLiteral("Id de ventana."))}},
            QJsonArray{QStringLiteral("target_id")}),
+        fn(QStringLiteral("desktop_resize"),
+           QStringLiteral("Restaura el tamaño exterior enseñado de una ventana sin moverla. "
+                          "Usala cuando la receta indique ancho/alto y la ventana actual difiera."),
+           QJsonObject{
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de ventana."))},
+               {QStringLiteral("width"), intProp(QStringLiteral("Ancho exterior enseñado en píxeles."))},
+               {QStringLiteral("height"), intProp(QStringLiteral("Alto exterior enseñado en píxeles."))}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("width"), QStringLiteral("height")}),
         fn(QStringLiteral("desktop_wait"),
            QStringLiteral("Espera brevemente antes de volver a observar."),
            QJsonObject{{QStringLiteral("ms"), intProp(QStringLiteral("Milisegundos, máximo 10000."))}},
@@ -4364,6 +4374,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_key", "Escritorio", "Presiona teclas o combinaciones.", 90),
         mk("desktop_scroll", "Escritorio", "Desplaza el escritorio.", 70),
         mk("desktop_focus", "Escritorio", "Enfoca una ventana.", 70),
+        mk("desktop_resize", "Escritorio", "Restaura el tamaño enseñado de una ventana.", 72),
         mk("desktop_wait", "Escritorio", "Espera antes de observar.", 60),
         mk("desktop_wait_for", "Escritorio", "Espera una condición (ventana/control) sin dormir fijo.", 85),
         mk("desktop_assert", "Escritorio", "Verifica una condición comprobable (PASS/FAIL).", 88),

@@ -1175,6 +1175,45 @@ bool DesktopAutomationBackend::setWindowMaximized(const QString &targetId, bool 
 #endif
 }
 
+bool DesktopAutomationBackend::setWindowSize(const QString &targetId, int width, int height,
+                                              QString *error)
+{
+#ifdef Q_OS_WIN
+    bool parsed = false;
+    const quintptr raw = targetId.toULongLong(&parsed, 16);
+    HWND hwnd = parsed ? reinterpret_cast<HWND>(raw) : nullptr;
+    if (!hwnd || !IsWindow(hwnd)) {
+        if (error) *error = QStringLiteral("La ventana ya no está disponible.");
+        return false;
+    }
+    if (width <= 0 || height <= 0) {
+        if (error) *error = QStringLiteral("El tamaño de ventana enseñado no es válido.");
+        return false;
+    }
+    if (IsZoomed(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+    if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+    RECT rect{};
+    if (!GetWindowRect(hwnd, &rect)) {
+        if (error) *error = QStringLiteral("No se pudo leer el tamaño actual de la ventana.");
+        return false;
+    }
+    const int currentWidth = static_cast<int>(rect.right - rect.left);
+    const int currentHeight = static_cast<int>(rect.bottom - rect.top);
+    if (qAbs(currentWidth - width) > 2 || qAbs(currentHeight - height) > 2) {
+        if (!SetWindowPos(hwnd, nullptr, 0, 0, width, height,
+                          SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE)) {
+            if (error) *error = QStringLiteral("Windows rechazó el tamaño de ventana solicitado.");
+            return false;
+        }
+    }
+    return focusWindow(targetId, error);
+#else
+    Q_UNUSED(targetId) Q_UNUSED(width) Q_UNUSED(height)
+    if (error) *error = QStringLiteral("Control de ventanas disponible sólo en Windows.");
+    return false;
+#endif
+}
+
 QVariantMap DesktopAutomationBackend::waitFor(const QString &windowTargetId,
                                               const QString &windowTitle, const QString &query,
                                               const QString &role, int timeoutMs, QString *error)

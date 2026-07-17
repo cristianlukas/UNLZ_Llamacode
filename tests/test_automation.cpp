@@ -298,7 +298,11 @@ void AutomationTests::strokePointsSurviveRecipeAndPrompt()
         {QStringLiteral("intent"), QStringLiteral("Arrastrar con botón left (traza de 5 puntos)")},
         {QStringLiteral("button"), QStringLiteral("left")},
         {QStringLiteral("x"), 0.0}, {QStringLiteral("y"), 0.2},
-        {QStringLiteral("points"), points}};
+        {QStringLiteral("points"), points},
+        {QStringLiteral("target"), QVariantMap{
+             {QStringLiteral("windowLabel"), QStringLiteral("Sin título - Paint")},
+             {QStringLiteral("winWidth"), 1200}, {QStringLiteral("winHeight"), 800},
+             {QStringLiteral("windowMaximized"), false}}}};
     const QString id = AutomationArtifactStore::create(
         task, QVariantMap{{"kind", "window"}, {"targetId", "abc"}}, QVariantList{stroke}, {});
     const QVariantMap stored = AutomationArtifactStore::recipe(id)
@@ -310,6 +314,9 @@ void AutomationTests::strokePointsSurviveRecipeAndPrompt()
     QVERIFY(prompt.contains(QStringLiteral("[stroke]")));
     QVERIFY(prompt.contains(QStringLiteral("points=")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_stroke")));
+    QVERIFY(prompt.contains(QStringLiteral("desktop_resize")));
+    QVERIFY(prompt.contains(QStringLiteral("tamaño Teach 1200x800")));
+    QVERIFY(prompt.contains(QStringLiteral("maximizada=no")));
     QVERIFY(prompt.contains(QStringLiteral("[0.400,0.600]")));   // último punto
     // El prompt de escritorio ofrece la sincronización por condición.
     QVERIFY(prompt.contains(QStringLiteral("desktop_wait_for")));
@@ -356,6 +363,8 @@ void AutomationTests::recordedWindowStateSupportsExplicitAndLegacyRecipes()
     QVariantMap state = R::recordedWindowState(explicitRestored, scope);
     QVERIFY(state.value("known").toBool());
     QVERIFY(!state.value("maximized").toBool());
+    QCOMPARE(state.value("width").toInt(), 2500);
+    QCOMPARE(state.value("height").toInt(), 1400);
 
     state = R::recordedWindowState(
         QVariantMap{{"winWidth", 2576}, {"winHeight", 1408}}, scope);
@@ -364,6 +373,12 @@ void AutomationTests::recordedWindowStateSupportsExplicitAndLegacyRecipes()
 
     state = R::recordedWindowState(
         QVariantMap{{"winWidth", 900}, {"winHeight", 700}}, scope);
+    QVERIFY(state.value("known").toBool());
+    QVERIFY(!state.value("maximized").toBool());
+    QCOMPARE(state.value("width").toInt(), 900);
+    QCOMPARE(state.value("height").toInt(), 700);
+
+    state = R::recordedWindowState(QVariantMap{}, scope);
     QVERIFY(!state.value("known").toBool());
 }
 

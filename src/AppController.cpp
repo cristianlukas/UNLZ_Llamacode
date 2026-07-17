@@ -5064,9 +5064,14 @@ void AppController::playNextReplayStep()
                     AutomationRunner::recordedWindowState(target, scopeRect);
                 if (recordedState.value(QStringLiteral("known")).toBool()) {
                     QString stateError;
-                    if (!DesktopAutomationBackend::setWindowMaximized(
-                            curId, recordedState.value(QStringLiteral("maximized")).toBool(),
-                            &stateError)) {
+                    const bool maximized = recordedState.value(QStringLiteral("maximized")).toBool();
+                    bool restored = DesktopAutomationBackend::setWindowMaximized(
+                        curId, maximized, &stateError);
+                    if (restored && !maximized)
+                        restored = DesktopAutomationBackend::setWindowSize(
+                            curId, recordedState.value(QStringLiteral("width")).toInt(),
+                            recordedState.value(QStringLiteral("height")).toInt(), &stateError);
+                    if (!restored) {
                         error = stateError;
                         windowStateOk = false;
                     }

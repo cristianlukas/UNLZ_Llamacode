@@ -222,6 +222,7 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_key"),
         QStringLiteral("desktop_scroll"),
         QStringLiteral("desktop_focus"),
+        QStringLiteral("desktop_resize"),
         QStringLiteral("desktop_wait"),
         QStringLiteral("desktop_wait_for"),
         QStringLiteral("desktop_assert"),
@@ -269,6 +270,9 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "Cada paso trae un 'target' con name/role/controlId del control real bajo el "
             "cursor: preferí re-localizarlo (desktop_controls + desktop_click_element por "
             "ese name/role) y dejá las coordenadas sólo como respaldo. "
+            "VENTANA ENSEÑADA: si el target informa windowLabel, winWidth y winHeight, "
+            "buscá esa ventana por título y restaurá ese tamaño con desktop_resize antes "
+            "del click/trazo cuando no estaba maximizada. No arrastres sus bordes a mano. "
             "VERIFICACIÓN: un paso [assert] es una condición que DEBE cumplirse; reproducilo "
             "con desktop_assert (PASS/FAIL). Cerrá la Task con un desktop_assert del objetivo "
             "en vez de declarar éxito de memoria. "
@@ -329,6 +333,15 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
         const QString name = target.value(QStringLiteral("name")).toString();
         if (!role.isEmpty() || !name.isEmpty())
             out += QStringLiteral(" (target %1 \"%2\")").arg(role, name.left(80));
+        const QString windowLabel = target.value(QStringLiteral("windowLabel")).toString();
+        const int winWidth = target.value(QStringLiteral("winWidth")).toInt();
+        const int winHeight = target.value(QStringLiteral("winHeight")).toInt();
+        if (!windowLabel.isEmpty() && winWidth > 0 && winHeight > 0) {
+            out += QStringLiteral(" (ventana \"%1\", tamaño Teach %2x%3, maximizada=%4)")
+                       .arg(windowLabel.left(80)).arg(winWidth).arg(winHeight)
+                       .arg(target.value(QStringLiteral("windowMaximized")).toBool()
+                                ? QStringLiteral("sí") : QStringLiteral("no"));
+        }
         out += QLatin1Char('\n');
     }
     const QVariantList learnings = recipe.value(QStringLiteral("learnings")).toList();
@@ -615,14 +628,20 @@ QVariantMap AutomationRunner::recordedWindowState(const QVariantMap &target,
 {
     if (target.contains(QStringLiteral("windowMaximized")))
         return {{QStringLiteral("known"), true},
-                {QStringLiteral("maximized"), target.value(QStringLiteral("windowMaximized")).toBool()}};
+                {QStringLiteral("maximized"), target.value(QStringLiteral("windowMaximized")).toBool()},
+                {QStringLiteral("width"), target.value(QStringLiteral("winWidth"))},
+                {QStringLiteral("height"), target.value(QStringLiteral("winHeight"))}};
 
     const double sw = scope.value(QStringLiteral("width")).toDouble();
     const double sh = scope.value(QStringLiteral("height")).toDouble();
     const double ww = target.value(QStringLiteral("winWidth")).toDouble();
     const double wh = target.value(QStringLiteral("winHeight")).toDouble();
     if (sw > 0 && sh > 0 && ww > 0 && wh > 0 && ww / sw >= 0.94 && wh / sh >= 0.90)
-        return {{QStringLiteral("known"), true}, {QStringLiteral("maximized"), true}};
+        return {{QStringLiteral("known"), true}, {QStringLiteral("maximized"), true},
+                {QStringLiteral("width"), ww}, {QStringLiteral("height"), wh}};
+    if (ww > 0 && wh > 0)
+        return {{QStringLiteral("known"), true}, {QStringLiteral("maximized"), false},
+                {QStringLiteral("width"), ww}, {QStringLiteral("height"), wh}};
     return {{QStringLiteral("known"), false}};
 }
 
