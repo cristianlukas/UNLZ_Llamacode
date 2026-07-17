@@ -27,15 +27,38 @@ policy is enforced mechanically.
      ctest, run in background and wait for the notification).
    - Do **not** build Debug (Release-only policy since 2026-06-18).
 
-2. **Read the result:**
+2. **Read the result. Three outcomes, not two:**
    - Configure/Build failure → report the failing target and stop. This is a red
-     gate (do not commit).
+     gate (do not commit). **Before blaming your own change:** several sessions
+     share this working tree, so the broken file may be someone else's work in
+     progress. Check `git status` — if the failing file isn't yours, say so
+     instead of "fixing" it.
    - `ctest` runs with `--output-on-failure`. Any failing test → red gate.
      Report which test(s) failed, quote the assertion/output exactly.
-   - All green → `=== All tests passed ===`. Green gate.
+   - **`=== All tests passed ===` but the log ends with `[WARN] ... DIRTY`** →
+     **NOT green. Inconclusive.** `build_coord.ps1` re-fingerprints the source on
+     release; DIRTY means another session edited `src/`/`qml/`/`tests/` while the
+     suite was running, so those tests did not run on the source you are about to
+     commit. `tests.bat` still exits 0 (its contract is "the tests I ran passed"),
+     so **the exit code cannot be trusted here — you must read the log tail.**
+   - All green **and** no DIRTY warning → green gate.
 
-3. **Report** a one-line verdict first (`GATE GREEN — N/N tests passed` or
-   `GATE RED — <test> failed`), then details only if red.
+3. **Report** a one-line verdict first, then details only if not green:
+   - `GATE GREEN — N/N tests passed`
+   - `GATE RED — <test> failed`
+   - `GATE DIRTY — N/N passed but the source moved mid-run; result does not count`
+
+   Never report a DIRTY run as green, and never soften it to "green with a
+   caveat" — the whole point is that the number is meaningless. Reporting a
+   bogus green is the exact failure this project keeps hitting.
+
+4. **When DIRTY:** do not loop blindly — with several sessions active, most runs
+   on the shared tree will come back DIRTY. Say it plainly and offer the two real
+   options: re-run and hope the tree is quiet, or isolate first with
+   `powershell -File worktree.ps1 -Action new -Name <tarea>` and run the gate
+   there (a worktree is the only way to get a gate that actually means something).
+   If your change touches no C++/CMake at all, say that too: ctest is orthogonal
+   to it, and that is a more useful statement than a number.
 
 ## Conventions the gate assumes (do not re-explain, just honor)
 
@@ -59,3 +82,14 @@ policy is enforced mechanically.
 Do not commit. Either fix the failing test/code or, if a feature is missing its
 test, write it (see the module→test map in CLAUDE.md), register it, and re-run
 the gate. Loop until green.
+
+## Why DIRTY exists (do not "simplify" it away)
+
+The lock in `build_coord.ps1` serializes *who compiles*, not *what source is on
+disk*: other sessions edit the tree outside the lock, so a run can compile a
+source that no longer exists. A green that did not run on your source is worse
+than a red — it is a number that reads as evidence and is not. `tests.bat` keeps
+exit 0 on DIRTY on purpose: making it non-zero would paint the gate red almost
+permanently (with several sessions, any multi-minute run gets touched), and a red
+nobody can act on trains everyone to ignore red — including the real ones. So the
+honesty lives here, in the reporting, not in the exit code.
