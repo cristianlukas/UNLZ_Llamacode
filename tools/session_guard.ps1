@@ -264,7 +264,14 @@ if ($Mode -eq 'git-guard') {
         @{ rx = '\bgit\s+reset\s+[^|;&]*--hard';              what = 'git reset --hard (descarta TODO el working tree)' },
         @{ rx = '\bgit\s+clean\b[^|;&]*\s-[a-zA-Z]*[fdx]';    what = 'git clean -fd/-fx (borra archivos sin trackear)' },
         @{ rx = '\bgit\s+stash\b(?![^|;&]*\b(list|show)\b)';  what = 'git stash (se lleva los cambios de TODAS las sesiones)' },
-        @{ rx = "\bgit\s+add\s+[^|;&]*(-A\b|--all\b|$dot)";   what = 'git add -A/. (stagea trabajo de otras sesiones)' }
+        @{ rx = "\bgit\s+add\s+[^|;&]*(-A\b|--all\b|$dot)";   what = 'git add -A/. (stagea trabajo de otras sesiones)' },
+        # 'git commit -a' es 'git add -A' con otro nombre: stagea TODO lo tracked,
+        # incluido lo que esta editando otra sesion. Bloquear add -A y dejar pasar
+        # commit -am es cerrar la puerta y dejar la ventana abierta: el incidente
+        # real (un commit que se llevo 3 archivos ajenos) fue exactamente esto.
+        # 'git commit -m' (solo lo staged) pasa: es la forma correcta.
+        @{ rx = '\bgit\s+commit\b(?![^|;&]*--amend)[^|;&]*(\s-[a-zA-Z]*a[a-zA-Z]*\b|--all\b)'
+           what = 'git commit -a/-am (stagea y commitea trabajo de otras sesiones)' }
     )
     # Matchear el TEXTO del comando bloquea cosas que solo NOMBRAN el comando sin
     # ejecutarlo: un echo, un grep, documentacion, un JSON con 'git stash' adentro.
@@ -272,15 +279,19 @@ if ($Mode -eq 'git-guard') {
     # antes de bloquear, exigimos que el 'git' este de verdad en posicion de
     # comando y fuera de comillas.
 
-    # ?El indice cae dentro de un string entrecomillado?
-    function Test-Quoted([string]$s, [int]$i) {
+    # Blanquea lo que este entre comillas, conservando las posiciones. Asi ningun
+    # patron puede pegar contra el CONTENIDO de un string: ni el 'git stash' de un
+    # echo, ni el '-a' del mensaje en git commit -m "arreglo el flag -a".
+    function Get-Masked([string]$s) {
+        $sb = [Text.StringBuilder]::new($s)
         $inS = $false; $inD = $false
-        for ($k = 0; $k -lt $i -and $k -lt $s.Length; $k++) {
+        for ($k = 0; $k -lt $s.Length; $k++) {
             $c = $s[$k]
             if     ($c -eq "'" -and -not $inD) { $inS = -not $inS }
             elseif ($c -eq '"' -and -not $inS) { $inD = -not $inD }
+            elseif ($inS -or $inD)             { [void]$sb.Replace($c, ' ', $k, 1) }
         }
-        return ($inS -or $inD)
+        return $sb.ToString()
     }
     # ?Esta 'git' donde arranca un comando, y no como argumento de otro?
     # ('echo git stash' no ejecuta nada; 'foo && git stash' si.)
@@ -291,12 +302,11 @@ if ($Mode -eq 'git-guard') {
         return ([string]$s[$k] -in @(';', '|', '&', '(', '{', '`', "`n"))
     }
 
+    $masked = Get-Masked $cmd
     $hit = $null
     foreach ($p in $patterns) {
-        foreach ($m in [regex]::Matches($cmd, $p.rx)) {
-            if (-not (Test-Quoted $cmd $m.Index) -and (Test-CommandPos $cmd $m.Index)) {
-                $hit = $p; break
-            }
+        foreach ($m in [regex]::Matches($masked, $p.rx)) {
+            if (Test-CommandPos $masked $m.Index) { $hit = $p; break }
         }
         if ($hit) { break }
     }

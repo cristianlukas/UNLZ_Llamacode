@@ -75,6 +75,23 @@ foreach ($c in @(
     Ok (-not ($o -match 'deny')) "deja pasar: $c"
 }
 
+Write-Host "== test 2a: 'git commit -a' es 'git add -A' con otro nombre =="
+# El agujero que tenia el guard: bloqueaba add -A y dejaba pasar commit -am, que
+# stagea TODO lo tracked igual. Es el incidente real que ya paso una vez (un
+# commit que se llevo 3 archivos de otra sesion).
+foreach ($c in @('git commit -am "wip"', 'git commit -a -m "wip"', 'git commit --all -m "wip"')) {
+    $o = GitGuard $c
+    Ok ($o -match 'deny') "bloquea: $c"
+}
+foreach ($c in @(
+    'git commit -m "solo lo staged"',           # la forma correcta
+    'git commit --amend --no-edit',             # no barre el working tree
+    'git commit -m "arreglo el flag -a de foo"' # el '-a' esta DENTRO del mensaje
+)) {
+    $o = GitGuard $c
+    Ok (-not ($o -match 'deny')) "deja pasar: $c"
+}
+
 Write-Host "== test 2b: MENCIONAR el comando no es EJECUTARLO =="
 # Se me colo en la primera version: el guard matcheaba el texto, asi que bloqueaba
 # un benchmark que llevaba 'git stash' dentro de un JSON. Nombrar != ejecutar, y
