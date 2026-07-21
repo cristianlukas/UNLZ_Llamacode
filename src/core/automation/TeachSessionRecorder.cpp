@@ -329,6 +329,28 @@ bool TeachSessionRecorder::armVisualRegionSelection()
     return true;
 }
 
+QVariantMap TeachSessionRecorder::captureVisualRegion(const QRect &physicalRect)
+{
+    if (!m_visualRegionArmed || m_state != QLatin1String("recording")) return {};
+    m_visualRegionArmed = false;
+    const QVariantMap locator = captureTemplateRect(physicalRect.normalized());
+    if (!locator.isEmpty())
+        appendEvent({{QStringLiteral("kind"), QStringLiteral("visual_reference")},
+                     {QStringLiteral("intent"), QStringLiteral("Región visual seleccionada")},
+                     {QStringLiteral("locator"), locator}}, false);
+    else
+        emit changed();
+    return locator;
+}
+
+void TeachSessionRecorder::cancelVisualRegionSelection()
+{
+    if (!m_visualRegionArmed) return;
+    m_visualRegionArmed = false;
+    appendEvent({{QStringLiteral("kind"), QStringLiteral("visual_region_cancelled")},
+                 {QStringLiteral("intent"), QStringLiteral("Selección visual cancelada")}}, false);
+}
+
 void TeachSessionRecorder::appendEvent(const QVariantMap &source, bool capture)
 {
     QVariantMap event = source;
@@ -576,7 +598,7 @@ void TeachSessionRecorder::onKeyDown(quint32 vk, quint32 scan)
         return;
     }
     if (vk == VK_F9) {
-        armVisualRegionSelection();
+        emit visualRegionRequested();
         return;
     }
 

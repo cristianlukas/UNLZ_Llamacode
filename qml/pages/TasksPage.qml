@@ -703,7 +703,7 @@ Item {
                 color: Theme.textMuted
                 font.pixelSize: 11
                 text: teachMode.currentIndex === 0
-                    ? "Escritorio foreground: F8 captura 72×72 bajo el cursor. F9 arma selección rectangular: arrastrá sobre cualquier objetivo gráfico."
+                    ? "Escritorio foreground: F8 captura 72×72 bajo el cursor. F9 abre un selector rectangular seguro: arrastrá sobre cualquier objetivo gráfico; Esc cancela."
                     : "Navegador background: corre en un navegador headless por detrás, sin tomar tu pantalla. Podés seguir usando la PC mientras se ejecuta. Sirve para tareas 100% web (abrir una URL, extraer datos, completar formularios)."
             }
             RowLayout {

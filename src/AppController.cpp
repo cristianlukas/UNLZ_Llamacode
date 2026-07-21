@@ -23,6 +23,9 @@
 #include <QGuiApplication>
 #include <QApplication>
 #include <QWidget>
+#include <QPainter>
+#include <QMouseEvent>
+#include <QKeyEvent>
 #include <QPushButton>
 #include <QHBoxLayout>
 #include <QScreen>
@@ -86,6 +89,75 @@
 #include <cmath>
 
 namespace {
+class TeachRegionOverlay final : public QWidget
+{
+public:
+    explicit TeachRegionOverlay(std::function<void(const QRect &)> done)
+        : QWidget(nullptr, Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint),
+          m_done(std::move(done))
+    {
+        setAttribute(Qt::WA_TranslucentBackground);
+        setMouseTracking(true);
+        setCursor(Qt::CrossCursor);
+        setFocusPolicy(Qt::StrongFocus);
+    }
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override
+    {
+        if (event->button() != Qt::LeftButton) return;
+        m_dragging = true;
+        m_start = event->position().toPoint();
+        m_end = m_start;
+        m_startPhysical = DesktopAutomationBackend::cursorPosPhysical();
+        update();
+    }
+    void mouseMoveEvent(QMouseEvent *event) override
+    {
+        if (!m_dragging) return;
+        m_end = event->position().toPoint();
+        update();
+    }
+    void mouseReleaseEvent(QMouseEvent *event) override
+    {
+        if (!m_dragging || event->button() != Qt::LeftButton) return;
+        m_dragging = false;
+        m_end = event->position().toPoint();
+        const QRect physical(m_startPhysical, DesktopAutomationBackend::cursorPosPhysical());
+        finish(physical.normalized());
+    }
+    void keyPressEvent(QKeyEvent *event) override
+    {
+        if (event->key() == Qt::Key_Escape) finish({});
+        else QWidget::keyPressEvent(event);
+    }
+    void paintEvent(QPaintEvent *) override
+    {
+        QPainter painter(this);
+        painter.fillRect(rect(), QColor(8, 10, 18, 72));
+        painter.setPen(QPen(QColor("#ff767d"), 2));
+        painter.setBrush(QColor(255, 118, 125, 35));
+        if (m_dragging) painter.drawRect(QRect(m_start, m_end).normalized());
+        painter.setPen(Qt::white);
+        painter.drawText(QRect(0, 18, width(), 32), Qt::AlignHCenter,
+                         QStringLiteral("Arrastrá para seleccionar · Esc cancela"));
+    }
+
+private:
+    void finish(const QRect &physical)
+    {
+        hide();
+        const auto callback = std::move(m_done);
+        if (callback) callback(physical);
+        deleteLater();
+    }
+    std::function<void(const QRect &)> m_done;
+    QPoint m_start;
+    QPoint m_end;
+    QPoint m_startPhysical;
+    bool m_dragging = false;
+};
+
 QHostAddress bindAddressForHost(const QString &host)
 {
     if (host == QLatin1String("0.0.0.0") || host.isEmpty())
@@ -588,6 +660,8 @@ AppController::AppController(QObject *parent) : QObject(parent)
         updateTeachStopOverlay();
         emit teachChanged();
     });
+    connect(&m_teachRecorder, &TeachSessionRecorder::visualRegionRequested,
+            this, [this]() { armTeachVisualRegionSelection(); }, Qt::QueuedConnection);
     connect(&m_teachRecorder, &TeachSessionRecorder::finished, this,
             [this](const QString &artifactId) {
         const QVariantMap manifest = AutomationArtifactStore::manifest(artifactId);
@@ -751,6 +825,10 @@ void AppController::updateTeachStopOverlay()
                         || m_teachRecorder.state() == QLatin1String("paused");
     if (!active) {
         if (m_teachStopOverlay) m_teachStopOverlay->hide();
+        if (m_teachRegionOverlay) {
+            m_teachRegionOverlay->close();
+            m_teachRegionOverlay = nullptr;
+        }
         return;
     }
     if (!m_teachStopOverlay) {
@@ -7190,7 +7268,33 @@ QVariantMap AppController::captureTeachVisualReference(int size)
 
 bool AppController::armTeachVisualRegionSelection()
 {
-    return m_teachRecorder.armVisualRegionSelection();
+    if (m_teachRegionOverlay) return false;
+    if (!m_teachRecorder.armVisualRegionSelection()) return false;
+
+    QRect virtualGeometry;
+    for (QScreen *screen : QGuiApplication::screens())
+        virtualGeometry = virtualGeometry.united(screen->geometry());
+    if (!virtualGeometry.isValid()) {
+        m_teachRecorder.cancelVisualRegionSelection();
+        return false;
+    }
+    auto *overlay = new TeachRegionOverlay([this](const QRect &physical) {
+        m_teachRegionOverlay = nullptr;
+        // Esperar a que Windows retire la capa de selección antes de capturar.
+        QTimer::singleShot(120, this, [this, physical]() {
+            if (physical.width() >= 12 && physical.height() >= 12)
+                m_teachRecorder.captureVisualRegion(physical);
+            else
+                m_teachRecorder.cancelVisualRegionSelection();
+        });
+    });
+    m_teachRegionOverlay = overlay;
+    overlay->setGeometry(virtualGeometry);
+    overlay->show();
+    overlay->raise();
+    overlay->activateWindow();
+    overlay->setFocus(Qt::ActiveWindowFocusReason);
+    return true;
 }
 
 QString AppController::finishTeach()

@@ -168,7 +168,8 @@ que se activen en cada sesión.
   plantilla en memoria con umbral y escala acotados, rechazan coincidencias ambiguas
   y verifican la geometría antes de actuar. Teach v2 captura automáticamente una
   plantilla cuando un clic no tiene ancla semántica; F8 captura una referencia rápida
-  y F9 permite arrastrar una región exacta. Tasks permite probar, reemplazar, eliminar
+  y F9 abre una capa de selección multimonitor para arrastrar una región exacta sin
+  enviar ese gesto a la aplicación subyacente (Escape cancela). Tasks permite probar, reemplazar, eliminar
   o agregar variantes claro/oscuro de cada plantilla sin dejar referencias huérfanas.
   El matcher usa OpenCV `matchTemplate` si está disponible al compilar y conserva un
   backend Qt muestreado y acotado como fallback portable. Play resuelve cada

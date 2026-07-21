@@ -396,7 +396,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.60"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.61"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -1311,6 +1311,7 @@ private:
     QProcess *m_browserRecordProc = nullptr;   // codegen en curso (modo teach)
     TeachSessionRecorder m_teachRecorder;
     QPointer<QWidget> m_teachStopOverlay;
+    QPointer<QWidget> m_teachRegionOverlay;
     bool      m_mermaidEnabled = true;          // render de diagramas mermaid en el chat
     QStringList m_agentDisabledTools;           // tools built-in apagadas por el usuario
     // Perfil de agente activo (override vivo del modo agente). Vacío = resolver

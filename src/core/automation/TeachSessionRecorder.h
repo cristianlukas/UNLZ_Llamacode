@@ -36,12 +36,15 @@ public:
     // Útil para controles puramente visuales; devuelve metadata o {} si falla.
     QVariantMap captureVisualReference(int size = 72);
     bool armVisualRegionSelection();
+    QVariantMap captureVisualRegion(const QRect &physicalRect);
+    void cancelVisualRegionSelection();
     QString finish();
     void cancel();
 
 signals:
     void changed();
     void finished(const QString &artifactId);
+    void visualRegionRequested();
 
 private slots:
     void sampleDesktop();
