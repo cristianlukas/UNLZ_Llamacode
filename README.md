@@ -158,7 +158,11 @@ que se activen en cada sesión.
   usuario o de una Task.
 - **Control del escritorio**: el agente prioriza controles semánticos de Windows
   (UI Automation), usa captura visual sólo cuando aporta información y verifica el
-  resultado después de actuar. Teach conserva la geometría de la ventana objetivo
+  resultado después de actuar. Los clics visuales aceptan únicamente coordenadas
+  normalizadas `0..1`: el schema y el backend rechazan valores fuera de rango antes
+  de mover el mouse, evitando confundir una grilla de grounding `0..1000` con
+  coordenadas ejecutables. Si el objetivo no aparece con claridad, el agente se
+  abstiene en vez de elegir un control parecido. Teach conserva la geometría de la ventana objetivo
   y Play restaura su estado maximizado o su tamaño exterior antes de reproducir
   gestos, evitando que un cambio accidental de tamaño desplace dibujos y clicks.
   Mientras controla ventanas, mouse o teclado se

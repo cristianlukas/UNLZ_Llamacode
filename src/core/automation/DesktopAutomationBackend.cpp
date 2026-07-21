@@ -14,6 +14,8 @@
 #include <QVector>
 #include <QWindow>
 
+#include <cmath>
+
 #ifdef Q_OS_WIN
 #  define NOMINMAX
 #  include <windows.h>
@@ -490,6 +492,12 @@ bool DesktopAutomationBackend::click(const QString &kind, const QString &targetI
                                      double x, double y, const QString &button,
                                      QString *error, QVariantMap *trace)
 {
+    if (!isNormalizedPoint(x, y)) {
+        if (error) *error = QStringLiteral(
+            "Coordenadas inválidas: x/y deben estar normalizadas entre 0 y 1; "
+            "no se ejecutó ningún clic.");
+        return false;
+    }
     if (!interactiveSessionAvailable()) {
         if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
         return false;
@@ -547,12 +555,22 @@ bool DesktopAutomationBackend::stroke(const QString &kind, const QString &target
                                       const QVariantList &points, const QString &button,
                                       int holdMs, QString *error, QVariantMap *trace)
 {
-    if (!interactiveSessionAvailable()) {
-        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
-        return false;
-    }
     if (points.size() < 2) {
         if (error) *error = QStringLiteral("Una traza necesita al menos 2 puntos.");
+        return false;
+    }
+    for (const QVariant &v : points) {
+        const QVariantMap point = v.toMap();
+        if (!isNormalizedPoint(point.value(QStringLiteral("x")).toDouble(),
+                               point.value(QStringLiteral("y")).toDouble())) {
+            if (error) *error = QStringLiteral(
+                "Traza inválida: todos los puntos x/y deben estar normalizados "
+                "entre 0 y 1; no se movió el mouse.");
+            return false;
+        }
+    }
+    if (!interactiveSessionAvailable()) {
+        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
         return false;
     }
     const QRect bounds = targetBounds(kind, targetId);
@@ -1173,6 +1191,12 @@ bool DesktopAutomationBackend::setWindowMaximized(const QString &targetId, bool 
     if (error) *error = QStringLiteral("Control de ventanas disponible sólo en Windows.");
     return false;
 #endif
+}
+
+bool DesktopAutomationBackend::isNormalizedPoint(double x, double y)
+{
+    return std::isfinite(x) && std::isfinite(y)
+        && x >= 0.0 && x <= 1.0 && y >= 0.0 && y <= 1.0;
 }
 
 bool DesktopAutomationBackend::setWindowSize(const QString &targetId, int width, int height,

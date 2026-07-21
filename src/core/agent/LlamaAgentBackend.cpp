@@ -996,7 +996,13 @@ QString LlamaAgentBackend::desktopPlaybookSection(bool visionReady)
     if (visionReady) {
         s += QStringLiteral(
             "Este perfil tiene visión (--mmproj): también podés usar desktop_observe "
-            "para VER la pantalla cuando el texto UIA no alcance.\n");
+            "para VER la pantalla cuando el texto UIA no alcance. Para grounding visual, "
+            "desktop_click/desktop_stroke aceptan EXCLUSIVAMENTE coordenadas normalizadas "
+            "0..1: si razonaste en una grilla 0..1000, dividí x e y por 1000 antes de "
+            "llamar la tool. Nunca sustituyas el objetivo pedido por un control parecido: "
+            "si no está visible o hay ambigüedad, no hagas clic; volvé a observar o "
+            "informá que no se encontró. Después de un clic visual, capturá o consultá "
+            "UIA una vez y verificá el cambio esperado antes de seguir.\n");
     } else {
         s += QStringLiteral(
             "Este perfil NO tiene visión (sin --mmproj): desktop_observe saca una "
@@ -4171,21 +4177,29 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("text"), strProp(QStringLiteral("Texto visible a clickear."))}},
            QJsonArray{QStringLiteral("target_id"), QStringLiteral("text")}),
         fn(QStringLiteral("desktop_observe"),
-           QStringLiteral("Captura el alcance de escritorio enseñado. Usala antes y después "
-                          "de cada acción; devuelve la ruta de la observación actual."),
+           QStringLiteral("Captura el alcance actual como evidencia visual. Usala cuando UIA/OCR "
+                          "no alcancen, antes de un clic por coordenadas y una vez después para "
+                          "verificar el cambio. No afirmes que un control existe si no se ve con "
+                          "claridad; ante ausencia o ambigüedad, abstenete."),
            QJsonObject{
                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance guardado en la receta."))}},
            QJsonArray{QStringLiteral("target_id")}),
         fn(QStringLiteral("desktop_click"),
            QStringLiteral("Hace click en coordenadas NORMALIZADAS 0..1 dentro del alcance. "
+                          "NO acepta la grilla visual 0..1000: dividí ambas coordenadas por 1000. "
                           "Acepta button='left'|'right'|'middle' y devuelve trace con "
-                          "pointer/target. Observá primero y no uses coordenadas como replay ciego."),
+                          "pointer/target. Observá primero, no uses coordenadas como replay ciego "
+                          "y verificá el resultado después."),
             QJsonObject{
                 {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                 {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
-                {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
-                {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
+                {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                    {QStringLiteral("minimum"), 0.0},
+                                                    {QStringLiteral("maximum"), 1.0}}},
+                {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                    {QStringLiteral("minimum"), 0.0},
+                                                    {QStringLiteral("maximum"), 1.0}}},
                 {QStringLiteral("button"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("string")},
                     {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}},
@@ -4206,8 +4220,12 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                     {QStringLiteral("items"), QJsonObject{
                         {QStringLiteral("type"), QStringLiteral("object")},
                         {QStringLiteral("properties"), QJsonObject{
-                            {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
-                            {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}}}}}}}},
+                            {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                                {QStringLiteral("minimum"), 0.0},
+                                                                {QStringLiteral("maximum"), 1.0}}},
+                            {QStringLiteral("y"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                                {QStringLiteral("minimum"), 0.0},
+                                                                {QStringLiteral("maximum"), 1.0}}}}}}}}},
                 {QStringLiteral("button"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("string")},
                     {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}},

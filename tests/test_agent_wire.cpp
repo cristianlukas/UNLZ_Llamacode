@@ -878,6 +878,10 @@ void AgentWireTests::desktopPlaybookSection_coversKeyboardPathAndTextVerify()
     const QString vis = LlamaAgentBackend::desktopPlaybookSection(true);
     QVERIFY(vis.contains(QStringLiteral("mmproj")));
     QVERIFY(vis.contains(QStringLiteral("desktop_observe")));
+    QVERIFY(vis.contains(QStringLiteral("0..1000")));
+    QVERIFY(vis.contains(QStringLiteral("dividí x e y por")));
+    QVERIFY(vis.contains(QStringLiteral("no hagas clic"), Qt::CaseInsensitive));
+    QVERIFY(vis.contains(QStringLiteral("verificá el cambio"), Qt::CaseInsensitive));
     // La variante sin visión debe advertir explícitamente que NO puede ver.
     QVERIFY(novis.contains(QStringLiteral("NO")) );
     QVERIFY(novis != vis);

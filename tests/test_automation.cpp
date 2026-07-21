@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <limits>
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
 #include "core/automation/DesktopAutomationBackend.h"
@@ -10,6 +11,7 @@ class AutomationTests : public QObject
 private slots:
     void initTestCase();
     void normalizedCoordinatesScaleAcrossResolutions();
+    void normalizedCoordinatesRejectVisualGridAndNonFiniteValues();
     void sensitiveActionClassification();
     void desktopRequiresTraining();
     void limitsAreClamped();
@@ -55,6 +57,26 @@ void AutomationTests::normalizedCoordinatesScaleAcrossResolutions()
     QCOMPARE(DesktopAutomationBackend::denormalizePoint(
                  normalized, QRect(100, 50, 3840, 2160)),
              QPoint(2020, 1130));
+}
+
+void AutomationTests::normalizedCoordinatesRejectVisualGridAndNonFiniteValues()
+{
+    QVERIFY(DesktopAutomationBackend::isNormalizedPoint(0.0, 0.0));
+    QVERIFY(DesktopAutomationBackend::isNormalizedPoint(0.578, 0.674));
+    QVERIFY(DesktopAutomationBackend::isNormalizedPoint(1.0, 1.0));
+    QVERIFY(!DesktopAutomationBackend::isNormalizedPoint(578.0, 674.0));
+    QVERIFY(!DesktopAutomationBackend::isNormalizedPoint(-0.01, 0.5));
+    QVERIFY(!DesktopAutomationBackend::isNormalizedPoint(0.5, 1.01));
+    QVERIFY(!DesktopAutomationBackend::isNormalizedPoint(
+        std::numeric_limits<double>::infinity(), 0.5));
+    QVERIFY(!DesktopAutomationBackend::isNormalizedPoint(
+        std::numeric_limits<double>::quiet_NaN(), 0.5));
+
+    // Debe fallar antes de consultar la sesión interactiva o mover el cursor.
+    QString error;
+    QVERIFY(!DesktopAutomationBackend::click(QStringLiteral("screen"), QStringLiteral("0"),
+                                              578.0, 674.0, QStringLiteral("left"), &error));
+    QVERIFY(error.contains(QStringLiteral("no se ejecutó ningún clic")));
 }
 
 void AutomationTests::sensitiveActionClassification()

@@ -22,6 +22,9 @@ public:
 
     static QPointF normalizePoint(const QPoint &absolute, const QRect &bounds);
     static QPoint denormalizePoint(const QPointF &normalized, const QRect &bounds);
+    // Las tools públicas usan exclusivamente coordenadas normalizadas 0..1.
+    // Validar evita clamp silencioso de una salida visual en grilla 0..1000.
+    static bool isNormalizedPoint(double x, double y);
 
     static bool interactiveSessionAvailable();
     // Lanza una app DESPRENDIDA (no bloquea, no hereda pipes): a diferencia de
