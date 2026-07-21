@@ -411,6 +411,27 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
     const QString rootTpl = QString::fromUtf8(g.readAll());
     g.close();
     QCOMPARE(rootTpl, tpl);
+
+    // Todos los perfiles Gemma 4 deben forzar la plantilla canónica. Dejar que
+    // alguno use sólo el metadata embebido hace que un GGUF descargado antes de
+    // la corrección de Google conserve silenciosamente el tool-calling viejo.
+    QFile bundle(bundlePath());
+    QVERIFY2(bundle.open(QIODevice::ReadOnly), "no se pudo abrir system_profiles.json");
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    int gemmaProfiles = 0;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        const QJsonObject model = profile.value(QStringLiteral("model")).toObject();
+        const QString identity = model.value(QStringLiteral("repo")).toString()
+                                 + QLatin1Char('/')
+                                 + model.value(QStringLiteral("file")).toString();
+        if (!identity.contains(QStringLiteral("gemma-4"), Qt::CaseInsensitive))
+            continue;
+        ++gemmaProfiles;
+        QCOMPARE(profile.value(QStringLiteral("chatTemplate")).toString(),
+                 QStringLiteral("gemma4-tools-fixed.jinja"));
+    }
+    QCOMPARE(gemmaProfiles, 4);
 }
 
 QTEST_MAIN(SystemProfilesTests)

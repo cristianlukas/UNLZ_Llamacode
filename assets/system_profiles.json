@@ -333,6 +333,7 @@
     "minRamGb": 16,
     "cpuOk": false,
     "folder": "gemma-4-12b",
+    "chatTemplate": "gemma4-tools-fixed.jinja",
     "model": {
       "repo": "unsloth/gemma-4-12b-it-GGUF",
       "file": "gemma-4-12b-it-UD-Q3_K_XL.gguf",
@@ -499,6 +500,7 @@
     "minRamGb": 8,
     "cpuOk": false,
     "folder": "gemma-4-E4B",
+    "chatTemplate": "gemma4-tools-fixed.jinja",
     "model": {
       "repo": "unsloth/gemma-4-E4B-it-GGUF",
       "file": "gemma-4-E4B-it-Q4_K_M.gguf",
@@ -602,6 +604,7 @@
     "minRamGb": 8,
     "cpuOk": false,
     "folder": "gemma-4-E2B",
+    "chatTemplate": "gemma4-tools-fixed.jinja",
     "model": {
       "repo": "unsloth/gemma-4-E2B-it-GGUF",
       "file": "gemma-4-E2B-it-Q4_K_M.gguf",

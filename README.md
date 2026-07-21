@@ -653,6 +653,11 @@ como Calculadora, archivos, shell, desarrollo o extracción web, el agente valid
 con `desktop_controls`, Playwright, filesystem o comandos en vez de depender de
 capturas visuales.
 
+Todos los perfiles de sistema Gemma 4 fuerzan mediante `--chat-template-file` la
+plantilla canónica corregida de Google incluida con LlamaCode. Así, los GGUF ya
+descargados también reciben las correcciones de historial, razonamiento y
+tool-calling sin tener que volver a descargar los pesos.
+
 La selección de perfil que se restaura al abrir la aplicación representa la
 última elección explícita del usuario en Lanzar o Agente. Los cambios temporales
 de modelo realizados por Tasks, verificación, benchmarks, Charla o el watchdog no
