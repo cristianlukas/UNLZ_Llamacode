@@ -19,11 +19,23 @@ QString WorkflowEngine::validate(const QJsonObject &def)
         const QJsonObject step = it.value().toObject();
         if (!types.contains(step.value(QStringLiteral("type")).toString()))
             return QStringLiteral("tipo invalido en %1").arg(it.key());
-        for (const QString &key : {QStringLiteral("next"), QStringLiteral("onSuccess"),
-                                   QStringLiteral("onFailure")}) {
+        QStringList routeKeys{QStringLiteral("next"), QStringLiteral("onSuccess"),
+                              QStringLiteral("onFailure"), QStringLiteral("onTrue"),
+                              QStringLiteral("onFalse")};
+        if (step.value(QStringLiteral("type")).toString() == QLatin1String("approval")) {
+            const QJsonObject choices = step.value(QStringLiteral("choices")).toObject();
+            for (auto choice = choices.begin(); choice != choices.end(); ++choice)
+                routeKeys << choice.key();
+            for (const QString &choice : {QStringLiteral("accept"), QStringLiteral("reject")})
+                if (step.contains(choice)) routeKeys << choice;
+        }
+        for (const QString &key : routeKeys) {
             const QString target = step.value(key).toString();
-            if (!target.isEmpty() && target != QLatin1String("stop") && !steps.contains(target))
-                return QStringLiteral("destino %1 inexistente en %2").arg(target, it.key());
+            const QString choiceTarget = step.value(QStringLiteral("choices")).toObject()
+                                             .value(key).toString();
+            const QString resolved = target.isEmpty() ? choiceTarget : target;
+            if (!resolved.isEmpty() && resolved != QLatin1String("stop") && !steps.contains(resolved))
+                return QStringLiteral("destino %1 inexistente en %2").arg(resolved, it.key());
         }
     }
     return {};
@@ -55,6 +67,9 @@ QString WorkflowEngine::nextStep(const QJsonObject &step, const QString &route)
     if (!route.isEmpty()) {
         const QString routed = step.value(route).toString();
         if (!routed.isEmpty()) return routed;
+        const QString choice = step.value(QStringLiteral("choices")).toObject()
+                                   .value(route).toString();
+        if (!choice.isEmpty()) return choice;
     }
     return step.value(QStringLiteral("next")).toString();
 }

@@ -10,6 +10,7 @@
 #include "core/tasks/RunHistoryStore.h"
 #include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
+#include "core/tasks/WorkflowRunner.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
 #include "core/SecretStore.h"
@@ -50,6 +51,8 @@ class AppController : public QObject
     Q_PROPERTY(QString runningTaskId READ runningTaskId NOTIFY taskRunStateChanged)
     Q_PROPERTY(QString runningTaskName READ runningTaskName NOTIFY taskRunStateChanged)
     Q_PROPERTY(QString runningTaskPhase READ runningTaskPhase NOTIFY taskRunStateChanged)
+    Q_PROPERTY(QVariantMap runningWorkflowState READ runningWorkflowState NOTIFY taskRunStateChanged)
+    Q_PROPERTY(QVariantMap workflowApproval READ workflowApproval NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantList chatSessions    READ chatSessions    NOTIFY chatSessionsChanged)
     Q_PROPERTY(QVariantList chatMessages    READ chatMessages    NOTIFY chatMessagesChanged)
     Q_PROPERTY(QString      chatSessionId   READ chatSessionId   NOTIFY chatSessionsChanged)
@@ -193,6 +196,8 @@ public:
     QString runningTaskId() const { return m_runningTaskId; }
     QString runningTaskName() const { return m_runningTaskName; }
     QString runningTaskPhase() const { return m_runningTaskPhase; }
+    QVariantMap runningWorkflowState() const;
+    QVariantMap workflowApproval() const { return m_workflowApproval; }
 
     QVariantList chatSessions()     const { return m_chatSessions; }
     QVariantList chatMessages()     const { return m_chatMessages; }
@@ -396,7 +401,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.61"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.62"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -447,6 +452,8 @@ public:
     // no, auto-inicia server+agente (perfil de la Task o el activo), ejecuta al
     // quedar listo y lo apaga al terminar. Marca lastRun en el TaskStore.
     Q_INVOKABLE void runTask(const QString &id);
+    Q_INVOKABLE void approveTaskWorkflow(const QString &choice,
+                                         const QString &userText = QString());
     // Test seams (solo para tests; no usar desde la app). Permiten ejercitar el
     // ciclo del bucle de Tasks sin un llama-server real: inyectar un backend de
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
@@ -1070,6 +1077,11 @@ private:
     QString  m_runningTaskName;
     QString  m_runningTaskPhase;
     QString  m_runningTaskPostPrompt;
+    WorkflowRunner *m_workflowRunner = nullptr;
+    QJsonObject m_runningWorkflowDefinition;
+    QVariantMap m_workflowApproval;
+    bool m_workflowStepInFlight = false;
+    QVariantMap m_runningTaskMetricsBaseline;
     qsizetype m_runningTaskLogStart = 0;
     bool     m_runningTaskSilentUnlessError = false;
     // Estado del bucle "correr hasta cumplir objetivo" (feature Loops). El
@@ -1115,6 +1127,9 @@ private:
     void dispatchPendingScheduledTask();
     // Maneja el fin de turno del agente (marca lastRun, apaga si fue auto-iniciado).
     void onAgentTurnFinished();
+    void startOrRestoreTaskWorkflow(const QVariantMap &task);
+    QString workflowStepPrompt(const QString &stepId, const QString &type,
+                               const QVariantMap &step, const QVariantMap &context) const;
     void finishRunningTask(const QString &status, const QString &summary);
     // Registra en el historial una corrida que falló ANTES de arrancar el cuerpo
     // (gating/validación). finishRunningTask sólo graba lo que llegó a correr, así

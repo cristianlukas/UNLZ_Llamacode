@@ -36,6 +36,9 @@ Item {
             descField.text = t.description || ""
             prePromptField.text = t.prePrompt || ""
             postPromptField.text = t.postPrompt || ""
+            workflowJsonField.text = Object.keys(t.workflow || {}).length > 0
+                ? JSON.stringify(t.workflow, null, 2) : ""
+            workflowJsonError.text = ""
             silentUnlessError.checked = t.silentUnlessError || false
             loopEnabled.checked = t.loopEnabled || false
             loopGoalField.text = t.loopGoal || ""
@@ -67,6 +70,8 @@ Item {
             descField.text = ""
             prePromptField.text = ""
             postPromptField.text = ""
+            workflowJsonField.text = ""
+            workflowJsonError.text = ""
             silentUnlessError.checked = false
             loopEnabled.checked = false
             loopGoalField.text = ""
@@ -373,6 +378,39 @@ Item {
                     font.pixelSize: 13
                 }
 
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 24
+                    Layout.rightMargin: 24
+                    Layout.preferredHeight: approvalText.implicitHeight + 36
+                    visible: Object.keys(App.workflowApproval || {}).length > 0
+                    radius: 8
+                    color: Theme.surfaceBg
+                    border.color: Theme.accent
+
+                    RowLayout {
+                        anchors { fill: parent; margins: 12 }
+                        spacing: 10
+                        Text {
+                            id: approvalText
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            color: Theme.textPrimary
+                            text: (App.workflowApproval.prompt || "El workflow requiere aprobación.")
+                                + "\nPaso: " + (App.workflowApproval.stepId || "—")
+                        }
+                        LcButton {
+                            text: "Rechazar"
+                            secondary: true
+                            onClicked: App.approveTaskWorkflow("reject", "")
+                        }
+                        LcButton {
+                            text: "Aprobar"
+                            onClicked: App.approveTaskWorkflow("accept", "")
+                        }
+                    }
+                }
+
                 Repeater {
                     model: App.taskStore
                     delegate: Rectangle {
@@ -417,7 +455,13 @@ Item {
                                 }
                                 Text {
                                     visible: App.runningTaskId === taskId
-                                    text: App.runningTaskPhase === "verificando" ? "Verificando con postprompt..." : "Ejecutando..."
+                                    text: App.runningTaskPhase === "verificando"
+                                          ? "Verificando con postprompt..."
+                                          : App.runningTaskPhase === "aprobación"
+                                            ? "Esperando aprobación..."
+                                            : App.runningTaskPhase.indexOf("workflow:") === 0
+                                              ? "Workflow · " + App.runningTaskPhase.substring(9)
+                                              : "Ejecutando..."
                                     color: Theme.accent
                                     font.pixelSize: 11
                                 }
@@ -895,6 +939,17 @@ Item {
         padding: 0
 
         function saveAndClose() {
+            var workflow = {}
+            if (workflowJsonField.text.trim().length > 0) {
+                try {
+                    workflow = JSON.parse(workflowJsonField.text)
+                    if (!workflow.entry || !workflow.steps)
+                        throw new Error("debe contener entry y steps")
+                } catch (e) {
+                    workflowJsonError.text = "Workflow JSON inválido: " + e
+                    return
+                }
+            }
             App.taskStore.save(root.editId, {
                 name: nameField.text,
                 description: descField.text,
@@ -921,7 +976,8 @@ Item {
                 profileId: profileCombo.selectedProfileId,
                 steps: root.collectSteps(),
                 permScope: root.collectPermScope(),
-                permFolders: root.collectPermFolders()
+                permFolders: root.collectPermFolders(),
+                workflow: workflow
             })
             close()
         }
@@ -978,6 +1034,21 @@ Item {
                             background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
                         }
                     }
+
+                    Text { text: "Workflow JSON opcional"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 150
+                        TextArea {
+                            id: workflowJsonField
+                            wrapMode: TextArea.NoWrap
+                            color: Theme.textPrimary
+                            font.family: "Consolas"
+                            placeholderText: '{"schemaVersion":1,"entry":"explore","steps":{"explore":{"type":"agent","prompt":"Explorá","next":"done"},"done":{"type":"finish"}}}'
+                            background: Rectangle { radius: 6; color: Theme.inputBg; border.color: Theme.inputBorderColor }
+                        }
+                    }
+                    Text { id: workflowJsonError; color: Theme.btnDangerBg; font.pixelSize: 11; visible: text.length > 0 }
 
                     Text { text: "Preprompt opcional"; color: Theme.textSecondary; font.pixelSize: 12 }
                     ScrollView {
@@ -1836,6 +1907,8 @@ Item {
         property string ownerName: ""
         property var runs: []
         property int selectedRun: -1
+        property int baselineRun: -1
+        property var metricComparison: ({})
 
         function fmt(iso) {
             if (!iso) return "—"
@@ -1850,6 +1923,9 @@ Item {
             ownerName = name || id
             runs = App.runHistory(id)
             selectedRun = runs.length > 0 ? 0 : -1
+            baselineRun = runs.length > 1 ? 1 : -1
+            metricComparison = baselineRun >= 0
+                ? App.compareTaskRunMetrics(ownerId, baselineRun, selectedRun) : ({})
             open()
         }
 
@@ -1934,7 +2010,12 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: historyDialog.selectedRun = index
+                                onClicked: {
+                                    historyDialog.selectedRun = index
+                                    historyDialog.metricComparison = historyDialog.baselineRun >= 0
+                                        ? App.compareTaskRunMetrics(historyDialog.ownerId,
+                                            historyDialog.baselineRun, index) : ({})
+                                }
                             }
                         }
                     }
@@ -1960,6 +2041,51 @@ Item {
                         color: Theme.textSecondary
                         font.pixelSize: 12
                         wrapMode: Text.Wrap
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: metricsRow.implicitHeight + 18
+                        visible: detailCol.run && detailCol.run.metrics
+                        radius: 6
+                        color: Theme.inputBg
+                        border.color: Theme.inputBorderColor
+                        RowLayout {
+                            id: metricsRow
+                            anchors { fill: parent; margins: 9 }
+                            spacing: 12
+                            Text {
+                                Layout.fillWidth: true
+                                color: Theme.textSecondary
+                                font.pixelSize: 11
+                                text: detailCol.run && detailCol.run.metrics
+                                    ? ("Tokens prompt: " + (detailCol.run.metrics.promptTokens || 0)
+                                       + " · generados: " + (detailCol.run.metrics.generatedTokens || 0)
+                                       + " · tools: " + (detailCol.run.metrics.toolCalls || 0)
+                                       + " · tiempo: " + Number(detailCol.run.metrics.wallMs || 0).toFixed(0) + " ms") : ""
+                            }
+                            LcButton {
+                                text: historyDialog.baselineRun === historyDialog.selectedRun
+                                      ? "Baseline" : "Usar como baseline"
+                                secondary: true
+                                onClicked: {
+                                    historyDialog.baselineRun = historyDialog.selectedRun
+                                    historyDialog.metricComparison = ({})
+                                }
+                            }
+                        }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: historyDialog.metricComparison
+                                 && !historyDialog.metricComparison.error
+                                 && historyDialog.baselineRun !== historyDialog.selectedRun
+                        color: Theme.accent
+                        font.pixelSize: 11
+                        text: visible
+                            ? ("A/B vs baseline · prompt "
+                               + Number(historyDialog.metricComparison.promptTokensChangePct || 0).toFixed(1) + "%"
+                               + " · tiempo " + Number(historyDialog.metricComparison.wallMsChangePct || 0).toFixed(1) + "%"
+                               + " · bytes tools " + Number(historyDialog.metricComparison.toolBytesChangePct || 0).toFixed(1) + "%") : ""
                     }
                     Text {
                         Layout.fillWidth: true

@@ -18,6 +18,7 @@ public:
     QJsonObject snapshot() const;
     WorkflowEngine::State state() const { return m_state; }
     bool active() const;
+    void reset();
 
 public slots:
     void completeCurrent(const QVariant &result, bool success = true,

@@ -116,6 +116,7 @@ public:
     Q_INVOKABLE void refresh();
     // Marca el resultado de una corrida (actualiza lastRunAt/lastRunStatus).
     Q_INVOKABLE void markRun(const QString &id, const QString &status, const QString &summary = QString());
+    void markWorkflowState(const QString &id, const QVariantMap &state);
 
     // Nombre → slug seguro / id. minúsculas [a-z0-9_-].
     static QString sanitize(const QString &name);

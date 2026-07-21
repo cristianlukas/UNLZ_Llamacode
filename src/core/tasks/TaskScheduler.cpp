@@ -35,6 +35,12 @@ QStringList TaskScheduler::dueTaskIds(const QVariantList &tasks, const QDateTime
     for (const QVariant &tv : tasks) {
         const QVariantMap t = tv.toMap();
         if (!t.value("scheduleEnabled", false).toBool()) continue;
+        const QDateTime retryAt = QDateTime::fromString(
+            t.value("nextAttemptAt").toString(), Qt::ISODate);
+        if (retryAt.isValid()) {
+            if (retryAt <= now) due << t.value("id").toString();
+            continue;
+        }
         // Modelo amigable (scheduleSpec) tiene prioridad; si no, cron crudo legacy.
         const QVariantMap spec = t.value("scheduleSpec").toMap();
         if (TaskSchedule::isValid(spec)) {

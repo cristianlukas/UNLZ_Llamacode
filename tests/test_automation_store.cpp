@@ -17,6 +17,7 @@ private slots:
     void markRun_updatesStatus();
     void pruneOrphans_dropsUnlinked();
     void dueTaskIds_matchesScheduleSpec();
+    void failedRunSchedulesExponentialRetry();
 };
 
 static QVariantMap sampleAutomation()
@@ -116,6 +117,34 @@ void AutomationStoreTests::dueTaskIds_matchesScheduleSpec()
     const QStringList due = TaskScheduler::dueTaskIds(rows, now);
     QCOMPARE(due.size(), 1);
     QCOMPARE(due.first(), QStringLiteral("due"));
+}
+
+void AutomationStoreTests::failedRunSchedulesExponentialRetry()
+{
+    AutomationStore s;
+    for (const QVariant &a : s.all()) s.remove(a.toMap().value("id").toString());
+    const QString id = s.save({}, {{"name", "Retry"}, {"processId", "p"},
+                                   {"scheduleEnabled", true}, {"retryMax", 2},
+                                   {"retryBackoffSec", 10}});
+    s.markRun(id, QStringLiteral("error"), QStringLiteral("falló"));
+    QVariantMap a = s.get(id);
+    QCOMPARE(a.value("retryCount").toInt(), 1);
+    const QDateTime first = QDateTime::fromString(a.value("nextAttemptAt").toString(), Qt::ISODate);
+    QVERIFY(first.isValid());
+    QVERIFY(TaskScheduler::dueTaskIds({a}, first.addSecs(-1)).isEmpty());
+    QCOMPARE(TaskScheduler::dueTaskIds({a}, first), QStringList{id});
+
+    s.markRun(id, QStringLiteral("running"));
+    s.markRun(id, QStringLiteral("error"));
+    a = s.get(id);
+    QCOMPARE(a.value("retryCount").toInt(), 2);
+    QVERIFY(QDateTime::fromString(a.value("nextAttemptAt").toString(), Qt::ISODate)
+                .secsTo(QDateTime::currentDateTimeUtc()) <= 0);
+    s.markRun(id, QStringLiteral("ok"));
+    a = s.get(id);
+    QCOMPARE(a.value("retryCount").toInt(), 0);
+    QVERIFY(a.value("nextAttemptAt").toString().isEmpty());
+    s.remove(id);
 }
 
 QTEST_MAIN(AutomationStoreTests)

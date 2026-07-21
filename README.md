@@ -1043,6 +1043,9 @@ apaga el agente auto-iniciado.
 - `TaskScheduler` evalúa por minuto (timer in-app, de-dup por minuto) y dispara
   `runTask` en cada Task vencida. Toggle global persistido; corre mientras la app
   esté abierta.
+- Una programación fallida conserva `retryCount` y `nextAttemptAt`; reintenta con
+  backoff exponencial persistente (60 s por defecto, máximo 24 h y tres intentos)
+  antes de volver a depender del cron normal. Un éxito reinicia el contador.
 - Ejemplos: `0 9 * * *` (9:00 diario) · `*/15 9-17 * * 1-5` (cada 15 min, 9–17h,
   lun–vie) · `0 0 1 * *` (día 1 de cada mes).
 
@@ -1117,6 +1120,13 @@ explorar lenguajes con llaves; valida balance y literales, vuelve automáticamen
 al texto exacto ante cualquier duda y exige releer el rango original antes de
 editar. Los workflows JSON disponen de runner reanudable con snapshots,
 condiciones, pausas de aprobación, cancelación y presupuesto de iteraciones/tiempo.
+La definición se edita desde Procesos; durante la ejecución la UI muestra el paso
+activo y ofrece Aprobar/Rechazar. Cada paso `agent`, `tool`, `verify` o `parallel`
+corre como turno separado y alimenta el contexto del siguiente. El snapshot queda
+en la Task y el historial para reanudar una corrida interrumpida. En Historial se
+puede elegir una corrida baseline y ver deltas A/B de tokens, tiempo y bytes de
+tools. Las métricas corresponden al intervalo de la corrida, no al acumulado de
+la sesión del backend.
 
 ### Persistencia y vista
 

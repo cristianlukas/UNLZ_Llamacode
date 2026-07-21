@@ -36,6 +36,13 @@ bool WorkflowRunner::active() const
         || m_state.status == WorkflowEngine::WaitingApproval;
 }
 
+void WorkflowRunner::reset()
+{
+    m_definition = {};
+    m_state = {};
+    m_dispatched = false;
+}
+
 QVariantMap WorkflowRunner::context() const
 {
     return {{QStringLiteral("variables"), m_state.variables},
@@ -94,6 +101,18 @@ void WorkflowRunner::completeCurrent(const QVariant &result, bool success,
 void WorkflowRunner::approve(const QString &choice, const QString &userText)
 {
     if (m_state.status != WorkflowEngine::WaitingApproval || !m_dispatched) return;
+    const QJsonObject step = WorkflowEngine::currentStep(m_definition, m_state);
+    QString target = step.value(choice).toString();
+    if (target.isEmpty())
+        target = step.value(QStringLiteral("choices")).toObject().value(choice).toString();
+    if (choice == QLatin1String("reject") && (target.isEmpty() || target == QLatin1String("stop"))) {
+        m_state.status = WorkflowEngine::Cancelled;
+        m_state.error = userText.isEmpty() ? QStringLiteral("aprobación rechazada") : userText;
+        m_dispatched = false;
+        emit stateChanged(snapshot());
+        emit finished(false, snapshot());
+        return;
+    }
     m_dispatched = false;
     WorkflowEngine::approve(m_definition, &m_state, choice, userText);
     emit stateChanged(snapshot());

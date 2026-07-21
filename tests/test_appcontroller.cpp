@@ -128,6 +128,7 @@ private slots:
     void datasetAbortStopsOnError();
     void fileWatchTriggerRegistersPath();
     void earlyFailureRecordedInHistory();
+    void workflowTaskPausesApprovesAndPersistsSnapshot();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
     void cpuSystemProfileRequiresCpuBinary();
@@ -940,6 +941,39 @@ void AppControllerTests::earlyFailureRecordedInHistory()
     QCOMPARE(hist.size(), 1);
     QCOMPARE(hist.first().toMap().value(QStringLiteral("status")).toString(),
              QStringLiteral("error"));
+}
+
+void AppControllerTests::workflowTaskPausesApprovesAndPersistsSnapshot()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    const QVariantMap workflow{
+        {"schemaVersion", 1}, {"entry", "work"},
+        {"steps", QVariantMap{
+            {"work", QVariantMap{{"type", "agent"}, {"prompt", "hacé el paso"}, {"next", "gate"}}},
+            {"gate", QVariantMap{{"type", "approval"}, {"prompt", "¿continuar?"}, {"accept", "done"}}},
+            {"done", QVariantMap{{"type", "finish"}}}}}};
+    const QString id = app.taskStore()->save({}, {
+        {"name", "Workflow test"}, {"description", "local"},
+        {"executionMode", "auto"}, {"workflow", workflow}});
+    QSignalSpy finished(&app, &AppController::taskRunFinished);
+
+    app.runTaskBodyForTest(id);
+    QTRY_VERIFY_WITH_TIMEOUT(!app.workflowApproval().isEmpty(), 2000);
+    QCOMPARE(app.runningTaskPhase(), QStringLiteral("aprobación"));
+    QCOMPARE(app.workflowApproval().value("stepId").toString(), QStringLiteral("gate"));
+    const QVariantMap paused = app.taskStore()->get(id).value("workflowState").toMap();
+    QCOMPARE(paused.value("status").toString(), QStringLiteral("waiting_approval"));
+
+    app.approveTaskWorkflow(QStringLiteral("accept"));
+    QTRY_COMPARE_WITH_TIMEOUT(finished.size(), 1, 2000);
+    QCOMPARE(finished.first().at(2).toString(), QStringLiteral("ok"));
+    const QVariantList history = app.runHistory(id);
+    QCOMPARE(history.size(), 1);
+    QCOMPARE(history.first().toMap().value("workflowState").toMap()
+                 .value("status").toString(), QStringLiteral("completed"));
 }
 
 void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()

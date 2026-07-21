@@ -263,6 +263,17 @@ void TaskStore::markRun(const QString &id, const QString &status, const QString 
     emit changed();
 }
 
+void TaskStore::markWorkflowState(const QString &id, const QVariantMap &state)
+{
+    const int row = indexOfId(id);
+    if (row < 0) return;
+    m_items[row][QStringLiteral("workflowState")] = state;
+    const QModelIndex mi = index(row);
+    emit dataChanged(mi, mi);
+    save();
+    emit changed();
+}
+
 void TaskStore::refresh()
 {
     beginResetModel();
@@ -476,6 +487,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["triggerHotkey"]   = task.value("triggerHotkey").toString();
     o["trainingType"]    = task.value("trainingType", QStringLiteral("literal")).toString();
     o["workflow"]        = QJsonObject::fromVariantMap(task.value("workflow").toMap());
+    o["workflowState"]   = QJsonObject::fromVariantMap(task.value("workflowState").toMap());
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -549,6 +561,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["triggerHotkey"]   = obj.value("triggerHotkey").toString();
     t["trainingType"]    = obj.value("trainingType").toString(QStringLiteral("literal"));
     t["workflow"]        = obj.value("workflow").toObject().toVariantMap();
+    t["workflowState"]   = obj.value("workflowState").toObject().toVariantMap();
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

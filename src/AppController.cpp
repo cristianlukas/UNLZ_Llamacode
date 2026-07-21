@@ -655,6 +655,47 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    m_workflowRunner = new WorkflowRunner(this);
+    connect(m_workflowRunner, &WorkflowRunner::stateChanged, this,
+            [this](const QJsonObject &snapshot) {
+        if (!m_runningTaskId.isEmpty())
+            m_tasks.markWorkflowState(m_runningTaskId, snapshot.toVariantMap());
+        emit taskRunStateChanged();
+    });
+    connect(m_workflowRunner, &WorkflowRunner::stepRequested, this,
+            [this](const QString &stepId, const QString &type,
+                   const QVariantMap &step, const QVariantMap &context) {
+        if (m_runningTaskId.isEmpty()) return;
+        m_workflowApproval.clear();
+        m_workflowStepInFlight = true;
+        m_runningTaskPhase = QStringLiteral("workflow:%1").arg(stepId);
+        m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
+                        QStringLiteral("Workflow: %1 (%2)").arg(stepId, type));
+        emit taskRunStateChanged();
+        sendToAgent(workflowStepPrompt(stepId, type, step, context));
+    });
+    connect(m_workflowRunner, &WorkflowRunner::approvalRequested, this,
+            [this](const QString &stepId, const QVariantMap &step) {
+        m_workflowStepInFlight = false;
+        m_runningTaskPhase = QStringLiteral("aprobación");
+        m_workflowApproval = step;
+        m_workflowApproval[QStringLiteral("stepId")] = stepId;
+        m_tasks.markRun(m_runningTaskId, QStringLiteral("waiting_approval"),
+                        step.value(QStringLiteral("prompt"),
+                                   QStringLiteral("El workflow requiere aprobación.")).toString());
+        emit taskRunStateChanged();
+    });
+    connect(m_workflowRunner, &WorkflowRunner::finished, this,
+            [this](bool success, const QJsonObject &snapshot) {
+        if (m_runningTaskId.isEmpty()) return;
+        m_workflowStepInFlight = false;
+        m_workflowApproval.clear();
+        const QString error = snapshot.value(QStringLiteral("error")).toString();
+        finishRunningTask(success ? QStringLiteral("ok") : QStringLiteral("error"),
+            success ? QStringLiteral("Workflow completado (%1 pasos).")
+                          .arg(snapshot.value(QStringLiteral("completedSteps")).toArray().size())
+                    : QStringLiteral("Workflow falló: %1").arg(error));
+    });
     connect(&m_teachRecorder, &TeachSessionRecorder::changed,
             this, [this]() {
         updateTeachStopOverlay();
@@ -4977,6 +5018,7 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     m_runningTaskPostPrompt = AutomationRunner::expandVariables(
         TaskStore::composePostPrompt(task), m_runningTaskRow);
     m_runningTaskLogStart = m_agentLog.size();
+    m_runningTaskMetricsBaseline = currentAgentEfficiency();
     m_runningTaskSilentUnlessError = task.value(QStringLiteral("silentUnlessError"), false).toBool();
     m_runningTaskLoopEnabled = task.value(QStringLiteral("loopEnabled"), false).toBool()
                                && !TaskStore::composeLoopGoalPrompt(task).isEmpty();
@@ -5016,6 +5058,13 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     prepareTaskAgentSession();
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
+
+    // Un workflow definido reemplaza el turno monolítico: cada paso se despacha
+    // por separado y su snapshot se persiste antes de avanzar.
+    if (!task.value(QStringLiteral("workflow")).toMap().isEmpty()) {
+        startOrRestoreTaskWorkflow(task);
+        return;
+    }
 
     // Reproducción fiel (determinista): si es un Teach de escritorio con pasos
     // mecánicos grabados (incluye trazos/dibujo), los reproducimos tal cual sin
@@ -5063,6 +5112,72 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
         }
     }
     sendToAgent(prompt);
+}
+
+QVariantMap AppController::runningWorkflowState() const
+{
+    return m_workflowRunner ? m_workflowRunner->snapshot().toVariantMap() : QVariantMap{};
+}
+
+QString AppController::workflowStepPrompt(const QString &stepId, const QString &type,
+                                          const QVariantMap &step,
+                                          const QVariantMap &context) const
+{
+    QString instruction = step.value(QStringLiteral("prompt")).toString().trimmed();
+    if (instruction.isEmpty()) instruction = step.value(QStringLiteral("instruction")).toString().trimmed();
+    if (type == QLatin1String("tool")) {
+        const QString tool = step.value(QStringLiteral("tool")).toString();
+        const QString args = QString::fromUtf8(QJsonDocument::fromVariant(
+            step.value(QStringLiteral("arguments"))).toJson(QJsonDocument::Compact));
+        instruction = QStringLiteral("Ejecutá la tool `%1` con estos argumentos: %2. "
+                                     "Verificá el resultado y explicá brevemente la evidencia.")
+                          .arg(tool, args);
+    } else if (type == QLatin1String("verify")) {
+        instruction = QStringLiteral("Verificá de forma independiente este criterio y usá tools "
+                                     "si hacen falta. Fallá explícitamente si no hay evidencia: %1")
+                          .arg(instruction);
+    } else if (type == QLatin1String("parallel")) {
+        instruction = QStringLiteral("Resolvé estas ramas independientes en paralelo mediante "
+                                     "subagentes cuando estén disponibles y consolidá resultados: %1")
+                          .arg(QString::fromUtf8(QJsonDocument::fromVariant(
+                              step.value(QStringLiteral("branches"))).toJson(QJsonDocument::Compact)));
+    }
+    const QString contextJson = QString::fromUtf8(
+        QJsonDocument::fromVariant(context).toJson(QJsonDocument::Compact));
+    return QStringLiteral("WORKFLOW paso `%1` (%2).\n%3\n\nContexto acumulado: %4\n"
+                          "Completá sólo este paso; no avances al siguiente.")
+        .arg(stepId, type, instruction, contextJson);
+}
+
+void AppController::startOrRestoreTaskWorkflow(const QVariantMap &task)
+{
+    m_runningWorkflowDefinition = QJsonObject::fromVariantMap(
+        task.value(QStringLiteral("workflow")).toMap());
+    m_workflowRunner->reset();
+    const QJsonObject saved = QJsonObject::fromVariantMap(
+        task.value(QStringLiteral("workflowState")).toMap());
+    const QString savedStatus = saved.value(QStringLiteral("status")).toString();
+    bool ok = false;
+    if (savedStatus == QLatin1String("running")
+        || savedStatus == QLatin1String("waiting_approval"))
+        ok = m_workflowRunner->restore(m_runningWorkflowDefinition, saved);
+    else
+        ok = m_workflowRunner->start(m_runningWorkflowDefinition, m_runningTaskId,
+             {{QStringLiteral("taskName"), m_runningTaskName},
+              {QStringLiteral("row"), m_runningTaskRow}});
+    if (!ok && m_runningTaskId.isEmpty()) return; // pudo finalizar sincrónicamente
+    if (!ok)
+        finishRunningTask(QStringLiteral("error"),
+                          QStringLiteral("No se pudo iniciar o restaurar el workflow."));
+}
+
+void AppController::approveTaskWorkflow(const QString &choice, const QString &userText)
+{
+    if (!m_workflowRunner || m_workflowApproval.isEmpty()) return;
+    m_workflowApproval.clear();
+    m_workflowRunner->approve(choice.trimmed().isEmpty() ? QStringLiteral("accept") : choice,
+                              userText);
+    emit taskRunStateChanged();
 }
 
 bool AppController::startDesktopReplay(const QString &id, const QString &artifactId)
@@ -5548,6 +5663,13 @@ void AppController::dispatchPendingScheduledTask()
 void AppController::onAgentTurnFinished()
 {
     if (!m_runningTaskId.isEmpty()) {
+        if (m_workflowRunner && m_workflowRunner->active() && m_workflowStepInFlight) {
+            m_workflowStepInFlight = false;
+            const QString result = latestAgentAssistantText().trimmed();
+            const bool success = !result.isEmpty() && !taskFinalTextIndicatesFailure(result);
+            m_workflowRunner->completeCurrent(result, success);
+            return;
+        }
         if (!m_runningTaskPostPrompt.isEmpty() && m_runningTaskPhase != QLatin1String("verificando")) {
             m_runningTaskPhase = QStringLiteral("verificando");
             const QString post = m_runningTaskPostPrompt;
@@ -5829,8 +5951,18 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
                                               ? AutomationRunner::buildRunReport(m_agentMessages)
                                               : m_replayReport },
     };
-    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
-        rec[QStringLiteral("metrics")] = cb->efficiencySummary();
+    if (m_workflowRunner && !m_runningWorkflowDefinition.isEmpty())
+        rec[QStringLiteral("workflowState")] = m_workflowRunner->snapshot().toVariantMap();
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        QVariantMap metrics = cb->efficiencySummary();
+        for (const QString &key : {QStringLiteral("requests"), QStringLiteral("promptTokens"),
+                                   QStringLiteral("generatedTokens"), QStringLiteral("promptMs"),
+                                   QStringLiteral("generatedMs"), QStringLiteral("wallMs"),
+                                   QStringLiteral("toolCalls"), QStringLiteral("toolBytes")})
+            metrics[key] = metrics.value(key).toDouble()
+                           - m_runningTaskMetricsBaseline.value(key).toDouble();
+        rec[QStringLiteral("metrics")] = metrics;
+    }
     m_runHistory.append(id, rec);
     if (!m_runningAutomationId.isEmpty()) {
         m_automations.markRun(m_runningAutomationId, status, summary);
@@ -5848,7 +5980,12 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskPhase.clear();
     m_visualVerificationDesktopActions = 0;
     m_runningTaskPostPrompt.clear();
+    m_runningWorkflowDefinition = {};
+    m_workflowApproval.clear();
+    m_workflowStepInFlight = false;
+    if (m_workflowRunner) m_workflowRunner->reset();
     m_runningTaskLogStart = 0;
+    m_runningTaskMetricsBaseline.clear();
     m_runningTaskSilentUnlessError = false;
     m_runningTaskLoopEnabled = false;
     m_runningTaskLoopIteration = 0;

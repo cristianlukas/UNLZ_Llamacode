@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QUuid>
 #include <QRegularExpression>
+#include <QtMath>
 
 AutomationStore::AutomationStore(QObject *parent) : QAbstractListModel(parent)
 {
@@ -90,6 +91,9 @@ QString AutomationStore::save(const QString &id, const QVariantMap &def)
     // Workflow declarativo opcional. Las automatizaciones legacy siguen usando
     // processId; conservar ambos permite migracion gradual sin romper scheduler.
     a["workflow"]          = def.value("workflow", a.value("workflow", QVariantMap{}));
+    a["retryMax"]          = qBound(0, def.value("retryMax", a.value("retryMax", 3)).toInt(), 10);
+    a["retryBackoffSec"]   = qBound(5, def.value("retryBackoffSec",
+                                      a.value("retryBackoffSec", 60)).toInt(), 86400);
     a["updatedAt"]         = now;
 
     QString outId;
@@ -145,9 +149,27 @@ void AutomationStore::markRun(const QString &id, const QString &status, const QS
     const int row = indexOfId(id);
     if (row < 0) return;
     m_items[row]["lastRunStatus"] = status;
-    m_items[row]["lastRunAt"] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    const QDateTime now = QDateTime::currentDateTimeUtc();
+    m_items[row]["lastRunAt"] = now.toString(Qt::ISODate);
     if (!summary.isEmpty())
         m_items[row]["lastRunSummary"] = summary;
+    if (status == QLatin1String("ok")) {
+        m_items[row]["retryCount"] = 0;
+        m_items[row].remove(QStringLiteral("nextAttemptAt"));
+    } else if (status == QLatin1String("error")) {
+        const int retry = m_items[row].value("retryCount").toInt() + 1;
+        const int maxRetry = m_items[row].value("retryMax", 3).toInt();
+        m_items[row]["retryCount"] = retry;
+        if (retry <= maxRetry) {
+            const int base = m_items[row].value("retryBackoffSec", 60).toInt();
+            const int delay = qMin(86400, base * (1 << qMin(retry - 1, 10)));
+            m_items[row]["nextAttemptAt"] = now.addSecs(delay).toString(Qt::ISODate);
+        } else {
+            m_items[row].remove(QStringLiteral("nextAttemptAt"));
+        }
+    } else if (status == QLatin1String("running")) {
+        m_items[row].remove(QStringLiteral("nextAttemptAt"));
+    }
     const QModelIndex mi = index(row);
     emit dataChanged(mi, mi);
     save();
@@ -193,6 +215,10 @@ QJsonObject AutomationStore::toJson(const QVariantMap &a)
     o["scheduleSpec"]      = QJsonObject::fromVariantMap(a.value("scheduleSpec").toMap());
     o["silentUnlessError"] = a.value("silentUnlessError", false).toBool();
     o["workflow"]          = QJsonObject::fromVariantMap(a.value("workflow").toMap());
+    o["retryMax"]          = a.value("retryMax", 3).toInt();
+    o["retryBackoffSec"]   = a.value("retryBackoffSec", 60).toInt();
+    o["retryCount"]        = a.value("retryCount", 0).toInt();
+    o["nextAttemptAt"]     = a.value("nextAttemptAt").toString();
     o["createdAt"]         = a.value("createdAt").toString();
     o["updatedAt"]         = a.value("updatedAt").toString();
     o["lastRunAt"]         = a.value("lastRunAt").toString();
@@ -212,6 +238,10 @@ QVariantMap AutomationStore::fromJson(const QJsonObject &obj)
     a["scheduleSpec"]      = obj.value("scheduleSpec").toObject().toVariantMap();
     a["silentUnlessError"] = obj.value("silentUnlessError").toBool(false);
     a["workflow"]          = obj.value("workflow").toObject().toVariantMap();
+    a["retryMax"]          = qBound(0, obj.value("retryMax").toInt(3), 10);
+    a["retryBackoffSec"]   = qBound(5, obj.value("retryBackoffSec").toInt(60), 86400);
+    a["retryCount"]        = obj.value("retryCount").toInt(0);
+    a["nextAttemptAt"]     = obj.value("nextAttemptAt").toString();
     a["createdAt"]         = obj.value("createdAt").toString();
     a["updatedAt"]         = obj.value("updatedAt").toString();
     a["lastRunAt"]         = obj.value("lastRunAt").toString();
