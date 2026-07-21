@@ -20,6 +20,8 @@ VoiceController::VoiceController(QObject *parent) : QObject(parent)
     connect(&m_stt, &SttEngine::transcribed, this, &VoiceController::onSttDone);
     connect(&m_stt, &SttEngine::failed,      this, &VoiceController::onSttFailed);
     connect(&m_tts, &TtsEngine::audioReady,  this, &VoiceController::onTtsAudio);
+    connect(&m_tts, &TtsEngine::audioChunk, this, &VoiceController::onTtsAudioChunk);
+    connect(&m_tts, &TtsEngine::audioStreamFinished, this, &VoiceController::onTtsStreamFinished);
     connect(&m_tts, &TtsEngine::failed,       this, &VoiceController::onTtsFailed);
 }
 
@@ -315,6 +317,7 @@ bool VoiceController::segmentHadVoice() const
 
 void VoiceController::flushSegment(bool finalSeg)
 {
+    if (finalSeg) m_latency.beginTurn();
     // Encolar el segmento solo si tuvo voz y dura algo (>200ms) — evita fragmentos.
     const int segMs = int((m_segment.size() / 2) * 1000.0 / m_sampleRate);
     if (segmentHadVoice() && segMs >= 200) {
@@ -365,7 +368,8 @@ void VoiceController::finalizeTurn()
         else setState(Idle);
         return;
     }
-    m_tTurn.restart();
+    m_latency.markTranscript();
+    m_tTurn.restart(); // cronometro legacy; m_latency incluye STT completo
     m_turnFirstAudio = false;
     qInfo().noquote() << QStringLiteral("[charla] turno del usuario: \"%1\" (%2 chars)")
                              .arg(full.left(120)).arg(full.size());
@@ -473,6 +477,7 @@ void VoiceController::speak(const QString &text)
         if (m_cfg.autoListen) startListening();
         return;
     }
+    m_latency.markFirstLlmText();
     // TTS por chunks: trocear en oraciones y sintetizar la primera ya; las demás
     // se generan mientras suena la anterior (arranca a hablar mucho antes).
     m_streamBubble = -1;
@@ -513,6 +518,7 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     // sigan llegando deltas del agente del turno anterior.
     if (m_state == Listening || m_state == Transcribing) return;
     const QString fullText = sanitizeForSpeech(rawText);
+    if (!fullText.isEmpty()) m_latency.markFirstLlmText();
     // Nueva burbuja del agente (narración intermedia o respuesta final): resetear
     // el puntero de consumidos. No tocamos las colas: lo ya encolado sigue sonando.
     if (bubbleId != m_streamBubble) {
@@ -564,6 +570,7 @@ void VoiceController::pumpTts()
 {
     if (m_tts.busy() || m_ttsQueue.isEmpty()) return;
     const QString sent = m_ttsQueue.takeFirst();
+    m_latency.markFirstTtsRequest();
     m_tTts.restart();
     qInfo().noquote() << QStringLiteral("[charla] TTS: sintetizando %1 chars (cola=%2)")
                              .arg(sent.size()).arg(m_ttsQueue.size());
@@ -572,18 +579,72 @@ void VoiceController::pumpTts()
 
 void VoiceController::onTtsAudio(const QByteArray &audio, const QString &format)
 {
+    m_latency.markFirstAudioGenerated();
     qInfo().noquote() << QStringLiteral("[charla] TTS: audio listo en %1 ms (%2 KB, %3)")
                              .arg(m_tTts.isValid() ? m_tTts.elapsed() : 0)
                              .arg(audio.size() / 1024).arg(format);
     if (!m_turnFirstAudio && m_tTurn.isValid()) {
         m_turnFirstAudio = true;
-        // Métrica clave: fin del habla del usuario → primer audio de respuesta.
-        qInfo().noquote() << QStringLiteral("[charla] LATENCIA turno→primer audio: %1 ms")
+        // Diagnostico legacy desde transcript final; la metrica end-to-end real
+        // se persiste cuando QAudioSink/QMediaPlayer empiezan a reproducir.
+        qInfo().noquote() << QStringLiteral("[charla] transcript→audio generado: %1 ms")
                                  .arg(m_tTurn.elapsed());
     }
     m_audioQueue.append(qMakePair(audio, format));
     pumpTts();                 // adelantar la síntesis de la próxima oración
     if (!m_playing) playNextClip();
+}
+
+void VoiceController::onTtsAudioChunk(const QByteArray &pcm, int sampleRate, int channels)
+{
+    if (pcm.isEmpty()) return;
+    m_latency.markFirstAudioGenerated();
+    if (!m_streamingPcm) {
+        teardownPlayback();
+        QAudioFormat fmt;
+        fmt.setSampleRate(sampleRate);
+        fmt.setChannelCount(channels);
+        fmt.setSampleFormat(QAudioFormat::Int16);
+        m_sink = new QAudioSink(fmt, this);
+        // Un buffer moderado absorbe jitter de red sin volver a esperar el clip.
+        m_sink->setBufferSize(qMax(8192, sampleRate * channels * 2 / 2));
+        m_sinkRate = sampleRate;
+        m_sinkChannels = channels;
+        m_streamingPcm = true;
+        m_streamingPcmFinished = false;
+        m_playing = true;
+        connect(m_sink, &QAudioSink::stateChanged, this, [this](QAudio::State st) {
+            if (st == QAudio::IdleState && m_streamingPcmFinished && m_playing)
+                onClipFinished();
+            else if (st == QAudio::StoppedState && m_sink && m_sink->error() != QAudio::NoError)
+                fail(QStringLiteral("playback PCM streaming: error de salida"));
+        });
+        if (m_cfg.bargeIn && !m_source) {
+            beginCapture();
+            m_monitorOnly = true;
+            if (m_state != Error) setState(Speaking);
+        }
+        m_sinkIo = m_sink->start();
+    }
+    if (m_sinkIo) {
+        m_sinkIo->write(pcm);
+        const QVariantMap sample = m_latency.markFirstAudioPlayed(
+            m_cfg.sttManagedEngine.isEmpty() ? m_cfg.sttModel : m_cfg.sttManagedEngine,
+            m_cfg.ttsMode);
+        if (!sample.isEmpty()) emit latencyUpdated(sample);
+    }
+}
+
+void VoiceController::onTtsStreamFinished()
+{
+    m_streamingPcmFinished = true;
+    if (!m_ttsQueue.isEmpty()) {
+        // La proxima oracion comparte el mismo sink push-mode; no permitir que
+        // un Idle transitorio cierre el turno entre ambos responses.
+        m_streamingPcmFinished = false;
+        pumpTts();
+    }
+    if (m_sink && m_sink->state() == QAudio::IdleState && m_playing) onClipFinished();
 }
 
 void VoiceController::playNextClip()
@@ -654,10 +715,18 @@ void VoiceController::playPcm(const QByteArray &pcm, int sampleRate, int channel
         if (m_state != Error) setState(Speaking);
     }
     m_sink->start(m_playBuf);
+    if (m_firstPlaybackPending) {
+        m_firstPlaybackPending = false;
+        const QVariantMap sample = m_latency.markFirstAudioPlayed(
+            m_cfg.sttManagedEngine.isEmpty() ? m_cfg.sttModel : m_cfg.sttManagedEngine,
+            m_cfg.ttsMode);
+        if (!sample.isEmpty()) emit latencyUpdated(sample);
+    }
 }
 
 void VoiceController::playAudio(const QByteArray &audio, const QString &format)
 {
+    m_firstPlaybackPending = true;
     // WAV PCM16 (piper y la mayoría de servers TTS locales): directo a QAudioSink.
     int rate = 0, ch = 0;
     if (format == QLatin1String("wav") && AudioCodec::wavPcm16Format(audio, &rate, &ch)) {
@@ -693,10 +762,20 @@ void VoiceController::playAudio(const QByteArray &audio, const QString &format)
         if (m_state != Error) setState(Speaking);
     }
     m_player->play();
+    if (m_firstPlaybackPending) {
+        m_firstPlaybackPending = false;
+        const QVariantMap sample = m_latency.markFirstAudioPlayed(
+            m_cfg.sttManagedEngine.isEmpty() ? m_cfg.sttModel : m_cfg.sttManagedEngine,
+            m_cfg.ttsMode);
+        if (!sample.isEmpty()) emit latencyUpdated(sample);
+    }
 }
 
 void VoiceController::teardownSink()
 {
+    m_sinkIo = nullptr;
+    m_streamingPcm = false;
+    m_streamingPcmFinished = false;
     if (m_sink) {
         QAudioSink *s = m_sink;
         m_sink = nullptr;          // antes de stop(): evita re-entrar por stateChanged

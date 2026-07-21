@@ -44,6 +44,10 @@ public:
 signals:
     // audio crudo + formato ("wav"|"mp3"|"pcm").
     void audioReady(const QByteArray &audio, const QString &format);
+    // Bloques PCM16 de un response HTTP chunked. streamFinished cierra la
+    // oracion; el consumidor puede reproducir antes de que termine la sintesis.
+    void audioChunk(const QByteArray &pcm, int sampleRate, int channels);
+    void audioStreamFinished();
     void failed(const QString &error);
 
 private:
@@ -61,6 +65,7 @@ private:
     QString m_key;
     QNetworkAccessManager m_nam;
     QNetworkReply *m_reply = nullptr;
+    qint64 m_streamBytes = 0;
     QString m_piperBin, m_piperModel;
     class QProcess *m_piper = nullptr;   // spawn per-call (fallback)
     QString m_piperOut;                  // wav temporal de salida (per-call)

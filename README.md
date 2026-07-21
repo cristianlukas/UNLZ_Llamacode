@@ -134,6 +134,7 @@ que se activen en cada sesión.
 | Historial de chat | `AppLocalData/LlamaCode/chat/` | No |
 | Tasks programadas | `AppLocalData/LlamaCode/tasks/` | No |
 | Resultados de benchmark | `AppLocalData/LlamaCode/benchmarks/` | No |
+| Métricas de latencia de voz | `AppLocalData/LlamaCode/voice/latency.jsonl` | No |
 | Estado de procesos | `AppLocalData/LlamaCode/services.json` | No |
 | Secretos | SecretStore del sistema o referencias a env vars | No se guardan en JSON del repo |
 
@@ -514,12 +515,21 @@ incluidos).
   `/v1/audio/speech`). Una sola ruta de código: **local** (whisper.cpp server,
   openedai-speech, piper-http en localhost, sin key) o **cloud** (URL remota +
   keyRef). Configurable por separado para STT y TTS.
-- **TTS multimotor**: cada perfil puede fijar HTTP, Piper o `qwen3-tts.cpp`, o
+- **TTS multimotor**: cada perfil puede fijar HTTP/Kokoro, Piper o `qwen3-tts.cpp`, o
   dejarlo en `auto`. La selección automática considera RAM, VRAM total/libre y
   motores instalados: prioriza Qwen3-TTS 1.7B/0.6B cuando hay margen y conserva
   Piper para equipos chicos o cuando conviene reservar VRAM para el LLM. Qwen3
   admite GGUF, embedding de hablante, WAV+transcripción de referencia y una
   instrucción de estilo; si falla puede caer a Piper sin perder el turno.
+- **Kokoro y audio incremental**: `kokoro` usa la misma interfaz HTTP configurable
+  que los demás servidores TTS. Cuando el endpoint entrega PCM16 chunked, la app
+  escribe cada bloque directamente a `QAudioSink` y empieza a reproducir antes de
+  que termine la síntesis. El sample rate y los canales se declaran en el perfil.
+- **Presupuesto de latencia observable**: cada turno mide desde el endpointing
+  (antes del STT) hasta el primer bloque enviado al dispositivo de audio, separando
+  STT, primer texto del LLM, solicitud/generación TTS y arranque de playback. Se
+  conservan hasta 500 muestras locales en `voice/latency.jsonl` y la pantalla de
+  Charla muestra p50/p90/p95 para comparar motores y perfiles con datos reales.
 - **Guarda de capacidad agentic**: Charla clasifica el modelo activo por tamaño y
   arquitectura. Los dense menores de 4B se reservan para conversación/comandos
   acotados; 4B–7B se consideran agentes básicos y 7B+ el piso conservador para

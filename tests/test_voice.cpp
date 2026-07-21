@@ -16,6 +16,7 @@
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/voice/VoiceServerManager.h"
+#include "core/voice/VoiceLatencyTracker.h"
 
 // Tests del modo Charla. Solo funciones puras (sin micrófono/red/playback):
 // round-trip de config, codec WAV/RMS, builders de request STT/TTS, lógica VAD.
@@ -49,6 +50,7 @@ private slots:
     void ttsSentenceSplit();
     void ttsStreamingSentences();
     void ttsSanitizeForSpeech();
+    void latencyPercentiles();
     void voiceInLaunchProfile();
     void sttServerCatalog();
     void voiceBinaryUrls();
@@ -163,6 +165,9 @@ void TestVoice::configRoundTrip()
     c.ttsProvider = "local";
     c.ttsVoice = "nova";
     c.ttsFormat = "mp3";
+    c.ttsStreamAudio = true;
+    c.ttsPcmSampleRate = 22050;
+    c.ttsPcmChannels = 2;
     c.vadSilenceMs = 1200;
     c.bargeIn = false;
     c.cursorOcr = true;
@@ -181,9 +186,21 @@ void TestVoice::configRoundTrip()
     QCOMPARE(r.ttsVoice, QString("nova"));
     QCOMPARE(r.ttsMode, QString("auto"));
     QCOMPARE(r.ttsFormat, QString("mp3"));
+    QCOMPARE(r.ttsStreamAudio, true);
+    QCOMPARE(r.ttsPcmSampleRate, 22050);
+    QCOMPARE(r.ttsPcmChannels, 2);
     QCOMPARE(r.vadSilenceMs, 1200);
     QCOMPARE(r.bargeIn, false);
     QVERIFY(!r.ttsIsCloud());
+}
+
+void TestVoice::latencyPercentiles()
+{
+    QCOMPARE(VoiceLatencyTracker::percentile({}, .50), -1);
+    const QList<int> values{100, 200, 300, 400, 500};
+    QCOMPARE(VoiceLatencyTracker::percentile(values, .50), 300);
+    QCOMPARE(VoiceLatencyTracker::percentile(values, .90), 500);
+    QCOMPARE(VoiceLatencyTracker::percentile(values, .95), 500);
 }
 
 void TestVoice::wavHeaderAndExtract()

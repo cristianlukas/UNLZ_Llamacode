@@ -18,6 +18,9 @@ QJsonObject VoiceConfig::toJson() const
     o["ttsKeyRef"]      = ttsKeyRef;
     o["ttsFormat"]      = ttsFormat;
     o["ttsMode"]        = ttsMode;
+    o["ttsStreamAudio"] = ttsStreamAudio;
+    o["ttsPcmSampleRate"] = ttsPcmSampleRate;
+    o["ttsPcmChannels"] = ttsPcmChannels;
     o["ttsManagedVoice"]= ttsManagedVoice;
     o["ttsFallbackMode"] = ttsFallbackMode;
     o["qwenBinaryPath"] = qwenBinaryPath;
@@ -63,6 +66,9 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.ttsFormat   = o.value("ttsFormat").toString(c.ttsFormat);
     c.ttsMode     = o.value("ttsMode").toString(c.ttsMode);
     if (c.ttsMode.isEmpty()) c.ttsMode = QStringLiteral("auto");
+    c.ttsStreamAudio = o.value("ttsStreamAudio").toBool(c.ttsStreamAudio);
+    c.ttsPcmSampleRate = qBound(8000, o.value("ttsPcmSampleRate").toInt(c.ttsPcmSampleRate), 192000);
+    c.ttsPcmChannels = qBound(1, o.value("ttsPcmChannels").toInt(c.ttsPcmChannels), 2);
     c.ttsManagedVoice = o.value("ttsManagedVoice").toString(c.ttsManagedVoice);
     c.ttsFallbackMode = o.value("ttsFallbackMode").toString(c.ttsFallbackMode);
     c.qwenBinaryPath = o.value("qwenBinaryPath").toString();

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.52 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.53 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -87,6 +87,7 @@ set(CORE_SOURCES
     src/core/voice/TurnDetector.cpp
     src/core/voice/VoiceController.cpp
     src/core/voice/VoiceServerManager.cpp
+    src/core/voice/VoiceLatencyTracker.cpp
     src/core/voice/CharlaTuning.cpp
     src/core/eval/EvalSuite.cpp
     src/core/ToolCallingSupport.cpp
@@ -158,6 +159,7 @@ set(HEADERS
     src/core/voice/TurnDetector.h
     src/core/voice/VoiceController.h
     src/core/voice/VoiceServerManager.h
+    src/core/voice/VoiceLatencyTracker.h
     src/core/eval/EvalSuite.h
     src/core/ToolCallingSupport.h
     src/core/downloads/DownloadHistoryStore.h

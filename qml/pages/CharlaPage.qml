@@ -420,7 +420,7 @@ Item {
                         Text { text: "Modo"; color: Theme.textSecondary }
                         LcComboBox {
                             Layout.fillWidth: true
-                            model: ["auto", "piper", "qwen3", "http"]
+                            model: ["auto", "piper", "kokoro", "qwen3", "http"]
                             currentIndex: Math.max(0, model.indexOf(page.cfg.ttsMode || "auto"))
                             onActivated: { page.cfg.ttsMode = model[currentIndex]; page.save() }
                         }
@@ -528,12 +528,12 @@ Item {
                     Text {
                         text: "Síntesis de voz (TTS) — endpoint HTTP"
                         color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true }
-                        visible: page.cfg.ttsMode === "http"
+                        visible: page.cfg.ttsMode === "http" || page.cfg.ttsMode === "kokoro"
                     }
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
                         Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
-                        visible: page.cfg.ttsMode === "http"
+                        visible: page.cfg.ttsMode === "http" || page.cfg.ttsMode === "kokoro"
 
                         Text { text: "Proveedor"; color: Theme.textSecondary }
                         LcComboBox {
@@ -541,6 +541,29 @@ Item {
                             model: ["local", "cloud"]
                             currentIndex: (page.cfg.ttsProvider === "cloud") ? 1 : 0
                             onActivated: { page.cfg.ttsProvider = model[currentIndex]; page.save() }
+                        }
+                        Text { text: "Streaming PCM"; color: Theme.textSecondary }
+                        LcCheckBox {
+                            text: "Reproducir mientras llega"
+                            checked: page.cfg.ttsStreamAudio === true
+                            onToggled: {
+                                page.cfg.ttsStreamAudio = checked
+                                if (checked) page.cfg.ttsFormat = "pcm"
+                                page.save()
+                            }
+                        }
+                        Text { text: "PCM (Hz / canales)"; color: Theme.textSecondary; visible: page.cfg.ttsStreamAudio === true }
+                        RowLayout {
+                            Layout.fillWidth: true; visible: page.cfg.ttsStreamAudio === true
+                            LcTextField {
+                                Layout.fillWidth: true; text: String(page.cfg.ttsPcmSampleRate || 24000)
+                                onEditingFinished: { page.cfg.ttsPcmSampleRate = parseInt(text) || 24000; page.save() }
+                            }
+                            LcComboBox {
+                                model: ["1", "2"]
+                                currentIndex: Math.max(0, model.indexOf(String(page.cfg.ttsPcmChannels || 1)))
+                                onActivated: { page.cfg.ttsPcmChannels = parseInt(model[currentIndex]); page.save() }
+                            }
                         }
                         Text { text: "Endpoint (baseUrl)"; color: Theme.textSecondary }
                         LcTextField {
@@ -573,6 +596,22 @@ Item {
                             visible: page.cfg.ttsProvider === "cloud"
                             text: page.cfg.ttsKeyRef || ""
                             onEditingFinished: { page.cfg.ttsKeyRef = text; page.save() }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+                        implicitHeight: latencyText.implicitHeight + 18
+                        radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
+                        property var stats: App.voiceLatencyStats
+                        Text {
+                            id: latencyText; anchors.fill: parent; anchors.margins: 9
+                            wrapMode: Text.WordWrap; color: Theme.textSecondary; font.pixelSize: 12
+                            text: parent.stats.count > 0
+                                  ? "Latencia real (" + parent.stats.count + " turnos): p50 "
+                                    + parent.stats.p50Ms + " ms · p90 " + parent.stats.p90Ms
+                                    + " ms · p95 " + parent.stats.p95Ms + " ms"
+                                  : "Latencia real: todavía no hay turnos medidos."
                         }
                     }
 

@@ -34,6 +34,7 @@
 #include "core/agent/OpencodeBackend.h"
 #include "core/agent/RawChatBackend.h"
 #include "core/voice/VoiceController.h"
+#include "core/voice/VoiceLatencyTracker.h"
 #include "core/voice/VoiceTypes.h"
 #include "core/voice/VoiceServerManager.h"
 #include "core/voice/CharlaTuning.h"
@@ -13992,6 +13993,13 @@ void AppController::ensureVoice()
     });
     connect(m_voice, &VoiceController::errorChanged, this, &AppController::voiceStateChanged);
     connect(m_voice, &VoiceController::levelChanged, this, &AppController::voiceLevelChanged);
+    connect(m_voice, &VoiceController::latencyUpdated, this,
+            [this](const QVariantMap &) { emit voiceLatencyStatsChanged(); });
+}
+
+QVariantMap AppController::voiceLatencyStats() const
+{
+    return m_voice ? m_voice->latencyStats() : VoiceLatencyTracker::summary();
 }
 
 QVariantMap AppController::recommendedVoiceTts(const QString &profileId) const

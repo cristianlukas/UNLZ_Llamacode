@@ -319,7 +319,22 @@ void TtsEngine::synthesize(const QString &text)
 
     const QByteArray body = buildSpeechBody(m_cfg.ttsModel, m_cfg.ttsVoice, text, m_cfg.ttsFormat);
     const QString fmt = m_cfg.ttsFormat;
+    m_streamBytes = 0;
     m_reply = m_nam.post(req, body);
+    const bool streamPcm = m_cfg.ttsStreamAudio && fmt == QLatin1String("pcm");
+    if (streamPcm) {
+        connect(m_reply, &QNetworkReply::readyRead, this, [this]() {
+            if (!m_reply) return;
+            const int http = m_reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            const QByteArray contentType = m_reply->header(QNetworkRequest::ContentTypeHeader).toByteArray();
+            if (http < 200 || http >= 300 || contentType.contains("json")) return;
+            const QByteArray chunk = m_reply->readAll();
+            if (!chunk.isEmpty()) {
+                m_streamBytes += chunk.size();
+                emit audioChunk(chunk, m_cfg.ttsPcmSampleRate, m_cfg.ttsPcmChannels);
+            }
+        });
+    }
     connect(m_reply, &QNetworkReply::finished, this, [this, fmt, text]() {
         QNetworkReply *r = m_reply;
         m_reply = nullptr;
@@ -334,6 +349,7 @@ void TtsEngine::synthesize(const QString &text)
             emit failed(r->errorString());
             return;
         }
+        const bool streamed = m_cfg.ttsStreamAudio && fmt == QLatin1String("pcm");
         const QByteArray audio = r->readAll();
         // Algunos servers devuelven JSON de error con 200; detectar.
         if (audio.startsWith('{')) {
@@ -343,6 +359,15 @@ void TtsEngine::synthesize(const QString &text)
                                 QStringLiteral("error TTS")));
                 return;
             }
+        }
+        if (streamed) {
+            if (!audio.isEmpty()) {
+                m_streamBytes += audio.size();
+                emit audioChunk(audio, m_cfg.ttsPcmSampleRate, m_cfg.ttsPcmChannels);
+            }
+            if (m_streamBytes <= 0) { emit failed(QStringLiteral("stream PCM vacío")); return; }
+            emit audioStreamFinished();
+            return;
         }
         if (audio.isEmpty()) { emit failed(QStringLiteral("audio vacío")); return; }
         emit audioReady(audio, fmt);

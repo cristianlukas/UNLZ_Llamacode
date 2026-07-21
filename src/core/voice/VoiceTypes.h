@@ -35,7 +35,12 @@ struct VoiceConfig {
     QString ttsFormat   = QStringLiteral("wav");     // wav | mp3 | pcm
     // Modo TTS: auto elige según hardware/disponibilidad; http usa un endpoint
     // OpenAI-compatible; piper y qwen3 son procesos locales.
-    QString ttsMode = QStringLiteral("auto");        // auto | http | piper | qwen3
+    QString ttsMode = QStringLiteral("auto");        // auto | http | kokoro | piper | qwen3
+    // HTTP PCM incremental: reproduce cada bloque al llegar, sin esperar un WAV
+    // completo. Kokoro y cualquier endpoint compatible pueden usar esta ruta.
+    bool ttsStreamAudio = false;
+    int ttsPcmSampleRate = 24000;
+    int ttsPcmChannels = 1;
     QString ttsManagedVoice = QStringLiteral("es_ES-davefx-medium");
     QString ttsFallbackMode = QStringLiteral("piper"); // none | http | piper
     QString qwenBinaryPath;                          // qwen3-tts-cli[.exe]

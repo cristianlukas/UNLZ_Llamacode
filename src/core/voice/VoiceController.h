@@ -4,6 +4,7 @@
 #include "TtsEngine.h"
 #include "VadEngine.h"
 #include "TurnDetector.h"
+#include "VoiceLatencyTracker.h"
 #include <QObject>
 #include <QByteArray>
 #include <QPointer>
@@ -34,6 +35,7 @@ class VoiceController : public QObject
     Q_PROPERTY(bool active READ active NOTIFY stateChanged)
     Q_PROPERTY(double level READ level NOTIFY levelChanged)        // RMS live [0..1] para meter
     Q_PROPERTY(QString lastError READ lastError NOTIFY errorChanged)
+    Q_PROPERTY(QVariantMap latencyStats READ latencyStats NOTIFY latencyUpdated)
 public:
     enum State { Idle, Listening, Transcribing, Thinking, Speaking, Error };
     Q_ENUM(State)
@@ -54,6 +56,7 @@ public:
     bool active() const { return m_state != Idle && m_state != Error; }
     double level() const { return m_level; }
     QString lastError() const { return m_lastError; }
+    QVariantMap latencyStats() const { return VoiceLatencyTracker::summary(); }
 
     State state() const { return m_state; }
 
@@ -119,12 +122,15 @@ signals:
     void transcriptReady(const QString &text);
     // Transcripción parcial en vivo (segmentos ya reconocidos del turno en curso).
     void partialTranscript(const QString &text);
+    void latencyUpdated(const QVariantMap &sample);
 
 private slots:
     void onAudioReady();
     void onSttDone(const QString &text);
     void onSttFailed(const QString &err);
     void onTtsAudio(const QByteArray &audio, const QString &format);
+    void onTtsAudioChunk(const QByteArray &pcm, int sampleRate, int channels);
+    void onTtsStreamFinished();
     void onTtsFailed(const QString &err);
 
 private:
@@ -181,6 +187,7 @@ private:
     QAudioOutput *m_audioOut = nullptr;
     QBuffer *m_playBuf = nullptr;
     QAudioSink *m_sink = nullptr;    // path PCM16 directo (reusado entre clips)
+    QPointer<QIODevice> m_sinkIo;    // push-mode para HTTP PCM incremental
     int m_sinkRate = 0;
     int m_sinkChannels = 0;
 
@@ -190,6 +197,8 @@ private:
     QStringList m_ttsQueue;                          // oraciones pendientes
     QList<QPair<QByteArray, QString>> m_audioQueue;  // {audio, formato} a reproducir
     bool m_playing = false;                          // hay un clip sonando
+    bool m_streamingPcm = false;
+    bool m_streamingPcmFinished = false;
 
     // Estado del streaming incremental (modo agente): burbuja en curso y cuántos
     // chars de su texto ya se encolaron como oraciones completas.
@@ -203,4 +212,6 @@ private:
     QElapsedTimer m_tTts;
     QElapsedTimer m_tTurn;         // arranca al finalizar el habla del usuario
     bool m_turnFirstAudio = false; // ya se logueó el primer audio del turno
+    VoiceLatencyTracker m_latency;
+    bool m_firstPlaybackPending = false;
 };

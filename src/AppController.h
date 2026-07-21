@@ -167,6 +167,7 @@ class AppController : public QObject
     Q_PROPERTY(double  voiceLevel READ voiceLevel NOTIFY voiceLevelChanged)
     Q_PROPERTY(QString voiceError READ voiceError NOTIFY voiceStateChanged)
     Q_PROPERTY(QString voicePartial READ voicePartial NOTIFY voicePartialChanged)
+    Q_PROPERTY(QVariantMap voiceLatencyStats READ voiceLatencyStats NOTIFY voiceLatencyStatsChanged)
     Q_PROPERTY(bool dictationActive READ dictationActive NOTIFY dictationChanged)
     Q_PROPERTY(QString dictationText READ dictationText NOTIFY dictationChanged)
     Q_PROPERTY(bool updateAvailable READ updateAvailable NOTIFY updateCheckChanged)
@@ -395,7 +396,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.52"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.53"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -810,6 +811,7 @@ public:
     double  voiceLevel() const;
     QString voiceError() const;
     QString voicePartial() const { return m_voicePartial; }
+    QVariantMap voiceLatencyStats() const;
     // Config de Charla POR LaunchProfile (vive en el perfil; la Charla usa la del
     // perfil activo). El setter persiste en el perfil y, si es el activo, la aplica
     // al controller vivo.
@@ -872,6 +874,7 @@ signals:
     void voiceStateChanged();
     void voiceLevelChanged();
     void voicePartialChanged();
+    void voiceLatencyStatsChanged();
     void dictationChanged();
     void voiceInstallProgress(const QString &engineId, int pct, const QString &status);
     void voiceInstallFinished(const QString &engineId, bool ok, const QString &message);
