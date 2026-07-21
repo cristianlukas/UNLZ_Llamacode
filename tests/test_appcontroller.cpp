@@ -130,6 +130,7 @@ private slots:
     void earlyFailureRecordedInHistory();
     void workflowTaskPausesApprovesAndPersistsSnapshot();
     void workflowDirectToolCompletesWithoutModelTurn();
+    void workflowValidationIsAvailableToVisualEditor();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
     void cpuSystemProfileRequiresCpuBinary();
@@ -995,6 +996,17 @@ void AppControllerTests::workflowDirectToolCompletesWithoutModelTurn()
     QTRY_COMPARE_WITH_TIMEOUT(finished.size(), 1, 2000);
     QCOMPARE(finished.first().at(2).toString(), QStringLiteral("ok"));
     QCOMPARE(fake->bodyRuns(), 0);
+}
+
+void AppControllerTests::workflowValidationIsAvailableToVisualEditor()
+{
+    AppController app;
+    const QVariantMap valid{{"schemaVersion", 1}, {"entry", "start"},
+        {"steps", QVariantMap{{"start", QVariantMap{{"type", "finish"}}}}}};
+    QVERIFY(app.validateWorkflow(valid).isEmpty());
+    QVariantMap broken = valid;
+    broken["entry"] = QStringLiteral("missing");
+    QVERIFY(app.validateWorkflow(broken).contains(QStringLiteral("entry")));
 }
 
 void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()

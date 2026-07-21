@@ -22,6 +22,7 @@ Item {
     property string autoEditId: ""
     property string teachTaskId: ""
     property var teachTargets: []
+    ListModel { id: workflowVisualModel }
 
     // ── Editor de Proceso ──
     function openEditor(id) {
@@ -95,6 +96,7 @@ Item {
             profileCombo.currentIndex = 0
         }
         editor.open()
+        editor.refreshVisualWorkflow()
     }
 
     // ── Editor de Automatización ──
@@ -962,6 +964,8 @@ Item {
                     workflow = JSON.parse(workflowJsonField.text)
                     if (!workflow.entry || !workflow.steps)
                         throw new Error("debe contener entry y steps")
+                    const validation = App.validateWorkflow(workflow)
+                    if (validation.length > 0) throw new Error(validation)
                 } catch (e) {
                     workflowJsonError.text = "Workflow JSON inválido: " + e
                     return
@@ -997,6 +1001,55 @@ Item {
                 workflow: workflow
             })
             close()
+        }
+
+        function refreshVisualWorkflow() {
+            workflowVisualModel.clear()
+            if (workflowJsonField.text.trim().length === 0) return
+            try {
+                const def = JSON.parse(workflowJsonField.text)
+                const ids = Object.keys(def.steps || {})
+                for (let i = 0; i < ids.length; ++i) {
+                    const step = def.steps[ids[i]] || {}
+                    workflowVisualModel.append({ stepId: ids[i], stepType: step.type || "agent",
+                        stepNext: step.next || step.onSuccess || "", stepPrompt: step.prompt || "" })
+                }
+                workflowJsonError.text = App.validateWorkflow(def)
+            } catch (e) { workflowJsonError.text = "Workflow JSON inválido: " + e }
+        }
+
+        function applyVisualWorkflow() {
+            let def = { schemaVersion: 1, entry: "", steps: {} }
+            try { if (workflowJsonField.text.trim().length > 0) def = JSON.parse(workflowJsonField.text) }
+            catch (e) {}
+            def.schemaVersion = 1
+            def.steps = {}
+            for (let i = 0; i < workflowVisualModel.count; ++i) {
+                const row = workflowVisualModel.get(i)
+                const step = { type: row.stepType }
+                if (row.stepNext.length > 0) step.next = row.stepNext
+                if (row.stepPrompt.length > 0) step.prompt = row.stepPrompt
+                def.steps[row.stepId] = step
+            }
+            if (!def.entry || !def.steps[def.entry])
+                def.entry = workflowVisualModel.count > 0 ? workflowVisualModel.get(0).stepId : ""
+            workflowJsonField.text = workflowVisualModel.count > 0 ? JSON.stringify(def, null, 2) : ""
+            workflowJsonError.text = workflowVisualModel.count > 0 ? App.validateWorkflow(def) : ""
+        }
+
+        function addVisualStep() {
+            let n = workflowVisualModel.count + 1
+            let id = "step" + n
+            let used = true
+            while (used) {
+                used = false
+                for (let i = 0; i < workflowVisualModel.count; ++i)
+                    if (workflowVisualModel.get(i).stepId === id) { used = true; id = "step" + (++n); break }
+            }
+            if (workflowVisualModel.count > 0)
+                workflowVisualModel.setProperty(workflowVisualModel.count - 1, "stepNext", id)
+            workflowVisualModel.append({ stepId: id, stepType: "agent", stepNext: "", stepPrompt: "" })
+            applyVisualWorkflow()
         }
 
         background: Rectangle {
@@ -1052,7 +1105,46 @@ Item {
                         }
                     }
 
-                    Text { text: "Workflow JSON opcional"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text { text: "Workflow"; color: Theme.textSecondary; font.pixelSize: 12; Layout.fillWidth: true }
+                        LcButton { text: "↻ Visualizar"; secondary: true; onClicked: editor.refreshVisualWorkflow() }
+                        LcButton { text: "+ Nodo"; secondary: true; onClicked: editor.addVisualStep() }
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: workflowVisualModel.count > 0 ? Math.min(300, 18 + workflowVisualModel.count * 112) : 0
+                        visible: workflowVisualModel.count > 0
+                        color: Theme.inputBg
+                        border.color: Theme.inputBorderColor
+                        radius: 6
+                        ListView {
+                            anchors { fill: parent; margins: 8 }
+                            spacing: 6
+                            model: workflowVisualModel
+                            clip: true
+                            delegate: Rectangle {
+                                width: ListView.view.width
+                                height: 104
+                                radius: 5
+                                color: Theme.popupBg
+                                border.color: index === 0 ? Theme.accent : Theme.borderColor
+                                ColumnLayout {
+                                    anchors { fill: parent; margins: 7 }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        LcTextField { Layout.preferredWidth: 120; text: model.stepId; onEditingFinished: { workflowVisualModel.setProperty(index, "stepId", text); editor.applyVisualWorkflow() } }
+                                        LcComboBox { Layout.preferredWidth: 120; model: ["agent","tool","verify","condition","approval","parallel","finish"]; currentIndex: Math.max(0, model.indexOf(workflowVisualModel.get(index).stepType)); onActivated: { workflowVisualModel.setProperty(index, "stepType", currentText); editor.applyVisualWorkflow() } }
+                                        Text { text: "→"; color: Theme.textMuted }
+                                        LcTextField { Layout.fillWidth: true; text: model.stepNext; placeholderText: "siguiente"; onEditingFinished: { workflowVisualModel.setProperty(index, "stepNext", text); editor.applyVisualWorkflow() } }
+                                        LcButton { text: "✕"; secondary: true; onClicked: { workflowVisualModel.remove(index); editor.applyVisualWorkflow() } }
+                                    }
+                                    LcTextField { Layout.fillWidth: true; text: model.stepPrompt; placeholderText: "Prompt o instrucción del nodo"; onEditingFinished: { workflowVisualModel.setProperty(index, "stepPrompt", text); editor.applyVisualWorkflow() } }
+                                }
+                            }
+                        }
+                    }
+                    Text { text: "JSON sincronizado (avanzado)"; color: Theme.textMuted; font.pixelSize: 11 }
                     ScrollView {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 150
@@ -1679,7 +1771,7 @@ Item {
                         wrapMode: Text.Wrap
                         color: Theme.textMuted
                         font.pixelSize: 11
-                        text: "El scheduler solo dispara mientras la app está abierta y con server+agente encendidos."
+                        text: "El companion del scheduler sigue activo con la ventana cerrada; al vencer una programación despierta la app e inicia el perfil del proceso."
                     }
                     Text {
                         id: autoError

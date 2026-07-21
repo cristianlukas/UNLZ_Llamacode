@@ -49,6 +49,7 @@ void AgentEfficiencyTests::structured_compactsAndProjects()
 {
     const QString src = "int  main() {\r\n  QString s = \"a  b\"; // keep\r\n  return 0;\r\n}\r\n";
     const auto view = StructuredSourceView::build(src, "main.cpp", true);
+    QCOMPARE(view.parserBackend, QStringLiteral("lexical"));
     QVERIFY2(view.safe, qPrintable(view.error));
     QVERIFY(view.compact.size() < src.size());
     QVERIFY(view.compact.contains("a  b"));

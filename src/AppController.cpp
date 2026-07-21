@@ -924,6 +924,12 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(this, &AppController::agentStartingChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentRunningChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentRunningChanged, this, [this]() {
+        if (agentRunning() && !m_pendingAutomationStartupId.isEmpty()) {
+            const QString automationId = m_pendingAutomationStartupId;
+            m_pendingAutomationStartupId.clear();
+            QTimer::singleShot(0, this, [this, automationId]() { runAutomation(automationId); });
+            return;
+        }
         if (!agentRunning() || !m_runningTaskId.isEmpty()) return;
         for (const QVariant &value : m_tasks.all()) {
             const QVariantMap task = value.toMap();
@@ -948,8 +954,12 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(m_scheduler, &TaskScheduler::automationDue, this, [this](const QString &id) {
         runAutomation(id);
     });
-    if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
-        m_scheduler->setEnabled(true);
+    if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool()) {
+        const bool detached = !QStandardPaths::isTestModeEnabled()
+            && QProcess::startDetached(QCoreApplication::applicationFilePath(),
+                                       {QStringLiteral("--scheduler-daemon")});
+        if (!detached) m_scheduler->setEnabled(true);
+    }
 
     // Triggers fileWatch: (re)armar el watcher al cambiar las Tasks y una vez al inicio.
     connect(&m_tasks, &QAbstractItemModel::dataChanged, this, [this]() { rebuildTaskTriggers(); });
@@ -5104,6 +5114,11 @@ void AppController::runTask(const QString &id)
     launchTaskBody(id, task);
 }
 
+QString AppController::validateWorkflow(const QVariantMap &definition) const
+{
+    return WorkflowEngine::validate(QJsonObject::fromVariantMap(definition));
+}
+
 // Arranca el cuerpo de una Task: setea el estado de corrida, inicializa el bucle
 // y manda el primer prompt. Separado de runTask (que hace el gating de
 // server/agente) para poder ejercitar el ciclo del bucle en tests sin un
@@ -5698,6 +5713,30 @@ void AppController::runAutomation(const QString &automationId)
         m_automations.markRun(automationId, QStringLiteral("error"),
                               QStringLiteral("El proceso enlazado ya no existe."));
         emit serverError(QStringLiteral("El proceso enlazado a la automatización ya no existe."));
+        return;
+    }
+    // El daemon puede despertar una app sin server. En ese caso iniciamos el
+    // perfil del proceso y retomamos esta automatización cuando el agente avisa
+    // que está listo, sin duplicar el motor de ejecución en el companion.
+    if (!canRunTask()) {
+        const QVariantMap task = m_tasks.get(processId);
+        const QString configured = task.value(QStringLiteral("profileId")).toString();
+        const QString profileId = configured.isEmpty() ? m_activeLaunchId : configured;
+        if (profileId.isEmpty()) {
+            m_automations.markRun(automationId, QStringLiteral("error"),
+                                  QStringLiteral("La automatización no tiene un perfil ejecutable."));
+            emit serverError(QStringLiteral("Asigná un perfil al proceso antes de programarlo."));
+            return;
+        }
+        m_pendingAutomationStartupId = automationId;
+        m_automations.markRun(automationId, QStringLiteral("starting"),
+                              QStringLiteral("Iniciando servidor y agente..."));
+        startServerAndAgent(profileId);
+        if (!serverRunning() && !agentRunning()) {
+            m_pendingAutomationStartupId.clear();
+            m_automations.markRun(automationId, QStringLiteral("error"),
+                                  QStringLiteral("No se pudo iniciar el perfil."));
+        }
         return;
     }
     // runTask marcará lastRun en el proceso; finishRunningTask propaga al
@@ -6551,9 +6590,13 @@ void AppController::setChatPersonaDesigner(bool enabled)
 
 void AppController::setTasksSchedulerEnabled(bool on)
 {
-    if (!m_scheduler || m_scheduler->enabled() == on) return;
-    m_scheduler->setEnabled(on);
     QSettings().setValue(QStringLiteral("tasks/schedulerEnabled"), on);
+    if (!m_scheduler) return;
+    m_scheduler->setEnabled(false);
+    if (on && (QStandardPaths::isTestModeEnabled()
+        || !QProcess::startDetached(QCoreApplication::applicationFilePath(),
+                                    {QStringLiteral("--scheduler-daemon")})))
+        m_scheduler->setEnabled(true);
     emit tasksSchedulerChanged();
 }
 

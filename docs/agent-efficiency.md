@@ -60,3 +60,24 @@ ediciones incorrectas.
 - Una proyección compacta nunca es destino de edición.
 - Un hash/cambio de archivo debe invalidar cualquier proyección cacheada.
 - Acciones destructivas conservan aprobación humana incluso dentro de jobs.
+
+### Suite E2E fija
+
+`assets/benchmarks/custom/agent_efficiency_e2e_v1.json` se distribuye con la app.
+Sus IDs, prompts, límites y comandos de aceptación están versionados; una comparación
+válida usa la misma revisión de la suite, modelo, perfil, hardware y cantidad de
+pasadas. El resultado persistido aporta calidad, tiempo, tokens y uso de tools.
+
+## Project Brain incremental
+
+El manifiesto schema v2 persiste únicamente metadata y SHA-256. Un refresh reutiliza
+el hash cuando tamaño y mtime coinciden, calcula contenido sólo para altas/cambios y
+reporta `changes.added/updated/removed/reused`. El cache es regenerable y no guarda
+contenido fuente.
+
+## Parser estructural opcional
+
+`read_file(compact=true)` intenta `tree-sitter parse --quiet` si encuentra el CLI (o
+`LLAMACODE_TREE_SITTER`) y el archivo existe. Sólo marca `parserValidated=true` ante
+un árbol sin `ERROR`/`MISSING`; cualquier ausencia, timeout o gramática no instalada
+cae automáticamente al validador lexical conservador.

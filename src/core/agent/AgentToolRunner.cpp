@@ -1116,6 +1116,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             const auto view = StructuredSourceView::build(QString::fromUtf8(raw), abs, true);
             if (view.safe) {
                 out[QStringLiteral("structuredSource")] = true;
+                out[QStringLiteral("structuredParser")] = view.parserBackend;
+                out[QStringLiteral("parserValidated")] = view.parserValidated;
                 out[QStringLiteral("originalBytes")] = view.originalBytes;
                 out[QStringLiteral("compactBytes")] = view.compact.toUtf8().size();
                 out[QStringLiteral("reductionPct")] = view.reductionPct();

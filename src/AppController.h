@@ -31,6 +31,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QFile>
+#include <QSettings>
 
 class QThread;
 class QFileSystemWatcher;
@@ -189,7 +190,8 @@ public:
     ProfileManager    *profileManager()  { return &m_profiles; }
     TaskStore         *taskStore()       { return &m_tasks; }
     AutomationStore   *automationStore() { return &m_automations; }
-    bool tasksSchedulerEnabled() const { return m_scheduler && m_scheduler->enabled(); }
+    bool tasksSchedulerEnabled() const
+    { return QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool(); }
     void setTasksSchedulerEnabled(bool on);
     // Reconstruye el QFileSystemWatcher desde las Tasks con triggerType=fileWatch.
     // Idempotente; llamar tras cambios en las Tasks. Expuesto para tests.
@@ -407,7 +409,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.63"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.64"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -461,6 +463,7 @@ public:
     Q_INVOKABLE void approveTaskWorkflow(const QString &choice,
                                          const QString &userText = QString());
     Q_INVOKABLE void runTaskAB(const QString &id);
+    Q_INVOKABLE QString validateWorkflow(const QVariantMap &definition) const;
     // Test seams (solo para tests; no usar desde la app). Permiten ejercitar el
     // ciclo del bucle de Tasks sin un llama-server real: inyectar un backend de
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
@@ -1139,6 +1142,7 @@ private:
     // Task programada esperando que el agente auto-iniciado quede listo.
     QString  m_pendingScheduledTaskId;
     QString  m_pendingScheduledLaunchId;
+    QString  m_pendingAutomationStartupId;
     // El agente fue auto-iniciado por el scheduler → apagarlo al terminar el turno.
     bool     m_scheduledAutoStop = false;
     void dispatchPendingScheduledTask();

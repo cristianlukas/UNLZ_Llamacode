@@ -7,9 +7,21 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QHash>
 #include <QSaveFile>
 #include <QSet>
 #include <QStandardPaths>
+
+namespace {
+QByteArray contentHash(const QString &path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) return {};
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    if (!hash.addData(&file)) return {};
+    return hash.result().toHex();
+}
+}
 
 QString ProjectBrain::cachePath(const QString &root)
 {
@@ -39,6 +51,13 @@ QVariantMap ProjectBrain::refresh(const QString &root, int maxFiles)
     QVariantList files;
     QVariantMap extensions;
     qint64 bytes = 0;
+    const QVariantMap previous = load(root);
+    QHash<QString, QVariantMap> previousFiles;
+    for (const QVariant &value : previous.value(QStringLiteral("files")).toList()) {
+        const QVariantMap item = value.toMap();
+        previousFiles.insert(item.value(QStringLiteral("path")).toString(), item);
+    }
+    int added = 0, updated = 0, reused = 0;
     QDirIterator it(root, QDir::Files | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (it.hasNext() && files.size() < effectiveMax) {
         it.next();
@@ -52,15 +71,32 @@ QVariantMap ProjectBrain::refresh(const QString &root, int maxFiles)
         extensions[ext.isEmpty() ? QStringLiteral("(none)") : ext]
             = extensions.value(ext.isEmpty() ? QStringLiteral("(none)") : ext).toInt() + 1;
         bytes += info.size();
+        const qint64 modifiedMs = info.lastModified().toMSecsSinceEpoch();
+        const QVariantMap old = previousFiles.take(rel);
+        QByteArray hash;
+        if (!old.isEmpty() && old.value(QStringLiteral("bytes")).toLongLong() == info.size()
+            && old.value(QStringLiteral("modifiedMs")).toLongLong() == modifiedMs
+            && !old.value(QStringLiteral("sha256")).toString().isEmpty()) {
+            hash = old.value(QStringLiteral("sha256")).toString().toLatin1();
+            ++reused;
+        } else {
+            hash = contentHash(info.absoluteFilePath());
+            old.isEmpty() ? ++added : ++updated;
+        }
         files.append(QVariantMap{{QStringLiteral("path"), rel},
             {QStringLiteral("bytes"), info.size()},
-            {QStringLiteral("modifiedMs"), info.lastModified().toMSecsSinceEpoch()}});
+            {QStringLiteral("modifiedMs"), modifiedMs},
+            {QStringLiteral("sha256"), QString::fromLatin1(hash)}});
     }
-    QVariantMap brain{{QStringLiteral("schemaVersion"), 1},
+    const int removed = previousFiles.size();
+    QVariantMap brain{{QStringLiteral("schemaVersion"), 2},
         {QStringLiteral("root"), base.absolutePath()},
         {QStringLiteral("refreshedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
         {QStringLiteral("fileCount"), files.size()}, {QStringLiteral("bytes"), bytes},
         {QStringLiteral("extensions"), extensions}, {QStringLiteral("files"), files},
+        {QStringLiteral("changes"), QVariantMap{{QStringLiteral("added"), added},
+            {QStringLiteral("updated"), updated}, {QStringLiteral("removed"), removed},
+            {QStringLiteral("reused"), reused}}},
         {QStringLiteral("truncated"), files.size() >= effectiveMax}};
     QSaveFile file(cachePath(root));
     if (file.open(QIODevice::WriteOnly)) {

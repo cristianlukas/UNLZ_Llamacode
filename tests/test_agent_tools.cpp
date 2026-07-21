@@ -126,10 +126,23 @@ void AgentToolsTests::projectBrain_persistsWorkspaceIndex()
     QVERIFY(result.value("ok").toBool());
     const QJsonObject brain = QJsonDocument::fromJson(
         result.value("result").toString().toUtf8()).object();
-    QCOMPARE(brain.value("schemaVersion").toInt(), 1);
+    QCOMPARE(brain.value("schemaVersion").toInt(), 2);
     QCOMPARE(brain.value("root").toString(), QDir(m_dir.path()).absolutePath());
     QVERIFY(brain.value("fileCount").toInt() >= 2);
     QVERIFY(brain.value("extensions").toObject().value("cpp").toInt() >= 1);
+
+    const QVariantMap second = call("project_brain", {{"max_files", 100}});
+    const QJsonObject refreshed = QJsonDocument::fromJson(
+        second.value("result").toString().toUtf8()).object();
+    QVERIFY(refreshed.value("changes").toObject().value("reused").toInt() >= 2);
+    QCOMPARE(refreshed.value("changes").toObject().value("updated").toInt(), 0);
+
+    QVERIFY(call("write_file", {{"path", "src/main.cpp"},
+                                {"content", "int main(){return 0;}\n"}}).value("ok").toBool());
+    const QVariantMap third = call("project_brain", {{"max_files", 100}});
+    const QJsonObject changed = QJsonDocument::fromJson(
+        third.value("result").toString().toUtf8()).object();
+    QVERIFY(changed.value("changes").toObject().value("updated").toInt() >= 1);
 }
 
 void AgentToolsTests::confinement_blocksOutsideCwd()

@@ -2,6 +2,8 @@
 #include "core/ControlApi.h"
 #include "core/MermaidRenderer.h"
 #include "ThemeProvider.h"
+#include "core/tasks/AutomationStore.h"
+#include "core/tasks/TaskScheduler.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -22,6 +24,9 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QTimer>
+#include <QLockFile>
+#include <QProcess>
+#include <QSettings>
 
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
@@ -72,7 +77,47 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
+    app.setApplicationName("LlamaCode");
+    app.setOrganizationName("LlamaCode");
+    app.setApplicationVersion("0.1.64");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
+
+    // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
+    // por IPC. Un lock evita duplicados; el toggle persistido lo apaga solo.
+    if (app.arguments().contains(QStringLiteral("--scheduler-daemon"))) {
+        const QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+        QDir().mkpath(runtimeDir);
+        QLockFile lock(runtimeDir + QStringLiteral("/scheduler-daemon.lock"));
+        lock.setStaleLockTime(60000);
+        if (!lock.tryLock(100)) return 0;
+        AutomationStore store;
+        TaskScheduler scheduler(&store);
+        QObject::connect(&scheduler, &TaskScheduler::automationDue, &app,
+                         [&app](const QString &automationId) {
+            QLocalSocket socket;
+            socket.connectToServer(QStringLiteral("LlamaCode-single-instance"));
+            if (socket.waitForConnected(500)) {
+                socket.write((QStringLiteral("automation:") + automationId).toUtf8());
+                socket.flush();
+                socket.waitForBytesWritten(500);
+                return;
+            }
+            QProcess::startDetached(QCoreApplication::applicationFilePath(),
+                                    {QStringLiteral("--run-automation"), automationId,
+                                     QStringLiteral("--startup")});
+        });
+        QTimer settingsWatch;
+        settingsWatch.setInterval(15000);
+        QObject::connect(&settingsWatch, &QTimer::timeout, &app, [&app]() {
+            if (!QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
+                app.quit();
+        });
+        if (!QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
+            return 0;
+        settingsWatch.start();
+        scheduler.setEnabled(true);
+        return app.exec();
+    }
 
     // ── Instancia única ──
     // Si ya hay una instancia (incluida la del tray), pedirle que se muestre y salir,
@@ -109,10 +154,6 @@ int main(int argc, char *argv[])
     const QIcon appIcon(QStringLiteral(":/assets/app_icon.ico"));
 #endif
     app.setWindowIcon(appIcon);
-    app.setApplicationName("LlamaCode");
-    app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.63");
-
     qDebug() << "QApplication ready";
 
     // Splash nativo: se muestra ANTES de cargar QML y cubre el escaneo pesado de
@@ -165,10 +206,16 @@ int main(int argc, char *argv[])
     if (instanceServer->listen(kInstanceKey)) {
         QObject::connect(instanceServer, &QLocalServer::newConnection, &controller, [instanceServer, &controller]() {
             if (QLocalSocket *c = instanceServer->nextPendingConnection()) {
-                c->disconnectFromServer();
-                c->deleteLater();
+                QObject::connect(c, &QLocalSocket::readyRead, &controller, [c, &controller]() {
+                    const QString command = QString::fromUtf8(c->readAll()).trimmed();
+                    if (command.startsWith(QStringLiteral("automation:")))
+                        controller.runAutomation(command.mid(11));
+                    else
+                        controller.notifySecondInstance();
+                    c->disconnectFromServer();
+                    c->deleteLater();
+                });
             }
-            controller.notifySecondInstance();
         });
     }
 
@@ -208,6 +255,13 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty()) {
         qCritical() << "No root objects — QML load failed";
         return -1;
+    }
+
+    const int runArg = app.arguments().indexOf(QStringLiteral("--run-automation"));
+    if (runArg >= 0 && runArg + 1 < app.arguments().size()) {
+        const QString automationId = app.arguments().at(runArg + 1);
+        QTimer::singleShot(1500, &controller,
+                           [&controller, automationId]() { controller.runAutomation(automationId); });
     }
 
     // Apertura rápida: la ventana se muestra primero; el escaneo pesado se difiere

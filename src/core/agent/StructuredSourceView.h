@@ -13,6 +13,8 @@ public:
         QString compact;
         QVector<Segment> segments;
         QString error;
+        QString parserBackend = QStringLiteral("lexical");
+        bool parserValidated = false;
         bool safe = false;
         int originalBytes = 0;
         double reductionPct() const;

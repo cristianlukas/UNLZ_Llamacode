@@ -297,7 +297,7 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
 
 La eficiencia del agente incluye telemetría por fase, prefijo estable para
 reutilizar la caché KV, checkpoints versionados, vistas estructuradas seguras,
-un índice persistente regenerable del workspace (`project_brain`) y workflows
+un índice persistente incremental del workspace (`project_brain`) y workflows
 reanudables. El diseño, esquema y protocolo de benchmark están en
 [`docs/agent-efficiency.md`](docs/agent-efficiency.md).
 
@@ -1122,8 +1122,11 @@ tokens de prompt/generación, tiempo de pared, fases, llamadas de tools y bytes 
 resultados. `read_file(compact=true)` ofrece una vista efímera compacta para
 explorar lenguajes con llaves; valida balance y literales, vuelve automáticamente
 al texto exacto ante cualquier duda y exige releer el rango original antes de
-editar. `project_brain` guarda sólo metadata regenerable (rutas, tamaños, fechas y
-extensiones) para evitar redescubrir la estructura del workspace sin copiar código.
+editar. Cuando el CLI `tree-sitter` y la gramática correspondiente están disponibles,
+la vista compacta valida primero el árbol sintáctico; si no, conserva el validador
+lexical seguro. `project_brain` guarda sólo metadata regenerable y SHA-256 (rutas,
+tamaños, fechas y extensiones), reutiliza archivos sin cambios y reporta el delta
+para evitar redescubrir la estructura del workspace sin copiar código.
 Los workflows JSON disponen de runner reanudable con snapshots, condiciones,
 pausas de aprobación, cancelación y presupuesto de iteraciones/tiempo.
 La definición se edita desde Procesos; durante la ejecución la UI muestra el paso
@@ -1135,6 +1138,16 @@ y reanuda al volver a estar disponible el agente. En Procesos, el botón **A/B**
 ejecuta automáticamente baseline y candidato con el mismo Task; Historial conserva
 los deltas de tokens, tiempo y bytes de tools. Las métricas corresponden al
 intervalo de cada corrida, no al acumulado de la sesión del backend.
+
+El editor de Procesos incluye una vista visual sincronizada con el JSON: permite
+crear nodos, elegir tipo, destino y prompt, y valida todas las rutas con el mismo
+`WorkflowEngine` usado al ejecutar. El scheduler usa un companion sin UI
+(`--scheduler-daemon`) con lock e IPC: sigue evaluando cron con la ventana cerrada,
+despierta una única instancia y auto-inicia el perfil del proceso antes de correr.
+
+Benchmark incluye la suite versionada **Agent efficiency E2E v1**, con tareas
+Python, TypeScript/Node y C++ y aceptación por archivos/comandos. Esto permite
+comparar versiones con la misma carga y guardar calidad, tiempo, tokens y tools.
 
 ### Persistencia y vista
 

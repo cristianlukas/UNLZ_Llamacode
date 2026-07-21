@@ -1,6 +1,30 @@
 #include "StructuredSourceView.h"
 
 #include <QFileInfo>
+#include <QProcess>
+#include <QStandardPaths>
+
+namespace {
+bool treeSitterValidates(const QString &fileName)
+{
+    if (!QFileInfo::exists(fileName)) return false;
+    QString executable = QString::fromLocal8Bit(qgetenv("LLAMACODE_TREE_SITTER"));
+    if (executable.isEmpty()) executable = QStandardPaths::findExecutable(QStringLiteral("tree-sitter"));
+    if (executable.isEmpty()) return false;
+    QProcess process;
+    process.setProcessChannelMode(QProcess::MergedChannels);
+    process.start(executable, {QStringLiteral("parse"), QStringLiteral("--quiet"),
+                               QFileInfo(fileName).absoluteFilePath()});
+    if (!process.waitForStarted(1000) || !process.waitForFinished(3000)) {
+        process.kill();
+        process.waitForFinished(500);
+        return false;
+    }
+    const QByteArray output = process.readAll();
+    return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0
+        && !output.contains("ERROR") && !output.contains("MISSING");
+}
+}
 
 double StructuredSourceView::Result::reductionPct() const
 {
@@ -20,6 +44,10 @@ StructuredSourceView::Result StructuredSourceView::build(const QString &source,
     if (indentationSensitive) {
         out.error = QStringLiteral("lenguaje sensible a indentacion: usar fuente exacta");
         return out;
+    }
+    if (treeSitterValidates(fileName)) {
+        out.parserBackend = QStringLiteral("tree-sitter");
+        out.parserValidated = true;
     }
 
     QByteArray compact;
