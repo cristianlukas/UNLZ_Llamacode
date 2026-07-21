@@ -42,6 +42,7 @@
 #include "core/voice/VoiceAgentPolicy.h"
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/agent/AgentEfficiency.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
@@ -5736,6 +5737,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
                                               ? AutomationRunner::buildRunReport(m_agentMessages)
                                               : m_replayReport },
     };
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        rec[QStringLiteral("metrics")] = cb->efficiencySummary();
     m_runHistory.append(id, rec);
     if (!m_runningAutomationId.isEmpty()) {
         m_automations.markRun(m_runningAutomationId, status, summary);
@@ -5879,6 +5882,31 @@ void AppController::recordEarlyFailure(const QString &processId, const QString &
 QVariantList AppController::runHistory(const QString &ownerId) const
 {
     return m_runHistory.history(ownerId);
+}
+
+QVariantMap AppController::compareTaskRunMetrics(const QString &ownerId,
+                                                 int baselineIndex,
+                                                 int candidateIndex) const
+{
+    const QVariantList rows = m_runHistory.history(ownerId);
+    if (baselineIndex < 0 || candidateIndex < 0
+        || baselineIndex >= rows.size() || candidateIndex >= rows.size())
+        return {{QStringLiteral("error"), QStringLiteral("índice de corrida fuera de rango")}};
+    const QVariantMap baseline = rows.at(baselineIndex).toMap().value(QStringLiteral("metrics")).toMap();
+    const QVariantMap candidate = rows.at(candidateIndex).toMap().value(QStringLiteral("metrics")).toMap();
+    if (baseline.isEmpty() || candidate.isEmpty())
+        return {{QStringLiteral("error"), QStringLiteral("las dos corridas deben tener métricas")}};
+    QVariantMap result = AgentEfficiency::compare(baseline, candidate);
+    result[QStringLiteral("baseline")] = baseline;
+    result[QStringLiteral("candidate")] = candidate;
+    return result;
+}
+
+QVariantMap AppController::currentAgentEfficiency() const
+{
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        return cb->efficiencySummary();
+    return {};
 }
 
 QString AppController::taskRunWorkLog(const QString &id) const

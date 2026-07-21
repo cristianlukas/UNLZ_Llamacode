@@ -396,7 +396,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.58"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.59"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -500,6 +500,12 @@ public:
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
     // Historial de corridas de un Proceso o Programación (más nuevo primero).
     Q_INVOKABLE QVariantList runHistory(const QString &ownerId) const;
+    // Compara telemetría de dos corridas (índices del historial, 0=más nueva).
+    // Permite A/B reproducible sin mezclar los scores de calidad del benchmark.
+    Q_INVOKABLE QVariantMap compareTaskRunMetrics(const QString &ownerId,
+                                                  int baselineIndex,
+                                                  int candidateIndex) const;
+    Q_INVOKABLE QVariantMap currentAgentEfficiency() const;
     static bool taskFinalTextIndicatesFailure(const QString &text);
     static bool taskRequiresToolEvidence(const QVariantMap &task);
     // Una reproducción determinista exitosa también es evidencia de operación:

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.58 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.59 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -102,6 +102,7 @@ set(CORE_SOURCES
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
     src/core/tasks/WorkflowEngine.cpp
+    src/core/tasks/WorkflowRunner.cpp
     src/core/automation/DesktopAutomationBackend.cpp
     src/core/automation/VisualMatcher.cpp
     src/core/automation/FuzzyMatch.cpp
@@ -176,6 +177,7 @@ set(HEADERS
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
     src/core/tasks/WorkflowEngine.h
+    src/core/tasks/WorkflowRunner.h
     src/core/automation/DesktopAutomationBackend.h
     src/core/automation/VisualMatcher.h
     src/core/automation/AutomationArtifactStore.h

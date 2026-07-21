@@ -8,6 +8,7 @@
 #include "CodeGraphIndexer.h"     // graph action='index': repo→GraphStore determinista
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
 #include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
+#include "StructuredSourceView.h" // vista compacta segura y proyectable
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -1110,6 +1111,19 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         out[QStringLiteral("readRel")] = base.relativeFilePath(abs);
         out[QStringLiteral("readFp")]  = QString::fromLatin1(
             QCryptographicHash::hash(raw, QCryptographicHash::Md5).toHex());
+        if (args.value(QStringLiteral("compact")).toBool()) {
+            const auto view = StructuredSourceView::build(QString::fromUtf8(raw), abs, true);
+            if (view.safe) {
+                out[QStringLiteral("structuredSource")] = true;
+                out[QStringLiteral("originalBytes")] = view.originalBytes;
+                out[QStringLiteral("compactBytes")] = view.compact.toUtf8().size();
+                out[QStringLiteral("reductionPct")] = view.reductionPct();
+                return QStringLiteral("[vista compacta segura · %1% menos · sólo lectura; "
+                                      "para editar releé el rango exacto sin compact]\n%2")
+                    .arg(QString::number(view.reductionPct(), 'f', 1), view.compact);
+            }
+            out[QStringLiteral("structuredSourceFallback")] = view.error;
+        }
         return QString::fromUtf8(raw);
     }
     if (name == QLatin1String("list_dir")) {

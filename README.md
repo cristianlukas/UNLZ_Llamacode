@@ -1101,6 +1101,14 @@ score corto / score completo
 errores graves (count)
 ```
 
+Las corridas de Tasks también guardan telemetría del harness en su historial:
+tokens de prompt/generación, tiempo de pared, fases, llamadas de tools y bytes de
+resultados. `read_file(compact=true)` ofrece una vista efímera compacta para
+explorar lenguajes con llaves; valida balance y literales, vuelve automáticamente
+al texto exacto ante cualquier duda y exige releer el rango original antes de
+editar. Los workflows JSON disponen de runner reanudable con snapshots,
+condiciones, pausas de aprobación, cancelación y presupuesto de iteraciones/tiempo.
+
 ### Persistencia y vista
 
 - Resultados en JSON (`AppLocalData/LlamaCode/benchmarks/{timestamp}.json`).
@@ -1183,6 +1191,7 @@ Código, datos y diseño tomados de otros proyectos:
 | **Tongyi DeepResearch** | Ideas de investigación de horizonte largo, test-time scaling, resumen de contexto y búsqueda agentic iterativa | https://github.com/Alibaba-NLP/DeepResearch |
 | **Omnix** | Ideas de API local multimodal, `reqId` de correlación, modo headless y separación de colas texto/operaciones auxiliares. Revisión: [`docs/omnix_review.md`](docs/omnix_review.md) | https://github.com/LoanLemon/Omnix |
 | **Honey (I Shrunk the AI)** | _Inspiración conceptual_ (no se toma código): la directiva opt-in "Frugalidad (honey)" del agente — código YAGNI, respuesta-primero y handoffs agente↔agente densos clave:valor en vez de JSON | https://github.com/Green-PT/honey-for-devs |
+| **Vix** | Ideas (sin copiar código) para prefijos estables entre fases, telemetría comparable, workflows reanudables y vistas compactas efímeras con fallback seguro | https://github.com/get-vix/vix |
 | **TurboLLM** | Inspiración de diseño para catálogo de motores/forks, compatibilidad por hardware, probe enriquecido y build-from-source guiado para forks sin prebuilts. No se copia código por su licencia source-available. | https://github.com/mohitsoni48/TurboLLM |
 | **OpenModel** | Ideas (no se copia código): ingesta de modelos ya descargados por Ollama vía scheme `ollama://` (reusa los blobs GGUF sin re-descargar) y un diagnóstico consolidado estilo `om doctor` (binarios/roots/catálogo/hardware/git/gateway + issues accionables) | https://github.com/wundercorp/openmodel |
 

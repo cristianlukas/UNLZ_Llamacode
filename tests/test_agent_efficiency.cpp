@@ -3,6 +3,7 @@
 #include "core/agent/AgentEfficiency.h"
 #include "core/agent/StructuredSourceView.h"
 #include "core/tasks/WorkflowEngine.h"
+#include "core/tasks/WorkflowRunner.h"
 
 class AgentEfficiencyTests : public QObject
 {
@@ -14,6 +15,7 @@ private slots:
     void structured_rejectsUnsafeLanguagesAndSyntax();
     void workflow_validatesRoutesAndApproval();
     void workflow_budgetAndSnapshot();
+    void workflowRunner_dispatchApprovalConditionAndFinish();
 };
 
 void AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
@@ -102,6 +104,31 @@ void AgentEfficiencyTests::workflow_budgetAndSnapshot()
     QCOMPARE(restored.workflowId, state.workflowId);
     QCOMPARE(restored.status, state.status);
     QCOMPARE(restored.variables.value("goal").toString(), QString("test"));
+}
+
+void AgentEfficiencyTests::workflowRunner_dispatchApprovalConditionAndFinish()
+{
+    QJsonObject def{{"schemaVersion", 1}, {"entry", "work"},
+        {"steps", QJsonObject{
+            {"work", QJsonObject{{"type", "agent"}, {"next", "gate"}}},
+            {"gate", QJsonObject{{"type", "approval"}, {"accept", "check"}}},
+            {"check", QJsonObject{{"type", "condition"}, {"variable", "verified"},
+                                    {"onTrue", "done"}, {"onFalse", "stop"}}},
+            {"done", QJsonObject{{"type", "finish"}}}}}};
+    WorkflowRunner runner;
+    QSignalSpy steps(&runner, &WorkflowRunner::stepRequested);
+    QSignalSpy approvals(&runner, &WorkflowRunner::approvalRequested);
+    QSignalSpy finished(&runner, &WorkflowRunner::finished);
+    QVERIFY(runner.start(def, "run-1", {{"verified", true}}));
+    QCOMPARE(steps.size(), 1);
+    runner.completeCurrent(QStringLiteral("ok"));
+    QCOMPARE(approvals.size(), 1);
+    const QJsonObject paused = runner.snapshot();
+    QCOMPARE(paused.value("status").toString(), QStringLiteral("waiting_approval"));
+    runner.approve(QStringLiteral("accept"), QStringLiteral("go"));
+    QCOMPARE(finished.size(), 1);
+    QVERIFY(finished.first().at(0).toBool());
+    QCOMPARE(runner.snapshot().value("status").toString(), QStringLiteral("completed"));
 }
 
 QTEST_MAIN(AgentEfficiencyTests)

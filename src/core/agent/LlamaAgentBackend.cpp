@@ -3926,7 +3926,8 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("path"), strProp(QStringLiteral("Ruta relativa al proyecto."))},
                {QStringLiteral("offset"), intProp(QStringLiteral("Línea inicial (1-based). Opcional."))},
-               {QStringLiteral("limit"), intProp(QStringLiteral("Cantidad de líneas a leer desde offset. Opcional."))}},
+               {QStringLiteral("limit"), intProp(QStringLiteral("Cantidad de líneas a leer desde offset. Opcional."))},
+               {QStringLiteral("compact"), boolProp(QStringLiteral("Vista compacta segura para explorar C/C++/JS/TS/Java/Rust. Hace fallback exacto si no puede validarla; nunca usar como texto de edición."))}},
            QJsonArray{QStringLiteral("path")}),
         fn(QStringLiteral("list_dir"), QStringLiteral("Lista archivos y carpetas de un directorio."),
            QJsonObject{

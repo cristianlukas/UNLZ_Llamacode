@@ -26,6 +26,7 @@ private slots:
     void cleanup();
 
     void writeReadEditCycle();
+    void readFile_compactViewAndSafeFallback();
     void confinement_blocksOutsideCwd();
     void allowedRoots_permitExtraFolder();
     void unconfined_permitsAnyPath();
@@ -91,6 +92,26 @@ void AgentToolsTests::writeReadEditCycle()
 
     QVariantMap r2 = call("read_file", {{"path", "sub/a.txt"}});
     QVERIFY(r2.value("result").toString().contains("hello qt"));
+}
+
+void AgentToolsTests::readFile_compactViewAndSafeFallback()
+{
+    QVariantMap w = call("write_file", {{"path", "compact.cpp"},
+        {"content", "int  add ( int a, int b ) {\n    return a + b;\n}\n"}});
+    QVERIFY(w.value("ok").toBool());
+    const QVariantMap compact = call("read_file", {{"path", "compact.cpp"}, {"compact", true}});
+    QVERIFY(compact.value("ok").toBool());
+    QVERIFY(compact.value("structuredSource").toBool());
+    QVERIFY(compact.value("reductionPct").toDouble() > 0.0);
+    QVERIFY(compact.value("result").toString().contains("vista compacta segura"));
+
+    w = call("write_file", {{"path", "exact.py"}, {"content", "def x():\n    return 1\n"}});
+    QVERIFY(w.value("ok").toBool());
+    const QVariantMap exact = call("read_file", {{"path", "exact.py"}, {"compact", true}});
+    QVERIFY(exact.value("ok").toBool());
+    QVERIFY(!exact.value("structuredSource").toBool());
+    QVERIFY(exact.value("structuredSourceFallback").toString().contains("indentacion"));
+    QVERIFY(exact.value("result").toString().contains("    return 1"));
 }
 
 void AgentToolsTests::confinement_blocksOutsideCwd()
