@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.54 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.57 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -100,6 +100,7 @@ set(CORE_SOURCES
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
     src/core/automation/DesktopAutomationBackend.cpp
+    src/core/automation/VisualMatcher.cpp
     src/core/automation/FuzzyMatch.cpp
     src/core/automation/OcrEngine.cpp
     src/core/automation/OcrTextLocator.cpp
@@ -170,6 +171,7 @@ set(HEADERS
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
     src/core/automation/DesktopAutomationBackend.h
+    src/core/automation/VisualMatcher.h
     src/core/automation/AutomationArtifactStore.h
     src/core/automation/TeachKeyBuffer.h
     src/core/automation/TeachSessionRecorder.h
@@ -448,6 +450,7 @@ if (BUILD_TESTS)
     add_lc_test(test_voice              tests/test_voice.cpp)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
     add_lc_test(test_automation         tests/test_automation.cpp)
+    add_lc_test(test_visual_matcher     tests/test_visual_matcher.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_automation_store   tests/test_automation_store.cpp)
     add_lc_test(test_run_history        tests/test_run_history.cpp)

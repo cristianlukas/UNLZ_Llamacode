@@ -847,6 +847,43 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[desktop_click_text: ok]\ntrace=%1").arg(json);
     }
+    if (name == QLatin1String("desktop_find_image")) {
+        QString error;
+        const QVariantMap match = DesktopAutomationBackend::findImage(
+            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("template_path")).toString(),
+            args.value(QStringLiteral("threshold")).toDouble(0.88),
+            args.value(QStringLiteral("min_scale")).toDouble(1.0),
+            args.value(QStringLiteral("max_scale")).toDouble(1.0),
+            args.value(QStringLiteral("require_unique")).toBool(true), &error);
+        if (match.isEmpty()) return QStringLiteral("[desktop_find_image: %1]").arg(error);
+        const bool found = match.value(QStringLiteral("found")).toBool()
+                        && !match.value(QStringLiteral("ambiguous")).toBool();
+        if (ok) *ok = found;
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(match)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_find_image: %1]\nmatch=%2")
+            .arg(found ? QStringLiteral("found") : error, json);
+    }
+    if (name == QLatin1String("desktop_click_image")) {
+        QString error;
+        QVariantMap trace;
+        const bool good = DesktopAutomationBackend::clickImage(
+            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+            args.value(QStringLiteral("target_id")).toString(),
+            args.value(QStringLiteral("template_path")).toString(),
+            args.value(QStringLiteral("threshold")).toDouble(0.88),
+            args.value(QStringLiteral("min_scale")).toDouble(1.0),
+            args.value(QStringLiteral("max_scale")).toDouble(1.0),
+            args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
+            &error, &trace);
+        if (ok) *ok = good;
+        if (!good) return QStringLiteral("[desktop_click_image: %1]").arg(error);
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_click_image: ok]\ntrace=%1").arg(json);
+    }
     if (name == QLatin1String("desktop_observe")) {
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(
             QStringLiteral("screen"));

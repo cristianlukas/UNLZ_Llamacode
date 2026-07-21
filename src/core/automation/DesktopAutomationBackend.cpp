@@ -1,4 +1,5 @@
 #include "DesktopAutomationBackend.h"
+#include "VisualMatcher.h"
 
 #include "FuzzyMatch.h"
 #include "OcrEngine.h"
@@ -1123,6 +1124,71 @@ bool DesktopAutomationBackend::clickText(const QString &kind, const QString &tar
         p[QStringLiteral("clickCount")] = times;
         (*trace)[QStringLiteral("pointer")] = p;
     }
+    return true;
+}
+
+QVariantMap DesktopAutomationBackend::findImage(const QString &kind, const QString &targetId,
+                                                 const QString &templatePath, double threshold,
+                                                 double minScale, double maxScale,
+                                                 bool requireUnique, QString *error)
+{
+    if (error) error->clear();
+    const QImage needle(templatePath);
+    if (needle.isNull()) {
+        if (error) *error = QStringLiteral("No se pudo leer la plantilla visual: %1")
+                                .arg(templatePath);
+        return {};
+    }
+    QString captureError;
+    const QImage haystack = capture(kind, targetId, &captureError);
+    if (haystack.isNull()) {
+        if (error) *error = captureError;
+        return {};
+    }
+    VisualMatcher::Options options;
+    options.threshold = threshold;
+    options.minScale = minScale;
+    options.maxScale = maxScale;
+    options.requireUnique = requireUnique;
+    const VisualMatcher::Result result = VisualMatcher::find(haystack, needle, options);
+    if (error && !result.error.isEmpty()) *error = result.error;
+    QVariantMap out = result.toVariantMap(haystack.size());
+    out[QStringLiteral("templatePath")] = QFileInfo(templatePath).absoluteFilePath();
+    out[QStringLiteral("scopeKind")] = kind;
+    out[QStringLiteral("targetId")] = targetId;
+    return out;
+}
+
+bool DesktopAutomationBackend::clickImage(const QString &kind, const QString &targetId,
+                                           const QString &templatePath, double threshold,
+                                           double minScale, double maxScale,
+                                           const QString &button, QString *error,
+                                           QVariantMap *trace)
+{
+    if (error) error->clear();
+    const QRect before = targetBounds(kind, targetId);
+    const QVariantMap match = findImage(kind, targetId, templatePath, threshold,
+                                        minScale, maxScale, true, error);
+    if (!match.value(QStringLiteral("found")).toBool()
+        || match.value(QStringLiteral("ambiguous")).toBool())
+        return false;
+    // Evita clickear otra posición si la ventana se movió o redimensionó entre la
+    // captura y la acción. El llamador puede observar de nuevo y reintentar.
+    const QRect after = targetBounds(kind, targetId);
+    if (!before.isValid() || before != after) {
+        if (error) *error = QStringLiteral("El alcance cambió después de localizar la imagen; "
+                                          "no se ejecutó ningún clic.");
+        return false;
+    }
+    const QVariantMap rect = match.value(QStringLiteral("rect")).toMap();
+    const double x = rect.value(QStringLiteral("x")).toDouble()
+                   + rect.value(QStringLiteral("width")).toDouble() / 2.0;
+    const double y = rect.value(QStringLiteral("y")).toDouble()
+                   + rect.value(QStringLiteral("height")).toDouble() / 2.0;
+    QVariantMap clickTrace;
+    if (!click(kind, targetId, x, y, button, error, &clickTrace)) return false;
+    clickTrace[QStringLiteral("visualMatch")] = match;
+    if (trace) *trace = clickTrace;
     return true;
 }
 

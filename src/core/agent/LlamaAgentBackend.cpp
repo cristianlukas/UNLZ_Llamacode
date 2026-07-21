@@ -2488,6 +2488,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
         QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
+        QStringLiteral("desktop_find_image"), QStringLiteral("desktop_click_image"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
         QStringLiteral("desktop_stroke"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
@@ -3342,6 +3343,9 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
         return {QStringLiteral("target_id"), QStringLiteral("control_id")};
     if (name == QLatin1String("desktop_click_text"))
         return {QStringLiteral("target_id"), QStringLiteral("text")};
+    if (name == QLatin1String("desktop_find_image")
+        || name == QLatin1String("desktop_click_image"))
+        return {QStringLiteral("target_id"), QStringLiteral("template_path")};
     if (name == QLatin1String("desktop_type")) return {QStringLiteral("text")};
     if (name == QLatin1String("desktop_key")) return {QStringLiteral("key")};
     return {};   // list_dir, memory, browser_skill_list: args opcionales
@@ -4176,6 +4180,47 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la pantalla o ventana."))},
                {QStringLiteral("text"), strProp(QStringLiteral("Texto visible a clickear."))}},
            QJsonArray{QStringLiteral("target_id"), QStringLiteral("text")}),
+        fn(QStringLiteral("desktop_find_image"),
+           QStringLiteral("Busca una plantilla visual dentro de una pantalla o ventana sin "
+                          "hacer click. Fallback para canvas, iconos y escritorios remotos "
+                          "cuando UI Automation y OCR no exponen el objetivo. Devuelve rect "
+                          "normalizado, escala, confianza y ambigüedad."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("template_path"), strProp(QStringLiteral("Ruta de la imagen de referencia."))},
+               {QStringLiteral("threshold"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("min_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 2.0}}},
+               {QStringLiteral("max_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 2.0}}},
+               {QStringLiteral("require_unique"), boolProp(QStringLiteral("Rechazar alternativas equivalentes; default true."))}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("template_path")}),
+        fn(QStringLiteral("desktop_click_image"),
+           QStringLiteral("Localiza una plantilla visual y clickea su centro sólo si hay una "
+                          "coincidencia segura y única. Se abstiene si la ventana cambia entre "
+                          "captura y acción. Preferí antes UIA y OCR."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("template_path"), strProp(QStringLiteral("Ruta de la imagen de referencia."))},
+               {QStringLiteral("threshold"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("min_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 2.0}}},
+               {QStringLiteral("max_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 2.0}}},
+               {QStringLiteral("button"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("string")},
+                    {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}}}}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("template_path")}),
         fn(QStringLiteral("desktop_observe"),
            QStringLiteral("Captura el alcance actual como evidencia visual. Usala cuando UIA/OCR "
                           "no alcancen, antes de un clic por coordenadas y una vez después para "
@@ -4385,6 +4430,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_windows", "Escritorio", "Inventario estructurado de ventanas (barato, sin captura).", 80),
         mk("desktop_controls", "Escritorio", "Árbol de controles de una ventana (UIA, DOM-aware).", 150),
         mk("desktop_click_element", "Escritorio", "Click a un control por nombre/id (UIA), no por pixel.", 110),
+        mk("desktop_find_image", "Escritorio", "Localiza una plantilla visual con confianza y ambigüedad.", 135),
+        mk("desktop_click_image", "Escritorio", "Localiza y clickea una plantilla visual única.", 145),
         mk("desktop_observe", "Escritorio", "Captura el alcance visual enseñado.", 90),
         mk("desktop_click", "Escritorio", "Click visual con coordenadas normalizadas.", 100),
         mk("desktop_stroke", "Escritorio", "Arrastra una traza continua (dibujar/pintar/swipe).", 95),

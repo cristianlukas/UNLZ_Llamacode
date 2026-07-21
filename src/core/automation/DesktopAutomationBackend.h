@@ -108,6 +108,19 @@ public:
                           const QString &button = QStringLiteral("left"), int clickCount = 1,
                           QString *error = nullptr, QVariantMap *trace = nullptr);
 
+    // Fallback visual para canvas, iconos y escritorios remotos que no exponen
+    // UIA ni texto. Devuelve rect normalizado + confianza; clickImage se abstiene
+    // si hay dos matches equivalentes o cambia la geometría del target.
+    static QVariantMap findImage(const QString &kind, const QString &targetId,
+                                 const QString &templatePath, double threshold = 0.88,
+                                 double minScale = 1.0, double maxScale = 1.0,
+                                 bool requireUnique = true, QString *error = nullptr);
+    static bool clickImage(const QString &kind, const QString &targetId,
+                           const QString &templatePath, double threshold = 0.88,
+                           double minScale = 1.0, double maxScale = 1.0,
+                           const QString &button = QStringLiteral("left"),
+                           QString *error = nullptr, QVariantMap *trace = nullptr);
+
     // Control UIA bajo un punto absoluto de pantalla. Lo usa el grabador Teach para
     // anclar cada click/stroke a un control semántico (name/role/controlId + la
     // ventana dueña) en vez de sólo coordenadas → replay robusto ante reflow de UI.
