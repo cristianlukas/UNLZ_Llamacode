@@ -12,6 +12,7 @@ private slots:
     void rejectsMissingTemplate();
     void rejectsAmbiguousRepeatedTemplate();
     void findsScaledTemplate();
+    void rejectsUniformRegionWhenTemplateHasBorder();
     void largeDesktopSearchStaysBounded();
 };
 
@@ -66,6 +67,20 @@ void VisualMatcherTests::rejectsMissingTemplate()
     const auto result = VisualMatcher::find(screen, patternedNeedle());
     QVERIFY(!result.found);
     QVERIFY(!result.error.isEmpty());
+}
+
+void VisualMatcherTests::rejectsUniformRegionWhenTemplateHasBorder()
+{
+    QImage screen(120, 90, QImage::Format_RGB32);
+    screen.fill(QColor(235, 235, 235));
+    QImage needle(48, 30, QImage::Format_RGB32);
+    needle.fill(QColor(235, 235, 235));
+    QPainter painter(&needle);
+    painter.setPen(QPen(QColor(40, 80, 170), 4));
+    painter.drawRect(1, 1, 45, 27);
+    painter.end();
+    const auto result = VisualMatcher::find(screen, needle);
+    QVERIFY(!result.found);
 }
 
 void VisualMatcherTests::rejectsAmbiguousRepeatedTemplate()

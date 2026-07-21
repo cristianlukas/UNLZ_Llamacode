@@ -14,9 +14,10 @@ struct Candidate { QRect rect; double score = 0.0; double scale = 1.0; };
 
 double sampledSimilarity(const QImage &haystack, const QImage &needle, int left, int top)
 {
-    // Hasta 12x12 muestras uniformes: costo predecible incluso con templates grandes.
-    const int sx = qMax(1, needle.width() / 12);
-    const int sy = qMax(1, needle.height() / 12);
+    // Hasta 20x20 muestras uniformes. El barrido adapta su stride al costo total,
+    // por lo que ganamos estructura sin perder el límite de tiempo en 4K.
+    const int sx = qMax(1, needle.width() / 20);
+    const int sy = qMax(1, needle.height() / 20);
     qint64 difference = 0;
     int count = 0;
     for (int y = sy / 2; y < needle.height(); y += sy) {
@@ -26,6 +27,25 @@ double sampledSimilarity(const QImage &haystack, const QImage &needle, int left,
             difference += qAbs(int(h[x]) - int(n[x]));
             ++count;
         }
+    }
+    // El muestreo centrado puede caer íntegramente dentro de un botón de color
+    // plano y omitir su borde. En ese caso una zona uniforme del escritorio daba
+    // confianza 1.0 aunque no tuviera la estructura de la plantilla. Muestrear el
+    // perímetro conserva el costo acotado y vuelve observable esa estructura.
+    const auto add = [&](int x, int y) {
+        difference += qAbs(int(haystack.constScanLine(top + y)[left + x])
+                           - int(needle.constScanLine(y)[x]));
+        ++count;
+    };
+    const int edgeStepX = qMax(1, needle.width() / 20);
+    const int edgeStepY = qMax(1, needle.height() / 20);
+    for (int x = 0; x < needle.width(); x += edgeStepX) {
+        add(x, 0);
+        if (needle.height() > 1) add(x, needle.height() - 1);
+    }
+    for (int y = edgeStepY; y + 1 < needle.height(); y += edgeStepY) {
+        add(0, y);
+        if (needle.width() > 1) add(needle.width() - 1, y);
     }
     return count > 0 ? 1.0 - double(difference) / (255.0 * count) : 0.0;
 }
@@ -160,7 +180,7 @@ VisualMatcher::Result VisualMatcher::find(const QImage &haystackSource,
             : original.scaled(scaledSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
         const qint64 positions = qint64(haystack.width() - needle.width() + 1)
                                * qint64(haystack.height() - needle.height() + 1);
-        const int stride = qMax(1, int(qCeil(qSqrt(double(positions) / 750000.0))));
+        const int stride = qMax(1, int(qCeil(qSqrt(double(positions) / 250000.0))));
         for (int y = 0; y <= haystack.height() - needle.height(); y += stride) {
             for (int x = 0; x <= haystack.width() - needle.width(); x += stride) {
                 const Candidate candidate{QRect(x, y, needle.width(), needle.height()),

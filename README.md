@@ -185,6 +185,9 @@ El probe opt-in `qa_visual_automation` valida búsqueda real, DPI y multimonitor
 una ventana propia. Por defecto no mueve el mouse; `--execute-click --screen N`
 habilita el clic E2E explícitamente. No forma parte de `ctest` para no interferir con
 el escritorio del usuario ni con runners headless.
+`--matrix` recorre automáticamente todos los monitores disponibles, dos objetivos
+gráficos y temas claro/oscuro; puede combinarse con `--execute-click` para verificar
+también el dispatch foreground de cada caso.
 
 ### Nota de seguridad
 
