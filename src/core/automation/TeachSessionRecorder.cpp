@@ -2,6 +2,8 @@
 #include "AutomationArtifactStore.h"
 #include "DesktopAutomationBackend.h"
 #include "core/agent/BrowserTeach.h"
+#include <QCryptographicHash>
+#include <QFile>
 
 #include <QCursor>
 #include <QDateTime>
@@ -119,6 +121,7 @@ void TeachSessionRecorder::reset()
     m_error.clear();
     m_events.clear();
     m_evidence.clear();
+    m_templateCount = 0;
     m_artifactId.clear();
     m_task.clear();
     m_mode.clear();
@@ -245,6 +248,70 @@ QString TeachSessionRecorder::captureEvidence()
     return name;
 }
 
+QVariantMap TeachSessionRecorder::captureTemplateAt(const QPoint &physical, int requestedSize)
+{
+    if (m_mode != QLatin1String("desktop")) return {};
+    const QVariantMap info = DesktopAutomationBackend::targetInfo(m_scopeKind, m_scopeId);
+    const QRect bounds(info.value(QStringLiteral("x")).toInt(), info.value(QStringLiteral("y")).toInt(),
+                       info.value(QStringLiteral("width")).toInt(), info.value(QStringLiteral("height")).toInt());
+    if (!bounds.isValid() || !bounds.contains(physical)) {
+        m_error = QStringLiteral("El cursor debe estar dentro del alcance enseñado.");
+        return {};
+    }
+    QString error;
+    const QImage capture = DesktopAutomationBackend::capture(m_scopeKind, m_scopeId, &error);
+    if (capture.isNull()) { m_error = error; return {}; }
+    const double sx = double(capture.width()) / bounds.width();
+    const double sy = double(capture.height()) / bounds.height();
+    const QPoint center(qRound((physical.x() - bounds.x()) * sx),
+                        qRound((physical.y() - bounds.y()) * sy));
+    const int size = qBound(24, requestedSize, 256);
+    QRect crop(center.x() - size / 2, center.y() - size / 2, size, size);
+    crop = crop.intersected(capture.rect());
+    if (crop.width() < 16 || crop.height() < 16) {
+        m_error = QStringLiteral("La región visual quedó fuera del alcance.");
+        return {};
+    }
+    const QString dir = AutomationArtifactStore::artifactDir(
+                            m_task.value(QStringLiteral("id")).toString())
+                        + QStringLiteral("/templates");
+    QDir().mkpath(dir);
+    const QString file = QStringLiteral("template-%1.png")
+                             .arg(++m_templateCount, 4, 10, QLatin1Char('0'));
+    const QImage needle = capture.copy(crop);
+    const QString path = dir + QLatin1Char('/') + file;
+    if (!needle.save(path, "PNG")) {
+        m_error = QStringLiteral("No se pudo guardar la plantilla visual.");
+        return {};
+    }
+    QFile hashFile(path);
+    QByteArray hash;
+    if (hashFile.open(QIODevice::ReadOnly))
+        hash = QCryptographicHash::hash(hashFile.readAll(), QCryptographicHash::Sha256).toHex();
+    return QVariantMap{
+        {QStringLiteral("type"), QStringLiteral("image")},
+        {QStringLiteral("file"), QStringLiteral("templates/") + file},
+        {QStringLiteral("threshold"), 0.88},
+        {QStringLiteral("minScale"), 0.8},
+        {QStringLiteral("maxScale"), 1.25},
+        {QStringLiteral("requireUnique"), true},
+        {QStringLiteral("width"), needle.width()},
+        {QStringLiteral("height"), needle.height()},
+        {QStringLiteral("sha256"), QString::fromLatin1(hash)}};
+}
+
+QVariantMap TeachSessionRecorder::captureVisualReference(int size)
+{
+    if (m_state != QLatin1String("recording") && m_state != QLatin1String("paused")) return {};
+    const QVariantMap locator = captureTemplateAt(
+        DesktopAutomationBackend::cursorPosPhysical(), size);
+    if (locator.isEmpty()) { emit changed(); return {}; }
+    appendEvent({{QStringLiteral("kind"), QStringLiteral("visual_reference")},
+                 {QStringLiteral("intent"), QStringLiteral("Referencia visual capturada")},
+                 {QStringLiteral("locator"), locator}}, false);
+    return locator;
+}
+
 void TeachSessionRecorder::appendEvent(const QVariantMap &source, bool capture)
 {
     QVariantMap event = source;
@@ -349,6 +416,24 @@ void TeachSessionRecorder::sampleDesktop()
                          {QStringLiteral("points"), m_strokePoints},
                          {QStringLiteral("target"), target}}, true);
         } else {
+            QVariantList locators;
+            const QString controlId = target.value(QStringLiteral("controlId")).toString();
+            const QString controlName = target.value(QStringLiteral("name")).toString();
+            if (!controlId.isEmpty() || !controlName.isEmpty()) {
+                locators << QVariantMap{{QStringLiteral("type"), QStringLiteral("uia")},
+                                        {QStringLiteral("controlId"), controlId},
+                                        {QStringLiteral("name"), controlName},
+                                        {QStringLiteral("role"), target.value(QStringLiteral("role"))}};
+                if (!controlName.isEmpty())
+                    locators << QVariantMap{{QStringLiteral("type"), QStringLiteral("ocr")},
+                                            {QStringLiteral("text"), controlName}};
+            } else {
+                const QVariantMap imageLocator = captureTemplateAt(m_strokeStartAbs, 72);
+                if (!imageLocator.isEmpty()) locators << imageLocator;
+            }
+            locators << QVariantMap{{QStringLiteral("type"), QStringLiteral("normalizedPoint")},
+                                    {QStringLiteral("x"), start.x()},
+                                    {QStringLiteral("y"), start.y()}};
             appendEvent({{QStringLiteral("kind"), QStringLiteral("click")},
                          {QStringLiteral("intent"), btn == QLatin1String("right")
                               ? QStringLiteral("Click derecho") : QStringLiteral("Click izquierdo")},
@@ -356,6 +441,7 @@ void TeachSessionRecorder::sampleDesktop()
                          {QStringLiteral("button"), btn},
                          {QStringLiteral("x"), start.x()}, {QStringLiteral("y"), start.y()},
                          {QStringLiteral("pointer"), pointerTrace(m_strokeStartAbs, start, btn)},
+                         {QStringLiteral("locators"), locators},
                          {QStringLiteral("target"), target}}, true);
         }
         m_strokePoints.clear();
@@ -451,6 +537,13 @@ void TeachSessionRecorder::removeKeyHook()
 void TeachSessionRecorder::onKeyDown(quint32 vk, quint32 scan)
 {
     if (m_state != QLatin1String("recording")) return;
+
+    // Atajo global de Teach: el cursor permanece sobre el objetivo, por lo que la
+    // región capturada no termina accidentalmente sobre la ventana de LlamaCode.
+    if (vk == VK_F8) {
+        captureVisualReference(72);
+        return;
+    }
 
     // La tecla Win es modificador (Win+R) Y tecla independiente (tap → menú
     // Inicio). En keydown sólo arrancamos el seguimiento; el paso [key WIN] de un

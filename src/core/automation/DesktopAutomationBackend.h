@@ -120,6 +120,16 @@ public:
                            double minScale = 1.0, double maxScale = 1.0,
                            const QString &button = QStringLiteral("left"),
                            QString *error = nullptr, QVariantMap *trace = nullptr);
+    static QVariantMap waitImage(const QString &kind, const QString &targetId,
+                                 const QString &templatePath, bool appear = true,
+                                 int timeoutMs = 4000, double threshold = 0.88,
+                                 double minScale = 1.0, double maxScale = 1.0,
+                                 QString *error = nullptr);
+    static QVariantMap assertImage(const QString &kind, const QString &targetId,
+                                   const QString &templatePath, bool shouldExist = true,
+                                   int timeoutMs = 1500, double threshold = 0.88,
+                                   double minScale = 1.0, double maxScale = 1.0,
+                                   QString *error = nullptr);
 
     // Control UIA bajo un punto absoluto de pantalla. Lo usa el grabador Teach para
     // anclar cada click/stroke a un control semántico (name/role/controlId + la

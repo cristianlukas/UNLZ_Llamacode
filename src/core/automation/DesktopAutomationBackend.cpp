@@ -12,6 +12,7 @@
 #include <QGuiApplication>
 #include <QProcess>
 #include <QScreen>
+#include <QThread>
 #include <QVector>
 #include <QWindow>
 
@@ -1187,9 +1188,60 @@ bool DesktopAutomationBackend::clickImage(const QString &kind, const QString &ta
                    + rect.value(QStringLiteral("height")).toDouble() / 2.0;
     QVariantMap clickTrace;
     if (!click(kind, targetId, x, y, button, error, &clickTrace)) return false;
+    QString postError;
+    const QVariantMap post = findImage(kind, targetId, templatePath, threshold,
+                                       minScale, maxScale, false, &postError);
     clickTrace[QStringLiteral("visualMatch")] = match;
+    clickTrace[QStringLiteral("postMatch")] = post;
     if (trace) *trace = clickTrace;
     return true;
+}
+
+QVariantMap DesktopAutomationBackend::waitImage(const QString &kind, const QString &targetId,
+                                                 const QString &templatePath, bool appear,
+                                                 int timeoutMs, double threshold,
+                                                 double minScale, double maxScale,
+                                                 QString *error)
+{
+    if (error) error->clear();
+    QElapsedTimer timer;
+    timer.start();
+    QVariantMap last;
+    const int timeout = qBound(0, timeoutMs, 60000);
+    do {
+        QString matchError;
+        last = findImage(kind, targetId, templatePath, threshold, minScale, maxScale,
+                         true, &matchError);
+        const bool present = last.value(QStringLiteral("found")).toBool()
+                          && !last.value(QStringLiteral("ambiguous")).toBool();
+        if (present == appear) {
+            last[QStringLiteral("conditionMet")] = true;
+            last[QStringLiteral("elapsedMs")] = timer.elapsed();
+            last[QStringLiteral("expected")] = appear ? QStringLiteral("appear")
+                                                        : QStringLiteral("disappear");
+            return last;
+        }
+        if (timer.elapsed() >= timeout) break;
+        QThread::msleep(100);
+    } while (true);
+    last[QStringLiteral("conditionMet")] = false;
+    last[QStringLiteral("elapsedMs")] = timer.elapsed();
+    if (error) *error = QStringLiteral("La condición visual no se cumplió antes del timeout.");
+    return last;
+}
+
+QVariantMap DesktopAutomationBackend::assertImage(const QString &kind, const QString &targetId,
+                                                   const QString &templatePath, bool shouldExist,
+                                                   int timeoutMs, double threshold,
+                                                   double minScale, double maxScale,
+                                                   QString *error)
+{
+    QVariantMap result = waitImage(kind, targetId, templatePath, shouldExist, timeoutMs,
+                                   threshold, minScale, maxScale, error);
+    result[QStringLiteral("pass")] = result.value(QStringLiteral("conditionMet"));
+    result[QStringLiteral("assertion")] = shouldExist
+        ? QStringLiteral("image exists") : QStringLiteral("image absent");
+    return result;
 }
 
 QVariantMap DesktopAutomationBackend::controlAtPoint(const QPoint &absolute)

@@ -442,6 +442,12 @@ Item {
                                 }
                             }
                             LcButton {
+                                text: "Plantillas"
+                                secondary: true
+                                visible: !!model.teachArtifactId
+                                onClicked: templatePopup.openFor(model.teachArtifactId, taskName)
+                            }
+                            LcButton {
                                 text: "Detener"
                                 secondary: true
                                 visible: App.runningTaskId === taskId
@@ -697,7 +703,7 @@ Item {
                 color: Theme.textMuted
                 font.pixelSize: 11
                 text: teachMode.currentIndex === 0
-                    ? "Escritorio foreground: el agente controla tu pantalla real (mouse y teclado). Ocupa la PC mientras corre — no la uses en paralelo. Sirve para apps de escritorio o flujos que no son solo web."
+                    ? "Escritorio foreground: el agente controla tu pantalla real. Durante Teach, dejá el cursor sobre un objetivo gráfico y presioná F8 para guardar una plantilla visual."
                     : "Navegador background: corre en un navegador headless por detrás, sin tomar tu pantalla. Podés seguir usando la PC mientras se ejecuta. Sirve para tareas 100% web (abrir una URL, extraer datos, completar formularios)."
             }
             RowLayout {
@@ -795,6 +801,18 @@ Item {
                     secondary: true
                     visible: App.teachState === "recording" || App.teachState === "paused"
                     onClicked: App.pauseTeach(App.teachState !== "paused")
+                }
+                LcButton {
+                    text: "Capturar imagen"
+                    secondary: true
+                    visible: teachMode.currentIndex === 0
+                          && (App.teachState === "recording" || App.teachState === "paused")
+                    onClicked: {
+                        const ref = App.captureTeachVisualReference(72)
+                        teachError.text = ref && ref.file
+                            ? "Plantilla guardada: " + ref.file
+                            : (App.teachError || "No se pudo capturar la región bajo el cursor.")
+                    }
                 }
                 LcButton {
                     text: "Finalizar"
@@ -2033,6 +2051,91 @@ Item {
                     LcButton { text: "Cerrar"; onClicked: historyDialog.close() }
                 }
             }
+        }
+    }
+
+    Popup {
+        id: templatePopup
+        modal: true
+        parent: Overlay.overlay
+        width: Math.min(620, root.width - 80)
+        height: Math.min(480, root.height - 80)
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 18
+        property string artifactId: ""
+        property string processName: ""
+        property var rows: []
+        property string statusText: ""
+        property string replaceFile: ""
+        function refresh() { rows = App.automationTemplates(artifactId) }
+        function openFor(id, name) {
+            artifactId = id; processName = name; statusText = ""; refresh(); open()
+        }
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text { text: "Plantillas visuales · " + templatePopup.processName; color: Theme.textPrimary; font.bold: true }
+            Text {
+                Layout.fillWidth: true
+                text: "Teach las usa después de UI Automation y OCR. Probar no hace clic; sólo busca la imagen en el alcance actual."
+                color: Theme.textMuted; wrapMode: Text.Wrap; font.pixelSize: 11
+            }
+            ListView {
+                Layout.fillWidth: true; Layout.fillHeight: true; clip: true
+                model: templatePopup.rows
+                delegate: Rectangle {
+                    width: ListView.view.width; height: 66; radius: 6; color: Theme.cardBg
+                    RowLayout {
+                        anchors.fill: parent; anchors.margins: 8; spacing: 8
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Text { text: modelData.file || "plantilla"; color: Theme.textPrimary; elide: Text.ElideMiddle; Layout.fillWidth: true }
+                            Text { text: (modelData.width || 0) + "×" + (modelData.height || 0) + " · umbral " + (modelData.threshold || 0.88); color: Theme.textMuted; font.pixelSize: 10 }
+                        }
+                        LcButton {
+                            text: "Probar"; secondary: true
+                            onClicked: {
+                                const r = App.testAutomationTemplate(templatePopup.artifactId, modelData.file)
+                                templatePopup.statusText = r.found && !r.ambiguous
+                                    ? "Encontrada · confianza " + Number(r.confidence).toFixed(3)
+                                    : (r.error || "No encontrada o ambigua")
+                            }
+                        }
+                        LcButton {
+                            text: "Eliminar"; secondary: true
+                            onClicked: {
+                                if (App.removeAutomationTemplate(templatePopup.artifactId, modelData.file))
+                                    templatePopup.refresh()
+                            }
+                        }
+                        LcButton {
+                            text: "Reemplazar"; secondary: true
+                            onClicked: {
+                                templatePopup.replaceFile = modelData.file
+                                replaceTemplateDialog.open()
+                            }
+                        }
+                    }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { Layout.fillWidth: true; text: templatePopup.statusText; color: Theme.accent; elide: Text.ElideRight }
+                LcButton { text: "Cerrar"; onClicked: templatePopup.close() }
+            }
+        }
+    }
+
+    FileDialog {
+        id: replaceTemplateDialog
+        title: "Elegir nueva plantilla visual"
+        nameFilters: ["Imágenes (*.png *.jpg *.jpeg *.bmp *.webp)"]
+        onAccepted: {
+            const ok = App.replaceAutomationTemplate(templatePopup.artifactId,
+                templatePopup.replaceFile, selectedFile.toString())
+            templatePopup.statusText = ok ? "Plantilla reemplazada." : "No se pudo reemplazar la plantilla."
+            templatePopup.refresh()
         }
     }
 

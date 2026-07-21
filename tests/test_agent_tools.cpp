@@ -330,6 +330,20 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
                          {{"expect_text", "texto-que-no-existe-zzz"}, {"timeout_ms", 200}});
     QVERIFY(!a.value("ok").toBool());
     QVERIFY(a.value("result").toString().startsWith(QStringLiteral("[desktop_assert: FAIL")));
+
+    // Tools visuales: una plantilla inexistente falla de manera determinista y
+    // conserva el nombre de la tool para que el agente pueda autocorregirse.
+    for (const QString &tool : {QStringLiteral("desktop_find_image"),
+                                QStringLiteral("desktop_click_image"),
+                                QStringLiteral("desktop_wait_image"),
+                                QStringLiteral("desktop_assert_image")}) {
+        const QVariantMap visual = call(tool, {{"target_id", "0"},
+                                                {"scope_kind", "screen"},
+                                                {"template_path", "Z:/missing-template.png"},
+                                                {"timeout_ms", 0}});
+        QVERIFY2(!visual.value("ok").toBool(), qPrintable(tool));
+        QVERIFY(visual.value("result").toString().contains(tool));
+    }
 }
 
 void AgentToolsTests::desktopLaunch_emptyAppErrorsCleanly()

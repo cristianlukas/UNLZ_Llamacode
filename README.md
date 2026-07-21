@@ -162,13 +162,15 @@ que se activen en cada sesión.
   normalizadas `0..1`: el schema y el backend rechazan valores fuera de rango antes
   de mover el mouse, evitando confundir una grilla de grounding `0..1000` con
   coordenadas ejecutables. Si el objetivo no aparece con claridad, el agente se
-  abstiene en vez de elegir un control parecido. Teach conserva la geometría de la ventana objetivo
-  y, para canvas, iconos o escritorios remotos sin controles semánticos, el agente
-  dispone de `desktop_find_image` y `desktop_click_image`: buscan una plantilla en
-  memoria con umbral y escala acotados, rechazan coincidencias ambiguas y verifican
-  que la geometría del alcance no cambió antes de hacer clic. UI Automation y OCR
-  siguen siendo los caminos preferidos.
-  y Play restaura su estado maximizado o su tamaño exterior antes de reproducir
+  abstiene en vez de elegir un control parecido. Para canvas, iconos o escritorios
+  remotos sin controles semánticos, el agente dispone de `desktop_find_image`,
+  `desktop_click_image`, `desktop_wait_image` y `desktop_assert_image`: buscan una
+  plantilla en memoria con umbral y escala acotados, rechazan coincidencias ambiguas
+  y verifican la geometría antes de actuar. Teach v2 captura automáticamente una
+  plantilla cuando un clic no tiene ancla semántica; F8 permite agregar referencias
+  manuales y Tasks permite probarlas, reemplazarlas o eliminarlas. Play resuelve cada
+  clic mediante `UI Automation → OCR → plantilla → coordenada normalizada`, restaura
+  el estado maximizado o el tamaño exterior de la ventana antes de reproducir
   gestos, evitando que un cambio accidental de tamaño desplace dibujos y clicks.
   Mientras controla ventanas, mouse o teclado se
   muestra durante toda la automatización un indicador siempre visible, un reborde

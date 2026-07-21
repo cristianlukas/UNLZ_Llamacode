@@ -884,6 +884,32 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[desktop_click_image: ok]\ntrace=%1").arg(json);
     }
+    if (name == QLatin1String("desktop_wait_image")
+        || name == QLatin1String("desktop_assert_image")) {
+        QString error;
+        const bool expected = args.value(name == QLatin1String("desktop_wait_image")
+            ? QStringLiteral("appear") : QStringLiteral("should_exist")).toBool(true);
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        const QString path = args.value(QStringLiteral("template_path")).toString();
+        const int timeout = args.value(QStringLiteral("timeout_ms")).toInt(
+            name == QLatin1String("desktop_wait_image") ? 4000 : 1500);
+        const double threshold = args.value(QStringLiteral("threshold")).toDouble(0.88);
+        const double minScale = args.value(QStringLiteral("min_scale")).toDouble(1.0);
+        const double maxScale = args.value(QStringLiteral("max_scale")).toDouble(1.0);
+        const QVariantMap result = name == QLatin1String("desktop_wait_image")
+            ? DesktopAutomationBackend::waitImage(kind, target, path, expected, timeout,
+                                                   threshold, minScale, maxScale, &error)
+            : DesktopAutomationBackend::assertImage(kind, target, path, expected, timeout,
+                                                     threshold, minScale, maxScale, &error);
+        const bool good = result.value(name == QLatin1String("desktop_wait_image")
+            ? QStringLiteral("conditionMet") : QStringLiteral("pass")).toBool();
+        if (ok) *ok = good;
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(result)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[%1: %2]\nresult=%3")
+            .arg(name, good ? QStringLiteral("ok") : error, json);
+    }
     if (name == QLatin1String("desktop_observe")) {
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(
             QStringLiteral("screen"));

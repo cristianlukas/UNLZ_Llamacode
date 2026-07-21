@@ -758,10 +758,10 @@ void AppController::updateTeachStopOverlay()
         overlay->setObjectName(QStringLiteral("llamacodeTeachStopOverlay"));
         overlay->setWindowTitle(QStringLiteral("LlamaCode Teach Controls"));
         overlay->setAttribute(Qt::WA_TranslucentBackground);
-        overlay->setFixedSize(210, 58);
+        overlay->setFixedSize(310, 58);
         auto *layout = new QHBoxLayout(overlay);
         layout->setContentsMargins(3, 3, 3, 3);
-        auto *stop = new QPushButton(QStringLiteral("■  Detener grabación"), overlay);
+        auto *stop = new QPushButton(QStringLiteral("F8 captura imagen   ·   ■ Detener"), overlay);
         stop->setCursor(Qt::PointingHandCursor);
         stop->setStyleSheet(QStringLiteral(
             "QPushButton { background:#25283a; color:#f2f2f2; border:2px solid #e05f65; "
@@ -5044,6 +5044,7 @@ void AppController::playNextReplayStep()
         const QVariantMap target = step.value(QStringLiteral("target")).toMap();
         const QString winLabel = target.value(QStringLiteral("windowLabel")).toString();
         QString scopeKind = m_replayScopeKind, scopeId = m_replayScopeId;
+        QString currentWindowId;
         QVariantList points = step.value(QStringLiteral("points")).toList();
         if (kind == QLatin1String("click"))
             points = QVariantList{QVariantMap{{QStringLiteral("x"), step.value(QStringLiteral("x"))},
@@ -5051,15 +5052,14 @@ void AppController::playNextReplayStep()
         QString anchored;
         bool windowStateOk = true;
         if (!winLabel.isEmpty() && target.value(QStringLiteral("winWidth")).toInt() > 0) {
-            QString curId;
             for (const QVariant &w : DesktopAutomationBackend::windows()) {
                 const QVariantMap row = w.toMap();
                 if (AutomationRunner::windowTitleMatches(
                         winLabel, row.value(QStringLiteral("label")).toString())) {
-                    curId = row.value(QStringLiteral("id")).toString(); break;
+                    currentWindowId = row.value(QStringLiteral("id")).toString(); break;
                 }
             }
-            if (!curId.isEmpty()) {
+            if (!currentWindowId.isEmpty()) {
                 const QVariantMap scopeRect = DesktopAutomationBackend::targetInfo(m_replayScopeKind, m_replayScopeId);
                 const QVariantMap recordedState =
                     AutomationRunner::recordedWindowState(target, scopeRect);
@@ -5067,10 +5067,10 @@ void AppController::playNextReplayStep()
                     QString stateError;
                     const bool maximized = recordedState.value(QStringLiteral("maximized")).toBool();
                     bool restored = DesktopAutomationBackend::setWindowMaximized(
-                        curId, maximized, &stateError);
+                        currentWindowId, maximized, &stateError);
                     if (restored && !maximized)
                         restored = DesktopAutomationBackend::setWindowSize(
-                            curId, recordedState.value(QStringLiteral("width")).toInt(),
+                            currentWindowId, recordedState.value(QStringLiteral("width")).toInt(),
                             recordedState.value(QStringLiteral("height")).toInt(), &stateError);
                     if (!restored) {
                         error = stateError;
@@ -5083,7 +5083,7 @@ void AppController::playNextReplayStep()
                                          {QStringLiteral("height"), target.value(QStringLiteral("winHeight"))}};
                 points = AutomationRunner::reanchorPointsToWindow(points, scopeRect, recWin);
                 scopeKind = QStringLiteral("window");
-                scopeId = curId;
+                scopeId = currentWindowId;
                 anchored = QStringLiteral(" [ventana '%1', estado Teach restaurado]")
                                .arg(winLabel.left(30));
             }
@@ -5091,12 +5091,53 @@ void AppController::playNextReplayStep()
         const QString button = step.value(QStringLiteral("button"), QStringLiteral("left")).toString();
         if (kind == QLatin1String("click")) {
             const QVariantMap p0 = points.value(0).toMap();
-            detail = QStringLiteral("click %1,%2%3")
+            const QVariantList locators = step.value(QStringLiteral("locators")).toList();
+            QString used = QStringLiteral("normalizedPoint");
+            if (windowStateOk && !currentWindowId.isEmpty()) {
+                for (const QVariant &lv : locators) {
+                    const QVariantMap locator = lv.toMap();
+                    if (locator.value(QStringLiteral("type")).toString() != QLatin1String("uia")) continue;
+                    const QString controlId = locator.value(QStringLiteral("controlId")).toString();
+                    const QString name = locator.value(QStringLiteral("name")).toString();
+                    if (!controlId.isEmpty())
+                        ok = DesktopAutomationBackend::clickElement(currentWindowId, controlId, &error);
+                    if (!ok && !name.isEmpty())
+                        ok = DesktopAutomationBackend::clickElement(currentWindowId, name, &error);
+                    if (ok) { used = QStringLiteral("uia"); break; }
+                }
+                if (!ok) {
+                    for (const QVariant &lv : locators) {
+                        const QVariantMap locator = lv.toMap();
+                        if (locator.value(QStringLiteral("type")).toString() != QLatin1String("ocr")) continue;
+                        ok = DesktopAutomationBackend::clickText(QStringLiteral("window"), currentWindowId,
+                            locator.value(QStringLiteral("text")).toString(), button, 1, &error);
+                        if (ok) { used = QStringLiteral("ocr"); break; }
+                    }
+                }
+            }
+            if (windowStateOk && !ok) {
+                for (const QVariant &lv : locators) {
+                    const QVariantMap locator = lv.toMap();
+                    if (locator.value(QStringLiteral("type")).toString() != QLatin1String("image")) continue;
+                    const QString path = AutomationArtifactStore::artifactDir(m_replayArtifactId)
+                                         + QLatin1Char('/') + locator.value(QStringLiteral("file")).toString();
+                    ok = DesktopAutomationBackend::clickImage(scopeKind, scopeId, path,
+                        locator.value(QStringLiteral("threshold"), 0.88).toDouble(),
+                        locator.value(QStringLiteral("minScale"), 0.8).toDouble(),
+                        locator.value(QStringLiteral("maxScale"), 1.25).toDouble(),
+                        button, &error);
+                    if (ok) { used = QStringLiteral("image"); break; }
+                }
+            }
+            if (windowStateOk && !ok) {
+                ok = DesktopAutomationBackend::click(scopeKind, scopeId,
+                    p0.value(QStringLiteral("x")).toDouble(),
+                    p0.value(QStringLiteral("y")).toDouble(), button, &error);
+            }
+            detail = QStringLiteral("click[%1] %2,%3%4")
+                         .arg(used)
                          .arg(p0.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)
                          .arg(p0.value(QStringLiteral("y")).toDouble(), 0, 'f', 3).arg(anchored);
-            ok = windowStateOk && DesktopAutomationBackend::click(scopeKind, scopeId,
-                                            p0.value(QStringLiteral("x")).toDouble(),
-                                            p0.value(QStringLiteral("y")).toDouble(), button, &error);
         } else {
             detail = QStringLiteral("stroke %1 pts%2").arg(points.size()).arg(anchored);
             ok = windowStateOk
@@ -7099,6 +7140,11 @@ void AppController::addTeachNote(const QString &note)
     m_teachRecorder.addNote(note);
 }
 
+QVariantMap AppController::captureTeachVisualReference(int size)
+{
+    return m_teachRecorder.captureVisualReference(size);
+}
+
 QString AppController::finishTeach()
 {
     return m_teachRecorder.finish();
@@ -7107,6 +7153,41 @@ QString AppController::finishTeach()
 void AppController::cancelTeach()
 {
     m_teachRecorder.cancel();
+}
+
+QVariantList AppController::automationTemplates(const QString &artifactId) const
+{
+    return AutomationArtifactStore::templates(artifactId);
+}
+
+QVariantMap AppController::testAutomationTemplate(const QString &artifactId,
+                                                  const QString &fileName) const
+{
+    const QVariantMap scope = AutomationArtifactStore::manifest(artifactId)
+                                  .value(QStringLiteral("scope")).toMap();
+    QString error;
+    QVariantMap result = DesktopAutomationBackend::findImage(
+        scope.value(QStringLiteral("kind"), QStringLiteral("screen")).toString(),
+        scope.value(QStringLiteral("targetId"), QStringLiteral("0")).toString(),
+        AutomationArtifactStore::artifactDir(artifactId) + QStringLiteral("/templates/")
+            + QFileInfo(fileName).fileName(), 0.88, 0.8, 1.25, true, &error);
+    if (!error.isEmpty()) result[QStringLiteral("error")] = error;
+    return result;
+}
+
+bool AppController::removeAutomationTemplate(const QString &artifactId,
+                                             const QString &fileName)
+{
+    return AutomationArtifactStore::removeTemplate(artifactId, fileName);
+}
+
+bool AppController::replaceAutomationTemplate(const QString &artifactId,
+                                              const QString &fileName,
+                                              const QString &sourcePath)
+{
+    const QUrl url(sourcePath);
+    return AutomationArtifactStore::replaceTemplate(
+        artifactId, fileName, url.isLocalFile() ? url.toLocalFile() : sourcePath);
 }
 
 QVariantList AppController::automationTimeline(const QString &artifactId) const

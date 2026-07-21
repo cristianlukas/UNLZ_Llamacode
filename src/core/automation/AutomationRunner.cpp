@@ -215,6 +215,10 @@ QStringList AutomationRunner::desktopToolNames()
         QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"),
         QStringLiteral("desktop_click_element"),
+        QStringLiteral("desktop_find_image"),
+        QStringLiteral("desktop_click_image"),
+        QStringLiteral("desktop_wait_image"),
+        QStringLiteral("desktop_assert_image"),
         QStringLiteral("desktop_observe"),
         QStringLiteral("desktop_click"),
         QStringLiteral("desktop_stroke"),
@@ -255,7 +259,8 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "Para cálculos cortos: primero limpiá con desktop_key ESC, después detectá la "
             "expresión del objetivo y escribila completa con '=' en una sola llamada "
             "(desktop_type \"<expresión>=\"); no la partas ni presiones ENTER después.\n"
-            "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId.\n"
+            "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId; "
+            "si la receta trae locator image y UIA/OCR fallan, usá desktop_find_image/click_image.\n"
             "5) Verificá con desktop_controls usando el visor ACTUAL ('Se muestra X'); "
             "no aceptes Historial/Memoria como resultado final.\n"
             "Cada tool de click devuelve trace con pointer/target; usalo para validar "
@@ -274,7 +279,7 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "buscá esa ventana por título y restaurá ese tamaño con desktop_resize antes "
             "del click/trazo cuando no estaba maximizada. No arrastres sus bordes a mano. "
             "VERIFICACIÓN: un paso [assert] es una condición que DEBE cumplirse; reproducilo "
-            "con desktop_assert (PASS/FAIL). Cerrá la Task con un desktop_assert del objetivo "
+            "con desktop_assert o desktop_assert_image (PASS/FAIL). Cerrá la Task con una aserción del objetivo "
             "en vez de declarar éxito de memoria. "
             "No leas evidence/*.jpg con read_file.\n");
     } else if (mode == QLatin1String("browserBackground")) {

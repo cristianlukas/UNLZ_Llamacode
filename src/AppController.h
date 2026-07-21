@@ -396,7 +396,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.57"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.58"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -518,9 +518,18 @@ public:
     Q_INVOKABLE QString startBrowserTeach(const QString &taskId, const QString &url);
     Q_INVOKABLE void pauseTeach(bool paused);
     Q_INVOKABLE void addTeachNote(const QString &note);
+    Q_INVOKABLE QVariantMap captureTeachVisualReference(int size = 72);
     Q_INVOKABLE QString finishTeach();
     Q_INVOKABLE void cancelTeach();
     Q_INVOKABLE QVariantList automationTimeline(const QString &artifactId) const;
+    Q_INVOKABLE QVariantList automationTemplates(const QString &artifactId) const;
+    Q_INVOKABLE QVariantMap testAutomationTemplate(const QString &artifactId,
+                                                   const QString &fileName) const;
+    Q_INVOKABLE bool removeAutomationTemplate(const QString &artifactId,
+                                              const QString &fileName);
+    Q_INVOKABLE bool replaceAutomationTemplate(const QString &artifactId,
+                                               const QString &fileName,
+                                               const QString &sourcePath);
     Q_INVOKABLE QString importBrowserSkillAsTask(const QString &skillName);
     Q_INVOKABLE bool removeAutomationEvidence(const QString &artifactId,
                                               const QString &fileName);

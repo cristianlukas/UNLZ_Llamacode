@@ -9,7 +9,9 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QImage>
 #include <QRegularExpression>
+#include <QSet>
 #include <QStandardPaths>
 #include <QUuid>
 
@@ -50,6 +52,7 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
     if (id.isEmpty()) id = QUuid::createUuid().toString(QUuid::WithoutBraces).left(12);
     const QString dir = artifactDir(id);
     QDir().mkpath(dir + QStringLiteral("/evidence"));
+    QDir().mkpath(dir + QStringLiteral("/templates"));
     const QString now = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     QVariantMap manifest{
         {QStringLiteral("formatVersion"), FormatVersion},
@@ -72,12 +75,32 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
             event[QStringLiteral("text")] = redact(event.value(QStringLiteral("text")).toString());
         steps.append(event);
     }
+    QVariantList templateRows;
+    QSet<QString> seenTemplates;
+    for (const QVariant &value : steps) {
+        const QVariantMap step = value.toMap();
+        QVariantList locators = step.value(QStringLiteral("locators")).toList();
+        if (step.value(QStringLiteral("kind")).toString() == QLatin1String("visual_reference"))
+            locators << step.value(QStringLiteral("locator"));
+        for (const QVariant &lv : locators) {
+            const QVariantMap locator = lv.toMap();
+            if (locator.value(QStringLiteral("type")).toString() != QLatin1String("image")) continue;
+            const QString file = QFileInfo(locator.value(QStringLiteral("file")).toString()).fileName();
+            if (file.isEmpty() || seenTemplates.contains(file)) continue;
+            seenTemplates.insert(file);
+            QVariantMap row = locator;
+            row[QStringLiteral("file")] = QStringLiteral("templates/") + file;
+            templateRows << row;
+        }
+    }
+    manifest[QStringLiteral("templateCount")] = templateRows.size();
     QVariantMap recipe{
         {QStringLiteral("formatVersion"), FormatVersion},
         {QStringLiteral("objective"), task.value(QStringLiteral("description"))},
         {QStringLiteral("prompt"), task.value(QStringLiteral("prePrompt"))},
         {QStringLiteral("steps"), steps},
         {QStringLiteral("evidence"), evidence},
+        {QStringLiteral("templates"), templateRows},
         {QStringLiteral("learnings"), QVariantList{}},
         {QStringLiteral("successCriteria"), task.value(QStringLiteral("postPrompt"))}};
     // La captura del paso verification es la referencia visual canónica del
@@ -112,6 +135,38 @@ QVariantMap AutomationArtifactStore::recipe(const QString &id)
 QVariantList AutomationArtifactStore::timeline(const QString &id)
 {
     return recipe(id).value(QStringLiteral("steps")).toList();
+}
+
+QVariantList AutomationArtifactStore::templates(const QString &id)
+{
+    return recipe(id).value(QStringLiteral("templates")).toList();
+}
+
+bool AutomationArtifactStore::removeTemplate(const QString &id, const QString &fileName)
+{
+    const QString safe = QFileInfo(fileName).fileName();
+    if (safe.isEmpty()) return false;
+    QVariantMap r = recipe(id);
+    if (r.isEmpty()) return false;
+    QVariantList kept;
+    for (const QVariant &v : r.value(QStringLiteral("templates")).toList())
+        if (QFileInfo(v.toMap().value(QStringLiteral("file")).toString()).fileName() != safe)
+            kept << v;
+    r[QStringLiteral("templates")] = kept;
+    const bool removed = QFile::remove(artifactDir(id) + QStringLiteral("/templates/") + safe);
+    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r) && removed;
+}
+
+bool AutomationArtifactStore::replaceTemplate(const QString &id, const QString &fileName,
+                                               const QString &sourcePath)
+{
+    const QString safe = QFileInfo(fileName).fileName();
+    QImage probe(sourcePath);
+    if (safe.isEmpty() || probe.isNull()) return false;
+    const QString destination = artifactDir(id) + QStringLiteral("/templates/") + safe;
+    QDir().mkpath(QFileInfo(destination).absolutePath());
+    QFile::remove(destination);
+    return probe.save(destination, "PNG");
 }
 
 QString AutomationArtifactStore::importBrowserSkill(const QString &skillName, const QVariantMap &task)
@@ -164,6 +219,8 @@ bool AutomationArtifactStore::appendLearning(const QString &id, const QString &s
     const QString safeLog = redact(log);
     static const QStringList markers{
         QStringLiteral("desktop_click_element"), QStringLiteral("desktop_controls"),
+        QStringLiteral("desktop_find_image"), QStringLiteral("desktop_click_image"),
+        QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_windows"),
         QStringLiteral("mcp__playwright"), QStringLiteral("browser_"),
         QStringLiteral("run_shell")};

@@ -31,6 +31,9 @@ public:
     // Se graba como paso [assert] anclado al control bajo el cursor → el replay lo
     // reproduce con desktop_assert (objetivo comprobable, no opinable).
     void addAssertion(const QString &expectText);
+    // Captura una plantilla cuadrada alrededor del cursor y la agrega a la receta.
+    // Útil para controles puramente visuales; devuelve metadata o {} si falla.
+    QVariantMap captureVisualReference(int size = 72);
     QString finish();
     void cancel();
 
@@ -44,6 +47,7 @@ private slots:
 private:
     void appendEvent(const QVariantMap &event, bool captureEvidence);
     QString captureEvidence();
+    QVariantMap captureTemplateAt(const QPoint &physical, int size);
     void reset();
     // Vacía el texto pendiente del buffer de teclado como un paso [type].
     void flushKeys();
@@ -70,6 +74,7 @@ private:
     QVariantMap m_task;
     QVariantList m_events;
     QStringList m_evidence;
+    int m_templateCount = 0;
     QTimer m_timer;
     QElapsedTimer m_clock;
     QPoint m_lastCursor;

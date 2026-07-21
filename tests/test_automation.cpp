@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <QImage>
 #include <limits>
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
@@ -543,20 +544,33 @@ void AutomationTests::artifactsRoundTripAndRedactSecrets()
     QVariantMap task{{"id", "demo-automation"}, {"name", "Demo"},
                      {"description", "Completar formulario"},
                      {"executionMode", "desktop"}, {"approvalPolicy", "sensitive"}};
+    const QString templateDir = AutomationArtifactStore::artifactDir(QStringLiteral("demo-automation"))
+                                + QStringLiteral("/templates");
+    QDir().mkpath(templateDir);
+    QImage needle(24, 24, QImage::Format_RGB32);
+    needle.fill(Qt::red);
+    QVERIFY(needle.save(templateDir + QStringLiteral("/template-0001.png")));
     const QVariantList events{
         QVariantMap{{"kind", "note"}, {"text", "password=secreto"},
                     {"intent", "Ingresar datos"}},
+        QVariantMap{{"kind", "click"}, {"locators", QVariantList{QVariantMap{
+                        {"type", "image"}, {"file", "templates/template-0001.png"},
+                        {"width", 24}, {"height", 24}, {"threshold", 0.88}}}}},
         QVariantMap{{"kind", "verification"}, {"intent", "Verificar resultado"},
                     {"evidence", "final.jpg"}}};
     const QString id = AutomationArtifactStore::create(
         task, QVariantMap{{"kind", "screen"}, {"targetId", "0"}}, events, {});
     QCOMPARE(id, QStringLiteral("demo-automation"));
-    QCOMPARE(AutomationArtifactStore::manifest(id).value("formatVersion").toInt(), 1);
+    QCOMPARE(AutomationArtifactStore::manifest(id).value("formatVersion").toInt(),
+             AutomationArtifactStore::FormatVersion);
     const QVariantList timeline = AutomationArtifactStore::timeline(id);
-    QCOMPARE(timeline.size(), 2);
+    QCOMPARE(timeline.size(), 3);
     QVERIFY(timeline.first().toMap().value("text").toString().contains(QStringLiteral("[REDACTED]")));
     QCOMPARE(AutomationArtifactStore::recipe(id).value("finalReference").toString(),
              QStringLiteral("final.jpg"));
+    QCOMPARE(AutomationArtifactStore::templates(id).size(), 1);
+    QVERIFY(AutomationArtifactStore::removeTemplate(id, QStringLiteral("template-0001.png")));
+    QVERIFY(AutomationArtifactStore::templates(id).isEmpty());
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

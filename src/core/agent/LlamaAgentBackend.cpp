@@ -2553,6 +2553,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
         QStringLiteral("desktop_find_image"), QStringLiteral("desktop_click_image"),
+        QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
         QStringLiteral("desktop_stroke"),
         QStringLiteral("desktop_type"), QStringLiteral("desktop_key"),
@@ -3408,7 +3409,9 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("desktop_click_text"))
         return {QStringLiteral("target_id"), QStringLiteral("text")};
     if (name == QLatin1String("desktop_find_image")
-        || name == QLatin1String("desktop_click_image"))
+        || name == QLatin1String("desktop_click_image")
+        || name == QLatin1String("desktop_wait_image")
+        || name == QLatin1String("desktop_assert_image"))
         return {QStringLiteral("target_id"), QStringLiteral("template_path")};
     if (name == QLatin1String("desktop_type")) return {QStringLiteral("text")};
     if (name == QLatin1String("desktop_key")) return {QStringLiteral("key")};
@@ -4285,6 +4288,34 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                     {QStringLiteral("type"), QStringLiteral("string")},
                     {QStringLiteral("enum"), QJsonArray{QStringLiteral("left"), QStringLiteral("right"), QStringLiteral("middle")}}}}},
            QJsonArray{QStringLiteral("target_id"), QStringLiteral("template_path")}),
+        fn(QStringLiteral("desktop_wait_image"),
+           QStringLiteral("Espera de forma acotada a que una plantilla visual aparezca o desaparezca."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("template_path"), strProp(QStringLiteral("Ruta de la plantilla."))},
+               {QStringLiteral("appear"), boolProp(QStringLiteral("true=esperar aparición; false=desaparición."))},
+               {QStringLiteral("timeout_ms"), intProp(QStringLiteral("Timeout; default 4000, máximo 60000."))},
+               {QStringLiteral("threshold"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("min_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
+               {QStringLiteral("max_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("template_path")}),
+        fn(QStringLiteral("desktop_assert_image"),
+           QStringLiteral("Verifica sin modificar el escritorio que una plantilla exista o esté ausente."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("template_path"), strProp(QStringLiteral("Ruta de la plantilla."))},
+               {QStringLiteral("should_exist"), boolProp(QStringLiteral("Condición esperada; default true."))},
+               {QStringLiteral("timeout_ms"), intProp(QStringLiteral("Timeout corto; default 1500."))},
+               {QStringLiteral("threshold"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                                                          {QStringLiteral("minimum"), 0.5},
+                                                          {QStringLiteral("maximum"), 1.0}}},
+               {QStringLiteral("min_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}},
+               {QStringLiteral("max_scale"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")}}}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("template_path")}),
         fn(QStringLiteral("desktop_observe"),
            QStringLiteral("Captura el alcance actual como evidencia visual. Usala cuando UIA/OCR "
                           "no alcancen, antes de un clic por coordenadas y una vez después para "
@@ -4496,6 +4527,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("desktop_click_element", "Escritorio", "Click a un control por nombre/id (UIA), no por pixel.", 110),
         mk("desktop_find_image", "Escritorio", "Localiza una plantilla visual con confianza y ambigüedad.", 135),
         mk("desktop_click_image", "Escritorio", "Localiza y clickea una plantilla visual única.", 145),
+        mk("desktop_wait_image", "Escritorio", "Espera aparición o desaparición de una plantilla.", 120),
+        mk("desktop_assert_image", "Escritorio", "Verifica una condición visual sin actuar.", 120),
         mk("desktop_observe", "Escritorio", "Captura el alcance visual enseñado.", 90),
         mk("desktop_click", "Escritorio", "Click visual con coordenadas normalizadas.", 100),
         mk("desktop_stroke", "Escritorio", "Arrastra una traza continua (dibujar/pintar/swipe).", 95),
