@@ -1,0 +1,62 @@
+# Eficiencia, contexto estructurado y workflows
+
+LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
+
+- `AgentEfficiency`: normaliza telemetría `timings` de llama.cpp y `usage` de
+  proveedores OpenAI-compatible, agrega por fase y calcula comparaciones A/B.
+- Prefijo estable: el system prompt contiene un protocolo fijo y los cambios
+  Plan/Ejecución se agregan como controles cortos al final del historial. El
+  runner continúa aplicando el bloqueo efectivo de tools en Plan.
+- Checkpoints de sesión versionados: cada turno persiste longitudes UI/API y
+  restaura snapshots al abrir. Las sesiones antiguas reconstruyen checkpoints
+  conservadores sin inventar snapshots de archivos.
+- `StructuredSourceView`: produce una vista efímera compacta con mapeo byte a
+  byte al original. Nunca escribe la proyección; rechaza sintaxis dudosa y
+  lenguajes sensibles a indentación, donde se usa la fuente exacta.
+- `WorkflowEngine`: máquina de estados determinista con pasos agent/tool,
+  aprobación, condiciones/paralelo/verificación como tipos validados,
+  presupuestos y snapshots JSON reanudables. La ejecución real debe pasar por
+  los runners existentes para conservar permisos y límites de concurrencia.
+
+## Esquema de workflow v1
+
+```json
+{
+  "schemaVersion": 1,
+  "entry": "explore",
+  "budget": { "maxIterations": 12, "maxSeconds": 1800 },
+  "steps": {
+    "explore": { "type": "agent", "next": "review" },
+    "review": { "type": "approval", "accept": "execute", "reject": "stop" },
+    "execute": { "type": "tool", "onSuccess": "verify", "onFailure": "stop" },
+    "verify": { "type": "verify", "onSuccess": "finish", "onFailure": "execute" },
+    "finish": { "type": "finish" }
+  }
+}
+```
+
+Tasks y Automations preservan un objeto `workflow` opcional. Los registros de
+historial preservan `workflowState` y `metrics`. Los registros legacy siguen
+siendo válidos.
+
+## Benchmark A/B
+
+Comparar con el mismo modelo, quant, contexto, prompt, temperatura y hardware:
+
+1. Prefijo estable apagado/encendido.
+2. Fuente exacta/vista estructurada.
+3. Caché fría y caliente por separado.
+4. Cinco pasadas como mínimo y orden aleatorio.
+
+Registrar tokens de prompt/generados, tiempos de prefill/generación/pared,
+tool calls, bytes de tools, éxito, reparaciones, RAM y VRAM. Una variante pasa
+el gate si reduce al menos 15% tokens o 10% tiempo sin reducir éxito ni producir
+ediciones incorrectas.
+
+## Límites de seguridad
+
+- Un workflow no ejecuta shell directamente: solicita una tool al runner.
+- Cambiar de fase no modifica permisos.
+- Una proyección compacta nunca es destino de edición.
+- Un hash/cambio de archivo debe invalidar cualquier proyección cacheada.
+- Acciones destructivas conservan aprobación humana incluso dentro de jobs.

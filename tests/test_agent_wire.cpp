@@ -34,6 +34,7 @@ private slots:
     void developmentDisciplineSection_coversRegressionGuards();
     void testSafetyNetSection_coversRunnerDetectionAndQuality();
     void projectContextSection_coversIntentAndMemory();
+    void stablePhasePrefix_keepsSystemPromptInvariant();
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
     void desktopConfirmKeyBlockedAfterTypeEquals();
     void parsesNativeToolCallLeakFallback();
@@ -49,6 +50,20 @@ private slots:
 void AgentWireTests::initTestCase()
 {
     QStandardPaths::setTestModeEnabled(true);
+}
+
+void AgentWireTests::stablePhasePrefix_keepsSystemPromptInvariant()
+{
+    LlamaAgentBackend be;
+    be.setStablePhasePrefix(true);
+    be.setApprovalPolicy(QStringLiteral("ask"));
+    const QString before = be.systemPromptForTest();
+    const int toolsBefore = be.toolSchemasForTest().size();
+    be.setApprovalPolicy(QStringLiteral("plan"));
+    const QString after = be.systemPromptForTest();
+    QCOMPARE(after, before);
+    QCOMPARE(be.toolSchemasForTest().size(), toolsBefore);
+    QVERIFY(after.contains(QStringLiteral("PROTOCOLO DE FASES")));
 }
 
 void AgentWireTests::failureSpiralDetectsEquivalentErrorsAndResetsOnProgress()

@@ -143,6 +143,7 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["postPrompt"]      = def.value("postPrompt", t.value("postPrompt"));
     t["silentUnlessError"] = def.value("silentUnlessError", t.value("silentUnlessError", false));
     t["steps"]           = def.value("steps", t.value("steps", QVariantList{}));
+    t["workflow"]        = def.value("workflow", t.value("workflow", QVariantMap{}));
     t["scheduleEnabled"] = def.value("scheduleEnabled", t.value("scheduleEnabled", false));
     t["scheduleCron"]    = def.value("scheduleCron", t.value("scheduleCron"));
     t["scheduleSpec"]    = def.value("scheduleSpec", t.value("scheduleSpec", QVariantMap{}));
@@ -474,6 +475,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["triggerDebounceMs"] = task.value("triggerDebounceMs", 1500).toInt();
     o["triggerHotkey"]   = task.value("triggerHotkey").toString();
     o["trainingType"]    = task.value("trainingType", QStringLiteral("literal")).toString();
+    o["workflow"]        = QJsonObject::fromVariantMap(task.value("workflow").toMap());
 
     QJsonArray steps;
     for (const QVariant &sv : task.value("steps").toList()) {
@@ -546,6 +548,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["triggerDebounceMs"] = obj.value("triggerDebounceMs").toInt(1500);
     t["triggerHotkey"]   = obj.value("triggerHotkey").toString();
     t["trainingType"]    = obj.value("trainingType").toString(QStringLiteral("literal"));
+    t["workflow"]        = obj.value("workflow").toObject().toVariantMap();
 
     QVariantList steps;
     for (const QJsonValue &sv : obj.value("steps").toArray()) {

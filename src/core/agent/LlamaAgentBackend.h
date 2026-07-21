@@ -66,6 +66,9 @@ public:
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
+    void setStablePhasePrefix(bool enabled) { m_stablePhasePrefix = enabled; }
+    bool stablePhasePrefixForTest() const { return m_stablePhasePrefix; }
+    QVariantMap efficiencySummary() const;
     void setEphemeralSessions(bool enabled) { m_ephemeralSessions = enabled; }
 
     // Adjuntos (imágenes/docs) a incluir en el PRÓXIMO sendMessage (modelo VL).
@@ -437,6 +440,8 @@ private:
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;
+    bool    m_stablePhasePrefix = true;
+    QVariantList m_efficiencyRequests;
     // Directivas del system prompt ON (keys de directiveCatalog). Sin setear
     // (m_directivesSet=false) = todas activas (no regresiona el comportamiento).
     QSet<QString> m_directives;
@@ -557,6 +562,8 @@ private:
     struct Checkpoint { int apiLen; int msgLen; QStringList editKeys; };
     QList<Checkpoint> m_checkpoints;
     void pushCheckpoint();
+    QJsonArray checkpointsToJson() const;
+    void restoreCheckpoints(const QJsonArray &saved);
 
     // Sub-agentes en vuelo (callId → runner/worktree/branch/tarjeta). Mientras
     // m_subsOutstanding>0 el loop principal espera a que terminen todos.

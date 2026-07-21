@@ -87,6 +87,9 @@ QString AutomationStore::save(const QString &id, const QVariantMap &def)
     a["scheduleCron"]      = def.value("scheduleCron", a.value("scheduleCron"));
     a["scheduleSpec"]      = def.value("scheduleSpec", a.value("scheduleSpec", QVariantMap{}));
     a["silentUnlessError"] = def.value("silentUnlessError", a.value("silentUnlessError", false));
+    // Workflow declarativo opcional. Las automatizaciones legacy siguen usando
+    // processId; conservar ambos permite migracion gradual sin romper scheduler.
+    a["workflow"]          = def.value("workflow", a.value("workflow", QVariantMap{}));
     a["updatedAt"]         = now;
 
     QString outId;
@@ -189,6 +192,7 @@ QJsonObject AutomationStore::toJson(const QVariantMap &a)
     o["scheduleCron"]      = a.value("scheduleCron").toString();
     o["scheduleSpec"]      = QJsonObject::fromVariantMap(a.value("scheduleSpec").toMap());
     o["silentUnlessError"] = a.value("silentUnlessError", false).toBool();
+    o["workflow"]          = QJsonObject::fromVariantMap(a.value("workflow").toMap());
     o["createdAt"]         = a.value("createdAt").toString();
     o["updatedAt"]         = a.value("updatedAt").toString();
     o["lastRunAt"]         = a.value("lastRunAt").toString();
@@ -207,6 +211,7 @@ QVariantMap AutomationStore::fromJson(const QJsonObject &obj)
     a["scheduleCron"]      = obj.value("scheduleCron").toString();
     a["scheduleSpec"]      = obj.value("scheduleSpec").toObject().toVariantMap();
     a["silentUnlessError"] = obj.value("silentUnlessError").toBool(false);
+    a["workflow"]          = obj.value("workflow").toObject().toVariantMap();
     a["createdAt"]         = obj.value("createdAt").toString();
     a["updatedAt"]         = obj.value("updatedAt").toString();
     a["lastRunAt"]         = obj.value("lastRunAt").toString();

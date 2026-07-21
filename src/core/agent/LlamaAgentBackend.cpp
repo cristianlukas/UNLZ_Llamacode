@@ -1,6 +1,7 @@
 #include "LlamaAgentBackend.h"
 #include "AgentToolRunner.h"
 #include "SubAgentRunner.h"
+#include "AgentEfficiency.h"
 #include "AgentEventLog.h"
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
@@ -1129,7 +1130,12 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     };
     if (dirOn("efficiency")) base += efficiencySection();
 
-    if (m_approvalMode == QLatin1String("plan"))
+    if (m_stablePhasePrefix)
+        base += QStringLiteral(
+            "PROTOCOLO DE FASES: [FASE=PLAN] impone solo lectura y prohibe editar o "
+            "ejecutar shell; [FASE=EJECUCION] habilita ejecutar el plan y verificar. "
+            "El runner aplica la politica y no puede evadirse.\n\n");
+    else if (m_approvalMode == QLatin1String("plan"))
         base += QStringLiteral(
             "MODO PLAN (read-only): NO podés editar archivos ni correr comandos; solo "
             "leer/buscar. Investigá lo necesario y entregá un PLAN claro y accionable "
@@ -1293,13 +1299,21 @@ void LlamaAgentBackend::setPermissionRules(const QString &rules)
 
 void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
 {
+    const QString previousMode = m_approvalMode;
     m_approvalMode = mode;
     // "super" = sin confinamiento al cwd (acceso a todo el disco).
     if (m_worker)
         QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
                                   Q_ARG(bool, mode != QLatin1String("super")));
-    // Plan mode cambia tanto el system prompt como el set de tools → refrescar el
-    // system prompt (índice 0) para que el cambio aplique en el próximo turno.
+    if (m_stablePhasePrefix && previousMode != mode && !m_apiMessages.isEmpty()) {
+        const QString control = mode == QLatin1String("plan")
+            ? QStringLiteral("[FASE=PLAN] Solo explorar y planificar. Prohibido editar o ejecutar shell.")
+            : QStringLiteral("[FASE=EJECUCION] Ejecutar el plan aprobado y verificar el resultado.");
+        m_apiMessages.append(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                         {QStringLiteral("content"), control}});
+        return;
+    }
+    // Compatibilidad: modo legacy reconstruye el system prompt.
     if (!m_apiMessages.isEmpty()) {
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
@@ -1440,6 +1454,50 @@ void LlamaAgentBackend::pushCheckpoint()
     m_checkpoints.append(Checkpoint{
         static_cast<int>(m_apiMessages.size()), static_cast<int>(m_messages.size()),
         m_editSnapshots.keys()});
+}
+
+QVariantMap LlamaAgentBackend::efficiencySummary() const
+{
+    return AgentEfficiency::summarize(m_efficiencyRequests);
+}
+
+QJsonArray LlamaAgentBackend::checkpointsToJson() const
+{
+    QJsonArray out;
+    for (const Checkpoint &cp : m_checkpoints)
+        out.append(QJsonObject{{QStringLiteral("apiLen"), cp.apiLen},
+                               {QStringLiteral("msgLen"), cp.msgLen},
+                               {QStringLiteral("editKeys"), QJsonArray::fromStringList(cp.editKeys)}});
+    return out;
+}
+
+void LlamaAgentBackend::restoreCheckpoints(const QJsonArray &saved)
+{
+    m_checkpoints.clear();
+    for (const QJsonValue &v : saved) {
+        const QJsonObject o = v.toObject();
+        Checkpoint cp{o.value(QStringLiteral("apiLen")).toInt(),
+                      o.value(QStringLiteral("msgLen")).toInt(), {}};
+        for (const QJsonValue &key : o.value(QStringLiteral("editKeys")).toArray())
+            cp.editKeys.append(key.toString());
+        if (cp.apiLen >= 1 && cp.apiLen <= m_apiMessages.size()
+            && cp.msgLen >= 0 && cp.msgLen <= m_messages.size())
+            m_checkpoints.append(cp);
+    }
+    // Compatibilidad con sesiones previas: reconstruir un punto conservador por
+    // cada turno user visible, sin inventar snapshots de archivos.
+    if (m_checkpoints.isEmpty()) {
+        int apiCursor = 1;
+        for (int mi = 0; mi < m_messages.size(); ++mi) {
+            if (m_messages.at(mi).toMap().value(QStringLiteral("role")).toString()
+                != QLatin1String("user")) continue;
+            while (apiCursor < m_apiMessages.size()
+                   && m_apiMessages.at(apiCursor).toObject().value(QStringLiteral("role")).toString()
+                          != QLatin1String("user")) ++apiCursor;
+            m_checkpoints.append({qMin(apiCursor, int(m_apiMessages.size())), mi, {}});
+            ++apiCursor;
+        }
+    }
 }
 
 // Rebobina la conversación al estado previo al mensaje de usuario en `msgIndex`.
@@ -2119,6 +2177,12 @@ void LlamaAgentBackend::handleStreamData()
         const int compTok = usage.value(QStringLiteral("completion_tokens")).toInt(-1);
         if (compTok >= 0) m_genTokens = compTok;
         const QJsonObject timings = obj.value(QStringLiteral("timings")).toObject();
+        if (!timings.isEmpty() || !obj.value(QStringLiteral("usage")).toObject().isEmpty()) {
+            const QString phase = m_approvalMode == QLatin1String("plan")
+                ? QStringLiteral("plan") : QStringLiteral("execute");
+            m_efficiencyRequests.append(
+                AgentEfficiency::Request::fromResponse(obj, phase).toVariant());
+        }
         if (!timings.isEmpty()) {
             const int pn = timings.value(QStringLiteral("predicted_n")).toInt(-1);
             const double pms = timings.value(QStringLiteral("predicted_ms")).toDouble(-1.0);
@@ -4585,7 +4649,7 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
     // PLAN MODE: solo lectura. Excluir write_file/edit_file/run_shell y MCP
     // (no podemos saber si una tool MCP muta), dejar read_file/list_dir/grep/
     // glob/web_fetch.
-    if (m_approvalMode == QLatin1String("plan")) {
+    if (!m_stablePhasePrefix && m_approvalMode == QLatin1String("plan")) {
         static const QSet<QString> planAllowed{
             QStringLiteral("read_file"), QStringLiteral("list_dir"),
             QStringLiteral("grep"), QStringLiteral("glob"), QStringLiteral("web_fetch"),
@@ -4858,6 +4922,7 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
             mm[QStringLiteral("typing")] = false;
             m_messages.append(mm);
         }
+        restoreCheckpoints(obj.value(QStringLiteral("checkpoints")).toArray());
     }
     for (const QVariant &v : std::as_const(m_sessions)) {
         const QVariantMap s = v.toMap();
@@ -4959,7 +5024,9 @@ void LlamaAgentBackend::persistSession(const QString &sessionId) const
         {QStringLiteral("id"), sessionId},
         {QStringLiteral("title"), title},
         {QStringLiteral("messages"), msgs},
-        {QStringLiteral("api"), m_apiMessages}
+        {QStringLiteral("api"), m_apiMessages},
+        {QStringLiteral("checkpoints"), checkpointsToJson()},
+        {QStringLiteral("snapshotVersion"), 1}
     };
     QFile f(sessionFilePath(sessionId));
     if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {

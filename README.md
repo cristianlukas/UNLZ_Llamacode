@@ -281,6 +281,11 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
 
 ## Arquitectura
 
+La eficiencia del agente incluye telemetría por fase, prefijo estable para
+reutilizar la caché KV, checkpoints versionados, vistas estructuradas seguras y
+workflows reanudables. El diseño, esquema y protocolo de benchmark están en
+[`docs/agent-efficiency.md`](docs/agent-efficiency.md).
+
 ```text
 LlamaCode
 ├── UI Layer (Qt Quick / QML)

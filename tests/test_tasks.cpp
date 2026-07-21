@@ -57,7 +57,9 @@ void TasksTests::initTestCase()
 
 void TasksTests::jsonRoundTrip()
 {
-    const QVariantMap in = sampleTask();
+    QVariantMap in = sampleTask();
+    in["workflow"] = QVariantMap{{"schemaVersion", 1}, {"entry", "run"},
+                                  {"steps", QVariantMap{{"run", QVariantMap{{"type", "agent"}}}}}};
     const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(in));
     QCOMPARE(out.value("name").toString(), in.value("name").toString());
     QCOMPARE(out.value("profileId").toString(), QStringLiteral("p1"));
@@ -80,6 +82,7 @@ void TasksTests::jsonRoundTrip()
     QCOMPARE(steps.size(), 2);
     QCOMPARE(steps.at(0).toMap().value("kind").toString(), QStringLiteral("browser"));
     QCOMPARE(steps.at(0).toMap().value("ref").toString(), QStringLiteral("https://x"));
+    QCOMPARE(out.value("workflow").toMap().value("entry").toString(), QStringLiteral("run"));
 }
 
 void TasksTests::jsonRoundTrip_permsAndScheduleSpec()

@@ -72,6 +72,8 @@ set(CORE_SOURCES
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
     src/core/agent/CodeGraphIndexer.cpp
+    src/core/agent/AgentEfficiency.cpp
+    src/core/agent/StructuredSourceView.cpp
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
     src/core/agent/HotspotAnalyzer.cpp
@@ -99,6 +101,7 @@ set(CORE_SOURCES
     src/core/tasks/CronSchedule.cpp
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
+    src/core/tasks/WorkflowEngine.cpp
     src/core/automation/DesktopAutomationBackend.cpp
     src/core/automation/VisualMatcher.cpp
     src/core/automation/FuzzyMatch.cpp
@@ -147,6 +150,8 @@ set(HEADERS
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
     src/core/agent/CodeGraphIndexer.h
+    src/core/agent/AgentEfficiency.h
+    src/core/agent/StructuredSourceView.h
     src/core/agent/BrowserTeach.h
     src/core/agent/HotspotAnalyzer.h
     src/core/mail/MailClient.h
@@ -170,6 +175,7 @@ set(HEADERS
     src/core/tasks/CronSchedule.h
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
+    src/core/tasks/WorkflowEngine.h
     src/core/automation/DesktopAutomationBackend.h
     src/core/automation/VisualMatcher.h
     src/core/automation/AutomationArtifactStore.h
@@ -422,6 +428,7 @@ if (BUILD_TESTS)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
     add_lc_test(test_agent_profiles     tests/test_agent_profiles.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
+    add_lc_test(test_agent_efficiency    tests/test_agent_efficiency.cpp)
     add_lc_test(test_system_profiles    tests/test_system_profiles.cpp)
     add_lc_test(test_secret_store       tests/test_secret_store.cpp)
     add_lc_test(test_registries         tests/test_registries.cpp)
