@@ -24,6 +24,7 @@ public:
         double confidence = 0.0;
         double secondConfidence = 0.0;
         double scale = 1.0;
+        QString backend = QStringLiteral("qt-sampled");
         QString error;
 
         QVariantMap toVariantMap(const QSize &haystackSize) const;

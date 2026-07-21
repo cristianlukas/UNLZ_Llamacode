@@ -1,5 +1,6 @@
 #include <QtTest>
 #include <QPainter>
+#include <QElapsedTimer>
 
 #include "core/automation/VisualMatcher.h"
 
@@ -11,6 +12,7 @@ private slots:
     void rejectsMissingTemplate();
     void rejectsAmbiguousRepeatedTemplate();
     void findsScaledTemplate();
+    void largeDesktopSearchStaysBounded();
 };
 
 static QImage patternedNeedle(int size = 12)
@@ -36,8 +38,25 @@ void VisualMatcherTests::findsUniqueTemplateAndNormalizesRect()
     QVERIFY(!result.ambiguous);
     QCOMPARE(result.rect, QRect(31, 19, 12, 12));
     QVERIFY(result.confidence > 0.99);
+    QVERIFY(result.backend == QLatin1String("qt-sampled")
+            || result.backend == QLatin1String("opencv-matchTemplate"));
     const QVariantMap rect = result.toVariantMap(screen.size()).value("rect").toMap();
     QVERIFY(qAbs(rect.value("x").toDouble() - 31.0 / 80.0) < 0.001);
+}
+
+void VisualMatcherTests::largeDesktopSearchStaysBounded()
+{
+    QImage screen(2560, 1440, QImage::Format_RGB32);
+    screen.fill(QColor(210, 210, 210));
+    const QImage needle = patternedNeedle(48);
+    QPainter(&screen).drawImage(2190, 1200, needle);
+    QElapsedTimer timer;
+    timer.start();
+    const auto result = VisualMatcher::find(screen, needle);
+    QVERIFY2(result.found, qPrintable(result.error));
+    // Es una guarda amplia de regresión, no un benchmark: evita volver por error
+    // a un barrido completo por píxel×template en escritorios grandes.
+    QVERIFY2(timer.elapsed() < 8000, qPrintable(QString::number(timer.elapsed())));
 }
 
 void VisualMatcherTests::rejectsMissingTemplate()

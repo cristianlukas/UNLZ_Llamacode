@@ -167,8 +167,11 @@ que se activen en cada sesión.
   `desktop_click_image`, `desktop_wait_image` y `desktop_assert_image`: buscan una
   plantilla en memoria con umbral y escala acotados, rechazan coincidencias ambiguas
   y verifican la geometría antes de actuar. Teach v2 captura automáticamente una
-  plantilla cuando un clic no tiene ancla semántica; F8 permite agregar referencias
-  manuales y Tasks permite probarlas, reemplazarlas o eliminarlas. Play resuelve cada
+  plantilla cuando un clic no tiene ancla semántica; F8 captura una referencia rápida
+  y F9 permite arrastrar una región exacta. Tasks permite probar, reemplazar, eliminar
+  o agregar variantes claro/oscuro de cada plantilla sin dejar referencias huérfanas.
+  El matcher usa OpenCV `matchTemplate` si está disponible al compilar y conserva un
+  backend Qt muestreado y acotado como fallback portable. Play resuelve cada
   clic mediante `UI Automation → OCR → plantilla → coordenada normalizada`, restaura
   el estado maximizado o el tamaño exterior de la ventana antes de reproducir
   gestos, evitando que un cambio accidental de tamaño desplace dibujos y clicks.
@@ -176,6 +179,11 @@ que se activen en cada sesión.
   muestra durante toda la automatización un indicador siempre visible, un reborde
   independiente en cada monitor y un aro alrededor del puntero; el conjunto puede ocultarse
   desde Configuración > perfiles de agente > Indicador de escritorio.
+
+El probe opt-in `qa_visual_automation` valida búsqueda real, DPI y multimonitor en
+una ventana propia. Por defecto no mueve el mouse; `--execute-click --screen N`
+habilita el clic E2E explícitamente. No forma parte de `ctest` para no interferir con
+el escritorio del usuario ni con runners headless.
 
 ### Nota de seguridad
 

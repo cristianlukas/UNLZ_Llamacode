@@ -19,6 +19,8 @@ public:
     static bool removeTemplate(const QString &id, const QString &fileName);
     static bool replaceTemplate(const QString &id, const QString &fileName,
                                 const QString &sourcePath);
+    static bool addTemplateVariant(const QString &id, const QString &fileName,
+                                   const QString &sourcePath);
     static QString importBrowserSkill(const QString &skillName, const QVariantMap &task);
     static bool appendLearning(const QString &id, const QString &summary, const QString &log);
     static bool removeEvidence(const QString &id, const QString &fileName);

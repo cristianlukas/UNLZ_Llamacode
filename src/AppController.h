@@ -396,7 +396,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.59"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.60"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -525,6 +525,7 @@ public:
     Q_INVOKABLE void pauseTeach(bool paused);
     Q_INVOKABLE void addTeachNote(const QString &note);
     Q_INVOKABLE QVariantMap captureTeachVisualReference(int size = 72);
+    Q_INVOKABLE bool armTeachVisualRegionSelection();
     Q_INVOKABLE QString finishTeach();
     Q_INVOKABLE void cancelTeach();
     Q_INVOKABLE QVariantList automationTimeline(const QString &artifactId) const;
@@ -536,6 +537,9 @@ public:
     Q_INVOKABLE bool replaceAutomationTemplate(const QString &artifactId,
                                                const QString &fileName,
                                                const QString &sourcePath);
+    Q_INVOKABLE bool addAutomationTemplateVariant(const QString &artifactId,
+                                                  const QString &fileName,
+                                                  const QString &sourcePath);
     Q_INVOKABLE QString importBrowserSkillAsTask(const QString &skillName);
     Q_INVOKABLE bool removeAutomationEvidence(const QString &artifactId,
                                               const QString &fileName);
@@ -1051,6 +1055,7 @@ private:
     QString      m_replayScopeId;
     QString      m_replayTaskId;
     QString      m_replayArtifactId;
+    QVariantList m_replayTemplateRows;
     QVariantList m_replayReport;   // {n,tool,ok,summary} por paso (auditoría honesta)
     int          m_replayErrors = 0;
     int          m_visualVerificationDesktopActions = 0;

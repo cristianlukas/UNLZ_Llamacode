@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.59 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.60 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,8 +11,12 @@ option(LC_USE_QTKEYCHAIN "Cifrar secretos vía QtKeychain (Secret Service / WinC
 option(LC_STRICT_WARNINGS "Enable stricter compiler warnings for project targets" OFF)
 option(LC_WARNINGS_AS_ERRORS "Treat project compiler warnings as errors" OFF)
 option(LC_ENABLE_CLANG_TIDY "Run clang-tidy during C++ builds when available" OFF)
+option(LC_USE_OPENCV "Use OpenCV acceleration for visual template matching when available" ON)
 
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick Sql Concurrent Network Widgets Multimedia Svg)
+if (LC_USE_OPENCV)
+    find_package(OpenCV QUIET COMPONENTS core imgproc)
+endif()
 
 # --- QtKeychain: almacenamiento de secretos respaldado por el SO, multiplataforma.
 # Se intenta find_package (system/vcpkg); si no está y la opción está ON, se baja con
@@ -207,6 +211,14 @@ target_link_libraries(llamacode_core PUBLIC
     Qt6::Multimedia
     Qt6::Svg
 )
+if (OpenCV_FOUND)
+    target_link_libraries(llamacode_core PUBLIC ${OpenCV_LIBS})
+    target_include_directories(llamacode_core PRIVATE ${OpenCV_INCLUDE_DIRS})
+    target_compile_definitions(llamacode_core PRIVATE LC_HAVE_OPENCV=1)
+    message(STATUS "VisualMatcher: OpenCV acceleration enabled (${OpenCV_VERSION})")
+else()
+    message(STATUS "VisualMatcher: portable Qt matcher (OpenCV not found)")
+endif()
 if (WIN32)
     # Wtsapi32: sesión interactiva. Ole32/OleAut32: COM + BSTR para UI Automation
     # (árbol de controles del escritorio, DesktopAutomationBackend::controls).
@@ -483,4 +495,13 @@ if (BUILD_TESTS)
     endif()
     target_include_directories(qa_ocr_probe PRIVATE src tests)
     target_link_libraries(qa_ocr_probe PRIVATE llamacode_core)
+
+    qt_add_executable(qa_visual_automation tests/qa_visual_automation.cpp)
+    set_target_properties(qa_visual_automation PROPERTIES WIN32_EXECUTABLE FALSE)
+    if (MSVC)
+        target_compile_options(qa_visual_automation PRIVATE /utf-8)
+        target_link_options(qa_visual_automation PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
+    endif()
+    target_include_directories(qa_visual_automation PRIVATE src tests)
+    target_link_libraries(qa_visual_automation PRIVATE llamacode_core)
 endif()

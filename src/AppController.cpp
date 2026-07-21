@@ -759,10 +759,10 @@ void AppController::updateTeachStopOverlay()
         overlay->setObjectName(QStringLiteral("llamacodeTeachStopOverlay"));
         overlay->setWindowTitle(QStringLiteral("LlamaCode Teach Controls"));
         overlay->setAttribute(Qt::WA_TranslucentBackground);
-        overlay->setFixedSize(310, 58);
+        overlay->setFixedSize(365, 58);
         auto *layout = new QHBoxLayout(overlay);
         layout->setContentsMargins(3, 3, 3, 3);
-        auto *stop = new QPushButton(QStringLiteral("F8 captura imagen   ·   ■ Detener"), overlay);
+        auto *stop = new QPushButton(QStringLiteral("F8 captura · F9 región · ■ Detener"), overlay);
         stop->setCursor(Qt::PointingHandCursor);
         stop->setStyleSheet(QStringLiteral(
             "QPushButton { background:#25283a; color:#f2f2f2; border:2px solid #e05f65; "
@@ -5003,6 +5003,7 @@ bool AppController::startDesktopReplay(const QString &id, const QString &artifac
     m_replayIndex = 0;
     m_replayTaskId = id;
     m_replayArtifactId = artifactId;
+    m_replayTemplateRows = recipe.value(QStringLiteral("templates")).toList();
     m_replayReport.clear();
     m_replayErrors = 0;
 
@@ -5120,14 +5121,26 @@ void AppController::playNextReplayStep()
                 for (const QVariant &lv : locators) {
                     const QVariantMap locator = lv.toMap();
                     if (locator.value(QStringLiteral("type")).toString() != QLatin1String("image")) continue;
-                    const QString path = AutomationArtifactStore::artifactDir(m_replayArtifactId)
-                                         + QLatin1Char('/') + locator.value(QStringLiteral("file")).toString();
-                    ok = DesktopAutomationBackend::clickImage(scopeKind, scopeId, path,
-                        locator.value(QStringLiteral("threshold"), 0.88).toDouble(),
-                        locator.value(QStringLiteral("minScale"), 0.8).toDouble(),
-                        locator.value(QStringLiteral("maxScale"), 1.25).toDouble(),
-                        button, &error);
-                    if (ok) { used = QStringLiteral("image"); break; }
+                    QVariantList candidates{locator};
+                    const QString primary = locator.value(QStringLiteral("file")).toString();
+                    for (const QVariant &tv : std::as_const(m_replayTemplateRows)) {
+                        const QVariantMap variant = tv.toMap();
+                        if (variant.value(QStringLiteral("variantOf")).toString() == primary)
+                            candidates << variant;
+                    }
+                    for (const QVariant &cv : candidates) {
+                        const QVariantMap candidate = cv.toMap();
+                        const QString path = AutomationArtifactStore::artifactDir(m_replayArtifactId)
+                                             + QLatin1Char('/') + candidate.value(QStringLiteral("file")).toString();
+                        ok = DesktopAutomationBackend::clickImage(scopeKind, scopeId, path,
+                            candidate.value(QStringLiteral("threshold"), 0.88).toDouble(),
+                            candidate.value(QStringLiteral("minScale"), 0.8).toDouble(),
+                            candidate.value(QStringLiteral("maxScale"), 1.25).toDouble(),
+                            button, &error);
+                        if (ok) { used = candidate.contains(QStringLiteral("variantOf"))
+                                ? QStringLiteral("image-variant") : QStringLiteral("image"); break; }
+                    }
+                    if (ok) break;
                 }
             }
             if (windowStateOk && !ok) {
@@ -5179,6 +5192,7 @@ void AppController::finishDesktopReplay()
     m_replayIndex = 0;
     m_replayTaskId.clear();
     m_replayArtifactId.clear();
+    m_replayTemplateRows.clear();
     if (m_runningTaskId != id) return;
 
     // Estado honesto: si algún paso mecánico falló (p.ej. no se pudo abrir la app,
@@ -5767,6 +5781,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_replayIndex = 0;
     m_replayTaskId.clear();
     m_replayArtifactId.clear();
+    m_replayTemplateRows.clear();
     m_replayReport.clear();
     m_replayErrors = 0;
     if (m_desktopTaskIndicatorActive) {
@@ -7173,6 +7188,11 @@ QVariantMap AppController::captureTeachVisualReference(int size)
     return m_teachRecorder.captureVisualReference(size);
 }
 
+bool AppController::armTeachVisualRegionSelection()
+{
+    return m_teachRecorder.armVisualRegionSelection();
+}
+
 QString AppController::finishTeach()
 {
     return m_teachRecorder.finish();
@@ -7199,6 +7219,10 @@ QVariantMap AppController::testAutomationTemplate(const QString &artifactId,
         scope.value(QStringLiteral("targetId"), QStringLiteral("0")).toString(),
         AutomationArtifactStore::artifactDir(artifactId) + QStringLiteral("/templates/")
             + QFileInfo(fileName).fileName(), 0.88, 0.8, 1.25, true, &error);
+    result[QStringLiteral("recommendRecapture")] =
+        !result.value(QStringLiteral("found")).toBool()
+        || result.value(QStringLiteral("ambiguous")).toBool()
+        || result.value(QStringLiteral("confidence")).toDouble() < 0.92;
     if (!error.isEmpty()) result[QStringLiteral("error")] = error;
     return result;
 }
@@ -7215,6 +7239,15 @@ bool AppController::replaceAutomationTemplate(const QString &artifactId,
 {
     const QUrl url(sourcePath);
     return AutomationArtifactStore::replaceTemplate(
+        artifactId, fileName, url.isLocalFile() ? url.toLocalFile() : sourcePath);
+}
+
+bool AppController::addAutomationTemplateVariant(const QString &artifactId,
+                                                 const QString &fileName,
+                                                 const QString &sourcePath)
+{
+    const QUrl url(sourcePath);
+    return AutomationArtifactStore::addTemplateVariant(
         artifactId, fileName, url.isLocalFile() ? url.toLocalFile() : sourcePath);
 }
 

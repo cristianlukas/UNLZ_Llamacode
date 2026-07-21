@@ -703,7 +703,7 @@ Item {
                 color: Theme.textMuted
                 font.pixelSize: 11
                 text: teachMode.currentIndex === 0
-                    ? "Escritorio foreground: el agente controla tu pantalla real. Durante Teach, dejá el cursor sobre un objetivo gráfico y presioná F8 para guardar una plantilla visual."
+                    ? "Escritorio foreground: F8 captura 72×72 bajo el cursor. F9 arma selección rectangular: arrastrá sobre cualquier objetivo gráfico."
                     : "Navegador background: corre en un navegador headless por detrás, sin tomar tu pantalla. Podés seguir usando la PC mientras se ejecuta. Sirve para tareas 100% web (abrir una URL, extraer datos, completar formularios)."
             }
             RowLayout {
@@ -812,6 +812,16 @@ Item {
                         teachError.text = ref && ref.file
                             ? "Plantilla guardada: " + ref.file
                             : (App.teachError || "No se pudo capturar la región bajo el cursor.")
+                    }
+                }
+                LcButton {
+                    text: "Seleccionar región"
+                    secondary: true
+                    visible: teachMode.currentIndex === 0 && App.teachState === "recording"
+                    onClicked: {
+                        teachError.text = App.armTeachVisualRegionSelection()
+                            ? "Selección armada: arrastrá un rectángulo sobre el objetivo."
+                            : "No se pudo armar la selección."
                     }
                 }
                 LcButton {
@@ -2068,6 +2078,7 @@ Item {
         property var rows: []
         property string statusText: ""
         property string replaceFile: ""
+        property string variantBase: ""
         function refresh() { rows = App.automationTemplates(artifactId) }
         function openFor(id, name) {
             artifactId = id; processName = name; statusText = ""; refresh(); open()
@@ -2099,6 +2110,7 @@ Item {
                                 const r = App.testAutomationTemplate(templatePopup.artifactId, modelData.file)
                                 templatePopup.statusText = r.found && !r.ambiguous
                                     ? "Encontrada · confianza " + Number(r.confidence).toFixed(3)
+                                      + (r.recommendRecapture ? " · conviene recapturar o agregar variante" : "")
                                     : (r.error || "No encontrada o ambigua")
                             }
                         }
@@ -2114,6 +2126,14 @@ Item {
                             onClicked: {
                                 templatePopup.replaceFile = modelData.file
                                 replaceTemplateDialog.open()
+                            }
+                        }
+                        LcButton {
+                            text: "+ Variante"; secondary: true
+                            visible: !(modelData.variantOf || "")
+                            onClicked: {
+                                templatePopup.variantBase = modelData.file
+                                variantTemplateDialog.open()
                             }
                         }
                     }
@@ -2135,6 +2155,18 @@ Item {
             const ok = App.replaceAutomationTemplate(templatePopup.artifactId,
                 templatePopup.replaceFile, selectedFile.toString())
             templatePopup.statusText = ok ? "Plantilla reemplazada." : "No se pudo reemplazar la plantilla."
+            templatePopup.refresh()
+        }
+    }
+
+    FileDialog {
+        id: variantTemplateDialog
+        title: "Agregar variante visual"
+        nameFilters: ["Imágenes (*.png *.jpg *.jpeg *.bmp *.webp)"]
+        onAccepted: {
+            const ok = App.addAutomationTemplateVariant(templatePopup.artifactId,
+                templatePopup.variantBase, selectedFile.toString())
+            templatePopup.statusText = ok ? "Variante agregada." : "No se pudo agregar la variante."
             templatePopup.refresh()
         }
     }

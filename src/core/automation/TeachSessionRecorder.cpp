@@ -122,6 +122,7 @@ void TeachSessionRecorder::reset()
     m_events.clear();
     m_evidence.clear();
     m_templateCount = 0;
+    m_visualRegionArmed = false;
     m_artifactId.clear();
     m_task.clear();
     m_mode.clear();
@@ -250,12 +251,20 @@ QString TeachSessionRecorder::captureEvidence()
 
 QVariantMap TeachSessionRecorder::captureTemplateAt(const QPoint &physical, int requestedSize)
 {
+    const int size = qBound(24, requestedSize, 256);
+    return captureTemplateRect(QRect(physical.x() - size / 2, physical.y() - size / 2,
+                                     size, size));
+}
+
+QVariantMap TeachSessionRecorder::captureTemplateRect(const QRect &physicalRect)
+{
     if (m_mode != QLatin1String("desktop")) return {};
     const QVariantMap info = DesktopAutomationBackend::targetInfo(m_scopeKind, m_scopeId);
     const QRect bounds(info.value(QStringLiteral("x")).toInt(), info.value(QStringLiteral("y")).toInt(),
                        info.value(QStringLiteral("width")).toInt(), info.value(QStringLiteral("height")).toInt());
-    if (!bounds.isValid() || !bounds.contains(physical)) {
-        m_error = QStringLiteral("El cursor debe estar dentro del alcance enseñado.");
+    const QRect requested = physicalRect.normalized().intersected(bounds);
+    if (!bounds.isValid() || requested.width() < 12 || requested.height() < 12) {
+        m_error = QStringLiteral("La región visual debe quedar dentro del alcance y medir al menos 12×12.");
         return {};
     }
     QString error;
@@ -263,10 +272,9 @@ QVariantMap TeachSessionRecorder::captureTemplateAt(const QPoint &physical, int 
     if (capture.isNull()) { m_error = error; return {}; }
     const double sx = double(capture.width()) / bounds.width();
     const double sy = double(capture.height()) / bounds.height();
-    const QPoint center(qRound((physical.x() - bounds.x()) * sx),
-                        qRound((physical.y() - bounds.y()) * sy));
-    const int size = qBound(24, requestedSize, 256);
-    QRect crop(center.x() - size / 2, center.y() - size / 2, size, size);
+    QRect crop(qRound((requested.x() - bounds.x()) * sx),
+               qRound((requested.y() - bounds.y()) * sy),
+               qRound(requested.width() * sx), qRound(requested.height() * sy));
     crop = crop.intersected(capture.rect());
     if (crop.width() < 16 || crop.height() < 16) {
         m_error = QStringLiteral("La región visual quedó fuera del alcance.");
@@ -310,6 +318,15 @@ QVariantMap TeachSessionRecorder::captureVisualReference(int size)
                  {QStringLiteral("intent"), QStringLiteral("Referencia visual capturada")},
                  {QStringLiteral("locator"), locator}}, false);
     return locator;
+}
+
+bool TeachSessionRecorder::armVisualRegionSelection()
+{
+    if (m_state != QLatin1String("recording")) return false;
+    m_visualRegionArmed = true;
+    appendEvent({{QStringLiteral("kind"), QStringLiteral("visual_region_armed")},
+                 {QStringLiteral("intent"), QStringLiteral("Arrastrá un rectángulo sobre el objetivo visual")}}, false);
+    return true;
 }
 
 void TeachSessionRecorder::appendEvent(const QVariantMap &source, bool capture)
@@ -381,6 +398,20 @@ void TeachSessionRecorder::sampleDesktop()
     // ── Soltar: cerrar el gesto como [stroke] (si arrastró) o [click] (puntual). ──
     else if (!pressed && wasPressed && m_strokeActive) {
         m_strokeActive = false;
+        if (m_visualRegionArmed) {
+            m_visualRegionArmed = false;
+            const QVariantMap locator = captureTemplateRect(
+                QRect(m_strokeStartAbs, cursor).normalized());
+            if (!locator.isEmpty())
+                appendEvent({{QStringLiteral("kind"), QStringLiteral("visual_reference")},
+                             {QStringLiteral("intent"), QStringLiteral("Región visual seleccionada")},
+                             {QStringLiteral("locator"), locator}}, false);
+            m_strokePoints.clear();
+            m_leftDown = left;
+            m_rightDown = right;
+            m_lastCursor = cursor;
+            return;
+        }
         const QString btn = m_strokeButton;
         const QPointF start = m_strokePoints.isEmpty() ? QPointF()
             : QPointF(m_strokePoints.first().toMap().value(QStringLiteral("x")).toDouble(),
@@ -542,6 +573,10 @@ void TeachSessionRecorder::onKeyDown(quint32 vk, quint32 scan)
     // región capturada no termina accidentalmente sobre la ventana de LlamaCode.
     if (vk == VK_F8) {
         captureVisualReference(72);
+        return;
+    }
+    if (vk == VK_F9) {
+        armVisualRegionSelection();
         return;
     }
 

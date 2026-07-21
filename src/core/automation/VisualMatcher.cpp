@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <limits>
 
+#ifdef LC_HAVE_OPENCV
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#endif
+
 namespace {
 struct Candidate { QRect rect; double score = 0.0; double scale = 1.0; };
 
@@ -28,8 +33,10 @@ double sampledSimilarity(const QImage &haystack, const QImage &needle, int left,
 bool overlapsSameObject(const QRect &a, const QRect &b)
 {
     const QRect overlap = a.intersected(b);
-    const int smaller = qMin(a.width() * a.height(), b.width() * b.height());
-    return smaller > 0 && overlap.width() * overlap.height() > smaller / 3;
+    // Cualquier solapamiento entre ventanas del mismo tamaño es el mismo objeto
+    // visto con un offset vecino del barrido, no una alternativa accionable. La
+    // política anterior (sólo >1/3 del área) marcaba como ambiguo un único botón.
+    return !overlap.isEmpty() && overlap.width() > 0 && overlap.height() > 0;
 }
 }
 
@@ -40,6 +47,7 @@ QVariantMap VisualMatcher::Result::toVariantMap(const QSize &size) const
                     {QStringLiteral("confidence"), confidence},
                     {QStringLiteral("secondConfidence"), secondConfidence},
                     {QStringLiteral("scale"), scale}};
+    out[QStringLiteral("backend")] = backend;
     if (!error.isEmpty()) out[QStringLiteral("error")] = error;
     if (found && size.width() > 0 && size.height() > 0) {
         out[QStringLiteral("rect")] = QVariantMap{
@@ -80,6 +88,63 @@ VisualMatcher::Result VisualMatcher::find(const QImage &haystackSource,
     std::sort(scales.begin(), scales.end());
     scales.erase(std::unique(scales.begin(), scales.end(),
                              [](double a, double b) { return qAbs(a - b) < 0.01; }), scales.end());
+
+#ifdef LC_HAVE_OPENCV
+    Candidate cvBest;
+    Candidate cvSecond;
+    bool cvFits = false;
+    const cv::Mat hay(haystack.height(), haystack.width(), CV_8UC1,
+                      const_cast<uchar *>(haystack.constBits()), haystack.bytesPerLine());
+    const cv::Mat base(original.height(), original.width(), CV_8UC1,
+                       const_cast<uchar *>(original.constBits()), original.bytesPerLine());
+    for (double scale : scales) {
+        const QSize size(qMax(3, qRound(original.width() * scale)),
+                         qMax(3, qRound(original.height() * scale)));
+        if (size.width() > haystack.width() || size.height() > haystack.height()) continue;
+        cvFits = true;
+        cv::Mat needle;
+        if (qAbs(scale - 1.0) < 0.001) needle = base;
+        else cv::resize(base, needle, cv::Size(size.width(), size.height()), 0, 0, cv::INTER_AREA);
+        cv::Mat scores;
+        cv::matchTemplate(hay, needle, scores, cv::TM_CCOEFF_NORMED);
+        double maxScore = 0.0;
+        cv::Point maxPoint;
+        cv::minMaxLoc(scores, nullptr, &maxScore, nullptr, &maxPoint);
+        Candidate first{QRect(maxPoint.x, maxPoint.y, needle.cols, needle.rows), maxScore, scale};
+        cv::Mat suppressed = scores.clone();
+        const int left = qMax(0, maxPoint.x - needle.cols / 2);
+        const int top = qMax(0, maxPoint.y - needle.rows / 2);
+        const int right = qMin(suppressed.cols, maxPoint.x + needle.cols / 2 + 1);
+        const int bottom = qMin(suppressed.rows, maxPoint.y + needle.rows / 2 + 1);
+        suppressed(cv::Rect(left, top, right - left, bottom - top)).setTo(-1.0f);
+        double secondScore = 0.0;
+        cv::Point secondPoint;
+        cv::minMaxLoc(suppressed, nullptr, &secondScore, nullptr, &secondPoint);
+        Candidate alt{QRect(secondPoint.x, secondPoint.y, needle.cols, needle.rows), secondScore, scale};
+        for (const Candidate &candidate : {first, alt}) {
+            if (candidate.score > cvBest.score) { cvSecond = cvBest; cvBest = candidate; }
+            else if (!overlapsSameObject(candidate.rect, cvBest.rect)
+                     && candidate.score > cvSecond.score) cvSecond = candidate;
+        }
+    }
+    if (!cvFits) {
+        result.error = QStringLiteral("La plantilla es más grande que el alcance capturado.");
+        return result;
+    }
+    result.backend = QStringLiteral("opencv-matchTemplate");
+    result.confidence = cvBest.score;
+    result.secondConfidence = cvSecond.score;
+    result.scale = cvBest.scale;
+    result.rect = cvBest.rect;
+    result.found = cvBest.score >= threshold;
+    result.ambiguous = result.found && rawOptions.requireUnique
+        && cvSecond.score >= threshold && cvBest.score - cvSecond.score < 0.025;
+    if (result.ambiguous)
+        result.error = QStringLiteral("Hay más de una coincidencia visual igualmente probable.");
+    else if (!result.found)
+        result.error = QStringLiteral("No se encontró la plantilla con la confianza requerida.");
+    return result;
+#endif
 
     Candidate best;
     Candidate second;

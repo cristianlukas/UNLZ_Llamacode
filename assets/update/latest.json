@@ -1,6 +1,6 @@
 {
   "newVersion": false,
-  "version": "0.1.59",
+  "version": "0.1.60",
   "title": "Nueva version disponible",
   "summary": "Incluye el detector de actualizaciones, mejoras de arranque y avisos con changelog dentro de la app.",
   "changelog": [

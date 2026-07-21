@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QElapsedTimer>
 #include <QPoint>
+#include <QRect>
 #include <QTimer>
 #include <QVariantList>
 
@@ -34,6 +35,7 @@ public:
     // Captura una plantilla cuadrada alrededor del cursor y la agrega a la receta.
     // Útil para controles puramente visuales; devuelve metadata o {} si falla.
     QVariantMap captureVisualReference(int size = 72);
+    bool armVisualRegionSelection();
     QString finish();
     void cancel();
 
@@ -48,6 +50,7 @@ private:
     void appendEvent(const QVariantMap &event, bool captureEvidence);
     QString captureEvidence();
     QVariantMap captureTemplateAt(const QPoint &physical, int size);
+    QVariantMap captureTemplateRect(const QRect &physicalRect);
     void reset();
     // Vacía el texto pendiente del buffer de teclado como un paso [type].
     void flushKeys();
@@ -75,6 +78,7 @@ private:
     QVariantList m_events;
     QStringList m_evidence;
     int m_templateCount = 0;
+    bool m_visualRegionArmed = false;
     QTimer m_timer;
     QElapsedTimer m_clock;
     QPoint m_lastCursor;

@@ -3,6 +3,7 @@
 #include "core/tasks/TaskStore.h"
 
 #include <QDateTime>
+#include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -28,6 +29,43 @@ QVariantMap readJson(const QString &path)
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly)) return {};
     return QJsonDocument::fromJson(f.readAll()).object().toVariantMap();
+}
+
+QVariantMap imageMetadata(const QString &path)
+{
+    const QImage image(path);
+    if (image.isNull()) return {};
+    QFile file(path);
+    QByteArray hash;
+    if (file.open(QIODevice::ReadOnly))
+        hash = QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex();
+    return QVariantMap{{QStringLiteral("width"), image.width()},
+                       {QStringLiteral("height"), image.height()},
+                       {QStringLiteral("sha256"), QString::fromLatin1(hash)},
+                       {QStringLiteral("updatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}};
+}
+
+bool sameTemplateFile(const QVariantMap &locator, const QString &safe)
+{
+    return locator.value(QStringLiteral("type")).toString() == QLatin1String("image")
+        && QFileInfo(locator.value(QStringLiteral("file")).toString()).fileName() == safe;
+}
+
+QVariantMap mergedMetadata(QVariantMap locator, const QVariantMap &metadata)
+{
+    for (auto it = metadata.constBegin(); it != metadata.constEnd(); ++it)
+        locator[it.key()] = it.value();
+    return locator;
+}
+
+void updateManifestTemplateCount(const QString &id, int count)
+{
+    QVariantMap manifest = readJson(AutomationArtifactStore::artifactDir(id)
+                                    + QStringLiteral("/manifest.json"));
+    if (manifest.isEmpty()) return;
+    manifest[QStringLiteral("templateCount")] = count;
+    manifest[QStringLiteral("updatedAt")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    writeJson(AutomationArtifactStore::artifactDir(id) + QStringLiteral("/manifest.json"), manifest);
 }
 }
 
@@ -149,12 +187,40 @@ bool AutomationArtifactStore::removeTemplate(const QString &id, const QString &f
     QVariantMap r = recipe(id);
     if (r.isEmpty()) return false;
     QVariantList kept;
-    for (const QVariant &v : r.value(QStringLiteral("templates")).toList())
-        if (QFileInfo(v.toMap().value(QStringLiteral("file")).toString()).fileName() != safe)
-            kept << v;
+    QStringList removedFiles{safe};
+    const QString primaryPath = QStringLiteral("templates/") + safe;
+    for (const QVariant &v : r.value(QStringLiteral("templates")).toList()) {
+        const QVariantMap row = v.toMap();
+        const QString rowFile = QFileInfo(row.value(QStringLiteral("file")).toString()).fileName();
+        if (rowFile == safe || row.value(QStringLiteral("variantOf")).toString() == primaryPath) {
+            if (!removedFiles.contains(rowFile)) removedFiles << rowFile;
+        }
+        else
+            kept << row;
+    }
+    QVariantList rewrittenSteps;
+    for (const QVariant &v : r.value(QStringLiteral("steps")).toList()) {
+        QVariantMap step = v.toMap();
+        QVariantList locators;
+        for (const QVariant &lv : step.value(QStringLiteral("locators")).toList()) {
+            const QString locatorFile = QFileInfo(lv.toMap().value(QStringLiteral("file")).toString()).fileName();
+            if (!removedFiles.contains(locatorFile)) locators << lv;
+        }
+        if (step.contains(QStringLiteral("locators"))) step[QStringLiteral("locators")] = locators;
+        const QVariantMap single = step.value(QStringLiteral("locator")).toMap();
+        if (!single.isEmpty() && removedFiles.contains(
+                QFileInfo(single.value(QStringLiteral("file")).toString()).fileName()))
+            continue; // referencia visual huérfana: eliminar el paso completo
+        rewrittenSteps << step;
+    }
+    r[QStringLiteral("steps")] = rewrittenSteps;
     r[QStringLiteral("templates")] = kept;
-    const bool removed = QFile::remove(artifactDir(id) + QStringLiteral("/templates/") + safe);
-    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r) && removed;
+    bool removed = true;
+    for (const QString &file : removedFiles)
+        removed = QFile::remove(artifactDir(id) + QStringLiteral("/templates/") + file) && removed;
+    const bool saved = writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
+    if (saved) updateManifestTemplateCount(id, kept.size());
+    return saved && removed;
 }
 
 bool AutomationArtifactStore::replaceTemplate(const QString &id, const QString &fileName,
@@ -166,7 +232,63 @@ bool AutomationArtifactStore::replaceTemplate(const QString &id, const QString &
     const QString destination = artifactDir(id) + QStringLiteral("/templates/") + safe;
     QDir().mkpath(QFileInfo(destination).absolutePath());
     QFile::remove(destination);
-    return probe.save(destination, "PNG");
+    if (!probe.save(destination, "PNG")) return false;
+    const QVariantMap metadata = imageMetadata(destination);
+    QVariantMap recipeMap = recipe(id);
+    QVariantList templateRows;
+    for (const QVariant &v : recipeMap.value(QStringLiteral("templates")).toList()) {
+        QVariantMap row = v.toMap();
+        if (QFileInfo(row.value(QStringLiteral("file")).toString()).fileName() == safe)
+            row = mergedMetadata(row, metadata);
+        templateRows << row;
+    }
+    QVariantList steps;
+    for (const QVariant &v : recipeMap.value(QStringLiteral("steps")).toList()) {
+        QVariantMap step = v.toMap();
+        QVariantList locators;
+        for (const QVariant &lv : step.value(QStringLiteral("locators")).toList()) {
+            QVariantMap locator = lv.toMap();
+            if (sameTemplateFile(locator, safe)) locator = mergedMetadata(locator, metadata);
+            locators << locator;
+        }
+        if (step.contains(QStringLiteral("locators"))) step[QStringLiteral("locators")] = locators;
+        QVariantMap single = step.value(QStringLiteral("locator")).toMap();
+        if (sameTemplateFile(single, safe)) step[QStringLiteral("locator")] = mergedMetadata(single, metadata);
+        steps << step;
+    }
+    recipeMap[QStringLiteral("templates")] = templateRows;
+    recipeMap[QStringLiteral("steps")] = steps;
+    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), recipeMap);
+}
+
+bool AutomationArtifactStore::addTemplateVariant(const QString &id, const QString &fileName,
+                                                  const QString &sourcePath)
+{
+    const QString safe = QFileInfo(fileName).fileName();
+    const QImage source(sourcePath);
+    QVariantMap r = recipe(id);
+    if (safe.isEmpty() || source.isNull() || r.isEmpty()) return false;
+    const QString stem = QFileInfo(safe).completeBaseName();
+    int index = 1;
+    QString variantFile;
+    do variantFile = QStringLiteral("%1-variant-%2.png").arg(stem).arg(index++);
+    while (QFile::exists(artifactDir(id) + QStringLiteral("/templates/") + variantFile));
+    const QString destination = artifactDir(id) + QStringLiteral("/templates/") + variantFile;
+    if (!source.save(destination, "PNG")) return false;
+    QVariantMap row{{QStringLiteral("type"), QStringLiteral("image")},
+                    {QStringLiteral("file"), QStringLiteral("templates/") + variantFile},
+                    {QStringLiteral("variantOf"), QStringLiteral("templates/") + safe},
+                    {QStringLiteral("threshold"), 0.88},
+                    {QStringLiteral("minScale"), 0.8},
+                    {QStringLiteral("maxScale"), 1.25},
+                    {QStringLiteral("requireUnique"), true}};
+    row = mergedMetadata(row, imageMetadata(destination));
+    QVariantList rows = r.value(QStringLiteral("templates")).toList();
+    rows << row;
+    r[QStringLiteral("templates")] = rows;
+    const bool saved = writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
+    if (saved) updateManifestTemplateCount(id, rows.size());
+    return saved;
 }
 
 QString AutomationArtifactStore::importBrowserSkill(const QString &skillName, const QVariantMap &task)

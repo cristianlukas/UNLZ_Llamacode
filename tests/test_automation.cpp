@@ -1,5 +1,6 @@
 #include <QtTest>
 #include <QImage>
+#include <QTemporaryDir>
 #include <limits>
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
@@ -569,8 +570,28 @@ void AutomationTests::artifactsRoundTripAndRedactSecrets()
     QCOMPARE(AutomationArtifactStore::recipe(id).value("finalReference").toString(),
              QStringLiteral("final.jpg"));
     QCOMPARE(AutomationArtifactStore::templates(id).size(), 1);
+    QTemporaryDir replacements;
+    QImage replacement(30, 18, QImage::Format_RGB32);
+    replacement.fill(Qt::blue);
+    const QString replacementPath = replacements.filePath(QStringLiteral("replacement.png"));
+    QVERIFY(replacement.save(replacementPath));
+    QVERIFY(AutomationArtifactStore::replaceTemplate(
+        id, QStringLiteral("template-0001.png"), replacementPath));
+    QVariantMap updated = AutomationArtifactStore::templates(id).first().toMap();
+    QCOMPARE(updated.value("width").toInt(), 30);
+    QCOMPARE(updated.value("height").toInt(), 18);
+    QVERIFY(!updated.value("sha256").toString().isEmpty());
+    const QVariantList updatedLocators = AutomationArtifactStore::timeline(id).at(1).toMap()
+                                              .value("locators").toList();
+    QCOMPARE(updatedLocators.first().toMap().value("width").toInt(), 30);
+    QVERIFY(AutomationArtifactStore::addTemplateVariant(
+        id, QStringLiteral("template-0001.png"), replacementPath));
+    QCOMPARE(AutomationArtifactStore::templates(id).size(), 2);
     QVERIFY(AutomationArtifactStore::removeTemplate(id, QStringLiteral("template-0001.png")));
     QVERIFY(AutomationArtifactStore::templates(id).isEmpty());
+    // Eliminar el primario limpia variantes y localizadores para no dejar rutas huérfanas.
+    QVERIFY(AutomationArtifactStore::timeline(id).at(1).toMap()
+                .value("locators").toList().isEmpty());
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 
