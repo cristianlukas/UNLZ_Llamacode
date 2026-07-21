@@ -27,6 +27,7 @@ private slots:
 
     void writeReadEditCycle();
     void readFile_compactViewAndSafeFallback();
+    void projectBrain_persistsWorkspaceIndex();
     void confinement_blocksOutsideCwd();
     void allowedRoots_permitExtraFolder();
     void unconfined_permitsAnyPath();
@@ -112,6 +113,23 @@ void AgentToolsTests::readFile_compactViewAndSafeFallback()
     QVERIFY(!exact.value("structuredSource").toBool());
     QVERIFY(exact.value("structuredSourceFallback").toString().contains("indentacion"));
     QVERIFY(exact.value("result").toString().contains("    return 1"));
+}
+
+void AgentToolsTests::projectBrain_persistsWorkspaceIndex()
+{
+    QVERIFY(call("write_file", {{"path", "src/main.cpp"}, {"content", "int main(){}\n"}})
+                .value("ok").toBool());
+    QVERIFY(call("write_file", {{"path", "README.md"}, {"content", "# Test\n"}})
+                .value("ok").toBool());
+
+    const QVariantMap result = call("project_brain", {{"max_files", 100}});
+    QVERIFY(result.value("ok").toBool());
+    const QJsonObject brain = QJsonDocument::fromJson(
+        result.value("result").toString().toUtf8()).object();
+    QCOMPARE(brain.value("schemaVersion").toInt(), 1);
+    QCOMPARE(brain.value("root").toString(), QDir(m_dir.path()).absolutePath());
+    QVERIFY(brain.value("fileCount").toInt() >= 2);
+    QVERIFY(brain.value("extensions").toObject().value("cpp").toInt() >= 1);
 }
 
 void AgentToolsTests::confinement_blocksOutsideCwd()

@@ -45,6 +45,8 @@
 #include "core/voice/VoiceAgentPolicy.h"
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/agent/AgentToolRunner.h"
+#include "core/agent/SubAgentRunner.h"
 #include "core/agent/AgentEfficiency.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
@@ -655,6 +657,14 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    m_workflowToolRunner = new AgentToolRunner(this);
+    connect(m_workflowToolRunner, &AgentToolRunner::toolExecuted, this,
+            [this](const QVariantMap &result) {
+        if (!m_workflowRunner || !m_workflowRunner->active()) return;
+        m_workflowStepInFlight = false;
+        m_pendingDirectTool.clear();
+        m_workflowRunner->completeCurrent(result, result.value(QStringLiteral("ok")).toBool());
+    });
     m_workflowRunner = new WorkflowRunner(this);
     connect(m_workflowRunner, &WorkflowRunner::stateChanged, this,
             [this](const QJsonObject &snapshot) {
@@ -667,6 +677,77 @@ AppController::AppController(QObject *parent) : QObject(parent)
                    const QVariantMap &step, const QVariantMap &context) {
         if (m_runningTaskId.isEmpty()) return;
         m_workflowApproval.clear();
+        if (type == QLatin1String("tool") && step.value(QStringLiteral("direct"), true).toBool()) {
+            const QString tool = step.value(QStringLiteral("tool")).toString();
+            const QJsonObject args = QJsonObject::fromVariantMap(
+                step.value(QStringLiteral("arguments")).toMap());
+            if (tool.isEmpty()) {
+                m_workflowRunner->completeCurrent(QStringLiteral("tool faltante"), false);
+                return;
+            }
+            if (LlamaAgentBackend::isDestructiveAction(tool, args)) {
+                m_pendingDirectTool = {{QStringLiteral("tool"), tool},
+                                       {QStringLiteral("arguments"), args.toVariantMap()}};
+                m_workflowApproval = {{QStringLiteral("stepId"), stepId},
+                    {QStringLiteral("prompt"), QStringLiteral("La tool directa `%1` es destructiva. ¿Ejecutar?").arg(tool)},
+                    {QStringLiteral("directTool"), true}};
+                m_runningTaskPhase = QStringLiteral("aprobación");
+                emit taskRunStateChanged();
+                return;
+            }
+            const QVariantMap taskDef = m_tasks.get(m_runningTaskId);
+            m_workflowToolRunner->setConfined(
+                taskDef.value(QStringLiteral("permScope"), QStringLiteral("project")).toString()
+                    != QLatin1String("full"));
+            m_workflowToolRunner->setAllowedRoots(taskDef.value(QStringLiteral("permFolders")).toStringList());
+            m_workflowStepInFlight = true;
+            m_runningTaskPhase = QStringLiteral("workflow:%1").arg(stepId);
+            m_workflowToolRunner->executeTool(stepId, tool,
+                QString::fromUtf8(QJsonDocument(args).toJson(QJsonDocument::Compact)),
+                currentAgentProjectDir().isEmpty() ? QDir::currentPath() : currentAgentProjectDir());
+            emit taskRunStateChanged();
+            return;
+        }
+        if (type == QLatin1String("parallel")) {
+            const QVariantList branches = step.value(QStringLiteral("branches")).toList();
+            if (branches.isEmpty()) {
+                m_workflowRunner->completeCurrent(QStringLiteral("ramas paralelas vacías"), false);
+                return;
+            }
+            const auto active = buildContext(m_activeLaunchId);
+            const QString cwd = currentAgentProjectDir().isEmpty()
+                ? QDir::currentPath() : currentAgentProjectDir();
+            m_workflowBranches.clear();
+            m_workflowBranchResults.clear();
+            m_workflowBranchFailed = false;
+            m_workflowStepInFlight = true;
+            m_runningTaskPhase = QStringLiteral("workflow:%1 · %2 ramas")
+                                     .arg(stepId).arg(branches.size());
+            int index = 0;
+            for (const QVariant &value : branches) {
+                const QVariantMap branch = value.toMap();
+                const QString branchId = branch.value(QStringLiteral("id"),
+                    QStringLiteral("branch-%1").arg(++index)).toString();
+                const QString prompt = branch.value(QStringLiteral("prompt"), value.toString()).toString();
+                auto *sub = new SubAgentRunner(branchId, serverBaseUrl(),
+                    routedModelId(active.catalogModel.id), cwd, prompt,
+                    m_agentTemperature, false, this);
+                m_workflowBranches.insert(branchId, sub);
+                connect(sub, &SubAgentRunner::finished, this,
+                        [this](const QString &id, const QString &result, bool ok) {
+                    m_workflowBranchResults[id] = result;
+                    m_workflowBranchFailed = m_workflowBranchFailed || !ok;
+                    if (auto *runner = m_workflowBranches.take(id)) runner->deleteLater();
+                    if (!m_workflowBranches.isEmpty()) return;
+                    m_workflowStepInFlight = false;
+                    m_workflowRunner->completeCurrent(m_workflowBranchResults,
+                                                      !m_workflowBranchFailed);
+                });
+                sub->start();
+            }
+            emit taskRunStateChanged();
+            return;
+        }
         m_workflowStepInFlight = true;
         m_runningTaskPhase = QStringLiteral("workflow:%1").arg(stepId);
         m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
@@ -695,6 +776,45 @@ AppController::AppController(QObject *parent) : QObject(parent)
             success ? QStringLiteral("Workflow completado (%1 pasos).")
                           .arg(snapshot.value(QStringLiteral("completedSteps")).toArray().size())
                     : QStringLiteral("Workflow falló: %1").arg(error));
+    });
+    connect(this, &AppController::taskRunFinished, this,
+            [this](const QString &id, const QString &, const QString &, const QString &, bool) {
+        if (id != m_taskAbId) return;
+        if (m_taskAbStage == 1) {
+            m_taskAbStage = 2;
+            m_taskAbStatus = QStringLiteral("A/B: ejecutando variante optimizada…");
+            if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+                cb->setStablePhasePrefix(true);
+            emit taskAbChanged();
+            QTimer::singleShot(0, this, [this, id]() { runTask(id); });
+            return;
+        }
+        if (m_taskAbStage == 2) {
+            const QVariantMap comparison = compareTaskRunMetrics(id, 1, 0);
+            m_taskAbStatus = comparison.contains(QStringLiteral("error"))
+                ? comparison.value(QStringLiteral("error")).toString()
+                : QStringLiteral("A/B completado: prompt %1%, tiempo %2%")
+                    .arg(QString::number(comparison.value(QStringLiteral("promptTokensChangePct")).toDouble(), 'f', 1),
+                         QString::number(comparison.value(QStringLiteral("wallMsChangePct")).toDouble(), 'f', 1));
+            m_taskAbId.clear();
+            m_taskAbStage = 0;
+            emit taskAbChanged();
+            emit taskAbFinished(id, comparison);
+        }
+    });
+    connect(this, &AppController::taskRunFinished, this,
+            [this](const QString &, const QString &, const QString &, const QString &, bool) {
+        if (!m_taskAbId.isEmpty()) return;
+        QTimer::singleShot(0, this, [this]() {
+            if (!agentRunning() || !m_runningTaskId.isEmpty()) return;
+            for (const QVariant &value : m_tasks.all()) {
+                const QVariantMap task = value.toMap();
+                if (task.value(QStringLiteral("lastRunStatus")).toString() == QLatin1String("resumable")) {
+                    runTask(task.value(QStringLiteral("id")).toString());
+                    break;
+                }
+            }
+        });
     });
     connect(&m_teachRecorder, &TeachSessionRecorder::changed,
             this, [this]() {
@@ -803,6 +923,19 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(this, &AppController::taskRunStateChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentStartingChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentRunningChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::agentRunningChanged, this, [this]() {
+        if (!agentRunning() || !m_runningTaskId.isEmpty()) return;
+        for (const QVariant &value : m_tasks.all()) {
+            const QVariantMap task = value.toMap();
+            if (task.value(QStringLiteral("lastRunStatus")).toString() != QLatin1String("resumable"))
+                continue;
+            const QString id = task.value(QStringLiteral("id")).toString();
+            QTimer::singleShot(0, this, [this, id]() {
+                if (m_runningTaskId.isEmpty() && agentRunning()) runTask(id);
+            });
+            break; // una por vez; las restantes se retomarán en el próximo ciclo
+        }
+    });
     connect(this, &AppController::serverRunningChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::serverReadyChanged, this, &AppController::taskRunAvailabilityChanged);
 
@@ -5174,10 +5307,50 @@ void AppController::startOrRestoreTaskWorkflow(const QVariantMap &task)
 void AppController::approveTaskWorkflow(const QString &choice, const QString &userText)
 {
     if (!m_workflowRunner || m_workflowApproval.isEmpty()) return;
+    if (!m_pendingDirectTool.isEmpty()) {
+        const QVariantMap pending = m_pendingDirectTool;
+        m_workflowApproval.clear();
+        if (choice != QLatin1String("accept")) {
+            m_pendingDirectTool.clear();
+            m_workflowRunner->completeCurrent(QStringLiteral("tool directa rechazada"), false);
+            return;
+        }
+        const QVariantMap taskDef = m_tasks.get(m_runningTaskId);
+        m_workflowToolRunner->setConfined(
+            taskDef.value(QStringLiteral("permScope"), QStringLiteral("project")).toString()
+                != QLatin1String("full"));
+        m_workflowToolRunner->setAllowedRoots(taskDef.value(QStringLiteral("permFolders")).toStringList());
+        m_workflowStepInFlight = true;
+        m_workflowToolRunner->executeTool(
+            m_workflowRunner->state().currentStep,
+            pending.value(QStringLiteral("tool")).toString(),
+            QString::fromUtf8(QJsonDocument::fromVariant(
+                pending.value(QStringLiteral("arguments"))).toJson(QJsonDocument::Compact)),
+            currentAgentProjectDir().isEmpty() ? QDir::currentPath() : currentAgentProjectDir());
+        emit taskRunStateChanged();
+        return;
+    }
     m_workflowApproval.clear();
     m_workflowRunner->approve(choice.trimmed().isEmpty() ? QStringLiteral("accept") : choice,
                               userText);
     emit taskRunStateChanged();
+}
+
+void AppController::runTaskAB(const QString &id)
+{
+    if (!m_taskAbId.isEmpty() || !m_runningTaskId.isEmpty()) return;
+    if (m_tasks.get(id).isEmpty()) return;
+    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!cb) {
+        emit serverError(QStringLiteral("El A/B de eficiencia requiere el agente nativo."));
+        return;
+    }
+    m_taskAbId = id;
+    m_taskAbStage = 1;
+    m_taskAbStatus = QStringLiteral("A/B: ejecutando baseline sin prefijo estable…");
+    cb->setStablePhasePrefix(false);
+    emit taskAbChanged();
+    runTask(id);
 }
 
 bool AppController::startDesktopReplay(const QString &id, const QString &artifactId)
@@ -5983,6 +6156,14 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningWorkflowDefinition = {};
     m_workflowApproval.clear();
     m_workflowStepInFlight = false;
+    m_pendingDirectTool.clear();
+    for (SubAgentRunner *branch : std::as_const(m_workflowBranches)) {
+        branch->cancel();
+        branch->deleteLater();
+    }
+    m_workflowBranches.clear();
+    m_workflowBranchResults.clear();
+    m_workflowBranchFailed = false;
     if (m_workflowRunner) m_workflowRunner->reset();
     m_runningTaskLogStart = 0;
     m_runningTaskMetricsBaseline.clear();

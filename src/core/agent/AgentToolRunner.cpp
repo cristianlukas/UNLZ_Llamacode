@@ -9,6 +9,7 @@
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
 #include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
 #include "StructuredSourceView.h" // vista compacta segura y proyectable
+#include "ProjectBrain.h"
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -1125,6 +1126,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             out[QStringLiteral("structuredSourceFallback")] = view.error;
         }
         return QString::fromUtf8(raw);
+    }
+    if (name == QLatin1String("project_brain")) {
+        const QVariantMap brain = ProjectBrain::refresh(
+            cwd, qBound(100, args.value(QStringLiteral("max_files")).toInt(4000), 20000));
+        if (ok) *ok = !brain.contains(QStringLiteral("error"));
+        return QString::fromUtf8(QJsonDocument::fromVariant(brain).toJson(QJsonDocument::Compact));
     }
     if (name == QLatin1String("list_dir")) {
         const QString abs = resolve(args.value(QStringLiteral("path")).toString());

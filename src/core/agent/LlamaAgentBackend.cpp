@@ -3934,6 +3934,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("path"), strProp(QStringLiteral("Ruta relativa (vacío = raíz)."))},
                {QStringLiteral("recursive"), boolProp(QStringLiteral("Listar recursivo (ignora node_modules/.git/etc). Default false."))}},
            QJsonArray{}),
+        fn(QStringLiteral("project_brain"),
+           QStringLiteral("Regenera y devuelve un índice persistente y liviano del proyecto: rutas, tamaños, fechas y distribución por extensión. No copia contenido fuente."),
+           QJsonObject{
+               {QStringLiteral("max_files"), intProp(QStringLiteral("Máximo de archivos a indexar (1-20000, default 4000)."))}},
+           QJsonArray{}),
         fn(QStringLiteral("grep"),
            QStringLiteral("Busca una EXPRESIÓN REGULAR en los archivos del proyecto (recursivo). "
                           "Ignora node_modules/.git/build/dist/venv/__pycache__ y binarios."),
@@ -4502,6 +4507,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
     return QVariantList{
         mk("read_file", "Archivos", "Lee un archivo de texto (offset/limit).", 90),
         mk("list_dir",  "Archivos", "Lista archivos y carpetas.", 80),
+        mk("project_brain", "Conocimiento", "Índice persistente de estructura y metadata del proyecto.", 95),
         mk("glob",      "Archivos", "Lista archivos por patrón glob.", 110),
         mk("grep",      "Búsqueda", "Busca una regex en el proyecto.", 100),
         mk("code_hotspots", "Búsqueda", "Archivos riesgosos: churn git + autores + sin test (score 1-10).", 140),

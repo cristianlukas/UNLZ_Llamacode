@@ -296,8 +296,9 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
 ## Arquitectura
 
 La eficiencia del agente incluye telemetría por fase, prefijo estable para
-reutilizar la caché KV, checkpoints versionados, vistas estructuradas seguras y
-workflows reanudables. El diseño, esquema y protocolo de benchmark están en
+reutilizar la caché KV, checkpoints versionados, vistas estructuradas seguras,
+un índice persistente regenerable del workspace (`project_brain`) y workflows
+reanudables. El diseño, esquema y protocolo de benchmark están en
 [`docs/agent-efficiency.md`](docs/agent-efficiency.md).
 
 ```text
@@ -1121,15 +1122,19 @@ tokens de prompt/generación, tiempo de pared, fases, llamadas de tools y bytes 
 resultados. `read_file(compact=true)` ofrece una vista efímera compacta para
 explorar lenguajes con llaves; valida balance y literales, vuelve automáticamente
 al texto exacto ante cualquier duda y exige releer el rango original antes de
-editar. Los workflows JSON disponen de runner reanudable con snapshots,
-condiciones, pausas de aprobación, cancelación y presupuesto de iteraciones/tiempo.
+editar. `project_brain` guarda sólo metadata regenerable (rutas, tamaños, fechas y
+extensiones) para evitar redescubrir la estructura del workspace sin copiar código.
+Los workflows JSON disponen de runner reanudable con snapshots, condiciones,
+pausas de aprobación, cancelación y presupuesto de iteraciones/tiempo.
 La definición se edita desde Procesos; durante la ejecución la UI muestra el paso
-activo y ofrece Aprobar/Rechazar. Cada paso `agent`, `tool`, `verify` o `parallel`
-corre como turno separado y alimenta el contexto del siguiente. El snapshot queda
-en la Task y el historial para reanudar una corrida interrumpida. En Historial se
-puede elegir una corrida baseline y ver deltas A/B de tokens, tiempo y bytes de
-tools. Las métricas corresponden al intervalo de la corrida, no al acumulado de
-la sesión del backend.
+activo y ofrece Aprobar/Rechazar. Los pasos `tool` se ejecutan directamente por el
+runner nativo (con confinamiento y aprobación para acciones destructivas); los
+pasos `parallel` lanzan subagentes reales y reúnen sus resultados antes de seguir.
+El snapshot queda en la Task y el historial, y una corrida interrumpida se detecta
+y reanuda al volver a estar disponible el agente. En Procesos, el botón **A/B**
+ejecuta automáticamente baseline y candidato con el mismo Task; Historial conserva
+los deltas de tokens, tiempo y bytes de tools. Las métricas corresponden al
+intervalo de cada corrida, no al acumulado de la sesión del backend.
 
 ### Persistencia y vista
 

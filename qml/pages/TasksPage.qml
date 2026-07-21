@@ -411,6 +411,17 @@ Item {
                     }
                 }
 
+                Text {
+                    visible: App.taskAbRunning || (App.taskAbStatus || "").length > 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 24
+                    Layout.rightMargin: 24
+                    text: App.taskAbStatus
+                    color: Theme.accent
+                    font.pixelSize: 11
+                    wrapMode: Text.Wrap
+                }
+
                 Repeater {
                     model: App.taskStore
                     delegate: Rectangle {
@@ -475,6 +486,12 @@ Item {
                                          : "▶ Ejecutar")
                                 enabled: App.canRunTask
                                 onClicked: App.runTask(taskId)
+                            }
+                            LcButton {
+                                text: "A/B"
+                                secondary: true
+                                enabled: App.canRunTask && !App.taskAbRunning
+                                onClicked: App.runTaskAB(taskId)
                             }
                             LcButton {
                                 text: model.teachArtifactId ? "Reentrenar" : "Teach"

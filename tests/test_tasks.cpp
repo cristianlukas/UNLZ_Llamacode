@@ -21,6 +21,7 @@ private slots:
     void duplicate_clonesWithNewId();
     void markRun_updatesStatus();
     void reload_recoversOrphanRunningStatus();
+    void reload_preservesResumableWorkflow();
     void loop_jsonRoundTrip();
     void loop_decideStopsAndRepeats();
     void loop_composeGoalPrompt();
@@ -207,6 +208,27 @@ void TasksTests::reload_recoversOrphanRunningStatus()
         const QVariantMap task = reloaded.get(id);
         QCOMPARE(task.value("lastRunStatus").toString(), QStringLiteral("error"));
         QVERIFY(task.value("lastRunSummary").toString().contains(QStringLiteral("interrumpida")));
+        reloaded.remove(id);
+    }
+}
+
+void TasksTests::reload_preservesResumableWorkflow()
+{
+    QString id;
+    {
+        TaskStore s;
+        QVariantMap task = sampleTask();
+        task["workflow"] = QVariantMap{{"schemaVersion", 1}, {"entry", "work"},
+            {"steps", QVariantMap{{"work", QVariantMap{{"type", "agent"}}}}}};
+        id = s.save({}, task);
+        s.markRun(id, QStringLiteral("running"));
+        s.markWorkflowState(id, {{"schemaVersion", 1}, {"workflowId", id},
+                                 {"currentStep", "work"}, {"status", "running"}});
+    }
+    {
+        TaskStore reloaded;
+        QCOMPARE(reloaded.get(id).value("lastRunStatus").toString(), QStringLiteral("resumable"));
+        QVERIFY(reloaded.get(id).value("lastRunSummary").toString().contains(QStringLiteral("reanudará")));
         reloaded.remove(id);
     }
 }

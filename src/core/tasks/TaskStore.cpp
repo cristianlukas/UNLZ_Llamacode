@@ -600,9 +600,15 @@ void TaskStore::load()
         // "Ejecutando..." después de crash, cierre o rebuild.
         if (task.value(QStringLiteral("lastRunStatus")).toString()
             == QLatin1String("running")) {
-            task[QStringLiteral("lastRunStatus")] = QStringLiteral("error");
-            task[QStringLiteral("lastRunSummary")] = QStringLiteral(
-                "La ejecución anterior fue interrumpida al cerrarse o reiniciarse LlamaCode.");
+            const QString workflowStatus = task.value(QStringLiteral("workflowState")).toMap()
+                                               .value(QStringLiteral("status")).toString();
+            const bool resumable = workflowStatus == QLatin1String("running")
+                                || workflowStatus == QLatin1String("waiting_approval");
+            task[QStringLiteral("lastRunStatus")] = resumable
+                ? QStringLiteral("resumable") : QStringLiteral("error");
+            task[QStringLiteral("lastRunSummary")] = resumable
+                ? QStringLiteral("Workflow interrumpido; se reanudará al iniciar el agente.")
+                : QStringLiteral("La ejecución anterior fue interrumpida al cerrarse o reiniciarse LlamaCode.");
             recoveredInterruptedRun = true;
         }
         m_items.append(task);

@@ -35,6 +35,8 @@
 class QThread;
 class QFileSystemWatcher;
 class QWidget;
+class AgentToolRunner;
+class SubAgentRunner;
 
 class AppController : public QObject
 {
@@ -53,6 +55,8 @@ class AppController : public QObject
     Q_PROPERTY(QString runningTaskPhase READ runningTaskPhase NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantMap runningWorkflowState READ runningWorkflowState NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantMap workflowApproval READ workflowApproval NOTIFY taskRunStateChanged)
+    Q_PROPERTY(bool taskAbRunning READ taskAbRunning NOTIFY taskAbChanged)
+    Q_PROPERTY(QString taskAbStatus READ taskAbStatus NOTIFY taskAbChanged)
     Q_PROPERTY(QVariantList chatSessions    READ chatSessions    NOTIFY chatSessionsChanged)
     Q_PROPERTY(QVariantList chatMessages    READ chatMessages    NOTIFY chatMessagesChanged)
     Q_PROPERTY(QString      chatSessionId   READ chatSessionId   NOTIFY chatSessionsChanged)
@@ -198,6 +202,8 @@ public:
     QString runningTaskPhase() const { return m_runningTaskPhase; }
     QVariantMap runningWorkflowState() const;
     QVariantMap workflowApproval() const { return m_workflowApproval; }
+    bool taskAbRunning() const { return !m_taskAbId.isEmpty(); }
+    QString taskAbStatus() const { return m_taskAbStatus; }
 
     QVariantList chatSessions()     const { return m_chatSessions; }
     QVariantList chatMessages()     const { return m_chatMessages; }
@@ -454,6 +460,7 @@ public:
     Q_INVOKABLE void runTask(const QString &id);
     Q_INVOKABLE void approveTaskWorkflow(const QString &choice,
                                          const QString &userText = QString());
+    Q_INVOKABLE void runTaskAB(const QString &id);
     // Test seams (solo para tests; no usar desde la app). Permiten ejercitar el
     // ciclo del bucle de Tasks sin un llama-server real: inyectar un backend de
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
@@ -1002,6 +1009,8 @@ signals:
     void navigateToDownloads();
     void tasksSchedulerChanged();
     void taskRunStateChanged();
+    void taskAbChanged();
+    void taskAbFinished(const QString &id, const QVariantMap &comparison);
     void taskRunAvailabilityChanged();
     void taskRunFinished(const QString &id, const QString &name, const QString &status,
                          const QString &summary, bool silentUnlessError);
@@ -1082,6 +1091,14 @@ private:
     QVariantMap m_workflowApproval;
     bool m_workflowStepInFlight = false;
     QVariantMap m_runningTaskMetricsBaseline;
+    AgentToolRunner *m_workflowToolRunner = nullptr;
+    QVariantMap m_pendingDirectTool;
+    QHash<QString, SubAgentRunner *> m_workflowBranches;
+    QVariantMap m_workflowBranchResults;
+    bool m_workflowBranchFailed = false;
+    QString m_taskAbId;
+    QString m_taskAbStatus;
+    int m_taskAbStage = 0;
     qsizetype m_runningTaskLogStart = 0;
     bool     m_runningTaskSilentUnlessError = false;
     // Estado del bucle "correr hasta cumplir objetivo" (feature Loops). El

@@ -129,6 +129,7 @@ private slots:
     void fileWatchTriggerRegistersPath();
     void earlyFailureRecordedInHistory();
     void workflowTaskPausesApprovesAndPersistsSnapshot();
+    void workflowDirectToolCompletesWithoutModelTurn();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
     void cpuSystemProfileRequiresCpuBinary();
@@ -974,6 +975,26 @@ void AppControllerTests::workflowTaskPausesApprovesAndPersistsSnapshot()
     QCOMPARE(history.size(), 1);
     QCOMPARE(history.first().toMap().value("workflowState").toMap()
                  .value("status").toString(), QStringLiteral("completed"));
+}
+
+void AppControllerTests::workflowDirectToolCompletesWithoutModelTurn()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    app.setTestAgentBackend(fake);
+    const QVariantMap workflow{{"schemaVersion", 1}, {"entry", "list"},
+        {"steps", QVariantMap{
+            {"list", QVariantMap{{"type", "tool"}, {"tool", "list_dir"},
+                                  {"arguments", QVariantMap{{"path", "."}}}, {"next", "done"}}},
+            {"done", QVariantMap{{"type", "finish"}}}}}};
+    const QString id = app.taskStore()->save({}, {{"name", "Direct tool"},
+        {"description", "local"}, {"executionMode", "auto"}, {"workflow", workflow}});
+    QSignalSpy finished(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+    QTRY_COMPARE_WITH_TIMEOUT(finished.size(), 1, 2000);
+    QCOMPARE(finished.first().at(2).toString(), QStringLiteral("ok"));
+    QCOMPARE(fake->bodyRuns(), 0);
 }
 
 void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
