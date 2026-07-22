@@ -2442,6 +2442,7 @@ void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry)
     const QString slug = EngineCatalog::buildDirName(entry.repo);
     const QString flavor = entry.flavor;
     const QString displayName = entry.name;
+    const QString sourceBranch = entry.sourceBranch;
 
     const QString script = QStringLiteral(R"PS(
 $ErrorActionPreference = 'Stop'
@@ -2465,8 +2466,10 @@ try {
 
     if (Test-Path $buildRoot) { Remove-Item -LiteralPath $buildRoot -Recurse -Force }
     New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
-    Write-Output ('STATUS: Clonando ' + $repo + ' ...')
-    git clone --depth 1 $repo $src
+    $branch = '%4'
+    Write-Output ('STATUS: Clonando ' + $repo + $(if ($branch) { ' [' + $branch + ']' } else { '' }) + ' ...')
+    if ($branch) { git clone --branch $branch --depth 1 $repo $src }
+    else { git clone --depth 1 $repo $src }
     if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
     $commit = (git -C $src rev-parse --short HEAD).Trim()
 
@@ -2478,7 +2481,7 @@ try {
 @echo off
 call "$vcvars" x64
 if errorlevel 1 exit /b 1
-cmake -G "$generator" -S "$src" -B "$build" -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
+cmake -G "$generator" -S "$src" -B "$build" -DGGML_CUDA=ON -DGGML_CCACHE=OFF -DCMAKE_BUILD_TYPE=Release
 if errorlevel 1 exit /b 1
 cmake --build "$build" -j --target llama-server
 exit /b %errorlevel%
@@ -2513,7 +2516,8 @@ exit /b %errorlevel%
 }
 )PS").arg(QString(repoUrl).replace("'", "''"),
           QString(slug).replace("'", "''"),
-          QDir::toNativeSeparators(toolsDir).replace("'", "''"));
+          QDir::toNativeSeparators(toolsDir).replace("'", "''"),
+          QString(sourceBranch).replace("'", "''"));
 
     m_installSourceRepo = entry.repo;
     m_installSourceLabel = flavor;
@@ -9861,6 +9865,8 @@ void AppController::rebuildModelRecommendations()
             row[QStringLiteral("minRamGb")] = m.value(QStringLiteral("min_ram_gb")).toDouble();
             row[QStringLiteral("recommendedRamGb")] = m.value(QStringLiteral("recommended_ram_gb")).toDouble();
             row[QStringLiteral("minVramGb")] = m.value(QStringLiteral("min_vram_gb")).toDouble();
+            const QString requiredEngine = m.value(QStringLiteral("required_engine")).toString();
+            row[QStringLiteral("requiredEngine")] = requiredEngine;
             row[QStringLiteral("ctxK")] = qRound(ctx / 1000.0);
             row[QStringLiteral("context")] = ctx;
             QString runLabel = runMode;
@@ -9881,6 +9887,9 @@ void AppController::rebuildModelRecommendations()
                 .arg(QString::number(requiredGb, 'f', 1))
                 .arg(qRound(ctx / 1000.0))
                 .arg(qRound(m.value(QStringLiteral("hf_downloads")).toDouble()));
+            if (!requiredEngine.isEmpty())
+                row[QStringLiteral("notes")] = row.value(QStringLiteral("notes")).toString()
+                    + QStringLiteral(" · requiere motor %1").arg(requiredEngine);
             row[QStringLiteral("fit")] = fit;
             row[QStringLiteral("score")] = score;
             row[QStringLiteral("sourcePriority")] = cookbookPriority;

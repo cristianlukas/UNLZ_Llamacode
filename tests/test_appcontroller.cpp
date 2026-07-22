@@ -518,8 +518,18 @@ void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
     QVERIFY(catalog.open(QIODevice::ReadOnly));
     const QJsonArray rows = QJsonDocument::fromJson(catalog.readAll()).array();
     bool sawTinyQwen = false;
+    bool sawNanbeige = false;
     for (const QJsonValue &v : rows) {
         const QJsonObject row = v.toObject();
+        if (row.value(QStringLiteral("name")).toString() == QLatin1String("Nanbeige/Nanbeige4.2-3B")) {
+            QCOMPARE(row.value(QStringLiteral("architecture")).toString(), QStringLiteral("nanbeige"));
+            QCOMPARE(row.value(QStringLiteral("required_engine")).toString(), QStringLiteral("nanbeige42"));
+            const QJsonArray sources = row.value(QStringLiteral("gguf_sources")).toArray();
+            QVERIFY(!sources.isEmpty());
+            QCOMPARE(sources.first().toObject().value(QStringLiteral("file")).toString(),
+                     QStringLiteral("nanbeige4.2-3b-Q4_K_M.gguf"));
+            sawNanbeige = true;
+        }
         if (row.value(QStringLiteral("name")).toString() == QLatin1String("Qwen/Qwen3.5-2B-MTP")) {
             const QJsonArray sources = row.value(QStringLiteral("gguf_sources")).toArray();
             QVERIFY(!sources.isEmpty());
@@ -530,6 +540,7 @@ void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
         }
     }
     QVERIFY(sawTinyQwen);
+    QVERIFY(sawNanbeige);
 }
 
 void AppControllerTests::createRecommendedLaunchProfileBuildsProfile()

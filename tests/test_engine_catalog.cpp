@@ -21,6 +21,13 @@ void EngineCatalogTests::catalogIncludesSourceForks()
 
     const EngineCatalogEntry official = EngineCatalog::entry(QStringLiteral("llama.cpp"));
     QVERIFY(official.variants.size() >= 3);
+
+    const EngineCatalogEntry nanbeige = EngineCatalog::entry(QStringLiteral("nanbeige42"));
+    QCOMPARE(nanbeige.repo, QStringLiteral("Nanbeige/llama.cpp"));
+    QCOMPARE(nanbeige.sourceBranch, QStringLiteral("nanbeige42"));
+    QVERIFY(!nanbeige.variants.isEmpty());
+    QVERIFY(nanbeige.variants.first().buildFromSource);
+    QCOMPARE(nanbeige.variants.first().gpuVendors, QStringList{QStringLiteral("nvidia")});
 }
 
 void EngineCatalogTests::variantCompatibilityReportsReason()

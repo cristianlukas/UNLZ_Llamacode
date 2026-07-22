@@ -27,6 +27,7 @@ struct EngineCatalogEntry {
     QString support;
     QString note;
     QList<EngineVariant> variants;
+    QString sourceBranch;
 };
 
 struct HardwareSignals {

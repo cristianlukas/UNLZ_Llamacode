@@ -361,6 +361,10 @@ La página **Binarios** incluye un catálogo curado de motores y forks:
 - Forks como `ik_llama.cpp` o `TurboQuant` se muestran con compatibilidad por
   plataforma/GPU y, cuando no publican prebuilts útiles, ofrecen build-from-source
   guiado para producir `llama-server` y registrarlo en `BinaryRegistry`.
+- `Nanbeige llama.cpp` compila la rama `nanbeige42` con CUDA para ejecutar los
+  GGUF Looped Transformer de Nanbeige4.2. Se mantiene experimental y separado del
+  motor oficial; en Windows el build guiado desactiva `ccache`, que no es fiable al
+  interceptar `cl.exe` en este fork.
 - Motores con contrato distinto (`KoboldCpp`, `llamafile`) quedan catalogados como
   opciones experimentales/manuales hasta que el launcher soporte su ciclo completo.
 
@@ -396,6 +400,15 @@ MLX/AWQ/GPTQ/EXL2 del catálogo se filtran para no ofrecer repos que requieren o
 runtime o no tienen archivo `.gguf` descargable por la app. Además, se agregan picks
 curados recientes (por ejemplo `Qwen3.5-9B-GGUF`) cuando el catálogo base no trae una
 fuente GGUF explícita.
+
+El cookbook incluye `Nanbeige4.2-3B` Q4_K_M como candidato experimental para código
+y tools. La entrada declara `required_engine: nanbeige42`: descargar el GGUF no
+implica compatibilidad con un binario oficial y el usuario debe instalar el fork
+correspondiente desde **Binarios**.
+Validación local en RTX 3090 (Q4_K_M verificado por SHA-256): ~103 tok/s de
+generación y tool-call nativa correcta en el primer turno. Sigue experimental porque
+puede sobre-generar, desobedecer formatos breves y repetir contenido tras devolver
+el resultado de una tool; por eso no se instala como perfil de sistema predeterminado.
 
 ### Scoring
 
