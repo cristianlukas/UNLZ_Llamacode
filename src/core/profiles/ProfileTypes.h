@@ -129,6 +129,8 @@ struct AgentProfile {
     bool mcpEnabled = true;         // false = no inyectar tools MCP (ahorra contexto;
                                     // las tools MCP NO están en toolCatalog, así que
                                     // enabledTools no las puede apagar — esto sí)
+    bool thinkingLeakGuard = false; // compatibilidad opt-in: no preservar thinking
+                                    // previo y cortar colas tras </think> huérfano
 
     QJsonObject toJson() const;
     static AgentProfile fromJson(const QJsonObject &obj);

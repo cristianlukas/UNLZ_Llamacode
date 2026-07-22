@@ -4292,6 +4292,7 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
     }
     cb->setDirectives(dirs);
     cb->setThinkingEnabled(m_agentThinkingEnabled);
+    cb->setThinkingLeakGuard(ap.thinkingLeakGuard);
     cb->setMcpToolsEnabled(ap.mcpEnabled);
 }
 

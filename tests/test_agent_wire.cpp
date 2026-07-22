@@ -27,6 +27,7 @@ private slots:
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
+    void thinkingLeakGuard_isOptInAndControlsTemplate();
     void buildWarmupPayload_prefillsWithoutGenerating();
     void trimStaleImages_keepsOnlyLatestCapture();
     void buildObservationMessage_wrapsImagesAsUserMultimodal();
@@ -681,16 +682,33 @@ void AgentWireTests::visibleAnswer_stripsThinkButSalvagesWhenEmpty()
     // Texto sin think: intacto.
     QCOMPARE(B::visibleAnswer(QStringLiteral("respuesta directa"), false),
              QStringLiteral("respuesta directa"));
-    // Regresión Nanbeige/otros templates agentic: respuesta válida, cierre think
-    // huérfano y repetición. Debe conservar una sola copia limpia.
+    // Política estándar (default): no adivina que la cola sea repetición.
     QCOMPARE(B::visibleAnswer(
                  QStringLiteral("Resultado correcto.\n</think>\nResultado correcto."), false),
-             QStringLiteral("Resultado correcto."));
+             QStringLiteral("Resultado correcto.\n\nResultado correcto."));
     // Un cierre huérfano al principio no debe borrar la respuesta posterior.
     QCOMPARE(B::visibleAnswer(QStringLiteral("</think>Respuesta útil"), false),
              QStringLiteral("Respuesta útil"));
     // Realmente vacío (sólo etiquetas) → vacío, no inventa.
     QVERIFY(B::visibleAnswer(QStringLiteral("<think></think>"), false).isEmpty());
+}
+
+void AgentWireTests::thinkingLeakGuard_isOptInAndControlsTemplate()
+{
+    using B = LlamaAgentBackend;
+    const QString leaked = QStringLiteral(
+        "Resultado correcto.\n</think>\nResultado correcto.");
+
+    QCOMPARE(B::visibleAnswer(leaked, false, true), QStringLiteral("Resultado correcto."));
+    QCOMPARE(B::visibleAnswer(leaked, false, false),
+             QStringLiteral("Resultado correcto.\n\nResultado correcto."));
+
+    const QJsonObject standard = B::thinkingTemplateKwargs(false, false);
+    QCOMPARE(standard.value(QStringLiteral("enable_thinking")).toBool(), false);
+    QVERIFY(!standard.contains(QStringLiteral("preserve_thinking")));
+
+    const QJsonObject guarded = B::thinkingTemplateKwargs(false, true);
+    QCOMPARE(guarded.value(QStringLiteral("preserve_thinking")).toBool(), false);
 }
 
 void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()

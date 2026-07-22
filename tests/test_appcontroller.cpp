@@ -536,7 +536,6 @@ void AppControllerTests::modelRecommendationsUseResolvableGgufNames()
             QCOMPARE(sources.first().toObject().value(QStringLiteral("repo")).toString(),
                      QStringLiteral("unsloth/Qwen3.5-2B-MTP-GGUF"));
             sawTinyQwen = true;
-            break;
         }
     }
     QVERIFY(sawTinyQwen);

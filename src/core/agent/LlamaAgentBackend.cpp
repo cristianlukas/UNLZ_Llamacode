@@ -78,7 +78,7 @@ static QString stripThinkForContext(const QString &s)
 
 // Cuando "Pensar" está apagado, algunos modelos igual streamean tags <think>
 // dentro de content. La UI y el historial deben quedarse sólo con la respuesta.
-static QString stripThinkForOutput(const QString &s)
+static QString stripThinkForOutput(const QString &s, bool truncateOrphanTail)
 {
     QString out = s;
     out.remove(QRegularExpression(QStringLiteral("<think>[\\s\\S]*?</think>"),
@@ -93,7 +93,7 @@ static QString stripThinkForOutput(const QString &s)
     // prefijo evita mostrar/persistir la cola repetida; si aparece al principio,
     // se elimina abajo y se conserva lo que siga.
     const QRegularExpressionMatch orphanClose = closeRe.match(out);
-    if (orphanClose.hasMatch()
+    if (truncateOrphanTail && orphanClose.hasMatch()
         && !out.left(orphanClose.capturedStart()).trimmed().isEmpty()
         && !out.left(orphanClose.capturedStart()).contains(
             QRegularExpression(QStringLiteral("<think\\b"),
@@ -115,10 +115,11 @@ static QString stripThinkForOutput(const QString &s)
     return out.trimmed();
 }
 
-QString LlamaAgentBackend::visibleAnswer(const QString &content, bool thinkingEnabled)
+QString LlamaAgentBackend::visibleAnswer(const QString &content, bool thinkingEnabled,
+                                         bool thinkingLeakGuard)
 {
     if (thinkingEnabled) return content;
-    const QString stripped = stripThinkForOutput(content);
+    const QString stripped = stripThinkForOutput(content, thinkingLeakGuard);
     if (!stripped.isEmpty()) return stripped;
     // El modelo metió TODO dentro de <think> y no dejó respuesta afuera: rescatar el
     // interior (sin las etiquetas) para no mostrar una burbuja vacía.
@@ -126,6 +127,15 @@ QString LlamaAgentBackend::visibleAnswer(const QString &content, bool thinkingEn
     inner.remove(QRegularExpression(QStringLiteral("</?think\\b[^>]*>"),
                                     QRegularExpression::CaseInsensitiveOption));
     return inner.trimmed();
+}
+
+QJsonObject LlamaAgentBackend::thinkingTemplateKwargs(bool thinkingEnabled,
+                                                      bool thinkingLeakGuard)
+{
+    QJsonObject kwargs{{QStringLiteral("enable_thinking"), thinkingEnabled}};
+    if (thinkingLeakGuard)
+        kwargs.insert(QStringLiteral("preserve_thinking"), false);
+    return kwargs;
 }
 
 static const QString kMcpPrefix = QStringLiteral("mcp__");
@@ -1941,11 +1951,7 @@ void LlamaAgentBackend::runCompletion()
     // Razonamiento controlado por el toggle global de la app, no por el perfil.
     payload.insert(QStringLiteral("reasoning_budget"), m_thinkingEnabled ? -1 : 0);
     payload.insert(QStringLiteral("chat_template_kwargs"),
-                   QJsonObject{{QStringLiteral("enable_thinking"), m_thinkingEnabled},
-                               // El historial wire ya pasa por stripThinkForContext;
-                               // pedir preservación sólo puede reintroducir bloques
-                               // viejos o cierres huérfanos en templates agentic.
-                               {QStringLiteral("preserve_thinking"), false}});
+                   thinkingTemplateKwargs(m_thinkingEnabled, m_thinkingLeakGuard));
 
     // Crear la burbuja del asistente (typing) ANTES de disparar el request, no
     // recién al primer token. En turnos de follow-up (tras una tool) la burbuja
@@ -2263,7 +2269,7 @@ void LlamaAgentBackend::handleStreamData()
         QString full = m_streamBase;
         if (m_thinkingEnabled && !m_streamReason.isEmpty())
             full += QStringLiteral("<think>") + m_streamReason + QStringLiteral("</think>\n");
-        full += visibleAnswer(m_streamContent, m_thinkingEnabled);
+        full += visibleAnswer(m_streamContent, m_thinkingEnabled, m_thinkingLeakGuard);
         // Chars acumulados de args de tool en streaming. Cuando el modelo genera una
         // tool (p.ej. write_file con un archivo grande) los tokens llegan como
         // delta.tool_calls.arguments, NO como content. Hay que contarlos para el
@@ -2333,7 +2339,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
         QString clean = m_streamBase;
         if (m_thinkingEnabled && !m_streamReason.isEmpty())
             clean += QStringLiteral("<think>") + m_streamReason + QStringLiteral("</think>\n");
-        clean += visibleAnswer(m_streamContent, m_thinkingEnabled);
+        clean += visibleAnswer(m_streamContent, m_thinkingEnabled, m_thinkingLeakGuard);
         QVariantMap m = m_messages[m_curAsstIdx].toMap();
         m[QStringLiteral("content")] = clean;
         m_messages[m_curAsstIdx] = m;

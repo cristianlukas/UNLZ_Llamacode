@@ -23,6 +23,7 @@ private slots:
     void modelProfile_jsonRoundTrip();
     void runtimePreset_jsonRoundTrip();
     void launchProfile_jsonRoundTrip();
+    void agentProfile_thinkingLeakGuardRoundTripAndDefault();
     void masterConfig_jsonRoundTrip();
     void masterConfig_legacyMigration();
 
@@ -148,6 +149,22 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     // browserAutomation ausente → default "inherit".
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).browserAutomation,
              QStringLiteral("inherit"));
+}
+
+void ProfilesTests::agentProfile_thinkingLeakGuardRoundTripAndDefault()
+{
+    AgentProfile profile;
+    profile.id = QStringLiteral("nanbeige-agent");
+    profile.name = QStringLiteral("Nanbeige compat");
+    profile.thinkingLeakGuard = true;
+    const AgentProfile restored = AgentProfile::fromJson(profile.toJson());
+    QVERIFY(restored.thinkingLeakGuard);
+
+    // Perfiles viejos y perfiles nuevos sin opt-in conservan el comportamiento
+    // estándar del template/modelo.
+    QVERIFY(!AgentProfile::fromJson(QJsonObject{}).thinkingLeakGuard);
+    for (const AgentProfile &preset : AgentProfile::systemPresets())
+        QVERIFY(!preset.thinkingLeakGuard);
 }
 
 void ProfilesTests::masterConfig_jsonRoundTrip()

@@ -66,6 +66,7 @@ public:
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
+    void setThinkingLeakGuard(bool enabled) { m_thinkingLeakGuard = enabled; }
     void setStablePhasePrefix(bool enabled) { m_stablePhasePrefix = enabled; }
     bool stablePhasePrefixForTest() const { return m_stablePhasePrefix; }
     QVariantMap efficiencySummary() const;
@@ -228,7 +229,10 @@ public:
     // (Qwen con thinking off suele hacerlo) y al quitar quedaría vacío, RESCATA el
     // texto interno en vez de mostrar una burbuja vacía: silencio es peor que
     // verboso, y era la causa de los saludos "sin respuesta". PURA → unit-testeable.
-    static QString visibleAnswer(const QString &content, bool thinkingEnabled);
+    static QString visibleAnswer(const QString &content, bool thinkingEnabled,
+                                 bool thinkingLeakGuard = false);
+    static QJsonObject thinkingTemplateKwargs(bool thinkingEnabled,
+                                              bool thinkingLeakGuard);
 
     // Une los deltas incrementales de tool_calls (streaming OpenAI) en el
     // acumulador `acc` (index → {id,name,arguments}). id/name se setean cuando
@@ -440,6 +444,7 @@ private:
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;
+    bool    m_thinkingLeakGuard = false;
     bool    m_stablePhasePrefix = true;
     QVariantList m_efficiencyRequests;
     // Directivas del system prompt ON (keys de directiveCatalog). Sin setear

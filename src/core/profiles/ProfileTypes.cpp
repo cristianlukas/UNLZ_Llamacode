@@ -155,6 +155,7 @@ QJsonObject AgentProfile::toJson() const {
     o["temperature"] = temperature;
     o["systemExtra"] = systemExtra;
     o["mcpEnabled"] = mcpEnabled;
+    o["thinkingLeakGuard"] = thinkingLeakGuard;
     return o;
 }
 AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
@@ -168,6 +169,7 @@ AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
     p.temperature = o["temperature"].toDouble(-1.0);
     p.systemExtra = o["systemExtra"].toString();
     p.mcpEnabled = o["mcpEnabled"].toBool(true);   // legacy sin la clave = MCP on
+    p.thinkingLeakGuard = o["thinkingLeakGuard"].toBool(false);
     return p;
 }
 QString AgentProfile::generateId() { return newId(); }

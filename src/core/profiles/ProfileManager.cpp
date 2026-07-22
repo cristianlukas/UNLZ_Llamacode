@@ -524,7 +524,7 @@ static QVariantMap agentProfileToVariant(const AgentProfile &p)
             {"enabledTools", p.enabledTools}, {"directives", p.directives},
             {"approvalMode", p.approvalMode}, {"thinking", p.thinking},
             {"temperature", p.temperature}, {"systemExtra", p.systemExtra},
-            {"mcpEnabled", p.mcpEnabled}};
+            {"mcpEnabled", p.mcpEnabled}, {"thinkingLeakGuard", p.thinkingLeakGuard}};
 }
 
 namespace {
@@ -683,6 +683,8 @@ bool ProfileManager::updateAgentProfile(const QVariantMap &data)
     if (data.contains("temperature"))  p.temperature = data.value("temperature").toDouble();
     if (data.contains("systemExtra"))  p.systemExtra = data.value("systemExtra").toString();
     if (data.contains("mcpEnabled"))   p.mcpEnabled = data.value("mcpEnabled").toBool();
+    if (data.contains("thinkingLeakGuard"))
+        p.thinkingLeakGuard = data.value("thinkingLeakGuard").toBool();
     bool ok = m_agentProfiles.update(p);
     if (ok) save();
     return ok;

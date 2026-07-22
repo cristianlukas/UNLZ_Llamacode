@@ -248,6 +248,11 @@ El agente nativo combina dos guardas anti-loop: bloquea llamadas idénticas desp
 de tres repeticiones y detecta espirales de fallos equivalentes aunque el modelo
 cambie comandos o argumentos. Un éxito o una escritura comprobable reinicia la
 racha, reduciendo falsos positivos cuando existe progreso real.
+Los perfiles de agente editables incluyen además la opción de compatibilidad
+`thinkingLeakGuard`, apagada por defecto. Al activarla para un modelo cuyo template
+filtra razonamiento, el harness pide no preservar thinking entre llamadas de tools
+y descarta la cola posterior a un `</think>` huérfano; los demás perfiles conservan
+el comportamiento estándar del modelo/template.
 También vigila el stream de cada generación: si un bloque largo se repite tres
 veces consecutivas, conserva una copia, detiene esa generación y registra
 `stream_repetition`. Esto cubre loops de razonamiento/respuesta que ocurren antes

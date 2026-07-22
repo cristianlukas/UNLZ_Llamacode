@@ -1084,7 +1084,8 @@ Item {
                         property var edit: ({ id: "", name: "", system: false,
                                               enabledTools: [], directives: [],
                                               approvalMode: "ask", thinking: false,
-                                              temperature: -1, systemExtra: "" })
+                                              temperature: -1, systemExtra: "",
+                                              thinkingLeakGuard: false })
                         property var toolGroups: []     // agrupado por categoría
                         property var directiveItems: [] // catálogo de directivas
                         property int enabledCount: 0
@@ -1162,6 +1163,7 @@ Item {
                                      directives: (p.directives || []).slice(),
                                      approvalMode: p.approvalMode || "ask",
                                      thinking: p.thinking === true,
+                                     thinkingLeakGuard: p.thinkingLeakGuard === true,
                                      temperature: (p.temperature === undefined ? -1 : p.temperature),
                                      systemExtra: p.systemExtra || "" }
                             apNameField.text = edit.name
@@ -1179,6 +1181,7 @@ Item {
                                 "directives": edit.directives,
                                 "approvalMode": approvalCombo.currentValue || "ask",
                                 "thinking": thinkingSwitch.checked,
+                                "thinkingLeakGuard": thinkingLeakGuardSwitch.checked,
                                 "temperature": (tempField.text.trim().length && !isNaN(parseFloat(tempField.text)))
                                                ? parseFloat(tempField.text) : -1,
                                 "systemExtra": extraField.text
@@ -1320,6 +1323,14 @@ Item {
                                     Switch {
                                         id: thinkingSwitch
                                         checked: agentProfilesSection.edit.thinking
+                                    }
+
+                                    Text { text: "Compatibilidad thinking"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    Switch {
+                                        id: thinkingLeakGuardSwitch
+                                        checked: agentProfilesSection.edit.thinkingLeakGuard === true
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Opt-in por perfil: no preserva razonamiento previo y corta colas repetidas después de un </think> huérfano. Dejalo apagado salvo que el modelo presente esa fuga."
                                     }
 
                                     Text { text: "Indicador de escritorio"; color: Theme.textSecondary; font.pixelSize: 12 }
