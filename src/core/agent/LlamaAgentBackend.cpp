@@ -87,6 +87,19 @@ static QString stripThinkForOutput(const QString &s)
                                     QRegularExpression::CaseInsensitiveOption);
     const QRegularExpression closeRe(QStringLiteral("</think>"),
                                      QRegularExpression::CaseInsensitiveOption);
+    // Algunos templates emiten una respuesta final válida y luego filtran un
+    // `</think>` huérfano antes de repetirla. Con thinking apagado ese cierre no
+    // puede aportar semántica. Si ya hay una respuesta sustancial, conservar el
+    // prefijo evita mostrar/persistir la cola repetida; si aparece al principio,
+    // se elimina abajo y se conserva lo que siga.
+    const QRegularExpressionMatch orphanClose = closeRe.match(out);
+    if (orphanClose.hasMatch()
+        && !out.left(orphanClose.capturedStart()).trimmed().isEmpty()
+        && !out.left(orphanClose.capturedStart()).contains(
+            QRegularExpression(QStringLiteral("<think\\b"),
+                               QRegularExpression::CaseInsensitiveOption))) {
+        out.truncate(orphanClose.capturedStart());
+    }
     QRegularExpressionMatch open = openRe.match(out);
     while (open.hasMatch()) {
         const QRegularExpressionMatch close = closeRe.match(out, open.capturedEnd());
@@ -1928,7 +1941,11 @@ void LlamaAgentBackend::runCompletion()
     // Razonamiento controlado por el toggle global de la app, no por el perfil.
     payload.insert(QStringLiteral("reasoning_budget"), m_thinkingEnabled ? -1 : 0);
     payload.insert(QStringLiteral("chat_template_kwargs"),
-                   QJsonObject{{QStringLiteral("enable_thinking"), m_thinkingEnabled}});
+                   QJsonObject{{QStringLiteral("enable_thinking"), m_thinkingEnabled},
+                               // El historial wire ya pasa por stripThinkForContext;
+                               // pedir preservación sólo puede reintroducir bloques
+                               // viejos o cierres huérfanos en templates agentic.
+                               {QStringLiteral("preserve_thinking"), false}});
 
     // Crear la burbuja del asistente (typing) ANTES de disparar el request, no
     // recién al primer token. En turnos de follow-up (tras una tool) la burbuja

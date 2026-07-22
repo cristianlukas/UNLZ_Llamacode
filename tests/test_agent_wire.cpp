@@ -681,6 +681,14 @@ void AgentWireTests::visibleAnswer_stripsThinkButSalvagesWhenEmpty()
     // Texto sin think: intacto.
     QCOMPARE(B::visibleAnswer(QStringLiteral("respuesta directa"), false),
              QStringLiteral("respuesta directa"));
+    // Regresión Nanbeige/otros templates agentic: respuesta válida, cierre think
+    // huérfano y repetición. Debe conservar una sola copia limpia.
+    QCOMPARE(B::visibleAnswer(
+                 QStringLiteral("Resultado correcto.\n</think>\nResultado correcto."), false),
+             QStringLiteral("Resultado correcto."));
+    // Un cierre huérfano al principio no debe borrar la respuesta posterior.
+    QCOMPARE(B::visibleAnswer(QStringLiteral("</think>Respuesta útil"), false),
+             QStringLiteral("Respuesta útil"));
     // Realmente vacío (sólo etiquetas) → vacío, no inventa.
     QVERIFY(B::visibleAnswer(QStringLiteral("<think></think>"), false).isEmpty());
 }

@@ -409,6 +409,9 @@ Validación local en RTX 3090 (Q4_K_M verificado por SHA-256): ~103 tok/s de
 generación y tool-call nativa correcta en el primer turno. Sigue experimental porque
 puede sobre-generar, desobedecer formatos breves y repetir contenido tras devolver
 el resultado de una tool; por eso no se instala como perfil de sistema predeterminado.
+El harness mitiga ese comportamiento sin acoplarse al modelo: no preserva bloques de
+thinking en el historial wire y corta colas posteriores a un `</think>` huérfano
+cuando pensar está desactivado, conservando la respuesta válida anterior.
 
 ### Scoring
 
