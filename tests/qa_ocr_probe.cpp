@@ -12,7 +12,7 @@
 // lógico y físico coinciden y taparían el bug). Así se encontró y se verificó el
 // fix de coords físicas: el acuerdo en el monitor al 150% pasó de 10% a 80%.
 //
-// Uso:  qa_ocr_probe.exe [texto-a-buscar]
+// Uso:  qa_ocr_probe.exe [--self-contained] [texto-a-buscar]
 // Sale 0 si todas las pantallas acuerdan >=70%, 1 si alguna no, 2 sin muestra.
 
 #include "core/automation/DesktopAutomationBackend.h"
@@ -20,17 +20,68 @@
 #include "core/automation/OcrTextLocator.h"
 #include "core/automation/FuzzyMatch.h"
 
-#include <QGuiApplication>
+#include <QApplication>
+#include <QLabel>
+#include <QPushButton>
 #include <QScreen>
 #include <QTextStream>
+#include <QThread>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <memory>
+#include <vector>
 
 
 static QTextStream out(stdout);
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
-    const QString needle = argc > 1 ? QString::fromLocal8Bit(argv[1]) : QString();
+    QApplication app(argc, argv);
+    bool selfContained = false;
+    QString needle;
+    for (int i = 1; i < argc; ++i) {
+        const QString arg = QString::fromLocal8Bit(argv[i]);
+        if (arg == QLatin1String("--self-contained")) selfContained = true;
+        else if (needle.isEmpty()) needle = arg;
+    }
+
+    // Una superficie por monitor hace reproducible el probe: aporta texto con
+    // controles UIA equivalentes en 100/125/150% sin depender de que el operador
+    // abra y acomode manualmente otra aplicación.
+    std::vector<std::unique_ptr<QWidget>> fixtures;
+    if (selfContained) {
+        int index = 0;
+        for (QScreen *screen : QGuiApplication::screens()) {
+            auto fixture = std::make_unique<QWidget>();
+            fixture->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint
+                                    | Qt::WindowStaysOnTopHint);
+            fixture->setWindowTitle(QStringLiteral("LlamaCode OCR QA %1").arg(++index));
+            fixture->setStyleSheet(QStringLiteral("background:white; color:#182034;"));
+            auto *layout = new QVBoxLayout(fixture.get());
+            layout->setContentsMargins(48, 48, 48, 48);
+            layout->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+            auto *heading = new QLabel(QStringLiteral("LLAMACODE OCR VALIDACIÓN 7429"), fixture.get());
+            heading->setStyleSheet(QStringLiteral("font:700 22px 'Segoe UI'; color:#182034;"));
+            layout->addWidget(heading);
+            for (const QString &text : {QStringLiteral("Archivo de prueba"),
+                                        QStringLiteral("Configuración visual"),
+                                        QStringLiteral("Confirmar operación")}) {
+                auto *button = new QPushButton(text, fixture.get());
+                button->setAccessibleName(text);
+                button->setMinimumHeight(44);
+                button->setFixedWidth(420);
+                layout->addWidget(button);
+            }
+            const QRect area = screen->availableGeometry();
+            fixture->setGeometry(area);
+            fixture->show();
+            fixtures.push_back(std::move(fixture));
+        }
+        app.processEvents();
+        QThread::msleep(900);
+        app.processEvents();
+        if (needle.isEmpty()) needle = QStringLiteral("Archivo");
+    }
 
     out << "== Motor OCR ==\n";
     out << "  available : " << (OcrEngine::available() ? "SI" : "NO") << "\n";
