@@ -683,10 +683,7 @@ void AppControllerTests::loopTaskRunsBodyUntilGoalMet()
     QSignalSpy fin(&app, &AppController::taskRunFinished);
     app.runTaskBodyForTest(id);
 
-    for (int i = 0; i < 100 && fin.isEmpty(); ++i)
-        QTest::qWait(10);
-
-    QVERIFY(!fin.isEmpty());
+    QTRY_VERIFY_WITH_TIMEOUT(!fin.isEmpty(), 5000);
     const QList<QVariant> args = fin.takeFirst();
     QCOMPARE(args.at(2).toString(), QStringLiteral("ok"));   // status final
     // Cuerpo corrió 2 veces (iter1 GOAL_NOT_MET → iter2 GOAL_MET).
@@ -711,10 +708,7 @@ void AppControllerTests::loopTaskStopsAtMaxIterations()
     QSignalSpy fin(&app, &AppController::taskRunFinished);
     app.runTaskBodyForTest(id);
 
-    for (int i = 0; i < 100 && fin.isEmpty(); ++i)
-        QTest::qWait(10);
-
-    QVERIFY(!fin.isEmpty());
+    QTRY_VERIFY_WITH_TIMEOUT(!fin.isEmpty(), 5000);
     QCOMPARE(fake->bodyRuns(), 3);   // exactamente maxIter corridas del cuerpo
 }
 
@@ -738,9 +732,7 @@ void AppControllerTests::dataDrivenTaskRunsBodyPerRow()
     QSignalSpy fin(&app, &AppController::taskRunFinished);
     app.runTaskBodyForTest(id);
 
-    for (int i = 0; i < 200 && fin.count() < 2; ++i)
-        QTest::qWait(10);
-
+    QTRY_COMPARE_WITH_TIMEOUT(fin.count(), 2, 5000);
     QCOMPARE(fake->bodyRuns(), 2);              // una corrida del cuerpo por fila
     QCOMPARE(fin.count(), 2);                   // cada fila = un registro/finished
     // La última corrida sustituyó la 2da fila (Beto/40), sin dejar el placeholder.
@@ -769,7 +761,7 @@ void AppControllerTests::taskRetriesBodyOnFailure()
     QSignalSpy fin(&app, &AppController::taskRunFinished);
     app.runTaskBodyForTest(id);
     // Reintento asíncrono: esperar los 2 finished (1er fallo + relanzamiento ok).
-    for (int i = 0; i < 300 && fin.count() < 2; ++i) QTest::qWait(10);
+    QTRY_COMPARE_WITH_TIMEOUT(fin.count(), 2, 8000);
 
     QCOMPARE(fake->bodyRuns(), 2);                       // falló, reintentó
     QCOMPARE(fin.count(), 2);
@@ -799,7 +791,7 @@ void AppControllerTests::datasetAbortStopsOnError()
 
     QSignalSpy fin(&app, &AppController::taskRunFinished);
     app.runTaskBodyForTest(id);
-    for (int i = 0; i < 200 && fin.isEmpty(); ++i) QTest::qWait(10);
+    QTRY_VERIFY_WITH_TIMEOUT(!fin.isEmpty(), 5000);
     QTest::qWait(60);   // dar chance a un (indebido) avance de fila
 
     QVERIFY(!fin.isEmpty());
