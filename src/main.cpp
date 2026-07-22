@@ -4,6 +4,7 @@
 #include "ThemeProvider.h"
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/TaskScheduler.h"
+#include "core/tasks/SchedulerDaemonRegistration.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -87,7 +88,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.64");
+    app.setApplicationVersion("0.1.65");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
 
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
@@ -123,6 +124,19 @@ int main(int argc, char *argv[])
         if (!QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
             return 0;
         settingsWatch.start();
+        auto writeHeartbeat = []() {
+            QFile file(SchedulerDaemonRegistration::heartbeatPath());
+            if (file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+                file.write(QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs).toUtf8());
+        };
+        QTimer heartbeat;
+        heartbeat.setInterval(15000);
+        QObject::connect(&heartbeat, &QTimer::timeout, &app, writeHeartbeat);
+        QObject::connect(&app, &QCoreApplication::aboutToQuit, &app, []() {
+            QFile::remove(SchedulerDaemonRegistration::heartbeatPath());
+        });
+        writeHeartbeat();
+        heartbeat.start();
         scheduler.setEnabled(true);
         return app.exec();
     }

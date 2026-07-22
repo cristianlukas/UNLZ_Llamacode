@@ -3960,7 +3960,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
         fn(QStringLiteral("project_brain"),
            QStringLiteral("Regenera y devuelve un índice persistente y liviano del proyecto: rutas, tamaños, fechas y distribución por extensión. No copia contenido fuente."),
            QJsonObject{
-               {QStringLiteral("max_files"), intProp(QStringLiteral("Máximo de archivos a indexar (1-20000, default 4000)."))}},
+               {QStringLiteral("max_files"), intProp(QStringLiteral("Máximo de archivos a indexar (1-20000, default 4000)."))},
+               {QStringLiteral("changed_paths"), QJsonObject{
+                    {QStringLiteral("type"), QStringLiteral("array")},
+                    {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}},
+                    {QStringLiteral("description"), QStringLiteral("Rutas modificadas por watcher para actualización incremental sin recorrer todo el repo.")}}}},
            QJsonArray{}),
         fn(QStringLiteral("grep"),
            QStringLiteral("Busca una EXPRESIÓN REGULAR en los archivos del proyecto (recursivo). "

@@ -39,6 +39,10 @@ Tasks y Automations preservan un objeto `workflow` opcional. Los registros de
 historial preservan `workflowState` y `metrics`. Los registros legacy siguen
 siendo válidos.
 
+La vista visual es una proyección editable y sin pérdida: conserva campos avanzados,
+ramas, argumentos, presupuestos y metadata que no representa gráficamente, y al
+guardar modifica únicamente los campos visibles de cada nodo.
+
 ## Benchmark A/B
 
 Comparar con el mismo modelo, quant, contexto, prompt, temperatura y hardware:
@@ -52,6 +56,10 @@ Registrar tokens de prompt/generados, tiempos de prefill/generación/pared,
 tool calls, bytes de tools, éxito, reparaciones, RAM y VRAM. Una variante pasa
 el gate si reduce al menos 15% tokens o 10% tiempo sin reducir éxito ni producir
 ediciones incorrectas.
+
+El primer resultado exitoso de cada combinación suite/perfil/target queda marcado
+automáticamente como baseline. Las corridas posteriores persisten su ID y los deltas
+de tiempo y calidad, para evitar comparaciones manuales ambiguas.
 
 ## Límites de seguridad
 
@@ -70,14 +78,24 @@ pasadas. El resultado persistido aporta calidad, tiempo, tokens y uso de tools.
 
 ## Project Brain incremental
 
-El manifiesto schema v2 persiste únicamente metadata y SHA-256. Un refresh reutiliza
-el hash cuando tamaño y mtime coinciden, calcula contenido sólo para altas/cambios y
-reporta `changes.added/updated/removed/reused`. El cache es regenerable y no guarda
-contenido fuente.
+El manifiesto schema v2 persiste únicamente metadata y SHA-256. Un refresh completo
+reutiliza el hash cuando tamaño y mtime coinciden. Después de una escritura del agente,
+o al recibir `changed_paths`, actualiza sólo esos archivos/subárboles y reporta
+`scanMode=events` y `changes.added/updated/removed/reused`. El cache es regenerable y
+no guarda contenido fuente.
 
 ## Parser estructural opcional
 
-`read_file(compact=true)` intenta `tree-sitter parse --quiet` si encuentra el CLI (o
-`LLAMACODE_TREE_SITTER`) y el archivo existe. Sólo marca `parserValidated=true` ante
-un árbol sin `ERROR`/`MISSING`; cualquier ausencia, timeout o gramática no instalada
-cae automáticamente al validador lexical conservador.
+`read_file(compact=true)` intenta `tree-sitter parse --xml` si encuentra el CLI (o
+`LLAMACODE_TREE_SITTER`) y el archivo existe. La vista se construye con las hojas del
+árbol y conserva el mapeo exacto al byte original. Sólo marca
+`parserBackend=tree-sitter-ast` ante un árbol completo sin `ERROR`/`MISSING`; cualquier
+ausencia, timeout, gramática no instalada o mapeo dudoso cae automáticamente al
+validador lexical conservador.
+
+## Scheduler persistente
+
+Al habilitar Tasks programadas se registra el companion `--scheduler-daemon` en el
+inicio de sesión del sistema operativo. Un heartbeat permite distinguir registro y
+proceso activo; deshabilitar el scheduler elimina el registro. El daemon conserva el
+lock de instancia e IPC existentes.

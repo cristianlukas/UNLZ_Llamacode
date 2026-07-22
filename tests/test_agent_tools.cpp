@@ -142,6 +142,7 @@ void AgentToolsTests::projectBrain_persistsWorkspaceIndex()
     const QVariantMap third = call("project_brain", {{"max_files", 100}});
     const QJsonObject changed = QJsonDocument::fromJson(
         third.value("result").toString().toUtf8()).object();
+    QCOMPARE(changed.value("scanMode").toString(), QStringLiteral("events"));
     QVERIFY(changed.value("changes").toObject().value("updated").toInt() >= 1);
 }
 

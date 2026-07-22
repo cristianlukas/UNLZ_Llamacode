@@ -731,6 +731,9 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
         result = runNative(name, args, cwd, out, &ok);
     }
 
+    if (ok && out.value(QStringLiteral("isWrite")).toBool())
+        m_projectBrainDirtyPaths.insert(out.value(QStringLiteral("absPath")).toString());
+
     out[QStringLiteral("result")] = result;
     out[QStringLiteral("ok")] = ok;
     emit toolExecuted(out);
@@ -1130,8 +1133,14 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return QString::fromUtf8(raw);
     }
     if (name == QLatin1String("project_brain")) {
-        const QVariantMap brain = ProjectBrain::refresh(
-            cwd, qBound(100, args.value(QStringLiteral("max_files")).toInt(4000), 20000));
+        QStringList changed;
+        for (const QJsonValue &value : args.value(QStringLiteral("changed_paths")).toArray())
+            changed.append(value.toString());
+        changed.append(m_projectBrainDirtyPaths.values());
+        const int maxFiles = qBound(100, args.value(QStringLiteral("max_files")).toInt(4000), 20000);
+        const QVariantMap brain = changed.isEmpty() ? ProjectBrain::refresh(cwd, maxFiles)
+                                                    : ProjectBrain::update(cwd, changed, maxFiles);
+        m_projectBrainDirtyPaths.clear();
         if (ok) *ok = !brain.contains(QStringLiteral("error"));
         return QString::fromUtf8(QJsonDocument::fromVariant(brain).toJson(QJsonDocument::Compact));
     }

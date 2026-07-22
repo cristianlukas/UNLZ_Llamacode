@@ -3,17 +3,30 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QStandardPaths>
+#include <QXmlStreamReader>
+#include <QProcessEnvironment>
 
 namespace {
-bool treeSitterValidates(const QString &fileName)
+bool onlyWhitespace(const QByteArray &bytes)
 {
-    if (!QFileInfo::exists(fileName)) return false;
+    for (const char c : bytes)
+        if (c != ' ' && c != '\t' && c != '\r' && c != '\n') return false;
+    return true;
+}
+
+bool treeSitterCompact(const QString &fileName, const QByteArray &source,
+                       StructuredSourceView::Result *out)
+{
+    if (!out || !QFileInfo::exists(fileName)) return false;
     QString executable = QString::fromLocal8Bit(qgetenv("LLAMACODE_TREE_SITTER"));
     if (executable.isEmpty()) executable = QStandardPaths::findExecutable(QStringLiteral("tree-sitter"));
     if (executable.isEmpty()) return false;
     QProcess process;
     process.setProcessChannelMode(QProcess::MergedChannels);
-    process.start(executable, {QStringLiteral("parse"), QStringLiteral("--quiet"),
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("NO_COLOR"), QStringLiteral("1"));
+    process.setProcessEnvironment(env);
+    process.start(executable, {QStringLiteral("parse"), QStringLiteral("--xml"),
                                QFileInfo(fileName).absoluteFilePath()});
     if (!process.waitForStarted(1000) || !process.waitForFinished(3000)) {
         process.kill();
@@ -21,8 +34,54 @@ bool treeSitterValidates(const QString &fileName)
         return false;
     }
     const QByteArray output = process.readAll();
-    return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0
-        && !output.contains("ERROR") && !output.contains("MISSING");
+    if (process.exitStatus() != QProcess::NormalExit || process.exitCode() != 0
+        || output.contains("ERROR") || output.contains("MISSING")) return false;
+
+    struct XmlNode { bool hasChild = false; QString text; };
+    QVector<XmlNode> stack;
+    QStringList tokens;
+    QXmlStreamReader xml(output);
+    while (!xml.atEnd()) {
+        xml.readNext();
+        if (xml.isStartElement()) {
+            if (!stack.isEmpty()) stack.last().hasChild = true;
+            stack.append(XmlNode{});
+        } else if (xml.isCharacters() && !stack.isEmpty()) {
+            stack.last().text += xml.text();
+        } else if (xml.isEndElement() && !stack.isEmpty()) {
+            const XmlNode node = stack.takeLast();
+            if (!node.hasChild && !node.text.isEmpty()) tokens.append(node.text);
+        }
+    }
+    if (xml.hasError() || tokens.isEmpty()) return false;
+
+    QByteArray compact;
+    QVector<StructuredSourceView::Segment> segments;
+    int cursor = 0;
+    for (const QString &tokenText : tokens) {
+        const QByteArray token = tokenText.toUtf8();
+        if (token.isEmpty()) continue;
+        const int at = source.indexOf(token, cursor);
+        if (at < cursor || !onlyWhitespace(source.mid(cursor, at - cursor))) return false;
+        if (!compact.isEmpty()) {
+            const char a = compact.back(), b = token.front();
+            const bool wordA = a == '_' || (a >= '0' && a <= '9') || (a >= 'A' && a <= 'Z') || (a >= 'a' && a <= 'z');
+            const bool wordB = b == '_' || (b >= '0' && b <= '9') || (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z');
+            if (wordA && wordB) compact.append(' ');
+        }
+        const int compactStart = compact.size();
+        compact.append(token);
+        for (int i = 0; i < token.size(); ++i)
+            segments.append({compactStart + i, at + i, 1});
+        cursor = at + token.size();
+    }
+    if (!onlyWhitespace(source.mid(cursor)) || compact.isEmpty()) return false;
+    out->compact = QString::fromUtf8(compact);
+    out->segments = segments;
+    out->parserBackend = QStringLiteral("tree-sitter-ast");
+    out->parserValidated = true;
+    out->safe = true;
+    return true;
 }
 }
 
@@ -45,10 +104,7 @@ StructuredSourceView::Result StructuredSourceView::build(const QString &source,
         out.error = QStringLiteral("lenguaje sensible a indentacion: usar fuente exacta");
         return out;
     }
-    if (treeSitterValidates(fileName)) {
-        out.parserBackend = QStringLiteral("tree-sitter");
-        out.parserValidated = true;
-    }
+    if (treeSitterCompact(fileName, utf8, &out)) return out;
 
     QByteArray compact;
     bool string = false, character = false, lineComment = false, blockComment = false;

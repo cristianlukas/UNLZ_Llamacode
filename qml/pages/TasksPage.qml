@@ -1008,11 +1008,12 @@ Item {
             if (workflowJsonField.text.trim().length === 0) return
             try {
                 const def = JSON.parse(workflowJsonField.text)
-                const ids = Object.keys(def.steps || {})
-                for (let i = 0; i < ids.length; ++i) {
-                    const step = def.steps[ids[i]] || {}
-                    workflowVisualModel.append({ stepId: ids[i], stepType: step.type || "agent",
-                        stepNext: step.next || step.onSuccess || "", stepPrompt: step.prompt || "" })
+                const rows = App.workflowVisualRows(def)
+                for (let i = 0; i < rows.length; ++i) {
+                    const row = rows[i]
+                    workflowVisualModel.append({ stepId: row.stepId, stepType: row.stepType,
+                        stepNext: row.stepNext || "", stepPrompt: row.stepPrompt || "",
+                        routeKey: row.routeKey || "", originalStepJson: JSON.stringify(row.originalStep || {}) })
                 }
                 workflowJsonError.text = App.validateWorkflow(def)
             } catch (e) { workflowJsonError.text = "Workflow JSON inválido: " + e }
@@ -1022,17 +1023,16 @@ Item {
             let def = { schemaVersion: 1, entry: "", steps: {} }
             try { if (workflowJsonField.text.trim().length > 0) def = JSON.parse(workflowJsonField.text) }
             catch (e) {}
-            def.schemaVersion = 1
-            def.steps = {}
+            const rows = []
             for (let i = 0; i < workflowVisualModel.count; ++i) {
                 const row = workflowVisualModel.get(i)
-                const step = { type: row.stepType }
-                if (row.stepNext.length > 0) step.next = row.stepNext
-                if (row.stepPrompt.length > 0) step.prompt = row.stepPrompt
-                def.steps[row.stepId] = step
+                let original = {}
+                try { original = JSON.parse(row.originalStepJson || "{}") } catch (e) {}
+                rows.push({ stepId: row.stepId, stepType: row.stepType,
+                    stepNext: row.stepNext, stepPrompt: row.stepPrompt,
+                    routeKey: row.routeKey, originalStep: original })
             }
-            if (!def.entry || !def.steps[def.entry])
-                def.entry = workflowVisualModel.count > 0 ? workflowVisualModel.get(0).stepId : ""
+            def = App.mergeWorkflowVisual(def, rows)
             workflowJsonField.text = workflowVisualModel.count > 0 ? JSON.stringify(def, null, 2) : ""
             workflowJsonError.text = workflowVisualModel.count > 0 ? App.validateWorkflow(def) : ""
         }
@@ -1048,7 +1048,8 @@ Item {
             }
             if (workflowVisualModel.count > 0)
                 workflowVisualModel.setProperty(workflowVisualModel.count - 1, "stepNext", id)
-            workflowVisualModel.append({ stepId: id, stepType: "agent", stepNext: "", stepPrompt: "" })
+            workflowVisualModel.append({ stepId: id, stepType: "agent", stepNext: "", stepPrompt: "",
+                routeKey: "next", originalStepJson: "{}" })
             applyVisualWorkflow()
         }
 

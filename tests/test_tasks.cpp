@@ -5,6 +5,7 @@
 #include <QtTest>
 #include <functional>
 #include "core/tasks/TaskStore.h"
+#include "core/tasks/SchedulerDaemonRegistration.h"
 
 class TasksTests : public QObject
 {
@@ -29,6 +30,7 @@ private slots:
     void loop_stopsEarlyWhenGoalMet();
     void loop_composeProgressCarriesPriorVerdict();
     void verifyProfile_routesOnlyWhenSetAndDifferent();
+    void schedulerDaemon_quotesExecutablePath();
 };
 
 static QVariantMap sampleTask()
@@ -54,6 +56,15 @@ static QVariantMap sampleTask()
 void TasksTests::initTestCase()
 {
     QStandardPaths::setTestModeEnabled(true);
+}
+
+void TasksTests::schedulerDaemon_quotesExecutablePath()
+{
+    const QString command = SchedulerDaemonRegistration::startupCommand(
+        QStringLiteral("C:/Program Files/LlamaCode/LlamaCode.exe"));
+    QVERIFY(command.startsWith(QLatin1Char('"')));
+    QVERIFY(command.contains(QStringLiteral("--scheduler-daemon")));
+    QVERIFY(command.contains(QStringLiteral("Program Files")));
 }
 
 void TasksTests::jsonRoundTrip()

@@ -51,6 +51,8 @@
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
+#include "core/tasks/WorkflowVisualModel.h"
+#include "core/tasks/SchedulerDaemonRegistration.h"
 #include "core/ToolCallingSupport.h"
 #include "core/diag/LogTriage.h"
 #include <QtConcurrent>
@@ -955,6 +957,11 @@ AppController::AppController(QObject *parent) : QObject(parent)
         runAutomation(id);
     });
     if (s.value(QStringLiteral("tasks/schedulerEnabled"), false).toBool()) {
+        QString registrationError;
+        SchedulerDaemonRegistration::setEnabled(true, QCoreApplication::applicationFilePath(),
+                                                &registrationError);
+        if (!registrationError.isEmpty())
+            appendServerEvent(QStringLiteral("scheduler"), registrationError);
         const bool detached = !QStandardPaths::isTestModeEnabled()
             && QProcess::startDetached(QCoreApplication::applicationFilePath(),
                                        {QStringLiteral("--scheduler-daemon")});
@@ -5123,6 +5130,17 @@ QString AppController::validateWorkflow(const QVariantMap &definition) const
     return WorkflowEngine::validate(QJsonObject::fromVariantMap(definition));
 }
 
+QVariantList AppController::workflowVisualRows(const QVariantMap &definition) const
+{
+    return WorkflowVisualModel::rows(definition);
+}
+
+QVariantMap AppController::mergeWorkflowVisual(const QVariantMap &definition,
+                                                const QVariantList &rows) const
+{
+    return WorkflowVisualModel::merge(definition, rows);
+}
+
 // Arranca el cuerpo de una Task: setea el estado de corrida, inicializa el bucle
 // y manda el primer prompt. Separado de runTask (que hace el gating de
 // server/agente) para poder ejercitar el ciclo del bucle en tests sin un
@@ -6595,6 +6613,11 @@ void AppController::setChatPersonaDesigner(bool enabled)
 void AppController::setTasksSchedulerEnabled(bool on)
 {
     QSettings().setValue(QStringLiteral("tasks/schedulerEnabled"), on);
+    QString registrationError;
+    if (!QStandardPaths::isTestModeEnabled()
+        && !SchedulerDaemonRegistration::setEnabled(on, QCoreApplication::applicationFilePath(),
+                                                     &registrationError))
+        emit serverError(registrationError);
     if (!m_scheduler) return;
     m_scheduler->setEnabled(false);
     if (on && (QStandardPaths::isTestModeEnabled()
@@ -6602,6 +6625,11 @@ void AppController::setTasksSchedulerEnabled(bool on)
                                     {QStringLiteral("--scheduler-daemon")})))
         m_scheduler->setEnabled(true);
     emit tasksSchedulerChanged();
+}
+
+QVariantMap AppController::schedulerDaemonStatus() const
+{
+    return SchedulerDaemonRegistration::status();
 }
 
 QString AppController::previewTaskPrompt(const QString &id) const
@@ -11861,6 +11889,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["runLabel"] = runLabel;
                                 result["runDir"]   = *runDirShared;
 
+                                decorateBenchmarkBaseline(&result);
                                 m_benchmarkResults.append(result);
                                 emit benchmarkResultsChanged();
                                 saveBenchmarkResult(result);
@@ -12495,6 +12524,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["runDir"]       = runDir;
 
             if (!canceled) {
+                decorateBenchmarkBaseline(&result);
                 m_benchmarkResults.append(result);
                 emit benchmarkResultsChanged();
                 saveBenchmarkResult(result);
@@ -13094,6 +13124,7 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("runLabel")] = runLabel;
     result[QStringLiteral("runDir")] = runDir;
 
+    decorateBenchmarkBaseline(&result);
     m_benchmarkResults.append(result);
     emit benchmarkResultsChanged();
     saveBenchmarkResult(result);
@@ -13160,6 +13191,10 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["failureStage"] = result.value("failureStage").toString();
     summary["failureMessage"] = result.value("failureMessage").toString();
     summary["failureDetail"] = result.value("failureDetail").toString();
+    summary["isBaseline"] = result.value("isBaseline").toBool();
+    summary["baselineId"] = result.value("baselineId").toString();
+    summary["elapsedVsBaselinePct"] = result.value("elapsedVsBaselinePct").toDouble();
+    summary["qualityVsBaselinePctPoints"] = result.value("qualityVsBaselinePctPoints").toDouble();
     idx.append(summary);
 
     if (fi.open(QIODevice::WriteOnly | QIODevice::Truncate))
@@ -13169,6 +13204,41 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     QFile rf(dir + "/" + id + ".json");
     if (rf.open(QIODevice::WriteOnly | QIODevice::Truncate))
         rf.write(QJsonDocument(QJsonObject::fromVariantMap(result)).toJson());
+}
+
+void AppController::decorateBenchmarkBaseline(QVariantMap *result) const
+{
+    if (!result || result->value(QStringLiteral("failed")).toBool()) return;
+    const QString benchmark = result->value(QStringLiteral("benchmarkName")).toString();
+    const QString profile = result->value(QStringLiteral("profileId")).toString();
+    const QString target = result->value(QStringLiteral("target")).toString();
+    const QString agentProfile = result->value(QStringLiteral("agentProfileId")).toString();
+    for (const QVariant &value : m_benchmarkResults) {
+        const QVariantMap previous = value.toMap();
+        if (previous.value(QStringLiteral("failed")).toBool()
+            || previous.value(QStringLiteral("benchmarkName")).toString() != benchmark
+            || previous.value(QStringLiteral("profileId")).toString() != profile
+            || previous.value(QStringLiteral("target")).toString() != target
+            || previous.value(QStringLiteral("agentProfileId")).toString() != agentProfile)
+            continue;
+        const QString baselineId = previous.value(QStringLiteral("baselineId"),
+                                                   previous.value(QStringLiteral("id"))).toString();
+        (*result)[QStringLiteral("baselineId")] = baselineId;
+        (*result)[QStringLiteral("isBaseline")] = false;
+        const double baseTime = previous.value(QStringLiteral("elapsedSec")).toDouble();
+        if (baseTime > 0.0)
+            (*result)[QStringLiteral("elapsedVsBaselinePct")] =
+                (result->value(QStringLiteral("elapsedSec")).toDouble() / baseTime - 1.0) * 100.0;
+        const int baseTotal = previous.value(QStringLiteral("qualityTotal")).toInt();
+        const int newTotal = result->value(QStringLiteral("qualityTotal")).toInt();
+        if (baseTotal > 0 && newTotal > 0)
+            (*result)[QStringLiteral("qualityVsBaselinePctPoints")] =
+                100.0 * result->value(QStringLiteral("qualityScore")).toInt() / newTotal
+                - 100.0 * previous.value(QStringLiteral("qualityScore")).toInt() / baseTotal;
+        return;
+    }
+    (*result)[QStringLiteral("isBaseline")] = true;
+    (*result)[QStringLiteral("baselineId")] = result->value(QStringLiteral("id")).toString();
 }
 
 void AppController::loadBenchmarkResults()

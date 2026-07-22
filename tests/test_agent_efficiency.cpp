@@ -4,6 +4,7 @@
 #include "core/agent/StructuredSourceView.h"
 #include "core/tasks/WorkflowEngine.h"
 #include "core/tasks/WorkflowRunner.h"
+#include "core/tasks/WorkflowVisualModel.h"
 
 class AgentEfficiencyTests : public QObject
 {
@@ -16,6 +17,7 @@ private slots:
     void workflow_validatesRoutesAndApproval();
     void workflow_budgetAndSnapshot();
     void workflowRunner_dispatchApprovalConditionAndFinish();
+    void workflowVisual_roundTripPreservesAdvancedFields();
 };
 
 void AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
@@ -130,6 +132,35 @@ void AgentEfficiencyTests::workflowRunner_dispatchApprovalConditionAndFinish()
     QCOMPARE(finished.size(), 1);
     QVERIFY(finished.first().at(0).toBool());
     QCOMPARE(runner.snapshot().value("status").toString(), QStringLiteral("completed"));
+}
+
+void AgentEfficiencyTests::workflowVisual_roundTripPreservesAdvancedFields()
+{
+    const QVariantMap definition{{"schemaVersion", 1}, {"entry", "tool"},
+        {"budget", QVariantMap{{"maxIterations", 9}}},
+        {"steps", QVariantMap{
+            {"tool", QVariantMap{{"type", "tool"}, {"tool", "grep"},
+                {"arguments", QVariantMap{{"pattern", "TODO"}}}, {"onSuccess", "branch"},
+                {"onFailure", "stop"}, {"direct", true}}},
+            {"branch", QVariantMap{{"type", "parallel"},
+                {"branches", QVariantList{QVariantMap{{"prompt", "a"}}, QVariantMap{{"prompt", "b"}}}},
+                {"next", "done"}}},
+            {"done", QVariantMap{{"type", "finish"}}}}}};
+    QVariantList rows = WorkflowVisualModel::rows(definition);
+    QCOMPARE(rows.size(), 3);
+    QVariantMap first = rows.first().toMap();
+    first["stepPrompt"] = QStringLiteral("nuevo prompt");
+    rows[0] = first;
+    const QVariantMap merged = WorkflowVisualModel::merge(definition, rows);
+    QCOMPARE(merged.value("budget").toMap().value("maxIterations").toInt(), 9);
+    const QVariantMap tool = merged.value("steps").toMap().value("tool").toMap();
+    QCOMPARE(tool.value("tool").toString(), QStringLiteral("grep"));
+    QCOMPARE(tool.value("arguments").toMap().value("pattern").toString(), QStringLiteral("TODO"));
+    QCOMPARE(tool.value("onFailure").toString(), QStringLiteral("stop"));
+    QVERIFY(tool.value("direct").toBool());
+    QCOMPARE(tool.value("prompt").toString(), QStringLiteral("nuevo prompt"));
+    QCOMPARE(merged.value("steps").toMap().value("branch").toMap()
+                 .value("branches").toList().size(), 2);
 }
 
 QTEST_MAIN(AgentEfficiencyTests)

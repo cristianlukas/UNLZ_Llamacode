@@ -105,3 +105,79 @@ QVariantMap ProjectBrain::refresh(const QString &root, int maxFiles)
     }
     return brain;
 }
+
+QVariantMap ProjectBrain::update(const QString &root, const QStringList &changedPaths, int maxFiles)
+{
+    const QDir base(root);
+    QVariantMap previous = load(root);
+    if (!base.exists() || previous.value(QStringLiteral("schemaVersion")).toInt() < 2)
+        return refresh(root, maxFiles);
+    QHash<QString, QVariantMap> entries;
+    for (const QVariant &value : previous.value(QStringLiteral("files")).toList()) {
+        const QVariantMap item = value.toMap();
+        entries.insert(item.value(QStringLiteral("path")).toString(), item);
+    }
+    int added = 0, updated = 0, removed = 0;
+    auto removePrefix = [&](const QString &prefix) {
+        const QString slash = prefix.isEmpty() ? QString() : prefix + QLatin1Char('/');
+        for (auto it = entries.begin(); it != entries.end();) {
+            if (it.key() == prefix || (!slash.isEmpty() && it.key().startsWith(slash))) {
+                it = entries.erase(it); ++removed;
+            } else ++it;
+        }
+    };
+    auto addFile = [&](const QFileInfo &info) {
+        if (!info.exists() || !info.isFile() || info.size() > 4 * 1024 * 1024) return;
+        const QString rel = QDir::fromNativeSeparators(base.relativeFilePath(info.absoluteFilePath()));
+        const bool existed = entries.contains(rel);
+        entries[rel] = QVariantMap{{QStringLiteral("path"), rel}, {QStringLiteral("bytes"), info.size()},
+            {QStringLiteral("modifiedMs"), info.lastModified().toMSecsSinceEpoch()},
+            {QStringLiteral("sha256"), QString::fromLatin1(contentHash(info.absoluteFilePath()))}};
+        existed ? ++updated : ++added;
+    };
+    for (const QString &path : changedPaths) {
+        const QString abs = QFileInfo(path).isAbsolute() ? QFileInfo(path).absoluteFilePath()
+                                                         : base.absoluteFilePath(path);
+        const QFileInfo info(abs);
+        const QString rel = QDir::fromNativeSeparators(base.relativeFilePath(abs));
+        if (rel == QLatin1String("..") || rel.startsWith(QStringLiteral("../"))) continue;
+        if (!info.exists()) { removePrefix(rel); continue; }
+        if (info.isFile()) {
+            const bool existed = entries.contains(rel);
+            removePrefix(rel); addFile(info);
+            if (existed) { --added; --removed; ++updated; }
+            continue;
+        }
+        removePrefix(rel);
+        QDirIterator it(abs, QDir::Files | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+        while (it.hasNext() && entries.size() < qBound(1, maxFiles, 20000)) {
+            it.next(); addFile(it.fileInfo());
+        }
+    }
+    QStringList keys = entries.keys();
+    keys.sort(Qt::CaseInsensitive);
+    QVariantList files; QVariantMap extensions; qint64 bytes = 0;
+    const int limit = qBound(1, maxFiles, 20000);
+    for (const QString &key : keys.mid(0, limit)) {
+        const QVariantMap item = entries.value(key);
+        files.append(item); bytes += item.value(QStringLiteral("bytes")).toLongLong();
+        const QString ext = QFileInfo(key).suffix().toLower();
+        const QString extKey = ext.isEmpty() ? QStringLiteral("(none)") : ext;
+        extensions[extKey] = extensions.value(extKey).toInt() + 1;
+    }
+    QVariantMap brain{{QStringLiteral("schemaVersion"), 2}, {QStringLiteral("root"), base.absolutePath()},
+        {QStringLiteral("refreshedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {QStringLiteral("scanMode"), QStringLiteral("events")},
+        {QStringLiteral("fileCount"), files.size()}, {QStringLiteral("bytes"), bytes},
+        {QStringLiteral("extensions"), extensions}, {QStringLiteral("files"), files},
+        {QStringLiteral("changes"), QVariantMap{{QStringLiteral("added"), added},
+            {QStringLiteral("updated"), updated}, {QStringLiteral("removed"), removed},
+            {QStringLiteral("reused"), qMax(0, entries.size() - added - updated)}}},
+        {QStringLiteral("truncated"), entries.size() > limit}};
+    QSaveFile file(cachePath(root));
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(QJsonDocument(QJsonObject::fromVariantMap(brain)).toJson(QJsonDocument::Compact));
+        file.commit();
+    }
+    return brain;
+}

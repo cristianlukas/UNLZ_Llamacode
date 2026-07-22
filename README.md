@@ -188,7 +188,6 @@ el escritorio del usuario ni con runners headless.
 `--matrix` recorre automáticamente todos los monitores disponibles, dos objetivos
 gráficos y temas claro/oscuro; puede combinarse con `--execute-click` para verificar
 también el dispatch foreground de cada caso.
-
 ### Nota de seguridad
 
 La API local, los procesos lanzados y los archivos de configuración viven bajo la
@@ -1155,15 +1154,18 @@ ejecuta automáticamente baseline y candidato con el mismo Task; Historial conse
 los deltas de tokens, tiempo y bytes de tools. Las métricas corresponden al
 intervalo de cada corrida, no al acumulado de la sesión del backend.
 
-El editor de Procesos incluye una vista visual sincronizada con el JSON: permite
-crear nodos, elegir tipo, destino y prompt, y valida todas las rutas con el mismo
-`WorkflowEngine` usado al ejecutar. El scheduler usa un companion sin UI
-(`--scheduler-daemon`) con lock e IPC: sigue evaluando cron con la ventana cerrada,
-despierta una única instancia y auto-inicia el perfil del proceso antes de correr.
+El editor de Procesos incluye una vista visual sincronizada y sin pérdida con el JSON:
+permite crear nodos, elegir tipo, destino y prompt, conserva campos avanzados no
+representados y valida todas las rutas con el mismo `WorkflowEngine` usado al ejecutar.
+El scheduler usa un companion sin UI (`--scheduler-daemon`) con lock, IPC, registro de
+inicio de sesión y heartbeat: sigue evaluando cron con la ventana cerrada, despierta
+una única instancia y auto-inicia el perfil del proceso antes de correr.
 
 Benchmark incluye la suite versionada **Agent efficiency E2E v1**, con tareas
 Python, TypeScript/Node y C++ y aceptación por archivos/comandos. Esto permite
-comparar versiones con la misma carga y guardar calidad, tiempo, tokens y tools.
+comparar versiones con la misma carga y guardar calidad, tiempo, tokens y tools. El
+primer resultado exitoso por suite/perfil/target se adopta como baseline automático;
+los siguientes guardan su referencia y deltas de tiempo y calidad.
 
 ### Persistencia y vista
 

@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QByteArray>
 #include <QElapsedTimer>
+#include <QSet>
 #include <QJsonObject>
 #include <QList>
 #include <QVariantList>
@@ -120,4 +121,5 @@ private:
     QByteArray  m_shellOut;          // salida acumulada
     QElapsedTimer m_shellClock;
     int         m_shellTimeoutS = 120;
+    QSet<QString> m_projectBrainDirtyPaths;
 };

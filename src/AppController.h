@@ -409,7 +409,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.64"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.65"); }
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
     // catálogo, hardware, git, gateway y server en un solo QVariantMap, más una
     // lista `issues` de problemas accionables. Reachable headless vía ControlApi
@@ -464,6 +464,9 @@ public:
                                          const QString &userText = QString());
     Q_INVOKABLE void runTaskAB(const QString &id);
     Q_INVOKABLE QString validateWorkflow(const QVariantMap &definition) const;
+    Q_INVOKABLE QVariantList workflowVisualRows(const QVariantMap &definition) const;
+    Q_INVOKABLE QVariantMap mergeWorkflowVisual(const QVariantMap &definition,
+                                                 const QVariantList &rows) const;
     // Test seams (solo para tests; no usar desde la app). Permiten ejercitar el
     // ciclo del bucle de Tasks sin un llama-server real: inyectar un backend de
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.
@@ -514,6 +517,7 @@ public:
     // Ejecuta la Automatización `automationId`: resuelve el proceso enlazado y lo
     // corre vía runTask, marcando el resultado también en el AutomationStore.
     Q_INVOKABLE void runAutomation(const QString &automationId);
+    Q_INVOKABLE QVariantMap schedulerDaemonStatus() const;
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
     // Historial de corridas de un Proceso o Programación (más nuevo primero).
     Q_INVOKABLE QVariantList runHistory(const QString &ownerId) const;
@@ -1496,6 +1500,7 @@ private:
     void seedBundledCustomBenchmarks() const;
     QString benchmarkRunsDir() const;     // root for isolated timestamped run folders
     void saveBenchmarkResult(const QVariantMap &result);
+    void decorateBenchmarkBaseline(QVariantMap *result) const;
     QString benchmarkServerLogTail(int maxBytes = 24000) const;
     void saveBenchmarkFailureResult(const QString &profileId, const QString &profileName,
                                     int pass, int passes, const QString &mode,
