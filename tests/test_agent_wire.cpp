@@ -810,6 +810,12 @@ void AgentWireTests::developmentDisciplineSection_coversRegressionGuards()
             || g.contains(QStringLiteral("contrato"), Qt::CaseInsensitive));
     // Pilar 4: correr tests/compilar al terminar.
     QVERIFY(g.contains(QStringLiteral("test"), Qt::CaseInsensitive));
+    // Pilar 5: entregables ejecutables (scripts .bat/.sh) se corren antes de darlos.
+    QVERIFY(g.contains(QStringLiteral(".bat")));
+    QVERIFY(g.contains(QStringLiteral("EJECUTALO"), Qt::CaseInsensitive));
+    // Pilar 6: validar condiciones de inicio Y runtime, no solo que arranque.
+    QVERIFY(g.contains(QStringLiteral("runtime"), Qt::CaseInsensitive));
+    QVERIFY(g.contains(QStringLiteral("end-to-end"), Qt::CaseInsensitive));
 
     // Cableado: buildSystemPrompt() la incluye. No es accesible directo (privada),
     // pero la sección es lo que se concatena tal cual → testear la sección cubre

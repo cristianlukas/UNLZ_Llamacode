@@ -892,7 +892,13 @@ QString LlamaAgentBackend::developmentDisciplineSection()
         "UNA vez después del cambio. Si no hay tests, al menos compilá. Si el cambio "
         "es de comportamiento y no había test que lo cubra, agregá uno.\n"
         "- Si tu cambio podría afectar OTRO flujo, decilo explícito en el resumen "
-        "final (qué tocaste y qué podría impactar).\n\n");
+        "final (qué tocaste y qué podría impactar).\n"
+        "- ENTREGABLES: si le das un script/comando para correr (.bat, .sh, .ps1), "
+        "EJECUTALO vos tal cual primero y confirmá que no falla. Si no lo podés correr "
+        "acá, decilo.\n"
+        "- INICIO Y RUNTIME: no basta con que arranque; probá un caso end-to-end "
+        "(estado inicial válido, ej. spawnear DENTRO del mapa; interacción sin "
+        "crashear).\n\n");
 }
 
 QString LlamaAgentBackend::testSafetyNetSection()
