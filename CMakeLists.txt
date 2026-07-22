@@ -316,6 +316,7 @@ qt_add_qml_module(LlamaCode
         qml/components/ToolSupportBanner.qml
         qml/components/LcButton.qml
         qml/components/LcComboBox.qml
+        qml/components/LcCheckBox.qml
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
         qml/components/LcScrollBar.qml
