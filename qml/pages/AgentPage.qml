@@ -740,7 +740,9 @@ Item {
                     contentItem: Text {
                         text: approvalModeCombo.displayText
                         color: Theme.textPrimary; font.pixelSize: 12
-                        leftPadding: 10; verticalAlignment: Text.AlignVCenter
+                        leftPadding: 10
+                        rightPadding: approvalModeCombo.indicator ? approvalModeCombo.indicator.width + 4 : 10
+                        verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
                     }
                 }
                 // Perfil de agente activo (capacidades + directivas). Override vivo
@@ -757,7 +759,9 @@ Item {
                     contentItem: Text {
                         text: "🤖 " + agentProfileCombo.displayText
                         color: Theme.textPrimary; font.pixelSize: 12
-                        leftPadding: 10; verticalAlignment: Text.AlignVCenter
+                        leftPadding: 10
+                        rightPadding: agentProfileCombo.indicator ? agentProfileCombo.indicator.width + 4 : 10
+                        verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
                     }
                 }
                 CheckBox {
@@ -1774,7 +1778,13 @@ Item {
 
                     Timer {
                         id: bottomTimer
-                        interval: 0
+                        // Debounce ~1 frame: durante streaming el contentHeight cambia
+                        // muchas veces por segundo (uno o más por token). Con interval 0
+                        // cada cambio dispara forceLayout+scroll y, con delegates de
+                        // altura variable que se re-miden en pasadas, el fondo rebota
+                        // (sube/baja). Coalescer la ráfaga en un solo reflow por frame
+                        // elimina el temblor sin latencia perceptible.
+                        interval: 32
                         onTriggered: {
                             if (!msgList.followBottom) return
                             msgList.forceLayout()

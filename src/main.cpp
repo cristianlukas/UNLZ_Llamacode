@@ -7,6 +7,7 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 #include <QIcon>
 #include <QFile>
 #include <QTextStream>
@@ -74,6 +75,13 @@ int main(int argc, char *argv[])
 
     qInstallMessageHandler(messageHandler);
     qDebug() << "=== LlamaCode starting ===" << QDateTime::currentDateTime().toString();
+
+    // Estilo de Qt Quick Controls: forzar "Basic" (customizable). El default en
+    // Windows es el estilo NATIVO, que ignora los override de background/contentItem/
+    // header/footer con los que toda la UI está themeada → diálogos sin contenido ni
+    // botones, checkbox sin pintar y warnings "current style does not support
+    // customization". Debe setearse ANTES de cargar cualquier QML.
+    QQuickStyle::setStyle(QStringLiteral("Basic"));
 
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
