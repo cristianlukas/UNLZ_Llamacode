@@ -870,7 +870,10 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
 
 ### Rápido (recomendado)
 
-`build.bat` mata procesos colgados, configura, compila, despliega el runtime Qt (`windeployqt`) y regenera los accesos directos. Acepta config y la opción `NOPAUSE` para ejecución automatizada:
+`build.bat` conserva la caché y los tracking logs para que los builds siguientes
+sean incrementales, compila, despliega el runtime Qt (`windeployqt`) y regenera
+los accesos directos. Sólo cierra `LlamaCode.exe` si bloquea el enlace; no mata
+compiladores ni servidores de otras sesiones. Acepta config y la opción `NOPAUSE`:
 
 ```bat
 build.bat Release NOPAUSE  REM configuración usada para validar y entregar cambios
@@ -882,6 +885,10 @@ Para subir la versión de la app y del flag de actualización:
 bump-version.bat 0.1.2
 bump-version.bat 0.1.2 --summary "Resumen corto" --changelog "Cambio A|Cambio B"
 ```
+
+Compilar ya no incrementa la versión automáticamente. El versionado es una acción
+explícita de release mediante `bump-version.bat`, para no invalidar CMake, recursos
+y unidades C++ en cada build local.
 
 Salidas:
 
@@ -918,7 +925,7 @@ cmake --build build --config Release --parallel
 
 ### Calidad de código
 
-- `tests.bat Release` configura `build_tests`, compila y corre toda la suite Qt Test.
+- `tests.bat Release` reutiliza `build_tests`, compila incrementalmente y corre toda la suite Qt Test.
 - Si `clang-format` está instalado, CMake expone los targets `format` y
   `format-check` usando `.clang-format`.
 - `LC_STRICT_WARNINGS=ON` activa `/W4 /permissive-` en MSVC o

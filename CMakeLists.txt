@@ -13,6 +13,11 @@ option(LC_WARNINGS_AS_ERRORS "Treat project compiler warnings as errors" OFF)
 option(LC_ENABLE_CLANG_TIDY "Run clang-tidy during C++ builds when available" OFF)
 option(LC_USE_OPENCV "Use OpenCV acceleration for visual template matching when available" ON)
 
+# FetchContent still populates a missing dependency on first configure, but an
+# existing checkout must not contact its remote on every CMake regeneration.
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL
+    "Do not update already populated FetchContent dependencies" FORCE)
+
 find_package(Qt6 6.4 REQUIRED COMPONENTS Core Quick QuickControls2 Sql Concurrent Network Widgets Multimedia Svg)
 if (LC_USE_OPENCV)
     find_package(OpenCV QUIET COMPONENTS core imgproc)

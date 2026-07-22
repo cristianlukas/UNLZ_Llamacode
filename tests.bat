@@ -37,17 +37,17 @@ if not "%COORD_RC%"=="0" (
 )
 set HELD_LOCK=1
 
-REM Build dir separado para no pisar la build del app. En el primer configure
-REM dejamos que CMake elija su generador default (la última VS instalada); en
-REM reconfiguraciones reusa el generador cacheado.
+REM Build dir separado para no pisar la build del app. CMake configura una sola
+REM vez; luego ZERO_CHECK regenera sólo cuando cambian sus entradas.
 if not exist build_tests mkdir build_tests
 
-if exist build_tests\CMakeCache.txt (
-    "%CMAKE%" -S . -B build_tests -DCMAKE_PREFIX_PATH="%QT_DIR%" -DBUILD_TESTS=ON
+if not exist build_tests\CMakeCache.txt (
+    "%CMAKE%" -S . -B build_tests -A x64 -DCMAKE_PREFIX_PATH="%QT_DIR%" ^
+        -DBUILD_TESTS=ON -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
+    if errorlevel 1 ( echo. & echo === Configure FAILED === & goto :done_fail )
 ) else (
-    "%CMAKE%" -S . -B build_tests -A x64 -DCMAKE_PREFIX_PATH="%QT_DIR%" -DBUILD_TESTS=ON
+    echo [INFO] Reusing build_tests CMake cache.
 )
-if errorlevel 1 ( echo. & echo === Configure FAILED === & goto :done_fail )
 
 "%CMAKE%" --build build_tests --config %CFG% -- /maxcpucount:4
 if errorlevel 1 ( echo. & echo === Build FAILED === & goto :done_fail )

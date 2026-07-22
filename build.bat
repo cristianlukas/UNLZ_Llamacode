@@ -14,6 +14,7 @@ if not exist "%CMAKE%" set CMAKE=C:\Program Files (x86)\Microsoft Visual Studio\
 set GENERATOR=Visual Studio 16 2019
 if exist "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe" set GENERATOR=Visual Studio 17 2022
 if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" set GENERATOR=Visual Studio 17 2022
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" set GENERATOR=Visual Studio 17 2022
 
 if not exist "%CMAKE%" (
     echo [ERROR] CMake not found.
@@ -44,52 +45,49 @@ if not "%COORD_RC%"=="0" (
 )
 set HELD_LOCK=1
 
-REM Cada build sube la version +0.0.1 (patch) antes de configurar/compilar.
-call "%~dp0bump-patch.bat"
-if errorlevel 1 ( goto :failed )
-
-echo [INFO] Killing LlamaCode and managed children...
+REM Cerrar solo la app que puede bloquear el .exe de salida. Los servidores y
+REM compiladores de otras sesiones pertenecen a sus dueños; el coordinador ya
+REM serializa esta lane.
+echo [INFO] Closing LlamaCode before linking...
 taskkill /F /IM LlamaCode.exe      >nul 2>&1
-taskkill /F /IM llama-server.exe   >nul 2>&1
-taskkill /F /IM opencode.exe       >nul 2>&1
-taskkill /F /IM aider.exe          >nul 2>&1
-
-echo [INFO] Killing stale build tools...
-taskkill /F /IM MSBuild.exe        >nul 2>&1
-taskkill /F /IM CL.exe             >nul 2>&1
-taskkill /F /IM link.exe           >nul 2>&1
-taskkill /F /IM rc.exe             >nul 2>&1
-taskkill /F /IM qmlcachegen.exe    >nul 2>&1
-taskkill /F /IM rcc.exe            >nul 2>&1
-taskkill /F /IM moc.exe            >nul 2>&1
-ping -n 3 127.0.0.1 >nul 2>&1
-
-echo [INFO] Clearing stale tlogs...
-if exist build (
-    for /r "build" %%f in (*.tlog) do del /f /q "%%f" >nul 2>&1
-)
 
 if not exist build mkdir build
 cd build
 
 if exist CMakeCache.txt (
-    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" CMakeCache.txt') do set "CACHE_GENERATOR=%%G"
-    if defined CACHE_GENERATOR (
-        if /I not "!CACHE_GENERATOR!"=="%GENERATOR%" (
-            echo [INFO] Generator changed from "!CACHE_GENERATOR!" to "%GENERATOR%". Resetting CMake cache...
-            del /f /q CMakeCache.txt >nul 2>&1
-            rmdir /s /q CMakeFiles >nul 2>&1
-        )
-    )
+    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" CMakeCache.txt') do set "GENERATOR=%%G"
+)
+if not exist CMakeCache.txt if exist _deps\qtkeychain-subbuild\CMakeCache.txt (
+    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" _deps\qtkeychain-subbuild\CMakeCache.txt') do set "GENERATOR=%%G"
 )
 
-REM VS is a multi-config generator: configure once, build per --config below.
-"%CMAKE%" .. -G "%GENERATOR%" -A x64 ^
-    -DCMAKE_PREFIX_PATH="%QT_DIR%"
-if errorlevel 1 (
-    echo.
-    echo === Configure FAILED ===
-    goto :failed
+REM Configurar sólo al crear/migrar el árbol. En builds calientes, MSBuild/ZERO_CHECK
+REM reejecuta CMake automáticamente si CMakeLists o los globs cambiaron. Evitar el
+REM configure incondicional ahorra el escaneo de Qt/QML y FetchContent. Las fuentes
+REM ya descargadas no consultan GitHub en cada regeneración.
+set NEED_CONFIG=0
+if not exist CMakeCache.txt set NEED_CONFIG=1
+if not exist CMakeFiles\VerifyGlobs.cmake set NEED_CONFIG=1
+if "%NEED_CONFIG%"=="1" (
+    if exist _deps\qtkeychain-subbuild\CMakeCache.txt (
+        set "DEP_GENERATOR="
+        for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" _deps\qtkeychain-subbuild\CMakeCache.txt') do set "DEP_GENERATOR=%%G"
+        if defined DEP_GENERATOR if /I not "!DEP_GENERATOR!"=="%GENERATOR%" (
+            echo [INFO] Removing incompatible generated QtKeychain build metadata.
+            rmdir /s /q _deps\qtkeychain-subbuild
+            rmdir /s /q _deps\qtkeychain-build
+        )
+    )
+    "%CMAKE%" .. -G "%GENERATOR%" -A x64 ^
+        -DCMAKE_PREFIX_PATH="%QT_DIR%" ^
+        -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
+    if errorlevel 1 (
+        echo.
+        echo === Configure FAILED ===
+        goto :failed
+    )
+) else (
+    echo [INFO] Reusing CMake cache; incremental build will regenerate only if needed.
 )
 
 cd ..
