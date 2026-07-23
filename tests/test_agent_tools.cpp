@@ -365,13 +365,16 @@ void AgentToolsTests::desktopControls_invalidWindowErrorsCleanly()
     QVERIFY(!k.value("ok").toBool());
     QVERIFY(k.value("result").toString().startsWith(QStringLiteral("[desktop_click_element:")));
 
-    // desktop_stroke: dispatch + parseo de 'points' (array de {x,y}) SÍ; la
-    // ejecución real (arrastre en pantalla) es QA manual. En headless falla limpio
-    // (sesión bloqueada o pocos puntos) con prefijo [desktop_stroke:], sin crashear.
-    QJsonArray pts{QJsonObject{{"x", 0.1}, {"y", 0.1}}, QJsonObject{{"x", 0.5}, {"y", 0.5}}};
+    // desktop_stroke: validar dispatch + parseo sin tocar el escritorio real. Un
+    // punto fuera de 0..1 se rechaza antes de consultar la sesión o emitir input.
+    // El arrastre real pertenece exclusivamente al probe manual qa_visual_automation.
+    QJsonArray pts{QJsonObject{{"x", -0.1}, {"y", 0.1}},
+                   QJsonObject{{"x", 0.5}, {"y", 0.5}}};
     QVariantMap s = call("desktop_stroke",
                          {{"target_id", "0"}, {"scope_kind", "screen"}, {"points", pts}});
+    QVERIFY(!s.value("ok").toBool());
     QVERIFY(s.value("result").toString().startsWith(QStringLiteral("[desktop_stroke:")));
+    QVERIFY(s.value("result").toString().contains(QStringLiteral("no se movió el mouse")));
 
     // desktop_wait_for: dispatch + timeout. Un título de ventana inexistente con
     // timeout corto → found:false, sin colgar, con prefijo [desktop_wait_for:.
