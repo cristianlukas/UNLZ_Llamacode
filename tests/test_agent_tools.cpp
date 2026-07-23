@@ -47,6 +47,8 @@ private slots:
     void honeyHandoff_densifiesMasterAndSubPrompts();
     void webUrlGuard_blocksPrivateAndCredentials();
     void readableWebText_prefersArticleAndPreservesStructure();
+    void webEscalation_requiresVerifiableEvidence();
+    void webFetch_forcedUnavailableProviderFailsDeterministically();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -472,6 +474,43 @@ void AgentToolsTests::readableWebText_prefersArticleAndPreservesStructure()
     QVERIFY(!text.contains(QStringLiteral("Menú secreto")));
     QVERIFY(!text.contains(QStringLiteral("robar")));
     QVERIFY(!text.contains(QStringLiteral("Publicidad")));
+}
+
+void AgentToolsTests::webEscalation_requiresVerifiableEvidence()
+{
+    QVERIFY(AgentToolRunner::webEscalationReasons(
+                QStringLiteral("<article>Contenido documental suficientemente largo para "
+                               "resolver una consulta normal sin navegador.</article>"),
+                QString(400, QLatin1Char('x'))).isEmpty());
+
+    const QStringList challenge = AgentToolRunner::webEscalationReasons(
+        QStringLiteral("<title>Checking your browser</title><div>Cloudflare Ray ID</div>"),
+        QStringLiteral("Checking your browser"));
+    QVERIFY(challenge.contains(QStringLiteral("challenge")));
+    QVERIFY(challenge.contains(QStringLiteral("thin_content")));
+
+    const QStringList js = AgentToolRunner::webEscalationReasons(
+        QStringLiteral("<div id=\"root\"></div><noscript>Please enable JavaScript</noscript>"),
+        QString());
+    QVERIFY(js.contains(QStringLiteral("javascript_required")));
+    QVERIFY(js.contains(QStringLiteral("empty")));
+
+    const QStringList transport = AgentToolRunner::webEscalationReasons(
+        QString(), QString(), QStringLiteral("timeout"));
+    QVERIFY(transport.contains(QStringLiteral("transport_error")));
+}
+
+void AgentToolsTests::webFetch_forcedUnavailableProviderFailsDeterministically()
+{
+    // IP pública literal: supera la guarda sin DNS. Como Camofox no está
+    // configurado, falla antes de hacer red y deja un diagnóstico accionable.
+    const QVariantMap result = call(
+        QStringLiteral("web_fetch"),
+        QJsonObject{{QStringLiteral("url"), QStringLiteral("https://93.184.216.34/")},
+                    {QStringLiteral("provider"), QStringLiteral("camofox")}});
+    QVERIFY(!result.value(QStringLiteral("ok")).toBool());
+    QVERIFY(result.value(QStringLiteral("result")).toString()
+                .contains(QStringLiteral("Camofox no está configurado")));
 }
 
 QTEST_MAIN(AgentToolsTests)

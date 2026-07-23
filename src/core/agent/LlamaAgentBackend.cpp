@@ -459,6 +459,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(bool, m_directives.contains(QStringLiteral("honey"))));
     QMetaObject::invokeMethod(m_worker, "setMailAccounts", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mailAccounts));
+    QMetaObject::invokeMethod(m_worker, "setWebProviders", Qt::QueuedConnection,
+                              Q_ARG(QVariantList, m_webProviders));
     QMetaObject::invokeMethod(m_worker, "initServers", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mcpConfig), Q_ARG(QString, m_cwd));
     emit runningChanged();
@@ -4022,11 +4024,19 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("timeout_s"), intProp(QStringLiteral("Timeout en segundos (default 120, máx 1800)."))}},
            QJsonArray{QStringLiteral("command")}),
         fn(QStringLiteral("web_fetch"),
-           QStringLiteral("Descarga una URL pública http(s), prioriza article/main y devuelve texto "
-                          "estructurado. Bloquea redes privadas y revalida redirects. Para páginas "
-                          "JS, challenges o contenido vacío, escalá a las tools MCP de Playwright."),
+           QStringLiteral("Obtiene una URL pública con pipeline direct → Playwright MCP → Camofox. "
+                          "Sólo escala si detecta error, challenge, shell JS o contenido insuficiente; "
+                          "devuelve proveedor, intentos y evidencia. Bloquea redes privadas y redirects "
+                          "inseguros. 'provider' fuerza un proveedor para diagnóstico."),
            QJsonObject{
-               {QStringLiteral("url"), strProp(QStringLiteral("URL completa (http:// o https://)."))}},
+               {QStringLiteral("url"), strProp(QStringLiteral("URL completa (http:// o https://)."))},
+               {QStringLiteral("provider"), QJsonObject{
+                   {QStringLiteral("type"), QStringLiteral("string")},
+                   {QStringLiteral("enum"), QJsonArray{QStringLiteral("auto"),
+                                                        QStringLiteral("direct"),
+                                                        QStringLiteral("playwright"),
+                                                        QStringLiteral("camofox")}},
+                   {QStringLiteral("description"), QStringLiteral("Proveedor (default auto).")}}}},
            QJsonArray{QStringLiteral("url")}),
         fn(QStringLiteral("web_search"),
            QStringLiteral("Busca en la web y devuelve los mejores resultados (título, URL, snippet). "
@@ -4660,6 +4670,14 @@ void LlamaAgentBackend::setMailAccounts(const QVariantList &accounts)
     if (m_running && m_worker)
         QMetaObject::invokeMethod(m_worker, "setMailAccounts", Qt::QueuedConnection,
                                   Q_ARG(QVariantList, m_mailAccounts));
+}
+
+void LlamaAgentBackend::setWebProviders(const QVariantList &providers)
+{
+    m_webProviders = providers;
+    if (m_worker)
+        QMetaObject::invokeMethod(m_worker, "setWebProviders", Qt::QueuedConnection,
+                                  Q_ARG(QVariantList, m_webProviders));
 }
 
 void LlamaAgentBackend::ensureWorker()

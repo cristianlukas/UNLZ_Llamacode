@@ -268,6 +268,38 @@ QString AgentToolRunner::extractReadableWebText(const QString &html)
     return text.trimmed();
 }
 
+QStringList AgentToolRunner::webEscalationReasons(const QString &html, const QString &text,
+                                                   const QString &transportError)
+{
+    QStringList reasons;
+    if (!transportError.isEmpty()) reasons << QStringLiteral("transport_error");
+    const QString sample = (html.left(120000) + QLatin1Char(' ') + text.left(12000)).toLower();
+    static const QStringList challenges{
+        QStringLiteral("cf-chl-"), QStringLiteral("cloudflare ray id"),
+        QStringLiteral("checking your browser"), QStringLiteral("verify you are human"),
+        QStringLiteral("attention required"), QStringLiteral("captcha"),
+        QStringLiteral("datadome"), QStringLiteral("perimeterx"), QStringLiteral("px-captcha")};
+    for (const QString &marker : challenges)
+        if (sample.contains(marker)) {
+            reasons << QStringLiteral("challenge");
+            break;
+        }
+    static const QStringList jsMarkers{
+        QStringLiteral("enable javascript"), QStringLiteral("javascript is required"),
+        QStringLiteral("requires javascript"), QStringLiteral("please turn javascript on"),
+        QStringLiteral("__next_data__"), QStringLiteral("id=\"__next\""),
+        QStringLiteral("id=\"root\"></div>"), QStringLiteral("id=\"app\"></div>")};
+    for (const QString &marker : jsMarkers)
+        if (sample.contains(marker)) {
+            reasons << QStringLiteral("javascript_required");
+            break;
+        }
+    if (text.trimmed().isEmpty()) reasons << QStringLiteral("empty");
+    else if (text.trimmed().size() < 280) reasons << QStringLiteral("thin_content");
+    reasons.removeDuplicates();
+    return reasons;
+}
+
 // GET sincrónico con timeout, redirecciones revalidadas y cuerpo acotado. Corre
 // en el worker para que DNS y red nunca bloqueen la UI.
 static QByteArray httpGetSync(const QUrl &initialUrl, QString *err, int timeoutMs = 20000,
@@ -327,10 +359,12 @@ static QByteArray httpGetSync(const QUrl &initialUrl, QString *err, int timeoutM
 }
 
 // Descarga una URL y devuelve su texto limpiado (cap chars). "" si falla.
-static QString fetchUrlText(const QString &url, int cap, QString *err = nullptr)
+static QString fetchUrlText(const QString &url, int cap, QString *err = nullptr,
+                            QString *rawHtml = nullptr)
 {
     const QByteArray body = httpGetSync(QUrl(url), err);
     if (body.isEmpty()) return {};
+    if (rawHtml) *rawHtml = QString::fromUtf8(body);
     const QString text = AgentToolRunner::extractReadableWebText(QString::fromUtf8(body));
     return text.left(cap);
 }
@@ -582,6 +616,131 @@ void AgentToolRunner::setAllowedRoots(const QStringList &roots)
 void AgentToolRunner::setServerBaseUrl(const QString &url) { m_serverBaseUrl = url; }
 void AgentToolRunner::setSessionId(const QString &sessionId) { m_sessionId = sessionId; }
 void AgentToolRunner::setMailAccounts(const QVariantList &accounts) { m_mailAccounts = accounts; }
+void AgentToolRunner::setWebProviders(const QVariantList &providers) { m_webProviders = providers; }
+
+QString AgentToolRunner::fetchViaPlaywright(const QString &url, QString *error)
+{
+    McpClient *browser = nullptr;
+    QString navigateTool, extractTool;
+    for (McpClient *client : std::as_const(m_mcp)) {
+        QString nav, eval, snapshot;
+        for (const McpClient::ToolDef &tool : client->tools()) {
+            if (tool.name == QLatin1String("browser_navigate")) nav = tool.name;
+            else if (tool.name == QLatin1String("browser_evaluate")) eval = tool.name;
+            else if (tool.name == QLatin1String("browser_snapshot")) snapshot = tool.name;
+        }
+        if (!nav.isEmpty() && (!eval.isEmpty() || !snapshot.isEmpty())) {
+            browser = client;
+            navigateTool = nav;
+            extractTool = !eval.isEmpty() ? eval : snapshot;
+            break;
+        }
+    }
+    if (!browser) {
+        if (error) *error = QStringLiteral("Playwright MCP no está disponible");
+        return {};
+    }
+    bool navOk = false;
+    const QString navResult = browser->callTool(navigateTool, QJsonObject{{"url", url}}, &navOk);
+    if (!navOk) {
+        if (error) *error = QStringLiteral("navegación fallida: %1").arg(navResult.left(240));
+        return {};
+    }
+    bool extractOk = false;
+    QJsonObject args;
+    if (extractTool == QLatin1String("browser_evaluate")) {
+        args[QStringLiteral("function")] = QStringLiteral(
+            "() => { const root = document.querySelector('article,main') || document.body; "
+            "return root ? root.innerText : ''; }");
+    }
+    const QString result = browser->callTool(extractTool, args, &extractOk);
+    if (!extractOk || result.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("extracción DOM fallida: %1").arg(result.left(240));
+        return {};
+    }
+    return result.left(96 * 1024);
+}
+
+QString AgentToolRunner::fetchViaCamofox(const QString &url, QString *error)
+{
+    QVariantMap cfg;
+    for (const QVariant &entry : std::as_const(m_webProviders)) {
+        const QVariantMap candidate = entry.toMap();
+        if (candidate.value(QStringLiteral("enabled"), true).toBool()
+            && candidate.value(QStringLiteral("provider")).toString().toLower()
+                   == QLatin1String("camofox")) {
+            cfg = candidate;
+            break;
+        }
+    }
+    if (cfg.isEmpty()) {
+        if (error) *error = QStringLiteral("Camofox no está configurado o está desactivado");
+        return {};
+    }
+    QString base = cfg.value(QStringLiteral("baseUrl")).toString().trimmed();
+    if (base.endsWith(QLatin1Char('/'))) base.chop(1);
+    if (base.isEmpty()) {
+        if (error) *error = QStringLiteral("Camofox no tiene Base URL");
+        return {};
+    }
+    const QString key = cfg.value(QStringLiteral("apiKey")).toString();
+    QString postError;
+    const QJsonObject createBody{
+        {QStringLiteral("userId"), QStringLiteral("llamacode")},
+        {QStringLiteral("sessionKey"), QStringLiteral("web-fetch")},
+        {QStringLiteral("url"), url}};
+    const QByteArray create = httpPostJson(
+        QUrl(base + QStringLiteral("/tabs")),
+        QJsonDocument(createBody).toJson(QJsonDocument::Compact), &postError, 30000, key);
+    const QString tabId = QJsonDocument::fromJson(create).object()
+                              .value(QStringLiteral("tabId")).toString();
+    if (tabId.isEmpty()) {
+        if (error) *error = QStringLiteral("Camofox no pudo abrir la página: %1").arg(postError);
+        return {};
+    }
+
+    const QString expression = QStringLiteral(
+        "(() => { const root=document.querySelector('article,main')||document.body;"
+        "return JSON.stringify({title:document.title,text:root?.innerText||'',url:location.href}); })()");
+    const QJsonObject evalBody{
+        {QStringLiteral("userId"), QStringLiteral("llamacode")},
+        {QStringLiteral("expression"), expression}};
+    const QByteArray evaluated = httpPostJson(
+        QUrl(base + QStringLiteral("/tabs/") + tabId + QStringLiteral("/evaluate")),
+        QJsonDocument(evalBody).toJson(QJsonDocument::Compact), &postError, 30000, key);
+
+    // Cerrar siempre la pestaña; el resultado del cleanup no invalida la lectura.
+    QNetworkAccessManager cleanupNam;
+    QNetworkRequest cleanupReq(
+        QUrl(base + QStringLiteral("/tabs/") + tabId + QStringLiteral("?userId=llamacode")));
+    if (!key.isEmpty())
+        cleanupReq.setRawHeader(QByteArrayLiteral("Authorization"),
+                                QByteArrayLiteral("Bearer ") + key.toUtf8());
+    QNetworkReply *cleanup = cleanupNam.deleteResource(cleanupReq);
+    QEventLoop cleanupLoop;
+    QTimer cleanupTimer;
+    cleanupTimer.setSingleShot(true);
+    QObject::connect(cleanup, &QNetworkReply::finished, &cleanupLoop, &QEventLoop::quit);
+    QObject::connect(&cleanupTimer, &QTimer::timeout, &cleanupLoop, &QEventLoop::quit);
+    cleanupTimer.start(3000);
+    cleanupLoop.exec();
+    if (cleanup->isRunning()) cleanup->abort();
+    cleanup->deleteLater();
+
+    const QJsonObject outer = QJsonDocument::fromJson(evaluated).object();
+    QString encoded = outer.value(QStringLiteral("result")).toString();
+    if (encoded.isEmpty()) {
+        if (error) *error = QStringLiteral("Camofox no devolvió DOM: %1").arg(postError);
+        return {};
+    }
+    const QJsonObject inner = QJsonDocument::fromJson(encoded.toUtf8()).object();
+    const QString text = inner.value(QStringLiteral("text")).toString().trimmed();
+    if (text.isEmpty()) {
+        if (error) *error = QStringLiteral("Camofox devolvió contenido vacío");
+        return {};
+    }
+    return text.left(96 * 1024);
+}
 void AgentToolRunner::setTeacherConfig(const QString &url, const QString &model, const QString &key)
 {
     m_teacherUrl = url.trimmed();
@@ -1339,16 +1498,67 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("web_fetch")) {
         const QString url = args.value(QStringLiteral("url")).toString();
-        if (!url.startsWith(QLatin1String("http")))
-            return QStringLiteral("[url inválida: debe empezar con http(s)://]");
-        QString err;
-        const QString text = fetchUrlText(url, 48 * 1024, &err);
+        QString validationError;
+        if (!isSafePublicWebUrl(url, &validationError))
+            return QStringLiteral("[web_fetch: URL bloqueada: %1]").arg(validationError);
+        const QString requested = args.value(QStringLiteral("provider"))
+                                      .toString(QStringLiteral("auto")).trimmed().toLower();
+        if (!QStringList{QStringLiteral("auto"), QStringLiteral("direct"),
+                         QStringLiteral("playwright"), QStringLiteral("camofox")}
+                 .contains(requested))
+            return QStringLiteral("[web_fetch: provider inválido; usá auto, direct, playwright o camofox]");
+
+        QString text, html, directError;
+        QString provider = requested;
+        QStringList reasons;
+        QStringList attempts;
+        if (requested == QLatin1String("auto") || requested == QLatin1String("direct")) {
+            text = fetchUrlText(url, 48 * 1024, &directError, &html);
+            reasons = webEscalationReasons(html, text, directError);
+            attempts << QStringLiteral("direct");
+            provider = QStringLiteral("direct");
+            if (requested == QLatin1String("direct") && text.isEmpty())
+                return QStringLiteral("[web_fetch direct: %1]")
+                    .arg(directError.isEmpty() ? QStringLiteral("respuesta vacía") : directError);
+        }
+        const bool mustEscalate = requested != QLatin1String("direct")
+            && (requested != QLatin1String("auto") || !reasons.isEmpty());
+        if (mustEscalate
+            && (requested == QLatin1String("auto") || requested == QLatin1String("playwright"))) {
+            QString browserError;
+            const QString browserText = fetchViaPlaywright(url, &browserError);
+            attempts << QStringLiteral("playwright");
+            if (!browserText.isEmpty()) {
+                text = browserText;
+                provider = QStringLiteral("playwright");
+                reasons.clear();
+            } else if (requested == QLatin1String("playwright")) {
+                return QStringLiteral("[web_fetch playwright: %1]").arg(browserError);
+            }
+        }
+        if (mustEscalate && provider != QLatin1String("playwright")
+            && (requested == QLatin1String("auto") || requested == QLatin1String("camofox"))) {
+            QString camofoxError;
+            const QString camofoxText = fetchViaCamofox(url, &camofoxError);
+            attempts << QStringLiteral("camofox");
+            if (!camofoxText.isEmpty()) {
+                text = camofoxText;
+                provider = QStringLiteral("camofox");
+                reasons.clear();
+            } else if (requested == QLatin1String("camofox")) {
+                return QStringLiteral("[web_fetch camofox: %1]").arg(camofoxError);
+            }
+        }
         if (text.isEmpty()) {
-            if (!err.isEmpty()) return QStringLiteral("[error al descargar %1: %2]").arg(url, err);
-            return QStringLiteral("[respuesta vacía]");
+            return QStringLiteral("[web_fetch: sin contenido; intentos=%1; evidencia=%2]")
+                .arg(attempts.join(QLatin1Char(',')),
+                     reasons.isEmpty() ? QStringLiteral("none") : reasons.join(QLatin1Char(',')));
         }
         if (ok) *ok = true;
-        return text;
+        const QString evidence = reasons.isEmpty() ? QStringLiteral("none")
+                                                    : reasons.join(QLatin1Char(','));
+        return QStringLiteral("[web_fetch provider=%1 attempts=%2 evidence=%3]\n%4")
+            .arg(provider, attempts.join(QLatin1Char(',')), evidence, text);
     }
     if (name == QLatin1String("web_search")) {
         const QString query = args.value(QStringLiteral("query")).toString().trimmed();

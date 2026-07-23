@@ -758,14 +758,23 @@ el **MCP de Playwright** en el set de tools del agente. El Teach de browser se
 gestiona desde Automatizaciones y guarda **recetas reproducibles** que
 las Tasks pueden reejecutar.
 
-La lectura web usa un camino progresivo: `web_search` consulta SearXNG —incluido
-un endpoint local configurado explícitamente— o DuckDuckGo, y `web_fetch` resuelve
-DNS, bloquea localhost/redes privadas/metadata cloud, revalida cada redirección,
-limita la descarga y extrae primero `article`/`main` conservando párrafos y
-encabezados. Si una página necesita JavaScript, presenta un challenge o no entrega
-contenido útil, el agente escala a Playwright MCP. Los navegadores alternativos
-pueden registrarse como MCP externos, pero no son dependencias ni mecanismos de
-bypass incorporados en LlamaCode.
+La lectura web usa proveedores tipados. `web_search` consulta SearXNG —incluido un
+endpoint local configurado explícitamente— o DuckDuckGo. `web_fetch` ejecuta el
+pipeline `direct → Playwright MCP → Camofox`: el camino directo resuelve DNS,
+bloquea localhost/redes privadas/metadata cloud, revalida cada redirección, limita
+la descarga a 2 MB y extrae primero `article`/`main`. Sólo escala cuando hay
+evidencia verificable (`transport_error`, challenge conocido, shell que requiere
+JavaScript, contenido vacío o demasiado corto). Playwright y Camofox leen el DOM
+renderizado; la respuesta informa proveedor, intentos y evidencia. El parámetro
+`provider=direct|playwright|camofox` permite diagnóstico determinista.
+
+Camofox se agrega en **Configuración → Integrations → API Service**, eligiendo
+`Camofox`, normalmente con `http://127.0.0.1:9377`. Es opt-in, diagnosticable con
+`/health` y LlamaCode no instala ni inicia su contenedor. La API key se conserva
+con la integración y se envía como Bearer cuando corresponde. CloakBrowser sólo
+puede registrarse como integración externa/manual: se guarda desactivado, no forma
+parte del pipeline automático, no se descarga ni se redistribuye. Un operador que
+decida usarlo debe revisar por separado su binario, licencia y riesgos.
 
 ## Adjuntos (documentos + visión)
 

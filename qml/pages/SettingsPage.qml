@@ -1056,14 +1056,44 @@ Item {
                                     Layout.fillWidth: true
                                     spacing: 8
                                     visible: typeCombo.currentValue === "api_service"
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        Text { text: "Uso"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                        LcComboBox {
+                                            id: apiProvider
+                                            Layout.fillWidth: true
+                                            model: [
+                                                { label: "API genérica", value: "generic" },
+                                                { label: "Camofox (web_fetch opcional)", value: "camofox" },
+                                                { label: "CloakBrowser (externo/manual)", value: "cloakbrowser" }
+                                            ]
+                                            textRole: "label"
+                                            valueRole: "value"
+                                        }
+                                    }
                                     LcTextField { id: apiName; Layout.fillWidth: true; placeholderText: "Nombre" }
-                                    LcTextField { id: apiUrl;  Layout.fillWidth: true; placeholderText: "Base URL (https://…)" }
+                                    LcTextField {
+                                        id: apiUrl
+                                        Layout.fillWidth: true
+                                        placeholderText: apiProvider.currentValue === "camofox"
+                                                         ? "Base URL (ej. http://127.0.0.1:9377)"
+                                                         : "Base URL (https://…)"
+                                    }
                                     LcTextField { id: apiKey;  Layout.fillWidth: true; placeholderText: "API key (opcional)"; echoMode: TextInput.Password }
+                                    Text {
+                                        visible: apiProvider.currentValue === "cloakbrowser"
+                                        Layout.fillWidth: true
+                                        wrapMode: Text.WordWrap
+                                        color: Theme.textMuted
+                                        font.pixelSize: 11
+                                        text: "Se guarda desactivado. LlamaCode no descarga su binario ni lo usa automáticamente; registralo sólo para documentar una instalación externa revisada."
+                                    }
                                     LcButton {
                                         text: "Agregar API Service"
                                         enabled: apiName.text.trim().length > 0 && apiUrl.text.trim().length > 0
                                         onClicked: {
-                                            if (App.saveApiService("", apiName.text.trim(), apiUrl.text.trim(), apiKey.text, true)) {
+                                            if (App.saveApiService("", apiName.text.trim(), apiUrl.text.trim(),
+                                                                   apiKey.text, true, apiProvider.currentValue)) {
                                                 apiName.text = ""; apiUrl.text = ""; apiKey.text = ""
                                             }
                                         }

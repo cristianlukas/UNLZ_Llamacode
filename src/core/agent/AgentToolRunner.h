@@ -43,6 +43,9 @@ public slots:
     void setSessionId(const QString &sessionId);
     // Cuentas de correo (con password ya resuelto) para email_send/list/read.
     void setMailAccounts(const QVariantList &accounts);
+    // Proveedores web externos habilitados desde Integrations:
+    // {provider,baseUrl,apiKey,enabled}. No instala servicios.
+    void setWebProviders(const QVariantList &providers);
     // Config del modelo maestro (tool ask_teacher). Vacío = usar env vars.
     void setTeacherConfig(const QString &url, const QString &model, const QString &key);
     // Config de maestro tipo CLI (claude-code / codex). cliPath vacío = deshabilitado.
@@ -88,7 +91,11 @@ public:
     // contenido principal y conserva estructura legible con presupuesto acotado.
     static bool isSafePublicWebUrl(const QString &url, QString *error = nullptr);
     static QString extractReadableWebText(const QString &html);
+    static QStringList webEscalationReasons(const QString &html, const QString &text,
+                                            const QString &transportError = QString());
 private:
+    QString fetchViaPlaywright(const QString &url, QString *error);
+    QString fetchViaCamofox(const QString &url, QString *error);
     void startShell(const QString &callId, const QString &command,
                     const QString &cwd, int timeoutS);
     void finishShell(bool timedOut, bool cancelled);
@@ -99,6 +106,7 @@ private:
     QString m_serverBaseUrl;
     QString m_sessionId;           // sesión activa (filtro de recent_actions)
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
+    QVariantList m_webProviders;   // proveedores REST opt-in (p.ej. Camofox)
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)
     // Maestro CLI (claude-code / codex). m_masterKind: "none"|"http"|"cli".
     QString m_masterKind = QStringLiteral("none");

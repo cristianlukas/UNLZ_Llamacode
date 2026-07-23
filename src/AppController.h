@@ -717,7 +717,8 @@ public:
                                         const QString &commandOrUrl);
     // Alta/edición de un API Service genérico (endpoint HTTP + key). id vacío = crear.
     Q_INVOKABLE bool saveApiService(const QString &id, const QString &name,
-                                    const QString &baseUrl, const QString &apiKey, bool enabled);
+                                    const QString &baseUrl, const QString &apiKey, bool enabled,
+                                    const QString &provider);
     Q_INVOKABLE bool removeIntegration(const QString &id);
     Q_INVOKABLE bool setIntegrationEnabled(const QString &id, bool enabled);
     // Test asíncrono. Emite integrationTestResult(id, ok, message).
@@ -1430,6 +1431,7 @@ private:
     QString integrationsFilePath() const;
     QJsonArray readApiServices() const;
     bool writeApiServices(const QJsonArray &arr);
+    QVariantList webProviderConfigs() const;
     QJsonObject exportFileSet(const QString &root, const QStringList &relativePaths) const;
     bool importFileSet(const QString &root, const QJsonObject &set, QStringList *written);
     bool removePathForWipe(const QString &path);

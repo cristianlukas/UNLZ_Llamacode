@@ -3811,6 +3811,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setDisabledTools(m_agentDisabledTools);
         cb->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
         cb->setMailAccounts(mailAccountsResolved());
+        cb->setWebProviders(webProviderConfigs());
         cb->setMailAutoSend(m_mailAutoSend);
         cb->setHitlDestructive(m_hitlDestructive);
         cb->setVisionAvailable(m_serverHasVision);
@@ -7214,8 +7215,26 @@ bool AppController::writeApiServices(const QJsonArray &arr)
     if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
     f.write(QJsonDocument(arr).toJson());
     f.close();
+    if (LlamaAgentBackend *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setWebProviders(webProviderConfigs());
     emit integrationsChanged();
     return true;
+}
+
+QVariantList AppController::webProviderConfigs() const
+{
+    QVariantList out;
+    for (const QJsonValue &value : readApiServices()) {
+        const QJsonObject o = value.toObject();
+        const QString provider = o.value(QStringLiteral("provider")).toString().toLower();
+        if (provider.isEmpty() || provider == QLatin1String("generic")) continue;
+        out.append(QVariantMap{
+            {QStringLiteral("provider"), provider},
+            {QStringLiteral("baseUrl"), o.value(QStringLiteral("baseUrl")).toString()},
+            {QStringLiteral("apiKey"), o.value(QStringLiteral("apiKey")).toString()},
+            {QStringLiteral("enabled"), o.value(QStringLiteral("enabled")).toBool(false)}});
+    }
+    return out;
 }
 
 QVariantList AppController::integrations() const
@@ -7244,10 +7263,15 @@ QVariantList AppController::integrations() const
         it[QStringLiteral("type")]    = QStringLiteral("api_service");
         it[QStringLiteral("name")]    = o.value(QStringLiteral("name")).toString();
         it[QStringLiteral("enabled")] = o.value(QStringLiteral("enabled")).toBool(true);
-        it[QStringLiteral("summary")] = o.value(QStringLiteral("baseUrl")).toString();
+        const QString provider = o.value(QStringLiteral("provider"))
+                                     .toString(QStringLiteral("generic"));
+        it[QStringLiteral("summary")] = provider == QLatin1String("generic")
+            ? o.value(QStringLiteral("baseUrl")).toString()
+            : QStringLiteral("%1 · %2").arg(provider, o.value(QStringLiteral("baseUrl")).toString());
         QVariantMap cfg;
         cfg[QStringLiteral("baseUrl")] = o.value(QStringLiteral("baseUrl")).toString();
         cfg[QStringLiteral("hasKey")]  = !o.value(QStringLiteral("apiKey")).toString().isEmpty();
+        cfg[QStringLiteral("provider")] = provider;
         it[QStringLiteral("config")]   = cfg;
         out.append(it);
     }
@@ -7269,9 +7293,15 @@ bool AppController::saveMcpIntegration(const QString &name, const QString &type,
 }
 
 bool AppController::saveApiService(const QString &id, const QString &name,
-                                   const QString &baseUrl, const QString &apiKey, bool enabled)
+                                   const QString &baseUrl, const QString &apiKey, bool enabled,
+                                   const QString &provider)
 {
     if (name.trimmed().isEmpty()) return false;
+    const QString p = provider.trimmed().isEmpty() ? QStringLiteral("generic")
+                                                    : provider.trimmed().toLower();
+    // CloakBrowser se registra sólo como integración avanzada/manual. Nunca entra
+    // al pipeline automático ni queda activo al crearlo.
+    if (p == QLatin1String("cloakbrowser")) enabled = false;
     QJsonArray arr = readApiServices();
     if (id.isEmpty()) {
         arr.append(QJsonObject{
@@ -7279,6 +7309,7 @@ bool AppController::saveApiService(const QString &id, const QString &name,
             {QStringLiteral("name"),    name.trimmed()},
             {QStringLiteral("baseUrl"), baseUrl.trimmed()},
             {QStringLiteral("apiKey"),  apiKey},
+            {QStringLiteral("provider"), p},
             {QStringLiteral("enabled"), enabled}});
         return writeApiServices(arr);
     }
@@ -7287,6 +7318,7 @@ bool AppController::saveApiService(const QString &id, const QString &name,
         if (o.value(QStringLiteral("id")).toString() == id) {
             o[QStringLiteral("name")]    = name.trimmed();
             o[QStringLiteral("baseUrl")] = baseUrl.trimmed();
+            o[QStringLiteral("provider")] = p;
             // key vacío en edición = conservar la existente.
             if (!apiKey.isEmpty()) o[QStringLiteral("apiKey")] = apiKey;
             o[QStringLiteral("enabled")] = enabled;
@@ -7341,30 +7373,52 @@ void AppController::testIntegration(const QString &id)
 {
     if (id.startsWith(QStringLiteral("api:"))) {
         const QString aid = id.mid(4);
-        QString baseUrl, apiKey;
+        QString baseUrl, apiKey, provider;
         for (const QJsonValue &v : readApiServices()) {
             const QJsonObject o = v.toObject();
             if (o.value(QStringLiteral("id")).toString() == aid) {
                 baseUrl = o.value(QStringLiteral("baseUrl")).toString();
                 apiKey  = o.value(QStringLiteral("apiKey")).toString();
+                provider = o.value(QStringLiteral("provider"))
+                               .toString(QStringLiteral("generic"));
                 break;
             }
         }
         if (baseUrl.isEmpty()) { emit integrationTestResult(id, false, QStringLiteral("URL vacía")); return; }
+        if (provider == QLatin1String("cloakbrowser")) {
+            emit integrationTestResult(
+                id, false,
+                QStringLiteral("CloakBrowser es externo/manual, no se ejecuta ni distribuye con LlamaCode."));
+            return;
+        }
         if (!m_nam) m_nam = new QNetworkAccessManager(this);
+        if (provider == QLatin1String("camofox")) {
+            while (baseUrl.endsWith(QLatin1Char('/'))) baseUrl.chop(1);
+            baseUrl += QStringLiteral("/health");
+        }
         QNetworkRequest req((QUrl(baseUrl)));
         if (!apiKey.isEmpty())
             req.setRawHeader(QByteArrayLiteral("Authorization"),
                              QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
         QNetworkReply *reply = m_nam->get(req);
-        connect(reply, &QNetworkReply::finished, this, [this, reply, id]() {
+        connect(reply, &QNetworkReply::finished, this, [this, reply, id, provider]() {
             const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             const QString err = reply->errorString();
+            const QByteArray body = reply->readAll();
             const bool neterr = reply->error() != QNetworkReply::NoError && status == 0;
             reply->deleteLater();
             if (neterr) emit integrationTestResult(id, false, err);
-            else        emit integrationTestResult(id, status > 0 && status < 500,
-                                                   QStringLiteral("HTTP %1").arg(status));
+            else {
+                const bool ok = status >= 200 && status < 300;
+                QString msg = QStringLiteral("HTTP %1").arg(status);
+                if (provider == QLatin1String("camofox") && ok) {
+                    const QJsonObject health = QJsonDocument::fromJson(body).object();
+                    msg = QStringLiteral("Camofox OK · browser=%1")
+                              .arg(health.value(QStringLiteral("browserRunning")).toBool()
+                                       ? QStringLiteral("activo") : QStringLiteral("en espera"));
+                }
+                emit integrationTestResult(id, ok, msg);
+            }
         });
         return;
     }
@@ -12214,6 +12268,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         agent->setPermissionRules(m_agentPermRules);
         agent->setAgentTuning(m_agentSystemPrompt, temp);
         agent->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
+        agent->setWebProviders(webProviderConfigs());
         agent->setVisionAvailable(m_serverHasVision);
         agent->setDisabledTools({}); // por defecto: todas las tools (escribir/probar)
         // NIVEL del agente: si se eligió un perfil, aplicá sus capacidades +
