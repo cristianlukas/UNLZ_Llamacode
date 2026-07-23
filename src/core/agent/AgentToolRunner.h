@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QElapsedTimer>
 #include <QSet>
+#include <QHash>
 #include <QJsonObject>
 #include <QList>
 #include <QVariantList>
@@ -93,9 +94,11 @@ public:
     static QString extractReadableWebText(const QString &html);
     static QStringList webEscalationReasons(const QString &html, const QString &text,
                                             const QString &transportError = QString());
-private:
+    // Adapters individuales, públicos para probes/E2E sin pasar por la política.
     QString fetchViaPlaywright(const QString &url, QString *error);
     QString fetchViaCamofox(const QString &url, QString *error);
+    bool consumeWebRateLimit(const QString &host, qint64 nowMs, QString *error = nullptr);
+private:
     void startShell(const QString &callId, const QString &command,
                     const QString &cwd, int timeoutS);
     void finishShell(bool timedOut, bool cancelled);
@@ -107,6 +110,7 @@ private:
     QString m_sessionId;           // sesión activa (filtro de recent_actions)
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QVariantList m_webProviders;   // proveedores REST opt-in (p.ej. Camofox)
+    QHash<QString, QList<qint64>> m_webRequestTimes; // rate limit por host, ventana 60 s
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)
     // Maestro CLI (claude-code / codex). m_masterKind: "none"|"http"|"cli".
     QString m_masterKind = QStringLiteral("none");

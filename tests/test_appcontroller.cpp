@@ -107,6 +107,7 @@ private slots:
     void createRecommendedLaunchProfileBuildsProfile();
     void createRecommendedLaunchProfileReusesExistingMenuProfile();
     void browserMcpEffectiveResolves();
+    void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
@@ -616,6 +617,48 @@ void AppControllerTests::browserMcpEffectiveResolves()
     QVERIFY( AppController::browserMcpEffective(QStringLiteral("inherit"), true));
     QVERIFY(!AppController::browserMcpEffective(QStringLiteral("inherit"), false));
     QVERIFY( AppController::browserMcpEffective(QString(), true));   // vacío → hereda
+}
+
+void AppControllerTests::integrationSecretsMigrateOutOfJson()
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    QDir().mkpath(dir);
+    const QString path = dir + QStringLiteral("/integrations.json");
+    const QString secret = QStringLiteral("legacy-camofox-secret-DO-NOT-PERSIST");
+    {
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        file.write(QJsonDocument(QJsonArray{QJsonObject{
+            {QStringLiteral("id"), QStringLiteral("legacy-camofox")},
+            {QStringLiteral("name"), QStringLiteral("Camofox")},
+            {QStringLiteral("provider"), QStringLiteral("camofox")},
+            {QStringLiteral("baseUrl"), QStringLiteral("http://127.0.0.1:9377")},
+            {QStringLiteral("apiKey"), secret},
+            {QStringLiteral("enabled"), true}}}).toJson());
+    }
+
+    AppController controller; // constructor ejecuta la migración
+    QFile migrated(path);
+    QVERIFY(migrated.open(QIODevice::ReadOnly));
+    const QByteArray json = migrated.readAll();
+    QVERIFY(!json.contains(secret.toUtf8()));
+    const QJsonObject stored = QJsonDocument::fromJson(json).array().first().toObject();
+    QCOMPARE(stored.value(QStringLiteral("apiKeyRef")).toString(),
+             QStringLiteral("integration/legacy-camofox"));
+    QVERIFY(!stored.contains(QStringLiteral("apiKey")));
+    const QVariantList integrations = controller.integrations();
+    bool migratedHasKey = false;
+    for (const QVariant &entry : integrations) {
+        const QVariantMap integration = entry.toMap();
+        if (integration.value(QStringLiteral("id")).toString()
+            == QLatin1String("api:legacy-camofox")) {
+            migratedHasKey = integration.value(QStringLiteral("config")).toMap()
+                                 .value(QStringLiteral("hasKey")).toBool();
+            break;
+        }
+    }
+    QVERIFY(migratedHasKey);
+    QVERIFY(controller.removeIntegration(QStringLiteral("api:legacy-camofox")));
 }
 
 void AppControllerTests::browserTeachSkillsLifecycle()

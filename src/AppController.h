@@ -1432,6 +1432,7 @@ private:
     QJsonArray readApiServices() const;
     bool writeApiServices(const QJsonArray &arr);
     QVariantList webProviderConfigs() const;
+    void migrateIntegrationSecrets();
     QJsonObject exportFileSet(const QString &root, const QStringList &relativePaths) const;
     bool importFileSet(const QString &root, const QJsonObject &set, QStringList *written);
     bool removePathForWipe(const QString &path);

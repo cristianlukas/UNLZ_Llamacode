@@ -517,4 +517,15 @@ if (BUILD_TESTS)
     endif()
     target_include_directories(qa_visual_automation PRIVATE src tests)
     target_link_libraries(qa_visual_automation PRIVATE llamacode_core)
+
+    # Probe opt-in de proveedores web reales. No entra en ctest porque requiere
+    # Camofox o Playwright MCP instalados por el operador.
+    qt_add_executable(qa_web_providers tests/qa_web_providers.cpp)
+    set_target_properties(qa_web_providers PROPERTIES WIN32_EXECUTABLE FALSE)
+    if (MSVC)
+        target_compile_options(qa_web_providers PRIVATE /utf-8)
+        target_link_options(qa_web_providers PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
+    endif()
+    target_include_directories(qa_web_providers PRIVATE src tests)
+    target_link_libraries(qa_web_providers PRIVATE llamacode_core)
 endif()

@@ -14,9 +14,44 @@
 #include <QJsonDocument>
 #include <QDir>
 #include <QFile>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/AgentEventLog.h"
 #include "core/agent/SubAgentRunner.h"
+
+class CamofoxStub : public QTcpServer
+{
+public:
+    explicit CamofoxStub(QObject *parent = nullptr) : QTcpServer(parent)
+    {
+        connect(this, &QTcpServer::newConnection, this, [this]() {
+            QTcpSocket *socket = nextPendingConnection();
+            connect(socket, &QTcpSocket::readyRead, socket, [socket]() {
+                const QByteArray request = socket->readAll();
+                if (!request.contains("\r\n\r\n")) return;
+                QByteArray body;
+                if (request.startsWith("POST /tabs HTTP/"))
+                    body = QByteArrayLiteral(
+                        "{\"tabId\":\"tab-1\",\"url\":\"https://93.184.216.34/\"}");
+                else if (request.startsWith("POST /tabs/tab-1/evaluate HTTP/"))
+                    body = QByteArrayLiteral(
+                        "{\"result\":\"{\\\"title\\\":\\\"Example\\\",\\\"text\\\":"
+                        "\\\"Contenido DOM renderizado suficientemente largo para validar el "
+                        "proveedor Camofox de extremo a extremo sin acceder a Internet.\\\","
+                        "\\\"url\\\":\\\"https://93.184.216.34/\\\",\\\"score\\\":900}\"}");
+                else
+                    body = QByteArrayLiteral("{\"ok\":true}");
+                QByteArray response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n"
+                    "Connection: close\r\nContent-Length: " + QByteArray::number(body.size())
+                    + "\r\n\r\n" + body;
+                socket->write(response);
+                socket->disconnectFromHost();
+            });
+            connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+        });
+    }
+};
 
 class AgentToolsTests : public QObject
 {
@@ -49,6 +84,8 @@ private slots:
     void readableWebText_prefersArticleAndPreservesStructure();
     void webEscalation_requiresVerifiableEvidence();
     void webFetch_forcedUnavailableProviderFailsDeterministically();
+    void webFetch_camofoxProviderE2E();
+    void webFetch_rateLimitsPerHost();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -511,6 +548,33 @@ void AgentToolsTests::webFetch_forcedUnavailableProviderFailsDeterministically()
     QVERIFY(!result.value(QStringLiteral("ok")).toBool());
     QVERIFY(result.value(QStringLiteral("result")).toString()
                 .contains(QStringLiteral("Camofox no está configurado")));
+}
+
+void AgentToolsTests::webFetch_camofoxProviderE2E()
+{
+    CamofoxStub server;
+    QVERIFY(server.listen(QHostAddress::LocalHost));
+    m_runner->setWebProviders({QVariantMap{
+        {QStringLiteral("provider"), QStringLiteral("camofox")},
+        {QStringLiteral("baseUrl"),
+         QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort())},
+        {QStringLiteral("enabled"), true}}});
+    QString error;
+    const QString text = m_runner->fetchViaCamofox(
+        QStringLiteral("https://93.184.216.34/"), &error);
+    QVERIFY2(!text.isEmpty(), qPrintable(error));
+    QVERIFY(text.contains(QStringLiteral("Contenido DOM renderizado")));
+}
+
+void AgentToolsTests::webFetch_rateLimitsPerHost()
+{
+    QString error;
+    for (int i = 0; i < 30; ++i)
+        QVERIFY(m_runner->consumeWebRateLimit(QStringLiteral("example.com"), 1000 + i,
+                                             &error));
+    QVERIFY(!m_runner->consumeWebRateLimit(QStringLiteral("example.com"), 2000, &error));
+    QVERIFY(error.contains(QStringLiteral("rate limit")));
+    QVERIFY(m_runner->consumeWebRateLimit(QStringLiteral("example.com"), 61031, &error));
 }
 
 QTEST_MAIN(AgentToolsTests)

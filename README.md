@@ -762,19 +762,33 @@ La lectura web usa proveedores tipados. `web_search` consulta SearXNG —incluid
 endpoint local configurado explícitamente— o DuckDuckGo. `web_fetch` ejecuta el
 pipeline `direct → Playwright MCP → Camofox`: el camino directo resuelve DNS,
 bloquea localhost/redes privadas/metadata cloud, revalida cada redirección, limita
-la descarga a 2 MB y extrae primero `article`/`main`. Sólo escala cuando hay
+la descarga a 2 MB y extrae primero `article`/`main`. Los proveedores de navegador
+reciben únicamente la URL pública final resuelta por ese preflight y deben informar
+una URL final pública verificable. Cada host queda limitado a 30 lecturas/minuto.
+Sólo escala cuando hay
 evidencia verificable (`transport_error`, challenge conocido, shell que requiere
 JavaScript, contenido vacío o demasiado corto). Playwright y Camofox leen el DOM
-renderizado; la respuesta informa proveedor, intentos y evidencia. El parámetro
+renderizado con una extracción determinista que elimina chrome de navegación y
+elige el contenedor principal por texto, párrafos y densidad de enlaces; la
+respuesta informa proveedor, intentos y evidencia. El parámetro
 `provider=direct|playwright|camofox` permite diagnóstico determinista.
 
 Camofox se agrega en **Configuración → Integrations → API Service**, eligiendo
 `Camofox`, normalmente con `http://127.0.0.1:9377`. Es opt-in, diagnosticable con
-`/health` y LlamaCode no instala ni inicia su contenedor. La API key se conserva
-con la integración y se envía como Bearer cuando corresponde. CloakBrowser sólo
+`/health` más una apertura/cierre real de pestaña, y LlamaCode no instala ni inicia
+su contenedor. La API key se guarda en `SecretStore`; `integrations.json` conserva
+sólo una referencia y la clave se envía como Bearer cuando corresponde. Las
+instalaciones anteriores que tenían la clave en JSON se migran automáticamente.
+CloakBrowser sólo
 puede registrarse como integración externa/manual: se guarda desactivado, no forma
 parte del pipeline automático, no se descarga ni se redistribuye. Un operador que
 decida usarlo debe revisar por separado su binario, licencia y riesgos.
+
+El ejecutable de QA `qa_web_providers` permite probar servicios reales fuera de
+`ctest`, sin convertir dependencias externas en requisito del build:
+`qa_web_providers camofox https://example.com` (URL configurable con
+`LLAMACODE_QA_CAMOFOX_URL`) o `qa_web_providers playwright https://example.com`
+con `LLAMACODE_QA_PLAYWRIGHT_CMD` definido.
 
 ## Adjuntos (documentos + visión)
 

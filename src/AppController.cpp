@@ -659,6 +659,7 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    migrateIntegrationSecrets();
     m_workflowToolRunner = new AgentToolRunner(this);
     connect(m_workflowToolRunner, &AgentToolRunner::toolExecuted, this,
             [this](const QVariantMap &result) {
@@ -7221,6 +7222,31 @@ bool AppController::writeApiServices(const QJsonArray &arr)
     return true;
 }
 
+void AppController::migrateIntegrationSecrets()
+{
+    QJsonArray arr = readApiServices();
+    bool changed = false;
+    for (int i = 0; i < arr.size(); ++i) {
+        QJsonObject o = arr[i].toObject();
+        const QString id = o.value(QStringLiteral("id")).toString();
+        if (id.isEmpty()) continue;
+        QString ref = o.value(QStringLiteral("apiKeyRef")).toString();
+        if (ref.isEmpty()) {
+            ref = QStringLiteral("integration/") + id;
+            o[QStringLiteral("apiKeyRef")] = ref;
+            changed = true;
+        }
+        const QString legacy = o.value(QStringLiteral("apiKey")).toString();
+        if (!legacy.isEmpty()) m_secrets.set(ref, legacy);
+        if (o.contains(QStringLiteral("apiKey"))) {
+            o.remove(QStringLiteral("apiKey"));
+            changed = true;
+        }
+        arr[i] = o;
+    }
+    if (changed) writeApiServices(arr);
+}
+
 QVariantList AppController::webProviderConfigs() const
 {
     QVariantList out;
@@ -7231,7 +7257,8 @@ QVariantList AppController::webProviderConfigs() const
         out.append(QVariantMap{
             {QStringLiteral("provider"), provider},
             {QStringLiteral("baseUrl"), o.value(QStringLiteral("baseUrl")).toString()},
-            {QStringLiteral("apiKey"), o.value(QStringLiteral("apiKey")).toString()},
+            {QStringLiteral("apiKey"), m_secrets.resolve(
+                 o.value(QStringLiteral("apiKeyRef")).toString())},
             {QStringLiteral("enabled"), o.value(QStringLiteral("enabled")).toBool(false)}});
     }
     return out;
@@ -7270,7 +7297,8 @@ QVariantList AppController::integrations() const
             : QStringLiteral("%1 · %2").arg(provider, o.value(QStringLiteral("baseUrl")).toString());
         QVariantMap cfg;
         cfg[QStringLiteral("baseUrl")] = o.value(QStringLiteral("baseUrl")).toString();
-        cfg[QStringLiteral("hasKey")]  = !o.value(QStringLiteral("apiKey")).toString().isEmpty();
+        cfg[QStringLiteral("hasKey")]  = m_secrets.has(
+            o.value(QStringLiteral("apiKeyRef")).toString());
         cfg[QStringLiteral("provider")] = provider;
         it[QStringLiteral("config")]   = cfg;
         out.append(it);
@@ -7304,11 +7332,14 @@ bool AppController::saveApiService(const QString &id, const QString &name,
     if (p == QLatin1String("cloakbrowser")) enabled = false;
     QJsonArray arr = readApiServices();
     if (id.isEmpty()) {
+        const QString newId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        const QString keyRef = QStringLiteral("integration/") + newId;
+        if (!apiKey.isEmpty()) m_secrets.set(keyRef, apiKey);
         arr.append(QJsonObject{
-            {QStringLiteral("id"),      QUuid::createUuid().toString(QUuid::WithoutBraces)},
+            {QStringLiteral("id"),      newId},
             {QStringLiteral("name"),    name.trimmed()},
             {QStringLiteral("baseUrl"), baseUrl.trimmed()},
-            {QStringLiteral("apiKey"),  apiKey},
+            {QStringLiteral("apiKeyRef"), keyRef},
             {QStringLiteral("provider"), p},
             {QStringLiteral("enabled"), enabled}});
         return writeApiServices(arr);
@@ -7316,11 +7347,14 @@ bool AppController::saveApiService(const QString &id, const QString &name,
     for (int i = 0; i < arr.size(); ++i) {
         QJsonObject o = arr[i].toObject();
         if (o.value(QStringLiteral("id")).toString() == id) {
+            QString keyRef = o.value(QStringLiteral("apiKeyRef")).toString();
+            if (keyRef.isEmpty()) keyRef = QStringLiteral("integration/") + id;
             o[QStringLiteral("name")]    = name.trimmed();
             o[QStringLiteral("baseUrl")] = baseUrl.trimmed();
             o[QStringLiteral("provider")] = p;
-            // key vacío en edición = conservar la existente.
-            if (!apiKey.isEmpty()) o[QStringLiteral("apiKey")] = apiKey;
+            o[QStringLiteral("apiKeyRef")] = keyRef;
+            o.remove(QStringLiteral("apiKey"));
+            if (!apiKey.isEmpty()) m_secrets.set(keyRef, apiKey);
             o[QStringLiteral("enabled")] = enabled;
             arr[i] = o;
             return writeApiServices(arr);
@@ -7341,6 +7375,9 @@ bool AppController::removeIntegration(const QString &id)
         QJsonArray arr = readApiServices();
         for (int i = 0; i < arr.size(); ++i)
             if (arr[i].toObject().value(QStringLiteral("id")).toString() == aid) {
+                const QString ref = arr[i].toObject()
+                                        .value(QStringLiteral("apiKeyRef")).toString();
+                if (!ref.isEmpty()) m_secrets.remove(ref);
                 arr.removeAt(i);
                 return writeApiServices(arr);
             }
@@ -7378,7 +7415,7 @@ void AppController::testIntegration(const QString &id)
             const QJsonObject o = v.toObject();
             if (o.value(QStringLiteral("id")).toString() == aid) {
                 baseUrl = o.value(QStringLiteral("baseUrl")).toString();
-                apiKey  = o.value(QStringLiteral("apiKey")).toString();
+                apiKey  = m_secrets.resolve(o.value(QStringLiteral("apiKeyRef")).toString());
                 provider = o.value(QStringLiteral("provider"))
                                .toString(QStringLiteral("generic"));
                 break;
@@ -7401,7 +7438,8 @@ void AppController::testIntegration(const QString &id)
             req.setRawHeader(QByteArrayLiteral("Authorization"),
                              QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
         QNetworkReply *reply = m_nam->get(req);
-        connect(reply, &QNetworkReply::finished, this, [this, reply, id, provider]() {
+        connect(reply, &QNetworkReply::finished, this,
+                [this, reply, id, provider, baseUrl, apiKey]() {
             const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
             const QString err = reply->errorString();
             const QByteArray body = reply->readAll();
@@ -7413,9 +7451,53 @@ void AppController::testIntegration(const QString &id)
                 QString msg = QStringLiteral("HTTP %1").arg(status);
                 if (provider == QLatin1String("camofox") && ok) {
                     const QJsonObject health = QJsonDocument::fromJson(body).object();
-                    msg = QStringLiteral("Camofox OK · browser=%1")
-                              .arg(health.value(QStringLiteral("browserRunning")).toBool()
-                                       ? QStringLiteral("activo") : QStringLiteral("en espera"));
+                    QNetworkRequest openReq(QUrl(baseUrl.left(baseUrl.size() - 7)
+                                                + QStringLiteral("/tabs")));
+                    openReq.setHeader(QNetworkRequest::ContentTypeHeader,
+                                      QByteArrayLiteral("application/json"));
+                    if (!apiKey.isEmpty())
+                        openReq.setRawHeader(QByteArrayLiteral("Authorization"),
+                                             QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
+                    const QByteArray payload = QJsonDocument(QJsonObject{
+                        {QStringLiteral("userId"), QStringLiteral("llamacode-diagnostic")},
+                        {QStringLiteral("sessionKey"), QStringLiteral("diagnostic")},
+                        {QStringLiteral("url"), QStringLiteral("about:blank")}})
+                                                   .toJson(QJsonDocument::Compact);
+                    QNetworkReply *opened = m_nam->post(openReq, payload);
+                    connect(opened, &QNetworkReply::finished, this,
+                            [this, opened, id, health, baseUrl, apiKey]() {
+                        const QJsonObject result =
+                            QJsonDocument::fromJson(opened->readAll()).object();
+                        const QString tabId = result.value(QStringLiteral("tabId")).toString();
+                        const bool openedOk = opened->error() == QNetworkReply::NoError
+                                              && !tabId.isEmpty();
+                        opened->deleteLater();
+                        if (!openedOk) {
+                            emit integrationTestResult(
+                                id, false, QStringLiteral("Camofox responde pero no pudo abrir pestaña."));
+                            return;
+                        }
+                        QString root = baseUrl;
+                        if (root.endsWith(QStringLiteral("/health"))) root.chop(7);
+                        QNetworkRequest closeReq(
+                            QUrl(root + QStringLiteral("/tabs/") + tabId
+                                 + QStringLiteral("?userId=llamacode-diagnostic")));
+                        if (!apiKey.isEmpty())
+                            closeReq.setRawHeader(QByteArrayLiteral("Authorization"),
+                                                  QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
+                        QNetworkReply *closed = m_nam->deleteResource(closeReq);
+                        connect(closed, &QNetworkReply::finished, this,
+                                [this, closed, id, health]() {
+                            const bool closeOk = closed->error() == QNetworkReply::NoError;
+                            closed->deleteLater();
+                            emit integrationTestResult(
+                                id, closeOk,
+                                closeOk
+                                    ? QStringLiteral("Camofox OK · health + abrir/cerrar pestaña")
+                                    : QStringLiteral("Camofox abrió pero no cerró la pestaña de diagnóstico."));
+                        });
+                    });
+                    return;
                 }
                 emit integrationTestResult(id, ok, msg);
             }
