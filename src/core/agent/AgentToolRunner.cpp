@@ -22,6 +22,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
+#include <QHostAddress>
+#include <QHostInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QEventLoop>
@@ -132,49 +134,204 @@ static void terminateProcessTree(QProcess *proc)
 // ── Helpers web (compartidos por web_fetch / web_search / deep_research) ──
 struct WebHit { QString title, url, snippet; };
 
-// GET sincrónico con timeout (corre en el hilo worker, sin event loop propio del caller).
-static QByteArray httpGetSync(const QUrl &url, QString *err, int timeoutMs = 20000)
+static bool isBlockedWebAddress(const QHostAddress &address)
 {
-    QNetworkAccessManager nam;
-    QNetworkRequest req(url);
-    req.setHeader(QNetworkRequest::UserAgentHeader, QByteArrayLiteral("Mozilla/5.0 LlamaCode/0.1"));
-    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
-                     QNetworkRequest::NoLessSafeRedirectPolicy);
-    QNetworkReply *reply = nam.get(req);
-    QEventLoop loop;
-    QTimer killer; killer.setSingleShot(true);
-    QObject::connect(&killer, &QTimer::timeout, &loop, &QEventLoop::quit);
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    killer.start(timeoutMs);
-    loop.exec();
-    if (reply->isRunning()) { reply->abort(); reply->deleteLater(); if (err) *err = QStringLiteral("timeout"); return {}; }
-    if (reply->error() != QNetworkReply::NoError) { if (err) *err = reply->errorString(); reply->deleteLater(); return {}; }
-    const QByteArray body = reply->readAll(); reply->deleteLater(); return body;
+    if (address.isNull() || address.isLoopback() || address.isMulticast())
+        return true;
+    if (address.protocol() == QAbstractSocket::IPv4Protocol) {
+        const quint32 ip = address.toIPv4Address();
+        return (ip & 0xff000000U) == 0x00000000U       // 0.0.0.0/8
+            || (ip & 0xff000000U) == 0x0a000000U       // 10/8
+            || (ip & 0xffc00000U) == 0x64400000U       // 100.64/10
+            || (ip & 0xff000000U) == 0x7f000000U       // 127/8
+            || (ip & 0xffff0000U) == 0xa9fe0000U       // 169.254/16
+            || (ip & 0xfff00000U) == 0xac100000U       // 172.16/12
+            || (ip & 0xffffff00U) == 0xc0000000U       // 192.0.0/24
+            || (ip & 0xffffff00U) == 0xc0000200U       // TEST-NET-1
+            || (ip & 0xffff0000U) == 0xc0a80000U       // 192.168/16
+            || (ip & 0xfffe0000U) == 0xc6120000U       // benchmark 198.18/15
+            || (ip & 0xffffff00U) == 0xc6336400U       // TEST-NET-2
+            || (ip & 0xffffff00U) == 0xcb007100U       // TEST-NET-3
+            || (ip & 0xf0000000U) == 0xe0000000U;      // multicast/reservado
+    }
+    const Q_IPV6ADDR ip = address.toIPv6Address();
+    bool ipv4Mapped = true;
+    for (int i = 0; i < 10; ++i)
+        ipv4Mapped = ipv4Mapped && ip[i] == 0;
+    ipv4Mapped = ipv4Mapped && ip[10] == 0xffU && ip[11] == 0xffU;
+    if (ipv4Mapped) {
+        const quint32 v4 = (quint32(ip[12]) << 24) | (quint32(ip[13]) << 16)
+                         | (quint32(ip[14]) << 8) | quint32(ip[15]);
+        return isBlockedWebAddress(QHostAddress(v4));
+    }
+    return (ip[0] & 0xfeU) == 0xfcU                    // unique-local fc00::/7
+        || (ip[0] == 0xfeU && (ip[1] & 0xc0U) == 0x80U) // link-local fe80::/10
+        || ip[0] == 0xffU;                             // multicast
 }
 
-// HTML crudo → texto plano: saca script/style, tags, entidades, colapsa espacios.
-static QString cleanHtmlToText(QString text)
+bool AgentToolRunner::isSafePublicWebUrl(const QString &raw, QString *error)
 {
-    text.remove(QRegularExpression(QStringLiteral("(?is)<(script|style)[^>]*>.*?</\\1>")));
-    text.remove(QRegularExpression(QStringLiteral("(?s)<[^>]+>")));
+    const QUrl url = QUrl::fromUserInput(raw);
+    const QString scheme = url.scheme().toLower();
+    const QString host = url.host().trimmed().toLower();
+    if (!url.isValid() || (scheme != QLatin1String("http") && scheme != QLatin1String("https"))
+        || host.isEmpty()) {
+        if (error) *error = QStringLiteral("sólo se permiten URLs http(s) absolutas");
+        return false;
+    }
+    if (!url.userInfo().isEmpty()) {
+        if (error) *error = QStringLiteral("no se permiten credenciales embebidas en la URL");
+        return false;
+    }
+    if (host == QLatin1String("localhost") || host.endsWith(QLatin1String(".localhost"))
+        || host.endsWith(QLatin1String(".local")) || host.endsWith(QLatin1String(".internal"))) {
+        if (error) *error = QStringLiteral("destino local/interno bloqueado");
+        return false;
+    }
+
+    QHostAddress literal;
+    if (literal.setAddress(host)) {
+        if (isBlockedWebAddress(literal)) {
+            if (error) *error = QStringLiteral("dirección IP no pública bloqueada");
+            return false;
+        }
+        return true;
+    }
+
+    const QHostInfo info = QHostInfo::fromName(host);
+    if (info.error() != QHostInfo::NoError || info.addresses().isEmpty()) {
+        if (error) *error = QStringLiteral("no se pudo resolver el host");
+        return false;
+    }
+    for (const QHostAddress &address : info.addresses()) {
+        if (isBlockedWebAddress(address)) {
+            if (error) *error = QStringLiteral("el host resuelve a una red no pública");
+            return false;
+        }
+    }
+    return true;
+}
+
+static QString decodeHtmlEntities(QString text)
+{
     text.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
     text.replace(QStringLiteral("&amp;"),  QStringLiteral("&"));
     text.replace(QStringLiteral("&lt;"),   QStringLiteral("<"));
     text.replace(QStringLiteral("&gt;"),   QStringLiteral(">"));
     text.replace(QStringLiteral("&quot;"), QStringLiteral("\""));
     text.replace(QStringLiteral("&#x27;"), QStringLiteral("'"));
+    QRegularExpression numeric(QStringLiteral("&#(x?[0-9a-fA-F]+);"));
+    auto it = numeric.globalMatch(text);
+    QList<QPair<QString, QString>> replacements;
+    while (it.hasNext()) {
+        const auto match = it.next();
+        bool ok = false;
+        const QString token = match.captured(1);
+        const uint value = token.startsWith(QLatin1Char('x'), Qt::CaseInsensitive)
+            ? token.mid(1).toUInt(&ok, 16) : token.toUInt(&ok, 10);
+        if (ok && value <= 0x10ffffU)
+            replacements.append({match.captured(0), QString::fromUcs4(&value, 1)});
+    }
+    for (const auto &replacement : replacements)
+        text.replace(replacement.first, replacement.second);
+    return text;
+}
+
+QString AgentToolRunner::extractReadableWebText(const QString &html)
+{
+    QString text = html;
+    text.remove(QRegularExpression(
+        QStringLiteral("(?is)<(script|style|noscript|svg|canvas|template|nav|footer|aside|form)"
+                       "[^>]*>.*?</\\1>")));
+
+    // Preferir el contenido semántico principal cuando existe. El fallback al body
+    // evita perder páginas viejas o HTML imperfecto.
+    QRegularExpression mainRe(QStringLiteral("(?is)<(article|main)\\b[^>]*>(.*)</\\1>"));
+    const auto mainMatch = mainRe.match(text);
+    if (mainMatch.hasMatch())
+        text = mainMatch.captured(2);
+    else {
+        const auto bodyMatch = QRegularExpression(
+            QStringLiteral("(?is)<body\\b[^>]*>(.*)</body>")).match(text);
+        if (bodyMatch.hasMatch()) text = bodyMatch.captured(1);
+    }
+
+    text.replace(QRegularExpression(
+        QStringLiteral("(?is)<\\s*(br|hr)\\b[^>]*>")), QStringLiteral("\n"));
+    text.replace(QRegularExpression(
+        QStringLiteral("(?is)</\\s*(p|div|li|tr|section|article|main|h[1-6])\\s*>")),
+        QStringLiteral("\n"));
+    text.replace(QRegularExpression(QStringLiteral("(?s)<[^>]+>")), QStringLiteral(""));
+    text = decodeHtmlEntities(text);
     text.replace(QRegularExpression(QStringLiteral("[ \t]+")), QStringLiteral(" "));
     text.replace(QRegularExpression(QStringLiteral("\n[ \t]*(?:\n[ \t]*)+")), QStringLiteral("\n\n"));
     return text.trimmed();
 }
 
+// GET sincrónico con timeout, redirecciones revalidadas y cuerpo acotado. Corre
+// en el worker para que DNS y red nunca bloqueen la UI.
+static QByteArray httpGetSync(const QUrl &initialUrl, QString *err, int timeoutMs = 20000,
+                              bool allowConfiguredLocalEndpoint = false)
+{
+    QUrl url = initialUrl;
+    for (int redirect = 0; redirect <= 5; ++redirect) {
+        QString validationError;
+        // Un SearXNG local es una integración explícita del usuario. La excepción
+        // sólo vale para el primer request configurado; todo redirect se revalida.
+        if (!(redirect == 0 && allowConfiguredLocalEndpoint)
+            && !AgentToolRunner::isSafePublicWebUrl(url.toString(), &validationError)) {
+            if (err) *err = QStringLiteral("URL bloqueada: %1").arg(validationError);
+            return {};
+        }
+        QNetworkAccessManager nam;
+        QNetworkRequest req(url);
+        req.setHeader(QNetworkRequest::UserAgentHeader,
+                      QByteArrayLiteral("Mozilla/5.0 LlamaCode/0.1"));
+        req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                         QNetworkRequest::ManualRedirectPolicy);
+        QNetworkReply *reply = nam.get(req);
+        QEventLoop loop;
+        QTimer killer;
+        killer.setSingleShot(true);
+        QObject::connect(&killer, &QTimer::timeout, &loop, &QEventLoop::quit);
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        killer.start(timeoutMs);
+        loop.exec();
+        if (reply->isRunning()) {
+            reply->abort();
+            reply->deleteLater();
+            if (err) *err = QStringLiteral("timeout");
+            return {};
+        }
+        const QVariant redirectTarget =
+            reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+        if (redirectTarget.isValid()) {
+            url = url.resolved(redirectTarget.toUrl());
+            reply->deleteLater();
+            continue;
+        }
+        if (reply->error() != QNetworkReply::NoError) {
+            if (err) *err = reply->errorString();
+            reply->deleteLater();
+            return {};
+        }
+        QByteArray body = reply->readAll();
+        reply->deleteLater();
+        constexpr qsizetype kMaxDownloadBytes = 2 * 1024 * 1024;
+        if (body.size() > kMaxDownloadBytes)
+            body.truncate(kMaxDownloadBytes);
+        return body;
+    }
+    if (err) *err = QStringLiteral("demasiadas redirecciones");
+    return {};
+}
+
 // Descarga una URL y devuelve su texto limpiado (cap chars). "" si falla.
 static QString fetchUrlText(const QString &url, int cap, QString *err = nullptr)
 {
-    if (!url.startsWith(QLatin1String("http"))) { if (err) *err = QStringLiteral("url inválida"); return {}; }
     const QByteArray body = httpGetSync(QUrl(url), err);
     if (body.isEmpty()) return {};
-    const QString text = cleanHtmlToText(QString::fromUtf8(body));
+    const QString text = AgentToolRunner::extractReadableWebText(QString::fromUtf8(body));
     return text.left(cap);
 }
 
@@ -202,7 +359,7 @@ static QVector<WebHit> runWebSearch(const QString &query, int count, QString *er
         q.addQueryItem(QStringLiteral("q"), query);
         q.addQueryItem(QStringLiteral("format"), QStringLiteral("json"));
         u.setQuery(q);
-        const QByteArray body = httpGetSync(u, err);
+        const QByteArray body = httpGetSync(u, err, 20000, true);
         if (!body.isEmpty()) {
             const QJsonArray arr = QJsonDocument::fromJson(body).object()
                                        .value(QStringLiteral("results")).toArray();
@@ -231,8 +388,9 @@ static QVector<WebHit> runWebSearch(const QString &query, int count, QString *er
             const auto tm = titleIt.next();
             WebHit h;
             h.url = resolveDdgRedirect(tm.captured(1));
-            h.title = cleanHtmlToText(tm.captured(2));
-            if (snipIt.hasNext()) h.snippet = cleanHtmlToText(snipIt.next().captured(1));
+            h.title = AgentToolRunner::extractReadableWebText(tm.captured(2));
+            if (snipIt.hasNext())
+                h.snippet = AgentToolRunner::extractReadableWebText(snipIt.next().captured(1));
             if (!h.url.isEmpty()) hits.append(h);
         }
     }

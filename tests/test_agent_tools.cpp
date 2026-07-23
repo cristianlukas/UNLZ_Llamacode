@@ -45,6 +45,8 @@ private slots:
     void desktopControls_invalidWindowErrorsCleanly();
     void desktopLaunch_emptyAppErrorsCleanly();
     void honeyHandoff_densifiesMasterAndSubPrompts();
+    void webUrlGuard_blocksPrivateAndCredentials();
+    void readableWebText_prefersArticleAndPreservesStructure();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -432,6 +434,41 @@ void AgentToolsTests::honeyHandoff_densifiesMasterAndSubPrompts()
     QVERIFY(sOn.contains(QStringLiteral("C:/ws")));
     QVERIFY(sOn.contains(QStringLiteral("FRUGALIDAD (honey)")));
     QVERIFY(sOn.contains(QStringLiteral("YAGNI")));
+}
+
+void AgentToolsTests::webUrlGuard_blocksPrivateAndCredentials()
+{
+    QString error;
+    QVERIFY(!AgentToolRunner::isSafePublicWebUrl(QStringLiteral("http://127.0.0.1/admin"),
+                                                  &error));
+    QVERIFY(error.contains(QStringLiteral("no pública")));
+    QVERIFY(!AgentToolRunner::isSafePublicWebUrl(
+        QStringLiteral("http://169.254.169.254/latest/meta-data"), &error));
+    QVERIFY(!AgentToolRunner::isSafePublicWebUrl(QStringLiteral("http://[::1]/"), &error));
+    QVERIFY(!AgentToolRunner::isSafePublicWebUrl(
+        QStringLiteral("http://[::ffff:127.0.0.1]/"), &error));
+    QVERIFY(!AgentToolRunner::isSafePublicWebUrl(
+        QStringLiteral("https://user:secret@example.com/"), &error));
+    QVERIFY(error.contains(QStringLiteral("credenciales")));
+    QVERIFY(!AgentToolRunner::isSafePublicWebUrl(QStringLiteral("file:///etc/passwd"), &error));
+}
+
+void AgentToolsTests::readableWebText_prefersArticleAndPreservesStructure()
+{
+    const QString html = QStringLiteral(
+        "<html><body><nav>Menú secreto</nav><article><h1>Título &amp; prueba</h1>"
+        "<p>Primer párrafo.</p><script>robar()</script><p>Segundo &#x1F999;</p>"
+        "</article><footer>Publicidad</footer></body></html>");
+    const QString text = AgentToolRunner::extractReadableWebText(html);
+    QVERIFY(text.contains(QStringLiteral("Título & prueba")));
+    QVERIFY(text.contains(QStringLiteral("Primer párrafo.")));
+    QVERIFY(text.contains(QStringLiteral("Segundo")));
+    QVERIFY(text.indexOf(QStringLiteral("Primer párrafo."))
+            < text.indexOf(QStringLiteral("Segundo")));
+    QVERIFY(text.contains(QString::fromUtf8("🦙")));
+    QVERIFY(!text.contains(QStringLiteral("Menú secreto")));
+    QVERIFY(!text.contains(QStringLiteral("robar")));
+    QVERIFY(!text.contains(QStringLiteral("Publicidad")));
 }
 
 QTEST_MAIN(AgentToolsTests)

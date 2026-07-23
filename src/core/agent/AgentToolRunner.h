@@ -83,6 +83,11 @@ public:
     // System prompt del maestro para los handoffs de ask_teacher. Pura y estática
     // → unit-testeable. honey=true pide respuesta densa clave:valor (frugalidad).
     static QString masterSystemPrompt(bool honey);
+    // Helpers puros de la superficie web. La validación bloquea destinos locales,
+    // privados y metadata antes de cualquier request; la extracción prioriza el
+    // contenido principal y conserva estructura legible con presupuesto acotado.
+    static bool isSafePublicWebUrl(const QString &url, QString *error = nullptr);
+    static QString extractReadableWebText(const QString &html);
 private:
     void startShell(const QString &callId, const QString &command,
                     const QString &cwd, int timeoutS);

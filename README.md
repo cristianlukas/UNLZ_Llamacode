@@ -758,6 +758,15 @@ el **MCP de Playwright** en el set de tools del agente. El Teach de browser se
 gestiona desde Automatizaciones y guarda **recetas reproducibles** que
 las Tasks pueden reejecutar.
 
+La lectura web usa un camino progresivo: `web_search` consulta SearXNG —incluido
+un endpoint local configurado explícitamente— o DuckDuckGo, y `web_fetch` resuelve
+DNS, bloquea localhost/redes privadas/metadata cloud, revalida cada redirección,
+limita la descarga y extrae primero `article`/`main` conservando párrafos y
+encabezados. Si una página necesita JavaScript, presenta un challenge o no entrega
+contenido útil, el agente escala a Playwright MCP. Los navegadores alternativos
+pueden registrarse como MCP externos, pero no son dependencias ni mecanismos de
+bypass incorporados en LlamaCode.
+
 ## Adjuntos (documentos + visión)
 
 `DocumentExtractor` convierte adjuntos **pdf/office → markdown** vía sidecar

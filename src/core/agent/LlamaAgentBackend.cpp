@@ -4022,8 +4022,9 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("timeout_s"), intProp(QStringLiteral("Timeout en segundos (default 120, máx 1800)."))}},
            QJsonArray{QStringLiteral("command")}),
         fn(QStringLiteral("web_fetch"),
-           QStringLiteral("Descarga una URL http(s) y devuelve su texto (HTML limpiado a texto plano). "
-                          "Para docs/referencias online."),
+           QStringLiteral("Descarga una URL pública http(s), prioriza article/main y devuelve texto "
+                          "estructurado. Bloquea redes privadas y revalida redirects. Para páginas "
+                          "JS, challenges o contenido vacío, escalá a las tools MCP de Playwright."),
            QJsonObject{
                {QStringLiteral("url"), strProp(QStringLiteral("URL completa (http:// o https://)."))}},
            QJsonArray{QStringLiteral("url")}),
