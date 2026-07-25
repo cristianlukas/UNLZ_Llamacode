@@ -1711,7 +1711,14 @@ Item {
                     }
 
                     function scrollToBottom() {
-                        contentY = maxContentY()
+                        // Nunca mover el viewport hacia arriba desde el auto-follow.
+                        // ListView puede informar transitoriamente un contentHeight
+                        // demasiado chico mientras recicla/mide delegates altos; si
+                        // copiamos ese maxY, un refresh normal del QVariantList puede
+                        // mandar la conversación hasta el inicio.
+                        var maxY = maxContentY()
+                        if (contentY < maxY)
+                            contentY = maxY
                     }
 
                     function normalizeViewport() {
@@ -1770,7 +1777,10 @@ Item {
                         viewportSettleTimer.restart()
                     }
                     onModelChanged: {
-                        contentY = minContentY()
+                        // agentMessages es un QVariantList: cada NOTIFY puede hacer
+                        // que QML vea una nueva instancia de modelo aunque sólo haya
+                        // cambiado un mensaje. No reiniciar contentY aquí; el vaciado
+                        // real ya se maneja en onCountChanged.
                         followBottom = true
                         bottomTimer.restart()
                         viewportSettleTimer.restart()

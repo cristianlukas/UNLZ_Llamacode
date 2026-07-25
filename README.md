@@ -523,6 +523,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real
+- **Viewport estable**: las actualizaciones del modelo y las mediciones transitorias
+  de mensajes altos no reinician el chat al comienzo; el auto-scroll sólo avanza
+  hacia el final cuando el usuario ya estaba siguiendo la respuesta.
 - **Estado visible del turno**: la burbuja activa muestra si el agente está
   pensando, ejecutando una herramienta, escribiendo/leyendo archivos o esperando
   aprobación, para que las acciones largas no parezcan un bloqueo silencioso.
