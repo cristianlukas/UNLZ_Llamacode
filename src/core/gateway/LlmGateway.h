@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QHostAddress>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
@@ -32,9 +33,9 @@ public:
     struct Hooks {
         std::function<QString()>      baseUrl;        // url del llama-server activo
         std::function<bool()>         ready;          // server listo (health ok)
-        std::function<QString()>      currentModel;   // modelo cargado ahora
-        std::function<QStringList()>  modelNames;     // modelos disponibles (catálogo+perfiles)
-        std::function<void(QString)>  ensureModel;    // pedir carga de un modelo
+        std::function<QString()>      currentModel;   // id estable del launch cargado
+        std::function<QJsonArray()>   models;         // [{id,name,context,output}]
+        std::function<void(QString)>  ensureModel;    // pedir carga por id estable
         std::function<void()>         activity;       // bump idle watchdog
     };
     void setHooks(const Hooks &h) { m_hooks = h; }
@@ -54,6 +55,8 @@ public:
     static QJsonObject openAIToAnthropic(const QJsonObject &openai);
     // Resolver el modelo pedido contra la librería (match exacto > substring > "").
     static QString resolveModel(const QString &requested, const QStringList &available);
+    static QString resolveModelId(const QString &requested, const QJsonArray &models);
+    static QJsonObject modelsResponse(const QJsonArray &models);
     // LRU: registrar uso de `name`; devuelve los ids a desalojar (size > keepN).
     static QStringList lruTouch(QStringList &order, const QString &name, int keepN);
     // Inyecta salida estructurada (grammar GBNF o json_schema) en un payload OpenAI.
@@ -71,6 +74,7 @@ private:
     void forward(QTcpSocket *sock, const QString &path, const QByteArray &body,
                  bool anthropic, bool stream);
     void writeError(QTcpSocket *sock, int code, const QString &msg);
+    void writeJson(QTcpSocket *sock, int code, const QJsonObject &value);
 
     QTcpServer            *m_server = nullptr;
     QNetworkAccessManager *m_nam = nullptr;

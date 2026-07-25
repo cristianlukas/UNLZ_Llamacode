@@ -2,10 +2,24 @@ import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import LlamaCode 1.0
 
 Item {
     id: root
+
+    FolderDialog {
+        id: openCodeProjectDialog
+        title: "Elegí el proyecto para OpenCode"
+        onAccepted: {
+            var path = selectedFolder.toString().replace("file:///", "")
+            var err = App.launchOpenCode(path, openCodeProfile.currentValue ?? "")
+            gwMsg.text = err.length === 0
+                ? "OpenCode lanzado contra " + App.gatewayBaseUrl()
+                : err
+            gwMsg.ok = err.length === 0
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -510,7 +524,7 @@ Item {
                         }
                     }
 
-                    // ── Gateway / API (Anthropic + auto-load) ────────────────
+                    // ── Gateway / API (OpenAI + Anthropic + auto-load) ───────
                     ColumnLayout {
                         id: gatewaySection
                         Layout.fillWidth: true
@@ -548,7 +562,7 @@ Item {
                                             font.bold: true
                                         }
                                         Text {
-                                            text: "Proxy con endpoint Anthropic /v1/messages (para Claude Code) y auto-load: el request nombra un modelo y se carga solo. " + (App.gatewayRunning ? ("Activo en " + App.gatewayBaseUrl()) : "Apagado.")
+                                            text: "API local para OpenCode y Claude Code con auto-load: cada request puede cargar el perfil pedido. " + (App.gatewayRunning ? ("Activo en " + App.gatewayBaseUrl()) : "Apagado.")
                                             color: App.gatewayRunning ? Theme.accent : Theme.textMuted
                                             font.pixelSize: 11
                                             wrapMode: Text.WordWrap
@@ -614,6 +628,25 @@ Item {
                                     Layout.fillWidth: true
                                     visible: App.gatewayEnabled
                                     spacing: 8
+                                    ComboBox {
+                                        id: openCodeProfile
+                                        Layout.fillWidth: true
+                                        property var launchMenu: App.profileManager.launchProfilesForMenu()
+                                        model: launchMenu
+                                        textRole: "displayName"
+                                        valueRole: "id"
+                                        Component.onCompleted: {
+                                            var idx = indexOfValue(App.activeLaunchId)
+                                            currentIndex = idx >= 0 ? idx : 0
+                                        }
+                                        Connections {
+                                            target: App.profileManager
+                                            function onLaunchesChanged() {
+                                                openCodeProfile.launchMenu =
+                                                    App.profileManager.launchProfilesForMenu()
+                                            }
+                                        }
+                                    }
                                     LcButton {
                                         text: "Lanzar Claude Code en mi GPU"
                                         onClicked: {
@@ -624,7 +657,11 @@ Item {
                                             gwMsg.ok = err.length === 0
                                         }
                                     }
-                                    Item { Layout.fillWidth: true }
+                                    LcButton {
+                                        text: "Lanzar OpenCode en mi GPU"
+                                        enabled: openCodeProfile.currentValue !== undefined
+                                        onClicked: openCodeProjectDialog.open()
+                                    }
                                 }
                                 Text {
                                     id: gwMsg
@@ -638,7 +675,7 @@ Item {
                                 }
                                 Text {
                                     visible: App.gatewayEnabled
-                                    text: "Manual: ANTHROPIC_BASE_URL=" + App.gatewayBaseUrl() + "  ·  endpoints OpenAI /v1/chat/completions y Anthropic /v1/messages."
+                                    text: "Manual: OpenAI base URL " + App.gatewayBaseUrl() + "/v1  ·  endpoints /v1/models, /v1/chat/completions y /v1/messages."
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                     wrapMode: Text.WordWrap

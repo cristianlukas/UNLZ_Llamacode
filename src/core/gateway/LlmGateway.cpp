@@ -145,6 +145,42 @@ QString LlmGateway::resolveModel(const QString &requested, const QStringList &av
     return best;
 }
 
+QString LlmGateway::resolveModelId(const QString &requested, const QJsonArray &models)
+{
+    const QString r = requested.trimmed();
+    if (r.isEmpty()) return {};
+    for (const QJsonValue &value : models) {
+        const QJsonObject model = value.toObject();
+        if (model.value(QStringLiteral("id")).toString().compare(r, Qt::CaseInsensitive) == 0)
+            return model.value(QStringLiteral("id")).toString();
+    }
+    for (const QJsonValue &value : models) {
+        const QJsonObject model = value.toObject();
+        if (model.value(QStringLiteral("name")).toString().compare(r, Qt::CaseInsensitive) == 0)
+            return model.value(QStringLiteral("id")).toString();
+    }
+    return {};
+}
+
+QJsonObject LlmGateway::modelsResponse(const QJsonArray &models)
+{
+    QJsonArray data;
+    for (const QJsonValue &value : models) {
+        const QJsonObject model = value.toObject();
+        const QString id = model.value(QStringLiteral("id")).toString();
+        if (id.isEmpty()) continue;
+        data.append(QJsonObject{
+            {QStringLiteral("id"), id},
+            {QStringLiteral("object"), QStringLiteral("model")},
+            {QStringLiteral("owned_by"), QStringLiteral("llamacode")}
+        });
+    }
+    return QJsonObject{
+        {QStringLiteral("object"), QStringLiteral("list")},
+        {QStringLiteral("data"), data}
+    };
+}
+
 QStringList LlmGateway::lruTouch(QStringList &order, const QString &name, int keepN)
 {
     if (name.isEmpty()) return {};
@@ -239,10 +275,22 @@ void LlmGateway::onNewConnection()
 
 void LlmGateway::writeError(QTcpSocket *sock, int code, const QString &msg)
 {
-    const QByteArray json = QJsonDocument(QJsonObject{
+    writeJson(sock, code, QJsonObject{
         {QStringLiteral("error"), QJsonObject{{QStringLiteral("message"), msg}}}
-    }).toJson(QJsonDocument::Compact);
-    QByteArray r = "HTTP/1.1 " + QByteArray::number(code) + " ERR\r\n";
+    });
+}
+
+void LlmGateway::writeJson(QTcpSocket *sock, int code, const QJsonObject &value)
+{
+    const QByteArray json = QJsonDocument(value).toJson(QJsonDocument::Compact);
+    const QByteArray reason = code == 200 ? "OK"
+        : code == 400 ? "Bad Request"
+        : code == 401 ? "Unauthorized"
+        : code == 404 ? "Not Found"
+        : code == 405 ? "Method Not Allowed"
+        : code == 502 ? "Bad Gateway"
+        : code == 503 ? "Service Unavailable" : "Error";
+    QByteArray r = "HTTP/1.1 " + QByteArray::number(code) + " " + reason + "\r\n";
     r += "Content-Type: application/json\r\n";
     r += "Access-Control-Allow-Origin: *\r\n";
     r += "Content-Length: " + QByteArray::number(json.size()) + "\r\n\r\n" + json;
@@ -277,19 +325,46 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
         if (tok != m_apiKey) { writeError(sock, 401, QStringLiteral("API key inválida")); return; }
     }
 
-    const bool anthropic = p.endsWith(QLatin1String("/v1/messages"));
-    const bool openai = p.contains(QLatin1String("/v1/"));
-    if (!anthropic && !openai) { writeError(sock, 404, QStringLiteral("endpoint desconocido")); return; }
+    if (p == QLatin1String("/v1/models")) {
+        if (method != "GET") {
+            writeError(sock, 405, QStringLiteral("método no permitido"));
+            return;
+        }
+        writeJson(sock, 200, modelsResponse(m_hooks.models ? m_hooks.models() : QJsonArray{}));
+        return;
+    }
 
-    const QJsonObject reqObj = QJsonDocument::fromJson(body).object();
+    const bool anthropic = p == QLatin1String("/v1/messages");
+    const bool openai = p == QLatin1String("/v1/chat/completions");
+    if (!anthropic && !openai) {
+        writeError(sock, 404, QStringLiteral("endpoint desconocido"));
+        return;
+    }
+    if (method != "POST") {
+        writeError(sock, 405, QStringLiteral("método no permitido"));
+        return;
+    }
+
+    QJsonParseError parseError;
+    const QJsonDocument requestDocument = QJsonDocument::fromJson(body, &parseError);
+    if (parseError.error != QJsonParseError::NoError || !requestDocument.isObject()) {
+        writeError(sock, 400, QStringLiteral("JSON inválido"));
+        return;
+    }
+    const QJsonObject reqObj = requestDocument.object();
     const bool stream = reqObj.value(QStringLiteral("stream")).toBool(false);
     const QString requested = reqObj.value(QStringLiteral("model")).toString();
+    const QJsonArray models = m_hooks.models ? m_hooks.models() : QJsonArray{};
+    const QString resolved = resolveModelId(requested, models);
+    if (!requested.isEmpty() && resolved.isEmpty()) {
+        writeError(sock, 404, QStringLiteral("modelo desconocido: %1").arg(requested));
+        return;
+    }
 
     if (m_hooks.activity) m_hooks.activity();
 
     // Auto-load del modelo pedido (si difiere del activo y autoSwap está on).
-    if (m_autoSwap && m_hooks.modelNames && m_hooks.ensureModel) {
-        const QString resolved = resolveModel(requested, m_hooks.modelNames());
+    if (m_autoSwap && m_hooks.ensureModel) {
         const QString current = m_hooks.currentModel ? m_hooks.currentModel() : QString();
         if (!resolved.isEmpty() && resolved.compare(current, Qt::CaseInsensitive) != 0) {
             lruTouch(m_lru, resolved, m_keepN);
@@ -304,8 +379,13 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
     auto *clock = new QElapsedTimer; clock->start();
     QPointer<QTcpSocket> psock(sock);
     waitTimer->setInterval(150);
-    connect(waitTimer, &QTimer::timeout, this, [this, waitTimer, clock, psock, p, body, anthropic, stream]() {
-        const bool ready = m_hooks.ready ? m_hooks.ready() : true;
+    connect(waitTimer, &QTimer::timeout, this,
+            [this, waitTimer, clock, psock, p, body, anthropic, stream, resolved]() {
+        const bool serverReady = m_hooks.ready ? m_hooks.ready() : true;
+        const QString current = m_hooks.currentModel ? m_hooks.currentModel() : QString();
+        const bool rightModel = resolved.isEmpty()
+            || current.compare(resolved, Qt::CaseInsensitive) == 0;
+        const bool ready = serverReady && rightModel;
         if (!psock) { waitTimer->stop(); waitTimer->deleteLater(); delete clock; return; }
         if (ready) {
             waitTimer->stop(); waitTimer->deleteLater();
@@ -348,6 +428,15 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
         connect(reply, &QNetworkReply::finished, this, [this, reply, psock, anthropic]() {
             if (!psock) { reply->deleteLater(); return; }
             const QByteArray raw = reply->readAll();
+            const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+            if (reply->error() != QNetworkReply::NoError || status >= 400) {
+                QJsonObject error = QJsonDocument::fromJson(raw).object();
+                const QString message = error.value(QStringLiteral("error")).toObject()
+                    .value(QStringLiteral("message")).toString(reply->errorString());
+                writeError(psock, status >= 400 ? status : 502, message);
+                reply->deleteLater();
+                return;
+            }
             QByteArray out = raw;
             if (anthropic) {
                 const QJsonObject oai = QJsonDocument::fromJson(raw).object();

@@ -66,6 +66,7 @@ set(CORE_SOURCES
     src/core/ControlApi.cpp
     src/core/AuxiliaryJobScheduler.cpp
     src/core/gateway/LlmGateway.cpp
+    src/core/integrations/OpenCodeIntegration.cpp
     src/core/SecretStore.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
@@ -147,6 +148,7 @@ set(HEADERS
     src/core/ControlApi.h
     src/core/AuxiliaryJobScheduler.h
     src/core/gateway/LlmGateway.h
+    src/core/integrations/OpenCodeIntegration.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h

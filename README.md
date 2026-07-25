@@ -881,6 +881,49 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   porque Windows puede usar memoria compartida y degradar fuertemente los TPS.
 - **Endpoint OpenAI** — con el server corriendo muestra `http://<host>:<port>/v1` (read-only, seleccionable) + botón *Copiar*, para apuntar agentes externos (opencode, aider, etc.) al backend local.
 
+## Gateway local para OpenCode y Claude Code
+
+En **Configuración > Gateway · API**, LlamaCode puede exponer los perfiles de
+lanzamiento locales mediante una API en `http://127.0.0.1:8088` (puerto
+configurable):
+
+- `GET /v1/models` lista IDs estables de perfiles.
+- `POST /v1/chat/completions` ofrece la API OpenAI-compatible usada por OpenCode.
+- `POST /v1/messages` adapta el protocolo Anthropic para Claude Code.
+- Si un request pide otro perfil y auto-load está activo, LlamaCode hace el swap,
+  espera que el modelo correcto quede listo y recién entonces reenvía el request.
+
+El botón **Lanzar OpenCode en mi GPU** permite elegir perfil y proyecto. LlamaCode
+inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona
+`llamacode/<launch-profile-id>` y pasa la API key por una variable de entorno. No
+modifica el `opencode.json` global ni el del proyecto. OpenCode debe estar
+instalado y disponible en `PATH`.
+
+Configuración manual equivalente:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "llamacode": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LlamaCode local",
+      "options": {
+        "baseURL": "http://127.0.0.1:8088/v1",
+        "apiKey": "local"
+      },
+      "models": {
+        "<launch-profile-id>": {
+          "name": "Modelo local",
+          "tool_call": true
+        }
+      }
+    }
+  },
+  "model": "llamacode/<launch-profile-id>"
+}
+```
+
 ## Process Lifecycle
 
 - **Windows Job Object**: todos los subprocesos (llama-server + harness) se asignan al Job Object del proceso principal. Al cerrar UNLZ_Llamacode (normal o crash), los hijos mueren automáticamente.

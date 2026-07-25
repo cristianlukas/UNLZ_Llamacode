@@ -55,6 +55,7 @@
 #include "core/tasks/SchedulerDaemonRegistration.h"
 #include "core/ToolCallingSupport.h"
 #include "core/diag/LogTriage.h"
+#include "core/integrations/OpenCodeIntegration.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
 #include <QDebug>
@@ -6424,16 +6425,9 @@ void AppController::wireGatewayHooks()
     h.baseUrl      = [this]() { return serverBaseUrl(); };
     h.ready        = [this]() { return serverReady(); };
     h.currentModel = [this]() {
-        return m_profiles.resolveLaunch(m_activeLaunchId).name;
+        return m_activeLaunchId;
     };
-    h.modelNames   = [this]() {
-        QStringList names;
-        for (const QVariant &v : m_profiles.launchProfilesForMenu()) {
-            const QString n = v.toMap().value(QStringLiteral("name")).toString();
-            if (!n.isEmpty()) names << n;
-        }
-        return names;
-    };
+    h.models       = [this]() { return gatewayModelCatalog(); };
     h.ensureModel  = [this](const QString &name) { gatewayEnsureModel(name); };
     h.activity     = [this]() { bumpActivity(); };
     m_gateway->setHooks(h);
@@ -6442,17 +6436,30 @@ void AppController::wireGatewayHooks()
     m_gateway->setApiKey(m_gatewayApiKey);
 }
 
+QJsonArray AppController::gatewayModelCatalog() const
+{
+    QJsonArray models;
+    for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
+        const QVariantMap menu = value.toMap();
+        const QString id = menu.value(QStringLiteral("id")).toString();
+        if (id.isEmpty()) continue;
+        const LaunchProfile launch = m_profiles.resolveLaunch(id);
+        const RuntimePreset runtime = m_profiles.resolveRuntime(launch.runtimePresetId);
+        const int context = runtime.ctx > 0 ? runtime.ctx : 4096;
+        models.append(QJsonObject{
+            {QStringLiteral("id"), id},
+            {QStringLiteral("name"), menu.value(QStringLiteral("displayName")).toString()},
+            {QStringLiteral("context"), context},
+            {QStringLiteral("output"), qBound(1024, context / 4, 8192)}
+        });
+    }
+    return models;
+}
+
 void AppController::gatewayEnsureModel(const QString &name)
 {
-    // Mapear nombre de modelo → launch profile y arrancar si no es el activo.
-    QString launchId;
-    for (const QVariant &v : m_profiles.launchProfilesForMenu()) {
-        const QVariantMap m = v.toMap();
-        if (m.value(QStringLiteral("name")).toString().compare(name, Qt::CaseInsensitive) == 0) {
-            launchId = m.value(QStringLiteral("id")).toString();
-            break;
-        }
-    }
+    // El gateway resuelve aliases/nombres y entrega siempre el id estable.
+    const QString launchId = name;
     if (launchId.isEmpty()) return;
     if (launchId == m_activeLaunchId && serverRunning()) return;
     appendServerEvent(QStringLiteral("lifecycle"),
@@ -6567,6 +6574,79 @@ QString AppController::launchClaudeCode()
     }
     appendServerEvent(QStringLiteral("lifecycle"),
         QStringLiteral("Claude Code lanzado contra el gateway (%1).").arg(gatewayBaseUrl()));
+    return {};
+}
+
+QString AppController::launchOpenCode(const QString &projectDir,
+                                      const QString &launchProfileId)
+{
+    const QString id = launchProfileId.isEmpty() ? m_activeLaunchId : launchProfileId;
+    const LaunchProfile launch = m_profiles.resolveLaunch(id);
+    if (launch.id.isEmpty())
+        return QStringLiteral("Elegí un perfil de lanzamiento válido.");
+
+    const QFileInfo projectInfo(projectDir);
+    if (projectDir.isEmpty() || !projectInfo.isDir())
+        return QStringLiteral("Elegí una carpeta de proyecto válida.");
+
+    QString executable = QStandardPaths::findExecutable(QStringLiteral("opencode"));
+#ifdef Q_OS_WIN
+    if (executable.isEmpty())
+        executable = QStandardPaths::findExecutable(QStringLiteral("opencode.cmd"));
+#endif
+    if (executable.isEmpty())
+        return QStringLiteral("No encontré 'opencode' en el PATH. Instalá OpenCode primero.");
+
+    if (!m_gateway || !m_gateway->listening()) {
+        if (m_gatewayEnabled) startGateway();
+        else setGatewayEnabled(true);
+    }
+    if (!m_gateway || !m_gateway->listening())
+        return QStringLiteral("No pude arrancar el gateway.");
+
+    const QJsonObject config = OpenCodeIntegration::buildConfig(
+        gatewayBaseUrl() + QStringLiteral("/v1"), gatewayModelCatalog(), id);
+    const QString configJson = QString::fromUtf8(
+        QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("OPENCODE_CONFIG_CONTENT"), configJson);
+    env.insert(QStringLiteral("LLAMACODE_GATEWAY_API_KEY"),
+               m_gatewayApiKey.isEmpty() ? QStringLiteral("local") : m_gatewayApiKey);
+
+    auto *proc = new QProcess(this);
+    proc->setProcessEnvironment(env);
+    proc->setWorkingDirectory(projectInfo.absoluteFilePath());
+    const QString model = OpenCodeIntegration::modelRef(id);
+#ifdef Q_OS_WIN
+    // npm/nvm instalan OpenCode como .cmd. Ejecutarlo mediante cmd conserva una
+    // consola interactiva propia y evita modificar la consola de LlamaCode.
+    const QString quotedExe = QStringLiteral("\"%1\"").arg(
+        QDir::toNativeSeparators(executable).replace(QLatin1Char('"'), QStringLiteral("\"\"")));
+    const QString quotedProject = QStringLiteral("\"%1\"").arg(
+        QDir::toNativeSeparators(projectInfo.absoluteFilePath())
+            .replace(QLatin1Char('"'), QStringLiteral("\"\"")));
+    const QString command = QStringLiteral("%1 %2 -m \"%3\"")
+        .arg(quotedExe, quotedProject, model);
+    proc->setProgram(QStandardPaths::findExecutable(QStringLiteral("cmd.exe")));
+    proc->setArguments({QStringLiteral("/d"), QStringLiteral("/s"),
+                        QStringLiteral("/c"), command});
+    proc->setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments *args) {
+        args->flags |= CREATE_NEW_CONSOLE;
+    });
+#else
+    proc->setProgram(executable);
+    proc->setArguments({projectInfo.absoluteFilePath(),
+                        QStringLiteral("-m"), model});
+#endif
+    if (!proc->startDetached()) {
+        proc->deleteLater();
+        return QStringLiteral("No pude lanzar OpenCode.");
+    }
+    proc->deleteLater();
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("OpenCode lanzado con '%1' contra %2.")
+            .arg(id, gatewayBaseUrl()));
     return {};
 }
 

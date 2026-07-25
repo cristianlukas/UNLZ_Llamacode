@@ -5,7 +5,12 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QEventLoop>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QTcpServer>
 #include "core/gateway/LlmGateway.h"
+#include "core/integrations/OpenCodeIntegration.h"
 #include "AppController.h"
 
 class GatewayTests : public QObject
@@ -16,6 +21,9 @@ private slots:
     void anthropicToolsMapToOpenAI();
     void openAIToAnthropicMapsContentAndStop();
     void resolveModelMatches();
+    void stableModelCatalog();
+    void openCodeConfigUsesEnvironmentSecret();
+    void modelsEndpointServesStableIds();
     void lruEvictsBeyondKeepN();
     void structuredOutputInjection();
     void idleStopDecision();
@@ -108,6 +116,85 @@ void GatewayTests::resolveModelMatches()
     QCOMPARE(LlmGateway::resolveModel("gemma", avail), QStringLiteral("Gemma-2-9B"));      // substring
     QVERIFY(LlmGateway::resolveModel("nonexistent-xyz", avail).isEmpty());
     QVERIFY(LlmGateway::resolveModel("", avail).isEmpty());
+}
+
+void GatewayTests::stableModelCatalog()
+{
+    const QJsonArray models{
+        QJsonObject{{"id","launch-qwen"}, {"name","Qwen Coder"},
+                    {"context",32768}, {"output",8192}},
+        QJsonObject{{"id","launch-gemma"}, {"name","Gemma"}}
+    };
+    QCOMPARE(LlmGateway::resolveModelId("launch-qwen", models),
+             QStringLiteral("launch-qwen"));
+    QCOMPARE(LlmGateway::resolveModelId("qwen coder", models),
+             QStringLiteral("launch-qwen"));
+    QVERIFY(LlmGateway::resolveModelId("qwen", models).isEmpty());
+
+    const QJsonObject response = LlmGateway::modelsResponse(models);
+    QCOMPARE(response.value("object").toString(), QStringLiteral("list"));
+    const QJsonArray data = response.value("data").toArray();
+    QCOMPARE(data.size(), 2);
+    QCOMPARE(data.first().toObject().value("id").toString(),
+             QStringLiteral("launch-qwen"));
+    QCOMPARE(data.first().toObject().value("owned_by").toString(),
+             QStringLiteral("llamacode"));
+}
+
+void GatewayTests::openCodeConfigUsesEnvironmentSecret()
+{
+    const QJsonArray models{
+        QJsonObject{{"id","launch-qwen"}, {"name","Qwen Coder"},
+                    {"context",32768}, {"output",8192}}
+    };
+    const QJsonObject config = OpenCodeIntegration::buildConfig(
+        QStringLiteral("http://127.0.0.1:8088/v1"), models,
+        QStringLiteral("launch-qwen"));
+    QCOMPARE(config.value("model").toString(),
+             QStringLiteral("llamacode/launch-qwen"));
+    const QJsonObject provider = config.value("provider").toObject()
+        .value("llamacode").toObject();
+    QCOMPARE(provider.value("npm").toString(),
+             QStringLiteral("@ai-sdk/openai-compatible"));
+    const QJsonObject options = provider.value("options").toObject();
+    QCOMPARE(options.value("baseURL").toString(),
+             QStringLiteral("http://127.0.0.1:8088/v1"));
+    QCOMPARE(options.value("apiKey").toString(),
+             QStringLiteral("{env:LLAMACODE_GATEWAY_API_KEY}"));
+    const QByteArray serialized = QJsonDocument(config).toJson();
+    QVERIFY(!serialized.contains("sk-"));
+    QCOMPARE(provider.value("models").toObject().value("launch-qwen").toObject()
+                 .value("limit").toObject().value("context").toInt(), 32768);
+    QVERIFY(provider.value("models").toObject().value("launch-qwen").toObject()
+                .value("tool_call").toBool());
+}
+
+void GatewayTests::modelsEndpointServesStableIds()
+{
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::LocalHost, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+
+    LlmGateway gateway;
+    LlmGateway::Hooks hooks;
+    hooks.models = [] {
+        return QJsonArray{QJsonObject{{"id","launch-qwen"}, {"name","Qwen"}}};
+    };
+    gateway.setHooks(hooks);
+    QVERIFY(gateway.start(port));
+
+    QNetworkAccessManager nam;
+    QNetworkReply *reply = nam.get(QNetworkRequest(
+        QUrl(QStringLiteral("http://127.0.0.1:%1/v1/models").arg(port))));
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    const QJsonObject result = QJsonDocument::fromJson(reply->readAll()).object();
+    QCOMPARE(result.value("data").toArray().first().toObject().value("id").toString(),
+             QStringLiteral("launch-qwen"));
+    reply->deleteLater();
 }
 
 void GatewayTests::lruEvictsBeyondKeepN()

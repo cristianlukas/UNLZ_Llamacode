@@ -694,6 +694,8 @@ public:
     Q_INVOKABLE void stopGateway();
     Q_INVOKABLE QString gatewayBaseUrl() const;
     Q_INVOKABLE QString launchClaudeCode();   // exec `claude` apuntando al gateway
+    Q_INVOKABLE QString launchOpenCode(const QString &projectDir,
+                                       const QString &launchProfileId);
 
     // Idle auto-stop
     int  idleAutoStopMin() const { return m_idleAutoStopMin; }
@@ -1395,6 +1397,7 @@ private:
     void        stopIdleWatchdog();
     void        wireGatewayHooks();
     void        gatewayEnsureModel(const QString &name);
+    QJsonArray  gatewayModelCatalog() const;
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
     QString   m_agentSystemPrompt;
