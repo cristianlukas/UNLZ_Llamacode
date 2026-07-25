@@ -529,6 +529,8 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   inferior conserva la altura de sus controles y no queda recortado al maximizar.
   Los movimientos del viewport del Agente se registran como `agent/ui/scroll` en
   `runtime/agent.log`, con la acción, posición, límites, altura y estado de seguimiento.
+  Al reemplazar la lista de mensajes, el viewport conserva el seguimiento inferior
+  durante el vaciado transitorio que realiza Qt y se restaura tras estabilizar el layout.
 - **Estado visible del turno**: la burbuja activa muestra si el agente está
   pensando, ejecutando una herramienta, escribiendo/leyendo archivos o esperando
   aprobación, para que las acciones largas no parezcan un bloqueo silencioso.

@@ -1701,6 +1701,11 @@ Item {
                     // delegates de altura variable que cambian por token, la
                     // estimación de positionViewAtEnd oscila (salta arriba/abajo).
                     property bool followBottom: true
+                    // QVariantList se reemplaza completo al cambiar un mensaje. Qt
+                    // vacía el ListView durante un frame y fuerza contentY al inicio.
+                    // Recordar que estábamos abajo evita interpretar ese movimiento
+                    // interno como una decisión del usuario.
+                    property bool restoreBottomAfterModelReset: false
                     property string scrollMutationReason: ""
                     property real previousContentY: 0
 
@@ -1775,6 +1780,15 @@ Item {
                     onContentYChanged: {
                         traceScroll("contentYChanged", "")
                         previousContentY = contentY
+                        if (count === 0) {
+                            if (followBottom)
+                                restoreBottomAfterModelReset = true
+                            return
+                        }
+                        if (restoreBottomAfterModelReset) {
+                            followBottom = true
+                            return
+                        }
                         // Clamp duro cuando no hay streaming. agentRunning no sirve
                         // como condición: el agente queda activo mientras se restaura
                         // una sesión y Qt recalcula varias veces las alturas.
@@ -1803,6 +1817,8 @@ Item {
                             normalizeViewport()
                         if (followBottom)
                             bottomTimer.restart()
+                        if (restoreBottomAfterModelReset)
+                            modelResetSettleTimer.restart()
                     }
                     // Sólo re-pegar al fondo si el usuario YA estaba abajo. Si subió
                     // a leer, un mensaje/token nuevo no lo arrastra de vuelta.
@@ -1813,13 +1829,17 @@ Item {
                         // un contentY grande puede quedar fuera del nuevo contenido y
                         // dejar el viewport completamente negro.
                         if (count === 0) {
+                            restoreBottomAfterModelReset =
+                                    restoreBottomAfterModelReset || followBottom
                             setContentY("countChanged:empty", minContentY())
                             followBottom = true
                             return
                         }
-                        followBottom = true
+                        if (restoreBottomAfterModelReset)
+                            followBottom = true
                         bottomTimer.restart()
                         viewportSettleTimer.restart()
+                        modelResetSettleTimer.restart()
                     }
                     onModelChanged: {
                         traceScroll("modelChanged", "")
@@ -1862,6 +1882,24 @@ Item {
                             if (msgList.followBottom)
                                 msgList.scrollToBottom()
                             msgList.traceScroll("settleTimer:after", "")
+                        }
+                    }
+
+                    // Se reinicia con cada medición de delegates. Al quedar quieto el
+                    // layout, restaura por última vez el fondo y recién entonces
+                    // vuelve a permitir que contentY determine followBottom.
+                    Timer {
+                        id: modelResetSettleTimer
+                        interval: 180
+                        onTriggered: {
+                            if (!msgList.restoreBottomAfterModelReset)
+                                return
+                            msgList.traceScroll("modelResetSettle:before", "")
+                            msgList.forceLayout()
+                            msgList.scrollToBottom()
+                            msgList.restoreBottomAfterModelReset = false
+                            msgList.followBottom = true
+                            msgList.traceScroll("modelResetSettle:after", "")
                         }
                     }
 
