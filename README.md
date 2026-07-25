@@ -530,7 +530,8 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   Los movimientos del viewport del Agente se registran como `agent/ui/scroll` en
   `runtime/agent.log`, con la acción, posición, límites, altura y estado de seguimiento.
   Al reemplazar la lista de mensajes, el viewport conserva el seguimiento inferior
-  durante el vaciado transitorio que realiza Qt y se restaura tras estabilizar el layout.
+  mediante un modelo visual incremental estable: actualizar o agregar una burbuja no
+  vacía el `ListView`, por lo que no existe un frame intermedio visible en el inicio.
 - **Estado visible del turno**: la burbuja activa muestra si el agente está
   pensando, ejecutando una herramienta, escribiendo/leyendo archivos o esperando
   aprobación, para que las acciones largas no parezcan un bloqueo silencioso.

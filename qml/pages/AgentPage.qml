@@ -15,6 +15,41 @@ Item {
     property var agentAttachments: []
     property string lastProfileSuggestionKind: ""
 
+    // App.agentMessages es QVariantList y cada NOTIFY crea una instancia nueva.
+    // Mantener un ListModel estable evita que ListView se vacíe durante un frame
+    // y fuerce contentY al inicio al enviar o actualizar un mensaje.
+    ListModel {
+        id: agentMessageUiModel
+        dynamicRoles: true
+    }
+
+    function sameAgentMessage(a, b) {
+        if (!a || !b) return false
+        const fields = ["role", "content", "typing", "status", "createdAt",
+                        "completedAt", "tokens", "elapsedMs", "tps", "reverted",
+                        "diff", "absPath", "path", "ok", "name", "command",
+                        "output", "title"]
+        for (let i = 0; i < fields.length; ++i) {
+            const key = fields[i]
+            if ((a[key] ?? null) !== (b[key] ?? null))
+                return false
+        }
+        return true
+    }
+
+    function syncAgentMessageModel() {
+        const source = App.agentMessages
+        const shared = Math.min(agentMessageUiModel.count, source.length)
+        for (let i = 0; i < shared; ++i) {
+            if (!sameAgentMessage(agentMessageUiModel.get(i).entry, source[i]))
+                agentMessageUiModel.setProperty(i, "entry", source[i])
+        }
+        while (agentMessageUiModel.count > source.length)
+            agentMessageUiModel.remove(agentMessageUiModel.count - 1)
+        for (let i = shared; i < source.length; ++i)
+            agentMessageUiModel.append({entry: source[i]})
+    }
+
     // ── Ancho del panel de sesiones (redimensionable + persistente) ──────
     property int sessionsPanelWidth: 220
     property int sessionsPanelMin: 160
@@ -503,6 +538,7 @@ Item {
     }
 
     Component.onCompleted: {
+        syncAgentMessageModel()
         tryRestoreSessionsPanel()
         // Preferir el launch activo (lanzado en "Lanzar"); si no hay, el primero.
         let target = App.activeLaunchId
@@ -526,7 +562,10 @@ Item {
         target: App
         // Cuando se lanza un perfil en "Lanzar", reflejarlo acá.
         function onActiveLaunchIdChanged() { root.syncToActiveLaunch() }
-        function onAgentMessagesChanged() { root.markActivity() }
+        function onAgentMessagesChanged() {
+            root.syncAgentMessageModel()
+            root.markActivity()
+        }
         function onAgentPendingToolChanged() { root.markActivity() }
         function onAgentLogChanged() { root.markActivity() }
         function onAgentRunningChanged() { root.markActivity() }
@@ -1260,8 +1299,8 @@ Item {
                     // Mantener delegados de arriba medidos: evita que contentHeight
                     // se re-estime al subir (causa del salto/traba hacia arriba).
                     cacheBuffer: 4000
-                    visible: App.agentMessages.length > 0
-                    model: App.agentMessages
+                    visible: agentMessageUiModel.count > 0
+                    model: agentMessageUiModel
                     ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                     delegate: Item {
@@ -1269,16 +1308,16 @@ Item {
                         width: msgList.width
                         height: (isDiff ? diffCard.height : (isTool ? toolCard.height : bubbleRect.height)) + 8
 
-                        readonly property bool isUser: modelData.role === "user"
-                        readonly property bool isDiff: modelData.role === "diff"
-                        readonly property bool isTool: modelData.role === "toolcall"
+                        readonly property bool isUser: entry.role === "user"
+                        readonly property bool isDiff: entry.role === "diff"
+                        readonly property bool isTool: entry.role === "toolcall"
                         // Durante streaming, esta burbuja usa el texto en vivo
-                        // (App.agentStreamingText) en vez de modelData.content, así
+                        // (App.agentStreamingText) en vez de entry.content, así
                         // sólo este delegate se refresca por token (sin reset de lista).
                         readonly property bool isStreaming: index === App.agentStreamingIndex
                         readonly property string content: isStreaming
                             ? App.agentStreamingText
-                            : (modelData.content ?? "")
+                            : (entry.content ?? "")
                         readonly property int maxInlineChars: 60000
                         readonly property bool isLongContent: content.length > maxInlineChars
                         property bool expandedLongContent: false
@@ -1289,8 +1328,8 @@ Item {
                                 return content.slice(Math.max(0, content.length - maxInlineChars))
                             return content.slice(0, maxInlineChars)
                         }
-                        readonly property bool isTyping: modelData.typing ?? false
-                        readonly property string metaLine: root.formatMeta(modelData)
+                        readonly property bool isTyping: entry.typing ?? false
+                        readonly property string metaLine: root.formatMeta(entry)
                         property bool editing: false
 
                         Rectangle {
@@ -1321,7 +1360,7 @@ Item {
                                     width: parent.width
                                     text: {
                                         if (delegateRoot.isTyping && delegateRoot.visibleContent.length === 0)
-                                            return (modelData.status ?? "Pensando...") + "  "
+                                            return (entry.status ?? "Pensando...") + "  "
                                         if (delegateRoot.isTyping)
                                             return delegateRoot.visibleContent + "▌"
                                         return delegateRoot.visibleContent
@@ -1482,15 +1521,15 @@ Item {
                             radius: 8
                             color: Theme.inputBg
                             border.color: Theme.borderColor
-                            readonly property bool reverted: modelData.reverted ?? false
+                            readonly property bool reverted: entry.reverted ?? false
                             // Diff colapsado por defecto: solo nombre + toggle.
                             property bool expanded: false
                             readonly property int diffLines: {
-                                const d = String(modelData.diff ?? "")
+                                const d = String(entry.diff ?? "")
                                 if (d.length === 0) return 0
                                 return d.split("\n").length
                             }
-                            readonly property string filePath: modelData.absPath ?? modelData.path ?? ""
+                            readonly property string filePath: entry.absPath ?? entry.path ?? ""
 
                             // Click derecho → menú: abrir carpeta contenedora.
                             MouseArea {
@@ -1524,7 +1563,7 @@ Item {
                                     Text { text: "📝"; font.pixelSize: 13 }
                                     Text {
                                         Layout.fillWidth: true
-                                        text: (modelData.path ?? "")
+                                        text: (entry.path ?? "")
                                               + (diffCard.diffLines > 0 ? "  · " + diffCard.diffLines + " líneas" : "")
                                               + (diffCard.reverted ? "  · revertido" : "")
                                         color: diffCard.reverted ? Theme.textMuted : Theme.textPrimary
@@ -1546,13 +1585,13 @@ Item {
                                         text: "Copiar"; secondary: true
                                         implicitHeight: 24
                                         visible: diffCard.diffLines > 0
-                                        onClicked: App.copyToClipboard(modelData.diff ?? "")
+                                        onClicked: App.copyToClipboard(entry.diff ?? "")
                                     }
                                     LcButton {
                                         text: "Revertir"; secondary: true
                                         visible: !diffCard.reverted
                                         implicitHeight: 24
-                                        onClicked: App.revertAgentEdit(modelData.absPath ?? modelData.path ?? "")
+                                        onClicked: App.revertAgentEdit(entry.absPath ?? entry.path ?? "")
                                     }
                                 }
 
@@ -1572,7 +1611,7 @@ Item {
                                         // Lazy: solo materializar el texto (puede ser de miles de
                                         // líneas) cuando la tarjeta está expandida. Si no, vacío →
                                         // sin layout costoso en cada rebuild del ListView.
-                                        text: diffCard.expanded ? (modelData.diff ?? "") : ""
+                                        text: diffCard.expanded ? (entry.diff ?? "") : ""
                                         color: Theme.textSecondary
                                         font { family: Theme.codeFont; pixelSize: 11 }
                                         wrapMode: TextEdit.NoWrap
@@ -1595,13 +1634,13 @@ Item {
                             border.color: Theme.borderColor
 
                             // run_shell async en ejecución → expandido y "corriendo".
-                            readonly property bool running: modelData.typing ?? false
+                            readonly property bool running: entry.typing ?? false
                             property bool userExpanded: false
                             readonly property bool expanded: running || userExpanded
-                            readonly property bool ok: modelData.ok ?? true
-                            readonly property string toolName: modelData.name ?? ""
-                            readonly property string command: modelData.command ?? ""
-                            readonly property string output: modelData.output ?? ""
+                            readonly property bool ok: entry.ok ?? true
+                            readonly property string toolName: entry.name ?? ""
+                            readonly property string command: entry.command ?? ""
+                            readonly property string output: entry.output ?? ""
                             readonly property bool hasBody: command.length > 0 || output.length > 0
 
                             ColumnLayout {
