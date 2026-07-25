@@ -540,8 +540,14 @@ Item {
     Component.onCompleted: {
         syncAgentMessageModel()
         tryRestoreSessionsPanel()
-        // Preferir el launch activo (lanzado en "Lanzar"); si no hay, el primero.
+        // Preferir el launch realmente activo. Si la app se abrió sin servidor,
+        // restaurar la última selección del Agente (o el último launch global de
+        // versiones anteriores), nunca caer directamente en el primer perfil.
         let target = App.activeLaunchId
+        if (!target || target.length === 0)
+            target = App.readSetting("lastAgentLaunchId", "")
+        if (!target || target.length === 0)
+            target = App.readSetting("lastLaunchId", "")
         if (!target || target.length === 0) {
             const menu = App.profileManager.launchProfilesForMenu()
             if (menu.length > 0) target = menu[0].id ?? ""
@@ -637,7 +643,10 @@ Item {
                         resolveHarness(selectedLaunchId)
                     }
                     onActivated: {
-                        if (currentValue) App.writeSetting("lastLaunchId", currentValue)
+                        if (currentValue) {
+                            App.writeSetting("lastAgentLaunchId", currentValue)
+                            App.writeSetting("lastLaunchId", currentValue)
+                        }
                     }
                 }
 
@@ -868,7 +877,15 @@ Item {
                     }
                     danger: App.agentRunning || App.agentStarting
                     enabled: selectedLaunchId.length > 0
-                    onClicked: (App.agentRunning || App.agentStarting) ? App.stopAgent() : App.startAgent(selectedLaunchId)
+                    onClicked: {
+                        if (App.agentRunning || App.agentStarting) {
+                            App.stopAgent()
+                        } else {
+                            App.writeSetting("lastAgentLaunchId", selectedLaunchId)
+                            App.writeSetting("lastLaunchId", selectedLaunchId)
+                            App.startAgent(selectedLaunchId)
+                        }
+                    }
                 }
             }
         }

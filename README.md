@@ -523,6 +523,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real
+- **Perfil recordado por modo**: Agente restaura su última selección al volver a
+  abrir la app; si aún no existe esa preferencia usa el último perfil global,
+  en vez de caer en el primer perfil del menú.
 - **Viewport estable**: las actualizaciones del modelo y las mediciones transitorias
   de mensajes altos no reinician el chat al comienzo; el auto-scroll sólo avanza
   hacia el final cuando el usuario ya estaba siguiendo la respuesta. El compositor
