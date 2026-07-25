@@ -614,6 +614,9 @@ public:
     Q_INVOKABLE QString agentNativeLogDir(const QString &adapter) const;
     Q_INVOKABLE void openAgentLogDir(const QString &adapter);
     Q_INVOKABLE void openRuntimeLogDir();
+    // Diagnóstico de movimientos inesperados del viewport QML. Persiste en
+    // runtime/agent.log junto a las acciones del backend para correlacionarlos.
+    Q_INVOKABLE void logAgentUiScroll(const QString &event, const QString &state);
     Q_INVOKABLE void newOpencodeSession();
     Q_INVOKABLE void switchOpencodeSession(const QString &sessionId);
     Q_INVOKABLE void refreshOpencodeSessionList();

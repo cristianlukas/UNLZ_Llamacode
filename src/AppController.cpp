@@ -13420,6 +13420,12 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
         rf.write(QJsonDocument(QJsonObject::fromVariantMap(result)).toJson());
 }
 
+void AppController::logAgentUiScroll(const QString &event, const QString &state)
+{
+    appendAgentEvent(QStringLiteral("ui/scroll"),
+                     QStringLiteral("%1 %2").arg(event, state));
+}
+
 void AppController::decorateBenchmarkBaseline(QVariantMap *result) const
 {
     if (!result || result->value(QStringLiteral("failed")).toBool()) return;

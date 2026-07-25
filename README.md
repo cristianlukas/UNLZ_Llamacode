@@ -527,6 +527,8 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   de mensajes altos no reinician el chat al comienzo; el auto-scroll sólo avanza
   hacia el final cuando el usuario ya estaba siguiendo la respuesta. El compositor
   inferior conserva la altura de sus controles y no queda recortado al maximizar.
+  Los movimientos del viewport del Agente se registran como `agent/ui/scroll` en
+  `runtime/agent.log`, con la acción, posición, límites, altura y estado de seguimiento.
 - **Estado visible del turno**: la burbuja activa muestra si el agente está
   pensando, ejecutando una herramienta, escribiendo/leyendo archivos o esperando
   aprobación, para que las acciones largas no parezcan un bloqueo silencioso.

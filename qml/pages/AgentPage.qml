@@ -1701,6 +1701,43 @@ Item {
                     // delegates de altura variable que cambian por token, la
                     // estimación de positionViewAtEnd oscila (salta arriba/abajo).
                     property bool followBottom: true
+                    property string scrollMutationReason: ""
+                    property real previousContentY: 0
+
+                    function scrollState(extra) {
+                        return JSON.stringify({
+                            y: Number(contentY.toFixed(2)),
+                            previousY: Number(previousContentY.toFixed(2)),
+                            originY: Number(minContentY().toFixed(2)),
+                            maxY: Number(maxContentY().toFixed(2)),
+                            contentHeight: Number(contentHeight.toFixed(2)),
+                            viewportHeight: Number(height.toFixed(2)),
+                            count: count,
+                            followBottom: followBottom,
+                            moving: moving,
+                            dragging: dragging,
+                            typing: root.hasTypingMessage,
+                            mutation: scrollMutationReason.length > 0
+                                      ? scrollMutationReason : "qt/internal",
+                            extra: extra ?? ""
+                        })
+                    }
+
+                    function traceScroll(event, extra) {
+                        App.logAgentUiScroll(event, scrollState(extra))
+                    }
+
+                    function setContentY(reason, value) {
+                        if (!isFinite(value)) {
+                            traceScroll("reject-nonfinite-target", reason + "=" + value)
+                            return
+                        }
+                        if (Math.abs(contentY - value) < 0.01)
+                            return
+                        scrollMutationReason = reason
+                        contentY = value
+                        scrollMutationReason = ""
+                    }
 
                     function minContentY() {
                         return isFinite(originY) ? originY : 0
@@ -1718,24 +1755,26 @@ Item {
                         // mandar la conversación hasta el inicio.
                         var maxY = maxContentY()
                         if (contentY < maxY)
-                            contentY = maxY
+                            setContentY("scrollToBottom", maxY)
                     }
 
                     function normalizeViewport() {
                         var minY = minContentY()
                         var maxY = maxContentY()
                         if (!isFinite(contentY) || contentY < minY) {
-                            contentY = minY
+                            setContentY("normalize:min", minY)
                             return
                         }
                         if (contentY > maxY)
-                            contentY = maxY
+                            setContentY("normalize:max", maxY)
                     }
 
                     // followBottom se actualiza en vivo con cualquier cambio de
                     // posición (flick nativo o rueda animada): si el usuario sube,
                     // dejamos de auto-bajar durante el streaming.
                     onContentYChanged: {
+                        traceScroll("contentYChanged", "")
+                        previousContentY = contentY
                         // Clamp duro cuando no hay streaming. agentRunning no sirve
                         // como condición: el agente queda activo mientras se restaura
                         // una sesión y Qt recalcula varias veces las alturas.
@@ -1748,10 +1787,15 @@ Item {
                         }
                         followBottom = (contentY >= maxY - 2)
                     }
-                    onMovementEnded: followBottom = atYEnd
+                    onMovementStarted: traceScroll("movementStarted", "")
+                    onMovementEnded: {
+                        followBottom = atYEnd
+                        traceScroll("movementEnded", "atYEnd=" + atYEnd)
+                    }
                     // Throttle: durante streaming el contentHeight cambia por token.
                     // Un solo callLater coalescido evita reflows en cascada.
                     onContentHeightChanged: {
+                        traceScroll("contentHeightChanged", "")
                         // Los delegates largos se miden en varias pasadas. Si una
                         // pasada reduce contentHeight, el contentY anterior puede
                         // quedar fuera del rango y Qt muestra un viewport vacío.
@@ -1763,12 +1807,13 @@ Item {
                     // Sólo re-pegar al fondo si el usuario YA estaba abajo. Si subió
                     // a leer, un mensaje/token nuevo no lo arrastra de vuelta.
                     onCountChanged: {
+                        traceScroll("countChanged", "")
                         // Si el modelo se vacía durante un cambio de backend/sesión,
                         // descartar el offset del historial anterior. De lo contrario
                         // un contentY grande puede quedar fuera del nuevo contenido y
                         // dejar el viewport completamente negro.
                         if (count === 0) {
-                            contentY = minContentY()
+                            setContentY("countChanged:empty", minContentY())
                             followBottom = true
                             return
                         }
@@ -1777,6 +1822,7 @@ Item {
                         viewportSettleTimer.restart()
                     }
                     onModelChanged: {
+                        traceScroll("modelChanged", "")
                         // agentMessages es un QVariantList: cada NOTIFY puede hacer
                         // que QML vea una nueva instancia de modelo aunque sólo haya
                         // cambiado un mensaje. No reiniciar contentY aquí; el vaciado
@@ -1797,8 +1843,10 @@ Item {
                         interval: 32
                         onTriggered: {
                             if (!msgList.followBottom) return
+                            msgList.traceScroll("bottomTimer:before", "")
                             msgList.forceLayout()
                             msgList.scrollToBottom()
+                            msgList.traceScroll("bottomTimer:after", "")
                         }
                     }
 
@@ -1808,10 +1856,12 @@ Item {
                         id: viewportSettleTimer
                         interval: 120
                         onTriggered: {
+                            msgList.traceScroll("settleTimer:before", "")
                             msgList.forceLayout()
                             msgList.normalizeViewport()
                             if (msgList.followBottom)
                                 msgList.scrollToBottom()
+                            msgList.traceScroll("settleTimer:after", "")
                         }
                     }
 
@@ -1825,7 +1875,8 @@ Item {
                             var maxY = msgList.maxContentY()
                             var pixelY = ev.pixelDelta.y
                             var delta = pixelY !== 0 ? pixelY : (ev.angleDelta.y / 120) * 72
-                            msgList.contentY = Math.max(minY, Math.min(maxY, msgList.contentY - delta))
+                            msgList.setContentY("wheel",
+                                                Math.max(minY, Math.min(maxY, msgList.contentY - delta)))
                             ev.accepted = true
                         }
                     }
