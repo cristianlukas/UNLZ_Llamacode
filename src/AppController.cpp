@@ -64,6 +64,7 @@
 #include <QSqlError>
 #include <QDir>
 #include <QFileInfo>
+#include <QSaveFile>
 #include <QFileSystemWatcher>
 #include <QEventLoop>
 #include <QAbstractNativeEventFilter>
@@ -79,6 +80,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QCoreApplication>
+#include <QUuid>
 #include <QUuid>
 #include <QDirIterator>
 #include <functional>
@@ -6625,12 +6627,30 @@ QString AppController::launchOpenCode(const QString &projectDir,
     // npm/nvm instalan OpenCode como .cmd. Ejecutarlo mediante cmd conserva una
     // consola interactiva propia y evita modificar la consola de LlamaCode.
     if (OpenCodeIntegration::requiresWindowsCommandShell(executable)) {
+        const QString launcherDir = QStandardPaths::writableLocation(
+            QStandardPaths::AppLocalDataLocation) + QStringLiteral("/runtime/opencode");
+        if (!QDir().mkpath(launcherDir)) {
+            proc->deleteLater();
+            return QStringLiteral("No pude crear el launcher temporal de OpenCode.");
+        }
+        QDir runtimeDir(launcherDir);
+        for (const QString &stale : runtimeDir.entryList(
+                 {QStringLiteral("launch-*.cmd")}, QDir::Files))
+            QFile::remove(runtimeDir.filePath(stale));
+        const QString launcherPath = launcherDir + QStringLiteral("/launch-")
+            + QUuid::createUuid().toString(QUuid::WithoutBraces)
+            + QStringLiteral(".cmd");
+        QSaveFile launcher(launcherPath);
+        if (!launcher.open(QIODevice::WriteOnly)
+            || launcher.write(OpenCodeIntegration::windowsLauncherScript(
+                   executable, projectInfo.absoluteFilePath(), model)) < 0
+            || !launcher.commit()) {
+            proc->deleteLater();
+            return QStringLiteral("No pude escribir el launcher temporal de OpenCode.");
+        }
         proc->setProgram(QStandardPaths::findExecutable(QStringLiteral("cmd.exe")));
-        proc->setArguments({
-            QStringLiteral("/d"), QStringLiteral("/s"), QStringLiteral("/c"),
-            OpenCodeIntegration::windowsCommand(
-                executable, projectInfo.absoluteFilePath(), model)
-        });
+        proc->setArguments({QStringLiteral("/d"), QStringLiteral("/c"),
+                            QDir::toNativeSeparators(launcherPath)});
     } else {
         proc->setProgram(executable);
         proc->setArguments({projectInfo.absoluteFilePath(),

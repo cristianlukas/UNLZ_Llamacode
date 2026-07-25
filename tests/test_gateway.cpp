@@ -6,9 +6,12 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QEventLoop>
+#include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QProcess>
 #include <QTcpServer>
+#include <QTemporaryDir>
 #include "core/gateway/LlmGateway.h"
 #include "core/integrations/OpenCodeIntegration.h"
 #include "AppController.h"
@@ -24,6 +27,7 @@ private slots:
     void stableModelCatalog();
     void openCodeConfigUsesEnvironmentSecret();
     void openCodeWindowsLauncherPrefersCmdWrapper();
+    void openCodeWindowsLauncherExecutesCmdWrapper();
     void modelsEndpointServesStableIds();
     void lruEvictsBeyondKeepN();
     void structuredOutputInjection();
@@ -193,6 +197,51 @@ void GatewayTests::openCodeWindowsLauncherPrefersCmdWrapper()
     QVERIFY(command.startsWith(QStringLiteral("call \"C:\\node\\opencode.cmd\"")));
     QVERIFY(command.contains(QStringLiteral("\"C:\\Work\\My Project\"")));
     QVERIFY(command.contains(QStringLiteral("OpenCode no pudo iniciar")));
+    const QByteArray script = OpenCodeIntegration::windowsLauncherScript(
+        QStringLiteral("C:/node/opencode.cmd"),
+        QStringLiteral("C:/Work/My Project"),
+        QStringLiteral("llamacode/profile-1"));
+    QVERIFY(script.startsWith("@echo off\r\ncall \"C:\\node\\opencode.cmd\""));
+    QVERIFY(!script.contains("\\\""));
+}
+
+void GatewayTests::openCodeWindowsLauncherExecutesCmdWrapper()
+{
+#ifndef Q_OS_WIN
+    QSKIP("Regresión específica de cmd.exe");
+#else
+    QTemporaryDir temp;
+    QVERIFY(temp.isValid());
+    const QString fakePath = temp.filePath(QStringLiteral("fake opencode.cmd"));
+    const QString launcherPath = temp.filePath(QStringLiteral("launch opencode.cmd"));
+    const QString argsPath = temp.filePath(QStringLiteral("args.txt"));
+
+    QFile fake(fakePath);
+    QVERIFY(fake.open(QIODevice::WriteOnly));
+    fake.write("@echo off\r\necho %* > \"%~dp0args.txt\"\r\n");
+    fake.close();
+
+    QFile launcher(launcherPath);
+    QVERIFY(launcher.open(QIODevice::WriteOnly));
+    launcher.write(OpenCodeIntegration::windowsLauncherScript(
+        fakePath, QStringLiteral("C:/Work/My Project"),
+        QStringLiteral("llamacode/profile-1")));
+    launcher.close();
+
+    QProcess process;
+    process.setProgram(QStringLiteral("cmd.exe"));
+    process.setArguments({QStringLiteral("/d"), QStringLiteral("/c"),
+                          QDir::toNativeSeparators(launcherPath)});
+    process.start();
+    QVERIFY(process.waitForFinished(10000));
+    QCOMPARE(process.exitCode(), 0);
+
+    QFile args(argsPath);
+    QVERIFY(args.open(QIODevice::ReadOnly));
+    const QByteArray actual = args.readAll();
+    QVERIFY(actual.contains("\"C:\\Work\\My Project\""));
+    QVERIFY(actual.contains("-m \"llamacode\\profile-1\""));
+#endif
 }
 
 void GatewayTests::modelsEndpointServesStableIds()

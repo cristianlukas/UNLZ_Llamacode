@@ -85,3 +85,12 @@ QString OpenCodeIntegration::windowsCommand(const QString &executable,
         .arg(call, quoteForCmd(executable), quoteForCmd(projectDir),
              quoteForCmd(model));
 }
+
+QByteArray OpenCodeIntegration::windowsLauncherScript(const QString &executable,
+                                                      const QString &projectDir,
+                                                      const QString &model)
+{
+    const QString command = windowsCommand(executable, projectDir, model);
+    return QStringLiteral("@echo off\r\n%1\r\n")
+        .arg(command).toUtf8();
+}

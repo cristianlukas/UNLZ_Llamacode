@@ -20,4 +20,7 @@ public:
     static QString windowsCommand(const QString &executable,
                                   const QString &projectDir,
                                   const QString &model);
+    static QByteArray windowsLauncherScript(const QString &executable,
+                                            const QString &projectDir,
+                                            const QString &model);
 };
