@@ -15,7 +15,7 @@ Item {
             var path = selectedFolder.toString().replace("file:///", "")
             var err = App.launchOpenCode(path, openCodeProfile.currentValue ?? "")
             gwMsg.text = err.length === 0
-                ? "OpenCode lanzado contra " + App.gatewayBaseUrl()
+                ? "OpenCode Desktop lanzado contra " + App.gatewayBaseUrl()
                 : err
             gwMsg.ok = err.length === 0
         }
@@ -658,7 +658,7 @@ Item {
                                         }
                                     }
                                     LcButton {
-                                        text: "Lanzar OpenCode en mi GPU"
+                                        text: "Abrir OpenCode GUI en mi GPU"
                                         enabled: openCodeProfile.currentValue !== undefined
                                         onClicked: openCodeProjectDialog.open()
                                     }

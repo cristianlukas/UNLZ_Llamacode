@@ -893,11 +893,12 @@ configurable):
 - Si un request pide otro perfil y auto-load está activo, LlamaCode hace el swap,
   espera que el modelo correcto quede listo y recién entonces reenvía el request.
 
-El botón **Lanzar OpenCode en mi GPU** permite elegir perfil y proyecto. LlamaCode
+El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona
 `llamacode/<launch-profile-id>` y pasa la API key por una variable de entorno. No
 modifica el `opencode.json` global ni el del proyecto. OpenCode debe estar
-instalado y disponible en `PATH`.
+instalado como aplicación Desktop. Si Desktop ya estaba abierto, hay que cerrarlo
+antes de relanzarlo para que el nuevo proceso herede la configuración del gateway.
 
 Configuración manual equivalente:
 

@@ -3,6 +3,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QString>
+#include <QStringList>
 
 // Construcción pura de la configuración efímera que LlamaCode inyecta al
 // proceso OpenCode. No modifica la configuración global ni la del proyecto.
@@ -13,14 +14,5 @@ public:
                                    const QJsonArray &models,
                                    const QString &selectedModelId);
     static QString modelRef(const QString &modelId);
-    static QString preferredWindowsExecutable(const QString &commandWrapper,
-                                              const QString &nativeExecutable,
-                                              const QString &genericExecutable);
-    static bool requiresWindowsCommandShell(const QString &executable);
-    static QString windowsCommand(const QString &executable,
-                                  const QString &projectDir,
-                                  const QString &model);
-    static QByteArray windowsLauncherScript(const QString &executable,
-                                            const QString &projectDir,
-                                            const QString &model);
+    static QStringList windowsDesktopCandidates(const QString &localAppData);
 };

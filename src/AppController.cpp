@@ -64,7 +64,6 @@
 #include <QSqlError>
 #include <QDir>
 #include <QFileInfo>
-#include <QSaveFile>
 #include <QFileSystemWatcher>
 #include <QEventLoop>
 #include <QAbstractNativeEventFilter>
@@ -80,7 +79,6 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QCoreApplication>
-#include <QUuid>
 #include <QUuid>
 #include <QDirIterator>
 #include <functional>
@@ -6591,16 +6589,27 @@ QString AppController::launchOpenCode(const QString &projectDir,
     if (projectDir.isEmpty() || !projectInfo.isDir())
         return QStringLiteral("Elegí una carpeta de proyecto válida.");
 
+    QString executable = qEnvironmentVariable("OPENCODE_DESKTOP_PATH");
 #ifdef Q_OS_WIN
-    const QString executable = OpenCodeIntegration::preferredWindowsExecutable(
-        QStandardPaths::findExecutable(QStringLiteral("opencode.cmd")),
-        QStandardPaths::findExecutable(QStringLiteral("opencode.exe")),
-        QStandardPaths::findExecutable(QStringLiteral("opencode")));
+    if (executable.isEmpty()) {
+        const QString localAppData = qEnvironmentVariable("LOCALAPPDATA");
+        for (const QString &candidate :
+             OpenCodeIntegration::windowsDesktopCandidates(localAppData)) {
+            if (QFileInfo::exists(candidate)) {
+                executable = candidate;
+                break;
+            }
+        }
+    }
+    if (executable.isEmpty())
+        executable = QStandardPaths::findExecutable(QStringLiteral("OpenCode.exe"));
 #else
-    const QString executable = QStandardPaths::findExecutable(QStringLiteral("opencode"));
+    if (executable.isEmpty())
+        executable = QStandardPaths::findExecutable(QStringLiteral("OpenCode"));
 #endif
     if (executable.isEmpty())
-        return QStringLiteral("No encontré 'opencode' en el PATH. Instalá OpenCode primero.");
+        return QStringLiteral("No encontré OpenCode Desktop. Instalá la aplicación gráfica "
+                              "o definí OPENCODE_DESKTOP_PATH.");
 
     if (!m_gateway || !m_gateway->listening()) {
         if (m_gatewayEnabled) startGateway();
@@ -6622,55 +6631,17 @@ QString AppController::launchOpenCode(const QString &projectDir,
     auto *proc = new QProcess(this);
     proc->setProcessEnvironment(env);
     proc->setWorkingDirectory(projectInfo.absoluteFilePath());
-    const QString model = OpenCodeIntegration::modelRef(id);
-#ifdef Q_OS_WIN
-    // npm/nvm instalan OpenCode como .cmd. Ejecutarlo mediante cmd conserva una
-    // consola interactiva propia y evita modificar la consola de LlamaCode.
-    if (OpenCodeIntegration::requiresWindowsCommandShell(executable)) {
-        const QString launcherDir = QStandardPaths::writableLocation(
-            QStandardPaths::AppLocalDataLocation) + QStringLiteral("/runtime/opencode");
-        if (!QDir().mkpath(launcherDir)) {
-            proc->deleteLater();
-            return QStringLiteral("No pude crear el launcher temporal de OpenCode.");
-        }
-        QDir runtimeDir(launcherDir);
-        for (const QString &stale : runtimeDir.entryList(
-                 {QStringLiteral("launch-*.cmd")}, QDir::Files))
-            QFile::remove(runtimeDir.filePath(stale));
-        const QString launcherPath = launcherDir + QStringLiteral("/launch-")
-            + QUuid::createUuid().toString(QUuid::WithoutBraces)
-            + QStringLiteral(".cmd");
-        QSaveFile launcher(launcherPath);
-        if (!launcher.open(QIODevice::WriteOnly)
-            || launcher.write(OpenCodeIntegration::windowsLauncherScript(
-                   executable, projectInfo.absoluteFilePath(), model)) < 0
-            || !launcher.commit()) {
-            proc->deleteLater();
-            return QStringLiteral("No pude escribir el launcher temporal de OpenCode.");
-        }
-        proc->setProgram(QStandardPaths::findExecutable(QStringLiteral("cmd.exe")));
-        proc->setArguments({QStringLiteral("/d"), QStringLiteral("/c"),
-                            QDir::toNativeSeparators(launcherPath)});
-    } else {
-        proc->setProgram(executable);
-        proc->setArguments({projectInfo.absoluteFilePath(),
-                            QStringLiteral("-m"), model});
-    }
-    proc->setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments *args) {
-        args->flags |= CREATE_NEW_CONSOLE;
-    });
-#else
     proc->setProgram(executable);
-    proc->setArguments({projectInfo.absoluteFilePath(),
-                        QStringLiteral("-m"), model});
-#endif
+    // Desktop toma el modelo de OPENCODE_CONFIG_CONTENT. El path abre/selecciona
+    // el proyecto sin introducir flags exclusivos de la TUI.
+    proc->setArguments({projectInfo.absoluteFilePath()});
     if (!proc->startDetached()) {
         proc->deleteLater();
-        return QStringLiteral("No pude lanzar OpenCode.");
+        return QStringLiteral("No pude lanzar OpenCode Desktop.");
     }
     proc->deleteLater();
     appendServerEvent(QStringLiteral("lifecycle"),
-        QStringLiteral("OpenCode lanzado con '%1' contra %2.")
+        QStringLiteral("OpenCode Desktop lanzado con '%1' contra %2.")
             .arg(id, gatewayBaseUrl()));
     return {};
 }
