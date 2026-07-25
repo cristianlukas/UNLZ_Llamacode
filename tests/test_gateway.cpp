@@ -23,6 +23,7 @@ private slots:
     void resolveModelMatches();
     void stableModelCatalog();
     void openCodeConfigUsesEnvironmentSecret();
+    void openCodeWindowsLauncherPrefersCmdWrapper();
     void modelsEndpointServesStableIds();
     void lruEvictsBeyondKeepN();
     void structuredOutputInjection();
@@ -167,6 +168,31 @@ void GatewayTests::openCodeConfigUsesEnvironmentSecret()
                  .value("limit").toObject().value("context").toInt(), 32768);
     QVERIFY(provider.value("models").toObject().value("launch-qwen").toObject()
                 .value("tool_call").toBool());
+}
+
+void GatewayTests::openCodeWindowsLauncherPrefersCmdWrapper()
+{
+    QCOMPARE(OpenCodeIntegration::preferredWindowsExecutable(
+                 QStringLiteral("C:/node/opencode.cmd"),
+                 QStringLiteral("C:/bin/opencode.exe"),
+                 QStringLiteral("C:/node/opencode")),
+             QStringLiteral("C:/node/opencode.cmd"));
+    QCOMPARE(OpenCodeIntegration::preferredWindowsExecutable(
+                 {}, QStringLiteral("C:/bin/opencode.exe"),
+                 QStringLiteral("C:/node/opencode")),
+             QStringLiteral("C:/bin/opencode.exe"));
+    QVERIFY(OpenCodeIntegration::requiresWindowsCommandShell(
+        QStringLiteral("C:/node/opencode.cmd")));
+    QVERIFY(!OpenCodeIntegration::requiresWindowsCommandShell(
+        QStringLiteral("C:/bin/opencode.exe")));
+
+    const QString command = OpenCodeIntegration::windowsCommand(
+        QStringLiteral("C:/node/opencode.cmd"),
+        QStringLiteral("C:/Work/My Project"),
+        QStringLiteral("llamacode/profile-1"));
+    QVERIFY(command.startsWith(QStringLiteral("call \"C:\\node\\opencode.cmd\"")));
+    QVERIFY(command.contains(QStringLiteral("\"C:\\Work\\My Project\"")));
+    QVERIFY(command.contains(QStringLiteral("OpenCode no pudo iniciar")));
 }
 
 void GatewayTests::modelsEndpointServesStableIds()

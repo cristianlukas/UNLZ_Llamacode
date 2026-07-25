@@ -1,5 +1,8 @@
 #include "OpenCodeIntegration.h"
 
+#include <QDir>
+#include <QFileInfo>
+
 QString OpenCodeIntegration::modelRef(const QString &modelId)
 {
     return QStringLiteral("llamacode/") + modelId;
@@ -48,4 +51,37 @@ QJsonObject OpenCodeIntegration::buildConfig(const QString &gatewayV1Url,
     if (!selectedModelId.isEmpty())
         root.insert(QStringLiteral("model"), modelRef(selectedModelId));
     return root;
+}
+
+QString OpenCodeIntegration::preferredWindowsExecutable(
+    const QString &commandWrapper, const QString &nativeExecutable,
+    const QString &genericExecutable)
+{
+    if (!commandWrapper.isEmpty()) return commandWrapper;
+    if (!nativeExecutable.isEmpty()) return nativeExecutable;
+    return genericExecutable;
+}
+
+bool OpenCodeIntegration::requiresWindowsCommandShell(const QString &executable)
+{
+    const QString suffix = QFileInfo(executable).suffix().toLower();
+    return suffix == QLatin1String("cmd") || suffix == QLatin1String("bat");
+}
+
+static QString quoteForCmd(QString value)
+{
+    value.replace(QLatin1Char('"'), QStringLiteral("\"\""));
+    return QStringLiteral("\"%1\"").arg(QDir::toNativeSeparators(value));
+}
+
+QString OpenCodeIntegration::windowsCommand(const QString &executable,
+                                            const QString &projectDir,
+                                            const QString &model)
+{
+    const QString call = requiresWindowsCommandShell(executable)
+        ? QStringLiteral("call ") : QString();
+    return QStringLiteral("%1%2 %3 -m %4 || "
+                          "(echo. & echo OpenCode no pudo iniciar. & pause)")
+        .arg(call, quoteForCmd(executable), quoteForCmd(projectDir),
+             quoteForCmd(model));
 }

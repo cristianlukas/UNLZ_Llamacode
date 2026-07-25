@@ -13,4 +13,11 @@ public:
                                    const QJsonArray &models,
                                    const QString &selectedModelId);
     static QString modelRef(const QString &modelId);
+    static QString preferredWindowsExecutable(const QString &commandWrapper,
+                                              const QString &nativeExecutable,
+                                              const QString &genericExecutable);
+    static bool requiresWindowsCommandShell(const QString &executable);
+    static QString windowsCommand(const QString &executable,
+                                  const QString &projectDir,
+                                  const QString &model);
 };

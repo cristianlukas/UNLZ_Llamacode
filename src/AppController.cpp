@@ -6589,10 +6589,13 @@ QString AppController::launchOpenCode(const QString &projectDir,
     if (projectDir.isEmpty() || !projectInfo.isDir())
         return QStringLiteral("Elegí una carpeta de proyecto válida.");
 
-    QString executable = QStandardPaths::findExecutable(QStringLiteral("opencode"));
 #ifdef Q_OS_WIN
-    if (executable.isEmpty())
-        executable = QStandardPaths::findExecutable(QStringLiteral("opencode.cmd"));
+    const QString executable = OpenCodeIntegration::preferredWindowsExecutable(
+        QStandardPaths::findExecutable(QStringLiteral("opencode.cmd")),
+        QStandardPaths::findExecutable(QStringLiteral("opencode.exe")),
+        QStandardPaths::findExecutable(QStringLiteral("opencode")));
+#else
+    const QString executable = QStandardPaths::findExecutable(QStringLiteral("opencode"));
 #endif
     if (executable.isEmpty())
         return QStringLiteral("No encontré 'opencode' en el PATH. Instalá OpenCode primero.");
@@ -6621,16 +6624,18 @@ QString AppController::launchOpenCode(const QString &projectDir,
 #ifdef Q_OS_WIN
     // npm/nvm instalan OpenCode como .cmd. Ejecutarlo mediante cmd conserva una
     // consola interactiva propia y evita modificar la consola de LlamaCode.
-    const QString quotedExe = QStringLiteral("\"%1\"").arg(
-        QDir::toNativeSeparators(executable).replace(QLatin1Char('"'), QStringLiteral("\"\"")));
-    const QString quotedProject = QStringLiteral("\"%1\"").arg(
-        QDir::toNativeSeparators(projectInfo.absoluteFilePath())
-            .replace(QLatin1Char('"'), QStringLiteral("\"\"")));
-    const QString command = QStringLiteral("%1 %2 -m \"%3\"")
-        .arg(quotedExe, quotedProject, model);
-    proc->setProgram(QStandardPaths::findExecutable(QStringLiteral("cmd.exe")));
-    proc->setArguments({QStringLiteral("/d"), QStringLiteral("/s"),
-                        QStringLiteral("/c"), command});
+    if (OpenCodeIntegration::requiresWindowsCommandShell(executable)) {
+        proc->setProgram(QStandardPaths::findExecutable(QStringLiteral("cmd.exe")));
+        proc->setArguments({
+            QStringLiteral("/d"), QStringLiteral("/s"), QStringLiteral("/c"),
+            OpenCodeIntegration::windowsCommand(
+                executable, projectInfo.absoluteFilePath(), model)
+        });
+    } else {
+        proc->setProgram(executable);
+        proc->setArguments({projectInfo.absoluteFilePath(),
+                            QStringLiteral("-m"), model});
+    }
     proc->setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments *args) {
         args->flags |= CREATE_NEW_CONSOLE;
     });
