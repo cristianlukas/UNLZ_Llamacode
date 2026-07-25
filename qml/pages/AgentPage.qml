@@ -2050,7 +2050,12 @@ Item {
         // ── Input bar ────────────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
-            height: inputCol.implicitHeight + 16
+            // Es hijo de ColumnLayout: `height` solo no es una restricción de
+            // layout y puede terminar comprimido por debajo de sus controles,
+            // que luego se dibujan fuera del borde inferior de la ventana.
+            implicitHeight: inputCol.implicitHeight + 16
+            Layout.preferredHeight: implicitHeight
+            Layout.minimumHeight: implicitHeight
             color: Theme.baseBg
             visible: App.agentRunning && !App.agentInTerminal
 
