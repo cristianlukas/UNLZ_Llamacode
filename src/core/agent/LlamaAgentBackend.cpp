@@ -650,7 +650,8 @@ void LlamaAgentBackend::startCompaction(int head, int keepFrom)
         {QStringLiteral("stream"), false},
         {QStringLiteral("temperature"), 0.2},
         {QStringLiteral("max_tokens"), qMin(2048, m_ctxLimit > 0 ? m_ctxLimit / 8 : 2048)},
-        {QStringLiteral("cache_prompt"), true}
+        {QStringLiteral("cache_prompt"), true},
+        {QStringLiteral("llama_user_id"), m_sessionId}
     };
 
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
@@ -740,7 +741,8 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
         {QStringLiteral("stream"), false},
         {QStringLiteral("temperature"), 0.1},
         {QStringLiteral("max_tokens"), qMin(1024, m_ctxLimit > 0 ? m_ctxLimit / 8 : 1024)},
-        {QStringLiteral("cache_prompt"), true}
+        {QStringLiteral("cache_prompt"), true},
+        {QStringLiteral("llama_user_id"), sid}
     };
 
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
@@ -1838,6 +1840,7 @@ void LlamaAgentBackend::prefillWarmup()
         wire, buildToolSchemas(),
         m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId,
         m_temperature, m_thinkingEnabled);
+    payload.insert(QStringLiteral("llama_user_id"), m_sessionId);
     if (usingTextTools()) {
         payload = buildTextToolPayload(payload);
         payload[QStringLiteral("max_tokens")] = 1;
