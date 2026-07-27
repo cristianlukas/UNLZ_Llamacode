@@ -39,11 +39,6 @@ public:
     {
         return QStringLiteral("http://127.0.0.1:%1").arg(m_srv.serverPort());
     }
-    QByteArray requestBody() const
-    {
-        const int split = m_req.indexOf("\r\n\r\n");
-        return split < 0 ? QByteArray() : m_req.mid(split + 4);
-    }
 
 private slots:
     void onConn()
@@ -86,7 +81,6 @@ private slots:
     void persistsAcrossRestart();
     void stream_accumulatesAssistantContent();
     void stream_reportsErrorOnHttp500();
-    void stream_sendsStablePromptCacheIdentity();
     void preamble_emptyWhenThinkingNoPersona();
     void preamble_thinkingOffAddsNoThinkSystem();
     void preamble_designerAddsPersonaFirst();
@@ -243,28 +237,6 @@ void BackendsNetTests::stream_reportsErrorOnHttp500()
         errSpy.wait(100);
 
     QVERIFY(!errSpy.isEmpty());
-}
-
-void BackendsNetTests::stream_sendsStablePromptCacheIdentity()
-{
-    SseStubServer stub;
-    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\n")));
-
-    QTemporaryDir dir;
-    RawChatBackend be;
-    AgentContext c = ctx(dir.path());
-    c.serverBaseUrl = stub.baseUrl();
-    be.start(c);
-    const QString sessionId = be.currentSessionId();
-
-    QSignalSpy finishedSpy(&be, &RawChatBackend::turnFinished);
-    be.sendMessage(QStringLiteral("cacheame"));
-    for (int i = 0; i < 40 && finishedSpy.isEmpty(); ++i)
-        finishedSpy.wait(100);
-
-    const QJsonObject payload = QJsonDocument::fromJson(stub.requestBody()).object();
-    QCOMPARE(payload.value(QStringLiteral("cache_prompt")).toBool(), true);
-    QCOMPARE(payload.value(QStringLiteral("llama_user_id")).toString(), sessionId);
 }
 
 static QString sysContent(const QJsonArray &a, int i)

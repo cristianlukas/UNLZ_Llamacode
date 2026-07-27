@@ -3,16 +3,6 @@
 #include "../GGUFScanner.h"
 #include <QFileInfo>
 #include <QRegularExpression>
-#include <limits>
-
-#ifdef Q_OS_WIN
-#  include <windows.h>
-#elif defined(Q_OS_LINUX)
-#  include <sys/sysinfo.h>
-#elif defined(Q_OS_MACOS)
-#  include <sys/types.h>
-#  include <sys/sysctl.h>
-#endif
 
 namespace {
 struct SamplingFlag {
@@ -20,40 +10,6 @@ struct SamplingFlag {
     QStringList names;
     QString recommended;
 };
-
-struct MemorySnapshot {
-    quint64 totalMiB = 0;
-    quint64 availableMiB = 0;
-};
-
-static MemorySnapshot systemMemorySnapshot()
-{
-    MemorySnapshot out;
-#ifdef Q_OS_WIN
-    MEMORYSTATUSEX st{};
-    st.dwLength = sizeof(st);
-    if (GlobalMemoryStatusEx(&st)) {
-        out.totalMiB = st.ullTotalPhys / (1024ULL * 1024ULL);
-        out.availableMiB = st.ullAvailPhys / (1024ULL * 1024ULL);
-    }
-#elif defined(Q_OS_LINUX)
-    struct sysinfo st {};
-    if (sysinfo(&st) == 0) {
-        const quint64 unit = st.mem_unit;
-        out.totalMiB = (quint64(st.totalram) * unit) / (1024ULL * 1024ULL);
-        out.availableMiB = (quint64(st.freeram + st.bufferram) * unit)
-                           / (1024ULL * 1024ULL);
-    }
-#elif defined(Q_OS_MACOS)
-    quint64 total = 0;
-    size_t len = sizeof(total);
-    if (sysctlbyname("hw.memsize", &total, &len, nullptr, 0) == 0) {
-        out.totalMiB = total / (1024ULL * 1024ULL);
-        out.availableMiB = out.totalMiB / 2;
-    }
-#endif
-    return out;
-}
 }
 
 static bool supportsAnyFlag(const LlamaBinary &bin, const QString &flag)
@@ -238,23 +194,6 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     applyReasoningControl(ctx, args, result.warnings);
     applySamplingPolicy(ctx, args, result.warnings);
 
-    const QString cacheRamFlag = ctx.binary.resolveFlag(QStringLiteral("--cache-ram"));
-    if (ctx.binary.supportsFlag(cacheRamFlag)
-        && !args.contains(cacheRamFlag)
-        && !args.contains(QStringLiteral("--cache-ram"))) {
-        const MemorySnapshot mem = systemMemorySnapshot();
-        const int cacheMiB = recommendedCacheRamMiB(
-            mem.totalMiB, mem.availableMiB,
-            quint64(qMax<qint64>(0, QFileInfo(ctx.catalogModel.absolutePath).size())));
-        if (cacheMiB > 0) {
-            args << cacheRamFlag << QString::number(cacheMiB);
-            result.warnings.append(QStringLiteral(
-                "Prompt cache RAM autoajustado a %1 MiB según %2 MiB disponibles "
-                "(podés sobrescribirlo con --cache-ram).")
-                .arg(cacheMiB).arg(mem.availableMiB));
-        }
-    }
-
     result.effectiveArgs = args;
     result.effectiveEnv = env;
     result.binaryPath = ctx.binary.path;
@@ -262,26 +201,6 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
                          .arg(ctx.binary.path, args.join(' '));
 
     return result;
-}
-
-int EffectiveProfileBuilder::recommendedCacheRamMiB(quint64 totalMiB,
-                                                     quint64 availableMiB,
-                                                     quint64 modelBytes)
-{
-    if (totalMiB == 0 || availableMiB == 0)
-        return 0;
-    const quint64 modelMiB = (modelBytes + 1024ULL * 1024ULL - 1)
-                             / (1024ULL * 1024ULL);
-    const quint64 headroom = qMax<quint64>(8192, totalMiB / 5);
-    if (availableMiB <= headroom + modelMiB)
-        return 0;
-    quint64 budget = qMin(totalMiB * 3 / 8,
-                          availableMiB - headroom - modelMiB);
-    budget = (budget / 1024) * 1024;
-    if (budget < 4096)
-        return 0;
-    return int(qMin<quint64>(budget,
-                             quint64((std::numeric_limits<int>::max)())));
 }
 
 void EffectiveProfileBuilder::applyReasoningControl(const Context &ctx,

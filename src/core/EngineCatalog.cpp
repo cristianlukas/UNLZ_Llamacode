@@ -153,24 +153,6 @@ QList<EngineCatalogEntry> EngineCatalog::entries()
                      QStringLiteral("cuda"), {QStringLiteral("windows"), QStringLiteral("linux")}, {},
                      false, true, QStringLiteral("experimental"), QStringLiteral("fast")),
          }},
-        {QStringLiteral("cachyllama"),
-         QStringLiteral("CachyLlama"),
-         QStringLiteral("llama-server"),
-         QStringLiteral("Fork con prompt/KV cache persistente en SSD para sesiones agentes largas."),
-         QStringLiteral("fewtarius/CachyLlama"),
-         QStringLiteral("https://github.com/fewtarius/CachyLlama"),
-         QStringLiteral("cachyllama"),
-         QStringLiteral("experimental"),
-         QStringLiteral("Experimental: conserva checkpoints entre reinicios. Mantener llama.cpp oficial como fallback."),
-         {
-             variant(QStringLiteral("cachyllama-cuda-source"), QStringLiteral("Build CUDA (NVIDIA)"),
-                     QStringLiteral("cuda"), {QStringLiteral("windows"), QStringLiteral("linux")},
-                     {QStringLiteral("nvidia")}, false, true,
-                     QStringLiteral("experimental"), QStringLiteral("fast")),
-             variant(QStringLiteral("cachyllama-vulkan-source"), QStringLiteral("Build Vulkan"),
-                     QStringLiteral("vulkan"), {QStringLiteral("windows"), QStringLiteral("linux")},
-                     {}, false, true, QStringLiteral("experimental"), QStringLiteral("baseline")),
-         }},
     };
 }
 

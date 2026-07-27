@@ -54,8 +54,6 @@ private slots:
     void builder_emitsTensorOverrides();
     void builder_warnsOnMalformedTensorOverride();
     void runtimePreset_roundtripsTensorOverrides();
-    void cacheRamBudget_isAdaptiveAndConservative();
-    void builder_autoAddsSupportedCacheRam();
 };
 
 void CoreTests::inferFamily_data()
@@ -269,39 +267,6 @@ void CoreTests::builder_emitsHostPort()
     QCOMPARE(ep.effectiveArgs[hi + 1], QStringLiteral("127.0.0.1"));
     QVERIFY(pi >= 0 && pi + 1 < ep.effectiveArgs.size());
     QCOMPARE(ep.effectiveArgs[pi + 1], QStringLiteral("9099"));
-}
-
-void CoreTests::cacheRamBudget_isAdaptiveAndConservative()
-{
-    QCOMPARE(EffectiveProfileBuilder::recommendedCacheRamMiB(
-                 128 * 1024, 100 * 1024, 20ULL * 1024 * 1024 * 1024),
-             48 * 1024);
-    QCOMPARE(EffectiveProfileBuilder::recommendedCacheRamMiB(
-                 16 * 1024, 7 * 1024, 8ULL * 1024 * 1024 * 1024),
-             0);
-    QCOMPARE(EffectiveProfileBuilder::recommendedCacheRamMiB(0, 0, 0), 0);
-}
-
-void CoreTests::builder_autoAddsSupportedCacheRam()
-{
-    auto ctx = makeCtx();
-    ctx.binary.supportedFlags = {
-        QStringLiteral("--host"), QStringLiteral("--port"), QStringLiteral("--model"),
-        QStringLiteral("--jinja"), QStringLiteral("--cache-ram")
-    };
-    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
-    const int idx = ep.effectiveArgs.indexOf(QStringLiteral("--cache-ram"));
-    if (idx >= 0) {
-        QVERIFY(idx + 1 < ep.effectiveArgs.size());
-        QVERIFY(ep.effectiveArgs.at(idx + 1).toInt() >= 4096);
-        QCOMPARE(ep.effectiveArgs.count(QStringLiteral("--cache-ram")), 1);
-    }
-
-    ctx.launch.extraArgs = {QStringLiteral("--cache-ram 6144")};
-    const EffectiveProfile manual = EffectiveProfileBuilder::build(ctx);
-    QCOMPARE(manual.effectiveArgs.count(QStringLiteral("--cache-ram")), 1);
-    const int manualIdx = manual.effectiveArgs.indexOf(QStringLiteral("--cache-ram"));
-    QCOMPARE(manual.effectiveArgs.value(manualIdx + 1), QStringLiteral("6144"));
 }
 
 void CoreTests::builder_dropsUnsupportedFlag()

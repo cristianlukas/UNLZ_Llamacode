@@ -28,12 +28,6 @@ void EngineCatalogTests::catalogIncludesSourceForks()
     QVERIFY(!nanbeige.variants.isEmpty());
     QVERIFY(nanbeige.variants.first().buildFromSource);
     QCOMPARE(nanbeige.variants.first().gpuVendors, QStringList{QStringLiteral("nvidia")});
-
-    const EngineCatalogEntry cachy = EngineCatalog::entry(QStringLiteral("cachyllama"));
-    QCOMPARE(cachy.repo, QStringLiteral("fewtarius/CachyLlama"));
-    QCOMPARE(cachy.support, QStringLiteral("experimental"));
-    QVERIFY(!cachy.variants.isEmpty());
-    QVERIFY(cachy.variants.first().buildFromSource);
 }
 
 void EngineCatalogTests::variantCompatibilityReportsReason()

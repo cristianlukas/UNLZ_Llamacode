@@ -1945,7 +1945,6 @@ void LlamaAgentBackend::runCompletion()
         // así el server procesa sólo el sufijo nuevo en vez de re-evaluar todo el
         // contexto. No dependemos del default del fork (que puede venir en false).
         {QStringLiteral("cache_prompt"), true},
-        {QStringLiteral("llama_user_id"), m_sessionId},
         // Pedir el bloque `usage` en el chunk final del stream → tokens reales de
         // generación (en vez de estimar chars/4) para métricas/tps fiables.
         {QStringLiteral("stream_options"), QJsonObject{{QStringLiteral("include_usage"), true}}}
@@ -2039,12 +2038,6 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
             QStringLiteral("<tool_call|>"), QStringLiteral("<|tool_call|>"),
             QStringLiteral("</tool_call>"), QStringLiteral("<end_of_turn>")}}
     };
-    if (nativePayload.contains(QStringLiteral("cache_prompt")))
-        payload.insert(QStringLiteral("cache_prompt"),
-                       nativePayload.value(QStringLiteral("cache_prompt")));
-    if (nativePayload.contains(QStringLiteral("llama_user_id")))
-        payload.insert(QStringLiteral("llama_user_id"),
-                       nativePayload.value(QStringLiteral("llama_user_id")));
     if (nativePayload.contains(QStringLiteral("temperature")))
         payload.insert(QStringLiteral("temperature"), nativePayload.value(QStringLiteral("temperature")));
     return payload;
