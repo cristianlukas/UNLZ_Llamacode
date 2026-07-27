@@ -26,5 +26,9 @@ public:
 
     static QVariantMap summarize(const QVariantList &requests);
     static QVariantMap compare(const QVariantMap &baseline, const QVariantMap &candidate);
+    // Agrupa pasadas de benchmark por perfil y calcula estadísticos robustos.
+    // Las filas fallidas cuentan para estabilidad/éxito, pero no contaminan
+    // medianas de tiempo o calidad con ceros sintéticos.
+    static QVariantMap benchmarkComparison(const QVariantList &runs);
     static QString normalizedPhase(const QString &phase);
 };

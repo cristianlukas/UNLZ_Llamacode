@@ -13418,6 +13418,29 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     QFile rf(dir + "/" + id + ".json");
     if (rf.open(QIODevice::WriteOnly | QIODevice::Truncate))
         rf.write(QJsonDocument(QJsonObject::fromVariantMap(result)).toJson());
+
+    // Mantener un informe agregado dentro de la carpeta aislada de la corrida.
+    // Se reescribe después de cada pasada para que una cancelación o crash deje
+    // igualmente un artefacto útil con las muestras completadas hasta entonces.
+    const QString runDir = result.value(QStringLiteral("runDir")).toString();
+    if (!runDir.isEmpty()) {
+        QVariantList runRows;
+        for (const QVariant &value : std::as_const(m_benchmarkResults)) {
+            const QVariantMap row = value.toMap();
+            if (row.value(QStringLiteral("runDir")).toString() == runDir)
+                runRows.append(row);
+        }
+        QVariantMap report = AgentEfficiency::benchmarkComparison(runRows);
+        report[QStringLiteral("benchmarkName")] =
+            result.value(QStringLiteral("benchmarkName")).toString();
+        report[QStringLiteral("runLabel")] = result.value(QStringLiteral("runLabel")).toString();
+        report[QStringLiteral("target")] = result.value(QStringLiteral("target")).toString();
+        report[QStringLiteral("generatedAt")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        QFile comparisonFile(QDir(runDir).filePath(QStringLiteral("comparison.json")));
+        if (comparisonFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            comparisonFile.write(
+                QJsonDocument(QJsonObject::fromVariantMap(report)).toJson(QJsonDocument::Indented));
+    }
 }
 
 void AppController::logAgentUiScroll(const QString &event, const QString &state)

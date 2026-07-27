@@ -74,7 +74,14 @@ de tiempo y calidad, para evitar comparaciones manuales ambiguas.
 `assets/benchmarks/custom/agent_efficiency_e2e_v1.json` se distribuye con la app.
 Sus IDs, prompts, límites y comandos de aceptación están versionados; una comparación
 válida usa la misma revisión de la suite, modelo, perfil, hardware y cantidad de
-pasadas. El resultado persistido aporta calidad, tiempo, tokens y uso de tools.
+pasadas. La suite recomienda tres pasadas: al seleccionarla la UI aplica ese valor,
+que el usuario todavía puede modificar. Cada carpeta aislada mantiene además
+`comparison.json`, actualizado después de cada muestra, con tasa de éxito,
+estabilidad del resultado, rango y mediana de calidad, medianas de tiempo y
+reparaciones, y deltas pareados entre los perfiles seleccionados. Las pasadas
+fallidas cuentan para éxito/estabilidad pero no introducen ceros artificiales en
+las medianas. El resultado individual persistido aporta calidad, tiempo y uso de
+tools.
 
 ## Project Brain incremental
 

@@ -643,7 +643,23 @@ Item {
                                     arr.push({ id: "", text: "(sin benchmarks — creá uno)" })
                                 return arr
                             }
-                            onActivated: root.customId = currentValue ?? ""
+                            onActivated: {
+                                root.customId = currentValue ?? ""
+                                const cs = App.customBenchmarks || []
+                                for (let i = 0; i < cs.length; i++) {
+                                    if (cs[i].id !== root.customId) continue
+                                    // Instalaciones anteriores pueden conservar una copia
+                                    // sembrada de la suite v1 sin este campo de metadata.
+                                    const fallback = root.customId === "agent_efficiency_e2e_v1" ? 3 : 0
+                                    const recommended = parseInt(cs[i].recommendedPasses ?? fallback)
+                                    if (recommended > 0) {
+                                        passesSpin.value = Math.min(passesSpin.to,
+                                                                    Math.max(passesSpin.from, recommended))
+                                        App.writeSetting("benchPasses", passesSpin.value)
+                                    }
+                                    break
+                                }
+                            }
                             // Reconcile selection to the saved customId. Do NOT write customId
                             // back from currentValue here: the model loads async, so an early
                             // pass would clobber the saved id with index 0 (first benchmark).
@@ -821,6 +837,14 @@ Item {
                             implicitWidth: 96
                             onValueModified: App.writeSetting("benchPasses", value)
                         }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: customMode.checked && root.customId === "agent_efficiency_e2e_v1"
+                        text: "La suite E2E recomienda 3 pasadas. comparison.json agrupa estabilidad, mediana de calidad y tiempo entre perfiles."
+                        color: Theme.textMuted
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
                     }
 
                     // Timeout duro opcional por corrida (wall-clock, segundos). 0 = sin límite.

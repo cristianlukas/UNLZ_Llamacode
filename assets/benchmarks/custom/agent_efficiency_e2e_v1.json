@@ -4,6 +4,7 @@
   "description": "Suite versionada y reproducible para comparar calidad, tiempo, tokens y uso de tools entre versiones del agente.",
   "source": "bundled",
   "protocolVersion": 1,
+  "recommendedPasses": 3,
   "prompts": [
     {
       "id": "python_parser_regression",

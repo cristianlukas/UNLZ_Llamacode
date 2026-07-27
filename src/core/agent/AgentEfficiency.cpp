@@ -1,5 +1,6 @@
 #include "AgentEfficiency.h"
 
+#include <algorithm>
 #include <QtMath>
 
 static double firstNumber(const QJsonObject &a, const QJsonObject &b,
@@ -89,6 +90,119 @@ QVariantMap AgentEfficiency::compare(const QVariantMap &base, const QVariantMap 
         out[key + QStringLiteral("ChangePct")] = a > 0.0 ? ((b - a) * 100.0 / a) : 0.0;
     }
     return out;
+}
+
+static double median(QList<double> values)
+{
+    if (values.isEmpty()) return 0.0;
+    std::sort(values.begin(), values.end());
+    const qsizetype middle = values.size() / 2;
+    return values.size() % 2
+        ? values.at(middle)
+        : (values.at(middle - 1) + values.at(middle)) / 2.0;
+}
+
+QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
+{
+    QMap<QString, QVariantList> grouped;
+    for (const QVariant &value : runs) {
+        const QVariantMap run = value.toMap();
+        const QString profileId = run.value(QStringLiteral("profileId")).toString().trimmed();
+        if (!profileId.isEmpty())
+            grouped[profileId].append(run);
+    }
+
+    QVariantList profiles;
+    QMap<QString, QVariantMap> aggregateById;
+    for (auto it = grouped.cbegin(); it != grouped.cend(); ++it) {
+        const QVariantList profileRuns = it.value();
+        QList<double> qualityPct;
+        QList<double> elapsedSec;
+        QList<double> firstAttemptSec;
+        QList<double> repairAttempts;
+        int successful = 0;
+        int fullyAccepted = 0;
+        int failed = 0;
+        QString profileName;
+
+        for (const QVariant &value : profileRuns) {
+            const QVariantMap run = value.toMap();
+            if (profileName.isEmpty())
+                profileName = run.value(QStringLiteral("profileName")).toString()
+                                      .section(QStringLiteral(" · pasada "), 0, 0);
+            const bool runFailed = run.value(QStringLiteral("failed")).toBool();
+            if (runFailed) {
+                failed++;
+                continue;
+            }
+            successful++;
+            const int score = run.value(QStringLiteral("qualityScore")).toInt();
+            const int total = run.value(QStringLiteral("qualityTotal")).toInt();
+            if (total > 0) {
+                qualityPct.append(100.0 * score / total);
+                if (score >= total) fullyAccepted++;
+            }
+            const double elapsed = run.value(QStringLiteral("elapsedSec")).toDouble();
+            if (elapsed > 0.0) elapsedSec.append(elapsed);
+            const double first = run.value(QStringLiteral("timeToFirstAttempt")).toDouble();
+            if (first > 0.0) firstAttemptSec.append(first);
+            repairAttempts.append(run.value(QStringLiteral("repairAttempts")).toDouble());
+        }
+
+        const int totalRuns = profileRuns.size();
+        const int majority = qMax(successful, failed);
+        const auto minmaxQuality = std::minmax_element(qualityPct.cbegin(), qualityPct.cend());
+        QVariantMap aggregate{
+            {QStringLiteral("profileId"), it.key()},
+            {QStringLiteral("profileName"), profileName},
+            {QStringLiteral("runs"), totalRuns},
+            {QStringLiteral("successfulRuns"), successful},
+            {QStringLiteral("failedRuns"), failed},
+            {QStringLiteral("fullyAcceptedRuns"), fullyAccepted},
+            {QStringLiteral("successRatePct"), totalRuns > 0 ? 100.0 * successful / totalRuns : 0.0},
+            {QStringLiteral("stabilityRatePct"), totalRuns > 0 ? 100.0 * majority / totalRuns : 0.0},
+            {QStringLiteral("outcomeSpread"), successful > 0 && failed > 0},
+            {QStringLiteral("medianQualityPct"), median(qualityPct)},
+            {QStringLiteral("medianElapsedSec"), median(elapsedSec)},
+            {QStringLiteral("medianFirstAttemptSec"), median(firstAttemptSec)},
+            {QStringLiteral("medianRepairAttempts"), median(repairAttempts)}
+        };
+        aggregate[QStringLiteral("qualityRangePctPoints")] = qualityPct.isEmpty()
+            ? 0.0 : *minmaxQuality.second - *minmaxQuality.first;
+        profiles.append(aggregate);
+        aggregateById.insert(it.key(), aggregate);
+    }
+
+    QVariantList comparisons;
+    const QStringList ids = aggregateById.keys();
+    for (qsizetype i = 0; i < ids.size(); ++i) {
+        for (qsizetype j = i + 1; j < ids.size(); ++j) {
+            const QVariantMap baseline = aggregateById.value(ids.at(i));
+            const QVariantMap candidate = aggregateById.value(ids.at(j));
+            const double baseTime = baseline.value(QStringLiteral("medianElapsedSec")).toDouble();
+            const double candidateTime = candidate.value(QStringLiteral("medianElapsedSec")).toDouble();
+            comparisons.append(QVariantMap{
+                {QStringLiteral("baselineProfileId"), ids.at(i)},
+                {QStringLiteral("candidateProfileId"), ids.at(j)},
+                {QStringLiteral("qualityDeltaPctPoints"),
+                 candidate.value(QStringLiteral("medianQualityPct")).toDouble()
+                     - baseline.value(QStringLiteral("medianQualityPct")).toDouble()},
+                {QStringLiteral("successRateDeltaPctPoints"),
+                 candidate.value(QStringLiteral("successRatePct")).toDouble()
+                     - baseline.value(QStringLiteral("successRatePct")).toDouble()},
+                {QStringLiteral("elapsedChangePct"),
+                 baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0}
+            });
+        }
+    }
+
+    return {
+        {QStringLiteral("schemaVersion"), 1},
+        {QStringLiteral("runCount"), runs.size()},
+        {QStringLiteral("profileCount"), profiles.size()},
+        {QStringLiteral("profiles"), profiles},
+        {QStringLiteral("comparisons"), comparisons}
+    };
 }
 
 QString AgentEfficiency::normalizedPhase(const QString &phase)
