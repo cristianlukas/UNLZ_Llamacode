@@ -1035,7 +1035,9 @@ void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
         {QStringLiteral("messages"), QJsonArray{
             QJsonObject{{QStringLiteral("role"), QStringLiteral("system")},
                         {QStringLiteral("content"), QStringLiteral("sys")}}}},
-        {QStringLiteral("max_tokens"), 2048}};
+        {QStringLiteral("max_tokens"), 2048},
+        {QStringLiteral("cache_prompt"), true},
+        {QStringLiteral("llama_user_id"), QStringLiteral("session-123")}};
 
     const QJsonObject p = be.buildTextToolPayloadForTest(nativePayload);
 
@@ -1057,6 +1059,9 @@ void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()
                                    .first().toObject().value(QStringLiteral("content")).toString();
     QVERIFY(sysContent.contains(QStringLiteral("<think>")));
     QVERIFY(sysContent.contains(QStringLiteral("Nunca respondas vacío")));
+    QCOMPARE(p.value(QStringLiteral("cache_prompt")).toBool(), true);
+    QCOMPARE(p.value(QStringLiteral("llama_user_id")).toString(),
+             QStringLiteral("session-123"));
 }
 
 void AgentWireTests::adaptiveSubagentLimit_respectsProfileContextAndVram()

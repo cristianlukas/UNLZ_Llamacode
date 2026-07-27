@@ -469,7 +469,9 @@ void RawChatBackend::sendMessage(const QString &text)
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("raw") : m_ctx.modelId},
         {QStringLiteral("messages"), reqMsgs},
-        {QStringLiteral("stream"), true}
+        {QStringLiteral("stream"), true},
+        {QStringLiteral("cache_prompt"), true},
+        {QStringLiteral("llama_user_id"), m_sessionId}
     };
     // Control de thinking (llama.cpp).
     //  - reasoning_budget: per-request, NO depende del chat template. 0 = sin thinking, -1 = ilimitado.

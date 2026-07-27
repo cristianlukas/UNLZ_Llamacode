@@ -270,6 +270,16 @@ el worker y el modelo recibe sólo `mcp_search_tools` y `mcp_call_tool`. La bús
 devuelve bajo demanda los schemas relevantes, evitando reenviar todas las
 definiciones en cada turno y manteniendo plano el costo de contexto al sumar servers.
 
+Para backends locales, LlamaCode habilita reutilización del prompt cache en chat,
+agente nativo y fallback de tools por texto, y envía un identificador estable por
+sesión para que los motores con afinidad de checkpoints no mezclen conversaciones.
+Cuando el probe del binario confirma soporte para `--cache-ram`, calcula
+automáticamente un presupuesto conservador usando la RAM disponible, el tamaño del
+modelo y margen para el sistema; un valor manual en el perfil siempre tiene
+prioridad. El catálogo incluye además **CachyLlama** como motor experimental
+compilable desde fuente para evaluar checkpoints KV persistentes sin reemplazar el
+motor oficial.
+
 La delegación multi-agente ajusta automáticamente su concurrencia al perfil activo:
 respeta los slots de `llama-server`, reduce el fan-out con contextos largos y aplica
 límites conservadores según la VRAM detectada. Un perfil de un solo slot conserva
