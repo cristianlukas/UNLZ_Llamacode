@@ -87,7 +87,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 13);                       // tiers base + MAX-Q/FAST-GEMMA + Laguna experimental
+    QCOMPARE(sys, 14);                       // tiers base + MAX-Q/FAST-GEMMA + experimentales
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -256,6 +256,7 @@ void SystemProfilesTests::manager_smallProfilesAreConservative()
                                 .arg(launchId).arg(rt.value("gpuLayers").toInt())));
     };
     assertRt(QStringLiteral("sys-vram-4-gemma"), 8192, 128, 12);
+    assertRt(QStringLiteral("sys-exp-vram-4-gemma-heretic"), 8192, 128, 12);
     assertRt(QStringLiteral("sys-vram-2-gemma"), 8192, 64, 8);
     assertRt(QStringLiteral("sys-vram-2"), 8192, 64, 8);
     assertRt(QStringLiteral("sys-vram-0"), 8192, 128, 0);
@@ -481,7 +482,7 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
         QCOMPARE(profile.value(QStringLiteral("chatTemplate")).toString(),
                  QStringLiteral("gemma4-tools-fixed.jinja"));
     }
-    QCOMPARE(gemmaProfiles, 4);
+    QCOMPARE(gemmaProfiles, 5);
 }
 
 QTEST_MAIN(SystemProfilesTests)

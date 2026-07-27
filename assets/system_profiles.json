@@ -607,6 +607,56 @@
     "binaryKind": "official"
   },
   {
+    "id": "sys-exp-vram-4-gemma-heretic",
+    "tier": "4GB-Gemma-Experimental",
+    "extra": true,
+    "displayName": "[experimental] 4GB · Gemma 4 E4B Heretic QAT",
+    "minVramGb": 4,
+    "minRamGb": 8,
+    "cpuOk": false,
+    "folder": "gemma-4-E4B-heretic-QAT",
+    "chatTemplate": "gemma4-tools-fixed.jinja",
+    "model": {
+      "repo": "SC117/gemma-4-E4B-it-heretic-QAT-GGUF",
+      "file": "gemma-4-E4B-it-heretic-QAT-UD-Q4_K_XL.gguf",
+      "quant": "UD-Q4_K_XL"
+    },
+    "runtime": {
+      "ctx": 8192,
+      "gpuLayers": 12,
+      "batch": 128,
+      "ubatch": 128,
+      "kv": "q4_0",
+      "flashAttn": true
+    },
+    "extraArgs": [
+      "--temp",
+      "1.0",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "64",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--parallel",
+      "1",
+      "--cache-type-v",
+      "q4_0",
+      "--reasoning",
+      "off"
+    ],
+    "comment": "EXPERIMENTAL: variante Heretic ARA sobre Gemma 4 E4B QAT. La alineación de seguridad fue removida; no promover a perfil general sin superar benchmarks de agente y revisión de seguridad. Sin mmproj por defecto. Mantiene runtime, template y sampling del perfil E4B QAT base para permitir comparaciones controladas.",
+    "mtp": {
+      "enabled": false,
+      "args": []
+    },
+    "binaryKind": "official"
+  },
+  {
     "id": "sys-vram-2",
     "tier": "2GB",
     "order": 7,

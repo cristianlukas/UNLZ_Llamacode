@@ -753,6 +753,12 @@ plantilla canónica corregida de Google incluida con LlamaCode. Así, los GGUF y
 descargados también reciben las correcciones de historial, razonamiento y
 tool-calling sin tener que volver a descargar los pesos.
 
+El perfil adicional **Gemma 4 E4B Heretic QAT** se ofrece únicamente como
+experimental para comparaciones controladas contra el E4B QAT base. Conserva el
+mismo runtime, sampling y plantilla de tools, pero sus pesos tienen removida la
+alineación de seguridad; no debe promoverse a perfil general sin superar los
+benchmarks de agente y una revisión específica de seguridad.
+
 La selección de perfil que se restaura al abrir la aplicación representa la
 última elección explícita del usuario en Lanzar o Agente. Los cambios temporales
 de modelo realizados por Tasks, verificación, benchmarks, Charla o el watchdog no
