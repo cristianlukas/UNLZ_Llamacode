@@ -675,12 +675,12 @@ Item {
                             onEditingFinished: { page.cfg.vadSegmentMs = parseInt(text) || 350; page.save() }
                         }
                         Text { text: "Auto-escuchar"; color: Theme.textSecondary }
-                        Switch {
+                        LcSwitch {
                             checked: page.cfg.autoListen !== false
                             onToggled: { page.cfg.autoListen = checked; page.save() }
                         }
                         Text { text: "Barge-in (interrumpir)"; color: Theme.textSecondary }
-                        Switch {
+                        LcSwitch {
                             checked: page.cfg.bargeIn !== false
                             onToggled: { page.cfg.bargeIn = checked; page.save() }
                         }
@@ -703,7 +703,7 @@ Item {
                             spacing: 12
                             Text { text: "Mover el cursor por voz"; color: Theme.textSecondary }
                             Item { Layout.fillWidth: true }
-                            Switch {
+                            LcSwitch {
                                 // Default OFF: activarlo hace que Charla capture la
                                 // pantalla para leerla. Es decisión del usuario.
                                 checked: page.cfg.cursorOcr === true

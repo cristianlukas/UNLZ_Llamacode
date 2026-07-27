@@ -319,7 +319,7 @@ Item {
             RowLayout {
                 anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
                 spacing: 10
-                Switch {
+                LcSwitch {
                     id: schedSwitch
                     text: ""
                     Layout.preferredWidth: 44

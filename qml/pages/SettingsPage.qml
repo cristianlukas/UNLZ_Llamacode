@@ -415,7 +415,7 @@ Item {
                                         }
                                     }
 
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.readSetting("window/minimizeToTray", false)
                                         onToggled: {
                                             App.writeSetting("window/minimizeToTray", checked)
@@ -449,7 +449,7 @@ Item {
                                         }
                                     }
 
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.startWithWindowsEnabled()
                                         onToggled: {
                                             const error = App.setStartWithWindowsEnabled(checked)
@@ -483,7 +483,7 @@ Item {
                                         }
                                     }
 
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.autoStartAgentOnLaunch
                                         onToggled: App.autoStartAgentOnLaunch = checked
                                     }
@@ -569,7 +569,7 @@ Item {
                                             Layout.fillWidth: true
                                         }
                                     }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.gatewayEnabled
                                         onToggled: App.gatewayEnabled = checked
                                     }
@@ -607,7 +607,7 @@ Item {
                                             color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
                                         }
                                     }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.gatewayAutoSwap
                                         onToggled: App.gatewayAutoSwap = checked
                                     }
@@ -646,7 +646,7 @@ Item {
                                             Layout.fillWidth: true
                                         }
                                     }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.gatewayLanEnabled
                                         onToggled: App.gatewayLanEnabled = checked
                                     }
@@ -831,7 +831,7 @@ Item {
                                     }
                                 }
 
-                                Switch {
+                                LcSwitch {
                                     checked: App.mermaidEnabled
                                     enabled: Mermaid.available
                                     onToggled: App.mermaidEnabled = checked
@@ -874,7 +874,7 @@ Item {
                                             Layout.fillWidth: true
                                         }
                                     }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.browserAutomationEnabled
                                         onToggled: App.browserAutomationEnabled = checked
                                     }
@@ -1110,7 +1110,7 @@ Item {
                                                     }
                                                 }
                                                 Item { Layout.fillWidth: true }
-                                                Switch {
+                                                LcSwitch {
                                                     checked: modelData.enabled
                                                     onToggled: App.setIntegrationEnabled(modelData.id, checked)
                                                 }
@@ -1489,13 +1489,13 @@ Item {
                                     }
 
                                     Text { text: "Razonar"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                    Switch {
+                                    LcSwitch {
                                         id: thinkingSwitch
                                         checked: agentProfilesSection.edit.thinking
                                     }
 
                                     Text { text: "Compatibilidad thinking"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                    Switch {
+                                    LcSwitch {
                                         id: thinkingLeakGuardSwitch
                                         checked: agentProfilesSection.edit.thinkingLeakGuard === true
                                         ToolTip.visible: hovered
@@ -1503,7 +1503,7 @@ Item {
                                     }
 
                                     Text { text: "Indicador de escritorio"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.desktopIndicatorVisible
                                         onToggled: App.desktopIndicatorVisible = checked
                                         ToolTip.visible: hovered
@@ -1532,7 +1532,7 @@ Item {
                                             color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
                                         }
                                     }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.hitlDestructive
                                         onToggled: App.hitlDestructive = checked
                                     }
@@ -1577,7 +1577,7 @@ Item {
                                                     Layout.fillWidth: true
                                                 }
                                             }
-                                            Switch {
+                                            LcSwitch {
                                                 enabled: !agentProfilesSection.isSystem
                                                 checked: agentProfilesSection.isDirOn(modelData.key)
                                                 onToggled: agentProfilesSection.setDirOn(modelData.key, checked)
@@ -1653,7 +1653,7 @@ Item {
                                                             Layout.fillWidth: true
                                                         }
                                                     }
-                                                    Switch {
+                                                    LcSwitch {
                                                         enabled: !agentProfilesSection.isSystem
                                                         checked: agentProfilesSection.isToolOn(modelData.name)
                                                         onToggled: agentProfilesSection.setToolOn(modelData.name, checked)
@@ -1786,7 +1786,7 @@ Item {
                                             color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
                                         }
                                     }
-                                    Switch {
+                                    LcSwitch {
                                         checked: App.mailAutoSend
                                         onToggled: App.mailAutoSend = checked
                                     }
@@ -2198,7 +2198,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 8
                 Text { text: "Barra lateral translúcida"; color: Theme.textPrimary; font.pixelSize: 13; Layout.fillWidth: true }
-                Switch {
+                LcSwitch {
                     checked: themeEditor.translucent
                     onToggled: themeEditor.translucent = checked
                 }
