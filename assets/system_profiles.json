@@ -560,57 +560,7 @@
   {
     "id": "sys-vram-4-gemma",
     "tier": "4GB-Gemma",
-    "displayName": "[general] 4GB · Gemma 4 E4B QAT",
-    "minVramGb": 4,
-    "minRamGb": 8,
-    "cpuOk": false,
-    "folder": "gemma-4-E4B",
-    "chatTemplate": "gemma4-tools-fixed.jinja",
-    "model": {
-      "repo": "unsloth/gemma-4-E4B-it-GGUF",
-      "file": "gemma-4-E4B-it-Q4_K_M.gguf",
-      "quant": "Q4_K_M"
-    },
-    "runtime": {
-      "ctx": 8192,
-      "gpuLayers": 12,
-      "batch": 128,
-      "ubatch": 128,
-      "kv": "q4_0",
-      "flashAttn": true
-    },
-    "extraArgs": [
-      "--temp",
-      "1.0",
-      "--top-p",
-      "0.95",
-      "--top-k",
-      "64",
-      "--min-p",
-      "0.0",
-      "--no-context-shift",
-      "--metrics",
-      "--no-warmup",
-      "--jinja",
-      "--parallel",
-      "1",
-      "--cache-type-v",
-      "q4_0",
-      "--reasoning",
-      "off"
-    ],
-    "comment": "Gemma 4 E4B QAT (~4GB). Perfil conservador para 4GB: batch bajo y offload parcial, pero ctx 8k para que Automatizaciones tenga espacio de prompt/tools. Sin mmproj por defecto: las automatizaciones verifican por tools/texto y cargar visión aumenta RAM/prompt sin aportar al flujo.",
-    "mtp": {
-      "enabled": false,
-      "args": []
-    },
-    "binaryKind": "official"
-  },
-  {
-    "id": "sys-exp-vram-4-gemma-heretic",
-    "tier": "4GB-Gemma-Experimental",
-    "extra": true,
-    "displayName": "[experimental] 4GB · Gemma 4 E4B Heretic QAT",
+    "displayName": "[general] 4GB · Gemma 4 E4B Heretic QAT",
     "minVramGb": 4,
     "minRamGb": 8,
     "cpuOk": false,
@@ -649,7 +599,7 @@
       "--reasoning",
       "off"
     ],
-    "comment": "EXPERIMENTAL: variante Heretic ARA sobre Gemma 4 E4B QAT. La alineación de seguridad fue removida; no promover a perfil general sin superar benchmarks de agente y revisión de seguridad. Sin mmproj por defecto. Mantiene runtime, template y sampling del perfil E4B QAT base para permitir comparaciones controladas.",
+    "comment": "Gemma 4 E4B Heretic QAT (~4GB), promovido como perfil general tras superar al E4B QAT base en Agent efficiency E2E v1 (5/11 vs 2/11 checks, mayor throughput y menor TTFT). Perfil conservador para 4GB: batch bajo, offload parcial y ctx 8k. La variante remueve alineación de seguridad; usar las aprobaciones de tools para acciones sensibles. Sin mmproj por defecto.",
     "mtp": {
       "enabled": false,
       "args": []

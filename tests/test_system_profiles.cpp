@@ -87,7 +87,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 14);                       // tiers base + MAX-Q/FAST-GEMMA + experimentales
+    QCOMPARE(sys, 13);                       // tiers base + MAX-Q/FAST-GEMMA + Laguna experimental
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -256,7 +256,6 @@ void SystemProfilesTests::manager_smallProfilesAreConservative()
                                 .arg(launchId).arg(rt.value("gpuLayers").toInt())));
     };
     assertRt(QStringLiteral("sys-vram-4-gemma"), 8192, 128, 12);
-    assertRt(QStringLiteral("sys-exp-vram-4-gemma-heretic"), 8192, 128, 12);
     assertRt(QStringLiteral("sys-vram-2-gemma"), 8192, 64, 8);
     assertRt(QStringLiteral("sys-vram-2"), 8192, 64, 8);
     assertRt(QStringLiteral("sys-vram-0"), 8192, 128, 0);
@@ -470,6 +469,7 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
     QVERIFY2(bundle.open(QIODevice::ReadOnly), "no se pudo abrir system_profiles.json");
     const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
     int gemmaProfiles = 0;
+    bool promotedHeretic = false;
     for (const QJsonValue &value : profiles) {
         const QJsonObject profile = value.toObject();
         const QJsonObject model = profile.value(QStringLiteral("model")).toObject();
@@ -481,8 +481,16 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
         ++gemmaProfiles;
         QCOMPARE(profile.value(QStringLiteral("chatTemplate")).toString(),
                  QStringLiteral("gemma4-tools-fixed.jinja"));
+        if (profile.value(QStringLiteral("id")).toString() == QStringLiteral("sys-vram-4-gemma")) {
+            QCOMPARE(model.value(QStringLiteral("repo")).toString(),
+                     QStringLiteral("SC117/gemma-4-E4B-it-heretic-QAT-GGUF"));
+            QCOMPARE(model.value(QStringLiteral("file")).toString(),
+                     QStringLiteral("gemma-4-E4B-it-heretic-QAT-UD-Q4_K_XL.gguf"));
+            promotedHeretic = true;
+        }
     }
-    QCOMPARE(gemmaProfiles, 5);
+    QCOMPARE(gemmaProfiles, 4);
+    QVERIFY(promotedHeretic);
 }
 
 QTEST_MAIN(SystemProfilesTests)
