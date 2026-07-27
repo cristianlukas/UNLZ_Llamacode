@@ -9,6 +9,7 @@ Item {
     property real logHeight: 220
     property real minLogHeight: 120
     property bool _restored: false   // evita pisar la setting durante la carga inicial
+    property bool _syncingActiveLaunch: false
     property string pendingPortLaunchId: ""
     property string pendingPortHost: ""
     property int pendingPortCurrent: 0
@@ -20,6 +21,19 @@ Item {
             App.startServerAndAgent(launchId)
         else
             App.startServer(launchId)
+    }
+
+    function syncToActiveLaunch() {
+        const id = App.activeLaunchId
+        if (!id || id.length === 0) return
+        root._syncingActiveLaunch = true
+        launchCombo.selectLaunchProfile(id)
+        root._syncingActiveLaunch = false
+    }
+
+    onVisibleChanged: {
+        if (visible && App.serverRunning)
+            syncToActiveLaunch()
     }
 
     Connections {
@@ -421,6 +435,12 @@ Item {
                         target: App
                         // tras descargar deps / escanear, recomputar ready.
                         function onSetupStateChanged() { launchCombo.refreshMenu() }
+                        // startServer también lo invocan benchmarks, Tasks y Charla.
+                        // Reflejar el perfil realmente activo sin convertir ese swap
+                        // interno en la preferencia persistida del usuario.
+                        function onActiveLaunchIdChanged() {
+                            root.syncToActiveLaunch()
+                        }
                         function onLaunchProfileSelected(launchProfileId) {
                             launchCombo.selectLaunchProfile(launchProfileId)
                         }
@@ -456,7 +476,8 @@ Item {
                         // Recomputar SIEMPRE para que la vista previa refleje ESTE perfil
                         // (si no, queda el comando del perfil anterior = preview stale).
                         App.computeEffectiveProfile(currentValue)
-                        if (root._restored) App.writeSetting("lastLaunchId", currentValue)
+                        if (root._restored && !root._syncingActiveLaunch)
+                            App.writeSetting("lastLaunchId", currentValue)
                         const it = itemById(currentValue)
                         if (it && it.ready === false) {
                             // Perfil de sistema sin modelo/binario: ofrecer instalar deps.
@@ -474,7 +495,10 @@ Item {
                             if (i >= 0) launchCombo.currentIndex = i
                         }
                         root._restored = true
-                        if (launchCombo.currentValue) App.computeEffectiveProfile(launchCombo.currentValue)
+                        if (App.serverRunning && App.activeLaunchId.length > 0)
+                            root.syncToActiveLaunch()
+                        else if (launchCombo.currentValue)
+                            App.computeEffectiveProfile(launchCombo.currentValue)
                     }
                 }
 
