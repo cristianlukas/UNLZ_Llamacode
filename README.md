@@ -210,7 +210,7 @@ quant, contexto, batch, backend y temperatura del equipo.
 | CPU + 32 GB RAM | `cpu_only` | 7B–14B `Q4_K_M` | 8k–16k | Mejor calidad, menor velocidad |
 | GPU 6–8 GB VRAM + 16 GB RAM | `gpu` o `partial_offload` | 7B–9B `Q4_K_M`, modelos coder compactos | 8k–16k | Buen punto de entrada para agente local |
 | GPU 12 GB VRAM + 32 GB RAM | `gpu` | 9B–14B `Q4_K_M` / `Q5_K_M` | 16k–32k | Recomendado para uso diario |
-| GPU 16 GB VRAM + 32–64 GB RAM | `gpu` | 14B–32B cuantizados, MoE chicos | 16k–32k | Agente y RAG más estables |
+| GPU 16 GB VRAM + 32–64 GB RAM | `partial_offload` | KAT Coder 2.5 35B-A3B `Q4_K_M` (`--n-cpu-moe 18`) | 32k | Validado E2E: 11/11 ×3, 3/3 sin reparar y 4,70× más rápido que Qwen3.6 IQ4_XS |
 | GPU 24 GB+ VRAM + 64 GB RAM | `partial_offload` | KAT Coder 2.5 35B-A3B `Q4_K_M` (default coding) | 32k | Validado E2E: misma calidad final que Qwen base y ~4× menor tiempo mediano |
 
 El modo `partial_offload` permite combinar VRAM y RAM cuando el modelo no entra

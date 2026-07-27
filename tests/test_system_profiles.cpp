@@ -50,6 +50,7 @@ private slots:
     void bundle_gemma4TemplateKeepsLlamaCppMarkers();
     void manager_smallProfilesAreConservative();
     void manager_defaultCodingProfileUsesKatCoder();
+    void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -325,6 +326,40 @@ void SystemProfilesTests::manager_defaultCodingProfileUsesKatCoder()
     QCOMPARE(valueAfter(QStringLiteral("--repeat-penalty")), QStringLiteral("1.0"));
     QCOMPARE(valueAfter(QStringLiteral("--presence-penalty")), QStringLiteral("0.0"));
     QCOMPARE(valueAfter(QStringLiteral("--reasoning")), QStringLiteral("on"));
+}
+
+void SystemProfilesTests::manager_16gbCodingProfileUsesBenchmarkedKatCoder()
+{
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-vram-16"));
+    QCOMPARE(launch.value(QStringLiteral("name")).toString(),
+             QStringLiteral("[coding] 16GB · KAT Coder 2.5 35B-A3B Q4_K_M"));
+
+    const QVariantMap model =
+        pm.getModelProfile(launch.value(QStringLiteral("modelProfileId")).toString());
+    const QString modelsDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
+    const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    const QString expectedModelId = QUuid::createUuidV5(
+        ns, QString(modelsDir
+                    + "/KAT-Coder-V2.5-Dev-Q4_K_M-GGUF/"
+                      "Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf").toUtf8())
+                                        .toString(QUuid::WithoutBraces);
+    QCOMPARE(model.value(QStringLiteral("modelId")).toString(), expectedModelId);
+
+    const QVariantMap runtime =
+        pm.getRuntimePreset(launch.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 32768);
+    QCOMPARE(runtime.value(QStringLiteral("gpuLayers")).toInt(), 999);
+    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q4_0"));
+
+    const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+    QVERIFY(args.contains(QStringLiteral("--n-cpu-moe")));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--n-cpu-moe")) + 1),
+             QStringLiteral("18"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--reasoning")) + 1),
+             QStringLiteral("on"));
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()
