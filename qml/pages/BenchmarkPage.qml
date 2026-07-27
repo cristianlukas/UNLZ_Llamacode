@@ -834,7 +834,8 @@ Item {
                             id: passesSpin
                             from: 1; to: 20; editable: true
                             value: Math.min(20, Math.max(1, parseInt(App.readSetting("benchPasses", "1")) || 1))
-                            implicitWidth: 96
+                            Layout.preferredWidth: 144
+                            Layout.minimumWidth: 144
                             onValueModified: App.writeSetting("benchPasses", value)
                         }
                     }
@@ -866,7 +867,8 @@ Item {
                             id: timeoutSpin
                             from: 0; to: 7200; stepSize: 30; editable: true
                             value: Math.min(7200, Math.max(0, parseInt(App.readSetting("benchTimeout", "0")) || 0))
-                            implicitWidth: 96
+                            Layout.preferredWidth: 144
+                            Layout.minimumWidth: 144
                             textFromValue: function(v) { return v === 0 ? "—" : v + " s" }
                             valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
                             onValueModified: App.writeSetting("benchTimeout", value)
