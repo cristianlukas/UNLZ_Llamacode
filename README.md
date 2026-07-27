@@ -592,6 +592,12 @@ incluidos).
   Piper para equipos chicos o cuando conviene reservar VRAM para el LLM. Qwen3
   admite GGUF, embedding de hablante, WAV+transcripción de referencia y una
   instrucción de estilo; si falla puede caer a Piper sin perder el turno.
+- **Inflect v2 ONNX experimental**: puede seleccionarse manualmente como TTS local
+  ultraliviano con el runner Python oficial y proveedor CPU, DirectML o CUDA.
+  Admite las variantes Nano/Micro descargadas por el usuario, pero la versión
+  publicada es exclusivamente inglesa, de voz masculina fija y sin clonación.
+  LlamaCode exige que la aplicación y Charla usen inglés (`en`), nunca lo elige en
+  modo `auto` y conserva Piper como fallback.
 - **Kokoro y audio incremental**: `kokoro` usa la misma interfaz HTTP configurable
   que los demás servidores TTS. Cuando el endpoint entrega PCM16 chunked, la app
   escribe cada bloque directamente a `QAudioSink` y empieza a reproducir antes de

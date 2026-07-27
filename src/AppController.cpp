@@ -15202,6 +15202,20 @@ void AppController::startCharla()
         emit serverError(QStringLiteral("Configurá la carpeta de modelos Qwen3-TTS desde Charla."));
         return;
     }
+    if (effectiveTtsMode == QLatin1String("inflect")) {
+        if (!c.sttLanguage.trimmed().toLower().startsWith(QLatin1String("en"))) {
+            emit serverError(QStringLiteral(
+                "Inflect v2 es experimental y sólo admite inglés. Cambiá el idioma de LlamaCode a inglés."));
+            return;
+        }
+        const QString runner =
+            QDir(c.inflectModelDir).filePath(QStringLiteral("onnx/inference_onnx.py"));
+        if (c.inflectModelDir.trimmed().isEmpty() || !QFileInfo::exists(runner)) {
+            emit serverError(QStringLiteral(
+                "Configurá la carpeta descargada de Inflect v2 ONNX desde Charla."));
+            return;
+        }
+    }
     if (!c.sttManagedEngine.isEmpty()) {
         if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
             emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")

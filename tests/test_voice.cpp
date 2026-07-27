@@ -77,6 +77,15 @@ void TestVoice::ttsQwenArgsAndPolicy()
                  .value("mode").toString(), QString("piper"));
     QCOMPARE(TtsPolicy::recommend(c, 0.0, 8.0, 0.0, false, false)
                  .value("mode").toString(), QString("http"));
+
+    c.inflectModelDir = "C:/models/Inflect-Nano-v2-ONNX";
+    c.inflectProvider = "directml";
+    const QStringList inflect =
+        TtsEngine::buildInflectArgs(c, "Hello from Ingi", "voice.wav");
+    QVERIFY(inflect.first().endsWith("onnx/inference_onnx.py"));
+    QVERIFY(inflect.contains("Hello from Ingi"));
+    QVERIFY(inflect.contains("voice.wav"));
+    QVERIFY(inflect.contains("directml"));
 }
 
 void TestVoice::voiceAgentCapabilityPolicy()
@@ -168,6 +177,9 @@ void TestVoice::configRoundTrip()
     c.ttsStreamAudio = true;
     c.ttsPcmSampleRate = 22050;
     c.ttsPcmChannels = 2;
+    c.inflectPythonPath = "C:/Python/python.exe";
+    c.inflectModelDir = "C:/models/Inflect-Nano-v2-ONNX";
+    c.inflectProvider = "directml";
     c.vadSilenceMs = 1200;
     c.bargeIn = false;
     c.cursorOcr = true;
@@ -189,6 +201,9 @@ void TestVoice::configRoundTrip()
     QCOMPARE(r.ttsStreamAudio, true);
     QCOMPARE(r.ttsPcmSampleRate, 22050);
     QCOMPARE(r.ttsPcmChannels, 2);
+    QCOMPARE(r.inflectPythonPath, QString("C:/Python/python.exe"));
+    QCOMPARE(r.inflectModelDir, QString("C:/models/Inflect-Nano-v2-ONNX"));
+    QCOMPARE(r.inflectProvider, QString("directml"));
     QCOMPARE(r.vadSilenceMs, 1200);
     QCOMPARE(r.bargeIn, false);
     QVERIFY(!r.ttsIsCloud());
