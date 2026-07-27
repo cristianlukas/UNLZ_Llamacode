@@ -420,7 +420,7 @@ Item {
                         Text { text: "Modo"; color: Theme.textSecondary }
                         LcComboBox {
                             Layout.fillWidth: true
-                            model: ["auto", "piper", "kokoro", "qwen3", "inflect", "http"]
+                            model: ["auto", "piper", "kokoro", "qwen3", "http"]
                             currentIndex: Math.max(0, model.indexOf(page.cfg.ttsMode || "auto"))
                             onActivated: { page.cfg.ttsMode = model[currentIndex]; page.save() }
                         }
@@ -523,48 +523,6 @@ Item {
                         LcTextField { Layout.fillWidth: true; text: page.cfg.qwenReferenceText || ""; onEditingFinished: { page.cfg.qwenReferenceText = text; page.save() } }
                         Text { text: "Instrucción de estilo"; color: Theme.textSecondary }
                         LcTextField { Layout.fillWidth: true; placeholderText: "tono calmo, docente..."; text: page.cfg.qwenInstruction || ""; onEditingFinished: { page.cfg.qwenInstruction = text; page.save() } }
-                    }
-
-                    Text {
-                        text: "Inflect v2 ONNX (experimental · sólo inglés · voz masculina fija)"
-                        color: Theme.textPrimary
-                        Layout.leftMargin: 24
-                        font { pixelSize: 15; bold: true }
-                        visible: page.cfg.ttsMode === "inflect"
-                    }
-                    GridLayout {
-                        columns: 2; columnSpacing: 12; rowSpacing: 8
-                        Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
-                        visible: page.cfg.ttsMode === "inflect"
-
-                        Text { text: "Requisito"; color: Theme.textSecondary }
-                        Text {
-                            Layout.fillWidth: true; wrapMode: Text.WordWrap
-                            color: (page.cfg.sttLanguage || "").toLowerCase().indexOf("en") === 0
-                                   ? Theme.textMuted : Theme.errorText
-                            text: "LlamaCode debe estar en inglés (STT “en”). No se selecciona automáticamente."
-                        }
-                        Text { text: "Python"; color: Theme.textSecondary }
-                        LcTextField {
-                            Layout.fillWidth: true
-                            placeholderText: "python o ruta a python.exe"
-                            text: page.cfg.inflectPythonPath || "python"
-                            onEditingFinished: { page.cfg.inflectPythonPath = text; page.save() }
-                        }
-                        Text { text: "Carpeta modelo"; color: Theme.textSecondary }
-                        LcTextField {
-                            Layout.fillWidth: true
-                            placeholderText: "Inflect-Nano-v2-ONNX o Inflect-Micro-v2-ONNX"
-                            text: page.cfg.inflectModelDir || ""
-                            onEditingFinished: { page.cfg.inflectModelDir = text; page.save() }
-                        }
-                        Text { text: "Proveedor ONNX"; color: Theme.textSecondary }
-                        LcComboBox {
-                            Layout.fillWidth: true
-                            model: ["cpu", "directml", "cuda"]
-                            currentIndex: Math.max(0, model.indexOf(page.cfg.inflectProvider || "cpu"))
-                            onActivated: { page.cfg.inflectProvider = model[currentIndex]; page.save() }
-                        }
                     }
 
                     Text {
