@@ -8282,6 +8282,23 @@ void AppController::checkForUpdates()
     });
 }
 
+// Raiz de la instalacion (el checkout) a partir del exe: build/<Config>/LlamaCode.exe
+// cuelga de la raiz del repo. Devuelve "" si el exe no vive dentro de un
+// checkout con bootstrap (ej. una copia suelta): ahi el bootstrap usa su default.
+QString AppController::installRootForExePath(const QString &exePath)
+{
+    QDir dir(QFileInfo(exePath).absolutePath());
+    for (int up = 0; up < 4; ++up) {
+        if (QFile::exists(dir.filePath(QStringLiteral("CMakeLists.txt")))
+            && QFile::exists(dir.filePath(QStringLiteral("scripts/bootstrap.ps1")))) {
+            return QDir::toNativeSeparators(dir.absolutePath());
+        }
+        if (!dir.cdUp())
+            break;
+    }
+    return QString();
+}
+
 QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release)
 {
     if (release.value(QStringLiteral("draft")).toBool()
@@ -8381,11 +8398,24 @@ void AppController::handleUpdateDecision(const QString &decision)
         if (scriptUrl.isEmpty())
             scriptUrl = QStringLiteral("https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1");
 #ifdef Q_OS_WIN
+        // Sin LC_DIR el bootstrap clona en %USERPROFILE%\LlamaCode: mataba esta
+        // app y actualizaba OTRA copia (o una nueva), por eso "se cierra y no
+        // actualiza". Apuntarlo a la instalacion que esta corriendo.
+        const QString installRoot =
+            installRootForExePath(QCoreApplication::applicationFilePath());
+        QString command = QStringLiteral("irm '%1' | iex").arg(scriptUrl);
+        if (!installRoot.isEmpty()) {
+            QString escaped = installRoot;
+            escaped.replace(QLatin1Char('\''), QLatin1String("''"));
+            command = QStringLiteral("$env:LC_DIR='%1'; ").arg(escaped) + command;
+        }
+        // -NoExit: el update tarda minutos y si falla la consola se cerraba sola,
+        // dejando al usuario sin app y sin el error.
         QProcess::startDetached(QStringLiteral("powershell"),
-                                {QStringLiteral("-NoProfile"),
+                                {QStringLiteral("-NoExit"),
+                                 QStringLiteral("-NoProfile"),
                                  QStringLiteral("-ExecutionPolicy"), QStringLiteral("Bypass"),
-                                 QStringLiteral("-Command"),
-                                 QStringLiteral("irm '%1' | iex").arg(scriptUrl)});
+                                 QStringLiteral("-Command"), command});
 #else
         const QString releaseUrl = m_updateInfo.value(QStringLiteral("releaseUrl")).toString();
         QDesktopServices::openUrl(QUrl(releaseUrl.isEmpty()

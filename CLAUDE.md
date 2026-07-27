@@ -231,6 +231,20 @@ Ojo: **en la máquina de desarrollo el aviso casi nunca aparece**, porque cada
 build corre `bump-patch.bat` y deja la versión local por encima del último tag.
 Para probar el popup hace falta un binario con versión menor a la publicada.
 
-Test: `powershell -File tests\test_release_script.ps1` (fuera de ctest, infra PS).
-El parseo del release de GitHub sí está en ctest
-(`githubReleaseToUpdateFlag`, `tests/test_appcontroller.cpp`).
+**"Actualizar ahora"** lanza `scripts/bootstrap.ps1` en una consola aparte
+(`-NoExit`: el update tarda minutos y si falla el error tiene que quedar a la
+vista). El app le pasa `LC_DIR` con **la instalación que está corriendo**
+(`installRootForExePath`: sube desde el exe hasta el checkout con
+`CMakeLists.txt` + `scripts/bootstrap.ps1`). Sin eso el bootstrap clona en
+`%USERPROFILE%\LlamaCode`, mata la app y actualiza *otra* copia — el síntoma era
+"se cierra y no actualiza".
+
+El bootstrap hace `git reset --hard origin/main` sobre `LC_DIR`, así que **aborta
+si el destino tiene cambios sin commitear** (forzar con `LC_FORCE=1`), y recién
+cierra la app justo antes del build: si algo falla antes, el usuario se queda con
+su versión vieja andando.
+
+Tests: `powershell -File tests\test_release_script.ps1` y
+`powershell -File tests\test_bootstrap_script.ps1` (fuera de ctest, infra PS).
+En ctest: `githubReleaseToUpdateFlag` e `installRootForExePath`
+(`tests/test_appcontroller.cpp`).

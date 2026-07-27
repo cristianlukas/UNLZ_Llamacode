@@ -8,7 +8,7 @@
     deploys the Qt runtime next to the binary.
 
 .EXAMPLE
-    irm https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
+    irm https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1 | iex
 
 .NOTES
     Override defaults via env vars before running:
@@ -22,7 +22,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 # ── Config ──────────────────────────────────────────────────────────────────
-$Repo    = 'https://github.com/guideahon/UNLZ_Llamacode.git'
+$Repo    = 'https://github.com/cristianlukas/UNLZ_Llamacode.git'
 $Dir     = if ($env:LC_DIR)    { $env:LC_DIR }    else { Join-Path $env:USERPROFILE 'LlamaCode' }
 $Branch  = if ($env:LC_BRANCH) { $env:LC_BRANCH } else { 'main' }
 $Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Release' }
@@ -172,6 +172,17 @@ Ok "Qt6: $QtDir"
 
 # ── Clone / update ──────────────────────────────────────────────────────────
 if (Test-Path (Join-Path $Dir '.git')) {
+    # 'Actualizar ahora' pasa LC_DIR con la instalacion que esta corriendo, que
+    # puede ser un checkout de trabajo: el reset --hard de abajo se llevaria
+    # puesto todo lo no commiteado. Abortar salvo LC_FORCE=1.
+    $Dirty = @(git -C $Dir status --porcelain | Where-Object { $_ })
+    if ($Dirty.Count -gt 0 -and -not $env:LC_FORCE) {
+        Write-Host ""
+        Write-Host "[ERROR] $Dir tiene $($Dirty.Count) archivo(s) sin commitear." -ForegroundColor Red
+        $Dirty | Select-Object -First 10 | ForEach-Object { Write-Host "        $_" }
+        Write-Host "        Commitealos (o corre con LC_FORCE=1 para descartarlos)." -ForegroundColor Red
+        exit 1
+    }
     Info "Repo exists -- pulling latest..."
     git -C $Dir fetch --depth 1 origin $Branch
     git -C $Dir checkout $Branch
@@ -184,11 +195,13 @@ Ok "source ready"
 
 # ── Build ───────────────────────────────────────────────────────────────────
 $BuildDir = Join-Path $Dir 'build'
-Stop-LlamaCodeProcesses
 Info "Configuring..."
 & $CMake -S $Dir -B $BuildDir -G $Generator -A x64 -DCMAKE_PREFIX_PATH="$QtDir"
 if ($LASTEXITCODE -ne 0) { Die "CMake configure failed." }
 
+# Recien aca se cierra la app: el link necesita el exe libre, pero si algo de
+# arriba falla el usuario se queda con su version vieja andando.
+Stop-LlamaCodeProcesses
 Info "Building ($Config)..."
 & $CMake --build $BuildDir --config $Config -- /maxcpucount
 if ($LASTEXITCODE -ne 0) { Die "Build failed." }

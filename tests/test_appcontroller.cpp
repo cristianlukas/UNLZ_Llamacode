@@ -97,6 +97,7 @@ private slots:
     void exportUserDataToWritesBackup();
     void githubReleaseIsConvertedToUpdateFlag();
     void githubPrereleaseIsIgnored();
+    void installRootIsDerivedFromExeLocation();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
     void exportChatSessionToMissingSessionErrors();
@@ -166,6 +167,36 @@ void AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
     QCOMPARE(flag.value(QStringLiteral("releaseUrl")).toString(),
              QStringLiteral("https://example.test/release"));
     QCOMPARE(flag.value(QStringLiteral("changelog")).toArray().size(), 3);
+}
+
+// "Actualizar ahora" le pasa esta ruta al bootstrap via LC_DIR. Si sale vacia,
+// el script clona en %USERPROFILE%\LlamaCode y actualiza OTRA copia: la app se
+// cierra (el bootstrap la mata) y la instalacion real queda igual.
+void AppControllerTests::installRootIsDerivedFromExeLocation()
+{
+    QTemporaryDir checkout;
+    QVERIFY(checkout.isValid());
+    const QDir root(checkout.path());
+    QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("scripts"))));
+    QVERIFY(QDir().mkpath(root.filePath(QStringLiteral("build/Release"))));
+
+    auto touch = [](const QString &path) {
+        QFile f(path);
+        return f.open(QIODevice::WriteOnly) ? (f.write("x") > 0) : false;
+    };
+    QVERIFY(touch(root.filePath(QStringLiteral("CMakeLists.txt"))));
+    QVERIFY(touch(root.filePath(QStringLiteral("scripts/bootstrap.ps1"))));
+
+    const QString exe = root.filePath(QStringLiteral("build/Release/LlamaCode.exe"));
+    QCOMPARE(AppController::installRootForExePath(exe),
+             QDir::toNativeSeparators(root.absolutePath()));
+
+    // Un exe suelto (sin checkout arriba) no inventa una raiz: el bootstrap
+    // usa su default en vez de resetear un directorio cualquiera.
+    QTemporaryDir loose;
+    QVERIFY(loose.isValid());
+    QVERIFY(AppController::installRootForExePath(
+                QDir(loose.path()).filePath(QStringLiteral("LlamaCode.exe"))).isEmpty());
 }
 
 void AppControllerTests::githubPrereleaseIsIgnored()
