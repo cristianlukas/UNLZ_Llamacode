@@ -12,6 +12,7 @@ class QTcpServer;
 class QTcpSocket;
 class QNetworkAccessManager;
 class QNetworkReply;
+class QUdpSocket;
 
 // LlmGateway — proxy HTTP delante del llama-server activo. Aporta lo que el
 // llama-server crudo no da:
@@ -67,6 +68,7 @@ public:
                                              const QJsonObject &jsonSchema);
     // Elige una IPv4 enrutable dentro de la LAN, evitando loopback/APIPA.
     static QHostAddress preferredLanAddress(const QList<QHostAddress> &addresses);
+    static constexpr quint16 DiscoveryPort = 45454;
 
 signals:
     void requestServed(const QString &path, const QString &model);
@@ -81,6 +83,7 @@ private:
     void writeJson(QTcpSocket *sock, int code, const QJsonObject &value);
 
     QTcpServer            *m_server = nullptr;
+    QUdpSocket            *m_discovery = nullptr;
     QNetworkAccessManager *m_nam = nullptr;
     Hooks   m_hooks;
     int     m_keepN = 4;

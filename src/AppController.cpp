@@ -19,6 +19,8 @@
 #include <QTcpServer>
 #include <QHostAddress>
 #include <QNetworkInterface>
+#include <QUdpSocket>
+#include <QNetworkDatagram>
 #include <QDateTime>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -1809,6 +1811,16 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
     const bool hasAgent = !adapter.isEmpty()
                           && adapter != QLatin1String("none")
                           && adapter != QLatin1String("raw");
+
+    // Un perfil LAN/cloud no lanza un proceso local: conecta directamente el
+    // agente al gateway remoto configurado en el BackendProfile.
+    if (ctx.backend.isCloud()) {
+        m_activeLaunchId = launchProfileId;
+        emit activeLaunchIdChanged();
+        if (agentRunning() || m_agentStarting) stopAgent();
+        startAgent(launchProfileId);
+        return;
+    }
 
     if (serverRunning()) {
         if (hasAgent && !agentRunning())
@@ -6521,8 +6533,21 @@ void AppController::gatewayEnsureModel(const QString &name)
     if (launchId == m_activeLaunchId && serverRunning()) return;
     appendServerEvent(QStringLiteral("lifecycle"),
         QStringLiteral("Gateway: auto-load del modelo '%1'.").arg(name));
-    if (serverRunning()) stopServer();
-    startServerAndAgent(launchId);
+    if (!serverRunning()) {
+        startServerAndAgent(launchId);
+        return;
+    }
+    auto *conn = new QMetaObject::Connection;
+    *conn = connect(this, &AppController::serverRunningChanged, this,
+                    [this, conn, launchId]() {
+        if (serverRunning() || m_serverStopping) return;
+        disconnect(*conn);
+        delete conn;
+        QTimer::singleShot(0, this, [this, launchId]() {
+            startServerAndAgent(launchId);
+        });
+    });
+    stopServer();
 }
 
 void AppController::startGateway()
@@ -6645,6 +6670,122 @@ void AppController::setGatewayLanEnabled(bool on)
         startGateway();
     }
     emit gatewayChanged();
+}
+
+void AppController::discoverLanServers()
+{
+    if (m_lanDiscoverySocket) m_lanDiscoverySocket->deleteLater();
+    m_lanServers.clear();
+    m_lanDiscoverySocket = new QUdpSocket(this);
+    if (!m_lanDiscoverySocket->bind(QHostAddress::AnyIPv4, 0)) {
+        m_lanDiscoverySocket->deleteLater();
+        m_lanDiscoverySocket = nullptr;
+        emit lanServersChanged();
+        return;
+    }
+    connect(m_lanDiscoverySocket, &QUdpSocket::readyRead, this, [this]() {
+        while (m_lanDiscoverySocket && m_lanDiscoverySocket->hasPendingDatagrams()) {
+            const QNetworkDatagram datagram = m_lanDiscoverySocket->receiveDatagram();
+            const QJsonObject obj = QJsonDocument::fromJson(datagram.data()).object();
+            if (obj.value("protocol").toString() != QLatin1String("llamacode-lan-v1"))
+                continue;
+            const QString url = QStringLiteral("http://%1:%2")
+                .arg(datagram.senderAddress().toString()).arg(obj.value("port").toInt());
+            QVariantMap server = obj.toVariantMap();
+            server["url"] = url;
+            bool replaced = false;
+            for (int i = 0; i < m_lanServers.size(); ++i) {
+                if (m_lanServers.at(i).toMap().value("url").toString() == url) {
+                    m_lanServers[i] = server; replaced = true; break;
+                }
+            }
+            if (!replaced) m_lanServers.append(server);
+            emit lanServersChanged();
+        }
+    });
+    emit lanServersChanged();
+    const QByteArray probe("LLAMACODE_DISCOVER_V1");
+    m_lanDiscoverySocket->writeDatagram(probe, QHostAddress::Broadcast,
+                                         LlmGateway::DiscoveryPort);
+    for (const QNetworkInterface &iface : QNetworkInterface::allInterfaces()) {
+        if (!(iface.flags() & QNetworkInterface::IsUp)
+            || (iface.flags() & QNetworkInterface::IsLoopBack)) continue;
+        for (const QNetworkAddressEntry &entry : iface.addressEntries())
+            if (!entry.broadcast().isNull())
+                m_lanDiscoverySocket->writeDatagram(
+                    probe, entry.broadcast(), LlmGateway::DiscoveryPort);
+    }
+    QTimer::singleShot(1800, this, [this]() {
+        if (!m_lanDiscoverySocket) return;
+        m_lanDiscoverySocket->close();
+        m_lanDiscoverySocket->deleteLater();
+        m_lanDiscoverySocket = nullptr;
+        emit lanServersChanged();
+    });
+}
+
+void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
+                                 const QString &profileId, const QString &profileName,
+                                 int context)
+{
+    if (baseUrl.isEmpty() || profileId.isEmpty()) {
+        emit lanProfileReady({}, QStringLiteral("Servidor o perfil LAN inválido."));
+        return;
+    }
+    QString launchId;
+    for (const QVariant &item : m_profiles.launchProfilesForMenu()) {
+        const LaunchProfile lp = m_profiles.resolveLaunch(item.toMap().value("id").toString());
+        const BackendProfile bp = m_profiles.resolveBackend(lp.backendProfileId);
+        if (bp.isCloud() && bp.cloudBaseUrl == baseUrl && bp.cloudModel == profileId) {
+            launchId = lp.id; break;
+        }
+    }
+    const QString name = profileName.isEmpty() ? profileId : profileName;
+    if (launchId.isEmpty()) {
+        const QString backendId = m_profiles.addBackend(
+            QStringLiteral("LAN · %1").arg(name), {}, "127.0.0.1", 8080);
+        const QString keyRef = QStringLiteral("lan/%1/%2")
+            .arg(QUrl(baseUrl).host(), profileId);
+        m_profiles.setBackendCloud(backendId, "cloud", baseUrl, keyRef,
+                                   profileId, qMax(1024, context));
+        m_secrets.set(keyRef, apiKey);
+        const QString modelId = m_profiles.addModelProfile(
+            QStringLiteral("LAN · %1").arg(name), {}, {}, {});
+        const QString runtimeId = m_profiles.addRuntimePreset(
+            QStringLiteral("LAN · %1").arg(name), qMax(1024, context),
+            512, 0, false, true);
+        launchId = m_profiles.addLaunchProfile(
+            QStringLiteral("LAN · %1").arg(name), backendId, modelId, runtimeId);
+    }
+    if (launchId.isEmpty()) {
+        emit lanProfileReady({}, QStringLiteral("No se pudo crear el perfil LAN."));
+        return;
+    }
+    if (!m_nam) m_nam = new QNetworkAccessManager(this);
+    QNetworkRequest request(QUrl(baseUrl + QStringLiteral("/llamacode/v1/activate")));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setRawHeader("Authorization", QByteArrayLiteral("Bearer ") + apiKey.toUtf8());
+    auto *reply = m_nam->post(request, QJsonDocument(QJsonObject{
+        {"model", profileId}
+    }).toJson(QJsonDocument::Compact));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, launchId]() {
+        const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const QString error = reply->error() == QNetworkReply::NoError && status == 200
+            ? QString() : QStringLiteral("El servidor LAN rechazó la conexión: %1")
+                              .arg(reply->errorString());
+        reply->deleteLater();
+        if (!error.isEmpty()) {
+            emit lanProfileReady({}, error);
+            return;
+        }
+        m_activeLaunchId = launchId;
+        writeSetting(QStringLiteral("lastLaunchId"), launchId);
+        computeEffectiveProfile(launchId);
+        emit activeLaunchIdChanged();
+        emit launchProfileSelected(launchId);
+        startAgent(launchId);
+        emit lanProfileReady(launchId, {});
+    });
 }
 
 QString AppController::launchClaudeCode()

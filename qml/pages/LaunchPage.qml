@@ -32,6 +32,116 @@ Item {
             root.pendingPortStartAgent = startAgent
             portCollisionDialog.open()
         }
+        function onLanProfileReady(launchProfileId, error) {
+            lanDialog.busy = false
+            lanDialog.message = error.length > 0
+                ? error
+                : "Servidor remoto iniciado y agente conectado."
+            if (error.length === 0)
+                lanDialog.close()
+        }
+    }
+
+    Dialog {
+        id: lanDialog
+        modal: true
+        width: 560
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+        title: "Usar un servidor LAN"
+        standardButtons: Dialog.NoButton
+        property bool busy: false
+        property string message: ""
+        property var selectedServer: (serverCombo.currentIndex >= 0
+                                      && serverCombo.currentIndex < App.lanServers.length)
+                                     ? App.lanServers[serverCombo.currentIndex] : null
+        property var remoteProfiles: selectedServer ? (selectedServer.profiles || []) : []
+        background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.borderColor }
+
+        onOpened: {
+            message = ""
+            App.discoverLanServers()
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            Text {
+                Layout.fillWidth: true
+                text: "LlamaCode busca automáticamente equipos que estén compartiendo su gateway en esta red."
+                color: Theme.textSecondary
+                wrapMode: Text.WordWrap
+                font.pixelSize: 12
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Servidor"; color: Theme.textMuted; Layout.preferredWidth: 70 }
+                LcComboBox {
+                    id: serverCombo
+                    Layout.fillWidth: true
+                    model: App.lanServers
+                    textRole: "name"
+                    onCurrentIndexChanged: profileCombo.currentIndex = 0
+                }
+                LcButton {
+                    text: App.lanDiscoveryActive ? "Buscando…" : "Buscar otra vez"
+                    secondary: true
+                    enabled: !App.lanDiscoveryActive && !lanDialog.busy
+                    onClicked: App.discoverLanServers()
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Perfil"; color: Theme.textMuted; Layout.preferredWidth: 70 }
+                LcComboBox {
+                    id: profileCombo
+                    Layout.fillWidth: true
+                    model: lanDialog.remoteProfiles
+                    textRole: "name"
+                    valueRole: "id"
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: !App.lanDiscoveryActive && App.lanServers.length === 0
+                text: "No encontré servidores. En la otra PC activá Configuración → Gateway → Compartir server en LAN y revisá el firewall de red privada."
+                color: Theme.textMuted
+                wrapMode: Text.WordWrap
+                font.pixelSize: 11
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: lanDialog.message.length > 0
+                text: lanDialog.message
+                color: Theme.errorText
+                wrapMode: Text.WordWrap
+                font.pixelSize: 11
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: 8
+                LcButton {
+                    text: "Cancelar"
+                    secondary: true
+                    enabled: !lanDialog.busy
+                    onClicked: lanDialog.close()
+                }
+                LcButton {
+                    text: lanDialog.busy ? "Iniciando servidor remoto…" : "Usar perfil remoto"
+                    enabled: !lanDialog.busy && lanDialog.selectedServer
+                             && profileCombo.currentIndex >= 0
+                    onClicked: {
+                        const profile = lanDialog.remoteProfiles[profileCombo.currentIndex]
+                        if (!profile) return
+                        lanDialog.busy = true
+                        lanDialog.message = ""
+                        App.useLanServer(lanDialog.selectedServer.url,
+                                         lanDialog.selectedServer.apiKey || "",
+                                         profile.id || "", profile.name || profile.id,
+                                         profile.context || 4096)
+                    }
+                }
+            }
+        }
     }
 
     // Perfil de sistema seleccionado sin modelo/binario: ofrecer instalar deps.
@@ -269,6 +379,13 @@ Item {
                 spacing: 16
 
                 Text { text: (App.langV, App.l("launch.profile")); color: Theme.textMuted; font.pixelSize: 12 }
+
+                LcButton {
+                    text: "Usar un servidor LAN"
+                    secondary: true
+                    Layout.alignment: Qt.AlignLeft
+                    onClicked: lanDialog.open()
+                }
 
                 LcComboBox {
                     id: launchCombo

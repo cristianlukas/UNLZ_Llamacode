@@ -26,6 +26,7 @@ private slots:
     void openCodeDesktopCandidates();
     void modelsEndpointServesStableIds();
     void preferredLanAddressSelectsPrivateIpv4();
+    void lanActivationStartsRequestedProfile();
     void lruEvictsBeyondKeepN();
     void structuredOutputInjection();
     void idleStopDecision();
@@ -225,6 +226,36 @@ void GatewayTests::preferredLanAddressSelectsPrivateIpv4()
         QHostAddress(QStringLiteral("127.0.0.1")),
         QHostAddress(QStringLiteral("169.254.1.2"))
     }).isNull());
+}
+
+void GatewayTests::lanActivationStartsRequestedProfile()
+{
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::LocalHost, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+    QString activated;
+    LlmGateway gateway;
+    LlmGateway::Hooks hooks;
+    hooks.models = [] {
+        return QJsonArray{QJsonObject{{"id","remote-qwen"}, {"name","Qwen LAN"}}};
+    };
+    hooks.ensureModel = [&activated](const QString &id) { activated = id; };
+    gateway.setHooks(hooks);
+    gateway.setApiKey(QStringLiteral("secret"));
+    QVERIFY(gateway.start(port));
+    QNetworkRequest request(QUrl(
+        QStringLiteral("http://127.0.0.1:%1/llamacode/v1/activate").arg(port)));
+    request.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
+    request.setRawHeader("Authorization", "Bearer secret");
+    QNetworkAccessManager nam;
+    QNetworkReply *reply = nam.post(request, QByteArrayLiteral("{\"model\":\"remote-qwen\"}"));
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    QCOMPARE(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    QCOMPARE(activated, QStringLiteral("remote-qwen"));
+    reply->deleteLater();
 }
 
 void GatewayTests::lruEvictsBeyondKeepN()

@@ -12,6 +12,9 @@
 #include <QUuid>
 #include <QElapsedTimer>
 #include <QPointer>
+#include <QUdpSocket>
+#include <QNetworkDatagram>
+#include <QHostInfo>
 
 // ── Funciones puras ──────────────────────────────────────────────────────────
 
@@ -229,12 +232,45 @@ bool LlmGateway::start(quint16 port, const QHostAddress &addr)
         return false;
     }
     m_port = port;
+    if (addr != QHostAddress::LocalHost && addr != QHostAddress::LocalHostIPv6) {
+        m_discovery = new QUdpSocket(this);
+        if (m_discovery->bind(QHostAddress::AnyIPv4, DiscoveryPort,
+                              QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
+            connect(m_discovery, &QUdpSocket::readyRead, this, [this]() {
+                while (m_discovery && m_discovery->hasPendingDatagrams()) {
+                    const QNetworkDatagram request = m_discovery->receiveDatagram();
+                    if (request.data().trimmed() != QByteArrayLiteral("LLAMACODE_DISCOVER_V1"))
+                        continue;
+                    const QJsonObject response{
+                        {"protocol", "llamacode-lan-v1"},
+                        {"name", QHostInfo::localHostName()},
+                        {"port", int(m_port)},
+                        {"apiKey", m_apiKey},
+                        {"ready", m_hooks.ready ? m_hooks.ready() : false},
+                        {"currentModel", m_hooks.currentModel ? m_hooks.currentModel() : QString()},
+                        {"profiles", m_hooks.models ? m_hooks.models() : QJsonArray{}}
+                    };
+                    m_discovery->writeDatagram(
+                        QJsonDocument(response).toJson(QJsonDocument::Compact),
+                        request.senderAddress(), request.senderPort());
+                }
+            });
+        } else {
+            m_discovery->deleteLater();
+            m_discovery = nullptr;
+        }
+    }
     qInfo("LlmGateway: escuchando en http://%s:%u", qPrintable(addr.toString()), port);
     return true;
 }
 
 void LlmGateway::stop()
 {
+    if (m_discovery) {
+        m_discovery->close();
+        m_discovery->deleteLater();
+        m_discovery = nullptr;
+    }
     if (m_server) { m_server->close(); m_server->deleteLater(); m_server = nullptr; }
     m_port = 0;
 }
@@ -359,6 +395,26 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
             return;
         }
         writeJson(sock, 200, modelsResponse(m_hooks.models ? m_hooks.models() : QJsonArray{}));
+        return;
+    }
+
+    if (p == QLatin1String("/llamacode/v1/activate")) {
+        if (method != "POST") {
+            writeError(sock, 405, QStringLiteral("método no permitido"));
+            return;
+        }
+        const QString requested = QJsonDocument::fromJson(body).object()
+                                      .value(QStringLiteral("model")).toString();
+        const QString resolved = resolveModelId(
+            requested, m_hooks.models ? m_hooks.models() : QJsonArray{});
+        if (resolved.isEmpty()) {
+            writeError(sock, 404, QStringLiteral("perfil remoto desconocido"));
+            return;
+        }
+        if (m_hooks.activity) m_hooks.activity();
+        if (m_hooks.ensureModel) m_hooks.ensureModel(resolved);
+        writeJson(sock, 200, QJsonObject{{"ok", true}, {"model", resolved},
+                                         {"status", "starting"}});
         return;
     }
 

@@ -953,6 +953,13 @@ automáticamente. La pantalla ofrece dos flujos:
 En Windows se debe permitir el puerto sólo para redes privadas cuando el firewall
 lo solicite. Desactivar el switch vuelve a limitar el gateway a esta PC.
 
+Desde otro equipo no hace falta crear el backend manualmente: en **Lanzar**,
+**Usar un servidor LAN** envía un discovery broadcast, lista los LlamaCode que
+comparten gateway y permite elegir uno de sus perfiles. Al confirmar, el cliente
+crea o reutiliza un perfil remoto, guarda la credencial en `SecretStore` y pide al
+servidor que cargue —o vuelva a iniciar— el perfil elegido antes de conectar el
+agente local.
+
 El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona
 `llamacode/<launch-profile-id>` y pasa la API key por una variable de entorno. No

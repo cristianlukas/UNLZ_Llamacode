@@ -32,6 +32,7 @@
 #include <QNetworkRequest>
 #include <QFile>
 #include <QSettings>
+class QUdpSocket;
 
 class QThread;
 class QFileSystemWatcher;
@@ -138,6 +139,8 @@ class AppController : public QObject
     Q_PROPERTY(int     gatewayKeepN    READ gatewayKeepN    WRITE setGatewayKeepN    NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayAutoSwap READ gatewayAutoSwap WRITE setGatewayAutoSwap NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayLanEnabled READ gatewayLanEnabled WRITE setGatewayLanEnabled NOTIFY gatewayChanged)
+    Q_PROPERTY(QVariantList lanServers READ lanServers NOTIFY lanServersChanged)
+    Q_PROPERTY(bool lanDiscoveryActive READ lanDiscoveryActive NOTIFY lanServersChanged)
     // Idle auto-stop del server (libera VRAM tras N minutos sin uso; 0 = off).
     Q_PROPERTY(int     idleAutoStopMin READ idleAutoStopMin WRITE setIdleAutoStopMin NOTIFY idleAutoStopChanged)
     Q_PROPERTY(int agentContextUsed READ agentContextUsed NOTIFY agentContextChanged)
@@ -707,6 +710,12 @@ public:
     Q_INVOKABLE QString gatewayBaseUrl() const;
     Q_INVOKABLE QString gatewayLanBaseUrl() const;
     Q_INVOKABLE QString gatewayLanOpenCodeConfig(const QString &launchProfileId) const;
+    QVariantList lanServers() const { return m_lanServers; }
+    bool lanDiscoveryActive() const { return m_lanDiscoverySocket != nullptr; }
+    Q_INVOKABLE void discoverLanServers();
+    Q_INVOKABLE void useLanServer(const QString &baseUrl, const QString &apiKey,
+                                  const QString &profileId, const QString &profileName,
+                                  int context);
     Q_INVOKABLE QString launchClaudeCode();   // exec `claude` apuntando al gateway
     Q_INVOKABLE QString launchOpenCode(const QString &projectDir,
                                        const QString &launchProfileId);
@@ -1006,6 +1015,8 @@ signals:
     void desktopIndicatorChanged();
     void autoStartAgentOnLaunchChanged();
     void gatewayChanged();
+    void lanServersChanged();
+    void lanProfileReady(const QString &launchProfileId, const QString &error);
     void idleAutoStopChanged();
     void agentContextChanged();
     void agentTuningChanged();
@@ -1404,6 +1415,8 @@ private:
     int         m_gatewayKeepN = 4;
     bool        m_gatewayAutoSwap = true;
     bool        m_gatewayLanEnabled = false;
+    QVariantList m_lanServers;
+    QUdpSocket  *m_lanDiscoverySocket = nullptr;
 
     // Idle auto-stop
     int         m_idleAutoStopMin = 0;        // 0 = desactivado
