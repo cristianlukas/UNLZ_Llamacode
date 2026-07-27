@@ -57,6 +57,7 @@ private slots:
     void controller_showcase8gbOffersGemmaAndQwen();
     void controller_showcase24gbUnchanged();
     void controller_showcaseEmptyWhenNoSiblings();
+    void bundle_lagunaIsOptInAndHardwareGated();
 
 private:
     QTemporaryDir m_dir;
@@ -86,7 +87,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 12);                       // 20/16/12-MoE/8-Gemma/8-QwenAgent/4/4-Gemma/2/2-Gemma/0 + MAX Q + FAST GEMMA
+    QCOMPARE(sys, 13);                       // tiers base + MAX-Q/FAST-GEMMA + Laguna experimental
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -366,6 +367,55 @@ void SystemProfilesTests::controller_showcase24gbUnchanged()
     for (const QVariant &v : sc) ids << v.toMap().value("launchId").toString();
     QVERIFY(ids.contains("sys-maxq"));
     QVERIFY(ids.contains("sys-fastgemma"));
+}
+
+void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
+{
+    QFile f(bundlePath());
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
+    QJsonObject laguna;
+    for (const QJsonValue &v : arr) {
+        const QJsonObject o = v.toObject();
+        if (o.value(QStringLiteral("id")).toString()
+            == QStringLiteral("sys-laguna-s-2-1-q2")) {
+            laguna = o;
+            break;
+        }
+    }
+    QVERIFY2(!laguna.isEmpty(), "falta el perfil experimental Laguna");
+    QVERIFY(laguna.value(QStringLiteral("extra")).toBool());
+    QVERIFY(!laguna.value(QStringLiteral("autoCompanion")).toBool());
+    QCOMPARE(laguna.value(QStringLiteral("minVramGb")).toInt(), 24);
+    QCOMPARE(laguna.value(QStringLiteral("minRamGb")).toInt(), 120);
+    QCOMPARE(laguna.value(QStringLiteral("binaryPin")).toString(),
+             QStringLiteral("b10087"));
+
+    const QJsonObject model = laguna.value(QStringLiteral("model")).toObject();
+    QCOMPARE(model.value(QStringLiteral("file")).toString(),
+             QStringLiteral("Laguna-S-2.1-UD-Q2_K_XL.gguf"));
+    const QJsonObject runtime = laguna.value(QStringLiteral("runtime")).toObject();
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 100000);
+    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 768);
+    const QJsonArray args = laguna.value(QStringLiteral("extraArgs")).toArray();
+    QStringList tokens;
+    for (const QJsonValue &arg : args)
+        tokens << arg.toString();
+    const int cpuMoe = tokens.indexOf(QStringLiteral("--n-cpu-moe"));
+    QVERIFY(cpuMoe >= 0 && cpuMoe + 1 < tokens.size());
+    QCOMPARE(tokens.at(cpuMoe + 1), QStringLiteral("32"));
+
+    // Sigue fuera del recomendado y del showcase premium: es opt-in incluso en
+    // la máquina objetivo de 24GB VRAM + 128GB RAM.
+    AppController app;
+    app.setHardwareSummaryForTest(24.0, 128.0,
+                                  QStringLiteral("NVIDIA GeForce RTX 3090"));
+    QVERIFY(app.recommendedSystemProfile().value(QStringLiteral("launchId")).toString()
+            != QStringLiteral("sys-laguna-s-2-1-q2"));
+    const QVariantList showcase = app.recommendedShowcase();
+    for (const QVariant &item : showcase)
+        QVERIFY(item.toMap().value(QStringLiteral("launchId")).toString()
+                != QStringLiteral("sys-laguna-s-2-1-q2"));
 }
 
 // Un tier sin grupo de showcase (ej. 4GB) no ofrece "uno/otro/ambos".

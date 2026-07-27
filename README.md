@@ -218,6 +218,14 @@ completo en la GPU, a costa de velocidad. Para notebooks o equipos con poca
 memoria, conviene empezar con contexto 8k, `Q4_K_M` y cerrar procesos pesados antes
 de lanzar benchmarks o Deep Research.
 
+En equipos de **24 GB VRAM + 128 GB RAM** el catálogo ofrece además, sólo bajo
+instalación manual, el perfil experimental
+`[experimental] Laguna S 2.1 118B-A8B Q2`. Usa el GGUF
+`UD-Q2_K_XL` de ~39,7 GB en una sola PC mediante GPU+RAM (`--n-cpu-moe 32`),
+contexto 100k y `ubatch 768`; requiere `llama.cpp b10087+`. No forma parte de la
+recomendación automática, no se descarga junto con MAX-Q/FAST-GEMMA y debe
+compararse mediante benchmark antes de usarlo como reemplazo de MAX-Q.
+
 ## Estado actual
 
 **P0–P4 completo y funcionando.**

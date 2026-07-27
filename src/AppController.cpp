@@ -11022,12 +11022,18 @@ void AppController::acceptSystemProfileImpl(const QString &launchId, bool startW
     m_pendingSystemStartAgent = startWhenReady;
     enqueueSystemProfileAssets(entry);
 
-    // Máquina tope (24GB VRAM): además dejar listos MAX-Q y FAST-GEMMA (cada uno con
-    // su binario y assets) para usarlos sin más descargas.
+    // Máquina tope (24GB VRAM): además dejar listos los extras que aceptan descarga
+    // acompañante. Perfiles experimentales grandes pueden declarar
+    // autoCompanion=false para seguir instalables sin bajar decenas de GB al elegir
+    // otro perfil premium.
     if (vram >= 23.5) {
         for (const QJsonValue &v : readSystemProfilesBundle()) {
             const QJsonObject e = v.toObject();
-            if (e.value("extra").toBool() && e.value("id").toString() != launchId) {
+            const bool autoCompanion =
+                !e.contains(QStringLiteral("autoCompanion"))
+                || e.value(QStringLiteral("autoCompanion")).toBool();
+            if (e.value("extra").toBool() && autoCompanion
+                && e.value("id").toString() != launchId) {
                 ensureSystemProfileBinary(e);
                 enqueueSystemProfileAssets(e);
             }
