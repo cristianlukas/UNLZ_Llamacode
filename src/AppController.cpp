@@ -8169,9 +8169,13 @@ void AppController::checkForUpdates()
     if (m_updateReply)
         return;
 
-    const QUrl url(QStringLiteral("https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/assets/update/latest.json"));
+    const QUrl url(QStringLiteral(
+        "https://api.github.com/repos/cristianlukas/UNLZ_Llamacode/releases/latest"));
     QNetworkRequest req(url);
     req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+    req.setRawHeader("Accept", "application/vnd.github+json");
+    req.setRawHeader("X-GitHub-Api-Version", "2022-11-28");
+    req.setRawHeader("User-Agent", "LlamaCode/" + version().toUtf8());
     if (!m_nam)
         m_nam = new QNetworkAccessManager(this);
     m_updateReply = m_nam->get(req);
@@ -8181,7 +8185,8 @@ void AppController::checkForUpdates()
 
         QJsonObject flag;
         if (reply && reply->error() == QNetworkReply::NoError) {
-            flag = QJsonDocument::fromJson(reply->readAll()).object();
+            const QJsonObject release = QJsonDocument::fromJson(reply->readAll()).object();
+            flag = githubReleaseToUpdateFlag(release);
         }
         if (reply)
             reply->deleteLater();
@@ -8189,6 +8194,54 @@ void AppController::checkForUpdates()
             flag = readBundledUpdateFlag();
         applyUpdateFlag(flag);
     });
+}
+
+QJsonObject AppController::githubReleaseToUpdateFlag(const QJsonObject &release)
+{
+    if (release.value(QStringLiteral("draft")).toBool()
+        || release.value(QStringLiteral("prerelease")).toBool()) {
+        return {};
+    }
+
+    QString releaseVersion = release.value(QStringLiteral("tag_name")).toString().trimmed();
+    if (releaseVersion.startsWith(QLatin1Char('v'), Qt::CaseInsensitive))
+        releaseVersion.remove(0, 1);
+    if (QVersionNumber::fromString(releaseVersion).isNull())
+        return {};
+
+    const QString body = release.value(QStringLiteral("body")).toString().trimmed();
+    QVariantList changelog;
+    QString summary;
+    const QStringList lines = body.split(QLatin1Char('\n'));
+    for (QString line : lines) {
+        line = line.trimmed();
+        while (line.startsWith(QLatin1Char('#')))
+            line.remove(0, 1);
+        line = line.trimmed();
+        if (line.startsWith(QStringLiteral("- ")) || line.startsWith(QStringLiteral("* ")))
+            line.remove(0, 2);
+        if (line.isEmpty())
+            continue;
+        if (summary.isEmpty())
+            summary = line;
+        if (changelog.size() < 12)
+            changelog.append(line);
+    }
+
+    return QJsonObject{
+        {QStringLiteral("newVersion"), true},
+        {QStringLiteral("version"), releaseVersion},
+        {QStringLiteral("title"),
+         release.value(QStringLiteral("name")).toString(
+             QStringLiteral("Nueva version disponible"))},
+        {QStringLiteral("summary"), summary},
+        {QStringLiteral("changelog"), QJsonArray::fromVariantList(changelog)},
+        {QStringLiteral("releaseUrl"),
+         release.value(QStringLiteral("html_url")).toString()},
+        {QStringLiteral("updateUrl"),
+         QStringLiteral("https://raw.githubusercontent.com/cristianlukas/"
+                        "UNLZ_Llamacode/main/scripts/bootstrap.ps1")}
+    };
 }
 
 void AppController::applyUpdateFlag(const QJsonObject &flag)
@@ -8216,6 +8269,7 @@ void AppController::applyUpdateFlag(const QJsonObject &flag)
     info[QStringLiteral("title")] = flag.value(QStringLiteral("title")).toString(QStringLiteral("Nueva version disponible"));
     info[QStringLiteral("summary")] = flag.value(QStringLiteral("summary")).toString();
     info[QStringLiteral("updateUrl")] = flag.value(QStringLiteral("updateUrl")).toString();
+    info[QStringLiteral("releaseUrl")] = flag.value(QStringLiteral("releaseUrl")).toString();
     QVariantList changelog;
     const QJsonArray arr = flag.value(QStringLiteral("changelog")).toArray();
     for (const QJsonValue &v : arr) {
@@ -8239,7 +8293,7 @@ void AppController::handleUpdateDecision(const QString &decision)
         writeSetting(QStringLiteral("updates/skipUntilVersion"), QString());
         QString scriptUrl = m_updateInfo.value(QStringLiteral("updateUrl")).toString();
         if (scriptUrl.isEmpty())
-            scriptUrl = QStringLiteral("https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1");
+            scriptUrl = QStringLiteral("https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1");
 #ifdef Q_OS_WIN
         QProcess::startDetached(QStringLiteral("powershell"),
                                 {QStringLiteral("-NoProfile"),

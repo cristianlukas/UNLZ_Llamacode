@@ -249,7 +249,7 @@ compararse mediante benchmark antes de usarlo como reemplazo de MAX-Q.
 | Endpoint health check automático | ✅ (polling /health post-start) |
 | Pre-check colisión de puerto al iniciar server | ✅ |
 | Popup de primer inicio (binario + modelo + perfil automático) | ✅ |
-| Detector de nueva versión (flag remoto + popup con changelog) | ✅ |
+| Detector de nueva versión (última GitHub Release + popup con changelog) | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 
 El agente nativo combina dos guardas anti-loop: bloquea llamadas idénticas después

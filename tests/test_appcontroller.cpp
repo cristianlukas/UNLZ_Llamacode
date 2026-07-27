@@ -95,6 +95,8 @@ class AppControllerTests : public QObject
 private slots:
     void initTestCase();
     void exportUserDataToWritesBackup();
+    void githubReleaseIsConvertedToUpdateFlag();
+    void githubPrereleaseIsIgnored();
     void importUserDataFromRoundTrips();
     void exportUserDataToEmptyPathErrors();
     void exportChatSessionToMissingSessionErrors();
@@ -146,6 +148,34 @@ private:
     QTemporaryDir m_tmp;
     QString makeLoopTask(AppController &app, const QString &name, int maxIter);
 };
+
+void AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
+{
+    const QJsonObject release{
+        {QStringLiteral("tag_name"), QStringLiteral("v0.2.0")},
+        {QStringLiteral("name"), QStringLiteral("LlamaCode 0.2.0")},
+        {QStringLiteral("html_url"), QStringLiteral("https://example.test/release")},
+        {QStringLiteral("body"), QStringLiteral("Mejoras generales\n- Inicio más rápido\n- Corrección importante")},
+        {QStringLiteral("draft"), false},
+        {QStringLiteral("prerelease"), false},
+    };
+
+    const QJsonObject flag = AppController::githubReleaseToUpdateFlag(release);
+    QCOMPARE(flag.value(QStringLiteral("version")).toString(), QStringLiteral("0.2.0"));
+    QCOMPARE(flag.value(QStringLiteral("newVersion")).toBool(), true);
+    QCOMPARE(flag.value(QStringLiteral("releaseUrl")).toString(),
+             QStringLiteral("https://example.test/release"));
+    QCOMPARE(flag.value(QStringLiteral("changelog")).toArray().size(), 3);
+}
+
+void AppControllerTests::githubPrereleaseIsIgnored()
+{
+    const QJsonObject release{
+        {QStringLiteral("tag_name"), QStringLiteral("v9.0.0-beta")},
+        {QStringLiteral("prerelease"), true},
+    };
+    QVERIFY(AppController::githubReleaseToUpdateFlag(release).isEmpty());
+}
 
 void AppControllerTests::voiceWhisperServerAvailabilityUsesConfiguredPath()
 {

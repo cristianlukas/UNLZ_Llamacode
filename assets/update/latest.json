@@ -8,5 +8,5 @@
     "Popup de actualizacion pendiente al iniciar LlamaCode.",
     "Opciones para actualizar ahora, postergar al proximo inicio o silenciar hasta la proxima version."
   ],
-  "updateUrl": "https://raw.githubusercontent.com/guideahon/UNLZ_Llamacode/main/scripts/bootstrap.ps1"
+  "updateUrl": "https://raw.githubusercontent.com/cristianlukas/UNLZ_Llamacode/main/scripts/bootstrap.ps1"
 }
