@@ -137,6 +137,7 @@ class AppController : public QObject
     Q_PROPERTY(QString gatewayApiKey   READ gatewayApiKey   WRITE setGatewayApiKey   NOTIFY gatewayChanged)
     Q_PROPERTY(int     gatewayKeepN    READ gatewayKeepN    WRITE setGatewayKeepN    NOTIFY gatewayChanged)
     Q_PROPERTY(bool    gatewayAutoSwap READ gatewayAutoSwap WRITE setGatewayAutoSwap NOTIFY gatewayChanged)
+    Q_PROPERTY(bool    gatewayLanEnabled READ gatewayLanEnabled WRITE setGatewayLanEnabled NOTIFY gatewayChanged)
     // Idle auto-stop del server (libera VRAM tras N minutos sin uso; 0 = off).
     Q_PROPERTY(int     idleAutoStopMin READ idleAutoStopMin WRITE setIdleAutoStopMin NOTIFY idleAutoStopChanged)
     Q_PROPERTY(int agentContextUsed READ agentContextUsed NOTIFY agentContextChanged)
@@ -693,9 +694,13 @@ public:
     void    setGatewayKeepN(int n);
     bool    gatewayAutoSwap() const { return m_gatewayAutoSwap; }
     void    setGatewayAutoSwap(bool on);
+    bool    gatewayLanEnabled() const { return m_gatewayLanEnabled; }
+    void    setGatewayLanEnabled(bool on);
     Q_INVOKABLE void startGateway();
     Q_INVOKABLE void stopGateway();
     Q_INVOKABLE QString gatewayBaseUrl() const;
+    Q_INVOKABLE QString gatewayLanBaseUrl() const;
+    Q_INVOKABLE QString gatewayLanOpenCodeConfig(const QString &launchProfileId) const;
     Q_INVOKABLE QString launchClaudeCode();   // exec `claude` apuntando al gateway
     Q_INVOKABLE QString launchOpenCode(const QString &projectDir,
                                        const QString &launchProfileId);
@@ -1391,6 +1396,7 @@ private:
     QString     m_gatewayApiKey;
     int         m_gatewayKeepN = 4;
     bool        m_gatewayAutoSwap = true;
+    bool        m_gatewayLanEnabled = false;
 
     // Idle auto-stop
     int         m_idleAutoStopMin = 0;        // 0 = desactivado

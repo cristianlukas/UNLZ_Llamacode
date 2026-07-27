@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QString>
 #include <QStringList>
+#include <QList>
 #include <functional>
 
 class QTcpServer;
@@ -47,6 +48,7 @@ public:
     void stop();
     bool listening() const;
     quint16 port() const { return m_port; }
+    QHostAddress serverAddress() const;
 
     // ── Funciones puras (testeables) ─────────────────────────────────────────
     // Anthropic /v1/messages → OpenAI /v1/chat/completions (request).
@@ -63,6 +65,8 @@ public:
     static QJsonObject applyStructuredOutput(QJsonObject payload,
                                              const QString &grammar,
                                              const QJsonObject &jsonSchema);
+    // Elige una IPv4 enrutable dentro de la LAN, evitando loopback/APIPA.
+    static QHostAddress preferredLanAddress(const QList<QHostAddress> &addresses);
 
 signals:
     void requestServed(const QString &path, const QString &model);

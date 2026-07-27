@@ -18,6 +18,7 @@
 #include <QProcess>
 #include <QTcpServer>
 #include <QHostAddress>
+#include <QNetworkInterface>
 #include <QDateTime>
 #include <QClipboard>
 #include <QGuiApplication>
@@ -900,6 +901,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_gatewayApiKey  = s.value(QStringLiteral("gateway/apiKey")).toString();
     m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
     m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
+    m_gatewayLanEnabled = s.value(QStringLiteral("gateway/lanEnabled"), false).toBool();
     m_idleAutoStopMin = s.value(QStringLiteral("server/idleAutoStopMin"), 0).toInt();
     m_gitAvailable      = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
 
@@ -6472,9 +6474,13 @@ void AppController::startGateway()
 {
     if (!m_gateway) { m_gateway = new LlmGateway(this); wireGatewayHooks(); }
     if (m_gateway->listening()) return;
-    if (m_gateway->start(static_cast<quint16>(m_gatewayPort))) {
+    const QHostAddress bindAddress = m_gatewayLanEnabled
+        ? QHostAddress::AnyIPv4 : QHostAddress::LocalHost;
+    if (m_gateway->start(static_cast<quint16>(m_gatewayPort), bindAddress)) {
         appendServerEvent(QStringLiteral("lifecycle"),
-            QStringLiteral("Gateway escuchando en %1").arg(gatewayBaseUrl()));
+            m_gatewayLanEnabled
+                ? QStringLiteral("Gateway LAN escuchando en %1").arg(gatewayLanBaseUrl())
+                : QStringLiteral("Gateway escuchando en %1").arg(gatewayBaseUrl()));
     } else {
         emit serverError(QStringLiteral("No pude abrir el gateway en el puerto %1.").arg(m_gatewayPort));
     }
@@ -6490,6 +6496,33 @@ void AppController::stopGateway()
 QString AppController::gatewayBaseUrl() const
 {
     return QStringLiteral("http://127.0.0.1:%1").arg(m_gatewayPort);
+}
+
+QString AppController::gatewayLanBaseUrl() const
+{
+    const QHostAddress address =
+        LlmGateway::preferredLanAddress(QNetworkInterface::allAddresses());
+    if (address.isNull())
+        return {};
+    return QStringLiteral("http://%1:%2").arg(address.toString()).arg(m_gatewayPort);
+}
+
+QString AppController::gatewayLanOpenCodeConfig(const QString &launchProfileId) const
+{
+    const QString baseUrl = gatewayLanBaseUrl();
+    if (baseUrl.isEmpty())
+        return {};
+    const QString id = launchProfileId.isEmpty() ? m_activeLaunchId : launchProfileId;
+    QJsonObject config = OpenCodeIntegration::buildConfig(
+        baseUrl + QStringLiteral("/v1"), gatewayModelCatalog(), id);
+    QJsonObject providers = config.value(QStringLiteral("provider")).toObject();
+    QJsonObject provider = providers.value(QStringLiteral("llamacode")).toObject();
+    QJsonObject options = provider.value(QStringLiteral("options")).toObject();
+    options[QStringLiteral("apiKey")] = m_gatewayApiKey;
+    provider[QStringLiteral("options")] = options;
+    providers[QStringLiteral("llamacode")] = provider;
+    config[QStringLiteral("provider")] = providers;
+    return QString::fromUtf8(QJsonDocument(config).toJson(QJsonDocument::Indented));
 }
 
 void AppController::setGatewayEnabled(bool on)
@@ -6535,6 +6568,27 @@ void AppController::setGatewayAutoSwap(bool on)
     m_gatewayAutoSwap = on;
     QSettings().setValue(QStringLiteral("gateway/autoSwap"), on);
     if (m_gateway) m_gateway->setAutoSwap(on);
+    emit gatewayChanged();
+}
+
+void AppController::setGatewayLanEnabled(bool on)
+{
+    if (m_gatewayLanEnabled == on) return;
+    m_gatewayLanEnabled = on;
+    QSettings settings;
+    settings.setValue(QStringLiteral("gateway/lanEnabled"), on);
+    if (on && m_gatewayApiKey.trimmed().isEmpty()) {
+        m_gatewayApiKey = QUuid::createUuid().toString(QUuid::WithoutBraces)
+            .remove(QLatin1Char('-'));
+        settings.setValue(QStringLiteral("gateway/apiKey"), m_gatewayApiKey);
+        if (m_gateway) m_gateway->setApiKey(m_gatewayApiKey);
+    }
+    if (m_gateway && m_gateway->listening()) {
+        stopGateway();
+        startGateway();
+    } else if (on && m_gatewayEnabled) {
+        startGateway();
+    }
     emit gatewayChanged();
 }
 

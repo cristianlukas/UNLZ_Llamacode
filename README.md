@@ -936,6 +936,20 @@ configurable):
 - Si un request pide otro perfil y auto-load está activo, LlamaCode hace el swap,
   espera que el modelo correcto quede listo y recién entonces reenvía el request.
 
+El switch **Compartir server en la red local (LAN)** cambia el bind de loopback a
+`0.0.0.0` y muestra la URL IPv4 privada anunciable (por ejemplo,
+`http://192.168.1.20:8088`). Si todavía no hay una API key, LlamaCode genera una
+automáticamente. La pantalla ofrece dos flujos:
+
+1. **Otro LlamaCode en LAN**: crear allí un backend Cloud/OpenAI-compatible usando
+   la URL LAN como Base URL, el ID del perfil remoto como modelo y la API key
+   compartida mediante `LLAMACODE_GATEWAY_API_KEY`.
+2. **OpenCode en LAN**: copiar desde LlamaCode un `opencode.json` completo con la
+   URL `/v1`, catálogo de perfiles y credencial.
+
+En Windows se debe permitir el puerto sólo para redes privadas cuando el firewall
+lo solicite. Desactivar el switch vuelve a limitar el gateway a esta PC.
+
 El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona
 `llamacode/<launch-profile-id>` y pasa la API key por una variable de entorno. No

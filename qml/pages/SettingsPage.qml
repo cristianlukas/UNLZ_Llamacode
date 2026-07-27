@@ -622,6 +622,108 @@ Item {
                                     onEditingFinished: App.gatewayApiKey = text
                                 }
 
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 8
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        Text {
+                                            text: "Compartir server en la red local (LAN)"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 13
+                                        }
+                                        Text {
+                                            text: App.gatewayLanEnabled
+                                                ? (App.gatewayLanBaseUrl().length > 0
+                                                   ? "Escuchando para otros dispositivos en " + App.gatewayLanBaseUrl()
+                                                   : "No se encontró una dirección IPv4 de red local.")
+                                                : "Sólo esta PC puede conectarse. Al activar LAN se genera una API key si está vacía."
+                                            color: App.gatewayLanEnabled ? Theme.accent : Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                    Switch {
+                                        checked: App.gatewayLanEnabled
+                                        onToggled: App.gatewayLanEnabled = checked
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled && App.gatewayLanEnabled
+                                    spacing: 8
+
+                                    Text {
+                                        text: "OPCIÓN 1 · OTRO LLAMACODE EN LAN"
+                                        color: Theme.accent
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: "En el otro LlamaCode creá un Backend tipo Cloud/OpenAI-compatible. Base URL: "
+                                              + App.gatewayLanBaseUrl()
+                                              + " · Modelo: el ID del perfil elegido abajo · Var de key: LLAMACODE_GATEWAY_API_KEY."
+                                        color: Theme.textSecondary
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+                                    RowLayout {
+                                        spacing: 8
+                                        LcButton {
+                                            text: "Copiar URL para LlamaCode"
+                                            onClicked: {
+                                                App.copyToClipboard(App.gatewayLanBaseUrl())
+                                                gwMsg.text = "URL LAN copiada."
+                                                gwMsg.ok = true
+                                            }
+                                        }
+                                        LcButton {
+                                            text: "Copiar API key"
+                                            secondary: true
+                                            onClicked: {
+                                                App.copyToClipboard(App.gatewayApiKey)
+                                                gwMsg.text = "API key copiada. Compartila sólo con dispositivos confiables."
+                                                gwMsg.ok = true
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "OPCIÓN 2 · OPENCODE EN LAN"
+                                        color: Theme.accent
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: "Copiá la configuración en opencode.json del otro dispositivo. Incluye la URL LAN, los perfiles disponibles y la API key."
+                                        color: Theme.textSecondary
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+                                    LcButton {
+                                        text: "Copiar configuración de OpenCode"
+                                        enabled: openCodeProfile.currentValue !== undefined
+                                        onClicked: {
+                                            App.copyToClipboard(App.gatewayLanOpenCodeConfig(openCodeProfile.currentValue ?? ""))
+                                            gwMsg.text = "Configuración LAN de OpenCode copiada."
+                                            gwMsg.ok = true
+                                        }
+                                    }
+                                    Text {
+                                        text: "Windows puede pedir permiso de firewall la primera vez. Permití acceso sólo en redes privadas."
+                                        color: Theme.textMuted
+                                        font.pixelSize: 10
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+                                }
+
                                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor; visible: App.gatewayEnabled }
 
                                 RowLayout {

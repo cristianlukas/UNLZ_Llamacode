@@ -241,6 +241,34 @@ void LlmGateway::stop()
 
 bool LlmGateway::listening() const { return m_server && m_server->isListening(); }
 
+QHostAddress LlmGateway::serverAddress() const
+{
+    return m_server ? m_server->serverAddress() : QHostAddress();
+}
+
+QHostAddress LlmGateway::preferredLanAddress(const QList<QHostAddress> &addresses)
+{
+    QHostAddress fallback;
+    for (const QHostAddress &address : addresses) {
+        if (address.protocol() != QAbstractSocket::IPv4Protocol
+            || address.isLoopback() || address.isNull()) {
+            continue;
+        }
+        const quint32 ip = address.toIPv4Address();
+        // 169.254/16 es link-local y no sirve como dirección anunciable normal.
+        if ((ip & 0xffff0000U) == 0xa9fe0000U)
+            continue;
+        const bool privateUse = (ip & 0xff000000U) == 0x0a000000U
+            || (ip & 0xfff00000U) == 0xac100000U
+            || (ip & 0xffff0000U) == 0xc0a80000U;
+        if (privateUse)
+            return address;
+        if (fallback.isNull())
+            fallback = address;
+    }
+    return fallback;
+}
+
 void LlmGateway::onNewConnection()
 {
     while (m_server->hasPendingConnections()) {

@@ -25,6 +25,7 @@ private slots:
     void openCodeConfigUsesEnvironmentSecret();
     void openCodeDesktopCandidates();
     void modelsEndpointServesStableIds();
+    void preferredLanAddressSelectsPrivateIpv4();
     void lruEvictsBeyondKeepN();
     void structuredOutputInjection();
     void idleStopDecision();
@@ -207,6 +208,23 @@ void GatewayTests::modelsEndpointServesStableIds()
     QCOMPARE(result.value("data").toArray().first().toObject().value("id").toString(),
              QStringLiteral("launch-qwen"));
     reply->deleteLater();
+}
+
+void GatewayTests::preferredLanAddressSelectsPrivateIpv4()
+{
+    const QList<QHostAddress> addresses{
+        QHostAddress(QStringLiteral("127.0.0.1")),
+        QHostAddress(QStringLiteral("169.254.10.20")),
+        QHostAddress(QStringLiteral("2001:db8::1")),
+        QHostAddress(QStringLiteral("192.168.1.42")),
+        QHostAddress(QStringLiteral("10.0.0.8"))
+    };
+    QCOMPARE(LlmGateway::preferredLanAddress(addresses).toString(),
+             QStringLiteral("192.168.1.42"));
+    QVERIFY(LlmGateway::preferredLanAddress({
+        QHostAddress(QStringLiteral("127.0.0.1")),
+        QHostAddress(QStringLiteral("169.254.1.2"))
+    }).isNull());
 }
 
 void GatewayTests::lruEvictsBeyondKeepN()
