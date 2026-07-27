@@ -8387,7 +8387,10 @@ void AppController::handleUpdateDecision(const QString &decision)
                                  QStringLiteral("-Command"),
                                  QStringLiteral("irm '%1' | iex").arg(scriptUrl)});
 #else
-        QDesktopServices::openUrl(QUrl(QStringLiteral("https://github.com/guideahon/UNLZ_Llamacode")));
+        const QString releaseUrl = m_updateInfo.value(QStringLiteral("releaseUrl")).toString();
+        QDesktopServices::openUrl(QUrl(releaseUrl.isEmpty()
+            ? QStringLiteral("https://github.com/cristianlukas/UNLZ_Llamacode/releases/latest")
+            : releaseUrl));
 #endif
     }
 
