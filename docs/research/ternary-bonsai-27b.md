@@ -52,6 +52,41 @@ refactor de una línea, silogismo y JSON estricto. Los dos modelos aprobaron tod
 por lo que este resultado sólo confirma compatibilidad básica y no equivalencia de
 calidad para trabajo agente prolongado.
 
+### Tres benchmarks propios de LlamaCode
+
+Se ejecutaron los tres primeros casos de `Suite rápida · Python coding`
+(`f779d1cb-0a6f-4c31-ba9a-54b640209b9b`) con tres pasadas por modelo:
+
+- `mini_calc_lang`
+- `expense_tracker`
+- `log_analyzer`
+
+Se usaron los prompts y criterios de aceptación versionados de la suite. Cada
+respuesta se guardó como el archivo solicitado y sólo contó como éxito cuando
+aprobó `python -m py_compile` y su `--self-test` terminó en menos de 30 segundos,
+imprimió `SELF_TEST_OK` y salió con código 0. Ambos modelos usaron el mismo runtime,
+contexto 16K, sampling conservador y las mismas tres semillas. Esta corrida ejercitó
+la generación directa de los artefactos; no incluyó el loop de reparación por tools
+del benchmark agente E2E.
+
+| Modelo | Éxitos | Compilan | Mediana pared | Mediana generación |
+|---|---:|---:|---:|---:|
+| Ternary Bonsai 27B Q2_0 | 0/9 | 9/9 | 102.16 s | 28.90 t/s |
+| Qwen3.5-9B Q4_K_M | 1/9 | 8/9 | 80.49 s | 47.85 t/s |
+
+Qwen3.5-9B aprobó una pasada de `expense_tracker`; las otras dos fallaron la
+importación CSV. Ningún modelo aprobó `mini_calc_lang` ni `log_analyzer`. Bonsai
+produjo siempre Python sintácticamente válido, pero presentó timeouts, errores de
+parser, uso incorrecto de `argparse`, duplicación de IDs y un `NameError` dentro
+de sus self-tests. El 9B también tuvo errores de parser/CLI y una salida con Markdown
+inválido.
+
+El resultado favorece al 9B, pero sobre todo muestra que ninguno es suficientemente
+estable en generación directa de programas largos. No justifica reemplazar el perfil
+8 GB por Bonsai. La siguiente comparación útil debe usar `Agent efficiency E2E v1`
+con tools y reparación habilitados, una vez que Bonsai pueda registrarse con un
+runtime CUDA soportado por LlamaCode.
+
 ## Calidad publicada
 
 El whitepaper de PrismML informa, sobre 15 benchmarks en thinking mode:
