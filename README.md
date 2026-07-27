@@ -1172,6 +1172,12 @@ apaga el agente auto-iniciado.
 
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
 
+Evaluaciones de modelos candidatas:
+
+- [Ternary Bonsai 27B (2026-07-27)](docs/research/ternary-bonsai-27b.md):
+  comparación local contra MAX-Q y modelos del tier 5–8 GB; por ahora se recomienda
+  seguimiento experimental, no perfil agente/coding predeterminado.
+
 ### Flujo de uso
 
 1. Seleccionar uno o más `LaunchProfile` para comparar.

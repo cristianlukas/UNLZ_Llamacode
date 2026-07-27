@@ -74,6 +74,15 @@ QStringList TtsEngine::buildQwenArgs(const VoiceConfig &c, const QString &text,
     return a;
 }
 
+QStringList TtsEngine::buildInflectArgs(const VoiceConfig &c, const QString &text,
+                                        const QString &outFile)
+{
+    const QString runner = QDir(c.inflectModelDir).filePath(QStringLiteral("onnx/inference_onnx.py"));
+    return {runner, QStringLiteral("--text"), text,
+            QStringLiteral("--output"), outFile,
+            QStringLiteral("--provider"), c.inflectProvider};
+}
+
 void TtsEngine::fallbackFrom(const QString &failedMode, const QString &text, const QString &error)
 {
     const QString fallback = m_cfg.ttsFallbackMode;
@@ -122,6 +131,61 @@ void TtsEngine::synthesizeQwen(const QString &text)
         fallbackFrom(QStringLiteral("qwen3"), text, QStringLiteral("no se pudo lanzar Qwen3-TTS: %1").arg(err));
     });
     m_qwen->start(prog, buildQwenArgs(m_cfg, text, m_qwenOut));
+}
+
+void TtsEngine::synthesizeInflect(const QString &text)
+{
+    // Inflect v2 publicado actualmente tiene frontend fonético exclusivamente
+    // inglés. La guarda también vive acá para que configs editados a mano no
+    // puedan presentarlo como una voz multilingüe.
+    if (!m_cfg.sttLanguage.trimmed().toLower().startsWith(QLatin1String("en"))) {
+        fallbackFrom(QStringLiteral("inflect"), text,
+                     QStringLiteral("Inflect v2 experimental sólo admite Charla en inglés"));
+        return;
+    }
+    const QString runner =
+        QDir(m_cfg.inflectModelDir).filePath(QStringLiteral("onnx/inference_onnx.py"));
+    if (m_cfg.inflectModelDir.trimmed().isEmpty() || !QFileInfo::exists(runner)) {
+        fallbackFrom(QStringLiteral("inflect"), text,
+                     QStringLiteral("configurá la carpeta del modelo Inflect v2 ONNX"));
+        return;
+    }
+    m_inflectOut = QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+        + QStringLiteral("/lc_inflect_tts_") + QUuid::createUuid().toString(QUuid::Id128)
+        + QStringLiteral(".wav");
+    m_inflect = new QProcess(this);
+    m_inflect->setWorkingDirectory(m_cfg.inflectModelDir);
+    m_inflect->setProcessChannelMode(QProcess::SeparateChannels);
+    connect(m_inflect, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+            [this, text](int code, QProcess::ExitStatus status) {
+        QProcess *p = m_inflect; m_inflect = nullptr;
+        const QString detail = p ? QString::fromUtf8(p->readAllStandardError()).trimmed() : QString();
+        if (p) p->deleteLater();
+        QFile f(m_inflectOut);
+        if (status != QProcess::NormalExit || code != 0 || !f.open(QIODevice::ReadOnly)) {
+            QFile::remove(m_inflectOut);
+            fallbackFrom(QStringLiteral("inflect"), text,
+                         detail.isEmpty() ? QStringLiteral("Inflect no generó audio") : detail);
+            return;
+        }
+        const QByteArray wav = f.readAll();
+        f.close();
+        QFile::remove(m_inflectOut);
+        if (wav.isEmpty()) {
+            fallbackFrom(QStringLiteral("inflect"), text, QStringLiteral("audio Inflect vacío"));
+            return;
+        }
+        emit audioReady(wav, QStringLiteral("wav"));
+    });
+    connect(m_inflect, &QProcess::errorOccurred, this, [this, text](QProcess::ProcessError) {
+        if (!m_inflect) return;
+        const QString err = m_inflect->errorString();
+        m_inflect->deleteLater(); m_inflect = nullptr;
+        QFile::remove(m_inflectOut);
+        fallbackFrom(QStringLiteral("inflect"), text,
+                     QStringLiteral("no se pudo lanzar Inflect: %1").arg(err));
+    });
+    m_inflect->start(m_cfg.inflectPythonPath, buildInflectArgs(m_cfg, text, m_inflectOut));
 }
 
 QString TtsEngine::resolvePiperModel() const
@@ -309,6 +373,7 @@ void TtsEngine::synthesize(const QString &text)
     if (text.trimmed().isEmpty()) { emit failed(QStringLiteral("texto vacío")); return; }
     if (m_cfg.ttsMode == QLatin1String("piper")) { synthesizePiper(text); return; }
     if (m_cfg.ttsMode == QLatin1String("qwen3")) { synthesizeQwen(text); return; }
+    if (m_cfg.ttsMode == QLatin1String("inflect")) { synthesizeInflect(text); return; }
 
     QString base = m_cfg.ttsBaseUrl;
     while (base.endsWith('/')) base.chop(1);
@@ -386,6 +451,11 @@ void TtsEngine::cancel()
         QProcess *p = m_qwen; m_qwen = nullptr;
         p->kill(); p->deleteLater();
         if (!m_qwenOut.isEmpty()) QFile::remove(m_qwenOut);
+    }
+    if (m_inflect) {
+        QProcess *p = m_inflect; m_inflect = nullptr;
+        p->kill(); p->deleteLater();
+        if (!m_inflectOut.isEmpty()) QFile::remove(m_inflectOut);
     }
     // Turno residente en vuelo: descartarlo y matar el proceso (se relanza en el
     // próximo synthesize). Evita mezclar audio de un turno cancelado.

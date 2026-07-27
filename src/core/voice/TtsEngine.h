@@ -23,7 +23,7 @@ public:
     void synthesize(const QString &text);
     // Ocupado = hay un request en vuelo (HTTP, spawn per-call, o turno pendiente
     // en el piper residente). El proceso residente vivo NO cuenta como ocupado.
-    bool busy() const { return m_reply != nullptr || m_piper != nullptr || m_qwen != nullptr || m_piperPending; }
+    bool busy() const { return m_reply != nullptr || m_piper != nullptr || m_qwen != nullptr || m_inflect != nullptr || m_piperPending; }
     void cancel();
 
     // ¿Hay una voz piper local instalada (modelo .onnx presente)? Fallback cuando
@@ -40,6 +40,8 @@ public:
     static QByteArray buildPiperJsonLine(const QString &text, const QString &outFile);
     static QStringList buildQwenArgs(const VoiceConfig &cfg, const QString &text,
                                      const QString &outFile);
+    static QStringList buildInflectArgs(const VoiceConfig &cfg, const QString &text,
+                                        const QString &outFile);
 
 signals:
     // audio crudo + formato ("wav"|"mp3"|"pcm").
@@ -59,6 +61,7 @@ private:
     QString resolvePiperModel() const;
     QString resolvePiperProg() const;
     void synthesizeQwen(const QString &text);
+    void synthesizeInflect(const QString &text);
     void fallbackFrom(const QString &failedMode, const QString &text, const QString &error);
 
     VoiceConfig m_cfg;
@@ -71,6 +74,8 @@ private:
     QString m_piperOut;                  // wav temporal de salida (per-call)
     class QProcess *m_qwen = nullptr;
     QString m_qwenOut;
+    class QProcess *m_inflect = nullptr;
+    QString m_inflectOut;
 
     // Piper residente: proceso vivo en modo --json-input. Un turno a la vez
     // (VoiceController serializa vía busy()).

@@ -33,6 +33,9 @@ QJsonObject VoiceConfig::toJson() const
     o["qwenInstruction"] = qwenInstruction;
     o["qwenLanguage"] = qwenLanguage;
     o["qwenThreads"] = qwenThreads;
+    o["inflectPythonPath"] = inflectPythonPath;
+    o["inflectModelDir"] = inflectModelDir;
+    o["inflectProvider"] = inflectProvider;
     o["ttsAutoConfigure"] = ttsAutoConfigure;
     o["vadThreshold"]   = vadThreshold;
     o["vadSilenceMs"]   = vadSilenceMs;
@@ -81,6 +84,14 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.qwenInstruction = o.value("qwenInstruction").toString();
     c.qwenLanguage = o.value("qwenLanguage").toString(c.qwenLanguage);
     c.qwenThreads = o.value("qwenThreads").toInt(c.qwenThreads);
+    c.inflectPythonPath = o.value("inflectPythonPath").toString(c.inflectPythonPath);
+    if (c.inflectPythonPath.trimmed().isEmpty()) c.inflectPythonPath = QStringLiteral("python");
+    c.inflectModelDir = o.value("inflectModelDir").toString();
+    c.inflectProvider = o.value("inflectProvider").toString(c.inflectProvider).toLower();
+    if (c.inflectProvider != QLatin1String("cpu")
+        && c.inflectProvider != QLatin1String("directml")
+        && c.inflectProvider != QLatin1String("cuda"))
+        c.inflectProvider = QStringLiteral("cpu");
     c.ttsAutoConfigure = o.value("ttsAutoConfigure").toBool(c.ttsAutoConfigure);
     c.vadThreshold = o.value("vadThreshold").toDouble(c.vadThreshold);
     c.vadSilenceMs = o.value("vadSilenceMs").toInt(c.vadSilenceMs);

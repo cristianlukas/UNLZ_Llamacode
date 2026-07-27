@@ -34,8 +34,8 @@ struct VoiceConfig {
     QString ttsKeyRef;
     QString ttsFormat   = QStringLiteral("wav");     // wav | mp3 | pcm
     // Modo TTS: auto elige según hardware/disponibilidad; http usa un endpoint
-    // OpenAI-compatible; piper y qwen3 son procesos locales.
-    QString ttsMode = QStringLiteral("auto");        // auto | http | kokoro | piper | qwen3
+    // OpenAI-compatible; piper, qwen3 e inflect son procesos locales.
+    QString ttsMode = QStringLiteral("auto");        // auto | http | kokoro | piper | qwen3 | inflect
     // HTTP PCM incremental: reproduce cada bloque al llegar, sin esperar un WAV
     // completo. Kokoro y cualquier endpoint compatible pueden usar esta ruta.
     bool ttsStreamAudio = false;
@@ -53,6 +53,11 @@ struct VoiceConfig {
     QString qwenInstruction;                         // estilo/tono
     QString qwenLanguage = QStringLiteral("es");
     int qwenThreads = 0;                             // 0 = cores físicos/default motor
+    // Inflect v2 ONNX experimental: runner oficial Python, sólo inglés y voz fija.
+    // modelDir debe contener onnx/inference_onnx.py y los artefactos descargados.
+    QString inflectPythonPath = QStringLiteral("python");
+    QString inflectModelDir;
+    QString inflectProvider = QStringLiteral("cpu"); // cpu | directml | cuda
     bool ttsAutoConfigure = true;
 
     // ── Captura / VAD (detección de fin de habla) ──
