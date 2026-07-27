@@ -213,3 +213,24 @@ corren en paralelo entre sí) con un lock atómico (`.buildlock/`, gitignored):
 - El "owner" real es un proceso *guardian* oculto (su vida == el lock); `release`
   lo mata. Así el PID sí prueba vida (el powershell que hace `acquire` muere ya).
 - Test: `powershell -File tests\test_build_coord.ps1` (fuera de ctest; infra PS/bat).
+
+### Releases y detector de updates
+`AppController::checkForUpdates()` pide `/releases/latest` a la API de GitHub y
+compara `tag_name` (sin la `v`) contra la versión propia. **Sin releases
+publicados el endpoint da 404** y el app cae al `assets/update/latest.json`
+bundleado, que trae `newVersion:false` → nunca avisa nada. El detector no está
+roto: falta publicar.
+
+Publicar (el tag DEBE ser `vX.Y.Z` o `QVersionNumber` no lo parsea):
+```
+release.bat                                  # dry run: muestra el plan
+release.bat -Publish                         # taggea vX.Y.Z, pushea y crea el release
+powershell -File tools\release.ps1 -Version 0.2.0 -Publish
+```
+Ojo: **en la máquina de desarrollo el aviso casi nunca aparece**, porque cada
+build corre `bump-patch.bat` y deja la versión local por encima del último tag.
+Para probar el popup hace falta un binario con versión menor a la publicada.
+
+Test: `powershell -File tests\test_release_script.ps1` (fuera de ctest, infra PS).
+El parseo del release de GitHub sí está en ctest
+(`githubReleaseToUpdateFlag`, `tests/test_appcontroller.cpp`).
