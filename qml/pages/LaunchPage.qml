@@ -600,24 +600,17 @@ Item {
                                 spacing: 2
                                 Repeater {
                                     model: App.profileManager.launchProfiles
-                                    delegate: CheckBox {
+                                    delegate: LcCheckBox {
                                         id: poolCheck
                                         required property string name
                                         required property string profileId
                                         Layout.fillWidth: true
+                                        text: name
                                         checked: !!routerBox.pool[profileId]
                                         onToggled: {
                                             var p = routerBox.pool
                                             p[profileId] = checked
                                             routerBox.pool = p
-                                        }
-                                        contentItem: Text {
-                                            text: poolCheck.name
-                                            color: Theme.theme === "oled" ? "white" : Theme.textPrimary
-                                            font.pixelSize: 12
-                                            leftPadding: poolCheck.indicator.width + 6
-                                            verticalAlignment: Text.AlignVCenter
-                                            elide: Text.ElideRight
                                         }
                                     }
                                 }
