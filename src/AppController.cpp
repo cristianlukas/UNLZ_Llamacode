@@ -2275,46 +2275,6 @@ void AppController::computeEffectiveProfile(const QString &launchProfileId)
     emit effectiveProfileChanged();
 }
 
-QVariantMap AppController::cachyCacheInfo(const QString &launchProfileId)
-{
-    const auto ctx = buildContext(launchProfileId);
-    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
-    QString path;
-    const int i = ep.effectiveArgs.indexOf(QStringLiteral("--cache-ssd"));
-    if (i >= 0 && i + 1 < ep.effectiveArgs.size())
-        path = QDir::fromNativeSeparators(ep.effectiveArgs.at(i + 1));
-    if (path.isEmpty())
-        return {{QStringLiteral("enabled"), false}};
-
-    quint64 bytes = 0;
-    QDirIterator it(path, QDir::Files, QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        it.next();
-        bytes += quint64(qMax<qint64>(0, it.fileInfo().size()));
-    }
-    return {{QStringLiteral("enabled"), true},
-            {QStringLiteral("path"), QDir::toNativeSeparators(path)},
-            {QStringLiteral("bytes"), QVariant::fromValue<qulonglong>(bytes)},
-            {QStringLiteral("mib"), double(bytes) / (1024.0 * 1024.0)}};
-}
-
-bool AppController::clearCachyCache(const QString &launchProfileId)
-{
-    const QVariantMap info = cachyCacheInfo(launchProfileId);
-    const QString path = QDir::fromNativeSeparators(info.value(QStringLiteral("path")).toString());
-    const QString root = QDir::cleanPath(
-        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-        + QStringLiteral("/cache/cachyllama"));
-    const QString target = QDir::cleanPath(path);
-    if (target.isEmpty() || target == root
-        || !target.startsWith(root + QLatin1Char('/'), Qt::CaseInsensitive)) {
-        return false;
-    }
-    if (!QFileInfo::exists(target))
-        return true;
-    return QDir(target).removeRecursively();
-}
-
 void AppController::computeEffectiveProfilePreview(const QString &launchProfileId,
                                                    const QVariantMap &overrides)
 {
@@ -2458,8 +2418,7 @@ void AppController::installMtpBinary()
     startBinaryInstall();
 }
 
-void AppController::installCatalogEngine(const QString &engineId,
-                                         const QString &variantId)
+void AppController::installCatalogEngine(const QString &engineId)
 {
     const EngineCatalogEntry e = EngineCatalog::entry(engineId);
     if (e.id.isEmpty()) {
@@ -2478,10 +2437,8 @@ void AppController::installCatalogEngine(const QString &engineId,
     const HardwareSignals hw = EngineCatalog::detectHardware();
     for (const EngineVariant &v : e.variants) {
         QString reason;
-        if (!variantId.isEmpty() && v.id != variantId)
-            continue;
         if (v.buildFromSource && EngineCatalog::isVariantCompatible(v, hw, &reason)) {
-            startSourceBuildInstall(e, v);
+            startSourceBuildInstall(e);
             return;
         }
     }
@@ -2489,8 +2446,7 @@ void AppController::installCatalogEngine(const QString &engineId,
     emit serverError(QStringLiteral("%1 está catalogado, pero esta build todavía no tiene instalador automático para ese tipo de motor. Usá \"Agregar\" y registrá el binario compatible.").arg(e.name));
 }
 
-void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry,
-                                            const EngineVariant &variant)
+void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry)
 {
     if (m_installingOfficialBinary || m_installerProc) {
         emit serverError("Binary install already in progress.");
@@ -2510,7 +2466,6 @@ void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry,
     const QString flavor = entry.flavor;
     const QString displayName = entry.name;
     const QString sourceBranch = entry.sourceBranch;
-    const QString sourceBackend = variant.backend;
 
     const QString script = QStringLiteral(R"PS(
 $ErrorActionPreference = 'Stop'
@@ -2526,10 +2481,7 @@ try {
     foreach ($cmd in @('git','cmake')) {
         if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) { throw ($cmd + ' no está en PATH.') }
     }
-    $backend = '%5'
-    if ($backend -eq 'cuda' -and -not (Get-Command nvcc -ErrorAction SilentlyContinue)) {
-        throw 'CUDA Toolkit (nvcc) no está en PATH.'
-    }
+    if (-not (Get-Command nvcc -ErrorAction SilentlyContinue)) { throw 'CUDA Toolkit (nvcc) no está en PATH.' }
     $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
     if (-not (Test-Path $vswhere)) { throw 'No encuentro vswhere.exe. Instalá Visual Studio Build Tools con Desktop development with C++.' }
     $vcvars = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Auxiliary\Build\vcvarsall.bat | Select-Object -First 1
@@ -2544,7 +2496,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
     $commit = (git -C $src rev-parse --short HEAD).Trim()
 
-    Write-Output ('STATUS: Configurando CMake ' + $backend.ToUpperInvariant() + ' Release...')
+    Write-Output 'STATUS: Configurando CMake CUDA Release...'
     $bat = Join-Path $buildRoot '_llamacode_build.bat'
     $ninja = Get-Command ninja -ErrorAction SilentlyContinue
     $generator = if ($ninja) { 'Ninja' } else { 'NMake Makefiles' }
@@ -2552,9 +2504,7 @@ try {
 @echo off
 call "$vcvars" x64
 if errorlevel 1 exit /b 1
-set BACKEND_FLAG=-DGGML_VULKAN=ON
-if /I "$backend"=="cuda" set BACKEND_FLAG=-DGGML_CUDA=ON -DCMAKE_CUDA_FLAGS=--expt-relaxed-constexpr
-cmake -G "$generator" -S "$src" -B "$build" %BACKEND_FLAG% -DGGML_CCACHE=OFF -DCMAKE_BUILD_TYPE=Release
+cmake -G "$generator" -S "$src" -B "$build" -DGGML_CUDA=ON -DGGML_CCACHE=OFF -DCMAKE_BUILD_TYPE=Release
 if errorlevel 1 exit /b 1
 cmake --build "$build" -j --target llama-server
 exit /b %errorlevel%
@@ -2567,17 +2517,15 @@ exit /b %errorlevel%
            Select-Object -First 1
     if (-not $exe) { throw 'llama-server.exe no apareció tras compilar.' }
 
+    $nvcc = (Get-Command nvcc).Source
+    $cudaBin = Split-Path -Parent $nvcc
+    $cudaDirs = @($cudaBin, (Join-Path $cudaBin 'x64')) | Where-Object { Test-Path $_ }
     $copied = 0
-    if ($backend -eq 'cuda') {
-        $nvcc = (Get-Command nvcc).Source
-        $cudaBin = Split-Path -Parent $nvcc
-        $cudaDirs = @($cudaBin, (Join-Path $cudaBin 'x64')) | Where-Object { Test-Path $_ }
-        foreach ($dir in $cudaDirs) {
-            foreach ($dll in Get-ChildItem -Path $dir -File -ErrorAction SilentlyContinue) {
-                if ($dll.Name -match '^(cudart64_|cublas64_|cublaslt64_|nvrtc64_|nvrtc-builtins64_|nvjitlink_).*\.dll$') {
-                    Copy-Item -LiteralPath $dll.FullName -Destination $exe.DirectoryName -Force -ErrorAction SilentlyContinue
-                    $copied++
-                }
+    foreach ($dir in $cudaDirs) {
+        foreach ($dll in Get-ChildItem -Path $dir -File -ErrorAction SilentlyContinue) {
+            if ($dll.Name -match '^(cudart64_|cublas64_|cublaslt64_|nvrtc64_|nvrtc-builtins64_|nvjitlink_).*\.dll$') {
+                Copy-Item -LiteralPath $dll.FullName -Destination $exe.DirectoryName -Force -ErrorAction SilentlyContinue
+                $copied++
             }
         }
     }
@@ -2592,8 +2540,7 @@ exit /b %errorlevel%
 )PS").arg(QString(repoUrl).replace("'", "''"),
           QString(slug).replace("'", "''"),
           QDir::toNativeSeparators(toolsDir).replace("'", "''"),
-          QString(sourceBranch).replace("'", "''"),
-          QString(sourceBackend).replace("'", "''"));
+          QString(sourceBranch).replace("'", "''"));
 
     m_installSourceRepo = entry.repo;
     m_installSourceLabel = flavor;
@@ -4622,12 +4569,10 @@ void AppController::startAgent(const QString &launchProfileId)
             c.modelId       = ctx.backend.cloudModel.trimmed();
             c.apiKey        = cloudKey;
             c.ctxOverride   = ctx.backend.cloudCtx;
-            c.localBackend  = false;
         } else {
             c.serverBaseUrl = serverBaseUrl();
             c.modelId       = routedModelId(ctx.catalogModel.id);
             c.ctxOverride   = ctx.runtime.ctx;
-            c.localBackend  = true;
             c.parallelSlots = qMax(1, ctx.runtime.parallelSlots);
             c.vramTotalMb   = m_serverStats.value(QStringLiteral("totalMb")).toDouble();
             const double usedMb = m_serverStats.value(QStringLiteral("usedMb")).toDouble();
@@ -9606,7 +9551,6 @@ struct BenchTaskDef {
     bool isSpeed;
     std::function<bool(const QString &)> eval;
     QVariantMap acceptance;
-    bool restartBefore = false;
 };
 
 static bool benchEvalJson(const QString &r)
@@ -9623,19 +9567,6 @@ static bool benchEvalJson(const QString &r)
 
 static QVector<BenchTaskDef> buildBenchTasks(const QString &mode)
 {
-    if (mode == QLatin1String("cache")) {
-        const QString stablePrefix =
-            QStringLiteral("Analyze this stable agent context and answer only CACHE_OK. ")
-            + QStringLiteral("system tools repository history ").repeated(400);
-        return {
-            {QStringLiteral("cache_cold"), QStringLiteral("cache-cold"),
-             stablePrefix, 16, true, nullptr, {}, false},
-            {QStringLiteral("cache_warm"), QStringLiteral("cache-warm"),
-             stablePrefix, 16, true, nullptr, {}, false},
-            {QStringLiteral("cache_restored"), QStringLiteral("cache-restored"),
-             stablePrefix, 16, true, nullptr, {}, true},
-        };
-    }
     const bool full = (mode == QStringLiteral("full"));
     QVector<BenchTaskDef> t;
 
@@ -12095,11 +12026,7 @@ void AppController::startBenchmark(const QStringList &profileIds, const QString 
 {
     m_benchHardTimeoutSec = qMax(0, timeoutSec);
     setBenchmarkAgentProfile(agentProfileId);
-    runBenchmarkInternal(profileIds, mode, {},
-                         mode == QLatin1String("cache")
-                             ? QStringLiteral("cache-persistence")
-                             : QStringLiteral("standard"),
-                         mode == QLatin1String("cache") ? 1 : qMax(1, passes), target);
+    runBenchmarkInternal(profileIds, mode, {}, QStringLiteral("standard"), qMax(1, passes), target);
 }
 
 void AppController::startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes,
@@ -12165,8 +12092,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     const QString benchmarkName = isCustom
         ? runLabel
         : (mode == QLatin1String("short") ? QStringLiteral("Corta")
-           : mode == QLatin1String("cache") ? QStringLiteral("Cache frío/caliente/reinicio")
-                                             : QStringLiteral("Completa"));
+                                          : QStringLiteral("Completa"));
     const QVector<BenchTaskDef> tasks = isCustom
                                             ? buildCustomBenchTasks(customTasks)
                                             : buildBenchTasks(mode);
@@ -12243,8 +12169,6 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         auto startAttempts = std::make_shared<int>(0);
         auto runProfile = std::make_shared<std::function<void()>>();
         *runProfile = [=]() {
-            if (mode == QLatin1String("cache") && *startAttempts == 0)
-                clearCachyCache(profileId);
             const qint64 loadStartMs = QDateTime::currentMSecsSinceEpoch();
             m_benchmarkStatus = QString("[%1/%2] %3 — iniciando servidor...")
                 .arg(idx + 1).arg(profileIds.size()).arg(profName);
@@ -12347,12 +12271,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                     return;
                 }
 
-                // Warm-up request (discard result). El benchmark de cache necesita
-                // que su primera medición sea realmente fría.
+                // Warm-up request (discard result)
                 m_benchmarkStatus = QString("[%1/%2] %3 — calentando...").arg(idx+1).arg(profileIds.size()).arg(profName);
                 emit benchmarkStatusChanged();
 
-                auto afterWarmup = [=](QVariantMap) {
+                benchmarkRequest(url, "Say hi.", 32, true, [=](QVariantMap) {
                     // Run all tasks sequentially, repeated `passes` times per profile.
                     auto taskResults = std::make_shared<QVariantList>();
                     auto passNo = std::make_shared<int>(1);
@@ -12419,32 +12342,6 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["totalTime"] = result["elapsedSec"];
                                 result["passedAfterRepair"] = false;
                                 result["tasks"]        = *taskResults;
-                                if (mode == QLatin1String("cache")) {
-                                    QVariantMap cold, warm, restored;
-                                    for (const QVariant &tv : *taskResults) {
-                                        const QVariantMap tm = tv.toMap();
-                                        const QString id = tm.value(QStringLiteral("id")).toString();
-                                        if (id == QLatin1String("cache_cold")) cold = tm;
-                                        else if (id == QLatin1String("cache_warm")) warm = tm;
-                                        else if (id == QLatin1String("cache_restored")) restored = tm;
-                                    }
-                                    const double coldTtft = cold.value(QStringLiteral("ttft_ms")).toDouble();
-                                    const double warmTtft = warm.value(QStringLiteral("ttft_ms")).toDouble();
-                                    const double restoredTtft =
-                                        restored.value(QStringLiteral("ttft_ms")).toDouble();
-                                    result[QStringLiteral("cacheColdTtftMs")] = coldTtft;
-                                    result[QStringLiteral("cacheWarmTtftMs")] = warmTtft;
-                                    result[QStringLiteral("cacheRestoredTtftMs")] = restoredTtft;
-                                    result[QStringLiteral("cacheWarmSpeedup")] =
-                                        warmTtft > 0.0 ? coldTtft / warmTtft : 0.0;
-                                    result[QStringLiteral("cacheRestoredSpeedup")] =
-                                        restoredTtft > 0.0 ? coldTtft / restoredTtft : 0.0;
-                                    const QVariantMap cacheInfo = cachyCacheInfo(profileId);
-                                    result[QStringLiteral("cacheDiskMiB")] =
-                                        cacheInfo.value(QStringLiteral("mib"));
-                                    result[QStringLiteral("cachePath")] =
-                                        cacheInfo.value(QStringLiteral("path"));
-                                }
                                 result["failed"]       = failed;
                                 if (failed) {
                                     result["failureStage"] = QStringLiteral("request");
@@ -12507,7 +12404,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                         const QString resultType = task.isSpeed
                             ? QStringLiteral("speed")
                             : QStringLiteral("quality");
-                        auto onTaskResult = [=](QVariantMap res) {
+                        benchmarkRequest(url, task.prompt, task.maxTokens, true, [=](QVariantMap res) {
                             (*stepsDone)++;
                             m_benchmarkProgress = qMin(99, (*stepsDone * 100) / qMax(1, totalSteps));
                             emit benchmarkProgressChanged();
@@ -12546,50 +12443,10 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
                             taskResults->append(res);
                             (*runTask)(ti + 1);
-                        };
-                        auto issue = [=](const QString &requestUrl) {
-                            benchmarkRequest(requestUrl, task.prompt, task.maxTokens, true,
-                                             onTaskResult, resultType);
-                        };
-                        if (task.restartBefore) {
-                            m_benchmarkStatus = QString("[%1/%2] %3 — reiniciando para restaurar cache...")
-                                .arg(idx+1).arg(profileIds.size()).arg(profName);
-                            emit benchmarkStatusChanged();
-                            stopServer();
-                            benchmarkWaitServerStopped(10000, [=]() {
-                                startServer(profileId);
-                                if (!serverRunning()) {
-                                    QVariantMap failed;
-                                    failed[QStringLiteral("failed")] = true;
-                                    failed[QStringLiteral("failureMessage")] =
-                                        QStringLiteral("No se pudo reiniciar llama-server.");
-                                    onTaskResult(failed);
-                                    return;
-                                }
-                                benchmarkWaitServerReady(
-                                    150, 150, serverBaseUrl(), m_benchmarkStatus,
-                                    [=](bool restartReady) {
-                                        if (!restartReady) {
-                                            QVariantMap failed;
-                                            failed[QStringLiteral("failed")] = true;
-                                            failed[QStringLiteral("failureMessage")] =
-                                                QStringLiteral("Servidor no quedó listo tras reinicio.");
-                                            onTaskResult(failed);
-                                            return;
-                                        }
-                                        issue(serverBaseUrl());
-                                    });
-                            });
-                        } else {
-                            issue(url);
-                        }
+                        }, resultType);
                     };
                     (*runTask)(0);
-                };
-                if (mode == QLatin1String("cache"))
-                    afterWarmup({});
-                else
-                    benchmarkRequest(url, "Say hi.", 32, true, afterWarmup);
+                });
             });
         };
 
@@ -13386,8 +13243,6 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
     payload["max_tokens"] = maxTokens;
     payload["temperature"]= 0.0;
     payload["top_p"]      = 1.0;
-    payload["cache_prompt"] = true;
-    payload["llama_user_id"] = QStringLiteral("llamacode-benchmark-cache");
     if (streaming)
         payload["stream_options"] = QJsonObject{{"include_usage", true}};
 
@@ -13427,9 +13282,7 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
 
     if (streaming) {
         struct SpeedState { QByteArray buf; qint64 ttftMs = -1; int chunks = 0;
-                            int tokens = 0; int promptTokens = 0;
-                            int evaluatedPromptTokens = 0; double promptMs = 0.0;
-                            QString response; };
+                            int tokens = 0; QString response; };
         auto state = std::make_shared<SpeedState>();
 
         connect(reply, &QNetworkReply::readyRead, this, [=]() {
@@ -13445,18 +13298,8 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                 const QJsonObject obj = QJsonDocument::fromJson(json).object();
                 // Final usage chunk (choices empty, usage populated)
                 const QJsonObject usage = obj.value("usage").toObject();
-                if (!usage.isEmpty()) {
+                if (!usage.isEmpty())
                     state->tokens = usage.value("completion_tokens").toInt(state->tokens);
-                    state->promptTokens = usage.value("prompt_tokens").toInt(state->promptTokens);
-                }
-                const QJsonObject timings = obj.value(QStringLiteral("timings")).toObject();
-                if (!timings.isEmpty()) {
-                    state->evaluatedPromptTokens =
-                        timings.value(QStringLiteral("prompt_n")).toInt(
-                            state->evaluatedPromptTokens);
-                    state->promptMs = timings.value(QStringLiteral("prompt_ms"))
-                                          .toDouble(state->promptMs);
-                }
                 const QString delta = obj.value("choices").toArray().first().toObject()
                     .value("delta").toObject().value("content").toString();
                 if (!delta.isEmpty()) {
@@ -13483,12 +13326,6 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             r["tokens"]     = tokens;
             r["elapsed_ms"] = totalMs;
             r["response"]   = state->response;
-            r["promptTokens"] = state->promptTokens;
-            r["evaluatedPromptTokens"] = state->evaluatedPromptTokens;
-            r["cachedPromptTokens"] =
-                qMax(0, state->promptTokens - state->evaluatedPromptTokens);
-            r["cacheHit"] = r.value("cachedPromptTokens").toInt() > 0;
-            r["promptMs"] = state->promptMs;
             r["failed"]     = failed;
             if (failed) {
                 r["failureMessage"] = *hardTimedOut

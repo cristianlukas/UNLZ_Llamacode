@@ -22,7 +22,6 @@ Item {
     property bool mtpEnabled: false
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool smokeTestRunning: false
-    property string cachyCacheStatus: ""
     // Política: siempre LlamaAgent. Sin selector de harness; sin "none"/"opencode".
     property string harnessAdapter: "llamaagent"
     property string harnessProfileId: ""
@@ -154,8 +153,7 @@ Item {
             "--alias": true, "--n-predict": true, "--cache-type-v": true, "--temp": true,
             "--top-p": true, "--top-k": true, "--min-p": true,
             "--repeat-penalty": true, "--presence-penalty": true,
-            "--cache-ram": true, "--cache-reuse": true, "--cache-ssd": true,
-            "--cache-ssd-cold-maxsize": true
+            "--cache-ram": true, "--cache-reuse": true
         }
         const boolFlags = { "--no-context-shift": true, "--context-shift": true, "--metrics": true, "--no-warmup": true }
         const out = []
@@ -344,7 +342,6 @@ Item {
         contextShiftCheck.checked = true
         metricsCheck.checked = false; noWarmupCheck.checked = false
         cacheRamField.text = ""; cacheReuseField.text = ""
-        cacheSsdField.text = ""; cacheSsdMaxField.text = ""
         for (let i = 0; i < rawExtra.length; ++i) {
             const cur = rawExtra[i]
             const nxt = (i + 1 < rawExtra.length) ? rawExtra[i + 1] : ""
@@ -358,8 +355,6 @@ Item {
             if (cur === "--presence-penalty") { presencePenaltyField.text = nxt; i += 1; continue }
             if (cur === "--cache-ram") { cacheRamField.text = nxt; i += 1; continue }
             if (cur === "--cache-reuse") { cacheReuseField.text = nxt; i += 1; continue }
-            if (cur === "--cache-ssd") { cacheSsdField.text = nxt; i += 1; continue }
-            if (cur === "--cache-ssd-cold-maxsize") { cacheSsdMaxField.text = nxt; i += 1; continue }
             if (cur === "--no-context-shift") { contextShiftCheck.checked = false; continue }
             if (cur === "--context-shift")    { contextShiftCheck.checked = true;  continue }
             if (cur === "--metrics") { metricsCheck.checked = true; continue }
@@ -395,8 +390,6 @@ Item {
         if (noWarmupCheck.checked) out.push("--no-warmup")
         if (cacheRamField.text.trim().length > 0) out.push(rf("--cache-ram"), cacheRamField.text.trim())
         if (cacheReuseField.text.trim().length > 0) out.push(rf("--cache-reuse"), cacheReuseField.text.trim())
-        if (cacheSsdField.text.trim().length > 0) out.push(rf("--cache-ssd"), cacheSsdField.text.trim())
-        if (cacheSsdMaxField.text.trim().length > 0) out.push(rf("--cache-ssd-cold-maxsize"), cacheSsdMaxField.text.trim())
         const manual = splitArgs(manualExtraArgsArea.text)
         for (let i = 0; i < manual.length; ++i)
             out.push(manual[i].startsWith('-') ? rf(manual[i]) : manual[i])
@@ -1263,10 +1256,6 @@ Item {
                         LcTextField { id: cacheRamField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
                         Text { text: "cache-reuse"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField { id: cacheReuseField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly }
-                        Text { text: "cache-ssd (CachyLlama)"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: cacheSsdField; Layout.fillWidth: true; placeholderText: "vacío = automático" }
-                        Text { text: "cache-ssd límite MiB"; color: Theme.textSecondary; font.pixelSize: 12 }
-                        LcTextField { id: cacheSsdMaxField; Layout.fillWidth: true; inputMethodHints: Qt.ImhDigitsOnly; placeholderText: "automático" }
                         Text { text: "power-limit (W)"; color: Theme.textSecondary; font.pixelSize: 12 }
                         LcTextField {
                             id: powerLimitField
@@ -1296,24 +1285,6 @@ Item {
                     CheckBox { id: contextShiftCheck;   text: "context-shift";    checked: true; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                     CheckBox { id: metricsCheck; text: "metrics"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
                     CheckBox { id: noWarmupCheck; text: "no-warmup"; contentItem: Text { text: parent.text; color: Theme.textSecondary; leftPadding: parent.indicator.width + 6 } }
-                    LcButton {
-                        text: "Limpiar caché CachyLlama"
-                        secondary: true
-                        enabled: selectedLaunchId.length > 0 && !App.serverRunning
-                        onClicked: {
-                            const before = App.cachyCacheInfo(selectedLaunchId)
-                            const ok = App.clearCachyCache(selectedLaunchId)
-                            cachyCacheStatus = ok
-                                ? ("Caché limpiada (" + Number(before.mib || 0).toFixed(1) + " MiB)")
-                                : "Este perfil no usa una caché CachyLlama administrada"
-                        }
-                    }
-                    Text {
-                        visible: cachyCacheStatus.length > 0
-                        text: cachyCacheStatus
-                        color: Theme.textMuted
-                        font.pixelSize: 11
-                    }
                 }
 
                 // ── Agente ───────────────────────────────────────────────────

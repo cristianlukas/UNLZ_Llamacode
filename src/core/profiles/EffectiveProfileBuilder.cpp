@@ -3,10 +3,6 @@
 #include "../GGUFScanner.h"
 #include <QFileInfo>
 #include <QRegularExpression>
-#include <QCryptographicHash>
-#include <QDir>
-#include <QStandardPaths>
-#include <QStorageInfo>
 #include <limits>
 
 #ifdef Q_OS_WIN
@@ -259,34 +255,6 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         }
     }
 
-    const bool cachy = ctx.binary.flavor.compare(QStringLiteral("cachyllama"),
-                                                  Qt::CaseInsensitive) == 0;
-    const QString cacheSsdFlag = ctx.binary.resolveFlag(QStringLiteral("--cache-ssd"));
-    if (cachy && ctx.binary.supportsFlag(cacheSsdFlag)
-        && !args.contains(cacheSsdFlag)
-        && !args.contains(QStringLiteral("--cache-ssd"))) {
-        const QString path = cacheSsdPath(ctx);
-        QDir().mkpath(path);
-        const int diskMiB = recommendedCacheSsdMiB(QStorageInfo(path).bytesAvailable());
-        if (diskMiB > 0) {
-            args << cacheSsdFlag << QDir::toNativeSeparators(path);
-            auto addCachy = [&](const QString &flag, const QString &value) {
-                const QString resolved = ctx.binary.resolveFlag(flag);
-                if (ctx.binary.supportsFlag(resolved) && !args.contains(resolved))
-                    args << resolved << value;
-            };
-            addCachy(QStringLiteral("--cache-ssd-checkpoints"), QStringLiteral("64"));
-            addCachy(QStringLiteral("--cache-ssd-max-conversations"),
-                     QString::number(qMax(16, ctx.runtime.parallelSlots * 4)));
-            addCachy(QStringLiteral("--cache-ssd-cold-maxsize"), QString::number(diskMiB));
-            addCachy(QStringLiteral("--cache-ssd-system-prompts"), QStringLiteral("8"));
-            addCachy(QStringLiteral("--cache-ssd-system-max-days"), QStringLiteral("30"));
-            result.warnings.append(QStringLiteral(
-                "CachyLlama SSD cache: %1 (límite %2 MiB).")
-                .arg(QDir::toNativeSeparators(path)).arg(diskMiB));
-        }
-    }
-
     result.effectiveArgs = args;
     result.effectiveEnv = env;
     result.binaryPath = ctx.binary.path;
@@ -314,28 +282,6 @@ int EffectiveProfileBuilder::recommendedCacheRamMiB(quint64 totalMiB,
         return 0;
     return int(qMin<quint64>(budget,
                              quint64((std::numeric_limits<int>::max)())));
-}
-
-int EffectiveProfileBuilder::recommendedCacheSsdMiB(quint64 availableBytes)
-{
-    const quint64 availableMiB = availableBytes / (1024ULL * 1024ULL);
-    if (availableMiB < 16 * 1024)
-        return 0;
-    // Usar como máximo 25% del espacio libre, entre 8 y 128 GiB.
-    const quint64 budget = qBound<quint64>(8 * 1024, availableMiB / 4,
-                                           128 * 1024);
-    return int(budget);
-}
-
-QString EffectiveProfileBuilder::cacheSsdPath(const Context &ctx)
-{
-    const QString identity = ctx.catalogModel.absolutePath + QLatin1Char('|')
-                             + ctx.catalogModel.fileName + QLatin1Char('|')
-                             + ctx.binary.versionHint;
-    const QString key = QString::fromLatin1(
-        QCryptographicHash::hash(identity.toUtf8(), QCryptographicHash::Sha256).toHex().left(16));
-    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation))
-        .filePath(QStringLiteral("cache/cachyllama/%1").arg(key));
 }
 
 void EffectiveProfileBuilder::applyReasoningControl(const Context &ctx,

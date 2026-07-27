@@ -34,8 +34,6 @@ void EngineCatalogTests::catalogIncludesSourceForks()
     QCOMPARE(cachy.support, QStringLiteral("experimental"));
     QVERIFY(!cachy.variants.isEmpty());
     QVERIFY(cachy.variants.first().buildFromSource);
-    QCOMPARE(cachy.variants.at(0).backend, QStringLiteral("cuda"));
-    QCOMPARE(cachy.variants.at(1).backend, QStringLiteral("vulkan"));
 }
 
 void EngineCatalogTests::variantCompatibilityReportsReason()

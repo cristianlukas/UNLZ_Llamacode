@@ -403,7 +403,6 @@ Item {
         else modelTarget.checked = true
         const m = String(App.readSetting("benchMode", "short"))
         if (m === "custom") customMode.checked = true
-        else if (m === "cache") cacheMode.checked = true
         else if (m === "full") fullMode.checked = true
         else shortMode.checked = true
         App.thinkingEnabled = (App.readSetting("benchThinking", App.thinkingEnabled) === true
@@ -470,32 +469,6 @@ Item {
                                 text: "Modo Chat"
                                 color: Theme.theme === "oled" ? "white" : Theme.textPrimary
                                 font.pixelSize: 12
-                            }
-                        }
-                        Item { height: 2 }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 5
-                            TapHandler { onTapped: cacheMode.checked = true }
-                            RadioButton {
-                                id: cacheMode
-                                text: ""
-                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "cache")
-                                ButtonGroup.group: modeGroup
-                                padding: 0
-                                leftPadding: 0
-                                rightPadding: 0
-                                Layout.minimumWidth: implicitIndicatorWidth
-                                Layout.preferredWidth: implicitIndicatorWidth
-                                Layout.maximumWidth: implicitIndicatorWidth
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: "Cache: frío → caliente → restaurado tras reinicio"
-                                color: Theme.textSecondary
-                                font.pixelSize: 12
-                                wrapMode: Text.Wrap
                             }
                         }
                         Item { height: 2 }
@@ -922,9 +895,7 @@ Item {
                                                                  agentTarget.checked ? "agent" : "model", timeoutSpin.value,
                                                                  agentTarget.checked ? agentProfileCombo.currentValue : "")
                                 } else {
-                                    App.startBenchmark(root.selectedIds,
-                                                       cacheMode.checked ? "cache" : (shortMode.checked ? "short" : "full"),
-                                                       passesSpin.value,
+                                    App.startBenchmark(root.selectedIds, shortMode.checked ? "short" : "full", passesSpin.value,
                                                        agentTarget.checked ? "agent" : "model", timeoutSpin.value,
                                                        agentTarget.checked ? agentProfileCombo.currentValue : "")
                                 }

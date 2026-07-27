@@ -166,13 +166,7 @@ Item {
 
                         property var firstVariant: (modelData.variants && modelData.variants.length > 0)
                                                    ? modelData.variants[0] : ({})
-                        property var installVariant: {
-                            const variants = modelData.variants || []
-                            for (let i = 0; i < variants.length; ++i)
-                                if (variants[i].compatible) return variants[i]
-                            return firstVariant
-                        }
-                        property bool sourceBuild: installVariant.buildFromSource ?? false
+                        property bool sourceBuild: firstVariant.buildFromSource ?? false
 
                         ColumnLayout {
                             anchors.fill: parent
@@ -207,8 +201,7 @@ Item {
                                 Layout.fillWidth: true
                                 Text {
                                     Layout.fillWidth: true
-                                    text: sourceBuild ? ("Build " + (installVariant.label || "from source"))
-                                                      : (installVariant.label || "Prebuilt / manual")
+                                    text: sourceBuild ? "Build from source" : (firstVariant.label || "Prebuilt / manual")
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                     elide: Text.ElideRight
@@ -217,7 +210,7 @@ Item {
                                     text: sourceBuild ? "Compilar" : "Instalar"
                                     secondary: !modelData.recommended
                                     enabled: !App.installingOfficialBinary && modelData.compatible
-                                    onClicked: App.installCatalogEngine(modelData.id, installVariant.id || "")
+                                    onClicked: App.installCatalogEngine(modelData.id)
                                 }
                             }
                         }
