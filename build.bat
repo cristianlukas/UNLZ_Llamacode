@@ -68,17 +68,24 @@ REM ya descargadas no consultan GitHub en cada regeneración.
 set NEED_CONFIG=0
 if not exist CMakeCache.txt set NEED_CONFIG=1
 if not exist CMakeFiles\VerifyGlobs.cmake set NEED_CONFIG=1
-if "%NEED_CONFIG%"=="1" (
-    if exist _deps\qtkeychain-subbuild\CMakeCache.txt (
-        set "DEP_GENERATOR="
-        for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" _deps\qtkeychain-subbuild\CMakeCache.txt') do set "DEP_GENERATOR=%%G"
-        if defined DEP_GENERATOR if /I not "!DEP_GENERATOR!"=="%GENERATOR%" (
-            echo [INFO] Removing incompatible generated QtKeychain build metadata.
-            rmdir /s /q _deps\qtkeychain-subbuild
-            rmdir /s /q _deps\qtkeychain-build
-        )
+
+REM Un subbuild de QtKeychain de OTRO generador mata el configure entero ("Does
+REM not match the generator used previously"). Se revisa SIEMPRE, no solo al
+REM crear el arbol: la mezcla aparece en arboles ya configurados cuando dos
+REM scripts detectaron VS distinto.
+if exist _deps\qtkeychain-subbuild\CMakeCache.txt (
+    set "DEP_GENERATOR="
+    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" _deps\qtkeychain-subbuild\CMakeCache.txt') do set "DEP_GENERATOR=%%G"
+    if defined DEP_GENERATOR if /I not "!DEP_GENERATOR!"=="!GENERATOR!" (
+        echo [INFO] Removing incompatible generated QtKeychain build metadata.
+        rmdir /s /q _deps\qtkeychain-subbuild
+        rmdir /s /q _deps\qtkeychain-build
+        set NEED_CONFIG=1
     )
-    "%CMAKE%" .. -G "%GENERATOR%" -A x64 ^
+)
+
+if "%NEED_CONFIG%"=="1" (
+    "%CMAKE%" .. -G "!GENERATOR!" -A x64 ^
         -DCMAKE_PREFIX_PATH="%QT_DIR%" ^
         -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
     if errorlevel 1 (

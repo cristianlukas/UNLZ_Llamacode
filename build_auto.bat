@@ -14,6 +14,7 @@ if not exist "%CMAKE%" set CMAKE=C:\Program Files (x86)\Microsoft Visual Studio\
 set GENERATOR=Visual Studio 16 2019
 if exist "C:\BuildTools2022\MSBuild\Current\Bin\MSBuild.exe" set GENERATOR=Visual Studio 17 2022
 if exist "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" set GENERATOR=Visual Studio 17 2022
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe" set GENERATOR=Visual Studio 17 2022
 
 if not exist "%CMAKE%" (
     echo [ERROR] CMake not found.
@@ -72,21 +73,43 @@ if exist build (
 if not exist build mkdir build
 cd build
 
+REM Generador: si el arbol ya existe, manda el suyo. Migrarlo a la fuerza deja
+REM los subbuilds de FetchContent en el generador viejo y el configure aborta.
 if exist CMakeCache.txt (
-    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" CMakeCache.txt') do set "CACHE_GENERATOR=%%G"
-    if defined CACHE_GENERATOR (
-        if /I not "!CACHE_GENERATOR!"=="%GENERATOR%" (
-            echo [INFO] Generator changed from "!CACHE_GENERATOR!" to "%GENERATOR%". Resetting CMake cache...
-            del /f /q CMakeCache.txt >nul 2>&1
-            rmdir /s /q CMakeFiles >nul 2>&1
-        )
+    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" CMakeCache.txt') do set "GENERATOR=%%G"
+)
+if not exist CMakeCache.txt if exist _deps\qtkeychain-subbuild\CMakeCache.txt (
+    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" _deps\qtkeychain-subbuild\CMakeCache.txt') do set "GENERATOR=%%G"
+)
+
+set NEED_CONFIG=0
+if not exist CMakeCache.txt set NEED_CONFIG=1
+if not exist CMakeFiles\VerifyGlobs.cmake set NEED_CONFIG=1
+
+REM Un subbuild de QtKeychain de OTRO generador mata el configure entero ("Does
+REM not match the generator used previously"). Se revisa SIEMPRE, no solo al
+REM crear el arbol: la mezcla aparece en arboles ya configurados cuando dos
+REM scripts detectaron VS distinto.
+if exist _deps\qtkeychain-subbuild\CMakeCache.txt (
+    set "DEP_GENERATOR="
+    for /f "tokens=2 delims==" %%G in ('findstr /b /c:"CMAKE_GENERATOR:INTERNAL=" _deps\qtkeychain-subbuild\CMakeCache.txt') do set "DEP_GENERATOR=%%G"
+    if defined DEP_GENERATOR if /I not "!DEP_GENERATOR!"=="!GENERATOR!" (
+        echo [INFO] Removing incompatible generated QtKeychain build metadata.
+        rmdir /s /q _deps\qtkeychain-subbuild
+        rmdir /s /q _deps\qtkeychain-build
+        set NEED_CONFIG=1
     )
 )
 
 REM VS is a multi-config generator: configure once, build per --config below.
-"%CMAKE%" .. -G "%GENERATOR%" -A x64 ^
-    -DCMAKE_PREFIX_PATH="%QT_DIR%"
-if errorlevel 1 ( echo. & echo === Configure FAILED === & cd .. & goto :done_fail )
+if "%NEED_CONFIG%"=="1" (
+    "%CMAKE%" .. -G "!GENERATOR!" -A x64 ^
+        -DCMAKE_PREFIX_PATH="%QT_DIR%" ^
+        -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
+    if errorlevel 1 ( echo. & echo === Configure FAILED === & cd .. & goto :done_fail )
+) else (
+    echo [INFO] Reusing CMake cache; ZERO_CHECK reconfigura solo si hace falta.
+)
 
 cd ..
 

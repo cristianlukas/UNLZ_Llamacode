@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $build = [IO.File]::ReadAllText((Join-Path $root 'build.bat'))
+$auto  = [IO.File]::ReadAllText((Join-Path $root 'build_auto.bat'))
 $tests = [IO.File]::ReadAllText((Join-Path $root 'tests.bat'))
 $fails = 0
 
@@ -22,6 +23,24 @@ Check (-not $build.Contains('Generator changed from')) 'existing build trees are
 Check ($build.Contains('_deps\qtkeychain-subbuild\CMakeCache.txt')) 'interrupted configure reuses dependency generator'
 Check ($build.Contains('if not exist CMakeFiles\VerifyGlobs.cmake set NEED_CONFIG=1')) 'partial configure is repaired'
 Check ($build.Contains('Removing incompatible generated QtKeychain build metadata')) 'partial mixed-generator dependency is repaired'
+
+# build_auto.bat es el que corren las IAs/CI: misma politica de generador que
+# build.bat. Divergio una vez y el configure moria con "Does not match the
+# generator used previously" solo por ese lado.
+Write-Host '== build_auto.bat shares the generator policy =='
+Check ($auto.Contains('Program Files (x86)\Microsoft Visual Studio\2022')) 'VS 2022 x86 install root is detected'
+Check (-not $auto.Contains('Generator changed from')) 'existing build trees are not forcibly migrated'
+Check ($auto.Contains('Removing incompatible generated QtKeychain build metadata')) 'mixed-generator dependency is repaired'
+Check ($auto.Contains('-DFETCHCONTENT_UPDATES_DISCONNECTED=ON')) 'dependency updates are disconnected after fetch'
+Check ($auto.Contains('if not exist CMakeFiles\VerifyGlobs.cmake set NEED_CONFIG=1')) 'partial configure is repaired'
+
+# El chequeo del subbuild va FUERA del bloque NEED_CONFIG: un arbol ya
+# configurado tambien puede tener el _deps del generador viejo.
+foreach ($pair in @(@('build.bat', $build), @('build_auto.bat', $auto))) {
+    $depIdx = $pair[1].IndexOf('_deps\qtkeychain-subbuild\CMakeCache.txt', $pair[1].IndexOf('set NEED_CONFIG=0'))
+    $cfgIdx = $pair[1].IndexOf('if "%NEED_CONFIG%"=="1" (')
+    Check ($depIdx -gt 0 -and $depIdx -lt $cfgIdx) "$($pair[0]) repairs the dependency generator before deciding to configure"
+}
 
 if ($fails) { throw "$fails build-script regression(s) failed" }
 Write-Host 'All build-script regressions passed.'
