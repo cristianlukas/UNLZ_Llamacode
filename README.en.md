@@ -173,7 +173,7 @@ depends on the model, quant, context, batch, backend and machine thermals.
 | 6–8 GB VRAM GPU + 16 GB RAM | `gpu` or `partial_offload` | 7B–9B `Q4_K_M`, compact coder models | 8k–16k | Good entry point for a local agent |
 | 12 GB VRAM GPU + 32 GB RAM | `gpu` | 9B–14B `Q4_K_M` / `Q5_K_M` | 16k–32k | Recommended for daily use |
 | 16 GB VRAM GPU + 32–64 GB RAM | `gpu` | Quantized 14B–32B, small MoE models | 16k–32k | More stable agent and RAG workflows |
-| 24 GB+ VRAM GPU + 64 GB RAM | `gpu` | Quantized 32B+ or higher quants | 32k+ | Best margin for long context and multitasking |
+| 24 GB+ VRAM GPU + 64 GB RAM | `partial_offload` | KAT Coder 2.5 35B-A3B `Q4_K_M` (coding default) | 32k | E2E validated: same final quality as base Qwen at about 4× lower median time |
 
 `partial_offload` combines VRAM and RAM when the full model does not fit on the GPU,
 at the cost of speed. On notebooks or low-memory machines, start with 8k context,

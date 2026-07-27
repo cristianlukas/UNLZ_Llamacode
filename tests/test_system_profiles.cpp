@@ -49,6 +49,7 @@ private slots:
     void bundle_draftMtpAlwaysDeclaresDraftModel();
     void bundle_gemma4TemplateKeepsLlamaCppMarkers();
     void manager_smallProfilesAreConservative();
+    void manager_defaultCodingProfileUsesKatCoder();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -286,15 +287,55 @@ void SystemProfilesTests::manager_smallProfilesAreConservative()
     QVERIFY(sawCpuKind);
 }
 
+void SystemProfilesTests::manager_defaultCodingProfileUsesKatCoder()
+{
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-vram-20"));
+    QCOMPARE(launch.value(QStringLiteral("name")).toString(),
+             QStringLiteral("[coding] 20GB · KAT Coder 2.5 35B-A3B Q4_K_M"));
+
+    const QVariantMap model =
+        pm.getModelProfile(launch.value(QStringLiteral("modelProfileId")).toString());
+    const QString modelsDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
+    const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    const QString expectedModelId = QUuid::createUuidV5(
+        ns, QString(modelsDir
+                    + "/KAT-Coder-V2.5-Dev-Q4_K_M-GGUF/"
+                      "Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf").toUtf8())
+                                        .toString(QUuid::WithoutBraces);
+    QCOMPARE(model.value(QStringLiteral("modelId")).toString(), expectedModelId);
+
+    const QVariantMap runtime =
+        pm.getRuntimePreset(launch.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 32768);
+    QCOMPARE(runtime.value(QStringLiteral("gpuLayers")).toInt(), 30);
+    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 2048);
+    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q4_0"));
+
+    const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+    const auto valueAfter = [&args](const QString &flag) {
+        const int index = args.indexOf(flag);
+        return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
+    };
+    QCOMPARE(valueAfter(QStringLiteral("--temp")), QStringLiteral("0.60"));
+    QCOMPARE(valueAfter(QStringLiteral("--top-p")), QStringLiteral("0.95"));
+    QCOMPARE(valueAfter(QStringLiteral("--top-k")), QStringLiteral("20"));
+    QCOMPARE(valueAfter(QStringLiteral("--repeat-penalty")), QStringLiteral("1.0"));
+    QCOMPARE(valueAfter(QStringLiteral("--presence-penalty")), QStringLiteral("0.0"));
+    QCOMPARE(valueAfter(QStringLiteral("--reasoning")), QStringLiteral("on"));
+}
+
 void SystemProfilesTests::controller_recommendsClosestTier()
 {
     AppController app;
     // 24GB: maxq/fastgemma son extra (showcase), así que el mejor tier no-extra
-    // ≤VRAM es el de 20GB (Qwen3.6-27B dense).
+    // ≤VRAM es el default coding KAT de 20GB.
     app.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
              QStringLiteral("sys-vram-20"));
-    // RTX 3080 20GB: tier dedicado 27B dense.
+    // RTX 3080 20GB: mismo tier KAT con offload parcial validado.
     app.setHardwareSummaryForTest(20.0, 64.0, QStringLiteral("NVIDIA GeForce RTX 3080"));
     QCOMPARE(app.recommendedSystemProfile().value("launchId").toString(),
              QStringLiteral("sys-vram-20"));
