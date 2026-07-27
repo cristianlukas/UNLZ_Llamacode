@@ -405,7 +405,10 @@ public:
     // Instala el build MTP (Anbeeld/beellama.cpp, DFlash/MTP) — solo Windows CUDA.
     // Para perfiles de sistema en máquinas NVIDIA: habilita los flags MTP.
     Q_INVOKABLE void installMtpBinary();
-    Q_INVOKABLE void installCatalogEngine(const QString &engineId);
+    Q_INVOKABLE void installCatalogEngine(const QString &engineId,
+                                           const QString &variantId = QString());
+    Q_INVOKABLE QVariantMap cachyCacheInfo(const QString &launchProfileId);
+    Q_INVOKABLE bool clearCachyCache(const QString &launchProfileId);
     Q_INVOKABLE void cancelOfficialBinaryInstall();
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
@@ -1193,7 +1196,8 @@ private:
     bool    m_installRequireCuda = false;
     bool    m_installRequireCpu = false;
     void startBinaryInstall();   // cuerpo común (antes en installOfficialBinary)
-    void startSourceBuildInstall(const EngineCatalogEntry &entry);
+    void startSourceBuildInstall(const EngineCatalogEntry &entry,
+                                 const EngineVariant &variant);
     QProcess *m_smokeTestProc = nullptr;
     QTimer   *m_smokeTestTimer = nullptr;
     QString   m_smokeTestLog;

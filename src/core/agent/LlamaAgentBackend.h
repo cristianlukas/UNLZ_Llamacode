@@ -219,6 +219,8 @@ public:
     QJsonObject buildTextToolPayloadForTest(const QJsonObject &nativePayload) const {
         return buildTextToolPayload(nativePayload);
     }
+    static QJsonObject cacheIdentityPayload(QJsonObject payload, bool localBackend,
+                                            const QString &sessionId);
 
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();

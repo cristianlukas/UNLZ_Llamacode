@@ -15,6 +15,8 @@ public:
         int generatedTokens = 0;
         double promptMs = 0.0;
         double generatedMs = 0.0;
+        int cachedPromptTokens = 0;
+        bool cacheHit = false;
         double wallMs = 0.0;
         int toolCalls = 0;
         qint64 toolBytes = 0;

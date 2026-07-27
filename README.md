@@ -285,8 +285,11 @@ Cuando el probe del binario confirma soporte para `--cache-ram`, calcula
 automáticamente un presupuesto conservador usando la RAM disponible, el tamaño del
 modelo y margen para el sistema; un valor manual en el perfil siempre tiene
 prioridad. El catálogo incluye además **CachyLlama** como motor experimental
-compilable desde fuente para evaluar checkpoints KV persistentes sin reemplazar el
-motor oficial.
+compilable desde fuente en CUDA o Vulkan para evaluar checkpoints KV persistentes
+sin reemplazar el motor oficial. En ese motor, la app crea una caché SSD aislada
+por modelo/versión, limita su tamaño según el espacio libre y permite inspeccionarla
+o limpiarla desde el perfil. Los identificadores de conversación y campos
+específicos de `llama-server` se omiten para proveedores cloud.
 
 La delegación multi-agente ajusta automáticamente su concurrencia al perfil activo:
 respeta los slots de `llama-server`, reduce el fan-out con contextos largos y aplica
@@ -1317,6 +1320,12 @@ Python, TypeScript/Node y C++ y aceptación por archivos/comandos. Esto permite
 comparar versiones con la misma carga y guardar calidad, tiempo, tokens y tools. El
 primer resultado exitoso por suite/perfil/target se adopta como baseline automático;
 los siguientes guardan su referencia y deltas de tiempo y calidad.
+
+El modo **Cache** ejecuta el mismo prefijo en tres condiciones: evaluación fría,
+repetición caliente y restauración tras reiniciar `llama-server`. Antes de la fase
+fría limpia únicamente la carpeta CachyLlama aislada del perfil. Los resultados
+incluyen TTFT, tiempo de prompt, tokens evaluados y tokens reutilizados, para
+comparar CachyLlama contra `llama.cpp --cache-ram` bajo la misma carga.
 
 ### Persistencia y vista
 

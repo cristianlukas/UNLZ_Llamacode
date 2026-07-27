@@ -23,6 +23,8 @@ public:
     static EffectiveProfile build(const Context &ctx);
     static int recommendedCacheRamMiB(quint64 totalMiB, quint64 availableMiB,
                                       quint64 modelBytes);
+    static int recommendedCacheSsdMiB(quint64 availableBytes);
+    static QString cacheSsdPath(const Context &ctx);
 
 private:
     static void applyBackend(const BackendProfile &bp,

@@ -422,6 +422,21 @@ LlamaAgentBackend::LlamaAgentBackend(QObject *parent) : IAgentBackend(parent)
 
 LlamaAgentBackend::~LlamaAgentBackend() { stop(); teardownWorker(); }
 
+QJsonObject LlamaAgentBackend::cacheIdentityPayload(QJsonObject payload,
+                                                     bool localBackend,
+                                                     const QString &sessionId)
+{
+    if (!localBackend) {
+        payload.remove(QStringLiteral("cache_prompt"));
+        payload.remove(QStringLiteral("llama_user_id"));
+        return payload;
+    }
+    payload.insert(QStringLiteral("cache_prompt"), true);
+    if (!sessionId.isEmpty())
+        payload.insert(QStringLiteral("llama_user_id"), sessionId);
+    return payload;
+}
+
 // ───────────────────────────── Ciclo de vida ─────────────────────────────
 void LlamaAgentBackend::start(const AgentContext &ctx)
 {
@@ -653,6 +668,7 @@ void LlamaAgentBackend::startCompaction(int head, int keepFrom)
         {QStringLiteral("cache_prompt"), true},
         {QStringLiteral("llama_user_id"), m_sessionId}
     };
+    payload = cacheIdentityPayload(payload, m_ctx.localBackend, m_sessionId);
 
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
     QNetworkRequest req((QUrl(url)));
@@ -744,6 +760,7 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
         {QStringLiteral("cache_prompt"), true},
         {QStringLiteral("llama_user_id"), sid}
     };
+    payload = cacheIdentityPayload(payload, m_ctx.localBackend, sid);
 
     const QString url = m_ctx.serverBaseUrl + QStringLiteral("/v1/chat/completions");
     QNetworkRequest req((QUrl(url)));
@@ -1841,6 +1858,7 @@ void LlamaAgentBackend::prefillWarmup()
         m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId,
         m_temperature, m_thinkingEnabled);
     payload.insert(QStringLiteral("llama_user_id"), m_sessionId);
+    payload = cacheIdentityPayload(payload, m_ctx.localBackend, m_sessionId);
     if (usingTextTools()) {
         payload = buildTextToolPayload(payload);
         payload[QStringLiteral("max_tokens")] = 1;
@@ -1954,6 +1972,7 @@ void LlamaAgentBackend::runCompletion()
         {QStringLiteral("stream_options"), QJsonObject{{QStringLiteral("include_usage"), true}}}
     };
     if (m_temperature >= 0.0) payload.insert(QStringLiteral("temperature"), m_temperature);
+    payload = cacheIdentityPayload(payload, m_ctx.localBackend, m_sessionId);
     // Razonamiento controlado por el toggle global de la app, no por el perfil.
     payload.insert(QStringLiteral("reasoning_budget"), m_thinkingEnabled ? -1 : 0);
     payload.insert(QStringLiteral("chat_template_kwargs"),

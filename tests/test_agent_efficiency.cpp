@@ -30,6 +30,12 @@ void AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
     QCOMPARE(a.promptTokens, 100);
     QCOMPARE(a.generatedTokens, 20);
 
+    QJsonObject cached{{"timings", QJsonObject{{"prompt_n", 4}, {"prompt_ms", 2.0}}},
+                       {"usage", QJsonObject{{"prompt_tokens", 100}}}};
+    const auto c = AgentEfficiency::Request::fromResponse(cached, "execute", 5.0);
+    QCOMPARE(c.cachedPromptTokens, 96);
+    QVERIFY(c.cacheHit);
+
     QJsonObject cloud{{"usage", QJsonObject{{"prompt_tokens", 60}, {"completion_tokens", 10}}}};
     auto b = AgentEfficiency::Request::fromResponse(cloud, "plan", 90.0);
     QCOMPARE(b.promptTokens, 60);
@@ -38,11 +44,14 @@ void AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
 
 void AgentEfficiencyTests::metrics_summarizesAndCompares()
 {
-    QVariantList rows{QVariantMap{{"phase", "explore"}, {"promptTokens", 100}, {"wallMs", 50.0}},
+    QVariantList rows{QVariantMap{{"phase", "explore"}, {"promptTokens", 100},
+                                  {"cachedPromptTokens", 80}, {"cacheHit", true}, {"wallMs", 50.0}},
                       QVariantMap{{"phase", "plan"}, {"promptTokens", 50}, {"wallMs", 25.0}}};
     const QVariantMap total = AgentEfficiency::summarize(rows);
     QCOMPARE(total.value("promptTokens").toLongLong(), 150);
     QCOMPARE(total.value("phases").toMap().size(), 2);
+    QCOMPARE(total.value("cachedPromptTokens").toLongLong(), 80);
+    QCOMPARE(total.value("cacheHitRate").toDouble(), 0.5);
     const QVariantMap delta = AgentEfficiency::compare(total,
         QVariantMap{{"promptTokens", 120}, {"wallMs", 60.0}});
     QCOMPARE(delta.value("promptTokensChangePct").toDouble(), -20.0);

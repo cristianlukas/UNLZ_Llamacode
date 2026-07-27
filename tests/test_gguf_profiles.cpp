@@ -56,6 +56,7 @@ private slots:
     void runtimePreset_roundtripsTensorOverrides();
     void cacheRamBudget_isAdaptiveAndConservative();
     void builder_autoAddsSupportedCacheRam();
+    void cacheSsdBudgetAndPath_areBoundedAndModelIsolated();
 };
 
 void CoreTests::inferFamily_data()
@@ -302,6 +303,25 @@ void CoreTests::builder_autoAddsSupportedCacheRam()
     QCOMPARE(manual.effectiveArgs.count(QStringLiteral("--cache-ram")), 1);
     const int manualIdx = manual.effectiveArgs.indexOf(QStringLiteral("--cache-ram"));
     QCOMPARE(manual.effectiveArgs.value(manualIdx + 1), QStringLiteral("6144"));
+}
+
+void CoreTests::cacheSsdBudgetAndPath_areBoundedAndModelIsolated()
+{
+    QCOMPARE(EffectiveProfileBuilder::recommendedCacheSsdMiB(8ULL * 1024 * 1024 * 1024), 0);
+    QCOMPARE(EffectiveProfileBuilder::recommendedCacheSsdMiB(64ULL * 1024 * 1024 * 1024),
+             16 * 1024);
+    QCOMPARE(EffectiveProfileBuilder::recommendedCacheSsdMiB(1024ULL * 1024 * 1024 * 1024),
+             128 * 1024);
+
+    auto a = makeCtx();
+    a.binary.flavor = QStringLiteral("cachyllama");
+    a.catalogModel.fileName = QStringLiteral("model-a.gguf");
+    auto b = a;
+    b.catalogModel.fileName = QStringLiteral("model-b.gguf");
+    const QString pa = EffectiveProfileBuilder::cacheSsdPath(a);
+    const QString pb = EffectiveProfileBuilder::cacheSsdPath(b);
+    QVERIFY(pa.contains(QStringLiteral("cachyllama")));
+    QVERIFY(pa != pb);
 }
 
 void CoreTests::builder_dropsUnsupportedFlag()

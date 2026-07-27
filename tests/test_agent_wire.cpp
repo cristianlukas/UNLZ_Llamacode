@@ -44,6 +44,7 @@ private slots:
     void failureSpiralDetectsEquivalentErrorsAndResetsOnProgress();
     void streamRepetitionDetectsLongTripleBlockOnly();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
+    void cacheIdentity_isLocalOnlyAndSessionIsolated();
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
     void isDestructiveAction_gatesShellDesktopMemory();
 };
@@ -691,6 +692,25 @@ void AgentWireTests::visibleAnswer_stripsThinkButSalvagesWhenEmpty()
              QStringLiteral("Respuesta útil"));
     // Realmente vacío (sólo etiquetas) → vacío, no inventa.
     QVERIFY(B::visibleAnswer(QStringLiteral("<think></think>"), false).isEmpty());
+}
+
+void AgentWireTests::cacheIdentity_isLocalOnlyAndSessionIsolated()
+{
+    const QJsonObject base{{QStringLiteral("messages"), QJsonArray{}},
+                           {QStringLiteral("cache_prompt"), true},
+                           {QStringLiteral("llama_user_id"), QStringLiteral("stale")}};
+    const QJsonObject cloud =
+        LlamaAgentBackend::cacheIdentityPayload(base, false, QStringLiteral("session-a"));
+    QVERIFY(!cloud.contains(QStringLiteral("cache_prompt")));
+    QVERIFY(!cloud.contains(QStringLiteral("llama_user_id")));
+
+    const QJsonObject a =
+        LlamaAgentBackend::cacheIdentityPayload(base, true, QStringLiteral("session-a"));
+    const QJsonObject b =
+        LlamaAgentBackend::cacheIdentityPayload(base, true, QStringLiteral("session-b"));
+    QCOMPARE(a.value(QStringLiteral("cache_prompt")).toBool(), true);
+    QCOMPARE(a.value(QStringLiteral("llama_user_id")).toString(), QStringLiteral("session-a"));
+    QCOMPARE(b.value(QStringLiteral("llama_user_id")).toString(), QStringLiteral("session-b"));
 }
 
 void AgentWireTests::thinkingLeakGuard_isOptInAndControlsTemplate()

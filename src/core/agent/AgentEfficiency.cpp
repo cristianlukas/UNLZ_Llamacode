@@ -20,6 +20,8 @@ QVariantMap AgentEfficiency::Request::toVariant() const
             {QStringLiteral("generatedTokens"), generatedTokens},
             {QStringLiteral("promptMs"), promptMs},
             {QStringLiteral("generatedMs"), generatedMs},
+            {QStringLiteral("cachedPromptTokens"), cachedPromptTokens},
+            {QStringLiteral("cacheHit"), cacheHit},
             {QStringLiteral("wallMs"), wallMs},
             {QStringLiteral("toolCalls"), toolCalls},
             {QStringLiteral("toolBytes"), toolBytes}};
@@ -39,13 +41,24 @@ AgentEfficiency::Request AgentEfficiency::Request::fromResponse(
     r.promptMs = firstNumber(timings, root, {QStringLiteral("prompt_ms")});
     r.generatedMs = firstNumber(timings, root, {QStringLiteral("predicted_ms")});
     r.wallMs = qMax(0.0, elapsed);
+    const int usagePrompt = usage.value(QStringLiteral("prompt_tokens")).toInt();
+    const int evaluatedPrompt = timings.value(QStringLiteral("prompt_n")).toInt();
+    r.cachedPromptTokens = qMax(0, usagePrompt - evaluatedPrompt);
+    if (r.cachedPromptTokens == 0) {
+        r.cachedPromptTokens = qRound(firstNumber(
+            timings, root, {QStringLiteral("cached_n"), QStringLiteral("cache_n"),
+                            QStringLiteral("cached_tokens"), QStringLiteral("tokens_cached")}));
+    }
+    r.cacheHit = r.cachedPromptTokens > 0
+                 || root.value(QStringLiteral("cache_hit")).toBool(false);
     return r;
 }
 
 QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
 {
     QVariantMap out{{QStringLiteral("requests"), requests.size()}};
-    qint64 prompt = 0, generated = 0, toolBytes = 0;
+    qint64 prompt = 0, generated = 0, cachedPrompt = 0, toolBytes = 0;
+    int cacheHits = 0;
     int tools = 0;
     double promptMs = 0.0, generatedMs = 0.0, wallMs = 0.0;
     QVariantMap phases;
@@ -53,6 +66,8 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
         const QVariantMap r = v.toMap();
         prompt += r.value(QStringLiteral("promptTokens")).toLongLong();
         generated += r.value(QStringLiteral("generatedTokens")).toLongLong();
+        cachedPrompt += r.value(QStringLiteral("cachedPromptTokens")).toLongLong();
+        if (r.value(QStringLiteral("cacheHit")).toBool()) ++cacheHits;
         promptMs += r.value(QStringLiteral("promptMs")).toDouble();
         generatedMs += r.value(QStringLiteral("generatedMs")).toDouble();
         wallMs += r.value(QStringLiteral("wallMs")).toDouble();
@@ -69,6 +84,9 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
     }
     out[QStringLiteral("promptTokens")] = prompt;
     out[QStringLiteral("generatedTokens")] = generated;
+    out[QStringLiteral("cachedPromptTokens")] = cachedPrompt;
+    out[QStringLiteral("cacheHitRate")] = requests.isEmpty()
+        ? 0.0 : double(cacheHits) / requests.size();
     out[QStringLiteral("promptMs")] = promptMs;
     out[QStringLiteral("generatedMs")] = generatedMs;
     out[QStringLiteral("wallMs")] = wallMs;
