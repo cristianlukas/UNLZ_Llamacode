@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.65 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.67 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -331,6 +331,7 @@ qt_add_qml_module(LlamaCode
         qml/components/LcSwitch.qml
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
+        qml/components/LcColorPicker.qml
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
         qml/components/MermaidPreviewDialog.qml

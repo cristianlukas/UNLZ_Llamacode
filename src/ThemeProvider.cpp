@@ -249,6 +249,24 @@ QVariantMap ThemeProvider::customTheme(const QString &id) const {
     return {};
 }
 
+QString ThemeProvider::normalizeHex(const QString &s) const {
+    QString t = s.trimmed();
+    if (t.startsWith(QLatin1Char('#'))) t.remove(0, 1);
+    for (const QChar &c : t) {
+        const QChar l = c.toLower();
+        const bool hexDigit = (l >= QLatin1Char('0') && l <= QLatin1Char('9'))
+                           || (l >= QLatin1Char('a') && l <= QLatin1Char('f'));
+        if (!hexDigit) return QString();
+    }
+    if (t.size() == 3) {   // shorthand rgb → rrggbb
+        QString e;
+        for (const QChar &c : t) { e.append(c); e.append(c); }
+        t = e;
+    }
+    if (t.size() != 6 && t.size() != 8) return QString();
+    return QStringLiteral("#") + t.toLower();
+}
+
 QString ThemeProvider::saveCustomTheme(const QVariantMap &def) {
     QVariantMap m = def;
     QString id = m.value(QStringLiteral("id")).toString();
@@ -258,6 +276,21 @@ QString ThemeProvider::saveCustomTheme(const QVariantMap &def) {
     }
     if (m.value(QStringLiteral("name")).toString().trimmed().isEmpty())
         m.insert(QStringLiteral("name"), QStringLiteral("Tema custom"));
+
+    // Anclas de color: un hex tipeado a mano puede llegar basura ("#1e1e2eaaaa").
+    // Sanear acá y no en la UI: QColor("basura") es inválido y derivaría toda la
+    // paleta en negro sin avisar.
+    const QString base = m.value(QStringLiteral("base"), QStringLiteral("dark")).toString();
+    const struct { const char *key; const char *role; } kAnchors[] = {
+        {"accent",     "accent"},
+        {"background", "baseBg"},
+        {"foreground", "textPrimary"},
+    };
+    for (const auto &a : kAnchors) {
+        const QString key = QLatin1String(a.key);
+        const QString norm = normalizeHex(m.value(key).toString());
+        m.insert(key, norm.isEmpty() ? lit(QLatin1String(a.role), base) : norm);
+    }
 
     QJsonArray arr;
     bool replaced = false;

@@ -18,6 +18,8 @@ private slots:
     void applyCustomDerivesPalette();
     void deleteActiveFallsBack();
     void contrastChangesSurfaces();
+    void normalizeHexAcceptsAndRejects();
+    void saveSanitizesColorAnchors();
 };
 
 void ThemeTests::initTestCase()
@@ -136,6 +138,41 @@ void ThemeTests::deleteActiveFallsBack()
     // Borrar el activo → vuelve a un built-in y la lista queda vacía.
     QVERIFY(!t.themeIsCustom());
     QCOMPARE(t.customThemes().size(), 0);
+}
+
+// El editor de tema valida el hex con esto (largo fijo + shorthand + '#' opcional).
+void ThemeTests::normalizeHexAcceptsAndRejects()
+{
+    ThemeProvider t;
+    QCOMPARE(t.normalizeHex(QStringLiteral("#89B4FA")), QStringLiteral("#89b4fa"));
+    QCOMPARE(t.normalizeHex(QStringLiteral("89b4fa")),  QStringLiteral("#89b4fa"));
+    QCOMPARE(t.normalizeHex(QStringLiteral("  #f0a ")), QStringLiteral("#ff00aa"));  // shorthand
+    QCOMPARE(t.normalizeHex(QStringLiteral("#8089b4fa")), QStringLiteral("#8089b4fa")); // AARRGGBB
+
+    // Basura: el caso real era tipear de más en el campo hex sin límite.
+    QCOMPARE(t.normalizeHex(QStringLiteral("#1e1e2eaaaaaaaaaaaaaaaaaa")), QString());
+    QCOMPARE(t.normalizeHex(QStringLiteral("#1e1e2")), QString());   // 5 dígitos
+    QCOMPARE(t.normalizeHex(QStringLiteral("#zzzzzz")), QString());  // no-hex
+    QCOMPARE(t.normalizeHex(QString()), QString());
+}
+
+void ThemeTests::saveSanitizesColorAnchors()
+{
+    ThemeProvider t;
+    QSettings().setValue(QStringLiteral("customThemes"), QString());
+    const QString id = t.saveCustomTheme(QVariantMap{
+        {QStringLiteral("name"), QStringLiteral("Sucio")},
+        {QStringLiteral("base"), QStringLiteral("dark")},
+        {QStringLiteral("accent"), QStringLiteral("f0a")},                    // shorthand
+        {QStringLiteral("background"), QStringLiteral("#1e1e2eaaaaaaaaaa")},  // basura
+        {QStringLiteral("foreground"), QStringLiteral("#CDD6F4")},
+    });
+    const QVariantMap got = t.customTheme(id);
+    QCOMPARE(got.value(QStringLiteral("accent")).toString(), QStringLiteral("#ff00aa"));
+    // Ancla inválida → literal del tema base, nunca se persiste el texto roto.
+    QCOMPARE(got.value(QStringLiteral("background")).toString(), QStringLiteral("#1e1e2e"));
+    QCOMPARE(got.value(QStringLiteral("foreground")).toString(), QStringLiteral("#cdd6f4"));
+    t.deleteCustomTheme(id);
 }
 
 QTEST_MAIN(ThemeTests)

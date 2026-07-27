@@ -8,6 +8,72 @@ import LlamaCode 1.0
 Item {
     id: root
 
+    // Fila de ancla de color del editor de tema: label + swatch clickeable (abre
+    // LcColorPicker) + hex. `value` es la fuente de verdad y el campo se sincroniza
+    // a mano: tipear rompería un binding y loadDef() ya no lo actualizaría.
+    component ColorRow: RowLayout {
+        id: colorRow
+        property string label: ""
+        property string value: ""
+        property string lastValid: "#000000"
+        readonly property bool valid: Theme.normalizeHex(value) !== ""
+
+        Layout.fillWidth: true
+        spacing: 8
+        onValueChanged: {
+            if (hexInput.text !== value) hexInput.text = value
+            if (valid) lastValid = Theme.normalizeHex(value)
+        }
+
+        Text {
+            text: colorRow.label
+            color: Theme.textSecondary
+            font.pixelSize: 12
+            Layout.preferredWidth: 110
+        }
+        Rectangle {
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            radius: 6
+            color: colorRow.valid ? colorRow.value : "transparent"
+            border.width: swatchMouse.containsMouse ? 2 : 1
+            border.color: !colorRow.valid ? Theme.errorBorder
+                        : swatchMouse.containsMouse ? Theme.accent : Theme.divider
+            MouseArea {
+                id: swatchMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    colorPicker.target = colorRow
+                    colorPicker.openWith(colorRow.valid ? colorRow.value : colorRow.lastValid)
+                }
+            }
+            ToolTip.visible: swatchMouse.containsMouse
+            ToolTip.text: "Elegir color"
+        }
+        LcTextField {
+            id: hexInput
+            Layout.fillWidth: true
+            placeholderText: "#RRGGBB"
+            maximumLength: 7                     // "#rrggbb" — el hex tiene largo fijo
+            validator: RegularExpressionValidator {
+                regularExpression: /#?[0-9a-fA-F]{0,6}/
+            }
+            onTextEdited: colorRow.value = text
+            // Al salir del campo: normalizar ("f0a" → "#ff00aa"); si quedó basura,
+            // volver al último válido en vez de persistirla.
+            onEditingFinished: colorRow.value = colorRow.valid
+                ? Theme.normalizeHex(colorRow.value) : colorRow.lastValid
+        }
+    }
+
+    LcColorPicker {
+        id: colorPicker
+        property var target: null
+        onPicked: function (hex) { if (target) target.value = hex }
+    }
+
     FolderDialog {
         id: openCodeProjectDialog
         title: "Elegí el proyecto para OpenCode"
@@ -2082,9 +2148,9 @@ Item {
             nameField.text = def.name || ""
             baseTheme = def.base || "dark"
             baseCombo.currentIndex = baseCombo.indexOfValue(baseTheme)
-            accentField.text = def.accent || ""
-            bgField.text = def.background || ""
-            fgField.text = def.foreground || ""
+            accentRow.value = def.accent || ""
+            bgRow.value = def.background || ""
+            fgRow.value = def.foreground || ""
             uiFontField.text = def.uiFont || ""
             codeFontField.text = def.codeFont || ""
             contrastSlider.value = def.contrast !== undefined ? def.contrast : 30
@@ -2097,9 +2163,9 @@ Item {
                 "id": editId,
                 "name": nameField.text.trim(),
                 "base": baseCombo.currentValue,
-                "accent": accentField.text.trim(),
-                "background": bgField.text.trim(),
-                "foreground": fgField.text.trim(),
+                "accent": accentRow.value.trim(),
+                "background": bgRow.value.trim(),
+                "foreground": fgRow.value.trim(),
                 "uiFont": uiFontField.text.trim(),
                 "codeFont": codeFontField.text.trim(),
                 "contrast": Math.round(contrastSlider.value),
@@ -2139,49 +2205,10 @@ Item {
                 }
             }
 
-            // Pickers de color: hex + swatch.
-            Repeater {
-                model: [
-                    { lbl: "Acento",          fld: "accent" },
-                    { lbl: "Fondo",           fld: "background" },
-                    { lbl: "Primer plano",    fld: "foreground" },
-                ]
-                delegate: RowLayout {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Text {
-                        text: modelData.lbl
-                        color: Theme.textSecondary
-                        font.pixelSize: 12
-                        Layout.preferredWidth: 110
-                    }
-                    Rectangle {
-                        width: 28; height: 28; radius: 6
-                        border.color: Theme.divider
-                        color: {
-                            var t = modelData.fld === "accent" ? accentField.text
-                                  : modelData.fld === "background" ? bgField.text : fgField.text
-                            return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(t) ? t : "transparent"
-                        }
-                    }
-                    LcTextField {
-                        Layout.fillWidth: true
-                        placeholderText: "#RRGGBB"
-                        text: modelData.fld === "accent" ? accentField.text
-                            : modelData.fld === "background" ? bgField.text : fgField.text
-                        onTextChanged: {
-                            if (modelData.fld === "accent") accentField.text = text
-                            else if (modelData.fld === "background") bgField.text = text
-                            else fgField.text = text
-                        }
-                    }
-                }
-            }
-            // Campos reales (ocultos) que sostienen el estado de color.
-            LcTextField { id: accentField; visible: false }
-            LcTextField { id: bgField; visible: false }
-            LcTextField { id: fgField; visible: false }
+            // Anclas de color: swatch clickeable (abre el selector) + hex.
+            ColorRow { id: accentRow; label: "Acento" }
+            ColorRow { id: bgRow;     label: "Fondo" }
+            ColorRow { id: fgRow;     label: "Primer plano" }
 
             LcTextField {
                 id: uiFontField

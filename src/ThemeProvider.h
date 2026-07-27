@@ -119,6 +119,11 @@ public:
     Q_INVOKABLE void applyCustomTheme(const QString &id) { setTheme(QStringLiteral("custom:") + id); }
     // Plantilla de arranque (anclas del tema base) para el editor "Nuevo".
     Q_INVOKABLE QVariantMap defaultCustomDef(const QString &base) const;
+    // Normaliza un hex escrito a mano ("f0a", "#F0A", "aarrggbb", con/sin '#')
+    // → "#rrggbb" / "#aarrggbb" en minúsculas. "" si no es un color válido.
+    // Lo usa el editor de tema (QML) para validar y saveCustomTheme() para
+    // sanear las 3 anclas antes de persistirlas.
+    Q_INVOKABLE QString normalizeHex(const QString &s) const;
 
     QString navBg()          const { return colorFor(QStringLiteral("navBg")); }
     QString baseBg()         const { return colorFor(QStringLiteral("baseBg")); }

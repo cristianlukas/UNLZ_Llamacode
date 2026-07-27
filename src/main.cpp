@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.65");
+    app.setApplicationVersion("0.1.67");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
 
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
