@@ -10,7 +10,7 @@ Reglas:
   `add_lc_test(<area> tests/test_<area>.cpp)` (helper ya definido, sección
   `if (BUILD_TESTS)`).
 - Antes de commitear: correr `tests.bat` (configura `BUILD_TESTS=ON`, compila en
-  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 39;
+  `build_tests/`, corre `ctest`). Build + todos los tests verdes = gate (hoy 42;
   ver `add_lc_test` en `CMakeLists.txt`). No commitear en rojo. Atajo: `/gate`.
   Verde NO alcanza: si el coordinador imprime `[WARN] ... DIRTY`, los tests NO
   corrieron sobre tu fuente y el resultado no vale. Volvé a correrlo.
@@ -55,6 +55,14 @@ Reglas:
 | FuzzyMatch (matching difuso de nombres de control) | `tests/test_fuzzy_match.cpp` |
 | OcrTextLocator (ubicar texto OCR en pantalla) | `tests/test_ocr_locator.cpp` |
 | VoiceCursorCommand (parseo de órdenes de cursor por voz) | `tests/test_voice.cpp` |
+| ThemeProvider (temas custom, normalización de hex) | `tests/test_theme.cpp` |
+| LcColorRow + LcColorPicker (editor de tema, lado QML) | `tests/qml/tst_color_picker.qml` |
+
+Los componentes QML sin C++ se testean con el runtime `qml` en offscreen
+(`add_test(qml_color_picker ...)`): los archivos reales se copian a
+`build_tests/qml_harness/` junto a stubs de `Theme`/`App` (que en el app son
+context properties de C++). Un archivo QML resuelve los nombres sin calificar en
+SU directorio, por eso conviven copiados en vez de importarse.
 
 ### Pendiente de cobertura
 Stub HTTP ya disponible: `SseStubServer` en `tests/test_backends_net.cpp` cubre

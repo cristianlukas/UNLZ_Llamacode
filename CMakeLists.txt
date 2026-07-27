@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.69 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.71 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -332,6 +332,7 @@ qt_add_qml_module(LlamaCode
         qml/components/LcTextField.qml
         qml/components/LcDialog.qml
         qml/components/LcColorPicker.qml
+        qml/components/LcColorRow.qml
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
         qml/components/MermaidPreviewDialog.qml
@@ -499,6 +500,45 @@ if (BUILD_TESTS)
     add_lc_test(test_logtriage          tests/test_logtriage.cpp)
     add_lc_test(test_fuzzy_match        tests/test_fuzzy_match.cpp)
     add_lc_test(test_ocr_locator        tests/test_ocr_locator.cpp)
+
+    # ── Test de componentes QML (sin C++) ──
+    # Corre el runtime `qml` sobre tests/qml/tst_*.qml en offscreen. Los
+    # componentes REALES se copian al lado de los stubs de Theme/App (que en el
+    # app son context properties de C++): un archivo QML resuelve los nombres
+    # sin calificar en SU directorio, asi que tienen que convivir.
+    get_target_property(_lc_qmake_exe Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(_lc_qt_bin "${_lc_qmake_exe}" DIRECTORY)
+    set(LC_QML_HARNESS_DIR "${CMAKE_CURRENT_BINARY_DIR}/qml_harness")
+    set(LC_QML_HARNESS_SOURCES
+        tests/qml/qmldir
+        tests/qml/Theme.qml
+        tests/qml/App.qml
+        tests/qml/LcDialog.qml
+        tests/qml/LcButton.qml
+        tests/qml/LcTextField.qml
+        tests/qml/tst_color_picker.qml
+        qml/components/LcColorPicker.qml
+        qml/components/LcColorRow.qml
+    )
+    set(_lc_qml_harness_copies)
+    foreach(_src ${LC_QML_HARNESS_SOURCES})
+        get_filename_component(_name "${_src}" NAME)
+        add_custom_command(
+            OUTPUT "${LC_QML_HARNESS_DIR}/${_name}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${CMAKE_CURRENT_SOURCE_DIR}/${_src}" "${LC_QML_HARNESS_DIR}/${_name}"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}"
+            COMMENT "Staging ${_name} for the QML harness")
+        list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/${_name}")
+    endforeach()
+    add_custom_target(qml_harness ALL DEPENDS ${_lc_qml_harness_copies})
+
+    add_test(NAME qml_color_picker
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_color_picker.qml")
+    set_tests_properties(qml_color_picker PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
 
     # Harness de QA manual del OCR: se compila pero NO se registra en ctest (a
     # propósito: necesita escritorio vivo + paquete de idioma, y en headless daría
