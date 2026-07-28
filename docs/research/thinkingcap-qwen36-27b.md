@@ -4,11 +4,11 @@ Fecha: 2026-07-28. Hardware: RTX 3090 24 GB, Ryzen 7 7700, Windows.
 
 ## Veredicto
 
-ThinkingCap-Qwen3.6-27B queda como perfil experimental y **no reemplaza todavía**
-a MAX-Q Qwen3.6-27B Dense. La comparación primaria correcta es dense contra dense;
-KAT Coder 2.5, por ser MoE, se conserva únicamente como referencia secundaria de
-calidad. El benchmark crudo homogéneo favorece a MAX-Q; ThinkingCap sólo mostró
-ventaja de extremo a extremo frente a KAT al sumar MTP y menor uso de tokens.
+ThinkingCap-Qwen3.6-27B fue promovido a **MAX-Q** en configuración 131k tras la
+comparación E2E dense contra dense: obtuvo 15/15 sin reparación en 219,5 s y
+232,9 s. El anterior MAX-Q Qwen3.6-27B de 262k se conserva como **MAX-CTX** para
+tareas donde prima la ventana máxima. KAT Coder 2.5, por ser MoE, se mantiene
+únicamente como referencia secundaria de calidad.
 
 ## Configuración medida
 
@@ -103,10 +103,9 @@ visión, MTP4, `mlock`, sin `mmap` y un slot.
 Con `reasoning on`, un control separado agotó 1200 tokens pensando sin producir
 contenido visible. El perfil operativo usa `reasoning off`, igual que MAX-Q.
 
-Veredicto: **ThinkingCap 131k sí es viable en 24 GB** y queda como alternativa
-experimental de mayor calidad potencial, con la mitad de contexto de MAX-Q.
-No sustituye al perfil MAX-Q 262k, pero merece una comparación E2E de calidad.
-El instalador experimental queda fijado en esta configuración de 131k.
+Veredicto: **ThinkingCap 131k sí es viable en 24 GB** y pasa a ser MAX-Q. Tiene
+la mitad de contexto del Qwen base anterior, que queda disponible como MAX-CTX.
+El instalador queda fijado en esta configuración de 131k.
 
 Resultados originales:
 `AppLocalData/LlamaCode/benchmark-runs/Agent_efficiency_E2E_v1_20260728_113248/`.
@@ -115,8 +114,7 @@ Resultados originales:
 
 - El detector reconoce los GGUF oficiales `ThinkingCap-Qwen3.6-*` como MTP
   self-contained aunque el nombre no contenga el token `-MTP`.
-- `sys-maxq` continúa apuntando a MAX-Q; ThinkingCap no se promueve con evidencia
-  contra un baseline MoE.
+- `sys-maxq` apunta a ThinkingCap 131k; `sys-maxctx` conserva Qwen base 262k.
 - `tools/add_thinkingcap_profiles.py` permite instalar de forma idempotente el
   perfil experimental/comparativo en una configuración de desarrollo.
 

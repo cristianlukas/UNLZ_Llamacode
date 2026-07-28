@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Instala perfiles experimentales de ThinkingCap-Qwen3.6-27B.
+"""Instala el perfil MAX-Q de ThinkingCap-Qwen3.6-27B.
 
 El script es determinista e idempotente. Corre en dry-run salvo que se pase
 --apply y debe ejecutarse con LlamaCode cerrado, porque la app persiste profiles/
@@ -28,9 +28,9 @@ PROFILE_DIR = os.path.join(REPO, "profiles")
 
 # Reutiliza el backend/harness del benchmark KAT ya validado (llama.cpp CUDA).
 BASE_LAUNCH_ID = "bd6f72c4-f849-40ec-b3d6-b930f93921dd"
-MODEL_NAME = "[experimental] ThinkingCap Qwen3.6 27B Q4_K_M + vision"
-RUNTIME_NAME = "[experimental] ThinkingCap 27B · 131k Q4KV"
-LAUNCH_NAME = "113_THINKINGCAP-EVAL 131k MTP4"
+MODEL_NAME = "MAX-Q · ThinkingCap Qwen3.6 27B Q4_K_M + vision"
+RUNTIME_NAME = "MAX-Q · ThinkingCap 27B · 131k Q4KV"
+LAUNCH_NAME = "MAX-Q · ThinkingCap Qwen3.6-27B 131k MTP4"
 
 
 def stable_id(kind):
@@ -94,8 +94,8 @@ def main():
     }
     launch = copy.deepcopy(base)
     launch.update({
-        "alias": "THINKINGCAP 27B 131K MTP4",
-        "favorite": False,
+        "alias": "MAX-Q",
+        "favorite": True,
         "id": stable_id("launch"),
         "modelProfileId": model["id"],
         "name": LAUNCH_NAME,

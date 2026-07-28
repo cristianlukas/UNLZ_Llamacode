@@ -53,7 +53,7 @@ private slots:
     void manager_smallProfilesAreConservative();
     void manager_defaultCodingProfileUsesKatCoder();
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
-    void manager_24gbPremiumRemainsMaxQUntilDenseComparison();
+    void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -92,7 +92,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 13);                       // tiers base + MAX-Q/FAST-GEMMA + Laguna experimental
+    QCOMPARE(sys, 14);                       // tiers base + MAX-Q/MAX-CTX/FAST-GEMMA + Laguna
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -369,28 +369,28 @@ void SystemProfilesTests::manager_16gbCodingProfileUsesBenchmarkedKatCoder()
              QStringLiteral("on"));
 }
 
-void SystemProfilesTests::manager_24gbPremiumRemainsMaxQUntilDenseComparison()
+void SystemProfilesTests::manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx()
 {
     ProfileManager pm;
     const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-maxq"));
     QCOMPARE(launch.value(QStringLiteral("name")).toString(),
-             QStringLiteral("[coding] 24GB · Qwen3.6-27B (calidad máxima)"));
+             QStringLiteral("[coding] MAX-Q · ThinkingCap Qwen3.6-27B 131k (visión)"));
 
     const QVariantMap model =
         pm.getModelProfile(launch.value(QStringLiteral("modelProfileId")).toString());
     const QString modelsDir =
         QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
     const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
-    const QString modelBase = modelsDir + "/Qwen3.6-27B-MTP/";
+    const QString modelBase = modelsDir + "/ThinkingCap-Qwen3.6-27B-GGUF/";
     QCOMPARE(model.value(QStringLiteral("modelId")).toString(),
              QUuid::createUuidV5(
-                 ns, QString(modelBase + "Qwen3.6-27B-IQ4_XS.gguf").toUtf8())
+                 ns, QString(modelBase + "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf").toUtf8())
                  .toString(QUuid::WithoutBraces));
-    QVERIFY(model.value(QStringLiteral("mmprojId")).toString().isEmpty());
+    QVERIFY(!model.value(QStringLiteral("mmprojId")).toString().isEmpty());
 
     const QVariantMap runtime =
         pm.getRuntimePreset(launch.value(QStringLiteral("runtimePresetId")).toString());
-    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 262000);
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 131000);
     QCOMPARE(runtime.value(QStringLiteral("gpuLayers")).toInt(), 999);
     QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 512);
     QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 64);
@@ -401,20 +401,19 @@ void SystemProfilesTests::manager_24gbPremiumRemainsMaxQUntilDenseComparison()
         const int index = args.indexOf(flag);
         return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
     };
-    QCOMPARE(valueAfter(QStringLiteral("--spec-type")), QStringLiteral("mtp"));
-    QCOMPARE(valueAfter(QStringLiteral("--spec-draft-n-max")), QStringLiteral("3"));
+    QCOMPARE(valueAfter(QStringLiteral("--spec-type")), QStringLiteral("draft-mtp"));
+    QCOMPARE(valueAfter(QStringLiteral("--spec-draft-n-max")), QStringLiteral("4"));
     QCOMPARE(valueAfter(QStringLiteral("--reasoning")), QStringLiteral("off"));
 
-    QFile bundle(bundlePath());
-    QVERIFY(bundle.open(QIODevice::ReadOnly));
-    const QJsonArray entries = QJsonDocument::fromJson(bundle.readAll()).array();
-    const auto premium = std::find_if(entries.begin(), entries.end(), [](const QJsonValue &value) {
-        return value.toObject().value(QStringLiteral("id")).toString()
-            == QStringLiteral("sys-maxq");
-    });
-    QVERIFY(premium != entries.end());
-    QCOMPARE(premium->toObject().value(QStringLiteral("binaryKind")).toString(),
-             QStringLiteral("beellama"));
+    const QVariantMap maxCtx = pm.getLaunchProfile(QStringLiteral("sys-maxctx"));
+    QCOMPARE(maxCtx.value(QStringLiteral("name")).toString(),
+             QStringLiteral("[coding] MAX-CTX · Qwen3.6-27B 262k"));
+    const QVariantMap maxCtxRuntime =
+        pm.getRuntimePreset(maxCtx.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(maxCtxRuntime.value(QStringLiteral("ctx")).toInt(), 262000);
+    const QVariantMap maxCtxModel =
+        pm.getModelProfile(maxCtx.value(QStringLiteral("modelProfileId")).toString());
+    QVERIFY(maxCtxModel.value(QStringLiteral("mmprojId")).toString().isEmpty());
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()

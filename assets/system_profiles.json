@@ -4,9 +4,80 @@
     "tier": "24GB-Qwen",
     "order": 1,
     "extra": true,
-    "displayName": "[coding] 24GB · Qwen3.6-27B (calidad máxima)",
+    "displayName": "[coding] MAX-Q · ThinkingCap Qwen3.6-27B 131k (visión)",
     "showcaseGroup": "top24",
     "showcaseLabel": "Coding",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "requiresMtpBinary": true,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF",
+    "model": {
+      "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF",
+      "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf",
+      "mmprojFile": "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf",
+      "quant": "Q4_K_M"
+    },
+    "runtime": {
+      "ctx": 131000,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
+      "threads": 8,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": true,
+      "mmap": false
+    },
+    "extraArgs": [
+      "--cache-type-k",
+      "q4_0",
+      "--cache-type-v",
+      "q4_0",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--cache-ram",
+      "32768",
+      "--cache-reuse",
+      "512",
+      "--jinja",
+      "--threads-batch",
+      "8",
+      "--predict",
+      "4096",
+      "--parallel",
+      "1",
+      "--reasoning",
+      "off"
+    ],
+    "mtp": {
+      "enabled": true,
+      "args": [
+        "--spec-type",
+        "draft-mtp",
+        "--spec-draft-n-max",
+        "4"
+      ]
+    },
+    "binaryKind": "official",
+    "comment": "MAX-Q promovido tras benchmark E2E dense-vs-dense: ThinkingCap logró 15/15 sin reparación en 219,5 s y 232,9 s. Mantiene 131k para entrar de forma estable en 24 GB."
+  },
+  {
+    "id": "sys-maxctx",
+    "tier": "24GB-Qwen-MAX-CTX",
+    "order": 3,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[coding] MAX-CTX · Qwen3.6-27B 262k",
     "minVramGb": 24,
     "minRamGb": 32,
     "cpuOk": false,
@@ -71,7 +142,8 @@
         "32"
       ]
     },
-    "binaryKind": "beellama"
+    "binaryKind": "beellama",
+    "comment": "Anterior MAX-Q renombrado MAX-CTX: conserva Qwen base IQ4_XS, contexto 262k y MTP+NGRAM. Opt-in para tareas donde prima la ventana máxima."
   },
   {
     "id": "sys-fastgemma",

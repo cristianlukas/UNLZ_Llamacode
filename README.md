@@ -224,7 +224,8 @@ instalación manual, el perfil experimental
 `UD-Q2_K_XL` de ~39,7 GB en una sola PC mediante GPU+RAM (`--n-cpu-moe 32`),
 contexto 100k y `ubatch 768`; requiere `llama.cpp b10087+`. No forma parte de la
 recomendación automática, no se descarga junto con MAX-Q/FAST-GEMMA y debe
-compararse mediante benchmark antes de usarlo como reemplazo de MAX-Q.
+compararse mediante benchmark antes de reemplazar MAX-Q. MAX-Q usa ThinkingCap
+Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 
 ## Estado actual
 
