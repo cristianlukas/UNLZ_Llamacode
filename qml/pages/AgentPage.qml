@@ -239,12 +239,11 @@ Item {
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         width: 500
+        height: 210
         leftPadding: 20
         rightPadding: 20
         topPadding: 16
         bottomPadding: 16
-        implicitHeight: implicitHeaderHeight + implicitContentHeight
-                        + implicitFooterHeight + topPadding + bottomPadding
         closePolicy: Popup.CloseOnEscape
         background: Rectangle {
             color: Theme.popupBg
