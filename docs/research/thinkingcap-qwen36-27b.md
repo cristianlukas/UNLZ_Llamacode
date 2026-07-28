@@ -82,9 +82,31 @@ operable y habría requerido horas.
 
 Conclusión: ThinkingCap Q4_K_M **no puede reemplazar a MAX-Q IQ4_XS conservando
 262k en una RTX 3090 de 24 GB**. El perfil experimental se dejó en modo de paridad
-262k para reproducir este límite, pero no debe recomendarse para uso diario. Para
-hacer viable ThinkingCap hay que reducir contexto o usar una quant más pequeña;
-ambas opciones dejan de ser un reemplazo equivalente de MAX-Q.
+262k sólo durante la reproducción de este límite. Para hacerlo viable había que
+reducir contexto o usar una quant más pequeña; ambas opciones dejan de ser un
+reemplazo equivalente de MAX-Q.
+
+## Punto operativo a 131k
+
+Se repitió la prueba cambiando únicamente el contexto a 131000 (slot efectivo
+131072). El resto permaneció en batch 512, ubatch 64, KV q4_0, GPU completa,
+visión, MTP4, `mlock`, sin `mmap` y un slot.
+
+- VRAM en reposo: 22374 MiB; margen: 1953 MiB.
+- VRAM tras generar: 22357 MiB; margen: 1970 MiB.
+- Prompt real: 212,12 tok/s.
+- Decode real: 50,51 tok/s.
+- MTP: 232/352 drafts aceptados (65,9%), longitud media 3,64.
+- Respuesta: 318 tokens en 6,59 s de servidor, finalización normal y 1338
+  caracteres de contenido útil.
+
+Con `reasoning on`, un control separado agotó 1200 tokens pensando sin producir
+contenido visible. El perfil operativo usa `reasoning off`, igual que MAX-Q.
+
+Veredicto: **ThinkingCap 131k sí es viable en 24 GB** y queda como alternativa
+experimental de mayor calidad potencial, con la mitad de contexto de MAX-Q.
+No sustituye al perfil MAX-Q 262k, pero merece una comparación E2E de calidad.
+El instalador experimental queda fijado en esta configuración de 131k.
 
 Resultados originales:
 `AppLocalData/LlamaCode/benchmark-runs/Agent_efficiency_E2E_v1_20260728_113248/`.

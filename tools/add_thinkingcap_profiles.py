@@ -29,8 +29,8 @@ PROFILE_DIR = os.path.join(REPO, "profiles")
 # Reutiliza el backend/harness del benchmark KAT ya validado (llama.cpp CUDA).
 BASE_LAUNCH_ID = "bd6f72c4-f849-40ec-b3d6-b930f93921dd"
 MODEL_NAME = "[experimental] ThinkingCap Qwen3.6 27B Q4_K_M + vision"
-RUNTIME_NAME = "[experimental] ThinkingCap 27B · MAX-Q parity 262k Q4KV"
-LAUNCH_NAME = "113_THINKINGCAP-EVAL MAX-Q parity 262k MTP4"
+RUNTIME_NAME = "[experimental] ThinkingCap 27B · 131k Q4KV"
+LAUNCH_NAME = "113_THINKINGCAP-EVAL 131k MTP4"
 
 
 def stable_id(kind):
@@ -81,7 +81,7 @@ def main():
         "batch": 512,
         "cacheType": "q4_0",
         "contBatching": True,
-        "ctx": 262000,
+        "ctx": 131000,
         "flashAttention": True,
         "gpuLayers": -1,
         "id": stable_id("runtime"),
@@ -94,7 +94,7 @@ def main():
     }
     launch = copy.deepcopy(base)
     launch.update({
-        "alias": "THINKINGCAP 27B 262K MTP4",
+        "alias": "THINKINGCAP 27B 131K MTP4",
         "favorite": False,
         "id": stable_id("launch"),
         "modelProfileId": model["id"],
@@ -120,7 +120,7 @@ def main():
             "--predict", "4096",
             "--parallel", "1",
             "--flash-attn", "on",
-            "--ctx-size", "262000",
+            "--ctx-size", "131000",
             "--reasoning", "off",
         ],
     })
