@@ -1239,6 +1239,11 @@ Evaluaciones de modelos candidatas:
 3. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
 4. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
 
+Las suites custom pueden declarar un timeout recomendado. La UI avisa cuando el
+límite elegido es menor: un timeout durante la reparación conserva los checks ya
+medidos, pero se identifica como `Timeout` y no como un fallo final de calidad. La
+suite `Stress largo y difícil` recomienda al menos 900 s por corrida.
+
 ### Modos de prueba
 
 | Modo | Prompts | `n_predict` | Score | Tiempo estimado |

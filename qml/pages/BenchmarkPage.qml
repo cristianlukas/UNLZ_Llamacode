@@ -191,6 +191,18 @@ Item {
     }
     function clearAllFilters() { columnFilters = ({}) }
 
+    function selectedCustomDefinition() {
+        const defs = App.customBenchmarks || []
+        for (let i = 0; i < defs.length; i++)
+            if (String(defs[i].id ?? "") === customId) return defs[i]
+        return ({})
+    }
+
+    function recommendedTimeoutSec() {
+        const n = Number(selectedCustomDefinition().recommendedTimeoutSec ?? 0)
+        return isFinite(n) && n > 0 ? Math.round(n) : 0
+    }
+
     function filteredBenchmarkResults(rows) {
         const out = []
         const cf = columnFilters
@@ -303,10 +315,15 @@ Item {
             Popup {
                 id: filterPopup
                 y: hdr.height + 2
-                width: 240
+                x: {
+                    const p = hdr.mapToItem(root, 0, 0)
+                    return Math.max(8 - p.x, Math.min(0, root.width - 8 - width - p.x))
+                }
+                width: Math.min(300, Math.max(220, root.width - 16))
                 padding: 0
                 modal: false
                 focus: true
+                closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
                 property var checked: ({})
 
                 function initChecked() {
@@ -349,9 +366,11 @@ Item {
                     }
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
                     // Seleccionar todo
-                    CheckBox {
+                    LcCheckBox {
                         id: selAll
+                        Layout.fillWidth: true
                         Layout.leftMargin: 8
+                        Layout.rightMargin: 8
                         text: "(Seleccionar todo)"
                         tristate: false
                         checked: {
@@ -371,11 +390,12 @@ Item {
                             width: parent.width; spacing: 1
                             Repeater {
                                 model: root.distinctColumnValues(hdr.column)
-                                delegate: CheckBox {
+                                delegate: LcCheckBox {
                                     required property string modelData
+                                    Layout.fillWidth: true
                                     checked: filterPopup.checked[modelData] === true
                                     onToggled: filterPopup.setVal(modelData, checked)
-                                    contentItem: Text { text: modelData; color: Theme.textPrimary; font.pixelSize: 12; leftPadding: parent.indicator.width + 6; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight }
+                                    text: modelData
                                 }
                             }
                         }
@@ -847,6 +867,18 @@ Item {
                         font.pixelSize: 10
                         wrapMode: Text.Wrap
                     }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: customMode.checked && root.recommendedTimeoutSec() > 0
+                                 && timeoutSpin.value > 0
+                                 && timeoutSpin.value < root.recommendedTimeoutSec()
+                        text: "Esta suite recomienda al menos "
+                              + root.recommendedTimeoutSec()
+                              + " s. El timeout actual puede cortar una reparación y mostrar un resultado parcial."
+                        color: Theme.warnText
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
+                    }
 
                     // Timeout duro opcional por corrida (wall-clock, segundos). 0 = sin límite.
                     RowLayout {
@@ -1131,8 +1163,9 @@ Item {
                                     }
                                     LcButton {
                                         anchors { verticalCenter: parent.verticalCenter; right: parent.right }
-                                        width: 52; height: 24
-                                        text: "Fallo"
+                                        width: (modelData.timedOut ?? false) ? 66 : 52
+                                        height: 24
+                                        text: (modelData.timedOut ?? false) ? "Timeout" : "Fallo"
                                         danger: true
                                         visible: resultRow.failed
                                         onClicked: {

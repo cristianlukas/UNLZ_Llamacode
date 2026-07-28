@@ -144,6 +144,7 @@ private slots:
     void agentLevels_contextBudgetLadder();
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
+    void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
 
 private:
     QTemporaryDir m_tmp;
@@ -256,6 +257,28 @@ void AppControllerTests::initTestCase()
     QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
     QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
     QVERIFY(m_tmp.isValid());
+}
+
+void AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
+{
+    const QJsonObject oldBundled{
+        {QStringLiteral("id"), QStringLiteral("stress-largo-dificil-python-v1")},
+        {QStringLiteral("bundledVersion"), 1},
+        {QStringLiteral("name"), QStringLiteral("copia vieja")}
+    };
+    const QJsonObject newBundled{
+        {QStringLiteral("id"), QStringLiteral("stress-largo-dificil-python-v1")},
+        {QStringLiteral("bundledVersion"), 2}
+    };
+    const QJsonObject personal{
+        {QStringLiteral("id"), QStringLiteral("personal")},
+        {QStringLiteral("bundledVersion"), 0}
+    };
+
+    QVERIFY(AppController::shouldReplaceBundledBenchmarkForTest(newBundled, oldBundled));
+    QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(oldBundled, newBundled));
+    QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(newBundled, personal));
+    QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(personal, oldBundled));
 }
 
 void AppControllerTests::exportUserDataToWritesBackup()

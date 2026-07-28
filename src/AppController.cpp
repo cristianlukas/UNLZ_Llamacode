@@ -12160,6 +12160,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         meta["target"]     = target;
         meta["agentProfileId"]   = m_benchmarkAgentProfileId;
         meta["agentProfileName"] = m_benchmarkAgentProfileName;
+        meta["timeoutSec"]  = m_benchHardTimeoutSec;
         meta["startedAt"]  = QDateTime::currentDateTime().toString(Qt::ISODate);
         meta["timestamp"]  = (double)QDateTime::currentMSecsSinceEpoch();
         QJsonArray profArr;
@@ -12993,6 +12994,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["benchmarkName"] = (mode == QLatin1String("short") ? QStringLiteral("Corta")
                                       : mode == QLatin1String("full") ? QStringLiteral("Completa")
                                       : runLabel);
+            result["timeoutSec"]   = m_benchHardTimeoutSec;
             result["timestamp"]    = (double)QDateTime::currentMSecsSinceEpoch();
             result["qualityScore"] = qScore;
             result["qualityTotal"] = qTotal;
@@ -13017,7 +13019,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["failed"]       = *passFailed || *timedOut || (qTotal > 0 && qScore < qTotal);
             if (result.value(QStringLiteral("failed")).toBool()) {
                 result["failureStage"] = *timedOut
-                    ? QStringLiteral("agent-idle-timeout")
+                    ? QStringLiteral("hard-timeout")
                     : (*passFailed ? QStringLiteral("agent") : QStringLiteral("acceptance"));
                 result["failureMessage"] = failureMessage->isEmpty()
                     ? (qTotal > 0 && qScore < qTotal
@@ -13874,6 +13876,18 @@ QString AppController::customBenchmarkDir() const
     return dir;
 }
 
+bool AppController::shouldReplaceBundledBenchmarkForTest(
+    const QJsonObject &source, const QJsonObject &destination)
+{
+    const int srcVersion = source.value(QStringLiteral("bundledVersion")).toInt();
+    const int dstVersion = destination.value(QStringLiteral("bundledVersion")).toInt();
+    const QString srcId = source.value(QStringLiteral("id")).toString();
+    return !srcId.isEmpty()
+        && srcId == destination.value(QStringLiteral("id")).toString()
+        && srcVersion > 0
+        && srcVersion > dstVersion;
+}
+
 void AppController::seedBundledCustomBenchmarks() const
 {
     const QString dstDir = customBenchmarkDir();
@@ -13883,16 +13897,32 @@ void AppController::seedBundledCustomBenchmarks() const
     while (it.hasNext()) {
         const QString srcPath = it.next();
         const QString dstPath = QDir(dstDir).filePath(QFileInfo(srcPath).fileName());
-        if (QFileInfo::exists(dstPath))
-            continue;
-
         QFile src(srcPath);
         if (!src.open(QIODevice::ReadOnly))
             continue;
+        const QByteArray srcBytes = src.readAll();
+        const QJsonObject srcObject = QJsonDocument::fromJson(srcBytes).object();
+
+        if (QFileInfo::exists(dstPath)) {
+            QFile existing(dstPath);
+            if (!existing.open(QIODevice::ReadOnly))
+                continue;
+            const QJsonObject dstObject =
+                QJsonDocument::fromJson(existing.readAll()).object();
+            if (!shouldReplaceBundledBenchmarkForTest(srcObject, dstObject))
+                continue;
+
+            QFile dst(dstPath);
+            if (!dst.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                continue;
+            dst.write(srcBytes);
+            continue;
+        }
+
         QFile dst(dstPath);
         if (!dst.open(QIODevice::WriteOnly | QIODevice::NewOnly))
             continue;
-        dst.write(src.readAll());
+        dst.write(srcBytes);
     }
 }
 
