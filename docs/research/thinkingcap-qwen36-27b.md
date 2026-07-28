@@ -66,6 +66,26 @@ el costo base de ambos dense y se complementa con el smoke MTP, no lo sustituye.
 La promoción queda pendiente de repetir `Agent efficiency E2E v1` x3 con
 `agent-avanzado` contra MAX-Q, misma ventana de contexto y política MTP.
 
+## Prueba de paridad MAX-Q a 262k
+
+Se probó ThinkingCap con los parámetros operativos de MAX-Q: contexto solicitado
+262000 (slot efectivo 262144), batch 512, ubatch 64, KV K/V q4_0, GPU completa,
+`mlock`, sin `mmap`, un slot y cache RAM de 32 GB. ThinkingCap conservó su MTP
+self-contained `draft-mtp` n=4 porque no puede usar exactamente el esquema
+MTP+NGRAM del GGUF MAX-Q.
+
+El servidor cargó modelo, projector, MTP y el slot completo, pero ocupó
+aproximadamente 24229 MiB de VRAM y dejó apenas 98 MiB libres. En la primera
+petición el procesamiento del prompt cayó a 2,24 tok/s. Se interrumpió la
+generación: completar la suite E2E x3 bajo esas condiciones no representa un uso
+operable y habría requerido horas.
+
+Conclusión: ThinkingCap Q4_K_M **no puede reemplazar a MAX-Q IQ4_XS conservando
+262k en una RTX 3090 de 24 GB**. El perfil experimental se dejó en modo de paridad
+262k para reproducir este límite, pero no debe recomendarse para uso diario. Para
+hacer viable ThinkingCap hay que reducir contexto o usar una quant más pequeña;
+ambas opciones dejan de ser un reemplazo equivalente de MAX-Q.
+
 Resultados originales:
 `AppLocalData/LlamaCode/benchmark-runs/Agent_efficiency_E2E_v1_20260728_113248/`.
 

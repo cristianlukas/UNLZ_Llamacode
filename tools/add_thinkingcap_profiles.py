@@ -29,8 +29,8 @@ PROFILE_DIR = os.path.join(REPO, "profiles")
 # Reutiliza el backend/harness del benchmark KAT ya validado (llama.cpp CUDA).
 BASE_LAUNCH_ID = "bd6f72c4-f849-40ec-b3d6-b930f93921dd"
 MODEL_NAME = "[experimental] ThinkingCap Qwen3.6 27B Q4_K_M + vision"
-RUNTIME_NAME = "[experimental] ThinkingCap 27B · 32k Q4KV"
-LAUNCH_NAME = "113_THINKINGCAP-EVAL Qwen3.6-27B Q4_K_M MTP4"
+RUNTIME_NAME = "[experimental] ThinkingCap 27B · MAX-Q parity 262k Q4KV"
+LAUNCH_NAME = "113_THINKINGCAP-EVAL MAX-Q parity 262k MTP4"
 
 
 def stable_id(kind):
@@ -78,23 +78,23 @@ def main():
         "specType": "draft-mtp",
     }
     runtime = {
-        "batch": 2048,
+        "batch": 512,
         "cacheType": "q4_0",
         "contBatching": True,
-        "ctx": 32768,
+        "ctx": 262000,
         "flashAttention": True,
         "gpuLayers": -1,
         "id": stable_id("runtime"),
-        "mlock": False,
-        "mmap": True,
+        "mlock": True,
+        "mmap": False,
         "name": RUNTIME_NAME,
         "parallelSlots": 1,
         "threads": 8,
-        "ubatch": 512,
+        "ubatch": 64,
     }
     launch = copy.deepcopy(base)
     launch.update({
-        "alias": "THINKINGCAP 27B MTP4",
+        "alias": "THINKINGCAP 27B 262K MTP4",
         "favorite": False,
         "id": stable_id("launch"),
         "modelProfileId": model["id"],
@@ -113,15 +113,15 @@ def main():
             "--no-context-shift",
             "--metrics",
             "--no-warmup",
+            "--cache-ram", "32768",
             "--cache-reuse", "512",
             "--jinja",
             "--threads-batch", "8",
-            "--predict", "8192",
+            "--predict", "4096",
             "--parallel", "1",
             "--flash-attn", "on",
-            "--ctx-size", "32768",
-            "--reasoning", "on",
-            "--chat-template-kwargs", '{"preserve_thinking":true}',
+            "--ctx-size", "262000",
+            "--reasoning", "off",
         ],
     })
 
