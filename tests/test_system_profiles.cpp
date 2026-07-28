@@ -15,7 +15,9 @@
 #include <QStandardPaths>
 #include <QUuid>
 #include <QCoreApplication>
+#include <algorithm>
 #include "core/profiles/ProfileManager.h"
+#include "core/profiles/MtpDetection.h"
 #include "AppController.h"
 
 // Bundle resuelto relativo al repo (ctest corre con WORKING_DIRECTORY = source dir).
@@ -51,6 +53,7 @@ private slots:
     void manager_smallProfilesAreConservative();
     void manager_defaultCodingProfileUsesKatCoder();
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
+    void manager_24gbPremiumUsesBenchmarkedThinkingCap();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -233,8 +236,12 @@ void SystemProfilesTests::bundle_draftMtpAlwaysDeclaresDraftModel()
         if (!declaresDraftMtp)
             continue;
         const QJsonObject draft = entry.value(QStringLiteral("draftModel")).toObject();
-        QVERIFY2(!draft.value(QStringLiteral("repo")).toString().isEmpty()
-                     && !draft.value(QStringLiteral("file")).toString().isEmpty(),
+        const QString modelFile =
+            entry.value(QStringLiteral("model")).toObject().value(QStringLiteral("file")).toString();
+        const bool selfContained = MtpDetection::isSelfContained(modelFile);
+        QVERIFY2(selfContained
+                     || (!draft.value(QStringLiteral("repo")).toString().isEmpty()
+                         && !draft.value(QStringLiteral("file")).toString().isEmpty()),
                  qPrintable(QStringLiteral("%1 declara draft-mtp pero no draftModel repo/file")
                                 .arg(id)));
     }
@@ -360,6 +367,59 @@ void SystemProfilesTests::manager_16gbCodingProfileUsesBenchmarkedKatCoder()
              QStringLiteral("18"));
     QCOMPARE(args.value(args.indexOf(QStringLiteral("--reasoning")) + 1),
              QStringLiteral("on"));
+}
+
+void SystemProfilesTests::manager_24gbPremiumUsesBenchmarkedThinkingCap()
+{
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-maxq"));
+    QCOMPARE(launch.value(QStringLiteral("name")).toString(),
+             QStringLiteral("[coding+visión] 24GB · ThinkingCap Qwen3.6-27B Q4_K_M"));
+
+    const QVariantMap model =
+        pm.getModelProfile(launch.value(QStringLiteral("modelProfileId")).toString());
+    const QString modelsDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
+    const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    const QString modelBase = modelsDir + "/ThinkingCap-Qwen3.6-27B-GGUF/";
+    QCOMPARE(model.value(QStringLiteral("modelId")).toString(),
+             QUuid::createUuidV5(
+                 ns, QString(modelBase + "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf").toUtf8())
+                 .toString(QUuid::WithoutBraces));
+    QCOMPARE(model.value(QStringLiteral("mmprojId")).toString(),
+             QUuid::createUuidV5(
+                 ns, QString(modelBase + "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf").toUtf8())
+                 .toString(QUuid::WithoutBraces));
+
+    const QVariantMap runtime =
+        pm.getRuntimePreset(launch.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 32768);
+    QCOMPARE(runtime.value(QStringLiteral("gpuLayers")).toInt(), -1);
+    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 2048);
+    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q4_0"));
+
+    const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+    const auto valueAfter = [&args](const QString &flag) {
+        const int index = args.indexOf(flag);
+        return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
+    };
+    QCOMPARE(valueAfter(QStringLiteral("--spec-type")), QStringLiteral("draft-mtp"));
+    QCOMPARE(valueAfter(QStringLiteral("--spec-draft-n-max")), QStringLiteral("4"));
+    QCOMPARE(valueAfter(QStringLiteral("--repeat-penalty")), QStringLiteral("1.0"));
+    QCOMPARE(valueAfter(QStringLiteral("--presence-penalty")), QStringLiteral("0.0"));
+    QCOMPARE(valueAfter(QStringLiteral("--reasoning")), QStringLiteral("on"));
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray entries = QJsonDocument::fromJson(bundle.readAll()).array();
+    const auto premium = std::find_if(entries.begin(), entries.end(), [](const QJsonValue &value) {
+        return value.toObject().value(QStringLiteral("id")).toString()
+            == QStringLiteral("sys-maxq");
+    });
+    QVERIFY(premium != entries.end());
+    QCOMPARE(premium->toObject().value(QStringLiteral("binaryPin")).toString(),
+             QStringLiteral("b9763"));
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()

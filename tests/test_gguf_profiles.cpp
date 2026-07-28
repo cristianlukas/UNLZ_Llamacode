@@ -105,6 +105,9 @@ void CoreTests::draftCandidate()
     QVERIFY(GGUFScanner::isDraftCandidate("tiny.gguf", 1LL * 1024 * 1024 * 1024));
     QVERIFY(!GGUFScanner::isDraftCandidate("Qwen2.5-32B-Q5_K_M.gguf", 20LL * 1024 * 1024 * 1024));
     QVERIFY(MtpDetection::isSelfContained("ThinkingCap-Qwen3.6-27B-Q3_K_M-MTP.gguf"));
+    QVERIFY(MtpDetection::isSelfContained("ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf"));
+    QVERIFY(MtpDetection::isSelfContained("bottlecapai_ThinkingCap-Qwen3_6-27B-Q8_0.gguf"));
+    QVERIFY(!MtpDetection::isSelfContained("ThinkingCap-Qwen3.5-27B-Q4_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("Qwen3.6-27B-Q3_K_M.gguf"));
 }
 
@@ -359,16 +362,18 @@ void CoreTests::builder_rawDraftMtpRequiresDraftModel()
 void CoreTests::builder_emitsSelfContainedMtpFlags()
 {
     auto ctx = makeCtx();
-    ctx.catalogModel.fileName = "ThinkingCap-Qwen3.6-27B-Q3_K_M-MTP.gguf";
+    // El GGUF oficial de BottleCapAI tiene el cabezal MTP integrado aunque el
+    // filename no incluya el token "-MTP".
+    ctx.catalogModel.fileName = "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf";
     ctx.model.specType = "draft-mtp";
-    ctx.model.specDraftNMax = 3;
+    ctx.model.specDraftNMax = 4;
 
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     QVERIFY(ep.blockingErrors.isEmpty());
     const int type = ep.effectiveArgs.indexOf("--spec-type");
     QVERIFY(type >= 0 && ep.effectiveArgs.value(type + 1) == "draft-mtp");
     const int nmax = ep.effectiveArgs.indexOf("--spec-draft-n-max");
-    QVERIFY(nmax >= 0 && ep.effectiveArgs.value(nmax + 1) == "3");
+    QVERIFY(nmax >= 0 && ep.effectiveArgs.value(nmax + 1) == "4");
     QVERIFY(!ep.effectiveArgs.contains("--spec-draft-model"));
 }
 
