@@ -239,11 +239,28 @@ Item {
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         width: 500
+        leftPadding: 20
+        rightPadding: 20
+        topPadding: 16
+        bottomPadding: 16
+        implicitHeight: implicitHeaderHeight + implicitContentHeight
+                        + implicitFooterHeight + topPadding + bottomPadding
         closePolicy: Popup.CloseOnEscape
-        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        background: Rectangle {
+            color: Theme.popupBg
+            radius: 12
+            border.color: Theme.popupBorderColor
+            border.width: 1
+        }
         Overlay.modal: Rectangle { color: Theme.overlayColor }
         header: Rectangle {
             color: Theme.popupHeaderBg; height: 50; radius: 12
+            Rectangle {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: 1
+                color: Theme.popupHeaderBorder
+            }
             Text {
                 anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
                 text: "Perfil recomendado: " + (profileSuggestionDialog.recommendation.label || "optimizado")
@@ -269,6 +286,12 @@ Item {
         }
         footer: Rectangle {
             color: Theme.popupHeaderBg; height: 54; radius: 12
+            Rectangle {
+                anchors.top: parent.top
+                width: parent.width
+                height: 1
+                color: Theme.popupHeaderBorder
+            }
             Row {
                 anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                 spacing: 10
