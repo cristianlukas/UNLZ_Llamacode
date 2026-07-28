@@ -25,6 +25,7 @@ QJsonObject RunHistoryStore::toJson(const QVariantMap &r)
 {
     QJsonObject o;
     o["runId"]       = r.value("runId").toString();
+    o["correlationId"] = r.value("correlationId").toString();
     o["ownerId"]     = r.value("ownerId").toString();
     o["startedAt"]   = r.value("startedAt").toString();
     o["finishedAt"]  = r.value("finishedAt").toString();
@@ -37,6 +38,7 @@ QJsonObject RunHistoryStore::toJson(const QVariantMap &r)
     o["report"]      = QJsonArray::fromVariantList(r.value("report").toList());
     o["workflowState"] = QJsonObject::fromVariantMap(r.value("workflowState").toMap());
     o["metrics"]       = QJsonObject::fromVariantMap(r.value("metrics").toMap());
+    o["receipts"]      = QJsonArray::fromVariantList(r.value("receipts").toList());
     return o;
 }
 
@@ -44,6 +46,7 @@ QVariantMap RunHistoryStore::fromJson(const QJsonObject &obj)
 {
     QVariantMap r;
     r["runId"]       = obj.value("runId").toString();
+    r["correlationId"] = obj.value("correlationId").toString();
     r["ownerId"]     = obj.value("ownerId").toString();
     r["startedAt"]   = obj.value("startedAt").toString();
     r["finishedAt"]  = obj.value("finishedAt").toString();
@@ -55,6 +58,7 @@ QVariantMap RunHistoryStore::fromJson(const QJsonObject &obj)
     r["report"]      = obj.value("report").toArray().toVariantList();
     r["workflowState"] = obj.value("workflowState").toObject().toVariantMap();
     r["metrics"]       = obj.value("metrics").toObject().toVariantMap();
+    r["receipts"]      = obj.value("receipts").toArray().toVariantList();
     return r;
 }
 

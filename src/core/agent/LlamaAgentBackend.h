@@ -549,6 +549,8 @@ private:
     // Aprobación en curso (1 tool a la vez)
     QString m_awaitId;              // id del tool_call esperando respuesta ("" = ninguno)
     QJsonObject m_awaitCall;
+    QString m_awaitPayloadHash;     // aprobación ligada al payload MCP exacto
+    QString m_correlationId;        // un ID por turno, propagado a tools/recibos
 
     // Snapshots para revertir ediciones: path absoluto → {existía, contenido viejo}
     struct EditSnapshot { bool existed = false; QByteArray oldContent; };

@@ -8,6 +8,7 @@
 #include "CodeGraphIndexer.h"     // graph action='index': repo→GraphStore determinista
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
 #include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
+#include "ToolExecutionSafety.h"
 #include "StructuredSourceView.h" // vista compacta segura y proyectable
 #include "ProjectBrain.h"
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
@@ -32,6 +33,7 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcess>
+#include <QSaveFile>
 #include <QRegularExpression>
 #include <QSet>
 #include <QTimer>
@@ -46,6 +48,51 @@
 #include <cstring>
 
 static const QString kMcpPrefix = QStringLiteral("mcp__");
+
+namespace {
+
+QString mcpLedgerPath()
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/tool_receipts");
+    QDir().mkpath(dir);
+    return dir + QStringLiteral("/mcp_idempotency.json");
+}
+
+QJsonObject loadMcpLedger()
+{
+    QFile file(mcpLedgerPath());
+    if (!file.open(QIODevice::ReadOnly)) return {};
+    return QJsonDocument::fromJson(file.readAll()).object();
+}
+
+void saveMcpLedger(QJsonObject ledger)
+{
+    // Limitar crecimiento: conservar las 1000 entradas más recientes.
+    if (ledger.size() > 1000) {
+        QStringList keys = ledger.keys();
+        std::sort(keys.begin(), keys.end(), [&ledger](const QString &a, const QString &b) {
+            return ledger.value(a).toObject().value(QStringLiteral("ts")).toString()
+                 < ledger.value(b).toObject().value(QStringLiteral("ts")).toString();
+        });
+        while (ledger.size() > 1000 && !keys.isEmpty())
+            ledger.remove(keys.takeFirst());
+    }
+    QSaveFile file(mcpLedgerPath());
+    if (!file.open(QIODevice::WriteOnly)) return;
+    file.write(QJsonDocument(ledger).toJson(QJsonDocument::Compact));
+    file.commit();
+}
+
+const McpClient::ToolDef *findMcpTool(McpClient *client, const QString &name)
+{
+    if (!client) return nullptr;
+    for (const McpClient::ToolDef &tool : client->tools())
+        if (tool.name == name) return &tool;
+    return nullptr;
+}
+
+} // namespace
 
 // Carpetas que grep/glob NO recorren (ruido + lentitud). Aproxima a los defaults
 // de opencode/aider; no parsea .gitignore completo.
@@ -1015,12 +1062,20 @@ void AgentToolRunner::initServers(const QVariantList &cfg, const QString &cwd)
                 {QStringLiteral("server"), c->serverName()},
                 {QStringLiteral("name"), t.name},
                 {QStringLiteral("description"), t.description},
+                {QStringLiteral("annotations"), t.annotations.toVariantMap()},
+                {QStringLiteral("safety"), ToolExecutionSafety::toVariantMap(
+                     ToolExecutionSafety::fromMcpTool(t.name, t.description, t.annotations))},
                 {QStringLiteral("schema"), QVariant::fromValue(
                      QString::fromUtf8(QJsonDocument(t.inputSchema).toJson(QJsonDocument::Compact)))}
             });
         }
     }
     emit serversReady(defs);
+}
+
+void AgentToolRunner::setCorrelationId(const QString &correlationId)
+{
+    m_correlationId = correlationId;
 }
 
 void AgentToolRunner::executeTool(const QString &callId, const QString &name,
@@ -1041,6 +1096,7 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
     }
 
     QVariantMap out{{QStringLiteral("callId"), callId}, {QStringLiteral("name"), name}};
+    out[QStringLiteral("correlationId")] = m_correlationId;
     bool ok = false;
     QString result;
 
@@ -1048,7 +1104,13 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
         const QString query = args.value(QStringLiteral("query")).toString().trimmed().toLower();
         const QString serverFilter = args.value(QStringLiteral("server")).toString().trimmed();
         const int limit = qBound(1, args.value(QStringLiteral("limit")).toInt(5), 10);
-        struct Match { int score; QString name; QString description; QJsonObject schema; };
+        struct Match {
+            int score;
+            QString name;
+            QString description;
+            QJsonObject schema;
+            QVariantMap safety;
+        };
         QList<Match> matches;
         const QStringList terms = query.split(QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_-]+")), Qt::SkipEmptyParts);
         for (McpClient *c : std::as_const(m_mcp)) {
@@ -1059,7 +1121,11 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                 const QString hay = (full + QLatin1Char(' ') + t.description).toLower();
                 int score = query.isEmpty() ? 0 : (hay.contains(query) ? 100 : 0);
                 for (const QString &term : terms) if (hay.contains(term)) score += 10;
-                if (score > 0) matches.append({score, full, t.description, t.inputSchema});
+                if (score > 0) matches.append({
+                    score, full, t.description, t.inputSchema,
+                    ToolExecutionSafety::toVariantMap(ToolExecutionSafety::fromMcpTool(
+                        t.name, t.description, t.annotations))
+                });
             }
         }
         std::sort(matches.begin(), matches.end(), [](const Match &a, const Match &b) {
@@ -1068,7 +1134,8 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
         QJsonArray found;
         for (int i = 0; i < qMin(limit, matches.size()); ++i)
             found.append(QJsonObject{{"name", matches[i].name}, {"description", matches[i].description},
-                                     {"inputSchema", matches[i].schema}});
+                                     {"inputSchema", matches[i].schema},
+                                     {"safety", QJsonObject::fromVariantMap(matches[i].safety)}});
         result = QString::fromUtf8(QJsonDocument(QJsonObject{{"tools", found}, {"matched", found.size()}}).toJson(QJsonDocument::Compact));
         ok = true;
     } else if (name == QLatin1String("mcp_call_tool")) {
@@ -1085,10 +1152,73 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                 const QString server = rest.left(sep); bare = rest.mid(sep + 2);
                 for (McpClient *c : std::as_const(m_mcp)) if (c->serverName() == server) { client = c; break; }
             }
-            bool exists = false;
-            if (client) for (const McpClient::ToolDef &t : client->tools()) if (t.name == bare) { exists = true; break; }
-            if (!exists) result = QStringLiteral("[mcp: server/tool no encontrado: %1]").arg(target);
-            else result = client->callTool(bare, inner, &ok);
+            const McpClient::ToolDef *tool = findMcpTool(client, bare);
+            if (!tool) {
+                result = QStringLiteral("[mcp: server/tool no encontrado: %1]").arg(target);
+            } else {
+                const auto contract = ToolExecutionSafety::fromMcpTool(
+                    tool->name, tool->description, tool->annotations);
+                const QString hash = ToolExecutionSafety::payloadHash(
+                    client->serverName(), bare, inner);
+                const QString key = ToolExecutionSafety::idempotencyKey(m_correlationId, hash);
+                out[QStringLiteral("payloadHash")] = hash;
+                out[QStringLiteral("idempotencyKey")] = key;
+                out[QStringLiteral("safety")] = ToolExecutionSafety::toVariantMap(contract);
+                out[QStringLiteral("externalWrite")] = contract.effect != QLatin1String("read");
+
+                QJsonObject ledger = loadMcpLedger();
+                const QJsonObject prior = ledger.value(key).toObject();
+                const QString priorStatus = prior.value(QStringLiteral("status")).toString();
+                if (out.value(QStringLiteral("externalWrite")).toBool()
+                    && (priorStatus == QLatin1String("executed")
+                        || priorStatus == QLatin1String("verified"))) {
+                    ok = true;
+                    result = prior.value(QStringLiteral("result")).toString();
+                    out[QStringLiteral("deduplicated")] = true;
+                    out[QStringLiteral("receipt")] = prior.toVariantMap();
+                } else {
+                    QJsonObject rawResult;
+                    result = client->callTool(bare, inner, &ok, &rawResult,
+                                              key, m_correlationId);
+                    const QJsonObject structured =
+                        rawResult.value(QStringLiteral("structuredContent")).toObject();
+                    const QJsonObject serverReceipt =
+                        structured.value(QStringLiteral("receipt")).toObject();
+                    QJsonObject receipt{
+                        {QStringLiteral("status"), ok ? QStringLiteral("executed")
+                                                     : QStringLiteral("failed")},
+                        {QStringLiteral("server"), client->serverName()},
+                        {QStringLiteral("tool"), bare},
+                        {QStringLiteral("correlationId"), m_correlationId},
+                        {QStringLiteral("payloadHash"), hash},
+                        {QStringLiteral("idempotencyKey"), key},
+                        {QStringLiteral("resultHash"), ToolExecutionSafety::resultHash(result)},
+                        {QStringLiteral("result"), result.left(64 * 1024)},
+                        {QStringLiteral("ts"), QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)}
+                    };
+                    // structuredContent.receipt permite prueba fuerte sin acoplarse
+                    // a un proveedor: externalId, before/after y rollbackToken.
+                    for (const QString &field : {
+                             QStringLiteral("externalId"), QStringLiteral("before"),
+                             QStringLiteral("after"), QStringLiteral("rollbackToken"),
+                             QStringLiteral("verification")}) {
+                        if (serverReceipt.contains(field))
+                            receipt.insert(field, serverReceipt.value(field));
+                    }
+                    if (serverReceipt.value(QStringLiteral("status")).toString()
+                            == QLatin1String("verified"))
+                        receipt[QStringLiteral("status")] = QStringLiteral("verified");
+                    if (ok && contract.effect == QLatin1String("read"))
+                        receipt[QStringLiteral("status")] = QStringLiteral("verified");
+                    out[QStringLiteral("receipt")] = receipt.toVariantMap();
+                    if (ok && out.value(QStringLiteral("externalWrite")).toBool()) {
+                        // Se persiste como executed para auditoría, pero sólo un recibo
+                        // verified se deduplica automáticamente.
+                        ledger.insert(key, receipt);
+                        saveMcpLedger(ledger);
+                    }
+                }
+            }
         }
     } else if (name.startsWith(kMcpPrefix)) {
         // mcp__<server>__<tool>

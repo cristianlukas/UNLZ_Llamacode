@@ -79,6 +79,7 @@ set(CORE_SOURCES
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
     src/core/agent/AgentEventLog.cpp
+    src/core/agent/ToolExecutionSafety.cpp
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
     src/core/agent/CodeGraphIndexer.cpp
@@ -162,6 +163,7 @@ set(HEADERS
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
     src/core/agent/AgentEventLog.h
+    src/core/agent/ToolExecutionSafety.h
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
     src/core/agent/CodeGraphIndexer.h
@@ -493,6 +495,7 @@ if (BUILD_TESTS)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_automation_store   tests/test_automation_store.cpp)
     add_lc_test(test_run_history        tests/test_run_history.cpp)
+    add_lc_test(test_tool_execution_safety tests/test_tool_execution_safety.cpp)
     add_lc_test(test_download_history   tests/test_download_history.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)
     add_lc_test(test_toolcalling        tests/test_toolcalling.cpp)

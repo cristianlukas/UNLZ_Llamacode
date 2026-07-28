@@ -2045,6 +2045,31 @@ Item {
 
                         Rectangle {
                             Layout.fillWidth: true
+                            visible: (approvalCard.tool.reason ?? "") === "external_write"
+                            color: Qt.rgba(Theme.warnText.r, Theme.warnText.g, Theme.warnText.b, 0.12)
+                            border.color: Theme.warnText; radius: 6
+                            implicitHeight: externalWarn.implicitHeight + 12
+                            Text {
+                                id: externalWarn
+                                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 8 }
+                                text: "Escritura externa MCP: se ejecutará exactamente el payload mostrado. La huella y el recibo quedarán auditados."
+                                color: Theme.warnText; font { pixelSize: 11; bold: true }
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: (approvalCard.tool.payloadHash ?? "").length > 0
+                            text: "Payload SHA-256: " + (approvalCard.tool.payloadHash ?? "")
+                                  + "\nCorrelation ID: " + (approvalCard.tool.correlationId ?? "")
+                            color: Theme.textMuted
+                            font { family: Theme.codeFont; pixelSize: 10 }
+                            wrapMode: Text.WrapAnywhere
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
                             visible: (approvalCard.tool.detail ?? "").length > 0
                             color: Theme.inputBg; radius: 6
                             border.color: Theme.borderColor

@@ -3,6 +3,7 @@
 #include "SubAgentRunner.h"
 #include "AgentEfficiency.h"
 #include "AgentEventLog.h"
+#include "ToolExecutionSafety.h"
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
 #include "core/ToolCallingSupport.h"
@@ -1394,6 +1395,10 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         return;
     }
     ensureSession();
+    m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    ensureWorker();
+    QMetaObject::invokeMethod(m_worker, "setCorrelationId", Qt::QueuedConnection,
+                              Q_ARG(QString, m_correlationId));
     m_compactStall = 0;   // nuevo turno de usuario → reintentar compactar si hiciera falta
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
@@ -1416,6 +1421,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     m_messages.append(userMsg);
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                           QJsonObject{{QStringLiteral("source"), QStringLiteral("user")},
+                                      {QStringLiteral("correlationId"), m_correlationId},
                                       {QStringLiteral("text"), text.left(4096)},
                                       {QStringLiteral("attachments"), attachments.size()}});
 
@@ -2523,6 +2529,7 @@ void LlamaAgentBackend::processPendingCalls()
     const int sigCnt = ++m_callCounts[sig];
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("tool_call"),
                           QJsonObject{{QStringLiteral("tool"), name},
+                                      {QStringLiteral("correlationId"), m_correlationId},
                                       {QStringLiteral("toolCallId"), id},
                                       {QStringLiteral("toolKind"), kind},
                                       {QStringLiteral("args"), argStr.left(8192)},
@@ -2722,8 +2729,27 @@ void LlamaAgentBackend::processPendingCalls()
     // lectura; al llamar, clasificamos y evaluamos guardrails con nombre/args internos.
     if (name == QLatin1String("mcp_search_tools"))
         kind = QStringLiteral("read");
-    if (name == QLatin1String("mcp_call_tool"))
+    QVariantMap discoveredMcpSafety;
+    if (name == QLatin1String("mcp_call_tool")) {
         kind = toolKind(args.value(QStringLiteral("name")).toString());
+        const QString target = args.value(QStringLiteral("name")).toString();
+        for (const QVariant &value : std::as_const(m_mcpTools)) {
+            const QVariantMap def = value.toMap();
+            const QString full = QStringLiteral("mcp__%1__%2")
+                                     .arg(def.value(QStringLiteral("server")).toString(),
+                                          def.value(QStringLiteral("name")).toString());
+            if (full == target) {
+                discoveredMcpSafety = def.value(QStringLiteral("safety")).toMap();
+                break;
+            }
+        }
+        if (discoveredMcpSafety.isEmpty())
+            discoveredMcpSafety = ToolExecutionSafety::toVariantMap(
+                ToolExecutionSafety::fromMcpTool(target, QString(), {}));
+        if (discoveredMcpSafety.value(QStringLiteral("effect")).toString()
+                == QLatin1String("read"))
+            kind = QStringLiteral("read");
+    }
 
     // PLAN MODE: bloquear cualquier tool que mute (write/shell/mcp). Las read
     // ya están filtradas del schema, pero defendemos por si el modelo igual la pide.
@@ -2810,11 +2836,17 @@ void LlamaAgentBackend::processPendingCalls()
                                       ? args.value(QStringLiteral("arguments")).toObject() : args;
     const bool destructiveGated = (m_hitlDestructive
                                    && m_approvalMode != QLatin1String("super")
-                                   && isDestructiveAction(guardName, guardArgs, m_lastDesktopResult));
+                                   && (isDestructiveAction(guardName, guardArgs, m_lastDesktopResult)
+                                       || discoveredMcpSafety.value(
+                                              QStringLiteral("destructive")).toBool()));
+    const QVariantMap mcpSafety = discoveredMcpSafety;
+    const bool mcpApprovalGated = !mcpSafety.isEmpty()
+                                  && mcpSafety.value(QStringLiteral("approvalRequired"), true).toBool();
     if (destructiveGated)
         emit logAppended(QStringLiteral("[guardrail] '%1' es destructiva → aprobación requerida\n").arg(name));
 
-    if (!forceAsk && !emailGated && !destructiveGated && (autoAll || autoRead || always || emailAuto)) {
+    if (!forceAsk && !emailGated && !destructiveGated && !mcpApprovalGated
+        && (autoAll || autoRead || always || emailAuto)) {
         emit logAppended(QStringLiteral("[tool] auto-approving %1\n").arg(name));
         approveAndContinue(call.value(QStringLiteral("id")).toString(), QStringLiteral("once"));
         return;
@@ -2824,6 +2856,18 @@ void LlamaAgentBackend::processPendingCalls()
     m_awaitId   = call.value(QStringLiteral("id")).toString();
     m_awaitCall = call;
     QString detail = args.value(QStringLiteral("command")).toString();
+    m_awaitPayloadHash.clear();
+    if (name == QLatin1String("mcp_call_tool")) {
+        const QString target = args.value(QStringLiteral("name")).toString();
+        const QString rest = target.startsWith(QStringLiteral("mcp__"))
+                                 ? target.mid(5) : target;
+        const int sep = rest.indexOf(QStringLiteral("__"));
+        const QString server = sep >= 0 ? rest.left(sep) : QString();
+        const QString tool = sep >= 0 ? rest.mid(sep + 2) : target;
+        m_awaitPayloadHash = ToolExecutionSafety::payloadHash(
+            server, tool, args.value(QStringLiteral("arguments")).toObject());
+        detail = QStringLiteral("%1 · payload %2").arg(target, m_awaitPayloadHash.left(12));
+    }
     if (detail.isEmpty()) detail = args.value(QStringLiteral("path")).toString();
     if (detail.isEmpty()) detail = args.value(QStringLiteral("pattern")).toString();
     if (name == QLatin1String("email_send"))
@@ -2866,10 +2910,14 @@ void LlamaAgentBackend::processPendingCalls()
         {QStringLiteral("title"),     name},
         {QStringLiteral("detail"),    detail},
         {QStringLiteral("diff"),      diff},
+        {QStringLiteral("correlationId"), m_correlationId},
+        {QStringLiteral("payloadHash"), m_awaitPayloadHash},
+        {QStringLiteral("safety"), mcpSafety},
         // Motivo del freno: el guardrail Zero-Autonomy tiene prioridad en el card
         // (una destructiva puede además ser write). "" = aprobación normal.
         {QStringLiteral("reason"),    destructiveGated ? QStringLiteral("destructive")
                                     : emailGated       ? QStringLiteral("email")
+                                    : mcpApprovalGated ? QStringLiteral("external_write")
                                                        : QString()}
     });
     ensureAssistantBubble();
@@ -2887,8 +2935,35 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
     const QString name   = fn.value(QStringLiteral("name")).toString();
     const QString argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
+    if (response != QLatin1String("reject") && !m_awaitPayloadHash.isEmpty()) {
+        const QJsonObject approvalArgs = QJsonDocument::fromJson(argStr.toUtf8()).object();
+        const QString target = approvalArgs.value(QStringLiteral("name")).toString();
+        const QString rest = target.startsWith(QStringLiteral("mcp__"))
+                                 ? target.mid(5) : target;
+        const int sep = rest.indexOf(QStringLiteral("__"));
+        const QString currentHash = ToolExecutionSafety::payloadHash(
+            sep >= 0 ? rest.left(sep) : QString(),
+            sep >= 0 ? rest.mid(sep + 2) : target,
+            approvalArgs.value(QStringLiteral("arguments")).toObject());
+        if (currentHash != m_awaitPayloadHash) {
+            const QString error = QStringLiteral(
+                "[aprobación invalidada: el payload MCP cambió antes de ejecutar]");
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  {{QStringLiteral("tool"), name},
+                                   {QStringLiteral("toolCallId"), id},
+                                   {QStringLiteral("correlationId"), m_correlationId},
+                                   {QStringLiteral("reason"), QStringLiteral("approval_payload_mismatch")}});
+            m_awaitId.clear();
+            m_awaitCall = {};
+            m_awaitPayloadHash.clear();
+            appendToolResult(id, name, error);
+            processPendingCalls();
+            return;
+        }
+    }
     m_awaitId.clear();
     m_awaitCall = {};
+    m_awaitPayloadHash.clear();
 
     // Comando/ruta a mostrar en la tarjeta de la tool.
     const QJsonObject a = QJsonDocument::fromJson(argStr.toUtf8()).object();
@@ -2940,10 +3015,11 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     const bool ok      = result.value(QStringLiteral("ok")).toBool();
     QString res        = result.value(QStringLiteral("result")).toString();
     const bool isWrite = result.value(QStringLiteral("isWrite")).toBool();
+    const bool externalWrite = result.value(QStringLiteral("externalWrite")).toBool();
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
-    const bool failureSpiral = recordToolOutcome(name, ok, isWrite, res);
+    const bool failureSpiral = recordToolOutcome(name, ok, isWrite || externalWrite, res);
     if (name.startsWith(QLatin1String("desktop_"))) {
         m_lastDesktopTool = name;
         m_lastDesktopResult = res;
@@ -2959,8 +3035,20 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
                                                  : QStringLiteral("failure"),
                           QJsonObject{{QStringLiteral("tool"), name},
                                       {QStringLiteral("toolCallId"), callId},
+                                      {QStringLiteral("correlationId"),
+                                       result.value(QStringLiteral("correlationId")).toString()},
                                       {QStringLiteral("ok"), ok},
                                       {QStringLiteral("isWrite"), isWrite},
+                                      {QStringLiteral("externalWrite"), externalWrite},
+                                      {QStringLiteral("payloadHash"),
+                                       result.value(QStringLiteral("payloadHash")).toString()},
+                                      {QStringLiteral("idempotencyKey"),
+                                       result.value(QStringLiteral("idempotencyKey")).toString()},
+                                      {QStringLiteral("deduplicated"),
+                                       result.value(QStringLiteral("deduplicated")).toBool()},
+                                      {QStringLiteral("receipt"),
+                                       QJsonObject::fromVariantMap(
+                                           result.value(QStringLiteral("receipt")).toMap())},
                                       {QStringLiteral("detail"), m_execCommand},
                                       {QStringLiteral("result"), res.left(8192)}});
 
@@ -2998,6 +3086,20 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     } else if (!isWrite) {
         // write_file/edit_file → tarjeta de diff (abajo). El resto → tarjeta propia.
         appendToolCard(name, toolKind(name), ok, m_execCommand, res);
+        if (!m_messages.isEmpty() && !result.value(QStringLiteral("receipt")).toMap().isEmpty()) {
+            QVariantMap card = m_messages.last().toMap();
+            card[QStringLiteral("correlationId")] =
+                result.value(QStringLiteral("correlationId")).toString();
+            card[QStringLiteral("payloadHash")] =
+                result.value(QStringLiteral("payloadHash")).toString();
+            card[QStringLiteral("idempotencyKey")] =
+                result.value(QStringLiteral("idempotencyKey")).toString();
+            card[QStringLiteral("deduplicated")] =
+                result.value(QStringLiteral("deduplicated")).toBool();
+            card[QStringLiteral("receipt")] = result.value(QStringLiteral("receipt")).toMap();
+            m_messages[m_messages.size() - 1] = card;
+            emit messagesChanged();
+        }
     }
     m_execCommand.clear();
 

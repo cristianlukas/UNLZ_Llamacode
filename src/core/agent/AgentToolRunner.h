@@ -42,6 +42,8 @@ public slots:
     void setServerBaseUrl(const QString &url);
     // Sesión activa del agente: la tool recent_actions filtra el event-log por ella.
     void setSessionId(const QString &sessionId);
+    // Identificador de punta a punta del turno actual (Task/agente/tools/reintentos).
+    void setCorrelationId(const QString &correlationId);
     // Cuentas de correo (con password ya resuelto) para email_send/list/read.
     void setMailAccounts(const QVariantList &accounts);
     // Proveedores web externos habilitados desde Integrations:
@@ -108,6 +110,7 @@ private:
     QStringList m_allowedRoots;   // carpetas extra permitidas (scope "folder")
     QString m_serverBaseUrl;
     QString m_sessionId;           // sesión activa (filtro de recent_actions)
+    QString m_correlationId;
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QVariantList m_webProviders;   // proveedores REST opt-in (p.ej. Camofox)
     QHash<QString, QList<qint64>> m_webRequestTimes; // rate limit por host, ventana 60 s

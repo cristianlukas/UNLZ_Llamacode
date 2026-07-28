@@ -35,7 +35,9 @@ void RunHistoryTests::jsonRoundTrip()
     const QVariantMap in{
         {"runId", "r1"}, {"ownerId", "proc-a"}, {"startedAt", "2024-01-01T09:00:00"},
         {"finishedAt", "2024-01-01T09:05:00"}, {"status", "ok"}, {"summary", "listo"},
-        {"source", "manual"}, {"automationId", ""}, {"log", "traza completa\nlinea 2"},
+        {"source", "manual"}, {"automationId", ""}, {"correlationId", "corr-1"},
+        {"log", "traza completa\nlinea 2"},
+        {"receipts", QVariantList{QVariantMap{{"status", "executed"}, {"tool", "create_issue"}}}},
         {"report", QVariantList{
             QVariantMap{{"n", 1}, {"tool", "desktop_launch"}, {"ok", true}, {"summary", "ok"}},
             QVariantMap{{"n", 2}, {"tool", "desktop_assert"}, {"ok", false}, {"summary", "FAIL"}}}}
@@ -44,6 +46,9 @@ void RunHistoryTests::jsonRoundTrip()
     QCOMPARE(out.value("runId").toString(), QStringLiteral("r1"));
     QCOMPARE(out.value("status").toString(), QStringLiteral("ok"));
     QCOMPARE(out.value("log").toString(), QStringLiteral("traza completa\nlinea 2"));
+    QCOMPARE(out.value("correlationId").toString(), QStringLiteral("corr-1"));
+    QCOMPARE(out.value("receipts").toList().first().toMap().value("tool").toString(),
+             QStringLiteral("create_issue"));
     // El run-report por paso sobrevive el round-trip.
     const QVariantList rep = out.value("report").toList();
     QCOMPARE(rep.size(), 2);

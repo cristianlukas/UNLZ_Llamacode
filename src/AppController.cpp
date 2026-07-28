@@ -6189,6 +6189,15 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
 
     // Historial: registrar la corrida bajo el Proceso y, si vino de una
     // Programación, también bajo ésta (así ambas pestañas muestran su historial).
+    QVariantList receipts;
+    QString correlationId;
+    for (const QVariant &message : std::as_const(m_agentMessages)) {
+        const QVariantMap row = message.toMap();
+        const QVariantMap receipt = row.value(QStringLiteral("receipt")).toMap();
+        if (!receipt.isEmpty()) receipts.append(receipt);
+        if (correlationId.isEmpty())
+            correlationId = row.value(QStringLiteral("correlationId")).toString();
+    }
     QVariantMap rec{
         { QStringLiteral("startedAt"),  m_runningTaskStartedAt },
         { QStringLiteral("finishedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate) },
@@ -6199,6 +6208,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
                                             ? QStringLiteral("manual")
                                             : QStringLiteral("programacion") },
         { QStringLiteral("automationId"), m_runningAutomationId },
+        { QStringLiteral("correlationId"), correlationId },
+        { QStringLiteral("receipts"), receipts },
         { QStringLiteral("report"),       m_replayReport.isEmpty()
                                               ? AutomationRunner::buildRunReport(m_agentMessages)
                                               : m_replayReport },

@@ -278,6 +278,18 @@ el worker y el modelo recibe sólo `mcp_search_tools` y `mcp_call_tool`. La bús
 devuelve bajo demanda los schemas relevantes, evitando reenviar todas las
 definiciones en cada turno y manteniendo plano el costo de contexto al sumar servers.
 
+Las tools MCP externas aplican además un contrato transaccional uniforme. LlamaCode
+lee las `annotations` estándar (`readOnlyHint`, `destructiveHint`,
+`idempotentHint`, `openWorldHint`) y admite una extensión opcional
+`annotations.llamacode`; si faltan metadatos, la tool se considera escritura
+externa y exige aprobación. La aprobación queda ligada al SHA-256 del payload
+exacto, cada turno propaga un `correlationId` y cada llamada recibe una clave de
+idempotencia por `_meta`. Los resultados generan recibos persistentes con hashes,
+estado `executed`/`verified`, deduplicación dentro de la misma correlación y, cuando
+el server devuelve `structuredContent.receipt`, evidencia como `externalId`,
+`before`, `after`, `verification` y `rollbackToken`. Tasks conserva esos recibos
+en su historial de corridas.
+
 La delegación multi-agente ajusta automáticamente su concurrencia al perfil activo:
 respeta los slots de `llama-server`, reduce el fan-out con contextos largos y aplica
 límites conservadores según la VRAM detectada. Un perfil de un solo slot conserva
