@@ -4,32 +4,29 @@
     "tier": "24GB-Qwen",
     "order": 1,
     "extra": true,
-    "displayName": "[coding+visión] 24GB · ThinkingCap Qwen3.6-27B Q4_K_M",
+    "displayName": "[coding] 24GB · Qwen3.6-27B (calidad máxima)",
     "showcaseGroup": "top24",
-    "showcaseLabel": "Coding + visión",
+    "showcaseLabel": "Coding",
     "minVramGb": 24,
     "minRamGb": 32,
     "cpuOk": false,
     "requiresMtpBinary": true,
-    "binaryPin": "b9763",
-    "folder": "ThinkingCap-Qwen3.6-27B-GGUF",
+    "folder": "Qwen3.6-27B-MTP",
     "model": {
-      "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF",
-      "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf",
-      "quant": "Q4_K_M",
-      "mmprojRepo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF",
-      "mmprojFile": "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf"
+      "repo": "unsloth/Qwen3.6-27B-MTP-GGUF",
+      "file": "Qwen3.6-27B-IQ4_XS.gguf",
+      "quant": "IQ4_XS"
     },
     "runtime": {
-      "ctx": 32768,
-      "gpuLayers": -1,
-      "batch": 2048,
-      "ubatch": 512,
+      "ctx": 262000,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
       "threads": 8,
       "kv": "q4_0",
       "flashAttn": true,
-      "mlock": false,
-      "mmap": true
+      "mlock": true,
+      "mmap": false
     },
     "extraArgs": [
       "--cache-type-v",
@@ -42,38 +39,39 @@
       "20",
       "--min-p",
       "0.0",
-      "--repeat-penalty",
-      "1.0",
-      "--presence-penalty",
-      "0.0",
       "--no-context-shift",
       "--metrics",
       "--no-warmup",
+      "--cache-ram",
+      "32768",
       "--cache-reuse",
       "512",
       "--jinja",
       "--threads-batch",
       "8",
       "--predict",
-      "8192",
+      "4096",
       "--parallel",
       "1",
       "--reasoning",
-      "on",
-      "--chat-template-kwargs",
-      "{\"preserve_thinking\":true}"
+      "off"
     ],
     "mtp": {
       "enabled": true,
       "args": [
         "--spec-type",
-        "draft-mtp",
+        "mtp",
         "--spec-draft-n-max",
-        "4"
+        "3",
+        "--spec-ngram-mod-n-match",
+        "24",
+        "--spec-ngram-mod-n-min",
+        "16",
+        "--spec-ngram-mod-n-max",
+        "32"
       ]
     },
-    "binaryKind": "official",
-    "comment": "Perfil premium 24GB validado con Agent efficiency E2E v1 x3 contra KAT Coder 2.5: ambos 11/11 x3 al primer intento y cero reparaciones; ThinkingCap obtuvo mediana 181.2s frente a 214.4s (15.5% menor), 33.17 frente a 27.51 tok/s y 3764 frente a 4201 tokens. Mediana medida: 21474MB VRAM y 22140MB RAM. MTP self-contained n=4, ctx 32768, KV q4_0 y visión."
+    "binaryKind": "beellama"
   },
   {
     "id": "sys-fastgemma",

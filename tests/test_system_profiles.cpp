@@ -53,7 +53,7 @@ private slots:
     void manager_smallProfilesAreConservative();
     void manager_defaultCodingProfileUsesKatCoder();
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
-    void manager_24gbPremiumUsesBenchmarkedThinkingCap();
+    void manager_24gbPremiumRemainsMaxQUntilDenseComparison();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -369,34 +369,31 @@ void SystemProfilesTests::manager_16gbCodingProfileUsesBenchmarkedKatCoder()
              QStringLiteral("on"));
 }
 
-void SystemProfilesTests::manager_24gbPremiumUsesBenchmarkedThinkingCap()
+void SystemProfilesTests::manager_24gbPremiumRemainsMaxQUntilDenseComparison()
 {
     ProfileManager pm;
     const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-maxq"));
     QCOMPARE(launch.value(QStringLiteral("name")).toString(),
-             QStringLiteral("[coding+visión] 24GB · ThinkingCap Qwen3.6-27B Q4_K_M"));
+             QStringLiteral("[coding] 24GB · Qwen3.6-27B (calidad máxima)"));
 
     const QVariantMap model =
         pm.getModelProfile(launch.value(QStringLiteral("modelProfileId")).toString());
     const QString modelsDir =
         QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/models";
     const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
-    const QString modelBase = modelsDir + "/ThinkingCap-Qwen3.6-27B-GGUF/";
+    const QString modelBase = modelsDir + "/Qwen3.6-27B-MTP/";
     QCOMPARE(model.value(QStringLiteral("modelId")).toString(),
              QUuid::createUuidV5(
-                 ns, QString(modelBase + "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf").toUtf8())
+                 ns, QString(modelBase + "Qwen3.6-27B-IQ4_XS.gguf").toUtf8())
                  .toString(QUuid::WithoutBraces));
-    QCOMPARE(model.value(QStringLiteral("mmprojId")).toString(),
-             QUuid::createUuidV5(
-                 ns, QString(modelBase + "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf").toUtf8())
-                 .toString(QUuid::WithoutBraces));
+    QVERIFY(model.value(QStringLiteral("mmprojId")).toString().isEmpty());
 
     const QVariantMap runtime =
         pm.getRuntimePreset(launch.value(QStringLiteral("runtimePresetId")).toString());
-    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 32768);
-    QCOMPARE(runtime.value(QStringLiteral("gpuLayers")).toInt(), -1);
-    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 2048);
-    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 262000);
+    QCOMPARE(runtime.value(QStringLiteral("gpuLayers")).toInt(), 999);
+    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 64);
     QCOMPARE(runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q4_0"));
 
     const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
@@ -404,11 +401,9 @@ void SystemProfilesTests::manager_24gbPremiumUsesBenchmarkedThinkingCap()
         const int index = args.indexOf(flag);
         return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
     };
-    QCOMPARE(valueAfter(QStringLiteral("--spec-type")), QStringLiteral("draft-mtp"));
-    QCOMPARE(valueAfter(QStringLiteral("--spec-draft-n-max")), QStringLiteral("4"));
-    QCOMPARE(valueAfter(QStringLiteral("--repeat-penalty")), QStringLiteral("1.0"));
-    QCOMPARE(valueAfter(QStringLiteral("--presence-penalty")), QStringLiteral("0.0"));
-    QCOMPARE(valueAfter(QStringLiteral("--reasoning")), QStringLiteral("on"));
+    QCOMPARE(valueAfter(QStringLiteral("--spec-type")), QStringLiteral("mtp"));
+    QCOMPARE(valueAfter(QStringLiteral("--spec-draft-n-max")), QStringLiteral("3"));
+    QCOMPARE(valueAfter(QStringLiteral("--reasoning")), QStringLiteral("off"));
 
     QFile bundle(bundlePath());
     QVERIFY(bundle.open(QIODevice::ReadOnly));
@@ -418,8 +413,8 @@ void SystemProfilesTests::manager_24gbPremiumUsesBenchmarkedThinkingCap()
             == QStringLiteral("sys-maxq");
     });
     QVERIFY(premium != entries.end());
-    QCOMPARE(premium->toObject().value(QStringLiteral("binaryPin")).toString(),
-             QStringLiteral("b9763"));
+    QCOMPARE(premium->toObject().value(QStringLiteral("binaryKind")).toString(),
+             QStringLiteral("beellama"));
 }
 
 void SystemProfilesTests::controller_recommendsClosestTier()

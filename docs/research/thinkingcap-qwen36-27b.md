@@ -4,11 +4,11 @@ Fecha: 2026-07-28. Hardware: RTX 3090 24 GB, Ryzen 7 7700, Windows.
 
 ## Veredicto
 
-ThinkingCap-Qwen3.6-27B Q4_K_M con MTP self-contained `n=4` reemplaza al
-Qwen3.6-27B base como perfil premium de coding + visión para 24 GB. En la suite
-agente de LlamaCode igualó la calidad y estabilidad de KAT Coder 2.5, pero terminó
-15,5% antes en la mediana. KAT se mantiene como default de 16/20 GB y como opción
-con mayor margen de VRAM.
+ThinkingCap-Qwen3.6-27B queda como perfil experimental y **no reemplaza todavía**
+a MAX-Q Qwen3.6-27B Dense. La comparación primaria correcta es dense contra dense;
+KAT Coder 2.5, por ser MoE, se conserva únicamente como referencia secundaria de
+calidad. El benchmark crudo homogéneo favorece a MAX-Q; ThinkingCap sólo mostró
+ventaja de extremo a extremo frente a KAT al sumar MTP y menor uso de tokens.
 
 ## Configuración medida
 
@@ -47,6 +47,25 @@ ThinkingCap redujo 33,185 s la mediana, equivalente a 15,5% respecto de KAT. Su
 TPS mediano fue 20,6% mayor y utilizó 10,4% menos tokens en la mediana. El costo
 es 2799 MB más de VRAM mediana (15,0%); por eso el perfil queda limitado a 24 GB.
 
+Esta tabla no decide el reemplazo de MAX-Q: KAT es MoE y se incluye sólo como
+referencia secundaria de calidad.
+
+## Comparación primaria dense vs dense
+
+`llama-bench` b9763, RTX 3090, cinco repeticiones, GPU completa, FA, batch 2048,
+ubatch 512, KV q4_0; prompt 512 y generación 128:
+
+| Dense | Quant | Prompt processing | Generación |
+|---|---|---:|---:|
+| MAX-Q Qwen3.6-27B | IQ4_XS | 843,31 tok/s | 30,96 tok/s |
+| ThinkingCap Qwen3.6-27B | Q4_K_M | 802,68 tok/s | 29,42 tok/s |
+
+En esta medición cruda MAX-Q fue 5,1% más rápido procesando prompt y 5,2% más
+rápido generando. No se activó MTP en `llama-bench`; por eso este resultado mide
+el costo base de ambos dense y se complementa con el smoke MTP, no lo sustituye.
+La promoción queda pendiente de repetir `Agent efficiency E2E v1` x3 con
+`agent-avanzado` contra MAX-Q, misma ventana de contexto y política MTP.
+
 Resultados originales:
 `AppLocalData/LlamaCode/benchmark-runs/Agent_efficiency_E2E_v1_20260728_113248/`.
 
@@ -54,8 +73,8 @@ Resultados originales:
 
 - El detector reconoce los GGUF oficiales `ThinkingCap-Qwen3.6-*` como MTP
   self-contained aunque el nombre no contenga el token `-MTP`.
-- `sys-maxq` conserva su ID por compatibilidad, pero ahora instala ThinkingCap
-  Q4_K_M, su projector y usa llama.cpp oficial con MTP4 a 32k.
+- `sys-maxq` continúa apuntando a MAX-Q; ThinkingCap no se promueve con evidencia
+  contra un baseline MoE.
 - `tools/add_thinkingcap_profiles.py` permite instalar de forma idempotente el
   perfil experimental/comparativo en una configuración de desarrollo.
 
