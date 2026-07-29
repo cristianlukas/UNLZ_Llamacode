@@ -358,9 +358,12 @@ QString AgentToolRunner::summarizeBrowserNetworkEvidence(const QString &raw,
         QString origin;
         QString path;
         QSet<int> statuses;
+        QSet<QString> queryParameterNames;
         int count = 0;
     };
     QMap<QString, Endpoint> grouped;
+    QMap<QString, int> transitions;
+    QString previousKey;
     int ignoredStatic = 0;
     int ignoredInvalid = 0;
 
@@ -414,8 +417,15 @@ QString AgentToolRunner::summarizeBrowserNetworkEvidence(const QString &raw,
         ep.origin = origin;
         ep.path = path;
         ++ep.count;
+        const QUrlQuery query(url);
+        for (const auto &item : query.queryItems(QUrl::FullyDecoded))
+            if (!item.first.trimmed().isEmpty())
+                ep.queryParameterNames.insert(item.first.left(80));
         const auto statusMatch = statusRx.match(line.mid(urlMatch.capturedEnd()));
         if (statusMatch.hasMatch()) ep.statuses.insert(statusMatch.captured(1).toInt());
+        if (!previousKey.isEmpty() && previousKey != key)
+            ++transitions[previousKey + QChar(0x1f) + key];
+        previousKey = key;
     }
 
     QJsonArray endpoints;
@@ -424,22 +434,41 @@ QString AgentToolRunner::summarizeBrowserNetworkEvidence(const QString &raw,
         QList<int> sortedStatuses(ep.statuses.cbegin(), ep.statuses.cend());
         std::sort(sortedStatuses.begin(), sortedStatuses.end());
         for (int status : sortedStatuses) statuses.append(status);
+        QStringList queryNames(ep.queryParameterNames.cbegin(), ep.queryParameterNames.cend());
+        std::sort(queryNames.begin(), queryNames.end());
+        QJsonArray pathParameters;
+        if (ep.path.contains(QLatin1String("{id}"))) pathParameters.append(QStringLiteral("id"));
         endpoints.append(QJsonObject{
             {QStringLiteral("method"), ep.method},
             {QStringLiteral("origin"), ep.origin},
             {QStringLiteral("pathTemplate"), ep.path},
             {QStringLiteral("count"), ep.count},
-            {QStringLiteral("statuses"), statuses}});
+            {QStringLiteral("statuses"), statuses},
+            {QStringLiteral("pathParameters"), pathParameters},
+            {QStringLiteral("queryParameterNames"), QJsonArray::fromStringList(queryNames)},
+            {QStringLiteral("confidence"), ep.count > 1 ? 0.9 : 0.7}});
+    }
+    QJsonArray sequence;
+    for (auto it = transitions.cbegin(); it != transitions.cend(); ++it) {
+        const QStringList pair = it.key().split(QChar(0x1f));
+        if (pair.size() == 2)
+            sequence.append(QJsonObject{{QStringLiteral("from"), pair.at(0)},
+                                        {QStringLiteral("to"), pair.at(1)},
+                                        {QStringLiteral("count"), it.value()},
+                                        {QStringLiteral("inference"), QStringLiteral("observed_order")}});
     }
     const QJsonObject result{
         {QStringLiteral("kind"), QStringLiteral("browser_network_evidence")},
+        {QStringLiteral("contractVersion"), 1},
         {QStringLiteral("endpointCount"), endpoints.size()},
         {QStringLiteral("endpoints"), endpoints},
+        {QStringLiteral("sequence"), sequence},
         {QStringLiteral("ignoredStatic"), ignoredStatic},
         {QStringLiteral("ignoredInvalid"), ignoredInvalid},
         {QStringLiteral("truncatedInput"), raw.size() > 2 * 1024 * 1024},
         {QStringLiteral("privacy"), QJsonObject{
              {QStringLiteral("queryValuesRetained"), false},
+             {QStringLiteral("queryParameterNamesRetained"), true},
              {QStringLiteral("headersRetained"), false},
              {QStringLiteral("bodiesRetained"), false},
              {QStringLiteral("volatilePathSegmentsNormalized"), true}}}};
@@ -2964,8 +2993,11 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
 
         const bool includeStatic = args.value(QStringLiteral("include_static")).toBool(false);
         QJsonObject networkArgs;
-        if (networkTool->inputSchema.value(QStringLiteral("properties")).toObject()
-                .contains(QStringLiteral("includeStatic")))
+        const QJsonObject networkProperties =
+            networkTool->inputSchema.value(QStringLiteral("properties")).toObject();
+        if (networkProperties.contains(QStringLiteral("static")))
+            networkArgs.insert(QStringLiteral("static"), includeStatic);
+        else if (networkProperties.contains(QStringLiteral("includeStatic")))
             networkArgs.insert(QStringLiteral("includeStatic"), includeStatic);
         bool called = false;
         const QString raw = client->callTool(networkTool->name, networkArgs, &called,
@@ -2973,8 +3005,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (!called)
             return QStringLiteral("[browser_network_discover: Playwright no pudo leer "
                                   "el tráfico]\n") + raw.left(2000);
+        const QString summarized = summarizeBrowserNetworkEvidence(raw, includeStatic);
+        const QString artifactId = args.value(QStringLiteral("artifact_id")).toString().trimmed();
+        bool persisted = false;
+        if (!artifactId.isEmpty()) {
+            const QVariantMap evidence =
+                QJsonDocument::fromJson(summarized.toUtf8()).object().toVariantMap();
+            persisted = AutomationArtifactStore::appendNetworkDiscovery(
+                artifactId, evidence, args.value(QStringLiteral("action")).toString());
+        }
         if (ok) *ok = true;
-        return summarizeBrowserNetworkEvidence(raw, includeStatic);
+        if (artifactId.isEmpty()) return summarized;
+        QJsonObject response = QJsonDocument::fromJson(summarized.toUtf8()).object();
+        response[QStringLiteral("artifactId")] = artifactId;
+        response[QStringLiteral("persisted")] = persisted;
+        return QString::fromUtf8(QJsonDocument(response).toJson(QJsonDocument::Compact));
     }
     if (name == QLatin1String("email_accounts")) {
         if (ok) *ok = true;

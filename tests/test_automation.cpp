@@ -37,6 +37,7 @@ private slots:
     void headlessBrowserCommandForcesHeadless();
     void artifactsRoundTripAndRedactSecrets();
     void artifactLearningsAppendAndPrompt();
+    void networkDiscoveriesPersistDedupAndReachPrompt();
     void promptDedupsRepeatedLearnings();
     void desktopPromptKeepsVerboseRecipesCompact();
     void keyBufferAccumulatesTextIntoTypeStep();
@@ -637,6 +638,54 @@ void AutomationTests::artifactLearningsAppendAndPrompt()
         AutomationArtifactStore::recipe(id));
     QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
+    QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::networkDiscoveriesPersistDedupAndReachPrompt()
+{
+    const QVariantMap task{{"id", "network-discovery-test"},
+                           {"name", "Descubrir contrato"},
+                           {"description", "Crear un elemento"},
+                           {"executionMode", "browserBackground"},
+                           {"discoverNetwork", true}};
+    const QString id = AutomationArtifactStore::create(
+        task, QVariantMap{{"kind", "browser"}}, QVariantList{}, QStringList{});
+    QVERIFY(!id.isEmpty());
+    const QVariantMap evidence{
+        {"kind", "browser_network_evidence"},
+        {"endpoints", QVariantList{
+             QVariantMap{{"method", "POST"},
+                         {"origin", "https://api.example.com"},
+                         {"pathTemplate", "/v1/items/{id}"},
+                         {"count", 2},
+                         {"statuses", QVariantList{201, 202}}}}},
+        {"privacy", QVariantMap{{"queryValuesRetained", false},
+                                {"headersRetained", false},
+                                {"bodiesRetained", false}}}};
+    QVERIFY(AutomationArtifactStore::appendNetworkDiscovery(
+        id, evidence, QStringLiteral("Click en Crear token=SECRETO")));
+    QVERIFY(AutomationArtifactStore::appendNetworkDiscovery(
+        id, evidence, QStringLiteral("Click repetido")));
+    const QVariantList discoveries = AutomationArtifactStore::networkDiscoveries(id);
+    QCOMPARE(discoveries.size(), 1);
+    QVERIFY(!discoveries.first().toMap().value("action").toString().contains("SECRETO"));
+    QCOMPARE(discoveries.first().toMap().value("reviewStatus").toString(),
+             QStringLiteral("pending"));
+    const QString signature = discoveries.first().toMap().value("signature").toString();
+    QVERIFY(AutomationArtifactStore::setNetworkDiscoveryReview(
+        id, signature, QStringLiteral("approved")));
+    QCOMPARE(AutomationArtifactStore::networkDiscoveries(id).first().toMap()
+                 .value("reviewStatus").toString(), QStringLiteral("approved"));
+    QVERIFY(!AutomationArtifactStore::setNetworkDiscoveryReview(
+        id, signature, QStringLiteral("unsafe-status")));
+
+    const QString prompt = AutomationRunner::augmentPrompt(
+        task, AutomationArtifactStore::manifest(id), AutomationArtifactStore::recipe(id));
+    QVERIFY(prompt.contains(QStringLiteral("browser_network_discover")));
+    QVERIFY(prompt.contains(QStringLiteral("POST https://api.example.com/v1/items/{id}")));
+    QVERIFY(prompt.contains(QStringLiteral("no autorización")));
+    QVERIFY(AutomationArtifactStore::clearNetworkDiscoveries(id));
+    QVERIFY(AutomationArtifactStore::networkDiscoveries(id).isEmpty());
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
 }
 

@@ -811,6 +811,13 @@ declarar un bloqueo. La evidencia se agrupa por método, origen y path; LlamaCod
 conserva query strings, headers, cookies ni bodies, normaliza identificadores
 volátiles y excluye assets estáticos por defecto. La inspección es pasiva: no
 reproduce requests ni evita autenticación, permisos o aprobaciones.
+En **Enseñar tarea → Navegador background** se puede activar esta observación. Tras
+ejecutar el flujo, el agente correlaciona el resumen con la acción principal y lo
+persiste en `recipe.json` como evidencia pendiente de revisión. El botón **Red** de
+cada proceso permite revisar o limpiar los contratos observados; las ejecuciones
+siguientes reciben como contexto sólo los últimos resúmenes acotados. Cada
+descubrimiento puede aprobarse o rechazarse: los rechazados no vuelven a entrar al
+prompt adaptativo.
 
 La lectura web usa proveedores tipados. `web_search` consulta SearXNG —incluido un
 endpoint local configurado explícitamente— o DuckDuckGo. `web_fetch` ejecuta el

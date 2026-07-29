@@ -8075,12 +8075,14 @@ QString AppController::startDesktopTeach(const QString &taskId, const QString &s
     return m_teachRecorder.startDesktop(task, scopeKind, scopeTargetId);
 }
 
-QString AppController::startBrowserTeach(const QString &taskId, const QString &url)
+QString AppController::startBrowserTeach(const QString &taskId, const QString &url,
+                                         bool discoverNetwork)
 {
     QVariantMap task = m_tasks.get(taskId);
     if (task.isEmpty()) return QStringLiteral("Guardá la Task antes de iniciar Teach.");
     task[QStringLiteral("executionMode")] = QStringLiteral("browserBackground");
     task[QStringLiteral("automationStatus")] = QStringLiteral("recording");
+    task[QStringLiteral("discoverNetwork")] = discoverNetwork;
     m_tasks.save(taskId, task);
     const QString recorderError = m_teachRecorder.startBrowser(task, url);
     if (!recorderError.isEmpty()) return recorderError;
@@ -8199,6 +8201,24 @@ bool AppController::addAutomationTemplateVariant(const QString &artifactId,
 QVariantList AppController::automationTimeline(const QString &artifactId) const
 {
     return AutomationArtifactStore::timeline(artifactId);
+}
+
+QVariantList AppController::automationNetworkDiscoveries(const QString &artifactId) const
+{
+    return AutomationArtifactStore::networkDiscoveries(artifactId);
+}
+
+bool AppController::reviewAutomationNetworkDiscovery(const QString &artifactId,
+                                                     const QString &signature,
+                                                     const QString &status)
+{
+    return AutomationArtifactStore::setNetworkDiscoveryReview(
+        artifactId, signature, status);
+}
+
+bool AppController::clearAutomationNetworkDiscoveries(const QString &artifactId)
+{
+    return AutomationArtifactStore::clearNetworkDiscoveries(artifactId);
 }
 
 QString AppController::importBrowserSkillAsTask(const QString &skillName)

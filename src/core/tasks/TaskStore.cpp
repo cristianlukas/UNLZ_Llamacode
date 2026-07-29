@@ -189,6 +189,7 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     // cual el Teach; liviano) o "adaptive" (el agente entiende título+descripción+
     // teach y decide cada paso; robusto ante cambios de UI, más pesado).
     t["trainingType"]    = def.value("trainingType", t.value("trainingType", QStringLiteral("literal")));
+    t["discoverNetwork"] = def.value("discoverNetwork", t.value("discoverNetwork", false));
     t["updatedAt"]       = now;
 
     QString outId;

@@ -23,6 +23,12 @@ public:
                                    const QString &sourcePath);
     static QString importBrowserSkill(const QString &skillName, const QVariantMap &task);
     static bool appendLearning(const QString &id, const QString &summary, const QString &log);
+    static bool appendNetworkDiscovery(const QString &id, const QVariantMap &evidence,
+                                       const QString &action = QString());
+    static QVariantList networkDiscoveries(const QString &id);
+    static bool setNetworkDiscoveryReview(const QString &id, const QString &signature,
+                                          const QString &status);
+    static bool clearNetworkDiscoveries(const QString &id);
     static bool removeEvidence(const QString &id, const QString &fileName);
     static QString redact(const QString &text);
 };

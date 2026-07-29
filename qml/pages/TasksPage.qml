@@ -511,6 +511,12 @@ Item {
                                 onClicked: templatePopup.openFor(model.teachArtifactId, taskName)
                             }
                             LcButton {
+                                text: "Red"
+                                secondary: true
+                                visible: !!model.teachArtifactId
+                                onClicked: networkPopup.openFor(model.teachArtifactId, taskName)
+                            }
+                            LcButton {
                                 text: "Detener"
                                 secondary: true
                                 visible: App.runningTaskId === taskId
@@ -793,6 +799,27 @@ Item {
                 visible: teachMode.currentIndex === 1
                 placeholderText: "URL inicial (https://...)"
             }
+            CheckBox {
+                id: discoverNetwork
+                visible: teachMode.currentIndex === 1
+                checked: true
+                text: "Descubrir y guardar contratos de red durante la ejecución"
+                contentItem: Text {
+                    text: discoverNetwork.text
+                    color: Theme.textSecondary
+                    font.pixelSize: 11
+                    leftPadding: discoverNetwork.indicator.width + 6
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: teachMode.currentIndex === 1 && discoverNetwork.checked
+                text: "Observa tráfico ya generado por Playwright, elimina queries, headers, cookies y cuerpos, y lo deja pendiente de revisión. No reejecuta endpoints."
+                color: Theme.textMuted
+                font.pixelSize: 10
+                wrapMode: Text.Wrap
+            }
             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
             Text {
                 text: "Estado: " + App.teachState
@@ -843,7 +870,8 @@ Item {
                                     : (teachObjective.text.trim().substring(0, 60) || "Tarea enseñada"),
                                 "description": teachObjective.text.trim(),
                                 "prePrompt": teachObjective.text.trim(),
-                                "executionMode": teachMode.currentIndex === 0 ? "desktop" : "browserBackground"
+                                "executionMode": teachMode.currentIndex === 0 ? "desktop" : "browserBackground",
+                                "discoverNetwork": teachMode.currentIndex === 1 && discoverNetwork.checked
                             })
                             if (!pid || pid.length === 0) {
                                 teachError.text = "No se pudo crear el proceso."
@@ -855,7 +883,7 @@ Item {
                             ? App.startDesktopTeach(pid,
                                 scopeKind.currentIndex === 0 ? "screen" : "window",
                                 targetCombo.currentValue)
-                            : App.startBrowserTeach(pid, teachUrl.text)
+                            : App.startBrowserTeach(pid, teachUrl.text, discoverNetwork.checked)
                         teachError.text = err
                     }
                 }
@@ -2379,6 +2407,118 @@ Item {
                 Layout.fillWidth: true
                 Text { Layout.fillWidth: true; text: templatePopup.statusText; color: Theme.accent; elide: Text.ElideRight }
                 LcButton { text: "Cerrar"; onClicked: templatePopup.close() }
+            }
+        }
+    }
+
+    Popup {
+        id: networkPopup
+        modal: true
+        parent: Overlay.overlay
+        width: Math.min(720, root.width - 80)
+        height: Math.min(520, root.height - 80)
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 18
+        property string artifactId: ""
+        property string processName: ""
+        property var rows: []
+        property string statusText: ""
+        function refresh() { rows = App.automationNetworkDiscoveries(artifactId) }
+        function openFor(id, name) {
+            artifactId = id; processName = name; statusText = ""; refresh(); open()
+        }
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text { text: "Contratos de red · " + networkPopup.processName; color: Theme.textPrimary; font.bold: true }
+            Text {
+                Layout.fillWidth: true
+                text: "Evidencia pasiva correlacionada con acciones del flujo. No contiene query strings, headers, cookies ni cuerpos y no autoriza a reproducir requests."
+                color: Theme.textMuted; wrapMode: Text.Wrap; font.pixelSize: 11
+            }
+            ListView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                model: networkPopup.rows
+                delegate: Rectangle {
+                    width: ListView.view.width
+                    height: discoveryColumn.implicitHeight + 18
+                    radius: 6
+                    color: Theme.cardBg
+                    ColumnLayout {
+                        id: discoveryColumn
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 9 }
+                        Text {
+                            Layout.fillWidth: true
+                            text: (modelData.action || "Acción no rotulada") + " · " + (modelData.at || "")
+                            color: Theme.textPrimary; font.bold: true; wrapMode: Text.Wrap
+                        }
+                        Repeater {
+                            model: modelData.endpoints || []
+                            Text {
+                                Layout.fillWidth: true
+                                text: (modelData.method || "?") + " "
+                                      + (modelData.origin || "") + (modelData.pathTemplate || "")
+                                      + " · estados " + JSON.stringify(modelData.statuses || [])
+                                      + " · ×" + (modelData.count || 1)
+                                color: Theme.textSecondary
+                                font { family: "Consolas"; pixelSize: 10 }
+                                wrapMode: Text.Wrap
+                            }
+                        }
+                        Text {
+                            text: "Estado: " + (modelData.reviewStatus || "pending")
+                            color: Theme.accent; font.pixelSize: 10
+                        }
+                        RowLayout {
+                            LcButton {
+                                text: "Aprobar"
+                                secondary: true
+                                enabled: (modelData.reviewStatus || "pending") !== "approved"
+                                onClicked: {
+                                    if (App.reviewAutomationNetworkDiscovery(
+                                            networkPopup.artifactId, modelData.signature, "approved"))
+                                        networkPopup.refresh()
+                                }
+                            }
+                            LcButton {
+                                text: "Rechazar"
+                                secondary: true
+                                enabled: (modelData.reviewStatus || "pending") !== "rejected"
+                                onClicked: {
+                                    if (App.reviewAutomationNetworkDiscovery(
+                                            networkPopup.artifactId, modelData.signature, "rejected"))
+                                        networkPopup.refresh()
+                                }
+                            }
+                            Item { Layout.fillWidth: true }
+                        }
+                    }
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: networkPopup.rows.length === 0
+                text: "Todavía no hay contratos observados. Ejecutá el proceso: el agente analizará la red después de la acción principal."
+                color: Theme.textMuted; wrapMode: Text.Wrap
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { Layout.fillWidth: true; text: networkPopup.statusText; color: Theme.accent }
+                LcButton {
+                    text: "Limpiar"
+                    secondary: true
+                    enabled: networkPopup.rows.length > 0
+                    onClicked: {
+                        if (App.clearAutomationNetworkDiscoveries(networkPopup.artifactId)) {
+                            networkPopup.statusText = "Descubrimientos eliminados."
+                            networkPopup.refresh()
+                        }
+                    }
+                }
+                LcButton { text: "Cerrar"; onClicked: networkPopup.close() }
             }
         }
     }

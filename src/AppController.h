@@ -553,7 +553,8 @@ public:
     Q_INVOKABLE QVariantList automationWindows() const;
     Q_INVOKABLE QString startDesktopTeach(const QString &taskId, const QString &scopeKind,
                                           const QString &scopeTargetId);
-    Q_INVOKABLE QString startBrowserTeach(const QString &taskId, const QString &url);
+    Q_INVOKABLE QString startBrowserTeach(const QString &taskId, const QString &url,
+                                          bool discoverNetwork = true);
     Q_INVOKABLE void pauseTeach(bool paused);
     Q_INVOKABLE void addTeachNote(const QString &note);
     Q_INVOKABLE QVariantMap captureTeachVisualReference(int size = 72);
@@ -562,6 +563,11 @@ public:
     Q_INVOKABLE void cancelTeach();
     Q_INVOKABLE QVariantList automationTimeline(const QString &artifactId) const;
     Q_INVOKABLE QVariantList automationTemplates(const QString &artifactId) const;
+    Q_INVOKABLE QVariantList automationNetworkDiscoveries(const QString &artifactId) const;
+    Q_INVOKABLE bool reviewAutomationNetworkDiscovery(const QString &artifactId,
+                                                      const QString &signature,
+                                                      const QString &status);
+    Q_INVOKABLE bool clearAutomationNetworkDiscoveries(const QString &artifactId);
     Q_INVOKABLE QVariantMap testAutomationTemplate(const QString &artifactId,
                                                    const QString &fileName) const;
     Q_INVOKABLE bool removeAutomationTemplate(const QString &artifactId,

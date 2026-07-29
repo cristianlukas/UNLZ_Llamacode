@@ -291,6 +291,16 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "cambió. Tratá selector/control como target primario; coordenadas de mouse "
             "son respaldo cuando no haya selector confiable. Registrá y validá cada click "
             "contra la salida/trace de la tool o el snapshot posterior.\n");
+        if (recipe.value(QStringLiteral("networkDiscoveryEnabled")).toBool()
+            || task.value(QStringLiteral("discoverNetwork")).toBool()) {
+            out += QStringLiteral(
+                "DESCUBRIMIENTO DE RED AUTORIZADO: después de la acción principal y su "
+                "verificación visible, llamá una vez browser_network_discover con "
+                "artifact_id=\"%1\" y action describiendo brevemente esa acción. La tool "
+                "sólo observa requests ya vistos, redacta secretos y guarda el contrato "
+                "para revisión; no reproduzcas endpoints ni eludas permisos.\n")
+                       .arg(manifest.value(QStringLiteral("id")).toString());
+        }
     }
     out += QStringLiteral("Artefacto: %1\n").arg(manifest.value(QStringLiteral("id")).toString());
     const QVariantList steps = recipe.value(QStringLiteral("steps")).toList();
@@ -350,6 +360,38 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
         out += QLatin1Char('\n');
     }
     const QVariantList learnings = recipe.value(QStringLiteral("learnings")).toList();
+    const QVariantList discoveries =
+        recipe.value(QStringLiteral("networkDiscoveries")).toList();
+    if (!discoveries.isEmpty()) {
+        out += QStringLiteral("Contratos de red observados:\n");
+        int shown = 0;
+        for (int i = discoveries.size() - 1; i >= 0 && shown < 2; --i) {
+            const QVariantMap discovery = discoveries.at(i).toMap();
+            if (discovery.value(QStringLiteral("reviewStatus")).toString()
+                == QLatin1String("rejected"))
+                continue;
+            ++shown;
+            const QString action = discovery.value(QStringLiteral("action")).toString();
+            const QString review = discovery.value(QStringLiteral("reviewStatus"),
+                                                    QStringLiteral("pending")).toString();
+            if (!action.isEmpty())
+                out += QStringLiteral("- acción: %1 · revisión=%2\n")
+                           .arg(action.left(160), review);
+            for (const QVariant &ev : discovery.value(QStringLiteral("endpoints")).toList()) {
+                const QVariantMap endpoint = ev.toMap();
+                const QString statuses = QString::fromUtf8(QJsonDocument(
+                    QJsonArray::fromVariantList(endpoint.value(QStringLiteral("statuses")).toList()))
+                                                               .toJson(QJsonDocument::Compact));
+                out += QStringLiteral("  %1 %2%3 · estados=%4 · observaciones=%5\n")
+                           .arg(endpoint.value(QStringLiteral("method")).toString(),
+                                endpoint.value(QStringLiteral("origin")).toString(),
+                                endpoint.value(QStringLiteral("pathTemplate")).toString(),
+                                statuses,
+                                endpoint.value(QStringLiteral("count")).toString());
+            }
+        }
+        out += QStringLiteral("Son evidencia de observación, no autorización para invocarlos directamente.\n");
+    }
     // Dedup en el prompt: artefactos viejos ya acumularon varios learnings de
     // éxito casi idénticos (antes del dedup en appendLearning). Colapsarlos acá
     // por firma normalizada evita reinyectar el mismo texto N veces. Recorremos

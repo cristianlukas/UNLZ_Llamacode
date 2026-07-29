@@ -140,6 +140,9 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
         {QStringLiteral("evidence"), evidence},
         {QStringLiteral("templates"), templateRows},
         {QStringLiteral("learnings"), QVariantList{}},
+        {QStringLiteral("networkDiscoveryEnabled"),
+         task.value(QStringLiteral("discoverNetwork"), false)},
+        {QStringLiteral("networkDiscoveries"), QVariantList{}},
         {QStringLiteral("successCriteria"), task.value(QStringLiteral("postPrompt"))}};
     // La captura del paso verification es la referencia visual canónica del
     // resultado enseñado (no una captura intermedia de una acción).
@@ -356,6 +359,100 @@ bool AutomationArtifactStore::appendLearning(const QString &id, const QString &s
     learnings.append(item);
     while (learnings.size() > 12) learnings.removeFirst();
     r[QStringLiteral("learnings")] = learnings;
+    r[QStringLiteral("updatedAt")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
+}
+
+bool AutomationArtifactStore::appendNetworkDiscovery(const QString &id,
+                                                      const QVariantMap &evidence,
+                                                      const QString &action)
+{
+    QVariantMap r = recipe(id);
+    if (r.isEmpty()
+        || evidence.value(QStringLiteral("kind")).toString()
+               != QLatin1String("browser_network_evidence"))
+        return false;
+    QVariantList endpoints;
+    for (const QVariant &value : evidence.value(QStringLiteral("endpoints")).toList()) {
+        const QVariantMap endpoint = value.toMap();
+        if (endpoint.value(QStringLiteral("method")).toString().isEmpty()
+            || endpoint.value(QStringLiteral("origin")).toString().isEmpty()
+            || endpoint.value(QStringLiteral("pathTemplate")).toString().isEmpty())
+            continue;
+        endpoints << QVariantMap{
+            {QStringLiteral("method"), endpoint.value(QStringLiteral("method"))},
+            {QStringLiteral("origin"), endpoint.value(QStringLiteral("origin"))},
+            {QStringLiteral("pathTemplate"), endpoint.value(QStringLiteral("pathTemplate"))},
+            {QStringLiteral("count"), endpoint.value(QStringLiteral("count"))},
+            {QStringLiteral("statuses"), endpoint.value(QStringLiteral("statuses"))},
+            {QStringLiteral("pathParameters"), endpoint.value(QStringLiteral("pathParameters"))},
+            {QStringLiteral("queryParameterNames"), endpoint.value(QStringLiteral("queryParameterNames"))},
+            {QStringLiteral("confidence"), endpoint.value(QStringLiteral("confidence"))}};
+    }
+    if (endpoints.isEmpty()) return false;
+
+    QVariantList discoveries = r.value(QStringLiteral("networkDiscoveries")).toList();
+    QVariantMap item{
+        {QStringLiteral("at"), QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)},
+        {QStringLiteral("action"), redact(action).simplified().left(240)},
+        {QStringLiteral("endpoints"), endpoints},
+        {QStringLiteral("sequence"), evidence.value(QStringLiteral("sequence"))},
+        {QStringLiteral("privacy"), evidence.value(QStringLiteral("privacy"))},
+        {QStringLiteral("source"), QStringLiteral("playwright-mcp")},
+        {QStringLiteral("reviewStatus"), QStringLiteral("pending")}};
+    const QString signature = QString::fromLatin1(QCryptographicHash::hash(
+        QJsonDocument(QJsonArray::fromVariantList(endpoints)).toJson(QJsonDocument::Compact),
+        QCryptographicHash::Sha256).toHex());
+    item[QStringLiteral("signature")] = signature;
+    for (int i = discoveries.size() - 1; i >= 0; --i) {
+        if (discoveries.at(i).toMap().value(QStringLiteral("signature")).toString() == signature) {
+            discoveries.removeAt(i);
+            break;
+        }
+    }
+    discoveries << item;
+    while (discoveries.size() > 20) discoveries.removeFirst();
+    r[QStringLiteral("networkDiscoveries")] = discoveries;
+    r[QStringLiteral("updatedAt")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
+}
+
+QVariantList AutomationArtifactStore::networkDiscoveries(const QString &id)
+{
+    return recipe(id).value(QStringLiteral("networkDiscoveries")).toList();
+}
+
+bool AutomationArtifactStore::setNetworkDiscoveryReview(const QString &id,
+                                                        const QString &signature,
+                                                        const QString &status)
+{
+    if (status != QLatin1String("approved") && status != QLatin1String("rejected"))
+        return false;
+    QVariantMap r = recipe(id);
+    if (r.isEmpty() || signature.trimmed().isEmpty()) return false;
+    QVariantList discoveries;
+    bool found = false;
+    for (const QVariant &value : r.value(QStringLiteral("networkDiscoveries")).toList()) {
+        QVariantMap item = value.toMap();
+        if (item.value(QStringLiteral("signature")).toString() == signature) {
+            item[QStringLiteral("reviewStatus")] = status;
+            item[QStringLiteral("reviewedAt")] =
+                QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+            found = true;
+        }
+        discoveries << item;
+    }
+    if (!found) return false;
+    r[QStringLiteral("networkDiscoveries")] = discoveries;
+    r[QStringLiteral("updatedAt")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
+}
+
+bool AutomationArtifactStore::clearNetworkDiscoveries(const QString &id)
+{
+    QVariantMap r = recipe(id);
+    if (r.isEmpty()) return false;
+    r[QStringLiteral("networkDiscoveries")] = QVariantList{};
     r[QStringLiteral("updatedAt")] = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     return writeJson(artifactDir(id) + QStringLiteral("/recipe.json"), r);
 }

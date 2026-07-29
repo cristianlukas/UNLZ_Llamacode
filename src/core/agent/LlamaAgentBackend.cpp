@@ -4409,7 +4409,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "contrato web produjo el cambio, antes de concluir que no hay API."),
            QJsonObject{
                {QStringLiteral("include_static"), boolProp(
-                    QStringLiteral("Incluye assets CSS/JS/imágenes; default false."))}},
+                    QStringLiteral("Incluye assets CSS/JS/imágenes; default false."))},
+               {QStringLiteral("artifact_id"), strProp(
+                    QStringLiteral("Artefacto Teach donde guardar el descubrimiento; opcional."))},
+               {QStringLiteral("action"), strProp(
+                    QStringLiteral("Acción visible que precedió a estos requests; opcional."))}},
            QJsonArray{}),
         fn(QStringLiteral("recent_actions"),
            QStringLiteral("Relee tu propio rastro reciente (tool_calls, resultados y FALLOS de "

@@ -552,12 +552,15 @@ void AgentToolsTests::browserNetworkEvidence_redactsAndGroups()
     QCOMPARE(root.value("ignoredStatic").toInt(), 1);
     QVERIFY(!summary.contains("SECRETO"));
     QVERIFY(!summary.contains("OTRO"));
-    QVERIFY(!summary.contains("api_key"));
+    QVERIFY(summary.contains("api_key"));
     QVERIFY(summary.contains("/v1/jobs/{id}"));
+    QVERIFY(summary.contains("observed_order"));
     const QJsonObject privacy = root.value("privacy").toObject();
     QVERIFY(!privacy.value("queryValuesRetained").toBool());
+    QVERIFY(privacy.value("queryParameterNamesRetained").toBool());
     QVERIFY(!privacy.value("headersRetained").toBool());
     QVERIFY(!privacy.value("bodiesRetained").toBool());
+    QVERIFY(root.value("truncatedInput").isBool());
 }
 
 void AgentToolsTests::webFetch_forcedUnavailableProviderFailsDeterministically()

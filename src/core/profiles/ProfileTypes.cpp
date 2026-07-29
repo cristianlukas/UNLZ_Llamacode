@@ -198,7 +198,8 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     interTools << "search_docs" << "memory" << "code_hotspots";
     QStringList advTools = interTools;
     advTools << "web_search" << "web_fetch" << "semantic_search"
-             << "hybrid_search" << "verify_claims" << "graph";
+             << "hybrid_search" << "verify_claims" << "graph"
+             << "browser_network_discover";
     return {
         mk("agent-chat",       "Chat liviano", chatTools,  {},
            "ask", false, /*mcp=*/false),
