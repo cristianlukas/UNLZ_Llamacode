@@ -1400,6 +1400,8 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     QMetaObject::invokeMethod(m_worker, "setCorrelationId", Qt::QueuedConnection,
                               Q_ARG(QString, m_correlationId));
     m_compactStall = 0;   // nuevo turno de usuario → reintentar compactar si hiciera falta
+    m_transportRetries = 0;
+    m_contextRecoveries = 0;
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
     // Contenido a mostrar en la UI: texto + chips de adjuntos.
@@ -2108,6 +2110,36 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
             postCompletionRequest(buildTextToolPayload(payload), TextTools);
             return;
         }
+        const RetryClass retryClass = classifyCompletionError(status, err + QLatin1Char(' ') + body);
+        if (!ok && retryClass == RetryContextOverflow && m_contextRecoveries < 2) {
+            ++m_contextRecoveries;
+            emit logAppended(QStringLiteral(
+                "[turn] overflow de contexto; compactación de emergencia (%1/2)\n")
+                                 .arg(m_contextRecoveries));
+            closeAssistantBubble();
+            int head = 0, keepFrom = 0;
+            if (planCompaction(head, keepFrom)) {
+                startCompaction(head, keepFrom);
+            } else if (m_apiMessages.size() > 7) {
+                applyCompaction(2, m_apiMessages.size() - 4, QString());
+                QTimer::singleShot(0, this, [this]() { if (m_running) runCompletion(); });
+            } else {
+                handleStreamFinished(false, err);
+            }
+            return;
+        }
+        if (!ok && retryClass == RetryTransient && m_transportRetries < 3) {
+            const int attempt = ++m_transportRetries;
+            const int delayMs = 500 * (1 << (attempt - 1));
+            emit logAppended(QStringLiteral(
+                "[turn] error transitorio HTTP %1; reintento %2/3 en %3 ms\n")
+                                 .arg(status).arg(attempt).arg(delayMs));
+            closeAssistantBubble();
+            QTimer::singleShot(delayMs, this, [this, payload, mode]() {
+                if (m_running && !m_reply) postCompletionRequest(payload, mode);
+            });
+            return;
+        }
         handleStreamFinished(ok, err);
     });
     resetStreamIdleWatchdog();
@@ -2337,6 +2369,12 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     if (!ok && !m_streamRepetitionDetected) {
         finishTurn(QStringLiteral("[error: %1]").arg(err), false);
         return;
+    }
+    if (ok) {
+        // El presupuesto de retry es por request lógico, no por toda la cadena
+        // ReAct: una tool exitosa no debe consumir los reintentos de la siguiente.
+        m_transportRetries = 0;
+        m_contextRecoveries = 0;
     }
 
     // Quitar el indicador "⏳ preparando…" de tool en streaming: dejar el bubble
@@ -5080,6 +5118,124 @@ void LlamaAgentBackend::deleteSession(const QString &sessionId)
     }
     persistIndex();
     emit sessionsChanged();
+}
+
+LlamaAgentBackend::RetryClass
+LlamaAgentBackend::classifyCompletionError(int httpStatus, const QString &errorText)
+{
+    const QString e = errorText.toLower();
+    static const QStringList contextMarkers{
+        QStringLiteral("context_length"), QStringLiteral("context length"),
+        QStringLiteral("maximum context"), QStringLiteral("too many tokens"),
+        QStringLiteral("n_ctx"), QStringLiteral("prompt is too long"),
+        QStringLiteral("exceeds the context")
+    };
+    if (httpStatus == 413) return RetryContextOverflow;
+    for (const QString &marker : contextMarkers)
+        if (e.contains(marker)) return RetryContextOverflow;
+    if (httpStatus == 408 || httpStatus == 425 || httpStatus == 429
+        || httpStatus == 500 || httpStatus == 502 || httpStatus == 503
+        || httpStatus == 504)
+        return RetryTransient;
+    if (httpStatus == 0
+        && (e.contains(QStringLiteral("timeout"))
+            || e.contains(QStringLiteral("timed out"))
+            || e.contains(QStringLiteral("temporary"))
+            || e.contains(QStringLiteral("connection reset"))
+            || e.contains(QStringLiteral("remote host closed"))))
+        return RetryTransient;
+    return RetryNone;
+}
+
+void LlamaAgentBackend::forkSession(const QString &sessionId)
+{
+    forkSessionImpl(sessionId, -1);
+}
+
+void LlamaAgentBackend::forkSessionAtMessage(int msgIndex)
+{
+    forkSessionImpl(m_sessionId, msgIndex);
+}
+
+void LlamaAgentBackend::forkSessionImpl(const QString &sessionId, int msgIndex)
+{
+    if (sessionId.isEmpty() || isBusy()) {
+        if (isBusy()) emit errorOccurred(QStringLiteral("No se puede bifurcar con un turno en curso."));
+        return;
+    }
+    if (sessionId == m_sessionId) saveCurrentSession();
+
+    QFile sourceFile(sessionFilePath(sessionId));
+    if (!sourceFile.open(QIODevice::ReadOnly)) return;
+    const QJsonObject source = QJsonDocument::fromJson(sourceFile.readAll()).object();
+    sourceFile.close();
+    QJsonArray messages = source.value(QStringLiteral("messages")).toArray();
+    QJsonArray api = source.value(QStringLiteral("api")).toArray();
+    if (msgIndex >= 0) {
+        if (msgIndex >= messages.size()) return;
+        while (messages.size() > msgIndex + 1) messages.removeLast();
+        // Una rama desde un mensaje usa un transcript textual válido. No copiamos
+        // tool_calls parciales ni resultados posteriores al punto elegido.
+        QJsonArray rebuilt;
+        for (const QJsonValue &v : api) {
+            if (v.toObject().value(QStringLiteral("role")).toString() == QLatin1String("system"))
+                rebuilt.append(v);
+            else
+                break;
+        }
+        for (const QJsonValue &v : messages) {
+            const QJsonObject m = v.toObject();
+            const QString role = m.value(QStringLiteral("role")).toString();
+            if (role == QLatin1String("user") || role == QLatin1String("assistant"))
+                rebuilt.append(QJsonObject{{QStringLiteral("role"), role},
+                                           {QStringLiteral("content"),
+                                            m.value(QStringLiteral("content")).toString()}});
+        }
+        api = rebuilt;
+    }
+
+    QVariantMap parent;
+    for (const QVariant &v : std::as_const(m_sessions)) {
+        if (v.toMap().value(QStringLiteral("id")).toString() == sessionId) {
+            parent = v.toMap();
+            break;
+        }
+    }
+    const QString newId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    QVariantMap child = parent;
+    child[QStringLiteral("id")] = newId;
+    child[QStringLiteral("title")] =
+        QStringLiteral("%1 · rama").arg(parent.value(QStringLiteral("title"),
+                                                     QStringLiteral("Sesión")).toString());
+    child[QStringLiteral("created")] =
+        static_cast<double>(QDateTime::currentMSecsSinceEpoch());
+    child[QStringLiteral("parentSessionId")] = sessionId;
+    child[QStringLiteral("forkMessageIndex")] = msgIndex;
+    child[QStringLiteral("depth")] = parent.value(QStringLiteral("depth")).toInt() + 1;
+    m_sessions.prepend(child);
+    persistIndex();
+
+    QJsonObject forked{
+        {QStringLiteral("id"), newId},
+        {QStringLiteral("title"), child.value(QStringLiteral("title")).toString()},
+        {QStringLiteral("messages"), messages},
+        {QStringLiteral("api"), api},
+        {QStringLiteral("checkpoints"), QJsonArray{}},
+        {QStringLiteral("snapshotVersion"), 1},
+        {QStringLiteral("parentSessionId"), sessionId},
+        {QStringLiteral("forkMessageIndex"), msgIndex}
+    };
+    QFile target(sessionFilePath(newId));
+    if (!target.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        m_sessions.removeFirst();
+        persistIndex();
+        return;
+    }
+    target.write(QJsonDocument(forked).toJson());
+    target.close();
+    setCurrentSession(newId);
+    emit logAppended(QStringLiteral("[sesión bifurcada: %1 → %2, mensaje=%3]\n")
+                         .arg(sessionId, newId).arg(msgIndex));
 }
 
 void LlamaAgentBackend::deleteProject(const QString &projectDir)

@@ -55,6 +55,8 @@ public:
     void renameSession(const QString &sessionId, const QString &title) override;
     void deleteSession(const QString &sessionId) override;
     void deleteProject(const QString &projectDir) override;
+    void forkSession(const QString &sessionId) override;
+    void forkSessionAtMessage(int msgIndex);
     void refreshSessions() override;
 
     void approveTool(const QString &id, bool always = false) override;
@@ -130,6 +132,9 @@ public:
     // proyecto, escribir un test caja-negra por cada feature/cambio, registrarlo y
     // correr el suite. Pura y testeable. La consume buildSystemPrompt().
     static QString testSafetyNetSection();
+
+    enum RetryClass { RetryNone, RetryTransient, RetryContextOverflow };
+    static RetryClass classifyCompletionError(int httpStatus, const QString &errorText);
 
     // Sección del system prompt sobre contexto del proyecto: entender el PORQUÉ
     // antes de tocar (no romper workarounds deliberados), revisar co-cambios por
@@ -415,6 +420,7 @@ private:
     void removeSessionFile(const QString &sessionId) const;
     void saveCurrentSession();           // vuelca m_messages+m_apiMessages al store
     void setCurrentSession(const QString &sessionId);
+    void forkSessionImpl(const QString &sessionId, int msgIndex);
 
     AgentContext m_ctx;
     QNetworkAccessManager *m_nam = nullptr;
@@ -428,6 +434,8 @@ private:
     QNetworkReply *m_reply = nullptr;
     QTimer *m_streamIdleTimer = nullptr;
     bool m_streamIdleTimedOut = false;
+    int m_transportRetries = 0;
+    int m_contextRecoveries = 0;
     bool m_running = false;
     bool m_textToolFallback = false;       // server rechazó OpenAI tools nativo (400)
     bool m_forceTextTools = false;         // modelo sin tool-template → texto desde el inicio

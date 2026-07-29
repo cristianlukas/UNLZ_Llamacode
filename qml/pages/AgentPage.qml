@@ -827,6 +827,20 @@ Item {
                         verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight
                     }
                 }
+                Text {
+                    visible: resolvedAdapter === "llamaagent"
+                    readonly property var sandbox: {
+                        const modeDependency = App.agentApprovalMode
+                        return App.agentSandboxStatus()
+                    }
+                    text: App.agentApprovalMode === "super" ? "⚠ Sin sandbox" : "🛡 Workspace"
+                    color: App.agentApprovalMode === "super" ? Theme.warnText : Theme.textMuted
+                    font.pixelSize: 10
+                    ToolTip.visible: sandboxMA.containsMouse
+                    ToolTip.text: (sandbox.detail ?? "") + "\nSO enforced: "
+                                  + ((sandbox.osEnforced ?? false) ? "sí" : "no")
+                    MouseArea { id: sandboxMA; anchors.fill: parent; hoverEnabled: true }
+                }
                 // Perfil de agente activo (capacidades + directivas). Override vivo
                 // de la sesión; no pisa el del perfil de lanzamiento.
                 LcComboBox {
@@ -1174,7 +1188,8 @@ Item {
                                     Layout.fillWidth: true
                                     text: {
                                         const t = modelData.title ?? ""
-                                        return t.length > 0 ? t : "Nueva sesión"
+                                        const branch = (modelData.depth ?? 0) > 0 ? "↳ " : ""
+                                        return branch + (t.length > 0 ? t : "Nueva sesión")
                                     }
                                     color: modelData.id === (App.opencodeSessionId ?? "")
                                            ? Theme.accent : Theme.textPrimary
@@ -1487,6 +1502,12 @@ Item {
                                     }
                                 }
                                 Text {
+                                    visible: (modelData.parentSessionId ?? "").length > 0
+                                    text: "rama · mensaje " + ((modelData.forkMessageIndex ?? -1) >= 0
+                                                              ? modelData.forkMessageIndex : "final")
+                                    color: Theme.accent; font.pixelSize: 9
+                                }
+                                Text {
                                     visible: delegateRoot.metaLine.length > 0
                                     width: parent.width
                                     text: delegateRoot.metaLine
@@ -1545,6 +1566,21 @@ Item {
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: App.rollbackAgentToMessage(index)
+                                        }
+                                    }
+                                    Text {
+                                        visible: delegateRoot.isUser && resolvedAdapter === "llamaagent"
+                                                 && !root.hasTypingMessage && !root.waitingApproval
+                                                 && !delegateRoot.editing
+                                        text: "⑂ Bifurcar"
+                                        color: forkMessageMA.containsMouse ? Theme.textPrimary : Theme.textMuted
+                                        font.pixelSize: 10
+                                        MouseArea {
+                                            id: forkMessageMA
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: App.forkAgentAtMessage(index)
                                         }
                                     }
                                     // Editar: reescribe el texto (de IA o usuario) y descarta lo posterior.

@@ -12,6 +12,7 @@ class PortableSkillStore
 {
 public:
     static QString globalRoot();
+    static QString bundledRoot();
     static QString projectRoot(const QString &workspace);
 
     static QVariantList list(const QString &workspace = QString());

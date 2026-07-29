@@ -1384,8 +1384,25 @@ progresiva: mantiene sólo nombre y descripción en el catálogo y abre las
 instrucciones completas cuando resultan relevantes. Las habilidades del proyecto
 en `.llamacode/skills/` pueden reemplazar una global del mismo nombre, pero nunca
 amplían los permisos de tools ni el confinamiento. La vista **Agente → Skills**
-permite inspeccionarlas. Formato, límites y ejemplo en
+permite inspeccionarlas. El ejecutable incluye seis skills científicos iniciales:
+revisión bibliográfica, lectura crítica, diseño experimental, verificación de
+citas, revisión por pares y análisis reproducible. Formato, límites y ejemplo en
 [`docs/skills.md`](docs/skills.md).
+
+Las sesiones del agente nativo forman un árbol persistente: una rama conserva
+`parentSessionId`, profundidad y mensaje de origen. Se puede bifurcar la sesión
+completa desde el menú o un turno concreto desde la burbuja del usuario, sin
+alterar la rama original.
+
+Ante `context_length_exceeded`, el agente compacta de emergencia y reintenta hasta
+dos veces. Los fallos transitorios HTTP 408/425/429/5xx usan backoff exponencial
+acotado; errores deterministas de autenticación o schema no se reintentan.
+
+`LlamaCode.exe --agent-daemon` (alias `--headless`) inicia el núcleo y la
+ControlApi local sin cargar QML ni crear ventanas. El puerto se controla con
+`LLAMACODE_CONTROL_PORT` (8765 por defecto, sólo localhost). Mantiene la política
+de instancia única: la GUI y el daemon no operan simultáneamente sobre los mismos
+procesos y stores; clientes externos consumen la API.
 
 ## Seguridad operativa
 
@@ -1407,6 +1424,8 @@ el `.bat` avisa que el binario o el gate no corresponden a la fuente).
 
 - Nada destructivo sin aprobación explícita.
 - Escrituras fuera de workspace: bloqueadas por defecto.
+- Las rutas se validan por su destino canónico; un symlink/junction no puede
+  escapar del workspace o de las carpetas adicionales autorizadas.
 - Comandos shell con allowlist/denylist por `WorkspaceProfile`.
 - Subprocesos tagged con env vars para auditoría y control de ciclo de vida.
 

@@ -218,6 +218,8 @@ add_library(llamacode_core STATIC
     ${HEADERS}
 )
 target_include_directories(llamacode_core PUBLIC src)
+target_compile_definitions(llamacode_core PRIVATE
+    LC_BUNDLED_SKILLS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/skills")
 target_link_libraries(llamacode_core PUBLIC
     Qt6::Core
     Qt6::Quick
@@ -382,6 +384,11 @@ file(GLOB LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS
     CONFIGURE_DEPENDS
     "assets/benchmarks/custom/*.json"
 )
+file(GLOB_RECURSE LLAMACODE_BUNDLED_SKILLS
+    RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    CONFIGURE_DEPENDS
+    "assets/skills/*/SKILL.md"
+)
 
 qt_add_resources(LlamaCode "llamacode_assets"
     PREFIX "/"
@@ -399,6 +406,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/eval/reasoning_bias.json
         assets/eval/snake_retro_singlefile.json
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}
+        ${LLAMACODE_BUNDLED_SKILLS}
 )
 
 target_include_directories(LlamaCode PRIVATE src)

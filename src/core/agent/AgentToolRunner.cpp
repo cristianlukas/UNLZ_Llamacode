@@ -759,7 +759,10 @@ void AgentToolRunner::setAllowedRoots(const QStringList &roots)
 {
     m_allowedRoots.clear();
     for (const QString &r : roots) {
-        const QString c = QDir::cleanPath(r.trimmed());
+        const QFileInfo info(r.trimmed());
+        const QString c = QDir::cleanPath(info.canonicalFilePath().isEmpty()
+                                          ? info.absoluteFilePath()
+                                          : info.canonicalFilePath());
         if (!c.isEmpty()) m_allowedRoots << c;
     }
 }
@@ -1711,15 +1714,40 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return QStringLiteral("[desktop_wait: %1 ms]").arg(ms);
     }
     const QDir base(cwd);
-    auto resolve = [&](const QString &rel) { return QDir::cleanPath(base.absoluteFilePath(rel)); };
+    auto canonicalPolicyPath = [](const QString &raw) {
+        QFileInfo info(raw);
+        if (info.exists() && !info.canonicalFilePath().isEmpty())
+            return QDir::cleanPath(info.canonicalFilePath());
+        QStringList tail{info.fileName()};
+        QDir parent = info.absoluteDir();
+        while (!parent.exists() && !parent.isRoot()) {
+            tail.prepend(parent.dirName());
+            parent.cdUp();
+        }
+        const QFileInfo parentInfo(parent.absolutePath());
+        QString resolved = parentInfo.canonicalFilePath();
+        if (resolved.isEmpty()) resolved = parentInfo.absoluteFilePath();
+        for (const QString &part : std::as_const(tail))
+            resolved = QDir(resolved).filePath(part);
+        return QDir::cleanPath(resolved);
+    };
+    auto resolve = [&](const QString &rel) {
+        return canonicalPolicyPath(base.absoluteFilePath(rel));
+    };
     // En modo "Super Agente" (no confinado) se permite cualquier ruta del disco.
     auto underRoot = [&](const QString &abs, const QString &root) {
-        return abs == root || abs.startsWith(root + QStringLiteral("/"))
-               || abs.startsWith(root + QStringLiteral("\\"));
+#ifdef Q_OS_WIN
+        constexpr Qt::CaseSensitivity cs = Qt::CaseInsensitive;
+#else
+        constexpr Qt::CaseSensitivity cs = Qt::CaseSensitive;
+#endif
+        return abs.compare(root, cs) == 0
+            || abs.startsWith(root + QStringLiteral("/"), cs)
+            || abs.startsWith(root + QStringLiteral("\\"), cs);
     };
     auto inProject = [&](const QString &abs) {
         if (!m_confined) return true;
-        if (underRoot(abs, QDir::cleanPath(base.absolutePath()))) return true;
+        if (underRoot(abs, canonicalPolicyPath(base.absolutePath()))) return true;
         // Carpetas extra autorizadas por la Task (scope "folder").
         for (const QString &root : m_allowedRoots)
             if (underRoot(abs, root)) return true;

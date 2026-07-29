@@ -49,6 +49,17 @@ QString PortableSkillStore::globalRoot()
         .filePath(QStringLiteral("skills"));
 }
 
+QString PortableSkillStore::bundledRoot()
+{
+    const QString resource = QStringLiteral(":/assets/skills");
+    if (QDir(resource).exists()) return resource;
+#ifdef LC_BUNDLED_SKILLS_DIR
+    return QDir::fromNativeSeparators(QStringLiteral(LC_BUNDLED_SKILLS_DIR));
+#else
+    return resource;
+#endif
+}
+
 QString PortableSkillStore::projectRoot(const QString &workspace)
 {
     if (workspace.trimmed().isEmpty()) return {};
@@ -134,6 +145,7 @@ QVariantList PortableSkillStore::list(const QString &workspace)
     // Global primero; proyecto reemplaza por nombre para permitir overrides locales.
     QMap<QString, QVariantMap> byName;
     const QList<QPair<QString, QString>> roots{
+        {QStringLiteral("bundled"), bundledRoot()},
         {QStringLiteral("global"), globalRoot()},
         {QStringLiteral("project"), projectRoot(workspace)}
     };
@@ -163,7 +175,8 @@ QVariantMap PortableSkillStore::load(const QString &name, const QString &workspa
     // Proyecto tiene precedencia.
     const QList<QPair<QString, QString>> roots{
         {QStringLiteral("project"), projectRoot(workspace)},
-        {QStringLiteral("global"), globalRoot()}
+        {QStringLiteral("global"), globalRoot()},
+        {QStringLiteral("bundled"), bundledRoot()}
     };
     for (const auto &[scope, root] : roots) {
         if (root.isEmpty()) continue;

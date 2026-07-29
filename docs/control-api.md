@@ -7,6 +7,17 @@ QML, sin código por función.
 
 Implementación: `src/core/ControlApi.{h,cpp}`, instanciado en `src/main.cpp`.
 
+Para ejecutarla sin interfaz:
+
+```powershell
+$env:LLAMACODE_CONTROL_PORT = 8765
+.\LlamaCode.exe --agent-daemon
+```
+
+`--headless` es alias. En este modo no se carga QML y el núcleo realiza el escaneo
+de arranque. La instancia única evita que una GUI y un daemon muten
+simultáneamente los mismos stores.
+
 > **Empezá por acá:** `GET /help` (índice autodescriptivo) y `GET /methods`
 > (métodos + propiedades + sub-targets del momento). Ante un nombre desconocido,
 > el error te devuelve la lista `available` de nombres válidos — no hace falta leer

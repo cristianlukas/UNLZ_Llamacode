@@ -609,6 +609,7 @@ public:
     Q_INVOKABLE void clearAgentQueue();
     // Rebobinar la conversación del agente al estado previo a un mensaje de usuario.
     Q_INVOKABLE void rollbackAgentToMessage(int msgIndex);
+    Q_INVOKABLE void forkAgentAtMessage(int msgIndex);
     // Igual para el chat (RawChatBackend): trunca msgs desde ese índice.
     Q_INVOKABLE void rollbackChatToMessage(int msgIndex);
     // Editar el texto de un mensaje (user o IA) y descartar lo posterior.
@@ -639,6 +640,7 @@ public:
     // ── Tools del agente (habilitar/deshabilitar built-in) ──
     // Catálogo con metadata + estado enabled, para la UI de toggles.
     Q_INVOKABLE QVariantList agentToolCatalog() const;
+    Q_INVOKABLE QVariantMap agentSandboxStatus() const;
     Q_INVOKABLE QVariantList portableSkills() const;
     Q_INVOKABLE QVariantMap portableSkill(const QString &name) const;
     Q_INVOKABLE void setAgentToolEnabled(const QString &name, bool enabled);

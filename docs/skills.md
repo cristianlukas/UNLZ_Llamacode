@@ -1,6 +1,7 @@
 # Habilidades portables
 
-LlamaCode descubre habilidades declarativas sin inyectar todas sus instrucciones
+LlamaCode incluye seis habilidades científicas versionadas y descubre habilidades
+declarativas adicionales sin inyectar todas sus instrucciones
 en el contexto. El agente recibe sólo nombre, alcance y descripción mediante
 `skill_list`; cuando una habilidad es relevante usa `skill_load` para leer el
 cuerpo completo.
@@ -9,8 +10,9 @@ cuerpo completo.
 
 - Global: `AppLocalData/LlamaCode/skills/<nombre>/SKILL.md`
 - Proyecto: `<workspace>/.llamacode/skills/<nombre>/SKILL.md`
+- Bundled: seis habilidades científicas incluidas en el ejecutable.
 
-Una habilidad del proyecto reemplaza una global con el mismo nombre. El nombre
+La precedencia es proyecto → global → bundled. El nombre
 debe estar en kebab-case, coincidir con la carpeta y tener hasta 64 caracteres.
 
 ## Formato

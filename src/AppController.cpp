@@ -4226,6 +4226,24 @@ QVariantList AppController::agentToolCatalog() const
     return out;
 }
 
+QVariantMap AppController::agentSandboxStatus() const
+{
+    const bool super = m_agentApprovalMode == QLatin1String("super");
+    return {
+        {QStringLiteral("mode"), super ? QStringLiteral("unrestricted")
+                                      : QStringLiteral("workspace")},
+        {QStringLiteral("label"), super ? QStringLiteral("Sin confinamiento")
+                                       : QStringLiteral("Workspace confinado")},
+        {QStringLiteral("workspace"), currentAgentProjectDir()},
+        {QStringLiteral("canonicalPaths"), !super},
+        {QStringLiteral("symlinkEscapeBlocked"), !super},
+        {QStringLiteral("osEnforced"), false},
+        {QStringLiteral("detail"), super
+            ? QStringLiteral("Super Agente permite acceso al disco según los permisos del proceso.")
+            : QStringLiteral("Las tools de archivo validan rutas canónicas y bloquean escapes por enlaces; shell conserva aprobación y política lógica.")}
+    };
+}
+
 QVariantList AppController::portableSkills() const
 {
     return PortableSkillStore::list(currentAgentProjectDir());
@@ -13885,6 +13903,12 @@ QString AppController::customBenchmarkDir() const
                         + "/benchmarks/custom";
     QDir().mkpath(dir);
     return dir;
+}
+
+void AppController::forkAgentAtMessage(int msgIndex)
+{
+    if (auto *la = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        la->forkSessionAtMessage(msgIndex);
 }
 
 bool AppController::shouldReplaceBundledBenchmarkForTest(

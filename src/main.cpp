@@ -90,6 +90,8 @@ int main(int argc, char *argv[])
     app.setOrganizationName("LlamaCode");
     app.setApplicationVersion("0.1.74");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
+    const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
+        || app.arguments().contains(QStringLiteral("--agent-daemon"));
 
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
     // por IPC. Un lock evita duplicados; el toggle persistido lo apaga solo.
@@ -221,6 +223,14 @@ int main(int argc, char *argv[])
     ThemeProvider theme;
     MermaidRenderer mermaid;
 
+    // API local para UI externa, CLI y pruebas. En --headless / --agent-daemon
+    // se convierte en el único frontend y no se carga QML.
+    const QByteArray controlPortEnv = qgetenv("LLAMACODE_CONTROL_PORT");
+    const quint16 controlPort = controlPortEnv.isEmpty()
+        ? 8765 : static_cast<quint16>(controlPortEnv.toUInt());
+    auto *controlApi = new ControlApi(&controller, &controller);
+    controlApi->start(controlPort);
+
     // Servidor de instancia única: cuando otra instancia intente abrirse, recibe
     // su "raise" y le pide a la UI que restaure/enfoque la ventana existente.
     QLocalServer::removeServer(kInstanceKey);   // limpiar socket huérfano de un crash
@@ -243,6 +253,12 @@ int main(int argc, char *argv[])
 
     qDebug() << "Controllers ready";
 
+    if (headlessAgent) {
+        qDebug() << "Agent daemon headless activo en localhost:" << controlPort;
+        QTimer::singleShot(0, &controller, &AppController::runStartupScan);
+        return app.exec();
+    }
+
     // El escaneo pesado (binaries/roots/hardware/catálogo) se DIFIERE a después de
     // mostrar la ventana (ver abajo), para que la interfaz abra de inmediato.
 
@@ -261,14 +277,6 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("TrayIconSource", trayIconSource);
     engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);
 
-    // Control API headless (espejo de AppController) para tests sin GUI.
-    // Puerto: env LLAMACODE_CONTROL_PORT (default 8765). 0 = desactivado. Localhost.
-    {
-        const QByteArray pEnv = qgetenv("LLAMACODE_CONTROL_PORT");
-        const quint16 port = pEnv.isEmpty() ? 8765 : static_cast<quint16>(pEnv.toUInt());
-        auto *ctl = new ControlApi(&controller, &controller);
-        ctl->start(port);
-    }
     engine.addImportPath(QStringLiteral("qrc:/"));
 
     qDebug() << "Loading Main.qml";

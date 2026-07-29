@@ -43,12 +43,16 @@ struct AgentSession {
     QString projectId;
     QString projectName;
     QString projectDir;
+    QString parentSessionId;
+    int     forkMessageIndex = -1;
+    int     depth = 0;
 
     QVariantMap toMap() const {
         return {
             {"id", id}, {"title", title}, {"created", created},
             {"projectId", projectId}, {"projectName", projectName},
-            {"projectDir", projectDir}
+            {"projectDir", projectDir}, {"parentSessionId", parentSessionId},
+            {"forkMessageIndex", forkMessageIndex}, {"depth", depth}
         };
     }
 };

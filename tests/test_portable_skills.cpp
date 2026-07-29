@@ -13,6 +13,7 @@ class PortableSkillsTests : public QObject
 private slots:
     void discoversAndLoadsProjectSkill();
     void rejectsInvalidManifest();
+    void bundledScientificPackIsValid();
 };
 
 static void writeSkill(const QString &workspace, const QString &slug, const QString &text)
@@ -67,6 +68,28 @@ void PortableSkillsTests::rejectsInvalidManifest()
     QVERIFY(!loaded.value(QStringLiteral("ok")).toBool());
     QVERIFY(loaded.value(QStringLiteral("error")).toString().contains(
         QStringLiteral("no encontrada"), Qt::CaseInsensitive));
+}
+
+void PortableSkillsTests::bundledScientificPackIsValid()
+{
+    const QVariantList skills = PortableSkillStore::list();
+    const QStringList expected{
+        QStringLiteral("literature-review"),
+        QStringLiteral("critical-paper-reading"),
+        QStringLiteral("experimental-design"),
+        QStringLiteral("citation-verification"),
+        QStringLiteral("peer-review"),
+        QStringLiteral("reproducible-data-analysis")
+    };
+    for (const QString &name : expected) {
+        auto it = std::find_if(skills.cbegin(), skills.cend(), [&name](const QVariant &v) {
+            return v.toMap().value(QStringLiteral("name")).toString() == name;
+        });
+        QVERIFY2(it != skills.cend(), qPrintable(QStringLiteral("Falta skill bundled: ") + name));
+        QCOMPARE(it->toMap().value(QStringLiteral("scope")).toString(),
+                 QStringLiteral("bundled"));
+        QVERIFY(PortableSkillStore::load(name).value(QStringLiteral("ok")).toBool());
+    }
 }
 
 QTEST_GUILESS_MAIN(PortableSkillsTests)

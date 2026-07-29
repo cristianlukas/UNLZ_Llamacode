@@ -24,6 +24,7 @@ private slots:
     void forceTextToolsSkipsNativeToolAttempt();
     void restartRepublishesPersistedMessages();
     void taskSessionIsEphemeralAndRestoresPrevious();
+    void nativeSessionForkPersistsTreeMetadata();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
@@ -46,6 +47,7 @@ private slots:
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
     void isDestructiveAction_gatesShellDesktopMemory();
+    void completionErrorClassification_isSelective();
 };
 
 void AgentWireTests::initTestCase()
@@ -95,6 +97,25 @@ void AgentWireTests::streamRepetitionDetectsLongTripleBlockOnly()
     QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(prefix + block + block), -1);
     QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(
                  QStringLiteral("sí sí sí"), 3, 80), -1);
+}
+
+void AgentWireTests::completionErrorClassification_isSelective()
+{
+    QCOMPARE(LlamaAgentBackend::classifyCompletionError(
+                 400, QStringLiteral("prompt exceeds the context length")),
+             LlamaAgentBackend::RetryContextOverflow);
+    QCOMPARE(LlamaAgentBackend::classifyCompletionError(
+                 429, QStringLiteral("rate limited")),
+             LlamaAgentBackend::RetryTransient);
+    QCOMPARE(LlamaAgentBackend::classifyCompletionError(
+                 503, QStringLiteral("unavailable")),
+             LlamaAgentBackend::RetryTransient);
+    QCOMPARE(LlamaAgentBackend::classifyCompletionError(
+                 401, QStringLiteral("invalid api key")),
+             LlamaAgentBackend::RetryNone);
+    QCOMPARE(LlamaAgentBackend::classifyCompletionError(
+                 400, QStringLiteral("invalid tool schema")),
+             LlamaAgentBackend::RetryNone);
 }
 
 static QJsonObject msg(const QString &role, const QString &content)
@@ -541,6 +562,59 @@ void AgentWireTests::restartRepublishesPersistedMessages()
     QCOMPARE(backend.messages().first().toMap().value(QStringLiteral("content")).toString(),
              QStringLiteral("mensaje persistido"));
 
+    backend.stop();
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::nativeSessionForkPersistsTreeMetadata()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QVERIFY(QDir().mkpath(store));
+    const QString parentId = QStringLiteral("fork-parent");
+    QFile indexFile(store + QStringLiteral("/index.json"));
+    QVERIFY(indexFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    indexFile.write(QJsonDocument(QJsonArray{QJsonObject{
+        {QStringLiteral("id"), parentId}, {QStringLiteral("title"), QStringLiteral("Origen")},
+        {QStringLiteral("created"), 1.0}, {QStringLiteral("projectDir"), QStringLiteral("P")}
+    }}).toJson());
+    indexFile.close();
+    QFile source(store + QLatin1Char('/') + parentId + QStringLiteral(".json"));
+    QVERIFY(source.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    source.write(QJsonDocument(QJsonObject{
+        {QStringLiteral("messages"), QJsonArray{
+            QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                        {QStringLiteral("content"), QStringLiteral("pregunta")}},
+            QJsonObject{{QStringLiteral("role"), QStringLiteral("assistant")},
+                        {QStringLiteral("content"), QStringLiteral("respuesta")}}}},
+        {QStringLiteral("api"), QJsonArray{
+            msg(QStringLiteral("system"), QStringLiteral("s")),
+            msg(QStringLiteral("user"), QStringLiteral("pregunta")),
+            msg(QStringLiteral("assistant"), QStringLiteral("respuesta"))}}
+    }).toJson());
+    source.close();
+
+    QTemporaryDir cwd;
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:1");
+    ctx.modelId = QStringLiteral("test");
+    LlamaAgentBackend backend;
+    backend.start(ctx);
+    backend.forkSessionAtMessage(0);
+
+    QCOMPARE(backend.sessions().size(), 2);
+    const QVariantMap child = backend.sessions().first().toMap();
+    QCOMPARE(child.value(QStringLiteral("parentSessionId")).toString(), parentId);
+    QCOMPARE(child.value(QStringLiteral("forkMessageIndex")).toInt(), 0);
+    QCOMPARE(child.value(QStringLiteral("depth")).toInt(), 1);
+    QCOMPARE(backend.messages().size(), 1);
+    QCOMPARE(backend.messages().first().toMap().value(QStringLiteral("content")).toString(),
+             QStringLiteral("pregunta"));
+    QVERIFY(QFile::exists(store + QLatin1Char('/')
+                          + child.value(QStringLiteral("id")).toString() + QStringLiteral(".json")));
     backend.stop();
     QDir(store).removeRecursively();
 }
