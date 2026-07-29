@@ -83,6 +83,7 @@ private slots:
     void webUrlGuard_blocksPrivateAndCredentials();
     void readableWebText_prefersArticleAndPreservesStructure();
     void webEscalation_requiresVerifiableEvidence();
+    void browserNetworkEvidence_redactsAndGroups();
     void webFetch_forcedUnavailableProviderFailsDeterministically();
     void webFetch_camofoxProviderE2E();
     void webFetch_rateLimitsPerHost();
@@ -535,6 +536,28 @@ void AgentToolsTests::webEscalation_requiresVerifiableEvidence()
     const QStringList transport = AgentToolRunner::webEscalationReasons(
         QString(), QString(), QStringLiteral("timeout"));
     QVERIFY(transport.contains(QStringLiteral("transport_error")));
+}
+
+void AgentToolsTests::browserNetworkEvidence_redactsAndGroups()
+{
+    const QString raw = QStringLiteral(
+        "GET https://example.com/assets/app.js?token=SECRETO => [200] OK\n"
+        "POST https://api.example.com/v1/jobs/123456?api_key=SECRETO => [201] Created\n"
+        "POST https://api.example.com/v1/jobs/987654?api_key=OTRO => [202] Accepted\n"
+        "GET https://api.example.com/v1/jobs/550e8400-e29b-41d4-a716-446655440000 "
+        "=> [200] OK\n");
+    const QString summary = AgentToolRunner::summarizeBrowserNetworkEvidence(raw);
+    const QJsonObject root = QJsonDocument::fromJson(summary.toUtf8()).object();
+    QCOMPARE(root.value("endpointCount").toInt(), 2);
+    QCOMPARE(root.value("ignoredStatic").toInt(), 1);
+    QVERIFY(!summary.contains("SECRETO"));
+    QVERIFY(!summary.contains("OTRO"));
+    QVERIFY(!summary.contains("api_key"));
+    QVERIFY(summary.contains("/v1/jobs/{id}"));
+    const QJsonObject privacy = root.value("privacy").toObject();
+    QVERIFY(!privacy.value("queryValuesRetained").toBool());
+    QVERIFY(!privacy.value("headersRetained").toBool());
+    QVERIFY(!privacy.value("bodiesRetained").toBool());
 }
 
 void AgentToolsTests::webFetch_forcedUnavailableProviderFailsDeterministically()

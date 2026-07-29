@@ -2588,6 +2588,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("memory"), QStringLiteral("graph"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
+        QStringLiteral("browser_network_discover"),
         QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
         QStringLiteral("desktop_find_image"), QStringLiteral("desktop_click_image"),
@@ -4348,6 +4349,16 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("name"), strProp(QStringLiteral("Nombre del skill (ver browser_skill_list)."))}},
            QJsonArray{QStringLiteral("name")}),
+        fn(QStringLiteral("browser_network_discover"),
+           QStringLiteral("Inspecciona los requests observados por el browser Playwright "
+                          "activo y devuelve evidencia agrupada por método, origen y path. "
+                          "No conserva query strings, headers, cookies ni bodies. Usalo "
+                          "después de realizar una acción autorizada para descubrir qué "
+                          "contrato web produjo el cambio, antes de concluir que no hay API."),
+           QJsonObject{
+               {QStringLiteral("include_static"), boolProp(
+                    QStringLiteral("Incluye assets CSS/JS/imágenes; default false."))}},
+           QJsonArray{}),
         fn(QStringLiteral("recent_actions"),
            QStringLiteral("Relee tu propio rastro reciente (tool_calls, resultados y FALLOS de "
                           "esta sesión) para auto-corregirte: ver qué intentaste, qué se repitió "
@@ -4674,6 +4685,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
         mk("browser_skill_list", "Browser", "Lista skills de browser grabados (teach).", 70),
         mk("browser_skill_replay", "Browser", "Reproduce un skill de browser grabado (Playwright).", 100),
+        mk("browser_network_discover", "Browser", "Resume requests Playwright sin secretos ni cuerpos.", 105),
         mk("recent_actions", "Conocimiento", "Relee tu rastro reciente (tool_calls/fallos) para auto-corregirte.", 90),
         mk("desktop_windows", "Escritorio", "Inventario estructurado de ventanas (barato, sin captura).", 80),
         mk("desktop_controls", "Escritorio", "Árbol de controles de una ventana (UIA, DOM-aware).", 150),

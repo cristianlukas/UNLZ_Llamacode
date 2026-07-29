@@ -96,6 +96,11 @@ public:
     static QString extractReadableWebText(const QString &html);
     static QStringList webEscalationReasons(const QString &html, const QString &text,
                                             const QString &transportError = QString());
+    // Convierte la salida textual de Playwright browser_network_requests en
+    // evidencia acotada: agrupa method+host+path, elimina query/fragment y
+    // redacta credenciales. Pura para poder probarla sin browser ni MCP.
+    static QString summarizeBrowserNetworkEvidence(const QString &raw,
+                                                    bool includeStatic = false);
     // Adapters individuales, públicos para probes/E2E sin pasar por la política.
     QString fetchViaPlaywright(const QString &url, QString *error);
     QString fetchViaCamofox(const QString &url, QString *error);

@@ -804,6 +804,14 @@ el **MCP de Playwright** en el set de tools del agente. El Teach de browser se
 gestiona desde Automatizaciones y guarda **recetas reproducibles** que
 las Tasks pueden reejecutar.
 
+Cuando una interfaz web no tiene documentación suficiente, la tool
+`browser_network_discover` resume los requests ya observados por el Playwright MCP
+activo y permite investigar el contrato que produjo una acción autorizada antes de
+declarar un bloqueo. La evidencia se agrupa por método, origen y path; LlamaCode no
+conserva query strings, headers, cookies ni bodies, normaliza identificadores
+volátiles y excluye assets estáticos por defecto. La inspección es pasiva: no
+reproduce requests ni evita autenticación, permisos o aprobaciones.
+
 La lectura web usa proveedores tipados. `web_search` consulta SearXNG —incluido un
 endpoint local configurado explícitamente— o DuckDuckGo. `web_fetch` ejecuta el
 pipeline `direct → Playwright MCP → Camofox`: el camino directo resuelve DNS,

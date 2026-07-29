@@ -28,6 +28,7 @@
 #include <QHostInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QMap>
 #include <QEventLoop>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -346,6 +347,102 @@ QStringList AgentToolRunner::webEscalationReasons(const QString &html, const QSt
     else if (text.trimmed().size() < 280) reasons << QStringLiteral("thin_content");
     reasons.removeDuplicates();
     return reasons;
+}
+
+QString AgentToolRunner::summarizeBrowserNetworkEvidence(const QString &raw,
+                                                         bool includeStatic)
+{
+    struct Endpoint {
+        QString method;
+        QString origin;
+        QString path;
+        QSet<int> statuses;
+        int count = 0;
+    };
+    QMap<QString, Endpoint> grouped;
+    int ignoredStatic = 0;
+    int ignoredInvalid = 0;
+
+    // Playwright ha usado formatos como "GET https://... => [200] OK" y
+    // "[GET] https://...". Buscar por línea mantiene la correlación sin conservar
+    // headers, bodies, cookies ni valores de query.
+    const QRegularExpression urlRx(QStringLiteral(R"(https?://[^\s"'<>]+)"),
+                                   QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpression methodRx(
+        QStringLiteral(R"(\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b)"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpression statusRx(QStringLiteral(R"((?:=>\s*)?\[?([1-5]\d\d)\]?)"));
+    const QRegularExpression staticRx(
+        QStringLiteral(R"(\.(?:css|js|mjs|png|jpe?g|gif|svg|ico|woff2?|ttf|map)(?:$|/))"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpression volatileSegmentRx(
+        QStringLiteral(R"((?<=/)(?:\d{4,}|[0-9a-f]{8}-[0-9a-f-]{27,}|[A-Za-z0-9_-]{32,})(?=/|$))"),
+        QRegularExpression::CaseInsensitiveOption);
+
+    const QStringList lines = raw.left(2 * 1024 * 1024).split(QLatin1Char('\n'));
+    for (const QString &line : lines) {
+        const auto urlMatch = urlRx.match(line);
+        if (!urlMatch.hasMatch()) continue;
+        QString urlText = urlMatch.captured();
+        while (!urlText.isEmpty() && QStringLiteral(".,;:)]}").contains(urlText.back()))
+            urlText.chop(1);
+        QUrl url(urlText);
+        if (!url.isValid() || url.host().isEmpty()) {
+            ++ignoredInvalid;
+            continue;
+        }
+        QString path = url.path(QUrl::FullyDecoded);
+        if (path.isEmpty()) path = QStringLiteral("/");
+        path.replace(volatileSegmentRx, QStringLiteral("{id}"));
+        if (!includeStatic && staticRx.match(path).hasMatch()) {
+            ++ignoredStatic;
+            continue;
+        }
+
+        const auto methodMatch = methodRx.match(line.left(urlMatch.capturedStart()));
+        const QString method = methodMatch.hasMatch()
+                                   ? methodMatch.captured(1).toUpper()
+                                   : QStringLiteral("GET");
+        const QString origin = url.scheme().toLower() + QStringLiteral("://")
+                               + url.host().toLower()
+                               + (url.port() > 0 ? QStringLiteral(":%1").arg(url.port())
+                                                 : QString());
+        const QString key = method + QLatin1Char(' ') + origin + path;
+        Endpoint &ep = grouped[key];
+        ep.method = method;
+        ep.origin = origin;
+        ep.path = path;
+        ++ep.count;
+        const auto statusMatch = statusRx.match(line.mid(urlMatch.capturedEnd()));
+        if (statusMatch.hasMatch()) ep.statuses.insert(statusMatch.captured(1).toInt());
+    }
+
+    QJsonArray endpoints;
+    for (const Endpoint &ep : std::as_const(grouped)) {
+        QJsonArray statuses;
+        QList<int> sortedStatuses(ep.statuses.cbegin(), ep.statuses.cend());
+        std::sort(sortedStatuses.begin(), sortedStatuses.end());
+        for (int status : sortedStatuses) statuses.append(status);
+        endpoints.append(QJsonObject{
+            {QStringLiteral("method"), ep.method},
+            {QStringLiteral("origin"), ep.origin},
+            {QStringLiteral("pathTemplate"), ep.path},
+            {QStringLiteral("count"), ep.count},
+            {QStringLiteral("statuses"), statuses}});
+    }
+    const QJsonObject result{
+        {QStringLiteral("kind"), QStringLiteral("browser_network_evidence")},
+        {QStringLiteral("endpointCount"), endpoints.size()},
+        {QStringLiteral("endpoints"), endpoints},
+        {QStringLiteral("ignoredStatic"), ignoredStatic},
+        {QStringLiteral("ignoredInvalid"), ignoredInvalid},
+        {QStringLiteral("truncatedInput"), raw.size() > 2 * 1024 * 1024},
+        {QStringLiteral("privacy"), QJsonObject{
+             {QStringLiteral("queryValuesRetained"), false},
+             {QStringLiteral("headersRetained"), false},
+             {QStringLiteral("bodiesRetained"), false},
+             {QStringLiteral("volatilePathSegmentsNormalized"), true}}}};
+    return QString::fromUtf8(QJsonDocument(result).toJson(QJsonDocument::Compact));
 }
 
 // GET sincrónico con timeout, redirecciones revalidadas y cuerpo acotado. Corre
@@ -2783,6 +2880,41 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[browser_skill_replay %1 · exit=%2]\ntrace=%3\n%4")
                    .arg(skill).arg(proc.exitCode()).arg(json, out.left(8000));
+    }
+    if (name == QLatin1String("browser_network_discover")) {
+        McpClient *client = nullptr;
+        const McpClient::ToolDef *networkTool = nullptr;
+        for (McpClient *candidate : std::as_const(m_mcp)) {
+            for (const McpClient::ToolDef &tool : candidate->tools()) {
+                const QString normalized = tool.name.toLower();
+                if (normalized == QLatin1String("browser_network_requests")
+                    || (normalized.contains(QLatin1String("network"))
+                        && normalized.contains(QLatin1String("request")))) {
+                    client = candidate;
+                    networkTool = &tool;
+                    break;
+                }
+            }
+            if (networkTool) break;
+        }
+        if (!client || !networkTool)
+            return QStringLiteral("[browser_network_discover: el MCP de navegador activo "
+                                  "no expone inspección de requests. Abrí una página con "
+                                  "Playwright o actualizá playwright-mcp.]");
+
+        const bool includeStatic = args.value(QStringLiteral("include_static")).toBool(false);
+        QJsonObject networkArgs;
+        if (networkTool->inputSchema.value(QStringLiteral("properties")).toObject()
+                .contains(QStringLiteral("includeStatic")))
+            networkArgs.insert(QStringLiteral("includeStatic"), includeStatic);
+        bool called = false;
+        const QString raw = client->callTool(networkTool->name, networkArgs, &called,
+                                             nullptr, {}, m_correlationId);
+        if (!called)
+            return QStringLiteral("[browser_network_discover: Playwright no pudo leer "
+                                  "el tráfico]\n") + raw.left(2000);
+        if (ok) *ok = true;
+        return summarizeBrowserNetworkEvidence(raw, includeStatic);
     }
     if (name == QLatin1String("email_accounts")) {
         if (ok) *ok = true;
