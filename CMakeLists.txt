@@ -90,6 +90,8 @@ set(CORE_SOURCES
     src/core/agent/BrowserTeach.cpp
     src/core/agent/PortableSkillStore.cpp
     src/core/agent/HotspotAnalyzer.cpp
+    src/core/agents/AgentDefinitionStore.cpp
+    src/core/agents/TriggerManager.cpp
     src/core/mail/MailClient.cpp
     src/core/voice/VoiceTypes.cpp
     src/core/voice/VoiceCursorCommand.cpp
@@ -174,6 +176,8 @@ set(HEADERS
     src/core/agent/BrowserTeach.h
     src/core/agent/PortableSkillStore.h
     src/core/agent/HotspotAnalyzer.h
+    src/core/agents/AgentDefinitionStore.h
+    src/core/agents/TriggerManager.h
     src/core/mail/MailClient.h
     src/core/voice/VoiceTypes.h
     src/core/voice/AudioCodec.h
@@ -343,6 +347,7 @@ qt_add_qml_module(LlamaCode
         qml/components/OpencodeConfigDialog.qml
         qml/components/MermaidPreviewDialog.qml
         qml/pages/AgentPage.qml
+        qml/pages/AgentsPage.qml
         qml/pages/TasksPage.qml
         qml/pages/BenchmarkPage.qml
         qml/pages/ResearchPage.qml
@@ -471,6 +476,7 @@ if (BUILD_TESTS)
     add_lc_test(test_profile_health     tests/test_profile_health.cpp)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
     add_lc_test(test_agent_profiles     tests/test_agent_profiles.cpp)
+    add_lc_test(test_agent_definitions  tests/test_agent_definitions.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
     add_lc_test(test_agent_efficiency    tests/test_agent_efficiency.cpp)
     add_lc_test(test_system_profiles    tests/test_system_profiles.cpp)

@@ -252,6 +252,7 @@ Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 | Popup de primer inicio (binario + modelo + perfil automático) | ✅ |
 | Detector de nueva versión (última GitHub Release + popup con changelog) | ✅ |
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
+| Agentes persistentes versionados + feedback supervisado + triggers | ✅ |
 
 El agente nativo combina dos guardas anti-loop: bloquea llamadas idénticas después
 de tres repeticiones y detecta espirales de fallos equivalentes aunque el modelo
@@ -266,6 +267,34 @@ También vigila el stream de cada generación: si un bloque largo se repite tres
 veces consecutivas, conserva una copia, detiene esa generación y registra
 `stream_repetition`. Esto cubre loops de razonamiento/respuesta que ocurren antes
 de que el modelo llegue a solicitar una herramienta.
+
+### Agentes persistentes
+
+La página **Agentes** agrupa en una entidad de producto la identidad e instrucciones
+del agente, su `AgentProfile`, `LaunchProfile`, workspace, skills, permisos, Tasks
+y triggers asociados. Al activarlo, LlamaCode aplica sus instrucciones y perfil de
+capacidades al agente nativo. Las definiciones se guardan en
+`AppLocalData/LlamaCode/agents/agents.json`.
+
+Cada cambio semántico genera una revisión inmutable con motivo y snapshot. La UI
+permite inspeccionar el historial y restaurar una revisión anterior; restaurar crea
+una revisión nueva y nunca reescribe la historia. El feedback también es
+supervisado: **Proponer** no cambia el comportamiento; sólo **Aprobar** incorpora
+la corrección a las instrucciones y crea otra revisión. Este mecanismo no puede
+elevar permisos, activar tools ni modificar secretos.
+
+Las Tasks vinculadas alimentan un resumen operativo por agente (corridas, tasa de
+éxito, tokens y tiempo) reutilizando `RunHistoryStore`, incluidos los resultados
+manuales y programados existentes.
+
+`TriggerManager` persiste triggers normalizados en
+`AppLocalData/LlamaCode/agents/triggers.json`. `filesystem` usa
+`QFileSystemWatcher` con debounce; `webhook` y `appEvent` se despachan con el mismo
+contrato `{type,event}` mediante `dispatchEvent`. Como `triggerManager` es un
+sub-target de `ControlApi`, conectores locales pueden invocarlo por
+`POST /invoke` sin agregar endpoints específicos por proveedor. Todos los tipos
+terminan solicitando una Task existente, conservando sus permisos, aprobaciones,
+traza y validación final.
 
 Cuando un turno encuentra fallos de herramientas, cambia de estrategia y finalmente
 progresa con éxito, el agente ejecuta una reflexión breve en segundo plano y conserva

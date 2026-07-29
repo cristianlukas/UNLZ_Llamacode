@@ -23,6 +23,7 @@ Rectangle {
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
         { key: "agent.title",   icon: "🤖",  serverOnly: true  },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
+        { key: "agents", label: "Agentes", icon: "🧠", serverOnly: false },
         { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
@@ -71,7 +72,7 @@ Rectangle {
                     spacing: 12
                     anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                     Text {
-                        text: (App.langV, App.l(modelData.key))
+                        text: modelData.label || (App.langV, App.l(modelData.key))
                         font.pixelSize: 14
                         color: root.currentIndex === index ? Theme.textPrimary : Theme.textSecondary
                     }
@@ -85,7 +86,7 @@ Rectangle {
         ItemDelegate {
             Layout.fillWidth: true
             height: 48
-            highlighted: root.currentIndex === 11
+            highlighted: root.currentIndex === 12
             background: Rectangle {
                 color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
                 Rectangle {
@@ -101,10 +102,10 @@ Rectangle {
                 Text {
                     text: (App.langV, App.l("nav.settings"))
                     font.pixelSize: 14
-                    color: root.currentIndex === 11 ? Theme.textPrimary : Theme.textSecondary
+                    color: root.currentIndex === 12 ? Theme.textPrimary : Theme.textSecondary
                 }
             }
-            onClicked: { root.currentIndex = 11; root.pageSelected(11) }
+            onClicked: { root.currentIndex = 12; root.pageSelected(12) }
         }
 
         Text {

@@ -889,6 +889,20 @@ AppController::AppController(QObject *parent) : QObject(parent)
     if (m_browserMcpCommand.trimmed().isEmpty())
         m_browserMcpCommand = QStringLiteral("npx @playwright/mcp@latest");
     m_agentSystemPrompt = s.value(QStringLiteral("agent/systemPrompt")).toString();
+    m_activeAgentDefinitionId =
+        s.value(QStringLiteral("agent/activeDefinitionId")).toString();
+    const QVariantMap activeDefinition =
+        m_agentDefinitions.get(m_activeAgentDefinitionId);
+    if (activeDefinition.isEmpty()) {
+        m_activeAgentDefinitionId.clear();
+    } else {
+        const QString instructions =
+            activeDefinition.value(QStringLiteral("instructions")).toString();
+        if (!instructions.isEmpty()) m_agentSystemPrompt = instructions;
+        const QString profileId =
+            activeDefinition.value(QStringLiteral("profileId")).toString();
+        if (!profileId.isEmpty()) m_activeAgentProfileId = profileId;
+    }
     m_agentPermRules    = s.value(QStringLiteral("agent/permRules")).toString();
     m_agentTemperature  = s.value(QStringLiteral("agent/temperature"), -1.0).toDouble();
     m_agentDisabledTools = s.value(QStringLiteral("agent/disabledTools")).toStringList();
@@ -981,6 +995,20 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(&m_tasks, &QAbstractItemModel::rowsInserted, this, [this]() { rebuildTaskTriggers(); });
     connect(&m_tasks, &QAbstractItemModel::rowsRemoved, this, [this]() { rebuildTaskTriggers(); });
     rebuildTaskTriggers();
+    connect(&m_triggerManager, &TriggerManager::taskRequested, this,
+            [this](const QString &taskId, const QString &triggerId,
+                   const QVariantMap &) {
+        appendAgentEvent(QStringLiteral("trigger"),
+                         QStringLiteral("Trigger %1 solicitó la Task %2.")
+                             .arg(triggerId, taskId));
+        if (m_runningTaskId.isEmpty()) runTask(taskId);
+        else {
+            if (!m_pendingTriggeredTasks.contains(taskId))
+                m_pendingTriggeredTasks.append(taskId);
+            appendAgentEvent(QStringLiteral("trigger"),
+                             QStringLiteral("Trigger en cola: ya hay una Task en ejecución."));
+        }
+    });
 
     // Gateway (proxy Anthropic/OpenAI + auto-load). Se arranca on-demand.
     m_gateway = new LlmGateway(this);
@@ -5120,6 +5148,26 @@ void AppController::onTriggerPathChanged(const QString &path)
     }
 }
 
+QVariantMap AppController::agentDefinitionMetrics(const QString &agentId) const
+{
+    return m_agentDefinitions.aggregateMetrics(agentId, [this](const QString &ownerId) {
+        return m_runHistory.history(ownerId);
+    });
+}
+
+bool AppController::activateAgentDefinition(const QString &agentId)
+{
+    const QVariantMap definition = m_agentDefinitions.get(agentId);
+    if (definition.isEmpty()) return false;
+    m_activeAgentDefinitionId = agentId;
+    QSettings().setValue(QStringLiteral("agent/activeDefinitionId"), agentId);
+    const QString profileId = definition.value(QStringLiteral("profileId")).toString();
+    if (!profileId.isEmpty()) setActiveAgentProfileId(profileId);
+    setAgentSystemPrompt(definition.value(QStringLiteral("instructions")).toString());
+    emit activeAgentDefinitionChanged();
+    return true;
+}
+
 void AppController::runTask(const QString &id)
 {
     QVariantMap task = m_tasks.get(id);
@@ -6376,6 +6424,14 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         m_dataIndex = 0;
     }
     m_runningTaskRow.clear();
+
+    if (!m_pendingTriggeredTasks.isEmpty()) {
+        const QString nextTriggeredTask = m_pendingTriggeredTasks.takeFirst();
+        QTimer::singleShot(0, this, [this, nextTriggeredTask]() {
+            if (m_runningTaskId.isEmpty()) runTask(nextTriggeredTask);
+        });
+        return;
+    }
 
     if (m_scheduledAutoStop) {
         m_scheduledAutoStop = false;

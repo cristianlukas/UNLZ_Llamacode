@@ -10,6 +10,8 @@
 #include "core/tasks/RunHistoryStore.h"
 #include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
+#include "core/agents/AgentDefinitionStore.h"
+#include "core/agents/TriggerManager.h"
 #include "core/tasks/WorkflowRunner.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
@@ -48,6 +50,10 @@ class AppController : public QObject
     Q_PROPERTY(ModelCatalog*       modelCatalog    READ modelCatalog    CONSTANT)
     Q_PROPERTY(ProfileManager*     profileManager  READ profileManager  CONSTANT)
     Q_PROPERTY(TaskStore*          taskStore       READ taskStore       CONSTANT)
+    Q_PROPERTY(AgentDefinitionStore* agentDefinitions READ agentDefinitions CONSTANT)
+    Q_PROPERTY(TriggerManager* triggerManager READ triggerManager CONSTANT)
+    Q_PROPERTY(QString activeAgentDefinitionId READ activeAgentDefinitionId
+               NOTIFY activeAgentDefinitionChanged)
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
@@ -196,6 +202,11 @@ public:
     ModelCatalog      *modelCatalog()    { return &m_catalog; }
     ProfileManager    *profileManager()  { return &m_profiles; }
     TaskStore         *taskStore()       { return &m_tasks; }
+    AgentDefinitionStore *agentDefinitions() { return &m_agentDefinitions; }
+    TriggerManager *triggerManager() { return &m_triggerManager; }
+    Q_INVOKABLE QVariantMap agentDefinitionMetrics(const QString &agentId) const;
+    QString activeAgentDefinitionId() const { return m_activeAgentDefinitionId; }
+    Q_INVOKABLE bool activateAgentDefinition(const QString &agentId);
     AutomationStore   *automationStore() { return &m_automations; }
     bool tasksSchedulerEnabled() const
     { return QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool(); }
@@ -1026,6 +1037,7 @@ signals:
     void agentThinkingChanged();
     void agentToolsChanged();
     void activeAgentProfileChanged();
+    void activeAgentDefinitionChanged();
     void agentTeacherChanged();
     void mailAutoSendChanged();
     void hitlDestructiveChanged();
@@ -1105,6 +1117,10 @@ private:
     ModelCatalog      m_catalog;
     ModelRootRegistry m_roots{&m_catalog};
     ProfileManager    m_profiles;
+    AgentDefinitionStore m_agentDefinitions;
+    TriggerManager m_triggerManager;
+    QString m_activeAgentDefinitionId;
+    QStringList m_pendingTriggeredTasks;
     TaskStore         m_tasks;
     // Watcher de triggers fileWatch: mapea cada path vigilado → ids de Task a correr,
     // con debounce por Task (evita ráfagas de eventos de guardado).
