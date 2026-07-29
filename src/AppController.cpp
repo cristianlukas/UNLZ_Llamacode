@@ -16102,13 +16102,16 @@ QString AppController::voiceError() const { return m_voice ? m_voice->lastError(
 
 QVariantList AppController::profileHealth()
 {
-    return ProfileHealthChecker::checkAllAsVariant(&m_profiles, &m_binaries, &m_catalog);
+    QVariantList list;
+    for (const HealthIssue &issue : resolvedProfileHealth())
+        list << issue.toMap();
+    return list;
 }
 
 QVariantMap AppController::profileHealthSummary()
 {
     int errors = 0, warnings = 0;
-    for (const HealthIssue &i : ProfileHealthChecker::checkAll(&m_profiles, &m_binaries, &m_catalog)) {
+    for (const HealthIssue &i : resolvedProfileHealth()) {
         if (i.severity == QLatin1String("error")) ++errors;
         else ++warnings;
     }
@@ -16116,4 +16119,33 @@ QVariantMap AppController::profileHealthSummary()
     m["errors"] = errors;
     m["warnings"] = warnings;
     return m;
+}
+
+QList<HealthIssue> AppController::resolvedProfileHealth()
+{
+    QList<HealthIssue> issues;
+    for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
+        const QString launchId = value.toMap().value(QStringLiteral("id")).toString();
+        if (launchId.isEmpty()) continue;
+
+        const EffectiveProfileBuilder::Context ctx = buildContext(launchId);
+        ProfileHealthChecker::Refs r;
+        r.launch = ctx.launch;
+        r.backend = ctx.backend;
+        r.backendFound = !ctx.backend.id.isEmpty();
+        r.binary = ctx.binary;
+        r.binaryFound = !ctx.binary.id.isEmpty();
+        r.model = ctx.model;
+        r.modelRefFound = !ctx.model.id.isEmpty();
+        r.modelFileExists = !ctx.catalogModel.id.isEmpty() && ctx.catalogModel.isAvailable;
+        r.modelFileName = ctx.catalogModel.fileName;
+        r.mmprojFileExists = !ctx.mmprojModel.id.isEmpty() && ctx.mmprojModel.isAvailable;
+        r.draftFileExists = !ctx.draftModel.id.isEmpty() && ctx.draftModel.isAvailable;
+        r.runtimeFound = ctx.launch.runtimePresetId.isEmpty() || !ctx.runtime.id.isEmpty();
+        if (!ctx.launch.agentProfileId.isEmpty())
+            r.agentRefFound =
+                !m_profiles.resolveAgentProfile(ctx.launch.agentProfileId).id.isEmpty();
+        issues << ProfileHealthChecker::checkLaunch(r);
+    }
+    return issues;
 }

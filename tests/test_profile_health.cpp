@@ -58,6 +58,7 @@ private slots:
     void backendUnset();
     void backendMissing();
     void binaryMissing();
+    void resolvedSystemBinaryIsAccepted();
     void binaryPathInvalid();
     void modelFileMissing();
     void mmprojMissingIsWarning();
@@ -119,6 +120,16 @@ void ProfileHealthTests::binaryMissing()
     r.binaryFound = false;
     const auto v = ProfileHealthChecker::checkLaunch(r);
     QVERIFY(hasCode(v, "binary-missing"));
+}
+
+void ProfileHealthTests::resolvedSystemBinaryIsAccepted()
+{
+    auto r = healthyLocal();
+    r.launch.system = true;
+    r.backend.binaryId.clear();
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QVERIFY(!hasCode(v, "binary-unset"));
+    QVERIFY(!hasCode(v, "binary-missing"));
 }
 
 void ProfileHealthTests::binaryPathInvalid()

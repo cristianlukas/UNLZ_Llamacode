@@ -60,7 +60,10 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
                       "Indicar el nombre del modelo a enviar.");
     } else {
         // Local: requiere binario válido.
-        if (r.backend.binaryId.isEmpty())
+        // Los perfiles de sistema no persisten binaryId: AppController resuelve
+        // el binario efectivo por kind/pin al construir el contexto. Si el caller
+        // ya entregó ese binario resuelto, el backend está correctamente sano.
+        if (r.backend.binaryId.isEmpty() && !r.binaryFound)
             out << mk("error", id, "binary", "binary-unset",
                       "Backend local sin binario asignado.",
                       "Asignar un binario de llama-server al backend.");

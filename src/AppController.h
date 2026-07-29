@@ -5,6 +5,7 @@
 #include "core/ModelCatalog.h"
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
+#include "core/profiles/ProfileHealthChecker.h"
 #include "core/tasks/TaskStore.h"
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/RunHistoryStore.h"
@@ -1635,6 +1636,7 @@ private:
     // cuyo nombre+ruta contiene el pin). Vacío si no hay pin o no hay match válido
     // → el caller cae al resolveSystemBinaryId por kind.
     QString pinnedSystemBinaryId(const QString &launchId) const;
+    QList<HealthIssue> resolvedProfileHealth();
     // Instala el binario del tipo pedido si falta (cpu/official→installOfficialBinary,
     // beellama→installMtpBinary). beellama es CUDA-only: sin NVIDIA cae a official.
     void ensureSystemBinary(const QString &kind);
