@@ -276,6 +276,11 @@ y triggers asociados. Al activarlo, LlamaCode aplica sus instrucciones y perfil 
 capacidades al agente nativo. Las definiciones se guardan en
 `AppLocalData/LlamaCode/agents/agents.json`.
 
+Para crear uno alcanza con completar nombre, propósito e instrucciones; las
+referencias por ID a perfiles, workspace, Tasks y skills son avanzadas y opcionales.
+La propia página explica el flujo de revisiones, feedback y triggers, y todos sus
+controles siguen la paleta del tema activo.
+
 Cada cambio semántico genera una revisión inmutable con motivo y snapshot. La UI
 permite inspeccionar el historial y restaurar una revisión anterior; restaurar crea
 una revisión nueva y nunca reescribe la historia. El feedback también es

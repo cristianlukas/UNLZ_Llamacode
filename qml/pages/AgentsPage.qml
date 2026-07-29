@@ -11,6 +11,26 @@ Item {
     property var feedbackRows: []
     property var metricRows: ({})
 
+    component FieldLabel: Text {
+        color: Theme.textSecondary
+        font.pixelSize: 12
+    }
+
+    component ThemedTextArea: TextArea {
+        color: Theme.textPrimary
+        placeholderTextColor: Theme.textMuted
+        selectionColor: Theme.accent
+        selectedTextColor: Theme.btnPrimaryText
+        font.pixelSize: 13
+        padding: 10
+        background: Rectangle {
+            radius: 6
+            color: Theme.inputBg
+            border.color: parent.activeFocus ? Theme.inputBorderFocus : Theme.inputBorderColor
+            border.width: parent.activeFocus ? 2 : 1
+        }
+    }
+
     function selectAgent(id) {
         selectedId = id || ""
         edit = selectedId ? App.agentDefinitions.get(selectedId) : ({})
@@ -59,8 +79,10 @@ Item {
                 RowLayout {
                     Text { text: "Agentes"; color: Theme.textPrimary; font.pixelSize: 19; font.bold: true }
                     Item { Layout.fillWidth: true }
-                    Button {
+                    LcButton {
                         text: "+"
+                        implicitWidth: 40
+                        Accessible.name: "Crear agente"
                         onClicked: {
                             root.selectedId = ""
                             root.edit = ({})
@@ -74,12 +96,24 @@ Item {
                     model: App.agentDefinitions
                     clip: true
                     delegate: ItemDelegate {
+                        id: agentDelegate
                         required property string id
                         required property string name
                         required property int currentRevision
                         width: ListView.view.width
                         highlighted: root.selectedId === id
-                        text: name + "  · r" + currentRevision
+                        contentItem: Text {
+                            text: agentDelegate.name + "  · r" + agentDelegate.currentRevision
+                            color: agentDelegate.highlighted ? Theme.btnPrimaryText : Theme.textPrimary
+                            font.pixelSize: 13
+                            elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        background: Rectangle {
+                            radius: 6
+                            color: agentDelegate.highlighted ? Theme.accent
+                                  : (agentDelegate.hovered ? Theme.inputBg : "transparent")
+                        }
                         onClicked: root.selectAgent(id)
                     }
                 }
@@ -95,32 +129,68 @@ Item {
                 spacing: 10
 
                 Text { text: selectedId ? "Definición persistente" : "Nuevo agente"; color: Theme.textPrimary; font.pixelSize: 20; font.bold: true }
-                TextField { id: nameField; Layout.fillWidth: true; placeholderText: "Nombre" }
-                TextField { id: descriptionField; Layout.fillWidth: true; placeholderText: "Descripción y propósito" }
-                TextArea {
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: quickHelp.implicitHeight + 24
+                    radius: 8
+                    color: Theme.surfaceBg
+                    border.color: Theme.borderColor
+                    Text {
+                        id: quickHelp
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        color: Theme.textSecondary
+                        wrapMode: Text.Wrap
+                        text: selectedId
+                              ? "Editá la identidad o las instrucciones y guardá una nueva revisión. Activar hace que esta definición sea la usada por el agente nativo."
+                              : "Creá una identidad reutilizable para el agente: completá nombre, propósito e instrucciones. Los perfiles, workspace, Tasks, skills y triggers son opcionales."
+                    }
+                }
+
+                FieldLabel { text: "Nombre *" }
+                LcTextField { id: nameField; Layout.fillWidth: true; placeholderText: "Ej.: Asistente de investigación" }
+                FieldLabel { text: "Descripción y propósito" }
+                LcTextField { id: descriptionField; Layout.fillWidth: true; placeholderText: "Qué rol cumple y para qué conviene usarlo" }
+                FieldLabel { text: "Instrucciones permanentes" }
+                ThemedTextArea {
                     id: instructionsField; Layout.fillWidth: true; Layout.preferredHeight: 130
-                    placeholderText: "Instrucciones permanentes del agente"; wrapMode: TextEdit.Wrap
+                    placeholderText: "Ej.: Respondé en español, citá fuentes y pedí confirmación antes de acciones externas."
+                    wrapMode: TextEdit.Wrap
+                }
+                Text {
+                    Layout.fillWidth: true
+                    color: Theme.textMuted
+                    font.pixelSize: 11
+                    wrapMode: Text.Wrap
+                    text: "Configuración avanzada (opcional). Usá los IDs existentes de Perfiles, Lanzar, Tasks y Skills; si los dejás vacíos, el agente hereda la configuración activa."
                 }
                 GridLayout {
                     Layout.fillWidth: true; columns: 2; columnSpacing: 8; rowSpacing: 8
-                    TextField { id: profileField; Layout.fillWidth: true; placeholderText: "AgentProfile ID" }
-                    TextField { id: launchField; Layout.fillWidth: true; placeholderText: "LaunchProfile ID" }
-                    TextField { id: workspaceField; Layout.fillWidth: true; placeholderText: "Workspace ID" }
-                    TextField { id: taskField; Layout.fillWidth: true; placeholderText: "Task IDs, separados por coma" }
-                    TextField { id: skillsField; Layout.columnSpan: 2; Layout.fillWidth: true; placeholderText: "Skill IDs, separados por coma" }
+                    LcTextField { id: profileField; Layout.fillWidth: true; placeholderText: "ID del perfil de agente" }
+                    LcTextField { id: launchField; Layout.fillWidth: true; placeholderText: "ID del perfil de lanzamiento" }
+                    LcTextField { id: workspaceField; Layout.fillWidth: true; placeholderText: "ID del workspace" }
+                    LcTextField { id: taskField; Layout.fillWidth: true; placeholderText: "IDs de Tasks, separados por coma" }
+                    LcTextField { id: skillsField; Layout.columnSpan: 2; Layout.fillWidth: true; placeholderText: "IDs de Skills, separados por coma" }
                 }
                 RowLayout {
-                    Button { text: "Guardar nueva revisión"; enabled: nameField.text.trim().length > 0; onClicked: root.saveAgent() }
-                    Button {
+                    LcButton {
+                        text: selectedId ? "Guardar nueva revisión" : "Crear agente"
+                        enabled: nameField.text.trim().length > 0
+                        onClicked: root.saveAgent()
+                    }
+                    LcButton {
                         text: App.activeAgentDefinitionId === selectedId ? "Activo" : "Activar"
                         enabled: selectedId.length > 0 && App.activeAgentDefinitionId !== selectedId
                         onClicked: App.activateAgentDefinition(selectedId)
                     }
-                    Button {
+                    LcButton {
+                        secondary: true
                         text: "Duplicar"; enabled: selectedId.length > 0
                         onClicked: root.selectAgent(App.agentDefinitions.duplicate(selectedId))
                     }
-                    Button {
+                    LcButton {
+                        danger: true
                         text: "Eliminar"; enabled: selectedId.length > 0
                         onClicked: { App.agentDefinitions.remove(selectedId); root.selectAgent("") }
                     }
@@ -137,9 +207,13 @@ Item {
                 }
 
                 Text { text: "Feedback supervisado"; color: Theme.textPrimary; font.pixelSize: 16; font.bold: true }
+                Text {
+                    Layout.fillWidth: true; color: Theme.textSecondary; wrapMode: Text.Wrap
+                    text: "Proponé una corrección observada durante el uso. Después podés aprobarla para incorporarla como una nueva revisión o rechazarla."
+                }
                 RowLayout {
-                    TextField { id: feedbackField; Layout.fillWidth: true; placeholderText: "Corrección que querés convertir en instrucción" }
-                    Button {
+                    LcTextField { id: feedbackField; Layout.fillWidth: true; placeholderText: "Ej.: Siempre incluir el enlace de cada fuente" }
+                    LcButton {
                         text: "Proponer"; enabled: selectedId.length > 0 && feedbackField.text.trim().length > 0
                         onClicked: {
                             App.agentDefinitions.proposeFeedback(selectedId, feedbackField.text, "agent")
@@ -153,11 +227,12 @@ Item {
                     delegate: RowLayout {
                         Layout.fillWidth: true
                         Text { Layout.fillWidth: true; text: modelData.feedback; color: Theme.textSecondary; wrapMode: Text.Wrap }
-                        Button {
+                        LcButton {
                             text: "Aprobar"
                             onClicked: { App.agentDefinitions.approveFeedback(modelData.id); root.selectAgent(selectedId) }
                         }
-                        Button {
+                        LcButton {
+                            secondary: true
                             text: "Rechazar"
                             onClicked: { App.agentDefinitions.rejectFeedback(modelData.id); root.selectAgent(selectedId) }
                         }
@@ -173,7 +248,8 @@ Item {
                             Layout.fillWidth: true; color: Theme.textSecondary
                             text: "r" + modelData.number + " · " + modelData.reason + " · " + modelData.createdAt
                         }
-                        Button {
+                        LcButton {
+                            secondary: true
                             text: "Restaurar"; enabled: modelData.number !== edit.currentRevision
                             onClicked: { App.agentDefinitions.restoreRevision(selectedId, modelData.number); root.selectAgent(selectedId) }
                         }
@@ -183,13 +259,13 @@ Item {
                 Text { text: "Triggers normalizados"; color: Theme.textPrimary; font.pixelSize: 16; font.bold: true }
                 Text {
                     Layout.fillWidth: true; color: Theme.textSecondary; wrapMode: Text.Wrap
-                    text: "Filesystem se vigila localmente. Webhook y appEvent usan el mismo contrato dispatchEvent(type, payload)."
+                    text: "Opcional: ejecutá una Task cuando cambie una ruta local, llegue un webhook o la app emita un evento. Necesitás el ID de una Task ya creada."
                 }
                 RowLayout {
-                    ComboBox { id: triggerType; model: ["filesystem", "webhook", "appEvent"] }
-                    TextField { id: triggerValue; Layout.fillWidth: true; placeholderText: triggerType.currentText === "filesystem" ? "Ruta" : "Clave o nombre de evento" }
-                    TextField { id: triggerTask; Layout.fillWidth: true; placeholderText: "Task ID" }
-                    Button {
+                    LcComboBox { id: triggerType; model: ["filesystem", "webhook", "appEvent"] }
+                    LcTextField { id: triggerValue; Layout.fillWidth: true; placeholderText: triggerType.currentText === "filesystem" ? "Ruta a vigilar" : "Clave o nombre del evento" }
+                    LcTextField { id: triggerTask; Layout.fillWidth: true; placeholderText: "ID de la Task" }
+                    LcButton {
                         text: "Agregar"
                         enabled: selectedId.length > 0 && triggerValue.text.length > 0 && triggerTask.text.length > 0
                         onClicked: {
@@ -222,7 +298,8 @@ Item {
                         visible: agentId === root.selectedId
                         Layout.fillWidth: visible
                         Text { Layout.fillWidth: true; text: name; color: Theme.textSecondary }
-                        Button {
+                        LcButton {
+                            danger: true
                             text: "Eliminar"
                             onClicked: { App.triggerManager.remove(id); root.selectAgent(root.selectedId) }
                         }
