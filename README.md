@@ -1430,6 +1430,27 @@ Las sesiones del agente nativo forman un árbol persistente: una rama conserva
 completa desde el menú o un turno concreto desde la burbuja del usuario, sin
 alterar la rama original.
 
+### Salas multiagente
+
+La vista Agente incluye **Sala**, un timeline persistente donde el usuario, el
+coordinador y los especialistas aparecen como participantes identificados. Cada
+evento conserva tipo, autor, audiencia, correlación y timestamp; los eventos
+dirigidos sólo entran al contexto compacto de su audiencia. Las menciones
+`@id`/`@nombre` se registran como handoffs.
+
+Los presets `/review`, `/council` y `/research` crean el roster apropiado y
+despachan un contrato de coordinación al agente nativo, que reutiliza la tool
+`task` y sus worktrees para el trabajo paralelo. `/review` separa implementador
+con escritura y revisor de sólo lectura; ningún grant puede ampliarse después de
+creado, sólo reducirse. Acciones externas y destructivas nacen deshabilitadas.
+El resultado final del coordinador vuelve al timeline como `decision` o `error`.
+
+Las salas viven en `AppLocalData/LlamaCode/agent-rooms/`: metadata en
+`rooms.json` y eventos append-only en `events/<roomId>.jsonl`. El QObject
+`agentRoomStore` y los métodos `createAgentRoom`, `sendAgentRoomMessage` y
+`runAgentRoomPreset` también están disponibles por ControlApi para clientes
+headless.
+
 Ante `context_length_exceeded`, el agente compacta de emergencia y reintenta hasta
 dos veces. Los fallos transitorios HTTP 408/425/429/5xx usan backoff exponencial
 acotado; errores deterministas de autenticación o schema no se reintentan.

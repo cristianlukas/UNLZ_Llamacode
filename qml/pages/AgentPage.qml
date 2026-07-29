@@ -900,6 +900,16 @@ Item {
                     }
                 }
                 LcButton {
+                    text: "👥 Sala"
+                    secondary: true
+                    visible: resolvedAdapter === "llamaagent"
+                    onClicked: {
+                        if ((App.agentRoomStore.currentRoomId ?? "").length === 0)
+                            App.createAgentRoom("Sala de " + (App.opencodeSessionTitle || "trabajo"), "")
+                        roomDialog.open()
+                    }
+                }
+                LcButton {
                     text: "🧠 Memoria"
                     secondary: true
                     visible: (resolvedAdapter === "llamaagent" || resolvedAdapter === "opencode")
@@ -2499,6 +2509,140 @@ Item {
                             const t = agentInput.text.trim()
                             if (App.escalateToMaster(t)) agentInput.text = ""
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Sala multiagente: timeline persistente + presets ────────────────────
+    LcDialog {
+        id: roomDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: Math.min(820, parent.width - 40)
+        height: Math.min(680, parent.height - 40)
+        title: "Sala multiagente"
+        footer: null
+        closePolicy: Popup.CloseOnEscape
+        background: Rectangle { color: Theme.popupHeaderBg ?? Theme.baseBg; radius: 10; border.color: Theme.borderColor }
+        contentItem: ColumnLayout {
+            spacing: 10
+            RowLayout {
+                Layout.fillWidth: true
+                LcComboBox {
+                    id: roomCombo
+                    Layout.fillWidth: true
+                    model: App.agentRoomStore.rooms
+                    textRole: "title"
+                    valueRole: "id"
+                    currentIndex: Math.max(0, indexOfValue(App.agentRoomStore.currentRoomId))
+                    onActivated: App.agentRoomStore.currentRoomId = currentValue
+                }
+                LcButton {
+                    text: "+ Nueva"
+                    onClicked: App.createAgentRoom("Sala de trabajo", "")
+                }
+            }
+            Flow {
+                Layout.fillWidth: true
+                spacing: 6
+                Repeater {
+                    model: App.agentRoomStore.currentParticipants
+                    Rectangle {
+                        width: participantText.implicitWidth + 16
+                        height: 25; radius: 12
+                        color: Theme.inputBg; border.color: Theme.borderColor
+                        Text {
+                            id: participantText
+                            anchors.centerIn: parent
+                            text: (modelData.kind === "human" ? "👤 " : "🤖 ")
+                                  + (modelData.name || modelData.id)
+                            color: Theme.textSecondary; font.pixelSize: 11
+                        }
+                    }
+                }
+            }
+            ListView {
+                id: roomTimeline
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 8
+                model: App.agentRoomStore.currentEvents
+                onCountChanged: positionViewAtEnd()
+                delegate: Rectangle {
+                    width: roomTimeline.width
+                    height: roomEventColumn.implicitHeight + 18
+                    radius: 7
+                    color: (modelData.author || "").startsWith("human:")
+                           ? Theme.highlight : Theme.inputBg
+                    border.color: Theme.borderColor
+                    Column {
+                        id: roomEventColumn
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 9 }
+                        spacing: 4
+                        Text {
+                            width: parent.width
+                            text: (modelData.author || "system") + " · " + (modelData.type || "message")
+                            color: Theme.accent; font { pixelSize: 10; bold: true }
+                            elide: Text.ElideRight
+                        }
+                        Text {
+                            width: parent.width
+                            text: modelData.content || ""
+                            color: Theme.textPrimary; font.pixelSize: 12
+                            wrapMode: Text.Wrap
+                        }
+                    }
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+                LcButton {
+                    text: "/review"
+                    enabled: App.agentRunning && roomGoal.text.trim().length > 0
+                    onClicked: {
+                        if (App.runAgentRoomPreset(App.agentRoomStore.currentRoomId, "review", roomGoal.text))
+                            roomGoal.text = ""
+                    }
+                }
+                LcButton {
+                    text: "/council"; secondary: true
+                    enabled: App.agentRunning && roomGoal.text.trim().length > 0
+                    onClicked: {
+                        if (App.runAgentRoomPreset(App.agentRoomStore.currentRoomId, "council", roomGoal.text))
+                            roomGoal.text = ""
+                    }
+                }
+                LcButton {
+                    text: "/research"; secondary: true
+                    enabled: App.agentRunning && roomGoal.text.trim().length > 0
+                    onClicked: {
+                        if (App.runAgentRoomPreset(App.agentRoomStore.currentRoomId, "research", roomGoal.text))
+                            roomGoal.text = ""
+                    }
+                }
+                LcTextField {
+                    id: roomGoal
+                    Layout.fillWidth: true
+                    placeholderText: "Mensaje, objetivo o @participante…"
+                    onAccepted: {
+                        if (App.sendAgentRoomMessage(App.agentRoomStore.currentRoomId,
+                                                     text, []))
+                            text = ""
+                    }
+                }
+                LcButton {
+                    text: "Enviar"
+                    enabled: App.agentRunning && roomGoal.text.trim().length > 0
+                    onClicked: {
+                        if (App.sendAgentRoomMessage(App.agentRoomStore.currentRoomId,
+                                                     roomGoal.text, []))
+                            roomGoal.text = ""
                     }
                 }
             }

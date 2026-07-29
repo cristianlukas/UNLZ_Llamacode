@@ -665,6 +665,7 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     migrateIntegrationSecrets();
+    m_agentRoomStore = new AgentRoomStore(this);
     m_workflowToolRunner = new AgentToolRunner(this);
     connect(m_workflowToolRunner, &AgentToolRunner::toolExecuted, this,
             [this](const QVariantMap &result) {
@@ -5148,6 +5149,121 @@ void AppController::onTriggerPathChanged(const QString &path)
     }
 }
 
+QString AppController::createAgentRoom(const QString &title, const QString &projectDir)
+{
+    const QString dir = projectDir.trimmed().isEmpty() ? currentAgentProjectDir() : projectDir;
+    return m_agentRoomStore ? m_agentRoomStore->createRoom(title, dir) : QString();
+}
+
+bool AppController::sendAgentRoomMessage(const QString &roomId, const QString &text,
+                                         const QStringList &audience)
+{
+    if (!m_agentRoomStore || text.trimmed().isEmpty()
+        || m_agentRoomStore->room(roomId).isEmpty() || !agentRunning())
+        return false;
+    QStringList resolvedAudience = audience;
+    if (resolvedAudience.isEmpty()) {
+        const QVariantList people = m_agentRoomStore->participants(roomId);
+        for (const QVariant &value : people) {
+            const QVariantMap person = value.toMap();
+            const QString id = person.value(QStringLiteral("id")).toString();
+            const QString shortId = id.section(QLatin1Char(':'), -1);
+            const QString name = person.value(QStringLiteral("name")).toString();
+            const QRegularExpression mention(
+                QStringLiteral("(?i)(?:^|\\s)@(?:%1|%2)(?=\\s|[,:;.!?]|$)")
+                    .arg(QRegularExpression::escape(shortId),
+                         QRegularExpression::escape(name)));
+            if (mention.match(text).hasMatch()) resolvedAudience << id;
+        }
+        resolvedAudience.removeDuplicates();
+    }
+    const QString correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QString eventId = m_agentRoomStore->postEvent(roomId, {
+        {"type", resolvedAudience.isEmpty() ? QStringLiteral("message") : QStringLiteral("handoff")},
+        {"author", "human:owner"}, {"content", text.trimmed()},
+        {"audience", resolvedAudience}, {"correlationId", correlationId}
+    });
+    if (eventId.isEmpty()) return false;
+    m_activeRoomId = roomId;
+    m_activeRoomCorrelationId = correlationId;
+    m_activeRoomPreset.clear();
+    QString prompt = QStringLiteral(
+        "[SALA MULTIAGENTE]\n"
+        "Respondé como agent:coordinator. Conservá identidad de autor, citá handoffs y "
+        "usá la tool task para delegar si aporta valor. No amplíes permisos de ningún "
+        "participante. Mensaje del usuario:\n%1").arg(text.trimmed());
+    if (!resolvedAudience.isEmpty())
+        prompt += QStringLiteral("\nAudiencia solicitada: %1")
+                      .arg(resolvedAudience.join(QStringLiteral(", ")));
+    const QString context = m_agentRoomStore->compactContext(roomId, QStringLiteral("agent:coordinator"), 8000);
+    if (!context.isEmpty())
+        prompt += QStringLiteral("\n\nTimeline relevante:\n%1").arg(context);
+    sendToAgent(prompt);
+    return true;
+}
+
+bool AppController::runAgentRoomPreset(const QString &roomId, const QString &presetName,
+                                       const QString &goal)
+{
+    if (!m_agentRoomStore || !agentRunning() || goal.trimmed().isEmpty()) return false;
+    const QVariantMap definition = m_agentRoomStore->preset(presetName, goal);
+    if (definition.contains(QStringLiteral("error"))
+        || m_agentRoomStore->room(roomId).isEmpty())
+        return false;
+    const QVariantList members = definition.value(QStringLiteral("participants")).toList();
+    for (const QVariant &value : members) {
+        QVariantMap member = value.toMap();
+        member[QStringLiteral("kind")] = QStringLiteral("agent");
+        member[QStringLiteral("status")] = QStringLiteral("available");
+        QVariantMap grant = member.value(QStringLiteral("grant")).toMap();
+        // Todo preset nace sin acciones externas/destructivas, incluso si faltan
+        // esos campos en la definición.
+        grant[QStringLiteral("externalWrite")] = false;
+        grant[QStringLiteral("destructive")] = false;
+        member[QStringLiteral("grant")] = grant;
+        m_agentRoomStore->upsertParticipant(roomId, member);
+    }
+    const QString correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    m_agentRoomStore->postEvent(roomId, {
+        {"type", "task_assigned"}, {"author", "human:owner"}, {"content", goal.trimmed()},
+        {"audience", QStringList{"agent:coordinator"}}, {"correlationId", correlationId},
+        {"metadata", QVariantMap{{"preset", definition.value("name")}}}
+    });
+    m_agentRoomStore->postEvent(roomId, {
+        {"type", "task_progress"}, {"author", "agent:coordinator"},
+        {"content", QStringLiteral("Preset /%1 iniciado con %2 participantes.")
+                        .arg(definition.value("name").toString()).arg(members.size())},
+        {"correlationId", correlationId}
+    });
+    m_activeRoomId = roomId;
+    m_activeRoomCorrelationId = correlationId;
+    m_activeRoomPreset = definition.value(QStringLiteral("name")).toString();
+
+    QStringList roster;
+    for (const QVariant &value : members) {
+        const QVariantMap m = value.toMap();
+        const QVariantMap g = m.value(QStringLiteral("grant")).toMap();
+        roster << QStringLiteral("- %1 (%2), grant=%3")
+                      .arg(m.value("id").toString(), m.value("role").toString(),
+                           QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(g))
+                                                .toJson(QJsonDocument::Compact)));
+    }
+    const QString prompt = QStringLiteral(
+        "[SALA MULTIAGENTE · PRESET /%1]\n"
+        "Objetivo: %2\n\nParticipantes y autoridad máxima:\n%3\n\n"
+        "%4\n\n"
+        "Reglas obligatorias:\n"
+        "1. Usá la tool task para ejecutar especialistas en paralelo cuando corresponda.\n"
+        "2. Ningún participante puede obtener permisos que su grant no contenga.\n"
+        "3. Identificá cada aporte con el id del participante.\n"
+        "4. Verificá el resultado con evidencia concreta antes de finalizar.\n"
+        "5. Cerrá con una síntesis breve que enumere handoffs, evidencia y asuntos pendientes.")
+            .arg(m_activeRoomPreset, goal.trimmed(), roster.join(QLatin1Char('\n')),
+                 definition.value(QStringLiteral("instructions")).toString());
+    sendToAgent(prompt);
+    return true;
+}
+
 QVariantMap AppController::agentDefinitionMetrics(const QString &agentId) const
 {
     return m_agentDefinitions.aggregateMetrics(agentId, [this](const QString &ownerId) {
@@ -5999,6 +6115,20 @@ void AppController::dispatchPendingScheduledTask()
 
 void AppController::onAgentTurnFinished()
 {
+    if (m_agentRoomStore && !m_activeRoomId.isEmpty()) {
+        const QString answer = latestAgentAssistantText().trimmed();
+        const bool ok = !answer.isEmpty() && !taskFinalTextIndicatesFailure(answer);
+        m_agentRoomStore->postEvent(m_activeRoomId, {
+            {"type", ok ? QStringLiteral("decision") : QStringLiteral("error")},
+            {"author", "agent:coordinator"},
+            {"content", answer.isEmpty() ? QStringLiteral("El agente terminó sin respuesta.") : answer},
+            {"correlationId", m_activeRoomCorrelationId},
+            {"metadata", QVariantMap{{"preset", m_activeRoomPreset}, {"ok", ok}}}
+        });
+        m_activeRoomId.clear();
+        m_activeRoomCorrelationId.clear();
+        m_activeRoomPreset.clear();
+    }
     if (!m_runningTaskId.isEmpty()) {
         if (m_workflowRunner && m_workflowRunner->active() && m_workflowStepInFlight) {
             m_workflowStepInFlight = false;

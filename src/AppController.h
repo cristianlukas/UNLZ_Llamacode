@@ -15,6 +15,7 @@
 #include "core/tasks/WorkflowRunner.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
+#include "core/agent/AgentRoomStore.h"
 #include "core/SecretStore.h"
 #include "core/gateway/LlmGateway.h"
 #include "core/voice/VoiceServerManager.h"
@@ -52,6 +53,7 @@ class AppController : public QObject
     Q_PROPERTY(TaskStore*          taskStore       READ taskStore       CONSTANT)
     Q_PROPERTY(AgentDefinitionStore* agentDefinitions READ agentDefinitions CONSTANT)
     Q_PROPERTY(TriggerManager* triggerManager READ triggerManager CONSTANT)
+    Q_PROPERTY(AgentRoomStore* agentRoomStore READ agentRoomStore CONSTANT)
     Q_PROPERTY(QString activeAgentDefinitionId READ activeAgentDefinitionId
                NOTIFY activeAgentDefinitionChanged)
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
@@ -273,6 +275,7 @@ public:
     QString activeProfileToolSupport() const { return m_activeProfileToolSupport; }
     QString agentLog() const { return m_agentLog; }
     QVariantList agentMessages()  const { return m_agentMessages; }
+    AgentRoomStore *agentRoomStore() { return m_agentRoomStore; }
     int agentStreamingIndex() const { return m_agentStreamingIndex; }
     QString agentStreamingText() const { return m_agentStreamingText; }
     int chatStreamingIndex() const { return m_chatStreamingIndex; }
@@ -610,6 +613,12 @@ public:
     // keyRef del backend cloud de un perfil ("" si el backend no es cloud).
     Q_INVOKABLE QString cloudKeyRefForProfile(const QString &launchProfileId);
     Q_INVOKABLE void sendToAgent(const QString &text);
+    Q_INVOKABLE QString createAgentRoom(const QString &title,
+                                        const QString &projectDir = QString());
+    Q_INVOKABLE bool sendAgentRoomMessage(const QString &roomId, const QString &text,
+                                          const QStringList &audience = {});
+    Q_INVOKABLE bool runAgentRoomPreset(const QString &roomId, const QString &preset,
+                                        const QString &goal);
     // Escalado manual al maestro del perfil activo. Devuelve false si no hay maestro
     // configurado o el agente no está corriendo.
     Q_INVOKABLE bool escalateToMaster(const QString &problem = QString());
@@ -1392,6 +1401,10 @@ private:
     QString   m_opencodeSessionTitle;
     bool           m_agentStopping = false;   // reservado para path genérico (stdin)
     QVariantList m_agentMessages;
+    AgentRoomStore *m_agentRoomStore = nullptr;
+    QString m_activeRoomId;
+    QString m_activeRoomCorrelationId;
+    QString m_activeRoomPreset;
     int       m_agentStreamingIndex = -1;
     QString   m_agentStreamingText;
     int       m_agentQueuedCount = 0;

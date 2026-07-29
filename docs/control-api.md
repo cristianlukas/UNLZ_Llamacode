@@ -189,3 +189,19 @@ un `launchId` con harness `custom`.
 - La superficie es **viva**: lo expuesto = los `Q_INVOKABLE`/`Q_PROPERTY` de `AppController`
   y sus sub-objetos en esta build. Si un método/propiedad no aparece en `/methods`, no existe
   en esta versión.
+# Salas multiagente
+
+La API introspectiva expone `agentRoomStore` como sub-target:
+
+```powershell
+curl "localhost:8765/methods?target=agentRoomStore"
+curl "localhost:8765/prop?target=agentRoomStore&name=rooms"
+curl -X POST localhost:8765/invoke -d '{"method":"createAgentRoom","args":["Revisión","C:/repo"]}'
+curl -X POST localhost:8765/invoke -d '{"method":"runAgentRoomPreset","args":["<roomId>","review","Implementar y validar el cambio"]}'
+```
+
+También se puede invocar `postEvent`, `participants`, `events`,
+`updateGrant` y `compactContext` directamente con
+`"target":"agentRoomStore"`. El servidor continúa limitado a localhost. Los
+grants de participantes existentes son monotónicos: una actualización puede
+revocar capacidades, pero no añadir autoridad.

@@ -79,6 +79,7 @@ set(CORE_SOURCES
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
     src/core/agent/AgentEventLog.cpp
+    src/core/agent/AgentRoomStore.cpp
     src/core/agent/ToolExecutionSafety.cpp
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
@@ -166,6 +167,7 @@ set(HEADERS
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
     src/core/agent/AgentEventLog.h
+    src/core/agent/AgentRoomStore.h
     src/core/agent/ToolExecutionSafety.h
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
@@ -479,6 +481,7 @@ if (BUILD_TESTS)
     add_lc_test(test_agent_definitions  tests/test_agent_definitions.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
     add_lc_test(test_agent_efficiency    tests/test_agent_efficiency.cpp)
+    add_lc_test(test_agent_rooms         tests/test_agent_rooms.cpp)
     add_lc_test(test_system_profiles    tests/test_system_profiles.cpp)
     add_lc_test(test_secret_store       tests/test_secret_store.cpp)
     add_lc_test(test_registries         tests/test_registries.cpp)
