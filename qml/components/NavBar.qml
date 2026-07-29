@@ -23,11 +23,11 @@ Rectangle {
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
         { key: "agent.title",   icon: "🤖",  serverOnly: true  },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
-        { key: "agents", label: "Agentes", icon: "🧠", serverOnly: false },
         { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.downloads", icon: "⬇",   serverOnly: false },
+        { key: "agents", label: "Agentes", icon: "🧠", serverOnly: false },
     ]
 
     ColumnLayout {
