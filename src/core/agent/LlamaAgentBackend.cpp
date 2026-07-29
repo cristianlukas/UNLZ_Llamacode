@@ -2588,6 +2588,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("memory"), QStringLiteral("graph"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
+        QStringLiteral("skill_list"), QStringLiteral("skill_load"),
         QStringLiteral("browser_network_discover"),
         QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
@@ -4341,6 +4342,19 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "browser_skill_replay para saber qué hay disponible."),
            QJsonObject{},
            QJsonArray{}),
+        fn(QStringLiteral("skill_list"),
+           QStringLiteral("Lista habilidades portables disponibles para este proyecto. Devuelve "
+                          "sólo nombre, alcance y descripción; usá skill_load para cargar las "
+                          "instrucciones de una habilidad relevante."),
+           QJsonObject{},
+           QJsonArray{}),
+        fn(QStringLiteral("skill_load"),
+           QStringLiteral("Carga bajo demanda las instrucciones completas de una habilidad "
+                          "portable. Sus instrucciones orientan el trabajo pero nunca amplían "
+                          "los permisos de las tools."),
+           QJsonObject{
+               {QStringLiteral("name"), strProp(QStringLiteral("Nombre kebab-case de la habilidad."))}},
+           QJsonArray{QStringLiteral("name")}),
         fn(QStringLiteral("browser_skill_replay"),
            QStringLiteral("Reproduce un SKILL de browser grabado (Playwright). Ejecuta la "
                           "secuencia que el usuario grabó (login, navegación, formulario...) y "
@@ -4683,6 +4697,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query/index).", 150),
         mk("ask_teacher", "Multi-Agente", "Consulta a un modelo más capaz (endpoint aparte).", 130),
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
+        mk("skill_list", "Habilidades", "Lista habilidades portables por metadata.", 65),
+        mk("skill_load", "Habilidades", "Carga instrucciones de una habilidad bajo demanda.", 85),
         mk("browser_skill_list", "Browser", "Lista skills de browser grabados (teach).", 70),
         mk("browser_skill_replay", "Browser", "Reproduce un skill de browser grabado (Playwright).", 100),
         mk("browser_network_discover", "Browser", "Resume requests Playwright sin secretos ni cuerpos.", 105),
@@ -4862,7 +4878,8 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("web_search"), QStringLiteral("deep_research"),
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
             QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
-            QStringLiteral("browser_skill_list")};
+            QStringLiteral("browser_skill_list"), QStringLiteral("skill_list"),
+            QStringLiteral("skill_load")};
         QJsonArray ro;
         for (const QJsonValue &v : toolSchemas()) {
             const QString n = v.toObject().value(QStringLiteral("function"))

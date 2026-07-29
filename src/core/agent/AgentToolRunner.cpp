@@ -7,6 +7,7 @@
 #include "GraphStore.h"          // knowledge graph (entidades + relaciones)
 #include "CodeGraphIndexer.h"     // graph action='index': repo→GraphStore determinista
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
+#include "PortableSkillStore.h"  // habilidades declarativas con carga progresiva
 #include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
 #include "ToolExecutionSafety.h"
 #include "StructuredSourceView.h" // vista compacta segura y proyectable
@@ -1349,6 +1350,37 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                    const QString &cwd, QVariantMap &out, bool *ok)
 {
     if (ok) *ok = false;
+    if (name == QLatin1String("skill_list")) {
+        const QVariantList skills = PortableSkillStore::list(cwd);
+        out[QStringLiteral("skills")] = skills;
+        out[QStringLiteral("count")] = skills.size();
+        if (ok) *ok = true;
+        if (skills.isEmpty())
+            return QStringLiteral("[sin habilidades portables instaladas]");
+        QStringList lines{QStringLiteral("Habilidades disponibles:")};
+        for (const QVariant &item : skills) {
+            const QVariantMap skill = item.toMap();
+            lines << QStringLiteral("- %1 [%2]: %3")
+                         .arg(skill.value(QStringLiteral("name")).toString(),
+                              skill.value(QStringLiteral("scope")).toString(),
+                              skill.value(QStringLiteral("description")).toString());
+        }
+        return lines.join(QLatin1Char('\n'));
+    }
+    if (name == QLatin1String("skill_load")) {
+        const QVariantMap skill =
+            PortableSkillStore::load(args.value(QStringLiteral("name")).toString(), cwd);
+        for (auto it = skill.cbegin(); it != skill.cend(); ++it) out[it.key()] = it.value();
+        const bool loaded = skill.value(QStringLiteral("ok")).toBool();
+        if (ok) *ok = loaded;
+        if (!loaded)
+            return QStringLiteral("[skill_load: %1]")
+                .arg(skill.value(QStringLiteral("error")).toString());
+        return QStringLiteral("[habilidad %1 · scope=%2]\n%3")
+            .arg(skill.value(QStringLiteral("name")).toString(),
+                 skill.value(QStringLiteral("scope")).toString(),
+                 skill.value(QStringLiteral("instructions")).toString());
+    }
     if (args.contains(QStringLiteral("_parse_error"))) {
         return QStringLiteral("[argumentos JSON inválidos para %1: %2. Probablemente "
                               "el servidor truncó un tool_call demasiado grande (%3 "

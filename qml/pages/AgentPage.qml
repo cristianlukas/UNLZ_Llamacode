@@ -14,6 +14,8 @@ Item {
     property int idleSeconds: 0
     property var agentAttachments: []
     property string lastProfileSuggestionKind: ""
+    property var portableSkillRows: []
+    property var selectedPortableSkill: ({})
 
     // App.agentMessages es QVariantList y cada NOTIFY crea una instancia nueva.
     // Mantener un ListModel estable evita que ListView se vacíe durante un frame
@@ -859,6 +861,15 @@ Item {
                         color: Theme.textPrimary; font.pixelSize: 12
                         leftPadding: agentThinkingCheck.indicator.width + 6
                         verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                LcButton {
+                    text: "🧩 Skills"
+                    visible: resolvedAdapter === "llamaagent"
+                    onClicked: {
+                        root.portableSkillRows = App.portableSkills()
+                        root.selectedPortableSkill = ({})
+                        skillsDialog.open()
                     }
                 }
                 LcButton {
@@ -2828,6 +2839,93 @@ Item {
             Text {
                 text: "deny = bloquea · allow = auto-aprueba · ask = pide aprobación. kind opcional (read/write/shell)."
                 color: Theme.textMuted; font.pixelSize: 11; Layout.fillWidth: true; wrapMode: Text.WordWrap
+            }
+        }
+    }
+
+    Dialog {
+        id: skillsDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: 680
+        height: 500
+        closePolicy: Popup.CloseOnEscape
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 58; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+            Column {
+                anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                Text { text: "Habilidades portables"; color: Theme.textPrimary; font.pixelSize: 15; font.bold: true }
+                Text {
+                    text: "Globales: AppLocalData/skills · Proyecto: .llamacode/skills"
+                    color: Theme.textMuted; font.pixelSize: 11
+                }
+            }
+        }
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 54; radius: 12
+            LcButton {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                text: "Cerrar"; secondary: true; onClicked: skillsDialog.close()
+            }
+        }
+        contentItem: RowLayout {
+            spacing: 10
+            Rectangle {
+                Layout.preferredWidth: 260; Layout.fillHeight: true
+                color: Theme.inputBg; radius: 8; border.color: Theme.borderColor
+                ListView {
+                    anchors.fill: parent; anchors.margins: 4
+                    clip: true; spacing: 3
+                    model: root.portableSkillRows
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: ListView.view.width; height: 58; radius: 6
+                        color: root.selectedPortableSkill.name === modelData.name
+                               ? Theme.highlight : "transparent"
+                        Column {
+                            anchors { fill: parent; margins: 8 }
+                            Text { text: modelData.name; color: Theme.textPrimary; font.bold: true; font.pixelSize: 12 }
+                            Text {
+                                text: modelData.scope + " · " + modelData.description
+                                color: Theme.textMuted; font.pixelSize: 10
+                                width: parent.width; elide: Text.ElideRight
+                            }
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: root.selectedPortableSkill = App.portableSkill(modelData.name)
+                        }
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: root.portableSkillRows.length === 0
+                        text: "No hay skills instalados"
+                        color: Theme.textMuted; font.pixelSize: 12
+                    }
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true; Layout.fillHeight: true
+                color: Theme.inputBg; radius: 8; border.color: Theme.borderColor
+                ScrollView {
+                    anchors.fill: parent; anchors.margins: 8
+                    TextArea {
+                        readOnly: true; selectByMouse: true
+                        wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                        color: Theme.textPrimary; background: null
+                        font { family: Theme.codeFont; pixelSize: 11 }
+                        text: root.selectedPortableSkill.instructions
+                              || "Seleccioná una habilidad para inspeccionar sus instrucciones."
+                    }
+                }
             }
         }
     }

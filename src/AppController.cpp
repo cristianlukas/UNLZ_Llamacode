@@ -2,6 +2,7 @@
 #include "core/OllamaImporter.h"
 #include "core/profiles/ProfileHealthChecker.h"
 #include "core/agent/BrowserTeach.h"
+#include "core/agent/PortableSkillStore.h"
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
 #include "core/automation/DesktopAutomationBackend.h"
@@ -4223,6 +4224,16 @@ QVariantList AppController::agentToolCatalog() const
         v = m;
     }
     return out;
+}
+
+QVariantList AppController::portableSkills() const
+{
+    return PortableSkillStore::list(currentAgentProjectDir());
+}
+
+QVariantMap AppController::portableSkill(const QString &name) const
+{
+    return PortableSkillStore::load(name, currentAgentProjectDir());
 }
 
 void AppController::setAgentToolEnabled(const QString &name, bool enabled)

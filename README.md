@@ -1377,6 +1377,16 @@ PPL baseline con tolerancia default del 3%.
 
 Detalle completo en [`docs/tuner.md`](docs/tuner.md).
 
+## Habilidades portables
+
+El agente nativo descubre bundles `SKILL.md` globales y por proyecto con carga
+progresiva: mantiene sólo nombre y descripción en el catálogo y abre las
+instrucciones completas cuando resultan relevantes. Las habilidades del proyecto
+en `.llamacode/skills/` pueden reemplazar una global del mismo nombre, pero nunca
+amplían los permisos de tools ni el confinamiento. La vista **Agente → Skills**
+permite inspeccionarlas. Formato, límites y ejemplo en
+[`docs/skills.md`](docs/skills.md).
+
 ## Seguridad operativa
 
 Los builds y tests paralelos se serializan por lane mediante `build_coord.ps1`.

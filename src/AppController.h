@@ -639,6 +639,8 @@ public:
     // ── Tools del agente (habilitar/deshabilitar built-in) ──
     // Catálogo con metadata + estado enabled, para la UI de toggles.
     Q_INVOKABLE QVariantList agentToolCatalog() const;
+    Q_INVOKABLE QVariantList portableSkills() const;
+    Q_INVOKABLE QVariantMap portableSkill(const QString &name) const;
     Q_INVOKABLE void setAgentToolEnabled(const QString &name, bool enabled);
     // ── Perfiles de agente (capacidades + directivas como toggles) ──
     // Catálogo de directivas del system prompt para la UI (passthrough al backend).

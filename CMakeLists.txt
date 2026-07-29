@@ -88,6 +88,7 @@ set(CORE_SOURCES
     src/core/agent/ProjectBrain.cpp
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
+    src/core/agent/PortableSkillStore.cpp
     src/core/agent/HotspotAnalyzer.cpp
     src/core/mail/MailClient.cpp
     src/core/voice/VoiceTypes.cpp
@@ -171,6 +172,7 @@ set(HEADERS
     src/core/agent/StructuredSourceView.h
     src/core/agent/ProjectBrain.h
     src/core/agent/BrowserTeach.h
+    src/core/agent/PortableSkillStore.h
     src/core/agent/HotspotAnalyzer.h
     src/core/mail/MailClient.h
     src/core/voice/VoiceTypes.h
@@ -481,6 +483,7 @@ if (BUILD_TESTS)
     add_lc_test(test_control_api        tests/test_control_api.cpp)
     add_lc_test(test_auxiliary_job_scheduler tests/test_auxiliary_job_scheduler.cpp)
     add_lc_test(test_agent_tools        tests/test_agent_tools.cpp)
+    add_lc_test(test_portable_skills    tests/test_portable_skills.cpp)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)
     add_lc_test(test_hotspots           tests/test_hotspots.cpp)
     add_lc_test(test_master_cli         tests/test_master_cli.cpp)
