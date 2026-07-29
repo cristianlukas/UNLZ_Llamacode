@@ -1446,7 +1446,7 @@ Item {
         }
     }
 
-    Dialog {
+    LcDialog {
         id: failureDialog
         modal: true
         parent: Overlay.overlay
@@ -1455,6 +1455,7 @@ Item {
         width: Math.min(parent ? parent.width - 80 : 900, 900)
         height: Math.min(parent ? parent.height - 80 : 680, 680)
         title: "Fallo de benchmark"
+        footer: null
 
         background: Rectangle {
             color: Theme.popupBg
@@ -1540,15 +1541,30 @@ Item {
         }
     }
 
-    Dialog {
+    LcDialog {
         id: importErrorDialog
         property alias text: importErrorLabel.text
         modal: true
         parent: Overlay.overlay
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
+        width: Math.min(420, parent.width - 48)
+        height: 190
+        leftPadding: 20
+        rightPadding: 20
         title: "No se pudo importar la EvalSuite"
-        standardButtons: Dialog.Ok
+        standardButtons: Dialog.NoButton
+        footer: Rectangle {
+            color: Theme.popupHeaderBg
+            height: 56
+            radius: 12
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            LcButton {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                text: "Aceptar"
+                onClicked: importErrorDialog.close()
+            }
+        }
         Label { id: importErrorLabel; wrapMode: Text.WordWrap; width: 360 }
     }
 

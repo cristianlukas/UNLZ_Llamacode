@@ -379,7 +379,7 @@ ApplicationWindow {
         id: errorToast
         parent: Overlay.overlay
         anchors.centerIn: parent
-        width: 380
+        width: Math.min(380, parent.width - 32)
         height: 60
         modal: false
 
@@ -415,8 +415,8 @@ ApplicationWindow {
         modal: true
         clip: true
         closePolicy: Popup.NoAutoClose
-        width: 760
-        height: 640
+        width: Math.min(760, parent.width - 48)
+        height: Math.min(640, parent.height - 48)
         padding: 18
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)

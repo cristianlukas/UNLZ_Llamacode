@@ -17,6 +17,11 @@ Item {
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         width: Math.min(560, root.width - 48)
+        height: 230
+        leftPadding: 20
+        rightPadding: 20
+        topPadding: 16
+        bottomPadding: 16
         closePolicy: Popup.CloseOnEscape
 
         property bool targetEnabled: false

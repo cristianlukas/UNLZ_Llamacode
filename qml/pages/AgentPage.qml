@@ -184,6 +184,11 @@ Item {
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         width: 460
+        height: 230
+        leftPadding: 20
+        rightPadding: 20
+        topPadding: 16
+        bottomPadding: 16
         closePolicy: Popup.CloseOnEscape
         background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor; border.width: 1 }
         Overlay.modal: Rectangle { color: Theme.overlayColor }
@@ -395,6 +400,11 @@ Item {
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         width: Math.min(560, root.width - 48)
+        height: 230
+        leftPadding: 20
+        rightPadding: 20
+        topPadding: 16
+        bottomPadding: 16
         closePolicy: Popup.CloseOnEscape
 
         property bool targetEnabled: false
@@ -2440,14 +2450,20 @@ Item {
         target: App
         function onGitRequiredForSubagents() { gitInstallDialog.open() }
     }
-    Dialog {
+    LcDialog {
         id: gitInstallDialog
         modal: true
         parent: Overlay.overlay
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
         width: 460
+        height: 210
+        leftPadding: 20
+        rightPadding: 20
+        topPadding: 16
+        bottomPadding: 16
         title: "Git requerido para subagents"
+        footer: null
         closePolicy: Popup.CloseOnEscape
         background: Rectangle { color: Theme.popupHeaderBg ?? Theme.baseBg; radius: 10; border.color: Theme.borderColor }
         contentItem: ColumnLayout {

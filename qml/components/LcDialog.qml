@@ -17,6 +17,10 @@ Dialog {
 
     implicitWidth: Math.max(420, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: implicitHeaderHeight + implicitContentHeight + implicitFooterHeight + topPadding + bottomPadding
+    // Popup no siempre adopta implicitHeight cuando el consumidor fija width.
+    // Mantener un alto real evita que header/footer se monten sobre el contenido.
+    height: Math.min(parent ? Math.max(180, parent.height - 48) : 720,
+                     Math.max(180, implicitHeight))
     closePolicy: Popup.CloseOnEscape
 
     background: Rectangle {

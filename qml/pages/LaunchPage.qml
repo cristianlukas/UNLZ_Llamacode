@@ -56,14 +56,16 @@ Item {
         }
     }
 
-    Dialog {
+    LcDialog {
         id: lanDialog
         modal: true
         width: 560
+        height: 330
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         title: "Usar un servidor LAN"
         standardButtons: Dialog.NoButton
+        footer: null
         property bool busy: false
         property string message: ""
         property var selectedServer: (serverCombo.currentIndex >= 0
@@ -159,16 +161,18 @@ Item {
     }
 
     // Perfil de sistema seleccionado sin modelo/binario: ofrecer instalar deps.
-    Dialog {
+    LcDialog {
         id: depsDialog
         property string launchId: ""
         property string profileName: ""
         modal: true
         width: 460
+        height: 200
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         title: "Faltan dependencias"
         standardButtons: Dialog.NoButton
+        footer: null
         background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.borderColor }
         contentItem: ColumnLayout {
             spacing: 12
@@ -231,6 +235,7 @@ Item {
         id: vramWarningDialog
         modal: true
         width: 500
+        height: 300
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         closePolicy: Popup.CloseOnEscape
@@ -302,6 +307,7 @@ Item {
         id: portConflictDialog
         modal: true
         width: 430
+        height: 250
         x: Math.round((root.width - width) / 2)
         y: Math.round((root.height - height) / 2)
         closePolicy: Popup.CloseOnEscape
@@ -1001,10 +1007,11 @@ Item {
         modal: true
         focus: true
         width: Math.min(520, parent.width - 48)
+        height: 250
         padding: 18
         closePolicy: Popup.CloseOnEscape
         x: Math.round((parent.width - width) / 2)
-        y: Math.round((parent.height - implicitHeight) / 2)
+        y: Math.round((parent.height - height) / 2)
 
         background: Rectangle {
             color: Theme.popupBg
