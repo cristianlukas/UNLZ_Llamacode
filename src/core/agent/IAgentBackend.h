@@ -98,6 +98,8 @@ signals:
     void errorOccurred(const QString &message);
     // Uso de contexto del último turno: tokens usados / límite (n_ctx). -1 = desconocido.
     void contextUsage(int used, int limit);
+    void contextManaged(int workingTokens, int transcriptTokens,
+                        qint64 prunedTokens, int pruneEvents);
     // El agente quiso usar subagents (tool `task`) pero git no está instalado.
     void gitRequired();
     // Resultado de inspeccionar el chat-template del modelo (vía /props de

@@ -202,7 +202,13 @@ public:
     // budget depende de si las tools viajan como payload nativo (reservan tokens)
     // o embebidas en texto (modo text-tools → no reservan). Ver test_agent_wire.
     void setCtxLimitForTest(int n) { m_ctxLimit = n; }
-    void setApiMessagesForTest(const QJsonArray &m) { m_apiMessages = m; }
+    void setApiMessagesForTest(const QJsonArray &m) {
+        m_apiMessages = m;
+        m_transcriptMessages = m;
+    }
+    QJsonArray apiMessagesForTest() const { return m_apiMessages; }
+    QJsonArray transcriptMessagesForTest() const { return m_transcriptMessages; }
+    int pruneWorkingContextForTest() { return pruneWorkingContext(); }
     bool planCompactionForTest(int &head, int &keepFrom) const {
         return planCompaction(head, keepFrom);
     }
@@ -408,9 +414,15 @@ private:
     // perfil, resume el tramo intermedio con el propio LLM y lo reemplaza por un
     // mensaje de resumen, conservando system + objetivo inicial + cola reciente.
     int  estimateApiTokens() const;      // estimación de tokens del historial API
+    int  estimateMessageTokens(const QJsonArray &messages) const;
     bool planCompaction(int &head, int &keepFrom) const;  // ¿hay tramo a compactar?
     void startCompaction(int head, int keepFrom);         // dispara resumen (async)
     void applyCompaction(int head, int keepFrom, const QString &summary); // reemplaza tramo
+    void appendApiMessage(const QJsonObject &message);
+    void replaceSystemMessage(const QJsonObject &message);
+    int pruneWorkingContext();
+    bool isProtectedContextMessage(const QJsonObject &message) const;
+    QString normalizeCompactionSummary(const QString &summary) const;
     QString storageDir() const;
     QString sessionFilePath(const QString &sessionId) const;
     void loadFromDisk();
@@ -429,6 +441,9 @@ private:
     bool m_compacting = false;                 // compactación en curso
     int  m_compactStall = 0;                   // compactaciones consecutivas sin reducir tokens
                                                // (anti-loop: si no baja, dejar de compactar)
+    int  m_contextPrunedMessages = 0;
+    qint64 m_contextPrunedTokens = 0;
+    int  m_lastPromptTokens = 0;
     QNetworkReply *m_consolidateReply = nullptr;     // request de consolidación de memoria
     QHash<QString, int> m_consolidatedLen;     // sessionId → nº de msgs ya consolidados (dedupe)
     QNetworkReply *m_reply = nullptr;
@@ -528,7 +543,10 @@ private:
     bool m_streamRepetitionDetected = false; // loop textual cortado durante generación
     QHash<int, QJsonObject> m_streamToolCalls; // index → {id,name,arguments} mergeado
 
-    QJsonArray m_apiMessages;       // conversación real para la API (incluye tool/assistant tool_calls)
+    // El transcript es la fuente de verdad inmutable de la sesión. m_apiMessages
+    // es sólo la memoria de trabajo enviada al modelo y puede podarse/compactarse.
+    QJsonArray m_transcriptMessages;
+    QJsonArray m_apiMessages;
     QJsonArray m_pendingCalls;      // tool_calls restantes del turno actual
     QSet<QString> m_alwaysAllowed;  // kinds aprobados con "Siempre"
 
@@ -576,7 +594,7 @@ private:
     // Checkpoints para rollback: uno por turno de usuario (antes de enviar). Guarda
     // longitudes de m_messages/m_apiMessages y qué archivos ya estaban editados
     // (para revertir solo los editados DESPUÉS al rebobinar).
-    struct Checkpoint { int apiLen; int msgLen; QStringList editKeys; };
+    struct Checkpoint { int apiLen; int transcriptLen; int msgLen; QStringList editKeys; };
     QList<Checkpoint> m_checkpoints;
     void pushCheckpoint();
     QJsonArray checkpointsToJson() const;

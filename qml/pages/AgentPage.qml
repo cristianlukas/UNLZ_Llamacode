@@ -769,7 +769,8 @@ Item {
                 // Indicador de contexto (tokens usados / n_ctx).
                 Rectangle {
                     visible: App.agentContextLimit > 0 && App.agentRunning
-                    implicitWidth: 130; implicitHeight: 26
+                    implicitWidth: App.agentContextPruneEvents > 0 ? 174 : 130
+                    implicitHeight: 26
                     radius: 6
                     color: Theme.inputBg
                     border.color: Theme.borderColor
@@ -786,8 +787,20 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: "ctx " + App.agentContextUsed + "/" + App.agentContextLimit
+                              + (App.agentContextPruneEvents > 0
+                                 ? " · −" + App.agentContextPruned : "")
                         color: Theme.textSecondary; font { pixelSize: 11; family: Theme.codeFont }
                     }
+                    MouseArea {
+                        id: contextHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                    }
+                    ToolTip.visible: contextHover.containsMouse
+                    ToolTip.text: "Memoria de trabajo: " + App.agentContextUsed + " tokens"
+                                  + "\nTranscript completo: " + App.agentContextTranscript
+                                  + "\nAhorro acumulado: " + App.agentContextPruned
+                                  + " tokens en " + App.agentContextPruneEvents + " eventos"
                 }
 
                 // Política de aprobación de herramientas.

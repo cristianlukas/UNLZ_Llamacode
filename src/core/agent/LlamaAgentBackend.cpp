@@ -504,7 +504,14 @@ void LlamaAgentBackend::fetchContextLimit()
 // Tokens estimados de un único mensaje de la API (content + args de tool_calls).
 static int msgTokensOf(const QJsonObject &m)
 {
-    int t = (m.value(QStringLiteral("content")).toString().size() + 3) / 4;
+    int chars = m.value(QStringLiteral("content")).toString().size();
+    for (const QJsonValue &partValue : m.value(QStringLiteral("content")).toArray()) {
+        const QJsonObject part = partValue.toObject();
+        chars += part.value(QStringLiteral("text")).toString().size();
+        if (part.value(QStringLiteral("type")).toString() == QLatin1String("image_url"))
+            chars += 4096; // aproximación conservadora del presupuesto visual
+    }
+    int t = (chars + 3) / 4;
     const QJsonArray tcs = m.value(QStringLiteral("tool_calls")).toArray();
     for (const QJsonValue &v : tcs) {
         const QJsonObject fn = v.toObject().value(QStringLiteral("function")).toObject();
@@ -527,10 +534,134 @@ static int toolSchemaTokensOf(const QJsonArray &tools)
 
 int LlamaAgentBackend::estimateApiTokens() const
 {
+    return estimateMessageTokens(m_apiMessages);
+}
+
+int LlamaAgentBackend::estimateMessageTokens(const QJsonArray &messages) const
+{
     int total = 0;
-    for (const QJsonValue &v : m_apiMessages)
+    for (const QJsonValue &v : messages)
         total += msgTokensOf(v.toObject());
     return total;
+}
+
+void LlamaAgentBackend::appendApiMessage(const QJsonObject &message)
+{
+    m_apiMessages.append(message);
+    m_transcriptMessages.append(message);
+}
+
+void LlamaAgentBackend::replaceSystemMessage(const QJsonObject &message)
+{
+    if (m_apiMessages.isEmpty()) m_apiMessages.append(message);
+    else m_apiMessages.replace(0, message);
+    if (m_transcriptMessages.isEmpty()) m_transcriptMessages.append(message);
+    else m_transcriptMessages.replace(0, message);
+}
+
+bool LlamaAgentBackend::isProtectedContextMessage(const QJsonObject &message) const
+{
+    if (message.value(QStringLiteral("_lc_protected")).toBool()) return true;
+    if (message.value(QStringLiteral("role")).toString() == QLatin1String("system"))
+        return true;
+    static const QSet<QString> protectedTools{
+        QStringLiteral("write_file"), QStringLiteral("edit_file"),
+        QStringLiteral("run_shell"), QStringLiteral("task"),
+        QStringLiteral("skill_load"), QStringLiteral("memory"),
+        QStringLiteral("context_checkpoint")
+    };
+    for (const QJsonValue &v : message.value(QStringLiteral("tool_calls")).toArray()) {
+        const QString name = v.toObject().value(QStringLiteral("function")).toObject()
+                                 .value(QStringLiteral("name")).toString();
+        if (protectedTools.contains(name)) return true;
+    }
+    return false;
+}
+
+// Poda barata y determinista. Mantiene la estructura assistant.tool_calls → tool,
+// pero reemplaza resultados repetidos y argumentos fallidos antiguos por recibos.
+// Nunca toca el transcript persistido.
+int LlamaAgentBackend::pruneWorkingContext()
+{
+    if (m_apiMessages.size() < 8) return 0;
+    const int beforeTokens = estimateApiTokens();
+    QHash<QString, int> newestSignature;
+    int changed = 0;
+    for (int i = m_apiMessages.size() - 1; i >= 0; --i) {
+        QJsonObject assistant = m_apiMessages.at(i).toObject();
+        const QJsonArray calls = assistant.value(QStringLiteral("tool_calls")).toArray();
+        if (calls.isEmpty() || isProtectedContextMessage(assistant)) continue;
+        QJsonArray rewrittenCalls = calls;
+        bool assistantChanged = false;
+        for (int ci = 0; ci < calls.size(); ++ci) {
+            QJsonObject call = calls.at(ci).toObject();
+            QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+            const QString id = call.value(QStringLiteral("id")).toString();
+            const QString name = fn.value(QStringLiteral("name")).toString();
+            const QString args = fn.value(QStringLiteral("arguments")).toString();
+            const QString signature = name + QLatin1Char('\n') + args;
+            int resultIndex = -1;
+            for (int j = i + 1; j < m_apiMessages.size(); ++j) {
+                const QJsonObject candidate = m_apiMessages.at(j).toObject();
+                if (candidate.value(QStringLiteral("role")).toString() != QLatin1String("tool"))
+                    break;
+                if (candidate.value(QStringLiteral("tool_call_id")).toString() == id) {
+                    resultIndex = j;
+                    break;
+                }
+            }
+            if (resultIndex < 0) continue;
+            QJsonObject result = m_apiMessages.at(resultIndex).toObject();
+            const QString content = result.value(QStringLiteral("content")).toString();
+            const bool error = content.contains(QStringLiteral("error"), Qt::CaseInsensitive)
+                               || content.contains(QStringLiteral("fall"), Qt::CaseInsensitive)
+                               || content.contains(QStringLiteral("rechaz"), Qt::CaseInsensitive);
+            if (error && m_apiMessages.size() - resultIndex > 4 && args.size() > 256) {
+                fn[QStringLiteral("arguments")] =
+                    QStringLiteral("{\"_pruned\":\"argumentos antiguos de llamada fallida\"}");
+                call[QStringLiteral("function")] = fn;
+                rewrittenCalls.replace(ci, call);
+                assistantChanged = true;
+                ++changed;
+            } else if (newestSignature.contains(signature)) {
+                result[QStringLiteral("content")] =
+                    QStringLiteral("[resultado repetido podado; usar la llamada equivalente más reciente]");
+                m_apiMessages.replace(resultIndex, result);
+                ++changed;
+            } else {
+                newestSignature.insert(signature, resultIndex);
+            }
+        }
+        if (assistantChanged) {
+            assistant[QStringLiteral("tool_calls")] = rewrittenCalls;
+            m_apiMessages.replace(i, assistant);
+        }
+    }
+    if (changed > 0) {
+        ++m_contextPrunedMessages;
+        m_contextPrunedTokens += qMax(0, beforeTokens - estimateApiTokens());
+        emit logAppended(QStringLiteral("[contexto: poda determinista aplicó %1 reemplazos]\n")
+                             .arg(changed));
+        emit contextManaged(estimateApiTokens(), estimateMessageTokens(m_transcriptMessages),
+                            m_contextPrunedTokens, m_contextPrunedMessages);
+    }
+    return changed;
+}
+
+QString LlamaAgentBackend::normalizeCompactionSummary(const QString &summary) const
+{
+    QString cleaned = stripThinkForContext(summary).trimmed();
+    if (cleaned.startsWith(QStringLiteral("```"))) {
+        const int firstNl = cleaned.indexOf(QLatin1Char('\n'));
+        const int lastFence = cleaned.lastIndexOf(QStringLiteral("```"));
+        if (firstNl >= 0 && lastFence > firstNl)
+            cleaned = cleaned.mid(firstNl + 1, lastFence - firstNl - 1).trimmed();
+    }
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(cleaned.toUtf8(), &error);
+    if (error.error == QJsonParseError::NoError && doc.isObject())
+        return QString::fromUtf8(doc.toJson(QJsonDocument::Compact));
+    return cleaned.left(12000);
 }
 
 // Serializa un mensaje de la API a texto legible para el resumen.
@@ -586,7 +717,20 @@ bool LlamaAgentBackend::planCompaction(int &head, int &keepFrom) const
               == QLatin1String("tool"))
         ++keepFrom;
 
-    return (keepFrom - head) > 0;
+    if ((keepFrom - head) <= 0) return false;
+
+    // Compactar invalida el prompt-cache desde `head`. Sólo conviene si el tramo
+    // liberado se amortiza en las siguientes iteraciones. Bajo presión dura
+    // (>=97% del presupuesto real) se prioriza evitar overflow.
+    int removable = 0;
+    for (int i = head; i < keepFrom; ++i)
+        removable += msgTokensOf(m_apiMessages.at(i).toObject());
+    const int current = estimateApiTokens();
+    const int expectedSummary = qMin(2048, qMax(128, removable / 5));
+    const int savings = qMax(0, removable - expectedSummary);
+    const int cacheRebuild = qMax(current, m_lastPromptTokens);
+    const bool hardPressure = current >= int(m_ctxLimit * 0.97) - outReserve - toolsReserve;
+    return hardPressure || savings * 3 > cacheRebuild;
 }
 
 // Reemplaza m_apiMessages[head..keepFrom) por un único mensaje de resumen.
@@ -598,7 +742,7 @@ void LlamaAgentBackend::applyCompaction(int head, int keepFrom, const QString &s
     const int dropped = keepFrom - head;
     const int before = estimateApiTokens();
 
-    QString body = summary.trimmed();
+    QString body = normalizeCompactionSummary(summary);
     const bool summarized = !body.isEmpty();
     if (!summarized)
         body = QStringLiteral("[Se omitieron %1 mensajes intermedios para no exceder el "
@@ -615,17 +759,24 @@ void LlamaAgentBackend::applyCompaction(int head, int keepFrom, const QString &s
 
     m_apiMessages = neu;
     const int after = estimateApiTokens();
+    m_contextPrunedTokens += qMax(0, before - after);
     // Anti-loop: si el resumen no redujo tokens de forma apreciable (el tramo
     // compactable es chico y lo pesado es el head protegido: system+objetivo),
     // contá el intento fallido. Tras 2 seguidos, runCompletion deja de compactar
     // y sigue: el prompt igual entra en n_ctx real (el "over budget" es una
     // reserva conservadora, no un overflow del server).
-    if (after < before - 8) m_compactStall = 0;
-    else ++m_compactStall;
+    if (after < before - 8) {
+        m_compactStall = 0;
+        ++m_contextPrunedMessages;
+    } else {
+        ++m_compactStall;
+    }
     emit logAppended(QStringLiteral("[compactación %1: %2 msgs · ~%3→%4 tok (n_ctx=%5)]\n")
                          .arg(summarized ? QStringLiteral("vía modelo") : QStringLiteral("poda"))
                          .arg(dropped).arg(before).arg(after).arg(m_ctxLimit));
     emit contextUsage(after, m_ctxLimit);
+    emit contextManaged(after, estimateMessageTokens(m_transcriptMessages),
+                        m_contextPrunedTokens, m_contextPrunedMessages);
 }
 
 // Dispara el request de resumen del tramo [head, keepFrom). Al completar,
@@ -637,11 +788,13 @@ void LlamaAgentBackend::startCompaction(int head, int keepFrom)
         convo += serializeMsgForSummary(m_apiMessages[i].toObject());
 
     const QString sys = QStringLiteral(
-        "Sos un compactador de contexto. Resumí de forma concisa pero completa el "
-        "siguiente tramo de conversación entre un usuario y un agente de coding. "
-        "Preservá TODO lo accionable: objetivo, decisiones tomadas, archivos "
-        "creados/editados con sus rutas, comandos relevantes y su resultado, errores "
-        "y estado actual de la tarea. No inventes. Respondé solo con el resumen.");
+        "Sos un compactador de memoria de trabajo. Convertí el tramo en UN objeto JSON "
+        "válido y compacto con estas claves: goal:string, completed:string[], "
+        "decisions:string[], artifacts:[{path:string,change:string,verified:bool}], "
+        "failed_approaches:string[], open_questions:string[], next_action:string, "
+        "evidence:string[]. Preservá restricciones del usuario, rutas, cambios no "
+        "verificados, resultados de tests/build y errores todavía relevantes. Omití "
+        "salidas repetidas y detalles ya cerrados. No inventes. Respondé sólo JSON.");
 
     QJsonObject payload{
         {QStringLiteral("model"), m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId},
@@ -883,6 +1036,9 @@ void LlamaAgentBackend::ensureSession()
         {QStringLiteral("role"), QStringLiteral("system")},
         {QStringLiteral("content"), buildSystemPrompt()}
     } };
+    m_transcriptMessages = m_apiMessages;
+    m_contextPrunedMessages = 0;
+    m_contextPrunedTokens = 0;
     m_messages.clear();
     m_readFingerprints.clear();
     m_checkpoints.clear();
@@ -1121,7 +1277,7 @@ void LlamaAgentBackend::setDirectives(const QStringList &keys)
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
             sys[QStringLiteral("content")] = buildSystemPrompt();
-            m_apiMessages.replace(0, sys);
+            replaceSystemMessage(sys);
         }
     }
 }
@@ -1238,7 +1394,7 @@ void LlamaAgentBackend::setAgentTuning(const QString &systemExtra, double temper
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
             sys[QStringLiteral("content")] = buildSystemPrompt();
-            m_apiMessages.replace(0, sys);
+            replaceSystemMessage(sys);
         }
     }
 }
@@ -1250,7 +1406,7 @@ void LlamaAgentBackend::setThinkingEnabled(bool enabled)
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
             sys[QStringLiteral("content")] = buildSystemPrompt();
-            m_apiMessages.replace(0, sys);
+            replaceSystemMessage(sys);
         }
     }
 }
@@ -1341,8 +1497,9 @@ void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
         const QString control = mode == QLatin1String("plan")
             ? QStringLiteral("[FASE=PLAN] Solo explorar y planificar. Prohibido editar o ejecutar shell.")
             : QStringLiteral("[FASE=EJECUCION] Ejecutar el plan aprobado y verificar el resultado.");
-        m_apiMessages.append(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
-                                         {QStringLiteral("content"), control}});
+        appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                     {QStringLiteral("content"), control},
+                                     {QStringLiteral("_lc_protected"), true}});
         return;
     }
     // Compatibilidad: modo legacy reconstruye el system prompt.
@@ -1350,7 +1507,7 @@ void LlamaAgentBackend::setApprovalPolicy(const QString &mode)
         QJsonObject sys = m_apiMessages.first().toObject();
         if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
             sys[QStringLiteral("content")] = buildSystemPrompt();
-            m_apiMessages.replace(0, sys);
+            replaceSystemMessage(sys);
         }
     }
 }
@@ -1431,7 +1588,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     // inline + docs de texto inlineados); si no, string plano.
     const QString apiText = trimmed;
     if (attachments.isEmpty()) {
-        m_apiMessages.append(QJsonObject{
+        appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},
             {QStringLiteral("content"), apiText}});
     } else {
@@ -1458,7 +1615,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
             parts.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("text")},
                                      {QStringLiteral("text"), textPart}});
         for (const QJsonValue &iv : images) parts.append(iv);
-        m_apiMessages.append(QJsonObject{
+        appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},
             {QStringLiteral("content"), parts}});
     }
@@ -1491,8 +1648,8 @@ void LlamaAgentBackend::sendMessage(const QString &text)
 void LlamaAgentBackend::pushCheckpoint()
 {
     m_checkpoints.append(Checkpoint{
-        static_cast<int>(m_apiMessages.size()), static_cast<int>(m_messages.size()),
-        m_editSnapshots.keys()});
+        static_cast<int>(m_apiMessages.size()), static_cast<int>(m_transcriptMessages.size()),
+        static_cast<int>(m_messages.size()), m_editSnapshots.keys()});
 }
 
 QVariantMap LlamaAgentBackend::efficiencySummary() const
@@ -1505,6 +1662,7 @@ QJsonArray LlamaAgentBackend::checkpointsToJson() const
     QJsonArray out;
     for (const Checkpoint &cp : m_checkpoints)
         out.append(QJsonObject{{QStringLiteral("apiLen"), cp.apiLen},
+                               {QStringLiteral("transcriptLen"), cp.transcriptLen},
                                {QStringLiteral("msgLen"), cp.msgLen},
                                {QStringLiteral("editKeys"), QJsonArray::fromStringList(cp.editKeys)}});
     return out;
@@ -1516,6 +1674,8 @@ void LlamaAgentBackend::restoreCheckpoints(const QJsonArray &saved)
     for (const QJsonValue &v : saved) {
         const QJsonObject o = v.toObject();
         Checkpoint cp{o.value(QStringLiteral("apiLen")).toInt(),
+                      o.value(QStringLiteral("transcriptLen"))
+                          .toInt(o.value(QStringLiteral("apiLen")).toInt()),
                       o.value(QStringLiteral("msgLen")).toInt(), {}};
         for (const QJsonValue &key : o.value(QStringLiteral("editKeys")).toArray())
             cp.editKeys.append(key.toString());
@@ -1533,7 +1693,8 @@ void LlamaAgentBackend::restoreCheckpoints(const QJsonArray &saved)
             while (apiCursor < m_apiMessages.size()
                    && m_apiMessages.at(apiCursor).toObject().value(QStringLiteral("role")).toString()
                           != QLatin1String("user")) ++apiCursor;
-            m_checkpoints.append({qMin(apiCursor, int(m_apiMessages.size())), mi, {}});
+            m_checkpoints.append({qMin(apiCursor, int(m_apiMessages.size())),
+                                  qMin(apiCursor, int(m_transcriptMessages.size())), mi, {}});
             ++apiCursor;
         }
     }
@@ -1553,7 +1714,8 @@ void LlamaAgentBackend::rollbackToMessage(int msgIndex)
     if (ci < 0) { emit errorOccurred(QStringLiteral("No hay checkpoint para ese mensaje.")); return; }
 
     const Checkpoint cp = m_checkpoints[ci];
-    if (cp.msgLen > m_messages.size() || cp.apiLen > m_apiMessages.size()) return;
+    if (cp.msgLen > m_messages.size() || cp.apiLen > m_apiMessages.size()
+        || cp.transcriptLen > m_transcriptMessages.size()) return;
 
     // Revertir archivos editados DESPUÉS del checkpoint (los que no estaban en
     // editKeys). Sólo se puede restaurar al contenido original (1er snapshot).
@@ -1566,6 +1728,7 @@ void LlamaAgentBackend::rollbackToMessage(int msgIndex)
     // Truncar conversación (UI + API) al estado del checkpoint.
     while (m_messages.size() > cp.msgLen) m_messages.removeLast();
     while (m_apiMessages.size() > cp.apiLen) m_apiMessages.removeLast();
+    while (m_transcriptMessages.size() > cp.transcriptLen) m_transcriptMessages.removeLast();
 
     // Descartar checkpoints desde éste en adelante.
     while (m_checkpoints.size() > ci) m_checkpoints.removeLast();
@@ -1609,6 +1772,7 @@ void LlamaAgentBackend::editMessage(int msgIndex, const QString &newText)
                                    {QStringLiteral("content"), content}});
     }
     m_apiMessages = neu;
+    m_transcriptMessages = neu;
 
     // Descartar checkpoints que apunten más allá del estado actual.
     while (!m_checkpoints.isEmpty() && m_checkpoints.last().msgLen > m_messages.size())
@@ -1887,6 +2051,7 @@ void LlamaAgentBackend::runCompletion()
     // y modelos chicos pierden qué ventana/acción sigue. Ahí preferimos mantener
     // el rastro literal y apoyarnos en el catálogo recortado de tools.
     if (!m_taskAutoApprove) {
+        pruneWorkingContext();
         int head = 0, keepFrom = 0;
         if (m_compactStall < 2 && planCompaction(head, keepFrom)) {
             startCompaction(head, keepFrom); return;
@@ -2240,6 +2405,8 @@ void LlamaAgentBackend::handleStreamData()
         const QJsonObject usage = obj.value(QStringLiteral("usage")).toObject();
         const int used = usage.value(QStringLiteral("total_tokens")).toInt(-1);
         if (used >= 0) emit contextUsage(used, m_ctxLimit);
+        const int promptTok = usage.value(QStringLiteral("prompt_tokens")).toInt(-1);
+        if (promptTok >= 0) m_lastPromptTokens = promptTok;
         // Métricas reales de generación. `usage.completion_tokens` = tokens
         // generados (exacto). `timings` (llama.cpp) trae predicted_n/predicted_ms
         // → tiempo de generación puro, sin prompt-processing. Preferir timings.
@@ -2258,6 +2425,9 @@ void LlamaAgentBackend::handleStreamData()
             if (pn >= 0)  m_genTokens = pn;
             if (pms > 0.0) m_genMs = pms;
         }
+        if (promptTok >= 0 || !timings.isEmpty())
+            emit contextManaged(estimateApiTokens(), estimateMessageTokens(m_transcriptMessages),
+                                m_contextPrunedTokens, m_contextPrunedMessages);
 
         const QJsonArray choices = obj.value(QStringLiteral("choices")).toArray();
         if (choices.isEmpty()) continue;
@@ -2440,7 +2610,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
                 m_messages[m_curAsstIdx] = m;
             }
             closeAssistantBubble();
-            m_apiMessages.append(QJsonObject{
+            appendApiMessage(QJsonObject{
                 {QStringLiteral("role"), QStringLiteral("assistant")},
                 {QStringLiteral("content"), apiContent}});
             toolCalls.append(textCall);
@@ -2488,14 +2658,14 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             if (!m_lastDesktopResult.isEmpty())
                 guidance += QStringLiteral("\nResultado de la última tool:\n%1")
                                 .arg(m_lastDesktopResult.left(1200));
-            m_apiMessages.append(QJsonObject{
+            appendApiMessage(QJsonObject{
                 {QStringLiteral("role"), QStringLiteral("user")},
                 {QStringLiteral("content"), guidance}});
             runCompletion();
             return;
         }
         if (!apiContent.isEmpty())
-            m_apiMessages.append(QJsonObject{
+            appendApiMessage(QJsonObject{
                 {QStringLiteral("role"), QStringLiteral("assistant")},
                 {QStringLiteral("content"), apiContent}});
         finishTurn(QString());   // bubble ya tiene el texto; solo finalizar.
@@ -2509,7 +2679,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // próximo texto del modelo abrirá una burbuja nueva.
     closeAssistantBubble();
     if (!usingTextTools()) {
-        m_apiMessages.append(QJsonObject{
+        appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), apiContent},
             {QStringLiteral("tool_calls"), toolCalls}});
@@ -2528,7 +2698,7 @@ void LlamaAgentBackend::processPendingCalls()
         // para no romper el contrato OpenAI tool_call→tool_result).
         if (!m_pendingObservations.isEmpty()) {
             const QJsonObject obs = buildObservationMessage(m_pendingObservations);
-            if (!obs.isEmpty()) m_apiMessages.append(obs);
+            if (!obs.isEmpty()) appendApiMessage(obs);
             m_pendingObservations.clear();
         }
         // Todas las tools resueltas → re-consultar al modelo con los resultados.
@@ -2623,7 +2793,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
         QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
-        QStringLiteral("memory"), QStringLiteral("graph"),
+        QStringLiteral("memory"), QStringLiteral("graph"), QStringLiteral("context_checkpoint"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
         QStringLiteral("skill_list"), QStringLiteral("skill_load"),
@@ -2745,6 +2915,43 @@ void LlamaAgentBackend::processPendingCalls()
         appendToolResult(id, name, QStringLiteral(
             "[error: faltan argumentos requeridos para %1: %2]")
             .arg(name, missing.join(QStringLiteral(", "))));
+        processPendingCalls();
+        return;
+    }
+
+    // Checkpoint explícito de fin de fase: el modelo entrega un recibo
+    // estructurado y el harness decide si el ahorro justifica invalidar el KV.
+    if (name == QLatin1String("context_checkpoint")) {
+        m_pendingCalls.removeFirst();
+        const QString summary = normalizeCompactionSummary(
+            args.value(QStringLiteral("summary")).toString());
+        QJsonParseError checkpointError;
+        const QJsonObject checkpoint = QJsonDocument::fromJson(
+            summary.toUtf8(), &checkpointError).object();
+        if (checkpointError.error != QJsonParseError::NoError
+            || checkpoint.value(QStringLiteral("goal")).toString().isEmpty()
+            || checkpoint.value(QStringLiteral("next_action")).toString().isEmpty()) {
+            appendToolResult(id, name,
+                QStringLiteral("[checkpoint rechazado: summary debe ser JSON válido con goal y next_action]"));
+            processPendingCalls();
+            return;
+        }
+        const int head = qMin(2, int(m_apiMessages.size()));
+        const int keepFrom = qMax(head, int(m_apiMessages.size()) - 4);
+        int removable = 0;
+        for (int i = head; i < keepFrom; ++i)
+            removable += msgTokensOf(m_apiMessages.at(i).toObject());
+        const int before = estimateApiTokens();
+        const int estimatedAfter = before - removable + qMax(64, (summary.size() + 3) / 4);
+        if (keepFrom > head && estimatedAfter * 10 <= before * 7) {
+            applyCompaction(head, keepFrom, summary);
+            appendToolResult(id, name,
+                QStringLiteral("[checkpoint aceptado: fase cerrada; contexto de trabajo reducido de ~%1 a ~%2 tokens]")
+                    .arg(before).arg(estimateApiTokens()));
+        } else {
+            appendToolResult(id, name,
+                QStringLiteral("[checkpoint registrado sin compactar: el ahorro estimado no alcanza 30%]"));
+        }
         processPendingCalls();
         return;
     }
@@ -3534,14 +3741,14 @@ void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name,
     Q_UNUSED(name)
     if (m_textToolFallback) {
         const QString compact = budgetTextToolOutput(name, content);
-        m_apiMessages.append(QJsonObject{
+        appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},
             {QStringLiteral("content"), QStringLiteral("TOOL_RESULT %1 %2:\n%3")
                                         .arg(id, name, compact)}
         });
         return;
     }
-    m_apiMessages.append(QJsonObject{
+    appendApiMessage(QJsonObject{
         {QStringLiteral("role"), QStringLiteral("tool")},
         {QStringLiteral("tool_call_id"), id},
         {QStringLiteral("content"), content}
@@ -3550,6 +3757,8 @@ void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name,
 
 QStringList LlamaAgentBackend::requiredArgs(const QString &name)
 {
+    if (name == QLatin1String("context_checkpoint"))
+        return {QStringLiteral("summary")};
     if (name == QLatin1String("mcp_search_tools")) return {QStringLiteral("query")};
     if (name == QLatin1String("mcp_call_tool")) return {QStringLiteral("name")};
     if (name == QLatin1String("read_file"))  return {QStringLiteral("path")};
@@ -3890,7 +4099,7 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
         emit messagesChanged();
     }
     if (persistFinalToApi && !finalText.isEmpty())
-        m_apiMessages.append(QJsonObject{
+        appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), finalText}});
     emit logAppended(QStringLiteral("[turn] completed (finalTextChars=%1)\n").arg(shownChars));
@@ -4267,6 +4476,13 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                    {QStringLiteral("description"), QStringLiteral("Afirmaciones a verificar (también acepta texto con una por línea).")}}},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
            QJsonArray{QStringLiteral("claims")}),
+        fn(QStringLiteral("context_checkpoint"),
+           QStringLiteral("Cierra una fase terminada. Compacta sólo si ahorra >=30%; "
+                          "nunca con acciones pendientes. Conserva el transcript."),
+           QJsonObject{{QStringLiteral("summary"), strProp(
+               QStringLiteral("JSON compacto: goal, completed[], decisions[], artifacts[], "
+                              "open_questions[], next_action."))}},
+           QJsonArray{QStringLiteral("summary")}),
         fn(QStringLiteral("memory"),
            QStringLiteral("Memoria PERSISTENTE por CAPAS (sobrevive entre sesiones). "
                           "action='save' guarda un hecho atómico con metadata y PROVENANCE; "
@@ -4736,6 +4952,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("edit_file", "Código",   "Reemplazo exacto en un archivo existente.", 160),
         mk("run_shell", "Código",   "Ejecuta un comando de shell.", 110),
         mk("memory",    "Conocimiento", "Memoria persistente del proyecto (save/recall/forget).", 110),
+        mk("context_checkpoint", "Coordinación",
+           "Cierra una fase y compacta memoria de trabajo con transcript intacto.", 95),
         mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query/index).", 150),
         mk("ask_teacher", "Multi-Agente", "Consulta a un modelo más capaz (endpoint aparte).", 130),
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
@@ -5024,6 +5242,7 @@ void LlamaAgentBackend::newSession()
     m_sessionId.clear();
     m_messages.clear();
     m_apiMessages = {};
+    m_transcriptMessages = {};
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
     ensureSession();        // crea sesión nueva + system prompt + persiste
@@ -5042,6 +5261,7 @@ void LlamaAgentBackend::newTaskSession()
     m_sessionId.clear();
     m_messages.clear();
     m_apiMessages = {};
+    m_transcriptMessages = {};
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
     ensureSession();
@@ -5058,6 +5278,7 @@ void LlamaAgentBackend::endTaskSession()
     m_sessionId.clear();
     m_messages.clear();
     m_apiMessages = {};
+    m_transcriptMessages = {};
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
     m_readFingerprints.clear();
@@ -5114,6 +5335,7 @@ void LlamaAgentBackend::deleteSession(const QString &sessionId)
         m_sessionId.clear();
         m_messages.clear();
         m_apiMessages = {};
+        m_transcriptMessages = {};
         m_curAsstIdx = -1;
         if (!m_sessions.isEmpty())
             setCurrentSession(m_sessions.first().toMap().value(QStringLiteral("id")).toString());
@@ -5167,6 +5389,7 @@ void LlamaAgentBackend::forkSessionImpl(const QString &sessionId, int msgIndex)
         if (isBusy()) emit errorOccurred(QStringLiteral("No se puede bifurcar con un turno en curso."));
         return;
     }
+
     if (sessionId == m_sessionId) saveCurrentSession();
 
     QFile sourceFile(sessionFilePath(sessionId));
@@ -5174,7 +5397,10 @@ void LlamaAgentBackend::forkSessionImpl(const QString &sessionId, int msgIndex)
     const QJsonObject source = QJsonDocument::fromJson(sourceFile.readAll()).object();
     sourceFile.close();
     QJsonArray messages = source.value(QStringLiteral("messages")).toArray();
-    QJsonArray api = source.value(QStringLiteral("api")).toArray();
+    QJsonArray transcript = source.value(QStringLiteral("transcript")).toArray();
+    if (transcript.isEmpty()) transcript = source.value(QStringLiteral("api")).toArray();
+    QJsonArray api = source.value(QStringLiteral("workingContext")).toArray();
+    if (api.isEmpty()) api = transcript;
     if (msgIndex >= 0) {
         if (msgIndex >= messages.size()) return;
         while (messages.size() > msgIndex + 1) messages.removeLast();
@@ -5196,6 +5422,7 @@ void LlamaAgentBackend::forkSessionImpl(const QString &sessionId, int msgIndex)
                                             m.value(QStringLiteral("content")).toString()}});
         }
         api = rebuilt;
+        transcript = rebuilt;
     }
 
     QVariantMap parent;
@@ -5223,9 +5450,11 @@ void LlamaAgentBackend::forkSessionImpl(const QString &sessionId, int msgIndex)
         {QStringLiteral("id"), newId},
         {QStringLiteral("title"), child.value(QStringLiteral("title")).toString()},
         {QStringLiteral("messages"), messages},
-        {QStringLiteral("api"), api},
+        {QStringLiteral("api"), transcript},
+        {QStringLiteral("transcript"), transcript},
+        {QStringLiteral("workingContext"), api},
         {QStringLiteral("checkpoints"), QJsonArray{}},
-        {QStringLiteral("snapshotVersion"), 1},
+        {QStringLiteral("snapshotVersion"), 2},
         {QStringLiteral("parentSessionId"), sessionId},
         {QStringLiteral("forkMessageIndex"), msgIndex}
     };
@@ -5265,6 +5494,7 @@ void LlamaAgentBackend::deleteProject(const QString &projectDir)
         m_sessionId.clear();
         m_messages.clear();
         m_apiMessages = {};
+        m_transcriptMessages = {};
         m_curAsstIdx = -1;
         // Si quedan sesiones de OTROS proyectos, abrir una. Si no queda ninguna,
         // dejar estado vacío: NO recrear sesión (recrear en el cwd borrado haría
@@ -5290,6 +5520,7 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
     m_curAsstIdx = -1;
     m_messages.clear();
     m_apiMessages = {};
+    m_transcriptMessages = {};
     m_readFingerprints.clear();
     m_checkpoints.clear();
     if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
@@ -5298,7 +5529,18 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
     if (f.open(QIODevice::ReadOnly)) {
         const QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
         f.close();
-        m_apiMessages = obj.value(QStringLiteral("api")).toArray();
+        m_apiMessages = obj.value(QStringLiteral("workingContext")).toArray();
+        m_transcriptMessages = obj.value(QStringLiteral("transcript")).toArray();
+        // Compatibilidad con snapshots v1: `api` era a la vez transcript y
+        // contexto de trabajo.
+        if (m_apiMessages.isEmpty())
+            m_apiMessages = obj.value(QStringLiteral("api")).toArray();
+        if (m_transcriptMessages.isEmpty())
+            m_transcriptMessages = obj.value(QStringLiteral("api")).toArray();
+        const QJsonObject stats = obj.value(QStringLiteral("contextStats")).toObject();
+        m_contextPrunedMessages = stats.value(QStringLiteral("prunedMessages")).toInt();
+        m_contextPrunedTokens = static_cast<qint64>(
+            stats.value(QStringLiteral("prunedTokens")).toDouble());
         const QJsonArray msgs = obj.value(QStringLiteral("messages")).toArray();
         for (const QJsonValue &mv : msgs) {
             QVariantMap mm = mv.toObject().toVariantMap();
@@ -5321,6 +5563,7 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
         m_apiMessages = QJsonArray{ QJsonObject{
             {QStringLiteral("role"), QStringLiteral("system")},
             {QStringLiteral("content"), buildSystemPrompt()}} };
+    if (m_transcriptMessages.isEmpty()) m_transcriptMessages = m_apiMessages;
     emit sessionsChanged();
     emit messagesChanged();
 }
@@ -5407,9 +5650,14 @@ void LlamaAgentBackend::persistSession(const QString &sessionId) const
         {QStringLiteral("id"), sessionId},
         {QStringLiteral("title"), title},
         {QStringLiteral("messages"), msgs},
-        {QStringLiteral("api"), m_apiMessages},
+        {QStringLiteral("api"), m_transcriptMessages}, // compatibilidad con v1
+        {QStringLiteral("transcript"), m_transcriptMessages},
+        {QStringLiteral("workingContext"), m_apiMessages},
+        {QStringLiteral("contextStats"), QJsonObject{
+            {QStringLiteral("prunedMessages"), m_contextPrunedMessages},
+            {QStringLiteral("prunedTokens"), static_cast<double>(m_contextPrunedTokens)}}},
         {QStringLiteral("checkpoints"), checkpointsToJson()},
-        {QStringLiteral("snapshotVersion"), 1}
+        {QStringLiteral("snapshotVersion"), 2}
     };
     QFile f(sessionFilePath(sessionId));
     if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {

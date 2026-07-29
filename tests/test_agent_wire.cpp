@@ -42,6 +42,8 @@ private slots:
     void parsesNativeToolCallLeakFallback();
     void textToolsModeDoesNotDoubleReserveToolBudget();
     void compactionStallCounterTracksProgress();
+    void compactionPreservesImmutableTranscript();
+    void deterministicPruningDeduplicatesOnlyWorkingContext();
     void failureSpiralDetectsEquivalentErrorsAndResetsOnProgress();
     void streamRepetitionDetectsLongTripleBlockOnly();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
@@ -563,6 +565,11 @@ void AgentWireTests::restartRepublishesPersistedMessages()
              QStringLiteral("mensaje persistido"));
 
     backend.stop();
+    QVERIFY(sessionFile.open(QIODevice::ReadOnly));
+    const QJsonObject migrated = QJsonDocument::fromJson(sessionFile.readAll()).object();
+    QCOMPARE(migrated.value(QStringLiteral("snapshotVersion")).toInt(), 2);
+    QVERIFY(!migrated.value(QStringLiteral("transcript")).toArray().isEmpty());
+    QVERIFY(!migrated.value(QStringLiteral("workingContext")).toArray().isEmpty());
     QDir(store).removeRecursively();
 }
 
@@ -613,8 +620,15 @@ void AgentWireTests::nativeSessionForkPersistsTreeMetadata()
     QCOMPARE(backend.messages().size(), 1);
     QCOMPARE(backend.messages().first().toMap().value(QStringLiteral("content")).toString(),
              QStringLiteral("pregunta"));
-    QVERIFY(QFile::exists(store + QLatin1Char('/')
-                          + child.value(QStringLiteral("id")).toString() + QStringLiteral(".json")));
+    const QString childPath = store + QLatin1Char('/')
+        + child.value(QStringLiteral("id")).toString() + QStringLiteral(".json");
+    QVERIFY(QFile::exists(childPath));
+    QFile childFile(childPath);
+    QVERIFY(childFile.open(QIODevice::ReadOnly));
+    const QJsonObject childSnapshot = QJsonDocument::fromJson(childFile.readAll()).object();
+    QCOMPARE(childSnapshot.value(QStringLiteral("snapshotVersion")).toInt(), 2);
+    QVERIFY(!childSnapshot.value(QStringLiteral("transcript")).toArray().isEmpty());
+    QVERIFY(!childSnapshot.value(QStringLiteral("workingContext")).toArray().isEmpty());
     backend.stop();
     QDir(store).removeRecursively();
 }
@@ -1093,6 +1107,60 @@ void AgentWireTests::compactionStallCounterTracksProgress()
     be.setApiMessagesForTest(history());
     be.applyCompactionForTest(2, 4, QStringLiteral("ok"));
     QCOMPARE(be.compactStallForTest(), 0);
+}
+
+void AgentWireTests::compactionPreservesImmutableTranscript()
+{
+    QJsonArray history{
+        QJsonObject{{"role", "system"}, {"content", "system"}},
+        QJsonObject{{"role", "user"}, {"content", "objetivo"}},
+        QJsonObject{{"role", "assistant"}, {"content", QString(2000, 'a')}},
+        QJsonObject{{"role", "user"}, {"content", QString(2000, 'b')}},
+        QJsonObject{{"role", "assistant"}, {"content", "cola"}},
+        QJsonObject{{"role", "user"}, {"content", "seguí"}}
+    };
+    LlamaAgentBackend be;
+    be.setCtxLimitForTest(8192);
+    be.setApiMessagesForTest(history);
+    be.applyCompactionForTest(2, 4,
+        QStringLiteral("{\"goal\":\"g\",\"completed\":[\"x\"],\"decisions\":[],"
+                       "\"artifacts\":[],\"failed_approaches\":[],"
+                       "\"open_questions\":[],\"next_action\":\"n\",\"evidence\":[]}"));
+
+    QCOMPARE(be.transcriptMessagesForTest(), history);
+    QVERIFY(be.apiMessagesForTest().size() < history.size());
+    QVERIFY(be.apiMessagesForTest().at(2).toObject().value("content").toString()
+                .contains(QStringLiteral("\"next_action\":\"n\"")));
+}
+
+void AgentWireTests::deterministicPruningDeduplicatesOnlyWorkingContext()
+{
+    auto assistantCall = [](const QString &id) {
+        return QJsonObject{{"role", "assistant"}, {"content", ""},
+            {"tool_calls", QJsonArray{QJsonObject{
+                {"id", id}, {"type", "function"},
+                {"function", QJsonObject{{"name", "grep"},
+                    {"arguments", "{\"pattern\":\"needle\"}"}}}}}}};
+    };
+    QJsonArray history{
+        QJsonObject{{"role", "system"}, {"content", "system"}},
+        QJsonObject{{"role", "user"}, {"content", "objetivo"}},
+        assistantCall("old"),
+        QJsonObject{{"role", "tool"}, {"tool_call_id", "old"}, {"content", QString(1000, 'x')}},
+        QJsonObject{{"role", "assistant"}, {"content", "intermedio"}},
+        QJsonObject{{"role", "user"}, {"content", "otra vez"}},
+        assistantCall("new"),
+        QJsonObject{{"role", "tool"}, {"tool_call_id", "new"}, {"content", QString(1000, 'y')}}
+    };
+    LlamaAgentBackend be;
+    be.setApiMessagesForTest(history);
+    QCOMPARE(be.pruneWorkingContextForTest(), 1);
+
+    QCOMPARE(be.transcriptMessagesForTest(), history);
+    QCOMPARE(be.apiMessagesForTest().at(3).toObject().value("content").toString(),
+             QStringLiteral("[resultado repetido podado; usar la llamada equivalente más reciente]"));
+    QCOMPARE(be.apiMessagesForTest().at(7).toObject().value("content").toString(),
+             QString(1000, 'y'));
 }
 
 void AgentWireTests::textToolPayloadCapsGenerationAndStopsAtToolCall()

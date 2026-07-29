@@ -145,6 +145,9 @@ class AppController : public QObject
     Q_PROPERTY(int     idleAutoStopMin READ idleAutoStopMin WRITE setIdleAutoStopMin NOTIFY idleAutoStopChanged)
     Q_PROPERTY(int agentContextUsed READ agentContextUsed NOTIFY agentContextChanged)
     Q_PROPERTY(int agentContextLimit READ agentContextLimit NOTIFY agentContextChanged)
+    Q_PROPERTY(int agentContextTranscript READ agentContextTranscript NOTIFY agentContextChanged)
+    Q_PROPERTY(qint64 agentContextPruned READ agentContextPruned NOTIFY agentContextChanged)
+    Q_PROPERTY(int agentContextPruneEvents READ agentContextPruneEvents NOTIFY agentContextChanged)
     Q_PROPERTY(QString agentSystemPrompt READ agentSystemPrompt WRITE setAgentSystemPrompt NOTIFY agentTuningChanged)
     Q_PROPERTY(double agentTemperature READ agentTemperature WRITE setAgentTemperature NOTIFY agentTuningChanged)
     Q_PROPERTY(QString agentPermRules READ agentPermRules WRITE setAgentPermRules NOTIFY agentTuningChanged)
@@ -271,6 +274,9 @@ public:
     QVariantMap agentPendingTool() const { return m_agentPendingTool; }
     int agentContextUsed() const { return m_agentContextUsed; }
     int agentContextLimit() const { return m_agentContextLimit; }
+    int agentContextTranscript() const { return m_agentContextTranscript; }
+    qint64 agentContextPruned() const { return m_agentContextPruned; }
+    int agentContextPruneEvents() const { return m_agentContextPruneEvents; }
     QString agentSystemPrompt() const { return m_agentSystemPrompt; }
     double agentTemperature() const { return m_agentTemperature; }
     QString agentPermRules() const { return m_agentPermRules; }
@@ -1439,6 +1445,9 @@ private:
     QJsonArray  gatewayModelCatalog() const;
     int       m_agentContextUsed = 0;
     int       m_agentContextLimit = -1;
+    int       m_agentContextTranscript = 0;
+    qint64    m_agentContextPruned = 0;
+    int       m_agentContextPruneEvents = 0;
     QString   m_agentSystemPrompt;
     QString   m_agentPermRules;
     double    m_agentTemperature = -1.0;

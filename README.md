@@ -1405,6 +1405,18 @@ Ante `context_length_exceeded`, el agente compacta de emergencia y reintenta has
 dos veces. Los fallos transitorios HTTP 408/425/429/5xx usan backoff exponencial
 acotado; errores deterministas de autenticación o schema no se reintentan.
 
+El agente usa además **memoria de trabajo dinámica**: cada sesión persiste un
+`transcript` completo e inmutable separado del `workingContext` que se manda al
+modelo. Antes de una inferencia poda de forma determinista resultados duplicados y
+argumentos voluminosos de errores antiguos, sin tocar escrituras, tests, memoria,
+skills ni subagentes. Cuando la presión de contexto lo justifica, genera un
+checkpoint JSON estructurado; el modelo también puede llamar
+`context_checkpoint` al cerrar una fase. La compactación sólo se acepta si el
+ahorro amortiza la invalidación del prompt-cache (o evita un overflow). El medidor
+de Agente muestra contexto activo, tokens ahorrados y, en su tooltip, el tamaño del
+transcript íntegro. Los snapshots v1 se migran al leerlos y las bifurcaciones
+preservan ambas representaciones.
+
 `LlamaCode.exe --agent-daemon` (alias `--headless`) inicia el núcleo y la
 ControlApi local sin cargar QML ni crear ventanas. El puerto se controla con
 `LLAMACODE_CONTROL_PORT` (8765 por defecto, sólo localhost). Mantiene la política

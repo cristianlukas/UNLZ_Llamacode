@@ -3815,6 +3815,14 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         if (limit > 0) m_agentContextLimit = limit;
         emit agentContextChanged();
     });
+    connect(b, &IAgentBackend::contextManaged, this,
+            [this](int working, int transcript, qint64 pruned, int events) {
+        m_agentContextUsed = working;
+        m_agentContextTranscript = transcript;
+        m_agentContextPruned = pruned;
+        m_agentContextPruneEvents = events;
+        emit agentContextChanged();
+    });
     connect(b, &IAgentBackend::chatTemplateDetected, this, [this](bool have, bool tools) {
         m_toolTemplateHave = have;
         m_toolTemplateSupports = tools;

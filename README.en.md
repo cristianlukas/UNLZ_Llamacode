@@ -741,3 +741,11 @@ Code, data and design taken from other projects:
 | **archex** | Code-context pipeline ideas in `hybrid_search`: token-budget packing + dep-graph expansion (neighbors via imports/includes). Review: [`docs/archex_context_review.md`](docs/archex_context_review.md) | https://github.com/Mathews-Tom/archex |
 
 > When adding code/data from another repo, add the corresponding row here.
+The native agent uses **dynamic working memory**: every session persists an
+immutable full `transcript` separately from the `workingContext` sent to the
+model. Before inference it deterministically prunes duplicate tool results and
+large arguments from stale failures while protecting writes, tests, memory,
+skills, and subagents. Structured phase checkpoints compact only when their
+estimated savings amortize prompt-cache invalidation or prevent context overflow.
+The Agent context meter reports active context, saved tokens, and full transcript
+size. Legacy v1 snapshots are migrated on load and forks preserve both forms.
