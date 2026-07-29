@@ -967,6 +967,10 @@ AppController::AppController(QObject *parent) : QObject(parent)
         }
     });
     connect(this, &AppController::serverRunningChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::serverRunningChanged,
+            this, &AppController::backendAvailableChanged);
+    connect(this, &AppController::activeLaunchIdChanged,
+            this, &AppController::backendAvailableChanged);
     connect(this, &AppController::serverReadyChanged, this, &AppController::taskRunAvailabilityChanged);
 
     // Migración: Procesos legacy con schedule embebido → Automatización enlazada.
@@ -6965,6 +6969,17 @@ void AppController::useLanServer(const QString &baseUrl, const QString &apiKey,
         startAgent(launchId);
         emit lanProfileReady(launchId, {});
     });
+}
+
+bool AppController::backendAvailable() const
+{
+    bool activeRemoteProfile = false;
+    if (!m_activeLaunchId.isEmpty()) {
+        const LaunchProfile launch = m_profiles.resolveLaunch(m_activeLaunchId);
+        activeRemoteProfile = !launch.id.isEmpty()
+            && m_profiles.resolveBackend(launch.backendProfileId).isCloud();
+    }
+    return backendAvailability(serverRunning(), activeRemoteProfile);
 }
 
 QString AppController::launchClaudeCode()
