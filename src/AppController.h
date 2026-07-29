@@ -82,6 +82,9 @@ class AppController : public QObject
     // Render de diagramas Mermaid en el chat (requiere sidecar mermaid-cli).
     Q_PROPERTY(bool mermaidEnabled READ mermaidEnabled WRITE setMermaidEnabled NOTIFY mermaidEnabledChanged)
     Q_PROPERTY(bool   serverRunning   READ serverRunning   NOTIFY serverRunningChanged)
+    // Disponibilidad del backend para la UI: proceso local o perfil remoto/cloud
+    // activo. Un cliente LAN no crea un QProcess local.
+    Q_PROPERTY(bool   backendAvailable READ backendAvailable NOTIFY backendAvailableChanged)
     Q_PROPERTY(bool   serverStopping  READ serverStopping  NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverReady     READ serverReady     NOTIFY serverReadyChanged)
     Q_PROPERTY(QString serverState    READ serverState     NOTIFY serverStateChanged)
@@ -234,6 +237,11 @@ public:
     bool         chatGenerating()   const { return m_chatGenerating; }
     bool         chatThinkingSupported() const { return m_chatThinkingSupported; }
     bool   serverRunning()   const { return m_proc && m_proc->state() != QProcess::NotRunning; }
+    bool   backendAvailable() const;
+    static bool backendAvailability(bool localServerRunning, bool activeRemoteProfile)
+    {
+        return localServerRunning || activeRemoteProfile;
+    }
     bool   serverStopping()  const { return m_serverStopping; }
     bool   serverReady()     const { return m_serverReady; }
     QString serverState()    const { return m_serverState; }
@@ -987,6 +995,7 @@ signals:
     // la UI debe pedirla y llamar setSecret(keyRef, value) antes de reintentar.
     void cloudSecretRequired(const QString &launchProfileId, const QString &keyRef);
     void serverRunningChanged();
+    void backendAvailableChanged();
     // Otra instancia intentó abrirse (single-instance): la UI restaura/enfoca la
     // ventana existente en vez de abrir una nueva.
     void secondInstanceLaunched();

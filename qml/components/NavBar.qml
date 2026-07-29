@@ -56,7 +56,7 @@ Rectangle {
                 // (App.agentStarting) → la página muestra su popup "Iniciando agente"
                 // con los botones deshabilitados, igual que Agente. Solo queda
                 // grisada si el agente no fue iniciado en absoluto.
-                enabled: (!modelData.serverOnly || App.serverRunning)
+                enabled: (!modelData.serverOnly || App.backendAvailable)
                          && (!modelData.agentOnly || App.agentRunning || App.agentStarting)
                 opacity: enabled ? 1.0 : 0.35
                 background: Rectangle {

@@ -123,6 +123,7 @@ private slots:
     void researchReportsExposeFormattedDate();
     void exportWorkspaceIncludesChatsAndResearch();
     void autoStartAgentOnLaunchPersists();
+    void remoteBackendEnablesServerDependentUi();
     void windowsStartupCommandQuotesExecutable();
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
@@ -791,6 +792,13 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(BrowserTeach::listSkills().contains(QStringLiteral("my-skill")));
     QVERIFY(BrowserTeach::removeSkill(QStringLiteral("My Skill")));
     QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
+}
+
+void AppControllerTests::remoteBackendEnablesServerDependentUi()
+{
+    QVERIFY(!AppController::backendAvailability(false, false));
+    QVERIFY(AppController::backendAvailability(true, false));
+    QVERIFY(AppController::backendAvailability(false, true));
 }
 
 void AppControllerTests::windowsStartupCommandQuotesExecutable()

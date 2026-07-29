@@ -266,11 +266,12 @@ ApplicationWindow {
                         const agentOnly = (i === 7)
                         // No expulsar mientras el agente arranca (agentStarting): la
                         // página muestra su popup de carga. Solo si no hay agente.
-                        if ((serverOnly && !App.serverRunning)
+                        if ((serverOnly && !App.backendAvailable)
                             || (agentOnly && !App.agentRunning && !App.agentStarting))
                             stack.currentIndex = 0
                     }
                     function onServerRunningChanged() { guard() }
+                    function onBackendAvailableChanged() { guard() }
                     function onAgentRunningChanged() { guard() }
                     // Al instalar dependencias, abrir la sección Descargas (índice 10).
                     function onNavigateToDownloads() { stack.currentIndex = 10 }

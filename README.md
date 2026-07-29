@@ -1007,7 +1007,9 @@ Desde otro equipo no hace falta crear el backend manualmente: en **Lanzar**,
 comparten gateway y permite elegir uno de sus perfiles. Al confirmar, el cliente
 crea o reutiliza un perfil remoto, guarda la credencial en `SecretStore` y pide al
 servidor que cargue —o vuelva a iniciar— el perfil elegido antes de conectar el
-agente local.
+agente local. Una vez aceptada la conexión, Chat, Agente, Investigación, Tasks y
+Charla se habilitan también en el cliente LAN: su disponibilidad depende del
+backend remoto activo y no de que exista un proceso `llama-server` local.
 
 El botón **Abrir OpenCode GUI en mi GPU** permite elegir perfil y proyecto. LlamaCode
 inyecta una configuración runtime mediante `OPENCODE_CONFIG_CONTENT`, selecciona
