@@ -114,6 +114,7 @@ set(CORE_SOURCES
     src/core/tasks/TaskStore.cpp
     src/core/tasks/AutomationStore.cpp
     src/core/tasks/RunHistoryStore.cpp
+    src/core/tasks/EvidenceBundle.cpp
     src/core/tasks/CronSchedule.cpp
     src/core/tasks/TaskSchedule.cpp
     src/core/tasks/TaskScheduler.cpp
@@ -198,6 +199,7 @@ set(HEADERS
     src/core/tasks/TaskStore.h
     src/core/tasks/AutomationStore.h
     src/core/tasks/RunHistoryStore.h
+    src/core/tasks/EvidenceBundle.h
     src/core/tasks/CronSchedule.h
     src/core/tasks/TaskSchedule.h
     src/core/tasks/TaskScheduler.h
@@ -515,6 +517,7 @@ if (BUILD_TESTS)
     add_lc_test(test_cron               tests/test_cron.cpp)
     add_lc_test(test_automation_store   tests/test_automation_store.cpp)
     add_lc_test(test_run_history        tests/test_run_history.cpp)
+    add_lc_test(test_evidence_bundle    tests/test_evidence_bundle.cpp)
     add_lc_test(test_tool_execution_safety tests/test_tool_execution_safety.cpp)
     add_lc_test(test_download_history   tests/test_download_history.cpp)
     add_lc_test(test_theme              tests/test_theme.cpp)

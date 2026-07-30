@@ -6612,6 +6612,34 @@ QVariantList AppController::runHistory(const QString &ownerId) const
     return m_runHistory.history(ownerId);
 }
 
+QString AppController::exportRunEvidence(const QString &ownerId)
+{
+    if (ownerId.trimmed().isEmpty()) return QString();
+    const QString path = QFileDialog::getSaveFileName(
+        nullptr, QStringLiteral("Exportar evidencia de corrida"),
+        QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation))
+            .filePath(QStringLiteral("llamacode-evidence-%1.json").arg(
+                RunHistoryStore::sanitize(ownerId))),
+        QStringLiteral("Evidence JSON (*.json)"));
+    return path.isEmpty() ? QString() : exportRunEvidenceTo(ownerId, path);
+}
+
+QString AppController::exportRunEvidenceTo(const QString &ownerId, const QString &path)
+{
+    if (ownerId.trimmed().isEmpty() || path.trimmed().isEmpty()) {
+        emit serverError(QStringLiteral("Faltan el owner o la ruta de evidencia."));
+        return QString();
+    }
+    const QJsonObject bundle = EvidenceBundle::build(ownerId, m_runHistory.history(ownerId),
+                                                      version());
+    QString error;
+    if (!EvidenceBundle::write(path, bundle, &error)) {
+        emit serverError(QStringLiteral("No se pudo exportar la evidencia: %1").arg(error));
+        return QString();
+    }
+    return path;
+}
+
 QVariantMap AppController::compareTaskRunMetrics(const QString &ownerId,
                                                  int baselineIndex,
                                                  int candidateIndex) const

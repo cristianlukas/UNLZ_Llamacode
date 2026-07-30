@@ -1401,6 +1401,13 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
 | IQ4_XS | 77/100 | −16.3% | 42 | 2 GB | 12 GB |
 | Q3_K_M | 65/100 | −29.3% | 55 | 2 GB | 9 GB |
 
+## Evidencia reproducible de corridas
+
+Desde el Historial de Tasks se puede exportar un paquete JSON versionado con la
+traza persistida, métricas, reportes de tools, workflow, receipts, versión del
+producto y un hash SHA-256 por corrida. La exportación no reejecuta la Task ni
+incluye secretos. Ver [`docs/evidence.md`](docs/evidence.md).
+
 ## Auto-tuning de parámetros
 
 Búsqueda automática de los flags de `llama-server` (`ngl`, `batch`, `ubatch`,

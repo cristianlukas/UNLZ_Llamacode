@@ -2314,6 +2314,12 @@ Item {
                     anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
                     spacing: 10
                     LcButton {
+                        text: "Exportar evidencia"
+                        secondary: true
+                        enabled: historyDialog.runs.length > 0
+                        onClicked: App.exportRunEvidence(historyDialog.ownerId)
+                    }
+                    LcButton {
                         text: "Copiar reporte"
                         secondary: true
                         enabled: historyDialog.selectedRun >= 0

@@ -9,6 +9,7 @@
 #include "core/tasks/TaskStore.h"
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/RunHistoryStore.h"
+#include "core/tasks/EvidenceBundle.h"
 #include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/agents/AgentDefinitionStore.h"
@@ -561,6 +562,9 @@ public:
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
     // Historial de corridas de un Proceso o Programación (más nuevo primero).
     Q_INVOKABLE QVariantList runHistory(const QString &ownerId) const;
+    // Exporta el historial como paquete de evidencia versionado con hashes.
+    Q_INVOKABLE QString exportRunEvidence(const QString &ownerId);
+    Q_INVOKABLE QString exportRunEvidenceTo(const QString &ownerId, const QString &path);
     // Compara telemetría de dos corridas (índices del historial, 0=más nueva).
     // Permite A/B reproducible sin mezclar los scores de calidad del benchmark.
     Q_INVOKABLE QVariantMap compareTaskRunMetrics(const QString &ownerId,
