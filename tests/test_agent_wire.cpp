@@ -22,6 +22,7 @@ private slots:
     void parsesTextToolCallFallback();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void forceTextToolsSkipsNativeToolAttempt();
+    void stoppingDuringCompletionReleasesTurn();
     void restartRepublishesPersistedMessages();
     void taskSessionIsEphemeralAndRestoresPrevious();
     void nativeSessionForkPersistsTreeMetadata();
@@ -508,6 +509,73 @@ void AgentWireTests::forceTextToolsSkipsNativeToolAttempt()
     }
     QVERIFY(sawTool);
     QVERIFY(sawFinal);
+    backend.stop();
+}
+
+// Regresión: si llama-server se reinicia con un stream en vuelo, stop() debe
+// cerrar el turno y liberar todos los guards. Antes quedaba una burbuja
+// "Pensando..." y Tasks/workflows esperaban turnFinished indefinidamente.
+class FakeHangingServer : public QTcpServer
+{
+protected:
+    void incomingConnection(qintptr socketDescriptor) override
+    {
+        auto *sock = new QTcpSocket(this);
+        sock->setSocketDescriptor(socketDescriptor);
+        connect(sock, &QTcpSocket::readyRead, this, [sock]() {
+            const QByteArray request = sock->readAll();
+            if (request.startsWith("GET /props")) {
+                const QByteArray body = QByteArrayLiteral("{\"n_ctx\":4096}");
+                sock->write(QByteArrayLiteral(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ")
+                    + QByteArray::number(body.size())
+                    + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + body);
+                sock->disconnectFromHost();
+            }
+            // POST /chat/completions queda abierto para simular el server que
+            // desaparece/reinicia durante prompt processing.
+        });
+        connect(sock, &QTcpSocket::disconnected, sock, &QObject::deleteLater);
+    }
+};
+
+void AgentWireTests::stoppingDuringCompletionReleasesTurn()
+{
+    FakeHangingServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    ctx.modelId = QStringLiteral("test-model");
+    ctx.ctxOverride = 4096;
+
+    LlamaAgentBackend backend;
+    backend.setEphemeralSessions(true);
+    backend.start(ctx);
+    QSignalSpy finished(&backend, &LlamaAgentBackend::turnFinished);
+    QSignalSpy errors(&backend, &LlamaAgentBackend::errorOccurred);
+    backend.sendMessage(QStringLiteral("trabajo largo"));
+    QTRY_VERIFY_WITH_TIMEOUT(server.hasPendingConnections()
+                            || backend.messages().size() >= 2, 1000);
+
+    backend.stop();
+
+    QCOMPARE(finished.count(), 1);
+    QVERIFY(!backend.running());
+    const QVariantMap last = backend.messages().last().toMap();
+    QVERIFY(!last.value(QStringLiteral("typing")).toBool());
+    QVERIFY(last.value(QStringLiteral("content")).toString()
+                .contains(QStringLiteral("puede reintentarse")));
+
+    // Reiniciar el mismo objeto y enviar otro turno no debe disparar el guard
+    // fantasma "Hay un turno en curso".
+    backend.start(ctx);
+    backend.sendMessage(QStringLiteral("segundo intento"));
+    QCOMPARE(errors.count(), 0);
     backend.stop();
 }
 

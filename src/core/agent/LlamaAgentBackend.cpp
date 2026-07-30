@@ -951,6 +951,14 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
 
 void LlamaAgentBackend::stop()
 {
+    // Un restart/swap del llama-server puede ocurrir mientras hay una completion,
+    // una tool o una aprobación en vuelo. Antes se abortaban los objetos async,
+    // pero nunca se cerraba el turno: la UI conservaba "Pensando..." y los
+    // consumidores de turnFinished (Tasks/workflows) esperaban para siempre.
+    const bool interruptedTurn = m_reply || m_compactReply || m_compacting
+                                 || !m_awaitId.isEmpty() || !m_execCallId.isEmpty()
+                                 || !m_pendingCalls.isEmpty() || subsActive()
+                                 || m_curAsstIdx >= 0;
     emit desktopActivityChanged(false, QString(), QString());
     if (m_compactReply) {
         QNetworkReply *cr = m_compactReply; m_compactReply = nullptr;
@@ -974,7 +982,21 @@ void LlamaAgentBackend::stop()
     }
     m_pendingCalls = {};
     m_awaitId.clear();
+    m_awaitCall = {};
+    m_execCallId.clear();
     cancelAllSubs();
+    if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
+    if (interruptedTurn) {
+        emit logAppended(QStringLiteral(
+            "[turn] interrumpido porque el backend o servidor se detuvo; liberando estado\n"));
+        finishTurn(QStringLiteral(
+            "[error: el servidor o backend se reinició durante la respuesta; "
+            "el turno fue interrumpido y puede reintentarse.]"), false);
+    } else {
+        // Defensa para estados transitorios heredados de builds anteriores.
+        setTyping(false);
+        m_curAsstIdx = -1;
+    }
     saveCurrentSession();
     persistIndex();
     // Apagar servers MCP pero mantener vivo el hilo worker (se destruye en ~).

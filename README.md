@@ -1461,6 +1461,9 @@ headless.
 Ante `context_length_exceeded`, el agente compacta de emergencia y reintenta hasta
 dos veces. Los fallos transitorios HTTP 408/425/429/5xx usan backoff exponencial
 acotado; errores deterministas de autenticación o schema no se reintentan.
+Si el servidor o el backend se reinicia con una respuesta en curso, el turno se
+cierra como interrumpido, libera inmediatamente el estado ocupado y queda listo
+para reintentar; Tasks y workflows reciben `turnFinished` y no esperan para siempre.
 
 El agente usa además **memoria de trabajo dinámica**: cada sesión persiste un
 `transcript` completo e inmutable separado del `workingContext` que se manda al
