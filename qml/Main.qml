@@ -266,7 +266,11 @@ ApplicationWindow {
                         const agentOnly = (i === 7)
                         // No expulsar mientras el agente arranca (agentStarting): la
                         // página muestra su popup de carga. Solo si no hay agente.
-                        if ((serverOnly && !App.backendAvailable)
+                        // Un cambio de pensamiento reinicia el mismo launch a propósito.
+                        // No expulsar Agente durante ese hueco sin backend: su propia
+                        // página informa que está recargando.
+                        const preserveAgentDuringThinkingRestart = i === 5 && App.thinkingRestarting
+                        if ((serverOnly && !App.backendAvailable && !preserveAgentDuringThinkingRestart)
                             || (agentOnly && !App.agentRunning && !App.agentStarting))
                             stack.currentIndex = 0
                     }

@@ -972,6 +972,19 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(this, &AppController::activeLaunchIdChanged,
             this, &AppController::backendAvailableChanged);
     connect(this, &AppController::serverReadyChanged, this, &AppController::taskRunAvailabilityChanged);
+    connect(this, &AppController::serverReadyChanged, this, [this]() {
+        if (m_thinkingRestarting && serverReady()) {
+            m_thinkingRestarting = false;
+            emit thinkingRestartingChanged();
+        }
+    });
+    connect(this, &AppController::serverStateChanged, this, [this]() {
+        // No retener la vista en una recarga que terminó en un fallo definitivo.
+        if (m_thinkingRestarting && m_serverState == QLatin1String("failed")) {
+            m_thinkingRestarting = false;
+            emit thinkingRestartingChanged();
+        }
+    });
 
     // Migración: Procesos legacy con schedule embebido → Automatización enlazada.
     migrateLegacySchedulesToAutomations();
@@ -4126,6 +4139,10 @@ void AppController::restartActiveLaunchForThinking(bool withAgent, bool cancelAc
     }
 
     m_restartThinkingAfterResponse = false;
+    if (!m_thinkingRestarting) {
+        m_thinkingRestarting = true;
+        emit thinkingRestartingChanged();
+    }
     if (cancelActiveGeneration) {
         if (m_chatGenerating)
             stopChatGeneration();
@@ -4145,6 +4162,12 @@ void AppController::restartActiveLaunchForThinking(bool withAgent, bool cancelAc
             startServerAndAgent(launchId);
         else
             startServer(launchId);
+        // Errores de validación o de arranque síncronos no producen un estado
+        // ready; liberar la UI para que muestre el error normal.
+        if (!serverRunning() && m_thinkingRestarting) {
+            m_thinkingRestarting = false;
+            emit thinkingRestartingChanged();
+        }
     };
 
     if (!serverRunning()) {

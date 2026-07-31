@@ -90,6 +90,9 @@ class AppController : public QObject
     Q_PROPERTY(bool   serverStopping  READ serverStopping  NOTIFY serverRunningChanged)
     Q_PROPERTY(bool   serverReady     READ serverReady     NOTIFY serverReadyChanged)
     Q_PROPERTY(QString serverState    READ serverState     NOTIFY serverStateChanged)
+    // Reinicio intencional al cambiar thinking: conserva la superficie actual
+    // mientras el proceso baja, vuelve a cargar el modelo y el agente se reconecta.
+    Q_PROPERTY(bool thinkingRestarting READ thinkingRestarting NOTIFY thinkingRestartingChanged)
     Q_PROPERTY(QVariantMap serverStats READ serverStats    NOTIFY serverStatsChanged)
     Q_PROPERTY(QString serverLog      READ serverLog       NOTIFY serverLogChanged)
     Q_PROPERTY(QString activeLaunchId READ activeLaunchId  NOTIFY activeLaunchIdChanged)
@@ -247,6 +250,7 @@ public:
     bool   serverStopping()  const { return m_serverStopping; }
     bool   serverReady()     const { return m_serverReady; }
     QString serverState()    const { return m_serverState; }
+    bool thinkingRestarting() const { return m_thinkingRestarting; }
     QVariantMap serverStats() const { return m_serverStats; }
     QString serverLog()      const { return m_log; }
     QString activeLaunchId() const { return m_activeLaunchId; }
@@ -1008,6 +1012,7 @@ signals:
     void showSetupRequested();
     void serverReadyChanged();
     void serverStateChanged();
+    void thinkingRestartingChanged();
     void serverStatsChanged();
     void serverHasVisionChanged();
     void gitAvailableChanged();
@@ -1431,6 +1436,7 @@ private:
     bool      m_launchThinkingEnabled = false;  // razonamiento duro del próximo llama-server
     bool      m_restartThinkingAfterResponse = false;
     bool      m_restartThinkingWithAgent = false;
+    bool      m_thinkingRestarting = false;
     void      restartActiveLaunchForThinking(bool withAgent, bool cancelActiveGeneration);
     // Automatización de browser (MCP Playwright). Toggle global; cada LaunchProfile
     // puede forzar on/off con browserAutomation ("inherit"|"on"|"off").

@@ -1335,7 +1335,7 @@ Item {
                 Rectangle {
                     anchors.centerIn: parent
                     z: 5
-                    visible: App.agentStarting || (App.agentRunning && (!App.serverRunning || !App.serverReady))
+                    visible: App.thinkingRestarting || App.agentStarting || (App.agentRunning && (!App.serverRunning || !App.serverReady))
                     radius: 10
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
@@ -1358,7 +1358,9 @@ Item {
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: App.agentStarting
+                            text: App.thinkingRestarting
+                                ? "Recargando modelo para aplicar el nivel de pensamiento..."
+                                : App.agentStarting
                                 ? "Iniciando agente..."
                                 : !App.serverRunning
                                 ? "Servidor no disponible. Iniciá el modelo en Lanzar."
