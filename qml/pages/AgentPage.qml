@@ -1810,13 +1810,6 @@ Item {
                                         }
                                     }
                                     LcButton {
-                                        text: toolCard.expanded ? "Ocultar" : "Ver comando"
-                                        secondary: true
-                                        implicitHeight: 24
-                                        visible: toolCard.hasBody
-                                        onClicked: toolCard.userExpanded = !toolCard.expanded
-                                    }
-                                    LcButton {
                                         text: "Copiar"; secondary: true
                                         implicitHeight: 24
                                         visible: toolCard.hasBody
