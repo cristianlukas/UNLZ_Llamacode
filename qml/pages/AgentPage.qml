@@ -575,13 +575,14 @@ Item {
         syncAgentMessageModel()
         tryRestoreSessionsPanel()
         // Preferir el launch realmente activo. Si la app se abrió sin servidor,
-        // restaurar la última selección del Agente (o el último launch global de
-        // versiones anteriores), nunca caer directamente en el primer perfil.
+        // Restaurar el último perfil usado en toda la app. La preferencia propia
+        // del Agente sólo sirve de compatibilidad: no debe revivir una selección
+        // vieja cuando el usuario usó otro perfil desde Lanzar.
         let target = App.activeLaunchId
         if (!target || target.length === 0)
-            target = App.readSetting("lastAgentLaunchId", "")
-        if (!target || target.length === 0)
             target = App.readSetting("lastLaunchId", "")
+        if (!target || target.length === 0)
+            target = App.readSetting("lastAgentLaunchId", "")
         if (!target || target.length === 0) {
             const menu = App.profileManager.launchProfilesForMenu()
             if (menu.length > 0) target = menu[0].id ?? ""
