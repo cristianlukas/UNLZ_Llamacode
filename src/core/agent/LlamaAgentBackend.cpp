@@ -1602,10 +1602,11 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         return;
     }
     ensureSession();
-    // El primer prompt identifica la sesión enseguida. No sustituir títulos
-    // escritos por el usuario ni renombrar sesiones efímeras de Tasks.
-    if (m_messages.isEmpty())
-        autoTitleCurrentSession(trimmed);
+    // El título predeterminado identifica una sesión todavía sin nombre. El
+    // buffer visual puede contener mensajes de estado antes del primer prompt,
+    // así que no se usa como condición. autoTitleCurrentSession protege los
+    // títulos manuales y las sesiones efímeras.
+    autoTitleCurrentSession(trimmed);
     m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     ensureWorker();
     QMetaObject::invokeMethod(m_worker, "setCorrelationId", Qt::QueuedConnection,
