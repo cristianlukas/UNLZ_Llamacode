@@ -1398,7 +1398,9 @@ Item {
                         }
                         ScrollView {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: Math.min(220, chatQueueRows.implicitHeight)
+                            // Evita que ScrollView colapse antes de crear los
+                            // delegates de la cola.
+                            Layout.preferredHeight: Math.min(220, Math.max(52, App.chatQueuedCount * 56))
                             clip: true
                             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                             Column {

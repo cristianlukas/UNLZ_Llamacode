@@ -2385,7 +2385,10 @@ Item {
                     }
                     ScrollView {
                         width: parent.width
-                        height: Math.min(220, agentQueueRows.implicitHeight)
+                        // El alto depende del contador del backend (y no del
+                        // implicitHeight del contenido de ScrollView, que puede
+                        // calcularse como 0 antes de instanciar el Repeater).
+                        height: Math.min(220, Math.max(52, App.agentQueuedCount * 56))
                         clip: true
                         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                         Column {

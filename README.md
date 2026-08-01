@@ -573,9 +573,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Streaming estable**: durante la generación se actualiza sólo la burbuja activa,
   sin reconstruir toda la lista de mensajes, para evitar saltos verticales.
 - **Stop de generación** con guardado de lo recibido
-- **Cola administrable durante la generación**: el botón `Cola (N)` permite
-  previsualizar cada mensaje pendiente, editarlo, eliminarlo de forma individual
-  o vaciar la cola completa antes de que se envíe el siguiente turno.
+- **Cola administrable durante la generación**: los mensajes pendientes se ven
+  encima del compositor, numerados y con dos líneas de vista previa; cada uno se
+  puede previsualizar, editar o eliminar, y la cola completa puede vaciarse.
 
 ## Harness de Agente (opencode)
 
