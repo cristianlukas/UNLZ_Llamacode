@@ -567,8 +567,9 @@ public:
     bool agentStartingFlagForTest() const { return m_agentStarting; }
     QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
     static QString composeHybridExecutionPromptForTest(const QString &request,
-                                                       const QString &plan);
+                                                        const QString &plan);
     static QString parseHybridStreamLineForTest(const QByteArray &line, bool *done);
+    void setHybridPhaseForTest(const QString &phase) { setHybridPhase(phase); }
     QVariantMap resolvedSystemBinaryForTest(const QString &launchId)
     {
         const auto ctx = buildContext(launchId);
@@ -1337,6 +1338,7 @@ private:
     void startHybridExecutor();
     void dispatchHybridRequest();
     void resetHybridRun();
+    void setHybridPhase(const QString &phase);
     // Watchdog auto-restart on crash
     QString   m_serverState = QStringLiteral("stopped"); // stopped|running|restarting|failed
     int       m_serverRestartCount = 0;

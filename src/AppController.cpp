@@ -4979,28 +4979,31 @@ void AppController::startSequentialHybrid(const QString &text, const LaunchProfi
         emit serverError(QStringLiteral("Esperá a que termine el turno actual antes de iniciar otro request híbrido."));
         return;
     }
+    // La UI observa agentRunningChanged cuando stopAgent() apaga temporalmente el
+    // ejecutor. Marcar el pipeline antes de ese evento evita que interprete el
+    // hot-swap como una detención real y navegue de Agente a Lanzar.
+    setHybridPhase(QStringLiteral("preparing"));
     m_hybridExecutorLaunchId = executor.id;
     m_hybridPlannerLaunchId = planner.id;
     m_hybridUserRequest = text.trimmed();
     m_hybridPlan.clear(); m_hybridFailure.clear();
-    emit agentStartingChanged();
     appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral("Planificador: %1 · ejecutor: %2")
                          .arg(planner.name, executor.name));
 
     if (buildContext(planner.id).backend.isCloud()) {
-        m_hybridPhase = QStringLiteral("planning");
+        setHybridPhase(QStringLiteral("planning"));
         requestHybridPlan();
         return;
     }
 
     auto launchPlanner = [this]() {
-        m_hybridPhase = QStringLiteral("planner-start");
+        setHybridPhase(QStringLiteral("planner-start"));
         auto *ready = new QMetaObject::Connection;
         *ready = connect(this, &AppController::serverReadyChanged, this, [this, ready]() {
             if (!m_serverReady || m_activeLaunchId != m_hybridPlannerLaunchId
                 || m_hybridPhase != QLatin1String("planner-start")) return;
             disconnect(*ready); delete ready;
-            m_hybridPhase = QStringLiteral("planning");
+            setHybridPhase(QStringLiteral("planning"));
             requestHybridPlan();
         });
         startServer(m_hybridPlannerLaunchId);
@@ -5012,7 +5015,7 @@ void AppController::startSequentialHybrid(const QString &text, const LaunchProfi
 
     if (agentRunning() || m_agentStarting) stopAgent();
     if (!serverRunning()) { QTimer::singleShot(0, this, launchPlanner); return; }
-    m_hybridPhase = QStringLiteral("stopping-executor");
+    setHybridPhase(QStringLiteral("stopping-executor"));
     auto *stopped = new QMetaObject::Connection;
     *stopped = connect(this, &AppController::serverRunningChanged, this, [this, stopped, launchPlanner]() {
         if (serverRunning() || m_serverStopping || m_hybridPhase != QLatin1String("stopping-executor")) return;
@@ -5125,7 +5128,7 @@ void AppController::finishHybridPlanning(const QString &plan, const QString &err
     if (buildContext(m_hybridPlannerLaunchId).backend.isCloud() || !serverRunning()) {
         startHybridExecutor(); return;
     }
-    m_hybridPhase = QStringLiteral("stopping-planner");
+    setHybridPhase(QStringLiteral("stopping-planner"));
     auto *stopped = new QMetaObject::Connection;
     *stopped = connect(this, &AppController::serverRunningChanged, this, [this, stopped]() {
         if (serverRunning() || m_serverStopping || m_hybridPhase != QLatin1String("stopping-planner")) return;
@@ -5137,7 +5140,7 @@ void AppController::finishHybridPlanning(const QString &plan, const QString &err
 
 void AppController::startHybridExecutor()
 {
-    m_hybridPhase = QStringLiteral("executor-start");
+    setHybridPhase(QStringLiteral("executor-start"));
     if (m_activeLaunchId == m_hybridExecutorLaunchId && agentRunning()) { dispatchHybridRequest(); return; }
     auto *running = new QMetaObject::Connection;
     *running = connect(this, &AppController::agentRunningChanged, this, [this, running]() {
@@ -5163,7 +5166,7 @@ void AppController::dispatchHybridRequest()
         return;
     }
     const QString prompt = composeHybridExecutionPromptForTest(m_hybridUserRequest, m_hybridPlan);
-    m_hybridPhase = QStringLiteral("dispatching"); m_hybridDispatching = true;
+    setHybridPhase(QStringLiteral("dispatching")); m_hybridDispatching = true;
     if (!m_hybridAttachments.isEmpty()) {
         if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
             backend->setPendingAttachments(m_hybridAttachments);
@@ -5185,7 +5188,6 @@ QString AppController::composeHybridExecutionPromptForTest(const QString &reques
 
 void AppController::resetHybridRun()
 {
-    const bool wasActive = !m_hybridPhase.isEmpty();
     if (m_hybridReply) { m_hybridReply->abort(); m_hybridReply->deleteLater(); }
     if (m_hybridProgressWatchdog) m_hybridProgressWatchdog->stop();
     m_hybridReply.clear();
@@ -5194,8 +5196,16 @@ void AppController::resetHybridRun()
     m_hybridAttachments.clear();
     m_hybridStreamBuffer.clear(); m_hybridStreamPlan.clear();
     m_hybridStreamDone = false; m_hybridStalled = false;
-    m_hybridPhase.clear(); m_hybridDispatching = false;
-    if (wasActive) emit agentStartingChanged();
+    m_hybridDispatching = false;
+    setHybridPhase({});
+}
+
+void AppController::setHybridPhase(const QString &phase)
+{
+    if (m_hybridPhase == phase) return;
+    const bool wasActive = !m_hybridPhase.isEmpty();
+    m_hybridPhase = phase;
+    if (wasActive != !m_hybridPhase.isEmpty()) emit agentStartingChanged();
 }
 
 bool AppController::agentBackendBusy() const

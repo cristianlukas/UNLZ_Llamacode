@@ -115,6 +115,7 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridStreamParserDetectsProgressAndCompletion();
+    void hybridSwapRemainsStartingUntilPipelineEnds();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
@@ -271,6 +272,28 @@ void AppControllerTests::hybridStreamParserDetectsProgressAndCompletion()
     QCOMPARE(AppController::parseHybridStreamLineForTest(QByteArrayLiteral("data: [DONE]"), &done),
              QString());
     QVERIFY(done);
+}
+
+void AppControllerTests::hybridSwapRemainsStartingUntilPipelineEnds()
+{
+    AppController app;
+    QSignalSpy startingChanged(&app, &AppController::agentStartingChanged);
+
+    QVERIFY(!app.agentStarting());
+    app.setHybridPhaseForTest(QStringLiteral("preparing"));
+    QVERIFY(app.agentStarting());
+    QCOMPARE(startingChanged.count(), 1);
+
+    // Las fases internas no deben crear un instante observable como detenido.
+    app.setHybridPhaseForTest(QStringLiteral("stopping-executor"));
+    app.setHybridPhaseForTest(QStringLiteral("planning"));
+    app.setHybridPhaseForTest(QStringLiteral("executor-start"));
+    QVERIFY(app.agentStarting());
+    QCOMPARE(startingChanged.count(), 1);
+
+    app.setHybridPhaseForTest(QString());
+    QVERIFY(!app.agentStarting());
+    QCOMPARE(startingChanged.count(), 2);
 }
 
 void AppControllerTests::initTestCase()

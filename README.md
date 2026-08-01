@@ -355,9 +355,12 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   descarga el planificador, restaura el servidor y agente ejecutores, y entrega el
   request original junto con el plan. La planificación usa streaming y un watchdog
   de progreso: no existe un límite total mientras sigan llegando deltas; sólo se
-  aborta ante ausencia inicial prolongada o inactividad sostenida del stream. Los adjuntos se conservan para la fase de
-  ejecución. Si el planificador falla o responde vacío, el ejecutor se restaura
-  pero el request se cancela para no ejecutar a ciegas.
+  aborta ante ausencia inicial prolongada o inactividad sostenida del stream. La
+  vista Agente permanece activa durante todo el hot-swap y muestra el pipeline como
+  inicio en curso, sin confundir el apagado transitorio con una detención. Los
+  adjuntos se conservan para la fase de ejecución. Si el planificador falla o
+  responde vacío, el ejecutor se restaura pero el request se cancela para no
+  ejecutar a ciegas.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
 - **Workspaces portables**: los proyectos también pueden asociar investigaciones y
   exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,
