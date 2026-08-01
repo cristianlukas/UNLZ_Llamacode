@@ -73,6 +73,9 @@ public:
     bool stablePhasePrefixForTest() const { return m_stablePhasePrefix; }
     QVariantMap efficiencySummary() const;
     void setEphemeralSessions(bool enabled) { m_ephemeralSessions = enabled; }
+    // Título breve y determinista a partir del primer objetivo del usuario.
+    // Público para cubrir el límite de tres palabras sin requerir un servidor.
+    static QString suggestSessionTitle(const QString &firstPrompt);
 
     // Adjuntos (imágenes/docs) a incluir en el PRÓXIMO sendMessage (modelo VL).
     void setPendingAttachments(const QStringList &paths) { m_pendingAttachments = paths; }
@@ -431,6 +434,7 @@ private:
     void persistAll() const;
     void removeSessionFile(const QString &sessionId) const;
     void saveCurrentSession();           // vuelca m_messages+m_apiMessages al store
+    void autoTitleCurrentSession(const QString &firstPrompt);
     void setCurrentSession(const QString &sessionId);
     void forkSessionImpl(const QString &sessionId, int msgIndex);
 

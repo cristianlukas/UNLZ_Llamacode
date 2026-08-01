@@ -51,6 +51,7 @@ private slots:
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
     void isDestructiveAction_gatesShellDesktopMemory();
     void completionErrorClassification_isSelective();
+    void sessionTitle_isBriefAndPromptDerived();
 };
 
 void AgentWireTests::initTestCase()
@@ -100,6 +101,18 @@ void AgentWireTests::streamRepetitionDetectsLongTripleBlockOnly()
     QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(prefix + block + block), -1);
     QCOMPARE(LlamaAgentBackend::repeatedSuffixStart(
                  QStringLiteral("sí sí sí"), 3, 80), -1);
+}
+
+void AgentWireTests::sessionTitle_isBriefAndPromptDerived()
+{
+    QCOMPARE(LlamaAgentBackend::suggestSessionTitle(
+                 QStringLiteral("¿Podés revisar el error de compilación CMake?")),
+             QStringLiteral("Revisar error compilación"));
+    QCOMPARE(LlamaAgentBackend::suggestSessionTitle(QStringLiteral("para y con")),
+             QStringLiteral("Sesión"));
+    QVERIFY(LlamaAgentBackend::suggestSessionTitle(
+                 QStringLiteral("crear una app de inventario para biblioteca"))
+                 .split(QLatin1Char(' '), Qt::SkipEmptyParts).size() <= 3);
 }
 
 void AgentWireTests::completionErrorClassification_isSelective()

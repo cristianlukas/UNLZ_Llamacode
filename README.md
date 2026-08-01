@@ -1447,6 +1447,10 @@ Las sesiones del agente nativo forman un árbol persistente: una rama conserva
 completa desde el menú o un turno concreto desde la burbuja del usuario, sin
 alterar la rama original.
 
+Al enviar el primer prompt de una sesión nueva, LlamaCode asigna automáticamente
+un título breve derivado de su objetivo (hasta tres palabras). El título queda
+persistido y nunca reemplaza uno renombrado manualmente por el usuario.
+
 ### Salas multiagente
 
 La vista Agente incluye **Sala**, un timeline persistente donde el usuario, el

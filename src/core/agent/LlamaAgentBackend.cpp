@@ -537,6 +537,34 @@ int LlamaAgentBackend::estimateApiTokens() const
     return estimateMessageTokens(m_apiMessages);
 }
 
+QString LlamaAgentBackend::suggestSessionTitle(const QString &firstPrompt)
+{
+    static const QSet<QString> ignored{
+        QStringLiteral("a"), QStringLiteral("al"), QStringLiteral("and"),
+        QStringLiteral("con"), QStringLiteral("de"), QStringLiteral("del"),
+        QStringLiteral("el"), QStringLiteral("en"), QStringLiteral("for"),
+        QStringLiteral("la"), QStringLiteral("las"), QStringLiteral("lo"),
+        QStringLiteral("los"), QStringLiteral("me"), QStringLiteral("mi"),
+        QStringLiteral("para"), QStringLiteral("podés"), QStringLiteral("puedes"),
+        QStringLiteral("please"), QStringLiteral("por"),
+        QStringLiteral("que"), QStringLiteral("quiero"), QStringLiteral("the"),
+        QStringLiteral("to"), QStringLiteral("un"), QStringLiteral("una"),
+        QStringLiteral("un"), QStringLiteral("una"), QStringLiteral("y"),
+        QStringLiteral("you")};
+    const QStringList words = firstPrompt.split(
+        QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_-]+")), Qt::SkipEmptyParts);
+    QStringList title;
+    for (const QString &word : words) {
+        if (ignored.contains(word.toLower())) continue;
+        title.append(word.left(32));
+        if (title.size() == 3) break;
+    }
+    if (title.isEmpty()) return QStringLiteral("Sesión");
+    QString result = title.join(QLatin1Char(' '));
+    result[0] = result.at(0).toUpper();
+    return result;
+}
+
 int LlamaAgentBackend::estimateMessageTokens(const QJsonArray &messages) const
 {
     int total = 0;
@@ -1574,6 +1602,10 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         return;
     }
     ensureSession();
+    // El primer prompt identifica la sesión enseguida. No sustituir títulos
+    // escritos por el usuario ni renombrar sesiones efímeras de Tasks.
+    if (m_messages.isEmpty())
+        autoTitleCurrentSession(trimmed);
     m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     ensureWorker();
     QMetaObject::invokeMethod(m_worker, "setCorrelationId", Qt::QueuedConnection,
@@ -5317,6 +5349,25 @@ void LlamaAgentBackend::newSessionInProject(const QString &projectDir)
 {
     if (!projectDir.isEmpty() && QFileInfo(projectDir).isDir()) m_cwd = projectDir;
     newSession();
+}
+
+void LlamaAgentBackend::autoTitleCurrentSession(const QString &firstPrompt)
+{
+    if (m_ephemeralSessions || m_sessionId.isEmpty()
+        || m_sessionTitle != QLatin1String("Sesión")) return;
+    const QString title = suggestSessionTitle(firstPrompt);
+    if (title == QLatin1String("Sesión")) return;
+    m_sessionTitle = title;
+    for (int i = 0; i < m_sessions.size(); ++i) {
+        QVariantMap session = m_sessions.at(i).toMap();
+        if (session.value(QStringLiteral("id")).toString() != m_sessionId) continue;
+        session[QStringLiteral("title")] = title;
+        m_sessions[i] = session;
+        break;
+    }
+    persistIndex();
+    persistSession(m_sessionId);
+    emit sessionsChanged();
 }
 
 void LlamaAgentBackend::switchSession(const QString &sessionId)
