@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import LlamaCode 1.0
+import "NavigationPolicy.js" as NavigationPolicy
 
 Rectangle {
     id: root
@@ -21,9 +22,11 @@ Rectangle {
         { key: "nav.models",   icon: "📦",  serverOnly: false },
         { key: "nav.binaries", icon: "⚙",   serverOnly: false },
         { key: "nav.chat",      icon: "💬",  serverOnly: true  },
-        { key: "agent.title",   icon: "🤖",  serverOnly: true  },
+        { key: "agent.title",   icon: "🤖",  serverOnly: true,
+          keepDuringAgentTransition: true, keepDuringThinkingRestart: true },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
-        { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true },
+        { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true,
+          keepDuringAgentTransition: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
         { key: "nav.downloads", icon: "⬇",   serverOnly: false },
@@ -56,8 +59,8 @@ Rectangle {
                 // (App.agentStarting) → la página muestra su popup "Iniciando agente"
                 // con los botones deshabilitados, igual que Agente. Solo queda
                 // grisada si el agente no fue iniciado en absoluto.
-                enabled: (!modelData.serverOnly || App.backendAvailable)
-                         && (!modelData.agentOnly || App.agentRunning || App.agentStarting)
+                enabled: NavigationPolicy.pageEnabled(modelData, App.backendAvailable,
+                                                       App.agentRunning, App.agentStarting)
                 opacity: enabled ? 1.0 : 0.35
                 background: Rectangle {
                     color: parent.highlighted ? Theme.highlight : (parent.hovered && parent.enabled ? Theme.hoverBg : "transparent")

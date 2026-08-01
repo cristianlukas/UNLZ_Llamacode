@@ -336,6 +336,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/LaunchPage.qml
         qml/pages/ChatPage.qml
         qml/components/NavBar.qml
+        qml/components/NavigationPolicy.js
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
         qml/components/ToolSupportBanner.qml
@@ -543,6 +544,8 @@ if (BUILD_TESTS)
         tests/qml/LcButton.qml
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
+        tests/qml/tst_navigation_policy.qml
+        qml/components/NavigationPolicy.js
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
     )
@@ -563,6 +566,13 @@ if (BUILD_TESTS)
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_color_picker.qml")
     set_tests_properties(qml_color_picker PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+
+    add_test(NAME qml_navigation_policy
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_navigation_policy.qml")
+    set_tests_properties(qml_navigation_policy PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
 

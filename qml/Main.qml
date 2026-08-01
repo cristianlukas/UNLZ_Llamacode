@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt.labs.platform as Platform
 import LlamaCode 1.0
+import "components/NavigationPolicy.js" as NavigationPolicy
 
 ApplicationWindow {
     id: window
@@ -251,6 +252,7 @@ ApplicationWindow {
                 spacing: 0
 
                 NavBar {
+                    id: navBar
                     Layout.fillHeight: true
                     currentIndex: stack.currentIndex
                     onPageSelected: function(idx) { stack.currentIndex = idx }
@@ -262,16 +264,10 @@ ApplicationWindow {
                     target: App
                     function guard() {
                         const i = stack.currentIndex
-                        const serverOnly = (i === 4 || i === 5 || i === 6 || i === 7 || i === 8)
-                        const agentOnly = (i === 7)
-                        // No expulsar mientras el agente arranca (agentStarting): la
-                        // página muestra su popup de carga. Solo si no hay agente.
-                        // Un cambio de pensamiento reinicia el mismo launch a propósito.
-                        // No expulsar Agente durante ese hueco sin backend: su propia
-                        // página informa que está recargando.
-                        const preserveAgentDuringThinkingRestart = i === 5 && App.thinkingRestarting
-                        if ((serverOnly && !App.backendAvailable && !preserveAgentDuringThinkingRestart)
-                            || (agentOnly && !App.agentRunning && !App.agentStarting))
+                        const page = navBar.pages[i] || { serverOnly: false }
+                        if (NavigationPolicy.shouldNavigateToLaunch(
+                                page, App.backendAvailable, App.agentRunning,
+                                App.agentStarting, App.thinkingRestarting))
                             stack.currentIndex = 0
                     }
                     function onServerRunningChanged() { guard() }
