@@ -47,6 +47,11 @@ private:
     void doCreateSession();
     void loadSessionMessages(const QString &sessionId);
     void subscribeEvents();
+    QVariantList &messagesForSession(const QString &sessionId);
+    int &assistantIndexForSession(const QString &sessionId);
+    // Publica sólo la sesión que el usuario está mirando. Las demás pueden
+    // seguir generando en segundo plano sin contaminar el panel visible.
+    void publishSessionMessages(const QString &sessionId);
     // response: "once" | "always" | "reject"
     void respondPermission(const QString &sessionId, const QString &permissionId,
                            const QString &response);
@@ -64,6 +69,8 @@ private:
     QVariantList m_messages;
     QVariantList m_sessions;
     int        m_curAsstIdx = -1;
+    QHash<QString, QVariantList> m_sessionMessages;
+    QHash<QString, int> m_sessionAssistantIndices;
     bool       m_stopping = false;
     bool       m_forceNew = false;
     QString    m_approvalMode = QStringLiteral("ask");

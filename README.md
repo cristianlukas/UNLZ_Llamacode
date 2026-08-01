@@ -602,6 +602,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   agente, incluido **Máximo**, no activan `Pensar` si el checkbox está apagado.
 - **Vista terminal**: log raw para debug
 - **Sesiones opencode**: historial persistido en opencode DB, agrupado por directorio/proyecto
+- **Sesiones concurrentes**: crear o abrir otra sesión no cancela una respuesta
+  ya iniciada; el stream SSE se conserva y se aplica a su propia sesión aunque
+  el usuario esté mirando otra.
 - **Resume automático**: retoma la última sesión al reiniciar el agente
 - **Títulos auto-generados**: actualización en tiempo real vía `session.updated` SSE
 

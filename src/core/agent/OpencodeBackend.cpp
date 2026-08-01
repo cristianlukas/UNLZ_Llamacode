@@ -43,6 +43,24 @@ QString OpencodeBackend::projectNameFromDir(const QString &dir)
     return parts.isEmpty() ? QStringLiteral("(sin proyecto)") : parts.last();
 }
 
+QVariantList &OpencodeBackend::messagesForSession(const QString &sessionId)
+{
+    return m_sessionMessages[sessionId];
+}
+
+int &OpencodeBackend::assistantIndexForSession(const QString &sessionId)
+{
+    return m_sessionAssistantIndices[sessionId];
+}
+
+void OpencodeBackend::publishSessionMessages(const QString &sessionId)
+{
+    if (sessionId != m_sessionId) return;
+    m_messages = messagesForSession(sessionId);
+    m_curAsstIdx = assistantIndexForSession(sessionId);
+    emit messagesChanged();
+}
+
 void OpencodeBackend::start(const AgentContext &ctx)
 {
     if (running()) return;
@@ -90,6 +108,8 @@ void OpencodeBackend::launchProcess()
         m_sessionId.clear();
         m_messages.clear();
         m_curAsstIdx = -1;
+        m_sessionMessages.clear();
+        m_sessionAssistantIndices.clear();
         emit messagesChanged();
         m_stopping = false;
         emit runningChanged();
@@ -214,6 +234,8 @@ void OpencodeBackend::doCreateSession()
         e.projectName = projectNameFromDir(cwd);
         e.projectDir  = cwd;
         m_sessions.prepend(e.toMap());
+        m_sessionMessages.insert(m_sessionId, {});
+        m_sessionAssistantIndices.insert(m_sessionId, -1);
         emit sessionsChanged();
         emit logAppended(QStringLiteral("[opencode session ready]\n"));
         subscribeEvents();
@@ -224,12 +246,11 @@ void OpencodeBackend::loadSessionMessages(const QString &sessionId)
 {
     const QUrl url(m_attachUrl + QStringLiteral("/session/") + sessionId + QStringLiteral("/message"));
     auto *reply = m_nam->get(QNetworkRequest(url));
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, sessionId]() {
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError) return;
         const QJsonArray msgs = QJsonDocument::fromJson(reply->readAll()).array();
-        m_messages.clear();
-        m_curAsstIdx = -1;
+        QVariantList loaded;
         for (const QJsonValue &mv : msgs) {
             const QJsonObject msg = mv.toObject();
             const QString role = msg.value(QStringLiteral("info")).toObject().value(QStringLiteral("role")).toString();
@@ -248,9 +269,11 @@ void OpencodeBackend::loadSessionMessages(const QString &sessionId)
             mm[QStringLiteral("elapsedMs")] = 0;
             mm[QStringLiteral("tokens")] = estimateTokens(text);
             mm[QStringLiteral("tps")] = 0.0;
-            m_messages.append(mm);
+            loaded.append(mm);
         }
-        emit messagesChanged();
+        m_sessionMessages.insert(sessionId, loaded);
+        m_sessionAssistantIndices.insert(sessionId, -1);
+        publishSessionMessages(sessionId);
     });
 }
 
@@ -267,22 +290,24 @@ void OpencodeBackend::sendMessage(const QString &text)
     umMap[QStringLiteral("elapsedMs")] = 0;
     umMap[QStringLiteral("tokens")] = estimateTokens(text);
     umMap[QStringLiteral("tps")] = 0.0;
-    m_messages.append(umMap);
+    const QString sessionId = m_sessionId;
+    QVariantList &messages = messagesForSession(sessionId);
+    messages.append(umMap);
     AgentMessage am; am.role = QStringLiteral("assistant"); am.typing = true;
     QVariantMap amMap = am.toMap();
     amMap[QStringLiteral("createdAt")] = static_cast<double>(nowMs);
     amMap[QStringLiteral("elapsedMs")] = 0;
     amMap[QStringLiteral("tokens")] = 0;
     amMap[QStringLiteral("tps")] = 0.0;
-    m_messages.append(amMap);
-    m_curAsstIdx = m_messages.size() - 1;
-    emit messagesChanged();
+    messages.append(amMap);
+    assistantIndexForSession(sessionId) = messages.size() - 1;
+    publishSessionMessages(sessionId);
 
     if (m_sessionId.isEmpty()) {
         emit logAppended(QStringLiteral("[waiting: opencode session not ready yet]\n"));
         return;
     }
-    QNetworkRequest req(QUrl(m_attachUrl + QStringLiteral("/session/") + m_sessionId
+    QNetworkRequest req(QUrl(m_attachUrl + QStringLiteral("/session/") + sessionId
                              + QStringLiteral("/prompt_async")));
     req.setHeader(QNetworkRequest::ContentTypeHeader, QByteArrayLiteral("application/json"));
     const QJsonObject partObj{{QStringLiteral("type"), QStringLiteral("text")}, {QStringLiteral("text"), text}};
@@ -331,8 +356,8 @@ void OpencodeBackend::switchSession(const QString &sessionId)
 {
     if (sessionId == m_sessionId) return;
     m_sessionId = sessionId;
-    m_messages.clear();
-    m_curAsstIdx = -1;
+    m_messages = messagesForSession(sessionId);
+    m_curAsstIdx = assistantIndexForSession(sessionId);
     for (const QVariant &v : std::as_const(m_sessions)) {
         const QVariantMap m = v.toMap();
         if (m.value(QStringLiteral("id")).toString() == sessionId) {
@@ -343,7 +368,10 @@ void OpencodeBackend::switchSession(const QString &sessionId)
     QSettings().setValue(QStringLiteral("opencode/lastSessionId"), sessionId);
     emit sessionsChanged();
     emit messagesChanged();
-    loadSessionMessages(sessionId);
+    // Si ya llegó streaming para esta sesión, su cache es la fuente de verdad;
+    // una lectura HTTP tardía no debe pisar la respuesta que sigue en curso.
+    if (!m_sessionMessages.contains(sessionId))
+        loadSessionMessages(sessionId);
 }
 
 void OpencodeBackend::refreshSessions()
@@ -417,6 +445,10 @@ void OpencodeBackend::forkSession(const QString &sessionId)
 
 void OpencodeBackend::subscribeEvents()
 {
+    // Es un único stream global que OpenCode multiplexa por sessionID. Crear
+    // otro al abrir una sesión reemplazaba m_eventReply y dejaba la respuesta
+    // previa sin consumidor efectivo.
+    if (m_eventReply) return;
     QNetworkRequest req(QUrl(m_attachUrl + QStringLiteral("/event")));
     req.setRawHeader(QByteArrayLiteral("Accept"), QByteArrayLiteral("text/event-stream"));
     req.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork);
@@ -433,13 +465,19 @@ void OpencodeBackend::subscribeEvents()
             const QJsonObject obj = doc.object();
             const QString type = obj.value(QStringLiteral("type")).toString();
             const QJsonObject props = obj.value(QStringLiteral("properties")).toObject();
+            // OpenCode multiplexa las sesiones por el mismo SSE. Nunca usar la
+            // sesión visible como destino de un evento: durante una generación
+            // el usuario puede crear o abrir otra sesión.
+            const QString eventSessionId = props.value(QStringLiteral("sessionID")).toString();
             if (type == QLatin1String("message.part.delta")) {
                 if (props.value(QStringLiteral("field")).toString() == QLatin1String("text")) {
                     const QString delta = props.value(QStringLiteral("delta")).toString();
                     if (!delta.isEmpty()) {
                         emit logAppended(delta);
-                        if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
-                            auto msg = m_messages[m_curAsstIdx].toMap();
+                        const int index = assistantIndexForSession(eventSessionId);
+                        QVariantList &messages = messagesForSession(eventSessionId);
+                        if (!eventSessionId.isEmpty() && index >= 0 && index < messages.size()) {
+                            auto msg = messages[index].toMap();
                             const QString content = msg[QStringLiteral("content")].toString() + delta;
                             msg[QStringLiteral("content")] = content;
                             const qint64 startedAt = static_cast<qint64>(msg.value(QStringLiteral("createdAt")).toDouble());
@@ -450,8 +488,8 @@ void OpencodeBackend::subscribeEvents()
                             msg[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
                                 ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
                                 : 0.0;
-                            m_messages[m_curAsstIdx] = msg;
-                            emit messagesChanged();
+                            messages[index] = msg;
+                            publishSessionMessages(eventSessionId);
                         }
                     }
                 }
@@ -474,8 +512,10 @@ void OpencodeBackend::subscribeEvents()
                                             .toObject().value(QStringLiteral("type")).toString();
                 if (status == QLatin1String("idle")) {
                     emit logAppended(QStringLiteral("\n"));
-                    if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
-                        auto msg = m_messages[m_curAsstIdx].toMap();
+                    const int index = assistantIndexForSession(eventSessionId);
+                    QVariantList &messages = messagesForSession(eventSessionId);
+                    if (!eventSessionId.isEmpty() && index >= 0 && index < messages.size()) {
+                        auto msg = messages[index].toMap();
                         msg[QStringLiteral("typing")] = false;
                         const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
                         const qint64 startedAt = static_cast<qint64>(msg.value(QStringLiteral("createdAt")).toDouble());
@@ -488,10 +528,11 @@ void OpencodeBackend::subscribeEvents()
                         msg[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
                             ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
                             : 0.0;
-                        m_messages[m_curAsstIdx] = msg;
-                        emit messagesChanged();
+                        messages[index] = msg;
+                        publishSessionMessages(eventSessionId);
                     }
-                    m_curAsstIdx = -1;
+                    assistantIndexForSession(eventSessionId) = -1;
+                    if (eventSessionId == m_sessionId) m_curAsstIdx = -1;
                 }
             } else if (type == QLatin1String("permission.asked")) {
                 const QString permId = props.value(QStringLiteral("id")).toString();
@@ -530,8 +571,10 @@ void OpencodeBackend::subscribeEvents()
                 const QString errMsg = props.value(QStringLiteral("message")).toString();
                 if (!errMsg.isEmpty()) {
                     emit logAppended(QStringLiteral("[error: %1]\n").arg(errMsg));
-                    if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
-                        auto msg = m_messages[m_curAsstIdx].toMap();
+                    const int index = assistantIndexForSession(eventSessionId);
+                    QVariantList &messages = messagesForSession(eventSessionId);
+                    if (!eventSessionId.isEmpty() && index >= 0 && index < messages.size()) {
+                        auto msg = messages[index].toMap();
                         msg[QStringLiteral("content")] = QStringLiteral("[error: %1]").arg(errMsg);
                         msg[QStringLiteral("typing")] = false;
                         const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
@@ -545,10 +588,11 @@ void OpencodeBackend::subscribeEvents()
                         msg[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
                             ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
                             : 0.0;
-                        m_messages[m_curAsstIdx] = msg;
-                        emit messagesChanged();
+                        messages[index] = msg;
+                        publishSessionMessages(eventSessionId);
                     }
-                    m_curAsstIdx = -1;
+                    assistantIndexForSession(eventSessionId) = -1;
+                    if (eventSessionId == m_sessionId) m_curAsstIdx = -1;
                 }
             }
         }
