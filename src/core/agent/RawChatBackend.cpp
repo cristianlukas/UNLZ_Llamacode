@@ -580,6 +580,10 @@ void RawChatBackend::sendMessage(const QString &text)
         if (!ok && !m_stopping)
             emit errorOccurred(QStringLiteral("raw chat error: %1").arg(err));
         m_curAsstIdx = -1;
+        // Mantener el mismo contrato que LlamaAgentBackend: incluso una respuesta
+        // SSE válida sin contenido (sólo `data: [DONE]`) cierra el turno. Tasks,
+        // workflows y la cola no deben inferir finalización por texto generado.
+        emit turnFinished();
         // Respuesta cerrada → enviar el próximo encolado (async para no anidar).
         if (!m_msgQueue.isEmpty())
             QMetaObject::invokeMethod(this, "flushQueue", Qt::QueuedConnection);
