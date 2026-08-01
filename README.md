@@ -592,7 +592,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Viewport estable**: las actualizaciones del modelo y las mediciones transitorias
   de mensajes altos no reinician el chat al comienzo; el auto-scroll sólo avanza
   hacia el final cuando el usuario ya estaba siguiendo la respuesta. El compositor
-  inferior conserva la altura de sus controles y no queda recortado al maximizar.
+  inferior conserva la altura de sus controles y no queda recortado al maximizar;
+  además, crece con mensajes multilínea hasta ocupar como máximo el 50% del alto
+  visible y, desde allí, conserva scroll interno para mantener todo el texto legible.
   Los movimientos del viewport del Agente se registran como `agent/ui/scroll` en
   `runtime/agent.log`, con la acción, posición, límites, altura y estado de seguimiento.
   Al reemplazar la lista de mensajes, el viewport conserva el seguimiento inferior

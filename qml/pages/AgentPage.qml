@@ -2357,12 +2357,49 @@ Item {
                         }
                     }
 
-                    LcTextField {
-                        id: agentInput
+                    ScrollView {
+                        id: agentInputFrame
                         Layout.fillWidth: true
-                        enabled: App.serverRunning && App.serverReady
-                        readonly property bool busy: root.hasTypingMessage
-                        placeholderText: (!App.serverRunning)
+                        readonly property real minimumInputHeight: 34
+                        readonly property real maximumInputHeight: Math.max(minimumInputHeight, root.height * 0.5)
+                        Layout.preferredHeight: Math.min(maximumInputHeight,
+                                                         Math.max(minimumInputHeight,
+                                                                  agentInput.contentHeight
+                                                                  + agentInput.topPadding
+                                                                  + agentInput.bottomPadding))
+                        Layout.minimumHeight: minimumInputHeight
+                        Layout.maximumHeight: maximumInputHeight
+                        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                        ScrollBar.vertical.policy: agentInput.contentHeight + agentInput.topPadding
+                                                   + agentInput.bottomPadding > height
+                                                   ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
+                        clip: true
+                        background: Rectangle {
+                            radius: 6
+                            color: Theme.inputBg
+                            border.color: agentInput.activeFocus ? Theme.inputBorderFocus
+                                                                 : Theme.inputBorderColor
+                            border.width: agentInput.activeFocus ? 2 : 1
+                        }
+
+                        TextArea {
+                            id: agentInput
+                            width: agentInputFrame.availableWidth
+                            implicitHeight: Math.max(agentInputFrame.minimumInputHeight,
+                                                     contentHeight + topPadding + bottomPadding)
+                            enabled: App.serverRunning && App.serverReady
+                            readonly property bool busy: root.hasTypingMessage
+                            color: Theme.textPrimary
+                            placeholderTextColor: Theme.textMuted
+                            font.pixelSize: 13
+                            leftPadding: 10
+                            rightPadding: 10
+                            topPadding: 7
+                            bottomPadding: 7
+                            wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
+                            selectByMouse: true
+                            background: null
+                            placeholderText: (!App.serverRunning)
                             ? "Servidor no disponible. Iniciá el modelo en Lanzar."
                             : (!App.serverReady
                                ? "Modelo cargando..."
@@ -2370,9 +2407,9 @@ Item {
                                   ? ("Enter encola · Shift+Enter interrumpe"
                                      + (App.agentQueuedCount > 0 ? "  ·  " + App.agentQueuedCount + " en cola" : ""))
                                   : (App.langV, App.l("agent.input"))))
-                        // @-mentions: recalcular el popup al cambiar texto/cursor.
-                        onTextChanged: root.updateMention()
-                        onCursorPositionChanged: root.updateMention()
+                            // @-mentions: recalcular el popup al cambiar texto/cursor.
+                            onTextChanged: root.updateMention()
+                            onCursorPositionChanged: root.updateMention()
                         // Enter = enviar (idle) o encolar (ocupado). Shift+Enter = interrumpir.
                         // Si el popup de @-mentions está abierto: ↑/↓ navegan, Enter acepta, Esc cierra.
                         Keys.onPressed: (event) => {
@@ -2450,6 +2487,7 @@ Item {
                                     }
                                 }
                             }
+                        }
                         }
                     }
                     // Idle: "Enviar" (incluye adjuntos).
