@@ -7389,7 +7389,20 @@ void AppController::refreshOpencodeSessionList()
 
 void AppController::newOpencodeSessionInProject(const QString &projectDir)
 {
-    if (m_agentBackend) m_agentBackend->newSessionInProject(projectDir);
+    if (!m_agentBackend || m_agentSessionCreateQueued) return;
+
+    // Este invokable se llama desde el botón "+" de un section delegate del
+    // ListView. newSessionInProject() emite sessionsChanged(), que reemplaza el
+    // modelo y puede destruir el delegate mientras su MouseArea aún procesa el
+    // click. Postergar una vuelta de event loop evita esa reentrada de QML.
+    IAgentBackend *const backend = m_agentBackend;
+    const QString targetProjectDir = projectDir;
+    m_agentSessionCreateQueued = true;
+    QTimer::singleShot(0, this, [this, backend, targetProjectDir]() {
+        m_agentSessionCreateQueued = false;
+        if (m_agentBackend == backend && backend)
+            backend->newSessionInProject(targetProjectDir);
+    });
 }
 
 void AppController::renameOpencodeSession(const QString &sessionId, const QString &title)

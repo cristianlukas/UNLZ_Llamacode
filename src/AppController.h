@@ -1359,6 +1359,9 @@ private:
     QString             m_piSessionPath;
     // Backend de agente activo (opencode/goose/raw). Dueño de su proceso/conexión.
     IAgentBackend      *m_agentBackend = nullptr;
+    // Crear una sesión desde un delegate QML muta el modelo del ListView. Se
+    // difiere al próximo ciclo para no destruir ese delegate dentro de su click.
+    bool                m_agentSessionCreateQueued = false;
     // Backend de chat directo (raw), separado del modo Agente.
     IAgentBackend      *m_chatBackend = nullptr;
     // Modo Charla (voz-a-voz): orquestador STT→chat→TTS. Reusa m_chatBackend.

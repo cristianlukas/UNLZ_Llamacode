@@ -578,6 +578,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real
+- **Sesiones seguras**: crear una sesión desde el botón `+` de una carpeta se
+  difiere fuera del click del listado, evitando reconstruir el delegate QML
+  mientras todavía se lo está procesando.
 - **Último perfil usado**: Agente restaura primero el último perfil seleccionado
   en toda la app; su preferencia histórica propia sólo se usa como compatibilidad
   si no existe una selección global, evitando revivir un perfil antiguo.
