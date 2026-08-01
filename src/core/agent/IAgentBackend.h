@@ -39,6 +39,11 @@ public:
     virtual void queueMessage(const QString &text) { sendMessage(text); }
     virtual int queuedCount() const { return 0; }
     virtual QStringList queuedMessages() const { return {}; }
+    // Cambios puntuales sobre la cola visible. Devuelven false si el índice o el
+    // texto no son válidos, para que la UI pueda conservar su edición local.
+    virtual bool updateQueuedMessage(int index, const QString &text)
+        { Q_UNUSED(index) Q_UNUSED(text) return false; }
+    virtual bool removeQueuedMessage(int index) { Q_UNUSED(index) return false; }
     virtual void clearQueue() {}
 
     // Sesiones (no todos los backends las soportan; default: no-op)

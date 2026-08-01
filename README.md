@@ -573,16 +573,28 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Streaming estable**: durante la generación se actualiza sólo la burbuja activa,
   sin reconstruir toda la lista de mensajes, para evitar saltos verticales.
 - **Stop de generación** con guardado de lo recibido
+- **Cola administrable durante la generación**: el botón `Cola (N)` permite
+  previsualizar cada mensaje pendiente, editarlo, eliminarlo de forma individual
+  o vaciar la cola completa antes de que se envíe el siguiente turno.
 
 ## Harness de Agente (opencode)
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real
+- **Cola administrable**: mientras el agente trabaja, `Cola (N)` abre los
+  mensajes pendientes para previsualizarlos, editarlos, eliminarlos o vaciarlos.
 - **Sesiones seguras**: crear una sesión desde el botón `+` de una carpeta se
   difiere fuera del click del listado, evitando reconstruir el delegate QML
   mientras todavía se lo está procesando. Durante un turno nativo en curso se
   puede navegar y revisar otra sesión: el turno sigue en su sesión de origen y
   sus deltas no contaminan el historial que se está viendo.
+- **Turnos simultáneos entre proyectos**: el agente nativo crea un runtime aislado
+  por conversación activa (request, stream, contexto, compactación, tools,
+  aprobaciones y subagentes). Con `parallelSlots >= 2`, una tarea de un proyecto
+  puede continuar mientras se inicia otra en un proyecto distinto. Si todos los
+  slots están ocupados, el nuevo turno queda en cola; dentro de una misma
+  conversación los turnos conservan orden estricto. La lista de sesiones muestra
+  `Trabajando` o `En cola` por conversación.
 - **Último perfil usado**: Agente restaura primero el último perfil seleccionado
   explícitamente en su selector y lo usa también para el autoarranque; los cambios
   internos de perfil de Tasks, benchmarks o Charla no pueden reemplazarlo.

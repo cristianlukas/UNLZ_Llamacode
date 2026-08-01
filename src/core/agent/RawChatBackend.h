@@ -25,6 +25,8 @@ public:
     void queueMessage(const QString &text) override;
     int queuedCount() const override { return m_msgQueue.size(); }
     QStringList queuedMessages() const override { return m_msgQueue; }
+    bool updateQueuedMessage(int index, const QString &text) override;
+    bool removeQueuedMessage(int index) override;
     void clearQueue() override;
 
     void newSession() override;

@@ -649,6 +649,24 @@ void RawChatBackend::clearQueue()
     emit queueChanged();
 }
 
+bool RawChatBackend::updateQueuedMessage(int index, const QString &text)
+{
+    const QString updated = text.trimmed();
+    if (index < 0 || index >= m_msgQueue.size() || updated.isEmpty()) return false;
+    if (m_msgQueue[index] == updated) return true;
+    m_msgQueue[index] = updated;
+    emit queueChanged();
+    return true;
+}
+
+bool RawChatBackend::removeQueuedMessage(int index)
+{
+    if (index < 0 || index >= m_msgQueue.size()) return false;
+    m_msgQueue.removeAt(index);
+    emit queueChanged();
+    return true;
+}
+
 bool RawChatBackend::updateSessionProject(const QString &sessionId, const QString &projectId,
                                           const QString &projectName, const QString &projectDir)
 {

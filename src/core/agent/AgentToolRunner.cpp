@@ -30,6 +30,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMap>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QEventLoop>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -1381,6 +1383,13 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
 QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                    const QString &cwd, QVariantMap &out, bool *ok)
 {
+    // Mouse, teclado, ventanas y capturas son recursos globales de la PC. Los
+    // runtimes concurrentes pueden leer repos distintos en paralelo, pero toda
+    // tool desktop_* se serializa para que sus observaciones y acciones no se
+    // crucen entre conversaciones.
+    static QMutex desktopMutex;
+    QMutexLocker<QMutex> desktopLock(
+        name.startsWith(QLatin1String("desktop_")) ? &desktopMutex : nullptr);
     if (ok) *ok = false;
     if (name == QLatin1String("skill_list")) {
         const QVariantList skills = PortableSkillStore::list(cwd);

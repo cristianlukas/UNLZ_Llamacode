@@ -126,6 +126,8 @@ class AppController : public QObject
     // Mensajes encolados pendientes (modo "encolar"), agente y chat.
     Q_PROPERTY(int agentQueuedCount READ agentQueuedCount NOTIFY agentQueueChanged)
     Q_PROPERTY(int chatQueuedCount READ chatQueuedCount NOTIFY chatQueueChanged)
+    Q_PROPERTY(QStringList agentQueuedMessages READ agentQueuedMessages NOTIFY agentQueueChanged)
+    Q_PROPERTY(QStringList chatQueuedMessages READ chatQueuedMessages NOTIFY chatQueueChanged)
     Q_PROPERTY(QVariantList agentSessions  READ agentSessions  NOTIFY agentSessionsChanged)
     Q_PROPERTY(QString opencodeSessionId   READ opencodeSessionId   NOTIFY agentSessionsChanged)
     Q_PROPERTY(QString opencodeSessionTitle READ opencodeSessionTitle NOTIFY agentSessionsChanged)
@@ -296,6 +298,8 @@ public:
     QString chatStreamingText() const { return m_chatStreamingText; }
     int agentQueuedCount() const { return m_agentQueuedCount; }
     int chatQueuedCount() const { return m_chatQueuedCount; }
+    QStringList agentQueuedMessages() const;
+    QStringList chatQueuedMessages() const;
     QVariantList agentSessions()  const { return m_agentSessions; }
     QString opencodeSessionId()   const { return m_opencodeSessionId; }
     QString opencodeSessionTitle() const { return m_opencodeSessionTitle; }
@@ -379,6 +383,8 @@ public:
     Q_INVOKABLE void sendChatMessageWithAttachments(const QString &text, const QStringList &paths);
     Q_INVOKABLE void steerChat(const QString &text);
     Q_INVOKABLE void queueChat(const QString &text);
+    Q_INVOKABLE bool updateChatQueuedMessage(int index, const QString &text);
+    Q_INVOKABLE bool removeChatQueuedMessage(int index);
     Q_INVOKABLE void clearChatQueue();
     Q_INVOKABLE QStringList pickChatAttachments();
     // Si el portapapeles tiene una imagen, la guarda a temp y devuelve la ruta; "" si no.
@@ -658,6 +664,8 @@ public:
     // Steering (interrumpe el turno y manda ya) / cola (manda al terminar).
     Q_INVOKABLE void steerAgent(const QString &text);
     Q_INVOKABLE void queueAgent(const QString &text);
+    Q_INVOKABLE bool updateAgentQueuedMessage(int index, const QString &text);
+    Q_INVOKABLE bool removeAgentQueuedMessage(int index);
     Q_INVOKABLE void clearAgentQueue();
     // Rebobinar la conversación del agente al estado previo a un mensaje de usuario.
     Q_INVOKABLE void rollbackAgentToMessage(int msgIndex);

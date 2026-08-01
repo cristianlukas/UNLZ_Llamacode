@@ -1248,9 +1248,13 @@ Item {
                                     Layout.fillWidth: true
                                     text: {
                                         const ms = modelData.created ?? 0
+                                        const state = modelData.runtimeState ?? "idle"
+                                        if (state === "running") return "● Trabajando"
+                                        if (state === "queued") return "○ En cola (" + (modelData.queuedCount ?? 0) + ")"
                                         return ms > 0 ? new Date(ms).toLocaleDateString(Qt.locale(), "d MMM yyyy") : ""
                                     }
-                                    color: Theme.textMuted
+                                    color: (modelData.runtimeState ?? "idle") === "running"
+                                           ? Theme.successText : Theme.textMuted
                                     font.pixelSize: 10
                                 }
                             }
@@ -2357,6 +2361,52 @@ Item {
                           verticalCenter: parent.verticalCenter; margins: 8 }
                 spacing: 6
 
+                // Cola visible: mantiene los próximos mensajes a la vista sin
+                // obligar a abrir un menú ni ocultar el texto que se enviará.
+                Column {
+                    width: parent.width
+                    spacing: 4
+                    visible: App.agentQueuedCount > 0
+                    Row {
+                        width: parent.width
+                        Text { text: "Mensajes en cola"; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
+                        Item { width: Math.max(0, parent.width - queueClearAgent.implicitWidth - 150); height: 1 }
+                        LcButton { id: queueClearAgent; text: "Vaciar cola"; danger: true; onClicked: App.clearAgentQueue() }
+                    }
+                    ScrollView {
+                        width: parent.width
+                        height: Math.min(220, agentQueueRows.implicitHeight)
+                        clip: true
+                        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                        Column {
+                            id: agentQueueRows
+                            width: parent.width
+                            spacing: 4
+                            Repeater {
+                                model: App.agentQueuedMessages
+                                Rectangle {
+                                    required property int index
+                                    required property string modelData
+                                    width: agentQueueRows.width
+                                    height: 52
+                                    radius: 6; color: Theme.inputBg; border.color: Theme.borderColor
+                                    RowLayout {
+                                        anchors.fill: parent; anchors.margins: 6; spacing: 6
+                                        Text { text: (index + 1) + ")"; color: Theme.textMuted; font.bold: true }
+                                        Text { Layout.fillWidth: true; text: modelData; color: Theme.textPrimary
+                                            wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight }
+                                        LcButton { text: "Previsualizar"; secondary: true
+                                            onClicked: { agentQueueDialog.editIndex = -1; agentQueueDialog.open() } }
+                                        LcButton { text: "Editar"; secondary: true
+                                            onClicked: { agentQueueDialog.editIndex = index; agentQueueDialog.open() } }
+                                        LcButton { text: "Eliminar"; danger: true; onClicked: App.removeAgentQueuedMessage(index) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Chips de adjuntos pendientes.
                 Flow {
                     width: parent.width
@@ -2571,6 +2621,62 @@ Item {
                 }
             }
         }
+    }
+
+    // La cola es editable: mostrar el texto completo evita perder mensajes antes
+    // de que termine el turno actual, y las acciones operan por índice en backend.
+    LcDialog {
+        id: agentQueueDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: Math.min(680, parent.width - 40)
+        height: Math.min(520, parent.height - 40)
+        title: "Mensajes en cola (" + App.agentQueuedCount + ")"
+        property int editIndex: -1
+        footer: RowLayout {
+            width: parent.width
+            LcButton { text: "Vaciar cola"; danger: true; onClicked: App.clearAgentQueue() }
+            Item { Layout.fillWidth: true }
+            LcButton { text: "Cerrar"; secondary: true; onClicked: agentQueueDialog.close() }
+        }
+        contentItem: ListView {
+            id: agentQueueList
+            clip: true
+            spacing: 8
+            model: App.agentQueuedMessages
+            delegate: Rectangle {
+                required property int index
+                required property string modelData
+                width: agentQueueList.width
+                height: queueEditor.visible ? Math.max(118, queueEditor.contentHeight + 58) : preview.implicitHeight + 42
+                radius: 7
+                color: Theme.inputBg
+                border.color: Theme.borderColor
+                property bool editing: agentQueueDialog.editIndex === index
+                Text { id: number; anchors { left: parent.left; top: parent.top; margins: 9 }
+                    text: (index + 1) + "."; color: Theme.textMuted; font.bold: true }
+                Text { id: preview; visible: !parent.editing
+                    anchors { left: number.right; right: controls.left; top: parent.top; margins: 9 }
+                    text: modelData; color: Theme.textPrimary; wrapMode: Text.Wrap; maximumLineCount: 5; elide: Text.ElideRight }
+                TextArea { id: queueEditor; visible: parent.editing
+                    anchors { left: number.right; right: controls.left; top: parent.top; margins: 7 }
+                    text: modelData; color: Theme.textPrimary; wrapMode: TextArea.Wrap
+                    background: Rectangle { color: Theme.baseBg; radius: 4; border.color: Theme.inputBorderColor } }
+                Column {
+                    id: controls
+                    anchors { right: parent.right; top: parent.top; margins: 7 }
+                    spacing: 5
+                    LcButton { text: parent.parent.editing ? "Guardar" : "Editar"; secondary: true
+                        onClicked: { if (parent.parent.editing) { if (App.updateAgentQueuedMessage(index, queueEditor.text)) agentQueueDialog.editIndex = -1 } else agentQueueDialog.editIndex = index } }
+                    LcButton { text: "Eliminar"; danger: true; onClicked: App.removeAgentQueuedMessage(index) }
+                }
+            }
+            Text { anchors.centerIn: parent; visible: App.agentQueuedCount === 0
+                text: "No hay mensajes en cola."; color: Theme.textMuted }
+        }
+        onOpened: if (App.agentQueuedCount === 0) close()
     }
 
     // ── Sala multiagente: timeline persistente + presets ────────────────────

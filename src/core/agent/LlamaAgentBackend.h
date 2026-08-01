@@ -34,8 +34,10 @@ public:
     void cancelGeneration() override;
     void steerMessage(const QString &text) override;
     void queueMessage(const QString &text) override;
-    int queuedCount() const override { return m_msgQueue.size(); }
-    QStringList queuedMessages() const override { return m_msgQueue; }
+    int queuedCount() const override;
+    QStringList queuedMessages() const override;
+    bool updateQueuedMessage(int index, const QString &text) override;
+    bool removeQueuedMessage(int index) override;
     void clearQueue() override;
 
     // Rebobinar la conversación al estado previo a un mensaje de usuario (índice
@@ -343,8 +345,9 @@ public:
     QVariantList messages() const override {
         return m_viewSessionId.isEmpty() ? m_messages : m_viewMessages;
     }
-    QVariantList sessions() const override { return m_sessions; }
+    QVariantList sessions() const override;
     bool isBusy() const;               // turno/tool/compactación en curso
+    bool selectedSessionBusy() const;  // runtime de la sesión visible
 
 private:
     enum CompletionMode { NativeFull, NativeCompat, TextTools };
@@ -447,6 +450,12 @@ private:
     void showSessionWhileTurnRuns(const QString &sessionId);
     void activateViewedSessionIfIdle();
     void forkSessionImpl(const QString &sessionId, int msgIndex);
+    LlamaAgentBackend *viewRuntime() const;
+    LlamaAgentBackend *ensureSessionRuntime(const QString &sessionId);
+    void copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) const;
+    int activeRuntimeCount() const;
+    void pumpSessionRuntimes();
+    void syncRuntimeSession(const QString &sessionId, LlamaAgentBackend *runtime);
 
     AgentContext m_ctx;
     QNetworkAccessManager *m_nam = nullptr;
@@ -546,6 +555,10 @@ private:
     QString m_viewSessionTitle;
     QString m_viewProjectDir;
     QVariantList m_viewMessages;
+    // Una instancia completa por conversación concurrente: aísla request,
+    // stream, contexto, tools, aprobaciones, compactación y subagentes.
+    QHash<QString, LlamaAgentBackend *> m_sessionRuntimes;
+    bool m_isSessionRuntime = false;
     QVariantList m_sessions;
     bool m_ephemeralSessions = false;
     // Estado para restaurar la sesión del usuario tras una Task efímera.

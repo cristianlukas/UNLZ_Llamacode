@@ -419,6 +419,9 @@ QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messa
 LlamaAgentBackend::LlamaAgentBackend(QObject *parent) : IAgentBackend(parent)
 {
     m_nam = new QNetworkAccessManager(this);
+    connect(this, &IAgentBackend::turnFinished, this, [this]() {
+        if (!m_isSessionRuntime) pumpSessionRuntimes();
+    });
 }
 
 LlamaAgentBackend::~LlamaAgentBackend() { stop(); teardownWorker(); }
@@ -979,6 +982,15 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
 
 void LlamaAgentBackend::stop()
 {
+    if (!m_isSessionRuntime) {
+        const auto runtimes = m_sessionRuntimes;
+        m_sessionRuntimes.clear();
+        for (LlamaAgentBackend *runtime : runtimes) {
+            if (!runtime) continue;
+            runtime->stop();
+            runtime->deleteLater();
+        }
+    }
     // Un restart/swap del llama-server puede ocurrir mientras hay una completion,
     // una tool o una aprobación en vuelo. Antes se abortaban los objetos async,
     // pero nunca se cerraba el turno: la UI conservaba "Pensando..." y los
@@ -1026,7 +1038,7 @@ void LlamaAgentBackend::stop()
         m_curAsstIdx = -1;
     }
     saveCurrentSession();
-    persistIndex();
+    if (!m_isSessionRuntime) persistIndex();
     // Apagar servers MCP pero mantener vivo el hilo worker (se destruye en ~).
     if (m_worker) QMetaObject::invokeMethod(m_worker, "shutdown", Qt::QueuedConnection);
     if (m_running) { m_running = false; emit runningChanged(); }
@@ -1034,6 +1046,14 @@ void LlamaAgentBackend::stop()
 
 void LlamaAgentBackend::cancelGeneration()
 {
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = viewRuntime()) {
+            runtime->cancelGeneration();
+            pumpSessionRuntimes();
+            emit sessionsChanged();
+            return;
+        }
+    }
     emit desktopActivityChanged(false, QString(), QString());
     if (m_compactReply) {
         QNetworkReply *cr = m_compactReply;
@@ -1064,6 +1084,10 @@ void LlamaAgentBackend::cancelGeneration()
     cancelAllSubs();
     // PARAR = detener todo, incluida la cola de mensajes pendientes.
     if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
+    if (!m_isSessionRuntime) {
+        pumpSessionRuntimes();
+        emit sessionsChanged();
+    }
 }
 
 void LlamaAgentBackend::ensureSession()
@@ -1594,6 +1618,27 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     const QStringList attachments = m_pendingAttachments;
     m_pendingAttachments.clear();
     if (!m_running || (trimmed.isEmpty() && attachments.isEmpty())) return;
+    if (!m_isSessionRuntime && !m_viewSessionId.isEmpty()) {
+        LlamaAgentBackend *runtime = ensureSessionRuntime(m_viewSessionId);
+        if (!runtime) return;
+        copyRuntimeConfigurationTo(runtime);
+        if (runtime->m_worker)
+            QMetaObject::invokeMethod(runtime->m_worker, "setConfined", Qt::QueuedConnection,
+                                      Q_ARG(bool, runtime->m_approvalMode != QLatin1String("super")));
+        runtime->setPendingAttachments(attachments);
+        if (activeRuntimeCount() >= qMax(1, m_ctx.parallelSlots) && !runtime->isBusy()) {
+            if (!trimmed.isEmpty() || !attachments.isEmpty()) {
+                runtime->m_msgQueue.append(trimmed);
+                emit runtime->queueChanged();
+                emit logAppended(QStringLiteral(
+                    "[session %1: turno en cola por capacidad de slots]\n")
+                                     .arg(m_viewSessionId));
+            }
+            return;
+        }
+        runtime->sendMessage(trimmed);
+        return;
+    }
     // Bloquear si hay turno en curso, una tool esperando aprobación, o una
     // compactación async en vuelo. Sin esto, mandar durante la compactación
     // corrompe m_apiMessages (reentrancy) → crash en Qt6Core.
@@ -1851,10 +1896,54 @@ bool LlamaAgentBackend::isBusy() const
            || !m_pendingCalls.isEmpty() || subsActive();
 }
 
+bool LlamaAgentBackend::selectedSessionBusy() const
+{
+    if (LlamaAgentBackend *runtime = viewRuntime()) return runtime->isBusy();
+    return isBusy();
+}
+
+int LlamaAgentBackend::queuedCount() const
+{
+    if (LlamaAgentBackend *runtime = viewRuntime()) return runtime->m_msgQueue.size();
+    return m_msgQueue.size();
+}
+
+QStringList LlamaAgentBackend::queuedMessages() const
+{
+    if (LlamaAgentBackend *runtime = viewRuntime()) return runtime->m_msgQueue;
+    return m_msgQueue;
+}
+
+QVariantList LlamaAgentBackend::sessions() const
+{
+    QVariantList decorated = m_sessions;
+    for (int i = 0; i < decorated.size(); ++i) {
+        QVariantMap session = decorated.at(i).toMap();
+        const QString id = session.value(QStringLiteral("id")).toString();
+        const LlamaAgentBackend *runtime = m_sessionRuntimes.value(id, nullptr);
+        const bool active = runtime ? runtime->isBusy()
+                                    : (id == m_sessionId && isBusy());
+        const int queued = runtime ? runtime->m_msgQueue.size()
+                                   : (id == m_sessionId ? m_msgQueue.size() : 0);
+        session[QStringLiteral("runtimeState")] = active
+            ? QStringLiteral("running")
+            : (queued > 0 ? QStringLiteral("queued") : QStringLiteral("idle"));
+        session[QStringLiteral("queuedCount")] = queued;
+        decorated[i] = session;
+    }
+    return decorated;
+}
+
 // Encolar: si está ocupado, guarda y se enviará al terminar el turno. Si no,
 // envía ya.
 void LlamaAgentBackend::queueMessage(const QString &text)
 {
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = viewRuntime()) {
+            runtime->queueMessage(text);
+            return;
+        }
+    }
     const QString t = text.trimmed();
     if (!m_running || t.isEmpty()) return;
     if (!isBusy()) { sendMessage(t); return; }
@@ -1868,6 +1957,12 @@ void LlamaAgentBackend::queueMessage(const QString &text)
 // historial) y envía el mensaje nuevo de inmediato.
 void LlamaAgentBackend::steerMessage(const QString &text)
 {
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = viewRuntime()) {
+            runtime->steerMessage(text);
+            return;
+        }
+    }
     const QString t = text.trimmed();
     if (!m_running || t.isEmpty()) return;
     if (isBusy()) {
@@ -1888,6 +1983,12 @@ void LlamaAgentBackend::flushQueue()
 
 void LlamaAgentBackend::clearQueue()
 {
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = viewRuntime()) {
+            runtime->clearQueue();
+            return;
+        }
+    }
     if (m_msgQueue.isEmpty()) return;
     m_msgQueue.clear();
     emit queueChanged();
@@ -2292,6 +2393,7 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
     resetStreamState();
     m_streamIdleTimedOut = false;
     m_reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    emit sessionsChanged();
     connect(m_reply, &QNetworkReply::readyRead, this, [this]() { handleStreamData(); });
     connect(m_reply, &QNetworkReply::finished, this, [this, payload, mode]() {
         if (m_streamIdleTimer) m_streamIdleTimer->stop();
@@ -3989,6 +4091,14 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
 
 void LlamaAgentBackend::approveTool(const QString &id, bool always)
 {
+    if (!m_isSessionRuntime && id != m_awaitId) {
+        for (LlamaAgentBackend *runtime : std::as_const(m_sessionRuntimes)) {
+            if (runtime && runtime->m_awaitId == id) {
+                runtime->approveTool(id, always);
+                return;
+            }
+        }
+    }
     if (id != m_awaitId) return;
     if (always) m_alwaysAllowed.insert(toolKind(
         m_awaitCall.value(QStringLiteral("function")).toObject()
@@ -3998,6 +4108,14 @@ void LlamaAgentBackend::approveTool(const QString &id, bool always)
 
 void LlamaAgentBackend::rejectTool(const QString &id)
 {
+    if (!m_isSessionRuntime && id != m_awaitId) {
+        for (LlamaAgentBackend *runtime : std::as_const(m_sessionRuntimes)) {
+            if (runtime && runtime->m_awaitId == id) {
+                runtime->rejectTool(id);
+                return;
+            }
+        }
+    }
     if (id != m_awaitId) return;
     approveAndContinue(id, QStringLiteral("reject"));
 }
@@ -4190,6 +4308,7 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
         consolidateMemory(true);
 
     emit turnFinished();
+    emit sessionsChanged();
 
     // Turno cerrado → si hay mensajes encolados, enviar el próximo. Async (cola)
     // para no anidar runCompletion dentro del stack del turno que recién terminó.
@@ -5359,6 +5478,32 @@ void LlamaAgentBackend::newSessionInProject(const QString &projectDir)
     newSession();
 }
 
+bool LlamaAgentBackend::updateQueuedMessage(int index, const QString &text)
+{
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = viewRuntime())
+            return runtime->updateQueuedMessage(index, text);
+    }
+    const QString updated = text.trimmed();
+    if (index < 0 || index >= m_msgQueue.size() || updated.isEmpty()) return false;
+    if (m_msgQueue[index] == updated) return true;
+    m_msgQueue[index] = updated;
+    emit queueChanged();
+    return true;
+}
+
+bool LlamaAgentBackend::removeQueuedMessage(int index)
+{
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = viewRuntime())
+            return runtime->removeQueuedMessage(index);
+    }
+    if (index < 0 || index >= m_msgQueue.size()) return false;
+    m_msgQueue.removeAt(index);
+    emit queueChanged();
+    return true;
+}
+
 void LlamaAgentBackend::autoTitleCurrentSession(const QString &firstPrompt)
 {
     if (m_ephemeralSessions || m_sessionId.isEmpty()
@@ -5378,9 +5523,173 @@ void LlamaAgentBackend::autoTitleCurrentSession(const QString &firstPrompt)
     emit sessionsChanged();
 }
 
+LlamaAgentBackend *LlamaAgentBackend::viewRuntime() const
+{
+    if (m_viewSessionId.isEmpty()) return nullptr;
+    return m_sessionRuntimes.value(m_viewSessionId, nullptr);
+}
+
+void LlamaAgentBackend::copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) const
+{
+    if (!runtime) return;
+    runtime->m_approvalMode = m_approvalMode;
+    runtime->m_systemExtra = m_systemExtra;
+    runtime->m_temperature = m_temperature;
+    runtime->m_thinkingEnabled = m_thinkingEnabled;
+    runtime->m_thinkingLeakGuard = m_thinkingLeakGuard;
+    runtime->m_stablePhasePrefix = m_stablePhasePrefix;
+    runtime->m_directives = m_directives;
+    runtime->m_directivesSet = m_directivesSet;
+    runtime->m_permRules = m_permRules;
+    runtime->m_disabledTools = m_disabledTools;
+    runtime->m_teacherUrl = m_teacherUrl;
+    runtime->m_teacherModel = m_teacherModel;
+    runtime->m_teacherKey = m_teacherKey;
+    runtime->m_masterKind = m_masterKind;
+    runtime->m_masterCliName = m_masterCliName;
+    runtime->m_masterCliPath = m_masterCliPath;
+    runtime->m_masterEscalation = m_masterEscalation;
+    runtime->m_masterAutoAfterFails = m_masterAutoAfterFails;
+    runtime->m_masterApplyEdits = m_masterApplyEdits;
+    runtime->m_masterTimeoutS = m_masterTimeoutS;
+    runtime->m_masterChain = m_masterChain;
+    runtime->m_mcpConfig = m_mcpConfig;
+    runtime->m_mailAccounts = m_mailAccounts;
+    runtime->m_webProviders = m_webProviders;
+    runtime->m_mailAutoSend = m_mailAutoSend;
+    runtime->m_hitlDestructive = m_hitlDestructive;
+    runtime->m_mcpToolsEnabled = m_mcpToolsEnabled;
+    runtime->m_forceTextTools = m_forceTextTools;
+    runtime->m_visionReady = m_visionReady;
+    runtime->m_alwaysAllowed = m_alwaysAllowed;
+}
+
+void LlamaAgentBackend::syncRuntimeSession(const QString &sessionId,
+                                           LlamaAgentBackend *runtime)
+{
+    if (!runtime) return;
+    if (m_viewSessionId == sessionId) {
+        m_viewMessages = runtime->messages();
+        m_viewSessionTitle = runtime->currentSessionTitle();
+        m_viewProjectDir = runtime->currentProjectDir();
+    }
+    for (const QVariant &candidate : runtime->sessions()) {
+        const QVariantMap updated = candidate.toMap();
+        if (updated.value(QStringLiteral("id")).toString() != sessionId) continue;
+        for (int i = 0; i < m_sessions.size(); ++i) {
+            if (m_sessions.at(i).toMap().value(QStringLiteral("id")).toString() == sessionId) {
+                m_sessions[i] = updated;
+                break;
+            }
+        }
+        break;
+    }
+}
+
+LlamaAgentBackend *LlamaAgentBackend::ensureSessionRuntime(const QString &sessionId)
+{
+    if (sessionId.isEmpty() || m_isSessionRuntime) return nullptr;
+    if (LlamaAgentBackend *existing = m_sessionRuntimes.value(sessionId, nullptr))
+        return existing;
+
+    QString projectDir;
+    for (const QVariant &value : std::as_const(m_sessions)) {
+        const QVariantMap session = value.toMap();
+        if (session.value(QStringLiteral("id")).toString() == sessionId) {
+            projectDir = session.value(QStringLiteral("projectDir")).toString();
+            break;
+        }
+    }
+    if (projectDir.isEmpty()) return nullptr;
+
+    auto *runtime = new LlamaAgentBackend(this);
+    runtime->m_isSessionRuntime = true;
+    copyRuntimeConfigurationTo(runtime);
+    m_sessionRuntimes.insert(sessionId, runtime);
+
+    connect(runtime, &IAgentBackend::messagesChanged, this, [this, sessionId, runtime]() {
+        syncRuntimeSession(sessionId, runtime);
+        if (m_viewSessionId == sessionId) emit messagesChanged();
+        emit sessionsChanged();
+    });
+    connect(runtime, &IAgentBackend::streamingText, this,
+            [this, sessionId](int index, const QString &content) {
+        if (m_viewSessionId == sessionId) emit streamingText(index, content);
+    });
+    connect(runtime, &IAgentBackend::queueChanged, this, [this, sessionId]() {
+        if (m_viewSessionId == sessionId) emit queueChanged();
+    });
+    connect(runtime, &IAgentBackend::sessionsChanged, this, [this, sessionId, runtime]() {
+        syncRuntimeSession(sessionId, runtime);
+        emit sessionsChanged();
+    });
+    connect(runtime, &IAgentBackend::toolApprovalNeeded, this,
+            [this, sessionId](QVariantMap call) {
+        call[QStringLiteral("sessionId")] = sessionId;
+        emit toolApprovalNeeded(call);
+    });
+    connect(runtime, &IAgentBackend::turnFinished, this, [this, sessionId, runtime]() {
+        syncRuntimeSession(sessionId, runtime);
+        pumpSessionRuntimes();
+        emit sessionsChanged();
+    });
+    connect(runtime, &IAgentBackend::logAppended, this,
+            [this, sessionId](const QString &chunk) {
+        emit logAppended(QStringLiteral("[session %1] %2").arg(sessionId.left(8), chunk));
+    });
+    connect(runtime, &IAgentBackend::errorOccurred, this, &IAgentBackend::errorOccurred);
+    connect(runtime, &IAgentBackend::desktopActivityChanged,
+            this, &IAgentBackend::desktopActivityChanged);
+    connect(runtime, &IAgentBackend::contextUsage, this, &IAgentBackend::contextUsage);
+    connect(runtime, &IAgentBackend::contextManaged, this, &IAgentBackend::contextManaged);
+    connect(runtime, &IAgentBackend::gitRequired, this, &IAgentBackend::gitRequired);
+
+    AgentContext runtimeContext = m_ctx;
+    runtimeContext.cwd = projectDir;
+    runtime->start(runtimeContext);
+    runtime->switchSession(sessionId);
+    syncRuntimeSession(sessionId, runtime);
+    return runtime;
+}
+
+int LlamaAgentBackend::activeRuntimeCount() const
+{
+    auto cost = [](const LlamaAgentBackend *runtime) {
+        if (!runtime || !runtime->isBusy()) return 0;
+        // Un turno que espera varios subagentes ocupa tantos slots de inferencia
+        // como runners activos (al menos uno para estados tool/aprobación).
+        return qMax(1, static_cast<int>(runtime->m_subs.size()));
+    };
+    int count = cost(this);
+    for (LlamaAgentBackend *runtime : m_sessionRuntimes) count += cost(runtime);
+    return count;
+}
+
+void LlamaAgentBackend::pumpSessionRuntimes()
+{
+    const int capacity = qMax(1, m_ctx.parallelSlots);
+    while (activeRuntimeCount() < capacity) {
+        LlamaAgentBackend *next = nullptr;
+        for (LlamaAgentBackend *runtime : std::as_const(m_sessionRuntimes)) {
+            if (runtime && !runtime->isBusy() && !runtime->m_msgQueue.isEmpty()) {
+                next = runtime;
+                break;
+            }
+        }
+        if (!next) break;
+        next->flushQueue();
+    }
+}
+
 void LlamaAgentBackend::switchSession(const QString &sessionId)
 {
     if (sessionId.isEmpty()) return;
+    if (!m_isSessionRuntime && m_sessionRuntimes.contains(sessionId)) {
+        showSessionWhileTurnRuns(sessionId);
+        if (LlamaAgentBackend *runtime = m_sessionRuntimes.value(sessionId))
+            syncRuntimeSession(sessionId, runtime);
+        return;
+    }
     if (sessionId == m_sessionId) {
         if (m_viewSessionId.isEmpty()) return;
         m_viewSessionId.clear();
@@ -5410,6 +5719,14 @@ void LlamaAgentBackend::showSessionWhileTurnRuns(const QString &sessionId)
         m_viewSessionTitle = s.value(QStringLiteral("title")).toString();
         m_viewProjectDir = s.value(QStringLiteral("projectDir")).toString();
         break;
+    }
+    if (LlamaAgentBackend *runtime = m_sessionRuntimes.value(sessionId, nullptr)) {
+        m_viewSessionTitle = runtime->currentSessionTitle();
+        m_viewProjectDir = runtime->currentProjectDir();
+        m_viewMessages = runtime->messages();
+        emit sessionsChanged();
+        emit messagesChanged();
+        return;
     }
     QFile f(sessionFilePath(sessionId));
     if (f.open(QIODevice::ReadOnly)) {
@@ -5458,6 +5775,16 @@ void LlamaAgentBackend::renameSession(const QString &sessionId, const QString &t
 void LlamaAgentBackend::deleteSession(const QString &sessionId)
 {
     if (sessionId.isEmpty()) return;
+    if (!m_isSessionRuntime) {
+        if (LlamaAgentBackend *runtime = m_sessionRuntimes.take(sessionId)) {
+            runtime->stop();
+            runtime->deleteLater();
+        }
+        if (m_viewSessionId == sessionId) {
+            m_viewSessionId.clear();
+            m_viewMessages.clear();
+        }
+    }
     for (int i = 0; i < m_sessions.size(); ++i) {
         if (m_sessions[i].toMap().value(QStringLiteral("id")).toString() == sessionId) {
             m_sessions.removeAt(i);

@@ -4960,7 +4960,7 @@ void AppController::sendToAgent(const QString &text)
 bool AppController::agentBackendBusy() const
 {
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
-        return cb->isBusy();
+        return cb->selectedSessionBusy();
     return false;
 }
 
@@ -7404,6 +7404,21 @@ void AppController::newOpencodeSessionInProject(const QString &projectDir)
         if (m_agentBackend == backend && backend)
             backend->newSessionInProject(targetProjectDir);
     });
+}
+
+QStringList AppController::agentQueuedMessages() const
+{
+    return m_agentBackend ? m_agentBackend->queuedMessages() : QStringList{};
+}
+
+bool AppController::updateAgentQueuedMessage(int index, const QString &text)
+{
+    return m_agentBackend && m_agentBackend->updateQueuedMessage(index, text);
+}
+
+bool AppController::removeAgentQueuedMessage(int index)
+{
+    return m_agentBackend && m_agentBackend->removeQueuedMessage(index);
 }
 
 void AppController::renameOpencodeSession(const QString &sessionId, const QString &title)
@@ -14208,6 +14223,21 @@ QString AppController::customBenchmarkDir() const
                         + "/benchmarks/custom";
     QDir().mkpath(dir);
     return dir;
+}
+
+QStringList AppController::chatQueuedMessages() const
+{
+    return m_chatBackend ? m_chatBackend->queuedMessages() : QStringList{};
+}
+
+bool AppController::updateChatQueuedMessage(int index, const QString &text)
+{
+    return m_chatBackend && m_chatBackend->updateQueuedMessage(index, text);
+}
+
+bool AppController::removeChatQueuedMessage(int index)
+{
+    return m_chatBackend && m_chatBackend->removeQueuedMessage(index);
 }
 
 void AppController::forkAgentAtMessage(int msgIndex)

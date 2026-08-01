@@ -81,6 +81,7 @@ private slots:
     void persistsAcrossRestart();
     void stream_accumulatesAssistantContent();
     void stream_reportsErrorOnHttp500();
+    void queuedMessages_canBePreviewedEditedAndRemoved();
     void preamble_emptyWhenThinkingNoPersona();
     void preamble_thinkingOffAddsNoThinkSystem();
     void preamble_designerAddsPersonaFirst();
@@ -237,6 +238,36 @@ void BackendsNetTests::stream_reportsErrorOnHttp500()
         errSpy.wait(100);
 
     QVERIFY(!errSpy.isEmpty());
+}
+
+void BackendsNetTests::queuedMessages_canBePreviewedEditedAndRemoved()
+{
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\\n")));
+
+    QTemporaryDir dir;
+    RawChatBackend be;
+    AgentContext c = ctx(dir.path());
+    c.serverBaseUrl = stub.baseUrl();
+    be.start(c);
+    QSignalSpy finishedSpy(&be, &IAgentBackend::turnFinished);
+
+    // sendMessage crea el reply de forma sincrónica; antes de procesar SSE la
+    // segunda entrada queda pendiente y puede administrarse desde la UI.
+    be.sendMessage(QStringLiteral("turno actual"));
+    be.queueMessage(QStringLiteral("  mensaje original  "));
+    QCOMPARE(be.queuedMessages(), QStringList{QStringLiteral("mensaje original")});
+    QVERIFY(be.updateQueuedMessage(0, QStringLiteral("mensaje editado")));
+    QCOMPARE(be.queuedMessages(), QStringList{QStringLiteral("mensaje editado")});
+    QVERIFY(be.removeQueuedMessage(0));
+    QVERIFY(be.queuedMessages().isEmpty());
+    QVERIFY(!be.updateQueuedMessage(0, QStringLiteral("inválido")));
+    QVERIFY(!be.removeQueuedMessage(0));
+
+    // Dejar cerrar el reply SSE antes de destruir el backend/servidor del test.
+    for (int i = 0; i < 10 && finishedSpy.isEmpty(); ++i)
+        finishedSpy.wait(100);
+    QVERIFY(!finishedSpy.isEmpty());
 }
 
 static QString sysContent(const QJsonArray &a, int i)

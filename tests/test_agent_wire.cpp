@@ -23,6 +23,7 @@ private slots:
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void forceTextToolsSkipsNativeToolAttempt();
     void stoppingDuringCompletionReleasesTurn();
+    void differentProjectsRunTurnsConcurrently();
     void restartRepublishesPersistedMessages();
     void taskSessionIsEphemeralAndRestoresPrevious();
     void nativeSessionForkPersistsTreeMetadata();
@@ -590,12 +591,14 @@ void AgentWireTests::forceTextToolsSkipsNativeToolAttempt()
 // "Pensando..." y Tasks/workflows esperaban turnFinished indefinidamente.
 class FakeHangingServer : public QTcpServer
 {
+public:
+    int postRequests = 0;
 protected:
     void incomingConnection(qintptr socketDescriptor) override
     {
         auto *sock = new QTcpSocket(this);
         sock->setSocketDescriptor(socketDescriptor);
-        connect(sock, &QTcpSocket::readyRead, this, [sock]() {
+        connect(sock, &QTcpSocket::readyRead, this, [this, sock]() {
             const QByteArray request = sock->readAll();
             if (request.startsWith("GET /props")) {
                 const QByteArray body = QByteArrayLiteral("{\"n_ctx\":4096}");
@@ -605,12 +608,64 @@ protected:
                     + QByteArrayLiteral("\r\nConnection: close\r\n\r\n") + body);
                 sock->disconnectFromHost();
             }
+            if (request.startsWith("POST /v1/chat/completions")
+                && !sock->property("countedPost").toBool()) {
+                sock->setProperty("countedPost", true);
+                ++postRequests;
+            }
             // POST /chat/completions queda abierto para simular el server que
             // desaparece/reinicia durante prompt processing.
         });
         connect(sock, &QTcpSocket::disconnected, sock, &QObject::deleteLater);
     }
 };
+
+void AgentWireTests::differentProjectsRunTurnsConcurrently()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    FakeHangingServer server;
+    QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+    QTemporaryDir maritime;
+    QTemporaryDir stellar;
+    QVERIFY(maritime.isValid());
+    QVERIFY(stellar.isValid());
+
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = maritime.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(server.serverPort());
+    ctx.modelId = QStringLiteral("test-model");
+    ctx.ctxOverride = 4096;
+    ctx.parallelSlots = 2;
+
+    LlamaAgentBackend backend;
+    backend.start(ctx);
+    const QString maritimeId = backend.currentSessionId();
+    backend.newSessionInProject(stellar.path());
+    const QString stellarId = backend.currentSessionId();
+    QVERIFY(maritimeId != stellarId);
+
+    backend.switchSession(maritimeId);
+    backend.sendMessage(QStringLiteral("turno maritima"));
+    QVERIFY(backend.isBusy());
+    backend.switchSession(stellarId);
+    backend.sendMessage(QStringLiteral("turno stellar"));
+
+    QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 2, 3000);
+    QVERIFY(backend.selectedSessionBusy());
+    QCOMPARE(backend.currentSessionId(), stellarId);
+
+    // PARAR en la conversación visible cancela sólo Stellar; Marítima sigue.
+    backend.cancelGeneration();
+    QVERIFY(!backend.selectedSessionBusy());
+    backend.switchSession(maritimeId);
+    QVERIFY(backend.selectedSessionBusy());
+    backend.cancelGeneration();
+    backend.stop();
+    QDir(store).removeRecursively();
+}
 
 void AgentWireTests::stoppingDuringCompletionReleasesTurn()
 {
