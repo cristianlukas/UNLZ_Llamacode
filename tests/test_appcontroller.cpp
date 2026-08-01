@@ -114,6 +114,7 @@ private slots:
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void hybridExecutionPromptPreservesRequestAndPlan();
+    void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
     void hybridSwapRemainsStartingUntilPipelineEnds();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
@@ -260,6 +261,20 @@ void AppControllerTests::hybridExecutionPromptPreservesRequestAndPlan()
     QVERIFY(prompt.contains(QStringLiteral("REQUEST ORIGINAL:\ncorregí el bug")));
     QVERIFY(prompt.contains(QStringLiteral("1. leer\n2. probar")));
     QVERIFY(prompt.contains(QStringLiteral("verificá el resultado")));
+}
+
+void AppControllerTests::hybridVisibleMessagePreservesOnlyOriginalRequest()
+{
+    const QString original = QStringLiteral(
+        "revisá la documentación y actualizala toda a fondo; sólo documentación");
+    const QString internal = AppController::composeHybridExecutionPromptForTest(
+        original, QStringLiteral("1. leer README\n2. crear RECOMMENDATIONS.md"));
+
+    QCOMPARE(LlamaAgentBackend::visibleUserTextForTest(internal, original), original);
+    QVERIFY(!LlamaAgentBackend::visibleUserTextForTest(internal, original)
+                 .contains(QStringLiteral("PLAN DEL MODELO")));
+    // Los envíos normales mantienen el comportamiento anterior.
+    QCOMPARE(LlamaAgentBackend::visibleUserTextForTest(original, QString()), original);
 }
 
 void AppControllerTests::hybridStreamParserDetectsProgressAndCompletion()

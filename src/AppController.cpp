@@ -5171,7 +5171,14 @@ void AppController::dispatchHybridRequest()
         if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
             backend->setPendingAttachments(m_hybridAttachments);
     }
-    sendToAgent(prompt);
+    if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        appendAgentEvent(QStringLiteral("input"),
+                         QStringLiteral("> %1").arg(m_hybridUserRequest));
+        backend->sendMessageWithVisibleText(prompt, m_hybridUserRequest);
+    } else {
+        // Los demás adaptadores aún no separan transcript y payload interno.
+        sendToAgent(prompt);
+    }
     m_hybridDispatching = false;
     appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral("Plan entregado al ejecutor."));
     resetHybridRun();

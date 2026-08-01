@@ -358,7 +358,9 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   aborta ante ausencia inicial prolongada o inactividad sostenida del stream. La
   vista Agente permanece activa y habilitada durante todo el hot-swap, incluso en
   el intervalo sin backend, y muestra el pipeline como inicio en curso sin
-  confundir el apagado transitorio con una detención. Los
+  confundir el apagado transitorio con una detención. El transcript y el título de
+  sesión muestran únicamente el request original del usuario; el plan y las
+  instrucciones de coordinación se entregan a la API como contexto interno. Los
   adjuntos se conservan para la fase de ejecución. Si el planificador falla o
   responde vacío, el ejecutor se restaura pero el request se cancela para no
   ejecutar a ciegas.

@@ -30,6 +30,10 @@ public:
     void start(const AgentContext &ctx) override;
     void stop() override;
     void sendMessage(const QString &text) override;
+    // Envía un payload enriquecido al modelo, pero conserva en conversación,
+    // título y auditoría únicamente el texto que realmente escribió el usuario.
+    void sendMessageWithVisibleText(const QString &apiText, const QString &visibleText);
+    static QString visibleUserTextForTest(const QString &apiText, const QString &visibleText);
     void prefillWarmup() override;
     void cancelGeneration() override;
     void steerMessage(const QString &text) override;
@@ -350,6 +354,7 @@ public:
     bool selectedSessionBusy() const;  // runtime de la sesión visible
 
 private:
+    void sendMessageImpl(const QString &apiText, const QString &visibleText);
     enum CompletionMode { NativeFull, NativeCompat, TextTools };
 
     // Loop

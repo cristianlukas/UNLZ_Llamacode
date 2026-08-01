@@ -1614,7 +1614,26 @@ void LlamaAgentBackend::setTaskAutoApprove(bool on) { m_taskAutoApprove = on; }
 // ───────────────────────────── Conversación ──────────────────────────────
 void LlamaAgentBackend::sendMessage(const QString &text)
 {
+    sendMessageImpl(text, text);
+}
+
+void LlamaAgentBackend::sendMessageWithVisibleText(const QString &apiText,
+                                                   const QString &visibleText)
+{
+    sendMessageImpl(apiText, visibleText);
+}
+
+QString LlamaAgentBackend::visibleUserTextForTest(const QString &apiText,
+                                                  const QString &visibleText)
+{
+    const QString visible = visibleText.trimmed();
+    return visible.isEmpty() ? apiText.trimmed() : visible;
+}
+
+void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visibleText)
+{
     const QString trimmed = text.trimmed();
+    const QString visibleTrimmed = visibleUserTextForTest(trimmed, visibleText);
     const QStringList attachments = m_pendingAttachments;
     m_pendingAttachments.clear();
     if (!m_running || (trimmed.isEmpty() && attachments.isEmpty())) return;
@@ -1636,7 +1655,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
             }
             return;
         }
-        runtime->sendMessage(trimmed);
+        runtime->sendMessageImpl(trimmed, visibleTrimmed);
         return;
     }
     // Bloquear si hay turno en curso, una tool esperando aprobación, o una
@@ -1661,7 +1680,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     pushCheckpoint();   // snapshot ANTES de agregar el nuevo turno (para rollback)
 
     // Contenido a mostrar en la UI: texto + chips de adjuntos.
-    QString display = trimmed;
+    QString display = visibleTrimmed;
     for (const QString &p : attachments)
         display += QStringLiteral("\n📎 ") + QFileInfo(p).fileName();
 
@@ -1679,11 +1698,11 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     m_messages.append(userMsg);
     // Titular después de insertar el primer mensaje: así la persistencia y
     // cualquier cambio de vista observan el prompt que originó el nombre.
-    autoTitleCurrentSession(trimmed);
+    autoTitleCurrentSession(visibleTrimmed);
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                           QJsonObject{{QStringLiteral("source"), QStringLiteral("user")},
                                       {QStringLiteral("correlationId"), m_correlationId},
-                                      {QStringLiteral("text"), text.left(4096)},
+                                      {QStringLiteral("text"), visibleTrimmed.left(4096)},
                                       {QStringLiteral("attachments"), attachments.size()}});
 
     // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
