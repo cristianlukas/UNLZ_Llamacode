@@ -116,6 +116,7 @@ private slots:
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
+    void hybridStructuredPlanValidatesAndRejectsUnsafeShape();
     void hybridSwapRemainsStartingUntilPipelineEnds();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
@@ -143,6 +144,7 @@ private slots:
     void workflowValidationIsAvailableToVisualEditor();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
+    void systemProfileMinimumBuildSelectsNewestCompatible();
     void cpuSystemProfileRequiresCpuBinary();
     void charlaTranscriptRoutesToAgentWhenRunning();
     void charlaCursorOcrIsOptInAndDoesNotHijackChat();
@@ -287,6 +289,30 @@ void AppControllerTests::hybridStreamParserDetectsProgressAndCompletion()
     QCOMPARE(AppController::parseHybridStreamLineForTest(QByteArrayLiteral("data: [DONE]"), &done),
              QString());
     QVERIFY(done);
+}
+
+void AppControllerTests::hybridStructuredPlanValidatesAndRejectsUnsafeShape()
+{
+    const QString valid = QStringLiteral(R"(```json
+{"schemaVersion":1,"goal":"arreglar","understanding":"bug","assumptions":[],
+ "files":["src/a.cpp"],"steps":["inspeccionar","editar"],"tests":["ctest"],
+ "risks":["regresión"],"doneWhen":["tests pasan"]}
+```)" );
+    QString error;
+    const QVariantMap plan = AppController::parseHybridPlanForTest(valid, &error);
+    QVERIFY2(error.isEmpty(), qPrintable(error));
+    QCOMPARE(plan.value("schemaVersion").toInt(), 1);
+    QCOMPARE(plan.value("goal").toString(), QStringLiteral("arreglar"));
+    const QString prompt = AppController::composeHybridExecutionPromptForTest(
+        QStringLiteral("pedido"), QString::fromUtf8(QJsonDocument::fromVariant(plan).toJson()));
+    QVERIFY(prompt.contains(QStringLiteral("PLAN ESTRUCTURADO")));
+    QVERIFY(prompt.contains(QStringLiteral("pedido")));
+
+    const QVariantMap invalid = AppController::parseHybridPlanForTest(
+        QStringLiteral(R"({"schemaVersion":1,"goal":"x","steps":[],"tests":[],"risks":[],"doneWhen":[]})"),
+        &error);
+    QVERIFY(invalid.isEmpty());
+    QVERIFY(!error.isEmpty());
 }
 
 void AppControllerTests::hybridSwapRemainsStartingUntilPipelineEnds()
@@ -1350,6 +1376,42 @@ void AppControllerTests::systemProfileBinaryPinReadsBundle()
     QVERIFY(app.systemProfileBinaryPin(QStringLiteral("nopin")).isEmpty());
     QVERIFY(app.systemProfileBinaryPin(QStringLiteral("unknown")).isEmpty());
 
+    qunsetenv("LLAMACODE_SYSTEM_PROFILES");
+}
+
+void AppControllerTests::systemProfileMinimumBuildSelectsNewestCompatible()
+{
+    QCOMPARE(AppController::llamaCppBuildNumber(QStringLiteral("llama.cpp b10217")), 10217);
+    QCOMPARE(AppController::llamaCppBuildNumber(QStringLiteral("build: 10221 (abc)")), 10221);
+    QCOMPARE(AppController::llamaCppBuildNumber(QStringLiteral("unknown")), 0);
+
+    const QString bundle = m_tmp.filePath(QStringLiteral("sysprof_min_build.json"));
+    QFile f(bundle);
+    QVERIFY(f.open(QIODevice::WriteOnly));
+    f.write(R"([{"id":"deepseek","binaryKind":"official","minimumBinaryBuild":10217}])");
+    f.close();
+    qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
+
+    AppController app;
+    while (app.binaryRegistry()->rowCount() > 0) {
+        const QString id = app.binaryRegistry()->data(
+            app.binaryRegistry()->index(0, 0), BinaryRegistry::IdRole).toString();
+        QVERIFY(app.binaryRegistry()->remove(id));
+    }
+    auto addFake = [&](const QString &file, const QString &version) {
+        const QString path = m_tmp.filePath(file);
+        QFile exe(path);
+        if (!exe.open(QIODevice::WriteOnly)) return QString();
+        exe.write("fake"); exe.close();
+        return app.binaryRegistry()->add(path, QStringLiteral("llama-server ") + version,
+                                         QStringLiteral("official"), QStringLiteral("cuda"), version);
+    };
+    addFake(QStringLiteral("old.exe"), QStringLiteral("b10216"));
+    addFake(QStringLiteral("compatible.exe"), QStringLiteral("b10217"));
+    const QString newest = addFake(QStringLiteral("newest.exe"), QStringLiteral("b10221"));
+    QVERIFY(!newest.isEmpty());
+    QCOMPARE(app.systemProfileMinimumBinaryBuild(QStringLiteral("deepseek")), 10217);
+    QCOMPARE(app.resolvedSystemBinaryForTest(QStringLiteral("deepseek")).value("id").toString(), newest);
     qunsetenv("LLAMACODE_SYSTEM_PROFILES");
 }
 

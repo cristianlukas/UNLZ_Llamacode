@@ -1400,7 +1400,7 @@ Item {
                             text: App.thinkingRestarting
                                 ? "Recargando modelo para aplicar el nivel de pensamiento..."
                                 : App.agentStarting
-                                ? "Iniciando agente..."
+                                ? (App.hybridStatus.length > 0 ? App.hybridStatus : "Iniciando agente...")
                                 : !App.serverRunning
                                 ? "Servidor no disponible. Iniciá el modelo en Lanzar."
                                 : "Cargando modelo..."

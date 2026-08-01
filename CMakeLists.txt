@@ -85,6 +85,7 @@ set(CORE_SOURCES
     src/core/agent/GraphStore.cpp
     src/core/agent/CodeGraphIndexer.cpp
     src/core/agent/AgentEfficiency.cpp
+    src/core/agent/HybridPlanning.cpp
     src/core/agent/StructuredSourceView.cpp
     src/core/agent/ProjectBrain.cpp
     src/core/agent/MasterCli.cpp
@@ -174,6 +175,7 @@ set(HEADERS
     src/core/agent/GraphStore.h
     src/core/agent/CodeGraphIndexer.h
     src/core/agent/AgentEfficiency.h
+    src/core/agent/HybridPlanning.h
     src/core/agent/StructuredSourceView.h
     src/core/agent/ProjectBrain.h
     src/core/agent/BrowserTeach.h

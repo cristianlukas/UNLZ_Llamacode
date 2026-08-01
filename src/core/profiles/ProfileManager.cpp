@@ -867,6 +867,9 @@ void ProfileManager::loadSystemProfiles()
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
         lp.runtimePresetId = rt.id;
+        lp.agentProfileId = o.value(QStringLiteral("agentProfileId")).toString();
+        lp.plannerProfileId = o.value(QStringLiteral("plannerProfileId")).toString();
+        lp.hybridMode = o.value(QStringLiteral("hybridMode")).toString(QStringLiteral("off"));
         QStringList extra;
         for (const QJsonValue &a : o.value("extraArgs").toArray()) extra << a.toString();
         const QJsonObject mtp = o.value("mtp").toObject();

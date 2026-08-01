@@ -1,5 +1,85 @@
 [
   {
+    "id": "sys-ultraq-dsv4-0731-iq3s",
+    "tier": "24GB-DeepSeek-V4-Ultra",
+    "order": 90,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[experimental ultra] ULTRA-Q · DeepSeek V4 Flash 0731 IQ3_S 131k",
+    "minVramGb": 24,
+    "minRamGb": 120,
+    "cpuOk": false,
+    "folder": "DeepSeek-V4-Flash-0731-UD-IQ3_S",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "unsloth/DeepSeek-V4-Flash-0731-GGUF",
+      "file": "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+      "files": [
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00002-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00003-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00004-of-00004.gguf"
+      ],
+      "quant": "UD-IQ3_S"
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 44,
+      "batch": 1024,
+      "ubatch": 512,
+      "threads": 0,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": false
+    },
+    "extraArgs": [
+      "--cache-type-k", "q4_0", "--cache-type-v", "q4_0",
+      "--n-cpu-moe", "39", "--temp", "1.0", "--top-p", "0.95",
+      "--top-k", "0", "--min-p", "0.0", "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0", "--no-context-shift", "--metrics",
+      "--no-warmup", "--jinja", "--threads-batch", "0", "--predict", "16384",
+      "--parallel", "1", "--reasoning-format", "auto"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10217,
+    "contextPresets": [65536, 131072, 196608, 262144, 393216],
+    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. 131k es el preset equilibrado; medir 64k/192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
+  },
+  {
+    "id": "sys-hybrid-ultraq-maxq",
+    "tier": "24GB-Hybrid-Ultra-MaxQ",
+    "order": 91,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[experimental hybrid] ULTRA-Q planner → MAX-Q executor",
+    "minVramGb": 24,
+    "minRamGb": 120,
+    "cpuOk": false,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF",
+    "agentProfileId": "agent-maximo",
+    "plannerProfileId": "sys-ultraq-dsv4-0731-iq3s",
+    "hybridMode": "sequential",
+    "model": {
+      "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF",
+      "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf",
+      "quant": "Q4_K_M"
+    },
+    "runtime": {
+      "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64,
+      "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false
+    },
+    "extraArgs": [
+      "--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60",
+      "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--no-context-shift",
+      "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512",
+      "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1",
+      "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "4"
+    ],
+    "binaryKind": "official",
+    "comment": "DeepSeek ULTRA-Q planifica sin tools; MAX-Q implementa con el agente nativo. Secuencial porque ambos comparten la RTX 3090."
+  },
+  {
     "id": "sys-maxq",
     "tier": "24GB-Qwen",
     "order": 1,

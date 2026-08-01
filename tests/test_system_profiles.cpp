@@ -63,6 +63,7 @@ private slots:
     void controller_showcase24gbUnchanged();
     void controller_showcaseEmptyWhenNoSiblings();
     void bundle_lagunaIsOptInAndHardwareGated();
+    void bundle_ultraQAndHybridAreWiredAndOptIn();
 
 private:
     QTemporaryDir m_dir;
@@ -92,7 +93,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 14);                       // tiers base + MAX-Q/MAX-CTX/FAST-GEMMA + Laguna
+    QCOMPARE(sys, 16);                       // tiers base + extras + ULTRA-Q/híbrido
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -621,6 +622,44 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
     }
     QCOMPARE(gemmaProfiles, 4);
     QVERIFY(promotedHeretic);
+}
+
+void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject ultra, hybrid;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        if (profile.value("id").toString() == QLatin1String("sys-ultraq-dsv4-0731-iq3s")) ultra = profile;
+        if (profile.value("id").toString() == QLatin1String("sys-hybrid-ultraq-maxq")) hybrid = profile;
+    }
+    QVERIFY(!ultra.isEmpty());
+    QVERIFY(ultra.value("extra").toBool());
+    QVERIFY(!ultra.value("autoCompanion").toBool());
+    QCOMPARE(ultra.value("minimumBinaryBuild").toInt(), 10217);
+    QCOMPARE(ultra.value("contextPresets").toArray().size(), 5);
+    QCOMPARE(ultra.value("minRamGb").toInt(), 120);
+    const QJsonObject model = ultra.value("model").toObject();
+    QCOMPARE(model.value("repo").toString(), QStringLiteral("unsloth/DeepSeek-V4-Flash-0731-GGUF"));
+    QCOMPARE(model.value("files").toArray().size(), 4);
+    QCOMPARE(model.value("file").toString(),
+             QStringLiteral("DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf"));
+    QStringList args;
+    for (const QJsonValue &v : ultra.value("extraArgs").toArray()) args << v.toString();
+    QCOMPARE(args.value(args.indexOf("--n-cpu-moe") + 1), QStringLiteral("39"));
+
+    QVERIFY(!hybrid.isEmpty());
+    QCOMPARE(hybrid.value("plannerProfileId").toString(),
+             QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
+    QCOMPARE(hybrid.value("hybridMode").toString(), QStringLiteral("sequential"));
+    QCOMPARE(hybrid.value("binaryKind").toString(), QStringLiteral("official"));
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-hybrid-ultraq-maxq"));
+    QCOMPARE(launch.value("plannerProfileId").toString(),
+             QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
+    QCOMPARE(launch.value("hybridMode").toString(), QStringLiteral("sequential"));
 }
 
 QTEST_MAIN(SystemProfilesTests)

@@ -118,6 +118,7 @@ class AppController : public QObject
     Q_PROPERTY(QString activeProfileToolSupport READ activeProfileToolSupport NOTIFY activeProfileToolSupportChanged)
     Q_PROPERTY(QString agentLog       READ agentLog          NOTIFY agentLogChanged)
     Q_PROPERTY(bool agentStarting     READ agentStarting     NOTIFY agentStartingChanged)
+    Q_PROPERTY(QString hybridStatus   READ hybridStatus      NOTIFY agentStartingChanged)
     Q_PROPERTY(QVariantList agentMessages  READ agentMessages  NOTIFY agentMessagesChanged)
     // Streaming incremental: índice del mensaje en streaming (-1 = ninguno) y su
     // texto en vivo. La UI override sólo esa burbuja sin re-bindear toda la lista.
@@ -289,6 +290,7 @@ public:
     }
     bool agentStarting() const { return m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()
                                        || !m_hybridPhase.isEmpty(); }
+    QString hybridStatus() const;
     QString activeProfileToolSupport() const { return m_activeProfileToolSupport; }
     QString agentLog() const { return m_agentLog; }
     QVariantList agentMessages()  const { return m_agentMessages; }
@@ -534,6 +536,10 @@ public:
     // binaryPin del perfil de sistema (del bundle): substring de nombre/ruta del
     // build a fijar (ej. "b9842"). Vacío = sin pin. Público (headless/test).
     Q_INVOKABLE QString systemProfileBinaryPin(const QString &launchId) const;
+    Q_INVOKABLE int systemProfileMinimumBinaryBuild(const QString &launchId) const;
+    Q_INVOKABLE QVariantList systemProfileContextPresets(const QString &launchId) const;
+    Q_INVOKABLE QString createSystemProfileContextVariant(const QString &launchId, int ctx);
+    static int llamaCppBuildNumber(const QString &text);
     // Aplica las capacidades de un perfil de agente al backend (tools/directivas/
     // MCP; thinking viene del checkbox global) usando la MISMA traducción que la app. Test seam para medir el
     // presupuesto de contexto por NIVEL sin duplicar la lógica de mapeo.
@@ -568,6 +574,7 @@ public:
     QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
     static QString composeHybridExecutionPromptForTest(const QString &request,
                                                         const QString &plan);
+    static QVariantMap parseHybridPlanForTest(const QString &text, QString *error = nullptr);
     static QString parseHybridStreamLineForTest(const QByteArray &line, bool *done);
     void setHybridPhaseForTest(const QString &phase) { setHybridPhase(phase); }
     QVariantMap resolvedSystemBinaryForTest(const QString &launchId)
@@ -1304,6 +1311,8 @@ private:
     QString   m_hybridPlannerLaunchId;
     QString   m_hybridUserRequest;
     QString   m_hybridPlan;
+    QString   m_hybridPlanningContext;
+    QString   m_hybridPlanCacheKey;
     QString   m_hybridFailure;
     QStringList m_hybridAttachments;
     QString   m_hybridPhase;
@@ -1334,6 +1343,11 @@ private:
     void maybeStartPendingAgentOnReady();
     void startSequentialHybrid(const QString &text, const LaunchProfile &executor);
     void requestHybridPlan();
+    QString buildHybridPlanningContext() const;
+    QString hybridPlanCachePath(const QString &key) const;
+    bool loadHybridPlanCache();
+    void saveHybridPlanCache() const;
+    void persistHybridJournal() const;
     void finishHybridPlanning(const QString &plan, const QString &error = QString());
     void startHybridExecutor();
     void dispatchHybridRequest();
@@ -1686,10 +1700,12 @@ private:
     QString resolveSystemBinaryId(const QString &kind = QString()) const;
     // binaryKind del perfil de sistema (del bundle); "official" si no se especifica.
     QString systemProfileBinaryKind(const QString &launchId) const;
+    int systemProfileMinimumBuild(const QString &launchId) const;
     // Id del binario instalado que matchea el binaryPin del perfil (primer válido
     // cuyo nombre+ruta contiene el pin). Vacío si no hay pin o no hay match válido
     // → el caller cae al resolveSystemBinaryId por kind.
     QString pinnedSystemBinaryId(const QString &launchId) const;
+    QString minimumSystemBinaryId(const QString &launchId) const;
     QList<HealthIssue> resolvedProfileHealth();
     // Instala el binario del tipo pedido si falta (cpu/official→installOfficialBinary,
     // beellama→installMtpBinary). beellama es CUDA-only: sin NVIDIA cae a official.

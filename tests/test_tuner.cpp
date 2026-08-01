@@ -18,6 +18,7 @@ private slots:
     void computeLoss_penalizesSubGate();
     void run_qualityGateAvoidsLowestQuant();
     void tunedArgs_emitsSpecDraftNMax();
+    void tunedArgs_emitsCpuMoe();
     void parsePerplexity_readsLastReportedValue();
 };
 
@@ -83,6 +84,18 @@ void TunerTests::tunedArgs_emitsSpecDraftNMax()
     const QStringList args = TunerEngine::tunedArgs(params, cfg);
     const int i = args.indexOf("--spec-draft-n-max");
     QVERIFY(i >= 0 && args[i + 1] == "2");
+}
+
+void TunerTests::tunedArgs_emitsCpuMoe()
+{
+    QVector<TunableParam> params{
+        {ParamSpec::categorical("n-cpu-moe", {"31", "35", "39", "43"}),
+         "--n-cpu-moe", false},
+    };
+    Config cfg; cfg["n-cpu-moe"] = 2;
+    const QStringList args = TunerEngine::tunedArgs(params, cfg);
+    const int i = args.indexOf("--n-cpu-moe");
+    QVERIFY(i >= 0 && args.value(i + 1) == QLatin1String("39"));
 }
 
 void TunerTests::parsePerplexity_readsLastReportedValue()

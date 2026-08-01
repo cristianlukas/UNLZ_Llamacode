@@ -52,6 +52,7 @@
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/SubAgentRunner.h"
 #include "core/agent/AgentEfficiency.h"
+#include "core/agent/HybridPlanning.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
@@ -67,7 +68,9 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDir>
+#include <QDirIterator>
 #include <QFileInfo>
+#include <QSaveFile>
 #include <QFileSystemWatcher>
 #include <QEventLoop>
 #include <QAbstractNativeEventFilter>
@@ -665,6 +668,18 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 AppController::AppController(QObject *parent) : QObject(parent)
 {
     migrateIntegrationSecrets();
+    // Un cierre/crash durante un hot-swap no debe dejar seleccionado al planner.
+    // Recuperamos el ejecutor como perfil activo; el plan validado permanece en
+    // hybrid-plans y podrá reutilizarse en el retry explícito del usuario.
+    {
+        QSettings settings;
+        const QByteArray raw = settings.value(QStringLiteral("hybrid/journal")).toString().toUtf8();
+        const QJsonObject journal = QJsonDocument::fromJson(raw).object();
+        const QString executor = journal.value(QStringLiteral("executor")).toString();
+        if (!executor.isEmpty())
+            writeSetting(QStringLiteral("lastLaunchId"), executor);
+        settings.remove(QStringLiteral("hybrid/journal"));
+    }
     m_agentRoomStore = new AgentRoomStore(this);
     m_workflowToolRunner = new AgentToolRunner(this);
     connect(m_workflowToolRunner, &AgentToolRunner::toolExecuted, this,
@@ -3413,10 +3428,18 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
         // los builds viejos no cargan) sin tocar el resto de perfiles "official".
         // Si el pin no matchea ningún binario instalado, cae al kind habitual.
         binId = pinnedSystemBinaryId(ctx.launch.id);
+        if (binId.isEmpty() && systemProfileMinimumBuild(ctx.launch.id) > 0)
+            binId = minimumSystemBinaryId(ctx.launch.id);
         if (binId.isEmpty())
             binId = resolveSystemBinaryId(systemProfileBinaryKind(ctx.launch.id));
     }
     ctx.binary = m_binaries.findById(binId);
+    const int minimumBuild = ctx.launch.system ? systemProfileMinimumBuild(ctx.launch.id) : 0;
+    if (minimumBuild > 0
+        && llamaCppBuildNumber(ctx.binary.versionHint + QLatin1Char(' ') + ctx.binary.name
+                               + QLatin1Char(' ') + ctx.binary.path) < minimumBuild) {
+        ctx.binary = {};
+    }
     if (ctx.launch.system && systemProfileBinaryKind(ctx.launch.id) == QLatin1String("cpu")
         && !ctx.binary.id.isEmpty() && ctx.binary.backend != QLatin1String("cpu")) {
         ctx.binary = {};
@@ -4987,8 +5010,17 @@ void AppController::startSequentialHybrid(const QString &text, const LaunchProfi
     m_hybridPlannerLaunchId = planner.id;
     m_hybridUserRequest = text.trimmed();
     m_hybridPlan.clear(); m_hybridFailure.clear();
+    m_hybridPlanningContext = buildHybridPlanningContext();
+    m_hybridPlanCacheKey = QString::fromLatin1(HybridPlanning::cacheKey(
+        m_hybridUserRequest, m_hybridPlanningContext, planner.id));
     appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral("Planificador: %1 · ejecutor: %2")
                          .arg(planner.name, executor.name));
+
+    if (loadHybridPlanCache()) {
+        appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral("Plan válido reutilizado desde caché."));
+        startHybridExecutor();
+        return;
+    }
 
     if (buildContext(planner.id).backend.isCloud()) {
         setHybridPhase(QStringLiteral("planning"));
@@ -5039,12 +5071,15 @@ void AppController::requestHybridPlan()
     const QJsonArray messages{
         QJsonObject{{"role", "system"}, {"content", QStringLiteral(
             "Sos el planificador de un agente de código. No ejecutes acciones ni uses tools. "
-            "Devolvé exclusivamente un plan detallado, ordenado y accionable para otro modelo. "
-            "Incluí archivos o áreas probables, riesgos, verificaciones y criterio de finalización.")}},
-        QJsonObject{{"role", "user"}, {"content", m_hybridUserRequest}}};
+            "Devolvé exclusivamente JSON válido con schemaVersion=1 y las claves goal, understanding, "
+            "assumptions, files, steps, tests, risks y doneWhen. steps y doneWhen no pueden estar vacíos. "
+            "No uses markdown. Basá el plan en el contexto provisto y no inventes archivos.")}},
+        QJsonObject{{"role", "user"}, {"content", QStringLiteral(
+            "REQUEST:\n%1\n\nCONTEXTO DEL WORKSPACE (sólo lectura):\n%2")
+            .arg(m_hybridUserRequest, m_hybridPlanningContext)}}};
     const QJsonObject body{{"model", model.isEmpty() ? QStringLiteral("default") : model},
                            {"messages", messages}, {"stream", true},
-                           {"temperature", 0.2}, {"max_tokens", 4096}};
+                           {"temperature", 0.2}, {"max_tokens", 8192}};
     m_hybridStreamBuffer.clear(); m_hybridStreamPlan.clear();
     m_hybridStreamDone = false; m_hybridStalled = false;
     m_hybridReply = m_nam->post(req, QJsonDocument(body).toJson(QJsonDocument::Compact));
@@ -5098,6 +5133,97 @@ void AppController::requestHybridPlan()
     });
 }
 
+QString AppController::buildHybridPlanningContext() const
+{
+    const auto executor = const_cast<AppController *>(this)->buildContext(m_hybridExecutorLaunchId);
+    QString root = executor.workspace.cwd.trimmed();
+    if (root.isEmpty()) root = m_agentCwdOverride.trimmed();
+    if (root.isEmpty()) root = QDir::currentPath();
+    root = QDir(root).absolutePath();
+
+    QStringList sections;
+    sections << QStringLiteral("WORKSPACE: %1").arg(QDir::toNativeSeparators(root));
+    for (const QString &name : {QStringLiteral("AGENTS.md"), QStringLiteral("agents.md"),
+                                QStringLiteral("README.md"), QStringLiteral("readme.md")}) {
+        QFile file(QDir(root).filePath(name));
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QByteArray bytes = file.read(32768);
+            sections << QStringLiteral("--- %1 ---\n%2").arg(name, QString::fromUtf8(bytes));
+        }
+    }
+
+    QStringList paths;
+    QDirIterator it(root, QDir::Files | QDir::NoDotAndDotDot,
+                    QDirIterator::Subdirectories);
+    while (it.hasNext() && paths.size() < 300) {
+        const QString abs = it.next();
+        const QString rel = QDir(root).relativeFilePath(abs);
+        if (rel.startsWith(QStringLiteral(".git/")) || rel.startsWith(QStringLiteral("build/"))
+            || rel.startsWith(QStringLiteral("build_tests/")) || rel.contains(QStringLiteral("/node_modules/")))
+            continue;
+        paths << rel;
+    }
+    paths.sort(Qt::CaseInsensitive);
+    sections << QStringLiteral("--- ÁRBOL ACOTADO (%1 archivos) ---\n%2")
+                    .arg(paths.size()).arg(paths.join(QLatin1Char('\n')));
+
+    QProcess git;
+    git.setWorkingDirectory(root);
+    git.start(QStringLiteral("git"), {QStringLiteral("status"), QStringLiteral("--short")});
+    if (git.waitForFinished(3000)) {
+        const QString status = QString::fromUtf8(git.readAllStandardOutput()).trimmed().left(16384);
+        sections << QStringLiteral("--- GIT STATUS ---\n%1").arg(status.isEmpty()
+            ? QStringLiteral("(limpio)") : status);
+    }
+    return sections.join(QStringLiteral("\n\n")).left(192 * 1024);
+}
+
+QString AppController::hybridPlanCachePath(const QString &key) const
+{
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        + QStringLiteral("/hybrid-plans");
+    QDir().mkpath(dir);
+    return dir + QLatin1Char('/') + key + QStringLiteral(".json");
+}
+
+bool AppController::loadHybridPlanCache()
+{
+    if (m_hybridPlanCacheKey.isEmpty()) return false;
+    QFile file(hybridPlanCachePath(m_hybridPlanCacheKey));
+    if (!file.open(QIODevice::ReadOnly)) return false;
+    QString error;
+    const QJsonObject plan = HybridPlanning::parsePlan(QString::fromUtf8(file.readAll()), &error);
+    if (plan.isEmpty()) return false;
+    m_hybridPlan = QString::fromUtf8(QJsonDocument(plan).toJson(QJsonDocument::Compact));
+    return true;
+}
+
+void AppController::saveHybridPlanCache() const
+{
+    if (m_hybridPlanCacheKey.isEmpty() || m_hybridPlan.isEmpty()) return;
+    QSaveFile file(hybridPlanCachePath(m_hybridPlanCacheKey));
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(m_hybridPlan.toUtf8());
+        file.commit();
+    }
+}
+
+void AppController::persistHybridJournal() const
+{
+    QSettings settings;
+    if (m_hybridPhase.isEmpty()) {
+        settings.remove(QStringLiteral("hybrid/journal"));
+        return;
+    }
+    const QJsonObject journal{{QStringLiteral("phase"), m_hybridPhase},
+                              {QStringLiteral("executor"), m_hybridExecutorLaunchId},
+                              {QStringLiteral("planner"), m_hybridPlannerLaunchId},
+                              {QStringLiteral("cacheKey"), m_hybridPlanCacheKey},
+                              {QStringLiteral("updatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}};
+    settings.setValue(QStringLiteral("hybrid/journal"),
+                      QString::fromUtf8(QJsonDocument(journal).toJson(QJsonDocument::Compact)));
+}
+
 QString AppController::parseHybridStreamLineForTest(const QByteArray &line, bool *done)
 {
     if (done) *done = false;
@@ -5121,9 +5247,18 @@ QString AppController::parseHybridStreamLineForTest(const QByteArray &line, bool
 
 void AppController::finishHybridPlanning(const QString &plan, const QString &error)
 {
-    m_hybridPlan = plan; m_hybridFailure = error;
+    QString validationError = error;
+    QJsonObject structured;
+    if (validationError.isEmpty())
+        structured = HybridPlanning::parsePlan(plan, &validationError);
+    m_hybridPlan = structured.isEmpty()
+        ? QString() : QString::fromUtf8(QJsonDocument(structured).toJson(QJsonDocument::Compact));
+    m_hybridFailure = validationError;
+    if (m_hybridFailure.isEmpty()) saveHybridPlanCache();
     appendAgentEvent(QStringLiteral("hybrid"), error.isEmpty()
-        ? QStringLiteral("Plan recibido (%1 caracteres).").arg(plan.size())
+        ? (m_hybridFailure.isEmpty()
+            ? QStringLiteral("Plan estructurado recibido y validado (%1 caracteres).").arg(m_hybridPlan.size())
+            : QStringLiteral("Falló la validación del plan: %1").arg(m_hybridFailure))
         : QStringLiteral("Falló la planificación: %1").arg(error));
     if (buildContext(m_hybridPlannerLaunchId).backend.isCloud() || !serverRunning()) {
         startHybridExecutor(); return;
@@ -5187,10 +5322,17 @@ void AppController::dispatchHybridRequest()
 QString AppController::composeHybridExecutionPromptForTest(const QString &request,
                                                             const QString &plan)
 {
-    return QStringLiteral(
-        "REQUEST ORIGINAL:\n%1\n\nPLAN DEL MODELO PLANIFICADOR (validalo y ejecutalo; adaptalo sólo si la evidencia "
-        "del workspace lo exige):\n%2\n\nEjecutá el trabajo completo, verificá el resultado y respondé con el resultado final.")
+    QString error;
+    const QJsonObject structured = HybridPlanning::parsePlan(plan, &error);
+    if (!structured.isEmpty()) return HybridPlanning::executorPrompt(request, structured);
+    // Compatibilidad con sesiones híbridas iniciadas por versiones anteriores.
+    return QStringLiteral("REQUEST ORIGINAL:\n%1\n\nPLAN LEGACY:\n%2\n\nEjecutá el trabajo completo, verificá el resultado y respondé con el resultado final.")
         .arg(request.trimmed(), plan.trimmed());
+}
+
+QVariantMap AppController::parseHybridPlanForTest(const QString &text, QString *error)
+{
+    return HybridPlanning::parsePlan(text, error).toVariantMap();
 }
 
 void AppController::resetHybridRun()
@@ -5200,6 +5342,7 @@ void AppController::resetHybridRun()
     m_hybridReply.clear();
     m_hybridExecutorLaunchId.clear(); m_hybridPlannerLaunchId.clear();
     m_hybridUserRequest.clear(); m_hybridPlan.clear(); m_hybridFailure.clear();
+    m_hybridPlanningContext.clear(); m_hybridPlanCacheKey.clear();
     m_hybridAttachments.clear();
     m_hybridStreamBuffer.clear(); m_hybridStreamPlan.clear();
     m_hybridStreamDone = false; m_hybridStalled = false;
@@ -5212,7 +5355,22 @@ void AppController::setHybridPhase(const QString &phase)
     if (m_hybridPhase == phase) return;
     const bool wasActive = !m_hybridPhase.isEmpty();
     m_hybridPhase = phase;
+    persistHybridJournal();
     if (wasActive != !m_hybridPhase.isEmpty()) emit agentStartingChanged();
+}
+
+QString AppController::hybridStatus() const
+{
+    static const QHash<QString, QString> labels{
+        {QStringLiteral("preparing"), QStringLiteral("Preparando contexto para ULTRA-Q…")},
+        {QStringLiteral("stopping-executor"), QStringLiteral("Descargando MAX-Q…")},
+        {QStringLiteral("planner-start"), QStringLiteral("Cargando ULTRA-Q…")},
+        {QStringLiteral("planning"), QStringLiteral("ULTRA-Q está planificando…")},
+        {QStringLiteral("stopping-planner"), QStringLiteral("Descargando ULTRA-Q…")},
+        {QStringLiteral("executor-start"), QStringLiteral("Restaurando MAX-Q…")},
+        {QStringLiteral("dispatching"), QStringLiteral("Entregando el plan validado a MAX-Q…")}
+    };
+    return labels.value(m_hybridPhase);
 }
 
 bool AppController::agentBackendBusy() const
@@ -11690,6 +11848,12 @@ void AppController::ensureSystemProfileBinary(const QJsonObject &entry)
         return;
     }
 
+    if (entry.value(QStringLiteral("minimumBinaryBuild")).toInt() > 0) {
+        if (minimumSystemBinaryId(launchId).isEmpty())
+            installRequiredBinaryForProfile(launchId);
+        return;
+    }
+
     ensureSystemBinary(entry.value(QStringLiteral("binaryKind")).toString(QStringLiteral("official")));
 }
 
@@ -11709,6 +11873,69 @@ QString AppController::systemProfileBinaryPin(const QString &launchId) const
     return {};
 }
 
+int AppController::systemProfileMinimumBuild(const QString &launchId) const
+{
+    for (const QJsonValue &v : readSystemProfilesBundle())
+        if (v.toObject().value(QStringLiteral("id")).toString() == launchId)
+            return v.toObject().value(QStringLiteral("minimumBinaryBuild")).toInt();
+    return 0;
+}
+
+int AppController::systemProfileMinimumBinaryBuild(const QString &launchId) const
+{
+    return systemProfileMinimumBuild(launchId);
+}
+
+QVariantList AppController::systemProfileContextPresets(const QString &launchId) const
+{
+    QVariantList out;
+    for (const QJsonValue &v : readSystemProfilesBundle()) {
+        const QJsonObject entry = v.toObject();
+        if (entry.value(QStringLiteral("id")).toString() != launchId) continue;
+        for (const QJsonValue &ctx : entry.value(QStringLiteral("contextPresets")).toArray())
+            out << ctx.toInt();
+        break;
+    }
+    return out;
+}
+
+QString AppController::createSystemProfileContextVariant(const QString &launchId, int ctx)
+{
+    const QVariantList presets = systemProfileContextPresets(launchId);
+    if (!presets.contains(ctx)) return {};
+    const QString copyId = m_profiles.duplicateLaunchProfile(launchId);
+    if (copyId.isEmpty()) return {};
+    const QVariantMap launch = m_profiles.getLaunchProfile(copyId);
+    const QString runtimeId = launch.value(QStringLiteral("runtimePresetId")).toString();
+    QVariantMap runtime = m_profiles.getRuntimePreset(runtimeId);
+    runtime[QStringLiteral("ctx")] = ctx;
+    runtime[QStringLiteral("name")] = QStringLiteral("ULTRA-Q · %1k ctx")
+        .arg(qRound(ctx / 1024.0));
+    if (!m_profiles.updateRuntimePreset(runtime)) return {};
+    QVariantMap update = launch;
+    update[QStringLiteral("name")] = QStringLiteral("ULTRA-Q · %1k ctx")
+        .arg(qRound(ctx / 1024.0));
+    m_profiles.updateLaunchProfile(update);
+    return copyId;
+}
+
+int AppController::llamaCppBuildNumber(const QString &text)
+{
+    static const QList<QRegularExpression> patterns = {
+        QRegularExpression(QStringLiteral("(?:^|[^a-z0-9])b(\\d{3,})(?:[^0-9]|$)"),
+                           QRegularExpression::CaseInsensitiveOption),
+        QRegularExpression(QStringLiteral("\\bbuild\\s*[:#-]?\\s*(\\d{3,})\\b"),
+                           QRegularExpression::CaseInsensitiveOption),
+        QRegularExpression(QStringLiteral("\\bversion\\s*:\\s*(\\d{3,})\\b"),
+                           QRegularExpression::CaseInsensitiveOption)
+    };
+    for (const QRegularExpression &pattern : patterns) {
+        const auto match = pattern.match(text);
+        if (match.hasMatch()) return match.captured(1).toInt();
+    }
+    return 0;
+}
+
 QString AppController::pinnedSystemBinaryId(const QString &launchId) const
 {
     const QString pin = systemProfileBinaryPin(launchId).toLower();
@@ -11722,6 +11949,27 @@ QString AppController::pinnedSystemBinaryId(const QString &launchId) const
         if ((b.name + QLatin1Char(' ') + b.path).toLower().contains(pin)) return bid;
     }
     return {};   // pin sin binario válido → caller cae al kind
+}
+
+QString AppController::minimumSystemBinaryId(const QString &launchId) const
+{
+    const int minimum = systemProfileMinimumBuild(launchId);
+    if (minimum <= 0) return {};
+    QString bestId;
+    int bestBuild = -1;
+    for (int r = 0; r < m_binaries.rowCount(); ++r) {
+        const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
+        const LlamaBinary b = m_binaries.findById(bid);
+        if (b.path.isEmpty() || !QFileInfo::exists(b.path) || b.backend == QLatin1String("cpu"))
+            continue;
+        const int build = llamaCppBuildNumber(b.versionHint + QLatin1Char(' ') + b.name
+                                               + QLatin1Char(' ') + b.path);
+        if (build >= minimum && build > bestBuild) {
+            bestBuild = build;
+            bestId = bid;
+        }
+    }
+    return bestId;
 }
 
 QString AppController::resolveSystemBinaryId(const QString &kind) const
@@ -11991,8 +12239,16 @@ void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
     };
     const QString folder = entry.value("folder").toString();
     const QJsonObject mo = entry.value("model").toObject();
-    if (!have(mo.value("file").toString()))
+    const QJsonArray files = mo.value(QStringLiteral("files")).toArray();
+    if (!files.isEmpty()) {
+        for (const QJsonValue &value : files) {
+            const QString remoteFile = value.toString();
+            if (!have(QFileInfo(remoteFile).fileName()))
+                enqueueModelDownload(mo.value("repo").toString(), remoteFile, folder);
+        }
+    } else if (!have(mo.value("file").toString())) {
         enqueueModelDownload(mo.value("repo").toString(), mo.value("file").toString(), folder);
+    }
     const QString mmRepo = mo.value("mmprojRepo").toString();
     const QString mmFile = mo.value("mmprojFile").toString();
     if (!mmRepo.isEmpty() && !mmFile.isEmpty() && !have(mmFile))
@@ -14762,7 +15018,8 @@ namespace {
 // Espacio de búsqueda por defecto: flags ampliamente soportados por llama-server.
 // cache-type-k/v marcados como qualityRisk: el gate de calidad impide que el
 // optimizador colapse al quant más bajo solo por velocidad.
-QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = false)
+QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = false,
+                                      bool cpuMoe = false)
 {
     using tuner::ParamSpec;
     if (cpuOnly) {
@@ -14796,6 +15053,12 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
     if (hasDraft) {
         params.append({ParamSpec::intRange("spec-draft-n-max", 1, 5, 1),
                        "--spec-draft-n-max", false});
+    }
+    if (cpuMoe) {
+        // Modelos MoE gigantes (DeepSeek/Laguna/KAT): explorar el reparto de
+        // expertos entre RAM y VRAM, el factor dominante en hardware híbrido.
+        params.append({ParamSpec::categorical("n-cpu-moe", {"31", "35", "39", "43"}),
+                       "--n-cpu-moe", false});
     }
     return params;
 }
@@ -14868,7 +15131,8 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
                          || normalizedMode == QLatin1String("cpu_only");
     const bool hasDraft = !cpuOnly && (effArgs.contains(QStringLiteral("--draft-model"))
                           || effArgs.contains(QStringLiteral("-md")));
-    QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly);
+    const bool cpuMoe = !cpuOnly && effArgs.contains(QStringLiteral("--n-cpu-moe"));
+    QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly, cpuMoe);
 
     // baseArgs = args efectivos menos host/port y menos los flags que vamos a
     // afinar (con sus aliases), para no duplicarlos.
@@ -14881,6 +15145,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
         QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
         QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
         QStringLiteral("--spec-draft-n-max"),
+        QStringLiteral("--n-cpu-moe"),
     };
     const QSet<QString> switchFlags = {
         QStringLiteral("--flash-attn"), QStringLiteral("-fa"),

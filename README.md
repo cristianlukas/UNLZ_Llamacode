@@ -227,6 +227,15 @@ recomendación automática, no se descarga junto con MAX-Q/FAST-GEMMA y debe
 compararse mediante benchmark antes de reemplazar MAX-Q. MAX-Q usa ThinkingCap
 Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 
+El mismo tier ofrece ahora, también **opt-in**, `[experimental ultra] ULTRA-Q`,
+basado en `DeepSeek-V4-Flash-0731 UD-IQ3_S` (~116 GB en cuatro shards). Su punto
+inicial para RTX 3090 + Ryzen 9900X + 128 GB DDR5 es contexto 131k, 44 capas GPU,
+KV q4_0 y `--n-cpu-moe 39`; requiere llama.cpp oficial b10217 o posterior. El
+perfil declara presets clonables 64k/131k/192k/256k/384k y el auto-tuner explora
+31/35/39/43 capas MoE en CPU. No se recomienda ni descarga automáticamente: antes
+de promoverlo se debe medir estabilidad, pagefile, calidad y tiempo total en el
+hardware local. Detalle operativo en [`docs/ultra-q.md`](docs/ultra-q.md).
+
 ## Estado actual
 
 **P0–P4 completo y funcionando.**
@@ -364,6 +373,12 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   adjuntos se conservan para la fase de ejecución. Si el planificador falla o
   responde vacío, el ejecutor se restaura pero el request se cancela para no
   ejecutar a ciegas.
+  El preset `[experimental hybrid] ULTRA-Q planner → MAX-Q executor` amplía ese
+  pipeline con un contexto de workspace acotado (reglas, README, árbol y Git), un
+  contrato `HybridPlan v1` validado y cacheado por SHA-256, y un journal de fases.
+  Un retry idéntico reutiliza el plan; cambios en request/contexto/modelo lo
+  invalidan. Tras un cierre durante el swap, el siguiente arranque restaura MAX-Q
+  como perfil seleccionado. La UI muestra cada fase del intercambio.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
 - **Workspaces portables**: los proyectos también pueden asociar investigaciones y
   exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,
