@@ -568,6 +568,7 @@ public:
     QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
     static QString composeHybridExecutionPromptForTest(const QString &request,
                                                        const QString &plan);
+    static QString parseHybridStreamLineForTest(const QByteArray &line, bool *done);
     QVariantMap resolvedSystemBinaryForTest(const QString &launchId)
     {
         const auto ctx = buildContext(launchId);
@@ -1306,6 +1307,11 @@ private:
     QStringList m_hybridAttachments;
     QString   m_hybridPhase;
     QPointer<QNetworkReply> m_hybridReply;
+    QTimer   *m_hybridProgressWatchdog = nullptr;
+    QByteArray m_hybridStreamBuffer;
+    QString   m_hybridStreamPlan;
+    bool      m_hybridStreamDone = false;
+    bool      m_hybridStalled = false;
     bool      m_hybridDispatching = false;
     bool      m_serverStopping = false;
     bool      m_serverReady    = false;

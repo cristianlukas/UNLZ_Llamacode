@@ -353,7 +353,9 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   En modo secuencial, cada envío de Agente detiene el ejecutor, carga el
   planificador y le pide un plan sin tools mediante `/v1/chat/completions`; luego
   descarga el planificador, restaura el servidor y agente ejecutores, y entrega el
-  request original junto con el plan. Los adjuntos se conservan para la fase de
+  request original junto con el plan. La planificación usa streaming y un watchdog
+  de progreso: no existe un límite total mientras sigan llegando deltas; sólo se
+  aborta ante ausencia inicial prolongada o inactividad sostenida del stream. Los adjuntos se conservan para la fase de
   ejecución. Si el planificador falla o responde vacío, el ejecutor se restaura
   pero el request se cancela para no ejecutar a ciegas.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.

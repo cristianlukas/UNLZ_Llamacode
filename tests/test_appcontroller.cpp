@@ -114,6 +114,7 @@ private slots:
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void hybridExecutionPromptPreservesRequestAndPlan();
+    void hybridStreamParserDetectsProgressAndCompletion();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
@@ -258,6 +259,18 @@ void AppControllerTests::hybridExecutionPromptPreservesRequestAndPlan()
     QVERIFY(prompt.contains(QStringLiteral("REQUEST ORIGINAL:\ncorregí el bug")));
     QVERIFY(prompt.contains(QStringLiteral("1. leer\n2. probar")));
     QVERIFY(prompt.contains(QStringLiteral("verificá el resultado")));
+}
+
+void AppControllerTests::hybridStreamParserDetectsProgressAndCompletion()
+{
+    bool done = false;
+    QCOMPARE(AppController::parseHybridStreamLineForTest(
+                 QByteArrayLiteral("data: {\"choices\":[{\"delta\":{\"content\":\"Paso 1\"}}]}"), &done),
+             QStringLiteral("Paso 1"));
+    QVERIFY(!done);
+    QCOMPARE(AppController::parseHybridStreamLineForTest(QByteArrayLiteral("data: [DONE]"), &done),
+             QString());
+    QVERIFY(done);
 }
 
 void AppControllerTests::initTestCase()

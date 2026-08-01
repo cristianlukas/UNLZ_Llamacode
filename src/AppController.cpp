@@ -5040,28 +5040,80 @@ void AppController::requestHybridPlan()
             "Incluí archivos o áreas probables, riesgos, verificaciones y criterio de finalización.")}},
         QJsonObject{{"role", "user"}, {"content", m_hybridUserRequest}}};
     const QJsonObject body{{"model", model.isEmpty() ? QStringLiteral("default") : model},
-                           {"messages", messages}, {"stream", false},
+                           {"messages", messages}, {"stream", true},
                            {"temperature", 0.2}, {"max_tokens", 4096}};
+    m_hybridStreamBuffer.clear(); m_hybridStreamPlan.clear();
+    m_hybridStreamDone = false; m_hybridStalled = false;
     m_hybridReply = m_nam->post(req, QJsonDocument(body).toJson(QJsonDocument::Compact));
     QPointer<QNetworkReply> reply = m_hybridReply;
-    QTimer::singleShot(300000, this, [reply]() {
-        if (reply && reply->isRunning()) reply->abort();
+    if (!m_hybridProgressWatchdog) {
+        m_hybridProgressWatchdog = new QTimer(this);
+        m_hybridProgressWatchdog->setSingleShot(true);
+        connect(m_hybridProgressWatchdog, &QTimer::timeout, this, [this]() {
+            if (!m_hybridReply || !m_hybridReply->isRunning()) return;
+            m_hybridStalled = true;
+            appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral(
+                "Planificador sin progreso observable; abortando stream estancado."));
+            m_hybridReply->abort();
+        });
+    }
+    // No es un límite total: sólo cubre ausencia absoluta de respuesta inicial.
+    // Desde el primer delta, cada progreso renueva una ventana de inactividad.
+    m_hybridProgressWatchdog->start(180000);
+    connect(reply, &QNetworkReply::readyRead, this, [this, reply]() {
+        if (!reply || reply != m_hybridReply) return;
+        m_hybridStreamBuffer += reply->readAll();
+        while (true) {
+            const int nl = m_hybridStreamBuffer.indexOf('\n');
+            if (nl < 0) break;
+            const QByteArray line = m_hybridStreamBuffer.left(nl);
+            m_hybridStreamBuffer.remove(0, nl + 1);
+            bool done = false;
+            const QString delta = parseHybridStreamLineForTest(line, &done);
+            if (!delta.isEmpty()) {
+                m_hybridStreamPlan += delta;
+                m_hybridProgressWatchdog->start(60000);
+            }
+            if (done) m_hybridStreamDone = true;
+        }
     });
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         if (!reply || reply != m_hybridReply) return;
-        const QByteArray bytes = reply->readAll();
+        if (m_hybridProgressWatchdog) m_hybridProgressWatchdog->stop();
+        m_hybridStreamBuffer += reply->readAll();
+        bool tailDone = false;
+        const QString tail = parseHybridStreamLineForTest(m_hybridStreamBuffer, &tailDone);
+        if (!tail.isEmpty()) m_hybridStreamPlan += tail;
+        m_hybridStreamDone = m_hybridStreamDone || tailDone;
         const QString transport = reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
         reply->deleteLater(); m_hybridReply.clear();
-        const QJsonObject root = QJsonDocument::fromJson(bytes).object();
-        const QJsonArray choices = root.value(QStringLiteral("choices")).toArray();
-        const QString plan = choices.isEmpty() ? QString() : choices.first().toObject()
-            .value(QStringLiteral("message")).toObject().value(QStringLiteral("content")).toString().trimmed();
-        QString error = transport;
-        if (error.isEmpty() && plan.isEmpty())
-            error = root.value(QStringLiteral("error")).toObject().value(QStringLiteral("message")).toString();
+        const QString plan = m_hybridStreamPlan.trimmed();
+        QString error = m_hybridStalled ? QStringLiteral("stream estancado sin progreso")
+            : ((m_hybridStreamDone && !plan.isEmpty()) ? QString() : transport);
         if (error.isEmpty() && plan.isEmpty()) error = QStringLiteral("respuesta vacía del planificador");
         finishHybridPlanning(plan, error);
     });
+}
+
+QString AppController::parseHybridStreamLineForTest(const QByteArray &line, bool *done)
+{
+    if (done) *done = false;
+    QByteArray data = line.trimmed();
+    if (data.startsWith("data:")) data = data.mid(5).trimmed();
+    if (data.isEmpty()) return {};
+    if (data == "[DONE]") { if (done) *done = true; return {}; }
+    const QJsonObject root = QJsonDocument::fromJson(data).object();
+    const QJsonArray choices = root.value(QStringLiteral("choices")).toArray();
+    if (choices.isEmpty()) return {};
+    const QJsonObject choice = choices.first().toObject();
+    QString text = choice.value(QStringLiteral("delta")).toObject()
+                       .value(QStringLiteral("content")).toString();
+    if (text.isEmpty())
+        text = choice.value(QStringLiteral("message")).toObject()
+                   .value(QStringLiteral("content")).toString();
+    const QString finish = choice.value(QStringLiteral("finish_reason")).toString();
+    if (done && !finish.isEmpty()) *done = true;
+    return text;
 }
 
 void AppController::finishHybridPlanning(const QString &plan, const QString &error)
@@ -5135,10 +5187,13 @@ void AppController::resetHybridRun()
 {
     const bool wasActive = !m_hybridPhase.isEmpty();
     if (m_hybridReply) { m_hybridReply->abort(); m_hybridReply->deleteLater(); }
+    if (m_hybridProgressWatchdog) m_hybridProgressWatchdog->stop();
     m_hybridReply.clear();
     m_hybridExecutorLaunchId.clear(); m_hybridPlannerLaunchId.clear();
     m_hybridUserRequest.clear(); m_hybridPlan.clear(); m_hybridFailure.clear();
     m_hybridAttachments.clear();
+    m_hybridStreamBuffer.clear(); m_hybridStreamPlan.clear();
+    m_hybridStreamDone = false; m_hybridStalled = false;
     m_hybridPhase.clear(); m_hybridDispatching = false;
     if (wasActive) emit agentStartingChanged();
 }
