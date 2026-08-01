@@ -109,6 +109,7 @@ private slots:
     void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
     void createRecommendedLaunchProfileReusesExistingMenuProfile();
+    void preferredAgentLaunchIdIgnoresGlobalProfileSwap();
     void browserMcpEffectiveResolves();
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
@@ -792,6 +793,21 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(BrowserTeach::listSkills().contains(QStringLiteral("my-skill")));
     QVERIFY(BrowserTeach::removeSkill(QStringLiteral("My Skill")));
     QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
+}
+
+void AppControllerTests::preferredAgentLaunchIdIgnoresGlobalProfileSwap()
+{
+    AppController app;
+    const QVariantList launches = app.profileManager()->launchProfilesForMenu();
+    QVERIFY(launches.size() >= 2);
+    const QString agentId = launches.at(0).toMap().value(QStringLiteral("id")).toString();
+    const QString swappedId = launches.at(1).toMap().value(QStringLiteral("id")).toString();
+    QVERIFY(agentId != swappedId);
+    app.writeSetting(QStringLiteral("lastAgentLaunchId"), agentId);
+    app.writeSetting(QStringLiteral("lastLaunchId"), swappedId);
+    QCOMPARE(app.preferredAgentLaunchId(), agentId);
+    app.writeSetting(QStringLiteral("lastAgentLaunchId"), QStringLiteral("missing-profile"));
+    QCOMPARE(app.preferredAgentLaunchId(), swappedId);
 }
 
 void AppControllerTests::remoteBackendEnablesServerDependentUi()

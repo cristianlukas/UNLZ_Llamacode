@@ -476,6 +476,9 @@ public:
     Q_INVOKABLE QString lf(const QString &key, const QString &arg1) const { return l(key).arg(arg1); }
     Q_INVOKABLE QVariant readSetting(const QString &key, const QVariant &defaultValue = QVariant()) const;
     Q_INVOKABLE void writeSetting(const QString &key, const QVariant &value);
+    // Preferencia explícita del selector Agente. No se contamina con swaps de
+    // perfil internos usados por benchmarks, Tasks, watchdog o Charla.
+    Q_INVOKABLE QString preferredAgentLaunchId() const;
     Q_INVOKABLE bool startWithWindowsEnabled() const;
     Q_INVOKABLE QString setStartWithWindowsEnabled(bool enabled);
     static QString windowsStartupCommand(const QString &executablePath);

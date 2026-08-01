@@ -1606,11 +1606,6 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         return;
     }
     ensureSession();
-    // El título predeterminado identifica una sesión todavía sin nombre. El
-    // buffer visual puede contener mensajes de estado antes del primer prompt,
-    // así que no se usa como condición. autoTitleCurrentSession protege los
-    // títulos manuales y las sesiones efímeras.
-    autoTitleCurrentSession(trimmed);
     m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     ensureWorker();
     QMetaObject::invokeMethod(m_worker, "setCorrelationId", Qt::QueuedConnection,
@@ -1637,6 +1632,9 @@ void LlamaAgentBackend::sendMessage(const QString &text)
         {QStringLiteral("tps"), 0.0}};
     if (!attachments.isEmpty()) userMsg[QStringLiteral("attachments")] = attachments;
     m_messages.append(userMsg);
+    // Titular después de insertar el primer mensaje: así la persistencia y
+    // cualquier cambio de vista observan el prompt que originó el nombre.
+    autoTitleCurrentSession(trimmed);
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                           QJsonObject{{QStringLiteral("source"), QStringLiteral("user")},
                                       {QStringLiteral("correlationId"), m_correlationId},
@@ -5364,9 +5362,9 @@ void LlamaAgentBackend::newSessionInProject(const QString &projectDir)
 void LlamaAgentBackend::autoTitleCurrentSession(const QString &firstPrompt)
 {
     if (m_ephemeralSessions || m_sessionId.isEmpty()
-        || m_sessionTitle != QLatin1String("Sesión")) return;
+        || m_sessionTitle != QStringLiteral("Sesión")) return;
     const QString title = suggestSessionTitle(firstPrompt);
-    if (title == QLatin1String("Sesión")) return;
+    if (title == QStringLiteral("Sesión")) return;
     m_sessionTitle = title;
     for (int i = 0; i < m_sessions.size(); ++i) {
         QVariantMap session = m_sessions.at(i).toMap();
@@ -5732,20 +5730,43 @@ void LlamaAgentBackend::loadFromDisk()
     // persistieron en este índice global y ensucian el sidebar del Agente.
     // Filtrarlas al cargar y purgar el índice si había alguna.
     static const QRegularExpression benchWs(QStringLiteral("__ws(_p\\d+)?$"));
-    bool purged = false;
+    bool indexChanged = false;
     for (const QJsonValue &v : arr) {
-        const QVariantMap s = v.toObject().toVariantMap();
+        QVariantMap s = v.toObject().toVariantMap();
         const QString sid = s.value(QStringLiteral("id")).toString();
         if (sid.isEmpty()) continue;
         const QString pn = s.value(QStringLiteral("projectName")).toString();
         if (benchWs.match(pn).hasMatch()) {
             removeSessionFile(sid);   // borrar también el .json huérfano
-            purged = true;
+            indexChanged = true;
             continue;
+        }
+        // Migración de sesiones creadas por builds donde el autotítulo se
+        // perdía: si ya existe un primer prompt, derivar el nombre del archivo.
+        if (s.value(QStringLiteral("title")).toString().trimmed().isEmpty()
+            || s.value(QStringLiteral("title")).toString() == QStringLiteral("Sesión")) {
+            QFile sessionFile(sessionFilePath(sid));
+            if (sessionFile.open(QIODevice::ReadOnly)) {
+                const QJsonArray messages = QJsonDocument::fromJson(sessionFile.readAll())
+                                                .object().value(QStringLiteral("messages")).toArray();
+                sessionFile.close();
+                for (const QJsonValue &messageValue : messages) {
+                    const QJsonObject message = messageValue.toObject();
+                    if (message.value(QStringLiteral("role")).toString() != QLatin1String("user"))
+                        continue;
+                    const QString title = suggestSessionTitle(
+                        message.value(QStringLiteral("content")).toString());
+                    if (title != QStringLiteral("Sesión")) {
+                        s[QStringLiteral("title")] = title;
+                        indexChanged = true;
+                    }
+                    break;
+                }
+            }
         }
         m_sessions.append(s);
     }
-    if (purged) persistIndex();
+    if (indexChanged) persistIndex();
     if (m_sessions.isEmpty()) return;
     // Cargar la primera como activa.
     const QString sid = m_sessions.first().toMap().value(QStringLiteral("id")).toString();

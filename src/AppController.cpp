@@ -1178,9 +1178,10 @@ void AppController::runStartupScan()
 
     // Auto-arrancar el agente al abrir la app si el toggle está activo. Mantiene el
     // server+agente calientes para que las Tasks programadas (cron) disparen a horario
-    // sin la latencia de levantar el modelo. Usa el último perfil lanzado.
+    // sin la latencia de levantar el modelo. Usa la última selección explícita
+    // del Agente; lastLaunchId puede haber cambiado por otros modos internos.
     if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
-        const QString launchId = readSetting(QStringLiteral("lastLaunchId"), QString()).toString();
+        const QString launchId = preferredAgentLaunchId();
         if (!launchId.isEmpty()) {
             appendAgentEvent(QStringLiteral("lifecycle"),
                              QStringLiteral("Auto-inicio del agente al abrir la app (tasks por horario)."));
@@ -8474,6 +8475,17 @@ bool AppController::addAutomationTemplateVariant(const QString &artifactId,
 QVariantList AppController::automationTimeline(const QString &artifactId) const
 {
     return AutomationArtifactStore::timeline(artifactId);
+}
+
+QString AppController::preferredAgentLaunchId() const
+{
+    const QString agentId = readSetting(QStringLiteral("lastAgentLaunchId"), QString()).toString();
+    if (!agentId.isEmpty() && !m_profiles.resolveLaunch(agentId).id.isEmpty())
+        return agentId;
+    const QString globalId = readSetting(QStringLiteral("lastLaunchId"), QString()).toString();
+    if (!globalId.isEmpty() && !m_profiles.resolveLaunch(globalId).id.isEmpty())
+        return globalId;
+    return {};
 }
 
 QVariantList AppController::automationNetworkDiscoveries(const QString &artifactId) const

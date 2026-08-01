@@ -52,6 +52,8 @@ private slots:
     void isDestructiveAction_gatesShellDesktopMemory();
     void completionErrorClassification_isSelective();
     void sessionTitle_isBriefAndPromptDerived();
+    void firstPromptTitlesAndPersistsSession();
+    void startupRepairsDefaultTitleFromFirstPrompt();
 };
 
 void AgentWireTests::initTestCase()
@@ -113,6 +115,64 @@ void AgentWireTests::sessionTitle_isBriefAndPromptDerived()
     QVERIFY(LlamaAgentBackend::suggestSessionTitle(
                  QStringLiteral("crear una app de inventario para biblioteca"))
                  .split(QLatin1Char(' '), Qt::SkipEmptyParts).size() <= 3);
+}
+
+void AgentWireTests::firstPromptTitlesAndPersistsSession()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:1");
+    ctx.modelId = QStringLiteral("test");
+    LlamaAgentBackend backend;
+    backend.start(ctx);
+    backend.sendMessage(QStringLiteral("Revisá documentación marítima completa"));
+    QCOMPARE(backend.currentSessionTitle(), QStringLiteral("Revisá documentación marítima"));
+    backend.cancelGeneration();
+    backend.stop();
+
+    QFile index(store + QStringLiteral("/index.json"));
+    QVERIFY(index.open(QIODevice::ReadOnly));
+    const QJsonArray sessions = QJsonDocument::fromJson(index.readAll()).array();
+    QCOMPARE(sessions.first().toObject().value(QStringLiteral("title")).toString(),
+             QStringLiteral("Revisá documentación marítima"));
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::startupRepairsDefaultTitleFromFirstPrompt()
+{
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QVERIFY(QDir().mkpath(store));
+    const QString id = QStringLiteral("legacy-title");
+    QFile index(store + QStringLiteral("/index.json"));
+    QVERIFY(index.open(QIODevice::WriteOnly));
+    index.write(QJsonDocument(QJsonArray{QJsonObject{
+        {QStringLiteral("id"), id}, {QStringLiteral("title"), QStringLiteral("Sesión")}
+    }}).toJson());
+    index.close();
+    QFile session(store + QLatin1Char('/') + id + QStringLiteral(".json"));
+    QVERIFY(session.open(QIODevice::WriteOnly));
+    session.write(QJsonDocument(QJsonObject{{QStringLiteral("messages"), QJsonArray{
+        QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                    {QStringLiteral("content"), QStringLiteral("Actualizar documentación completa")}}
+    }}}).toJson());
+    session.close();
+    QTemporaryDir cwd;
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent"); ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:1"); ctx.modelId = QStringLiteral("test");
+    LlamaAgentBackend backend;
+    backend.start(ctx);
+    QCOMPARE(backend.currentSessionTitle(), QStringLiteral("Actualizar documentación completa"));
+    backend.stop();
+    QDir(store).removeRecursively();
 }
 
 void AgentWireTests::completionErrorClassification_isSelective()

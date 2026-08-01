@@ -584,8 +584,11 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   puede navegar y revisar otra sesión: el turno sigue en su sesión de origen y
   sus deltas no contaminan el historial que se está viendo.
 - **Último perfil usado**: Agente restaura primero el último perfil seleccionado
-  en toda la app; su preferencia histórica propia sólo se usa como compatibilidad
-  si no existe una selección global, evitando revivir un perfil antiguo.
+  explícitamente en su selector y lo usa también para el autoarranque; los cambios
+  internos de perfil de Tasks, benchmarks o Charla no pueden reemplazarlo.
+- **Títulos automáticos**: el primer prompt asigna un título de hasta tres palabras;
+  al iniciar también se reparan sesiones antiguas que ya tienen prompt pero todavía
+  figuran como `Sesión`.
 - **Viewport estable**: las actualizaciones del modelo y las mediciones transitorias
   de mensajes altos no reinician el chat al comienzo; el auto-scroll sólo avanza
   hacia el final cuando el usuario ya estaba siguiendo la respuesta. El compositor

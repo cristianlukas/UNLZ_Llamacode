@@ -484,22 +484,9 @@ Item {
         }
     }
 
-    // La página vive en un StackLayout (no se recrea): al mostrarse, sincronizar
-    // con el perfil que se lanzó en "Lanzar" (App.activeLaunchId) y re-resolver
-    // el harness por si cambió en Perfiles.
-    onVisibleChanged: if (visible) { syncToActiveLaunch(); if (selectedLaunchId.length > 0) resolveHarness(selectedLaunchId) }
-
-    // Selecciona en el combo el launch activo (el que se inició en Lanzar).
-    // No pisa la selección si el agente ya está corriendo.
-    function syncToActiveLaunch() {
-        if (App.agentRunning) return
-        const id = App.activeLaunchId
-        if (!id || id.length === 0) return
-        if (id === selectedLaunchId) return
-        selectedLaunchId = id
-        profileCombo.currentIndex = profileCombo.indexOfValue(id)
-        resolveHarness(id)
-    }
+    // La página vive en un StackLayout (no se recrea): re-resolver el harness
+    // al mostrarla, conservando siempre la última selección explícita de Agente.
+    onVisibleChanged: if (visible && selectedLaunchId.length > 0) resolveHarness(selectedLaunchId)
 
     function projectDirForSection(sectionName) {
         for (let i = 0; i < App.agentSessions.length; i++) {
@@ -574,15 +561,13 @@ Item {
     Component.onCompleted: {
         syncAgentMessageModel()
         tryRestoreSessionsPanel()
-        // Preferir el launch realmente activo. Si la app se abrió sin servidor,
-        // Restaurar el último perfil usado en toda la app. La preferencia propia
-        // del Agente sólo sirve de compatibilidad: no debe revivir una selección
-        // vieja cuando el usuario usó otro perfil desde Lanzar.
-        let target = App.activeLaunchId
+        // Restaurar la última selección explícita de Agente. El launch activo
+        // sólo es fallback para instalaciones que todavía no guardaron esa clave.
+        let target = App.preferredAgentLaunchId()
+        if (!target || target.length === 0)
+            target = App.activeLaunchId
         if (!target || target.length === 0)
             target = App.readSetting("lastLaunchId", "")
-        if (!target || target.length === 0)
-            target = App.readSetting("lastAgentLaunchId", "")
         if (!target || target.length === 0) {
             const menu = App.profileManager.launchProfilesForMenu()
             if (menu.length > 0) target = menu[0].id ?? ""
@@ -601,8 +586,6 @@ Item {
 
     Connections {
         target: App
-        // Cuando se lanza un perfil en "Lanzar", reflejarlo acá.
-        function onActiveLaunchIdChanged() { root.syncToActiveLaunch() }
         function onAgentMessagesChanged() {
             root.syncAgentMessageModel()
             root.markActivity()
