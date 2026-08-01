@@ -624,6 +624,16 @@ Item {
 
     Connections {
         target: App
+        function syncLocalLaunchSelection() {
+            const target = App.preferredAgentLaunchId()
+            if (!target || target.length === 0 || target === root.selectedLaunchId)
+                return
+            root.selectedLaunchId = target
+            profileCombo.currentIndex = profileCombo.indexOfValue(target)
+            root.resolveHarness(target)
+        }
+        function onActiveLaunchIdChanged() { syncLocalLaunchSelection() }
+        function onServerRunningChanged() { syncLocalLaunchSelection() }
         function onAgentMessagesChanged() {
             root.syncAgentMessageModel()
             root.markActivity()

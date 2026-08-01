@@ -109,7 +109,7 @@ private slots:
     void modelRecommendationsUseResolvableGgufNames();
     void createRecommendedLaunchProfileBuildsProfile();
     void createRecommendedLaunchProfileReusesExistingMenuProfile();
-    void preferredAgentLaunchIdIgnoresGlobalProfileSwap();
+    void preferredAgentLaunchSelection();
     void browserMcpEffectiveResolves();
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
@@ -795,8 +795,19 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
 }
 
-void AppControllerTests::preferredAgentLaunchIdIgnoresGlobalProfileSwap()
+void AppControllerTests::preferredAgentLaunchSelection()
 {
+    QCOMPARE(AppController::choosePreferredAgentLaunchId("agent-local", false,
+                                                         "active-local", "global"),
+             QStringLiteral("active-local"));
+    QCOMPARE(AppController::choosePreferredAgentLaunchId("agent-cloud", true,
+                                                         "active-local", "global"),
+             QStringLiteral("agent-cloud"));
+    QCOMPARE(AppController::choosePreferredAgentLaunchId("agent-local", false, {}, "global"),
+             QStringLiteral("agent-local"));
+    QCOMPARE(AppController::choosePreferredAgentLaunchId({}, false, {}, "global"),
+             QStringLiteral("global"));
+
     AppController app;
     const QVariantList launches = app.profileManager()->launchProfilesForMenu();
     QVERIFY(launches.size() >= 2);

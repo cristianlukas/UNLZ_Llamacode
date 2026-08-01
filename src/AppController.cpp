@@ -8495,12 +8495,29 @@ QVariantList AppController::automationTimeline(const QString &artifactId) const
 QString AppController::preferredAgentLaunchId() const
 {
     const QString agentId = readSetting(QStringLiteral("lastAgentLaunchId"), QString()).toString();
-    if (!agentId.isEmpty() && !m_profiles.resolveLaunch(agentId).id.isEmpty())
-        return agentId;
+    const LaunchProfile agentLaunch = m_profiles.resolveLaunch(agentId);
+    // Un perfil cloud es deliberadamente independiente del servidor local activo.
+    // Para perfiles locales, en cambio, Agente debe reflejar el launch que realmente
+    // está cargado: conservar lastAgentLaunchId podía mostrar (y aplicar parámetros
+    // de) otro modelo mientras todas las requests iban al servidor activo.
     const QString globalId = readSetting(QStringLiteral("lastLaunchId"), QString()).toString();
-    if (!globalId.isEmpty() && !m_profiles.resolveLaunch(globalId).id.isEmpty())
-        return globalId;
-    return {};
+    return choosePreferredAgentLaunchId(
+        agentLaunch.id,
+        !agentLaunch.id.isEmpty()
+            && m_profiles.resolveBackend(agentLaunch.backendProfileId).isCloud(),
+        m_profiles.resolveLaunch(m_activeLaunchId).id,
+        m_profiles.resolveLaunch(globalId).id);
+}
+
+QString AppController::choosePreferredAgentLaunchId(const QString &agentId,
+                                                    bool agentIsCloud,
+                                                    const QString &activeId,
+                                                    const QString &globalId)
+{
+    if (agentIsCloud && !agentId.isEmpty()) return agentId;
+    if (!activeId.isEmpty()) return activeId;
+    if (!agentId.isEmpty()) return agentId;
+    return globalId;
 }
 
 QVariantList AppController::automationNetworkDiscoveries(const QString &artifactId) const

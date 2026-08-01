@@ -595,9 +595,10 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   slots están ocupados, el nuevo turno queda en cola; dentro de una misma
   conversación los turnos conservan orden estricto. La lista de sesiones muestra
   `Trabajando` o `En cola` por conversación.
-- **Último perfil usado**: Agente restaura primero el último perfil seleccionado
-  explícitamente en su selector y lo usa también para el autoarranque; los cambios
-  internos de perfil de Tasks, benchmarks o Charla no pueden reemplazarlo.
+- **Perfil efectivo visible**: con un servidor local activo, Agente sincroniza su
+  selector con el perfil realmente cargado y usa sus parámetros, evitando mostrar
+  o aplicar otro launch guardado. Los perfiles cloud conservan una selección
+  independiente; sin servidor activo se restaura el último perfil de Agente.
 - **Títulos automáticos**: el primer prompt asigna un título de hasta tres palabras;
   al iniciar también se reparan sesiones antiguas que ya tienen prompt pero todavía
   figuran como `Sesión`.
