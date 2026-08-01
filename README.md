@@ -682,7 +682,8 @@ incluidos).
 El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructurado.
 
 - **MemoryStore por capas**: hechos durables extraídos de las conversaciones
-  (consolidación en background al dejar una sesión) + memoria por proyecto en archivo.
+  (consolidación en background al terminar una fase recuperada) + memoria por proyecto en archivo.
+  Navegar, crear o abrir sesiones nunca dispara esta tarea pesada.
   Los hechos estructurados vigentes se inyectan de forma acotada al iniciar el
   agente y pueden registrar importancia, sorpresa, verificación y supersesión. El
   ranking y la poda priorizan correcciones, reglas y decisiones verificadas sin

@@ -5293,7 +5293,9 @@ void LlamaAgentBackend::revertEdit(const QString &path)
 void LlamaAgentBackend::newSession()
 {
     saveCurrentSession();
-    consolidateMemory();     // extraer hechos durables de la sesión saliente
+    // Cambiar/crear una sesión debe ser sólo una operación de UI y persistencia.
+    // No iniciar consolidación contra un transcript potencialmente grande acá:
+    // ese request coincidía con el reset del modelo QML y podía cerrar la app.
     m_sessionId.clear();
     m_messages.clear();
     m_apiMessages = {};
@@ -5587,7 +5589,8 @@ void LlamaAgentBackend::refreshSessions() { emit sessionsChanged(); }
 void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
 {
     saveCurrentSession();   // vuelca la sesión actual antes de cambiar
-    consolidateMemory();    // extraer hechos durables de la sesión saliente
+    // La consolidación corre al cerrar turnos con recuperación, no al navegar.
+    // Así abrir otra sesión nunca compite con el reset de la conversación visible.
     m_sessionId = sessionId;
     if (m_worker) QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
                                             Q_ARG(QString, m_sessionId));
