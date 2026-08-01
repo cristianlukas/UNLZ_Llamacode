@@ -1597,6 +1597,10 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     // Bloquear si hay turno en curso, una tool esperando aprobación, o una
     // compactación async en vuelo. Sin esto, mandar durante la compactación
     // corrompe m_apiMessages (reentrancy) → crash en Qt6Core.
+    // Si el usuario estaba mirando otra sesión mientras el turno anterior
+    // terminaba, activarla recién ahora: navegar no interrumpe ni reutiliza el
+    // contexto de la sesión que seguía trabajando.
+    if (!isBusy()) activateViewedSessionIfIdle();
     if (m_reply || m_compactReply || m_compacting || !m_awaitId.isEmpty()) {
         emit errorOccurred(QStringLiteral("Hay un turno en curso."));
         return;
@@ -2583,7 +2587,10 @@ void LlamaAgentBackend::handleStreamData()
             const qint64 now = QDateTime::currentMSecsSinceEpoch();
             if (now - m_lastUiEmitMs >= 33) {
                 m_lastUiEmitMs = now;
-                emit streamingText(m_curAsstIdx, full);
+                // La UI puede estar mostrando otra sesión; ese delta pertenece
+                // al turno activo y no debe reemplazar el historial visible.
+                if (m_viewSessionId.isEmpty())
+                    emit streamingText(m_curAsstIdx, full);
             }
         }
     }
@@ -5375,7 +5382,60 @@ void LlamaAgentBackend::autoTitleCurrentSession(const QString &firstPrompt)
 
 void LlamaAgentBackend::switchSession(const QString &sessionId)
 {
-    if (sessionId.isEmpty() || sessionId == m_sessionId) return;
+    if (sessionId.isEmpty()) return;
+    if (sessionId == m_sessionId) {
+        if (m_viewSessionId.isEmpty()) return;
+        m_viewSessionId.clear();
+        m_viewSessionTitle.clear();
+        m_viewProjectDir.clear();
+        m_viewMessages.clear();
+        emit sessionsChanged();
+        emit messagesChanged();
+        return;
+    }
+    if (isBusy()) {
+        showSessionWhileTurnRuns(sessionId);
+        return;
+    }
+    setCurrentSession(sessionId);
+}
+
+void LlamaAgentBackend::showSessionWhileTurnRuns(const QString &sessionId)
+{
+    m_viewSessionId = sessionId;
+    m_viewSessionTitle.clear();
+    m_viewProjectDir.clear();
+    m_viewMessages.clear();
+    for (const QVariant &v : std::as_const(m_sessions)) {
+        const QVariantMap s = v.toMap();
+        if (s.value(QStringLiteral("id")).toString() != sessionId) continue;
+        m_viewSessionTitle = s.value(QStringLiteral("title")).toString();
+        m_viewProjectDir = s.value(QStringLiteral("projectDir")).toString();
+        break;
+    }
+    QFile f(sessionFilePath(sessionId));
+    if (f.open(QIODevice::ReadOnly)) {
+        const QJsonArray msgs = QJsonDocument::fromJson(f.readAll())
+                                    .object().value(QStringLiteral("messages")).toArray();
+        f.close();
+        for (const QJsonValue &mv : msgs) {
+            QVariantMap message = mv.toObject().toVariantMap();
+            message[QStringLiteral("typing")] = false;
+            m_viewMessages.append(message);
+        }
+    }
+    emit sessionsChanged();
+    emit messagesChanged();
+}
+
+void LlamaAgentBackend::activateViewedSessionIfIdle()
+{
+    if (m_viewSessionId.isEmpty() || isBusy()) return;
+    const QString sessionId = m_viewSessionId;
+    m_viewSessionId.clear();
+    m_viewSessionTitle.clear();
+    m_viewProjectDir.clear();
+    m_viewMessages.clear();
     setCurrentSession(sessionId);
 }
 

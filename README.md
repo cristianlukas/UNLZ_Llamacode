@@ -580,7 +580,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Vista Agente**: chat bubbles con streaming en tiempo real
 - **Sesiones seguras**: crear una sesión desde el botón `+` de una carpeta se
   difiere fuera del click del listado, evitando reconstruir el delegate QML
-  mientras todavía se lo está procesando.
+  mientras todavía se lo está procesando. Durante un turno nativo en curso se
+  puede navegar y revisar otra sesión: el turno sigue en su sesión de origen y
+  sus deltas no contaminan el historial que se está viendo.
 - **Último perfil usado**: Agente restaura primero el último perfil seleccionado
   en toda la app; su preferencia histórica propia sólo se usa como compatibilidad
   si no existe una selección global, evitando revivir un perfil antiguo.

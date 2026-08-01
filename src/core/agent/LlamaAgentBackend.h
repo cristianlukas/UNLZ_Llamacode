@@ -331,10 +331,18 @@ public:
     // fire-and-forget. Se dispara solo al dejar una sesión y puede invocarse manual.
     void consolidateMemory(bool recoveredSkill = false);
 
-    QString currentSessionId() const override { return m_sessionId; }
-    QString currentSessionTitle() const override { return m_sessionTitle; }
-    QString currentProjectDir() const override { return m_cwd; }
-    QVariantList messages() const override { return m_messages; }
+    QString currentSessionId() const override {
+        return m_viewSessionId.isEmpty() ? m_sessionId : m_viewSessionId;
+    }
+    QString currentSessionTitle() const override {
+        return m_viewSessionId.isEmpty() ? m_sessionTitle : m_viewSessionTitle;
+    }
+    QString currentProjectDir() const override {
+        return m_viewSessionId.isEmpty() ? m_cwd : m_viewProjectDir;
+    }
+    QVariantList messages() const override {
+        return m_viewSessionId.isEmpty() ? m_messages : m_viewMessages;
+    }
     QVariantList sessions() const override { return m_sessions; }
     bool isBusy() const;               // turno/tool/compactación en curso
 
@@ -436,6 +444,8 @@ private:
     void saveCurrentSession();           // vuelca m_messages+m_apiMessages al store
     void autoTitleCurrentSession(const QString &firstPrompt);
     void setCurrentSession(const QString &sessionId);
+    void showSessionWhileTurnRuns(const QString &sessionId);
+    void activateViewedSessionIfIdle();
     void forkSessionImpl(const QString &sessionId, int msgIndex);
 
     AgentContext m_ctx;
@@ -530,6 +540,12 @@ private:
 
     QString m_sessionId;
     QString m_sessionTitle;
+    // Vista desacoplada del contexto que está ejecutando el turno. Permite mirar
+    // otra sesión mientras el agente termina la original sin mezclar historiales.
+    QString m_viewSessionId;
+    QString m_viewSessionTitle;
+    QString m_viewProjectDir;
+    QVariantList m_viewMessages;
     QVariantList m_sessions;
     bool m_ephemeralSessions = false;
     // Estado para restaurar la sesión del usuario tras una Task efímera.
