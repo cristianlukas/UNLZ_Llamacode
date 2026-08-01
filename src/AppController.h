@@ -287,7 +287,8 @@ public:
         if (m_piActive) return true;
         return m_agentInTerminal ? (m_agentPid != 0) : (m_agentProc && m_agentProc->state() != QProcess::NotRunning);
     }
-    bool agentStarting() const { return m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty(); }
+    bool agentStarting() const { return m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()
+                                       || !m_hybridPhase.isEmpty(); }
     QString activeProfileToolSupport() const { return m_activeProfileToolSupport; }
     QString agentLog() const { return m_agentLog; }
     QVariantList agentMessages()  const { return m_agentMessages; }
@@ -565,6 +566,8 @@ public:
     void triggerPendingAgentForTest() { maybeStartPendingAgentOnReady(); }
     bool agentStartingFlagForTest() const { return m_agentStarting; }
     QString pendingAutoAgentForTest() const { return m_pendingAutoAgentLaunchId; }
+    static QString composeHybridExecutionPromptForTest(const QString &request,
+                                                       const QString &plan);
     QVariantMap resolvedSystemBinaryForTest(const QString &launchId)
     {
         const auto ctx = buildContext(launchId);
@@ -1295,6 +1298,15 @@ private:
     QString   m_serverLogFilePath;
     QString   m_activeLaunchId;
     QString   m_pendingAutoAgentLaunchId;
+    QString   m_hybridExecutorLaunchId;
+    QString   m_hybridPlannerLaunchId;
+    QString   m_hybridUserRequest;
+    QString   m_hybridPlan;
+    QString   m_hybridFailure;
+    QStringList m_hybridAttachments;
+    QString   m_hybridPhase;
+    QPointer<QNetworkReply> m_hybridReply;
+    bool      m_hybridDispatching = false;
     bool      m_serverStopping = false;
     bool      m_serverReady    = false;
     bool      m_serverHasVision = false;
@@ -1313,6 +1325,12 @@ private:
     // m_agentStarting para no dejar "Iniciando agente" trabado. Compartido por
     // el ready-branch del health-poll y el arranque síncrono de startServerAndAgent.
     void maybeStartPendingAgentOnReady();
+    void startSequentialHybrid(const QString &text, const LaunchProfile &executor);
+    void requestHybridPlan();
+    void finishHybridPlanning(const QString &plan, const QString &error = QString());
+    void startHybridExecutor();
+    void dispatchHybridRequest();
+    void resetHybridRun();
     // Watchdog auto-restart on crash
     QString   m_serverState = QStringLiteral("stopped"); // stopped|running|restarting|failed
     int       m_serverRestartCount = 0;

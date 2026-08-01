@@ -186,6 +186,22 @@ QList<HealthIssue> ProfileHealthChecker::checkAll(ProfileManager *profiles,
         }
 
         out << checkLaunch(r);
+        if (launch.hybridMode != QLatin1String("off")) {
+            const LaunchProfile planner = profiles->resolveLaunch(launch.plannerProfileId);
+            if (launch.plannerProfileId.isEmpty() || planner.id.isEmpty())
+                out << mk("error", launch.id, "hybrid", "hybrid-planner-missing",
+                          "El perfil híbrido no tiene un planificador válido.",
+                          "Elegir un LaunchProfile planificador existente.");
+            else if (planner.id == launch.id)
+                out << mk("error", launch.id, "hybrid", "hybrid-self-reference",
+                          "El planificador híbrido no puede ser el mismo perfil ejecutor.",
+                          "Elegir dos perfiles distintos.");
+            if (launch.hybridMode != QLatin1String("sequential")
+                && launch.hybridMode != QLatin1String("concurrent"))
+                out << mk("error", launch.id, "hybrid", "hybrid-mode-invalid",
+                          "Modo híbrido desconocido.",
+                          "Usar sequential, concurrent u off.");
+        }
     }
     return out;
 }

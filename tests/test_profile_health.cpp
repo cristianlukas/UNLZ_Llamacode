@@ -66,6 +66,7 @@ private slots:
     void runtimeAndAgentMissingAreWarnings();
     void cloudSkipsBinaryAndModel();
     void cloudMissingUrlIsError();
+    void hybridPlannerValidation();
 };
 
 void ProfileHealthTests::initTestCase()
@@ -213,6 +214,22 @@ void ProfileHealthTests::cloudMissingUrlIsError()
     QCOMPARE(severityOf(v, "cloud-url-missing"), QStringLiteral("error"));
     QVERIFY(hasCode(v, "cloud-key-unset"));
     QVERIFY(hasCode(v, "cloud-model-unset"));
+}
+
+void ProfileHealthTests::hybridPlannerValidation()
+{
+    ProfileManager pm;
+    const QString executor = pm.addLaunchProfile("Executor", "", "", "");
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", executor},
+                                               {"hybridMode", "sequential"},
+                                               {"plannerProfileId", "missing"}}));
+    auto issues = ProfileHealthChecker::checkAll(&pm, nullptr, nullptr);
+    QVERIFY(hasCode(issues, "hybrid-planner-missing"));
+
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", executor},
+                                               {"plannerProfileId", executor}}));
+    issues = ProfileHealthChecker::checkAll(&pm, nullptr, nullptr);
+    QVERIFY(hasCode(issues, "hybrid-self-reference"));
 }
 
 QTEST_MAIN(ProfileHealthTests)

@@ -350,6 +350,12 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   otro ejecutor. El modo secuencial está pensado para modelos locales que comparten
   GPU/puerto; el concurrente, para endpoints independientes. El repo incluye la
   prueba `111_HYBRID MAX-Q planner + KAT-Coder executor`.
+  En modo secuencial, cada envío de Agente detiene el ejecutor, carga el
+  planificador y le pide un plan sin tools mediante `/v1/chat/completions`; luego
+  descarga el planificador, restaura el servidor y agente ejecutores, y entrega el
+  request original junto con el plan. Los adjuntos se conservan para la fase de
+  ejecución. Si el planificador falla o responde vacío, el ejecutor se restaura
+  pero el request se cancela para no ejecutar a ciegas.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
 - **Workspaces portables**: los proyectos también pueden asociar investigaciones y
   exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,

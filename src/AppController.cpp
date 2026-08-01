@@ -4938,6 +4938,17 @@ bool AppController::escalateToMaster(const QString &problem)
 void AppController::sendToAgent(const QString &text)
 {
     if (text.trimmed().isEmpty()) return;
+    if (!m_hybridDispatching && m_hybridPhase.isEmpty() && !m_activeLaunchId.isEmpty()) {
+        const LaunchProfile launch = m_profiles.resolveLaunch(m_activeLaunchId);
+        if (launch.hybridMode == QLatin1String("sequential") && !launch.plannerProfileId.isEmpty()) {
+            startSequentialHybrid(text, launch);
+            return;
+        }
+    }
+    if (!m_hybridPhase.isEmpty() && !m_hybridDispatching) {
+        emit serverError(QStringLiteral("Ya hay un request híbrido en curso."));
+        return;
+    }
     if (m_agentBackend && m_agentBackend->running()) {
         appendAgentEvent(QStringLiteral("input"), QStringLiteral("> %1").arg(text));
         m_agentBackend->sendMessage(text);
@@ -4955,6 +4966,181 @@ void AppController::sendToAgent(const QString &text)
 
     // Adapters genéricos basados en stdin (opencode usa OpencodeBackend, delegado arriba).
     m_agentProc->write((text + QLatin1Char('\n')).toUtf8());
+}
+
+void AppController::startSequentialHybrid(const QString &text, const LaunchProfile &executor)
+{
+    const LaunchProfile planner = m_profiles.resolveLaunch(executor.plannerProfileId);
+    if (planner.id.isEmpty() || planner.id == executor.id) {
+        emit serverError(QStringLiteral("Perfil híbrido inválido: el planificador no existe o coincide con el ejecutor."));
+        return;
+    }
+    if (agentBackendBusy()) {
+        emit serverError(QStringLiteral("Esperá a que termine el turno actual antes de iniciar otro request híbrido."));
+        return;
+    }
+    m_hybridExecutorLaunchId = executor.id;
+    m_hybridPlannerLaunchId = planner.id;
+    m_hybridUserRequest = text.trimmed();
+    m_hybridPlan.clear(); m_hybridFailure.clear();
+    emit agentStartingChanged();
+    appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral("Planificador: %1 · ejecutor: %2")
+                         .arg(planner.name, executor.name));
+
+    if (buildContext(planner.id).backend.isCloud()) {
+        m_hybridPhase = QStringLiteral("planning");
+        requestHybridPlan();
+        return;
+    }
+
+    auto launchPlanner = [this]() {
+        m_hybridPhase = QStringLiteral("planner-start");
+        auto *ready = new QMetaObject::Connection;
+        *ready = connect(this, &AppController::serverReadyChanged, this, [this, ready]() {
+            if (!m_serverReady || m_activeLaunchId != m_hybridPlannerLaunchId
+                || m_hybridPhase != QLatin1String("planner-start")) return;
+            disconnect(*ready); delete ready;
+            m_hybridPhase = QStringLiteral("planning");
+            requestHybridPlan();
+        });
+        startServer(m_hybridPlannerLaunchId);
+        if (!serverRunning()) {
+            disconnect(*ready); delete ready;
+            finishHybridPlanning({}, QStringLiteral("no se pudo iniciar el planificador"));
+        }
+    };
+
+    if (agentRunning() || m_agentStarting) stopAgent();
+    if (!serverRunning()) { QTimer::singleShot(0, this, launchPlanner); return; }
+    m_hybridPhase = QStringLiteral("stopping-executor");
+    auto *stopped = new QMetaObject::Connection;
+    *stopped = connect(this, &AppController::serverRunningChanged, this, [this, stopped, launchPlanner]() {
+        if (serverRunning() || m_serverStopping || m_hybridPhase != QLatin1String("stopping-executor")) return;
+        disconnect(*stopped); delete stopped;
+        QTimer::singleShot(0, this, launchPlanner);
+    });
+    stopServer();
+}
+
+void AppController::requestHybridPlan()
+{
+    const auto ctx = buildContext(m_hybridPlannerLaunchId);
+    QString base = ctx.backend.isCloud() ? ctx.backend.cloudBaseUrl.trimmed() : serverBaseUrl();
+    QString model = ctx.backend.isCloud() ? ctx.backend.cloudModel.trimmed() : ctx.catalogModel.id;
+    const QString key = ctx.backend.isCloud() ? m_secrets.resolve(ctx.backend.cloudKeyRef.trimmed()) : QString();
+    if (base.endsWith(QLatin1Char('/'))) base.chop(1);
+    if (!m_nam) m_nam = new QNetworkAccessManager(this);
+    QNetworkRequest req(QUrl(base + QStringLiteral("/v1/chat/completions")));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
+    if (!key.isEmpty()) req.setRawHeader("Authorization", "Bearer " + key.toUtf8());
+    const QJsonArray messages{
+        QJsonObject{{"role", "system"}, {"content", QStringLiteral(
+            "Sos el planificador de un agente de código. No ejecutes acciones ni uses tools. "
+            "Devolvé exclusivamente un plan detallado, ordenado y accionable para otro modelo. "
+            "Incluí archivos o áreas probables, riesgos, verificaciones y criterio de finalización.")}},
+        QJsonObject{{"role", "user"}, {"content", m_hybridUserRequest}}};
+    const QJsonObject body{{"model", model.isEmpty() ? QStringLiteral("default") : model},
+                           {"messages", messages}, {"stream", false},
+                           {"temperature", 0.2}, {"max_tokens", 4096}};
+    m_hybridReply = m_nam->post(req, QJsonDocument(body).toJson(QJsonDocument::Compact));
+    QPointer<QNetworkReply> reply = m_hybridReply;
+    QTimer::singleShot(300000, this, [reply]() {
+        if (reply && reply->isRunning()) reply->abort();
+    });
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (!reply || reply != m_hybridReply) return;
+        const QByteArray bytes = reply->readAll();
+        const QString transport = reply->error() == QNetworkReply::NoError ? QString() : reply->errorString();
+        reply->deleteLater(); m_hybridReply.clear();
+        const QJsonObject root = QJsonDocument::fromJson(bytes).object();
+        const QJsonArray choices = root.value(QStringLiteral("choices")).toArray();
+        const QString plan = choices.isEmpty() ? QString() : choices.first().toObject()
+            .value(QStringLiteral("message")).toObject().value(QStringLiteral("content")).toString().trimmed();
+        QString error = transport;
+        if (error.isEmpty() && plan.isEmpty())
+            error = root.value(QStringLiteral("error")).toObject().value(QStringLiteral("message")).toString();
+        if (error.isEmpty() && plan.isEmpty()) error = QStringLiteral("respuesta vacía del planificador");
+        finishHybridPlanning(plan, error);
+    });
+}
+
+void AppController::finishHybridPlanning(const QString &plan, const QString &error)
+{
+    m_hybridPlan = plan; m_hybridFailure = error;
+    appendAgentEvent(QStringLiteral("hybrid"), error.isEmpty()
+        ? QStringLiteral("Plan recibido (%1 caracteres).").arg(plan.size())
+        : QStringLiteral("Falló la planificación: %1").arg(error));
+    if (buildContext(m_hybridPlannerLaunchId).backend.isCloud() || !serverRunning()) {
+        startHybridExecutor(); return;
+    }
+    m_hybridPhase = QStringLiteral("stopping-planner");
+    auto *stopped = new QMetaObject::Connection;
+    *stopped = connect(this, &AppController::serverRunningChanged, this, [this, stopped]() {
+        if (serverRunning() || m_serverStopping || m_hybridPhase != QLatin1String("stopping-planner")) return;
+        disconnect(*stopped); delete stopped;
+        QTimer::singleShot(0, this, [this]() { startHybridExecutor(); });
+    });
+    stopServer();
+}
+
+void AppController::startHybridExecutor()
+{
+    m_hybridPhase = QStringLiteral("executor-start");
+    if (m_activeLaunchId == m_hybridExecutorLaunchId && agentRunning()) { dispatchHybridRequest(); return; }
+    auto *running = new QMetaObject::Connection;
+    *running = connect(this, &AppController::agentRunningChanged, this, [this, running]() {
+        if (!agentRunning() || m_activeLaunchId != m_hybridExecutorLaunchId
+            || m_hybridPhase != QLatin1String("executor-start")) return;
+        disconnect(*running); delete running;
+        dispatchHybridRequest();
+    });
+    startServerAndAgent(m_hybridExecutorLaunchId);
+    if (!serverRunning() && !agentRunning() && !m_agentStarting) {
+        disconnect(*running); delete running;
+        const QString error = m_hybridFailure.isEmpty() ? QStringLiteral("no se pudo restaurar el ejecutor") : m_hybridFailure;
+        resetHybridRun();
+        emit serverError(QStringLiteral("Request híbrido cancelado: %1.").arg(error));
+    }
+}
+
+void AppController::dispatchHybridRequest()
+{
+    if (!m_hybridFailure.isEmpty()) {
+        const QString error = m_hybridFailure; resetHybridRun();
+        emit serverError(QStringLiteral("Request híbrido cancelado porque el planificador falló: %1.").arg(error));
+        return;
+    }
+    const QString prompt = composeHybridExecutionPromptForTest(m_hybridUserRequest, m_hybridPlan);
+    m_hybridPhase = QStringLiteral("dispatching"); m_hybridDispatching = true;
+    if (!m_hybridAttachments.isEmpty()) {
+        if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+            backend->setPendingAttachments(m_hybridAttachments);
+    }
+    sendToAgent(prompt);
+    m_hybridDispatching = false;
+    appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral("Plan entregado al ejecutor."));
+    resetHybridRun();
+}
+
+QString AppController::composeHybridExecutionPromptForTest(const QString &request,
+                                                            const QString &plan)
+{
+    return QStringLiteral(
+        "REQUEST ORIGINAL:\n%1\n\nPLAN DEL MODELO PLANIFICADOR (validalo y ejecutalo; adaptalo sólo si la evidencia "
+        "del workspace lo exige):\n%2\n\nEjecutá el trabajo completo, verificá el resultado y respondé con el resultado final.")
+        .arg(request.trimmed(), plan.trimmed());
+}
+
+void AppController::resetHybridRun()
+{
+    const bool wasActive = !m_hybridPhase.isEmpty();
+    if (m_hybridReply) { m_hybridReply->abort(); m_hybridReply->deleteLater(); }
+    m_hybridReply.clear();
+    m_hybridExecutorLaunchId.clear(); m_hybridPlannerLaunchId.clear();
+    m_hybridUserRequest.clear(); m_hybridPlan.clear(); m_hybridFailure.clear();
+    m_hybridAttachments.clear();
+    m_hybridPhase.clear(); m_hybridDispatching = false;
+    if (wasActive) emit agentStartingChanged();
 }
 
 bool AppController::agentBackendBusy() const
@@ -7240,6 +7426,14 @@ void AppController::sendToAgentWithAttachments(const QString &text, const QStrin
     }
 
     if (text.trimmed().isEmpty() && filtered.isEmpty()) return;
+    if (m_hybridPhase.isEmpty() && !m_hybridDispatching && !m_activeLaunchId.isEmpty()) {
+        const LaunchProfile launch = m_profiles.resolveLaunch(m_activeLaunchId);
+        if (launch.hybridMode == QLatin1String("sequential") && !launch.plannerProfileId.isEmpty()) {
+            m_hybridAttachments = filtered;
+            startSequentialHybrid(text, launch);
+            return;
+        }
+    }
     if (auto *la = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
         if (m_agentBackend->running()) {
             la->setPendingAttachments(filtered);

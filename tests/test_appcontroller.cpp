@@ -113,6 +113,7 @@ private slots:
     void browserMcpEffectiveResolves();
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
+    void hybridExecutionPromptPreservesRequestAndPlan();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
@@ -248,6 +249,15 @@ QString AppControllerTests::makeLoopTask(AppController &app, const QString &name
         {QStringLiteral("loopMaxIterations"), maxIter}
     };
     return app.taskStore()->save(QString(), def);
+}
+
+void AppControllerTests::hybridExecutionPromptPreservesRequestAndPlan()
+{
+    const QString prompt = AppController::composeHybridExecutionPromptForTest(
+        QStringLiteral("  corregí el bug  "), QStringLiteral("  1. leer\n2. probar  "));
+    QVERIFY(prompt.contains(QStringLiteral("REQUEST ORIGINAL:\ncorregí el bug")));
+    QVERIFY(prompt.contains(QStringLiteral("1. leer\n2. probar")));
+    QVERIFY(prompt.contains(QStringLiteral("verificá el resultado")));
 }
 
 void AppControllerTests::initTestCase()
