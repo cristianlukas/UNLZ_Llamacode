@@ -589,6 +589,9 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
 - **Títulos automáticos**: el primer prompt asigna un título de hasta tres palabras;
   al iniciar también se reparan sesiones antiguas que ya tienen prompt pero todavía
   figuran como `Sesión`.
+- **Modo por sesión**: cada chat del Agente recuerda por separado su política de
+  aprobación y su nivel de capacidades; al cambiar de sesión se restauran ambos,
+  incluso después de reiniciar la aplicación.
 - **Viewport estable**: las actualizaciones del modelo y las mediciones transitorias
   de mensajes altos no reinician el chat al comienzo; el auto-scroll sólo avanza
   hacia el final cuando el usuario ya estaba siguiendo la respuesta. El compositor

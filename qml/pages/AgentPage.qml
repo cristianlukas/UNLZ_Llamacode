@@ -16,6 +16,43 @@ Item {
     property string lastProfileSuggestionKind: ""
     property var portableSkillRows: []
     property var selectedPortableSkill: ({})
+    property bool restoringSessionModes: false
+    property string restoredSessionModesId: ""
+
+    function sessionModeKey(sessionId, field) {
+        return "agent/sessionModes/" + sessionId + "/" + field
+    }
+
+    function persistCurrentSessionModes() {
+        const sessionId = App.opencodeSessionId
+        if (restoringSessionModes || !sessionId || sessionId.length === 0) return
+        App.writeSetting(sessionModeKey(sessionId, "approvalMode"), App.agentApprovalMode)
+        App.writeSetting(sessionModeKey(sessionId, "agentProfileId"), App.activeAgentProfileId)
+    }
+
+    function restoreCurrentSessionModes() {
+        const sessionId = App.opencodeSessionId
+        if (!sessionId || sessionId.length === 0 || sessionId === restoredSessionModesId) return
+        restoringSessionModes = true
+
+        // Aplicar primero el nivel: un perfil puede definir su aprobación por
+        // defecto. La política guardada se restaura después y tiene la última palabra.
+        const savedProfile = String(App.readSetting(
+            sessionModeKey(sessionId, "agentProfileId"), ""))
+        if (savedProfile.length > 0)
+            App.activeAgentProfileId = savedProfile
+
+        const savedApproval = String(App.readSetting(
+            sessionModeKey(sessionId, "approvalMode"), ""))
+        if (savedApproval.length > 0)
+            App.agentApprovalMode = savedApproval
+
+        restoredSessionModesId = sessionId
+        restoringSessionModes = false
+        // Una sesión nueva o legacy hereda el modo visible actual y desde este
+        // momento ya cuenta con una preferencia propia.
+        persistCurrentSessionModes()
+    }
 
     // App.agentMessages es QVariantList y cada NOTIFY crea una instancia nueva.
     // Mantener un ListModel estable evita que ListView se vacíe durante un frame
@@ -577,6 +614,7 @@ Item {
             profileCombo.currentIndex = profileCombo.indexOfValue(target)
             resolveHarness(target)
         }
+        restoreCurrentSessionModes()
     }
 
     function markActivity() {
@@ -590,6 +628,9 @@ Item {
             root.syncAgentMessageModel()
             root.markActivity()
         }
+        function onAgentSessionsChanged() { root.restoreCurrentSessionModes() }
+        function onAgentApprovalModeChanged() { root.persistCurrentSessionModes() }
+        function onActiveAgentProfileChanged() { root.persistCurrentSessionModes() }
         function onAgentPendingToolChanged() { root.markActivity() }
         function onAgentLogChanged() { root.markActivity() }
         function onAgentRunningChanged() { root.markActivity() }
