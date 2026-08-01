@@ -346,6 +346,10 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
 - **Multi-llama.cpp**: convivir con varias builds/forks sin fricción.
 - **Multi-GGUF roots**: indexar varias carpetas/discos de modelos.
 - **Multi-perfiles compuestos**: mezclar `Backend + Model + Runtime + Harness + Workspace`.
+- **Perfiles híbridos**: un `LaunchProfile` puede vincular un perfil planificador y
+  otro ejecutor. El modo secuencial está pensado para modelos locales que comparten
+  GPU/puerto; el concurrente, para endpoints independientes. El repo incluye la
+  prueba `111_HYBRID MAX-Q planner + KAT-Coder executor`.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
 - **Workspaces portables**: los proyectos también pueden asociar investigaciones y
   exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,

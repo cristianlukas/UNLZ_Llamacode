@@ -205,6 +205,12 @@ struct LaunchProfile {
     QStringList extraArgs;
     QMap<QString, QString> envOverrides;
     MasterConfig master;      // supervisor opcional (maestro CLI/HTTP)
+    // Orquestación híbrida por turno. Cuando plannerProfileId no está vacío,
+    // el request se planifica con ese LaunchProfile y se ejecuta con éste.
+    // "sequential" permite compartir GPU/puerto descargando un modelo antes de
+    // cargar el siguiente; "concurrent" queda reservado para endpoints distintos.
+    QString plannerProfileId;
+    QString hybridMode = QStringLiteral("off"); // off | sequential | concurrent
     // Límite de potencia de GPU (W) aplicado vía nvidia-smi al arrancar el server
     // de este perfil. 0 = sin override (usa el global de Ajustes, si hay).
     int powerLimitW = 0;

@@ -292,6 +292,8 @@ QJsonObject LaunchProfile::toJson() const {
     o["extraArgs"] = QJsonArray::fromStringList(extraArgs);
     o["envOverrides"] = mapToJson(envOverrides);
     o["master"] = master.toJson();
+    o["plannerProfileId"] = plannerProfileId;
+    o["hybridMode"] = hybridMode;
     o["powerLimitW"] = powerLimitW;
     o["browserAutomation"] = browserAutomation;
     o["voice"] = voice.toJson();
@@ -316,6 +318,9 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     for (const auto &v : o["extraArgs"].toArray()) p.extraArgs.append(v.toString());
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
     p.master = MasterConfig::fromJson(o["master"].toObject());
+    p.plannerProfileId = o["plannerProfileId"].toString();
+    p.hybridMode = o["hybridMode"].toString(QStringLiteral("off"));
+    if (p.hybridMode.isEmpty()) p.hybridMode = QStringLiteral("off");
     p.powerLimitW = o["powerLimitW"].toInt(0);
     p.browserAutomation = o["browserAutomation"].toString(QStringLiteral("inherit"));
     if (p.browserAutomation.isEmpty()) p.browserAutomation = QStringLiteral("inherit");

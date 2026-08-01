@@ -27,6 +27,8 @@ Item {
     property string harnessProfileId: ""
     // Perfil de agente por defecto de este launch (capacidades + directivas).
     property string agentProfileId: ""
+    property string plannerProfileId: ""
+    property string hybridMode: "off"
 
     // ── Salud de perfiles (health-check) ──────────────────────────
     // Lista de issues {severity,launchId,entity,code,message,fix} de todos los
@@ -366,6 +368,8 @@ Item {
         masterEscalation = mc.escalation ?? "manual"
         masterAutoAfterFails = mc.autoAfterFails ?? 3
         masterChainLoad(mc.fallbacks ?? [])
+        plannerProfileId = lp.plannerProfileId ?? ""
+        hybridMode = lp.hybridMode ?? "off"
         refreshMasterCliStatus(false)
 
         // Refresca vista previa del comando para el perfil cargado
@@ -529,6 +533,8 @@ Item {
             "runtimePresetId": effectiveRid, "extraArgs": rebuiltArgs, "envOverrides": envOverrides,
             "harnessProfileId": resolvedHarnessId,
             "agentProfileId": agentProfileCombo.currentValue ?? "",
+            "plannerProfileId": hybridMode === "off" ? "" : plannerProfileId,
+            "hybridMode": hybridMode,
             "master": {
                 "fallbacks": masterChainToArray(),
                 "escalation": masterEscalation,
@@ -1382,6 +1388,42 @@ Item {
                                 color: Theme.textPrimary
                                 wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
                                 background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            }
+                        }
+                    }
+                }
+
+                // ── Modo híbrido ─────────────────────────────────────────────
+                Rectangle {
+                    Layout.fillWidth: true
+                    color: Theme.surfaceBg; border.color: Theme.borderColor; radius: 8
+                    implicitHeight: hybridCol.implicitHeight + 20
+                    ColumnLayout {
+                        id: hybridCol
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                        spacing: 8
+                        Text { text: "Modo híbrido — Planificador + ejecutor"; color: Theme.textSecondary; font { pixelSize: 12; bold: true } }
+                        Text {
+                            Layout.fillWidth: true; wrapMode: Text.WordWrap
+                            text: "En cada request, el perfil elegido arma un plan detallado y este perfil lo ejecuta. Secuencial permite compartir GPU y puerto."
+                            color: Theme.textMuted; font.pixelSize: 11
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true; spacing: 10
+                            LcComboBox {
+                                id: hybridModeCombo; Layout.preferredWidth: 180
+                                model: [{text:"Desactivado", value:"off"}, {text:"Secuencial", value:"sequential"}, {text:"Concurrente", value:"concurrent"}]
+                                textRole: "text"; valueRole: "value"
+                                currentIndex: Math.max(0, indexOfValue(root.hybridMode))
+                                onActivated: root.hybridMode = currentValue
+                            }
+                            LcComboBox {
+                                id: plannerProfileCombo; Layout.fillWidth: true
+                                enabled: root.hybridMode !== "off"
+                                model: App.profileManager.launchProfilesForMenu()
+                                textRole: "displayName"; valueRole: "id"
+                                currentIndex: Math.max(0, indexOfValue(root.plannerProfileId))
+                                onActivated: root.plannerProfileId = currentValue
                             }
                         }
                     }

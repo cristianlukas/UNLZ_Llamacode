@@ -131,6 +131,8 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     l.master.fallbacks.append(mf);
     l.powerLimitW = 280;
     l.browserAutomation = "on";
+    l.plannerProfileId = "planner-maxq";
+    l.hybridMode = "sequential";
     const LaunchProfile r = LaunchProfile::fromJson(l.toJson());
     QCOMPARE(r.browserAutomation, QStringLiteral("on"));
     QCOMPARE(r.name, l.name);
@@ -143,12 +145,16 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.master.fallbacks.first().type, QStringLiteral("cli"));
     QCOMPARE(r.master.fallbacks.first().cliName, QStringLiteral("claude"));
     QCOMPARE(r.powerLimitW, 280);
+    QCOMPARE(r.plannerProfileId, QStringLiteral("planner-maxq"));
+    QCOMPARE(r.hybridMode, QStringLiteral("sequential"));
     // Default (campo ausente) → 0 = sin override.
     LaunchProfile empty;
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).powerLimitW, 0);
     // browserAutomation ausente → default "inherit".
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).browserAutomation,
              QStringLiteral("inherit"));
+    QCOMPARE(LaunchProfile::fromJson(QJsonObject{}).hybridMode,
+             QStringLiteral("off"));
 }
 
 void ProfilesTests::agentProfile_thinkingLeakGuardRoundTripAndDefault()

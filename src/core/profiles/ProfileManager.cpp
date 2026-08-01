@@ -383,6 +383,9 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.harnessProfileId = data.value("harnessProfileId", p.harnessProfileId).toString();
     p.workspaceProfileId = data.value("workspaceProfileId", p.workspaceProfileId).toString();
     p.agentProfileId = data.value("agentProfileId", p.agentProfileId).toString();
+    p.plannerProfileId = data.value("plannerProfileId", p.plannerProfileId).toString();
+    p.hybridMode = data.value("hybridMode", p.hybridMode).toString();
+    if (p.plannerProfileId.isEmpty()) p.hybridMode = QStringLiteral("off");
     p.extraArgs = data.value("extraArgs", p.extraArgs).toStringList();
     if (data.contains("master")) {
         const QVariantMap m = data.value("master").toMap();
@@ -451,6 +454,8 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"harnessProfileId", p.harnessProfileId},
             {"workspaceProfileId", p.workspaceProfileId},
             {"agentProfileId", p.agentProfileId},
+            {"plannerProfileId", p.plannerProfileId},
+            {"hybridMode", p.hybridMode},
             {"extraArgs", p.extraArgs},
             {"browserAutomation", p.browserAutomation},
             {"master", masterToVariant(p.master)}};
