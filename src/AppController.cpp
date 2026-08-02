@@ -4677,6 +4677,8 @@ void AppController::startAgent(const QString &launchProfileId)
         }
         b->setAgentTuning(m_agentSystemPrompt, m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
         if (auto *cb = qobject_cast<LlamaAgentBackend *>(b)) {
+            cb->setReasoningPolicy(ctx.launch.reasoningEffort,
+                                   ctx.launch.reasoningBudget);
             const MasterConfig &mc = ctx.launch.master;
             if (mc.isConfigured()) {
                 cb->setMasterChain(buildMasterChain(mc), mc.escalation, mc.autoAfterFails);
@@ -13625,6 +13627,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         m_benchmarkAgent = agent;
         agent->setEphemeralSessions(true);
         agent->setThinkingEnabled(m_agentThinkingEnabled);
+        agent->setReasoningPolicy(ctx.launch.reasoningEffort,
+                                  ctx.launch.reasoningBudget);
         agent->setApprovalPolicy(QStringLiteral("super"));   // auto-approve every tool (headless)
         agent->setPermissionRules(m_agentPermRules);
         agent->setAgentTuning(m_agentSystemPrompt, benchmarkTemp);

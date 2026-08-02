@@ -643,6 +643,8 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QVERIFY(ultra.value("extra").toBool());
     QVERIFY(!ultra.value("autoCompanion").toBool());
     QCOMPARE(ultra.value("minimumBinaryBuild").toInt(), 10228);
+    QCOMPARE(ultra.value("reasoningEffort").toString(), QStringLiteral("high"));
+    QCOMPARE(ultra.value("reasoningBudget").toInt(), 8192);
     QCOMPARE(ultra.value("contextPresets").toArray().size(), 5);
     QCOMPARE(ultra.value("minRamGb").toInt(), 120);
     const QJsonObject model = ultra.value("model").toObject();

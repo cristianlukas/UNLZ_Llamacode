@@ -1120,6 +1120,14 @@ void AgentWireTests::thinkingLeakGuard_isOptInAndControlsTemplate()
     const QJsonObject standard = B::thinkingTemplateKwargs(false, false);
     QCOMPARE(standard.value(QStringLiteral("enable_thinking")).toBool(), false);
     QVERIFY(!standard.contains(QStringLiteral("preserve_thinking")));
+    QVERIFY(!standard.contains(QStringLiteral("reasoning_effort")));
+
+    const QJsonObject deepSeekHigh = B::thinkingTemplateKwargs(true, false,
+                                                               QStringLiteral("HIGH"));
+    QCOMPARE(deepSeekHigh.value(QStringLiteral("reasoning_effort")).toString(),
+             QStringLiteral("high"));
+    QVERIFY(!B::thinkingTemplateKwargs(false, false, QStringLiteral("max"))
+                 .contains(QStringLiteral("reasoning_effort")));
 
     const QJsonObject guarded = B::thinkingTemplateKwargs(false, true);
     QCOMPARE(guarded.value(QStringLiteral("preserve_thinking")).toBool(), false);

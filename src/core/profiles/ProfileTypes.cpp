@@ -309,6 +309,8 @@ QJsonObject LaunchProfile::toJson() const {
     o["harnessProfileId"] = harnessProfileId;
     o["workspaceProfileId"] = workspaceProfileId;
     o["agentProfileId"] = agentProfileId;
+    o["reasoningEffort"] = reasoningEffort;
+    o["reasoningBudget"] = reasoningBudget;
     o["extraArgs"] = QJsonArray::fromStringList(extraArgs);
     o["envOverrides"] = mapToJson(envOverrides);
     o["master"] = master.toJson();
@@ -335,6 +337,12 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.harnessProfileId = o["harnessProfileId"].toString();
     p.workspaceProfileId = o["workspaceProfileId"].toString();
     p.agentProfileId = o["agentProfileId"].toString();
+    p.reasoningEffort = o["reasoningEffort"].toString().trimmed().toLower();
+    if (p.reasoningEffort != QLatin1String("low")
+        && p.reasoningEffort != QLatin1String("high")
+        && p.reasoningEffort != QLatin1String("max"))
+        p.reasoningEffort.clear();
+    p.reasoningBudget = qMax(-1, o["reasoningBudget"].toInt(-1));
     for (const auto &v : o["extraArgs"].toArray()) p.extraArgs.append(v.toString());
     p.envOverrides = mapFromJson(o["envOverrides"].toObject());
     p.master = MasterConfig::fromJson(o["master"].toObject());

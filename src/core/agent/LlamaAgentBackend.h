@@ -78,6 +78,7 @@ public:
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
+    void setReasoningPolicy(const QString &effort, int budget);
     void setThinkingLeakGuard(bool enabled) { m_thinkingLeakGuard = enabled; }
     void setStablePhasePrefix(bool enabled) { m_stablePhasePrefix = enabled; }
     bool stablePhasePrefixForTest() const { return m_stablePhasePrefix; }
@@ -267,7 +268,8 @@ public:
     static QString visibleAnswer(const QString &content, bool thinkingEnabled,
                                  bool thinkingLeakGuard = false);
     static QJsonObject thinkingTemplateKwargs(bool thinkingEnabled,
-                                              bool thinkingLeakGuard);
+                                              bool thinkingLeakGuard,
+                                              const QString &reasoningEffort = QString());
 
     // Une los deltas incrementales de tool_calls (streaming OpenAI) en el
     // acumulador `acc` (index → {id,name,arguments}). id/name se setean cuando
@@ -512,6 +514,8 @@ private:
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
     double  m_temperature = -1.0;   // <0 = no enviar (default del server)
     bool    m_thinkingEnabled = false;
+    QString m_reasoningEffort;
+    int     m_reasoningBudget = -1;
     bool    m_thinkingLeakGuard = false;
     bool    m_stablePhasePrefix = true;
     QVariantList m_efficiencyRequests;

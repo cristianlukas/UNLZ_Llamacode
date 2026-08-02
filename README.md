@@ -293,6 +293,10 @@ la salida incremental renueva el watchdog, por lo que un build largo con activid
 no se corta. Todo timeout produce `tool_result`, reinicia el worker y cierra el
 turno con diagnóstico en vez de consumir el timeout global. Benchmark de agente
 usa temperatura acotada, seed fijo y guarda métricas de progreso/estancamiento.
+Los perfiles de lanzamiento pueden fijar `reasoningEffort` y `reasoningBudget`
+por request. ULTRA-Q usa `high` explícito y un techo de 8192 tokens para evitar
+la cola larga del `low` implícito de DeepSeek V4 Flash sin desactivar el
+razonamiento en tareas complejas.
 Los perfiles de agente editables incluyen además la opción de compatibilidad
 `thinkingLeakGuard`, apagada por defecto. Al activarla para un modelo cuyo template
 filtra razonamiento, el harness pide no preservar thinking entre llamadas de tools

@@ -11,6 +11,8 @@
     "cpuOk": false,
     "folder": "DeepSeek-V4-Flash-0731-UD-IQ3_S",
     "agentProfileId": "agent-maximo",
+    "reasoningEffort": "high",
+    "reasoningBudget": 8192,
     "model": {
       "repo": "unsloth/DeepSeek-V4-Flash-0731-GGUF",
       "file": "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
@@ -136,7 +138,7 @@
         "comment": "Más expertos en RAM; sacrifica decode para liberar VRAM al prefill."
       }
     ],
-    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
+    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Reasoning effort high explícito evita el low implícito (prefijo vacío) y el budget 8192 corta colas patológicas sin impedir tareas largas. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s-dspark-external",

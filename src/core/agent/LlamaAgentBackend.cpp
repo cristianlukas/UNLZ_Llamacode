@@ -131,9 +131,15 @@ QString LlamaAgentBackend::visibleAnswer(const QString &content, bool thinkingEn
 }
 
 QJsonObject LlamaAgentBackend::thinkingTemplateKwargs(bool thinkingEnabled,
-                                                      bool thinkingLeakGuard)
+                                                      bool thinkingLeakGuard,
+                                                      const QString &reasoningEffort)
 {
     QJsonObject kwargs{{QStringLiteral("enable_thinking"), thinkingEnabled}};
+    const QString effort = reasoningEffort.trimmed().toLower();
+    if (thinkingEnabled && (effort == QLatin1String("low")
+                            || effort == QLatin1String("high")
+                            || effort == QLatin1String("max")))
+        kwargs.insert(QStringLiteral("reasoning_effort"), effort);
     if (thinkingLeakGuard)
         kwargs.insert(QStringLiteral("preserve_thinking"), false);
     return kwargs;
@@ -1643,6 +1649,16 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     sendMessageImpl(text, text);
 }
 
+void LlamaAgentBackend::setReasoningPolicy(const QString &effort, int budget)
+{
+    const QString normalized = effort.trimmed().toLower();
+    m_reasoningEffort = (normalized == QLatin1String("low")
+                         || normalized == QLatin1String("high")
+                         || normalized == QLatin1String("max"))
+        ? normalized : QString();
+    m_reasoningBudget = qMax(-1, budget);
+}
+
 void LlamaAgentBackend::setProgressPolicy(const AgentProgressGovernor::Policy &policy,
                                           int quickToolTimeoutSec)
 {
@@ -2337,9 +2353,11 @@ void LlamaAgentBackend::runCompletion()
     if (m_temperature >= 0.0) payload.insert(QStringLiteral("temperature"), m_temperature);
     if (m_seed >= 0) payload.insert(QStringLiteral("seed"), m_seed);
     // Razonamiento controlado por el toggle global de la app, no por el perfil.
-    payload.insert(QStringLiteral("reasoning_budget"), m_thinkingEnabled ? -1 : 0);
+    payload.insert(QStringLiteral("reasoning_budget"),
+                   m_thinkingEnabled ? m_reasoningBudget : 0);
     payload.insert(QStringLiteral("chat_template_kwargs"),
-                   thinkingTemplateKwargs(m_thinkingEnabled, m_thinkingLeakGuard));
+                   thinkingTemplateKwargs(m_thinkingEnabled, m_thinkingLeakGuard,
+                                          m_reasoningEffort));
 
     // Crear la burbuja del asistente (typing) ANTES de disparar el request, no
     // recién al primer token. En turnos de follow-up (tras una tool) la burbuja
