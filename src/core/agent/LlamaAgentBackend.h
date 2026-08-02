@@ -227,6 +227,9 @@ public:
     }
     int compactStallForTest() const { return m_compactStall; }
     static QString failureFingerprint(const QString &tool, const QString &result);
+    // Firma semántica estable para anti-loop: normaliza JSON equivalente
+    // (espacios y orden de claves) antes de comparar llamadas consecutivas.
+    static QString toolCallSignature(const QString &tool, const QString &arguments);
     static int repeatedSuffixStart(const QString &text, int repeats = 3,
                                    int minBlockChars = 80);
     bool recordToolOutcomeForTest(const QString &tool, bool ok, bool isWrite,
@@ -591,7 +594,8 @@ private:
     // Robustez (Etapa 7)
     int m_turnIters = 0;                 // completions consumidas en el turno actual
     int m_emptyTextRetries = 0;          // reintentos por turno text-tools vacío (nudge)
-    QHash<QString, int> m_callCounts;    // firma de tool_call → veces vista (anti-loop)
+    QString m_lastCallSignature;         // firma de la última tool_call del turno
+    int m_sameCallStreak = 0;            // repeticiones consecutivas de esa firma
     QString m_failureFingerprint;        // error normalizado de la racha actual
     int m_equivalentFailures = 0;        // fallos consecutivos equivalentes
     bool m_turnHadDifficulty = false;    // hubo al menos una tool fallida en este turno
@@ -607,7 +611,7 @@ private:
     // real lo frena kMaxSameCall (misma tool + mismos args repetidos). Que el
     // agente haga tantas iteraciones como necesite.
     static constexpr int kMaxTurnIters = 1000;
-    static constexpr int kMaxSameCall  = 3;
+    static constexpr int kMaxSameCall  = 3; // la tercera idéntica se bloquea sin ejecutarse
     static constexpr int kFailureSpiralThreshold = 3;
 
     // Aprobación en curso (1 tool a la vez)

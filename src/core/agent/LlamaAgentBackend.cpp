@@ -1755,7 +1755,8 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
 
     m_turnIters = 0;
     m_emptyTextRetries = 0;
-    m_callCounts.clear();
+    m_lastCallSignature.clear();
+    m_sameCallStreak = 0;
     m_turnHadDifficulty = false;
     m_turnRecovered = false;
     m_escalatedSigs.clear();
@@ -2914,8 +2915,14 @@ void LlamaAgentBackend::processPendingCalls()
     setAssistantStatus(toolStatusText(name, kind));
 
     // ── Robustez: anti-loop ──────────────────────────────────────────────
-    const QString sig = name + QLatin1Char('|') + argStr;
-    const int sigCnt = ++m_callCounts[sig];
+    const QString sig = toolCallSignature(name, argStr);
+    if (sig == m_lastCallSignature) {
+        ++m_sameCallStreak;
+    } else {
+        m_lastCallSignature = sig;
+        m_sameCallStreak = 1;
+    }
+    const int sigCnt = m_sameCallStreak;
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("tool_call"),
                           QJsonObject{{QStringLiteral("tool"), name},
                                       {QStringLiteral("correlationId"), m_correlationId},
@@ -2948,9 +2955,10 @@ void LlamaAgentBackend::processPendingCalls()
         name = QStringLiteral("ask_teacher");
         kind = toolKind(name);
         argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
-    } else if (sigCnt > kMaxSameCall) {
-        // No matar el turno: inyectar el aviso como tool_result y continuar.
-        // El modelo recibe el feedback y corrige solo, sin pedir "continuá".
+    } else if (sigCnt >= kMaxSameCall) {
+        // La tercera llamada consecutiva no se ejecuta. Inyectamos el tool_result
+        // para conservar el contrato assistant/tool y cerramos el turno: volver a
+        // consultar al mismo modelo le permitía ignorar el aviso y reiniciar el loop.
         ++m_toolFail;
         m_pendingCalls.removeFirst();
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
@@ -2958,11 +2966,15 @@ void LlamaAgentBackend::processPendingCalls()
                                           {QStringLiteral("toolCallId"), id},
                                           {QStringLiteral("reason"), QStringLiteral("anti_loop")},
                                           {QStringLiteral("repeatCount"), sigCnt}});
-        appendToolResult(id, name,
-            QStringLiteral("[anti-loop: ya ejecutaste esta tool idéntica %1 veces "
-                           "sin progreso. NO la repitas: cambiá de enfoque, ajustá "
-                           "los args, o usá otra tool.]").arg(kMaxSameCall));
-        processPendingCalls();
+        const QString notice = QStringLiteral(
+            "[anti-loop: se bloqueó la tercera llamada consecutiva a '%1' con los "
+            "mismos argumentos porque no hubo progreso verificable. Turno detenido "
+            "para evitar más consumo; revisá lo ya obtenido antes de continuar.]"
+        ).arg(name);
+        appendToolResult(id, name, notice);
+        emit logAppended(QStringLiteral("[anti-loop] tercera tool idéntica bloqueada; "
+                                        "cerrando turno\n"));
+        finishTurn(notice);
         return;
     }
 
@@ -3616,6 +3628,21 @@ QString LlamaAgentBackend::failureFingerprint(const QString &tool, const QString
     return tool.section(QLatin1Char('_'), 0, 0) + QLatin1Char('|')
         + QString::fromLatin1(QCryptographicHash::hash(normalized.toUtf8(),
                                                        QCryptographicHash::Sha256).toHex());
+}
+
+QString LlamaAgentBackend::toolCallSignature(const QString &tool, const QString &arguments)
+{
+    QJsonParseError error;
+    const QJsonDocument parsed = QJsonDocument::fromJson(arguments.trimmed().toUtf8(), &error);
+    QByteArray canonical;
+    if (error.error == QJsonParseError::NoError && !parsed.isNull()) {
+        canonical = parsed.toJson(QJsonDocument::Compact);
+    } else {
+        QString fallback = arguments.trimmed();
+        fallback.replace(QRegularExpression(QStringLiteral("\\s+")), QStringLiteral(" "));
+        canonical = fallback.toUtf8();
+    }
+    return tool.trimmed().toLower() + QLatin1Char('|') + QString::fromUtf8(canonical);
 }
 
 bool LlamaAgentBackend::recordToolOutcome(const QString &tool, bool ok, bool isWrite,
