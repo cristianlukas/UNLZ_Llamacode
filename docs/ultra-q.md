@@ -24,11 +24,31 @@ KV q4_0 · flash-attn · mmap · parallel 1
 --spec-type draft-dspark · --spec-draft-n-max 5
 ```
 
-El checkpoint 0731 incluye el cabezal DSpark en el propio GGUF: no necesita un
-archivo draft separado. Las variantes de contexto clonadas desde ULTRA-Q heredan
-esta configuración. El valor `n-max 5` es el preset publicado con el soporte
-upstream y debe compararse localmente contra MTP (`draft-mtp`, n-max 2) y sin
-speculative decoding si el hardware muestra una regresión.
+El perfil original se conserva sin cambios como control histórico: asume que el
+cabezal DSpark quedó disponible dentro del GGUF principal. Los GGUF `UD-IQ3_S`
+actuales de Unsloth no exponen esas capas como un drafter separado utilizable por
+llama.cpp, por lo que activar sólo `draft-dspark` puede no acelerar la generación.
+Las variantes de contexto y benchmark existentes continúan ligadas a ese perfil
+para no cambiar resultados anteriores.
+
+El perfil paralelo
+`sys-ultraq-dsv4-0731-iq3s-dspark-external` reutiliza los mismos cuatro shards y
+descarga además `DeepseekV4-Flash-20260731-DSpark.gguf` desde
+`am17an/DeepseekV4-Flash-20260731-DSpark`. LlamaCode lo asocia como draft
+obligatorio y genera:
+
+```text
+--spec-draft-model <ruta al DSpark.gguf>
+--spec-type draft-dspark
+--spec-draft-n-max 5
+--spec-draft-ngl auto
+```
+
+El draft agrega aproximadamente 10,9 GB. En una RTX 3090 con el modelo principal
+parcialmente en VRAM puede terminar en RAM o forzar otra distribución, de modo que
+la aceleración no está garantizada. Comparar el perfil externo con ULTRA-Q y con
+`[bench ULTRA-Q] ... nospec`, registrando aceptación, TG, RAM, VRAM y pagefile,
+antes de promoverlo.
 
 La configuración de sampling es deliberadamente específica para el agente de
 código. DeepSeek recomienda `temperature 1.0` y `top_p 1.0` para el uso local

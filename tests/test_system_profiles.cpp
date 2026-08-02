@@ -93,7 +93,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 28); // tiers base + extras + ULTRA-Q/híbrido + 12 variantes bench
+    QCOMPARE(sys, 29); // tiers base + extras + ULTRA-Q/híbrido + DSpark externo + 12 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -629,10 +629,14 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QFile bundle(bundlePath());
     QVERIFY(bundle.open(QIODevice::ReadOnly));
     const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
-    QJsonObject ultra, hybrid;
+    ProfileManager pm;
+    QJsonObject ultra, ultraExternal, hybrid;
     for (const QJsonValue &value : profiles) {
         const QJsonObject profile = value.toObject();
         if (profile.value("id").toString() == QLatin1String("sys-ultraq-dsv4-0731-iq3s")) ultra = profile;
+        if (profile.value("id").toString()
+            == QLatin1String("sys-ultraq-dsv4-0731-iq3s-dspark-external"))
+            ultraExternal = profile;
         if (profile.value("id").toString() == QLatin1String("sys-hybrid-ultraq-maxq")) hybrid = profile;
     }
     QVERIFY(!ultra.isEmpty());
@@ -662,12 +666,42 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
     QCOMPARE(ultra.value("benchmarkVariants").toArray().size(), 12);
 
+    QVERIFY(!ultraExternal.isEmpty());
+    QVERIFY(ultraExternal.value("extra").toBool());
+    QVERIFY(!ultraExternal.value("autoCompanion").toBool());
+    QCOMPARE(ultraExternal.value("minimumBinaryBuild").toInt(), 10228);
+    QCOMPARE(ultraExternal.value("model").toObject().value("file").toString(),
+             model.value("file").toString());
+    const QJsonObject externalDraft = ultraExternal.value("draftModel").toObject();
+    QCOMPARE(externalDraft.value("repo").toString(),
+             QStringLiteral("am17an/DeepseekV4-Flash-20260731-DSpark"));
+    QCOMPARE(externalDraft.value("file").toString(),
+             QStringLiteral("DeepseekV4-Flash-20260731-DSpark.gguf"));
+    const QJsonObject externalSpec = ultraExternal.value("spec").toObject();
+    QCOMPARE(externalSpec.value("type").toString(), QStringLiteral("draft-dspark"));
+    QCOMPARE(externalSpec.value("draftNgl").toString(), QStringLiteral("auto"));
+    QCOMPARE(externalSpec.value("draftNMax").toInt(), 5);
+    QStringList externalArgs;
+    for (const QJsonValue &v : ultraExternal.value("extraArgs").toArray())
+        externalArgs << v.toString();
+    QCOMPARE(externalArgs.value(externalArgs.indexOf("--spec-type") + 1),
+             QStringLiteral("draft-dspark"));
+    QVERIFY(!externalArgs.contains(QStringLiteral("--spec-draft-model")));
+
+    const QVariantMap externalLaunch =
+        pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s-dspark-external"));
+    const QVariantMap externalModel =
+        pm.getModelProfile(externalLaunch.value("modelProfileId").toString());
+    QVERIFY(!externalModel.value("draftModelId").toString().isEmpty());
+    QCOMPARE(externalModel.value("specType").toString(), QStringLiteral("draft-dspark"));
+    QCOMPARE(externalModel.value("specDraftNgl").toString(), QStringLiteral("auto"));
+    QCOMPARE(externalModel.value("specDraftNMax").toInt(), 5);
+
     QVERIFY(!hybrid.isEmpty());
     QCOMPARE(hybrid.value("plannerProfileId").toString(),
              QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
     QCOMPARE(hybrid.value("hybridMode").toString(), QStringLiteral("sequential"));
     QCOMPARE(hybrid.value("binaryKind").toString(), QStringLiteral("official"));
-    ProfileManager pm;
     const QVariantMap launch = pm.getLaunchProfile(QStringLiteral("sys-hybrid-ultraq-maxq"));
     QCOMPARE(launch.value("plannerProfileId").toString(),
              QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));

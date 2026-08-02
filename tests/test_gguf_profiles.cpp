@@ -47,6 +47,7 @@ private slots:
     void builder_missingDraftIsBlocking();
     void builder_rawDraftMtpRequiresDraftModel();
     void builder_rawDsparkDoesNotRequireExternalDraftModel();
+    void builder_externalDsparkEmitsDraftAndType();
     void builder_emitsSelfContainedMtpFlags();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_forcesF16KvWithDraft();
@@ -381,6 +382,38 @@ void CoreTests::builder_rawDsparkDoesNotRequireExternalDraftModel()
     QVERIFY(type >= 0);
     QCOMPARE(ep.effectiveArgs.value(type + 1), QStringLiteral("draft-dspark"));
     QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--spec-draft-model")));
+}
+
+void CoreTests::builder_externalDsparkEmitsDraftAndType()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf";
+    ctx.model.draftModelId = "dspark";
+    ctx.model.specType = "draft-dspark";
+    ctx.model.specDraftNMax = 5;
+    ctx.model.specDraftNgl = "auto";
+    ctx.draftModel.id = "dspark";
+    ctx.draftModel.isAvailable = true;
+    ctx.draftModel.absolutePath = "C:/models/DeepseekV4-Flash-20260731-DSpark.gguf";
+    ctx.launch.extraArgs = {QStringLiteral("--spec-type"),
+                            QStringLiteral("draft-dspark")};
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    const QStringList &args = ep.effectiveArgs;
+    int index = args.indexOf(QStringLiteral("--spec-draft-model"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), ctx.draftModel.absolutePath);
+    index = args.indexOf(QStringLiteral("--spec-type"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), QStringLiteral("draft-dspark"));
+    index = args.indexOf(QStringLiteral("--spec-draft-n-max"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), QStringLiteral("5"));
+    index = args.indexOf(QStringLiteral("--spec-draft-ngl"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), QStringLiteral("auto"));
 }
 
 void CoreTests::builder_emitsSelfContainedMtpFlags()

@@ -240,6 +240,13 @@ recomienda ni descarga automáticamente: antes
 de promoverlo se debe medir estabilidad, pagefile, calidad y tiempo total en el
 hardware local. Detalle operativo en [`docs/ultra-q.md`](docs/ultra-q.md).
 
+Para validar el soporte upstream con el drafter real sin modificar ese baseline,
+el catálogo agrega el perfil paralelo `[experimental ultra] ULTRA-Q · DSpark
+externo`. Reutiliza los cuatro shards IQ3_S y descarga como dependencia obligatoria
+el GGUF DSpark separado (~10,9 GB), emitiendo `--spec-draft-model` junto con
+`draft-dspark`. Sigue siendo opt-in: en 24 GB de VRAM el costo adicional puede
+anular la aceleración y debe compararse contra ULTRA-Q y la variante `nospec`.
+
 ## Estado actual
 
 **P0–P4 completo y funcionando.**

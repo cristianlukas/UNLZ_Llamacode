@@ -139,6 +139,65 @@
     "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
   },
   {
+    "id": "sys-ultraq-dsv4-0731-iq3s-dspark-external",
+    "tier": "24GB-DeepSeek-V4-Ultra",
+    "order": 104,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[experimental ultra] ULTRA-Q · DSpark externo · IQ3_S 131k",
+    "minVramGb": 24,
+    "minRamGb": 120,
+    "cpuOk": false,
+    "folder": "DeepSeek-V4-Flash-0731-UD-IQ3_S",
+    "agentProfileId": "agent-maximo",
+    "reasoningEffort": "high",
+    "reasoningBudget": 8192,
+    "model": {
+      "repo": "unsloth/DeepSeek-V4-Flash-0731-GGUF",
+      "file": "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+      "files": [
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00002-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00003-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00004-of-00004.gguf"
+      ],
+      "quant": "UD-IQ3_S"
+    },
+    "draftModel": {
+      "repo": "am17an/DeepseekV4-Flash-20260731-DSpark",
+      "file": "DeepseekV4-Flash-20260731-DSpark.gguf",
+      "folder": "DeepSeek-V4-Flash-0731-DSpark"
+    },
+    "spec": {
+      "type": "draft-dspark",
+      "draftNgl": "auto",
+      "draftNMax": 5
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 44,
+      "batch": 1024,
+      "ubatch": 512,
+      "threads": 0,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q4_0", "--cache-type-v", "q4_0",
+      "--n-cpu-moe", "39", "--fit-target", "512", "--temp", "0.60", "--top-p", "0.95",
+      "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0", "--no-context-shift", "--metrics",
+      "--no-warmup", "--jinja", "--threads-batch", "0", "--predict", "16384",
+      "--parallel", "1", "--reasoning-format", "auto", "--spec-type", "draft-dspark"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10228,
+    "contextPresets": [65536, 131072, 196608, 262144, 393216],
+    "comment": "Experimental paralelo: conserva intacto ULTRA-Q y reutiliza sus cuatro shards IQ3_S, pero descarga y exige el drafter DSpark GGUF separado publicado por el autor del soporte upstream. Emite --spec-draft-model, --spec-type draft-dspark y n-max 5 con llama.cpp b10228+. El draft agrega ~10,9 GB y puede no acelerar una RTX 3090 con offload híbrido; comparar contra ULTRA-Q y [bench ULTRA-Q] nospec antes de promover."
+  },
+  {
     "id": "sys-hybrid-ultraq-maxq",
     "tier": "24GB-Hybrid-Ultra-MaxQ",
     "order": 91,
