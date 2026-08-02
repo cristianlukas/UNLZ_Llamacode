@@ -646,9 +646,11 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(model.value("files").toArray().size(), 4);
     QCOMPARE(model.value("file").toString(),
              QStringLiteral("DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf"));
+    QVERIFY(ultra.value("runtime").toObject().value("mmap").toBool());
     QStringList args;
     for (const QJsonValue &v : ultra.value("extraArgs").toArray()) args << v.toString();
     QCOMPARE(args.value(args.indexOf("--n-cpu-moe") + 1), QStringLiteral("39"));
+    QCOMPARE(args.value(args.indexOf("--fit-target") + 1), QStringLiteral("512"));
 
     QVERIFY(!hybrid.isEmpty());
     QCOMPARE(hybrid.value("plannerProfileId").toString(),
