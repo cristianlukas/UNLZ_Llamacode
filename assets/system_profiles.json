@@ -35,8 +35,8 @@
     },
     "extraArgs": [
       "--cache-type-k", "q4_0", "--cache-type-v", "q4_0",
-      "--n-cpu-moe", "39", "--fit-target", "512", "--temp", "1.0", "--top-p", "0.95",
-      "--top-k", "0", "--min-p", "0.0", "--repeat-penalty", "1.0",
+      "--n-cpu-moe", "39", "--fit-target", "512", "--temp", "0.60", "--top-p", "0.95",
+      "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0",
       "--presence-penalty", "0.0", "--no-context-shift", "--metrics",
       "--no-warmup", "--jinja", "--threads-batch", "0", "--predict", "16384",
       "--parallel", "1", "--reasoning-format", "auto"
@@ -44,7 +44,7 @@
     "binaryKind": "official",
     "minimumBinaryBuild": 10217,
     "contextPresets": [65536, 131072, 196608, 262144, 393216],
-    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
+    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
   },
   {
     "id": "sys-hybrid-ultraq-maxq",

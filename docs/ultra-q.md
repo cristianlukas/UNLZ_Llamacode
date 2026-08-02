@@ -18,9 +18,27 @@ usan otros perfiles.
 
 ```text
 ctx 131072 · gpuLayers 44 · batch 1024 · ubatch 512
-KV q4_0 · flash-attn · no-mmap · parallel 1
---n-cpu-moe 39 · temp 1.0 · top-p 0.95
+KV q4_0 · flash-attn · mmap · parallel 1
+--n-cpu-moe 39 · temp 0.60 · top-p 0.95 · top-k 20
 ```
+
+La configuración de sampling es deliberadamente específica para el agente de
+código. DeepSeek recomienda `temperature 1.0` y `top_p 1.0` para el uso local
+general de V4 Flash, mientras que su guía por casos baja coding/math a temperatura
+`0.0`; el post de referencia no publica valores de sampling. ULTRA-Q usa el punto
+conservador común de LlamaCode (`0.60 / 0.95 / top-k 20`, `min-p 0`, penalidades
+neutras) para limitar deriva y repetición sin hacer completamente determinista una
+elección de tool equivocada. El detector del agente sigue siendo la defensa
+principal contra loops: el sampler no la reemplaza.
+
+En la medición local validada con llama.cpp b10223, el proceso estabilizó su
+working set en ~104,8 GB y la RTX 3090 en 20.963/24.576 MiB (85,3%). Se conserva
+`--no-warmup`: con sólo ~4,1 GB de RAM física libre, un cache RAM adicional o un
+prefill grande al arrancar induciría paginación. `mmap` permite que Windows conserve
+las páginas del GGUF en su file cache mientras el server permanezca vivo; cerrar el
+proceso destruye VRAM/KV y no existe una instantánea portable que pueda restaurarlos.
+Para reinicios rápidos, mantener el servidor persistente y reutilizar
+`cache_prompt=true`, ya enviado por el agente en cada iteración.
 
 Los contextos permitidos para crear variantes son 64k, 131k, 192k, 256k y 384k.
 384k es experimental: debe verificarse contra RAM comprometida, pagefile, VRAM y

@@ -651,6 +651,13 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     for (const QJsonValue &v : ultra.value("extraArgs").toArray()) args << v.toString();
     QCOMPARE(args.value(args.indexOf("--n-cpu-moe") + 1), QStringLiteral("39"));
     QCOMPARE(args.value(args.indexOf("--fit-target") + 1), QStringLiteral("512"));
+    QCOMPARE(args.value(args.indexOf("--temp") + 1), QStringLiteral("0.60"));
+    QCOMPARE(args.value(args.indexOf("--top-p") + 1), QStringLiteral("0.95"));
+    QCOMPARE(args.value(args.indexOf("--top-k") + 1), QStringLiteral("20"));
+    QCOMPARE(args.value(args.indexOf("--min-p") + 1), QStringLiteral("0.0"));
+    QCOMPARE(args.value(args.indexOf("--repeat-penalty") + 1), QStringLiteral("1.0"));
+    QCOMPARE(args.value(args.indexOf("--presence-penalty") + 1), QStringLiteral("0.0"));
+    QVERIFY(args.contains(QStringLiteral("--no-warmup")));
 
     QVERIFY(!hybrid.isEmpty());
     QCOMPARE(hybrid.value("plannerProfileId").toString(),
