@@ -682,6 +682,14 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(balancedRt.value("ubatch").toInt(), 1024);
     QCOMPARE(balanced.value("modelProfileId").toString(),
              QStringLiteral("sysmodel-sys-bench-ultraq-b4096-u1024-ds5"));
+    const QVariantMap balancedModel =
+        pm.getModelProfile(balanced.value("modelProfileId").toString());
+    const QVariantMap ultraLaunch =
+        pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
+    const QVariantMap ultraModel =
+        pm.getModelProfile(ultraLaunch.value("modelProfileId").toString());
+    QCOMPARE(balancedModel.value("modelId").toString(),
+             ultraModel.value("modelId").toString());
     QCOMPARE(balanced.value("extraArgs").toStringList().value(
                  balanced.value("extraArgs").toStringList().indexOf("--spec-draft-n-max") + 1),
              QStringLiteral("5"));

@@ -161,6 +161,8 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         if (!cur.startsWith(u'-')) { args.append(cur); continue; }
         if (cur == QLatin1String("--spec-type") && i + 1 < extraTokens.size()
             && extraTokens.at(i + 1).contains(QStringLiteral("draft"), Qt::CaseInsensitive)
+            && extraTokens.at(i + 1).compare(QStringLiteral("draft-dspark"),
+                                             Qt::CaseInsensitive) != 0
             && ctx.model.draftModelId.isEmpty()
             && !MtpDetection::isSelfContained(ctx.catalogModel.fileName)) {
             result.blockingErrors.append(QStringLiteral(

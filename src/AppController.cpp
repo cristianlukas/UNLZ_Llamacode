@@ -11796,7 +11796,11 @@ static QJsonArray readSystemProfilesBundle()
                                        : QStringLiteral(":/assets/system_profiles.json");
     QFile f(src);
     if (!f.open(QIODevice::ReadOnly)) return {};
-    return QJsonDocument::fromJson(f.readAll()).array();
+    // buildContext() usa este bundle para religar por nombre los modelos que el
+    // usuario guarda fuera de la carpeta administrada (por ejemplo D:\Models).
+    // ProfileManager expande las variantes de benchmark al cargarlas; esta vista
+    // debe hacer lo mismo o sólo el perfil base puede encontrar su GGUF.
+    return expandSystemProfileVariants(QJsonDocument::fromJson(f.readAll()).array());
 }
 
 void AppController::ensureSystemBinary(const QString &kind)

@@ -46,6 +46,7 @@ private slots:
     void builder_emitsSpecFlags();
     void builder_missingDraftIsBlocking();
     void builder_rawDraftMtpRequiresDraftModel();
+    void builder_rawDsparkDoesNotRequireExternalDraftModel();
     void builder_emitsSelfContainedMtpFlags();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_forcesF16KvWithDraft();
@@ -360,6 +361,26 @@ void CoreTests::builder_rawDraftMtpRequiresDraftModel()
         if (e.contains(QStringLiteral("draftModel"), Qt::CaseInsensitive))
             mentionsProfileDraft = true;
     QVERIFY2(mentionsProfileDraft, qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+}
+
+void CoreTests::builder_rawDsparkDoesNotRequireExternalDraftModel()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf";
+    ctx.launch.extraArgs = {
+        QStringLiteral("--spec-type"),
+        QStringLiteral("draft-dspark"),
+        QStringLiteral("--spec-draft-n-max"),
+        QStringLiteral("5")
+    };
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    const int type = ep.effectiveArgs.indexOf(QStringLiteral("--spec-type"));
+    QVERIFY(type >= 0);
+    QCOMPARE(ep.effectiveArgs.value(type + 1), QStringLiteral("draft-dspark"));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--spec-draft-model")));
 }
 
 void CoreTests::builder_emitsSelfContainedMtpFlags()
