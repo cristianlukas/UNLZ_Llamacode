@@ -107,6 +107,9 @@ void CoreTests::draftCandidate()
     QVERIFY(MtpDetection::isSelfContained("ThinkingCap-Qwen3.6-27B-Q3_K_M-MTP.gguf"));
     QVERIFY(MtpDetection::isSelfContained("ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf"));
     QVERIFY(MtpDetection::isSelfContained("bottlecapai_ThinkingCap-Qwen3_6-27B-Q8_0.gguf"));
+    QVERIFY(MtpDetection::isSelfContained(
+        "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf"));
+    QVERIFY(!MtpDetection::isSelfContained("DeepSeek-V4-Flash-Preview-UD-IQ3_S.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("ThinkingCap-Qwen3.5-27B-Q4_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("Qwen3.6-27B-Q3_K_M.gguf"));
 }

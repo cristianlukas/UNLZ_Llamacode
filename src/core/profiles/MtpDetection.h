@@ -6,10 +6,11 @@
 
 namespace MtpDetection {
 
-// Heurística conservadora para GGUFs que transportan el cabezal MTP junto al
-// modelo principal. La mayoría de publishers marca MTP como token del filename.
+// Heurística conservadora para GGUFs que transportan un speculator (MTP/DSpark)
+// junto al modelo principal. La mayoría de publishers marca MTP en el filename.
 // BottleCapAI publica ThinkingCap con el cabezal integrado pero conserva nombres
 // de quant estándar (p. ej. ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf).
+// DeepSeek-V4-Flash-0731 es el checkpoint oficial con cabezal DSpark integrado.
 inline bool isSelfContained(const QString &fileName)
 {
     const QString base = QFileInfo(fileName).completeBaseName();
@@ -19,8 +20,12 @@ inline bool isSelfContained(const QString &fileName)
     static const QRegularExpression thinkingCapQwen36(
         QStringLiteral(R"((^|[-_.])thinkingcap[-_.]qwen3[._-]?6($|[-_.]))"),
         QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression deepSeekV4Flash0731(
+        QStringLiteral(R"((^|[-_.])deepseek[-_.]?v4[-_.]flash[-_.]0731($|[-_.]))"),
+        QRegularExpression::CaseInsensitiveOption);
     return marker.match(base).hasMatch()
-        || thinkingCapQwen36.match(base).hasMatch();
+        || thinkingCapQwen36.match(base).hasMatch()
+        || deepSeekV4Flash0731.match(base).hasMatch();
 }
 
 } // namespace MtpDetection

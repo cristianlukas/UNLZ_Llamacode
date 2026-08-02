@@ -230,7 +230,9 @@ Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 El mismo tier ofrece ahora, también **opt-in**, `[experimental ultra] ULTRA-Q`,
 basado en `DeepSeek-V4-Flash-0731 UD-IQ3_S` (~116 GB en cuatro shards). Su punto
 inicial para RTX 3090 + Ryzen 9900X + 128 GB DDR5 es contexto 131k, 44 capas GPU,
-KV q4_0, `mmap`, `--n-cpu-moe 39` y margen de VRAM `--fit-target 512`; requiere llama.cpp oficial b10217 o posterior. En Windows, `no-mmap` puede intentar reservar cerca de 99 GB de memoria CUDA Host y fallar incluso con 128 GB de RAM. El
+KV q4_0, `mmap`, `--n-cpu-moe 39`, margen de VRAM `--fit-target 512` y DSpark
+integrado (`--spec-type draft-dspark --spec-draft-n-max 5`); requiere llama.cpp
+oficial b10228 o posterior. En Windows, `no-mmap` puede intentar reservar cerca de 99 GB de memoria CUDA Host y fallar incluso con 128 GB de RAM. El
 perfil declara presets clonables 64k/131k/192k/256k/384k y el auto-tuner explora
 31/35/39/43 capas MoE en CPU. No se recomienda ni descarga automáticamente: antes
 de promoverlo se debe medir estabilidad, pagefile, calidad y tiempo total en el

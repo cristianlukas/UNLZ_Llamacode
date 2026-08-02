@@ -48,7 +48,7 @@ struct ModelProfile {
     QString draftModelId;
     // Speculative decoding / MTP. draft-mtp también puede usar el cabezal embebido
     // del GGUF principal cuando su filename lo identifica como MTP.
-    QString specType;          // "" | "draft-mtp" (Gemma4 QAT assistant heads)
+    QString specType;          // "" | "draft-mtp" | "draft-dspark"
     int     specDraftNMax = 0; // --spec-draft-n-max (0 = no emitir)
     QString specDraftNgl;      // --spec-draft-ngl  ("" | "all" | número de capas)
     QString specDraftTypeK;    // --spec-draft-type-k ("" | "q8_0" | "f16"...)

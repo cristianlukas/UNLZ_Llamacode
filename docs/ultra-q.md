@@ -10,7 +10,8 @@ El perfil `sys-ultraq-dsv4-0731-iq3s` descarga manualmente los cuatro shards
 150 GB libres. Las descargas usan la cola reanudable existente y el perfil no es
 companion de ningún showcase.
 
-Requiere llama.cpp oficial b10217 o posterior. LlamaCode compara el número de
+Requiere llama.cpp oficial b10228 o posterior. Esa release incorpora MTP/DSpark
+para DeepSeek V4. LlamaCode compara el número de
 build, elige el binario compatible más nuevo y conserva instaladas las builds que
 usan otros perfiles.
 
@@ -20,7 +21,14 @@ usan otros perfiles.
 ctx 131072 · gpuLayers 44 · batch 1024 · ubatch 512
 KV q4_0 · flash-attn · mmap · parallel 1
 --n-cpu-moe 39 · temp 0.60 · top-p 0.95 · top-k 20
+--spec-type draft-dspark · --spec-draft-n-max 5
 ```
+
+El checkpoint 0731 incluye el cabezal DSpark en el propio GGUF: no necesita un
+archivo draft separado. Las variantes de contexto clonadas desde ULTRA-Q heredan
+esta configuración. El valor `n-max 5` es el preset publicado con el soporte
+upstream y debe compararse localmente contra MTP (`draft-mtp`, n-max 2) y sin
+speculative decoding si el hardware muestra una regresión.
 
 La configuración de sampling es deliberadamente específica para el agente de
 código. DeepSeek recomienda `temperature 1.0` y `top_p 1.0` para el uso local

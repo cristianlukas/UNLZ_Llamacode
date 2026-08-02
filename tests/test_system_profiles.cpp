@@ -638,7 +638,7 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QVERIFY(!ultra.isEmpty());
     QVERIFY(ultra.value("extra").toBool());
     QVERIFY(!ultra.value("autoCompanion").toBool());
-    QCOMPARE(ultra.value("minimumBinaryBuild").toInt(), 10217);
+    QCOMPARE(ultra.value("minimumBinaryBuild").toInt(), 10228);
     QCOMPARE(ultra.value("contextPresets").toArray().size(), 5);
     QCOMPARE(ultra.value("minRamGb").toInt(), 120);
     const QJsonObject model = ultra.value("model").toObject();
@@ -658,6 +658,8 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(args.value(args.indexOf("--repeat-penalty") + 1), QStringLiteral("1.0"));
     QCOMPARE(args.value(args.indexOf("--presence-penalty") + 1), QStringLiteral("0.0"));
     QVERIFY(args.contains(QStringLiteral("--no-warmup")));
+    QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
+    QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
 
     QVERIFY(!hybrid.isEmpty());
     QCOMPARE(hybrid.value("plannerProfileId").toString(),
