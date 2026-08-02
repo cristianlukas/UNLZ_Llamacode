@@ -265,10 +265,12 @@ hardware local. Detalle operativo en [`docs/ultra-q.md`](docs/ultra-q.md).
 | Agente nativo (LlamaAgentBackend, ReAct + tools + MCP) | ✅ P5 |
 | Agentes persistentes versionados + feedback supervisado + triggers | ✅ |
 
-El agente nativo combina dos guardas anti-loop: bloquea llamadas idénticas después
-de tres repeticiones y detecta espirales de fallos equivalentes aunque el modelo
-cambie comandos o argumentos. Un éxito o una escritura comprobable reinicia la
-racha, reduciendo falsos positivos cuando existe progreso real.
+El agente nativo combina dos guardas anti-loop: canoniza nombre y argumentos JSON,
+permite dos llamadas idénticas consecutivas y bloquea la tercera antes de ejecutarla.
+El bloqueo cierra el turno en vez de volver a consultar al modelo con otro aviso,
+evitando que reinicie el ciclo. Una llamada diferente reinicia la racha; además se
+detectan espirales de fallos equivalentes aunque cambien comandos o argumentos, y
+un éxito o una escritura comprobable reinicia esa racha de errores.
 Los perfiles de agente editables incluyen además la opción de compatibilidad
 `thinkingLeakGuard`, apagada por defecto. Al activarla para un modelo cuyo template
 filtra razonamiento, el harness pide no preservar thinking entre llamadas de tools
