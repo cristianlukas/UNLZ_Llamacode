@@ -117,6 +117,7 @@ private slots:
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
     void hybridStructuredPlanValidatesAndRejectsUnsafeShape();
+    void hybridStatusUsesSelectedPlannerAndExecutorNames();
     void hybridSwapRemainsStartingUntilPipelineEnds();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
@@ -335,6 +336,20 @@ void AppControllerTests::hybridSwapRemainsStartingUntilPipelineEnds()
     app.setHybridPhaseForTest(QString());
     QVERIFY(!app.agentStarting());
     QCOMPARE(startingChanged.count(), 2);
+}
+
+void AppControllerTests::hybridStatusUsesSelectedPlannerAndExecutorNames()
+{
+    const QString planner = QStringLiteral("MAX-Q planner");
+    const QString executor = QStringLiteral("KAT-Coder executor");
+    QCOMPARE(AppController::hybridStatusTextForTest(QStringLiteral("preparing"), planner, executor),
+             QStringLiteral("Preparando contexto para MAX-Q planner…"));
+    QCOMPARE(AppController::hybridStatusTextForTest(QStringLiteral("planning"), planner, executor),
+             QStringLiteral("MAX-Q planner está planificando…"));
+    QCOMPARE(AppController::hybridStatusTextForTest(QStringLiteral("executor-start"), planner, executor),
+             QStringLiteral("Restaurando KAT-Coder executor…"));
+    QCOMPARE(AppController::hybridStatusTextForTest(QStringLiteral("dispatching"), planner, executor),
+             QStringLiteral("Entregando el plan validado a KAT-Coder executor…"));
 }
 
 void AppControllerTests::initTestCase()

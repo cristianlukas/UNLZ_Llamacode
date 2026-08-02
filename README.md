@@ -408,7 +408,8 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   contrato `HybridPlan v1` validado y cacheado por SHA-256, y un journal de fases.
   Un retry idéntico reutiliza el plan; cambios en request/contexto/modelo lo
   invalidan. Tras un cierre durante el swap, el siguiente arranque restaura MAX-Q
-  como perfil seleccionado. La UI muestra cada fase del intercambio.
+  como perfil seleccionado. La UI muestra cada fase del intercambio usando los
+  nombres reales del planificador y del ejecutor seleccionados.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
 - **Workspaces portables**: los proyectos también pueden asociar investigaciones y
   exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,

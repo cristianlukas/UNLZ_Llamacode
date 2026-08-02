@@ -576,6 +576,9 @@ public:
                                                         const QString &plan);
     static QVariantMap parseHybridPlanForTest(const QString &text, QString *error = nullptr);
     static QString parseHybridStreamLineForTest(const QByteArray &line, bool *done);
+    static QString hybridStatusTextForTest(const QString &phase,
+                                           const QString &plannerName,
+                                           const QString &executorName);
     void setHybridPhaseForTest(const QString &phase) { setHybridPhase(phase); }
     QVariantMap resolvedSystemBinaryForTest(const QString &launchId)
     {

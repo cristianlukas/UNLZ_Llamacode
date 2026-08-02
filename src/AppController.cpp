@@ -5014,9 +5014,9 @@ void AppController::startSequentialHybrid(const QString &text, const LaunchProfi
     // La UI observa agentRunningChanged cuando stopAgent() apaga temporalmente el
     // ejecutor. Marcar el pipeline antes de ese evento evita que interprete el
     // hot-swap como una detención real y navegue de Agente a Lanzar.
-    setHybridPhase(QStringLiteral("preparing"));
     m_hybridExecutorLaunchId = executor.id;
     m_hybridPlannerLaunchId = planner.id;
+    setHybridPhase(QStringLiteral("preparing"));
     m_hybridUserRequest = text.trimmed();
     m_hybridPlan.clear(); m_hybridFailure.clear();
     m_hybridPlanningContext = buildHybridPlanningContext();
@@ -5370,16 +5370,34 @@ void AppController::setHybridPhase(const QString &phase)
 
 QString AppController::hybridStatus() const
 {
-    static const QHash<QString, QString> labels{
-        {QStringLiteral("preparing"), QStringLiteral("Preparando contexto para ULTRA-Q…")},
-        {QStringLiteral("stopping-executor"), QStringLiteral("Descargando MAX-Q…")},
-        {QStringLiteral("planner-start"), QStringLiteral("Cargando ULTRA-Q…")},
-        {QStringLiteral("planning"), QStringLiteral("ULTRA-Q está planificando…")},
-        {QStringLiteral("stopping-planner"), QStringLiteral("Descargando ULTRA-Q…")},
-        {QStringLiteral("executor-start"), QStringLiteral("Restaurando MAX-Q…")},
-        {QStringLiteral("dispatching"), QStringLiteral("Entregando el plan validado a MAX-Q…")}
-    };
-    return labels.value(m_hybridPhase);
+    const LaunchProfile planner = m_profiles.resolveLaunch(m_hybridPlannerLaunchId);
+    const LaunchProfile executor = m_profiles.resolveLaunch(m_hybridExecutorLaunchId);
+    return hybridStatusTextForTest(m_hybridPhase, planner.name, executor.name);
+}
+
+QString AppController::hybridStatusTextForTest(const QString &phase,
+                                               const QString &plannerName,
+                                               const QString &executorName)
+{
+    const QString planner = plannerName.trimmed().isEmpty()
+        ? QStringLiteral("el planificador") : plannerName.trimmed();
+    const QString executor = executorName.trimmed().isEmpty()
+        ? QStringLiteral("el ejecutor") : executorName.trimmed();
+    if (phase == QLatin1String("preparing"))
+        return QStringLiteral("Preparando contexto para %1…").arg(planner);
+    if (phase == QLatin1String("stopping-executor"))
+        return QStringLiteral("Descargando %1…").arg(executor);
+    if (phase == QLatin1String("planner-start"))
+        return QStringLiteral("Cargando %1…").arg(planner);
+    if (phase == QLatin1String("planning"))
+        return QStringLiteral("%1 está planificando…").arg(planner);
+    if (phase == QLatin1String("stopping-planner"))
+        return QStringLiteral("Descargando %1…").arg(planner);
+    if (phase == QLatin1String("executor-start"))
+        return QStringLiteral("Restaurando %1…").arg(executor);
+    if (phase == QLatin1String("dispatching"))
+        return QStringLiteral("Entregando el plan validado a %1…").arg(executor);
+    return {};
 }
 
 bool AppController::agentBackendBusy() const
