@@ -1,0 +1,49 @@
+#pragma once
+
+#include <QJsonObject>
+#include <QSet>
+#include <QString>
+
+// Presupuesto elástico del loop ReAct. No limita el tiempo legítimo de una tool:
+// decide sólo al terminar acciones, premiando evidencia nueva y detectando
+// familias semánticas repetidas aunque cambien argumentos superficiales.
+class AgentProgressGovernor
+{
+public:
+    struct Policy {
+        int initialCredits = 8;
+        int maxCredits = 16;
+        int replanAfter = 3;
+        int stopAfterReplan = 5;
+    };
+    enum Action { Continue, Replan, Stop };
+    struct Decision {
+        Action action = Continue;
+        bool progress = false;
+        bool objectiveSatisfied = false;
+        int credits = 0;
+        int stagnant = 0;
+        QString semanticKey;
+        QString reason;
+    };
+
+    explicit AgentProgressGovernor(const Policy &policy = {});
+    void setPolicy(const Policy &policy);
+    void reset(const QString &objective = QString());
+    Decision record(const QString &tool, const QString &arguments,
+                    bool ok, const QString &result, bool isWrite);
+
+    static QString semanticKey(const QString &tool, const QString &arguments);
+
+private:
+    Policy m_policy;
+    int m_credits = 0;
+    int m_stagnant = 0;
+    int m_replans = 0;
+    QSet<QString> m_evidence;
+    QSet<QString> m_semanticSuccess;
+    QSet<QString> m_exactWriteSuccess;
+    bool m_multiLanguageRequested = false;
+    QSet<QString> m_expectedArtifacts;
+    QSet<QString> m_completedArtifacts;
+};

@@ -131,6 +131,11 @@ struct AgentProfile {
                                     // enabledTools no las puede apagar — esto sí)
     bool thinkingLeakGuard = false; // compatibilidad opt-in: no preservar thinking
                                     // previo y cortar colas tras </think> huérfano
+    int progressCredits = 8;        // presupuesto elástico inicial de acciones
+    int progressMaxCredits = 16;    // techo al renovar por evidencia nueva
+    int progressReplanAfter = 3;    // acciones estancadas antes de replantear
+    int progressStopAfter = 5;      // estancadas posteriores antes de cerrar
+    int quickToolTimeoutSec = 15;   // watchdog para tools locales rápidas
 
     QJsonObject toJson() const;
     static AgentProfile fromJson(const QJsonObject &obj);

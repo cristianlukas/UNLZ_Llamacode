@@ -530,7 +530,12 @@ static QVariantMap agentProfileToVariant(const AgentProfile &p)
             {"enabledTools", p.enabledTools}, {"directives", p.directives},
             {"approvalMode", p.approvalMode}, {"thinking", p.thinking},
             {"temperature", p.temperature}, {"systemExtra", p.systemExtra},
-            {"mcpEnabled", p.mcpEnabled}, {"thinkingLeakGuard", p.thinkingLeakGuard}};
+            {"mcpEnabled", p.mcpEnabled}, {"thinkingLeakGuard", p.thinkingLeakGuard},
+            {"progressCredits", p.progressCredits},
+            {"progressMaxCredits", p.progressMaxCredits},
+            {"progressReplanAfter", p.progressReplanAfter},
+            {"progressStopAfter", p.progressStopAfter},
+            {"quickToolTimeoutSec", p.quickToolTimeoutSec}};
 }
 
 namespace {
@@ -691,6 +696,16 @@ bool ProfileManager::updateAgentProfile(const QVariantMap &data)
     if (data.contains("mcpEnabled"))   p.mcpEnabled = data.value("mcpEnabled").toBool();
     if (data.contains("thinkingLeakGuard"))
         p.thinkingLeakGuard = data.value("thinkingLeakGuard").toBool();
+    if (data.contains("progressCredits"))
+        p.progressCredits = qMax(2, data.value("progressCredits").toInt());
+    if (data.contains("progressMaxCredits"))
+        p.progressMaxCredits = qMax(p.progressCredits, data.value("progressMaxCredits").toInt());
+    if (data.contains("progressReplanAfter"))
+        p.progressReplanAfter = qMax(2, data.value("progressReplanAfter").toInt());
+    if (data.contains("progressStopAfter"))
+        p.progressStopAfter = qMax(2, data.value("progressStopAfter").toInt());
+    if (data.contains("quickToolTimeoutSec"))
+        p.quickToolTimeoutSec = qBound(5, data.value("quickToolTimeoutSec").toInt(), 120);
     bool ok = m_agentProfiles.update(p);
     if (ok) save();
     return ok;

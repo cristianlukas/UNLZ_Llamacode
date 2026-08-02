@@ -1260,7 +1260,10 @@ Item {
                                               enabledTools: [], directives: [],
                                               approvalMode: "ask", thinking: false,
                                               temperature: -1, systemExtra: "",
-                                              thinkingLeakGuard: false })
+                                              thinkingLeakGuard: false,
+                                              progressCredits: 8, progressMaxCredits: 16,
+                                              progressReplanAfter: 3, progressStopAfter: 5,
+                                              quickToolTimeoutSec: 15 })
                         property var toolGroups: []     // agrupado por categoría
                         property var directiveItems: [] // catálogo de directivas
                         property int enabledCount: 0
@@ -1339,12 +1342,22 @@ Item {
                                      approvalMode: p.approvalMode || "ask",
                                      thinking: p.thinking === true,
                                      thinkingLeakGuard: p.thinkingLeakGuard === true,
+                                     progressCredits: p.progressCredits || 8,
+                                     progressMaxCredits: p.progressMaxCredits || 16,
+                                     progressReplanAfter: p.progressReplanAfter || 3,
+                                     progressStopAfter: p.progressStopAfter || 5,
+                                     quickToolTimeoutSec: p.quickToolTimeoutSec || 15,
                                      temperature: (p.temperature === undefined ? -1 : p.temperature),
                                      systemExtra: p.systemExtra || "" }
                             apNameField.text = edit.name
                             extraField.text = edit.systemExtra
                             tempField.text = edit.temperature >= 0 ? String(edit.temperature) : ""
                             approvalCombo.currentIndex = Math.max(0, approvalCombo.indexOfValue(edit.approvalMode))
+                            progressCreditsField.text = String(edit.progressCredits)
+                            progressMaxField.text = String(edit.progressMaxCredits)
+                            progressReplanField.text = String(edit.progressReplanAfter)
+                            progressStopField.text = String(edit.progressStopAfter)
+                            quickToolTimeoutField.text = String(edit.quickToolTimeoutSec)
                             rebuildGroups()  // recrea delegates → switches re-evaluan checked
                         }
                         function save() {
@@ -1357,6 +1370,11 @@ Item {
                                 "approvalMode": approvalCombo.currentValue || "ask",
                                 "thinking": thinkingSwitch.checked,
                                 "thinkingLeakGuard": thinkingLeakGuardSwitch.checked,
+                                "progressCredits": parseInt(progressCreditsField.text) || 8,
+                                "progressMaxCredits": parseInt(progressMaxField.text) || 16,
+                                "progressReplanAfter": parseInt(progressReplanField.text) || 3,
+                                "progressStopAfter": parseInt(progressStopField.text) || 5,
+                                "quickToolTimeoutSec": parseInt(quickToolTimeoutField.text) || 15,
                                 "temperature": (tempField.text.trim().length && !isNaN(parseFloat(tempField.text)))
                                                ? parseFloat(tempField.text) : -1,
                                 "systemExtra": extraField.text
@@ -1518,6 +1536,21 @@ Item {
 
                                     Text { text: "Temperatura"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcTextField { id: tempField; Layout.fillWidth: true; placeholderText: "vacío = heredar del modelo" }
+
+                                    Text { text: "Créditos de progreso"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: progressCreditsField; Layout.fillWidth: true; placeholderText: "8" }
+
+                                    Text { text: "Máximo renovable"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: progressMaxField; Layout.fillWidth: true; placeholderText: "16" }
+
+                                    Text { text: "Replantear tras"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: progressReplanField; Layout.fillWidth: true; placeholderText: "3 acciones sin progreso" }
+
+                                    Text { text: "Cerrar tras replanteo"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: progressStopField; Layout.fillWidth: true; placeholderText: "5 acciones sin progreso" }
+
+                                    Text { text: "Timeout tool rápida (s)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: quickToolTimeoutField; Layout.fillWidth: true; placeholderText: "15" }
 
                                     Text { text: "Instrucciones extra"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcTextField { id: extraField; Layout.fillWidth: true; placeholderText: "opcional, se añade al system prompt" }

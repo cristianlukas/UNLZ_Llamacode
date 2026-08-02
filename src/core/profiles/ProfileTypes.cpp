@@ -156,6 +156,11 @@ QJsonObject AgentProfile::toJson() const {
     o["systemExtra"] = systemExtra;
     o["mcpEnabled"] = mcpEnabled;
     o["thinkingLeakGuard"] = thinkingLeakGuard;
+    o["progressCredits"] = progressCredits;
+    o["progressMaxCredits"] = progressMaxCredits;
+    o["progressReplanAfter"] = progressReplanAfter;
+    o["progressStopAfter"] = progressStopAfter;
+    o["quickToolTimeoutSec"] = quickToolTimeoutSec;
     return o;
 }
 AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
@@ -170,6 +175,11 @@ AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
     p.systemExtra = o["systemExtra"].toString();
     p.mcpEnabled = o["mcpEnabled"].toBool(true);   // legacy sin la clave = MCP on
     p.thinkingLeakGuard = o["thinkingLeakGuard"].toBool(false);
+    p.progressCredits = qMax(2, o["progressCredits"].toInt(8));
+    p.progressMaxCredits = qMax(p.progressCredits, o["progressMaxCredits"].toInt(16));
+    p.progressReplanAfter = qMax(2, o["progressReplanAfter"].toInt(3));
+    p.progressStopAfter = qMax(2, o["progressStopAfter"].toInt(5));
+    p.quickToolTimeoutSec = qBound(5, o["quickToolTimeoutSec"].toInt(15), 120);
     return p;
 }
 QString AgentProfile::generateId() { return newId(); }
@@ -200,7 +210,7 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     advTools << "web_search" << "web_fetch" << "semantic_search"
              << "hybrid_search" << "verify_claims" << "graph"
              << "browser_network_discover";
-    return {
+    QList<AgentProfile> presets{
         mk("agent-chat",       "Chat liviano", chatTools,  {},
            "ask", false, /*mcp=*/false),
         mk("agent-basico",     "Básico",     coreTools,  {},
@@ -213,6 +223,16 @@ QList<AgentProfile> AgentProfile::systemPresets() {
         mk("agent-maximo",     "Máximo",     {"*"}, {"*"},
            "super", true),
     };
+    presets[0].progressCredits = 6;
+    presets[0].progressMaxCredits = 10;
+    presets[0].progressStopAfter = 4;
+    presets[3].progressCredits = 12;
+    presets[3].progressMaxCredits = 24;
+    presets[4].progressCredits = 16;
+    presets[4].progressMaxCredits = 32;
+    presets[4].progressReplanAfter = 5;
+    presets[4].progressStopAfter = 8;
+    return presets;
 }
 
 // ---- MasterFallback ----

@@ -1,5 +1,6 @@
 #pragma once
 #include "IAgentBackend.h"
+#include "AgentProgressGovernor.h"
 #include <QHash>
 #include <QList>
 #include <QSet>
@@ -71,6 +72,9 @@ public:
     void setPermissionRules(const QString &rules) override;
     void revertEdit(const QString &path) override;
     void setAgentTuning(const QString &systemExtra, double temperature) override;
+    void setProgressPolicy(const AgentProgressGovernor::Policy &policy,
+                           int quickToolTimeoutSec = 15);
+    void setDeterministicSeed(int seed) { m_seed = seed; }
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
@@ -78,6 +82,11 @@ public:
     void setStablePhasePrefix(bool enabled) { m_stablePhasePrefix = enabled; }
     bool stablePhasePrefixForTest() const { return m_stablePhasePrefix; }
     QVariantMap efficiencySummary() const;
+    QVariantMap progressSummary() const {
+        return {{QStringLiteral("progressEvents"), m_progressEvents},
+                {QStringLiteral("stagnationEvents"), m_stagnationEvents},
+                {QStringLiteral("replanEvents"), m_replanEvents}};
+    }
     void setEphemeralSessions(bool enabled) { m_ephemeralSessions = enabled; }
     // Título breve y determinista a partir del primer objetivo del usuario.
     // Público para cubrir el límite de tres palabras sin requerir un servidor.
@@ -230,6 +239,8 @@ public:
     // Firma semántica estable para anti-loop: normaliza JSON equivalente
     // (espacios y orden de claves) antes de comparar llamadas consecutivas.
     static QString toolCallSignature(const QString &tool, const QString &arguments);
+    static int toolWatchdogSeconds(const QString &tool, const QJsonObject &arguments,
+                                   int quickTimeoutSec = 15);
     static int repeatedSuffixStart(const QString &text, int repeats = 3,
                                    int minBlockChars = 80);
     bool recordToolOutcomeForTest(const QString &tool, bool ok, bool isWrite,
@@ -376,6 +387,8 @@ private:
 
     // Worker de ejecución de tools (hilo aparte; no bloquea UI).
     void ensureWorker();
+    void configureWorker();
+    void restartWorkerAfterTimeout();
     void teardownWorker();
 
 private slots:
@@ -543,6 +556,15 @@ private:
     AgentToolRunner *m_worker = nullptr;
     QString m_execCallId;            // tool_call en ejecución ("" = ninguno)
     QString m_execCommand;           // comando/ruta del tool en ejecución (para la tarjeta)
+    QString m_execToolName;
+    QString m_execArguments;
+    QTimer *m_toolWatchdog = nullptr;
+    int m_quickToolTimeoutSec = 15;
+    int m_execWatchdogSec = 15;
+    AgentProgressGovernor m_progressGovernor;
+    int m_progressEvents = 0;
+    int m_stagnationEvents = 0;
+    int m_replanEvents = 0;
     qint64  m_lastUiEmitMs = 0;       // throttle de messagesChanged durante streaming
     // run_shell async: tarjeta de tool "en vivo" (creada al arrancar, actualizada
     // con chunks de salida, finalizada al terminar).
@@ -554,6 +576,7 @@ private:
     // predicted_ms ms → tps de generación pura (sin prompt-processing/TTFT).
     int     m_genTokens = 0;
     double  m_genMs = 0.0;
+    int     m_seed = -1;             // >=0: reproducibilidad de benchmark
 
     QString m_sessionId;
     QString m_sessionTitle;

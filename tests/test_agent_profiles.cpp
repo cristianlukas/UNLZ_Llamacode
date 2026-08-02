@@ -65,6 +65,11 @@ void AgentProfilesTests::agentProfile_jsonRoundTrip()
     QCOMPARE(r.thinking, p.thinking);
     QCOMPARE(r.temperature, p.temperature);
     QCOMPARE(r.systemExtra, p.systemExtra);
+    QCOMPARE(r.progressCredits, p.progressCredits);
+    QCOMPARE(r.progressMaxCredits, p.progressMaxCredits);
+    QCOMPARE(r.progressReplanAfter, p.progressReplanAfter);
+    QCOMPARE(r.progressStopAfter, p.progressStopAfter);
+    QCOMPARE(r.quickToolTimeoutSec, p.quickToolTimeoutSec);
 }
 
 void AgentProfilesTests::systemPresets_shape()
@@ -119,6 +124,9 @@ void AgentProfilesTests::systemPresets_shape()
     QCOMPARE(maximo.directives, QStringList{QStringLiteral("*")});
     QCOMPARE(maximo.approvalMode, QStringLiteral("super"));
     QVERIFY(maximo.thinking);
+    QVERIFY(chat.progressCredits < maximo.progressCredits);
+    QVERIFY(chat.progressMaxCredits < maximo.progressMaxCredits);
+    QVERIFY(chat.quickToolTimeoutSec > 0);
 }
 
 // Garantía clave para el benchmark por NIVEL: distintos niveles = distintas
@@ -287,6 +295,11 @@ void AgentProfilesTests::manager_crudAndPersistence()
             {"approvalMode", "manual"},
             {"thinking", true},
             {"temperature", 0.3},
+            {"progressCredits", 11},
+            {"progressMaxCredits", 22},
+            {"progressReplanAfter", 4},
+            {"progressStopAfter", 7},
+            {"quickToolTimeoutSec", 20},
             {"systemExtra", "extra"}};
         QVERIFY(pm.updateAgentProfile(upd));
 
@@ -296,6 +309,11 @@ void AgentProfilesTests::manager_crudAndPersistence()
         QCOMPARE(got.value("directives").toStringList(), (QStringList{"discipline", "testNet"}));
         QCOMPARE(got.value("approvalMode").toString(), QStringLiteral("manual"));
         QVERIFY(got.value("thinking").toBool());
+        QCOMPARE(got.value("progressCredits").toInt(), 11);
+        QCOMPARE(got.value("progressMaxCredits").toInt(), 22);
+        QCOMPARE(got.value("progressReplanAfter").toInt(), 4);
+        QCOMPARE(got.value("progressStopAfter").toInt(), 7);
+        QCOMPARE(got.value("quickToolTimeoutSec").toInt(), 20);
 
         // Duplicar.
         const QString dupId = pm.duplicateAgentProfile(newId);

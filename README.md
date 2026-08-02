@@ -273,6 +273,19 @@ El bloqueo cierra el turno en vez de volver a consultar al modelo con otro aviso
 evitando que reinicie el ciclo. Una llamada diferente reinicia la racha; además se
 detectan espirales de fallos equivalentes aunque cambien comandos o argumentos, y
 un éxito o una escritura comprobable reinicia esa racha de errores.
+Sobre esas guardas opera un gobernador de progreso elástico: agrupa intenciones
+equivalentes aunque varíen superficialmente los argumentos (por ejemplo una serie
+no solicitada de `run_test.*`), renueva el presupuesto cuando aparece evidencia
+nueva y exige un replanteo antes de detener una trayectoria estancada. Las tareas
+multilenguaje explícitas conservan sus artefactos independientes. Los valores de
+crédito/replanteo/cierre pertenecen al `AgentProfile`, de modo que Chat liviano es
+más frugal y Máximo admite exploración más extensa sin reglas por nombre de modelo.
+Cada tool tiene además watchdog por inactividad: operaciones locales rápidas usan
+un límite corto, red/investigación uno amplio y `run_shell` respeta su `timeout_s`;
+la salida incremental renueva el watchdog, por lo que un build largo con actividad
+no se corta. Todo timeout produce `tool_result`, reinicia el worker y cierra el
+turno con diagnóstico en vez de consumir el timeout global. Benchmark de agente
+usa temperatura acotada, seed fijo y guarda métricas de progreso/estancamiento.
 Los perfiles de agente editables incluyen además la opción de compatibilidad
 `thinkingLeakGuard`, apagada por defecto. Al activarla para un modelo cuyo template
 filtra razonamiento, el harness pide no preservar thinking entre llamadas de tools

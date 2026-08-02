@@ -49,6 +49,7 @@ private slots:
     void deterministicPruningDeduplicatesOnlyWorkingContext();
     void failureSpiralDetectsEquivalentErrorsAndResetsOnProgress();
     void toolCallSignatureNormalizesEquivalentJson();
+    void toolWatchdogIsTypeAware();
     void streamRepetitionDetectsLongTripleBlockOnly();
     void textToolPayloadCapsGenerationAndStopsAtToolCall();
     void adaptiveSubagentLimit_respectsProfileContextAndVram();
@@ -118,6 +119,14 @@ void AgentWireTests::toolCallSignatureNormalizesEquivalentJson()
             != LlamaAgentBackend::toolCallSignature(
                 QStringLiteral("read_file"),
                 QStringLiteral("{\"path\":\"otro.md\",\"limit\":300}")));
+}
+
+void AgentWireTests::toolWatchdogIsTypeAware()
+{
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds("write_file", {}, 15), 15);
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(
+                 "run_shell", QJsonObject{{"timeout_s", 600}}, 15), 615);
+    QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds("web_search", {}, 15), 180);
 }
 
 void AgentWireTests::sessionTitle_isBriefAndPromptDerived()

@@ -85,6 +85,7 @@ set(CORE_SOURCES
     src/core/agent/GraphStore.cpp
     src/core/agent/CodeGraphIndexer.cpp
     src/core/agent/AgentEfficiency.cpp
+    src/core/agent/AgentProgressGovernor.cpp
     src/core/agent/HybridPlanning.cpp
     src/core/agent/StructuredSourceView.cpp
     src/core/agent/ProjectBrain.cpp
@@ -486,6 +487,7 @@ if (BUILD_TESTS)
     add_lc_test(test_agent_definitions  tests/test_agent_definitions.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
     add_lc_test(test_agent_efficiency    tests/test_agent_efficiency.cpp)
+    add_lc_test(test_agent_progress      tests/test_agent_progress.cpp)
     add_lc_test(test_agent_rooms         tests/test_agent_rooms.cpp)
     add_lc_test(test_system_profiles    tests/test_system_profiles.cpp)
     add_lc_test(test_secret_store       tests/test_secret_store.cpp)

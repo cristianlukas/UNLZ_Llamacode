@@ -419,6 +419,30 @@ QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messa
 LlamaAgentBackend::LlamaAgentBackend(QObject *parent) : IAgentBackend(parent)
 {
     m_nam = new QNetworkAccessManager(this);
+    m_toolWatchdog = new QTimer(this);
+    m_toolWatchdog->setSingleShot(true);
+    connect(m_toolWatchdog, &QTimer::timeout, this, [this]() {
+        if (m_execCallId.isEmpty()) return;
+        const QString callId = m_execCallId;
+        const QString tool = m_execToolName;
+        const QString args = m_execArguments;
+        m_execCallId.clear();
+        ++m_toolFail;
+        ++m_stagnationEvents;
+        const QString message = QStringLiteral(
+            "[tool-timeout: '%1' no produjo resultado ni actividad durante %2 s; "
+            "worker reiniciado y turno cerrado de forma segura]")
+                .arg(tool).arg(m_execWatchdogSec);
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("tool_timeout"),
+                              {{QStringLiteral("tool"), tool},
+                               {QStringLiteral("toolCallId"), callId},
+                               {QStringLiteral("semanticKey"),
+                                AgentProgressGovernor::semanticKey(tool, args)},
+                               {QStringLiteral("idleSec"), m_execWatchdogSec}});
+        appendToolResult(callId, tool, message);
+        restartWorkerAfterTimeout();
+        finishTurn(message);
+    });
     connect(this, &IAgentBackend::turnFinished, this, [this]() {
         if (!m_isSessionRuntime) pumpSessionRuntimes();
     });
@@ -982,6 +1006,7 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
 
 void LlamaAgentBackend::stop()
 {
+    m_toolWatchdog->stop();
     if (!m_isSessionRuntime) {
         const auto runtimes = m_sessionRuntimes;
         m_sessionRuntimes.clear();
@@ -1046,6 +1071,7 @@ void LlamaAgentBackend::stop()
 
 void LlamaAgentBackend::cancelGeneration()
 {
+    m_toolWatchdog->stop();
     if (!m_isSessionRuntime) {
         if (LlamaAgentBackend *runtime = viewRuntime()) {
             runtime->cancelGeneration();
@@ -1617,6 +1643,13 @@ void LlamaAgentBackend::sendMessage(const QString &text)
     sendMessageImpl(text, text);
 }
 
+void LlamaAgentBackend::setProgressPolicy(const AgentProgressGovernor::Policy &policy,
+                                          int quickToolTimeoutSec)
+{
+    m_progressGovernor.setPolicy(policy);
+    m_quickToolTimeoutSec = qBound(5, quickToolTimeoutSec, 120);
+}
+
 void LlamaAgentBackend::sendMessageWithVisibleText(const QString &apiText,
                                                    const QString &visibleText)
 {
@@ -1759,6 +1792,7 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_sameCallStreak = 0;
     m_turnHadDifficulty = false;
     m_turnRecovered = false;
+    m_progressGovernor.reset(visibleTrimmed);
     m_escalatedSigs.clear();
     if (!m_taskAutoApprove)
         m_desktopLaunchApps.clear();
@@ -2301,6 +2335,7 @@ void LlamaAgentBackend::runCompletion()
         {QStringLiteral("stream_options"), QJsonObject{{QStringLiteral("include_usage"), true}}}
     };
     if (m_temperature >= 0.0) payload.insert(QStringLiteral("temperature"), m_temperature);
+    if (m_seed >= 0) payload.insert(QStringLiteral("seed"), m_seed);
     // Razonamiento controlado por el toggle global de la app, no por el perfil.
     payload.insert(QStringLiteral("reasoning_budget"), m_thinkingEnabled ? -1 : 0);
     payload.insert(QStringLiteral("chat_template_kwargs"),
@@ -3436,6 +3471,11 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     // Ejecución en el worker (no bloquea UI). Resume en onToolExecuted().
     ensureWorker();
     m_execCallId = id;
+    m_execToolName = name;
+    m_execArguments = argStr;
+    const int watchdogSec = toolWatchdogSeconds(name, a, m_quickToolTimeoutSec);
+    m_execWatchdogSec = watchdogSec;
+    m_toolWatchdog->start(watchdogSec * 1000);
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(true, name, m_execCommand);
     ensureAssistantBubble();
@@ -3450,12 +3490,16 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     const QString callId = result.value(QStringLiteral("callId")).toString();
     if (callId.isEmpty() || callId != m_execCallId) return;   // resultado tardío/ajeno
     m_execCallId.clear();
+    m_toolWatchdog->stop();
 
     const QString name = result.value(QStringLiteral("name")).toString();
     const bool ok      = result.value(QStringLiteral("ok")).toBool();
     QString res        = result.value(QStringLiteral("result")).toString();
     const bool isWrite = result.value(QStringLiteral("isWrite")).toBool();
     const bool externalWrite = result.value(QStringLiteral("externalWrite")).toBool();
+    const QString executedArgs = m_execArguments;
+    m_execToolName.clear();
+    m_execArguments.clear();
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
@@ -3562,6 +3606,35 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
 
     // Al contexto va la versión acotada (salvo que ya sea un stub de dedup).
     QString contextResult = dedup ? res : budgetToolOutput(name, res);
+    const AgentProgressGovernor::Decision progress = m_progressGovernor.record(
+        name, executedArgs, ok, res, isWrite || externalWrite);
+    if (progress.progress) ++m_progressEvents; else ++m_stagnationEvents;
+    AgentEventLog::append(m_cwd, m_sessionId,
+                          progress.progress ? QStringLiteral("progress")
+                                            : QStringLiteral("stagnation"),
+                          {{QStringLiteral("tool"), name},
+                           {QStringLiteral("toolCallId"), callId},
+                           {QStringLiteral("semanticKey"), progress.semanticKey},
+                           {QStringLiteral("credits"), progress.credits},
+                           {QStringLiteral("stagnant"), progress.stagnant},
+                           {QStringLiteral("reason"), progress.reason}});
+    if (progress.action == AgentProgressGovernor::Replan) {
+        ++m_replanEvents;
+        contextResult += QStringLiteral(
+            "\n[REPLANIFICACIÓN OBLIGATORIA: el presupuesto elástico detectó actividad "
+            "sin avance. Resumí objetivo, evidencia obtenida y pendiente; elegí una "
+            "estrategia materialmente distinta o finalizá si ya cumpliste. No generes "
+            "más variantes superficiales del mismo artefacto.]");
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("replan"),
+                              {{QStringLiteral("semanticKey"), progress.semanticKey},
+                               {QStringLiteral("reason"), progress.reason}});
+    }
+    if (progress.objectiveSatisfied) {
+        contextResult += QStringLiteral(
+            "\n[Los artefactos nombrados explícitamente en el objetivo ya existen. "
+            "Hacé como máximo una verificación relevante y finalizá; no agregues "
+            "scaffolding ni variantes no solicitadas.]");
+    }
     if (failureSpiral) {
         contextResult += QStringLiteral(
             "\n[anti-loop: %1 ejecuciones consecutivas terminaron con el mismo "
@@ -3576,6 +3649,31 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
                                           {QStringLiteral("fingerprint"), m_failureFingerprint}});
     }
     appendToolResult(callId, name, contextResult);
+
+    if (progress.action == AgentProgressGovernor::Stop) {
+        const QString notice = QStringLiteral(
+            "[turno detenido: no hubo progreso verificable después de replantear; "
+            "se preservaron todos los resultados y archivos obtenidos]");
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              {{QStringLiteral("reason"), QStringLiteral("semantic_stagnation")},
+                               {QStringLiteral("semanticKey"), progress.semanticKey}});
+        finishTurn(notice);
+        return;
+    }
+
+    if (progress.action == AgentProgressGovernor::Replan && !m_pendingCalls.isEmpty()) {
+        // Mantener el contrato OpenAI: toda tool_call del mensaje assistant recibe
+        // tool_result, pero no ejecutamos el resto de un lote ya clasificado como
+        // espiral. El siguiente completion debe producir un plan nuevo.
+        for (const QJsonValue &pendingValue : std::as_const(m_pendingCalls)) {
+            const QJsonObject pending = pendingValue.toObject();
+            const QJsonObject fn = pending.value(QStringLiteral("function")).toObject();
+            appendToolResult(pending.value(QStringLiteral("id")).toString(),
+                             fn.value(QStringLiteral("name")).toString(),
+                             QStringLiteral("[omitida: replanteo obligatorio antes de continuar]"));
+        }
+        m_pendingCalls = {};
+    }
 
     // Captura visual (desktop_observe / screenshots): si el server tiene visión,
     // encolar la imagen para inyectarla al contexto al cerrar el turno de tools.
@@ -3645,6 +3743,18 @@ QString LlamaAgentBackend::toolCallSignature(const QString &tool, const QString 
     return tool.trimmed().toLower() + QLatin1Char('|') + QString::fromUtf8(canonical);
 }
 
+int LlamaAgentBackend::toolWatchdogSeconds(const QString &tool,
+                                           const QJsonObject &arguments,
+                                           int quickTimeoutSec)
+{
+    if (tool == QLatin1String("run_shell"))
+        return qBound(5, arguments.value(QStringLiteral("timeout_s")).toInt(120) + 15, 1815);
+    if (tool.startsWith(QLatin1String("mcp__")) || tool == QLatin1String("mcp_call_tool")
+        || tool.contains(QStringLiteral("research")) || tool.startsWith(QLatin1String("web_")))
+        return 180;
+    return qBound(5, quickTimeoutSec, 120);
+}
+
 bool LlamaAgentBackend::recordToolOutcome(const QString &tool, bool ok, bool isWrite,
                                           const QString &result)
 {
@@ -3696,6 +3806,9 @@ void LlamaAgentBackend::onToolOutputChunk(const QString &callId, const QString &
 {
     if (callId != m_liveToolCallId || m_liveToolMsgIdx < 0
         || m_liveToolMsgIdx >= m_messages.size()) return;
+    // Actividad real renueva el watchdog: un build largo con salida no se corta.
+    if (m_toolWatchdog->isActive())
+        m_toolWatchdog->start(m_toolWatchdog->interval());
     QVariantMap card = m_messages[m_liveToolMsgIdx].toMap();
     QString out = card.value(QStringLiteral("output")).toString() + chunk;
     if (out.size() > 64 * 1024) out = out.right(64 * 1024);   // cola visible
@@ -4331,12 +4444,16 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
                           QJsonObject{{QStringLiteral("chars"), shownChars},
                                       {QStringLiteral("toolOk"), m_toolOk},
                                       {QStringLiteral("toolFail"), m_toolFail},
+                                      {QStringLiteral("progressEvents"), m_progressEvents},
+                                      {QStringLiteral("stagnationEvents"), m_stagnationEvents},
+                                      {QStringLiteral("replanEvents"), m_replanEvents},
                                       {QStringLiteral("text"), finalText.left(4096)}});
     m_curAsstIdx = -1;
     m_pendingCalls = {};
     m_awaitId.clear();
     m_awaitCall = {};
     m_execCallId.clear();
+    m_toolWatchdog->stop();
 
     // Salud: tasa de éxito de tools en la sesión.
     const int total = m_toolOk + m_toolFail;
@@ -5307,6 +5424,47 @@ void LlamaAgentBackend::ensureWorker()
     connect(m_worker, &AgentToolRunner::toolStarted, this, &LlamaAgentBackend::onToolStarted);
     connect(m_worker, &AgentToolRunner::toolOutputChunk, this, &LlamaAgentBackend::onToolOutputChunk);
     m_workerThread->start();
+}
+
+void LlamaAgentBackend::configureWorker()
+{
+    if (!m_worker) return;
+    QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
+                              Q_ARG(bool, m_approvalMode != QLatin1String("super")));
+    QMetaObject::invokeMethod(m_worker, "setServerBaseUrl", Qt::QueuedConnection,
+                              Q_ARG(QString, m_ctx.serverBaseUrl));
+    QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
+                              Q_ARG(QString, m_sessionId));
+    QMetaObject::invokeMethod(m_worker, "setTeacherConfig", Qt::QueuedConnection,
+                              Q_ARG(QString, m_teacherUrl), Q_ARG(QString, m_teacherModel),
+                              Q_ARG(QString, m_teacherKey));
+    QMetaObject::invokeMethod(m_worker, "setMasterChain", Qt::QueuedConnection,
+                              Q_ARG(QVariantList, m_masterChain));
+    QMetaObject::invokeMethod(m_worker, "setMailAccounts", Qt::QueuedConnection,
+                              Q_ARG(QVariantList, m_mailAccounts));
+    QMetaObject::invokeMethod(m_worker, "setWebProviders", Qt::QueuedConnection,
+                              Q_ARG(QVariantList, m_webProviders));
+    QMetaObject::invokeMethod(m_worker, "initServers", Qt::QueuedConnection,
+                              Q_ARG(QVariantList, m_mcpConfig), Q_ARG(QString, m_cwd));
+}
+
+void LlamaAgentBackend::restartWorkerAfterTimeout()
+{
+    if (m_workerThread) {
+        disconnect(m_worker, nullptr, this, nullptr);
+        m_workerThread->requestInterruption();
+        m_workerThread->quit();
+        if (!m_workerThread->wait(300)) {
+            m_workerThread->terminate();
+            m_workerThread->wait(2000);
+        }
+        delete m_worker;
+        m_worker = nullptr;
+        delete m_workerThread;
+        m_workerThread = nullptr;
+    }
+    ensureWorker();
+    configureWorker();
 }
 
 // Solo al destruir el backend. Apaga MCP en el hilo worker (afinidad correcta de

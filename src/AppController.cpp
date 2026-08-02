@@ -4429,6 +4429,12 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
     cb->setThinkingEnabled(m_agentThinkingEnabled);
     cb->setThinkingLeakGuard(ap.thinkingLeakGuard);
     cb->setMcpToolsEnabled(ap.mcpEnabled);
+    cb->setProgressPolicy(AgentProgressGovernor::Policy{
+                              ap.progressCredits,
+                              ap.progressMaxCredits,
+                              ap.progressReplanAfter,
+                              ap.progressStopAfter},
+                          ap.quickToolTimeoutSec);
 }
 
 void AppController::applyActiveAgentProfile()
@@ -13494,6 +13500,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 if (ok) { temp = v; break; }
             }
     }
+    // El benchmark mide el perfil, no la suerte de una trayectoria agentic.
+    // Conservamos algo de sampling pero acotado y fijamos seed por pasada.
+    const double benchmarkTemp = temp < 0.0 ? 0.1 : qMin(temp, 0.1);
+    const int benchmarkSeed = 4242;
 
     auto sanitize = [](QString s) {
         s.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_-]+")), QStringLiteral("_"));
@@ -13617,7 +13627,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         agent->setThinkingEnabled(m_agentThinkingEnabled);
         agent->setApprovalPolicy(QStringLiteral("super"));   // auto-approve every tool (headless)
         agent->setPermissionRules(m_agentPermRules);
-        agent->setAgentTuning(m_agentSystemPrompt, temp);
+        agent->setAgentTuning(m_agentSystemPrompt, benchmarkTemp);
+        agent->setDeterministicSeed(benchmarkSeed);
         agent->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
         agent->setWebProviders(webProviderConfigs());
         agent->setVisionAvailable(m_serverHasVision);
@@ -13884,6 +13895,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["target"]       = QStringLiteral("agent");
             result["agentProfileId"]   = m_benchmarkAgentProfileId;
             result["agentProfileName"] = m_benchmarkAgentProfileName;
+            result["agentTemperature"] = benchmarkTemp;
+            result["agentSeed"] = benchmarkSeed;
             result["benchmarkName"] = (mode == QLatin1String("short") ? QStringLiteral("Corta")
                                       : mode == QLatin1String("full") ? QStringLiteral("Completa")
                                       : runLabel);
@@ -13907,6 +13920,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["response"]     = finalText;
             result["agentFiles"]   = files;
             result["agentMetrics"] = assistantMetrics;
+            result["progressGovernor"] = agent->progressSummary();
             result["acceptance"]   = acceptanceRows;
             result["timedOut"]     = *timedOut;
             result["failed"]       = *passFailed || *timedOut || (qTotal > 0 && qScore < qTotal);
