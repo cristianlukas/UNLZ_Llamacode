@@ -1,4 +1,5 @@
 #include "ProfileManager.h"
+#include "SystemProfileVariants.h"
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
@@ -777,7 +778,7 @@ void ProfileManager::loadSystemProfiles()
         return;
     }
     raw = f.readAll();
-    const QJsonArray arr = QJsonDocument::fromJson(raw).array();
+    const QJsonArray arr = expandSystemProfileVariants(QJsonDocument::fromJson(raw).array());
     if (arr.isEmpty()) return;
 
     // modelId DETERMINISTA por ruta (igual que GGUFScanner.cpp): liga el perfil al

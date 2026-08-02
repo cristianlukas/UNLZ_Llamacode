@@ -53,6 +53,20 @@ Los contextos permitidos para crear variantes son 64k, 131k, 192k, 256k y 384k.
 tiempo de prefill. El tuner incluye `--n-cpu-moe 31/35/39/43` y conserva el gate
 de calidad/perplexity existente.
 
+## Perfiles de benchmark
+
+El bundle incluye doce perfiles opt-in `[bench ULTRA-Q]` que reutilizan los mismos
+shards y el mismo binario. La matriz cubre batch lógico 2048/4096/8192, ubatch
+512/1024/2048, DSpark n-max 1/3/5 y un control sin speculative decoding. Dos
+variantes adicionales comparan `--n-cpu-moe 35/43` contra el baseline 39. Los
+perfiles `stress` con ubatch 2048 pueden fallar por OOM: ese fallo es un resultado
+válido y no deben usarse como configuración diaria sin medir estabilidad.
+
+Comparar con el mismo prompt y contexto efectivo. Registrar PP tok/s, TG tok/s,
+TTFT, tiempo total, aceptación DSpark, VRAM pico, RAM comprometida y pagefile. Un
+batch mayor que el prompt no aporta velocidad; `batch >= ubatch` se mantiene en
+toda la matriz. Ninguna variante se recomienda ni descarga automáticamente.
+
 ## Híbrido ULTRA-Q → MAX-Q
 
 El perfil `sys-hybrid-ultraq-maxq` usa ULTRA-Q sólo para planificar y MAX-Q para

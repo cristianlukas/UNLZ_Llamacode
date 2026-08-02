@@ -1,6 +1,7 @@
 #include "AppController.h"
 #include "core/OllamaImporter.h"
 #include "core/profiles/ProfileHealthChecker.h"
+#include "core/profiles/SystemProfileVariants.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/agent/PortableSkillStore.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -8231,7 +8232,7 @@ QJsonArray AppController::readApiServices() const
 {
     QFile f(integrationsFilePath());
     if (!f.open(QIODevice::ReadOnly)) return {};
-    return QJsonDocument::fromJson(f.readAll()).array();
+    return expandSystemProfileVariants(QJsonDocument::fromJson(f.readAll()).array());
 }
 
 bool AppController::writeApiServices(const QJsonArray &arr)
@@ -15129,8 +15130,13 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
     const QString normalizedMode = mode.trimmed().toLower();
     const bool cpuOnly = normalizedMode == QLatin1String("cpu")
                          || normalizedMode == QLatin1String("cpu_only");
+    const int specTypeIndex = effArgs.indexOf(QStringLiteral("--spec-type"));
+    const bool hasEmbeddedDraft = specTypeIndex >= 0 && specTypeIndex + 1 < effArgs.size()
+        && effArgs.at(specTypeIndex + 1).contains(QStringLiteral("draft"), Qt::CaseInsensitive);
     const bool hasDraft = !cpuOnly && (effArgs.contains(QStringLiteral("--draft-model"))
-                          || effArgs.contains(QStringLiteral("-md")));
+                          || effArgs.contains(QStringLiteral("-md"))
+                          || effArgs.contains(QStringLiteral("--spec-draft-model"))
+                          || hasEmbeddedDraft);
     const bool cpuMoe = !cpuOnly && effArgs.contains(QStringLiteral("--n-cpu-moe"));
     QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly, cpuMoe);
 

@@ -234,7 +234,9 @@ KV q4_0, `mmap`, `--n-cpu-moe 39`, margen de VRAM `--fit-target 512` y DSpark
 integrado (`--spec-type draft-dspark --spec-draft-n-max 5`); requiere llama.cpp
 oficial b10228 o posterior. En Windows, `no-mmap` puede intentar reservar cerca de 99 GB de memoria CUDA Host y fallar incluso con 128 GB de RAM. El
 perfil declara presets clonables 64k/131k/192k/256k/384k y el auto-tuner explora
-31/35/39/43 capas MoE en CPU. No se recomienda ni descarga automáticamente: antes
+31/35/39/43 capas MoE en CPU. Incluye además doce perfiles opt-in de benchmark
+para comparar batch/ubatch, DSpark y reparto CPU-MoE sin alterar el baseline. No se
+recomienda ni descarga automáticamente: antes
 de promoverlo se debe medir estabilidad, pagefile, calidad y tiempo total en el
 hardware local. Detalle operativo en [`docs/ultra-q.md`](docs/ultra-q.md).
 

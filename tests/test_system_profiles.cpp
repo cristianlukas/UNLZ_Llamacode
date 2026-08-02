@@ -93,7 +93,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 16);                       // tiers base + extras + ULTRA-Q/híbrido
+    QCOMPARE(sys, 28); // tiers base + extras + ULTRA-Q/híbrido + 12 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -660,6 +660,7 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QVERIFY(args.contains(QStringLiteral("--no-warmup")));
     QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
     QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
+    QCOMPARE(ultra.value("benchmarkVariants").toArray().size(), 12);
 
     QVERIFY(!hybrid.isEmpty());
     QCOMPARE(hybrid.value("plannerProfileId").toString(),
@@ -671,6 +672,30 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(launch.value("plannerProfileId").toString(),
              QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
     QCOMPARE(launch.value("hybridMode").toString(), QStringLiteral("sequential"));
+
+    const QVariantMap balanced =
+        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-ds5"));
+    QVERIFY(balanced.value("system").toBool());
+    const QVariantMap balancedRt =
+        pm.getRuntimePreset(balanced.value("runtimePresetId").toString());
+    QCOMPARE(balancedRt.value("batch").toInt(), 4096);
+    QCOMPARE(balancedRt.value("ubatch").toInt(), 1024);
+    QCOMPARE(balanced.value("modelProfileId").toString(),
+             QStringLiteral("sysmodel-sys-bench-ultraq-b4096-u1024-ds5"));
+    QCOMPARE(balanced.value("extraArgs").toStringList().value(
+                 balanced.value("extraArgs").toStringList().indexOf("--spec-draft-n-max") + 1),
+             QStringLiteral("5"));
+
+    const QVariantMap noSpec =
+        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-nospec"));
+    QVERIFY(!noSpec.value("extraArgs").toStringList().contains(QStringLiteral("--spec-type")));
+    QVERIFY(!noSpec.value("extraArgs").toStringList().contains(
+        QStringLiteral("--spec-draft-n-max")));
+
+    const QVariantMap moe35 =
+        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-moe35"));
+    const QStringList moeArgs = moe35.value("extraArgs").toStringList();
+    QCOMPARE(moeArgs.value(moeArgs.indexOf("--n-cpu-moe") + 1), QStringLiteral("35"));
 }
 
 QTEST_MAIN(SystemProfilesTests)

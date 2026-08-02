@@ -45,6 +45,97 @@
     "binaryKind": "official",
     "minimumBinaryBuild": 10228,
     "contextPresets": [65536, 131072, 196608, 262144, 393216],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-ultraq-b2048-u512-ds5",
+        "order": 92,
+        "displayName": "[bench ULTRA-Q] B2048 · U512 · DSpark 5",
+        "runtime": {"batch": 2048, "ubatch": 512},
+        "comment": "Benchmark conservador: duplica batch lógico manteniendo el microbatch base."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u512-ds5",
+        "order": 93,
+        "displayName": "[bench ULTRA-Q] B4096 · U512 · DSpark 5",
+        "runtime": {"batch": 4096, "ubatch": 512},
+        "comment": "Aísla el efecto de batch 4096 sin aumentar el compute graph de ubatch."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u512-ds5",
+        "order": 94,
+        "displayName": "[bench ULTRA-Q] B8192 · U512 · DSpark 5",
+        "runtime": {"batch": 8192, "ubatch": 512},
+        "comment": "Batch lógico grande para prompts largos; vigilar RAM comprometida y TTFT."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-ds5",
+        "order": 95,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · DSpark 5",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "comment": "Candidato equilibrado para mejorar prefill con flash-attn."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u1024-ds5",
+        "order": 96,
+        "displayName": "[bench ULTRA-Q] B8192 · U1024 · DSpark 5",
+        "runtime": {"batch": 8192, "ubatch": 1024},
+        "comment": "Prompt largo y ubatch medio; medir wall-time, no sólo PP tok/s."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u2048-ds5",
+        "order": 97,
+        "displayName": "[bench ULTRA-Q stress] B4096 · U2048 · DSpark 5",
+        "runtime": {"batch": 4096, "ubatch": 2048},
+        "comment": "Stress de compute graph; puede agotar VRAM en RTX 3090."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5",
+        "order": 98,
+        "displayName": "[bench ULTRA-Q stress] B8192 · U2048 · DSpark 5",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "comment": "Máximo stress de prefill; OOM o paginación son resultados válidos del benchmark."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-ds1",
+        "order": 99,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · DSpark 1",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "extraArgOverrides": {"--spec-draft-n-max": 1},
+        "comment": "Aísla DSpark n-max 1 sobre el candidato equilibrado."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-ds3",
+        "order": 100,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · DSpark 3",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "extraArgOverrides": {"--spec-draft-n-max": 3},
+        "comment": "Aísla DSpark n-max 3 sobre el candidato equilibrado."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-nospec",
+        "order": 101,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · sin DSpark",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "extraArgOverrides": {"--spec-type": null, "--spec-draft-n-max": null},
+        "comment": "Control sin speculative decoding para medir la ganancia real de DSpark."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-moe35",
+        "order": 102,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · CPU-MoE 35",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "extraArgOverrides": {"--n-cpu-moe": 35},
+        "comment": "Más expertos en GPU; puede mejorar decode si conserva margen de VRAM."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-moe43",
+        "order": 103,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · CPU-MoE 43",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "extraArgOverrides": {"--n-cpu-moe": 43},
+        "comment": "Más expertos en RAM; sacrifica decode para liberar VRAM al prefill."
+      }
+    ],
     "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
   },
   {
