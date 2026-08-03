@@ -2403,6 +2403,8 @@ QJsonObject LlamaAgentBackend::buildTextToolPayload(const QJsonObject &nativePay
         "Tools disponibles: %1.\n"
         "Para usar una tool respondé SOLO una línea con este formato exacto:\n"
         "TOOL_CALL {\"name\":\"web_fetch\",\"arguments\":{\"url\":\"https://example.com\"}}\n"
+        "UN SOLO TOOL_CALL por turno: no listes varias ni adivines rutas; esperá "
+        "el TOOL_RESULT.\n"
         "No agregues explicación junto al TOOL_CALL. NO razones en voz alta ni uses "
         "etiquetas <think>: tu PRIMERA línea debe ser el TOOL_CALL (o el resultado "
         "final si ya terminaste). Nunca respondas vacío. La app ejecutará la tool y te "
@@ -2549,6 +2551,7 @@ void LlamaAgentBackend::resetStreamState()
     m_streamContent.clear();
     m_streamReason.clear();
     m_streamRepetitionDetected = false;
+    m_streamToolCallCut = false;
     m_streamToolCalls.clear();
     m_genTokens = 0;
     m_genMs = 0.0;
@@ -2668,6 +2671,22 @@ void LlamaAgentBackend::handleStreamData()
             m_streamReason += delta.value(QStringLiteral("reasoning_content")).toString();
         m_streamContent += delta.value(QStringLiteral("content")).toString();
 
+        // Modo texto: un turno = UN tool-call. Algunos modelos escupen una
+        // ráfaga de decenas de TOOL_CALL en una sola generación (paths
+        // inventados incluidos): sólo el primero se ejecuta y el resto queda
+        // como texto basura en el transcript, quemando minutos de generación.
+        // Cortamos apenas empieza el segundo.
+        if (usingTextTools() && !m_streamToolCallCut) {
+            const int cut = secondTextToolCallStart(m_streamContent);
+            if (cut > 0) {
+                m_streamContent.truncate(cut);
+                m_streamToolCallCut = true;
+                emit logAppended(QStringLiteral(
+                    "[turn] ráfaga de TOOL_CALL en modo texto; corto en el primero\n"));
+                if (m_reply) m_reply->abort();
+            }
+        }
+
         // Loop dentro de UNA generación: algunos modelos repiten un párrafo hasta
         // agotar n_predict, por lo que el anti-loop de tool calls nunca llega a
         // observarlo. Exigimos tres copias exactas de un bloque largo para evitar
@@ -2771,7 +2790,7 @@ void LlamaAgentBackend::handleStreamData()
 
 void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 {
-    if (!ok && !m_streamRepetitionDetected) {
+    if (!ok && !m_streamRepetitionDetected && !m_streamToolCallCut) {
         finishTurn(QStringLiteral("[error: %1]").arg(err), false);
         return;
     }
@@ -4187,6 +4206,20 @@ bool LlamaAgentBackend::redundantDesktopConfirmKey(const QString &previousTool,
     return k == QLatin1String("=")
            || k == QLatin1String("enter")
            || k == QLatin1String("return");
+}
+
+int LlamaAgentBackend::secondTextToolCallStart(const QString &content)
+{
+    static const QRegularExpression marker(QStringLiteral("\\bTOOL_CALL\\b"),
+                                           QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch first = marker.match(content);
+    if (!first.hasMatch()) return -1;
+    // El primer TOOL_CALL tiene que estar completo (JSON balanceado) antes de
+    // cortar: si no, el "segundo" podría ser texto dentro de los argumentos.
+    if (extractBalancedJsonObject(content, first.capturedEnd()).isEmpty()) return -1;
+    const QRegularExpressionMatch second = marker.match(content, first.capturedEnd());
+    if (!second.hasMatch()) return -1;
+    return second.capturedStart();
 }
 
 QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)

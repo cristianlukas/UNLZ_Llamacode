@@ -258,6 +258,8 @@ public:
     // Schemas de las tools built-in (sin MCP). Público para reusar en sub-agentes.
     static QJsonArray toolSchemas();
     static QJsonObject textToolCallFromContent(const QString &content);
+    // Offset donde arranca el SEGUNDO TOOL_CALL de una ráfaga (-1 si no hay).
+    static int secondTextToolCallStart(const QString &content);
 
     // Texto VISIBLE de una respuesta del modelo según "Pensar". Con Pensar ON deja
     // el content tal cual (la UI muestra <think>). Con Pensar OFF quita los bloques
@@ -609,6 +611,7 @@ private:
     QString    m_streamContent;     // delta.content acumulado
     QString    m_streamReason;      // delta.reasoning_content acumulado
     bool m_streamRepetitionDetected = false; // loop textual cortado durante generación
+    bool m_streamToolCallCut = false;        // ráfaga de TOOL_CALL cortada en el segundo
     QHash<int, QJsonObject> m_streamToolCalls; // index → {id,name,arguments} mergeado
 
     // El transcript es la fuente de verdad inmutable de la sesión. m_apiMessages

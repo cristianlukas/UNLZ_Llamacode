@@ -20,6 +20,7 @@ private slots:
     void dropsDanglingAssistantAndAnchorsFirstUser();
     void dropsTransportErrorAssistantMessages();
     void parsesTextToolCallFallback();
+    void cutsTextToolCallBurstAtSecondCall();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void forceTextToolsSkipsNativeToolAttempt();
     void thirdIdenticalToolCallStopsTurnWithoutExecuting();
@@ -322,6 +323,27 @@ void AgentWireTests::parsesTextToolCallFallback()
     QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
 }
 
+// Ráfaga: el modelo escupe decenas de TOOL_CALL en UNA generación. Sólo el
+// primero se ejecuta; el resto era texto basura en el chat y minutos quemados.
+void AgentWireTests::cutsTextToolCallBurstAtSecondCall()
+{
+    const QString one = QStringLiteral(
+        "TOOL_CALL {\"name\":\"list_dir\",\"arguments\":{\"path\":\"C:\\\\a\"}}");
+    QCOMPARE(LlamaAgentBackend::secondTextToolCallStart(one), -1);
+    // Primer call todavía incompleto (JSON sin cerrar): no cortar.
+    QCOMPARE(LlamaAgentBackend::secondTextToolCallStart(
+                 QStringLiteral("TOOL_CALL {\"name\":\"list_dir\",\"argu")), -1);
+
+    const QString burst = one + QStringLiteral("\n") + one + QStringLiteral("\n") + one;
+    const int cut = LlamaAgentBackend::secondTextToolCallStart(burst);
+    QCOMPARE(cut, one.size() + 1);
+
+    const QString head = burst.left(cut);
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(head);
+    QCOMPARE(call.value(QStringLiteral("function")).toObject()
+                 .value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
+}
+
 void AgentWireTests::parsesNativeToolCallLeakFallback()
 {
     // Regresión del bug "sumar 2+2": modelos como Gemma filtran su formato NATIVO
@@ -472,7 +494,11 @@ void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
     QTRY_VERIFY_WITH_TIMEOUT(finished.count() == 1, 10000);
     QCOMPARE(server.nativeRejects, 2);
     QCOMPARE(server.textRequests, 2);
-    QVERIFY(server.secondTextBodySize < 20000);
+    // Lo que se testea es que el TOOL_RESULT viaje truncado (el archivo crudo son
+    // 50k). El techo es holgado a propósito: el prompt del protocolo textual
+    // cambia de tamaño y no debe romper este test.
+    QVERIFY2(server.secondTextBodySize < 30000,
+             qPrintable(QStringLiteral("body=%1").arg(server.secondTextBodySize)));
     QVERIFY(server.secondTextBodyWasTruncated);
 
     bool sawTool = false;
