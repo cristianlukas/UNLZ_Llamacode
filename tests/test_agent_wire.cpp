@@ -31,6 +31,7 @@ private slots:
     void taskSessionIsEphemeralAndRestoresPrevious();
     void newSessionDropsPreviousEmptySession();
     void nativeSessionForkPersistsTreeMetadata();
+    void midConversationNoteRole_neverSystem();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
     void visibleAnswer_stripsThinkButSalvagesWhenEmpty();
@@ -1127,6 +1128,53 @@ static QJsonArray tcDelta(int index, const QJsonObject &fn,
                    {QStringLiteral("function"), fn}};
     if (!id.isEmpty()) tc.insert(QStringLiteral("id"), id);
     return QJsonArray{tc};
+}
+
+// El resumen de compactación se inyecta EN MEDIO del hilo: nunca con role=system
+// (los templates que hoistean system al tope le borran la posición y corren el
+// prefijo del prompt-cache). deepseek-v4 usa el rol que DS entrenó para esto.
+void AgentWireTests::midConversationNoteRole_neverSystem()
+{
+    const QStringList others{
+        QStringLiteral(""), QStringLiteral("local"),
+        QStringLiteral("gemma-4-31b-it"), QStringLiteral("gpt-4.1"),
+        QStringLiteral("deepseek-v3.1"), QStringLiteral("deepseek-r1"),
+    };
+    for (const QString &m : others) {
+        const QString role = LlamaAgentBackend::midConversationNoteRole(m);
+        QVERIFY2(role != QLatin1String("system"), qPrintable(m));
+        QCOMPARE(role, QStringLiteral("user"));
+    }
+
+    const QStringList dsV4{
+        QStringLiteral("DeepSeek-V4-Flash-0731"),
+        QStringLiteral("deepseek-ai/DeepSeek-V4-Flash-0731"),
+        QStringLiteral("deepseek_v4"),
+        QStringLiteral("DeepSeek V4"),
+    };
+    for (const QString &m : dsV4)
+        QCOMPARE(LlamaAgentBackend::midConversationNoteRole(m),
+                 QStringLiteral("latest_reminder"));
+
+    // El sanitizer degrada el system no inicial con el mismo criterio, y el
+    // system de índice 0 (el prompt real) queda intacto en ambos casos.
+    const QJsonArray in{
+        msg(QStringLiteral("system"), QStringLiteral("base")),
+        msg(QStringLiteral("user"), QStringLiteral("task")),
+        msg(QStringLiteral("system"), QStringLiteral("[Resumen del contexto previo]"))
+    };
+    const QJsonArray plain = LlamaAgentBackend::sanitizeApiMessagesForWire(in);
+    QCOMPARE(plain.at(0).toObject().value(QStringLiteral("role")).toString(),
+             QStringLiteral("system"));
+    QCOMPARE(plain.at(2).toObject().value(QStringLiteral("role")).toString(),
+             QStringLiteral("user"));
+
+    const QJsonArray ds = LlamaAgentBackend::sanitizeApiMessagesForWire(
+        in, QStringLiteral("DeepSeek-V4-Flash-0731"));
+    QCOMPARE(ds.at(0).toObject().value(QStringLiteral("role")).toString(),
+             QStringLiteral("system"));
+    QCOMPARE(ds.at(2).toObject().value(QStringLiteral("role")).toString(),
+             QStringLiteral("latest_reminder"));
 }
 
 void AgentWireTests::mergeToolCallDelta_assemblesAcrossChunks()
