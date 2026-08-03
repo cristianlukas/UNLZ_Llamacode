@@ -336,6 +336,13 @@ public:
     // Memoria por proyecto: ruta del archivo de memoria dentro de un cwd.
     static QString memoryFilePath(const QString &cwd);
 
+    // Raíz de trabajo utilizable, o vacío si `dir` no sirve como proyecto.
+    // Rechaza el home del usuario, su carpeta padre y la raíz de una unidad:
+    // ahí las tools (con auto-aprobación) escribirían sobre .ssh/.claude/perfiles.
+    static QString safeProjectDir(const QString &dir);
+    // Workspace aislado que se usa cuando no hay proyecto válido. Nunca el home.
+    static QString fallbackWorkspaceDir();
+
     // Normaliza el historial antes de enviarlo a backends OpenAI-compatible:
     // elimina pares assistant/tool incompletos, conserva un user de anclaje y
     // evita system messages no iniciales.
@@ -465,6 +472,10 @@ private:
     void applyCompaction(int head, int keepFrom, const QString &summary); // reemplaza tramo
     void appendApiMessage(const QJsonObject &message);
     void replaceSystemMessage(const QJsonObject &message);
+    // Reconstruye el system prompt cuando cambió el contexto (cwd, modo). Sin
+    // esto el prompt persistido sigue anunciando el proyecto y los permisos de
+    // cuando se creó la sesión, y el modelo pide rutas que el runner deniega.
+    void refreshSystemPromptContext();
     int pruneWorkingContext();
     bool isProtectedContextMessage(const QJsonObject &message) const;
     QString normalizeCompactionSummary(const QString &summary) const;

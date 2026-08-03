@@ -28,6 +28,7 @@
 #include <QPointer>
 #include <QRegularExpression>
 #include <QDebug>
+#include <algorithm>
 
 static int estimateTokens(const QString &text)
 {
@@ -460,8 +461,17 @@ LlamaAgentBackend::~LlamaAgentBackend() { stop(); teardownWorker(); }
 void LlamaAgentBackend::start(const AgentContext &ctx)
 {
     m_ctx = ctx;
-    m_cwd = (!ctx.cwd.isEmpty() && QFileInfo(ctx.cwd).isDir())
-                ? ctx.cwd : QDir::homePath();
+    // Sin proyecto válido NO se cae al home: con auto-aprobación las tools
+    // trabajarían sobre C:\Users\<user> (.ssh, .claude, perfiles). Workspace
+    // aislado y aviso visible; el cwd real de la sesión lo repone loadFromDisk.
+    m_cwd = safeProjectDir(ctx.cwd);
+    if (m_cwd.isEmpty()) {
+        m_cwd = fallbackWorkspaceDir();
+        emit logAppended(QStringLiteral("[proyecto no definido o inseguro (%1): usando "
+                                        "workspace aislado %2]\n")
+                             .arg(QDir::toNativeSeparators(ctx.cwd.trimmed()),
+                                  QDir::toNativeSeparators(m_cwd)));
+    }
     m_running = true;
     if (!m_ephemeralSessions)
         loadFromDisk();     // recupera sesiones previas; activa la primera
@@ -620,6 +630,17 @@ void LlamaAgentBackend::replaceSystemMessage(const QJsonObject &message)
     else m_apiMessages.replace(0, message);
     if (m_transcriptMessages.isEmpty()) m_transcriptMessages.append(message);
     else m_transcriptMessages.replace(0, message);
+}
+
+void LlamaAgentBackend::refreshSystemPromptContext()
+{
+    if (m_apiMessages.isEmpty()) return;
+    QJsonObject sys = m_apiMessages.first().toObject();
+    if (sys.value(QStringLiteral("role")).toString() != QLatin1String("system")) return;
+    const QString rebuilt = buildSystemPrompt();
+    if (sys.value(QStringLiteral("content")).toString() == rebuilt) return;
+    sys[QStringLiteral("content")] = rebuilt;
+    replaceSystemMessage(sys);
 }
 
 bool LlamaAgentBackend::isProtectedContextMessage(const QJsonObject &message) const
@@ -1162,6 +1183,38 @@ void LlamaAgentBackend::ensureSession()
 QString LlamaAgentBackend::memoryFilePath(const QString &cwd)
 {
     return QDir::cleanPath(cwd + QStringLiteral("/.llamacode/memory.md"));
+}
+
+QString LlamaAgentBackend::safeProjectDir(const QString &dir)
+{
+    const QString trimmed = dir.trimmed();
+    if (trimmed.isEmpty()) return QString();
+    const QFileInfo info(trimmed);
+    if (!info.isDir()) return QString();
+    const QString abs = QDir::cleanPath(info.absoluteFilePath());
+    if (QDir(abs).isRoot()) return QString();
+    const QString home = QDir::cleanPath(QDir::homePath());
+#ifdef Q_OS_WIN
+    constexpr Qt::CaseSensitivity cs = Qt::CaseInsensitive;
+#else
+    constexpr Qt::CaseSensitivity cs = Qt::CaseSensitive;
+#endif
+    // El home y su carpeta padre (C:\Users) no son proyectos: ahí adentro viven
+    // credenciales y configuración de todas las herramientas del usuario.
+    if (abs.compare(home, cs) == 0) return QString();
+    QDir homeParent(home);
+    if (homeParent.cdUp() && abs.compare(QDir::cleanPath(homeParent.absolutePath()), cs) == 0)
+        return QString();
+    return abs;
+}
+
+QString LlamaAgentBackend::fallbackWorkspaceDir()
+{
+    const QString dir = QDir::cleanPath(
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        + QStringLiteral("/workspace"));
+    QDir().mkpath(dir);
+    return dir;
 }
 
 QString LlamaAgentBackend::developmentDisciplineSection()
@@ -5745,7 +5798,8 @@ void LlamaAgentBackend::endTaskSession()
 
 void LlamaAgentBackend::newSessionInProject(const QString &projectDir)
 {
-    if (!projectDir.isEmpty() && QFileInfo(projectDir).isDir()) m_cwd = projectDir;
+    const QString safe = safeProjectDir(projectDir);
+    if (!safe.isEmpty()) m_cwd = safe;
     newSession();
 }
 
@@ -6287,10 +6341,12 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
     m_checkpoints.clear();
     if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
 
+    QString snapshotProjectDir;
     QFile f(sessionFilePath(sessionId));
     if (f.open(QIODevice::ReadOnly)) {
         const QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
         f.close();
+        snapshotProjectDir = obj.value(QStringLiteral("projectDir")).toString();
         m_apiMessages = obj.value(QStringLiteral("workingContext")).toArray();
         m_transcriptMessages = obj.value(QStringLiteral("transcript")).toArray();
         // Compatibilidad con snapshots v1: `api` era a la vez transcript y
@@ -6311,15 +6367,23 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
         }
         restoreCheckpoints(obj.value(QStringLiteral("checkpoints")).toArray());
     }
+    QString indexProjectDir;
     for (const QVariant &v : std::as_const(m_sessions)) {
         const QVariantMap s = v.toMap();
         if (s.value(QStringLiteral("id")).toString() == sessionId) {
             m_sessionTitle = s.value(QStringLiteral("title")).toString();
-            const QString pd = s.value(QStringLiteral("projectDir")).toString();
-            if (!pd.isEmpty()) m_cwd = pd;
+            indexProjectDir = s.value(QStringLiteral("projectDir")).toString();
             break;
         }
     }
+    // El índice manda, pero si no tiene el dato (índice viejo o sesión que
+    // nunca se indexó) vale el del snapshot. Sin esto la sesión hereda el cwd
+    // del backend y el agente termina trabajando en otro proyecto.
+    const QString previousCwd = m_cwd;
+    QString restored = safeProjectDir(indexProjectDir);
+    if (restored.isEmpty()) restored = safeProjectDir(snapshotProjectDir);
+    if (!restored.isEmpty()) m_cwd = restored;
+    if (m_cwd != previousCwd) refreshSystemPromptContext();
     // Si la sesión no tenía system prompt (vacía), garantizar uno.
     if (m_apiMessages.isEmpty())
         m_apiMessages = QJsonArray{ QJsonObject{
@@ -6349,10 +6413,12 @@ void LlamaAgentBackend::loadFromDisk()
 {
     if (m_ephemeralSessions) return;
     if (!m_sessions.isEmpty()) return;
+    QJsonArray arr;
     QFile f(storageDir() + QStringLiteral("/index.json"));
-    if (!f.open(QIODevice::ReadOnly)) return;
-    const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
-    f.close();
+    if (f.open(QIODevice::ReadOnly)) {
+        arr = QJsonDocument::fromJson(f.readAll()).array();
+        f.close();
+    }
     // Las corridas de benchmark crean workspaces aislados llamados
     // "<perfil>__ws" o "<perfil>__ws_pN". Builds viejas (pre-ephemeral) las
     // persistieron en este índice global y ensucian el sidebar del Agente.
@@ -6394,7 +6460,48 @@ void LlamaAgentBackend::loadFromDisk()
         }
         m_sessions.append(s);
     }
-    if (indexChanged) persistIndex();
+    // Reconstrucción: snapshots en disco que el índice no lista (índice viejo,
+    // perdido, o sesión guardada por un runtime paralelo). Sin esto la sesión
+    // desaparece del panel y, peor, pierde su projectDir.
+    QSet<QString> indexed;
+    for (const QVariant &v : std::as_const(m_sessions))
+        indexed.insert(v.toMap().value(QStringLiteral("id")).toString());
+    const QFileInfoList snapshots = QDir(storageDir()).entryInfoList(
+        QStringList{QStringLiteral("*.json")}, QDir::Files, QDir::Time);
+    for (const QFileInfo &fi : snapshots) {
+        const QString sid = fi.completeBaseName();
+        if (sid == QLatin1String("index") || indexed.contains(sid)) continue;
+        QFile snapshot(fi.absoluteFilePath());
+        if (!snapshot.open(QIODevice::ReadOnly)) continue;
+        const QJsonObject obj = QJsonDocument::fromJson(snapshot.readAll()).object();
+        snapshot.close();
+        if (obj.value(QStringLiteral("id")).toString() != sid) continue;
+        if (obj.value(QStringLiteral("messages")).toArray().isEmpty()) continue;
+        const QString projectDir = obj.value(QStringLiteral("projectDir")).toString();
+        if (benchWs.match(QFileInfo(projectDir).fileName()).hasMatch()) continue;
+        QVariantMap recovered;
+        recovered[QStringLiteral("id")] = sid;
+        recovered[QStringLiteral("title")] = obj.value(QStringLiteral("title")).toString();
+        recovered[QStringLiteral("created")] =
+            static_cast<double>(fi.birthTime().isValid()
+                                    ? fi.birthTime().toMSecsSinceEpoch()
+                                    : fi.lastModified().toMSecsSinceEpoch());
+        recovered[QStringLiteral("projectDir")] = projectDir;
+        recovered[QStringLiteral("projectName")] =
+            obj.value(QStringLiteral("projectName")).toString();
+        recovered[QStringLiteral("projectId")] = QString();
+        m_sessions.append(recovered);
+        indexed.insert(sid);
+        indexChanged = true;
+    }
+    if (indexChanged) {
+        std::sort(m_sessions.begin(), m_sessions.end(),
+                  [](const QVariant &a, const QVariant &b) {
+                      return a.toMap().value(QStringLiteral("created")).toDouble()
+                          > b.toMap().value(QStringLiteral("created")).toDouble();
+                  });
+        persistIndex();
+    }
     // Sesiones sin ningún mensaje que quedaron de corridas anteriores: no sobreviven.
     pruneEmptySessions(QString());
     if (m_sessions.isEmpty()) return;
@@ -6421,10 +6528,13 @@ void LlamaAgentBackend::persistSession(const QString &sessionId) const
     if (m_ephemeralSessions) return;
     if (sessionId.isEmpty() || sessionId != m_sessionId) return;  // solo la activa tiene datos en RAM
     QString title;
+    QString projectDir = m_cwd;
     for (const QVariant &v : m_sessions) {
         const QVariantMap s = v.toMap();
         if (s.value(QStringLiteral("id")).toString() == sessionId) {
             title = s.value(QStringLiteral("title")).toString();
+            const QString pd = s.value(QStringLiteral("projectDir")).toString();
+            if (!pd.isEmpty()) projectDir = pd;
             break;
         }
     }
@@ -6437,6 +6547,10 @@ void LlamaAgentBackend::persistSession(const QString &sessionId) const
     QJsonObject obj{
         {QStringLiteral("id"), sessionId},
         {QStringLiteral("title"), title},
+        // El cwd vive también en el snapshot: si el índice se pierde o queda
+        // viejo, la sesión sigue sabiendo sobre qué proyecto trabajaba.
+        {QStringLiteral("projectDir"), projectDir},
+        {QStringLiteral("projectName"), QFileInfo(projectDir).fileName()},
         {QStringLiteral("messages"), msgs},
         {QStringLiteral("api"), m_transcriptMessages}, // compatibilidad con v1
         {QStringLiteral("transcript"), m_transcriptMessages},
