@@ -4914,14 +4914,17 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "empaquetar por presupuesto de tokens y expandir con vecinos del dep-graph "
                           "(archivos que el resultado importa/incluye). Con compact=true devuelve "
                           "sólo citas 'rel:Lini-Lfin' + preview de 1 línea (estilo FastContext): "
-                          "explorás barato y leés después los spans con read_file. args: query/k/path/"
-                          "token_budget/expand_graph/compact."),
+                          "explorás barato y leés después los spans con read_file. Con "
+                          "include_docs=true suma los PDF/Office/EPUB del proyecto al mismo índice "
+                          "(manuales, normativa, specs), no sólo código. args: query/k/path/"
+                          "token_budget/expand_graph/compact/include_docs."),
            QJsonObject{
                {QStringLiteral("query"), strProp(QStringLiteral("Qué buscás (lenguaje natural)."))},
                {QStringLiteral("k"), intProp(QStringLiteral("Cantidad de fragmentos (default 6, máx 15). Ignorado si hay token_budget."))},
                {QStringLiteral("token_budget"), intProp(QStringLiteral("Presupuesto aprox de tokens; llena hasta el límite en vez de k fijo (0=off)."))},
                {QStringLiteral("expand_graph"), boolProp(QStringLiteral("Listar archivos relacionados vía imports/includes. Default true."))},
                {QStringLiteral("compact"), boolProp(QStringLiteral("Devolver sólo citas 'rel:Lini-Lfin' + preview, sin cuerpo. Ahorra tokens de exploración. Default false."))},
+               {QStringLiteral("include_docs"), boolProp(QStringLiteral("Indexar también PDF/Office/EPUB/HTML vía extractor (máx 25 docs, lento la 1ª vez, después cacheado). Default false."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
            QJsonArray{QStringLiteral("query")}),
         fn(QStringLiteral("repo_slice"),
@@ -4936,6 +4939,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("token_budget"), intProp(QStringLiteral("Presupuesto aproximado de tokens."))},
                {QStringLiteral("expand_graph"), boolProp(QStringLiteral("Incluir vecinos por imports/includes. Default true."))},
                {QStringLiteral("compact"), boolProp(QStringLiteral("Sólo citas+rango+preview. Default true."))},
+               {QStringLiteral("include_docs"), boolProp(QStringLiteral("Sumar PDF/Office/EPUB/HTML al índice (máx 25). Default false."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio opcional."))}},
            QJsonArray{QStringLiteral("query")}),
         fn(QStringLiteral("verify_claims"),

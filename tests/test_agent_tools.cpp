@@ -74,6 +74,7 @@ private slots:
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
     void hybridSearch_compactReturnsSpans();
+    void hybridSearch_includeDocsReportsCorpus();
     void repoSlice_defaultsToCompactEvidence();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
@@ -329,6 +330,37 @@ void AgentToolsTests::hybridSearch_compactReturnsSpans()
     QVERIFY(res.contains("blob.cpp:1-"));         // cita span 'rel:Lini-Lfin'
     QVERIFY(!res.contains("SECRETBODY"));         // cuerpo NO volcado (sólo preview 1ª línea)
     QVERIFY(!res.contains("──────"));             // sin separador de bloques de cuerpo
+}
+
+// include_docs suma documentos (pdf/office/epub/html) al MISMO índice híbrido, no
+// sólo código. Sin el flag, un .html se sigue indexando como texto plano (no se
+// pierde nada); con el flag pasa por el extractor y el header reporta el corpus de
+// docs — incluidos los que NO se pudieron extraer, para que el agente sepa que hay
+// fuentes afuera. Acá no hay markitdown ni Python garantizados: lo que se fija es
+// el contrato de reporte y la no-regresión del path de texto.
+void AgentToolsTests::hybridSearch_includeDocsReportsCorpus()
+{
+    call("write_file", {{"path", "manual.html"},
+                        {"content", "<html><body>DOCSCORPUS_MARKER estructuracion</body></html>\n"}});
+    call("write_file", {{"path", "code.cpp"},
+                        {"content", "// DOCSCORPUS_MARKER en codigo\n"}});
+
+    // Sin el flag: el .html cuenta como texto plano y no hay nota de docs.
+    const QVariantMap plain = call("hybrid_search", {{"query", "DOCSCORPUS_MARKER"},
+                                                     {"expand_graph", false}});
+    QVERIFY(plain.value("ok").toBool());
+    const QString plainRes = plain.value("result").toString();
+    QVERIFY(plainRes.contains("manual.html"));
+    QVERIFY(!plainRes.contains("docs"));
+
+    // Con el flag: el header reporta el corpus de documentos (indexados y fallidos).
+    const QVariantMap docs = call("hybrid_search", {{"query", "DOCSCORPUS_MARKER"},
+                                                    {"include_docs", true},
+                                                    {"expand_graph", false}});
+    QVERIFY(docs.value("ok").toBool());
+    const QString docsRes = docs.value("result").toString();
+    QVERIFY(docsRes.contains(QRegularExpression(QStringLiteral("\\d+ docs"))));
+    QVERIFY(docsRes.contains("code.cpp"));   // el path de código sigue vivo
 }
 
 void AgentToolsTests::repoSlice_defaultsToCompactEvidence()

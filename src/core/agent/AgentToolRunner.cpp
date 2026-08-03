@@ -13,6 +13,7 @@
 #include "StructuredSourceView.h" // vista compacta segura y proyectable
 #include "ProjectBrain.h"
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
+#include "core/DocumentExtractor.h" // hybrid_search include_docs: pdf/office al índice
 #include "WebFetchProvider.h"
 #include "core/automation/DesktopAutomationBackend.h"
 #include "core/automation/AutomationArtifactStore.h"
@@ -2285,16 +2286,11 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QStringList files;
         collectFiles(rootAbs, files, 8000);
         bool truncated = false;
-        for (const QString &fp : files) {
-            if (chunks.size() >= maxChunks) { truncated = true; break; }
-            QFileInfo fi(fp);
-            if (fi.size() > 1024 * 1024) continue;
-            QFile f(fp);
-            if (!f.open(QIODevice::ReadOnly)) continue;
-            const QByteArray raw = f.read(1024 * 1024);
-            if (raw.contains('\0')) continue;
-            const QStringList lines = QString::fromUtf8(raw).split(QLatin1Char('\n'));
-            const QString rel = base.relativeFilePath(fp);
+
+        // Trocea un cuerpo de texto en chunks de chunkLines y les calcula BM25.
+        // Común al path de archivos de texto y al de documentos extraídos: para el
+        // ranking un PDF convertido a markdown es texto como cualquier otro.
+        auto addChunks = [&](const QString &rel, const QStringList &lines) {
             for (int start = 0; start < lines.size() && chunks.size() < maxChunks; start += chunkLines) {
                 const int segLines = qMin(chunkLines, lines.size() - start);
                 const QString text = lines.mid(start, chunkLines).join(QLatin1Char('\n')).trimmed();
@@ -2313,7 +2309,51 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                     QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex());
                 chunks.append({rel, start + 1, start + segLines, key, text, bm});
             }
+        };
+
+        // include_docs se lee antes del barrido de texto: con docs prendidos un .html
+        // lo indexa el extractor (markdown limpio, sin tags); apagado, se sigue
+        // leyendo como texto plano igual que siempre — nada se pierde.
+        const bool includeDocs = args.value(QStringLiteral("include_docs")).toBool();
+        for (const QString &fp : files) {
+            if (chunks.size() >= maxChunks) { truncated = true; break; }
+            QFileInfo fi(fp);
+            if (fi.size() > 1024 * 1024) continue;
+            if (includeDocs && DocumentExtractor::isRich(fp)) continue;   // path de docs
+            QFile f(fp);
+            if (!f.open(QIODevice::ReadOnly)) continue;
+            const QByteArray raw = f.read(1024 * 1024);
+            if (raw.contains('\0')) continue;
+            addChunks(base.relativeFilePath(fp),
+                      QString::fromUtf8(raw).split(QLatin1Char('\n')));
         }
+
+        // Documentos (pdf/office/epub/html) → misma pipeline BM25+vector+rerank.
+        // OPT-IN (include_docs): la extracción cuesta un proceso Python por archivo
+        // (markitdown), así que no se paga en cada búsqueda de código. El cache por
+        // md5 de DocumentExtractor hace que la segunda corrida sea gratis.
+        // Las líneas citadas son del TEXTO EXTRAÍDO, no del PDF: sirven para ubicar
+        // el pasaje, no como página.
+        int docsIndexed = 0, docsFailed = 0;
+        QString docErr;
+        if (includeDocs) {
+            const int kMaxDocs = 25;
+            for (const QString &fp : files) {
+                if (docsIndexed + docsFailed >= kMaxDocs) { truncated = true; break; }
+                if (chunks.size() >= maxChunks) { truncated = true; break; }
+                if (!DocumentExtractor::isRich(fp)) continue;
+                QString err;
+                const QString text = DocumentExtractor::extract(fp, &err);
+                if (text.trimmed().isEmpty()) {
+                    ++docsFailed;
+                    if (docErr.isEmpty() && !err.isEmpty()) docErr = err;
+                    continue;
+                }
+                ++docsIndexed;
+                addChunks(base.relativeFilePath(fp), text.split(QLatin1Char('\n')));
+            }
+        }
+
         if (chunks.isEmpty()) return QStringLiteral("[no hay archivos de texto para indexar]");
 
         // Ranking BM25.
@@ -2485,10 +2525,23 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         }
 
         if (ok) *ok = true;
+        // Nota de docs: se informan también los que fallaron (con el primer motivo)
+        // para que el agente sepa que hay fuentes NO indexadas y no concluya sobre
+        // un corpus incompleto creyéndolo completo.
+        QString docsNote;
+        if (includeDocs) {
+            docsNote = QStringLiteral(" · %1 docs").arg(docsIndexed);
+            if (docsFailed > 0)
+                docsNote += QStringLiteral(" (%1 sin extraer%2)")
+                                .arg(docsFailed)
+                                .arg(docErr.isEmpty() ? QString()
+                                                      : QStringLiteral(": ") + docErr);
+        }
         const QString header = (repoSlice
-            ? QStringLiteral("[repo_slice · evidencia previa a edición · %1 chunks · %2%3%4]\n\n")
-            : QStringLiteral("[%1 chunks · %2%3%4]\n\n"))
+            ? QStringLiteral("[repo_slice · evidencia previa a edición · %1 chunks · %2%3%4%5]\n\n")
+            : QStringLiteral("[%1 chunks · %2%3%4%5]\n\n"))
             .arg(chunks.size()).arg(rerankNote)
+            .arg(docsNote)
             .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString())
             .arg(tokenBudget > 0 ? QStringLiteral(" · ~%1 tok").arg(usedTok) : QString());
         return header + outL.join(compact ? QStringLiteral("\n")
