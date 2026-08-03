@@ -3,6 +3,8 @@
 #include <QCryptographicHash>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QRegularExpression>
+#include <QStringList>
 
 QJsonObject HybridPlanning::parsePlan(const QString &text, QString *error)
 {
@@ -26,9 +28,62 @@ QJsonObject HybridPlanning::parsePlan(const QString &text, QString *error)
         if (error) *error = QStringLiteral("JSON inválido: %1").arg(parseError.errorString());
         return {};
     }
-    const QJsonObject plan = doc.object();
+    const QJsonObject plan = normalizePlan(doc.object());
     if (!validatePlan(plan, error)) return {};
     return plan;
+}
+
+QJsonObject HybridPlanning::normalizePlan(const QJsonObject &plan)
+{
+    QJsonObject out = plan;
+    // schemaVersion como string ("1") es la otra desviación habitual.
+    if (out.value(QStringLiteral("schemaVersion")).isString())
+        out.insert(QStringLiteral("schemaVersion"),
+                   out.value(QStringLiteral("schemaVersion")).toString().trimmed().toInt());
+
+    const auto toLines = [](const QString &raw) {
+        QJsonArray items;
+        const QStringList lines = raw.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            QString item = line.trimmed();
+            // Viñetas y numeración quedan fuera: el valor es el paso, no su marca.
+            static const QRegularExpression bullet(
+                QStringLiteral("^(?:[-*\\x{2022}]|\\d+[.)])\\s+"));
+            item.remove(bullet);
+            item = item.trimmed();
+            if (!item.isEmpty()) items.append(item);
+        }
+        return items;
+    };
+
+    for (const QString &key : {QStringLiteral("assumptions"), QStringLiteral("files"),
+                               QStringLiteral("steps"), QStringLiteral("tests"),
+                               QStringLiteral("risks"), QStringLiteral("doneWhen")}) {
+        const QJsonValue value = out.value(key);
+        if (value.isArray()) {
+            QJsonArray items;
+            for (const QJsonValue &item : value.toArray()) {
+                if (item.isString()) {
+                    const QString text = item.toString().trimmed();
+                    if (!text.isEmpty()) items.append(text);
+                } else if (item.isObject()) {
+                    items.append(QString::fromUtf8(
+                        QJsonDocument(item.toObject()).toJson(QJsonDocument::Compact)));
+                } else if (item.isArray()) {
+                    items.append(QString::fromUtf8(
+                        QJsonDocument(item.toArray()).toJson(QJsonDocument::Compact)));
+                } else if (!item.isNull() && !item.isUndefined()) {
+                    items.append(item.toVariant().toString());
+                }
+            }
+            out.insert(key, items);
+        } else if (value.isString()) {
+            out.insert(key, toLines(value.toString()));
+        } else {
+            out.insert(key, QJsonArray{});
+        }
+    }
+    return out;
 }
 
 bool HybridPlanning::validatePlan(const QJsonObject &plan, QString *error)

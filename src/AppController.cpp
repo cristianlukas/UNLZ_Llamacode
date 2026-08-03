@@ -5304,12 +5304,19 @@ void AppController::startHybridExecutor()
 
 void AppController::dispatchHybridRequest()
 {
-    if (!m_hybridFailure.isEmpty()) {
-        const QString error = m_hybridFailure; resetHybridRun();
-        emit serverError(QStringLiteral("Request híbrido cancelado porque el planificador falló: %1.").arg(error));
-        return;
+    // El plan es una ayuda, no el pedido: si el planificador falla, el ejecutor
+    // igual recibe el request original (antes se cancelaba y la sesión quedaba
+    // como si el usuario nunca hubiera pedido nada).
+    const bool degraded = !m_hybridFailure.isEmpty();
+    if (degraded) {
+        appendAgentEvent(QStringLiteral("hybrid"), QStringLiteral(
+            "Planificador falló (%1). Ejecuto el request original sin plan.").arg(m_hybridFailure));
+        emit serverError(QStringLiteral(
+            "El planificador híbrido falló: %1. Ejecuto el request sin plan.").arg(m_hybridFailure));
     }
-    const QString prompt = composeHybridExecutionPromptForTest(m_hybridUserRequest, m_hybridPlan);
+    const QString prompt = degraded
+        ? m_hybridUserRequest
+        : composeHybridExecutionPromptForTest(m_hybridUserRequest, m_hybridPlan);
     setHybridPhase(QStringLiteral("dispatching")); m_hybridDispatching = true;
     if (!m_hybridAttachments.isEmpty()) {
         if (auto *backend = qobject_cast<LlamaAgentBackend *>(m_agentBackend))

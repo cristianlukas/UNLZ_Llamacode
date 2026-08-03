@@ -117,6 +117,7 @@ private slots:
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
     void hybridStructuredPlanValidatesAndRejectsUnsafeShape();
+    void hybridPlanNormalizesScalarLists();
     void hybridStatusUsesSelectedPlannerAndExecutorNames();
     void hybridSwapRemainsStartingUntilPipelineEnds();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
@@ -314,6 +315,26 @@ void AppControllerTests::hybridStructuredPlanValidatesAndRejectsUnsafeShape()
         &error);
     QVERIFY(invalid.isEmpty());
     QVERIFY(!error.isEmpty());
+}
+
+// El planificador suele mandar doneWhen/steps como texto o con viñetas: eso no
+// puede tumbar el request (antes daba "doneWhen debe ser un array").
+void AppControllerTests::hybridPlanNormalizesScalarLists()
+{
+    QString error;
+    const QVariantMap plan = AppController::parseHybridPlanForTest(
+        QStringLiteral(R"({"schemaVersion":"1","goal":"documentar",)"
+                       R"("steps":"- leer README\n2) actualizar docs",)"
+                       R"("doneWhen":"docs actualizadas","risks":null})"),
+        &error);
+    QVERIFY2(error.isEmpty(), qPrintable(error));
+    QCOMPARE(plan.value("schemaVersion").toInt(), 1);
+    QCOMPARE(plan.value("steps").toStringList(),
+             QStringList({QStringLiteral("leer README"), QStringLiteral("actualizar docs")}));
+    QCOMPARE(plan.value("doneWhen").toStringList(),
+             QStringList({QStringLiteral("docs actualizadas")}));
+    QVERIFY(plan.value("risks").toList().isEmpty());
+    QVERIFY(plan.contains("tests"));
 }
 
 void AppControllerTests::hybridSwapRemainsStartingUntilPipelineEnds()
