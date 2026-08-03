@@ -1791,10 +1791,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             if (underRoot(abs, root)) return true;
         return false;
     };
+    // Mensaje accionable: sin la raiz permitida el modelo reintenta ".." en bucle.
+    auto outsideMsg = [&](const QString &abs) {
+        return QStringLiteral("[ruta fuera del proyecto: %1 · raíz permitida: %2 · "
+                              "usá rutas relativas dentro del proyecto (\".\" es la raíz); "
+                              "no reintentes con \"..\" ni rutas absolutas de afuera]")
+            .arg(abs, canonicalPolicyPath(base.absolutePath()));
+    };
 
     if (name == QLatin1String("read_file")) {
         const QString abs = resolve(args.value(QStringLiteral("path")).toString());
-        if (!inProject(abs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(abs)) return outsideMsg(abs);
         QFile f(abs);
         if (!f.open(QIODevice::ReadOnly)) return QStringLiteral("[no se pudo abrir: %1]").arg(abs);
         const QByteArray raw = f.read(4 * 1024 * 1024);
@@ -1848,7 +1855,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("list_dir")) {
         const QString abs = resolve(args.value(QStringLiteral("path")).toString());
-        if (!inProject(abs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(abs)) return outsideMsg(abs);
         QDir d(abs);
         if (!d.exists()) return QStringLiteral("[no existe: %1]").arg(abs);
         const bool recursive = args.value(QStringLiteral("recursive")).toBool();
@@ -2078,7 +2085,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         k = qBound(1, k, 15);
         const QString sub = args.value(QStringLiteral("path")).toString();
         const QString rootAbs = resolve(sub);
-        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         // Tokens de la consulta (lowercase, >=2 chars, únicos).
         QStringList terms;
@@ -2148,7 +2155,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (k <= 0) k = 5;
         k = qBound(1, k, 15);
         const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
-        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         struct Ch { QString rel; int line; QString key; QString text; QVector<float> vec; };
         QVector<Ch> chunks;
@@ -2264,7 +2271,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (k <= 0) k = 6;
         k = qBound(1, k, 15);
         const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
-        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         // Términos de la query para BM25.
         QStringList terms;
@@ -2503,7 +2510,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         }
         if (claims.isEmpty()) return QStringLiteral("[verify_claims: 'claims' vacío]");
         const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
-        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         // Corpus: archivos de texto del proyecto + memoria estructurada.
         QStringList files;
@@ -2555,7 +2562,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString pattern = args.value(QStringLiteral("pattern")).toString();
         const QString sub = args.value(QStringLiteral("path")).toString();
         const QString rootAbs = resolve(sub);
-        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(rootAbs)) return outsideMsg(rootAbs);
         const QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
         if (!re.isValid())
             return QStringLiteral("[regex inválida: %1]").arg(re.errorString());
@@ -2584,7 +2591,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString pattern = args.value(QStringLiteral("pattern")).toString();
         const QString sub = args.value(QStringLiteral("path")).toString();
         const QString rootAbs = resolve(sub);
-        if (!inProject(rootAbs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(rootAbs)) return outsideMsg(rootAbs);
         const QRegularExpression re = globToRegex(pattern);
         // Si el patrón no tiene '/', matchea contra el nombre de archivo; si tiene,
         // contra la ruta relativa (con '/').
@@ -2622,7 +2629,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     if (name == QLatin1String("write_file")) {
         const QString rel = args.value(QStringLiteral("path")).toString();
         const QString abs = resolve(rel);
-        if (!inProject(abs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(abs)) return outsideMsg(abs);
 
         QFile prev(abs);
         const bool existed = prev.exists();
@@ -2651,7 +2658,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     if (name == QLatin1String("edit_file")) {
         const QString rel = args.value(QStringLiteral("path")).toString();
         const QString abs = resolve(rel);
-        if (!inProject(abs)) return QStringLiteral("[ruta fuera del proyecto]");
+        if (!inProject(abs)) return outsideMsg(abs);
         QFile prev(abs);
         if (!prev.exists())
             return QStringLiteral("[no existe: %1 — usá write_file para crearlo]").arg(rel);

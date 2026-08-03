@@ -28,6 +28,7 @@ void AgentProgressGovernor::reset(const QString &objective)
     m_evidence.clear();
     m_semanticSuccess.clear();
     m_exactWriteSuccess.clear();
+    m_failedSignatures.clear();
     m_expectedArtifacts.clear();
     m_completedArtifacts.clear();
     const QString lower = objective.toLower();
@@ -118,9 +119,17 @@ AgentProgressGovernor::Decision AgentProgressGovernor::record(
         m_stagnant = 0;
         m_credits = qMin(m_policy.maxCredits, m_credits + 2);
         d.reason = QStringLiteral("evidencia nueva");
+    } else if (!ok && m_failedSignatures.contains(evidence)) {
+        // Mismo fallo, misma acción: el modelo esta en bucle. Doble costo para
+        // llegar al replanteo/corte sin gastar diez turnos.
+        ++m_stagnant;
+        m_credits -= 2;
+        d.repeatedFailure = true;
+        d.reason = QStringLiteral("acción fallida ya intentada (bucle)");
     } else {
         ++m_stagnant;
         --m_credits;
+        if (!ok) m_failedSignatures.insert(evidence);
         d.reason = ok ? QStringLiteral("acción equivalente sin evidencia nueva")
                       : QStringLiteral("acción fallida");
     }

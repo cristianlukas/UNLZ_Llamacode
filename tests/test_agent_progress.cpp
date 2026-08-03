@@ -12,6 +12,7 @@ private slots:
     void explicitMultiLanguageTaskAllowsVariants();
     void namedArtifactTriggersEarlyClosureHint();
     void repeatedEditsToSameFileCanMakeProgress();
+    void repeatedIdenticalFailureCostsDouble();
 };
 
 void AgentProgressTests::semanticVariantsCollapse()
@@ -81,6 +82,25 @@ void AgentProgressTests::repeatedEditsToSameFileCanMakeProgress()
     AgentProgressGovernor g;
     QVERIFY(g.record("edit_file", R"({"path":"app.cpp"})", true, "diff one", true).progress);
     QVERIFY(g.record("edit_file", R"({"path":"app.cpp"})", true, "diff two", true).progress);
+}
+
+// El bucle clasico: list_dir ".." rechazado una y otra vez. Cada repeticion
+// identica cuesta doble para llegar al replanteo sin gastar diez turnos.
+void AgentProgressTests::repeatedIdenticalFailureCostsDouble()
+{
+    AgentProgressGovernor g({8, 16, 99, 99});
+    const char *args = R"({"path":".."})";
+    const QString refusal = QStringLiteral("[ruta fuera del proyecto: ...]");
+    const auto first = g.record("list_dir", args, false, refusal, false);
+    QVERIFY(!first.repeatedFailure);
+    QCOMPARE(first.credits, 7);
+    const auto second = g.record("list_dir", args, false, refusal, false);
+    QVERIFY(second.repeatedFailure);
+    QCOMPARE(second.credits, 5);
+    QCOMPARE(g.record("list_dir", args, false, refusal, false).credits, 3);
+    QCOMPARE(g.record("list_dir", args, false, refusal, false).credits, 1);
+    QCOMPARE(g.record("list_dir", args, false, refusal, false).action,
+             AgentProgressGovernor::Replan);
 }
 
 QTEST_MAIN(AgentProgressTests)

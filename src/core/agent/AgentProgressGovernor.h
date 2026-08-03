@@ -21,6 +21,7 @@ public:
         Action action = Continue;
         bool progress = false;
         bool objectiveSatisfied = false;
+        bool repeatedFailure = false;
         int credits = 0;
         int stagnant = 0;
         QString semanticKey;
@@ -43,6 +44,9 @@ private:
     QSet<QString> m_evidence;
     QSet<QString> m_semanticSuccess;
     QSet<QString> m_exactWriteSuccess;
+    // Firmas (clave semántica + resultado) de acciones que ya fallaron: repetirlas
+    // es el bucle clasico (list_dir ".." una y otra vez) y cuesta doble.
+    QSet<QString> m_failedSignatures;
     bool m_multiLanguageRequested = false;
     QSet<QString> m_expectedArtifacts;
     QSet<QString> m_completedArtifacts;
