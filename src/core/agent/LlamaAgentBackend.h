@@ -286,6 +286,18 @@ public:
     // [text, image_url...]. Objeto vacío si no hay imágenes. PURA → unit-testeable.
     static QJsonObject buildObservationMessage(const QStringList &imageDataUris);
 
+    // Rol para notas inyectadas EN MEDIO de la conversación (hoy: el resumen de
+    // compactación). "system" es el rol equivocado: varios chat-templates
+    // (DeepSeek-V4 y sus ports jinja) HOISTEAN todos los mensajes system al tope
+    // del prompt, así que la nota pierde su posición (el modelo no sabe dónde se
+    // cortó el hilo) y encima corre el prefijo → invalida el prompt-cache de todo
+    // lo que sigue, en cada turno.
+    //   deepseek-v4 → "latest_reminder" (el rol que DS entrenó para esto)
+    //   resto       → "user" (aceptado por todo server OpenAI-compat y
+    //                 posicionalmente fiel; un rol inventado da 400 en cloud)
+    // PURA → unit-testeable.
+    static QString midConversationNoteRole(const QString &modelId);
+
     // Cap adaptativo para sub-agentes: combina slots reales del perfil, contexto
     // por secuencia y VRAM. Público/puro para pruebas y UI futura.
     static int adaptiveSubagentLimit(int parallelSlots, int ctxTokens,
@@ -334,8 +346,10 @@ public:
 
     // Normaliza el historial antes de enviarlo a backends OpenAI-compatible:
     // elimina pares assistant/tool incompletos, conserva un user de anclaje y
-    // evita system messages no iniciales.
-    static QJsonArray sanitizeApiMessagesForWire(const QJsonArray &messages);
+    // evita system messages no iniciales (degradados con midConversationNoteRole,
+    // que depende del modelo).
+    static QJsonArray sanitizeApiMessagesForWire(const QJsonArray &messages,
+                                                 const QString &modelId = QString());
 
     // Poda de capturas viejas (pura, testeable): conserva las imágenes solo en los
     // últimos `keepLast` mensajes que las tengan; en los anteriores reemplaza cada

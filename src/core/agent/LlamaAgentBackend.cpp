@@ -367,7 +367,8 @@ static QJsonArray dropOrphanToolMessages(const QJsonArray &messages)
     return out;
 }
 
-QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messages)
+QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messages,
+                                                         const QString &modelId)
 {
     if (messages.isEmpty()) return messages;
 
@@ -415,7 +416,7 @@ QJsonArray LlamaAgentBackend::sanitizeApiMessagesForWire(const QJsonArray &messa
             sawFirstSystem = true;
             continue;
         }
-        o[QStringLiteral("role")] = QStringLiteral("user");
+        o[QStringLiteral("role")] = midConversationNoteRole(modelId);
         out.replace(i, o);
     }
 
@@ -814,7 +815,10 @@ void LlamaAgentBackend::applyCompaction(int head, int keepFrom, const QString &s
     QJsonArray neu;
     for (int i = 0; i < head; ++i) neu.append(m_apiMessages[i]);
     neu.append(QJsonObject{
-        {QStringLiteral("role"), QStringLiteral("system")},
+        {QStringLiteral("role"), midConversationNoteRole(m_ctx.modelId)},
+        // Ya no es role=system, así que no lo cubre el atajo de
+        // isProtectedContextMessage: marcarlo explícito.
+        {QStringLiteral("_lc_protected"), true},
         {QStringLiteral("content"),
          QStringLiteral("[Resumen del contexto previo (%1 mensajes compactados para no "
                         "exceder n_ctx=%2)]:\n%3").arg(dropped).arg(m_ctxLimit, 0, 10).arg(body)}});
@@ -2233,7 +2237,7 @@ void LlamaAgentBackend::prefillWarmup()
     ensureSession();
     // Misma poda que runCompletion: el prefijo cacheado debe coincidir byte a byte.
     m_apiMessages = trimStaleImages(m_apiMessages, 1);
-    const QJsonArray wire = sanitizeApiMessagesForWire(m_apiMessages);
+    const QJsonArray wire = sanitizeApiMessagesForWire(m_apiMessages, m_ctx.modelId);
     if (wire.isEmpty()) return;
 
     QJsonObject payload = buildWarmupPayload(
@@ -2313,7 +2317,7 @@ void LlamaAgentBackend::runCompletion()
     // varias desktop_observe acumulaban 50k+ tokens de prompt (minutos de prefill).
     m_apiMessages = trimStaleImages(m_apiMessages, 1);
 
-    QJsonArray wireMessages = sanitizeApiMessagesForWire(m_apiMessages);
+    QJsonArray wireMessages = sanitizeApiMessagesForWire(m_apiMessages, m_ctx.modelId);
     const QByteArray beforeWire = QJsonDocument(m_apiMessages).toJson(QJsonDocument::Compact);
     const QByteArray afterWire = QJsonDocument(wireMessages).toJson(QJsonDocument::Compact);
     if (afterWire != beforeWire) {
@@ -2589,6 +2593,17 @@ void LlamaAgentBackend::resetStreamIdleWatchdog()
         });
     }
     m_streamIdleTimer->start(streamIdleTimeoutMs());
+}
+
+// Ver el comentario de la declaración en el header: los templates que hoistean
+// system al tope rompen tanto la posición de la nota como el prompt-cache.
+QString LlamaAgentBackend::midConversationNoteRole(const QString &modelId)
+{
+    static const QRegularExpression dsV4(
+        QStringLiteral("deepseek[^a-z0-9]*v4"), QRegularExpression::CaseInsensitiveOption);
+    if (dsV4.match(modelId).hasMatch())
+        return QStringLiteral("latest_reminder");
+    return QStringLiteral("user");
 }
 
 void LlamaAgentBackend::mergeToolCallDelta(QHash<int, QJsonObject> &acc,
