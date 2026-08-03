@@ -273,8 +273,12 @@ ApplicationWindow {
                     function onServerRunningChanged() { guard() }
                     function onBackendAvailableChanged() { guard() }
                     function onAgentRunningChanged() { guard() }
-                    // Al instalar dependencias, abrir la sección Descargas (índice 10).
-                    function onNavigateToDownloads() { stack.currentIndex = 10 }
+                    // Al instalar dependencias, abrir la sección Descargas. El
+                    // índice sale de NavBar para que agregar secciones no lo
+                    // desincronice del StackLayout.
+                    function onNavigateToDownloads() {
+                        stack.currentIndex = navBar.indexOfKey("nav.downloads")
+                    }
                 }
 
                 Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider }
@@ -295,6 +299,7 @@ ApplicationWindow {
                     TasksPage       {}
                     CharlaPage      {}
                     BenchmarkPage   {}
+                    TunerPage       {}
                     DownloadsPage   {}
                     AgentsPage      {}
                     SettingsPage    {}

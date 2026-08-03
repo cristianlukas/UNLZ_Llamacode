@@ -15150,8 +15150,33 @@ QStringList stripFlags(const QStringList &args, const QSet<QString> &valueFlags,
 
 }  // namespace
 
+QString AppController::optimizedProfileName(const QString &sourceName)
+{
+    const QString prefix = QStringLiteral("Opti - ");
+    // Re-optimizar un perfil ya optimizado no debe encadenar prefijos.
+    if (sourceName.startsWith(prefix)) return sourceName;
+    return prefix + sourceName;
+}
+
+double AppController::tuneGainPct(double after, double before)
+{
+    if (before <= 0.0 || after <= 0.0) return 0.0;
+    return (after - before) / before * 100.0;
+}
+
+void AppController::clearAutoTuneResults()
+{
+    if (m_autoTuneRunning) return;   // no borrar lo que se está llenando
+    m_autoTuneTrials.clear();
+    m_autoTuneResult.clear();
+    m_autoTuneStatus.clear();
+    m_autoTuneProgress = 0;
+    emit autoTuneChanged();
+}
+
 void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
-                                  double qualityGate, int nPredict, const QString &mode)
+                                  double qualityGate, int nPredict, const QString &mode,
+                                  double ppWeight, int prefillTokens, bool measureBaseline)
 {
     if (m_autoTuneRunning) {
         emit serverError(QStringLiteral("Auto-tune ya en curso."));
@@ -15217,6 +15242,12 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
     job.acceptance = {QStringLiteral("def is_prime"), QStringLiteral("return")};
     job.params = params;
     job.cpuOnly = cpuOnly;
+    job.ppWeight = qBound(0.0, ppWeight, 1.0);
+    job.prefillTokens = qMax(0, prefillTokens);
+    // El baseline se mide con los args efectivos SIN tocar (con host/port
+    // quitados: launchAndMeasure los agrega apuntando al puerto scratch).
+    job.measureBaseline = measureBaseline;
+    job.baselineArgs = stripFlags(effArgs, {QStringLiteral("--host"), QStringLiteral("--port")}, {});
     job.perplexityBinaryPath = siblingToolPath(binaryPath, QStringLiteral("llama-perplexity"));
     job.perplexityCorpusPath = defaultPerplexityCorpusPath();
     job.usePerplexityGate = !job.perplexityBinaryPath.isEmpty() && !job.perplexityCorpusPath.isEmpty();
@@ -15229,10 +15260,13 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
     m_autoTuneLaunchId = launchProfileId;
     m_autoTuneRunning = true;
     m_autoTuneProgress = 0;
-    m_autoTuneStatus = QStringLiteral("Iniciando auto-tune%1 (%2 trials)%3…")
+    m_autoTuneTrials.clear();
+    m_autoTuneResult.clear();
+    m_autoTuneStatus = QStringLiteral("Iniciando auto-tune%1 (%2 trials)%3%4…")
                            .arg(cpuOnly ? QStringLiteral(" CPU") : QString())
                            .arg(job.settings.maxTrials)
-                           .arg(job.usePerplexityGate ? QStringLiteral(" + PPL") : QString());
+                           .arg(job.usePerplexityGate ? QStringLiteral(" + PPL") : QString())
+                           .arg(job.measureBaseline ? QStringLiteral(" + baseline") : QString());
     emit autoTuneChanged();
 
     m_tuneThread = new QThread(this);
@@ -15242,19 +15276,37 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
     connect(m_tuneThread, &QThread::started, m_tuneWorker, &TunerWorker::run);
 
     connect(m_tuneWorker, &TunerWorker::trial, this,
-            [this](int index, int total, double tps, double quality, const QString &summary) {
+            [this](int index, int total, double tps, double quality, const QString &summary,
+                   double promptTps, double genTps) {
                 m_autoTuneProgress = total > 0 ? (index * 100 / total) : 0;
-                m_autoTuneStatus = QStringLiteral("Trial %1/%2 — %3 tok/s, calidad %4 [%5]")
-                                       .arg(index).arg(total)
-                                       .arg(tps, 0, 'f', 1).arg(quality, 0, 'f', 2)
-                                       .arg(summary);
+                // index 0 = baseline (fuera del presupuesto de trials).
+                m_autoTuneStatus = index == 0
+                    ? QStringLiteral("Baseline — %1").arg(summary)
+                    : QStringLiteral("Trial %1/%2 — %3 tok/s, calidad %4 [%5]")
+                          .arg(index).arg(total)
+                          .arg(tps, 0, 'f', 1).arg(quality, 0, 'f', 2)
+                          .arg(summary);
+
+                QVariantMap row;
+                row[QStringLiteral("index")] = index;
+                row[QStringLiteral("total")] = total;
+                row[QStringLiteral("baseline")] = index == 0;
+                row[QStringLiteral("score")] = tps;
+                row[QStringLiteral("quality")] = quality;
+                row[QStringLiteral("promptTps")] = promptTps;
+                row[QStringLiteral("genTps")] = genTps;
+                row[QStringLiteral("summary")] = summary;
+                m_autoTuneTrials.append(row);
+
                 emit autoTuneChanged();
-                emit autoTuneTrial(index, total, tps, quality, summary);
+                emit autoTuneTrial(index, total, tps, quality, summary, promptTps, genTps);
             });
 
     connect(m_tuneWorker, &TunerWorker::finished, this,
-            [this](bool ok, const QStringList &bestArgs, double tps, double quality) {
-                onAutoTuneFinished(ok, bestArgs, tps, quality);
+            [this](bool ok, const QStringList &bestArgs, double tps, double quality,
+                   double promptTps, double genTps, double basePp, double baseTg) {
+                onAutoTuneFinished(ok, bestArgs, tps, quality, promptTps, genTps,
+                                   basePp, baseTg);
             });
 
     // Limpieza del hilo al terminar.
@@ -15276,23 +15328,30 @@ void AppController::cancelAutoTune()
 }
 
 void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
-                                       double throughput, double quality)
+                                       double throughput, double quality,
+                                       double promptTps, double genTps,
+                                       double basePromptTps, double baseGenTps)
 {
     m_autoTuneRunning = false;
     m_autoTuneProgress = 100;
 
     QString mergedSummary;
+    QString createdId;
+    QString createdName;
     if (ok && !bestArgs.isEmpty() && !m_autoTuneLaunchId.isEmpty()) {
-        // No sobrescribir el perfil original: clonarlo en uno nuevo "-tuned" con
-        // la mejor config fusionada en extraArgs (reemplazando flags previos de
-        // los mismos parámetros).
+        // No sobrescribir el perfil original: clonarlo en uno nuevo "Opti - …"
+        // con la mejor config fusionada en extraArgs (reemplazando flags previos
+        // de los mismos parámetros).
         const LaunchProfile src = m_profiles.resolveLaunch(m_autoTuneLaunchId);
         const QString srcDisplay = src.alias.isEmpty() ? src.name : src.alias;
 
         // addLaunchProfile ya quita el prefijo "N_" y asigna uno nuevo.
+        const QString newName = optimizedProfileName(src.name);
         const QString newId = m_profiles.addLaunchProfile(
-            src.name + QStringLiteral("-tuned"),
+            newName,
             src.backendProfileId, src.modelProfileId, src.runtimePresetId);
+        createdId = newId;
+        createdName = newName;
 
         const QSet<QString> valueFlags = {
             QStringLiteral("-ngl"), QStringLiteral("--n-gpu-layers"), QStringLiteral("--gpu-layers"),
@@ -15313,22 +15372,40 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
         np[QStringLiteral("extraArgs")] = extra;
         np[QStringLiteral("harnessProfileId")] = src.harnessProfileId;
         np[QStringLiteral("workspaceProfileId")] = src.workspaceProfileId;
-        np[QStringLiteral("alias")] = QStringLiteral("Auto-tuned: %1").arg(srcDisplay);
+        np[QStringLiteral("alias")] = optimizedProfileName(srcDisplay);
         m_profiles.updateLaunchProfile(np);
         m_profiles.saveProfiles();
 
         mergedSummary = bestArgs.join(QLatin1Char(' '));
         m_autoTuneStatus = QStringLiteral("Auto-tune OK: %1 tok/s, calidad %2. "
-                                          "Perfil nuevo creado con: %3")
+                                          "Perfil «%3» creado con: %4")
                                .arg(throughput, 0, 'f', 1).arg(quality, 0, 'f', 2)
-                               .arg(mergedSummary);
+                               .arg(newName, mergedSummary);
     } else {
         m_autoTuneStatus = ok ? QStringLiteral("Auto-tune sin cambios aplicables.")
                               : QStringLiteral("Auto-tune sin config válida (¿server no arrancó?).");
     }
 
+    // Resumen A/B para la sección Tuner. La mejora sólo tiene sentido si el
+    // baseline se midió: sin "antes", un número de "después" no dice nada.
+    m_autoTuneResult.clear();
+    m_autoTuneResult[QStringLiteral("ok")] = ok;
+    m_autoTuneResult[QStringLiteral("bestArgs")] = mergedSummary;
+    m_autoTuneResult[QStringLiteral("score")] = throughput;
+    m_autoTuneResult[QStringLiteral("quality")] = quality;
+    m_autoTuneResult[QStringLiteral("promptTps")] = promptTps;
+    m_autoTuneResult[QStringLiteral("genTps")] = genTps;
+    m_autoTuneResult[QStringLiteral("basePromptTps")] = basePromptTps;
+    m_autoTuneResult[QStringLiteral("baseGenTps")] = baseGenTps;
+    m_autoTuneResult[QStringLiteral("hasBaseline")] = basePromptTps > 0.0 || baseGenTps > 0.0;
+    m_autoTuneResult[QStringLiteral("promptGainPct")] = tuneGainPct(promptTps, basePromptTps);
+    m_autoTuneResult[QStringLiteral("genGainPct")] = tuneGainPct(genTps, baseGenTps);
+    m_autoTuneResult[QStringLiteral("newProfileId")] = createdId;
+    m_autoTuneResult[QStringLiteral("newProfileName")] = createdName;
+    m_autoTuneResult[QStringLiteral("sourceProfileId")] = m_autoTuneLaunchId;
+
     emit autoTuneChanged();
-    emit autoTuneFinished(ok, mergedSummary, throughput, quality);
+    emit autoTuneFinished(ok, mergedSummary, throughput, quality, createdId);
 }
 
 void AppController::startResearch(const QString &topic, const QString &mode, int maxPages,

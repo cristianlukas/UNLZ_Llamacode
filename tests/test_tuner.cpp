@@ -20,6 +20,12 @@ private slots:
     void tunedArgs_emitsSpecDraftNMax();
     void tunedArgs_emitsCpuMoe();
     void parsePerplexity_readsLastReportedValue();
+    void parseThroughput_splitsPromptAndGen();
+    void parseThroughput_derivesFromMsAndCount();
+    void parseThroughput_invalidWhenNoTimings();
+    void blended_respectsWeightExtremes();
+    void blended_fallsBackToMeasuredLeg();
+    void padPrompt_reachesTargetAndKeepsInstruction();
 };
 
 void TunerTests::paramSpec_intRange()
@@ -106,6 +112,82 @@ void TunerTests::parsePerplexity_readsLastReportedValue()
         "Final estimate: PPL = 10.25\n";
     QCOMPARE(TunerEngine::parsePerplexity(out), 10.25);
     QCOMPARE(TunerEngine::parsePerplexity("no metric here"), -1.0);
+}
+
+// llama.cpp reporta prefill y generación por separado. Tunear -b/-ub mirando
+// sólo la generación mide el efecto secundario: su efecto principal es el
+// prefill, así que las dos patas tienen que salir separadas del parseo.
+void TunerTests::parseThroughput_splitsPromptAndGen()
+{
+    const QByteArray body =
+        R"({"content":"hi","timings":{"prompt_per_second":812.5,"predicted_per_second":37.2}})";
+    const ThroughputSample s = TunerEngine::parseThroughput(body);
+    QVERIFY(s.valid());
+    QCOMPARE(s.promptTps, 812.5);
+    QCOMPARE(s.genTps, 37.2);
+}
+
+void TunerTests::parseThroughput_derivesFromMsAndCount()
+{
+    // Sin los *_per_second: derivar de ms + cantidad de tokens.
+    const QByteArray body =
+        R"({"timings":{"prompt_ms":2000,"prompt_n":1000,"predicted_ms":2000,"predicted_n":100}})";
+    const ThroughputSample s = TunerEngine::parseThroughput(body);
+    QCOMPARE(s.promptTps, 500.0);
+    QCOMPARE(s.genTps, 50.0);
+}
+
+void TunerTests::parseThroughput_invalidWhenNoTimings()
+{
+    QVERIFY(!TunerEngine::parseThroughput("{}").valid());
+    QVERIFY(!TunerEngine::parseThroughput("no json").valid());
+}
+
+void TunerTests::blended_respectsWeightExtremes()
+{
+    ThroughputSample s;
+    s.promptTps = 800.0;
+    s.genTps = 40.0;
+    // Peso 0 = comportamiento histórico (sólo TG): sin esto, activar la mezcla
+    // cambiaría en silencio el resultado de todo tuning previo.
+    QCOMPARE(s.blended(0.0), 40.0);
+    QCOMPARE(s.blended(1.0), 800.0);
+    QCOMPARE(s.blended(0.5), 420.0);
+    // Fuera de rango se recorta en vez de extrapolar.
+    QCOMPARE(s.blended(-1.0), 40.0);
+    QCOMPARE(s.blended(2.0), 800.0);
+}
+
+void TunerTests::blended_fallsBackToMeasuredLeg()
+{
+    // Si una pata no se midió, el objetivo es la otra: castigar al candidato por
+    // una métrica que el server no reportó lo sacaría de la búsqueda por un
+    // motivo que no es suyo.
+    ThroughputSample onlyGen;
+    onlyGen.genTps = 40.0;
+    QCOMPARE(onlyGen.blended(1.0), 40.0);
+
+    ThroughputSample onlyPrompt;
+    onlyPrompt.promptTps = 800.0;
+    QCOMPARE(onlyPrompt.blended(0.0), 800.0);
+}
+
+void TunerTests::padPrompt_reachesTargetAndKeepsInstruction()
+{
+    const QString instruction = QStringLiteral("Write is_prime. Return only code.");
+
+    // 0 = no rellenar (comportamiento previo intacto).
+    QCOMPARE(TunerEngine::padPromptToTokens(instruction, 0), instruction);
+
+    const QString padded = TunerEngine::padPromptToTokens(instruction, 2048);
+    // ~4 chars/token: el prefill tiene que quedar en el orden pedido, si no
+    // -b/-ub siguen sin señal que optimizar.
+    QVERIFY(padded.size() >= 2048 * 4 - 32);
+    // La instrucción va al final: los criterios de aceptación se evalúan sobre
+    // ella y el relleno no debe sepultarla.
+    QVERIFY(padded.endsWith(instruction));
+    // Un prompt ya más largo que el objetivo no se toca.
+    QCOMPARE(TunerEngine::padPromptToTokens(padded, 8), padded);
 }
 
 QTEST_MAIN(TunerTests)

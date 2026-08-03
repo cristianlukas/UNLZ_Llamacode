@@ -155,6 +155,8 @@ private slots:
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
+    void tunerProfileNameUsesOptiPrefixWithoutChaining();
+    void tunerGainPctNeedsBothLegs();
 
 private:
     QTemporaryDir m_tmp;
@@ -1555,6 +1557,27 @@ void AppControllerTests::importOllamaModelsIngestsStore()
 
     // Ruta inexistente → sin ingesta.
     QVERIFY(app.importOllamaModels(QDir::temp().filePath("no-such-ollama-xyz")).isEmpty());
+}
+
+// El tuner nunca pisa el perfil original: clona a "Opti - <nombre>". Es un
+// contrato visible al usuario, y re-optimizar no debe encadenar prefijos.
+void AppControllerTests::tunerProfileNameUsesOptiPrefixWithoutChaining()
+{
+    QCOMPARE(AppController::optimizedProfileName(QStringLiteral("MAX-Q coding")),
+             QStringLiteral("Opti - MAX-Q coding"));
+    // Re-optimizar un perfil ya optimizado deja el nombre igual.
+    QCOMPARE(AppController::optimizedProfileName(QStringLiteral("Opti - MAX-Q coding")),
+             QStringLiteral("Opti - MAX-Q coding"));
+}
+
+void AppControllerTests::tunerGainPctNeedsBothLegs()
+{
+    QCOMPARE(AppController::tuneGainPct(120.0, 100.0), 20.0);
+    QCOMPARE(AppController::tuneGainPct(80.0, 100.0), -20.0);
+    // Sin baseline medido (-1 o 0) no se inventa una mejora.
+    QCOMPARE(AppController::tuneGainPct(120.0, -1.0), 0.0);
+    QCOMPARE(AppController::tuneGainPct(120.0, 0.0), 0.0);
+    QCOMPARE(AppController::tuneGainPct(-1.0, 100.0), 0.0);
 }
 
 QTEST_MAIN(AppControllerTests)

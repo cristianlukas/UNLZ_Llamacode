@@ -767,7 +767,7 @@ Item {
                             secondary: true
                             enabled: selectedLaunchId.length > 0 && !selectedIsSystem && !App.serverRunning && !App.autoTuneRunning
                             ToolTip.visible: hovered
-                            ToolTip.text: "Optimiza ngl/batch/flash-attn/cache-type maximizando tok/s sin degradar calidad. Usa PPL si encuentra llama-perplexity. Crea un perfil nuevo \"-tuned\""
+                            ToolTip.text: "Optimiza ngl/batch/flash-attn/cache-type maximizando tok/s sin degradar calidad. Usa PPL si encuentra llama-perplexity. Crea un perfil nuevo \"Opti - …\". Para elegir PP vs TG y comparar contra el perfil actual, usá la sección Tuner"
                             onClicked: { saveAll(); App.startAutoTune(selectedLaunchId, 24, 0.6, 256, "auto") }
                         }
                         LcButton {

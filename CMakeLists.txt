@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.77 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.80 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -358,6 +358,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/AgentsPage.qml
         qml/pages/TasksPage.qml
         qml/pages/BenchmarkPage.qml
+        qml/pages/TunerPage.qml
         qml/pages/ResearchPage.qml
         qml/pages/CharlaPage.qml
         qml/pages/DownloadsPage.qml

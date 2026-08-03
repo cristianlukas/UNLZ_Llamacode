@@ -183,6 +183,10 @@ class AppController : public QObject
     Q_PROPERTY(bool autoTuneRunning READ autoTuneRunning NOTIFY autoTuneChanged)
     Q_PROPERTY(int autoTuneProgress READ autoTuneProgress NOTIFY autoTuneChanged)
     Q_PROPERTY(QString autoTuneStatus READ autoTuneStatus NOTIFY autoTuneChanged)
+    // Propiedades (no Q_INVOKABLE) para que la sección Tuner se re-evalúe sola
+    // en cada trial: un método invocable no dispara re-binding en QML.
+    Q_PROPERTY(QVariantList autoTuneTrials READ autoTuneTrials NOTIFY autoTuneChanged)
+    Q_PROPERTY(QVariantMap autoTuneResult READ autoTuneResult NOTIFY autoTuneChanged)
     Q_PROPERTY(bool researchRunning READ researchRunning NOTIFY researchChanged)
     Q_PROPERTY(int researchProgress READ researchProgress NOTIFY researchChanged)
     Q_PROPERTY(QString researchStatus READ researchStatus NOTIFY researchChanged)
@@ -456,7 +460,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.77"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.80"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -866,13 +870,34 @@ public:
     // calidad). Lanza llama-server por candidato en un puerto scratch, mide
     // tok/s y calidad, y al terminar fusiona la mejor config en extraArgs del
     // launch profile. maxTrials/qualityGate/nPredict son opcionales.
+    // ppWeight [0,1]: cuánto pesa el prefill (PP) contra la generación (TG) en el
+    // objetivo. prefillTokens: largo del prompt de medición; con un prompt corto
+    // el PP no es medible y -b/-ub quedan sin señal que optimizar.
+    // OJO: 8 parámetros = el techo que puede invocar ControlApi (QGenericArgument
+    // ga[8]). Un 9º haría que el arg extra no se pase headless. Si hace falta más
+    // configuración, agrupar en un QVariantMap en vez de sumar parámetros.
     Q_INVOKABLE void startAutoTune(const QString &launchProfileId, int maxTrials = 24,
                                    double qualityGate = 0.0, int nPredict = 256,
-                                   const QString &mode = QStringLiteral("auto"));
+                                   const QString &mode = QStringLiteral("auto"),
+                                   double ppWeight = 0.0, int prefillTokens = 0,
+                                   bool measureBaseline = false);
     Q_INVOKABLE void cancelAutoTune();
+    // Nombre del perfil que produce el tuner a partir del original. Prefijo
+    // "Opti - " (contrato visible al usuario); no re-prefija un perfil que ya
+    // salió del tuner, para no encadenar "Opti - Opti - …" al re-optimizar.
+    static QString optimizedProfileName(const QString &sourceName);
+    // Mejora relativa (%) de una medición contra su baseline. 0 si falta
+    // cualquiera de las dos: sin "antes" no hay mejora que reportar.
+    static double tuneGainPct(double after, double before);
     bool autoTuneRunning() const { return m_autoTuneRunning; }
     int autoTuneProgress() const { return m_autoTuneProgress; }
     QString autoTuneStatus() const { return m_autoTuneStatus; }
+    // Filas de la tabla de trials de la sección Tuner. index 0 = baseline.
+    QVariantList autoTuneTrials() const { return m_autoTuneTrials; }
+    // Resultado final: bestArgs, pp/tg de la mejor config y del baseline,
+    // mejora %, y el perfil "Opti - " creado.
+    QVariantMap autoTuneResult() const { return m_autoTuneResult; }
+    Q_INVOKABLE void clearAutoTuneResults();
 
     Q_INVOKABLE void startResearch(const QString &topic, const QString &mode, int maxPages,
                                    const QString &workspaceId = QString(),
@@ -1113,12 +1138,14 @@ signals:
     void benchmarkResultsChanged();
     void customBenchmarksChanged();
     void autoTuneChanged();
-    // Cada trial evaluado: índice/total, tok/s, calidad [0,1], resumen de flags.
+    // Cada trial evaluado: índice/total, score mezclado, calidad [0,1], resumen
+    // de flags, y el desglose pp/tg (-1 = no medido).
     void autoTuneTrial(int index, int total, double throughput, double quality,
-                       const QString &summary);
+                       const QString &summary, double promptTps, double genTps);
     // Fin del tuning: ok=true si encontró config válida; bestArgs ya fusionados.
+    // newProfileId: perfil "Opti - " creado (vacío si no se creó ninguno).
     void autoTuneFinished(bool ok, const QString &bestArgs, double throughput,
-                          double quality);
+                          double quality, const QString &newProfileId);
     void researchChanged();
     void researchReportsChanged();
     void researchFinished(const QString &id, const QString &title);
@@ -1621,10 +1648,14 @@ private:
     int          m_autoTuneProgress = 0;
     QString      m_autoTuneStatus;
     QString      m_autoTuneLaunchId;     // perfil objetivo del tuning en curso
+    QVariantList m_autoTuneTrials;       // filas para la tabla de la sección Tuner
+    QVariantMap  m_autoTuneResult;       // resumen final + perfil creado
     QThread     *m_tuneThread = nullptr;
     TunerWorker *m_tuneWorker = nullptr;
     void onAutoTuneFinished(bool ok, const QStringList &bestArgs,
-                            double throughput, double quality);
+                            double throughput, double quality,
+                            double promptTps, double genTps,
+                            double basePromptTps, double baseGenTps);
     QVariantMap  m_hardwareSummary;
     QVariantList m_modelRecommendations;
     struct ModelDownloadItem {

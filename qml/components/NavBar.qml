@@ -29,9 +29,23 @@ Rectangle {
           keepDuringAgentTransition: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
+        { key: "tuner", label: "Tuner", icon: "🎛", serverOnly: false },
         { key: "nav.downloads", icon: "⬇",   serverOnly: false },
         { key: "agents", label: "Agentes", icon: "🧠", serverOnly: false },
     ]
+
+    // Ajustes va al pie, fuera del Repeater: su índice es el que sigue a la
+    // última página. Derivarlo evita que agregar una sección lo desincronice
+    // del StackLayout (era un 12 hardcodeado en tres lugares).
+    readonly property int settingsIndex: pages.length
+
+    // Índice de una página por su key, para navegar sin números mágicos.
+    // -1 si no existe.
+    function indexOfKey(key) {
+        for (var i = 0; i < pages.length; ++i)
+            if (pages[i].key === key) return i
+        return -1
+    }
 
     ColumnLayout {
         anchors { fill: parent; margins: 0 }
@@ -89,7 +103,7 @@ Rectangle {
         ItemDelegate {
             Layout.fillWidth: true
             height: 48
-            highlighted: root.currentIndex === 12
+            highlighted: root.currentIndex === root.settingsIndex
             background: Rectangle {
                 color: parent.highlighted ? Theme.highlight : (parent.hovered ? Theme.hoverBg : "transparent")
                 Rectangle {
@@ -105,10 +119,10 @@ Rectangle {
                 Text {
                     text: (App.langV, App.l("nav.settings"))
                     font.pixelSize: 14
-                    color: root.currentIndex === 12 ? Theme.textPrimary : Theme.textSecondary
+                    color: root.currentIndex === root.settingsIndex ? Theme.textPrimary : Theme.textSecondary
                 }
             }
-            onClicked: { root.currentIndex = 12; root.pageSelected(12) }
+            onClicked: { root.currentIndex = root.settingsIndex; root.pageSelected(root.settingsIndex) }
         }
 
         Text {

@@ -12,16 +12,21 @@ void TunerWorker::run()
     TunerEngine engine;
     m_engine = &engine;
     QObject::connect(&engine, &TunerEngine::trialDone, this,
-                     [this](int i, int n, double tps, double q, const QString &s) {
-                         emit trial(i, n, tps, q, s);
+                     [this](int i, int n, double tps, double q, const QString &s,
+                            double pp, double tg) {
+                         emit trial(i, n, tps, q, s, pp, tg);
                      });
 
     const tuner::Trial best = engine.run(m_job);
+    const tuner::TrialResult base = engine.baseline();
     m_engine = nullptr;
     const bool ok = !best.result.failed && best.result.throughput > 0.0;
     const QStringList bestArgs =
         ok ? TunerEngine::tunedArgs(m_job.params, best.config) : QStringList{};
-    emit finished(ok, bestArgs, best.result.throughput, best.result.quality);
+    emit finished(ok, bestArgs, best.result.throughput, best.result.quality,
+                  best.result.promptTps, best.result.genTps,
+                  base.failed ? -1.0 : base.promptTps,
+                  base.failed ? -1.0 : base.genTps);
 }
 
 void TunerWorker::cancel()
