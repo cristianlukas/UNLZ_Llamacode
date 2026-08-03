@@ -65,6 +65,10 @@ public:
     void forkSession(const QString &sessionId) override;
     void forkSessionAtMessage(int msgIndex);
     void refreshSessions() override;
+    // Descarta sesiones sin ningún mensaje (creadas y abandonadas). `keepId`
+    // nunca se toca (la sesión recién creada / recién abierta).
+    void pruneEmptySessions(const QString &keepId);
+    bool sessionHasNoMessages(const QString &sessionId) const;
 
     void approveTool(const QString &id, bool always = false) override;
     void rejectTool(const QString &id) override;

@@ -8,6 +8,7 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QStandardPaths>
+#include <QDir>
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -75,6 +76,8 @@ private slots:
 
     void start_createsInitialSession();
     void newSession_addsSession();
+    void newSession_dropsPreviousEmptySession();
+    void emptySessionsDoNotSurviveRestart();
     void renameSession_updatesTitle();
     void switchSession_changesCurrent();
     void deleteSession_removes();
@@ -90,7 +93,21 @@ private slots:
 private:
     AgentContext ctx(const QString &cwd);
     static QString lastAssistant(const RawChatBackend &be);
+    // Deja historia real en la sesión activa y espera a que el turno cierre. Sin
+    // esto la sesión queda vacía (y las vacías ya no se conservan). El turno
+    // TIENE que cerrar contra el stub: destruir el backend con un reply en vuelo
+    // crashea.
+    static void seedHistory(RawChatBackend &be);
 };
+
+void BackendsNetTests::seedHistory(RawChatBackend &be)
+{
+    QSignalSpy finished(&be, &IAgentBackend::turnFinished);
+    be.sendMessage(QStringLiteral("hola"));
+    for (int i = 0; i < 40 && finished.isEmpty(); ++i)
+        finished.wait(100);
+    QVERIFY(!finished.isEmpty());
+}
 
 QString BackendsNetTests::lastAssistant(const RawChatBackend &be)
 {
@@ -125,12 +142,67 @@ void BackendsNetTests::start_createsInitialSession()
 
 void BackendsNetTests::newSession_addsSession()
 {
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\n")));
     QTemporaryDir dir;
     RawChatBackend be;
-    be.start(ctx(dir.path()));
+    AgentContext c = ctx(dir.path());
+    c.serverBaseUrl = stub.baseUrl();
+    be.start(c);
+    // Una sesión sin mensajes no se conserva al crear otra: para contar +1 la
+    // primera tiene que tener historia.
+    seedHistory(be);
     const int before = be.sessions().size();
     be.newSession();
     QCOMPARE(be.sessions().size(), before + 1);
+}
+
+// El store de chat_raw persiste entre corridas y entre tests: contar sesiones en
+// absoluto exige limpiarlo antes.
+static void clearRawChatStore()
+{
+    QDir(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+         + QStringLiteral("/chat_raw")).removeRecursively();
+}
+
+void BackendsNetTests::newSession_dropsPreviousEmptySession()
+{
+    clearRawChatStore();
+    QTemporaryDir dir;
+    RawChatBackend be;
+    be.start(ctx(dir.path()));
+    const QString empty = be.currentSessionId();
+    be.newSession();
+    // La sesión abandonada sin input ni output no queda listada.
+    QCOMPARE(be.sessions().size(), 1);
+    QVERIFY(be.currentSessionId() != empty);
+    for (const QVariant &v : be.sessions())
+        QVERIFY(v.toMap().value("id").toString() != empty);
+}
+
+void BackendsNetTests::emptySessionsDoNotSurviveRestart()
+{
+    clearRawChatStore();
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\n")));
+    QTemporaryDir dir;
+    QString withHistory;
+    {
+        RawChatBackend be;
+        AgentContext c = ctx(dir.path());
+        c.serverBaseUrl = stub.baseUrl();
+        be.start(c);
+        seedHistory(be);
+        withHistory = be.currentSessionId();
+        be.newSession();          // queda vacía y es la activa
+        be.stop();
+    }
+    {
+        RawChatBackend be2;
+        be2.start(ctx(dir.path()));
+        QCOMPARE(be2.sessions().size(), 1);
+        QCOMPARE(be2.sessions().first().toMap().value("id").toString(), withHistory);
+    }
 }
 
 void BackendsNetTests::renameSession_updatesTitle()
@@ -147,10 +219,15 @@ void BackendsNetTests::renameSession_updatesTitle()
 
 void BackendsNetTests::switchSession_changesCurrent()
 {
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\n")));
     QTemporaryDir dir;
     RawChatBackend be;
-    be.start(ctx(dir.path()));
+    AgentContext c = ctx(dir.path());
+    c.serverBaseUrl = stub.baseUrl();
+    be.start(c);
     const QString first = be.currentSessionId();
+    seedHistory(be);   // sin historia no sobrevive al cambio
     be.newSession();
     const QString second = be.currentSessionId();
     QVERIFY(first != second);
@@ -172,11 +249,16 @@ void BackendsNetTests::deleteSession_removes()
 
 void BackendsNetTests::persistsAcrossRestart()
 {
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\n")));
     QTemporaryDir dir;
     QString id;
     {
         RawChatBackend be;
-        be.start(ctx(dir.path()));
+        AgentContext c = ctx(dir.path());
+        c.serverBaseUrl = stub.baseUrl();
+        be.start(c);
+        seedHistory(be);   // sin historia no sobrevive al reinicio
         be.renameSession(be.currentSessionId(), "Persistida");
         id = be.currentSessionId();
         be.stop();

@@ -5696,6 +5696,8 @@ void LlamaAgentBackend::newSession()
     m_curAsstIdx = -1;
     m_desktopLaunchApps.clear();
     ensureSession();        // crea sesión nueva + system prompt + persiste
+    // La sesión que se acaba de dejar, si nunca tuvo mensajes, no queda en el panel.
+    pruneEmptySessions(m_sessionId);
 }
 
 void LlamaAgentBackend::newTaskSession()
@@ -6076,6 +6078,35 @@ void LlamaAgentBackend::deleteSession(const QString &sessionId)
     emit sessionsChanged();
 }
 
+bool LlamaAgentBackend::sessionHasNoMessages(const QString &sessionId) const
+{
+    if (sessionId.isEmpty()) return false;
+    if (sessionId == m_sessionId) return m_messages.isEmpty();
+    QFile f(sessionFilePath(sessionId));
+    if (!f.open(QIODevice::ReadOnly)) return true;   // sin archivo = sin historia
+    const QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+    f.close();
+    return obj.value(QStringLiteral("messages")).toArray().isEmpty();
+}
+
+void LlamaAgentBackend::pruneEmptySessions(const QString &keepId)
+{
+    if (m_ephemeralSessions || m_isSessionRuntime) return;
+    QStringList doomed;
+    for (const QVariant &v : std::as_const(m_sessions)) {
+        const QString id = v.toMap().value(QStringLiteral("id")).toString();
+        if (id.isEmpty() || id == keepId) continue;
+        // Una sesión con runtime propio puede tener un turno en vuelo cuyo
+        // primer mensaje todavía no tocó disco: no se toca.
+        if (m_sessionRuntimes.contains(id) || id == m_viewSessionId) continue;
+        if (id == m_sessionId) continue;   // la activa se descarta recién al dejarla
+        if (!sessionHasNoMessages(id)) continue;
+        doomed << id;
+    }
+    for (const QString &id : std::as_const(doomed))
+        deleteSession(id);
+}
+
 LlamaAgentBackend::RetryClass
 LlamaAgentBackend::classifyCompletionError(int httpStatus, const QString &errorText)
 {
@@ -6295,6 +6326,7 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
             {QStringLiteral("role"), QStringLiteral("system")},
             {QStringLiteral("content"), buildSystemPrompt()}} };
     if (m_transcriptMessages.isEmpty()) m_transcriptMessages = m_apiMessages;
+    pruneEmptySessions(sessionId);
     emit sessionsChanged();
     emit messagesChanged();
 }
@@ -6363,6 +6395,8 @@ void LlamaAgentBackend::loadFromDisk()
         m_sessions.append(s);
     }
     if (indexChanged) persistIndex();
+    // Sesiones sin ningún mensaje que quedaron de corridas anteriores: no sobreviven.
+    pruneEmptySessions(QString());
     if (m_sessions.isEmpty()) return;
     // Cargar la primera como activa.
     const QString sid = m_sessions.first().toMap().value(QStringLiteral("id")).toString();

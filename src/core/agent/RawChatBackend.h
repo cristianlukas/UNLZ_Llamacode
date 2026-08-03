@@ -64,6 +64,9 @@ public:
     void setStructuredOutput(const QString &grammar, const QString &jsonSchema) {
         m_grammar = grammar; m_jsonSchema = jsonSchema;
     }
+    // Descarta sesiones sin ningún mensaje (creadas y abandonadas). `keepId`
+    // nunca se toca (la sesión recién creada / recién abierta).
+    void pruneEmptySessions(const QString &keepId);
 
 private:
     QString storageDir() const;

@@ -191,10 +191,38 @@ void RawChatBackend::createSession(const QString &projectId, const QString &proj
     m_messages.clear();
     m_curAsstIdx = -1;
     if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
+    // Crear una sesión y dejarla sin usar no debe acumular basura en el panel:
+    // las sesiones vacías anteriores se descartan al crear la nueva.
+    pruneEmptySessions(id);
     persistIndex();
     persistSession(id);
     emit sessionsChanged();
     emit messagesChanged();
+}
+
+void RawChatBackend::pruneEmptySessions(const QString &keepId)
+{
+    QStringList doomed;
+    for (const QVariant &v : std::as_const(m_sessions)) {
+        const QString id = v.toMap().value(QStringLiteral("id")).toString();
+        if (id.isEmpty() || id == keepId) continue;
+        if (id == m_sessionId) continue;   // la activa se descarta recién al dejarla
+        if (!m_sessionMessages.value(id).isEmpty()) continue;
+        doomed << id;
+    }
+    if (doomed.isEmpty()) return;
+    for (const QString &id : std::as_const(doomed)) {
+        for (int i = 0; i < m_sessions.size(); ++i) {
+            if (m_sessions[i].toMap().value(QStringLiteral("id")).toString() == id) {
+                m_sessions.removeAt(i);
+                break;
+            }
+        }
+        m_sessionMessages.remove(id);
+        removeSessionFile(id);
+    }
+    persistIndex();
+    emit sessionsChanged();
 }
 
 void RawChatBackend::setCurrentSession(const QString &sessionId)
@@ -213,6 +241,7 @@ void RawChatBackend::setCurrentSession(const QString &sessionId)
             break;
         }
     }
+    pruneEmptySessions(sessionId);
     emit sessionsChanged();
     emit messagesChanged();
 }
@@ -754,6 +783,9 @@ void RawChatBackend::loadFromDisk()
         }
         m_sessionMessages.insert(sid, msgs);
     }
+
+    // Sesiones vacías que quedaron de corridas anteriores: no sobreviven al arranque.
+    pruneEmptySessions(QString());
 
     if (!m_sessions.isEmpty()) {
         const QVariantMap s0 = m_sessions.first().toMap();

@@ -29,6 +29,7 @@ private slots:
     void differentProjectsRunTurnsConcurrently();
     void restartRepublishesPersistedMessages();
     void taskSessionIsEphemeralAndRestoresPrevious();
+    void newSessionDropsPreviousEmptySession();
     void nativeSessionForkPersistsTreeMetadata();
     void mergeToolCallDelta_assemblesAcrossChunks();
     void mergeToolCallDelta_parallelCallsByIndex();
@@ -167,6 +168,37 @@ void AgentWireTests::firstPromptTitlesAndPersistsSession()
     const QJsonArray sessions = QJsonDocument::fromJson(index.readAll()).array();
     QCOMPARE(sessions.first().toObject().value(QStringLiteral("title")).toString(),
              QStringLiteral("Revisá documentación marítima"));
+    QDir(store).removeRecursively();
+}
+
+void AgentWireTests::newSessionDropsPreviousEmptySession()
+{
+    // Crear una sesión y crear otra sin escribir nada: la primera no queda
+    // listada (no tiene ni input ni output).
+    const QString store = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                          + QStringLiteral("/agent_llamaagent");
+    QDir(store).removeRecursively();
+    QTemporaryDir cwd;
+    QVERIFY(cwd.isValid());
+    AgentContext ctx;
+    ctx.adapter = QStringLiteral("llamaagent");
+    ctx.cwd = cwd.path();
+    ctx.serverBaseUrl = QStringLiteral("http://127.0.0.1:1");
+    ctx.modelId = QStringLiteral("test");
+    LlamaAgentBackend backend;
+    backend.start(ctx);
+    const QString empty = backend.currentSessionId();
+    backend.newSession();
+    QCOMPARE(backend.sessions().size(), 1);
+    QVERIFY(backend.currentSessionId() != empty);
+    QVERIFY(!QFile::exists(store + QLatin1Char('/') + empty + QStringLiteral(".json")));
+
+    // Con historia sí se conserva.
+    backend.sendMessage(QStringLiteral("hola"));
+    backend.cancelGeneration();          // cerrar el turno antes de cambiar de sesión
+    backend.newSession();
+    QCOMPARE(backend.sessions().size(), 2);
+    backend.stop();
     QDir(store).removeRecursively();
 }
 
@@ -829,9 +861,20 @@ void AgentWireTests::differentProjectsRunTurnsConcurrently()
     LlamaAgentBackend backend;
     backend.start(ctx);
     const QString maritimeId = backend.currentSessionId();
+    // Las dos sesiones arrancan con historia: una sesión sin ningún mensaje no
+    // sobrevive a que la dejes (se descarta como vacía). Cada semilla cuesta un
+    // POST al server falso, de ahí que el conteo esperado sea 4.
+    backend.sendMessage(QStringLiteral("semilla maritima"));
+    QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 1, 3000);   // el POST no es sincrónico
+    backend.cancelGeneration();
+    QTRY_VERIFY_WITH_TIMEOUT(!backend.isBusy(), 3000);
     backend.newSessionInProject(stellar.path());
     const QString stellarId = backend.currentSessionId();
     QVERIFY(maritimeId != stellarId);
+    backend.sendMessage(QStringLiteral("semilla stellar"));
+    QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 2, 3000);   // esperar el POST antes de cortar
+    backend.cancelGeneration();
+    QTRY_VERIFY_WITH_TIMEOUT(!backend.isBusy(), 3000);
 
     backend.switchSession(maritimeId);
     backend.sendMessage(QStringLiteral("turno maritima"));
@@ -839,7 +882,7 @@ void AgentWireTests::differentProjectsRunTurnsConcurrently()
     backend.switchSession(stellarId);
     backend.sendMessage(QStringLiteral("turno stellar"));
 
-    QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 2, 3000);
+    QTRY_COMPARE_WITH_TIMEOUT(server.postRequests, 4, 3000);
     QVERIFY(backend.selectedSessionBusy());
     QCOMPARE(backend.currentSessionId(), stellarId);
 
