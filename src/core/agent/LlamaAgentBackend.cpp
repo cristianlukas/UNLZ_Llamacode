@@ -528,9 +528,11 @@ void LlamaAgentBackend::fetchContextLimit()
         if (nctx < 0) nctx = root.value(QStringLiteral("n_ctx")).toInt(-1);
         if (nctx > 0) { m_ctxLimit = nctx; emit contextUsage(0, m_ctxLimit); }
         // chat_template: señal directa de si el GGUF sabe emitir tool calls.
-        const QString tmpl = root.value(QStringLiteral("chat_template")).toString();
-        emit chatTemplateDetected(!tmpl.isEmpty(),
-                                  ToolCallingSupport::templateMentionsTools(tmpl));
+        // llama.cpp nuevo publica además `chat_template_caps`, que es lo que el
+        // server realmente evaluó del template: si está, manda sobre el regex.
+        bool have = false;
+        const bool tools = toolSupportFromProps(root, &have);
+        emit chatTemplateDetected(have, tools);
     });
 }
 
@@ -4206,6 +4208,18 @@ bool LlamaAgentBackend::redundantDesktopConfirmKey(const QString &previousTool,
     return k == QLatin1String("=")
            || k == QLatin1String("enter")
            || k == QLatin1String("return");
+}
+
+bool LlamaAgentBackend::toolSupportFromProps(const QJsonObject &props, bool *haveTemplate)
+{
+    const QString tmpl = props.value(QStringLiteral("chat_template")).toString();
+    const QJsonObject caps = props.value(QStringLiteral("chat_template_caps")).toObject();
+    if (haveTemplate) *haveTemplate = !tmpl.isEmpty() || !caps.isEmpty();
+    // `chat_template_caps` es lo que el propio server dedujo del template; el
+    // regex sobre el jinja es la señal de reserva para binarios viejos.
+    const QJsonValue capTools = caps.value(QStringLiteral("supports_tool_calls"));
+    if (capTools.isBool()) return capTools.toBool();
+    return ToolCallingSupport::templateMentionsTools(tmpl);
 }
 
 int LlamaAgentBackend::secondTextToolCallStart(const QString &content)

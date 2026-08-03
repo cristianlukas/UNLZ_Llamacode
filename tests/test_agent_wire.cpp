@@ -21,6 +21,7 @@ private slots:
     void dropsTransportErrorAssistantMessages();
     void parsesTextToolCallFallback();
     void cutsTextToolCallBurstAtSecondCall();
+    void readsToolSupportFromPropsCaps();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void forceTextToolsSkipsNativeToolAttempt();
     void thirdIdenticalToolCallStopsTurnWithoutExecuting();
@@ -342,6 +343,35 @@ void AgentWireTests::cutsTextToolCallBurstAtSecondCall()
     const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(head);
     QCOMPARE(call.value(QStringLiteral("function")).toObject()
                  .value(QStringLiteral("name")).toString(), QStringLiteral("list_dir"));
+}
+
+// llama.cpp nuevo publica en /props lo que dedujo del template
+// (chat_template_caps). Manda sobre el regex jinja; sin caps, se usa el regex.
+void AgentWireTests::readsToolSupportFromPropsCaps()
+{
+    bool have = false;
+    const QJsonObject withCaps{
+        {QStringLiteral("chat_template"), QStringLiteral("{{ messages }}")},
+        {QStringLiteral("chat_template_caps"),
+         QJsonObject{{QStringLiteral("supports_tool_calls"), true}}}};
+    QVERIFY(LlamaAgentBackend::toolSupportFromProps(withCaps, &have));
+    QVERIFY(have);
+
+    const QJsonObject capsNoTools{
+        {QStringLiteral("chat_template"), QStringLiteral("{% for tool in tools %}{{ tool | tojson }}")},
+        {QStringLiteral("chat_template_caps"),
+         QJsonObject{{QStringLiteral("supports_tool_calls"), false}}}};
+    QVERIFY(!LlamaAgentBackend::toolSupportFromProps(capsNoTools, &have));
+
+    // Binario viejo sin caps → cae al regex sobre el jinja.
+    const QJsonObject legacy{
+        {QStringLiteral("chat_template"), QStringLiteral("{{ message.tool_calls }}")}};
+    QVERIFY(LlamaAgentBackend::toolSupportFromProps(legacy, &have));
+    QVERIFY(have);
+
+    have = true;
+    QVERIFY(!LlamaAgentBackend::toolSupportFromProps(QJsonObject{}, &have));
+    QVERIFY(!have);
 }
 
 void AgentWireTests::parsesNativeToolCallLeakFallback()

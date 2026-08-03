@@ -37,4 +37,13 @@ public:
     static Support combine(Support cookbook, bool haveTemplate, bool templateTools);
 
     static QString toString(Support s);   // "supported" | "unsupported" | "unknown"
+
+    // ¿Arrancar directo en el protocolo TEXTUAL de tools? Sólo cuando el soporte
+    // nativo está descartado. Con "unknown" se intenta nativo: si el server lo
+    // rechaza (400) el backend cae a texto solo. Al revés no hay vuelta atrás —
+    // el turno entero se gasta en el protocolo lento aunque el modelo sirviera
+    // tool-calling nativo (pasaba en cada swap de modelo: el reset de la señal
+    // de template dejaba "unknown" hasta que respondía el /props del server nuevo).
+    static bool shouldForceTextTools(const QString &support)
+    { return support == QLatin1String("unsupported"); }
 };

@@ -18,6 +18,7 @@ private slots:
     void fromCookbook_unknownNoMatch();
     void templateMentionsTools_detects();
     void combine_matrix();
+    void forceTextTools_onlyWhenUnsupported();
 };
 
 static QJsonArray sampleCookbook()
@@ -79,6 +80,18 @@ void ToolCallingTests::combine_matrix()
     QCOMPARE(TS::combine(TS::Support::Unknown, true, false), TS::Support::Unsupported);
     // Desconocido sin señal de template → Unknown.
     QCOMPARE(TS::combine(TS::Support::Unknown, false, false), TS::Support::Unknown);
+}
+
+// "unknown" es transitorio: en cada swap de modelo la señal de template se
+// resetea hasta que responde el /props del server nuevo. Forzar texto ahí
+// gastaba el turno entero en el protocolo lento con modelos que sí traen
+// tool-calling nativo (KAT-Coder respondía 200 al payload con tools).
+void ToolCallingTests::forceTextTools_onlyWhenUnsupported()
+{
+    QVERIFY(TS::shouldForceTextTools(QStringLiteral("unsupported")));
+    QVERIFY(!TS::shouldForceTextTools(QStringLiteral("unknown")));
+    QVERIFY(!TS::shouldForceTextTools(QStringLiteral("supported")));
+    QVERIFY(!TS::shouldForceTextTools(QString()));
 }
 
 QTEST_MAIN(ToolCallingTests)

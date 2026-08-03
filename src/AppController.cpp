@@ -3911,7 +3911,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
         cb->setMailAutoSend(m_mailAutoSend);
         cb->setHitlDestructive(m_hitlDestructive);
         cb->setVisionAvailable(m_serverHasVision);
-        cb->setForceTextTools(m_activeProfileToolSupport != QLatin1String("supported"));
+        cb->setForceTextTools(ToolCallingSupport::shouldForceTextTools(m_activeProfileToolSupport));
     }
     m_agentBackend = b;
     // El perfil de agente activo (capacidades + directivas + ajustes) tiene la
@@ -5440,13 +5440,11 @@ void AppController::recomputeToolSupport()
         m_activeProfileToolSupport = next;
         emit activeProfileToolSupportChanged();
     }
-    // Salvo que el tool-calling nativo esté CONFIRMADO ("supported"), usar el
-    // protocolo textual de tools: cubre "unsupported" (chat-template sin tools,
-    // ej. Gemma) y "unknown" (no se pudo confirmar — p.ej. /props sin chat_template).
-    // El protocolo textual funciona con cualquier modelo que siga instrucciones, así
-    // que es el default seguro para que las herramientas REALMENTE se ejecuten.
+    // Protocolo textual SOLO con soporte nativo descartado ("unsupported"). Con
+    // "unknown" se intenta nativo y el backend cae a texto solo si el server
+    // devuelve 400 — ver shouldForceTextTools.
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
-        cb->setForceTextTools(next != QLatin1String("supported"));
+        cb->setForceTextTools(ToolCallingSupport::shouldForceTextTools(next));
 }
 
 bool AppController::canRunTask() const
