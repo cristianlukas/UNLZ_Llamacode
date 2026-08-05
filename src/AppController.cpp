@@ -7585,8 +7585,9 @@ bool AppController::backendAvailable() const
     bool activeRemoteProfile = false;
     if (!m_activeLaunchId.isEmpty()) {
         const LaunchProfile launch = m_profiles.resolveLaunch(m_activeLaunchId);
+        const BackendProfile backend = m_profiles.resolveBackend(launch.backendProfileId);
         activeRemoteProfile = !launch.id.isEmpty()
-            && m_profiles.resolveBackend(launch.backendProfileId).isCloud();
+            && (backend.isCloud() || isRemoteHost(backend.host));
     }
     return backendAvailability(serverRunning(), activeRemoteProfile);
 }

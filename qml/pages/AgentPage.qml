@@ -1374,7 +1374,7 @@ Item {
                 Rectangle {
                     anchors.centerIn: parent
                     z: 5
-                    visible: App.thinkingRestarting || App.agentStarting || (App.agentRunning && (!App.serverRunning || !App.serverReady))
+                    visible: App.thinkingRestarting || App.agentStarting || (App.agentRunning && (!App.backendAvailable || (App.serverRunning && !App.serverReady)))
                     radius: 10
                     color: Theme.surfaceBg
                     border.color: Theme.borderColor
@@ -1401,7 +1401,7 @@ Item {
                                 ? "Recargando modelo para aplicar el nivel de pensamiento..."
                                 : App.agentStarting
                                 ? (App.hybridStatus.length > 0 ? App.hybridStatus : "Iniciando agente...")
-                                : !App.serverRunning
+                                : !App.backendAvailable
                                 ? "Servidor no disponible. Iniciá el modelo en Lanzar."
                                 : "Cargando modelo..."
                             color: Theme.textSecondary; font.pixelSize: 14
@@ -2453,7 +2453,7 @@ Item {
                     LcButton {
                         text: "📎"
                         secondary: true
-                        enabled: App.serverRunning && App.serverReady && !agentInput.busy
+                        enabled: App.backendAvailable && (App.serverReady || !App.serverRunning) && !agentInput.busy
                         onClicked: {
                             const picked = App.pickAgentAttachments()
                             if (picked && picked.length > 0)
@@ -2491,7 +2491,7 @@ Item {
                             width: agentInputFrame.availableWidth
                             implicitHeight: Math.max(agentInputFrame.minimumInputHeight,
                                                      contentHeight + topPadding + bottomPadding)
-                            enabled: App.serverRunning && App.serverReady
+                            enabled: App.backendAvailable && (App.serverReady || !App.serverRunning)
                             readonly property bool busy: root.hasTypingMessage
                             color: Theme.textPrimary
                             placeholderTextColor: Theme.textMuted
@@ -2503,9 +2503,9 @@ Item {
                             wrapMode: TextArea.WrapAtWordBoundaryOrAnywhere
                             selectByMouse: true
                             background: null
-                            placeholderText: (!App.serverRunning)
+                            placeholderText: (!App.backendAvailable)
                             ? "Servidor no disponible. Iniciá el modelo en Lanzar."
-                            : (!App.serverReady
+                            : (!App.serverReady && App.serverRunning
                                ? "Modelo cargando..."
                                : (busy
                                   ? ("Enter encola · Shift+Enter interrumpe"
@@ -2545,7 +2545,7 @@ Item {
                             if (event.key !== Qt.Key_Return && event.key !== Qt.Key_Enter) return
                             event.accepted = true
                             const t = text.trim()
-                            if (!App.serverRunning || !App.serverReady) return
+                            if (!App.backendAvailable) return
                             if (event.modifiers & Qt.ShiftModifier) {
                                 if (t.length > 0) { App.steerAgent(t); text = "" }
                                 return
@@ -2598,7 +2598,7 @@ Item {
                     LcButton {
                         visible: !agentInput.busy
                         text: (App.langV, App.l("agent.send"))
-                        enabled: App.serverRunning && App.serverReady
+                        enabled: App.backendAvailable
                             && (agentInput.text.trim().length > 0 || root.agentAttachments.length > 0)
                         onClicked: root.agentSend()
                     }
