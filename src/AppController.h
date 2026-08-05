@@ -915,6 +915,11 @@ public:
                                           const QString &workspaceName,
                                           const QString &path);
     Q_INVOKABLE void rescanHardware();
+    // Re-escanea TODOS los roots de modelos, incluidos los de scanMode "manual"
+    // (que el arranque no toca). Un root manual con modelos nuevos en disco los
+    // deja invisibles para los perfiles hasta que alguien fuerza esto, y el
+    // síntoma que ve el usuario es un opaco "No model selected".
+    Q_INVOKABLE void rescanModelRoots();
     // ── GPU power limit (nvidia-smi) ──
     // Estado actual por GPU: {available:bool, gpus:[{index,name,currentW,defaultW,
     // minW,maxW,drawW}]}. Lectura síncrona (rápida, usada on-demand desde Ajustes).
@@ -941,6 +946,13 @@ public:
     // Diferido fuera del constructor; QML lo invoca tras pintar el popup de carga.
     Q_INVOKABLE void runStartupScan();
     Q_INVOKABLE QString createRecommendedLaunchProfile();
+    // Duplica un launch profile. Envuelve ProfileManager::duplicateLaunchProfile
+    // para cerrar el agujero de los perfiles de sistema: esos resuelven en CADA
+    // arranque, y sólo por ser system, tanto el binario (binaryPin /
+    // minimumBinaryBuild / binaryKind) como el gguf (religado por nombre de archivo
+    // contra los roots escaneados). La copia NO es system, así que ambas
+    // resoluciones dejan de correr: hay que hornear sus resultados en la copia.
+    Q_INVOKABLE QString duplicateLaunchProfile(const QString &launchId);
     Q_INVOKABLE void downloadRecommendedModel(const QString &repo, const QString &fileName);
     Q_INVOKABLE void pauseModelDownload(const QString &id);
     Q_INVOKABLE void resumeModelDownload(const QString &id);

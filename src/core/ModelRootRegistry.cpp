@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QPointer>
+#include <QSet>
 #include <QtConcurrent/QtConcurrentRun>
 
 ModelRootRegistry::ModelRootRegistry(ModelCatalog *catalog, QObject *parent)
@@ -246,6 +247,13 @@ void ModelRootRegistry::doScan(const ModelRoot &root)
             if (!self)
                 return;
             catalog->addBatch(found);
+            // Lo que el scan ya no vio en disco deja de estar disponible: si no,
+            // un modelo borrado o movido sigue apareciendo en la UI y en los
+            // perfiles que lo referencian.
+            QSet<QString> present;
+            present.reserve(found.size());
+            for (const CatalogModel &m : found) present.insert(m.id);
+            catalog->reconcileRoot(rootId, present);
             self->m_scanning = false;
             emit self->scanningChanged();
             emit self->scanFinished(rootId, found.size());

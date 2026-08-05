@@ -49,69 +49,11 @@
     "contextPresets": [65536, 131072, 196608, 262144, 393216],
     "benchmarkVariants": [
       {
-        "id": "sys-bench-ultraq-b2048-u512-ds5",
-        "order": 92,
-        "displayName": "[bench ULTRA-Q] B2048 · U512 · DSpark 5",
-        "runtime": {"batch": 2048, "ubatch": 512},
-        "comment": "Benchmark conservador: duplica batch lógico manteniendo el microbatch base."
-      },
-      {
-        "id": "sys-bench-ultraq-b4096-u512-ds5",
-        "order": 93,
-        "displayName": "[bench ULTRA-Q] B4096 · U512 · DSpark 5",
-        "runtime": {"batch": 4096, "ubatch": 512},
-        "comment": "Aísla el efecto de batch 4096 sin aumentar el compute graph de ubatch."
-      },
-      {
-        "id": "sys-bench-ultraq-b8192-u512-ds5",
-        "order": 94,
-        "displayName": "[bench ULTRA-Q] B8192 · U512 · DSpark 5",
-        "runtime": {"batch": 8192, "ubatch": 512},
-        "comment": "Batch lógico grande para prompts largos; vigilar RAM comprometida y TTFT."
-      },
-      {
-        "id": "sys-bench-ultraq-b4096-u1024-ds5",
-        "order": 95,
-        "displayName": "[bench ULTRA-Q] B4096 · U1024 · DSpark 5",
-        "runtime": {"batch": 4096, "ubatch": 1024},
-        "comment": "Candidato equilibrado para mejorar prefill con flash-attn."
-      },
-      {
-        "id": "sys-bench-ultraq-b8192-u1024-ds5",
-        "order": 96,
-        "displayName": "[bench ULTRA-Q] B8192 · U1024 · DSpark 5",
-        "runtime": {"batch": 8192, "ubatch": 1024},
-        "comment": "Prompt largo y ubatch medio; medir wall-time, no sólo PP tok/s."
-      },
-      {
-        "id": "sys-bench-ultraq-b4096-u2048-ds5",
-        "order": 97,
-        "displayName": "[bench ULTRA-Q stress] B4096 · U2048 · DSpark 5",
-        "runtime": {"batch": 4096, "ubatch": 2048},
-        "comment": "Stress de compute graph; puede agotar VRAM en RTX 3090."
-      },
-      {
         "id": "sys-bench-ultraq-b8192-u2048-ds5",
         "order": 98,
         "displayName": "[bench ULTRA-Q stress] B8192 · U2048 · DSpark 5",
         "runtime": {"batch": 8192, "ubatch": 2048},
-        "comment": "Máximo stress de prefill; OOM o paginación son resultados válidos del benchmark."
-      },
-      {
-        "id": "sys-bench-ultraq-b4096-u1024-ds1",
-        "order": 99,
-        "displayName": "[bench ULTRA-Q] B4096 · U1024 · DSpark 1",
-        "runtime": {"batch": 4096, "ubatch": 1024},
-        "extraArgOverrides": {"--spec-draft-n-max": 1},
-        "comment": "Aísla DSpark n-max 1 sobre el candidato equilibrado."
-      },
-      {
-        "id": "sys-bench-ultraq-b4096-u1024-ds3",
-        "order": 100,
-        "displayName": "[bench ULTRA-Q] B4096 · U1024 · DSpark 3",
-        "runtime": {"batch": 4096, "ubatch": 1024},
-        "extraArgOverrides": {"--spec-draft-n-max": 3},
-        "comment": "Aísla DSpark n-max 3 sobre el candidato equilibrado."
+        "comment": "BASELINE: mejor wall-time medido (223 s / 250 s en dos pasadas). Referencia contra la que se comparan todas las variantes de investigación de abajo."
       },
       {
         "id": "sys-bench-ultraq-b4096-u1024-nospec",
@@ -119,15 +61,7 @@
         "displayName": "[bench ULTRA-Q] B4096 · U1024 · sin DSpark",
         "runtime": {"batch": 4096, "ubatch": 1024},
         "extraArgOverrides": {"--spec-type": null, "--spec-draft-n-max": null},
-        "comment": "Control sin speculative decoding para medir la ganancia real de DSpark."
-      },
-      {
-        "id": "sys-bench-ultraq-b4096-u1024-moe35",
-        "order": 102,
-        "displayName": "[bench ULTRA-Q] B4096 · U1024 · CPU-MoE 35",
-        "runtime": {"batch": 4096, "ubatch": 1024},
-        "extraArgOverrides": {"--n-cpu-moe": 35},
-        "comment": "Más expertos en GPU; puede mejorar decode si conserva margen de VRAM."
+        "comment": "Control sin speculative decoding ya medido (278 s / 286 s): la referencia de que DSpark no mejoraba el wall-time."
       },
       {
         "id": "sys-bench-ultraq-b4096-u1024-moe43",
@@ -136,6 +70,199 @@
         "runtime": {"batch": 4096, "ubatch": 1024},
         "extraArgOverrides": {"--n-cpu-moe": 43},
         "comment": "Más expertos en RAM; sacrifica decode para liberar VRAM al prefill."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-nospec",
+        "order": 110,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · sin DSpark",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-type": null, "--spec-draft-n-max": null},
+        "comment": "CONTROL CLAVE: el batch ganador sin speculative. Si iguala los 223 s, la ganancia era del batch y DSpark no aporta."
+      },
+      {
+        "id": "sys-bench-ultraq-b4096-u1024-moe43-nospec",
+        "order": 111,
+        "displayName": "[bench ULTRA-Q] B4096 · U1024 · MoE 43 · sin DSpark",
+        "runtime": {"batch": 4096, "ubatch": 1024},
+        "extraArgOverrides": {"--n-cpu-moe": 43, "--spec-type": null, "--spec-draft-n-max": null},
+        "comment": "Control del candidato bajo-VRAM: aísla si la ventaja de CPU-MoE 43 es independiente de DSpark."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-pmin05",
+        "order": 112,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · p-min 0.5",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-p-min": 0.5},
+        "comment": "p-min default es 0.00: nunca descarta un draft malo. Los logs muestran acceptance bimodal (0.34 a 1.00); cortar los drafts flojos debería recuperar el overhead."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-pmin08",
+        "order": 113,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · p-min 0.8",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-p-min": 0.8},
+        "comment": "Corte agresivo: sólo especula cuando el draft está muy seguro. Menos intentos, menos desperdicio."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-draftgpu",
+        "order": 114,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · draft full GPU",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-n-cpu-moe": 0},
+        "comment": "Expertos del draft en GPU mientras el target mantiene su offload. Si el draft sufre el ancho de banda de RAM, la diferencia salta acá."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-draftkv4",
+        "order": 115,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · KV draft q4_0",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-type-k": "q4_0", "--spec-draft-type-v": "q4_0"},
+        "comment": "KV del draft en q4_0 (default f16): libera VRAM del draft para el target y el compute graph."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds8",
+        "order": 117,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 8",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-n-max": 8},
+        "comment": "Draft más largo: gana más por acierto y desperdicia más por fallo. Con la acceptance ~0.9 observada debería pagar."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds10",
+        "order": 118,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 10",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-n-max": 10},
+        "comment": "Límite superior del barrido; si empeora, confirma que el costo de generar el draft domina sobre la ganancia."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds8-pmin05",
+        "order": 119,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 8 · p-min 0.5",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-draft-n-max": 8, "--spec-draft-p-min": 0.5},
+        "comment": "Cruce de los dos ejes: draft largo cuando el modelo está seguro, corte temprano cuando no."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-moe43-ds5",
+        "order": 121,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · MoE 43 · DSpark 5",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--n-cpu-moe": 43},
+        "comment": "Cruza el batch ganador con el CPU-MoE del candidato bajo-VRAM: mide si las dos ventajas se suman o se pisan."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-temp0",
+        "order": 130,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · temp 0 (greedy)",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--temp": 0, "--top-k": 0, "--top-p": 0, "--min-p": 0},
+        "comment": "HIPÓTESIS PRINCIPAL: con temp > 0 el sampling estocástico rechaza drafts que el greedy aceptaría, y se paga el draft igual. Explicaría la acceptance bimodal (0.34 a 1.00) de los logs. Cambia el sampling, así que hay que mirar el score de calidad además del tiempo."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-mlock",
+        "order": 131,
+        "displayName": "[bench ULTRA-Q · REQUIERE PAGEFILE] B8192 · U2048 · DSpark 5 · mmap+mlock",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--load-mode": "mmap+mlock"},
+        "comment": "NO CORRER SIN ARCHIVO DE PAGINACIÓN: sin pagefile el commit limit de Windows es igual a la RAM física (127 GB), y VirtualLock compite contra el commit de todo lo demás. Medido: fija 45 GB, el siguiente lock falla con ERROR_COMMITMENT_LIMIT y el server muere con GGML_ASSERT(ctx->mem_buffer != NULL). Con un pagefile de 32-64 GB debería entrar. La promesa: pinear el modelo evita que Windows recorte el working set del mmap durante el decode (~10 tok/s reportados en un 3090 Ti con este modelo), y podría explicar el spread grande entre pasadas de la misma config."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-temp0-mlock",
+        "order": 132,
+        "displayName": "[bench ULTRA-Q · REQUIERE PAGEFILE] B8192 · U2048 · DSpark 5 · temp 0 + mmap+mlock",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--temp": 0, "--top-k": 0, "--top-p": 0, "--min-p": 0, "--load-mode": "mmap+mlock"},
+        "comment": "NO CORRER SIN ARCHIVO DE PAGINACIÓN (ver la variante de arriba). Combina el pineo en RAM con el greedy: si ambas pagan, es el candidato a perfil de producción."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ngrammod",
+        "order": 133,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · ngram-mod 32/48/64",
+        "runtime": {"batch": 8192, "ubatch": 2048},
+        "extraArgOverrides": {"--spec-type": "ngram-mod", "--spec-draft-n-max": null,
+                              "--spec-ngram-mod-n-match": 32, "--spec-ngram-mod-n-min": 48,
+                              "--spec-ngram-mod-n-max": 64, "--temp": 0, "--top-k": 0,
+                              "--top-p": 0, "--min-p": 0},
+        "comment": "ngram-mod en vez de DSpark, sin modelo draft. Si gana, DSpark no justifica su costo acá. SIN --load-mode mmap+mlock: en esta máquina el modelo (~116 GB) no entra pineado en 128 GB de RAM y llama.cpp muere con GGML_ASSERT(ctx->mem_buffer != NULL). La receta original era para un quant de 90.9 GB."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-kv8",
+        "order": 134,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · KV q8_0",
+        "runtime": {"batch": 8192, "ubatch": 2048, "kv": "q8_0"},
+        "extraArgOverrides": {"--cache-type-k": "q8_0", "--cache-type-v": "q8_0"},
+        "comment": "CALIDAD + ACCEPTANCE: el KV de V4 ya viene comprimido de fábrica, así que el q4_0 del perfil comprime encima de algo comprimido. El propio builder advierte que el KV cuantizado mata la acceptance del draft, pero la salvaguarda no aplica acá porque el spec-type viene por extraArgs. Cuesta VRAM; mirar score de calidad Y acceptance en el log."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-kv8-nospec",
+        "order": 140,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV q8_0 · sin DSpark",
+        "runtime": {"batch": 8192, "ubatch": 2048, "kv": "q8_0"},
+        "extraArgOverrides": {"--cache-type-k": "q8_0", "--cache-type-v": "q8_0",
+                              "--spec-type": null, "--spec-draft-n-max": null},
+        "comment": "CONTROL DEL HALLAZGO: KV q8_0 midió 212 s, el mejor tiempo de la tanda. Falta saber por qué. Si sin DSpark también baja, la mejora era del KV y no de la acceptance del draft; si sube, el q4_0 estaba hundiendo a DSpark. Sin este control el resultado no se puede atribuir."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-kv8-temp0",
+        "order": 141,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV q8_0 · temp 0",
+        "runtime": {"batch": 8192, "ubatch": 2048, "kv": "q8_0"},
+        "extraArgOverrides": {"--cache-type-k": "q8_0", "--cache-type-v": "q8_0",
+                              "--temp": 0, "--top-k": 0, "--top-p": 0, "--min-p": 0},
+        "comment": "Las dos únicas variables que completaron y midieron bien, juntas y sin nada más. Ambas apuntan a lo mismo: que el draft se acepte más seguido."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-kv8-ds8",
+        "order": 142,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV q8_0 · DSpark 8",
+        "runtime": {"batch": 8192, "ubatch": 2048, "kv": "q8_0"},
+        "extraArgOverrides": {"--cache-type-k": "q8_0", "--cache-type-v": "q8_0",
+                              "--spec-draft-n-max": 8},
+        "comment": "El barrido de n-max anterior corrió sobre KV q4_0, que ahora se sospecha degradaba la acceptance. Con mejor KV, un draft más largo debería pagar más — y si no, el techo no está en el largo."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-kv8-moe43",
+        "order": 143,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV q8_0 · MoE 43",
+        "runtime": {"batch": 8192, "ubatch": 2048, "kv": "q8_0"},
+        "extraArgOverrides": {"--cache-type-k": "q8_0", "--cache-type-v": "q8_0",
+                              "--n-cpu-moe": 43},
+        "comment": "El KV q8_0 cuesta VRAM (21 GB de 24) y MoE 43 la libera (11.5 GB). Juntos dicen si se puede tener el mejor tiempo sin quedar al borde de la VRAM."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-kv-k8v4",
+        "order": 144,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV K q8_0 / V q4_0",
+        "runtime": {"batch": 8192, "ubatch": 2048, "kv": "q8_0"},
+        "extraArgOverrides": {"--cache-type-k": "q8_0", "--cache-type-v": "q4_0"},
+        "comment": "Asimétrico: la atención es más sensible a la precisión de K que a la de V. Si casi todo el beneficio del q8_0 viene del K, esto lo conserva a mitad del costo de VRAM."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-tb16",
+        "order": 136,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · prefill 16 hilos",
+        "runtime": {"batch": 8192, "ubatch": 2048, "threads": 8},
+        "extraArgOverrides": {"--threads-batch": 16},
+        "comment": "Ryzen 7 7700 = 8 núcleos físicos / 16 hilos. Hoy corre 8 y 8. El decode con MoE en RAM está limitado por ancho de banda y no gana con SMT, pero el prefill es compute-bound y sí puede: deja el decode en 8 físicos y le da los 16 lógicos al batch."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-ds5-t6",
+        "order": 137,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · DSpark 5 · 6 hilos",
+        "runtime": {"batch": 8192, "ubatch": 2048, "threads": 6},
+        "extraArgOverrides": {"--threads-batch": 8},
+        "comment": "Con sólo 8 núcleos, los hilos de decode compiten con el driver y las transferencias PCIe de los expertos. Dejar dos libres a veces sube el decode; si baja, el cuello es memoria y no scheduling."
+      },
+      {
+        "id": "sys-bench-ultraq-b8192-u2048-best",
+        "order": 138,
+        "displayName": "[bench ULTRA-Q] B8192 · U2048 · combo (temp 0 + KV q8_0 + prefill 16)",
+        "runtime": {"batch": 8192, "ubatch": 2048, "threads": 8, "kv": "q8_0"},
+        "extraArgOverrides": {"--temp": 0, "--top-k": 0, "--top-p": 0, "--min-p": 0,
+                              "--cache-type-k": "q8_0", "--cache-type-v": "q8_0",
+                              "--threads-batch": 16},
+        "comment": "Techo: junta lo que midió bien en la primera tanda (KV q8_0 dio 212 s, el mejor tiempo; temp 0 completó) más el prefill con SMT. Sin mlock, que crashea acá. Si esto no le gana al baseline, ninguna pieza suelta lo hará."
       }
     ],
     "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Reasoning effort high explícito evita el low implícito (prefijo vacío) y el budget 8192 corta colas patológicas sin impedir tareas largas. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."

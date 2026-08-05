@@ -3449,6 +3449,45 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.mmprojModel = m_catalog.findById(ctx.model.mmprojId);
     ctx.draftModel = m_catalog.findById(ctx.model.draftModelId);
 
+    // Copia previa a las reparaciones: es contra esto que el auto-sanado del final
+    // decide si el perfil guardado quedó desactualizado.
+    const ModelProfile modelAsStored = ctx.model;
+
+    // 1) Ancla estable: el id textual se deriva de la ruta, así que mover el gguf
+    // de carpeta lo invalida y el perfil queda apuntando a la nada. El stable id
+    // no cambia nunca, así que es el primer respaldo cuando el id no resuelve.
+    auto viaStableId = [this](CatalogModel &m, qint64 stableId) {
+        if (stableId <= 0) return;
+        if (!m.id.isEmpty() && m.isAvailable) return;   // el id textual ya sirvió
+        const CatalogModel byAnchor = m_catalog.findByStableId(stableId);
+        if (!byAnchor.id.isEmpty() && byAnchor.isAvailable) m = byAnchor;
+    };
+    viaStableId(ctx.catalogModel, ctx.model.modelStableId);
+    viaStableId(ctx.mmprojModel, ctx.model.mmprojStableId);
+    viaStableId(ctx.draftModel, ctx.model.draftStableId);
+
+    // 2) Último recurso, para perfiles anteriores al ancla: el id resuelve a una
+    // fila no disponible mientras OTRA fila describe el mismo archivo y sí lo está
+    // (el scanner minteaba ids aleatorios por scan antes de derivarlos de la ruta).
+    // Religamos por nombre de archivo antes de fallar con "Model unavailable"
+    // teniendo el gguf en disco. Sólo actúa cuando el perfil ya estaba roto.
+    auto relinkStaleRow = [this](CatalogModel &m) {
+        if (m.id.isEmpty() || m.isAvailable || m.fileName.isEmpty()) return;
+        for (int i = 0; i < m_catalog.rowCount(); ++i) {
+            const QVariantMap row = m_catalog.getAt(i);
+            if (row.value(QStringLiteral("fileName")).toString() != m.fileName) continue;
+            if (!row.value(QStringLiteral("isAvailable"), true).toBool()) continue;
+            m = m_catalog.findById(row.value(QStringLiteral("id")).toString());
+            return;
+        }
+    };
+    relinkStaleRow(ctx.catalogModel);
+    relinkStaleRow(ctx.mmprojModel);
+    relinkStaleRow(ctx.draftModel);
+    ctx.model.modelId = ctx.catalogModel.id;
+    ctx.model.mmprojId = ctx.mmprojModel.id;
+    ctx.model.draftModelId = ctx.draftModel.id;
+
     // Perfil de sistema: si el id determinista (por ruta esperada) no está en el
     // catálogo, ligar por NOMBRE DE ARCHIVO contra cualquier root escaneado. Así
     // el perfil funciona aunque el gguf esté en otra carpeta que la del download.
@@ -3516,6 +3555,31 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
             break;
         }
     }
+    // Auto-sanado: si resolvimos el archivo por cualquiera de las vías de arriba,
+    // grabamos en el perfil el ancla y el id vigentes. Así el perfil deja de
+    // depender de heurísticas la próxima vez, y un perfil viejo adquiere ancla sola
+    // la primera vez que se usa. Los de sistema no se persisten (son de solo
+    // lectura y se regeneran del bundle en cada arranque).
+    if (!ctx.launch.system && !ctx.model.id.isEmpty()) {
+        const bool changed =
+            modelAsStored.modelStableId  != ctx.catalogModel.stableId ||
+            modelAsStored.mmprojStableId != ctx.mmprojModel.stableId  ||
+            modelAsStored.draftStableId  != ctx.draftModel.stableId   ||
+            modelAsStored.modelId        != ctx.catalogModel.id       ||
+            modelAsStored.mmprojId       != ctx.mmprojModel.id        ||
+            modelAsStored.draftModelId   != ctx.draftModel.id;
+        if (changed && !ctx.catalogModel.id.isEmpty()) {
+            ModelProfile persisted = ctx.model;
+            persisted.modelId        = ctx.catalogModel.id;
+            persisted.mmprojId       = ctx.mmprojModel.id;
+            persisted.draftModelId   = ctx.draftModel.id;
+            persisted.modelStableId  = ctx.catalogModel.stableId;
+            persisted.mmprojStableId = ctx.mmprojModel.stableId;
+            persisted.draftStableId  = ctx.draftModel.stableId;
+            m_profiles.updateModelProfileFull(persisted);
+        }
+    }
+
     ctx.reasoningEnabled = m_launchThinkingEnabled;
     return ctx;
 }
@@ -11054,6 +11118,11 @@ static QString recommendationLane(const QString &caps, const QString &runMode, d
 
 // ── Public methods ─────────────────────────────────────────────────────────────
 
+void AppController::rescanModelRoots()
+{
+    m_roots.scanAll();
+}
+
 void AppController::rescanHardware()
 {
     QVariantMap hw;
@@ -11922,6 +11991,55 @@ int AppController::systemProfileMinimumBinaryBuild(const QString &launchId) cons
     return systemProfileMinimumBuild(launchId);
 }
 
+QString AppController::duplicateLaunchProfile(const QString &launchId)
+{
+    const QVariantMap src = m_profiles.getLaunchProfile(launchId);
+    const bool srcIsSystem = src.value(QStringLiteral("system")).toBool();
+
+    // Resolver el ORIGINAL antes de copiar: siendo system, buildContext le aplica
+    // las dos resoluciones dinámicas que la copia va a perder — el binario por
+    // política (pin/minimumBuild/kind) y el religado del gguf por nombre de archivo
+    // contra los roots escaneados. Horneamos ambos resultados en la copia.
+    const EffectiveProfileBuilder::Context srcCtx =
+        srcIsSystem ? buildContext(launchId) : EffectiveProfileBuilder::Context{};
+
+    const QString copyId = m_profiles.duplicateLaunchProfile(launchId);
+    if (copyId.isEmpty() || !srcIsSystem) return copyId;
+
+    const QVariantMap copy = m_profiles.getLaunchProfile(copyId);
+
+    // Binario: el backend de sistema lo lleva vacío a propósito.
+    const QVariantMap backend = m_profiles.getBackend(
+        copy.value(QStringLiteral("backendProfileId")).toString());
+    if (!backend.value(QStringLiteral("id")).toString().isEmpty()
+        && backend.value(QStringLiteral("binaryId")).toString().isEmpty()
+        && !srcCtx.binary.id.isEmpty()) {
+        m_profiles.updateBackend(backend.value(QStringLiteral("id")).toString(),
+                                 backend.value(QStringLiteral("name")).toString(),
+                                 srcCtx.binary.id,
+                                 backend.value(QStringLiteral("host")).toString(),
+                                 backend.value(QStringLiteral("port")).toInt(),
+                                 backend.value(QStringLiteral("baseArgs")).toStringList());
+    }
+
+    // Modelo: el id del perfil de sistema es determinista por la ruta administrada.
+    // Si el gguf real vive en otro root, el original lo religa por nombre; la copia
+    // se queda con el id determinista que no existe en el catálogo ("No model
+    // selected"). Fijamos los ids que el original resolvió de verdad.
+    const QVariantMap model = m_profiles.getModelProfile(
+        copy.value(QStringLiteral("modelProfileId")).toString());
+    if (!model.value(QStringLiteral("id")).toString().isEmpty()
+        && !srcCtx.catalogModel.id.isEmpty()
+        && srcCtx.catalogModel.id != model.value(QStringLiteral("modelId")).toString()) {
+        m_profiles.updateModelProfile(model.value(QStringLiteral("id")).toString(),
+                                      model.value(QStringLiteral("name")).toString(),
+                                      srcCtx.catalogModel.id,
+                                      srcCtx.mmprojModel.id,
+                                      srcCtx.draftModel.id);
+    }
+    return copyId;
+}
+
 QVariantList AppController::systemProfileContextPresets(const QString &launchId) const
 {
     QVariantList out;
@@ -11939,7 +12057,7 @@ QString AppController::createSystemProfileContextVariant(const QString &launchId
 {
     const QVariantList presets = systemProfileContextPresets(launchId);
     if (!presets.contains(ctx)) return {};
-    const QString copyId = m_profiles.duplicateLaunchProfile(launchId);
+    const QString copyId = duplicateLaunchProfile(launchId);   // hornea el binario resuelto
     if (copyId.isEmpty()) return {};
     const QVariantMap launch = m_profiles.getLaunchProfile(copyId);
     const QString runtimeId = launch.value(QStringLiteral("runtimePresetId")).toString();

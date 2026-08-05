@@ -12,6 +12,36 @@ Item {
     readonly property bool selectedIsSystem:
         selectedLaunchId.length > 0 && App.profileManager.isSystemLaunch(selectedLaunchId)
     property string backendId: ""
+    // El backend no tiene binario fijado (binaryId ""). El combo no puede mostrar
+    // "vacío" —cae a index 0—, así que lo recordamos aparte para no guardar el
+    // primer binario de la lista como si el usuario lo hubiera elegido.
+    property bool backendBinaryUnset: false
+    // Mismo problema con los modelos: si el id guardado no está en el catálogo, el
+    // combo cae al primer gguf de la lista. Guardamos el id original acá para
+    // preservarlo en vez de pisar el perfil con un modelo que nadie eligió.
+    property string modelMainUnresolved: ""
+    property string modelMmprojUnresolved: ""
+    property string modelDraftUnresolved: ""
+
+    // Posiciona un combo de modelo en `id`. Devuelve "" si pudo representarlo, o el
+    // propio `id` si no está en la lista (combo en index 0, valor a preservar).
+    function bindModelCombo(combo, id) {
+        const idx = combo.indexOfValue(id)
+        combo.currentIndex = Math.max(0, idx)
+        return (id.length > 0 && idx < 0) ? id : ""
+    }
+
+    // Id a persistir: el del combo, salvo que el guardado no se haya podido
+    // representar — ahí se conserva el original en vez de pisarlo.
+    function effectiveModelId() {
+        return modelMainUnresolved.length > 0 ? modelMainUnresolved : (modelMain.currentValue ?? "")
+    }
+    function effectiveMmprojId() {
+        return modelMmprojUnresolved.length > 0 ? modelMmprojUnresolved : (modelMmproj.currentValue ?? "")
+    }
+    function effectiveDraftId() {
+        return modelDraftUnresolved.length > 0 ? modelDraftUnresolved : (modelDraft.currentValue ?? "")
+    }
     property string modelProfileId: ""
     property string runtimeId: ""
     property string backendNameCurrent: ""
@@ -274,7 +304,9 @@ Item {
     function duplicateProfile() {
         if (!selectedLaunchId || selectedLaunchId.length === 0) return
         // Clon profundo (incl. perfiles de sistema → copia editable de usuario).
-        const lId = App.profileManager.duplicateLaunchProfile(selectedLaunchId)
+        // Vía AppController, no ProfileManager: la copia de un perfil de sistema
+        // necesita que se le fije el binario que el original resolvía por política.
+        const lId = App.duplicateLaunchProfile(selectedLaunchId)
         if (lId && lId.length > 0) selectProfile(lId)
     }
 
@@ -304,7 +336,9 @@ Item {
         backendNameCurrent = bp.name ?? ""
         backendHost.text = bp.host ?? "127.0.0.1"
         backendPort.text = (bp.port ?? 8080).toString()
-        backendBinary.currentIndex = Math.max(0, backendBinary.indexOfValue(bp.binaryId ?? ""))
+        const bpBinaryId = bp.binaryId ?? ""
+        backendBinaryUnset = (bpBinaryId.length === 0)
+        backendBinary.currentIndex = Math.max(0, backendBinary.indexOfValue(bpBinaryId))
         backendKind.currentIndex = Math.max(0, backendKind.indexOfValue(bp.kind ?? "local"))
         cloudBaseUrl.text = bp.cloudBaseUrl ?? ""
         cloudKeyRef.text = bp.cloudKeyRef ?? ""
@@ -314,11 +348,15 @@ Item {
 
         const mp = App.profileManager.getModelProfile(modelProfileId)
         modelNameCurrent = mp.name ?? ""
-        modelMain.currentIndex = Math.max(0, modelMain.indexOfValue(mp.modelId ?? ""))
+        // Un id que el combo no puede representar (no está en el catálogo, o la fila
+        // quedó no disponible) NO debe caer al índice 0: eso muestra el primer gguf
+        // de la lista como si fuera el del perfil, y al guardar lo escribe de verdad.
+        // Recordamos el id original y lo preservamos al guardar.
+        modelMainUnresolved  = bindModelCombo(modelMain,   mp.modelId ?? "")
         mmprojEnabled = (mp.mmprojId ?? "").length > 0
-        modelMmproj.currentIndex = Math.max(0, modelMmproj.indexOfValue(mp.mmprojId ?? ""))
+        modelMmprojUnresolved = bindModelCombo(modelMmproj, mp.mmprojId ?? "")
         draftEnabled = (mp.draftModelId ?? "").length > 0
-        modelDraft.currentIndex = Math.max(0, modelDraft.indexOfValue(mp.draftModelId ?? ""))
+        modelDraftUnresolved  = bindModelCombo(modelDraft,  mp.draftModelId ?? "")
         mtpEnabled = (mp.specType ?? "") === "draft-mtp"
         specNMaxField.text = ((mp.specDraftNMax ?? 0) || 0).toString()
         specKvType.currentIndex = Math.max(0, specKvType.find(mp.specDraftTypeK ?? ""))
@@ -403,14 +441,14 @@ Item {
     // Recalcula la vista previa del comando con los valores actuales del editor (sin guardar).
     function recomputePreview() {
         if (!selectedLaunchId || selectedLaunchId.length === 0) return
-        const binId = backendBinary.currentValue ?? ""
+        const binId = backendBinaryUnset ? "" : (backendBinary.currentValue ?? "")
         App.computeEffectiveProfilePreview(selectedLaunchId, {
             "host": backendHost.text,
             "port": parseInt(backendPort.text) || 8080,
             "binaryId": binId,
-            "modelId": modelMain.currentValue ?? "",
-            "mmprojId": mmprojEnabled ? (modelMmproj.currentValue ?? "") : "",
-            "draftModelId": draftEnabled ? (modelDraft.currentValue ?? "") : "",
+            "modelId": effectiveModelId(),
+            "mmprojId": mmprojEnabled ? effectiveMmprojId() : "",
+            "draftModelId": draftEnabled ? effectiveDraftId() : "",
             "specType": mtpEnabled ? "draft-mtp" : "",
             "specDraftNMax": mtpEnabled ? (parseInt(specNMaxField.text) || 0) : 0,
             "specDraftNgl": (draftEnabled && mtpEnabled) ? "all" : "",
@@ -445,7 +483,7 @@ Item {
         } catch (e) { envOverrides = {} }
 
         // Backend: update if exists, create if not
-        const binaryId = backendBinary.currentValue ?? ""
+        const binaryId = backendBinaryUnset ? "" : (backendBinary.currentValue ?? "")
         let effectiveBid = backendId
         if (!App.profileManager.updateBackend(effectiveBid, backendNameCurrent, binaryId, backendHost.text, parseInt(backendPort.text), [])) {
             effectiveBid = App.profileManager.addBackend(
@@ -461,9 +499,9 @@ Item {
             App.setSecret(cloudKeyRef.text, cloudKeyValue.text)
 
         // Model: update if exists, create if not
-        const mainModelId  = modelMain.currentValue  ?? ""
-        const mmprojId     = mmprojEnabled  ? (modelMmproj.currentValue ?? "") : ""
-        const draftModelId = draftEnabled   ? (modelDraft.currentValue  ?? "") : ""
+        const mainModelId  = effectiveModelId()
+        const mmprojId     = mmprojEnabled  ? effectiveMmprojId() : ""
+        const draftModelId = draftEnabled   ? effectiveDraftId()  : ""
         let effectiveMid = modelProfileId
         if (!App.profileManager.updateModelProfile(effectiveMid, modelNameCurrent, mainModelId, mmprojId, draftModelId)) {
             effectiveMid = App.profileManager.addModelProfile(
@@ -1069,6 +1107,10 @@ Item {
                             visible: !backendGrid.cloud
                             model: App.binaryRegistry
                             textRole: "displayLabel"; valueRole: "binId"
+                            // Elegir explícitamente = deja de estar "sin fijar".
+                            onActivated: root.backendBinaryUnset = false
+                            displayText: root.backendBinaryUnset
+                                ? "(automático — sin fijar)" : currentText
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: backendBinary.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
@@ -1119,8 +1161,14 @@ Item {
                             id: modelMain
                             Layout.fillWidth: true
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
-                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
-                            contentItem: Text { text: modelMain.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                            onActivated: root.modelMainUnresolved = ""
+                            displayText: root.modelMainUnresolved.length > 0
+                                ? "(no está en el catálogo — elegí uno)" : currentText
+                            background: Rectangle { color: Theme.inputBg; radius: 6
+                                border.color: root.modelMainUnresolved.length > 0 ? Theme.errorBorder : Theme.borderColor }
+                            contentItem: Text { text: modelMain.displayText
+                                color: root.modelMainUnresolved.length > 0 ? Theme.errorText : Theme.textPrimary
+                                font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
 
                         CheckBox { id: mmprojCheck; checked: mmprojEnabled; onCheckedChanged: mmprojEnabled = checked; padding: 0 }
@@ -1130,6 +1178,9 @@ Item {
                             Layout.fillWidth: true
                             enabled: mmprojEnabled; opacity: mmprojEnabled ? 1.0 : 0.4
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
+                            onActivated: root.modelMmprojUnresolved = ""
+                            displayText: root.modelMmprojUnresolved.length > 0
+                                ? "(no está en el catálogo — elegí uno)" : currentText
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: modelMmproj.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
@@ -1141,6 +1192,9 @@ Item {
                             Layout.fillWidth: true
                             enabled: draftEnabled; opacity: draftEnabled ? 1.0 : 0.4
                             model: App.modelCatalog; textRole: "fileName"; valueRole: "modelId"
+                            onActivated: root.modelDraftUnresolved = ""
+                            displayText: root.modelDraftUnresolved.length > 0
+                                ? "(no está en el catálogo — elegí uno)" : currentText
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: modelDraft.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }

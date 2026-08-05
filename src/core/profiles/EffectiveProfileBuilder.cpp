@@ -156,6 +156,22 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         for (const QString &t : tokens)
             extraTokens.append(t);
     }
+    // El draft puede venir del ModelProfile o declarado a mano en los extraArgs con
+    // una ruta absoluta (--spec-draft-model / -md / --model-draft). Si está ahí y el
+    // archivo existe, el perfil es válido: exigir además draftModelId lo rechazaba
+    // por una vía que llama-server sí acepta.
+    bool draftInExtraArgs = false;
+    for (int i = 0; i + 1 < extraTokens.size(); ++i) {
+        const QString &t = extraTokens.at(i);
+        if (t != QLatin1String("--spec-draft-model") && t != QLatin1String("-md")
+            && t != QLatin1String("--model-draft"))
+            continue;
+        if (QFileInfo::exists(extraTokens.at(i + 1))) { draftInExtraArgs = true; break; }
+        result.warnings.append(
+            QStringLiteral("El draft declarado en los argumentos no está en disco: %1")
+                .arg(extraTokens.at(i + 1)));
+    }
+
     for (int i = 0; i < extraTokens.size(); ++i) {
         const QString &cur = extraTokens.at(i);
         if (!cur.startsWith(u'-')) { args.append(cur); continue; }
@@ -164,6 +180,7 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
             && extraTokens.at(i + 1).compare(QStringLiteral("draft-dspark"),
                                              Qt::CaseInsensitive) != 0
             && ctx.model.draftModelId.isEmpty()
+            && !draftInExtraArgs
             && !MtpDetection::isSelfContained(ctx.catalogModel.fileName)) {
             result.blockingErrors.append(QStringLiteral(
                 "Este perfil declara %1 %2, pero no tiene draftModel asociado. "

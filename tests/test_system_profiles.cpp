@@ -64,6 +64,7 @@ private slots:
     void controller_showcaseEmptyWhenNoSiblings();
     void bundle_lagunaIsOptInAndHardwareGated();
     void bundle_ultraQAndHybridAreWiredAndOptIn();
+    void controller_duplicateBakesResolvedBinary();
 
 private:
     QTemporaryDir m_dir;
@@ -93,7 +94,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 29); // tiers base + extras + ULTRA-Q/híbrido + DSpark externo + 12 variantes bench
+    QCOMPARE(sys, 43); // tiers base + extras + ULTRA-Q/híbrido + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -666,7 +667,7 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QVERIFY(args.contains(QStringLiteral("--no-warmup")));
     QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
     QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
-    QCOMPARE(ultra.value("benchmarkVariants").toArray().size(), 12);
+    QCOMPARE(ultra.value("benchmarkVariants").toArray().size(), 26);
 
     QVERIFY(!ultraExternal.isEmpty());
     QVERIFY(ultraExternal.value("extra").toBool());
@@ -710,14 +711,14 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(launch.value("hybridMode").toString(), QStringLiteral("sequential"));
 
     const QVariantMap balanced =
-        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-ds5"));
+        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b8192-u2048-ds5"));
     QVERIFY(balanced.value("system").toBool());
     const QVariantMap balancedRt =
         pm.getRuntimePreset(balanced.value("runtimePresetId").toString());
-    QCOMPARE(balancedRt.value("batch").toInt(), 4096);
-    QCOMPARE(balancedRt.value("ubatch").toInt(), 1024);
+    QCOMPARE(balancedRt.value("batch").toInt(), 8192);
+    QCOMPARE(balancedRt.value("ubatch").toInt(), 2048);
     QCOMPARE(balanced.value("modelProfileId").toString(),
-             QStringLiteral("sysmodel-sys-bench-ultraq-b4096-u1024-ds5"));
+             QStringLiteral("sysmodel-sys-bench-ultraq-b8192-u2048-ds5"));
     const QVariantMap balancedModel =
         pm.getModelProfile(balanced.value("modelProfileId").toString());
     const QVariantMap ultraLaunch =
@@ -736,10 +737,151 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QVERIFY(!noSpec.value("extraArgs").toStringList().contains(
         QStringLiteral("--spec-draft-n-max")));
 
-    const QVariantMap moe35 =
-        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-moe35"));
-    const QStringList moeArgs = moe35.value("extraArgs").toStringList();
-    QCOMPARE(moeArgs.value(moeArgs.indexOf("--n-cpu-moe") + 1), QStringLiteral("35"));
+    const QVariantMap moe43 =
+        pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-moe43"));
+    const QStringList moeArgs = moe43.value("extraArgs").toStringList();
+    QCOMPARE(moeArgs.value(moeArgs.indexOf("--n-cpu-moe") + 1), QStringLiteral("43"));
+
+    // Variantes de investigación de DSpark sobre el batch ganador (B8192·U2048).
+    auto argsOf = [&pm](const char *id) {
+        return pm.getLaunchProfile(QString::fromLatin1(id)).value("extraArgs").toStringList();
+    };
+    // Control: el batch ganador debe quedar SIN speculative, o no mide nada.
+    const QStringList wideNoSpec = argsOf("sys-bench-ultraq-b8192-u2048-nospec");
+    QVERIFY(!wideNoSpec.isEmpty());
+    QVERIFY(!wideNoSpec.contains(QStringLiteral("--spec-type")));
+    QVERIFY(!wideNoSpec.contains(QStringLiteral("--spec-draft-n-max")));
+    // El corte por confianza se agrega sin perder el resto de la config de DSpark.
+    const QStringList pmin = argsOf("sys-bench-ultraq-b8192-u2048-ds5-pmin05");
+    QCOMPARE(pmin.value(pmin.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
+    QCOMPARE(pmin.value(pmin.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
+    QCOMPARE(pmin.value(pmin.indexOf("--spec-draft-p-min") + 1), QStringLiteral("0.5"));
+    // El offload del draft es independiente del offload del target.
+    const QStringList draftGpu = argsOf("sys-bench-ultraq-b8192-u2048-ds5-draftgpu");
+    QCOMPARE(draftGpu.value(draftGpu.indexOf("--n-cpu-moe") + 1), QStringLiteral("39"));
+    QCOMPARE(draftGpu.value(draftGpu.indexOf("--spec-draft-n-cpu-moe") + 1), QStringLiteral("0"));
+    // Cambiar de tipo de speculative reemplaza el valor, no agrega un segundo flag.
+    const QStringList ngram = argsOf("sys-bench-ultraq-b8192-u2048-ngrammod");
+    QCOMPARE(ngram.count(QStringLiteral("--spec-type")), 1);
+    QCOMPARE(ngram.value(ngram.indexOf("--spec-type") + 1), QStringLiteral("ngram-mod"));
+
+    // El control del hallazgo KV q8_0 debe quedar sin speculative, o no controla nada.
+    const QStringList kv8NoSpec = argsOf("sys-bench-ultraq-b8192-u2048-kv8-nospec");
+    QVERIFY(!kv8NoSpec.isEmpty());
+    QVERIFY(!kv8NoSpec.contains(QStringLiteral("--spec-type")));
+    QCOMPARE(kv8NoSpec.value(kv8NoSpec.indexOf("--cache-type-k") + 1), QStringLiteral("q8_0"));
+    // Asimétrico: K en q8_0 y V en q4_0, no los dos iguales.
+    const QStringList k8v4 = argsOf("sys-bench-ultraq-b8192-u2048-kv-k8v4");
+    QCOMPARE(k8v4.value(k8v4.indexOf("--cache-type-k") + 1), QStringLiteral("q8_0"));
+    QCOMPARE(k8v4.value(k8v4.indexOf("--cache-type-v") + 1), QStringLiteral("q4_0"));
+
+    // Greedy: temp/top-k/top-p/min-p en 0. Con sampling estocástico el verificador
+    // rechaza drafts que el greedy aceptaría, y el draft se paga igual.
+    const QStringList greedy = argsOf("sys-bench-ultraq-b8192-u2048-ds5-temp0");
+    QCOMPARE(greedy.count(QStringLiteral("--temp")), 1);
+    QCOMPARE(greedy.value(greedy.indexOf("--temp") + 1), QStringLiteral("0"));
+    QCOMPARE(greedy.value(greedy.indexOf("--top-k") + 1), QStringLiteral("0"));
+    QCOMPARE(greedy.value(greedy.indexOf("--top-p") + 1), QStringLiteral("0"));
+    // Pinear el modelo sólo funciona con archivo de paginación: sin él el commit
+    // limit de Windows es la RAM física, VirtualLock falla a mitad de camino y el
+    // server muere con GGML_ASSERT(ctx->mem_buffer != NULL). Los perfiles que lo
+    // usan tienen que avisarlo en el NOMBRE, que es lo único que se ve al elegir
+    // qué correr en el benchmark.
+    int pinning = 0;
+    auto *launches = pm.launchProfiles();
+    for (int r = 0; r < launches->rowCount(); ++r) {
+        const QModelIndex idx = launches->index(r);
+        if (!launches->data(idx, ProfileListModel<LaunchProfile>::SystemRole).toBool()) continue;
+        const QString id = launches->data(idx, ProfileListModel<LaunchProfile>::IdRole).toString();
+        if (!id.startsWith(QStringLiteral("sys-bench-ultraq"))) continue;
+        const QVariantMap lp = pm.getLaunchProfile(id);
+        const QStringList a = lp.value("extraArgs").toStringList();
+        const int lm = a.indexOf(QStringLiteral("--load-mode"));
+        const bool pins = a.contains(QStringLiteral("--mlock"))
+                          || (lm >= 0 && a.value(lm + 1).contains(QStringLiteral("mlock")));
+        if (!pins) continue;
+        ++pinning;
+        QVERIFY2(lp.value("name").toString().contains(QStringLiteral("REQUIERE PAGEFILE")),
+                 qPrintable(QStringLiteral("%1 pinea el modelo pero su nombre no avisa").arg(id)));
+    }
+    QCOMPARE(pinning, 2);
+    // ngram-mod trae su propia ventana y no arrastra el n-max de DSpark.
+    const QStringList ngramMod = argsOf("sys-bench-ultraq-b8192-u2048-ngrammod");
+    QCOMPARE(ngramMod.value(ngramMod.indexOf("--spec-type") + 1), QStringLiteral("ngram-mod"));
+    QVERIFY(!ngramMod.contains(QStringLiteral("--spec-draft-n-max")));
+    QCOMPARE(ngramMod.value(ngramMod.indexOf("--spec-ngram-mod-n-match") + 1), QStringLiteral("32"));
+    QCOMPARE(ngramMod.value(ngramMod.indexOf("--spec-ngram-mod-n-max") + 1), QStringLiteral("64"));
+    // El KV del perfil se sube sin duplicar el flag.
+    const QStringList kv8 = argsOf("sys-bench-ultraq-b8192-u2048-ds5-kv8");
+    QCOMPARE(kv8.count(QStringLiteral("--cache-type-k")), 1);
+    QCOMPARE(kv8.value(kv8.indexOf("--cache-type-k") + 1), QStringLiteral("q8_0"));
+    QCOMPARE(kv8.value(kv8.indexOf("--cache-type-v") + 1), QStringLiteral("q8_0"));
+
+    // Las variantes descartadas por resultados ya no se ofrecen.
+    for (const char *gone : {"sys-bench-ultraq-b2048-u512-ds5", "sys-bench-ultraq-b8192-u512-ds5",
+                             "sys-bench-ultraq-b4096-u1024-moe35", "sys-bench-ultraq-b4096-u1024-ds1",
+                             "sys-bench-ultraq-b4096-u1024-ds3"})
+        QVERIFY2(pm.getLaunchProfile(QString::fromLatin1(gone)).isEmpty(), gone);
+}
+
+// Regresión: duplicar un perfil de sistema debe FIJAR en la copia lo que el
+// original resolvía dinámicamente sólo por ser system.
+//   - binario por minimumBinaryBuild: antes la copia quedaba con backend.binaryId
+//     vacío y la UI la ataba al primer binario de la lista — que puede ser un build
+//     viejo sin los flags del perfil (p.ej. --spec-type draft-dspark) y el server
+//     moría al arrancar.
+//   - modelo: el ModelProfile de sistema lleva un id determinista por la ruta
+//     administrada; el religado por nombre de archivo también es system-only.
+void SystemProfilesTests::controller_duplicateBakesResolvedBinary()
+{
+    // Dos binarios "instalados": uno viejo (primero de la lista, el que se colaba)
+    // y uno que cumple el mínimo del perfil ULTRA-Q (build 10228).
+    const QString oldExe = m_dir.path() + QStringLiteral("/b9045/llama-server.exe");
+    const QString newExe = m_dir.path() + QStringLiteral("/b10228-cuda12.4/llama-server.exe");
+    for (const QString &p : {oldExe, newExe}) {
+        QVERIFY(QDir().mkpath(QFileInfo(p).absolutePath()));
+        QFile f(p);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("stub");
+    }
+
+    AppController app;
+    const QString oldId = app.binaryRegistry()->add(oldExe, QStringLiteral("b9045 (cuda)"),
+                                                    QStringLiteral("official"),
+                                                    QStringLiteral("cuda"), QStringLiteral("b9045"));
+    const QString newId = app.binaryRegistry()->add(newExe, QStringLiteral("b10228 CUDA 12.4"),
+                                                    QStringLiteral("official"),
+                                                    QStringLiteral("cuda"), QStringLiteral("b10228"));
+    QVERIFY(!oldId.isEmpty() && !newId.isEmpty());
+
+    const QString sysId = QStringLiteral("sys-bench-ultraq-b8192-u2048-ds5");
+    QCOMPARE(app.systemProfileMinimumBinaryBuild(sysId), 10228);
+
+    const QString dup = app.duplicateLaunchProfile(sysId);
+    QVERIFY(!dup.isEmpty());
+
+    ProfileManager *pm = app.profileManager();
+    QVERIFY(!pm->isSystemLaunch(dup));
+    const QVariantMap backend =
+        pm->getBackend(pm->getLaunchProfile(dup).value("backendProfileId").toString());
+    // Fijado, y al binario correcto — no al primero de la lista.
+    QCOMPARE(backend.value("binaryId").toString(), newId);
+    QVERIFY(backend.value("binaryId").toString() != oldId);
+
+    // El original sigue sin binario fijado: resuelve en cada arranque.
+    const QVariantMap sysBackend =
+        pm->getBackend(pm->getLaunchProfile(sysId).value("backendProfileId").toString());
+    QVERIFY(sysBackend.value("binaryId").toString().isEmpty());
+
+    // El modelo de la copia nunca queda vacío: o mantiene el id determinista del
+    // original, o el que el religado del original resolvió contra el catálogo.
+    const QVariantMap sysModel =
+        pm->getModelProfile(pm->getLaunchProfile(sysId).value("modelProfileId").toString());
+    const QVariantMap dupModel =
+        pm->getModelProfile(pm->getLaunchProfile(dup).value("modelProfileId").toString());
+    QVERIFY(!dupModel.value("modelId").toString().isEmpty());
+    // Sin catálogo escaneado en el test no hay religado, así que debe coincidir.
+    QCOMPARE(dupModel.value("modelId").toString(), sysModel.value("modelId").toString());
 }
 
 QTEST_MAIN(SystemProfilesTests)

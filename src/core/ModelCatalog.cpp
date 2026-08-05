@@ -29,9 +29,12 @@ CREATE TABLE IF NOT EXISTS catalog_models (
     is_vision_candidate INTEGER NOT NULL DEFAULT 0,
     is_draft_candidate INTEGER NOT NULL DEFAULT 0,
     sha256 TEXT,
-    is_available INTEGER NOT NULL DEFAULT 1
+    is_available INTEGER NOT NULL DEFAULT 1,
+    stable_id INTEGER NOT NULL DEFAULT 0
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_path ON catalog_models(absolute_path);
+CREATE INDEX IF NOT EXISTS idx_stable ON catalog_models(stable_id);
+CREATE INDEX IF NOT EXISTS idx_identity ON catalog_models(file_name, size_bytes);
 )";
 
 ModelCatalog::ModelCatalog(QObject *parent)
@@ -171,19 +174,25 @@ void ModelCatalog::addOrUpdate(const CatalogModel &model)
     // El scanner ahora genera ids DETERMINISTAS por ruta (UUIDv5), así que el id
     // entrante para un mismo archivo es siempre el mismo. Adoptarlo en match por
     // ruta hace converger filas viejas (ids aleatorios legacy) al id estable.
-    const int idx = indexOfId(model.id);
+    CatalogModel incoming = model;
+    const int idx = indexOfId(incoming.id);
     if (idx >= 0) {
-        m_all[idx] = model;
+        // Conservar el ancla de la fila que reemplazamos: el scanner no la conoce.
+        if (incoming.stableId <= 0) incoming.stableId = m_all[idx].stableId;
+        if (incoming.stableId <= 0) incoming.stableId = assignStableId(incoming);
+        m_all[idx] = incoming;
     } else {
         // Check by path
         int pathIdx = -1;
         for (int i = 0; i < m_all.size(); ++i) {
-            if (m_all[i].absolutePath == model.absolutePath) { pathIdx = i; break; }
+            if (m_all[i].absolutePath == incoming.absolutePath) { pathIdx = i; break; }
         }
-        if (pathIdx >= 0) m_all[pathIdx] = model;
-        else m_all.append(model);
+        if (incoming.stableId <= 0 && pathIdx >= 0) incoming.stableId = m_all[pathIdx].stableId;
+        if (incoming.stableId <= 0) incoming.stableId = assignStableId(incoming);
+        if (pathIdx >= 0) m_all[pathIdx] = incoming;
+        else m_all.append(incoming);
     }
-    saveToDb(model);
+    saveToDb(incoming);
     beginResetModel();
     rebuildVisible();
     endResetModel();
@@ -194,13 +203,21 @@ void ModelCatalog::addBatch(const QList<CatalogModel> &models)
 {
     auto db = QSqlDatabase::database(m_connName);
     db.transaction();
-    for (const auto &m : models) {
+    for (const auto &incomingRef : models) {
+        CatalogModel m = incomingRef;
         const int idx = indexOfId(m.id);
-        if (idx >= 0) m_all[idx] = m;
-        else {
+        if (idx >= 0) {
+            if (m.stableId <= 0) m.stableId = m_all[idx].stableId;
+            if (m.stableId <= 0) m.stableId = assignStableId(m);
+            m_all[idx] = m;
+        } else {
             int pathIdx = -1;
             for (int i = 0; i < m_all.size(); ++i)
                 if (m_all[i].absolutePath == m.absolutePath) { pathIdx = i; break; }
+            // El ancla sobrevive al cambio de id textual: si el archivo ya se vio
+            // antes (misma ruta, o mismo nombre+tamaño en otra carpeta), se reusa.
+            if (m.stableId <= 0 && pathIdx >= 0) m.stableId = m_all[pathIdx].stableId;
+            if (m.stableId <= 0) m.stableId = assignStableId(m);
             if (pathIdx >= 0) m_all[pathIdx] = m;   // converge a id determinista por ruta
             else m_all.append(m);
         }
@@ -230,6 +247,33 @@ void ModelCatalog::markRootUnavailable(const QString &rootId)
     }
 }
 
+void ModelCatalog::reconcileRoot(const QString &rootId, const QSet<QString> &presentIds)
+{
+    // Scan vacío = root offline o fallado. No invalidamos nada: markRootUnavailable
+    // es el camino explícito para eso.
+    if (presentIds.isEmpty()) return;
+
+    auto db = QSqlDatabase::database(m_connName);
+    db.transaction();
+    bool changed = false;
+    for (auto &m : m_all) {
+        if (m.rootId != rootId) continue;
+        const bool present = presentIds.contains(m.id);
+        if (m.isAvailable == present) continue;
+        m.isAvailable = present;
+        saveToDb(m);
+        changed = true;
+    }
+    db.commit();
+
+    if (changed) {
+        beginResetModel();
+        rebuildVisible();
+        endResetModel();
+        emit countChanged();
+    }
+}
+
 void ModelCatalog::removeByRootId(const QString &rootId)
 {
     auto db = QSqlDatabase::database(m_connName);
@@ -253,7 +297,8 @@ QVariantMap ModelCatalog::get(const QString &id) const
     if (idx < 0) return {};
     const CatalogModel &m = m_all.at(idx);
     return {
-        {"id", m.id}, {"rootId", m.rootId}, {"absolutePath", m.absolutePath},
+        {"id", m.id}, {"stableId", m.stableId},
+        {"rootId", m.rootId}, {"absolutePath", m.absolutePath},
         {"fileName", m.fileName}, {"sizeBytes", m.sizeBytes},
         {"sizeLabel", m.sizeLabel()}, {"family", m.familyHint},
         {"quant", m.quantHint}, {"quantReal", m.quantReal},
@@ -276,6 +321,26 @@ CatalogModel ModelCatalog::findById(const QString &id) const
     const int idx = indexOfId(id);
     if (idx < 0) return {};
     return m_all.at(idx);
+}
+
+CatalogModel ModelCatalog::findByStableId(qint64 stableId) const
+{
+    if (stableId <= 0) return {};
+    // Puede haber más de una fila con el mismo ancla: el archivo se movió y la fila
+    // de la ruta vieja sigue en la DB, o hay dos copias en carpetas distintas.
+    // Preferimos las disponibles y, entre ellas, la de mtime más reciente — la que
+    // el último scan vio. Determinista, sin depender del orden de inserción.
+    const CatalogModel *best = nullptr;
+    for (const auto &m : m_all) {
+        if (m.stableId != stableId) continue;
+        if (!best) { best = &m; continue; }
+        if (m.isAvailable != best->isAvailable) {
+            if (m.isAvailable) best = &m;
+            continue;
+        }
+        if (m.mtime > best->mtime) best = &m;
+    }
+    return best ? *best : CatalogModel{};
 }
 
 QList<CatalogModel> ModelCatalog::allForRoot(const QString &rootId) const
@@ -313,10 +378,41 @@ bool ModelCatalog::openDb()
              "ALTER TABLE catalog_models ADD COLUMN quant_mismatch INTEGER NOT NULL DEFAULT 0",
              "ALTER TABLE catalog_models ADD COLUMN architecture TEXT",
              "ALTER TABLE catalog_models ADD COLUMN parameter_count INTEGER NOT NULL DEFAULT 0",
-             "ALTER TABLE catalog_models ADD COLUMN trained_context INTEGER NOT NULL DEFAULT 0" }) {
+             "ALTER TABLE catalog_models ADD COLUMN trained_context INTEGER NOT NULL DEFAULT 0",
+             "ALTER TABLE catalog_models ADD COLUMN stable_id INTEGER NOT NULL DEFAULT 0",
+             "CREATE INDEX IF NOT EXISTS idx_stable ON catalog_models(stable_id)",
+             "CREATE INDEX IF NOT EXISTS idx_identity ON catalog_models(file_name, size_bytes)" }) {
         q.exec(QString::fromUtf8(alter));
     }
     return true;
+}
+
+qint64 ModelCatalog::assignStableId(const CatalogModel &m)
+{
+    // El id textual del catálogo se deriva de la RUTA, así que mover un gguf de
+    // carpeta le cambia el id y orfana todo perfil que lo referenciara. El stable
+    // id es un entero incremental que se asigna UNA vez por archivo y no vuelve a
+    // cambiar: es el ancla que los perfiles pueden guardar sin miedo.
+    //
+    // Identidad del archivo = (nombre, tamaño en bytes). Sobrevive a mover o
+    // renombrar carpetas, que es el caso real que rompía los perfiles. No sobrevive
+    // a renombrar el archivo en sí; ahí se trata como uno nuevo, que es lo prudente.
+    auto db = QSqlDatabase::database(m_connName);
+
+    QSqlQuery find(db);
+    find.prepare("SELECT stable_id FROM catalog_models "
+                 "WHERE file_name = ? AND size_bytes = ? AND stable_id > 0 LIMIT 1");
+    find.addBindValue(m.fileName);
+    find.addBindValue(m.sizeBytes);
+    if (find.exec() && find.next()) {
+        const qint64 existing = find.value(0).toLongLong();
+        if (existing > 0) return existing;
+    }
+
+    QSqlQuery next(db);
+    if (next.exec("SELECT COALESCE(MAX(stable_id), 0) + 1 FROM catalog_models") && next.next())
+        return next.value(0).toLongLong();
+    return 1;
 }
 
 void ModelCatalog::loadFromDb()
@@ -325,8 +421,8 @@ void ModelCatalog::loadFromDb()
     QSqlQuery q("SELECT id, root_id, absolute_path, file_name, size_bytes, mtime, "
                 "family_hint, quant_hint, is_vision_candidate, is_draft_candidate, "
                 "sha256, is_available, quant_real, tensor_breakdown, bpw, "
-                "quant_mismatch, architecture, parameter_count, trained_context "
-                "FROM catalog_models", db);
+                "quant_mismatch, architecture, parameter_count, trained_context, "
+                "stable_id FROM catalog_models", db);
     while (q.next()) {
         CatalogModel m;
         m.id = q.value(0).toString();
@@ -348,8 +444,25 @@ void ModelCatalog::loadFromDb()
         m.architecture = q.value(16).toString();
         m.parameterCount = q.value(17).toLongLong();
         m.trainedContext = q.value(18).toInt();
+        m.stableId = q.value(19).toLongLong();
         m_all.append(m);
     }
+    backfillStableIds();
+}
+
+// DBs anteriores al stable id (y filas escritas por versiones viejas) llegan con 0.
+// Se lo asignamos una vez, al cargar, para que toda fila tenga ancla desde el arranque.
+void ModelCatalog::backfillStableIds()
+{
+    auto db = QSqlDatabase::database(m_connName);
+    bool any = false;
+    for (auto &m : m_all) {
+        if (m.stableId > 0) continue;
+        if (!any) { db.transaction(); any = true; }
+        m.stableId = assignStableId(m);
+        saveToDb(m);
+    }
+    if (any) db.commit();
 }
 
 void ModelCatalog::saveToDb(const CatalogModel &m)
@@ -361,8 +474,8 @@ void ModelCatalog::saveToDb(const CatalogModel &m)
         (id, root_id, absolute_path, file_name, size_bytes, mtime,
          family_hint, quant_hint, is_vision_candidate, is_draft_candidate,
          sha256, is_available, quant_real, tensor_breakdown, bpw, quant_mismatch,
-         architecture, parameter_count, trained_context)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         architecture, parameter_count, trained_context, stable_id)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     )");
     q.addBindValue(m.id);
     q.addBindValue(m.rootId);
@@ -383,6 +496,7 @@ void ModelCatalog::saveToDb(const CatalogModel &m)
     q.addBindValue(m.architecture);
     q.addBindValue(m.parameterCount);
     q.addBindValue(m.trainedContext);
+    q.addBindValue(m.stableId);
     if (!q.exec())
         qWarning() << "saveToDb failed:" << q.lastError().text();
 }

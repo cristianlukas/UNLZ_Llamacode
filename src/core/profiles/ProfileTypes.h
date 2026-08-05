@@ -46,6 +46,14 @@ struct ModelProfile {
     QString modelId;
     QString mmprojId;
     QString draftModelId;
+    // Ancla estable al archivo, en paralelo a los ids de catálogo de arriba. Esos
+    // se derivan de la ruta: mover el gguf, o un cambio en cómo el scanner los
+    // mintea, los invalida y el perfil queda apuntando a la nada ("No model
+    // selected"). El stable id se asigna una vez por archivo y no cambia, así que
+    // sirve de respaldo para volver a encontrarlo. 0 = perfil viejo, sin ancla.
+    qint64 modelStableId = 0;
+    qint64 mmprojStableId = 0;
+    qint64 draftStableId = 0;
     // Speculative decoding / MTP. draft-mtp también puede usar el cabezal embebido
     // del GGUF principal cuando su filename lo identifica como MTP.
     QString specType;          // "" | "draft-mtp" | "draft-dspark"

@@ -54,6 +54,9 @@ QJsonObject ModelProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name; o["modelId"] = modelId;
     o["mmprojId"] = mmprojId; o["draftModelId"] = draftModelId;
+    o["modelStableId"] = static_cast<double>(modelStableId);
+    o["mmprojStableId"] = static_cast<double>(mmprojStableId);
+    o["draftStableId"] = static_cast<double>(draftStableId);
     o["specType"] = specType; o["specDraftNMax"] = specDraftNMax;
     o["specDraftNgl"] = specDraftNgl;
     o["specDraftTypeK"] = specDraftTypeK; o["specDraftTypeV"] = specDraftTypeV;
@@ -65,6 +68,9 @@ ModelProfile ModelProfile::fromJson(const QJsonObject &o) {
     p.modelId = o["modelId"].toString();
     p.mmprojId = o["mmprojId"].toString();
     p.draftModelId = o["draftModelId"].toString();
+    p.modelStableId = static_cast<qint64>(o["modelStableId"].toDouble(0));
+    p.mmprojStableId = static_cast<qint64>(o["mmprojStableId"].toDouble(0));
+    p.draftStableId = static_cast<qint64>(o["draftStableId"].toDouble(0));
     p.specType = o["specType"].toString();
     p.specDraftNMax = o["specDraftNMax"].toInt(0);
     p.specDraftNgl = o["specDraftNgl"].toString();

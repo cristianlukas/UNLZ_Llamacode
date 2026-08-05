@@ -3,7 +3,13 @@
 #include <QDateTime>
 
 struct CatalogModel {
+    // Id textual: UUIDv5 de la ruta absoluta. Cambia si el archivo se mueve.
     QString id;
+    // Ancla estable para que la referencien los perfiles: entero incremental que se
+    // asigna una sola vez por archivo (identidad = nombre + tamaño) y NO cambia
+    // aunque el gguf se mueva de carpeta y el id textual se recalcule. 0 = sin
+    // asignar todavía (fila recién construida por el scanner).
+    qint64 stableId = 0;
     QString rootId;
     QString absolutePath;
     QString fileName;

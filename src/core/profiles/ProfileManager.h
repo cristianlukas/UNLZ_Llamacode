@@ -113,6 +113,9 @@ public:
     Q_INVOKABLE bool updateModelProfile(const QString &id, const QString &name,
                                         const QString &modelId, const QString &mmprojId,
                                         const QString &draftId);
+    // Reemplaza el ModelProfile entero, anclas incluidas. Lo usa el auto-sanado de
+    // buildContext, que necesita persistir stable ids y no sólo los ids textuales.
+    bool updateModelProfileFull(const ModelProfile &p);
     Q_INVOKABLE QVariantMap getModelProfile(const QString &id) const;
     // Config de speculative decoding / MTP del ModelProfile (separado para no
     // romper las firmas de add/update). Vacío/0 = no emitir.

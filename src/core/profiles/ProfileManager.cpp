@@ -185,12 +185,29 @@ bool ProfileManager::removeModelProfile(const QString &id)
     return ok;
 }
 
+bool ProfileManager::updateModelProfileFull(const ModelProfile &p)
+{
+    const ModelProfile cur = m_models.findById(p.id);
+    if (cur.id.isEmpty() || cur.system) return false;
+    ModelProfile next = p;
+    next.system = false;
+    const bool ok = m_models.update(next);
+    if (ok) save();
+    return ok;
+}
+
 bool ProfileManager::updateModelProfile(const QString &id, const QString &name,
                                          const QString &modelId, const QString &mmprojId,
                                          const QString &draftId)
 {
     ModelProfile p = m_models.findById(id);
     if (p.id.isEmpty() || p.system) return false;
+    // Elegir otro archivo invalida el ancla del anterior. La ponemos en 0 en vez de
+    // arrastrar la vieja —que apuntaría al modelo equivocado— y buildContext la
+    // vuelve a resolver contra el catálogo la próxima vez que se use el perfil.
+    if (p.modelId != modelId)      p.modelStableId = 0;
+    if (p.mmprojId != mmprojId)    p.mmprojStableId = 0;
+    if (p.draftModelId != draftId) p.draftStableId = 0;
     p.name = name; p.modelId = modelId;
     p.mmprojId = mmprojId; p.draftModelId = draftId;
     bool ok = m_models.update(p);
