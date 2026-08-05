@@ -123,7 +123,6 @@ private slots:
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
-<<<<<<< HEAD
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
     void deterministicReplayCountsAsToolEvidence();
@@ -922,7 +921,6 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
 }
 
-<<<<<<< HEAD
 void AppControllerTests::preferredAgentLaunchSelection()
 {
     QCOMPARE(AppController::choosePreferredAgentLaunchId("agent-local", false,
@@ -1594,7 +1592,6 @@ void AppControllerTests::isRemoteHostDetectsLanHosts()
     QVERIFY(AppController::isRemoteHost(QStringLiteral("192.168.1.50")));
     QVERIFY(AppController::isRemoteHost(QStringLiteral("10.0.0.15")));
     QVERIFY(AppController::isRemoteHost(QStringLiteral("pc-potente.local")));
-}
 }
 
 QTEST_MAIN(AppControllerTests)
