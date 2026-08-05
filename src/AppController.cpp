@@ -1595,11 +1595,31 @@ void AppController::startServer(const QString &launchProfileId)
     if (serverRunning()) {
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("startServer abort: servidor ya en ejecución (pid=%1)")
-                              .arg(m_proc ? QString::number(m_proc->processId()) : QStringLiteral("?")));
+                              .arg(m_proc ? QString::number(m_proc->processId()) : QStringLiteral("remote")));
         emit serverError("Server already running. Stop it first.");
         return;
     }
     m_serverIsRouter = false;   // modo normal: un modelo por server
+
+    const auto ctx = buildContext(launchProfileId);
+    const bool isCloud = ctx.backend.isCloud();
+    const bool isRemote = isRemoteHost(ctx.backend.host);
+
+    if (isCloud || isRemote) {
+        m_activeLaunchId = launchProfileId;
+        writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
+        m_remoteServerActive = true;
+        m_serverReady = false;
+        m_serverStopping = false;
+        setServerState(QStringLiteral("running"));
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Conectando a servidor remoto/cloud: %1").arg(serverBaseUrl()));
+        startHealthPolling();
+        emit serverRunningChanged();
+        emit serverReadyChanged();
+        emit activeLaunchIdChanged();
+        return;
+    }
 
     // Repoblar flags soportados del binario justo antes de armar el perfil.
     // Si el registro quedó con flags stale/parciales, EffectiveProfileBuilder::addFlag
@@ -1845,7 +1865,7 @@ void AppController::startHealthPolling()
         auto *reply = m_nam->get(QNetworkRequest(QUrl(serverBaseUrl() + "/health")));
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            const bool ok = reply->error() == QNetworkReply::NoError && status == 200;
+            const bool ok = reply->error() == QNetworkReply::NoError && (status == 200 || (m_remoteServerActive && status == 404));
             const QString errStr = reply->errorString();
             reply->deleteLater();
             if (!ok) {
@@ -2287,6 +2307,27 @@ void AppController::applyConfiguredPowerLimit(const LaunchProfile &launch)
 
 void AppController::stopServer()
 {
+    if (m_remoteServerActive) {
+        if (m_serverRestartTimer) m_serverRestartTimer->stop();
+        m_serverRestartCount = 0;
+        if (m_agentStarting || !m_pendingAutoAgentLaunchId.isEmpty()) {
+            m_agentStarting = false;
+            m_pendingAutoAgentLaunchId.clear();
+            emit agentStartingChanged();
+        }
+        stopHealthPolling();
+        stopVramPolling();
+        m_remoteServerActive = false;
+        m_serverReady = false;
+        m_serverStopping = false;
+        setServerState(QStringLiteral("stopped"));
+        if (m_serverHasVision) { m_serverHasVision = false; emit serverHasVisionChanged(); }
+        if (m_chatThinkingSupported) { m_chatThinkingSupported = false; emit chatThinkingSupportedChanged(); }
+        emit serverReadyChanged();
+        emit serverRunningChanged();
+        appendServerEvent(QStringLiteral("lifecycle"), QStringLiteral("Conexión a servidor remoto/cloud detenida."));
+        return;
+    }
     if (!m_proc || m_serverStopping) return;
     // Parada explícita: cancelar watchdog para que no auto-reinicie.
     if (m_serverRestartTimer) m_serverRestartTimer->stop();
@@ -4707,8 +4748,8 @@ void AppController::startAgent(const QString &launchProfileId)
         // Necesita el llama-server corriendo (usa su API OpenAI). Sin server → refused.
         // Si está corriendo pero el modelo aún carga, igual arranca: la UI muestra
         // "Modelo cargando" y el usuario espera al ready antes de enviar.
-        // Provider cloud: no hay server local, el agente pega directo al endpoint.
-        if (!cloud && !serverRunning()) {
+        const bool remote = isRemoteHost(ctx.backend.host);
+        if (!cloud && !remote && !serverRunning()) {
             const QString msg = QStringLiteral(
                 "El harness 'LlamaAgent' necesita el servidor corriendo. Iniciá el modelo en 'Lanzar' primero.");
             appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: %1").arg(msg));
@@ -4716,6 +4757,10 @@ void AppController::startAgent(const QString &launchProfileId)
             m_agentStarting = false;
             emit agentStartingChanged();
             return;
+        }
+
+        if ((cloud || remote) && !serverRunning()) {
+            startServer(launchProfileId);
         }
 
         // Parse profile temperature if agent temperature is default (< 0)

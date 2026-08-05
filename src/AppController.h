@@ -248,12 +248,16 @@ public:
     QString      chatSessionTitle() const { return m_chatSessionTitle; }
     bool         chatGenerating()   const { return m_chatGenerating; }
     bool         chatThinkingSupported() const { return m_chatThinkingSupported; }
-    bool   serverRunning()   const { return m_proc && m_proc->state() != QProcess::NotRunning; }
     bool   backendAvailable() const;
     static bool backendAvailability(bool localServerRunning, bool activeRemoteProfile)
     {
         return localServerRunning || activeRemoteProfile;
     }
+    static bool isRemoteHost(const QString &host) {
+        const QString h = host.trimmed().toLower();
+        return !h.isEmpty() && h != QLatin1String("127.0.0.1") && h != QLatin1String("localhost") && h != QLatin1String("::1") && h != QLatin1String("0.0.0.0");
+    }
+    bool   serverRunning()   const { return (m_proc && m_proc->state() != QProcess::NotRunning) || m_remoteServerActive; }
     bool   serverStopping()  const { return m_serverStopping; }
     bool   serverReady()     const { return m_serverReady; }
     QString serverState()    const { return m_serverState; }
@@ -272,6 +276,16 @@ public:
     // Resumen para badges: {errors, warnings} (conteo de issues por severity).
     Q_INVOKABLE QVariantMap profileHealthSummary();
     QString serverBaseUrl() const {
+        if (!m_activeLaunchId.isEmpty()) {
+            const auto ctx = const_cast<AppController*>(this)->buildContext(m_activeLaunchId);
+            if (ctx.backend.isCloud()) {
+                return ctx.backend.cloudBaseUrl.trimmed();
+            }
+            if (isRemoteHost(ctx.backend.host)) {
+                const int port = ctx.backend.port > 0 ? ctx.backend.port : 8080;
+                return QStringLiteral("http://%1:%2").arg(ctx.backend.host.trimmed()).arg(port);
+            }
+        }
         const QStringList args = m_effectiveProfile.value("effectiveArgs").toStringList();
         QString host = QStringLiteral("127.0.0.1");
         int port = 8080;
@@ -1367,6 +1381,7 @@ private:
     bool      m_hybridDispatching = false;
     bool      m_serverStopping = false;
     bool      m_serverReady    = false;
+    bool      m_remoteServerActive = false;
     bool      m_serverHasVision = false;
     bool      m_serverGpuRequested = false;
     bool      m_serverGpuDeviceSeen = false;

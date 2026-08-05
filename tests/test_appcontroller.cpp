@@ -123,6 +123,7 @@ private slots:
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void browserTeachSkillsLifecycle();
+<<<<<<< HEAD
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
     void deterministicReplayCountsAsToolEvidence();
@@ -157,6 +158,7 @@ private slots:
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
     void tunerProfileNameUsesOptiPrefixWithoutChaining();
     void tunerGainPctNeedsBothLegs();
+    void isRemoteHostDetectsLanHosts();
 
 private:
     QTemporaryDir m_tmp;
@@ -920,6 +922,7 @@ void AppControllerTests::browserTeachSkillsLifecycle()
     QVERIFY(!BrowserTeach::hasSkill(QStringLiteral("My Skill")));
 }
 
+<<<<<<< HEAD
 void AppControllerTests::preferredAgentLaunchSelection()
 {
     QCOMPARE(AppController::choosePreferredAgentLaunchId("agent-local", false,
@@ -1578,6 +1581,20 @@ void AppControllerTests::tunerGainPctNeedsBothLegs()
     QCOMPARE(AppController::tuneGainPct(120.0, -1.0), 0.0);
     QCOMPARE(AppController::tuneGainPct(120.0, 0.0), 0.0);
     QCOMPARE(AppController::tuneGainPct(-1.0, 100.0), 0.0);
+}
+
+void AppControllerTests::isRemoteHostDetectsLanHosts()
+{
+    QVERIFY(!AppController::isRemoteHost(QStringLiteral("127.0.0.1")));
+    QVERIFY(!AppController::isRemoteHost(QStringLiteral("localhost")));
+    QVERIFY(!AppController::isRemoteHost(QStringLiteral("0.0.0.0")));
+    QVERIFY(!AppController::isRemoteHost(QStringLiteral("::1")));
+    QVERIFY(!AppController::isRemoteHost(QStringLiteral("")));
+
+    QVERIFY(AppController::isRemoteHost(QStringLiteral("192.168.1.50")));
+    QVERIFY(AppController::isRemoteHost(QStringLiteral("10.0.0.15")));
+    QVERIFY(AppController::isRemoteHost(QStringLiteral("pc-potente.local")));
+}
 }
 
 QTEST_MAIN(AppControllerTests)
