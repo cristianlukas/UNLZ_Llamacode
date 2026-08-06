@@ -64,6 +64,7 @@ private slots:
     void controller_showcaseEmptyWhenNoSiblings();
     void bundle_lagunaIsOptInAndHardwareGated();
     void bundle_ultraQAndHybridAreWiredAndOptIn();
+    void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_duplicateBakesResolvedBinary();
 
 private:
@@ -94,7 +95,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 43); // tiers base + extras + ULTRA-Q/híbrido + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 44); // tiers base + extras + ULTRA-Q/híbrido/48GB + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -623,6 +624,68 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
     }
     QCOMPARE(gemmaProfiles, 4);
     QVERIFY(promotedHeretic);
+}
+
+// El perfil de 48 GB (2x RTX 3090) reusa los mismos shards que ULTRA-Q y solo
+// cambia lo que la VRAM extra habilita: KV q8_0, menos expertos en RAM, batch
+// ganador del barrido y reparto explicito entre las dos placas.
+void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject ultra, dual;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        const QString id = profile.value("id").toString();
+        if (id == QLatin1String("sys-ultraq-dsv4-0731-iq3s")) ultra = profile;
+        if (id == QLatin1String("sys-ultraq-dsv4-0731-iq3s-48gb")) dual = profile;
+    }
+    QVERIFY(!dual.isEmpty());
+    QVERIFY(dual.value("extra").toBool());
+    QVERIFY(!dual.value("autoCompanion").toBool());
+    QCOMPARE(dual.value("minVramGb").toInt(), 48);
+    QCOMPARE(dual.value("minRamGb").toInt(), 120);
+    QCOMPARE(dual.value("minimumBinaryBuild").toInt(), 10228);
+    QCOMPARE(dual.value("model").toObject(), ultra.value("model").toObject());
+    QVERIFY(!dual.contains(QStringLiteral("benchmarkVariants")));
+
+    const QJsonObject rt = dual.value("runtime").toObject();
+    QCOMPARE(rt.value("batch").toInt(), 8192);
+    QCOMPARE(rt.value("ubatch").toInt(), 2048);
+    QCOMPARE(rt.value("kv").toString(), QStringLiteral("q8_0"));
+    QVERIFY(rt.value("mmap").toBool());
+    QVERIFY(!rt.value("mlock").toBool());
+
+    QStringList args;
+    for (const QJsonValue &v : dual.value("extraArgs").toArray()) args << v.toString();
+    QCOMPARE(args.value(args.indexOf("--cache-type-k") + 1), QStringLiteral("q8_0"));
+    QCOMPARE(args.value(args.indexOf("--cache-type-v") + 1), QStringLiteral("q8_0"));
+    QCOMPARE(args.value(args.indexOf("--n-cpu-moe") + 1), QStringLiteral("30"));
+    QCOMPARE(args.value(args.indexOf("--threads-batch") + 1), QStringLiteral("16"));
+    QCOMPARE(args.value(args.indexOf("--split-mode") + 1), QStringLiteral("layer"));
+    QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,1"));
+    QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
+    QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
+    QCOMPARE(args.value(args.indexOf("--spec-draft-type-k") + 1), QStringLiteral("q4_0"));
+
+    // El launch derivado tiene que llegar con esos valores, no solo el bundle.
+    ProfileManager pm;
+    const QVariantMap launch =
+        pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb"));
+    QVERIFY(launch.value("system").toBool());
+    const QVariantMap preset = pm.getRuntimePreset(launch.value("runtimePresetId").toString());
+    QCOMPARE(preset.value("batch").toInt(), 8192);
+    QCOMPARE(preset.value("ubatch").toInt(), 2048);
+    const QStringList launchArgs = launch.value("extraArgs").toStringList();
+    QCOMPARE(launchArgs.value(launchArgs.indexOf("--n-cpu-moe") + 1), QStringLiteral("30"));
+    QVERIFY(launchArgs.contains(QStringLiteral("--tensor-split")));
+
+    // Mismo modelo fisico que ULTRA-Q: no re-descarga los 116 GB de shards.
+    const QVariantMap ultraLaunch =
+        pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
+    QCOMPARE(pm.getModelProfile(launch.value("modelProfileId").toString()).value("modelId"),
+             pm.getModelProfile(ultraLaunch.value("modelProfileId").toString()).value("modelId"));
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()

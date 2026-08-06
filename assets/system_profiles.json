@@ -268,6 +268,58 @@
     "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Reasoning effort high explícito evita el low implícito (prefijo vacío) y el budget 8192 corta colas patológicas sin impedir tareas largas. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
   },
   {
+    "id": "sys-ultraq-dsv4-0731-iq3s-48gb",
+    "tier": "48GB-DeepSeek-V4-Ultra",
+    "order": 89,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[experimental ultra] ULTRA-Q 48GB · DeepSeek V4 Flash 0731 IQ3_S 131k",
+    "minVramGb": 48,
+    "minRamGb": 120,
+    "cpuOk": false,
+    "folder": "DeepSeek-V4-Flash-0731-UD-IQ3_S",
+    "agentProfileId": "agent-maximo",
+    "reasoningEffort": "high",
+    "reasoningBudget": 8192,
+    "model": {
+      "repo": "unsloth/DeepSeek-V4-Flash-0731-GGUF",
+      "file": "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+      "files": [
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00002-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00003-of-00004.gguf",
+        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00004-of-00004.gguf"
+      ],
+      "quant": "UD-IQ3_S"
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 999,
+      "batch": 8192,
+      "ubatch": 2048,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+      "--n-cpu-moe", "30", "--fit-target", "512", "--temp", "0.60", "--top-p", "0.95",
+      "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0", "--no-context-shift", "--metrics",
+      "--no-warmup", "--jinja", "--threads-batch", "16", "--predict", "16384",
+      "--parallel", "1", "--reasoning-format", "auto",
+      "--split-mode", "layer", "--main-gpu", "0", "--tensor-split", "1,1",
+      "--spec-type", "draft-dspark", "--spec-draft-n-max", "5",
+      "--spec-draft-type-k", "q4_0", "--spec-draft-type-v", "q4_0"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10228,
+    "contextPresets": [65536, 131072, 196608, 262144, 393216],
+    "comment": "Clon de ULTRA-Q para 48 GB (2x RTX 3090 24 GB, sin NVLink) + 128 GB RAM. Mismos shards IQ3_S. Diferencias, todas apoyadas en lo ya medido en el tier de 24 GB: (1) batch 8192 / ubatch 2048, el mejor wall-time del barrido; (2) KV q8_0 en K y V, que dio el mejor tiempo (212 s) pero costaba 21 de 24 GB en una sola placa y acá reparte; (3) --n-cpu-moe 30 en vez de 39: los ~24 GB extra pagan el KV q8_0 y suben ~7 capas de expertos de RAM a VRAM (el decode con MoE en RAM está limitado por ancho de banda de sistema, así que cada capa que sube es ganancia directa); (4) --threads-batch 16 (SMT del Ryzen 7 7700 al prefill, que es compute-bound) dejando 8 hilos físicos al decode; (5) reparto explícito --split-mode layer + --tensor-split 1,1: layer-split manda con PCIe sin NVLink porque transfiere una activación por frontera de capa, mientras que row-split sincroniza en cada tensor; (6) KV del drafter DSpark en q4_0 (default f16) para no gastar VRAM del target. gpuLayers 999: el techo real lo fija --n-cpu-moe, no el conteo de capas. mlock sigue en false (crashea) y mmap en true (sin mmap intenta reservar ~99 GB de CUDA Host y falla). Sin medir todavia: bajar --n-cpu-moe a 26/28 si sobra VRAM, y 196k/262k de contexto, que con KV q8_0 cuesta el doble que en el perfil de 24 GB."
+  },
+  {
     "id": "sys-ultraq-dsv4-0731-iq3s-dspark-external",
     "tier": "24GB-DeepSeek-V4-Ultra",
     "order": 104,
