@@ -113,6 +113,7 @@ private slots:
     void browserMcpEffectiveResolves();
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
+    void benchmarkStopStepKillsWhenBudgetRunsOut();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
@@ -1187,6 +1188,27 @@ void AppControllerTests::ocrStatusAlwaysExplainsItself()
         QVERIFY(!st.value(QStringLiteral("language")).toString().isEmpty());
     else
         QVERIFY(st.value(QStringLiteral("detail")).toString().contains(QStringLiteral("OCR")));
+}
+
+// Regresión "el perfil falla en 4 s con failureStage=server-load": el benchmark
+// esperaba 8 s a que muriera el server anterior y, si seguía vivo, arrancaba
+// igual. startServer abortaba con "servidor ya en ejecución" y la pasada entera
+// se anotaba como fallo. Con DeepSeek V4 (116 GB mapeados, ~40 GB de VRAM) el
+// cierre tarda más que eso, así que agotado el presupuesto hay que MATAR, no
+// seguir de largo.
+void AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
+{
+    using Step = AppController::BenchStopStep;
+    // Ya murió: arrancar, sobre presupuesto o no.
+    QCOMPARE(AppController::benchmarkStopStep(false, 45000), Step::Proceed);
+    QCOMPARE(AppController::benchmarkStopStep(false, 0), Step::Proceed);
+    QCOMPARE(AppController::benchmarkStopStep(false, -300), Step::Proceed);
+    // Sigue vivo y queda tiempo: seguir esperando.
+    QCOMPARE(AppController::benchmarkStopStep(true, 45000), Step::Wait);
+    QCOMPARE(AppController::benchmarkStopStep(true, 300), Step::Wait);
+    // Sigue vivo y se acabó el tiempo: matar (antes: arrancaba igual).
+    QCOMPARE(AppController::benchmarkStopStep(true, 0), Step::Kill);
+    QCOMPARE(AppController::benchmarkStopStep(true, -300), Step::Kill);
 }
 
 // Regresión "16GB trabado en Iniciando agente": tras un swap/restart de server

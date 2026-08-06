@@ -474,7 +474,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.81"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.83"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -1749,6 +1749,15 @@ private:
                                   qint64 lastActivityMs = 0,
                                   qint64 lastLogSize = -1);
     void benchmarkWaitServerStopped(int remainingMs, std::function<void()> onStopped);
+    void benchmarkEnsureServerStopped(int budgetMs, std::function<void()> onStopped);
+
+public:
+    // Qué hacer mientras se espera que el server anterior muera, según si sigue
+    // vivo y cuánto presupuesto queda. Pura para poder testearla sin proceso.
+    enum class BenchStopStep { Proceed, Wait, Kill };
+    static BenchStopStep benchmarkStopStep(bool stillRunning, int budgetLeftMs);
+
+private:
     void benchmarkKillStrayServers();
     void benchmarkRequest(const QString &url, const QString &prompt,
                           int maxTokens, bool streaming,

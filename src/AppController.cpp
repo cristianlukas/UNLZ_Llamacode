@@ -13325,6 +13325,14 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         auto startAttempts = std::make_shared<int>(0);
         auto runProfile = std::make_shared<std::function<void()>>();
         *runProfile = [=]() {
+            // Nunca arrancar encima de un server vivo: startServer abortaría y la
+            // pasada se anotaría como fallo de carga. Vale para el primer intento
+            // y para los reintentos.
+            if (serverRunning()) {
+                stopServer();
+                benchmarkEnsureServerStopped(45000, [=]() { (*runProfile)(); });
+                return;
+            }
             const qint64 loadStartMs = QDateTime::currentMSecsSinceEpoch();
             m_benchmarkStatus = QString("[%1/%2] %3 — iniciando servidor...")
                 .arg(idx + 1).arg(profileIds.size()).arg(profName);
@@ -13606,12 +13614,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             });
         };
 
-        if (serverRunning()) {
-            stopServer();
-            benchmarkWaitServerStopped(8000, [runProfile]() { (*runProfile)(); });
-        } else {
-            (*runProfile)();
-        }
+        // runProfile ya se encarga de bajar un server vivo antes de arrancar.
+        (*runProfile)();
     };
     (*processNext)(0);
 }
@@ -14374,6 +14378,39 @@ void AppController::benchmarkWaitServerStopped(int remainingMs, std::function<vo
     QTimer::singleShot(300, this, [=]() {
         benchmarkWaitServerStopped(remainingMs - 300, onStopped);
     });
+}
+
+AppController::BenchStopStep AppController::benchmarkStopStep(bool stillRunning, int budgetLeftMs)
+{
+    if (!stillRunning) return BenchStopStep::Proceed;
+    return budgetLeftMs > 0 ? BenchStopStep::Wait : BenchStopStep::Kill;
+}
+
+// Como benchmarkWaitServerStopped, pero NO sigue de largo si el server no murió a
+// tiempo: lo mata. Esperar y arrancar igual hace que startServer aborte con
+// "servidor ya en ejecución" y el perfil entero se anote como fallo de carga —
+// que es lo que pasaba con DeepSeek V4 (116 GB mapeados y ~40 GB de VRAM tardan
+// bastante más que los 8 s que se esperaban antes).
+void AppController::benchmarkEnsureServerStopped(int budgetMs, std::function<void()> onStopped)
+{
+    switch (benchmarkStopStep(serverRunning(), budgetMs)) {
+    case BenchStopStep::Proceed:
+        onStopped();
+        return;
+    case BenchStopStep::Wait:
+        QTimer::singleShot(300, this, [=]() {
+            benchmarkEnsureServerStopped(budgetMs - 300, onStopped);
+        });
+        return;
+    case BenchStopStep::Kill:
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Benchmark: el server anterior no cerró a tiempo; "
+                                         "forzando el cierre antes de arrancar el perfil."));
+        benchmarkKillStrayServers();
+        // Margen para que el proceso muera del todo y el driver libere la VRAM.
+        QTimer::singleShot(3000, this, [=]() { onStopped(); });
+        return;
+    }
 }
 
 // Force-kill any leftover llama-server processes that survived a previous run and
