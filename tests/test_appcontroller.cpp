@@ -114,6 +114,7 @@ private slots:
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
+    void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
@@ -1209,6 +1210,24 @@ void AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
     // Sigue vivo y se acabó el tiempo: matar (antes: arrancaba igual).
     QCOMPARE(AppController::benchmarkStopStep(true, 0), Step::Kill);
     QCOMPARE(AppController::benchmarkStopStep(true, -300), Step::Kill);
+}
+
+// Si el server ya está sirviendo el perfil que se va a benchmarkear, el modelo ya
+// está en VRAM y descargarlo para recargar lo mismo son minutos por pasada.
+void AppControllerTests::benchmarkReusesServerAlreadyLoadedWithSameProfile()
+{
+    const QString a = QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb");
+    const QString b = QStringLiteral("sys-ultraq-dsv4-0731-iq3s");
+    // Mismo perfil, corriendo y listo → reusar.
+    QVERIFY(AppController::benchmarkCanReuseServer(a, a, true, true));
+    // Otro perfil: puede compartir el .gguf pero diferir en ctx/KV/batch/offload,
+    // así que el server cargado no sirve para medirlo.
+    QVERIFY(!AppController::benchmarkCanReuseServer(b, a, true, true));
+    // Cargando todavía, o sin server, o sin perfil activo → arrancar normal.
+    QVERIFY(!AppController::benchmarkCanReuseServer(a, a, true, false));
+    QVERIFY(!AppController::benchmarkCanReuseServer(a, a, false, true));
+    QVERIFY(!AppController::benchmarkCanReuseServer(QString(), a, true, true));
+    QVERIFY(!AppController::benchmarkCanReuseServer(a, QString(), true, true));
 }
 
 // Regresión "16GB trabado en Iniciando agente": tras un swap/restart de server

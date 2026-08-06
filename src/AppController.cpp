@@ -13325,20 +13325,35 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         auto startAttempts = std::make_shared<int>(0);
         auto runProfile = std::make_shared<std::function<void()>>();
         *runProfile = [=]() {
-            // Nunca arrancar encima de un server vivo: startServer abortaría y la
-            // pasada se anotaría como fallo de carga. Vale para el primer intento
-            // y para los reintentos.
-            if (serverRunning()) {
+            // Si el server que está corriendo ya es ESTE perfil y está listo, el
+            // modelo ya está en VRAM: no tiene sentido descargarlo para volver a
+            // cargar lo mismo (con DeepSeek V4 son minutos por pasada).
+            const bool reuse = benchmarkCanReuseServer(m_activeLaunchId, profileId,
+                                                       serverRunning(), m_serverReady);
+            // Con cualquier otro perfil vivo hay que bajarlo primero: startServer
+            // abortaría y la pasada se anotaría como fallo de carga. Vale para el
+            // primer intento y para los reintentos.
+            if (serverRunning() && !reuse) {
                 stopServer();
                 benchmarkEnsureServerStopped(45000, [=]() { (*runProfile)(); });
                 return;
             }
             const qint64 loadStartMs = QDateTime::currentMSecsSinceEpoch();
-            m_benchmarkStatus = QString("[%1/%2] %3 — iniciando servidor...")
-                .arg(idx + 1).arg(profileIds.size()).arg(profName);
+            m_benchmarkStatus = QString("[%1/%2] %3 — %4")
+                .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                .arg(reuse ? QStringLiteral("reusando el servidor ya cargado...")
+                           : QStringLiteral("iniciando servidor..."));
             emit benchmarkStatusChanged();
 
-            startServer(profileId);
+            if (reuse) {
+                appendServerEvent(QStringLiteral("lifecycle"),
+                                  QStringLiteral("Benchmark: reusando el server ya cargado "
+                                                 "con este perfil (sin recarga de modelo)."));
+                // El power limit puede haber cambiado en Ajustes desde que arrancó.
+                applyConfiguredPowerLimit(m_profiles.resolveLaunch(profileId));
+            } else {
+                startServer(profileId);
+            }
             if (!serverRunning()) {
                 if (m_benchmarkCanceled) { (*processNext)(idx + 1); return; }
                 // Auto-recovery: a stale/leftover llama-server (holding port 8021
@@ -14378,6 +14393,19 @@ void AppController::benchmarkWaitServerStopped(int remainingMs, std::function<vo
     QTimer::singleShot(300, this, [=]() {
         benchmarkWaitServerStopped(remainingMs - 300, onStopped);
     });
+}
+
+// Reusar el server sólo si ya está sirviendo EXACTAMENTE este perfil y terminó de
+// cargar. Se compara el launch id y no el modelo: dos perfiles pueden compartir el
+// .gguf y diferir en ctx, KV, batch u offload, y ahí el server cargado no sirve
+// para medir el otro.
+bool AppController::benchmarkCanReuseServer(const QString &activeLaunchId,
+                                            const QString &wantedLaunchId,
+                                            bool running, bool ready)
+{
+    if (!running || !ready) return false;
+    if (activeLaunchId.isEmpty() || wantedLaunchId.isEmpty()) return false;
+    return activeLaunchId == wantedLaunchId;
 }
 
 AppController::BenchStopStep AppController::benchmarkStopStep(bool stillRunning, int budgetLeftMs)
