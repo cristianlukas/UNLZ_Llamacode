@@ -474,7 +474,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.80"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.81"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -1003,8 +1003,11 @@ public:
     // Instala UN solo perfil del showcase (coding o general) sin bajar el otro.
     Q_INVOKABLE void acceptShowcaseOne(const QString &launchId);
     // Inyecta el resumen de hardware (solo para tests headless).
+    // vramTotalGb <= 0 significa "una sola placa" (total = vramGb).
     Q_INVOKABLE void setHardwareSummaryForTest(double vramGb, double ramGb,
-                                               const QString &gpuName);
+                                               const QString &gpuName,
+                                               double vramTotalGb = 0.0,
+                                               int gpuCount = 0);
 
     // ── Modo Charla (voz-a-voz) ──
     QString voiceState() const;

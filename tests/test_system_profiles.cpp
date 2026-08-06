@@ -65,6 +65,7 @@ private slots:
     void bundle_lagunaIsOptInAndHardwareGated();
     void bundle_ultraQAndHybridAreWiredAndOptIn();
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
+    void controller_launchMenuGatesByTotalVramAcrossGpus();
     void controller_duplicateBakesResolvedBinary();
 
 private:
@@ -686,6 +687,34 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
         pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
     QCOMPARE(pm.getModelProfile(launch.value("modelProfileId").toString()).value("modelId"),
              pm.getModelProfile(ultraLaunch.value("modelProfileId").toString()).value("modelId"));
+}
+
+// El menú de Lanzar gatea por VRAM TOTAL, no por la placa más grande: llama.cpp
+// reparte por capas, asi que 2x24 GB habilita un perfil que pide 48.
+void SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus()
+{
+    const QString id = QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb");
+    auto idsOf = [](const QVariantList &menu) {
+        QStringList out;
+        for (const QVariant &v : menu) out << v.toMap().value("id").toString();
+        return out;
+    };
+
+    AppController single;
+    single.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"));
+    const QStringList singleIds = idsOf(single.launchMenu());
+    QVERIFY(singleIds.contains(QStringLiteral("sys-ultraq-dsv4-0731-iq3s")));
+    QVERIFY(!singleIds.contains(id));
+
+    AppController dual;
+    dual.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"), 48.0, 2);
+    const QVariantList dualMenu = dual.launchMenu();
+    QVERIFY(idsOf(dualMenu).contains(id));
+    for (const QVariant &v : dualMenu) {
+        const QVariantMap m = v.toMap();
+        if (m.value("id").toString() != id) continue;
+        QCOMPARE(m.value("minVram").toDouble(), 48.0);
+    }
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()

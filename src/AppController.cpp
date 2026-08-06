@@ -11190,7 +11190,12 @@ void AppController::rescanHardware()
 #endif
     hw[QStringLiteral("ramGb")] = ramGb;
 
+    // vramGb = la placa más grande (lo que entra sin repartir: es lo que miden el
+    // catálogo y el scoring). vramTotalGb = la suma de todas, que es lo que puede
+    // usar llama.cpp repartiendo por capas entre placas.
     double vramGb = 0;
+    double vramTotalGb = 0;
+    int gpuCount = 0;
     QString gpuName;
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
     if (!nvidiaSmi.isEmpty()) {
@@ -11198,23 +11203,35 @@ void AppController::rescanHardware()
         p.start(nvidiaSmi, {QStringLiteral("--query-gpu=name,memory.total"),
                             QStringLiteral("--format=csv,noheader,nounits")});
         if (p.waitForFinished(1800)) {
-            const QString firstLine = QString::fromUtf8(p.readAllStandardOutput()).split('\n', Qt::SkipEmptyParts).value(0).trimmed();
-            const int comma = firstLine.lastIndexOf(',');
-            if (comma > 0) {
-                gpuName = firstLine.left(comma).trimmed();
-                vramGb = firstLine.mid(comma + 1).trimmed().toDouble() / 1024.0;
+            const QStringList lines = QString::fromUtf8(p.readAllStandardOutput())
+                                          .split('\n', Qt::SkipEmptyParts);
+            for (const QString &raw : lines) {
+                const QString line = raw.trimmed();
+                const int comma = line.lastIndexOf(',');
+                if (comma <= 0) continue;
+                const double gb = line.mid(comma + 1).trimmed().toDouble() / 1024.0;
+                if (gb <= 0) continue;
+                ++gpuCount;
+                vramTotalGb += gb;
+                if (gb > vramGb) { vramGb = gb; gpuName = line.left(comma).trimmed(); }
             }
         }
     }
     hw[QStringLiteral("gpuName")] = gpuName.isEmpty() ? QStringLiteral("GPU no detectada") : gpuName;
     hw[QStringLiteral("vramGb")] = vramGb;
+    hw[QStringLiteral("vramTotalGb")] = vramTotalGb;
+    hw[QStringLiteral("gpuCount")] = gpuCount;
     hw[QStringLiteral("backendHint")] = vramGb >= 6 ? QStringLiteral("GPU") : QStringLiteral("CPU");
+    const QString gpuText =
+        vramGb <= 0 ? QStringLiteral("sin VRAM NVIDIA detectada")
+        : gpuCount > 1
+            ? QStringLiteral("%1 x%2 (%3 GB VRAM total)")
+                  .arg(gpuName).arg(gpuCount).arg(QString::number(vramTotalGb, 'f', 1))
+            : QStringLiteral("%1 (%2 GB VRAM)").arg(gpuName).arg(QString::number(vramGb, 'f', 1));
     hw[QStringLiteral("summary")] = QStringLiteral("%1 hilos · %2 GB RAM · %3")
         .arg(QThread::idealThreadCount())
         .arg(ramGb > 0 ? QString::number(ramGb, 'f', 1) : QStringLiteral("?"))
-        .arg(vramGb > 0
-                 ? QStringLiteral("%1 (%2 GB VRAM)").arg(gpuName).arg(QString::number(vramGb, 'f', 1))
-                 : QStringLiteral("sin VRAM NVIDIA detectada"));
+        .arg(gpuText);
 
     m_hardwareSummary = hw;
     emit hardwareSummaryChanged();
@@ -12250,7 +12267,10 @@ bool AppController::systemProfileReady(const QString &launchId)
 
 QVariantList AppController::launchMenu()
 {
-    const double vram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
+    // Techo de VRAM = la suma de las placas: llama.cpp reparte por capas, así que
+    // un perfil de 48 GB es elegible en 2x24 aunque ninguna placa sola lo aguante.
+    const double vram = qMax(m_hardwareSummary.value(QStringLiteral("vramTotalGb")).toDouble(),
+                             m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
     QHash<QString, double> minV;
     for (const QJsonValue &v : readSystemProfilesBundle()) {
         const QJsonObject e = v.toObject();
@@ -12506,11 +12526,14 @@ void AppController::maybeActivatePendingSystemProfile()
 }
 
 void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,
-                                             const QString &gpuName)
+                                             const QString &gpuName,
+                                             double vramTotalGb, int gpuCount)
 {
     m_hardwareSummary[QStringLiteral("vramGb")] = vramGb;
     m_hardwareSummary[QStringLiteral("ramGb")] = ramGb;
     m_hardwareSummary[QStringLiteral("gpuName")] = gpuName;
+    m_hardwareSummary[QStringLiteral("vramTotalGb")] = vramTotalGb > 0 ? vramTotalGb : vramGb;
+    m_hardwareSummary[QStringLiteral("gpuCount")] = gpuCount > 0 ? gpuCount : (vramGb > 0 ? 1 : 0);
 }
 
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)
