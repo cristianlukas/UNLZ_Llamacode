@@ -651,24 +651,36 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     QCOMPARE(dual.value("model").toObject(), ultra.value("model").toObject());
     QVERIFY(!dual.contains(QStringLiteral("benchmarkVariants")));
 
+    // Valores medidos contra el server real: ver el comment del perfil. Cambiarlos
+    // sin volver a medir es lo que hacia crashear al server (OOM o illegal memory
+    // access), asi que el test los clava.
     const QJsonObject rt = dual.value("runtime").toObject();
-    QCOMPARE(rt.value("batch").toInt(), 8192);
-    QCOMPARE(rt.value("ubatch").toInt(), 2048);
-    QCOMPARE(rt.value("kv").toString(), QStringLiteral("q8_0"));
+    QCOMPARE(rt.value("batch").toInt(), 4096);   // 8192 => illegal memory access
+    QCOMPARE(rt.value("ubatch").toInt(), 1024);
+    QCOMPARE(rt.value("kv").toString(), QStringLiteral("q4_0")); // q8_0 deja CUDA0 al borde
+    QCOMPARE(rt.value("gpuLayers").toInt(), 44);
     QVERIFY(rt.value("mmap").toBool());
     QVERIFY(!rt.value("mlock").toBool());
 
     QStringList args;
     for (const QJsonValue &v : dual.value("extraArgs").toArray()) args << v.toString();
-    QCOMPARE(args.value(args.indexOf("--cache-type-k") + 1), QStringLiteral("q8_0"));
-    QCOMPARE(args.value(args.indexOf("--cache-type-v") + 1), QStringLiteral("q8_0"));
-    QCOMPARE(args.value(args.indexOf("--n-cpu-moe") + 1), QStringLiteral("30"));
+    QCOMPARE(args.value(args.indexOf("--cache-type-k") + 1), QStringLiteral("q4_0"));
+    QCOMPARE(args.value(args.indexOf("--cache-type-v") + 1), QStringLiteral("q4_0"));
     QCOMPARE(args.value(args.indexOf("--threads-batch") + 1), QStringLiteral("16"));
-    QCOMPARE(args.value(args.indexOf("--split-mode") + 1), QStringLiteral("layer"));
-    QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,1"));
     QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
     QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
-    QCOMPARE(args.value(args.indexOf("--spec-draft-type-k") + 1), QStringLiteral("q4_0"));
+
+    // El reparto va con -ot explicito, NO con --n-cpu-moe: en multi-GPU el
+    // n-cpu-moe manda todas las capas pesadas a una placa (OOM) y, aun
+    // balanceado, mata la inferencia con illegal memory access.
+    QVERIFY(!args.contains(QStringLiteral("--n-cpu-moe")));
+    QVERIFY(!args.contains(QStringLiteral("--split-mode")));  // "row" ni carga
+    QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,0"));
+    const QStringList ot = args.filter(QStringLiteral("_exps="));
+    QCOMPARE(ot.size(), 3);
+    QVERIFY(ot.at(0).endsWith(QStringLiteral("=CUDA1")));
+    QVERIFY(ot.at(1).endsWith(QStringLiteral("=CUDA0")));
+    QVERIFY(ot.at(2).endsWith(QStringLiteral("=CPU")));   // barrido final: el resto a RAM
 
     // El launch derivado tiene que llegar con esos valores, no solo el bundle.
     ProfileManager pm;
@@ -676,11 +688,12 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
         pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb"));
     QVERIFY(launch.value("system").toBool());
     const QVariantMap preset = pm.getRuntimePreset(launch.value("runtimePresetId").toString());
-    QCOMPARE(preset.value("batch").toInt(), 8192);
-    QCOMPARE(preset.value("ubatch").toInt(), 2048);
+    QCOMPARE(preset.value("batch").toInt(), 4096);
+    QCOMPARE(preset.value("ubatch").toInt(), 1024);
     const QStringList launchArgs = launch.value("extraArgs").toStringList();
-    QCOMPARE(launchArgs.value(launchArgs.indexOf("--n-cpu-moe") + 1), QStringLiteral("30"));
-    QVERIFY(launchArgs.contains(QStringLiteral("--tensor-split")));
+    QCOMPARE(launchArgs.filter(QStringLiteral("_exps=")).size(), 3);
+    QVERIFY(!launchArgs.contains(QStringLiteral("--n-cpu-moe")));
+    QCOMPARE(launchArgs.value(launchArgs.indexOf("--tensor-split") + 1), QStringLiteral("1,0"));
 
     // Mismo modelo fisico que ULTRA-Q: no re-descarga los 116 GB de shards.
     const QVariantMap ultraLaunch =

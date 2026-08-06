@@ -294,30 +294,32 @@
     },
     "runtime": {
       "ctx": 131072,
-      "gpuLayers": 999,
-      "batch": 8192,
-      "ubatch": 2048,
+      "gpuLayers": 44,
+      "batch": 4096,
+      "ubatch": 1024,
       "threads": 8,
-      "kv": "q8_0",
+      "kv": "q4_0",
       "flashAttn": true,
       "mlock": false,
       "mmap": true
     },
     "extraArgs": [
-      "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
-      "--n-cpu-moe", "30", "--fit-target", "512", "--temp", "0.60", "--top-p", "0.95",
+      "--cache-type-k", "q4_0", "--cache-type-v", "q4_0",
+      "--fit-target", "512", "--temp", "0.60", "--top-p", "0.95",
       "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0",
       "--presence-penalty", "0.0", "--no-context-shift", "--metrics",
       "--no-warmup", "--jinja", "--threads-batch", "16", "--predict", "16384",
       "--parallel", "1", "--reasoning-format", "auto",
-      "--split-mode", "layer", "--main-gpu", "0", "--tensor-split", "1,1",
-      "--spec-type", "draft-dspark", "--spec-draft-n-max", "5",
-      "--spec-draft-type-k", "q4_0", "--spec-draft-type-v", "q4_0"
+      "--tensor-split", "1,0",
+      "-ot", "blk\\.(29|3[0-6])\\.ffn_.*_exps=CUDA1",
+      "-ot", "blk\\.(4[0-3])\\.ffn_.*_exps=CUDA0",
+      "-ot", "blk\\.\\d+\\.ffn_.*_exps=CPU",
+      "--spec-type", "draft-dspark", "--spec-draft-n-max", "5"
     ],
     "binaryKind": "official",
     "minimumBinaryBuild": 10228,
     "contextPresets": [65536, 131072, 196608, 262144, 393216],
-    "comment": "Clon de ULTRA-Q para 48 GB (2x RTX 3090 24 GB, sin NVLink) + 128 GB RAM. Mismos shards IQ3_S. Diferencias, todas apoyadas en lo ya medido en el tier de 24 GB: (1) batch 8192 / ubatch 2048, el mejor wall-time del barrido; (2) KV q8_0 en K y V, que dio el mejor tiempo (212 s) pero costaba 21 de 24 GB en una sola placa y acá reparte; (3) --n-cpu-moe 30 en vez de 39: los ~24 GB extra pagan el KV q8_0 y suben ~7 capas de expertos de RAM a VRAM (el decode con MoE en RAM está limitado por ancho de banda de sistema, así que cada capa que sube es ganancia directa); (4) --threads-batch 16 (SMT del Ryzen 7 7700 al prefill, que es compute-bound) dejando 8 hilos físicos al decode; (5) reparto explícito --split-mode layer + --tensor-split 1,1: layer-split manda con PCIe sin NVLink porque transfiere una activación por frontera de capa, mientras que row-split sincroniza en cada tensor; (6) KV del drafter DSpark en q4_0 (default f16) para no gastar VRAM del target. gpuLayers 999: el techo real lo fija --n-cpu-moe, no el conteo de capas. mlock sigue en false (crashea) y mmap en true (sin mmap intenta reservar ~99 GB de CUDA Host y falla). Sin medir todavia: bajar --n-cpu-moe a 26/28 si sobra VRAM, y 196k/262k de contexto, que con KV q8_0 cuesta el doble que en el perfil de 24 GB."
+    "comment": "Clon de ULTRA-Q para 48 GB (2x RTX 3090 24 GB, sin NVLink) + 128 GB RAM. Mismos shards IQ3_S. TODO lo de aca esta MEDIDO contra el server real (b10228), no estimado, porque la primera version por analogia con el tier de 24 GB crasheaba: el modelo tiene 44 capas y --n-cpu-moe deja livianas las primeras N (expertos en CPU) y pesadas el resto, asi que el reparto multi-GPU por cantidad de capas (--tensor-split 1,1) le mandaba TODAS las pesadas a una placa y pedia 34,6 GB en una de 24 -> OOM. Balancear el split cargaba bien pero la inferencia moria con 'CUDA error: an illegal memory access' en cuanto entraba el primer prompt (la misma config en una sola placa responde, asi que es el path multi-GPU + --n-cpu-moe). Sacar --n-cpu-moe y dejar el auto-fit funciona pero no sirve: offloadea capas enteras y el prefill se cae a 8,8 t/s (39,7 t/s con una sola placa). --split-mode row ni carga ('device CUDA0 does not support split buffers'). Lo que SI anda: reparto explicito de expertos con -ot. --tensor-split 1,0 deja las 44 capas base (atencion, densos y KV) en CUDA0; el primer -ot manda los expertos de blk 29-36 a CUDA1, el segundo los de blk 40-43 a CUDA0 y el tercero barre el resto a CPU. Medido contra 1 placa con el mismo prompt: prefill 147 t/s vs 39,7 y decode 4,46 t/s vs 2,45 (+82%), con 17,7 GB en CUDA0 y 20,2 GB en CUDA1 (margen ~6 y ~4 GB). Reproducido dos veces sin crash. Los limites, tambien medidos: batch 8192/ubatch 2048 vuelve a tirar illegal memory access, por eso 4096/1024; y sumar dos capas mas de expertos (blk 28 y 39) tambien crashea, por eso el reparto queda en 12 capas. KV en q4_0, no q8_0: el q8_0 cargaba pero dejaba CUDA0 en 24,0 de 24,5 GB. mlock false (crashea) y mmap true (sin mmap intenta reservar ~99 GB de CUDA Host y falla). OJO: los -ot nombran CUDA0/CUDA1 explicitamente, asi que este perfil asume exactamente dos placas."
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s-dspark-external",
