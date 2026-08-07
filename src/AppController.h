@@ -474,7 +474,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.84"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.90"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -1073,6 +1073,14 @@ public:
                                                             const QString &finalText,
                                                             const QVariantList &benchTasks,
                                                             const QStringList &files);
+
+    // Puntúa las respuestas de texto del agente con el evaluador que ya trae cada
+    // tarea del benchmark. Sin esto, una suite cuyas tareas se contestan en el chat
+    // (la "Corta": "responde YES o NO", "devolvé sólo JSON") queda sin score: el
+    // modo agente sólo sabía puntuar archivos producidos en el workspace.
+    static QVariantMap scoreBenchTextResponsesForTest(const QString &mode,
+                                                      const QVariantList &benchTasks,
+                                                      const QVariantList &messages);
 
 signals:
     void voiceStateChanged();

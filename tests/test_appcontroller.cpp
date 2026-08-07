@@ -115,6 +115,7 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
+    void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
@@ -1210,6 +1211,75 @@ void AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
     // Sigue vivo y se acabó el tiempo: matar (antes: arrancaba igual).
     QCOMPARE(AppController::benchmarkStopStep(true, 0), Step::Kill);
     QCOMPARE(AppController::benchmarkStopStep(true, -300), Step::Kill);
+}
+
+// Regresión "el benchmark Corta termina sin score": en modo agente el puntaje
+// salía sólo de los archivos que el agente dejara en el workspace (acceptance o
+// el fallback py_compile). Una suite que se contesta en el chat — "respondé YES o
+// NO", "devolvé sólo JSON" — no produce archivos, así que quedaba 0/0 y la tabla
+// mostraba un guion como si hubiera fallado. Las tareas YA traen su evaluador de
+// texto; sólo faltaba usarlo.
+void AppControllerTests::benchmarkScoresChatAnswersWhenAgentWritesNoFiles()
+{
+    const QVariantList tasks{
+        QVariantMap{{"id", "reasoning_logic"},
+                    {"prompt", "All A are B. All B are C. Is all A are C? Answer YES or NO, then explain in one sentence."}},
+        QVariantMap{{"id", "math_arithmetic"},
+                    {"prompt", "Calculate: (17 * 23) + (456 / 8) - 12. Show each step. Give the final numeric answer."}},
+        // Las de velocidad no se puntúan: sólo miden TPS.
+        QVariantMap{{"id", "speed_short"},
+                    {"prompt", "Write a Python function to check if a number is prime."}},
+    };
+    auto msg = [](const char *role, const QString &content) {
+        return QVariant(QVariantMap{{"role", role}, {"content", content}});
+    };
+
+    // Una respuesta correcta y una incorrecta, sin un solo archivo de por medio.
+    QVariantList messages{
+        msg("user", tasks.at(0).toMap().value("prompt").toString()),
+        msg("assistant", QStringLiteral("YES, porque la relación es transitiva.")),
+        msg("user", tasks.at(1).toMap().value("prompt").toString()),
+        msg("assistant", QStringLiteral("El resultado es 999.")),
+        msg("user", tasks.at(2).toMap().value("prompt").toString()),
+        msg("assistant", QStringLiteral("def is_prime(n): ...")),
+    };
+    const QVariantMap scored =
+        AppController::scoreBenchTextResponsesForTest(QStringLiteral("short"), tasks, messages);
+    QCOMPARE(scored.value("total").toInt(), 2);   // speed_short NO cuenta
+    QCOMPARE(scored.value("score").toInt(), 1);   // sólo la de lógica pasa
+    const QVariantList rows = scored.value("rows").toList();
+    QCOMPARE(rows.size(), 2);
+    QCOMPARE(rows.at(0).toMap().value("taskId").toString(), QStringLiteral("reasoning_logic"));
+    QVERIFY(rows.at(0).toMap().value("passed").toBool());
+    QVERIFY(!rows.at(1).toMap().value("passed").toBool());
+
+    // El agente puede intercalar mensajes de tool antes de contestar.
+    QVariantList withTools{
+        msg("user", tasks.at(1).toMap().value("prompt").toString()),
+        msg("tool", QStringLiteral("{\"result\": 436}")),
+        msg("assistant", QString()),                       // vacío: se saltea
+        msg("assistant", QStringLiteral("La cuenta da 436.")),
+    };
+    const QVariantMap viaTools = AppController::scoreBenchTextResponsesForTest(
+        QStringLiteral("short"), QVariantList{tasks.at(1)}, withTools);
+    QCOMPARE(viaTools.value("total").toInt(), 1);
+    QCOMPARE(viaTools.value("score").toInt(), 1);
+
+    // Una tarea que nunca llegó a correr (timeout) no se cuenta como fallada:
+    // sumaría un 0/1 que no refleja la calidad del modelo.
+    const QVariantMap corte = AppController::scoreBenchTextResponsesForTest(
+        QStringLiteral("short"), tasks, QVariantList{});
+    QCOMPARE(corte.value("total").toInt(), 0);
+
+    // Con criterios declarativos propios NO se duplica el puntaje.
+    QVariantList conAcceptance{
+        QVariantMap{{"id", "reasoning_logic"},
+                    {"prompt", tasks.at(0).toMap().value("prompt")},
+                    {"acceptance", QVariantMap{{"files", QVariantList{"x.py"}}}}},
+    };
+    const QVariantMap noDup = AppController::scoreBenchTextResponsesForTest(
+        QStringLiteral("short"), conAcceptance, messages);
+    QCOMPARE(noDup.value("total").toInt(), 0);
 }
 
 // Si el server ya está sirviendo el perfil que se va a benchmarkear, el modelo ya

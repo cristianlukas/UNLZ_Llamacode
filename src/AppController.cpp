@@ -13635,6 +13635,74 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     (*processNext)(0);
 }
 
+// Empareja cada tarea con la respuesta que le dio el agente y la pasa por el
+// evaluador que la tarea ya define (el mismo que usa el modo "modelo"). Las
+// tareas de velocidad no se puntúan: sólo miden TPS.
+QVariantMap AppController::scoreBenchTextResponsesForTest(const QString &mode,
+                                                          const QVariantList &benchTasks,
+                                                          const QVariantList &messages)
+{
+    QVariantList rows;
+    int score = 0;
+    int total = 0;
+
+    QHash<QString, const BenchTaskDef *> defById;
+    const QVector<BenchTaskDef> defs = buildBenchTasks(mode);
+    for (const BenchTaskDef &d : defs)
+        defById.insert(d.id, &d);
+
+    for (const QVariant &tv : benchTasks) {
+        const QVariantMap task = tv.toMap();
+        const QString taskId = task.value(QStringLiteral("id")).toString();
+        const BenchTaskDef *def = defById.value(taskId, nullptr);
+        if (!def || !def->eval || def->isSpeed)
+            continue;
+        // Ya hay criterios declarativos para esta tarea: no duplicar el puntaje.
+        if (!task.value(QStringLiteral("acceptance")).toMap().isEmpty())
+            continue;
+
+        // La respuesta es el primer mensaje del asistente con texto que sigue al
+        // prompt de la tarea. El agente puede intercalar mensajes de herramienta,
+        // así que se busca hacia adelante y se saltean los vacíos.
+        const QString prompt = task.value(QStringLiteral("prompt")).toString();
+        QString answer;
+        bool seenPrompt = false;
+        for (const QVariant &mv : messages) {
+            const QVariantMap m = mv.toMap();
+            const QString role = m.value(QStringLiteral("role")).toString();
+            const QString content = m.value(QStringLiteral("content")).toString();
+            if (!seenPrompt) {
+                if (role == QLatin1String("user") && !prompt.isEmpty()
+                    && content.contains(prompt.left(48)))
+                    seenPrompt = true;
+                continue;
+            }
+            if (role == QLatin1String("user")) break;   // arrancó la tarea siguiente
+            if (role == QLatin1String("assistant") && !content.trimmed().isEmpty()) {
+                answer = content;
+                break;
+            }
+        }
+        if (!seenPrompt)
+            continue;   // la tarea no llegó a correr (timeout / corte)
+
+        const bool passed = def->eval(answer);
+        QVariantMap row;
+        row[QStringLiteral("taskId")] = taskId;
+        row[QStringLiteral("type")] = QStringLiteral("text");
+        row[QStringLiteral("passed")] = passed;
+        rows.append(row);
+        total++;
+        if (passed) score++;
+    }
+
+    QVariantMap out;
+    out[QStringLiteral("rows")] = rows;
+    out[QStringLiteral("score")] = score;
+    out[QStringLiteral("total")] = total;
+    return out;
+}
+
 QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &workspace,
                                                                 const QString &finalText,
                                                                 const QVariantList &benchTasks,
@@ -14042,6 +14110,22 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     acceptanceRows.append(row);
                     qTotal++;
                     if (row.value(QStringLiteral("passed")).toBool()) qScore++;
+                }
+            }
+
+            // Sin criterios declarativos, puntuar las RESPUESTAS con el evaluador
+            // que cada tarea ya define. Antes se dependía sólo de los archivos que
+            // el agente dejara en el workspace, así que una suite que se contesta
+            // en el chat (la "Corta") quedaba en 0/0 y la tabla mostraba un guion
+            // como si la corrida hubiera fallado.
+            if (qTotal == 0) {
+                const QVariantMap textScore =
+                    scoreBenchTextResponsesForTest(mode, benchTasks, msgs);
+                const QVariantList textRows = textScore.value(QStringLiteral("rows")).toList();
+                if (!textRows.isEmpty()) {
+                    acceptanceRows.append(textRows);
+                    qScore += textScore.value(QStringLiteral("score")).toInt();
+                    qTotal += textScore.value(QStringLiteral("total")).toInt();
                 }
             }
 
