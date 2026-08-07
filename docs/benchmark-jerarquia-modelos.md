@@ -73,6 +73,41 @@ la sesión (`probe3.py`) y es reproducible contra cualquier server.
 
 ---
 
+## 3b. Resultados del eje nuevo: la jerarquía está al revés
+
+Anulando el puzzle de las 5 casas (mal diseñado: **no tiene solución**, verificado
+a mano — así que "fallarlo" era lo correcto):
+
+| | KAT-Coder | **ThinkingCap+MTP** | DeepSeek V4 |
+|---|---|---|---|
+| D conocimiento de nicho (5) | 5/5 | 5/5 | 5/5 |
+| E contexto largo 8k + 24k (2) | 2/2 | 2/2 | 2/2 |
+| F torneo (1) | 1/1 | 1/1 | 1/1 |
+| G json con 7 reglas (1) | 1/1 | 1/1 | 1/1 |
+| G reescritura con 4 reglas (1) | ❌ | ✅ | ❌ |
+| **total válido** | 9/10 | **10/10** | 9/10 |
+| velocidad | 110 t/s | 60 t/s | 7 t/s |
+
+**DeepSeek no ganó una sola tarea** que los otros no ganaran, y empata con KAT
+yendo 15× más lento. La única tarea que separó a alguien la ganó ThinkingCap.
+
+## 3c. Cuarto intento: tareas de élite. ThinkingCap 14/14
+
+Buscando explícitamente algo que un 284B haga mejor que un 27B:
+
+| eje | ThinkingCap+MTP |
+|---|---|
+| H conocimiento long-tail (Redis ZSET, año de Karatsuba, counting Bloom, Turing 1936, CAP + Gilbert/Lynch, sort externo) | 6/6 |
+| I matemática multi-paso (último dígito de 7^7^7, MISSISSIPPI, serie telescópica, 2^100 mod 125) | 4/4 |
+| J algoritmos poco frecuentes, ejecutados (Boyer-Moore O(1) sin `Counter`, k-ésimo desde el final en una pasada) | 2/2 |
+| K trampas (reglas contradictorias, bate y pelota) | 2/2 |
+| **total** | **14/14** |
+
+Un 27B satura el techo de todo lo que se puede construir **y verificar con
+certeza**. Ese es el límite del experimento: para tareas donde un 284B despegue
+harían falta problemas de nivel investigación, donde el evaluador tendría que
+conocer la respuesta correcta de antemano.
+
 ## 4. Lo que ya se puede afirmar
 
 1. **KAT-Coder no es "el rápido y limitado".** Empata en capacidad con ThinkingCap
