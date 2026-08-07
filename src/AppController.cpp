@@ -57,6 +57,7 @@
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
+#include "core/eval/BenchmarkPack.h"
 #include "core/tasks/WorkflowVisualModel.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
 #include "core/ToolCallingSupport.h"
@@ -14053,6 +14054,23 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
                 score++;
         }
 
+        // Packs públicos (GSM8K/HumanEval/MMLU): corrección exacta por tipo, no por
+        // substring. Un "42" suelto en medio del razonamiento no es la respuesta.
+        const QString graderType = acceptance.value(QStringLiteral("graderType")).toString();
+        if (!graderType.isEmpty() && graderType != QLatin1String("code_tests")) {
+            BenchmarkItem bi;
+            bi.type = graderType;
+            bi.expected = acceptance.value(QStringLiteral("expected")).toString();
+            QVariantMap row;
+            row[QStringLiteral("taskId")] = task.value(QStringLiteral("id")).toString();
+            row[QStringLiteral("type")] = QStringLiteral("grader:") + graderType;
+            row[QStringLiteral("passed")] = BenchmarkPack::grade(bi, searchable);
+            rows.append(row);
+            total++;
+            if (row.value(QStringLiteral("passed")).toBool()) score++;
+            continue;
+        }
+
         const QVariantList expectSubs = acceptance.value(QStringLiteral("expectSubstrings")).toList();
         for (const QVariant &sv : expectSubs) {
             const QString needle = sv.toString().trimmed();
@@ -15595,6 +15613,61 @@ QString AppController::importEvalSuite(const QString &path)
     def["description"] = suite.description;
     def["prompts"] = prompts;
     def["source"] = QStringLiteral("evalsuite");
+    return saveCustomBenchmark(def);
+}
+
+QString AppController::importBenchmarkPack(const QString &path, int limit)
+{
+    m_lastEvalImportError.clear();
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        m_lastEvalImportError = QStringLiteral("no se pudo abrir %1").arg(path);
+        return {};
+    }
+    QString err;
+    const BenchmarkPack pack =
+        BenchmarkPack::autoImport(f.readAll(), QFileInfo(path).fileName(), &err);
+    f.close();
+    if (pack.isEmpty()) {
+        m_lastEvalImportError = err.isEmpty() ? QStringLiteral("pack vacío") : err;
+        return {};
+    }
+
+    QVariantList prompts;
+    for (const BenchmarkItem &it : pack.items) {
+        if (limit > 0 && prompts.size() >= limit) break;
+        QVariantMap acc;
+        acc[QStringLiteral("files")] = QVariantList{};
+        // La corrección real de estos packs es exacta (letra / número / tests), no
+        // por substring, así que el criterio viaja en `expected`/`graderType` y lo
+        // aplica BenchmarkPack::grade. expectSubstrings queda vacío a propósito:
+        // usarlo daría por buena una respuesta que apenas menciona el valor.
+        acc[QStringLiteral("commands")] = QVariantList{};
+        acc[QStringLiteral("expectSubstrings")] = QVariantList{};
+        acc[QStringLiteral("graderType")] = it.type;
+        acc[QStringLiteral("expected")] = it.expected;
+        if (!it.tests.isEmpty()) acc[QStringLiteral("tests")] = it.tests;
+
+        QVariantMap p;
+        p[QStringLiteral("id")] = it.id;
+        p[QStringLiteral("prompt")] = it.prompt;
+        p[QStringLiteral("isSpeed")] = false;
+        p[QStringLiteral("maxTokens")] = it.type == QLatin1String("code_tests") ? 1200 : 800;
+        p[QStringLiteral("category")] = pack.id;
+        p[QStringLiteral("weight")] = 1;
+        p[QStringLiteral("acceptance")] = acc;
+        prompts.append(p);
+    }
+
+    QVariantMap def;
+    def[QStringLiteral("name")] = limit > 0
+        ? QStringLiteral("%1 (%2 ítems)").arg(pack.name).arg(prompts.size())
+        : pack.name;
+    def[QStringLiteral("description")] =
+        QStringLiteral("Benchmark público importado. Fuente: %1. Licencia: %2.")
+            .arg(pack.source, pack.license);
+    def[QStringLiteral("prompts")] = prompts;
+    def[QStringLiteral("source")] = QStringLiteral("benchmark-pack:") + pack.id;
     return saveCustomBenchmark(def);
 }
 

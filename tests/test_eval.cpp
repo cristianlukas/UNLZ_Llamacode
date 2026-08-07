@@ -6,6 +6,7 @@
 #include <QSet>
 #include "AppController.h"
 #include "core/eval/EvalSuite.h"
+#include "core/eval/BenchmarkPack.h"
 
 class EvalTests : public QObject
 {
@@ -18,6 +19,8 @@ private slots:
     void reasoningBiasSuite_isValid();
     void snakeSuite_isValid();
     void agentAcceptance_scoresGeneratedFiles();
+    void benchPack_extractsAnswersFromRealModelOutput();
+    void benchPack_importsPublicFormats();
 };
 
 static QByteArray sampleJson()
@@ -179,5 +182,123 @@ let score = 0;
                  qPrintable(row.toMap().value(QStringLiteral("name")).toString()));
 }
 
+// Parsear la respuesta de un LLM es donde se cometen los errores caros: en este
+// mismo proyecto hubo evaluadores que comparaban literales y daban por incorrecto
+// codigo perfecto escrito con otro espaciado. Estos casos son respuestas REALES
+// que devolvieron los modelos durante el barrido del 2026-08-07.
+void EvalTests::benchPack_extractsAnswersFromRealModelOutput()
+{
+    // ── opción múltiple ──
+    QCOMPARE(BenchmarkPack::extractChoice("B"), QStringLiteral("B"));
+    QCOMPARE(BenchmarkPack::extractChoice("Answer: C"), QStringLiteral("C"));
+    QCOMPARE(BenchmarkPack::extractChoice("Respuesta: (D)"), QStringLiteral("D"));
+    QCOMPARE(BenchmarkPack::extractChoice("<think>A parece, pero no</think>\nAnswer: B"),
+             QStringLiteral("B"));
+    // Si razona y se corrige, vale la ULTIMA marca explicita.
+    QCOMPARE(BenchmarkPack::extractChoice("Answer: A\nMe equivoque. Answer: C"),
+             QStringLiteral("C"));
+    QVERIFY(BenchmarkPack::extractChoice("No estoy seguro").isEmpty());
+
+    // ── numérico ──
+    QCOMPARE(BenchmarkPack::extractNumber("El resultado es 436."), QStringLiteral("436"));
+    QCOMPARE(BenchmarkPack::extractNumber("...\n#### 18"), QStringLiteral("18"));
+    // Separador de miles: NO es un decimal.
+    QCOMPARE(BenchmarkPack::extractNumber("Son 34,650 formas"), QStringLiteral("34650"));
+    QCOMPARE(BenchmarkPack::extractNumber("Son 34.650 formas"), QStringLiteral("34650"));
+    // Decimal de verdad, y los ceros a la derecha no cambian el valor.
+    QCOMPARE(BenchmarkPack::extractNumber("cuesta 0.05"), QStringLiteral("0.05"));
+    QCOMPARE(BenchmarkPack::extractNumber("cuesta 3.50"), QStringLiteral("3.5"));
+    QCOMPARE(BenchmarkPack::extractNumber("da -0"), QStringLiteral("0"));
+    QCOMPARE(BenchmarkPack::extractNumber("total 007"), QStringLiteral("7"));
+    QVERIFY(BenchmarkPack::extractNumber("no se puede calcular").isEmpty());
+
+    // ── código ──
+    QCOMPARE(BenchmarkPack::extractCode("```python\ndef f(): pass\n```").trimmed(),
+             QStringLiteral("def f(): pass"));
+    // Con varios bloques vale el ultimo: el modelo suele mostrar el mal ejemplo
+    // primero y la version corregida despues.
+    QCOMPARE(BenchmarkPack::extractCode("```\nmalo\n```\ntexto\n```\nbueno\n```").trimmed(),
+             QStringLiteral("bueno"));
+    QCOMPARE(BenchmarkPack::extractCode("def g(): pass").trimmed(),
+             QStringLiteral("def g(): pass"));
+
+    // ── grade ──
+    BenchmarkItem mc;
+    mc.type = QStringLiteral("multiple_choice");
+    mc.expected = QStringLiteral("B");
+    QVERIFY(BenchmarkPack::grade(mc, QStringLiteral("La respuesta es B porque...")));
+    QVERIFY(!BenchmarkPack::grade(mc, QStringLiteral("Answer: A")));
+
+    BenchmarkItem num;
+    num.type = QStringLiteral("numeric");
+    num.expected = QStringLiteral("#### 72");
+    QVERIFY(BenchmarkPack::grade(num, QStringLiteral("Entonces son 72 manzanas.")));
+    QVERIFY(BenchmarkPack::grade(num, QStringLiteral("son 72.00")));
+    QVERIFY(!BenchmarkPack::grade(num, QStringLiteral("son 71")));
+
+    BenchmarkItem con;
+    con.type = QStringLiteral("contains");
+    con.expected = QStringLiteral("Raft|raft");
+    QVERIFY(BenchmarkPack::grade(con, QStringLiteral("etcd usa RAFT")));
+    QVERIFY(!BenchmarkPack::grade(con, QStringLiteral("usa Paxos")));
+
+    // code_tests NO se decide sin ejecutar: el runner tiene que correr los tests.
+    BenchmarkItem code;
+    code.type = QStringLiteral("code_tests");
+    QVERIFY(!BenchmarkPack::grade(code, QStringLiteral("def f(): return 1")));
+}
+
+// Cada suite publica su propio formato: el import los normaliza a un item unico.
+void EvalTests::benchPack_importsPublicFormats()
+{
+    const QByteArray gsm =
+        "{\"question\":\"Juan tiene 3 cajas de 6 huevos. Cuantos huevos hay?\","
+        "\"answer\":\"3*6 = 18\\n#### 18\"}\n"
+        "{\"question\":\"2+2?\",\"answer\":\"#### 4\"}\n";
+    QString err;
+    BenchmarkPack g = BenchmarkPack::fromGsm8kJsonl(gsm, &err);
+    QCOMPARE(g.items.size(), 2);
+    QCOMPARE(g.items.at(0).type, QStringLiteral("numeric"));
+    QCOMPARE(g.items.at(0).expected, QStringLiteral("18"));   // del "#### 18"
+    QVERIFY(g.items.at(0).prompt.contains(QStringLiteral("huevos")));
+
+    const QByteArray he =
+        "{\"task_id\":\"HumanEval/0\",\"prompt\":\"def add(a,b):\\n\","
+        "\"test\":\"def check(f):\\n    assert f(1,2)==3\\n\",\"entry_point\":\"add\"}\n";
+    BenchmarkPack h = BenchmarkPack::fromHumanEvalJsonl(he, &err);
+    QCOMPARE(h.items.size(), 1);
+    QCOMPARE(h.items.at(0).type, QStringLiteral("code_tests"));
+    QCOMPARE(h.items.at(0).id, QStringLiteral("HumanEval/0"));
+    QVERIFY(h.items.at(0).tests.contains(QStringLiteral("check(add)")));
+
+    const QByteArray mmlu =
+        "{\"question\":\"Capital de Francia\",\"choices\":[\"Roma\",\"Paris\",\"Lima\"],"
+        "\"answer\":1}\n";
+    BenchmarkPack m = BenchmarkPack::fromMmluJsonl(mmlu, &err);
+    QCOMPARE(m.items.size(), 1);
+    QCOMPARE(m.items.at(0).expected, QStringLiteral("B"));    // indice 1 -> B
+    QVERIFY(m.items.at(0).prompt.contains(QStringLiteral("B) Paris")));
+
+    // El auto-import distingue los tres por sus claves, sin que el usuario elija.
+    QCOMPARE(BenchmarkPack::autoImport(gsm, QStringLiteral("x"), &err).id,
+             QStringLiteral("gsm8k"));
+    QCOMPARE(BenchmarkPack::autoImport(he, QStringLiteral("x"), &err).id,
+             QStringLiteral("humaneval"));
+    QCOMPARE(BenchmarkPack::autoImport(mmlu, QStringLiteral("x"), &err).id,
+             QStringLiteral("mmlu"));
+
+    // Round-trip por el formato propio: lo que se guarda se vuelve a leer igual.
+    const BenchmarkPack back = BenchmarkPack::fromPackJson(g.toPackJson(), &err);
+    QCOMPARE(back.items.size(), g.items.size());
+    QCOMPARE(back.items.at(0).expected, g.items.at(0).expected);
+    QCOMPARE(back.id, QStringLiteral("gsm8k"));
+
+    // Basura: falla con motivo, no con un pack vacio silencioso.
+    err.clear();
+    QVERIFY(BenchmarkPack::autoImport("no soy json", QStringLiteral("x"), &err).isEmpty());
+    QVERIFY(!err.isEmpty());
+}
+
 QTEST_MAIN(EvalTests)
 #include "test_eval.moc"
+

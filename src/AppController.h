@@ -474,7 +474,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.91"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.94"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -884,6 +884,11 @@ public:
     // Importa una EvalSuite JSON (src/core/eval) como custom benchmark. Devuelve
     // el id creado, o "" si falla (motivo en lastEvalImportError()).
     Q_INVOKABLE QString importEvalSuite(const QString &path);
+    // Importa un benchmark PÚBLICO estándar (GSM8K, HumanEval, MMLU) desde el
+    // JSONL tal cual se descarga. Detecta el formato solo. `limit` corta la
+    // cantidad de ítems: HumanEval son 164 y GSM8K 1319, y a 7 t/s eso son días.
+    // Devuelve el id del benchmark creado, o vacío (ver lastEvalImportError).
+    Q_INVOKABLE QString importBenchmarkPack(const QString &path, int limit = 0);
     Q_INVOKABLE QString lastEvalImportError() const { return m_lastEvalImportError; }
     Q_INVOKABLE void startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes = 1,
                                           const QString &target = QStringLiteral("model"), int timeoutSec = 0,
