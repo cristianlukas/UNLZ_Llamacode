@@ -1271,6 +1271,22 @@ void AppControllerTests::benchmarkScoresChatAnswersWhenAgentWritesNoFiles()
         QStringLiteral("short"), tasks, QVariantList{});
     QCOMPARE(corte.value("total").toInt(), 0);
 
+    // Un puntaje de calidad parcial NO es una corrida fallada: 3/5 en una suite de
+    // preguntas es el resultado. Si eso marcara failed, la tabla taparía el score
+    // con un badge rojo y se dispararían reparaciones inútiles.
+    const QVariantList soloTexto{
+        QVariantMap{{"type", "text"}, {"taskId", "a"}, {"passed", true}},
+        QVariantMap{{"type", "text"}, {"taskId", "b"}, {"passed", false}},
+    };
+    QVERIFY(!AppController::benchHardCriteriaFailed(soloTexto));
+    // Pero un archivo que el agente no dejó sí es un fallo de ejecución.
+    QVariantList conArchivo = soloTexto;
+    conArchivo.append(QVariantMap{{"type", "file"}, {"taskId", "c"}, {"passed", false}});
+    QVERIFY(AppController::benchHardCriteriaFailed(conArchivo));
+    QVariantList archivoOk{QVariantMap{{"type", "file"}, {"taskId", "c"}, {"passed", true}}};
+    QVERIFY(!AppController::benchHardCriteriaFailed(archivoOk));
+    QVERIFY(!AppController::benchHardCriteriaFailed(QVariantList{}));
+
     // Con criterios declarativos propios NO se duplica el puntaje.
     QVariantList conAcceptance{
         QVariantMap{{"id", "reasoning_logic"},

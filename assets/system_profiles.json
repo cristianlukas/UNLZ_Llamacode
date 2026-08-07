@@ -724,7 +724,8 @@
       131072,
       196608
     ],
-    "comment": "ThinkingCap 27B repartido entre las dos placas. Entra ENTERO en VRAM, asi que no hay offload de expertos a RAM y no aplica ninguna de las trampas del perfil de DeepSeek: alcanza con -sm layer -ts 1,1. Lo que compran los 48 GB aca no es velocidad de pesos sino KV: q8_0 en vez del q4_0 que exige el tier de 24 GB, mas contexto, y batch 2048/512 en vez de 512/64. Medido con un prompt de 12.010 tokens: prefill 1.818,9 t/s y decode 34,9 t/s, con 12,6 y 11,9 GB usados (sobra la mitad de la VRAM). mmproj cargado, o sea vision disponible. Comparar contra sys-maxq (24 GB, KV q4_0) para ver cuanto aporta el KV mas fino. CONTROL contra una sola placa (mismo prompt, mismo ctx, mismo KV): single da 952,3 de prefill y 29,5 de decode contra los 1.818,9 / 34,9 de aca, o sea el reparto gana +91% de prefill. El motivo es que el modelo NO entra comodo en 24 GB: en single quedan 22,3 GB usados de 24 y el KV pelea contra los pesos. Vale aclararlo porque la guia dual de club-3090 recomienda lo contrario (quedarse en una placa y bajar el KV antes que repartir), y esa regla vale cuando el modelo entra holgado, no aca."
+    "comment": "ThinkingCap 27B repartido entre las dos placas. Entra ENTERO en VRAM, asi que no hay offload de expertos a RAM y no aplica ninguna de las trampas del perfil de DeepSeek: alcanza con -sm layer -ts 1,1. Lo que compran los 48 GB aca no es velocidad de pesos sino KV: q8_0 en vez del q4_0 que exige el tier de 24 GB, mas contexto, y batch 2048/512 en vez de 512/64. Medido con un prompt de 12.010 tokens: prefill 1.818,9 t/s y decode 34,9 t/s, con 12,6 y 11,9 GB usados (sobra la mitad de la VRAM). mmproj cargado, o sea vision disponible. Comparar contra sys-maxq (24 GB, KV q4_0) para ver cuanto aporta el KV mas fino. CONTROL contra una sola placa (mismo prompt, mismo ctx, mismo KV): single da 952,3 de prefill y 29,5 de decode contra los 1.818,9 / 34,9 de aca, o sea el reparto gana +91% de prefill. El motivo es que el modelo NO entra comodo en 24 GB: en single quedan 22,3 GB usados de 24 y el KV pelea contra los pesos. Vale aclararlo porque la guia dual de club-3090 recomienda lo contrario (quedarse en una placa y bajar el KV antes que repartir), y esa regla vale cuando el modelo entra holgado, no aca. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
+    "minimumBinaryBuild": 10228
   },
   {
     "id": "sys-48-thinkingcap-196k",
@@ -797,7 +798,7 @@
       131072,
       196608
     ],
-    "comment": "Igual que sys-48-thinkingcap-131k pero con 196k de contexto: prefill 1.774,8 t/s y decode 36,7 t/s con el mismo prompt, 14,2 y 13,5 GB. El contexto sale casi gratis, asi que este es el que conviene salvo que el benchmark diga lo contrario. 196k es el TECHO MEDIDO: a 262144 el server muere con 'illegal memory access' pese a sobrar VRAM, asi que no subirlo sin volver a medir.",
+    "comment": "Igual que sys-48-thinkingcap-131k pero con 196k de contexto: prefill 1.774,8 t/s y decode 36,7 t/s con el mismo prompt, 14,2 y 13,5 GB. El contexto sale casi gratis, asi que este es el que conviene salvo que el benchmark diga lo contrario. 196k es el TECHO MEDIDO: a 262144 el server muere con 'illegal memory access' pese a sobrar VRAM, asi que no subirlo sin volver a medir. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
     "benchmarkVariants": [
       {
         "id": "sys-bench-48-tc-mtp",
@@ -845,7 +846,8 @@
         },
         "comment": "Batch grande contra los 2048/512 del base. Con el modelo entero en VRAM y la mitad libre, el prefill deberia subir; es la palanca mas barata que queda."
       }
-    ]
+    ],
+    "minimumBinaryBuild": 10228
   },
   {
     "id": "sys-48-katcoder-262k",
@@ -921,7 +923,7 @@
       131072,
       262144
     ],
-    "comment": "KAT-Coder V2.5-Dev (35B-A3B, ~3 B activos) entero en las dos placas, sin offload a RAM. Es de lejos el mas rapido de los tres modelos del tier: prefill 4.134,7 t/s y decode 113,5 t/s con el mismo prompt de 12.010 tokens, usando 14,3 y 13,5 GB. El tier de 24 GB (sys-vram-20) lo corre con 30 capas en GPU y 32k de contexto; aca entra completo con 262k y KV q8_0. Si el benchmark dice que la calidad alcanza, este es el perfil de trabajo diario.",
+    "comment": "KAT-Coder V2.5-Dev (35B-A3B, ~3 B activos) entero en las dos placas, sin offload a RAM. Es de lejos el mas rapido de los tres modelos del tier: prefill 4.134,7 t/s y decode 113,5 t/s con el mismo prompt de 12.010 tokens, usando 14,3 y 13,5 GB. El tier de 24 GB (sys-vram-20) lo corre con 30 capas en GPU y 32k de contexto; aca entra completo con 262k y KV q8_0. Si el benchmark dice que la calidad alcanza, este es el perfil de trabajo diario. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
     "benchmarkVariants": [
       {
         "id": "sys-bench-48-kat-f16",
@@ -968,7 +970,8 @@
         },
         "comment": "KAT corre con --reasoning on: piensa antes de responder. Apagarlo cambia el wall-time mucho mas que cualquier flag de VRAM, a costa de las tareas que necesitan razonar. Es LA comparacion que decide si conviene para trabajo diario."
       }
-    ]
+    ],
+    "minimumBinaryBuild": 10228
   },
   {
     "id": "sys-48-katcoder-131k",
@@ -1044,7 +1047,8 @@
       131072,
       262144
     ],
-    "comment": "Igual que sys-48-katcoder-262k con la mitad de contexto: prefill 4.164,8 t/s y decode 115,4 t/s, 12,9 y 12,1 GB. La diferencia contra el de 262k esta dentro del ruido (~1%), asi que este existe solo para confirmarlo en tu benchmark: si empatan, quedate con el de 262k que te da el doble de contexto gratis. CONTROL contra una sola placa (mismo prompt, ctx y KV): single da 2.605,6 de prefill y 106,7 de decode contra los 4.164,8 / 115,4 de aca (+60% de prefill). En single la VRAM queda en 23,0 GB de 24, asi que 262k directamente no entra: el reparto es lo que habilita los contextos grandes de este tier."
+    "comment": "Igual que sys-48-katcoder-262k con la mitad de contexto: prefill 4.164,8 t/s y decode 115,4 t/s, 12,9 y 12,1 GB. La diferencia contra el de 262k esta dentro del ruido (~1%), asi que este existe solo para confirmarlo en tu benchmark: si empatan, quedate con el de 262k que te da el doble de contexto gratis. CONTROL contra una sola placa (mismo prompt, ctx y KV): single da 2.605,6 de prefill y 106,7 de decode contra los 4.164,8 / 115,4 de aca (+60% de prefill). En single la VRAM queda en 23,0 GB de 24, asi que 262k directamente no entra: el reparto es lo que habilita los contextos grandes de este tier. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
+    "minimumBinaryBuild": 10228
   },
   {
     "id": "sys-48-katcoder-393k-nographs",
@@ -1119,10 +1123,11 @@
       262144,
       393216
     ],
-    "comment": "Contexto maximo de KAT: 393216. A ese contexto el server crashea con 'CUDA error: invalid program counter' apenas entra el primer prompt, y lo que lo destraba es apagar los CUDA graphs por env (GGML_CUDA_DISABLE_GRAPHS=1). No sale gratis y por eso es un perfil aparte y no el default: medido sobre KAT 262k con KV f16, apagar los graphs baja el decode de 123,9 a 97,7 t/s (-21%) aunque sube un poco el prefill (4.303,1 a 4.479,1). A 393k queda en 4.058,5 de prefill y 77,7 de decode. O sea: usalo cuando de verdad necesites la ventana de 393k, y quedate en el de 262k para trabajo normal. El KV va en q8_0 y no f16 porque a 393k el f16 no entra.",
+    "comment": "Contexto maximo de KAT: 393216. A ese contexto el server crashea con 'CUDA error: invalid program counter' apenas entra el primer prompt, y lo que lo destraba es apagar los CUDA graphs por env (GGML_CUDA_DISABLE_GRAPHS=1). No sale gratis y por eso es un perfil aparte y no el default: medido sobre KAT 262k con KV f16, apagar los graphs baja el decode de 123,9 a 97,7 t/s (-21%) aunque sube un poco el prefill (4.303,1 a 4.479,1). A 393k queda en 4.058,5 de prefill y 77,7 de decode. O sea: usalo cuando de verdad necesites la ventana de 393k, y quedate en el de 262k para trabajo normal. El KV va en q8_0 y no f16 porque a 393k el f16 no entra. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
     "env": {
       "GGML_CUDA_DISABLE_GRAPHS": "1"
-    }
+    },
+    "minimumBinaryBuild": 10228
   },
   {
     "id": "sys-48-dsv4-iq2m",

@@ -474,7 +474,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.90"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.91"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -1081,6 +1081,10 @@ public:
     static QVariantMap scoreBenchTextResponsesForTest(const QString &mode,
                                                       const QVariantList &benchTasks,
                                                       const QVariantList &messages);
+
+    // Un score de calidad parcial (3/5) NO es una corrida fallada; que falte un
+    // archivo pedido, sí. Separa una cosa de la otra.
+    static bool benchHardCriteriaFailed(const QVariantList &acceptanceRows);
 
 signals:
     void voiceStateChanged();

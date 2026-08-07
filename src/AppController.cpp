@@ -13635,6 +13635,22 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     (*processNext)(0);
 }
 
+// ¿Falló algún criterio DURO? Las filas de tipo "text" son puntaje de calidad
+// (cuántas preguntas contestó bien), no una condición de ejecución: un 3/5 es un
+// resultado válido. Las de archivo/substring/comando sí: si el agente no dejó el
+// archivo que se le pidió, la corrida falló y vale la pena reintentar.
+bool AppController::benchHardCriteriaFailed(const QVariantList &acceptanceRows)
+{
+    for (const QVariant &rv : acceptanceRows) {
+        const QVariantMap row = rv.toMap();
+        if (row.value(QStringLiteral("type")).toString() == QLatin1String("text"))
+            continue;
+        if (!row.value(QStringLiteral("passed")).toBool())
+            return true;
+    }
+    return false;
+}
+
 // Empareja cada tarea con la respuesta que le dio el agente y la pasa por el
 // evaluador que la tarea ya define (el mismo que usa el modo "modelo"). Las
 // tareas de velocidad no se puntúan: sólo miden TPS.
@@ -14154,7 +14170,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *timeToFirstAttempt = elapsed;
             }
 
-            const bool acceptanceFailed = qTotal > 0 && qScore < qTotal;
+            // Un puntaje parcial de CALIDAD no es una corrida fallada: 3/5 en una
+            // suite de preguntas es el resultado, no un error, y marcarlo failed
+            // esconde el score detrás de un badge rojo y dispara reparaciones al
+            // pedo. Sólo los criterios duros (archivos que faltan, comandos que no
+            // corren) cuentan como fallo de ejecución.
+            const bool acceptanceFailed = benchHardCriteriaFailed(acceptanceRows);
             if (!canceled && !*timedOut && !*passFailed && acceptanceFailed
                     && *repairAttempts < maxRepairAttempts) {
                 (*repairAttempts)++;
