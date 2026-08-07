@@ -66,6 +66,7 @@ private slots:
     void bundle_ultraQAndHybridAreWiredAndOptIn();
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_launchMenuGatesByTotalVramAcrossGpus();
+    void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
 
 private:
@@ -96,7 +97,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 44); // tiers base + extras + ULTRA-Q/híbrido/48GB + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 49); // tiers base + extras + familia 48GB (6) + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -655,12 +656,11 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     // sin volver a medir es lo que hacia crashear al server (OOM o illegal memory
     // access), asi que el test los clava.
     const QJsonObject rt = dual.value("runtime").toObject();
-    QCOMPARE(rt.value("batch").toInt(), 4096);   // 8192 => illegal memory access
-    QCOMPARE(rt.value("ubatch").toInt(), 1024);
+    QCOMPARE(rt.value("batch").toInt(), 4096);
+    QCOMPARE(rt.value("ubatch").toInt(), 4096);
     QCOMPARE(rt.value("kv").toString(), QStringLiteral("q4_0")); // q8_0 deja CUDA0 al borde
-    QCOMPARE(rt.value("gpuLayers").toInt(), 44);
-    QVERIFY(rt.value("mmap").toBool());
-    QVERIFY(!rt.value("mlock").toBool());
+    QVERIFY(rt.value("mmap").toBool());     // --no-mmap => OOM (116 GB en 128 de RAM)
+    QVERIFY(!rt.value("mlock").toBool());   // mlock crashea
 
     QStringList args;
     for (const QJsonValue &v : dual.value("extraArgs").toArray()) args << v.toString();
@@ -674,13 +674,27 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     // n-cpu-moe manda todas las capas pesadas a una placa (OOM) y, aun
     // balanceado, mata la inferencia con illegal memory access.
     QVERIFY(!args.contains(QStringLiteral("--n-cpu-moe")));
-    QVERIFY(!args.contains(QStringLiteral("--split-mode")));  // "row" ni carga
-    QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,0"));
-    const QStringList ot = args.filter(QStringLiteral("_exps="));
+    QCOMPARE(args.value(args.indexOf("--split-mode") + 1), QStringLiteral("layer"));
+    QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,1"));
+    // --fit off, no --fit-target: con el target el server muere en el primer prefill.
+    QCOMPARE(args.value(args.indexOf("--fit") + 1), QStringLiteral("off"));
+    QVERIFY(!args.contains(QStringLiteral("--fit-target")));
+
+    // Reparto de expertos ALINEADO con la capa base. Con -ts 1,1 llama.cpp deja las
+    // capas 0-21 en CUDA0 y 22-43 en CUDA1: mandar los expertos de una capa a la
+    // OTRA placa cruza PCIe por token y hunde el decode (5,16 t/s vs 9,55).
+    const QStringList ot = args.filter(QStringLiteral("_exps"));
     QCOMPARE(ot.size(), 3);
-    QVERIFY(ot.at(0).endsWith(QStringLiteral("=CUDA1")));
-    QVERIFY(ot.at(1).endsWith(QStringLiteral("=CUDA0")));
-    QVERIFY(ot.at(2).endsWith(QStringLiteral("=CPU")));   // barrido final: el resto a RAM
+    QVERIFY(ot.at(0).contains(QStringLiteral("16|17|18|19|20|21")));
+    QVERIFY(ot.at(0).endsWith(QStringLiteral("=CUDA0")));   // capas base en CUDA0
+    QVERIFY(ot.at(1).contains(QStringLiteral("22|23|24|25|26|27")));
+    QVERIFY(ot.at(1).endsWith(QStringLiteral("=CUDA1")));   // capas base en CUDA1
+    QVERIFY(ot.at(2).endsWith(QStringLiteral("=CPU")));     // -ot es first-match-wins:
+                                                            // el catch-all va ULTIMO
+    // El regex tiene que nombrar el tensor exacto: con ffn_.*_exps arrastra tensores
+    // que no deben moverse y el server muere con illegal memory access.
+    for (const QString &rule : ot)
+        QVERIFY(rule.contains(QStringLiteral("ffn_(gate|up|down)_exps\\.weight")));
 
     // El launch derivado tiene que llegar con esos valores, no solo el bundle.
     ProfileManager pm;
@@ -689,17 +703,88 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     QVERIFY(launch.value("system").toBool());
     const QVariantMap preset = pm.getRuntimePreset(launch.value("runtimePresetId").toString());
     QCOMPARE(preset.value("batch").toInt(), 4096);
-    QCOMPARE(preset.value("ubatch").toInt(), 1024);
+    QCOMPARE(preset.value("ubatch").toInt(), 4096);
     const QStringList launchArgs = launch.value("extraArgs").toStringList();
-    QCOMPARE(launchArgs.filter(QStringLiteral("_exps=")).size(), 3);
+    QCOMPARE(launchArgs.filter(QStringLiteral("_exps")).size(), 3);
     QVERIFY(!launchArgs.contains(QStringLiteral("--n-cpu-moe")));
-    QCOMPARE(launchArgs.value(launchArgs.indexOf("--tensor-split") + 1), QStringLiteral("1,0"));
+    QCOMPARE(launchArgs.value(launchArgs.indexOf("--tensor-split") + 1), QStringLiteral("1,1"));
 
     // Mismo modelo fisico que ULTRA-Q: no re-descarga los 116 GB de shards.
     const QVariantMap ultraLaunch =
         pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-iq3s"));
     QCOMPARE(pm.getModelProfile(launch.value("modelProfileId").toString()).value("modelId"),
              pm.getModelProfile(ultraLaunch.value("modelProfileId").toString()).value("modelId"));
+}
+
+// La familia 48GB son pares comparables para benchmarkear (DeepSeek con y sin
+// DSpark, ThinkingCap 131k/196k, KAT 131k/262k). Todos reparten entre las dos
+// placas y todos declaran 48 GB, así que el menú los muestra o los esconde juntos.
+void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+
+    const QStringList expected{
+        QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb"),   // DeepSeek + DSpark
+        QStringLiteral("sys-48-dsv4-nospec"),               // DeepSeek sin DSpark
+        QStringLiteral("sys-48-thinkingcap-131k"),
+        QStringLiteral("sys-48-thinkingcap-196k"),
+        QStringLiteral("sys-48-katcoder-262k"),
+        QStringLiteral("sys-48-katcoder-131k"),
+    };
+    QHash<QString, QJsonObject> found;
+    for (const QJsonValue &v : profiles) {
+        const QJsonObject o = v.toObject();
+        if (expected.contains(o.value("id").toString()))
+            found.insert(o.value("id").toString(), o);
+    }
+    QCOMPARE(found.size(), expected.size());
+
+    for (const QString &id : expected) {
+        const QJsonObject o = found.value(id);
+        QCOMPARE(o.value("minVramGb").toInt(), 48);
+        QVERIFY(o.value("extra").toBool());              // opt-in, no auto-recomendados
+        QVERIFY(!o.value("autoCompanion").toBool());     // no arrastran descargas
+        QVERIFY(!o.value("comment").toString().isEmpty());
+        QStringList args;
+        for (const QJsonValue &a : o.value("extraArgs").toArray()) args << a.toString();
+        // Reparto entre las dos placas + el --fit off que evita el crash de prefill.
+        QCOMPARE(args.value(args.indexOf("--split-mode") + 1), QStringLiteral("layer"));
+        QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,1"));
+        QCOMPARE(args.value(args.indexOf("--fit") + 1), QStringLiteral("off"));
+        QVERIFY(o.value("runtime").toObject().value("flashAttn").toBool());
+    }
+
+    // Los que entran enteros en VRAM no llevan reparto de expertos (no hay offload
+    // a RAM); los de DeepSeek sí, porque el modelo son ~116 GB.
+    for (const QString &id : expected) {
+        QStringList args;
+        for (const QJsonValue &a : found.value(id).value("extraArgs").toArray())
+            args << a.toString();
+        const bool isDeepSeek = id.contains(QStringLiteral("dsv4"))
+                             || id.contains(QStringLiteral("ultraq"));
+        QCOMPARE(args.filter(QStringLiteral("_exps")).size(), isDeepSeek ? 3 : 0);
+    }
+
+    // ThinkingCap conserva la visión (mmproj) y KAT usa el KV fino que habilitan
+    // los 48 GB — es justamente lo que el tier de 24 GB no puede pagar.
+    QVERIFY(!found.value(QStringLiteral("sys-48-thinkingcap-196k"))
+                 .value("model").toObject().value("mmprojFile").toString().isEmpty());
+    QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
+                 .value("runtime").toObject().value("kv").toString(),
+             QStringLiteral("q8_0"));
+    // 196k es el techo medido de ThinkingCap: a 262144 el server crashea.
+    QCOMPARE(found.value(QStringLiteral("sys-48-thinkingcap-196k"))
+                 .value("runtime").toObject().value("ctx").toInt(), 196608);
+
+    // Todos tienen que llegar al menú como perfiles de sistema lanzables.
+    ProfileManager pm;
+    for (const QString &id : expected) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(launch.value("system").toBool(), qPrintable(id));
+        QVERIFY2(!launch.value("modelProfileId").toString().isEmpty(), qPrintable(id));
+    }
 }
 
 // El menú de Lanzar gatea por VRAM TOTAL, no por la placa más grande: llama.cpp
