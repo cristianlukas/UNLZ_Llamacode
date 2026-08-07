@@ -28,6 +28,7 @@ void AgentProgressGovernor::reset(const QString &objective)
     m_evidence.clear();
     m_semanticSuccess.clear();
     m_exactWriteSuccess.clear();
+    m_contentFirstPath.clear();
     m_failedSignatures.clear();
     m_expectedArtifacts.clear();
     m_completedArtifacts.clear();
@@ -110,7 +111,31 @@ AgentProgressGovernor::Decision AgentProgressGovernor::record(
     const bool newSemanticWrite = ok && isWrite && !m_semanticSuccess.contains(d.semanticKey);
     const bool continuingExactWrite = ok && isWrite
         && m_exactWriteSuccess.contains(exactWriteTarget);
-    d.progress = newEvidence && (!isWrite || newSemanticWrite || continuingExactWrite);
+
+    // Re-escribir lo MISMO con otro nombre no es progreso. La clave semántica de
+    // una escritura incluye el path, así que sin este chequeo alcanzaba con
+    // renombrar para que cada vuelta contara como evidencia nueva: el contador de
+    // estancamiento se reseteaba y encima sumaba créditos. Medido en un benchmark
+    // real: 1.436 archivos .py en una sola tarea (is_prime.py, prime_check.py,
+    // prime_checker.py, prime_checker_v10.py…) y 704 en otra con nombres ya
+    // degenerados (add.py, add_only.py, add_only_only.py).
+    bool duplicateElsewhere = false;
+    if (ok && isWrite) {
+        const QString content = parsedArgs.value(QStringLiteral("content")).toString();
+        if (!content.trimmed().isEmpty()) {
+            const QString contentHash = QString::fromLatin1(
+                QCryptographicHash::hash(content.trimmed().toUtf8(),
+                                         QCryptographicHash::Sha256).toHex());
+            const QString firstPath = m_contentFirstPath.value(contentHash);
+            if (firstPath.isEmpty())
+                m_contentFirstPath.insert(contentHash, exactWriteTarget);
+            else if (firstPath != exactWriteTarget)
+                duplicateElsewhere = true;   // mismo contenido, archivo nuevo
+        }
+    }
+
+    d.progress = newEvidence && !duplicateElsewhere
+        && (!isWrite || newSemanticWrite || continuingExactWrite);
 
     if (d.progress) {
         m_evidence.insert(evidence);
@@ -134,7 +159,14 @@ AgentProgressGovernor::Decision AgentProgressGovernor::record(
                       : QStringLiteral("acción fallida");
     }
 
-    if (m_replans == 0 && (m_stagnant >= m_policy.replanAfter || m_credits <= 0)) {
+    // Techo duro: da igual cuánto "progreso" declare el presupuesto elástico, si el
+    // turno ya generó decenas de archivos distintos está en un bucle de renombres.
+    if (m_policy.maxDistinctWrites > 0
+        && m_exactWriteSuccess.size() > m_policy.maxDistinctWrites) {
+        d.action = Stop;
+        d.reason = QStringLiteral("demasiados archivos distintos en un turno (%1): bucle de renombres")
+                       .arg(m_exactWriteSuccess.size());
+    } else if (m_replans == 0 && (m_stagnant >= m_policy.replanAfter || m_credits <= 0)) {
         ++m_replans;
         m_stagnant = 0;
         m_credits = qMax(2, m_policy.initialCredits / 2);

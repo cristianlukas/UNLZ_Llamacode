@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QHash>
 #include <QSet>
 #include <QString>
 
@@ -15,6 +16,12 @@ public:
         int maxCredits = 16;
         int replanAfter = 3;
         int stopAfterReplan = 5;
+        // Techo duro de archivos DISTINTOS escritos en un turno. El chequeo de
+        // contenido duplicado no alcanza cuando el modelo cambia una línea en cada
+        // vuelta (prime_checker.py, prime_checker_v2.py, …_v10.py): ahí cada
+        // escritura es "nueva" y el presupuesto elástico nunca cierra. Ningún
+        // objetivo legítimo necesita tantos archivos nuevos en un solo turno.
+        int maxDistinctWrites = 24;
     };
     enum Action { Continue, Replan, Stop };
     struct Decision {
@@ -44,6 +51,9 @@ private:
     QSet<QString> m_evidence;
     QSet<QString> m_semanticSuccess;
     QSet<QString> m_exactWriteSuccess;
+    // contenido ya escrito -> primer path donde se escribio. Re-escribir lo mismo
+    // con otro nombre no es progreso: es el bucle de "prime_checker_v10.py".
+    QHash<QString, QString> m_contentFirstPath;
     // Firmas (clave semántica + resultado) de acciones que ya fallaron: repetirlas
     // es el bucle clasico (list_dir ".." una y otra vez) y cuesta doble.
     QSet<QString> m_failedSignatures;

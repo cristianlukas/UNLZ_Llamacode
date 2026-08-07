@@ -13,6 +13,8 @@ private slots:
     void namedArtifactTriggersEarlyClosureHint();
     void repeatedEditsToSameFileCanMakeProgress();
     void repeatedIdenticalFailureCostsDouble();
+    void sameContentUnderNewNameIsNotProgress();
+    void renameLoopStopsAtDistinctWriteCeiling();
 };
 
 void AgentProgressTests::semanticVariantsCollapse()
@@ -75,6 +77,62 @@ void AgentProgressTests::namedArtifactTriggersEarlyClosureHint()
     const auto d = g.record("write_file", R"({"path":"answer.py"})",
                             true, "written", true);
     QVERIFY(d.objectiveSatisfied);
+}
+
+// Regresión medida en un benchmark real: una sola tarea generó 1.436 archivos .py
+// (is_prime.py, prime_check.py, prime_checker.py, prime_checker_v10.py…) y otra 704
+// con nombres ya degenerados (add.py, add_only.py, add_only_only.py). La clave
+// semántica de una escritura incluye el path, así que alcanzaba con renombrar para
+// que cada vuelta contara como evidencia nueva: reseteaba el estancamiento y encima
+// sumaba créditos. El turno tardó 4.696 s en vez de ~400.
+void AgentProgressTests::sameContentUnderNewNameIsNotProgress()
+{
+    AgentProgressGovernor g;
+    auto writeArgs = [](const QString &path, const QString &content) {
+        return QStringLiteral("{\"path\":\"%1\",\"content\":\"%2\"}").arg(path, content);
+    };
+    const QString body = QStringLiteral("def is_prime(n): return n > 1");
+
+    QVERIFY(g.record("write_file", writeArgs("is_prime.py", body), true, "escrito", true).progress);
+
+    // Mismo contenido, otro nombre: NO es progreso.
+    const auto d = g.record("write_file", writeArgs("prime_check.py", body), true, "escrito", true);
+    QVERIFY(!d.progress);
+    QVERIFY(d.stagnant > 0);
+
+    // Contenido realmente distinto en otro archivo sí sigue siendo progreso.
+    QVERIFY(g.record("write_file",
+                     writeArgs("merge_sort.py", QStringLiteral("def merge_sort(a): return sorted(a)")),
+                     true, "escrito", true).progress);
+}
+
+// Red de seguridad para el caso que el chequeo de contenido no agarra: el modelo
+// cambia una línea en cada vuelta, así que cada archivo es "nuevo" de verdad y el
+// presupuesto elástico nunca cierra.
+void AgentProgressTests::renameLoopStopsAtDistinctWriteCeiling()
+{
+    AgentProgressGovernor::Policy p;
+    p.maxDistinctWrites = 5;
+    AgentProgressGovernor g(p);
+    auto renameArgs = [](int i) {
+        return QStringLiteral("{\"path\":\"prime_v%1.py\",\"content\":\"def f(): return %1\"}").arg(i);
+    };
+    AgentProgressGovernor::Action last = AgentProgressGovernor::Continue;
+    for (int i = 0; i < 40; ++i) {
+        last = g.record("write_file", renameArgs(i), true,
+                        QStringLiteral("escrito %1").arg(i), true).action;
+        if (last == AgentProgressGovernor::Stop) break;
+    }
+    QCOMPARE(last, AgentProgressGovernor::Stop);
+
+    // Con el techo por defecto, un puñado de archivos legítimos no se corta.
+    AgentProgressGovernor ok;
+    for (int i = 0; i < 6; ++i) {
+        const QString args =
+            QStringLiteral("{\"path\":\"mod%1.py\",\"content\":\"def f%1(): return %1\"}").arg(i);
+        QVERIFY(ok.record("write_file", args, true, QStringLiteral("escrito %1").arg(i), true).action
+                != AgentProgressGovernor::Stop);
+    }
 }
 
 void AgentProgressTests::repeatedEditsToSameFileCanMakeProgress()
