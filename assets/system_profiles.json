@@ -780,7 +780,7 @@
       131072,
       196608
     ],
-    "comment": "ThinkingCap 27B repartido entre las dos placas. Entra ENTERO en VRAM, asi que no hay offload de expertos a RAM y no aplica ninguna de las trampas del perfil de DeepSeek: alcanza con -sm layer -ts 1,1. Lo que compran los 48 GB aca no es velocidad de pesos sino KV: q8_0 en vez del q4_0 que exige el tier de 24 GB, mas contexto, y batch 2048/512 en vez de 512/64. Medido con un prompt de 12.010 tokens: prefill 1.818,9 t/s y decode 34,9 t/s, con 12,6 y 11,9 GB usados (sobra la mitad de la VRAM). mmproj cargado, o sea vision disponible. Comparar contra sys-maxq (24 GB, KV q4_0) para ver cuanto aporta el KV mas fino."
+    "comment": "ThinkingCap 27B repartido entre las dos placas. Entra ENTERO en VRAM, asi que no hay offload de expertos a RAM y no aplica ninguna de las trampas del perfil de DeepSeek: alcanza con -sm layer -ts 1,1. Lo que compran los 48 GB aca no es velocidad de pesos sino KV: q8_0 en vez del q4_0 que exige el tier de 24 GB, mas contexto, y batch 2048/512 en vez de 512/64. Medido con un prompt de 12.010 tokens: prefill 1.818,9 t/s y decode 34,9 t/s, con 12,6 y 11,9 GB usados (sobra la mitad de la VRAM). mmproj cargado, o sea vision disponible. Comparar contra sys-maxq (24 GB, KV q4_0) para ver cuanto aporta el KV mas fino. CONTROL contra una sola placa (mismo prompt, mismo ctx, mismo KV): single da 952,3 de prefill y 29,5 de decode contra los 1.818,9 / 34,9 de aca, o sea el reparto gana +91% de prefill. El motivo es que el modelo NO entra comodo en 24 GB: en single quedan 22,3 GB usados de 24 y el KV pelea contra los pesos. Vale aclararlo porque la guia dual de club-3090 recomienda lo contrario (quedarse en una placa y bajar el KV antes que repartir), y esa regla vale cuando el modelo entra holgado, no aca."
   },
   {
     "id": "sys-48-thinkingcap-196k",
@@ -1100,7 +1100,7 @@
       131072,
       262144
     ],
-    "comment": "Igual que sys-48-katcoder-262k con la mitad de contexto: prefill 4.164,8 t/s y decode 115,4 t/s, 12,9 y 12,1 GB. La diferencia contra el de 262k esta dentro del ruido (~1%), asi que este existe solo para confirmarlo en tu benchmark: si empatan, quedate con el de 262k que te da el doble de contexto gratis."
+    "comment": "Igual que sys-48-katcoder-262k con la mitad de contexto: prefill 4.164,8 t/s y decode 115,4 t/s, 12,9 y 12,1 GB. La diferencia contra el de 262k esta dentro del ruido (~1%), asi que este existe solo para confirmarlo en tu benchmark: si empatan, quedate con el de 262k que te da el doble de contexto gratis. CONTROL contra una sola placa (mismo prompt, ctx y KV): single da 2.605,6 de prefill y 106,7 de decode contra los 4.164,8 / 115,4 de aca (+60% de prefill). En single la VRAM queda en 23,0 GB de 24, asi que 262k directamente no entra: el reparto es lo que habilita los contextos grandes de este tier."
   },
   {
     "id": "sys-48-dsv4-res10",
