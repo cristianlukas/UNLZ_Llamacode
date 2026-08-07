@@ -13,6 +13,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QStandardPaths>
+#include <QRegularExpression>
 #include <QUuid>
 #include <QCoreApplication>
 #include <algorithm>
@@ -97,7 +98,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 49); // tiers base + extras + familia 48GB (6) + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 64); // tiers base + extras + familia 48GB (21) + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -650,7 +651,6 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     QCOMPARE(dual.value("minRamGb").toInt(), 120);
     QCOMPARE(dual.value("minimumBinaryBuild").toInt(), 10228);
     QCOMPARE(dual.value("model").toObject(), ultra.value("model").toObject());
-    QVERIFY(!dual.contains(QStringLiteral("benchmarkVariants")));
 
     // Valores medidos contra el server real: ver el comment del perfil. Cambiarlos
     // sin volver a medir es lo que hacia crashear al server (OOM o illegal memory
@@ -728,6 +728,8 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     const QStringList expected{
         QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb"),   // DeepSeek + DSpark
         QStringLiteral("sys-48-dsv4-nospec"),               // DeepSeek sin DSpark
+        QStringLiteral("sys-48-dsv4-res10"),                // menos residencia
+        QStringLiteral("sys-48-dsv4-res14"),                // mas residencia (control)
         QStringLiteral("sys-48-thinkingcap-131k"),
         QStringLiteral("sys-48-thinkingcap-196k"),
         QStringLiteral("sys-48-katcoder-262k"),
@@ -778,13 +780,68 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(found.value(QStringLiteral("sys-48-thinkingcap-196k"))
                  .value("runtime").toObject().value("ctx").toInt(), 196608);
 
-    // Todos tienen que llegar al menú como perfiles de sistema lanzables.
-    ProfileManager pm;
+    // La residencia de expertos de DeepSeek tiene que seguir ALINEADA en todas las
+    // variantes: reglas =CUDA0 sólo con capas < 22, =CUDA1 sólo con capas >= 22.
+    // Desalinear es el error que hundía el decode, y no da error visible.
     for (const QString &id : expected) {
+        if (!id.contains(QStringLiteral("dsv4")) && !id.contains(QStringLiteral("ultraq")))
+            continue;
+        QStringList args;
+        for (const QJsonValue &a : found.value(id).value("extraArgs").toArray())
+            args << a.toString();
+        for (const QString &rule : args.filter(QStringLiteral("_exps"))) {
+            const bool toCuda0 = rule.endsWith(QStringLiteral("=CUDA0"));
+            const bool toCuda1 = rule.endsWith(QStringLiteral("=CUDA1"));
+            if (!toCuda0 && !toCuda1) continue;   // el catch-all a CPU no aplica
+            // Sólo los números del selector de capas: el "=CUDA0"/"=CUDA1" del final
+            // también tiene dígitos y no es una capa.
+            const QString layers = rule.left(rule.indexOf(QStringLiteral(".ffn_")));
+            static const QRegularExpression num(QStringLiteral("\\d+"));
+            auto it = num.globalMatch(layers);
+            while (it.hasNext()) {
+                const int layer = it.next().captured().toInt();
+                if (toCuda0)
+                    QVERIFY2(layer < 22, qPrintable(id + QStringLiteral(": ") + rule));
+                else
+                    QVERIFY2(layer >= 22, qPrintable(id + QStringLiteral(": ") + rule));
+            }
+        }
+    }
+
+    // Cada modelo trae su barrido de variantes para benchmarkear (heredan del base
+    // y sólo cambian una palanca). Sin ellas el usuario no puede comparar nada.
+    QCOMPARE(found.value(QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb"))
+                 .value("benchmarkVariants").toArray().size(), 5);
+    QCOMPARE(found.value(QStringLiteral("sys-48-thinkingcap-196k"))
+                 .value("benchmarkVariants").toArray().size(), 4);
+    QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
+                 .value("benchmarkVariants").toArray().size(), 4);
+
+    // Todos tienen que llegar al menú como perfiles de sistema lanzables, incluidas
+    // las variantes expandidas.
+    ProfileManager pm;
+    QStringList launchable = expected;
+    launchable << QStringLiteral("sys-bench-48-dsv4-kv8")
+               << QStringLiteral("sys-bench-48-dsv4-196k")
+               << QStringLiteral("sys-bench-48-tc-mtp")
+               << QStringLiteral("sys-bench-48-kat-f16")
+               << QStringLiteral("sys-bench-48-kat-noreason");
+    for (const QString &id : launchable) {
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(launch.value("system").toBool(), qPrintable(id));
         QVERIFY2(!launch.value("modelProfileId").toString().isEmpty(), qPrintable(id));
     }
+
+    // Las variantes tienen que llegar con la palanca aplicada, no sólo declarada.
+    const QStringList mtpArgs =
+        pm.getLaunchProfile(QStringLiteral("sys-bench-48-tc-mtp")).value("extraArgs").toStringList();
+    QCOMPARE(mtpArgs.value(mtpArgs.indexOf("--spec-type") + 1), QStringLiteral("draft-mtp"));
+    const QVariantMap f16 = pm.getLaunchProfile(QStringLiteral("sys-bench-48-kat-f16"));
+    QCOMPARE(pm.getRuntimePreset(f16.value("runtimePresetId").toString())
+                 .value("cacheType").toString(),
+             QStringLiteral("f16"));
+    const QStringList f16Args = f16.value("extraArgs").toStringList();
+    QCOMPARE(f16Args.value(f16Args.indexOf("--cache-type-k") + 1), QStringLiteral("f16"));
 }
 
 // El menú de Lanzar gatea por VRAM TOTAL, no por la placa más grande: llama.cpp
