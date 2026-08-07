@@ -864,6 +864,10 @@ public:
                                     const QString &target = QStringLiteral("model"), int timeoutSec = 0,
                                     const QString &agentProfileId = QString());
     Q_INVOKABLE void cancelBenchmark();
+    // Una serie son horas: si la app muere en el perfil 8 de 13, esto dice qué
+    // faltaba y lo retoma sin repetir lo ya medido.
+    Q_INVOKABLE QVariantMap pendingBenchmark() const;
+    Q_INVOKABLE bool resumeBenchmark();
     Q_INVOKABLE void openBenchmarkFolder(const QString &path);
     Q_INVOKABLE void clearBenchmarkResults();
     Q_INVOKABLE void removeBenchmarkResult(int index);
@@ -1745,6 +1749,12 @@ private:
                                     const QString &runLabel, const QString &runDir,
                                     const QString &stage, const QString &message,
                                     const QString &detail, double elapsedSec = 0.0);
+    QString benchmarkResumeFile() const;
+    void saveBenchmarkResumePoint(const QStringList &pending, const QString &mode,
+                                  int passes, const QString &target,
+                                  const QString &agentProfileId,
+                                  const QString &runDir, const QString &runLabel);
+    void clearBenchmarkResumePoint();
     void runBenchmarkInternal(const QStringList &profileIds, const QString &mode,
                               const QVariantList &customTasks, const QString &runLabel,
                               int passes, const QString &target = QStringLiteral("model"));

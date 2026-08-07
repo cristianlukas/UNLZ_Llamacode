@@ -116,6 +116,7 @@ private slots:
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
+    void benchmarkResumesWhereItDiedInsteadOfLosingTheSeries();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
@@ -1211,6 +1212,51 @@ void AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
     // Sigue vivo y se acabó el tiempo: matar (antes: arrancaba igual).
     QCOMPARE(AppController::benchmarkStopStep(true, 0), Step::Kill);
     QCOMPARE(AppController::benchmarkStopStep(true, -300), Step::Kill);
+}
+
+// Una serie de benchmarks son horas. Si la app se cae en el perfil 8 de 13, lo que
+// faltaba tiene que poder retomarse: un crash del proceso no se puede atrapar desde
+// adentro, así que el punto de reanudación se escribe en disco antes de cada perfil.
+void AppControllerTests::benchmarkResumesWhereItDiedInsteadOfLosingTheSeries()
+{
+    AppController app;
+    // Sin serie previa no hay nada que reanudar, y resume no inventa una corrida.
+    QVERIFY(app.pendingBenchmark().isEmpty());
+    QVERIFY(!app.resumeBenchmark());
+
+    // Simular lo que deja el bucle antes de tocar el perfil 3 de 5.
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+                        + QStringLiteral("/benchmark-runs");
+    QDir().mkpath(dir);
+    QJsonObject o;
+    o["pending"] = QJsonArray{"sys-48-katcoder-262k", "sys-bench-48-kat-f16", "sys-48-katcoder-131k"};
+    o["mode"] = "short";
+    o["passes"] = 2;
+    o["target"] = "agent";
+    o["agentProfileId"] = "agent-chat";
+    o["runLabel"] = "standard";
+    QFile f(dir + QStringLiteral("/.resume.json"));
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+    f.close();
+
+    const QVariantMap pending = app.pendingBenchmark();
+    QCOMPARE(pending.value("pending").toStringList().size(), 3);
+    QCOMPARE(pending.value("pending").toStringList().first(),
+             QStringLiteral("sys-48-katcoder-262k"));
+    QCOMPARE(pending.value("passes").toInt(), 2);
+    QCOMPARE(pending.value("target").toString(), QStringLiteral("agent"));
+    QCOMPARE(pending.value("agentProfileId").toString(), QStringLiteral("agent-chat"));
+
+    // Una serie terminada no deja nada pendiente: el archivo con lista vacía no
+    // debe hacer que la app crea que quedó trabajo a medias.
+    o["pending"] = QJsonArray{};
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+    f.close();
+    QVERIFY(app.pendingBenchmark().isEmpty());
+    QVERIFY(!app.resumeBenchmark());
+    QFile::remove(f.fileName());
 }
 
 // Regresión "el benchmark Corta termina sin score": en modo agente el puntaje

@@ -13220,6 +13220,78 @@ void AppController::openBenchmarkFolder(const QString &path)
     QDesktopServices::openUrl(QUrl::fromLocalFile(fi.absoluteFilePath()));
 }
 
+// ── Reanudación del benchmark ────────────────────────────────────────────────
+// Una serie de benchmarks son horas. Si la app se cae en el perfil 8 de 13, sin
+// esto se pierde todo lo que faltaba y hay que reconstruir a mano qué corrió. Un
+// crash del proceso no se puede atrapar desde adentro, así que el punto de
+// reanudación se escribe en disco ANTES de cada perfil.
+QString AppController::benchmarkResumeFile() const
+{
+    return benchmarkRunsDir() + QStringLiteral("/.resume.json");
+}
+
+void AppController::saveBenchmarkResumePoint(const QStringList &pending, const QString &mode,
+                                             int passes, const QString &target,
+                                             const QString &agentProfileId,
+                                             const QString &runDir, const QString &runLabel)
+{
+    QJsonObject o;
+    o[QStringLiteral("pending")] = QJsonArray::fromStringList(pending);
+    o[QStringLiteral("mode")] = mode;
+    o[QStringLiteral("passes")] = passes;
+    o[QStringLiteral("target")] = target;
+    o[QStringLiteral("agentProfileId")] = agentProfileId;
+    o[QStringLiteral("runDir")] = runDir;
+    o[QStringLiteral("runLabel")] = runLabel;
+    o[QStringLiteral("savedAt")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    QDir().mkpath(benchmarkRunsDir());
+    QFile f(benchmarkResumeFile());
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+}
+
+void AppController::clearBenchmarkResumePoint()
+{
+    QFile::remove(benchmarkResumeFile());
+}
+
+// Lo que quedó pendiente de la última serie, o un map vacío si terminó bien.
+QVariantMap AppController::pendingBenchmark() const
+{
+    QFile f(benchmarkResumeFile());
+    if (!f.open(QIODevice::ReadOnly)) return {};
+    const QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+    QStringList pending;
+    for (const QJsonValue &v : o.value(QStringLiteral("pending")).toArray())
+        pending << v.toString();
+    if (pending.isEmpty()) return {};
+    return QVariantMap{
+        {QStringLiteral("pending"), pending},
+        {QStringLiteral("mode"), o.value(QStringLiteral("mode")).toString()},
+        {QStringLiteral("passes"), o.value(QStringLiteral("passes")).toInt(1)},
+        {QStringLiteral("target"), o.value(QStringLiteral("target")).toString()},
+        {QStringLiteral("agentProfileId"), o.value(QStringLiteral("agentProfileId")).toString()},
+        {QStringLiteral("runLabel"), o.value(QStringLiteral("runLabel")).toString()},
+        {QStringLiteral("savedAt"), o.value(QStringLiteral("savedAt")).toString()},
+    };
+}
+
+// Retoma exactamente donde quedó. Devuelve false si no había nada pendiente.
+bool AppController::resumeBenchmark()
+{
+    const QVariantMap p = pendingBenchmark();
+    if (p.isEmpty() || m_benchmarkRunning) return false;
+    const QStringList ids = p.value(QStringLiteral("pending")).toStringList();
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Benchmark: reanudando %1 perfil(es) que quedaron "
+                                     "pendientes de la serie anterior.").arg(ids.size()));
+    startBenchmark(ids, p.value(QStringLiteral("mode")).toString(),
+                   p.value(QStringLiteral("passes")).toInt(),
+                   p.value(QStringLiteral("target")).toString(), 0,
+                   p.value(QStringLiteral("agentProfileId")).toString());
+    return true;
+}
+
 void AppController::runBenchmarkInternal(const QStringList &profileIds, const QString &mode,
                                          const QVariantList &customTasks, const QString &runLabel,
                                          int passes, const QString &target)
@@ -13311,11 +13383,18 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             m_benchmarkRunning  = false;
             m_benchmarkProgress = 100;
             m_benchmarkStatus   = m_benchmarkCanceled ? "Cancelado." : "Completado.";
+            clearBenchmarkResumePoint();
             emit benchmarkRunningChanged();
             emit benchmarkProgressChanged();
             emit benchmarkStatusChanged();
             return;
         }
+
+        // Punto de reanudación en disco ANTES de tocar el perfil: si la app se
+        // cae acá (un crash del proceso no se puede atrapar desde adentro), al
+        // volver a arrancar sabemos qué faltaba y no se pierde la serie entera.
+        saveBenchmarkResumePoint(profileIds.mid(idx), mode, passes, target,
+                                 m_benchmarkAgentProfileId, *runDirShared, runLabel);
 
         const QString profileId   = profileIds.at(idx);
         const QVariantMap profData = m_profiles.getLaunchProfile(profileId);
@@ -13442,6 +13521,13 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                     runAgentBenchmark(profileId, profName, idx, profileIds.size(),
                                       agentTasks, passes, mode, runLabel, *runDirShared,
                                       [=]() {
+                                          // El progreso sólo avanzaba por los caminos
+                                          // de FALLO, así que una corrida sana se
+                                          // quedaba clavada en 0% de punta a punta.
+                                          (*stepsDone) += tasks.size() * passes;
+                                          m_benchmarkProgress =
+                                              qMin(99, (*stepsDone * 100) / qMax(1, totalSteps));
+                                          emit benchmarkProgressChanged();
                                           stopServer();
                                           benchmarkWaitServerStopped(10000, [=]() {
                                               (*processNext)(idx + 1);
