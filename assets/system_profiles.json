@@ -570,7 +570,7 @@
     "order": 88,
     "extra": true,
     "autoCompanion": false,
-    "displayName": "[48GB] ULTRA-Q · DeepSeek V4 Flash IQ3_S 131k · sin DSpark",
+    "displayName": "DeepSeek V4-7-8-26",
     "minVramGb": 48,
     "minRamGb": 120,
     "cpuOk": false,
@@ -725,7 +725,8 @@
       196608
     ],
     "comment": "ThinkingCap 27B repartido entre las dos placas. Entra ENTERO en VRAM, asi que no hay offload de expertos a RAM y no aplica ninguna de las trampas del perfil de DeepSeek: alcanza con -sm layer -ts 1,1. Lo que compran los 48 GB aca no es velocidad de pesos sino KV: q8_0 en vez del q4_0 que exige el tier de 24 GB, mas contexto, y batch 2048/512 en vez de 512/64. Medido con un prompt de 12.010 tokens: prefill 1.818,9 t/s y decode 34,9 t/s, con 12,6 y 11,9 GB usados (sobra la mitad de la VRAM). mmproj cargado, o sea vision disponible. Comparar contra sys-maxq (24 GB, KV q4_0) para ver cuanto aporta el KV mas fino. CONTROL contra una sola placa (mismo prompt, mismo ctx, mismo KV): single da 952,3 de prefill y 29,5 de decode contra los 1.818,9 / 34,9 de aca, o sea el reparto gana +91% de prefill. El motivo es que el modelo NO entra comodo en 24 GB: en single quedan 22,3 GB usados de 24 y el KV pelea contra los pesos. Vale aclararlo porque la guia dual de club-3090 recomienda lo contrario (quedarse en una placa y bajar el KV antes que repartir), y esa regla vale cuando el modelo entra holgado, no aca. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
-    "minimumBinaryBuild": 10228
+    "minimumBinaryBuild": 10228,
+    "vision": true
   },
   {
     "id": "sys-48-thinkingcap-196k",
@@ -847,7 +848,8 @@
         "comment": "Batch grande contra los 2048/512 del base. Con el modelo entero en VRAM y la mitad libre, el prefill deberia subir; es la palanca mas barata que queda."
       }
     ],
-    "minimumBinaryBuild": 10228
+    "minimumBinaryBuild": 10228,
+    "vision": true
   },
   {
     "id": "sys-48-katcoder-262k",
@@ -855,7 +857,7 @@
     "order": 82,
     "extra": true,
     "autoCompanion": false,
-    "displayName": "[48GB] KAT Coder 2.5 35B-A3B Q4_K_M · 262k",
+    "displayName": "KAT-Coder-7-8-26",
     "minVramGb": 48,
     "minRamGb": 32,
     "cpuOk": false,
@@ -1221,6 +1223,164 @@
     "comment": "MISMO modelo que el perfil base pero en UD-IQ2_M (90,9 GB contra los 116 del IQ3_S). SIN MEDIR: hay que descargar ~91 GB y correr el benchmark. Existe porque es la UNICA palanca que puede mover el decode de verdad. El decode de ~9,5 t/s del IQ3_S no lo limita la GPU: 32 de las 44 capas tienen sus expertos en RAM y el cuello es el ancho de banda DDR5, por eso no lo movieron ni mlock, ni el batch, ni el reparto. Lo unico que lo mueve es sacar expertos de la RAM, y para eso hay que achicar el modelo. La cuenta: con IQ3_S entran 12 capas de expertos en los 48 GB; con IQ2_M el experto por capa pasa de ~2,2 a ~1,7 GB y entran ~16, y ademas cada token lee 22% menos bytes de RAM. Por eso este perfil reside 12 capas de expertos en CUDA1 (blk 25-36) contra las 8 del IQ3_S: el experto mas chico deja entrar mas en la misma placa. EL COSTO ES CALIDAD y es real: DeepSeek V4 ya viene en 4-bit de fabrica, asi que IQ2 es cuantizar sobre cuantizado. Las opiniones publicas estan divididas — quien publico el setup de 25,8 t/s en una sola 3090 Ti dice no haber visto perdida en prosa, y varios sostienen que IQ2 arruina el trabajo agentico largo (loops en generacion larga). Correlo contra el perfil IQ3_S en el mismo benchmark y decidilo con datos. Si aparecen loops, antes de culpar al quant probar una build cuda13.3: hay reportes de que el bug de looping es de CUDA 13.2 y nuestro binario es cuda12.4. SALIDA VERIFICADA: con --tensor-split 1,1 (repartir tambien las capas base) este modelo devuelve TEXTO CORRUPTO — con el prompt 'cual es la capital de Francia' contesta '.#/!)'. No crashea ni avisa: responde basura con metricas de velocidad perfectas, que es la peor forma de fallar. Por eso las capas base van enteras en CUDA0 (--tensor-split 1,0) y CUDA1 recibe SOLO expertos. ThinkingCap y KAT no tienen el problema (entran enteros en VRAM, sin offload a CPU): es especifico de este modelo con expertos en RAM mas reparto de capas base. CONSECUENCIA HONESTA: asi configurado el dual NO le gana al tier de 24 GB (113,9 t/s de prefill y 7,58 de decode contra 160,5 / 9,50 en una sola placa). Existe para poder medir IQ2_M y para el dia que llama.cpp arregle el reparto; si buscas velocidad hoy, usa el perfil de 24 GB."
   },
   {
+    "id": "sys-48-thinkingcap-mtp",
+    "tier": "48GB-Qwen-Vision",
+    "order": 79,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "ThinkingCap+MTP-7-8-26",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF",
+      "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf",
+      "mmprojFile": "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf",
+      "quant": "Q4_K_M"
+    },
+    "runtime": {
+      "ctx": 196608,
+      "gpuLayers": 999,
+      "batch": 2048,
+      "ubatch": 512,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k",
+      "q8_0",
+      "--cache-type-v",
+      "q8_0",
+      "--fit",
+      "off",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--threads-batch",
+      "16",
+      "--predict",
+      "8192",
+      "--parallel",
+      "1",
+      "--reasoning-format",
+      "auto",
+      "--cache-prompt",
+      "--cache-reuse",
+      "512",
+      "--split-mode",
+      "layer",
+      "--tensor-split",
+      "1,1",
+      "--spec-type",
+      "draft-mtp",
+      "--spec-draft-n-max",
+      "4"
+    ],
+    "binaryKind": "official",
+    "contextPresets": [
+      32768,
+      65536,
+      131072,
+      196608
+    ],
+    "comment": "El ganador del barrido del 2026-08-07: 10/10 en el set de 4 ejes (conocimiento de nicho, contexto largo 8k/24k, entidades cruzadas, instrucciones anidadas), la unica tarea que separo a alguien —reescritura con 4 restricciones que interactuan— la gano solo el. KAT y DeepSeek sacaron 9/10. Ademas MTP da +68% de decode sin costo de calidad (36,7 -> 61,8 t/s) y baja el tiempo de tarea de 96 s a 59 s. Trae vision (mmproj). Es el default recomendado del tier: mejor calidad medida, 60 t/s y 196k de contexto. El techo de contexto es 196k — a 262144 crashea con VRAM de sobra.",
+    "minimumBinaryBuild": 10228,
+    "vision": true
+  },
+  {
+    "id": "sys-48-hybrid-tc-kat",
+    "tier": "48GB-Hybrid",
+    "order": 78,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[hybrid 48GB] ThinkingCap+MTP planifica → KAT-Coder ejecuta",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "KAT-Coder-V2.5-Dev-Q4_K_M-GGUF",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF",
+      "file": "Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf",
+      "quant": "Q4_K_M"
+    },
+    "runtime": {
+      "ctx": 262144,
+      "gpuLayers": 999,
+      "batch": 2048,
+      "ubatch": 512,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k",
+      "q8_0",
+      "--cache-type-v",
+      "q8_0",
+      "--fit",
+      "off",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--repeat-penalty",
+      "1.0",
+      "--presence-penalty",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--threads-batch",
+      "16",
+      "--predict",
+      "8192",
+      "--parallel",
+      "1",
+      "--reasoning",
+      "on",
+      "--cache-prompt",
+      "--cache-reuse",
+      "512",
+      "--split-mode",
+      "layer",
+      "--tensor-split",
+      "1,1"
+    ],
+    "binaryKind": "official",
+    "contextPresets": [
+      32768,
+      65536,
+      131072,
+      262144
+    ],
+    "comment": "Junta los dos ganadores del barrido: ThinkingCap+MTP planifica (10/10, la unica tarea que separo a alguien fue suya) y KAT-Coder ejecuta (9/10 pero a 110 t/s contra 60). La idea es pagar el modelo mas capaz solo en la parte que decide, y el rapido en la parte que escribe codigo, que es donde se van los tokens. Secuencial y no paralelo: los dos entran comodos en 48 GB pero no a la vez con 262k de contexto cada uno, asi que se turnan. DeepSeek quedo afuera del hibrido a proposito: empato con KAT en las 10 tareas y va 15x mas lento.",
+    "minimumBinaryBuild": 10228,
+    "plannerProfileId": "sys-48-thinkingcap-mtp",
+    "hybridMode": "sequential"
+  },
+  {
     "id": "sys-ultraq-dsv4-0731-iq3s-dspark-external",
     "tier": "24GB-DeepSeek-V4-Ultra",
     "order": 104,
@@ -1450,7 +1610,8 @@
       ]
     },
     "binaryKind": "official",
-    "comment": "MAX-Q promovido tras benchmark E2E dense-vs-dense: ThinkingCap logró 15/15 sin reparación en 219,5 s y 232,9 s. Mantiene 131k para entrar de forma estable en 24 GB."
+    "comment": "MAX-Q promovido tras benchmark E2E dense-vs-dense: ThinkingCap logró 15/15 sin reparación en 219,5 s y 232,9 s. Mantiene 131k para entrar de forma estable en 24 GB.",
+    "vision": true
   },
   {
     "id": "sys-maxctx",
@@ -1908,7 +2069,8 @@
       "args": []
     },
     "binaryKind": "official",
-    "binaryPin": "b9763"
+    "binaryPin": "b9763",
+    "vision": true
   },
   {
     "id": "sys-vram-8-qwen-agent",

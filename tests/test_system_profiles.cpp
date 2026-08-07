@@ -98,7 +98,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 59); // tiers base + extras + familia 48GB (16) + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 61); // tiers base + extras + familia 48GB (18) + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -190,6 +190,22 @@ void SystemProfilesTests::manager_fastGemmaDflashWired()
 
 void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
 {
+    // La visión intencional se declara con "vision": true en el bundle, no por el
+    // texto del displayName: un perfil puede llamarse como el usuario quiera
+    // ("ThinkingCap+MTP-7-8-26") y seguir cargando mmproj a propósito. El chequeo
+    // sigue existiendo para lo que importa — que nadie arrastre un mmproj sin
+    // querer, porque cuesta VRAM.
+    QSet<QString> declaresVision;
+    {
+        QFile bundle(bundlePath());
+        QVERIFY(bundle.open(QIODevice::ReadOnly));
+        for (const QJsonValue &v : QJsonDocument::fromJson(bundle.readAll()).array()) {
+            const QJsonObject o = v.toObject();
+            if (o.value(QStringLiteral("vision")).toBool())
+                declaresVision.insert(o.value(QStringLiteral("id")).toString());
+        }
+    }
+
     ProfileManager pm;
     auto *m = pm.launchProfiles();
     for (int r = 0; r < m->rowCount(); ++r) {
@@ -201,7 +217,8 @@ void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
         const QVariantMap model = pm.getModelProfile(launch.value("modelProfileId").toString());
         const QString name = launch.value("name").toString().toLower();
         const bool isVisionProfile = name.contains(QStringLiteral("visión"))
-                                     || name.contains(QStringLiteral("vision"));
+                                     || name.contains(QStringLiteral("vision"))
+                                     || declaresVision.contains(launchId);
         if (!isVisionProfile) {
             QVERIFY2(model.value("mmprojId").toString().isEmpty(),
                      qPrintable(QStringLiteral("%1 carga mmproj sin ser perfil de visión")
@@ -735,6 +752,8 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringLiteral("sys-48-katcoder-262k"),
         QStringLiteral("sys-48-katcoder-131k"),
         QStringLiteral("sys-48-katcoder-393k-nographs"),
+        QStringLiteral("sys-48-thinkingcap-mtp"),      // el ganador del barrido
+        QStringLiteral("sys-48-hybrid-tc-kat"),        // planner TC+MTP, ejecutor KAT
     };
     QHash<QString, QJsonObject> found;
     for (const QJsonValue &v : profiles) {
@@ -851,6 +870,32 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QVERIFY2(launch.value("system").toBool(), qPrintable(id));
         QVERIFY2(!launch.value("modelProfileId").toString().isEmpty(), qPrintable(id));
     }
+
+    // Los tres modelos medidos el 2026-08-07 quedan con nombre propio y fecha para
+    // poder identificarlos después, y el híbrido junta a los dos ganadores:
+    // ThinkingCap+MTP (10/10) planifica y KAT (9/10 pero a 110 t/s) ejecuta.
+    QCOMPARE(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("displayName").toString(),
+             QStringLiteral("ThinkingCap+MTP-7-8-26"));
+    QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k")).value("displayName").toString(),
+             QStringLiteral("KAT-Coder-7-8-26"));
+    QCOMPARE(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("displayName").toString(),
+             QStringLiteral("DeepSeek V4-7-8-26"));
+
+    const QJsonObject hyb = found.value(QStringLiteral("sys-48-hybrid-tc-kat"));
+    QCOMPARE(hyb.value("plannerProfileId").toString(), QStringLiteral("sys-48-thinkingcap-mtp"));
+    QCOMPARE(hyb.value("hybridMode").toString(), QStringLiteral("sequential"));
+    // El ejecutor es KAT: mismo modelo que el perfil de KAT, no el de ThinkingCap.
+    QCOMPARE(hyb.value("model").toObject().value("file").toString(),
+             found.value(QStringLiteral("sys-48-katcoder-262k"))
+                 .value("model").toObject().value("file").toString());
+    // El planner tiene que existir y traer MTP, que es lo que lo hace rendir.
+    QStringList mtpArgs2;
+    for (const QJsonValue &a : found.value(QStringLiteral("sys-48-thinkingcap-mtp"))
+                                   .value("extraArgs").toArray())
+        mtpArgs2 << a.toString();
+    QCOMPARE(mtpArgs2.value(mtpArgs2.indexOf("--spec-type") + 1), QStringLiteral("draft-mtp"));
+    QVERIFY(!found.value(QStringLiteral("sys-48-thinkingcap-mtp"))
+                 .value("model").toObject().value("mmprojFile").toString().isEmpty());
 
     // 393k sólo arranca con los CUDA graphs apagados, y eso viaja por env: si el
     // env se pierde, el server muere con "invalid program counter" en el primer
