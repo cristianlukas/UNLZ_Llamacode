@@ -13286,6 +13286,96 @@ void AppController::openBenchmarkFolder(const QString &path)
     QDesktopServices::openUrl(QUrl::fromLocalFile(fi.absoluteFilePath()));
 }
 
+// Re-puntúa corridas YA guardadas con los evaluadores actuales, sin volver a
+// correr los modelos. Cada resultado guarda su workspace, y ahí quedaron los
+// archivos que produjo el agente: alcanza para recalcular. Una serie son horas de
+// GPU; cuando el bug está en el evaluador y no en la medición, re-evaluar es lo
+// correcto. Devuelve cuántos resultados cambiaron.
+int AppController::rescoreBenchmarkResults()
+{
+    int changed = 0;
+    const QString root = benchmarkRunsDir();
+    QDirIterator runs(root, QStringList{QStringLiteral("*.json")},
+                      QDir::Files, QDirIterator::Subdirectories);
+    while (runs.hasNext()) {
+        const QString path = runs.next();
+        const QString base = QFileInfo(path).fileName();
+        if (base == QLatin1String("metadata.json") || base == QLatin1String("comparison.json")
+            || base.startsWith(QLatin1Char('.')))
+            continue;
+
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly)) continue;
+        QJsonObject o = QJsonDocument::fromJson(f.readAll()).object();
+        f.close();
+
+        const QString workspace = o.value(QStringLiteral("workspace")).toString();
+        if (workspace.isEmpty() || !QDir(workspace).exists()) continue;
+        const QString mode = o.value(QStringLiteral("mode")).toString();
+        if (mode.isEmpty()) continue;
+
+        QStringList files;
+        QDirIterator di(workspace, QDir::Files, QDirIterator::Subdirectories);
+        while (di.hasNext()) {
+            di.next();
+            files << QDir(workspace).relativeFilePath(di.filePath());
+        }
+
+        // Las tareas se reconstruyen del modo: son las mismas que corrieron.
+        QVariantList benchTasks;
+        for (const BenchTaskDef &d : buildBenchTasks(mode)) {
+            if (d.isSpeed || !d.eval) continue;
+            benchTasks.append(QVariantMap{{QStringLiteral("id"), d.id},
+                                          {QStringLiteral("prompt"), d.prompt}});
+        }
+        const QString wsText = benchWorkspaceText(workspace, files);
+        const QString response = o.value(QStringLiteral("response")).toString();
+
+        QVariantList rows;
+        int score = 0, total = 0;
+        for (const QVariant &tv : benchTasks) {
+            const QString taskId = tv.toMap().value(QStringLiteral("id")).toString();
+            const bool passed = evalBenchTaskForTest(mode, taskId,
+                                                     response + QLatin1Char('\n') + wsText);
+            rows.append(QVariantMap{{QStringLiteral("taskId"), taskId},
+                                    {QStringLiteral("type"), QStringLiteral("text")},
+                                    {QStringLiteral("passed"), passed}});
+            total++;
+            if (passed) score++;
+        }
+        if (total == 0) continue;
+
+        const bool sameScore = o.value(QStringLiteral("qualityScore")).toInt() == score
+                            && o.value(QStringLiteral("qualityTotal")).toInt() == total;
+        if (sameScore) continue;
+
+        o[QStringLiteral("qualityScore")] = score;
+        o[QStringLiteral("qualityTotal")] = total;
+        o[QStringLiteral("finalScore")] = score;
+        o[QStringLiteral("finalTotal")] = total;
+        o[QStringLiteral("firstAttemptScore")] = score;
+        o[QStringLiteral("firstAttemptTotal")] = total;
+        o[QStringLiteral("acceptance")] = QJsonArray::fromVariantList(rows);
+        // Un puntaje de calidad parcial NO es una corrida fallada. Sólo sobrevive
+        // el timeout, que sí es un fallo de ejecución; el "failureStage:
+        // acceptance" que ponía el bucle viejo deja de aplicar.
+        o[QStringLiteral("failed")] = o.value(QStringLiteral("timedOut")).toBool(false);
+        if (o.value(QStringLiteral("failureStage")).toString() == QLatin1String("acceptance")) {
+            o.remove(QStringLiteral("failureStage"));
+            o.remove(QStringLiteral("failureMessage"));
+        }
+        o[QStringLiteral("rescoredAt")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+
+        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            f.write(QJsonDocument(o).toJson());
+            f.close();
+            changed++;
+        }
+    }
+    if (changed > 0) loadBenchmarkResults();
+    return changed;
+}
+
 // ── Reanudación del benchmark ────────────────────────────────────────────────
 // Una serie de benchmarks son horas. Si la app se cae en el perfil 8 de 13, sin
 // esto se pierde todo lo que faltaba y hay que reconstruir a mano qué corrió. Un
@@ -13785,6 +13875,24 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         (*runProfile)();
     };
     (*processNext)(0);
+}
+
+// Todo lo que el agente dejó escrito en el workspace, como un solo texto para el
+// evaluador. Se saltea el log interno y se corta a 512 KB: puntuar no necesita
+// más, y un workspace enorme no debe frenar el cierre de la corrida.
+QString AppController::benchWorkspaceText(const QString &workspace, const QStringList &files)
+{
+    QString out;
+    const QDir ws(workspace);
+    for (const QString &rel : files) {
+        if (rel.contains(QStringLiteral(".llamacode/"))) continue;   // log del agente
+        QFile f(ws.filePath(rel));
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
+        out += QStringLiteral("\n// ---- ") + rel + QStringLiteral(" ----\n");
+        out += QString::fromUtf8(f.read(256 * 1024));
+        if (out.size() > 512 * 1024) break;
+    }
+    return out;
 }
 
 bool AppController::evalBenchTaskForTest(const QString &mode, const QString &taskId,
@@ -14310,8 +14418,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             // en el chat (la "Corta") quedaba en 0/0 y la tabla mostraba un guion
             // como si la corrida hubiera fallado.
             if (qTotal == 0) {
-                const QVariantMap textScore =
-                    scoreBenchTextResponsesForTest(mode, benchTasks, msgs);
+                // El agente trabaja con herramientas: escribe is_prime.py y su
+                // mensaje final suele venir VACÍO. Evaluar sólo el chat daba False
+                // en todas las tareas de código aunque el archivo estuviera
+                // perfecto, así que los archivos del workspace entran al evaluador.
+                const QVariantMap textScore = scoreBenchTextResponsesForTest(
+                    mode, benchTasks, msgs, benchWorkspaceText(workspace, files));
                 const QVariantList textRows = textScore.value(QStringLiteral("rows")).toList();
                 if (!textRows.isEmpty()) {
                     acceptanceRows.append(textRows);

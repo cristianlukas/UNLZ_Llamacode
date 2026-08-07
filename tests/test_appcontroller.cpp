@@ -1259,6 +1259,29 @@ void AppControllerTests::benchmarkEvaluatorsToleratePresentationNotContent()
     QVERIFY(ok("math_arithmetic", "El resultado final es 436."));
     QVERIFY(ok("math_arithmetic", "**436**"));
     QVERIFY(!ok("math_arithmetic", "El resultado es 999."));
+
+    // El caso que rompía todo en la corrida real: el agente NO contesta por chat,
+    // escribe el archivo y su mensaje final viene vacío. El contenido del
+    // workspace tiene que llegar al evaluador.
+    QTemporaryDir ws;
+    QVERIFY(ws.isValid());
+    QFile py(ws.filePath(QStringLiteral("is_prime.py")));
+    QVERIFY(py.open(QIODevice::WriteOnly | QIODevice::Text));
+    py.write("def is_prime(n: int) -> bool:\n    if n <= 1:\n        return False\n    return True\n");
+    py.close();
+    QDir(ws.path()).mkpath(QStringLiteral(".llamacode"));
+    QFile log(ws.filePath(QStringLiteral(".llamacode/agent_events.jsonl")));
+    QVERIFY(log.open(QIODevice::WriteOnly | QIODevice::Text));
+    log.write("{\"kind\":\"observation\"}\n");
+    log.close();
+
+    const QString wsText = AppController::benchWorkspaceText(
+        ws.path(), QStringList{QStringLiteral("is_prime.py"),
+                               QStringLiteral(".llamacode/agent_events.jsonl")});
+    QVERIFY(wsText.contains(QStringLiteral("def is_prime")));
+    QVERIFY(!wsText.contains(QStringLiteral("agent_events")));   // el log no se puntúa
+    QVERIFY(AppController::evalBenchTaskForTest(m, QStringLiteral("python_prime"),
+                                                QString() + QLatin1Char('\n') + wsText));
 }
 
 // Una serie de benchmarks son horas. Si la app se cae en el perfil 8 de 13, lo que

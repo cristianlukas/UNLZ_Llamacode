@@ -868,6 +868,10 @@ public:
     // faltaba y lo retoma sin repetir lo ya medido.
     Q_INVOKABLE QVariantMap pendingBenchmark() const;
     Q_INVOKABLE bool resumeBenchmark();
+    // Re-puntúa las corridas ya guardadas con los evaluadores actuales, usando el
+    // workspace que quedó en disco. Cuando el bug está en el evaluador y no en la
+    // medición, esto evita repetir horas de GPU. Devuelve cuántas cambiaron.
+    Q_INVOKABLE int rescoreBenchmarkResults();
     Q_INVOKABLE void openBenchmarkFolder(const QString &path);
     Q_INVOKABLE void clearBenchmarkResults();
     Q_INVOKABLE void removeBenchmarkResult(int index);
@@ -1092,6 +1096,10 @@ public:
     // libre de un LLM y se rompen con el formato (markdown, <think>, espaciado).
     static bool evalBenchTaskForTest(const QString &mode, const QString &taskId,
                                      const QString &text);
+    // Todo lo que el agente escribió en el workspace, como un solo texto: en modo
+    // agente el mensaje final suele venir vacío porque el trabajo quedó en los
+    // archivos, y sin esto las tareas de código puntúan 0 aunque estén bien.
+    static QString benchWorkspaceText(const QString &workspace, const QStringList &files);
 
     // Un score de calidad parcial (3/5) NO es una corrida fallada; que falte un
     // archivo pedido, sí. Separa una cosa de la otra.
