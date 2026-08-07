@@ -108,6 +108,26 @@ certeza**. Ese es el límite del experimento: para tareas donde un 284B despegue
 harían falta problemas de nivel investigación, donde el evaluador tendría que
 conocer la respuesta correcta de antemano.
 
+## 3d. DeepSeek sobre el mismo set de élite: empate, sin una sola ventaja
+
+| | ThinkingCap+MTP | DeepSeek V4 IQ3_S |
+|---|---|---|
+| H conocimiento long-tail (6) | 6/6 | 6/6 |
+| I matemática multi-paso (4) | 4/4 | 4/4 |
+| J algoritmos poco frecuentes (2) | 2/2 | 2/2 ¹ |
+| K trampas (2) | 2/2 | 2/2 |
+| **total** | **14/14** | **14/14** ¹ |
+| velocidad | 60 t/s | 7 t/s |
+
+¹ La corrida automática marcó 13/14 por un fallo en Boyer-Moore, pero al repetir
+esa tarea sola DeepSeek escribió el algoritmo canónico correcto (dos variables,
+verificación en segunda pasada, sin `Counter`) y **pasa los cinco tests**. Era
+varianza de muestreo a temp 0.3, no incapacidad: se cuenta como PASS.
+
+**Resultado buscando explícitamente una ventaja de DeepSeek: no existe.** Sobre 24
+tareas de cuatro sets distintos, no ganó ninguna que ThinkingCap no ganara, y va
+8× más lento.
+
 ## 4. Lo que ya se puede afirmar
 
 1. **KAT-Coder no es "el rápido y limitado".** Empata en capacidad con ThinkingCap
@@ -116,16 +136,25 @@ conocer la respuesta correcta de antemano.
    necesitás imágenes, no hay razón medida para preferirlo.
 3. **MTP sí vale, y mucho**: +68% de decode (36,7 → 61,8 t/s) sin costo de
    calidad, y baja el tiempo de tarea de 96 s a 59 s. Es la mejor palanca del tier.
-4. **DeepSeek todavía no justificó su costo.** 7 t/s contra 110 de KAT — 15× más
-   lento — sin ventaja demostrada en ninguna tarea hasta el eje D.
+4. **DeepSeek no justifica su costo, y el tema está cerrado.** Empata 14/14 con
+   ThinkingCap en el set de élite y 9/10 vs 10/10 en el anterior, a 7 t/s contra
+   60. Sobre 24 tareas no ganó ninguna. Sale del roster diario.
 
 ### Hipótesis abierta sobre DeepSeek
 
-Se está corriendo en **UD-IQ3_S**, o sea cuantizado sobre un modelo que ya viene
-en 4-bit de fábrica. Si su ventaja se perdió ahí, hay dos salidas y las dos son
-accionables: bajar a **IQ2_M** (más chico, más expertos en VRAM, ~2× de decode) ya
-que la calidad no se estaría aprovechando igual, o sacarlo del roster y quedarse
-con KAT + ThinkingCap.
+Se corrió en **UD-IQ3_S**, cuantizado sobre un modelo que ya viene en 4-bit. La
+pregunta era si la ventaja se perdió ahí. Quedó **sin resolver a propósito**, y no
+vale la pena resolverla:
+
+- **Q4 no entra en la máquina**: ~170 GB contra ~138 GB utilizables (48 VRAM + 128
+  RAM menos overhead). Los ~30 GB que faltan se leerían del disco en cada token.
+  Haría falta pasar a 192 GB de RAM.
+- **Q2 (91 GB) no se bajó** porque no hay con qué medir la mejora: comparar quants
+  exige al menos UNA tarea donde DeepSeek se despegue, y no existe ninguna. Bajar
+  91 GB para comparar dos empates es tiempo tirado.
+
+Si alguna vez aparece una tarea donde DeepSeek gane, el perfil `sys-48-dsv4-iq2m`
+ya está armado y ahí sí tiene sentido la comparación.
 
 ---
 
