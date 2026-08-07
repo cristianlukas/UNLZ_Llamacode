@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
 import LlamaCode 1.0
+import "../components/BenchmarkScore.js" as BenchmarkScore
 
 Item {
     id: root
@@ -83,18 +84,10 @@ Item {
         if (column === "target") return benchmarkTargetLabel(row).toLowerCase()
         if (column === "agentProfile") return (row.agentProfileName ?? "").toString().toLowerCase()
         if (column === "benchmark") return benchmarkNameLabel(row).toLowerCase()
-        if (column === "score") {
-            const total = row.qualityTotal ?? 0
-            return total > 0 ? (row.qualityScore ?? 0) / total : -1
-        }
-        if (column === "firstAttemptScore") {
-            const total = row.firstAttemptTotal ?? row.qualityTotal ?? 0
-            return total > 0 ? (row.firstAttemptScore ?? row.qualityScore ?? 0) / total : -1
-        }
-        if (column === "finalScore") {
-            const total = row.finalTotal ?? row.qualityTotal ?? 0
-            return total > 0 ? (row.finalScore ?? row.qualityScore ?? 0) / total : -1
-        }
+        if (column === "score") return BenchmarkScore.sortKey(row, "qualityScore", "qualityTotal")
+        if (column === "firstAttemptScore")
+            return BenchmarkScore.sortKey(row, "firstAttemptScore", "firstAttemptTotal")
+        if (column === "finalScore") return BenchmarkScore.sortKey(row, "finalScore", "finalTotal")
         if (column === "repairAttempts") return row.repairAttempts ?? 0
         if (column === "timeToFirstAttempt") return row.timeToFirstAttempt ?? row.elapsedSec ?? 0
         if (column === "totalTime") return row.totalTime ?? row.elapsedSec ?? 0
@@ -222,15 +215,14 @@ Item {
         return sortedBenchmarkResults(filteredBenchmarkResults(App.benchmarkResults), sortColumn, sortDirection)
     }
     function scoreLabel(row, scoreKey, totalKey) {
-        const s = row[scoreKey] ?? row.qualityScore ?? 0
-        const t = row[totalKey] ?? row.qualityTotal ?? 0
-        return t > 0 ? s + "/" + t : "—"
+        return BenchmarkScore.scoreLabel(row, scoreKey, totalKey)
     }
     function scoreColor(row, scoreKey, totalKey) {
-        const s = row[scoreKey] ?? row.qualityScore ?? 0
-        const t = row[totalKey] ?? row.qualityTotal ?? 1
-        const r = s / t
-        return r >= 0.8 ? Theme.successText : r >= 0.5 ? Theme.warnText : Theme.errorText
+        const tone = BenchmarkScore.scoreTone(row, scoreKey, totalKey)
+        return tone === "muted" ? Theme.textMuted
+             : tone === "ok" ? Theme.successText
+             : tone === "warn" ? Theme.warnText
+             : Theme.errorText
     }
     function secondsLabel(value) {
         const sec = value ?? 0
@@ -1146,17 +1138,8 @@ Item {
                                     Text {
                                         anchors.fill: parent
                                         visible: !resultRow.failed
-                                        text: {
-                                            const s = modelData.qualityScore ?? 0
-                                            const t = modelData.qualityTotal ?? 0
-                                            return t > 0 ? s + "/" + t : "—"
-                                        }
-                                        color: {
-                                            const s = modelData.qualityScore ?? 0
-                                            const t = modelData.qualityTotal ?? 1
-                                            const r = s / t
-                                            return r >= 0.8 ? Theme.successText : r >= 0.5 ? Theme.warnText : Theme.errorText
-                                        }
+                                        text: root.scoreLabel(modelData, "qualityScore", "qualityTotal")
+                                        color: root.scoreColor(modelData, "qualityScore", "qualityTotal")
                                         font.pixelSize: 12; font.bold: true
                                         horizontalAlignment: Text.AlignRight
                                         verticalAlignment: Text.AlignVCenter

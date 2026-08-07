@@ -501,7 +501,7 @@
       "ctx": 131072,
       "gpuLayers": 999,
       "batch": 4096,
-      "ubatch": 4096,
+      "ubatch": 1024,
       "threads": 8,
       "kv": "q4_0",
       "flashAttn": true,
@@ -543,11 +543,9 @@
       "--split-mode",
       "layer",
       "--tensor-split",
-      "1,1",
+      "1,0",
       "-ot",
-      "blk\\.(16|17|18|19|20|21)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0",
-      "-ot",
-      "blk\\.(22|23|24|25|26|27)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
+      "blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
       "-ot",
       "blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
       "--spec-type",
@@ -564,59 +562,7 @@
       262144,
       393216
     ],
-    "comment": "ULTRA-Q para 48 GB (2x RTX 3090, sin NVLink) + 128 GB RAM. Mismos shards IQ3_S que el tier de 24 GB. Todo MEDIDO contra el server real (b10228) con un prompt de 12.405 tokens, porque los prompts cortos dan falso verde: la config crasheaba recien en el primer prefill grande. LA REGLA QUE MANDA: los expertos residentes tienen que estar en la MISMA placa que su capa base. Con -sm layer -ts 1,1 llama.cpp parte las 44 capas base 0-21 en CUDA0 y 22-43 en CUDA1, asi que un -ot que mande los expertos de blk 27 a CUDA0 obliga a cruzar PCIe de ida y vuelta por token. Desalineado el decode BAJA al sumar residencia (5,16 t/s con 12 capas); alineado sube (9,55 t/s con las mismas 12). Contra una sola placa (--n-cpu-moe 39): prefill 160,5 t/s y decode 9,50 t/s. Este perfil, alineado y con DSpark: prefill 207,0 t/s (+29%). Sin DSpark: 194,9 t/s de prefill y 9,55 t/s de decode (ver sys-48-dsv4-nospec; el decode con spec no es medible con un prompt sintetico repetitivo porque la aceptacion del draft es artificialmente mala, por eso conviven las dos variantes). VRAM 22,3 y 22,2 GB. Otras dos trampas del mismo path, las dos se ven como 'CUDA error: an illegal memory access' en el primer prefill: el regex del -ot tiene que nombrar ffn_(gate|up|down)_exps.weight (con ffn_.*_exps arrastra tensores que no deben moverse), y va --fit off, no --fit-target N. -ot es first-match-wins: las reglas por device van ANTES del catch-all =CPU. Limites medidos: 14 capas residentes (7+7) empeora (166 t/s / 8,76) porque deja la VRAM al borde; --no-mmap da OOM (IQ3_S son 116 GB y hay 128 de RAM); mlock crashea; --split-mode row ni carga ('device CUDA0 does not support split buffers'). La receta base salio de github.com/noonghunna/club-3090 (models/deepseek-v4-flash-0731/llama-cpp/compose/dual). OJO: los -ot nombran CUDA0/CUDA1, asi que este perfil asume exactamente dos placas.",
-    "benchmarkVariants": [
-      {
-        "id": "sys-bench-48-dsv4-kv8",
-        "order": 90,
-        "displayName": "[bench 48GB DSv4] KV q8_0",
-        "runtime": {
-          "kv": "q8_0"
-        },
-        "extraArgOverrides": {
-          "--cache-type-k": "q8_0",
-          "--cache-type-v": "q8_0"
-        },
-        "comment": "MEDIDO: prefill 216,0 t/s, el mejor de la familia DeepSeek (el base con q4_0 da 207,0). El KV mas fino cuesta VRAM pero en el reparto alineado entra. Si tu carga es de contexto largo, este es el candidato a ganarle al base."
-      },
-      {
-        "id": "sys-bench-48-dsv4-196k",
-        "order": 91,
-        "displayName": "[bench 48GB DSv4] 196k de contexto",
-        "runtime": {
-          "ctx": 196608
-        },
-        "comment": "MEDIDO: prefill 198,7 t/s con 196k de ventana (el base corre 131k a 207,0). Mide cuanto cuesta el contexto extra: si la caida es ~4% como aca, conviene el contexto."
-      },
-      {
-        "id": "sys-bench-48-dsv4-b2048",
-        "order": 92,
-        "displayName": "[bench 48GB DSv4] B2048 · U2048",
-        "runtime": {
-          "batch": 2048,
-          "ubatch": 2048
-        },
-        "comment": "Mitad de batch que el base (4096/4096). Baja el compute buffer ~1,7 GB por placa, o sea deja lugar para mas expertos residentes; la contra es que el prefill suele caer. Control para saber si el batch grande esta pagando."
-      },
-      {
-        "id": "sys-bench-48-dsv4-ds8",
-        "order": 93,
-        "displayName": "[bench 48GB DSv4] DSpark 8",
-        "extraArgOverrides": {
-          "--spec-draft-n-max": 8
-        },
-        "comment": "Draft mas largo (n=8 contra los 5 del base): gana mas por acierto y desperdicia mas por fallo. Solo se puede decidir con trabajo real, porque la aceptacion del draft depende del texto y un prompt sintetico la subestima."
-      },
-      {
-        "id": "sys-bench-48-dsv4-ds5-pmin05",
-        "order": 94,
-        "displayName": "[bench 48GB DSv4] DSpark 5 · p-min 0.5",
-        "extraArgOverrides": {
-          "--spec-draft-p-min": 0.5
-        },
-        "comment": "p-min por defecto es 0.00: nunca descarta un draft malo. Cortar los drafts flojos deberia recuperar el overhead que hoy se paga en los fallos."
-      }
-    ]
+    "comment": "ULTRA-Q para 48 GB (2x RTX 3090, sin NVLink) + 128 GB RAM. Mismos shards IQ3_S que el tier de 24 GB. Todo MEDIDO contra el server real (b10228) con un prompt de 12.405 tokens, porque los prompts cortos dan falso verde: la config crasheaba recien en el primer prefill grande. LA REGLA QUE MANDA: los expertos residentes tienen que estar en la MISMA placa que su capa base. Con -sm layer -ts 1,1 llama.cpp parte las 44 capas base 0-21 en CUDA0 y 22-43 en CUDA1, asi que un -ot que mande los expertos de blk 27 a CUDA0 obliga a cruzar PCIe de ida y vuelta por token. Desalineado el decode BAJA al sumar residencia (5,16 t/s con 12 capas); alineado sube (9,55 t/s con las mismas 12). Contra una sola placa (--n-cpu-moe 39): prefill 160,5 t/s y decode 9,50 t/s. Este perfil, alineado y con DSpark: prefill 207,0 t/s (+29%). Sin DSpark: 194,9 t/s de prefill y 9,55 t/s de decode (ver sys-48-dsv4-nospec; el decode con spec no es medible con un prompt sintetico repetitivo porque la aceptacion del draft es artificialmente mala, por eso conviven las dos variantes). VRAM 22,3 y 22,2 GB. Otras dos trampas del mismo path, las dos se ven como 'CUDA error: an illegal memory access' en el primer prefill: el regex del -ot tiene que nombrar ffn_(gate|up|down)_exps.weight (con ffn_.*_exps arrastra tensores que no deben moverse), y va --fit off, no --fit-target N. -ot es first-match-wins: las reglas por device van ANTES del catch-all =CPU. Limites medidos: 14 capas residentes (7+7) empeora (166 t/s / 8,76) porque deja la VRAM al borde; --no-mmap da OOM (IQ3_S son 116 GB y hay 128 de RAM); mlock crashea; --split-mode row ni carga ('device CUDA0 does not support split buffers'). La receta base salio de github.com/noonghunna/club-3090 (models/deepseek-v4-flash-0731/llama-cpp/compose/dual). OJO: los -ot nombran CUDA0/CUDA1, asi que este perfil asume exactamente dos placas. SALIDA VERIFICADA: con --tensor-split 1,1 (repartir tambien las capas base) este modelo devuelve TEXTO CORRUPTO — con el prompt 'cual es la capital de Francia' contesta '.#/!)'. No crashea ni avisa: responde basura con metricas de velocidad perfectas, que es la peor forma de fallar. Por eso las capas base van enteras en CUDA0 (--tensor-split 1,0) y CUDA1 recibe SOLO expertos. ThinkingCap y KAT no tienen el problema (entran enteros en VRAM, sin offload a CPU): es especifico de este modelo con expertos en RAM mas reparto de capas base. CONSECUENCIA HONESTA: asi configurado el dual NO le gana al tier de 24 GB (113,9 t/s de prefill y 7,58 de decode contra 160,5 / 9,50 en una sola placa). Existe para poder medir IQ2_M y para el dia que llama.cpp arregle el reparto; si buscas velocidad hoy, usa el perfil de 24 GB."
   },
   {
     "id": "sys-48-dsv4-nospec",
@@ -647,7 +593,7 @@
       "ctx": 131072,
       "gpuLayers": 999,
       "batch": 4096,
-      "ubatch": 4096,
+      "ubatch": 1024,
       "threads": 8,
       "kv": "q4_0",
       "flashAttn": true,
@@ -689,11 +635,9 @@
       "--split-mode",
       "layer",
       "--tensor-split",
-      "1,1",
+      "1,0",
       "-ot",
-      "blk\\.(16|17|18|19|20|21)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0",
-      "-ot",
-      "blk\\.(22|23|24|25|26|27)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
+      "blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
       "-ot",
       "blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
       "--repeat-last-n",
@@ -707,7 +651,7 @@
       196608,
       262144
     ],
-    "comment": "Control de sys-ultraq-dsv4-0731-iq3s-48gb: identico pero SIN speculative decoding. Existe porque el decode con DSpark no se puede medir con un prompt sintetico (la aceptacion del draft sale artificialmente mala) y aca si: prefill 194,9 t/s y decode 9,55 t/s contra los 160,5 / 9,50 de una sola placa. Con DSpark el prefill sube a 207,0 pero el decode hay que medirlo con trabajo real. Corre este y el otro en el mismo benchmark y compara: si tu carga es de contexto largo gana el de DSpark, si es de generacion larga puede ganar este. Rige la misma regla de alineacion expertos/capa base descrita en el perfil hermano."
+    "comment": "Control de sys-ultraq-dsv4-0731-iq3s-48gb: identico pero SIN speculative decoding. Existe porque el decode con DSpark no se puede medir con un prompt sintetico (la aceptacion del draft sale artificialmente mala) y aca si: prefill 194,9 t/s y decode 9,55 t/s contra los 160,5 / 9,50 de una sola placa. Con DSpark el prefill sube a 207,0 pero el decode hay que medirlo con trabajo real. Corre este y el otro en el mismo benchmark y compara: si tu carga es de contexto largo gana el de DSpark, si es de generacion larga puede ganar este. Rige la misma regla de alineacion expertos/capa base descrita en el perfil hermano. SALIDA VERIFICADA: con --tensor-split 1,1 (repartir tambien las capas base) este modelo devuelve TEXTO CORRUPTO — con el prompt 'cual es la capital de Francia' contesta '.#/!)'. No crashea ni avisa: responde basura con metricas de velocidad perfectas, que es la peor forma de fallar. Por eso las capas base van enteras en CUDA0 (--tensor-split 1,0) y CUDA1 recibe SOLO expertos. ThinkingCap y KAT no tienen el problema (entran enteros en VRAM, sin offload a CPU): es especifico de este modelo con expertos en RAM mas reparto de capas base. CONSECUENCIA HONESTA: asi configurado el dual NO le gana al tier de 24 GB (113,9 t/s de prefill y 7,58 de decode contra 160,5 / 9,50 en una sola placa). Existe para poder medir IQ2_M y para el dia que llama.cpp arregle el reparto; si buscas velocidad hoy, usa el perfil de 24 GB."
   },
   {
     "id": "sys-48-thinkingcap-131k",
@@ -1103,194 +1047,6 @@
     "comment": "Igual que sys-48-katcoder-262k con la mitad de contexto: prefill 4.164,8 t/s y decode 115,4 t/s, 12,9 y 12,1 GB. La diferencia contra el de 262k esta dentro del ruido (~1%), asi que este existe solo para confirmarlo en tu benchmark: si empatan, quedate con el de 262k que te da el doble de contexto gratis. CONTROL contra una sola placa (mismo prompt, ctx y KV): single da 2.605,6 de prefill y 106,7 de decode contra los 4.164,8 / 115,4 de aca (+60% de prefill). En single la VRAM queda en 23,0 GB de 24, asi que 262k directamente no entra: el reparto es lo que habilita los contextos grandes de este tier."
   },
   {
-    "id": "sys-48-dsv4-res10",
-    "tier": "48GB-DeepSeek-V4-Ultra",
-    "order": 97,
-    "extra": true,
-    "autoCompanion": false,
-    "displayName": "[48GB] ULTRA-Q · DeepSeek V4 Flash · 10 capas residentes",
-    "minVramGb": 48,
-    "minRamGb": 120,
-    "cpuOk": false,
-    "folder": "DeepSeek-V4-Flash-0731-UD-IQ3_S",
-    "agentProfileId": "agent-maximo",
-    "reasoningEffort": "high",
-    "reasoningBudget": 8192,
-    "model": {
-      "repo": "unsloth/DeepSeek-V4-Flash-0731-GGUF",
-      "file": "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
-      "files": [
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00002-of-00004.gguf",
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00003-of-00004.gguf",
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00004-of-00004.gguf"
-      ],
-      "quant": "UD-IQ3_S"
-    },
-    "runtime": {
-      "ctx": 131072,
-      "gpuLayers": 999,
-      "batch": 4096,
-      "ubatch": 4096,
-      "threads": 8,
-      "kv": "q4_0",
-      "flashAttn": true,
-      "mlock": false,
-      "mmap": true
-    },
-    "extraArgs": [
-      "--cache-type-k",
-      "q4_0",
-      "--cache-type-v",
-      "q4_0",
-      "--fit",
-      "off",
-      "--temp",
-      "0.60",
-      "--top-p",
-      "0.95",
-      "--top-k",
-      "20",
-      "--min-p",
-      "0.0",
-      "--repeat-penalty",
-      "1.0",
-      "--presence-penalty",
-      "0.0",
-      "--no-context-shift",
-      "--metrics",
-      "--no-warmup",
-      "--jinja",
-      "--threads-batch",
-      "16",
-      "--predict",
-      "16384",
-      "--parallel",
-      "1",
-      "--reasoning-format",
-      "auto",
-      "--cache-prompt",
-      "--split-mode",
-      "layer",
-      "--tensor-split",
-      "1,1",
-      "-ot",
-      "blk\\.(17|18|19|20|21)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0",
-      "-ot",
-      "blk\\.(22|23|24|25|26)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
-      "-ot",
-      "blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
-      "--spec-type",
-      "draft-dspark",
-      "--spec-draft-n-max",
-      "5"
-    ],
-    "binaryKind": "official",
-    "minimumBinaryBuild": 10228,
-    "contextPresets": [
-      65536,
-      131072,
-      196608,
-      262144,
-      393216
-    ],
-    "comment": "Dos capas de expertos MENOS que el perfil base (10 en vez de 12), o sea ~4,8 GB mas de VRAM libre. El base queda en 22,3 y 22,2 GB de 24, que es poco margen si ademas abris el escritorio o el navegador. Si el base te tira illegal memory access en uso real pero este aguanta, el problema era el margen y no la config. Se paga con algo de decode."
-  },
-  {
-    "id": "sys-48-dsv4-res14",
-    "tier": "48GB-DeepSeek-V4-Ultra",
-    "order": 98,
-    "extra": true,
-    "autoCompanion": false,
-    "displayName": "[48GB] ULTRA-Q · DeepSeek V4 Flash · 14 capas · B2048",
-    "minVramGb": 48,
-    "minRamGb": 120,
-    "cpuOk": false,
-    "folder": "DeepSeek-V4-Flash-0731-UD-IQ3_S",
-    "agentProfileId": "agent-maximo",
-    "reasoningEffort": "high",
-    "reasoningBudget": 8192,
-    "model": {
-      "repo": "unsloth/DeepSeek-V4-Flash-0731-GGUF",
-      "file": "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
-      "files": [
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf",
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00002-of-00004.gguf",
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00003-of-00004.gguf",
-        "UD-IQ3_S/DeepSeek-V4-Flash-0731-UD-IQ3_S-00004-of-00004.gguf"
-      ],
-      "quant": "UD-IQ3_S"
-    },
-    "runtime": {
-      "ctx": 131072,
-      "gpuLayers": 999,
-      "batch": 2048,
-      "ubatch": 2048,
-      "threads": 8,
-      "kv": "q4_0",
-      "flashAttn": true,
-      "mlock": false,
-      "mmap": true
-    },
-    "extraArgs": [
-      "--cache-type-k",
-      "q4_0",
-      "--cache-type-v",
-      "q4_0",
-      "--fit",
-      "off",
-      "--temp",
-      "0.60",
-      "--top-p",
-      "0.95",
-      "--top-k",
-      "20",
-      "--min-p",
-      "0.0",
-      "--repeat-penalty",
-      "1.0",
-      "--presence-penalty",
-      "0.0",
-      "--no-context-shift",
-      "--metrics",
-      "--no-warmup",
-      "--jinja",
-      "--threads-batch",
-      "16",
-      "--predict",
-      "16384",
-      "--parallel",
-      "1",
-      "--reasoning-format",
-      "auto",
-      "--cache-prompt",
-      "--split-mode",
-      "layer",
-      "--tensor-split",
-      "1,1",
-      "-ot",
-      "blk\\.(15|16|17|18|19|20|21)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0",
-      "-ot",
-      "blk\\.(22|23|24|25|26|27|28)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
-      "-ot",
-      "blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
-      "--spec-type",
-      "draft-dspark",
-      "--spec-draft-n-max",
-      "5"
-    ],
-    "binaryKind": "official",
-    "minimumBinaryBuild": 10228,
-    "contextPresets": [
-      65536,
-      131072,
-      196608,
-      262144,
-      393216
-    ],
-    "comment": "El extremo opuesto: 14 capas residentes (7+7), que solo entran bajando el batch a 2048 para achicar el compute buffer. MEDIDO: 166,3 t/s de prefill y 8,76 de decode, PEOR que el base (194,9 / 9,55) — mas expertos en VRAM no compensa el batch chico y deja la VRAM al borde (24,0 y 23,1 GB). Queda como control: si en tu maquina gana, la conclusion cambia."
-  },
-  {
     "id": "sys-48-katcoder-393k-nographs",
     "tier": "48GB-KAT",
     "order": 99,
@@ -1396,7 +1152,7 @@
       "ctx": 131072,
       "gpuLayers": 999,
       "batch": 4096,
-      "ubatch": 4096,
+      "ubatch": 1024,
       "threads": 8,
       "kv": "q4_0",
       "flashAttn": true,
@@ -1438,11 +1194,9 @@
       "--split-mode",
       "layer",
       "--tensor-split",
-      "1,1",
+      "1,0",
       "-ot",
-      "blk\\.(14|15|16|17|18|19|20|21)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0",
-      "-ot",
-      "blk\\.(22|23|24|25|26|27|28|29)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
+      "blk\\.(25|26|27|28|29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1",
       "-ot",
       "blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
       "--spec-type",
@@ -1459,7 +1213,7 @@
       262144,
       393216
     ],
-    "comment": "MISMO modelo que el perfil base pero en UD-IQ2_M (90,9 GB contra los 116 del IQ3_S). SIN MEDIR: hay que descargar ~91 GB y correr el benchmark. Existe porque es la UNICA palanca que puede mover el decode de verdad. El decode de ~9,5 t/s del IQ3_S no lo limita la GPU: 32 de las 44 capas tienen sus expertos en RAM y el cuello es el ancho de banda DDR5, por eso no lo movieron ni mlock, ni el batch, ni el reparto. Lo unico que lo mueve es sacar expertos de la RAM, y para eso hay que achicar el modelo. La cuenta: con IQ3_S entran 12 capas de expertos en los 48 GB; con IQ2_M el experto por capa pasa de ~2,2 a ~1,7 GB y entran ~16, y ademas cada token lee 22% menos bytes de RAM. Por eso la residencia de este perfil es de 16 capas (8+8) y no 12, siempre alineada (blk 14-21 en CUDA0, 22-29 en CUDA1). EL COSTO ES CALIDAD y es real: DeepSeek V4 ya viene en 4-bit de fabrica, asi que IQ2 es cuantizar sobre cuantizado. Las opiniones publicas estan divididas — quien publico el setup de 25,8 t/s en una sola 3090 Ti dice no haber visto perdida en prosa, y varios sostienen que IQ2 arruina el trabajo agentico largo (loops en generacion larga). Correlo contra el perfil IQ3_S en el mismo benchmark y decidilo con datos. Si aparecen loops, antes de culpar al quant probar una build cuda13.3: hay reportes de que el bug de looping es de CUDA 13.2 y nuestro binario es cuda12.4."
+    "comment": "MISMO modelo que el perfil base pero en UD-IQ2_M (90,9 GB contra los 116 del IQ3_S). SIN MEDIR: hay que descargar ~91 GB y correr el benchmark. Existe porque es la UNICA palanca que puede mover el decode de verdad. El decode de ~9,5 t/s del IQ3_S no lo limita la GPU: 32 de las 44 capas tienen sus expertos en RAM y el cuello es el ancho de banda DDR5, por eso no lo movieron ni mlock, ni el batch, ni el reparto. Lo unico que lo mueve es sacar expertos de la RAM, y para eso hay que achicar el modelo. La cuenta: con IQ3_S entran 12 capas de expertos en los 48 GB; con IQ2_M el experto por capa pasa de ~2,2 a ~1,7 GB y entran ~16, y ademas cada token lee 22% menos bytes de RAM. Por eso este perfil reside 12 capas de expertos en CUDA1 (blk 25-36) contra las 8 del IQ3_S: el experto mas chico deja entrar mas en la misma placa. EL COSTO ES CALIDAD y es real: DeepSeek V4 ya viene en 4-bit de fabrica, asi que IQ2 es cuantizar sobre cuantizado. Las opiniones publicas estan divididas — quien publico el setup de 25,8 t/s en una sola 3090 Ti dice no haber visto perdida en prosa, y varios sostienen que IQ2 arruina el trabajo agentico largo (loops en generacion larga). Correlo contra el perfil IQ3_S en el mismo benchmark y decidilo con datos. Si aparecen loops, antes de culpar al quant probar una build cuda13.3: hay reportes de que el bug de looping es de CUDA 13.2 y nuestro binario es cuda12.4. SALIDA VERIFICADA: con --tensor-split 1,1 (repartir tambien las capas base) este modelo devuelve TEXTO CORRUPTO — con el prompt 'cual es la capital de Francia' contesta '.#/!)'. No crashea ni avisa: responde basura con metricas de velocidad perfectas, que es la peor forma de fallar. Por eso las capas base van enteras en CUDA0 (--tensor-split 1,0) y CUDA1 recibe SOLO expertos. ThinkingCap y KAT no tienen el problema (entran enteros en VRAM, sin offload a CPU): es especifico de este modelo con expertos en RAM mas reparto de capas base. CONSECUENCIA HONESTA: asi configurado el dual NO le gana al tier de 24 GB (113,9 t/s de prefill y 7,58 de decode contra 160,5 / 9,50 en una sola placa). Existe para poder medir IQ2_M y para el dia que llama.cpp arregle el reparto; si buscas velocidad hoy, usa el perfil de 24 GB."
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s-dspark-external",

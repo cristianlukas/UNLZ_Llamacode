@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.80 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.88 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -551,7 +551,9 @@ if (BUILD_TESTS)
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
         tests/qml/tst_navigation_policy.qml
+        tests/qml/tst_benchmark_score.qml
         qml/components/NavigationPolicy.js
+        qml/components/BenchmarkScore.js
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
     )
@@ -579,6 +581,13 @@ if (BUILD_TESTS)
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_navigation_policy.qml")
     set_tests_properties(qml_navigation_policy PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+
+    add_test(NAME qml_benchmark_score
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_benchmark_score.qml")
+    set_tests_properties(qml_benchmark_score PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
 
