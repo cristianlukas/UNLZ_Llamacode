@@ -98,7 +98,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 65); // tiers base + extras + familia 48GB (22) + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 66); // tiers base + extras + familia 48GB (23) + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -730,6 +730,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringLiteral("sys-48-dsv4-nospec"),               // DeepSeek sin DSpark
         QStringLiteral("sys-48-dsv4-res10"),                // menos residencia
         QStringLiteral("sys-48-dsv4-res14"),                // mas residencia (control)
+        QStringLiteral("sys-48-dsv4-iq2m"),                 // quant chico: mas expertos en VRAM
         QStringLiteral("sys-48-thinkingcap-131k"),
         QStringLiteral("sys-48-thinkingcap-196k"),
         QStringLiteral("sys-48-katcoder-262k"),
@@ -808,6 +809,27 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
             }
         }
     }
+
+    // El perfil IQ2_M apunta a OTRO quant (90,9 GB contra 116), que es lo único que
+    // puede bajar el tráfico a RAM — el cuello del decode. Si alguien lo hace
+    // apuntar a los shards del IQ3_S deja de tener sentido: sería el perfil base
+    // con más residencia de la que entra.
+    const QJsonObject iq2 = found.value(QStringLiteral("sys-48-dsv4-iq2m"));
+    QCOMPARE(iq2.value("model").toObject().value("quant").toString(),
+             QStringLiteral("UD-IQ2_M"));
+    QCOMPARE(iq2.value("model").toObject().value("files").toArray().size(), 3);
+    QVERIFY(iq2.value("folder").toString().contains(QStringLiteral("IQ2_M")));
+    // Y aprovecha el quant chico para residir más expertos que el base (16 vs 12).
+    QStringList iq2Args;
+    for (const QJsonValue &a : iq2.value("extraArgs").toArray()) iq2Args << a.toString();
+    const QStringList iq2Ot = iq2Args.filter(QStringLiteral("=CUDA"));
+    QCOMPARE(iq2Ot.size(), 2);
+    QStringList baseArgs;
+    for (const QJsonValue &a : found.value(QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb"))
+                                  .value("extraArgs").toArray())
+        baseArgs << a.toString();
+    const QStringList baseOt = baseArgs.filter(QStringLiteral("=CUDA"));
+    QVERIFY(iq2Ot.at(0).count(u'|') > baseOt.at(0).count(u'|'));
 
     // Cada modelo trae su barrido de variantes para benchmarkear (heredan del base
     // y sólo cambian una palanca). Sin ellas el usuario no puede comparar nada.
