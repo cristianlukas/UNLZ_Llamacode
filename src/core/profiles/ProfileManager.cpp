@@ -475,6 +475,10 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"plannerProfileId", p.plannerProfileId},
             {"hybridMode", p.hybridMode},
             {"extraArgs", p.extraArgs},
+            // El env llega al server via EffectiveProfileBuilder, pero sin esto la UI
+            // y el headless no pueden verlo: hay perfiles que dependen de una env var
+            // para no crashear (GGML_CUDA_DISABLE_GRAPHS en el de 393k).
+            {"envOverrides", QVariant::fromValue(p.envOverrides)},
             {"browserAutomation", p.browserAutomation},
             {"master", masterToVariant(p.master)}};
 }

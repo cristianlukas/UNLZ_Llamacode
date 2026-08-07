@@ -98,7 +98,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 64); // tiers base + extras + familia 48GB (21) + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 65); // tiers base + extras + familia 48GB (22) + DSpark externo + 26 variantes bench
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -734,6 +734,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringLiteral("sys-48-thinkingcap-196k"),
         QStringLiteral("sys-48-katcoder-262k"),
         QStringLiteral("sys-48-katcoder-131k"),
+        QStringLiteral("sys-48-katcoder-393k-nographs"),
     };
     QHash<QString, QJsonObject> found;
     for (const QJsonValue &v : profiles) {
@@ -830,6 +831,24 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(launch.value("system").toBool(), qPrintable(id));
         QVERIFY2(!launch.value("modelProfileId").toString().isEmpty(), qPrintable(id));
+    }
+
+    // 393k sólo arranca con los CUDA graphs apagados, y eso viaja por env: si el
+    // env se pierde, el server muere con "invalid program counter" en el primer
+    // prompt. Es la única palanca del tier que no es un flag de línea de comandos.
+    const QJsonObject k393 = found.value(QStringLiteral("sys-48-katcoder-393k-nographs"));
+    QCOMPARE(k393.value("runtime").toObject().value("ctx").toInt(), 393216);
+    QCOMPARE(k393.value("env").toObject().value("GGML_CUDA_DISABLE_GRAPHS").toString(),
+             QStringLiteral("1"));
+    const QVariantMap k393Launch =
+        pm.getLaunchProfile(QStringLiteral("sys-48-katcoder-393k-nographs"));
+    QCOMPARE(k393Launch.value("envOverrides").toMap()
+                 .value(QStringLiteral("GGML_CUDA_DISABLE_GRAPHS")).toString(),
+             QStringLiteral("1"));
+    // Y nadie más lo lleva: apagar los graphs cuesta ~21% de decode.
+    for (const QString &id : expected) {
+        if (id == QStringLiteral("sys-48-katcoder-393k-nographs")) continue;
+        QVERIFY2(found.value(id).value("env").toObject().isEmpty(), qPrintable(id));
     }
 
     // Las variantes tienen que llegar con la palanca aplicada, no sólo declarada.
