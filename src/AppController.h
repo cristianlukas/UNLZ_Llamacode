@@ -1084,7 +1084,14 @@ public:
     // modo agente sólo sabía puntuar archivos producidos en el workspace.
     static QVariantMap scoreBenchTextResponsesForTest(const QString &mode,
                                                       const QVariantList &benchTasks,
-                                                      const QVariantList &messages);
+                                                      const QVariantList &messages,
+                                                      const QString &extraText = QString());
+
+    // Corre el evaluador de UNA tarea del benchmark sobre un texto. Existe para
+    // poder testear los evaluadores con respuestas reales de modelos: son texto
+    // libre de un LLM y se rompen con el formato (markdown, <think>, espaciado).
+    static bool evalBenchTaskForTest(const QString &mode, const QString &taskId,
+                                     const QString &text);
 
     // Un score de calidad parcial (3/5) NO es una corrida fallada; que falte un
     // archivo pedido, sí. Separa una cosa de la otra.

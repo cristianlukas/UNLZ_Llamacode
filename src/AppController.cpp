@@ -10529,16 +10529,91 @@ struct BenchTaskDef {
     QVariantMap acceptance;
 };
 
+// Los evaluadores del benchmark miran texto libre de un LLM, así que tienen que
+// tolerar lo que SIEMPRE aparece y no cambia la respuesta: el bloque <think>, las
+// cercas de markdown, el negrita/cursiva y el espaciado arbitrario. Sin esto se
+// mide el formato en vez del contenido: la versión anterior exigía el literal
+// "n <= 1" y daba por incorrecta una función perfecta escrita "n<=1".
+static QString benchNormalize(const QString &raw)
+{
+    QString s = raw;
+    // El razonamiento no es la respuesta: si quedó embebido, sacarlo.
+    static const QRegularExpression think(
+        QStringLiteral("<think>.*?</think>|<thinking>.*?</thinking>"),
+        QRegularExpression::DotMatchesEverythingOption | QRegularExpression::CaseInsensitiveOption);
+    s.remove(think);
+    s.remove(QLatin1Char('`'));          // `code` y ```fences```
+    // OJO: acá NO se tocan los asteriscos. Sacarlos para limpiar **negrita**
+    // destruye el código Python (`x**2` quedaba `x2`) y daba por incorrecto un
+    // one-liner perfecto. El markdown se limpia sólo donde importa: benchEvalYes.
+    return s;
+}
+
+// Espacios colapsados: compara contenido, no formato.
+static QString benchSquashed(const QString &raw)
+{
+    static const QRegularExpression ws(QStringLiteral("\\s+"));
+    return benchNormalize(raw).replace(ws, QStringLiteral(" "));
+}
+
 static bool benchEvalJson(const QString &r)
 {
-    const QString tr = r.trimmed();
-    int s = tr.indexOf('{'), e = tr.lastIndexOf('}');
-    if (s < 0 || e <= s) return false;
-    QJsonParseError err;
-    auto doc = QJsonDocument::fromJson(tr.mid(s, e - s + 1).toUtf8(), &err);
-    if (err.error != QJsonParseError::NoError || !doc.isObject()) return false;
-    const auto o = doc.object();
-    return o.contains("name") && o.contains("age") && o.contains("active");
+    const QString tr = benchNormalize(r).trimmed();
+    // Probar TODOS los objetos candidatos, no sólo del primer "{" al último "}":
+    // con reasoning o varios bloques, ese rango no parsea aunque el JSON pedido
+    // esté ahí.
+    for (int s = tr.indexOf('{'); s >= 0; s = tr.indexOf('{', s + 1)) {
+        for (int e = tr.lastIndexOf('}'); e > s; e = tr.lastIndexOf('}', e - 1)) {
+            QJsonParseError err;
+            const auto doc = QJsonDocument::fromJson(tr.mid(s, e - s + 1).toUtf8(), &err);
+            if (err.error != QJsonParseError::NoError || !doc.isObject()) continue;
+            const auto o = doc.object();
+            if (o.contains("name") && o.contains("age") && o.contains("active"))
+                return true;
+        }
+    }
+    return false;
+}
+
+// "def is_prime(...)" con guarda de los casos borde, en cualquier estilo.
+static bool benchEvalIsPrime(const QString &r)
+{
+    const QString s = benchSquashed(r);
+    static const QRegularExpression sig(QStringLiteral("def\\s+is_prime\\s*\\("));
+    static const QRegularExpression guard(
+        QStringLiteral("n\\s*<=\\s*1|n\\s*<\\s*2|n\\s*==\\s*1|n\\s*in\\s*\\(?\\[?\\s*0\\s*,\\s*1"));
+    return sig.match(s).hasMatch() && s.contains(QStringLiteral("return"))
+        && guard.match(s).hasMatch();
+}
+
+// One-liner con list comprehension que eleve al cuadrado los pares.
+static bool benchEvalRefactor(const QString &r)
+{
+    const QString s = benchSquashed(r);
+    static const QRegularExpression comp(
+        QStringLiteral("\\[[^\\]]*for\\s+\\w+\\s+in[^\\]]*if[^\\]]*\\]"));
+    static const QRegularExpression square(
+        QStringLiteral("\\*\\*\\s*2|(\\w)\\s*\\*\\s*\\1\\b|pow\\s*\\("));
+    return comp.match(s).hasMatch() && square.match(s).hasMatch();
+}
+
+// Un "sí" afirmativo al principio de la respuesta, en inglés o castellano.
+static bool benchEvalYes(const QString &r)
+{
+    // Acá sí conviene sacar el markdown: "**YES**" es un sí.
+    QString s = benchSquashed(r);
+    s.remove(QLatin1Char('*'));
+    s.remove(QLatin1Char('#'));
+    s = s.trimmed().toUpper();
+    // Sacar el acento en vez de ponerlo en el patrón: "Í" no es carácter de
+    // palabra para PCRE, así que un "\b" detrás de "SÍ" nunca casa y "Sí, porque
+    // es transitiva" contaba como NO.
+    s.replace(QChar(0x00CD), QLatin1Char('I'));   // Í
+    static const QRegularExpression yes(QStringLiteral("^[^A-Z]{0,12}(YES|SI)\\b"));
+    if (yes.match(s).hasMatch()) return true;
+    // Algunos modelos abren con "La respuesta es YES" o "Answer: YES".
+    static const QRegularExpression yesNear(QStringLiteral("\\b(YES|SI)\\b"));
+    return yesNear.match(s.left(80)).hasMatch();
 }
 
 static QVector<BenchTaskDef> buildBenchTasks(const QString &mode)
@@ -10609,34 +10684,25 @@ static QVector<BenchTaskDef> buildBenchTasks(const QString &mode)
     t.append({"python_prime", "coding",
         "Write a Python function is_prime(n: int) -> bool with proper type hints. "
         "Handle edge cases (n<=1, n=2). No explanation, just code.",
-        300, false,
-        [](const QString &r) {
-            return r.contains("def is_prime") && r.contains("return") &&
-                   (r.contains("n <= 1") || r.contains("n < 2") || r.contains("n == 1"));
-        }});
+        300, false, benchEvalIsPrime});
 
     t.append({"math_arithmetic", "math",
         "Calculate: (17 * 23) + (456 / 8) - 12. Show each step. Give the final numeric answer.",
         512, false,
-        [](const QString &r) { return r.contains("436") || r.contains("436.0"); }});
+        [](const QString &r) {
+            const QString n = benchSquashed(r);
+            return n.contains(QStringLiteral("436"));
+        }});
 
     t.append({"code_refactor", "coding",
         "Rewrite this as a one-liner using list comprehension:\n"
         "result = []\nfor x in range(10):\n    if x % 2 == 0:\n        result.append(x**2)\n"
         "Return only the one-liner, no explanation.",
-        100, false,
-        [](const QString &r) {
-            return r.contains("[") && r.contains("for") && r.contains("if") &&
-                   (r.contains("**2") || r.contains("x*x") || r.contains("pow("));
-        }});
+        100, false, benchEvalRefactor});
 
     t.append({"reasoning_logic", "reasoning",
         "All A are B. All B are C. Is all A are C? Answer YES or NO, then explain in one sentence.",
-        150, false,
-        [](const QString &r) {
-            const QString u = r.toUpper().trimmed();
-            return u.startsWith("YES") || u.left(20).contains("YES");
-        }});
+        150, false, benchEvalYes});
 
     t.append({"json_output", "instruction",
         "Return ONLY valid JSON: {\"name\":\"Alice\",\"age\":30,\"active\":true}. "
@@ -13721,6 +13787,15 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     (*processNext)(0);
 }
 
+bool AppController::evalBenchTaskForTest(const QString &mode, const QString &taskId,
+                                         const QString &text)
+{
+    for (const BenchTaskDef &d : buildBenchTasks(mode))
+        if (d.id == taskId && d.eval)
+            return d.eval(text);
+    return false;
+}
+
 // ¿Falló algún criterio DURO? Las filas de tipo "text" son puntaje de calidad
 // (cuántas preguntas contestó bien), no una condición de ejecución: un 3/5 es un
 // resultado válido. Las de archivo/substring/comando sí: si el agente no dejó el
@@ -13742,7 +13817,8 @@ bool AppController::benchHardCriteriaFailed(const QVariantList &acceptanceRows)
 // tareas de velocidad no se puntúan: sólo miden TPS.
 QVariantMap AppController::scoreBenchTextResponsesForTest(const QString &mode,
                                                           const QVariantList &benchTasks,
-                                                          const QVariantList &messages)
+                                                          const QVariantList &messages,
+                                                          const QString &extraText)
 {
     QVariantList rows;
     int score = 0;
@@ -13768,6 +13844,7 @@ QVariantMap AppController::scoreBenchTextResponsesForTest(const QString &mode,
         // así que se busca hacia adelante y se saltean los vacíos.
         const QString prompt = task.value(QStringLiteral("prompt")).toString();
         QString answer;
+        QString taskText;      // mensajes previos del asistente dentro de la tarea
         bool seenPrompt = false;
         for (const QVariant &mv : messages) {
             const QVariantMap m = mv.toMap();
@@ -13781,14 +13858,26 @@ QVariantMap AppController::scoreBenchTextResponsesForTest(const QString &mode,
             }
             if (role == QLatin1String("user")) break;   // arrancó la tarea siguiente
             if (role == QLatin1String("assistant") && !content.trimmed().isEmpty()) {
+                // Quedarse con el ÚLTIMO mensaje del asistente de la tarea, pero
+                // acumulando los anteriores: el agente suele escribir el código en
+                // un mensaje y resumir en el siguiente.
+                if (!answer.isEmpty()) taskText += answer + QLatin1Char('\n');
                 answer = content;
-                break;
             }
         }
         if (!seenPrompt)
             continue;   // la tarea no llegó a correr (timeout / corte)
 
-        const bool passed = def->eval(answer);
+        // En modo agente la respuesta final suele ser un RESUMEN ("creé el
+        // archivo"): el código real quedó en un archivo o en un bloque de código
+        // anterior. Evaluar sólo el último mensaje hacía que las tareas de
+        // programación fallaran SIEMPRE, en todos los modelos, y el benchmark
+        // parecía decir que ninguno sabe escribir código.
+        bool passed = def->eval(answer);
+        if (!passed && !taskText.isEmpty())
+            passed = def->eval(taskText + QLatin1Char('\n') + answer);
+        if (!passed && !extraText.isEmpty())
+            passed = def->eval(answer + QLatin1Char('\n') + extraText);
         QVariantMap row;
         row[QStringLiteral("taskId")] = taskId;
         row[QStringLiteral("type")] = QStringLiteral("text");

@@ -117,6 +117,7 @@ private slots:
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
     void benchmarkResumesWhereItDiedInsteadOfLosingTheSeries();
+    void benchmarkEvaluatorsToleratePresentationNotContent();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
     void hybridStreamParserDetectsProgressAndCompletion();
@@ -1212,6 +1213,52 @@ void AppControllerTests::benchmarkStopStepKillsWhenBudgetRunsOut()
     // Sigue vivo y se acabó el tiempo: matar (antes: arrancaba igual).
     QCOMPARE(AppController::benchmarkStopStep(true, 0), Step::Kill);
     QCOMPARE(AppController::benchmarkStopStep(true, -300), Step::Kill);
+}
+
+// Los evaluadores miran texto libre de un LLM, así que no pueden puntuar el
+// FORMATO. En la primera corrida real, python_prime y code_refactor dieron False
+// en las 4 pasadas de todos los modelos: exigían el literal "n <= 1" y "**2", y
+// cualquier función correcta escrita "n<=1" o "x ** 2" contaba como error.
+void AppControllerTests::benchmarkEvaluatorsToleratePresentationNotContent()
+{
+    const QString m = QStringLiteral("short");
+    auto ok = [&](const char *id, const QString &text) {
+        return AppController::evalBenchTaskForTest(m, QLatin1String(id), text);
+    };
+
+    // is_prime: la guarda del caso borde vale en cualquier estilo.
+    QVERIFY(ok("python_prime", "def is_prime(n: int) -> bool:\n    if n <= 1:\n        return False\n    return True"));
+    QVERIFY(ok("python_prime", "def is_prime(n:int)->bool:\n if n<=1: return False\n return True"));
+    QVERIFY(ok("python_prime", "def is_prime(n: int) -> bool:\n    if n < 2:\n        return False\n    return True"));
+    QVERIFY(ok("python_prime", "```python\ndef is_prime(n: int) -> bool:\n    if n<2: return False\n    return True\n```"));
+    QVERIFY(ok("python_prime", "<think>me piden una función</think>\ndef is_prime(n):\n if n<=1: return False\n return True"));
+    QVERIFY(!ok("python_prime", "No sé cómo hacerlo."));
+    QVERIFY(!ok("python_prime", "def is_even(n):\n    return n % 2 == 0"));   // otra función
+
+    // Refactor a one-liner: la potencia puede venir espaciada o como x*x.
+    QVERIFY(ok("code_refactor", "result = [x**2 for x in range(10) if x % 2 == 0]"));
+    QVERIFY(ok("code_refactor", "result = [x ** 2 for x in range(10) if x % 2 == 0]"));
+    QVERIFY(ok("code_refactor", "[x*x for x in range(10) if x % 2 == 0]"));
+    QVERIFY(ok("code_refactor", "```python\n[pow(x, 2) for x in range(10) if x % 2 == 0]\n```"));
+    QVERIFY(!ok("code_refactor", "for x in range(10): result.append(x**2)"));  // no es comprehension
+
+    // YES: markdown, prefijos y castellano.
+    QVERIFY(ok("reasoning_logic", "YES, por transitividad."));
+    QVERIFY(ok("reasoning_logic", "**YES** — la relación es transitiva."));
+    QVERIFY(ok("reasoning_logic", "Answer: YES. Todo A es C."));
+    QVERIFY(ok("reasoning_logic", "Sí, porque la relación es transitiva."));
+    QVERIFY(!ok("reasoning_logic", "NO, no se sigue."));
+
+    // JSON: aunque venga con reasoning o texto alrededor.
+    QVERIFY(ok("json_output", "{\"name\":\"Alice\",\"age\":30,\"active\":true}"));
+    QVERIFY(ok("json_output", "```json\n{\"name\":\"Alice\",\"age\":30,\"active\":true}\n```"));
+    QVERIFY(ok("json_output", "Acá va: {\"name\":\"Alice\",\"age\":30,\"active\":true} listo."));
+    QVERIFY(!ok("json_output", "{\"nombre\":\"Alice\"}"));
+
+    // La cuenta, con separadores o sin ellos.
+    QVERIFY(ok("math_arithmetic", "El resultado final es 436."));
+    QVERIFY(ok("math_arithmetic", "**436**"));
+    QVERIFY(!ok("math_arithmetic", "El resultado es 999."));
 }
 
 // Una serie de benchmarks son horas. Si la app se cae en el perfil 8 de 13, lo que
