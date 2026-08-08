@@ -64,4 +64,27 @@ struct BenchmarkPack {
     static QString extractChoice(const QString &response);   // "B" o vacío
     static QString extractNumber(const QString &response);   // normalizado, o vacío
     static QString extractCode(const QString &response);     // sin cercas markdown
+
+    struct CodeRun {
+        bool passed = false;
+        bool timedOut = false;
+        int exitCode = -1;
+        QString error;      // stderr recortado: assert fallado y SyntaxError son
+                            // diagnósticos distintos y hay que poder verlos
+    };
+
+    // Ejecuta el código que devolvió el modelo contra los tests del ítem. Es la
+    // única forma de puntuar code_tests: no hay substring que sirva.
+    //
+    // El código viene de un LLM, así que corre en un directorio temporal propio
+    // que se borra al terminar, y con timeout duro — tarde o temprano un modelo
+    // devuelve `while True:` y sin timeout el benchmark se cuelga sin decir por
+    // qué. NO es un sandbox de seguridad: no hay aislamiento de red ni de
+    // filesystem más allá del cwd. No correr packs de origen desconocido.
+    static CodeRun runCodeTests(const QString &code, const QString &tests,
+                                int timeoutMs = 20000, const QString &pythonPath = QString());
+
+    // grade() + ejecución cuando el ítem es code_tests. `python` vacío = buscar en PATH.
+    static bool gradeWithExecution(const BenchmarkItem &item, const QString &response,
+                                   int timeoutMs = 20000, QString *detail = nullptr);
 };

@@ -2,6 +2,8 @@
 // únicas en orden, manejo de JSON inválido. Reusa el sample real del repo.
 
 #include <QtTest>
+#include <QElapsedTimer>
+#include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QSet>
 #include "AppController.h"
@@ -21,6 +23,7 @@ private slots:
     void agentAcceptance_scoresGeneratedFiles();
     void benchPack_extractsAnswersFromRealModelOutput();
     void benchPack_importsPublicFormats();
+    void benchPack_runsCodeTestsWithTimeout();
 };
 
 static QByteArray sampleJson()
@@ -297,6 +300,69 @@ void EvalTests::benchPack_importsPublicFormats()
     err.clear();
     QVERIFY(BenchmarkPack::autoImport("no soy json", QStringLiteral("x"), &err).isEmpty());
     QVERIFY(!err.isEmpty());
+}
+
+// code_tests es el unico tipo que NO se puede puntuar sin ejecutar. El codigo
+// viene de un LLM, asi que el runner necesita timeout duro y cwd propio: tarde o
+// temprano un modelo devuelve `while True:`.
+void EvalTests::benchPack_runsCodeTestsWithTimeout()
+{
+    if (QStandardPaths::findExecutable(QStringLiteral("python")).isEmpty()
+        && QStandardPaths::findExecutable(QStringLiteral("python3")).isEmpty())
+        QSKIP("python no esta en el PATH");
+
+    const QString tests = QStringLiteral("def check(f):\n    assert f(1,2)==3\n    "
+                                         "assert f(0,0)==0\n\ncheck(add)\n");
+
+    // Correcto -> pasa.
+    auto ok = BenchmarkPack::runCodeTests(QStringLiteral("def add(a,b):\n    return a+b\n"), tests);
+    QVERIFY2(ok.passed, qPrintable(ok.error));
+    QVERIFY(!ok.timedOut);
+
+    // Compila pero falla el assert -> no pasa, y el motivo queda visible.
+    auto bad = BenchmarkPack::runCodeTests(QStringLiteral("def add(a,b):\n    return a-b\n"), tests);
+    QVERIFY(!bad.passed);
+    QVERIFY(!bad.timedOut);
+    QVERIFY2(bad.error.contains(QStringLiteral("AssertionError")), qPrintable(bad.error));
+
+    // No parsea -> tampoco pasa, y se distingue del assert fallado.
+    auto broken = BenchmarkPack::runCodeTests(QStringLiteral("def add(a,b)\n    return a+b\n"), tests);
+    QVERIFY(!broken.passed);
+    QVERIFY2(broken.error.contains(QStringLiteral("SyntaxError")), qPrintable(broken.error));
+
+    // Sin codigo -> falla sin crashear ni lanzar python.
+    auto empty = BenchmarkPack::runCodeTests(QString(), tests);
+    QVERIFY(!empty.passed);
+    QVERIFY(!empty.error.isEmpty());
+
+    // Bucle infinito -> corta por timeout Y lo respeta. Sin esto el benchmark se
+    // cuelga sin decir por que.
+    QElapsedTimer t;
+    t.start();
+    auto loop = BenchmarkPack::runCodeTests(
+        QStringLiteral("def add(a,b):\n    while True:\n        pass\n"), tests, 3000);
+    const qint64 elapsed = t.elapsed();
+    QVERIFY(!loop.passed);
+    QVERIFY(loop.timedOut);
+    QVERIFY2(elapsed < 15000, qPrintable(QStringLiteral("tardo %1 ms").arg(elapsed)));
+
+    // gradeWithExecution: extrae el codigo de las cercas y ejecuta.
+    BenchmarkItem item;
+    item.type = QStringLiteral("code_tests");
+    item.tests = tests;
+    QString detail;
+    QVERIFY(BenchmarkPack::gradeWithExecution(
+        item, QStringLiteral("Aca va:\n```python\ndef add(a,b):\n    return a+b\n```"),
+        20000, &detail));
+    QVERIFY(!BenchmarkPack::gradeWithExecution(
+        item, QStringLiteral("```python\ndef add(a,b):\n    return 99\n```"), 20000, &detail));
+    QVERIFY(!detail.isEmpty());
+
+    // Para los otros tipos delega en grade(): no lanza python al pedo.
+    BenchmarkItem num;
+    num.type = QStringLiteral("numeric");
+    num.expected = QStringLiteral("42");
+    QVERIFY(BenchmarkPack::gradeWithExecution(num, QStringLiteral("son 42")));
 }
 
 QTEST_MAIN(EvalTests)

@@ -14057,17 +14057,23 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
         // Packs públicos (GSM8K/HumanEval/MMLU): corrección exacta por tipo, no por
         // substring. Un "42" suelto en medio del razonamiento no es la respuesta.
         const QString graderType = acceptance.value(QStringLiteral("graderType")).toString();
-        if (!graderType.isEmpty() && graderType != QLatin1String("code_tests")) {
+        if (!graderType.isEmpty()) {
             BenchmarkItem bi;
             bi.type = graderType;
             bi.expected = acceptance.value(QStringLiteral("expected")).toString();
+            bi.tests = acceptance.value(QStringLiteral("tests")).toString();
+            // code_tests EJECUTA el código: es el único tipo que no se puede
+            // puntuar mirando texto, y es justo el que discrimina (HumanEval).
+            QString detail;
+            const bool passed = BenchmarkPack::gradeWithExecution(bi, searchable, 20000, &detail);
             QVariantMap row;
             row[QStringLiteral("taskId")] = task.value(QStringLiteral("id")).toString();
             row[QStringLiteral("type")] = QStringLiteral("grader:") + graderType;
-            row[QStringLiteral("passed")] = BenchmarkPack::grade(bi, searchable);
+            row[QStringLiteral("passed")] = passed;
+            if (!detail.isEmpty()) row[QStringLiteral("output")] = detail;
             rows.append(row);
             total++;
-            if (row.value(QStringLiteral("passed")).toBool()) score++;
+            if (passed) score++;
             continue;
         }
 

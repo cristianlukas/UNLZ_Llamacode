@@ -4,6 +4,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <QFile>
+#include <QProcess>
+#include <QProcessEnvironment>
+#include <QStandardPaths>
+#include <QTemporaryDir>
 
 namespace {
 
@@ -138,6 +143,85 @@ bool BenchmarkPack::grade(const BenchmarkItem &item, const QString &response)
 
     // code_tests necesita ejecutar el código: no se decide acá.
     return false;
+}
+
+// ── Ejecución de code_tests ──────────────────────────────────────────────────
+
+BenchmarkPack::CodeRun BenchmarkPack::runCodeTests(const QString &code, const QString &tests,
+                                                   int timeoutMs, const QString &pythonPath)
+{
+    CodeRun r;
+    if (code.trimmed().isEmpty()) {
+        r.error = QStringLiteral("la respuesta no traía código");
+        return r;
+    }
+
+    QString python = pythonPath;
+    if (python.isEmpty()) python = QStandardPaths::findExecutable(QStringLiteral("python"));
+    if (python.isEmpty()) python = QStandardPaths::findExecutable(QStringLiteral("python3"));
+    if (python.isEmpty()) {
+        r.error = QStringLiteral("no se encontró python en el PATH");
+        return r;
+    }
+
+    QTemporaryDir dir;
+    if (!dir.isValid()) {
+        r.error = QStringLiteral("no se pudo crear el directorio temporal");
+        return r;
+    }
+    const QString file = dir.filePath(QStringLiteral("candidate.py"));
+    {
+        QFile f(file);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            r.error = QStringLiteral("no se pudo escribir el archivo temporal");
+            return r;
+        }
+        f.write(code.toUtf8());
+        f.write("\n\n");
+        f.write(tests.toUtf8());
+        f.write("\n");
+    }
+
+    QProcess p;
+    p.setWorkingDirectory(dir.path());   // que no escriba sobre el repo
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("PYTHONDONTWRITEBYTECODE"), QStringLiteral("1"));
+    env.insert(QStringLiteral("PYTHONIOENCODING"), QStringLiteral("utf-8"));
+    p.setProcessEnvironment(env);
+    p.start(python, {QStringLiteral("-I"), file});   // -I: sin site-packages del usuario
+    if (!p.waitForStarted(5000)) {
+        r.error = QStringLiteral("no se pudo lanzar python");
+        return r;
+    }
+    if (!p.waitForFinished(timeoutMs)) {
+        p.kill();
+        p.waitForFinished(2000);
+        r.timedOut = true;
+        r.error = QStringLiteral("timeout de %1 ms (¿bucle infinito?)").arg(timeoutMs);
+        return r;
+    }
+
+    r.exitCode = p.exitCode();
+    r.passed = (p.exitStatus() == QProcess::NormalExit && r.exitCode == 0);
+    if (!r.passed) {
+        const QString err = QString::fromUtf8(p.readAllStandardError()).trimmed();
+        // La última línea es la que dice qué pasó (AssertionError, SyntaxError…).
+        const QStringList lines = err.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        r.error = lines.isEmpty() ? QStringLiteral("exit %1").arg(r.exitCode)
+                                  : lines.last().trimmed().left(300);
+    }
+    return r;
+}
+
+bool BenchmarkPack::gradeWithExecution(const BenchmarkItem &item, const QString &response,
+                                       int timeoutMs, QString *detail)
+{
+    if (item.type != QLatin1String("code_tests"))
+        return grade(item, response);
+
+    const CodeRun r = runCodeTests(extractCode(response), item.tests, timeoutMs);
+    if (detail) *detail = r.error;
+    return r.passed;
 }
 
 // ── Importadores ─────────────────────────────────────────────────────────────
