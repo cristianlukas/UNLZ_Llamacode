@@ -171,3 +171,54 @@ ya está armado y ahí sí tiene sentido la comparación.
   `failed` esconde el score y dispara reparaciones inútiles.
 - **Una tarea con 1.436 archivos generados no está midiendo el modelo.** Ver el
   bucle de renombres en `AgentProgressGovernor` (§ commit 3975790).
+
+---
+
+## 6. HumanEval (benchmark público, 20 ítems, corregido ejecutando los tests)
+
+Última corrida, 2026-08-08:
+
+| modelo | score | tiempo | t/s |
+|---|---|---|---|
+| DeepSeek V4 IQ3_S | **19/20** (95%) | 1.597 s | 7 |
+| ThinkingCap+MTP | **19/20** (95%) | 224 s | 60 |
+| KAT-Coder | 18/20 (90%) | **23 s** | 110 |
+
+Los tres caen en el rango que publican los modelos de esta clase (80–95% pass@1),
+que es la señal de que el circuito mide bien. **DeepSeek tarda 70× más que KAT
+para un punto de diferencia sobre 20.**
+
+### Cuánto costó llegar a un número confiable
+
+Seis corridas, y las cinco primeras midieron otra cosa. Vale anotarlas porque el
+patrón se repitió toda la sesión — **el sistema devuelve números plausibles aunque
+esté midiendo mal**:
+
+| # | qué medía en realidad | síntoma |
+|---|---|---|
+| 1 | la suite built-in "Completa" | `startBenchmark` toma un *modo*, no un id de pack |
+| 2 | nada: grader no conectado en el path del agente | 0/20 |
+| 3 | nada: tampoco en el path del modelo | 0/20 |
+| 4 | ThinkingCap sin ser escuchado | MTP manda todo por `reasoning_content` |
+| 5 | DeepSeek con el razonamiento pegado al código | `invalid character '¿'` |
+| 6 | HumanEval de verdad | 19/19/18 |
+
+Cada uno dejó un test de regresión. Los artefactos que más engañaron fueron los
+que **parecían fallas del modelo**: `NameError: name 'List' is not defined` y
+`SyntaxError: 'return' outside function` eran del harness — HumanEval espera
+`prompt + completion` y yo ejecutaba sólo la respuesta.
+
+Quedan 1–2 fallos residuales por modelo del mismo tipo (texto colándose al código,
+respuestas sin cercas de markdown). No se persiguieron más porque no cambian el
+orden: el resultado es un empate técnico con 70× de diferencia en velocidad.
+
+## 7. Veredicto
+
+1. **KAT-Coder es el default.** 90% en HumanEval a 110 t/s; la tarea completa en
+   23 segundos contra 27 minutos de DeepSeek.
+2. **ThinkingCap+MTP cuando haga falta visión o el punto extra de calidad.** Mismo
+   95% que DeepSeek a 7× su velocidad, y con mmproj.
+3. **DeepSeek V4 no justifica su costo.** Empata en calidad, tarda 70× más, ocupa
+   116 GB, necesita offload a RAM y una configuración frágil (`-ot` alineado, y
+   con `--tensor-split 1,1` devuelve texto corrupto sin avisar).
+4. **MTP es la mejor palanca del tier**: +68% de decode sin costo de calidad.
