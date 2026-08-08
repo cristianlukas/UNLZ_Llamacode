@@ -2381,5 +2381,56 @@
     },
     "binaryKind": "cpu",
     "comment": "Fallback CPU para Automatizaciones: Qwen3.5 4B Q4 con ctx 8k y batch bajo. Evita el 35B/32k en CPU, que puede quedar minutos sin emitir la primera tool."
+  },
+  {
+    "id": "sys-experimental-minimax-m27-q3ks",
+    "tier": "128GB-MiniMax-M2.7",
+    "order": 160,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "[experimental] MiniMax M2.7 Q3_K_S · 32k",
+    "minVramGb": 24,
+    "minRamGb": 112,
+    "cpuOk": false,
+    "folder": "MiniMax-M2.7-Q3_K_S-GGUF",
+    "agentProfileId": "agent-maximo",
+    "reasoningEffort": "high",
+    "reasoningBudget": 8192,
+    "model": {
+      "repo": "mradermacher/MiniMax-M2.7-GGUF",
+      "file": "MiniMax-M2.7-Q3_K_S.gguf",
+      "quant": "Q3_K_S"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 512,
+      "threads": 0,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--n-cpu-moe", "32",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--parallel", "1",
+      "--predict", "8192",
+      "--reasoning-format", "auto"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10228,
+    "contextPresets": [32768, 65536],
+    "comment": "Experimental y opt-in. MiniMax M2.7 Q3_K_S pesa ~98.8 GB: el perfil exige 112 GB de RAM declarada y deja margen para runtime/KV, pero debe validarse con la memoria libre real antes de descargar. No usar Q4 en 128 GB. Sin speculative decoding hasta medir estabilidad y calidad. Fuente GGUF: mradermacher/MiniMax-M2.7-GGUF."
   }
 ]

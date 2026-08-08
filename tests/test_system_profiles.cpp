@@ -65,6 +65,7 @@ private slots:
     void controller_showcaseEmptyWhenNoSiblings();
     void bundle_lagunaIsOptInAndHardwareGated();
     void bundle_ultraQAndHybridAreWiredAndOptIn();
+    void bundle_miniMaxIsOptInAndMemoryGated();
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_launchMenuGatesByTotalVramAcrossGpus();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
@@ -569,6 +570,36 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     for (const QVariant &item : showcase)
         QVERIFY(item.toMap().value(QStringLiteral("launchId")).toString()
                 != QStringLiteral("sys-laguna-s-2-1-q2"));
+}
+
+void SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
+{
+    QFile f(bundlePath());
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
+    QJsonObject profile;
+    for (const QJsonValue &v : arr) {
+        if (v.toObject().value(QStringLiteral("id")).toString()
+            == QStringLiteral("sys-experimental-minimax-m27-q3ks")) {
+            profile = v.toObject();
+            break;
+        }
+    }
+    QVERIFY2(!profile.isEmpty(), "falta el perfil experimental MiniMax M2.7");
+    QVERIFY(profile.value(QStringLiteral("extra")).toBool());
+    QVERIFY(!profile.value(QStringLiteral("autoCompanion")).toBool());
+    QCOMPARE(profile.value(QStringLiteral("minRamGb")).toInt(), 112);
+    QCOMPARE(profile.value(QStringLiteral("model")).toObject().value(QStringLiteral("quant")).toString(),
+             QStringLiteral("Q3_K_S"));
+    QCOMPARE(profile.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("ctx")).toInt(), 32768);
+
+    AppController app;
+    app.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"));
+    QVERIFY(app.recommendedSystemProfile().value(QStringLiteral("launchId")).toString()
+            != QStringLiteral("sys-experimental-minimax-m27-q3ks"));
+    for (const QVariant &item : app.recommendedShowcase())
+        QVERIFY(item.toMap().value(QStringLiteral("launchId")).toString()
+                != QStringLiteral("sys-experimental-minimax-m27-q3ks"));
 }
 
 // Un tier sin grupo de showcase (ej. 4GB) no ofrece "uno/otro/ambos".
