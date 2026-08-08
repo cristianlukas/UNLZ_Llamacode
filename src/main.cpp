@@ -146,7 +146,11 @@ int main(int argc, char *argv[])
     // ── Instancia única ──
     // Si ya hay una instancia (incluida la del tray), pedirle que se muestre y salir,
     // en vez de abrir una segunda (que duplicaría el botón en la taskbar).
+#ifdef LC_DEBUG_ICON
+    const QString kInstanceKey = QStringLiteral("LlamaCode-single-instance-debug");
+#else
     const QString kInstanceKey = QStringLiteral("LlamaCode-single-instance");
+#endif
     {
         QLocalSocket probe;
         probe.connectToServer(kInstanceKey);
