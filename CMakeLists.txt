@@ -89,6 +89,7 @@ set(CORE_SOURCES
     src/core/agent/HybridPlanning.cpp
     src/core/agent/StructuredSourceView.cpp
     src/core/agent/ProjectBrain.cpp
+    src/core/agent/ContextPreflight.cpp
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
     src/core/agent/PortableSkillStore.cpp
@@ -180,6 +181,7 @@ set(HEADERS
     src/core/agent/HybridPlanning.h
     src/core/agent/StructuredSourceView.h
     src/core/agent/ProjectBrain.h
+    src/core/agent/ContextPreflight.h
     src/core/agent/BrowserTeach.h
     src/core/agent/PortableSkillStore.h
     src/core/agent/HotspotAnalyzer.h

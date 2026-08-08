@@ -109,6 +109,16 @@ para los paquetes de sistema. Validado en contenedor Ubuntu 24.04 limpio
 
 ## Qué es
 
+### Preflight de contexto en Debug
+
+El build Debug activa un preflight local inspirado en Graft: antes del primer
+turno del agente consulta el `project_brain` persistente, prepara candidatos por
+objetivo y solicita `repo_slice`/`hybrid_search` con expansión del grafo. Después
+de cada `write_file` o `edit_file` actualiza el índice de metadata y las
+relaciones del código. El preflight no copia fuentes, no usa servicios externos
+y registra sus métricas en la traza de la sesión. Release conserva el flujo
+histórico hasta validar el beneficio con benchmarks.
+
 UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
 
 Principio central:

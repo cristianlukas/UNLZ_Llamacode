@@ -1,5 +1,8 @@
 #include "LlamaAgentBackend.h"
 #include "AgentToolRunner.h"
+#include "ContextPreflight.h"
+#include "ProjectBrain.h"
+#include "CodeGraphIndexer.h"
 #include "SubAgentRunner.h"
 #include "AgentEfficiency.h"
 #include "AgentEventLog.h"
@@ -1816,6 +1819,19 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
     // inline + docs de texto inlineados); si no, string plano.
     const QString apiText = trimmed;
+#ifdef LC_DEBUG_ICON
+    if (attachments.isEmpty() && !m_cwd.isEmpty()) {
+        const QString preflight = ContextPreflight::build(m_cwd, visibleTrimmed);
+        appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
+                                     {QStringLiteral("content"), preflight},
+                                     {QStringLiteral("_lc_protected"), true}});
+        emit logAppended(QStringLiteral("[preflight: contexto inicial preparado]\n"));
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
+                              QJsonObject{{QStringLiteral("source"), QStringLiteral("context_preflight")},
+                                          {QStringLiteral("mode"), QStringLiteral("debug")},
+                                          {QStringLiteral("candidates"), preflight}});
+    }
+#endif
     if (attachments.isEmpty()) {
         appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},
@@ -3607,6 +3623,22 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     const QString executedArgs = m_execArguments;
     m_execToolName.clear();
     m_execArguments.clear();
+#ifdef LC_DEBUG_ICON
+    if (ok && isWrite && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))) {
+        const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
+        const QString path = args.value(QStringLiteral("path")).toString();
+        if (!path.isEmpty()) {
+            ProjectBrain::update(m_cwd, QStringList{path});
+            QString report;
+            CodeGraphIndexer::reindexFiles(m_cwd, QStringList{path}, {}, &report);
+            emit logAppended(QStringLiteral("[preflight: índices resincronizados tras %1]\n").arg(path));
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
+                                  QJsonObject{{QStringLiteral("source"), QStringLiteral("context_resync")},
+                                              {QStringLiteral("path"), path},
+                                              {QStringLiteral("graphReport"), report}});
+        }
+    }
+#endif
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
