@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.94 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.99 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -342,6 +342,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/ChatPage.qml
         qml/components/NavBar.qml
         qml/components/NavigationPolicy.js
+        qml/components/BenchmarkScore.js
         qml/components/PageHeader.qml
         qml/components/CommandPreview.qml
         qml/components/ToolSupportBanner.qml
