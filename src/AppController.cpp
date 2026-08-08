@@ -14947,7 +14947,7 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
 
     if (streaming) {
         struct SpeedState { QByteArray buf; qint64 ttftMs = -1; int chunks = 0;
-                            int tokens = 0; QString response; };
+                            int tokens = 0; QString response; QString reasoning; };
         auto state = std::make_shared<SpeedState>();
 
         connect(reply, &QNetworkReply::readyRead, this, [=]() {
@@ -14967,18 +14967,19 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                     state->tokens = usage.value("completion_tokens").toInt(state->tokens);
                 const QJsonObject deltaObj = obj.value("choices").toArray().first().toObject()
                     .value("delta").toObject();
-                QString delta = deltaObj.value("content").toString();
-                // Los modelos con reasoning (MTP, DSpark) mandan TODO por
-                // reasoning_content y dejan content vacío. Sin este fallback la
-                // respuesta llega vacía y el benchmark puntúa 0 sin decir por qué:
-                // ThinkingCap+MTP sacaba 0/20 en HumanEval por esto, no por fallar
-                // los tests.
-                if (delta.isEmpty())
-                    delta = deltaObj.value("reasoning_content").toString();
-                if (!delta.isEmpty()) {
+                const QString content = deltaObj.value("content").toString();
+                const QString reasoning = deltaObj.value("reasoning_content").toString();
+                // Se acumulan POR SEPARADO. Mezclarlos en un solo buffer parecía
+                // funcionar (arreglaba el 0/20 de ThinkingCap, que manda todo por
+                // reasoning) pero rompía a DeepSeek: su razonamiento en castellano
+                // terminaba pegado al código y Python moría con "invalid character
+                // '¿'" o "unterminated string literal". El razonamiento es un
+                // fallback para cuando NO hay respuesta, no parte de la respuesta.
+                if (!content.isEmpty() || !reasoning.isEmpty()) {
                     if (state->ttftMs < 0) state->ttftMs = QDateTime::currentMSecsSinceEpoch() - startMs;
                     state->chunks++;
-                    state->response += delta;
+                    state->response += content;
+                    state->reasoning += reasoning;
                 }
             }
         });
@@ -14998,7 +14999,11 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             r["chunks"]     = state->chunks;
             r["tokens"]     = tokens;
             r["elapsed_ms"] = totalMs;
-            r["response"]   = state->response;
+            // Si el modelo contesto SOLO por reasoning (MTP manda todo por ahi y
+            // deja content vacio), esa es la respuesta. Si mando las dos cosas, la
+            // respuesta es content y el razonamiento no se mezcla.
+            r["response"]   = state->response.trimmed().isEmpty() ? state->reasoning
+                                                                  : state->response;
             r["failed"]     = failed;
             if (failed) {
                 r["failureMessage"] = *hardTimedOut
