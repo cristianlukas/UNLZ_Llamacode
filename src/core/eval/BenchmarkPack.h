@@ -28,6 +28,11 @@ struct BenchmarkItem {
     QString type;
     QString expected;
     QString tests;          // sólo code_tests: asserts que se ejecutan aparte
+    // Preámbulo del prompt original (imports, firma, helpers). HumanEval lo da
+    // por sentado y el modelo suele devolver sólo el cuerpo o sólo la función: si
+    // no redefine `entryPoint`, hay que anteponerlo o falta contexto y explota.
+    QString preamble;
+    QString entryPoint;
     QStringList choices;    // sólo multiple_choice, para armar el prompt
 };
 
@@ -82,7 +87,9 @@ struct BenchmarkPack {
     // qué. NO es un sandbox de seguridad: no hay aislamiento de red ni de
     // filesystem más allá del cwd. No correr packs de origen desconocido.
     static CodeRun runCodeTests(const QString &code, const QString &tests,
-                                int timeoutMs = 20000, const QString &pythonPath = QString());
+                                int timeoutMs = 20000, const QString &pythonPath = QString(),
+                                const QString &preamble = QString(),
+                                const QString &entryPoint = QString());
 
     // grade() + ejecución cuando el ítem es code_tests. `python` vacío = buscar en PATH.
     static bool gradeWithExecution(const BenchmarkItem &item, const QString &response,

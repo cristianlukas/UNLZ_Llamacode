@@ -148,7 +148,9 @@ bool BenchmarkPack::grade(const BenchmarkItem &item, const QString &response)
 // ── Ejecución de code_tests ──────────────────────────────────────────────────
 
 BenchmarkPack::CodeRun BenchmarkPack::runCodeTests(const QString &code, const QString &tests,
-                                                   int timeoutMs, const QString &pythonPath)
+                                                   int timeoutMs, const QString &pythonPath,
+                                                   const QString &preamble,
+                                                   const QString &entryPoint)
 {
     CodeRun r;
     if (code.trimmed().isEmpty()) {
@@ -186,6 +188,28 @@ BenchmarkPack::CodeRun BenchmarkPack::runCodeTests(const QString &code, const QS
         if (!code.contains(QStringLiteral("import ")))
             f.write("from typing import List, Dict, Tuple, Optional, Any, Set, Union\n"
                     "import math, re, collections, itertools, functools, heapq, string\n\n");
+        // Si el modelo NO redefinió la función objetivo, devolvió sólo el cuerpo o
+        // se apoyó en un helper del enunciado. En los dos casos hay que anteponer
+        // el prompt, que es lo que hace el harness oficial. Sin esto se ve como
+        // "SyntaxError: 'return' outside function" o "NameError: name
+        // 'is_palindrome' is not defined": parecen errores del modelo y no lo son.
+        // Si redefine, igual puede necesitar los imports y los helpers del
+        // enunciado (DeepSeek fallaba con "NameError: name 'is_palindrome' is not
+        // defined" por esto). Se antepone el preámbulo RECORTADO hasta antes de la
+        // firma: pegarlo entero dejaría un `def` sin cuerpo y no compilaría.
+        const bool redefines = !entryPoint.isEmpty()
+            && code.contains(QStringLiteral("def ") + entryPoint);
+        if (!preamble.isEmpty()) {
+            QString head = preamble;
+            if (redefines) {
+                const int sig = preamble.indexOf(QStringLiteral("def ") + entryPoint);
+                head = sig > 0 ? preamble.left(sig) : QString();
+            }
+            if (!head.trimmed().isEmpty()) {
+                f.write(head.toUtf8());
+                f.write("\n");
+            }
+        }
         f.write(code.toUtf8());
         f.write("\n\n");
         f.write(tests.toUtf8());
@@ -229,7 +253,8 @@ bool BenchmarkPack::gradeWithExecution(const BenchmarkItem &item, const QString 
     if (item.type != QLatin1String("code_tests"))
         return grade(item, response);
 
-    const CodeRun r = runCodeTests(extractCode(response), item.tests, timeoutMs);
+    const CodeRun r = runCodeTests(extractCode(response), item.tests, timeoutMs,
+                                   QString(), item.preamble, item.entryPoint);
     if (detail) *detail = r.error;
     return r.passed;
 }
@@ -280,6 +305,11 @@ BenchmarkPack BenchmarkPack::fromHumanEvalJsonl(const QByteArray &jsonl, QString
                                    "completo de la función, sin explicación.\n\n") + prompt;
         // El harness de HumanEval llama check(entry_point) al final.
         it.tests = test + QStringLiteral("\n\ncheck(%1)\n").arg(entry);
+        // El enunciado trae imports, la firma y a veces un helper que el modelo da
+        // por sentado: se guarda para poder anteponerlo si su respuesta no
+        // redefine la función.
+        it.preamble = prompt;
+        it.entryPoint = entry;
         p.items.append(it);
     }
     if (p.items.isEmpty() && err) *err = QStringLiteral("HumanEval: ninguna línea válida");
@@ -339,6 +369,8 @@ BenchmarkPack BenchmarkPack::fromPackJson(const QByteArray &json, QString *err)
         it.type = io.value(QStringLiteral("type")).toString();
         it.expected = io.value(QStringLiteral("expected")).toString();
         it.tests = io.value(QStringLiteral("tests")).toString();
+        it.preamble = io.value(QStringLiteral("preamble")).toString();
+        it.entryPoint = io.value(QStringLiteral("entryPoint")).toString();
         for (const QJsonValue &c : io.value(QStringLiteral("choices")).toArray())
             it.choices << c.toString();
         if (!it.prompt.isEmpty() && !it.type.isEmpty()) p.items.append(it);
@@ -362,6 +394,8 @@ QByteArray BenchmarkPack::toPackJson() const
         io[QStringLiteral("type")] = it.type;
         if (!it.expected.isEmpty()) io[QStringLiteral("expected")] = it.expected;
         if (!it.tests.isEmpty()) io[QStringLiteral("tests")] = it.tests;
+        if (!it.preamble.isEmpty()) io[QStringLiteral("preamble")] = it.preamble;
+        if (!it.entryPoint.isEmpty()) io[QStringLiteral("entryPoint")] = it.entryPoint;
         if (!it.choices.isEmpty())
             io[QStringLiteral("choices")] = QJsonArray::fromStringList(it.choices);
         arr.append(io);

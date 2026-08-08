@@ -377,6 +377,38 @@ void EvalTests::benchPack_runsCodeTestsWithTimeout()
         typedTests);
     QVERIFY2(selfImport.passed, qPrintable(selfImport.error));
 
+    // El caso que quedaba: el modelo devuelve SOLO el cuerpo, o usa un helper que
+    // estaba en el enunciado. Sin anteponer el prompt se ve como "SyntaxError:
+    // 'return' outside function" y "NameError: name 'is_palindrome' is not
+    // defined" — paso de verdad con KAT y DeepSeek, y parecian errores de ellos.
+    BenchmarkItem he;
+    he.type = QStringLiteral("code_tests");
+    he.entryPoint = QStringLiteral("suma_pares");
+    he.preamble = QStringLiteral(
+        "def es_par(n):\n    return n % 2 == 0\n\ndef suma_pares(xs):\n");
+    he.tests = QStringLiteral("def check(f):\n    assert f([1,2,3,4]) == 6\n\ncheck(suma_pares)\n");
+
+    // Solo el cuerpo, indentado: se antepone el prompt y compila.
+    QString d1;
+    QVERIFY2(BenchmarkPack::gradeWithExecution(
+                 he, QStringLiteral("    return sum(x for x in xs if es_par(x))\n"), 20000, &d1),
+             qPrintable(d1));
+
+    // Redefine la funcion pero usa el helper del enunciado: tambien necesita el
+    // preambulo, y no se rompe por definirla dos veces.
+    QString d2;
+    QVERIFY2(BenchmarkPack::gradeWithExecution(
+                 he,
+                 QStringLiteral("```python\ndef suma_pares(xs):\n"
+                                "    return sum(x for x in xs if es_par(x))\n```"),
+                 20000, &d2),
+             qPrintable(d2));
+
+    // Y una solucion mal sigue estando mal: el preambulo no regala puntos.
+    QString d3;
+    QVERIFY(!BenchmarkPack::gradeWithExecution(
+        he, QStringLiteral("def suma_pares(xs):\n    return 999\n"), 20000, &d3));
+
     // Para los otros tipos delega en grade(): no lanza python al pedo.
     BenchmarkItem num;
     num.type = QStringLiteral("numeric");

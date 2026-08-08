@@ -13847,6 +13847,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 bi.type = task.acceptance.value(QStringLiteral("graderType")).toString();
                                 bi.expected = task.acceptance.value(QStringLiteral("expected")).toString();
                                 bi.tests = task.acceptance.value(QStringLiteral("tests")).toString();
+                                bi.preamble = task.acceptance.value(QStringLiteral("preamble")).toString();
+                                bi.entryPoint = task.acceptance.value(QStringLiteral("entryPoint")).toString();
                                 QString detail;
                                 res["passed"] = BenchmarkPack::gradeWithExecution(
                                     bi, res.value("response").toString(), 20000, &detail);
@@ -14079,6 +14081,8 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
             bi.type = graderType;
             bi.expected = acceptance.value(QStringLiteral("expected")).toString();
             bi.tests = acceptance.value(QStringLiteral("tests")).toString();
+            bi.preamble = acceptance.value(QStringLiteral("preamble")).toString();
+            bi.entryPoint = acceptance.value(QStringLiteral("entryPoint")).toString();
             // code_tests EJECUTA el código: es el único tipo que no se puede
             // puntuar mirando texto, y es justo el que discrimina (HumanEval).
             QString detail;
@@ -15683,6 +15687,11 @@ QString AppController::importBenchmarkPack(const QString &path, int limit)
         acc[QStringLiteral("graderType")] = it.type;
         acc[QStringLiteral("expected")] = it.expected;
         if (!it.tests.isEmpty()) acc[QStringLiteral("tests")] = it.tests;
+        // El enunciado de HumanEval trae imports, firma y a veces un helper que el
+        // modelo da por sentado: sin esto sus soluciones fallan por contexto que
+        // falta, no por estar mal.
+        if (!it.preamble.isEmpty()) acc[QStringLiteral("preamble")] = it.preamble;
+        if (!it.entryPoint.isEmpty()) acc[QStringLiteral("entryPoint")] = it.entryPoint;
 
         QVariantMap p;
         p[QStringLiteral("id")] = it.id;
