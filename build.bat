@@ -2,9 +2,9 @@
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 
-REM Usage: build.bat [Debug|Release|Both] [NOPAUSE]   (default: Both)
+REM Usage: build.bat [Debug|Release|Both] [NOPAUSE]   (default: Debug)
 set CONFIGS=%1
-if "%CONFIGS%"=="" set CONFIGS=Both
+if "%CONFIGS%"=="" set CONFIGS=Debug
 set NO_PAUSE=0
 if /I "%2"=="NOPAUSE" set NO_PAUSE=1
 

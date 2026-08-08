@@ -14,7 +14,7 @@
     Override defaults via env vars before running:
       $env:LC_DIR     = "C:\path\to\install"   # default: %USERPROFILE%\LlamaCode
       $env:LC_BRANCH  = "main"
-      $env:LC_CONFIG  = "Release"               # Release|Debug
+      $env:LC_CONFIG  = "Debug"                 # Debug (default) | Release
       $env:LC_NORUN   = "1"                      # skip launching at the end
 #>
 
@@ -25,7 +25,7 @@ Set-StrictMode -Version Latest
 $Repo    = 'https://github.com/cristianlukas/UNLZ_Llamacode.git'
 $Dir     = if ($env:LC_DIR)    { $env:LC_DIR }    else { Join-Path $env:USERPROFILE 'LlamaCode' }
 $Branch  = if ($env:LC_BRANCH) { $env:LC_BRANCH } else { 'main' }
-$Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Release' }
+$Config  = if ($env:LC_CONFIG) { $env:LC_CONFIG } else { 'Debug' }
 $QtVer   = '6.8.3'
 $QtArch  = 'win64_msvc2022_64'
 $QtDir   = "C:\Qt\$QtVer\msvc2022_64"

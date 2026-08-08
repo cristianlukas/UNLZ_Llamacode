@@ -88,7 +88,7 @@ Variables opcionales (setear antes de correr):
 |---|---|---|
 | `LC_DIR` | `~/LlamaCode` | carpeta de instalación aislada |
 | `LC_BRANCH` | `main` | rama a clonar |
-| `LC_CONFIG` | `Release` | `Release` o `Debug` |
+| `LC_CONFIG` | `Debug` | `Debug` (release candidate) o `Release` (estable) |
 | `LC_QTVER` | `6.8.3` | versión de Qt (sólo Linux) |
 | `LC_QTROOT` | `~/Qt` | raíz de instalación de Qt (sólo Linux) |
 | `LC_NORUN` | (vacío) | `1` = no lanzar al terminar |
@@ -1164,7 +1164,8 @@ los accesos directos. Sólo cierra `LlamaCode.exe` si bloquea el enlace; no mata
 compiladores ni servidores de otras sesiones. Acepta config y la opción `NOPAUSE`:
 
 ```bat
-build.bat Release NOPAUSE  REM configuración usada para validar y entregar cambios
+build.bat NOPAUSE          REM Debug: release candidate (predeterminado)
+build.bat Release NOPAUSE  REM Release: promoción estable explícita
 ```
 
 Para subir la versión de la app y del flag de actualización:
@@ -1182,8 +1183,13 @@ Salidas:
 
 | Config | Binario | Acceso directo | Icono |
 |--------|---------|----------------|-------|
-| Release | `build\Release\LlamaCode.exe` (optimizado, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (llama normal) |
-| Debug | `build\Debug\LlamaCode.exe` (compilación manual opcional) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
+| Debug | `build\Debug\LlamaCode.exe` (release candidate, símbolos + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
+| Release | `build\Release\LlamaCode.exe` (estable, optimizado, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (llama normal) |
+
+El build predeterminado es Debug para probar y acumular varias versiones candidatas.
+Release se reserva para una promoción estable explícita, una vez integradas y
+validadas varias versiones de Debug. `build.bat Both` sigue disponible cuando se
+necesitan ambos artefactos.
 
 El icono rojo del Debug va embebido en el `.exe` (taskbar/explorer) vía
 `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake define `LC_DEBUG_ICON` solo en
@@ -1213,7 +1219,7 @@ cmake --build build --config Release --parallel
 
 ### Calidad de código
 
-- `tests.bat Release` reutiliza `build_tests`, compila incrementalmente y corre toda la suite Qt Test.
+- `tests.bat Debug` reutiliza `build_tests`, compila incrementalmente y corre toda la suite Qt Test; pasar `Release` sólo para validar la promoción estable.
 - Si `clang-format` está instalado, CMake expone los targets `format` y
   `format-check` usando `.clang-format`.
 - `LC_STRICT_WARNINGS=ON` activa `/W4 /permissive-` en MSVC o

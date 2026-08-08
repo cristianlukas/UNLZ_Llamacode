@@ -4,9 +4,9 @@ cd /d "%~dp0"
 
 REM build_auto.bat: variante SIN pause para uso automatizado (Claude / CI).
 REM El build.bat con pause queda para el usuario. No agregar pause aca.
-REM Usage: build_auto.bat [Debug|Release|Both]   (default: Both)
+REM Usage: build_auto.bat [Debug|Release|Both]   (default: Debug)
 set CONFIGS=%1
-if "%CONFIGS%"=="" set CONFIGS=Both
+if "%CONFIGS%"=="" set CONFIGS=Debug
 
 set QT_DIR=C:\Qt\6.8.3\msvc2022_64
 set CMAKE=%PROGRAMFILES%\CMake\bin\cmake.exe

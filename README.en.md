@@ -87,7 +87,7 @@ Optional variables (set before running):
 |---|---|---|
 | `LC_DIR` | `~/LlamaCode` | isolated install folder |
 | `LC_BRANCH` | `main` | branch to clone |
-| `LC_CONFIG` | `Release` | `Release` or `Debug` |
+| `LC_CONFIG` | `Debug` | `Debug` (release candidate) or `Release` (stable) |
 | `LC_QTVER` | `6.8.3` | Qt version (Linux only) |
 | `LC_QTROOT` | `~/Qt` | Qt install root (Linux only) |
 | `LC_NORUN` | (empty) | `1` = don't launch when done |
@@ -518,7 +518,7 @@ With a vision model (server launched with `--mmproj`) it also accepts **images**
 `build.bat` kills hung processes, configures, builds, deploys the Qt runtime (`windeployqt`) and regenerates the shortcuts. Accepts a config:
 
 ```bat
-build.bat            REM Debug + Release (default)
+build.bat            REM Debug only (default; release candidate)
 build.bat Debug      REM Debug only
 build.bat Release    REM Release only
 ```
@@ -527,8 +527,12 @@ Outputs:
 
 | Config | Binary | Shortcut | Icon |
 |--------|--------|----------|------|
-| Release | `build\Release\LlamaCode.exe` (optimized, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (normal llama) |
-| Debug | `build\Debug\LlamaCode.exe` (symbols + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (**red** llama) |
+| Debug | `build\Debug\LlamaCode.exe` (release candidate; symbols + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (**red** llama) |
+| Release | `build\Release\LlamaCode.exe` (stable, optimized, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (normal llama) |
+
+Use Debug to accumulate and validate several candidate versions. Promote to
+Release explicitly only after that validation; `build.bat Both` remains available
+when both artifacts are needed.
 
 The Debug red icon is embedded in the `.exe` (taskbar/explorer) via `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake defines `/dLC_DEBUG_ICON` only in Debug config), and also in the `.lnk`.
 
