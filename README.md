@@ -1390,6 +1390,12 @@ límite elegido es menor: un timeout durante la reparación conserva los checks 
 medidos, pero se identifica como `Timeout` y no como un fallo final de calidad. La
 suite `Stress largo y difícil` recomienda al menos 900 s por corrida.
 
+Para construir un subset corto y reproducible de HumanEval con mayor complejidad
+estructural, usar `python tools/select_humaneval_hard.py <HumanEval.jsonl>
+<salida.jsonl>`. El selector genera además un manifest con los ids y métricas;
+emplea la solución canónica sólo para ordenar y conserva sin cambios los registros
+oficiales que importa y ejecuta LlamaCode.
+
 ### Modos de prueba
 
 | Modo | Prompts | `n_predict` | Score | Tiempo estimado |

@@ -213,16 +213,53 @@ Quedan 1–2 fallos residuales por modelo del mismo tipo (texto colándose al c�
 respuestas sin cercas de markdown). No se persiguieron más porque no cambian el
 orden: el resultado es un empate técnico con 70× de diferencia en velocidad.
 
+### 6b. HumanEval difícil y corto (12 ítems, 3 pasadas)
+
+Los identificadores de HumanEval no están ordenados por dificultad: usar simplemente
+los últimos doce habría incluido ejercicios cortos como `/162` y `/163`. Para evitar
+elegir a mano después de ver respuestas, `tools/select_humaneval_hard.py` ordena el
+pack público de forma determinista por complejidad estructural de la solución
+canónica (AST, flujo de control, profundidad y tests) y excluye `/0`–`/19`, ya usados
+en la corrida anterior. La solución canónica se usa sólo para seleccionar; el JSONL
+resultante conserva el prompt y los tests oficiales y nunca se la envía al modelo.
+
+Subset fijado antes de correr: `/81`, `/129`, `/95`, `/75`, `/124`, `/140`, `/141`,
+`/39`, `/127`, `/132`, `/94`, `/20`. Resultado de 36 intentos por perfil:
+
+| perfil | scores por pasada | total | tiempo medio | tokens | decode ponderado |
+|---|---:|---:|---:|---:|---:|
+| KAT-Coder | 11, 11, 11 / 12 | **33/36 (91,7%)** | 41,0 s | 14.570 | 122,4 t/s |
+| ThinkingCap+MTP | 10, 10, 10 / 12 | 30/36 (83,3%) | **39,5 s** | 7.554 | 66,2 t/s |
+| DeepSeek V4 IQ3_S | 10, 9, 10 / 12 | 29/36 (80,6%) | 457,9 s | 10.015 | 7,3 t/s |
+
+Los fallos también discriminan:
+
+- KAT falló `/81` una vez y `/132` dos veces: score estable, solución concreta no
+  totalmente estable.
+- ThinkingCap repitió exactamente `/127` y `/132` en las tres pasadas.
+- DeepSeek falló `/132` tres veces, `/127` dos y `/129` dos. No resolvió ningún
+  ejercicio que estableciera una ventaja sobre ambos perfiles más baratos.
+
+Este test sí pide más código y más ramas que el prefijo de 20, pero sigue siendo
+**función aislada, pass@1**. Por eso refuta una ventaja de DeepSeek en programación
+algorítmica corta; no sustituye un proyecto agentic acumulativo con archivos,
+herramientas, tests iterativos y recuperación de errores.
+
 ## 7. Veredicto
 
-1. **KAT-Coder es el default.** 90% en HumanEval a 110 t/s; la tarea completa en
-   23 segundos contra 27 minutos de DeepSeek.
-2. **ThinkingCap+MTP cuando haga falta visión o el punto extra de calidad.** Mismo
-   95% que DeepSeek a 7× su velocidad, y con mmproj.
-3. **DeepSeek V4 no justifica su costo.** Empata en calidad, tarda 70× más, ocupa
+1. **KAT-Coder es el default.** Ganó además el subset difícil: 91,7%, contra 83,3%
+   de ThinkingCap y 80,6% de DeepSeek.
+2. **ThinkingCap+MTP cuando haga falta visión.** Conserva la ventaja cualitativa de
+   mmproj, pero el subset difícil no mostró una ventaja de código sobre KAT.
+3. **DeepSeek V4 no justifica su costo en código aislado.** Fue último en el subset
+   difícil, tardó 11,2× más que KAT en promedio, ocupa
    116 GB, necesita offload a RAM y una configuración frágil (`-ot` alineado, y
    con `--tensor-split 1,1` devuelve texto corrupto sin avisar).
 4. **MTP es la mejor palanca del tier**: +68% de decode sin costo de calidad.
+
+La hipótesis de una ventaja específicamente **agentic y acumulativa** queda abierta:
+HumanEval no usa repositorio ni tools. No debe afirmarse que DeepSeek la tiene hasta
+que gane una prueba de proyecto reproducible bajo esas condiciones.
 
 ## 8. Comparación de quant DeepSeek (WikiText-2 + HumanEval)
 

@@ -155,6 +155,16 @@ anterior sigue siendo comparable. Un probe real posterior al fix confirmó una
 sola regla `-ot`, score 1/1 y **6,78 t/s**: activar CUDA1 no rescata el quant y en
 ese caso empeora el decode frente a los ~7,25 t/s de la corrida anterior.
 
+### Extensión ejecutada: subset HumanEval difícil y corto
+
+Como los ids de HumanEval no codifican dificultad, no se tomó simplemente la cola
+del pack. `tools/select_humaneval_hard.py` selecciona 12 ítems no vistos mediante
+complejidad AST de la solución canónica, sin incluirla en los prompts. Se hicieron
+tres pasadas por perfil: KAT 33/36, ThinkingCap+MTP 30/36 y DeepSeek IQ3_S 29/36.
+DeepSeek promedió 457,9 s por pasada contra 41,0 s de KAT. El resultado descarta
+una ventaja de DeepSeek en funciones algorítmicas aisladas; la hipótesis agentic
+requiere otro instrumento con repositorio, tools y estado acumulado.
+
 Los pasos 1–4 responden "¿alguno de los tres es mejor?". Los pasos 5–6 responden
 "¿el quant arruinó a DeepSeek?". Son independientes: si el 3 muestra que DeepSeek
 gana algo, el 6 pasa a ser prioritario; si vuelve a empatar, el 6 es lo único que
