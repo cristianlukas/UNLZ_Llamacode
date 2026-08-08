@@ -891,6 +891,10 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("favorite").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("benchmark").toBool());
+    int marked = 0;
+    for (auto it = found.cbegin(); it != found.cend(); ++it)
+        marked += it.value().value("favorite").toBool() ? 1 : 0;
+    QCOMPARE(marked, 3);
     QCOMPARE(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("displayName").toString(),
              QStringLiteral("DeepSeek V4-7-8-26"));
 

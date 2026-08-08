@@ -902,8 +902,13 @@ void ProfileManager::loadSystemProfiles()
         lp.name = o.value("displayName").toString();
         // Alias = solo la VRAM (ej "12GB"), sin sufijos MoE/Gemma/Qwen.
         lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
-        lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
-        lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
+        // Solo estos tres perfiles del benchmark solicitado por el usuario llevan
+        // ambos marcadores; no propagar la insignia a variantes hermanas.
+        const bool evaluated = id == QStringLiteral("sys-48-katcoder-262k")
+            || id == QStringLiteral("sys-48-thinkingcap-mtp")
+            || id == QStringLiteral("sys-48-dsv4-nospec");
+        lp.favorite = evaluated;
+        lp.benchmark = evaluated;
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
         lp.runtimePresetId = rt.id;
