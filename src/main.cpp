@@ -163,7 +163,11 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
     // Identidad de taskbar explícita: sin esto Windows no asocia el icono a la
     // ventana frameless y muestra el icono genérico (splash y app).
+#ifdef LC_DEBUG_ICON
+    SetCurrentProcessExplicitAppUserModelID(L"LlamaCode.Desktop.Debug");
+#else
     SetCurrentProcessExplicitAppUserModelID(L"LlamaCode.Desktop.App");
+#endif
 #endif
 
     // Icono según build: Debug = rojo (debug_icon), Release = normal. Coincide

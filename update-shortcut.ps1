@@ -5,7 +5,11 @@ param(
     [string]$ShortcutPath
 )
 
-$AppUserModelId = "LlamaCode.Desktop.App"
+$AppUserModelId = if ($Config -ieq 'Debug') {
+    "LlamaCode.Desktop.Debug"
+} else {
+    "LlamaCode.Desktop.App"
+}
 
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $ShortcutPath -or [string]::IsNullOrWhiteSpace($ShortcutPath)) {
