@@ -165,6 +165,17 @@ DeepSeek promedió 457,9 s por pasada contra 41,0 s de KAT. El resultado descart
 una ventaja de DeepSeek en funciones algorítmicas aisladas; la hipótesis agentic
 requiere otro instrumento con repositorio, tools y estado acumulado.
 
+### Extensión ejecutada: BigCodeBench-Hard
+
+Se generó una muestra determinista de ocho tareas BigCodeBench-Hard v0.1.4 con
+`tools/prepare_bigcodebench_hard.py`. El selector excluye tareas de red/procesos,
+comprueba dependencias y exige que la solución canónica pase los tests oficiales
+en el mismo entorno aislado. Dos pasadas dieron exactamente el mismo resultado:
+KAT 3/8, ThinkingCap+MTP 3/8 y DeepSeek IQ3_S conservador 1/8. El perfil DeepSeek
+48 GB solicitado crasheó dos veces en el primer prompt con acceso CUDA ilegal; sus
+0/8 sin tokens se descartaron. Ver el detalle y tiempos en
+`docs/benchmark-jerarquia-modelos.md`.
+
 Los pasos 1–4 responden "¿alguno de los tres es mejor?". Los pasos 5–6 responden
 "¿el quant arruinó a DeepSeek?". Son independientes: si el 3 muestra que DeepSeek
 gana algo, el 6 pasa a ser prioritario; si vuelve a empatar, el 6 es lo único que

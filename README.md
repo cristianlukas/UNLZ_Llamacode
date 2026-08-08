@@ -1396,6 +1396,12 @@ estructural, usar `python tools/select_humaneval_hard.py <HumanEval.jsonl>
 emplea la solución canónica sólo para ordenar y conserva sin cambios los registros
 oficiales que importa y ejecuta LlamaCode.
 
+BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
+<dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
+selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y
+valida cada tarea ejecutando previamente su solución canónica con los tests
+oficiales. La referencia no se guarda en los prompts generados.
+
 ### Modos de prueba
 
 | Modo | Prompts | `n_predict` | Score | Tiempo estimado |

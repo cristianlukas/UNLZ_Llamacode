@@ -261,6 +261,42 @@ La hipótesis de una ventaja específicamente **agentic y acumulativa** queda ab
 HumanEval no usa repositorio ni tools. No debe afirmarse que DeepSeek la tiene hasta
 que gane una prueba de proyecto reproducible bajo esas condiciones.
 
+## 7b. BigCodeBench-Hard Instruct (8 ítems, 2 pasadas)
+
+Para salir del tipo de ejercicio de HumanEval se usó BigCodeBench-Hard v0.1.4: su
+split Hard tiene 148 tareas orientadas a instrucciones más complejas y composición
+de APIs. `tools/prepare_bigcodebench_hard.py` construye una muestra reproducible:
+orden SHA-256 con seed fija, exclusión de red/subprocess y dependencias ausentes, y
+admisión sólo si la solución canónica pasa localmente los tests oficiales. La
+solución canónica valida el instrumento pero no se incluye en el pack ni en el
+prompt.
+
+IDs fijados antes de inferir: `/928`, `/765`, `/771`, `/1019`, `/906`, `/583`,
+`/139`, `/360`. Incluyen collections/itertools, filesystem, regex, OCR/imágenes,
+criptografía y NumPy/Pandas/Matplotlib. Resultado reproducido dos veces:
+
+| perfil | pasadas | total | tiempo medio | tokens totales | decode ponderado |
+|---|---:|---:|---:|---:|---:|
+| KAT-Coder | 3/8, 3/8 | **6/16 (37,5%)** | **35,6 s** | 5.733 | 118,4 t/s |
+| ThinkingCap+MTP | 3/8, 3/8 | **6/16 (37,5%)** | 64,6 s | 6.027 | 64,3 t/s |
+| DeepSeek V4 IQ3_S, perfil conservador | 1/8, 1/8 | 2/16 (12,5%) | 460,5 s | 4.950 | 5,6 t/s |
+
+KAT y ThinkingCap pasaron siempre `/928`, `/906` y `/139`, y fallaron los mismos
+otros cinco. DeepSeek sólo pasó `/928`; cambió firmas o retornos exigidos, renombró
+`task_func` en varias respuestas y se extendió de forma repetida en `/771`. No ganó
+ningún ítem exclusivo.
+
+El perfil pedido `sys-48-dsv4-nospec` no produjo un score válido: en dos intentos
+se cayó en el primer prompt con `CUDA illegal memory access` (primero GPU 1, después
+GPU 0). El runner siguió y guardó 0/8 sin tokens; esos resultados se excluyen. Para
+medir capacidad se usó `sys-ultraq-dsv4-0731-iq3s`, los mismos pesos UD-IQ3_S con
+offload conservador de una placa. Esto separa dos hechos: el perfil 48 GB es inestable
+con esta carga y, cuando el modelo sí corre, tampoco muestra ventaja de calidad.
+
+BigCodeBench sigue siendo generación de una función, no una sesión agentic sobre un
+repositorio. Es un escalón materialmente más complejo que HumanEval, pero no cierra
+por sí solo la hipótesis de trabajo acumulativo con tools.
+
 ## 8. Comparación de quant DeepSeek (WikiText-2 + HumanEval)
 
 Se descargaron los tres shards oficiales UD-IQ2_M (~90,9 GB) y se ejecutó
