@@ -13835,6 +13835,23 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                             res["category"] = task.category;
                             if (!task.isSpeed && task.eval)
                                 res["passed"] = task.eval(res.value("response").toString());
+                            // Packs públicos (HumanEval/GSM8K/MMLU): corrección exacta
+                            // por tipo. Sin esto puntúan 0 en el target "modelo", que
+                            // es justo como se corren estos packs: expectSubstrings
+                            // queda vacío a propósito porque un substring no alcanza
+                            // para decidir si un código pasa sus tests.
+                            else if (!task.isSpeed
+                                     && !task.acceptance.value(QStringLiteral("graderType"))
+                                             .toString().isEmpty()) {
+                                BenchmarkItem bi;
+                                bi.type = task.acceptance.value(QStringLiteral("graderType")).toString();
+                                bi.expected = task.acceptance.value(QStringLiteral("expected")).toString();
+                                bi.tests = task.acceptance.value(QStringLiteral("tests")).toString();
+                                QString detail;
+                                res["passed"] = BenchmarkPack::gradeWithExecution(
+                                    bi, res.value("response").toString(), 20000, &detail);
+                                if (!detail.isEmpty()) res["graderDetail"] = detail;
+                            }
                             // EvalSuite: scoring por substrings esperados en la respuesta
                             // (tareas de texto sin auto-eval; pasa si están TODOS).
                             else if (!task.isSpeed) {
