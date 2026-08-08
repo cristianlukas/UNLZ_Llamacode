@@ -33,4 +33,8 @@ public:
     // Resumen humano de las top-N firmas: "Nx  <sample>" por línea. Vacío si no
     // hay errores. `maxGroups` acota el ruido (default 10).
     static QString summarize(const QString &log, int maxGroups = 10);
+
+    // Detecta degradaciones conocidas de llama.cpp que pueden dejar el prefill
+    // en CPU sin que el proceso termine. Devuelve un diagnóstico accionable.
+    static QString performanceWarnings(const QString &log);
 };

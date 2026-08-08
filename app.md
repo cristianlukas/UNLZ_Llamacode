@@ -163,6 +163,13 @@ Fields:
 
 `extraArgs` is where most specialized llama.cpp/BeeLlama tuning lives. Examples:
 
+### Diagnóstico de fallback GPU
+
+El triage del log del servidor detecta degradaciones silenciosas de llama.cpp:
+`SPLIT_MODE_TENSOR` con sampler CPU, capas asignadas a CPU y operadores sin
+soporte GPU. No cambia automáticamente `--split-mode`; informa el problema para
+comparar `tensor` contra `layer` manteniendo constantes contexto, batch y ubatch.
+
 ```json
 [
   "--alias", "precision-100k-q5k-q4v-cross1024",

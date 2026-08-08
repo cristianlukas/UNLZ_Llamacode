@@ -3279,7 +3279,11 @@ QString AppController::triageServerLog(int maxGroups) const
 {
     // Barre tanto el log del server (crashes de llama-server) como el del agente.
     const QString combined = m_log + QLatin1Char('\n') + m_agentLog;
-    return LogTriage::summarize(combined, maxGroups);
+    const QString errors = LogTriage::summarize(combined, maxGroups);
+    const QString performance = LogTriage::performanceWarnings(combined);
+    if (errors.isEmpty()) return performance;
+    if (performance.isEmpty()) return errors;
+    return errors + QLatin1Char('\n') + performance;
 }
 
 QVariantMap AppController::doctor() const
@@ -13701,6 +13705,10 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                     // Run all tasks sequentially, repeated `passes` times per profile.
                     auto taskResults = std::make_shared<QVariantList>();
                     auto passNo = std::make_shared<int>(1);
+                    // A transport failure while the llama-server is restarting is
+                    // not a model miss.  Keep it separate so a crashed profile can
+                    // never be reported as a valid 0/N quality score.
+                    auto serverCrashed = std::make_shared<bool>(false);
                     auto passStartMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
                     auto runTask = std::make_shared<std::function<void(int)>>();
 
@@ -13765,14 +13773,29 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["passedAfterRepair"] = false;
                                 result["tasks"]        = *taskResults;
                                 result["failed"]       = failed;
-                                if (failed) {
-                                    result["failureStage"] = QStringLiteral("request");
+                                if (*serverCrashed) {
+                                    result["invalid"] = true;
+                                    result["qualityScore"] = 0;
+                                    result["qualityTotal"] = 0;
+                                    result["firstAttemptScore"] = 0;
+                                    result["firstAttemptTotal"] = 0;
+                                    result["finalScore"] = 0;
+                                    result["finalTotal"] = 0;
+                                    result["failureStage"] = QStringLiteral("server-crash");
                                     result["failureMessage"] =
-                                        failureMessage.isEmpty()
-                                            ? QStringLiteral("Falló una request del benchmark.")
-                                            : failureMessage;
-                                    result["failureDetail"] =
-                                        failureDetail.isEmpty() ? benchmarkServerLogTail() : failureDetail;
+                                        QStringLiteral("Corrida inválida: el llama-server perdió el transporte durante una request.");
+                                    result["failureDetail"] = benchmarkServerLogTail();
+                                }
+                                if (failed) {
+                                    if (!*serverCrashed) {
+                                        result["failureStage"] = QStringLiteral("request");
+                                        result["failureMessage"] =
+                                            failureMessage.isEmpty()
+                                                ? QStringLiteral("Falló una request del benchmark.")
+                                                : failureMessage;
+                                        result["failureDetail"] =
+                                            failureDetail.isEmpty() ? benchmarkServerLogTail() : failureDetail;
+                                    }
                                 }
                                 result["id"]           = QUuid::createUuid().toString(QUuid::WithoutBraces);
 
@@ -13827,6 +13850,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                             ? QStringLiteral("speed")
                             : QStringLiteral("quality");
                         benchmarkRequest(url, task.prompt, task.maxTokens, true, [=](QVariantMap res) {
+                            if (res.value(QStringLiteral("failed")).toBool()
+                                && (!serverRunning() || !m_serverReady
+                                    || m_serverState != QLatin1String("running"))) {
+                                *serverCrashed = true;
+                            }
                             (*stepsDone)++;
                             m_benchmarkProgress = qMin(99, (*stepsDone * 100) / qMax(1, totalSteps));
                             emit benchmarkProgressChanged();

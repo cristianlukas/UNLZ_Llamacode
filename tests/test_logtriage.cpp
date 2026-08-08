@@ -15,6 +15,8 @@ private slots:
     void group_ordersByCountDesc();
     void summarize_capsGroupsAndReportsRest();
     void summarize_emptyWhenNoErrors();
+    void performanceWarnings_detectsCpuFallbacks();
+    void performanceWarnings_ignoresHealthyLog();
 };
 
 void LogTriageTests::isErrorLine_detectsErrorsIgnoresInfo()
@@ -80,6 +82,25 @@ void LogTriageTests::summarize_emptyWhenNoErrors()
 {
     QVERIFY(LogTriage::summarize(QStringLiteral("info: todo bien\nhealth ok")).isEmpty());
     QVERIFY(LogTriage::summarize(QString()).isEmpty());
+}
+
+void LogTriageTests::performanceWarnings_detectsCpuFallbacks()
+{
+    const QString log = QStringLiteral(
+        "llama_params_fit is not implemented for SPLIT_MODE_TENSOR\n"
+        "backend sampling not supported with SPLIT_MODE_TENSOR, using CPU sampler\n"
+        "layer 0 is assigned to device CPU but fused op is assigned to device CUDA0\n");
+    const QString warnings = LogTriage::performanceWarnings(log);
+    QVERIFY(warnings.contains(QStringLiteral("sampler CPU")));
+    QVERIFY(warnings.contains(QStringLiteral("cayó en CPU")));
+    QCOMPARE(warnings.count(QStringLiteral("Rendimiento:")), 2);
+}
+
+void LogTriageTests::performanceWarnings_ignoresHealthyLog()
+{
+    QVERIFY(LogTriage::performanceWarnings(
+        QStringLiteral("CUDA0: all layers assigned\nCUDA1: all layers assigned\n"))
+        .isEmpty());
 }
 
 QTEST_MAIN(LogTriageTests)

@@ -71,3 +71,29 @@ QString LogTriage::summarize(const QString &log, int maxGroups)
         out << QStringLiteral("… y %1 firma(s) de error más.").arg(groups.size() - n);
     return out.join(QLatin1Char('\n'));
 }
+
+QString LogTriage::performanceWarnings(const QString &log)
+{
+    QStringList warnings;
+    const auto addOnce = [&warnings](const QString &warning) {
+        if (!warnings.contains(warning)) warnings << warning;
+    };
+
+    if (log.contains(QStringLiteral("SPLIT_MODE_TENSOR"), Qt::CaseInsensitive) &&
+        (log.contains(QStringLiteral("using CPU sampler"), Qt::CaseInsensitive) ||
+         log.contains(QStringLiteral("sampling not supported"), Qt::CaseInsensitive))) {
+        addOnce(QStringLiteral(
+            "Rendimiento: split-mode tensor está usando sampler CPU; compará --split-mode layer para recuperar prefill GPU."));
+    }
+    if (QRegularExpression(QStringLiteral(
+            "layer\\s+[^\\n]*assigned to device CPU|assigned to device CPU[^\\n]*layer"),
+            QRegularExpression::CaseInsensitiveOption).match(log).hasMatch()) {
+        addOnce(QStringLiteral(
+            "Rendimiento: al menos una capa cayó en CPU; bajá ctx/batch/ubatch o revisá la distribución GPU antes de medir tok/s."));
+    }
+    if (log.contains(QStringLiteral("usually due to missing support"), Qt::CaseInsensitive)) {
+        addOnce(QStringLiteral(
+            "Rendimiento: hay un operador sin soporte en el backend GPU; verificá el log de asignación porque puede degradar todo el prefill."));
+    }
+    return warnings.join(QLatin1Char('\n'));
+}
