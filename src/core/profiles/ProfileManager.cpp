@@ -530,12 +530,14 @@ QVariantList ProfileManager::launchProfilesForMenu() const
         const QString base = p.alias.isEmpty()
             ? p.name
             : QStringLiteral("%1 - %2").arg(p.alias, p.name);
-        // Marcador distintivo: ⚙ para perfiles de sistema (como ★ para favoritos).
-        const QString mark = p.system ? QStringLiteral("⚙ ")
-                                      : (p.favorite ? QStringLiteral("★ ") : QString());
+        // Marcadores independientes: sistema, favorito y benchmark.
+        QString mark;
+        if (p.system) mark += QStringLiteral("⚙ ");
+        if (p.favorite) mark += QStringLiteral("★ ");
+        if (p.benchmark) mark += QStringLiteral("🏆 ");
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
-            {"favorite", p.favorite}, {"system", p.system},
+            {"favorite", p.favorite}, {"benchmark", p.benchmark}, {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
             // el dropdown y el texto seleccionado; si hay alias va junto al nombre.
             {"displayName", mark + base}});
@@ -900,7 +902,8 @@ void ProfileManager::loadSystemProfiles()
         lp.name = o.value("displayName").toString();
         // Alias = solo la VRAM (ej "12GB"), sin sufijos MoE/Gemma/Qwen.
         lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
-        lp.favorite = false;
+        lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
+        lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
         lp.runtimePresetId = rt.id;

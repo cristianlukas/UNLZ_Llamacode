@@ -207,6 +207,7 @@ struct LaunchProfile {
     QString name;
     QString alias;            // opcional; tiene prioridad sobre name en la UI
     bool    favorite = false; // marcados con estrella y ordenados arriba
+    bool    benchmark = false; // perfil destacado por una evaluación comparativa
     QString backendProfileId;
     QString modelProfileId;
     QString runtimePresetId;

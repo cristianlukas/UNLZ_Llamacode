@@ -564,6 +564,8 @@
   },
   {
     "id": "sys-48-dsv4-nospec",
+    "favorite": true,
+    "benchmark": true,
     "tier": "48GB-DeepSeek-V4-Ultra",
     "order": 88,
     "extra": true,
@@ -849,6 +851,8 @@
   },
   {
     "id": "sys-48-katcoder-262k",
+    "favorite": true,
+    "benchmark": true,
     "tier": "48GB-KAT",
     "order": 82,
     "extra": true,
@@ -1218,6 +1222,8 @@
   },
   {
     "id": "sys-48-thinkingcap-mtp",
+    "favorite": true,
+    "benchmark": true,
     "tier": "48GB-Qwen-Vision",
     "order": 79,
     "extra": true,

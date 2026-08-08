@@ -308,7 +308,7 @@ MasterConfig MasterConfig::fromJson(const QJsonObject &o) {
 QJsonObject LaunchProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
-    o["alias"] = alias; o["favorite"] = favorite;
+    o["alias"] = alias; o["favorite"] = favorite; o["benchmark"] = benchmark;
     o["backendProfileId"] = backendProfileId;
     o["modelProfileId"] = modelProfileId;
     o["runtimePresetId"] = runtimePresetId;
@@ -332,6 +332,7 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.id = o["id"].toString(); p.name = o["name"].toString();
     p.alias = o["alias"].toString();
     p.favorite = o["favorite"].toBool(false);
+    p.benchmark = o["benchmark"].toBool(false);
     p.backendProfileId = o["backendProfileId"].toString();
     p.modelProfileId = o["modelProfileId"].toString();
     // Normally a string id. Tolerate an inline preset object (manual edits /
