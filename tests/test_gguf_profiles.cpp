@@ -525,17 +525,18 @@ void CoreTests::builder_warnsOnManualQwenSampling()
     QVERIFY(topKWarn);
 }
 
-// Role-aware per-tensor quant: cada spec válido se emite como --override-tensor.
+// Role-aware per-tensor quant: llama.cpp exige una unica ocurrencia comma-separated;
+// si se repite el flag, b10228 conserva silenciosamente solo la ultima regla.
 void CoreTests::builder_emitsTensorOverrides()
 {
     auto ctx = makeCtx();
     ctx.runtime.tensorOverrides = {"ffn_.*=Q4_K", "attn_.*=Q8_0"};
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     const QStringList &a = ep.effectiveArgs;
-    QCOMPARE(a.count("--override-tensor"), 2);
+    QCOMPARE(a.count("--override-tensor"), 1);
     int i = a.indexOf("--override-tensor");
     QVERIFY(i >= 0 && i + 1 < a.size());
-    QCOMPARE(a[i + 1], QStringLiteral("ffn_.*=Q4_K"));
+    QCOMPARE(a[i + 1], QStringLiteral("ffn_.*=Q4_K,attn_.*=Q8_0"));
 }
 
 // Spec sin '=' se descarta con warning, sin emitir el flag.

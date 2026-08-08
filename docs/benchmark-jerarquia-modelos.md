@@ -181,6 +181,7 @@ ya está armado y ahí sí tiene sentido la comparación.
 | modelo | score | tiempo | t/s |
 |---|---|---|---|
 | DeepSeek V4 IQ3_S | **19/20** (95%) | 1.597 s | 7 |
+| DeepSeek V4 IQ2_M | 18/20 (90%) | 1.621 s | ~7,25 |
 | ThinkingCap+MTP | **19/20** (95%) | 224 s | 60 |
 | KAT-Coder | 18/20 (90%) | **23 s** | 110 |
 
@@ -222,3 +223,25 @@ orden: el resultado es un empate técnico con 70× de diferencia en velocidad.
    116 GB, necesita offload a RAM y una configuración frágil (`-ot` alineado, y
    con `--tensor-split 1,1` devuelve texto corrupto sin avisar).
 4. **MTP es la mejor palanca del tier**: +68% de decode sin costo de calidad.
+
+## 8. Comparación de quant DeepSeek (WikiText-2 + HumanEval)
+
+Se descargaron los tres shards oficiales UD-IQ2_M (~90,9 GB) y se ejecutó
+`llama-perplexity` b10228 sobre el mismo `wiki.test.raw`, 40 chunks de 512 tokens:
+
+| quant | PPL | delta vs IQ3_S | HumanEval-20 | tiempo |
+|---|---:|---:|---:|---:|
+| UD-IQ3_S | 4,6923 ± 0,12246 | baseline | 19/20 | 1.597 s |
+| UD-IQ2_M | 5,7034 ± 0,15557 | **+21,6%** | 18/20 | 1.621 s |
+
+El resultado cierra la pregunta del quant: **IQ2_M no regala velocidad ni
+calidad** en esta configuración. Sus fallos `/7` y `/10` agotaron los 1.200 tokens
+repitiendo razonamiento sin emitir código. Queda descargado para reproducibilidad,
+pero no debe promoverse.
+
+La corrida descubrió además que b10228 acepta varias reglas `-ot` dentro de una
+sola ocurrencia separada por comas; si se repite el flag, conserva sólo la última.
+El builder y los tres perfiles DeepSeek 48 GB quedaron corregidos. PPL y score son
+comparables porque no cambian los pesos. Un probe real posterior al fix verificó
+una sola regla `-ot`, pasó 1/1 y midió **6,78 t/s**: la residencia CUDA1 no
+rescata IQ2_M y, para ese ítem, empeoró el decode frente a ~7,25 t/s.

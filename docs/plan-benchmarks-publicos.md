@@ -1,7 +1,10 @@
 # Plan de ejecución: benchmarks públicos y la pregunta del quant
 
-Estado al 2026-08-07. Dos cosas quedaron a medias y se anotan primero porque
-condicionan todo lo demás.
+Estado al 2026-08-08: fases 1, 2, 3, 5 y 6 ejecutadas. La fase 4 no se lanzó:
+el empate 19/20 entre ThinkingCap y DeepSeek ya quedó resuelto por una diferencia
+de tiempo de 7x entre ellos y 70x contra KAT; gastar otras ~5 h no puede cambiar
+la decisión operativa. Resultados reproducibles en
+`docs/benchmark-jerarquia-modelos.md`.
 
 ## Deuda reconocida
 
@@ -132,6 +135,25 @@ pasar a 192 GB de RAM.
 | 4 | HumanEval completo si hay empate | — | ~5 h |
 | 5 | Perplejidad IQ3_S (baseline) | 6 | ~20 min |
 | 6 | Bajar IQ2_M + perplejidad + HumanEval | veredicto | 91 GB + ~2 h |
+
+### Resultado ejecutado (2026-08-08)
+
+| quant | WikiText-2 PPL (40 x 512) | HumanEval-20 | tiempo HumanEval |
+|---|---:|---:|---:|
+| UD-IQ3_S | 4,6923 ± 0,12246 | 19/20 | 1.597 s |
+| UD-IQ2_M | 5,7034 ± 0,15557 | 18/20 | 1.621 s |
+
+IQ2_M empeora la PPL **21,6%**, pierde un punto en HumanEval y no mejora el
+decode observado (~7,25 t/s). Se descarta como perfil recomendado. Los dos fallos
+de IQ2_M (`HumanEval/7` y `/10`) agotaron 1.200 tokens repitiendo razonamiento sin
+entregar código ejecutable.
+
+Durante la medición se detectó que llama.cpp b10228 conserva sólo el último
+`-ot` cuando el flag se repite. Los perfiles y `EffectiveProfileBuilder` pasan
+ahora todas las reglas en una única ocurrencia comma-separated; la calidad/PPL
+anterior sigue siendo comparable. Un probe real posterior al fix confirmó una
+sola regla `-ot`, score 1/1 y **6,78 t/s**: activar CUDA1 no rescata el quant y en
+ese caso empeora el decode frente a los ~7,25 t/s de la corrida anterior.
 
 Los pasos 1–4 responden "¿alguno de los tres es mejor?". Los pasos 5–6 responden
 "¿el quant arruinó a DeepSeek?". Son independientes: si el 3 muestra que DeepSeek

@@ -453,7 +453,10 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
         }
     }
 
-    // Role-aware per-tensor quant: un --override-tensor por spec.
+    // llama.cpp b10228+ acepta varias reglas separadas por coma en un unico
+    // --override-tensor. Repetir el flag conserva solo la ultima regla y puede
+    // cambiar silenciosamente la colocacion/cuantiacion de tensores.
+    QStringList validTensorOverrides;
     for (const QString &spec : rt.tensorOverrides) {
         const QString s = spec.trimmed();
         if (s.isEmpty())
@@ -464,8 +467,10 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
                 .arg(s));
             continue;
         }
-        addFlag(bin, "--override-tensor", s, args, warnings);
+        validTensorOverrides.append(s);
     }
+    if (!validTensorOverrides.isEmpty())
+        addFlag(bin, "--override-tensor", validTensorOverrides.join(','), args, warnings);
 }
 
 void EffectiveProfileBuilder::addFlag(const LlamaBinary &bin, const QString &flag,

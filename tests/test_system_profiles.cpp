@@ -704,14 +704,16 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     // capas base repartidas); ThinkingCap y KAT con 1,1 responden bien.
     QCOMPARE(args.value(args.indexOf("--tensor-split") + 1), QStringLiteral("1,0"));
     const QStringList ot = args.filter(QStringLiteral("_exps"));
-    QCOMPARE(ot.size(), 2);
-    QVERIFY(ot.at(0).endsWith(QStringLiteral("=CUDA1")));   // sólo expertos cruzan
-    QVERIFY(!ot.at(0).contains(QStringLiteral("=CUDA0")));
-    QVERIFY(ot.at(1).endsWith(QStringLiteral("=CPU")));     // -ot es first-match-wins:
-                                                            // el catch-all va ULTIMO
+    QCOMPARE(ot.size(), 1);
+    const QStringList otRules = ot.at(0).split(',');
+    QCOMPARE(otRules.size(), 2);
+    QVERIFY(otRules.at(0).endsWith(QStringLiteral("=CUDA1"))); // sólo expertos cruzan
+    QVERIFY(!otRules.at(0).contains(QStringLiteral("=CUDA0")));
+    QVERIFY(otRules.at(1).endsWith(QStringLiteral("=CPU")));   // -ot es first-match-wins:
+                                                               // el catch-all va ULTIMO
     // El regex tiene que nombrar el tensor exacto: con ffn_.*_exps arrastra tensores
     // que no deben moverse y el server muere con illegal memory access.
-    for (const QString &rule : ot)
+    for (const QString &rule : otRules)
         QVERIFY(rule.contains(QStringLiteral("ffn_(gate|up|down)_exps\\.weight")));
 
     // El launch derivado tiene que llegar con esos valores, no solo el bundle.
@@ -723,7 +725,7 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     QCOMPARE(preset.value("batch").toInt(), 4096);
     QCOMPARE(preset.value("ubatch").toInt(), 1024);
     const QStringList launchArgs = launch.value("extraArgs").toStringList();
-    QCOMPARE(launchArgs.filter(QStringLiteral("_exps")).size(), 2);
+    QCOMPARE(launchArgs.filter(QStringLiteral("_exps")).size(), 1);
     QVERIFY(!launchArgs.contains(QStringLiteral("--n-cpu-moe")));
     QCOMPARE(launchArgs.value(launchArgs.indexOf("--tensor-split") + 1), QStringLiteral("1,0"));
 
@@ -791,7 +793,9 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
             args << a.toString();
         const bool isDeepSeek = id.contains(QStringLiteral("dsv4"))
                              || id.contains(QStringLiteral("ultraq"));
-        QCOMPARE(args.filter(QStringLiteral("_exps")).size(), isDeepSeek ? 2 : 0);
+        // Las dos reglas DeepSeek viajan comma-separated en una unica ocurrencia:
+        // repetir -ot hace que llama.cpp conserve solo la ultima.
+        QCOMPARE(args.filter(QStringLiteral("_exps")).size(), isDeepSeek ? 1 : 0);
     }
 
     // ThinkingCap conserva la visión (mmproj) y KAT usa el KV fino que habilitan
@@ -815,7 +819,10 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringList args;
         for (const QJsonValue &a : found.value(id).value("extraArgs").toArray())
             args << a.toString();
-        for (const QString &rule : args.filter(QStringLiteral("_exps"))) {
+        QStringList rules;
+        for (const QString &joined : args.filter(QStringLiteral("_exps")))
+            rules.append(joined.split(','));
+        for (const QString &rule : rules) {
             QVERIFY2(!rule.endsWith(QStringLiteral("=CUDA0")), qPrintable(id));
             if (!rule.endsWith(QStringLiteral("=CUDA1"))) continue;  // catch-all a CPU
             // Sólo los números del selector de capas: el "=CUDA0"/"=CUDA1" del final
