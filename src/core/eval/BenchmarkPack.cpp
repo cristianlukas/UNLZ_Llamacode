@@ -176,6 +176,16 @@ BenchmarkPack::CodeRun BenchmarkPack::runCodeTests(const QString &code, const QS
             r.error = QStringLiteral("no se pudo escribir el archivo temporal");
             return r;
         }
+        // Los prompts de HumanEval traen los imports arriba de la firma, y el
+        // modelo suele devolver SOLO la función. Ejecutar la función sola falla
+        // con "NameError: name 'List' is not defined", que no es un error del
+        // modelo sino del harness: el oficial concatena prompt + completion.
+        // Anteponer los imports habituales cubre el caso sin tener que arrastrar
+        // el prompt entero (que termina en una docstring sin cuerpo y no compila
+        // si el modelo ya redefinió la función).
+        if (!code.contains(QStringLiteral("import ")))
+            f.write("from typing import List, Dict, Tuple, Optional, Any, Set, Union\n"
+                    "import math, re, collections, itertools, functools, heapq, string\n\n");
         f.write(code.toUtf8());
         f.write("\n\n");
         f.write(tests.toUtf8());

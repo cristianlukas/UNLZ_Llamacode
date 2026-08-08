@@ -14965,8 +14965,16 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                 const QJsonObject usage = obj.value("usage").toObject();
                 if (!usage.isEmpty())
                     state->tokens = usage.value("completion_tokens").toInt(state->tokens);
-                const QString delta = obj.value("choices").toArray().first().toObject()
-                    .value("delta").toObject().value("content").toString();
+                const QJsonObject deltaObj = obj.value("choices").toArray().first().toObject()
+                    .value("delta").toObject();
+                QString delta = deltaObj.value("content").toString();
+                // Los modelos con reasoning (MTP, DSpark) mandan TODO por
+                // reasoning_content y dejan content vacío. Sin este fallback la
+                // respuesta llega vacía y el benchmark puntúa 0 sin decir por qué:
+                // ThinkingCap+MTP sacaba 0/20 en HumanEval por esto, no por fallar
+                // los tests.
+                if (delta.isEmpty())
+                    delta = deltaObj.value("reasoning_content").toString();
                 if (!delta.isEmpty()) {
                     if (state->ttftMs < 0) state->ttftMs = QDateTime::currentMSecsSinceEpoch() - startMs;
                     state->chunks++;

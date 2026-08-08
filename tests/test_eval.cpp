@@ -358,6 +358,25 @@ void EvalTests::benchPack_runsCodeTestsWithTimeout()
         item, QStringLiteral("```python\ndef add(a,b):\n    return 99\n```"), 20000, &detail));
     QVERIFY(!detail.isEmpty());
 
+    // HumanEval: el modelo devuelve la funcion SIN los imports que estaban en el
+    // prompt. Ejecutarla sola daba "NameError: name 'List' is not defined", que es
+    // un error del harness y no del modelo — paso de verdad con KAT en HumanEval/0.
+    const QString typedTests = QStringLiteral(
+        "def check(f):\n    assert f([1.0, 2.0], 0.5) == False\n\ncheck(has_close)\n");
+    auto typed = BenchmarkPack::runCodeTests(
+        QStringLiteral("def has_close(numbers: List[float], threshold: float) -> bool:\n"
+                       "    return False\n"),
+        typedTests);
+    QVERIFY2(typed.passed, qPrintable(typed.error));
+
+    // Si el modelo YA trae su import, no se le pisa nada.
+    auto selfImport = BenchmarkPack::runCodeTests(
+        QStringLiteral("from typing import List\n"
+                       "def has_close(numbers: List[float], threshold: float) -> bool:\n"
+                       "    return False\n"),
+        typedTests);
+    QVERIFY2(selfImport.passed, qPrintable(selfImport.error));
+
     // Para los otros tipos delega en grade(): no lanza python al pedo.
     BenchmarkItem num;
     num.type = QStringLiteral("numeric");
