@@ -127,9 +127,11 @@ function Update-LlamaCodeShortcutFile {
             $shortcut.IconLocation = "$exePath,0"
         }
     } else {
-        $shortcut.TargetPath = "$env:WINDIR\System32\cmd.exe"
-        $shortcut.Arguments = "/c start `"`" `".\build\$Config\LlamaCode.exe`""
-        $shortcut.WorkingDirectory = $projectRoot
+        # Keep the shortcut bound to the requested build artifact even before
+        # the first build creates it; do not hide a missing binary behind cmd.exe.
+        $shortcut.TargetPath = $exePath
+        $shortcut.Arguments = ""
+        $shortcut.WorkingDirectory = Split-Path -Parent $exePath
         if (Test-Path $iconPath) {
             $shortcut.IconLocation = "$iconPath,0"
         }
