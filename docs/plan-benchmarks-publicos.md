@@ -171,8 +171,9 @@ Se generó una muestra determinista de ocho tareas BigCodeBench-Hard v0.1.4 con
 `tools/prepare_bigcodebench_hard.py`. El selector excluye tareas de red/procesos,
 comprueba dependencias y exige que la solución canónica pase los tests oficiales
 en el mismo entorno aislado. Dos pasadas dieron exactamente el mismo resultado:
-KAT 3/8, ThinkingCap+MTP 3/8, Fable Fusion Q6 MTP3 32k 3/8, Laguna S 2.1 Q2 sobre 2×3090 2/8 y DeepSeek IQ3_S
-conservador 1/8. El perfil DeepSeek
+KAT 3/8, ThinkingCap+MTP 3/8, Fable Fusion Q6 MTP3 32k 3/8, Laguna S 2.1 Q2 sobre 2×3090 2/8,
+DeepSeek IQ3_S conservador 1/8 y MiniMax M2.7 Q3_K_S 1/8. MiniMax fue estable
+con b10331 y repitió sólo `/906`, pero tardó 1.783,8 s por pasada. El perfil DeepSeek
 48 GB solicitado crasheó dos veces en el primer prompt con acceso CUDA ilegal; sus
 0/8 sin tokens se descartaron. Ver el detalle y tiempos en
 `docs/benchmark-jerarquia-modelos.md`.

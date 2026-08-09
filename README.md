@@ -279,13 +279,15 @@ perfil se mantiene fuera de las recomendaciones automáticas hasta completar la
 suite agentica E2E. La comparación textual y el barrido están documentados en
 [`docs/research/fable-fusion-qwen36-27b.md`](docs/research/fable-fusion-qwen36-27b.md).
 
-En **2× RTX 3090 + 128 GB RAM** existe además el perfil opt-in y sólo-chat
-`[experimental chat-only 48GB] MiniMax M2.7 Q3_K_S · 32k`. El GGUF ocupa
-98,69 GB. La receta medida con llama.cpp b10228 (`--n-cpu-moe 50`, reparto
-`layer 1,1`) carga en unos 16 s y genera cerca de 1 tok/s; una respuesta mínima
-con razonamiento bajo tardó 116,7 s. El tool-calling derribó el server durante la
-validación, por lo que el perfil no declara agente, no participa del router y no
-debe promoverse. Q4 tampoco es viable con 128 GB por tamaño.
+En **2× RTX 3090 + 128 GB RAM** existe además el perfil favorito/benchmark opt-in
+`[experimental 48GB] MiniMax M2.7 Q3_K_S · 32k`. El GGUF ocupa 98,69 GB. La
+receta optimizada requiere llama.cpp b10331 (`--n-cpu-moe 45`, reparto
+`layer 3,1`): usa aproximadamente 9,1/22,6 GB de VRAM, completa tool-calling y
+midió 11,4 tok/s de decode en una llamada corta. En BigCodeBench-Hard repitió 1/8
+dos veces (2/16, 12,5%), a 1.783,8 s por pasada y 5,4 tok/s sostenidos: estable,
+pero sin ventaja de calidad y mucho más lento que los perfiles Qwen. b10228
+derribaba el server con tools. Permanece fuera de recomendaciones automáticas;
+Q4 tampoco es viable con 128 GB por tamaño.
 
 ## Estado actual
 

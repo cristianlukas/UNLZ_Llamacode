@@ -626,7 +626,11 @@ void SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
     QVERIFY(!profile.value(QStringLiteral("autoCompanion")).toBool());
     QCOMPARE(profile.value(QStringLiteral("minRamGb")).toInt(), 112);
     QCOMPARE(profile.value(QStringLiteral("minVramGb")).toInt(), 48);
-    QVERIFY(profile.value(QStringLiteral("agentProfileId")).toString().isEmpty());
+    QVERIFY(profile.value(QStringLiteral("favorite")).toBool());
+    QVERIFY(profile.value(QStringLiteral("benchmark")).toBool());
+    QCOMPARE(profile.value(QStringLiteral("agentProfileId")).toString(),
+             QStringLiteral("agent-maximo"));
+    QCOMPARE(profile.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10331);
     QCOMPARE(profile.value(QStringLiteral("model")).toObject().value(QStringLiteral("quant")).toString(),
              QStringLiteral("Q3_K_S"));
     QCOMPARE(profile.value(QStringLiteral("model")).toObject().value(QStringLiteral("file")).toString(),
@@ -636,9 +640,9 @@ void SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
     QStringList args;
     for (const QJsonValue &arg : profile.value(QStringLiteral("extraArgs")).toArray())
         args << arg.toString();
-    QCOMPARE(args.value(args.indexOf(QStringLiteral("--n-cpu-moe")) + 1), QStringLiteral("50"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--n-cpu-moe")) + 1), QStringLiteral("45"));
     QCOMPARE(args.value(args.indexOf(QStringLiteral("--split-mode")) + 1), QStringLiteral("layer"));
-    QCOMPARE(args.value(args.indexOf(QStringLiteral("--tensor-split")) + 1), QStringLiteral("1,1"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--tensor-split")) + 1), QStringLiteral("3,1"));
 
     AppController app;
     app.setHardwareSummaryForTest(48.0, 128.0, QStringLiteral("2x NVIDIA GeForce RTX 3090"));

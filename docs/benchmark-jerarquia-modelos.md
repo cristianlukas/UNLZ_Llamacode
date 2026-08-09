@@ -282,6 +282,7 @@ criptografía y NumPy/Pandas/Matplotlib. Resultado reproducido dos veces:
 | Fable Fusion Q6, MTP3 32k, 2×3090 | 3/8, 3/8 | **6/16 (37,5%)** | 71,5 s | 5.084 | 50,3 t/s |
 | Laguna S 2.1 118B-A8B UD-Q2_K_XL, 2×3090 | 2/8, 2/8 | **4/16 (25,0%)** | 91,1 s | 10.267 | 64,2 t/s |
 | DeepSeek V4 IQ3_S, perfil conservador | 1/8, 1/8 | 2/16 (12,5%) | 460,5 s | 4.950 | 5,6 t/s |
+| MiniMax M2.7 Q3_K_S, 32k, 2×3090 | 1/8, 1/8 | 2/16 (12,5%) | 1.783,8 s | 9.600 | 5,4 t/s |
 
 KAT, ThinkingCap y Fable pasaron siempre `/928`, `/906` y `/139`, y fallaron los
 mismos otros cinco. Fable empató calidad, pero tardó 10,7% más que ThinkingCap y
@@ -303,6 +304,14 @@ GPU 0). El runner siguió y guardó 0/8 sin tokens; esos resultados se excluyen.
 medir capacidad se usó `sys-ultraq-dsv4-0731-iq3s`, los mismos pesos UD-IQ3_S con
 offload conservador de una placa. Esto separa dos hechos: el perfil 48 GB es inestable
 con esta carga y, cuando el modelo sí corre, tampoco muestra ventaja de calidad.
+
+MiniMax se midió después de optimizarlo sobre llama.cpp b10331: `--n-cpu-moe 45`,
+`--split-mode layer` y `--tensor-split 3,1`. Las dos pasadas fueron estables y
+reprodujeron exactamente el mismo resultado: pasó sólo `/906` y falló `/928`,
+`/765`, `/771`, `/1019`, `/583`, `/139` y `/360`. Casi todas las respuestas
+agotaron 1.200 tokens, por lo que empató la calidad de DeepSeek pero tardó 3,9×
+más por pasada. Queda marcado como favorito/benchmark para repetir comparaciones,
+no como recomendación automática.
 
 BigCodeBench sigue siendo generación de una función, no una sesión agentic sobre un
 repositorio. Es un escalón materialmente más complejo que HumanEval, pero no cierra
