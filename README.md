@@ -1456,7 +1456,9 @@ BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y
 valida cada tarea ejecutando previamente su solución canónica con los tests
-oficiales. La referencia no se guarda en los prompts generados.
+oficiales. La referencia no se guarda en los prompts generados. El análisis
+detallado de los seis perfiles medidos está en
+[`docs/informe-bigcodebench-hard-modelos.md`](docs/informe-bigcodebench-hard-modelos.md).
 
 ### Modos de prueba
 

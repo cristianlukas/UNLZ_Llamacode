@@ -282,7 +282,7 @@ criptografía y NumPy/Pandas/Matplotlib. Resultado reproducido dos veces:
 | Fable Fusion Q6, MTP3 32k, 2×3090 | 3/8, 3/8 | **6/16 (37,5%)** | 71,5 s | 5.084 | 50,3 t/s |
 | Laguna S 2.1 118B-A8B UD-Q2_K_XL, 2×3090 | 2/8, 2/8 | **4/16 (25,0%)** | 91,1 s | 10.267 | 64,2 t/s |
 | DeepSeek V4 IQ3_S, perfil conservador | 1/8, 1/8 | 2/16 (12,5%) | 460,5 s | 4.950 | 5,6 t/s |
-| MiniMax M2.7 Q3_K_S, 32k, 2×3090 | 1/8, 1/8 | 2/16 (12,5%) | 1.783,8 s | 9.600 | 5,4 t/s |
+| MiniMax M2.7 Q3_K_S, 32k, 2×3090 | 1/8, 1/8 | 2/16 (12,5%) | 1.783,8 s | 19.200 | 5,4 t/s |
 
 KAT, ThinkingCap y Fable pasaron siempre `/928`, `/906` y `/139`, y fallaron los
 mismos otros cinco. Fable empató calidad, pero tardó 10,7% más que ThinkingCap y
