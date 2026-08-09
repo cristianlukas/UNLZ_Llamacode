@@ -1881,6 +1881,7 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     m_emptyTextRetries = 0;
     m_lastCallSignature.clear();
     m_sameCallStreak = 0;
+    m_replannedCallSigs.clear();
     m_turnHadDifficulty = false;
     m_turnRecovered = false;
     m_progressGovernor.reset(visibleTrimmed);
@@ -2602,12 +2603,16 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
             }
             return;
         }
-        if (!ok && retryClass == RetryTransient && m_transportRetries < 3) {
+        if (!ok && retryClass == RetryTransient
+            && m_transportRetries < kMaxTransportRetries) {
             const int attempt = ++m_transportRetries;
-            const int delayMs = 500 * (1 << (attempt - 1));
+            const int delayMs = qMin(kMaxTransportRetryDelayMs,
+                                     500 * (1 << qMin(attempt - 1, 4)));
             emit logAppended(QStringLiteral(
-                "[turn] error transitorio HTTP %1; reintento %2/3 en %3 ms\n")
-                                 .arg(status).arg(attempt).arg(delayMs));
+                "[turn] error transitorio HTTP %1; llama-agent conserva el turno "
+                "mientras llama-server reinicia (reintento %2/%3 en %4 ms)\n")
+                                 .arg(status).arg(attempt).arg(kMaxTransportRetries)
+                                 .arg(delayMs));
             closeAssistantBubble();
             QTimer::singleShot(delayMs, this, [this, payload, mode]() {
                 if (m_running && !m_reply) postCompletionRequest(payload, mode);
@@ -3115,8 +3120,10 @@ void LlamaAgentBackend::processPendingCalls()
         argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
     } else if (sigCnt >= kMaxSameCall) {
         // La tercera llamada consecutiva no se ejecuta. Inyectamos el tool_result
-        // para conservar el contrato assistant/tool y cerramos el turno: volver a
-        // consultar al mismo modelo le permitía ignorar el aviso y reiniciar el loop.
+        // para conservar el contrato assistant/tool y se lo devolvemos al modelo:
+        // debe intentar una estrategia distinta en vez de dejar trabajo bloqueado.
+        // Si ignora una vez el replanteo y repite exactamente lo mismo, recién ahí
+        // cerramos para mantener un límite duro de consumo.
         ++m_toolFail;
         m_pendingCalls.removeFirst();
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
@@ -3124,15 +3131,29 @@ void LlamaAgentBackend::processPendingCalls()
                                           {QStringLiteral("toolCallId"), id},
                                           {QStringLiteral("reason"), QStringLiteral("anti_loop")},
                                           {QStringLiteral("repeatCount"), sigCnt}});
-        const QString notice = QStringLiteral(
-            "[anti-loop: se bloqueó la tercera llamada consecutiva a '%1' con los "
-            "mismos argumentos porque no hubo progreso verificable. Turno detenido "
-            "para evitar más consumo; revisá lo ya obtenido antes de continuar.]"
-        ).arg(name);
+        const bool alreadyReplanned = m_replannedCallSigs.contains(sig);
+        const QString notice = alreadyReplanned
+            ? QStringLiteral(
+                "[anti-loop: la llamada a '%1' volvió a repetirse aun después del "
+                "replanteo obligatorio; turno detenido para limitar consumo.]").arg(name)
+            : QStringLiteral(
+                "[anti-loop: no ejecutes otra vez '%1' con estos argumentos: ya se "
+                "obtuvo el mismo resultado sin progreso. REPLANIFICACIÓN OBLIGATORIA: "
+                "usá la evidencia disponible y elegí ahora una herramienta, argumentos "
+                "o enfoque materialmente diferente; si el objetivo ya está resuelto, "
+                "entregá el resultado final.]").arg(name);
         appendToolResult(id, name, notice);
+        if (alreadyReplanned) {
+            emit logAppended(QStringLiteral("[anti-loop] el modelo ignoró el replanteo; "
+                                            "cerrando turno\n"));
+            finishTurn(notice);
+            return;
+        }
+        m_replannedCallSigs.insert(sig);
+        ++m_replanEvents;
         emit logAppended(QStringLiteral("[anti-loop] tercera tool idéntica bloqueada; "
-                                        "cerrando turno\n"));
-        finishTurn(notice);
+                                        "devolviendo evidencia al modelo para replantear\n"));
+        processPendingCalls();
         return;
     }
 

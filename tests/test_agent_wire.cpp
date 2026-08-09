@@ -24,7 +24,7 @@ private slots:
     void readsToolSupportFromPropsCaps();
     void fallsBackToTextToolsWhenServerRejectsNativeTools();
     void forceTextToolsSkipsNativeToolAttempt();
-    void thirdIdenticalToolCallStopsTurnWithoutExecuting();
+    void thirdIdenticalToolCallReplansWithoutExecuting();
     void stoppingDuringCompletionReleasesTurn();
     void differentProjectsRunTurnsConcurrently();
     void restartRepublishesPersistedMessages();
@@ -583,8 +583,8 @@ void AgentWireTests::fallsBackToTextToolsWhenServerRejectsNativeTools()
 // (con forceTextTools el backend no debe intentar el path nativo). Responde el
 // protocolo textual directamente.
 // Regresión ULTRA-Q: el modelo insiste con la misma lectura aunque ya recibió el
-// contenido y luego el stub de deduplicación. La tercera llamada debe cerrarle el
-// turno sin ejecutar otra lectura ni pedir una cuarta completion.
+// contenido y luego el stub de deduplicación. La tercera llamada se bloquea y el
+// cuarto request simula que la IA acepta el replanteo y entrega un resultado final.
 class FakeRepeatingToolServer : public QTcpServer
 {
 public:
@@ -614,8 +614,11 @@ protected:
                 return;
             }
             ++completionRequests;
-            writeSse(sock, QStringLiteral(
-                "TOOL_CALL {\"name\":\"read_file\",\"arguments\":{\"path\":\"marker.txt\"}}"));
+            if (completionRequests <= 3)
+                writeSse(sock, QStringLiteral(
+                    "TOOL_CALL {\"name\":\"read_file\",\"arguments\":{\"path\":\"marker.txt\"}}"));
+            else
+                writeSse(sock, QStringLiteral("FINAL: read_file ejecutado correctamente"));
         });
         connect(sock, &QTcpSocket::disconnected, sock, &QObject::deleteLater);
     }
@@ -764,7 +767,7 @@ void AgentWireTests::forceTextToolsSkipsNativeToolAttempt()
     backend.stop();
 }
 
-void AgentWireTests::thirdIdenticalToolCallStopsTurnWithoutExecuting()
+void AgentWireTests::thirdIdenticalToolCallReplansWithoutExecuting()
 {
     QTemporaryDir cwd;
     QVERIFY(cwd.isValid());
@@ -790,18 +793,23 @@ void AgentWireTests::thirdIdenticalToolCallStopsTurnWithoutExecuting()
     backend.sendMessage(QStringLiteral("Revisá marker.txt."));
 
     QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 10000);
-    QCOMPARE(server.completionRequests, 3);
+    // La tercera llamada se bloquea, pero su resultado correctivo vuelve a la IA.
+    // El fake responde entonces con FINAL, simulando que eligió otro camino.
+    QCOMPARE(server.completionRequests, 4);
     QVERIFY(!backend.isBusy());
     int executedReads = 0;
+    bool sawReplannedFinal = false;
     for (const QVariant &message : backend.messages()) {
         const QVariantMap map = message.toMap();
         if (map.value(QStringLiteral("role")).toString() == QLatin1String("toolcall")
             && map.value(QStringLiteral("name")).toString() == QLatin1String("read_file"))
             ++executedReads;
+        if (map.value(QStringLiteral("content")).toString()
+                .contains(QStringLiteral("read_file ejecutado correctamente")))
+            sawReplannedFinal = true;
     }
     QCOMPARE(executedReads, 2);
-    QVERIFY(backend.messages().last().toMap().value(QStringLiteral("content")).toString()
-                .contains(QStringLiteral("tercera llamada consecutiva")));
+    QVERIFY(sawReplannedFinal);
     backend.stop();
 }
 

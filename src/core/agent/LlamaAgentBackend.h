@@ -657,6 +657,7 @@ private:
     int m_emptyTextRetries = 0;          // reintentos por turno text-tools vacío (nudge)
     QString m_lastCallSignature;         // firma de la última tool_call del turno
     int m_sameCallStreak = 0;            // repeticiones consecutivas de esa firma
+    QSet<QString> m_replannedCallSigs;    // firmas ya devueltas al modelo para cambiar estrategia
     QString m_failureFingerprint;        // error normalizado de la racha actual
     int m_equivalentFailures = 0;        // fallos consecutivos equivalentes
     bool m_turnHadDifficulty = false;    // hubo al menos una tool fallida en este turno
@@ -672,7 +673,9 @@ private:
     // real lo frena kMaxSameCall (misma tool + mismos args repetidos). Que el
     // agente haga tantas iteraciones como necesite.
     static constexpr int kMaxTurnIters = 1000;
-    static constexpr int kMaxSameCall  = 3; // la tercera idéntica se bloquea sin ejecutarse
+    static constexpr int kMaxSameCall  = 3; // la tercera idéntica se bloquea y fuerza replanteo
+    static constexpr int kMaxTransportRetries = 60; // hasta ~5 min mientras reinicia llama-server
+    static constexpr int kMaxTransportRetryDelayMs = 5000;
     static constexpr int kFailureSpiralThreshold = 3;
 
     // Aprobación en curso (1 tool a la vez)
