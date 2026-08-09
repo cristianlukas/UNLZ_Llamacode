@@ -99,7 +99,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 67); // 30 perfiles base + 37 variantes declarativas de benchmark
+    QCOMPARE(sys, 68); // 30 perfiles base + 38 variantes declarativas de benchmark
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -944,7 +944,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
                  .value("benchmarkVariants").toArray().size(), 4);
     QCOMPARE(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp"))
-                 .value("benchmarkVariants").toArray().size(), 3);
+                 .value("benchmarkVariants").toArray().size(), 4);
 
     // Todos tienen que llegar al menú como perfiles de sistema lanzables, incluidas
     // las variantes expandidas.
@@ -972,10 +972,12 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("favorite").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("benchmark").toBool());
+    QVERIFY(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("favorite").toBool());
+    QVERIFY(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("benchmark").toBool());
     int marked = 0;
     for (auto it = found.cbegin(); it != found.cend(); ++it)
         marked += it.value().value("favorite").toBool() ? 1 : 0;
-    QCOMPARE(marked, 3);
+    QCOMPARE(marked, 4);
     QCOMPARE(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("displayName").toString(),
              QStringLiteral("DeepSeek V4-7-8-26"));
 
@@ -999,7 +1001,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(fable.value("model").toObject().value("quant").toString(),
              QStringLiteral("Q6_K"));
     QVERIFY(!fable.value("model").toObject().value("mmprojFile").toString().isEmpty());
-    QCOMPARE(fable.value("runtime").toObject().value("ctx").toInt(), 120000);
+    QCOMPARE(fable.value("runtime").toObject().value("ctx").toInt(), 32768);
     QCOMPARE(fable.value("minimumBinaryBuild").toInt(), 10331);
     QStringList fableArgs;
     for (const QJsonValue &a : fable.value("extraArgs").toArray())
@@ -1011,7 +1013,13 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-type") + 1),
              QStringLiteral("draft-mtp"));
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-draft-n-max") + 1),
-             QStringLiteral("4"));
+             QStringLiteral("3"));
+    const QVariantMap fableLaunch = pm.getLaunchProfile(QStringLiteral("sys-48-fablefusion-q6-mtp"));
+    QVERIFY(fableLaunch.value("favorite").toBool());
+    QVERIFY(fableLaunch.value("benchmark").toBool());
+    const QVariantMap fableVariant = pm.getLaunchProfile(QStringLiteral("sys-bench-48-fable-mtp3"));
+    QVERIFY(!fableVariant.value("favorite").toBool());
+    QVERIFY(!fableVariant.value("benchmark").toBool());
 
     // 393k sólo arranca con los CUDA graphs apagados, y eso viaja por env: si el
     // env se pierde, el server muere con "invalid program counter" en el primer

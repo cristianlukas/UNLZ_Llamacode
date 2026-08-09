@@ -171,7 +171,7 @@ Se generó una muestra determinista de ocho tareas BigCodeBench-Hard v0.1.4 con
 `tools/prepare_bigcodebench_hard.py`. El selector excluye tareas de red/procesos,
 comprueba dependencias y exige que la solución canónica pase los tests oficiales
 en el mismo entorno aislado. Dos pasadas dieron exactamente el mismo resultado:
-KAT 3/8, ThinkingCap+MTP 3/8, Laguna S 2.1 Q2 sobre 2×3090 2/8 y DeepSeek IQ3_S
+KAT 3/8, ThinkingCap+MTP 3/8, Fable Fusion Q6 MTP3 32k 3/8, Laguna S 2.1 Q2 sobre 2×3090 2/8 y DeepSeek IQ3_S
 conservador 1/8. El perfil DeepSeek
 48 GB solicitado crasheó dos veces en el primer prompt con acceso CUDA ilegal; sus
 0/8 sin tokens se descartaron. Ver el detalle y tiempos en

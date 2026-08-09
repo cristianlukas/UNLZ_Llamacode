@@ -463,7 +463,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         ? p.name
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
-            {"alias", p.alias}, {"favorite", p.favorite},
+            {"alias", p.alias}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
             {"system", p.system},
             {"displayName", displayName},
             {"backendProfileId", p.backendProfileId},
@@ -902,13 +902,10 @@ void ProfileManager::loadSystemProfiles()
         lp.name = o.value("displayName").toString();
         // Alias = solo la VRAM (ej "12GB"), sin sufijos MoE/Gemma/Qwen.
         lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
-        // Solo estos tres perfiles del benchmark solicitado por el usuario llevan
-        // ambos marcadores; no propagar la insignia a variantes hermanas.
-        const bool evaluated = id == QStringLiteral("sys-48-katcoder-262k")
-            || id == QStringLiteral("sys-48-thinkingcap-mtp")
-            || id == QStringLiteral("sys-48-dsv4-nospec");
-        lp.favorite = evaluated;
-        lp.benchmark = evaluated;
+        // Las insignias pertenecen al catalogo: asi un perfil medido puede marcarse
+        // sin recompilar esta clase ni propagar el estado a variantes hermanas.
+        lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
+        lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
         lp.runtimePresetId = rt.id;

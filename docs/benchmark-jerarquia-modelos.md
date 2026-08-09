@@ -279,15 +279,23 @@ criptografía y NumPy/Pandas/Matplotlib. Resultado reproducido dos veces:
 |---|---:|---:|---:|---:|---:|
 | KAT-Coder | 3/8, 3/8 | **6/16 (37,5%)** | **35,6 s** | 5.733 | 118,4 t/s |
 | ThinkingCap+MTP | 3/8, 3/8 | **6/16 (37,5%)** | 64,6 s | 6.027 | 64,3 t/s |
+| Fable Fusion Q6, MTP3 32k, 2×3090 | 3/8, 3/8 | **6/16 (37,5%)** | 71,5 s | 5.084 | 50,3 t/s |
 | Laguna S 2.1 118B-A8B UD-Q2_K_XL, 2×3090 | 2/8, 2/8 | **4/16 (25,0%)** | 91,1 s | 10.267 | 64,2 t/s |
 | DeepSeek V4 IQ3_S, perfil conservador | 1/8, 1/8 | 2/16 (12,5%) | 460,5 s | 4.950 | 5,6 t/s |
 
-KAT y ThinkingCap pasaron siempre `/928`, `/906` y `/139`, y fallaron los mismos
-otros cinco. Laguna pasó siempre `/928` y `/139`: no alcanzó a los dos perfiles
+KAT, ThinkingCap y Fable pasaron siempre `/928`, `/906` y `/139`, y fallaron los
+mismos otros cinco. Fable empató calidad, pero tardó 10,7% más que ThinkingCap y
+aproximadamente el doble que KAT. Laguna pasó siempre `/928` y `/139`: no alcanzó a los dos perfiles
 Qwen, aunque duplicó el score de DeepSeek con aproximadamente una quinta parte de
 su tiempo. DeepSeek sólo pasó `/928`; cambió firmas o retornos exigidos, renombró
 `task_func` en varias respuestas y se extendió de forma repetida en `/771`. No ganó
 ningún ítem exclusivo.
+
+El barrido sostenido de Fable detectó una diferencia que el smoke corto no mostró:
+120k/MTP4 completó la primera pasada pero cayó con `CUDA illegal memory access` al
+iniciar la segunda; MTP3 y `nospec` a 120k tampoco produjeron dos corridas válidas.
+Con 32k/MTP3 completó las 16 tareas sin crash y repitió exactamente el score y los
+IDs. Por estabilidad, esa configuración queda como base y 120k como preset opt-in.
 
 El perfil pedido `sys-48-dsv4-nospec` no produjo un score válido: en dos intentos
 se cayó en el primer prompt con `CUDA illegal memory access` (primero GPU 1, después

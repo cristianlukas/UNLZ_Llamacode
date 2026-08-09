@@ -271,9 +271,12 @@ anular la aceleración y debe compararse contra ULTRA-Q y la variante `nospec`.
 
 El tier dual de 48 GB incluye además el perfil opt-in
 `[experimental 48GB] Fable Fusion Qwen3.6-27B Q6 · MTP · visión`. Requiere
-llama.cpp b10331+, descarga el GGUF MTP Q6 y `mmproj-F16`, usa MTP4 con KV
-K=f16/V=q8 y se mantiene fuera de las recomendaciones automáticas hasta completar
-la suite agentica E2E. La comparación textual y el barrido están documentados en
+llama.cpp b10331+, descarga el GGUF MTP Q6 y `mmproj-F16`, y usa MTP3 a 32k con
+KV K=f16/V=q8. En BigCodeBench-Hard repitió 3/8 dos veces (6/16, 37,5%), igualando
+la calidad de KAT/ThinkingCap pero con 71,5 s por pasada. El ajuste corto MTP4 a
+120k no queda como base: bajo carga sostenida produjo accesos CUDA ilegales. El
+perfil se mantiene fuera de las recomendaciones automáticas hasta completar la
+suite agentica E2E. La comparación textual y el barrido están documentados en
 [`docs/research/fable-fusion-qwen36-27b.md`](docs/research/fable-fusion-qwen36-27b.md).
 
 En **2× RTX 3090 + 128 GB RAM** existe además el perfil opt-in y sólo-chat
