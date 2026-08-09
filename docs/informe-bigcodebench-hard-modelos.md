@@ -151,4 +151,3 @@ promediaron con la tabla principal. Ocho tareas permiten comparar estos perfiles
 bajo condiciones idénticas, pero no estimar con precisión el pass@1 global de las
 148 tareas del split Hard. La igualdad entre pasadas muestra reproducibilidad de
 esta muestra, no generalización a todo el dataset.
-
