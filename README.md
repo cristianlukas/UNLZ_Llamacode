@@ -244,8 +244,10 @@ lo mantiene completo en GPU (`split-mode layer`, `tensor-split 1,1`, mmap y KV
 q4_0). Medido con b10228: carga en 16,5 s, ocupa 22.168/20.609 MiB, procesa
 67.660 tokens a 1.673 t/s y genera a 37,5 t/s; a 32k alcanzó 1.954 t/s de prefill
 y 55–69 t/s de decode. Emitió tool calls OpenAI válidas. Ambos perfiles preservan
-el razonamiento entre turnos; la variante 48 GB sigue siendo opt-in hasta superar
-el benchmark de calidad contra ThinkingCap/KAT.
+el razonamiento entre turnos. En BigCodeBench-Hard obtuvo dos veces 2/8 (4/16,
+25,0%; 91,1 s por pasada), por debajo de KAT/ThinkingCap (37,5%) y por encima de
+DeepSeek V4 IQ3_S (12,5%). La variante 48 GB queda marcada como favorita y perfil
+evaluado, pero sigue siendo opt-in: no reemplaza a KAT/ThinkingCap para coding.
 
 El mismo tier ofrece ahora, también **opt-in**, `[experimental ultra] ULTRA-Q`,
 basado en `DeepSeek-V4-Flash-0731 UD-IQ3_S` (~116 GB en cuatro shards). Su punto

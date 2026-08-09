@@ -573,6 +573,7 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QVERIFY2(!dual.isEmpty(), "falta la variante Laguna medida para 2x3090");
     QVERIFY(dual.value(QStringLiteral("extra")).toBool());
     QVERIFY(!dual.value(QStringLiteral("autoCompanion")).toBool());
+    QVERIFY(dual.value(QStringLiteral("favorite")).toBool());
     QVERIFY(dual.value(QStringLiteral("benchmark")).toBool());
     QCOMPARE(dual.value(QStringLiteral("minVramGb")).toInt(), 48);
     QCOMPARE(dual.value(QStringLiteral("minRamGb")).toInt(), 64);

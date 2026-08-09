@@ -1941,6 +1941,7 @@
     "tier": "48GB-Laguna-Experimental",
     "extra": true,
     "autoCompanion": false,
+    "favorite": true,
     "benchmark": true,
     "order": 4,
     "displayName": "[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k",
