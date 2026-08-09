@@ -258,6 +258,13 @@ el GGUF DSpark separado (~10,9 GB), emitiendo `--spec-draft-model` junto con
 `draft-dspark`. Sigue siendo opt-in: en 24 GB de VRAM el costo adicional puede
 anular la aceleración y debe compararse contra ULTRA-Q y la variante `nospec`.
 
+El tier dual de 48 GB incluye además el perfil opt-in
+`[experimental 48GB] Fable Fusion Qwen3.6-27B Q6 · MTP · visión`. Requiere
+llama.cpp b10331+, descarga el GGUF MTP Q6 y `mmproj-F16`, usa MTP4 con KV
+K=f16/V=q8 y se mantiene fuera de las recomendaciones automáticas hasta completar
+la suite agentica E2E. La comparación textual y el barrido están documentados en
+[`docs/research/fable-fusion-qwen36-27b.md`](docs/research/fable-fusion-qwen36-27b.md).
+
 En **2× RTX 3090 + 128 GB RAM** existe además el perfil opt-in y sólo-chat
 `[experimental chat-only 48GB] MiniMax M2.7 Q3_K_S · 32k`. El GGUF ocupa
 98,69 GB. La receta medida con llama.cpp b10228 (`--n-cpu-moe 50`, reparto

@@ -983,7 +983,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-type") + 1),
              QStringLiteral("draft-mtp"));
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-draft-n-max") + 1),
-             QStringLiteral("3"));
+             QStringLiteral("4"));
 
     // 393k sólo arranca con los CUDA graphs apagados, y eso viaja por env: si el
     // env se pierde, el server muere con "invalid program counter" en el primer
