@@ -15855,7 +15855,7 @@ namespace {
 // cache-type-k/v marcados como qualityRisk: el gate de calidad impide que el
 // optimizador colapse al quant más bajo solo por velocidad.
 QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = false,
-                                      bool cpuMoe = false)
+                                      bool cpuMoe = false, bool splitMode = false)
 {
     using tuner::ParamSpec;
     if (cpuOnly) {
@@ -15895,6 +15895,13 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
         // expertos entre RAM y VRAM, el factor dominante en hardware híbrido.
         params.append({ParamSpec::categorical("n-cpu-moe", {"31", "35", "39", "43"}),
                        "--n-cpu-moe", false});
+    }
+    if (splitMode) {
+        // En multi-GPU dense, tensor puede acelerar TG pero algunas versiones
+        // dejan el prefill/sampler en CPU. Medir ambas opciones con PP y TG
+        // separados permite elegir según la carga real del usuario.
+        params.append({ParamSpec::categorical("split-mode", {"layer", "tensor"}),
+                       "--split-mode", false});
     }
     return params;
 }
@@ -15998,7 +16005,25 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
                           || effArgs.contains(QStringLiteral("--spec-draft-model"))
                           || hasEmbeddedDraft);
     const bool cpuMoe = !cpuOnly && effArgs.contains(QStringLiteral("--n-cpu-moe"));
-    QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly, cpuMoe);
+    bool canTuneSplitMode = false;
+    if (!cpuOnly && m_hardwareSummary.value(QStringLiteral("gpuCount")).toInt() > 1) {
+        const QString effectiveBinary = QFileInfo(binaryPath).canonicalFilePath();
+        for (int row = 0; row < m_binaries.rowCount(); ++row) {
+            const QModelIndex idx = m_binaries.index(row);
+            const QString candidate = QFileInfo(
+                m_binaries.data(idx, BinaryRegistry::PathRole).toString()).canonicalFilePath();
+            if (candidate.compare(effectiveBinary, Qt::CaseInsensitive) != 0) continue;
+            const QString id = m_binaries.data(idx, BinaryRegistry::IdRole).toString();
+            m_binaries.detectCapabilitiesSync(id);
+            const LlamaBinary binary = m_binaries.findById(id);
+            canTuneSplitMode = TunerEngine::canTuneSplitMode(
+                m_hardwareSummary.value(QStringLiteral("gpuCount")).toInt(),
+                binary.backend, binary.supportedFlags, effArgs, cpuOnly, cpuMoe);
+            break;
+        }
+    }
+    QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly, cpuMoe,
+                                                    canTuneSplitMode);
 
     // baseArgs = args efectivos menos host/port y menos los flags que vamos a
     // afinar (con sus aliases), para no duplicarlos.
@@ -16012,6 +16037,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
         QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
         QStringLiteral("--spec-draft-n-max"),
         QStringLiteral("--n-cpu-moe"),
+        QStringLiteral("--split-mode"),
     };
     const QSet<QString> switchFlags = {
         QStringLiteral("--flash-attn"), QStringLiteral("-fa"),
@@ -16151,6 +16177,7 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
             QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
             QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
             QStringLiteral("--spec-draft-n-max"),
+            QStringLiteral("--split-mode"),
         };
         const QSet<QString> switchFlags = {
             QStringLiteral("--flash-attn"), QStringLiteral("-fa"),

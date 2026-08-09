@@ -66,10 +66,16 @@ Definido en `AppController::buildTuneParams()`:
 |-----------|------|----------|:---:|
 | ngl | `-ngl` | 0 / 20 / 40 / 99 | |
 | batch | `-b` | 256 / 512 / 1024 / 2048 | |
-| ubatch | `-ub` | 128 / 256 / 512 | |
+| ubatch | `-ub` | 128 / 256 / 512 / 1024 / 2048 | |
 | flash-attn | `--flash-attn` (switch) | off / on | |
 | cache-type-k | `--cache-type-k` | f16 / q8_0 / q4_0 | ✓ |
 | cache-type-v | `--cache-type-v` | f16 / q8_0 / q4_0 | ✓ |
+| split-mode | `--split-mode` | layer / tensor | |
+
+`split-mode` sólo entra al espacio cuando hay al menos dos GPU NVIDIA, el
+binario CUDA declara soporte para el flag y el perfil no usa CPU-MoE ni
+`--override-tensor`. Esos layouts tienen reglas de residencia propias y no son
+intercambiables de forma segura.
 
 Combos inválidos para el binario (p.ej. quant de V cache sin flash-attn) hacen
 fallar ese trial → quedan penalizados automáticamente. El optimizador los evita.
@@ -101,8 +107,9 @@ por substrings para no bloquear el flujo.
    GPU o crashea — todos los trials darían 0 tok/s.)*
 3. **Espera** `/health` 200 (hasta `readyTimeoutMs`); aborta apenas el proceso
    muere.
-4. **Mide**: POST `/completion` (`stream:false`), throughput de
-   `timings.predicted_per_second` (fallback `predicted_n / predicted_ms`).
+4. **Mide**: POST `/completion` (`stream:false`), PP y TG por separado desde
+   `timings.prompt_per_second` y `timings.predicted_per_second` (con fallback a
+   tokens/tiempo). El objetivo combina ambos con el peso elegido en la UI.
 5. **Califica**: fracción de substrings de aceptación presentes en `content`
    (estilo EvalSuite), en `[0,1]`.
 6. **Mata** el server para liberar RAM/VRAM.
@@ -154,9 +161,22 @@ tools\build_tuner_tests.ps1   # MSVC 2022 + Qt 6.8.3; engine necesita /Zc:__cplu
 
 ---
 
+## Validación local multi-GPU
+
+En 2× RTX 3090, llama.cpp oficial y Qwen3.6-27B IQ4_XS, con 6.618 tokens de
+prompt, contexto 32k, `batch=2048`, `ubatch=512` y el resto idéntico:
+
+| split | PP tok/s | TG tok/s |
+|-------|---------:|---------:|
+| layer | 664,65 | 32,09 |
+| tensor | 1.108,39 | 29,16 |
+
+En esa versión `tensor` mejoró PP 66,8% y redujo TG 9,1%. La dirección difiere
+de reportes de otras builds, lo que confirma que debe medirse por binario,
+modelo y carga en vez de fijar una opción global.
+
 ## Pendiente
 
-- Prueba end-to-end con modelo real (hasta ahora validado con mock HTTP).
 - Afinar espacio de búsqueda / `nPredict` / prompt de medición según hardware.
 - Exponer en UI la tabla de trials (hoy solo la última línea de estado).
 - Elegir corpus PPL y umbral desde UI avanzada.

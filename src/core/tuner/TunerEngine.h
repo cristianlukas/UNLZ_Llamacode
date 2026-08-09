@@ -133,6 +133,13 @@ public:
     static QStringList tunedArgs(const QVector<TunableParam> &params,
                                  const tuner::Config &config);
 
+    // Gate conservador para explorar --split-mode: sólo CUDA multi-GPU, flag
+    // confirmado y sin layouts MoE/per-tensor cuyo reparto no es intercambiable.
+    static bool canTuneSplitMode(int gpuCount, const QString &backend,
+                                 const QStringList &supportedFlags,
+                                 const QStringList &effectiveArgs,
+                                 bool cpuOnly, bool cpuMoe);
+
 signals:
     void trialDone(int index, int total, double throughput, double quality,
                    const QString &summary, double promptTps, double genTps);

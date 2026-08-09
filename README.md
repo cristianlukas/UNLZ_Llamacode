@@ -1533,7 +1533,8 @@ incluye secretos. Ver [`docs/evidence.md`](docs/evidence.md).
 ## Auto-tuning de parámetros
 
 Búsqueda automática de los flags de `llama-server` (`ngl`, `batch`, `ubatch`,
-`flash-attn`, `cache-type-k/v`) que maximizan **tok/s** sin degradar la
+`flash-attn`, `cache-type-k/v` y, en CUDA multi-GPU compatible, `split-mode`)
+que maximizan **tok/s** sin degradar la
 **calidad**. Optimizador TPE-lite (Parzen discreto) con **gate de calidad** y
 validación PPL opcional: a diferencia de *llama-launcher v1.3*, tunear el quant
 de KV cache solo por velocidad no colapsa al quant más bajo, porque la pérdida

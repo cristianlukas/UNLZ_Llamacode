@@ -59,6 +59,21 @@ QStringList TunerEngine::tunedArgs(const QVector<TunableParam> &params,
     return args;
 }
 
+bool TunerEngine::canTuneSplitMode(int gpuCount, const QString &backend,
+                                   const QStringList &supportedFlags,
+                                   const QStringList &effectiveArgs,
+                                   bool cpuOnly, bool cpuMoe)
+{
+    if (cpuOnly || cpuMoe || gpuCount < 2
+        || backend.compare(QStringLiteral("cuda"), Qt::CaseInsensitive) != 0)
+        return false;
+    if (!supportedFlags.contains(QStringLiteral("--split-mode"))
+        && !supportedFlags.contains(QStringLiteral("-sm")))
+        return false;
+    return !effectiveArgs.contains(QStringLiteral("--override-tensor"))
+           && !effectiveArgs.contains(QStringLiteral("-ot"));
+}
+
 double ThroughputSample::blended(double ppWeight) const
 {
     const double w = qBound(0.0, ppWeight, 1.0);

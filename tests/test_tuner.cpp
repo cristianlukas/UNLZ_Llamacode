@@ -19,6 +19,8 @@ private slots:
     void run_qualityGateAvoidsLowestQuant();
     void tunedArgs_emitsSpecDraftNMax();
     void tunedArgs_emitsCpuMoe();
+    void tunedArgs_emitsSplitMode();
+    void canTuneSplitMode_gatesUnsafeLayouts();
     void parsePerplexity_readsLastReportedValue();
     void parseThroughput_splitsPromptAndGen();
     void parseThroughput_derivesFromMsAndCount();
@@ -102,6 +104,33 @@ void TunerTests::tunedArgs_emitsCpuMoe()
     const QStringList args = TunerEngine::tunedArgs(params, cfg);
     const int i = args.indexOf("--n-cpu-moe");
     QVERIFY(i >= 0 && args.value(i + 1) == QLatin1String("39"));
+}
+
+void TunerTests::tunedArgs_emitsSplitMode()
+{
+    QVector<TunableParam> params{
+        {ParamSpec::categorical("split-mode", {"layer", "tensor"}),
+         "--split-mode", false},
+    };
+    Config cfg; cfg["split-mode"] = 1;
+    const QStringList args = TunerEngine::tunedArgs(params, cfg);
+    const int i = args.indexOf("--split-mode");
+    QVERIFY(i >= 0);
+    QCOMPARE(args.value(i + 1), QStringLiteral("tensor"));
+}
+
+void TunerTests::canTuneSplitMode_gatesUnsafeLayouts()
+{
+    const QStringList flags{QStringLiteral("--split-mode")};
+    QVERIFY(TunerEngine::canTuneSplitMode(2, QStringLiteral("cuda"), flags, {}, false, false));
+    QVERIFY(!TunerEngine::canTuneSplitMode(1, QStringLiteral("cuda"), flags, {}, false, false));
+    QVERIFY(!TunerEngine::canTuneSplitMode(2, QStringLiteral("vulkan"), flags, {}, false, false));
+    QVERIFY(!TunerEngine::canTuneSplitMode(2, QStringLiteral("cuda"), {}, {}, false, false));
+    QVERIFY(!TunerEngine::canTuneSplitMode(2, QStringLiteral("cuda"), flags, {}, true, false));
+    QVERIFY(!TunerEngine::canTuneSplitMode(2, QStringLiteral("cuda"), flags, {}, false, true));
+    QVERIFY(!TunerEngine::canTuneSplitMode(
+        2, QStringLiteral("cuda"), flags,
+        {QStringLiteral("--override-tensor"), QStringLiteral("blk.*=CUDA0")}, false, false));
 }
 
 void TunerTests::parsePerplexity_readsLastReportedValue()
