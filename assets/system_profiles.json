@@ -66,8 +66,8 @@
       "16384",
       "--parallel",
       "1",
-      "--reasoning-format",
-      "auto",
+      "--reasoning",
+      "off",
       "--spec-type",
       "draft-dspark",
       "--spec-draft-n-max",
@@ -1302,6 +1302,114 @@
     "vision": true
   },
   {
+    "id": "sys-48-fablefusion-q6-mtp",
+    "tier": "48GB-Qwen-Vision",
+    "order": 78,
+    "extra": true,
+    "autoCompanion": false,
+    "benchmark": true,
+    "displayName": "[experimental 48GB] Fable Fusion Qwen3.6-27B Q6 · MTP · visión",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.6-27B-Fable-Fusion-Q6",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF",
+      "file": "Qwen3.6-27B-Fable-Fus-711-UnHeretic-NM-DAU-NEO-MAX-NEO-MTP-Q6_K.gguf",
+      "mmprojRepo": "DavidAU/Qwen3.6-27B-Fable-Fusion-711-Uncensored-Heretic-NM-DAU-NEO-MAX-MTP-GGUF",
+      "mmprojFile": "mmproj-F16.gguf",
+      "quant": "Q6_K"
+    },
+    "runtime": {
+      "ctx": 120000,
+      "gpuLayers": 999,
+      "batch": 2048,
+      "ubatch": 512,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k",
+      "f16",
+      "--cache-type-v",
+      "q8_0",
+      "--fit",
+      "off",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--repeat-penalty",
+      "1.0",
+      "--presence-penalty",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--threads-batch",
+      "16",
+      "--predict",
+      "8192",
+      "--parallel",
+      "1",
+      "--reasoning-format",
+      "auto",
+      "--split-mode",
+      "layer",
+      "--tensor-split",
+      "1,1",
+      "--spec-type",
+      "draft-mtp",
+      "--spec-draft-n-max",
+      "3"
+    ],
+    "binaryKind": "official",
+    "contextPresets": [
+      32768,
+      65536,
+      120000
+    ],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-48-fable-mtp1",
+        "order": 77,
+        "displayName": "[bench 48GB Fable Q6] MTP 1 · 120k",
+        "extraArgOverrides": {
+          "--spec-draft-n-max": "1"
+        }
+      },
+      {
+        "id": "sys-bench-48-fable-mtp4",
+        "order": 76,
+        "displayName": "[bench 48GB Fable Q6] MTP 4 · 120k",
+        "extraArgOverrides": {
+          "--spec-draft-n-max": "4"
+        }
+      },
+      {
+        "id": "sys-bench-48-fable-kv-q8",
+        "order": 75,
+        "displayName": "[bench 48GB Fable Q6] KV q8/q8 · MTP 3 · 120k",
+        "extraArgOverrides": {
+          "--cache-type-k": "q8_0",
+          "--cache-type-v": "q8_0"
+        }
+      }
+    ],
+    "comment": "Perfil opt-in para comparar el Q6_K MTP del post de LocalLLM contra ThinkingCap+MTP. Descarga tambien mmproj-F16. En 2x RTX 3090, 32k K=f16/V=q8_0 y MTP3, b10228 dio salida corrupta incluso sin speculator; b10331 corrigio la compatibilidad. split-mode tensor crashea b10228 con una asercion del backend, por eso el perfil usa layer aunque el post use tensor. No promover sin completar el benchmark de calidad y validar 120k.",
+    "minimumBinaryBuild": 10331,
+    "vision": true
+  },
+  {
     "id": "sys-48-hybrid-tc-kat",
     "tier": "48GB-Hybrid",
     "order": 78,
@@ -1825,7 +1933,7 @@
       "args": []
     },
     "binaryKind": "official",
-    "binaryPin": "b10087"
+    "minimumBinaryBuild": 10087
   },
   {
     "id": "sys-vram-20",
@@ -2384,21 +2492,20 @@
   },
   {
     "id": "sys-experimental-minimax-m27-q3ks",
-    "tier": "128GB-MiniMax-M2.7",
+    "tier": "48GB-MiniMax-M2.7",
     "order": 160,
     "extra": true,
     "autoCompanion": false,
-    "displayName": "[experimental] MiniMax M2.7 Q3_K_S · 32k",
-    "minVramGb": 24,
+    "displayName": "[experimental chat-only 48GB] MiniMax M2.7 Q3_K_S · 32k",
+    "minVramGb": 48,
     "minRamGb": 112,
     "cpuOk": false,
     "folder": "MiniMax-M2.7-Q3_K_S-GGUF",
-    "agentProfileId": "agent-maximo",
-    "reasoningEffort": "high",
-    "reasoningBudget": 8192,
+    "reasoningEffort": "low",
+    "reasoningBudget": 2048,
     "model": {
       "repo": "mradermacher/MiniMax-M2.7-GGUF",
-      "file": "MiniMax-M2.7-Q3_K_S.gguf",
+      "file": "MiniMax-M2.7.Q3_K_S.gguf",
       "quant": "Q3_K_S"
     },
     "runtime": {
@@ -2413,7 +2520,10 @@
       "mmap": true
     },
     "extraArgs": [
-      "--n-cpu-moe", "32",
+      "--n-cpu-moe", "50",
+      "--fit", "off",
+      "--split-mode", "layer",
+      "--tensor-split", "1,1",
       "--temp", "0.60",
       "--top-p", "0.95",
       "--top-k", "20",
@@ -2430,7 +2540,7 @@
     ],
     "binaryKind": "official",
     "minimumBinaryBuild": 10228,
-    "contextPresets": [32768, 65536],
-    "comment": "Experimental y opt-in. MiniMax M2.7 Q3_K_S pesa ~98.8 GB: el perfil exige 112 GB de RAM declarada y deja margen para runtime/KV, pero debe validarse con la memoria libre real antes de descargar. No usar Q4 en 128 GB. Sin speculative decoding hasta medir estabilidad y calidad. Fuente GGUF: mradermacher/MiniMax-M2.7-GGUF."
+    "contextPresets": [32768],
+    "comment": "Experimental, opt-in y SOLO CHAT para 2x RTX 3090 + 128 GB RAM. Medido con llama.cpp b10228 y el GGUF de 98.69 GB: n-cpu-moe 50 + split layer 1,1 carga en ~16 s, usa ~65.5 GB de working set y ~15.5/24.2 GB de VRAM, y genera ~1.0 tok/s. n-cpu-moe 45 da OOM; cpu-moe completo no termina 16 tokens en 300 s; una solicitud con tools derribo el server, por eso no declara agentProfileId ni entra al router. Reasoning low necesito 114 tokens y 116.7 s para responder PARIS. No usar Q4 en 128 GB ni promover hasta que llama.cpp estabilice tool-calling/rendimiento para minimax-m2. Fuente: mradermacher/MiniMax-M2.7-GGUF."
   }
 ]

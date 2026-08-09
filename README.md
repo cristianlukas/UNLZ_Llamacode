@@ -232,7 +232,8 @@ En equipos de **24 GB VRAM + 128 GB RAM** el catálogo ofrece además, sólo baj
 instalación manual, el perfil experimental
 `[experimental] Laguna S 2.1 118B-A8B Q2`. Usa el GGUF
 `UD-Q2_K_XL` de ~39,7 GB en una sola PC mediante GPU+RAM (`--n-cpu-moe 32`),
-contexto 100k y `ubatch 768`; requiere `llama.cpp b10087+`. No forma parte de la
+contexto 100k y `ubatch 768`; requiere `llama.cpp b10087+` y acepta cualquier
+build oficial posterior compatible (no queda fijado a b10087). No forma parte de la
 recomendación automática, no se descarga junto con MAX-Q/FAST-GEMMA y debe
 compararse mediante benchmark antes de reemplazar MAX-Q. MAX-Q usa ThinkingCap
 Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
@@ -256,6 +257,14 @@ externo`. Reutiliza los cuatro shards IQ3_S y descarga como dependencia obligato
 el GGUF DSpark separado (~10,9 GB), emitiendo `--spec-draft-model` junto con
 `draft-dspark`. Sigue siendo opt-in: en 24 GB de VRAM el costo adicional puede
 anular la aceleración y debe compararse contra ULTRA-Q y la variante `nospec`.
+
+En **2× RTX 3090 + 128 GB RAM** existe además el perfil opt-in y sólo-chat
+`[experimental chat-only 48GB] MiniMax M2.7 Q3_K_S · 32k`. El GGUF ocupa
+98,69 GB. La receta medida con llama.cpp b10228 (`--n-cpu-moe 50`, reparto
+`layer 1,1`) carga en unos 16 s y genera cerca de 1 tok/s; una respuesta mínima
+con razonamiento bajo tardó 116,7 s. El tool-calling derribó el server durante la
+validación, por lo que el perfil no declara agente, no participa del router y no
+debe promoverse. Q4 tampoco es viable con 128 GB por tamaño.
 
 ## Estado actual
 
@@ -1288,6 +1297,11 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
 - `prePrompt` y `postPrompt` opcionales: instrucciones agénticas antes de ejecutar
   la Task y una verificación posterior (por ejemplo, chequear que la salida tenga
   evidencia suficiente o pedir una validación del resultado).
+- `verifyProfileId` permite usar otro LaunchProfile como revisor. Con
+  `autoDifficultyRouting`, el ejecutor conserva las verificaciones simples y se
+  escala al revisor cuando el contexto activo, la cantidad de archivos editados,
+  los fallos consecutivos o los ciclos indican dificultad alta; dos señales medias
+  combinadas también disparan el escalado.
 - `steps[]`: cada paso `{kind, intent, ref}` con `kind` ∈
   `instruction|browser|shell|mail|desktop`. Los pasos `browser` graban un skill
   reproducible vía Playwright codegen (reusa el modo *teach* del browser).
@@ -1341,7 +1355,10 @@ agente re-deriva las acciones con sus tools (browser MCP, shell, mail, etc.) y
   al modelo para no provocar HTTP 400 por contexto/payload excesivo.
 - Mientras corre, la UI muestra la fase (`ejecutando` o `verificando`). Si hay
   `postPrompt`, se envía como segundo turno al terminar la ejecución principal y
-  la Task no se marca como finalizada hasta completar esa verificación.
+  la Task no se marca como finalizada hasta completar esa verificación. El editor
+  permite elegir un perfil revisor distinto y decidir entre usarlo siempre o sólo
+  cuando el router de dificultad pide escalado. El mismo routing se aplica al
+  chequeo de objetivo de los bucles.
 - Para cualquier automatización de escritorio enseñada, el prefijo seguro de
   teclado de la receta (por ejemplo `WIN → nombre de app → ENTER`) se
   reproduce en paralelo al primer prefill: no hay nombres de aplicaciones
@@ -1509,7 +1526,10 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
 ### Persistencia y vista
 
 - Resultados en JSON (`AppLocalData/LlamaCode/benchmarks/{timestamp}.json`).
-- Vista tabla en `BenchmarkPage.qml`: columnas ordenables, filtro por perfil/quant/fecha.
+- Vista tabla en `BenchmarkPage.qml`: columnas ordenables, filtro por perfil/quant/fecha
+  y **QPM (calidad por minuto)**. QPM usa el score final relativo, el tiempo total
+  y una penalización por intentos de reparación; una corrida sin tiempo o fallada
+  no recibe un score inventado.
 - Exportar a CSV desde la UI.
 
 ### Tabla de ejemplo

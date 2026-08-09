@@ -22,7 +22,7 @@ Item {
     // Anchos redimensionables por columna del historial.
     property var colW: ({
         profile: 200, target: 58, agentProfile: 96, benchmark: 100, score: 60, firstAttemptScore: 58,
-        finalScore: 58, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
+        finalScore: 58, qpm: 68, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
         passedAfterRepair: 68, tps: 60, ttft: 60, seconds: 70, ram: 60, vram: 60, date: 118
     })
     function colWidth(c) { const w = colW[c]; return (w !== undefined && w > 0) ? w : 60 }
@@ -88,6 +88,7 @@ Item {
         if (column === "firstAttemptScore")
             return BenchmarkScore.sortKey(row, "firstAttemptScore", "firstAttemptTotal")
         if (column === "finalScore") return BenchmarkScore.sortKey(row, "finalScore", "finalTotal")
+        if (column === "qpm") return BenchmarkScore.qualityPerMinute(row)
         if (column === "repairAttempts") return row.repairAttempts ?? 0
         if (column === "timeToFirstAttempt") return row.timeToFirstAttempt ?? row.elapsedSec ?? 0
         if (column === "totalTime") return row.totalTime ?? row.elapsedSec ?? 0
@@ -151,6 +152,7 @@ Item {
         if (column === "score") return scoreLabel(row, "qualityScore", "qualityTotal")
         if (column === "firstAttemptScore") return scoreLabel(row, "firstAttemptScore", "firstAttemptTotal")
         if (column === "finalScore") return scoreLabel(row, "finalScore", "finalTotal")
+        if (column === "qpm") return BenchmarkScore.qualityPerMinuteLabel(row)
         if (column === "repairAttempts") return String(row.repairAttempts ?? 0)
         if (column === "timeToFirstAttempt") return secondsLabel(row.timeToFirstAttempt ?? row.elapsedSec)
         if (column === "totalTime") return secondsLabel(row.totalTime ?? row.elapsedSec)
@@ -1021,6 +1023,7 @@ Item {
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("score"); onLoaded: { item.title = "Score"; item.column = "score" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstAttemptScore"); onLoaded: { item.title = "First"; item.column = "firstAttemptScore" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("finalScore"); onLoaded: { item.title = "Final"; item.column = "finalScore" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("qpm"); onLoaded: { item.title = "QPM"; item.column = "qpm" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("repairAttempts"); onLoaded: { item.title = "Fixes"; item.column = "repairAttempts" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("timeToFirstAttempt"); onLoaded: { item.title = "T First"; item.column = "timeToFirstAttempt" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("totalTime"); onLoaded: { item.title = "T Total"; item.column = "totalTime" } }
@@ -1170,6 +1173,18 @@ Item {
                                     font.pixelSize: 11
                                     font.bold: true
                                     Layout.preferredWidth: root.colWidth("finalScore"); horizontalAlignment: Text.AlignRight
+                                }
+                                Text {
+                                    text: BenchmarkScore.qualityPerMinuteLabel(modelData)
+                                    color: {
+                                        const tone = BenchmarkScore.qualityPerMinuteTone(modelData)
+                                        return tone === "ok" ? Theme.successText
+                                             : tone === "warn" ? Theme.warnText
+                                             : tone === "error" ? Theme.errorText : Theme.textMuted
+                                    }
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    Layout.preferredWidth: root.colWidth("qpm"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: (modelData.repairAttempts ?? 0).toString()

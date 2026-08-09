@@ -52,6 +52,39 @@ QtObject {
         check(BenchmarkScore.sortKey(mal, "qualityScore", "qualityTotal") > -1,
               "Un score bajo ordena por encima de 'sin evaluar'")
 
+        // ── Calidad por minuto (qualityPerMinute) ──
+        const buenQpm = { qualityScore: 5, qualityTotal: 5, failed: false, elapsedSec: 60, repairs: 0 }
+        check(BenchmarkScore.qualityPerMinute(buenQpm) > 0,
+              "Calidad/minuto positiva cuando hay score y tiempo")
+        check(BenchmarkScore.qualityPerMinute(buenQpm) >= 100,
+              "5/5 en 60s sin reparaciones da >= 100 qpm")
+        check(BenchmarkScore.qualityPerMinuteTone(buenQpm) === "ok",
+              "QPM alto va en verde")
+
+        const malQpm = { qualityScore: 1, qualityTotal: 5, failed: false, elapsedSec: 300, repairs: 3 }
+        check(BenchmarkScore.qualityPerMinute(malQpm) < BenchmarkScore.qualityPerMinute(buenQpm),
+              "Mal score + lento + reparaciones da menos qpm")
+        check(BenchmarkScore.qualityPerMinuteTone(malQpm) === "error",
+              "QPM bajo va en rojo")
+
+        const falloQpm = { qualityScore: 0, qualityTotal: 0, failed: true, elapsedSec: 10 }
+        check(BenchmarkScore.qualityPerMinute(falloQpm) === 0,
+              "Corrida fallada da 0 qpm")
+        check(BenchmarkScore.qualityPerMinuteLabel(falloQpm) === "—",
+              "Corrida fallada muestra guion en qpm label")
+
+        const labelOk = BenchmarkScore.qualityPerMinuteLabel(buenQpm)
+        check(labelOk.endsWith(" qpm"),
+              "Label de qpm termina con ' qpm'")
+
+        const totalTimeQpm = { qualityScore: 5, qualityTotal: 5, failed: false,
+                               elapsedSec: 5, totalTime: 120, repairAttempts: 1 }
+        check(BenchmarkScore.qualityPerMinute(totalTimeQpm) === 40,
+              "QPM usa totalTime y repairAttempts reales del benchmark")
+        check(BenchmarkScore.qualityPerMinute({ qualityScore: 5, qualityTotal: 5,
+                                                failed: false, elapsedSec: 0 }) === 0,
+              "Sin tiempo válido no inventa QPM")
+
         console.log(fails === 0 ? "TODO OK" : (fails + " FALLAS"))
         Qt.exit(fails === 0 ? 0 : 1)
     }

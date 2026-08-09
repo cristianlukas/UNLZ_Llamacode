@@ -99,7 +99,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 61); // tiers base + extras + familia 48GB (18) + DSpark externo + 26 variantes bench
+    QCOMPARE(sys, 66); // 29 perfiles base + 37 variantes declarativas de benchmark
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -202,8 +202,16 @@ void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
         QVERIFY(bundle.open(QIODevice::ReadOnly));
         for (const QJsonValue &v : QJsonDocument::fromJson(bundle.readAll()).array()) {
             const QJsonObject o = v.toObject();
-            if (o.value(QStringLiteral("vision")).toBool())
+            if (o.value(QStringLiteral("vision")).toBool()) {
                 declaresVision.insert(o.value(QStringLiteral("id")).toString());
+                // Las variantes declarativas heredan mmproj/vision del perfil base
+                // al expandirse en ProfileManager; reconocer también sus IDs.
+                for (const QJsonValue &variant :
+                     o.value(QStringLiteral("benchmarkVariants")).toArray()) {
+                    declaresVision.insert(
+                        variant.toObject().value(QStringLiteral("id")).toString());
+                }
+            }
         }
     }
 
@@ -542,8 +550,8 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QVERIFY(!laguna.value(QStringLiteral("autoCompanion")).toBool());
     QCOMPARE(laguna.value(QStringLiteral("minVramGb")).toInt(), 24);
     QCOMPARE(laguna.value(QStringLiteral("minRamGb")).toInt(), 120);
-    QCOMPARE(laguna.value(QStringLiteral("binaryPin")).toString(),
-             QStringLiteral("b10087"));
+    QVERIFY(laguna.value(QStringLiteral("binaryPin")).toString().isEmpty());
+    QCOMPARE(laguna.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10087);
 
     const QJsonObject model = laguna.value(QStringLiteral("model")).toObject();
     QCOMPARE(model.value(QStringLiteral("file")).toString(),
@@ -589,12 +597,23 @@ void SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
     QVERIFY(profile.value(QStringLiteral("extra")).toBool());
     QVERIFY(!profile.value(QStringLiteral("autoCompanion")).toBool());
     QCOMPARE(profile.value(QStringLiteral("minRamGb")).toInt(), 112);
+    QCOMPARE(profile.value(QStringLiteral("minVramGb")).toInt(), 48);
+    QVERIFY(profile.value(QStringLiteral("agentProfileId")).toString().isEmpty());
     QCOMPARE(profile.value(QStringLiteral("model")).toObject().value(QStringLiteral("quant")).toString(),
              QStringLiteral("Q3_K_S"));
+    QCOMPARE(profile.value(QStringLiteral("model")).toObject().value(QStringLiteral("file")).toString(),
+             QStringLiteral("MiniMax-M2.7.Q3_K_S.gguf"));
     QCOMPARE(profile.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("ctx")).toInt(), 32768);
 
+    QStringList args;
+    for (const QJsonValue &arg : profile.value(QStringLiteral("extraArgs")).toArray())
+        args << arg.toString();
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--n-cpu-moe")) + 1), QStringLiteral("50"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--split-mode")) + 1), QStringLiteral("layer"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--tensor-split")) + 1), QStringLiteral("1,1"));
+
     AppController app;
-    app.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"));
+    app.setHardwareSummaryForTest(48.0, 128.0, QStringLiteral("2x NVIDIA GeForce RTX 3090"));
     QVERIFY(app.recommendedSystemProfile().value(QStringLiteral("launchId")).toString()
             != QStringLiteral("sys-experimental-minimax-m27-q3ks"));
     for (const QVariant &item : app.recommendedShowcase())
@@ -786,6 +805,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringLiteral("sys-48-katcoder-131k"),
         QStringLiteral("sys-48-katcoder-393k-nographs"),
         QStringLiteral("sys-48-thinkingcap-mtp"),      // el ganador del barrido
+        QStringLiteral("sys-48-fablefusion-q6-mtp"),   // comparativa Q6 MTP + visión
         QStringLiteral("sys-48-hybrid-tc-kat"),        // planner TC+MTP, ejecutor KAT
     };
     QHash<QString, QJsonObject> found;
@@ -895,6 +915,8 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
                  .value("benchmarkVariants").toArray().size(), 4);
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
                  .value("benchmarkVariants").toArray().size(), 4);
+    QCOMPARE(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp"))
+                 .value("benchmarkVariants").toArray().size(), 3);
 
     // Todos tienen que llegar al menú como perfiles de sistema lanzables, incluidas
     // las variantes expandidas.
@@ -944,6 +966,24 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(mtpArgs2.value(mtpArgs2.indexOf("--spec-type") + 1), QStringLiteral("draft-mtp"));
     QVERIFY(!found.value(QStringLiteral("sys-48-thinkingcap-mtp"))
                  .value("model").toObject().value("mmprojFile").toString().isEmpty());
+
+    const QJsonObject fable = found.value(QStringLiteral("sys-48-fablefusion-q6-mtp"));
+    QCOMPARE(fable.value("model").toObject().value("quant").toString(),
+             QStringLiteral("Q6_K"));
+    QVERIFY(!fable.value("model").toObject().value("mmprojFile").toString().isEmpty());
+    QCOMPARE(fable.value("runtime").toObject().value("ctx").toInt(), 120000);
+    QCOMPARE(fable.value("minimumBinaryBuild").toInt(), 10331);
+    QStringList fableArgs;
+    for (const QJsonValue &a : fable.value("extraArgs").toArray())
+        fableArgs << a.toString();
+    QCOMPARE(fableArgs.value(fableArgs.indexOf("--cache-type-k") + 1),
+             QStringLiteral("f16"));
+    QCOMPARE(fableArgs.value(fableArgs.indexOf("--cache-type-v") + 1),
+             QStringLiteral("q8_0"));
+    QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-type") + 1),
+             QStringLiteral("draft-mtp"));
+    QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-draft-n-max") + 1),
+             QStringLiteral("3"));
 
     // 393k sólo arranca con los CUDA graphs apagados, y eso viaja por env: si el
     // env se pierde, el server muere con "invalid program counter" en el primer

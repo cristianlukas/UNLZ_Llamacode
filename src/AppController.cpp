@@ -53,6 +53,7 @@
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/SubAgentRunner.h"
 #include "core/agent/AgentEfficiency.h"
+#include "core/agent/DifficultyRouter.h"
 #include "core/agent/HybridPlanning.h"
 #include "core/mail/MailClient.h"
 #include "core/agent/McpClient.h"
@@ -4368,6 +4369,46 @@ void AppController::sendForPhaseProfile(const QString &targetLaunchId,
     stopServer();
 }
 
+QString AppController::taskVerificationProfile(const QVariantMap &task)
+{
+    const QString configured = TaskStore::verifyProfileFor(task, m_runningTaskExecLaunchId);
+    if (configured.isEmpty() || !task.value(QStringLiteral("autoDifficultyRouting"), false).toBool())
+        return configured;
+
+    QSet<QString> affectedFiles;
+    int consecutiveToolFailures = 0;
+    for (auto it = m_agentMessages.crbegin(); it != m_agentMessages.crend(); ++it) {
+        const QVariantMap message = it->toMap();
+        if (message.value(QStringLiteral("role")).toString() != QLatin1String("toolcall"))
+            continue;
+        const QString tool = message.value(QStringLiteral("name")).toString();
+        if (tool == QLatin1String("write_file") || tool == QLatin1String("edit_file")) {
+            const QString path = message.value(QStringLiteral("command")).toString().trimmed();
+            if (!path.isEmpty()) affectedFiles.insert(path);
+        }
+        if (!message.value(QStringLiteral("ok"), true).toBool())
+            ++consecutiveToolFailures;
+        else if (consecutiveToolFailures > 0)
+            break;
+    }
+
+    QVariantMap state{
+        {QStringLiteral("filesAffected"), affectedFiles.size()},
+        {QStringLiteral("contextTokens"), m_agentContextUsed},
+        {QStringLiteral("repeatedFailures"), qMax(m_attemptRetry, consecutiveToolFailures)},
+        {QStringLiteral("agentCycles"), qMax(1, m_runningTaskLoopIteration)},
+    };
+    const DifficultyRouter::Assessment assessment = DifficultyRouter().assessDetailed(state);
+    appendAgentEvent(QStringLiteral("task"),
+                     assessment.shouldEscalate()
+                         ? QStringLiteral("Router por dificultad: escalando al revisor (%1).")
+                               .arg(assessment.reasons.join(QStringLiteral("; ")))
+                         : QStringLiteral("Router por dificultad: el ejecutor conserva la verificación (%1 archivos, %2 tokens, %3 ciclos, %4 fallos consecutivos).")
+                               .arg(affectedFiles.size()).arg(m_agentContextUsed)
+                               .arg(m_runningTaskLoopIteration).arg(consecutiveToolFailures));
+    return assessment.shouldEscalate() ? configured : QString();
+}
+
 void AppController::setAgentTeacherUrl(const QString &url)
 {
     if (url == m_agentTeacherUrl) return;
@@ -6734,7 +6775,7 @@ void AppController::onAgentTurnFinished()
             m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
                             QStringLiteral("Ejecutando postprompt de verificación..."));
             emit taskRunStateChanged();
-            sendToAgent(post);
+            sendForPhaseProfile(taskVerificationProfile(m_tasks.get(m_runningTaskId)), post, false);
             return;
         }
         // Volvemos de un turno de chequeo de objetivo del bucle: el texto final
@@ -6825,7 +6866,7 @@ void AppController::onAgentTurnFinished()
                 emit taskRunStateChanged();
                 // Routing: el goal-check corre en el modelo de verificación si está
                 // configurado (sesión nueva; se auto-verifica con herramientas).
-                sendForPhaseProfile(m_runningTaskVerifyLaunchId, goalPrompt, false);
+                sendForPhaseProfile(taskVerificationProfile(task), goalPrompt, false);
                 return;
             }
         }

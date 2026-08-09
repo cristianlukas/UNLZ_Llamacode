@@ -50,3 +50,44 @@ function sortKey(row, scoreKey, totalKey) {
     const total = scoreTotal(row, totalKey)
     return total > 0 ? scoreValue(row, scoreKey) / total : -1
 }
+
+// Score "calidad por minuto": combina calidad relativa, velocidad y reparaciones
+// en un solo número comparable entre perfiles.
+//
+// Fórmula: (calidadRatio * 100) / minutosTotales * penalizacionReparaciones
+//   - calidadRatio = qualityScore / qualityTotal (0..1)
+//   - minutosTotales = elapsedSec / 60 (mínimo 0.1 para evitar división por cero)
+//   - penalizacionReparaciones = 1.0 / (1 + repairs * 0.25)
+//
+// Mayor = mejor. Permite ordenar perfiles por eficiencia real, no solo tok/s.
+function qualityPerMinute(row) {
+    const total = scoreTotal(row, "qualityTotal")
+    if (row.failed || total <= 0)
+        return 0
+
+    const qualityRatio = scoreValue(row, "qualityScore") / total
+    const elapsedSec = row.totalTime ?? row.elapsedSec ?? 0
+    if (!isFinite(elapsedSec) || elapsedSec <= 0)
+        return 0
+    const minutes = elapsedSec / 60
+    const repairs = row.repairAttempts ?? row.repairs ?? 0
+    const repairPenalty = 1.0 / (1 + repairs * 0.25)
+
+    return (qualityRatio * 100) / minutes * repairPenalty
+}
+
+// Etiqueta legible del score calidad/minuto.
+function qualityPerMinuteLabel(row) {
+    const qpm = qualityPerMinute(row)
+    if (qpm <= 0) return "—"
+    return qpm.toFixed(1) + " qpm"
+}
+
+// Tono visual para calidad/minuto.
+function qualityPerMinuteTone(row) {
+    const qpm = qualityPerMinute(row)
+    if (qpm <= 0) return "muted"
+    if (qpm >= 50) return "ok"
+    if (qpm >= 20) return "warn"
+    return "error"
+}

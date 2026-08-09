@@ -387,8 +387,10 @@ void TasksTests::verifyProfile_routesOnlyWhenSetAndDifferent()
 
     // Roundtrip persiste el campo.
     task["verifyProfileId"] = QStringLiteral("p-verify");
+    task["autoDifficultyRouting"] = true;
     const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(task));
     QCOMPARE(out.value("verifyProfileId").toString(), QStringLiteral("p-verify"));
+    QCOMPARE(out.value("autoDifficultyRouting").toBool(), true);
 }
 
 QTEST_MAIN(TasksTests)

@@ -86,6 +86,7 @@ set(CORE_SOURCES
     src/core/agent/CodeGraphIndexer.cpp
     src/core/agent/AgentEfficiency.cpp
     src/core/agent/AgentProgressGovernor.cpp
+    src/core/agent/DifficultyRouter.cpp
     src/core/agent/HybridPlanning.cpp
     src/core/agent/StructuredSourceView.cpp
     src/core/agent/ProjectBrain.cpp
@@ -178,6 +179,7 @@ set(HEADERS
     src/core/agent/GraphStore.h
     src/core/agent/CodeGraphIndexer.h
     src/core/agent/AgentEfficiency.h
+    src/core/agent/DifficultyRouter.h
     src/core/agent/HybridPlanning.h
     src/core/agent/StructuredSourceView.h
     src/core/agent/ProjectBrain.h
@@ -538,6 +540,7 @@ if (BUILD_TESTS)
     add_lc_test(test_logtriage          tests/test_logtriage.cpp)
     add_lc_test(test_fuzzy_match        tests/test_fuzzy_match.cpp)
     add_lc_test(test_ocr_locator        tests/test_ocr_locator.cpp)
+    add_lc_test(test_difficulty_router  tests/test_difficulty_router.cpp)
 
     # ── Test de componentes QML (sin C++) ──
     # Corre el runtime `qml` sobre tests/qml/tst_*.qml en offscreen. Los

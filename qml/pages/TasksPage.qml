@@ -59,6 +59,7 @@ Item {
             triggerHotkeyField.text = t.triggerHotkey || ""
             verifyOtherModel.checked = !!(t.verifyProfileId)
             verifyProfileCombo.selectProfile(t.verifyProfileId || "")
+            autoDifficultyRouting.checked = !!t.autoDifficultyRouting
             loadPermissions(t.permScope || "project", t.permFolders || [])
             const steps = t.steps || []
             for (var i = 0; i < steps.length; ++i)
@@ -92,6 +93,7 @@ Item {
             triggerHotkeyField.text = ""
             verifyOtherModel.checked = false
             verifyProfileCombo.currentIndex = 0
+            autoDifficultyRouting.checked = false
             loadPermissions("project", [])
             profileCombo.currentIndex = 0
         }
@@ -1009,6 +1011,7 @@ Item {
                 loopGoal: loopGoalField.text,
                 loopMaxIterations: loopMaxIterations.value,
                 verifyProfileId: verifyOtherModel.checked ? verifyProfileCombo.selectedProfileId : "",
+                autoDifficultyRouting: verifyOtherModel.checked && autoDifficultyRouting.checked,
                 executionMode: ["auto", "desktop", "browserBackground"][executionMode.currentIndex],
                 approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
                 trainingType: ["literal", "adaptive"][trainingType.currentIndex],
@@ -1297,6 +1300,19 @@ Item {
                         function selectProfile(pid) {
                             const idx = indexOfValue(pid)
                             currentIndex = idx >= 0 ? idx : 0
+                        }
+                    }
+
+                    CheckBox {
+                        id: autoDifficultyRouting
+                        visible: verifyOtherModel.checked
+                        text: "Escalar al revisor sólo si la dificultad es alta"
+                        contentItem: Text {
+                            text: autoDifficultyRouting.text
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                            leftPadding: autoDifficultyRouting.indicator.width + 6
+                            verticalAlignment: Text.AlignVCenter
                         }
                     }
 

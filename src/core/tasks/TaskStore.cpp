@@ -62,6 +62,7 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case LoopGoalRole:          return t.value("loopGoal");
     case LoopMaxIterationsRole: return t.value("loopMaxIterations", 5);
     case VerifyProfileIdRole:   return t.value("verifyProfileId");
+    case AutoDifficultyRoutingRole: return t.value("autoDifficultyRouting", false);
     default:                  return {};
     }
 }
@@ -107,6 +108,7 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { LoopGoalRole,          "loopGoal" },
         { LoopMaxIterationsRole, "loopMaxIterations" },
         { VerifyProfileIdRole,   "verifyProfileId" },
+        { AutoDifficultyRoutingRole, "autoDifficultyRouting" },
     };
 }
 
@@ -170,6 +172,8 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["loopMaxIterations"] = qBound(1, def.value("loopMaxIterations",
                                        t.value("loopMaxIterations", 5)).toInt(), 100);
     t["verifyProfileId"] = def.value("verifyProfileId", t.value("verifyProfileId"));
+    t["autoDifficultyRouting"] = def.value("autoDifficultyRouting",
+                                             t.value("autoDifficultyRouting", false));
     // Data-driven (RPA por lote): dataset embebido (texto) o por archivo. El mismo
     // flujo corre una vez por fila, con {{var}} sustituido por los valores de la fila.
     t["datasetInline"]   = def.value("datasetInline", t.value("datasetInline"));
@@ -478,6 +482,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["loopGoal"]        = task.value("loopGoal").toString();
     o["loopMaxIterations"] = task.value("loopMaxIterations", 5).toInt();
     o["verifyProfileId"] = task.value("verifyProfileId").toString();
+    o["autoDifficultyRouting"] = task.value("autoDifficultyRouting", false).toBool();
     o["datasetInline"]   = task.value("datasetInline").toString();
     o["datasetFormat"]   = task.value("datasetFormat").toString();
     o["datasetPath"]     = task.value("datasetPath").toString();
@@ -552,6 +557,7 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
     t["loopGoal"]        = obj.value("loopGoal").toString();
     t["loopMaxIterations"] = qBound(1, obj.value("loopMaxIterations").toInt(5), 100);
     t["verifyProfileId"] = obj.value("verifyProfileId").toString();
+    t["autoDifficultyRouting"] = obj.value("autoDifficultyRouting").toBool(false);
     t["datasetInline"]   = obj.value("datasetInline").toString();
     t["datasetFormat"]   = obj.value("datasetFormat").toString();
     t["datasetPath"]     = obj.value("datasetPath").toString();

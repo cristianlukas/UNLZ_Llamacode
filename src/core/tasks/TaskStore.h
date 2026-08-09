@@ -64,7 +64,8 @@ public:
         LoopEnabledRole,        // bool: correr en bucle hasta cumplir el objetivo
         LoopGoalRole,           // condición de éxito en lenguaje natural
         LoopMaxIterationsRole,  // techo de iteraciones (corta el bucle sí o sí)
-        VerifyProfileIdRole     // perfil opcional para la fase de verificación/goal-check
+        VerifyProfileIdRole,    // perfil opcional para la fase de verificación/goal-check
+        AutoDifficultyRoutingRole // usar el verificador sólo ante dificultad alta
     };
 
     // Routing multi-modelo (fase verify): perfil a usar para la verificación
