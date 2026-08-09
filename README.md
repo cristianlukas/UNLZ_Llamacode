@@ -238,6 +238,15 @@ recomendación automática, no se descarga junto con MAX-Q/FAST-GEMMA y debe
 compararse mediante benchmark antes de reemplazar MAX-Q. MAX-Q usa ThinkingCap
 Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 
+Para **2× RTX 3090 (48 GB agregados) + 64 GB RAM o más**, el perfil paralelo
+`[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k` reutiliza el mismo GGUF y
+lo mantiene completo en GPU (`split-mode layer`, `tensor-split 1,1`, mmap y KV
+q4_0). Medido con b10228: carga en 16,5 s, ocupa 22.168/20.609 MiB, procesa
+67.660 tokens a 1.673 t/s y genera a 37,5 t/s; a 32k alcanzó 1.954 t/s de prefill
+y 55–69 t/s de decode. Emitió tool calls OpenAI válidas. Ambos perfiles preservan
+el razonamiento entre turnos; la variante 48 GB sigue siendo opt-in hasta superar
+el benchmark de calidad contra ThinkingCap/KAT.
+
 El mismo tier ofrece ahora, también **opt-in**, `[experimental ultra] ULTRA-Q`,
 basado en `DeepSeek-V4-Flash-0731 UD-IQ3_S` (~116 GB en cuatro shards). Su punto
 inicial para RTX 3090 + Ryzen 9900X + 128 GB DDR5 es contexto 131k, 44 capas GPU,

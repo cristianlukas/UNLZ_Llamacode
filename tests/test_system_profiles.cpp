@@ -99,7 +99,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 66); // 29 perfiles base + 37 variantes declarativas de benchmark
+    QCOMPARE(sys, 67); // 30 perfiles base + 37 variantes declarativas de benchmark
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -536,13 +536,15 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QFile f(bundlePath());
     QVERIFY(f.open(QIODevice::ReadOnly));
     const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
-    QJsonObject laguna;
+    QJsonObject laguna, dual;
     for (const QJsonValue &v : arr) {
         const QJsonObject o = v.toObject();
         if (o.value(QStringLiteral("id")).toString()
             == QStringLiteral("sys-laguna-s-2-1-q2")) {
             laguna = o;
-            break;
+        } else if (o.value(QStringLiteral("id")).toString()
+                   == QStringLiteral("sys-laguna-s-2-1-q2-48gb")) {
+            dual = o;
         }
     }
     QVERIFY2(!laguna.isEmpty(), "falta el perfil experimental Laguna");
@@ -566,6 +568,30 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     const int cpuMoe = tokens.indexOf(QStringLiteral("--n-cpu-moe"));
     QVERIFY(cpuMoe >= 0 && cpuMoe + 1 < tokens.size());
     QCOMPARE(tokens.at(cpuMoe + 1), QStringLiteral("32"));
+    QVERIFY(tokens.contains(QStringLiteral("--reasoning-preserve")));
+
+    QVERIFY2(!dual.isEmpty(), "falta la variante Laguna medida para 2x3090");
+    QVERIFY(dual.value(QStringLiteral("extra")).toBool());
+    QVERIFY(!dual.value(QStringLiteral("autoCompanion")).toBool());
+    QVERIFY(dual.value(QStringLiteral("benchmark")).toBool());
+    QCOMPARE(dual.value(QStringLiteral("minVramGb")).toInt(), 48);
+    QCOMPARE(dual.value(QStringLiteral("minRamGb")).toInt(), 64);
+    QCOMPARE(dual.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10087);
+    QCOMPARE(dual.value(QStringLiteral("model")).toObject(), model);
+    const QJsonObject dualRuntime = dual.value(QStringLiteral("runtime")).toObject();
+    QCOMPARE(dualRuntime.value(QStringLiteral("ctx")).toInt(), 100000);
+    QVERIFY(dualRuntime.value(QStringLiteral("mmap")).toBool());
+    QStringList dualArgs;
+    for (const QJsonValue &arg : dual.value(QStringLiteral("extraArgs")).toArray())
+        dualArgs << arg.toString();
+    QVERIFY(!dualArgs.contains(QStringLiteral("--n-cpu-moe")));
+    QCOMPARE(dualArgs.value(dualArgs.indexOf(QStringLiteral("--fit")) + 1),
+             QStringLiteral("on"));
+    QCOMPARE(dualArgs.value(dualArgs.indexOf(QStringLiteral("--split-mode")) + 1),
+             QStringLiteral("layer"));
+    QCOMPARE(dualArgs.value(dualArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
+             QStringLiteral("1,1"));
+    QVERIFY(dualArgs.contains(QStringLiteral("--reasoning-preserve")));
 
     // Sigue fuera del recomendado y del showcase premium: es opt-in incluso en
     // la máquina objetivo de 24GB VRAM + 128GB RAM.
@@ -578,6 +604,7 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     for (const QVariant &item : showcase)
         QVERIFY(item.toMap().value(QStringLiteral("launchId")).toString()
                 != QStringLiteral("sys-laguna-s-2-1-q2"));
+
 }
 
 void SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
@@ -1020,6 +1047,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
 void SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus()
 {
     const QString id = QStringLiteral("sys-ultraq-dsv4-0731-iq3s-48gb");
+    const QString lagunaId = QStringLiteral("sys-laguna-s-2-1-q2-48gb");
     auto idsOf = [](const QVariantList &menu) {
         QStringList out;
         for (const QVariant &v : menu) out << v.toMap().value("id").toString();
@@ -1031,11 +1059,13 @@ void SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus()
     const QStringList singleIds = idsOf(single.launchMenu());
     QVERIFY(singleIds.contains(QStringLiteral("sys-ultraq-dsv4-0731-iq3s")));
     QVERIFY(!singleIds.contains(id));
+    QVERIFY(!singleIds.contains(lagunaId));
 
     AppController dual;
     dual.setHardwareSummaryForTest(24.0, 128.0, QStringLiteral("NVIDIA GeForce RTX 3090"), 48.0, 2);
     const QVariantList dualMenu = dual.launchMenu();
     QVERIFY(idsOf(dualMenu).contains(id));
+    QVERIFY(idsOf(dualMenu).contains(lagunaId));
     for (const QVariant &v : dualMenu) {
         const QVariantMap m = v.toMap();
         if (m.value("id").toString() != id) continue;
