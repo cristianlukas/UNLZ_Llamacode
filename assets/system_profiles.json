@@ -2620,9 +2620,16 @@
     "minimumBinaryBuild": 10228,
     "contextPresets": [32768, 65536, 131072],
     "benchmarkVariants": [
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-64k", "order": 146, "displayName": "[bench antirez Q2/Q4] 64k · ubatch 512", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-131k", "order": 147, "displayName": "[bench antirez Q2/Q4] 131k · ubatch 1024", "runtime": { "ctx": 131072, "batch": 4096, "ubatch": 1024 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-prefill", "order": 148, "displayName": "[bench antirez Q2/Q4] 32k · batch 8192 · ubatch 2048", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-16k", "order": 146, "displayName": "[bench antirez] 16k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 16384, "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b2048", "order": 147, "displayName": "[bench antirez] 32k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b4096", "order": 148, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b8192", "order": 149, "displayName": "[bench antirez stress] 32k · B8192 · U1024 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 1024 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-64k", "order": 150, "displayName": "[bench antirez] 64k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-131k", "order": 151, "displayName": "[bench antirez stress] 131k · B4096 · U1024 · KV q4_0", "runtime": { "ctx": 131072, "batch": 4096, "ubatch": 1024 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-kv8", "order": 152, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q8_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-48-antirez-dsv4-q2q4-kvf16", "order": 153, "displayName": "[bench antirez stress] 32k · B4096 · U512 · KV f16", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "f16" }, "extraArgOverrides": { "--cache-type-k": "f16", "--cache-type-v": "f16" } },
+      { "id": "sys-48-antirez-dsv4-q2q4-64k-kv8", "order": 154, "displayName": "[bench antirez stress] 64k · B4096 · U1024 · KV q8_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 1024, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-48-antirez-dsv4-q2q4-prefill", "order": 155, "displayName": "[bench antirez prefill] 32k · B8192 · U2048 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
     ],
     "comment": "Cuant híbrido antirez de ~90,89 GiB: expertos Q4K en capas 37–42 y expertos IQ2XXS en el resto. Opt-in porque el README del autor lo orienta al motor DS4 y la compatibilidad llama.cpp debe validarse localmente. Medir carga, texto corto, prefill y decode antes de usarlo en agente. El perfil no reemplaza DeepSeek V4-7-8-26."
   },
