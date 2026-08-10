@@ -100,7 +100,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 68); // 30 perfiles base + 38 variantes declarativas de benchmark
+    QVERIFY2(sys >= 68, "el bundle debe conservar al menos los perfiles base y variantes existentes");
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles

@@ -2634,6 +2634,7 @@
     "benchmark": true,
     "autoCompanion": false,
     "displayName": "[experimental 48GB] BigBang-v1 35B-A3B Q4_K_M · visión",
+    "vision": true,
     "minVramGb": 24,
     "minRamGb": 48,
     "cpuOk": false,
@@ -2677,5 +2678,25 @@
       { "id": "sys-bench-48-bigbang-post", "order": 154, "displayName": "[bench BigBang] 131k · MTP · top-p 0.08", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } }
     ],
     "comment": "Perfil experimental del GGUF publicado por bartowski. Incluye mmproj bf16 para visión. El MTP está embebido en estos quants y se activa con --spec-type draft-mtp; el perfil exige llama.cpp b10262+. Comparar siempre contra los perfiles KAT-Coder existentes con la misma suite y repeticiones."
+  },
+  {
+    "id": "sys-experimental-minimax-m27-q3ks",
+    "tier": "48GB-MiniMax",
+    "order": 155,
+    "extra": true,
+    "benchmark": true,
+    "favorite": true,
+    "autoCompanion": false,
+    "displayName": "[experimental 48GB] MiniMax M2.7 Q3_K_S",
+    "minVramGb": 48,
+    "minRamGb": 112,
+    "cpuOk": false,
+    "agentProfileId": "agent-maximo",
+    "model": { "repo": "MiniMaxAI/MiniMax-M2.7-GGUF", "file": "MiniMax-M2.7.Q3_K_S.gguf", "quant": "Q3_K_S" },
+    "runtime": { "ctx": 32768, "gpuLayers": 999, "batch": 4096, "ubatch": 512, "kv": "q4_0", "flashAttn": true },
+    "extraArgs": ["--n-cpu-moe", "45", "--split-mode", "layer", "--tensor-split", "3,1", "--reasoning", "on"],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10331,
+    "comment": "Perfil experimental opt-in; no se recomienda automáticamente. Requiere 2x RTX 3090 y 128 GB de RAM."
   }
 ]
