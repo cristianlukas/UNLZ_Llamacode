@@ -2625,5 +2625,56 @@
       { "id": "sys-48-antirez-dsv4-q2q4-0731-prefill", "order": 148, "displayName": "[bench antirez Q2/Q4] 32k · batch 8192 · ubatch 2048", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
     ],
     "comment": "Cuant híbrido antirez de ~90,89 GiB: expertos Q4K en capas 37–42 y expertos IQ2XXS en el resto. Opt-in porque el README del autor lo orienta al motor DS4 y la compatibilidad llama.cpp debe validarse localmente. Medir carga, texto corto, prefill y decode antes de usarlo en agente. El perfil no reemplaza DeepSeek V4-7-8-26."
+  },
+  {
+    "id": "sys-48-bigbang-v1-q4km",
+    "tier": "48GB-BigBang",
+    "order": 149,
+    "extra": true,
+    "benchmark": true,
+    "autoCompanion": false,
+    "displayName": "[experimental 48GB] BigBang-v1 35B-A3B Q4_K_M · visión",
+    "minVramGb": 24,
+    "minRamGb": 48,
+    "cpuOk": false,
+    "folder": "BigBang-v1-Q4_K_M-GGUF",
+    "agentProfileId": "agent-maximo",
+    "reasoningEffort": "high",
+    "reasoningBudget": 8192,
+    "model": {
+      "repo": "bartowski/endless-frontier_BigBang-v1-GGUF",
+      "file": "endless-frontier_BigBang-v1-Q4_K_M.gguf",
+      "quant": "Q4_K_M",
+      "sizeGb": 21.86,
+      "mmprojRepo": "bartowski/endless-frontier_BigBang-v1-GGUF",
+      "mmprojFile": "mmproj-endless-frontier_BigBang-v1-bf16.gguf"
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 999,
+      "batch": 4096,
+      "ubatch": 1024,
+      "threads": 0,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift",
+      "--metrics", "--no-warmup", "--jinja", "--parallel", "1", "--reasoning", "on"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10228,
+    "contextPresets": [32768, 65536, 131072, 196608],
+    "benchmarkVariants": [
+      { "id": "sys-bench-48-bigbang-base", "order": 150, "displayName": "[bench BigBang] 131k · KV q8 · top-p 0.95", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware." },
+      { "id": "sys-bench-48-bigbang-fast", "order": 151, "displayName": "[bench BigBang] 131k · batch 8192 · ubatch 2048", "runtime": { "batch": 8192, "ubatch": 2048 } },
+      { "id": "sys-bench-48-bigbang-long", "order": 152, "displayName": "[bench BigBang] 196k · KV q4 · contexto largo", "runtime": { "ctx": 196608, "kv": "q4_0" }, "extraArgOverrides": { "--cache-type-k": "q4_0", "--cache-type-v": "q4_0" } },
+      { "id": "sys-bench-48-bigbang-post", "order": 153, "displayName": "[bench BigBang] 131k · top-p 0.08 · receta del post", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08" } }
+    ],
+    "comment": "Perfil experimental del GGUF publicado por bartowski. Incluye mmproj bf16 para visión. El repositorio no publica draft MTP separado ni declara una variante MTP autocontenida; por eso no se activa speculative decoding hasta validar metadata y una build compatible. Comparar siempre contra los perfiles KAT-Coder existentes con la misma suite y repeticiones."
   }
 ]
