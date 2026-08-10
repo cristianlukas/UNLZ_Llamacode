@@ -154,7 +154,16 @@ if ((Test-Path $exePath) -and (Test-Path $taskbarDir)) {
     $expectedTarget = [System.IO.Path]::GetFullPath($exePath)
     Get-ChildItem -LiteralPath $taskbarDir -Filter "*.lnk" -ErrorAction SilentlyContinue | ForEach-Object {
         $pinned = $wsh.CreateShortcut($_.FullName)
-        if (-not [string]::IsNullOrWhiteSpace($pinned.TargetPath)) {
+        $legacyDebugPin = ($Config -ieq 'Debug' -and
+            $_.BaseName -in @('LlamaCode', 'LlamaCode-Debug'))
+        $legacyReleasePin = ($Config -ine 'Debug' -and
+            $_.BaseName -eq 'LlamaCode')
+        if ($legacyDebugPin -or $legacyReleasePin) {
+            # A stale pinned shortcut may point to a deleted build and therefore
+            # cannot be matched by target. Repair it by its stable legacy name.
+            Update-LlamaCodeShortcutFile -Path $_.FullName
+            $updatedPinnedShortcuts += $_.FullName
+        } elseif (-not [string]::IsNullOrWhiteSpace($pinned.TargetPath)) {
             $pinnedTarget = [System.IO.Path]::GetFullPath($pinned.TargetPath)
             if ([string]::Equals($pinnedTarget, $expectedTarget, [System.StringComparison]::OrdinalIgnoreCase)) {
                 Update-LlamaCodeShortcutFile -Path $_.FullName
