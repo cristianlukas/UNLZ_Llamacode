@@ -18,41 +18,18 @@ después y no está incluida.
 | 2 | Fable-Q6-K_MTP3_32k | Completo | 30,41% — 45/148 | 22m48s |
 | 4 | ThinkingCap_Q4-K-M_MTP4_196k | Completo | 28,38% — 42/148 | 17m45s |
 | 4 | Laguna-S-2.1_UD-Q2-K-XL_SinDrafter_100k | Completo | 28,38% — 42/148 | 15m46s |
-| 6 | **KAT-Coder-2.5_Q5-K-M_SinDrafter_196k** | Completo | **27,70% — 41/148** | **9m15,5s** |
 
 MiniMax quedó explícitamente excluido de esta corrida completa. DeepSeek mejora
 al KAT Q4 en sólo 2 tareas y 1,35 puntos, pero tarda aproximadamente 18 veces
-más. El KAT Q5 seleccionado queda 4 tareas y 2,71 puntos por debajo del Q4, y
-es 6,5 segundos más rápido; por eso se agrega como perfil experimental
-favorito/benchmark, no reemplaza al Q4 como recomendación principal.
+más.
 
-### Selección del KAT-Coder Q5
+### Experimento KAT-Coder Q5 descartado
 
-Se descargó `Q5_K_M`, el punto medio de la familia Q5, y se compararon tres
-drafters contra el control sin drafter en cuatro tareas oficiales, con un máximo
-de 512 tokens. El criterio combinó tiempo y conservación de la salida del
-control:
-
-| drafter | tiempo (4 tareas) | salidas idénticas al control |
-|---|---:|---:|
-| SinDrafter | 24,9 s | control |
-| NgramMapK | 26,0 s | 1/4 |
-| NgramSimple | 26,3 s | 0/4 |
-| **NgramMod** | 36,2 s | **3/4** |
-
-Con `NgramMod`, 64k, 131k y 196k produjeron salidas idénticas y tardaron cerca
-de 5,2 s en la tarea de control; la carga fue de unos 12 s. Se eligió 196k
-porque ofrece 50% más contexto que 131k sin penalización observada y cabe con
-holgura en 2× RTX 3090 (15.524 + 13.959 MiB). El preset 262k se conserva sólo
-como variante diagnóstica: produjo una salida corrupta de barras repetidas y no
-se promovió.
-
-La corrida completa de control sin drafter obtuvo también 41/148, pero tardó
-9m15,5s frente a 10m05,5s de `NgramMod`. Las soluciones fueron idénticas en
-91/148 tareas. `NgramMod` acertó exclusivamente `/13`, `/445` y `/879`, mientras
-que el control acertó exclusivamente `/208`, `/760` y `/1085`. Al no existir
-ganancia neta de calidad y sí una penalización de 50 segundos, el perfil promovido
-es `KAT-Coder-2.5_Q5-K-M_SinDrafter_196k`; `NgramMod` queda como variante.
+`Q5_K_M` obtuvo 41/148 (27,70%) tanto sin drafter como con `NgramMod`, frente a
+45/148 (30,41%) del `Q4_K_M`. Sin drafter tardó 9m15,5s y con `NgramMod`
+10m05,5s; por lo tanto Q5 no aportó calidad ni una mejora operativa relevante.
+El modelo, sus perfiles y las corridas locales se eliminaron después de documentar
+el resultado. Se conserva únicamente esta nota para evitar repetir el experimento.
 
 ## Resumen ejecutivo
 
