@@ -960,24 +960,27 @@ QString ProfileManager::duplicateLaunchProfile(const QString &id)
 
     // Clonar backing a entradas nuevas EDITABLES (system=false, ids frescos).
     BackendProfile be = m_backends.findById(src.backendProfileId);
+    if (!src.backendProfileId.isEmpty() && be.id.isEmpty()) return {};
     be.id = BackendProfile::generateId(); be.system = false;
-    if (!be.name.isEmpty()) m_backends.add(be);
+    if (!src.backendProfileId.isEmpty()) m_backends.add(be);
 
     ModelProfile mp = m_models.findById(src.modelProfileId);
+    if (!src.modelProfileId.isEmpty() && mp.id.isEmpty()) return {};
     mp.id = ModelProfile::generateId(); mp.system = false;
-    if (!mp.name.isEmpty()) m_models.add(mp);
+    if (!src.modelProfileId.isEmpty()) m_models.add(mp);
 
     RuntimePreset rt = m_runtimes.findById(src.runtimePresetId);
+    if (!src.runtimePresetId.isEmpty() && rt.id.isEmpty()) return {};
     rt.id = RuntimePreset::generateId(); rt.system = false;
-    if (!rt.name.isEmpty()) m_runtimes.add(rt);
+    if (!src.runtimePresetId.isEmpty()) m_runtimes.add(rt);
 
     LaunchProfile lp = src;
     lp.id = LaunchProfile::generateId();
     lp.system = false;
     lp.favorite = false;
-    if (!be.name.isEmpty()) lp.backendProfileId = be.id;
-    if (!mp.name.isEmpty()) lp.modelProfileId = mp.id;
-    if (!rt.name.isEmpty()) lp.runtimePresetId = rt.id;
+    if (!src.backendProfileId.isEmpty()) lp.backendProfileId = be.id;
+    if (!src.modelProfileId.isEmpty()) lp.modelProfileId = mp.id;
+    if (!src.runtimePresetId.isEmpty()) lp.runtimePresetId = rt.id;
     int maxSeq = 0;
     for (const auto &x : m_launches.m_items) maxSeq = std::max(maxSeq, seqOf(x.name));
     lp.name = QStringLiteral("%1_%2 (copia)").arg(maxSeq + 1).arg(stripSeq(src.name));

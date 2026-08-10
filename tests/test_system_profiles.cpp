@@ -46,6 +46,7 @@ private slots:
     void manager_systemNotPersisted();
     void manager_immutable();
     void manager_duplicateMakesEditableCopy();
+    void manager_duplicatePreservesLaunchLinkage();
     void manager_modelIdIsDeterministic();
     void manager_fastGemmaDflashWired();
     void manager_systemProfilesAvoidAccidentalVisionAndMtp();
@@ -155,6 +156,24 @@ void SystemProfilesTests::manager_duplicateMakesEditableCopy()
     // backing clonado: ids distintos a los del perfil de sistema.
     const QVariantMap src = pm.getLaunchProfile("sys-vram-12-moe");
     const QVariantMap cp = pm.getLaunchProfile(dup);
+    QVERIFY(cp.value("modelProfileId").toString() != src.value("modelProfileId").toString());
+    QVERIFY(cp.value("runtimePresetId").toString() != src.value("runtimePresetId").toString());
+}
+
+void SystemProfilesTests::manager_duplicatePreservesLaunchLinkage()
+{
+    ProfileManager pm;
+    const QVariantMap src = pm.getLaunchProfile("sys-vram-12-moe");
+    const QString dup = pm.duplicateLaunchProfile("sys-vram-12-moe");
+    QVERIFY(!dup.isEmpty());
+    const QVariantMap cp = pm.getLaunchProfile(dup);
+    QVERIFY(!cp.value("backendProfileId").toString().isEmpty());
+    QVERIFY(!cp.value("modelProfileId").toString().isEmpty());
+    QVERIFY(!cp.value("runtimePresetId").toString().isEmpty());
+    QVERIFY(!pm.getBackend(cp.value("backendProfileId").toString()).isEmpty());
+    QVERIFY(!pm.getModelProfile(cp.value("modelProfileId").toString()).isEmpty());
+    QVERIFY(!pm.getRuntimePreset(cp.value("runtimePresetId").toString()).isEmpty());
+    QVERIFY(cp.value("backendProfileId").toString() != src.value("backendProfileId").toString());
     QVERIFY(cp.value("modelProfileId").toString() != src.value("modelProfileId").toString());
     QVERIFY(cp.value("runtimePresetId").toString() != src.value("runtimePresetId").toString());
 }
