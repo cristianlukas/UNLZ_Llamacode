@@ -23,9 +23,13 @@ inline bool isSelfContained(const QString &fileName)
     static const QRegularExpression deepSeekV4Flash0731(
         QStringLiteral(R"((^|[-_.])deepseek[-_.]?v4[-_.]flash[-_.]0731($|[-_.]))"),
         QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression bigBangV1(
+        QStringLiteral("(^|[-_.])bigbang[-_.]?v1($|[-_.])"),
+        QRegularExpression::CaseInsensitiveOption);
     return marker.match(base).hasMatch()
         || thinkingCapQwen36.match(base).hasMatch()
-        || deepSeekV4Flash0731.match(base).hasMatch();
+        || deepSeekV4Flash0731.match(base).hasMatch()
+        || bigBangV1.match(base).hasMatch();
 }
 
 } // namespace MtpDetection
