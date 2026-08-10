@@ -15051,7 +15051,9 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
 
     if (streaming) {
         struct SpeedState { QByteArray buf; qint64 ttftMs = -1; int chunks = 0;
-                            int tokens = 0; QString response; QString reasoning; };
+                            int tokens = 0; int predictedN = 0; double predictedMs = -1.0;
+                            double predictedPerSecond = -1.0;
+                            QString response; QString reasoning; };
         auto state = std::make_shared<SpeedState>();
 
         connect(reply, &QNetworkReply::readyRead, this, [=]() {
@@ -15065,6 +15067,19 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                 const QByteArray json = line.mid(6);
                 if (json == "[DONE]") continue;
                 const QJsonObject obj = QJsonDocument::fromJson(json).object();
+                // llama.cpp can expose generation timings in the final SSE
+                // chunk.  These are generation-only metrics and must win over
+                // wall-clock/chunk estimates, which are affected by buffering,
+                // tool latency and network scheduling.
+                const QJsonObject timings = obj.value(QStringLiteral("timings")).toObject();
+                if (!timings.isEmpty()) {
+                    const int predictedN = timings.value(QStringLiteral("predicted_n")).toInt(0);
+                    const double predictedMs = timings.value(QStringLiteral("predicted_ms")).toDouble(-1.0);
+                    const double predictedPerSecond = timings.value(QStringLiteral("predicted_per_second")).toDouble(-1.0);
+                    if (predictedN > 0) state->predictedN = predictedN;
+                    if (predictedMs > 0.0) state->predictedMs = predictedMs;
+                    if (predictedPerSecond > 0.0) state->predictedPerSecond = predictedPerSecond;
+                }
                 // Final usage chunk (choices empty, usage populated)
                 const QJsonObject usage = obj.value("usage").toObject();
                 if (!usage.isEmpty())
@@ -15091,11 +15106,17 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
         connect(reply, &QNetworkReply::finished, this, [=]() {
             *requestDone = true;
             const qint64 totalMs = QDateTime::currentMSecsSinceEpoch() - startMs;
-            const int tokens = state->tokens > 0 ? state->tokens : state->chunks;
-            double tps = 0;
-            if (state->ttftMs >= 0 && tokens > 0)
-                tps = tokens / qMax(0.001, (totalMs - state->ttftMs) / 1000.0);
             const bool failed = reply->error() != QNetworkReply::NoError;
+            const int tokens = state->predictedN > 0
+                ? state->predictedN : (state->tokens > 0 ? state->tokens : state->chunks);
+            double tps = 0;
+            if (!failed && state->predictedPerSecond > 0.0) {
+                tps = state->predictedPerSecond;
+            } else if (!failed && state->predictedN > 0 && state->predictedMs > 0.0) {
+                tps = state->predictedN * 1000.0 / state->predictedMs;
+            } else if (!failed && state->ttftMs >= 0 && tokens > 0) {
+                tps = tokens / qMax(0.001, (totalMs - state->ttftMs) / 1000.0);
+            }
             QVariantMap r;
             r["type"]       = resultType.isEmpty() ? QStringLiteral("speed") : resultType;
             r["ttft_ms"]    = state->ttftMs;
