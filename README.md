@@ -1438,9 +1438,8 @@ Evaluaciones de modelos candidatas:
 
 - [BigBang-v1 Q4_K_M (2026-08-10)](docs/research/bigbang-v1-q4km.md): perfil
   experimental con mmproj bf16 y cuatro variantes de benchmark para comparar
-  contra KAT-Coder. El repositorio de Hugging Face no publica un draft MTP
-  separado, así que speculative decoding queda desactivado hasta validar una
-  variante compatible.
+  contra KAT-Coder. El MTP está embebido en el GGUF y se prueba con
+  `--spec-type draft-mtp`; requiere llama.cpp b10262+.
 
 - [Ternary Bonsai 27B (2026-07-27)](docs/research/ternary-bonsai-27b.md):
   comparación local contra MAX-Q y modelos del tier 5–8 GB; por ahora se recomienda

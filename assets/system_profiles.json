@@ -2667,14 +2667,15 @@
       "--metrics", "--no-warmup", "--jinja", "--parallel", "1", "--reasoning", "on"
     ],
     "binaryKind": "official",
-    "minimumBinaryBuild": 10228,
+    "minimumBinaryBuild": 10262,
     "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
-      { "id": "sys-bench-48-bigbang-base", "order": 150, "displayName": "[bench BigBang] 131k · KV q8 · top-p 0.95", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware." },
-      { "id": "sys-bench-48-bigbang-fast", "order": 151, "displayName": "[bench BigBang] 131k · batch 8192 · ubatch 2048", "runtime": { "batch": 8192, "ubatch": 2048 } },
-      { "id": "sys-bench-48-bigbang-long", "order": 152, "displayName": "[bench BigBang] 196k · KV q4 · contexto largo", "runtime": { "ctx": 196608, "kv": "q4_0" }, "extraArgOverrides": { "--cache-type-k": "q4_0", "--cache-type-v": "q4_0" } },
-      { "id": "sys-bench-48-bigbang-post", "order": 153, "displayName": "[bench BigBang] 131k · top-p 0.08 · receta del post", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08" } }
+      { "id": "sys-bench-48-bigbang-base", "order": 150, "displayName": "[bench BigBang] 131k · sin MTP · KV q8", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware." },
+      { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV q8", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+." },
+      { "id": "sys-bench-48-bigbang-fast", "order": 152, "displayName": "[bench BigBang] 131k · MTP · batch 8192 · ubatch 2048", "runtime": { "batch": 8192, "ubatch": 2048 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
+      { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV q4", "runtime": { "ctx": 196608, "kv": "q4_0" }, "extraArgOverrides": { "--cache-type-k": "q4_0", "--cache-type-v": "q4_0", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
+      { "id": "sys-bench-48-bigbang-post", "order": 154, "displayName": "[bench BigBang] 131k · MTP · top-p 0.08", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } }
     ],
-    "comment": "Perfil experimental del GGUF publicado por bartowski. Incluye mmproj bf16 para visión. El repositorio no publica draft MTP separado ni declara una variante MTP autocontenida; por eso no se activa speculative decoding hasta validar metadata y una build compatible. Comparar siempre contra los perfiles KAT-Coder existentes con la misma suite y repeticiones."
+    "comment": "Perfil experimental del GGUF publicado por bartowski. Incluye mmproj bf16 para visión. El MTP está embebido en estos quants y se activa con --spec-type draft-mtp; el perfil exige llama.cpp b10262+. Comparar siempre contra los perfiles KAT-Coder existentes con la misma suite y repeticiones."
   }
 ]

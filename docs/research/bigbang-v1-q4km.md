@@ -12,6 +12,5 @@ bf16 publicado en el mismo repositorio.
 - receta del post: `temp 0.70`, `top-p 0.08`.
 
 La comparación debe ejecutarse con la misma suite, seed, contexto efectivo y
-cantidad de repeticiones que KAT-Coder. El repositorio consultado no contiene un
-draft MTP separado ni declara MTP autocontenido; por eso el perfil no activa
-speculative decoding todavía.
+cantidad de repeticiones que KAT-Coder. El MTP está embebido en el GGUF y se
+activa con `--spec-type draft-mtp`; requiere llama.cpp b10262+.
