@@ -14084,7 +14084,9 @@ QVariantMap AppController::scoreBenchTextResponsesForTest(const QString &mode,
                     seenPrompt = true;
                 continue;
             }
-            if (role == QLatin1String("user")) break;   // arrancó la tarea siguiente
+            if (role == QLatin1String("user")
+                    && !content.contains(QStringLiteral("MODO REPARACION BENCHMARK")))
+                break;   // arrancó la tarea siguiente; las reparaciones siguen ligadas a la tarea
             if (role == QLatin1String("assistant") && !content.trimmed().isEmpty()) {
                 // Quedarse con el ÚLTIMO mensaje del asistente de la tarea, pero
                 // acumulando los anteriores: el agente suele escribir el código en
@@ -14613,10 +14615,13 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 (*repairAttempts)++;
                 *finished = false;
                 QVariantList failedRows;
+                QSet<QString> failedTaskIds;
                 for (const QVariant &rv : acceptanceRows) {
                     const QVariantMap row = rv.toMap();
-                    if (!row.value(QStringLiteral("passed")).toBool())
+                    if (!row.value(QStringLiteral("passed")).toBool()) {
                         failedRows.append(row);
+                        failedTaskIds.insert(row.value(QStringLiteral("taskId")).toString());
+                    }
                 }
                 const QString failedJson = QString::fromUtf8(
                     QJsonDocument(QJsonArray::fromVariantList(failedRows))
@@ -14624,6 +14629,17 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 const QString fileList = files.isEmpty()
                     ? QStringLiteral("(sin archivos detectados)")
                     : files.join(QStringLiteral("\n"));
+                QString failedPrompts;
+                for (const QVariant &tv : benchTasks) {
+                    const QVariantMap task = tv.toMap();
+                    if (!failedTaskIds.contains(task.value(QStringLiteral("id")).toString()))
+                        continue;
+                    failedPrompts += QStringLiteral("\n\n--- TAREA FALLIDA %1 ---\n%2")
+                        .arg(task.value(QStringLiteral("id")).toString(),
+                             task.value(QStringLiteral("prompt")).toString());
+                }
+                if (failedPrompts.isEmpty())
+                    failedPrompts = prompts.join(QStringLiteral("\n\n---\n\n"));
                 const QString repair = QStringLiteral(
                     "MODO REPARACION BENCHMARK:\n"
                     "La implementacion anterior fallo criterios de aceptacion. "
@@ -14632,13 +14648,13 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     "Intento de reparacion: %1/%2\n\n"
                     "Archivos detectados:\n%3\n\n"
                     "Checks fallidos y salidas:\n%4\n\n"
-                    "Tareas originales:\n%5\n\n"
+                    "Tareas fallidas a reparar (no repitas las demás):\n%5\n\n"
                     "Al terminar, responde breve indicando que corregiste y que pruebas corriste.")
                     .arg(*repairAttempts)
                     .arg(maxRepairAttempts)
                     .arg(fileList)
                     .arg(failedJson)
-                    .arg(prompts.join(QStringLiteral("\n\n---\n\n")));
+                    .arg(failedPrompts);
                 m_benchmarkStatus = QString("[%1/%2] %3 — reparando fallos %4/%5...")
                     .arg(idx+1).arg(total).arg(profName)
                     .arg(*repairAttempts).arg(maxRepairAttempts);
