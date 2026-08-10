@@ -1166,6 +1166,11 @@ Item {
                                     enabled: (modelData.runDir ?? "") !== ""
                                     onTriggered: App.openBenchmarkFolder(modelData.runDir ?? "")
                                 }
+                                MenuSeparator {}
+                                MenuItem {
+                                    text: "Borrar fila"
+                                    onTriggered: App.removeBenchmarkResultById(modelData.id ?? "")
+                                }
                             }
 
                             // ── Main row ───────────────────────────────────
