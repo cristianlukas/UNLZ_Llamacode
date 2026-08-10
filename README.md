@@ -1235,7 +1235,9 @@ necesitan ambos artefactos.
 
 Debug conserva los símbolos PDB y las aserciones, pero usa optimización MSVC `/O2`
 para que el candidato de uso diario no tenga la penalización de rendimiento de
-un Debug tradicional (`/Od`).
+un Debug tradicional (`/Od`). También enlaza contra el runtime optimizado de Qt
+y MSVC (`/MD`); así mantiene el diagnóstico del código propio sin el arranque
+lento de las DLL de instrumentación de Qt Debug.
 
 El icono rojo del Debug va embebido en el `.exe` (taskbar/explorer) vía
 `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake define `LC_DEBUG_ICON` solo en

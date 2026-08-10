@@ -137,8 +137,9 @@ set "EXE_PATH=%EXE_DIR%\LlamaCode.exe"
 if not exist "%WINDEPLOYQT%" ( echo [ERROR] windeployqt not found & exit /b 1 )
 if not exist "%EXE_PATH%"    ( echo [ERROR] %EXE_PATH% missing & exit /b 1 )
 
+REM Debug optimiza LlamaCode pero usa las DLL release de Qt (ver CMakeLists.txt)
+REM para evitar el arranque extremadamente lento de Qt6* d.dll.
 set DEPLOY_FLAG=--release
-if /I "%CFG%"=="Debug" set DEPLOY_FLAG=--debug
 
 echo [INFO] Deploying Qt runtime (%CFG%)...
 "%WINDEPLOYQT%" %DEPLOY_FLAG% --qmldir "%~dp0qml" --no-translations --compiler-runtime "%EXE_PATH%" >nul

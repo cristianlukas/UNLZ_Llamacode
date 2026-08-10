@@ -18,7 +18,19 @@ option(LC_USE_OPENCV "Use OpenCV acceleration for visual template matching when 
 # candidato optimizado sin perder símbolos ni aserciones.
 if (MSVC)
     string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    # Debug combina con las dependencias Qt release; usa el mismo CRT /MD.
+    # Los símbolos PDB y las aserciones no dependen de /MDd.
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL" CACHE STRING
+        "MSVC runtime for the optimized Debug candidate" FORCE)
 endif()
+
+# Qt Debug carga DLLs de instrumentación muy grandes (Qt6Cored.dll,
+# Qt6Quickd.dll, etc.) y puede tardar decenas de segundos antes de entrar a
+# main(). El candidato Debug de LlamaCode conserva sus propios símbolos,
+# asserts y optimización, pero usa las DLL release de Qt para tener un arranque
+# representativo del producto y evitar ese bloqueo del loader.
+set(CMAKE_MAP_IMPORTED_CONFIG_DEBUG Release CACHE STRING
+    "Use optimized imported dependencies for the Debug candidate" FORCE)
 
 # FetchContent still populates a missing dependency on first configure, but an
 # existing checkout must not contact its remote on every CMake regeneration.
