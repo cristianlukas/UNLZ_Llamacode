@@ -12,8 +12,9 @@ Item {
         try { return JSON.parse(App.readSetting("benchSelectedIds", "[]")) } catch (e) { return [] }
     }
     onSelectedIdsChanged: App.writeSetting("benchSelectedIds", JSON.stringify(selectedIds))
-    property string sortColumn: ""
-    property int sortDirection: 0
+    // El historial abre mostrando primero las corridas más recientes.
+    property string sortColumn: "date"
+    property int sortDirection: -1
     property var failureRow: ({})
     property string modeFilter: ""
     property string benchmarkFilter: ""
