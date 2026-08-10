@@ -99,7 +99,7 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
             anySysId = m->data(m->index(r), ProfileListModel<LaunchProfile>::IdRole).toString();
         }
     }
-    QCOMPARE(sys, 68); // 30 perfiles base + 38 variantes declarativas de benchmark
+    QCOMPARE(sys, 75); // 31 perfiles base + 44 variantes declarativas de benchmark
     QVERIFY(pm.isSystemLaunch("sys-vram-16"));
     QVERIFY(!anySysId.isEmpty());
     // Visión: solo los perfiles Gemma vision dedicados llevan mmproj. Los perfiles
@@ -834,6 +834,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringLiteral("sys-48-thinkingcap-131k"),
         QStringLiteral("sys-48-thinkingcap-196k"),
         QStringLiteral("sys-48-katcoder-262k"),
+        QStringLiteral("sys-48-katcoder-q5-ngrammod-196k"),
         QStringLiteral("sys-48-katcoder-131k"),
         QStringLiteral("sys-48-katcoder-393k-nographs"),
         QStringLiteral("sys-48-thinkingcap-mtp"),      // el ganador del barrido
@@ -947,6 +948,8 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
                  .value("benchmarkVariants").toArray().size(), 4);
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
                  .value("benchmarkVariants").toArray().size(), 4);
+    QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-q5-ngrammod-196k"))
+                 .value("benchmarkVariants").toArray().size(), 6);
     QCOMPARE(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp"))
                  .value("benchmarkVariants").toArray().size(), 4);
 
@@ -972,6 +975,16 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
              QStringLiteral("KAT-Coder-7-8-26"));
     QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("favorite").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("benchmark").toBool());
+    const QJsonObject katQ5 =
+        found.value(QStringLiteral("sys-48-katcoder-q5-ngrammod-196k"));
+    QCOMPARE(katQ5.value("displayName").toString(),
+             QStringLiteral("KAT-Coder-2.5_Q5-K-M_NgramMod_196k"));
+    QCOMPARE(katQ5.value("model").toObject().value("quant").toString(),
+             QStringLiteral("Q5_K_M"));
+    QCOMPARE(katQ5.value("runtime").toObject().value("ctx").toInt(), 196608);
+    QVERIFY(katQ5.value("extraArgs").toArray().contains(QStringLiteral("ngram-mod")));
+    QVERIFY(katQ5.value("favorite").toBool());
+    QVERIFY(katQ5.value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("favorite").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("favorite").toBool());
@@ -981,7 +994,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     int marked = 0;
     for (auto it = found.cbegin(); it != found.cend(); ++it)
         marked += it.value().value("favorite").toBool() ? 1 : 0;
-    QCOMPARE(marked, 4);
+    QCOMPARE(marked, 5);
     QCOMPARE(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("displayName").toString(),
              QStringLiteral("DeepSeek V4-7-8-26"));
 

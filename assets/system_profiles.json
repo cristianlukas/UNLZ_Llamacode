@@ -976,6 +976,164 @@
     "minimumBinaryBuild": 10228
   },
   {
+    "id": "sys-48-katcoder-q5-ngrammod-196k",
+    "favorite": true,
+    "benchmark": true,
+    "tier": "48GB-KAT",
+    "order": 81,
+    "extra": true,
+    "autoCompanion": false,
+    "displayName": "KAT-Coder-2.5_Q5-K-M_NgramMod_196k",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "KAT-Coder-V2.5-Dev-Q5_K_M-GGUF",
+    "agentProfileId": "agent-maximo",
+    "model": {
+      "repo": "bartowski/Kwaipilot_KAT-Coder-V2.5-Dev-GGUF",
+      "file": "Kwaipilot_KAT-Coder-V2.5-Dev-Q5_K_M.gguf",
+      "quant": "Q5_K_M"
+    },
+    "runtime": {
+      "ctx": 196608,
+      "gpuLayers": 999,
+      "batch": 2048,
+      "ubatch": 512,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k",
+      "q8_0",
+      "--cache-type-v",
+      "q8_0",
+      "--fit",
+      "off",
+      "--temp",
+      "0.60",
+      "--top-p",
+      "0.95",
+      "--top-k",
+      "20",
+      "--min-p",
+      "0.0",
+      "--repeat-penalty",
+      "1.0",
+      "--presence-penalty",
+      "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--threads-batch",
+      "16",
+      "--predict",
+      "8192",
+      "--parallel",
+      "1",
+      "--reasoning",
+      "on",
+      "--cache-prompt",
+      "--cache-reuse",
+      "512",
+      "--split-mode",
+      "layer",
+      "--tensor-split",
+      "1,1",
+      "--spec-type",
+      "ngram-mod",
+      "--spec-ngram-mod-n-match",
+      "24",
+      "--spec-ngram-mod-n-min",
+      "48",
+      "--spec-ngram-mod-n-max",
+      "64"
+    ],
+    "binaryKind": "official",
+    "contextPresets": [
+      65536,
+      131072,
+      196608,
+      262144
+    ],
+    "comment": "KAT-Coder V2.5-Dev Q5_K_M para 2x RTX 3090. Q5_K_M es el punto medio recomendado de la familia Q5. En 4 tareas oficiales, ngram-mod preservo 3/4 salidas del control greedy; ngram-map-k preservo 1/4 y ngram-simple 0/4. El barrido de contexto dio la misma salida y ~5,2 s en 64k/131k/196k, con cargas de ~12 s; 196k usa 15.524+13.959 MiB y compra 50% mas contexto que 131k sin penalizacion observada. 262k se descarta porque produjo salida corrupta de barras repetidas. BigCodeBench-Hard Instruct oficial: 41/148 (27,70%) en 10m05,5s de generacion; queda 4 tareas y 2,71 puntos por debajo del Q4_K_M sin drafter (45/148, 30,41%).",
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-48-kat-q5-none-196k",
+        "order": 90,
+        "displayName": "KAT-Coder-2.5_Q5-K-M_SinDrafter_196k",
+        "extraArgOverrides": {
+          "--spec-type": null,
+          "--spec-ngram-mod-n-match": null,
+          "--spec-ngram-mod-n-min": null,
+          "--spec-ngram-mod-n-max": null
+        },
+        "comment": "Control sin speculative decoding para medir la ganancia real del drafter sobre las mismas respuestas."
+      },
+      {
+        "id": "sys-bench-48-kat-q5-ngramsimple-196k",
+        "order": 91,
+        "displayName": "KAT-Coder-2.5_Q5-K-M_NgramSimple_196k",
+        "extraArgOverrides": {
+          "--spec-type": "ngram-simple",
+          "--spec-ngram-mod-n-match": null,
+          "--spec-ngram-mod-n-min": null,
+          "--spec-ngram-mod-n-max": null,
+          "--spec-ngram-simple-size-n": "12",
+          "--spec-ngram-simple-size-m": "48",
+          "--spec-ngram-simple-min-hits": "1"
+        },
+        "comment": "Drafter por coincidencia directa de n-gramas, sin modelo auxiliar."
+      },
+      {
+        "id": "sys-bench-48-kat-q5-ngrammap-196k",
+        "order": 92,
+        "displayName": "KAT-Coder-2.5_Q5-K-M_NgramMapK_196k",
+        "extraArgOverrides": {
+          "--spec-type": "ngram-map-k",
+          "--spec-ngram-mod-n-match": null,
+          "--spec-ngram-mod-n-min": null,
+          "--spec-ngram-mod-n-max": null,
+          "--spec-ngram-map-k-size-n": "12",
+          "--spec-ngram-map-k-size-m": "48",
+          "--spec-ngram-map-k-min-hits": "1"
+        },
+        "comment": "Drafter con mapa de n-gramas; compite contra ngram-mod y ngram-simple."
+      },
+      {
+        "id": "sys-bench-48-kat-q5-ngrammod-64k",
+        "order": 93,
+        "displayName": "KAT-Coder-2.5_Q5-K-M_NgramMod_64k",
+        "runtime": {
+          "ctx": 65536
+        },
+        "comment": "Contexto inferior a 131k para medir memoria, estabilidad y velocidad."
+      },
+      {
+        "id": "sys-bench-48-kat-q5-ngrammod-131k",
+        "order": 94,
+        "displayName": "KAT-Coder-2.5_Q5-K-M_NgramMod_131k",
+        "runtime": {
+          "ctx": 131072
+        },
+        "comment": "Control de contexto inferior al perfil promovido; dio la misma salida y tiempo que 196k."
+      },
+      {
+        "id": "sys-bench-48-kat-q5-ngrammod-262k",
+        "order": 95,
+        "displayName": "KAT-Coder-2.5_Q5-K-M_NgramMod_262k",
+        "runtime": {
+          "ctx": 262144
+        },
+        "comment": "Extremo alto del barrido para verificar si el contexto adicional sigue siendo gratuito y estable."
+      }
+    ],
+    "minimumBinaryBuild": 10331
+  },
+  {
     "id": "sys-48-katcoder-131k",
     "tier": "48GB-KAT",
     "order": 83,

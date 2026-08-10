@@ -2,6 +2,51 @@
 
 Fecha de consolidación: 2026-08-09.
 
+## Corrida oficial completa (148 tareas)
+
+Además de la muestra exploratoria de ocho tareas documentada más abajo, se
+ejecutó el protocolo oficial completo BigCodeBench-Hard Instruct sobre 148
+tareas. El evaluador local fue validado con las soluciones canónicas: 147/148
+(99,3%), con la única falla esperada en `BigCodeBench/590`. Los tiempos de la
+tabla son de generación de las 148 respuestas; la evaluación de tests se hizo
+después y no está incluida.
+
+| posición | perfil | estado | resultado | tiempo |
+|---:|---|---|---:|---:|
+| 1 | **DeepSeek-V4_IQ3-S_SinDrafter_131k** | Completo | **31,76% — 47/148** | **2h48m24s** |
+| 2 | **KAT-Coder-2.5_Q4-K-M_SinDrafter_262k** | Completo | **30,41% — 45/148** | **9m22s** |
+| 2 | Fable-Q6-K_MTP3_32k | Completo | 30,41% — 45/148 | 22m48s |
+| 4 | ThinkingCap_Q4-K-M_MTP4_196k | Completo | 28,38% — 42/148 | 17m45s |
+| 4 | Laguna-S-2.1_UD-Q2-K-XL_SinDrafter_100k | Completo | 28,38% — 42/148 | 15m46s |
+| 6 | **KAT-Coder-2.5_Q5-K-M_NgramMod_196k** | Completo | **27,70% — 41/148** | **10m05,5s** |
+
+MiniMax quedó explícitamente excluido de esta corrida completa. DeepSeek mejora
+al KAT Q4 en sólo 2 tareas y 1,35 puntos, pero tarda aproximadamente 18 veces
+más. El KAT Q5 seleccionado queda 4 tareas y 2,71 puntos por debajo del Q4, y
+además tarda 43,5 segundos más; por eso se agrega como perfil experimental
+favorito/benchmark, no reemplaza al Q4 como recomendación principal.
+
+### Selección del KAT-Coder Q5
+
+Se descargó `Q5_K_M`, el punto medio de la familia Q5, y se compararon tres
+drafters contra el control sin drafter en cuatro tareas oficiales, con un máximo
+de 512 tokens. El criterio combinó tiempo y conservación de la salida del
+control:
+
+| drafter | tiempo (4 tareas) | salidas idénticas al control |
+|---|---:|---:|
+| SinDrafter | 24,9 s | control |
+| NgramMapK | 26,0 s | 1/4 |
+| NgramSimple | 26,3 s | 0/4 |
+| **NgramMod** | 36,2 s | **3/4** |
+
+Con `NgramMod`, 64k, 131k y 196k produjeron salidas idénticas y tardaron cerca
+de 5,2 s en la tarea de control; la carga fue de unos 12 s. Se eligió 196k
+porque ofrece 50% más contexto que 131k sin penalización observada y cabe con
+holgura en 2× RTX 3090 (15.524 + 13.959 MiB). El preset 262k se conserva sólo
+como variante diagnóstica: produjo una salida corrupta de barras repetidas y no
+se promovió.
+
 ## Resumen ejecutivo
 
 Se evaluaron seis perfiles locales sobre las mismas ocho tareas de
