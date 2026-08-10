@@ -1225,13 +1225,17 @@ Salidas:
 
 | Config | Binario | Acceso directo | Icono |
 |--------|---------|----------------|-------|
-| Debug | `build\Debug\LlamaCode.exe` (release candidate, símbolos + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
+| Debug | `build\Debug\LlamaCode.exe` (release candidate, optimizado + símbolos + asserts) | `LlamaCode-Debug.lnk` | `assets\debug_icon.ico` (llama **roja**) |
 | Release | `build\Release\LlamaCode.exe` (estable, optimizado, `NDEBUG`) | `LlamaCode.lnk` | `assets\app_icon.ico` (llama normal) |
 
 El build predeterminado es Debug para probar y acumular varias versiones candidatas.
 Release se reserva para una promoción estable explícita, una vez integradas y
 validadas varias versiones de Debug. `build.bat Both` sigue disponible cuando se
 necesitan ambos artefactos.
+
+Debug conserva los símbolos PDB y las aserciones, pero usa optimización MSVC `/O2`
+para que el candidato de uso diario no tenga la penalización de rendimiento de
+un Debug tradicional (`/Od`).
 
 El icono rojo del Debug va embebido en el `.exe` (taskbar/explorer) vía
 `app_icon.rc` + `#ifdef LC_DEBUG_ICON` (CMake define `LC_DEBUG_ICON` solo en
@@ -1440,6 +1444,12 @@ Evaluaciones de modelos candidatas:
 2. Elegir modo de prueba: **Corta** (~30 s) o **Completa** (1–5 min).
 3. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
 4. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
+
+Para comparar varias suites personalizadas en una sola operación, abrir
+**Pro-Benchmarks**, marcar los benchmarks deseados (o **Todos**) y pulsar
+**Iniciar benchmark**. La aplicación ejecuta la matriz suites × perfiles de forma
+secuencial y conserva una fila/resultados independientes por combinación; cancelar
+la corrida también descarta las suites pendientes.
 
 Las suites custom pueden declarar un timeout recomendado. La UI avisa cuando el
 límite elegido es menor: un timeout durante la reparación conserva los checks ya

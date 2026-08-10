@@ -13,6 +13,13 @@ option(LC_WARNINGS_AS_ERRORS "Treat project compiler warnings as errors" OFF)
 option(LC_ENABLE_CLANG_TIDY "Run clang-tidy during C++ builds when available" OFF)
 option(LC_USE_OPENCV "Use OpenCV acceleration for visual template matching when available" ON)
 
+# MSVC añade /RTC1 automáticamente a Debug. Es incompatible con /O2; quitarlo
+# en la configuración, antes de declarar los targets, permite que Debug sea un
+# candidato optimizado sin perder símbolos ni aserciones.
+if (MSVC)
+    string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+endif()
+
 # FetchContent still populates a missing dependency on first configure, but an
 # existing checkout must not contact its remote on every CMake regeneration.
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL
@@ -318,6 +325,22 @@ qt_add_executable(LlamaCode
 target_link_libraries(LlamaCode PRIVATE llamacode_core)
 target_compile_definitions(LlamaCode PRIVATE
     "$<$<CONFIG:Debug>:LC_DEBUG_ICON>")
+
+# Debug es el release candidate que se usa a diario. Mantener los símbolos y
+# asserts de Debug, pero optimizar el código nativo: las opciones MSVC por
+# defecto (/Od + /RTC1) hacen que la GUI y el núcleo sean sensiblemente más
+# lentos que Release. /RTC1 es incompatible con /O2, por eso se desactiva sólo
+# para esta configuración; el debugger sigue recibiendo PDB y las aserciones
+# siguen activas porque no definimos NDEBUG.
+if (MSVC)
+    foreach(_lc_debug_target IN ITEMS llamacode_core LlamaCode)
+        target_compile_options(${_lc_debug_target} PRIVATE
+            "$<$<CONFIG:Debug>:/O2>"
+            "$<$<CONFIG:Debug>:/Ob2>"
+            "$<$<CONFIG:Debug>:/Oi>"
+            "$<$<CONFIG:Debug>:/Ot>")
+    endforeach()
+endif()
 
 if (WIN32)
     target_sources(LlamaCode PRIVATE app_icon.rc)
