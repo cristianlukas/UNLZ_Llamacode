@@ -834,7 +834,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         QStringLiteral("sys-48-thinkingcap-131k"),
         QStringLiteral("sys-48-thinkingcap-196k"),
         QStringLiteral("sys-48-katcoder-262k"),
-        QStringLiteral("sys-48-katcoder-q5-ngrammod-196k"),
+        QStringLiteral("sys-48-katcoder-q5-none-196k"),
         QStringLiteral("sys-48-katcoder-131k"),
         QStringLiteral("sys-48-katcoder-393k-nographs"),
         QStringLiteral("sys-48-thinkingcap-mtp"),      // el ganador del barrido
@@ -948,7 +948,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
                  .value("benchmarkVariants").toArray().size(), 4);
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
                  .value("benchmarkVariants").toArray().size(), 4);
-    QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-q5-ngrammod-196k"))
+    QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-q5-none-196k"))
                  .value("benchmarkVariants").toArray().size(), 6);
     QCOMPARE(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp"))
                  .value("benchmarkVariants").toArray().size(), 4);
@@ -976,13 +976,13 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("favorite").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("benchmark").toBool());
     const QJsonObject katQ5 =
-        found.value(QStringLiteral("sys-48-katcoder-q5-ngrammod-196k"));
+        found.value(QStringLiteral("sys-48-katcoder-q5-none-196k"));
     QCOMPARE(katQ5.value("displayName").toString(),
-             QStringLiteral("KAT-Coder-2.5_Q5-K-M_NgramMod_196k"));
+             QStringLiteral("KAT-Coder-2.5_Q5-K-M_SinDrafter_196k"));
     QCOMPARE(katQ5.value("model").toObject().value("quant").toString(),
              QStringLiteral("Q5_K_M"));
     QCOMPARE(katQ5.value("runtime").toObject().value("ctx").toInt(), 196608);
-    QVERIFY(katQ5.value("extraArgs").toArray().contains(QStringLiteral("ngram-mod")));
+    QVERIFY(!katQ5.value("extraArgs").toArray().contains(QStringLiteral("--spec-type")));
     QVERIFY(katQ5.value("favorite").toBool());
     QVERIFY(katQ5.value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("favorite").toBool());

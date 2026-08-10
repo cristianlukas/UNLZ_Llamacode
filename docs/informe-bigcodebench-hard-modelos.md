@@ -18,12 +18,12 @@ después y no está incluida.
 | 2 | Fable-Q6-K_MTP3_32k | Completo | 30,41% — 45/148 | 22m48s |
 | 4 | ThinkingCap_Q4-K-M_MTP4_196k | Completo | 28,38% — 42/148 | 17m45s |
 | 4 | Laguna-S-2.1_UD-Q2-K-XL_SinDrafter_100k | Completo | 28,38% — 42/148 | 15m46s |
-| 6 | **KAT-Coder-2.5_Q5-K-M_NgramMod_196k** | Completo | **27,70% — 41/148** | **10m05,5s** |
+| 6 | **KAT-Coder-2.5_Q5-K-M_SinDrafter_196k** | Completo | **27,70% — 41/148** | **9m15,5s** |
 
 MiniMax quedó explícitamente excluido de esta corrida completa. DeepSeek mejora
 al KAT Q4 en sólo 2 tareas y 1,35 puntos, pero tarda aproximadamente 18 veces
 más. El KAT Q5 seleccionado queda 4 tareas y 2,71 puntos por debajo del Q4, y
-además tarda 43,5 segundos más; por eso se agrega como perfil experimental
+es 6,5 segundos más rápido; por eso se agrega como perfil experimental
 favorito/benchmark, no reemplaza al Q4 como recomendación principal.
 
 ### Selección del KAT-Coder Q5
@@ -46,6 +46,13 @@ porque ofrece 50% más contexto que 131k sin penalización observada y cabe con
 holgura en 2× RTX 3090 (15.524 + 13.959 MiB). El preset 262k se conserva sólo
 como variante diagnóstica: produjo una salida corrupta de barras repetidas y no
 se promovió.
+
+La corrida completa de control sin drafter obtuvo también 41/148, pero tardó
+9m15,5s frente a 10m05,5s de `NgramMod`. Las soluciones fueron idénticas en
+91/148 tareas. `NgramMod` acertó exclusivamente `/13`, `/445` y `/879`, mientras
+que el control acertó exclusivamente `/208`, `/760` y `/1085`. Al no existir
+ganancia neta de calidad y sí una penalización de 50 segundos, el perfil promovido
+es `KAT-Coder-2.5_Q5-K-M_SinDrafter_196k`; `NgramMod` queda como variante.
 
 ## Resumen ejecutivo
 
