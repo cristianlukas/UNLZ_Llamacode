@@ -13171,6 +13171,7 @@ void AppController::cancelBenchmark()
 {
     if (!m_benchmarkRunning) return;
     m_benchmarkCanceled = true;
+    m_proBenchmarkQueue.clear();
     m_benchmarkStatus = "Cancelando...";
     emit benchmarkStatusChanged();
     // Abort the in-flight HTTP request (health poll / warm-up / task) so the
@@ -13311,6 +13312,26 @@ void AppController::startCustomBenchmark(const QStringList &profileIds, const QS
                               ? QStringLiteral("custom") : def.value("name").toString();
     runBenchmarkInternal(profileIds, QStringLiteral("custom"),
                          def.value("prompts").toList(), label, qMax(1, passes), target);
+}
+
+void AppController::startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
+                                       int passes, const QString &target, int timeoutSec,
+                                       const QString &agentProfileId)
+{
+    if (m_benchmarkRunning || profileIds.isEmpty()) return;
+    m_proBenchmarkQueue.clear();
+    for (const QString &id : customIds) {
+        if (!id.trimmed().isEmpty()) m_proBenchmarkQueue.append(id.trimmed());
+    }
+    if (m_proBenchmarkQueue.isEmpty()) return;
+    const QString first = m_proBenchmarkQueue.takeFirst().toString();
+    m_proBenchmarkProfiles = profileIds;
+    m_proBenchmarkPasses = qMax(1, passes);
+    m_proBenchmarkTarget = target;
+    m_proBenchmarkTimeout = qMax(0, timeoutSec);
+    m_proBenchmarkAgent = agentProfileId;
+    // The queue is intentionally serialized: one model/server at a time.
+    startCustomBenchmark(profileIds, first, passes, target, timeoutSec, agentProfileId);
 }
 
 void AppController::openBenchmarkFolder(const QString &path)
@@ -13589,6 +13610,16 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             emit benchmarkRunningChanged();
             emit benchmarkProgressChanged();
             emit benchmarkStatusChanged();
+            if (!m_benchmarkCanceled && !m_proBenchmarkQueue.isEmpty()) {
+                const QString next = m_proBenchmarkQueue.takeFirst().toString();
+                QTimer::singleShot(0, this, [this, next]() {
+                    startCustomBenchmark(m_proBenchmarkProfiles, next, m_proBenchmarkPasses,
+                                         m_proBenchmarkTarget, m_proBenchmarkTimeout,
+                                         m_proBenchmarkAgent);
+                });
+            } else if (m_benchmarkCanceled) {
+                m_proBenchmarkQueue.clear();
+            }
             return;
         }
 

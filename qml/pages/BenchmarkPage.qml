@@ -246,6 +246,15 @@ Item {
     // Custom benchmark selection: "" = standard tasks, else a custom benchmark id
     property string customId: App.readSetting("benchCustomId", "")
     onCustomIdChanged: App.writeSetting("benchCustomId", customId)
+    property var proBenchmarkIds: {
+        try { return JSON.parse(App.readSetting("benchProBenchmarkIds", "[]")) } catch (e) { return [] }
+    }
+    onProBenchmarkIdsChanged: App.writeSetting("benchProBenchmarkIds", JSON.stringify(proBenchmarkIds))
+    function toggleProBenchmark(id) {
+        const a = proBenchmarkIds.slice(), i = a.indexOf(id)
+        if (i >= 0) a.splice(i, 1); else a.push(id)
+        proBenchmarkIds = a
+    }
 
     Component {
         id: sortableHeader
@@ -690,6 +699,12 @@ Item {
                             spacing: 6
                             LcButton {
                                 Layout.fillWidth: true
+                                text: "Pro-Benchmarks (%1)".arg(root.proBenchmarkIds.length)
+                                secondary: true
+                                onClicked: proBenchPopup.open()
+                            }
+                            LcButton {
+                                Layout.fillWidth: true
                                 text: "Nuevo"
                                 onClicked: { editor.loadDef(null); editor.open() }
                             }
@@ -717,6 +732,47 @@ Item {
                                     App.deleteCustomBenchmark(root.customId)
                                     root.customId = ""
                                     benchCombo.currentIndex = 0
+                                }
+                            }
+                        }
+
+                        Popup {
+                            id: proBenchPopup
+                            width: Math.min(420, root.width - 24)
+                            height: Math.min(460, root.height - 80)
+                            anchors.centerIn: Overlay.overlay
+                            modal: true
+                            focus: true
+                            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                            background: Rectangle { color: Theme.surfaceBg; border.color: Theme.borderColor; radius: 8 }
+                            contentItem: ColumnLayout {
+                                spacing: 8
+                                Text { text: "Pro-Benchmarks"; color: Theme.textPrimary; font.pixelSize: 16; font.bold: true }
+                                Text { text: "Elegí varias suites. Se ejecutan contra todos los perfiles marcados, una por vez."; color: Theme.textSecondary; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    LcButton { text: "Todos"; secondary: true; onClicked: { const a=[]; for (const b of (App.customBenchmarks||[])) a.push(b.id); root.proBenchmarkIds=a } }
+                                    LcButton { text: "Ninguno"; secondary: true; onClicked: root.proBenchmarkIds=[] }
+                                }
+                                ScrollView {
+                                    Layout.fillWidth: true; Layout.fillHeight: true; clip: true
+                                    ColumnLayout {
+                                        width: parent.width; spacing: 2
+                                        Repeater {
+                                            model: App.customBenchmarks || []
+                                            delegate: LcCheckBox {
+                                                required property var modelData
+                                                Layout.fillWidth: true
+                                                text: modelData.name || "(sin nombre)"
+                                                checked: root.proBenchmarkIds.indexOf(modelData.id) >= 0
+                                                onToggled: root.toggleProBenchmark(modelData.id)
+                                            }
+                                        }
+                                    }
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    LcButton { text: "Cerrar"; secondary: true; Layout.fillWidth: true; onClicked: proBenchPopup.close() }
                                 }
                             }
                         }
@@ -911,10 +967,15 @@ Item {
                             danger: App.benchmarkRunning
                             enabled: App.benchmarkRunning
                                      || (root.selectedIds.length > 0
-                                         && (!customMode.checked || root.customId !== ""))
+                                         && ((!customMode.checked || root.customId !== "")
+                                             || root.proBenchmarkIds.length > 0))
                             onClicked: {
                                 if (App.benchmarkRunning) {
                                     App.cancelBenchmark()
+                                } else if (root.proBenchmarkIds.length > 0) {
+                                    App.startProBenchmarks(root.selectedIds, root.proBenchmarkIds, passesSpin.value,
+                                                           agentTarget.checked ? "agent" : "model", timeoutSpin.value,
+                                                           agentTarget.checked ? agentProfileCombo.currentValue : "")
                                 } else if (customMode.checked) {
                                     if (root.customId !== "")
                                         App.startCustomBenchmark(root.selectedIds, root.customId, passesSpin.value,

@@ -893,6 +893,9 @@ public:
     Q_INVOKABLE void startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes = 1,
                                           const QString &target = QStringLiteral("model"), int timeoutSec = 0,
                                           const QString &agentProfileId = QString());
+    Q_INVOKABLE void startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
+                                        int passes = 1, const QString &target = QStringLiteral("model"),
+                                        int timeoutSec = 0, const QString &agentProfileId = QString());
     // Auto-tuning de parámetros de inferencia (AutoTuner TPE-lite + gate de
     // calidad). Lanza llama-server por candidato en un puerto scratch, mide
     // tok/s y calidad, y al terminar fusiona la mejor config en extraArgs del
@@ -1709,6 +1712,12 @@ private:
     void         setBenchmarkAgentProfile(const QString &agentProfileId);
     QVariantList m_benchmarkResults;
     QVariantList m_customBenchmarks;
+    QVariantList m_proBenchmarkQueue;
+    QStringList m_proBenchmarkProfiles;
+    int m_proBenchmarkPasses = 1;
+    QString m_proBenchmarkTarget;
+    int m_proBenchmarkTimeout = 0;
+    QString m_proBenchmarkAgent;
     QString      m_lastEvalImportError;
     // Auto-tuning
     bool         m_autoTuneRunning = false;
