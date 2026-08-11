@@ -14888,7 +14888,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             if (!content.isEmpty())
                 *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
             if (!*toolSeen && !*preToolCut) {
-                *preToolChars = qMax(*preToolChars, content.size());
+                *preToolChars += content.size();
                 if (*preToolChars >= kBenchmarkPreToolOutputLimit) {
                     *preToolCut = true;
                     AgentEventLog::append(workspace, QString(),
