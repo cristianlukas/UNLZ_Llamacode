@@ -1754,11 +1754,15 @@ void AppController::startServer(const QString &launchProfileId)
     });
     connect(m_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int code, QProcess::ExitStatus status) {
+        const QString exitedLaunchId = m_activeLaunchId;
+        const QString exitedArgs = m_proc ? m_proc->arguments().join(QStringLiteral(" ")) : QString();
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("Server exited with code %1").arg(code));
         if (code == -1073740791) {
             emit serverError(QStringLiteral(
-                "llama-server crasheó (0xC0000409). Revisá el perfil de lanzamiento activo (args/runtime)."));
+                "llama-server crasheó (0xC0000409). Perfil: %1. Args: %2")
+                    .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId,
+                         exitedArgs.isEmpty() ? QStringLiteral("(vacíos)") : exitedArgs));
         }
         clearServiceState(QStringLiteral("server"));
         // ¿Salida iniciada por el usuario (stopServer) o crash inesperado?
@@ -14434,6 +14438,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto finished  = std::make_shared<bool>(false);
         auto timedOut  = std::make_shared<bool>(false);
         auto passFailed = std::make_shared<bool>(false);
+        auto serverCrashed = std::make_shared<bool>(false);
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
@@ -14718,8 +14723,22 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["finalScore"] = qScore;
             result["finalTotal"] = qTotal;
             result["repairAttempts"] = *repairAttempts;
-            result["avgTps"]       = tpsCount > 0 ? tpsSum / tpsCount : 0.0;
-            result["avgTtftMs"]    = ttftCount > 0 ? ttftSum / ttftCount : 0.0;
+            const bool invalidNoResponse = *serverCrashed
+                || (*timedOut && finalText.startsWith(QStringLiteral("[timeout]")));
+            if (invalidNoResponse) {
+                result["invalid"] = true;
+                result["qualityScore"] = 0;
+                result["qualityTotal"] = 0;
+                result["firstAttemptScore"] = 0;
+                result["firstAttemptTotal"] = 0;
+                result["finalScore"] = 0;
+                result["finalTotal"] = 0;
+                result["acceptance"] = QVariantList{};
+            }
+            result["avgTps"]       = (invalidNoResponse || *passFailed || *timedOut)
+                ? 0.0 : (tpsCount > 0 ? tpsSum / tpsCount : 0.0);
+            result["avgTtftMs"]    = (invalidNoResponse || *passFailed || *timedOut)
+                ? 0.0 : (ttftCount > 0 ? ttftSum / ttftCount : 0.0);
             result["ramMb"]        = ramMb;
             result["vramMb"]       = vramMb;
             result["elapsedSec"]   = elapsed;
@@ -14734,13 +14753,16 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["timedOut"]     = *timedOut;
             result["failed"]       = *passFailed || *timedOut || (qTotal > 0 && qScore < qTotal);
             if (result.value(QStringLiteral("failed")).toBool()) {
-                result["failureStage"] = *timedOut
-                    ? QStringLiteral("hard-timeout")
-                    : (*passFailed ? QStringLiteral("agent") : QStringLiteral("acceptance"));
+                result["failureStage"] = *serverCrashed
+                    ? QStringLiteral("server-crash")
+                    : (*timedOut ? QStringLiteral("hard-timeout")
+                       : (*passFailed ? QStringLiteral("agent") : QStringLiteral("acceptance")));
                 result["failureMessage"] = failureMessage->isEmpty()
-                    ? (qTotal > 0 && qScore < qTotal
+                    ? (*serverCrashed
+                        ? QStringLiteral("El llama-server perdió la conexión durante la corrida; no hubo respuesta del asistente.")
+                        : (qTotal > 0 && qScore < qTotal
                         ? QStringLiteral("Fallaron criterios de aceptacion.")
-                        : finalText)
+                        : finalText))
                     : *failureMessage;
                 result["failureDetail"] = failureDetail->isEmpty()
                     ? (acceptanceRows.isEmpty()
@@ -14847,7 +14869,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             else (*sendNext)();
         });
         connect(agent, &IAgentBackend::errorOccurred, this, [=](const QString &msg) {
-            *passFailed = true;
+            const QString lower = msg.toLower();
+            *serverCrashed = lower.contains(QStringLiteral("connection closed"))
+                || lower.contains(QStringLiteral("connection refused"))
+                || lower.contains(QStringLiteral("server crashe"))
+                || lower.contains(QStringLiteral("llama-server"));
+            *passFailed = !*serverCrashed;
             *failureMessage = msg;
             *failureDetail = benchmarkServerLogTail();
             (*finalize)();
@@ -15169,6 +15196,11 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             r["response"]   = state->response.trimmed().isEmpty() ? state->reasoning
                                                                   : state->response;
             r["failed"]     = failed;
+            const auto networkError = reply->error();
+            r["serverLikelyDown"] = failed && !*hardTimedOut && !*idleTimedOut
+                && (networkError == QNetworkReply::ConnectionRefusedError
+                    || networkError == QNetworkReply::RemoteHostClosedError
+                    || networkError == QNetworkReply::UnknownNetworkError);
             if (failed) {
                 r["failureMessage"] = *hardTimedOut
                     ? QStringLiteral("Error de timeout")
@@ -15205,6 +15237,11 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             r["tokens"]     = tokens;
             r["response"]   = response;
             r["failed"]     = reply->error() != QNetworkReply::NoError;
+            const auto networkError = reply->error();
+            r["serverLikelyDown"] = r.value("failed").toBool() && !*hardTimedOut && !*idleTimedOut
+                && (networkError == QNetworkReply::ConnectionRefusedError
+                    || networkError == QNetworkReply::RemoteHostClosedError
+                    || networkError == QNetworkReply::UnknownNetworkError);
             if (r.value("failed").toBool()) {
                 r["failureMessage"] = *hardTimedOut
                     ? QStringLiteral("Error de timeout")

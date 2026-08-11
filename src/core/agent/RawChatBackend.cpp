@@ -587,19 +587,22 @@ void RawChatBackend::sendMessage(const QString &text)
         if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
             QVariantMap asst = m_messages[m_curAsstIdx].toMap();
             asst[QStringLiteral("typing")] = false;
-            if (!ok && asst.value(QStringLiteral("content")).toString().isEmpty())
+            if (!ok) {
+                asst[QStringLiteral("failed")] = true;
+                asst[QStringLiteral("failureMessage")] = err;
                 asst[QStringLiteral("content")] = QStringLiteral("[error: %1]").arg(err);
+            }
             if (!m_thinkingEnabled)
                 asst[QStringLiteral("content")] = stripThinkForOutput(asst.value(QStringLiteral("content")).toString());
             const qint64 doneAt = QDateTime::currentMSecsSinceEpoch();
             const qint64 startedAt = static_cast<qint64>(asst.value(QStringLiteral("createdAt")).toDouble());
             const qint64 elapsedMs = qMax<qint64>(0, doneAt - startedAt);
             const QString finalText = asst.value(QStringLiteral("content")).toString();
-            const int toks = estimateTokens(finalText);
+            const int toks = ok ? estimateTokens(finalText) : 0;
             asst[QStringLiteral("completedAt")] = static_cast<double>(doneAt);
             asst[QStringLiteral("tokens")] = toks;
             asst[QStringLiteral("elapsedMs")] = static_cast<int>(elapsedMs);
-            asst[QStringLiteral("tps")] = (elapsedMs > 0 && toks > 0)
+            asst[QStringLiteral("tps")] = (ok && elapsedMs > 0 && toks > 0)
                 ? (1000.0 * static_cast<double>(toks) / static_cast<double>(elapsedMs))
                 : 0.0;
             m_messages[m_curAsstIdx] = asst;

@@ -320,6 +320,12 @@ void BackendsNetTests::stream_reportsErrorOnHttp500()
         errSpy.wait(100);
 
     QVERIFY(!errSpy.isEmpty());
+    const QVariantList msgs = be.messages();
+    QVERIFY(!msgs.isEmpty());
+    const QVariantMap asst = msgs.last().toMap();
+    QVERIFY(asst.value(QStringLiteral("failed")).toBool());
+    QCOMPARE(asst.value(QStringLiteral("tokens")).toInt(), 0);
+    QCOMPARE(asst.value(QStringLiteral("tps")).toDouble(), 0.0);
 }
 
 void BackendsNetTests::queuedMessages_canBePreviewedEditedAndRemoved()
