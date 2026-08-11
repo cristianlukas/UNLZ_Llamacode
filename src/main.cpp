@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.80");
+    app.setApplicationVersion("0.1.99");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
         || app.arguments().contains(QStringLiteral("--agent-daemon"));
@@ -155,7 +155,9 @@ int main(int argc, char *argv[])
         QLocalSocket probe;
         probe.connectToServer(kInstanceKey);
         if (probe.waitForConnected(250)) {
-            probe.write("raise");
+            // La instancia existente puede ser headless: el proceso conserva su
+            // núcleo y materializa la UI dentro de sí mismo al recibir este comando.
+            probe.write("show-ui");
             probe.flush();
             probe.waitForBytesWritten(500);
             probe.disconnectFromServer();
@@ -261,12 +263,6 @@ int main(int argc, char *argv[])
 
     qDebug() << "Controllers ready";
 
-    if (headlessAgent) {
-        qDebug() << "Agent daemon headless activo en localhost:" << controlPort;
-        QTimer::singleShot(0, &controller, &AppController::runStartupScan);
-        return app.exec();
-    }
-
     // El escaneo pesado (binaries/roots/hardware/catálogo) se DIFIERE a después de
     // mostrar la ventana (ver abajo), para que la interfaz abra de inmediato.
 
@@ -284,6 +280,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("AppIconSource", appIconSource);
     engine.rootContext()->setContextProperty("TrayIconSource", trayIconSource);
     engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);
+    engine.rootContext()->setContextProperty("HeadlessMode", headlessAgent);
 
     engine.addImportPath(QStringLiteral("qrc:/"));
 
@@ -329,7 +326,11 @@ int main(int argc, char *argv[])
         });
     };
 
-    if (win && (win->isVisible() || startHidden))
+    if (headlessAgent) {
+        qDebug() << "Agent daemon headless activo en localhost:" << controlPort;
+        if (win) win->setVisible(false);
+        QTimer::singleShot(0, &controller, &AppController::runStartupScan);
+    } else if (win && (win->isVisible() || startHidden))
         runDeferredStartup();
     else if (win)
         QObject::connect(win, &QWindow::visibleChanged, &controller,

@@ -1034,7 +1034,7 @@ ApplicationWindow {
         x = savedX
         y = savedY
         const startHidden = StartedWithWindows && window.minimizeToTray
-        if (startHidden) {
+        if (HeadlessMode || startHidden) {
             visible = false
         } else if (savedMaximized) {
             showMaximized()
