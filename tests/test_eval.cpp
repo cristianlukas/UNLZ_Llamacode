@@ -183,6 +183,32 @@ let score = 0;
     for (const QVariant &row : rows)
         QVERIFY2(row.toMap().value(QStringLiteral("passed")).toBool(),
                  qPrintable(row.toMap().value(QStringLiteral("name")).toString()));
+
+    // HumanEval regression: a valid source file must not be concatenated with
+    // the agent's natural-language completion summary before execution.
+    QFile py(dir.filePath("solution.py"));
+    QVERIFY(py.open(QIODevice::WriteOnly | QIODevice::Text));
+    py.write("def has_close_elements(numbers, threshold):\n"
+             "    return any(abs(a - b) < threshold\n"
+             "               for i, a in enumerate(numbers)\n"
+             "               for b in numbers[i + 1:])\n");
+    py.close();
+    QVariantMap heAcceptance;
+    heAcceptance["graderType"] = QStringLiteral("code_tests");
+    heAcceptance["entryPoint"] = QStringLiteral("has_close_elements");
+    heAcceptance["preamble"] = QStringLiteral("def has_close_elements(numbers, threshold):\n");
+    heAcceptance["tests"] = QStringLiteral(
+        "def check(f):\n"
+        "    assert f([1.0, 2.0, 3.9, 4.0], 0.3)\n"
+        "check(has_close_elements)\n");
+    QVariantMap heTask;
+    heTask["id"] = QStringLiteral("HumanEval/0");
+    heTask["acceptance"] = heAcceptance;
+    const QVariantMap heScore = AppController::scoreAgentBenchmarkAcceptanceForTest(
+        dir.path(), QStringLiteral("Archivo solution.py creado y verificado."),
+        QVariantList{heTask}, QStringList{QStringLiteral("solution.py")});
+    QCOMPARE(heScore.value(QStringLiteral("score")).toInt(), 1);
+    QCOMPARE(heScore.value(QStringLiteral("total")).toInt(), 1);
 }
 
 // Parsear la respuesta de un LLM es donde se cometen los errores caros: en este
@@ -418,4 +444,3 @@ void EvalTests::benchPack_runsCodeTestsWithTimeout()
 
 QTEST_MAIN(EvalTests)
 #include "test_eval.moc"
-

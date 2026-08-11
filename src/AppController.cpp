@@ -14134,6 +14134,7 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
     int total = 0;
 
     QString searchable = finalText;
+    QList<QPair<QString, QString>> fileContents;
     const QDir ws(workspace);
     for (const QString &rel : files) {
         const QString cleanRel = QDir::cleanPath(rel);
@@ -14143,8 +14144,11 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
         if (!fi.exists() || !fi.isFile() || fi.size() > 2 * 1024 * 1024)
             continue;
         QFile f(fi.absoluteFilePath());
-        if (f.open(QIODevice::ReadOnly))
-            searchable += QStringLiteral("\n") + QString::fromUtf8(f.readAll());
+        if (f.open(QIODevice::ReadOnly)) {
+            const QString content = QString::fromUtf8(f.readAll());
+            searchable += QStringLiteral("\n") + content;
+            fileContents.append({cleanRel, content});
+        }
     }
     const QString hay = searchable.toLower();
 
@@ -14185,10 +14189,29 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
             bi.tests = acceptance.value(QStringLiteral("tests")).toString();
             bi.preamble = acceptance.value(QStringLiteral("preamble")).toString();
             bi.entryPoint = acceptance.value(QStringLiteral("entryPoint")).toString();
-            // code_tests EJECUTA el código: es el único tipo que no se puede
-            // puntuar mirando texto, y es justo el que discrimina (HumanEval).
+            // code_tests EJECUTA código. En modo agente, el mensaje final suele
+            // ser un resumen textual posterior a write_file; concatenarlo con el
+            // fuente contamina el script y produce SyntaxError aunque el archivo
+            // final sea válido. Preferir archivos fuente (Python primero) y usar
+            // el texto sólo como fallback cuando no se escribió ningún archivo.
             QString detail;
-            const bool passed = BenchmarkPack::gradeWithExecution(bi, searchable, 20000, &detail);
+            bool passed = false;
+            bool attemptedFile = false;
+            for (const auto &file : fileContents) {
+                if (!file.first.endsWith(QStringLiteral(".py"), Qt::CaseInsensitive))
+                    continue;
+                attemptedFile = true;
+                QString candidateDetail;
+                if (BenchmarkPack::gradeWithExecution(bi, file.second, 20000,
+                                                       &candidateDetail)) {
+                    passed = true;
+                    detail.clear();
+                    break;
+                }
+                detail = candidateDetail;
+            }
+            if (!attemptedFile)
+                passed = BenchmarkPack::gradeWithExecution(bi, finalText, 20000, &detail);
             QVariantMap row;
             row[QStringLiteral("taskId")] = task.value(QStringLiteral("id")).toString();
             row[QStringLiteral("type")] = QStringLiteral("grader:") + graderType;
