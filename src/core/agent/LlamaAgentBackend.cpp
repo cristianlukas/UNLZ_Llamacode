@@ -2912,6 +2912,8 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     std::sort(idxs.begin(), idxs.end());
     for (int i : idxs) {
         const QJsonObject acc = m_streamToolCalls.value(i);
+        if (acc.value(QStringLiteral("name")).toString().trimmed().isEmpty())
+            continue;
         QString argStr = acc.value(QStringLiteral("arguments")).toString();
 
         // CRÍTICO: si el modelo truncó los argumentos (p.ej. write_file con
@@ -2946,7 +2948,11 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
     // El historial de API NO lleva <think> (solo display lo lleva).
     const QString apiContent = stripThinkForContext(m_streamContent);
 
-    if (toolCalls.isEmpty() && usingTextTools()) {
+    // Some model templates (notably KAT-Coder's official XML format) emit a
+    // native-looking tool call in `content` when llama.cpp is run with
+    // --skip-chat-parsing. Parse that fallback in both modes; otherwise the
+    // XML is mistaken for the assistant's final code and never executes.
+    if (toolCalls.isEmpty()) {
         const QJsonObject textCall = textToolCallFromContent(apiContent);
         if (!textCall.isEmpty()) {
             if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
@@ -4417,6 +4423,32 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
                 QJsonParseError perr;
                 const QJsonObject obj = QJsonDocument::fromJson(json.toUtf8(), &perr).object();
                 if (perr.error == QJsonParseError::NoError) args = obj;
+            }
+        }
+    }
+
+    // Formato KAT-Coder/Qwen3.5 oficial:
+    // <tool_call><function=write_file><parameter=path>...</parameter>...
+    // </function></tool_call>. El template de KAT lo usa para tool-calling,
+    // mientras que llama.cpp lo entrega como texto cuando no activa un parser
+    // nativo qwen3_coder. Convertirlo al contrato OpenAI evita que el contenido
+    // XML termine escrito como si fuera código fuente.
+    if (!haveName && content.contains(QStringLiteral("<tool_call"), Qt::CaseInsensitive)) {
+        const QRegularExpression functionRe(
+            QStringLiteral("<function\\s*=\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*>([\\s\\S]*?)</function>"),
+            QRegularExpression::CaseInsensitiveOption);
+        const QRegularExpressionMatch fm = functionRe.match(content);
+        if (fm.hasMatch()) {
+            name = fm.captured(1).trimmed();
+            haveName = !name.isEmpty();
+            const QString body = fm.captured(2);
+            const QRegularExpression parameterRe(
+                QStringLiteral("<parameter\\s*=\\s*([^>]+)>([\\s\\S]*?)</parameter>"),
+                QRegularExpression::CaseInsensitiveOption);
+            QRegularExpressionMatchIterator it = parameterRe.globalMatch(body);
+            while (it.hasNext()) {
+                const QRegularExpressionMatch pm = it.next();
+                args.insert(pm.captured(1).trimmed(), pm.captured(2));
             }
         }
     }

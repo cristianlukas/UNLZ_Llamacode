@@ -1,0 +1,44 @@
+{%- for message in messages %}
+{%- if message.role == 'system' %}
+<|im_start|>system
+{{ message.content }}
+{%- if tools is defined and tools %}
+
+# Tools
+{{ tools | tojson }}
+
+Tool calls MUST use exactly:
+<tool_call>
+<function=tool_name>
+<parameter=name>value</parameter>
+</function>
+</tool_call>
+{%- endif %}<|im_end|>
+{%- elif message.role == 'user' %}
+<|im_start|>user
+{{ message.content }}<|im_end|>
+{%- elif message.role == 'assistant' %}
+<|im_start|>assistant
+{{ message.content | default('') }}
+{%- if message.tool_calls is defined and message.tool_calls %}
+{%- for call in message.tool_calls %}
+<tool_call>
+<function={{ call.function.name }}>
+{%- for key, value in (call.function.arguments | fromjson).items() %}
+<parameter={{ key }}>{{ value }}</parameter>
+{%- endfor %}
+</function>
+</tool_call>
+{%- endfor %}
+{%- endif %}<|im_end|>
+{%- elif message.role == 'tool' %}
+<|im_start|>user
+<tool_response>
+{{ message.content }}
+</tool_response><|im_end|>
+{%- endif %}
+{%- endfor %}
+<|im_start|>assistant
+{%- if enable_thinking is defined and enable_thinking == false %}<think>
+</think>
+{%- endif %}

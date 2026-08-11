@@ -14887,6 +14887,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         connect(agent, &IAgentBackend::streamingText, this, [=](int, const QString &content) {
             if (!content.isEmpty())
                 *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
+            // KAT-Coder emits its official XML tool protocol in content when
+            // chat parsing is delegated to LlamaCode. Do not classify that
+            // protocol as pre-tool rambling while the XML call is streaming.
+            if (content.contains(QStringLiteral("<tool_call"), Qt::CaseInsensitive))
+                *toolSeen = true;
             if (!*toolSeen && !*preToolCut) {
                 *preToolChars += content.size();
                 if (*preToolChars >= kBenchmarkPreToolOutputLimit) {

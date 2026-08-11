@@ -47,6 +47,7 @@ private slots:
     void desktopPlaybookSection_coversKeyboardPathAndTextVerify();
     void desktopConfirmKeyBlockedAfterTypeEquals();
     void parsesNativeToolCallLeakFallback();
+    void parsesKatCoderXmlToolCallFallback();
     void textToolsModeDoesNotDoubleReserveToolBudget();
     void compactionStallCounterTracksProgress();
     void compactionPreservesImmutableTranscript();
@@ -355,6 +356,25 @@ void AgentWireTests::parsesTextToolCallFallback()
     const QJsonObject args = QJsonDocument::fromJson(
         fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
     QCOMPARE(args.value(QStringLiteral("url")).toString(), QStringLiteral("https://dolarhoy.com/"));
+}
+
+void AgentWireTests::parsesKatCoderXmlToolCallFallback()
+{
+    const QString content = QStringLiteral(
+        "<tool_call>\n<function=write_file>\n"
+        "<parameter=path>solution.py</parameter>\n"
+        "<parameter=content>def answer():\\n    return 42</parameter>\n"
+        "</function>\n</tool_call>");
+
+    const QJsonObject call = LlamaAgentBackend::textToolCallFromContent(content);
+    QVERIFY(!call.isEmpty());
+    const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+    QCOMPARE(fn.value(QStringLiteral("name")).toString(), QStringLiteral("write_file"));
+    const QJsonObject args = QJsonDocument::fromJson(
+        fn.value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(args.value(QStringLiteral("path")).toString(), QStringLiteral("solution.py"));
+    QCOMPARE(args.value(QStringLiteral("content")).toString(),
+             QStringLiteral("def answer():\\n    return 42"));
 }
 
 // Ráfaga: el modelo escupe decenas de TOOL_CALL en UNA generación. Sólo el
