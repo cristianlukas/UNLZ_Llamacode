@@ -14447,6 +14447,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto passFailed = std::make_shared<bool>(false);
         auto serverCrashed = std::make_shared<bool>(false);
         auto earlyAccepted = std::make_shared<bool>(false);
+        auto toolSeen = std::make_shared<bool>(false);
+        auto preToolChars = std::make_shared<int>(0);
+        auto preToolCut = std::make_shared<bool>(false);
+        constexpr int kBenchmarkPreToolOutputLimit = 16000;
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
@@ -14883,6 +14887,19 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         connect(agent, &IAgentBackend::streamingText, this, [=](int, const QString &content) {
             if (!content.isEmpty())
                 *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
+            if (!*toolSeen && !*preToolCut) {
+                *preToolChars = qMax(*preToolChars, content.size());
+                if (*preToolChars >= kBenchmarkPreToolOutputLimit) {
+                    *preToolCut = true;
+                    AgentEventLog::append(workspace, QString(),
+                                          QStringLiteral("pre_tool_output_limit"),
+                                          QJsonObject{{QStringLiteral("chars"), *preToolChars},
+                                                      {QStringLiteral("limit"), kBenchmarkPreToolOutputLimit},
+                                                      {QStringLiteral("reason"),
+                                                       QStringLiteral("model produced long output before requesting a tool")}});
+                    agent->cancelGeneration();
+                }
+            }
             if (*finished || *turnStartMs <= 0 || *turnFirstMs >= 0) return;
             *turnFirstMs = QDateTime::currentMSecsSinceEpoch();
         });
@@ -14897,6 +14914,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             if (*finished) return;
             if (!chunk.trimmed().isEmpty())
                 *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
+            if (chunk.contains(QLatin1String("[turn] model requested")))
+                *toolSeen = true;
             if (!*toolsReady && chunk.contains(QLatin1String("[mcp]"))
                     && chunk.contains(QLatin1String("descubiertas"))) {
                 *toolsReady = true;
