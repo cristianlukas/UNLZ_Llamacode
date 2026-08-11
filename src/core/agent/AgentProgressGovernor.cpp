@@ -29,6 +29,7 @@ void AgentProgressGovernor::reset(const QString &objective)
     m_semanticSuccess.clear();
     m_exactWriteSuccess.clear();
     m_contentFirstPath.clear();
+    m_lastWriteContentHash.clear();
     m_failedSignatures.clear();
     m_expectedArtifacts.clear();
     m_completedArtifacts.clear();
@@ -109,8 +110,7 @@ AgentProgressGovernor::Decision AgentProgressGovernor::record(
         QCryptographicHash::hash(evidenceBytes, QCryptographicHash::Sha256).toHex());
     const bool newEvidence = ok && !result.trimmed().isEmpty() && !m_evidence.contains(evidence);
     const bool newSemanticWrite = ok && isWrite && !m_semanticSuccess.contains(d.semanticKey);
-    const bool continuingExactWrite = ok && isWrite
-        && m_exactWriteSuccess.contains(exactWriteTarget);
+    bool writeContentChanged = false;
 
     // Re-escribir lo MISMO con otro nombre no es progreso. La clave semántica de
     // una escritura incluye el path, así que sin este chequeo alcanzaba con
@@ -121,11 +121,19 @@ AgentProgressGovernor::Decision AgentProgressGovernor::record(
     // degenerados (add.py, add_only.py, add_only_only.py).
     bool duplicateElsewhere = false;
     if (ok && isWrite) {
+        const bool hasContentField = parsedArgs.contains(QStringLiteral("content"));
         const QString content = parsedArgs.value(QStringLiteral("content")).toString();
-        if (!content.trimmed().isEmpty()) {
+        if (!hasContentField) {
+            // edit_file suele transportar un patch/diff en otros campos; en ese
+            // protocolo el resultado cambia cuando realmente hubo una edición.
+            writeContentChanged = m_exactWriteSuccess.contains(exactWriteTarget)
+                && newEvidence;
+        } else if (!content.trimmed().isEmpty()) {
             const QString contentHash = QString::fromLatin1(
                 QCryptographicHash::hash(content.trimmed().toUtf8(),
                                          QCryptographicHash::Sha256).toHex());
+            writeContentChanged = m_lastWriteContentHash.value(exactWriteTarget) != contentHash;
+            m_lastWriteContentHash.insert(exactWriteTarget, contentHash);
             const QString firstPath = m_contentFirstPath.value(contentHash);
             if (firstPath.isEmpty())
                 m_contentFirstPath.insert(contentHash, exactWriteTarget);
@@ -135,7 +143,7 @@ AgentProgressGovernor::Decision AgentProgressGovernor::record(
     }
 
     d.progress = newEvidence && !duplicateElsewhere
-        && (!isWrite || newSemanticWrite || continuingExactWrite);
+        && (!isWrite || newSemanticWrite || writeContentChanged);
 
     if (d.progress) {
         m_evidence.insert(evidence);

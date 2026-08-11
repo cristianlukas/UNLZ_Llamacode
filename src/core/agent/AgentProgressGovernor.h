@@ -54,6 +54,9 @@ private:
     // contenido ya escrito -> primer path donde se escribio. Re-escribir lo mismo
     // con otro nombre no es progreso: es el bucle de "prime_checker_v10.py".
     QHash<QString, QString> m_contentFirstPath;
+    // Último hash escrito por ruta. Reescribir el mismo archivo con el mismo
+    // contenido no es progreso; cambiarlo sí lo es.
+    QHash<QString, QString> m_lastWriteContentHash;
     // Firmas (clave semántica + resultado) de acciones que ya fallaron: repetirlas
     // es el bucle clasico (list_dir ".." una y otra vez) y cuesta doble.
     QSet<QString> m_failedSignatures;

@@ -12,6 +12,7 @@ private slots:
     void explicitMultiLanguageTaskAllowsVariants();
     void namedArtifactTriggersEarlyClosureHint();
     void repeatedEditsToSameFileCanMakeProgress();
+    void repeatedIdenticalWriteToSameFileIsNotProgress();
     void repeatedIdenticalFailureCostsDouble();
     void sameContentUnderNewNameIsNotProgress();
     void renameLoopStopsAtDistinctWriteCeiling();
@@ -140,6 +141,16 @@ void AgentProgressTests::repeatedEditsToSameFileCanMakeProgress()
     AgentProgressGovernor g;
     QVERIFY(g.record("edit_file", R"({"path":"app.cpp"})", true, "diff one", true).progress);
     QVERIFY(g.record("edit_file", R"({"path":"app.cpp"})", true, "diff two", true).progress);
+}
+
+void AgentProgressTests::repeatedIdenticalWriteToSameFileIsNotProgress()
+{
+    AgentProgressGovernor g;
+    const QString args = R"({"path":"solution.py","content":"def f(): return 1"})";
+    QVERIFY(g.record("write_file", args, true, "escrito", true).progress);
+    const auto repeated = g.record("write_file", args, true, "escrito", true);
+    QVERIFY(!repeated.progress);
+    QVERIFY(repeated.stagnant > 0);
 }
 
 // El bucle clasico: list_dir ".." rechazado una y otra vez. Cada repeticion
