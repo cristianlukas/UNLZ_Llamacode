@@ -205,6 +205,7 @@ private:
     QString storagePath(const QString &entity) const;
     void setupWatcher();
     void onProfileFileChanged(const QString &path);
+    void onProfileDirectoryChanged(const QString &path);
 
     ProfileListModel<BackendProfile>   m_backends;
     ProfileListModel<ModelProfile>     m_models;

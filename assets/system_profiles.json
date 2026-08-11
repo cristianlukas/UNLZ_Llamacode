@@ -910,7 +910,7 @@
       "--parallel",
       "1",
       "--reasoning",
-      "on",
+      "off",
       "--cache-prompt",
       "--cache-reuse",
       "512",
@@ -927,7 +927,7 @@
       131072,
       262144
     ],
-    "comment": "KAT-Coder V2.5-Dev (35B-A3B, ~3 B activos) entero en las dos placas, sin offload a RAM. Es de lejos el mas rapido de los tres modelos del tier: prefill 4.134,7 t/s y decode 113,5 t/s con el mismo prompt de 12.010 tokens, usando 14,3 y 13,5 GB. El tier de 24 GB (sys-vram-20) lo corre con 30 capas en GPU y 32k de contexto; aca entra completo con 262k y KV q8_0. Si el benchmark dice que la calidad alcanza, este es el perfil de trabajo diario. Declara minimumBinaryBuild 10228 a proposito: sin eso el selector eligio una build vieja (b9045) que arranca pero avisa 'no usable GPU found ... compiled without GPU support' y el perfil entero falla con server-load. Ese es ademas el binario con el que se midio todo lo de este comment.",
+    "comment": "KAT-Coder V2.5-Dev (35B-A3B, ~3 B activos) entero en las dos placas, sin offload a RAM. Thinking queda apagado por defecto para uso diario y benchmarks reproducibles; se puede activar con la variante explícita de reasoning. Es de lejos el mas rapido de los tres modelos del tier: prefill 4.134,7 t/s y decode 113,5 t/s con el mismo prompt de 12.010 tokens, usando 14,3 y 13,5 GB. El tier de 24 GB (sys-vram-20) lo corre con 30 capas y 262k de contexto. Declara minimumBinaryBuild 10228 a proposito.",
     "benchmarkVariants": [
       {
         "id": "sys-bench-48-kat-f16",

@@ -105,6 +105,17 @@
 #include <cmath>
 
 namespace {
+bool launchThinkingEnabled(const QStringList &args, bool fallback)
+{
+    for (int i = 0; i < args.size(); ++i) {
+        if (args.at(i) == QLatin1String("--reasoning") && i + 1 < args.size())
+            return args.at(i + 1).compare(QLatin1String("off"), Qt::CaseInsensitive) != 0;
+        if (args.at(i) == QLatin1String("--reasoning-budget") && i + 1 < args.size())
+            return args.at(i + 1).toInt() != 0;
+    }
+    return fallback;
+}
+
 class TeachRegionOverlay final : public QWidget
 {
 public:
@@ -13836,6 +13847,9 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["passesTotal"]  = passes;
                                 result["mode"]         = mode;
                                 result["target"]       = QStringLiteral("model");
+                                const LaunchProfile modelLaunch = m_profiles.resolveLaunch(profileId);
+                                result["thinkingEnabled"] =
+                                    launchThinkingEnabled(modelLaunch.extraArgs, m_chatThinkingEnabled);
                                 result["benchmarkName"] = benchmarkName;
                                 result["timestamp"]    = (double)QDateTime::currentMSecsSinceEpoch();
                                 result["qualityScore"] = passed;
@@ -14733,6 +14747,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["agentProfileName"] = m_benchmarkAgentProfileName;
             result["agentTemperature"] = benchmarkTemp;
             result["agentSeed"] = benchmarkSeed;
+            result["thinkingEnabled"] = launchThinkingEnabled(ctx.launch.extraArgs,
+                                                               m_agentThinkingEnabled);
             result["benchmarkName"] = (mode == QLatin1String("short") ? QStringLiteral("Corta")
                                       : mode == QLatin1String("full") ? QStringLiteral("Completa")
                                       : runLabel);
@@ -15544,6 +15560,11 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     // Nivel del agente (vacío para target model / sin perfil elegido).
     result[QStringLiteral("agentProfileId")] = m_benchmarkAgentProfileId;
     result[QStringLiteral("agentProfileName")] = m_benchmarkAgentProfileName;
+    const LaunchProfile failedLaunch = m_profiles.resolveLaunch(profileId);
+    result[QStringLiteral("thinkingEnabled")] =
+        launchThinkingEnabled(failedLaunch.extraArgs,
+                              target == QLatin1String("agent") ? m_agentThinkingEnabled
+                                                                  : m_chatThinkingEnabled);
     result[QStringLiteral("benchmarkName")] = benchmarkName;
     result[QStringLiteral("timestamp")] = (double)QDateTime::currentMSecsSinceEpoch();
     result[QStringLiteral("qualityScore")] = 0;
@@ -15626,6 +15647,7 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["ramMb"]        = result.value("ramMb").toDouble();
     summary["vramMb"]       = result.value("vramMb").toDouble();
     summary["target"]       = result.value("target").toString();
+    summary["thinkingEnabled"] = result.value("thinkingEnabled").toBool();
     summary["agentProfileId"]   = result.value("agentProfileId").toString();
     summary["agentProfileName"] = result.value("agentProfileName").toString();
     summary["runLabel"]     = result.value("runLabel").toString();

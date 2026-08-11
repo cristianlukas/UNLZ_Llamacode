@@ -22,7 +22,7 @@ Item {
     property var columnFilters: ({})
     // Anchos redimensionables por columna del historial.
     property var colW: ({
-        profile: 200, target: 58, agentProfile: 96, benchmark: 100, score: 60, firstAttemptScore: 58,
+        profile: 200, target: 58, agentProfile: 96, benchmark: 100, thinking: 58, score: 60, firstAttemptScore: 58,
         finalScore: 58, qpm: 68, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
         passedAfterRepair: 68, tps: 60, ttft: 60, seconds: 70, ram: 60, vram: 60, date: 118
     })
@@ -80,11 +80,17 @@ Item {
         const label = (row.runLabel ?? "").toString()
         return label.length > 0 && label !== "standard" ? label : mode.toUpperCase()
     }
+    function thinkingLabel(row) {
+        if (row.thinkingEnabled === true || row.thinking === true) return "On"
+        if (row.thinkingEnabled === false || row.thinking === false) return "Off"
+        return "—"
+    }
     function sortValue(row, column) {
         if (column === "profile") return (row.profileName ?? "").toString().toLowerCase()
         if (column === "target") return benchmarkTargetLabel(row).toLowerCase()
         if (column === "agentProfile") return (row.agentProfileName ?? "").toString().toLowerCase()
         if (column === "benchmark") return benchmarkNameLabel(row).toLowerCase()
+        if (column === "thinking") return thinkingLabel(row).toLowerCase()
         if (column === "score") return BenchmarkScore.sortKey(row, "qualityScore", "qualityTotal")
         if (column === "firstAttemptScore")
             return BenchmarkScore.sortKey(row, "firstAttemptScore", "firstAttemptTotal")
@@ -150,6 +156,7 @@ Item {
         if (column === "target") return benchmarkTargetLabel(row)
         if (column === "agentProfile") { const n = (row.agentProfileName ?? "").toString(); return n.length ? n : "—" }
         if (column === "benchmark") return benchmarkNameLabel(row)
+        if (column === "thinking") return thinkingLabel(row)
         if (column === "score") return scoreLabel(row, "qualityScore", "qualityTotal")
         if (column === "firstAttemptScore") return scoreLabel(row, "firstAttemptScore", "firstAttemptTotal")
         if (column === "finalScore") return scoreLabel(row, "finalScore", "finalTotal")
@@ -1082,6 +1089,7 @@ Item {
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("target"); onLoaded: { item.title = "Modo"; item.column = "target" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("agentProfile"); onLoaded: { item.title = "Nivel"; item.column = "agentProfile" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("benchmark"); onLoaded: { item.title = "Benchmark"; item.column = "benchmark" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("thinking"); onLoaded: { item.title = "Think"; item.column = "thinking" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("score"); onLoaded: { item.title = "Score"; item.column = "score" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstAttemptScore"); onLoaded: { item.title = "First"; item.column = "firstAttemptScore" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("finalScore"); onLoaded: { item.title = "Final"; item.column = "finalScore" } }
@@ -1201,6 +1209,12 @@ Item {
                                     color: Theme.textSecondary; font.pixelSize: 11
                                     elide: Text.ElideRight
                                     Layout.preferredWidth: root.colWidth("benchmark"); horizontalAlignment: Text.AlignRight
+                                }
+                                Text {
+                                    text: root.thinkingLabel(modelData)
+                                    color: root.thinkingLabel(modelData) === "On" ? Theme.textSecondary : Theme.textMuted
+                                    font.pixelSize: 11
+                                    Layout.preferredWidth: root.colWidth("thinking"); horizontalAlignment: Text.AlignRight
                                 }
                                 Item {
                                     Layout.preferredWidth: root.colWidth("score")

@@ -60,6 +60,11 @@ void ProfileManager::setupWatcher()
 {
     connect(&m_watcher, &QFileSystemWatcher::fileChanged,
             this, &ProfileManager::onProfileFileChanged);
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged,
+            this, &ProfileManager::onProfileDirectoryChanged);
+    const QString profilesDir = QFileInfo(storagePath(QStringLiteral("backends"))).absolutePath();
+    if (QDir(profilesDir).exists() && !m_watcher.directories().contains(profilesDir))
+        m_watcher.addPath(profilesDir);
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                QStringLiteral("runtimes"), QStringLiteral("harnesses"),
                                QStringLiteral("workspaces"), QStringLiteral("launches"),
@@ -73,14 +78,36 @@ void ProfileManager::onProfileFileChanged(const QString &path)
 {
     // Re-armar el watch: una escritura atómica (rename) o algunos editores
     // reemplazan el archivo y el watcher pierde el path.
-    if (QFile::exists(path) && !m_watcher.files().contains(path))
-        m_watcher.addPath(path);
+    QTimer::singleShot(0, this, [this, path]() {
+        if (QFile::exists(path) && !m_watcher.files().contains(path))
+            m_watcher.addPath(path);
+    });
 
     if (m_saving) return;   // cambio provocado por nuestro propio save(): ignorar
 
     // Cambio externo (otra instancia / edición manual): recargar para no pisar.
     qInfo() << "[ProfileManager] cambio externo detectado, recargando:" << path;
     reloadFromDisk();
+}
+
+void ProfileManager::onProfileDirectoryChanged(const QString &path)
+{
+    // Atomic replacement removes a file watch briefly; the directory watch is
+    // the reliable second signal for edits made by another process.
+    if (m_saving) return;
+    QTimer::singleShot(50, this, [this, path]() {
+        if (m_saving) return;
+        qInfo() << "[ProfileManager] cambio externo detectado en directorio, recargando:" << path;
+        reloadFromDisk();
+        for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
+                                   QStringLiteral("runtimes"), QStringLiteral("harnesses"),
+                                   QStringLiteral("workspaces"), QStringLiteral("launches"),
+                                   QStringLiteral("agent_profiles")}) {
+            const QString file = storagePath(ent);
+            if (QFile::exists(file) && !m_watcher.files().contains(file))
+                m_watcher.addPath(file);
+        }
+    });
 }
 
 // ---- BackendProfile ----
