@@ -387,7 +387,7 @@ ApplicationWindow {
         parent: Overlay.overlay
         anchors.centerIn: parent
         width: Math.min(380, parent.width - 32)
-        height: 60
+        height: 78
         modal: false
 
         property string message: ""
@@ -411,6 +411,8 @@ ApplicationWindow {
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             width: parent.width - 24
+            maximumLineCount: 3
+            elide: Text.ElideRight
         }
 
         Timer { id: closeTimer; interval: 4000; onTriggered: errorToast.close() }
