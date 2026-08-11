@@ -53,6 +53,7 @@
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/SubAgentRunner.h"
 #include "core/agent/AgentEfficiency.h"
+#include "core/agent/AgentEventLog.h"
 #include "core/agent/DifficultyRouter.h"
 #include "core/agent/HybridPlanning.h"
 #include "core/mail/MailClient.h"
@@ -1759,10 +1760,16 @@ void AppController::startServer(const QString &launchProfileId)
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("Server exited with code %1").arg(code));
         if (code == -1073740791) {
+            // Los argumentos completos quedan en el log de lifecycle. No los
+            // muestres en el toast global: una línea de comando larga tapa la
+            // tabla y no ayuda a identificar el fallo inmediato.
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Crash detail: perfil=%1 args=%2")
+                                  .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId,
+                                       exitedArgs.isEmpty() ? QStringLiteral("(vacíos)") : exitedArgs));
             emit serverError(QStringLiteral(
-                "llama-server crasheó (0xC0000409). Perfil: %1. Args: %2")
-                    .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId,
-                         exitedArgs.isEmpty() ? QStringLiteral("(vacíos)") : exitedArgs));
+                "llama-server crasheó (0xC0000409). Perfil: %1. Revisá el log del servidor.")
+                    .arg(exitedLaunchId.isEmpty() ? QStringLiteral("(desconocido)") : exitedLaunchId));
         }
         clearServiceState(QStringLiteral("server"));
         // ¿Salida iniciada por el usuario (stopServer) o crash inesperado?
@@ -14439,6 +14446,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto timedOut  = std::make_shared<bool>(false);
         auto passFailed = std::make_shared<bool>(false);
         auto serverCrashed = std::make_shared<bool>(false);
+        auto earlyAccepted = std::make_shared<bool>(false);
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
@@ -14626,6 +14634,16 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
 
             const double elapsed = (QDateTime::currentMSecsSinceEpoch() - startMs) / 1000.0;
 
+            AgentEventLog::append(workspace, QString(),
+                                  QStringLiteral("benchmark_finalize"),
+                                  QJsonObject{{QStringLiteral("profileId"), profileId},
+                                              {QStringLiteral("benchmarkName"), runLabel},
+                                              {QStringLiteral("elapsedSec"), elapsed},
+                                              {QStringLiteral("timedOut"), *timedOut},
+                                              {QStringLiteral("passFailed"), *passFailed},
+                                              {QStringLiteral("serverCrashed"), *serverCrashed},
+                                              {QStringLiteral("earlyAccepted"), *earlyAccepted}});
+
             if (*firstAttemptScore < 0) {
                 *firstAttemptScore = qScore;
                 *firstAttemptTotal = qTotal;
@@ -14801,6 +14819,47 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             }
         };
 
+        // A benchmark is complete once its declared acceptance criteria pass.
+        // Waiting for a natural-language "turn finished" after that is unsafe:
+        // a model can keep rewriting an already-correct file forever.
+        auto acceptancePoll = std::make_shared<std::function<void()>>();
+        *acceptancePoll = [=]() {
+            if (*finished) return;
+            QStringList files;
+            QDirIterator it(workspace, QDir::Files, QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                it.next();
+                files << QDir(workspace).relativeFilePath(it.filePath());
+            }
+            if (!files.isEmpty()) {
+                const QVariantMap probe = scoreAgentBenchmarkAcceptanceForTest(
+                    workspace, QString(), benchTasks, files);
+                const QVariantList rows = probe.value(QStringLiteral("rows")).toList();
+                const int score = probe.value(QStringLiteral("score")).toInt();
+                const int total = probe.value(QStringLiteral("total")).toInt();
+                const bool hardFailed = benchHardCriteriaFailed(rows);
+                AgentEventLog::append(workspace, QString(),
+                                      QStringLiteral("benchmark_acceptance_probe"),
+                                      QJsonObject{{QStringLiteral("score"), score},
+                                                  {QStringLiteral("total"), total},
+                                                  {QStringLiteral("hardFailed"), hardFailed},
+                                                  {QStringLiteral("fileCount"), files.size()}});
+                if (total > 0 && score == total && !hardFailed) {
+                    *earlyAccepted = true;
+                    AgentEventLog::append(workspace, QString(),
+                                          QStringLiteral("benchmark_early_accept"),
+                                          QJsonObject{{QStringLiteral("score"), score},
+                                                      {QStringLiteral("total"), total},
+                                                      {QStringLiteral("reason"),
+                                                       QStringLiteral("acceptance passed before turn completion")}});
+                    agent->cancelGeneration();
+                    (*finalize)();
+                    return;
+                }
+            }
+            QTimer::singleShot(1000, this, [=]() { (*acceptancePoll)(); });
+        };
+
         // Send prompts one after another; advance when the agent goes idle.
         auto sendNext = std::make_shared<std::function<void()>>();
         *sendNext = [=]() {
@@ -14812,6 +14871,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             *turnStartMs = QDateTime::currentMSecsSinceEpoch();
             *turnFirstMs = -1;
             *lastActivityMs = *turnStartMs;
+            AgentEventLog::append(workspace, QString(),
+                                  QStringLiteral("benchmark_prompt"),
+                                  QJsonObject{{QStringLiteral("promptIndex"), *promptIdx},
+                                              {QStringLiteral("promptCount"), prompts.size()},
+                                              {QStringLiteral("promptChars"), prompts.at(*promptIdx).size()}});
             agent->sendMessage(agentPrompt(prompts.at(*promptIdx)));
             (*promptIdx)++;
         };
@@ -14905,6 +14969,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         if (m_benchHardTimeoutSec > 0) {
             QTimer::singleShot(m_benchHardTimeoutSec * 1000, this, [=]() {
                 if (*finished) return;
+                AgentEventLog::append(workspace, QString(),
+                                      QStringLiteral("benchmark_timeout"),
+                                      QJsonObject{{QStringLiteral("timeoutSec"), m_benchHardTimeoutSec},
+                                                  {QStringLiteral("reason"), QStringLiteral("hard wall-clock timeout")}});
                 *timedOut = true;
                 *passFailed = true;
                 *failureMessage = QStringLiteral("Error de timeout");
@@ -14929,6 +14997,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // Kick off the first prompt after tools are ready. If there are no MCP
         // servers, built-in tools are available immediately.
         QTimer::singleShot(300, this, [=]() { (*sendNext)(); });
+        QTimer::singleShot(1000, this, [=]() { (*acceptancePoll)(); });
         QTimer::singleShot(5000, this, [=]() {
             if (!*finished && !*toolsReady) {
                 *toolsReady = true;
