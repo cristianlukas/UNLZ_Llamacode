@@ -14898,6 +14898,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                                       {QStringLiteral("reason"),
                                                        QStringLiteral("model produced long output before requesting a tool")}});
                     agent->cancelGeneration();
+                    *passFailed = true;
+                    *failureMessage = QStringLiteral("El agente produjo demasiado texto antes de usar herramientas.");
+                    *failureDetail = QStringLiteral("Se alcanzó el límite preventivo de salida previa a herramientas (%1 caracteres).")
+                        .arg(kBenchmarkPreToolOutputLimit);
+                    QTimer::singleShot(0, this, [=]() { (*finalize)(); });
                 }
             }
             if (*finished || *turnStartMs <= 0 || *turnFirstMs >= 0) return;
