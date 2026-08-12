@@ -1463,6 +1463,12 @@ límite elegido es menor: un timeout durante la reparación conserva los checks 
 medidos, pero se identifica como `Timeout` y no como un fallo final de calidad. La
 suite `Stress largo y difícil` recomienda al menos 900 s por corrida.
 
+En benchmarks de agente, el checkbox **Thinking** es la configuración efectiva de
+la corrida: si está apagado, se inicia o recarga el servidor con `--reasoning off`
+y no se reutiliza un servidor arrancado con el estado contrario. Para perfiles
+KAT-Coder, si falta el template de herramientas, el benchmark instala o actualiza
+automáticamente `kat-coder-tools.jinja` antes de iniciar el servidor.
+
 Para construir un subset corto y reproducible de HumanEval con mayor complejidad
 estructural, usar `python tools/select_humaneval_hard.py <HumanEval.jsonl>
 <salida.jsonl>`. El selector genera además un manifest con los ids y métricas;

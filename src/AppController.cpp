@@ -3650,6 +3650,35 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     }
 
     ctx.reasoningEnabled = m_launchThinkingEnabled;
+
+    // Un perfil de usuario clonado desde KAT-Eval puede perder el template de
+    // tools. Sin él llama-server cae en peg-native y el agente nunca recibe
+    // llamadas de herramientas aunque el modelo siga generando texto.
+    const QString modelFile = ctx.catalogModel.fileName.toLower();
+    const bool katModel = modelFile.contains(QStringLiteral("kat-coder"))
+                       || modelFile.contains(QStringLiteral("kwaipilot_kat"));
+    if (katModel && !ctx.launch.extraArgs.contains(QStringLiteral("--chat-template-file"))) {
+        const QString dstDir = QStandardPaths::writableLocation(
+            QStandardPaths::AppLocalDataLocation) + QStringLiteral("/chat-templates");
+        QDir().mkpath(dstDir);
+        const QString dst = dstDir + QStringLiteral("/kat-coder-tools.jinja");
+        QFile src(QStringLiteral(":/assets/chat-templates/kat-coder-tools.jinja"));
+        if (src.open(QIODevice::ReadOnly)) {
+            const QByteArray bundled = src.readAll();
+            QFile installed(dst);
+            const bool stale = !installed.exists()
+                            || !installed.open(QIODevice::ReadOnly)
+                            || installed.readAll() != bundled;
+            if (stale) {
+                QFile out(dst);
+                if (out.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    out.write(bundled);
+            }
+        }
+        if (QFile::exists(dst))
+            ctx.launch.extraArgs << QStringLiteral("--skip-chat-parsing")
+                                 << QStringLiteral("--chat-template-file") << dst;
+    }
     return ctx;
 }
 
@@ -13664,8 +13693,16 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             // Si el server que está corriendo ya es ESTE perfil y está listo, el
             // modelo ya está en VRAM: no tiene sentido descargarlo para volver a
             // cargar lo mismo (con DeepSeek V4 son minutos por pasada).
+            bool serverThinkingMatches = true;
+            if (m_proc && serverRunning()) {
+                // El template de reasoning se fija al cargar el modelo: no
+                // reutilizar un server arrancado con el estado opuesto al checkbox.
+                serverThinkingMatches = launchThinkingEnabled(
+                    m_proc->arguments(), false) == m_agentThinkingEnabled;
+            }
             const bool reuse = benchmarkCanReuseServer(m_activeLaunchId, profileId,
-                                                       serverRunning(), m_serverReady);
+                                                       serverRunning(), m_serverReady)
+                            && serverThinkingMatches;
             // Con cualquier otro perfil vivo hay que bajarlo primero: startServer
             // abortaría y la pasada se anotaría como fallo de carga. Vale para el
             // primer intento y para los reintentos.
@@ -13849,9 +13886,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["passesTotal"]  = passes;
                                 result["mode"]         = mode;
                                 result["target"]       = QStringLiteral("model");
-                                const LaunchProfile modelLaunch = m_profiles.resolveLaunch(profileId);
-                                result["thinkingEnabled"] =
-                                    launchThinkingEnabled(modelLaunch.extraArgs, m_chatThinkingEnabled);
+                                result["thinkingEnabled"] = m_agentThinkingEnabled;
                                 result["benchmarkName"] = benchmarkName;
                                 result["timestamp"]    = (double)QDateTime::currentMSecsSinceEpoch();
                                 result["qualityScore"] = passed;
@@ -14344,6 +14379,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         return QStringLiteral(
             "MODO AGENTE BENCHMARK:\n"
             "- Trabaja en el directorio actual usando herramientas de archivo.\n"
+            "- Tu primera accion debe ser una llamada de herramienta: no escribas un plan ni codigo en el chat antes de usar write_file.\n"
             "- Debes crear/modificar los archivos pedidos en disco; no alcanza con responder codigo en el chat.\n"
             "- Si el prompt pide \"responder solamente con codigo\", interpretalo como: el archivo final debe contener solamente ese codigo.\n"
             "- Al terminar, responde breve indicando que archivos creaste y si compilaste/probaste.\n\n"
@@ -14466,6 +14502,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto toolSeen = std::make_shared<bool>(false);
         auto preToolChars = std::make_shared<int>(0);
         auto preToolCut = std::make_shared<bool>(false);
+        auto preToolRecoveryAttempts = std::make_shared<int>(0);
+        auto preToolRecoveryPending = std::make_shared<bool>(false);
         constexpr int kBenchmarkPreToolOutputLimit = 16000;
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
@@ -14754,8 +14792,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["agentProfileName"] = m_benchmarkAgentProfileName;
             result["agentTemperature"] = benchmarkTemp;
             result["agentSeed"] = benchmarkSeed;
-            result["thinkingEnabled"] = launchThinkingEnabled(ctx.launch.extraArgs,
-                                                               m_agentThinkingEnabled);
+            result["thinkingEnabled"] = m_agentThinkingEnabled;
             result["benchmarkName"] = (mode == QLatin1String("short") ? QStringLiteral("Corta")
                                       : mode == QLatin1String("full") ? QStringLiteral("Completa")
                                       : runLabel);
@@ -14936,12 +14973,18 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                                       {QStringLiteral("limit"), kBenchmarkPreToolOutputLimit},
                                                       {QStringLiteral("reason"),
                                                        QStringLiteral("model produced long output before requesting a tool")}});
-                    agent->cancelGeneration();
-                    *passFailed = true;
-                    *failureMessage = QStringLiteral("El agente produjo demasiado texto antes de usar herramientas.");
-                    *failureDetail = QStringLiteral("Se alcanzó el límite preventivo de salida previa a herramientas (%1 caracteres).")
-                        .arg(kBenchmarkPreToolOutputLimit);
-                    QTimer::singleShot(0, this, [=]() { (*finalize)(); });
+                    if (*preToolRecoveryAttempts < 1) {
+                        (*preToolRecoveryAttempts)++;
+                        *preToolRecoveryPending = true;
+                        agent->cancelGeneration();
+                    } else {
+                        agent->cancelGeneration();
+                        *passFailed = true;
+                        *failureMessage = QStringLiteral("El agente produjo demasiado texto antes de usar herramientas.");
+                        *failureDetail = QStringLiteral("Se alcanzó el límite preventivo de salida previa a herramientas (%1 caracteres), incluso después de un reintento correctivo.")
+                            .arg(kBenchmarkPreToolOutputLimit);
+                        QTimer::singleShot(0, this, [=]() { (*finalize)(); });
+                    }
                 }
             }
             if (*finished || *turnStartMs <= 0 || *turnFirstMs >= 0) return;
@@ -14990,6 +15033,23 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 turnMetrics->append(metric);
                 *turnStartMs = 0;
                 *turnFirstMs = -1;
+            }
+            if (*preToolRecoveryPending) {
+                *preToolRecoveryPending = false;
+                *preToolCut = false;
+                *preToolChars = 0;
+                *toolSeen = false;
+                *turnStartMs = QDateTime::currentMSecsSinceEpoch();
+                *turnFirstMs = -1;
+                AgentEventLog::append(workspace, QString(),
+                                      QStringLiteral("benchmark_tool_recovery"),
+                                      QJsonObject{{QStringLiteral("attempt"), *preToolRecoveryAttempts}});
+                agent->sendMessage(QStringLiteral(
+                    "CORRECCION CRITICA: no describas un plan ni escribas codigo en el chat. "
+                    "Usa ahora mismo la herramienta write_file para crear el archivo pedido "
+                    "en disco; despues ejecuta los checks de aceptacion. Responde solo luego "
+                    "de usar la herramienta."));
+                return;
             }
             if (m_benchmarkCanceled) { (*finalize)(); return; }
             if (*promptIdx >= prompts.size()) (*finalize)();
@@ -15578,11 +15638,7 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     // Nivel del agente (vacío para target model / sin perfil elegido).
     result[QStringLiteral("agentProfileId")] = m_benchmarkAgentProfileId;
     result[QStringLiteral("agentProfileName")] = m_benchmarkAgentProfileName;
-    const LaunchProfile failedLaunch = m_profiles.resolveLaunch(profileId);
-    result[QStringLiteral("thinkingEnabled")] =
-        launchThinkingEnabled(failedLaunch.extraArgs,
-                              target == QLatin1String("agent") ? m_agentThinkingEnabled
-                                                                  : m_chatThinkingEnabled);
+    result[QStringLiteral("thinkingEnabled")] = m_agentThinkingEnabled;
     result[QStringLiteral("benchmarkName")] = benchmarkName;
     result[QStringLiteral("timestamp")] = (double)QDateTime::currentMSecsSinceEpoch();
     result[QStringLiteral("qualityScore")] = 0;
