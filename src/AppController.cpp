@@ -13242,6 +13242,58 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
     return result;
 }
 
+QVariantList AppController::benchmarkBestModelosSpeed() const
+{
+    // Segunda capa de diversidad: parte de los candidatos Best25, resuelve el
+    // archivo GGUF real y permite como máximo dos perfiles por archivo. Así una
+    // familia con muchas variantes no ocupa toda la tabla.
+    QVariantList candidates = benchmarkBest25();
+    for (QVariant &value : candidates) {
+        QVariantMap row = value.toMap();
+        const LaunchProfile launch = m_profiles.resolveLaunch(
+            row.value(QStringLiteral("profileId")).toString());
+        const ModelProfile model = m_profiles.resolveModelProfile(launch.modelProfileId);
+        const CatalogModel catalog = m_catalog.findById(model.modelId);
+        QString gguf = QFileInfo(catalog.fileName).fileName();
+        if (gguf.isEmpty()) gguf = model.name;
+        if (gguf.isEmpty()) gguf = QStringLiteral("perfil:")
+            + row.value(QStringLiteral("profileId")).toString();
+        row[QStringLiteral("ggufName")] = gguf;
+        row[QStringLiteral("ggufKey")] = gguf.toLower();
+        value = row;
+    }
+
+    return benchmarkBestModelosSpeedForTest(candidates);
+}
+
+QVariantList AppController::benchmarkBestModelosSpeedForTest(const QVariantList &input)
+{
+    QVariantList candidates = input;
+    std::sort(candidates.begin(), candidates.end(), [](const QVariant &a, const QVariant &b) {
+        const QVariantMap x = a.toMap(), y = b.toMap();
+        const double qx = x.value(QStringLiteral("best25QualityRatio")).toDouble();
+        const double qy = y.value(QStringLiteral("best25QualityRatio")).toDouble();
+        if (!qFuzzyCompare(qx + 1.0, qy + 1.0)) return qx > qy;
+        const double tx = x.value(QStringLiteral("avgTps")).toDouble();
+        const double ty = y.value(QStringLiteral("avgTps")).toDouble();
+        if (!qFuzzyCompare(tx + 1.0, ty + 1.0)) return tx > ty;
+        return x.value(QStringLiteral("profileName")).toString()
+             < y.value(QStringLiteral("profileName")).toString();
+    });
+
+    QHash<QString, int> perGguf;
+    QVariantList result;
+    for (const QVariant &candidate : candidates) {
+        QVariantMap row = candidate.toMap();
+        const QString key = row.value(QStringLiteral("ggufKey")).toString();
+        if (perGguf.value(key, 0) >= 2) continue;
+        const int number = ++perGguf[key];
+        row[QStringLiteral("bestModelosSpeedRank")] = number;
+        result.append(row);
+    }
+    return result;
+}
+
 void AppController::clearBenchmarkResults()
 {
     // Delete persisted index + per-result files

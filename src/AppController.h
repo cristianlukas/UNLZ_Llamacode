@@ -180,6 +180,7 @@ class AppController : public QObject
     Q_PROPERTY(QString benchmarkStatus READ benchmarkStatus NOTIFY benchmarkStatusChanged)
     Q_PROPERTY(QVariantList benchmarkResults READ benchmarkResults NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBest25 READ benchmarkBest25 NOTIFY benchmarkResultsChanged)
+    Q_PROPERTY(QVariantList benchmarkBestModelosSpeed READ benchmarkBestModelosSpeed NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList customBenchmarks READ customBenchmarks NOTIFY customBenchmarksChanged)
     Q_PROPERTY(bool autoTuneRunning READ autoTuneRunning NOTIFY autoTuneChanged)
     Q_PROPERTY(int autoTuneProgress READ autoTuneProgress NOTIFY autoTuneChanged)
@@ -378,6 +379,7 @@ public:
     QString benchmarkStatus() const { return m_benchmarkStatus; }
     QVariantList benchmarkResults() const { return m_benchmarkResults; }
     QVariantList benchmarkBest25() const;
+    QVariantList benchmarkBestModelosSpeed() const;
     QVariantList customBenchmarks() const { return m_customBenchmarks; }
     bool researchRunning() const { return m_researchRunning; }
     int researchProgress() const { return m_researchProgress; }
@@ -483,6 +485,7 @@ public:
     static bool shouldReplaceBundledBenchmarkForTest(const QJsonObject &source,
                                                      const QJsonObject &destination);
     static QVariantList benchmarkBest25ForTest(const QVariantList &results);
+    static QVariantList benchmarkBestModelosSpeedForTest(const QVariantList &candidates);
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).
     static QString installRootForExePath(const QString &exePath);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,

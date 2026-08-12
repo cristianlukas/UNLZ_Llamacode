@@ -1481,6 +1481,11 @@ oficiales que importa y ejecuta LlamaCode.
 hasta 5). Dentro de cada grupo prioriza calidad final y luego TPS. Los perfiles
 que no alcanzan 5 TPS, fallan o quedan sin resultado no entran en la tabla.
 
+`tabla_best_modelos_speed` aplica una segunda regla de diversidad: resuelve el
+archivo GGUF real desde el catálogo y conserva como máximo dos perfiles por GGUF.
+Así una familia con muchas variantes no desplaza a Gemma, KAT-Coder, Qwen u otras
+familias que también tengan candidatos válidos.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y

@@ -116,6 +116,7 @@ private slots:
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
+    void benchmarkBestModelosSpeedCapsProfilesPerGguf();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
     void benchmarkResumesWhereItDiedInsteadOfLosingTheSeries();
     void benchmarkEvaluatorsToleratePresentationNotContent();
@@ -1454,6 +1455,37 @@ void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
     QCOMPARE(fast, 10);
     QCOMPARE(balanced, 10);
     QCOMPARE(quality, 5);
+}
+
+void AppControllerTests::benchmarkBestModelosSpeedCapsProfilesPerGguf()
+{
+    QVariantList rows;
+    for (int i = 0; i < 4; ++i) {
+        rows.append(QVariantMap{
+            {QStringLiteral("profileId"), QStringLiteral("qwen-%1").arg(i)},
+            {QStringLiteral("profileName"), QStringLiteral("Qwen %1").arg(i)},
+            {QStringLiteral("ggufKey"), QStringLiteral("qwen.gguf")},
+            {QStringLiteral("ggufName"), QStringLiteral("qwen.gguf")},
+            {QStringLiteral("avgTps"), 100.0 - i},
+            {QStringLiteral("best25QualityRatio"), 1.0},
+        });
+    }
+    rows.append(QVariantMap{
+        {QStringLiteral("profileId"), QStringLiteral("gemma")},
+        {QStringLiteral("profileName"), QStringLiteral("Gemma")},
+        {QStringLiteral("ggufKey"), QStringLiteral("gemma.gguf")},
+        {QStringLiteral("ggufName"), QStringLiteral("gemma.gguf")},
+        {QStringLiteral("avgTps"), 50.0},
+        {QStringLiteral("best25QualityRatio"), 1.0},
+    });
+
+    const QVariantList best = AppController::benchmarkBestModelosSpeedForTest(rows);
+    QCOMPARE(best.size(), 3);
+    int qwen = 0;
+    for (const QVariant &value : best)
+        if (value.toMap().value(QStringLiteral("ggufKey")).toString() == QStringLiteral("qwen.gguf"))
+            ++qwen;
+    QCOMPARE(qwen, 2);
 }
 
 // Si el server ya está sirviendo el perfil que se va a benchmarkear, el modelo ya

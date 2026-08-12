@@ -1096,6 +1096,11 @@ Item {
                             secondary: true
                             onClicked: best25Popup.open()
                         }
+                        LcButton {
+                            text: "tabla_best_modelos_speed"
+                            secondary: true
+                            onClicked: bestModelosSpeedPopup.open()
+                        }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: resultsList.count + " resultados"
@@ -1210,6 +1215,83 @@ Item {
                                 Text {
                                     anchors.centerIn: parent; visible: parent.count === 0
                                     text: "Todavía no hay corridas rápidas válidas para construir la tabla."
+                                    color: Theme.textMuted; font.pixelSize: 12
+                                }
+                            }
+                        }
+                    }
+
+                    Popup {
+                        id: bestModelosSpeedPopup
+                        width: Math.min(900, root.width - 40)
+                        height: Math.min(470, root.height - 100)
+                        anchors.centerIn: parent
+                        modal: true
+                        padding: 12
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                        background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.divider }
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 8
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    text: "tabla_best_modelos_speed"
+                                    color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
+                                }
+                                Item { Layout.fillWidth: true }
+                                LcButton {
+                                    text: "Seleccionar modelos"
+                                    secondary: true
+                                    enabled: (App.benchmarkBestModelosSpeed || []).length > 0
+                                    onClicked: {
+                                        const ids = []
+                                        for (const row of (App.benchmarkBestModelosSpeed || []))
+                                            if (ids.indexOf(row.profileId) < 0) ids.push(row.profileId)
+                                        root.selectedIds = ids
+                                        bestModelosSpeedPopup.close()
+                                    }
+                                }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Máximo 2 perfiles por GGUF; se conserva la mejor calidad y velocidad de cada modelo."
+                                color: Theme.textMuted; font.pixelSize: 11
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 28; color: Theme.baseBg; radius: 4
+                                RowLayout {
+                                    anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
+                                    Text { Layout.preferredWidth: 70; text: "# / Grupo"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 250; text: "GGUF"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.fillWidth: true; text: "Perfil"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 75; text: "TPS"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 75; text: "Calidad"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                }
+                            }
+                            ListView {
+                                Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 1
+                                model: App.benchmarkBestModelosSpeed || []
+                                ScrollBar.vertical: LcScrollBar {}
+                                delegate: Rectangle {
+                                    width: ListView.view.width; height: 29; color: index % 2 ? Theme.baseBg : "transparent"
+                                    RowLayout {
+                                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
+                                        Text {
+                                            Layout.preferredWidth: 70
+                                            text: "#" + (modelData.bestModelosSpeedRank || "") + " " + (modelData.best25Category || "")
+                                            color: Theme.accent; font.pixelSize: 11; font.bold: true
+                                        }
+                                        Text { Layout.preferredWidth: 250; text: modelData.ggufName || "—"; color: Theme.textSecondary; font.pixelSize: 11; elide: Text.ElideMiddle }
+                                        Text { Layout.fillWidth: true; text: modelData.profileName || ""; color: Theme.textPrimary; font.pixelSize: 11; elide: Text.ElideRight }
+                                        Text { Layout.preferredWidth: 75; text: Number(modelData.avgTps || 0).toFixed(1); color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 75; text: (modelData.qualityScore || 0) + "/" + (modelData.qualityTotal || 0); color: Theme.successText; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    }
+                                }
+                                Text {
+                                    anchors.centerIn: parent; visible: parent.count === 0
+                                    text: "Todavía no hay candidatos con GGUF resuelto."
                                     color: Theme.textMuted; font.pixelSize: 12
                                 }
                             }
