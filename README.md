@@ -1486,6 +1486,11 @@ archivo GGUF real desde el catálogo y conserva como máximo dos perfiles por GG
 Así una familia con muchas variantes no desplaza a Gemma, KAT-Coder, Qwen u otras
 familias que también tengan candidatos válidos.
 
+`tabla_best_modelos_quality` toma esos mismos perfiles y sus corridas válidas de
+`HumanEval (20 ítems)`, ordena por calidad final, primer intento y tiempo, y vuelve
+a limitar a dos perfiles por GGUF. Los fallos de infraestructura y timeouts quedan
+fuera del ranking de calidad, pero siguen visibles en el historial.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y

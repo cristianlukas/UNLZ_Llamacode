@@ -13294,6 +13294,81 @@ QVariantList AppController::benchmarkBestModelosSpeedForTest(const QVariantList 
     return result;
 }
 
+QVariantList AppController::benchmarkBestModelosQuality() const
+{
+    return benchmarkBestModelosQualityForTest(m_benchmarkResults,
+                                               benchmarkBestModelosSpeed());
+}
+
+QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantList &results,
+                                                               const QVariantList &speedCandidates)
+{
+    QHash<QString, QVariantMap> allowed;
+    for (const QVariant &value : speedCandidates) {
+        const QVariantMap row = value.toMap();
+        allowed.insert(row.value(QStringLiteral("profileId")).toString(), row);
+    }
+
+    QHash<QString, QVariantMap> latest;
+    for (const QVariant &value : results) {
+        const QVariantMap source = value.toMap();
+        if (source.value(QStringLiteral("target")).toString().toLower() != QStringLiteral("agent"))
+            continue;
+        if (!source.value(QStringLiteral("benchmarkName")).toString().startsWith(QStringLiteral("HumanEval (20")))
+            continue;
+        if (source.value(QStringLiteral("failed")).toBool()
+            || source.value(QStringLiteral("failureKind")).toString() != QStringLiteral("none"))
+            continue;
+        const QString id = source.value(QStringLiteral("profileId")).toString();
+        if (id.isEmpty() || !allowed.contains(id)) continue;
+        if (!latest.contains(id)
+            || source.value(QStringLiteral("timestamp")).toLongLong()
+               > latest.value(id).value(QStringLiteral("timestamp")).toLongLong())
+            latest.insert(id, source);
+    }
+
+    QVariantList candidates;
+    for (const QVariantMap &source : std::as_const(latest)) {
+        QVariantMap row = source;
+        const QVariantMap speed = allowed.value(source.value(QStringLiteral("profileId")).toString());
+        row[QStringLiteral("profileName")] = speed.value(QStringLiteral("profileName"));
+        row[QStringLiteral("ggufName")] = speed.value(QStringLiteral("ggufName"));
+        row[QStringLiteral("ggufKey")] = speed.value(QStringLiteral("ggufKey"));
+        row[QStringLiteral("best25Category")] = speed.value(QStringLiteral("best25Category"));
+        row[QStringLiteral("qualityRatio")] = source.value(QStringLiteral("qualityTotal")).toDouble() > 0.0
+            ? source.value(QStringLiteral("qualityScore")).toDouble()
+                / source.value(QStringLiteral("qualityTotal")).toDouble() : 0.0;
+        candidates.append(row);
+    }
+
+    std::sort(candidates.begin(), candidates.end(), [](const QVariant &a, const QVariant &b) {
+        const QVariantMap x = a.toMap(), y = b.toMap();
+        const double qx = x.value(QStringLiteral("qualityRatio")).toDouble();
+        const double qy = y.value(QStringLiteral("qualityRatio")).toDouble();
+        if (!qFuzzyCompare(qx + 1.0, qy + 1.0)) return qx > qy;
+        const double fx = x.value(QStringLiteral("firstAttemptScore")).toDouble();
+        const double fy = y.value(QStringLiteral("firstAttemptScore")).toDouble();
+        if (fx != fy) return fx > fy;
+        const double tx = x.value(QStringLiteral("timeToFirstAttempt")).toDouble();
+        const double ty = y.value(QStringLiteral("timeToFirstAttempt")).toDouble();
+        if (tx != ty) return tx < ty;
+        return x.value(QStringLiteral("profileName")).toString()
+             < y.value(QStringLiteral("profileName")).toString();
+    });
+
+    QHash<QString, int> perGguf;
+    QVariantList result;
+    for (const QVariant &candidate : candidates) {
+        QVariantMap row = candidate.toMap();
+        const QString key = row.value(QStringLiteral("ggufKey")).toString();
+        if (perGguf.value(key, 0) >= 2) continue;
+        row[QStringLiteral("bestModelosQualityRank")] = result.size() + 1;
+        result.append(row);
+        ++perGguf[key];
+    }
+    return result;
+}
+
 void AppController::clearBenchmarkResults()
 {
     // Delete persisted index + per-result files

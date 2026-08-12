@@ -1101,6 +1101,11 @@ Item {
                             secondary: true
                             onClicked: bestModelosSpeedPopup.open()
                         }
+                        LcButton {
+                            text: "tabla_best_modelos_quality"
+                            secondary: true
+                            onClicked: bestModelosQualityPopup.open()
+                        }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: resultsList.count + " resultados"
@@ -1292,6 +1297,81 @@ Item {
                                 Text {
                                     anchors.centerIn: parent; visible: parent.count === 0
                                     text: "Todavía no hay candidatos con GGUF resuelto."
+                                    color: Theme.textMuted; font.pixelSize: 12
+                                }
+                            }
+                        }
+                    }
+
+                    Popup {
+                        id: bestModelosQualityPopup
+                        width: Math.min(980, root.width - 40)
+                        height: Math.min(470, root.height - 100)
+                        anchors.centerIn: parent
+                        modal: true
+                        padding: 12
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                        background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.divider }
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 8
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    text: "tabla_best_modelos_quality · HumanEval (20 ítems)"
+                                    color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
+                                }
+                                Item { Layout.fillWidth: true }
+                                LcButton {
+                                    text: "Seleccionar modelos"
+                                    secondary: true
+                                    enabled: (App.benchmarkBestModelosQuality || []).length > 0
+                                    onClicked: {
+                                        const ids = []
+                                        for (const row of (App.benchmarkBestModelosQuality || []))
+                                            if (ids.indexOf(row.profileId) < 0) ids.push(row.profileId)
+                                        root.selectedIds = ids
+                                        bestModelosQualityPopup.close()
+                                    }
+                                }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Sólo resultados válidos de los perfiles speed; máximo 2 por GGUF. Orden: calidad final, primer intento y tiempo."
+                                color: Theme.textMuted; font.pixelSize: 11
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 28; color: Theme.baseBg; radius: 4
+                                RowLayout {
+                                    anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
+                                    Text { Layout.preferredWidth: 45; text: "#"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 220; text: "GGUF"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.fillWidth: true; text: "Perfil"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 100; text: "Categoría"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 85; text: "Calidad"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 85; text: "T First"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                }
+                            }
+                            ListView {
+                                Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 1
+                                model: App.benchmarkBestModelosQuality || []
+                                ScrollBar.vertical: LcScrollBar {}
+                                delegate: Rectangle {
+                                    width: ListView.view.width; height: 29; color: index % 2 ? Theme.baseBg : "transparent"
+                                    RowLayout {
+                                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
+                                        Text { Layout.preferredWidth: 45; text: modelData.bestModelosQualityRank || (index + 1); color: Theme.accent; font.pixelSize: 11; font.bold: true }
+                                        Text { Layout.preferredWidth: 220; text: modelData.ggufName || "—"; color: Theme.textSecondary; font.pixelSize: 11; elide: Text.ElideMiddle }
+                                        Text { Layout.fillWidth: true; text: modelData.profileName || ""; color: Theme.textPrimary; font.pixelSize: 11; elide: Text.ElideRight }
+                                        Text { Layout.preferredWidth: 100; text: modelData.best25Category || "—"; color: Theme.accent; font.pixelSize: 11 }
+                                        Text { Layout.preferredWidth: 85; text: (modelData.qualityScore || 0) + "/" + (modelData.qualityTotal || 0); color: Theme.successText; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 85; text: root.secondsLabel(modelData.timeToFirstAttempt); color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    }
+                                }
+                                Text {
+                                    anchors.centerIn: parent; visible: parent.count === 0
+                                    text: "Todavía no hay resultados válidos de HumanEval (20 ítems)."
                                     color: Theme.textMuted; font.pixelSize: 12
                                 }
                             }
