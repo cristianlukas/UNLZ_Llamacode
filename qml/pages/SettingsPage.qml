@@ -14,6 +14,29 @@ Item {
         onPicked: function (hex) { if (target) target.value = hex }
     }
 
+    property var gpuRows: []
+    property var selectedVramGpus: []
+
+    function refreshGpuInventory() {
+        const info = App.gpuInventory()
+        gpuRows = info.gpus ?? []
+        const raw = String(App.readSetting("gpu/vramIndices", ""))
+        selectedVramGpus = raw.length === 0 ? [] : raw.split(",").map(function(v) { return Number(v) })
+    }
+
+    function isVramGpuSelected(index) { return selectedVramGpus.indexOf(index) >= 0 }
+    function setVramGpuSelected(index, selected) {
+        let values = selectedVramGpus.slice()
+        const pos = values.indexOf(index)
+        if (selected && pos < 0) values.push(index)
+        if (!selected && pos >= 0) values.splice(pos, 1)
+        values.sort(function(a, b) { return a - b })
+        selectedVramGpus = values
+        App.writeSetting("gpu/vramIndices", values.join(","))
+    }
+
+    Component.onCompleted: refreshGpuInventory()
+
     FolderDialog {
         id: openCodeProjectDialog
         title: "Elegí el proyecto para OpenCode"
@@ -370,6 +393,69 @@ Item {
                                             }
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Sistema / bandeja ────────────────────────────────────
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text { text: "GPU · INFERENCIA"; color: Theme.accent; font.pixelSize: 11; font.bold: true }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg; border.color: Theme.borderColor; radius: 10
+                            implicitHeight: gpuInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: gpuInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text { text: "GPU de procesamiento"; color: Theme.textPrimary; font.pixelSize: 14; font.bold: true; Layout.fillWidth: true }
+                                    ComboBox {
+                                        id: processingGpu
+                                        Layout.preferredWidth: 250
+                                        model: ["Automática"].concat(root.gpuRows.map(function(g) { return "GPU " + g.index + " · " + g.name }))
+                                        Component.onCompleted: {
+                                            const configured = Number(App.readSetting("gpu/processingIndex", -1))
+                                            currentIndex = configured >= 0 ? configured + 1 : 0
+                                        }
+                                        onActivated: App.writeSetting("gpu/processingIndex", currentIndex - 1)
+                                    }
+                                }
+                                Text {
+                                    text: "Se usa para operaciones principales y muestreo de llama.cpp ( --main-gpu )."
+                                    color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                                }
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+                                Text { text: "GPUs de VRAM"; color: Theme.textPrimary; font.pixelSize: 14; font.bold: true }
+                                Text {
+                                    text: "Elegí qué GPUs reciben el modelo. Si no marcás ninguna, llama.cpp decide automáticamente."
+                                    color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                                }
+                                Repeater {
+                                    model: root.gpuRows
+                                    delegate: CheckBox {
+                                        text: "GPU " + modelData.index + " · " + modelData.name + " · " + Math.round(modelData.totalMb / 1024) + " GB"
+                                        checked: root.isVramGpuSelected(modelData.index)
+                                        onToggled: root.setVramGpuSelected(modelData.index, checked)
+                                        Layout.fillWidth: true
+                                    }
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: root.gpuRows.length === 0 ? "No se detectaron GPUs NVIDIA o nvidia-smi no está disponible." : "Cambios aplicados al próximo inicio del servidor."
+                                        color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap
+                                    }
+                                    LcButton { text: "Actualizar"; secondary: true; onClicked: root.refreshGpuInventory() }
                                 }
                             }
                         }

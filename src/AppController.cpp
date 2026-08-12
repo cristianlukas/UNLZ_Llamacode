@@ -3478,6 +3478,28 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
 {
     EffectiveProfileBuilder::Context ctx;
     ctx.launch = m_profiles.resolveLaunch(launchProfileId);
+    // Selección global de hardware. Se agrega como override efímero: los perfiles
+    // siguen siendo portables y la UI puede cambiar de GPU sin reescribirlos.
+    const int mainGpu = readSetting(QStringLiteral("gpu/processingIndex"), -1).toInt();
+    if (mainGpu >= 0)
+        ctx.launch.extraArgs << QStringLiteral("--main-gpu") << QString::number(mainGpu);
+    const QStringList vramGpus = readSetting(QStringLiteral("gpu/vramIndices"), QString())
+                                     .toString().split(u',', Qt::SkipEmptyParts);
+    if (!vramGpus.isEmpty()) {
+        int maxGpu = -1;
+        QList<int> selected;
+        for (const QString &value : vramGpus) {
+            bool ok = false;
+            const int index = value.trimmed().toInt(&ok);
+            if (ok && index >= 0) { selected.append(index); maxGpu = qMax(maxGpu, index); }
+        }
+        if (maxGpu >= 0) {
+            QStringList split;
+            for (int i = 0; i <= maxGpu; ++i)
+                split << (selected.contains(i) ? QStringLiteral("1") : QStringLiteral("0"));
+            ctx.launch.extraArgs << QStringLiteral("--tensor-split") << split.join(u',');
+        }
+    }
     ctx.backend = m_profiles.resolveBackend(ctx.launch.backendProfileId);
     ctx.model = m_profiles.resolveModelProfile(ctx.launch.modelProfileId);
     ctx.runtime = m_profiles.resolveRuntime(ctx.launch.runtimePresetId);
@@ -13239,6 +13261,51 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
             result.append(row);
         }
     }
+    return result;
+}
+
+QVariantList AppController::parseGpuInventoryCsv(const QString &csv)
+{
+    QVariantList gpus;
+    for (const QString &rawLine : csv.split(QRegularExpression(QStringLiteral("[\\r\\n]+")),
+                                           Qt::SkipEmptyParts)) {
+        const QStringList fields = rawLine.split(u',');
+        if (fields.size() < 3) continue;
+        bool ok = false;
+        const int index = fields.at(0).trimmed().toInt(&ok);
+        if (!ok || index < 0) continue;
+        QVariantMap gpu;
+        gpu[QStringLiteral("index")] = index;
+        gpu[QStringLiteral("name")] = fields.at(1).trimmed();
+        gpu[QStringLiteral("totalMb")] = fields.at(2).trimmed().toDouble(&ok);
+        if (!ok) gpu[QStringLiteral("totalMb")] = 0.0;
+        if (fields.size() >= 4) gpu[QStringLiteral("driver")] = fields.at(3).trimmed();
+        gpus.append(gpu);
+    }
+    return gpus;
+}
+
+QVariantMap AppController::gpuInventory() const
+{
+    QVariantMap result;
+    const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
+    if (nvidiaSmi.isEmpty()) {
+        result[QStringLiteral("available")] = false;
+        result[QStringLiteral("gpus")] = QVariantList();
+        result[QStringLiteral("message")] = QStringLiteral("nvidia-smi no encontrado");
+        return result;
+    }
+    QProcess p;
+    p.start(nvidiaSmi,
+            {QStringLiteral("--query-gpu=index,name,memory.total,driver_version"),
+             QStringLiteral("--format=csv,noheader,nounits")});
+    const bool finished = p.waitForFinished(4000);
+    const QVariantList gpus = finished
+        ? parseGpuInventoryCsv(QString::fromUtf8(p.readAllStandardOutput()))
+        : QVariantList();
+    result[QStringLiteral("available")] = !gpus.isEmpty();
+    result[QStringLiteral("gpus")] = gpus;
+    if (!finished) result[QStringLiteral("message")] = QStringLiteral("nvidia-smi no respondió");
     return result;
 }
 

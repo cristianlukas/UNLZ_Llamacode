@@ -1033,6 +1033,10 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   `serverState` = `stopped|running|restarting|failed`.
 - **Medidor de VRAM/stats en vivo**: poll async de `nvidia-smi` mientras el server
   corre (`serverStats`), para ver el consumo real.
+- **Selección de GPUs**: en Configuración → GPU · Inferencia se pueden ver las
+  GPUs NVIDIA detectadas, elegir la GPU de procesamiento (`--main-gpu`) y marcar
+  qué GPUs reciben el modelo en VRAM (`--tensor-split`). La selección se guarda
+  globalmente y se aplica al próximo inicio del servidor.
 - **Diagnóstico del log**: detecta por regex OOM, colisión de puerto, modelo cargado,
   etc., y los emite como eventos con nivel.
 - **Colisión de puerto recuperable**: si el puerto del perfil está ocupado, la UI

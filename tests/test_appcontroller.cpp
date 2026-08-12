@@ -103,6 +103,7 @@ private slots:
     void exportChatSessionToMissingSessionErrors();
     void parseGpuPowerCsvParses();
     void parseGpuPowerCsvTolerant();
+    void parseGpuInventoryCsvParses();
     void researchReportGuardrailsRejectKnownErrors();
     void researchReportGuardrailsAcceptCorrectedClaims();
     void ggufRecommendationCandidateFilter();
@@ -1456,6 +1457,18 @@ void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
     QCOMPARE(fast, 10);
     QCOMPARE(balanced, 10);
     QCOMPARE(quality, 5);
+}
+
+void AppControllerTests::parseGpuInventoryCsvParses()
+{
+    const QVariantList gpus = AppController::parseGpuInventoryCsv(
+        QStringLiteral("0, NVIDIA RTX 3090, 24576, 552.22\n"
+                       "1, NVIDIA RTX 3060, 12288, 552.22\n"));
+    QCOMPARE(gpus.size(), 2);
+    QCOMPARE(gpus.at(0).toMap().value(QStringLiteral("index")).toInt(), 0);
+    QCOMPARE(gpus.at(0).toMap().value(QStringLiteral("name")).toString(),
+             QStringLiteral("NVIDIA RTX 3090"));
+    QCOMPARE(gpus.at(1).toMap().value(QStringLiteral("totalMb")).toDouble(), 12288.0);
 }
 
 void AppControllerTests::benchmarkBestModelosSpeedCapsProfilesPerGguf()

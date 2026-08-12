@@ -964,6 +964,9 @@ public:
     // Estado actual por GPU: {available:bool, gpus:[{index,name,currentW,defaultW,
     // minW,maxW,drawW}]}. Lectura síncrona (rápida, usada on-demand desde Ajustes).
     Q_INVOKABLE QVariantMap gpuPowerInfo() const;
+    // GPUs NVIDIA visibles para llama.cpp: {available:bool, gpus:[{index,name,
+    // totalMb,driver}]}. Se obtiene bajo demanda para no bloquear el arranque.
+    Q_INVOKABLE QVariantMap gpuInventory() const;
     // Fija el power limit (W) en una GPU (gpuIndex<0 = todas). En Windows requiere
     // elevación → se relanza nvidia-smi vía powershell RunAs. Devuelve "" si OK o
     // un mensaje de error. Persiste el valor como setting global "gpuPowerLimitW".
@@ -971,6 +974,7 @@ public:
     // Parser de la salida CSV de nvidia-smi (--query-gpu power.*). Estático para
     // testear sin GPU. Devuelve lista de QVariantMap por GPU.
     static QVariantList parseGpuPowerCsv(const QString &csv);
+    static QVariantList parseGpuInventoryCsv(const QString &csv);
     // Reglas determinísticas para impedir que Deep Research publique errores
     // técnicos/comerciales conocidos aunque el modelo los redacte con confianza.
     static QStringList researchReportGuardrailIssues(const QString &report);
