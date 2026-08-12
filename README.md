@@ -1463,6 +1463,11 @@ límite elegido es menor: un timeout durante la reparación conserva los checks 
 medidos, pero se identifica como `Timeout` y no como un fallo final de calidad. La
 suite `Stress largo y difícil` recomienda al menos 900 s por corrida.
 
+El timeout duro se controla con un watchdog periódico de pared durante toda la
+pasada, incluida la generación activa. Al vencer, cancela la generación, aborta
+la request HTTP, fuerza la limpieza del `llama-server` y continúa con el siguiente
+perfil; el resultado queda persistido como `failureKind=timeout`.
+
 En benchmarks de agente, el checkbox **Thinking** es la configuración efectiva de
 la corrida: si está apagado, se inicia o recarga el servidor con `--reasoning off`
 y no se reutiliza un servidor arrancado con el estado contrario. Para perfiles

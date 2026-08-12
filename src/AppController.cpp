@@ -14731,6 +14731,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto lastActivityMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
         auto peakRamMb = std::make_shared<double>(0.0);
         auto peakVramMb = std::make_shared<double>(0.0);
+        auto hardTimeoutWatchdog = std::make_shared<QTimer *>(nullptr);
         auto sampleResources = std::make_shared<std::function<void()>>();
         *sampleResources = [=]() {
             if (*finished) return;
@@ -14746,6 +14747,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         *finalize = [=]() {
             if (*finished) return;
             *finished = true;
+
+            if (*hardTimeoutWatchdog) {
+                (*hardTimeoutWatchdog)->stop();
+                (*hardTimeoutWatchdog)->deleteLater();
+                *hardTimeoutWatchdog = nullptr;
+            }
 
             const bool canceled = m_benchmarkCanceled;
 
@@ -15295,22 +15302,34 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         if (idleTimeoutMs > 0)
             QTimer::singleShot(5000, this, [=]() { (*idlePoll)(); });
 
-        // Timeout duro (wall-clock) por corrida: si esta corrida supera el límite
-        // configurado, se corta SOLO esta (finalize avanza a la siguiente).
+        // Watchdog duro de pared: un timer periódico es más robusto que un
+        // singleShot aislado cuando el backend cambia de turno o aborta una
+        // request larga. Siempre mide desde el inicio de esta pasada.
         if (m_benchHardTimeoutSec > 0) {
-            QTimer::singleShot(m_benchHardTimeoutSec * 1000, this, [=]() {
+            auto *watchdog = new QTimer(this);
+            watchdog->setInterval(1000);
+            *hardTimeoutWatchdog = watchdog;
+            connect(watchdog, &QTimer::timeout, this, [=]() {
                 if (*finished) return;
+                const qint64 elapsedMs = QDateTime::currentMSecsSinceEpoch() - startMs;
+                if (elapsedMs < static_cast<qint64>(m_benchHardTimeoutSec) * 1000)
+                    return;
                 AgentEventLog::append(workspace, QString(),
                                       QStringLiteral("benchmark_timeout"),
                                       QJsonObject{{QStringLiteral("timeoutSec"), m_benchHardTimeoutSec},
+                                                  {QStringLiteral("elapsedMs"), elapsedMs},
                                                   {QStringLiteral("reason"), QStringLiteral("hard wall-clock timeout")}});
                 *timedOut = true;
                 *passFailed = true;
                 *failureMessage = QStringLiteral("Error de timeout");
                 *failureDetail = benchmarkServerLogTail();
                 agent->cancelGeneration();
+                if (m_benchmarkActiveReply)
+                    m_benchmarkActiveReply->abort();
+                benchmarkKillStrayServers();
                 (*finalize)();
             });
+            watchdog->start();
         }
 
         auto cancelPoll = std::make_shared<std::function<void()>>();
