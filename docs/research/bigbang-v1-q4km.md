@@ -43,3 +43,23 @@ aparte como costo en frío.
 - Las diferencias entre KAT y BigBang 196k KV q4 son demasiado pequeñas para
   considerarlas concluyentes con un único ítem. Para un ranking de calidad hay
   que repetir con una suite de al menos 10–20 tareas.
+
+## Referencia DeepSeek
+
+Los perfiles DeepSeek disponibles no forman parte del ranking principal: fueron
+corridas de una sola pasada, anteriores a la separación entre medición fría y
+caliente. Sirven como referencia de orden de magnitud, no como comparación
+estadística con las corridas nuevas.
+
+| Perfil | Calidad | Mejor T First observado | QPM equivalente | RAM | VRAM | Estado |
+|---|---:|---:|---:|---:|---:|---|
+| **deepseek v4-antirez-10-8-26** | 1/1 | **70,5 s** | **85,1** | 85,5–85,6 GB | 31.272–31.613 MB | Mejor DeepSeek medido |
+| DeepSeek V4-7-8-26 | 1/1 | 215,4 s | 27,9 | 101,7 GB | 30.944 MB | Muy lento |
+| DeepSeek V4-7-8-26, segunda corrida | 1/1 | 765,2 s | 7,8 | 97,9 GB | 31.502 MB | Variación anómala |
+
+El perfil DeepSeek que tendría sentido reintentar es **antirez**, con tres
+pasadas y el nuevo esquema de medición. Aun en su mejor corrida queda unas
+7,7 veces por encima de KAT-Coder en `T First`, y consume aproximadamente tres
+veces más RAM. El DeepSeek V4 estándar sólo conviene repetirlo si se quiere
+investigar la variación o evaluar calidad en una suite más difícil; no es un
+candidato competitivo para este smoke test.
