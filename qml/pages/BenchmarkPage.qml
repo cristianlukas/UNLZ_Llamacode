@@ -1338,7 +1338,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "Sólo resultados válidos de los perfiles speed; máximo 2 por GGUF. Orden: calidad final, primer intento y tiempo."
+                                text: "Resultados medidos de los perfiles speed; infra/timeouts quedan fuera. Máximo 2 por GGUF."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {

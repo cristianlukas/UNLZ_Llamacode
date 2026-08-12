@@ -13316,8 +13316,10 @@ QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantLis
             continue;
         if (!source.value(QStringLiteral("benchmarkName")).toString().startsWith(QStringLiteral("HumanEval (20")))
             continue;
-        if (source.value(QStringLiteral("failed")).toBool()
-            || source.value(QStringLiteral("failureKind")).toString() != QStringLiteral("none"))
+        const QString failureKind = source.value(QStringLiteral("failureKind")).toString();
+        if (source.value(QStringLiteral("timedOut")).toBool()
+            || failureKind == QStringLiteral("infrastructure")
+            || failureKind == QStringLiteral("timeout"))
             continue;
         const QString id = source.value(QStringLiteral("profileId")).toString();
         if (id.isEmpty() || !allowed.contains(id)) continue;

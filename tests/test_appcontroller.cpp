@@ -1511,8 +1511,9 @@ void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
     QVariantList results = {
         QVariantMap{{QStringLiteral("target"), QStringLiteral("agent")},
                     {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (20 ítems)")},
-                    {QStringLiteral("failureKind"), QStringLiteral("none")},
                     {QStringLiteral("profileId"), QStringLiteral("p1")},
+                    {QStringLiteral("failed"), true},
+                    {QStringLiteral("failureKind"), QStringLiteral("quality")},
                     {QStringLiteral("qualityScore"), 18}, {QStringLiteral("qualityTotal"), 20},
                     {QStringLiteral("firstAttemptScore"), 15}, {QStringLiteral("timeToFirstAttempt"), 30.0},
                     {QStringLiteral("timestamp"), 1LL}},

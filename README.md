@@ -1488,8 +1488,9 @@ familias que también tengan candidatos válidos.
 
 `tabla_best_modelos_quality` toma esos mismos perfiles y sus corridas válidas de
 `HumanEval (20 ítems)`, ordena por calidad final, primer intento y tiempo, y vuelve
-a limitar a dos perfiles por GGUF. Los fallos de infraestructura y timeouts quedan
-fuera del ranking de calidad, pero siguen visibles en el historial.
+a limitar a dos perfiles por GGUF. Conserva los fallos de calidad medidos (por
+ejemplo 19/20), mientras que infraestructura y timeouts quedan fuera del ranking
+pero siguen visibles en el historial.
 
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
