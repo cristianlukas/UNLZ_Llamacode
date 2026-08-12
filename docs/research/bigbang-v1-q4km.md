@@ -57,9 +57,31 @@ estadística con las corridas nuevas.
 | DeepSeek V4-7-8-26 | 1/1 | 215,4 s | 27,9 | 101,7 GB | 30.944 MB | Muy lento |
 | DeepSeek V4-7-8-26, segunda corrida | 1/1 | 765,2 s | 7,8 | 97,9 GB | 31.502 MB | Variación anómala |
 
-El perfil DeepSeek que tendría sentido reintentar es **antirez**, con tres
-pasadas y el nuevo esquema de medición. Aun en su mejor corrida queda unas
-7,7 veces por encima de KAT-Coder en `T First`, y consume aproximadamente tres
-veces más RAM. El DeepSeek V4 estándar sólo conviene repetirlo si se quiere
-investigar la variación o evaluar calidad en una suite más difícil; no es un
-candidato competitivo para este smoke test.
+El perfil DeepSeek genérico que tendría sentido reintentar es **antirez**, con
+tres pasadas y el nuevo esquema de medición. Su mejor corrida genérica queda
+unas 7,7 veces por encima de KAT-Coder en `T First`, y consume aproximadamente
+tres veces más RAM. Las variantes `bench antirez` son mejores y se detallan
+abajo. El DeepSeek V4 estándar sólo conviene repetirlo si se quiere investigar
+la variación o evaluar calidad en una suite más difícil; no es un candidato
+competitivo para este smoke test.
+
+### Variantes `bench antirez`
+
+La familia Antirez sí tiene varias configuraciones válidas adicionales. Este es
+el ranking por la corrida única observada; el QPM es equivalente a `60 / T First
+* 100`, no una mediana caliente.
+
+| Puesto | Variante | Calidad | T First | QPM equiv. | Contexto / KV | RAM | VRAM |
+|---:|---|---:|---:|---:|---|---:|---:|
+| 1 | **prefill 32k · B8192 · U2048** | 1/1 | **54,5 s** | **110,1** | 32k / q4_0 | 85,8 GB | 32.061 MB |
+| 2 | stress 32k · B8192 · U1024 | 1/1 | 61,2 s | 98,0 | 32k / q4_0 | 85,7 GB | 31.567 MB |
+| 3 | stress 131k · B4096 · U1024 | 1/1 | 61,9 s | 96,9 | 131k / q4_0 | 86,0 GB | 32.363 MB |
+| 4 | stress 64k · B4096 · U1024 | 1/1 | 62,5 s | 96,0 | 64k / q8_0 | 85,9 GB | 32.277 MB |
+| 5 | 64k · B4096 · U512 · KV q4_0 | 1/1 | 71,0 s | 84,5 | 64k / q4_0 | 85,6 GB | 31.913 MB |
+| 6 | 32k · B4096 · U512 · KV q4_0 | 1/1 | 72,3 s | 83,0 | 32k / q4_0 | 85,7 GB | 31.280 MB |
+
+Por lo tanto, el mejor candidato DeepSeek para repetir es **Antirez prefill
+32k/B8192/U2048/KV q4_0**. El segundo candidato sería **Antirez stress 131k**:
+es apenas 7,4 s más lento en esta corrida y prueba un contexto mucho mayor.
+Conviene repetir ambos con 3 pasadas para saber si la ventaja de prefill es real
+o sólo efecto de una única medición.
