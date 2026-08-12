@@ -165,6 +165,7 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
             {QStringLiteral("medianQualityPct"), median(qualityPct)},
             {QStringLiteral("medianElapsedSec"), median(elapsedSec)},
             {QStringLiteral("medianFirstAttemptSec"), median(firstAttemptSec)},
+            {QStringLiteral("comparisonTimeMetric"), QStringLiteral("timeToFirstAttempt")},
             {QStringLiteral("medianRepairAttempts"), median(repairAttempts)}
         };
         aggregate[QStringLiteral("qualityRangePctPoints")] = qualityPct.isEmpty()
@@ -179,8 +180,8 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
         for (qsizetype j = i + 1; j < ids.size(); ++j) {
             const QVariantMap baseline = aggregateById.value(ids.at(i));
             const QVariantMap candidate = aggregateById.value(ids.at(j));
-            const double baseTime = baseline.value(QStringLiteral("medianElapsedSec")).toDouble();
-            const double candidateTime = candidate.value(QStringLiteral("medianElapsedSec")).toDouble();
+            const double baseTime = baseline.value(QStringLiteral("medianFirstAttemptSec")).toDouble();
+            const double candidateTime = candidate.value(QStringLiteral("medianFirstAttemptSec")).toDouble();
             comparisons.append(QVariantMap{
                 {QStringLiteral("baselineProfileId"), ids.at(i)},
                 {QStringLiteral("candidateProfileId"), ids.at(j)},
@@ -190,6 +191,9 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
                 {QStringLiteral("successRateDeltaPctPoints"),
                  candidate.value(QStringLiteral("successRatePct")).toDouble()
                      - baseline.value(QStringLiteral("successRatePct")).toDouble()},
+                {QStringLiteral("comparisonTimeChangePct"),
+                 baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0},
+                // Backward-compatible alias for consumers of schemaVersion 1.
                 {QStringLiteral("elapsedChangePct"),
                  baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0}
             });

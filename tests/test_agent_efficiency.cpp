@@ -92,6 +92,9 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     QCOMPARE(comparison.value("baselineProfileId").toString(), QString("kat"));
     QCOMPARE(comparison.value("candidateProfileId").toString(), QString("qwen"));
     QCOMPARE(comparison.value("qualityDeltaPctPoints").toDouble(), -10.0);
+    QCOMPARE(comparison.value("elapsedChangePct").toDouble(), (75.0 / 58.0 - 1.0) * 100.0);
+    QCOMPARE(comparison.value("comparisonTimeChangePct").toDouble(), (75.0 / 58.0 - 1.0) * 100.0);
+    QCOMPARE(qwen.value("comparisonTimeMetric").toString(), QString("timeToFirstAttempt"));
 }
 
 void AgentEfficiencyTests::structured_compactsAndProjects()

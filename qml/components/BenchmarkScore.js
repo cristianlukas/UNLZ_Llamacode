@@ -41,8 +41,20 @@ function scoreTone(row, scoreKey, totalKey) {
 // score: una corrida sin criterios igual completó.
 function runStatus(row) {
     if (row.timedOut) return "timeout"
+    if (row.failureKind === "infrastructure" || row.failureStage === "server-crash"
+            || row.failureStage === "request" || row.failureStage === "agent") return "infrastructure"
+    if (row.failureKind === "quality" || row.failureStage === "acceptance") return "quality"
     if (row.failed) return "failed"
     return "done"
+}
+
+function statusLabel(row) {
+    const status = runStatus(row)
+    if (status === "timeout") return "Timeout"
+    if (status === "infrastructure") return "Infra"
+    if (status === "quality") return "Calidad"
+    if (status === "failed") return "Fallo"
+    return "OK"
 }
 
 // Orden: las filas sin score van al fondo en vez de mezclarse con los ceros.
@@ -54,9 +66,9 @@ function sortKey(row, scoreKey, totalKey) {
 // Score "calidad por minuto": combina calidad relativa, velocidad y reparaciones
 // en un solo número comparable entre perfiles.
 //
-// Fórmula: (calidadRatio * 100) / minutosTotales * penalizacionReparaciones
+// Fórmula: (calidadRatio * 100) / minutosPrimerIntento * penalizacionReparaciones
 //   - calidadRatio = qualityScore / qualityTotal (0..1)
-//   - minutosTotales = elapsedSec / 60 (mínimo 0.1 para evitar división por cero)
+//   - minutosPrimerIntento = timeToFirstAttempt / 60 (mínimo 0.1 para evitar división por cero)
 //   - penalizacionReparaciones = 1.0 / (1 + repairs * 0.25)
 //
 // Mayor = mejor. Permite ordenar perfiles por eficiencia real, no solo tok/s.
@@ -66,7 +78,7 @@ function qualityPerMinute(row) {
         return 0
 
     const qualityRatio = scoreValue(row, "qualityScore") / total
-    const elapsedSec = row.totalTime ?? row.elapsedSec ?? 0
+    const elapsedSec = row.timeToFirstAttempt ?? row.elapsedSec ?? 0
     if (!isFinite(elapsedSec) || elapsedSec <= 0)
         return 0
     const minutes = elapsedSec / 60

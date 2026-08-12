@@ -201,6 +201,11 @@ Item {
         return ({})
     }
 
+    function selectedCustomPromptCount() {
+        const prompts = selectedCustomDefinition().prompts
+        return prompts && prompts.length !== undefined ? prompts.length : 0
+    }
+
     function recommendedTimeoutSec() {
         const n = Number(selectedCustomDefinition().recommendedTimeoutSec ?? 0)
         return isFinite(n) && n > 0 ? Math.round(n) : 0
@@ -927,6 +932,15 @@ Item {
                     }
                     Text {
                         Layout.fillWidth: true
+                        visible: customMode.checked && root.selectedCustomPromptCount() === 1
+                        text: "Esta suite tiene 1 ítem: sirve como smoke test, no para rankear calidad. "
+                              + "Para comparar perfiles usá una suite de al menos 10–20 ítems."
+                        color: Theme.warnText
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        Layout.fillWidth: true
                         visible: customMode.checked && root.recommendedTimeoutSec() > 0
                                  && timeoutSpin.value > 0
                                  && timeoutSpin.value < root.recommendedTimeoutSec()
@@ -1230,9 +1244,11 @@ Item {
                                     }
                                     LcButton {
                                         anchors { verticalCenter: parent.verticalCenter; right: parent.right }
-                                        width: (modelData.timedOut ?? false) ? 66 : 52
+                                        width: BenchmarkScore.runStatus(modelData) === "timeout" ? 66
+                                              : BenchmarkScore.runStatus(modelData) === "infrastructure" ? 54
+                                              : 68
                                         height: 24
-                                        text: (modelData.timedOut ?? false) ? "Timeout" : "Fallo"
+                                        text: BenchmarkScore.statusLabel(modelData)
                                         danger: true
                                         visible: resultRow.failed
                                         onClicked: {
@@ -1383,7 +1399,8 @@ Item {
                                         spacing: 8
                                         Text {
                                             id: failureSummary
-                                            text: modelData.failureMessage ?? "Falló la pasada."
+                                            text: BenchmarkScore.statusLabel(modelData) + ": "
+                                                  + (modelData.failureMessage ?? "Falló la pasada.")
                                             color: Theme.errorText
                                             font.pixelSize: 11
                                             elide: Text.ElideRight

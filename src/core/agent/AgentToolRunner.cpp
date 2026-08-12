@@ -1773,6 +1773,15 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     auto resolve = [&](const QString &rel) {
         return canonicalPolicyPath(base.absoluteFilePath(rel));
     };
+    // Los modelos suelen envolver argumentos XML/JSON con espacios o saltos de
+    // línea. Para rutas relativas esos bytes no forman parte del nombre pedido y
+    // hacían que write_file creara/fallara contra un destino distinto al que el
+    // agente pretendía (por ejemplo "\nsolution.py\n").
+    auto normalizeToolPath = [](QString path) {
+        path = path.trimmed();
+        path.replace(QLatin1Char('\\'), QLatin1Char('/'));
+        return QDir::cleanPath(path);
+    };
     // En modo "Super Agente" (no confinado) se permite cualquier ruta del disco.
     auto underRoot = [&](const QString &abs, const QString &root) {
 #ifdef Q_OS_WIN
@@ -2680,7 +2689,9 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return HotspotAnalyzer::formatReport(hs);
     }
     if (name == QLatin1String("write_file")) {
-        const QString rel = args.value(QStringLiteral("path")).toString();
+        const QString rel = normalizeToolPath(args.value(QStringLiteral("path")).toString());
+        if (rel.isEmpty() || rel == QLatin1String("."))
+            return QStringLiteral("[path vacío: especificá un archivo relativo válido]");
         const QString abs = resolve(rel);
         if (!inProject(abs)) return outsideMsg(abs);
 
@@ -2709,7 +2720,9 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return QStringLiteral("[escrito %1 bytes en %2]").arg(data.size()).arg(rel);
     }
     if (name == QLatin1String("edit_file")) {
-        const QString rel = args.value(QStringLiteral("path")).toString();
+        const QString rel = normalizeToolPath(args.value(QStringLiteral("path")).toString());
+        if (rel.isEmpty() || rel == QLatin1String("."))
+            return QStringLiteral("[path vacío: especificá un archivo relativo válido]");
         const QString abs = resolve(rel);
         if (!inProject(abs)) return outsideMsg(abs);
         QFile prev(abs);

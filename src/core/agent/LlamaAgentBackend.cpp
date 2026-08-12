@@ -3501,7 +3501,7 @@ void LlamaAgentBackend::processPendingCalls()
                           args.value(QStringLiteral("subject")).toString());
     QString diff;
     if (name == QLatin1String("write_file") || name == QLatin1String("edit_file")) {
-        const QString rel = args.value(QStringLiteral("path")).toString();
+        const QString rel = QDir::cleanPath(args.value(QStringLiteral("path")).toString().trimmed());
         detail = rel;
         const QString abs = QDir::cleanPath(QDir(m_cwd).absoluteFilePath(rel));
         QString oldText;
@@ -3653,7 +3653,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
 #ifdef LC_DEBUG_ICON
     if (ok && isWrite && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))) {
         const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
-        const QString path = args.value(QStringLiteral("path")).toString();
+        const QString path = QDir::cleanPath(args.value(QStringLiteral("path")).toString().trimmed());
         if (!path.isEmpty()) {
             ProjectBrain::update(m_cwd, QStringList{path});
             QString report;

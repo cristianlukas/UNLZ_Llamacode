@@ -24,9 +24,13 @@ Tool calls MUST use exactly:
 {%- for call in message.tool_calls %}
 <tool_call>
 <function={{ call.function.name }}>
-{%- for key, value in (call.function.arguments | fromjson).items() %}
+{%- if call.function.arguments is mapping %}
+{%- for key, value in call.function.arguments.items() %}
 <parameter={{ key }}>{{ value }}</parameter>
 {%- endfor %}
+{%- elif call.function.arguments is string and call.function.arguments %}
+{{ call.function.arguments }}
+{%- endif %}
 </function>
 </tool_call>
 {%- endfor %}

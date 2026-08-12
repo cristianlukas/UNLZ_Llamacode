@@ -40,6 +40,12 @@ QtObject {
         check(BenchmarkScore.runStatus(fallo) === "failed", "Estado failed")
         const timeout = { qualityScore: 0, qualityTotal: 0, failed: true, timedOut: true }
         check(BenchmarkScore.runStatus(timeout) === "timeout", "Timeout se distingue de failed")
+        const infra = { qualityScore: 0, qualityTotal: 0, failed: true, failureKind: "infrastructure" }
+        check(BenchmarkScore.runStatus(infra) === "infrastructure", "Infra se distingue de calidad")
+        check(BenchmarkScore.statusLabel(infra) === "Infra", "Infra tiene etiqueta propia")
+        const calidad = { qualityScore: 0, qualityTotal: 5, failed: true, failureKind: "quality" }
+        check(BenchmarkScore.runStatus(calidad) === "quality", "Calidad se distingue de infraestructura")
+        check(BenchmarkScore.statusLabel(calidad) === "Calidad", "Calidad tiene etiqueta propia")
 
         // Fallback a qualityScore cuando la fila no trae las claves específicas.
         const soloQuality = { qualityScore: 4, qualityTotal: 4, failed: false }
@@ -78,9 +84,9 @@ QtObject {
               "Label de qpm termina con ' qpm'")
 
         const totalTimeQpm = { qualityScore: 5, qualityTotal: 5, failed: false,
-                               elapsedSec: 5, totalTime: 120, repairAttempts: 1 }
-        check(BenchmarkScore.qualityPerMinute(totalTimeQpm) === 40,
-              "QPM usa totalTime y repairAttempts reales del benchmark")
+                               elapsedSec: 5, totalTime: 120, timeToFirstAttempt: 30, repairAttempts: 1 }
+        check(BenchmarkScore.qualityPerMinute(totalTimeQpm) === 160,
+              "QPM usa timeToFirstAttempt y repairAttempts reales del benchmark")
         check(BenchmarkScore.qualityPerMinute({ qualityScore: 5, qualityTotal: 5,
                                                 failed: false, elapsedSec: 0 }) === 0,
               "Sin tiempo válido no inventa QPM")

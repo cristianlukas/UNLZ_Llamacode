@@ -13449,6 +13449,8 @@ int AppController::rescoreBenchmarkResults()
         // el timeout, que sí es un fallo de ejecución; el "failureStage:
         // acceptance" que ponía el bucle viejo deja de aplicar.
         o[QStringLiteral("failed")] = o.value(QStringLiteral("timedOut")).toBool(false);
+        o[QStringLiteral("failureKind")] = o.value(QStringLiteral("timedOut")).toBool(false)
+            ? QStringLiteral("timeout") : QStringLiteral("none");
         if (o.value(QStringLiteral("failureStage")).toString() == QLatin1String("acceptance")) {
             o.remove(QStringLiteral("failureStage"));
             o.remove(QStringLiteral("failureMessage"));
@@ -14790,7 +14792,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["acceptance"]   = acceptanceRows;
             result["timedOut"]     = *timedOut;
             result["failed"]       = *passFailed || *timedOut || (qTotal > 0 && qScore < qTotal);
-            if (result.value(QStringLiteral("failed")).toBool()) {
+            const bool runFailed = result.value(QStringLiteral("failed")).toBool();
+            result["failureKind"] = !runFailed ? QStringLiteral("none")
+                : (*timedOut ? QStringLiteral("timeout")
+                   : (*serverCrashed || *passFailed ? QStringLiteral("infrastructure")
+                      : QStringLiteral("quality")));
+            if (runFailed) {
                 result["failureStage"] = *serverCrashed
                     ? QStringLiteral("server-crash")
                     : (*timedOut ? QStringLiteral("hard-timeout")
@@ -15657,6 +15664,7 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["acceptance"]   = QJsonArray::fromVariantList(result.value("acceptance").toList());
     summary["failed"]       = result.value("failed").toBool();
     summary["failureStage"] = result.value("failureStage").toString();
+    summary["failureKind"] = result.value("failureKind").toString();
     summary["failureMessage"] = result.value("failureMessage").toString();
     summary["failureDetail"] = result.value("failureDetail").toString();
     summary["isBaseline"] = result.value("isBaseline").toBool();

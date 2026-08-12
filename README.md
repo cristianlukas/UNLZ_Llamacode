@@ -1569,9 +1569,23 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
 
 - Resultados en JSON (`AppLocalData/LlamaCode/benchmarks/{timestamp}.json`).
 - Vista tabla en `BenchmarkPage.qml`: columnas ordenables, filtro por perfil/quant/fecha
-  y **QPM (calidad por minuto)**. QPM usa el score final relativo, el tiempo total
-  y una penalización por intentos de reparación; una corrida sin tiempo o fallada
-  no recibe un score inventado.
+  y **QPM (calidad por minuto)**. QPM usa el score final relativo, el tiempo hasta el
+  primer intento (`timeToFirstAttempt`) y una penalización por reparaciones; no incluye
+  en la velocidad comparable el tiempo de reintentos, backend caído o grader. Una
+  corrida sin tiempo o fallada no recibe un score inventado.
+- Los estados de ejecución se separan en `Calidad`, `Infra` y `Timeout`. Un fallo del
+  modelo/evaluador de aceptación no se mezcla con una caída de `llama-server`, un
+  error de tool-call o el vencimiento del límite de pared. Los resultados nuevos
+  persisten además `failureKind` (`quality`, `infrastructure`, `timeout`, `none`),
+  mientras que la UI conserva compatibilidad con resultados históricos mediante
+  `failureStage`.
+- `comparison.json` compara perfiles por la mediana de `timeToFirstAttempt` y lo
+  identifica con `comparisonTimeMetric`; `comparisonTimeChangePct` es el delta
+  correspondiente. `elapsedChangePct` se conserva como alias de compatibilidad.
+- Una suite custom de un solo ítem se identifica como **smoke test** y la UI advierte
+  que no sirve para rankear calidad. Para comparar perfiles usar al menos 10–20 ítems;
+  las importaciones HumanEval completas o de 20 ítems quedan disponibles sin impedir
+  pruebas rápidas de un caso.
 - Exportar a CSV desde la UI.
 
 ### Tabla de ejemplo

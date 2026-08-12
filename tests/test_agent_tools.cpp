@@ -61,6 +61,7 @@ private slots:
     void cleanup();
 
     void writeReadEditCycle();
+    void writeFile_trimsModelPathWhitespace();
     void readFile_compactViewAndSafeFallback();
     void projectBrain_persistsWorkspaceIndex();
     void confinement_blocksOutsideCwd();
@@ -136,6 +137,16 @@ void AgentToolsTests::writeReadEditCycle()
 
     QVariantMap r2 = call("read_file", {{"path", "sub/a.txt"}});
     QVERIFY(r2.value("result").toString().contains("hello qt"));
+}
+
+void AgentToolsTests::writeFile_trimsModelPathWhitespace()
+{
+    const QVariantMap w = call("write_file", {{"path", "\nsolution.py\n"},
+                                                {"content", "def answer():\n    return 42\n"}});
+    QVERIFY2(w.value("ok").toBool(), qPrintable(w.value("result").toString()));
+    QVERIFY(QFile::exists(m_dir.filePath("solution.py")));
+    QVERIFY(!QFile::exists(m_dir.filePath("\nsolution.py\n")));
+    QCOMPARE(w.value("relPath").toString(), QStringLiteral("solution.py"));
 }
 
 void AgentToolsTests::readFile_compactViewAndSafeFallback()
