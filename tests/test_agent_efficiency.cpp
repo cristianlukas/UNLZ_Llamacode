@@ -53,21 +53,21 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     const QVariantList runs{
         QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen · pasada 1/3"},
                     {"qualityScore", 8}, {"qualityTotal", 10}, {"elapsedSec", 100.0},
-                    {"timeToFirstAttempt", 70.0}, {"repairAttempts", 1}, {"failed", false}},
+                    {"timeToFirstAttempt", 70.0}, {"repairAttempts", 1}, {"failed", false}, {"pass", 1}},
         QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen · pasada 2/3"},
                     {"qualityScore", 10}, {"qualityTotal", 10}, {"elapsedSec", 120.0},
-                    {"timeToFirstAttempt", 80.0}, {"repairAttempts", 0}, {"failed", false}},
+                    {"timeToFirstAttempt", 80.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 2}},
         QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen · pasada 3/3"},
                     {"failed", true}},
         QVariantMap{{"profileId", "kat"}, {"profileName", "KAT · pasada 1/3"},
                     {"qualityScore", 10}, {"qualityTotal", 10}, {"elapsedSec", 80.0},
-                    {"timeToFirstAttempt", 55.0}, {"repairAttempts", 0}, {"failed", false}},
+                    {"timeToFirstAttempt", 55.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 1}},
         QVariantMap{{"profileId", "kat"}, {"profileName", "KAT · pasada 2/3"},
                     {"qualityScore", 10}, {"qualityTotal", 10}, {"elapsedSec", 90.0},
-                    {"timeToFirstAttempt", 60.0}, {"repairAttempts", 0}, {"failed", false}},
+                    {"timeToFirstAttempt", 60.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 2}},
         QVariantMap{{"profileId", "kat"}, {"profileName", "KAT · pasada 3/3"},
                     {"qualityScore", 9}, {"qualityTotal", 10}, {"elapsedSec", 85.0},
-                    {"timeToFirstAttempt", 58.0}, {"repairAttempts", 1}, {"failed", false}}
+                    {"timeToFirstAttempt", 58.0}, {"repairAttempts", 1}, {"failed", false}, {"pass", 3}}
     };
     const QVariantMap report = AgentEfficiency::benchmarkComparison(runs);
     QCOMPARE(report.value("runCount").toInt(), 6);
@@ -82,6 +82,11 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     }
     QCOMPARE(qwen.value("medianQualityPct").toDouble(), 90.0);
     QCOMPARE(qwen.value("medianElapsedSec").toDouble(), 110.0);
+    QCOMPARE(qwen.value("medianColdFirstAttemptSec").toDouble(), 70.0);
+    QCOMPARE(qwen.value("medianWarmFirstAttemptSec").toDouble(), 80.0);
+    QCOMPARE(kat.value("medianColdFirstAttemptSec").toDouble(), 55.0);
+    QCOMPARE(kat.value("medianWarmFirstAttemptSec").toDouble(), 59.0);
+    QCOMPARE(qwen.value("comparisonTimeMetric").toString(), QString("warmTimeToFirstAttempt"));
     QCOMPARE(qwen.value("stabilityRatePct").toDouble(), 200.0 / 3.0);
     QVERIFY(qwen.value("outcomeSpread").toBool());
     QCOMPARE(kat.value("successRatePct").toDouble(), 100.0);
@@ -92,9 +97,8 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     QCOMPARE(comparison.value("baselineProfileId").toString(), QString("kat"));
     QCOMPARE(comparison.value("candidateProfileId").toString(), QString("qwen"));
     QCOMPARE(comparison.value("qualityDeltaPctPoints").toDouble(), -10.0);
-    QCOMPARE(comparison.value("elapsedChangePct").toDouble(), (75.0 / 58.0 - 1.0) * 100.0);
-    QCOMPARE(comparison.value("comparisonTimeChangePct").toDouble(), (75.0 / 58.0 - 1.0) * 100.0);
-    QCOMPARE(qwen.value("comparisonTimeMetric").toString(), QString("timeToFirstAttempt"));
+    QCOMPARE(comparison.value("elapsedChangePct").toDouble(), (80.0 / 59.0 - 1.0) * 100.0);
+    QCOMPARE(comparison.value("comparisonTimeChangePct").toDouble(), (80.0 / 59.0 - 1.0) * 100.0);
 }
 
 void AgentEfficiencyTests::structured_compactsAndProjects()

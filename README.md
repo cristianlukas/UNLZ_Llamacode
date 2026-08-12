@@ -1579,9 +1579,15 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
   persisten además `failureKind` (`quality`, `infrastructure`, `timeout`, `none`),
   mientras que la UI conserva compatibilidad con resultados históricos mediante
   `failureStage`.
-- `comparison.json` compara perfiles por la mediana de `timeToFirstAttempt` y lo
-  identifica con `comparisonTimeMetric`; `comparisonTimeChangePct` es el delta
-  correspondiente. `elapsedChangePct` se conserva como alias de compatibilidad.
+- `elapsedSec`/`totalTime` es el tiempo de pared completo, incluyendo setup y carga;
+  `setupSec` mide hasta el primer prompt. `timeToFirstAttempt` mide desde ese prompt
+  hasta el primer resultado aceptado. `measurementPhase` distingue la primera pasada
+  fría (`cold`) de las pasadas calientes (`warm`).
+- `comparison.json` conserva medianas frías y calientes, y compara perfiles por la
+  mediana caliente cuando hay pasadas 2+ (`comparisonTimeMetric` =
+  `warmTimeToFirstAttempt`); si no, usa `timeToFirstAttempt`. La primera pasada no
+  desaparece: queda disponible para diagnosticar costo de arranque. `comparisonTimeChangePct`
+  es el delta correspondiente y `elapsedChangePct` se conserva como alias.
 - Una suite custom de un solo ítem se identifica como **smoke test** y la UI advierte
   que no sirve para rankear calidad. Para comparar perfiles usar al menos 10–20 ítems;
   las importaciones HumanEval completas o de 20 ítems quedan disponibles sin impedir

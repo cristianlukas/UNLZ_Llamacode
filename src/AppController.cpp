@@ -14470,6 +14470,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
+        auto firstPromptMs = std::make_shared<qint64>(0);
         auto turnStartMs = std::make_shared<qint64>(0);
         auto turnFirstMs = std::make_shared<qint64>(-1);
         auto turnMetrics = std::make_shared<QVariantList>();
@@ -14652,7 +14653,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 }
             }
 
-            const double elapsed = (QDateTime::currentMSecsSinceEpoch() - startMs) / 1000.0;
+            const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+            const double elapsed = (nowMs - startMs) / 1000.0;
+            const double setupSec = *firstPromptMs > 0
+                ? qMax(0.0, (*firstPromptMs - startMs) / 1000.0) : 0.0;
+            const double promptElapsed = qMax(0.0, elapsed - setupSec);
 
             AgentEventLog::append(workspace, QString(),
                                   QStringLiteral("benchmark_finalize"),
@@ -14667,7 +14672,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             if (*firstAttemptScore < 0) {
                 *firstAttemptScore = qScore;
                 *firstAttemptTotal = qTotal;
-                *timeToFirstAttempt = elapsed;
+                *timeToFirstAttempt = promptElapsed;
             }
 
             // Un puntaje parcial de CALIDAD no es una corrida fallada: 3/5 en una
@@ -14782,7 +14787,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["ramMb"]        = ramMb;
             result["vramMb"]       = vramMb;
             result["elapsedSec"]   = elapsed;
-            result["timeToFirstAttempt"] = *timeToFirstAttempt > 0.0 ? *timeToFirstAttempt : elapsed;
+            result["setupSec"] = setupSec;
+            result["measurementPhase"] = *passNo > 1 ? QStringLiteral("warm")
+                                                            : QStringLiteral("cold");
+            result["timeToFirstAttempt"] = *timeToFirstAttempt > 0.0
+                ? *timeToFirstAttempt : promptElapsed;
             result["totalTime"] = elapsed;
             result["passedAfterRepair"] = *repairAttempts > 0 && qTotal > 0 && qScore >= qTotal;
             result["response"]     = finalText;
@@ -14896,6 +14905,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 .arg(idx+1).arg(total).arg(profName).arg(*promptIdx + 1).arg(prompts.size());
             emit benchmarkStatusChanged();
             *turnStartMs = QDateTime::currentMSecsSinceEpoch();
+            if (*promptIdx == 0)
+                *firstPromptMs = *turnStartMs;
             *turnFirstMs = -1;
             *lastActivityMs = *turnStartMs;
             AgentEventLog::append(workspace, QString(),
@@ -15651,6 +15662,8 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["avgTps"]       = result.value("avgTps").toDouble();
     summary["avgTtftMs"]    = result.value("avgTtftMs").toDouble();
     summary["elapsedSec"]   = result.value("elapsedSec").toDouble();
+    summary["setupSec"] = result.value("setupSec").toDouble();
+    summary["measurementPhase"] = result.value("measurementPhase").toString();
     summary["ramMb"]        = result.value("ramMb").toDouble();
     summary["vramMb"]       = result.value("vramMb").toDouble();
     summary["target"]       = result.value("target").toString();

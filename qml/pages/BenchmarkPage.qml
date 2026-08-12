@@ -941,6 +941,15 @@ Item {
                     }
                     Text {
                         Layout.fillWidth: true
+                        visible: customMode.checked && root.selectedCustomPromptCount() > 0
+                        text: "T First mide desde el primer prompt; T Total incluye setup y carga. "
+                              + "Con 2+ pasadas, la comparación usa la mediana caliente (pasadas 2+); la primera queda separada como fría."
+                        color: Theme.textMuted
+                        font.pixelSize: 10
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        Layout.fillWidth: true
                         visible: customMode.checked && root.recommendedTimeoutSec() > 0
                                  && timeoutSpin.value > 0
                                  && timeoutSpin.value < root.recommendedTimeoutSec()
