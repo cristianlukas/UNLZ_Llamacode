@@ -1504,6 +1504,11 @@ historial. Si una tool queda sin actividad o repite un fallo, el gobernador cort
 el turno de forma recuperable y el benchmark registra el perfil como
 `infrastructure`/`timeout`, permitiendo que la cola continúe.
 
+La tabla histórica también muestra `T No Gen.`: el tiempo total de la corrida
+menos el tiempo de generación medido por el backend. Incluye carga, espera,
+tool-calls, escritura, validaciones y reparaciones; sirve para distinguir TPS
+alto de latencia end-to-end real.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y

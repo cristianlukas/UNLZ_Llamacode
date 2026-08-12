@@ -14110,6 +14110,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["vramMb"]       = vramMb;
                                 result["elapsedSec"]   =
                                     (QDateTime::currentMSecsSinceEpoch() - *passStartMs) / 1000.0;
+                                result["generationSec"] = 0.0;
+                                result["nonGenerationSec"] = result["elapsedSec"];
                                 result["timeToFirstAttempt"] = result["elapsedSec"];
                                 result["totalTime"] = result["elapsedSec"];
                                 result["passedAfterRepair"] = false;
@@ -14762,6 +14764,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             QVariantList assistantMetrics;
             double tpsSum = 0.0;
             double ttftSum = 0.0;
+            double generationMs = 0.0;
             int tpsCount = 0;
             int ttftCount = 0;
             auto includeMetric = [&](const QVariantMap &metric) {
@@ -14777,6 +14780,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     ttftSum += ttft;
                     ttftCount++;
                 }
+                generationMs += qMax(0.0, metric.value(QStringLiteral("elapsedMs")).toDouble());
                 assistantMetrics.append(metric);
             };
             for (auto it = msgs.crbegin(); it != msgs.crend(); ++it)
@@ -15039,6 +15043,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["ramMb"]        = ramMb;
             result["vramMb"]       = vramMb;
             result["elapsedSec"]   = elapsed;
+            result["generationSec"] = generationMs / 1000.0;
+            result["nonGenerationSec"] = qMax(0.0, elapsed - generationMs / 1000.0);
             result["setupSec"] = setupSec;
             result["measurementPhase"] = *passNo > 1 ? QStringLiteral("warm")
                                                             : QStringLiteral("cold");
@@ -15880,6 +15886,8 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("ramMb")] = 0.0;
     result[QStringLiteral("vramMb")] = 0.0;
     result[QStringLiteral("elapsedSec")] = elapsedSec;
+    result[QStringLiteral("generationSec")] = 0.0;
+    result[QStringLiteral("nonGenerationSec")] = elapsedSec;
     result[QStringLiteral("timeToFirstAttempt")] = elapsedSec;
     result[QStringLiteral("totalTime")] = elapsedSec;
     result[QStringLiteral("passedAfterRepair")] = false;
@@ -15945,6 +15953,8 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["avgTps"]       = result.value("avgTps").toDouble();
     summary["avgTtftMs"]    = result.value("avgTtftMs").toDouble();
     summary["elapsedSec"]   = result.value("elapsedSec").toDouble();
+    summary["generationSec"] = result.value("generationSec").toDouble();
+    summary["nonGenerationSec"] = result.value("nonGenerationSec").toDouble();
     summary["setupSec"] = result.value("setupSec").toDouble();
     summary["measurementPhase"] = result.value("measurementPhase").toString();
     summary["ramMb"]        = result.value("ramMb").toDouble();
