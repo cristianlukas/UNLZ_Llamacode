@@ -649,6 +649,28 @@
       196608,
       262144
     ],
+    "benchmarkVariants": [
+      {
+        "id": "sys-48-dsv4-nospec-more-experts-gpu0",
+        "order": 89,
+        "benchmark": true,
+        "displayName": "[experimental DeepSeek] más expertos GPU0 · 1,0 · KV q4",
+        "extraArgOverrides": {
+          "-ot": "blk\\.(0|1|2|3|4|5|6|7|8)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0,blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1,blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU"
+        },
+        "comment": "Variante experimental: residentes en CUDA0 los expertos de las capas 0–8 y en CUDA1 los expertos 29–36. Se compara contra la configuración base 1,0; puede desbordar CUDA0 o cruzar el equilibrio de capas."
+      },
+      {
+        "id": "sys-48-dsv4-nospec-split11-kv4",
+        "order": 90,
+        "benchmark": true,
+        "displayName": "[experimental DeepSeek] reparto 1,1 · KV q4",
+        "extraArgOverrides": {
+          "--tensor-split": "1,1"
+        },
+        "comment": "Variante experimental de reparto alternativo: divide capas base entre CUDA0/CUDA1 y conserva KV q4_0. La salida puede ser inválida según la alineación expertos/capa; se incluye precisamente para medirlo y excluirla por calidad si falla."
+      }
+    ],
     "comment": "Control de sys-ultraq-dsv4-0731-iq3s-48gb: identico pero SIN speculative decoding. Existe porque el decode con DSpark no se puede medir con un prompt sintetico (la aceptacion del draft sale artificialmente mala) y aca si: prefill 194,9 t/s y decode 9,55 t/s contra los 160,5 / 9,50 de una sola placa. Con DSpark el prefill sube a 207,0 pero el decode hay que medirlo con trabajo real. Corre este y el otro en el mismo benchmark y compara: si tu carga es de contexto largo gana el de DSpark, si es de generacion larga puede ganar este. Rige la misma regla de alineacion expertos/capa base descrita en el perfil hermano. SALIDA VERIFICADA: con --tensor-split 1,1 (repartir tambien las capas base) este modelo devuelve TEXTO CORRUPTO — con el prompt 'cual es la capital de Francia' contesta '.#/!)'. No crashea ni avisa: responde basura con metricas de velocidad perfectas, que es la peor forma de fallar. Por eso las capas base van enteras en CUDA0 (--tensor-split 1,0) y CUDA1 recibe SOLO expertos. ThinkingCap y KAT no tienen el problema (entran enteros en VRAM, sin offload a CPU): es especifico de este modelo con expertos en RAM mas reparto de capas base. CONSECUENCIA HONESTA: asi configurado el dual NO le gana al tier de 24 GB (113,9 t/s de prefill y 7,58 de decode contra 160,5 / 9,50 en una sola placa). Existe para poder medir IQ2_M y para el dia que llama.cpp arregle el reparto; si buscas velocidad hoy, usa el perfil de 24 GB."
   },
   {

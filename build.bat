@@ -137,9 +137,12 @@ set "EXE_PATH=%EXE_DIR%\LlamaCode.exe"
 if not exist "%WINDEPLOYQT%" ( echo [ERROR] windeployqt not found & exit /b 1 )
 if not exist "%EXE_PATH%"    ( echo [ERROR] %EXE_PATH% missing & exit /b 1 )
 
-REM Debug optimiza LlamaCode pero usa las DLL release de Qt (ver CMakeLists.txt)
-REM para evitar el arranque extremadamente lento de Qt6* d.dll.
-set DEPLOY_FLAG=--release
+REM El target Debug enlaza las DLL Debug de Qt (Qt6* d.dll), por lo que
+REM windeployqt también debe desplegar los plugins Debug (en particular
+REM platforms\qwindowsd.dll). Usar --release aquí deja qwindows.dll
+REM incompatible y produce "no Qt platform plugin could be initialized".
+set "DEPLOY_FLAG="
+if /I "%CFG%"=="Release" set "DEPLOY_FLAG=--release"
 
 echo [INFO] Deploying Qt runtime (%CFG%)...
 "%WINDEPLOYQT%" %DEPLOY_FLAG% --qmldir "%~dp0qml" --no-translations --compiler-runtime "%EXE_PATH%" >nul

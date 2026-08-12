@@ -263,6 +263,20 @@ int main(int argc, char *argv[])
 
     qDebug() << "Controllers ready";
 
+    // El daemon headless no necesita QML. Además de ahorrar carga y memoria,
+    // esto evita que un error visual de una página pueda tumbar la ControlApi
+    // antes de que los clientes externos puedan usarla.
+    if (headlessAgent) {
+        qDebug() << "Agent daemon headless activo en localhost:" << controlPort;
+        // En GUI estas colecciones se inicializan durante el flujo de carga de
+        // la página Benchmark. El daemon debe dejarlas listas para que la API
+        // pueda iniciar benchmarks inmediatamente después de /health.
+        controller.loadBenchmarkResults();
+        controller.loadCustomBenchmarks();
+        QTimer::singleShot(0, &controller, &AppController::runStartupScan);
+        return app.exec();
+    }
+
     // El escaneo pesado (binaries/roots/hardware/catálogo) se DIFIERE a después de
     // mostrar la ventana (ver abajo), para que la interfaz abra de inmediato.
 

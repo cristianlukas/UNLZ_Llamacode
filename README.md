@@ -1526,6 +1526,13 @@ En benchmarks de agente también registra, desde el primer prompt, `1ª Tool`,
 archivo escrito y de la primera evaluación con criterios disponibles. Son
 métricas independientes de TPS y ayudan a explicar la latencia práctica.
 
+Para DeepSeek V4 dual se mantienen en la matriz de screening tres configuraciones
+comparables: la base `--tensor-split 1,0`, una variante experimental con expertos
+de las capas 0–8 residentes en CUDA0 y otra que prueba el reparto `1,1` con KV
+q4. Las variantes sólo avanzan a `tabla_best_modelos_speed` y HumanEval/20 si
+superan HumanEval/1; una salida inválida, fallo de infraestructura o timeout
+queda registrada pero fuera del ranking.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y
