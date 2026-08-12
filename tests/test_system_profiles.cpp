@@ -52,6 +52,7 @@ private slots:
     void manager_systemProfilesAvoidAccidentalVisionAndMtp();
     void bundle_draftMtpAlwaysDeclaresDraftModel();
     void bundle_gemma4TemplateKeepsLlamaCppMarkers();
+    void bundle_lagunaTemplateIsAppliedToBothProfiles();
     void manager_smallProfilesAreConservative();
     void manager_defaultCodingProfileUsesKatCoder();
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
@@ -745,6 +746,34 @@ void SystemProfilesTests::bundle_gemma4TemplateKeepsLlamaCppMarkers()
     }
     QCOMPARE(gemmaProfiles, 4);
     QVERIFY(promotedHeretic);
+}
+
+void SystemProfilesTests::bundle_lagunaTemplateIsAppliedToBothProfiles()
+{
+    const QDir repo = QFileInfo(bundlePath()).dir();
+    const QString path = repo.absoluteFilePath(
+        QStringLiteral("chat-templates/laguna-tools-v24.jinja"));
+    QFile templateFile(path);
+    QVERIFY2(templateFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("no se pudo abrir %1").arg(path)));
+    const QString tpl = QString::fromUtf8(templateFile.readAll());
+    QVERIFY(tpl.contains(QStringLiteral("laguna-s21-froggeric-v24.0-loopguard")));
+    QVERIFY(tpl.contains(QStringLiteral("<tool_call>")));
+    QVERIFY(tpl.contains(QStringLiteral("<tool_response>")));
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    int lagunaProfiles = 0;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        if (!profile.value(QStringLiteral("id")).toString().startsWith(QStringLiteral("sys-laguna")))
+            continue;
+        ++lagunaProfiles;
+        QCOMPARE(profile.value(QStringLiteral("chatTemplate")).toString(),
+                 QStringLiteral("laguna-tools-v24.jinja"));
+    }
+    QCOMPARE(lagunaProfiles, 2);
 }
 
 // El perfil de 48 GB (2x RTX 3090) reusa los mismos shards que ULTRA-Q y solo

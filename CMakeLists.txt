@@ -458,6 +458,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/system_profiles.json
         assets/chat-templates/gemma4-tools-fixed.jinja
         assets/chat-templates/kat-coder-tools.jinja
+        assets/chat-templates/laguna-tools-v24.jinja
         assets/benchmarks/aa_intelligence.json
         assets/benchmarks/local_cookbook_priorities.json
         assets/eval/reasoning_bias.json

@@ -1497,6 +1497,12 @@ a limitar a dos perfiles por GGUF. Conserva los fallos de calidad medidos (por
 ejemplo 19/20), mientras que infraestructura y timeouts quedan fuera del ranking
 pero siguen visibles en el historial.
 
+Laguna S 2.1 usa `assets/chat-templates/laguna-tools-v24.jinja`, una versión
+actualizada del template nativo con soporte de tools y loop-guard. Se aplica a
+los dos perfiles locales que comparten el GGUF Laguna; la ejecución de smoke test
+del 12 de agosto de 2026 confirmó que el modelo llega a tool-call y escritura,
+pero todavía puede quedar estancado repitiendo lecturas durante la reparación.
+
 Las rutas de las herramientas locales se normalizan antes de ejecutar y antes de
 volver a enviarlas al chat-template. Esto evita que saltos de línea emitidos por
 un modelo (por ejemplo `\nsolution.py\n`) creen rutas fantasma y contaminen el
