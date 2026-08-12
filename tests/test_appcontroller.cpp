@@ -115,6 +115,7 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
+    void benchmarkBest25ClassifiesExclusiveSpeedTiers();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
     void benchmarkResumesWhereItDiedInsteadOfLosingTheSeries();
     void benchmarkEvaluatorsToleratePresentationNotContent();
@@ -1412,6 +1413,47 @@ void AppControllerTests::benchmarkScoresChatAnswersWhenAgentWritesNoFiles()
     const QVariantMap noDup = AppController::scoreBenchTextResponsesForTest(
         QStringLiteral("short"), conAcceptance, messages);
     QCOMPARE(noDup.value("total").toInt(), 0);
+}
+
+void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
+{
+    QVariantList rows;
+    qint64 timestamp = 1;
+    auto add = [&](const QString &id, double tps, int score = 1) {
+        rows.append(QVariantMap{
+            {QStringLiteral("profileId"), id},
+            {QStringLiteral("profileName"), id + QStringLiteral(" · pasada 1/1")},
+            {QStringLiteral("target"), QStringLiteral("agent")},
+            {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (1 ítems)")},
+            {QStringLiteral("failed"), false},
+            {QStringLiteral("failureKind"), QStringLiteral("none")},
+            {QStringLiteral("avgTps"), tps},
+            {QStringLiteral("qualityScore"), score},
+            {QStringLiteral("qualityTotal"), 1},
+            {QStringLiteral("timestamp"), timestamp++},
+        });
+    };
+    for (int i = 0; i < 12; ++i) add(QStringLiteral("fast-%1").arg(i), 61.0 + i);
+    for (int i = 0; i < 12; ++i) add(QStringLiteral("balanced-%1").arg(i), 41.0 + i);
+    for (int i = 0; i < 7; ++i) add(QStringLiteral("quality-%1").arg(i), 6.0 + i);
+    add(QStringLiteral("excluded-60"), 60.0);
+    add(QStringLiteral("excluded-40"), 40.0);
+    add(QStringLiteral("excluded-5"), 5.0);
+
+    const QVariantList best = AppController::benchmarkBest25ForTest(rows);
+    QCOMPARE(best.size(), 25);
+    int fast = 0, balanced = 0, quality = 0;
+    for (const QVariant &value : best) {
+        const QVariantMap row = value.toMap();
+        const QString category = row.value(QStringLiteral("best25Category")).toString();
+        const double tps = row.value(QStringLiteral("avgTps")).toDouble();
+        if (category == QStringLiteral("Fast")) { ++fast; QVERIFY(tps > 60.0); }
+        if (category == QStringLiteral("Balanced")) { ++balanced; QVERIFY(tps > 40.0 && tps <= 60.0); }
+        if (category == QStringLiteral("Quality")) { ++quality; QVERIFY(tps > 5.0 && tps <= 40.0); }
+    }
+    QCOMPARE(fast, 10);
+    QCOMPARE(balanced, 10);
+    QCOMPARE(quality, 5);
 }
 
 // Si el server ya está sirviendo el perfil que se va a benchmarkear, el modelo ya

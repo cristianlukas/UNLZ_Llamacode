@@ -1475,6 +1475,12 @@ estructural, usar `python tools/select_humaneval_hard.py <HumanEval.jsonl>
 emplea la solución canónica sólo para ordenar y conserva sin cambios los registros
 oficiales que importa y ejecuta LlamaCode.
 
+`tabla_best_25` es el ranking de screening rápido de perfiles de agente sobre
+`HumanEval (1 ítems)`. Usa categorías exclusivas por TPS: **Fast** (>60, hasta
+10 perfiles), **Balanced** (>40 y <=60, hasta 10) y **Quality** (>5 y <=40,
+hasta 5). Dentro de cada grupo prioriza calidad final y luego TPS. Los perfiles
+que no alcanzan 5 TPS, fallan o quedan sin resultado no entran en la tabla.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y

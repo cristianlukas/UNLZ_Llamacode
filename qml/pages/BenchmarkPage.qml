@@ -1091,6 +1091,11 @@ Item {
                             enabled: root.activeFilterCount() > 0
                             onClicked: root.clearAllFilters()
                         }
+                        LcButton {
+                            text: "tabla_best_25"
+                            secondary: true
+                            onClicked: best25Popup.open()
+                        }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: resultsList.count + " resultados"
@@ -1129,6 +1134,85 @@ Item {
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("date"); onLoaded: { item.title = "Fecha"; item.column = "date" } }
                             Item { Layout.fillWidth: true; height: 30 }
                             Item { Layout.preferredWidth: 34; height: 30 }
+                        }
+                    }
+
+                    Popup {
+                        id: best25Popup
+                        width: Math.min(860, root.width - 40)
+                        height: Math.min(470, root.height - 100)
+                        anchors.centerIn: parent
+                        modal: true
+                        padding: 12
+                        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                        background: Rectangle { color: Theme.surfaceBg; radius: 8; border.color: Theme.divider }
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 8
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    text: "tabla_best_25 · HumanEval (1 ítem)"
+                                    color: Theme.textPrimary; font.pixelSize: 15; font.bold: true
+                                }
+                                Item { Layout.fillWidth: true }
+                                LcButton {
+                                    text: "Seleccionar 25"
+                                    secondary: true
+                                    enabled: (App.benchmarkBest25 || []).length > 0
+                                    onClicked: {
+                                        const ids = []
+                                        for (const row of (App.benchmarkBest25 || []))
+                                            if (ids.indexOf(row.profileId) < 0) ids.push(row.profileId)
+                                        root.selectedIds = ids
+                                        best25Popup.close()
+                                    }
+                                }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Fast >60 TPS · Balanced >40 TPS · Quality >5 TPS. Orden: calidad y luego TPS."
+                                color: Theme.textMuted; font.pixelSize: 11
+                            }
+                            Rectangle {
+                                Layout.fillWidth: true; height: 28; color: Theme.baseBg; radius: 4
+                                RowLayout {
+                                    anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
+                                    Text { Layout.preferredWidth: 70; text: "Grupo / #"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.fillWidth: true; text: "Perfil"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 80; text: "TPS"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 80; text: "Calidad"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 90; text: "T First"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                }
+                            }
+                            ListView {
+                                Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 1
+                                model: App.benchmarkBest25 || []
+                                ScrollBar.vertical: LcScrollBar {}
+                                delegate: Rectangle {
+                                    width: ListView.view.width; height: 29; color: index % 2 ? Theme.baseBg : "transparent"
+                                    RowLayout {
+                                        anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 8
+                                        Text {
+                                            Layout.preferredWidth: 70
+                                            text: (modelData.best25Category || "") + " #" + (modelData.best25Rank || "")
+                                            color: modelData.best25Category === "Fast" ? Theme.successText
+                                                 : modelData.best25Category === "Balanced" ? Theme.accent : Theme.warnText
+                                            font.pixelSize: 11; font.bold: true
+                                        }
+                                        Text { Layout.fillWidth: true; text: modelData.profileName || ""; color: Theme.textPrimary; font.pixelSize: 11; elide: Text.ElideRight }
+                                        Text { Layout.preferredWidth: 80; text: Number(modelData.avgTps || 0).toFixed(1); color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 80; text: (modelData.qualityScore || 0) + "/" + (modelData.qualityTotal || 0); color: Theme.successText; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 90; text: root.secondsLabel(modelData.timeToFirstAttempt); color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    }
+                                }
+                                Text {
+                                    anchors.centerIn: parent; visible: parent.count === 0
+                                    text: "Todavía no hay corridas rápidas válidas para construir la tabla."
+                                    color: Theme.textMuted; font.pixelSize: 12
+                                }
+                            }
                         }
                     }
 

@@ -13163,6 +13163,85 @@ void AppController::moveModelDownload(const QString &id, int delta)
     emitModelDownloadChanged();
 }
 
+QVariantList AppController::benchmarkBest25() const
+{
+    return benchmarkBest25ForTest(m_benchmarkResults);
+}
+
+QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
+{
+    // Best25 usa la última corrida rápida válida de cada perfil. Las categorías
+    // son exclusivas: Fast > 60 TPS, Balanced > 40 TPS y Quality > 5 TPS.
+    QHash<QString, QVariantMap> latest;
+    for (const QVariant &value : results) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("target")).toString().toLower() != QStringLiteral("agent"))
+            continue;
+        if (!row.value(QStringLiteral("benchmarkName")).toString().startsWith(QStringLiteral("HumanEval (1")))
+            continue;
+        if (row.value(QStringLiteral("failed")).toBool()
+            || row.value(QStringLiteral("failureKind")).toString() != QStringLiteral("none"))
+            continue;
+        const QString id = row.value(QStringLiteral("profileId")).toString();
+        const double tps = row.value(QStringLiteral("avgTps")).toDouble();
+        if (id.isEmpty() || tps <= 5.0) continue;
+        if (!latest.contains(id)
+            || row.value(QStringLiteral("timestamp")).toLongLong()
+               > latest.value(id).value(QStringLiteral("timestamp")).toLongLong())
+            latest.insert(id, row);
+    }
+
+    QVariantList candidates;
+    for (const QVariantMap &source : std::as_const(latest)) {
+        const double tps = source.value(QStringLiteral("avgTps")).toDouble();
+        QString category;
+        int limit = 0;
+        if (tps > 60.0) { category = QStringLiteral("Fast"); limit = 10; }
+        else if (tps > 40.0) { category = QStringLiteral("Balanced"); limit = 10; }
+        else { category = QStringLiteral("Quality"); limit = 5; }
+
+        QVariantMap row = source;
+        QString name = row.value(QStringLiteral("profileName")).toString();
+        name.remove(QRegularExpression(QStringLiteral("\\s+·\\s+pasada\\s+\\d+/\\d+$")));
+        row[QStringLiteral("profileName")] = name;
+        row[QStringLiteral("best25Category")] = category;
+        row[QStringLiteral("best25Limit")] = limit;
+        row[QStringLiteral("best25QualityRatio")] = source.value(QStringLiteral("qualityTotal")).toDouble() > 0.0
+            ? source.value(QStringLiteral("qualityScore")).toDouble()
+                / source.value(QStringLiteral("qualityTotal")).toDouble() : 0.0;
+        candidates.append(row);
+    }
+
+    auto ranked = [](const QVariant &a, const QVariant &b) {
+        const QVariantMap x = a.toMap(), y = b.toMap();
+        const double qx = x.value(QStringLiteral("best25QualityRatio")).toDouble();
+        const double qy = y.value(QStringLiteral("best25QualityRatio")).toDouble();
+        if (!qFuzzyCompare(qx + 1.0, qy + 1.0)) return qx > qy;
+        const double tx = x.value(QStringLiteral("avgTps")).toDouble();
+        const double ty = y.value(QStringLiteral("avgTps")).toDouble();
+        if (!qFuzzyCompare(tx + 1.0, ty + 1.0)) return tx > ty;
+        return x.value(QStringLiteral("profileName")).toString()
+             < y.value(QStringLiteral("profileName")).toString();
+    };
+
+    QVariantList result;
+    for (const QString &category : {QStringLiteral("Fast"), QStringLiteral("Balanced"), QStringLiteral("Quality")}) {
+        QVariantList group;
+        for (const QVariant &candidate : candidates)
+            if (candidate.toMap().value(QStringLiteral("best25Category")).toString() == category)
+                group.append(candidate);
+        std::sort(group.begin(), group.end(), ranked);
+        const int limit = category == QStringLiteral("Quality") ? 5 : 10;
+        const int count = qMin(limit, group.size());
+        for (int i = 0; i < count; ++i) {
+            QVariantMap row = group.at(i).toMap();
+            row[QStringLiteral("best25Rank")] = i + 1;
+            result.append(row);
+        }
+    }
+    return result;
+}
+
 void AppController::clearBenchmarkResults()
 {
     // Delete persisted index + per-result files
