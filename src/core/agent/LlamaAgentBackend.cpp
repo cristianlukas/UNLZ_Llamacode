@@ -2945,6 +2945,45 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
         });
     }
 
+    // Normalizar rutas antes de guardar el mensaje assistant.tool_calls en el
+    // historial que vuelve al chat-template. Algunos modelos (KAT-Coder en
+    // particular) emiten "\nsolution.py\n"; aunque el executor pueda tolerarlo,
+    // dejar esos bytes en el historial hace que el modelo los repita y ciertos
+    // templates fallen al renderizar la siguiente vuelta. La normalización es
+    // sólo para tools locales con path; no altera contenido de archivos ni URLs.
+    auto normalizeLocalToolCallPaths = [](QJsonArray calls) {
+        static const QSet<QString> pathTools{
+            QStringLiteral("read_file"), QStringLiteral("list_dir"),
+            QStringLiteral("grep"), QStringLiteral("glob"),
+            QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
+            QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
+            QStringLiteral("verify_claims"), QStringLiteral("write_file"),
+            QStringLiteral("edit_file")};
+        for (int i = 0; i < calls.size(); ++i) {
+            QJsonObject call = calls.at(i).toObject();
+            QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+            const QString name = fn.value(QStringLiteral("name")).toString();
+            if (!pathTools.contains(name)) continue;
+            QJsonParseError error;
+            QJsonDocument doc = QJsonDocument::fromJson(
+                fn.value(QStringLiteral("arguments")).toString().toUtf8(), &error);
+            if (error.error != QJsonParseError::NoError || !doc.isObject()) continue;
+            QJsonObject args = doc.object();
+            if (!args.contains(QStringLiteral("path"))) continue;
+            QString path = args.value(QStringLiteral("path")).toString().trimmed();
+            path.replace(QLatin1Char('\\'), QLatin1Char('/'));
+            path = QDir::cleanPath(path);
+            if (path.isEmpty()) path = QStringLiteral(".");
+            args[QStringLiteral("path")] = path;
+            fn[QStringLiteral("arguments")] = QString::fromUtf8(
+                QJsonDocument(args).toJson(QJsonDocument::Compact));
+            call[QStringLiteral("function")] = fn;
+            calls.replace(i, call);
+        }
+        return calls;
+    };
+    toolCalls = normalizeLocalToolCallPaths(toolCalls);
+
     // El historial de API NO lleva <think> (solo display lo lleva).
     const QString apiContent = stripThinkForContext(m_streamContent);
 
@@ -2965,6 +3004,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
                 {QStringLiteral("role"), QStringLiteral("assistant")},
                 {QStringLiteral("content"), apiContent}});
             toolCalls.append(textCall);
+            toolCalls = normalizeLocalToolCallPaths(toolCalls);
         }
     }
 

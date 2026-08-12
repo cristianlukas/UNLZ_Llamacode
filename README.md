@@ -1497,6 +1497,13 @@ a limitar a dos perfiles por GGUF. Conserva los fallos de calidad medidos (por
 ejemplo 19/20), mientras que infraestructura y timeouts quedan fuera del ranking
 pero siguen visibles en el historial.
 
+Las rutas de las herramientas locales se normalizan antes de ejecutar y antes de
+volver a enviarlas al chat-template. Esto evita que saltos de línea emitidos por
+un modelo (por ejemplo `\nsolution.py\n`) creen rutas fantasma y contaminen el
+historial. Si una tool queda sin actividad o repite un fallo, el gobernador corta
+el turno de forma recuperable y el benchmark registra el perfil como
+`infrastructure`/`timeout`, permitiendo que la cola continúe.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y

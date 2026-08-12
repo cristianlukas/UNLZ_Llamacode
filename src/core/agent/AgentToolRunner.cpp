@@ -1810,7 +1810,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     };
 
     if (name == QLatin1String("read_file")) {
-        const QString abs = resolve(args.value(QStringLiteral("path")).toString());
+        const QString abs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(abs)) return outsideMsg(abs);
         QFile f(abs);
         if (!f.open(QIODevice::ReadOnly)) return QStringLiteral("[no se pudo abrir: %1]").arg(abs);
@@ -1864,7 +1864,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         return QString::fromUtf8(QJsonDocument::fromVariant(brain).toJson(QJsonDocument::Compact));
     }
     if (name == QLatin1String("list_dir")) {
-        const QString abs = resolve(args.value(QStringLiteral("path")).toString());
+        const QString abs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(abs)) return outsideMsg(abs);
         QDir d(abs);
         if (!d.exists()) return QStringLiteral("[no existe: %1]").arg(abs);
@@ -2093,7 +2093,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         int k = args.value(QStringLiteral("k")).toInt();
         if (k <= 0) k = 5;
         k = qBound(1, k, 15);
-        const QString sub = args.value(QStringLiteral("path")).toString();
+        const QString sub = normalizeToolPath(args.value(QStringLiteral("path")).toString());
         const QString rootAbs = resolve(sub);
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
@@ -2164,7 +2164,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         int k = args.value(QStringLiteral("k")).toInt();
         if (k <= 0) k = 5;
         k = qBound(1, k, 15);
-        const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
+        const QString rootAbs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         struct Ch { QString rel; int line; QString key; QString text; QVector<float> vec; };
@@ -2280,7 +2280,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         int k = args.value(QStringLiteral("k")).toInt();
         if (k <= 0) k = 6;
         k = qBound(1, k, 15);
-        const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
+        const QString rootAbs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         // Términos de la query para BM25.
@@ -2571,7 +2571,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 if (!ln.trimmed().isEmpty()) claims << ln.trimmed();
         }
         if (claims.isEmpty()) return QStringLiteral("[verify_claims: 'claims' vacío]");
-        const QString rootAbs = resolve(args.value(QStringLiteral("path")).toString());
+        const QString rootAbs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
         // Corpus: archivos de texto del proyecto + memoria estructurada.
@@ -2622,7 +2622,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("grep")) {
         const QString pattern = args.value(QStringLiteral("pattern")).toString();
-        const QString sub = args.value(QStringLiteral("path")).toString();
+        const QString sub = normalizeToolPath(args.value(QStringLiteral("path")).toString());
         const QString rootAbs = resolve(sub);
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
         const QRegularExpression re(pattern, QRegularExpression::CaseInsensitiveOption);
@@ -2651,7 +2651,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("glob")) {
         const QString pattern = args.value(QStringLiteral("pattern")).toString();
-        const QString sub = args.value(QStringLiteral("path")).toString();
+        const QString sub = normalizeToolPath(args.value(QStringLiteral("path")).toString());
         const QString rootAbs = resolve(sub);
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
         const QRegularExpression re = globToRegex(pattern);
