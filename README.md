@@ -1509,6 +1509,11 @@ menos el tiempo de generación medido por el backend. Incluye carga, espera,
 tool-calls, escritura, validaciones y reparaciones; sirve para distinguir TPS
 alto de latencia end-to-end real.
 
+En benchmarks de agente también registra, desde el primer prompt, `1ª Tool`,
+`1ª Escritura` y `1ª Evaluable`: el instante de la primera tool-call, del primer
+archivo escrito y de la primera evaluación con criterios disponibles. Son
+métricas independientes de TPS y ayudan a explicar la latencia práctica.
+
 BigCodeBench-Hard se prepara con `python tools/prepare_bigcodebench_hard.py
 <dataset.parquet> <salida.json>`. El pack propio resultante usa el split Instruct,
 selección con seed fija, excluye tareas de red/procesos y dependencias ausentes, y

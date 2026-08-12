@@ -24,7 +24,7 @@ Item {
     property var colW: ({
         profile: 200, target: 58, agentProfile: 96, benchmark: 100, thinking: 58, score: 60, firstAttemptScore: 58,
         finalScore: 58, qpm: 68, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
-        passedAfterRepair: 68, tps: 60, ttft: 60, nonGeneration: 78, seconds: 70, ram: 60, vram: 60, date: 118
+        passedAfterRepair: 68, tps: 60, ttft: 60, nonGeneration: 78, firstTool: 78, firstWrite: 78, firstEvaluable: 82, seconds: 70, ram: 60, vram: 60, date: 118
     })
     function colWidth(c) { const w = colW[c]; return (w !== undefined && w > 0) ? w : 60 }
     function setColWidth(c, w) {
@@ -103,6 +103,9 @@ Item {
         if (column === "tps") return row.avgTps ?? 0
         if (column === "ttft") return row.avgTtftMs ?? 0
         if (column === "nonGeneration") return row.nonGenerationSec ?? 0
+        if (column === "firstTool") return row.firstToolCallSec ?? -1
+        if (column === "firstWrite") return row.firstWriteSec ?? -1
+        if (column === "firstEvaluable") return row.firstEvaluableSec ?? -1
         if (column === "seconds") return row.elapsedSec ?? 0
         if (column === "ram") return row.ramMb ?? 0
         if (column === "vram") return row.vramMb ?? 0
@@ -169,6 +172,9 @@ Item {
         if (column === "tps") { const v = row.avgTps ?? 0; return v > 0 ? v.toFixed(1) : "—" }
         if (column === "ttft") { const v = row.avgTtftMs ?? 0; return v > 0 ? Math.round(v) + " ms" : "—" }
         if (column === "nonGeneration") return secondsLabel(row.nonGenerationSec)
+        if (column === "firstTool") return secondsLabel(row.firstToolCallSec)
+        if (column === "firstWrite") return secondsLabel(row.firstWriteSec)
+        if (column === "firstEvaluable") return secondsLabel(row.firstEvaluableSec)
         if (column === "seconds") return secondsLabel(row.elapsedSec)
         if (column === "ram") { const v = row.ramMb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
         if (column === "vram") { const v = row.vramMb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
@@ -1141,6 +1147,9 @@ Item {
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("tps"); onLoaded: { item.title = "TPS"; item.column = "tps" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ttft"); onLoaded: { item.title = "TTFT"; item.column = "ttft" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("nonGeneration"); onLoaded: { item.title = "T No Gen."; item.column = "nonGeneration" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstTool"); onLoaded: { item.title = "1ª Tool"; item.column = "firstTool" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstWrite"); onLoaded: { item.title = "1ª Escritura"; item.column = "firstWrite" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("firstEvaluable"); onLoaded: { item.title = "1ª Evaluable"; item.column = "firstEvaluable" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("seconds"); onLoaded: { item.title = "Segundos"; item.column = "seconds" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ram"); onLoaded: { item.title = "RAM"; item.column = "ram" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vram"); onLoaded: { item.title = "VRAM"; item.column = "vram" } }
@@ -1584,6 +1593,9 @@ Item {
                                     color: Theme.warnText; font.pixelSize: 10
                                     Layout.preferredWidth: root.colWidth("nonGeneration"); horizontalAlignment: Text.AlignRight
                                 }
+                                Text { text: root.secondsLabel(modelData.firstToolCallSec); color: Theme.textSecondary; font.pixelSize: 10; Layout.preferredWidth: root.colWidth("firstTool"); horizontalAlignment: Text.AlignRight }
+                                Text { text: root.secondsLabel(modelData.firstWriteSec); color: Theme.textSecondary; font.pixelSize: 10; Layout.preferredWidth: root.colWidth("firstWrite"); horizontalAlignment: Text.AlignRight }
+                                Text { text: root.secondsLabel(modelData.firstEvaluableSec); color: Theme.textSecondary; font.pixelSize: 10; Layout.preferredWidth: root.colWidth("firstEvaluable"); horizontalAlignment: Text.AlignRight }
                                 Text {
                                     text: {
                                         const sec = modelData.elapsedSec ?? 0

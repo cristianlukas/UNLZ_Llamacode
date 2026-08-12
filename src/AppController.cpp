@@ -14112,6 +14112,9 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                     (QDateTime::currentMSecsSinceEpoch() - *passStartMs) / 1000.0;
                                 result["generationSec"] = 0.0;
                                 result["nonGenerationSec"] = result["elapsedSec"];
+                                result["firstToolCallSec"] = -1.0;
+                                result["firstWriteSec"] = -1.0;
+                                result["firstEvaluableSec"] = -1.0;
                                 result["timeToFirstAttempt"] = result["elapsedSec"];
                                 result["totalTime"] = result["elapsedSec"];
                                 result["passedAfterRepair"] = false;
@@ -14719,6 +14722,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
         auto firstPromptMs = std::make_shared<qint64>(0);
+        auto firstToolCallMs = std::make_shared<qint64>(0);
+        auto firstWriteMs = std::make_shared<qint64>(0);
+        auto firstEvaluableMs = std::make_shared<qint64>(0);
         auto turnStartMs = std::make_shared<qint64>(0);
         auto turnFirstMs = std::make_shared<qint64>(-1);
         auto turnMetrics = std::make_shared<QVariantList>();
@@ -15045,6 +15051,13 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["elapsedSec"]   = elapsed;
             result["generationSec"] = generationMs / 1000.0;
             result["nonGenerationSec"] = qMax(0.0, elapsed - generationMs / 1000.0);
+            const qint64 metricStartMs = *firstPromptMs > 0 ? *firstPromptMs : startMs;
+            auto metricSeconds = [=](qint64 at) {
+                return at > 0 ? qMax(0.0, (at - metricStartMs) / 1000.0) : -1.0;
+            };
+            result["firstToolCallSec"] = metricSeconds(*firstToolCallMs);
+            result["firstWriteSec"] = metricSeconds(*firstWriteMs);
+            result["firstEvaluableSec"] = metricSeconds(*firstEvaluableMs);
             result["setupSec"] = setupSec;
             result["measurementPhase"] = *passNo > 1 ? QStringLiteral("warm")
                                                             : QStringLiteral("cold");
@@ -15131,6 +15144,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 const QVariantList rows = probe.value(QStringLiteral("rows")).toList();
                 const int score = probe.value(QStringLiteral("score")).toInt();
                 const int total = probe.value(QStringLiteral("total")).toInt();
+                if (total > 0 && *firstEvaluableMs == 0)
+                    *firstEvaluableMs = QDateTime::currentMSecsSinceEpoch();
                 const bool hardFailed = benchHardCriteriaFailed(rows);
                 AgentEventLog::append(workspace, QString(),
                                       QStringLiteral("benchmark_acceptance_probe"),
@@ -15212,8 +15227,18 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             *turnFirstMs = QDateTime::currentMSecsSinceEpoch();
         });
         connect(agent, &IAgentBackend::messagesChanged, this, [=]() {
-            if (!*finished)
+            if (!*finished) {
                 *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
+                if (*firstWriteMs == 0) {
+                    for (const QVariant &mv : agent->messages()) {
+                        if (mv.toMap().value(QStringLiteral("role")).toString()
+                                == QLatin1String("diff")) {
+                            *firstWriteMs = QDateTime::currentMSecsSinceEpoch();
+                            break;
+                        }
+                    }
+                }
+            }
         });
 
         // running() is true for the whole backend lifetime (start→stop), NOT per
@@ -15224,6 +15249,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
             if (chunk.contains(QLatin1String("[turn] model requested")))
                 *toolSeen = true;
+            if (chunk.contains(QLatin1String("[turn] model requested"))
+                    && *firstToolCallMs == 0)
+                *firstToolCallMs = QDateTime::currentMSecsSinceEpoch();
             if (!*toolsReady && chunk.contains(QLatin1String("[mcp]"))
                     && chunk.contains(QLatin1String("descubiertas"))) {
                 *toolsReady = true;
@@ -15888,6 +15916,9 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("elapsedSec")] = elapsedSec;
     result[QStringLiteral("generationSec")] = 0.0;
     result[QStringLiteral("nonGenerationSec")] = elapsedSec;
+    result[QStringLiteral("firstToolCallSec")] = -1.0;
+    result[QStringLiteral("firstWriteSec")] = -1.0;
+    result[QStringLiteral("firstEvaluableSec")] = -1.0;
     result[QStringLiteral("timeToFirstAttempt")] = elapsedSec;
     result[QStringLiteral("totalTime")] = elapsedSec;
     result[QStringLiteral("passedAfterRepair")] = false;
@@ -15955,6 +15986,9 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["elapsedSec"]   = result.value("elapsedSec").toDouble();
     summary["generationSec"] = result.value("generationSec").toDouble();
     summary["nonGenerationSec"] = result.value("nonGenerationSec").toDouble();
+    summary["firstToolCallSec"] = result.value("firstToolCallSec").toDouble();
+    summary["firstWriteSec"] = result.value("firstWriteSec").toDouble();
+    summary["firstEvaluableSec"] = result.value("firstEvaluableSec").toDouble();
     summary["setupSec"] = result.value("setupSec").toDouble();
     summary["measurementPhase"] = result.value("measurementPhase").toString();
     summary["ramMb"]        = result.value("ramMb").toDouble();
