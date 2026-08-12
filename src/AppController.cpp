@@ -14595,6 +14595,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             "- Tu primera accion debe ser una llamada de herramienta: no escribas un plan ni codigo en el chat antes de usar write_file.\n"
             "- Debes crear/modificar los archivos pedidos en disco; no alcanza con responder codigo en el chat.\n"
             "- Si el prompt pide \"responder solamente con codigo\", interpretalo como: el archivo final debe contener solamente ese codigo.\n"
+            "- En tareas de codigo, conserva exactamente los nombres y firmas del preambulo; no los renombres ni los abrevies.\n"
+            "- Para HumanEval y tareas equivalentes, escribe la solucion en solution.py; no inventes nombres como closefunc.py o funcfunc.py.\n"
+            "- Antes de reparar, verifica que solution.py contenga exactamente la funcion solicitada y corrige ese archivo.\n"
             "- Al terminar, responde breve indicando que archivos creaste y si compilaste/probaste.\n\n"
             "TAREA ORIGINAL:\n%1").arg(prompt);
     };
@@ -14979,6 +14982,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     "La implementacion anterior fallo criterios de aceptacion. "
                     "No reinicies desde cero si no hace falta: inspecciona los archivos existentes, "
                     "corrige la causa concreta y vuelve a ejecutar/verificar los checks relevantes.\n\n"
+                    "En tareas de codigo conserva exactamente la firma indicada en el preambulo y usa solution.py "
+                    "como archivo canonico, salvo que la tarea indique otro nombre. No crees archivos alternativos "
+                    "con nombres inventados.\n\n"
                     "Intento de reparacion: %1/%2\n\n"
                     "Archivos detectados:\n%3\n\n"
                     "Checks fallidos y salidas:\n%4\n\n"

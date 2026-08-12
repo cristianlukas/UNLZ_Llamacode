@@ -1499,9 +1499,11 @@ pero siguen visibles en el historial.
 
 Laguna S 2.1 usa `assets/chat-templates/laguna-tools-v24.jinja`, una versión
 actualizada del template nativo con soporte de tools y loop-guard. Se aplica a
-los dos perfiles locales que comparten el GGUF Laguna; la ejecución de smoke test
-del 12 de agosto de 2026 confirmó que el modelo llega a tool-call y escritura,
-pero todavía puede quedar estancado repitiendo lecturas durante la reparación.
+los dos perfiles locales que comparten el GGUF Laguna. La corrida inicial mostró
+que el modelo podía desviarse a nombres de función y archivos inventados; el
+prompt de benchmark ahora exige conservar la firma del preámbulo y usar un
+archivo Python canónico. La reejecución del 12 de agosto de 2026 pasó 1/1 sin
+reparaciones, con 29,9 TPS y 34,6 s hasta el primer intento.
 
 Las rutas de las herramientas locales se normalizan antes de ejecutar y antes de
 volver a enviarlas al chat-template. Esto evita que saltos de línea emitidos por
