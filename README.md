@@ -659,6 +659,12 @@ Los perfiles nuevos creados desde la UI seleccionan `LlamaAgent` como harness
 por defecto. Al duplicar un `LaunchProfile`, se conserva explícitamente la
 selección de harness del perfil original.
 
+Un `LaunchProfile` también puede marcarse como `deprecated`. Estos perfiles
+siguen visibles y editables en **Configuración > Perfiles** para poder
+reactivarlos o migrarlos, pero se excluyen de los selectores operativos de
+**Lanzar**, **Agente**, **Benchmark** y de cualquier otra acción que pueda
+iniciar una ejecución.
+
 ### Importador de perfiles desde CLI
 
 Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n-gpu-layers 99`) y UNLZ_Llamacode extrae y configura automáticamente todos los parámetros reconocidos.

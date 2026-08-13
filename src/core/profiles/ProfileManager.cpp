@@ -422,6 +422,7 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.name = QStringLiteral("%1_%2").arg(seq).arg(stripSeq(newName));
     if (data.contains("alias"))    p.alias = data.value("alias").toString();
     if (data.contains("favorite")) p.favorite = data.value("favorite").toBool();
+    if (data.contains("deprecated")) p.deprecated = data.value("deprecated").toBool();
     p.backendProfileId = data.value("backendProfileId", p.backendProfileId).toString();
     p.modelProfileId = data.value("modelProfileId", p.modelProfileId).toString();
     p.runtimePresetId = data.value("runtimePresetId", p.runtimePresetId).toString();
@@ -491,6 +492,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
             {"alias", p.alias}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"deprecated", p.deprecated},
             {"system", p.system},
             {"displayName", displayName},
             {"backendProfileId", p.backendProfileId},
@@ -554,6 +556,7 @@ QVariantList ProfileManager::launchProfilesForMenu() const
         });
     QVariantList out;
     for (const auto &p : items) {
+        if (p.deprecated) continue;
         const QString base = p.alias.isEmpty()
             ? p.name
             : QStringLiteral("%1 - %2").arg(p.alias, p.name);
@@ -564,9 +567,36 @@ QVariantList ProfileManager::launchProfilesForMenu() const
         if (p.benchmark) mark += QStringLiteral("🏆 ");
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
-            {"favorite", p.favorite}, {"benchmark", p.benchmark}, {"system", p.system},
+            {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"deprecated", p.deprecated}, {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
             // el dropdown y el texto seleccionado; si hay alias va junto al nombre.
+            {"displayName", mark + base}});
+    }
+    return out;
+}
+
+QVariantList ProfileManager::launchProfilesForProfilesPage() const
+{
+    QList<LaunchProfile> items = m_launches.m_items;
+    std::stable_sort(items.begin(), items.end(),
+        [](const LaunchProfile &a, const LaunchProfile &b) {
+            if (a.favorite != b.favorite) return a.favorite;
+            return seqOf(a.name) < seqOf(b.name);
+        });
+    QVariantList out;
+    for (const auto &p : items) {
+        const QString base = p.alias.isEmpty()
+            ? p.name : QStringLiteral("%1 - %2").arg(p.alias, p.name);
+        QString mark;
+        if (p.system) mark += QStringLiteral("⚙ ");
+        if (p.favorite) mark += QStringLiteral("★ ");
+        if (p.benchmark) mark += QStringLiteral("🏆 ");
+        if (p.deprecated) mark += QStringLiteral("⚠ ");
+        out.append(QVariantMap{
+            {"id", p.id}, {"name", p.name}, {"alias", p.alias},
+            {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"deprecated", p.deprecated}, {"system", p.system},
             {"displayName", mark + base}});
     }
     return out;
@@ -1005,6 +1035,7 @@ QString ProfileManager::duplicateLaunchProfile(const QString &id)
     lp.id = LaunchProfile::generateId();
     lp.system = false;
     lp.favorite = false;
+    lp.deprecated = false;
     if (!src.backendProfileId.isEmpty()) lp.backendProfileId = be.id;
     if (!src.modelProfileId.isEmpty()) lp.modelProfileId = mp.id;
     if (!src.runtimePresetId.isEmpty()) lp.runtimePresetId = rt.id;

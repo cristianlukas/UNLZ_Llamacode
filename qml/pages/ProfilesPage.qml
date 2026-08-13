@@ -51,6 +51,7 @@ Item {
     property bool draftEnabled: false
     property bool mtpEnabled: false
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
+    property bool launchDeprecated: false // visible sólo en esta página administrativa
     property bool smokeTestRunning: false
     // Política: siempre LlamaAgent. Sin selector de harness; sin "none"/"opencode".
     property string harnessAdapter: "llamaagent"
@@ -328,6 +329,7 @@ Item {
 
         // Alias (display) opcional + favorito del perfil.
         root.launchFavorite = (lp.favorite === true)
+        root.launchDeprecated = (lp.deprecated === true)
         profileAliasField.text = lp.alias ?? ""
         powerLimitField.text = ((lp.powerLimitW ?? 0) > 0) ? (lp.powerLimitW).toString() : ""
         browserAutoCombo.currentIndex = Math.max(0, browserAutoCombo.indexOfValue(lp.browserAutomation ?? "inherit"))
@@ -565,6 +567,7 @@ Item {
         const lpOk = App.profileManager.updateLaunchProfile({
             "id": selectedLaunchId, "name": launchName,
             "alias": profileAliasField.text.trim(), "favorite": root.launchFavorite,
+            "deprecated": root.launchDeprecated,
             "powerLimitW": parseInt(powerLimitField.text) || 0,
             "browserAutomation": browserAutoCombo.currentValue ?? "inherit",
             "backendProfileId": effectiveBid, "modelProfileId": effectiveMid,
@@ -745,12 +748,12 @@ Item {
                             id: launchCombo
                             Layout.fillWidth: true
                             // Menú ordenado: favoritos (★) arriba; displayName = alias - name.
-                            property var launchMenu: App.profileManager.launchProfilesForMenu()
+                            property var launchMenu: App.profileManager.launchProfilesForProfilesPage()
                             Connections {
                                 target: App.profileManager
                                 function onLaunchesChanged() {
                                     const sel = launchCombo.currentValue
-                                    launchCombo.launchMenu = App.profileManager.launchProfilesForMenu()
+                                    launchCombo.launchMenu = App.profileManager.launchProfilesForProfilesPage()
                                     const i = launchCombo.indexOfValue(sel)
                                     if (i >= 0) launchCombo.currentIndex = i
                                 }
@@ -775,6 +778,24 @@ Item {
                             onClicked: {
                                 root.launchFavorite = !root.launchFavorite
                                 App.profileManager.setLaunchFavorite(selectedLaunchId, root.launchFavorite)
+                            }
+                        }
+                        // Deprecated (⚠): queda visible sólo en Perfiles y se
+                        // excluye de Lanzar, Agente, Benchmark y demás selectores.
+                        LcButton {
+                            text: root.launchDeprecated ? "⚠" : "✓"
+                            secondary: true
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
+                            ToolTip.visible: hovered
+                            ToolTip.text: root.launchDeprecated
+                                ? "Reactivar perfil operativo"
+                                : "Marcar como deprecated (ocultar de selectores)"
+                            onClicked: {
+                                root.launchDeprecated = !root.launchDeprecated
+                                App.profileManager.updateLaunchProfile({
+                                    "id": selectedLaunchId,
+                                    "deprecated": root.launchDeprecated
+                                })
                             }
                         }
                         // Alias opcional (prioridad sobre el nombre en los dropdowns).

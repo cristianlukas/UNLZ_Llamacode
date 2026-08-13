@@ -159,6 +159,7 @@ public:
     Q_INVOKABLE void setLaunchAlias(const QString &id, const QString &alias);
     // Perfiles ordenados para dropdowns: favoritos primero, displayName=alias - name.
     Q_INVOKABLE QVariantList launchProfilesForMenu() const;
+    Q_INVOKABLE QVariantList launchProfilesForProfilesPage() const;
     // AgentProfile (perfiles de agente: capacidades + directivas + ajustes)
     Q_INVOKABLE QString addAgentProfile(const QString &name);
     Q_INVOKABLE bool removeAgentProfile(const QString &id);

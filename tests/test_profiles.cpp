@@ -32,6 +32,7 @@ private slots:
     void manager_setBackendCloud();
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
+    void manager_deprecatedIsProfilesOnly();
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
     void manager_persistsAcrossInstances();
@@ -124,7 +125,7 @@ void ProfilesTests::runtimePreset_jsonRoundTrip()
 void ProfilesTests::launchProfile_jsonRoundTrip()
 {
     LaunchProfile l;
-    l.id = "l1"; l.name = "prod"; l.alias = "P"; l.favorite = true;
+    l.id = "l1"; l.name = "prod"; l.alias = "P"; l.favorite = true; l.deprecated = true;
     l.backendProfileId = "b1"; l.modelProfileId = "m1"; l.runtimePresetId = "r1";
     l.extraArgs = QStringList{"--verbose"};
     MasterFallback mf; mf.type = "cli"; mf.cliName = "claude";
@@ -138,6 +139,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.name, l.name);
     QCOMPARE(r.alias, l.alias);
     QCOMPARE(r.favorite, l.favorite);
+    QCOMPARE(r.deprecated, l.deprecated);
     QCOMPARE(r.backendProfileId, l.backendProfileId);
     QCOMPARE(r.modelProfileId, l.modelProfileId);
     QCOMPARE(r.extraArgs, l.extraArgs);
@@ -323,6 +325,28 @@ void ProfilesTests::manager_browserAutomationOverride()
         {"id", id}, {"browserAutomation", "off"}}));
     QCOMPARE(pm.getLaunchProfile(id).value("browserAutomation").toString(),
              QStringLiteral("off"));
+}
+
+void ProfilesTests::manager_deprecatedIsProfilesOnly()
+{
+    ProfileManager pm;
+    const QString id = pm.addLaunchProfile("Deprecated", "b", "m", "r");
+    QVERIFY(!id.isEmpty());
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", id}, {"deprecated", true}}));
+    QCOMPARE(pm.getLaunchProfile(id).value("deprecated").toBool(), true);
+    const QVariantList menu = pm.launchProfilesForMenu();
+    for (const QVariant &v : menu)
+        QVERIFY(v.toMap().value("id").toString() != id);
+    const QVariantList profiles = pm.launchProfilesForProfilesPage();
+    bool found = false;
+    for (const QVariant &v : profiles) {
+        if (v.toMap().value("id").toString() == id) {
+            found = true;
+            QCOMPARE(v.toMap().value("deprecated").toBool(), true);
+            QVERIFY(v.toMap().value("displayName").toString().startsWith(QStringLiteral("⚠ ")));
+        }
+    }
+    QVERIFY(found);
 }
 
 void ProfilesTests::manager_systemProfilesReloadIdempotent()
