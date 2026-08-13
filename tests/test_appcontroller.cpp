@@ -117,6 +117,7 @@ private slots:
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
+    void benchmarkBest25IncludesValidRowsWithoutTps();
     void benchmarkBestModelosSpeedCapsProfilesPerGguf();
     void benchmarkBestModelosQualityUsesTwentyItemResults();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
@@ -1457,6 +1458,26 @@ void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
     QCOMPARE(fast, 10);
     QCOMPARE(balanced, 10);
     QCOMPARE(quality, 5);
+}
+
+void AppControllerTests::benchmarkBest25IncludesValidRowsWithoutTps()
+{
+    const QVariantList rows{
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("deepseek")},
+                    {QStringLiteral("profileName"), QStringLiteral("DeepSeek")},
+                    {QStringLiteral("target"), QStringLiteral("agent")},
+                    {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (1 ítems)")},
+                    {QStringLiteral("failed"), false},
+                    {QStringLiteral("failureKind"), QStringLiteral("none")},
+                    {QStringLiteral("avgTps"), 0.0},
+                    {QStringLiteral("qualityScore"), 1},
+                    {QStringLiteral("qualityTotal"), 1},
+                    {QStringLiteral("timestamp"), 1}}};
+    const QVariantList best = AppController::benchmarkBest25ForTest(rows);
+    QCOMPARE(best.size(), 1);
+    const QVariantMap row = best.first().toMap();
+    QCOMPARE(row.value(QStringLiteral("best25Category")).toString(), QStringLiteral("Quality"));
+    QVERIFY(row.value(QStringLiteral("best25TpsPending")).toBool());
 }
 
 void AppControllerTests::parseGpuInventoryCsvParses()

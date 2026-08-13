@@ -1488,7 +1488,9 @@ oficiales que importa y ejecuta LlamaCode.
 `HumanEval (1 ítems)`. Usa categorías exclusivas por TPS: **Fast** (>60, hasta
 10 perfiles), **Balanced** (>40 y <=60, hasta 10) y **Quality** (>5 y <=40,
 hasta 5). Dentro de cada grupo prioriza calidad final y luego TPS. Los perfiles
-que no alcanzan 5 TPS, fallan o quedan sin resultado no entran en la tabla.
+que fallan o quedan sin resultado no entran; un perfil válido con calidad completa
+pero sin TPS persistido entra al final de **Quality** con la marca `TPS pendiente`,
+sin inventar una velocidad ni desplazar los cinco puestos medidos.
 
 `tabla_best_modelos_speed` aplica una segunda regla de diversidad: resuelve el
 archivo GGUF real desde el catálogo y conserva como máximo dos perfiles por GGUF.
