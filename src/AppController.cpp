@@ -13580,8 +13580,13 @@ void AppController::cancelBenchmark()
     // Stop the headless agent (agent target) so its turn ends promptly.
     if (m_benchmarkAgent)
         m_benchmarkAgent->cancelGeneration();
-    // Tear down the server now; the chain finalizes at the next checkpoint.
-    stopServer();
+    // Do not tear down the server synchronously here. The active agent run has
+    // its own finalize() callback, which must run first to persist the partial
+    // result and advance the benchmark state machine. Destroying the server at
+    // this point can suppress the agent's completion event and leave the UI in
+    // "Cancelando..." indefinitely. The normal profile-done callback performs
+    // the teardown after finalize; the load/request paths also observe the
+    // canceled flag and close themselves.
 }
 
 // ── Heurísticas para benchmarks personalizados ───────────────────────────────
