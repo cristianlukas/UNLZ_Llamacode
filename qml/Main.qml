@@ -21,6 +21,10 @@ ApplicationWindow {
     property color frameBorderColor: active ? Theme.frameBorderActive : Theme.frameBorderInact
     property color frameBgColor: Theme.baseBg
     property color titleBarColor: Theme.titleBg
+    // Un marco visible ayuda a distinguir la ventana del escritorio cuando no
+    // ocupa toda la pantalla. En maximizado se elimina para no duplicar el
+    // borde del área de trabajo del sistema.
+    property int windowedFrameWidth: 2
     // Los laterales deben ser más angostos que los scrollbars (14 px) para no
     // interceptar su thumb. Las esquinas conservan un área amplia y cómoda.
     property int sideResizeHandleSize: 3
@@ -156,7 +160,8 @@ ApplicationWindow {
         anchors.margins: 0
         radius: 0
         color: window.frameBgColor
-        border.width: 0
+        border.width: window.visibility === Window.Windowed ? window.windowedFrameWidth : 0
+        border.color: window.frameBorderColor
         clip: true
 
         ColumnLayout {
