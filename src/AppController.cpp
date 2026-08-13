@@ -13216,7 +13216,8 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
             || id == QLatin1String("sys-48-antirez-dsv4-q2q4-131k");
         // Una corrida válida cuyo backend no expuso TPS sigue siendo útil para
         // comparar calidad. Entra como Quality pendiente, sin inventar una
-        // velocidad ni desplazar a los perfiles medidos.
+        // velocidad ni desplazar a los perfiles medidos. Esto aplica a
+        // cualquier perfil válido de la tanda que se está revalidando.
         if (id.isEmpty() || (tps <= 5.0 && (!qualityValid || !tpsPendingCandidate))) continue;
         if (!latest.contains(id)
             || row.value(QStringLiteral("timestamp")).toLongLong()
@@ -13229,7 +13230,7 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
         const double tps = source.value(QStringLiteral("avgTps")).toDouble();
         QString category;
         int limit = 0;
-        const bool tpsPending = tps <= 5.0;
+        const bool tpsPending = tps <= 0.0;
         if (tpsPending) { category = QStringLiteral("Quality"); limit = 5; }
         else if (tps > 60.0) { category = QStringLiteral("Fast"); limit = 10; }
         else if (tps > 40.0) { category = QStringLiteral("Balanced"); limit = 10; }
@@ -13291,7 +13292,6 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
         row[QStringLiteral("best25QualityRatio")] = 1.0;
         candidates.append(row);
     }
-
     auto ranked = [](const QVariant &a, const QVariant &b) {
         const QVariantMap x = a.toMap(), y = b.toMap();
         const double qx = x.value(QStringLiteral("best25QualityRatio")).toDouble();
@@ -13315,18 +13315,22 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
                 group.append(candidate);
         std::sort(group.begin(), group.end(), ranked);
         const int limit = category == QStringLiteral("Quality") ? 5 : 10;
-        int measuredCount = 0;
-        for (const QVariant &candidate : group)
-            if (!candidate.toMap().value(QStringLiteral("best25TpsPending")).toBool())
-                ++measuredCount;
-        // Preserve the requested five measured Quality slots and append valid
-        // quality-only rows whose TPS instrumentation is pending.
-        const int count = category == QStringLiteral("Quality")
-            ? qMin(measuredCount, limit) + (group.size() - measuredCount)
-            : qMin(limit, group.size());
-        for (int i = 0; i < count; ++i) {
-            QVariantMap row = group.at(i).toMap();
-            row[QStringLiteral("best25Rank")] = i + 1;
+        // Preserve the requested measured slots and append valid quality-only
+        // rows whose TPS instrumentation is pending. Pending rows are sorted
+        // after measured rows, so selecting a contiguous prefix would silently
+        // omit them whenever there are more measured rows than the limit.
+        int measuredAdded = 0;
+        int added = 0;
+        for (const QVariant &candidate : group) {
+            const QVariantMap candidateMap = candidate.toMap();
+            const bool pending = candidateMap.value(QStringLiteral("best25TpsPending")).toBool();
+            if (category == QStringLiteral("Quality") && !pending && measuredAdded >= limit)
+                continue;
+            if (category != QStringLiteral("Quality") && added >= limit)
+                break;
+            if (!pending) ++measuredAdded;
+            QVariantMap row = candidateMap;
+            row[QStringLiteral("best25Rank")] = ++added;
             result.append(row);
         }
     }

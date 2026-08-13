@@ -1463,7 +1463,7 @@ void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
 void AppControllerTests::benchmarkBest25IncludesValidRowsWithoutTps()
 {
     const QVariantList rows{
-        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("deepseek")},
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("sys-48-dsv4-nospec")},
                     {QStringLiteral("profileName"), QStringLiteral("DeepSeek")},
                     {QStringLiteral("target"), QStringLiteral("agent")},
                     {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (1 ítems)")},
