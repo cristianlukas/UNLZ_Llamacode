@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName("LlamaCode");
     app.setApplicationVersion("0.1.99");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
+    const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
         || app.arguments().contains(QStringLiteral("--agent-daemon"));
 
@@ -151,7 +152,7 @@ int main(int argc, char *argv[])
 #else
     const QString kInstanceKey = QStringLiteral("LlamaCode-single-instance");
 #endif
-    {
+    if (!handoffUi) {
         QLocalSocket probe;
         probe.connectToServer(kInstanceKey);
         if (probe.waitForConnected(250)) {
@@ -243,14 +244,33 @@ int main(int argc, char *argv[])
 
     // Servidor de instancia única: cuando otra instancia intente abrirse, recibe
     // su "raise" y le pide a la UI que restaure/enfoque la ventana existente.
+    // Si la instancia existente es headless no hay QML que restaurar: hacemos un
+    // handoff limpio a una instancia gráfica del mismo ejecutable.
     QLocalServer::removeServer(kInstanceKey);   // limpiar socket huérfano de un crash
     auto *instanceServer = new QLocalServer(&app);
     if (instanceServer->listen(kInstanceKey)) {
-        QObject::connect(instanceServer, &QLocalServer::newConnection, &controller, [instanceServer, &controller]() {
+        QObject::connect(instanceServer, &QLocalServer::newConnection, &controller,
+                         [instanceServer, &controller, &app, headlessAgent, kInstanceKey]() {
             if (QLocalSocket *c = instanceServer->nextPendingConnection()) {
-                QObject::connect(c, &QLocalSocket::readyRead, &controller, [c, &controller]() {
+                QObject::connect(c, &QLocalSocket::readyRead, &controller,
+                                 [c, &controller, instanceServer, &app, headlessAgent, kInstanceKey]() {
                     const QString command = QString::fromUtf8(c->readAll()).trimmed();
-                    if (command.startsWith(QStringLiteral("automation:")))
+                    if (command == QStringLiteral("show-ui") && headlessAgent) {
+                        // Liberar el nombre antes de iniciar la GUI; de lo
+                        // contrario la GUI recién lanzada se detectaría a sí
+                        // misma como segunda instancia y saldría otra vez.
+                        instanceServer->close();
+                        QLocalServer::removeServer(kInstanceKey);
+                        QStringList guiArgs = app.arguments();
+                        guiArgs.removeAll(QStringLiteral("--headless"));
+                        guiArgs.removeAll(QStringLiteral("--agent-daemon"));
+                        guiArgs.append(QStringLiteral("--handoff-ui"));
+                        QTimer::singleShot(0, &app, [guiArgs, &app]() {
+                            if (!QProcess::startDetached(QCoreApplication::applicationFilePath(), guiArgs))
+                                qWarning() << "No se pudo convertir la instancia headless a GUI";
+                            app.quit();
+                        });
+                    } else if (command.startsWith(QStringLiteral("automation:")))
                         controller.runAutomation(command.mid(11));
                     else
                         controller.notifySecondInstance();

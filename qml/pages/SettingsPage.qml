@@ -1011,7 +1011,7 @@ Item {
                             implicitHeight: gpuInner.implicitHeight + 32
 
                             ColumnLayout {
-                                id: gpuInner
+                                id: gpuPowerInner
                                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
                                 spacing: 12
 

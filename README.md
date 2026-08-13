@@ -1774,7 +1774,10 @@ preservan ambas representaciones.
 ControlApi local sin cargar QML ni crear ventanas. El puerto se controla con
 `LLAMACODE_CONTROL_PORT` (8765 por defecto, sólo localhost). Mantiene la política
 de instancia única: la GUI y el daemon no operan simultáneamente sobre los mismos
-procesos y stores; clientes externos consumen la API.
+procesos y stores; clientes externos consumen la API. Si se ejecuta el acceso
+directo mientras sólo existe una instancia headless, ésta hace un handoff limpio
+a la GUI y conserva una única instancia visible. Si ya existe una GUI, el acceso
+directo simplemente la restaura y la enfoca.
 
 ## Seguridad operativa
 
