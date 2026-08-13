@@ -11,6 +11,7 @@
 #include <QRegularExpression>
 #include <QUuid>
 #include <QJsonObject>
+#include <QSet>
 #include <algorithm>
 
 // Launch profile display names carry a stable, non-repeating incremental id as a
@@ -422,6 +423,8 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.name = QStringLiteral("%1_%2").arg(seq).arg(stripSeq(newName));
     if (data.contains("alias"))    p.alias = data.value("alias").toString();
     if (data.contains("favorite")) p.favorite = data.value("favorite").toBool();
+    if (data.contains("benchmark")) p.benchmark = data.value("benchmark").toBool();
+    if (data.contains("systemBadge")) p.systemBadge = data.value("systemBadge").toBool();
     if (data.contains("deprecated")) p.deprecated = data.value("deprecated").toBool();
     p.backendProfileId = data.value("backendProfileId", p.backendProfileId).toString();
     p.modelProfileId = data.value("modelProfileId", p.modelProfileId).toString();
@@ -492,7 +495,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
             {"alias", p.alias}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
-            {"deprecated", p.deprecated},
+            {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", displayName},
             {"backendProfileId", p.backendProfileId},
@@ -562,13 +565,14 @@ QVariantList ProfileManager::launchProfilesForMenu() const
             : QStringLiteral("%1 - %2").arg(p.alias, p.name);
         // Marcadores independientes: sistema, favorito y benchmark.
         QString mark;
-        if (p.system) mark += QStringLiteral("⚙ ");
+        if (p.systemBadge) mark += QStringLiteral("⚙ ");
         if (p.favorite) mark += QStringLiteral("★ ");
         if (p.benchmark) mark += QStringLiteral("🏆 ");
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"favorite", p.favorite}, {"benchmark", p.benchmark},
-            {"deprecated", p.deprecated}, {"system", p.system},
+            {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
+            {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
             // el dropdown y el texto seleccionado; si hay alias va junto al nombre.
             {"displayName", mark + base}});
@@ -589,14 +593,15 @@ QVariantList ProfileManager::launchProfilesForProfilesPage() const
         const QString base = p.alias.isEmpty()
             ? p.name : QStringLiteral("%1 - %2").arg(p.alias, p.name);
         QString mark;
-        if (p.system) mark += QStringLiteral("⚙ ");
+        if (p.systemBadge) mark += QStringLiteral("⚙ ");
         if (p.favorite) mark += QStringLiteral("★ ");
         if (p.benchmark) mark += QStringLiteral("🏆 ");
         if (p.deprecated) mark += QStringLiteral("⚠ ");
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"favorite", p.favorite}, {"benchmark", p.benchmark},
-            {"deprecated", p.deprecated}, {"system", p.system},
+            {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
+            {"system", p.system},
             {"displayName", mark + base}});
     }
     return out;
@@ -957,12 +962,25 @@ void ProfileManager::loadSystemProfiles()
         LaunchProfile lp;
         lp.id = id; lp.system = true;
         lp.name = o.value("displayName").toString();
+        // Sólo los perfiles base para usuarios nuevos llevan el distintivo
+        // visual de sistema. `system` sigue siendo la bandera interna de
+        // inmutabilidad para todos los perfiles bundled.
+        static const QSet<QString> baseSystemIds = {
+            QStringLiteral("sys-maxq"), QStringLiteral("sys-maxctx"),
+            QStringLiteral("sys-fastgemma"), QStringLiteral("sys-laguna-s-2-1-q2"),
+            QStringLiteral("sys-vram-20"), QStringLiteral("sys-vram-16"),
+            QStringLiteral("sys-vram-12-moe"), QStringLiteral("sys-vram-8-gemma"),
+            QStringLiteral("sys-vram-8-qwen-agent"), QStringLiteral("sys-vram-4"),
+            QStringLiteral("sys-vram-4-gemma"), QStringLiteral("sys-vram-2"),
+            QStringLiteral("sys-vram-2-gemma"), QStringLiteral("sys-vram-0")
+        };
+        lp.systemBadge = baseSystemIds.contains(id);
         // Alias = solo la VRAM (ej "12GB"), sin sufijos MoE/Gemma/Qwen.
         lp.alias = QString::number(o.value("minVramGb").toInt()) + QStringLiteral("GB");
         // Las insignias pertenecen al catalogo: asi un perfil medido puede marcarse
         // sin recompilar esta clase ni propagar el estado a variantes hermanas.
         lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
-        lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
+        lp.benchmark = false;
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
         lp.runtimePresetId = rt.id;
@@ -1033,7 +1051,8 @@ QString ProfileManager::duplicateLaunchProfile(const QString &id)
 
     LaunchProfile lp = src;
     lp.id = LaunchProfile::generateId();
-    lp.system = false;
+        lp.system = false;
+        lp.systemBadge = false;
     lp.favorite = false;
     lp.deprecated = false;
     if (!src.backendProfileId.isEmpty()) lp.backendProfileId = be.id;

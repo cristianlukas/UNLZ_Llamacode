@@ -125,7 +125,8 @@ void ProfilesTests::runtimePreset_jsonRoundTrip()
 void ProfilesTests::launchProfile_jsonRoundTrip()
 {
     LaunchProfile l;
-    l.id = "l1"; l.name = "prod"; l.alias = "P"; l.favorite = true; l.deprecated = true;
+    l.id = "l1"; l.name = "prod"; l.alias = "P"; l.favorite = true;
+    l.systemBadge = true; l.benchmark = true; l.deprecated = true;
     l.backendProfileId = "b1"; l.modelProfileId = "m1"; l.runtimePresetId = "r1";
     l.extraArgs = QStringList{"--verbose"};
     MasterFallback mf; mf.type = "cli"; mf.cliName = "claude";
@@ -139,6 +140,8 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.name, l.name);
     QCOMPARE(r.alias, l.alias);
     QCOMPARE(r.favorite, l.favorite);
+    QCOMPARE(r.systemBadge, l.systemBadge);
+    QCOMPARE(r.benchmark, l.benchmark);
     QCOMPARE(r.deprecated, l.deprecated);
     QCOMPARE(r.backendProfileId, l.backendProfileId);
     QCOMPARE(r.modelProfileId, l.modelProfileId);
@@ -332,8 +335,11 @@ void ProfilesTests::manager_deprecatedIsProfilesOnly()
     ProfileManager pm;
     const QString id = pm.addLaunchProfile("Deprecated", "b", "m", "r");
     QVERIFY(!id.isEmpty());
-    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", id}, {"deprecated", true}}));
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", id}, {"deprecated", true},
+                                                {"systemBadge", true}, {"benchmark", true}}));
     QCOMPARE(pm.getLaunchProfile(id).value("deprecated").toBool(), true);
+    QCOMPARE(pm.getLaunchProfile(id).value("systemBadge").toBool(), true);
+    QCOMPARE(pm.getLaunchProfile(id).value("benchmark").toBool(), true);
     const QVariantList menu = pm.launchProfilesForMenu();
     for (const QVariant &v : menu)
         QVERIFY(v.toMap().value("id").toString() != id);
@@ -343,7 +349,7 @@ void ProfilesTests::manager_deprecatedIsProfilesOnly()
         if (v.toMap().value("id").toString() == id) {
             found = true;
             QCOMPARE(v.toMap().value("deprecated").toBool(), true);
-            QVERIFY(v.toMap().value("displayName").toString().startsWith(QStringLiteral("⚠ ")));
+            QVERIFY(v.toMap().value("displayName").toString().startsWith(QStringLiteral("⚙ 🏆 ⚠ ")));
         }
     }
     QVERIFY(found);

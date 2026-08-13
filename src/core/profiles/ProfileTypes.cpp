@@ -309,6 +309,7 @@ QJsonObject LaunchProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
     o["alias"] = alias; o["favorite"] = favorite; o["benchmark"] = benchmark;
+    o["systemBadge"] = systemBadge;
     o["deprecated"] = deprecated;
     o["backendProfileId"] = backendProfileId;
     o["modelProfileId"] = modelProfileId;
@@ -334,6 +335,7 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.alias = o["alias"].toString();
     p.favorite = o["favorite"].toBool(false);
     p.benchmark = o["benchmark"].toBool(false);
+    p.systemBadge = o["systemBadge"].toBool(false);
     p.deprecated = o["deprecated"].toBool(false);
     p.backendProfileId = o["backendProfileId"].toString();
     p.modelProfileId = o["modelProfileId"].toString();

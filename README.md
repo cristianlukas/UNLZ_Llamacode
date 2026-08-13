@@ -665,6 +665,12 @@ reactivarlos o migrarlos, pero se excluyen de los selectores operativos de
 **Lanzar**, **Agente**, **Benchmark** y de cualquier otra acción que pueda
 iniciar una ejecución.
 
+Los distintivos visuales son independientes: ⚙ identifica sólo los perfiles
+base recomendados para usuarios nuevos, mientras que 🏆 identifica únicamente
+los seis perfiles FAST/BALANCE/QUALITY seleccionados para comparación. La
+bandera interna de sistema puede seguir protegiendo perfiles bundled aunque no
+se muestre el distintivo ⚙.
+
 ### Importador de perfiles desde CLI
 
 Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n-gpu-layers 99`) y UNLZ_Llamacode extrae y configura automáticamente todos los parámetros reconocidos.

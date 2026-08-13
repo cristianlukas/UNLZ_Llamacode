@@ -594,7 +594,7 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QVERIFY(dual.value(QStringLiteral("extra")).toBool());
     QVERIFY(!dual.value(QStringLiteral("autoCompanion")).toBool());
     QVERIFY(dual.value(QStringLiteral("favorite")).toBool());
-    QVERIFY(dual.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!dual.value(QStringLiteral("benchmark")).toBool());
     QCOMPARE(dual.value(QStringLiteral("minVramGb")).toInt(), 48);
     QCOMPARE(dual.value(QStringLiteral("minRamGb")).toInt(), 64);
     QCOMPARE(dual.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10087);
@@ -647,7 +647,7 @@ void SystemProfilesTests::bundle_miniMaxIsOptInAndMemoryGated()
     QCOMPARE(profile.value(QStringLiteral("minRamGb")).toInt(), 112);
     QCOMPARE(profile.value(QStringLiteral("minVramGb")).toInt(), 48);
     QVERIFY(profile.value(QStringLiteral("favorite")).toBool());
-    QVERIFY(profile.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!profile.value(QStringLiteral("benchmark")).toBool());
     QCOMPARE(profile.value(QStringLiteral("agentProfileId")).toString(),
              QStringLiteral("agent-maximo"));
     QCOMPARE(profile.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10331);
@@ -1019,13 +1019,13 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k")).value("displayName").toString(),
              QStringLiteral("KAT-Coder-7-8-26"));
     QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("favorite").toBool());
-    QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("benchmark").toBool());
+    QVERIFY(!found.value(QStringLiteral("sys-48-katcoder-262k")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("favorite").toBool());
-    QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("benchmark").toBool());
+    QVERIFY(!found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("favorite").toBool());
-    QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("benchmark").toBool());
+    QVERIFY(!found.value(QStringLiteral("sys-48-dsv4-nospec")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("favorite").toBool());
-    QVERIFY(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("benchmark").toBool());
+    QVERIFY(!found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("benchmark").toBool());
     int marked = 0;
     for (auto it = found.cbegin(); it != found.cend(); ++it)
         marked += it.value().value("favorite").toBool() ? 1 : 0;
@@ -1068,7 +1068,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
              QStringLiteral("3"));
     const QVariantMap fableLaunch = pm.getLaunchProfile(QStringLiteral("sys-48-fablefusion-q6-mtp"));
     QVERIFY(fableLaunch.value("favorite").toBool());
-    QVERIFY(fableLaunch.value("benchmark").toBool());
+    QVERIFY(!fableLaunch.value("benchmark").toBool());
     const QVariantMap fableVariant = pm.getLaunchProfile(QStringLiteral("sys-bench-48-fable-mtp3"));
     QVERIFY(!fableVariant.value("favorite").toBool());
     QVERIFY(!fableVariant.value("benchmark").toBool());

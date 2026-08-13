@@ -565,7 +565,7 @@
   {
     "id": "sys-48-dsv4-nospec",
     "favorite": true,
-    "benchmark": true,
+    "benchmark": false,
     "tier": "48GB-DeepSeek-V4-Ultra",
     "order": 88,
     "extra": true,
@@ -653,7 +653,7 @@
       {
         "id": "sys-48-dsv4-nospec-more-experts-gpu0",
         "order": 89,
-        "benchmark": true,
+        "benchmark": false,
         "displayName": "[experimental DeepSeek] más expertos GPU0 · 1,0 · KV q4",
         "extraArgOverrides": {
           "-ot": "blk\\.(0|1|2|3|4|5|6|7|8)\\.ffn_(gate|up|down)_exps\\.weight=CUDA0,blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1,blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU"
@@ -663,7 +663,7 @@
       {
         "id": "sys-48-dsv4-nospec-split11-kv4",
         "order": 90,
-        "benchmark": true,
+        "benchmark": false,
         "displayName": "[experimental DeepSeek] reparto 1,1 · KV q4",
         "extraArgOverrides": {
           "--tensor-split": "1,1"
@@ -874,7 +874,7 @@
   {
     "id": "sys-48-katcoder-262k",
     "favorite": true,
-    "benchmark": true,
+    "benchmark": false,
     "tier": "48GB-KAT",
     "order": 82,
     "extra": true,
@@ -1247,7 +1247,7 @@
   {
     "id": "sys-48-thinkingcap-mtp",
     "favorite": true,
-    "benchmark": true,
+    "benchmark": false,
     "tier": "48GB-Qwen-Vision",
     "order": 79,
     "extra": true,
@@ -1332,7 +1332,7 @@
     "order": 78,
     "extra": true,
     "autoCompanion": false,
-    "benchmark": true,
+    "benchmark": false,
     "displayName": "[experimental 48GB] Fable Fusion Qwen3.6-27B Q6 · MTP · visión",
     "minVramGb": 48,
     "minRamGb": 32,
@@ -1977,7 +1977,7 @@
     "extra": true,
     "autoCompanion": false,
     "favorite": true,
-    "benchmark": true,
+    "benchmark": false,
     "order": 4,
     "displayName": "[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k",
     "chatTemplate": "laguna-tools-v24.jinja",
@@ -2606,7 +2606,7 @@
     "tier": "48GB-DeepSeek-V4-Antirez",
     "order": 145,
     "extra": true,
-    "benchmark": true,
+    "benchmark": false,
     "autoCompanion": false,
     "displayName": "deepseek v4-antirez-10-8-26",
     "minVramGb": 48,
@@ -2664,7 +2664,7 @@
     "tier": "48GB-BigBang",
     "order": 149,
     "extra": true,
-    "benchmark": true,
+    "benchmark": false,
     "autoCompanion": false,
     "displayName": "[experimental 48GB] BigBang-v1 35B-A3B Q4_K_M · visión",
     "vision": true,
@@ -2717,7 +2717,7 @@
     "tier": "48GB-MiniMax",
     "order": 155,
     "extra": true,
-    "benchmark": true,
+    "benchmark": false,
     "favorite": true,
     "autoCompanion": false,
     "displayName": "[experimental 48GB] MiniMax M2.7 Q3_K_S",
