@@ -160,8 +160,7 @@ ApplicationWindow {
         anchors.margins: 0
         radius: 0
         color: window.frameBgColor
-        border.width: window.visibility === Window.Windowed ? window.windowedFrameWidth : 0
-        border.color: window.frameBorderColor
+        border.width: 0
         clip: true
 
         ColumnLayout {
@@ -311,6 +310,18 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    // Se dibuja por encima del contenido para que ningún panel opaque alguno
+    // de los cuatro lados del marco. No intercepta arrastre ni redimensionado.
+    Rectangle {
+        id: windowFrameOverlay
+        anchors.fill: parent
+        color: "transparent"
+        border.width: window.visibility === Window.Windowed ? window.windowedFrameWidth : 0
+        border.color: window.frameBorderColor
+        z: 1000
+        enabled: false
     }
 
     MouseArea {
