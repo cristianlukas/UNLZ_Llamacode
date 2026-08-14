@@ -238,6 +238,14 @@ recomendación automática, no se descarga junto con MAX-Q/FAST-GEMMA y debe
 compararse mediante benchmark antes de reemplazar MAX-Q. MAX-Q usa ThinkingCap
 Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 
+Como perfil experimental de 24 GB, el catálogo también ofrece **Qwen3.8-27B**
+de Unsloth con MTP integrado, `mmproj-BF16.gguf` y la plantilla
+`qwen38-tools-fixed.jinja`. Incluye variantes UD-Q4/Q4_K_M/Q5_K_M y pruebas MTP2,
+MTP3 y MTP4 para compararlo con MAX-Q/ThinkingCap bajo la misma suite. Es opt-in:
+la app descarga los pesos desde Hugging Face cuando se acepta el perfil, pero no
+los incluye en el repositorio; el toggle de thinking controla `enable_thinking`,
+`preserve_thinking` y el esfuerzo `low`/`high`/`max` del template.
+
 Para **2× RTX 3090 (48 GB agregados) + 64 GB RAM o más**, el perfil paralelo
 `[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k` reutiliza el mismo GGUF y
 lo mantiene completo en GPU (`split-mode layer`, `tensor-split 1,1`, mmap y KV

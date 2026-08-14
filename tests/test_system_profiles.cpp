@@ -57,6 +57,7 @@ private slots:
     void manager_defaultCodingProfileUsesKatCoder();
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
     void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
+    void bundle_qwen38VariantsAreMtpVisionAndTemplated();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -1391,6 +1392,35 @@ void SystemProfilesTests::controller_duplicateBakesResolvedBinary()
     QVERIFY(!dupModel.value("modelId").toString().isEmpty());
     // Sin catálogo escaneado en el test no hay religado, así que debe coincidir.
     QCOMPARE(dupModel.value("modelId").toString(), sysModel.value("modelId").toString());
+}
+
+void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    const QStringList ids = {QStringLiteral("sys-qwen38-27b-udq4-131k"),
+                             QStringLiteral("sys-qwen38-27b-q4km-131k"),
+                             QStringLiteral("sys-qwen38-27b-q5km-131k")};
+    for (const QString &id : ids) {
+        QJsonObject found;
+        for (const QJsonValue &value : profiles)
+            if (value.toObject().value("id").toString() == id) found = value.toObject();
+        QVERIFY2(!found.isEmpty(), qPrintable(id));
+        QVERIFY(found.value("extra").toBool());
+        QVERIFY(found.value("vision").toBool());
+        QCOMPARE(found.value("chatTemplate").toString(), QStringLiteral("qwen38-tools-fixed.jinja"));
+        const QJsonObject model = found.value("model").toObject();
+        QCOMPARE(model.value("repo").toString(), QStringLiteral("unsloth/Qwen3.8-27B-GGUF"));
+        QCOMPARE(model.value("mmprojFile").toString(), QStringLiteral("mmproj-BF16.gguf"));
+        const QJsonObject mtp = found.value("mtp").toObject();
+        QVERIFY(mtp.value("enabled").toBool());
+        QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
+        const QVariantMap launch = ProfileManager().getLaunchProfile(id);
+        const QStringList args = launch.value("extraArgs").toStringList();
+        QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-mtp"));
+        QVERIFY(args.contains(QStringLiteral("--mmproj")));
+    }
 }
 
 QTEST_MAIN(SystemProfilesTests)
