@@ -1495,7 +1495,7 @@ void AppControllerTests::parseGpuInventoryCsvParses()
 void AppControllerTests::benchmarkBestModelosSpeedCapsProfilesPerGguf()
 {
     QVariantList rows;
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 11; ++i) {
         rows.append(QVariantMap{
             {QStringLiteral("profileId"), QStringLiteral("qwen-%1").arg(i)},
             {QStringLiteral("profileName"), QStringLiteral("Qwen %1").arg(i)},
@@ -1515,12 +1515,12 @@ void AppControllerTests::benchmarkBestModelosSpeedCapsProfilesPerGguf()
     });
 
     const QVariantList best = AppController::benchmarkBestModelosSpeedForTest(rows);
-    QCOMPARE(best.size(), 3);
+    QCOMPARE(best.size(), 11);
     int qwen = 0;
     for (const QVariant &value : best)
         if (value.toMap().value(QStringLiteral("ggufKey")).toString() == QStringLiteral("qwen.gguf"))
             ++qwen;
-    QCOMPARE(qwen, 2);
+    QCOMPARE(qwen, 10);
 }
 
 void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()

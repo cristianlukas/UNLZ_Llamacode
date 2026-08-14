@@ -1,6 +1,7 @@
 #include "AppController.h"
 #include "core/OllamaImporter.h"
 #include "core/profiles/ProfileHealthChecker.h"
+#include "core/profiles/MtpDetection.h"
 #include "core/profiles/SystemProfileVariants.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/agent/PortableSkillStore.h"
@@ -12684,6 +12685,8 @@ void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
         spec.value(QStringLiteral("type")).toString().contains(QStringLiteral("draft"), Qt::CaseInsensitive)
         || specTokens.contains(QStringLiteral("draft-mtp"), Qt::CaseInsensitive);
     if (requiresDraft
+        && !mtp.value(QStringLiteral("selfContained")).toBool()
+        && !MtpDetection::isSelfContained(mo.value(QStringLiteral("file")).toString())
         && (draft.value("repo").toString().isEmpty()
             || draft.value("file").toString().isEmpty())) {
         emit serverError(QStringLiteral(
@@ -13396,9 +13399,9 @@ QVariantMap AppController::gpuInventory() const
 
 QVariantList AppController::benchmarkBestModelosSpeed() const
 {
-    // Segunda capa de diversidad: parte de los candidatos Best25, resuelve el
-    // archivo GGUF real y permite como máximo dos perfiles por archivo. Así una
-    // familia con muchas variantes no ocupa toda la tabla.
+    // Segunda capa de diversidad: parte del screening HumanEval/0, resuelve el
+    // archivo GGUF real y conserva como máximo diez perfiles candidatos por
+    // archivo. Esos diez son los únicos que avanzan a HumanEval/20.
     QVariantList candidates = benchmarkBest25();
     for (QVariant &value : candidates) {
         QVariantMap row = value.toMap();
@@ -13438,7 +13441,7 @@ QVariantList AppController::benchmarkBestModelosSpeedForTest(const QVariantList 
     for (const QVariant &candidate : candidates) {
         QVariantMap row = candidate.toMap();
         const QString key = row.value(QStringLiteral("ggufKey")).toString();
-        if (perGguf.value(key, 0) >= 2) continue;
+        if (perGguf.value(key, 0) >= 10) continue;
         const int number = ++perGguf[key];
         row[QStringLiteral("bestModelosSpeedRank")] = number;
         result.append(row);
@@ -13515,7 +13518,7 @@ QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantLis
     for (const QVariant &candidate : candidates) {
         QVariantMap row = candidate.toMap();
         const QString key = row.value(QStringLiteral("ggufKey")).toString();
-        if (perGguf.value(key, 0) >= 2) continue;
+        if (perGguf.value(key, 0) >= 3) continue;
         row[QStringLiteral("bestModelosQualityRank")] = result.size() + 1;
         result.append(row);
         ++perGguf[key];

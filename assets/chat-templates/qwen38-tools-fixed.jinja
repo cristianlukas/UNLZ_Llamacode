@@ -1,65 +1,24 @@
-{# Qwen3.8 / LlamaCode v1: vision, XML tools and controllable reasoning. #}
-{%- set image_count = namespace(value=0) -%}
-{%- set video_count = namespace(value=0) -%}
-{%- set thinking = enable_thinking if enable_thinking is defined else true -%}
-{%- set keep_thinking = preserve_thinking if preserve_thinking is defined else true -%}
-{%- set effort = reasoning_effort if reasoning_effort is defined else 'xhigh' -%}
-{%- if effort == 'high' or effort == 'max' -%}{%- set effort = 'xhigh' -%}{%- endif -%}
-{%- if effort not in ['xhigh', 'medium', 'low'] -%}{%- set effort = 'xhigh' -%}{%- endif -%}
-{%- macro content(value, count=true, system=false) -%}
-  {%- if value is string -%}{{- value -}}
-  {%- elif value is iterable and value is not mapping -%}
-    {%- for item in value -%}
-      {%- if item is mapping and (item.type == 'image' or 'image' in item or 'image_url' in item) -%}
-        {%- if system -%}{{- raise_exception('System message cannot contain images.') -}}{%- endif -%}
-        {%- if count -%}{%- set image_count.value = image_count.value + 1 -%}{%- endif -%}
-        {{- '<|vision_start|><|image_pad|><|vision_end|>' -}}
-      {%- elif item is mapping and (item.type == 'video' or 'video' in item) -%}
-        {%- if system -%}{{- raise_exception('System message cannot contain videos.') -}}{%- endif -%}
-        {%- if count -%}{%- set video_count.value = video_count.value + 1 -%}{%- endif -%}
-        {{- '<|vision_start|><|video_pad|><|vision_end|>' -}}
-      {%- elif item is mapping and 'text' in item -%}{{- item.text -}}
-      {%- else -%}{{- item|string -}}{%- endif -%}
-    {%- endfor -%}
-  {%- elif value is none or value is undefined -%}{{- '' -}}
-  {%- else -%}{{- raise_exception('Unexpected content type.') -}}{%- endif -%}
-{%- endmacro -%}
-{%- if not messages -%}{{- raise_exception('No messages provided.') -}}{%- endif -%}
-{%- set instruction = '' -%}
-{%- if thinking and effort == 'xhigh' -%}{%- set instruction = 'Reasoning effort is set to xhigh. Validate assumptions and prioritize correctness.' -%}
-{%- elif thinking and effort == 'low' -%}{%- set instruction = 'Reasoning effort is set to low. Keep thinking brief and focused.' -%}{%- endif -%}
-{%- if tools and tools is iterable and tools is not mapping -%}
-  {{- '<|im_start|>system\n' -}}
-  {%- if instruction -%}{{- instruction + '\n\n' -}}{%- endif -%}
-  {{- '# Tools\n\nYou have access to the following functions:\n\n<tools>' -}}
-  {%- for tool in tools -%}{{- '\n' + tool|tojson -}}{%- endfor -%}
-  {{- '\n</tools>\n\nIf you choose to call a function ONLY reply in this format:\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter>value</parameter>\n</function>\n</tool_call>' -}}
-  {%- if messages[0].role == 'system' -%}{%- set s = content(messages[0].content, false, true)|trim -%}{%- if s -%}{{- '\n\n' + s -}}{%- endif -%}{%- endif -%}
-  {{- '<|im_end|>\n' -}}
-{%- elif messages[0].role == 'system' -%}
-  {%- set s = content(messages[0].content, false, true)|trim -%}
-  {{- '<|im_start|>system\n' + (instruction + '\n\n' if instruction else '') + s + '<|im_end|>\n' -}}
-{%- elif instruction -%}{{- '<|im_start|>system\n' + instruction + '<|im_end|>\n' -}}{%- endif -%}
-{%- set ns = namespace(last_query=messages|length - 1, multi=true) -%}
-{%- for message in messages[::-1] -%}
-  {%- set index = messages|length - 1 - loop.index0 -%}
-  {%- if ns.multi and message.role == 'user' -%}
-    {%- set c = content(message.content, false)|trim -%}
-    {%- if not (c.startswith('<tool_response>') and c.endswith('</tool_response>')) -%}{%- set ns.multi = false -%}{%- set ns.last_query = index -%}{%- endif -%}
-  {%- endif -%}
-{%- endfor -%}
-{%- for message in messages -%}
-  {%- set c = content(message.content, true, message.role == 'system')|trim -%}
-  {%- if message.role == 'system' -%}{%- if not loop.first -%}{{- raise_exception('System message must be first.') -}}{%- endif -%}
-  {%- elif message.role == 'user' -%}{{- '<|im_start|>user\n' + c + '<|im_end|>\n' -}}
-  {%- elif message.role == 'assistant' -%}
-    {%- set r = message.reasoning_content|string if message.reasoning_content is defined and message.reasoning_content is not none else '' -%}
-    {%- if keep_thinking and (loop.index0 > ns.last_query or not messages) and r -%}{{- '<|im_start|>assistant\n<think>\n' + r|trim + '\n</think>\n\n' + c -%}}
-    {%- else -%}{{- '<|im_start|>assistant\n' + c -%}{%- endif -%}
-    {%- if message.tool_calls and message.tool_calls is iterable and message.tool_calls is not mapping -%}
-      {%- for call in message.tool_calls -%}{%- set fn = call.function if call.function is defined else call -%}{{- '\n<tool_call>\n<function=' + fn.name + '>\n' -}}{%- for key, value in fn.arguments.items() -%}{{- '<parameter=' + key + '>\n' + (value|string if value is string else value|tojson) + '\n</parameter>\n' -}}{%- endfor -%}{{- '</function>\n</tool_call>' -}}{%- endfor -%}
-    {%- endif -%}{{- '<|im_end|>\n' -}}
-  {%- elif message.role == 'tool' -%}{{- '<|im_start|>user\n<tool_response>\n' + c + '\n</tool_response><|im_end|>\n' -}}
-  {%- else -%}{{- raise_exception('Unexpected message role.') -}}{%- endif -%}
-{%- endfor -%}
-{%- if add_generation_prompt -%}{{- '<|im_start|>assistant\n' -}}{%- if thinking -%}{{- '<think>\n' -}}{%- else -%}{{- '<think>\n</think>\n\n' -}}{%- endif -%}{%- endif -%}
+{# Qwen3.8 / LlamaCode: conservative llama.cpp-compatible template. #}
+{% set thinking = enable_thinking if enable_thinking is defined else true %}
+{% for message in messages %}
+{% if message.role == 'system' %}
+<|im_start|>system
+{% if tools %}# Tools
+{% for tool in tools %}{{ tool|tojson }}
+{% endfor %}Only call tools with the XML format <tool_call><function=name><parameter=key>value</parameter></function></tool_call>.
+{% endif %}{{ message.content }}<|im_end|>
+{% elif message.role == 'user' %}
+<|im_start|>user
+{{ message.content }}<|im_end|>
+{% elif message.role == 'assistant' %}
+<|im_start|>assistant
+{% if preserve_thinking and message.reasoning_content is defined and message.reasoning_content %}<think>{{ message.reasoning_content }}</think>
+{% endif %}{{ message.content }}<|im_end|>
+{% elif message.role == 'tool' %}
+<|im_start|>user
+<tool_response>{{ message.content }}</tool_response><|im_end|>
+{% endif %}
+{% endfor %}
+{% if add_generation_prompt %}<|im_start|>assistant
+{% if thinking %}<think>
+{% endif %}{% endif %}

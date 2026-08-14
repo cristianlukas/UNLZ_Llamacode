@@ -1519,14 +1519,15 @@ que fallan o quedan sin resultado no entran; un perfil válido con calidad compl
 pero sin TPS persistido entra al final de **Quality** con la marca `TPS pendiente`,
 sin inventar una velocidad ni desplazar los cinco puestos medidos.
 
-`tabla_best_modelos_speed` aplica una segunda regla de diversidad: resuelve el
-archivo GGUF real desde el catálogo y conserva como máximo dos perfiles por GGUF.
-Así una familia con muchas variantes no desplaza a Gemma, KAT-Coder, Qwen u otras
-familias que también tengan candidatos válidos.
+`tabla_best_modelos_speed` es la primera etapa por GGUF: resuelve el archivo GGUF
+real desde el catálogo y conserva como máximo **10 perfiles** que pasaron el
+screening HumanEval/0. La segunda etapa ejecuta HumanEval/20 únicamente sobre los
+**3 mejores perfiles de cada GGUF**; de esta forma la calidad larga compara
+variantes del mismo quant sin gastar 20 ítems en toda la matriz.
 
 `tabla_best_modelos_quality` toma esos mismos perfiles y sus corridas válidas de
-`HumanEval (20 ítems)`, ordena por calidad final, primer intento y tiempo, y vuelve
-a limitar a dos perfiles por GGUF. Conserva los fallos de calidad medidos (por
+`HumanEval (20 ítems)`, ordena por calidad final, primer intento y tiempo, y limita
+a tres perfiles por GGUF. Conserva los fallos de calidad medidos (por
 ejemplo 19/20), mientras que infraestructura y timeouts quedan fuera del ranking
 pero siguen visibles en el historial.
 

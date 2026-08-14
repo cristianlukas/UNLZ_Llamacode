@@ -2819,12 +2819,18 @@
     "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-UD-Q4_K_XL.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "UD-Q4_K_XL" },
     "runtime": { "ctx": 131072, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": false, "mmap": true },
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "on"],
-    "mtp": { "enabled": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] },
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] },
     "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
       { "id": "sys-bench-qwen38-udq4-mtp2", "order": 161, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Comparar con MAX-Q y ThinkingCap." },
       { "id": "sys-bench-qwen38-udq4-mtp4", "order": 162, "displayName": "[bench Qwen3.8] UD-Q4 · MTP4 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "4" }, "comment": "Comparar decode y calidad sostenida contra MTP3." },
-      { "id": "sys-bench-qwen38-udq4-mtp3-196k", "order": 163, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 196k · mmproj", "runtime": { "ctx": 196608 }, "comment": "Prueba de contexto largo con la misma visión." }
+      { "id": "sys-bench-qwen38-udq4-mtp3-196k", "order": 163, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 196k · mmproj", "runtime": { "ctx": 196608 }, "comment": "Prueba de contexto largo con la misma visión." },
+      { "id": "sys-bench-qwen38-udq4-mtp2-64k", "order": 166, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-64k", "order": 167, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 64k · mmproj", "runtime": { "ctx": 65536 } },
+      { "id": "sys-bench-qwen38-udq4-mtp4-64k", "order": 168, "displayName": "[bench Qwen3.8] UD-Q4 · MTP4 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-kv8", "order": 169, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } }
     ],
     "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa, MTP integrado y thinking configurable. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
   },
@@ -2836,8 +2842,19 @@
     "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-Q4_K_M.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "Q4_K_M" },
     "runtime": { "ctx": 131072, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": false, "mmap": true },
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "on"],
-    "mtp": { "enabled": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] }, "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072], "vision": true,
-    "comment": "Variante de referencia de calidad/compatibilidad; mismo mmproj y MTP que UD-Q4."
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] }, "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072], "vision": true,
+    "benchmarkVariants": [
+      { "id": "sys-bench-qwen38-q4km-mtp2", "order": 172, "displayName": "[bench Qwen3.8] Q4_K_M · MTP2 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "2" } },
+      { "id": "sys-bench-qwen38-q4km-mtp4", "order": 173, "displayName": "[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "4" } },
+      { "id": "sys-bench-qwen38-q4km-mtp2-64k", "order": 174, "displayName": "[bench Qwen3.8] Q4_K_M · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
+      { "id": "sys-bench-qwen38-q4km-mtp3-64k", "order": 175, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 64k · mmproj", "runtime": { "ctx": 65536 } },
+      { "id": "sys-bench-qwen38-q4km-mtp4-64k", "order": 176, "displayName": "[bench Qwen3.8] Q4_K_M · MTP4 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" } },
+      { "id": "sys-bench-qwen38-q4km-mtp3-kv8", "order": 177, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-q4km-mtp3-b1024", "order": 178, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
+      { "id": "sys-bench-qwen38-q4km-mtp3-b2048", "order": 179, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-bench-qwen38-q4km-mtp3-64k-kv8", "order": 180, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } }
+    ],
+    "comment": "Variante de referencia de calidad/compatibilidad; mismo mmproj y MTP que UD-Q4. Diez perfiles candidatos por GGUF: el base y nueve variantes pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."
   },
   {
     "id": "sys-qwen38-27b-q5km-131k",
@@ -2847,7 +2864,18 @@
     "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-Q5_K_M.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "Q5_K_M" },
     "runtime": { "ctx": 131072, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": false, "mmap": true },
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "on"],
-    "mtp": { "enabled": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] }, "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072], "vision": true,
-    "comment": "Variante de precisión: más peso y menos margen de KV. Medir calidad real versus Q4/UD-Q4."
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] }, "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072], "vision": true,
+    "benchmarkVariants": [
+      { "id": "sys-bench-qwen38-q5km-mtp2", "order": 181, "displayName": "[bench Qwen3.8] Q5_K_M · MTP2 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "2" } },
+      { "id": "sys-bench-qwen38-q5km-mtp4", "order": 182, "displayName": "[bench Qwen3.8] Q5_K_M · MTP4 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "4" } },
+      { "id": "sys-bench-qwen38-q5km-mtp2-64k", "order": 183, "displayName": "[bench Qwen3.8] Q5_K_M · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-64k", "order": 184, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · mmproj", "runtime": { "ctx": 65536 } },
+      { "id": "sys-bench-qwen38-q5km-mtp4-64k", "order": 185, "displayName": "[bench Qwen3.8] Q5_K_M · MTP4 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-kv8", "order": 186, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-b1024", "order": 187, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-b2048", "order": 188, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } }
+    ],
+    "comment": "Variante de precisión: más peso y menos margen de KV. Diez perfiles candidatos por GGUF pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."
   }
 ]
