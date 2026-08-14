@@ -13399,23 +13399,55 @@ QVariantMap AppController::gpuInventory() const
 
 QVariantList AppController::benchmarkBestModelosSpeed() const
 {
-    // Segunda capa de diversidad: parte del screening HumanEval/0, resuelve el
-    // archivo GGUF real y conserva como máximo diez perfiles candidatos por
+    // Primera etapa por GGUF: tomar todos los resultados válidos de HumanEval/0
+    // (sin pasar por best25, que es un ranking global con cupos por TPS),
+    // resolver el archivo GGUF real y conservar como máximo diez perfiles por
     // archivo. Esos diez son los únicos que avanzan a HumanEval/20.
-    QVariantList candidates = benchmarkBest25();
-    for (QVariant &value : candidates) {
-        QVariantMap row = value.toMap();
-        const LaunchProfile launch = m_profiles.resolveLaunch(
-            row.value(QStringLiteral("profileId")).toString());
+    QHash<QString, QVariantMap> latest;
+    for (const QVariant &value : m_benchmarkResults) {
+        const QVariantMap row = value.toMap();
+        const QString target = row.value(QStringLiteral("target")).toString();
+        if (target.compare(QStringLiteral("agent"), Qt::CaseInsensitive) != 0
+            && target.compare(QStringLiteral("model"), Qt::CaseInsensitive) != 0)
+            continue;
+        if (!row.value(QStringLiteral("benchmarkName")).toString().startsWith(
+                QStringLiteral("HumanEval (1")))
+            continue;
+        if (row.value(QStringLiteral("failed")).toBool()
+            || row.value(QStringLiteral("failureKind")).toString() != QStringLiteral("none"))
+            continue;
+        if (row.value(QStringLiteral("qualityTotal")).toInt() <= 0
+            || row.value(QStringLiteral("qualityScore")).toInt()
+               < row.value(QStringLiteral("qualityTotal")).toInt())
+            continue;
+        const QString id = row.value(QStringLiteral("profileId")).toString();
+        if (id.isEmpty()) continue;
+        if (!latest.contains(id)
+            || row.value(QStringLiteral("timestamp")).toLongLong()
+               > latest.value(id).value(QStringLiteral("timestamp")).toLongLong())
+            latest.insert(id, row);
+    }
+
+    QVariantList candidates;
+    for (const QVariantMap &source : std::as_const(latest)) {
+        QVariantMap row = source;
+        const double tps = row.value(QStringLiteral("avgTps")).toDouble();
+        const QString id = row.value(QStringLiteral("profileId")).toString();
+        const LaunchProfile launch = m_profiles.resolveLaunch(id);
         const ModelProfile model = m_profiles.resolveModelProfile(launch.modelProfileId);
         const CatalogModel catalog = m_catalog.findById(model.modelId);
         QString gguf = QFileInfo(catalog.fileName).fileName();
         if (gguf.isEmpty()) gguf = model.name;
-        if (gguf.isEmpty()) gguf = QStringLiteral("perfil:")
-            + row.value(QStringLiteral("profileId")).toString();
+        if (gguf.isEmpty()) gguf = QStringLiteral("perfil:") + id;
         row[QStringLiteral("ggufName")] = gguf;
         row[QStringLiteral("ggufKey")] = gguf.toLower();
-        value = row;
+        row[QStringLiteral("best25QualityRatio")] = row.value(QStringLiteral("qualityTotal")).toDouble() > 0.0
+            ? row.value(QStringLiteral("qualityScore")).toDouble()
+                / row.value(QStringLiteral("qualityTotal")).toDouble() : 0.0;
+        row[QStringLiteral("best25TpsPending")] = tps <= 0.0;
+        row[QStringLiteral("best25Category")] = tps > 60.0 ? QStringLiteral("Fast")
+            : tps > 40.0 ? QStringLiteral("Balanced") : QStringLiteral("Quality");
+        candidates.append(row);
     }
 
     return benchmarkBestModelosSpeedForTest(candidates);
@@ -13467,7 +13499,9 @@ QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantLis
     QHash<QString, QVariantMap> latest;
     for (const QVariant &value : results) {
         const QVariantMap source = value.toMap();
-        if (source.value(QStringLiteral("target")).toString().toLower() != QStringLiteral("agent"))
+        const QString target = source.value(QStringLiteral("target")).toString();
+        if (target.compare(QStringLiteral("agent"), Qt::CaseInsensitive) != 0
+            && target.compare(QStringLiteral("model"), Qt::CaseInsensitive) != 0)
             continue;
         if (!source.value(QStringLiteral("benchmarkName")).toString().startsWith(QStringLiteral("HumanEval (20")))
             continue;

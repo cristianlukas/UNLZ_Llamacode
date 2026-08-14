@@ -1259,7 +1259,7 @@ Item {
                                 }
                                 Item { Layout.fillWidth: true }
                                 LcButton {
-                                    text: "Seleccionar modelos"
+                                text: "Seleccionar 10 por GGUF"
                                     secondary: true
                                     enabled: (App.benchmarkBestModelosSpeed || []).length > 0
                                     onClicked: {
@@ -1273,7 +1273,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "Máximo 2 perfiles por GGUF; se conserva la mejor calidad y velocidad de cada modelo."
+                                text: "HumanEval/0: hasta 10 perfiles por GGUF; sólo estos avanzan a HumanEval/20."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {
@@ -1336,7 +1336,7 @@ Item {
                                 }
                                 Item { Layout.fillWidth: true }
                                 LcButton {
-                                    text: "Seleccionar modelos"
+                                text: "Seleccionar finalistas"
                                     secondary: true
                                     enabled: (App.benchmarkBestModelosQuality || []).length > 0
                                     onClicked: {
@@ -1350,7 +1350,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "Resultados medidos de los perfiles speed; infra/timeouts quedan fuera. Máximo 2 por GGUF."
+                                text: "HumanEval/20 sobre los 3 mejores perfiles por GGUF; infra/timeouts quedan fuera."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {
