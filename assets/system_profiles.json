@@ -1,5 +1,83 @@
 [
   {
+    "id": "sys-ninfer3090-qwen27",
+    "tier": "24GB-NInfer",
+    "order": 170,
+    "extra": true,
+    "benchmark": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.6-27B · texto",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "NInfer-Qwen3.6-27B",
+    "agentProfileId": "agent-intermedio",
+    "model": {
+      "repo": "neroued/Qwen3.6-27B-NInfer",
+      "file": "qwen3_6_27b.ninfer",
+      "quant": "groupwise-int"
+    },
+    "runtime": {
+      "ctx": 4096,
+      "batch": 512,
+      "ubatch": 128,
+      "gpuLayers": 999,
+      "kv": "q8_0",
+      "flashAttn": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--model-id", "qwen3.6-27b",
+      "--mtp-draft-tokens", "2", "--lm-head-draft",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
+    ],
+    "binaryKind": "ninfer3090",
+    "contextPresets": [4096, 8192, 16384],
+    "comment": "Backend experimental NInfer-3090. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_27b.ninfer en el root NInfer-Qwen3.6-27B. Sólo texto; el artefacto incorpora tokenizer, template y MTP."
+  },
+  {
+    "id": "sys-ninfer3090-qwen35",
+    "tier": "24GB-NInfer",
+    "order": 171,
+    "extra": true,
+    "benchmark": false,
+    "favorite": true,
+    "autoCompanion": false,
+    "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.6-35B-A3B · coding",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "NInfer-Qwen3.6-35B-A3B",
+    "agentProfileId": "agent-avanzado",
+    "model": {
+      "repo": "neroued/Qwen3.6-35B-A3B-NInfer",
+      "file": "qwen3_6_35b_a3b.ninfer",
+      "quant": "groupwise-int"
+    },
+    "runtime": {
+      "ctx": 4096,
+      "batch": 512,
+      "ubatch": 128,
+      "gpuLayers": 999,
+      "kv": "q8_0",
+      "flashAttn": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--model-id", "qwen3.6-35b-a3b",
+      "--mtp-draft-tokens", "2", "--lm-head-draft",
+      "--prompt-lookup-tokens", "15", "--prompt-lookup-min-match", "4", "--prompt-lookup-auto",
+      "--prompt-lookup-min-context", "1000",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
+    ],
+    "binaryKind": "ninfer3090",
+    "contextPresets": [4096, 8192, 16384],
+    "comment": "Backend experimental NInfer-3090 para coding. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_35b_a3b.ninfer en el root NInfer-Qwen3.6-35B-A3B. Usa MTP y prompt-lookup adaptativo; comparar HumanEval/0 y luego HumanEval/20 contra llama.cpp."
+  },
+  {
     "id": "sys-ultraq-dsv4-0731-iq3s",
     "tier": "24GB-DeepSeek-V4-Ultra",
     "order": 90,

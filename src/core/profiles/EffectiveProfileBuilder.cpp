@@ -106,6 +106,17 @@ static bool supportsGemma4AssistantDraft(const LlamaBinary &bin)
     return build == 0 || build >= 9763;
 }
 
+static bool isNinfer3090(const LlamaBinary &bin)
+{
+    const QString tag = (bin.flavor + QLatin1Char(' ') + bin.name + QLatin1Char(' ')
+                         + bin.path).toLower();
+    const QString exe = QFileInfo(bin.path).fileName();
+    return tag.contains(QStringLiteral("ninfer-3090"))
+        || tag.contains(QStringLiteral("ninfer-rtx3090"))
+        || exe.compare(QStringLiteral("ninfer-serve.exe"), Qt::CaseInsensitive) == 0
+        || exe.compare(QStringLiteral("ninfer-serve"), Qt::CaseInsensitive) == 0;
+}
+
 EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
 {
     EffectiveProfile result;
@@ -206,8 +217,8 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
         args.append(ctx.binary.resolveFlag(cur));
     }
 
-    // Asegurar --jinja: necesario para tool-calling por template.
-    if (!args.contains(QStringLiteral("--jinja")))
+    // NInfer ya incorpora el chat-template en el artefacto y no acepta --jinja.
+    if (!isNinfer3090(ctx.binary) && !args.contains(QStringLiteral("--jinja")))
         args << QStringLiteral("--jinja");
 
     applyReasoningControl(ctx, args, result.warnings);
@@ -350,6 +361,21 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
         errors.append(QStringLiteral("Model unavailable: %1").arg(model.fileName));
         return;
     }
+    if (isNinfer3090(bin)) {
+        if (!model.absolutePath.endsWith(QStringLiteral(".ninfer"), Qt::CaseInsensitive)) {
+            errors.append(QStringLiteral(
+                "NInfer-3090 sólo acepta artefactos .ninfer; el perfil apunta a '%1'.")
+                .arg(model.fileName));
+            return;
+        }
+        args << model.absolutePath;
+        if (!mp.mmprojId.isEmpty() || !mp.draftModelId.isEmpty())
+            warnings.append(QStringLiteral(
+                "NInfer-3090 usa visión/MTP embebidos en el artefacto; se ignoran "
+                "mmproj y draft externos del perfil."));
+        return;
+    }
+
     args << "--model" << model.absolutePath;
 
     // Gemma QAT q4_0 crudo (Google-style): degradado en llama.cpp. Avisar que el
@@ -418,6 +444,15 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
                                            bool specDecoding)
 {
     Q_UNUSED(errors)
+    if (isNinfer3090(bin)) {
+        args << "--max-context" << QString::number(rt.ctx);
+        args << "--prefill-chunk" << QString::number(qMax(128, qMin(rt.ubatch, 1024)));
+        args << "--kv-dtype"
+             << ((rt.cacheType == QStringLiteral("f16") || rt.cacheType == QStringLiteral("bf16"))
+                     ? QStringLiteral("bf16") : QStringLiteral("int8"));
+        args << "--text-only";
+        return;
+    }
     args << "--ctx-size" << QString::number(rt.ctx);
     args << "--batch-size" << QString::number(rt.batch);
     args << "--ubatch-size" << QString::number(rt.ubatch);

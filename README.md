@@ -518,7 +518,7 @@ LlamaCode
 ### Binary Registry
 
 Entidad `LlamaBinary`:
-- `id`, `name`, `path`, `flavor` (`official`, `mtp-fork`, `custom`)
+- `id`, `name`, `path`, `flavor` (`official`, `mtp-fork`, `ninfer-3090`, `custom`)
 - `backend` (`cuda`, `vulkan`, `cpu`, `metal`)
 - `versionHint` (texto libre)
 - `supportedFlags`, `kvTypes`, `conflictingFlags`, `flagAliases`
@@ -540,6 +540,13 @@ La página **Binarios** incluye un catálogo curado de motores y forks:
   interceptar `cl.exe` en este fork.
 - Motores con contrato distinto (`KoboldCpp`, `llamafile`) quedan catalogados como
   opciones experimentales/manuales hasta que el launcher soporte su ciclo completo.
+- **NInfer-3090** queda soportado como backend manual/experimental para sus dos
+  artefactos nativos `qwen3_6_27b.ninfer` y `qwen3_6_35b_a3b.ninfer`. Se registra
+  `ninfer-serve` en **Binarios** con flavor `ninfer-3090`; los perfiles bundled
+  `[experimental 24GB] NInfer-3090` usan la CLI nativa y no alteran los perfiles
+  `llama.cpp`. NInfer no acepta GGUF arbitrarios, visión externa ni draft externo:
+  el tokenizer, template, MTP y recursos compatibles deben estar dentro del
+  artefacto `.ninfer`.
 
 ### Capabilities Matrix
 

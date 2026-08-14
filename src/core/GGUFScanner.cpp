@@ -83,7 +83,7 @@ QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root)
         return results;
     }
 
-    QDirIterator it(root.path, {"*.gguf", "*.GGUF"},
+    QDirIterator it(root.path, {"*.gguf", "*.GGUF", "*.ninfer", "*.NINFER"},
                     QDir::Files, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {

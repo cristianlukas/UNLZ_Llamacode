@@ -55,6 +55,7 @@ private slots:
     void builder_warnsOnManualQwenSampling();
     void builder_emitsTensorOverrides();
     void builder_warnsOnMalformedTensorOverride();
+    void builder_ninfer3090UsesNativeArtifactCli();
     void runtimePreset_roundtripsTensorOverrides();
 };
 
@@ -550,6 +551,29 @@ void CoreTests::builder_warnsOnMalformedTensorOverride()
     for (const QString &w : ep.warnings)
         if (w.contains("ffn_only_no_type")) warned = true;
     QVERIFY(warned);
+}
+
+void CoreTests::builder_ninfer3090UsesNativeArtifactCli()
+{
+    auto ctx = makeCtx();
+    ctx.binary.flavor = QStringLiteral("ninfer-3090");
+    ctx.catalogModel.fileName = QStringLiteral("qwen3_6_35b_a3b.ninfer");
+    ctx.catalogModel.absolutePath = QStringLiteral("C:/models/qwen3_6_35b_a3b.ninfer");
+    ctx.runtime.ctx = 4096;
+    ctx.runtime.ubatch = 128;
+    ctx.runtime.cacheType = QStringLiteral("q8_0");
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    const QStringList &a = ep.effectiveArgs;
+    QVERIFY2(ep.blockingErrors.isEmpty(), qPrintable(ep.blockingErrors.join("\n")));
+    QVERIFY(a.contains(QStringLiteral("C:/models/qwen3_6_35b_a3b.ninfer")));
+    QVERIFY(!a.contains(QStringLiteral("--model")));
+    QVERIFY(!a.contains(QStringLiteral("--ctx-size")));
+    QVERIFY(a.contains(QStringLiteral("--max-context")));
+    QVERIFY(a.contains(QStringLiteral("--kv-dtype")));
+    QVERIFY(a.contains(QStringLiteral("int8")));
+    QVERIFY(a.contains(QStringLiteral("--text-only")));
+    QVERIFY(!a.contains(QStringLiteral("--jinja")));
 }
 
 // Persistencia: tensorOverrides sobrevive toJson→fromJson; entries vacías se filtran.

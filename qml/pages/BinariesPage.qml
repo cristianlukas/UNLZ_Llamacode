@@ -47,7 +47,7 @@ Item {
                     LcComboBox {
                         id: flavorCombo
                         Layout.fillWidth: true
-                        model: ["official", "mtp-fork", "custom"]
+                        model: ["official", "mtp-fork", "ninfer-3090", "custom"]
                         background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                         contentItem: Text { text: flavorCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                     }
@@ -364,14 +364,14 @@ Item {
                 editVersionField.text = binData.versionHint   ?? ""
                 editWorkDirField.text = binData.workingDirectory ?? ""
                 editBackendCombo.currentIndex  = ["cpu","cuda","vulkan","metal"].indexOf(binData.backend ?? "cpu")
-                editFlavorCombo.currentIndex   = ["official","mtp-fork","custom"].indexOf(binData.flavor ?? "official")
+                editFlavorCombo.currentIndex   = ["official","mtp-fork","ninfer-3090","custom"].indexOf(binData.flavor ?? "official")
                 if (editBackendCombo.currentIndex  < 0) editBackendCombo.currentIndex  = 0
                 if (editFlavorCombo.currentIndex   < 0) editFlavorCombo.currentIndex   = 0
             }
 
             onAccepted: {
                 const backends = ["cpu","cuda","vulkan","metal"]
-                const flavors  = ["official","mtp-fork","custom"]
+                const flavors  = ["official","mtp-fork","ninfer-3090","custom"]
                 App.binaryRegistry.update(
                     binId,
                     editNameField.text.trim(),
@@ -410,7 +410,7 @@ Item {
                         LcComboBox {
                             id: editFlavorCombo
                             Layout.fillWidth: true
-                            model: ["official", "mtp-fork", "custom"]
+                            model: ["official", "mtp-fork", "ninfer-3090", "custom"]
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: editFlavorCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }

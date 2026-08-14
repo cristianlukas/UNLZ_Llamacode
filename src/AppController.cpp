@@ -12153,6 +12153,8 @@ static QJsonArray readSystemProfilesBundle()
 
 void AppController::ensureSystemBinary(const QString &kind)
 {
+    if (kind == QLatin1String("ninfer3090"))
+        return; // NInfer se instala manualmente junto con sus artefactos .ninfer.
     bool hasBee = false, hasOfficial = false;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const LlamaBinary b = m_binaries.findById(
@@ -12376,18 +12378,26 @@ QString AppController::minimumSystemBinaryId(const QString &launchId) const
 
 QString AppController::resolveSystemBinaryId(const QString &kind) const
 {
-    QString firstId, beeId, officialId, gemmaId, cpuId;
+    QString firstId, beeId, officialId, gemmaId, ninferId, cpuId;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
         if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;     // solo válidos
         if (firstId.isEmpty()) firstId = bid;
+        const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
+        if (tag.contains(QStringLiteral("ninfer-3090"))
+            || tag.contains(QStringLiteral("ninfer-rtx3090"))
+            || b.flavor.compare(QStringLiteral("ninfer-3090"), Qt::CaseInsensitive) == 0
+            || QFileInfo(b.path).fileName().compare(QStringLiteral("ninfer-serve.exe"),
+                                                     Qt::CaseInsensitive) == 0) {
+            if (ninferId.isEmpty()) ninferId = bid;
+            continue;
+        }
         if (b.backend == QLatin1String("cpu")) {
             if (cpuId.isEmpty()) cpuId = bid;
             continue;
         }
-        const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
         const bool isBee = tag.contains("beellama") || tag.contains("mtp");
         if (isBee) { if (beeId.isEmpty()) beeId = bid; }
         else       { if (officialId.isEmpty()) officialId = bid; }       // official / gemma / etc
@@ -12395,6 +12405,8 @@ QString AppController::resolveSystemBinaryId(const QString &kind) const
     }
     if (kind == QLatin1String("cpu"))
         return cpuId;
+    if (kind == QLatin1String("ninfer3090"))
+        return ninferId;
     if (kind == QLatin1String("beellama"))
         return !beeId.isEmpty() ? beeId : firstId;
     if (kind == QLatin1String("gemma4"))                                  // gemma4-assistant
