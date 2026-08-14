@@ -240,7 +240,10 @@ Qwen3.6-27B a 131k; el anterior Qwen base de 262k se conserva como MAX-CTX.
 
 Como perfil experimental de 24 GB, el catálogo también ofrece **Qwen3.8-27B**
 de Unsloth con MTP integrado, `mmproj-BF16.gguf` y la plantilla
-`qwen38-tools-fixed.jinja`. Incluye variantes UD-Q4/Q4_K_M/Q5_K_M y pruebas MTP2,
+`qwen38-tools-fixed.jinja` (safe-v2, conservadora respecto del formato entrenado).
+La plantilla conserva el wording original de herramientas, bloques históricos de
+thinking y argumentos JSON/XML sin coerciones silenciosas, además de validar roles
+y contenido multimodal. Incluye variantes UD-Q4/Q4_K_M/Q5_K_M y pruebas MTP2,
 MTP3 y MTP4 para compararlo con MAX-Q/ThinkingCap bajo la misma suite. Es opt-in:
 la app descarga los pesos desde Hugging Face cuando se acepta el perfil, pero no
 los incluye en el repositorio; el toggle de thinking controla `enable_thinking`,
