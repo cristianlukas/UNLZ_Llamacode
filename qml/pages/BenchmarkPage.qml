@@ -726,27 +726,33 @@ Item {
                             Component.onCompleted: _syncToSaved()
                         }
 
-                        RowLayout {
+                        GridLayout {
                             Layout.fillWidth: true
-                            spacing: 6
+                            columns: 3
+                            rowSpacing: 6
+                            columnSpacing: 6
                             LcButton {
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
                                 text: "Pro-Benchmarks (%1)".arg(root.proBenchmarkIds.length)
                                 secondary: true
                                 onClicked: proBenchPopup.open()
                             }
                             LcButton {
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
                                 text: "Nuevo"
                                 onClicked: { editor.loadDef(null); editor.open() }
                             }
                             LcButton {
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
                                 text: "Importar Eval"
                                 onClicked: evalImportDialog.open()
                             }
                             LcButton {
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
                                 text: "Editar"
                                 enabled: root.customId !== ""
                                 onClicked: {
@@ -757,6 +763,7 @@ Item {
                             }
                             LcButton {
                                 Layout.fillWidth: true
+                                Layout.minimumWidth: 0
                                 text: "Borrar"
                                 danger: true
                                 enabled: root.customId !== ""
