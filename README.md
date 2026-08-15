@@ -1215,6 +1215,9 @@ Configuración manual equivalente:
 
 ## Process Lifecycle
 
+El arranque por fases, la instrumentación Normal/Debug y el escaneo incremental
+del catálogo están documentados en [`docs/startup-performance.md`](docs/startup-performance.md).
+
 - **Windows Job Object**: todos los subprocesos (llama-server + harness) se asignan al Job Object del proceso principal. Al cerrar UNLZ_Llamacode (normal o crash), los hijos mueren automáticamente.
 - **Env vars de trazabilidad**: `LLAMACODE_MANAGED=1`, `LLAMACODE_ROLE=server|harness-*`, `LLAMACODE_APP_PID=<pid>` en todos los procesos spawneados.
 - **PID state file** (`services.json`): al iniciar, detecta orphans de sesiones anteriores y los mata antes de levantar nuevos procesos.

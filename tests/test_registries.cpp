@@ -19,6 +19,7 @@
 #include "core/BinaryRegistry.h"
 #include "core/ModelRootRegistry.h"
 #include "core/ModelCatalog.h"
+#include "core/GGUFScanner.h"
 #include "core/OllamaImporter.h"
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -49,6 +50,7 @@ private slots:
 
     void modelRootRegistry_addRemove();
     void modelRootRegistry_scanFindsGguf();
+    void ggufScanner_reusesUnchangedCatalogMetadata();
 
     void ollamaImporter_resolveScheme();
     void ollamaImporter_scanFindsBlobs();
@@ -200,6 +202,37 @@ void RegistriesTests::modelRootRegistry_scanFindsGguf()
     reg.scan(id);
     QVERIFY(spy.wait(5000) || spy.count() > 0);
     QVERIFY(cat.count() >= 1);  // el .gguf entró al catálogo
+}
+
+void RegistriesTests::ggufScanner_reusesUnchangedCatalogMetadata()
+{
+    QTemporaryDir dir;
+    const QString path = writeFakeFile(dir.filePath("cached-Q4_K_M.gguf"), "x");
+    const QFileInfo info(path);
+
+    ModelRoot root;
+    root.id = QStringLiteral("root-cache");
+    root.path = dir.path();
+    root.enabled = true;
+    root.isOnline = true;
+
+    CatalogModel cached;
+    cached.id = QStringLiteral("stable-cached-id");
+    cached.rootId = root.id;
+    cached.absolutePath = path;
+    cached.fileName = info.fileName();
+    cached.sizeBytes = info.size();
+    cached.mtime = info.lastModified();
+    cached.quantReal = QStringLiteral("cached-quant");
+    cached.tensorBreakdown = QStringLiteral("cached-metadata");
+    cached.isAvailable = true;
+
+    GGUFScanner scanner;
+    const QList<CatalogModel> found = scanner.scan(root, {cached});
+    QCOMPARE(found.size(), 1);
+    QCOMPARE(found.first().id, cached.id);
+    QCOMPARE(found.first().quantReal, cached.quantReal);
+    QCOMPARE(found.first().tensorBreakdown, cached.tensorBreakdown);
 }
 
 void RegistriesTests::ollamaImporter_resolveScheme()

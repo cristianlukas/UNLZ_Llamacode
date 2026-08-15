@@ -14,6 +14,12 @@ public:
     // Synchronous scan — call from thread pool. Rutea por root.kind:
     // "ollama" → blobs del store de Ollama; cualquier otro → *.gguf en disco.
     QList<CatalogModel> scan(const ModelRoot &root);
+    // Igual que scan(), pero reutiliza la metadata ya catalogada cuando el
+    // archivo no cambió. Esto conserva toda la información (incluida la
+    // composición real) sin volver a leer headers de modelos enormes en cada
+    // inicio.
+    QList<CatalogModel> scan(const ModelRoot &root,
+                             const QList<CatalogModel> &cached);
 
     // Inferencia pura sobre el nombre de archivo (públicas para tests).
     static QString inferFamily(const QString &fileName);

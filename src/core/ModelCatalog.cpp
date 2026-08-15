@@ -45,12 +45,15 @@ ModelCatalog::ModelCatalog(QObject *parent)
     // db.open()/the query can briefly fail and leave us with an empty catalog
     // for the whole session (→ every profile becomes "No model selected").
     const bool dbHasData = QFileInfo(dbPath()).size() > 4096;
-    for (int attempt = 0; attempt < 10; ++attempt) {
+    // No bloquear varios segundos antes de que exista una ventana. SQLite ya
+    // tiene busy_timeout; si otra instancia mantiene el lock, el rescan de
+    // arranque puede reintentarse después desde el flujo de startup.
+    for (int attempt = 0; attempt < 3; ++attempt) {
         openDb();
         m_all.clear();
         loadFromDb();
         if (!m_all.isEmpty() || !dbHasData) break;
-        QThread::msleep(250);
+        QThread::msleep(50);
     }
     rebuildVisible();
 }
@@ -59,12 +62,12 @@ int ModelCatalog::reload()
 {
     beginResetModel();
     const bool dbHasData = QFileInfo(dbPath()).size() > 4096;
-    for (int attempt = 0; attempt < 10; ++attempt) {
+    for (int attempt = 0; attempt < 3; ++attempt) {
         openDb();
         m_all.clear();
         loadFromDb();
         if (!m_all.isEmpty() || !dbHasData) break;
-        QThread::msleep(250);
+        QThread::msleep(50);
     }
     endResetModel();
     rebuildVisible();

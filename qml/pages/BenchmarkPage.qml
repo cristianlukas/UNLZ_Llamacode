@@ -447,8 +447,8 @@ Item {
     }
 
     Component.onCompleted: {
-        if (App.loadBenchmarkResults) App.loadBenchmarkResults()
-        if (App.loadCustomBenchmarks) App.loadCustomBenchmarks()
+        // Se precargan después del primer pintado desde AppController. Esta
+        // página se crea junto con Main.qml aunque aún no sea visible.
         // Restaurar ancho del panel izquierdo (si el layout ya tiene tamaño).
         tryRestoreLeftPanel()
         Qt.callLater(tryRestoreLeftPanel)

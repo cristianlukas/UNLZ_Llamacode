@@ -17,11 +17,6 @@ ModelRootRegistry::ModelRootRegistry(ModelCatalog *catalog, QObject *parent)
 {
     load();
 
-    // Auto-scan startup roots
-    for (const auto &r : m_items) {
-        if (r.enabled && r.scanMode == "startup")
-            doScan(r);
-    }
 }
 
 int ModelRootRegistry::rowCount(const QModelIndex &parent) const
@@ -154,6 +149,13 @@ void ModelRootRegistry::scanAll()
         if (r.enabled) doScan(r);
 }
 
+void ModelRootRegistry::scanStartupRoots()
+{
+    for (const auto &r : m_items)
+        if (r.enabled && r.scanMode == QLatin1String("startup"))
+            doScan(r);
+}
+
 void ModelRootRegistry::refresh()
 {
     for (int i = 0; i < m_items.size(); ++i) {
@@ -230,15 +232,16 @@ void ModelRootRegistry::doScan(const ModelRoot &root)
     const QString rootId = root.id;
     const ModelRoot rootCopy = root;
     ModelCatalog *catalog = m_catalog;
+    const QList<CatalogModel> cached = catalog->allForRoot(root.id);
     QPointer<ModelRootRegistry> self(this);
 
     m_scanning = true;
     emit scanningChanged();
     emit scanStarted(rootId);
 
-    (void)QtConcurrent::run([self, rootCopy, rootId, catalog]() {
+    (void)QtConcurrent::run([self, rootCopy, rootId, catalog, cached]() {
         GGUFScanner scanner;
-        QList<CatalogModel> found = scanner.scan(rootCopy);
+        QList<CatalogModel> found = scanner.scan(rootCopy, cached);
 
         if (!self)
             return;

@@ -62,19 +62,55 @@ CatalogModel buildCatalogModel(const ModelRoot &root, const QString &filePath,
 
 QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root)
 {
+    return scan(root, {});
+}
+
+QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root,
+                                      const QList<CatalogModel> &cached)
+{
     QList<CatalogModel> results;
+
+    QMap<QString, CatalogModel> cacheByPath;
+    for (const CatalogModel &m : cached)
+        cacheByPath.insert(m.absolutePath, m);
+
+    auto appendCachedOrBuild = [&](const QString &path, const QString &name) {
+        const QFileInfo info(path);
+        const auto it = cacheByPath.constFind(path);
+        if (it != cacheByPath.constEnd()
+            && it->sizeBytes == info.size()
+            && it->mtime == info.lastModified()) {
+            CatalogModel cachedModel = it.value();
+            cachedModel.rootId = root.id;
+            cachedModel.isAvailable = true;
+            results.append(cachedModel);
+            return;
+        }
+        results.append(buildCatalogModel(root, path, name));
+    };
 
     // Store de Ollama: los pesos son blobs sin extensión, resueltos vía manifests.
     if (root.kind == QLatin1String("ollama")) {
         const QList<OllamaImporter::Entry> entries = OllamaImporter::scan(root.path);
         for (const OllamaImporter::Entry &e : entries) {
-            results.append(buildCatalogModel(root, e.blobPath, e.name));
+            appendCachedOrBuild(e.blobPath, e.name);
             emit progress(root.id, results.size());
             // Modelo multimodal: el projector (mmproj) entra como entrada aparte,
             // marcada como candidata de visión para poder emparejar --mmproj.
             if (!e.mmprojPath.isEmpty()) {
-                CatalogModel mm = buildCatalogModel(root, e.mmprojPath,
-                                                    e.name + QStringLiteral(" (mmproj)"));
+                const QString mmName = e.name + QStringLiteral(" (mmproj)");
+                const QFileInfo mmInfo(e.mmprojPath);
+                const auto cachedIt = cacheByPath.constFind(e.mmprojPath);
+                CatalogModel mm;
+                if (cachedIt != cacheByPath.constEnd()
+                    && cachedIt->sizeBytes == mmInfo.size()
+                    && cachedIt->mtime == mmInfo.lastModified()) {
+                    mm = cachedIt.value();
+                    mm.rootId = root.id;
+                    mm.isAvailable = true;
+                } else {
+                    mm = buildCatalogModel(root, e.mmprojPath, mmName);
+                }
                 mm.isVisionCandidate = true;
                 results.append(mm);
                 emit progress(root.id, results.size());
@@ -88,7 +124,7 @@ QList<CatalogModel> GGUFScanner::scan(const ModelRoot &root)
 
     while (it.hasNext()) {
         const QString filePath = it.next();
-        results.append(buildCatalogModel(root, filePath, QFileInfo(filePath).fileName()));
+        appendCachedOrBuild(filePath, QFileInfo(filePath).fileName());
         emit progress(root.id, results.size());
     }
 

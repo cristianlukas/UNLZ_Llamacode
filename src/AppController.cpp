@@ -684,6 +684,11 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    connect(&m_hardwareWatcher, &QFutureWatcher<QVariantMap>::finished, this,
+            [this]() {
+        m_hardwareScanInFlight = false;
+        applyHardwareSummary(m_hardwareWatcher.result());
+    });
     migrateIntegrationSecrets();
     // Un cierre/crash durante un hot-swap no debe dejar seleccionado al planner.
     // Recuperamos el ejecutor como perfil activo; el plan validado permanece en
@@ -1150,79 +1155,99 @@ void AppController::updateTeachStopOverlay()
 
 void AppController::runStartupScan()
 {
+    if (m_startupScanStarted)
+        return;
+    m_startupScanStarted = true;
+    m_startupBusy = true;
+    m_startupStatus = QStringLiteral("Preparando la aplicación…");
+    m_startupTimings.clear();
+    m_startupTimer.start();
+    emit startupChanged();
+
     m_binaries.refresh();
     m_roots.refresh();
-    rescanHardware();
 
-    // Diagnóstico de catálogo: comparar lo cargado en memoria contra las filas
-    // reales en el .db, para detectar fallos de carga (→ rescans con ids nuevos
-    // que orfanan los modelId de los perfiles).
-    {
+    // Cada bloque corre en un turno distinto del event loop. La ventana ya está
+    // visible y puede pintar/procesar input entre fases; no se cambia la
+    // navegación ni se difieren páginas QML completas.
+    QTimer::singleShot(0, this, [this]() {
+        m_startupStatus = QStringLiteral("Detectando hardware…");
+        emit startupChanged();
+        rescanHardware();
+
         const QString dbp = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
                             + QStringLiteral("/model_catalog.db");
         int dbRows = -1; QString dbErr; bool opened = false;
+        const QString cn = QStringLiteral("diagcat_%1").arg(QCoreApplication::applicationPid());
         {
-            const QString cn = QStringLiteral("diagcat_%1").arg(QCoreApplication::applicationPid());
-            // La QSqlDatabase y toda QSqlQuery deben destruirse ANTES de
-            // removeDatabase, si no Qt avisa "connection still in use". Por eso el
-            // objeto `d` (y `q`) viven en un scope interno que cierra antes.
-            {
-                QSqlDatabase d = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), cn);
-                d.setDatabaseName(dbp);
-                opened = d.open();
-                if (opened) {
-                    QSqlQuery q(QStringLiteral("SELECT COUNT(*) FROM catalog_models"), d);
-                    if (q.next()) dbRows = q.value(0).toInt(); else dbErr = q.lastError().text();
-                    d.close();
-                } else {
-                    dbErr = d.lastError().text();
-                }
+            QSqlDatabase d = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), cn);
+            d.setDatabaseName(dbp);
+            opened = d.open();
+            if (opened) {
+                QSqlQuery q(QStringLiteral("SELECT COUNT(*) FROM catalog_models"), d);
+                if (q.next()) dbRows = q.value(0).toInt(); else dbErr = q.lastError().text();
+                d.close();
+            } else {
+                dbErr = d.lastError().text();
             }
-            QSqlDatabase::removeDatabase(cn);
         }
+        QSqlDatabase::removeDatabase(cn);
         appendServerEvent(QStringLiteral("lifecycle"),
             QStringLiteral("catalog diag: inMemory=%1 dbRows=%2 dbOpen=%3 path=%4 err=%5 driversAvail=%6")
-                .arg(QString::number(m_catalog.count()),
-                     QString::number(dbRows),
-                     opened ? QStringLiteral("yes") : QStringLiteral("NO"),
-                     dbp,
+                .arg(QString::number(m_catalog.count()), QString::number(dbRows),
+                     opened ? QStringLiteral("yes") : QStringLiteral("NO"), dbp,
                      dbErr.isEmpty() ? QStringLiteral("-") : dbErr,
                      QSqlDatabase::drivers().join(QLatin1Char(','))));
-    }
 
-    // If folders are registered but no models were found yet (e.g. a root added
-    // in "manual" mode), scan them once on startup so the catalog is populated.
-    if (m_roots.count() > 0 && m_catalog.count() == 0)
-        m_roots.scanAll();
+        QTimer::singleShot(0, this, [this]() {
+            m_startupStatus = QStringLiteral("Actualizando catálogo de modelos…");
+            emit startupChanged();
+            bool scanned = false;
+            if (m_roots.count() > 0 && m_catalog.count() == 0) {
+                m_roots.scanAll();
+                scanned = true;
+            }
+            if (QString(readSetting(QStringLiteral("catalog/idSchemeV5"), QString()).toString())
+                    != QLatin1String("done")) {
+                if (m_roots.count() > 0) {
+                    m_roots.scanAll();
+                    scanned = true;
+                }
+                writeSetting(QStringLiteral("catalog/idSchemeV5"), QStringLiteral("done"));
+                appendServerEvent(QStringLiteral("lifecycle"),
+                                  QStringLiteral("catalog: migrado a ids deterministas (rescan forzado)."));
+            }
+            if (!scanned)
+                m_roots.scanStartupRoots();
 
-    // Migración única a ids de catálogo DETERMINISTAS (UUIDv5 por ruta). Las filas
-    // existentes traen ids aleatorios legacy; forzamos un rescan para reescribirlas
-    // con el id estable por ruta (converge en addBatch). Sin esto, scanAll sólo
-    // corre con catálogo vacío y los ids viejos nunca se actualizan.
-    if (QString(readSetting(QStringLiteral("catalog/idSchemeV5"), QString()).toString()) != QLatin1String("done")) {
-        if (m_roots.count() > 0)
-            m_roots.scanAll();
-        writeSetting(QStringLiteral("catalog/idSchemeV5"), QStringLiteral("done"));
-        appendServerEvent(QStringLiteral("lifecycle"),
-                          QStringLiteral("catalog: migrado a ids deterministas (rescan forzado)."));
-    }
-    refreshResearchReports();
+            QTimer::singleShot(0, this, [this]() {
+                m_startupStatus = QStringLiteral("Preparando historial y recomendaciones…");
+                emit startupChanged();
+                // Estas cargas eran disparadas por Component.onCompleted de
+                // páginas que StackLayout crea siempre. Dejarlas en la fase
+                // tardía conserva los datos precargados sin penalizar QML.
+                loadBenchmarkResults();
+                loadCustomBenchmarks();
+                refreshResearchReports();
 
-    // Auto-arrancar el agente al abrir la app si el toggle está activo. Mantiene el
-    // server+agente calientes para que las Tasks programadas (cron) disparen a horario
-    // sin la latencia de levantar el modelo. Usa la última selección explícita
-    // del Agente; lastLaunchId puede haber cambiado por otros modos internos.
-    if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
-        const QString launchId = preferredAgentLaunchId();
-        if (!launchId.isEmpty()) {
-            appendAgentEvent(QStringLiteral("lifecycle"),
-                             QStringLiteral("Auto-inicio del agente al abrir la app (tasks por horario)."));
-            startServerAndAgent(launchId);
-        } else {
-            appendAgentEvent(QStringLiteral("lifecycle"),
-                             QStringLiteral("Auto-inicio del agente pedido pero no hay último perfil; se omite."));
-        }
-    }
+                if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
+                    const QString launchId = preferredAgentLaunchId();
+                    if (!launchId.isEmpty()) {
+                        appendAgentEvent(QStringLiteral("lifecycle"),
+                                         QStringLiteral("Auto-inicio del agente al abrir la app (tasks por horario)."));
+                        startServerAndAgent(launchId);
+                    } else {
+                        appendAgentEvent(QStringLiteral("lifecycle"),
+                                         QStringLiteral("Auto-inicio del agente pedido pero no hay último perfil; se omite."));
+                    }
+                }
+                m_startupTimings[QStringLiteral("startupTotalMs")] = m_startupTimer.elapsed();
+                m_startupStatus = QStringLiteral("Aplicación lista · servidor detenido");
+                m_startupBusy = false;
+                emit startupChanged();
+            });
+        });
+    });
 }
 
 // --- Router mode (hot-swap) ---------------------------------------------
@@ -11358,6 +11383,10 @@ void AppController::rescanModelRoots()
 
 void AppController::rescanHardware()
 {
+    if (m_hardwareScanInFlight)
+        return;
+    m_hardwareScanInFlight = true;
+
     QVariantMap hw;
     hw[QStringLiteral("cpuThreads")] = QThread::idealThreadCount();
 
@@ -11377,52 +11406,80 @@ void AppController::rescanHardware()
 #endif
     hw[QStringLiteral("ramGb")] = ramGb;
 
-    // vramGb = la placa más grande (lo que entra sin repartir: es lo que miden el
-    // catálogo y el scoring). vramTotalGb = la suma de todas, que es lo que puede
-    // usar llama.cpp repartiendo por capas entre placas.
-    double vramGb = 0;
-    double vramTotalGb = 0;
-    int gpuCount = 0;
-    QString gpuName;
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
-    if (!nvidiaSmi.isEmpty()) {
-        QProcess p;
-        p.start(nvidiaSmi, {QStringLiteral("--query-gpu=name,memory.total"),
-                            QStringLiteral("--format=csv,noheader,nounits")});
-        if (p.waitForFinished(1800)) {
-            const QStringList lines = QString::fromUtf8(p.readAllStandardOutput())
-                                          .split('\n', Qt::SkipEmptyParts);
-            for (const QString &raw : lines) {
-                const QString line = raw.trimmed();
-                const int comma = line.lastIndexOf(',');
-                if (comma <= 0) continue;
-                const double gb = line.mid(comma + 1).trimmed().toDouble() / 1024.0;
-                if (gb <= 0) continue;
-                ++gpuCount;
-                vramTotalGb += gb;
-                if (gb > vramGb) { vramGb = gb; gpuName = line.left(comma).trimmed(); }
+    // La consulta de nvidia-smi puede tardar o quedar bloqueada por el driver.
+    // Ejecutarla en un worker evita congelar QML; RAM/CPU siguen disponibles de
+    // inmediato y el resultado de GPU llega después por señal Qt.
+    m_hardwareSummary = hw;
+    m_hardwareSummary[QStringLiteral("gpuName")] = QStringLiteral("Detectando GPU…");
+    m_hardwareSummary[QStringLiteral("vramGb")] = 0.0;
+    m_hardwareSummary[QStringLiteral("vramTotalGb")] = 0.0;
+    m_hardwareSummary[QStringLiteral("gpuCount")] = 0;
+    m_hardwareSummary[QStringLiteral("backendHint")] = QStringLiteral("CPU");
+    m_hardwareSummary[QStringLiteral("summary")] = QStringLiteral("%1 hilos · %2 GB RAM · Detectando GPU…")
+        .arg(QThread::idealThreadCount())
+        .arg(ramGb > 0 ? QString::number(ramGb, 'f', 1) : QStringLiteral("?"));
+    emit hardwareSummaryChanged();
+
+    const QVariantMap base = hw;
+    m_hardwareWatcher.setFuture(QtConcurrent::run([nvidiaSmi, base]() {
+        QVariantMap result = base;
+        double vramGb = 0;
+        double vramTotalGb = 0;
+        int gpuCount = 0;
+        QString gpuName;
+        if (!nvidiaSmi.isEmpty()) {
+            QProcess p;
+            p.start(nvidiaSmi, {QStringLiteral("--query-gpu=name,memory.total"),
+                                QStringLiteral("--format=csv,noheader,nounits")});
+            if (p.waitForFinished(1800)) {
+                const QStringList lines = QString::fromUtf8(p.readAllStandardOutput())
+                                              .split('\n', Qt::SkipEmptyParts);
+                for (const QString &raw : lines) {
+                    const QString line = raw.trimmed();
+                    const int comma = line.lastIndexOf(',');
+                    if (comma <= 0) continue;
+                    const double gb = line.mid(comma + 1).trimmed().toDouble() / 1024.0;
+                    if (gb <= 0) continue;
+                    ++gpuCount;
+                    vramTotalGb += gb;
+                    if (gb > vramGb) { vramGb = gb; gpuName = line.left(comma).trimmed(); }
+                }
             }
         }
-    }
-    hw[QStringLiteral("gpuName")] = gpuName.isEmpty() ? QStringLiteral("GPU no detectada") : gpuName;
-    hw[QStringLiteral("vramGb")] = vramGb;
-    hw[QStringLiteral("vramTotalGb")] = vramTotalGb;
-    hw[QStringLiteral("gpuCount")] = gpuCount;
-    hw[QStringLiteral("backendHint")] = vramGb >= 6 ? QStringLiteral("GPU") : QStringLiteral("CPU");
-    const QString gpuText =
-        vramGb <= 0 ? QStringLiteral("sin VRAM NVIDIA detectada")
-        : gpuCount > 1
-            ? QStringLiteral("%1 x%2 (%3 GB VRAM total)")
-                  .arg(gpuName).arg(gpuCount).arg(QString::number(vramTotalGb, 'f', 1))
-            : QStringLiteral("%1 (%2 GB VRAM)").arg(gpuName).arg(QString::number(vramGb, 'f', 1));
-    hw[QStringLiteral("summary")] = QStringLiteral("%1 hilos · %2 GB RAM · %3")
-        .arg(QThread::idealThreadCount())
-        .arg(ramGb > 0 ? QString::number(ramGb, 'f', 1) : QStringLiteral("?"))
-        .arg(gpuText);
+        result[QStringLiteral("gpuName")] = gpuName.isEmpty()
+            ? QStringLiteral("GPU no detectada") : gpuName;
+        result[QStringLiteral("vramGb")] = vramGb;
+        result[QStringLiteral("vramTotalGb")] = vramTotalGb;
+        result[QStringLiteral("gpuCount")] = gpuCount;
+        result[QStringLiteral("backendHint")] = vramGb >= 6
+            ? QStringLiteral("GPU") : QStringLiteral("CPU");
+        const QString gpuText = vramGb <= 0
+            ? QStringLiteral("sin VRAM NVIDIA detectada")
+            : gpuCount > 1
+                ? QStringLiteral("%1 x%2 (%3 GB VRAM total)")
+                      .arg(gpuName).arg(gpuCount).arg(QString::number(vramTotalGb, 'f', 1))
+                : QStringLiteral("%1 (%2 GB VRAM)")
+                      .arg(gpuName).arg(QString::number(vramGb, 'f', 1));
+        result[QStringLiteral("summary")] = QStringLiteral("%1 hilos · %2 GB RAM · %3")
+            .arg(result.value(QStringLiteral("cpuThreads")).toInt())
+            .arg(result.value(QStringLiteral("ramGb")).toDouble() > 0
+                     ? QString::number(result.value(QStringLiteral("ramGb")).toDouble(), 'f', 1)
+                     : QStringLiteral("?"))
+            .arg(gpuText);
+        return result;
+    }));
+}
 
-    m_hardwareSummary = hw;
+void AppController::applyHardwareSummary(const QVariantMap &hardware)
+{
+    if (hardware.isEmpty()) return;
+    m_hardwareSummary = hardware;
+    m_startupTimings[QStringLiteral("hardwareReadyMs")] = m_startupTimer.isValid()
+        ? m_startupTimer.elapsed() : 0;
     emit hardwareSummaryChanged();
     rebuildModelRecommendations();
+    emit startupChanged();
 }
 
 void AppController::rebuildModelRecommendations()
@@ -16782,6 +16839,20 @@ void AppController::loadCustomBenchmarks()
 QString AppController::saveCustomBenchmark(const QVariantMap &def)
 {
     QVariantMap m = def;
+    const QString duplicateKey = customBenchmarkDuplicateKey(
+        QJsonObject::fromVariantMap(m));
+    if (!duplicateKey.isEmpty()) {
+        // Importar dos veces el mismo pack no debe escribir un archivo nuevo
+        // que luego el loader descarte por deduplicación y devolver un id que
+        // no existe en customBenchmarks.
+        loadCustomBenchmarks();
+        for (const QVariant &value : m_customBenchmarks) {
+            const QVariantMap existing = value.toMap();
+            if (customBenchmarkDuplicateKey(QJsonObject::fromVariantMap(existing))
+                    == duplicateKey)
+                return existing.value(QStringLiteral("id")).toString();
+        }
+    }
     QString id = m.value("id").toString();
     if (id.isEmpty()) {
         id = QUuid::createUuid().toString(QUuid::WithoutBraces);

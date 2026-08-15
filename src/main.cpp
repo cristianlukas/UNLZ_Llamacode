@@ -29,6 +29,7 @@
 #include <QLockFile>
 #include <QProcess>
 #include <QSettings>
+#include <QElapsedTimer>
 
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
@@ -75,7 +76,10 @@ int main(int argc, char *argv[])
         s_logStream.setDevice(&s_logFile);
 
     qInstallMessageHandler(messageHandler);
-    qDebug() << "=== LlamaCode starting ===" << QDateTime::currentDateTime().toString();
+    QElapsedTimer startupClock;
+    startupClock.start();
+    qDebug() << "=== LlamaCode starting ===" << QDateTime::currentDateTime().toString()
+             << "elapsedMs=0";
 
     // Estilo de Qt Quick Controls: forzar "Basic" (customizable). El default en
     // Windows es el estilo NATIVO, que ignora los override de background/contentItem/
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
     const QIcon appIcon(QStringLiteral(":/assets/app_icon.ico"));
 #endif
     app.setWindowIcon(appIcon);
-    qDebug() << "QApplication ready";
+    qDebug() << "QApplication ready elapsedMs=" << startupClock.elapsed();
 
     // Splash nativo: se muestra ANTES de cargar QML y cubre el escaneo pesado de
     // arranque (runStartupScan). Se cierra cuando la ventana principal aparece.
@@ -318,7 +322,7 @@ int main(int argc, char *argv[])
 
     engine.addImportPath(QStringLiteral("qrc:/"));
 
-    qDebug() << "Loading Main.qml";
+    qDebug() << "Loading Main.qml elapsedMs=" << startupClock.elapsed();
     engine.loadFromModule("LlamaCode", "Main");
 
     if (engine.rootObjects().isEmpty()) {
@@ -342,12 +346,14 @@ int main(int argc, char *argv[])
         startedWithWindows,
         controller.readSetting(QStringLiteral("window/minimizeToTray"), false).toBool());
 
-    auto runDeferredStartup = [&controller, &splash, win, appIcon, startHidden]() {
+    auto runDeferredStartup = [&controller, &splash, &startupClock,
+                               win, appIcon, startHidden]() {
         static bool done = false;
         if (done) return;
         done = true;
         if (win) win->setIcon(appIcon);
         if (win && win->isVisible() && !startHidden) {
+            qDebug() << "First window visible elapsedMs=" << startupClock.elapsed();
             splash.show();
             if (QWindow *sh = splash.windowHandle()) {
                 sh->setIcon(appIcon);
@@ -375,7 +381,7 @@ int main(int argc, char *argv[])
             splash.close();
         });
 
-    qDebug() << "QML loaded OK — entering event loop";
+    qDebug() << "QML loaded OK — entering event loop elapsedMs=" << startupClock.elapsed();
     int ret = app.exec();
     qDebug() << "Event loop exited with code" << ret;
     return ret;

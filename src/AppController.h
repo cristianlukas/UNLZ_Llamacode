@@ -28,6 +28,7 @@
 #include <QProcess>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QFutureWatcher>
 #include <QVariantMap>
 #include <QJsonObject>
 #include <QHash>
@@ -197,6 +198,9 @@ class AppController : public QObject
     Q_PROPERTY(QString researchStatus READ researchStatus NOTIFY researchChanged)
     Q_PROPERTY(QVariantList researchReports READ researchReports NOTIFY researchReportsChanged)
     Q_PROPERTY(QVariantMap hardwareSummary READ hardwareSummary NOTIFY hardwareSummaryChanged)
+    Q_PROPERTY(bool startupBusy READ startupBusy NOTIFY startupChanged)
+    Q_PROPERTY(QString startupStatus READ startupStatus NOTIFY startupChanged)
+    Q_PROPERTY(QVariantMap startupTimings READ startupTimings NOTIFY startupChanged)
     Q_PROPERTY(QVariantList engineCatalog READ engineCatalog NOTIFY hardwareSummaryChanged)
     Q_PROPERTY(QVariantList modelRecommendations READ modelRecommendations NOTIFY modelRecommendationsChanged)
     Q_PROPERTY(bool modelDownloadRunning READ modelDownloadRunning NOTIFY modelDownloadChanged)
@@ -391,6 +395,9 @@ public:
     QString researchStatus() const { return m_researchStatus; }
     QVariantList researchReports() const { return m_researchReports; }
     QVariantMap hardwareSummary() const { return m_hardwareSummary; }
+    bool startupBusy() const { return m_startupBusy; }
+    QString startupStatus() const { return m_startupStatus; }
+    QVariantMap startupTimings() const { return m_startupTimings; }
     QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::detectHardware()); }
     QVariantList modelRecommendations() const { return m_modelRecommendations; }
     bool modelDownloadRunning() const { return m_modelDownloadReply != nullptr; }
@@ -1246,6 +1253,7 @@ signals:
     void researchFinished(const QString &id, const QString &title);
     void hardwareSummaryChanged();
     void modelRecommendationsChanged();
+    void startupChanged();
     void modelDownloadChanged();
     void downloadHistoryChanged();
     void launchProfileSelected(const QString &launchProfileId);
@@ -1761,6 +1769,14 @@ private:
                             double promptTps, double genTps,
                             double basePromptTps, double baseGenTps);
     QVariantMap  m_hardwareSummary;
+    bool m_startupBusy = false;
+    QString m_startupStatus;
+    QVariantMap m_startupTimings;
+    QElapsedTimer m_startupTimer;
+    bool m_startupScanStarted = false;
+    bool m_hardwareScanInFlight = false;
+    QFutureWatcher<QVariantMap> m_hardwareWatcher;
+    void applyHardwareSummary(const QVariantMap &hardware);
     QVariantList m_modelRecommendations;
     struct ModelDownloadItem {
         QString id;

@@ -46,7 +46,6 @@ Item {
 
     Component.onCompleted: {
         refreshWorkspaces()
-        App.refreshResearchReports()
     }
 
     Connections {

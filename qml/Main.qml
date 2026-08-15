@@ -189,6 +189,17 @@ ApplicationWindow {
 
                     Item { Layout.fillWidth: true }
 
+                    Text {
+                        visible: App.startupBusy || (App.startupStatus || "").length > 0
+                        text: App.startupStatus
+                        color: Theme.textSecondary
+                        font.pixelSize: 10
+                        elide: Text.ElideRight
+                        Layout.maximumWidth: 330
+                        Layout.alignment: Qt.AlignVCenter
+                        rightPadding: 12
+                    }
+
                     ToolButton {
                         text: "\uE921"
                         flat: true
