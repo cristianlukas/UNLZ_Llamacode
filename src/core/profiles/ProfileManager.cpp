@@ -40,8 +40,9 @@ bool isCuratedBestName(const LaunchProfile &profile)
         || key.contains(QStringLiteral("balance-thinkingcap"))
         || key.contains(QStringLiteral("laguna-s-2.1"))
         || key.contains(QStringLiteral("balance-laguna"))
-        || key.contains(QStringLiteral("deepseek fusion"))
-        || key.contains(QStringLiteral("fusion leloch"))
+        || profile.id == QStringLiteral("4f5cc556-333d-4310-955e-15042cd874d6")
+        || (key.contains(QStringLiteral("141_"))
+            && key.contains(QStringLiteral("fusion leloch")))
         || key.contains(QStringLiteral("qwen3.8"));
 }
 }
