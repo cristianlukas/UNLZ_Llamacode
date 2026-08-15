@@ -115,6 +115,7 @@ private slots:
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
+    void concurrencyBenchmarkSettingsClampBounds();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
     void benchmarkBest25IncludesValidRowsWithoutTps();
@@ -1458,6 +1459,23 @@ void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()
     QCOMPARE(fast, 10);
     QCOMPARE(balanced, 10);
     QCOMPARE(quality, 5);
+}
+
+void AppControllerTests::concurrencyBenchmarkSettingsClampBounds()
+{
+    const QVariantMap low = AppController::concurrencyBenchmarkSettingsForTest(
+        -4, -2, 0, 0);
+    QCOMPARE(low.value(QStringLiteral("minSlots")).toInt(), 1);
+    QCOMPARE(low.value(QStringLiteral("maxSlots")).toInt(), 1);
+    QCOMPARE(low.value(QStringLiteral("requests")).toInt(), 2);
+    QCOMPARE(low.value(QStringLiteral("maxTokens")).toInt(), 1);
+
+    const QVariantMap high = AppController::concurrencyBenchmarkSettingsForTest(
+        99, 2, 99, 99999);
+    QCOMPARE(high.value(QStringLiteral("minSlots")).toInt(), 16);
+    QCOMPARE(high.value(QStringLiteral("maxSlots")).toInt(), 16);
+    QCOMPARE(high.value(QStringLiteral("requests")).toInt(), 32);
+    QCOMPARE(high.value(QStringLiteral("maxTokens")).toInt(), 4096);
 }
 
 void AppControllerTests::benchmarkBest25IncludesValidRowsWithoutTps()

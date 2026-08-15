@@ -996,6 +996,53 @@ Item {
                         }
                     }
 
+                    // Benchmark de concurrencia real: mantiene el mismo modelo
+                    // y dispara requests simultáneas contra variantes de slots.
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: concurrencyColumn.implicitHeight + 20
+                        color: Theme.inputBg
+                        radius: 6
+                        border.color: Theme.divider
+                        ColumnLayout {
+                            id: concurrencyColumn
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                            spacing: 6
+                            Text {
+                                text: "CONCURRENCIA REAL"
+                                color: Theme.textSecondary; font.pixelSize: 10; font.bold: true
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Crea copias del perfil y compara requests simultáneas por slot."
+                                color: Theme.textMuted; font.pixelSize: 10; wrapMode: Text.Wrap
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                enabled: !App.benchmarkRunning
+                                Text { text: "Slots"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                SpinBox { id: concurrencyMin; from: 1; to: 16; value: 1; editable: true; Layout.preferredWidth: 70 }
+                                Text { text: "a"; color: Theme.textMuted; font.pixelSize: 11 }
+                                SpinBox { id: concurrencyMax; from: 1; to: 16; value: 3; editable: true; Layout.preferredWidth: 70 }
+                                Text { text: "requests"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                SpinBox { id: concurrencyRequests; from: 2; to: 32; value: 4; editable: true; Layout.preferredWidth: 70 }
+                            }
+                            LcButton {
+                                Layout.fillWidth: true
+                                text: "Medir concurrencia"
+                                secondary: true
+                                enabled: !App.benchmarkRunning && root.selectedIds.length === 1
+                                ToolTip.visible: hovered
+                                ToolTip.text: root.selectedIds.length === 1
+                                    ? "Compara 1..N slots con 4 requests simultáneas"
+                                    : "Seleccioná exactamente un perfil"
+                                onClicked: App.startConcurrencyBenchmark(root.selectedIds[0],
+                                    concurrencyMin.value, concurrencyMax.value,
+                                    concurrencyRequests.value, 128)
+                            }
+                        }
+                    }
+
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8

@@ -1486,6 +1486,14 @@ Evaluaciones de modelos candidatas:
 3. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
 4. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
 
+Para medir concurrencia real, seleccionar exactamente un perfil y usar **Medir
+concurrencia**. La herramienta crea copias editables del perfil para cada valor
+de `parallelSlots`, lanza varias requests simultáneas contra el mismo servidor y
+persiste `aggregateTps`, TTFT, latencia máxima, requests exitosas y RAM/VRAM en
+una carpeta `concurrency_<timestamp>`. El perfil original no se modifica. Esto
+mide el caso de uso de subagentes; el benchmark normal, en cambio, ejecuta sus
+prompts secuencialmente.
+
 Para comparar varias suites personalizadas en una sola operación, abrir
 **Pro-Benchmarks**, marcar los benchmarks deseados (o **Todos**) y pulsar
 **Iniciar benchmark**. La aplicación ejecuta la matriz suites × perfiles de forma

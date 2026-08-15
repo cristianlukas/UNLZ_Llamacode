@@ -13626,6 +13626,11 @@ void AppController::cancelBenchmark()
     // current callback fires immediately instead of waiting for it to finish.
     if (m_benchmarkActiveReply)
         m_benchmarkActiveReply->abort();
+    for (const auto &reply : std::as_const(m_benchmarkReplies)) {
+        if (reply)
+            reply->abort();
+    }
+    m_benchmarkReplies.clear();
     // Stop the headless agent (agent target) so its turn ends promptly.
     if (m_benchmarkAgent)
         m_benchmarkAgent->cancelGeneration();
@@ -13768,8 +13773,8 @@ void AppController::startCustomBenchmark(const QStringList &profileIds, const QS
 }
 
 void AppController::startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
-                                       int passes, const QString &target, int timeoutSec,
-                                       const QString &agentProfileId)
+                                        int passes, const QString &target, int timeoutSec,
+                                        const QString &agentProfileId)
 {
     if (m_benchmarkRunning || profileIds.isEmpty()) return;
     m_proBenchmarkQueue.clear();
@@ -13785,6 +13790,219 @@ void AppController::startProBenchmarks(const QStringList &profileIds, const QStr
     m_proBenchmarkAgent = agentProfileId;
     // The queue is intentionally serialized: one model/server at a time.
     startCustomBenchmark(profileIds, first, passes, target, timeoutSec, agentProfileId);
+}
+
+void AppController::startConcurrencyBenchmark(const QString &profileId, int minSlots,
+                                               int maxSlots, int requests, int maxTokens,
+                                               const QString &prompt)
+{
+    if (m_benchmarkRunning || profileId.trimmed().isEmpty()) return;
+    const QVariantMap settings = concurrencyBenchmarkSettingsForTest(
+        minSlots, maxSlots, requests, maxTokens);
+    minSlots = settings.value(QStringLiteral("minSlots")).toInt();
+    maxSlots = settings.value(QStringLiteral("maxSlots")).toInt();
+    requests = settings.value(QStringLiteral("requests")).toInt();
+    maxTokens = settings.value(QStringLiteral("maxTokens")).toInt();
+
+    const QVariantMap source = m_profiles.getLaunchProfile(profileId);
+    if (source.isEmpty()) return;
+
+    // Each slot count gets its own editable launch/runtime pair. This keeps the
+    // user's original profile untouched and makes every measured configuration
+    // reproducible from the normal Profiles page.
+    QVariantList variants;
+    for (int slotCount = minSlots; slotCount <= maxSlots; ++slotCount) {
+        const QString id = duplicateLaunchProfile(profileId);
+        if (id.isEmpty()) continue;
+        QVariantMap launch = m_profiles.getLaunchProfile(id);
+        QVariantMap runtime = m_profiles.getRuntimePreset(
+            launch.value(QStringLiteral("runtimePresetId")).toString());
+        runtime[QStringLiteral("parallelSlots")] = slotCount;
+        runtime[QStringLiteral("name")] =
+            QStringLiteral("Concurrency · %1 slots").arg(slotCount);
+        if (runtime.isEmpty() || !m_profiles.updateRuntimePreset(runtime))
+            continue;
+        launch[QStringLiteral("name")] =
+            QStringLiteral("Concurrency · %1 slots · %2")
+                .arg(slotCount).arg(source.value(QStringLiteral("name")).toString());
+        m_profiles.updateLaunchProfile(launch);
+        QVariantMap variant;
+        variant[QStringLiteral("id")] = id;
+        variant[QStringLiteral("slots")] = slotCount;
+        variants.append(variant);
+    }
+    if (variants.isEmpty()) return;
+
+    m_benchmarkRunning = true;
+    m_benchmarkCanceled = false;
+    m_benchmarkProgress = 0;
+    m_benchmarkStatus = QStringLiteral("Preparando benchmark de concurrencia...");
+    m_benchmarkReplies.clear();
+    emit benchmarkRunningChanged();
+    emit benchmarkProgressChanged();
+    emit benchmarkStatusChanged();
+
+    const QString stamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
+    const QString runDir = benchmarkRunsDir() + QStringLiteral("/concurrency_") + stamp;
+    QDir().mkpath(runDir);
+    const QString benchmarkName = QStringLiteral("Concurrency benchmark");
+    auto index = std::make_shared<int>(0);
+    auto runNext = std::make_shared<std::function<void()>>();
+    *runNext = [=]() {
+        if (m_benchmarkCanceled) {
+            if (serverRunning()) {
+                stopServer();
+                benchmarkWaitServerStopped(10000, [=]() { (*runNext)(); });
+                return;
+            }
+            m_benchmarkRunning = false;
+            m_benchmarkProgress = 100;
+            m_benchmarkStatus = QStringLiteral("Benchmark de concurrencia cancelado.");
+            emit benchmarkRunningChanged();
+            emit benchmarkProgressChanged();
+            emit benchmarkStatusChanged();
+            return;
+        }
+        if (*index >= variants.size()) {
+            m_benchmarkRunning = false;
+            m_benchmarkProgress = 100;
+            m_benchmarkStatus = m_benchmarkCanceled
+                ? QStringLiteral("Benchmark de concurrencia cancelado.")
+                : QStringLiteral("Benchmark de concurrencia completado.");
+            emit benchmarkRunningChanged();
+            emit benchmarkProgressChanged();
+            emit benchmarkStatusChanged();
+            return;
+        }
+
+        const QVariantMap variant = variants.at(*index).toMap();
+        const QString variantId = variant.value(QStringLiteral("id")).toString();
+        const int slotCount = variant.value(QStringLiteral("slots")).toInt();
+        const QString profileName = m_profiles.getLaunchProfile(variantId)
+            .value(QStringLiteral("name")).toString();
+        const int current = *index;
+        m_benchmarkStatus = QStringLiteral("[%1/%2] %3 — cargando...")
+            .arg(current + 1).arg(variants.size()).arg(profileName);
+        emit benchmarkStatusChanged();
+
+        if (serverRunning()) {
+            stopServer();
+            benchmarkWaitServerStopped(10000, [=]() { (*runNext)(); });
+            return;
+        }
+        startServer(variantId);
+        if (!serverRunning()) {
+            ++(*index);
+            m_benchmarkProgress = (*index * 100) / variants.size();
+            emit benchmarkProgressChanged();
+            QTimer::singleShot(0, this, [=]() { (*runNext)(); });
+            return;
+        }
+
+        benchmarkWaitServerReady(150, 150, serverBaseUrl(),
+            QStringLiteral("[%1/%2] %3").arg(current + 1).arg(variants.size()).arg(profileName),
+            [=](bool ready) {
+                if (!ready || m_benchmarkCanceled) {
+                    stopServer();
+                    benchmarkWaitServerStopped(10000, [=]() {
+                        ++(*index);
+                        m_benchmarkProgress = (*index * 100) / variants.size();
+                        emit benchmarkProgressChanged();
+                        (*runNext)();
+                    });
+                    return;
+                }
+                // Warm up before measuring so model load and first graph setup do
+                // not dominate the concurrency comparison.
+                benchmarkRequest(serverBaseUrl(), prompt, maxTokens, true,
+                    [=](QVariantMap) {
+                        auto started = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
+                        auto remaining = std::make_shared<int>(requests);
+                        auto rows = std::make_shared<QVariantList>();
+                        auto finalize = std::make_shared<std::function<void()>>();
+                        *finalize = [=]() {
+                            benchmarkMeasureResources([=](double ramMb, double vramMb) {
+                                double sumTps = 0.0, sumTtft = 0.0, maxElapsed = 0.0;
+                                int ok = 0, tokens = 0;
+                                for (const QVariant &value : *rows) {
+                                    const QVariantMap row = value.toMap();
+                                    if (!row.value(QStringLiteral("failed")).toBool()) ++ok;
+                                    sumTps += row.value(QStringLiteral("tps")).toDouble();
+                                    sumTtft += row.value(QStringLiteral("ttft_ms")).toDouble();
+                                    tokens += row.value(QStringLiteral("tokens")).toInt();
+                                    maxElapsed = qMax(maxElapsed, row.value(QStringLiteral("elapsed_ms")).toDouble());
+                                }
+                                const double wallSec =
+                                    (QDateTime::currentMSecsSinceEpoch() - *started) / 1000.0;
+                                QVariantMap result;
+                                result[QStringLiteral("id")] = QUuid::createUuid().toString(QUuid::WithoutBraces);
+                                result[QStringLiteral("profileId")] = variantId;
+                                result[QStringLiteral("profileName")] = profileName;
+                                result[QStringLiteral("sourceProfileId")] = profileId;
+                                result[QStringLiteral("benchmarkName")] = benchmarkName;
+                                result[QStringLiteral("runLabel")] = QStringLiteral("%1 slots").arg(slotCount);
+                                result[QStringLiteral("runDir")] = runDir;
+                                result[QStringLiteral("mode")] = QStringLiteral("concurrency");
+                                result[QStringLiteral("target")] = QStringLiteral("model");
+                                result[QStringLiteral("concurrencySlots")] = slotCount;
+                                result[QStringLiteral("concurrencyRequests")] = requests;
+                                result[QStringLiteral("successfulRequests")] = ok;
+                                result[QStringLiteral("aggregateTps")] = wallSec > 0.0 ? tokens / wallSec : 0.0;
+                                result[QStringLiteral("avgTps")] = requests > 0 ? sumTps / requests : 0.0;
+                                result[QStringLiteral("avgTtftMs")] = requests > 0 ? sumTtft / requests : 0.0;
+                                result[QStringLiteral("maxRequestMs")] = maxElapsed;
+                                result[QStringLiteral("elapsedSec")] = wallSec;
+                                result[QStringLiteral("totalTime")] = wallSec;
+                                result[QStringLiteral("timeToFirstAttempt")] = wallSec;
+                                result[QStringLiteral("ramMb")] = ramMb;
+                                result[QStringLiteral("vramMb")] = vramMb;
+                                result[QStringLiteral("qualityScore")] = ok;
+                                result[QStringLiteral("qualityTotal")] = requests;
+                                result[QStringLiteral("finalScore")] = ok;
+                                result[QStringLiteral("finalTotal")] = requests;
+                                result[QStringLiteral("firstAttemptScore")] = ok;
+                                result[QStringLiteral("firstAttemptTotal")] = requests;
+                                result[QStringLiteral("tasks")] = *rows;
+                                result[QStringLiteral("failed")] = ok == 0;
+                                if (ok < requests)
+                                    result[QStringLiteral("failureStage")] = QStringLiteral("request");
+                                m_benchmarkResults.append(result);
+                                emit benchmarkResultsChanged();
+                                saveBenchmarkResult(result);
+                                QFile report(QDir(runDir).filePath(QStringLiteral("slots_%1.json").arg(slotCount)));
+                                if (report.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                                    report.write(QJsonDocument(QJsonObject::fromVariantMap(result)).toJson(QJsonDocument::Indented));
+                                stopServer();
+                                benchmarkWaitServerStopped(10000, [=]() {
+                                    ++(*index);
+                                    m_benchmarkProgress = (*index * 100) / variants.size();
+                                    emit benchmarkProgressChanged();
+                                    (*runNext)();
+                                });
+                            });
+                        };
+                        for (int request = 0; request < requests; ++request) {
+                            benchmarkRequest(serverBaseUrl(), prompt, maxTokens, true,
+                                [=](QVariantMap row) {
+                                    rows->append(row);
+                                    if (--(*remaining) == 0) (*finalize)();
+                                });
+                        }
+                    });
+            });
+    };
+    (*runNext)();
+}
+
+QVariantMap AppController::concurrencyBenchmarkSettingsForTest(int minSlots, int maxSlots,
+                                                                int requests, int maxTokens)
+{
+    const int normalizedMin = qBound(1, minSlots, 16);
+    return QVariantMap{
+        {QStringLiteral("minSlots"), normalizedMin},
+        {QStringLiteral("maxSlots"), qBound(normalizedMin, maxSlots, 16)},
+        {QStringLiteral("requests"), qBound(2, requests, 32)},
+        {QStringLiteral("maxTokens"), qBound(1, maxTokens, 4096)}};
 }
 
 void AppController::openBenchmarkFolder(const QString &path)
@@ -15736,6 +15954,7 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
 
     auto *reply = m_nam->post(req, QJsonDocument(payload).toJson(QJsonDocument::Compact));
     m_benchmarkActiveReply = reply;   // so cancelBenchmark() can abort it
+    m_benchmarkReplies.append(reply);
     const qint64 startMs = QDateTime::currentMSecsSinceEpoch();
     // Sin idle-timeout por defecto (0 = deshabilitado). Solo corta el timeout
     // duro configurable por el usuario.
@@ -15863,6 +16082,9 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                 r["failureDetail"] = QString::fromUtf8(reply->readAll());
             }
             if (m_benchmarkActiveReply == reply) m_benchmarkActiveReply = nullptr;
+            m_benchmarkReplies.removeIf([reply](const QPointer<QNetworkReply> &p) {
+                return p.isNull() || p.data() == reply;
+            });
             reply->deleteLater();
             onDone(r);
         });
@@ -15904,6 +16126,9 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                 r["failureDetail"] = failureDetail;
             }
             if (m_benchmarkActiveReply == reply) m_benchmarkActiveReply = nullptr;
+            m_benchmarkReplies.removeIf([reply](const QPointer<QNetworkReply> &p) {
+                return p.isNull() || p.data() == reply;
+            });
             reply->deleteLater();
             onDone(r);
         });

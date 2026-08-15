@@ -31,6 +31,7 @@
 #include <QVariantMap>
 #include <QJsonObject>
 #include <QHash>
+#include <QList>
 #include <QPointer>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -906,6 +907,14 @@ public:
     Q_INVOKABLE void startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
                                         int passes = 1, const QString &target = QStringLiteral("model"),
                                         int timeoutSec = 0, const QString &agentProfileId = QString());
+    // Compara concurrencia real del llama-server. Para cada valor de slots crea
+    // una copia editable del launch, abre varias requests simultáneas y guarda
+    // throughput agregado, TTFT, latencia, RAM/VRAM y fallos en benchmarks.
+    Q_INVOKABLE void startConcurrencyBenchmark(const QString &profileId,
+                                               int minSlots = 1, int maxSlots = 3,
+                                               int requests = 4, int maxTokens = 128,
+                                               const QString &prompt = QStringLiteral(
+                                                   "Respondé con una lista numerada de 5 puntos sobre buenas prácticas de programación."));
     // Auto-tuning de parámetros de inferencia (AutoTuner TPE-lite + gate de
     // calidad). Lanza llama-server por candidato en un puerto scratch, mide
     // tok/s y calidad, y al terminar fusiona la mejor config en extraArgs del
@@ -1716,6 +1725,7 @@ private:
     bool         m_benchmarkRunning  = false;
     bool         m_benchmarkCanceled = false;
     QPointer<QNetworkReply> m_benchmarkActiveReply; // in-flight req, aborted on cancel
+    QList<QPointer<QNetworkReply>> m_benchmarkReplies; // requests concurrentes en vuelo
     QPointer<IAgentBackend> m_benchmarkAgent;       // dedicated headless agent (agent target)
     int          m_benchmarkProgress = 0;
     QString      m_benchmarkStatus;
@@ -1826,6 +1836,10 @@ public:
     static bool benchmarkCanReuseServer(const QString &activeLaunchId,
                                         const QString &wantedLaunchId,
                                         bool running, bool ready);
+    // Normaliza los límites del benchmark de concurrencia; puro para probar los
+    // bordes sin lanzar un servidor real.
+    static QVariantMap concurrencyBenchmarkSettingsForTest(int minSlots, int maxSlots,
+                                                            int requests, int maxTokens);
 
 private:
     void benchmarkKillStrayServers();
