@@ -2835,7 +2835,7 @@
       { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } }
     ],
-    "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa, MTP integrado y thinking configurable. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
+    "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa, MTP integrado y thinking configurable. Diez perfiles reales por GGUF (base + nueve variantes) pasan HumanEval/0 antes de promover tres a HumanEval/20. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
   },
   {
     "id": "sys-qwen38-27b-q4km-131k",

@@ -1403,6 +1403,7 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
     const QStringList ids = {QStringLiteral("sys-qwen38-27b-udq4-131k"),
                              QStringLiteral("sys-qwen38-27b-q4km-131k"),
                              QStringLiteral("sys-qwen38-27b-q5km-131k")};
+    ProfileManager pm;
     for (const QString &id : ids) {
         QJsonObject found;
         for (const QJsonValue &value : profiles)
@@ -1417,6 +1418,30 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         const QJsonObject mtp = found.value("mtp").toObject();
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
+        const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
+        QCOMPARE(variants.size(), 9); // base + 9 = 10 perfiles reales por GGUF
+        QSet<QString> variantIds;
+        const QVariantMap baseLaunch = pm.getLaunchProfile(id);
+        QVERIFY2(!baseLaunch.isEmpty(), qPrintable(id));
+        const QString baseModelId = pm.getModelProfile(
+            baseLaunch.value(QStringLiteral("modelProfileId")).toString())
+            .value(QStringLiteral("modelId")).toString();
+        QVERIFY(!baseModelId.isEmpty());
+        for (const QJsonValue &variantValue : variants) {
+            const QString variantId = variantValue.toObject().value(QStringLiteral("id")).toString();
+            QVERIFY(!variantId.isEmpty());
+            QVERIFY(!variantIds.contains(variantId));
+            variantIds.insert(variantId);
+            const QVariantMap launch = pm.getLaunchProfile(variantId);
+            QVERIFY2(!launch.isEmpty(), qPrintable(variantId));
+            const QVariantMap variantModel = pm.getModelProfile(
+                launch.value(QStringLiteral("modelProfileId")).toString());
+            QCOMPARE(variantModel.value(QStringLiteral("modelId")).toString(), baseModelId);
+            const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+            const int parallel = args.indexOf(QStringLiteral("--parallel"));
+            QVERIFY(parallel >= 0 && parallel + 1 < args.size());
+            QCOMPARE(args.at(parallel + 1), QStringLiteral("1"));
+        }
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.
     }

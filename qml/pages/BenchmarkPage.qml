@@ -1306,12 +1306,12 @@ Item {
                                 }
                                 Item { Layout.fillWidth: true }
                                 LcButton {
-                                text: "Seleccionar 10 por GGUF"
+                                    text: "Seleccionar top 3 + ⚡ BEST"
                                     secondary: true
-                                    enabled: (App.benchmarkBestModelosSpeed || []).length > 0
+                                    enabled: (App.benchmarkHumanEval20Candidates || []).length > 0
                                     onClicked: {
                                         const ids = []
-                                        for (const row of (App.benchmarkBestModelosSpeed || []))
+                                        for (const row of (App.benchmarkHumanEval20Candidates || []))
                                             if (ids.indexOf(row.profileId) < 0) ids.push(row.profileId)
                                         root.selectedIds = ids
                                         bestModelosSpeedPopup.close()
@@ -1320,7 +1320,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "HumanEval/0: hasta 10 perfiles por GGUF; sólo estos avanzan a HumanEval/20."
+                                text: "HumanEval/0 evalúa hasta 10 perfiles por GGUF; HumanEval/20 recibe sólo los 3 ganadores de cada GGUF y todos los controles ⚡ BEST."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {
@@ -1397,7 +1397,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "HumanEval/20 sobre los 3 mejores perfiles por GGUF; infra/timeouts quedan fuera."
+                                text: "HumanEval/20 compara los 3 mejores por GGUF con todos los perfiles ⚡ BEST; infra/timeouts quedan fuera."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {
@@ -1407,9 +1407,10 @@ Item {
                                     Text { Layout.preferredWidth: 45; text: "#"; color: Theme.textSecondary; font.pixelSize: 11 }
                                     Text { Layout.preferredWidth: 220; text: "GGUF"; color: Theme.textSecondary; font.pixelSize: 11 }
                                     Text { Layout.fillWidth: true; text: "Perfil"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                    Text { Layout.preferredWidth: 100; text: "Categoría"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                    Text { Layout.preferredWidth: 85; text: "Calidad"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
-                                    Text { Layout.preferredWidth: 85; text: "T First"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 85; text: "Origen"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    Text { Layout.preferredWidth: 70; text: "Calidad"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 60; text: "TPS"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                    Text { Layout.preferredWidth: 75; text: "T total"; color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
                                 }
                             }
                             ListView {
@@ -1423,9 +1424,10 @@ Item {
                                         Text { Layout.preferredWidth: 45; text: modelData.bestModelosQualityRank || (index + 1); color: Theme.accent; font.pixelSize: 11; font.bold: true }
                                         Text { Layout.preferredWidth: 220; text: modelData.ggufName || "—"; color: Theme.textSecondary; font.pixelSize: 11; elide: Text.ElideMiddle }
                                         Text { Layout.fillWidth: true; text: modelData.profileName || ""; color: Theme.textPrimary; font.pixelSize: 11; elide: Text.ElideRight }
-                                        Text { Layout.preferredWidth: 100; text: modelData.best25Category || "—"; color: Theme.accent; font.pixelSize: 11 }
-                                        Text { Layout.preferredWidth: 85; text: (modelData.qualityScore || 0) + "/" + (modelData.qualityTotal || 0); color: Theme.successText; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
-                                        Text { Layout.preferredWidth: 85; text: root.secondsLabel(modelData.timeToFirstAttempt); color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 85; text: modelData.humanEval20Control ? "⚡ BEST" : "Top 3"; color: Theme.accent; font.pixelSize: 11 }
+                                        Text { Layout.preferredWidth: 70; text: (modelData.qualityScore || 0) + "/" + (modelData.qualityTotal || 0); color: Theme.successText; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 60; text: Number(modelData.avgTps || 0).toFixed(1); color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
+                                        Text { Layout.preferredWidth: 75; text: root.secondsLabel(modelData.totalTime || modelData.elapsedSec); color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
                                     }
                                 }
                                 Text {

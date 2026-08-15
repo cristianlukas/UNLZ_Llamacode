@@ -120,6 +120,7 @@ private slots:
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
     void benchmarkBest25IncludesValidRowsWithoutTps();
     void benchmarkBestModelosSpeedCapsProfilesPerGguf();
+    void benchmarkHumanEval20CandidatesUseTopThreeAndBestControls();
     void benchmarkBestModelosQualityUsesTwentyItemResults();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
     void benchmarkResumesWhereItDiedInsteadOfLosingTheSeries();
@@ -1541,6 +1542,40 @@ void AppControllerTests::benchmarkBestModelosSpeedCapsProfilesPerGguf()
     QCOMPARE(qwen, 10);
 }
 
+void AppControllerTests::benchmarkHumanEval20CandidatesUseTopThreeAndBestControls()
+{
+    QVariantList speed;
+    for (int rank = 1; rank <= 4; ++rank) {
+        speed.append(QVariantMap{
+            {QStringLiteral("profileId"), QStringLiteral("qwen-%1").arg(rank)},
+            {QStringLiteral("ggufKey"), QStringLiteral("qwen.gguf")},
+            {QStringLiteral("bestModelosSpeedRank"), rank}});
+        speed.append(QVariantMap{
+            {QStringLiteral("profileId"), QStringLiteral("gemma-%1").arg(rank)},
+            {QStringLiteral("ggufKey"), QStringLiteral("gemma.gguf")},
+            {QStringLiteral("bestModelosSpeedRank"), rank}});
+    }
+    const QVariantList controls = {
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("qwen-1")}}, // duplicado
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("kat-best")},
+                    {QStringLiteral("humanEval20Control"), true}}
+    };
+
+    const QVariantList selected =
+        AppController::benchmarkHumanEval20CandidatesForTest(speed, controls);
+    QCOMPARE(selected.size(), 7); // 3 Qwen + 3 Gemma + control BEST externo
+    QSet<QString> ids;
+    for (const QVariant &value : selected)
+        ids.insert(value.toMap().value(QStringLiteral("profileId")).toString());
+    QVERIFY(ids.contains(QStringLiteral("qwen-1")));
+    QVERIFY(ids.contains(QStringLiteral("qwen-3")));
+    QVERIFY(!ids.contains(QStringLiteral("qwen-4")));
+    QVERIFY(ids.contains(QStringLiteral("gemma-3")));
+    QVERIFY(!ids.contains(QStringLiteral("gemma-4")));
+    QVERIFY(ids.contains(QStringLiteral("kat-best")));
+    QVERIFY(selected.last().toMap().value(QStringLiteral("humanEval20Control")).toBool());
+}
+
 void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
 {
     QVariantList speed = {
@@ -1612,11 +1647,12 @@ void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
                     {QStringLiteral("timestamp"), 3LL}}
     };
     const QVariantList best = AppController::benchmarkBestModelosQualityForTest(results, speed);
-    QCOMPARE(best.size(), 4);
+    QCOMPARE(best.size(), 5);
     QCOMPARE(best.at(0).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p5"));
     QCOMPARE(best.at(1).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p4"));
     QCOMPARE(best.at(2).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p2"));
     QCOMPARE(best.at(3).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p3"));
+    QCOMPARE(best.at(4).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p1"));
 }
 
 // Si el server ya está sirviendo el perfil que se va a benchmarkear, el modelo ya

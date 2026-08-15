@@ -182,6 +182,7 @@ class AppController : public QObject
     Q_PROPERTY(QVariantList benchmarkResults READ benchmarkResults NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBest25 READ benchmarkBest25 NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBestModelosSpeed READ benchmarkBestModelosSpeed NOTIFY benchmarkResultsChanged)
+    Q_PROPERTY(QVariantList benchmarkHumanEval20Candidates READ benchmarkHumanEval20Candidates NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBestModelosQuality READ benchmarkBestModelosQuality NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList customBenchmarks READ customBenchmarks NOTIFY customBenchmarksChanged)
     Q_PROPERTY(bool autoTuneRunning READ autoTuneRunning NOTIFY autoTuneChanged)
@@ -382,6 +383,7 @@ public:
     QVariantList benchmarkResults() const { return m_benchmarkResults; }
     QVariantList benchmarkBest25() const;
     QVariantList benchmarkBestModelosSpeed() const;
+    QVariantList benchmarkHumanEval20Candidates() const;
     QVariantList benchmarkBestModelosQuality() const;
     QVariantList customBenchmarks() const { return m_customBenchmarks; }
     bool researchRunning() const { return m_researchRunning; }
@@ -489,6 +491,8 @@ public:
                                                      const QJsonObject &destination);
     static QVariantList benchmarkBest25ForTest(const QVariantList &results);
     static QVariantList benchmarkBestModelosSpeedForTest(const QVariantList &candidates);
+    static QVariantList benchmarkHumanEval20CandidatesForTest(const QVariantList &speedCandidates,
+                                                              const QVariantList &bestControls);
     static QVariantList benchmarkBestModelosQualityForTest(const QVariantList &results,
                                                             const QVariantList &speedCandidates);
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).

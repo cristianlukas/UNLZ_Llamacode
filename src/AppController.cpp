@@ -13486,10 +13486,62 @@ QVariantList AppController::benchmarkBestModelosSpeedForTest(const QVariantList 
     return result;
 }
 
+QVariantList AppController::benchmarkHumanEval20Candidates() const
+{
+    QVariantList controls;
+    for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
+        const QVariantMap item = value.toMap();
+        if (!item.value(QStringLiteral("best")).toBool()) continue;
+        const QString id = item.value(QStringLiteral("id")).toString();
+        if (id.isEmpty()) continue;
+
+        const LaunchProfile launch = m_profiles.resolveLaunch(id);
+        const ModelProfile model = m_profiles.resolveModelProfile(launch.modelProfileId);
+        const CatalogModel catalog = m_catalog.findById(model.modelId);
+        QString gguf = QFileInfo(catalog.fileName).fileName();
+        if (gguf.isEmpty()) gguf = model.name;
+        if (gguf.isEmpty()) gguf = QStringLiteral("perfil:") + id;
+
+        controls.append(QVariantMap{
+            {QStringLiteral("profileId"), id},
+            {QStringLiteral("profileName"), item.value(QStringLiteral("displayName"))},
+            {QStringLiteral("ggufName"), gguf},
+            {QStringLiteral("ggufKey"), gguf.toLower()},
+            {QStringLiteral("best25Category"), QStringLiteral("⚡ BEST")},
+            {QStringLiteral("humanEval20Control"), true}});
+    }
+    return benchmarkHumanEval20CandidatesForTest(benchmarkBestModelosSpeed(), controls);
+}
+
+QVariantList AppController::benchmarkHumanEval20CandidatesForTest(
+    const QVariantList &speedCandidates, const QVariantList &bestControls)
+{
+    QVariantList result;
+    QSet<QString> seen;
+    for (const QVariant &value : speedCandidates) {
+        QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("bestModelosSpeedRank")).toInt() > 3) continue;
+        const QString id = row.value(QStringLiteral("profileId")).toString();
+        if (id.isEmpty() || seen.contains(id)) continue;
+        row[QStringLiteral("humanEval20Finalist")] = true;
+        result.append(row);
+        seen.insert(id);
+    }
+    for (const QVariant &value : bestControls) {
+        QVariantMap row = value.toMap();
+        const QString id = row.value(QStringLiteral("profileId")).toString();
+        if (id.isEmpty() || seen.contains(id)) continue;
+        row[QStringLiteral("humanEval20Control")] = true;
+        result.append(row);
+        seen.insert(id);
+    }
+    return result;
+}
+
 QVariantList AppController::benchmarkBestModelosQuality() const
 {
     return benchmarkBestModelosQualityForTest(m_benchmarkResults,
-                                               benchmarkBestModelosSpeed());
+                                               benchmarkHumanEval20Candidates());
 }
 
 QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantList &results,
@@ -13531,6 +13583,10 @@ QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantLis
         row[QStringLiteral("ggufName")] = speed.value(QStringLiteral("ggufName"));
         row[QStringLiteral("ggufKey")] = speed.value(QStringLiteral("ggufKey"));
         row[QStringLiteral("best25Category")] = speed.value(QStringLiteral("best25Category"));
+        row[QStringLiteral("humanEval20Finalist")] =
+            speed.value(QStringLiteral("humanEval20Finalist")).toBool();
+        row[QStringLiteral("humanEval20Control")] =
+            speed.value(QStringLiteral("humanEval20Control")).toBool();
         row[QStringLiteral("qualityRatio")] = source.value(QStringLiteral("qualityTotal")).toDouble() > 0.0
             ? source.value(QStringLiteral("qualityScore")).toDouble()
                 / source.value(QStringLiteral("qualityTotal")).toDouble() : 0.0;
@@ -13566,15 +13622,11 @@ QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantLis
              < y.value(QStringLiteral("profileName")).toString();
     });
 
-    QHash<QString, int> perGguf;
     QVariantList result;
     for (const QVariant &candidate : candidates) {
         QVariantMap row = candidate.toMap();
-        const QString key = row.value(QStringLiteral("ggufKey")).toString();
-        if (perGguf.value(key, 0) >= 3) continue;
         row[QStringLiteral("bestModelosQualityRank")] = result.size() + 1;
         result.append(row);
-        ++perGguf[key];
     }
     return result;
 }

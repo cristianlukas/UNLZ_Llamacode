@@ -1536,8 +1536,9 @@ sin inventar una velocidad ni desplazar los cinco puestos medidos.
 `tabla_best_modelos_speed` es la primera etapa por GGUF: resuelve el archivo GGUF
 real desde el catálogo y conserva como máximo **10 perfiles** que pasaron el
 screening HumanEval/0. La segunda etapa ejecuta HumanEval/20 únicamente sobre los
-**3 mejores perfiles de cada GGUF**; de esta forma la calidad larga compara
-variantes del mismo quant sin gastar 20 ítems en toda la matriz.
+**3 mejores perfiles de cada GGUF**, más todos los perfiles marcados ⚡ **BEST**
+como controles; de esta forma la calidad larga compara variantes del mismo quant
+sin perder las referencias globales ya promovidas.
 
 `tabla_best_modelos_quality` toma esos mismos perfiles y sus corridas válidas de
 `HumanEval (20 ítems)`, ordena por calidad final, primer intento y tiempo, y limita
@@ -1546,10 +1547,11 @@ ejemplo 19/20), mientras que infraestructura y timeouts quedan fuera del ranking
 pero siguen visibles en el historial.
 
 La regla operativa queda fijada así: `HumanEval/0` hace el screening de hasta 10
-perfiles por GGUF; sólo los 3 mejores de cada GGUF pasan a `HumanEval/20`. El
-ranking final `best` compara todos esos finalistas y prioriza, en orden, calidad
-final, TPS, tiempo total, score del primer intento, TTFT y menor cantidad de
-reparaciones. Los empates terminan con un orden estable por nombre de perfil.
+perfiles por GGUF; sólo los 3 mejores de cada GGUF y todos los ⚡ BEST pasan a
+`HumanEval/20`. El ranking final `best` compara todos esos finalistas y controles,
+y prioriza, en orden, calidad final, TPS, tiempo total, score del primer intento,
+TTFT y menor cantidad de reparaciones. Los empates terminan con un orden estable
+por nombre de perfil.
 
 Laguna S 2.1 usa `assets/chat-templates/laguna-tools-v24.jinja`, una versión
 actualizada del template nativo con soporte de tools y loop-guard. Se aplica a
