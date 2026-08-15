@@ -167,6 +167,7 @@ private slots:
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
+    void importedBenchmarkNamesDescribeSubset();
     void tunerProfileNameUsesOptiPrefixWithoutChaining();
     void tunerGainPctNeedsBothLegs();
     void isRemoteHostDetectsLanHosts();
@@ -419,6 +420,31 @@ void AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
     QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(oldBundled, newBundled));
     QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(newBundled, personal));
     QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(personal, oldBundled));
+}
+
+void AppControllerTests::importedBenchmarkNamesDescribeSubset()
+{
+    AppController app;
+    QTemporaryFile input(m_tmp.filePath(QStringLiteral("benchmark-XXXXXX.jsonl")));
+    QVERIFY(input.open());
+    input.write("{\"task_id\":\"HumanEval/0\",\"prompt\":\"def add(a,b):\\n\","
+                "\"test\":\"def check(f):\\n    assert f(1,2)==3\\n\",\"entry_point\":\"add\"}\n");
+    input.close();
+
+    const QString id = app.importBenchmarkPack(input.fileName());
+    QVERIFY(!id.isEmpty());
+    QVariantMap imported;
+    for (const QVariant &value : app.customBenchmarks()) {
+        const QVariantMap candidate = value.toMap();
+        if (candidate.value(QStringLiteral("id")).toString() == id) {
+            imported = candidate;
+            break;
+        }
+    }
+    QCOMPARE(imported.value(QStringLiteral("name")).toString(),
+             QStringLiteral("HumanEval · 1 ítem"));
+    QVERIFY(imported.value(QStringLiteral("description")).toString().contains(
+        QStringLiteral("Tarea: HumanEval/0")));
 }
 
 void AppControllerTests::exportUserDataToWritesBackup()

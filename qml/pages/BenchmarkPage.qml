@@ -214,6 +214,17 @@ Item {
         return prompts && prompts.length !== undefined ? prompts.length : 0
     }
 
+    function customBenchmarkText(def) {
+        const name = String(def.name || "(sin nombre)")
+        const description = String(def.description || "").trim()
+        // Los packs importados ya incluyen cantidad y tareas en name/description.
+        // Para benchmarks personales sin descripción, indicar al menos su tamaño.
+        if (description.length > 0 || name.indexOf("·") >= 0) return name
+        const prompts = def.prompts
+        const count = prompts && prompts.length !== undefined ? prompts.length : 0
+        return count > 0 ? name + " · " + count + (count === 1 ? " ítem" : " ítems") : name
+    }
+
     function recommendedTimeoutSec() {
         const n = Number(selectedCustomDefinition().recommendedTimeoutSec ?? 0)
         return isFinite(n) && n > 0 ? Math.round(n) : 0
@@ -682,7 +693,7 @@ Item {
                                 const arr = []
                                 const cs = App.customBenchmarks || []
                                 for (let i = 0; i < cs.length; i++)
-                                    arr.push({ id: cs[i].id, text: cs[i].name || "(sin nombre)" })
+                                    arr.push({ id: cs[i].id, text: root.customBenchmarkText(cs[i]) })
                                 if (arr.length === 0)
                                     arr.push({ id: "", text: "(sin benchmarks — creá uno)" })
                                 return arr
@@ -784,7 +795,7 @@ Item {
                                             delegate: LcCheckBox {
                                                 required property var modelData
                                                 Layout.fillWidth: true
-                                                text: modelData.name || "(sin nombre)"
+                                                text: root.customBenchmarkText(modelData)
                                                 checked: root.proBenchmarkIds.indexOf(modelData.id) >= 0
                                                 onToggled: root.toggleProBenchmark(modelData.id)
                                             }

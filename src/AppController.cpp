@@ -91,6 +91,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QCoreApplication>
+#include <QCryptographicHash>
 #include <QUuid>
 #include <QDirIterator>
 #include <functional>
@@ -16706,6 +16707,19 @@ bool AppController::shouldReplaceBundledBenchmarkForTest(
         && srcVersion > dstVersion;
 }
 
+static QString customBenchmarkDuplicateKey(const QJsonObject &definition)
+{
+    const QString source = definition.value(QStringLiteral("source")).toString();
+    if (!source.startsWith(QStringLiteral("benchmark-pack:")))
+        return {};
+    const QJsonValue prompts = definition.value(QStringLiteral("prompts"));
+    if (!prompts.isArray())
+        return {};
+    const QByteArray payload = QJsonDocument(prompts.toArray()).toJson(QJsonDocument::Compact);
+    return source + QLatin1Char(':')
+        + QString::fromLatin1(QCryptographicHash::hash(payload, QCryptographicHash::Sha256).toHex());
+}
+
 void AppController::seedBundledCustomBenchmarks() const
 {
     const QString dstDir = customBenchmarkDir();
@@ -16748,13 +16762,19 @@ void AppController::loadCustomBenchmarks()
 {
     seedBundledCustomBenchmarks();
     m_customBenchmarks.clear();
+    QSet<QString> importedPackKeys;
     const QDir dir(customBenchmarkDir());
     const auto files = dir.entryList({QStringLiteral("*.json")}, QDir::Files, QDir::Name);
     for (const QString &f : files) {
         QFile jf(dir.filePath(f));
         if (!jf.open(QIODevice::ReadOnly)) continue;
         const QJsonObject o = QJsonDocument::fromJson(jf.readAll()).object();
-        if (!o.isEmpty()) m_customBenchmarks.append(o.toVariantMap());
+        if (o.isEmpty()) continue;
+        const QString duplicateKey = customBenchmarkDuplicateKey(o);
+        if (!duplicateKey.isEmpty() && importedPackKeys.contains(duplicateKey))
+            continue;
+        if (!duplicateKey.isEmpty()) importedPackKeys.insert(duplicateKey);
+        m_customBenchmarks.append(o.toVariantMap());
     }
     emit customBenchmarksChanged();
 }
@@ -16865,13 +16885,23 @@ QString AppController::importBenchmarkPack(const QString &path, int limit)
         prompts.append(p);
     }
 
+    const int itemCount = prompts.size();
+    const QString itemLabel = itemCount == 1
+        ? QStringLiteral("1 ítem")
+        : QStringLiteral("%1 ítems").arg(itemCount);
+    const QString firstTask = pack.items.isEmpty() ? QString() : pack.items.first().id;
+    const QString lastTask = pack.items.isEmpty() ? QString() : pack.items.last().id;
+    const QString taskSummary = firstTask.isEmpty()
+        ? QString()
+        : (firstTask == lastTask
+               ? QStringLiteral("Tarea: %1.").arg(firstTask)
+               : QStringLiteral("Tareas: %1 … %2.").arg(firstTask, lastTask));
+
     QVariantMap def;
-    def[QStringLiteral("name")] = limit > 0
-        ? QStringLiteral("%1 (%2 ítems)").arg(pack.name).arg(prompts.size())
-        : pack.name;
+    def[QStringLiteral("name")] = QStringLiteral("%1 · %2").arg(pack.name, itemLabel);
     def[QStringLiteral("description")] =
-        QStringLiteral("Benchmark público importado. Fuente: %1. Licencia: %2.")
-            .arg(pack.source, pack.license);
+        QStringLiteral("Benchmark público importado · %1 %2 Fuente: %3. Licencia: %4.")
+            .arg(itemLabel, taskSummary, pack.source, pack.license).simplified();
     def[QStringLiteral("prompts")] = prompts;
     def[QStringLiteral("source")] = QStringLiteral("benchmark-pack:") + pack.id;
     return saveCustomBenchmark(def);
