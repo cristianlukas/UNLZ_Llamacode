@@ -1031,52 +1031,65 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 enabled: !App.benchmarkRunning
-                                Text { text: "Slots"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                SpinBox {
-                                    id: concurrencyMin
-                                    from: 1; to: 16; value: 1; editable: true
-                                    Layout.preferredWidth: 78
-                                    contentItem: TextInput {
-                                        text: concurrencyMin.displayText
-                                        color: Theme.textPrimary
-                                        font.pixelSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        leftPadding: 20; rightPadding: 20
-                                        readOnly: !concurrencyMin.editable
-                                        validator: concurrencyMin.validator
+                                spacing: 10
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Text { text: "Slots mínimos"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    SpinBox {
+                                        id: concurrencyMin
+                                        from: 1; to: 16; value: 1; editable: true
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 86
+                                        contentItem: TextInput {
+                                            text: concurrencyMin.displayText
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 13
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            leftPadding: 20; rightPadding: 20
+                                            readOnly: !concurrencyMin.editable
+                                            validator: concurrencyMin.validator
+                                        }
                                     }
                                 }
-                                Text { text: "a"; color: Theme.textMuted; font.pixelSize: 11 }
-                                SpinBox {
-                                    id: concurrencyMax
-                                    from: 1; to: 16; value: 3; editable: true
-                                    Layout.preferredWidth: 78
-                                    contentItem: TextInput {
-                                        text: concurrencyMax.displayText
-                                        color: Theme.textPrimary
-                                        font.pixelSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        leftPadding: 20; rightPadding: 20
-                                        readOnly: !concurrencyMax.editable
-                                        validator: concurrencyMax.validator
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Text { text: "Slots máximos"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    SpinBox {
+                                        id: concurrencyMax
+                                        from: 1; to: 16; value: 3; editable: true
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 86
+                                        contentItem: TextInput {
+                                            text: concurrencyMax.displayText
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 13
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            leftPadding: 20; rightPadding: 20
+                                            readOnly: !concurrencyMax.editable
+                                            validator: concurrencyMax.validator
+                                        }
                                     }
                                 }
-                                Text { text: "requests"; color: Theme.textSecondary; font.pixelSize: 11 }
-                                SpinBox {
-                                    id: concurrencyRequests
-                                    from: 2; to: 32; value: 4; editable: true
-                                    Layout.preferredWidth: 78
-                                    contentItem: TextInput {
-                                        text: concurrencyRequests.displayText
-                                        color: Theme.textPrimary
-                                        font.pixelSize: 13
-                                        horizontalAlignment: Text.AlignHCenter
-                                        verticalAlignment: Text.AlignVCenter
-                                        leftPadding: 20; rightPadding: 20
-                                        readOnly: !concurrencyRequests.editable
-                                        validator: concurrencyRequests.validator
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Text { text: "Requests"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                    SpinBox {
+                                        id: concurrencyRequests
+                                        from: 2; to: 32; value: 4; editable: true
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 86
+                                        contentItem: TextInput {
+                                            text: concurrencyRequests.displayText
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 13
+                                            horizontalAlignment: Text.AlignHCenter
+                                            verticalAlignment: Text.AlignVCenter
+                                            leftPadding: 20; rightPadding: 20
+                                            readOnly: !concurrencyRequests.editable
+                                            validator: concurrencyRequests.validator
+                                        }
                                     }
                                 }
                             }
