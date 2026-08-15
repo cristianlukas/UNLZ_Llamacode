@@ -1204,41 +1204,58 @@ Item {
                     anchors { fill: parent; margins: 20 }
                     spacing: 12
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 8
 
-                        Text {
-                            text: "▾ por columna para filtrar/ordenar"
-                            color: Theme.textMuted
-                            font.pixelSize: 11
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                Layout.fillWidth: true
+                                text: "▾ por columna para filtrar/ordenar"
+                                color: Theme.textMuted
+                                font.pixelSize: 11
+                            }
+                            Text {
+                                text: resultsList.count + " resultados"
+                                color: Theme.textMuted
+                                font.pixelSize: 11
+                            }
                         }
-                        LcButton {
-                            text: root.activeFilterCount() > 0 ? "Limpiar filtros (" + root.activeFilterCount() + ")" : "Limpiar filtros"
-                            secondary: true
-                            enabled: root.activeFilterCount() > 0
-                            onClicked: root.clearAllFilters()
-                        }
-                        LcButton {
-                            text: "tabla_best_25"
-                            secondary: true
-                            onClicked: best25Popup.open()
-                        }
-                        LcButton {
-                            text: "tabla_best_modelos_speed"
-                            secondary: true
-                            onClicked: bestModelosSpeedPopup.open()
-                        }
-                        LcButton {
-                            text: "tabla_best_modelos_quality"
-                            secondary: true
-                            onClicked: bestModelosQualityPopup.open()
-                        }
-                        Item { Layout.fillWidth: true }
-                        Text {
-                            text: resultsList.count + " resultados"
-                            color: Theme.textMuted
-                            font.pixelSize: 11
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: 6
+                            columnSpacing: 6
+                            LcButton {
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                text: root.activeFilterCount() > 0 ? "Limpiar filtros (" + root.activeFilterCount() + ")" : "Limpiar filtros"
+                                secondary: true
+                                enabled: root.activeFilterCount() > 0
+                                onClicked: root.clearAllFilters()
+                            }
+                            LcButton {
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                text: "Best 25"
+                                secondary: true
+                                onClicked: best25Popup.open()
+                            }
+                            LcButton {
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                text: "Best modelos · speed"
+                                secondary: true
+                                onClicked: bestModelosSpeedPopup.open()
+                            }
+                            LcButton {
+                                Layout.fillWidth: true
+                                Layout.minimumWidth: 0
+                                text: "Best modelos · quality"
+                                secondary: true
+                                onClicked: bestModelosQualityPopup.open()
+                            }
                         }
                     }
 
