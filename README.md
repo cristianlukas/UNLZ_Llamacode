@@ -1492,6 +1492,11 @@ Evaluaciones de modelos candidatas:
 3. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
 4. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
 
+Cuando una suite se repite en varias pasadas, el benchmark detiene y vuelve a
+cargar el servidor entre pasadas para aislar el estado de MTP/KV-cache. Si el
+backend se reinicia durante una respuesta, la corrida se clasifica como
+infraestructura y no se envía a reparaciones de calidad.
+
 Para medir concurrencia real, seleccionar exactamente un perfil y usar **Medir
 concurrencia**. La herramienta crea copias editables del perfil para cada valor
 de `parallelSlots`, lanza varias requests simultáneas contra el mismo servidor y

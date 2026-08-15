@@ -115,6 +115,7 @@ private slots:
     void integrationSecretsMigrateOutOfJson();
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
+    void benchmarkRestartErrorsAreInfrastructure();
     void concurrencyBenchmarkSettingsClampBounds();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
@@ -1445,6 +1446,16 @@ void AppControllerTests::benchmarkScoresChatAnswersWhenAgentWritesNoFiles()
     const QVariantMap noDup = AppController::scoreBenchTextResponsesForTest(
         QStringLiteral("short"), conAcceptance, messages);
     QCOMPARE(noDup.value("total").toInt(), 0);
+}
+
+void AppControllerTests::benchmarkRestartErrorsAreInfrastructure()
+{
+    QVERIFY(AppController::benchmarkErrorIsInfrastructureForTest(
+        QStringLiteral("[error: el servidor o backend se reinició durante la respuesta; el turno fue interrumpido.]")));
+    QVERIFY(AppController::benchmarkErrorIsInfrastructureForTest(
+        QStringLiteral("connection closed by peer")));
+    QVERIFY(!AppController::benchmarkErrorIsInfrastructureForTest(
+        QStringLiteral("Fallaron criterios de aceptacion.")));
 }
 
 void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()

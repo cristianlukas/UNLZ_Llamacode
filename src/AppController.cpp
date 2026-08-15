@@ -15067,6 +15067,20 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
     return out;
 }
 
+bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message)
+{
+    const QString lower = message.toLower();
+    return lower.contains(QStringLiteral("connection closed"))
+        || lower.contains(QStringLiteral("connection refused"))
+        || lower.contains(QStringLiteral("server crashe"))
+        || lower.contains(QStringLiteral("llama-server"))
+        || lower.contains(QStringLiteral("backend se reinició"))
+        || lower.contains(QStringLiteral("servidor se reinició"))
+        || lower.contains(QStringLiteral("servidor se reinicio"))
+        || lower.contains(QStringLiteral("backend restarted"))
+        || lower.contains(QStringLiteral("transport"));
+}
+
 void AppController::runAgentBenchmark(const QString &profileId, const QString &profName,
                                      int idx, int total, const QVariantList &benchTasks,
                                      int passes, const QString &mode, const QString &runLabel,
@@ -15367,6 +15381,21 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 }
                 includeMetric(metric);
             }
+            // A backend restart can arrive as an assistant-final marker instead
+            // of errorOccurred. Never turn that transport failure into a
+            // misleading quality failure or send the agent into repair loops.
+            for (auto it = msgs.crbegin(); it != msgs.crend(); ++it) {
+                const QVariantMap mm = it->toMap();
+                if (mm.value(QStringLiteral("role")).toString() == QLatin1String("assistant")
+                        && benchmarkErrorIsInfrastructureForTest(
+                               mm.value(QStringLiteral("content")).toString())) {
+                    *serverCrashed = true;
+                    *passFailed = false;
+                    if (failureMessage->isEmpty())
+                        *failureMessage = mm.value(QStringLiteral("content")).toString();
+                    break;
+                }
+            }
             // Prefer backend/server generation metrics for t/s. The turn-level
             // fallback measures a whole agent turn and can include tool execution,
             // file IO, tests and follow-up requests, so it is only useful when the
@@ -15488,7 +15517,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             // pedo. Sólo los criterios duros (archivos que faltan, comandos que no
             // corren) cuentan como fallo de ejecución.
             const bool acceptanceFailed = benchHardCriteriaFailed(acceptanceRows);
-            if (!canceled && !*timedOut && !*passFailed && acceptanceFailed
+            if (!canceled && !*timedOut && !*passFailed && !*serverCrashed && acceptanceFailed
                     && *repairAttempts < maxRepairAttempts) {
                 (*repairAttempts)++;
                 *finished = false;
@@ -15667,7 +15696,23 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
 
             if (!canceled && !*timedOut && *passNo < passes) {
                 (*passNo)++;
-                (*runOnePass)();
+                // Do not reuse a long-lived MTP/KV-cache server between passes.
+                // The previous pass may leave allocator/KV state degraded; a
+                // fresh server makes repeated HumanEval measurements comparable
+                // and prevents later passes from turning into false quality
+                // failures after a backend restart.
+                stopServer();
+                benchmarkEnsureServerStopped(45000, [=]() {
+                    if (m_benchmarkCanceled) {
+                        onProfileDone();
+                        return;
+                    }
+                    startServer(profileId);
+                    benchmarkWaitServerReady(150, 150, serverBaseUrl(),
+                        QStringLiteral("[%1/%2] %3 — recargando para pasada %4/%5")
+                            .arg(idx + 1).arg(total).arg(profName).arg(*passNo).arg(passes),
+                        [=](bool) { (*runOnePass)(); });
+                });
             } else {
                 onProfileDone();
             }
@@ -15853,10 +15898,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         });
         connect(agent, &IAgentBackend::errorOccurred, this, [=](const QString &msg) {
             const QString lower = msg.toLower();
-            *serverCrashed = lower.contains(QStringLiteral("connection closed"))
-                || lower.contains(QStringLiteral("connection refused"))
-                || lower.contains(QStringLiteral("server crashe"))
-                || lower.contains(QStringLiteral("llama-server"));
+            *serverCrashed = benchmarkErrorIsInfrastructureForTest(lower);
             *passFailed = !*serverCrashed;
             *failureMessage = msg;
             *failureDetail = benchmarkServerLogTail();
