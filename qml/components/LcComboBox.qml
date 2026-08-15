@@ -20,6 +20,7 @@ ComboBox {
         font.pixelSize: 13
         leftPadding: 10
         rightPadding: control.indicator ? control.indicator.width + 4 : 10
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
@@ -49,6 +50,7 @@ ComboBox {
             color: Theme.theme === "oled" ? "white" : Theme.textPrimary
             font.pixelSize: 13
             leftPadding: 6
+            horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
