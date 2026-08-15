@@ -116,6 +116,8 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkRestartErrorsAreInfrastructure();
+    void benchmarkUsesOneArtifactPerTask();
+    void benchmarkStreamingCountsSnapshotsOnce();
     void concurrencyBenchmarkSettingsClampBounds();
     void benchmarkReusesServerAlreadyLoadedWithSameProfile();
     void benchmarkBest25ClassifiesExclusiveSpeedTiers();
@@ -1456,6 +1458,70 @@ void AppControllerTests::benchmarkRestartErrorsAreInfrastructure()
         QStringLiteral("connection closed by peer")));
     QVERIFY(!AppController::benchmarkErrorIsInfrastructureForTest(
         QStringLiteral("Fallaron criterios de aceptacion.")));
+}
+
+void AppControllerTests::benchmarkUsesOneArtifactPerTask()
+{
+    QCOMPARE(AppController::benchmarkTaskArtifactNameForTest(QStringLiteral("HumanEval/0")),
+             QStringLiteral("solution_HumanEval_0.py"));
+
+    QTemporaryDir ws;
+    QVERIFY(ws.isValid());
+    const QString addFile = QStringLiteral("solution_HumanEval_0.py");
+    const QString subFile = QStringLiteral("solution_HumanEval_1.py");
+    auto write = [&](const QString &name, const QByteArray &content) {
+        QFile f(ws.filePath(name));
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+            return false;
+        return f.write(content) == content.size();
+    };
+    QVERIFY(write(addFile, "def add(a, b):\n    return a + b\n"));
+    QVERIFY(write(subFile, "def subtract(a, b):\n    return a - b\n"));
+
+    const QVariantMap addAcceptance{
+        {QStringLiteral("graderType"), QStringLiteral("code_tests")},
+        {QStringLiteral("entryPoint"), QStringLiteral("add")},
+        {QStringLiteral("preamble"), QStringLiteral("def add(a, b):\n")},
+        {QStringLiteral("tests"), QStringLiteral(
+            "\ndef check(candidate):\n    assert candidate(2, 3) == 5\n\ncheck(add)\n")}};
+    const QVariantMap subAcceptance{
+        {QStringLiteral("graderType"), QStringLiteral("code_tests")},
+        {QStringLiteral("entryPoint"), QStringLiteral("subtract")},
+        {QStringLiteral("preamble"), QStringLiteral("def subtract(a, b):\n")},
+        {QStringLiteral("tests"), QStringLiteral(
+            "\ndef check(candidate):\n    assert candidate(7, 2) == 5\n\ncheck(subtract)\n")}};
+    const QVariantList tasks{
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("HumanEval/0")},
+                    {QStringLiteral("artifactFile"), addFile},
+                    {QStringLiteral("acceptance"), addAcceptance}},
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("HumanEval/1")},
+                    {QStringLiteral("artifactFile"), subFile},
+                    {QStringLiteral("acceptance"), subAcceptance}}};
+    const QStringList files{addFile, subFile};
+
+    QVariantMap score = AppController::scoreAgentBenchmarkAcceptanceForTest(
+        ws.path(), QString(), tasks, files);
+    QCOMPARE(score.value(QStringLiteral("score")).toInt(), 2);
+    QCOMPARE(score.value(QStringLiteral("total")).toInt(), 2);
+
+    // Aunque ambas soluciones existan, no se pueden acreditar desde el archivo
+    // de la otra tarea: ése era el bug que ocultaba las sobrescrituras.
+    QVERIFY(write(addFile, "def subtract(a, b):\n    return a - b\n"));
+    QVERIFY(write(subFile, "def add(a, b):\n    return a + b\n"));
+    score = AppController::scoreAgentBenchmarkAcceptanceForTest(
+        ws.path(), QString(), tasks, files);
+    QCOMPARE(score.value(QStringLiteral("score")).toInt(), 0);
+    QCOMPARE(score.value(QStringLiteral("total")).toInt(), 2);
+}
+
+void AppControllerTests::benchmarkStreamingCountsSnapshotsOnce()
+{
+    QString previous;
+    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("abc")), 3);
+    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("abcdef")), 3);
+    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("abcdef")), 0);
+    // Un backend que emite chunks, no snapshots, sigue sumando el chunk completo.
+    QCOMPARE(AppController::benchmarkStreamingDeltaForTest(&previous, QStringLiteral("ghi")), 3);
 }
 
 void AppControllerTests::benchmarkBest25ClassifiesExclusiveSpeedTiers()

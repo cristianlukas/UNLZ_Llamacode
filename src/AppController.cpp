@@ -14559,6 +14559,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                         tm[QStringLiteral("id")] = t.id;
                         tm[QStringLiteral("prompt")] = t.prompt;
                         tm[QStringLiteral("acceptance")] = t.acceptance;
+                        tm[QStringLiteral("artifactFile")] =
+                            benchmarkTaskArtifactNameForTest(t.id);
                         agentTasks.append(tm);
                     }
                     runAgentBenchmark(profileId, profName, idx, profileIds.size(),
@@ -15013,20 +15015,37 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
             QString detail;
             bool passed = false;
             bool attemptedFile = false;
-            for (const auto &file : fileContents) {
-                if (!file.first.endsWith(QStringLiteral(".py"), Qt::CaseInsensitive))
-                    continue;
-                attemptedFile = true;
-                QString candidateDetail;
-                if (BenchmarkPack::gradeWithExecution(bi, file.second, 20000,
-                                                       &candidateDetail)) {
-                    passed = true;
-                    detail.clear();
+            const QString artifactFile =
+                QDir::cleanPath(task.value(QStringLiteral("artifactFile")).toString());
+            if (!artifactFile.isEmpty() && artifactFile != QLatin1String(".")) {
+                for (const auto &file : fileContents) {
+                    if (QDir::cleanPath(file.first) != artifactFile)
+                        continue;
+                    attemptedFile = true;
+                    passed = BenchmarkPack::gradeWithExecution(
+                        bi, file.second, 20000, &detail);
                     break;
                 }
-                detail = candidateDetail;
+                if (!attemptedFile)
+                    detail = QStringLiteral("Archivo esperado no encontrado: %1")
+                                 .arg(artifactFile);
+            } else {
+                // Compatibilidad con definiciones históricas sin artifactFile.
+                for (const auto &file : fileContents) {
+                    if (!file.first.endsWith(QStringLiteral(".py"), Qt::CaseInsensitive))
+                        continue;
+                    attemptedFile = true;
+                    QString candidateDetail;
+                    if (BenchmarkPack::gradeWithExecution(bi, file.second, 20000,
+                                                           &candidateDetail)) {
+                        passed = true;
+                        detail.clear();
+                        break;
+                    }
+                    detail = candidateDetail;
+                }
             }
-            if (!attemptedFile)
+            if (!attemptedFile && artifactFile.isEmpty())
                 passed = BenchmarkPack::gradeWithExecution(bi, finalText, 20000, &detail);
             QVariantMap row;
             row[QStringLiteral("taskId")] = task.value(QStringLiteral("id")).toString();
@@ -15065,6 +15084,29 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
     out[QStringLiteral("total")] = total;
     out[QStringLiteral("rows")] = rows;
     return out;
+}
+
+QString AppController::benchmarkTaskArtifactNameForTest(const QString &taskId)
+{
+    QString safe = taskId.trimmed();
+    safe.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_-]+")),
+                 QStringLiteral("_"));
+    safe = safe.left(80);
+    if (safe.isEmpty()) safe = QStringLiteral("task");
+    return QStringLiteral("solution_%1.py").arg(safe);
+}
+
+int AppController::benchmarkStreamingDeltaForTest(QString *previous,
+                                                  const QString &current)
+{
+    if (!previous) return current.size();
+    int delta = current.size();
+    if (current == *previous)
+        delta = 0;
+    else if (!previous->isEmpty() && current.startsWith(*previous))
+        delta = current.size() - previous->size();
+    *previous = current;
+    return qMax(0, delta);
 }
 
 bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message)
@@ -15143,7 +15185,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             head.contains(QStringLiteral("resumen"));
         return (looksLikePython && !looksLikeSummary) ? text : QString();
     };
-    auto agentPrompt = [](const QString &prompt) {
+    auto agentPrompt = [](const QString &prompt, const QString &artifactFile) {
         return QStringLiteral(
             "MODO AGENTE BENCHMARK:\n"
             "- Trabaja en el directorio actual usando herramientas de archivo.\n"
@@ -15151,10 +15193,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             "- Debes crear/modificar los archivos pedidos en disco; no alcanza con responder codigo en el chat.\n"
             "- Si el prompt pide \"responder solamente con codigo\", interpretalo como: el archivo final debe contener solamente ese codigo.\n"
             "- En tareas de codigo, conserva exactamente los nombres y firmas del preambulo; no los renombres ni los abrevies.\n"
-            "- Para HumanEval y tareas equivalentes, escribe la solucion en solution.py; no inventes nombres como closefunc.py o funcfunc.py.\n"
-            "- Antes de reparar, verifica que solution.py contenga exactamente la funcion solicitada y corrige ese archivo.\n"
+            "- Para esta tarea escribe la solucion exclusivamente en `%2`; no sobrescribas archivos de tareas anteriores.\n"
+            "- Antes de reparar, verifica que `%2` contenga exactamente la funcion solicitada y corrige ese archivo.\n"
             "- Al terminar, responde breve indicando que archivos creaste y si compilaste/probaste.\n\n"
-            "TAREA ORIGINAL:\n%1").arg(prompt);
+            "TAREA ORIGINAL:\n%1").arg(prompt, artifactFile);
     };
     auto estimateTokensLocal = [](const QString &s) {
         const int n = s.trimmed().size();
@@ -15205,10 +15247,19 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         return out;
     };
     QStringList prompts;
+    QStringList taskIds;
+    QStringList taskArtifacts;
     for (const QVariant &tv : benchTasks) {
-        const QString prompt = tv.toMap().value(QStringLiteral("prompt")).toString();
-        if (!prompt.trimmed().isEmpty())
+        const QVariantMap task = tv.toMap();
+        const QString prompt = task.value(QStringLiteral("prompt")).toString();
+        if (!prompt.trimmed().isEmpty()) {
             prompts << prompt;
+            const QString taskId = task.value(QStringLiteral("id")).toString();
+            taskIds << taskId;
+            QString artifact = task.value(QStringLiteral("artifactFile")).toString();
+            if (artifact.isEmpty()) artifact = benchmarkTaskArtifactNameForTest(taskId);
+            taskArtifacts << artifact;
+        }
     }
 
     auto passNo = std::make_shared<int>(1);
@@ -15275,6 +15326,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto preToolCut = std::make_shared<bool>(false);
         auto preToolRecoveryAttempts = std::make_shared<int>(0);
         auto preToolRecoveryPending = std::make_shared<bool>(false);
+        auto lastStreamingText = std::make_shared<QString>();
         constexpr int kBenchmarkPreToolOutputLimit = 16000;
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
@@ -15291,9 +15343,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto firstAttemptTotal = std::make_shared<int>(0);
         auto timeToFirstAttempt = std::make_shared<double>(0.0);
         const int maxRepairAttempts = 2;
-        // Sin idle-timeout por defecto: solo corta el timeout duro configurable
-        // por el usuario (0 = sin límite). 0 aquí deshabilita el idle-watchdog.
-        const int idleTimeoutMs = 0;
+        // Si cancelGeneration() no produce "[turn] completed", una serie
+        // headless no puede quedar clavada para siempre.
+        const int idleTimeoutMs = 180000;
         auto lastActivityMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
         auto peakRamMb = std::make_shared<double>(0.0);
         auto peakVramMb = std::make_shared<double>(0.0);
@@ -15410,12 +15462,16 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             QDirIterator di(workspace, QDir::Files, QDirIterator::Subdirectories);
             while (di.hasNext()) {
                 di.next();
-                files << QDir(workspace).relativeFilePath(di.filePath());
+                const QString rel = QDir(workspace).relativeFilePath(di.filePath());
+                if (!rel.startsWith(QStringLiteral(".llamacode/")))
+                    files << rel;
             }
             if (files.isEmpty()) {
                 const QString artifact = fallbackArtifact;
                 if (!artifact.isEmpty()) {
-                    const QString outName = requiredFileName(prompts.isEmpty() ? QString() : prompts.first());
+                    const QString outName = taskArtifacts.isEmpty()
+                        ? requiredFileName(prompts.isEmpty() ? QString() : prompts.first())
+                        : taskArtifacts.first();
                     QFile out(QDir(workspace).filePath(outName));
                     if (out.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
                         out.write(artifact.toUtf8());
@@ -15541,8 +15597,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     const QVariantMap task = tv.toMap();
                     if (!failedTaskIds.contains(task.value(QStringLiteral("id")).toString()))
                         continue;
-                    failedPrompts += QStringLiteral("\n\n--- TAREA FALLIDA %1 ---\n%2")
+                    failedPrompts += QStringLiteral(
+                        "\n\n--- TAREA FALLIDA %1 ---\nArchivo requerido: `%2`\n%3")
                         .arg(task.value(QStringLiteral("id")).toString(),
+                             task.value(QStringLiteral("artifactFile")).toString(),
                              task.value(QStringLiteral("prompt")).toString());
                 }
                 if (failedPrompts.isEmpty())
@@ -15552,9 +15610,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     "La implementacion anterior fallo criterios de aceptacion. "
                     "No reinicies desde cero si no hace falta: inspecciona los archivos existentes, "
                     "corrige la causa concreta y vuelve a ejecutar/verificar los checks relevantes.\n\n"
-                    "En tareas de codigo conserva exactamente la firma indicada en el preambulo y usa solution.py "
-                    "como archivo canonico, salvo que la tarea indique otro nombre. No crees archivos alternativos "
-                    "con nombres inventados.\n\n"
+                    "En tareas de codigo conserva exactamente la firma indicada en el preambulo y respeta el "
+                    "archivo requerido para cada tarea. No sobrescribas soluciones anteriores ni crees archivos "
+                    "alternativos con nombres inventados.\n\n"
                     "Intento de reparacion: %1/%2\n\n"
                     "Archivos detectados:\n%3\n\n"
                     "Checks fallidos y salidas:\n%4\n\n"
@@ -15572,6 +15630,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *turnStartMs = QDateTime::currentMSecsSinceEpoch();
                 *turnFirstMs = -1;
                 *lastActivityMs = *turnStartMs;
+                lastStreamingText->clear();
                 agent->sendMessage(repair);
                 return;
             }
@@ -15722,15 +15781,26 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // Waiting for a natural-language "turn finished" after that is unsafe:
         // a model can keep rewriting an already-correct file forever.
         auto acceptancePoll = std::make_shared<std::function<void()>>();
+        auto lastAcceptanceFingerprint = std::make_shared<QString>();
         *acceptancePoll = [=]() {
             if (*finished) return;
             QStringList files;
+            QStringList fingerprintParts;
             QDirIterator it(workspace, QDir::Files, QDirIterator::Subdirectories);
             while (it.hasNext()) {
                 it.next();
-                files << QDir(workspace).relativeFilePath(it.filePath());
+                const QString rel = QDir(workspace).relativeFilePath(it.filePath());
+                if (rel.startsWith(QStringLiteral(".llamacode/")))
+                    continue;
+                files << rel;
+                fingerprintParts << QStringLiteral("%1:%2:%3")
+                    .arg(rel).arg(it.fileInfo().size())
+                    .arg(it.fileInfo().lastModified().toMSecsSinceEpoch());
             }
-            if (!files.isEmpty()) {
+            fingerprintParts.sort();
+            const QString fingerprint = fingerprintParts.join(QLatin1Char('|'));
+            if (!files.isEmpty() && fingerprint != *lastAcceptanceFingerprint) {
+                *lastAcceptanceFingerprint = fingerprint;
                 const QVariantMap probe = scoreAgentBenchmarkAcceptanceForTest(
                     workspace, QString(), benchTasks, files);
                 const QVariantList rows = probe.value(QStringLiteral("rows")).toList();
@@ -15766,20 +15836,25 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         *sendNext = [=]() {
             if (!*toolsReady) return;
             if (m_benchmarkCanceled || *promptIdx >= prompts.size()) { (*finalize)(); return; }
+            const int currentPrompt = *promptIdx;
             m_benchmarkStatus = QString("[%1/%2] %3 — agente: prompt %4/%5...")
-                .arg(idx+1).arg(total).arg(profName).arg(*promptIdx + 1).arg(prompts.size());
+                .arg(idx+1).arg(total).arg(profName).arg(currentPrompt + 1).arg(prompts.size());
             emit benchmarkStatusChanged();
             *turnStartMs = QDateTime::currentMSecsSinceEpoch();
             if (*promptIdx == 0)
                 *firstPromptMs = *turnStartMs;
             *turnFirstMs = -1;
             *lastActivityMs = *turnStartMs;
+            lastStreamingText->clear();
             AgentEventLog::append(workspace, QString(),
                                   QStringLiteral("benchmark_prompt"),
-                                  QJsonObject{{QStringLiteral("promptIndex"), *promptIdx},
+                                  QJsonObject{{QStringLiteral("promptIndex"), currentPrompt},
                                               {QStringLiteral("promptCount"), prompts.size()},
-                                              {QStringLiteral("promptChars"), prompts.at(*promptIdx).size()}});
-            agent->sendMessage(agentPrompt(prompts.at(*promptIdx)));
+                                              {QStringLiteral("taskId"), taskIds.value(currentPrompt)},
+                                              {QStringLiteral("artifactFile"), taskArtifacts.value(currentPrompt)},
+                                              {QStringLiteral("promptChars"), prompts.at(currentPrompt).size()}});
+            agent->sendMessage(agentPrompt(prompts.at(currentPrompt),
+                                           taskArtifacts.value(currentPrompt)));
             (*promptIdx)++;
         };
 
@@ -15792,7 +15867,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             if (content.contains(QStringLiteral("<tool_call"), Qt::CaseInsensitive))
                 *toolSeen = true;
             if (!*toolSeen && !*preToolCut) {
-                *preToolChars += content.size();
+                *preToolChars += benchmarkStreamingDeltaForTest(lastStreamingText.get(), content);
                 if (*preToolChars >= kBenchmarkPreToolOutputLimit) {
                     *preToolCut = true;
                     AgentEventLog::append(workspace, QString(),
@@ -15805,6 +15880,15 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                         (*preToolRecoveryAttempts)++;
                         *preToolRecoveryPending = true;
                         agent->cancelGeneration();
+                        QTimer::singleShot(15000, this, [=]() {
+                            if (*finished || !*preToolRecoveryPending) return;
+                            *preToolRecoveryPending = false;
+                            *passFailed = true;
+                            *failureMessage = QStringLiteral(
+                                "El backend no cerró el turno después de cancelar una salida previa a herramientas.");
+                            *failureDetail = benchmarkServerLogTail();
+                            (*finalize)();
+                        });
                     } else {
                         agent->cancelGeneration();
                         *passFailed = true;
@@ -15880,6 +15964,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *preToolCut = false;
                 *preToolChars = 0;
                 *toolSeen = false;
+                lastStreamingText->clear();
                 *turnStartMs = QDateTime::currentMSecsSinceEpoch();
                 *turnFirstMs = -1;
                 AgentEventLog::append(workspace, QString(),
@@ -15887,9 +15972,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                       QJsonObject{{QStringLiteral("attempt"), *preToolRecoveryAttempts}});
                 agent->sendMessage(QStringLiteral(
                     "CORRECCION CRITICA: no describas un plan ni escribas codigo en el chat. "
-                    "Usa ahora mismo la herramienta write_file para crear el archivo pedido "
+                    "Usa ahora mismo la herramienta write_file para crear `%1` "
                     "en disco; despues ejecuta los checks de aceptacion. Responde solo luego "
-                    "de usar la herramienta."));
+                    "de usar la herramienta.")
+                    .arg(taskArtifacts.value(qMax(0, *promptIdx - 1))));
                 return;
             }
             if (m_benchmarkCanceled) { (*finalize)(); return; }

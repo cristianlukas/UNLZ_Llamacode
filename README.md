@@ -1497,6 +1497,15 @@ cargar el servidor entre pasadas para aislar el estado de MTP/KV-cache. Si el
 backend se reinicia durante una respuesta, la corrida se clasifica como
 infraestructura y no se envía a reparaciones de calidad.
 
+En benchmarks de agente con varias tareas, cada tarea tiene un artefacto Python
+propio (`solution_<task-id>.py`). El grader evalúa ese archivo exacto: así una
+respuesta no puede sobrescribir `solution.py` de tareas anteriores ni recibir
+crédito por el archivo de otra tarea. El sondeo de aceptación sólo vuelve a
+evaluar cuando cambian los artefactos del usuario y excluye `.llamacode/`.
+Además, el contador previo a herramientas reconoce snapshots acumulativos de
+streaming y aplica watchdogs para que una cancelación incompleta no deje una
+corrida headless bloqueada.
+
 El informe de la repetición headless del 2026-08-15, con perfiles, comandos,
 resultados y diagnóstico de infraestructura, está en
 [`docs/benchmark-rerun-2026-08-15.md`](docs/benchmark-rerun-2026-08-15.md).

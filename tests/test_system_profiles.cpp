@@ -58,6 +58,7 @@ private slots:
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
     void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
     void bundle_qwen38VariantsAreMtpVisionAndTemplated();
+    void bundle_bigBangDisablesCrashyFlashAttention();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -1445,6 +1446,49 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.
     }
+}
+
+void SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+
+    QJsonObject bigBang;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        if (profile.value("id").toString() == QStringLiteral("sys-48-bigbang-v1-q4km")) {
+            bigBang = profile;
+            break;
+        }
+    }
+
+    QVERIFY2(!bigBang.isEmpty(), "falta el perfil base BigBang");
+    QVERIFY2(!bigBang.value("runtime").toObject().value("flashAttn").toBool(),
+             "BigBang no debe reactivar el kernel Flash Attention que crashea en CUDA");
+    QCOMPARE(bigBang.value("runtime").toObject().value("kv").toString(),
+             QStringLiteral("f16"));
+    QCOMPARE(bigBang.value("runtime").toObject().value("batch").toInt(), 512);
+    QCOMPARE(bigBang.value("runtime").toObject().value("ubatch").toInt(), 128);
+    QStringList args;
+    for (const QJsonValue &value : bigBang.value("extraArgs").toArray())
+        args << value.toString();
+    const int flashArg = args.indexOf(QStringLiteral("--flash-attn"));
+    QVERIFY2(flashArg >= 0 && args.value(flashArg + 1) == QStringLiteral("off"),
+             "llama.cpp b10331 requiere --flash-attn off explicito; omitirlo usa auto");
+    const QString comment = bigBang.value("comment").toString();
+    QVERIFY(comment.contains(QStringLiteral("Flash Attention")));
+
+    bool foundBestVariant = false;
+    for (const QJsonValue &value : bigBang.value("benchmarkVariants").toArray()) {
+        if (value.toObject().value("id").toString()
+            == QStringLiteral("sys-bench-48-bigbang-post")) {
+            foundBestVariant = true;
+            QVERIFY2(!value.toObject().value("runtime").toObject().contains("flashAttn"),
+                     "la variante debe heredar Flash Attention desactivado del perfil base");
+        }
+    }
+    QVERIFY(foundBestVariant);
 }
 
 QTEST_MAIN(SystemProfilesTests)
