@@ -1708,6 +1708,8 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
   que no sirve para rankear calidad. Para comparar perfiles usar al menos 10–20 ítems;
   las importaciones HumanEval completas o de 20 ítems quedan disponibles sin impedir
   pruebas rápidas de un caso.
+- Las importaciones de packs públicos muestran la cantidad y las tareas incluidas;
+  copias exactas importadas varias veces se agrupan en la lista sin borrar sus archivos.
 - Exportar a CSV desde la UI.
 
 ### Tabla de ejemplo
