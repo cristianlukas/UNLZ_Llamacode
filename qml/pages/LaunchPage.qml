@@ -403,7 +403,8 @@ Item {
                 LcButton {
                     text: "Usar un servidor LAN"
                     secondary: true
-                    Layout.alignment: Qt.AlignLeft
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 44
                     onClicked: lanDialog.open()
                 }
 
