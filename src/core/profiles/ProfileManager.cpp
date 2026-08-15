@@ -42,8 +42,7 @@ bool isCuratedBestName(const LaunchProfile &profile)
         || key.contains(QStringLiteral("balance-laguna"))
         || profile.id == QStringLiteral("4f5cc556-333d-4310-955e-15042cd874d6")
         || (key.contains(QStringLiteral("141_"))
-            && key.contains(QStringLiteral("fusion leloch")))
-        || key.contains(QStringLiteral("qwen3.8"));
+            && key.contains(QStringLiteral("fusion leloch")));
 }
 }
 
