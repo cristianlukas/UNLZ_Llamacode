@@ -1497,6 +1497,10 @@ cargar el servidor entre pasadas para aislar el estado de MTP/KV-cache. Si el
 backend se reinicia durante una respuesta, la corrida se clasifica como
 infraestructura y no se envía a reparaciones de calidad.
 
+El informe de la repetición headless del 2026-08-15, con perfiles, comandos,
+resultados y diagnóstico de infraestructura, está en
+[`docs/benchmark-rerun-2026-08-15.md`](docs/benchmark-rerun-2026-08-15.md).
+
 Para medir concurrencia real, seleccionar exactamente un perfil y usar **Medir
 concurrencia**. La herramienta crea copias editables del perfil para cada valor
 de `parallelSlots`, lanza varias requests simultáneas contra el mismo servidor y
