@@ -13318,6 +13318,11 @@ QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
         const double tx = x.value(QStringLiteral("avgTps")).toDouble();
         const double ty = y.value(QStringLiteral("avgTps")).toDouble();
         if (!qFuzzyCompare(tx + 1.0, ty + 1.0)) return tx > ty;
+        const double ex = x.value(QStringLiteral("totalTime"),
+                                  x.value(QStringLiteral("elapsedSec"))).toDouble();
+        const double ey = y.value(QStringLiteral("totalTime"),
+                                  y.value(QStringLiteral("elapsedSec"))).toDouble();
+        if (!qFuzzyCompare(ex + 1.0, ey + 1.0)) return ex < ey;
         return x.value(QStringLiteral("profileName")).toString()
              < y.value(QStringLiteral("profileName")).toString();
     };
@@ -13537,12 +13542,26 @@ QVariantList AppController::benchmarkBestModelosQualityForTest(const QVariantLis
         const double qx = x.value(QStringLiteral("qualityRatio")).toDouble();
         const double qy = y.value(QStringLiteral("qualityRatio")).toDouble();
         if (!qFuzzyCompare(qx + 1.0, qy + 1.0)) return qx > qy;
+        const double tx = x.value(QStringLiteral("avgTps")).toDouble();
+        const double ty = y.value(QStringLiteral("avgTps")).toDouble();
+        if (!qFuzzyCompare(tx + 1.0, ty + 1.0)) return tx > ty;
+        const double totalX = x.value(QStringLiteral("totalTime"),
+                                      x.value(QStringLiteral("elapsedSec"))).toDouble();
+        const double totalY = y.value(QStringLiteral("totalTime"),
+                                      y.value(QStringLiteral("elapsedSec"))).toDouble();
+        if (!qFuzzyCompare(totalX + 1.0, totalY + 1.0)) return totalX < totalY;
         const double fx = x.value(QStringLiteral("firstAttemptScore")).toDouble();
         const double fy = y.value(QStringLiteral("firstAttemptScore")).toDouble();
         if (fx != fy) return fx > fy;
-        const double tx = x.value(QStringLiteral("timeToFirstAttempt")).toDouble();
-        const double ty = y.value(QStringLiteral("timeToFirstAttempt")).toDouble();
-        if (tx != ty) return tx < ty;
+        const double firstX = x.value(QStringLiteral("timeToFirstAttempt")).toDouble();
+        const double firstY = y.value(QStringLiteral("timeToFirstAttempt")).toDouble();
+        if (!qFuzzyCompare(firstX + 1.0, firstY + 1.0)) return firstX < firstY;
+        const double ttftX = x.value(QStringLiteral("avgTtftMs")).toDouble();
+        const double ttftY = y.value(QStringLiteral("avgTtftMs")).toDouble();
+        if (!qFuzzyCompare(ttftX + 1.0, ttftY + 1.0)) return ttftX < ttftY;
+        const int repairsX = x.value(QStringLiteral("repairAttempts")).toInt();
+        const int repairsY = y.value(QStringLiteral("repairAttempts")).toInt();
+        if (repairsX != repairsY) return repairsX < repairsY;
         return x.value(QStringLiteral("profileName")).toString()
              < y.value(QStringLiteral("profileName")).toString();
     });

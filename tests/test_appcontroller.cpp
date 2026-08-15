@@ -1554,6 +1554,16 @@ void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
                     {QStringLiteral("ggufName"), QStringLiteral("same.gguf")},
                     {QStringLiteral("ggufKey"), QStringLiteral("same.gguf")},
                     {QStringLiteral("best25Category"), QStringLiteral("Balanced")}},
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("p4")},
+                    {QStringLiteral("profileName"), QStringLiteral("P4")},
+                    {QStringLiteral("ggufName"), QStringLiteral("same.gguf")},
+                    {QStringLiteral("ggufKey"), QStringLiteral("same.gguf")},
+                    {QStringLiteral("best25Category"), QStringLiteral("Fast")}},
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("p5")},
+                    {QStringLiteral("profileName"), QStringLiteral("P5")},
+                    {QStringLiteral("ggufName"), QStringLiteral("same.gguf")},
+                    {QStringLiteral("ggufKey"), QStringLiteral("same.gguf")},
+                    {QStringLiteral("best25Category"), QStringLiteral("Fast")}},
         QVariantMap{{QStringLiteral("profileId"), QStringLiteral("p3")},
                     {QStringLiteral("profileName"), QStringLiteral("P3")},
                     {QStringLiteral("ggufName"), QStringLiteral("other.gguf")},
@@ -1575,7 +1585,24 @@ void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
                     {QStringLiteral("profileId"), QStringLiteral("p2")},
                     {QStringLiteral("qualityScore"), 20}, {QStringLiteral("qualityTotal"), 20},
                     {QStringLiteral("firstAttemptScore"), 20}, {QStringLiteral("timeToFirstAttempt"), 40.0},
+                    {QStringLiteral("avgTps"), 20.0}, {QStringLiteral("totalTime"), 40.0},
                     {QStringLiteral("timestamp"), 2LL}},
+        QVariantMap{{QStringLiteral("target"), QStringLiteral("agent")},
+                    {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (20 ítems)")},
+                    {QStringLiteral("failureKind"), QStringLiteral("none")},
+                    {QStringLiteral("profileId"), QStringLiteral("p4")},
+                    {QStringLiteral("qualityScore"), 20}, {QStringLiteral("qualityTotal"), 20},
+                    {QStringLiteral("firstAttemptScore"), 20}, {QStringLiteral("timeToFirstAttempt"), 30.0},
+                    {QStringLiteral("avgTps"), 50.0}, {QStringLiteral("totalTime"), 30.0},
+                    {QStringLiteral("timestamp"), 4LL}},
+        QVariantMap{{QStringLiteral("target"), QStringLiteral("agent")},
+                    {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (20 ítems)")},
+                    {QStringLiteral("failureKind"), QStringLiteral("none")},
+                    {QStringLiteral("profileId"), QStringLiteral("p5")},
+                    {QStringLiteral("qualityScore"), 20}, {QStringLiteral("qualityTotal"), 20},
+                    {QStringLiteral("firstAttemptScore"), 20}, {QStringLiteral("timeToFirstAttempt"), 20.0},
+                    {QStringLiteral("avgTps"), 50.0}, {QStringLiteral("totalTime"), 10.0},
+                    {QStringLiteral("timestamp"), 5LL}},
         QVariantMap{{QStringLiteral("target"), QStringLiteral("agent")},
                     {QStringLiteral("benchmarkName"), QStringLiteral("HumanEval (20 ítems)")},
                     {QStringLiteral("failureKind"), QStringLiteral("none")},
@@ -1585,10 +1612,11 @@ void AppControllerTests::benchmarkBestModelosQualityUsesTwentyItemResults()
                     {QStringLiteral("timestamp"), 3LL}}
     };
     const QVariantList best = AppController::benchmarkBestModelosQualityForTest(results, speed);
-    QCOMPARE(best.size(), 3);
-    QCOMPARE(best.at(0).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p2"));
-    QCOMPARE(best.at(1).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p3"));
-    QCOMPARE(best.at(2).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p1"));
+    QCOMPARE(best.size(), 4);
+    QCOMPARE(best.at(0).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p5"));
+    QCOMPARE(best.at(1).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p4"));
+    QCOMPARE(best.at(2).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p2"));
+    QCOMPARE(best.at(3).toMap().value(QStringLiteral("profileId")).toString(), QStringLiteral("p3"));
 }
 
 // Si el server ya está sirviendo el perfil que se va a benchmarkear, el modelo ya

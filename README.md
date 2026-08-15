@@ -1545,6 +1545,12 @@ a tres perfiles por GGUF. Conserva los fallos de calidad medidos (por
 ejemplo 19/20), mientras que infraestructura y timeouts quedan fuera del ranking
 pero siguen visibles en el historial.
 
+La regla operativa queda fijada así: `HumanEval/0` hace el screening de hasta 10
+perfiles por GGUF; sólo los 3 mejores de cada GGUF pasan a `HumanEval/20`. El
+ranking final `best` compara todos esos finalistas y prioriza, en orden, calidad
+final, TPS, tiempo total, score del primer intento, TTFT y menor cantidad de
+reparaciones. Los empates terminan con un orden estable por nombre de perfil.
+
 Laguna S 2.1 usa `assets/chat-templates/laguna-tools-v24.jinja`, una versión
 actualizada del template nativo con soporte de tools y loop-guard. Se aplica a
 los dos perfiles locales que comparten el GGUF Laguna. La corrida inicial mostró
