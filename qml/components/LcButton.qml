@@ -5,13 +5,25 @@ Button {
     id: root
     property bool danger: false
     property bool secondary: false
+    property string iconSource: ""
 
-    contentItem: Text {
-        text: root.text
-        font.pixelSize: 13
-        color: root.danger ? Theme.btnDangerText : (root.secondary ? Theme.btnSecondaryText : Theme.btnPrimaryText)
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
+    contentItem: Row {
+        spacing: root.iconSource.length > 0 && root.text.length > 0 ? 5 : 0
+        anchors.centerIn: parent
+        Image {
+            source: root.iconSource
+            visible: source.length > 0
+            width: 17; height: 17
+            fillMode: Image.PreserveAspectFit
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        Text {
+            text: root.text
+            font.pixelSize: 13
+            color: root.danger ? Theme.btnDangerText : (root.secondary ? Theme.btnSecondaryText : Theme.btnPrimaryText)
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     background: Rectangle {

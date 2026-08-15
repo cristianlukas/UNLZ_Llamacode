@@ -405,6 +405,8 @@ qt_add_qml_module(LlamaCode
         qml/pages/CharlaPage.qml
         qml/pages/DownloadsPage.qml
         qml/pages/SettingsPage.qml
+    RESOURCES
+        assets/best_bolt.svg
 )
 
 if (MSVC)

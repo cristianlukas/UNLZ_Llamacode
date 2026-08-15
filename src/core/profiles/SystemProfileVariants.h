@@ -27,6 +27,7 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
                 variant.value(QStringLiteral("displayName")).toString();
             // Una variante de tuning no hereda las insignias obtenidas por el
             // perfil base: debe medirse y marcarse de forma explicita.
+            derived[QStringLiteral("best")] = variant.value(QStringLiteral("best")).toBool(false);
             derived[QStringLiteral("favorite")] = variant.value(QStringLiteral("favorite")).toBool(false);
             derived[QStringLiteral("benchmark")] = variant.value(QStringLiteral("benchmark")).toBool(false);
             if (variant.contains(QStringLiteral("order")))

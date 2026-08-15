@@ -1466,6 +1466,9 @@ apaga el agente auto-iniciado.
 
 ## Benchmarking
 
+Los perfiles marcados como **BEST (⚡)** son recomendaciones curadas a partir de
+benchmarks. Se muestran antes que los favoritos en todos los selectores de perfiles.
+
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
 
 Evaluaciones de modelos candidatas:

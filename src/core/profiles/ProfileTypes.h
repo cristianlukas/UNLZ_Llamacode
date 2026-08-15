@@ -206,6 +206,7 @@ struct LaunchProfile {
     bool    system = false;   // perfil de sistema (bundled, inmutable, no persistido)
     QString name;
     QString alias;            // opcional; tiene prioridad sobre name en la UI
+    bool    best = false;     // perfil recomendado (rayo) y ordenado primero
     bool    favorite = false; // marcados con estrella y ordenados arriba
     bool    benchmark = false; // perfil destacado por una evaluación comparativa
     bool    systemBadge = false; // ícono de sistema; distinto de la inmutabilidad interna

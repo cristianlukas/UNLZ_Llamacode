@@ -28,6 +28,22 @@ int seqOf(const QString &name) {
 QString stripSeq(const QString &name) {
     return QString(name).remove(kSeqPrefix);
 }
+
+bool isCuratedBestName(const LaunchProfile &profile)
+{
+    const QString key = (profile.name + QLatin1Char(' ') + profile.alias).toLower();
+    return key.contains(QStringLiteral("kat-coder-7-8-26"))
+        || key.contains(QStringLiteral("fast-kat"))
+        || key.contains(QStringLiteral("bigbang-131k"))
+        || key.contains(QStringLiteral("fast-bigbang"))
+        || key.contains(QStringLiteral("thinkingcap-qwen3.6"))
+        || key.contains(QStringLiteral("balance-thinkingcap"))
+        || key.contains(QStringLiteral("laguna-s-2.1"))
+        || key.contains(QStringLiteral("balance-laguna"))
+        || key.contains(QStringLiteral("deepseek fusion"))
+        || key.contains(QStringLiteral("fusion leloch"))
+        || key.contains(QStringLiteral("qwen3.8"));
+}
 }
 
 ProfileManager::ProfileManager(QObject *parent) : QObject(parent)
@@ -422,6 +438,7 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     const QString newName = data.value("name", p.name).toString();
     p.name = QStringLiteral("%1_%2").arg(seq).arg(stripSeq(newName));
     if (data.contains("alias"))    p.alias = data.value("alias").toString();
+    if (data.contains("best"))     p.best = data.value("best").toBool();
     if (data.contains("favorite")) p.favorite = data.value("favorite").toBool();
     if (data.contains("benchmark")) p.benchmark = data.value("benchmark").toBool();
     if (data.contains("systemBadge")) p.systemBadge = data.value("systemBadge").toBool();
@@ -494,7 +511,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         ? p.name
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
-            {"alias", p.alias}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"alias", p.alias}, {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", displayName},
@@ -547,13 +564,15 @@ void ProfileManager::setLaunchAlias(const QString &id, const QString &alias)
     if (m_launches.update(p)) { save(); emit launchesChanged(); }
 }
 
-// Lista de perfiles de lanzamiento para dropdowns: favoritos primero (estrella),
+// Lista de perfiles de lanzamiento para dropdowns: BEST primero (rayo), luego
+// favoritos (estrella), y finalmente por id incremental.
 // luego por id incremental; displayName = "alias - name" si hay alias.
 QVariantList ProfileManager::launchProfilesForMenu() const
 {
     QList<LaunchProfile> items = m_launches.m_items;
     std::stable_sort(items.begin(), items.end(),
         [](const LaunchProfile &a, const LaunchProfile &b) {
+            if (a.best != b.best) return a.best;                 // BEST arriba
             if (a.favorite != b.favorite) return a.favorite;     // favoritos arriba
             return seqOf(a.name) < seqOf(b.name);                // luego por nº incremental
         });
@@ -565,12 +584,13 @@ QVariantList ProfileManager::launchProfilesForMenu() const
             : QStringLiteral("%1 - %2").arg(p.alias, p.name);
         // Marcadores independientes: sistema, favorito y benchmark.
         QString mark;
+        if (p.best) mark += QStringLiteral("⚡ ");
         if (p.systemBadge) mark += QStringLiteral("⚙ ");
         if (p.favorite) mark += QStringLiteral("★ ");
         if (p.benchmark) mark += QStringLiteral("🏆 ");
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
-            {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
@@ -585,6 +605,7 @@ QVariantList ProfileManager::launchProfilesForProfilesPage() const
     QList<LaunchProfile> items = m_launches.m_items;
     std::stable_sort(items.begin(), items.end(),
         [](const LaunchProfile &a, const LaunchProfile &b) {
+            if (a.best != b.best) return a.best;
             if (a.favorite != b.favorite) return a.favorite;
             return seqOf(a.name) < seqOf(b.name);
         });
@@ -593,13 +614,14 @@ QVariantList ProfileManager::launchProfilesForProfilesPage() const
         const QString base = p.alias.isEmpty()
             ? p.name : QStringLiteral("%1 - %2").arg(p.alias, p.name);
         QString mark;
+        if (p.best) mark += QStringLiteral("⚡ ");
         if (p.systemBadge) mark += QStringLiteral("⚙ ");
         if (p.favorite) mark += QStringLiteral("★ ");
         if (p.benchmark) mark += QStringLiteral("🏆 ");
         if (p.deprecated) mark += QStringLiteral("⚠ ");
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
-            {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", mark + base}});
@@ -980,6 +1002,7 @@ void ProfileManager::loadSystemProfiles()
         // Las insignias pertenecen al catalogo: asi un perfil medido puede marcarse
         // sin recompilar esta clase ni propagar el estado a variantes hermanas.
         lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
+        lp.best = o.value(QStringLiteral("best")).toBool(false);
         lp.benchmark = false;
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
@@ -1054,6 +1077,7 @@ QString ProfileManager::duplicateLaunchProfile(const QString &id)
         lp.system = false;
         lp.systemBadge = false;
     lp.favorite = false;
+    lp.best = false;
     lp.deprecated = false;
     if (!src.backendProfileId.isEmpty()) lp.backendProfileId = be.id;
     if (!src.modelProfileId.isEmpty()) lp.modelProfileId = mp.id;
@@ -1099,6 +1123,12 @@ void ProfileManager::load()
     loadList(storagePath("workspaces"), m_workspaces, &WorkspaceProfile::fromJson);
     loadList(storagePath("launches"),   m_launches,   &LaunchProfile::fromJson);
     loadList(storagePath("agent_profiles"), m_agentProfiles, &AgentProfile::fromJson);
+
+    // Importa la insignia BEST para perfiles curados que ya existían antes de
+    // introducir el campo. No modifica nombres ni perfiles que no coincidan.
+    for (LaunchProfile &profile : m_launches.m_items)
+        if (!profile.best && isCuratedBestName(profile))
+            profile.best = true;
 
     // Only allow persistence once we've loaded cleanly. If any existing file
     // failed to load, block all saves so a partial/empty in-memory state can

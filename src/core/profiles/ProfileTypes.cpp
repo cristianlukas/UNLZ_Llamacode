@@ -308,7 +308,7 @@ MasterConfig MasterConfig::fromJson(const QJsonObject &o) {
 QJsonObject LaunchProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
-    o["alias"] = alias; o["favorite"] = favorite; o["benchmark"] = benchmark;
+    o["alias"] = alias; o["best"] = best; o["favorite"] = favorite; o["benchmark"] = benchmark;
     o["systemBadge"] = systemBadge;
     o["deprecated"] = deprecated;
     o["backendProfileId"] = backendProfileId;
@@ -333,6 +333,7 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     LaunchProfile p;
     p.id = o["id"].toString(); p.name = o["name"].toString();
     p.alias = o["alias"].toString();
+    p.best = o["best"].toBool(false);
     p.favorite = o["favorite"].toBool(false);
     p.benchmark = o["benchmark"].toBool(false);
     p.systemBadge = o["systemBadge"].toBool(false);

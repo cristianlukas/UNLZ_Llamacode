@@ -125,7 +125,7 @@ void ProfilesTests::runtimePreset_jsonRoundTrip()
 void ProfilesTests::launchProfile_jsonRoundTrip()
 {
     LaunchProfile l;
-    l.id = "l1"; l.name = "prod"; l.alias = "P"; l.favorite = true;
+    l.id = "l1"; l.name = "prod"; l.alias = "P"; l.best = true; l.favorite = true;
     l.systemBadge = true; l.benchmark = true; l.deprecated = true;
     l.backendProfileId = "b1"; l.modelProfileId = "m1"; l.runtimePresetId = "r1";
     l.extraArgs = QStringList{"--verbose"};
@@ -139,6 +139,7 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.browserAutomation, QStringLiteral("on"));
     QCOMPARE(r.name, l.name);
     QCOMPARE(r.alias, l.alias);
+    QCOMPARE(r.best, l.best);
     QCOMPARE(r.favorite, l.favorite);
     QCOMPARE(r.systemBadge, l.systemBadge);
     QCOMPARE(r.benchmark, l.benchmark);
@@ -303,6 +304,7 @@ void ProfilesTests::manager_favoriteAndAlias()
     const QString id = pm.addLaunchProfile("L", "b", "m", "r");
     QVERIFY(!id.isEmpty());
     pm.setLaunchFavorite(id, true);
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", id}, {"best", true}}));
     pm.setLaunchAlias(id, "Alias");
     const QVariantList menu = pm.launchProfilesForMenu();
     QVERIFY(!menu.isEmpty());
@@ -310,7 +312,8 @@ void ProfilesTests::manager_favoriteAndAlias()
     QCOMPARE(top.value("alias").toString(), QStringLiteral("Alias"));
     QVERIFY(top.value("favorite").toBool());
     // displayName antepone la estrella a los favoritos y muestra alias + nombre.
-    QCOMPARE(top.value("displayName").toString(), QStringLiteral("★ Alias - 1_L"));
+    QCOMPARE(top.value("displayName").toString(), QStringLiteral("⚡ ★ Alias - 1_L"));
+    QVERIFY(top.value("best").toBool());
     QCOMPARE(pm.getLaunchProfile(id).value("displayName").toString(),
              QStringLiteral("Alias - 1_L"));
 }

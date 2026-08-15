@@ -50,6 +50,7 @@ Item {
     property bool mmprojEnabled: false
     property bool draftEnabled: false
     property bool mtpEnabled: false
+    property bool launchBest: false       // BEST (rayo), insignia curada del catálogo
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool launchDeprecated: false // visible sólo en esta página administrativa
     property bool smokeTestRunning: false
@@ -328,6 +329,7 @@ Item {
         manualExtraArgsArea.text = formatArgsForDisplay(extractManualArgs(rawExtra))
 
         // Alias (display) opcional + favorito del perfil.
+        root.launchBest = (lp.best === true)
         root.launchFavorite = (lp.favorite === true)
         root.launchDeprecated = (lp.deprecated === true)
         profileAliasField.text = lp.alias ?? ""
@@ -779,6 +781,16 @@ Item {
                                 root.launchFavorite = !root.launchFavorite
                                 App.profileManager.setLaunchFavorite(selectedLaunchId, root.launchFavorite)
                             }
+                        }
+                        // BEST (⚡): distintivo curado; los perfiles BEST son de solo lectura.
+                        LcButton {
+                            iconSource: "qrc:/qt/qml/LlamaCode/assets/best_bolt.svg"
+                            text: ""
+                            visible: root.launchBest
+                            enabled: false
+                            secondary: true
+                            ToolTip.visible: hovered
+                            ToolTip.text: "BEST: perfil recomendado"
                         }
                         // Deprecated (⚠): queda visible sólo en Perfiles y se
                         // excluye de Lanzar, Agente, Benchmark y demás selectores.
