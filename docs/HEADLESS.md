@@ -53,9 +53,12 @@ El smoke también valida hardware/performance sin GPU real:
 .\tests\headless_smoke.ps1 -Exe .\build\Debug\LlamaCode.exe
 ```
 
-Comprueba `runStartupScan`, `hardwareSummary` y
-`performanceRecommendation`. Si `nvidia-smi` no existe, el caso sigue siendo
-válido: debe publicar fingerprint, fallback CPU y `splitMode=layer`.
+Comprueba `runStartupScan`, `hardwareSummary`, `performanceRecommendation` y
+el circuito de matriz (`performanceMatrixCandidates`,
+`annotatePerformanceMatrix`, `rankPerformanceMatrix`) con una muestra
+sintética compatible con los artefactos reales. Si `nvidia-smi` no existe, el
+caso sigue siendo válido: debe publicar fingerprint, fallback CPU y
+`splitMode=layer`.
 
 ## Qué debe probarse headless
 
@@ -65,6 +68,7 @@ La matriz mínima para Tasks, loops y workflows es:
 |---|---|---:|---:|
 | `TaskStore` / `WorkflowEngine` | `test_tasks`, `test_agent_efficiency` | No | Sí |
 | ciclo de `AppController` | `test_appcontroller` con `FakeAgentBackend` | No | Sí |
+| hardware/topología/matriz de rendimiento | `test_hardware_diagnostics` + `headless_smoke.ps1` | No | Sí |
 | API HTTP reflexiva | `test_control_api` | No | Sí |
 | daemon real + ControlApi | smoke manual/CI separado | No para CRUD/validación | Recomendado |
 | loop con inferencia real | daemon + modelo local + `llama-server` | Sí | Opt-in |
@@ -182,7 +186,8 @@ El smoke reproducible está disponible en `tests/headless_smoke.ps1`:
 .\tests\headless_smoke.ps1 -Exe .\build\Debug\LlamaCode.exe
 ```
 
-Ese modo no carga un modelo y valida daemon, API, CRUD, persistencia y
+Ese modo no carga un modelo y valida daemon, hardware/topología, matriz de
+rendimiento, API, CRUD, persistencia y
 validación de workflow. Para ejecutar además el cuerpo del loop contra un
 modelo local ya configurado:
 
