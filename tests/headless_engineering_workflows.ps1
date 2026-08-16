@@ -16,17 +16,19 @@ try {
         catch { Start-Sleep -Milliseconds 250 }
     }
     if (-not $ready) { throw "El daemon no respondió en $base" }
-    function Invoke-Llama([string]$method, [object[]]$args) {
-        $body = @{ method = $method; args = $args } | ConvertTo-Json -Depth 20 -Compress
+    function Invoke-Llama([string]$method, [object[]]$argumentList) {
+        $body = @{ method = $method; args = @($argumentList) } | ConvertTo-Json -Depth 20 -Compress
         Invoke-RestMethod "$base/invoke" -Method Post -ContentType "application/json" -Body $body
     }
     $catalog = Invoke-Llama "engineeringWorkflows" @()
     if ($catalog.result.Count -ne 5) { throw "Se esperaban 5 workflows, llegaron $($catalog.result.Count)" }
-    $qa = ($catalog.result | Where-Object id -eq "qa")
+    $qa = ($catalog.result | Where-Object { $_.id -eq "qa" })
     if ((Invoke-Llama "validateWorkflow" @($qa)).result -ne "") { throw "QA inválido" }
     $taskId = (Invoke-Llama "installEngineeringWorkflow" @("qa")).result
     if ([string]::IsNullOrWhiteSpace($taskId)) { throw "No se instaló qa" }
-    $saved = (Invoke-Llama "get" @($taskId)).result
+    $getBody = @{ target = "taskStore"; method = "get"; args = @($taskId) } |
+        ConvertTo-Json -Depth 20 -Compress
+    $saved = (Invoke-RestMethod "$base/invoke" -Method Post -ContentType "application/json" -Body $getBody).result
     if ($saved.workflow.id -ne "qa") { throw "La Task no conserva workflow qa" }
     if ([string]::IsNullOrWhiteSpace($saved.safetyProfile)) { throw "Falta safetyProfile" }
     Write-Host "OK: catálogo, validación, instalación y persistencia headless"
