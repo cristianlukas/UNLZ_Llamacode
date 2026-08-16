@@ -44,8 +44,10 @@ Item {
             loopEnabled.checked = t.loopEnabled || false
             loopGoalField.text = t.loopGoal || ""
             loopMaxIterations.value = t.loopMaxIterations || 5
+            loopMaxSeconds.value = t.loopMaxSeconds || 0
             executionMode.currentIndex = Math.max(0, ["auto", "desktop", "browserBackground"].indexOf(t.executionMode || "auto"))
             approvalPolicy.currentIndex = Math.max(0, ["always", "sensitive", "autonomous"].indexOf(t.approvalPolicy || "sensitive"))
+            safetyProfile.currentIndex = Math.max(0, ["normal", "investigation", "guarded", "production"].indexOf(t.safetyProfile || "normal"))
             trainingType.currentIndex = (t.trainingType === "adaptive") ? 1 : 0
             timeoutSec.value = t.timeoutSec || 300
             maxActions.value = t.maxActions || 50
@@ -78,8 +80,10 @@ Item {
             loopEnabled.checked = false
             loopGoalField.text = ""
             loopMaxIterations.value = 5
+            loopMaxSeconds.value = 0
             executionMode.currentIndex = 0
             approvalPolicy.currentIndex = 1
+            safetyProfile.currentIndex = 0
             trainingType.currentIndex = 0
             timeoutSec.value = 300
             maxActions.value = 50
@@ -1043,10 +1047,12 @@ Item {
                 loopEnabled: loopEnabled.checked,
                 loopGoal: loopGoalField.text,
                 loopMaxIterations: loopMaxIterations.value,
+                loopMaxSeconds: loopMaxSeconds.value,
                 verifyProfileId: verifyOtherModel.checked ? verifyProfileCombo.selectedProfileId : "",
                 autoDifficultyRouting: verifyOtherModel.checked && autoDifficultyRouting.checked,
                 executionMode: ["auto", "desktop", "browserBackground"][executionMode.currentIndex],
                 approvalPolicy: ["always", "sensitive", "autonomous"][approvalPolicy.currentIndex],
+                safetyProfile: ["normal", "investigation", "guarded", "production"][safetyProfile.currentIndex],
                 trainingType: ["literal", "adaptive"][trainingType.currentIndex],
                 timeoutSec: timeoutSec.value,
                 maxActions: maxActions.value,
@@ -1293,7 +1299,9 @@ Item {
                             Layout.fillWidth: true
                             spacing: 12
                             Text { text: "Máx. iteraciones"; color: Theme.textSecondary; font.pixelSize: 11 }
-                            SpinBox { id: loopMaxIterations; from: 1; to: 100; value: 5; editable: true }
+                            SpinBox { id: loopMaxIterations; from: 1; to: 1000; value: 5; editable: true }
+                            Text { text: "Máx. segundos (0 = sin límite)"; color: Theme.textSecondary; font.pixelSize: 11 }
+                            SpinBox { id: loopMaxSeconds; from: 0; to: 86400; stepSize: 3600; value: 0; editable: true }
                         }
                     }
 
@@ -1368,6 +1376,15 @@ Item {
                                 id: approvalPolicy
                                 Layout.fillWidth: true
                                 model: ["Confirmar siempre", "Sólo acciones sensibles", "Autónoma"]
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Text { text: "Perfil de seguridad"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            LcComboBox {
+                                id: safetyProfile
+                                Layout.fillWidth: true
+                                model: ["Normal", "Investigación", "Guardado", "Producción"]
                             }
                         }
                         ColumnLayout {

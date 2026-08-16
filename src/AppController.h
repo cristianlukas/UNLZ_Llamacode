@@ -1,6 +1,8 @@
 #pragma once
 #include "core/BinaryRegistry.h"
 #include "core/EngineCatalog.h"
+#include "core/HardwareDiagnostics.h"
+#include "core/PerformanceMatrix.h"
 #include "core/ModelRootRegistry.h"
 #include "core/ModelCatalog.h"
 #include "core/profiles/ProfileManager.h"
@@ -25,6 +27,7 @@
 #include "core/voice/VoiceTypes.h"
 #include "core/tuner/TunerWorker.h"
 #include "core/automation/TeachSessionRecorder.h"
+#include "core/data/DataLab.h"
 #include <QObject>
 #include <QProcess>
 #include <QTimer>
@@ -62,6 +65,7 @@ class AppController : public QObject
     Q_PROPERTY(QString activeAgentDefinitionId READ activeAgentDefinitionId
                NOTIFY activeAgentDefinitionChanged)
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
+    Q_PROPERTY(DataLabStore*      dataLab         READ dataLab         CONSTANT)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
     Q_PROPERTY(bool canRunTask READ canRunTask NOTIFY taskRunAvailabilityChanged)
@@ -237,6 +241,7 @@ public:
     QString activeAgentDefinitionId() const { return m_activeAgentDefinitionId; }
     Q_INVOKABLE bool activateAgentDefinition(const QString &agentId);
     AutomationStore   *automationStore() { return &m_automations; }
+    DataLabStore       *dataLab()        { return &m_dataLab; }
     bool tasksSchedulerEnabled() const
     { return QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool(); }
     void setTasksSchedulerEnabled(bool on);
@@ -1004,6 +1009,14 @@ public:
     // GPUs NVIDIA visibles para llama.cpp: {available:bool, gpus:[{index,name,
     // totalMb,driver}]}. Se obtiene bajo demanda para no bloquear el arranque.
     Q_INVOKABLE QVariantMap gpuInventory() const;
+    // Recomendación explicable basada en la topología GPU/PCIe detectada.
+    Q_INVOKABLE QVariantMap performanceRecommendation(const QString &target = {}) const;
+    Q_INVOKABLE QVariantList performanceMatrixCandidates(const QString &target = {},
+                                                         bool withVision = false) const;
+    Q_INVOKABLE QVariantList rankPerformanceMatrix(const QVariantList &samples,
+                                                   const QString &target = {}) const;
+    Q_INVOKABLE QVariantMap annotatePerformanceMatrix(const QVariantMap &sample,
+                                                      const QVariantMap &candidate) const;
     // Fija el power limit (W) en una GPU (gpuIndex<0 = todas). En Windows requiere
     // elevación → se relanza nvidia-smi vía powershell RunAs. Devuelve "" si OK o
     // un mensaje de error. Persiste el valor como setting global "gpuPowerLimitW".
@@ -1353,6 +1366,7 @@ private:
     int          m_replayErrors = 0;
     int          m_visualVerificationDesktopActions = 0;
     AutomationStore   m_automations;
+    DataLabStore      m_dataLab;
     TaskScheduler    *m_scheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
     QString  m_runningTaskId;
@@ -1383,6 +1397,8 @@ private:
     // entre iteraciones y decide si re-disparar el cuerpo (ver TaskStore::decideLoop).
     bool     m_runningTaskLoopEnabled = false;
     int      m_runningTaskLoopIteration = 0;
+    int      m_runningTaskLoopMaxSeconds = 0;
+    qint64   m_runningTaskLoopStartedAtMs = 0;
     // Data-driven (RPA por lote): mismo flujo, una corrida del cuerpo por fila del
     // dataset. m_dataTaskId marca qué Task está iterando (evita re-resolver el
     // dataset en cada relanzamiento); m_dataRows son las filas resueltas; el índice

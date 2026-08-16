@@ -63,6 +63,7 @@
 #include "core/eval/BenchmarkPack.h"
 #include "core/tasks/WorkflowVisualModel.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
+#include "core/tasks/TaskSecurityPolicy.h"
 #include "core/ToolCallingSupport.h"
 #include "core/diag/LogTriage.h"
 #include "core/integrations/OpenCodeIntegration.h"
@@ -6941,10 +6942,7 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
                                       QStringLiteral("sensitive")).toString();
     const QString safetyProfile = task.value(QStringLiteral("safetyProfile"),
                                              QStringLiteral("normal")).toString();
-    const bool strictSafety = safetyProfile == QLatin1String("investigation")
-        || safetyProfile == QLatin1String("guarded")
-        || safetyProfile == QLatin1String("production");
-    cb->setTaskAutoApprove(policy == QLatin1String("autonomous") && !strictSafety);
+    cb->setTaskAutoApprove(TaskSecurityPolicy::autoApproveAllowed(task));
     const bool desktop = task.value(QStringLiteral("executionMode")).toString()
                          == QLatin1String("desktop");
     const QString proj = currentAgentProjectDir();
@@ -6993,15 +6991,8 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
         cb->setDisabledTools(disabled);
     } else {
         QStringList disabled;
-        if (productionSafety) {
-            for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
-                const QString tool = v.toMap().value(QStringLiteral("name")).toString();
-                if (tool.startsWith(QStringLiteral("browser_"))
-                    || tool.startsWith(QStringLiteral("web_"))
-                    || tool.startsWith(QStringLiteral("email_")))
-                    disabled << tool;
-            }
-        }
+        if (productionSafety)
+            disabled = TaskSecurityPolicy::disabledTools(task, LlamaAgentBackend::toolCatalog());
         cb->setDisabledTools(disabled);
     }
     cb->setMcpToolsEnabled(!pureDesktop);
@@ -7088,7 +7079,10 @@ void AppController::onAgentTurnFinished()
             const QString verdict = latestAgentAssistantText().trimmed();
             const TaskStore::LoopDecision d =
                 TaskStore::decideLoop(loopTask, m_runningTaskLoopIteration,
-                                      QStringLiteral("ok"), verdict);
+                                      QStringLiteral("ok"), verdict,
+                                      m_runningTaskLoopStartedAtMs > 0
+                                          ? (QDateTime::currentMSecsSinceEpoch() - m_runningTaskLoopStartedAtMs) / 1000
+                                          : -1);
             if (d.repeat) {
                 const int completed = m_runningTaskLoopIteration;
                 m_runningTaskLoopIteration++;
@@ -7409,6 +7403,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_runningTaskSilentUnlessError = false;
     m_runningTaskLoopEnabled = false;
     m_runningTaskLoopIteration = 0;
+    m_runningTaskLoopMaxSeconds = 0;
+    m_runningTaskLoopStartedAtMs = 0;
     m_runningTaskExecLaunchId.clear();
     m_runningTaskVerifyLaunchId.clear();
     m_pendingSwapPrompt.clear();
@@ -11633,23 +11629,51 @@ void AppController::rescanHardware()
         QString gpuName;
         if (!nvidiaSmi.isEmpty()) {
             QProcess p;
-            p.start(nvidiaSmi, {QStringLiteral("--query-gpu=name,memory.total"),
+            p.start(nvidiaSmi, {QStringLiteral(
+                                    "--query-gpu=index,name,memory.total,memory.free,pci.bus_id,"
+                                    "pci.link.gen.current,pci.link.width.current,temperature.gpu,"
+                                    "power.draw,power.limit"),
                                 QStringLiteral("--format=csv,noheader,nounits")});
             if (p.waitForFinished(1800)) {
-                const QStringList lines = QString::fromUtf8(p.readAllStandardOutput())
-                                              .split('\n', Qt::SkipEmptyParts);
-                for (const QString &raw : lines) {
-                    const QString line = raw.trimmed();
-                    const int comma = line.lastIndexOf(',');
-                    if (comma <= 0) continue;
-                    const double gb = line.mid(comma + 1).trimmed().toDouble() / 1024.0;
+                const QVariantList gpus = HardwareDiagnostics::parseNvidiaSmiCsv(
+                    QString::fromUtf8(p.readAllStandardOutput()));
+                result[QStringLiteral("gpus")] = gpus;
+                gpuCount = gpus.size();
+                for (const QVariant &value : gpus) {
+                    const QVariantMap gpu = value.toMap();
+                    const double mb = gpu.value(QStringLiteral("totalMb")).toDouble();
+                    const double gb = mb / 1024.0;
                     if (gb <= 0) continue;
-                    ++gpuCount;
                     vramTotalGb += gb;
-                    if (gb > vramGb) { vramGb = gb; gpuName = line.left(comma).trimmed(); }
+                    if (gb > vramGb) {
+                        vramGb = gb;
+                        gpuName = gpu.value(QStringLiteral("name")).toString();
+                    }
+                }
+                if (gpuCount > 1) {
+                    QProcess topo;
+                    topo.start(nvidiaSmi, {QStringLiteral("topo"), QStringLiteral("-m")});
+                    QString topoText;
+                    if (topo.waitForFinished(1200))
+                        topoText = QString::fromUtf8(topo.readAllStandardOutput());
+
+                    QProcess nvlink;
+                    nvlink.start(nvidiaSmi, {QStringLiteral("nvlink"), QStringLiteral("-s")});
+                    QString nvlinkText;
+                    if (nvlink.waitForFinished(1200))
+                        nvlinkText = QString::fromUtf8(nvlink.readAllStandardOutput());
+                    result = HardwareDiagnostics::enrichTopology(result, topoText, nvlinkText);
                 }
             }
         }
+        if (!result.contains(QStringLiteral("gpus")))
+            result[QStringLiteral("gpus")] = QVariantList{};
+        if (!result.contains(QStringLiteral("topology")))
+            result[QStringLiteral("topology")] = QVariantList{};
+        if (!result.contains(QStringLiteral("p2pAvailable")))
+            result[QStringLiteral("p2pAvailable")] = false;
+        if (!result.contains(QStringLiteral("nvlinkAvailable")))
+            result[QStringLiteral("nvlinkAvailable")] = false;
         result[QStringLiteral("gpuName")] = gpuName.isEmpty()
             ? QStringLiteral("GPU no detectada") : gpuName;
         result[QStringLiteral("vramGb")] = vramGb;
@@ -11657,6 +11681,12 @@ void AppController::rescanHardware()
         result[QStringLiteral("gpuCount")] = gpuCount;
         result[QStringLiteral("backendHint")] = vramGb >= 6
             ? QStringLiteral("GPU") : QStringLiteral("CPU");
+        result[QStringLiteral("hardwareFingerprint")] =
+            HardwareDiagnostics::hardwareFingerprint(result);
+        result[QStringLiteral("recommendedSplitMode")] =
+            HardwareDiagnostics::recommendedSplitMode(result);
+        result[QStringLiteral("performanceRecommendation")] =
+            HardwareDiagnostics::performanceRecommendation(result);
         const QString gpuText = vramGb <= 0
             ? QStringLiteral("sin VRAM NVIDIA detectada")
             : gpuCount > 1
@@ -11689,6 +11719,12 @@ QVariantList AppController::rankPerformanceMatrix(const QVariantList &samples,
                                                    const QString &target) const
 {
     return PerformanceMatrix::rank(samples, target);
+}
+
+QVariantMap AppController::annotatePerformanceMatrix(const QVariantMap &sample,
+                                                      const QVariantMap &candidate) const
+{
+    return PerformanceMatrix::annotate(sample, m_hardwareSummary, candidate);
 }
 
 void AppController::applyHardwareSummary(const QVariantMap &hardware)
@@ -16954,6 +16990,16 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     const QString id  = existingId.isEmpty()
                             ? QUuid::createUuid().toString(QUuid::WithoutBraces)
                             : existingId;
+    QVariantMap persistedResult = result;
+    if (!persistedResult.contains(QStringLiteral("hardwareFingerprint")))
+        persistedResult[QStringLiteral("hardwareFingerprint")] =
+            m_hardwareSummary.value(QStringLiteral("hardwareFingerprint"));
+    if (!persistedResult.contains(QStringLiteral("recommendedSplitMode")))
+        persistedResult[QStringLiteral("recommendedSplitMode")] =
+            m_hardwareSummary.value(QStringLiteral("recommendedSplitMode"));
+    if (!persistedResult.contains(QStringLiteral("hardwareGpuCount")))
+        persistedResult[QStringLiteral("hardwareGpuCount")] =
+            m_hardwareSummary.value(QStringLiteral("gpuCount"));
 
     // Update index
     const QString idxPath = dir + "/index.json";
@@ -16994,6 +17040,12 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["measurementPhase"] = result.value("measurementPhase").toString();
     summary["ramMb"]        = result.value("ramMb").toDouble();
     summary["vramMb"]       = result.value("vramMb").toDouble();
+    summary["hardwareFingerprint"] = persistedResult.value("hardwareFingerprint").toString();
+    summary["recommendedSplitMode"] = persistedResult.value("recommendedSplitMode").toString();
+    summary["hardwareGpuCount"] = persistedResult.value("hardwareGpuCount").toInt();
+    summary["performanceMatrixId"] = persistedResult.value("performanceMatrixId").toString();
+    summary["performanceScore"] = persistedResult.value("performanceScore").toDouble();
+    summary["measurementStatus"] = persistedResult.value("measurementStatus").toString();
     summary["target"]       = result.value("target").toString();
     summary["thinkingEnabled"] = result.value("thinkingEnabled").toBool();
     summary["agentProfileId"]   = result.value("agentProfileId").toString();
@@ -17024,7 +17076,7 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     // Full result file
     QFile rf(dir + "/" + id + ".json");
     if (rf.open(QIODevice::WriteOnly | QIODevice::Truncate))
-        rf.write(QJsonDocument(QJsonObject::fromVariantMap(result)).toJson());
+        rf.write(QJsonDocument(QJsonObject::fromVariantMap(persistedResult)).toJson());
 
     // Mantener un informe agregado dentro de la carpeta aislada de la corrida.
     // Se reescribe después de cada pasada para que una cancelación o crash deje

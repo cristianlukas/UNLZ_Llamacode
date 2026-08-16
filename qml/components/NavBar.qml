@@ -25,6 +25,7 @@ Rectangle {
         { key: "agent.title",   icon: "🤖",  serverOnly: true,
           keepDuringAgentTransition: true, keepDuringThinkingRestart: true },
         { key: "nav.research",  icon: "🔎",  serverOnly: true  },
+        { key: "nav.datalab",   label: "Data Lab", icon: "🧾", serverOnly: false },
         { key: "nav.tasks",     icon: "🗒",  serverOnly: true, agentOnly: true,
           keepDuringAgentTransition: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },

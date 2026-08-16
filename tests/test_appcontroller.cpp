@@ -72,11 +72,12 @@ public:
         m_msgs.append(QVariantMap{{QStringLiteral("role"), QStringLiteral("assistant")},
                                   {QStringLiteral("content"), reply}});
         emit messagesChanged();
-        QTimer::singleShot(0, this, [this]() { emit turnFinished(); });
+        QTimer::singleShot(m_replyDelayMs, this, [this]() { emit turnFinished(); });
     }
 
     void setVerdicts(const QStringList &v) { m_verdicts = v; }
     void setBodyReplies(const QStringList &r) { m_bodyReplies = r; }
+    void setReplyDelayMs(int ms) { m_replyDelayMs = qMax(0, ms); }
     int bodyRuns() const { return m_bodyRuns; }
     QString lastBodyPrompt() const { return m_lastBodyPrompt; }
 
@@ -86,6 +87,7 @@ private:
     QStringList m_verdicts;
     QStringList m_bodyReplies;
     QString m_lastBodyPrompt;
+    int m_replyDelayMs = 0;
     QVariantList m_msgs;
 };
 
@@ -138,6 +140,8 @@ private slots:
     void hybridSwapRemainsStartingUntilPipelineEnds();
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
+    void hardwareRecommendationIsHeadless();
+    void performanceMatrixIsHeadless();
     void browserTeachSkillsLifecycle();
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
@@ -152,6 +156,7 @@ private slots:
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
     void loopTaskStopsAtMaxIterations();
+    void loopTaskStopsAtMaxSeconds();
     void dataDrivenTaskRunsBodyPerRow();
     void taskRetriesBodyOnFailure();
     void datasetAbortStopsOnError();
@@ -160,6 +165,8 @@ private slots:
     void workflowTaskPausesApprovesAndPersistsSnapshot();
     void workflowDirectToolCompletesWithoutModelTurn();
     void workflowValidationIsAvailableToVisualEditor();
+    void engineeringCatalogIsExposedHeadless();
+    void engineeringPresetInstallsPersistsAndRestores();
     void harnessAdapterNormalizesToLlamaAgent();
     void systemProfileBinaryPinReadsBundle();
     void systemProfileMinimumBuildSelectsNewestCompatible();
@@ -1052,6 +1059,27 @@ void AppControllerTests::loopTaskStopsAtMaxIterations()
     QCOMPARE(fake->bodyRuns(), 3);   // exactamente maxIter corridas del cuerpo
 }
 
+void AppControllerTests::loopTaskStopsAtMaxSeconds()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    fake->setReplyDelayMs(1100);
+    fake->setVerdicts({QStringLiteral("GOAL_NOT_MET sigue faltando"),
+                       QStringLiteral("GOAL_NOT_MET no debería ejecutarse")});
+    app.setTestAgentBackend(fake);
+
+    const QString id = makeLoopTask(app, QStringLiteral("Loop con timeout"), 100);
+    QCOMPARE(app.taskStore()->save(id, {{QStringLiteral("loopMaxSeconds"), 1}}), id);
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+
+    QTRY_VERIFY_WITH_TIMEOUT(!fin.isEmpty(), 5000);
+    QCOMPARE(fin.first().at(2).toString(), QStringLiteral("ok"));
+    QCOMPARE(fake->bodyRuns(), 1);
+    QVERIFY(fin.first().at(3).toString().contains(QStringLiteral("tiempo")));
+}
+
 void AppControllerTests::dataDrivenTaskRunsBodyPerRow()
 {
     AppController app;
@@ -1896,6 +1924,48 @@ void AppControllerTests::workflowValidationIsAvailableToVisualEditor()
     QVERIFY(app.validateWorkflow(broken).contains(QStringLiteral("entry")));
 }
 
+void AppControllerTests::engineeringCatalogIsExposedHeadless()
+{
+    AppController app;
+    const QVariantList workflows = app.engineeringWorkflows();
+    QCOMPARE(workflows.size(), 5);
+    QVERIFY(app.engineeringSafetyProfiles().size() >= 4);
+    for (const QVariant &value : workflows) {
+        const QVariantMap workflow = value.toMap();
+        QVERIFY(!workflow.value(QStringLiteral("id")).toString().isEmpty());
+        QVERIFY(app.validateWorkflow(workflow).isEmpty());
+    }
+    QVERIFY(app.installEngineeringWorkflow(QStringLiteral("missing")).isEmpty());
+}
+
+void AppControllerTests::engineeringPresetInstallsPersistsAndRestores()
+{
+    const QStringList ids{QStringLiteral("investigate"), QStringLiteral("qa"),
+                          QStringLiteral("document-audit"), QStringLiteral("review"),
+                          QStringLiteral("release-check")};
+    AppController first;
+    QStringList installed;
+    for (const QString &workflowId : ids) {
+        const QString taskId = first.installEngineeringWorkflow(workflowId);
+        QVERIFY2(!taskId.isEmpty(), qPrintable(workflowId));
+        const QVariantMap task = first.taskStore()->get(taskId);
+        QCOMPARE(task.value(QStringLiteral("workflow")).toMap()
+                     .value(QStringLiteral("id")).toString(), workflowId);
+        QVERIFY(!task.value(QStringLiteral("safetyProfile")).toString().isEmpty());
+        QVERIFY(!task.value(QStringLiteral("approvalPolicy")).toString().isEmpty());
+        installed.append(taskId);
+    }
+
+    // Una segunda instancia fuerza el camino real de carga desde tasks.json.
+    AppController restored;
+    for (const QString &taskId : installed) {
+        const QVariantMap task = restored.taskStore()->get(taskId);
+        QVERIFY2(!task.isEmpty(), qPrintable(taskId));
+        QVERIFY(!task.value(QStringLiteral("workflow")).toMap().isEmpty());
+        QVERIFY(!task.value(QStringLiteral("safetyProfile")).toString().isEmpty());
+    }
+}
+
 void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
 {
     // Política: todo perfil usa LlamaAgent. "none"/vacío/"opencode" → "llamaagent".
@@ -2119,6 +2189,46 @@ void AppControllerTests::doctorReportsStructureAndIssues()
     // Entorno de test limpio: sin binarios ni modelos → debe reportar issues.
     if (app.binaryRegistry()->count() == 0)
         QVERIFY(!d.value(QStringLiteral("ok")).toBool());
+}
+
+void AppControllerTests::hardwareRecommendationIsHeadless()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(48.0, 64.0, QStringLiteral("RTX 3090"), 48.0, 2);
+    const QVariantMap summary = app.hardwareSummary();
+    QVERIFY(summary.value(QStringLiteral("hardwareFingerprint")).toString().startsWith("hw-"));
+    QCOMPARE(summary.value(QStringLiteral("recommendedSplitMode")).toString(), QStringLiteral("layer"));
+    const QVariantMap recommendation = app.performanceRecommendation(QStringLiteral("balanced"));
+    QCOMPARE(recommendation.value(QStringLiteral("splitMode")).toString(), QStringLiteral("layer"));
+    QCOMPARE(recommendation.value(QStringLiteral("kvCache")).toString(), QStringLiteral("q8_0"));
+}
+
+void AppControllerTests::performanceMatrixIsHeadless()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(48.0, 64.0, QStringLiteral("RTX 3090"), 48.0, 2);
+    const QVariantList candidates = app.performanceMatrixCandidates(QStringLiteral("decode"), false);
+    QCOMPARE(candidates.size(), 6);
+    for (const QVariant &value : candidates) {
+        const QVariantMap row = value.toMap();
+        QCOMPARE(row.value(QStringLiteral("status")).toString(), QStringLiteral("pending"));
+        QCOMPARE(row.value(QStringLiteral("splitMode")).toString(), QStringLiteral("layer"));
+    }
+    QVariantList measured;
+    QVariantMap sample = candidates.first().toMap();
+    sample[QStringLiteral("performanceCandidate")] = candidates.first();
+    sample[QStringLiteral("promptTps")] = 100.0;
+    sample[QStringLiteral("generationTps")] = 30.0;
+    sample[QStringLiteral("quality")] = 1.0;
+    sample[QStringLiteral("stable")] = true;
+    measured.append(sample);
+    const QVariantList ranked = app.rankPerformanceMatrix(measured, QStringLiteral("decode"));
+    QCOMPARE(ranked.first().toMap().value(QStringLiteral("rank")).toInt(), 1);
+    QVERIFY(ranked.first().toMap().value(QStringLiteral("performanceScore")).toDouble() > 0.0);
+    const QVariantMap annotated = app.annotatePerformanceMatrix(
+        sample, candidates.first().toMap());
+    QCOMPARE(annotated.value(QStringLiteral("measurementStatus")).toString(),
+             QStringLiteral("measured"));
 }
 
 void AppControllerTests::importOllamaModelsIngestsStore()

@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
     // por IPC. Un lock evita duplicados; el toggle persistido lo apaga solo.
     if (app.arguments().contains(QStringLiteral("--scheduler-daemon"))) {
+        const bool schedulerSmoke = qEnvironmentVariableIsSet("LLAMACODE_SCHEDULER_SMOKE");
         const QString runtimeDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
         QDir().mkpath(runtimeDir);
         QLockFile lock(runtimeDir + QStringLiteral("/scheduler-daemon.lock"));
@@ -128,7 +129,8 @@ int main(int argc, char *argv[])
             if (!QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
                 app.quit();
         });
-        if (!QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
+        if (!schedulerSmoke
+            && !QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool())
             return 0;
         settingsWatch.start();
         auto writeHeartbeat = []() {

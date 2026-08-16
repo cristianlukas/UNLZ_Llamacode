@@ -95,6 +95,55 @@ Item {
 
                         Item { Layout.preferredHeight: 2 }
 
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 12
+                            Layout.rightMargin: 12
+                            radius: 8
+                            color: Theme.inputBg
+                            border.color: Theme.borderColor
+                            implicitHeight: hardwareDiagCol.implicitHeight + 20
+
+                            ColumnLayout {
+                                id: hardwareDiagCol
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                                spacing: 5
+
+                                Text {
+                                    text: "Diagnóstico multi-GPU"
+                                    color: Theme.textPrimary
+                                    font { pixelSize: 13; bold: true }
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: App.hardwareSummary.summary || "Hardware no analizado"
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: {
+                                        const mode = App.hardwareSummary.recommendedSplitMode || "layer"
+                                        const rec = App.hardwareSummary.performanceRecommendation || ({})
+                                        return "Sugerencia: split-mode " + mode + " · KV "
+                                               + (rec.kvCache || "q8_0")
+                                    }
+                                    color: Theme.accent
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                }
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: (App.hardwareSummary.performanceRecommendation || ({})).reason ||
+                                          "La recomendación se ajustará cuando termine el probe de hardware."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+                        }
+
                         Text {
                             Layout.leftMargin: 16
                             text: "PERFIL A OPTIMIZAR"

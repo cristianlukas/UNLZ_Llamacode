@@ -311,6 +311,7 @@ ApplicationWindow {
                     ChatPage        {}
                     AgentPage       {}
                     ResearchPage    {}
+                    DataLabPage     {}
                     TasksPage       {}
                     CharlaPage      {}
                     BenchmarkPage   {}

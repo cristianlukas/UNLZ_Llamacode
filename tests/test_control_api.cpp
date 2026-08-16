@@ -9,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "core/ControlApi.h"
+#include "AppController.h"
 
 // Sub-objeto hijo: emula un registry/profileManager expuesto como QObject* prop.
 class FakeChild : public QObject
@@ -58,6 +59,7 @@ private slots:
     void requestIdFromHeader();
     void requestIdFromBody();
     void requestIdGeneratedWhenMissing();
+    void appControllerEngineeringCatalogIsHeadless();
 
 private:
     QJsonObject request(const QByteArray &method, const QString &path,
@@ -68,6 +70,42 @@ private:
     ControlApi *m_api = nullptr;
     quint16 m_port = 0;
 };
+
+static QJsonObject requestJsonAt(quint16 port, const QByteArray &method,
+                                 const QString &path, const QByteArray &body = {})
+{
+    QByteArray resp;
+    QTcpSocket sock;
+    QObject::connect(&sock, &QTcpSocket::readyRead, [&] { resp += sock.readAll(); });
+    sock.connectToHost(QHostAddress::LocalHost, port);
+    QByteArray req = method + " " + path.toUtf8() + " HTTP/1.1\r\nHost: localhost\r\n";
+    if (!body.isEmpty()) {
+        req += "Content-Type: application/json\r\nContent-Length: "
+            + QByteArray::number(body.size()) + "\r\n";
+    }
+    req += "Connection: close\r\n\r\n" + body;
+    QElapsedTimer timer;
+    timer.start();
+    bool sent = false;
+    while (timer.elapsed() < 3000) {
+        if (!sent && sock.state() == QAbstractSocket::ConnectedState) {
+            sock.write(req);
+            sock.flush();
+            sent = true;
+        }
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+        const int hdr = resp.indexOf("\r\n\r\n");
+        if (hdr >= 0) {
+            int length = 0;
+            for (const QByteArray &line : resp.left(hdr).split('\n'))
+                if (line.toLower().startsWith("content-length:"))
+                    length = line.mid(line.indexOf(':') + 1).trimmed().toInt();
+            if (resp.size() - hdr - 4 >= length)
+                return QJsonDocument::fromJson(resp.mid(hdr + 4)).object();
+        }
+    }
+    return {};
+}
 
 quint16 ControlApiTests::freePort()
 {
@@ -310,6 +348,39 @@ void ControlApiTests::requestIdGeneratedWhenMissing()
 {
     const QJsonObject o = request("GET", "/health");
     QVERIFY(!o.value("reqId").toString().isEmpty());
+}
+
+void ControlApiTests::appControllerEngineeringCatalogIsHeadless()
+{
+    QStandardPaths::setTestModeEnabled(true);
+    QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
+    QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
+    AppController app;
+    ControlApi api(&app);
+    const quint16 port = freePort();
+    QVERIFY(api.start(port));
+
+    const QJsonObject methods = requestJsonAt(port, "GET", "/methods");
+    QVERIFY(methods.value("methods").toArray()
+                .contains(QJsonValue(QStringLiteral("engineeringWorkflows/0"))));
+
+    const QJsonObject catalog = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"method":"engineeringWorkflows","args":[]})");
+    QVERIFY(catalog.value("ok").toBool());
+    QCOMPARE(catalog.value("result").toArray().size(), 5);
+
+    const QJsonObject safety = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"method":"engineeringSafetyProfiles","args":[]})");
+    QVERIFY(safety.value("ok").toBool());
+    QVERIFY(safety.value("result").toArray().size() >= 4);
+
+    const QJsonObject installed = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"method":"installEngineeringWorkflow","args":["qa"]})");
+    QVERIFY(installed.value("ok").toBool());
+    QVERIFY(!installed.value("result").toString().isEmpty());
 }
 
 QTEST_MAIN(ControlApiTests)

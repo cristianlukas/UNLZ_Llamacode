@@ -33,3 +33,19 @@ Un workflow exitoso debe dejar un resumen de pasos, resultados, herramientas y
 aprobaciones en el historial de la Task. `qa` debe agregar o justificar una
 prueba de regresión y `release-check` debe verificar el ejecutable Debug según
 las instrucciones de `AGENTS.md`.
+
+## Validación headless
+
+La cobertura de catálogo, persistencia, políticas de seguridad, AppController,
+ControlApi y el contrato de la barra QML puede correr sin modelo ni escritorio:
+
+```powershell
+cmake --build build_tests --config Debug --target test_engineering_workflows test_task_security_policy
+ctest --test-dir build_tests -C Debug -R "test_engineering_workflows|test_task_security_policy|test_tasks|test_appcontroller|test_control_api" --output-on-failure
+powershell -ExecutionPolicy Bypass -File .\tests\headless_engineering_workflows.ps1
+```
+
+El panel QML se valida por compilación y por el contrato headless de
+`AppController`; los loops con `FakeAgentBackend` tampoco requieren inferencia.
+Desktop/OCR/audio/browser real e inferencia local son QA optativo, no parte del
+gate headless.

@@ -25,6 +25,7 @@ private slots:
     void reload_preservesResumableWorkflow();
     void loop_jsonRoundTrip();
     void loop_decideStopsAndRepeats();
+    void loop_stopsAtOperationalTimeBudget();
     void loop_composeGoalPrompt();
     void loop_runsExactlyMaxIterationsWhenGoalNeverMet();
     void loop_stopsEarlyWhenGoalMet();
@@ -44,6 +45,7 @@ static QVariantMap sampleTask()
         {"prePrompt", "Usá browser si hace falta."}, {"postPrompt", "Verificá que el valor tenga compra y venta."},
         {"silentUnlessError", true},
         {"executionMode", "browserBackground"}, {"approvalPolicy", "sensitive"},
+        {"safetyProfile", "guarded"},
         {"teachArtifactId", "artifact-1"}, {"teachFormatVersion", 1},
         {"scopeKind", "screen"}, {"scopeTargetId", "0"}, {"scopeLabel", "Pantalla 1"},
         {"scopeWidth", 1920}, {"scopeHeight", 1080}, {"scopeDpi", 96.0},
@@ -82,6 +84,7 @@ void TasksTests::jsonRoundTrip()
     QCOMPARE(out.value("silentUnlessError").toBool(), true);
     QCOMPARE(out.value("executionMode").toString(), QStringLiteral("browserBackground"));
     QCOMPARE(out.value("approvalPolicy").toString(), QStringLiteral("sensitive"));
+    QCOMPARE(out.value("safetyProfile").toString(), QStringLiteral("guarded"));
     QCOMPARE(out.value("teachArtifactId").toString(), QStringLiteral("artifact-1"));
     QCOMPARE(out.value("maxActions").toInt(), 50);
     // Tipo de entrenamiento: default "literal"; y round-trip de "adaptive".
@@ -117,6 +120,11 @@ void TasksTests::jsonRoundTrip_permsAndScheduleSpec()
     // Default seguro cuando el JSON no trae permScope.
     const QVariantMap legacy = TaskStore::fromJson(TaskStore::toJson(sampleTask()));
     QCOMPARE(legacy.value("permScope").toString(), QStringLiteral("project"));
+
+    QVariantMap noSafety = sampleTask();
+    noSafety.remove(QStringLiteral("safetyProfile"));
+    QCOMPARE(TaskStore::fromJson(TaskStore::toJson(noSafety))
+                 .value(QStringLiteral("safetyProfile")).toString(), QStringLiteral("normal"));
 }
 
 void TasksTests::composePrompt_mentionsAllowedFolder()
@@ -250,15 +258,18 @@ void TasksTests::loop_jsonRoundTrip()
     in["loopEnabled"] = true;
     in["loopGoal"] = QStringLiteral("todos los tests en verde");
     in["loopMaxIterations"] = 7;
+    in["loopMaxSeconds"] = 7200;
     const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(in));
     QCOMPARE(out.value("loopEnabled").toBool(), true);
     QCOMPARE(out.value("loopGoal").toString(), QStringLiteral("todos los tests en verde"));
     QCOMPARE(out.value("loopMaxIterations").toInt(), 7);
+    QCOMPARE(out.value("loopMaxSeconds").toInt(), 7200);
 
     // Default seguro para JSON legacy sin campos de loop.
     const QVariantMap legacy = TaskStore::fromJson(TaskStore::toJson(sampleTask()));
     QCOMPARE(legacy.value("loopEnabled").toBool(), false);
     QCOMPARE(legacy.value("loopMaxIterations").toInt(), 5);
+    QCOMPARE(legacy.value("loopMaxSeconds").toInt(), 0);
 }
 
 void TasksTests::loop_decideStopsAndRepeats()
@@ -391,6 +402,21 @@ void TasksTests::verifyProfile_routesOnlyWhenSetAndDifferent()
     const QVariantMap out = TaskStore::fromJson(TaskStore::toJson(task));
     QCOMPARE(out.value("verifyProfileId").toString(), QStringLiteral("p-verify"));
     QCOMPARE(out.value("autoDifficultyRouting").toBool(), true);
+}
+
+void TasksTests::loop_stopsAtOperationalTimeBudget()
+{
+    QVariantMap task = sampleTask();
+    task["loopEnabled"] = true;
+    task["loopMaxIterations"] = 100;
+    task["loopMaxSeconds"] = 3600;
+
+    QVERIFY(TaskStore::decideLoop(task, 1, QStringLiteral("ok"),
+                                  QStringLiteral("GOAL_NOT_MET"), 3599).repeat);
+    const auto d = TaskStore::decideLoop(task, 1, QStringLiteral("ok"),
+                                         QStringLiteral("GOAL_NOT_MET"), 3600);
+    QVERIFY(!d.repeat);
+    QVERIFY(d.reason.contains(QStringLiteral("tiempo")));
 }
 
 QTEST_MAIN(TasksTests)

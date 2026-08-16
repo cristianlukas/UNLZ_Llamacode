@@ -62,6 +62,7 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case LoopEnabledRole:       return t.value("loopEnabled", false);
     case LoopGoalRole:          return t.value("loopGoal");
     case LoopMaxIterationsRole: return t.value("loopMaxIterations", 5);
+    case LoopMaxSecondsRole:    return t.value("loopMaxSeconds", 0);
     case VerifyProfileIdRole:   return t.value("verifyProfileId");
     case AutoDifficultyRoutingRole: return t.value("autoDifficultyRouting", false);
     default:                  return {};
@@ -109,6 +110,7 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { LoopEnabledRole,       "loopEnabled" },
         { LoopGoalRole,          "loopGoal" },
         { LoopMaxIterationsRole, "loopMaxIterations" },
+        { LoopMaxSecondsRole,    "loopMaxSeconds" },
         { VerifyProfileIdRole,   "verifyProfileId" },
         { AutoDifficultyRoutingRole, "autoDifficultyRouting" },
     };
@@ -173,7 +175,9 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["loopEnabled"]     = def.value("loopEnabled", t.value("loopEnabled", false));
     t["loopGoal"]        = def.value("loopGoal", t.value("loopGoal"));
     t["loopMaxIterations"] = qBound(1, def.value("loopMaxIterations",
-                                       t.value("loopMaxIterations", 5)).toInt(), 100);
+                                       t.value("loopMaxIterations", 5)).toInt(), 1000);
+    t["loopMaxSeconds"] = qBound(0, def.value("loopMaxSeconds",
+                                      t.value("loopMaxSeconds", 0)).toInt(), 86400);
     t["verifyProfileId"] = def.value("verifyProfileId", t.value("verifyProfileId"));
     t["autoDifficultyRouting"] = def.value("autoDifficultyRouting",
                                              t.value("autoDifficultyRouting", false));
@@ -364,7 +368,8 @@ QString TaskStore::composePostPrompt(const QVariantMap &task)
 
 TaskStore::LoopDecision TaskStore::decideLoop(const QVariantMap &task, int iteration,
                                               const QString &lastStatus,
-                                              const QString &lastSummary)
+                                              const QString &lastSummary,
+                                              qint64 elapsedSeconds)
 {
     if (!task.value("loopEnabled", false).toBool())
         return { false, QStringLiteral("bucle deshabilitado") };
@@ -374,13 +379,17 @@ TaskStore::LoopDecision TaskStore::decideLoop(const QVariantMap &task, int itera
     if (lastStatus == QLatin1String("error"))
         return { false, QStringLiteral("se detuvo por error en la corrida") };
 
+    const qint64 maxSeconds = qMax<qint64>(0, task.value("loopMaxSeconds", 0).toLongLong());
+    if (maxSeconds > 0 && elapsedSeconds >= 0 && elapsedSeconds >= maxSeconds)
+        return { false, QStringLiteral("se alcanzó el máximo de tiempo (%1 s)").arg(maxSeconds) };
+
     // El agente declaró el objetivo cumplido. GOAL_NOT_MET contiene GOAL_MET como
     // subcadena, así que descartamos primero el negativo.
     const QString sum = lastSummary.toUpper();
     if (!sum.contains(kGoalNotMetMarker) && sum.contains(kGoalMetMarker))
         return { false, QStringLiteral("objetivo cumplido") };
 
-    const int maxIter = qBound(1, task.value("loopMaxIterations", 5).toInt(), 100);
+    const int maxIter = qBound(1, task.value("loopMaxIterations", 5).toInt(), 1000);
     if (iteration >= maxIter)
         return { false, QStringLiteral("se alcanzó el máximo de iteraciones (%1)").arg(maxIter) };
 
@@ -468,6 +477,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["lastRunSummary"]  = task.value("lastRunSummary").toString();
     o["executionMode"]   = task.value("executionMode", QStringLiteral("auto")).toString();
     o["approvalPolicy"]  = task.value("approvalPolicy", QStringLiteral("sensitive")).toString();
+    o["safetyProfile"]   = task.value("safetyProfile", QStringLiteral("normal")).toString();
     o["teachArtifactId"] = task.value("teachArtifactId").toString();
     o["teachFormatVersion"] = task.value("teachFormatVersion", 1).toInt();
     o["trainedAt"]       = task.value("trainedAt").toString();
@@ -542,6 +552,8 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
         ? obj.value("executionMode").toString() : QStringLiteral("auto");
     t["approvalPolicy"]  = obj.contains("approvalPolicy")
         ? obj.value("approvalPolicy").toString() : QStringLiteral("sensitive");
+    t["safetyProfile"]   = obj.contains("safetyProfile")
+        ? obj.value("safetyProfile").toString() : QStringLiteral("normal");
     t["teachArtifactId"] = obj.value("teachArtifactId").toString();
     t["teachFormatVersion"] = obj.value("teachFormatVersion").toInt(1);
     t["trainedAt"]       = obj.value("trainedAt").toString();
@@ -559,7 +571,8 @@ QVariantMap TaskStore::fromJson(const QJsonObject &obj)
             ? QStringLiteral("untrained") : QStringLiteral("ready"));
     t["loopEnabled"]     = obj.value("loopEnabled").toBool(false);
     t["loopGoal"]        = obj.value("loopGoal").toString();
-    t["loopMaxIterations"] = qBound(1, obj.value("loopMaxIterations").toInt(5), 100);
+    t["loopMaxIterations"] = qBound(1, obj.value("loopMaxIterations").toInt(5), 1000);
+    t["loopMaxSeconds"] = qBound(0, obj.value("loopMaxSeconds").toInt(0), 86400);
     t["verifyProfileId"] = obj.value("verifyProfileId").toString();
     t["autoDifficultyRouting"] = obj.value("autoDifficultyRouting").toBool(false);
     t["datasetInline"]   = obj.value("datasetInline").toString();

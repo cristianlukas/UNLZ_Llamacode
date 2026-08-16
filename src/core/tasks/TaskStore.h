@@ -65,6 +65,7 @@ public:
         LoopEnabledRole,        // bool: correr en bucle hasta cumplir el objetivo
         LoopGoalRole,           // condición de éxito en lenguaje natural
         LoopMaxIterationsRole,  // techo de iteraciones (corta el bucle sí o sí)
+        LoopMaxSecondsRole,     // techo operativo de tiempo; 0 = sin límite
         VerifyProfileIdRole,    // perfil opcional para la fase de verificación/goal-check
         AutoDifficultyRoutingRole // usar el verificador sólo ante dificultad alta
     };
@@ -80,7 +81,8 @@ public:
     // salida del chequeo de objetivo (puede contener el marcador GOAL_MET).
     struct LoopDecision { bool repeat; QString reason; };
     static LoopDecision decideLoop(const QVariantMap &task, int iteration,
-                                   const QString &lastStatus, const QString &lastSummary);
+                                   const QString &lastStatus, const QString &lastSummary,
+                                   qint64 elapsedSeconds = -1);
 
     // Marcadores que el agente debe emitir al evaluar el objetivo del bucle.
     static const QString kGoalMetMarker;      // "GOAL_MET"

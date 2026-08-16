@@ -114,11 +114,10 @@ def make_pack(rows: list[dict]) -> dict:
     items = []
     for row in rows:
         entry = str(row["entry_point"])
-        prompt = (
-            "Implementá esta tarea de BigCodeBench-Hard. Devolvé SOLO código Python "
-            "autocontenido, sin explicación. Respetá exactamente la firma y todos los "
-            "casos borde.\n\n" + str(row["instruct_prompt"]).strip()
-        )
+        # Use the official English Instruct prompt verbatim.  Adding a translated
+        # wrapper changes the task (and is especially unfair to models whose chat
+        # template was tuned on the published English benchmark).
+        prompt = str(row["instruct_prompt"]).strip()
         items.append({
             "id": row["task_id"],
             "prompt": prompt,

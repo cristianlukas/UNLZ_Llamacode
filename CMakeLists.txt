@@ -74,6 +74,8 @@ set(CORE_SOURCES
     src/core/BinaryRegistry.cpp
     src/core/CapabilityDetector.cpp
     src/core/EngineCatalog.cpp
+    src/core/HardwareDiagnostics.cpp
+    src/core/PerformanceMatrix.cpp
     src/core/ModelRoot.cpp
     src/core/ModelRootRegistry.cpp
     src/core/CatalogModel.cpp
@@ -81,6 +83,7 @@ set(CORE_SOURCES
     src/core/GGUFScanner.cpp
     src/core/OllamaImporter.cpp
     src/core/DocumentExtractor.cpp
+    src/core/data/DataLab.cpp
     src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
     src/core/AuxiliaryJobScheduler.cpp
@@ -136,6 +139,7 @@ set(CORE_SOURCES
     src/core/diag/LogTriage.cpp
     src/core/downloads/DownloadHistoryStore.cpp
     src/core/tasks/TaskStore.cpp
+    src/core/tasks/TaskSecurityPolicy.cpp
     src/core/tasks/AutomationStore.cpp
     src/core/tasks/RunHistoryStore.cpp
     src/core/tasks/EvidenceBundle.cpp
@@ -168,6 +172,8 @@ set(HEADERS
     src/core/BinaryRegistry.h
     src/core/CapabilityDetector.h
     src/core/EngineCatalog.h
+    src/core/HardwareDiagnostics.h
+    src/core/PerformanceMatrix.h
     src/core/ModelRoot.h
     src/core/ModelRootRegistry.h
     src/core/CatalogModel.h
@@ -175,6 +181,7 @@ set(HEADERS
     src/core/GGUFScanner.h
     src/core/OllamaImporter.h
     src/core/DocumentExtractor.h
+    src/core/data/DataLab.h
     src/core/MermaidRenderer.h
     src/core/ControlApi.h
     src/core/AuxiliaryJobScheduler.h
@@ -226,6 +233,7 @@ set(HEADERS
     src/core/ToolCallingSupport.h
     src/core/downloads/DownloadHistoryStore.h
     src/core/tasks/TaskStore.h
+    src/core/tasks/TaskSecurityPolicy.h
     src/core/tasks/AutomationStore.h
     src/core/tasks/RunHistoryStore.h
     src/core/tasks/EvidenceBundle.h
@@ -404,6 +412,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/BenchmarkPage.qml
         qml/pages/TunerPage.qml
         qml/pages/ResearchPage.qml
+        qml/pages/DataLabPage.qml
         qml/pages/CharlaPage.qml
         qml/pages/DownloadsPage.qml
         qml/pages/SettingsPage.qml
@@ -512,6 +521,10 @@ if (BUILD_TESTS)
         target_include_directories(${name} PRIVATE src tests)
         target_link_libraries(${name} PRIVATE llamacode_core Qt6::Test)
         add_test(NAME ${name} COMMAND ${name})
+        # Todos los QtTests deben ser ejecutables sin escritorio. Los probes que
+        # requieren foreground no se registran como tests del gate.
+        set_tests_properties(${name} PROPERTIES
+            ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1")
         if (WIN32)
             set_property(TEST ${name} PROPERTY ENVIRONMENT_MODIFICATION
                 "PATH=path_list_prepend:$<TARGET_FILE_DIR:${name}>"
@@ -547,9 +560,11 @@ if (BUILD_TESTS)
     add_lc_test(test_capability         tests/test_capability.cpp)
     add_lc_test(test_engine_catalog     tests/test_engine_catalog.cpp)
     add_lc_test(test_document_extractor tests/test_document_extractor.cpp)
+    add_lc_test(test_datalab             tests/test_datalab.cpp)
     add_lc_test(test_memory_graph       tests/test_memory_graph.cpp)
     add_lc_test(test_code_graph         tests/test_code_graph.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
+    add_lc_test(test_hardware_diagnostics tests/test_hardware_diagnostics.cpp)
     add_lc_test(test_eval               tests/test_eval.cpp)
     # Ruta de la suite bundleada para validar el JSON real (no sólo el sample inline).
     target_compile_definitions(test_eval PRIVATE
@@ -569,6 +584,7 @@ if (BUILD_TESTS)
     add_lc_test(test_voice              tests/test_voice.cpp)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
     add_lc_test(test_engineering_workflows tests/test_engineering_workflows.cpp)
+    add_lc_test(test_task_security_policy tests/test_task_security_policy.cpp)
     add_lc_test(test_automation         tests/test_automation.cpp)
     add_lc_test(test_visual_matcher     tests/test_visual_matcher.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)
@@ -597,14 +613,17 @@ if (BUILD_TESTS)
         tests/qml/qmldir
         tests/qml/Theme.qml
         tests/qml/App.qml
+        tests/qml/PageHeader.qml
         tests/qml/LcDialog.qml
         tests/qml/LcButton.qml
         tests/qml/LcTextField.qml
         tests/qml/tst_color_picker.qml
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_benchmark_score.qml
+        tests/qml/tst_datalab.qml
         qml/components/NavigationPolicy.js
         qml/components/BenchmarkScore.js
+        qml/pages/DataLabPage.qml
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
     )
@@ -639,6 +658,13 @@ if (BUILD_TESTS)
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_benchmark_score.qml")
     set_tests_properties(qml_benchmark_score PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+
+    add_test(NAME qml_datalab
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_datalab.qml")
+    set_tests_properties(qml_datalab PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
 

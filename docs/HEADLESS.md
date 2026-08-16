@@ -222,4 +222,5 @@ El script usa un puerto localhost efímero y un directorio temporal de perfiles.
 Sin QML ni modelo consulta el catálogo por `/invoke`, valida `qa`, instala la
 Task, comprueba su persistencia y cierra el daemon incluso ante errores. La
 política de seguridad se prueba además con `test_task_security_policy` y la
-barra de presets con `qml_engineering_workflow_preset` en modo offscreen.
+barra de presets mediante el contrato headless de `AppController`; el panel se
+valida además durante el build QML.
