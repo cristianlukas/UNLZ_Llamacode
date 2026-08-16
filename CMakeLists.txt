@@ -146,6 +146,7 @@ set(CORE_SOURCES
     src/core/tasks/WorkflowEngine.cpp
     src/core/tasks/WorkflowRunner.cpp
     src/core/tasks/WorkflowVisualModel.cpp
+    src/core/tasks/EngineeringWorkflowCatalog.cpp
     src/core/automation/DesktopAutomationBackend.cpp
     src/core/automation/VisualMatcher.cpp
     src/core/automation/FuzzyMatch.cpp
@@ -235,6 +236,7 @@ set(HEADERS
     src/core/tasks/WorkflowEngine.h
     src/core/tasks/WorkflowRunner.h
     src/core/tasks/WorkflowVisualModel.h
+    src/core/tasks/EngineeringWorkflowCatalog.h
     src/core/automation/DesktopAutomationBackend.h
     src/core/automation/VisualMatcher.h
     src/core/automation/AutomationArtifactStore.h
@@ -566,6 +568,7 @@ if (BUILD_TESTS)
     add_lc_test(test_mail               tests/test_mail.cpp)
     add_lc_test(test_voice              tests/test_voice.cpp)
     add_lc_test(test_tasks              tests/test_tasks.cpp)
+    add_lc_test(test_engineering_workflows tests/test_engineering_workflows.cpp)
     add_lc_test(test_automation         tests/test_automation.cpp)
     add_lc_test(test_visual_matcher     tests/test_visual_matcher.cpp)
     add_lc_test(test_cron               tests/test_cron.cpp)

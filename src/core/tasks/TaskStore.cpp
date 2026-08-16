@@ -45,6 +45,7 @@ QVariant TaskStore::data(const QModelIndex &index, int role) const
     case SilentUnlessErrorRole: return t.value("silentUnlessError", false);
     case ExecutionModeRole:     return t.value("executionMode", QStringLiteral("auto"));
     case ApprovalPolicyRole:    return t.value("approvalPolicy", QStringLiteral("sensitive"));
+    case SafetyProfileRole:     return t.value("safetyProfile", QStringLiteral("normal"));
     case TeachArtifactIdRole:   return t.value("teachArtifactId");
     case TeachFormatVersionRole:return t.value("teachFormatVersion", 1);
     case TrainedAtRole:         return t.value("trainedAt");
@@ -91,6 +92,7 @@ QHash<int, QByteArray> TaskStore::roleNames() const
         { SilentUnlessErrorRole, "silentUnlessError" },
         { ExecutionModeRole,     "executionMode" },
         { ApprovalPolicyRole,    "approvalPolicy" },
+        { SafetyProfileRole,     "safetyProfile" },
         { TeachArtifactIdRole,   "teachArtifactId" },
         { TeachFormatVersionRole,"teachFormatVersion" },
         { TrainedAtRole,         "trainedAt" },
@@ -153,6 +155,7 @@ QString TaskStore::save(const QString &id, const QVariantMap &def)
     t["permFolders"]     = def.value("permFolders", t.value("permFolders", QVariantList{}));
     t["executionMode"]   = def.value("executionMode", t.value("executionMode", QStringLiteral("auto")));
     t["approvalPolicy"]  = def.value("approvalPolicy", t.value("approvalPolicy", QStringLiteral("sensitive")));
+    t["safetyProfile"]   = def.value("safetyProfile", t.value("safetyProfile", QStringLiteral("normal")));
     t["teachArtifactId"] = def.value("teachArtifactId", t.value("teachArtifactId"));
     t["teachFormatVersion"] = def.value("teachFormatVersion", t.value("teachFormatVersion", 1));
     t["trainedAt"]       = def.value("trainedAt", t.value("trainedAt"));
@@ -481,6 +484,7 @@ QJsonObject TaskStore::toJson(const QVariantMap &task)
     o["loopEnabled"]     = task.value("loopEnabled", false).toBool();
     o["loopGoal"]        = task.value("loopGoal").toString();
     o["loopMaxIterations"] = task.value("loopMaxIterations", 5).toInt();
+    o["loopMaxSeconds"] = task.value("loopMaxSeconds", 0).toInt();
     o["verifyProfileId"] = task.value("verifyProfileId").toString();
     o["autoDifficultyRouting"] = task.value("autoDifficultyRouting", false).toBool();
     o["datasetInline"]   = task.value("datasetInline").toString();

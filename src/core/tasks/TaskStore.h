@@ -48,6 +48,7 @@ public:
         SilentUnlessErrorRole,
         ExecutionModeRole,
         ApprovalPolicyRole,
+        SafetyProfileRole,
         TeachArtifactIdRole,
         TeachFormatVersionRole,
         TrainedAtRole,

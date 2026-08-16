@@ -15,6 +15,7 @@
 #include "core/agents/AgentDefinitionStore.h"
 #include "core/agents/TriggerManager.h"
 #include "core/tasks/WorkflowRunner.h"
+#include "core/tasks/EngineeringWorkflowCatalog.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
 #include "core/agent/AgentRoomStore.h"
@@ -572,6 +573,10 @@ public:
     Q_INVOKABLE QVariantList workflowVisualRows(const QVariantMap &definition) const;
     Q_INVOKABLE QVariantMap mergeWorkflowVisual(const QVariantMap &definition,
                                                  const QVariantList &rows) const;
+    // Presets de ingeniería declarativos, reutilizables desde Tasks y QML.
+    Q_INVOKABLE QVariantList engineeringWorkflows() const;
+    Q_INVOKABLE QVariantList engineeringSafetyProfiles() const;
+    Q_INVOKABLE QString installEngineeringWorkflow(const QString &workflowId);
     // Test seams (solo para tests; no usar desde la app). Permiten ejercitar el
     // ciclo del bucle de Tasks sin un llama-server real: inyectar un backend de
     // agente fake y arrancar el cuerpo de la Task salteando el gating de server.

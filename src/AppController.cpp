@@ -6119,6 +6119,25 @@ QVariantMap AppController::mergeWorkflowVisual(const QVariantMap &definition,
     return WorkflowVisualModel::merge(definition, rows);
 }
 
+QVariantList AppController::engineeringWorkflows() const
+{
+    return EngineeringWorkflowCatalog::workflows();
+}
+
+QVariantList AppController::engineeringSafetyProfiles() const
+{
+    return EngineeringWorkflowCatalog::safetyProfiles();
+}
+
+QString AppController::installEngineeringWorkflow(const QString &workflowId)
+{
+    const QVariantMap task = EngineeringWorkflowCatalog::installableTask(workflowId);
+    if (task.isEmpty()) return {};
+    const QString id = m_tasks.save({}, task);
+    if (!id.isEmpty()) rebuildTaskTriggers();
+    return id;
+}
+
 // Arranca el cuerpo de una Task: setea el estado de corrida, inicializa el bucle
 // y manda el primer prompt. Separado de runTask (que hace el gating de
 // server/agente) para poder ejercitar el ciclo del bucle en tests sin un
@@ -6781,7 +6800,12 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     cb->setTaskScope(scope, folders);
     const QString policy = task.value(QStringLiteral("approvalPolicy"),
                                       QStringLiteral("sensitive")).toString();
-    cb->setTaskAutoApprove(policy == QLatin1String("autonomous"));
+    const QString safetyProfile = task.value(QStringLiteral("safetyProfile"),
+                                             QStringLiteral("normal")).toString();
+    const bool strictSafety = safetyProfile == QLatin1String("investigation")
+        || safetyProfile == QLatin1String("guarded")
+        || safetyProfile == QLatin1String("production");
+    cb->setTaskAutoApprove(policy == QLatin1String("autonomous") && !strictSafety);
     const bool desktop = task.value(QStringLiteral("executionMode")).toString()
                          == QLatin1String("desktop");
     const QString proj = currentAgentProjectDir();
@@ -6809,6 +6833,8 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     // compactación innecesaria, primer turno más rápido. Cualquier otra Task
     // (browserBackground, o desktop con pasos web) mantiene MCP completo.
     const bool pureDesktop = desktop && !taskNeedsBrowser;
+    const bool productionSafety = task.value(QStringLiteral("safetyProfile"))
+                                      .toString() == QLatin1String("production");
     // Automatizaciones corren con máxima capacidad salvo cuando el Teach demuestra
     // un flujo de escritorio puro. En perfiles 8k, inyectar todo el catálogo
     // built-in + schemas de desktop alcanza para exceder n_ctx y fuerza el fallback
@@ -6827,7 +6853,17 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
         }
         cb->setDisabledTools(disabled);
     } else {
-        cb->setDisabledTools({});
+        QStringList disabled;
+        if (productionSafety) {
+            for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+                const QString tool = v.toMap().value(QStringLiteral("name")).toString();
+                if (tool.startsWith(QStringLiteral("browser_"))
+                    || tool.startsWith(QStringLiteral("web_"))
+                    || tool.startsWith(QStringLiteral("email_")))
+                    disabled << tool;
+            }
+        }
+        cb->setDisabledTools(disabled);
     }
     cb->setMcpToolsEnabled(!pureDesktop);
     if (pureDesktop) {

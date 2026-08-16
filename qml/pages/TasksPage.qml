@@ -312,6 +312,39 @@ Item {
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
         }
 
+        // Presets de ingeniería: son Tasks declarativas sobre el motor de
+        // workflows, reutilizables para cualquier workspace autorizado.
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 48
+            visible: root.currentTab === 0
+            color: Theme.surfaceBg
+            RowLayout {
+                anchors { fill: parent; leftMargin: 24; rightMargin: 16 }
+                spacing: 8
+                Text {
+                    text: "Workflows:"
+                    color: Theme.textSecondary
+                    font { pixelSize: 12; bold: true }
+                }
+                Repeater {
+                    model: App.engineeringWorkflows()
+                    delegate: LcButton {
+                        text: modelData.name
+                        secondary: true
+                        ToolTip.visible: hovered
+                        ToolTip.text: modelData.description
+                        onClicked: {
+                            const id = App.installEngineeringWorkflow(modelData.id)
+                            if (id) root.openEditor(id)
+                        }
+                    }
+                }
+                Item { Layout.fillWidth: true }
+            }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.divider }
+        }
+
         // Toggle del scheduler (pestaña Automatizaciones).
         Rectangle {
             Layout.fillWidth: true
