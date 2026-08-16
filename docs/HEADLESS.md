@@ -60,6 +60,12 @@ sintética compatible con los artefactos reales. Si `nvidia-smi` no existe, el
 caso sigue siendo válido: debe publicar fingerprint, fallback CPU y
 `splitMode=layer`.
 
+El script arranca el daemon con `--agent-daemon --handoff-ui` para que una
+instancia Debug abierta no interfiera con la prueba; `--handoff-ui` no carga
+QML. Si se usa otro ejecutable, debe tener su runtime Qt desplegado junto al
+binario: el ejecutable crudo de `build_tests/Debug` puede fallar por DLL
+faltantes; usar `build/Debug` o configurar `PATH`/`QT_PLUGIN_PATH`.
+
 ## Qué debe probarse headless
 
 La matriz mínima para Tasks, loops y workflows es:

@@ -36,7 +36,9 @@ function Get-Prop([string]$Target, [string]$Name) {
 }
 
 try {
-    $proc = Start-Process -FilePath $Exe -ArgumentList "--agent-daemon" -WindowStyle Hidden -PassThru
+    # --handoff-ui evita colisiones con la instancia Debug que puede estar
+    # abierta durante desarrollo; no habilita QML y conserva el modo daemon.
+    $proc = Start-Process -FilePath $Exe -ArgumentList "--agent-daemon --handoff-ui" -WindowStyle Hidden -PassThru
     $ready = $false
     for ($i = 0; $i -lt 30; $i++) {
         try { if ((Invoke-Api "/health").ok) { $ready = $true; break } } catch {}

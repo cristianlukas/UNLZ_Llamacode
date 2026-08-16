@@ -9,11 +9,21 @@ $oldPort = $env:LLAMACODE_CONTROL_PORT; $oldProfiles = $env:LLAMACODE_PROFILES_D
 try {
     New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
     $env:LLAMACODE_CONTROL_PORT = [string]$port; $env:LLAMACODE_PROFILES_DIR = $profileDir
-    $proc = Start-Process -FilePath $exe -ArgumentList "--headless" -WindowStyle Hidden -PassThru
+    $stdoutPath = Join-Path $profileDir "daemon.stdout.log"
+    $stderrPath = Join-Path $profileDir "daemon.stderr.log"
+    $proc = Start-Process -FilePath $exe -ArgumentList "--headless" `
+        -WorkingDirectory $root -WindowStyle Hidden -PassThru `
+        -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
     $base = "http://127.0.0.1:$port"; $ready = $false
     # El primer arranque puede cargar catálogos y perfiles antes de abrir
     # ControlApi; el timeout debe cubrir una notebook fría sin modelo.
     for ($i = 0; $i -lt 120; $i++) {
+        if ($proc.HasExited) {
+            $tail = @()
+            if (Test-Path $stdoutPath) { $tail += Get-Content $stdoutPath -Tail 12 }
+            if (Test-Path $stderrPath) { $tail += Get-Content $stderrPath -Tail 12 }
+            throw ("El daemon terminó con código {0}. Log: {1}" -f $proc.ExitCode, ($tail -join " | "))
+        }
         try { if ((Invoke-RestMethod "$base/health").ok) { $ready = $true; break } }
         catch { Start-Sleep -Milliseconds 500 }
     }
@@ -36,6 +46,7 @@ try {
     Write-Host "OK: catálogo, validación, instalación y persistencia headless"
 } finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
+    if ($proc) { $proc.WaitForExit(3000) | Out-Null }
     if ($null -eq $oldPort) { Remove-Item Env:LLAMACODE_CONTROL_PORT -ErrorAction SilentlyContinue } else { $env:LLAMACODE_CONTROL_PORT = $oldPort }
     if ($null -eq $oldProfiles) { Remove-Item Env:LLAMACODE_PROFILES_DIR -ErrorAction SilentlyContinue } else { $env:LLAMACODE_PROFILES_DIR = $oldProfiles }
     if (Test-Path -LiteralPath $profileDir) { Remove-Item -LiteralPath $profileDir -Recurse -Force }
