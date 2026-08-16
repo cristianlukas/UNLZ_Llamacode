@@ -38,7 +38,7 @@ def runtime_args(rt):
     a += ["--batch-size", str(rt.get("batch",512)), "--ubatch-size", str(rt.get("ubatch",512))]
     if rt.get("threads",0) > 0: a += ["--threads", str(rt["threads"])]
     if rt.get("flashAttn"): a += ["--flash-attn","on"]
-    a += ["--cache-type-k", rt.get("kv","f16")]
+    a += ["--cache-type-k", rt.get("kv","q8_0")]
     return a
 
 def main():

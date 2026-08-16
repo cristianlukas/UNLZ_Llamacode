@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     // ── Primitivas puras ──────────────────────────────────────────────────────
     QVector<TunableParam> params = {
         {ParamSpec::intRange("ngl", 0, 40, 8), "-ngl", false},
-        {ParamSpec::categorical("cache-type-k", {"f16", "q8_0", "q4_0"}, true),
+        {ParamSpec::categorical("cache-type-k", {"q8_0", "q4_0"}, true),
          "--cache-type-k", false},
         {ParamSpec::categorical("flash-attn", {"off", "on"}), "--flash-attn", true},
     };

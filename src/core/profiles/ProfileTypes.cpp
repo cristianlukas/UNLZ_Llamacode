@@ -102,7 +102,7 @@ RuntimePreset RuntimePreset::fromJson(const QJsonObject &o) {
     p.flashAttention = o["flashAttention"].toBool(false);
     p.mmap = o["mmap"].toBool(true); p.mlock = o["mlock"].toBool(false);
     p.contBatching = o["contBatching"].toBool(true);
-    p.cacheType = o["cacheType"].toString("f16");
+    p.cacheType = o["cacheType"].toString("q8_0");
     p.parallelSlots = o["parallelSlots"].toInt(1);
     for (const auto &v : o["tensorOverrides"].toArray()) {
         const QString s = v.toString().trimmed();

@@ -2489,7 +2489,7 @@ void AppController::computeEffectiveProfilePreview(const QString &launchProfileI
     ctx.runtime.mmap          = overrides.value("mmap", true).toBool();
     ctx.runtime.mlock         = overrides.value("mlock", false).toBool();
     ctx.runtime.contBatching  = overrides.value("contBatching", true).toBool();
-    ctx.runtime.cacheType     = overrides.value("cacheType", "f16").toString();
+    ctx.runtime.cacheType     = overrides.value("cacheType", "q8_0").toString();
     ctx.runtime.parallelSlots = overrides.value("parallelSlots", 1).toInt();
 
     ctx.launch.extraArgs = overrides.value("extraArgs").toStringList();
@@ -17302,9 +17302,9 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
             {ParamSpec::categorical("threads", {"2", "4", "8", "12", "16"}), "--threads", false},
             {ParamSpec::categorical("batch", {"128", "256", "512", "1024"}), "-b", false},
             {ParamSpec::categorical("ubatch", {"64", "128", "256", "512"}), "-ub", false},
-            {ParamSpec::categorical("cache-type-k", {"f16", "q8_0", "q4_0"}, true),
+            {ParamSpec::categorical("cache-type-k", {"q8_0", "q4_0"}, true),
              "--cache-type-k", false},
-            {ParamSpec::categorical("cache-type-v", {"f16", "q8_0", "q4_0"}, true),
+            {ParamSpec::categorical("cache-type-v", {"q8_0", "q4_0"}, true),
              "--cache-type-v", false},
         };
     }
@@ -17317,9 +17317,9 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
         // OOM. Los trials que igual no entren fallan/puntúan bajo y el TPE los descarta.
         {ParamSpec::categorical("ubatch", {"128", "256", "512", "1024", "2048"}), "-ub", false},
         {ParamSpec::categorical("flash-attn", {"off", "on"}), "--flash-attn", true},
-        {ParamSpec::categorical("cache-type-k", {"f16", "q8_0", "q4_0"}, true),
+        {ParamSpec::categorical("cache-type-k", {"q8_0", "q4_0"}, true),
          "--cache-type-k", false},
-        {ParamSpec::categorical("cache-type-v", {"f16", "q8_0", "q4_0"}, true),
+        {ParamSpec::categorical("cache-type-v", {"q8_0", "q4_0"}, true),
          "--cache-type-v", false},
     };
     // Si hay draft model (spec decoding / MTP), afinar spec-draft-n-max: el sweet

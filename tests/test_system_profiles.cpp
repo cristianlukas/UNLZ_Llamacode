@@ -59,6 +59,7 @@ private slots:
     void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
     void bundle_qwen38VariantsAreMtpVisionAndTemplated();
     void bundle_bigBangDisablesCrashyFlashAttention();
+    void bundle_quantizationPolicyCapsKvAtQ8();
     void bundle_bestProfilesUseRequestedCategoryNames();
 
     void controller_recommendsClosestTier();
@@ -1063,7 +1064,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     for (const QJsonValue &a : fable.value("extraArgs").toArray())
         fableArgs << a.toString();
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--cache-type-k") + 1),
-             QStringLiteral("f16"));
+             QStringLiteral("q8_0"));
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--cache-type-v") + 1),
              QStringLiteral("q8_0"));
     QCOMPARE(fableArgs.value(fableArgs.indexOf("--spec-type") + 1),
@@ -1099,12 +1100,12 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     const QStringList mtpArgs =
         pm.getLaunchProfile(QStringLiteral("sys-bench-48-tc-mtp")).value("extraArgs").toStringList();
     QCOMPARE(mtpArgs.value(mtpArgs.indexOf("--spec-type") + 1), QStringLiteral("draft-mtp"));
-    const QVariantMap f16 = pm.getLaunchProfile(QStringLiteral("sys-bench-48-kat-f16"));
-    QCOMPARE(pm.getRuntimePreset(f16.value("runtimePresetId").toString())
+    const QVariantMap katKv8 = pm.getLaunchProfile(QStringLiteral("sys-bench-48-kat-f16"));
+    QCOMPARE(pm.getRuntimePreset(katKv8.value("runtimePresetId").toString())
                  .value("cacheType").toString(),
-             QStringLiteral("f16"));
-    const QStringList f16Args = f16.value("extraArgs").toStringList();
-    QCOMPARE(f16Args.value(f16Args.indexOf("--cache-type-k") + 1), QStringLiteral("f16"));
+             QStringLiteral("q8_0"));
+    const QStringList katKv8Args = katKv8.value("extraArgs").toStringList();
+    QCOMPARE(katKv8Args.value(katKv8Args.indexOf("--cache-type-k") + 1), QStringLiteral("q8_0"));
 }
 
 // El menú de Lanzar gatea por VRAM TOTAL, no por la placa más grande: llama.cpp
@@ -1468,7 +1469,7 @@ void SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
     QVERIFY2(!bigBang.value("runtime").toObject().value("flashAttn").toBool(),
              "BigBang no debe reactivar el kernel Flash Attention que crashea en CUDA");
     QCOMPARE(bigBang.value("runtime").toObject().value("kv").toString(),
-             QStringLiteral("f16"));
+             QStringLiteral("q8_0"));
     QCOMPARE(bigBang.value("runtime").toObject().value("batch").toInt(), 512);
     QCOMPARE(bigBang.value("runtime").toObject().value("ubatch").toInt(), 128);
     QStringList args;
@@ -1525,6 +1526,46 @@ void SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
         QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-v")) + 1), QStringLiteral("q8_0"));
         const bool hasMtp = args.contains(QStringLiteral("--spec-type"));
         QCOMPARE(hasMtp, it.value());
+    }
+}
+
+void SystemProfilesTests::bundle_quantizationPolicyCapsKvAtQ8()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    const auto allowed = [](const QString &value) {
+        return value.isEmpty() || value.compare(QStringLiteral("q8_0"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("q4_0"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("q6_k"), Qt::CaseInsensitive) == 0;
+    };
+    const auto checkCacheArgs = [&allowed](const QJsonObject &object) {
+        const QJsonArray raw = object.value(QStringLiteral("extraArgs")).toArray();
+        for (int i = 0; i + 1 < raw.size(); ++i) {
+            const QString flag = raw.at(i).toString();
+            if (flag == QStringLiteral("--cache-type-k")
+                || flag == QStringLiteral("--cache-type-v"))
+                QVERIFY2(allowed(raw.at(i + 1).toString()), qPrintable(flag));
+        }
+    };
+
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        const QString id = profile.value(QStringLiteral("id")).toString();
+        const QJsonObject runtime = profile.value(QStringLiteral("runtime")).toObject();
+        QVERIFY2(allowed(runtime.value(QStringLiteral("kv")).toString()), qPrintable(id));
+        checkCacheArgs(profile);
+        for (const QJsonValue &variantValue : profile.value(QStringLiteral("benchmarkVariants")).toArray()) {
+            const QJsonObject variant = variantValue.toObject();
+            const QString variantId = variant.value(QStringLiteral("id")).toString();
+            if (variantId.isEmpty()) continue;
+            const QJsonObject variantRuntime = variant.value(QStringLiteral("runtime")).toObject();
+            QVERIFY2(allowed(variantRuntime.value(QStringLiteral("kv")).toString()),
+                     qPrintable(variantId));
+            const QJsonObject overrides = variant.value(QStringLiteral("extraArgOverrides")).toObject();
+            for (const QString &flag : {QStringLiteral("--cache-type-k"), QStringLiteral("--cache-type-v")})
+                QVERIFY2(allowed(overrides.value(flag).toString()), qPrintable(variantId));
+        }
     }
 }
 

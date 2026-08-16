@@ -251,7 +251,7 @@ Item {
         let host = '127.0.0.1', port = 8080, modelPath = ''
         let ctx = 4096, batch = 512, ubatch = 512, threads = -1, gpuLayers = -1
         let flashAttn = false, useMmap = true, useMlock = false, contBatch = true
-        let parallel = 1, cacheType = 'f16'
+        let parallel = 1, cacheType = 'q8_0'
         const extra = []
 
         while (i < tokens.length) {
@@ -373,7 +373,7 @@ Item {
         threadsField.text = (rt.threads ?? -1).toString()
         gpuLayersField.text = (rt.gpuLayers ?? -1).toString()
         parallelSlotsField.text = (rt.parallelSlots ?? 1).toString()
-        cacheTypeField.text = rt.cacheType ?? "f16"
+            cacheTypeField.text = rt.cacheType ?? "q8_0"
         tensorOverridesField.text = (rt.tensorOverrides ?? []).join(", ")
         flashAttnCheck.checked = rt.flashAttention ?? false
         mmapCheck.checked = rt.mmap ?? true
@@ -1253,7 +1253,7 @@ Item {
                             id: specKvType
                             Layout.fillWidth: true
                             enabled: draftEnabled && mtpEnabled; opacity: enabled ? 1.0 : 0.4
-                            model: ["", "f16", "q8_0"]
+                            model: ["", "q8_0"]
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: specKvType.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }

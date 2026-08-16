@@ -278,7 +278,7 @@
           "--spec-draft-type-k": "q4_0",
           "--spec-draft-type-v": "q4_0"
         },
-        "comment": "KV del draft en q4_0 (default f16): libera VRAM del draft para el target y el compute graph."
+        "comment": "KV del draft en q4_0; la política del catálogo no permite superar q8_0. Libera VRAM del draft para el target y el compute graph."
       },
       {
         "id": "sys-bench-ultraq-b8192-u2048-ds8",
@@ -1033,15 +1033,15 @@
       {
         "id": "sys-bench-48-kat-f16",
         "order": 88,
-        "displayName": "[bench 48GB KAT] KV f16 · 262k",
+        "displayName": "[bench 48GB KAT] KV q8_0 · 262k (cap de política)",
         "runtime": {
-          "kv": "f16"
+          "kv": "q8_0"
         },
         "extraArgOverrides": {
-          "--cache-type-k": "f16",
-          "--cache-type-v": "f16"
+          "--cache-type-k": "q8_0",
+          "--cache-type-v": "q8_0"
         },
-        "comment": "MEDIDO: 4.303,1 t/s de prefill y 123,9 t/s de decode, mejor que el q8_0 del base (4.134,7 / 113,5) Y con el KV sin cuantizar, o sea mejor calidad de atencion. Entra porque KAT deja 20 GB libres. Candidato claro a ser el default."
+        "comment": "Variante histórica que usaba KV f16; queda limitada a q8_0 por política. Los tiempos medidos con f16 no son comparables y deben repetirse."
       },
       {
         "id": "sys-bench-48-kat-kv4",
@@ -1054,7 +1054,7 @@
           "--cache-type-k": "q4_0",
           "--cache-type-v": "q4_0"
         },
-        "comment": "El extremo opuesto al f16. Con tres puntos (q4_0, q8_0, f16) sobre el mismo modelo y contexto se ve la curva completa calidad/velocidad del KV."
+        "comment": "El extremo cuantizado. Con q4_0 y q8_0 se compara el costo del KV sin usar precisiones superiores a la política del catálogo."
       },
       {
         "id": "sys-bench-48-kat-b4096",
@@ -1439,7 +1439,7 @@
     },
     "extraArgs": [
       "--cache-type-k",
-      "f16",
+      "q8_0",
       "--cache-type-v",
       "q8_0",
       "--fit",
@@ -1519,7 +1519,7 @@
         }
       }
     ],
-    "comment": "Perfil opt-in para el Q6_K MTP del post de LocalLLM. Descarga tambien mmproj-F16. En 2x RTX 3090, b10228 dio salida corrupta incluso sin speculator; b10331 corrigio la compatibilidad. El benchmark instruct de 10 tareas x3 dio 26/30 contra 12/30 de ThinkingCap Q4 MTP3. El barrido corto favorecio MTP4, pero BigCodeBench-Hard sostenido expuso CUDA illegal memory access a 120k con MTP4 y MTP3. La configuracion estable 32k/MTP3 completo dos pasadas identicas de 3/8 (6/16, 37,5%) a ~50,3 t/s y queda como base. KV q8/q8 y 120k permanecen como variantes para experimentacion; K=f16 se conserva por calidad a contexto largo. split-mode tensor crashea b10228, por eso usa layer.",
+    "comment": "Perfil opt-in para el Q6_K MTP del post de LocalLLM. Descarga tambien mmproj-F16. En 2x RTX 3090, b10228 dio salida corrupta incluso sin speculator; b10331 corrigio la compatibilidad. El benchmark instruct de 10 tareas x3 dio 26/30 contra 12/30 de ThinkingCap Q4 MTP3. El barrido corto favorecio MTP4, pero BigCodeBench-Hard sostenido expuso CUDA illegal memory access a 120k con MTP4 y MTP3. La configuracion estable 32k/MTP3 completo dos pasadas identicas de 3/8 (6/16, 37,5%) a ~50,3 t/s y queda como base. La política limita ambos lados del KV a q8_0 o menor; mmproj-F16 se conserva porque es el proyector auxiliar de visión. split-mode tensor crashea b10228, por eso usa layer.",
     "minimumBinaryBuild": 10331,
     "vision": true
   },
@@ -2757,7 +2757,7 @@
       { "id": "sys-48-antirez-dsv4-q2q4-64k", "order": 150, "displayName": "[bench antirez] 64k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
       { "id": "sys-48-antirez-dsv4-q2q4-131k", "order": 151, "displayName": "[bench antirez stress] 131k · B4096 · U1024 · KV q4_0", "runtime": { "ctx": 131072, "batch": 4096, "ubatch": 1024 } },
       { "id": "sys-48-antirez-dsv4-q2q4-kv8", "order": 152, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q8_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
-      { "id": "sys-48-antirez-dsv4-q2q4-kvf16", "order": 153, "displayName": "[bench antirez stress] 32k · B4096 · U512 · KV f16", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "f16" }, "extraArgOverrides": { "--cache-type-k": "f16", "--cache-type-v": "f16" } },
+      { "id": "sys-48-antirez-dsv4-q2q4-kvf16", "order": 153, "displayName": "[bench antirez stress] 32k · B4096 · U512 · KV q8_0 (cap de política)", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "La variante histórica KV f16 queda limitada a q8_0; los resultados anteriores con f16 no son comparables." },
       { "id": "sys-48-antirez-dsv4-q2q4-64k-kv8", "order": 154, "displayName": "[bench antirez stress] 64k · B4096 · U1024 · KV q8_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 1024, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-48-antirez-dsv4-q2q4-prefill", "order": 155, "displayName": "[bench antirez prefill] 32k · B8192 · U2048 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
     ],
@@ -2793,7 +2793,7 @@
       "batch": 512,
       "ubatch": 128,
       "threads": 0,
-      "kv": "f16",
+      "kv": "q8_0",
       "flashAttn": false,
       "mlock": false,
       "mmap": true
@@ -2808,10 +2808,10 @@
     "minimumBinaryBuild": 10262,
     "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
-      { "id": "sys-bench-48-bigbang-base", "order": 150, "displayName": "[bench BigBang] 131k · sin MTP · KV f16", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware." },
-      { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV f16", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+." },
+      { "id": "sys-bench-48-bigbang-base", "order": 150, "displayName": "[bench BigBang] 131k · sin MTP · KV q8_0", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware. La variante histórica usaba KV f16 y debe repetirse para comparar." },
+      { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV q8_0", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+. KV limitado a q8_0 por política." },
       { "id": "sys-bench-48-bigbang-fast", "order": 152, "displayName": "[bench BigBang] 131k · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
-      { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV f16", "runtime": { "ctx": 196608, "kv": "f16" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
+      { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV q8_0", "runtime": { "ctx": 196608, "kv": "q8_0" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64 }, "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido conservado, pero con 64k/batch 256/ubatch 64: en 131k/batch 512 el primer prefill provoca CUDA invalid argument/illegal memory access con mmproj en esta GPU." },
       { "id": "sys-repair-48-bigbang-mtp", "order": 155, "displayName": "REPAIR - BigBang · MTP · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--temp": "0.70", "--top-p": "0.08", "--reasoning": "off", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "Copia de reparación para sys-bench-48-bigbang-mtp y sys-bench-48-bigbang-fast: conserva MTP, baja contexto/batch, usa KV q8_0 y reactiva Flash Attention. Los perfiles originales crashearon con flash off a 131k; no se sobrescriben." },
       { "id": "sys-repair-48-bigbang-base", "order": 156, "displayName": "REPAIR - BigBang · sin MTP · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--reasoning": "off", "--spec-type": null, "--spec-draft-n-max": null }, "comment": "Copia de reparación para sys-bench-48-bigbang-base: elimina MTP, baja contexto/batch y usa KV q8_0 + Flash Attention. El original crasheó con flash off a 131k; no se sobrescribe." },

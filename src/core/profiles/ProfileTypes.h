@@ -59,7 +59,7 @@ struct ModelProfile {
     QString specType;          // "" | "draft-mtp" | "draft-dspark"
     int     specDraftNMax = 0; // --spec-draft-n-max (0 = no emitir)
     QString specDraftNgl;      // --spec-draft-ngl  ("" | "all" | número de capas)
-    QString specDraftTypeK;    // --spec-draft-type-k ("" | "q8_0" | "f16"...)
+    QString specDraftTypeK;    // --spec-draft-type-k ("" | "q8_0" | "q4_0"...)
     QString specDraftTypeV;    // --spec-draft-type-v
 
     QJsonObject toJson() const;
@@ -80,7 +80,9 @@ struct RuntimePreset {
     bool mmap = true;
     bool mlock = false;
     bool contBatching = true;
-    QString cacheType = "f16";
+    // Política de perfiles: KV K/V puede ser q8_0 o menor; no ofrecer f16
+    // como valor predeterminado para una candidata nueva.
+    QString cacheType = "q8_0";
     int parallelSlots = 1;
     // Role-aware per-tensor quant. Cada entry = un spec de --override-tensor de
     // llama.cpp ("<regex>=<type>", ej "ffn_.*=Q4_K"). Mantener attention/output

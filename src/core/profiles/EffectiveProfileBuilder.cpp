@@ -137,11 +137,11 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     applyBackend(ctx.backend, args, env, result.warnings, result.blockingErrors);
     applyModel(ctx.model, ctx.catalogModel, ctx.mmprojModel, ctx.draftModel,
                ctx.binary, args, result.warnings, result.blockingErrors);
-    // Speculative decoding activo: hay draft model resuelto. Con MTP, un KV-cache
-    // cuantizado (q4_0/q8_0) colapsa el draft acceptance ~a 0 (necesita f16); ver
-    // reportes de comunidad sobre Gemma4 QAT+MTP. Forzamos f16 y avisamos.
-    // El force-f16 del KV solo aplica al spec-decoding "plano" (sin specType). Con
-    // MTP/DFlash (perfiles calibrados que fijan KV q8/q4) se respeta el KV elegido.
+    // Speculative decoding activo: el perfil puede elegir explícitamente el KV.
+    // La política del catálogo admite q8_0 o menor; no se debe elevar en silencio
+    // a f16 porque eso vuelve incomparable la candidata y aumenta el uso de VRAM.
+    // La aceptación del draft puede bajar con KV cuantizado, por lo que se avisa
+    // y se deja que el benchmark mida el costo real.
     const bool specDecoding =
         !ctx.model.draftModelId.isEmpty() && ctx.draftModel.isAvailable
         && ctx.model.specType.isEmpty();
@@ -481,11 +481,10 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
     if (!rt.cacheType.isEmpty() && rt.cacheType != "f16") {
         if (specDecoding) {
             warnings.append(QStringLiteral(
-                "Speculative decoding active: KV cache quant '%1' kills draft "
-                "acceptance; forcing f16.").arg(rt.cacheType));
-        } else {
-            addFlag(bin, "--cache-type-k", rt.cacheType, args, warnings);
+                "Speculative decoding active: se respeta KV cache quant '%1'; "
+                "puede reducir la aceptación del draft.").arg(rt.cacheType));
         }
+        addFlag(bin, "--cache-type-k", rt.cacheType, args, warnings);
     }
 
     // llama.cpp b10228+ acepta varias reglas separadas por coma en un unico

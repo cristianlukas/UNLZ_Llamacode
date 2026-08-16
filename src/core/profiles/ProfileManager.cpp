@@ -949,7 +949,7 @@ void ProfileManager::loadSystemProfiles()
         rt.mmap = ro.value("mmap").toBool(true);
         rt.mlock = ro.value("mlock").toBool(false);
         rt.contBatching = true;
-        rt.cacheType = ro.value("kv").toString(QStringLiteral("f16"));
+        rt.cacheType = ro.value("kv").toString(QStringLiteral("q8_0"));
         sysRt.append(rt);
 
         ModelProfile mp;

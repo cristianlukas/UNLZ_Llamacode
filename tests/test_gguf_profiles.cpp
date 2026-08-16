@@ -50,7 +50,7 @@ private slots:
     void builder_externalDsparkEmitsDraftAndType();
     void builder_emitsSelfContainedMtpFlags();
     void builder_dropsGemmaDraftOnOldBinary();
-    void builder_forcesF16KvWithDraft();
+    void builder_respectsKvCapWithDraft();
     void builder_appliesQwenCodingSamplingPreset();
     void builder_warnsOnManualQwenSampling();
     void builder_emitsTensorOverrides();
@@ -455,9 +455,9 @@ void CoreTests::builder_dropsGemmaDraftOnOldBinary()
     QVERIFY(!a.contains("--spec-draft-ngl"));
 }
 
-// Spec decoding activo + KV cache cuantizado → forzar f16 (no emitir el flag) y
-// avisar. Sin draft, el quant pasa normal.
-void CoreTests::builder_forcesF16KvWithDraft()
+// Spec decoding activo + KV cache cuantizado → respetar q8/q4, avisar y no
+// elevar silenciosamente a f16. Sin draft, el quant pasa normal.
+void CoreTests::builder_respectsKvCapWithDraft()
 {
     // Caso sin draft: el quant se emite.
     {
@@ -466,7 +466,7 @@ void CoreTests::builder_forcesF16KvWithDraft()
         const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
         QVERIFY(ep.effectiveArgs.contains("--cache-type-k"));
     }
-    // Caso con draft disponible: se descarta el quant y se avisa.
+    // Caso con draft disponible: se conserva el quant solicitado y se avisa.
     {
         auto ctx = makeCtx();
         ctx.runtime.cacheType = "q4_0";
@@ -475,10 +475,12 @@ void CoreTests::builder_forcesF16KvWithDraft()
         ctx.draftModel.isAvailable = true;
         ctx.draftModel.absolutePath = "C:/models/draft.gguf";
         const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
-        QVERIFY(!ep.effectiveArgs.contains("--cache-type-k"));
+        const int cacheIndex = ep.effectiveArgs.indexOf("--cache-type-k");
+        QVERIFY(cacheIndex >= 0);
+        QCOMPARE(ep.effectiveArgs.value(cacheIndex + 1), QStringLiteral("q4_0"));
         bool warned = false;
         for (const QString &w : ep.warnings)
-            if (w.contains("f16")) warned = true;
+            if (w.contains("aceptación del draft")) warned = true;
         QVERIFY(warned);
     }
 }

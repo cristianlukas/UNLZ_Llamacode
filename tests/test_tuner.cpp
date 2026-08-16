@@ -40,9 +40,9 @@ void TunerTests::paramSpec_intRange()
 
 void TunerTests::paramSpec_categorical()
 {
-    const ParamSpec p = ParamSpec::categorical("cache", {"f16", "q8_0", "q4_0"}, true);
-    QCOMPARE(p.optionCount(), 3);
-    QCOMPARE(p.optionValue(2), std::string("q4_0"));
+    const ParamSpec p = ParamSpec::categorical("cache", {"q8_0", "q4_0"}, true);
+    QCOMPARE(p.optionCount(), 2);
+    QCOMPARE(p.optionValue(1), std::string("q4_0"));
     QVERIFY(p.qualityRisk);
 }
 
@@ -62,22 +62,22 @@ void TunerTests::run_qualityGateAvoidsLowestQuant()
     TunerSettings s;
     s.maxTrials = 40; s.startupTrials = 10; s.qualityGate = 0.6; s.seed = 1234;
     std::vector<ParamSpec> space{
-        ParamSpec::categorical("cache", {"f16", "q8_0", "q4_0"}, true),
+        ParamSpec::categorical("cache", {"q8_0", "q4_0"}, true),
     };
     AutoTuner t(space, s);
 
     // Modelo sintético: el quant más bajo (índice 2 = q4_0) es el más rápido
-    // pero su calidad cae por debajo del gate. El óptimo real es f16/q8_0.
+    // pero su calidad cae por debajo del gate. El óptimo real es q8_0.
     auto eval = [](const Config &c) {
         const int idx = c.at("cache");
         TrialResult r;
         r.throughput = 100.0 + idx * 100.0;          // q4_0 el más rápido
-        r.quality = (idx == 2) ? 0.40 : 0.85;        // q4_0 rompe calidad
+        r.quality = (idx == 1) ? 0.40 : 0.85;        // q4_0 rompe calidad
         return r;
     };
 
     const Trial best = t.run(eval);
-    QVERIFY(best.config.at("cache") != 2);           // NO colapsó al peor quant
+    QVERIFY(best.config.at("cache") != 1);           // NO colapsó al peor quant
     QVERIFY(best.result.quality >= s.qualityGate);
 }
 

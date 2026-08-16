@@ -4,6 +4,12 @@ Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la confi
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY.
 
+Política vigente: los pesos del modelo principal y el KV K/V deben ser `q8_0` o
+menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias
+limitadas a `q8_0`; sus tiempos y scores anteriores no se mezclan con los nuevos.
+Los `mmproj` `F16/BF16` se conservan únicamente como proyectores auxiliares de
+visión y no representan el quant de los pesos ni del KV.
+
 ## Tabla de resultados
 
 Los guiones indican que todavía no existe una corrida comparable guardada. Los valores históricos se conservan hasta que una repetición válida los reemplace.
@@ -15,7 +21,7 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | FAST - KAT2-Coder-7-8-26 | 20/20 | 1/1 | — | 307,78 s | 20,87 s | — | 0,00 | 103,93* | HE0 histórico con daemon-crash; revalidado 3/3 tras corregir lifecycle; BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
 | FAST - KAT-Coder-7-8-26 | 20/20 | 1/1 | — | 212,69 s | 20,60 s | — | 0,00 | 113,03 | HE0 válido (13,963 s); BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
 | FAST - BigBang · MTP · top-p 0.08 | 20/20 | 1/1 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | 165,87 | HE0 válido (10,428 s); BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
-| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | HE0 infraestructura (`Connection closed`, resultado bruto 0/1); BCB calidad; repetir | 131k · MTP · texto + imagen · KV f16 |
+| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | HE0 infraestructura (`Connection closed`, resultado bruto 0/1); BCB histórico con KV f16; repetir con q8_0 | 131k · MTP · texto + imagen · KV q8_0 |
 | BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | 1/1 | — | 174,96 s | — | — | — | 61,62 | HE0 válido (12,922 s); BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
 | BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | 1/1 | — | 197,10 s | 38,24 s | — | 0,00 | 63,90 | HE0 válido (11,435 s); BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | 1/1 | — | 204,16 s | 56,93 s | — | 0,00 | 53,34 | HE0 válido (16,980 s); BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
@@ -53,6 +59,39 @@ El orden es deliberado y se aplica a cada perfil base o candidato, siempre en mo
 
 La promoción de un perfil requiere pasar HE0. HE20 separa calidad general y problemas del harness; BCB separa los casos difíciles. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
 
+## Revalidación de perfiles modificados por la política q8 — HE0 (2026-08-16)
+
+Después de limitar los pesos y el KV K/V del catálogo a `q8_0` o menor, se
+repitió el smoketest en modo headless para los 16 perfiles afectados, incluidos
+los perfiles derivados que heredan el runtime del padre. La evidencia queda en
+`benchmark-runs/HumanEval_1_tems__20260816_162242`. Estos resultados son una
+nueva línea base: no se mezclan con tiempos tomados cuando el perfil usaba
+`f16`.
+
+| Perfil | ID | HumanEval/0 | Tiempo HE0 | TPS HE0 del agente | Estado |
+|---|---|---:|---:|---:|---|
+| `[bench 48GB KAT] KV q8_0 · 262k` | `sys-bench-48-kat-f16` | 1/1 | 16,267 s | 127,43 | Válido |
+| `[bench antirez stress] 32k · B4096 · U512 · KV q8_0` | `sys-48-antirez-dsv4-q2q4-kvf16` | 1/1 | 75,781 s | — | Válido; sin tokens medibles del agente |
+| `Fable Fusion Qwen3.6-27B Q6 · MTP · visión` | `sys-48-fablefusion-q6-mtp` | 1/1 | 11,419 s | 8,62 | Válido |
+| `Fable Q6 · MTP 1 · 120k` | `sys-bench-48-fable-mtp1` | 1/1 | 12,871 s | 2,91 | Válido |
+| `Fable Q6 · MTP 3 · 120k` | `sys-bench-48-fable-mtp3` | 1/1 | 10,315 s | — | Válido; sin tokens medibles del agente |
+| `Fable Q6 · KV q8/q8 · MTP 3` | `sys-bench-48-fable-kv-q8` | 1/1 | 11,342 s | 35,37 | Válido |
+| `Fable Q6 · sin MTP · 120k` | `sys-bench-48-fable-nospec` | 1/1 | 15,261 s | 16,39 | Válido |
+| `BigBang-v1 35B-A3B Q4_K_M · visión` | `sys-48-bigbang-v1-q4km` | 1/1 | 10,349 s | 29,02 | Válido |
+| `BigBang · 131k · sin MTP · KV q8_0` | `sys-bench-48-bigbang-base` | 1/1 | 11,761 s | — | Válido; sin tokens medibles del agente |
+| `BigBang · 131k · MTP embebido · KV q8_0` | `sys-bench-48-bigbang-mtp` | 1/1 | 11,313 s | — | Válido; sin tokens medibles del agente |
+| `BigBang · 131k · MTP · B1024/U256` | `sys-bench-48-bigbang-fast` | 1/1 | 11,291 s | — | Válido; sin tokens medibles del agente |
+| `BigBang · 196k · MTP · KV q8_0` | `sys-bench-48-bigbang-long` | 0/1 | 15,260 s | 0,66 | Infraestructura: `Connection closed` y transporte sin cierre evaluable; repetir |
+| `FAST - BigBang · MTP · top-p 0.08` | `sys-bench-48-bigbang-post` | 1/1 | 11,306 s | — | Válido; sin tokens medibles del agente |
+| `REPAIR - BigBang · MTP · 64k · B256/U64` | `sys-repair-48-bigbang-mtp` | 1/1 | 11,283 s | 46,43 | Válido |
+| `REPAIR - BigBang · sin MTP · 64k · B256/U64` | `sys-repair-48-bigbang-base` | 1/1 | 18,379 s | — | Válido; sin tokens medibles del agente |
+| `REPAIR - BALANCE BigBang · MTP · 64k · B256/U64` | `sys-repair-48-bigbang-mtp-balance` | 1/1 | 12,851 s | 16,46 | Válido |
+
+`TPS HE0 del agente` es el `avgTps` reportado por el harness para esta tanda;
+cuando la respuesta fue evaluable pero no incluyó tokens de generación, se
+deja `—` y no se inventa un throughput. La variante BigBang de 196k queda
+fuera de la promoción hasta repetirla con transporte completamente cerrado.
+
 ## Candidatos derivados para medir
 
 No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y dos variantes nuevas de Laguna. Cada fila sigue HE0 → HE20 → BCB; el HE0 de esta tanda ya fue ejecutado en modo headless y sus resultados están debajo.
@@ -64,9 +103,9 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` (`sys-bench-qwen38-udq4-mtp3-kv8`) | BALANCE - Qwen3.8 UD-Q4 visión | KV q8 puede sostener mejor contexto y calidad | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` (`sys-bench-qwen38-q4km-mtp4`) | Qwen3.8-27B Q4_K_M visión | Comparar MTP4 sin cambiar quant/contexto | MTP4 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` (`sys-bench-qwen38-q5km-mtp3-64k-kv8`) | Qwen3.8-27B Q5_K_M visión | Más precisión/KV puede mejorar BCB a costa de velocidad | ctx 65k; KV q8_0 | HE0 → HE20 → BCB |
-| `[bench 48GB KAT] KV f16 · 262k` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Aislar si KV f16 mejora calidad sin penalizar el decode | KV K/V f16 | HE0 → HE20 → BCB |
+| `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
-| `[bench BigBang] 131k · sin MTP · KV f16` (`sys-bench-48-bigbang-base`) | BALANCE - BigBang MTP | Aislar si el fallo pertenece al MTP o al harness/modelo | MTP desactivado | HE0 → HE20 → BCB |
+| `[bench BigBang] 131k · sin MTP · KV q8_0` (`sys-bench-48-bigbang-base`) | BALANCE - BigBang MTP | Aislar si el fallo pertenece al MTP o al harness/modelo | MTP desactivado; KV q8_0 | HE0 → HE20 → BCB |
 | `[bench 48GB MAX-Q] MTP4 · 131k · visión` (`sys-bench-48-tc-mtp-131k`) | BALANCE - ThinkingCap Qwen3.6 MTP4 | Mantener MTP4 y reducir contexto para evitar bloqueo sostenido | ctx 131k; MTP4 | HE0 → HE20 → BCB |
 | `[bench Laguna] Q2 · 64k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-64k-b1024`) | BALANCE - Laguna S 2.1 | Reducir KV y batch para salir del bucle de evaluación | ctx 65k; B1024/U256 | HE0 → HE20 → BCB |
 | `[bench Laguna] Q2 · 100k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-100k-b1024`) | BALANCE - Laguna S 2.1 | Aislar batch como causa manteniendo el contexto histórico | B1024/U256; ctx 100k | HE0 → HE20 → BCB |
@@ -84,9 +123,9 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` | 1/1 | 12,925 s | 57,87 | Válido |
 | `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` | 1/1 | 12,968 s | 45,38 | Válido |
 | `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` | 1/1 | 14,982 s | 52,48 | Válido |
-| `[bench 48GB KAT] KV f16 · 262k` | 0/1 | 13,930 s | 104,98 | HE0 evaluable; calidad fallida |
+| `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` | — | 58,638 s | — | Infraestructura: server-load |
-| `[bench BigBang] 131k · sin MTP · KV f16` | — | 12,470 s | — | Infraestructura: `Connection closed` (bruto 0/1) |
+| `[bench BigBang] 131k · sin MTP · KV q8_0` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
 | `[bench 48GB MAX-Q] MTP4 · 131k · visión` | 1/1 | 11,498 s | 58,02 | Válido |
 | `[bench Laguna] Q2 · 64k · B1024 · U256` | 1/1 | 15,004 s | 51,46 | Válido |
 | `[bench Laguna] Q2 · 100k · B1024 · U256` | 1/1 | 13,961 s | 51,99 | Válido |
@@ -175,14 +214,14 @@ extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --top-k 20 --min-p 0.0 --repe
 ```text
 tablaName: BALANCE - BigBang · MTP · top-p 0.08
 launchId: sys-bench-48-bigbang-mtp
-internalName: [bench BigBang] 131k · MTP embebido · KV f16
+internalName: [bench BigBang] 131k · MTP embebido · KV q8_0
 backendProfileId: sysbe-sys-bench-48-bigbang-mtp
 modelProfileId: sysmodel-sys-bench-48-bigbang-mtp
 runtimePresetId: sysrt-sys-bench-48-bigbang-mtp
 agentProfileId: agent-maximo
-runtime: ctx=131072, batch=512, ubatch=128, threads=0, gpuLayers=999, parallelSlots=1, cache=f16, flashAttention=off, contBatching=on, mmap=on, mlock=off
+runtime: ctx=131072, batch=512, ubatch=128, threads=0, gpuLayers=999, parallelSlots=1, cache=q8_0, flashAttention=off, contBatching=on, mmap=on, mlock=off
 mmprojId: 24152073-986a-5470-b717-a70861d14883
-extraArgs: --flash-attn off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --parallel 1 --reasoning on --spec-draft-n-max 5 --spec-type draft-mtp
+extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --parallel 1 --reasoning on --spec-draft-n-max 5 --spec-type draft-mtp
 WARNING: el nombre visible de la tabla no coincide con el nombre interno ni con top-p 0.08. No publicar esta fila como definitiva hasta resolver la identidad.
 ```
 

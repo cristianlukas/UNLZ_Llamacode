@@ -64,6 +64,34 @@ Antes de comparar una candidata con un perfil existente, registrar y conservar:
 No se deben comparar TPS, tiempo o calidad de suites distintas. Tampoco se
 deben comparar filas tomadas con un harness diferente sin marcar el cambio.
 
+## Política de cuantización
+
+Para las candidatas de este catálogo rige una cota explícita:
+
+- el KV cache K/V debe ser `q8_0` o menor (`q8_0`, `q6`, `q5`, `q4`, etc.);
+- el quant de los pesos del modelo principal debe ser `Q8` o menor;
+- no se ofrecen variantes de modelo o KV `f16`, `bf16` ni superiores a `Q8`;
+- los `mmproj`/projectors auxiliares `F16` o `BF16` de perfiles multimodales no
+  cuentan como quant de los pesos ni como KV: se conservan cuando son necesarios
+  para texto + imagen, audio u otra modalidad.
+
+Esta regla es de comparabilidad y de presupuesto de memoria, no una afirmación
+de que `f16` siempre sea peor. Si un resultado histórico fue obtenido con KV
+`f16`, queda archivado como antecedente y debe repetirse con el perfil limitado a
+`q8_0` antes de usarlo para elegir un ganador.
+
+Al crear o duplicar un perfil:
+
+1. Verificar el quant del GGUF principal, no sólo el nombre visible del perfil.
+2. Verificar `runtime.kv` y los argumentos efectivos
+   `--cache-type-k/--cache-type-v`.
+3. Verificar también el KV del draft si hay speculative decoding.
+4. Si aparece `f16`, `bf16` o un quant superior a `Q8`, bajar a `q8_0` o a un
+   valor menor, documentar el cambio y volver a ejecutar HE0 → HE20 → BCB.
+
+El `mmproj` puede seguir siendo F16/BF16 como excepción auxiliar; debe anotarse
+en la configuración para que no se confunda con el quant del modelo principal.
+
 ### Edición segura de perfiles
 
 Los perfiles se editan con LlamaCode completamente cerrada. La aplicación puede
