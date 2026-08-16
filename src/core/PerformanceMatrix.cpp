@@ -13,7 +13,8 @@ QVariantList PerformanceMatrix::candidates(const QVariantMap &hardware,
     const int gpuCount = gpuCountOk ? parsedGpuCount
                                     : hardware.value(QStringLiteral("gpus")).toList().size();
     QStringList modes{QStringLiteral("layer")};
-    if (gpuCount > 1 && hardware.value(QStringLiteral("p2pAvailable"), true).toBool())
+    // Topología ausente = capacidad desconocida: conservar layer como fallback.
+    if (gpuCount > 1 && hardware.value(QStringLiteral("p2pAvailable"), false).toBool())
         modes << QStringLiteral("tensor");
 
     const QStringList kvs = target.compare(QStringLiteral("quality"), Qt::CaseInsensitive) == 0

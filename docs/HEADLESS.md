@@ -247,5 +247,6 @@ El gate compila y ejecuta `test_engineering_workflows`,
 `test_task_security_policy`, `test_tasks`, `test_appcontroller` y
 `test_control_api`, y luego ejecuta el smoke HTTP del daemon. Sin `-Build`,
 reutiliza los binarios Debug ya compilados. Todos los procesos usan
-`QT_QPA_PLATFORM=offscreen`, perfiles temporales y un puerto localhost
-efímero; no modifican el perfil del usuario.
+`QT_QPA_PLATFORM=offscreen` en los tests Qt/QML; el daemon se ejecuta sin esa
+variable porque no carga QML. Ambos usan perfiles temporales y un puerto
+localhost efímero; no modifican el perfil del usuario.

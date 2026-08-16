@@ -4,6 +4,7 @@ $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $buildDir = Join-Path $root "build_tests"
 $qtBin = "C:\Qt\6.8.3\msvc2022_64\bin"
+$oldQpa = $env:QT_QPA_PLATFORM
 $env:QT_QPA_PLATFORM = "offscreen"
 $env:PATH = "$qtBin;$env:PATH"
 
@@ -37,7 +38,11 @@ foreach ($name in $tests) {
     if ($LASTEXITCODE -ne 0) { throw "$name falló con código $LASTEXITCODE" }
 }
 
+# El daemon ya es headless y no carga QML; QT_QPA_PLATFORM=offscreen puede
+# hacer que Qt GUI termine antes de abrir ControlApi. Se aísla del gate QML.
+$env:QT_QPA_PLATFORM = $null
 & powershell -NoProfile -ExecutionPolicy Bypass -File `
     (Join-Path $PSScriptRoot "headless_engineering_workflows.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Falló el smoke HTTP del daemon" }
+if ($null -eq $oldQpa) { $env:QT_QPA_PLATFORM = $null } else { $env:QT_QPA_PLATFORM = $oldQpa }
 Write-Host "OK: gate headless de workflows completo"
