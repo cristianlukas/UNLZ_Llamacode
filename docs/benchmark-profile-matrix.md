@@ -2,7 +2,7 @@
 
 Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek y los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
-El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY.
+El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
 Política vigente: los pesos del modelo principal y el KV K/V deben ser `q8_0` o
 menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias
@@ -53,11 +53,11 @@ La reparación de BigBang es deliberadamente conservadora: primero demuestra est
 
 El orden es deliberado y se aplica a cada perfil base o candidato, siempre en modo headless y con el mismo harness, agente, semilla y criterios de reparación:
 
-1. **HumanEval/0 (smoketest):** ejecutar una sola tarea. Verifica que el modelo, backend, plantilla, MTP/mmproj y transporte funcionen; registra `Calidad HE0` y `TPS HE0`. Un `server-load`, `server-crash`, `timeout`, conexión cerrada o respuesta sin cierre es un fallo de infraestructura, no calidad cero.
-2. **HumanEval/20:** sólo después de HE0 válido. Ejecutar las 20 tareas para medir calidad del perfil y del harness; registrar score, tiempo total y TPS. Las repeticiones reemplazan el valor histórico únicamente cuando terminan con cierre evaluable.
-3. **BigCodeBench/8:** después de HE20 válido —o como repetición explícita de una fila ya marcada— ejecutar las 8 tareas difíciles para medir tool-calls, reparaciones, loops y estabilidad sostenida; registrar score, tiempo total y TPS.
+1. **HumanEval/0 (smoketest):** ejecutar una sola tarea. Verifica que el modelo, backend, plantilla, MTP/mmproj y transporte funcionen; registra `Calidad HE0` y `TPS HE0`. Un `server-load`, `server-crash`, `timeout`, conexión cerrada o respuesta sin cierre es un fallo de infraestructura, no calidad cero, y bloquea las etapas siguientes de ese perfil.
+2. **HumanEval/20:** sólo después de HE0 válido para la misma configuración efectiva. Ejecutar las 20 tareas para medir calidad del perfil y del harness; registrar score, tiempo total y TPS. Si HE0 falló, no se ejecuta HE20: se investiga, se corrige y se repite HE0.
+3. **BigCodeBench/8:** sólo después de HE0 y HE20 válidos —o como repetición explícita de una fila ya marcada— ejecutar las 8 tareas difíciles para medir tool-calls, reparaciones, loops y estabilidad sostenida; registrar score, tiempo total y TPS.
 
-La promoción de un perfil requiere pasar HE0. HE20 separa calidad general y problemas del harness; BCB separa los casos difíciles. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
+La promoción de un perfil requiere pasar HE0. Un fallo de HE0 exige diagnóstico antes de cualquier HE20/BCB. HE20 separa calidad general y problemas del harness; BCB separa los casos difíciles. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
 
 ## Revalidación de perfiles modificados por la política q8 — HE0 (2026-08-16)
 

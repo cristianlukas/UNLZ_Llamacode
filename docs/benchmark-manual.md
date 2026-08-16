@@ -30,16 +30,18 @@ harness/agente
         ↓
 HE0 — smoketest de funcionamiento
         ↓
-HE20 — primer test de calidad comparable
+HE20 — primer test de calidad comparable (sólo si HE0=1/1 válido)
         ↓
-BCB/8 — test final de casos difíciles
+BCB/8 — test final de casos difíciles (sólo si HE0 y HE20 son válidos)
         ↓
 decisión FAST / BALANCED / QUALITY
 ```
 
-No se debe ejecutar HE20 sobre una candidata que no pasó HE0. Tampoco se debe
-usar BCB para rescatar una candidata que todavía tiene fallas de transporte,
-arranque o persistencia.
+HE0 es una compuerta dura por perfil y configuración efectiva. Si falla, hay
+que investigar a fondo la causa raíz, conservar logs/JSON, corregir o aislar
+un único cambio y repetir HE0 desde un workspace limpio. No se ejecuta HE20 ni
+BCB de ese perfil mientras HE0 no sea válido; tampoco se usa BCB para rescatar
+una candidata con fallas de transporte, arranque o persistencia.
 
 ## Qué debe quedar congelado
 
@@ -289,7 +291,7 @@ casos ejercitan más planificación, edición de archivos, imports, llamadas de
 herramientas, loops, casos borde y comportamiento sostenido.
 
 Se ejecutan los ocho casos con el mismo harness y el mismo criterio de validez.
-Todos los perfiles que tengan HE20 válido deben pasar por BCB cuando se esté
+Todos los perfiles que tengan HE0 y HE20 válidos deben pasar por BCB cuando se esté
 armando una tabla definitiva; no sólo el perfil que parezca más rápido.
 
 Registrar `BigCodeBench/8`, tiempo total BCB, TPS BCB, tareas fallidas, logs,
