@@ -1476,6 +1476,8 @@ Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, v
 
 Evaluaciones de modelos candidatas:
 
+El procedimiento completo y reutilizable para comparar un nuevo modelo, binario, perfil o harness está en el [Manual de benchmarking](docs/benchmark-manual.md). La matriz de perfiles y sus resultados históricos se mantiene en [docs/benchmark-profile-matrix.md](docs/benchmark-profile-matrix.md).
+
 - [BigBang-v1 Q4_K_M (2026-08-10)](docs/research/bigbang-v1-q4km.md): perfil
   experimental con mmproj bf16 y cuatro variantes de benchmark para comparar
   contra KAT-Coder. El MTP está embebido en el GGUF y se prueba con

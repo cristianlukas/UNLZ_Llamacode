@@ -1,0 +1,387 @@
+# Manual de benchmarking de modelos locales
+
+## Objetivo
+
+Este manual define el procedimiento oficial para comparar una combinación de:
+
+- modelo y archivo GGUF;
+- binario/runtime de `llama-server`;
+- perfil de lanzamiento de LlamaCode;
+- harness y perfil de agente;
+- suite de evaluación.
+
+El objetivo no es encontrar un ganador universal. Es determinar si una candidata
+supera a las existentes en su caso de uso: `FAST`, `BALANCED` o `QUALITY`.
+
+Una comparación sólo es válida cuando se mantiene constante el resto de la
+cadena. Si cambia el modelo, el binario, el perfil o el harness, se debe tratar
+como una nueva candidata y repetir el protocolo completo.
+
+## Regla principal: la escalera de validación
+
+Cada candidata debe avanzar por esta secuencia:
+
+```text
+LlamaCode app/configuración
+        ↓
+arranque headless + servidor
+        ↓
+harness/agente
+        ↓
+HE0 — smoketest de funcionamiento
+        ↓
+HE20 — primer test de calidad comparable
+        ↓
+BCB/8 — test final de casos difíciles
+        ↓
+decisión FAST / BALANCED / QUALITY
+```
+
+No se debe ejecutar HE20 sobre una candidata que no pasó HE0. Tampoco se debe
+usar BCB para rescatar una candidata que todavía tiene fallas de transporte,
+arranque o persistencia.
+
+## Qué debe quedar congelado
+
+Antes de comparar una candidata con un perfil existente, registrar y conservar:
+
+1. Máquina: GPU, VRAM, RAM, driver, versión de Windows, límite de potencia y
+   condiciones térmicas relevantes.
+2. Código: commit de LlamaCode, ejecutable usado y versión/build del binario de
+   `llama-server`.
+3. Modelo: ruta, nombre exacto, tamaño, hash si está disponible, quant,
+   `mmproj`, drafter/MTP y modalidades habilitadas.
+4. Perfil: contexto, batch, ubatch, threads, GPU layers, parallel slots,
+   tensor split, overrides, CPU-MoE, KV cache, flash attention, mmap/mlock,
+   cont-batching y todos los flags efectivos.
+5. Sampling: `temp`, `top-p`, `top-k`, `min-p`, repeat/presence penalty y
+   `n-predict`.
+6. Harness: suite, versión, perfil de agente, herramientas, formato de
+   salida, grader y reglas de limpieza.
+7. Ejecución: fecha/hora, timeout, cantidad de pasadas, seed si aplica y
+   identificador de la corrida.
+
+No se deben comparar TPS, tiempo o calidad de suites distintas. Tampoco se
+deben comparar filas tomadas con un harness diferente sin marcar el cambio.
+
+### Edición segura de perfiles
+
+Los perfiles se editan con LlamaCode completamente cerrada. La aplicación puede
+volver a guardar el catálogo al cerrarse y sobrescribir una edición realizada
+mientras estaba abierta.
+
+Procedimiento:
+
+1. Cerrar la aplicación y confirmar que no quedan procesos de LlamaCode ni
+   `llama-server` de una corrida anterior.
+2. Duplicar el perfil existente; no modificar el histórico que sirve de control.
+3. Cambiar sólo los parámetros que se quieren estudiar y documentar el motivo.
+4. Abrir la aplicación o el daemon headless.
+5. Verificar el comando efectivo en la vista previa y en `server.log`.
+6. Ejecutar HE0 antes de iniciar cualquier serie larga.
+
+Una candidata debe conservar el nombre del perfil base más un sufijo que
+identifique el cambio, por ejemplo `BALANCE - BigBang MTP - KVq8 candidato`.
+
+## Componentes y responsabilidades
+
+### LlamaCode app
+
+Orquesta el catálogo de perfiles, la creación y detención del servidor, el
+estado de la corrida, las métricas y la persistencia de resultados. La app no
+reemplaza al grader: un servidor que responde no implica que la solución sea
+correcta.
+
+### `llama-server` y backend
+
+Cargan el modelo y exponen la API de inferencia. Sus logs son la fuente para
+diagnosticar carga, CUDA, VRAM, MTP, CPU-MoE, cierres inesperados y tiempos
+nativos. La ocupación de VRAM por sí sola no es una métrica de calidad ni
+garantiza mayor velocidad: parte del modelo puede estar en RAM o distribuida
+entre GPUs de forma intencional.
+
+### Harness y agente
+
+Preparan la tarea, envían el prompt, ejecutan las herramientas necesarias,
+escriben el artefacto esperado y llaman al grader. El harness debe guardar
+eventos, errores, timestamps, archivos producidos y resultado por tarea.
+
+Para HumanEval, el artefacto debe ser específico por tarea, por ejemplo
+`solution_<task-id>.py`. El grader debe leer ese archivo y no un archivo residual
+de otra tarea. Cada pasada comienza con un workspace limpio.
+
+### Suites
+
+- `HumanEval/0` (`HE0`): un único caso, usado como smoketest.
+- `HumanEval/20` (`HE20`): veinte casos, primera medición de calidad comparable.
+- `BigCodeBench/8` (`BCB`): ocho casos más complejos, medición final para
+  diferenciar modelos que empatan en HE20.
+
+## Preparación de una corrida headless
+
+El modo headless evita depender del layout o del estado visual de la ventana.
+El flujo recomendado es:
+
+1. Compilar y verificar el ejecutable Debug candidato de este proyecto:
+   `build/Debug/LlamaCode.exe`.
+2. Iniciar el daemon headless con el método documentado por el proyecto.
+3. Confirmar que la API de control responde en `http://127.0.0.1:8765` y que
+   `/health` está disponible.
+4. Invocar `launchMenu()` y esperar `ready=true`.
+5. Confirmar el nombre, la ruta del modelo y el comando efectivo del perfil.
+6. Resolver las suites por nombre desde `customBenchmarks`; no copiar IDs de
+   una máquina o corrida sin comprobar que corresponden a la suite actual.
+7. Seleccionar todos los perfiles de control y candidatas del mismo caso de
+   uso.
+8. Ejecutar una sola etapa a la vez: HE0, luego HE20 y finalmente BCB.
+
+Ejemplo mínimo de consulta desde PowerShell:
+
+```powershell
+$base = "http://127.0.0.1:8765"
+
+function Invoke-Control($method, $args) {
+    $body = @{ method = $method; args = $args } | ConvertTo-Json -Depth 20
+    Invoke-RestMethod "$base/invoke" -Method Post -ContentType "application/json" -Body $body
+}
+
+function Get-Prop($name) {
+    (Invoke-RestMethod "$base/prop?name=$name").value
+}
+
+Invoke-Control "launchMenu" @{}
+Get-Prop "ready"
+Get-Prop "customBenchmarks"
+Get-Prop "benchmarkRunning"
+Get-Prop "benchmarkStatus"
+```
+
+La forma exacta de `startCustomBenchmark` puede variar entre versiones; antes
+de ejecutar se deben inspeccionar sus argumentos y usar los IDs devueltos por
+la app. La corrida debe guardar el directorio de resultados y los logs, no sólo
+la tabla resumida de la interfaz.
+
+Ubicaciones habituales en Windows:
+
+- resultados: `%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`;
+- servidor: `%LOCALAPPDATA%\LlamaCode\LlamaCode\logs\server.log`;
+- agente/harness: `%LOCALAPPDATA%\LlamaCode\LlamaCode\logs\agent.log` y
+  `agent.md`;
+- eventos de agente: workspace de la tarea, incluyendo `.llamacode` cuando
+  corresponda.
+
+## Etapa 1 — HE0: smoketest
+
+### Propósito
+
+HE0 responde rápidamente si la cadena completa funciona:
+
+```text
+perfil → carga del modelo → servidor → conexión → prompt → agente
+→ archivo de salida → grader
+```
+
+También permite medir una velocidad preliminar sin consumir una corrida HE20.
+
+### Criterio de aprobación
+
+Una candidata pasa HE0 sólo si:
+
+- obtiene `1/1`;
+- el transporte termina normalmente;
+- el servidor carga el modelo y permanece disponible durante la tarea;
+- no hay `server-load`, `server-crash`, `connection closed`, watchdog,
+  timeout ni artefacto inválido;
+- el grader lee el archivo generado por esa tarea y lo aprueba.
+
+Un `0/1` causado por daemon caído, conexión cerrada o archivo no entregado es
+una falla de infraestructura, no una medición de inteligencia. Se registra como
+tal y la candidata queda fuera de HE20 hasta corregirla.
+
+### Datos que se registran
+
+Registrar `HumanEval/0`, tiempo total HE0, TPS HE0, `failureKind`, intentos de
+reparación, uso de RAM/VRAM y el comando efectivo. Indicar si el TPS es nativo
+de `llama-server` o una estimación del agente; no mezclar ambas métricas sin
+etiquetarlas.
+
+### Si falla
+
+1. Guardar los logs y el JSON de la corrida.
+2. Clasificar la falla: carga, crash, timeout, transporte, harness/grader o
+   calidad.
+3. Comparar el comando efectivo con el perfil histórico que sí funcionó.
+4. Duplicar el perfil y realizar un solo cambio controlado.
+5. Volver a ejecutar HE0 desde un workspace limpio.
+6. Recién cuando pase, habilitarla para HE20.
+
+## Etapa 2 — HE20: first test de calidad
+
+### Propósito
+
+HE20 es la primera prueba de calidad estadísticamente útil para esta matriz.
+Se ejecutan los veinte casos con el mismo harness, agente, suite y reglas de
+limpieza para todos los perfiles.
+
+### Criterio de validez
+
+Una corrida HE20 es comparable cuando los veinte casos fueron procesados y el
+transporte, el daemon y el grader finalizaron normalmente. El resultado puede
+ser `19/20` o menor y seguir siendo una medición de calidad válida. En cambio,
+`0/20` con conexión cerrada, crash o timeout no debe interpretarse como calidad
+del modelo.
+
+Registrar:
+
+- `HumanEval/20`;
+- tiempo total HE20;
+- TPS HE20, con su origen claramente identificado;
+- primer resultado y resultado final después de reintentos;
+- tareas fallidas y razón de cada una;
+- número de reparaciones del perfil/harness;
+- estado de infraestructura.
+
+### Política de reintentos
+
+- Si la ejecución es válida pero el resultado es bajo, repetir una vez para
+  medir variabilidad antes de cambiar parámetros.
+- Si la falla es reproducible, crear una candidata derivada y conservar la
+  original como control.
+- Si hubo transporte roto, volver primero a HE0; no usar un reintento HE20
+  roto como evidencia de calidad.
+- Después de cualquier cambio en perfil, binario o harness, repetir HE0 y luego
+  HE20 desde cero.
+
+## Etapa 3 — BCB/8: final test de casos difíciles
+
+### Propósito
+
+BCB es la prueba final para distinguir candidatas que empatan en HE20. Sus
+casos ejercitan más planificación, edición de archivos, imports, llamadas de
+herramientas, loops, casos borde y comportamiento sostenido.
+
+Se ejecutan los ocho casos con el mismo harness y el mismo criterio de validez.
+Todos los perfiles que tengan HE20 válido deben pasar por BCB cuando se esté
+armando una tabla definitiva; no sólo el perfil que parezca más rápido.
+
+Registrar `BigCodeBench/8`, tiempo total BCB, TPS BCB, tareas fallidas, logs,
+reintentos y estado del servidor. Si BCB termina con transporte inválido, se
+anota como infraestructura y se repite después de un HE0, no como `0/8` de
+inteligencia.
+
+## Métricas y tabla oficial
+
+La tabla de trabajo debe tener una fila por perfil y conservar también la
+configuración completa:
+
+| Perfil | HumanEval/0 | Tiempo HE0 | TPS HE0 | HumanEval/20 | Tiempo HE20 | TPS HE20 | BigCodeBench/8 | Tiempo BCB | TPS BCB | Estado | Configuración |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| Candidata o control | Pendiente | — | — | Pendiente | — | — | Pendiente | — | — | Pendiente | commit, binario, modelo, contexto, MTP, modalidades, quant, flags, harness |
+
+La configuración debe permitir reconstruir el comando. Como mínimo incluye:
+
+```text
+modelo/GGUF + hash | binario/commit | contexto | batch/ubatch
+GPU layers | threads | parallel slots | cache K/V | flash/mmap/mlock
+tensor split/overrides/CPU-MoE | drafter/MTP | modalidades
+temp/top-p/top-k/min-p/penalties | agente/harness/suite
+timeout/passes | fecha y corrida
+```
+
+### Tiempo y TPS
+
+- `Tiempo HE0`, `Tiempo HE20` y `Tiempo BCB` son tiempos totales de la etapa,
+  desde el inicio hasta el cierre de la evaluación.
+- `TPS HE0`, `TPS HE20` y `TPS BCB` deben provenir siempre de la misma fuente
+  dentro de una comparación. Si falta el TPS nativo, guardar la estimación del
+  agente en una columna o nota separada.
+- El TPS no reemplaza a la calidad. Una respuesta rápida que no entrega un
+  artefacto calificable no es un resultado FAST válido.
+
+## Decisión por caso de uso
+
+### FAST
+
+Prioriza tiempo y TPS, pero con un piso de calidad acordado antes de medir. Un
+perfil no puede promocionarse como FAST si gana velocidad por entregar menos
+soluciones o por fallar el transporte. HE0 debe ser estable y HE20/BCB deben
+superar el piso definido para el uso.
+
+### BALANCED
+
+Busca el mejor compromiso entre calidad, tiempo, TPS y estabilidad. Primero se
+descartan resultados inválidos; luego se prioriza calidad y se usa tiempo/TPS
+para desempatar entre perfiles cercanos. Un perfil que falla BCB de forma
+repetible no debe declararse equilibrado sólo porque obtuvo `20/20` en HE20.
+
+### QUALITY
+
+Prioriza HE20, BCB y confiabilidad. Puede aceptar menor TPS, mayor tiempo,
+contexto grande o mayor uso de RAM/CPU si la configuración es estable y el
+resultado justifica el costo.
+
+### Regla de promoción
+
+Para declarar que una candidata supera a un control existente:
+
+1. Debe pasar HE0.
+2. Debe tener HE20 válido y superar el umbral de calidad del caso de uso.
+3. Debe tener BCB válido si la decisión se presenta como definitiva.
+4. Debe compararse con el control más cercano, en la misma máquina, suite,
+   harness y configuración de medición.
+5. Si la diferencia es pequeña, repetir la etapa o registrar la variabilidad
+   antes de declarar un ganador.
+
+El resultado esperado es una frontera de Pareto, no necesariamente un único
+perfil: uno puede ser el más rápido, otro el más inteligente y otro el más
+estable para contextos largos.
+
+## Diagnóstico de fallas
+
+| Síntoma | Interpretación inicial | Acción |
+|---|---|---|
+| `server-load` | Modelo, binario, ruta o flags no cargan | Verificar catálogo, ruta, comando y `server.log`; repetir HE0 |
+| `server-crash` | Backend/CUDA/recursos o ciclo de vida | Conservar logs, duplicar perfil, cambiar un parámetro de recursos y repetir HE0 |
+| `connection closed` | Transporte o daemon terminó antes del grader | No contar como calidad; limpiar y repetir HE0 |
+| timeout o sin progreso | Stagnación, tarea bloqueada o watchdog | Revisar eventos, timeout y progreso; cancelar limpiamente y correr de nuevo |
+| artefacto inválido | Harness, prompt, formato o workspace | Revisar nombre del archivo, grader y limpieza por tarea |
+| resultado válido bajo | Calidad o sampling | Repetir una vez; sólo luego evaluar cambios de perfil |
+
+No se deben aumentar timeouts indefinidamente para ocultar un bloqueo. Un
+timeout más largo es correcto sólo cuando los logs muestran progreso real y el
+caso necesita más tiempo.
+
+## Runbook completo para una nueva candidata
+
+1. Registrar modelo, binario, perfil, harness, agente y caso de uso.
+2. Duplicar el control más cercano con la aplicación cerrada.
+3. Abrir LlamaCode/daemon y verificar el comando efectivo.
+4. Ejecutar HE0 para todas las candidatas y controles.
+5. Separar las filas válidas de las fallas de infraestructura.
+6. Corregir o duplicar las candidatas fallidas y repetir HE0.
+7. Ejecutar HE20 para todas las que tengan HE0 válido.
+8. Diagnosticar y repetir cualquier HE20 inválido; conservar el primer y el
+   último resultado.
+9. Ejecutar BCB para todos los perfiles con HE20 válido.
+10. Completar la tabla con calidad, tiempos, TPS, estado y configuración.
+11. Comparar cada candidata con su control FAST, BALANCED o QUALITY más cercano.
+12. Promocionar sólo después de validar la etapa que sustenta la decisión y
+    archivar los JSON/logs de evidencia.
+13. Actualizar la matriz y este manual si cambia el harness, el esquema de
+    resultados o el ciclo de vida del daemon.
+
+## Evidencia y trazabilidad
+
+Cada corrida debe conservar:
+
+- JSON bruto del benchmark y resultado por tarea;
+- `server.log`, logs del agente y eventos del harness;
+- comando efectivo del servidor;
+- snapshot de configuración completa;
+- commit/build y hash del modelo cuando sea posible;
+- motivo de cada cambio, reparación, cancelación o descarte.
+
+Los resultados históricos no se sobrescriben. Si se corrige un perfil o el
+harness, se crea una nueva corrida con fecha/ID y se marca explícitamente que
+no es comparable con la anterior. La tabla puede mostrar el resultado vigente,
+pero el archivo bruto debe permitir reconstruir cómo se obtuvo.

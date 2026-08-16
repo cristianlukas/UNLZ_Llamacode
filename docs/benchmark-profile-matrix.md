@@ -2,6 +2,8 @@
 
 Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek y los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
+El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY.
+
 ## Tabla de resultados
 
 Los guiones indican que todavía no existe una corrida comparable guardada. Los valores históricos se conservan hasta que una repetición válida los reemplace.
