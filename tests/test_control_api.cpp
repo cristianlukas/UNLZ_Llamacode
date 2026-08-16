@@ -8,6 +8,7 @@
 #include <QTcpServer>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStandardPaths>
 #include "core/ControlApi.h"
 #include "AppController.h"
 
