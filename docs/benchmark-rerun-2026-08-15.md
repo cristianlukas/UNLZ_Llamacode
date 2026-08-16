@@ -59,10 +59,10 @@ crash o timeout no se consideran mediciones de calidad.
 | Laguna S 2.1 118B-A8B Q2 | 20/20 | 204,16 s |
 | Qwen3.8 UD-Q4 visión | 20/20 | 269,96 s |
 | FAST-KAT-Coder-7-8-26 | 20/20 | 212,69 s |
-| FAST-BigBang MTP top-p 0.08 | 1/20 | 344,57 s |
+| FAST-BigBang MTP top-p 0.08 (copia local antigua) | — | No comparable: conserva la configuración anterior |
 | ThinkingCap Qwen3.6-27B MTP4 | 20/20 | 174,96 s |
-| DeepSeek Fusion leloch | 1/20 | 2231,29 s |
-| BigBang MTP top-p 0.08 | 1/20 | 395,65 s |
+| DeepSeek Fusion leloch | 20/20 | 817,61 s |
+| BigBang MTP top-p 0.08 | 20/20 | 277,00 s |
 | Qwen3.8 UD-Q4 MTP4 | 20/20 | 332,12 s |
 | Qwen3.8-27B Q4_K_M visión | — | Sin medición válida |
 | Qwen3.8-27B Q5_K_M visión | — | Sin medición válida |
@@ -166,10 +166,31 @@ compatible Flash off/KV f16 y reducir el batch.
 La suite automatizada final fue `tests.bat Debug`: **52/52 pruebas aprobadas**.
 También se generó y verificó `build/Debug/LlamaCode.exe`.
 
+## HumanEval/20 definitivo con el harness corregido
+
+El 2026-08-15 se repitieron aisladamente, en modo `--headless`, los dos perfiles
+canónicos cuyos 1/20 habían sido producidos por la sobrescritura de
+`solution.py`. Cada perfil tuvo su propio daemon, servidor y workspace.
+
+| Perfil | HumanEval/20 | Tiempo | Reparaciones | Estabilidad |
+|---|---:|---:|---:|---:|
+| BigBang MTP top-p 0.08 | 20/20 | 277,00 s | 0 | 100% |
+| DeepSeek Fusion leloch | 20/20 | 817,61 s | 0 | 100% |
+
+Evidencia persistida:
+
+```text
+%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs\HumanEval_20_tems__20260815_205335
+%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs\HumanEval_20_tems__20260815_205909
+```
+
+El duplicado local `FAST-BigBang-131k-MTP-top-p-0.08` no reemplaza esta medición:
+conserva Flash Attention, KV q8 y B4096/U1024 de la configuración antigua. Debe
+considerarse obsoleto frente al perfil de sistema canónico ya corregido, no una
+tercera variante comparable.
+
 ## Pendientes
 
 - Repetir Qwen3.8-27B Q4_K_M visión y Q5_K_M visión en una tanda aislada.
 - Repetir los perfiles que quedaron después de Laguna, preferentemente uno por
   uno para que un crash no cancele la cola completa.
-- Repetir HumanEval/20 completo con el harness corregido para reemplazar los
-  registros históricos 1/20 de BigBang y DeepSeek por mediciones comparables.
