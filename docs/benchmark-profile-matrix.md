@@ -14,7 +14,7 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | FAST - KAT-Coder-7-8-26 | 20/20 | — | 212,69 s | 20,60 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
 | FAST - BigBang · MTP · top-p 0.08 | 20/20 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
 | BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | BCB calidad; 2 reparaciones y anti-loop; el ID interno corresponde a MTP embebido KV f16 | 131k · MTP · texto + imagen · KV f16 |
-| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | 174,96 s | — | — | — | BCB pendiente | 131k · MTP4 · texto + imagen · Q4_K_M |
+| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | 174,96 s | — | — | — | BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
 | BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | 197,10 s | — | — | — | BCB pendiente | 196k · MTP · texto + imagen · Q4_K_M |
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | 204,16 s | — | — | — | BCB pendiente | 100k · texto · Q2 |
 | QUALITY - DeepSeek Fusion leloch | 20/20 | — | 852,31 s | — | 9,15 | — | HE20 repetido válido; BCB pendiente | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
