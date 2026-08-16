@@ -503,6 +503,9 @@ public:
     static QVariantList benchmarkBestModelosQualityForTest(const QVariantList &results,
                                                             const QVariantList &speedCandidates);
     static bool benchmarkErrorIsInfrastructureForTest(const QString &message);
+    static bool benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCount,
+                                                          int declaredTaskCount,
+                                                          bool transportFailure);
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).
     static QString installRootForExePath(const QString &exePath);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,

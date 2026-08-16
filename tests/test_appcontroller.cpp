@@ -116,6 +116,7 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkRestartErrorsAreInfrastructure();
+    void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkUsesOneArtifactPerTask();
     void benchmarkStreamingCountsSnapshotsOnce();
     void concurrencyBenchmarkSettingsClampBounds();
@@ -1458,6 +1459,15 @@ void AppControllerTests::benchmarkRestartErrorsAreInfrastructure()
         QStringLiteral("connection closed by peer")));
     QVERIFY(!AppController::benchmarkErrorIsInfrastructureForTest(
         QStringLiteral("Fallaron criterios de aceptacion.")));
+}
+
+void AppControllerTests::benchmarkPreservesScoreAfterTransportTail()
+{
+    QVERIFY(AppController::benchmarkTransportAfterEvaluationForTest(8, 8, true));
+    QVERIFY(AppController::benchmarkTransportAfterEvaluationForTest(9, 8, true));
+    QVERIFY(!AppController::benchmarkTransportAfterEvaluationForTest(7, 8, true));
+    QVERIFY(!AppController::benchmarkTransportAfterEvaluationForTest(8, 8, false));
+    QVERIFY(!AppController::benchmarkTransportAfterEvaluationForTest(0, 8, true));
 }
 
 void AppControllerTests::benchmarkUsesOneArtifactPerTask()

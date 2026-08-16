@@ -15123,6 +15123,13 @@ bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message
         || lower.contains(QStringLiteral("transport"));
 }
 
+bool AppController::benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCount,
+                                                              int declaredTaskCount,
+                                                              bool transportFailure)
+{
+    return transportFailure && declaredTaskCount > 0 && evaluatedTaskCount >= declaredTaskCount;
+}
+
 void AppController::runAgentBenchmark(const QString &profileId, const QString &profName,
                                      int idx, int total, const QVariantList &benchTasks,
                                      int passes, const QString &mode, const QString &runLabel,
@@ -15438,8 +15445,9 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 includeMetric(metric);
             }
             // A backend restart can arrive as an assistant-final marker instead
-            // of errorOccurred. Never turn that transport failure into a
-            // misleading quality failure or send the agent into repair loops.
+            // of errorOccurred. The finalization path below distinguishes a
+            // transport failure before evaluation from one after every declared
+            // task already has an acceptance row.
             for (auto it = msgs.crbegin(); it != msgs.crend(); ++it) {
                 const QVariantMap mm = it->toMap();
                 if (mm.value(QStringLiteral("role")).toString() == QLatin1String("assistant")
@@ -15511,6 +15519,25 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     if (row.value(QStringLiteral("passed")).toBool()) qScore++;
                 }
             }
+
+            // A server transport can close immediately after the last agent
+            // response. If every declared task already has an acceptance row,
+            // the score is still a valid measurement; only the conversational
+            // tail was lost. Preserve that score instead of rewriting it as 0/0.
+            int declaredAcceptanceTaskCount = 0;
+            for (const QVariant &tv : benchTasks) {
+                if (!tv.toMap().value(QStringLiteral("acceptance")).toMap().isEmpty())
+                    ++declaredAcceptanceTaskCount;
+            }
+            QSet<QString> evaluatedAcceptanceTaskIds;
+            for (const QVariant &rv : acceptanceRows) {
+                const QString taskId = rv.toMap().value(QStringLiteral("taskId")).toString();
+                if (!taskId.isEmpty()) evaluatedAcceptanceTaskIds.insert(taskId);
+            }
+            const bool transportAfterEvaluation =
+                benchmarkTransportAfterEvaluationForTest(evaluatedAcceptanceTaskIds.size(),
+                                                          declaredAcceptanceTaskCount,
+                                                          *serverCrashed);
 
             // Sin criterios declarativos, puntuar las RESPUESTAS con el evaluador
             // que cada tarea ya define. Antes se dependía sólo de los archivos que
@@ -15669,7 +15696,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["finalScore"] = qScore;
             result["finalTotal"] = qTotal;
             result["repairAttempts"] = *repairAttempts;
-            const bool invalidNoResponse = *serverCrashed
+            result["transportAfterEvaluation"] = transportAfterEvaluation;
+            const bool invalidNoResponse = (*serverCrashed && !transportAfterEvaluation)
                 || (*timedOut && finalText.startsWith(QStringLiteral("[timeout]")));
             if (invalidNoResponse) {
                 result["invalid"] = true;
@@ -15714,15 +15742,16 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             const bool runFailed = result.value(QStringLiteral("failed")).toBool();
             result["failureKind"] = !runFailed ? QStringLiteral("none")
                 : (*timedOut ? QStringLiteral("timeout")
-                   : (*serverCrashed || *passFailed ? QStringLiteral("infrastructure")
+                   : ((*serverCrashed && !transportAfterEvaluation) || *passFailed
+                      ? QStringLiteral("infrastructure")
                       : QStringLiteral("quality")));
             if (runFailed) {
-                result["failureStage"] = *serverCrashed
+                result["failureStage"] = (*serverCrashed && !transportAfterEvaluation)
                     ? QStringLiteral("server-crash")
                     : (*timedOut ? QStringLiteral("hard-timeout")
                        : (*passFailed ? QStringLiteral("agent") : QStringLiteral("acceptance")));
                 result["failureMessage"] = failureMessage->isEmpty()
-                    ? (*serverCrashed
+                    ? ((*serverCrashed && !transportAfterEvaluation)
                         ? QStringLiteral("El llama-server perdió la conexión durante la corrida; no hubo respuesta del asistente.")
                         : (qTotal > 0 && qScore < qTotal
                         ? QStringLiteral("Fallaron criterios de aceptacion.")
