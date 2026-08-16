@@ -1,23 +1,26 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles que deben aparecer en la tabla final. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 ## Tabla de resultados
 
 Los guiones indican que todavía no existe una corrida comparable guardada. Los valores históricos se conservan hasta que una repetición válida los reemplace.
 
-| Perfil | HumanEval/20 | BigCodeBench/8 | Tiempo HE20 | Tiempo BCB | TPS HE20 | TPS BCB | Estado | Configuración |
-|---|---:|---:|---:|---:|---:|---:|---|---|
-| BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | 7/8 | 269,96 s | 736,07 s | — | 39,53 | HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
-| BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | 3/8 | 332,12 s | 585,12 s | — | 54,85 | HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
-| FAST - KAT2-Coder-7-8-26 | 20/20 | — | 307,78 s | 20,87 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - KAT-Coder-7-8-26 | 20/20 | — | 212,69 s | 20,60 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - BigBang · MTP · top-p 0.08 | 20/20 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
-| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | BCB calidad; 2 reparaciones y anti-loop; el ID interno corresponde a MTP embebido KV f16 | 131k · MTP · texto + imagen · KV f16 |
-| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | 174,96 s | — | — | — | BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
-| BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | 197,10 s | 38,24 s | — | 0,00 | BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
-| BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | 204,16 s | 56,93 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
-| QUALITY - DeepSeek Fusion leloch | 20/20 | — | 852,31 s | 716,23 s | 9,15 | 0,00 | BCB infraestructura: respuesta sin cierre evaluable; repetir | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
+| Perfil | HumanEval/20 | Calidad HE0 | BigCodeBench/8 | Tiempo HE20 | Tiempo BCB | TPS HE20 | TPS BCB | TPS HE0 | Estado | Configuración |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
+| BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | — | 7/8 | 269,96 s | 736,07 s | — | 39,53 | — | HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
+| BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | — | 3/8 | 332,12 s | 585,12 s | — | 54,85 | — | HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
+| FAST - KAT2-Coder-7-8-26 | 20/20 | — | — | 307,78 s | 20,87 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
+| FAST - KAT-Coder-7-8-26 | 20/20 | — | — | 212,69 s | 20,60 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
+| FAST - BigBang · MTP · top-p 0.08 | 20/20 | — | — | 136,84 s | 41,42 s | 107,56 | 0,00 | — | BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
+| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | BCB calidad; 2 reparaciones y anti-loop; el ID interno corresponde a MTP embebido KV f16 | 131k · MTP · texto + imagen · KV f16 |
+| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | — | 174,96 s | — | — | — | — | BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
+| BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | — | 197,10 s | 38,24 s | — | 0,00 | — | BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
+| BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | — | 204,16 s | 56,93 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
+| QUALITY - DeepSeek Fusion leloch | 20/20 | — | — | 852,31 s | 716,23 s | 9,15 | 0,00 | — | BCB infraestructura: respuesta sin cierre evaluable; repetir | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
+| QUALITY - DeepSeek Fusion leloch · VRAM balance | — | 1/1 | — | — | — | — | — | 9,20 | HE0 válido; 67,31 s; variante conservadora; VRAM medida 35,7 GiB | 131k · B4096 · U1024 · tensor-split 1,0 · expertos 0–1 en CUDA0 y 37–42 en CUDA1 · CPU-MoE · Q2/Q4 híbrido |
+
+HE0 de la variante: `HumanEval_1_tems__20260816_122508`, `1/1`, `67,308 s`, sin reparación ni fallo de infraestructura. El JSON del agente no emitió tokens (`avgTps=0`), por lo que `TPS HE0=9,20` es el timing nativo de `llama-server` (`eval time 24.993,57 ms / 230 tokens`), no un cero de rendimiento. La corrida descartada anterior `HumanEval_1_tems__20260816_122210` usó `tensor-split=1,1` y falló al cargar por OOM en CUDA1; no se cuenta como calidad.
 
 ## Captura completa de configuración
 
@@ -152,6 +155,25 @@ runtime: ctx=131072, batch=4096, ubatch=1024, threads=8, gpuLayers=999, parallel
 extraArgs: --cache-type-k q4_0 --cache-type-v q4_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 16384 --parallel 1 --reasoning-format auto --cache-prompt --split-mode layer --tensor-split 1,0 --override-tensor blk\.(37|38|39|40|41|42)\.ffn_(gate|up|down)_exps\.weight=CUDA1,blk\.[0-9]+\.ffn_(gate|up|down)_exps\.weight=CPU --repeat-last-n 64 --flash-attn on --cpu-moe --cache-ram 32768
 historical HE20 agent: agent-chat; thinkingEnabled=false
 ```
+
+### QUALITY - DeepSeek Fusion leloch · VRAM balance
+
+Variante duplicada mientras LlamaCode estaba cerrada. El perfil original no comparte backend, modelo ni runtime persistidos con esta copia; sólo comparten el mismo archivo de modelo identificado por `modelId`.
+
+```text
+launchId: 6b3bf7bd-0889-491a-9b6d-b12128478a5f
+backendProfileId: 07bf242d-0685-45d1-a752-11ddec6ef6df
+modelProfileId: 0985be04-d2bc-455d-a3a5-e5fc19795e5d
+runtimePresetId: fdd4ca0a-3b8d-43a2-924b-092327aca314
+agentProfileId: agent-maximo (el smoketest HE0 se ejecutó con agent-chat)
+runtime: ctx=131072, batch=4096, ubatch=1024, threads=8, gpuLayers=999, parallelSlots=1, cache=q4_0, flashAttention=on, contBatching=on, mmap=on, mlock=off
+mmprojId: (vacío)
+extraArgs: --cache-type-k q4_0 --cache-type-v q4_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 16384 --parallel 1 --reasoning-format auto --cache-prompt --split-mode layer --tensor-split 1,0 --override-tensor blk\.(0|1)\.ffn_(gate|up|down)_exps\.weight=CUDA0,blk\.(37|38|39|40|41|42)\.ffn_(gate|up|down)_exps\.weight=CUDA1,blk\.[0-9]+\.ffn_(gate|up|down)_exps\.weight=CPU --repeat-last-n 64 --flash-attn on --cpu-moe --cache-ram 32768
+```
+
+La variante conserva `--tensor-split 1,0` para no desalinear las capas base de los expertos. Su única diferencia funcional respecto del original es el primer tramo de `-ot`, que coloca los expertos de los bloques 0 y 1 en CUDA0; los bloques 37–42 siguen en CUDA1 y el resto sigue en CPU. La vista previa efectiva verificada antes del benchmark resolvió `--override-tensor` con esa misma regla.
+
+Backup de los cuatro archivos antes de la edición: `profiles/{launches,backends,models,runtimes}.json.bak.vram-variant.20260816_121921`.
 
 ## Regla de edición y verificación
 
