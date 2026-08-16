@@ -108,3 +108,18 @@ Invoke-RestMethod "http://127.0.0.1:8876/invoke?target=profileManager" `
 Los smoke tests headless deben usar un directorio de perfiles temporal y cerrar
 el daemon al terminar. La prueba no debe depender de un modelo descargado, de
 una GPU ni del estado visual de Windows.
+
+El smoke reproducible de ControlApi está en `tests/headless_persona_styles.ps1`:
+
+```powershell
+.\tests\headless_persona_styles.ps1 -Exe .\build\Debug\LlamaCode.exe -Port 8896
+```
+
+El script crea un directorio temporal, inicia el daemon oculto, espera `/health`
+y valida creación/edición de perfiles, asociación a un agente, ranking del
+ejemplo pertinente, límite de ejemplos e importación/exportación con ID nuevo.
+Al finalizar detiene el proceso y elimina el directorio temporal. No carga un
+modelo y no requiere GPU, QML, red externa ni interacción con el escritorio.
+El análisis asistido por modelo sigue siendo un smoke opt-in separado: necesita
+un backend local o cloud real y se debe verificar por
+`personaStyleAnalysisStatus` (`running` → `ready`/`error`).

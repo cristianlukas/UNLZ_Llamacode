@@ -163,7 +163,8 @@ QJsonObject PersonaStyleProfile::toJson() const {
 PersonaStyleProfile PersonaStyleProfile::fromJson(const QJsonObject &o) {
     PersonaStyleProfile p;
     p.id = o["id"].toString(); p.name = o["name"].toString();
-    p.kind = o["kind"].toString("writing-style");
+    p.kind = o["kind"].toString() == QLatin1String("personality")
+        ? QStringLiteral("personality") : QStringLiteral("writing-style");
     p.description = o["description"].toString();
     p.styleCard = o["styleCard"].toString();
     for (const auto &v : o["examples"].toArray()) p.examples.append(v.toString());

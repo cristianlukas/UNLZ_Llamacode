@@ -44,6 +44,7 @@ private slots:
     void manager_personaStyleListsAreTypedAndClearable();
     void manager_headlessPromptPreviewRanksRelevantExample();
     void manager_appliesModelAnalysisJsonSafely();
+    void manager_rejectsInvalidImportAndClampsLimits();
 
 private:
     QTemporaryDir m_dir;
@@ -196,6 +197,34 @@ void AgentProfilesTests::manager_appliesModelAnalysisJsonSafely()
     QCOMPARE(out.value("description").toString(), QStringLiteral("Cercano"));
     QCOMPARE(out.value("styleCard").toString(), QStringLiteral("Frases medias y sensoriales"));
     QCOMPARE(out.value("examples").toStringList(), QStringList{QStringLiteral("Ejemplo validado")});
+}
+
+void AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
+{
+    ProfileManager pm;
+    QVERIFY(pm.importPersonaStyleProfile(QStringLiteral("not-json")).isEmpty());
+    QVERIFY(pm.importPersonaStyleProfile(QStringLiteral("[]")).isEmpty());
+    QVERIFY(pm.importPersonaStyleProfile(QStringLiteral("{} ")).isEmpty());
+
+    const QString id = pm.addPersonaStyleProfile(QStringLiteral("Límites"),
+                                                  QStringLiteral("writing-style"));
+    QVERIFY(pm.updatePersonaStyleProfile({
+        {"id", id}, {"maxExamples", 999}, {"maxChars", 1},
+        {"examples", QStringList{QStringLiteral("uno"), QStringLiteral("dos")}}
+    }));
+    const QVariantMap profile = pm.getPersonaStyleProfile(id);
+    QCOMPARE(profile.value("maxExamples").toInt(), 8);
+    QCOMPARE(profile.value("maxChars").toInt(), 500);
+    QCOMPARE(profile.value("examples").toStringList().size(), 2);
+
+    const QString imported = pm.importPersonaStyleProfile(
+        QStringLiteral("{\"name\":\"Importado\",\"kind\":\"unknown\","
+                       "\"styleCard\":\"válido\",\"maxExamples\":-4,\"maxChars\":999999}"));
+    QVERIFY(!imported.isEmpty());
+    const QVariantMap importedProfile = pm.getPersonaStyleProfile(imported);
+    QCOMPARE(importedProfile.value("kind").toString(), QStringLiteral("writing-style"));
+    QCOMPARE(importedProfile.value("maxExamples").toInt(), 0);
+    QCOMPARE(importedProfile.value("maxChars").toInt(), 20000);
 }
 
 void AgentProfilesTests::systemPresets_shape()

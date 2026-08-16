@@ -1083,8 +1083,8 @@ QString ProfileManager::importPersonaStyleProfile(const QString &json)
     const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &error);
     if (error.error != QJsonParseError::NoError || !doc.isObject()) return {};
     PersonaStyleProfile p = PersonaStyleProfile::fromJson(doc.object());
+    if (p.name.trimmed().isEmpty()) return {};
     p.id = PersonaStyleProfile::generateId(); p.system = false;
-    if (p.name.trimmed().isEmpty()) p.name = QStringLiteral("Estilo importado");
     m_personaStyles.add(p); save(); emit personaStylesChanged(); return p.id;
 }
 
