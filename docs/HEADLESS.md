@@ -224,3 +224,17 @@ Task, comprueba su persistencia y cierra el daemon incluso ante errores. La
 política de seguridad se prueba además con `test_task_security_policy` y la
 barra de presets mediante el contrato headless de `AppController`; el panel se
 valida además durante el build QML.
+
+Para ejecutar el gate compuesto de workflows, sin depender de QML, modelo ni
+GPU:
+
+```powershell
+.\tests\headless_engineering_gate.ps1 -Build
+```
+
+El gate compila y ejecuta `test_engineering_workflows`,
+`test_task_security_policy`, `test_tasks`, `test_appcontroller` y
+`test_control_api`, y luego ejecuta el smoke HTTP del daemon. Sin `-Build`,
+reutiliza los binarios Debug ya compilados. Todos los procesos usan
+`QT_QPA_PLATFORM=offscreen`, perfiles temporales y un puerto localhost
+efímero; no modifican el perfil del usuario.

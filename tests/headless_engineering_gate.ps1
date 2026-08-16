@@ -1,4 +1,5 @@
 param([switch]$Build)
+
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $buildDir = Join-Path $root "build_tests"
