@@ -8,10 +8,16 @@ $env:QT_QPA_PLATFORM = "offscreen"
 $env:PATH = "$qtBin;$env:PATH"
 
 if ($Build) {
-    & cmake --build $buildDir --config Debug --target `
-        test_engineering_workflows test_task_security_policy test_tasks `
-        test_appcontroller test_control_api -- /maxcpucount:1
-    if ($LASTEXITCODE -ne 0) { throw "Falló la compilación del gate headless" }
+    # Visual Studio puede lanzar proyectos hermanos en paralelo aunque se pase
+    # /maxcpucount:1. Core se compila primero y cada test después, para evitar
+    # carreras sobre llamacode_core.lib/.pdb en el árbol compartido.
+    $targets = @("llamacode_core", "test_engineering_workflows",
+        "test_task_security_policy", "test_tasks", "test_appcontroller",
+        "test_control_api")
+    foreach ($target in $targets) {
+        & cmake --build $buildDir --config Debug --target $target -- /m:1
+        if ($LASTEXITCODE -ne 0) { throw "Falló la compilación de $target" }
+    }
 }
 
 $tests = @(

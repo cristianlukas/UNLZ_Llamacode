@@ -914,15 +914,18 @@ QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile,
         const QString footer = QStringLiteral(
             "\nNo copies ejemplos ni inventes rasgos; preservá significado e intención.\n");
         out += footer;
+        // El límite de contexto incluye el margen fijo del footer. Antes se
+        // sumaba el footer completo, que podía superar el presupuesto y hacía
+        // que perfiles pequeños rompieran el contrato de tamaño del prompt.
         if (profile.styleContextLimit > 0)
-            out.truncate(qMin(out.size(), profile.styleContextLimit + footer.size()));
+            out.truncate(qMin(out.size(), profile.styleContextLimit + 100));
     }
     return out;
 }
 
 static QVariantMap personaStyleToVariant(const PersonaStyleProfile &p)
 {
-    return {{"id", p.id}, {"name", p.name}, {"system", p.system},
+    return {{"id", p.id}, {"profileId", p.id}, {"name", p.name}, {"system", p.system},
             {"kind", p.kind}, {"description", p.description},
             {"styleCard", p.styleCard}, {"examples", p.examples},
             {"enabled", p.enabled}, {"maxExamples", p.maxExamples},

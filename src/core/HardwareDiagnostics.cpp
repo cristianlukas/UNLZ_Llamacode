@@ -1,7 +1,9 @@
 #include "HardwareDiagnostics.h"
 
+#include <algorithm>
 #include <QCryptographicHash>
 #include <QRegularExpression>
+#include <QSet>
 #include <QStringList>
 
 namespace {
@@ -67,10 +69,13 @@ QVariantMap HardwareDiagnostics::parseTopologyMatrix(const QString &text)
     const QStringList lines = text.split(QRegularExpression(QStringLiteral("[\\r\\n]+")),
                                          Qt::SkipEmptyParts);
     QStringList columns;
+    QSet<QString> seenLinks;
     for (const QString &raw : lines) {
         const QString line = raw.trimmed();
         if (line.startsWith(QStringLiteral("GPU")) && columns.isEmpty()) {
             columns = line.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+            while (!columns.isEmpty() && !columns.last().startsWith(QStringLiteral("GPU")))
+                columns.removeLast();
             continue;
         }
         if (!line.startsWith(QStringLiteral("GPU")) || columns.size() < 2)
@@ -80,16 +85,29 @@ QVariantMap HardwareDiagnostics::parseTopologyMatrix(const QString &text)
         if (fields.size() < 2)
             continue;
         const QString source = fields.first();
-        for (int i = 1; i < fields.size() && i < columns.size(); ++i) {
+        for (int i = 1; i < fields.size(); ++i) {
+            const int columnIndex = i - 1;
+            if (columnIndex < 0 || columnIndex >= columns.size()
+                || !columns.at(columnIndex).startsWith(QStringLiteral("GPU")))
+                continue;
             const QString relation = fields.at(i).toUpper();
             if (relation == QLatin1String("X") || relation == QLatin1String("N/A"))
                 continue;
             const bool direct = relation.startsWith(QStringLiteral("NV"))
                                 || relation == QLatin1String("PIX")
                                 || relation == QLatin1String("PXB");
+            if (!direct || source == columns.at(columnIndex))
+                continue;
             p2p = p2p || direct;
+            QStringList canonical{source, columns.at(columnIndex)};
+            std::sort(canonical.begin(), canonical.end());
+            const QString linkKey = canonical.join(QLatin1Char('|'));
+            if (seenLinks.contains(linkKey))
+                continue;
+            seenLinks.insert(linkKey);
+            const QStringList endpoints{source, columns.at(columnIndex)};
             links.append(QVariantMap{{QStringLiteral("from"), source},
-                                     {QStringLiteral("to"), columns.at(i)},
+                                     {QStringLiteral("to"), columns.at(columnIndex)},
                                      {QStringLiteral("relation"), relation},
                                      {QStringLiteral("direct"), direct}});
         }

@@ -12,6 +12,7 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QDir>
 #include <QJsonObject>
 #include <QSignalSpy>
 #include <algorithm>
@@ -24,6 +25,7 @@ class AgentProfilesTests : public QObject
     Q_OBJECT
 private slots:
     void initTestCase();
+    void cleanup();
 
     void agentProfile_jsonRoundTrip();
     void systemPresets_shape();
@@ -54,6 +56,13 @@ void AgentProfilesTests::initTestCase()
 {
     QVERIFY(m_dir.isValid());
     qputenv("LLAMACODE_PROFILES_DIR", m_dir.path().toLocal8Bit());
+}
+
+void AgentProfilesTests::cleanup()
+{
+    QDir dir(m_dir.path());
+    dir.removeRecursively();
+    QDir().mkpath(m_dir.path());
 }
 
 void AgentProfilesTests::agentProfile_jsonRoundTrip()

@@ -112,6 +112,9 @@ void AgentToolsTests::cleanup()
 {
     delete m_runner;
     m_runner = nullptr;
+    QDir dir(m_dir.path());
+    dir.removeRecursively();
+    QDir().mkpath(m_dir.path());
 }
 
 // Ejecuta una tool síncrona y devuelve el map de toolExecuted.

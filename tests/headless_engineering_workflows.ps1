@@ -9,11 +9,13 @@ $oldPort = $env:LLAMACODE_CONTROL_PORT; $oldProfiles = $env:LLAMACODE_PROFILES_D
 try {
     New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
     $env:LLAMACODE_CONTROL_PORT = [string]$port; $env:LLAMACODE_PROFILES_DIR = $profileDir
-    $proc = Start-Process -FilePath $exe -ArgumentList "--agent-daemon" -WindowStyle Hidden -PassThru
+    $proc = Start-Process -FilePath $exe -ArgumentList "--headless" -WindowStyle Hidden -PassThru
     $base = "http://127.0.0.1:$port"; $ready = $false
-    for ($i = 0; $i -lt 60; $i++) {
+    # El primer arranque puede cargar catálogos y perfiles antes de abrir
+    # ControlApi; el timeout debe cubrir una notebook fría sin modelo.
+    for ($i = 0; $i -lt 120; $i++) {
         try { if ((Invoke-RestMethod "$base/health").ok) { $ready = $true; break } }
-        catch { Start-Sleep -Milliseconds 250 }
+        catch { Start-Sleep -Milliseconds 500 }
     }
     if (-not $ready) { throw "El daemon no respondió en $base" }
     function Invoke-Llama([string]$method, [object[]]$argumentList) {

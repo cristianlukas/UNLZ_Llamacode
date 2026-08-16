@@ -38,7 +38,8 @@ void HardwareDiagnosticsTests::parsesP2pTopologyMatrix()
         "GPU1    NV1   X  0-15\n");
     const QVariantMap parsed = HardwareDiagnostics::parseTopologyMatrix(topo);
     QVERIFY(parsed.value(QStringLiteral("p2pAvailable")).toBool());
-    QCOMPARE(parsed.value(QStringLiteral("links")).toList().size(), 2);
+    // La matriz es simétrica; el contrato expone cada enlace una sola vez.
+    QCOMPARE(parsed.value(QStringLiteral("links")).toList().size(), 1);
 }
 
 void HardwareDiagnosticsTests::parsesNvlinkStatus()
@@ -84,7 +85,9 @@ void HardwareDiagnosticsTests::fastPcieAllowsTensor()
                      {QStringLiteral("pcieGeneration"), 4.0}, {QStringLiteral("pcieLanes"), 16.0}},
         QVariantMap{{QStringLiteral("name"), QStringLiteral("B")},
                      {QStringLiteral("pcieGeneration"), 4.0}, {QStringLiteral("pcieLanes"), 16.0}}};
-    QCOMPARE(HardwareDiagnostics::recommendedSplitMode(QVariantMap{{QStringLiteral("gpus"), gpus}}),
+    QCOMPARE(HardwareDiagnostics::recommendedSplitMode(QVariantMap{
+                 {QStringLiteral("gpus"), gpus},
+                 {QStringLiteral("p2pAvailable"), true}}),
              QStringLiteral("tensor"));
 }
 
@@ -150,6 +153,10 @@ void HardwareDiagnosticsTests::performanceMatrixIsHeadless()
     const QVariantList ranked = PerformanceMatrix::rank({sample}, QStringLiteral("decode"));
     QCOMPARE(ranked.first().toMap().value(QStringLiteral("rank")).toInt(), 1);
     QVERIFY(ranked.first().toMap().value(QStringLiteral("performanceScore")).toDouble() > 0.0);
+
+    const QVariantList unknownTopology = PerformanceMatrix::candidates(
+        QVariantMap{{QStringLiteral("gpuCount"), 2}}, QStringLiteral("decode"));
+    QCOMPARE(unknownTopology.size(), 6);
 }
 
 QTEST_MAIN(HardwareDiagnosticsTests)

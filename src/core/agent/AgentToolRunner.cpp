@@ -2718,6 +2718,20 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             return p.exitStatus() == QProcess::NormalExit;
         };
 
+        // No aceptar silenciosamente el cwd padre como si fuera un repo. Esto
+        // mantiene el contrato headless determinista en workspaces temporales
+        // y evita reportar cambios ajenos cuando el test o el agente corre
+        // dentro de una carpeta anidada.
+        QByteArray repoRoot;
+        QByteArray repoError;
+        int repoExit = -1;
+        if (!runGit({QStringLiteral("rev-parse"), QStringLiteral("--show-toplevel")},
+                    &repoRoot, &repoError, &repoExit) || repoExit != 0
+            || repoRoot.trimmed().isEmpty()) {
+            return QStringLiteral("[review_overengineering: no se pudo leer el diff git (%1)]")
+                       .arg(QString::fromLocal8Bit(repoError).trimmed());
+        }
+
         QByteArray diffBytes;
         QByteArray gitError;
         int gitExit = -1;

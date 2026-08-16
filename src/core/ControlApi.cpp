@@ -201,7 +201,11 @@ static QJsonArray methodNames(QObject *obj)
 {
     QJsonArray out;
     const QMetaObject *mo = obj->metaObject();
-    for (int i = mo->methodOffset(); i < mo->methodCount(); ++i) {
+    // Recorrer desde 0 mantiene el descubrimiento consistente incluso cuando
+    // el objeto expone métodos heredados o cuando moc reordena el offset de la
+    // clase durante builds incrementales. Los métodos QObject base se filtran
+    // abajo por su acceso/tipo y no afectan la invocación.
+    for (int i = 0; i < mo->methodCount(); ++i) {
         const QMetaMethod m = mo->method(i);
         if (m.access() != QMetaMethod::Public) continue;
         if (m.methodType() != QMetaMethod::Method && m.methodType() != QMetaMethod::Slot)
@@ -268,7 +272,7 @@ QByteArray ControlApi::jsonMethods(const QString &targetPath) const
         return "{\"error\":\"target desconocido\"}";
     const QMetaObject *mo = target->metaObject();
     QJsonArray methods;
-    for (int i = mo->methodOffset(); i < mo->methodCount(); ++i) {
+    for (int i = 0; i < mo->methodCount(); ++i) {
         const QMetaMethod m = mo->method(i);
         if (m.methodType() != QMetaMethod::Method && m.methodType() != QMetaMethod::Slot)
             continue;

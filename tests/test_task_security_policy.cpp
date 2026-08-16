@@ -47,9 +47,10 @@ void TaskSecurityPolicyTests::productionDisablesExternalToolFamilies()
     };
     const QStringList disabled = TaskSecurityPolicy::disabledTools(
         {{QStringLiteral("safetyProfile"), QStringLiteral("production")}}, catalog);
-    QCOMPARE(disabled, QStringList{QStringLiteral("browser_open"),
-                                   QStringLiteral("web_search"),
-                                   QStringLiteral("email_send")});
+    const QStringList expected{QStringLiteral("browser_open"),
+                               QStringLiteral("web_search"),
+                               QStringLiteral("email_send")};
+    QCOMPARE(disabled, expected);
 }
 
 void TaskSecurityPolicyTests::nonProductionDoesNotDisableTools()
