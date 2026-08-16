@@ -17,7 +17,7 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | 174,96 s | — | — | — | BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
 | BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | 197,10 s | 38,24 s | — | 0,00 | BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | 204,16 s | 56,93 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
-| QUALITY - DeepSeek Fusion leloch | 20/20 | — | 852,31 s | — | 9,15 | — | HE20 repetido válido; BCB pendiente | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
+| QUALITY - DeepSeek Fusion leloch | 20/20 | — | 852,31 s | 716,23 s | 9,15 | 0,00 | BCB infraestructura: respuesta sin cierre evaluable; repetir | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
 
 ## Captura completa de configuración
 
