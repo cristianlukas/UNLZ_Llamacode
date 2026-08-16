@@ -138,9 +138,16 @@ Item {
                         text: "Validar"
                         enabled: recordJson.text.trim().length > 0
                         onClicked: {
-                            const result = App.dataLab.validateRecord(root.selectedJobId, root.selectedDocumentId, recordJson.text)
-                            root.lastMessage = result.status + ((result.errors || []).length ? " · " + result.errors.join("; ") : "")
-                            root.refreshJob()
+                            try {
+                                const parsed = JSON.parse(recordJson.text)
+                                const result = Array.isArray(parsed)
+                                        ? App.dataLab.validateRecords(root.selectedJobId, root.selectedDocumentId, recordJson.text)
+                                        : App.dataLab.validateRecord(root.selectedJobId, root.selectedDocumentId, recordJson.text)
+                                root.lastMessage = result.status + ((result.errors || []).length ? " · " + result.errors.join("; ") : "")
+                                root.refreshJob()
+                            } catch (e) {
+                                root.lastMessage = "JSON inválido: " + e
+                            }
                         }
                     }
                 }
@@ -160,6 +167,24 @@ Item {
                             const result = App.dataLab.processJob(root.selectedJobId)
                             root.lastMessage = result.ok ? (result.extracted + " extraídos · " + result.failed + " fallidos") : (result.error || "Error")
                         }
+                    }
+                    LcButton {
+                        text: "Exportar JSON"
+                        secondary: true
+                        enabled: root.selectedJobId.length > 0
+                        onClicked: { exportFormat = "json"; exportDialog.open() }
+                    }
+                    LcButton {
+                        text: "Exportar CSV"
+                        secondary: true
+                        enabled: root.selectedJobId.length > 0
+                        onClicked: { exportFormat = "csv"; exportDialog.open() }
+                    }
+                    LcButton {
+                        text: "Exportar SQLite"
+                        secondary: true
+                        enabled: root.selectedJobId.length > 0
+                        onClicked: { exportFormat = "sqlite"; exportDialog.open() }
                     }
                     LcButton {
                         text: "Eliminar"
@@ -237,6 +262,19 @@ Item {
         onAccepted: {
             const paths = selectedFiles.map(function(url) { return url.toLocalFile ? url.toLocalFile() : url.toString() })
             filesField.text = paths.join(";")
+        }
+    }
+
+    property string exportFormat: "json"
+    FileDialog {
+        id: exportDialog
+        title: "Exportar Data Lab"
+        fileMode: FileDialog.SaveFile
+        onAccepted: {
+            const url = selectedFile
+            const path = url && url.toLocalFile ? url.toLocalFile() : String(url)
+            const result = App.dataLab.exportJob(root.selectedJobId, path, root.exportFormat)
+            root.lastMessage = result.length > 0 ? "Exportado: " + result : "No se pudo exportar"
         }
     }
 }

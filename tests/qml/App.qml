@@ -14,6 +14,8 @@ QtObject {
         function deleteJob(id) { return true }
         function extractionPrompt(jobId, documentId) { return "{}" }
         function validateRecord(jobId, documentId, json) { return { status: "valid", errors: [] } }
+        function validateRecords(jobId, documentId, json) { return { status: "valid", records: JSON.parse(json), errors: [] } }
+        function exportJob(jobId, path, format) { return path }
         function runExtraction(jobId, documentId, url, model) {}
         function createJob(name, schema, files) { return "job-2" }
     }

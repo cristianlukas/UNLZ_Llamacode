@@ -1072,7 +1072,8 @@ con `LLAMACODE_QA_PLAYWRIGHT_CMD` definido.
 Data Lab agrega un flujo local para convertir documentos en registros
 estructurados. Define un esquema JSON, procesa una carpeta mediante
 `DocumentExtractor`, genera prompts de extracción estrictos, valida tipos y
-campos obligatorios de forma determinística y exporta JSON/CSV. Los jobs quedan
+campos obligatorios de forma determinística y exporta JSON/CSV/SQLite desde la
+UI. Los jobs quedan
 persistidos en `AppLocalData/LlamaCode/data-lab/jobs/` y los documentos con
 errores se mantienen en estado `needs_review`. El detalle del contrato está en
 [`docs/data-lab.md`](docs/data-lab.md).

@@ -12,8 +12,9 @@ envía documentos fuera de la máquina por sí mismo.
 4. Ejecutar `runExtraction` contra un endpoint OpenAI-compatible local.
 5. Parsear la respuesta, reintentar errores transitorios y reparar una respuesta
    que no sea JSON válido.
-6. Validar la respuesta JSON con `validateRecord`.
-7. Exportar el job completo a JSON, CSV o SQLite.
+6. Validar la respuesta JSON con `validateRecord` o un array con
+   `validateRecords`.
+7. Exportar el job completo desde la UI a JSON, CSV o SQLite.
 
 `routeStage` clasifica el documento como `DATA-FAST`, `DATA-QUALITY` o
 `DATA-REPAIR`. La clasificación es determinística y no depende de nombres de

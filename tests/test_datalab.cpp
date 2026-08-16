@@ -13,8 +13,9 @@
 #include <QSqlQuery>
 
 #include "core/data/DataLab.h"
+#include "test_datalab.h"
 
-class DataLabFakeLlm final : public QTcpServer
+class DataLabFakeLlm : public QTcpServer
 {
 public:
     enum class Mode { Valid, RetryThenValid, InvalidThenValid };
@@ -50,20 +51,7 @@ private:
     int m_requests = 0;
 };
 
-class DataLabTests final : public QObject
-{
-    Q_OBJECT
-private slots:
-    void initTestCase() { QStandardPaths::setTestModeEnabled(true); }
-    void schemaValidation();
-    void recordNormalizationAndValidation();
-    void jobExtractionAndPersistence();
-    void modelResponseParsing();
-    void routingAndArbitration();
-    void headlessFakeLlmExtraction();
-    void headlessRetryAndRepair();
-    void benchmarkScoring();
-};
+void DataLabTests::initTestCase() { QStandardPaths::setTestModeEnabled(true); }
 
 void DataLabTests::schemaValidation()
 {
@@ -195,7 +183,8 @@ void DataLabTests::headlessFakeLlmExtraction()
     QCOMPARE(finished.at(0).at(2).toBool(), true);
     QCOMPARE(store.job(jobId).value("documents").toList().first().toMap().value("status").toString(), QStringLiteral("valid"));
     const QVariantMap savedDoc = store.job(jobId).value("documents").toList().first().toMap();
-    QVERIFY(savedDoc.value("evidence").toMap().value("cliente").toMap().value("matched").toBool());
+    QVERIFY(savedDoc.value("validation").toMap().value("evidence").toMap()
+                .value("cliente").toMap().value("matched").toBool());
     QVERIFY(store.deleteJob(jobId));
 }
 
@@ -245,4 +234,3 @@ void DataLabTests::benchmarkScoring()
 }
 
 QTEST_MAIN(DataLabTests)
-#include "test_datalab.moc"
