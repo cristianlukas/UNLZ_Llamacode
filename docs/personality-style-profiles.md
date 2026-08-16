@@ -32,6 +32,10 @@ envía una petición JSON al backend activo, valida la respuesta y sólo entonce
 actualiza el perfil. Si no hay backend disponible, la heurística sigue siendo
 offline. También se puede usar `buildStyleAnalysisPrompt()` desde ControlApi.
 
+La edición permite conservar varias muestras: separalas con la línea
+`--- EJEMPLO ---`. Al guardar y volver a abrir el perfil, la UI conserva cada
+muestra como un elemento independiente del JSON.
+
 Los ejemplos se recuperan con ranking local por términos de la consigna actual y
 se recortan al presupuesto del perfil. Esto funciona sin embeddings ni red; si
 en el futuro hay un índice semántico disponible, debe conservar este ranking

@@ -1359,6 +1359,7 @@ Item {
                         property int enabledTokens: 0
                         property var styleEdit: ({ id: "", name: "", kind: "writing-style",
                                                    description: "", styleCard: "", examples: [] })
+                        readonly property string styleExampleSeparator: "\n\n--- EJEMPLO ---\n\n"
                         readonly property bool isSystem: edit.system === true
 
                         function allToolNames() {
@@ -1383,6 +1384,22 @@ Item {
                             return edit.directives.indexOf("*") >= 0
                                 || edit.directives.indexOf(key) >= 0
                         }
+                        function parseStyleExamples(text) {
+                            var chunks = text.split(styleExampleSeparator), out = []
+                            for (var i = 0; i < chunks.length; ++i) {
+                                var value = chunks[i].trim()
+                                if (value.length) out.push(value)
+                            }
+                            return out
+                        }
+                        function formatStyleExamples(examples) {
+                            var out = []
+                            for (var i = 0; i < (examples || []).length; ++i) {
+                                var value = String(examples[i] || "").trim()
+                                if (value.length) out.push(value)
+                            }
+                            return out.join(styleExampleSeparator)
+                        }
                         function selectStyleProfile(id) {
                             var p = App.profileManager.getPersonaStyleProfile(id)
                             if (!p || !p.id) return
@@ -1392,7 +1409,7 @@ Item {
                             styleNameField.text = styleEdit.name
                             styleDescriptionField.text = styleEdit.description
                             styleCardField.text = styleEdit.styleCard
-                            styleExamplesField.text = styleEdit.examples.length ? styleEdit.examples[0] : ""
+                            styleExamplesField.text = formatStyleExamples(styleEdit.examples)
                             var ki = styleKindCombo.indexOfValue(styleEdit.kind)
                             if (ki >= 0) styleKindCombo.currentIndex = ki
                         }
@@ -1401,7 +1418,7 @@ Item {
                             App.profileManager.updatePersonaStyleProfile({
                                 id: styleEdit.id, name: styleNameField.text.trim(), kind: styleKindCombo.currentValue,
                                 description: styleDescriptionField.text, styleCard: styleCardField.text,
-                                examples: styleExamplesField.text.trim().length ? [styleExamplesField.text] : []
+                                examples: parseStyleExamples(styleExamplesField.text)
                             })
                         }
                         function createStyleProfile() {
@@ -1748,8 +1765,8 @@ Item {
                                     LcTextField { id: styleDescriptionField; Layout.fillWidth: true; placeholderText: "Para qué conviene usarlo" }
                                     Text { text: "Ficha"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     TextArea { id: styleCardField; Layout.fillWidth: true; Layout.minimumHeight: 72; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Tono, ritmo, vocabulario, preferencias y cosas a evitar" }
-                                    Text { text: "Muestra"; color: Theme.textSecondary; font.pixelSize: 12 }
-                                    TextArea { id: styleExamplesField; Layout.fillWidth: true; Layout.minimumHeight: 100; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Pegá un ejemplo. Se usa sólo como referencia y queda local." }
+                                    Text { text: "Muestras"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    TextArea { id: styleExamplesField; Layout.fillWidth: true; Layout.minimumHeight: 100; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Pegá una o más muestras. Separalas con --- EJEMPLO ---. Se usan sólo como referencia y quedan locales." }
                                 }
                                 TextArea {
                                     id: styleJsonField; Layout.fillWidth: true; Layout.minimumHeight: 70
