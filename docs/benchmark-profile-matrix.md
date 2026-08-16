@@ -8,19 +8,19 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 
 | Perfil | HumanEval/20 | Calidad HE0 | BigCodeBench/8 | Tiempo HE20 | Tiempo BCB | TPS HE20 | TPS BCB | TPS HE0 | Estado | Configuración |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | — | 7/8 | 269,96 s | 736,07 s | — | 39,53 | — | HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
-| BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | — | 3/8 | 332,12 s | 585,12 s | — | 54,85 | — | HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
-| FAST - KAT2-Coder-7-8-26 | 20/20 | — | — | 307,78 s | 20,87 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - KAT-Coder-7-8-26 | 20/20 | — | — | 212,69 s | 20,60 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - BigBang · MTP · top-p 0.08 | 20/20 | — | — | 136,84 s | 41,42 s | 107,56 | 0,00 | — | BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
-| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | BCB calidad; 2 reparaciones y anti-loop; el ID interno corresponde a MTP embebido KV f16 | 131k · MTP · texto + imagen · KV f16 |
-| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | — | 174,96 s | — | — | — | — | BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
-| BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | — | 197,10 s | 38,24 s | — | 0,00 | — | BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
-| BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | — | 204,16 s | 56,93 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
-| QUALITY - DeepSeek Fusion leloch | 20/20 | — | — | 852,31 s | 716,23 s* | 9,15 | 0* | — | Reintento BCB en curso; no contar respuesta sin cierre como calidad | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
-| QUALITY - DeepSeek Fusion leloch · VRAM balance | — | 1/1 | — | — | — | — | — | 9,20 | HE0 válido; 67,31 s; variante conservadora; VRAM medida 35,7 GiB | 131k · B4096 · U1024 · tensor-split 1,0 · expertos 0–1 en CUDA0 y 37–42 en CUDA1 · CPU-MoE · Q2/Q4 híbrido |
+| BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | 1/1 | 7/8 | 269,96 s | 736,07 s | — | 39,53 | 56,89 | HE0 válido (12,997 s); HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
+| BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | 1/1 | 3/8 | 332,12 s | 585,12 s | — | 54,85 | 57,06 | HE0 válido (13,132 s); HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
+| FAST - KAT2-Coder-7-8-26 | 20/20 | — | — | 307,78 s | 20,87 s | — | 0,00 | 103,93* | HE0 daemon-crash; sólo timing nativo; BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
+| FAST - KAT-Coder-7-8-26 | 20/20 | 1/1 | — | 212,69 s | 20,60 s | — | 0,00 | 113,03 | HE0 válido (13,963 s); BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
+| FAST - BigBang · MTP · top-p 0.08 | 20/20 | 1/1 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | 165,87 | HE0 válido (10,428 s); BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
+| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | HE0 infraestructura (`Connection closed`, resultado bruto 0/1); BCB calidad; repetir | 131k · MTP · texto + imagen · KV f16 |
+| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | 1/1 | — | 174,96 s | — | — | — | 61,62 | HE0 válido (12,922 s); BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
+| BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | 1/1 | — | 197,10 s | 38,24 s | — | 0,00 | 63,90 | HE0 válido (11,435 s); BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
+| BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | 1/1 | — | 204,16 s | 56,93 s | — | 0,00 | 53,34 | HE0 válido (16,980 s); BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
+| QUALITY - DeepSeek Fusion leloch | 20/20 | 1/1 | — | 852,31 s | 716,23 s† | 9,15 | 0† | 8,53 | HE0 válido (70,903 s); reintento BCB en curso; no contar respuesta sin cierre como calidad | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
+| QUALITY - DeepSeek Fusion leloch · VRAM balance | — | 1/1 | — | — | — | — | — | 8,81 | HE0 válido (67,039 s); variante conservadora; VRAM medida 35,7 GiB | 131k · B4096 · U1024 · tensor-split 1,0 · expertos 0–1 en CUDA0 y 37–42 en CUDA1 · CPU-MoE · Q2/Q4 híbrido |
 
-HE0 de la variante: `HumanEval_1_tems__20260816_122508`, `1/1`, `67,308 s`, sin reparación ni fallo de infraestructura. El JSON del agente no emitió tokens (`avgTps=0`), por lo que `TPS HE0=9,20` es el timing nativo de `llama-server` (`eval time 24.993,57 ms / 230 tokens`), no un cero de rendimiento. La corrida descartada anterior `HumanEval_1_tems__20260816_122210` usó `tensor-split=1,1` y falló al cargar por OOM en CUDA1; no se cuenta como calidad.
+HE0 de la variante actual: `HumanEval_1_tems__20260816_131714`, `1/1`, `67,039 s`, sin reparación ni fallo de infraestructura; `TPS HE0=8,81` es el timing nativo de `llama-server`. La corrida descartada anterior `HumanEval_1_tems__20260816_122210` usó `tensor-split=1,1` y falló al cargar por OOM en CUDA1; no se cuenta como calidad. La corrida histórica `HumanEval_1_tems__20260816_122508` también fue válida (`1/1`, `67,308 s`, `9,20 t/s`).
 
 ## Procedimiento de benchmarking
 
@@ -34,7 +34,7 @@ La promoción de un perfil requiere pasar HE0. HE20 separa calidad general y pro
 
 ## Candidatos derivados para medir
 
-No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y dos variantes nuevas de Laguna. Cada fila sigue HE0 → HE20 → BCB; todos empiezan sin resultados comparables.
+No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y dos variantes nuevas de Laguna. Cada fila sigue HE0 → HE20 → BCB; el HE0 de esta tanda ya fue ejecutado en modo headless y sus resultados están debajo.
 
 | Candidato | Derivado de | Hipótesis | Cambio controlado | Orden |
 |---|---|---|---|---|
@@ -52,9 +52,33 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench antirez] 32k · B2048 · U256 · KV q4_0` (`sys-48-antirez-dsv4-q2q4-0731-32k-b2048`) | QUALITY - DeepSeek Fusion leloch | Bajar contexto/batch para mejorar estabilidad sin repartir capas base | ctx 32k; B2048/U256; `tensor-split 1,0` | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B4096 · U512 · KV q8_0` (`sys-48-antirez-dsv4-q2q4-kv8`) | QUALITY - DeepSeek Fusion leloch | KV q8 puede mejorar calidad sostenida; medir coste real | ctx 32k; KV K/V q8_0 | HE0 → HE20 → BCB |
 
+## Resultados HE0 de los candidatos
+
+TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgTps` del agente cuando el harness no recibió tokens de generación. Un `—` indica que no hubo timing evaluable por fallo de carga o cierre de conexión.
+
+| Candidato | HumanEval/0 | Tiempo HE0 | TPS HE0 | Estado |
+|---|---:|---:|---:|---|
+| `[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj` | 1/1 | 12,926 s | 51,68 | Válido |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj` | 1/1 | 10,378 s | 64,66 | Válido |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` | 1/1 | 12,925 s | 57,87 | Válido |
+| `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` | 1/1 | 12,968 s | 45,38 | Válido |
+| `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` | 1/1 | 14,982 s | 52,48 | Válido |
+| `[bench 48GB KAT] KV f16 · 262k` | 0/1 | 13,930 s | 104,98 | HE0 evaluable; calidad fallida |
+| `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` | — | 58,638 s | — | Infraestructura: server-load |
+| `[bench BigBang] 131k · sin MTP · KV f16` | — | 12,470 s | — | Infraestructura: `Connection closed` (bruto 0/1) |
+| `[bench 48GB MAX-Q] MTP4 · 131k · visión` | 1/1 | 11,498 s | 58,02 | Válido |
+| `[bench Laguna] Q2 · 64k · B1024 · U256` | 1/1 | 15,004 s | 51,46 | Válido |
+| `[bench Laguna] Q2 · 100k · B1024 · U256` | 1/1 | 13,961 s | 51,99 | Válido |
+| `[bench antirez] 32k · B2048 · U256 · KV q4_0` | 1/1 | 93,540 s | 10,00 | Válido |
+| `[bench antirez] 32k · B4096 · U512 · KV q8_0` | 1/1 | 76,189 s | 10,00 | Válido |
+
+Evidencia de la tanda: `benchmark-runs/HumanEval_1_tems__20260816_130505` a `HumanEval_1_tems__20260816_133559`. Los 24 IDs fueron ejecutados aisladamente. KAT2 (`sys-48-katcoder-262k`) cargó y llegó a timing nativo de `103,93 t/s`, pero el daemon terminó en `APPCRASH` de `LlamaCode.exe` dentro de `Qt6Core.dll` antes de persistir el JSON; queda como `HE0 daemon-crash`, no como calidad.
+
 Las variantes DeepSeek mantienen la regla de seguridad del perfil histórico: `--tensor-split 1,0`, expertos residentes alineados con sus capas y resto en CPU. No se propone `tensor-split 1,1`, porque la prueba local anterior terminó en OOM/corrupción y no es una mejora válida.
 
-`*` En DeepSeek, el tiempo/TPS de BCB es el último intento observado antes de cerrar la serie; la respuesta no tuvo cierre evaluable. Debe repetirse después de HE0/HE20 válidos del perfil o variante correspondiente.
+`*` En KAT2, `103,93 t/s` es timing nativo observado antes del `APPCRASH`; no hay JSON evaluable y debe repetirse.
+
+`†` En DeepSeek, el tiempo/TPS de BCB es el último intento observado antes de cerrar la serie; la respuesta no tuvo cierre evaluable. Debe repetirse después de HE0/HE20 válidos del perfil o variante correspondiente.
 
 ## Captura completa de configuración
 
