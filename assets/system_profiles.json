@@ -2125,6 +2125,29 @@
       "args": []
     },
     "binaryKind": "official",
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-laguna-s-2-1-q2-48gb-64k-b1024",
+        "order": 190,
+        "displayName": "[bench Laguna] Q2 · 64k · B1024 · U256",
+        "runtime": {
+          "ctx": 65536,
+          "batch": 1024,
+          "ubatch": 256
+        },
+        "comment": "Candidato conservador para reducir presión de KV y batch después de un fallo de infraestructura: conserva split 1,1, KV q4_0 y reasoning-preserve. Ejecutar HE0 antes de HE20/BCB."
+      },
+      {
+        "id": "sys-bench-laguna-s-2-1-q2-48gb-100k-b1024",
+        "order": 191,
+        "displayName": "[bench Laguna] Q2 · 100k · B1024 · U256",
+        "runtime": {
+          "batch": 1024,
+          "ubatch": 256
+        },
+        "comment": "Control de batch: conserva el contexto histórico de 100k y reduce sólo batch/ubatch para aislar la causa de bloqueos o Connection closed. Ejecutar HE0 antes de HE20/BCB."
+      }
+    ],
     "minimumBinaryBuild": 10087
   },
   {

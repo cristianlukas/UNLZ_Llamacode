@@ -1,6 +1,6 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek y los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 ## Tabla de resultados
 
@@ -17,10 +17,44 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | — | 174,96 s | — | — | — | — | BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
 | BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | — | 197,10 s | 38,24 s | — | 0,00 | — | BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | — | 204,16 s | 56,93 s | — | 0,00 | — | BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
-| QUALITY - DeepSeek Fusion leloch | 20/20 | — | — | 852,31 s | 716,23 s | 9,15 | 0,00 | — | BCB infraestructura: respuesta sin cierre evaluable; repetir | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
+| QUALITY - DeepSeek Fusion leloch | 20/20 | — | — | 852,31 s | 716,23 s* | 9,15 | 0* | — | Reintento BCB en curso; no contar respuesta sin cierre como calidad | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
 | QUALITY - DeepSeek Fusion leloch · VRAM balance | — | 1/1 | — | — | — | — | — | 9,20 | HE0 válido; 67,31 s; variante conservadora; VRAM medida 35,7 GiB | 131k · B4096 · U1024 · tensor-split 1,0 · expertos 0–1 en CUDA0 y 37–42 en CUDA1 · CPU-MoE · Q2/Q4 híbrido |
 
 HE0 de la variante: `HumanEval_1_tems__20260816_122508`, `1/1`, `67,308 s`, sin reparación ni fallo de infraestructura. El JSON del agente no emitió tokens (`avgTps=0`), por lo que `TPS HE0=9,20` es el timing nativo de `llama-server` (`eval time 24.993,57 ms / 230 tokens`), no un cero de rendimiento. La corrida descartada anterior `HumanEval_1_tems__20260816_122210` usó `tensor-split=1,1` y falló al cargar por OOM en CUDA1; no se cuenta como calidad.
+
+## Procedimiento de benchmarking
+
+El orden es deliberado y se aplica a cada perfil base o candidato, siempre en modo headless y con el mismo harness, agente, semilla y criterios de reparación:
+
+1. **HumanEval/0 (smoketest):** ejecutar una sola tarea. Verifica que el modelo, backend, plantilla, MTP/mmproj y transporte funcionen; registra `Calidad HE0` y `TPS HE0`. Un `server-load`, `server-crash`, `timeout`, conexión cerrada o respuesta sin cierre es un fallo de infraestructura, no calidad cero.
+2. **HumanEval/20:** sólo después de HE0 válido. Ejecutar las 20 tareas para medir calidad del perfil y del harness; registrar score, tiempo total y TPS. Las repeticiones reemplazan el valor histórico únicamente cuando terminan con cierre evaluable.
+3. **BigCodeBench/8:** después de HE20 válido —o como repetición explícita de una fila ya marcada— ejecutar las 8 tareas difíciles para medir tool-calls, reparaciones, loops y estabilidad sostenida; registrar score, tiempo total y TPS.
+
+La promoción de un perfil requiere pasar HE0. HE20 separa calidad general y problemas del harness; BCB separa los casos difíciles. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
+
+## Candidatos derivados para medir
+
+No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y dos variantes nuevas de Laguna. Cada fila sigue HE0 → HE20 → BCB; todos empiezan sin resultados comparables.
+
+| Candidato | Derivado de | Hipótesis | Cambio controlado | Orden |
+|---|---|---|---|---|
+| `[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj` (`sys-bench-qwen38-udq4-mtp2-64k`) | BALANCE - Qwen3.8 UD-Q4 visión | Menos contexto y MTP pueden mejorar velocidad/estabilidad | ctx 65k; MTP2; B512/U64 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj` (`sys-bench-qwen38-udq4-mtp3-b1024`) | BALANCE - Qwen3.8 UD-Q4 visión | Menor batch puede evitar fallos de infraestructura | B1024/U128; MTP3 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` (`sys-bench-qwen38-udq4-mtp3-kv8`) | BALANCE - Qwen3.8 UD-Q4 visión | KV q8 puede sostener mejor contexto y calidad | KV K/V q8_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` (`sys-bench-qwen38-q4km-mtp4`) | Qwen3.8-27B Q4_K_M visión | Comparar MTP4 sin cambiar quant/contexto | MTP4 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` (`sys-bench-qwen38-q5km-mtp3-64k-kv8`) | Qwen3.8-27B Q5_K_M visión | Más precisión/KV puede mejorar BCB a costa de velocidad | ctx 65k; KV q8_0 | HE0 → HE20 → BCB |
+| `[bench 48GB KAT] KV f16 · 262k` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Aislar si KV f16 mejora calidad sin penalizar el decode | KV K/V f16 | HE0 → HE20 → BCB |
+| `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
+| `[bench BigBang] 131k · sin MTP · KV f16` (`sys-bench-48-bigbang-base`) | BALANCE - BigBang MTP | Aislar si el fallo pertenece al MTP o al harness/modelo | MTP desactivado | HE0 → HE20 → BCB |
+| `[bench 48GB MAX-Q] MTP4 · 131k · visión` (`sys-bench-48-tc-mtp-131k`) | BALANCE - ThinkingCap Qwen3.6 MTP4 | Mantener MTP4 y reducir contexto para evitar bloqueo sostenido | ctx 131k; MTP4 | HE0 → HE20 → BCB |
+| `[bench Laguna] Q2 · 64k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-64k-b1024`) | BALANCE - Laguna S 2.1 | Reducir KV y batch para salir del bucle de evaluación | ctx 65k; B1024/U256 | HE0 → HE20 → BCB |
+| `[bench Laguna] Q2 · 100k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-100k-b1024`) | BALANCE - Laguna S 2.1 | Aislar batch como causa manteniendo el contexto histórico | B1024/U256; ctx 100k | HE0 → HE20 → BCB |
+| `[bench antirez] 32k · B2048 · U256 · KV q4_0` (`sys-48-antirez-dsv4-q2q4-0731-32k-b2048`) | QUALITY - DeepSeek Fusion leloch | Bajar contexto/batch para mejorar estabilidad sin repartir capas base | ctx 32k; B2048/U256; `tensor-split 1,0` | HE0 → HE20 → BCB |
+| `[bench antirez] 32k · B4096 · U512 · KV q8_0` (`sys-48-antirez-dsv4-q2q4-kv8`) | QUALITY - DeepSeek Fusion leloch | KV q8 puede mejorar calidad sostenida; medir coste real | ctx 32k; KV K/V q8_0 | HE0 → HE20 → BCB |
+
+Las variantes DeepSeek mantienen la regla de seguridad del perfil histórico: `--tensor-split 1,0`, expertos residentes alineados con sus capas y resto en CPU. No se propone `tensor-split 1,1`, porque la prueba local anterior terminó en OOM/corrupción y no es una mejora válida.
+
+`*` En DeepSeek, el tiempo/TPS de BCB es el último intento observado antes de cerrar la serie; la respuesta no tuvo cierre evaluable. Debe repetirse después de HE0/HE20 válidos del perfil o variante correspondiente.
 
 ## Captura completa de configuración
 
