@@ -64,8 +64,11 @@ QVariantMap RunHistoryStore::fromJson(const QJsonObject &obj)
 
 QString RunHistoryStore::storagePath(const QString &ownerId) const
 {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-                        + QStringLiteral("/run_history");
+    const QByteArray overridePath = qgetenv("LLAMACODE_RUN_HISTORY_DIR");
+    const QString dir = overridePath.isEmpty()
+        ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+              + QStringLiteral("/run_history")
+        : QString::fromLocal8Bit(overridePath);
     QDir().mkpath(dir);
     return dir + QStringLiteral("/") + sanitize(ownerId) + QStringLiteral(".json");
 }

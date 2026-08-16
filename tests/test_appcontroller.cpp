@@ -409,6 +409,8 @@ void AppControllerTests::initTestCase()
     QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
     QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
     QVERIFY(m_tmp.isValid());
+    qputenv("LLAMACODE_RUN_HISTORY_DIR",
+            QFile::encodeName(QDir(m_tmp.path()).filePath(QStringLiteral("run_history"))));
 }
 
 void AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
