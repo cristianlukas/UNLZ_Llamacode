@@ -1346,6 +1346,9 @@ Item {
                                               enabledTools: [], directives: [],
                                               approvalMode: "ask", thinking: false,
                                               temperature: -1, systemExtra: "",
+                                              personalityProfileIds: [], styleProfileIds: [],
+                                              injectStyleExamples: true, styleExampleLimit: 2,
+                                              styleContextLimit: 6000,
                                               thinkingLeakGuard: false,
                                               progressCredits: 8, progressMaxCredits: 16,
                                               progressReplanAfter: 3, progressStopAfter: 5,
@@ -1354,6 +1357,8 @@ Item {
                         property var directiveItems: [] // catálogo de directivas
                         property int enabledCount: 0
                         property int enabledTokens: 0
+                        property var styleEdit: ({ id: "", name: "", kind: "writing-style",
+                                                   description: "", styleCard: "", examples: [] })
                         readonly property bool isSystem: edit.system === true
 
                         function allToolNames() {
@@ -1377,6 +1382,32 @@ Item {
                             if (key === "honey") return edit.directives.indexOf("honey") >= 0
                             return edit.directives.indexOf("*") >= 0
                                 || edit.directives.indexOf(key) >= 0
+                        }
+                        function selectStyleProfile(id) {
+                            var p = App.profileManager.getPersonaStyleProfile(id)
+                            if (!p || !p.id) return
+                            styleEdit = { id: p.id, name: p.name, kind: p.kind || "writing-style",
+                                          description: p.description || "", styleCard: p.styleCard || "",
+                                          examples: (p.examples || []).slice() }
+                            styleNameField.text = styleEdit.name
+                            styleDescriptionField.text = styleEdit.description
+                            styleCardField.text = styleEdit.styleCard
+                            styleExamplesField.text = styleEdit.examples.length ? styleEdit.examples[0] : ""
+                            var ki = styleKindCombo.indexOfValue(styleEdit.kind)
+                            if (ki >= 0) styleKindCombo.currentIndex = ki
+                        }
+                        function saveStyleProfile() {
+                            if (!styleEdit.id) return
+                            App.profileManager.updatePersonaStyleProfile({
+                                id: styleEdit.id, name: styleNameField.text.trim(), kind: styleKindCombo.currentValue,
+                                description: styleDescriptionField.text, styleCard: styleCardField.text,
+                                examples: styleExamplesField.text.trim().length ? [styleExamplesField.text] : []
+                            })
+                        }
+                        function createStyleProfile() {
+                            var id = App.profileManager.addPersonaStyleProfile("Nuevo estilo", "writing-style")
+                            styleProfileSelector.currentIndex = styleProfileSelector.indexOfValue(id)
+                            selectStyleProfile(id)
                         }
                         function setToolOn(name, on) {
                             var arr = edit.enabledTools.slice()
@@ -1434,7 +1465,12 @@ Item {
                                      progressStopAfter: p.progressStopAfter || 5,
                                      quickToolTimeoutSec: p.quickToolTimeoutSec || 15,
                                      temperature: (p.temperature === undefined ? -1 : p.temperature),
-                                     systemExtra: p.systemExtra || "" }
+                                     systemExtra: p.systemExtra || "",
+                                     personalityProfileIds: (p.personalityProfileIds || []).slice(),
+                                     styleProfileIds: (p.styleProfileIds || []).slice(),
+                                     injectStyleExamples: p.injectStyleExamples !== false,
+                                     styleExampleLimit: p.styleExampleLimit || 2,
+                                     styleContextLimit: p.styleContextLimit || 6000 }
                             apNameField.text = edit.name
                             extraField.text = edit.systemExtra
                             tempField.text = edit.temperature >= 0 ? String(edit.temperature) : ""
@@ -1444,6 +1480,13 @@ Item {
                             progressReplanField.text = String(edit.progressReplanAfter)
                             progressStopField.text = String(edit.progressStopAfter)
                             quickToolTimeoutField.text = String(edit.quickToolTimeoutSec)
+                            examplesSwitch.checked = edit.injectStyleExamples !== false
+                            styleExampleLimitField.text = String(edit.styleExampleLimit || 2)
+                            styleContextLimitField.text = String(edit.styleContextLimit || 6000)
+                            var pid = (edit.personalityProfileIds || []).length ? edit.personalityProfileIds[0] : ""
+                            var sid = (edit.styleProfileIds || []).length ? edit.styleProfileIds[0] : ""
+                            var pi = personalitySelector.indexOfValue(pid); if (pi >= 0) personalitySelector.currentIndex = pi
+                            var si = styleSelector.indexOfValue(sid); if (si >= 0) styleSelector.currentIndex = si
                             rebuildGroups()  // recrea delegates → switches re-evaluan checked
                         }
                         function save() {
@@ -1463,7 +1506,12 @@ Item {
                                 "quickToolTimeoutSec": parseInt(quickToolTimeoutField.text) || 15,
                                 "temperature": (tempField.text.trim().length && !isNaN(parseFloat(tempField.text)))
                                                ? parseFloat(tempField.text) : -1,
-                                "systemExtra": extraField.text
+                                "systemExtra": extraField.text,
+                                "personalityProfileIds": agentProfilesSection.edit.personalityProfileIds,
+                                "styleProfileIds": agentProfilesSection.edit.styleProfileIds,
+                                "injectStyleExamples": examplesSwitch.checked,
+                                "styleExampleLimit": parseInt(styleExampleLimitField.text) || 2,
+                                "styleContextLimit": parseInt(styleContextLimitField.text) || 6000
                             })
                             App.profileManager.saveProfiles()
                         }
@@ -1640,6 +1688,82 @@ Item {
 
                                     Text { text: "Instrucciones extra"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcTextField { id: extraField; Layout.fillWidth: true; placeholderText: "opcional, se añade al system prompt" }
+
+                                    Text { text: "Personalidad"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcComboBox {
+                                        id: personalitySelector; Layout.fillWidth: true
+                                        model: App.profileManager.personaStyleProfiles; textRole: "name"; valueRole: "profileId"
+                                        onActivated: agentProfilesSection.edit.personalityProfileIds = currentValue ? [currentValue] : []
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: personalitySelector.displayText || "Ninguna"; color: Theme.textPrimary; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+
+                                    Text { text: "Estilo de escritura"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcComboBox {
+                                        id: styleSelector; Layout.fillWidth: true
+                                        model: App.profileManager.personaStyleProfiles; textRole: "name"; valueRole: "profileId"
+                                        onActivated: agentProfilesSection.edit.styleProfileIds = currentValue ? [currentValue] : []
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: styleSelector.displayText || "Ninguno"; color: Theme.textPrimary; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+
+                                    Text { text: "Inyectar ejemplos"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcSwitch { id: examplesSwitch; checked: agentProfilesSection.edit.injectStyleExamples !== false }
+
+                                    Text { text: "Máximo de ejemplos"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: styleExampleLimitField; Layout.fillWidth: true; text: "2"; placeholderText: "2" }
+
+                                    Text { text: "Límite de contexto de estilo"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: styleContextLimitField; Layout.fillWidth: true; text: "6000"; placeholderText: "6000 caracteres" }
+                                }
+
+                                Text { text: "PERFILES DE PERSONALIDAD Y ESTILO"; color: Theme.accent; font.pixelSize: 11; font.bold: true }
+                                RowLayout {
+                                    Layout.fillWidth: true; spacing: 8
+                                    LcComboBox {
+                                        id: styleProfileSelector; Layout.fillWidth: true
+                                        model: App.profileManager.personaStyleProfiles; textRole: "name"; valueRole: "profileId"
+                                        onActivated: agentProfilesSection.selectStyleProfile(currentValue)
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: styleProfileSelector.displayText || "Seleccioná un perfil"; color: Theme.textPrimary; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+                                    LcButton { text: "Nuevo"; secondary: true; onClicked: agentProfilesSection.createStyleProfile() }
+                                    LcButton { text: "Guardar estilo"; secondary: true; enabled: !!agentProfilesSection.styleEdit.id; onClicked: agentProfilesSection.saveStyleProfile() }
+                                }
+                                GridLayout {
+                                    Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 8
+                                    enabled: !!agentProfilesSection.styleEdit.id && !agentProfilesSection.isSystem
+                                    Text { text: "Nombre"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: styleNameField; Layout.fillWidth: true }
+                                    Text { text: "Tipo"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcComboBox {
+                                        id: styleKindCombo; Layout.fillWidth: true; textRole: "label"; valueRole: "value"
+                                        model: [{label: "Estilo de escritura", value: "writing-style"}, {label: "Personalidad", value: "personality"}]
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: styleKindCombo.displayText; color: Theme.textPrimary; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+                                    Text { text: "Descripción"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField { id: styleDescriptionField; Layout.fillWidth: true; placeholderText: "Para qué conviene usarlo" }
+                                    Text { text: "Ficha"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    TextArea { id: styleCardField; Layout.fillWidth: true; Layout.minimumHeight: 72; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Tono, ritmo, vocabulario, preferencias y cosas a evitar" }
+                                    Text { text: "Muestra"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    TextArea { id: styleExamplesField; Layout.fillWidth: true; Layout.minimumHeight: 100; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Pegá un ejemplo. Se usa sólo como referencia y queda local." }
+                                }
+                                RowLayout {
+                                    Layout.fillWidth: true; spacing: 8
+                                    LcButton {
+                                        text: "Completar ficha desde muestra"; secondary: true
+                                        enabled: styleExamplesField.text.trim().length > 0 && !!agentProfilesSection.styleEdit.id
+                                        onClicked: styleCardField.text = App.profileManager.heuristicStyleCard(styleExamplesField.text)
+                                    }
+                                    Text {
+                                        Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.textMuted; font.pixelSize: 11
+                                        text: "También podés pedirle al modelo la ficha usando buildStyleAnalysisPrompt; revisala antes de guardarla."
+                                    }
+                                }
+                                Text {
+                                    Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.textMuted; font.pixelSize: 11
+                                    text: "La ficha se inyecta como preferencia de expresión. No modifica permisos, herramientas ni guardrails. Para generar una ficha inicial podés usar heuristicStyleCard desde una integración futura o pedirle al modelo el prompt de análisis."
                                 }
 
                                 // Guardrail global (no per-perfil): acciones destructivas

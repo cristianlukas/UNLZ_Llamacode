@@ -43,9 +43,9 @@
 - [Cookbook de modelos (hardware-fit)](#cookbook-de-modelos-recomendaciones-hardware-fit)
 - [Chat integrado](#chat-integrado) · [Harness de Agente](#harness-de-agente-opencode) · [Lanzamiento del servidor](#lanzamiento-del-servidor-launchpage)
 - [Backends cloud + secretos](#backends-cloud--secretos-cifrados) · [Modo Charla (voz)](#modo-charla-voz-a-voz) · [Memoria/RAG](#memoria-rag-y-verificación) · [Maestro/supervisor](#maestro--supervisor-escalado)
-- [Correo](#cuentas-de-correo) · [Browser (Playwright)](#automatización-de-browser-playwright) · [Adjuntos/visión](#adjuntos-documentos--visión) · [Watchdog + VRAM](#robustez-del-server-watchdog--vram) · [Otras capacidades](#otras-capacidades)
+- [Correo](#cuentas-de-correo) · [Browser (Playwright)](#automatización-de-browser-playwright) · [Data Lab](#data-lab) · [Adjuntos/visión](#adjuntos-documentos--visión) · [Watchdog + VRAM](#robustez-del-server-watchdog--vram) · [Otras capacidades](#otras-capacidades)
 - [Process Lifecycle](#process-lifecycle) · [Stack técnico](#stack-técnico) · [Build](#build) · [Estructura del repo](#estructura-del-repo)
-- [Fases](#fases) · [Tasks (macros + scheduler)](#tasks-macros-configurables--scheduler-cron) · [Benchmarking](#benchmarking) · [Auto-tuning](#auto-tuning-de-parámetros) · [Seguridad operativa](#seguridad-operativa)
+- [Fases](#fases) · [Tasks (macros + scheduler)](#tasks-macros-configurables--scheduler-cron) · [Workflows de ingeniería](#workflows-de-ingeniería) · [Benchmarking](#benchmarking) · [Rendimiento multi-GPU](#rendimiento-multi-gpu) · [Auto-tuning](#auto-tuning-de-parámetros) · [Seguridad operativa](#seguridad-operativa)
 - [Agradecimientos](#agradecimientos)
 
 ## Instalación ultra-rápida (banco de pruebas aislado)
@@ -129,6 +129,15 @@ Principio central:
 
 ## Privacidad y datos locales
 
+### Perfiles de personalidad y estilo
+
+Los perfiles de agente pueden asociar artefactos locales reutilizables de
+`personality` y `writing-style`. LlamaCode conserva una ficha resumida y
+ejemplos acotados, y los inyecta como preferencias de expresión en el system
+prompt sin modificar permisos, tools ni guardrails. Se guardan en el directorio
+local de perfiles y pueden importarse/exportarse como JSON. Ver
+[`docs/personality-style-profiles.md`](docs/personality-style-profiles.md).
+
 UNLZ_Llamacode está diseñado como estación local-first: la GUI, los perfiles, el
 catálogo de modelos, el historial de chat/agente y los procesos `llama-server`
 corren en la máquina del usuario. El proyecto también soporta integraciones
@@ -190,6 +199,12 @@ que se activen en cada sesión.
   muestra durante toda la automatización un indicador siempre visible, un reborde
   independiente en cada monitor y un aro alrededor del puntero; el conjunto puede ocultarse
   desde Configuración > perfiles de agente > Indicador de escritorio.
+
+- **Frugalidad opt-in**: los perfiles de agente pueden activar `Honey`, una política
+  YAGNI que prioriza reutilizar código y detenerse en la primera solución mínima
+  correcta sin eliminar validaciones, seguridad, tests, accesibilidad ni manejo de
+  errores. La acción **Revisar frugalidad** audita el diff actual en modo read-only
+  y devuelve métricas y candidatos de sobre-ingeniería para revisión humana.
 
 El probe opt-in `qa_visual_automation` valida búsqueda real, DPI y multimonitor en
 una ventana propia. Por defecto no mueve el mouse; `--execute-click --screen N`
@@ -1052,6 +1067,16 @@ El ejecutable de QA `qa_web_providers` permite probar servicios reales fuera de
 `LLAMACODE_QA_CAMOFOX_URL`) o `qa_web_providers playwright https://example.com`
 con `LLAMACODE_QA_PLAYWRIGHT_CMD` definido.
 
+## Data Lab
+
+Data Lab agrega un flujo local para convertir documentos en registros
+estructurados. Define un esquema JSON, procesa una carpeta mediante
+`DocumentExtractor`, genera prompts de extracción estrictos, valida tipos y
+campos obligatorios de forma determinística y exporta JSON/CSV. Los jobs quedan
+persistidos en `AppLocalData/LlamaCode/data-lab/jobs/` y los documentos con
+errores se mantienen en estado `needs_review`. El detalle del contrato está en
+[`docs/data-lab.md`](docs/data-lab.md).
+
 ## Adjuntos (documentos + visión)
 
 `DocumentExtractor` convierte adjuntos **pdf/office → markdown** vía sidecar
@@ -1348,6 +1373,18 @@ LlamaCode/
 6. **P5** ✅ Built-in coding agent nativo (`LlamaAgentBackend`): loop ReAct contra `llama-server`, tools (read/write/edit/grep/glob/list_dir/run_shell/web_fetch/task), MCP stdio, aprobaciones, plan mode, checkpoint/rollback, subagents paralelos en git worktrees, permisos por patrón, @-mentions, imágenes (visión)
 7. **P6** ✅ Tasks (macros semánticas configurables) + scheduler cron in-app, con auto ciclo de vida del agente
 8. **P7** ✅ Backends cloud + secretos cifrados, modo Charla (voz-a-voz), correo, browser (Playwright/teach), memoria/RAG, maestro/supervisor, watchdog + VRAM, router hot-swap, headless ControlApi
+
+## Workflows de ingeniería
+
+Los presets `Investigar bug`, `QA con regresión`, `Auditar documentación`,
+`Revisar cambios` y `Preparar release Debug` se instalan desde la sección Tasks.
+Son definiciones declarativas sobre el mismo motor de workflows que ya soporta
+aprobaciones, snapshots, pasos paralelos, reanudación y rollback. No conocen
+aplicaciones concretas ni coordenadas: el agente resuelve cada paso usando las
+tools y permisos del workspace.
+
+La especificación y los perfiles de seguridad están en
+[`docs/agent-workflows.md`](docs/agent-workflows.md).
 
 ## Tasks (macros configurables + scheduler cron)
 
@@ -1753,6 +1790,18 @@ Desde el Historial de Tasks se puede exportar un paquete JSON versionado con la
 traza persistida, métricas, reportes de tools, workflow, receipts, versión del
 producto y un hash SHA-256 por corrida. La exportación no reejecuta la Task ni
 incluye secretos. Ver [`docs/evidence.md`](docs/evidence.md).
+
+## Rendimiento multi-GPU
+
+El diagnóstico de hardware conserva la topología de cada GPU (`gpus`), un
+`hardwareFingerprint` y una recomendación explicable de `split-mode` y KV cache.
+En enlaces PCIe débiles prioriza `layer`; con enlaces rápidos habilita la prueba
+de `tensor`. La recomendación no reemplaza una medición: los benchmarks deben
+comparar prefill (`pp/s`), generación (`tg/s`), TTFT, VRAM por GPU y estabilidad
+con el mismo modelo, prompt y versión de `llama.cpp`.
+
+El contrato y las reglas están documentados en
+[`docs/multi-gpu-performance.md`](docs/multi-gpu-performance.md).
 
 ## Auto-tuning de parámetros
 

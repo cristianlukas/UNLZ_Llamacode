@@ -4733,8 +4733,10 @@ void AppController::applyActiveAgentProfile()
     }
     cb->setApprovalPolicy(approval);
 
-    const QString sysExtra = ap.systemExtra.trimmed().isEmpty() ? m_agentSystemPrompt
-                                                                : ap.systemExtra;
+    QString sysExtra = ap.systemExtra.trimmed().isEmpty() ? m_agentSystemPrompt
+                                                          : ap.systemExtra;
+    const QString personaStyle = m_profiles.renderPersonaStyleContext(ap);
+    if (!personaStyle.isEmpty()) sysExtra += personaStyle;
     const double temp = ap.temperature >= 0.0
         ? ap.temperature
         : (m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);

@@ -122,6 +122,25 @@ struct WorkspaceProfile {
     static QString generateId();
 };
 
+// Perfil reutilizable de personalidad o estilo. Es una preferencia de expresión,
+// nunca una fuente de permisos: no puede alterar tools, aprobaciones ni guardrails.
+struct PersonaStyleProfile {
+    QString id;
+    bool system = false;
+    QString name;
+    QString kind = "writing-style"; // personality | writing-style
+    QString description;
+    QString styleCard;
+    QStringList examples;
+    bool enabled = true;
+    int maxExamples = 2;
+    int maxChars = 6000;
+
+    QJsonObject toJson() const;
+    static PersonaStyleProfile fromJson(const QJsonObject &obj);
+    static QString generateId();
+};
+
 // Perfil de Agente: set de capacidades (tools) + directivas (secciones del system
 // prompt) + ajustes (approval/thinking/temperatura/instrucciones extra). Registro
 // global; los LaunchProfile y el modo agente lo referencian por id. Los 4 presets
@@ -136,6 +155,11 @@ struct AgentProfile {
     bool thinking = false;
     double temperature = -1.0;      // -1 = heredar del modelo/perfil
     QString systemExtra;            // instrucciones extra opcionales
+    QStringList personalityProfileIds;
+    QStringList styleProfileIds;
+    bool injectStyleExamples = true;
+    int styleExampleLimit = 2;
+    int styleContextLimit = 6000;
     bool mcpEnabled = true;         // false = no inyectar tools MCP (ahorra contexto;
                                     // las tools MCP NO están en toolCatalog, así que
                                     // enabledTools no las puede apagar — esto sí)

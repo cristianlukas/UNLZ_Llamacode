@@ -85,7 +85,7 @@ void ProfileManager::setupWatcher()
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                QStringLiteral("runtimes"), QStringLiteral("harnesses"),
                                QStringLiteral("workspaces"), QStringLiteral("launches"),
-                               QStringLiteral("agent_profiles")}) {
+                               QStringLiteral("agent_profiles"), QStringLiteral("persona_styles")}) {
         const QString p = storagePath(ent);
         if (QFile::exists(p)) m_watcher.addPath(p);
     }
@@ -119,7 +119,7 @@ void ProfileManager::onProfileDirectoryChanged(const QString &path)
         for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                    QStringLiteral("runtimes"), QStringLiteral("harnesses"),
                                    QStringLiteral("workspaces"), QStringLiteral("launches"),
-                                   QStringLiteral("agent_profiles")}) {
+                                   QStringLiteral("agent_profiles"), QStringLiteral("persona_styles")}) {
             const QString file = storagePath(ent);
             if (QFile::exists(file) && !m_watcher.files().contains(file))
                 m_watcher.addPath(file);
@@ -637,6 +637,11 @@ static QVariantMap agentProfileToVariant(const AgentProfile &p)
             {"enabledTools", p.enabledTools}, {"directives", p.directives},
             {"approvalMode", p.approvalMode}, {"thinking", p.thinking},
             {"temperature", p.temperature}, {"systemExtra", p.systemExtra},
+            {"personalityProfileIds", p.personalityProfileIds},
+            {"styleProfileIds", p.styleProfileIds},
+            {"injectStyleExamples", p.injectStyleExamples},
+            {"styleExampleLimit", p.styleExampleLimit},
+            {"styleContextLimit", p.styleContextLimit},
             {"mcpEnabled", p.mcpEnabled}, {"thinkingLeakGuard", p.thinkingLeakGuard},
             {"progressCredits", p.progressCredits},
             {"progressMaxCredits", p.progressMaxCredits},
@@ -800,6 +805,11 @@ bool ProfileManager::updateAgentProfile(const QVariantMap &data)
     if (data.contains("thinking"))     p.thinking = data.value("thinking").toBool();
     if (data.contains("temperature"))  p.temperature = data.value("temperature").toDouble();
     if (data.contains("systemExtra"))  p.systemExtra = data.value("systemExtra").toString();
+    if (data.contains("personalityProfileIds")) p.personalityProfileIds = data.value("personalityProfileIds").toStringList();
+    if (data.contains("styleProfileIds")) p.styleProfileIds = data.value("styleProfileIds").toStringList();
+    if (data.contains("injectStyleExamples")) p.injectStyleExamples = data.value("injectStyleExamples").toBool();
+    if (data.contains("styleExampleLimit")) p.styleExampleLimit = qBound(0, data.value("styleExampleLimit").toInt(), 8);
+    if (data.contains("styleContextLimit")) p.styleContextLimit = qBound(500, data.value("styleContextLimit").toInt(), 20000);
     if (data.contains("mcpEnabled"))   p.mcpEnabled = data.value("mcpEnabled").toBool();
     if (data.contains("thinkingLeakGuard"))
         p.thinkingLeakGuard = data.value("thinkingLeakGuard").toBool();
@@ -848,6 +858,144 @@ AgentProfile ProfileManager::resolveAgentProfile(const QString &id) const
     return m_agentProfiles.findById(id);
 }
 
+QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile) const
+{
+    QString out;
+    int remaining = qMax(500, profile.styleContextLimit);
+    auto append = [&](const PersonaStyleProfile &p, const QString &heading) {
+        if (!p.enabled || p.id.isEmpty() || remaining <= 0) return;
+        QString block = QStringLiteral("\n\n--- %1: %2 ---\n%3")
+            .arg(heading, p.name, p.styleCard.trimmed());
+        if (!p.description.trimmed().isEmpty())
+            block += QStringLiteral("\nDescripción: ") + p.description.trimmed();
+        if (profile.injectStyleExamples && p.kind == QLatin1String("writing-style")) {
+            int count = 0;
+            for (const QString &example : p.examples) {
+                if (count++ >= qMin(profile.styleExampleLimit, p.maxExamples)) break;
+                if (example.trimmed().isEmpty()) continue;
+                block += QStringLiteral("\nEjemplo de referencia (no copiar literalmente):\n")
+                         + example.left(p.maxChars);
+            }
+        }
+        block = block.left(remaining);
+        out += block;
+        remaining -= block.size();
+    };
+    for (const QString &id : profile.personalityProfileIds)
+        append(m_personaStyles.findById(id), QStringLiteral("PERSONALIDAD DEL USUARIO"));
+    for (const QString &id : profile.styleProfileIds)
+        append(m_personaStyles.findById(id), QStringLiteral("ESTILO DEL USUARIO"));
+    if (!out.isEmpty())
+        out += QStringLiteral("\nNo copies contenido de los ejemplos ni inventes rasgos. "
+                             "Preservá el significado, los hechos y la intención de cada pedido.\n");
+    return out;
+}
+
+static QVariantMap personaStyleToVariant(const PersonaStyleProfile &p)
+{
+    return {{"id", p.id}, {"name", p.name}, {"system", p.system},
+            {"kind", p.kind}, {"description", p.description},
+            {"styleCard", p.styleCard}, {"examples", p.examples},
+            {"enabled", p.enabled}, {"maxExamples", p.maxExamples},
+            {"maxChars", p.maxChars}};
+}
+
+QString ProfileManager::addPersonaStyleProfile(const QString &name, const QString &kind)
+{
+    PersonaStyleProfile p;
+    p.id = PersonaStyleProfile::generateId();
+    p.name = name.trimmed().isEmpty() ? QStringLiteral("Nuevo estilo") : name.trimmed();
+    p.kind = kind == QLatin1String("personality") ? QStringLiteral("personality")
+                                                    : QStringLiteral("writing-style");
+    m_personaStyles.add(p);
+    save();
+    return p.id;
+}
+
+bool ProfileManager::removePersonaStyleProfile(const QString &id)
+{
+    const PersonaStyleProfile p = m_personaStyles.findById(id);
+    if (p.id.isEmpty() || p.system) return false;
+    const bool ok = m_personaStyles.remove(id);
+    if (ok) save();
+    return ok;
+}
+
+bool ProfileManager::updatePersonaStyleProfile(const QVariantMap &data)
+{
+    PersonaStyleProfile p = m_personaStyles.findById(data.value("id").toString());
+    if (p.id.isEmpty() || p.system) return false;
+    if (data.contains("name")) p.name = data.value("name").toString().trimmed();
+    if (data.contains("kind")) p.kind = data.value("kind").toString() == QLatin1String("personality")
+                                      ? QStringLiteral("personality") : QStringLiteral("writing-style");
+    if (data.contains("description")) p.description = data.value("description").toString();
+    if (data.contains("styleCard")) p.styleCard = data.value("styleCard").toString();
+    if (data.contains("examples")) {
+        p.examples.clear();
+        for (const QString &e : data.value("examples").toStringList())
+            if (!e.trimmed().isEmpty()) p.examples << e.left(20000);
+    }
+    if (data.contains("enabled")) p.enabled = data.value("enabled").toBool();
+    if (data.contains("maxExamples")) p.maxExamples = qBound(0, data.value("maxExamples").toInt(), 8);
+    if (data.contains("maxChars")) p.maxChars = qBound(500, data.value("maxChars").toInt(), 20000);
+    const bool ok = m_personaStyles.update(p);
+    if (ok) save();
+    return ok;
+}
+
+QVariantMap ProfileManager::getPersonaStyleProfile(const QString &id) const
+{
+    return personaStyleToVariant(m_personaStyles.findById(id));
+}
+
+QString ProfileManager::buildStyleAnalysisPrompt(const QString &sample, const QString &kind) const
+{
+    const QString mode = kind == QLatin1String("personality") ? QStringLiteral("personalidad conversacional")
+                                                                 : QStringLiteral("estilo de escritura");
+    return QStringLiteral("Analizá únicamente patrones observables de %1 en el texto siguiente. "
+                          "No juzgues la calidad ni inventes rasgos. Devolvé una ficha breve "
+                          "en español con tono, ritmo, longitud de frases, vocabulario, "
+                          "preferencias y cosas a evitar. Preservá privacidad y no repitas el texto.\n\n"
+                          "MUESTRA:\n%2").arg(mode, sample.left(20000));
+}
+
+QString ProfileManager::heuristicStyleCard(const QString &sample) const
+{
+    const QString s = sample.trimmed();
+    if (s.isEmpty()) return {};
+    const QStringList sentences = s.split(QRegularExpression(QStringLiteral("[.!?]+\\s*")), Qt::SkipEmptyParts);
+    int words = s.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts).size();
+    const double avg = sentences.isEmpty() ? 0.0 : double(words) / sentences.size();
+    const QString length = avg < 12 ? QStringLiteral("frases cortas")
+                          : avg < 24 ? QStringLiteral("frases medias, con variación")
+                                     : QStringLiteral("frases largas y elaboradas");
+    const bool questions = s.contains(QLatin1Char('?'));
+    const bool exclamations = s.contains(QLatin1Char('!'));
+    return QStringLiteral("Longitud: %1. Promedio aproximado: %2 palabras por oración. "
+                          "Preguntas: %3. Exclamaciones: %4. Usá esta ficha como hipótesis "
+                          "editable y preservá significado e intención.")
+        .arg(length).arg(QString::number(avg, 'f', 1))
+        .arg(questions ? QStringLiteral("presente") : QStringLiteral("escaso"))
+        .arg(exclamations ? QStringLiteral("presente") : QStringLiteral("escaso"));
+}
+
+QString ProfileManager::exportPersonaStyleProfile(const QString &id) const
+{
+    const PersonaStyleProfile p = m_personaStyles.findById(id);
+    return p.id.isEmpty() ? QString() : QString::fromUtf8(QJsonDocument(p.toJson()).toJson(QJsonDocument::Indented));
+}
+
+QString ProfileManager::importPersonaStyleProfile(const QString &json)
+{
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !doc.isObject()) return {};
+    PersonaStyleProfile p = PersonaStyleProfile::fromJson(doc.object());
+    p.id = PersonaStyleProfile::generateId(); p.system = false;
+    if (p.name.trimmed().isEmpty()) p.name = QStringLiteral("Estilo importado");
+    m_personaStyles.add(p); save(); return p.id;
+}
+
 // ---- Resolvers ----
 
 BackendProfile   ProfileManager::resolveBackend(const QString &id)    const { return m_backends.findById(id); }
@@ -879,6 +1027,7 @@ void ProfileManager::loadSystemProfiles()
     stripSystem(m_runtimes);
     stripSystem(m_launches);
     stripSystem(m_agentProfiles);
+    stripSystem(m_personaStyles);
 
     // Perfiles de agente de sistema (Básico/Intermedio/Avanzado/Máximo): definidos
     // en código (AgentProfile::systemPresets), inmutables, no se persisten. Se
@@ -1133,6 +1282,7 @@ void ProfileManager::load()
     loadList(storagePath("workspaces"), m_workspaces, &WorkspaceProfile::fromJson);
     loadList(storagePath("launches"),   m_launches,   &LaunchProfile::fromJson);
     loadList(storagePath("agent_profiles"), m_agentProfiles, &AgentProfile::fromJson);
+    loadList(storagePath("persona_styles"), m_personaStyles, &PersonaStyleProfile::fromJson);
 
     // Importa la insignia BEST para perfiles curados que ya existían antes de
     // introducir el campo. No modifica nombres ni perfiles que no coincidan.
@@ -1238,12 +1388,13 @@ void ProfileManager::save() const
     saveList(storagePath("workspaces"), userOnly(m_workspaces.m_items));
     saveList(storagePath("launches"),   userOnly(m_launches.m_items));
     saveList(storagePath("agent_profiles"), userOnly(m_agentProfiles.m_items));
+    saveList(storagePath("persona_styles"), userOnly(m_personaStyles.m_items));
 
     // La escritura atómica (rename) hace que el watcher pierda los paths: re-armarlos.
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                QStringLiteral("runtimes"), QStringLiteral("harnesses"),
                                QStringLiteral("workspaces"), QStringLiteral("launches"),
-                               QStringLiteral("agent_profiles")}) {
+                               QStringLiteral("agent_profiles"), QStringLiteral("persona_styles")}) {
         const QString p = storagePath(ent);
         if (QFile::exists(p) && !m_watcher.files().contains(p)) m_watcher.addPath(p);
     }

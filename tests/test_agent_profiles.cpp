@@ -35,6 +35,8 @@ private slots:
     void manager_crudAndPersistence();
     void manager_systemPresetsImmutable();
     void manager_recommendsAndClonesTaskProfile();
+    void personaStyle_jsonAndPromptBudget();
+    void manager_personaStyleCrudAndImport();
 
 private:
     QTemporaryDir m_dir;
@@ -70,6 +72,43 @@ void AgentProfilesTests::agentProfile_jsonRoundTrip()
     QCOMPARE(r.progressReplanAfter, p.progressReplanAfter);
     QCOMPARE(r.progressStopAfter, p.progressStopAfter);
     QCOMPARE(r.quickToolTimeoutSec, p.quickToolTimeoutSec);
+}
+
+void AgentProfilesTests::personaStyle_jsonAndPromptBudget()
+{
+    PersonaStyleProfile p;
+    p.id = QStringLiteral("style-1"); p.name = QStringLiteral("Narrativo");
+    p.kind = QStringLiteral("writing-style"); p.styleCard = QStringLiteral("Frases medias");
+    p.examples = {QStringLiteral("Una muestra breve.")};
+    const PersonaStyleProfile r = PersonaStyleProfile::fromJson(p.toJson());
+    QCOMPARE(r.id, p.id); QCOMPARE(r.kind, p.kind); QCOMPARE(r.styleCard, p.styleCard);
+    QCOMPARE(r.examples, p.examples);
+
+    ProfileManager pm;
+    const QString id = pm.addPersonaStyleProfile(QStringLiteral("Estilo"), QStringLiteral("writing-style"));
+    QVERIFY(!id.isEmpty());
+    QVERIFY(pm.updatePersonaStyleProfile({{"id", id}, {"styleCard", "voz cercana"},
+                                          {"examples", QStringList{"Ejemplo uno."}}}));
+    AgentProfile ap; ap.styleProfileIds = {id}; ap.styleContextLimit = 120;
+    const QString rendered = pm.renderPersonaStyleContext(ap);
+    QVERIFY(rendered.contains(QStringLiteral("voz cercana")));
+    QVERIFY(rendered.size() <= 220); // margen por el cierre de instrucciones
+}
+
+void AgentProfilesTests::manager_personaStyleCrudAndImport()
+{
+    ProfileManager pm;
+    const QString id = pm.addPersonaStyleProfile(QStringLiteral("Importable"), QStringLiteral("personality"));
+    QVERIFY(!id.isEmpty());
+    const QString json = pm.exportPersonaStyleProfile(id);
+    QVERIFY(json.contains(QStringLiteral("Importable")));
+    const QString imported = pm.importPersonaStyleProfile(json);
+    QVERIFY(!imported.isEmpty()); QVERIFY(imported != id);
+    QVERIFY(pm.removePersonaStyleProfile(imported));
+    QVERIFY(pm.buildStyleAnalysisPrompt(QStringLiteral("Texto de prueba"), QStringLiteral("writing-style"))
+                .contains(QStringLiteral("MUESTRA")));
+    QVERIFY(pm.heuristicStyleCard(QStringLiteral("Una frase. Otra frase."))
+                .contains(QStringLiteral("Promedio")));
 }
 
 void AgentProfilesTests::systemPresets_shape()
@@ -233,7 +272,12 @@ void AgentProfilesTests::honey_isOptInOnly()
 
     // Elegida explícitamente: presente.
     be.setDirectives(QStringList{"honey"});
-    QVERIFY(be.systemPromptForTest().contains(QStringLiteral("FRUGALIDAD (Honey)")));
+    const QString honey = be.systemPromptForTest();
+    QVERIFY(honey.contains(QStringLiteral("FRUGALIDAD (Honey)")));
+    QVERIFY(honey.contains(QStringLiteral("¿hace falta?")));
+    QVERIFY(honey.contains(QStringLiteral("¿ya existe en este código?")));
+    QVERIFY(honey.contains(QStringLiteral("validación, seguridad")));
+    QVERIFY(honey.contains(QStringLiteral("accesibilidad")));
 }
 
 // Anti-sesgo es opt-in PURO como honey: endurece el razonamiento pero alarga el

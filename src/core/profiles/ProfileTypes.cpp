@@ -150,6 +150,30 @@ WorkspaceProfile WorkspaceProfile::fromJson(const QJsonObject &o) {
 }
 QString WorkspaceProfile::generateId() { return newId(); }
 
+// ---- PersonaStyleProfile ----
+QJsonObject PersonaStyleProfile::toJson() const {
+    QJsonObject o;
+    o["id"] = id; o["name"] = name; o["kind"] = kind;
+    o["description"] = description; o["styleCard"] = styleCard;
+    o["examples"] = QJsonArray::fromStringList(examples);
+    o["enabled"] = enabled;
+    o["maxExamples"] = maxExamples; o["maxChars"] = maxChars;
+    return o;
+}
+PersonaStyleProfile PersonaStyleProfile::fromJson(const QJsonObject &o) {
+    PersonaStyleProfile p;
+    p.id = o["id"].toString(); p.name = o["name"].toString();
+    p.kind = o["kind"].toString("writing-style");
+    p.description = o["description"].toString();
+    p.styleCard = o["styleCard"].toString();
+    for (const auto &v : o["examples"].toArray()) p.examples.append(v.toString());
+    p.enabled = o["enabled"].toBool(true);
+    p.maxExamples = qBound(0, o["maxExamples"].toInt(2), 8);
+    p.maxChars = qBound(500, o["maxChars"].toInt(6000), 20000);
+    return p;
+}
+QString PersonaStyleProfile::generateId() { return newId(); }
+
 // ---- AgentProfile ----
 QJsonObject AgentProfile::toJson() const {
     QJsonObject o;
@@ -160,6 +184,11 @@ QJsonObject AgentProfile::toJson() const {
     o["thinking"] = thinking;
     o["temperature"] = temperature;
     o["systemExtra"] = systemExtra;
+    o["personalityProfileIds"] = QJsonArray::fromStringList(personalityProfileIds);
+    o["styleProfileIds"] = QJsonArray::fromStringList(styleProfileIds);
+    o["injectStyleExamples"] = injectStyleExamples;
+    o["styleExampleLimit"] = styleExampleLimit;
+    o["styleContextLimit"] = styleContextLimit;
     o["mcpEnabled"] = mcpEnabled;
     o["thinkingLeakGuard"] = thinkingLeakGuard;
     o["progressCredits"] = progressCredits;
@@ -179,6 +208,11 @@ AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
     p.thinking = o["thinking"].toBool(false);
     p.temperature = o["temperature"].toDouble(-1.0);
     p.systemExtra = o["systemExtra"].toString();
+    for (const auto &v : o["personalityProfileIds"].toArray()) p.personalityProfileIds.append(v.toString());
+    for (const auto &v : o["styleProfileIds"].toArray()) p.styleProfileIds.append(v.toString());
+    p.injectStyleExamples = o["injectStyleExamples"].toBool(true);
+    p.styleExampleLimit = qBound(0, o["styleExampleLimit"].toInt(2), 8);
+    p.styleContextLimit = qBound(500, o["styleContextLimit"].toInt(6000), 20000);
     p.mcpEnabled = o["mcpEnabled"].toBool(true);   // legacy sin la clave = MCP on
     p.thinkingLeakGuard = o["thinkingLeakGuard"].toBool(false);
     p.progressCredits = qMax(2, o["progressCredits"].toInt(8));

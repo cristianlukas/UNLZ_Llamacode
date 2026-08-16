@@ -78,6 +78,7 @@ class ProfileManager : public QObject
     Q_PROPERTY(QAbstractListModel* workspaceProfiles READ workspaceProfiles CONSTANT)
     Q_PROPERTY(QAbstractListModel* launchProfiles  READ launchProfiles  CONSTANT)
     Q_PROPERTY(QAbstractListModel* agentProfiles   READ agentProfiles   CONSTANT)
+    Q_PROPERTY(QAbstractListModel* personaStyleProfiles READ personaStyleProfiles CONSTANT)
 
 public:
     explicit ProfileManager(QObject *parent = nullptr);
@@ -89,6 +90,7 @@ public:
     QAbstractListModel *workspaceProfiles() { return &m_workspaces; }
     QAbstractListModel *launchProfiles()    { return &m_launches; }
     QAbstractListModel *agentProfiles()     { return &m_agentProfiles; }
+    QAbstractListModel *personaStyleProfiles() { return &m_personaStyles; }
 
     // BackendProfile
     Q_INVOKABLE QString addBackend(const QString &name, const QString &binaryId,
@@ -176,6 +178,19 @@ public:
     Q_INVOKABLE bool isSystemAgentProfile(const QString &id) const;
     Q_INVOKABLE QVariantMap getAgentProfile(const QString &id) const;
     AgentProfile resolveAgentProfile(const QString &id) const;
+    QString renderPersonaStyleContext(const AgentProfile &profile) const;
+
+    // Perfiles reutilizables de personalidad/estilo. Se guardan separados de los
+    // perfiles de agente para poder compartirlos entre modelos y backends.
+    Q_INVOKABLE QString addPersonaStyleProfile(const QString &name, const QString &kind);
+    Q_INVOKABLE bool removePersonaStyleProfile(const QString &id);
+    Q_INVOKABLE bool updatePersonaStyleProfile(const QVariantMap &data);
+    Q_INVOKABLE QVariantMap getPersonaStyleProfile(const QString &id) const;
+    Q_INVOKABLE QString buildStyleAnalysisPrompt(const QString &sample,
+                                                  const QString &kind) const;
+    Q_INVOKABLE QString heuristicStyleCard(const QString &sample) const;
+    Q_INVOKABLE QString exportPersonaStyleProfile(const QString &id) const;
+    Q_INVOKABLE QString importPersonaStyleProfile(const QString &json);
 
     Q_INVOKABLE void saveProfiles() { save(); }
     void reloadFromDisk();
@@ -215,6 +230,7 @@ private:
     ProfileListModel<WorkspaceProfile> m_workspaces;
     ProfileListModel<LaunchProfile>    m_launches;
     ProfileListModel<AgentProfile>     m_agentProfiles;
+    ProfileListModel<PersonaStyleProfile> m_personaStyles;
 
     // Set false when load() can't read an existing file (e.g. locked by another
     // instance); blocks save() so a partial/empty state can't wipe stored data.
