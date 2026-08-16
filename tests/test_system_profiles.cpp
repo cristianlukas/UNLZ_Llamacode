@@ -59,6 +59,7 @@ private slots:
     void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
     void bundle_qwen38VariantsAreMtpVisionAndTemplated();
     void bundle_bigBangDisablesCrashyFlashAttention();
+    void bundle_bestProfilesUseRequestedCategoryNames();
 
     void controller_recommendsClosestTier();
     void controller_recommendedTierIncludesDisplayName();
@@ -1018,9 +1019,9 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     // poder identificarlos después, y el híbrido junta a los dos ganadores:
     // ThinkingCap+MTP (10/10) planifica y KAT (9/10 pero a 110 t/s) ejecuta.
     QCOMPARE(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("displayName").toString(),
-             QStringLiteral("ThinkingCap+MTP-7-8-26"));
+             QStringLiteral("BALANCE - ThinkingCap+MTP-7-8-26"));
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k")).value("displayName").toString(),
-             QStringLiteral("KAT-Coder-7-8-26"));
+             QStringLiteral("FAST - KAT2-Coder-7-8-26"));
     QVERIFY(found.value(QStringLiteral("sys-48-katcoder-262k")).value("favorite").toBool());
     QVERIFY(!found.value(QStringLiteral("sys-48-katcoder-262k")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("favorite").toBool());
@@ -1489,6 +1490,32 @@ void SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
         }
     }
     QVERIFY(foundBestVariant);
+}
+
+void SystemProfilesTests::bundle_bestProfilesUseRequestedCategoryNames()
+{
+    ProfileManager pm;
+    const QHash<QString, QString> expected{
+        {QStringLiteral("sys-qwen38-27b-udq4-131k"),
+         QStringLiteral("BALANCE - Qwen3.8 UD-Q4 visión")},
+        {QStringLiteral("sys-bench-qwen38-udq4-mtp4"),
+         QStringLiteral("BALANCE - Qwen3.8 UD-Q4 MTP4")},
+        {QStringLiteral("sys-48-katcoder-262k"),
+         QStringLiteral("FAST - KAT2-Coder-7-8-26")},
+        {QStringLiteral("sys-bench-48-bigbang-post"),
+         QStringLiteral("FAST - BigBang · MTP · top-p 0.08")},
+        {QStringLiteral("sys-48-thinkingcap-mtp"),
+         QStringLiteral("BALANCE - ThinkingCap+MTP-7-8-26")},
+        {QStringLiteral("sys-laguna-s-2-1-q2-48gb"),
+         QStringLiteral("BALANCE - Laguna S 2.1 118B-A8B Q2")},
+    };
+    for (auto it = expected.cbegin(); it != expected.cend(); ++it) {
+        const QVariantMap launch = pm.getLaunchProfile(it.key());
+        QVERIFY2(!launch.isEmpty(), qPrintable(it.key()));
+        const QString displayName =
+            launch.value(QStringLiteral("displayName")).toString();
+        QVERIFY2(displayName.endsWith(it.value()), qPrintable(displayName));
+    }
 }
 
 QTEST_MAIN(SystemProfilesTests)

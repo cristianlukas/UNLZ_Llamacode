@@ -958,7 +958,7 @@
     "order": 82,
     "extra": true,
     "autoCompanion": false,
-    "displayName": "KAT-Coder-7-8-26",
+    "displayName": "FAST - KAT2-Coder-7-8-26",
     "minVramGb": 48,
     "minRamGb": 32,
     "cpuOk": false,
@@ -1332,7 +1332,7 @@
     "order": 79,
     "extra": true,
     "autoCompanion": false,
-    "displayName": "ThinkingCap+MTP-7-8-26",
+    "displayName": "BALANCE - ThinkingCap+MTP-7-8-26",
     "minVramGb": 48,
     "minRamGb": 32,
     "cpuOk": false,
@@ -2060,7 +2060,7 @@
     "favorite": true,
     "benchmark": false,
     "order": 4,
-    "displayName": "[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k",
+    "displayName": "BALANCE - Laguna S 2.1 118B-A8B Q2",
     "chatTemplate": "laguna-tools-v24.jinja",
     "minVramGb": 48,
     "minRamGb": 64,
@@ -2789,7 +2789,7 @@
       { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV f16", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+." },
       { "id": "sys-bench-48-bigbang-fast", "order": 152, "displayName": "[bench BigBang] 131k · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV f16", "runtime": { "ctx": 196608, "kv": "f16" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
-      { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "[bench BigBang] 131k · MTP · top-p 0.08", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } }
+      { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } }
     ],
     "comment": "Perfil experimental del GGUF publicado por bartowski. Incluye mmproj bf16 para visión. El MTP está embebido en estos quants y se activa con --spec-type draft-mtp; el perfil exige llama.cpp b10262+. Flash Attention queda desactivado porque este modelo provoca un acceso ilegal CUDA reproducible en ggml_cuda_flash_attn_ext_mma_f16_case sobre el equipo dual RTX 3090 de referencia. Comparar siempre contra los perfiles KAT-Coder existentes con la misma suite y repeticiones."
   },
@@ -2816,7 +2816,7 @@
   {
     "id": "sys-qwen38-27b-udq4-131k",
     "tier": "24GB-Qwen38-Vision", "order": 160, "extra": true, "best": true, "favorite": true, "autoCompanion": false,
-    "displayName": "[experimental 24GB] Qwen3.8-27B UD-Q4 · MTP · visión · 131k",
+    "displayName": "BALANCE - Qwen3.8 UD-Q4 visión",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "folder": "Qwen3.8-27B-GGUF", "agentProfileId": "agent-maximo",
     "chatTemplate": "qwen38-tools-fixed.jinja",
     "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-UD-Q4_K_XL.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "UD-Q4_K_XL" },
@@ -2826,7 +2826,7 @@
     "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
       { "id": "sys-bench-qwen38-udq4-mtp2", "order": 161, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Comparar con MAX-Q y ThinkingCap." },
-      { "id": "sys-bench-qwen38-udq4-mtp4", "order": 162, "best": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP4 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "4" }, "comment": "Comparar decode y calidad sostenida contra MTP3." },
+      { "id": "sys-bench-qwen38-udq4-mtp4", "order": 162, "best": true, "displayName": "BALANCE - Qwen3.8 UD-Q4 MTP4", "extraArgOverrides": { "--spec-draft-n-max": "4" }, "comment": "Comparar decode y calidad sostenida contra MTP3." },
       { "id": "sys-bench-qwen38-udq4-mtp3-196k", "order": 163, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 196k · mmproj", "runtime": { "ctx": 196608 }, "comment": "Prueba de contexto largo con la misma visión." },
       { "id": "sys-bench-qwen38-udq4-mtp2-64k", "order": 166, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
       { "id": "sys-bench-qwen38-udq4-mtp3-64k", "order": 167, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 64k · mmproj", "runtime": { "ctx": 65536 } },

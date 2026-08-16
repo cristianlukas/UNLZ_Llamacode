@@ -54,16 +54,16 @@ crash o timeout no se consideran mediciones de calidad.
 
 | Perfil | HumanEval/20 | Tiempo |
 |---|---:|---:|
-| KAT-Coder-7-8-26 | 20/20 | 307,78 s |
-| ThinkingCap+MTP-7-8-26 | 20/20 | 197,10 s |
-| Laguna S 2.1 118B-A8B Q2 | 20/20 | 204,16 s |
-| Qwen3.8 UD-Q4 visión | 20/20 | 269,96 s |
-| FAST-KAT-Coder-7-8-26 | 20/20 | 212,69 s |
+| FAST - KAT2-Coder-7-8-26 | 20/20 | 307,78 s |
+| BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | 197,10 s |
+| BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | 204,16 s |
+| BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | 269,96 s |
+| FAST - KAT-Coder-7-8-26 | 20/20 | 212,69 s |
 | FAST-BigBang MTP top-p 0.08 (copia local antigua) | — | No comparable: conserva la configuración anterior |
-| ThinkingCap Qwen3.6-27B MTP4 | 20/20 | 174,96 s |
-| DeepSeek Fusion leloch | 20/20 | 817,61 s |
-| BigBang MTP top-p 0.08 | 20/20 | 277,00 s |
-| Qwen3.8 UD-Q4 MTP4 | 20/20 | 332,12 s |
+| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | 174,96 s |
+| QUALITY - DeepSeek Fusion leloch | 20/20 | 817,61 s |
+| FAST - BigBang · MTP · top-p 0.08 | 20/20 | 277,00 s |
+| BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | 332,12 s |
 | Qwen3.8-27B Q4_K_M visión | — | Sin medición válida |
 | Qwen3.8-27B Q5_K_M visión | — | Sin medición válida |
 
@@ -155,9 +155,9 @@ Se ejecutó `HumanEval (1 ítems)` de forma headless contra el Debug corregido:
 
 | Perfil | Resultado | Tiempo | Reparaciones |
 |---|---:|---:|---:|
-| DeepSeek Fusion leloch | 1/1 | 70,08 s | 0 |
-| Laguna S 2.1 118B-A8B Q2 | 1/1 | 11,38 s | 0 |
-| BigBang MTP top-p 0.08 (Flash off, KV f16, B512/U128) | 1/1 | 10,49 s | 0 |
+| QUALITY - DeepSeek Fusion leloch | 1/1 | 70,08 s | 0 |
+| BALANCE - Laguna S 2.1 118B-A8B Q2 | 1/1 | 11,38 s | 0 |
+| FAST - BigBang · MTP · top-p 0.08 (Flash off, KV f16, B512/U128) | 1/1 | 10,49 s | 0 |
 
 DeepSeek cargó y respondió correctamente. Laguna completó sin entrar en el
 bucle. BigBang cargó y ejecutó sin el crash CUDA después de aplicar la pareja
@@ -174,8 +174,8 @@ canónicos cuyos 1/20 habían sido producidos por la sobrescritura de
 
 | Perfil | HumanEval/20 | Tiempo | Reparaciones | Estabilidad |
 |---|---:|---:|---:|---:|
-| BigBang MTP top-p 0.08 | 20/20 | 277,00 s | 0 | 100% |
-| DeepSeek Fusion leloch | 20/20 | 817,61 s | 0 | 100% |
+| FAST - BigBang · MTP · top-p 0.08 | 20/20 | 277,00 s | 0 | 100% |
+| QUALITY - DeepSeek Fusion leloch | 20/20 | 817,61 s | 0 | 100% |
 
 Evidencia persistida:
 
