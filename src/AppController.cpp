@@ -15327,7 +15327,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto preToolRecoveryAttempts = std::make_shared<int>(0);
         auto preToolRecoveryPending = std::make_shared<bool>(false);
         auto lastStreamingText = std::make_shared<QString>();
-        constexpr int kBenchmarkPreToolOutputLimit = 16000;
+        // Reasoning-capable Qwen variants can emit a long code draft before
+        // switching to write_file. 16k was below that legitimate first draft,
+        // so the recovery loop classified a healthy backend as infrastructure.
+        // Keep a finite guard, but allow two recovery turns at 32k each.
+        constexpr int kBenchmarkPreToolOutputLimit = 32000;
         auto failureMessage = std::make_shared<QString>();
         auto failureDetail = std::make_shared<QString>();
         auto toolsReady = std::make_shared<bool>(mergedMcp.isEmpty());
@@ -15876,18 +15880,35 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                                       {QStringLiteral("limit"), kBenchmarkPreToolOutputLimit},
                                                       {QStringLiteral("reason"),
                                                        QStringLiteral("model produced long output before requesting a tool")}});
-                    if (*preToolRecoveryAttempts < 1) {
+                    if (*preToolRecoveryAttempts < 2) {
                         (*preToolRecoveryAttempts)++;
                         *preToolRecoveryPending = true;
                         agent->cancelGeneration();
-                        QTimer::singleShot(15000, this, [=]() {
+                        // cancelGeneration() aborts the HTTP reply and leaves the
+                        // backend idle, but deliberately does not emit
+                        // "[turn] completed" (that signal means a natural turn
+                        // finish). Do not wait for an event that this recovery
+                        // path cannot produce: once the abort has unwound, send
+                        // the corrective instruction directly.
+                        QTimer::singleShot(500, this, [=]() {
                             if (*finished || !*preToolRecoveryPending) return;
                             *preToolRecoveryPending = false;
-                            *passFailed = true;
-                            *failureMessage = QStringLiteral(
-                                "El backend no cerró el turno después de cancelar una salida previa a herramientas.");
-                            *failureDetail = benchmarkServerLogTail();
-                            (*finalize)();
+                            *preToolCut = false;
+                            *preToolChars = 0;
+                            *toolSeen = false;
+                            lastStreamingText->clear();
+                            *turnStartMs = QDateTime::currentMSecsSinceEpoch();
+                            *turnFirstMs = -1;
+                            AgentEventLog::append(workspace, QString(),
+                                                  QStringLiteral("benchmark_tool_recovery"),
+                                                  QJsonObject{{QStringLiteral("attempt"), *preToolRecoveryAttempts},
+                                                              {QStringLiteral("trigger"), QStringLiteral("abort_unwound")} });
+                            agent->sendMessage(QStringLiteral(
+                                "CORRECCION CRITICA: no describas un plan ni escribas codigo en el chat. "
+                                "Usa ahora mismo la herramienta write_file para crear `%1` "
+                                "en disco; despues ejecuta los checks de aceptacion. Responde solo luego "
+                                "de usar la herramienta.")
+                                .arg(taskArtifacts.value(qMax(0, *promptIdx - 1))));
                         });
                     } else {
                         agent->cancelGeneration();

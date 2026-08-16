@@ -1025,10 +1025,20 @@ void ProfileManager::loadSystemProfiles()
             QDir().mkpath(dstDir);
             const QString dst = dstDir + "/" + tpl;
             QFile src(QStringLiteral(":/assets/chat-templates/") + tpl);
-            if (!QFile::exists(dst) && src.open(QIODevice::ReadOnly)) {
-                QFile out(dst);
-                if (out.open(QIODevice::WriteOnly | QIODevice::Truncate))
-                    out.write(src.readAll());
+            if (src.open(QIODevice::ReadOnly)) {
+                // La copia vive en AppData y sobrevive a las actualizaciones del
+                // ejecutable. Compararla evita que un template corregido quede
+                // oculto detrás de una versión vieja instalada previamente.
+                const QByteArray bundled = src.readAll();
+                QFile installed(dst);
+                const bool stale = !installed.exists()
+                                || !installed.open(QIODevice::ReadOnly)
+                                || installed.readAll() != bundled;
+                if (stale) {
+                    QFile out(dst);
+                    if (out.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                        out.write(bundled);
+                }
             }
             if (QFile::exists(dst)) extra << QStringLiteral("--chat-template-file") << dst;
         }

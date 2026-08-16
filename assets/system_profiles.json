@@ -2789,7 +2789,7 @@
       { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV f16", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+." },
       { "id": "sys-bench-48-bigbang-fast", "order": 152, "displayName": "[bench BigBang] 131k · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV f16", "runtime": { "ctx": 196608, "kv": "f16" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
-      { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } }
+      { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64 }, "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido conservado, pero con 64k/batch 256/ubatch 64: en 131k/batch 512 el primer prefill provoca CUDA invalid argument/illegal memory access con mmproj en esta GPU." }
     ],
     "comment": "Perfil experimental del GGUF publicado por bartowski. Incluye mmproj bf16 para visión. El MTP está embebido en estos quants y se activa con --spec-type draft-mtp; el perfil exige llama.cpp b10262+. Flash Attention queda desactivado porque este modelo provoca un acceso ilegal CUDA reproducible en ggml_cuda_flash_attn_ext_mma_f16_case sobre el equipo dual RTX 3090 de referencia. Comparar siempre contra los perfiles KAT-Coder existentes con la misma suite y repeticiones."
   },
@@ -2821,7 +2821,7 @@
     "chatTemplate": "qwen38-tools-fixed.jinja",
     "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-UD-Q4_K_XL.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "UD-Q4_K_XL" },
     "runtime": { "ctx": 131072, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": false, "mmap": true },
-    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "on"],
+    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "off"],
     "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] },
     "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
@@ -2835,7 +2835,7 @@
       { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } }
     ],
-    "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa, MTP integrado y thinking configurable. Diez perfiles reales por GGUF (base + nueve variantes) pasan HumanEval/0 antes de promover tres a HumanEval/20. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
+    "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa y MTP integrado. Reasoning queda off en este perfil para el flujo agentico: con thinking on el modelo produce borradores largos y no emite la primera tool-call. Diez perfiles reales por GGUF (base + nueve variantes) pasan HumanEval/0 antes de promover tres a HumanEval/20. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
   },
   {
     "id": "sys-qwen38-27b-q4km-131k",

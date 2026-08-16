@@ -1487,6 +1487,15 @@ void SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
             foundBestVariant = true;
             QVERIFY2(!value.toObject().value("runtime").toObject().contains("flashAttn"),
                      "la variante debe heredar Flash Attention desactivado del perfil base");
+            const QJsonObject overrides = value.toObject().value("extraArgOverrides").toObject();
+            QCOMPARE(overrides.value(QStringLiteral("--spec-type")).toString(),
+                     QStringLiteral("draft-mtp"));
+            QCOMPARE(overrides.value(QStringLiteral("--spec-draft-n-max")).toString(),
+                     QStringLiteral("5"));
+            const QJsonObject runtime = value.toObject().value("runtime").toObject();
+            QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 65536);
+            QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 256);
+            QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 64);
         }
     }
     QVERIFY(foundBestVariant);

@@ -24,7 +24,9 @@
     ) }}
 {%- endif %}
 {%- set add_vision_id = add_vision_id if add_vision_id is defined else false %}
-{%- set enable_thinking = enable_thinking if enable_thinking is defined else true %}
+{# Keep the safe agent default aligned with --reasoning off. Callers that
+   explicitly request thinking still set enable_thinking=true. #}
+{%- set enable_thinking = enable_thinking if enable_thinking is defined else false %}
 {%- set auto_disable_thinking_with_tools =
     auto_disable_thinking_with_tools
     if auto_disable_thinking_with_tools is defined
@@ -44,7 +46,7 @@
 {%- elif preserve_thinking is defined and preserve_thinking is not none %}
     {%- set _preserve_thinking = preserve_thinking %}
 {%- else %}
-    {%- set _preserve_thinking = true %}
+    {%- set _preserve_thinking = false %}
 {%- endif %}
 {%- set max_tool_arg_chars =
     max_tool_arg_chars if max_tool_arg_chars is defined else 0
