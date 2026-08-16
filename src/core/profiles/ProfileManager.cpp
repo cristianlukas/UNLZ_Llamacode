@@ -868,7 +868,13 @@ QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile,
 {
     QString out;
     int remaining = qMax(0, profile.styleContextLimit);
-    const QStringList queryWords = query.toLower().split(QRegularExpression(QStringLiteral("[^\\p{L}")), Qt::SkipEmptyParts);
+    QStringList queryWords;
+    const QRegularExpression tokenPattern(QStringLiteral("[\\p{L}\\p{N}]+"));
+    auto tokenIt = tokenPattern.globalMatch(query.toLower());
+    while (tokenIt.hasNext()) {
+        const QString token = tokenIt.next().captured();
+        if (!token.isEmpty()) queryWords.append(token);
+    }
     auto append = [&](const PersonaStyleProfile &p, const QString &heading) {
         if (!p.enabled || p.id.isEmpty() || remaining <= 0) return;
         QString block = QStringLiteral("\n\n--- %1: %2 ---\n%3")
@@ -906,8 +912,7 @@ QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile,
         append(m_personaStyles.findById(id), QStringLiteral("ESTILO DEL USUARIO"));
     if (!out.isEmpty()) {
         const QString footer = QStringLiteral(
-            "\nNo copies contenido de los ejemplos ni inventes rasgos. "
-            "Preservá el significado, los hechos y la intención de cada pedido.\n");
+            "\nNo copies ejemplos ni inventes rasgos; preservá significado e intención.\n");
         out += footer;
         if (profile.styleContextLimit > 0)
             out.truncate(qMin(out.size(), profile.styleContextLimit + footer.size()));
