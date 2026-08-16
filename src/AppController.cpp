@@ -1406,20 +1406,32 @@ void AppController::startRouter(const QStringList &launchProfileIds, int modelsM
     };
 
     m_proc = new QProcess(this);
+    // Capture the concrete process instance in every callback. Using m_proc
+    // from a lambda is racy: after a crash/restart it can already point at a
+    // different QProcess (or be null) while the old process still emits its
+    // final readyRead/finished signals. That race was observed as intermittent
+    // Qt6Core access violations during benchmark teardown.
+    const QPointer<QProcess> routerProcess = m_proc;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert(QStringLiteral("LLAMACODE_MANAGED"), QStringLiteral("1"));
     env.insert(QStringLiteral("LLAMACODE_ROLE"),    QStringLiteral("router"));
     env.insert(QStringLiteral("LLAMACODE_APP_PID"), QString::number(QCoreApplication::applicationPid()));
     m_proc->setProcessEnvironment(env);
 
-    connect(m_proc, &QProcess::readyReadStandardOutput, this, [this]() {
-        appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(m_proc->readAllStandardOutput()));
+    connect(routerProcess, &QProcess::readyReadStandardOutput, this, [this, routerProcess]() {
+        if (routerProcess)
+            appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(routerProcess->readAllStandardOutput()));
     });
-    connect(m_proc, &QProcess::readyReadStandardError, this, [this]() {
-        appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(m_proc->readAllStandardError()));
+    connect(routerProcess, &QProcess::readyReadStandardError, this, [this, routerProcess]() {
+        if (routerProcess)
+            appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(routerProcess->readAllStandardError()));
     });
-    connect(m_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [this](int code, QProcess::ExitStatus) {
+    connect(routerProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this, routerProcess](int code, QProcess::ExitStatus) {
+        if (!routerProcess || m_proc != routerProcess) {
+            if (routerProcess) routerProcess->deleteLater();
+            return;
+        }
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("Router exited with code %1").arg(code));
         clearServiceState(QStringLiteral("server"));
@@ -1427,7 +1439,7 @@ void AppController::startRouter(const QStringList &launchProfileIds, int modelsM
         m_serverStopping = false;
         m_serverReady    = false;
         m_serverIsRouter = false;
-        m_proc->deleteLater();
+        routerProcess->deleteLater();
         m_proc = nullptr;
         emit serverRunningChanged();
         emit serverReadyChanged();
@@ -1776,6 +1788,9 @@ void AppController::startServer(const QString &launchProfileId)
     }
 
     m_proc = new QProcess(this);
+    // Keep callbacks tied to this exact server process; m_proc may be replaced
+    // by a later launch before queued Qt signals from this process are drained.
+    const QPointer<QProcess> serverProcess = m_proc;
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     for (auto it = envMap.begin(); it != envMap.end(); ++it)
@@ -1785,16 +1800,22 @@ void AppController::startServer(const QString &launchProfileId)
     env.insert(QStringLiteral("LLAMACODE_APP_PID"), QString::number(QCoreApplication::applicationPid()));
     m_proc->setProcessEnvironment(env);
 
-    connect(m_proc, &QProcess::readyReadStandardOutput, this, [this]() {
-        appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(m_proc->readAllStandardOutput()));
+    connect(serverProcess, &QProcess::readyReadStandardOutput, this, [this, serverProcess]() {
+        if (serverProcess)
+            appendServerEvent(QStringLiteral("stdout"), QString::fromUtf8(serverProcess->readAllStandardOutput()));
     });
-    connect(m_proc, &QProcess::readyReadStandardError, this, [this]() {
-        appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(m_proc->readAllStandardError()));
+    connect(serverProcess, &QProcess::readyReadStandardError, this, [this, serverProcess]() {
+        if (serverProcess)
+            appendServerEvent(QStringLiteral("stderr"), QString::fromUtf8(serverProcess->readAllStandardError()));
     });
-    connect(m_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            this, [this](int code, QProcess::ExitStatus status) {
+    connect(serverProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this, serverProcess](int code, QProcess::ExitStatus status) {
+        if (!serverProcess || m_proc != serverProcess) {
+            if (serverProcess) serverProcess->deleteLater();
+            return;
+        }
         const QString exitedLaunchId = m_activeLaunchId;
-        const QString exitedArgs = m_proc ? m_proc->arguments().join(QStringLiteral(" ")) : QString();
+        const QString exitedArgs = serverProcess->arguments().join(QStringLiteral(" "));
         appendServerEvent(QStringLiteral("lifecycle"),
                           QStringLiteral("Server exited with code %1").arg(code));
         if (code == -1073740791) {
@@ -1825,13 +1846,18 @@ void AppController::startServer(const QString &launchProfileId)
         stopVramPolling();
         m_serverStopping = false;
         m_serverReady    = false;
-        m_proc->deleteLater();
+        serverProcess->deleteLater();
         m_proc = nullptr;
         emit serverRunningChanged();
         emit serverReadyChanged();
 
+        // During a benchmark a crash is a measured infrastructure failure. Do
+        // not launch a second model behind the benchmark state machine: it can
+        // otherwise turn one native CUDA crash into a mixed/ambiguous pass.
+        // Manual launches retain the watchdog recovery behaviour.
+        const bool benchmarkOwnsLifecycle = m_benchmarkRunning || m_benchmarkCanceled;
         // Watchdog: auto-restart en crash, con backoff y tope de intentos.
-        if (crashed && !crashLaunchId.isEmpty()) {
+        if (crashed && !crashLaunchId.isEmpty() && !benchmarkOwnsLifecycle) {
             if (m_serverRestartCount < kMaxServerRestarts) {
                 m_serverRestartCount++;
                 const int delayMs = 2000 * m_serverRestartCount; // 2s, 4s, 6s

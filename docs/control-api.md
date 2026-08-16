@@ -180,6 +180,7 @@ un `launchId` con harness `custom`.
   `listMcpServers("project","<dir>")` y que el comando MCP exista en PATH.
 - `serverState` vuelve a `stopped` durante un turno: ver
   `%LOCALAPPDATA%\LlamaCode\LlamaCode\logs\server.log`; relanzar `startServer` y luego `startAgent`.
+- Durante un benchmark, un crash de `llama-server` no dispara el watchdog: el benchmark conserva el fallo como infraestructura y evita que un segundo server se mezcle con la pasada. En una ejecución manual sí se mantiene el reinicio automático con backoff. Revisá `server.log` y `benchmarkStatus` antes de reintentar.
 - Contexto roto por intentos previos: crear sesión nueva antes de reenviar el prompt.
 - Diagnóstico: server llama.cpp → `logs/server.log`; agente → `logs/agent.md`/`agent.log`.
 

@@ -10,7 +10,7 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
 | BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | 1/1 | 7/8 | 269,96 s | 736,07 s | — | 39,53 | 56,89 | HE0 válido (12,997 s); HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
 | BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | 1/1 | 3/8 | 332,12 s | 585,12 s | — | 54,85 | 57,06 | HE0 válido (13,132 s); HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
-| FAST - KAT2-Coder-7-8-26 | 20/20 | — | — | 307,78 s | 20,87 s | — | 0,00 | 103,93* | HE0 daemon-crash; sólo timing nativo; BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
+| FAST - KAT2-Coder-7-8-26 | 20/20 | 1/1 | — | 307,78 s | 20,87 s | — | 0,00 | 103,93* | HE0 histórico con daemon-crash; revalidado 3/3 tras corregir lifecycle; BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
 | FAST - KAT-Coder-7-8-26 | 20/20 | 1/1 | — | 212,69 s | 20,60 s | — | 0,00 | 113,03 | HE0 válido (13,963 s); BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
 | FAST - BigBang · MTP · top-p 0.08 | 20/20 | 1/1 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | 165,87 | HE0 válido (10,428 s); BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
 | BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | HE0 infraestructura (`Connection closed`, resultado bruto 0/1); BCB calidad; repetir | 131k · MTP · texto + imagen · KV f16 |
@@ -21,6 +21,25 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | QUALITY - DeepSeek Fusion leloch · VRAM balance | — | 1/1 | — | — | — | — | — | 8,81 | HE0 válido (67,039 s); variante conservadora; VRAM medida 35,7 GiB | 131k · B4096 · U1024 · tensor-split 1,0 · expertos 0–1 en CUDA0 y 37–42 en CUDA1 · CPU-MoE · Q2/Q4 híbrido |
 
 HE0 de la variante actual: `HumanEval_1_tems__20260816_131714`, `1/1`, `67,039 s`, sin reparación ni fallo de infraestructura; `TPS HE0=8,81` es el timing nativo de `llama-server`. La corrida descartada anterior `HumanEval_1_tems__20260816_122210` usó `tensor-split=1,1` y falló al cargar por OOM en CUDA1; no se cuenta como calidad. La corrida histórica `HumanEval_1_tems__20260816_122508` también fue válida (`1/1`, `67,308 s`, `9,20 t/s`).
+
+## Depuración del daemon y reparaciones BigBang (2026-08-16)
+
+La intermitencia tenía dos causas independientes. Primero, las variantes BigBang originales combinaban contexto de 131k, batches altos y Flash Attention desactivado; en el equipo dual RTX 3090 se observaron `resource allocation failed` e `illegal memory access` dentro de CUDA. Segundo, los callbacks de `QProcess` de server/router consultaban el miembro global `m_proc`: durante un crash, una recarga o el teardown del benchmark ese miembro podía ya apuntar a otro proceso o ser nulo. El watchdog también podía relanzar el server mientras el benchmark todavía estaba cerrando la pasada, mezclando dos ciclos de vida.
+
+La corrección en `AppController` captura el `QProcess` concreto con `QPointer` en cada callback, ignora señales tardías de procesos reemplazados y suprime el auto-restart del watchdog mientras el benchmark es dueño del ciclo de vida. En una ejecución manual el watchdog conserva la recuperación automática; durante un benchmark, el crash queda registrado como infraestructura y la pasada no se maquilla con un segundo server.
+
+Los perfiles históricos no se sobrescribieron. Se agregaron copias de reparación con `ctx=65536`, `batch=256`, `ubatch=64`, `cache K/V=q8_0` y Flash Attention activado explícitamente. Las dos variantes MTP conservan `--spec-type draft-mtp --spec-draft-n-max 5`; la variante sin MTP elimina ambos argumentos. Sus IDs y nombres son:
+
+| Perfil de reparación | ID | HE0 pasada 1 / 2 / 3 | Resultado |
+|---|---|---:|---|
+| REPAIR - BigBang · MTP · 64k · B256/U64 | `sys-repair-48-bigbang-mtp` | 19,673 / 13,090 / 11,463 s | 1/1 en 3/3; sin crash ni reparación |
+| REPAIR - BALANCE BigBang · MTP · 64k · B256/U64 | `sys-repair-48-bigbang-mtp-balance` | 11,480 / 13,056 / 11,468 s | 1/1 en 3/3; sin crash ni reparación |
+| REPAIR - BigBang · sin MTP · 64k · B256/U64 | `sys-repair-48-bigbang-base` | 13,047 / 13,045 / 21,641 s | 1/1 en 3/3; sin crash ni reparación |
+| FAST - KAT2-Coder-7-8-26 | `sys-48-katcoder-262k` | 19,606 / 14,993 / 16,058 s | 1/1 en 3/3; sin crash del daemon |
+
+La evidencia de esta validación fría está en `benchmark-runs/HumanEval_1_tems__20260816_140058`. La primera pasada de KAT2 necesitó dos reparaciones del agente, pero las tres pasadas cerraron con `1/1` y no hubo `Connection closed`, crash nativo ni nuevo `APPCRASH` de LlamaCode. El último `APPCRASH` de `LlamaCode.exe` observado en Event Viewer corresponde a la ejecución previa, antes del binario recompilado y de la corrección de callbacks.
+
+La reparación de BigBang es deliberadamente conservadora: primero demuestra estabilidad en HE0. Después de esa promoción, corresponde repetir HE20 y recién entonces BCB; no se deben mezclar los scores históricos de los perfiles originales con los de estas copias.
 
 ## Procedimiento de benchmarking
 
@@ -79,6 +98,8 @@ Las variantes DeepSeek mantienen la regla de seguridad del perfil histórico: `-
 `*` En KAT2, `103,93 t/s` es timing nativo observado antes del `APPCRASH`; no hay JSON evaluable y debe repetirse.
 
 `†` En DeepSeek, el tiempo/TPS de BCB es el último intento observado antes de cerrar la serie; la respuesta no tuvo cierre evaluable. Debe repetirse después de HE0/HE20 válidos del perfil o variante correspondiente.
+
+La nota histórica de KAT2 que sigue a esta sección describe el fallo anterior; no invalida la repetición 3/3 documentada arriba.
 
 ## Captura completa de configuración
 

@@ -1499,6 +1499,33 @@ void SystemProfilesTests::bundle_bigBangDisablesCrashyFlashAttention()
         }
     }
     QVERIFY(foundBestVariant);
+
+    // Las reparaciones de BigBang son copias explícitas: no cambian el perfil
+    // histórico con Flash Attention desactivado, pero sí deben evitar la
+    // combinación 131k/B512+ que produjo illegal memory access en CUDA.
+    ProfileManager pm;
+    const QHash<QString, bool> repairMtp = {
+        {QStringLiteral("sys-repair-48-bigbang-mtp"), true},
+        {QStringLiteral("sys-repair-48-bigbang-mtp-balance"), true},
+        {QStringLiteral("sys-repair-48-bigbang-base"), false},
+    };
+    for (auto it = repairMtp.cbegin(); it != repairMtp.cend(); ++it) {
+        const QVariantMap launch = pm.getLaunchProfile(it.key());
+        QVERIFY2(!launch.isEmpty(), qPrintable(it.key()));
+        const QVariantMap runtime = pm.getRuntimePreset(
+            launch.value(QStringLiteral("runtimePresetId")).toString());
+        QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 65536);
+        QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 256);
+        QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 64);
+        QCOMPARE(runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q8_0"));
+        QVERIFY(runtime.value(QStringLiteral("flashAttention")).toBool());
+        const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+        QCOMPARE(args.value(args.indexOf(QStringLiteral("--flash-attn")) + 1), QStringLiteral("on"));
+        QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-k")) + 1), QStringLiteral("q8_0"));
+        QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-type-v")) + 1), QStringLiteral("q8_0"));
+        const bool hasMtp = args.contains(QStringLiteral("--spec-type"));
+        QCOMPARE(hasMtp, it.value());
+    }
 }
 
 void SystemProfilesTests::bundle_bestProfilesUseRequestedCategoryNames()
