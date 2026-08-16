@@ -92,6 +92,12 @@ cuando la respuesta fue evaluable pero no incluyó tokens de generación, se
 deja `—` y no se inventa un throughput. La variante BigBang de 196k queda
 fuera de la promoción hasta repetirla con transporte completamente cerrado.
 
+La tanda HE20 posterior se canceló a pedido antes de iniciar BCB. En
+`benchmark-runs/HumanEval_20_tems__20260816_163945` sólo alcanzó a completarse
+`sys-bench-48-kat-f16`: `20/20` en `137,29 s`; los otros 15 perfiles quedaron
+pendientes. Este resultado HE20 es válido como medición del perfil, pero no
+promueve por sí solo a los restantes ni reemplaza sus resultados históricos.
+
 ## Candidatos derivados para medir
 
 No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y dos variantes nuevas de Laguna. Cada fila sigue HE0 → HE20 → BCB; el HE0 de esta tanda ya fue ejecutado en modo headless y sus resultados están debajo.
