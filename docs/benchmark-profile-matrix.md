@@ -11,9 +11,9 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | 7/8 | 269,96 s | 736,07 s | — | 39,53 | HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
 | BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | 3/8 | 332,12 s | 585,12 s | — | 54,85 | HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
 | FAST - KAT2-Coder-7-8-26 | 20/20 | — | 307,78 s | 20,87 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - KAT-Coder-7-8-26 | 20/20 | — | 212,69 s | — | — | — | BCB pendiente | 262k · texto · Q4_K_M |
-| FAST - BigBang · MTP · top-p 0.08 | 20/20 | — | 136,84 s | — | 107,56 | — | HE20 repetido válido; BCB pendiente | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
-| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 207,55 s | — | 117,58 | — | El ID interno corresponde a MTP embebido KV f16; revisar nombre antes de publicar | 131k · MTP · texto + imagen · KV f16 |
+| FAST - KAT-Coder-7-8-26 | 20/20 | — | 212,69 s | 20,60 s | — | 0,00 | BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
+| FAST - BigBang · MTP · top-p 0.08 | 20/20 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
+| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | BCB calidad; 2 reparaciones y anti-loop; el ID interno corresponde a MTP embebido KV f16 | 131k · MTP · texto + imagen · KV f16 |
 | BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | — | 174,96 s | — | — | — | BCB pendiente | 131k · MTP4 · texto + imagen · Q4_K_M |
 | BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | — | 197,10 s | — | — | — | BCB pendiente | 196k · MTP · texto + imagen · Q4_K_M |
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | — | 204,16 s | — | — | — | BCB pendiente | 100k · texto · Q2 |
