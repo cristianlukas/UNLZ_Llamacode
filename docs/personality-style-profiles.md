@@ -116,8 +116,9 @@ El smoke reproducible de ControlApi está en `tests/headless_persona_styles.ps1`
 ```
 
 El script crea un directorio temporal, inicia el daemon oculto, espera `/health`
-y valida creación/edición de perfiles, asociación a un agente, ranking del
-ejemplo pertinente, límite de ejemplos e importación/exportación con ID nuevo.
+y valida creación/edición de perfiles, rechazo de análisis inválido, aplicación
+de análisis JSON válido, asociación a un agente, ranking del ejemplo pertinente,
+límite de ejemplos e importación/exportación con ID nuevo.
 Al finalizar detiene el proceso y elimina el directorio temporal. No carga un
 modelo y no requiere GPU, QML, red externa ni interacción con el escritorio.
 El análisis asistido por modelo sigue siendo un smoke opt-in separado: necesita

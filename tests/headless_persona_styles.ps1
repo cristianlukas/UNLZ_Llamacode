@@ -36,6 +36,21 @@ try {
         "Headless style", "writing-style")).result
     if ([string]::IsNullOrWhiteSpace($styleId)) { throw "No se creó el perfil de estilo" }
 
+    $invalidAnalysis = (Invoke-Control "profileManager" "applyPersonaStyleAnalysis" -Arguments @(
+        $styleId, "respuesta sin JSON", "muestra original")).result
+    if ($invalidAnalysis) { throw "Se aceptó una respuesta de análisis inválida" }
+    $analysisJson = @{ schemaVersion = 1; description = "extraído en smoke";
+        styleCard = "frases medias y tono cercano"; examples = @("ejemplo extraído") } |
+        ConvertTo-Json -Compress
+    $validAnalysis = (Invoke-Control "profileManager" "applyPersonaStyleAnalysis" -Arguments @(
+        $styleId, $analysisJson, "muestra original")).result
+    if (-not $validAnalysis) { throw "No se aplicó el JSON de análisis válido" }
+    $analyzed = (Invoke-Control "profileManager" "getPersonaStyleProfile" -Arguments @($styleId)).result
+    if ($analyzed.styleCard -notmatch "frases medias" -or
+        $analyzed.examples[0] -ne "ejemplo extraído") {
+        throw "El resultado del análisis no persistió correctamente"
+    }
+
     $updated = Invoke-Control "profileManager" "updatePersonaStyleProfile" -Arguments @(@{
         id = $styleId
         styleCard = "voz clara y frases medias"
@@ -66,7 +81,7 @@ try {
         throw "La importación no generó un ID nuevo"
     }
 
-    Write-Output "PASS: ControlApi persona/style CRUD, asociación, ranking, preview e import/export"
+    Write-Output "PASS: ControlApi persona/style CRUD, análisis JSON, asociación, ranking, preview e import/export"
 } finally {
     if ($proc -and -not $proc.HasExited) {
         Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
