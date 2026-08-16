@@ -8,6 +8,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$qtRoot = "C:\Qt\6.8.3\msvc2022_64"
+$env:QT_QPA_PLATFORM = "offscreen"
+$env:QT_PLUGIN_PATH = Join-Path $qtRoot "plugins"
+$env:PATH = (Join-Path $qtRoot "bin") + ";" + $env:PATH
 $profileDir = Join-Path (Get-Location) ".headless-smoke-profiles"
 $env:LLAMACODE_CONTROL_PORT = "$Port"
 $env:LLAMACODE_PROFILES_DIR = $profileDir

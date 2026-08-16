@@ -2,6 +2,10 @@ $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $exe = Join-Path $root "build\Debug\LlamaCode.exe"
 if (-not (Test-Path -LiteralPath $exe)) { throw "No existe $exe. Ejecutá build.bat Debug NOPAUSE." }
+$qtRoot = "C:\Qt\6.8.3\msvc2022_64"
+$env:QT_QPA_PLATFORM = "offscreen"
+$env:QT_PLUGIN_PATH = Join-Path $qtRoot "plugins"
+$env:PATH = (Join-Path $qtRoot "bin") + ";" + $env:PATH
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
 $listener.Start(); $port = $listener.LocalEndpoint.Port; $listener.Stop()
 $profileDir = Join-Path ([IO.Path]::GetTempPath()) ("llamacode-workflow-" + [guid]::NewGuid())
