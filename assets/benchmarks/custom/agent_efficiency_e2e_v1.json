@@ -2,6 +2,19 @@
   "id": "agent_efficiency_e2e_v1",
   "name": "Agent efficiency E2E v1",
   "description": "Suite versionada y reproducible para comparar calidad, tiempo, tokens y uso de tools entre versiones del agente.",
+  "variants": ["baseline", "honey"],
+  "evaluation": {
+    "toggleDirective": "honey",
+    "additionalMetrics": [
+      "filesChanged",
+      "addedLines",
+      "removedLines",
+      "toolCalls",
+      "repairs",
+      "regressions"
+    ],
+    "gate": "No aceptar Honey si reduce éxito funcional o aumenta regresiones."
+  },
   "source": "bundled",
   "protocolVersion": 1,
   "recommendedPasses": 3,

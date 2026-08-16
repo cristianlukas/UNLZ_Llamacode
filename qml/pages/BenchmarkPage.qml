@@ -951,7 +951,9 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         visible: customMode.checked && root.customId === "agent_efficiency_e2e_v1"
-                        text: "La suite E2E recomienda 3 pasadas. comparison.json agrupa estabilidad, mediana de calidad y tiempo entre perfiles."
+                        text: "La suite E2E recomienda 3 pasadas. Compará perfiles con Honey ON/OFF; "
+                              + "comparison.json agrupa estabilidad, mediana de calidad y tiempo. "
+                              + "Revisá también archivos tocados, tool calls, tokens y reparaciones."
                         color: Theme.textMuted
                         font.pixelSize: 10
                         wrapMode: Text.Wrap

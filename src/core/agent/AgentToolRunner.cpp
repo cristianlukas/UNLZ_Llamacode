@@ -2688,6 +2688,108 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (ok) *ok = true;
         return HotspotAnalyzer::formatReport(hs);
     }
+    if (name == QLatin1String("review_overengineering")) {
+        const QString rawScope = args.value(QStringLiteral("scope")).toString().trimmed().toLower();
+        const QString scope = rawScope.isEmpty() ? QStringLiteral("working_tree") : rawScope;
+        if (scope != QLatin1String("working_tree") && scope != QLatin1String("staged"))
+            return QStringLiteral("[review_overengineering: scope inválido; usá working_tree o staged]");
+
+        int maxChars = args.value(QStringLiteral("max_diff_chars")).toInt();
+        if (!args.contains(QStringLiteral("max_diff_chars"))) maxChars = 120000;
+        maxChars = qBound(1000, maxChars, 500000);
+        const QStringList diffArgs = scope == QLatin1String("staged")
+            ? QStringList{QStringLiteral("diff"), QStringLiteral("--cached"),
+                          QStringLiteral("--no-ext-diff"), QStringLiteral("--unified=3")}
+            : QStringList{QStringLiteral("diff"), QStringLiteral("HEAD"),
+                          QStringLiteral("--no-ext-diff"), QStringLiteral("--unified=3")};
+
+        auto runGit = [&base](const QStringList &argv, QByteArray *stdoutBytes,
+                              QByteArray *stderrBytes, int *exitCode) {
+            QProcess p;
+            p.setWorkingDirectory(base.absolutePath());
+            p.start(QStringLiteral("git"), argv);
+            if (!p.waitForFinished(5000)) {
+                p.kill();
+                p.waitForFinished(500);
+            }
+            if (stdoutBytes) *stdoutBytes = p.readAllStandardOutput();
+            if (stderrBytes) *stderrBytes = p.readAllStandardError();
+            if (exitCode) *exitCode = p.exitCode();
+            return p.exitStatus() == QProcess::NormalExit;
+        };
+
+        QByteArray diffBytes;
+        QByteArray gitError;
+        int gitExit = -1;
+        if (!runGit(diffArgs, &diffBytes, &gitError, &gitExit) || gitExit != 0)
+            return QStringLiteral("[review_overengineering: no se pudo leer el diff git (%1)]")
+                       .arg(QString::fromLocal8Bit(gitError).trimmed());
+        QString diff = QString::fromLocal8Bit(diffBytes);
+        const bool truncated = diff.size() > maxChars;
+        if (truncated) diff.truncate(maxChars);
+
+        QByteArray statusBytes;
+        runGit({QStringLiteral("status"), QStringLiteral("--short")}, &statusBytes, nullptr, nullptr);
+        const QString status = QString::fromLocal8Bit(statusBytes).trimmed();
+
+        int added = 0;
+        int removed = 0;
+        QStringList files;
+        QStringList candidates;
+        QString currentFile;
+        const QRegularExpression fileRx(QStringLiteral("^\\+\\+\\+ b/(.+)$"));
+        const QRegularExpression numRx(QStringLiteral("^([0-9-]+)\\s+([0-9-]+)\\s+(.+)$"));
+        const QRegularExpression addedLineRx(
+                                              QStringLiteral("^\\+(?!\\+).*\\b(?:TODO|FIXME|later|future|generic|factory|adapter|registry|configurable)\\b.*"),
+                                              QRegularExpression::CaseInsensitiveOption);
+        const QStringList lines = diff.split(QLatin1Char('\n'));
+        for (const QString &line : lines) {
+            const auto fm = fileRx.match(line);
+            if (fm.hasMatch()) {
+                currentFile = fm.captured(1);
+                if (!files.contains(currentFile)) files << currentFile;
+                continue;
+            }
+            const auto nm = numRx.match(line);
+            if (nm.hasMatch() && !nm.captured(1).isEmpty()) {
+                if (nm.captured(1) != QLatin1String("-")) added += nm.captured(1).toInt();
+                if (nm.captured(2) != QLatin1String("-")) removed += nm.captured(2).toInt();
+                continue;
+            }
+            if (addedLineRx.match(line).hasMatch() && !currentFile.isEmpty()) {
+                const QString detail = line.mid(1).trimmed().left(180);
+                candidates << QStringLiteral("%1: línea agregada contiene posible scaffolding o extensión especulativa: %2")
+                                  .arg(currentFile, detail);
+            }
+        }
+        QJsonArray candidateJson;
+        for (const QString &candidate : std::as_const(candidates))
+            candidateJson.append(candidate);
+        QJsonArray fileJson;
+        for (const QString &file : std::as_const(files)) fileJson.append(file);
+        QJsonObject report{
+            {QStringLiteral("readOnly"), true},
+            {QStringLiteral("scope"), scope},
+            {QStringLiteral("files"), fileJson},
+            {QStringLiteral("metrics"), QJsonObject{
+                {QStringLiteral("filesChanged"), files.size()},
+                {QStringLiteral("addedLines"), added},
+                {QStringLiteral("removedLines"), removed},
+                {QStringLiteral("diffChars"), diff.size()},
+                {QStringLiteral("truncated"), truncated},
+                {QStringLiteral("untrackedStatusPresent"), !status.isEmpty()}}},
+            {QStringLiteral("deleteList"), candidateJson},
+            {QStringLiteral("guardrails"), QJsonArray{
+                QStringLiteral("No se modificaron archivos."),
+                QStringLiteral("Las sugerencias requieren revisión humana."),
+                QStringLiteral("No se recomienda eliminar validación, seguridad, tests, accesibilidad ni manejo de errores.")}},
+            {QStringLiteral("note"), status.isEmpty()
+                ? QStringLiteral("El diff no contiene archivos no rastreados visibles en git status.")
+                : QStringLiteral("git status detectó cambios no rastreados o adicionales; el diff no incluye su contenido automáticamente.")}
+        };
+        if (ok) *ok = true;
+        return QString::fromUtf8(QJsonDocument(report).toJson(QJsonDocument::Compact));
+    }
     if (name == QLatin1String("write_file")) {
         const QString rel = normalizeToolPath(args.value(QStringLiteral("path")).toString());
         if (rel.isEmpty() || rel == QLatin1String("."))

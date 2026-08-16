@@ -1378,10 +1378,16 @@ QString LlamaAgentBackend::honeySection()
 {
     return QStringLiteral(
         "FRUGALIDAD (Honey): reducí lo que GENERÁS, no lo que el usuario pidió.\n"
-        "- Código YAGNI-first: parar en el primer escalón que funciona (stdlib, "
-        "idioma nativo, una dependencia que ya está, una línea, el bloque mínimo). "
-        "Nada de scaffolding 'por si después': sin abstracciones, parámetros, "
-        "branches ni handlers especulativos que nadie pidió.\n"
+        "- Escalera YAGNI: preguntá 1) ¿hace falta?, 2) ¿ya existe en este código? "
+        "3) ¿lo resuelve la stdlib?, 4) ¿hay una API nativa?, 5) ¿ya existe una "
+        "dependencia instalada?, 6) ¿cuál es el bloque mínimo correcto? Parate en "
+        "el primer escalón que satisface la tarea.\n"
+        "- No agregues scaffolding 'por si después': evitá abstracciones, parámetros, "
+        "branches, factories, adapters, configuración o handlers especulativos que "
+        "nadie pidió. Reutilizá código y contratos existentes antes de crear otro.\n"
+        "- Lazy, nunca negligente: esta regla NO permite quitar validación, seguridad, "
+        "tests, accesibilidad, manejo de errores, permisos, aprobación humana ni "
+        "verificación del resultado. Si son necesarios, forman parte del mínimo.\n"
         "- Respuesta-primero: la respuesta o el resultado va primero; sin preámbulo, "
         "sin narrar el código que ya se lee solo, sin hedging.\n"
         "- Handoffs densos: cuando le pasás trabajo a otro agente (supervisor, "
@@ -2958,7 +2964,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
             QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
             QStringLiteral("verify_claims"), QStringLiteral("write_file"),
-            QStringLiteral("edit_file")};
+            QStringLiteral("edit_file"), QStringLiteral("review_overengineering")};
         for (int i = 0; i < calls.size(); ++i) {
             QJsonObject call = calls.at(i).toObject();
             QJsonObject fn = call.value(QStringLiteral("function")).toObject();
@@ -3211,6 +3217,7 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
         QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
+        QStringLiteral("review_overengineering"),
         QStringLiteral("memory"), QStringLiteral("graph"), QStringLiteral("context_checkpoint"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
@@ -4950,6 +4957,15 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("min_commits"), intProp(QStringLiteral("Ignora archivos con menos commits. Default 2."))},
                {QStringLiteral("since_days"), intProp(QStringLiteral("Ventana del historial en días. Default 0 = todo."))}},
            QJsonArray{}),
+        fn(QStringLiteral("review_overengineering"),
+           QStringLiteral("Revisa el diff actual de forma READ-ONLY y devuelve métricas y una "
+                          "delete-list explicable de posibles abstracciones, scaffolding o cambios "
+                          "especulativos. No modifica archivos, no ejecuta tests y no reemplaza la "
+                          "revisión humana. Usala después de implementar y antes de cerrar la tarea."),
+           QJsonObject{
+               {QStringLiteral("scope"), strProp(QStringLiteral("'working_tree' (default) o 'staged'."))},
+               {QStringLiteral("max_diff_chars"), intProp(QStringLiteral("Límite del diff leído; default 120000, máximo 500000."))}},
+           QJsonArray{}),
         fn(QStringLiteral("write_file"), QStringLiteral("Escribe (crea/sobrescribe) un archivo de texto. "
                           "Para CAMBIOS PUNTUALES en un archivo existente preferí edit_file (mucho más rápido)."),
            QJsonObject{
@@ -5544,6 +5560,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("glob",      "Archivos", "Lista archivos por patrón glob.", 110),
         mk("grep",      "Búsqueda", "Busca una regex en el proyecto.", 100),
         mk("code_hotspots", "Búsqueda", "Archivos riesgosos: churn git + autores + sin test (score 1-10).", 140),
+        mk("review_overengineering", "Revisión", "Auditoría read-only del diff con delete-list explicable.", 150),
         mk("search_docs", "Búsqueda", "Ranking de fragmentos por keywords (semántica-lite).", 120),
         mk("semantic_search", "Búsqueda", "Búsqueda por significado vía embeddings del server.", 130),
         mk("hybrid_search", "Búsqueda", "Híbrida BM25+vector con reranker (RAG, la mejor).", 150),

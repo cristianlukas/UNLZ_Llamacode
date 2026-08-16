@@ -14,6 +14,7 @@
 #include <QJsonDocument>
 #include <QDir>
 #include <QFile>
+#include <QProcess>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include "core/agent/AgentToolRunner.h"
@@ -73,6 +74,7 @@ private slots:
     void parseErrorExplainsChunking();
     void grep_findsMatch();
     void glob_listsFiles();
+    void reviewOverengineering_isReadOnlyAndExplainsCandidates();
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
     void hybridSearch_compactReturnsSpans();
@@ -302,6 +304,39 @@ void AgentToolsTests::glob_listsFiles()
     QVariantMap g = call("glob", {{"pattern", "*.cpp"}});
     QVERIFY(g.value("result").toString().contains("one.cpp"));
     QVERIFY(g.value("result").toString().contains("two.cpp"));
+}
+
+void AgentToolsTests::reviewOverengineering_isReadOnlyAndExplainsCandidates()
+{
+    const QString oldCwd = QDir::currentPath();
+    QDir::setCurrent(m_dir.path());
+    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("init"), QStringLiteral("-q")}) == 0);
+    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.email"),
+                                                       QStringLiteral("test@example.invalid")}) == 0);
+    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.name"),
+                                                       QStringLiteral("LlamaCode Test")}) == 0);
+    QFile fixture(m_dir.filePath("review.cpp"));
+    QVERIFY(fixture.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    fixture.write("int answer() { return 1; }\n");
+    fixture.close();
+    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("add"), QStringLiteral("review.cpp")}) == 0);
+    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("commit"), QStringLiteral("-qm"),
+                                                       QStringLiteral("fixture")}) == 0);
+    fixture.open(QIODevice::WriteOnly | QIODevice::Append);
+    fixture.write("// TODO future generic adapter configurable registry\n");
+    fixture.close();
+    QDir::setCurrent(oldCwd);
+
+    const QVariantMap result = call("review_overengineering", {});
+    QVERIFY2(result.value("ok").toBool(), qPrintable(result.value("result").toString()));
+    const QJsonObject report = QJsonDocument::fromJson(result.value("result").toString().toUtf8()).object();
+    QVERIFY(report.value("readOnly").toBool());
+    QVERIFY(report.value("metrics").toObject().value("filesChanged").toInt() >= 1);
+    QVERIFY(report.value("metrics").toObject().value("addedLines").toInt() >= 1);
+    QVERIFY(report.value("deleteList").toArray().size() >= 1);
+    QFile unchanged(m_dir.filePath("review.cpp"));
+    QVERIFY(unchanged.open(QIODevice::ReadOnly));
+    QVERIFY(QString::fromUtf8(unchanged.readAll()).contains(QStringLiteral("future generic adapter")));
 }
 
 void AgentToolsTests::runShell_echo()

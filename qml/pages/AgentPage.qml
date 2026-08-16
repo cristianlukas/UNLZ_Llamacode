@@ -2631,6 +2631,20 @@ Item {
                             if (App.escalateToMaster(t)) agentInput.text = ""
                         }
                     }
+                    // Auditoría read-only del diff: pide métricas y delete-list,
+                    // pero la tool no puede modificar archivos ni reemplaza la
+                    // aprobación humana.
+                    LcButton {
+                        visible: App.agentRunning && !agentInput.busy
+                        secondary: true
+                        text: "🧹 Revisar frugalidad"
+                        onClicked: root.sendAgentNow(
+                            "Revisá el diff actual usando review_overengineering. "
+                            + "Es una auditoría READ-ONLY: no edites ni borres archivos. "
+                            + "Devolvé primero las métricas y después una delete-list "
+                            + "explicable; conservá validaciones, seguridad, tests, "
+                            + "accesibilidad y manejo de errores.", [])
+                    }
                 }
             }
         }

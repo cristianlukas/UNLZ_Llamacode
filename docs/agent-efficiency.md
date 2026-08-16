@@ -1,5 +1,33 @@
 # Eficiencia, contexto estructurado y workflows
 
+## Frugalidad y revisión de sobre-ingeniería
+
+La directiva opt-in `honey` aplica una escalera YAGNI después de entender la
+tarea: comprobar si hace falta crear algo, reutilizar lo que ya existe, preferir
+stdlib/API nativa/dependencias instaladas y detenerse en el primer bloque mínimo
+correcto. La frugalidad sólo reduce scaffolding, pasos y texto; nunca permite
+quitar validaciones, seguridad, tests, accesibilidad, manejo de errores,
+permisos, aprobación humana o verificación del resultado.
+
+La tool read-only `review_overengineering` audita el diff de Git y devuelve:
+
+- archivos y líneas agregadas/eliminadas;
+- tamaño y truncamiento del diff;
+- candidatos explicables para una delete-list;
+- cambios no rastreados detectados por `git status`;
+- guardrails que la revisión humana debe conservar.
+
+No modifica archivos ni ejecuta tests. El botón **Revisar frugalidad** de la
+barra del Agente solicita esta auditoría de manera opt-in. Sus sugerencias son
+indicadores, no instrucciones automáticas: una abstracción puede ser necesaria
+por seguridad, validación, accesibilidad, rendimiento o un contrato existente.
+
+Para una comparación A/B reproducible, ejecutar la misma suite con el mismo
+modelo, perfil, hardware y cantidad de pasadas, alternando sólo la directiva
+`honey`. Registrar además `filesChanged`, `addedLines`, `removedLines`, tool
+calls, tokens, tiempo, éxito funcional, tests y reparaciones. Un resultado sólo
+es mejor si reduce complejidad o costo sin bajar éxito ni aumentar regresiones.
+
 LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
 
 - `AgentEfficiency`: normaliza telemetría `timings` de llama.cpp y `usage` de
