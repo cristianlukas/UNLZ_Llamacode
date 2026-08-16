@@ -3,10 +3,12 @@ param([switch]$Build)
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $buildDir = Join-Path $root "build_tests"
+$buildBin = Join-Path $buildDir "Debug"
 $qtBin = "C:\Qt\6.8.3\msvc2022_64\bin"
+$qtKeychainBin = Join-Path $buildDir "_deps\qtkeychain-build\Debug"
 $oldQpa = $env:QT_QPA_PLATFORM
 $env:QT_QPA_PLATFORM = "offscreen"
-$env:PATH = "$qtBin;$env:PATH"
+$env:PATH = "$buildBin;$qtKeychainBin;$qtBin;$env:PATH"
 
 if ($Build) {
     # Visual Studio puede lanzar proyectos hermanos en paralelo aunque se pase
