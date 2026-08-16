@@ -900,6 +900,28 @@ static QVariantMap personaStyleToVariant(const PersonaStyleProfile &p)
             {"maxChars", p.maxChars}};
 }
 
+static QVariantList personaStyleList(const QList<PersonaStyleProfile> &items,
+                                     const QString &kind)
+{
+    QVariantList out;
+    out.append(QVariantMap{{"profileId", QString()}, {"name", QStringLiteral("Ninguno")},
+                           {"system", false}, {"kind", kind}});
+    for (const PersonaStyleProfile &p : items) {
+        if (p.kind == kind) out.append(personaStyleToVariant(p));
+    }
+    return out;
+}
+
+QVariantList ProfileManager::personalityProfiles() const
+{
+    return personaStyleList(m_personaStyles.m_items, QStringLiteral("personality"));
+}
+
+QVariantList ProfileManager::writingStyleProfiles() const
+{
+    return personaStyleList(m_personaStyles.m_items, QStringLiteral("writing-style"));
+}
+
 QString ProfileManager::addPersonaStyleProfile(const QString &name, const QString &kind)
 {
     PersonaStyleProfile p;
@@ -909,6 +931,7 @@ QString ProfileManager::addPersonaStyleProfile(const QString &name, const QStrin
                                                     : QStringLiteral("writing-style");
     m_personaStyles.add(p);
     save();
+    emit personaStylesChanged();
     return p.id;
 }
 
@@ -917,7 +940,7 @@ bool ProfileManager::removePersonaStyleProfile(const QString &id)
     const PersonaStyleProfile p = m_personaStyles.findById(id);
     if (p.id.isEmpty() || p.system) return false;
     const bool ok = m_personaStyles.remove(id);
-    if (ok) save();
+    if (ok) { save(); emit personaStylesChanged(); }
     return ok;
 }
 
@@ -939,7 +962,7 @@ bool ProfileManager::updatePersonaStyleProfile(const QVariantMap &data)
     if (data.contains("maxExamples")) p.maxExamples = qBound(0, data.value("maxExamples").toInt(), 8);
     if (data.contains("maxChars")) p.maxChars = qBound(500, data.value("maxChars").toInt(), 20000);
     const bool ok = m_personaStyles.update(p);
-    if (ok) save();
+    if (ok) { save(); emit personaStylesChanged(); }
     return ok;
 }
 
@@ -993,7 +1016,7 @@ QString ProfileManager::importPersonaStyleProfile(const QString &json)
     PersonaStyleProfile p = PersonaStyleProfile::fromJson(doc.object());
     p.id = PersonaStyleProfile::generateId(); p.system = false;
     if (p.name.trimmed().isEmpty()) p.name = QStringLiteral("Estilo importado");
-    m_personaStyles.add(p); save(); return p.id;
+    m_personaStyles.add(p); save(); emit personaStylesChanged(); return p.id;
 }
 
 // ---- Resolvers ----

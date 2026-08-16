@@ -13,6 +13,8 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QJsonObject>
+#include <QSignalSpy>
+#include <algorithm>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
 #include "core/agent/LlamaAgentBackend.h"
@@ -38,6 +40,7 @@ private slots:
     void personaStyle_jsonAndPromptBudget();
     void manager_personaStyleCrudAndImport();
     void manager_personaStyleDisabledAndPersonalityNoExamples();
+    void manager_personaStyleListsAreTypedAndClearable();
 
 private:
     QTemporaryDir m_dir;
@@ -125,6 +128,7 @@ void AgentProfilesTests::manager_personaStyleCrudAndImport()
 void AgentProfilesTests::manager_personaStyleDisabledAndPersonalityNoExamples()
 {
     ProfileManager pm;
+    QSignalSpy stylesChanged(&pm, &ProfileManager::personaStylesChanged);
     const QString disabled = pm.addPersonaStyleProfile(QStringLiteral("Apagado"), QStringLiteral("writing-style"));
     const QString personality = pm.addPersonaStyleProfile(QStringLiteral("Conversacional"), QStringLiteral("personality"));
     QVERIFY(pm.updatePersonaStyleProfile({{"id", disabled}, {"enabled", false},
@@ -138,6 +142,29 @@ void AgentProfilesTests::manager_personaStyleDisabledAndPersonalityNoExamples()
     QVERIFY(!rendered.contains(QStringLiteral("NO DEBE APARECER")));
     QVERIFY(rendered.contains(QStringLiteral("calmo")));
     QVERIFY(!rendered.contains(QStringLiteral("contenido privado que no debe entrar")));
+    QVERIFY(stylesChanged.count() >= 4); // altas + dos ediciones
+}
+
+void AgentProfilesTests::manager_personaStyleListsAreTypedAndClearable()
+{
+    ProfileManager pm;
+    const QString persona = pm.addPersonaStyleProfile(QStringLiteral("P"), QStringLiteral("personality"));
+    const QString style = pm.addPersonaStyleProfile(QStringLiteral("S"), QStringLiteral("writing-style"));
+    const QVariantList personalities = pm.personalityProfiles();
+    const QVariantList styles = pm.writingStyleProfiles();
+    QVERIFY(!personalities.isEmpty()); QVERIFY(!styles.isEmpty());
+    QCOMPARE(personalities.first().toMap().value("profileId").toString(), QString());
+    QCOMPARE(styles.first().toMap().value("profileId").toString(), QString());
+    QVERIFY(std::any_of(personalities.cbegin(), personalities.cend(), [&](const QVariant &v) {
+        return v.toMap().value("profileId").toString() == persona;
+    }));
+    QVERIFY(std::any_of(styles.cbegin(), styles.cend(), [&](const QVariant &v) {
+        return v.toMap().value("profileId").toString() == style;
+    }));
+    for (const QVariant &v : personalities)
+        QVERIFY(v.toMap().value("profileId").toString() != style);
+    for (const QVariant &v : styles)
+        QVERIFY(v.toMap().value("profileId").toString() != persona);
 }
 
 void AgentProfilesTests::systemPresets_shape()

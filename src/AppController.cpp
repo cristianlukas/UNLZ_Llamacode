@@ -980,6 +980,11 @@ AppController::AppController(QObject *parent) : QObject(parent)
         maybeActivatePendingSystemProfile();
     });
     connect(&m_profiles, &ProfileManager::launchesChanged, this, &AppController::setupStateChanged);
+    connect(&m_profiles, &ProfileManager::personaStylesChanged, this, [this]() {
+        // Rebuild the active backend prompt immediately after a style/personality
+        // edit; no profile switch or GUI restart should be required.
+        applyActiveAgentProfile();
+    });
     cleanupDuplicateInitialLaunchProfiles();
     connect(this, &AppController::taskRunStateChanged, this, &AppController::taskRunAvailabilityChanged);
     connect(this, &AppController::agentStartingChanged, this, &AppController::taskRunAvailabilityChanged);

@@ -1692,7 +1692,7 @@ Item {
                                     Text { text: "Personalidad"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcComboBox {
                                         id: personalitySelector; Layout.fillWidth: true
-                                        model: App.profileManager.personaStyleProfiles; textRole: "name"; valueRole: "profileId"
+                                        model: App.profileManager.personalityProfiles; textRole: "name"; valueRole: "profileId"
                                         onActivated: agentProfilesSection.edit.personalityProfileIds = currentValue ? [currentValue] : []
                                         background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                                         contentItem: Text { text: personalitySelector.displayText || "Ninguna"; color: Theme.textPrimary; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
@@ -1701,7 +1701,7 @@ Item {
                                     Text { text: "Estilo de escritura"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     LcComboBox {
                                         id: styleSelector; Layout.fillWidth: true
-                                        model: App.profileManager.personaStyleProfiles; textRole: "name"; valueRole: "profileId"
+                                        model: App.profileManager.writingStyleProfiles; textRole: "name"; valueRole: "profileId"
                                         onActivated: agentProfilesSection.edit.styleProfileIds = currentValue ? [currentValue] : []
                                         background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                                         contentItem: Text { text: styleSelector.displayText || "Ninguno"; color: Theme.textPrimary; leftPadding: 10; verticalAlignment: Text.AlignVCenter }

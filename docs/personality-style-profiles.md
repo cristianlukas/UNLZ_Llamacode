@@ -21,6 +21,11 @@ estilo. El perfil activo conserva únicamente los IDs de esos artefactos. El
 backend inyecta la ficha y, opcionalmente, hasta dos ejemplos dentro de un
 límite de contexto configurable.
 
+Los selectores están tipados: una personalidad no aparece como estilo de
+escritura ni al revés, y ambos incluyen `Ninguno` para limpiar la asociación.
+Al guardar un perfil asociado, el backend activo reconstruye el system prompt
+inmediatamente; no hace falta cambiar de modelo ni reiniciar la sesión.
+
 La ficha debe describir patrones observables y no repetir datos privados. Para
 crear una ficha inicial se puede usar `buildStyleAnalysisPrompt()` con una
 muestra y pedir al modelo una salida estructurada; también existe una medición

@@ -79,6 +79,8 @@ class ProfileManager : public QObject
     Q_PROPERTY(QAbstractListModel* launchProfiles  READ launchProfiles  CONSTANT)
     Q_PROPERTY(QAbstractListModel* agentProfiles   READ agentProfiles   CONSTANT)
     Q_PROPERTY(QAbstractListModel* personaStyleProfiles READ personaStyleProfiles CONSTANT)
+    Q_PROPERTY(QVariantList personalityProfiles READ personalityProfiles NOTIFY personaStylesChanged)
+    Q_PROPERTY(QVariantList writingStyleProfiles READ writingStyleProfiles NOTIFY personaStylesChanged)
 
 public:
     explicit ProfileManager(QObject *parent = nullptr);
@@ -91,6 +93,8 @@ public:
     QAbstractListModel *launchProfiles()    { return &m_launches; }
     QAbstractListModel *agentProfiles()     { return &m_agentProfiles; }
     QAbstractListModel *personaStyleProfiles() { return &m_personaStyles; }
+    QVariantList personalityProfiles() const;
+    QVariantList writingStyleProfiles() const;
 
     // BackendProfile
     Q_INVOKABLE QString addBackend(const QString &name, const QString &binaryId,
@@ -210,6 +214,7 @@ signals:
     // Emitida cuando cambia la lista de launches (alta/baja/edición/alias/favorito)
     // para que los dropdowns reconstruyan launchProfilesForMenu().
     void launchesChanged();
+    void personaStylesChanged();
 
 private:
     void load();
