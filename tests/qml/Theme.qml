@@ -7,6 +7,8 @@ import QtQuick
 QtObject {
     property string accent: "#89b4fa"
     property string baseBg: "#1e1e2e"
+    property color surfaceBg: "#181825"
+    property color highlight: "#313244"
     property string divider: "#313244"
     property string errorBorder: "#f38ba8"
     property string inputBg: "#11111b"
