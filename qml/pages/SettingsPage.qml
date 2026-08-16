@@ -1729,6 +1729,8 @@ Item {
                                     }
                                     LcButton { text: "Nuevo"; secondary: true; onClicked: agentProfilesSection.createStyleProfile() }
                                     LcButton { text: "Guardar estilo"; secondary: true; enabled: !!agentProfilesSection.styleEdit.id; onClicked: agentProfilesSection.saveStyleProfile() }
+                                    LcButton { text: "Exportar JSON"; secondary: true; enabled: !!agentProfilesSection.styleEdit.id; onClicked: styleJsonField.text = App.profileManager.exportPersonaStyleProfile(agentProfilesSection.styleEdit.id) }
+                                    LcButton { text: "Importar JSON"; secondary: true; enabled: styleJsonField.text.trim().length > 0; onClicked: { var id = App.profileManager.importPersonaStyleProfile(styleJsonField.text); if (id) { styleProfileSelector.currentIndex = styleProfileSelector.indexOfValue(id); agentProfilesSection.selectStyleProfile(id) } } }
                                 }
                                 GridLayout {
                                     Layout.fillWidth: true; columns: 2; columnSpacing: 10; rowSpacing: 8
@@ -1749,6 +1751,11 @@ Item {
                                     Text { text: "Muestra"; color: Theme.textSecondary; font.pixelSize: 12 }
                                     TextArea { id: styleExamplesField; Layout.fillWidth: true; Layout.minimumHeight: 100; wrapMode: TextArea.Wrap; color: Theme.textPrimary; placeholderText: "Pegá un ejemplo. Se usa sólo como referencia y queda local." }
                                 }
+                                TextArea {
+                                    id: styleJsonField; Layout.fillWidth: true; Layout.minimumHeight: 70
+                                    wrapMode: TextArea.WrapAnywhere; color: Theme.textPrimary
+                                    placeholderText: "JSON para importar/exportar (queda local)"
+                                }
                                 RowLayout {
                                     Layout.fillWidth: true; spacing: 8
                                     LcButton {
@@ -1756,14 +1763,19 @@ Item {
                                         enabled: styleExamplesField.text.trim().length > 0 && !!agentProfilesSection.styleEdit.id
                                         onClicked: styleCardField.text = App.profileManager.heuristicStyleCard(styleExamplesField.text)
                                     }
+                                    LcButton {
+                                        text: "Analizar con modelo"; secondary: true
+                                        enabled: styleExamplesField.text.trim().length > 0 && !!agentProfilesSection.styleEdit.id && App.personaStyleAnalysisStatus !== "running"
+                                        onClicked: App.analyzePersonaStyleProfile(agentProfilesSection.styleEdit.id, styleExamplesField.text)
+                                    }
                                     Text {
                                         Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.textMuted; font.pixelSize: 11
-                                        text: "También podés pedirle al modelo la ficha usando buildStyleAnalysisPrompt; revisala antes de guardarla."
+                                        text: App.personaStyleAnalysisStatus === "running" ? "Analizando…" : (App.personaStyleAnalysisError || "Revisá la ficha antes de guardarla.")
                                     }
                                 }
                                 Text {
                                     Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.textMuted; font.pixelSize: 11
-                                    text: "La ficha se inyecta como preferencia de expresión. No modifica permisos, herramientas ni guardrails. Para generar una ficha inicial podés usar heuristicStyleCard desde una integración futura o pedirle al modelo el prompt de análisis."
+                                    text: "La ficha se inyecta como preferencia de expresión. No modifica permisos, herramientas ni guardrails. Podés generarla localmente o analizar la muestra con el modelo activo; revisala antes de guardarla."
                                 }
 
                                 // Guardrail global (no per-perfil): acciones destructivas

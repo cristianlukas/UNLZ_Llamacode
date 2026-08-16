@@ -41,6 +41,8 @@ private slots:
     void manager_personaStyleCrudAndImport();
     void manager_personaStyleDisabledAndPersonalityNoExamples();
     void manager_personaStyleListsAreTypedAndClearable();
+    void manager_headlessPromptPreviewRanksRelevantExample();
+    void manager_appliesModelAnalysisJsonSafely();
 
 private:
     QTemporaryDir m_dir;
@@ -165,6 +167,34 @@ void AgentProfilesTests::manager_personaStyleListsAreTypedAndClearable()
         QVERIFY(v.toMap().value("profileId").toString() != style);
     for (const QVariant &v : styles)
         QVERIFY(v.toMap().value("profileId").toString() != persona);
+}
+
+void AgentProfilesTests::manager_headlessPromptPreviewRanksRelevantExample()
+{
+    ProfileManager pm;
+    const QString style = pm.addPersonaStyleProfile(QStringLiteral("Ranked"), QStringLiteral("writing-style"));
+    QVERIFY(pm.updatePersonaStyleProfile({{"id", style}, {"styleCard", "voz clara"},
+        {"examples", QStringList{"bosque y río", "compilador y código"}}}));
+    const QString agent = pm.addAgentProfile(QStringLiteral("Headless"));
+    QVERIFY(pm.updateAgentProfile({{"id", agent}, {"styleProfileIds", QStringList{style}},
+                                  {"styleExampleLimit", 1}, {"styleContextLimit", 2000}}));
+    const QString preview = pm.previewPersonaStylePrompt(agent, QStringLiteral("necesito código del compilador"));
+    QVERIFY(preview.contains(QStringLiteral("compilador y código")));
+    QVERIFY(!preview.contains(QStringLiteral("bosque y río")));
+}
+
+void AgentProfilesTests::manager_appliesModelAnalysisJsonSafely()
+{
+    ProfileManager pm;
+    const QString id = pm.addPersonaStyleProfile(QStringLiteral("Analizado"), QStringLiteral("writing-style"));
+    QVERIFY(!pm.applyPersonaStyleAnalysis(id, QStringLiteral("respuesta sin json"), QStringLiteral("muestra")));
+    const QString response = QStringLiteral("```json\n{\"schemaVersion\":1,\"description\":\"Cercano\","
+        "\"styleCard\":\"Frases medias y sensoriales\",\"examples\":[\"Ejemplo validado\"]}\n```");
+    QVERIFY(pm.applyPersonaStyleAnalysis(id, response, QStringLiteral("muestra original")));
+    const QVariantMap out = pm.getPersonaStyleProfile(id);
+    QCOMPARE(out.value("description").toString(), QStringLiteral("Cercano"));
+    QCOMPARE(out.value("styleCard").toString(), QStringLiteral("Frases medias y sensoriales"));
+    QCOMPARE(out.value("examples").toStringList(), QStringList{QStringLiteral("Ejemplo validado")});
 }
 
 void AgentProfilesTests::systemPresets_shape()

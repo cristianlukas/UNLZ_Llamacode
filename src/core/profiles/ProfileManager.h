@@ -183,6 +183,7 @@ public:
     Q_INVOKABLE QVariantMap getAgentProfile(const QString &id) const;
     AgentProfile resolveAgentProfile(const QString &id) const;
     QString renderPersonaStyleContext(const AgentProfile &profile) const;
+    QString renderPersonaStyleContext(const AgentProfile &profile, const QString &query) const;
 
     // Perfiles reutilizables de personalidad/estilo. Se guardan separados de los
     // perfiles de agente para poder compartirlos entre modelos y backends.
@@ -193,8 +194,12 @@ public:
     Q_INVOKABLE QString buildStyleAnalysisPrompt(const QString &sample,
                                                   const QString &kind) const;
     Q_INVOKABLE QString heuristicStyleCard(const QString &sample) const;
+    Q_INVOKABLE bool applyPersonaStyleAnalysis(const QString &id, const QString &response,
+                                               const QString &sample = QString());
     Q_INVOKABLE QString exportPersonaStyleProfile(const QString &id) const;
     Q_INVOKABLE QString importPersonaStyleProfile(const QString &json);
+    Q_INVOKABLE QString previewPersonaStylePrompt(const QString &agentProfileId,
+                                                   const QString &query = QString()) const;
 
     Q_INVOKABLE void saveProfiles() { save(); }
     void reloadFromDisk();

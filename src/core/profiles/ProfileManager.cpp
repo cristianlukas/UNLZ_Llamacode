@@ -860,8 +860,15 @@ AgentProfile ProfileManager::resolveAgentProfile(const QString &id) const
 
 QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile) const
 {
+    return renderPersonaStyleContext(profile, QString());
+}
+
+QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile,
+                                                  const QString &query) const
+{
     QString out;
     int remaining = qMax(500, profile.styleContextLimit);
+    const QStringList queryWords = query.toLower().split(QRegularExpression(QStringLiteral("[^\\p{L}")), Qt::SkipEmptyParts);
     auto append = [&](const PersonaStyleProfile &p, const QString &heading) {
         if (!p.enabled || p.id.isEmpty() || remaining <= 0) return;
         QString block = QStringLiteral("\n\n--- %1: %2 ---\n%3")
@@ -869,9 +876,21 @@ QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile) c
         if (!p.description.trimmed().isEmpty())
             block += QStringLiteral("\nDescripción: ") + p.description.trimmed();
         if (profile.injectStyleExamples && p.kind == QLatin1String("writing-style")) {
-            int count = 0;
+            QList<QPair<int, QString>> ranked;
             for (const QString &example : p.examples) {
+                int score = 0;
+                const QString lower = example.toLower();
+                for (const QString &word : queryWords)
+                    if (word.size() >= 3) score += lower.count(word);
+                ranked.append({score, example});
+            }
+            std::stable_sort(ranked.begin(), ranked.end(), [](const auto &a, const auto &b) {
+                return a.first > b.first;
+            });
+            int count = 0;
+            for (const auto &rankedExample : ranked) {
                 if (count++ >= qMin(profile.styleExampleLimit, p.maxExamples)) break;
+                const QString &example = rankedExample.second;
                 if (example.trimmed().isEmpty()) continue;
                 block += QStringLiteral("\nEjemplo de referencia (no copiar literalmente):\n")
                          + example.left(p.maxChars);
@@ -1002,6 +1021,51 @@ QString ProfileManager::heuristicStyleCard(const QString &sample) const
         .arg(exclamations ? QStringLiteral("presente") : QStringLiteral("escaso"));
 }
 
+bool ProfileManager::applyPersonaStyleAnalysis(const QString &id, const QString &response,
+                                                const QString &sample)
+{
+    PersonaStyleProfile p = m_personaStyles.findById(id);
+    if (p.id.isEmpty() || p.system) return false;
+    QString json = response.trimmed();
+    const int begin = json.indexOf(QLatin1Char('{'));
+    const int end = json.lastIndexOf(QLatin1Char('}'));
+    if (begin < 0 || end <= begin) return false;
+    json = json.mid(begin, end - begin + 1);
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !doc.isObject()) return false;
+    const QJsonObject o = doc.object();
+    if (o.contains(QStringLiteral("description"))) p.description = o.value("description").toString().left(2000);
+    if (o.contains(QStringLiteral("styleCard"))) {
+        const QJsonValue card = o.value("styleCard");
+        p.styleCard = card.isObject()
+            ? QString::fromUtf8(QJsonDocument(card.toObject()).toJson(QJsonDocument::Compact))
+            : card.toString();
+    }
+    if (p.styleCard.trimmed().isEmpty()) {
+        QStringList parts;
+        for (const QString &key : {QStringLiteral("tone"), QStringLiteral("rhythm"),
+                                   QStringLiteral("sentenceLength"), QStringLiteral("preferredPatterns"),
+                                   QStringLiteral("avoid")}) {
+            if (!o.contains(key)) continue;
+            const QJsonValue value = o.value(key);
+            QString text = value.toVariant().toString();
+            if (value.isObject()) text = QString::fromUtf8(QJsonDocument(value.toObject()).toJson(QJsonDocument::Compact));
+            else if (value.isArray()) text = QString::fromUtf8(QJsonDocument(value.toArray()).toJson(QJsonDocument::Compact));
+            parts << key + QStringLiteral(": ") + text;
+        }
+        p.styleCard = parts.join(QStringLiteral("\n"));
+    }
+    p.examples.clear();
+    for (const QJsonValue &v : o.value(QStringLiteral("examples")).toArray())
+        if (v.isString() && !v.toString().trimmed().isEmpty()) p.examples << v.toString().left(20000);
+    if (p.examples.isEmpty() && !sample.trimmed().isEmpty()) p.examples << sample.left(20000);
+    if (p.styleCard.trimmed().isEmpty()) return false;
+    const bool ok = m_personaStyles.update(p);
+    if (ok) { save(); emit personaStylesChanged(); }
+    return ok;
+}
+
 QString ProfileManager::exportPersonaStyleProfile(const QString &id) const
 {
     const PersonaStyleProfile p = m_personaStyles.findById(id);
@@ -1017,6 +1081,13 @@ QString ProfileManager::importPersonaStyleProfile(const QString &json)
     p.id = PersonaStyleProfile::generateId(); p.system = false;
     if (p.name.trimmed().isEmpty()) p.name = QStringLiteral("Estilo importado");
     m_personaStyles.add(p); save(); emit personaStylesChanged(); return p.id;
+}
+
+QString ProfileManager::previewPersonaStylePrompt(const QString &agentProfileId,
+                                                   const QString &query) const
+{
+    const AgentProfile p = m_agentProfiles.findById(agentProfileId);
+    return p.id.isEmpty() ? QString() : renderPersonaStyleContext(p, query);
 }
 
 // ---- Resolvers ----

@@ -127,6 +127,8 @@ class AppController : public QObject
     // texto en vivo. La UI override sólo esa burbuja sin re-bindear toda la lista.
     Q_PROPERTY(int agentStreamingIndex READ agentStreamingIndex NOTIFY agentStreamingChanged)
     Q_PROPERTY(QString agentStreamingText READ agentStreamingText NOTIFY agentStreamingChanged)
+    Q_PROPERTY(QString personaStyleAnalysisStatus READ personaStyleAnalysisStatus NOTIFY personaStyleAnalysisChanged)
+    Q_PROPERTY(QString personaStyleAnalysisError READ personaStyleAnalysisError NOTIFY personaStyleAnalysisChanged)
     // Mensajes encolados pendientes (modo "encolar"), agente y chat.
     Q_PROPERTY(int agentQueuedCount READ agentQueuedCount NOTIFY agentQueueChanged)
     Q_PROPERTY(int chatQueuedCount READ chatQueuedCount NOTIFY chatQueueChanged)
@@ -325,6 +327,8 @@ public:
     AgentRoomStore *agentRoomStore() { return m_agentRoomStore; }
     int agentStreamingIndex() const { return m_agentStreamingIndex; }
     QString agentStreamingText() const { return m_agentStreamingText; }
+    QString personaStyleAnalysisStatus() const { return m_personaStyleAnalysisStatus; }
+    QString personaStyleAnalysisError() const { return m_personaStyleAnalysisError; }
     int chatStreamingIndex() const { return m_chatStreamingIndex; }
     QString chatStreamingText() const { return m_chatStreamingText; }
     int agentQueuedCount() const { return m_agentQueuedCount; }
@@ -707,6 +711,10 @@ public:
     // keyRef del backend cloud de un perfil ("" si el backend no es cloud).
     Q_INVOKABLE QString cloudKeyRefForProfile(const QString &launchProfileId);
     Q_INVOKABLE void sendToAgent(const QString &text);
+    // Analiza una muestra con el backend activo y aplica una ficha JSON validada
+    // al perfil indicado. No usa tools ni modifica el historial del agente.
+    Q_INVOKABLE bool analyzePersonaStyleProfile(const QString &profileId,
+                                                const QString &sample);
     Q_INVOKABLE QString createAgentRoom(const QString &title,
                                         const QString &projectDir = QString());
     Q_INVOKABLE bool sendAgentRoomMessage(const QString &roomId, const QString &text,
@@ -1225,6 +1233,7 @@ signals:
     void agentLogChanged();
     void agentMessagesChanged();
     void agentStreamingChanged();
+    void personaStyleAnalysisChanged();
     void agentQueueChanged();
     void chatQueueChanged();
     void agentSessionsChanged();
@@ -1702,6 +1711,9 @@ private:
     qint64    m_agentContextPruned = 0;
     int       m_agentContextPruneEvents = 0;
     QString   m_agentSystemPrompt;
+    QString   m_agentStyleQuery;
+    QString   m_personaStyleAnalysisStatus;
+    QString   m_personaStyleAnalysisError;
     QString   m_agentPermRules;
     double    m_agentTemperature = -1.0;
     double    m_resolvedProfileTemperature = -1.0;

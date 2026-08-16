@@ -26,10 +26,16 @@ escritura ni al revés, y ambos incluyen `Ninguno` para limpiar la asociación.
 Al guardar un perfil asociado, el backend activo reconstruye el system prompt
 inmediatamente; no hace falta cambiar de modelo ni reiniciar la sesión.
 
-La ficha debe describir patrones observables y no repetir datos privados. Para
-crear una ficha inicial se puede usar `buildStyleAnalysisPrompt()` con una
-muestra y pedir al modelo una salida estructurada; también existe una medición
-heurística local para una primera aproximación.
+La ficha debe describir patrones observables y no repetir datos privados. Desde
+Ajustes se puede usar la heurística local o **Analizar con modelo**. Esta última
+envía una petición JSON al backend activo, valida la respuesta y sólo entonces
+actualiza el perfil. Si no hay backend disponible, la heurística sigue siendo
+offline. También se puede usar `buildStyleAnalysisPrompt()` desde ControlApi.
+
+Los ejemplos se recuperan con ranking local por términos de la consigna actual y
+se recortan al presupuesto del perfil. Esto funciona sin embeddings ni red; si
+en el futuro hay un índice semántico disponible, debe conservar este ranking
+como fallback determinista.
 
 ## Importación y exportación
 
@@ -91,6 +97,12 @@ $body = @{ method = "addPersonaStyleProfile"; args = @("CI style", "writing-styl
   ConvertTo-Json -Compress
 $created = Invoke-RestMethod "http://127.0.0.1:8876/invoke?target=profileManager" `
   -Method Post -ContentType application/json -Body $body
+
+# Después de asociar el styleProfileId a un AgentProfile, probar el prompt final
+$preview = @{ method = "previewPersonaStylePrompt"; args = @("<agentProfileId>", "código del compilador") } |
+  ConvertTo-Json -Compress
+Invoke-RestMethod "http://127.0.0.1:8876/invoke?target=profileManager" `
+  -Method Post -ContentType application/json -Body $preview
 ```
 
 Los smoke tests headless deben usar un directorio de perfiles temporal y cerrar
