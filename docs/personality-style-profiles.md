@@ -45,3 +45,49 @@ La personalidad y el estilo son preferencias de expresión. La precedencia es:
 Si el usuario pide otro tono o formato para una respuesta puntual, esa petición
 debe prevalecer sobre el estilo persistente siempre que no contradiga una regla
 superior.
+
+## Validación headless
+
+La funcionalidad no depende de QML. El test unitario usa `QTemporaryDir`, no
+inicia ventanas ni servidores de modelos y cubre serialización, CRUD,
+importación, límites, perfiles deshabilitados y la regla de que `personality` no
+inyecta ejemplos de escritura.
+
+Con el árbol configurado y Qt disponible:
+
+```powershell
+cmake -S . -B build_tests -A x64 -DBUILD_TESTS=ON `
+  -DCMAKE_PREFIX_PATH="C:\Qt\6.8.3\msvc2022_64" `
+  -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
+cmake --build build_tests --config Debug --target test_agent_profiles
+$env:QT_QPA_PLATFORM = "offscreen"
+ctest --test-dir build_tests -C Debug -R test_agent_profiles --output-on-failure
+```
+
+La forma recomendada, que además coordina builds concurrentes, es:
+
+```powershell
+.\tests.bat Debug
+```
+
+Para probar el mismo contrato a través de ControlApi sin GUI, iniciar el daemon:
+
+```powershell
+$env:LLAMACODE_CONTROL_PORT = "8876"
+$env:LLAMACODE_PROFILES_DIR = "$pwd\headless-profile-test"
+.\build\Debug\LlamaCode.exe --agent-daemon
+```
+
+Luego descubrir el sub-target y crear/editar un perfil:
+
+```powershell
+Invoke-RestMethod "http://127.0.0.1:8876/methods?target=profileManager"
+$body = @{ method = "addPersonaStyleProfile"; args = @("CI style", "writing-style") } |
+  ConvertTo-Json -Compress
+$created = Invoke-RestMethod "http://127.0.0.1:8876/invoke?target=profileManager" `
+  -Method Post -ContentType application/json -Body $body
+```
+
+Los smoke tests headless deben usar un directorio de perfiles temporal y cerrar
+el daemon al terminar. La prueba no debe depender de un modelo descargado, de
+una GPU ni del estado visual de Windows.

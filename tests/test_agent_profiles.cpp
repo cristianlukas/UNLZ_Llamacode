@@ -37,6 +37,7 @@ private slots:
     void manager_recommendsAndClonesTaskProfile();
     void personaStyle_jsonAndPromptBudget();
     void manager_personaStyleCrudAndImport();
+    void manager_personaStyleDisabledAndPersonalityNoExamples();
 
 private:
     QTemporaryDir m_dir;
@@ -58,6 +59,11 @@ void AgentProfilesTests::agentProfile_jsonRoundTrip()
     p.thinking = true;
     p.temperature = 0.4;
     p.systemExtra = "sé conciso";
+    p.personalityProfileIds = {"persona-1"};
+    p.styleProfileIds = {"style-1"};
+    p.injectStyleExamples = false;
+    p.styleExampleLimit = 1;
+    p.styleContextLimit = 1200;
     const AgentProfile r = AgentProfile::fromJson(p.toJson());
     QCOMPARE(r.id, p.id);
     QCOMPARE(r.name, p.name);
@@ -67,6 +73,11 @@ void AgentProfilesTests::agentProfile_jsonRoundTrip()
     QCOMPARE(r.thinking, p.thinking);
     QCOMPARE(r.temperature, p.temperature);
     QCOMPARE(r.systemExtra, p.systemExtra);
+    QCOMPARE(r.personalityProfileIds, p.personalityProfileIds);
+    QCOMPARE(r.styleProfileIds, p.styleProfileIds);
+    QCOMPARE(r.injectStyleExamples, p.injectStyleExamples);
+    QCOMPARE(r.styleExampleLimit, p.styleExampleLimit);
+    QCOMPARE(r.styleContextLimit, p.styleContextLimit);
     QCOMPARE(r.progressCredits, p.progressCredits);
     QCOMPARE(r.progressMaxCredits, p.progressMaxCredits);
     QCOMPARE(r.progressReplanAfter, p.progressReplanAfter);
@@ -109,6 +120,24 @@ void AgentProfilesTests::manager_personaStyleCrudAndImport()
                 .contains(QStringLiteral("MUESTRA")));
     QVERIFY(pm.heuristicStyleCard(QStringLiteral("Una frase. Otra frase."))
                 .contains(QStringLiteral("Promedio")));
+}
+
+void AgentProfilesTests::manager_personaStyleDisabledAndPersonalityNoExamples()
+{
+    ProfileManager pm;
+    const QString disabled = pm.addPersonaStyleProfile(QStringLiteral("Apagado"), QStringLiteral("writing-style"));
+    const QString personality = pm.addPersonaStyleProfile(QStringLiteral("Conversacional"), QStringLiteral("personality"));
+    QVERIFY(pm.updatePersonaStyleProfile({{"id", disabled}, {"enabled", false},
+                                          {"styleCard", "NO DEBE APARECER"}}));
+    QVERIFY(pm.updatePersonaStyleProfile({{"id", personality}, {"styleCard", "calmo"},
+                                          {"examples", QStringList{"contenido privado que no debe entrar"}}}));
+    AgentProfile ap;
+    ap.personalityProfileIds = {disabled, personality};
+    ap.styleContextLimit = 2000;
+    const QString rendered = pm.renderPersonaStyleContext(ap);
+    QVERIFY(!rendered.contains(QStringLiteral("NO DEBE APARECER")));
+    QVERIFY(rendered.contains(QStringLiteral("calmo")));
+    QVERIFY(!rendered.contains(QStringLiteral("contenido privado que no debe entrar")));
 }
 
 void AgentProfilesTests::systemPresets_shape()
