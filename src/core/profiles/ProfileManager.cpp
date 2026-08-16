@@ -867,7 +867,7 @@ QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile,
                                                   const QString &query) const
 {
     QString out;
-    int remaining = qMax(500, profile.styleContextLimit);
+    int remaining = qMax(0, profile.styleContextLimit);
     const QStringList queryWords = query.toLower().split(QRegularExpression(QStringLiteral("[^\\p{L}")), Qt::SkipEmptyParts);
     auto append = [&](const PersonaStyleProfile &p, const QString &heading) {
         if (!p.enabled || p.id.isEmpty() || remaining <= 0) return;
@@ -904,9 +904,14 @@ QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile,
         append(m_personaStyles.findById(id), QStringLiteral("PERSONALIDAD DEL USUARIO"));
     for (const QString &id : profile.styleProfileIds)
         append(m_personaStyles.findById(id), QStringLiteral("ESTILO DEL USUARIO"));
-    if (!out.isEmpty())
-        out += QStringLiteral("\nNo copies contenido de los ejemplos ni inventes rasgos. "
-                             "Preservá el significado, los hechos y la intención de cada pedido.\n");
+    if (!out.isEmpty()) {
+        const QString footer = QStringLiteral(
+            "\nNo copies contenido de los ejemplos ni inventes rasgos. "
+            "Preservá el significado, los hechos y la intención de cada pedido.\n");
+        out += footer;
+        if (profile.styleContextLimit > 0)
+            out.truncate(qMin(out.size(), profile.styleContextLimit + footer.size()));
+    }
     return out;
 }
 

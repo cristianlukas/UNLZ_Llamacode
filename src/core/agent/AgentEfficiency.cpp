@@ -122,21 +122,33 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
         QList<double> coldFirstAttemptSec;
         QList<double> warmFirstAttemptSec;
         QList<double> repairAttempts;
+        QList<double> filesChanged;
+        QList<double> addedLines;
+        QList<double> removedLines;
         int successful = 0;
         int fullyAccepted = 0;
         int failed = 0;
         QString profileName;
+        QString agentVariant;
+        bool honeyEnabled = false;
 
         for (const QVariant &value : profileRuns) {
             const QVariantMap run = value.toMap();
             if (profileName.isEmpty())
                 profileName = run.value(QStringLiteral("profileName")).toString()
                                       .section(QStringLiteral(" · pasada "), 0, 0);
+            if (agentVariant.isEmpty())
+                agentVariant = run.value(QStringLiteral("agentVariant")).toString();
+            honeyEnabled = honeyEnabled || run.value(QStringLiteral("honeyEnabled")).toBool();
             const bool runFailed = run.value(QStringLiteral("failed")).toBool();
             if (runFailed) {
                 failed++;
                 continue;
             }
+            const QVariantMap complexity = run.value(QStringLiteral("complexityMetrics")).toMap();
+            filesChanged.append(complexity.value(QStringLiteral("filesChanged")).toDouble());
+            addedLines.append(complexity.value(QStringLiteral("addedLines")).toDouble());
+            removedLines.append(complexity.value(QStringLiteral("removedLines")).toDouble());
             successful++;
             const int score = run.value(QStringLiteral("qualityScore")).toInt();
             const int total = run.value(QStringLiteral("qualityTotal")).toInt();
@@ -163,6 +175,10 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
         QVariantMap aggregate{
             {QStringLiteral("profileId"), it.key()},
             {QStringLiteral("profileName"), profileName},
+            {QStringLiteral("agentVariant"), agentVariant.isEmpty()
+                ? (honeyEnabled ? QStringLiteral("honey") : QStringLiteral("baseline"))
+                : agentVariant},
+            {QStringLiteral("honeyEnabled"), honeyEnabled},
             {QStringLiteral("runs"), totalRuns},
             {QStringLiteral("successfulRuns"), successful},
             {QStringLiteral("failedRuns"), failed},
@@ -178,7 +194,10 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
             {QStringLiteral("comparisonTimeMetric"),
              warmFirstAttemptSec.isEmpty() ? QStringLiteral("timeToFirstAttempt")
                                            : QStringLiteral("warmTimeToFirstAttempt")},
-            {QStringLiteral("medianRepairAttempts"), median(repairAttempts)}
+            {QStringLiteral("medianRepairAttempts"), median(repairAttempts)},
+            {QStringLiteral("medianFilesChanged"), median(filesChanged)},
+            {QStringLiteral("medianAddedLines"), median(addedLines)},
+            {QStringLiteral("medianRemovedLines"), median(removedLines)}
         };
         aggregate[QStringLiteral("qualityRangePctPoints")] = qualityPct.isEmpty()
             ? 0.0 : *minmaxQuality.second - *minmaxQuality.first;
@@ -211,6 +230,15 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
                      - baseline.value(QStringLiteral("successRatePct")).toDouble()},
                 {QStringLiteral("comparisonTimeChangePct"),
                  baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0},
+                {QStringLiteral("filesChangedDelta"),
+                 candidate.value(QStringLiteral("medianFilesChanged")).toDouble()
+                     - baseline.value(QStringLiteral("medianFilesChanged")).toDouble()},
+                {QStringLiteral("addedLinesDelta"),
+                 candidate.value(QStringLiteral("medianAddedLines")).toDouble()
+                     - baseline.value(QStringLiteral("medianAddedLines")).toDouble()},
+                {QStringLiteral("removedLinesDelta"),
+                 candidate.value(QStringLiteral("medianRemovedLines")).toDouble()
+                     - baseline.value(QStringLiteral("medianRemovedLines")).toDouble()},
                 // Backward-compatible alias for consumers of schemaVersion 1.
                 {QStringLiteral("elapsedChangePct"),
                  baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0}

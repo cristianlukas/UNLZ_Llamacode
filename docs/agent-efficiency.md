@@ -24,9 +24,12 @@ por seguridad, validación, accesibilidad, rendimiento o un contrato existente.
 
 Para una comparación A/B reproducible, ejecutar la misma suite con el mismo
 modelo, perfil, hardware y cantidad de pasadas, alternando sólo la directiva
-`honey`. Registrar además `filesChanged`, `addedLines`, `removedLines`, tool
-calls, tokens, tiempo, éxito funcional, tests y reparaciones. Un resultado sólo
-es mejor si reduce complejidad o costo sin bajar éxito ni aumentar regresiones.
+`honey`. Cada resultado de agente persiste `agentVariant`, `honeyEnabled` y
+`complexityMetrics` (`filesChanged`, `filesCreated`, `filesDeleted`,
+`addedLines`, `removedLines`); `comparison.json` calcula sus medianas y deltas.
+Tool calls, tokens, tiempo, éxito funcional, tests y reparaciones continúan en
+la telemetría existente. Un resultado sólo es mejor si reduce complejidad o
+costo sin bajar éxito ni aumentar regresiones.
 
 LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
 
@@ -66,6 +69,15 @@ LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
 Tasks y Automations preservan un objeto `workflow` opcional. Los registros de
 historial preservan `workflowState` y `metrics`. Los registros legacy siguen
 siendo válidos.
+
+## Loops locales
+
+Las Tasks pueden repetir su cuerpo hasta cumplir un objetivo. Además del límite
+de iteraciones (`loopMaxIterations`, hasta 1000), admiten un límite operativo de
+tiempo (`loopMaxSeconds`, hasta 24 horas; `0` = sin límite). Este límite no es
+económico: protege la disponibilidad de GPU/CPU y evita relanzar una iteración
+cuando el loop ya agotó su ventana de ejecución. La decisión se evalúa antes de
+cada relanzamiento y queda registrada en el motivo de finalización.
 
 La vista visual es una proyección editable y sin pérdida: conserva campos avanzados,
 ramas, argumentos, presupuestos y metadata que no representa gráficamente, y al

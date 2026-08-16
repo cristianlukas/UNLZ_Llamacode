@@ -6327,6 +6327,8 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     m_runningTaskLoopEnabled = task.value(QStringLiteral("loopEnabled"), false).toBool()
                                && !TaskStore::composeLoopGoalPrompt(task).isEmpty();
     m_runningTaskLoopIteration = 1;   // esta primera corrida del cuerpo cuenta como iteración 1
+    m_runningTaskLoopMaxSeconds = qBound(0, task.value(QStringLiteral("loopMaxSeconds"), 0).toInt(), 86400);
+    m_runningTaskLoopStartedAtMs = QDateTime::currentMSecsSinceEpoch();
     // Routing verify-phase: el cuerpo corre en el modelo activo; el goal-check del
     // bucle puede correr en otro (si verifyProfileId difiere). Ver sendForPhaseProfile.
     m_runningTaskExecLaunchId = m_activeLaunchId;
@@ -11672,6 +11674,23 @@ void AppController::rescanHardware()
     }));
 }
 
+QVariantMap AppController::performanceRecommendation(const QString &target) const
+{
+    return HardwareDiagnostics::performanceRecommendation(m_hardwareSummary, target);
+}
+
+QVariantList AppController::performanceMatrixCandidates(const QString &target,
+                                                         bool withVision) const
+{
+    return PerformanceMatrix::candidates(m_hardwareSummary, target, withVision);
+}
+
+QVariantList AppController::rankPerformanceMatrix(const QVariantList &samples,
+                                                   const QString &target) const
+{
+    return PerformanceMatrix::rank(samples, target);
+}
+
 void AppController::applyHardwareSummary(const QVariantMap &hardware)
 {
     if (hardware.isEmpty()) return;
@@ -12993,6 +13012,25 @@ void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,
     m_hardwareSummary[QStringLiteral("gpuName")] = gpuName;
     m_hardwareSummary[QStringLiteral("vramTotalGb")] = vramTotalGb > 0 ? vramTotalGb : vramGb;
     m_hardwareSummary[QStringLiteral("gpuCount")] = gpuCount > 0 ? gpuCount : (vramGb > 0 ? 1 : 0);
+    QVariantList gpus;
+    const int count = m_hardwareSummary.value(QStringLiteral("gpuCount")).toInt();
+    for (int i = 0; i < count; ++i) {
+        gpus.append(QVariantMap{{QStringLiteral("index"), i},
+                                {QStringLiteral("name"), gpuName},
+                                {QStringLiteral("totalMb"), vramGb * 1024.0 / qMax(1, count)},
+                                {QStringLiteral("pcieGeneration"), 0.0},
+                                {QStringLiteral("pcieLanes"), 0.0}});
+    }
+    m_hardwareSummary[QStringLiteral("gpus")] = gpus;
+    m_hardwareSummary[QStringLiteral("p2pAvailable")] = false;
+    m_hardwareSummary[QStringLiteral("nvlinkAvailable")] = false;
+    m_hardwareSummary[QStringLiteral("hardwareFingerprint")] =
+        HardwareDiagnostics::hardwareFingerprint(m_hardwareSummary);
+    m_hardwareSummary[QStringLiteral("recommendedSplitMode")] =
+        HardwareDiagnostics::recommendedSplitMode(m_hardwareSummary);
+    m_hardwareSummary[QStringLiteral("performanceRecommendation")] =
+        HardwareDiagnostics::performanceRecommendation(m_hardwareSummary);
+    emit hardwareSummaryChanged();
 }
 
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)
@@ -14569,6 +14607,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         meta["target"]     = target;
         meta["agentProfileId"]   = m_benchmarkAgentProfileId;
         meta["agentProfileName"] = m_benchmarkAgentProfileName;
+        const AgentProfile metaAgent = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+        const bool metaHoney = !metaAgent.id.isEmpty()
+            && metaAgent.directives.contains(QStringLiteral("honey"));
+        meta["agentVariant"] = metaHoney ? QStringLiteral("honey") : QStringLiteral("baseline");
+        meta["honeyEnabled"] = metaHoney;
         meta["timeoutSec"]  = m_benchHardTimeoutSec;
         meta["startedAt"]  = QDateTime::currentDateTime().toString(Qt::ISODate);
         meta["timestamp"]  = (double)QDateTime::currentMSecsSinceEpoch();
@@ -15487,6 +15530,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                                                 : QStringLiteral("__ws"));
         const QString workspace = runDir + "/" + wsName;
         QDir().mkpath(workspace);
+        // La comparación es contra el estado inicial de ESTE pass, no contra
+        // el repo del usuario: el workspace del benchmark es aislado y puede
+        // contener reparaciones posteriores dentro de la misma corrida.
+        const BenchmarkWorkspaceSnapshot workspaceBefore =
+            snapshotBenchmarkWorkspace(workspace);
 
         auto *agent = new LlamaAgentBackend(this);
         m_benchmarkAgent = agent;
@@ -15888,6 +15936,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["target"]       = QStringLiteral("agent");
             result["agentProfileId"]   = m_benchmarkAgentProfileId;
             result["agentProfileName"] = m_benchmarkAgentProfileName;
+            result["agentVariant"] = benchmarkVariant;
+            result["honeyEnabled"] = honeyEnabled;
             result["agentTemperature"] = benchmarkTemp;
             result["agentSeed"] = benchmarkSeed;
             result["thinkingEnabled"] = m_agentThinkingEnabled;
@@ -15941,6 +15991,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["passedAfterRepair"] = *repairAttempts > 0 && qTotal > 0 && qScore >= qTotal;
             result["response"]     = finalText;
             result["agentFiles"]   = files;
+            result["complexityMetrics"] = benchmarkWorkspaceDelta(
+                workspaceBefore, snapshotBenchmarkWorkspace(workspace));
             result["agentMetrics"] = assistantMetrics;
             result["progressGovernor"] = agent->progressSummary();
             result["acceptance"]   = acceptanceRows;
@@ -16838,6 +16890,16 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     // Nivel del agente (vacío para target model / sin perfil elegido).
     result[QStringLiteral("agentProfileId")] = m_benchmarkAgentProfileId;
     result[QStringLiteral("agentProfileName")] = m_benchmarkAgentProfileName;
+    const AgentProfile failureAgent = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+    const bool failureHoney = !failureAgent.id.isEmpty()
+        && failureAgent.directives.contains(QStringLiteral("honey"));
+    result[QStringLiteral("agentVariant")] = failureHoney
+        ? QStringLiteral("honey") : QStringLiteral("baseline");
+    result[QStringLiteral("honeyEnabled")] = failureHoney;
+    result[QStringLiteral("complexityMetrics")] = QVariantMap{
+        {QStringLiteral("filesChanged"), 0}, {QStringLiteral("filesCreated"), 0},
+        {QStringLiteral("filesDeleted"), 0}, {QStringLiteral("addedLines"), 0},
+        {QStringLiteral("removedLines"), 0}};
     result[QStringLiteral("thinkingEnabled")] = m_agentThinkingEnabled;
     result[QStringLiteral("benchmarkName")] = benchmarkName;
     result[QStringLiteral("timestamp")] = (double)QDateTime::currentMSecsSinceEpoch();

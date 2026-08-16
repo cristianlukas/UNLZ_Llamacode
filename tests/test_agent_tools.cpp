@@ -75,6 +75,9 @@ private slots:
     void grep_findsMatch();
     void glob_listsFiles();
     void reviewOverengineering_isReadOnlyAndExplainsCandidates();
+    void reviewOverengineering_handlesEmptyStagedAndUntracked();
+    void reviewOverengineering_rejectsInvalidScopeAndTruncates();
+    void reviewOverengineering_withoutRepoExplainsRequirement();
     void runShell_echo();
     void hybridSearch_depGraphAndBudget();
     void hybridSearch_compactReturnsSpans();
@@ -308,24 +311,27 @@ void AgentToolsTests::glob_listsFiles()
 
 void AgentToolsTests::reviewOverengineering_isReadOnlyAndExplainsCandidates()
 {
-    const QString oldCwd = QDir::currentPath();
-    QDir::setCurrent(m_dir.path());
-    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("init"), QStringLiteral("-q")}) == 0);
-    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.email"),
-                                                       QStringLiteral("test@example.invalid")}) == 0);
-    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.name"),
-                                                       QStringLiteral("LlamaCode Test")}) == 0);
+    auto git = [this](const QStringList &args) {
+        QProcess p;
+        p.setWorkingDirectory(m_dir.path());
+        p.start(QStringLiteral("git"), args);
+        const bool finished = p.waitForFinished(10000);
+        return finished && p.exitStatus() == QProcess::NormalExit && p.exitCode() == 0;
+    };
+    QVERIFY(git({QStringLiteral("init"), QStringLiteral("-q")}));
+    QVERIFY(git({QStringLiteral("config"), QStringLiteral("user.email"),
+                 QStringLiteral("test@example.invalid")}));
+    QVERIFY(git({QStringLiteral("config"), QStringLiteral("user.name"),
+                 QStringLiteral("LlamaCode Test")}));
     QFile fixture(m_dir.filePath("review.cpp"));
     QVERIFY(fixture.open(QIODevice::WriteOnly | QIODevice::Truncate));
     fixture.write("int answer() { return 1; }\n");
     fixture.close();
-    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("add"), QStringLiteral("review.cpp")}) == 0);
-    QVERIFY(QProcess::execute(QStringLiteral("git"), {QStringLiteral("commit"), QStringLiteral("-qm"),
-                                                       QStringLiteral("fixture")}) == 0);
+    QVERIFY(git({QStringLiteral("add"), QStringLiteral("review.cpp")}));
+    QVERIFY(git({QStringLiteral("commit"), QStringLiteral("-qm"), QStringLiteral("fixture")}));
     fixture.open(QIODevice::WriteOnly | QIODevice::Append);
     fixture.write("// TODO future generic adapter configurable registry\n");
     fixture.close();
-    QDir::setCurrent(oldCwd);
 
     const QVariantMap result = call("review_overengineering", {});
     QVERIFY2(result.value("ok").toBool(), qPrintable(result.value("result").toString()));
@@ -337,6 +343,93 @@ void AgentToolsTests::reviewOverengineering_isReadOnlyAndExplainsCandidates()
     QFile unchanged(m_dir.filePath("review.cpp"));
     QVERIFY(unchanged.open(QIODevice::ReadOnly));
     QVERIFY(QString::fromUtf8(unchanged.readAll()).contains(QStringLiteral("future generic adapter")));
+}
+
+void AgentToolsTests::reviewOverengineering_handlesEmptyStagedAndUntracked()
+{
+    auto git = [this](const QStringList &args) {
+        QProcess p;
+        p.setWorkingDirectory(m_dir.path());
+        p.start(QStringLiteral("git"), args);
+        return p.waitForFinished(10000) && p.exitStatus() == QProcess::NormalExit
+            && p.exitCode() == 0;
+    };
+    QVERIFY(git({QStringLiteral("init"), QStringLiteral("-q")}));
+    QVERIFY(git({QStringLiteral("config"), QStringLiteral("user.email"), QStringLiteral("test@example.invalid")}));
+    QVERIFY(git({QStringLiteral("config"), QStringLiteral("user.name"), QStringLiteral("LlamaCode Test")}));
+    QFile fixture(m_dir.filePath("staged.txt"));
+    QVERIFY(fixture.open(QIODevice::WriteOnly));
+    fixture.write("base\n");
+    fixture.close();
+    QVERIFY(git({QStringLiteral("add"), QStringLiteral("staged.txt")}));
+    QVERIFY(git({QStringLiteral("commit"), QStringLiteral("-qm"), QStringLiteral("fixture")}));
+
+    QVariantMap empty = call("review_overengineering", {});
+    QVERIFY2(empty.value("ok").toBool(), qPrintable(empty.value("result").toString()));
+    const QJsonObject emptyReport = QJsonDocument::fromJson(empty.value("result").toString().toUtf8()).object();
+    QCOMPARE(emptyReport.value("metrics").toObject().value("filesChanged").toInt(), 0);
+    QCOMPARE(emptyReport.value("metrics").toObject().value("addedLines").toInt(), 0);
+
+    fixture.open(QIODevice::WriteOnly | QIODevice::Append);
+    fixture.write("TODO staged\n");
+    fixture.close();
+    QVERIFY(git({QStringLiteral("add"), QStringLiteral("staged.txt")}));
+    QVariantMap staged = call("review_overengineering", {{"scope", "staged"}});
+    QVERIFY(staged.value("ok").toBool());
+    const QJsonObject stagedReport = QJsonDocument::fromJson(staged.value("result").toString().toUtf8()).object();
+    QCOMPARE(stagedReport.value("scope").toString(), QStringLiteral("staged"));
+    QVERIFY(stagedReport.value("deleteList").toArray().size() >= 1);
+
+    QFile untracked(m_dir.filePath("untracked.txt"));
+    QVERIFY(untracked.open(QIODevice::WriteOnly));
+    untracked.write("not staged\n");
+    untracked.close();
+    QVariantMap working = call("review_overengineering", {});
+    QVERIFY(working.value("ok").toBool());
+    const QJsonObject workingReport = QJsonDocument::fromJson(working.value("result").toString().toUtf8()).object();
+    QVERIFY(workingReport.value("metrics").toObject().value("workingTreeDirty").toBool());
+    QVERIFY(workingReport.value("metrics").toObject().value("untrackedPresent").toBool());
+}
+
+void AgentToolsTests::reviewOverengineering_rejectsInvalidScopeAndTruncates()
+{
+    auto git = [this](const QStringList &args) {
+        QProcess p;
+        p.setWorkingDirectory(m_dir.path());
+        p.start(QStringLiteral("git"), args);
+        return p.waitForFinished(10000) && p.exitStatus() == QProcess::NormalExit
+            && p.exitCode() == 0;
+    };
+    QVERIFY(git({QStringLiteral("init"), QStringLiteral("-q")}));
+    QVERIFY(git({QStringLiteral("config"), QStringLiteral("user.email"), QStringLiteral("test@example.invalid")}));
+    QVERIFY(git({QStringLiteral("config"), QStringLiteral("user.name"), QStringLiteral("LlamaCode Test")}));
+    QFile fixture(m_dir.filePath("large.txt"));
+    QVERIFY(fixture.open(QIODevice::WriteOnly));
+    fixture.write("base\n");
+    fixture.close();
+    QVERIFY(git({QStringLiteral("add"), QStringLiteral("large.txt")}));
+    QVERIFY(git({QStringLiteral("commit"), QStringLiteral("-qm"), QStringLiteral("fixture")}));
+    fixture.open(QIODevice::WriteOnly | QIODevice::Append);
+    fixture.write(QByteArray(5000, 'x'));
+    fixture.write("\n");
+    fixture.close();
+
+    const QVariantMap invalid = call("review_overengineering", {{"scope", "nope"}});
+    QVERIFY(!invalid.value("ok").toBool());
+    QVERIFY(invalid.value("result").toString().contains(QStringLiteral("scope inválido")));
+
+    const QVariantMap truncated = call("review_overengineering", {{"max_diff_chars", 1000}});
+    QVERIFY(truncated.value("ok").toBool());
+    const QJsonObject report = QJsonDocument::fromJson(truncated.value("result").toString().toUtf8()).object();
+    QVERIFY(report.value("metrics").toObject().value("truncated").toBool());
+    QVERIFY(report.value("metrics").toObject().value("diffChars").toInt() <= 1000);
+}
+
+void AgentToolsTests::reviewOverengineering_withoutRepoExplainsRequirement()
+{
+    const QVariantMap result = call("review_overengineering", {});
+    QVERIFY(!result.value("ok").toBool());
+    QVERIFY(result.value("result").toString().contains(QStringLiteral("no se pudo leer el diff git")));
 }
 
 void AgentToolsTests::runShell_echo()

@@ -53,21 +53,31 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     const QVariantList runs{
         QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen · pasada 1/3"},
                     {"qualityScore", 8}, {"qualityTotal", 10}, {"elapsedSec", 100.0},
-                    {"timeToFirstAttempt", 70.0}, {"repairAttempts", 1}, {"failed", false}, {"pass", 1}},
+                    {"timeToFirstAttempt", 70.0}, {"repairAttempts", 1}, {"failed", false}, {"pass", 1},
+                    {"agentVariant", "honey"}, {"honeyEnabled", true},
+                    {"complexityMetrics", QVariantMap{{"filesChanged", 2}, {"addedLines", 20}, {"removedLines", 1}}}},
         QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen · pasada 2/3"},
                     {"qualityScore", 10}, {"qualityTotal", 10}, {"elapsedSec", 120.0},
-                    {"timeToFirstAttempt", 80.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 2}},
+                    {"timeToFirstAttempt", 80.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 2},
+                    {"agentVariant", "honey"}, {"honeyEnabled", true},
+                    {"complexityMetrics", QVariantMap{{"filesChanged", 4}, {"addedLines", 40}, {"removedLines", 2}}}},
         QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen · pasada 3/3"},
                     {"failed", true}},
         QVariantMap{{"profileId", "kat"}, {"profileName", "KAT · pasada 1/3"},
                     {"qualityScore", 10}, {"qualityTotal", 10}, {"elapsedSec", 80.0},
-                    {"timeToFirstAttempt", 55.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 1}},
+                    {"timeToFirstAttempt", 55.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 1},
+                    {"agentVariant", "baseline"}, {"honeyEnabled", false},
+                    {"complexityMetrics", QVariantMap{{"filesChanged", 1}, {"addedLines", 10}, {"removedLines", 0}}}},
         QVariantMap{{"profileId", "kat"}, {"profileName", "KAT · pasada 2/3"},
                     {"qualityScore", 10}, {"qualityTotal", 10}, {"elapsedSec", 90.0},
-                    {"timeToFirstAttempt", 60.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 2}},
+                    {"timeToFirstAttempt", 60.0}, {"repairAttempts", 0}, {"failed", false}, {"pass", 2},
+                    {"agentVariant", "baseline"}, {"honeyEnabled", false},
+                    {"complexityMetrics", QVariantMap{{"filesChanged", 3}, {"addedLines", 30}, {"removedLines", 1}}}},
         QVariantMap{{"profileId", "kat"}, {"profileName", "KAT · pasada 3/3"},
                     {"qualityScore", 9}, {"qualityTotal", 10}, {"elapsedSec", 85.0},
-                    {"timeToFirstAttempt", 58.0}, {"repairAttempts", 1}, {"failed", false}, {"pass", 3}}
+                    {"timeToFirstAttempt", 58.0}, {"repairAttempts", 1}, {"failed", false}, {"pass", 3},
+                    {"agentVariant", "baseline"}, {"honeyEnabled", false},
+                    {"complexityMetrics", QVariantMap{{"filesChanged", 2}, {"addedLines", 20}, {"removedLines", 1}}}}
     };
     const QVariantMap report = AgentEfficiency::benchmarkComparison(runs);
     QCOMPARE(report.value("runCount").toInt(), 6);
@@ -88,6 +98,10 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     QCOMPARE(kat.value("medianWarmFirstAttemptSec").toDouble(), 59.0);
     QCOMPARE(qwen.value("comparisonTimeMetric").toString(), QString("warmTimeToFirstAttempt"));
     QCOMPARE(qwen.value("stabilityRatePct").toDouble(), 200.0 / 3.0);
+    QCOMPARE(qwen.value("medianFilesChanged").toDouble(), 3.0);
+    QCOMPARE(qwen.value("medianAddedLines").toDouble(), 30.0);
+    QCOMPARE(qwen.value("agentVariant").toString(), QStringLiteral("honey"));
+    QVERIFY(qwen.value("honeyEnabled").toBool());
     QVERIFY(qwen.value("outcomeSpread").toBool());
     QCOMPARE(kat.value("successRatePct").toDouble(), 100.0);
     QCOMPARE(kat.value("qualityRangePctPoints").toDouble(), 10.0);

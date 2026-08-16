@@ -2738,7 +2738,6 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QStringList candidates;
         QString currentFile;
         const QRegularExpression fileRx(QStringLiteral("^\\+\\+\\+ b/(.+)$"));
-        const QRegularExpression numRx(QStringLiteral("^([0-9-]+)\\s+([0-9-]+)\\s+(.+)$"));
         const QRegularExpression addedLineRx(
                                               QStringLiteral("^\\+(?!\\+).*\\b(?:TODO|FIXME|later|future|generic|factory|adapter|registry|configurable)\\b.*"),
                                               QRegularExpression::CaseInsensitiveOption);
@@ -2750,16 +2749,17 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 if (!files.contains(currentFile)) files << currentFile;
                 continue;
             }
-            const auto nm = numRx.match(line);
-            if (nm.hasMatch() && !nm.captured(1).isEmpty()) {
-                if (nm.captured(1) != QLatin1String("-")) added += nm.captured(1).toInt();
-                if (nm.captured(2) != QLatin1String("-")) removed += nm.captured(2).toInt();
+            if (line.startsWith(QLatin1Char('+')) && !line.startsWith(QStringLiteral("+++"))) {
+                ++added;
+                if (addedLineRx.match(line).hasMatch() && !currentFile.isEmpty()) {
+                    const QString detail = line.mid(1).trimmed().left(180);
+                    candidates << QStringLiteral("%1: línea agregada contiene posible scaffolding o extensión especulativa: %2")
+                                      .arg(currentFile, detail);
+                }
                 continue;
             }
-            if (addedLineRx.match(line).hasMatch() && !currentFile.isEmpty()) {
-                const QString detail = line.mid(1).trimmed().left(180);
-                candidates << QStringLiteral("%1: línea agregada contiene posible scaffolding o extensión especulativa: %2")
-                                  .arg(currentFile, detail);
+            if (line.startsWith(QLatin1Char('-')) && !line.startsWith(QStringLiteral("---"))) {
+                ++removed;
             }
         }
         QJsonArray candidateJson;
@@ -2777,7 +2777,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 {QStringLiteral("removedLines"), removed},
                 {QStringLiteral("diffChars"), diff.size()},
                 {QStringLiteral("truncated"), truncated},
-                {QStringLiteral("untrackedStatusPresent"), !status.isEmpty()}}},
+                {QStringLiteral("workingTreeDirty"), !status.isEmpty()},
+                {QStringLiteral("untrackedPresent"), status.contains(QRegularExpression(QStringLiteral("(^|\\n)\\?\\? ")))} }},
             {QStringLiteral("deleteList"), candidateJson},
             {QStringLiteral("guardrails"), QJsonArray{
                 QStringLiteral("No se modificaron archivos."),
@@ -2785,7 +2786,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 QStringLiteral("No se recomienda eliminar validación, seguridad, tests, accesibilidad ni manejo de errores.")}},
             {QStringLiteral("note"), status.isEmpty()
                 ? QStringLiteral("El diff no contiene archivos no rastreados visibles en git status.")
-                : QStringLiteral("git status detectó cambios no rastreados o adicionales; el diff no incluye su contenido automáticamente.")}
+                : QStringLiteral("git status detectó cambios adicionales; el diff no incluye automáticamente el contenido de archivos no rastreados.")}
         };
         if (ok) *ok = true;
         return QString::fromUtf8(QJsonDocument(report).toJson(QJsonDocument::Compact));

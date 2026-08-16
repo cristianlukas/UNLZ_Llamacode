@@ -33,6 +33,7 @@ private slots:
     void setDirectives_defaultIncludesAll();
     void honey_isOptInOnly();
     void antiBias_isOptInOnly();
+    void reviewTool_isCataloguedAndSchemaIsReadOnly();
     void mcpEnabled_roundTrips();
     void manager_crudAndPersistence();
     void manager_systemPresetsImmutable();
@@ -387,6 +388,35 @@ void AgentProfilesTests::antiBias_isOptInOnly()
     // Elegida explícitamente: presente.
     be.setDirectives(QStringList{"antiBias"});
     QVERIFY(be.systemPromptForTest().contains(QStringLiteral("ANTI-SESGO")));
+}
+
+void AgentProfilesTests::reviewTool_isCataloguedAndSchemaIsReadOnly()
+{
+    bool inCatalog = false;
+    for (const QVariant &value : LlamaAgentBackend::toolCatalog()) {
+        if (value.toMap().value(QStringLiteral("name")).toString()
+                == QLatin1String("review_overengineering")) {
+            inCatalog = true;
+            break;
+        }
+    }
+    QVERIFY(inCatalog);
+
+    bool found = false;
+    for (const QJsonValue &value : LlamaAgentBackend::toolSchemas()) {
+        const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
+        if (fn.value(QStringLiteral("name")).toString()
+                != QLatin1String("review_overengineering")) continue;
+        found = true;
+        const QString description = fn.value(QStringLiteral("description")).toString();
+        QVERIFY(description.contains(QStringLiteral("READ-ONLY")));
+        QVERIFY(description.contains(QStringLiteral("No modifica archivos")));
+        const QJsonObject props = fn.value(QStringLiteral("parameters"))
+                                      .toObject().value(QStringLiteral("properties")).toObject();
+        QVERIFY(props.contains(QStringLiteral("scope")));
+        QVERIFY(props.contains(QStringLiteral("max_diff_chars")));
+    }
+    QVERIFY(found);
 }
 
 // mcpEnabled persiste por JSON y default es true para perfiles legacy (sin la

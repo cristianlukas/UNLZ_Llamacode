@@ -27,6 +27,199 @@ La prueba HTTP equivalente arranca el daemon con un puerto localhost y un
 El procedimiento específico está en
 [`personality-style-profiles.md`](personality-style-profiles.md).
 
+La extracción asistida se dispara sobre `AppController` y es asíncrona:
+
+```powershell
+$body = @{ method = "analyzePersonaStyleProfile"; args = @("<profileId>", "Mi muestra...") } |
+  ConvertTo-Json -Compress
+Invoke-RestMethod "http://127.0.0.1:8876/invoke" -Method Post `
+  -ContentType application/json -Body $body
+Invoke-RestMethod "http://127.0.0.1:8876/prop?name=personaStyleAnalysisStatus"
+Invoke-RestMethod "http://127.0.0.1:8876/prop?name=personaStyleAnalysisError"
+```
+
+El estado esperado es `running` → `ready` o `error`. El test headless no debe
+exigir un modelo real para validar parsing: para eso usa la respuesta JSON
+directamente con `applyPersonaStyleAnalysis`. La llamada al backend es un smoke
+test opcional y requiere que el perfil activo tenga server o backend cloud.
+
 Los tests que necesiten escritorio, navegador headed, audio físico o interacción
 visual no son parte de este smoke test: deben estar separados y marcados como
 QA opt-in, nunca ser un requisito del gate headless.
+
+El smoke también valida hardware/performance sin GPU real:
+
+```powershell
+.\tests\headless_smoke.ps1 -Exe .\build\Debug\LlamaCode.exe
+```
+
+Comprueba `runStartupScan`, `hardwareSummary` y
+`performanceRecommendation`. Si `nvidia-smi` no existe, el caso sigue siendo
+válido: debe publicar fingerprint, fallback CPU y `splitMode=layer`.
+
+## Qué debe probarse headless
+
+La matriz mínima para Tasks, loops y workflows es:
+
+| Capa | Cómo se ejecuta | Requiere modelo | Gate |
+|---|---|---:|---:|
+| `TaskStore` / `WorkflowEngine` | `test_tasks`, `test_agent_efficiency` | No | Sí |
+| ciclo de `AppController` | `test_appcontroller` con `FakeAgentBackend` | No | Sí |
+| API HTTP reflexiva | `test_control_api` | No | Sí |
+| daemon real + ControlApi | smoke manual/CI separado | No para CRUD/validación | Recomendado |
+| loop con inferencia real | daemon + modelo local + `llama-server` | Sí | Opt-in |
+| desktop/OCR/audio/headed browser | probes QA específicos | Sí o hardware | Nunca |
+
+Los tests unitarios y de `AppController` no deben abrir ventanas ni depender de
+QML, GPU, red o un modelo descargado. `runTaskBodyForTest()` existe únicamente
+para ese propósito: inyecta un backend falso y permite probar iteraciones,
+`GOAL_MET`, `GOAL_NOT_MET`, reanudación, aprobación, errores y límites sin
+inferencia real.
+
+## Auditoría read-only de frugalidad
+
+`review_overengineering` se prueba completamente headless desde
+`test_agent_tools`. El caso usa un repositorio Git temporal dentro de
+`QTemporaryDir`, ejecuta Git con `QProcess::setWorkingDirectory()` y nunca
+cambia el directorio global del proceso. Por eso es seguro con CTest paralelo.
+
+Ejecutar sólo este bloque durante desarrollo:
+
+```powershell
+cmake --build build_tests --config Debug --target test_agent_tools
+ctest --test-dir build_tests -C Debug -R test_agent_tools --output-on-failure
+```
+
+La cobertura incluye:
+
+- diff normal y repositorio sin cambios;
+- diff `staged`;
+- archivos no rastreados;
+- scope inválido;
+- truncamiento por `max_diff_chars`;
+- garantía de salida `readOnly` y ausencia de escritura;
+- repositorio sin `.git` y error controlado.
+
+No requiere QML, modelo, llama-server, GPU, red, navegador ni escritorio
+visible. Requiere `git` en `PATH`, igual que la capacidad productiva que audita.
+La tool no incluye automáticamente el contenido de archivos no rastreados:
+los informa mediante `untrackedPresent` para que el usuario decida si debe
+incorporarlos a una revisión posterior.
+
+## Benchmark Honey A/B headless
+
+El benchmark de agente se ejecuta siempre en workspaces temporales y headless.
+Seleccioná dos perfiles equivalentes, uno con la directiva `honey` y otro sin
+ella, y ejecutá la misma suite con el mismo modelo, hardware, seed y cantidad
+de pasadas. Cada resultado persiste:
+
+- `agentVariant`: `baseline` o `honey`;
+- `honeyEnabled`;
+- `complexityMetrics.filesChanged`;
+- `complexityMetrics.filesCreated` y `filesDeleted`;
+- `complexityMetrics.addedLines` y `removedLines`.
+
+`comparison.json` agrega medianas por perfil y deltas de complejidad entre
+variantes. No se necesita una ventana gráfica. La suite puede iniciarse por
+ControlApi con `startCustomBenchmark(...)`; consultar `benchmarkRunning`,
+`benchmarkProgress` y `benchmarkResults` por polling. Honey sólo se considera
+mejor si no reduce calidad/éxito ni aumenta regresiones.
+
+## Smoke real del daemon y una Loop vía ControlApi
+
+Este procedimiento valida el contrato que usarían CI o un cliente externo. No
+usa QML. Para CRUD, validación y persistencia no necesita modelo; para ejecutar
+el cuerpo de una Task sí necesita un agente local activo.
+
+```powershell
+$env:LLAMACODE_CONTROL_PORT = "8877"
+$env:LLAMACODE_PROFILES_DIR = Join-Path $pwd "headless-profile-test"
+New-Item -ItemType Directory -Force $env:LLAMACODE_PROFILES_DIR | Out-Null
+Start-Process -FilePath ".\build\Debug\LlamaCode.exe" -ArgumentList "--agent-daemon" `
+  -WindowStyle Hidden
+
+$base = "http://127.0.0.1:8877"
+function Inv($target, $method, $args) {
+  $body = @{ method = $method; args = $args } | ConvertTo-Json -Depth 12 -Compress
+  Invoke-RestMethod "$base/invoke?target=$target" -Method Post `
+    -ContentType "application/json" -Body $body
+}
+function Prop($target, $name) {
+  (Invoke-RestMethod "$base/prop?target=$target&name=$name").value
+}
+
+Invoke-RestMethod "$base/health"
+Inv "taskStore" "save" @("headless-loop", @{
+  name = "Headless loop smoke"
+  description = "Verificar un objetivo local"
+  loopEnabled = $true
+  loopGoal = "el agente confirmó la verificación"
+  loopMaxIterations = 3
+  loopMaxSeconds = 1800
+})
+
+# Con un agente local ya iniciado:
+Inv "" "runTask" @("headless-loop")
+while ([bool](Prop "" "taskRunning")) {
+  "phase=$((Prop "" "runningTaskPhase"))"
+  Start-Sleep 2
+}
+Prop "taskStore" "count"
+Inv "taskStore" "get" @("headless-loop")
+```
+
+El smoke debe comprobar `lastRunStatus`, `lastRunSummary`, el número de
+iteraciones y el estado persistido. Si se prueba sin modelo, limitarse a
+`save`, `get`, `validateWorkflow`, `engineeringWorkflows` y la persistencia;
+no interpretar una ejecución sin agente como un test de calidad del loop.
+
+Al terminar, detener el daemon y borrar el directorio temporal de perfiles. No
+usar el perfil de producción ni el puerto habitual si puede existir una GUI.
+
+El smoke reproducible está disponible en `tests/headless_smoke.ps1`:
+
+```powershell
+.\tests\headless_smoke.ps1 -Exe .\build\Debug\LlamaCode.exe
+```
+
+Ese modo no carga un modelo y valida daemon, API, CRUD, persistencia y
+validación de workflow. Para ejecutar además el cuerpo del loop contra un
+modelo local ya configurado:
+
+```powershell
+.\tests\headless_smoke.ps1 -RunModelLoop -LaunchId "<launchId>"
+```
+
+El segundo modo es optativo y no forma parte del gate porque depende de modelo,
+VRAM, tiempos de inferencia y disponibilidad del perfil local.
+
+Para verificar que la persistencia sobrevive a un reinicio del daemon:
+
+```powershell
+.\tests\headless_smoke.ps1 -TestRestartPersistence
+```
+
+Este smoke no ejecuta inferencia: sólo comprueba que el proceso pueda detenerse,
+volver a iniciarse y recuperar la Task desde el store persistente.
+
+Para probar el proceso companion del scheduler sin tocar el registro de inicio
+del sistema ni requerir que la programación global esté activada:
+
+```powershell
+.\tests\headless_smoke.ps1 -TestSchedulerDaemon
+```
+
+El script usa `LLAMACODE_SCHEDULER_SMOKE=1`, espera el heartbeat mediante
+`schedulerDaemonStatus` y mata el proceso al finalizar.
+
+## Smoke de workflows de ingeniería
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tests\headless_engineering_workflows.ps1
+```
+
+El script usa un puerto localhost efímero y un directorio temporal de perfiles.
+Sin QML ni modelo consulta el catálogo por `/invoke`, valida `qa`, instala la
+Task, comprueba su persistencia y cierra el daemon incluso ante errores. La
+política de seguridad se prueba además con `test_task_security_policy` y la
+barra de presets con `qml_engineering_workflow_preset` en modo offscreen.
