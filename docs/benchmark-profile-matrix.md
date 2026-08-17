@@ -59,6 +59,10 @@ presets a `batch=512, ubatch=64`, se repitió HE0 y luego HE20, y ambas quedaron
 generación fue del modelo durante una ejecución transportada, no un crash ni un
 acceso ilegal de CUDA, por lo que se conserva como calidad.
 
+Auditoría de cobertura: **11/11 perfiles con HE0, 11/11 con HE20 y 11/11 con
+BCB** bajo su huella efectiva actual. No quedan etapas pendientes; los scores
+BCB parciales se conservan como calidad del modelo y no como infraestructura.
+
 La corrección de la fila BALANCE - BigBang se validó nuevamente en modo headless
 después de recompilar el catálogo el 2026-08-17 con
 `sys-repair-48-bigbang-mtp-balance`, corrida

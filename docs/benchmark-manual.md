@@ -350,6 +350,16 @@ configuración y huella efectiva, se mantiene en
 [benchmark-profile-matrix.md](benchmark-profile-matrix.md). Esta referencia
 evita convertir un score bajo del modelo en un cambio de perfil no justificado.
 
+### Auditoría de cobertura final
+
+El 2026-08-17 se auditó la matriz contra los resultados persistidos y la huella
+SHA-256 efectiva de cada perfil: **11/11 perfiles tienen HE0, 11/11 tienen
+HE20 y 11/11 tienen BCB**. La cola de etapas faltantes queda en **0 HE0, 0
+HE20 y 0 BCB**. Los BCB con score parcial o cero están marcados
+`failureKind=quality`; no se repiten ni se modifica el perfil salvo que una
+nueva ejecución demuestre `infrastructure`, `timeout` inválido, transporte roto,
+crash o `CUDA illegal memory access`.
+
 ## Métricas y tabla oficial
 
 La tabla de trabajo debe tener una fila por perfil y conservar también la
