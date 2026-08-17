@@ -73,7 +73,7 @@
 - [x] Eliminar perfil
 - [x] **Importar perfil desde argumentos CLI** (parsea --host, --port, --model, --ctx-size, --batch-size, --ubatch-size, --threads, --n-gpu-layers, --flash-attn, --no-mmap, --mlock, --parallel, --cache-type-k)
 - [ ] Plantillas de perfil
-- [ ] Etiquetas y búsqueda por perfil
+- [x] Búsqueda por nombre, alias o id en la pantalla de perfiles
 - [ ] Favoritos y último usado
 - [x] Export/Import de perfiles completos (bundle JSON, ids y referencias preservados)
 - [ ] Historial de cambios por perfil
@@ -116,7 +116,7 @@
 - [x] Indicador "⏳ Procesando..." + cursor `▌`
 - [x] Sampling configurable por sesión (temperature/top-p/top-k, persistencia JSON, payload y panel ChatPage)
 - [x] Export conversación (Markdown/JSON) (`exportChatSession(id,format)` + items en menú contextual de ChatPage)
-- [x] Búsqueda en historial (`searchChatHistory(query)` invokable: matchea título + contenido, devuelve snippet; falta panel de búsqueda en UI)
+- [x] Búsqueda en historial (`searchChatHistory(query)` invokable: matchea título + contenido, devuelve snippet + panel de búsqueda en UI)
 
 ## P5 - Built-in agent nativo ✅ (`LlamaAgentBackend`, loop ReAct)
 

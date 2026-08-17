@@ -10,6 +10,7 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <algorithm>
 #include "core/profiles/ProfileTypes.h"
 #include "core/profiles/ProfileManager.h"
 
@@ -32,6 +33,7 @@ private slots:
     void manager_setBackendCloud();
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
+    void manager_profileSearchFiltersNameAliasAndId();
     void manager_deprecatedIsProfilesOnly();
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
@@ -317,6 +319,27 @@ void ProfilesTests::manager_favoriteAndAlias()
     QVERIFY(top.value("best").toBool());
     QCOMPARE(pm.getLaunchProfile(id).value("displayName").toString(),
              QStringLiteral("Alias - 1_L"));
+}
+
+void ProfilesTests::manager_profileSearchFiltersNameAliasAndId()
+{
+    ProfileManager pm;
+    const QString id = pm.addLaunchProfile(QStringLiteral("Qwen análisis"), {}, {}, {});
+    QVERIFY(!id.isEmpty());
+    pm.setLaunchAlias(id, QStringLiteral("Documentos"));
+
+    const QVariantList byName = pm.launchProfilesForProfilesPage(QStringLiteral("ANÁLISIS"));
+    QVERIFY(std::any_of(byName.cbegin(), byName.cend(), [&](const QVariant &v) {
+        return v.toMap().value(QStringLiteral("id")).toString() == id;
+    }));
+    const QVariantList byAlias = pm.launchProfilesForProfilesPage(QStringLiteral("documentos"));
+    QCOMPARE(byAlias.size(), 1);
+    QCOMPARE(byAlias.first().toMap().value(QStringLiteral("id")).toString(), id);
+    const QVariantList byId = pm.launchProfilesForProfilesPage(id.left(8));
+    QVERIFY(std::any_of(byId.cbegin(), byId.cend(), [&](const QVariant &v) {
+        return v.toMap().value(QStringLiteral("id")).toString() == id;
+    }));
+    QVERIFY(pm.launchProfilesForProfilesPage(QStringLiteral("no existe")).isEmpty());
 }
 
 void ProfilesTests::manager_browserAutomationOverride()

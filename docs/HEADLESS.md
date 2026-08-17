@@ -138,6 +138,11 @@ envía en cada request sólo cuando está configurado. Cada respuesta registra
 `firstTokenMs`. `test_backends_net` verifica payload, persistencia y medición
 contra un stub HTTP local, sin modelo ni GPU.
 
+La búsqueda de perfiles también es headless: `ProfileManager::launchProfilesForProfilesPage(query)`
+filtra por nombre, alias o id sin depender de QML. La regresión
+`manager_profileSearchFiltersNameAliasAndId` cubre mayúsculas/minúsculas, alias,
+id y resultado vacío.
+
 ## Benchmark Honey A/B headless
 
 El benchmark de agente se ejecuta siempre en workspaces temporales y headless.

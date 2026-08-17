@@ -600,9 +600,10 @@ QVariantList ProfileManager::launchProfilesForMenu() const
     return out;
 }
 
-QVariantList ProfileManager::launchProfilesForProfilesPage() const
+QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query) const
 {
     QList<LaunchProfile> items = m_launches.m_items;
+    const QString needle = query.trimmed().toCaseFolded();
     std::stable_sort(items.begin(), items.end(),
         [](const LaunchProfile &a, const LaunchProfile &b) {
             if (a.best != b.best) return a.best;
@@ -613,6 +614,11 @@ QVariantList ProfileManager::launchProfilesForProfilesPage() const
     for (const auto &p : items) {
         const QString base = p.alias.isEmpty()
             ? p.name : QStringLiteral("%1 - %2").arg(p.alias, p.name);
+        if (!needle.isEmpty()
+            && !p.name.toCaseFolded().contains(needle)
+            && !p.alias.toCaseFolded().contains(needle)
+            && !p.id.toCaseFolded().contains(needle))
+            continue;
         QString mark;
         if (p.best) mark += QStringLiteral("⚡ ");
         if (p.systemBadge) mark += QStringLiteral("⚙ ");

@@ -7,6 +7,7 @@ Item {
     id: root
 
     property string selectedLaunchId: ""
+    property string launchSearch: ""
     // Perfil de SISTEMA seleccionado: inmutable (solo lectura). Se puede duplicar
     // para editar, pero no guardar/borrar/renombrar el original.
     readonly property bool selectedIsSystem:
@@ -746,16 +747,26 @@ Item {
                         spacing: 10
 
                         Text { text: (App.langV, App.l("launch.profile")); color: Theme.textSecondary; font.pixelSize: 13 }
+                        LcTextField {
+                            id: launchSearchField
+                            Layout.preferredWidth: 210
+                            placeholderText: "Buscar perfil…"
+                            text: root.launchSearch
+                            onTextChanged: {
+                                root.launchSearch = text
+                                launchCombo.launchMenu = App.profileManager.launchProfilesForProfilesPage(root.launchSearch)
+                            }
+                        }
                         LcComboBox {
                             id: launchCombo
                             Layout.fillWidth: true
                             // Menú ordenado: favoritos (★) arriba; displayName = alias - name.
-                            property var launchMenu: App.profileManager.launchProfilesForProfilesPage()
+                            property var launchMenu: App.profileManager.launchProfilesForProfilesPage(root.launchSearch)
                             Connections {
                                 target: App.profileManager
                                 function onLaunchesChanged() {
                                     const sel = launchCombo.currentValue
-                                    launchCombo.launchMenu = App.profileManager.launchProfilesForProfilesPage()
+                                    launchCombo.launchMenu = App.profileManager.launchProfilesForProfilesPage(root.launchSearch)
                                     const i = launchCombo.indexOfValue(sel)
                                     if (i >= 0) launchCombo.currentIndex = i
                                 }
