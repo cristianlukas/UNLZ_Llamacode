@@ -182,6 +182,12 @@ cambiar archivos y la registra como `repair-stagnation`. El corte evita dejar
 un daemon consumiendo GPU indefinidamente y evita publicar un puntaje parcial
 como si fuera una corrida final.
 
+La huella que usa ese watchdog excluye los artefactos internos de LlamaCode bajo
+`.llamacode/` (por ejemplo `agent_events.jsonl`) y normaliza los separadores de
+ruta antes de comparar. Esto es importante en Windows, donde una ruta relativa
+puede llegar con `\\`; los eventos del propio agente nunca deben contar como
+progreso de una reparación.
+
 Ejemplo mínimo de consulta desde PowerShell:
 
 ```powershell

@@ -124,6 +124,13 @@ bool launchThinkingEnabled(const QStringList &args, bool fallback)
 
 using BenchmarkWorkspaceSnapshot = QMap<QString, qint64>;
 
+bool isBenchmarkInternalPath(const QString &relativePath)
+{
+    const QString portable = QDir::fromNativeSeparators(relativePath);
+    return portable == QLatin1String(".llamacode")
+        || portable.startsWith(QStringLiteral(".llamacode/"));
+}
+
 BenchmarkWorkspaceSnapshot snapshotBenchmarkWorkspace(const QString &root)
 {
     BenchmarkWorkspaceSnapshot snapshot;
@@ -131,7 +138,7 @@ BenchmarkWorkspaceSnapshot snapshotBenchmarkWorkspace(const QString &root)
     while (it.hasNext()) {
         it.next();
         const QString rel = QDir(root).relativeFilePath(it.filePath());
-        if (rel.startsWith(QStringLiteral(".llamacode/"))) continue;
+        if (isBenchmarkInternalPath(rel)) continue;
         QFile file(it.filePath());
         if (!file.open(QIODevice::ReadOnly)) continue;
         const QByteArray data = file.readAll();
@@ -13154,6 +13161,11 @@ void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,
     emit hardwareSummaryChanged();
 }
 
+bool AppController::benchmarkWorkspacePathIsInternalForTest(const QString &relativePath)
+{
+    return isBenchmarkInternalPath(relativePath);
+}
+
 void AppController::downloadRecommendedModel(const QString &repo, const QString &fileName)
 {
     enqueueModelDownload(repo, fileName, QString());
@@ -15966,7 +15978,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             while (it.hasNext()) {
                 it.next();
                 const QString rel = QDir(workspace).relativeFilePath(it.filePath());
-                if (rel.startsWith(QStringLiteral(".llamacode/")))
+                if (isBenchmarkInternalPath(rel))
                     continue;
                 parts << QStringLiteral("%1:%2:%3")
                     .arg(rel)

@@ -132,6 +132,7 @@ private slots:
     void benchmarkBestModelosQualityUsesTwentyItemResults();
     void benchmarkScoresChatAnswersWhenAgentWritesNoFiles();
     void benchmarkResumesWhereItDiedInsteadOfLosingTheSeries();
+    void benchmarkWorkspaceFingerprintIgnoresInternalAgentFiles();
     void benchmarkEvaluatorsToleratePresentationNotContent();
     void hybridExecutionPromptPreservesRequestAndPlan();
     void hybridVisibleMessagePreservesOnlyOriginalRequest();
@@ -2049,6 +2050,13 @@ void AppControllerTests::harnessAdapterNormalizesToLlamaAgent()
     // Respeta llamaagent y raw (modo Chat).
     QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("llamaagent")), QStringLiteral("llamaagent"));
     QCOMPARE(AppController::normalizeHarnessAdapter(QStringLiteral("raw")), QStringLiteral("raw"));
+}
+
+void AppControllerTests::benchmarkWorkspaceFingerprintIgnoresInternalAgentFiles()
+{
+    QVERIFY(AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral(".llamacode/agent_events.jsonl")));
+    QVERIFY(AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral(".llamacode\\agent_events.jsonl")));
+    QVERIFY(!AppController::benchmarkWorkspacePathIsInternalForTest(QStringLiteral("solution_BigCodeBench_928.py")));
 }
 
 // Niveles de agente = escalera de presupuesto de contexto. Ejercita los 5 presets

@@ -49,6 +49,29 @@ comparable. Las corridas se conservan en
 `benchmark-runs/BigCodeBench-Hard_8_tems__20260817_113521` y
 `benchmark-runs/BigCodeBench-Hard_8_tems__20260817_115030`.
 
+### Control de perfiles de agente alternativos
+
+Para separar modelo de agente/harness se repitieron corridas headless sin
+modificar los perfiles de inferencia, pasando sólo otro `agentProfileId` al
+benchmark. Todas usaron el mismo harness `HumanEval (1 ítems)` para HE0 y
+`BigCodeBench-Hard (8 ítems)` para BCB:
+
+| Perfil de inferencia | Agente | HE0 | BCB inicial/final | Tiempo BCB | Diagnóstico |
+|---|---|---:|---:|---:|---|
+| QUALITY - DeepSeek Fusion leloch | `agent-intermedio` | 1/1, 85,601 s | 2/8 → 2/8 | 997,436 s | Reparó archivos puntuales, pero terminó en `failureKind=infrastructure`, `failureStage=agent`; no es una mejora final comparable. |
+| QUALITY - DeepSeek Fusion leloch · VRAM balance | `agent-intermedio` | 1/1, 83,489 s | 1/8 → 1/8 | 1048,769 s | Sin crash CUDA; la reparación quedó estancada. |
+| QUALITY - DeepSeek Fusion leloch | `agent-basico` | 1/1, 74,651 s | 1/8 → 1/8 | 1013,900 s | `run_shell` no corrigió los fallos funcionales; la reparación quedó estancada. |
+| QUALITY - DeepSeek Fusion leloch | `agent-basico` post-fix | 1/1, 74,715 s | 2/8 → 2/8 | 830,127 s | El watchdog portable cortó la reparación a los 180 s sin cambios reales; ignoró correctamente `agent_events.jsonl`. |
+| BALANCE - Laguna S 2.1 | `agent-intermedio` | 0/0 | No ejecutado | — | El servidor terminó con `CUDA error: an illegal memory access` en GPU0 durante la carga; HE0 bloquea BCB. |
+
+La evidencia separa tres capas: (1) Laguna tiene una falla de infraestructura/CUDA
+antes del harness; (2) DeepSeek sí produce soluciones evaluables, pero conserva
+fallos funcionales concretos en BCB; (3) el agente puede mejorar o reparar
+archivos puntuales, pero cambiar `agent-chat` por `agent-intermedio` o
+`agent-basico` no elevó el score final. Durante estas pruebas se detectó y
+corrigió además un defecto portable del watchdog: en Windows debía ignorar
+`.llamacode\\agent_events.jsonl`, no sólo la variante con `/`.
+
 | Perfil | HumanEval/0 | HumanEval/20 | BigCodeBench/8 | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant | Parámetros (B) | Contexto | Configuración | Estado |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|
 | BALANCE - Qwen3.8 UD-Q4 visión | 1/1 | 20/20 | 7/8 | 12,997 s | 269,96 s | 736,07 s | 56,89 | — | 39,53 | Sí | MTP3 | UD-Q4_K_XL | 27B | 131072 | `launch=sys-qwen38-27b-udq4-131k; backend=sysbe-sys-qwen38-27b-udq4-131k; modelProfile=sysmodel-sys-qwen38-27b-udq4-131k; runtimePreset=sysrt-sys-qwen38-27b-udq4-131k; model=Qwen3.8-27B-UD-Q4_K_XL.gguf; mmproj=mmproj-BF16.gguf; agent=agent-maximo; binary=official,b10331+; runtime=ctx=131072,batch=512,ubatch=64,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --predict 4096 --parallel 1 --reasoning off --spec-type draft-mtp --spec-draft-n-max 3 --chat-template-file %LOCALAPPDATA%/LlamaCode/LlamaCode/chat-templates/qwen38-tools-fixed.jinja` | HE0 válido; HE20 histórico; BCB válido |

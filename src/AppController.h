@@ -618,6 +618,9 @@ public:
     Q_INVOKABLE QVariantList systemProfileContextPresets(const QString &launchId) const;
     Q_INVOKABLE QString createSystemProfileContextVariant(const QString &launchId, int ctx);
     static int llamaCppBuildNumber(const QString &text);
+    // Test seam para la huella del workspace del benchmark: los eventos internos
+    // del agente no cuentan como progreso de una reparación.
+    static bool benchmarkWorkspacePathIsInternalForTest(const QString &relativePath);
     // Aplica las capacidades de un perfil de agente al backend (tools/directivas/
     // MCP; thinking viene del checkbox global) usando la MISMA traducción que la app. Test seam para medir el
     // presupuesto de contexto por NIVEL sin duplicar la lógica de mapeo.
