@@ -36,6 +36,7 @@ private slots:
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
     void manager_persistsAcrossInstances();
+    void manager_exportImportBundle();
 
 private:
     QTemporaryDir m_dir;
@@ -387,6 +388,31 @@ void ProfilesTests::manager_persistsAcrossInstances()
         ProfileManager pm2;  // recarga de disco en el ctor
         QCOMPARE(pm2.getBackend(id).value("name").toString(), QStringLiteral("persist"));
     }
+}
+
+void ProfilesTests::manager_exportImportBundle()
+{
+    ProfileManager pm;
+    const QString backendId = pm.addBackend("bundle-backend", "bin-bundle",
+                                            "127.0.0.1", 9191);
+    QVERIFY(!backendId.isEmpty());
+    const QString launchId = pm.addLaunchProfile("bundle-launch", backendId, "model-missing",
+                                                 "runtime-missing");
+    QVERIFY(!launchId.isEmpty());
+    const QString json = pm.exportProfilesBundle();
+    QVERIFY(json.contains(QStringLiteral("schemaVersion")));
+    QVERIFY(json.contains(QStringLiteral("bundle-backend")));
+
+    QVERIFY(pm.removeBackend(backendId));
+    QVERIFY(pm.removeLaunchProfile(launchId));
+    const int imported = pm.importProfilesBundle(json);
+    QVERIFY(imported >= 2);
+    QCOMPARE(pm.getBackend(backendId).value(QStringLiteral("name")).toString(),
+             QStringLiteral("bundle-backend"));
+    QVERIFY(pm.getLaunchProfile(launchId).value(QStringLiteral("name")).toString()
+            .endsWith(QStringLiteral("_bundle-launch")));
+    QCOMPARE(pm.importProfilesBundle(QStringLiteral("not-json")), -1);
+    QCOMPARE(pm.importProfilesBundle(QStringLiteral("{\"schemaVersion\":99}")), -1);
 }
 
 QTEST_MAIN(ProfilesTests)

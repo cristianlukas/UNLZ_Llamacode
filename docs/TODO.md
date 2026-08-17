@@ -75,7 +75,7 @@
 - [ ] Plantillas de perfil
 - [ ] Etiquetas y búsqueda por perfil
 - [ ] Favoritos y último usado
-- [ ] Export/Import de perfiles completos (JSON)
+- [x] Export/Import de perfiles completos (bundle JSON, ids y referencias preservados)
 - [ ] Historial de cambios por perfil
 
 ## P2 - Model Catalog avanzado

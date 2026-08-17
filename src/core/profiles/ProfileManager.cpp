@@ -1509,6 +1509,67 @@ void ProfileManager::save() const
     QTimer::singleShot(400, const_cast<ProfileManager*>(this), [this]() { m_saving = false; });
 }
 
+QString ProfileManager::exportProfilesBundle() const
+{
+    QJsonObject root;
+    root[QStringLiteral("schemaVersion")] = 1;
+    auto addUser = [&root](const QString &key, const auto &items) {
+        QJsonArray out;
+        for (const auto &item : items)
+            if (!item.system) out.append(item.toJson());
+        root[key] = out;
+    };
+    addUser(QStringLiteral("backends"), m_backends.m_items);
+    addUser(QStringLiteral("models"), m_models.m_items);
+    addUser(QStringLiteral("runtimes"), m_runtimes.m_items);
+    addUser(QStringLiteral("harnesses"), m_harnesses.m_items);
+    addUser(QStringLiteral("workspaces"), m_workspaces.m_items);
+    addUser(QStringLiteral("launches"), m_launches.m_items);
+    addUser(QStringLiteral("agentProfiles"), m_agentProfiles.m_items);
+    addUser(QStringLiteral("personaStyles"), m_personaStyles.m_items);
+    return QString::fromUtf8(QJsonDocument(root).toJson(QJsonDocument::Indented));
+}
+
+int ProfileManager::importProfilesBundle(const QString &json)
+{
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !doc.isObject()) return -1;
+    const QJsonObject root = doc.object();
+    if (root.value(QStringLiteral("schemaVersion")).toInt() != 1) return -1;
+
+    int imported = 0;
+    auto hasId = [](const auto &items, const QString &id) {
+        for (const auto &item : items) if (item.id == id) return true;
+        return false;
+    };
+    auto importList = [&](const QString &key, auto &model, auto fromJson) {
+        const QJsonValue value = root.value(key);
+        if (!value.isArray()) return;
+        for (const QJsonValue &entry : value.toArray()) {
+            if (!entry.isObject()) continue;
+            const auto item = fromJson(entry.toObject());
+            if (item.id.isEmpty() || item.system || hasId(model.m_items, item.id)) continue;
+            model.add(item);
+            ++imported;
+        }
+    };
+    importList(QStringLiteral("backends"), m_backends, &BackendProfile::fromJson);
+    importList(QStringLiteral("models"), m_models, &ModelProfile::fromJson);
+    importList(QStringLiteral("runtimes"), m_runtimes, &RuntimePreset::fromJson);
+    importList(QStringLiteral("harnesses"), m_harnesses, &HarnessProfile::fromJson);
+    importList(QStringLiteral("workspaces"), m_workspaces, &WorkspaceProfile::fromJson);
+    importList(QStringLiteral("launches"), m_launches, &LaunchProfile::fromJson);
+    importList(QStringLiteral("agentProfiles"), m_agentProfiles, &AgentProfile::fromJson);
+    importList(QStringLiteral("personaStyles"), m_personaStyles, &PersonaStyleProfile::fromJson);
+    if (imported > 0) {
+        save();
+        emit launchesChanged();
+        emit personaStylesChanged();
+    }
+    return imported;
+}
+
 QString ProfileManager::storagePath(const QString &entity) const
 {
     // Profiles live in the project root (Documents\LlamaCode\profiles) so they

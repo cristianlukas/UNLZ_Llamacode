@@ -191,6 +191,11 @@ public:
     Q_INVOKABLE bool removePersonaStyleProfile(const QString &id);
     Q_INVOKABLE bool updatePersonaStyleProfile(const QVariantMap &data);
     Q_INVOKABLE QVariantMap getPersonaStyleProfile(const QString &id) const;
+    // Exporta/importa todos los perfiles de usuario como un bundle JSON. Los
+    // ids se conservan para mantener referencias entre backend/model/runtime/
+    // launch; los perfiles de sistema nunca salen ni entran.
+    Q_INVOKABLE QString exportProfilesBundle() const;
+    Q_INVOKABLE int importProfilesBundle(const QString &json);
     Q_INVOKABLE QString buildStyleAnalysisPrompt(const QString &sample,
                                                   const QString &kind) const;
     Q_INVOKABLE QString heuristicStyleCard(const QString &sample) const;

@@ -24,6 +24,11 @@ Usa `QTemporaryDir` para que la persistencia no toque los perfiles del usuario.
 La prueba HTTP equivalente arranca el daemon con un puerto localhost y un
 `LLAMACODE_PROFILES_DIR` temporal, consulta `profileManager` mediante
 `/methods?target=profileManager` y ejecuta sus `Q_INVOKABLE` con `/invoke`.
+
+Para exportar o importar perfiles completos sin QML, usar los invocables
+`exportProfilesBundle()` e `importProfilesBundle(json)`. El bundle incluye sólo
+perfiles de usuario, conserva ids y referencias, y devuelve la cantidad de
+entradas importadas (`-1` ante JSON o schema inválido).
 El procedimiento específico está en
 [`personality-style-profiles.md`](personality-style-profiles.md).
 
