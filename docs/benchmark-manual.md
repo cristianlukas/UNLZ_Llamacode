@@ -353,11 +353,12 @@ evita convertir un score bajo del modelo en un cambio de perfil no justificado.
 ## Métricas y tabla oficial
 
 La tabla de trabajo debe tener una fila por perfil y conservar también la
-configuración completa:
+configuración completa. El espejo persistente de la tabla vigente está en
+[benchmark-profile-matrix.md](benchmark-profile-matrix.md):
 
-| Perfil | HumanEval/0 | Tiempo HE0 | TPS HE0 | HumanEval/20 | Tiempo HE20 | TPS HE20 | BigCodeBench/8 | Tiempo BCB | TPS BCB | Estado | Configuración |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| Candidata o control | Pendiente | — | — | Pendiente | — | — | Pendiente | — | — | Pendiente | commit, binario, modelo, contexto, MTP, modalidades, quant, flags, harness |
+| Perfil | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant | Parámetros (B) | Contexto | Estado | Configuración |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---:|---:|---|---|
+| Candidata o control | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | — | — | — | — | — | Pendiente | commit, IDs, binario, modelo, modalidades, contexto, batch/ubatch, MTP, quant, KV, flags, harness, suite, timeout, fecha y huella |
 
 La configuración debe permitir reconstruir el comando. Como mínimo incluye:
 
