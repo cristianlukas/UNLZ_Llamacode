@@ -350,6 +350,9 @@ void EvalTests::benchPack_runsCodeTestsWithTimeout()
     QVERIFY(!bad.passed);
     QVERIFY(!bad.timedOut);
     QVERIFY2(bad.error.contains(QStringLiteral("AssertionError")), qPrintable(bad.error));
+    // El diagnóstico de reparación conserva el traceback, no sólo la última
+    // línea: el agente necesita saber qué archivo/check originó el contrato.
+    QVERIFY2(bad.error.contains(QStringLiteral("candidate.py")), qPrintable(bad.error));
 
     // No parsea -> tampoco pasa, y se distingue del assert fallado.
     auto broken = BenchmarkPack::runCodeTests(QStringLiteral("def add(a,b)\n    return a+b\n"), tests);

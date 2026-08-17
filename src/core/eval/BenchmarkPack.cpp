@@ -238,11 +238,16 @@ BenchmarkPack::CodeRun BenchmarkPack::runCodeTests(const QString &code, const QS
     r.exitCode = p.exitCode();
     r.passed = (p.exitStatus() == QProcess::NormalExit && r.exitCode == 0);
     if (!r.passed) {
-        const QString err = QString::fromUtf8(p.readAllStandardError()).trimmed();
-        // La última línea es la que dice qué pasó (AssertionError, SyntaxError…).
-        const QStringList lines = err.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
-        r.error = lines.isEmpty() ? QStringLiteral("exit %1").arg(r.exitCode)
-                                  : lines.last().trimmed().left(300);
+        const QString stderrText = QString::fromUtf8(p.readAllStandardError()).trimmed();
+        const QString stdoutText = QString::fromUtf8(p.readAllStandardOutput()).trimmed();
+        // La última línea sola ocultaba la causa útil para reparar BCB (por
+        // ejemplo, el traceback que explica qué contrato esperaba el mock).
+        // Conservamos una cola acotada del diagnóstico completo para que el
+        // agente pueda corregir con evidencia y no adivinar.
+        QString diagnostic = stderrText;
+        if (diagnostic.isEmpty()) diagnostic = stdoutText;
+        if (diagnostic.isEmpty()) diagnostic = QStringLiteral("exit %1").arg(r.exitCode);
+        r.error = diagnostic.right(6000);
     }
     return r;
 }

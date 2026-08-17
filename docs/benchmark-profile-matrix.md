@@ -35,7 +35,10 @@ salida, mata cualquier `llama-server.exe` residual y deja un margen antes de
 cargar el siguiente modelo. Esto evita heredar procesos o VRAM de otra corrida,
 pero no oculta un acceso ilegal reproducible. Las copias experimentales de
 Laguna se conservan fuera de la fila histórica y permanecen bloqueadas para
-HE20/BCB hasta que HE0 vuelva a ser válido.
+HE20/BCB hasta que HE0 vuelva a ser válido. Se agregó la copia
+`sys-laguna-s-2-1-q2-48gb-safe`, con ctx=65k, batch/ubatch=256/64, Flash
+Attention y fit desactivados, tensor-split 1,1 y 32 expertos en CPU; debe
+validarse con HE0 antes de habilitar las etapas siguientes.
 
 La repetición headless de DeepSeek después de una limpieza completa volvió a
 pasar HE0 (`1/1`, `69,45 s`, sin crash). En BCB cargó el modelo correctamente,
@@ -214,7 +217,7 @@ promueve por sí solo a los restantes ni reemplaza sus resultados históricos.
 
 ## Candidatos derivados para medir
 
-No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y dos variantes nuevas de Laguna. Cada fila sigue HE0 → HE20 → BCB; el HE0 de esta tanda ya fue ejecutado en modo headless y sus resultados están debajo.
+No se duplican manualmente los perfiles base. Se incorporan al plan las variantes ya existentes en el catálogo y tres variantes conservadoras de Laguna, incluida la copia CUDA safe. Cada fila sigue HE0 → HE20 → BCB; el HE0 de esta tanda ya fue ejecutado en modo headless y sus resultados están debajo.
 
 | Candidato | Derivado de | Hipótesis | Cambio controlado | Orden |
 |---|---|---|---|---|
@@ -229,6 +232,7 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench 48GB MAX-Q] MTP4 · 131k · visión` (`sys-bench-48-tc-mtp-131k`) | BALANCE - ThinkingCap Qwen3.6 MTP4 | Mantener MTP4 y reducir contexto para evitar bloqueo sostenido | ctx 131k; MTP4 | HE0 → HE20 → BCB |
 | `[bench Laguna] Q2 · 64k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-64k-b1024`) | BALANCE - Laguna S 2.1 | Reducir KV y batch para salir del bucle de evaluación | ctx 65k; B1024/U256 | HE0 → HE20 → BCB |
 | `[bench Laguna] Q2 · 100k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-100k-b1024`) | BALANCE - Laguna S 2.1 | Aislar batch como causa manteniendo el contexto histórico | B1024/U256; ctx 100k | HE0 → HE20 → BCB |
+| `BALANCE - Laguna S 2.1 · CUDA safe 64k` (`sys-laguna-s-2-1-q2-48gb-safe`) | BALANCE - Laguna S 2.1 | Evitar la ruta inestable de fit y reducir presión de KV/prefill; Flash on es obligatorio para V-cache q4_0 | ctx 65k; B256/U64; fit off; Flash on; tensor-split 1,1; 32 expertos CPU | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B2048 · U256 · KV q4_0` (`sys-48-antirez-dsv4-q2q4-0731-32k-b2048`) | QUALITY - DeepSeek Fusion leloch | Bajar contexto/batch para mejorar estabilidad sin repartir capas base | ctx 32k; B2048/U256; `tensor-split 1,0` | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B4096 · U512 · KV q8_0` (`sys-48-antirez-dsv4-q2q4-kv8`) | QUALITY - DeepSeek Fusion leloch | KV q8 puede mejorar calidad sostenida; medir coste real | ctx 32k; KV K/V q8_0 | HE0 → HE20 → BCB |
 
@@ -249,10 +253,11 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench 48GB MAX-Q] MTP4 · 131k · visión` | 1/1 | 11,498 s | 58,02 | Válido |
 | `[bench Laguna] Q2 · 64k · B1024 · U256` | 1/1 | 15,004 s | 51,46 | Válido |
 | `[bench Laguna] Q2 · 100k · B1024 · U256` | 1/1 | 13,961 s | 51,99 | Válido |
+| `BALANCE - Laguna S 2.1 · CUDA safe 64k` | 1/1 | 150,127 s | — | Válido; carga estable sin illegal access; el tiempo incluye cold start del agente |
 | `[bench antirez] 32k · B2048 · U256 · KV q4_0` | 1/1 | 93,540 s | 10,00 | Válido |
 | `[bench antirez] 32k · B4096 · U512 · KV q8_0` | 1/1 | 76,189 s | 10,00 | Válido |
 
-Evidencia de la tanda: `benchmark-runs/HumanEval_1_tems__20260816_130505` a `HumanEval_1_tems__20260816_133559`. Los 24 IDs fueron ejecutados aisladamente. KAT2 (`sys-48-katcoder-262k`) cargó y llegó a timing nativo de `103,93 t/s`, pero el daemon terminó en `APPCRASH` de `LlamaCode.exe` dentro de `Qt6Core.dll` antes de persistir el JSON; queda como `HE0 daemon-crash`, no como calidad.
+Evidencia de la tanda: `benchmark-runs/HumanEval_1_tems__20260816_130505` a `HumanEval_1_tems__20260816_133559`. La variante segura de Laguna se ejecutó en `benchmark-runs/HumanEval_1_tems__20260817_203002` con `agent-basico`: `1/1`, `150,127 s`, `failed=false`, `failureKind=none`, `vramMb=18891`, `ramMb=38050`. Los 24 IDs fueron ejecutados aisladamente. KAT2 (`sys-48-katcoder-262k`) cargó y llegó a timing nativo de `103,93 t/s`, pero el daemon terminó en `APPCRASH` de `LlamaCode.exe` dentro de `Qt6Core.dll` antes de persistir el JSON; queda como `HE0 daemon-crash`, no como calidad.
 
 Las variantes DeepSeek mantienen la regla de seguridad del perfil histórico: `--tensor-split 1,0`, expertos residentes alineados con sus capas y resto en CPU. No se propone `tensor-split 1,1`, porque la prueba local anterior terminó en OOM/corrupción y no es una mejora válida.
 

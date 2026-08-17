@@ -16268,6 +16268,14 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                         .arg(task.value(QStringLiteral("id")).toString(),
                              task.value(QStringLiteral("artifactFile")).toString(),
                              task.value(QStringLiteral("prompt")).toString());
+                    const QVariantMap acceptance = task.value(QStringLiteral("acceptance")).toMap();
+                    const QString tests = acceptance.value(QStringLiteral("tests")).toString();
+                    if (!tests.trimmed().isEmpty()) {
+                        failedPrompts += QStringLiteral(
+                            "\n\nCHECKS LOCALES DE ACEPTACION PARA ESTA TAREA "
+                            "(usarlos para corregir, no los reemplaces):\n```python\n%1\n```")
+                            .arg(tests.left(12000));
+                    }
                 }
                 if (failedPrompts.isEmpty())
                     failedPrompts = prompts.join(QStringLiteral("\n\n---\n\n"));
@@ -16276,6 +16284,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                     "La implementacion anterior fallo criterios de aceptacion. "
                     "No reinicies desde cero si no hace falta: inspecciona los archivos existentes, "
                     "corrige la causa concreta y vuelve a ejecutar/verificar los checks relevantes.\n\n"
+                    "REGLA ANTI-BUCLE: tu primera accion debe ser una llamada de herramienta "
+                    "write_file o edit_file sobre uno de los archivos fallidos. No respondas con "
+                    "un plan, no repitas el analisis en el chat y no ejecutes mas de una inspeccion "
+                    "sin hacer una edicion verificable. Despues de editar, ejecuta el check local "
+                    "correspondiente y conserva los archivos que ya pasan.\n\n"
                     "En tareas de codigo conserva exactamente la firma indicada en el preambulo y respeta el "
                     "archivo requerido para cada tarea. No sobrescribas soluciones anteriores ni crees archivos "
                     "alternativos con nombres inventados.\n\n"

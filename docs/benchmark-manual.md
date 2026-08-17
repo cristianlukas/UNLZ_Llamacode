@@ -177,16 +177,24 @@ El flujo recomendado es:
 
 Durante la reparación de BCB, la actividad válida es una modificación o
 verificación nueva del workspace. La generación continua de texto no cuenta
-como progreso: el harness corta una reparación que permanece 180 segundos sin
-cambiar archivos y la registra como `repair-stagnation`. El corte evita dejar
-un daemon consumiendo GPU indefinidamente y evita publicar un puntaje parcial
-como si fuera una corrida final.
+como progreso: el prompt de reparación exige que la primera acción sea
+`write_file`/`edit_file`, entrega el diagnóstico completo y los checks locales
+de las tareas fallidas, y el harness corta una reparación que permanece 180
+segundos sin cambiar archivos. El corte se registra como
+`repair-stagnation`, evita dejar un daemon consumiendo GPU indefinidamente y
+evita publicar un puntaje parcial como si fuera una corrida final.
 
 La huella que usa ese watchdog excluye los artefactos internos de LlamaCode bajo
 `.llamacode/` (por ejemplo `agent_events.jsonl`) y normaliza los separadores de
 ruta antes de comparar. Esto es importante en Windows, donde una ruta relativa
 puede llegar con `\\`; los eventos del propio agente nunca deben contar como
 progreso de una reparación.
+
+El runner conserva hasta 6000 caracteres del diagnóstico de `code_tests`, no
+sólo la última línea del traceback. Esto permite distinguir un error del modelo
+(por ejemplo, desviación muestral, API equivocada o contrato de archivo) de un
+error del harness, y permite que la reparación use los tests locales exactos
+sin volver a inventar el comportamiento esperado.
 
 Ejemplo mínimo de consulta desde PowerShell:
 

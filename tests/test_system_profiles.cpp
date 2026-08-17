@@ -561,7 +561,7 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QFile f(bundlePath());
     QVERIFY(f.open(QIODevice::ReadOnly));
     const QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
-    QJsonObject laguna, dual;
+    QJsonObject laguna, dual, safe;
     for (const QJsonValue &v : arr) {
         const QJsonObject o = v.toObject();
         if (o.value(QStringLiteral("id")).toString()
@@ -570,6 +570,9 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
         } else if (o.value(QStringLiteral("id")).toString()
                    == QStringLiteral("sys-laguna-s-2-1-q2-48gb")) {
             dual = o;
+        } else if (o.value(QStringLiteral("id")).toString()
+                   == QStringLiteral("sys-laguna-s-2-1-q2-48gb-safe")) {
+            safe = o;
         }
     }
     QVERIFY2(!laguna.isEmpty(), "falta el perfil experimental Laguna");
@@ -618,6 +621,28 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QCOMPARE(dualArgs.value(dualArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
              QStringLiteral("1,1"));
     QVERIFY(dualArgs.contains(QStringLiteral("--reasoning-preserve")));
+
+    QVERIFY2(!safe.isEmpty(), "falta la variante Laguna CUDA safe");
+    QVERIFY(safe.value(QStringLiteral("extra")).toBool());
+    QVERIFY(!safe.value(QStringLiteral("autoCompanion")).toBool());
+    QVERIFY(!safe.value(QStringLiteral("benchmark")).toBool());
+    QCOMPARE(safe.value(QStringLiteral("minVramGb")).toInt(), 48);
+    QCOMPARE(safe.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10087);
+    QCOMPARE(safe.value(QStringLiteral("model")).toObject(), model);
+    const QJsonObject safeRuntime = safe.value(QStringLiteral("runtime")).toObject();
+    QCOMPARE(safeRuntime.value(QStringLiteral("ctx")).toInt(), 65536);
+    QCOMPARE(safeRuntime.value(QStringLiteral("batch")).toInt(), 256);
+    QCOMPARE(safeRuntime.value(QStringLiteral("ubatch")).toInt(), 64);
+    QVERIFY(safeRuntime.value(QStringLiteral("flashAttn")).toBool());
+    QStringList safeArgs;
+    for (const QJsonValue &arg : safe.value(QStringLiteral("extraArgs")).toArray())
+        safeArgs << arg.toString();
+    QCOMPARE(safeArgs.value(safeArgs.indexOf(QStringLiteral("--fit")) + 1),
+             QStringLiteral("off"));
+    QCOMPARE(safeArgs.value(safeArgs.indexOf(QStringLiteral("--flash-attn")) + 1),
+             QStringLiteral("on"));
+    QCOMPARE(safeArgs.value(safeArgs.indexOf(QStringLiteral("--n-cpu-moe")) + 1),
+             QStringLiteral("32"));
 
     // Sigue fuera del recomendado y del showcase premium: es opt-in incluso en
     // la máquina objetivo de 24GB VRAM + 128GB RAM.
@@ -778,7 +803,7 @@ void SystemProfilesTests::bundle_lagunaTemplateIsAppliedToBothProfiles()
         QCOMPARE(profile.value(QStringLiteral("chatTemplate")).toString(),
                  QStringLiteral("laguna-tools-v24.jinja"));
     }
-    QCOMPARE(lagunaProfiles, 2);
+    QCOMPARE(lagunaProfiles, 3);
 }
 
 // El perfil de 48 GB (2x RTX 3090) reusa los mismos shards que ULTRA-Q y solo
