@@ -39,6 +39,7 @@ private slots:
     void allForRoot();
     void filterByFamily();
     void filterVisionOnly();
+    void manualCompatibility_survivesRescanAndReload();
     void removeByRootId();
     void persistsAcrossReload();
     void reconcileRoot_marksMissingUnavailable();
@@ -108,6 +109,21 @@ void CatalogTests::filterVisionOnly()
     c.setFilterVisionOnly(true);
     QCOMPARE(c.count(), 1);
     c.setFilterVisionOnly(false);
+}
+
+void CatalogTests::manualCompatibility_survivesRescanAndReload()
+{
+    {
+        ModelCatalog c;
+        c.addOrUpdate(mk("manual", "rootA", "qwen", false));
+        QVERIFY(c.setManualCompatibility("manual", true, true));
+        QVERIFY(c.get("manual").value("isVision").toBool());
+        c.addOrUpdate(mk("manual", "rootA", "qwen", false));
+        QVERIFY(c.findById("manual").isVisionCandidate);
+    }
+    ModelCatalog c2;
+    QVERIFY(c2.findById("manual").isVisionCandidate);
+    QVERIFY(c2.findById("manual").isDraftCandidate);
 }
 
 void CatalogTests::removeByRootId()

@@ -200,6 +200,14 @@ public:
     // launch; los perfiles de sistema nunca salen ni entran.
     Q_INVOKABLE QString exportProfilesBundle() const;
     Q_INVOKABLE int importProfilesBundle(const QString &json);
+    // Plantillas reutilizables de launch: guardan referencias y overrides, pero
+    // no crean ni modifican perfiles hasta que se aplican explícitamente.
+    Q_INVOKABLE QVariantList profileTemplates() const;
+    Q_INVOKABLE QString saveLaunchAsTemplate(const QString &launchId,
+                                             const QString &templateName);
+    Q_INVOKABLE QString createLaunchFromTemplate(const QString &templateId,
+                                                 const QString &name = QString());
+    Q_INVOKABLE bool removeProfileTemplate(const QString &templateId);
     // Historial append-only de snapshots de perfiles de usuario. Es headless y
     // permite auditar/restaurar manualmente cambios sin exponer secretos.
     Q_INVOKABLE QVariantList profileChangeHistory(const QString &entity,

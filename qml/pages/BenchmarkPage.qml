@@ -835,6 +835,12 @@ Item {
                             enabled: root.selectedIds.length > 0 && !App.benchmarkRunning
                             onClicked: root.selectedIds = []
                         }
+                        LcButton {
+                            text: "Exportar CSV"
+                            secondary: true
+                            enabled: (App.benchmarkResults || []).length > 0
+                            onClicked: csvExportDialog.open()
+                        }
                     }
 
                     Rectangle {
@@ -2037,6 +2043,17 @@ Item {
     }
 
     // ── Editor de benchmark personalizado ──────────────────────────────────────
+    FileDialog {
+        id: csvExportDialog
+        title: "Exportar resultados CSV"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["CSV (*.csv)"]
+        onAccepted: {
+            const path = selectedFile.toString().replace(/^file:\/\//, "")
+            App.exportBenchmarkResultsCsv(decodeURIComponent(path))
+        }
+    }
+
     FileDialog {
         id: evalImportDialog
         title: "Importar EvalSuite (JSON)"

@@ -72,7 +72,7 @@
 - [x] Renombrar perfil
 - [x] Eliminar perfil
 - [x] **Importar perfil desde argumentos CLI** (parsea --host, --port, --model, --ctx-size, --batch-size, --ubatch-size, --threads, --n-gpu-layers, --flash-attn, --no-mmap, --mlock, --parallel, --cache-type-k)
-- [ ] Plantillas de perfil
+- [x] Plantillas de perfil reutilizables (guardar/aplicar/eliminar vía `ProfileManager`, con referencias, args, env y tags)
 - [x] Búsqueda por nombre, alias, id o etiquetas en la pantalla de perfiles
 - [x] Favoritos y orden de favoritos en menús; último usado se conserva mediante el perfil activo persistido
 - [x] Export/Import de perfiles completos (bundle JSON, ids y referencias preservados)
@@ -82,7 +82,7 @@
 
 - [x] Dedupe por hash SHA256 para binarios; los modelos conservan ids estables y metadatos cacheados
 - [x] Filtros por familia/vision/root (UI); cuantización y tamaño quedan visibles en las tarjetas del catálogo
-- [ ] Marcar compatibilidad vision/draft manualmente
+- [x] Marcar compatibilidad vision/draft manualmente (UI + API headless, persistido fuera del scanner)
 - [x] Asociación rápida modelo → perfil desde ProfilesPage
 
 ## P3 - Harness opencode ✅
@@ -99,7 +99,7 @@
 - [x] Actualización de título de sesión en tiempo real vía SSE `session.updated`
 - [x] Limpieza de sesión/SSE al detener agente
 - [ ] `AiderCliAdapter`
-- [ ] Templates args/env por harness
+- [x] Templates args/env por harness (persistidos en `HarnessProfile` y expuestos por `ProfileManager`)
 - [x] Adjuntar archivos al mensaje (texto, documentos e imágenes con filtro de visión)
 
 ## P4 - Chat integrado ✅
@@ -135,17 +135,16 @@
 
 ## P6 - Benchmarking
 
-- [ ] `BenchmarkRunner`: lanza perfiles en secuencia vía `AppController`, parámetros fijos (temp 0, seed fijo)
-- [ ] `BenchmarkSession`: entidad con métricas por perfil (RAM, VRAM, t/s prompt eval, t/s gen, tiempo total, scores)
-- [ ] Modo **Corta**: 5 prompts × 256 tokens, score 0–2, ~30 s
-- [ ] Modo **Completa**: 15 prompts × 512 tokens, score 0–5, 1–5 min
-- [ ] Editor de prompts por categoría (razonamiento, código, pericial, extracción, contexto largo)
-- [ ] Scoring manual post-corrida desde UI (o automático vía juez LLM)
-- [ ] Persistencia en JSON (`benchmarks/{timestamp}.json`)
-- [ ] `BenchmarkPage.qml`: tabla comparativa con columnas ordenables y filtros
-- [ ] Exportar resultados a CSV
-- [ ] Selección multi-perfil para comparar en una misma corrida
-- [ ] Calidad relativa normalizada contra perfil baseline
+- [x] `BenchmarkRunner`: `runBenchmarkInternal` lanza perfiles en secuencia vía `AppController`
+- [x] `BenchmarkSession`: resultados JSON por perfil con RAM/VRAM, t/s, tiempos y scores
+- [x] Modo **Corta** y **Completa** con suites estándar y scoring de aceptación
+- [x] Editor/importador de prompts personalizados y suites por categoría
+- [x] Scoring post-corrida y re-scoring sin repetir inferencia
+- [x] Persistencia en JSON (`benchmarks/{timestamp}/...`)
+- [x] `BenchmarkPage.qml`: tabla comparativa con columnas ordenables y filtros
+- [x] Exportar resultados a CSV desde la UI y `AppController::exportBenchmarkResultsCsv`
+- [x] Selección multi-perfil y cola de benchmarks personalizados
+- [x] Calidad relativa y comparación contra baseline en `comparison.json`
 
 ## Calidad
 

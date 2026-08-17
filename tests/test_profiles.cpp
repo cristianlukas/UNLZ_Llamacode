@@ -35,6 +35,8 @@ private slots:
     void manager_favoriteAndAlias();
     void manager_profileSearchFiltersNameAliasAndId();
     void manager_tagsAndLastUsed();
+    void manager_profileTemplatesRoundTrip();
+    void manager_harnessArgsEnvRoundTrip();
     void manager_deprecatedIsProfilesOnly();
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
@@ -364,6 +366,41 @@ void ProfilesTests::manager_tagsAndLastUsed()
     const QVariantList byTag = pm.launchProfilesForProfilesPage(QStringLiteral("LOCAL"));
     QCOMPARE(byTag.size(), 1);
     QCOMPARE(byTag.first().toMap().value("id").toString(), id);
+}
+
+void ProfilesTests::manager_profileTemplatesRoundTrip()
+{
+    ProfileManager pm;
+    const QString launch = pm.addLaunchProfile(QStringLiteral("Template source"), "be", "mo", "rt");
+    QVERIFY(!launch.isEmpty());
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", launch}, {"tags", QStringList{"coding"}},
+                                               {"extraArgs", QStringList{"--temp", "0.6"}},
+                                               {"envOverrides", QVariantMap{{"TEST_TEMPLATE", "1"}}}}));
+    const QString tid = pm.saveLaunchAsTemplate(launch, QStringLiteral("Coding local"));
+    QVERIFY(!tid.isEmpty());
+    const QVariantList templates = pm.profileTemplates();
+    QVERIFY(std::any_of(templates.cbegin(), templates.cend(), [&](const QVariant &v) {
+        return v.toMap().value(QStringLiteral("id")).toString() == tid;
+    }));
+    const QString copy = pm.createLaunchFromTemplate(tid, QStringLiteral("From template"));
+    QVERIFY(!copy.isEmpty());
+    const QVariantMap restored = pm.getLaunchProfile(copy);
+    QCOMPARE(restored.value(QStringLiteral("tags")).toStringList(), QStringList{"coding"});
+    const QStringList expectedArgs{"--temp", "0.6"};
+    QCOMPARE(restored.value(QStringLiteral("extraArgs")).toStringList(), expectedArgs);
+    QCOMPARE(restored.value(QStringLiteral("envOverrides")).toMap().value(QStringLiteral("TEST_TEMPLATE")).toString(), QStringLiteral("1"));
+    QVERIFY(pm.removeProfileTemplate(tid));
+}
+
+void ProfilesTests::manager_harnessArgsEnvRoundTrip()
+{
+    ProfileManager pm;
+    const QString id = pm.addHarness(QStringLiteral("Harness"), QStringLiteral("llamaagent"));
+    QVERIFY(pm.updateHarness(QVariantMap{{"id", id}, {"args", QStringList{"--quiet"}},
+                                         {"env", QVariantMap{{"HARNESS_MODE", "test"}}}}));
+    const QVariantMap got = pm.getHarness(id);
+    QCOMPARE(got.value(QStringLiteral("args")).toStringList(), QStringList{"--quiet"});
+    QCOMPARE(got.value(QStringLiteral("env")).toMap().value(QStringLiteral("HARNESS_MODE")).toString(), QStringLiteral("test"));
 }
 
 void ProfilesTests::manager_browserAutomationOverride()

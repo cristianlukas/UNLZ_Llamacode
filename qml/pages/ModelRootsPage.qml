@@ -769,6 +769,25 @@ Item {
                             }
                         }
 
+                        Row {
+                            anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
+                            spacing: 4
+                            LcButton {
+                                text: isVision ? "👁✓" : "👁"
+                                secondary: true
+                                ToolTip.visible: hovered
+                                ToolTip.text: "Marcar compatibilidad de visión manualmente"
+                                onClicked: App.modelCatalog.setManualCompatibility(modelId, !isVision, isDraft)
+                            }
+                            LcButton {
+                                text: isDraft ? "⚡✓" : "⚡"
+                                secondary: true
+                                ToolTip.visible: hovered
+                                ToolTip.text: "Marcar compatibilidad draft manualmente"
+                                onClicked: App.modelCatalog.setManualCompatibility(modelId, isVision, !isDraft)
+                            }
+                        }
+
                         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.surfaceBg }
                     }
 

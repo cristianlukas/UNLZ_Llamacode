@@ -374,6 +374,11 @@ bool ProfileManager::updateHarness(const QVariantMap &data)
     p.adapter = data.value("adapter", p.adapter).toString();
     const QVariant argsV = data.value("args");
     if (argsV.isValid()) p.args = argsV.toStringList();
+    if (data.contains("env")) {
+        p.env.clear();
+        const QVariantMap env = data.value("env").toMap();
+        for (auto it = env.cbegin(); it != env.cend(); ++it) p.env.insert(it.key(), it.value().toString());
+    }
     bool ok = m_harnesses.update(p);
     if (ok) save();
     return ok;
@@ -383,7 +388,8 @@ QVariantMap ProfileManager::getHarness(const QString &id) const
 {
     const auto p = m_harnesses.findById(id);
     if (p.id.isEmpty()) return {};
-    return {{"id", p.id}, {"name", p.name}, {"adapter", p.adapter}, {"args", p.args}};
+    return {{"id", p.id}, {"name", p.name}, {"adapter", p.adapter}, {"args", p.args},
+            {"env", QVariant::fromValue(p.env)}};
 }
 
 // ---- LaunchProfile ----
@@ -461,6 +467,12 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     p.hybridMode = data.value("hybridMode", p.hybridMode).toString();
     if (p.plannerProfileId.isEmpty()) p.hybridMode = QStringLiteral("off");
     p.extraArgs = data.value("extraArgs", p.extraArgs).toStringList();
+    if (data.contains("envOverrides")) {
+        p.envOverrides.clear();
+        const QVariantMap env = data.value("envOverrides").toMap();
+        for (auto it = env.cbegin(); it != env.cend(); ++it)
+            p.envOverrides.insert(it.key(), it.value().toString());
+    }
     if (data.contains("master")) {
         const QVariantMap m = data.value("master").toMap();
         MasterConfig mc = p.master;
@@ -1666,6 +1678,92 @@ int ProfileManager::importProfilesBundle(const QString &json)
         emit personaStylesChanged();
     }
     return imported;
+}
+
+QVariantList ProfileManager::profileTemplates() const
+{
+    QFile f(storagePath(QStringLiteral("profile_templates")));
+    if (!f.open(QIODevice::ReadOnly)) return {};
+    QVariantList out;
+    for (const QJsonValue &v : QJsonDocument::fromJson(f.readAll()).array())
+        if (v.isObject()) out.append(v.toObject().toVariantMap());
+    return out;
+}
+
+QString ProfileManager::saveLaunchAsTemplate(const QString &launchId,
+                                             const QString &templateName)
+{
+    const LaunchProfile p = m_launches.findById(launchId);
+    const QString name = templateName.trimmed();
+    if (p.id.isEmpty() || p.system || name.isEmpty()) return {};
+
+    QJsonArray arr;
+    QFile f(storagePath(QStringLiteral("profile_templates")));
+    if (f.open(QIODevice::ReadOnly)) arr = QJsonDocument::fromJson(f.readAll()).array();
+    f.close();
+    const QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    QJsonObject env;
+    for (auto it = p.envOverrides.cbegin(); it != p.envOverrides.cend(); ++it) env[it.key()] = it.value();
+    QJsonObject row{{"id", id}, {"name", name}, {"createdAt", QDateTime::currentMSecsSinceEpoch()},
+                    {"sourceLaunchId", p.id}, {"alias", p.alias}, {"tags", QJsonArray::fromStringList(p.tags)},
+                    {"backendProfileId", p.backendProfileId}, {"modelProfileId", p.modelProfileId},
+                    {"runtimePresetId", p.runtimePresetId}, {"harnessProfileId", p.harnessProfileId},
+                    {"workspaceProfileId", p.workspaceProfileId}, {"agentProfileId", p.agentProfileId},
+                    {"plannerProfileId", p.plannerProfileId}, {"hybridMode", p.hybridMode},
+                    {"extraArgs", QJsonArray::fromStringList(p.extraArgs)},
+                    {"envOverrides", env}, {"browserAutomation", p.browserAutomation},
+                    {"master", p.master.toJson()}};
+    arr.append(row);
+    QDir().mkpath(QFileInfo(f.fileName()).absolutePath());
+    QFile out(f.fileName() + QStringLiteral(".tmp"));
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) return {};
+    const QByteArray bytes = QJsonDocument(arr).toJson(QJsonDocument::Indented);
+    if (out.write(bytes) != bytes.size()) { out.close(); QFile::remove(out.fileName()); return {}; }
+    out.close();
+    QFile::remove(f.fileName());
+    if (!QFile::rename(out.fileName(), f.fileName())) return {};
+    return id;
+}
+
+QString ProfileManager::createLaunchFromTemplate(const QString &templateId,
+                                                 const QString &name)
+{
+    QVariantMap selected;
+    for (const QVariant &v : profileTemplates())
+        if (v.toMap().value(QStringLiteral("id")).toString() == templateId) { selected = v.toMap(); break; }
+    if (selected.isEmpty()) return {};
+    const QString id = addLaunchProfile(name.trimmed().isEmpty()
+                                        ? selected.value(QStringLiteral("name")).toString()
+                                        : name,
+                                        selected.value(QStringLiteral("backendProfileId")).toString(),
+                                        selected.value(QStringLiteral("modelProfileId")).toString(),
+                                        selected.value(QStringLiteral("runtimePresetId")).toString());
+    if (id.isEmpty()) return {};
+    QVariantMap data = selected;
+    data[QStringLiteral("id")] = id;
+    data[QStringLiteral("name")] = name.trimmed().isEmpty()
+        ? selected.value(QStringLiteral("name")).toString() : name;
+    updateLaunchProfile(data);
+    return id;
+}
+
+bool ProfileManager::removeProfileTemplate(const QString &templateId)
+{
+    QFile f(storagePath(QStringLiteral("profile_templates")));
+    if (!f.open(QIODevice::ReadOnly)) return false;
+    QJsonArray arr = QJsonDocument::fromJson(f.readAll()).array();
+    f.close();
+    const int before = arr.size();
+    QJsonArray kept;
+    for (const QJsonValue &v : arr)
+        if (v.toObject().value(QStringLiteral("id")).toString() != templateId) kept.append(v);
+    if (kept.size() == before) return false;
+    QFile out(f.fileName() + QStringLiteral(".tmp"));
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    const QByteArray bytes = QJsonDocument(kept).toJson(QJsonDocument::Indented);
+    if (out.write(bytes) != bytes.size()) { out.close(); QFile::remove(out.fileName()); return false; }
+    out.close(); QFile::remove(f.fileName());
+    return QFile::rename(out.fileName(), f.fileName());
 }
 
 QString ProfileManager::storagePath(const QString &entity) const

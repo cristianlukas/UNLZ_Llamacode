@@ -3,6 +3,8 @@
 #include <QAbstractListModel>
 #include <QList>
 #include <QSet>
+#include <QHash>
+#include <QPair>
 
 class ModelCatalog : public QAbstractListModel
 {
@@ -77,6 +79,9 @@ public:
     Q_INVOKABLE void removeByRootId(const QString &rootId);
     Q_INVOKABLE QVariantMap get(const QString &id) const;
     Q_INVOKABLE QVariantMap getAt(int row) const;
+    // Override manual de compatibilidad, persistido aparte del scanner para que
+    // un rescan no lo borre.
+    Q_INVOKABLE bool setManualCompatibility(const QString &id, bool vision, bool draft);
 
     CatalogModel findById(const QString &id) const;
     // Resolución por ancla estable: sobrevive a que el gguf se mueva de carpeta,
@@ -98,6 +103,8 @@ private:
     QString dbPath() const;
     int indexOfId(const QString &id) const;
     bool matchesFilter(const CatalogModel &m) const;
+    void loadManualCompatibility();
+    void saveManualCompatibility() const;
 
     QList<CatalogModel> m_all;
     QList<const CatalogModel *> m_visible;
@@ -108,4 +115,5 @@ private:
 
     // SQLite connection name
     QString m_connName;
+    QHash<QString, QPair<bool, bool>> m_manualCompatibility;
 };

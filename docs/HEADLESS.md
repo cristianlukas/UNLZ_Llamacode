@@ -251,6 +251,11 @@ La auditoría de perfiles también es headless: `ProfileManager.profileChangeHis
 lee snapshots JSONL append-only por entidad/id. `test_profiles` cubre alta,
 actualización, lectura del historial y persistencia sin QML ni GUI.
 
+Las plantillas de launch también son headless: `saveLaunchAsTemplate` guarda
+referencias, args, variables de entorno y etiquetas; `createLaunchFromTemplate`
+crea una copia editable y `removeProfileTemplate` la elimina. El round-trip
+está cubierto por `manager_profileTemplatesRoundTrip` en `test_profiles`.
+
 Para verificar que la persistencia sobrevive a un reinicio del daemon:
 
 ```powershell

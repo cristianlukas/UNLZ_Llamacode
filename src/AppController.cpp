@@ -14258,6 +14258,34 @@ void AppController::startCustomBenchmark(const QStringList &profileIds, const QS
                          def.value("prompts").toList(), label, qMax(1, passes), target);
 }
 
+bool AppController::exportBenchmarkResultsCsv(const QString &path) const
+{
+    const QString target = path.trimmed();
+    if (target.isEmpty()) return false;
+    QSet<QString> keys;
+    for (const QVariant &v : m_benchmarkResults) {
+        const QVariantMap row = v.toMap();
+        for (auto it = row.cbegin(); it != row.cend(); ++it) keys.insert(it.key());
+    }
+    QStringList columns = keys.values();
+    std::sort(columns.begin(), columns.end());
+    auto csv = [](const QString &value) {
+        QString s = value;
+        s.replace(QLatin1Char('"'), QStringLiteral("\"\""));
+        return QStringLiteral("\"") + s + QStringLiteral("\"");
+    };
+    QFile f(target);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return false;
+    f.write((columns.join(QLatin1Char(',')) + QLatin1Char('\n')).toUtf8());
+    for (const QVariant &v : m_benchmarkResults) {
+        const QVariantMap row = v.toMap();
+        QStringList values;
+        for (const QString &key : columns) values << csv(row.value(key).toString());
+        f.write((values.join(QLatin1Char(',')) + QLatin1Char('\n')).toUtf8());
+    }
+    return true;
+}
+
 void AppController::startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
                                         int passes, const QString &target, int timeoutSec,
                                         const QString &agentProfileId)

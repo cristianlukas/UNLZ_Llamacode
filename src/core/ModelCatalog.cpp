@@ -8,6 +8,8 @@
 #include <QDebug>
 #include <QThread>
 #include <QFileInfo>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 static const char *kSchema = R"(
 CREATE TABLE IF NOT EXISTS catalog_models (
@@ -50,6 +52,7 @@ ModelCatalog::ModelCatalog(QObject *parent)
     // arranque puede reintentarse después desde el flujo de startup.
     for (int attempt = 0; attempt < 3; ++attempt) {
         openDb();
+        loadManualCompatibility();
         m_all.clear();
         loadFromDb();
         if (!m_all.isEmpty() || !dbHasData) break;
@@ -64,6 +67,7 @@ int ModelCatalog::reload()
     const bool dbHasData = QFileInfo(dbPath()).size() > 4096;
     for (int attempt = 0; attempt < 3; ++attempt) {
         openDb();
+        loadManualCompatibility();
         m_all.clear();
         loadFromDb();
         if (!m_all.isEmpty() || !dbHasData) break;
@@ -178,6 +182,11 @@ void ModelCatalog::addOrUpdate(const CatalogModel &model)
     // entrante para un mismo archivo es siempre el mismo. Adoptarlo en match por
     // ruta hace converger filas viejas (ids aleatorios legacy) al id estable.
     CatalogModel incoming = model;
+    if (m_manualCompatibility.contains(incoming.id)) {
+        const auto flags = m_manualCompatibility.value(incoming.id);
+        incoming.isVisionCandidate = flags.first;
+        incoming.isDraftCandidate = flags.second;
+    }
     const int idx = indexOfId(incoming.id);
     if (idx >= 0) {
         // Conservar el ancla de la fila que reemplazamos: el scanner no la conoce.
@@ -208,6 +217,11 @@ void ModelCatalog::addBatch(const QList<CatalogModel> &models)
     db.transaction();
     for (const auto &incomingRef : models) {
         CatalogModel m = incomingRef;
+        if (m_manualCompatibility.contains(m.id)) {
+            const auto flags = m_manualCompatibility.value(m.id);
+            m.isVisionCandidate = flags.first;
+            m.isDraftCandidate = flags.second;
+        }
         const int idx = indexOfId(m.id);
         if (idx >= 0) {
             if (m.stableId <= 0) m.stableId = m_all[idx].stableId;
@@ -307,10 +321,25 @@ QVariantMap ModelCatalog::get(const QString &id) const
         {"quant", m.quantHint}, {"quantReal", m.quantReal},
         {"tensorBreakdown", m.tensorBreakdown}, {"bpw", m.bpw},
         {"quantMismatch", m.quantMismatch}, {"isVision", m.isVisionCandidate},
+        {"visionManual", m_manualCompatibility.contains(m.id)},
         {"architecture", m.architecture}, {"parameterCount", m.parameterCount},
         {"trainedContext", m.trainedContext},
-        {"isDraft", m.isDraftCandidate}, {"isAvailable", m.isAvailable}
+        {"isDraft", m.isDraftCandidate}, {"draftManual", m_manualCompatibility.contains(m.id)}, {"isAvailable", m.isAvailable}
     };
+}
+
+bool ModelCatalog::setManualCompatibility(const QString &id, bool vision, bool draft)
+{
+    const int idx = indexOfId(id);
+    if (idx < 0) return false;
+    m_manualCompatibility.insert(id, qMakePair(vision, draft));
+    m_all[idx].isVisionCandidate = vision;
+    m_all[idx].isDraftCandidate = draft;
+    saveManualCompatibility();
+    saveToDb(m_all[idx]);
+    beginResetModel(); rebuildVisible(); endResetModel();
+    emit countChanged();
+    return true;
 }
 
 QVariantMap ModelCatalog::getAt(int row) const
@@ -511,6 +540,31 @@ void ModelCatalog::rebuildVisible()
         if (matchesFilter(m))
             m_visible.append(&m);
     }
+}
+
+void ModelCatalog::loadManualCompatibility()
+{
+    m_manualCompatibility.clear();
+    QFile f(dbPath() + QStringLiteral(".compat.json"));
+    if (!f.open(QIODevice::ReadOnly)) return;
+    const QJsonObject root = QJsonDocument::fromJson(f.readAll()).object();
+    for (auto it = root.begin(); it != root.end(); ++it) {
+        const QJsonObject flags = it.value().toObject();
+        m_manualCompatibility.insert(it.key(), qMakePair(flags.value(QStringLiteral("vision")).toBool(),
+                                                          flags.value(QStringLiteral("draft")).toBool()));
+    }
+}
+
+void ModelCatalog::saveManualCompatibility() const
+{
+    QJsonObject root;
+    for (auto it = m_manualCompatibility.cbegin(); it != m_manualCompatibility.cend(); ++it)
+        root[it.key()] = QJsonObject{{QStringLiteral("vision"), it.value().first},
+                                     {QStringLiteral("draft"), it.value().second}};
+    QDir().mkpath(QFileInfo(dbPath()).absolutePath());
+    QFile f(dbPath() + QStringLiteral(".compat.json"));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        f.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
 }
 
 bool ModelCatalog::matchesFilter(const CatalogModel &m) const

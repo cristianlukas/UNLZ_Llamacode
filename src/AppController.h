@@ -935,6 +935,7 @@ public:
     Q_INVOKABLE void clearBenchmarkResults();
     Q_INVOKABLE void removeBenchmarkResult(int index);
     Q_INVOKABLE void removeBenchmarkResultById(const QString &id);
+    Q_INVOKABLE bool exportBenchmarkResultsCsv(const QString &path) const;
     Q_INVOKABLE void loadBenchmarkResults();
     // Custom benchmarks (user-defined prompt sets)
     Q_INVOKABLE void loadCustomBenchmarks();
