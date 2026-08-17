@@ -151,7 +151,7 @@
 
 Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Qt Test). `tests/test_core.cpp`. 17/17 pasan.
 
-- [ ] Tests `BinaryRegistry`
+- [x] Tests `BinaryRegistry` (add/get/update/remove, hash y persistencia en `test_registries`)
 - [x] Tests `ModelRootRegistry`
 - [x] Tests `EffectiveProfileBuilder` (host/port, drop flag no soportado, modelo faltante = blocking)
 - [x] Tests `GGUFScanner` (inferencia familia/quant/vision/draft)
@@ -162,12 +162,12 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 - [ ] **LlamaProcessManager dedicado** — extraer ciclo de vida de proceso de `AppController` a clase propia. Refactor arquitectónico grande, alto riesgo, bajo ROI ahora. No empezado.
 - [x] **ControlApi `reqId` estable** — acepta `reqId` por body/query/header (`x-req-id`/`reqid`), lo genera si falta y lo devuelve en respuestas/errores. Falta propagar ese id a logs de Tasks/agente/benchmark.
 - [x] **Scheduler de operaciones auxiliares (núcleo)** — `AuxiliaryJobScheduler` separa del `TaskScheduler` cron una cola interna por clases de trabajo, prioridad, recurso ocupado, cancelación y snapshot consultable. Falta integrarlo con AppController/ControlApi para trabajos reales.
-- [ ] **Sampling por sesión (chat)** — temp/top-p/top-k por sesión. Plumbing: persistir en session JSON + pasar al payload de `RawChatBackend::runCompletion`. UI: panel en ChatPage.
+- [x] **Sampling por sesión (chat)** — temperature/top-p/top-k/min-p/repeat penalty, persistencia JSON, payload, medición first-token y panel en ChatPage.
 - [x] **Panel UI de búsqueda en historial** — campo de búsqueda + resultados (snippet y `switchChatSession`) en ChatPage.
 - [x] **Combo UI de filtro de log por nivel** — selector all/error/warn/stderr/stdout/lifecycle/health/diag en LaunchPage.
 - [x] **Banner UI de `serverDiagnostic`** — aviso no bloqueante en la vista de log del servidor.
 - [ ] **Verificación GUI e2e de subagents con LLM vivo** — requiere server+modelo corriendo. Plumbing git/worktree/merge/abort ya validado; falta corrida real con el modelo manejando `task`.
-- [ ] **Tests `BinaryRegistry`** — infra Qt Test ya montada (`BUILD_TESTS=ON`); agregar casos.
+- [x] **Tests `BinaryRegistry`** — add/get/update/remove, hash y persistencia en `test_registries`.
 - [x] **Tests `ModelRootRegistry`** — add/remove, escaneo GGUF, persistencia y Ollama en `test_registries`.
 - [x] **Tests `AppController` chat session CRUD** — sesiones raw, cola, rename/delete/move y persistencia en `test_backends_net`/`test_appcontroller`.
 
