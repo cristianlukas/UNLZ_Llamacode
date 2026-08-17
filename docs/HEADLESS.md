@@ -127,6 +127,11 @@ UI muestra como aviso no bloqueante. El build QML valida que ChatPage y
 LaunchPage consuman esos contratos; las pruebas de datos viven en
 `test_backends_net` y `test_appcontroller`.
 
+El backend raw también acepta sampling por sesión (`temperature`, `top_p` y
+`top_k`), lo persiste en el JSON de la sesión y lo envía en cada request. Cada
+respuesta registra `firstTokenMs` en el mensaje del asistente. La prueba
+`test_backends_net` lo verifica contra un stub HTTP local, sin modelo ni GPU.
+
 ## Benchmark Honey A/B headless
 
 El benchmark de agente se ejecuta siempre en workspaces temporales y headless.
