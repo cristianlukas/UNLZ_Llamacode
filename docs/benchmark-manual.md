@@ -196,6 +196,25 @@ de ejecutar se deben inspeccionar sus argumentos y usar los IDs devueltos por
 la app. La corrida debe guardar el directorio de resultados y los logs, no sólo
 la tabla resumida de la interfaz.
 
+## Espejo persistente de resultados y configuración
+
+La tabla canónica que se entrega al usuario está espejada en
+[`docs/benchmark-profile-matrix.md`](benchmark-profile-matrix.md). Esa matriz
+debe actualizarse en la misma modificación que cambie un perfil o agregue una
+medición. Su tabla incluye HE0, HE20, BigCodeBench, tiempos, TPS, visión,
+drafter, quant, parámetros, contexto y una columna `Configuración` con los
+identificadores de launch/backend/model/runtime, modelo y mmproj, agente,
+binario mínimo, runtime completo y todos los argumentos efectivos. Las
+secciones de captura completa que siguen a la tabla conservan además una
+representación legible por perfil.
+
+Regla de conservación: no reemplazar una configuración histórica sin marcarla
+como histórica. Si se corrige o duplica un perfil, agregar una fila o actualizar
+la fila corregida con el nuevo ID, registrar el comando efectivo y conservar la
+medición anterior con una marca de comparabilidad (`†`, infraestructura o
+repetir). Así la tabla visible y su espejo documental siempre describen la
+misma configuración.
+
 Ubicaciones habituales en Windows:
 
 - resultados: `%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`;
