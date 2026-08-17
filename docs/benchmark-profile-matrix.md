@@ -59,6 +59,12 @@ El orden es deliberado y se aplica a cada perfil base o candidato, siempre en mo
 
 La promoción de un perfil requiere pasar HE0. Un fallo de HE0 exige diagnóstico antes de cualquier HE20/BCB. HE20 separa calidad general y problemas del harness; BCB separa los casos difíciles. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
 
+La aplicación aplica esta compuerta en tiempo de ejecución mediante una huella
+SHA-256 del comando efectivo: los HE0 históricos sin huella no habilitan HE20;
+deben repetirse con el binario/harness actual. La verificación headless quedó
+probada el 2026-08-16: solicitar HE20 para `sys-bench-48-kat-f16` sin HE0
+compatible devolvió estado bloqueado y no arrancó ningún servidor.
+
 ## Revalidación de perfiles modificados por la política q8 — HE0 (2026-08-16)
 
 Después de limitar los pesos y el KV K/V del catálogo a `q8_0` o menor, se

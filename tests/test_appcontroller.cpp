@@ -119,6 +119,8 @@ private slots:
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkRestartErrorsAreInfrastructure();
     void benchmarkPreservesScoreAfterTransportTail();
+    void benchmarkGateRejectsBrokenOrStaleHe0();
+    void benchmarkGateAcceptsValidHe20QualityResult();
     void benchmarkUsesOneArtifactPerTask();
     void benchmarkStreamingCountsSnapshotsOnce();
     void concurrencyBenchmarkSettingsClampBounds();
@@ -1498,6 +1500,50 @@ void AppControllerTests::benchmarkPreservesScoreAfterTransportTail()
     QVERIFY(!AppController::benchmarkTransportAfterEvaluationForTest(7, 8, true));
     QVERIFY(!AppController::benchmarkTransportAfterEvaluationForTest(8, 8, false));
     QVERIFY(!AppController::benchmarkTransportAfterEvaluationForTest(0, 8, true));
+}
+
+void AppControllerTests::benchmarkGateRejectsBrokenOrStaleHe0()
+{
+    const QVariantMap valid{
+        {"benchmarkName", "HumanEval (1 ítems)"},
+        {"profileConfigFingerprint", "fp-current"},
+        {"qualityScore", 1}, {"qualityTotal", 1},
+        {"failed", false}, {"failureKind", "none"},
+        {"invalid", false}, {"timedOut", false},
+        {"transportAfterEvaluation", false}};
+    QVERIFY(AppController::benchmarkResultPassesGateForTest(
+        valid, QStringLiteral("he0"), QStringLiteral("fp-current")));
+
+    QVariantMap stale = valid;
+    stale[QStringLiteral("profileConfigFingerprint")] = QStringLiteral("fp-old");
+    QVERIFY(!AppController::benchmarkResultPassesGateForTest(
+        stale, QStringLiteral("he0"), QStringLiteral("fp-current")));
+
+    QVariantMap broken = valid;
+    broken[QStringLiteral("failed")] = true;
+    broken[QStringLiteral("failureKind")] = QStringLiteral("infrastructure");
+    broken[QStringLiteral("transportAfterEvaluation")] = true;
+    QVERIFY(!AppController::benchmarkResultPassesGateForTest(
+        broken, QStringLiteral("he0"), QStringLiteral("fp-current")));
+}
+
+void AppControllerTests::benchmarkGateAcceptsValidHe20QualityResult()
+{
+    const QVariantMap partial{
+        {"benchmarkName", "HumanEval (20 ítems)"},
+        {"profileConfigFingerprint", "fp-current"},
+        {"qualityScore", 19}, {"qualityTotal", 20},
+        {"failed", true}, {"failureKind", "quality"},
+        {"invalid", false}, {"timedOut", false},
+        {"transportAfterEvaluation", false}};
+    QVERIFY(AppController::benchmarkResultPassesGateForTest(
+        partial, QStringLiteral("he20"), QStringLiteral("fp-current")));
+
+    QVariantMap transport = partial;
+    transport[QStringLiteral("failureKind")] = QStringLiteral("infrastructure");
+    transport[QStringLiteral("transportAfterEvaluation")] = true;
+    QVERIFY(!AppController::benchmarkResultPassesGateForTest(
+        transport, QStringLiteral("he20"), QStringLiteral("fp-current")));
 }
 
 void AppControllerTests::benchmarkUsesOneArtifactPerTask()

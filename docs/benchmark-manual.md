@@ -43,6 +43,11 @@ un único cambio y repetir HE0 desde un workspace limpio. No se ejecuta HE20 ni
 BCB de ese perfil mientras HE0 no sea válido; tampoco se usa BCB para rescatar
 una candidata con fallas de transporte, arranque o persistencia.
 
+El controlador persiste una huella SHA-256 del comando efectivo junto con cada
+resultado. La huella debe coincidir al habilitar la etapa siguiente; cambiar
+modelo, contexto, KV, MTP, binario, tensor-split, harness o cualquier flag
+obliga a repetir HE0 aunque exista un resultado histórico `1/1`.
+
 ## Qué debe quedar congelado
 
 Antes de comparar una candidata con un perfil existente, registrar y conservar:

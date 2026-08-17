@@ -531,6 +531,11 @@ public:
     static bool benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCount,
                                                           int declaredTaskCount,
                                                           bool transportFailure);
+    // Compuerta de la escalera HE0 -> HE20 -> BCB. HE0 exige 1/1 y transporte
+    // válido; HE20 puede ser calidad parcial, pero nunca infraestructura rota.
+    static bool benchmarkResultPassesGateForTest(const QVariantMap &result,
+                                                  const QString &stage,
+                                                  const QString &profileFingerprint);
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).
     static QString installRootForExePath(const QString &exePath);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
@@ -1877,6 +1882,10 @@ private:
     QString benchmarkRunsDir() const;     // root for isolated timestamped run folders
     void saveBenchmarkResult(const QVariantMap &result);
     void decorateBenchmarkBaseline(QVariantMap *result) const;
+    QString benchmarkProfileConfigFingerprint(const QString &profileId);
+    QStringList benchmarkProfilesAllowedForStage(const QStringList &profileIds,
+                                                  const QString &stage,
+                                                  QStringList *blockedProfiles = nullptr);
     QString benchmarkServerLogTail(int maxBytes = 24000) const;
     void saveBenchmarkFailureResult(const QString &profileId, const QString &profileName,
                                     int pass, int passes, const QString &mode,

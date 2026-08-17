@@ -107,6 +107,9 @@
 #include <algorithm>
 #include <cmath>
 
+static QString benchmarkGateStage(const QString &label, int taskCount);
+static bool isBigCodeBenchLabel(const QString &label);
+
 namespace {
 bool launchThinkingEnabled(const QStringList &args, bool fallback)
 {
@@ -14254,8 +14257,41 @@ void AppController::startCustomBenchmark(const QStringList &profileIds, const QS
     if (def.isEmpty()) return;
     const QString label = def.value("name").toString().isEmpty()
                               ? QStringLiteral("custom") : def.value("name").toString();
-    runBenchmarkInternal(profileIds, QStringLiteral("custom"),
-                         def.value("prompts").toList(), label, qMax(1, passes), target);
+    const QVariantList prompts = def.value("prompts").toList();
+    QString stage = benchmarkGateStage(label, prompts.size());
+    if (stage.isEmpty() && isBigCodeBenchLabel(label))
+        stage = QStringLiteral("bcb");
+
+    QStringList runnableProfiles = profileIds;
+    if (stage == QLatin1String("he20") || stage == QLatin1String("bcb")) {
+        // The gate is evaluated against the effective command currently built
+        // for each profile, so changing KV/context/MTP/binary/flags invalidates
+        // older HE0 evidence automatically.
+        loadBenchmarkResults();
+        QStringList blocked;
+        runnableProfiles = benchmarkProfilesAllowedForStage(profileIds, stage, &blocked);
+        QString gateMessage;
+        if (!blocked.isEmpty()) {
+            gateMessage = QStringLiteral(
+                "%1 bloqueado para %2: HE0/HE20 no válido para la configuración efectiva actual. "
+                "Investigar, corregir y repetir la etapa anterior antes de continuar.")
+                .arg(blocked.join(QStringLiteral(", ")),
+                     stage == QLatin1String("he20") ? QStringLiteral("HE20")
+                                                     : QStringLiteral("BCB"));
+            emit serverError(gateMessage);
+        }
+        if (runnableProfiles.isEmpty()) {
+            m_proBenchmarkQueue.clear();
+            m_benchmarkStatus = gateMessage.isEmpty()
+                ? QStringLiteral("Benchmark bloqueado: no hay perfiles elegibles para esta etapa.")
+                : gateMessage;
+            emit benchmarkStatusChanged();
+            return;
+        }
+    }
+
+    runBenchmarkInternal(runnableProfiles, QStringLiteral("custom"),
+                         prompts, label, qMax(1, passes), target);
 }
 
 bool AppController::exportBenchmarkResultsCsv(const QString &path) const
@@ -14767,6 +14803,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             QJsonObject po;
             po["profileId"]   = pid;
             po["profileName"] = pd.value("name").toString();
+            po["profileConfigFingerprint"] = benchmarkProfileConfigFingerprint(pid);
             profArr.append(po);
         }
         meta["profiles"] = profArr;
@@ -15022,6 +15059,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
 
                                 QVariantMap result;
                                 result["profileId"]    = profileId;
+                                result["profileConfigFingerprint"] =
+                                    benchmarkProfileConfigFingerprint(profileId);
                                 result["profileName"]  = rowName;
                                 result["pass"]         = *passNo;
                                 result["passesTotal"]  = passes;
@@ -15518,6 +15557,95 @@ bool AppController::benchmarkTransportAfterEvaluationForTest(int evaluatedTaskCo
                                                               bool transportFailure)
 {
     return transportFailure && declaredTaskCount > 0 && evaluatedTaskCount >= declaredTaskCount;
+}
+
+bool AppController::benchmarkResultPassesGateForTest(const QVariantMap &result,
+                                                       const QString &stage,
+                                                       const QString &profileFingerprint)
+{
+    if (profileFingerprint.isEmpty()
+        || result.value(QStringLiteral("profileConfigFingerprint")).toString()
+               != profileFingerprint)
+        return false;
+
+    const QString benchmark = result.value(QStringLiteral("benchmarkName")).toString();
+    const int score = result.value(QStringLiteral("qualityScore")).toInt();
+    const int total = result.value(QStringLiteral("qualityTotal")).toInt();
+    const QString failureKind = result.value(QStringLiteral("failureKind")).toString();
+    const bool invalid = result.value(QStringLiteral("invalid")).toBool()
+                      || result.value(QStringLiteral("timedOut")).toBool()
+                      || result.value(QStringLiteral("transportAfterEvaluation")).toBool();
+    if (stage == QLatin1String("he0")) {
+        return benchmark.startsWith(QStringLiteral("HumanEval (1"))
+            && !invalid && !result.value(QStringLiteral("failed")).toBool()
+            && failureKind == QLatin1String("none")
+            && total > 0 && score >= total;
+    }
+    if (stage == QLatin1String("he20")) {
+        // A partial but normally transported HE20 score is a valid quality
+        // measurement. Infrastructure/timeout/transport failures are not.
+        return benchmark.startsWith(QStringLiteral("HumanEval (20"))
+            && !invalid && failureKind != QLatin1String("infrastructure")
+            && failureKind != QLatin1String("timeout") && total > 0;
+    }
+    return false;
+}
+
+QString AppController::benchmarkProfileConfigFingerprint(const QString &profileId)
+{
+    if (profileId.trimmed().isEmpty()) return {};
+    const EffectiveProfile effective = EffectiveProfileBuilder::build(buildContext(profileId));
+    QJsonObject payload;
+    payload[QStringLiteral("profileId")] = profileId;
+    payload[QStringLiteral("binaryPath")] = effective.binaryPath;
+    payload[QStringLiteral("valid")] = effective.isValid();
+    payload[QStringLiteral("args")] = QJsonArray::fromStringList(effective.effectiveArgs);
+    QJsonObject env;
+    for (auto it = effective.effectiveEnv.cbegin(); it != effective.effectiveEnv.cend(); ++it)
+        env[it.key()] = it.value();
+    payload[QStringLiteral("env")] = env;
+    return QString::fromLatin1(QCryptographicHash::hash(
+        QJsonDocument(payload).toJson(QJsonDocument::Compact),
+        QCryptographicHash::Sha256).toHex());
+}
+
+QStringList AppController::benchmarkProfilesAllowedForStage(const QStringList &profileIds,
+                                                             const QString &stage,
+                                                             QStringList *blockedProfiles)
+{
+    QStringList allowed;
+    QHash<QString, QVariantMap> latestHe0;
+    QHash<QString, QVariantMap> latestHe20;
+    auto keepLatest = [](QHash<QString, QVariantMap> *rows, const QVariantMap &row) {
+        const QString id = row.value(QStringLiteral("profileId")).toString();
+        if (id.isEmpty()) return;
+        const qint64 timestamp = row.value(QStringLiteral("timestamp")).toLongLong();
+        if (!rows->contains(id)
+            || timestamp >= rows->value(id).value(QStringLiteral("timestamp")).toLongLong())
+            rows->insert(id, row);
+    };
+    for (const QVariant &value : std::as_const(m_benchmarkResults)) {
+        const QVariantMap row = value.toMap();
+        const QString benchmark = row.value(QStringLiteral("benchmarkName")).toString();
+        if (benchmark.startsWith(QStringLiteral("HumanEval (1")))
+            keepLatest(&latestHe0, row);
+        else if (benchmark.startsWith(QStringLiteral("HumanEval (20")))
+            keepLatest(&latestHe20, row);
+    }
+
+    for (const QString &profileId : profileIds) {
+        const QString fingerprint = benchmarkProfileConfigFingerprint(profileId);
+        const bool he0 = benchmarkResultPassesGateForTest(
+            latestHe0.value(profileId), QStringLiteral("he0"), fingerprint);
+        const bool he20 = benchmarkResultPassesGateForTest(
+            latestHe20.value(profileId), QStringLiteral("he20"), fingerprint);
+        const bool ok = stage == QLatin1String("he20") ? he0 : he0 && he20;
+        if (ok)
+            allowed.append(profileId);
+        else if (blockedProfiles)
+            blockedProfiles->append(profileId);
+    }
+    return allowed;
 }
 
 void AppController::runAgentBenchmark(const QString &profileId, const QString &profName,
@@ -16075,6 +16203,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
 
             QVariantMap result;
             result["profileId"]    = profileId;
+            result["profileConfigFingerprint"] =
+                benchmarkProfileConfigFingerprint(profileId);
             result["profileName"]  = rowName;
             result["pass"]         = *passNo;
             result["passesTotal"]  = passes;
@@ -17028,6 +17158,8 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
 
     QVariantMap result;
     result[QStringLiteral("profileId")] = profileId;
+    result[QStringLiteral("profileConfigFingerprint")] =
+        benchmarkProfileConfigFingerprint(profileId);
     result[QStringLiteral("profileName")] = rowName;
     result[QStringLiteral("pass")] = pass;
     result[QStringLiteral("passesTotal")] = passes;
@@ -17388,6 +17520,20 @@ static QString customBenchmarkDuplicateKey(const QJsonObject &definition)
     const QByteArray payload = QJsonDocument(prompts.toArray()).toJson(QJsonDocument::Compact);
     return source + QLatin1Char(':')
         + QString::fromLatin1(QCryptographicHash::hash(payload, QCryptographicHash::Sha256).toHex());
+}
+
+static QString benchmarkGateStage(const QString &label, int taskCount)
+{
+    const QString lower = label.toLower();
+    if (!lower.contains(QStringLiteral("humaneval"))) return {};
+    if (taskCount == 1) return QStringLiteral("he0");
+    if (taskCount >= 20) return QStringLiteral("he20");
+    return {};
+}
+
+static bool isBigCodeBenchLabel(const QString &label)
+{
+    return label.toLower().contains(QStringLiteral("bigcodebench"));
 }
 
 void AppController::seedBundledCustomBenchmarks() const
