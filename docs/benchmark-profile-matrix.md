@@ -63,6 +63,7 @@ benchmark. Todas usaron el mismo harness `HumanEval (1 ítems)` para HE0 y
 | QUALITY - DeepSeek Fusion leloch | `agent-basico` | 1/1, 74,651 s | 1/8 → 1/8 | 1013,900 s | `run_shell` no corrigió los fallos funcionales; la reparación quedó estancada. |
 | QUALITY - DeepSeek Fusion leloch | `agent-basico` post-fix | 1/1, 74,715 s | 2/8 → 2/8 | 830,127 s | El watchdog portable cortó la reparación a los 180 s sin cambios reales; ignoró correctamente `agent_events.jsonl`. |
 | QUALITY - DeepSeek Fusion leloch | `agent-avanzado` | 1/1, 112,497 s | 3/8 → 4/8 | 1396,871 s total (682,967 s primer pase) | Sin crash CUDA ni cierre de transporte. Reparó 583 y recuperó cuatro tareas evaluables en total; 771, 1019, 139 y 360 siguieron fallando. El watchdog cortó el intento 2/2 tras 180 s sin cambios reales. Resultado no comparable como BCB final. |
+| QUALITY - DeepSeek Fusion leloch | `agent-maximo` | No repetido (HE0 ya válido) | 1/8 → 1/8 | 983,893 s total (788,396 s primer pase) | Sin crash CUDA. Sólo aprobó 906; la reparación 1/2 no modificó archivos durante 180 s y fue cortada por el watchdog. Peor que `agent-avanzado`; no es una mejora final comparable. |
 | BALANCE - Laguna S 2.1 | `agent-intermedio` | 0/0 | No ejecutado | — | El servidor terminó con `CUDA error: an illegal memory access` en GPU0 durante la carga; HE0 bloquea BCB. |
 | BALANCE - Laguna S 2.1 | `agent-avanzado` | 0/0 | No ejecutado | — | El servidor volvió a fallar en `server-load`, antes de iniciar el agente/harness, con `CUDA error: an illegal memory access` en GPU0 usando ctx=100k, batch=512, ubatch=64, tensor-split=1,1; HE0 bloquea BCB. |
 
@@ -73,7 +74,9 @@ archivos puntuales, pero cambiar `agent-chat` por `agent-intermedio` o
 `agent-basico` no elevó el score final. `agent-avanzado` elevó el primer pase
 de DeepSeek de 3/8 a 4/8, pero tampoco resolvió todos los contratos funcionales
 y terminó en el watchdog de reparación; por lo tanto no convierte el resultado
-en un 8/8 ni demuestra una mejora estable del modelo. Durante estas pruebas se detectó y
+en un 8/8 ni demuestra una mejora estable del modelo. `agent-maximo` fue peor:
+1/8 y también quedó detenido por el watchdog, con mayor latencia. Durante estas
+pruebas se detectó y
 corrigió además un defecto portable del watchdog: en Windows debía ignorar
 `.llamacode\\agent_events.jsonl`, no sólo la variante con `/`.
 
