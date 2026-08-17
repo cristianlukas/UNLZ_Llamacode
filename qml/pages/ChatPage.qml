@@ -9,6 +9,13 @@ Item {
     property bool newProjectDialogOpen: false
     property var thinkExpanded: ({})
     property var chatAttachments: []
+    property string chatSearchText: ""
+    property var chatSearchResults: []
+
+    function refreshChatSearch() {
+        root.chatSearchResults = root.chatSearchText.trim().length > 0
+                                  ? App.searchChatHistory(root.chatSearchText) : []
+    }
 
     Dialog {
         id: thinkingRestartDialog
@@ -276,6 +283,33 @@ Item {
                             font { pixelSize: 12; bold: true }
                             Layout.fillWidth: true
                         }
+                        LcButton {
+                            text: "⌕"
+                            secondary: true
+                            implicitWidth: 30
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Buscar en el historial"
+                            onClicked: chatSearchField.forceActiveFocus()
+                        }
+                    }
+                }
+
+                LcTextField {
+                    id: chatSearchField
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 8
+                    Layout.rightMargin: 8
+                    Layout.topMargin: 6
+                    Layout.bottomMargin: 6
+                    placeholderText: "Buscar chats…"
+                    text: root.chatSearchText
+                    onTextChanged: {
+                        root.chatSearchText = text
+                        root.refreshChatSearch()
+                    }
+                    Keys.onEscapePressed: {
+                        text = ""
+                        focus = false
                     }
                 }
 
@@ -341,7 +375,8 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    model: App.chatSessions
+                    model: root.chatSearchText.trim().length > 0
+                           ? root.chatSearchResults : App.chatSessions
                     ScrollBar.vertical: LcScrollBar { policy: ScrollBar.AsNeeded }
 
                     section.property: "projectName"
@@ -351,7 +386,9 @@ Item {
                         anchors.centerIn: parent
                         width: parent.width - 32
                         visible: sessionsList.count === 0
-                        text: "Sin chats todavía.\nUsá + para crear uno."
+                        text: root.chatSearchText.trim().length > 0
+                              ? "No hay coincidencias."
+                              : "Sin chats todavía.\nUsá + para crear uno."
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                         color: Theme.textMuted

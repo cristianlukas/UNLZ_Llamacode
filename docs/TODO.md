@@ -62,7 +62,7 @@
 ## P1 - Endpoint health
 
 - [x] `GET /health` polling post-start (`startHealthPolling`, intervalo 2s, set `serverReady` al 200)
-- [ ] `POST /v1/chat/completions` test prompt mínimo (existe smoke-test en benchmark, no en arranque)
+- [x] `POST /v1/chat/completions` test prompt mínimo (smoke HTTP aislado en `test_backends_net`)
 - [ ] Medir latencia first-token
 - [x] UI de estado: iniciando / listo / error (`serverReady`/`serverStopping`/`serverError`)
 
@@ -152,10 +152,10 @@
 Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Qt Test). `tests/test_core.cpp`. 17/17 pasan.
 
 - [ ] Tests `BinaryRegistry`
-- [ ] Tests `ModelRootRegistry`
+- [x] Tests `ModelRootRegistry`
 - [x] Tests `EffectiveProfileBuilder` (host/port, drop flag no soportado, modelo faltante = blocking)
 - [x] Tests `GGUFScanner` (inferencia familia/quant/vision/draft)
-- [ ] Tests `AppController` chat session CRUD
+- [x] Tests `AppController` chat session CRUD
 
 ## Pendientes deferidos (jun-2026) — backend/infra listo, falta lo anotado
 
@@ -163,13 +163,13 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 - [x] **ControlApi `reqId` estable** — acepta `reqId` por body/query/header (`x-req-id`/`reqid`), lo genera si falta y lo devuelve en respuestas/errores. Falta propagar ese id a logs de Tasks/agente/benchmark.
 - [x] **Scheduler de operaciones auxiliares (núcleo)** — `AuxiliaryJobScheduler` separa del `TaskScheduler` cron una cola interna por clases de trabajo, prioridad, recurso ocupado, cancelación y snapshot consultable. Falta integrarlo con AppController/ControlApi para trabajos reales.
 - [ ] **Sampling por sesión (chat)** — temp/top-p/top-k por sesión. Plumbing: persistir en session JSON + pasar al payload de `RawChatBackend::runCompletion`. UI: panel en ChatPage.
-- [ ] **Panel UI de búsqueda en historial** — invokable `searchChatHistory(query)` ya existe; falta campo de búsqueda + lista de resultados (snippet→switchChatSession) en ChatPage.
-- [ ] **Combo UI de filtro de log por nivel** — invokable `serverLogByLevel(level)` ya existe; falta selector (all/error/warn/stderr/stdout/lifecycle/health/diag) en la vista de log del server.
-- [ ] **Banner UI de `serverDiagnostic`** — señal emitida (OOM/port-busy/load-fail/…); falta mostrarla como aviso no-bloqueante en la UI.
+- [x] **Panel UI de búsqueda en historial** — campo de búsqueda + resultados (snippet y `switchChatSession`) en ChatPage.
+- [x] **Combo UI de filtro de log por nivel** — selector all/error/warn/stderr/stdout/lifecycle/health/diag en LaunchPage.
+- [x] **Banner UI de `serverDiagnostic`** — aviso no bloqueante en la vista de log del servidor.
 - [ ] **Verificación GUI e2e de subagents con LLM vivo** — requiere server+modelo corriendo. Plumbing git/worktree/merge/abort ya validado; falta corrida real con el modelo manejando `task`.
 - [ ] **Tests `BinaryRegistry`** — infra Qt Test ya montada (`BUILD_TESTS=ON`); agregar casos.
-- [ ] **Tests `ModelRootRegistry`** — idem.
-- [ ] **Tests `AppController` chat session CRUD** — idem (new/switch/delete/move/rename + persistencia index.json).
+- [x] **Tests `ModelRootRegistry`** — add/remove, escaneo GGUF, persistencia y Ollama en `test_registries`.
+- [x] **Tests `AppController` chat session CRUD** — sesiones raw, cola, rename/delete/move y persistencia en `test_backends_net`/`test_appcontroller`.
 
 ## Memoria estilo Thoth/GraphRAG (provenance+forget+grafo+consolidación ✅, commits c099c4d/42b1084/76c1003)
 

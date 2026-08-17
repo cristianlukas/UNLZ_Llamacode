@@ -10,11 +10,22 @@ Item {
     property real minLogHeight: 120
     property bool _restored: false   // evita pisar la setting durante la carga inicial
     property bool _syncingActiveLaunch: false
+    property string logLevel: "all"
+    property string diagnosticLevel: ""
+    property string diagnosticMessage: ""
     property string pendingPortLaunchId: ""
     property string pendingPortHost: ""
     property int pendingPortCurrent: 0
     property int pendingPortSuggested: 0
     property bool pendingPortStartAgent: false
+
+    Connections {
+        target: App
+        function onServerDiagnostic(level, message) {
+            root.diagnosticLevel = level
+            root.diagnosticMessage = message
+        }
+    }
 
     function startProfile(launchId, withAgent) {
         if (withAgent)
@@ -975,6 +986,31 @@ Item {
                 }
 
                 Rectangle {
+                    visible: root.diagnosticMessage.length > 0
+                    Layout.fillWidth: true
+                    implicitHeight: diagnosticText.implicitHeight + 12
+                    color: root.diagnosticLevel === "error" ? Theme.errorBg
+                                                               : Qt.rgba(Theme.warnText.r, Theme.warnText.g, Theme.warnText.b, 0.12)
+                    radius: 6
+                    Text {
+                        id: diagnosticText
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
+                        text: (root.diagnosticLevel.length > 0 ? "[" + root.diagnosticLevel + "] " : "")
+                              + root.diagnosticMessage
+                        color: Theme.textPrimary
+                        wrapMode: Text.WordWrap
+                        font.pixelSize: 11
+                    }
+                }
+
+                ComboBox {
+                    Layout.preferredWidth: 180
+                    model: ["all", "error", "warn", "stderr", "stdout", "lifecycle", "health", "diag"]
+                    currentIndex: model.indexOf(root.logLevel)
+                    onActivated: root.logLevel = currentText
+                }
+
+                Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     color: Theme.inputBg
@@ -989,7 +1025,7 @@ Item {
 
                         TextArea {
                             readOnly: true
-                            text: App.serverLog
+                            text: App.serverLogByLevel(root.logLevel)
                             color: Theme.textSecondary
                             font { family: Theme.codeFont; pixelSize: 12 }
                             wrapMode: TextArea.WrapAnywhere

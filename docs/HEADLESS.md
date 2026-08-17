@@ -116,6 +116,17 @@ La tool no incluye automáticamente el contenido de archivos no rastreados:
 los informa mediante `untrackedPresent` para que el usuario decida si debe
 incorporarlos a una revisión posterior.
 
+## Cobertura de UI respaldada por APIs headless
+
+Las funciones visuales de historial y diagnóstico también tienen contrato
+headless: `searchChatHistory(query)` devuelve resultados con snippet para que un
+cliente pueda reproducir la búsqueda sin QML; `serverLogByLevel(level)` filtra
+el log por `all`, `error`, `warn`, `stderr`, `stdout`, `lifecycle`, `health` o
+`diag`; y `serverDiagnostic(level,message)` conserva los diagnósticos que la
+UI muestra como aviso no bloqueante. El build QML valida que ChatPage y
+LaunchPage consuman esos contratos; las pruebas de datos viven en
+`test_backends_net` y `test_appcontroller`.
+
 ## Benchmark Honey A/B headless
 
 El benchmark de agente se ejecuta siempre en workspaces temporales y headless.
