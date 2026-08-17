@@ -438,6 +438,14 @@ bool ProfileManager::updateLaunchProfile(const QVariantMap &data)
     const QString newName = data.value("name", p.name).toString();
     p.name = QStringLiteral("%1_%2").arg(seq).arg(stripSeq(newName));
     if (data.contains("alias"))    p.alias = data.value("alias").toString();
+    if (data.contains("tags")) {
+        p.tags.clear();
+        for (const QString &tag : data.value("tags").toStringList()) {
+            const QString clean = tag.trimmed();
+            if (!clean.isEmpty() && !p.tags.contains(clean, Qt::CaseInsensitive))
+                p.tags.append(clean);
+        }
+    }
     if (data.contains("best"))     p.best = data.value("best").toBool();
     if (data.contains("favorite")) p.favorite = data.value("favorite").toBool();
     if (data.contains("benchmark")) p.benchmark = data.value("benchmark").toBool();
@@ -512,6 +520,7 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
         : QStringLiteral("%1 - %2").arg(p.alias, p.name);
     return {{"id", p.id}, {"name", p.name},
             {"alias", p.alias}, {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"tags", p.tags}, {"lastUsed", p.lastUsed},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", displayName},
@@ -564,6 +573,27 @@ void ProfileManager::setLaunchAlias(const QString &id, const QString &alias)
     if (m_launches.update(p)) { save(); emit launchesChanged(); }
 }
 
+void ProfileManager::setLaunchTags(const QString &id, const QStringList &tags)
+{
+    LaunchProfile p = m_launches.findById(id);
+    if (p.id.isEmpty() || p.system) return;
+    p.tags.clear();
+    for (const QString &tag : tags) {
+        const QString clean = tag.trimmed();
+        if (!clean.isEmpty() && !p.tags.contains(clean, Qt::CaseInsensitive))
+            p.tags.append(clean);
+    }
+    if (m_launches.update(p)) { save(); emit launchesChanged(); }
+}
+
+void ProfileManager::markLaunchUsed(const QString &id)
+{
+    LaunchProfile p = m_launches.findById(id);
+    if (p.id.isEmpty() || p.system) return;
+    p.lastUsed = QDateTime::currentMSecsSinceEpoch();
+    if (m_launches.update(p)) { save(); emit launchesChanged(); }
+}
+
 // Lista de perfiles de lanzamiento para dropdowns: BEST primero (rayo), luego
 // favoritos (estrella), y finalmente por id incremental.
 // luego por id incremental; displayName = "alias - name" si hay alias.
@@ -574,6 +604,7 @@ QVariantList ProfileManager::launchProfilesForMenu() const
         [](const LaunchProfile &a, const LaunchProfile &b) {
             if (a.best != b.best) return a.best;                 // BEST arriba
             if (a.favorite != b.favorite) return a.favorite;     // favoritos arriba
+            if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
             return seqOf(a.name) < seqOf(b.name);                // luego por nº incremental
         });
     QVariantList out;
@@ -591,6 +622,7 @@ QVariantList ProfileManager::launchProfilesForMenu() const
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"tags", p.tags}, {"lastUsed", p.lastUsed},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             // displayName lleva el marcador (⚙ sistema / ★ favorito) para verlo en
@@ -608,6 +640,7 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
         [](const LaunchProfile &a, const LaunchProfile &b) {
             if (a.best != b.best) return a.best;
             if (a.favorite != b.favorite) return a.favorite;
+            if (a.lastUsed != b.lastUsed) return a.lastUsed > b.lastUsed;
             return seqOf(a.name) < seqOf(b.name);
         });
     QVariantList out;
@@ -617,7 +650,10 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
         if (!needle.isEmpty()
             && !p.name.toCaseFolded().contains(needle)
             && !p.alias.toCaseFolded().contains(needle)
-            && !p.id.toCaseFolded().contains(needle))
+            && !p.id.toCaseFolded().contains(needle)
+            && !std::any_of(p.tags.cbegin(), p.tags.cend(), [&](const QString &tag) {
+                return tag.toCaseFolded().contains(needle);
+            }))
             continue;
         QString mark;
         if (p.best) mark += QStringLiteral("⚡ ");
@@ -628,6 +664,7 @@ QVariantList ProfileManager::launchProfilesForProfilesPage(const QString &query)
         out.append(QVariantMap{
             {"id", p.id}, {"name", p.name}, {"alias", p.alias},
             {"best", p.best}, {"favorite", p.favorite}, {"benchmark", p.benchmark},
+            {"tags", p.tags}, {"lastUsed", p.lastUsed},
             {"deprecated", p.deprecated}, {"systemBadge", p.systemBadge},
             {"system", p.system},
             {"displayName", mark + base}});

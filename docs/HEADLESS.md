@@ -139,9 +139,19 @@ envía en cada request sólo cuando está configurado. Cada respuesta registra
 contra un stub HTTP local, sin modelo ni GPU.
 
 La búsqueda de perfiles también es headless: `ProfileManager::launchProfilesForProfilesPage(query)`
-filtra por nombre, alias o id sin depender de QML. La regresión
+filtra por nombre, alias, id o etiquetas sin depender de QML. `setLaunchTags`
+normaliza etiquetas (trim, elimina vacías y duplicadas sin distinguir mayúsculas)
+y `markLaunchUsed` persiste el epoch en milisegundos; los menús ordenan por
+BEST, favorito, último uso y número incremental. La regresión
 `manager_profileSearchFiltersNameAliasAndId` cubre mayúsculas/minúsculas, alias,
-id y resultado vacío.
+id y resultado vacío; `manager_tagsAndLastUsed` cubre normalización, búsqueda por
+etiqueta, persistencia del último uso y round-trip JSON. Se puede ejecutar sin
+GUI con:
+
+```powershell
+cmake --build build_tests --config Debug --target test_profiles
+ctest --test-dir build_tests -C Debug -R test_profiles --output-on-failure
+```
 
 ## Benchmark Honey A/B headless
 

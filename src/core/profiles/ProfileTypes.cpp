@@ -344,6 +344,8 @@ QJsonObject LaunchProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
     o["alias"] = alias; o["best"] = best; o["favorite"] = favorite; o["benchmark"] = benchmark;
+    o["tags"] = QJsonArray::fromStringList(tags);
+    o["lastUsed"] = static_cast<double>(lastUsed);
     o["systemBadge"] = systemBadge;
     o["deprecated"] = deprecated;
     o["backendProfileId"] = backendProfileId;
@@ -370,6 +372,9 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.alias = o["alias"].toString();
     p.best = o["best"].toBool(false);
     p.favorite = o["favorite"].toBool(false);
+    for (const QJsonValue &v : o["tags"].toArray())
+        if (v.isString() && !v.toString().trimmed().isEmpty()) p.tags.append(v.toString().trimmed());
+    p.lastUsed = static_cast<qint64>(o["lastUsed"].toDouble(0));
     p.benchmark = o["benchmark"].toBool(false);
     p.systemBadge = o["systemBadge"].toBool(false);
     p.deprecated = o["deprecated"].toBool(false);

@@ -234,6 +234,8 @@ struct LaunchProfile {
     QString alias;            // opcional; tiene prioridad sobre name en la UI
     bool    best = false;     // perfil recomendado (rayo) y ordenado primero
     bool    favorite = false; // marcados con estrella y ordenados arriba
+    QStringList tags;          // etiquetas libres para filtrar perfiles
+    qint64 lastUsed = 0;       // epoch ms del último arranque exitoso
     bool    benchmark = false; // perfil destacado por una evaluación comparativa
     bool    systemBadge = false; // ícono de sistema; distinto de la inmutabilidad interna
     bool    deprecated = false; // visible sólo en Perfiles; excluido de uso operativo

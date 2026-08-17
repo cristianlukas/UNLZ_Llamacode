@@ -163,6 +163,8 @@ public:
     // Alias opcional (prioridad sobre name en la UI) y favorito (estrella, arriba).
     Q_INVOKABLE void setLaunchFavorite(const QString &id, bool favorite);
     Q_INVOKABLE void setLaunchAlias(const QString &id, const QString &alias);
+    Q_INVOKABLE void setLaunchTags(const QString &id, const QStringList &tags);
+    Q_INVOKABLE void markLaunchUsed(const QString &id);
     // Perfiles ordenados para dropdowns: favoritos primero, displayName=alias - name.
     Q_INVOKABLE QVariantList launchProfilesForMenu() const;
     // Lista ordenada para Perfiles. Si query no está vacío, filtra por nombre,

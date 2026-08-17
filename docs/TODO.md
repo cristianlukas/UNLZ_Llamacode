@@ -73,7 +73,7 @@
 - [x] Eliminar perfil
 - [x] **Importar perfil desde argumentos CLI** (parsea --host, --port, --model, --ctx-size, --batch-size, --ubatch-size, --threads, --n-gpu-layers, --flash-attn, --no-mmap, --mlock, --parallel, --cache-type-k)
 - [ ] Plantillas de perfil
-- [x] Búsqueda por nombre, alias o id en la pantalla de perfiles
+- [x] Búsqueda por nombre, alias, id o etiquetas en la pantalla de perfiles
 - [x] Favoritos y orden de favoritos en menús; último usado se conserva mediante el perfil activo persistido
 - [x] Export/Import de perfiles completos (bundle JSON, ids y referencias preservados)
 - [x] Historial de cambios por perfil (`profileChangeHistory`, JSONL append-only y test headless)

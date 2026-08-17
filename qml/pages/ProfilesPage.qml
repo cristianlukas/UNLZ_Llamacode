@@ -8,6 +8,7 @@ Item {
 
     property string selectedLaunchId: ""
     property string launchSearch: ""
+    property string launchTags: ""
     // Perfil de SISTEMA seleccionado: inmutable (solo lectura). Se puede duplicar
     // para editar, pero no guardar/borrar/renombrar el original.
     readonly property bool selectedIsSystem:
@@ -334,6 +335,7 @@ Item {
         root.launchFavorite = (lp.favorite === true)
         root.launchDeprecated = (lp.deprecated === true)
         profileAliasField.text = lp.alias ?? ""
+        profileTagsField.text = (lp.tags ?? []).join(", ")
         powerLimitField.text = ((lp.powerLimitW ?? 0) > 0) ? (lp.powerLimitW).toString() : ""
         browserAutoCombo.currentIndex = Math.max(0, browserAutoCombo.indexOfValue(lp.browserAutomation ?? "inherit"))
 
@@ -570,6 +572,7 @@ Item {
         const lpOk = App.profileManager.updateLaunchProfile({
             "id": selectedLaunchId, "name": launchName,
             "alias": profileAliasField.text.trim(), "favorite": root.launchFavorite,
+            "tags": profileTagsField.text.split(",").map(function(tag) { return tag.trim() }).filter(function(tag) { return tag.length > 0 }),
             "deprecated": root.launchDeprecated,
             "powerLimitW": parseInt(powerLimitField.text) || 0,
             "browserAutomation": browserAutoCombo.currentValue ?? "inherit",
@@ -829,6 +832,15 @@ Item {
                             enabled: selectedLaunchId.length > 0 && !selectedIsSystem
                             onEditingFinished: if (selectedLaunchId.length > 0 && !selectedIsSystem)
                                 App.profileManager.setLaunchAlias(selectedLaunchId, text.trim())
+                        }
+                        LcTextField {
+                            id: profileTagsField
+                            Layout.preferredWidth: 190
+                            placeholderText: "Etiquetas (coma)"
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
+                            onEditingFinished: if (selectedLaunchId.length > 0 && !selectedIsSystem)
+                                App.profileManager.setLaunchTags(selectedLaunchId,
+                                    text.split(",").map(function(tag) { return tag.trim() }).filter(function(tag) { return tag.length > 0 }))
                         }
                         }
 

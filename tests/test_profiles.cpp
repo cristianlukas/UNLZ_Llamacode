@@ -34,6 +34,7 @@ private slots:
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
     void manager_profileSearchFiltersNameAliasAndId();
+    void manager_tagsAndLastUsed();
     void manager_deprecatedIsProfilesOnly();
     void manager_browserAutomationOverride();
     void manager_systemProfilesReloadIdempotent();
@@ -137,6 +138,8 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     l.master.fallbacks.append(mf);
     l.powerLimitW = 280;
     l.browserAutomation = "on";
+    l.tags = QStringList{"coding", "local"};
+    l.lastUsed = 123456789;
     l.plannerProfileId = "planner-maxq";
     l.hybridMode = "sequential";
     const LaunchProfile r = LaunchProfile::fromJson(l.toJson());
@@ -157,6 +160,8 @@ void ProfilesTests::launchProfile_jsonRoundTrip()
     QCOMPARE(r.powerLimitW, 280);
     QCOMPARE(r.plannerProfileId, QStringLiteral("planner-maxq"));
     QCOMPARE(r.hybridMode, QStringLiteral("sequential"));
+    QCOMPARE(r.tags, l.tags);
+    QCOMPARE(r.lastUsed, l.lastUsed);
     // Default (campo ausente) → 0 = sin override.
     LaunchProfile empty;
     QCOMPARE(LaunchProfile::fromJson(empty.toJson()).powerLimitW, 0);
@@ -341,6 +346,24 @@ void ProfilesTests::manager_profileSearchFiltersNameAliasAndId()
         return v.toMap().value(QStringLiteral("id")).toString() == id;
     }));
     QVERIFY(pm.launchProfilesForProfilesPage(QStringLiteral("no existe")).isEmpty());
+}
+
+void ProfilesTests::manager_tagsAndLastUsed()
+{
+    ProfileManager pm;
+    const QString id = pm.addLaunchProfile(QStringLiteral("Tagged"), {}, {}, {});
+    QVERIFY(!id.isEmpty());
+    QVERIFY(pm.updateLaunchProfile(QVariantMap{{"id", id}, {"tags", QStringList{" coding ", "local", "CODING"}}}));
+    const QVariantMap before = pm.getLaunchProfile(id);
+    QCOMPARE(before.value("tags").toStringList(), QStringList({"coding", "local"}));
+    QCOMPARE(before.value("lastUsed").toLongLong(), 0);
+
+    pm.markLaunchUsed(id);
+    const QVariantMap after = pm.getLaunchProfile(id);
+    QVERIFY(after.value("lastUsed").toLongLong() > 0);
+    const QVariantList byTag = pm.launchProfilesForProfilesPage(QStringLiteral("LOCAL"));
+    QCOMPARE(byTag.size(), 1);
+    QCOMPARE(byTag.first().toMap().value("id").toString(), id);
 }
 
 void ProfilesTests::manager_browserAutomationOverride()

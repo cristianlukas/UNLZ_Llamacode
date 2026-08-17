@@ -1720,6 +1720,7 @@ void AppController::startServer(const QString &launchProfileId)
     const bool isRemote = isRemoteHost(ctx.backend.host);
 
     if (isCloud || isRemote) {
+        m_profiles.markLaunchUsed(launchProfileId);
         m_activeLaunchId = launchProfileId;
         writeSetting(QStringLiteral("lastLaunchId"), launchProfileId);
         m_remoteServerActive = true;
@@ -1971,6 +1972,7 @@ void AppController::startServer(const QString &launchProfileId)
     m_serverReady = false;
     m_proc->start(binaryPath, args);
     if (m_proc->waitForStarted(5000)) {
+        m_profiles.markLaunchUsed(launchProfileId);
         assignToJobObject(m_proc->processId());
         const int portIdx = args.indexOf(QStringLiteral("--port"));
         QVariantMap extra;
@@ -2037,6 +2039,7 @@ void AppController::startServerAndAgent(const QString &launchProfileId)
     // Un perfil LAN/cloud no lanza un proceso local: conecta directamente el
     // agente al gateway remoto configurado en el BackendProfile.
     if (ctx.backend.isCloud()) {
+        m_profiles.markLaunchUsed(launchProfileId);
         m_activeLaunchId = launchProfileId;
         emit activeLaunchIdChanged();
         if (agentRunning() || m_agentStarting) stopAgent();
