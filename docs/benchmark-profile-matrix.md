@@ -62,13 +62,18 @@ benchmark. Todas usaron el mismo harness `HumanEval (1 ítems)` para HE0 y
 | QUALITY - DeepSeek Fusion leloch · VRAM balance | `agent-intermedio` | 1/1, 83,489 s | 1/8 → 1/8 | 1048,769 s | Sin crash CUDA; la reparación quedó estancada. |
 | QUALITY - DeepSeek Fusion leloch | `agent-basico` | 1/1, 74,651 s | 1/8 → 1/8 | 1013,900 s | `run_shell` no corrigió los fallos funcionales; la reparación quedó estancada. |
 | QUALITY - DeepSeek Fusion leloch | `agent-basico` post-fix | 1/1, 74,715 s | 2/8 → 2/8 | 830,127 s | El watchdog portable cortó la reparación a los 180 s sin cambios reales; ignoró correctamente `agent_events.jsonl`. |
+| QUALITY - DeepSeek Fusion leloch | `agent-avanzado` | 1/1, 112,497 s | 3/8 → 4/8 | 1396,871 s total (682,967 s primer pase) | Sin crash CUDA ni cierre de transporte. Reparó 583 y recuperó cuatro tareas evaluables en total; 771, 1019, 139 y 360 siguieron fallando. El watchdog cortó el intento 2/2 tras 180 s sin cambios reales. Resultado no comparable como BCB final. |
 | BALANCE - Laguna S 2.1 | `agent-intermedio` | 0/0 | No ejecutado | — | El servidor terminó con `CUDA error: an illegal memory access` en GPU0 durante la carga; HE0 bloquea BCB. |
+| BALANCE - Laguna S 2.1 | `agent-avanzado` | 0/0 | No ejecutado | — | El servidor volvió a fallar en `server-load`, antes de iniciar el agente/harness, con `CUDA error: an illegal memory access` en GPU0 usando ctx=100k, batch=512, ubatch=64, tensor-split=1,1; HE0 bloquea BCB. |
 
 La evidencia separa tres capas: (1) Laguna tiene una falla de infraestructura/CUDA
 antes del harness; (2) DeepSeek sí produce soluciones evaluables, pero conserva
 fallos funcionales concretos en BCB; (3) el agente puede mejorar o reparar
 archivos puntuales, pero cambiar `agent-chat` por `agent-intermedio` o
-`agent-basico` no elevó el score final. Durante estas pruebas se detectó y
+`agent-basico` no elevó el score final. `agent-avanzado` elevó el primer pase
+de DeepSeek de 3/8 a 4/8, pero tampoco resolvió todos los contratos funcionales
+y terminó en el watchdog de reparación; por lo tanto no convierte el resultado
+en un 8/8 ni demuestra una mejora estable del modelo. Durante estas pruebas se detectó y
 corrigió además un defecto portable del watchdog: en Windows debía ignorar
 `.llamacode\\agent_events.jsonl`, no sólo la variante con `/`.
 
