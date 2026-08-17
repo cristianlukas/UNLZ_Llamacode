@@ -87,6 +87,11 @@ class AppController : public QObject
     Q_PROPERTY(QString chatStreamingText READ chatStreamingText NOTIFY chatStreamingChanged)
     Q_PROPERTY(bool chatThinkingEnabled READ chatThinkingEnabled WRITE setChatThinkingEnabled NOTIFY chatThinkingChanged)
     Q_PROPERTY(bool chatPersonaDesigner READ chatPersonaDesigner WRITE setChatPersonaDesigner NOTIFY chatPersonaDesignerChanged)
+    Q_PROPERTY(double chatTemperature READ chatTemperature WRITE setChatTemperature NOTIFY chatSamplingChanged)
+    Q_PROPERTY(double chatTopP READ chatTopP WRITE setChatTopP NOTIFY chatSamplingChanged)
+    Q_PROPERTY(int chatTopK READ chatTopK WRITE setChatTopK NOTIFY chatSamplingChanged)
+    Q_PROPERTY(double chatMinP READ chatMinP WRITE setChatMinP NOTIFY chatSamplingChanged)
+    Q_PROPERTY(double chatRepeatPenalty READ chatRepeatPenalty WRITE setChatRepeatPenalty NOTIFY chatSamplingChanged)
     Q_PROPERTY(bool thinkingEnabled READ thinkingEnabled WRITE setThinkingEnabled NOTIFY thinkingChanged)
     // Render de diagramas Mermaid en el chat (requiere sidecar mermaid-cli).
     Q_PROPERTY(bool mermaidEnabled READ mermaidEnabled WRITE setMermaidEnabled NOTIFY mermaidEnabledChanged)
@@ -365,6 +370,16 @@ public:
     void setChatThinkingEnabled(bool enabled);
     bool chatPersonaDesigner() const { return m_chatPersonaDesigner; }
     void setChatPersonaDesigner(bool enabled);
+    double chatTemperature() const { return m_chatTemperature; }
+    double chatTopP() const { return m_chatTopP; }
+    int chatTopK() const { return m_chatTopK; }
+    double chatMinP() const { return m_chatMinP; }
+    double chatRepeatPenalty() const { return m_chatRepeatPenalty; }
+    void setChatTemperature(double value);
+    void setChatTopP(double value);
+    void setChatTopK(int value);
+    void setChatMinP(double value);
+    void setChatRepeatPenalty(double value);
     // Automatización de browser vía MCP Playwright (toggle global; override por perfil).
     bool browserAutomationEnabled() const { return m_browserAutomationEnabled; }
     void setBrowserAutomationEnabled(bool enabled);
@@ -1238,6 +1253,7 @@ signals:
     void chatThinkingSupportedChanged();
     void chatThinkingChanged();
     void chatPersonaDesignerChanged();
+    void chatSamplingChanged();
     void thinkingChanged();
     void mermaidEnabledChanged();
     void agentRunningChanged();
@@ -1629,6 +1645,11 @@ private:
     bool          m_chatThinkingSupported = false;
     bool          m_chatThinkingEnabled = false;
     bool          m_chatPersonaDesigner = false;
+    double        m_chatTemperature = -1.0;
+    double        m_chatTopP = -1.0;
+    int           m_chatTopK = -1;
+    double        m_chatMinP = -1.0;
+    double        m_chatRepeatPenalty = -1.0;
     int           m_chatStreamingIndex = -1;
     QString       m_chatStreamingText;
     void fetchChatThinkingSupport();

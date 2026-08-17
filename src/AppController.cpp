@@ -969,6 +969,11 @@ AppController::AppController(QObject *parent) : QObject(parent)
                                      s.value(QStringLiteral("agent/thinkingEnabled"), false)).toBool();
     m_chatThinkingEnabled = s.value(QStringLiteral("chat/thinkingEnabledV2"), false).toBool();
     m_chatPersonaDesigner = s.value(QStringLiteral("chat/personaDesigner"), false).toBool();
+    m_chatTemperature = s.value(QStringLiteral("chat/temperature"), -1.0).toDouble();
+    m_chatTopP = s.value(QStringLiteral("chat/topP"), -1.0).toDouble();
+    m_chatTopK = s.value(QStringLiteral("chat/topK"), -1).toInt();
+    m_chatMinP = s.value(QStringLiteral("chat/minP"), -1.0).toDouble();
+    m_chatRepeatPenalty = s.value(QStringLiteral("chat/repeatPenalty"), -1.0).toDouble();
     m_launchThinkingEnabled = s.value(QStringLiteral("thinking/serverEnabled"),
                                       m_agentThinkingEnabled).toBool();
     m_mermaidEnabled = s.value(QStringLiteral("chat/mermaidEnabled"), true).toBool();
@@ -4853,6 +4858,11 @@ IAgentBackend *AppController::ensureChatBackend()
     if (auto *raw = qobject_cast<RawChatBackend *>(b)) {
         raw->setThinkingEnabled(m_chatThinkingEnabled);
         raw->setPersonaDesigner(m_chatPersonaDesigner);
+        raw->setSampling(QVariantMap{{QStringLiteral("temperature"), m_chatTemperature},
+                                     {QStringLiteral("topP"), m_chatTopP},
+                                     {QStringLiteral("topK"), m_chatTopK},
+                                     {QStringLiteral("minP"), m_chatMinP},
+                                     {QStringLiteral("repeatPenalty"), m_chatRepeatPenalty}});
     }
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_chatMessages = b->messages();
@@ -4913,6 +4923,15 @@ IAgentBackend *AppController::ensureChatBackend()
         m_chatSessions = groupSessionsByProject(b->sessions());
         m_chatSessionId = b->currentSessionId();
         m_chatSessionTitle = b->currentSessionTitle();
+        if (auto *raw = qobject_cast<RawChatBackend *>(b)) {
+            const QVariantMap sample = raw->sampling();
+            m_chatTemperature = sample.value(QStringLiteral("temperature"), -1.0).toDouble();
+            m_chatTopP = sample.value(QStringLiteral("topP"), -1.0).toDouble();
+            m_chatTopK = sample.value(QStringLiteral("topK"), -1).toInt();
+            m_chatMinP = sample.value(QStringLiteral("minP"), -1.0).toDouble();
+            m_chatRepeatPenalty = sample.value(QStringLiteral("repeatPenalty"), -1.0).toDouble();
+            emit chatSamplingChanged();
+        }
         emit chatSessionsChanged();
     });
     connect(b, &IAgentBackend::errorOccurred, this, [this](const QString &m) {
@@ -4927,6 +4946,11 @@ IAgentBackend *AppController::ensureChatBackend()
     c.serverBaseUrl = serverBaseUrl();
     c.modelId = routedModelId(QStringLiteral("chat"));
     b->start(c);
+    // start() crea/restaura la sesión activa; aplicar después garantiza que
+    // los valores configurados en AppController queden asociados a esa sesión
+    // y no se pierdan por el setSampling previo al arranque.
+    if (auto *raw = qobject_cast<RawChatBackend *>(b))
+        raw->setSampling(m_chatTemperature, m_chatTopP, m_chatTopK);
     m_chatBackend = b;
     return m_chatBackend;
 }
@@ -11702,6 +11726,61 @@ void AppController::rescanHardware()
             .arg(gpuText);
         return result;
     }));
+}
+
+void AppController::setChatTemperature(double value)
+{
+    const double next = (value >= 0.0 && value <= 2.0) ? value : -1.0;
+    if (qFuzzyCompare(m_chatTemperature, next)) return;
+    m_chatTemperature = next;
+    writeSetting(QStringLiteral("chat/temperature"), next);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setSampling(QVariantMap{{QStringLiteral("temperature"), m_chatTemperature}});
+    emit chatSamplingChanged();
+}
+
+void AppController::setChatTopP(double value)
+{
+    const double next = (value >= 0.0 && value <= 1.0) ? value : -1.0;
+    if (qFuzzyCompare(m_chatTopP, next)) return;
+    m_chatTopP = next;
+    writeSetting(QStringLiteral("chat/topP"), next);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setSampling(QVariantMap{{QStringLiteral("topP"), m_chatTopP}});
+    emit chatSamplingChanged();
+}
+
+void AppController::setChatTopK(int value)
+{
+    const int next = value >= 0 ? qMin(value, 1000) : -1;
+    if (m_chatTopK == next) return;
+    m_chatTopK = next;
+    writeSetting(QStringLiteral("chat/topK"), next);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setSampling(QVariantMap{{QStringLiteral("topK"), m_chatTopK}});
+    emit chatSamplingChanged();
+}
+
+void AppController::setChatMinP(double value)
+{
+    const double next = (value >= 0.0 && value <= 1.0) ? value : -1.0;
+    if (qFuzzyCompare(m_chatMinP, next)) return;
+    m_chatMinP = next;
+    writeSetting(QStringLiteral("chat/minP"), next);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setSampling(QVariantMap{{QStringLiteral("minP"), m_chatMinP}});
+    emit chatSamplingChanged();
+}
+
+void AppController::setChatRepeatPenalty(double value)
+{
+    const double next = (value >= 0.0 && value <= 2.0) ? value : -1.0;
+    if (qFuzzyCompare(m_chatRepeatPenalty, next)) return;
+    m_chatRepeatPenalty = next;
+    writeSetting(QStringLiteral("chat/repeatPenalty"), next);
+    if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
+        raw->setSampling(QVariantMap{{QStringLiteral("repeatPenalty"), m_chatRepeatPenalty}});
+    emit chatSamplingChanged();
 }
 
 QVariantMap AppController::performanceRecommendation(const QString &target) const

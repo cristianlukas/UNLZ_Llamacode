@@ -17,6 +17,92 @@ Item {
                                   ? App.searchChatHistory(root.chatSearchText) : []
     }
 
+    Popup {
+        id: samplingPopup
+        parent: Overlay.overlay
+        modal: false
+        padding: 14
+        x: Math.max(8, root.width - width - 18)
+        y: 54
+        width: 260
+        background: Rectangle {
+            color: Theme.popupBg; radius: 8
+            border.color: Theme.popupBorderColor
+        }
+        ColumnLayout {
+            width: parent.width
+            spacing: 8
+            Text {
+                text: "Sampling de esta sesión"
+                color: Theme.textPrimary
+                font.bold: true
+            }
+            Text {
+                text: "Vacío hereda el valor del servidor."
+                color: Theme.textMuted
+                font.pixelSize: 11
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Temp."; color: Theme.textSecondary; Layout.preferredWidth: 70 }
+                LcTextField {
+                    id: chatTempField
+                    Layout.fillWidth: true
+                    text: App.chatTemperature >= 0 ? String(App.chatTemperature) : ""
+                    placeholderText: "0.6"
+                    onEditingFinished: App.chatTemperature = text.trim().length ? Number(text) : -1
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Top-p"; color: Theme.textSecondary; Layout.preferredWidth: 70 }
+                LcTextField {
+                    id: chatTopPField
+                    Layout.fillWidth: true
+                    text: App.chatTopP >= 0 ? String(App.chatTopP) : ""
+                    placeholderText: "0.95"
+                    onEditingFinished: App.chatTopP = text.trim().length ? Number(text) : -1
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Top-k"; color: Theme.textSecondary; Layout.preferredWidth: 70 }
+                LcTextField {
+                    id: chatTopKField
+                    Layout.fillWidth: true
+                    text: App.chatTopK >= 0 ? String(App.chatTopK) : ""
+                    placeholderText: "20"
+                    onEditingFinished: App.chatTopK = text.trim().length ? Number(text) : -1
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Min-p"; color: Theme.textSecondary; Layout.preferredWidth: 70 }
+                LcTextField {
+                    Layout.fillWidth: true
+                    text: App.chatMinP >= 0 ? String(App.chatMinP) : ""
+                    placeholderText: "0.0"
+                    onEditingFinished: App.chatMinP = text.trim().length ? Number(text) : -1
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Repeat"; color: Theme.textSecondary; Layout.preferredWidth: 70 }
+                LcTextField {
+                    Layout.fillWidth: true
+                    text: App.chatRepeatPenalty >= 0 ? String(App.chatRepeatPenalty) : ""
+                    placeholderText: "1.0"
+                    onEditingFinished: App.chatRepeatPenalty = text.trim().length ? Number(text) : -1
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Item { Layout.fillWidth: true }
+                LcButton { text: "Cerrar"; secondary: true; onClicked: samplingPopup.close() }
+            }
+        }
+    }
+
     Dialog {
         id: thinkingRestartDialog
         modal: true
@@ -1467,6 +1553,14 @@ Item {
                                 }
                             }
                         }
+                    }
+                    LcButton {
+                        text: "Sampling"
+                        secondary: true
+                        visible: App.serverRunning && App.serverReady
+                        onClicked: samplingPopup.open()
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Temperatura, top-p y top-k de esta sesión"
                     }
 
                     // Chips de adjuntos

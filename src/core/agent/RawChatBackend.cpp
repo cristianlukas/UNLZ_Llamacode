@@ -170,6 +170,47 @@ void RawChatBackend::createSession(const QString &projectDir)
     createSession(projectDir, projectDir.isEmpty() ? QStringLiteral("(sin proyecto)") : QFileInfo(projectDir).fileName(), projectDir);
 }
 
+QVariantMap RawChatBackend::sampling() const
+{
+    return m_sessionSampling.value(m_sessionId, QVariantMap{
+        {QStringLiteral("temperature"), -1.0},
+        {QStringLiteral("topP"), -1.0},
+        {QStringLiteral("topK"), -1},
+        {QStringLiteral("minP"), -1.0},
+        {QStringLiteral("repeatPenalty"), -1.0}
+    });
+}
+
+void RawChatBackend::setSampling(const QVariantMap &value)
+{
+    if (m_sessionId.isEmpty()) return;
+    QVariantMap normalized = sampling();
+    for (const QString &key : {QStringLiteral("temperature"), QStringLiteral("topP"),
+                               QStringLiteral("topK"), QStringLiteral("minP"),
+                               QStringLiteral("repeatPenalty")}) {
+        if (!value.contains(key)) continue;
+        const double v = value.value(key).toDouble();
+        if (key == QLatin1String("temperature"))
+            normalized[key] = (v >= 0.0 && v <= 2.0) ? v : -1.0;
+        else if (key == QLatin1String("topP") || key == QLatin1String("minP"))
+            normalized[key] = (v >= 0.0 && v <= 1.0) ? v : -1.0;
+        else if (key == QLatin1String("repeatPenalty"))
+            normalized[key] = (v >= 0.0 && v <= 2.0) ? v : -1.0;
+        else
+            normalized[key] = value.value(key).toInt() >= 0
+                ? qMin(value.value(key).toInt(), 1000) : -1;
+    }
+    m_sessionSampling[m_sessionId] = normalized;
+    persistSession(m_sessionId);
+}
+
+void RawChatBackend::setSampling(double temperature, double topP, int topK)
+{
+    setSampling(QVariantMap{{QStringLiteral("temperature"), temperature},
+                            {QStringLiteral("topP"), topP},
+                            {QStringLiteral("topK"), topK}});
+}
+
 void RawChatBackend::createSession(const QString &projectId, const QString &projectName, const QString &projectDir)
 {
     const QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -507,6 +548,17 @@ void RawChatBackend::sendMessage(const QString &text)
     QJsonObject tmplKw;
     tmplKw.insert(QStringLiteral("enable_thinking"), m_thinkingEnabled);
     payload.insert(QStringLiteral("chat_template_kwargs"), tmplKw);
+    const QVariantMap sample = sampling();
+    const double temperature = sample.value(QStringLiteral("temperature"), -1.0).toDouble();
+    const double topP = sample.value(QStringLiteral("topP"), -1.0).toDouble();
+    const int topK = sample.value(QStringLiteral("topK"), -1).toInt();
+    const double minP = sample.value(QStringLiteral("minP"), -1.0).toDouble();
+    const double repeatPenalty = sample.value(QStringLiteral("repeatPenalty"), -1.0).toDouble();
+    if (temperature >= 0.0) payload.insert(QStringLiteral("temperature"), temperature);
+    if (topP >= 0.0) payload.insert(QStringLiteral("top_p"), topP);
+    if (topK >= 0) payload.insert(QStringLiteral("top_k"), topK);
+    if (minP >= 0.0) payload.insert(QStringLiteral("min_p"), minP);
+    if (repeatPenalty >= 0.0) payload.insert(QStringLiteral("repeat_penalty"), repeatPenalty);
 
     // Salida estructurada (GBNF grammar o JSON schema). Passthrough a llama-server.
     if (!m_grammar.trimmed().isEmpty()) {
@@ -545,6 +597,15 @@ void RawChatBackend::sendMessage(const QString &text)
             const QString reasoning = delta.value(QStringLiteral("reasoning_content")).toString();
             const QString chunk = delta.value(QStringLiteral("content")).toString();
             if (reasoning.isEmpty() && chunk.isEmpty()) continue;
+            if (m_curAsstIdx >= 0 && m_curAsstIdx < m_messages.size()) {
+                QVariantMap first = m_messages[m_curAsstIdx].toMap();
+                if (!first.contains(QStringLiteral("firstTokenMs"))) {
+                    const qint64 started = static_cast<qint64>(first.value(QStringLiteral("createdAt")).toDouble());
+                    first[QStringLiteral("firstTokenMs")] = static_cast<int>(qMax<qint64>(0,
+                        QDateTime::currentMSecsSinceEpoch() - started));
+                    m_messages[m_curAsstIdx] = first;
+                }
+            }
             if (m_thinkingEnabled)
                 m_reasonBuf += reasoning;
             m_answerBuf += chunk;
@@ -777,6 +838,7 @@ void RawChatBackend::loadFromDisk()
             const QJsonObject obj = QJsonDocument::fromJson(sf.readAll()).object();
             sf.close();
             const QJsonArray m = obj.value(QStringLiteral("messages")).toArray();
+            m_sessionSampling.insert(sid, obj.value(QStringLiteral("sampling")).toObject().toVariantMap());
             for (const QJsonValue &mv : m) {
                 const QJsonObject mo = mv.toObject();
                 QVariantMap mm = mo.toVariantMap();
@@ -833,6 +895,8 @@ void RawChatBackend::persistSession(const QString &sessionId) const
     obj[QStringLiteral("id")] = sessionId;
     obj[QStringLiteral("title")] = sess.value(QStringLiteral("title")).toString();
     obj[QStringLiteral("messages")] = msgs;
+    obj[QStringLiteral("sampling")] = QJsonObject::fromVariantMap(
+        m_sessionSampling.value(sessionId, sampling()));
     QFile f(sessionFilePath(sessionId));
     if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         f.write(QJsonDocument(obj).toJson());

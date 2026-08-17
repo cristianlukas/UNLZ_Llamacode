@@ -40,6 +40,7 @@ public:
     {
         return QStringLiteral("http://127.0.0.1:%1").arg(m_srv.serverPort());
     }
+    QByteArray request() const { return m_req; }
 
 private slots:
     void onConn()
@@ -83,6 +84,7 @@ private slots:
     void deleteSession_removes();
     void persistsAcrossRestart();
     void stream_accumulatesAssistantContent();
+    void sampling_isSentPersistedAndFirstTokenMeasured();
     void stream_reportsErrorOnHttp500();
     void queuedMessages_canBePreviewedEditedAndRemoved();
     void preamble_emptyWhenThinkingNoPersona();
@@ -299,6 +301,50 @@ void BackendsNetTests::stream_accumulatesAssistantContent()
         spy.wait(100);
 
     QCOMPARE(lastAssistant(be), QStringLiteral("Hola mundo"));
+}
+
+void BackendsNetTests::sampling_isSentPersistedAndFirstTokenMeasured()
+{
+    clearRawChatStore();
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral(
+        "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n"
+        "data: [DONE]\n")));
+    QTemporaryDir dir;
+    QString sessionId;
+    {
+        RawChatBackend be;
+        AgentContext c = ctx(dir.path());
+        c.serverBaseUrl = stub.baseUrl();
+        be.start(c);
+        sessionId = be.currentSessionId();
+        be.setSampling(0.6, 0.95, 20);
+        QCOMPARE(be.temperature(), 0.6);
+        QCOMPARE(be.topP(), 0.95);
+        QCOMPARE(be.topK(), 20);
+        QSignalSpy finished(&be, &IAgentBackend::turnFinished);
+        be.sendMessage(QStringLiteral("hola"));
+        QVERIFY(finished.wait(1000));
+        const QVariantMap assistant = be.messages().last().toMap();
+        QVERIFY(assistant.value(QStringLiteral("firstTokenMs")).toInt() >= 0);
+        const QByteArray request = stub.request();
+        const int headerEnd = request.indexOf("\r\n\r\n");
+        QVERIFY(headerEnd >= 0);
+        const QJsonObject body = QJsonDocument::fromJson(
+            request.mid(headerEnd + 4)).object();
+        QCOMPARE(body.value(QStringLiteral("temperature")).toDouble(), 0.6);
+        QCOMPARE(body.value(QStringLiteral("top_p")).toDouble(), 0.95);
+        QCOMPARE(body.value(QStringLiteral("top_k")).toInt(), 20);
+        be.stop();
+    }
+    {
+        RawChatBackend be;
+        be.start(ctx(dir.path()));
+        QCOMPARE(be.currentSessionId(), sessionId);
+        QCOMPARE(be.temperature(), 0.6);
+        QCOMPARE(be.topP(), 0.95);
+        QCOMPARE(be.topK(), 20);
+    }
 }
 
 void BackendsNetTests::stream_reportsErrorOnHttp500()

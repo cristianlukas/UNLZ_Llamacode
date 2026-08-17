@@ -51,6 +51,14 @@ public:
                               const QString &projectName, const QString &projectDir = QString());
     bool renameProject(const QString &oldName, const QString &newName);
     void setThinkingEnabled(bool enabled) { m_thinkingEnabled = enabled; }
+    // Sampling por sesión. Un valor negativo significa heredar el default del
+    // servidor; los valores se persisten junto con la sesión activa.
+    QVariantMap sampling() const;
+    void setSampling(const QVariantMap &sampling);
+    void setSampling(double temperature, double topP, int topK);
+    double temperature() const { return sampling().value(QStringLiteral("temperature"), -1.0).toDouble(); }
+    double topP() const { return sampling().value(QStringLiteral("topP"), -1.0).toDouble(); }
+    int topK() const { return sampling().value(QStringLiteral("topK"), -1).toInt(); }
     void setPendingAttachments(const QStringList &paths) { m_pendingAttachments = paths; }
     // Persona "Diseño": sesga al modelo a responder con artifacts visuales
     // (bloques ```mermaid / ```svg) que la UI rinde inline.
@@ -98,6 +106,7 @@ private:
     QVariantList m_messages;
     QVariantList m_sessions;
     QHash<QString, QVariantList> m_sessionMessages;
+    QHash<QString, QVariantMap> m_sessionSampling;
     int m_curAsstIdx = -1;
     QByteArray m_sseBuf;
     QString m_reasonBuf;   // reasoning_content acumulado (thinking)

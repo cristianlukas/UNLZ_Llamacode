@@ -146,6 +146,12 @@ ControlApi con `startCustomBenchmark(...)`; consultar `benchmarkRunning`,
 `benchmarkProgress` y `benchmarkResults` por polling. Honey sólo se considera
 mejor si no reduce calidad/éxito ni aumenta regresiones.
 
+Las sesiones de chat también exponen sampling reproducible sin GUI:
+`temperature`, `topP`, `topK`, `minP` y `repeatPenalty` se guardan en el JSON de
+la sesión y se envían al request `/v1/chat/completions` sólo cuando están
+configurados. Cada respuesta registra `firstTokenMs`; `test_backends_net`
+verifica payload, reinicio de sesión y medición contra un stub HTTP local.
+
 ## Smoke real del daemon y una Loop vía ControlApi
 
 Este procedimiento valida el contrato que usarían CI o un cliente externo. No

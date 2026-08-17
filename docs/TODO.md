@@ -47,7 +47,7 @@
 
 - [ ] `LlamaProcessManager` dedicado (extraer de `AppController`)
 - [x] Logs en vivo stdout/stderr (en AppController + AgentPage Vista terminal)
-- [x] Filtros de log por nivel (`serverLogByLevel(level)` invokable: all/error/warn/stderr/stdout/lifecycle/health/diag; falta combo en UI)
+- [x] Filtros de log por nivel (`serverLogByLevel(level)` invokable: all/error/warn/stderr/stdout/lifecycle/health/diag + combo en UI)
 - [x] Detecciones automáticas por regex en log (`detectServerLogPatterns`: OOM, port busy, modelo cargado, arg inválido, load fail, context-shift → señal `serverDiagnostic(level,msg)`)
 - [x] Botón copiar comando
 
@@ -63,7 +63,7 @@
 
 - [x] `GET /health` polling post-start (`startHealthPolling`, intervalo 2s, set `serverReady` al 200)
 - [x] `POST /v1/chat/completions` test prompt mínimo (smoke HTTP aislado en `test_backends_net`)
-- [ ] Medir latencia first-token
+- [x] Medir latencia first-token (campo `firstTokenMs` por respuesta de chat raw)
 - [x] UI de estado: iniciando / listo / error (`serverReady`/`serverStopping`/`serverError`)
 
 ## P2 - UX de perfiles (parcial)
@@ -114,7 +114,7 @@
 - [x] Nueva sesión desde UI
 - [x] Stop de generación con guardado
 - [x] Indicador "⏳ Procesando..." + cursor `▌`
-- [ ] Sampling configurable por sesión (temp, top-p, etc.) — requiere plumbing en `RawChatBackend` (persistir en session JSON + pasar al payload)
+- [x] Sampling configurable por sesión (temperature/top-p/top-k, persistencia JSON, payload y panel ChatPage)
 - [x] Export conversación (Markdown/JSON) (`exportChatSession(id,format)` + items en menú contextual de ChatPage)
 - [x] Búsqueda en historial (`searchChatHistory(query)` invokable: matchea título + contenido, devuelve snippet; falta panel de búsqueda en UI)
 
