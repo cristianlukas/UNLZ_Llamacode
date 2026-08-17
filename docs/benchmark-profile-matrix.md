@@ -16,6 +16,39 @@ Los valores históricos de la tabla siguiente quedan como referencia. La tabla
 vigente de la corrida corregida del 2026-08-17 aparece inmediatamente después;
 no se mezclan resultados tomados con otra huella de configuración.
 
+## Investigación de estabilidad Laguna/DeepSeek — 2026-08-17
+
+La repetición de Laguna confirmó que el resultado histórico no se puede
+reproducir en el estado actual del runtime. El perfil original pasó HE0 1/1 a
+las 02:50 con el mismo fingerprint `0ba62d48...`; después de una prueba
+experimental con `thinking on`, el servidor comenzó a terminar con
+`CUDA error: an illegal memory access` en GPU1. Se repitió con `thinking off`,
+daemon reiniciado, limpieza del límite de perfil, `fit off`, Flash Attention
+apagado, continuous batching apagado, contexto 65k, b10228 y offload parcial.
+El error continuó en Laguna (GPU1, y GPU0 en el offload parcial). Como control,
+Qwen3.8 con la misma infraestructura limpia pasó HE0 1/1 en 13,812 s; por eso
+la evidencia actual apunta a la combinación Laguna/GGUF/binario CUDA, no a una
+contaminación general de la GPU.
+
+La app ahora limpia el límite entre perfiles: detiene el servidor, espera su
+salida, mata cualquier `llama-server.exe` residual y deja un margen antes de
+cargar el siguiente modelo. Esto evita heredar procesos o VRAM de otra corrida,
+pero no oculta un acceso ilegal reproducible. Las copias experimentales de
+Laguna se conservan fuera de la fila histórica y permanecen bloqueadas para
+HE20/BCB hasta que HE0 vuelva a ser válido.
+
+La repetición headless de DeepSeek después de una limpieza completa volvió a
+pasar HE0 (`1/1`, `69,45 s`, sin crash). En BCB cargó el modelo correctamente,
+procesó las ocho tareas y creó los ocho artefactos con el nombre canónico
+`solution_BigCodeBench_<id>.py`. La primera repetición obtuvo `1/8` y se
+canceló al quedar la reparación sin cambios de workspace. Con el watchdog
+nuevo, la segunda repetición obtuvo `2/8` en la primera aceptación y registró
+`repair-stagnation` tras `184,996 ms` sin cambios; el resultado persistido es
+`2/8`, `failureKind=infrastructure`, `failureStage=agent`, no un BCB final
+comparable. Las corridas se conservan en
+`benchmark-runs/BigCodeBench-Hard_8_tems__20260817_113521` y
+`benchmark-runs/BigCodeBench-Hard_8_tems__20260817_115030`.
+
 | Perfil | HumanEval/0 | HumanEval/20 | BigCodeBench/8 | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant | Parámetros (B) | Contexto | Configuración | Estado |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|
 | BALANCE - Qwen3.8 UD-Q4 visión | 1/1 | 20/20 | 7/8 | 12,997 s | 269,96 s | 736,07 s | 56,89 | — | 39,53 | Sí | MTP3 | UD-Q4_K_XL | 27B | 131072 | `launch=sys-qwen38-27b-udq4-131k; backend=sysbe-sys-qwen38-27b-udq4-131k; modelProfile=sysmodel-sys-qwen38-27b-udq4-131k; runtimePreset=sysrt-sys-qwen38-27b-udq4-131k; model=Qwen3.8-27B-UD-Q4_K_XL.gguf; mmproj=mmproj-BF16.gguf; agent=agent-maximo; binary=official,b10331+; runtime=ctx=131072,batch=512,ubatch=64,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --predict 4096 --parallel 1 --reasoning off --spec-type draft-mtp --spec-draft-n-max 3 --chat-template-file %LOCALAPPDATA%/LlamaCode/LlamaCode/chat-templates/qwen38-tools-fixed.jinja` | HE0 válido; HE20 histórico; BCB válido |

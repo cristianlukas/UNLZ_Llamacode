@@ -14864,6 +14864,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         const QString profName    = profNameRaw.isEmpty() ? profileId : profNameRaw;
 
         auto startAttempts = std::make_shared<int>(0);
+        // A cold profile boundary is deliberate: even when no QProcess is
+        // attached anymore, a crashed llama-server can leave a stale process
+        // or CUDA allocation behind. Clean once before every new profile so
+        // measurements never inherit the previous model's server state.
+        auto boundaryCleaned = std::make_shared<bool>(false);
         auto runProfile = std::make_shared<std::function<void()>>();
         *runProfile = [=]() {
             // Si el server que está corriendo ya es ESTE perfil y está listo, el
@@ -14885,6 +14890,18 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             if (serverRunning() && !reuse) {
                 stopServer();
                 benchmarkEnsureServerStopped(45000, [=]() { (*runProfile)(); });
+                return;
+            }
+            if (!reuse && !*boundaryCleaned) {
+                *boundaryCleaned = true;
+                appendServerEvent(
+                    QStringLiteral("lifecycle"),
+                    QStringLiteral("Benchmark: limpiando el límite de perfil antes de cargar "
+                                   "un modelo nuevo (server, puerto y VRAM residual)."));
+                benchmarkKillStrayServers();
+                // Give Windows/CUDA a short grace period after process
+                // termination before the next model creates its context.
+                QTimer::singleShot(1500, this, [=]() { (*runProfile)(); });
                 return;
             }
             const qint64 loadStartMs = QDateTime::currentMSecsSinceEpoch();
@@ -14912,6 +14929,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                 static const int kMaxStartRetries = 2;
                 if (*startAttempts < kMaxStartRetries) {
                     (*startAttempts)++;
+                    *boundaryCleaned = false;
                     m_benchmarkStatus =
                         QString("[%1/%2] %3 — no arrancó; limpiando y reintentando (%4/%5)...")
                             .arg(idx + 1).arg(profileIds.size()).arg(profName)
@@ -15399,6 +15417,35 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
     }
     const QString hay = searchable.toLower();
 
+    // A few coding models have emitted the unambiguous typo
+    // solution_BigCodeBenchmark_<id>.py even when the task contract required
+    // solution_BigCodeBench_<id>.py. Keep the contract strict for every other
+    // artifact, but grade this exact spelling alias so a filename typo does not
+    // turn an otherwise evaluable BCB task into an artificial "file missing"
+    // failure. The prompt still tells the agent to write the canonical name.
+    auto artifactPathMatches = [](const QString &actual, const QString &expected) {
+        const QString actualClean = QDir::cleanPath(actual);
+        const QString expectedClean = QDir::cleanPath(expected);
+        if (actualClean == expectedClean)
+            return true;
+
+        const QFileInfo expectedInfo(expectedClean);
+        const QFileInfo actualInfo(actualClean);
+        if (expectedInfo.path() != actualInfo.path()
+            || expectedInfo.suffix().compare(actualInfo.suffix(), Qt::CaseInsensitive) != 0)
+            return false;
+
+        const QString canonicalStem = expectedInfo.completeBaseName();
+        if (canonicalStem.isEmpty()
+            || !canonicalStem.startsWith(QStringLiteral("solution_BigCodeBench_")))
+            return false;
+
+        QString alias = canonicalStem;
+        alias.replace(QStringLiteral("solution_BigCodeBench_"),
+                      QStringLiteral("solution_BigCodeBenchmark_"));
+        return actualInfo.completeBaseName() == alias;
+    };
+
     for (const QVariant &tv : benchTasks) {
         const QVariantMap task = tv.toMap();
         const QString taskId = task.value(QStringLiteral("id")).toString();
@@ -15411,7 +15458,15 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
             const QString rel = fv.toString().trimmed();
             if (rel.isEmpty())
                 continue;
-            const bool ok = QFileInfo(ws.filePath(rel)).exists();
+            bool ok = QFileInfo(ws.filePath(rel)).exists();
+            if (!ok) {
+                for (const QString &actual : files) {
+                    if (artifactPathMatches(actual, rel)) {
+                        ok = true;
+                        break;
+                    }
+                }
+            }
             QVariantMap row;
             row[QStringLiteral("taskId")] = taskId;
             row[QStringLiteral("type")] = QStringLiteral("file");
@@ -15448,7 +15503,7 @@ QVariantMap AppController::scoreAgentBenchmarkAcceptanceForTest(const QString &w
                 QDir::cleanPath(task.value(QStringLiteral("artifactFile")).toString());
             if (!artifactFile.isEmpty() && artifactFile != QLatin1String(".")) {
                 for (const auto &file : fileContents) {
-                    if (QDir::cleanPath(file.first) != artifactFile)
+                    if (!artifactPathMatches(file.first, artifactFile))
                         continue;
                     attemptedFile = true;
                     passed = BenchmarkPack::gradeWithExecution(
@@ -15717,17 +15772,27 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         return (looksLikePython && !looksLikeSummary) ? text : QString();
     };
     auto agentPrompt = [](const QString &prompt, const QString &artifactFile) {
-        return QStringLiteral(
+        const bool isBigCodeBenchArtifact =
+            artifactFile.startsWith(QStringLiteral("solution_BigCodeBench_"));
+        QString instructions = QStringLiteral(
             "MODO AGENTE BENCHMARK:\n"
             "- Trabaja en el directorio actual usando herramientas de archivo.\n"
             "- Tu primera accion debe ser una llamada de herramienta: no escribas un plan ni codigo en el chat antes de usar write_file.\n"
             "- Debes crear/modificar los archivos pedidos en disco; no alcanza con responder codigo en el chat.\n"
             "- Si el prompt pide \"responder solamente con codigo\", interpretalo como: el archivo final debe contener solamente ese codigo.\n"
             "- En tareas de codigo, conserva exactamente los nombres y firmas del preambulo; no los renombres ni los abrevies.\n"
-            "- Para esta tarea escribe la solucion exclusivamente en `%2`; no sobrescribas archivos de tareas anteriores.\n"
             "- Antes de reparar, verifica que `%2` contenga exactamente la funcion solicitada y corrige ese archivo.\n"
             "- Al terminar, responde breve indicando que archivos creaste y si compilaste/probaste.\n\n"
-            "TAREA ORIGINAL:\n%1").arg(prompt, artifactFile);
+            "TAREA ORIGINAL:\n%1");
+        if (isBigCodeBenchArtifact) {
+            instructions.replace(
+                QStringLiteral("- Antes de reparar, verifica que `%2` contenga exactamente la funcion solicitada y corrige ese archivo.\n"),
+                QStringLiteral(
+                    "- Para esta tarea escribe la solucion exclusivamente en `%2`; el nombre es literal y distingue Bench de Benchmark.\n"
+                    "- No uses `solution_BigCodeBenchmark_...`; si ya existe un archivo con ese typo, renombralo ahora a `%2`.\n"
+                    "- Antes de reparar, verifica que `%2` contenga exactamente la funcion solicitada y corrige ese archivo.\n"));
+        }
+        return instructions.arg(prompt, artifactFile);
     };
     auto estimateTokensLocal = [](const QString &s) {
         const int n = s.trimmed().size();
@@ -15887,6 +15952,30 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // headless no puede quedar clavada para siempre.
         const int idleTimeoutMs = 180000;
         auto lastActivityMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
+        // During repair, token streaming is not useful evidence of progress:
+        // a model can keep explaining the same fix forever without touching a
+        // solution file. Track the workspace instead and stop only after a
+        // full repair interval with no file change.
+        constexpr qint64 kBenchmarkRepairStagnationMs = 180000;
+        auto repairBaselineFingerprint = std::make_shared<QString>();
+        auto repairLastProgressMs = std::make_shared<qint64>(0);
+        auto repairWatchdog = std::make_shared<QTimer *>(nullptr);
+        auto workspaceFingerprint = [workspace]() {
+            QStringList parts;
+            QDirIterator it(workspace, QDir::Files, QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                it.next();
+                const QString rel = QDir(workspace).relativeFilePath(it.filePath());
+                if (rel.startsWith(QStringLiteral(".llamacode/")))
+                    continue;
+                parts << QStringLiteral("%1:%2:%3")
+                    .arg(rel)
+                    .arg(it.fileInfo().size())
+                    .arg(it.fileInfo().lastModified().toMSecsSinceEpoch());
+            }
+            parts.sort();
+            return parts.join(QLatin1Char('|'));
+        };
         auto peakRamMb = std::make_shared<double>(0.0);
         auto peakVramMb = std::make_shared<double>(0.0);
         auto hardTimeoutWatchdog = std::make_shared<QTimer *>(nullptr);
@@ -15910,6 +15999,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 (*hardTimeoutWatchdog)->stop();
                 (*hardTimeoutWatchdog)->deleteLater();
                 *hardTimeoutWatchdog = nullptr;
+            }
+            if (*repairWatchdog) {
+                (*repairWatchdog)->stop();
+                (*repairWatchdog)->deleteLater();
+                *repairWatchdog = nullptr;
             }
 
             const bool canceled = m_benchmarkCanceled;
@@ -16190,6 +16284,44 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 *turnStartMs = QDateTime::currentMSecsSinceEpoch();
                 *turnFirstMs = -1;
                 *lastActivityMs = *turnStartMs;
+                *repairBaselineFingerprint = workspaceFingerprint();
+                *repairLastProgressMs = *turnStartMs;
+                if (!*repairWatchdog) {
+                    auto *watchdog = new QTimer(this);
+                    watchdog->setInterval(5000);
+                    *repairWatchdog = watchdog;
+                    connect(watchdog, &QTimer::timeout, this, [=]() {
+                        if (*finished || *repairAttempts <= 0)
+                            return;
+                        const QString currentFingerprint = workspaceFingerprint();
+                        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+                        if (currentFingerprint != *repairBaselineFingerprint) {
+                            *repairBaselineFingerprint = currentFingerprint;
+                            *repairLastProgressMs = now;
+                            return;
+                        }
+                        if (*repairLastProgressMs <= 0
+                                || now - *repairLastProgressMs < kBenchmarkRepairStagnationMs)
+                            return;
+                        AgentEventLog::append(
+                            workspace, QString(), QStringLiteral("benchmark_repair_stagnation"),
+                            QJsonObject{{QStringLiteral("attempt"), *repairAttempts},
+                                        {QStringLiteral("stagnationMs"),
+                                         now - *repairLastProgressMs},
+                                        {QStringLiteral("reason"),
+                                         QStringLiteral("repair generated text without changing workspace files")}});
+                        *passFailed = true;
+                        *failureMessage = QStringLiteral(
+                            "El agente quedó en un bucle de reparación sin cambiar archivos.");
+                        *failureDetail = QStringLiteral(
+                            "La reparación no produjo cambios en el workspace durante %1 segundos; "
+                            "se detuvo para no confundir generación de texto con progreso.")
+                            .arg(kBenchmarkRepairStagnationMs / 1000);
+                        agent->cancelGeneration();
+                        (*finalize)();
+                    });
+                }
+                (*repairWatchdog)->start();
                 lastStreamingText->clear();
                 agent->sendMessage(repair);
                 return;

@@ -168,7 +168,19 @@ El flujo recomendado es:
    una máquina o corrida sin comprobar que corresponden a la suite actual.
 7. Seleccionar todos los perfiles de control y candidatas del mismo caso de
    uso.
-8. Ejecutar una sola etapa a la vez: HE0, luego HE20 y finalmente BCB.
+8. Antes de cambiar de perfil/modelo, cerrar la frontera de ejecución: detener
+   el `llama-server` anterior, esperar a que el proceso termine, verificar que
+   el puerto quede libre y limpiar cualquier `llama-server.exe` residual. Dar
+   un margen breve para que Windows/CUDA libere el contexto antes de cargar el
+   siguiente modelo. Registrar esa limpieza en `server.log`.
+9. Ejecutar una sola etapa a la vez: HE0, luego HE20 y finalmente BCB.
+
+Durante la reparación de BCB, la actividad válida es una modificación o
+verificación nueva del workspace. La generación continua de texto no cuenta
+como progreso: el harness corta una reparación que permanece 180 segundos sin
+cambiar archivos y la registra como `repair-stagnation`. El corte evita dejar
+un daemon consumiendo GPU indefinidamente y evita publicar un puntaje parcial
+como si fuera una corrida final.
 
 Ejemplo mínimo de consulta desde PowerShell:
 
@@ -269,6 +281,12 @@ etiquetarlas.
 5. Volver a ejecutar HE0 desde un workspace limpio.
 6. Recién cuando pase, habilitarla para HE20.
 
+La limpieza no convierte un `illegal memory access` en un resultado de calidad:
+si el error se repite después de detener el proceso, liberar el puerto y
+recargar desde cero, se debe clasificar como incompatibilidad del binario,
+GGUF o configuración CUDA. No se debe seguir subiendo el timeout ni interpretar
+ese `0/1` como inteligencia del modelo.
+
 ## Etapa 2 — HE20: first test de calidad
 
 ### Propósito
@@ -349,6 +367,17 @@ La tabla completa, con tiempos, TPS, modalidad, quant, contexto, parámetros,
 configuración y huella efectiva, se mantiene en
 [benchmark-profile-matrix.md](benchmark-profile-matrix.md). Esta referencia
 evita convertir un score bajo del modelo en un cambio de perfil no justificado.
+
+#### Investigación DeepSeek/Laguna — limpieza de frontera
+
+La repetición de DeepSeek con limpieza previa volvió a pasar HE0 (`1/1`,
+`69,45 s`) y cargó BCB sin crash. El primer intento BCB obtuvo `1/8`; el
+segundo obtuvo `2/8` en la primera aceptación, pero el agente quedó generando
+texto sin modificar el workspace. El watchdog de reparación lo cortó a los
+180 s y dejó el resultado como `failureKind=infrastructure`, no como calidad
+definitiva. Laguna, en cambio, siguió produciendo `CUDA illegal memory access`
+incluso después de reinicios y variantes controladas; queda bloqueada hasta
+que HE0 vuelva a ser reproducible.
 
 ### Auditoría de cobertura final
 

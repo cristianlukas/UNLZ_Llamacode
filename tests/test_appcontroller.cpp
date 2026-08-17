@@ -1603,6 +1603,26 @@ void AppControllerTests::benchmarkUsesOneArtifactPerTask()
         ws.path(), QString(), tasks, files);
     QCOMPARE(score.value(QStringLiteral("score")).toInt(), 0);
     QCOMPARE(score.value(QStringLiteral("total")).toInt(), 2);
+
+    // BCB models occasionally emit the unambiguous Bench/Benchmark spelling
+    // typo. It must remain gradeable without allowing another task's artifact
+    // to satisfy this task.
+    const QString aliasFile = QStringLiteral("solution_BigCodeBenchmark_928.py");
+    QVERIFY(write(aliasFile, "def task_func(word):\n    return {}\n"));
+    const QVariantMap aliasAcceptance{
+        {QStringLiteral("graderType"), QStringLiteral("code_tests")},
+        {QStringLiteral("entryPoint"), QStringLiteral("task_func")},
+        {QStringLiteral("preamble"), QStringLiteral("def task_func(word):\n")},
+        {QStringLiteral("tests"), QStringLiteral(
+            "\ndef check(candidate):\n    assert candidate('x') == {}\n\ncheck(task_func)\n")}};
+    const QVariantList aliasTasks{
+        QVariantMap{{QStringLiteral("id"), QStringLiteral("BigCodeBench/928")},
+                    {QStringLiteral("artifactFile"), QStringLiteral("solution_BigCodeBench_928.py")},
+                    {QStringLiteral("acceptance"), aliasAcceptance}}};
+    score = AppController::scoreAgentBenchmarkAcceptanceForTest(
+        ws.path(), QString(), aliasTasks, QStringList{aliasFile});
+    QCOMPARE(score.value(QStringLiteral("score")).toInt(), 1);
+    QCOMPARE(score.value(QStringLiteral("total")).toInt(), 1);
 }
 
 void AppControllerTests::benchmarkStreamingCountsSnapshotsOnce()
