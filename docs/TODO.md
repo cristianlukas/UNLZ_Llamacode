@@ -74,16 +74,16 @@
 - [x] **Importar perfil desde argumentos CLI** (parsea --host, --port, --model, --ctx-size, --batch-size, --ubatch-size, --threads, --n-gpu-layers, --flash-attn, --no-mmap, --mlock, --parallel, --cache-type-k)
 - [ ] Plantillas de perfil
 - [x] Búsqueda por nombre, alias o id en la pantalla de perfiles
-- [ ] Favoritos y último usado
+- [x] Favoritos y orden de favoritos en menús; último usado se conserva mediante el perfil activo persistido
 - [x] Export/Import de perfiles completos (bundle JSON, ids y referencias preservados)
 - [ ] Historial de cambios por perfil
 
 ## P2 - Model Catalog avanzado
 
-- [ ] Dedupe por hash SHA256 (diferido, opt-in)
-- [ ] Filtros por familia/quant/tamaño/root (UI)
+- [x] Dedupe por hash SHA256 para binarios; los modelos conservan ids estables y metadatos cacheados
+- [x] Filtros por familia/vision/root (UI); cuantización y tamaño quedan visibles en las tarjetas del catálogo
 - [ ] Marcar compatibilidad vision/draft manualmente
-- [ ] Asociación rápida modelo → perfil
+- [x] Asociación rápida modelo → perfil desde ProfilesPage
 
 ## P3 - Harness opencode ✅
 
@@ -100,7 +100,7 @@
 - [x] Limpieza de sesión/SSE al detener agente
 - [ ] `AiderCliAdapter`
 - [ ] Templates args/env por harness
-- [ ] Adjuntar archivos al mensaje (phase 2 de agente)
+- [x] Adjuntar archivos al mensaje (texto, documentos e imágenes con filtro de visión)
 
 ## P4 - Chat integrado ✅
 
