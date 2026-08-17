@@ -17252,6 +17252,10 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     QJsonObject summary;
     summary["id"]           = id;
     summary["profileId"]    = result.value("profileId").toString();
+    // The stage gate must survive a daemon restart. Keep the effective profile
+    // fingerprint in the compact index, not only in the full result artifact.
+    summary["profileConfigFingerprint"] =
+        result.value("profileConfigFingerprint").toString();
     // profileName is kept ONLY as a fallback for profiles that no longer exist;
     // the history display name is resolved live by profileId at load time.
     summary["profileName"]  = result.value("profileName").toString();

@@ -1519,6 +1519,11 @@ void AppControllerTests::benchmarkGateRejectsBrokenOrStaleHe0()
     QVERIFY(!AppController::benchmarkResultPassesGateForTest(
         stale, QStringLiteral("he0"), QStringLiteral("fp-current")));
 
+    QVariantMap legacy = valid;
+    legacy.remove(QStringLiteral("profileConfigFingerprint"));
+    QVERIFY(!AppController::benchmarkResultPassesGateForTest(
+        legacy, QStringLiteral("he0"), QStringLiteral("fp-current")));
+
     QVariantMap broken = valid;
     broken[QStringLiteral("failed")] = true;
     broken[QStringLiteral("failureKind")] = QStringLiteral("infrastructure");

@@ -297,14 +297,20 @@ Registrar:
 
 ### Política de reintentos
 
-- Si la ejecución es válida pero el resultado es bajo, repetir una vez para
-  medir variabilidad antes de cambiar parámetros.
-- Si la falla es reproducible, crear una candidata derivada y conservar la
-  original como control.
-- Si hubo transporte roto, volver primero a HE0; no usar un reintento HE20
-  roto como evidencia de calidad.
+- Si la ejecución es válida pero el modelo obtiene un resultado bajo, conservar
+  el score como medición de calidad. No cambiar el perfil ni repetir
+  automáticamente: una falla de calidad del modelo no es una falla de
+  infraestructura. Se puede repetir sólo si se quiere medir variabilidad, y se
+  debe conservar la primera medición.
+- Si la ejecución falla por harness, infraestructura, carga del servidor,
+  transporte, timeout sin progreso o `CUDA illegal memory access`, no contar el
+  score como calidad. Investigar la causa raíz, corregir el perfil/harness o el
+  ciclo de vida, y repetir primero HE0 y después HE20 desde un workspace limpio.
+- Si la falla es reproducible y requiere una modificación, crear una candidata
+  derivada y conservar la original como control; documentar el único cambio
+  controlado y su huella de configuración.
 - Después de cualquier cambio en perfil, binario o harness, repetir HE0 y luego
-  HE20 desde cero.
+  HE20 desde cero, aunque la corrida anterior hubiera obtenido un score alto.
 
 ## Etapa 3 — BCB/8: final test de casos difíciles
 
@@ -319,9 +325,30 @@ Todos los perfiles que tengan HE0 y HE20 válidos deben pasar por BCB cuando se 
 armando una tabla definitiva; no sólo el perfil que parezca más rápido.
 
 Registrar `BigCodeBench/8`, tiempo total BCB, TPS BCB, tareas fallidas, logs,
-reintentos y estado del servidor. Si BCB termina con transporte inválido, se
-anota como infraestructura y se repite después de un HE0, no como `0/8` de
-inteligencia.
+reintentos y estado del servidor. Un resultado bajo con servidor, harness y
+grader funcionando es una medición válida de calidad del modelo y no obliga a
+modificar ni repetir el perfil. Si BCB termina con transporte inválido,
+`server-load`, crash, timeout sin progreso, `CUDA illegal memory access` u otra
+falla de infraestructura/harness, se investiga y se repite después de HE0; no
+se registra como `0/8` de inteligencia.
+
+### Estado de referencia de la corrida headless (2026-08-17)
+
+La corrida definitiva se ejecutó con la compuerta corregida. HE0 y HE20 quedaron
+válidos para los once perfiles. KAT y Laguna tuvieron un fallo HE20 de CUDA en
+la configuración inicial (`batch/ubatch` altos); se investigó, se cambiaron
+sus copias de runtime a `512/64`, se repitió HE0 y luego HE20, y ambas quedaron
+20/20. Los diez BCB cerrados hasta esta actualización terminaron con
+`failureKind=quality`: el score fue bajo, pero servidor, harness y grader
+terminaron normalmente, por lo que no se repiten como si fueran fallos de
+infraestructura. DeepSeek VRAM cerró `2/8` en `6328,761 s` y `9,45 TPS`, con dos
+reparaciones internas y `failureKind=quality`; alcanzó el límite de generación
+del modelo, pero no presentó crash, acceso ilegal de CUDA ni transporte roto.
+
+La tabla completa, con tiempos, TPS, modalidad, quant, contexto, parámetros,
+configuración y huella efectiva, se mantiene en
+[benchmark-profile-matrix.md](benchmark-profile-matrix.md). Esta referencia
+evita convertir un score bajo del modelo en un cambio de perfil no justificado.
 
 ## Métricas y tabla oficial
 
@@ -414,14 +441,17 @@ caso necesita más tiempo.
 5. Separar las filas válidas de las fallas de infraestructura.
 6. Corregir o duplicar las candidatas fallidas y repetir HE0.
 7. Ejecutar HE20 para todas las que tengan HE0 válido.
-8. Diagnosticar y repetir cualquier HE20 inválido; conservar el primer y el
-   último resultado.
+8. Clasificar cada HE20: conservar un score bajo si la ejecución fue válida;
+   diagnosticar y repetir sólo los HE20 inválidos por harness/infraestructura,
+   conservando el primer y el último resultado.
 9. Ejecutar BCB para todos los perfiles con HE20 válido.
-10. Completar la tabla con calidad, tiempos, TPS, estado y configuración.
-11. Comparar cada candidata con su control FAST, BALANCED o QUALITY más cercano.
-12. Promocionar sólo después de validar la etapa que sustenta la decisión y
+10. Clasificar cada BCB con la misma regla: score bajo válido se conserva;
+    falla de harness/infraestructura se corrige y se repite tras HE0.
+11. Completar la tabla con calidad, tiempos, TPS, estado y configuración.
+12. Comparar cada candidata con su control FAST, BALANCED o QUALITY más cercano.
+13. Promocionar sólo después de validar la etapa que sustenta la decisión y
     archivar los JSON/logs de evidencia.
-13. Actualizar la matriz y este manual si cambia el harness, el esquema de
+14. Actualizar la matriz y este manual si cambia el harness, el esquema de
     resultados o el ciclo de vida del daemon.
 
 ## Evidencia y trazabilidad

@@ -12,7 +12,9 @@ visión y no representan el quant de los pesos ni del KV.
 
 ## Tabla de resultados
 
-Los guiones indican que todavía no existe una corrida comparable guardada. Los valores históricos se conservan hasta que una repetición válida los reemplace.
+Los valores históricos de la tabla siguiente quedan como referencia. La tabla
+vigente de la corrida corregida del 2026-08-17 aparece inmediatamente después;
+no se mezclan resultados tomados con otra huella de configuración.
 
 | Perfil | HumanEval/0 | HumanEval/20 | BigCodeBench/8 | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant | Parámetros (B) | Contexto | Configuración | Estado |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|
@@ -27,6 +29,36 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 1/1 | 20/20 | — | 16,980 s | 204,16 s | 56,93 s | 53,34 | — | 0,00 | No | — | UD-Q2_K_XL | 118B-A8B (≈8B activos) | 100000 | `launch=8d0dd2e0-c6c6-41ef-81d6-893c20d2f621; backend=b53df8bb-16b9-413d-8649-813e0a70d080; modelProfile=358edb77-0667-4190-b0e1-08654cb13864; runtimePreset=1b670632-3987-4047-be78-3efc93bb60d6; model=Laguna-S-2.1-UD-Q2_K_XL.gguf; mmproj=ninguno; agent=default del launch; binary=official,b10087+; runtime=ctx=100000,batch=2048,ubatch=768,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --fit on --split-mode layer --tensor-split 1,1 --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 4096 --parallel 1 --reasoning-format auto --reasoning-preserve --chat-template-file %LOCALAPPDATA%/LlamaCode/LlamaCode/chat-templates/laguna-tools-v24.jinja` | HE0 válido; BCB infraestructura (`Connection closed`); repetir |
 | QUALITY - DeepSeek Fusion leloch | 1/1 | 20/20 | — | 70,903 s | 852,31 s | 716,23 s† | 8,53 | 9,15 | 0† | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | 131072 | `launch=4f5cc556-333d-4310-955e-15042cd874d6; backend=1485cb47-757a-4a01-9f71-832567d01973; modelProfile=6ab3222e-5f71-442d-9eb9-7e895520befc; runtimePreset=20d4e6e6-9240-4926-9ea6-5bcea0eb2c50; model=DeepSeek-V4-Flash-Layers37-42Q4KExperts-OtherExpertLayersIQ2XXS...gguf; mmproj=ninguno; agent=agent-maximo (HE20 histórico agent-chat); binary=official,b10228+; runtime=ctx=131072,batch=4096,ubatch=1024,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 16384 --parallel 1 --reasoning-format auto --cache-prompt --split-mode layer --tensor-split 1,0 --override-tensor blk\.(37\|38\|39\|40\|41\|42)\.ffn_(gate\|up\|down)_exps\.weight=CUDA1,blk\.[0-9]+\.ffn_(gate\|up\|down)_exps\.weight=CPU --repeat-last-n 64 --flash-attn on --cpu-moe --cache-ram 32768` | HE0 válido; BCB sin cierre evaluable, repetir |
 | QUALITY - DeepSeek Fusion leloch · VRAM balance | — | — | — | — | — | — | 8,81 | — | — | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | 131072 | `launch=6b3bf7bd-0889-491a-9b6d-b12128478a5f; backend=07bf242d-0685-45d1-a752-11ddec6ef6df; modelProfile=0985be04-d2bc-455d-a3a5-e5fc19795e5d; runtimePreset=fdd4ca0a-3b8d-43a2-924b-092327aca314; model=DeepSeek-V4-Flash-Layers37-42Q4KExperts-OtherExpertLayersIQ2XXS...gguf; mmproj=ninguno; agent=agent-maximo (HE0 histórico agent-chat); binary=official,b10228+; runtime=ctx=131072,batch=4096,ubatch=1024,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 16384 --parallel 1 --reasoning-format auto --cache-prompt --split-mode layer --tensor-split 1,0 --override-tensor blk\.(0\|1)\.ffn_(gate\|up\|down)_exps\.weight=CUDA0,blk\.(37\|38\|39\|40\|41\|42)\.ffn_(gate\|up\|down)_exps\.weight=CUDA1,blk\.[0-9]+\.ffn_(gate\|up\|down)_exps\.weight=CPU --repeat-last-n 64 --flash-attn on --cpu-moe --cache-ram 32768` | Variante conservadora; HE0 histórico válido (67,039 s), requiere repetición con huella actual |
+
+## Corrida vigente headless — 2026-08-17
+
+Esta es la línea comparable para la implementación de la compuerta HE0 →
+HE20 → BCB. Los tiempos están en segundos y los TPS son los reportados por el
+harness. Cada fila se guardó con la huella SHA-256 de la configuración efectiva;
+las huellas completas quedan en el registro de resultados de la aplicación.
+
+| Perfil | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Clasificación |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| BALANCE - Qwen3.8 UD-Q4 visión | 1/1 | 20/20 | 5/8 | 11,288 s | 237,507 s | 1430,390 s | 39,22 | 60,50 | 65,21 | BCB calidad; sin fallo de infraestructura |
+| BALANCE - Qwen3.8 UD-Q4 MTP4 | 1/1 | 20/20 | 4/8 | 10,750 s | 262,737 s | 1507,487 s | — | 56,83 | 60,28 | BCB calidad; sin fallo de infraestructura |
+| FAST - KAT2-Coder-7-8-26 | 1/1 | 20/20 | 3/8 | 15,817 s | 183,904 s | 401,169 s | 124,24 | 108,45 | 116,83 | BCB calidad; HE20 repetido tras reducir B512/U64 |
+| FAST - KAT-Coder-7-8-26 | 1/1 | 20/20 | 3/8 | 17,102 s | 273,407 s | 639,302 s | — | 107,14 | 111,77 | BCB calidad; HE20 repetido tras reducir B512/U64 |
+| FAST - BigBang · MTP · top-p 0.08 | 1/1 | 20/20 | 3/8 | 11,289 s | 222,185 s | 1055,693 s | — | 204,42 | 207,33 | BCB calidad; sin fallo de infraestructura |
+| BALANCE - BigBang MTP | 1/1 | 20/20 | 3/8 | 11,266 s | 253,067 s | 406,496 s | — | 206,53 | 211,18 | BCB calidad; sin fallo de infraestructura |
+| BALANCE - ThinkingCap Qwen3.6 MTP4 | 1/1 | 20/20 | 3/8 | 11,288 s | 118,098 s | 169,431 s | 48,21 | 61,96 | 52,04 | BCB calidad; sin fallo de infraestructura |
+| BALANCE - ThinkingCap+MTP-7-8-26 | 1/1 | 20/20 | 3/8 | 10,265 s | 217,926 s | 401,922 s | 7,46 | 58,64 | 58,15 | BCB calidad; sin fallo de infraestructura |
+| BALANCE - Laguna S 2.1 118B-A8B Q2 | 1/1 | 20/20 | 0/8 | 13,921 s | 341,545 s | 1041,378 s | 47,84 | 55,35 | 52,62 | BCB calidad; HE20 repetido tras reducir B512/U64 |
+| QUALITY - DeepSeek Fusion leloch | 1/1 | 20/20 | 1/8 | 69,794 s | 802,656 s | 2397,063 s | — | 10,35 | 8,57 | BCB calidad; sin fallo de infraestructura |
+| QUALITY - DeepSeek Fusion leloch · VRAM balance | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | BCB calidad; 2 reparaciones internas, sin crash/CUDA |
+
+Los scores BCB menores que 8/8 son resultados válidos de calidad del modelo:
+no se repiten ni se “arreglan” cambiando parámetros cuando el transporte, el
+grader y el servidor terminaron correctamente. En cambio, las dos fallas HE20
+iniciales de KAT y Laguna sí fueron de CUDA/infraestructura; se corrigieron los
+presets a `batch=512, ubatch=64`, se repitió HE0 y luego HE20, y ambas quedaron
+20/20. DeepSeek VRAM terminó `2/8` tras dos reparaciones internas; el límite de
+generación fue del modelo durante una ejecución transportada, no un crash ni un
+acceso ilegal de CUDA, por lo que se conserva como calidad.
 
 La corrección de la fila BALANCE - BigBang se validó nuevamente en modo headless
 después de recompilar el catálogo el 2026-08-17 con
@@ -64,9 +96,9 @@ El orden es deliberado y se aplica a cada perfil base o candidato, siempre en mo
 
 1. **HumanEval/0 (smoketest):** ejecutar una sola tarea. Verifica que el modelo, backend, plantilla, MTP/mmproj y transporte funcionen; registra `Calidad HE0` y `TPS HE0`. Un `server-load`, `server-crash`, `timeout`, conexión cerrada o respuesta sin cierre es un fallo de infraestructura, no calidad cero, y bloquea las etapas siguientes de ese perfil.
 2. **HumanEval/20:** sólo después de HE0 válido para la misma configuración efectiva. Ejecutar las 20 tareas para medir calidad del perfil y del harness; registrar score, tiempo total y TPS. Si HE0 falló, no se ejecuta HE20: se investiga, se corrige y se repite HE0.
-3. **BigCodeBench/8:** sólo después de HE0 y HE20 válidos —o como repetición explícita de una fila ya marcada— ejecutar las 8 tareas difíciles para medir tool-calls, reparaciones, loops y estabilidad sostenida; registrar score, tiempo total y TPS.
+3. **BigCodeBench/8:** sólo después de HE0 y HE20 válidos —o como repetición explícita de una fila ya marcada— ejecutar las 8 tareas difíciles para medir tool-calls, reparaciones, loops y estabilidad sostenida; registrar score, tiempo total y TPS. Un score bajo con transporte, harness y grader funcionando es una medición válida del modelo y no obliga a cambiar ni repetir el perfil. Sólo un fallo de harness/infraestructura, carga, timeout sin progreso, conexión, crash o `CUDA illegal memory access` obliga a investigar, corregir y repetir BCB después de HE0.
 
-La promoción de un perfil requiere pasar HE0. Un fallo de HE0 exige diagnóstico antes de cualquier HE20/BCB. HE20 separa calidad general y problemas del harness; BCB separa los casos difíciles. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
+La promoción de un perfil requiere pasar HE0. Un fallo de HE0 exige diagnóstico antes de cualquier HE20/BCB. En HE20 y BCB se separan los resultados válidos de calidad del modelo de las fallas de harness/infraestructura: las primeras se conservan aunque sean bajas; las segundas se corrigen y se repiten. Por eso no se mezclan `0/0` de infraestructura con una puntuación de inteligencia, y todo resultado queda anotado junto con la configuración efectiva usada.
 
 La aplicación aplica esta compuerta en tiempo de ejecución mediante una huella
 SHA-256 del comando efectivo: los HE0 históricos sin huella no habilitan HE20;

@@ -451,7 +451,15 @@ LlamaAgentBackend::LlamaAgentBackend(QObject *parent) : IAgentBackend(parent)
                                 AgentProgressGovernor::semanticKey(tool, args)},
                                {QStringLiteral("idleSec"), m_execWatchdogSec}});
         appendToolResult(callId, tool, message);
-        restartWorkerAfterTimeout();
+        // A benchmark backend is ephemeral and is about to be stopped by its
+        // owner after this turn.  Do not tear down its QThread synchronously
+        // from the GUI thread: if the tool is still inside a native call,
+        // terminate()+delete can destroy Qt objects while their worker stack
+        // is unwinding (the daemon used to crash in Qt6Core here).  The stale
+        // result is ignored because m_execCallId was cleared above, and the
+        // normal backend stop path performs the orderly teardown.
+        if (!m_ephemeralSessions)
+            restartWorkerAfterTimeout();
         finishTurn(message);
     });
     connect(this, &IAgentBackend::turnFinished, this, [this]() {

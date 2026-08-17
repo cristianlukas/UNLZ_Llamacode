@@ -973,8 +973,8 @@
     "runtime": {
       "ctx": 262144,
       "gpuLayers": 999,
-      "batch": 2048,
-      "ubatch": 512,
+      "batch": 512,
+      "ubatch": 64,
       "threads": 8,
       "kv": "q8_0",
       "flashAttn": true,
@@ -1028,7 +1028,7 @@
       131072,
       262144
     ],
-    "comment": "KAT-Coder V2.5-Dev (35B-A3B, ~3 B activos) entero en las dos placas, sin offload a RAM. Thinking queda apagado por defecto para uso diario y benchmarks reproducibles; se puede activar con la variante explícita de reasoning. Es de lejos el mas rapido de los tres modelos del tier: prefill 4.134,7 t/s y decode 113,5 t/s con el mismo prompt de 12.010 tokens, usando 14,3 y 13,5 GB. El tier de 24 GB (sys-vram-20) lo corre con 30 capas y 262k de contexto. Declara minimumBinaryBuild 10228 a proposito.",
+    "comment": "KAT-Coder V2.5-Dev (35B-A3B, ~3 B activos) entero en las dos placas, sin offload a RAM. Thinking queda apagado por defecto para uso diario y benchmarks reproducibles; se puede activar con la variante explícita de reasoning. Es de lejos el mas rapido de los tres modelos del tier: prefill 4.134,7 t/s y decode 113,5 t/s con el mismo prompt de 12.010 tokens, usando 14,3 y 13,5 GB. Mantiene 262k de contexto, pero usa batch 512/ubatch 64: la combinación 262k/B2048/U512 provocó un acceso ilegal CUDA reproducible en flash attention durante HE20. El tier de 24 GB (sys-vram-20) lo corre con 30 capas y 262k de contexto. Declara minimumBinaryBuild 10228 a proposito.",
     "benchmarkVariants": [
       {
         "id": "sys-bench-48-kat-f16",
@@ -1345,10 +1345,10 @@
       "quant": "Q4_K_M"
     },
     "runtime": {
-      "ctx": 196608,
+      "ctx": 131072,
       "gpuLayers": 999,
-      "batch": 2048,
-      "ubatch": 512,
+      "batch": 512,
+      "ubatch": 64,
       "threads": 8,
       "kv": "q8_0",
       "flashAttn": true,
@@ -1401,7 +1401,7 @@
       131072,
       196608
     ],
-    "comment": "El ganador del barrido del 2026-08-07: 10/10 en el set de 4 ejes (conocimiento de nicho, contexto largo 8k/24k, entidades cruzadas, instrucciones anidadas), la unica tarea que separo a alguien —reescritura con 4 restricciones que interactuan— la gano solo el. KAT y DeepSeek sacaron 9/10. Ademas MTP da +68% de decode sin costo de calidad (36,7 -> 61,8 t/s) y baja el tiempo de tarea de 96 s a 59 s. Trae vision (mmproj). Es el default recomendado del tier: mejor calidad medida, 60 t/s y 196k de contexto. El techo de contexto es 196k — a 262144 crashea con VRAM de sobra.",
+    "comment": "El ganador del barrido del 2026-08-07: 10/10 en el set de 4 ejes (conocimiento de nicho, contexto largo 8k/24k, entidades cruzadas, instrucciones anidadas), la unica tarea que separo a alguien —reescritura con 4 restricciones que interactuan— la gano solo el. KAT y DeepSeek sacaron 9/10. MTP da +68% de decode sin costo de calidad. En este perfil se conserva MTP4, KV q8_0 y vision, pero se limita a 131k/B512/U64: la combinacion 196k/B2048/U512 produjo illegal memory access durante la carga en CUDA. El contexto 196k queda archivado hasta validar otra build.",
     "minimumBinaryBuild": 10228,
     "vision": true
   },
