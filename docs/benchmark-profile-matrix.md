@@ -21,18 +21,18 @@ Los guiones indican que todavía no existe una corrida comparable guardada. Los 
 | FAST - KAT2-Coder-7-8-26 | 1/1 | 20/20 | — | 16,267 s | 307,78 s | 20,87 s | 103,93* | — | 0,00 | No | — | Q4_K_M | 35B-A3B (≈3B activos) | HE0 revalidado 3/3; BCB infraestructura (`Connection closed`); repetir |
 | FAST - KAT-Coder-7-8-26 | 1/1 | 20/20 | — | 13,963 s | 212,69 s | 20,60 s | 113,03 | — | 0,00 | No | — | Q4_K_M | 35B-A3B (≈3B activos) | HE0 válido; BCB infraestructura (`Connection closed`); repetir |
 | FAST - BigBang · MTP · top-p 0.08 | 1/1 | 20/20 | — | 10,428 s | 136,84 s | 41,42 s | 165,87 | 107,56 | 0,00 | Sí | MTP embebido | Q4_K_M | 35B-A3B (≈3B activos) | HE0 válido; BCB infraestructura; repetir |
-| BALANCE - BigBang · MTP (reparado) | 1/1 | 20/20† | 2/8† | 28,855 s | 207,55 s† | 464,06 s† | 97,71 | 117,58† | 107,45† | Sí | MTP embebido | Q4_K_M | 35B-A3B (≈3B activos) | HE0 corregido y válido en `sys-repair-48-bigbang-mtp-balance`; HE20/BCB históricos del perfil 131k/Flash off, repetir |
+| BALANCE - BigBang MTP | 1/1 | 20/20† | 2/8† | 13,365 s | 207,55 s† | 464,06 s† | 10,72 | 117,58† | 107,45† | Sí | MTP embebido | Q4_K_M | 35B-A3B (≈3B activos) | HE0 corregido y válido sin reparación en `sys-repair-48-bigbang-mtp-balance`; HE20/BCB históricos del perfil 131k/Flash off, repetir |
 | BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 1/1 | 20/20 | — | 12,922 s | 174,96 s | — | 61,62 | — | — | Sí | MTP4 | Q4_K_M | 27B | HE0 válido; BCB bloqueado durante reparación; repetir |
 | BALANCE - ThinkingCap+MTP-7-8-26 | 1/1 | 20/20 | — | 11,435 s | 197,10 s | 38,24 s | 63,90 | — | 0,00 | Sí | MTP4 | Q4_K_M | 27B | HE0 válido; BCB infraestructura; repetir |
 | BALANCE - Laguna S 2.1 118B-A8B Q2 | 1/1 | 20/20 | — | 16,980 s | 204,16 s | 56,93 s | 53,34 | — | 0,00 | No | — | UD-Q2_K_XL | 118B-A8B (≈8B activos) | HE0 válido; BCB infraestructura (`Connection closed`); repetir |
 | QUALITY - DeepSeek Fusion leloch | 1/1 | 20/20 | — | 70,903 s | 852,31 s | 716,23 s† | 8,53 | 9,15 | 0† | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | HE0 válido; BCB sin cierre evaluable, repetir |
 | QUALITY - DeepSeek Fusion leloch · VRAM balance | — | — | — | — | — | — | 8,81 | — | — | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | Variante conservadora; HE0 histórico válido (67,039 s), requiere repetición con huella actual |
 
-La corrección de la fila BALANCE - BigBang se validó en modo headless el
-2026-08-17 con `sys-repair-48-bigbang-mtp-balance`, corrida
-`HumanEval_1_tems__20260817_000414`: **1/1 en 28,855 s**, `TPS HE0=97,71`, sin
-crash ni cierre de transporte. El primer intento necesitó una reparación del
-agente y el resultado final fue válido. La copia conserva MTP embebido, pero
+La corrección de la fila BALANCE - BigBang se validó nuevamente en modo headless
+después de recompilar el catálogo el 2026-08-17 con
+`sys-repair-48-bigbang-mtp-balance`, corrida
+`HumanEval_1_tems__20260817_001311`: **1/1 en 13,365 s**, `TPS HE0=10,72`, sin
+reparación, crash ni cierre de transporte. La copia conserva MTP embebido, pero
 usa `ctx=65536`, `batch=256`, `ubatch=64`, `flash-attn=on`, `KV=q8_0` y
 sampling conservador; el perfil histórico 131k/Flash off queda archivado y no
 se mezcla con esta medición.
@@ -50,7 +50,7 @@ Los perfiles históricos no se sobrescribieron. Se agregaron copias de reparaci�
 | Perfil de reparación | ID | HE0 pasada 1 / 2 / 3 | Resultado |
 |---|---|---:|---|
 | REPAIR - BigBang · MTP · 64k · B256/U64 | `sys-repair-48-bigbang-mtp` | 19,673 / 13,090 / 11,463 s | 1/1 en 3/3; sin crash ni reparación |
-| REPAIR - BALANCE BigBang · MTP · 64k · B256/U64 | `sys-repair-48-bigbang-mtp-balance` | 11,480 / 13,056 / 11,468 s | 1/1 en 3/3; sin crash ni reparación |
+| BALANCE - BigBang MTP | `sys-repair-48-bigbang-mtp-balance` | 11,480 / 13,056 / 11,468 s | 1/1 en 3/3; sin crash ni reparación |
 | REPAIR - BigBang · sin MTP · 64k · B256/U64 | `sys-repair-48-bigbang-base` | 13,047 / 13,045 / 21,641 s | 1/1 en 3/3; sin crash ni reparación |
 | FAST - KAT2-Coder-7-8-26 | `sys-48-katcoder-262k` | 19,606 / 14,993 / 16,058 s | 1/1 en 3/3; sin crash del daemon |
 
@@ -100,7 +100,7 @@ nueva línea base: no se mezclan con tiempos tomados cuando el perfil usaba
 | `FAST - BigBang · MTP · top-p 0.08` | `sys-bench-48-bigbang-post` | 1/1 | 11,306 s | — | Válido; sin tokens medibles del agente |
 | `REPAIR - BigBang · MTP · 64k · B256/U64` | `sys-repair-48-bigbang-mtp` | 1/1 | 11,283 s | 46,43 | Válido |
 | `REPAIR - BigBang · sin MTP · 64k · B256/U64` | `sys-repair-48-bigbang-base` | 1/1 | 18,379 s | — | Válido; sin tokens medibles del agente |
-| `REPAIR - BALANCE BigBang · MTP · 64k · B256/U64` | `sys-repair-48-bigbang-mtp-balance` | 1/1 | 12,851 s | 16,46 | Válido |
+| `BALANCE - BigBang MTP` | `sys-repair-48-bigbang-mtp-balance` | 1/1 | 12,851 s | 16,46 | Válido |
 
 `TPS HE0 del agente` es el `avgTps` reportado por el harness para esta tanda;
 cuando la respuesta fue evaluable pero no incluyó tokens de generación, se
@@ -246,16 +246,16 @@ extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn off --temp 0.60 
 WARNING: el nombre visible de la tabla no coincide con el nombre interno ni con top-p 0.08. No publicar esta fila como definitiva hasta resolver la identidad.
 ```
 
-### BALANCE - BigBang · MTP · reparación validada
+### BALANCE - BigBang MTP
 
 ```text
 launchId: sys-repair-48-bigbang-mtp-balance
-internalName: REPAIR - BALANCE BigBang · MTP · 64k · B256/U64
+internalName: BALANCE - BigBang MTP
 agentProfileId: agent-chat
 runtime: ctx=65536, batch=256, ubatch=64, threads=0, gpuLayers=999, parallelSlots=1, cache=q8_0, flashAttention=on, contBatching=on, mmap=on, mlock=off
 mmprojId: heredado del BigBang-v1; visión disponible
 extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --parallel 1 --reasoning off --spec-draft-n-max 5 --spec-type draft-mtp
-HE0: 1/1, 28,855 s, TPS 97,71; un intento de reparación del agente; sin crash ni transporte truncado
+HE0: 1/1, 13,365 s, TPS 10,72; sin reparación del agente, crash ni transporte truncado
 ```
 
 La fila histórica no se sobrescribe: la copia reparada es la que queda
