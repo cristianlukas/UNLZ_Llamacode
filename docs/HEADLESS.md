@@ -237,6 +237,10 @@ modelo local ya configurado:
 El segundo modo es optativo y no forma parte del gate porque depende de modelo,
 VRAM, tiempos de inferencia y disponibilidad del perfil local.
 
+La auditoría de perfiles también es headless: `ProfileManager.profileChangeHistory`
+lee snapshots JSONL append-only por entidad/id. `test_profiles` cubre alta,
+actualización, lectura del historial y persistencia sin QML ni GUI.
+
 Para verificar que la persistencia sobrevive a un reinicio del daemon:
 
 ```powershell

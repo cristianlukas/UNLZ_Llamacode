@@ -198,6 +198,11 @@ public:
     // launch; los perfiles de sistema nunca salen ni entran.
     Q_INVOKABLE QString exportProfilesBundle() const;
     Q_INVOKABLE int importProfilesBundle(const QString &json);
+    // Historial append-only de snapshots de perfiles de usuario. Es headless y
+    // permite auditar/restaurar manualmente cambios sin exponer secretos.
+    Q_INVOKABLE QVariantList profileChangeHistory(const QString &entity,
+                                                   const QString &id,
+                                                   int limit = 50) const;
     Q_INVOKABLE QString buildStyleAnalysisPrompt(const QString &sample,
                                                   const QString &kind) const;
     Q_INVOKABLE QString heuristicStyleCard(const QString &sample) const;

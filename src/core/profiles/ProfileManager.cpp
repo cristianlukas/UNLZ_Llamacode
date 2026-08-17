@@ -1503,6 +1503,36 @@ void ProfileManager::save() const
     saveList(storagePath("agent_profiles"), userOnly(m_agentProfiles.m_items));
     saveList(storagePath("persona_styles"), userOnly(m_personaStyles.m_items));
 
+    // Historial append-only: un snapshot por perfil presente en cada save.
+    // Es deliberadamente JSONL para poder inspeccionarlo y recuperarlo aunque
+    // una escritura posterior quede incompleta.
+    const QString historyPath = QFileInfo(storagePath(QStringLiteral("backends"))).absolutePath()
+                                + QStringLiteral("/profile_history.jsonl");
+    QFile history(historyPath);
+    if (history.open(QIODevice::WriteOnly | QIODevice::Append)) {
+        const double now = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
+        auto append = [&](const QString &entity, const auto &items) {
+            for (const auto &item : items) {
+                if (item.system) continue;
+                QJsonObject row{{QStringLiteral("timestamp"), now},
+                                {QStringLiteral("entity"), entity},
+                                {QStringLiteral("id"), item.id},
+                                {QStringLiteral("snapshot"), item.toJson()}};
+                history.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
+                history.write("\n");
+            }
+        };
+        append(QStringLiteral("backend"), m_backends.m_items);
+        append(QStringLiteral("model"), m_models.m_items);
+        append(QStringLiteral("runtime"), m_runtimes.m_items);
+        append(QStringLiteral("harness"), m_harnesses.m_items);
+        append(QStringLiteral("workspace"), m_workspaces.m_items);
+        append(QStringLiteral("launch"), m_launches.m_items);
+        append(QStringLiteral("agent"), m_agentProfiles.m_items);
+        append(QStringLiteral("personaStyle"), m_personaStyles.m_items);
+        history.close();
+    }
+
     // La escritura atómica (rename) hace que el watcher pierda los paths: re-armarlos.
     for (const QString &ent : {QStringLiteral("backends"), QStringLiteral("models"),
                                QStringLiteral("runtimes"), QStringLiteral("harnesses"),
@@ -1534,6 +1564,31 @@ QString ProfileManager::exportProfilesBundle() const
     addUser(QStringLiteral("agentProfiles"), m_agentProfiles.m_items);
     addUser(QStringLiteral("personaStyles"), m_personaStyles.m_items);
     return QString::fromUtf8(QJsonDocument(root).toJson(QJsonDocument::Indented));
+}
+
+QVariantList ProfileManager::profileChangeHistory(const QString &entity,
+                                                    const QString &id,
+                                                    int limit) const
+{
+    QVariantList out;
+    if (entity.trimmed().isEmpty() || id.trimmed().isEmpty() || limit <= 0) return out;
+    const QString path = QFileInfo(storagePath(QStringLiteral("backends"))).absolutePath()
+                         + QStringLiteral("/profile_history.jsonl");
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) return out;
+    QList<QVariantMap> matches;
+    while (!f.atEnd()) {
+        QJsonParseError error;
+        const QJsonDocument doc = QJsonDocument::fromJson(f.readLine(), &error);
+        if (error.error != QJsonParseError::NoError || !doc.isObject()) continue;
+        const QJsonObject row = doc.object();
+        if (row.value(QStringLiteral("entity")).toString() != entity
+            || row.value(QStringLiteral("id")).toString() != id) continue;
+        matches.append(row.toVariantMap());
+    }
+    const int begin = qMax(0, matches.size() - limit);
+    for (int i = matches.size() - 1; i >= begin; --i) out.append(matches.at(i));
+    return out;
 }
 
 int ProfileManager::importProfilesBundle(const QString &json)

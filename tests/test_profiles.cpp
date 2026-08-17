@@ -39,6 +39,7 @@ private slots:
     void manager_systemProfilesReloadIdempotent();
     void manager_persistsAcrossInstances();
     void manager_exportImportBundle();
+    void manager_profileChangeHistory();
 
 private:
     QTemporaryDir m_dir;
@@ -436,6 +437,20 @@ void ProfilesTests::manager_exportImportBundle()
             .endsWith(QStringLiteral("_bundle-launch")));
     QCOMPARE(pm.importProfilesBundle(QStringLiteral("not-json")), -1);
     QCOMPARE(pm.importProfilesBundle(QStringLiteral("{\"schemaVersion\":99}")), -1);
+}
+
+void ProfilesTests::manager_profileChangeHistory()
+{
+    ProfileManager pm;
+    const QString id = pm.addBackend(QStringLiteral("history-a"), QStringLiteral("bin"),
+                                     QStringLiteral("127.0.0.1"), 9911);
+    QVERIFY(!id.isEmpty());
+    QVERIFY(pm.updateBackendPort(id, 9912));
+    const QVariantList history = pm.profileChangeHistory(QStringLiteral("backend"), id, 10);
+    QVERIFY(history.size() >= 2);
+    QCOMPARE(history.first().toMap().value(QStringLiteral("id")).toString(), id);
+    QVERIFY(history.first().toMap().value(QStringLiteral("snapshot")).toMap()
+                .value(QStringLiteral("name")).toString().contains(QStringLiteral("history-a")));
 }
 
 QTEST_MAIN(ProfilesTests)

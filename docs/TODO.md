@@ -76,7 +76,7 @@
 - [x] Búsqueda por nombre, alias o id en la pantalla de perfiles
 - [x] Favoritos y orden de favoritos en menús; último usado se conserva mediante el perfil activo persistido
 - [x] Export/Import de perfiles completos (bundle JSON, ids y referencias preservados)
-- [ ] Historial de cambios por perfil
+- [x] Historial de cambios por perfil (`profileChangeHistory`, JSONL append-only y test headless)
 
 ## P2 - Model Catalog avanzado
 
