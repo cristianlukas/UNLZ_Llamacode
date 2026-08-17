@@ -1,6 +1,6 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-16. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek y los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-17. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek y los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
@@ -14,19 +14,28 @@ visión y no representan el quant de los pesos ni del KV.
 
 Los guiones indican que todavía no existe una corrida comparable guardada. Los valores históricos se conservan hasta que una repetición válida los reemplace.
 
-| Perfil | HumanEval/20 | Calidad HE0 | BigCodeBench/8 | Tiempo HE20 | Tiempo BCB | TPS HE20 | TPS BCB | TPS HE0 | Estado | Configuración |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| BALANCE - Qwen3.8 UD-Q4 visión | 20/20 | 1/1 | 7/8 | 269,96 s | 736,07 s | — | 39,53 | 56,89 | HE0 válido (12,997 s); HE20 histórico; BCB válido | 131k · MTP3 · texto + imagen · UD-Q4_K_XL |
-| BALANCE - Qwen3.8 UD-Q4 MTP4 | 20/20 | 1/1 | 3/8 | 332,12 s | 585,12 s | — | 54,85 | 57,06 | HE0 válido (13,132 s); HE20 válido; BCB calidad | 131k · MTP4 · texto + imagen · UD-Q4_K_XL |
-| FAST - KAT2-Coder-7-8-26 | 20/20 | 1/1 | — | 307,78 s | 20,87 s | — | 0,00 | 103,93* | HE0 histórico con daemon-crash; revalidado 3/3 tras corregir lifecycle; BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - KAT-Coder-7-8-26 | 20/20 | 1/1 | — | 212,69 s | 20,60 s | — | 0,00 | 113,03 | HE0 válido (13,963 s); BCB infraestructura (`Connection closed`); repetir | 262k · texto · Q4_K_M |
-| FAST - BigBang · MTP · top-p 0.08 | 20/20 | 1/1 | — | 136,84 s | 41,42 s | 107,56 | 0,00 | 165,87 | HE0 válido (10,428 s); BCB infraestructura; repetir | 131k · MTP · texto + imagen · Q4_K_M · top-p 0.08 |
-| BALANCE - BigBang · MTP · top-p 0.08 | 20/20 | — | 2/8 | 207,55 s | 464,06 s | 117,58 | 107,45 | — | HE0 infraestructura (`Connection closed`, resultado bruto 0/1); BCB histórico con KV f16; repetir con q8_0 | 131k · MTP · texto + imagen · KV q8_0 |
-| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 20/20 | 1/1 | — | 174,96 s | — | — | — | 61,62 | HE0 válido (12,922 s); BCB bloqueado durante reparación 2/2; cancelar y repetir | 131k · MTP4 · texto + imagen · Q4_K_M |
-| BALANCE - ThinkingCap+MTP-7-8-26 | 20/20 | 1/1 | — | 197,10 s | 38,24 s | — | 0,00 | 63,90 | HE0 válido (11,435 s); BCB infraestructura; repetir | 196k · MTP · texto + imagen · Q4_K_M |
-| BALANCE - Laguna S 2.1 118B-A8B Q2 | 20/20 | 1/1 | — | 204,16 s | 56,93 s | — | 0,00 | 53,34 | HE0 válido (16,980 s); BCB infraestructura (`Connection closed`); repetir | 100k · texto · Q2 |
-| QUALITY - DeepSeek Fusion leloch | 20/20 | 1/1 | — | 852,31 s | 716,23 s† | 9,15 | 0† | 8,53 | HE0 válido (70,903 s); reintento BCB en curso; no contar respuesta sin cierre como calidad | 131k · B4096 · U1024 · Flash ON · CPU-MoE · cache RAM 32 GiB · texto · Q2/Q4 híbrido · agent-chat |
-| QUALITY - DeepSeek Fusion leloch · VRAM balance | — | 1/1 | — | — | — | — | — | 8,81 | HE0 válido (67,039 s); variante conservadora; VRAM medida 35,7 GiB | 131k · B4096 · U1024 · tensor-split 1,0 · expertos 0–1 en CUDA0 y 37–42 en CUDA1 · CPU-MoE · Q2/Q4 híbrido |
+| Perfil | HumanEval/0 | HumanEval/20 | BigCodeBench/8 | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant | Parámetros (B) | Estado |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|
+| BALANCE - Qwen3.8 UD-Q4 visión | 1/1 | 20/20 | 7/8 | 12,997 s | 269,96 s | 736,07 s | 56,89 | — | 39,53 | Sí | MTP3 | UD-Q4_K_XL | 27B | HE0 válido; HE20 histórico; BCB válido |
+| BALANCE - Qwen3.8 UD-Q4 MTP4 | 1/1 | 20/20 | 3/8 | 13,132 s | 332,12 s | 585,12 s | 57,06 | — | 54,85 | Sí | MTP4 | UD-Q4_K_XL | 27B | HE0 válido; HE20 válido; BCB calidad |
+| FAST - KAT2-Coder-7-8-26 | 1/1 | 20/20 | — | 16,267 s | 307,78 s | 20,87 s | 103,93* | — | 0,00 | No | — | Q4_K_M | 35B-A3B (≈3B activos) | HE0 revalidado 3/3; BCB infraestructura (`Connection closed`); repetir |
+| FAST - KAT-Coder-7-8-26 | 1/1 | 20/20 | — | 13,963 s | 212,69 s | 20,60 s | 113,03 | — | 0,00 | No | — | Q4_K_M | 35B-A3B (≈3B activos) | HE0 válido; BCB infraestructura (`Connection closed`); repetir |
+| FAST - BigBang · MTP · top-p 0.08 | 1/1 | 20/20 | — | 10,428 s | 136,84 s | 41,42 s | 165,87 | 107,56 | 0,00 | Sí | MTP embebido | Q4_K_M | 35B-A3B (≈3B activos) | HE0 válido; BCB infraestructura; repetir |
+| BALANCE - BigBang · MTP · top-p 0.08 | 1/1 | 20/20† | 2/8† | 28,855 s | 207,55 s† | 464,06 s† | 97,71 | 117,58† | 107,45† | Sí | MTP embebido | Q4_K_M | 35B-A3B (≈3B activos) | HE0 corregido y válido en `sys-repair-48-bigbang-mtp-balance`; HE20/BCB históricos del perfil 131k/Flash off, repetir |
+| BALANCE - ThinkingCap Qwen3.6-27B MTP4 | 1/1 | 20/20 | — | 12,922 s | 174,96 s | — | 61,62 | — | — | Sí | MTP4 | Q4_K_M | 27B | HE0 válido; BCB bloqueado durante reparación; repetir |
+| BALANCE - ThinkingCap+MTP-7-8-26 | 1/1 | 20/20 | — | 11,435 s | 197,10 s | 38,24 s | 63,90 | — | 0,00 | Sí | MTP4 | Q4_K_M | 27B | HE0 válido; BCB infraestructura; repetir |
+| BALANCE - Laguna S 2.1 118B-A8B Q2 | 1/1 | 20/20 | — | 16,980 s | 204,16 s | 56,93 s | 53,34 | — | 0,00 | No | — | UD-Q2_K_XL | 118B-A8B (≈8B activos) | HE0 válido; BCB infraestructura (`Connection closed`); repetir |
+| QUALITY - DeepSeek Fusion leloch | 1/1 | 20/20 | — | 70,903 s | 852,31 s | 716,23 s† | 8,53 | 9,15 | 0† | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | HE0 válido; BCB sin cierre evaluable, repetir |
+| QUALITY - DeepSeek Fusion leloch · VRAM balance | — | — | — | — | — | — | 8,81 | — | — | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | Variante conservadora; HE0 histórico válido (67,039 s), requiere repetición con huella actual |
+
+La corrección de la fila BALANCE - BigBang se validó en modo headless el
+2026-08-17 con `sys-repair-48-bigbang-mtp-balance`, corrida
+`HumanEval_1_tems__20260817_000414`: **1/1 en 28,855 s**, `TPS HE0=97,71`, sin
+crash ni cierre de transporte. El primer intento necesitó una reparación del
+agente y el resultado final fue válido. La copia conserva MTP embebido, pero
+usa `ctx=65536`, `batch=256`, `ubatch=64`, `flash-attn=on`, `KV=q8_0` y
+sampling conservador; el perfil histórico 131k/Flash off queda archivado y no
+se mezcla con esta medición.
 
 HE0 de la variante actual: `HumanEval_1_tems__20260816_131714`, `1/1`, `67,039 s`, sin reparación ni fallo de infraestructura; `TPS HE0=8,81` es el timing nativo de `llama-server`. La corrida descartada anterior `HumanEval_1_tems__20260816_122210` usó `tensor-split=1,1` y falló al cargar por OOM en CUDA1; no se cuenta como calidad. La corrida histórica `HumanEval_1_tems__20260816_122508` también fue válida (`1/1`, `67,308 s`, `9,20 t/s`).
 
@@ -221,7 +230,7 @@ mmprojId: debe4716-71b7-5cfa-9d7a-045546810eda
 extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --no-context-shift --metrics --no-warmup --jinja --parallel 1 --reasoning on --spec-draft-n-max 5 --spec-type draft-mtp --temp 0.70 --top-p 0.08
 ```
 
-### BALANCE - BigBang · MTP · top-p 0.08
+### BALANCE - BigBang · MTP · top-p 0.08 (histórico)
 
 ```text
 tablaName: BALANCE - BigBang · MTP · top-p 0.08
@@ -236,6 +245,21 @@ mmprojId: 24152073-986a-5470-b717-a70861d14883
 extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --parallel 1 --reasoning on --spec-draft-n-max 5 --spec-type draft-mtp
 WARNING: el nombre visible de la tabla no coincide con el nombre interno ni con top-p 0.08. No publicar esta fila como definitiva hasta resolver la identidad.
 ```
+
+### BALANCE - BigBang · MTP · reparación validada
+
+```text
+launchId: sys-repair-48-bigbang-mtp-balance
+internalName: REPAIR - BALANCE BigBang · MTP · 64k · B256/U64
+agentProfileId: agent-chat
+runtime: ctx=65536, batch=256, ubatch=64, threads=0, gpuLayers=999, parallelSlots=1, cache=q8_0, flashAttention=on, contBatching=on, mmap=on, mlock=off
+mmprojId: heredado del BigBang-v1; visión disponible
+extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --flash-attn on --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --parallel 1 --reasoning off --spec-draft-n-max 5 --spec-type draft-mtp
+HE0: 1/1, 28,855 s, TPS 97,71; un intento de reparación del agente; sin crash ni transporte truncado
+```
+
+La fila histórica no se sobrescribe: la copia reparada es la que queda
+habilitada para repetir HE20 y luego BCB, siempre respetando la compuerta HE0.
 
 ### BALANCE - ThinkingCap Qwen3.6-27B MTP4
 
