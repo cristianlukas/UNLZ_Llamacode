@@ -4887,12 +4887,18 @@ QStringList AppController::harnessDirectiveFacts() const
 }
 
 QVariantMap AppController::compareHarnessBenchmarks(const QStringList &agentProfileIds,
-                                                   const QString &runDir) const
+                                                   const QString &runDir,
+                                                   double sinceEpochMs) const
 {
     QVariantList rows;
     for (const QVariant &value : m_benchmarkResults) {
         const QVariantMap row = value.toMap();
         if (!runDir.isEmpty() && row.value(QStringLiteral("runDir")).toString() != runDir)
+            continue;
+        // Corridas viejas del mismo perfil: fuera. Un perfil con historial contra
+        // uno recién creado no es un A/B, es un promedio contra una muestra.
+        if (sinceEpochMs > 0
+            && row.value(QStringLiteral("timestamp")).toDouble() < sinceEpochMs)
             continue;
         const QString agentId = row.value(QStringLiteral("agentProfileId")).toString();
         if (agentId.isEmpty()) continue;
@@ -4903,6 +4909,15 @@ QVariantMap AppController::compareHarnessBenchmarks(const QStringList &agentProf
         rows, QStringLiteral("agentProfileId"));
     report[QStringLiteral("groupBy")] = QStringLiteral("agentProfileId");
     report[QStringLiteral("rows")] = rows.size();
+    // Aviso de desbalance: comparar 30 corridas contra 1 se lee como si fueran
+    // comparables. Que el informe lo diga es más barato que una decisión mala.
+    int minRuns = -1, maxRuns = 0;
+    for (const QVariant &pv : report.value(QStringLiteral("profiles")).toList()) {
+        const int n = pv.toMap().value(QStringLiteral("runs")).toInt();
+        if (minRuns < 0 || n < minRuns) minRuns = n;
+        if (n > maxRuns) maxRuns = n;
+    }
+    report[QStringLiteral("balanced")] = (minRuns > 0 && maxRuns <= minRuns * 2);
     return report;
 }
 

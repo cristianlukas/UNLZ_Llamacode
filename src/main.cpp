@@ -68,6 +68,15 @@ static void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const 
 
 int main(int argc, char *argv[])
 {
+    // Modo test: redirige AppData/AppLocalData a una ubicación de prueba. Es la
+    // misma perilla que usan los tests C++ (QStandardPaths::setTestModeEnabled),
+    // expuesta por env var para los smokes headless que levantan el binario:
+    // Qt resuelve esas rutas por la API de shell de Windows, así que pisar
+    // %LOCALAPPDATA% NO alcanza y un smoke terminaba escribiendo memoria,
+    // directivas y catálogo en la instalación real del usuario.
+    if (qgetenv("LLAMACODE_TEST_MODE").trimmed() == "1")
+        QStandardPaths::setTestModeEnabled(true);
+
     // Log file: %APPDATA%\LlamaCode\llamacode.log
     QString logDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     QDir().mkpath(logDir);
@@ -92,7 +101,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.105");
+    app.setApplicationVersion("0.1.109");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))

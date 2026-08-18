@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.105"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.109"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -825,8 +825,12 @@ public:
     // A/B de HARNESS: agrupa las corridas de benchmark ya guardadas por perfil de
     // AGENTE (mismo modelo, distinto HarnessSpec) y devuelve el mismo informe que
     // usa comparison.json. `runDir` vacío = todas las corridas cargadas.
+    // `sinceEpochMs` acota a las corridas de ESTA sesión de barrido: sin ese
+    // filtro el informe mezcla el histórico del usuario (un perfil con 30 corridas
+    // viejas contra uno recién creado con 1) y la comparación es una mentira.
     Q_INVOKABLE QVariantMap compareHarnessBenchmarks(const QStringList &agentProfileIds,
-                                                     const QString &runDir = QString()) const;
+                                                     const QString &runDir = QString(),
+                                                     double sinceEpochMs = 0) const;
     Q_INVOKABLE QVariantMap agentSandboxStatus() const;
     Q_INVOKABLE QVariantList portableSkills() const;
     Q_INVOKABLE QVariantMap portableSkill(const QString &name) const;

@@ -178,6 +178,17 @@ la sesión y se envían al request `/v1/chat/completions` sólo cuando están
 configurados. Cada respuesta registra `firstTokenMs`; `test_backends_net`
 verifica payload, reinicio de sesión y medición contra un stub HTTP local.
 
+## Aislamiento de un smoke que levanta el binario
+
+`LLAMACODE_PROFILES_DIR` redirige los perfiles, pero **no** el resto: memoria,
+catálogo, chat y directivas cuelgan de `QStandardPaths::AppLocalDataLocation`,
+que en Windows Qt resuelve por la API de shell — pisar `%LOCALAPPDATA%` no hace
+nada. Para eso está `LLAMACODE_TEST_MODE=1`: `main.cpp` llama a
+`QStandardPaths::setTestModeEnabled(true)` y todo cae en
+`AppData/Local/qttest/...`, igual que en los tests C++.
+
+Sin esa variable, un smoke escribe en la instalación real del usuario.
+
 ## A/B de harness headless
 
 Comparar dos configuraciones de harness (mismo modelo, distinto `HarnessSpec`)

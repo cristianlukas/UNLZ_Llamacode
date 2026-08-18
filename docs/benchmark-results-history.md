@@ -2,6 +2,37 @@
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
 
+## 2026-08-18 — Primer A/B de HARNESS (mismo modelo, distinto HarnessSpec)
+
+Primera corrida real de `tools/harness_ab.ps1`: mismo launch
+(`116_FAST · KAT-Coder`, 2×3090), mismo benchmark (`llamacode_local_coding_smoke`,
+3 ítems), 2 pasadas, y como única variable el **perfil de agente**.
+
+| Perfil de agente | Tools (tok de schemas) | Calidad | Éxito | Tiempo | Archivos | Runs |
+|---|---|---:|---:|---:|---:|---:|
+| `agent-intermedio` | 10 (~1110) | 100,0 % | 50,0 % | 211,1 s | 4,0 | 2 |
+| `agent-minimal` | 6 (~630) | 100,0 % | 50,0 % | **98,5 s** | 4,0 | 2 |
+
+Delta: calidad 0,0 pp · éxito 0,0 pp · **tiempo −34,7 %**. Con esta muestra (n=2,
+un benchmark corto) el harness minimal hace lo mismo en dos tercios del tiempo;
+no alcanza para declararlo mejor en general, pero sí para dejar de suponer que
+más tools es gratis. Informe completo en
+`docs/benchmark-levels-artifacts/harness-ab-minimal-vs-intermedio.json`.
+
+**Tres defectos que sólo aparecieron corriéndolo de verdad** (los tres corregidos):
+
+1. `compareHarnessBenchmarks` agrupaba TODO el historial: la primera corrida
+   comparó 30 corridas viejas de `agent-intermedio` contra 1 de `agent-minimal`
+   y daba +36,7 pp de éxito a favor del nuevo. Ahora el barrido acota por
+   `sinceEpochMs` y el informe trae `balanced`, con aviso explícito si las
+   muestras son dispares.
+2. Un perfil con 5/6 criterios y 0 corridas exitosas se imprimía como
+   "calidad 0,0 %", que se lee como "mucho peor" cuando en realidad es
+   **sin dato** (las medianas se calculan sólo sobre corridas exitosas, a
+   propósito). Ahora dice `s/d` y marca el delta como no interpretable.
+3. Formato `{n,+6:N1}` inválido en .NET: el script moría por `FormatException`
+   justo antes de imprimir el resumen.
+
 ## 2026-08-17 — Reparación del tier DeepSeek VRAM 0–5
 
 Se investigó la conclusión anterior que atribuía el bloqueo del tier 0–5 a la

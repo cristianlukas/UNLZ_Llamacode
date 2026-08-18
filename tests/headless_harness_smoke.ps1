@@ -23,11 +23,19 @@ $qtRoot = "C:\Qt\6.8.3\msvc2022_64"
 $env:QT_QPA_PLATFORM = "offscreen"
 $env:QT_PLUGIN_PATH = Join-Path $qtRoot "plugins"
 $env:PATH = (Join-Path $qtRoot "bin") + ";" + $env:PATH
-# Perfiles aislados: este smoke CREA un perfil de agente; no debe tocar los del
-# usuario ni dejar basura en profiles/.
-$profileDir = Join-Path ([IO.Path]::GetTempPath()) ".harness-smoke-profiles"
+# Aislamiento COMPLETO: este smoke crea un perfil de agente y escribe directivas.
+# LLAMACODE_PROFILES_DIR cubre los perfiles, pero las directivas cuelgan de
+# QStandardPaths::AppLocalDataLocation, que en Windows sale de %LOCALAPPDATA% y
+# ese env var NO lo toca. Sin redirigirlo, el test sembraba el ejemplo bundleado
+# y creaba/borraba archivos en la instalacion real del usuario.
+$sandbox    = Join-Path ([IO.Path]::GetTempPath()) ".harness-smoke-sandbox"
+$profileDir = Join-Path $sandbox "profiles"
 $env:LLAMACODE_CONTROL_PORT = "$Port"
 $env:LLAMACODE_PROFILES_DIR = $profileDir
+# Qt resuelve AppLocalData por la API de shell de Windows, NO por %LOCALAPPDATA%:
+# la unica forma de redirigirlo desde afuera es el modo test (main.cpp lo activa
+# con esta env var y llama a QStandardPaths::setTestModeEnabled).
+$env:LLAMACODE_TEST_MODE = "1"
 New-Item -ItemType Directory -Force $profileDir | Out-Null
 
 $fails = 0
@@ -100,13 +108,25 @@ try {
     $del = Inv "" "removeHarnessDirective" @("smoke-directiva", "global")
     Ok ($del.result.ok -eq $true) "removeHarnessDirective la borra"
 
+    # El aislamiento tiene que ser real: en modo test Qt cuelga AppLocalData de
+    # AppData/Local/qttest/<Org>/<App>. Si hubiera escrito en la instalacion real,
+    # aca no habria nada y el test estaria mintiendo sobre su propio aislamiento.
+    $testRoot = Join-Path $env:LOCALAPPDATA "qttest"
+    $seeded = Get-ChildItem -Path $testRoot -Recurse -Filter "*.md" -ErrorAction SilentlyContinue |
+              Where-Object { $_.FullName -like "*harness*directives*" }
+    Ok ($seeded.Count -ge 1) "las directivas fueron al AppData de test, no a la instalacion real"
+
     # El verbo de comparacion existe y responde aunque no haya corridas.
     $cmp = Inv "" "compareHarnessBenchmarks" @(@("agent-intermedio"), "")
     Ok ($cmp.ok) "compareHarnessBenchmarks responde (sin corridas: informe vacio)"
     Ok ($cmp.result.groupBy -eq "agentProfileId") "y agrupa por perfil de AGENTE"
 } finally {
     if ($proc) { try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch {} }
-    Remove-Item -Recurse -Force $profileDir -ErrorAction SilentlyContinue
+    Remove-Item -Recurse -Force $sandbox -ErrorAction SilentlyContinue
+    # El AppData de test es compartido por todos los smokes: se limpia solo lo del
+    # harness para no pisarle datos a otro test que corra en paralelo.
+    Remove-Item -Recurse -Force (Join-Path $env:LOCALAPPDATA "qttest\LlamaCode\LlamaCode\harness") `
+        -ErrorAction SilentlyContinue
 }
 
 Write-Host ""

@@ -105,6 +105,11 @@ llama.cpp mainline y beellama v0.3.2):
 Necesitan una sesión de escritorio interactiva con ventanas vivas (no
 reproducible en headless/CI), así que sólo se cubre el path de error en
 `tests/test_agent_tools.cpp`. La lógica real es **QA manual**:
+- **Abrir la app después de tocar QML** (no alcanza con que compile): una página
+  en `qml/pages/` que usa componentes `Lc*` necesita `import LlamaCode 1.0` —
+  dentro del qrc la resolución por directorio NO cruza carpetas. Sin ese import
+  el módulo entero falla al cargar (`LcButton is not a type`) y la app no abre
+  ninguna ventana, con el build en verde. Pasó con `DataLabPage.qml`.
 - **Editor del harness modular** (Ajustes → Perfiles de agente): la lógica está
   cubierta por `qml_harness_editor`; lo que falta es **verlo**. Duplicar un preset
   → cambiar herencia, tocar dos packs, bajar "Capturas a conservar" a 0 → Guardar

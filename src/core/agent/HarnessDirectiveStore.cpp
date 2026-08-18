@@ -253,20 +253,30 @@ void HarnessDirectiveStore::seedBundledExamples()
     // y listo; borrarlo es una decisión del usuario que hay que respetar.
     const QString stamp = QDir(root).filePath(QStringLiteral(".seeded"));
     if (QFileInfo::exists(stamp)) return;
-    QFile stampFile(stamp);
-    if (stampFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        stampFile.write("bundled directives seeded\n");
-        stampFile.close();
-    }
+
+    // Copiar PRIMERO y marcar después: al revés, una copia fallida (permisos,
+    // disco lleno) dejaba el marcador puesto y el usuario se quedaba sin el
+    // ejemplo para siempre, sin explicación y sin reintento.
     const QDir bundled(QStringLiteral(":/assets/harness/directives"));
     if (!bundled.exists()) return;
+    bool allCopied = true;
     for (const QFileInfo &entry : bundled.entryInfoList(QStringList{QStringLiteral("*.md")},
                                                         QDir::Files)) {
         const QString dest = QDir(root).filePath(entry.fileName());
         if (QFileInfo::exists(dest)) continue;
-        QFile::copy(entry.absoluteFilePath(), dest);
+        if (!QFile::copy(entry.absoluteFilePath(), dest)) {
+            allCopied = false;
+            continue;
+        }
         // El qrc viene read-only: sin esto el usuario no puede editar la copia.
         QFile(dest).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    }
+    if (!allCopied) return;   // sin marcador: se reintenta en el próximo list()
+
+    QFile stampFile(stamp);
+    if (stampFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        stampFile.write("bundled directives seeded\n");
+        stampFile.close();
     }
 }
 

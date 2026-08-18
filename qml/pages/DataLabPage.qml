@@ -2,6 +2,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+// Sin este import la pagina NO resuelve los componentes Lc* : viven en
+// qml/components/ y esta pagina en qml/pages/, y dentro del qrc la resolucion
+// por directorio no cruza carpetas. Faltaba, y con eso el modulo entero fallaba
+// al cargar ("LcButton is not a type") y la app no abria ninguna ventana.
+import LlamaCode 1.0
 
 Item {
     id: root

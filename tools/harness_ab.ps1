@@ -80,6 +80,11 @@ function Wait-Benchmark {
     return $false
 }
 
+# Instante de arranque: la comparacion final se acota a las corridas de ESTE
+# barrido. Sin esto el informe suma el historial del usuario y un perfil con 30
+# corridas viejas "gana" contra uno recien creado con una.
+$sinceEpochMs = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+
 foreach ($ap in $AgentProfileIds) {
     Write-Host "=== Corriendo benchmark con perfil de agente '$ap'" -ForegroundColor Cyan
     if ($CustomBenchmarkId) {
@@ -92,27 +97,47 @@ foreach ($ap in $AgentProfileIds) {
     if (-not (Wait-Benchmark)) { throw "Timeout esperando el benchmark del perfil '$ap'." }
 }
 
-$report = (Inv "" "compareHarnessBenchmarks" @($AgentProfileIds, "")).result
+$report = (Inv "" "compareHarnessBenchmarks" @($AgentProfileIds, "", $sinceEpochMs)).result
 $report | ConvertTo-Json -Depth 12 | Set-Content -Path $Out -Encoding UTF8
 
 Write-Host ""
 Write-Host "=== Resultado por perfil de agente" -ForegroundColor Cyan
+# Las medianas de calidad/tiempo se calculan SOLO sobre corridas exitosas (una
+# corrida fallida no debe contaminar la mediana). Con pocas pasadas eso deja un
+# perfil sin ninguna muestra y "0,0%" se lee como "peor", cuando en realidad es
+# "sin dato": hay que decirlo, no imprimir un cero.
 foreach ($p in $report.profiles) {
-    Write-Host ("{0,-24} calidad {1,6:N1}%  exito {2,6:N1}%  tiempo {3,7:N1}s  archivos {4,4:N1}  runs {5}" -f `
-        $p.profileName, $p.medianQualityPct, $p.successRatePct, $p.medianElapsedSec,
-        $p.medianFilesChanged, $p.runs)
+    if ($p.successfulRuns -gt 0) {
+        Write-Host ("{0,-24} calidad {1,6:N1}%  exito {2,6:N1}%  tiempo {3,7:N1}s  archivos {4,4:N1}  runs {5}" -f `
+            $p.profileName, $p.medianQualityPct, $p.successRatePct, $p.medianElapsedSec,
+            $p.medianFilesChanged, $p.runs)
+    } else {
+        Write-Host ("{0,-24} calidad     s/d  exito {1,6:N1}%  tiempo     s/d  (0 de {2} corridas pasaron los criterios)" -f `
+            $p.profileName, $p.successRatePct, $p.runs) -ForegroundColor Yellow
+    }
 }
 Write-Host ""
 Write-Host "=== Deltas (candidato vs baseline)" -ForegroundColor Cyan
 # Formato con signo explicito: "{n,+6:N1}" NO es valido en .NET (el alineado es
 # un entero, no admite '+') y tiraba FormatException justo antes del resumen.
 function Signed($v) { return ("{0:+0.0;-0.0;0.0}" -f [double]$v) }
+$noSamples = @($report.profiles | Where-Object { $_.successfulRuns -le 0 } |
+                ForEach-Object { $_.profileId })
 foreach ($c in $report.comparisons) {
     Write-Host ("{0} -> {1}: calidad {2,7} pp  exito {3,7} pp  tiempo {4,7}%  archivos {5,6}" -f `
         $c.baselineProfileId, $c.candidateProfileId, (Signed $c.qualityDeltaPctPoints),
         (Signed $c.successRateDeltaPctPoints), (Signed $c.comparisonTimeChangePct),
         (Signed $c.filesChangedDelta))
+    if ($noSamples -contains $c.baselineProfileId -or $noSamples -contains $c.candidateProfileId) {
+        Write-Host ("   ^ delta NO interpretable: uno de los dos no tiene corridas exitosas. " +
+                    "Suma pasadas (-Passes) o revisa por que fallo.") -ForegroundColor Yellow
+    }
 }
 Write-Host ""
+if ($report.balanced -ne $true) {
+    Write-Host ("AVISO: la comparacion esta DESBALANCEADA (corridas por perfil: " +
+                (($report.profiles | ForEach-Object { $_.runs }) -join " vs ") +
+                "). Con muestras tan distintas los deltas no son comparables.") -ForegroundColor Red
+}
 Write-Host "Informe completo: $Out"
 Write-Host "Un harness solo es mejor si NO baja calidad ni tasa de exito." -ForegroundColor Yellow

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.105 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.109 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -405,6 +405,7 @@ qt_add_qml_module(LlamaCode
         qml/components/LcDialog.qml
         qml/components/LcColorPicker.qml
         qml/components/LcColorRow.qml
+        qml/components/LcHarnessEditor.qml
         qml/components/LcScrollBar.qml
         qml/components/OpencodeConfigDialog.qml
         qml/components/MermaidPreviewDialog.qml
@@ -655,6 +656,42 @@ if (BUILD_TESTS)
             COMMENT "Staging ${_name} for the QML harness")
         list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_DIR}/${_name}")
     endforeach()
+
+    # Modulo "LlamaCode" del harness: una PAGINA real (qml/pages/*) resuelve los
+    # componentes Lc* con `import LlamaCode 1.0`, porque dentro del qrc viven en
+    # otro directorio. Para que esos archivos corran bajo el runtime `qml` hace
+    # falta un modulo importable, y Qt lo busca en <importpath>/LlamaCode/qmldir:
+    # se stagean los stubs tambien ahi, con un qmldir que declara el modulo.
+    set(LC_QML_HARNESS_MODULE_DIR "${LC_QML_HARNESS_DIR}/LlamaCode")
+    set(LC_QML_HARNESS_MODULE_SOURCES
+        tests/qml/Theme.qml
+        tests/qml/App.qml
+        tests/qml/LcDialog.qml
+        tests/qml/LcButton.qml
+        tests/qml/LcTextField.qml
+        tests/qml/LcComboBox.qml
+        tests/qml/LcSwitch.qml
+        tests/qml/PageHeader.qml
+    )
+    add_custom_command(
+        OUTPUT "${LC_QML_HARNESS_MODULE_DIR}/qmldir"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/qml/module_qmldir"
+                "${LC_QML_HARNESS_MODULE_DIR}/qmldir"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/qml/module_qmldir"
+        COMMENT "Staging qmldir for the QML harness module")
+    list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_MODULE_DIR}/qmldir")
+    foreach(_src ${LC_QML_HARNESS_MODULE_SOURCES})
+        get_filename_component(_name "${_src}" NAME)
+        add_custom_command(
+            OUTPUT "${LC_QML_HARNESS_MODULE_DIR}/${_name}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${CMAKE_CURRENT_SOURCE_DIR}/${_src}" "${LC_QML_HARNESS_MODULE_DIR}/${_name}"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_src}"
+            COMMENT "Staging ${_name} for the QML harness module")
+        list(APPEND _lc_qml_harness_copies "${LC_QML_HARNESS_MODULE_DIR}/${_name}")
+    endforeach()
+
     add_custom_target(qml_harness ALL DEPENDS ${_lc_qml_harness_copies})
 
     add_test(NAME qml_color_picker

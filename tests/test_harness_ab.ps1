@@ -91,7 +91,7 @@ $stubScript = {
                 'startBenchmark'       { $running = $true; $polls = 0; $resp = '{"ok":true}' }
                 'startCustomBenchmark' { $running = $true; $polls = 0; $resp = '{"ok":true}' }
                 'compareHarnessBenchmarks' {
-                    $resp = '{"ok":true,"result":{"profiles":[' +
+                    $resp = '{"ok":true,"result":{"balanced":true,"profiles":[' +
                             '{"profileId":"a","profileName":"A","medianQualityPct":90.0,' +
                             '"successRatePct":100.0,"medianElapsedSec":100.0,' +
                             '"medianFilesChanged":2.0,"runs":1},' +
@@ -188,6 +188,10 @@ try {
     Ok ($starts[0].args[3] -eq 'agent') "corre con target=agent (no 'model')"
     $polls = @($calls | Where-Object { $_.method -eq 'compareHarnessBenchmarks' })
     Ok ($polls.Count -eq 1) "compara una sola vez, al final"
+    # El filtro temporal es lo que evita mezclar el historial del usuario con el
+    # barrido: sin el, un perfil con corridas viejas gana por acumulacion.
+    Ok ($polls[0].args.Count -ge 3 -and [double]$polls[0].args[2] -gt 0) `
+       "acota la comparacion a las corridas de este barrido (sinceEpochMs)"
     Ok ($r.ExitCode -eq 0) "exit 0"
     Ok (Test-Path $r.OutFile) "escribio el informe JSON"
     if (Test-Path $r.OutFile) {
