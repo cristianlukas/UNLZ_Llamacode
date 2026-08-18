@@ -4,6 +4,9 @@ Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-resul
 No se reescriben resultados anteriores: cada mejora agrega una entrada nueva
 con fecha, configuración, evidencia y decisión.
 
+El ID de la primera columna es el `launchId` persistente de LlamaCode. El
+nombre visible puede cambiar sin perder la asociación con sus resultados.
+
 ## 2026-08-17 — Laguna safe y reparación del harness
 
 - Laguna original fallaba durante la carga CUDA en GPU0, antes del harness.
@@ -30,8 +33,10 @@ con fecha, configuración, evidencia y decisión.
 
 - Se inició HE20 con la configuración vigente, `agent-avanzado`, harness LC-H1
   y timeout de 3600 s.
-- Estado anotado: 9/20 tareas generadas, sin crash CUDA ni cierre del daemon.
-- BCB permanece bloqueado hasta que HE20 termine y produzca una huella válida.
+- Resultado final: 20/20, 1164,244 s, `avgTps=9,577`, sin reparaciones,
+  `failureKind=none` y sin crash CUDA ni cierre del daemon.
+- BCB fue habilitado después de validar la huella HE20 actual y quedó en curso
+  con `agent-avanzado` y timeout de 5400 s.
 
 ## Diagnósticos BCB conocidos
 
