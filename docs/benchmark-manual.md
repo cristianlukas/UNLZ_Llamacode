@@ -31,6 +31,11 @@ Los perfiles sin ese indicador quedan archivados como referencia y no se
 ejecutan nuevamente. Incorporar otro perfil al conjunto activo requiere
 marcarlo explícitamente como `⚡ BEST` y registrar el motivo en el historial.
 
+Toda tabla o exportación resumida debe conservar estas columnas, en este orden:
+`ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 |
+Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant |
+Parámetros | Contexto | Thinking | Harness | Estado`.
+
 ## Regla principal: la escalera de validación
 
 Cada candidata debe avanzar por esta secuencia:
