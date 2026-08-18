@@ -298,27 +298,47 @@ ApplicationWindow {
 
                 Rectangle { width: 1; Layout.fillHeight: true; color: Theme.divider }
 
-                StackLayout {
+                // Crear todas las páginas al iniciar dispara un árbol QML muy
+                // grande y puede dejar sin respuesta incluso al tray. Cada
+                // Loader se activa al visitar su sección y conserva el objeto
+                // creado para no perder el estado de los formularios.
+                Item {
                     id: stack
+                    property int currentIndex: 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    currentIndex: 0
 
-                    LaunchPage      {}
-                    ProfilesPage    {}
-                    ModelRootsPage  { id: modelRootsPage }
-                    BinariesPage    { id: binariesPage }
-                    ChatPage        {}
-                    AgentPage       {}
-                    ResearchPage    {}
-                    DataLabPage     {}
-                    TasksPage       {}
-                    CharlaPage      {}
-                    BenchmarkPage   {}
-                    TunerPage       {}
-                    DownloadsPage   {}
-                    AgentsPage      {}
-                    SettingsPage    {}
+                    Component { id: launchPageComponent; LaunchPage {} }
+                    Component { id: profilesPageComponent; ProfilesPage {} }
+                    Component { id: modelRootsPageComponent; ModelRootsPage {} }
+                    Component { id: binariesPageComponent; BinariesPage {} }
+                    Component { id: chatPageComponent; ChatPage {} }
+                    Component { id: agentPageComponent; AgentPage {} }
+                    Component { id: researchPageComponent; ResearchPage {} }
+                    Component { id: dataLabPageComponent; DataLabPage {} }
+                    Component { id: tasksPageComponent; TasksPage {} }
+                    Component { id: charlaPageComponent; CharlaPage {} }
+                    Component { id: benchmarkPageComponent; BenchmarkPage {} }
+                    Component { id: tunerPageComponent; TunerPage {} }
+                    Component { id: downloadsPageComponent; DownloadsPage {} }
+                    Component { id: agentsPageComponent; AgentsPage {} }
+                    Component { id: settingsPageComponent; SettingsPage {} }
+
+                    Loader { id: launchLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 0; visible: stack.currentIndex === 0; sourceComponent: launchPageComponent; onLoaded: loaded = true }
+                    Loader { id: profilesLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 1; visible: stack.currentIndex === 1; sourceComponent: profilesPageComponent; onLoaded: loaded = true }
+                    Loader { id: modelRootsLoader; property bool loaded: false; property bool pendingOpen: false; anchors.fill: parent; active: loaded || stack.currentIndex === 2; visible: stack.currentIndex === 2; sourceComponent: modelRootsPageComponent; onLoaded: { loaded = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
+                    Loader { id: binariesLoader; property bool loaded: false; property bool pendingOpen: false; anchors.fill: parent; active: loaded || stack.currentIndex === 3; visible: stack.currentIndex === 3; sourceComponent: binariesPageComponent; onLoaded: { loaded = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
+                    Loader { id: chatLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 4; visible: stack.currentIndex === 4; sourceComponent: chatPageComponent; onLoaded: loaded = true }
+                    Loader { id: agentLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 5; visible: stack.currentIndex === 5; sourceComponent: agentPageComponent; onLoaded: loaded = true }
+                    Loader { id: researchLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 6; visible: stack.currentIndex === 6; sourceComponent: researchPageComponent; onLoaded: loaded = true }
+                    Loader { id: dataLabLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 7; visible: stack.currentIndex === 7; sourceComponent: dataLabPageComponent; onLoaded: loaded = true }
+                    Loader { id: tasksLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 8; visible: stack.currentIndex === 8; sourceComponent: tasksPageComponent; onLoaded: loaded = true }
+                    Loader { id: charlaLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 9; visible: stack.currentIndex === 9; sourceComponent: charlaPageComponent; onLoaded: loaded = true }
+                    Loader { id: benchmarkLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 10; visible: stack.currentIndex === 10; sourceComponent: benchmarkPageComponent; onLoaded: loaded = true }
+                    Loader { id: tunerLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 11; visible: stack.currentIndex === 11; sourceComponent: tunerPageComponent; onLoaded: loaded = true }
+                    Loader { id: downloadsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 12; visible: stack.currentIndex === 12; sourceComponent: downloadsPageComponent; onLoaded: loaded = true }
+                    Loader { id: agentsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 13; visible: stack.currentIndex === 13; sourceComponent: agentsPageComponent; onLoaded: loaded = true }
+                    Loader { id: settingsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 14; visible: stack.currentIndex === 14; sourceComponent: settingsPageComponent; onLoaded: loaded = true }
                 }
             }
         }
@@ -631,7 +651,11 @@ ApplicationWindow {
                 LcButton {
                     text: (App.langV, App.l("setup.locateBinary"))
                     secondary: true
-                    onClicked: { stack.currentIndex = 3; binariesPage.openAddDialog() }
+                    onClicked: {
+                        stack.currentIndex = 3
+                        if (binariesLoader.item) binariesLoader.item.openAddDialog()
+                        else binariesLoader.pendingOpen = true
+                    }
                 }
                 LcButton {
                     text: {
@@ -689,7 +713,11 @@ ApplicationWindow {
                 LcButton {
                     text: (App.langV, App.l("setup.locateModel"))
                     secondary: true
-                    onClicked: { stack.currentIndex = 2; modelRootsPage.openAddDialog() }
+                    onClicked: {
+                        stack.currentIndex = 2
+                        if (modelRootsLoader.item) modelRootsLoader.item.openAddDialog()
+                        else modelRootsLoader.pendingOpen = true
+                    }
                 }
                 LcButton {
                     text: (App.langV, App.l("setup.downloadModel"))

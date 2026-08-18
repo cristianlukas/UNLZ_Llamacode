@@ -30,6 +30,7 @@
 #include <QProcess>
 #include <QSettings>
 #include <QElapsedTimer>
+#include <memory>
 
 #ifdef Q_OS_WIN
 #  define WIN32_LEAN_AND_MEAN
@@ -106,6 +107,27 @@ int main(int argc, char *argv[])
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
         || app.arguments().contains(QStringLiteral("--agent-daemon"));
+
+    // Diagnóstico liviano del hilo GUI: si una operación síncrona impide
+    // despachar eventos, también puede impedir que Windows entregue a tiempo
+    // el menú contextual del tray. Se registra sólo una advertencia por pausa
+    // larga para no generar ruido ni trabajo adicional apreciable.
+    if (!headlessAgent) {
+        auto eventLoopClock = std::make_shared<QElapsedTimer>();
+        eventLoopClock->start();
+        auto *eventLoopProbe = new QTimer(&app);
+        eventLoopProbe->setInterval(100);
+        auto lastTickStorage = std::make_shared<qint64>(eventLoopClock->elapsed());
+        QObject::connect(eventLoopProbe, &QTimer::timeout, &app,
+                         [eventLoopClock, lastTickStorage]() {
+            const qint64 now = eventLoopClock->elapsed();
+            const qint64 gap = now - *lastTickStorage;
+            *lastTickStorage = now;
+            if (gap >= 250)
+                qWarning() << "GUI event-loop pause ms=" << gap;
+        });
+        eventLoopProbe->start();
+    }
 
     // Companion sin UI: evalúa el mismo AutomationStore/cron y despierta la app
     // por IPC. Un lock evita duplicados; el toggle persistido lo apaga solo.
