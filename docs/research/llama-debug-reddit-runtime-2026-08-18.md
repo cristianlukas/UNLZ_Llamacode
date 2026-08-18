@@ -57,3 +57,21 @@ La única mejora respaldada por esta prueba es `ubatch=128` manteniendo
 medible de decode. `batch=1024` no justifica el consumo adicional. No se cambia
 ningún perfil existente ni se promociona la variante a BEST; falta repetir con
 HE0/HE20/BCB si se quiere afirmar una mejora de calidad agentica.
+
+## HE0 ejecutado después
+
+El 2026-08-18 se ejecutó `HumanEval (1 ítems)` en target `agent`, una pasada por
+variante, con `agent-chat` (`Chat liviano`). Ambas copias pasaron la compuerta
+HE0 (`1/1`, `failed=false`, `failureKind=none`, sin timeout, sin reparación y
+sin fallo de transporte):
+
+| Variante | Tiempo total | Primer intento | Generación | VRAM pico | RAM pico |
+|---|---:|---:|---:|---:|---:|
+| `UBATCH128` | 26,242 s | 21,240 s | 7,270 s | 24.963 MB | 26.054 MB |
+| `UBATCH128_BATCH1024` | 18,760 s | 14,108 s | 0,734 s | 24.910 MB | 26.099 MB |
+
+La segunda terminó más rápido en esta pasada, pero no se promociona como mejor
+runtime: la diferencia de generación es demasiado grande para una única corrida
+y el benchmark no fue repetido. Los artefactos quedaron en
+`C:/Users/cristian/AppData/Local/LlamaCode/LlamaCode/benchmark-runs/HumanEval_1_tems__20260818_160208`.
+HE20 todavía no se ejecutó.
