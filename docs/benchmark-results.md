@@ -27,10 +27,6 @@ El esquema obligatorio de cada fila es exactamente: `ID`, `Perfil`, `Agente`,
 | `sys-laguna-s-2-1-q2-48gb-safe` | Laguna S 2.1 · CUDA safe 64k | básico | 1/1 | Pendiente | Pendiente | 150,127 s | — | — | — | — | — | No | — | UD-Q2_K_XL | 118B-A8B | 65k | No | LC-H1 | HE0 válido |
 | `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | DeepSeek Fusion VRAM histórico | chat | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB calidad |
 | `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | En curso | 112,497 s | 1164,244 s | — | — | 9,58 | — | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | HE20 válido; BCB en curso |
-| `f3d000b7-59da-4035-9114-f326515ba95d` | DeepSeek VRAM expertos 0-5 | chat | 0/1 | — | — | 61,421 s | — | — | 10,38 | — | — | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | HE0 inválido: no creó el archivo; HE20/BCB bloqueados |
-| `78929286-486e-43a2-a97b-25f251d34254` | DeepSeek VRAM expertos 0-9 | maximo | 0/0 | — | — | 9,199 s | — | — | — | — | — | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | HE0 bloqueado por OOM en GPU0 |
-| `b493dc59-5e6d-4327-b1d8-3b4e59a89c03` | DeepSeek VRAM expertos 0-5 · HE0 safe | maximo | 0/1 | — | — | 50,274 s | — | — | — | — | — | No | — | Q2/Q4 imatrix | 284B | 65k | No | LC-H1 | HE0 infraestructura: CUDA illegal access; HE20/BCB bloqueados |
-| `2ae89282-9bc1-4459-ac57-180a075a65ff` | DeepSeek VRAM expertos 0-5 · CUDA stable | maximo | 0/0 | — | — | 81,492 s | — | — | — | — | — | No | — | Q2/Q4 imatrix | 284B | 65k | No | LC-H1 | HE0 infraestructura: backend/daemon no estable; HE20/BCB bloqueados |
 
 ## Comparación de agentes en DeepSeek BCB
 
