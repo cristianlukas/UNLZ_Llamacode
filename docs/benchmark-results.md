@@ -4,7 +4,7 @@ Este archivo es la tabla operativa vigente. Cada mejora de perfil, harness,
 agente o infraestructura debe actualizar esta tabla y agregar una entrada en
 [`benchmark-results-history.md`](benchmark-results-history.md).
 
-Última actualización: 2026-08-17.
+Última actualización: 2026-08-18.
 
 ## Alcance activo
 
@@ -26,7 +26,19 @@ El esquema obligatorio de cada fila es exactamente: `ID`, `Perfil`, `Agente`,
 | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | ThinkingCap Qwen3.6 MTP4 | chat | 1/1 | 20/20 | 3/8 | 11,288 s | 118,098 s | 169,431 s | 48,21 | 61,96 | 52,04 | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | BCB calidad |
 | `sys-laguna-s-2-1-q2-48gb-safe` | Laguna S 2.1 · CUDA safe 64k | básico | 1/1 | Pendiente | Pendiente | 150,127 s | — | — | — | — | — | No | — | UD-Q2_K_XL | 118B-A8B | 65k | No | LC-H1 | HE0 válido |
 | `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | DeepSeek Fusion VRAM histórico | chat | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB calidad |
-| `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | En curso | 112,497 s | 1164,244 s | — | — | 9,58 | — | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | HE20 válido; BCB en curso |
+| `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | 4/8* | 112,497 s | 1164,244 s | 1396,871 s* | — | 9,58 | — | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB mejor resultado evaluable; repetir cancelado por reparación estancada |
+
+## Experimentos con compuerta HE0
+
+Estas variantes se probaron para repartir más expertos DeepSeek en GPU0. Al no
+pasar HE0, quedan bloqueadas y no se ejecutan HE20 ni BCB.
+
+| ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Estado |
+|---|---|---|---:|---:|---:|---:|---|
+| `392ea030-059e-4f69-86c6-81d3fa31acbc` | DeepSeek Fusion · VRAM expertos 0–2 | básico | 0/1 | No ejecutado | No ejecutado | 21,105 s | Salida no evaluable: no creó `solution_HumanEval_0.py`; sin CUDA/OOM |
+| `6d4b528f-f26d-4500-99cf-c25a36dd6f54` | DeepSeek Fusion · VRAM expertos 0–3 | chat | 0/1 | No ejecutado | No ejecutado | 32,450 s | Salida no evaluable: no creó `solution_HumanEval_0.py`; sin CUDA/OOM |
+| `318368e6-3fb7-4ef8-a76a-23030c544c49` | Laguna S 2.1 · CPU-safe 32k | básico → chat | 0/1 | No ejecutado | No ejecutado | 68,149 s / 74,605 s | El backend carga; ambos agentes no crearon `solution_HumanEval_0.py` |
+| `807c23f8-442c-4303-b96a-e1d0481eaf69` | Laguna S 2.1 · safe CUDA 65k | básico | 0/0 | No ejecutado | No ejecutado | 30,432 s | `CUDA illegal memory access` en GPU0 durante la carga |
 
 ## Comparación de agentes en DeepSeek BCB
 

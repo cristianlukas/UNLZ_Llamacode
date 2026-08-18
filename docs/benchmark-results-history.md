@@ -141,3 +141,42 @@ contexto/batch o usar una distribución más conservadora.
 `AssertionError`, `KeyError`, `PermissionError` o contrato de archivo con el
 servidor estable se clasifica como fallo funcional del código generado o del
 agente/harness.
+
+## 2026-08-18 — BCB DeepSeek, Laguna y tiers 0–2/0–3
+
+Se ejecutaron las acciones pendientes respetando la compuerta HE0:
+
+- **DeepSeek original** (`4f5cc556-333d-4310-955e-15042cd874d6`): se lanzó BCB
+  con `agent-avanzado` y timeout de 3600 s. La pasada alcanzó la etapa de
+  reparación de los fallos 765/771/1019/583/139/360 y generó temporales de
+  trabajo, pero quedó estancada en la reparación 1/2. Se canceló después de
+  más de 180 s sin cierre de etapa para no dejar el daemon consumiendo
+  recursos. No hay resultado final persistido; se conserva como mejor resultado
+  evaluable el **4/8 en 1396,871 s** de la corrida anterior.
+- **DeepSeek VRAM 0–1** (`6b3bf7bd-0889-491a-9b6d-b12128478a5f`): repetición
+  BCB con `agent-basico`, **2/8 en 928,677 s**. No hubo CUDA ilegal ni crash;
+  los seis fallos restantes son funcionales/contractuales del código generado
+  o del agente: 765, 771, 1019, 583, 139 y 360.
+- **Laguna safe CUDA 65k** (`807c23f8-442c-4303-b96a-e1d0481eaf69`): al
+  verificar HE0 sobre el ID real volvió a fallar durante la carga con
+  `CUDA error: an illegal memory access` en GPU0, 0/0 en 30,432 s. Por la
+  compuerta no se ejecutaron HE20 ni BCB.
+- **Laguna CPU-safe 32k** (`318368e6-3fb7-4ef8-a76a-23030c544c49`): el backend
+  cargó y no produjo CUDA/OOM, pero HE0 fue 0/1 con `agent-basico` (68,149 s)
+  y nuevamente 0/1 con `agent-chat` (74,605 s). En ambos casos faltó
+  `solution_HumanEval_0.py`. No se habilitaron HE20 ni BCB porque el fallo es
+  anterior a la validación de calidad.
+- **DeepSeek VRAM expertos 0–2** (`392ea030-059e-4f69-86c6-81d3fa31acbc`):
+  HE0 0/1 en 21,105 s con `agent-basico`; cargó sin CUDA/OOM, pero no creó el
+  archivo esperado. No se ejecutaron HE20/BCB.
+- **DeepSeek VRAM expertos 0–3** (`6d4b528f-f26d-4500-99cf-c25a36dd6f54`):
+  HE0 0/1 en 32,450 s con `agent-chat`; cargó sin CUDA/OOM, pero no creó el
+  archivo esperado. No se ejecutaron HE20/BCB.
+
+La conclusión es que 0–2/0–3 no mejoran por ahora a VRAM 0–1: el reparto es
+estable a nivel CUDA, pero no supera el smoketest del harness. Laguna tiene dos
+problemas distintos: el reparto 65k conserva el acceso ilegal en GPU0 y el
+reparto CPU-safe evita el crash pero no logra una salida evaluable con los dos
+agentes probados. Por tanto quedan pendientes una combinación de backend/binario
+o un agente/harness que produzca el archivo HE0; no corresponde saltar a HE20 ni
+BCB.
