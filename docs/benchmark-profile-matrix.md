@@ -443,3 +443,25 @@ Backup de los cuatro archivos antes de la edición: `profiles/{launches,backends
 3. Abrir LlamaCode headless y verificar `getLaunchProfile`, `getRuntimePreset` y la línea de comandos efectiva de `llama-server`.
 4. No aceptar un resultado 0/0 como calidad: clasificarlo como `Infraestructura`, `server-load`, `server-crash` o `timeout`.
 5. Actualizar primero la fila de resultados y luego el bloque de configuración, manteniendo el ID histórico de la corrida.
+
+## Experimentos Qwen3.6 cache híbrido — 2026-08-18
+
+Copias opt-in de MAX-Q ejecutadas exclusivamente desde `build/Debug/LlamaCode.exe`.
+No modifican el control `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c`.
+
+| Perfil | ID | Suite | Resultado | Tiempo | VRAM | RAM | Estado |
+|---|---|---|---:|---:|---:|---:|---|
+| Control MAX-Q MTP4 repetido | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | Corta/7 | 5/5 | 86,262 s | 23.849 MB | 26.408 MB | control |
+| Cache híbrido MTP2 | `sys-experiment-qwen36-cache-mtp2` | Corta/7 | 5/5 | 147,013 s | 23.576 MB | 25.065 MB | estable; lento |
+| Cache híbrido MTP4 | `sys-experiment-qwen36-cache-mtp4` | Corta/7 | 5/5 | 111,520 s | 23.867 MB | 25.371 MB | estable; sin promoción |
+| Cache híbrido MTP6/p-min 0.5 | `sys-experiment-qwen36-cache-mtp6` | Corta/7 | 5/5 | 86,551 s | 24.159 MB | 25.672 MB | repetir |
+| Texto-only cache híbrido MTP4 | `sys-experiment-qwen36-cache-text-mtp4` | Corta/7 | 5/5 | 91,671 s | 22.975 MB | 24.305 MB | menor memoria |
+
+Configuración común de las copias: `ctx=131000`, `batch=512`, `ubatch=64`,
+`parallel=1`, KV `q4_0`, Flash Attention, sampling conservador,
+`--cache-ram 32768 --ctx-checkpoints 8 --checkpoint-min-step 4096
+--kv-unified --cache-idle-slots`. La copia texto-only agrega `--no-mmproj`.
+El log de b10331 informa que `cache-reuse` no está soportado por el contexto MTP
+(y también queda deshabilitado en la variante multimodal), por lo que la mejora
+de cache propuesta por el texto no quedó validada completamente. La corrección
+híbrida de PR #25592 debe repetirse con un binario que la incluya.

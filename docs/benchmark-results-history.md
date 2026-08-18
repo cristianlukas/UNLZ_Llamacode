@@ -257,3 +257,28 @@ VRAM libre ni capacidad instalada. Las nuevas corridas también persisten
 sólo guardaron la suma no se desglosan retrospectivamente.
 Las corridas históricas sin dato no se completan por inferencia: quedan como
 `No medido` y deben repetirse si la comparación de memoria es necesaria.
+
+## 2026-08-18 — Experimentos Qwen3.6: checkpoints, MTP y texto-only en Debug
+
+Se agregaron cuatro copias opt-in de MAX-Q, sin modificar `sys-maxq` ni el
+launch histórico `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c`. Todas se probaron desde
+`build/Debug/LlamaCode.exe`, con llama.cpp b10331, `short`, `agent-maximo`, una
+pasada y la misma suite de 7 prompts. Las copias usan `--cache-ram 32768`,
+`--ctx-checkpoints 8`, `--checkpoint-min-step 4096`, `--kv-unified` y
+`--cache-idle-slots`.
+
+| Perfil | Resultado | Tiempo Corta | VRAM | RAM | Observación |
+|---|---:|---:|---:|---:|---|
+| Control MAX-Q MTP4 | 5/5 | 86,262 s | 23.849 MB | 26.408 MB | Corrida de control repetida |
+| Cache híbrido MTP2 | 5/5 | 147,013 s | 23.576 MB | 25.065 MB | Estable, pero más lento |
+| Cache híbrido MTP4 | 5/5 | 111,520 s | 23.867 MB | 25.371 MB | Estable, sin superar al control repetido |
+| Cache híbrido MTP6/p-min 0.5 | 5/5 | 86,551 s | 24.159 MB | 25.672 MB | Prometedor en una pasada; requiere repetición |
+| Texto-only cache híbrido MTP4 | 5/5 | 91,671 s | 22.975 MB | 24.305 MB | Menos memoria, ~6,3% más lento que el control repetido |
+
+El primer control de la serie tuvo 4/5 en 151,220 s, por lo que no se usa
+para declarar ganador frente a MTP2/MTP4/MTP6: la variabilidad del agente es
+visible. En los logs de b10331, `cache-reuse` fue desactivado tanto por el
+`mmproj` multimodal como por el contexto MTP texto-only; los checkpoints sí se
+crearon/restauraron, pero PR #25592 no se presume integrado en b10331. Resultado:
+ninguna copia se promueve todavía. MTP6 merece una repetición; texto-only queda
+como candidata de menor memoria para coding, no como mejora de velocidad.

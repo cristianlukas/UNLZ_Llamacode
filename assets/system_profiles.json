@@ -3045,5 +3045,53 @@
       { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } }
     ],
     "comment": "Variante de precisión: más peso y menos margen de KV. Diez perfiles candidatos por GGUF pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."
+  },
+  {
+    "id": "sys-experiment-qwen36-cache-mtp2",
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 190, "extra": true, "benchmark": false, "autoCompanion": false,
+    "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP2",
+    "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
+    "model": { "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF", "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf", "mmprojFile": "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf", "quant": "Q4_K_M" },
+    "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
+    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "2", "--spec-draft-p-min", "0.0"],
+    "binaryKind": "official", "minimumBinaryBuild": 10331, "vision": true,
+    "comment": "Copia experimental de sys-maxq: sólo cambia el manejo explícito de checkpoints/cache y baja MTP a 2. Sirve para medir estabilidad de cache y latencia contra MAX-Q sin modificarlo. La corrección completa de checkpoints híbridos de PR #25592 no se presume disponible en b10331."
+  },
+  {
+    "id": "sys-experiment-qwen36-cache-mtp4",
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 191, "extra": true, "benchmark": false, "autoCompanion": false,
+    "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP4",
+    "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
+    "model": { "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF", "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf", "mmprojFile": "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf", "quant": "Q4_K_M" },
+    "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
+    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "4", "--spec-draft-p-min", "0.0"],
+    "binaryKind": "official", "minimumBinaryBuild": 10331, "vision": true,
+    "comment": "Copia experimental de sys-maxq con checkpoints híbridos explícitos; conserva MTP4 para una comparación 1:1 con el perfil vigente. No reemplaza ni altera MAX-Q."
+  },
+  {
+    "id": "sys-experiment-qwen36-cache-mtp6",
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 192, "extra": true, "benchmark": false, "autoCompanion": false,
+    "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP6 p-min 0.5",
+    "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
+    "model": { "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF", "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf", "mmprojFile": "mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf", "quant": "Q4_K_M" },
+    "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
+    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "6", "--spec-draft-p-min", "0.5"],
+    "binaryKind": "official", "minimumBinaryBuild": 10331, "vision": true,
+    "comment": "Copia experimental de sys-maxq para medir el punto MTP6/p-min 0.5 reportado en la referencia. Mantiene sampling conservador y todos los límites de cache; no promover sin HE0 y comparación reproducible."
+  },
+  {
+    "id": "sys-experiment-qwen36-cache-text-mtp4",
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 193, "extra": true, "benchmark": false, "autoCompanion": false,
+    "displayName": "EXPERIMENTAL - MAX-Q texto-only · cache híbrido · MTP4",
+    "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
+    "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
+    "model": { "repo": "bottlecapai/ThinkingCap-Qwen3.6-27B-GGUF", "file": "ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf", "quant": "Q4_K_M" },
+    "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
+    "extraArgs": ["--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-mmproj", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "4", "--spec-draft-p-min", "0.0"],
+    "binaryKind": "official", "minimumBinaryBuild": 10331,
+    "comment": "Copia texto-only del experimento MTP4: elimina mmproj porque el flujo coding no usa visión y b10331 desactiva cache-reuse en modelos multimodales. Es la variante para comprobar si el cache de prompt/checkpoints realmente aporta en el caso de uso."
   }
 ]
