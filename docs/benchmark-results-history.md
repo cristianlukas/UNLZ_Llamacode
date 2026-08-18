@@ -13,6 +13,10 @@ La tabla viva se redujo a los siete perfiles solicitados. Se marcó con `⚡` el
 Qwen3.8 UD-Q4 visión como BEST de esta selección por tener el mayor BCB
 registrado (5/8). Los demás perfiles no llevan el indicador BEST.
 
+Desde esta fecha, el conjunto operativo queda restringido a perfiles con el
+indicador `⚡ BEST`; los demás se conservan sólo como histórico y no se
+benchmarkean nuevamente sin autorización explícita.
+
 ## 2026-08-17 — Laguna safe y reparación del harness
 
 - Laguna original fallaba durante la carga CUDA en GPU0, antes del harness.

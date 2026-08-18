@@ -24,6 +24,13 @@ La historia de corridas, descubrimientos, fallos y decisiones se conserva en
 [`benchmark-results-history.md`](benchmark-results-history.md). Toda mejora debe
 actualizar ambos archivos sin borrar los resultados históricos.
 
+## Alcance de ejecución
+
+Por defecto, sólo se benchmarkean perfiles marcados `⚡ BEST` en la tabla viva.
+Los perfiles sin ese indicador quedan archivados como referencia y no se
+ejecutan nuevamente. Incorporar otro perfil al conjunto activo requiere
+marcarlo explícitamente como `⚡ BEST` y registrar el motivo en el historial.
+
 ## Regla principal: la escalera de validación
 
 Cada candidata debe avanzar por esta secuencia:

@@ -6,6 +6,13 @@ agente o infraestructura debe actualizar esta tabla y agregar una entrada en
 
 Última actualización: 2026-08-17.
 
+## Alcance activo
+
+Sólo se ejecutan nuevos benchmarks para perfiles marcados `⚡ BEST`. En esta
+selección el único perfil activo es **⚡ Qwen3.8 UD-Q4 visión**. Los demás
+perfiles permanecen como referencia histórica y no deben volver a ejecutarse
+salvo autorización explícita.
+
 | ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant | Parámetros | Contexto | Thinking | Harness | Estado |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|---|
 | `sys-qwen38-27b-udq4-131k` | ⚡ Qwen3.8 UD-Q4 visión | chat | 1/1 | 20/20 | 5/8 | 11,288 s | 237,507 s | 1430,390 s | 39,22 | 60,50 | 65,21 | Sí | MTP3 | UD-Q4_K_XL | 27B | 131k | No | LC-H1 | BCB calidad |
