@@ -216,3 +216,12 @@ calidad del modelo, sino una incompatibilidad entre este GGUF/backend y los
 repartos que intentan mantener esos expertos en GPU0. No se ejecutaron HE20 ni
 BCB. La variante DeepSeek VRAM 0–1 continúa siendo la única de esa familia
 validada con HE0/HE20.
+
+# 2026-08-18 — VRAM total obligatoria por perfil
+
+La tabla operativa ahora incluye `VRAM total`. El valor es `vramMb`, el pico
+agregado de memoria usada en GPU0 + GPU1 durante la corrida reportada; no es
+VRAM libre ni capacidad instalada. La telemetría también conserva `ramMb` y,
+para variantes MoE, las lecturas individuales por GPU cuando están disponibles.
+Las corridas históricas sin dato no se completan por inferencia: quedan como
+`No medido` y deben repetirse si la comparación de memoria es necesaria.

@@ -63,7 +63,7 @@ BCB de ese perfil mientras HE0 no sea válido; tampoco se usa BCB para rescatar
 una candidata con fallas de transporte, arranque o persistencia.
 
 El controlador persiste una huella SHA-256 del comando efectivo junto con cada
-resultado. La huella debe coincidir al habilitar la etapa siguiente; cambiar
+resultado, además de `vramMb` (VRAM agregada) y `ramMb`. La huella debe coincidir al habilitar la etapa siguiente; cambiar
 modelo, contexto, KV, MTP, binario, tensor-split, harness o cualquier flag
 obliga a repetir HE0 aunque exista un resultado histórico `1/1`.
 
@@ -163,6 +163,18 @@ eventos, errores, timestamps, archivos producidos y resultado por tarea.
 Para HumanEval, el artefacto debe ser específico por tarea, por ejemplo
 `solution_<task-id>.py`. El grader debe leer ese archivo y no un archivo residual
 de otra tarea. Cada pasada comienza con un workspace limpio.
+
+### Telemetría obligatoria de memoria
+
+Cada perfil se mide con el servidor aislado: se detiene y limpia la corrida
+anterior, se inicia el perfil y el monitor toma muestras durante la carga y la
+ejecución. La tabla registra como `VRAM total` el máximo de `GPU0 usada +
+GPU1 usada` en MB (`vramMb`), no la VRAM libre ni la capacidad nominal de las
+placas. También se conserva `ramMb` como RAM pico en el JSON y en la historia.
+Si una corrida no obtiene telemetría válida, se escribe `No medido` y no se
+infiere el valor a partir del quant, contexto o TPS. Para variantes MoE se
+anotan además las lecturas por GPU en la historia, porque la suma total no
+muestra cómo se distribuyeron los expertos.
 
 ### Suites
 
