@@ -1,6 +1,31 @@
 # Historia, descubrimientos y anotaciones de benchmarking
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
+
+## 2026-08-17 — Reparación del tier DeepSeek VRAM 0–5
+
+Se investigó la conclusión anterior que atribuía el bloqueo del tier 0–5 a la
+generación/harness. La evidencia nueva obliga a corregirla: el primer fallo de
+la variante 0–5 reducida ocurrió en el primer prompt con `CUDA error: an illegal
+memory access` en GPU0, antes de que el agente pudiera crear
+`solution_HumanEval_0.py`. Por lo tanto, no se habilitó HE20 ni BCB.
+
+Se conservaron las variantes históricas y se probaron copias separadas:
+
+| Variante | Cambio | HE0 | Resultado técnico |
+|---|---|---:|---|
+| `VRAM experts 0-5` | reparto histórico, ctx 131k | 0/1 | El agente llegó a generar, pero el watchdog terminó una reparación sin cambios; luego el agente básico omitió el archivo esperado. |
+| `VRAM experts 0-5 · HE0 safe` | mismo reparto; `predict=4096`, ctx 65k, batch 2048, ubatch 512 | 0/1 | `CUDA error: an illegal memory access` en GPU0 al primer prompt; server salió con código `-1073740791`. |
+| `VRAM experts 0-5 · CUDA stable` | además `flash-attn off`, `no-mmap` | 0/0 | No carga: el GGUF usa cache V cuantizada y exige Flash Attention. Al corregir Flash Attention a `on`, la carga quedó inestable y el daemon desapareció antes de finalizar HE0. |
+
+La conclusión operativa queda así: **DeepSeek VRAM 0–1 sigue siendo la mejor
+variante DeepSeek validada (HE0 1/1 y HE20 histórico 20/20)**. Mover expertos
+0–5 sí aumenta la ocupación de GPU0, pero con el binario/GGUF actuales no es una
+configuración validada: presenta acceso ilegal intermitente o caída durante la
+carga. El problema no es sólo generación ni harness, y no corresponde presentar
+0–5 como candidato a HE20 hasta obtener una combinación de backend, binario y
+reparto que pase HE0 limpio. El tier 0–9 permanece descartado por OOM en GPU0
+(`24663.67 MiB` solicitados sobre `24576 MiB`).
 No se reescriben resultados anteriores: cada mejora agrega una entrada nueva
 con fecha, configuración, evidencia y decisión.
 
