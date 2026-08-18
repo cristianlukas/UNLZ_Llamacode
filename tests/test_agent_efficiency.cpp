@@ -13,6 +13,7 @@ private slots:
     void metrics_parsesLlamaAndOpenAI();
     void metrics_summarizesAndCompares();
     void metrics_aggregatesRepeatedBenchmarkRuns();
+    void metrics_groupsByAgentProfileForHarnessAb();
     void structured_compactsAndProjects();
     void structured_rejectsUnsafeLanguagesAndSyntax();
     void workflow_validatesRoutesAndApproval();
@@ -229,6 +230,52 @@ void AgentEfficiencyTests::workflowVisual_roundTripPreservesAdvancedFields()
     QCOMPARE(tool.value("prompt").toString(), QStringLiteral("nuevo prompt"));
     QCOMPARE(merged.value("steps").toMap().value("branch").toMap()
                  .value("branches").toList().size(), 2);
+}
+
+// A/B de HARNESS: mismo modelo (profileId), distinto perfil de agente. Agrupar
+// por profileId daria UNA fila y ninguna comparacion; hay que agrupar por
+// agentProfileId para que el barrido de tools/harness_ab.ps1 tenga sentido.
+void AgentEfficiencyTests::metrics_groupsByAgentProfileForHarnessAb()
+{
+    auto run = [](const QString &agentId, const QString &agentName, int score,
+                  double elapsed, double firstAttempt) {
+        return QVariantMap{{"profileId", "qwen"}, {"profileName", "Qwen"},
+                           {"agentProfileId", agentId}, {"agentProfileName", agentName},
+                           {"qualityScore", score}, {"qualityTotal", 10},
+                           {"elapsedSec", elapsed}, {"timeToFirstAttempt", firstAttempt},
+                           {"repairAttempts", 0}, {"failed", false}, {"pass", 1},
+                           {"complexityMetrics", QVariantMap{{"filesChanged", 2},
+                                                             {"addedLines", 10},
+                                                             {"removedLines", 1}}}};
+    };
+    const QVariantList runs{
+        run("agent-intermedio", "Intermedio", 9, 100.0, 60.0),
+        run("agent-intermedio", "Intermedio", 9, 110.0, 62.0),
+        run("agent-minimal", "Minimal", 8, 70.0, 40.0),
+        run("agent-minimal", "Minimal", 8, 74.0, 42.0)
+    };
+
+    // Agrupado por modelo: un solo grupo, nada que comparar.
+    const QVariantMap byModel = AgentEfficiency::benchmarkComparison(runs);
+    QCOMPARE(byModel.value("profileCount").toInt(), 1);
+    QVERIFY(byModel.value("comparisons").toList().isEmpty());
+
+    // Agrupado por harness: dos grupos y su delta.
+    const QVariantMap byHarness =
+        AgentEfficiency::benchmarkComparison(runs, QStringLiteral("agentProfileId"));
+    QCOMPARE(byHarness.value("profileCount").toInt(), 2);
+    QCOMPARE(byHarness.value("comparisons").toList().size(), 1);
+
+    QVariantMap minimal;
+    for (const QVariant &value : byHarness.value("profiles").toList()) {
+        const QVariantMap profile = value.toMap();
+        if (profile.value("profileId").toString() == "agent-minimal") minimal = profile;
+    }
+    // El nombre visible sale del perfil de AGENTE, no del modelo: si mostrara
+    // "Qwen" en las dos filas el informe seria ilegible.
+    QCOMPARE(minimal.value("profileName").toString(), QStringLiteral("Minimal"));
+    QCOMPARE(minimal.value("medianQualityPct").toDouble(), 80.0);
+    QCOMPARE(minimal.value("medianElapsedSec").toDouble(), 72.0);
 }
 
 QTEST_MAIN(AgentEfficiencyTests)

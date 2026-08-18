@@ -102,14 +102,20 @@ static double median(QList<double> values)
         : (values.at(middle - 1) + values.at(middle)) / 2.0;
 }
 
-QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
+QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const QString &groupBy)
 {
+    // groupBy: "profileId" (default, compara MODELOS) o "agentProfileId" (compara
+    // HARNESS: mismo modelo, distinto spec). Es la misma matemática; lo único que
+    // cambia es qué eje se mantiene fijo.
+    const QString key = groupBy.trimmed().isEmpty() ? QStringLiteral("profileId")
+                                                    : groupBy.trimmed();
+    const bool byAgent = key == QLatin1String("agentProfileId");
     QMap<QString, QVariantList> grouped;
     for (const QVariant &value : runs) {
         const QVariantMap run = value.toMap();
-        const QString profileId = run.value(QStringLiteral("profileId")).toString().trimmed();
-        if (!profileId.isEmpty())
-            grouped[profileId].append(run);
+        const QString groupId = run.value(key).toString().trimmed();
+        if (!groupId.isEmpty())
+            grouped[groupId].append(run);
     }
 
     QVariantList profiles;
@@ -135,7 +141,8 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs)
         for (const QVariant &value : profileRuns) {
             const QVariantMap run = value.toMap();
             if (profileName.isEmpty())
-                profileName = run.value(QStringLiteral("profileName")).toString()
+                profileName = run.value(byAgent ? QStringLiteral("agentProfileName")
+                                                : QStringLiteral("profileName")).toString()
                                       .section(QStringLiteral(" · pasada "), 0, 0);
             if (agentVariant.isEmpty())
                 agentVariant = run.value(QStringLiteral("agentVariant")).toString();

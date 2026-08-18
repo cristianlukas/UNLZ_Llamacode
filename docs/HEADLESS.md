@@ -178,6 +178,23 @@ la sesión y se envían al request `/v1/chat/completions` sólo cuando están
 configurados. Cada respuesta registra `firstTokenMs`; `test_backends_net`
 verifica payload, reinicio de sesión y medición contra un stub HTTP local.
 
+## A/B de harness headless
+
+Comparar dos configuraciones de harness (mismo modelo, distinto `HarnessSpec`)
+no necesita GUI: `startBenchmark`/`startCustomBenchmark` aceptan `agentProfileId`,
+y `compareHarnessBenchmarks(agentProfileIds, runDir)` agrupa las corridas
+guardadas por perfil de AGENTE en vez de por modelo. `tools\harness_ab.ps1`
+orquesta las dos corridas y escribe el informe:
+
+```powershell
+powershell -File tools\harness_ab.ps1 -LaunchProfileId <launch> `
+  -AgentProfileIds agent-intermedio,agent-minimal -Passes 3 -Port 8877
+```
+
+Los verbos del harness modular (`harnessPackCatalog`, `agentProfileSpec`,
+`setAgentProfileSpec`, `agentProfileDiff`, `harnessSpecSummary`,
+`harnessDirectiveCatalog`) viven en el target `profileManager`.
+
 ## Smoke real del daemon y una Loop vía ControlApi
 
 Este procedimiento valida el contrato que usarían CI o un cliente externo. No

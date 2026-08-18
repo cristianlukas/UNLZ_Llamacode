@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.101"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.102"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -808,6 +808,11 @@ public:
     // activo, escritorio, cuentas de correo, browser). ProfileManager solo puede
     // detectar git; sin esto el preflight de dependencias avisaba de menos.
     Q_INVOKABLE QVariantMap harnessSpecSummary(const QString &agentProfileId) const;
+    // A/B de HARNESS: agrupa las corridas de benchmark ya guardadas por perfil de
+    // AGENTE (mismo modelo, distinto HarnessSpec) y devuelve el mismo informe que
+    // usa comparison.json. `runDir` vacío = todas las corridas cargadas.
+    Q_INVOKABLE QVariantMap compareHarnessBenchmarks(const QStringList &agentProfileIds,
+                                                     const QString &runDir = QString()) const;
     Q_INVOKABLE QVariantMap agentSandboxStatus() const;
     Q_INVOKABLE QVariantList portableSkills() const;
     Q_INVOKABLE QVariantMap portableSkill(const QString &name) const;
@@ -1730,6 +1735,10 @@ private:
     // Aplica el override de una fase declarada en el spec ("plan"|"exec"|
     // "verify"|"goalCheck"). Sin fases declaradas es un no-op.
     void      applyHarnessPhase(const QString &phase);
+    // Tuning efectivo (systemExtra + temperatura) de un perfil bajo un spec dado
+    // (el resuelto, o el de una fase). Ver la definición para la precedencia.
+    void      resolveAgentTuning(const AgentProfile &ap, const HarnessSpec &spec,
+                                 QString *systemExtra, double *temperature) const;
     // Alcance de filesystem de la Task en curso ("" = ninguna). El spec del
     // perfil se intersecta con esto: un perfil no puede ampliar permisos.
     QString     m_agentTaskScope;

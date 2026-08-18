@@ -4599,7 +4599,19 @@ QString AppController::taskVerificationProfile(const QVariantMap &task)
         {QStringLiteral("repeatedFailures"), qMax(m_attemptRetry, consecutiveToolFailures)},
         {QStringLiteral("agentCycles"), qMax(1, m_runningTaskLoopIteration)},
     };
-    const DifficultyRouter::Assessment assessment = DifficultyRouter().assessDetailed(state);
+    // Umbrales del perfil de agente activo (módulo `escalation` del HarnessSpec).
+    // Sin esto el router usaba siempre sus defaults y el spec mentía.
+    const HarnessSpec spec = m_profiles.resolveHarnessSpec(
+        m_profiles.resolveAgentProfile(resolveAgentProfileId()));
+    DifficultyRouter::Thresholds th;
+    if (spec.escalation.set) {
+        th.filesAffected    = spec.escalation.routerFilesAffected;
+        th.contextTokens    = spec.escalation.routerContextTokens;
+        th.repeatedFailures = spec.escalation.routerRepeatedFailures;
+        th.agentCycles      = spec.escalation.routerAgentCycles;
+        th.confidenceFloor  = spec.escalation.routerConfidenceFloor;
+    }
+    const DifficultyRouter::Assessment assessment = DifficultyRouter(th).assessDetailed(state);
     appendAgentEvent(QStringLiteral("task"),
                      assessment.shouldEscalate()
                          ? QStringLiteral("Router por dificultad: escalando al revisor (%1).")
@@ -4807,6 +4819,26 @@ QVariantMap AppController::harnessSpecSummary(const QString &agentProfileId) con
     return m_profiles.harnessSpecSummary(agentProfileId, currentAgentProjectDir(), env);
 }
 
+QVariantMap AppController::compareHarnessBenchmarks(const QStringList &agentProfileIds,
+                                                   const QString &runDir) const
+{
+    QVariantList rows;
+    for (const QVariant &value : m_benchmarkResults) {
+        const QVariantMap row = value.toMap();
+        if (!runDir.isEmpty() && row.value(QStringLiteral("runDir")).toString() != runDir)
+            continue;
+        const QString agentId = row.value(QStringLiteral("agentProfileId")).toString();
+        if (agentId.isEmpty()) continue;
+        if (!agentProfileIds.isEmpty() && !agentProfileIds.contains(agentId)) continue;
+        rows.append(row);
+    }
+    QVariantMap report = AgentEfficiency::benchmarkComparison(
+        rows, QStringLiteral("agentProfileId"));
+    report[QStringLiteral("groupBy")] = QStringLiteral("agentProfileId");
+    report[QStringLiteral("rows")] = rows.size();
+    return report;
+}
+
 QStringList AppController::expandDirectiveSentinel(const QStringList &keys)
 {
     if (!keys.contains(QStringLiteral("*"))) return keys;
@@ -4875,6 +4907,12 @@ void AppController::applyHarnessPhase(const QString &phase)
     if (base.phases.isEmpty()) return;              // sin fases declaradas: nada que hacer
     const HarnessSpec phased = HarnessSpec::forPhase(base, phase);
     applyHarnessSpec(cb, phased);
+    // Temperatura e instrucciones extra de la fase: una fase de verificación
+    // puede querer temperatura 0 y otro texto sin duplicar el perfil entero.
+    QString sysExtra;
+    double temp = -1.0;
+    resolveAgentTuning(ap, phased, &sysExtra, &temp);
+    cb->setAgentTuning(sysExtra, temp);
     if (phased.permissions.set && phased.permissions.approvalMode != base.permissions.approvalMode) {
         cb->setApprovalPolicy(phased.permissions.approvalMode);
         appendAgentEvent(QStringLiteral("task"),
@@ -4883,6 +4921,31 @@ void AppController::applyHarnessPhase(const QString &phase)
     }
     if (phased.tools.set && !phased.tools.include.contains(QStringLiteral("*")))
         cb->setDisabledTools(HarnessTools::disabledFrom(HarnessTools::resolve(phased.tools)));
+}
+
+// Resuelve el tuning (systemExtra + temperatura) que se le pasa al backend.
+// Precedencia: módulo `prompt`/`protocol` del spec (o de la FASE) > campos
+// legacy del perfil > ajuste global > temperatura del perfil de modelo.
+// Extraído para que una fase pueda pisar temperatura/instrucciones igual que
+// pisa tools o permisos.
+void AppController::resolveAgentTuning(const AgentProfile &ap, const HarnessSpec &spec,
+                                       QString *systemExtra, double *temperature) const
+{
+    QString extra = ap.systemExtra;
+    if (spec.prompt.set && !spec.prompt.systemExtra.trimmed().isEmpty())
+        extra = spec.prompt.systemExtra;
+    if (extra.trimmed().isEmpty()) extra = m_agentSystemPrompt;
+    const QString personaStyle = m_profiles.renderPersonaStyleContext(ap, m_agentStyleQuery);
+    if (!personaStyle.isEmpty()) extra += personaStyle;
+
+    double temp = ap.temperature;
+    if (spec.protocol.set && spec.protocol.temperature >= 0.0)
+        temp = spec.protocol.temperature;
+    if (temp < 0.0)
+        temp = m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature;
+
+    if (systemExtra) *systemExtra = extra;
+    if (temperature) *temperature = temp;
 }
 
 void AppController::applyActiveAgentProfile()
@@ -4904,13 +4967,9 @@ void AppController::applyActiveAgentProfile()
     }
     cb->setApprovalPolicy(approval);
 
-    QString sysExtra = ap.systemExtra.trimmed().isEmpty() ? m_agentSystemPrompt
-                                                          : ap.systemExtra;
-    const QString personaStyle = m_profiles.renderPersonaStyleContext(ap, m_agentStyleQuery);
-    if (!personaStyle.isEmpty()) sysExtra += personaStyle;
-    const double temp = ap.temperature >= 0.0
-        ? ap.temperature
-        : (m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
+    QString sysExtra;
+    double temp = -1.0;
+    resolveAgentTuning(ap, m_profiles.resolveHarnessSpec(ap), &sysExtra, &temp);
     cb->setAgentTuning(sysExtra, temp);
 
     // Modo Plan: es una fase, no sólo una política de aprobación. Si el spec
@@ -5156,7 +5215,25 @@ void AppController::startAgent(const QString &launchProfileId)
         if (auto *cb = qobject_cast<LlamaAgentBackend *>(b)) {
             cb->setReasoningPolicy(ctx.launch.reasoningEffort,
                                    ctx.launch.reasoningBudget);
-            const MasterConfig &mc = ctx.launch.master;
+            // Cadena de maestros: el PERFIL DE AGENTE gana sobre el LaunchProfile.
+            // Así un mismo modelo puede escalar a distintos revisores según el
+            // harness elegido, sin duplicar el launch entero.
+            const HarnessSpec aspec = m_profiles.resolveHarnessSpec(
+                m_profiles.resolveAgentProfile(resolveAgentProfileId()));
+            MasterConfig mc = ctx.launch.master;
+            if (!aspec.escalation.masterFallbacks.isEmpty()) {
+                MasterConfig fromSpec;
+                for (const QJsonValue &v : aspec.escalation.masterFallbacks)
+                    fromSpec.fallbacks.append(MasterFallback::fromJson(v.toObject()));
+                fromSpec.escalation = aspec.escalation.masterEscalation.isEmpty()
+                    ? mc.escalation : aspec.escalation.masterEscalation;
+                fromSpec.autoAfterFails = aspec.escalation.masterAutoAfterFails > 0
+                    ? aspec.escalation.masterAutoAfterFails : mc.autoAfterFails;
+                mc = fromSpec;
+                appendAgentEvent(QStringLiteral("lifecycle"),
+                                 QStringLiteral("Maestro: cadena del perfil de agente (%1 nivel/es)")
+                                     .arg(mc.fallbacks.size()));
+            }
             if (mc.isConfigured()) {
                 cb->setMasterChain(buildMasterChain(mc), mc.escalation, mc.autoAfterFails);
             }

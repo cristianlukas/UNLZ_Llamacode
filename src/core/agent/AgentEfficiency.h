@@ -29,6 +29,9 @@ public:
     // Agrupa pasadas de benchmark por perfil y calcula estadísticos robustos.
     // Las filas fallidas cuentan para estabilidad/éxito, pero no contaminan
     // medianas de tiempo o calidad con ceros sintéticos.
-    static QVariantMap benchmarkComparison(const QVariantList &runs);
+    // groupBy = "profileId" (default: compara modelos) | "agentProfileId"
+    // (compara harness: mismo modelo, distinto HarnessSpec).
+    static QVariantMap benchmarkComparison(const QVariantList &runs,
+                                           const QString &groupBy = QStringLiteral("profileId"));
     static QString normalizedPhase(const QString &phase);
 };

@@ -199,6 +199,7 @@ QJsonObject HarnessEscalationModule::toJson() const
     o[QStringLiteral("isolateSubagents")] = isolateSubagents;
     o[QStringLiteral("masterEscalation")] = masterEscalation;
     o[QStringLiteral("masterAutoAfterFails")] = masterAutoAfterFails;
+    if (!masterFallbacks.isEmpty()) o[QStringLiteral("masterFallbacks")] = masterFallbacks;
     o[QStringLiteral("routerFilesAffected")] = routerFilesAffected;
     o[QStringLiteral("routerContextTokens")] = routerContextTokens;
     o[QStringLiteral("routerRepeatedFailures")] = routerRepeatedFailures;
@@ -215,6 +216,7 @@ HarnessEscalationModule HarnessEscalationModule::fromJson(const QJsonObject &o)
     m.isolateSubagents = o.value(QStringLiteral("isolateSubagents")).toBool(true);
     m.masterEscalation = o.value(QStringLiteral("masterEscalation")).toString();
     m.masterAutoAfterFails = boundedInt(o, "masterAutoAfterFails", 0, 0, 100);
+    m.masterFallbacks = o.value(QStringLiteral("masterFallbacks")).toArray();
     m.routerFilesAffected = boundedInt(o, "routerFilesAffected", 8, 1, 500);
     m.routerContextTokens = boundedInt(o, "routerContextTokens", 24000, 1000, 1000000);
     m.routerRepeatedFailures = boundedInt(o, "routerRepeatedFailures", 3, 1, 50);
@@ -391,6 +393,8 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
             escalation.masterEscalation);
     addDiff(out, "escalation", "masterAutoAfterFails", base.escalation.masterAutoAfterFails,
             escalation.masterAutoAfterFails);
+    addDiff(out, "escalation", "masterFallbacks", base.escalation.masterFallbacks.size(),
+            escalation.masterFallbacks.size());
     addDiff(out, "escalation", "routerFilesAffected", base.escalation.routerFilesAffected,
             escalation.routerFilesAffected);
     addDiff(out, "escalation", "routerContextTokens", base.escalation.routerContextTokens,

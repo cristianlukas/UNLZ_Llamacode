@@ -1,4 +1,5 @@
 #pragma once
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QMap>
 #include <QString>
@@ -112,6 +113,13 @@ struct HarnessEscalationModule {
     bool isolateSubagents = true;      // git worktree por sub-agente
     QString masterEscalation;          // "" = heredar del LaunchProfile
     int masterAutoAfterFails = 0;      // 0 = heredar
+    // Cadena de maestros del PERFIL DE AGENTE. Misma forma que MasterFallback
+    // (type/cliName/httpUrl/httpModel/httpKeyRef/profileId/applyEdits/timeoutSec).
+    // Vacía = usar la del LaunchProfile activo. Se guarda como JSON crudo para no
+    // arrastrar ProfileTypes acá: AppController la convierte con
+    // MasterFallback::fromJson y la resuelve con buildMasterChain (secretos y
+    // cliPath incluidos).
+    QJsonArray masterFallbacks;
     int routerFilesAffected = 8;
     int routerContextTokens = 24000;
     int routerRepeatedFailures = 3;

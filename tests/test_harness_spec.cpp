@@ -41,6 +41,8 @@ private slots:
     void permissions_scopeNeverWidens();
     void phases_patchOverridesResolvedSpec();
     void phases_canOverridePromptDirectives();
+    void phases_canOverrideTemperatureAndExtra();
+    void escalation_masterChainAndRouterThresholds();
     void diff_listsOnlyChangedFields();
     void presets_minimalAndRpaExist();
 
@@ -365,6 +367,61 @@ void HarnessSpecTests::phases_canOverridePromptDirectives()
     QCOMPARE(plan.prompt.builtin, QStringList{QStringLiteral("efficiency")});
     // El spec base no se toca: la fase es una vista, no una mutación.
     QCOMPARE(s.prompt.builtin.size(), 2);
+}
+
+// Temperatura e instrucciones extra por fase: una fase de verificacion puede
+// querer temperatura 0 sin duplicar el perfil entero.
+void HarnessSpecTests::phases_canOverrideTemperatureAndExtra()
+{
+    HarnessSpec s;
+    s.protocol.set = true;
+    s.protocol.temperature = 0.7;
+    s.prompt.set = true;
+    s.prompt.systemExtra = QStringLiteral("base");
+
+    QJsonObject proto;
+    proto[QStringLiteral("temperature")] = 0.0;
+    QJsonObject prompt;
+    prompt[QStringLiteral("systemExtra")] = QStringLiteral("verificá con evidencia");
+    QJsonObject patch;
+    patch[QStringLiteral("protocol")] = proto;
+    patch[QStringLiteral("prompt")] = prompt;
+    s.phases.insert(QStringLiteral("verify"), patch);
+
+    const HarnessSpec verify = HarnessSpec::forPhase(s, QStringLiteral("verify"));
+    QCOMPARE(verify.protocol.temperature, 0.0);
+    QCOMPARE(verify.prompt.systemExtra, QStringLiteral("verificá con evidencia"));
+    QCOMPARE(s.protocol.temperature, 0.7);   // el spec base no se muta
+}
+
+// La cadena de maestros y los umbrales del router viajan en el spec: son lo que
+// hace que "escalation" sea un módulo y no sólo dos flags.
+void HarnessSpecTests::escalation_masterChainAndRouterThresholds()
+{
+    QJsonObject esc;
+    esc[QStringLiteral("routerFilesAffected")] = 3;
+    esc[QStringLiteral("routerContextTokens")] = 9000;
+    esc[QStringLiteral("masterEscalation")] = QStringLiteral("auto");
+    esc[QStringLiteral("masterAutoAfterFails")] = 2;
+    QJsonArray chain;
+    chain.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("cli")},
+                             {QStringLiteral("cliName"), QStringLiteral("claude")}});
+    esc[QStringLiteral("masterFallbacks")] = chain;
+
+    const HarnessEscalationModule m = HarnessEscalationModule::fromJson(esc);
+    QCOMPARE(m.routerFilesAffected, 3);
+    QCOMPARE(m.routerContextTokens, 9000);
+    QCOMPARE(m.masterEscalation, QStringLiteral("auto"));
+    QCOMPARE(m.masterAutoAfterFails, 2);
+    QCOMPARE(m.masterFallbacks.size(), 1);
+    QCOMPARE(m.masterFallbacks.first().toObject().value(QStringLiteral("cliName")).toString(),
+             QStringLiteral("claude"));
+
+    // Round-trip: la cadena sobrevive a guardar/cargar el perfil.
+    const HarnessEscalationModule back = HarnessEscalationModule::fromJson(m.toJson());
+    QCOMPARE(back.masterFallbacks.size(), 1);
+    // Sin cadena declarada no se serializa la clave: el LaunchProfile sigue mandando.
+    QVERIFY(!HarnessEscalationModule().toJson().contains(QStringLiteral("masterFallbacks")));
 }
 
 void HarnessSpecTests::diff_listsOnlyChangedFields()
