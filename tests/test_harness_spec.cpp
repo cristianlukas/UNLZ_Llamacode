@@ -13,6 +13,7 @@
 
 #include <QtTest>
 #include <QTemporaryDir>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "core/profiles/HarnessSpec.h"
@@ -39,6 +40,7 @@ private slots:
     void permissions_guardrailOnlyDroppableInSuper();
     void permissions_scopeNeverWidens();
     void phases_patchOverridesResolvedSpec();
+    void phases_canOverridePromptDirectives();
     void diff_listsOnlyChangedFields();
     void presets_minimalAndRpaExist();
 
@@ -342,6 +344,27 @@ void HarnessSpecTests::phases_patchOverridesResolvedSpec()
     // Fase sin override = el spec base, sin sorpresas.
     const HarnessSpec exec = HarnessSpec::forPhase(s, QStringLiteral("exec"));
     QCOMPARE(exec.permissions.approvalMode, QStringLiteral("auto"));
+}
+
+// Una fase puede pisar las directivas built-in: es lo que permite que "plan"
+// entregue un prompt distinto al de "exec" sin duplicar el perfil.
+void HarnessSpecTests::phases_canOverridePromptDirectives()
+{
+    HarnessSpec s;
+    s.prompt.set = true;
+    s.prompt.builtin = {QStringLiteral("discipline"), QStringLiteral("testNet")};
+
+    QJsonObject promptPatch;
+    promptPatch[QStringLiteral("builtin")] =
+        QJsonArray{QStringLiteral("efficiency")};
+    QJsonObject patch;
+    patch[QStringLiteral("prompt")] = promptPatch;
+    s.phases.insert(QStringLiteral("plan"), patch);
+
+    const HarnessSpec plan = HarnessSpec::forPhase(s, QStringLiteral("plan"));
+    QCOMPARE(plan.prompt.builtin, QStringList{QStringLiteral("efficiency")});
+    // El spec base no se toca: la fase es una vista, no una mutación.
+    QCOMPARE(s.prompt.builtin.size(), 2);
 }
 
 void HarnessSpecTests::diff_listsOnlyChangedFields()

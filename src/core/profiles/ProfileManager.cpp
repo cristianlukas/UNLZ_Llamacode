@@ -1011,7 +1011,8 @@ QVariantList ProfileManager::harnessDirectiveCatalog(const QString &workspace) c
 // Resumen para el editor: tools resueltas, costo aproximado en tokens y
 // advertencias de dependencias. Es lo que convierte "personalizar" en una
 // decisión informada en vez de una adivinanza.
-QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString &workspace) const
+QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString &workspace,
+                                               const QVariantMap &env) const
 {
     const AgentProfile p = m_agentProfiles.findById(id);
     if (p.id.isEmpty()) return {};
@@ -1019,9 +1020,18 @@ QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString 
     const QStringList tools = spec.tools.include.contains(QStringLiteral("*"))
                                   ? HarnessTools::resolve(spec.tools)
                                   : HarnessTools::resolve(spec.tools);
-    HarnessTools::Environment env;
-    env.hasGit = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
-    QStringList warnings = HarnessTools::dependencyWarnings(tools, env);
+    HarnessTools::Environment environment;
+    environment.hasGit = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
+    auto envFlag = [&env](const char *key, bool def) {
+        const QVariant v = env.value(QString::fromLatin1(key));
+        return v.isValid() ? v.toBool() : def;
+    };
+    environment.hasEmbeddings = envFlag("hasEmbeddings", true);
+    environment.hasDesktop = envFlag("hasDesktop", true);
+    environment.hasMailAccount = envFlag("hasMailAccount", true);
+    environment.hasMcpServers = envFlag("hasMcpServers", true);
+    environment.hasBrowser = envFlag("hasBrowser", true);
+    QStringList warnings = HarnessTools::dependencyWarnings(tools, environment);
     for (const QString &slug : spec.prompt.custom) {
         const QVariantMap d = HarnessDirectiveStore::load(slug, workspace);
         if (!d.value(QStringLiteral("ok")).toBool())

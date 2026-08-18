@@ -31,7 +31,7 @@ Desde la implementación del plan modular, un perfil de agente es una
 | `context` | compactación (on/off + umbral + cola), poda, `keepLastImages`, read-dedup, preflight, warmup |
 | `permissions` | `approvalMode`, reglas por patrón, scope de FS, guardrails |
 | `escalation` | cap de sub-agentes, aislamiento en worktree, gatillo del maestro, umbrales del `DifficultyRouter` |
-| `protocol` | `auto` / `native` / `text`, thinking, temperatura, reasoning |
+| `protocol` | `auto` / `native` / `text`, leak-guard de thinking, temperatura, reasoning |
 | `phases` | overrides por fase: `plan`, `exec`, `verify`, `goalCheck` |
 
 Tres invariantes, todas testeadas:
@@ -489,5 +489,11 @@ end-to-end. Detalle en `CLAUDE.md`.
   siendo una recompilación.
 - Los umbrales del `DifficultyRouter` viven en el módulo `escalation` pero el
   router se instancia con sus defaults en `AppController`; falta pasárselos.
-- `maxDistinctWrites` y la cadena del maestro se declaran en el spec; el resto de
-  la config del maestro sigue en `LaunchProfile`.
+- La cadena del maestro sigue en `LaunchProfile`: el spec sólo declara el gatillo
+  (`masterEscalation`, `masterAutoAfterFails`).
+- Una fase puede pisar tools / prompt / loop / contexto / permisos y el modo de
+  protocolo, pero **no** la temperatura ni el `systemExtra` (los resuelve
+  `applyActiveAgentProfile` con sus propios fallbacks).
+- Barrido de benchmark comparando dos specs: **no está**. Los verbos headless y
+  `AgentEfficiency::benchmarkComparison()` permiten armarlo a mano; falta la
+  herramienta en `tools/` que lo corra de punta a punta.

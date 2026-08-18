@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.100"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.101"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -804,6 +804,10 @@ public:
     // ── Tools del agente (habilitar/deshabilitar built-in) ──
     // Catálogo con metadata + estado enabled, para la UI de toggles.
     Q_INVOKABLE QVariantList agentToolCatalog() const;
+    // Resumen del harness de un perfil con el ENTORNO REAL (embeddings del server
+    // activo, escritorio, cuentas de correo, browser). ProfileManager solo puede
+    // detectar git; sin esto el preflight de dependencias avisaba de menos.
+    Q_INVOKABLE QVariantMap harnessSpecSummary(const QString &agentProfileId) const;
     Q_INVOKABLE QVariantMap agentSandboxStatus() const;
     Q_INVOKABLE QVariantList portableSkills() const;
     Q_INVOKABLE QVariantMap portableSkill(const QString &name) const;
@@ -1721,6 +1725,8 @@ private:
     // Baja los módulos del HarnessSpec (loop/contexto/permisos/escalación/
     // protocolo/directivas de usuario) al backend. Ver docs/harness.md.
     void      applyHarnessSpec(class LlamaAgentBackend *cb, const HarnessSpec &spec);
+    // Expande el sentinel "*" del catálogo de directivas (sin las opt-in puras).
+    static QStringList expandDirectiveSentinel(const QStringList &keys);
     // Aplica el override de una fase declarada en el spec ("plan"|"exec"|
     // "verify"|"goalCheck"). Sin fases declaradas es un no-op.
     void      applyHarnessPhase(const QString &phase);

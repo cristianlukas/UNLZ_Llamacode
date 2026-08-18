@@ -1402,7 +1402,7 @@ Item {
                         }
                         function refreshHarnessInfo() {
                             if (!edit.id) return
-                            specSummary = App.profileManager.harnessSpecSummary(edit.id, App.currentAgentProjectDir()) || ({})
+                            specSummary = App.harnessSpecSummary(edit.id) || ({})
                             specDiff = App.profileManager.agentProfileDiff(edit.id) || []
                             packItems = App.profileManager.harnessPackCatalog() || []
                             customDirectiveItems = App.profileManager.harnessDirectiveCatalog(App.currentAgentProjectDir()) || []

@@ -4753,7 +4753,6 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
     // Un perfil legacy sin spec produce uno derivado equivalente, así que este
     // camino es el único y no hay dos formas de configurar el backend.
     const HarnessSpec spec = m_profiles.resolveHarnessSpec(ap);
-    applyHarnessSpec(cb, spec);
 
     QStringList disabled;
     if (!ap.enabledTools.contains(QStringLiteral("*"))) {
@@ -4767,25 +4766,7 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
         disabled = HarnessTools::disabledFrom(HarnessTools::resolve(spec.tools));
     cb->setDisabledTools(disabled);
 
-    QStringList dirs = ap.directives;
-    if (dirs.contains(QStringLiteral("*"))) {
-        // Expandir "*" a todo el catálogo MENOS las opt-in puras (honey, antiBias):
-        // son agresivas (recortan/alargan el razonamiento) y ni siquiera Máximo las
-        // trae implícitas; hay que nombrarlas. Coincide con isDirOn/setDirOn (QML) y
-        // con el gateo literal de buildSystemPrompt.
-        static const QSet<QString> optInPure{
-            QStringLiteral("honey"), QStringLiteral("antiBias")};
-        QStringList keep;
-        for (const QString &k : optInPure)
-            if (dirs.contains(k)) keep << k;
-        dirs.clear();
-        for (const QVariant &v : LlamaAgentBackend::directiveCatalog()) {
-            const QString k = v.toMap().value(QStringLiteral("key")).toString();
-            if (!optInPure.contains(k)) dirs << k;
-        }
-        dirs << keep;
-    }
-    cb->setDirectives(dirs);
+    cb->setDirectives(expandDirectiveSentinel(ap.directives));
     cb->setThinkingEnabled(m_agentThinkingEnabled);
     cb->setThinkingLeakGuard(ap.thinkingLeakGuard);
     cb->setMcpToolsEnabled(ap.mcpEnabled);
@@ -4795,21 +4776,69 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
                               ap.progressReplanAfter,
                               ap.progressStopAfter},
                           ap.quickToolTimeoutSec);
+
+    // El spec va ÚLTIMO a propósito: los campos legacy de arriba son el piso
+    // (perfiles viejos) y los módulos declarados los pisan. Al revés, un
+    // setDirectives/setProgressPolicy legacy borraría lo que declaró el spec.
+    applyHarnessSpec(cb, spec);
 }
 
 // Baja al backend los módulos del spec que no tienen equivalente en los campos
 // legacy de AgentProfile (loop fino, contexto, permisos, escalación, protocolo,
 // directivas de usuario). Separada de applyAgentProfileCaps para poder aplicar
 // una FASE (plan/exec/verify) sin rehacer el resto.
+// Expande el sentinel "*" a todo el catálogo MENOS las opt-in puras (honey,
+// antiBias): son agresivas (recortan/alargan el razonamiento) y ni siquiera
+// Máximo las trae implícitas; hay que nombrarlas. Coincide con isDirOn/setDirOn
+// (QML) y con el gateo literal de buildSystemPrompt.
+// Entorno real para el preflight de dependencias del harness. Lo que sabe el
+// AppController y ProfileManager no: si el server activo expone embeddings, si
+// hay sesión de escritorio, cuentas de correo o automatización de browser.
+QVariantMap AppController::harnessSpecSummary(const QString &agentProfileId) const
+{
+    const QVariantMap env{
+        {QStringLiteral("hasEmbeddings"), serverRunning()},
+        // Escritorio: en Windows siempre hay sesión interactiva cuando la app
+        // corre con UI; en headless las tools desktop_* fallan igual con su error.
+        {QStringLiteral("hasDesktop"), true},
+        {QStringLiteral("hasMailAccount"), !mailAccountsResolved().isEmpty()},
+        {QStringLiteral("hasBrowser"), m_browserAutomationEnabled},
+        {QStringLiteral("hasMcpServers"), true}};
+    return m_profiles.harnessSpecSummary(agentProfileId, currentAgentProjectDir(), env);
+}
+
+QStringList AppController::expandDirectiveSentinel(const QStringList &keys)
+{
+    if (!keys.contains(QStringLiteral("*"))) return keys;
+    static const QSet<QString> optInPure{
+        QStringLiteral("honey"), QStringLiteral("antiBias")};
+    QStringList out, keep;
+    for (const QString &k : optInPure)
+        if (keys.contains(k)) keep << k;
+    for (const QVariant &v : LlamaAgentBackend::directiveCatalog()) {
+        const QString k = v.toMap().value(QStringLiteral("key")).toString();
+        if (!optInPure.contains(k)) out << k;
+    }
+    out << keep;
+    return out;
+}
+
 void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &spec)
 {
     if (!cb) return;
     if (spec.loop.set) cb->setLoopPolicy(spec.loop);
     if (spec.context.set) cb->setContextPolicy(spec.context);
     if (spec.escalation.set) cb->setEscalationPolicy(spec.escalation);
-    if (spec.protocol.set) cb->setToolProtocol(spec.protocol.toolProtocol);
+    if (spec.protocol.set) {
+        cb->setToolProtocol(spec.protocol.toolProtocol);
+        cb->setThinkingLeakGuard(spec.protocol.thinkingLeakGuard);
+    }
     if (spec.tools.set) cb->setMcpToolsEnabled(spec.tools.mcpToolsEnabled);
     if (spec.prompt.set) {
+        // Directivas built-in del spec: sin esto un override por FASE de
+        // prompt.builtin no cambiaba nada (el perfil base funcionaba sólo porque
+        // los campos legacy se espejan al guardar).
+        cb->setDirectives(expandDirectiveSentinel(spec.prompt.builtin));
         cb->setPromptMaxChars(spec.prompt.maxChars);
         cb->setCustomDirectives(
             HarnessDirectiveStore::loadMany(spec.prompt.custom, currentAgentProjectDir()));
@@ -4883,6 +4912,10 @@ void AppController::applyActiveAgentProfile()
         ? ap.temperature
         : (m_agentTemperature >= 0.0 ? m_agentTemperature : m_resolvedProfileTemperature);
     cb->setAgentTuning(sysExtra, temp);
+
+    // Modo Plan: es una fase, no sólo una política de aprobación. Si el spec
+    // declaró overrides para "plan" (p.ej. sólo tools de lectura), se aplican acá.
+    if (approval == QLatin1String("plan")) applyHarnessPhase(QStringLiteral("plan"));
 }
 
 void AppController::approveAgentTool(const QString &id, bool always)

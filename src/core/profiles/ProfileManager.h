@@ -196,8 +196,12 @@ public:
     Q_INVOKABLE bool setAgentProfileSpec(const QString &id, const QVariantMap &specJson);
     Q_INVOKABLE QVariantList harnessPackCatalog() const;
     Q_INVOKABLE QVariantList harnessDirectiveCatalog(const QString &workspace = QString()) const;
+    // `env` permite al caller (AppController) informar lo que ProfileManager no
+    // sabe: si hay embeddings, escritorio, cuentas de correo o browser. Vacío =
+    // se asume disponible (sólo git se detecta acá).
     Q_INVOKABLE QVariantMap harnessSpecSummary(const QString &id,
-                                               const QString &workspace = QString()) const;
+                                               const QString &workspace = QString(),
+                                               const QVariantMap &env = {}) const;
     QString renderPersonaStyleContext(const AgentProfile &profile) const;
     QString renderPersonaStyleContext(const AgentProfile &profile, const QString &query) const;
 
