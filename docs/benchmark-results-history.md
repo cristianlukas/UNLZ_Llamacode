@@ -260,6 +260,11 @@ Las corridas históricas sin dato no se completan por inferencia: quedan como
 
 ## 2026-08-18 — Experimentos Qwen3.6: checkpoints, MTP y texto-only en Debug
 
+Los cuatro perfiles experimentales quedan incorporados al conjunto `⚡ BEST`
+de la tabla operativa para solicitar una corrida E2E reproducible (HE0 → HE20
+→ BCB). Esto sólo habilita su medición: no modifica los perfiles existentes ni
+los promueve como ganadores.
+
 Se agregaron cuatro copias opt-in de MAX-Q, sin modificar `sys-maxq` ni el
 launch histórico `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c`. Todas se probaron desde
 `build/Debug/LlamaCode.exe`, con llama.cpp b10331, `short`, `agent-maximo`, una

@@ -3048,7 +3048,7 @@
   },
   {
     "id": "sys-experiment-qwen36-cache-mtp2",
-    "tier": "24GB-Qwen-Cache-Experiment", "order": 190, "extra": true, "benchmark": false, "autoCompanion": false,
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 190, "extra": true, "best": true, "benchmark": false, "autoCompanion": false,
     "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP2",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
     "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
@@ -3060,7 +3060,7 @@
   },
   {
     "id": "sys-experiment-qwen36-cache-mtp4",
-    "tier": "24GB-Qwen-Cache-Experiment", "order": 191, "extra": true, "benchmark": false, "autoCompanion": false,
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 191, "extra": true, "best": true, "benchmark": false, "autoCompanion": false,
     "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP4",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
     "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
@@ -3072,7 +3072,7 @@
   },
   {
     "id": "sys-experiment-qwen36-cache-mtp6",
-    "tier": "24GB-Qwen-Cache-Experiment", "order": 192, "extra": true, "benchmark": false, "autoCompanion": false,
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 192, "extra": true, "best": true, "benchmark": false, "autoCompanion": false,
     "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP6 p-min 0.5",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
     "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",
@@ -3084,7 +3084,7 @@
   },
   {
     "id": "sys-experiment-qwen36-cache-text-mtp4",
-    "tier": "24GB-Qwen-Cache-Experiment", "order": 193, "extra": true, "benchmark": false, "autoCompanion": false,
+    "tier": "24GB-Qwen-Cache-Experiment", "order": 193, "extra": true, "best": true, "benchmark": false, "autoCompanion": false,
     "displayName": "EXPERIMENTAL - MAX-Q texto-only · cache híbrido · MTP4",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "requiresMtpBinary": true,
     "folder": "ThinkingCap-Qwen3.6-27B-GGUF", "agentProfileId": "agent-maximo",

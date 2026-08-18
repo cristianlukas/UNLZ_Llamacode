@@ -8,10 +8,11 @@ agente o infraestructura debe actualizar esta tabla y agregar una entrada en
 
 ## Alcance activo
 
-Sólo se ejecutan nuevos benchmarks para perfiles marcados `⚡ BEST`. En esta
-selección el único perfil activo es **⚡ Qwen3.8 UD-Q4 visión**. Los demás
-perfiles permanecen como referencia histórica y no deben volver a ejecutarse
-salvo autorización explícita.
+Sólo se ejecutan nuevos benchmarks para perfiles marcados `⚡ BEST`. La
+selección activa incluye **⚡ Qwen3.8 UD-Q4 visión** y los cuatro candidatos
+experimentales Qwen3.6 de cache/MTP incorporados el 2026-08-18. Estos cuatro
+son candidatos de medición, no ganadores promovidos: sus resultados siguen
+pendientes y no deben reemplazar perfiles existentes automáticamente.
 
 El esquema obligatorio de cada fila es exactamente: `ID`, `Perfil`, `Agente`,
 `HE0`, `HE20`, `BCB`, `Tiempo HE0`, `Tiempo HE20`, `Tiempo BCB`, `TPS HE0`,
@@ -31,6 +32,10 @@ reportada; no es la VRAM libre ni la capacidad instalada.
 | `8dd3325d-8658-45ca-9aad-ad80d301b4e9` | Laguna S.2.1 · dual GPU safe · 32k | Máximo | 1/1 | 20/20 | 4/8 | 60,919 s | 392,072 s | 871,561 s | 19,77 | 54,70 | 44,33 | No medido | No medido | 40.760 MB | No | — | UD-Q2_K_XL | 118B-A8B | 32k | No | LC-H1 | Reparado; usa 2×GPU |
 | `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | DeepSeek Fusion VRAM histórico | chat | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | No medido | No medido | 35.903 MB | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB calidad |
 | `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | 4/8* | 112,497 s | 1164,244 s | 1396,871 s* | — | 9,58 | — | No medido | No medido | 32.684 MB | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB mejor resultado evaluable; repetir cancelado por reparación estancada |
+| `sys-experiment-qwen36-cache-mtp2` | ⚡ Qwen3.6 cache híbrido · MTP2 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | Sí | MTP2 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
+| `sys-experiment-qwen36-cache-mtp4` | ⚡ Qwen3.6 cache híbrido · MTP4 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
+| `sys-experiment-qwen36-cache-mtp6` | ⚡ Qwen3.6 cache híbrido · MTP6 p-min 0.5 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | Sí | MTP6 p-min 0.5 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
+| `sys-experiment-qwen36-cache-text-mtp4` | ⚡ Qwen3.6 texto-only · cache híbrido · MTP4 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | No | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
 
 ## Experimentos con compuerta HE0
 
