@@ -38,6 +38,30 @@ reportó 7,484 TPS de generación promedio al cierre de la muestra. La RAM de
 trabajo del proceso no representa toda la memoria mapeada del modelo; para
 comparar contra las corridas históricas se usa el pico `ramMb` de LlamaCode.
 
+## 2026-08-17 — DeepSeek: tiers de expertos en GPU0
+
+Se conservaron los perfiles originales y se agregaron dos copias desde la
+variante VRAM 0–1:
+
+| Perfil | ID | HE0 | Tiempo | TPS | RAM pico | VRAM agregada | Estado |
+|---|---|---:|---:|---:|---:|---:|---|
+| DeepSeek original | `4f5cc556-333d-4310-955e-15042cd874d6` | 1/1 | 188,312 s | — | 92.303 MB | 32.736 MB | Válido |
+| DeepSeek VRAM 0–1 | `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | 1/1 | 184,200 s | — | 92.375 MB | 35.780 MB | Válido |
+| DeepSeek VRAM expertos 0–5 | `f3d000b7-59da-4035-9114-f326515ba95d` | 0/1 | 351,267 s | — | 79.374 MB | 42.586 MB | Harness/watchdog; sin OOM/CUDA |
+| DeepSeek VRAM expertos 0–9 | `78929286-486e-43a2-a97b-25f251d34254` | 0/0 | 9,199 s | — | — | — | OOM al cargar GPU0 |
+
+El tier 0–5 también se repitió con `agent-basico`: terminó en 0/1 de
+calidad, 161,997 s, 4,119 TPS, 77.334 MB de RAM y 42.621 MB de VRAM; el
+modelo no creó `solution_HumanEval_0.py`. La primera ejecución con
+`agent-maximo` quedó detenida por el watchdog tras 180 s sin cambios del
+workspace, aunque el servidor llegó a decodificar cerca de 9,7 t/s.
+
+El tier 0–9 no es viable con contexto 131k y la configuración actual:
+`cudaMalloc` pidió 24.663,67 MiB en GPU0 frente a 24.576 MiB disponibles.
+Conclusión: sí es posible mover más expertos a GPU0 hasta el tier 0–5, pero
+0–5 todavía no es una candidata válida de calidad y 0–9 requiere reducir
+contexto/batch o usar una distribución más conservadora.
+
 ## 2026-08-17 — Laguna safe y reparación del harness
 
 - Laguna original fallaba durante la carga CUDA en GPU0, antes del harness.
