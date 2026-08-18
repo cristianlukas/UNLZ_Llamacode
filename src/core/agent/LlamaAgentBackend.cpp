@@ -3376,6 +3376,30 @@ void LlamaAgentBackend::processPendingCalls()
     ensureAssistantBubble();
     setAssistantStatus(toolStatusText(name, kind));
 
+    if (m_harnessEngineId == QLatin1String("next")) {
+        bool builtin = false;
+        for (const QVariant &entry : toolCatalog()) {
+            if (entry.toMap().value(QStringLiteral("name")).toString() == name) {
+                builtin = true;
+                break;
+            }
+        }
+        if (builtin && !m_harnessCapabilities.canUse(name)) {
+            ++m_toolFail;
+            m_pendingCalls.removeFirst();
+            const QString refusal = QStringLiteral(
+                "[capability_refused: la activación Next no concedió '%1']").arg(name);
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  QJsonObject{{QStringLiteral("tool"), name},
+                                              {QStringLiteral("toolCallId"), id},
+                                              {QStringLiteral("reason"),
+                                               QStringLiteral("capability_revoked_or_denied")}});
+            appendToolResult(id, name, refusal);
+            processPendingCalls();
+            return;
+        }
+    }
+
     // ── Robustez: anti-loop ──────────────────────────────────────────────
     const QString sig = toolCallSignature(name, argStr);
     if (sig == m_lastCallSignature) {

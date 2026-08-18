@@ -36,6 +36,7 @@ Desde la implementación del plan modular, un perfil de agente es una
 | `protocol` | `auto` / `native` / `text`, leak-guard de thinking, temperatura, reasoning |
 | `memory` | hechos de `MemoryStore` inyectados, memoria de proyecto (+ tope), consolidación al salir |
 | `chat` | modo Chat sin tools: sampling, thinking, persona diseñadora, instrucciones persistentes |
+| `runtime` | contrato de ejecución: `legacy` o `next`, versión, fallback y flag experimental |
 | `phases` | overrides por fase: `plan`, `exec`, `verify`, `goalCheck` |
 
 Tres invariantes, todas testeadas:

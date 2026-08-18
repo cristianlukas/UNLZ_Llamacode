@@ -26,8 +26,8 @@ void HarnessEventLogTests::appendsAndReloadsInOrder()
     QVERIFY(log.append(QStringLiteral("turn/start"), QJsonObject{{"text", "hola"}}));
     QVERIFY(log.append(QStringLiteral("tool/result"), QJsonObject{{"ok", true}}));
     QCOMPARE(log.events().size(), 2);
-    QCOMPARE(log.events().at(0).value(QStringLiteral("seq")).toInt(), 1);
-    QCOMPARE(log.events().at(1).value(QStringLiteral("seq")).toInt(), 2);
+    QCOMPARE(log.events().at(0).toObject().value(QStringLiteral("seq")).toInt(), 1);
+    QCOMPARE(log.events().at(1).toObject().value(QStringLiteral("seq")).toInt(), 2);
 
     HarnessEventLog reloaded;
     QVERIFY(reloaded.open(path));

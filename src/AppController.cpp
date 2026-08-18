@@ -4761,8 +4761,22 @@ QString AppController::resolveAgentProfileId() const
 void AppController::setActiveAgentProfileId(const QString &id)
 {
     if (id == m_activeAgentProfileId) return;
+    const AgentProfile oldProfile = m_profiles.resolveAgentProfile(resolveAgentProfileId());
+    const QString oldEngine = HarnessEngine::effectiveId(
+        m_profiles.resolveHarnessSpec(oldProfile).runtime);
     m_activeAgentProfileId = id;
-    applyActiveAgentProfile();
+    const AgentProfile newProfile = m_profiles.resolveAgentProfile(resolveAgentProfileId());
+    const QString newEngine = HarnessEngine::effectiveId(
+        m_profiles.resolveHarnessSpec(newProfile).runtime);
+    if (m_agentBackend && m_agentBackend->running() && oldEngine != newEngine) {
+        const QString launchId = m_activeLaunchId;
+        m_agentBackend->stop();
+        QTimer::singleShot(0, this, [this, launchId]() {
+            if (!launchId.isEmpty() && !m_agentStopping) startAgent(launchId);
+        });
+    } else {
+        applyActiveAgentProfile();
+    }
     emit activeAgentProfileChanged();
 }
 

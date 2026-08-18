@@ -181,7 +181,7 @@ Item {
                 currentIndex: Math.max(0, indexOfValue(
                     root.specValue("runtime", "engine", "legacy")))
                 onActivated: {
-                    var selected = model[currentIndex] || ({})
+                    var selected = root.engines[currentIndex] || ({})
                     root.setRuntimeEngine(currentValue || "legacy", selected.version || 1)
                 }
                 background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
@@ -192,7 +192,7 @@ Item {
                 }
                 ToolTip.visible: hovered
                 ToolTip.text: {
-                    var selected = model[currentIndex] || ({})
+                    var selected = root.engines[currentIndex] || ({})
                     return selected.description || "Contrato de ejecución del harness"
                 }
             }

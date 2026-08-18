@@ -93,7 +93,7 @@ HarnessCapabilitySnapshot HarnessCapabilitySnapshot::fromJson(const QJsonObject 
     snapshot.profileId = object.value(QStringLiteral("profileId")).toString();
     snapshot.generation = qMax(1, object.value(QStringLiteral("generation")).toInt(1));
     const QJsonObject grantObject = object.value(QStringLiteral("grants")).toObject();
-    for (auto it = grantObject.cbegin(); it != grantObject.cend(); ++it)
+    for (auto it = grantObject.constBegin(); it != grantObject.constEnd(); ++it)
         if (it.value().isObject())
             snapshot.grants.insert(it.key(), HarnessCapabilityGrant::fromJson(it.value().toObject()));
     return snapshot;
