@@ -18,6 +18,12 @@ Se conservaron las variantes históricas y se probaron copias separadas:
 | `VRAM experts 0-5 · HE0 safe` | mismo reparto; `predict=4096`, ctx 65k, batch 2048, ubatch 512 | 0/1 | `CUDA error: an illegal memory access` en GPU0 al primer prompt; server salió con código `-1073740791`. |
 | `VRAM experts 0-5 · CUDA stable` | además `flash-attn off`, `no-mmap` | 0/0 | No carga: el GGUF usa cache V cuantizada y exige Flash Attention. Al corregir Flash Attention a `on`, la carga quedó inestable y el daemon desapareció antes de finalizar HE0. |
 
+Se hizo una repetición adicional del tier histórico 0–5 con `agent-chat`, sin
+cambiar el reparto CUDA: `0/1` en `61,421 s`, `10,38 t/s`, sin archivo creado y
+sin acceso ilegal a CUDA. Cambiar de agente no corrigió el resultado; el fallo
+queda clasificado como salida/modelo no evaluable, no como infraestructura. Por
+la compuerta HE0, no se ejecutaron HE20 ni BCB para ninguna variante 0–5/0–9.
+
 La conclusión operativa queda así: **DeepSeek VRAM 0–1 sigue siendo la mejor
 variante DeepSeek validada (HE0 1/1 y HE20 histórico 20/20)**. Mover expertos
 0–5 sí aumenta la ocupación de GPU0, pero con el binario/GGUF actuales no es una
