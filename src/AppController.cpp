@@ -4881,6 +4881,11 @@ QVariantMap AppController::harnessDirective(const QString &name) const
     return HarnessDirectiveStore::load(name, currentAgentProjectDir());
 }
 
+QStringList AppController::harnessDirectiveFacts() const
+{
+    return LlamaAgentBackend::directiveFactKeys();
+}
+
 QVariantMap AppController::compareHarnessBenchmarks(const QStringList &agentProfileIds,
                                                    const QString &runDir) const
 {

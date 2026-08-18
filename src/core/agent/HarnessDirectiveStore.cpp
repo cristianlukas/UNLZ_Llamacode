@@ -248,9 +248,16 @@ void HarnessDirectiveStore::seedBundledExamples()
 {
     const QString root = globalRoot();
     QDir().mkpath(root);
-    const bool empty = QDir(root).entryInfoList(QStringList{QStringLiteral("*.md")},
-                                                QDir::Files).isEmpty();
-    if (!empty) return;
+    // Marcador de sembrado: si el criterio fuera "la carpeta está vacía", borrar
+    // la única directiva propia haría reaparecer el ejemplo. Se siembra una vez
+    // y listo; borrarlo es una decisión del usuario que hay que respetar.
+    const QString stamp = QDir(root).filePath(QStringLiteral(".seeded"));
+    if (QFileInfo::exists(stamp)) return;
+    QFile stampFile(stamp);
+    if (stampFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        stampFile.write("bundled directives seeded\n");
+        stampFile.close();
+    }
     const QDir bundled(QStringLiteral(":/assets/harness/directives"));
     if (!bundled.exists()) return;
     for (const QFileInfo &entry : bundled.entryInfoList(QStringList{QStringLiteral("*.md")},

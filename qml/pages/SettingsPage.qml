@@ -1886,6 +1886,14 @@ Item {
                                         App.removeHarnessDirective(name, scope)
                                         agentProfilesSection.refreshHarnessInfo()
                                     }
+                                    // El componente no lee del disco: le pasamos el
+                                    // cuerpo resuelto para que abra el editor.
+                                    onDirectiveOpenRequested: function (name) {
+                                        var d = App.harnessDirective(name)
+                                        if (d && d.ok) harnessEditor.editDirective(d)
+                                    }
+                                    // Los hechos de `when` los define el backend.
+                                    directiveFacts: App.harnessDirectiveFacts()
                                 }
 
                                 // ── Directivas ──

@@ -65,6 +65,12 @@ El editor vive en `qml/components/LcHarnessEditor.qml`: no conoce a `App` (todo
 entra por propiedades y sale por señales), y por eso su lógica de edición —la
 parte donde una regresión cuesta un perfil— se testea sola.
 
+Los hechos que entiende el gate `when` salen de
+`LlamaAgentBackend::directiveFactKeys()` y la UI los enumera
+(`App.harnessDirectiveFacts()`): un test fija que el catálogo y los hechos que
+realmente se evalúan no diverjan, porque un `when` con un nombre inexistente
+deja la directiva fuera **en silencio**.
+
 Directivas propias: se crean, editan y borran desde el editor
 (`HarnessDirectiveStore::save`/`remove`, expuestas como `saveHarnessDirective` /
 `removeHarnessDirective`). Hay una bundleada de ejemplo
@@ -477,7 +483,8 @@ para benchmarks reproducibles.
 | Verbos de harness headless | `tests/test_control_api.cpp` |
 | Editor del harness (QML): edición del spec, diff, import/export | `tests/qml/tst_harness_editor.qml` (ctest: `qml_harness_editor`) |
 | Fases aplicadas por el runner de Tasks | `tests/test_appcontroller.cpp` |
-| Barrido A/B (`tools/harness_ab.ps1`) | `tests/test_harness_ab.ps1` (fuera de ctest, infra PS) |
+| Barrido A/B (`tools/harness_ab.ps1`) | `tests/test_harness_ab.ps1` (stub HTTP; fuera de ctest) |
+| Verbos del harness contra el daemon REAL | `tests/headless_harness_smoke.ps1` (fuera de ctest, necesita el exe) |
 | `EvalSuite` | `tests/test_eval.cpp` |
 
 Gate: `tests.bat` + ctest en verde antes de commitear (`/gate`). Si el

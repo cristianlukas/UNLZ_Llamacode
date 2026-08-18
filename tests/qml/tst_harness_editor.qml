@@ -25,6 +25,7 @@ ApplicationWindow {
     property int saveCount: 0
     property var lastDirectiveSave: null
     property var lastDirectiveRemove: null
+    property string lastDirectiveOpen: ""
 
     LcHarnessEditor {
         id: editor
@@ -51,6 +52,14 @@ ApplicationWindow {
         }
         onDirectiveRemoveRequested: function (name, scope) {
             win.lastDirectiveRemove = { name: name, scope: scope }
+        }
+        // El caller resuelve el cuerpo (el catalogo es solo metadata) y responde
+        // con editDirective: eso es lo que hace SettingsPage con App.harnessDirective.
+        onDirectiveOpenRequested: function (name) {
+            win.lastDirectiveOpen = name
+            editor.editDirective({ name: name, description: "convenciones",
+                                   when: "project.hasGit", body: "no romper",
+                                   scope: "project" })
         }
     }
 
@@ -149,15 +158,42 @@ ApplicationWindow {
         editor.setExtends("no-existe")
         check(editor.currentExtends() === "", "un padre inexistente cae a 'sin herencia'")
 
-        // --- Directivas: alta y baja salen por señal, no por acceso directo --
+        // --- Directivas: el camino del USUARIO ------------------------------
+        // Antes esto se probaba llamando editDirective() a mano, y el test pasaba
+        // mientras la funcion era inalcanzable desde la UI. Ahora se entra por el
+        // control real: el lapiz al lado de cada chip.
         var dirEditor = findChild("directiveEditor")
         check(dirEditor !== null, "el editor de directivas existe")
-        dirEditor.loadExisting({ name: "mis-convenciones", description: "convenciones",
-                                 when: "project.hasGit", body: "no romper", scope: "project" })
-        check(dirEditor.visible, "cargar una directiva abre el editor")
+        check(!dirEditor.visible, "arranca cerrado")
+
+        var pencil = findChild("directiveEdit_mis-convenciones")
+        check(pencil !== null, "cada directiva tiene su boton de editar")
+        var chip = findChild("directiveChip_mis-convenciones")
+        check(chip !== null, "y su chip de seleccion")
+        pencil.clicked()
+        check(win.lastDirectiveOpen === "mis-convenciones",
+              "el lapiz pide abrir esa directiva: " + win.lastDirectiveOpen)
+        check(dirEditor.visible, "y el editor queda abierto")
         check(findChild("dirName").text === "mis-convenciones", "carga el nombre")
         check(findChild("dirBody").text === "no romper", "carga el cuerpo")
         check(findChild("dirWhen").text === "project.hasGit", "carga la condicion")
+
+        // Con una directiva abierta, borrar sale por senal con su scope.
+        dirEditor.removeCurrent()
+        check(win.lastDirectiveRemove !== null, "borrar emite la senal")
+        check(win.lastDirectiveRemove.name === "mis-convenciones", "con el nombre correcto")
+        check(win.lastDirectiveRemove.scope === "project", "y el scope de donde vino")
+
+        // El chip NO abre el editor: sigue siendo el toggle de seleccion.
+        var editsBeforeChip = win.editedCount
+        chip.clicked()
+        check(win.editedCount === editsBeforeChip + 1, "el chip togglea la seleccion")
+
+        // Los hechos de `when` se listan para no adivinarlos.
+        editor.directiveFacts = ["vision", "project.hasGit"]
+        var factsLabel = findChild("directiveFactsLabel")
+        check(factsLabel !== null && factsLabel.text.indexOf("project.hasGit") > 0,
+              "la UI enumera los hechos disponibles")
 
         // --- Guardar: el caller decide qué hacer -----------------------------
         var savesBefore = win.saveCount

@@ -98,6 +98,10 @@ public:
     void setPromptMaxChars(int chars) { m_promptMaxChars = qMax(0, chars); }
     // Evaluación pura del gate `when` de una directiva de usuario.
     static bool directiveConditionMet(const QString &when, const QVariantMap &facts);
+    // Claves de los hechos que entiende `when` (para la UI y el editor). Ver el
+    // .cpp: son la única fuente, y un test fija que coincidan con directiveFacts.
+    static QStringList directiveFactKeys();
+    QVariantMap directiveFactsForTest() const { return directiveFacts(false); }
     void setDeterministicSeed(int seed) { m_seed = seed; }
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
@@ -502,6 +506,7 @@ private:
     void ensureSession();
     QString buildSystemPrompt() const;   // prompt base + memoria del proyecto
     void logFromConst(const QString &text) const;  // log desde métodos const
+    QVariantMap directiveFacts(bool super) const;  // hechos para el gate `when`
     void fetchContextLimit();            // n_ctx desde /props
     // Aplica Content-Type + Authorization Bearer (si hay provider cloud con apiKey).
     void applyHeaders(QNetworkRequest &req) const;

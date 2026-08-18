@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.104"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.105"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -819,6 +819,9 @@ public:
     Q_INVOKABLE QVariantMap removeHarnessDirective(const QString &name,
                                                    const QString &scope = QStringLiteral("global"));
     Q_INVOKABLE QVariantMap harnessDirective(const QString &name) const;
+    // Hechos que entiende el gate `when` de una directiva. Salen del backend
+    // (única fuente); la UI los enumera para que no haya que adivinarlos.
+    Q_INVOKABLE QStringList harnessDirectiveFacts() const;
     // A/B de HARNESS: agrupa las corridas de benchmark ya guardadas por perfil de
     // AGENTE (mismo modelo, distinto HarnessSpec) y devuelve el mismo informe que
     // usa comparison.json. `runDir` vacío = todas las corridas cargadas.

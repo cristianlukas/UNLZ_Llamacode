@@ -39,6 +39,9 @@ Item {
     signal directiveSaveRequested(string name, string description, string when,
                                   string body, string scope)
     signal directiveRemoveRequested(string name, string scope)
+    // Pedido de abrir una directiva existente. El componente no lee del disco:
+    // el caller resuelve el cuerpo y responde llamando a editDirective().
+    signal directiveOpenRequested(string name)
 
     implicitHeight: col.implicitHeight
     implicitWidth: col.implicitWidth
@@ -256,18 +259,36 @@ Item {
             visible: root.directives.length > 0
             Repeater {
                 model: root.directives
-                delegate: LcButton {
+                // Dos controles por directiva: el chip la marca/desmarca para el
+                // perfil, y el lápiz la ABRE para editar o borrar. Sin el segundo
+                // se podían crear directivas y después no tocarlas nunca más.
+                delegate: Row {
                     required property var modelData
-                    text: (root.specHasListItem("prompt", "custom", modelData.name) ? "✓ " : "")
-                          + modelData.name
-                    secondary: !root.specHasListItem("prompt", "custom", modelData.name)
-                    enabled: !root.readOnly
-                    ToolTip.visible: hovered
-                    ToolTip.text: modelData.description
-                                  + (modelData.when ? ("\ncondición: " + modelData.when) : "")
-                    onClicked: root.specToggleListItem(
-                        "prompt", "custom", modelData.name,
-                        !root.specHasListItem("prompt", "custom", modelData.name))
+                    spacing: 2
+                    LcButton {
+                        objectName: "directiveChip_" + modelData.name
+                        text: (root.specHasListItem("prompt", "custom", modelData.name) ? "✓ " : "")
+                              + modelData.name
+                        secondary: !root.specHasListItem("prompt", "custom", modelData.name)
+                        enabled: !root.readOnly
+                        ToolTip.visible: hovered
+                        ToolTip.text: modelData.description
+                                      + (modelData.when ? ("\ncondición: " + modelData.when) : "")
+                        onClicked: root.specToggleListItem(
+                            "prompt", "custom", modelData.name,
+                            !root.specHasListItem("prompt", "custom", modelData.name))
+                    }
+                    LcButton {
+                        objectName: "directiveEdit_" + modelData.name
+                        text: "✎"
+                        secondary: true
+                        enabled: !root.readOnly
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Editar o borrar esta directiva"
+                        // El catálogo no trae el cuerpo (list() es sólo metadata):
+                        // el caller lo resuelve y responde con editDirective().
+                        onClicked: root.directiveOpenRequested(modelData.name)
+                    }
                 }
             }
         }
@@ -288,6 +309,14 @@ Item {
                 dirName.text = ""; dirDesc.text = ""; dirWhen.text = ""; dirBody.text = ""
                 dirScope.currentIndex = 0
                 visible = true
+            }
+            // Baja de la directiva abierta. Existe como funcion (y no solo como
+            // onClicked) para que el test entre por el mismo camino que el boton.
+            function removeCurrent() {
+                if (editingName.length === 0) return false
+                root.directiveRemoveRequested(editingName, dirScope.currentValue || "global")
+                visible = false
+                return true
             }
             function loadExisting(d) {
                 editingName = d.name || ""
@@ -328,6 +357,7 @@ Item {
                 // los adivine (un hecho desconocido NO cumple, así que una
                 // directiva mal escrita nunca se inyecta).
                 Text {
+                    objectName: "directiveFactsLabel"
                     Layout.fillWidth: true; wrapMode: Text.WordWrap
                     text: "Hechos para `when` (coma = Y, ! = negación): " + root.directiveFacts.join(", ")
                     color: Theme.textMuted; font.pixelSize: 11
@@ -355,11 +385,7 @@ Item {
                     LcButton {
                         text: "Borrar"; danger: true
                         enabled: directiveEditor.editingName.length > 0
-                        onClicked: {
-                            root.directiveRemoveRequested(directiveEditor.editingName,
-                                                          dirScope.currentValue || "global")
-                            directiveEditor.visible = false
-                        }
+                        onClicked: directiveEditor.removeCurrent()
                     }
                     Item { Layout.fillWidth: true }
                 }

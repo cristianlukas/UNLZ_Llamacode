@@ -1572,18 +1572,7 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     // las built-in y la memoria: son el ajuste más específico. Cada una puede
     // declarar un gate `when` con hechos del contexto actual.
     if (!m_customDirectives.isEmpty()) {
-        const QVariantMap facts{
-            {QStringLiteral("tools.desktop"),
-             !m_disabledTools.contains(QStringLiteral("desktop_launch"))},
-            {QStringLiteral("tools.shell"),
-             !m_disabledTools.contains(QStringLiteral("run_shell"))},
-            {QStringLiteral("tools.web"),
-             !m_disabledTools.contains(QStringLiteral("web_fetch"))},
-            {QStringLiteral("tools.task"), !m_disabledTools.contains(QStringLiteral("task"))},
-            {QStringLiteral("vision"), m_visionReady},
-            {QStringLiteral("super"), super},
-            {QStringLiteral("project.hasGit"),
-             !m_cwd.isEmpty() && QFileInfo::exists(m_cwd + QStringLiteral("/.git"))}};
+        const QVariantMap facts = directiveFacts(super);
         for (const QVariant &v : m_customDirectives) {
             const QVariantMap d = v.toMap();
             const QString body = d.value(QStringLiteral("body")).toString().trimmed();
@@ -1840,6 +1829,34 @@ void LlamaAgentBackend::setCustomDirectives(const QVariantList &directives)
             replaceSystemMessage(sys);
         }
     }
+}
+
+// Hechos disponibles para el gate `when` de una directiva. La UI los enumera
+// (LcHarnessEditor.directiveFacts) para que el usuario no los adivine: un hecho
+// desconocido NO cumple, así que un typo deja la directiva fuera en silencio.
+// Las claves salen de acá y de ningún otro lado — test_harness_modules fija que
+// el catálogo y los hechos reales no diverjan.
+QStringList LlamaAgentBackend::directiveFactKeys()
+{
+    return {QStringLiteral("tools.desktop"), QStringLiteral("tools.shell"),
+            QStringLiteral("tools.web"),     QStringLiteral("tools.task"),
+            QStringLiteral("vision"),        QStringLiteral("super"),
+            QStringLiteral("project.hasGit")};
+}
+
+QVariantMap LlamaAgentBackend::directiveFacts(bool super) const
+{
+    return {{QStringLiteral("tools.desktop"),
+             !m_disabledTools.contains(QStringLiteral("desktop_launch"))},
+            {QStringLiteral("tools.shell"),
+             !m_disabledTools.contains(QStringLiteral("run_shell"))},
+            {QStringLiteral("tools.web"),
+             !m_disabledTools.contains(QStringLiteral("web_fetch"))},
+            {QStringLiteral("tools.task"), !m_disabledTools.contains(QStringLiteral("task"))},
+            {QStringLiteral("vision"), m_visionReady},
+            {QStringLiteral("super"), super},
+            {QStringLiteral("project.hasGit"),
+             !m_cwd.isEmpty() && QFileInfo::exists(m_cwd + QStringLiteral("/.git"))}};
 }
 
 // Gate declarativo de una directiva de usuario. Sintaxis mínima a propósito:

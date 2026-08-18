@@ -37,6 +37,7 @@ private slots:
     void directiveStore_projectOverridesGlobal();
     void directiveStore_savesEditsAndRemoves();
     void directiveStore_rejectsInvalidInput();
+    void directiveFactKeys_matchTheFactsActuallyUsed();
 
 private:
     QTemporaryDir m_ws;
@@ -448,6 +449,27 @@ void HarnessModulesTests::directiveStore_rejectsInvalidInput()
                                          QStringLiteral("b"), QStringLiteral("project"),
                                          QString())
                  .value(QStringLiteral("ok")).toBool());
+}
+
+// El catalogo de hechos que enumera la UI y los hechos que realmente evalua el
+// gate `when` tienen que ser EL MISMO conjunto. Si divergen, el usuario escribe
+// una condicion que nunca se cumple y la directiva queda fuera sin decir nada:
+// justo el tipo de falla muda que no se nota hasta que el prompt esta mal.
+void HarnessModulesTests::directiveFactKeys_matchTheFactsActuallyUsed()
+{
+    LlamaAgentBackend be;
+    const QStringList declared = LlamaAgentBackend::directiveFactKeys();
+    QStringList real = be.directiveFactsForTest().keys();
+    QStringList sortedDeclared = declared;
+    sortedDeclared.sort();
+    real.sort();
+    QCOMPARE(real, sortedDeclared);
+    QVERIFY(!declared.isEmpty());
+    // Y cada clave declarada es evaluable: `when` con esa clave no rebota por
+    // desconocida (rebotaria si el nombre tuviera un typo en el catalogo).
+    const QVariantMap facts = be.directiveFactsForTest();
+    for (const QString &key : declared)
+        QVERIFY2(facts.contains(key), qPrintable(key + " declarada pero no evaluada"));
 }
 
 QTEST_MAIN(HarnessModulesTests)
