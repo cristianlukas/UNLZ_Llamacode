@@ -49,3 +49,13 @@ build.bat Debug NOPAUSE
 Además de la suite automática, comprobar manualmente el click derecho del tray,
 la restauración de la ventana, el cambio entre páginas y las acciones de
 agregar binarios/modelos desde el asistente inicial.
+
+## Pendientes anotados
+
+- Regenerar el banco `build_tests` en un entorno aislado cuando no queden
+  procesos huérfanos de CMake/MSBuild y completar `tests.bat Debug`.
+- Hacer una prueba manual de 30–50 clicks derechos del tray mientras se cargan
+  benchmarks, se cambia de página y se ejecuta Teach.
+- Si las pausas del event loop siguen superando 250 ms, convertir el parseo de
+  historial/catálogo en trabajo `QtConcurrent` con resultados aplicados en el
+  hilo GUI; la separación actual sólo divide las fases entre turnos.
