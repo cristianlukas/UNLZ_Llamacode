@@ -36,6 +36,13 @@ reportada; no es la VRAM libre ni la capacidad instalada.
 | `sys-experiment-qwen36-cache-mtp4` | ⚡ Qwen3.6 cache híbrido · MTP4 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
 | `sys-experiment-qwen36-cache-mtp6` | ⚡ Qwen3.6 cache híbrido · MTP6 p-min 0.5 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | Sí | MTP6 p-min 0.5 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
 | `sys-experiment-qwen36-cache-text-mtp4` | ⚡ Qwen3.6 texto-only · cache híbrido · MTP4 | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No medido | No medido | — | No | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | Candidato BEST; benchmark solicitado |
+| `c3a3851d-c3a0-4dc8-8018-1c408f017a95` | llama-debug · ThinkingCap Q3_K_M MTP · ubatch 128 | Chat liviano | 1/1 | Pendiente | Pendiente | 26,242 s | — | — | — | — | — | 12.002 MB | 12.963 MB | 24.963 MB | No | MTP3 | Q3_K_M | 27B | 262k | No | LC-H1 | Copia editable; HE0 válido; HE20/BCB pendientes |
+| `d805e63a-f4df-4b99-86b3-5472f8998d63` | llama-debug · ThinkingCap Q3_K_M MTP · batch 1024 / ubatch 128 | Chat liviano | 1/1 | Pendiente | Pendiente | 18,760 s | — | — | — | — | — | 11.954 MB | 12.963 MB | 24.910 MB | No | MTP3 | Q3_K_M | 27B | 262k | No | LC-H1 | Copia editable; HE0 válido; HE20/BCB pendientes |
+
+Las dos filas `llama-debug` fueron solicitadas explícitamente para medición
+manual. No están marcadas como ⚡ BEST ni reemplazan al perfil original
+`106_MAX-Q`; ambos HE0 se ejecutaron con `agent-chat`, una pasada, y pasaron
+`HumanEval (1 ítems)` sin reparación, timeout, crash ni fallo de transporte.
 
 ## Experimentos con compuerta HE0
 

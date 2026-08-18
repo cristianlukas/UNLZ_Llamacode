@@ -2,6 +2,22 @@
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
 
+## 2026-08-18 — Candidatas `llama-debug` de runtime
+
+Se agregaron a la tabla viva dos copias editables del perfil
+`106_MAX-Q ThinkingCap Q3_K_M MTP` para medir el efecto de `ubatch=128` sin
+modificar el perfil original. Ambas usan `parallel=1`, Flash Attention, KV
+`q4_0`, contexto 262k y muestreo conservador; una conserva `batch=512` y la
+otra usa `batch=1024`.
+
+| Launch ID | Configuración | HE0 | Tiempo | VRAM agregada | Estado |
+|---|---|---:|---:|---:|---|
+| `c3a3851d-c3a0-4dc8-8018-1c408f017a95` | batch 512 / ubatch 128 | 1/1 | 26,242 s | 24.963 MB | HE0 válido; HE20/BCB pendientes |
+| `d805e63a-f4df-4b99-86b3-5472f8998d63` | batch 1024 / ubatch 128 | 1/1 | 18,760 s | 24.910 MB | HE0 válido; HE20/BCB pendientes |
+
+La segunda fue más rápida en esta única pasada, pero la diferencia de
+generación no se considera concluyente. Ninguna variante se promueve a BEST.
+
 ## 2026-08-18 — Primer A/B de HARNESS (mismo modelo, distinto HarnessSpec)
 
 Primera corrida real de `tools/harness_ab.ps1`: mismo launch
