@@ -1,0 +1,436 @@
+# El harness de agentes de LlamaCode
+
+Documento de referencia del **harness**: qué es, cómo está armado, qué garantías
+da y dónde tocar cada cosa. Refleja el código real (`src/core/agent/`), no el plan
+histórico.
+
+Documentos relacionados (y su estado):
+- `docs/plan_harness.md` — **histórico**. Plan por etapas de 2025/26; nombra
+  `CustomBackend`, que hoy se llama `LlamaAgentBackend`. Útil para el porqué de
+  las decisiones (p.ej. descartar Goose), no para el estado actual.
+- `docs/agent.md` — descripción del modo Agente; también usa el nombre viejo
+  `CustomBackend` en varias secciones.
+- `docs/codehamr_harness_review.md` — revisión externa que originó
+  `sanitizeApiMessagesForWire`, el idle-watchdog de SSE y el kill de árbol de shell.
+- `docs/agent-efficiency.md`, `docs/agent-workflows.md`, `docs/skills.md`,
+  `docs/evidence.md`, `docs/HEADLESS.md`, `docs/control-api.md`.
+
+---
+
+## 1. Qué es "el harness"
+
+Todo lo que rodea al modelo para que pueda **trabajar**: armado del contexto,
+protocolo de tool-calling, ejecución de tools, permisos, presupuesto de
+iteraciones, persistencia y telemetría. El modelo es intercambiable; el harness
+es el producto.
+
+Principio rector (heredado del plan original y todavía vigente): **la app no se
+casa con un runtime de agente**. Todo lo valioso (aprobación, diffs, memoria,
+compactación, robustez de protocolo) vive del lado harness-agnóstico.
+
+```
+QML (AgentPage / ChatPage / TasksPage)
+   ↕ propiedades + señales
+AppController                       fachada: espeja estado, resuelve perfil/secretos
+   ↕ IAgentBackend                  interfaz común (src/core/agent/IAgentBackend.h)
+LlamaAgentBackend | OpencodeBackend | RawChatBackend
+   ↕ HTTP OpenAI-compat (/v1/chat/completions, /props, /v1/embeddings)
+llama-server (local) o provider cloud
+   ↕ señales en cola (QThread)
+AgentToolRunner                     ejecuta tools nativas + MCP (worker thread)
+   ↕
+filesystem / shell / UIA-escritorio / browser / email / MCP stdio
+```
+
+---
+
+## 2. Backends
+
+`ensureAgentBackend(adapter)` en `AppController.cpp:4043` construye uno solo a la vez:
+
+| adapter | clase | rol |
+|---|---|---|
+| `llamaagent` | `LlamaAgentBackend` | agente nativo. Loop ReAct propio, tools, HITL, subagentes. **El harness real.** |
+| `opencode` | `OpencodeBackend` | harness externo (`opencode serve` + SSE). Legacy. |
+| — | `RawChatBackend` | chat directo sin tools; sólo la página Chat, no seleccionable como agente. |
+
+`IAgentBackend` es un `QObject` abstracto: la UI nunca conoce el backend concreto.
+Superficie (ver el header para la lista completa):
+
+- **Vida**: `start(AgentContext)`, `stop()`, `running()`.
+- **Conversación**: `sendMessage`, `cancelGeneration`, `steerMessage` (interrumpe
+  el turno y manda uno nuevo), `queueMessage` + edición/borrado de la cola,
+  `prefillWarmup` (precalienta el prompt-cache mientras el usuario habla en Charla).
+- **Sesiones**: new / switch / rename / delete / fork / refresh / `deleteProject`.
+- **Permisos**: `approveTool(id, always)`, `rejectTool`, `setApprovalPolicy`,
+  `setPermissionRules`, `revertEdit`.
+- **Señales**: `runningChanged`, `turnFinished`, `messagesChanged`,
+  `streamingText(index, content)` (update incremental de una burbuja, evita
+  reconstruir la lista por token), `queueChanged`, `sessionsChanged`,
+  `logAppended`, `toolApprovalNeeded`, `desktopActivityChanged`, `errorOccurred`,
+  `contextUsage`, `contextManaged`, `gitRequired`, `chatTemplateDetected`.
+
+`AgentContext` (`AgentTypes.h`) es lo que el backend recibe al arrancar: adapter,
+cwd, `serverBaseUrl`, `modelId`, `apiKey` + `ctxOverride` (provider cloud),
+`parallelSlots`, VRAM total/libre. Los dos últimos alimentan el cap adaptativo de
+sub-agentes.
+
+---
+
+## 3. El loop ReAct (`LlamaAgentBackend`)
+
+```
+sendMessage(text)
+ └─ pushCheckpoint()               rollback por turno de usuario
+ └─ runCompletion()  ── POST /v1/chat/completions (stream:true, tools, tool_choice:auto)
+      ├─ handleStreamData()        acumula content / reasoning_content / tool_calls[index]
+      └─ handleStreamFinished()
+           ├─ sin tool_calls → finishTurn()
+           └─ con tool_calls → processPendingCalls()
+                ├─ validación (JSON, requiredArgs, tool conocida, anti-loop, destructiva)
+                ├─ aprobación (reglas por patrón → política auto|ask|manual)
+                ├─ executeTool() en el worker thread → toolExecuted
+                ├─ AgentProgressGovernor decide Continue | Replan | Stop
+                └─ runCompletion()  con el tool result en contexto
+```
+
+Puntos que importan:
+
+- **Streaming SSE**. Los `tool_calls` llegan fragmentados por `index`;
+  `mergeToolCallDelta()` (pura, testeada) mergea `id`/`name` y concatena
+  `arguments` hasta el final del stream.
+- **Watchdog de inactividad de stream**, no de duración total: `m_streamIdleTimer`
+  se reinicia con cada frame SSE. Configurable con `LLAMACODE_STREAM_IDLE_TIMEOUT`
+  (segundos, default 3600). Un prefill lento y legítimo no se mata; un stream
+  muerto sí.
+- **Watchdog por tool**: `toolWatchdogSeconds(tool, args, quickTimeoutSec)` da un
+  presupuesto distinto según la tool (una lectura no merece lo mismo que un
+  `run_shell`). Al vencer, se reinicia el worker (`restartWorkerAfterTimeout`).
+- **Tres modos de completion** (`enum CompletionMode`): `NativeFull`,
+  `NativeCompat`, `TextTools`. Si el server rechaza tools nativas con 400 se cae a
+  protocolo textual (`m_textToolFallback`); `setForceTextTools(true)` lo activa
+  desde el primer request cuando el chat-template del GGUF no soporta tools (caso
+  Gemma). El parseo textual es `textToolCallFromContent()` +
+  `secondTextToolCallStart()` (corta ráfagas de varios TOOL_CALL).
+- **Reintentos clasificados**: `classifyCompletionError(httpStatus, text)` →
+  `RetryNone` / `RetryTransient` (hasta `kMaxTransportRetries`=60, ~5 min: cubre un
+  reinicio de llama-server) / `RetryContextOverflow` (dispara recuperación de
+  contexto en vez de reintentar igual).
+- **Límites**: `kMaxTurnIters`=1000 (tope de seguridad, deliberadamente altísimo —
+  no cortar trabajo legítimo) y `kMaxSameCall`=3 (la tercera llamada idéntica se
+  bloquea y fuerza replanteo). La firma la calcula `toolCallSignature()`, que
+  normaliza el JSON (orden de claves y espacios) para que un mismo pedido no se
+  disfrace de distinto.
+- **Espirales de fallo**: `failureFingerprint(tool, result)` normaliza el error;
+  `kFailureSpiralThreshold`=3 fallos equivalentes consecutivos cambia la
+  estrategia (replan / escalado al maestro).
+- **Repetición textual**: `repeatedSuffixStart()` detecta el bucle de generación
+  (mismo bloque repetido) y corta el stream.
+
+### AgentProgressGovernor
+
+Presupuesto **elástico** de créditos por turno, no un contador de pasos.
+`Policy{initialCredits=8, maxCredits=16, replanAfter=3, stopAfterReplan=5,
+maxDistinctWrites=24}`. Decide sólo al terminar una acción: la evidencia nueva
+premia créditos, la repetición de la misma *familia semántica* (aunque cambien
+los argumentos superficiales) los quema. `maxDistinctWrites` es el techo duro que
+mata el patrón `prime_checker.py`, `prime_checker_v2.py`, …`_v10.py`, donde cada
+escritura parece "nueva" y el presupuesto elástico nunca cerraría.
+
+---
+
+## 4. Contexto: transcript vs memoria de trabajo
+
+Dos arrays separados, y esa separación es la garantía central:
+
+- `m_transcriptMessages` — **fuente de verdad inmutable** de la sesión.
+- `m_apiMessages` — memoria de trabajo que se le manda al modelo. Se poda y se
+  compacta libremente.
+
+Mecanismos sobre la memoria de trabajo:
+
+| Mecanismo | Función | Qué hace |
+|---|---|---|
+| System prompt | `buildSystemPrompt()` | base + directivas + memoria del proyecto (`.llamacode/memory.md`, fallback `AGENTS.md`) |
+| Refresco de contexto | `refreshSystemPromptContext()` | reconstruye el system cuando cambia cwd/modo; sin esto el prompt persistido sigue anunciando permisos viejos |
+| Poda | `pruneWorkingContext()` | descarta lo prescindible; respeta `isProtectedContextMessage()` |
+| Compactación | `planCompaction` → `startCompaction` → `applyCompaction` | resume el tramo medio con el propio LLM; conserva system + objetivo inicial + cola reciente. `m_compactStall` corta el bucle si compactar deja de bajar tokens |
+| Saneo de wire | `sanitizeApiMessagesForWire(msgs, modelId)` | antes de cada request: elimina `tool` huérfanos, `assistant.tool_calls` colgantes, conserva el user de anclaje, degrada system no-inicial |
+| Rol de notas | `midConversationNoteRole(modelId)` | `latest_reminder` en deepseek-v4, `user` en el resto — **nunca** `system`, porque varios templates hoistean los system al tope y rompen posición + prompt-cache |
+| Imágenes | `trimStaleImages(msgs, keepLast)` | deja capturas sólo en los últimos N mensajes; el resto pasa a `[captura omitida]` (con mmproj cada screenshot son miles de tokens de prefill) |
+| Warmup | `buildWarmupPayload()` | mismo prefijo, `max_tokens=1`, `stream=false`, `cache_prompt=true` |
+| Read-dedup | `m_readFingerprints` | releer el mismo archivo sin cambios devuelve un stub en vez de re-inyectar el contenido |
+| Preflight | `ContextPreflight::build(root, request, maxFiles)` | slice inicial de archivos relevantes al pedido |
+
+`contextUsage(used, limit)` y `contextManaged(working, transcript, pruned, events)`
+son lo que ve la UI (barra "ctx N/M" y las métricas de poda). El límite sale de
+`/props` (`n_ctx`) salvo `ctxOverride` de un provider cloud, que no expone `/props`.
+
+### Thinking
+
+`visibleAnswer(content, thinkingEnabled, leakGuard)` decide qué se muestra. Con
+Pensar OFF quita los `<think>…</think>`, **pero** si el modelo metió toda la
+respuesta adentro (Qwen lo hace) rescata el texto interno en vez de dejar la
+burbuja vacía. Al historial de API el `<think>` no viaja nunca. Estrategia por
+binario/modelo: `--reasoning on/off`, `--reasoning-budget`, o
+`chat_template_kwargs.enable_thinking` (`thinkingTemplateKwargs()`).
+
+---
+
+## 5. Tools
+
+Catálogo built-in: `LlamaAgentBackend::toolCatalog()` — `{name, group,
+description, approxTokens}`. Los `approxTokens` son lo que hace que apagar tools
+sea una decisión de **presupuesto de contexto** y no de gusto.
+
+| Grupo | Tools |
+|---|---|
+| Archivos | `read_file`, `list_dir`, `glob` |
+| Búsqueda | `grep`, `code_hotspots`, `search_docs`, `semantic_search`, `hybrid_search`, `repo_slice` |
+| Código | `write_file`, `edit_file`, `run_shell` |
+| Revisión | `review_overengineering` |
+| Conocimiento | `project_brain`, `memory`, `graph`, `verify_claims`, `recent_actions`, `context_checkpoint` |
+| Web | `web_search`, `web_fetch`, `deep_research` |
+| Multi-Agente | `ask_teacher`, `task` |
+| Habilidades | `skill_list`, `skill_load` |
+| Browser | `browser_skill_list`, `browser_skill_replay`, `browser_network_discover` |
+| Escritorio | `desktop_windows`, `desktop_controls`, `desktop_click_element`, `desktop_find_image` / `click_image` / `wait_image` / `assert_image`, `desktop_observe`, `desktop_click`, `desktop_stroke`, `desktop_type`, `desktop_key`, `desktop_scroll`, `desktop_focus`, `desktop_resize`, `desktop_wait`, `desktop_wait_for`, `desktop_assert`, `desktop_launch` |
+| Correo | `email_accounts`, `email_send`, `email_list`, `email_read` |
+
+- `setDisabledTools(names)` las saca de `buildToolSchemas()` → no se ofrecen al
+  modelo, no gastan contexto. Acepta built-ins y `mcp__server__tool`.
+- `toolKind(name)` → `read | write | shell | mcp`, base de la política de permisos.
+- `requiredArgs(name)` se valida **antes** de ejecutar; faltante = tool result de
+  error, no crash del turno.
+
+### Ejecución: worker thread
+
+El loop coordina en el hilo principal (red asíncrona); la ejecución vive en
+`AgentToolRunner` sobre un `QThread` dedicado, porque `run_shell`, el handshake
+MCP (el primer `npx` baja el paquete) y `tools/call` son bloqueantes y congelarían
+la UI. Los `McpClient` viven en el worker por afinidad de `QProcess`.
+
+Flujo: `approveAndContinue` → `invokeMethod` en cola → `toolExecuted(QVariantMap)`
+→ `onToolExecuted` en el hilo UI (snapshot+diff si es write, tool result, seguir el
+loop). Una tool a la vez; `m_execCallId` descarta resultados tardíos tras
+cancelar. `run_shell` es async con tarjeta en vivo: `toolStarted` la crea,
+`toolOutputChunk` la va llenando (con throttle), `finishShell` la cierra. La
+cancelación mata el **árbol** de procesos (`taskkill /T /F` en Windows).
+
+### MCP
+
+`McpClient` = JSON-RPC 2.0 sobre stdio: `initialize` → `notifications/initialized`
+→ `tools/list` → `tools/call`. Las tools se inyectan con prefijo
+`mcp__<server>__<tool>` y se rutean por prefijo. Config = global + proyecto
+(el de proyecto pisa por nombre), más el server de browser inyectado según perfil.
+
+Dos gates independientes:
+- `setMcpServers(...)` — qué servers **corren**.
+- `setMcpToolsEnabled(bool)` — si sus tools se **inyectan** en el contexto. Las
+  tools MCP no están en `toolCatalog()`, así que `disabledTools` no las apaga;
+  esta es la perilla del perfil de agente (`mcpEnabled`).
+
+`ToolExecutionSafety` da el contrato uniforme para tools externas: cuando un
+server MCP no declara annotations, el default es **conservador**
+(`effect=external_write`, `approvalRequired=true`, `openWorld=true`). Aporta
+además `canonicalJson`, `payloadHash(server, tool, args)`, `idempotencyKey` y
+`resultHash` — lo que liga aprobación, idempotencia y recibos al payload exacto
+(por eso la aprobación guarda `m_awaitPayloadHash`: aprobar una llamada no
+aprueba otra parecida).
+
+---
+
+## 6. Permisos y guardrails
+
+Orden de evaluación:
+
+1. **Reglas por patrón** (`setPermissionRules`, una por línea:
+   `allow|deny|ask [kind:]<glob>`).
+2. **Política global** `agent/approvalMode`: `auto` (todo), `ask` (auto lectura;
+   pide write + shell + mcp), `manual` (pide todo).
+3. **Overrides de Task**: `setTaskAutoApprove(true)` auto-aprueba durante una Task
+   sin tocar la preferencia persistida.
+4. **Guardrail Zero-Autonomy** (`setHitlDestructive`, ON por defecto): si
+   `isDestructiveAction(name, args, desktopControlsText)` da true (borrado
+   recursivo, format, drop de DB, `memory forget/prune`, click sobre un control
+   cuyo nombre es delete/eliminar/format), **fuerza aprobación humana aunque el
+   modo sea `auto` o haya auto-approve de Task**. Sólo el modo "super" lo saltea.
+   Mismo mecanismo que el gate de `email_send` (enviar correo es acción externa
+   irreversible; `setMailAutoSend` es el opt-in explícito).
+5. En **sub-agentes**, que corren headless y no pueden pedir aprobación, el
+   guardrail **rechaza de plano** la acción destructiva y le dice al sub-agente
+   que la difiera al agente principal.
+
+Aprobación en vuelo: una tool a la vez (`m_awaitId` + `m_awaitCall` +
+`m_awaitPayloadHash`); `toolApprovalNeeded({tool, kind, detail, diff})` a la UI;
+"Siempre" agrega el `kind` a `m_alwaysAllowed` para la sesión.
+
+### Alcance de filesystem
+
+`setTaskScope(scope, folders)`:
+- `project` — confinado al cwd (default).
+- `folder` — cwd + carpetas listadas.
+- `full` — sin confinamiento ("Super Agente").
+
+`safeProjectDir(dir)` rechaza el home del usuario, su carpeta padre y la raíz de
+una unidad: ahí las tools con auto-aprobación escribirían sobre `.ssh`, `.claude`
+o los perfiles. Si no hay proyecto válido se usa `fallbackWorkspaceDir()`, que
+nunca es el home.
+
+### Diffs y rollback
+
+- `write_file` toma snapshot previo (`m_editSnapshots`) y genera un diff unificado
+  simple (`makeDiff`, prefijo/sufijo común + bloque +/-) que se muestra en la card
+  de aprobación **antes** de aplicar.
+- `revertEdit(path)` restaura o borra desde el snapshot.
+- `pushCheckpoint()` por turno de usuario guarda longitudes de mensajes +
+  qué archivos ya estaban editados; `rollbackToMessage(i)` rebobina la
+  conversación y revierte sólo lo editado después.
+- `editMessage(i, texto)` reescribe un mensaje y descarta lo posterior
+  (rebuildea `m_apiMessages` como turnos de texto: pierde la estructura de
+  tool_calls pero deja el contexto válido).
+- `forkSessionAtMessage(i)` bifurca la sesión en un punto.
+
+---
+
+## 7. Sesiones y persistencia
+
+- Store en `AppLocalData/agent_custom/`: `index.json` (lista) +
+  `<sessionId>.json` con `{messages (UI), api, transcript, checkpoints}`. Se
+  persiste el historial de API completo (roles tool / assistant+tool_calls) para
+  reanudar el contexto real, no sólo el texto.
+- **Concurrencia real**: `m_sessionRuntimes` mantiene **una instancia completa de
+  `LlamaAgentBackend` por conversación activa** (`m_isSessionRuntime=true`),
+  aislando request, stream, contexto, tools, aprobaciones, compactación y
+  subagentes. La "vista" está desacoplada del runtime que ejecuta
+  (`m_viewSessionId`): se puede mirar otra sesión mientras la primera termina su
+  turno, sin mezclar historiales. `isBusy()` vs `selectedSessionBusy()`.
+- Sesiones de Task: `newTaskSession()` / `endTaskSession()` son efímeras y
+  restauran la sesión previa del usuario al terminar.
+- `pruneEmptySessions(keepId)` limpia las creadas y abandonadas.
+- `suggestSessionTitle(firstPrompt)` da un título corto y determinista (≤3
+  palabras) sin consultar al server.
+
+---
+
+## 8. Multi-agente
+
+- **`task` → `SubAgentRunner`**: sub-agente headless con su propio loop ReAct y su
+  propio worker de tools, confinado a una **git worktree aislada**
+  (`createWorktree` / `mergeAndCleanupWorktree`). Sin git no hay subagentes → señal
+  `gitRequired`. El cap de paralelismo es adaptativo:
+  `adaptiveSubagentLimit(parallelSlots, ctxTokens, vramTotal, vramFree)`, con
+  `kAbsoluteMaxParallelSubs`=5 como techo duro. Los que no entran esperan en
+  `m_subQueue`; el loop principal no cierra el turno hasta que terminan todos.
+- **`ask_teacher` → maestro**: un modelo más capaz, por HTTP OpenAI-compat o por
+  CLI (`claude` / `codex`, detectados por `MasterCli`). `setMasterChain` define una
+  cadena de fallbacks ordenada; `escalation` es `manual` | `auto` | `both`, y
+  `autoAfterFails` dispara el escalado automático. `m_escalatedSigs` evita
+  re-escalar la misma firma (anti-recursión). Con la directiva `honey` el maestro
+  responde en formato denso clave:valor (`masterSystemPrompt(honey)`).
+- **`DifficultyRouter`**: clase pura que evalúa archivos afectados, tokens de
+  contexto, fallos repetidos, ciclos y confianza → `Low | Medium | High`, para
+  decidir si escalar a un modelo más capaz.
+- **`HybridPlanning`**: plan explícito antes de ejecutar (`parsePlan` /
+  `normalizePlan` — tolera las formas de más que devuelven los modelos —
+  `validatePlan`, `executorPrompt`, `cacheKey`).
+- **`AgentRoomStore`**: salas donde humanos y agentes comparten timeline, con
+  identidad, grants y evidencia. No ejecuta modelos.
+
+---
+
+## 9. Conocimiento persistente
+
+| Componente | Dónde | Qué guarda |
+|---|---|---|
+| `MemoryStore` | tool `memory` | hechos durables por capas (save/recall/forget) |
+| `GraphStore` + `CodeGraphIndexer` | `.llamacode/graph.jsonl` | knowledge graph `archivo -[defines]-> símbolo`, `archivo -[imports]-> archivo`. Indexado **sin LLM**, idempotente, con reindexado incremental por git-diff/mtime |
+| `ProjectBrain` | cache por root | índice de estructura y metadata del workspace; sólo huellas, nunca copia fuente afuera |
+| `AgentEventLog` | `.llamacode/agent_events.jsonl` | bitácora append-only de lo que el agente intentó/rechazó/ejecutó. La tool `recent_actions` la relee para auto-corregirse |
+| `PortableSkillStore` | `<AppLocalData>/skills/<slug>/SKILL.md` y `<ws>/.llamacode/skills/…` | habilidades portables; expone sólo metadata hasta que `skill_load` pide el cuerpo |
+| Consolidación | `consolidateMemory()` | corre una completion en background sobre el transcript al dejar una sesión y extrae hechos durables (`source="consolidation"`, deduplicado por `m_consolidatedLen`) |
+
+`StructuredSourceView` es la vista efímera de un archivo: comprime manteniendo el
+rango original de cada token, para poder proyectar la evidencia de vuelta al
+archivo real y **rechazar rangos ambiguos**. Nunca escribe el archivo compacto.
+
+---
+
+## 10. Directivas del system prompt
+
+`directiveCatalog()` es la fuente de verdad para la UI de toggles y para
+`buildSystemPrompt()`. Cada una es una función estática pura → unit-testeable.
+Sin setear = **todas activas** (no regresiona el comportamiento histórico).
+
+| key | Sección | Qué impone |
+|---|---|---|
+| `discipline` | `developmentDisciplineSection()` | anti-regresión: blast radius, cambio mínimo, preservar contratos, verificar |
+| `testNet` | `testSafetyNetSection()` | detectar el runner del proyecto, un test caja-negra por cambio, correr el suite |
+| `projectContext` | `projectContextSection()` | entender el porqué antes de tocar (no romper workarounds deliberados), co-cambios por git, dejar lo durable en memoria |
+| `efficiency` | `efficiencySection()` | menos pasos y tool calls |
+| `style` | `styleSection()` | respuestas concisas |
+| `honey` | `honeySection()` | **off por defecto**. Reduce lo que el modelo *emite*: código YAGNI sin scaffolding, respuesta-primero, handoffs densos |
+| `antiBias` | `antiBiasSection()` | **off por defecto**. "usual/estándar/típico" es señal de sesgo a re-examinar; responder al cumplir la premisa sin re-derivar |
+
+Aparte, `desktopPlaybookSection(visionReady)` se inyecta **sólo** si las tools de
+escritorio están habilitadas: camino rápido por teclado, verificación por texto
+(UIA) cuando no hay visión, clic semántico por nombre.
+
+Cambiar directivas con sesión viva reemplaza el mensaje system en vivo
+(`replaceSystemMessage`).
+
+---
+
+## 11. Telemetría
+
+`AgentEfficiency` normaliza lo que devuelven llama.cpp y los endpoints
+OpenAI-compat, **sin inventar**: los campos que el server no reporta quedan en
+cero. Por request: `phase`, prompt/generated tokens, prompt/generated ms, wall ms,
+tool calls, tool bytes. `summarize()`, `compare(baseline, candidate)` y
+`benchmarkComparison(runs)` (agrupa por perfil con estadísticos robustos; las
+filas fallidas cuentan para estabilidad pero no contaminan las medianas).
+
+El backend además guarda las métricas **reales** de generación del server
+(`timings.predicted_n` / `predicted_ms`) en vez de estimar chars/4 + wall clock,
+y expone `efficiencySummary()` y `progressSummary()` (`progressEvents`,
+`stagnationEvents`, `replanEvents`). `setDeterministicSeed(n)` fija la semilla
+para benchmarks reproducibles.
+
+---
+
+## 12. Cobertura de tests
+
+| Área del harness | Test |
+|---|---|
+| System prompt (directivas, disciplina, test-net, contexto), `mergeToolCallDelta`, `planCompaction` | `tests/test_agent_wire.cpp` |
+| Tools nativas, `executeTool`/`toolExecuted`, path de error de escritorio | `tests/test_agent_tools.cpp` |
+| Perfiles de agente (capacidades + directivas, presets, gating) | `tests/test_agent_profiles.cpp` |
+| Presupuesto de contexto | `tests/test_agent_context_budget.cpp` |
+| Loop de Loops (body → goal-check → repeat) con `FakeAgentBackend` | `tests/test_appcontroller.cpp` |
+| SSE stub de `/v1/chat/completions` | `tests/test_backends_net.cpp` (`SseStubServer`) |
+| Memoria + grafo | `tests/test_memory_graph.cpp` |
+| `code_hotspots` | `tests/test_hotspots.cpp` |
+| `MasterCli` | `tests/test_master_cli.cpp` |
+| `EvalSuite` | `tests/test_eval.cpp` |
+
+Gate: `tests.bat` + ctest en verde antes de commitear (`/gate`). Si el
+coordinador imprime `[WARN] ... DIRTY`, los tests **no** corrieron sobre tu
+fuente: el resultado no vale.
+
+Sin cobertura automatizada (QA manual, requiere escritorio vivo): UI Automation
+(`desktop_controls` / `desktop_click_element`), `desktop_observe` → visión con
+`--mmproj`, teach persistente de browser, y el swap de modelo de verify-phase
+end-to-end. Detalle en `CLAUDE.md`.
+
+---
+
+## 13. Deudas conocidas
+
+- `docs/plan_harness.md` y `docs/agent.md` siguen nombrando `CustomBackend`
+  (hoy `LlamaAgentBackend`) y describen `OpencodeBackend` como default.
+- `OpencodeBackend` no tiene diffs/revert ni la robustez de protocolo del backend
+  nativo (maneja su propio loop).
+- Preset "Minimal local agent" del review de codehamr: **pendiente**.
+- Kill de process group en Unix para `run_shell`: **pendiente** (Windows resuelto
+  con `taskkill /T /F`).
+- Scope de aprobación por proyecto (hoy global + override por Task).

@@ -1,5 +1,9 @@
 # Modo Agente — Documentación
 
+> Nota: este documento usa el nombre viejo `CustomBackend`; la clase hoy se llama
+> `LlamaAgentBackend` (adapter `llamaagent`) y es el backend por defecto. La
+> referencia completa y al día del harness es `docs/harness.md`.
+
 Cómo funciona el agente de LlamaCode: arquitectura, ciclo de vida, loop ReAct,
 tools (nativas + MCP), aprobación human-in-the-loop, diffs/revert, memoria/contexto,
 robustez y persistencia. Complementa `plan_harness.md` (estado/etapas).
