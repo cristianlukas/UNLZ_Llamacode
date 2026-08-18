@@ -1024,7 +1024,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QCOMPARE(found.value(QStringLiteral("sys-48-thinkingcap-196k"))
                  .value("benchmarkVariants").toArray().size(), 4);
     QCOMPARE(found.value(QStringLiteral("sys-48-katcoder-262k"))
-                 .value("benchmarkVariants").toArray().size(), 4);
+                 .value("benchmarkVariants").toArray().size(), 5);
     QCOMPARE(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp"))
                  .value("benchmarkVariants").toArray().size(), 4);
 
@@ -1447,7 +1447,7 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        QCOMPARE(variants.size(), 9); // base + 9 = 10 perfiles reales por GGUF
+        QCOMPARE(variants.size(), 10); // base + 10 = 11 perfiles reales por GGUF, incluida MTP+ngram
         QSet<QString> variantIds;
         const QVariantMap baseLaunch = pm.getLaunchProfile(id);
         QVERIFY2(!baseLaunch.isEmpty(), qPrintable(id));
@@ -1469,6 +1469,13 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
             const int parallel = args.indexOf(QStringLiteral("--parallel"));
             QVERIFY(parallel >= 0 && parallel + 1 < args.size());
             QCOMPARE(args.at(parallel + 1), QStringLiteral("1"));
+            if (variantId.endsWith(QStringLiteral("-ngram"))) {
+                QVERIFY(args.contains(QStringLiteral("--spec-type")));
+                QVERIFY(args.contains(QStringLiteral("draft-mtp,ngram-mod")));
+                QVERIFY(args.contains(QStringLiteral("--spec-ngram-mod-n-match")));
+                QVERIFY(args.contains(QStringLiteral("--spec-ngram-mod-n-min")));
+                QVERIFY(args.contains(QStringLiteral("--spec-ngram-mod-n-max")));
+            }
         }
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.

@@ -6,6 +6,29 @@ agente o infraestructura debe actualizar esta tabla y agregar una entrada en
 
 Última actualización: 2026-08-18.
 
+## Variantes ngram para comparar
+
+Se agregaron copias declarativas para medir `ngram-mod` sin modificar los
+perfiles base. En los perfiles con MTP se usa deliberadamente
+`--spec-type draft-mtp,ngram-mod` para probar ambos mecanismos juntos, con
+`--spec-ngram-mod-n-match 24`, `--spec-ngram-mod-n-min 16` y
+`--spec-ngram-mod-n-max 64`. KAT y Laguna no tienen un drafter MTP en su perfil
+base, por lo que sus copias prueban `ngram-mod` solo.
+
+| Variante | Base | Modo |
+|---|---|---|
+| `sys-bench-qwen38-udq4-mtp3-ngram` | Qwen3.8 UD-Q4 | MTP3 + ngram |
+| `sys-bench-qwen38-q4km-mtp3-ngram` | Qwen3.8 Q4_K_M | MTP3 + ngram |
+| `sys-bench-qwen38-q5km-mtp3-ngram` | Qwen3.8 Q5_K_M | MTP3 + ngram |
+| `sys-bench-48-kat-ngram` | KAT2-Coder | ngram |
+| `sys-bench-48-bigbang-mtp-ngram` | BigBang MTP balance | MTP5 + ngram |
+| `sys-bench-laguna-s-2-1-q2-48gb-ngram` | Laguna CUDA safe | ngram |
+| `sys-bench-maxq-ngram` | MAX-Q ThinkingCap | MTP4 + ngram |
+| `sys-bench-qwen36-cache-mtp2-ngram` | Qwen3.6 cache MTP2 | MTP2 + ngram |
+| `sys-bench-qwen36-cache-mtp4-ngram` | Qwen3.6 cache MTP4 | MTP4 + ngram |
+| `sys-bench-qwen36-cache-mtp6-ngram` | Qwen3.6 cache MTP6 | MTP6 + ngram |
+| `sys-bench-qwen36-cache-text-mtp4-ngram` | Qwen3.6 texto-only MTP4 | MTP4 + ngram |
+
 ## Alcance activo
 
 Sólo se ejecutan nuevos benchmarks para perfiles marcados `⚡ BEST`. La

@@ -32,6 +32,10 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             derived[QStringLiteral("benchmark")] = variant.value(QStringLiteral("benchmark")).toBool(false);
             if (variant.contains(QStringLiteral("order")))
                 derived[QStringLiteral("order")] = variant.value(QStringLiteral("order"));
+            // Las copias de benchmark son comparadores, no recomendaciones del
+            // showcase: no deben duplicar el perfil base en la portada.
+            derived.remove(QStringLiteral("showcaseGroup"));
+            derived.remove(QStringLiteral("showcaseLabel"));
             derived.remove(QStringLiteral("contextPresets"));
 
             QJsonObject runtime = derived.value(QStringLiteral("runtime")).toObject();

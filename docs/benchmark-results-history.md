@@ -303,3 +303,10 @@ visible. En los logs de b10331, `cache-reuse` fue desactivado tanto por el
 crearon/restauraron, pero PR #25592 no se presume integrado en b10331. Resultado:
 ninguna copia se promueve todavía. MTP6 merece una repetición; texto-only queda
 como candidata de menor memoria para coding, no como mejora de velocidad.
+# 2026-08-18 — Variantes ngram combinadas con MTP
+
+Se agregaron copias declarativas de los perfiles operativos para medir la
+combinación recomendada por llama.cpp: `draft-mtp,ngram-mod`. Las variantes
+usan `n-match=24`, `n-min=16` y `n-max=64`, conservando el MTP y el sampling del
+perfil base. KAT y Laguna se dejaron como `ngram-mod` solo porque sus perfiles
+base no incluyen un drafter MTP. Los perfiles originales no fueron alterados.

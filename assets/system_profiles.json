@@ -1074,6 +1074,18 @@
           "--reasoning": "off"
         },
         "comment": "KAT corre con --reasoning on: piensa antes de responder. Apagarlo cambia el wall-time mucho mas que cualquier flag de VRAM, a costa de las tareas que necesitan razonar. Es LA comparacion que decide si conviene para trabajo diario."
+      },
+      {
+        "id": "sys-bench-48-kat-ngram",
+        "order": 97,
+        "displayName": "[bench 48GB KAT] ngram · 262k",
+        "extraArgOverrides": {
+          "--spec-type": "ngram-mod",
+          "--spec-ngram-mod-n-match": "24",
+          "--spec-ngram-mod-n-min": "16",
+          "--spec-ngram-mod-n-max": "64"
+        },
+        "comment": "Copia ngram-only para comparar repetición de código contra el KAT base, que no incluye drafter MTP."
       }
     ],
     "minimumBinaryBuild": 10228
@@ -1893,6 +1905,9 @@
       ]
     },
     "binaryKind": "official",
+    "benchmarkVariants": [
+      { "id": "sys-bench-maxq-ngram", "order": 2, "displayName": "[bench MAX-Q] MTP4 + ngram · 131k · visión", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia del MAX-Q vigente para comparar MTP4 con ngram en coding repetitivo." }
+    ],
     "comment": "MAX-Q promovido tras benchmark E2E dense-vs-dense: ThinkingCap logró 15/15 sin reparación en 219,5 s y 232,9 s. Mantiene 131k para entrar de forma estable en 24 GB.",
     "vision": true
   },
@@ -2280,6 +2295,9 @@
       "--reasoning-format",
       "auto",
       "--reasoning-preserve"
+    ],
+    "benchmarkVariants": [
+      { "id": "sys-bench-laguna-s-2-1-q2-48gb-ngram", "order": 6, "displayName": "[bench Laguna] Q2 · ngram · 64k · B256/U64", "extraArgOverrides": { "--spec-type": "ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia ngram-only para comprobar si la repetición compensa en coding sin MTP." }
     ],
     "comment": "Variante conservadora de recuperación para CUDA: duplica Laguna sin tocar el perfil histórico y reduce ctx/batch/ubatch; mantiene Flash Attention porque la V-cache cuantizada lo requiere; fit off, tensor-split 1,1 y 32 expertos a CPU. Debe pasar HE0 antes de habilitar HE20/BCB.",
     "mtp": {
@@ -2953,6 +2971,7 @@
       { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV q8_0", "runtime": { "ctx": 196608, "kv": "q8_0" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64 }, "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido conservado, pero con 64k/batch 256/ubatch 64: en 131k/batch 512 el primer prefill provoca CUDA invalid argument/illegal memory access con mmproj en esta GPU." },
       { "id": "sys-repair-48-bigbang-mtp", "order": 155, "displayName": "REPAIR - BigBang · MTP · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--temp": "0.70", "--top-p": "0.08", "--reasoning": "off", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "Copia de reparación para sys-bench-48-bigbang-mtp y sys-bench-48-bigbang-fast: conserva MTP, baja contexto/batch, usa KV q8_0 y reactiva Flash Attention. Los perfiles originales crashearon con flash off a 131k; no se sobrescriben." },
+      { "id": "sys-bench-48-bigbang-mtp-ngram", "order": 158, "displayName": "[bench BigBang] MTP + ngram · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--reasoning": "off", "--spec-type": "draft-mtp,ngram-mod", "--spec-draft-n-max": "5", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia experimental para medir MTP embebido combinado con ngram sobre el perfil reparado." },
       { "id": "sys-repair-48-bigbang-base", "order": 156, "displayName": "REPAIR - BigBang · sin MTP · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--reasoning": "off", "--spec-type": null, "--spec-draft-n-max": null }, "comment": "Copia de reparación para sys-bench-48-bigbang-base: elimina MTP, baja contexto/batch y usa KV q8_0 + Flash Attention. El original crasheó con flash off a 131k; no se sobrescribe." },
       { "id": "sys-repair-48-bigbang-mtp-balance", "order": 157, "displayName": "BALANCE - BigBang MTP", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--temp": "0.60", "--top-p": "0.95", "--reasoning": "off", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "Perfil BALANCE corregido y promovido desde la copia de reparación: conserva MTP embebido y sampling estándar, pero usa 64k/B256/U64, KV q8_0 y Flash Attention para evitar los crashes CUDA observados en la configuración 131k/flash off." }
     ],
@@ -2998,7 +3017,8 @@
       { "id": "sys-bench-qwen38-udq4-mtp4-64k", "order": 168, "displayName": "[bench Qwen3.8] UD-Q4 · MTP4 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" } },
       { "id": "sys-bench-qwen38-udq4-mtp3-kv8", "order": 169, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
-      { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } }
+      { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-ngram", "order": 172, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia experimental para medir repetición de bloques con MTP; no reemplaza MTP3." }
     ],
     "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa y MTP integrado. Reasoning queda off en este perfil para el flujo agentico: con thinking on el modelo produce borradores largos y no emite la primera tool-call. Diez perfiles reales por GGUF (base + nueve variantes) pasan HumanEval/0 antes de promover tres a HumanEval/20. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
   },
@@ -3020,7 +3040,8 @@
       { "id": "sys-bench-qwen38-q4km-mtp3-kv8", "order": 177, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-bench-qwen38-q4km-mtp3-b1024", "order": 178, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-q4km-mtp3-b2048", "order": 179, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
-      { "id": "sys-bench-qwen38-q4km-mtp3-64k-kv8", "order": 180, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } }
+      { "id": "sys-bench-qwen38-q4km-mtp3-64k-kv8", "order": 180, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-q4km-mtp3-ngram", "order": 182, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia Q4_K_M que combina MTP3 y ngram." }
     ],
     "comment": "Variante de referencia de calidad/compatibilidad; mismo mmproj y MTP que UD-Q4. Diez perfiles candidatos por GGUF: el base y nueve variantes pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."
   },
@@ -3042,7 +3063,8 @@
       { "id": "sys-bench-qwen38-q5km-mtp3-kv8", "order": 186, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-bench-qwen38-q5km-mtp3-b1024", "order": 187, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-q5km-mtp3-b2048", "order": 188, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
-      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } }
+      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-ngram", "order": 191, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia Q5_K_M que combina MTP3 y ngram." }
     ],
     "comment": "Variante de precisión: más peso y menos margen de KV. Diez perfiles candidatos por GGUF pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."
   },
@@ -3056,7 +3078,10 @@
     "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "2", "--spec-draft-p-min", "0.0"],
     "binaryKind": "official", "minimumBinaryBuild": 10331, "vision": true,
-    "comment": "Copia experimental de sys-maxq: sólo cambia el manejo explícito de checkpoints/cache y baja MTP a 2. Sirve para medir estabilidad de cache y latencia contra MAX-Q sin modificarlo. La corrección completa de checkpoints híbridos de PR #25592 no se presume disponible en b10331."
+  "benchmarkVariants": [
+    { "id": "sys-bench-qwen36-cache-mtp2-ngram", "order": 194, "displayName": "[bench Qwen3.6] cache híbrido · MTP2 + ngram", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia MTP2 que combina MTP y ngram en la misma ejecución." }
+  ],
+  "comment": "Copia experimental de sys-maxq: sólo cambia el manejo explícito de checkpoints/cache y baja MTP a 2. Sirve para medir estabilidad de cache y latencia contra MAX-Q sin modificarlo. La corrección completa de checkpoints híbridos de PR #25592 no se presume disponible en b10331."
   },
   {
     "id": "sys-experiment-qwen36-cache-mtp4",
@@ -3068,7 +3093,10 @@
     "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "4", "--spec-draft-p-min", "0.0"],
     "binaryKind": "official", "minimumBinaryBuild": 10331, "vision": true,
-    "comment": "Copia experimental de sys-maxq con checkpoints híbridos explícitos; conserva MTP4 para una comparación 1:1 con el perfil vigente. No reemplaza ni altera MAX-Q."
+  "benchmarkVariants": [
+    { "id": "sys-bench-qwen36-cache-mtp4-ngram", "order": 195, "displayName": "[bench Qwen3.6] cache híbrido · MTP4 + ngram", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia MTP4 que combina MTP y ngram en la misma ejecución." }
+  ],
+  "comment": "Copia experimental de sys-maxq con checkpoints híbridos explícitos; conserva MTP4 para una comparación 1:1 con el perfil vigente. No reemplaza ni altera MAX-Q."
   },
   {
     "id": "sys-experiment-qwen36-cache-mtp6",
@@ -3080,7 +3108,10 @@
     "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "6", "--spec-draft-p-min", "0.5"],
     "binaryKind": "official", "minimumBinaryBuild": 10331, "vision": true,
-    "comment": "Copia experimental de sys-maxq para medir el punto MTP6/p-min 0.5 reportado en la referencia. Mantiene sampling conservador y todos los límites de cache; no promover sin HE0 y comparación reproducible."
+  "benchmarkVariants": [
+    { "id": "sys-bench-qwen36-cache-mtp6-ngram", "order": 196, "displayName": "[bench Qwen3.6] cache híbrido · MTP6 + ngram", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia MTP6/p-min 0.5 que combina MTP y ngram; conserva el p-min del perfil base." }
+  ],
+  "comment": "Copia experimental de sys-maxq para medir el punto MTP6/p-min 0.5 reportado en la referencia. Mantiene sampling conservador y todos los límites de cache; no promover sin HE0 y comparación reproducible."
   },
   {
     "id": "sys-experiment-qwen36-cache-text-mtp4",
@@ -3092,6 +3123,9 @@
     "runtime": { "ctx": 131000, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": true, "mmap": false },
     "extraArgs": ["--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-mmproj", "--no-context-shift", "--metrics", "--no-warmup", "--cache-ram", "32768", "--cache-reuse", "512", "--ctx-checkpoints", "8", "--checkpoint-min-step", "4096", "--kv-unified", "--cache-idle-slots", "--jinja", "--threads-batch", "8", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--spec-type", "draft-mtp", "--spec-draft-n-max", "4", "--spec-draft-p-min", "0.0"],
     "binaryKind": "official", "minimumBinaryBuild": 10331,
-    "comment": "Copia texto-only del experimento MTP4: elimina mmproj porque el flujo coding no usa visión y b10331 desactiva cache-reuse en modelos multimodales. Es la variante para comprobar si el cache de prompt/checkpoints realmente aporta en el caso de uso."
+  "benchmarkVariants": [
+    { "id": "sys-bench-qwen36-cache-text-mtp4-ngram", "order": 197, "displayName": "[bench Qwen3.6] texto-only · MTP4 + ngram", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia texto-only que combina MTP4 y ngram para coding repetitivo." }
+  ],
+  "comment": "Copia texto-only del experimento MTP4: elimina mmproj porque el flujo coding no usa visión y b10331 desactiva cache-reuse en modelos multimodales. Es la variante para comprobar si el cache de prompt/checkpoints realmente aporta en el caso de uso."
   }
 ]
