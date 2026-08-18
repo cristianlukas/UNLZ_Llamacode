@@ -25,6 +25,7 @@ El esquema obligatorio de cada fila es exactamente: `ID`, `Perfil`, `Agente`,
 | `sys-repair-48-bigbang-mtp-balance` | BigBang MTP BALANCE | chat | 1/1 | 20/20 | 3/8 | 11,266 s | 253,067 s | 406,496 s | — | 206,53 | 211,18 | Sí | MTP embebido | Q4_K_M | 35B-A3B | 65k | No | LC-H1 | Reparado |
 | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | ThinkingCap Qwen3.6 MTP4 | chat | 1/1 | 20/20 | 3/8 | 11,288 s | 118,098 s | 169,431 s | 48,21 | 61,96 | 52,04 | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | BCB calidad |
 | `sys-laguna-s-2-1-q2-48gb-safe` | Laguna S 2.1 · CUDA safe 64k | básico | 1/1 | Pendiente | Pendiente | 150,127 s | — | — | — | — | — | No | — | UD-Q2_K_XL | 118B-A8B | 65k | No | LC-H1 | HE0 válido |
+| `8dd3325d-8658-45ca-9aad-ad80d301b4e9` | Laguna S 2.1 · dual GPU safe · 32k | Máximo | 1/1 | 20/20 | 4/8 | 60,919 s | 392,072 s | 871,561 s | 19,77 | 54,70 | 44,33 | No | — | UD-Q2_K_XL | 118B-A8B | 32k | No | LC-H1 | Reparado; usa 2×GPU |
 | `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | DeepSeek Fusion VRAM histórico | chat | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB calidad |
 | `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | 4/8* | 112,497 s | 1164,244 s | 1396,871 s* | — | 9,58 | — | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB mejor resultado evaluable; repetir cancelado por reparación estancada |
 
@@ -37,8 +38,11 @@ pasar HE0, quedan bloqueadas y no se ejecutan HE20 ni BCB.
 |---|---|---|---:|---:|---:|---:|---|
 | `392ea030-059e-4f69-86c6-81d3fa31acbc` | DeepSeek Fusion · VRAM expertos 0–2 | básico | 0/1 | No ejecutado | No ejecutado | 21,105 s | Salida no evaluable: no creó `solution_HumanEval_0.py`; sin CUDA/OOM |
 | `6d4b528f-f26d-4500-99cf-c25a36dd6f54` | DeepSeek Fusion · VRAM expertos 0–3 | chat | 0/1 | No ejecutado | No ejecutado | 32,450 s | Salida no evaluable: no creó `solution_HumanEval_0.py`; sin CUDA/OOM |
+| `0a1b97be-dec6-41b8-8382-417ab840bec7` | DeepSeek expertos 0–2 · dual GPU tilted 32k | Máximo | 0/0 | No ejecutado | No ejecutado | 13,302 s | OOM en GPU1; las variantes dual 65k/32k también agotaron GPU1 |
+| `97221bae-60f1-4933-8ae7-fc1421407b7f` | DeepSeek expertos 0–2 · dual GPU 20 layers | Máximo | 0/0 | No ejecutado | No ejecutado | 37,075 s | Crash backend `ggml-cpu.c:2691 op not implemented` |
 | `318368e6-3fb7-4ef8-a76a-23030c544c49` | Laguna S 2.1 · CPU-safe 32k | básico → chat | 0/1 | No ejecutado | No ejecutado | 68,149 s / 74,605 s | El backend carga; ambos agentes no crearon `solution_HumanEval_0.py` |
 | `807c23f8-442c-4303-b96a-e1d0481eaf69` | Laguna S 2.1 · safe CUDA 65k | básico | 0/0 | No ejecutado | No ejecutado | 30,432 s | `CUDA illegal memory access` en GPU0 durante la carga |
+| `8dd3325d-8658-45ca-9aad-ad80d301b4e9` | Laguna S 2.1 · dual GPU safe · 32k | Máximo | 1/1 | 20/20 | 4/8 | 60,919 s / 392,072 s / 871,561 s | Reparado: `tensor-split 1,1`, ctx 32k, batch/ubatch 128/32, Flash Attention; sin crash |
 
 ## Comparación de agentes en DeepSeek BCB
 

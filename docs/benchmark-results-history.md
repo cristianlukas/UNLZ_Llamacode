@@ -180,3 +180,39 @@ reparto CPU-safe evita el crash pero no logra una salida evaluable con los dos
 agentes probados. Por tanto quedan pendientes una combinación de backend/binario
 o un agente/harness que produzca el archivo HE0; no corresponde saltar a HE20 ni
 BCB.
+
+## 2026-08-18 — Laguna reparada usando las dos RTX 3090
+
+La variante CPU-only se conservó sólo como diagnóstico; no es la solución de
+producción porque no utiliza las dos GPU. La variante operativa reparada es:
+
+| Perfil | ID | Configuración | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | VRAM agregada | RAM pico |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Laguna dual GPU safe 32k | `8dd3325d-8658-45ca-9aad-ad80d301b4e9` | `tensor-split 1,1`, `gpuLayers=999`, ctx 32768, batch/ubatch 128/32, Flash Attention, `predict=512`, agent-maximo | 1/1 | 20/20 | 4/8 | 60,919 s | 392,072 s | 871,561 s | 19,77 | 54,70 | 44,33 | 40.574 MB | 41.759 MB |
+
+La configuración dual GPU no presentó `CUDA illegal memory access`, OOM ni cierre
+del daemon. En BCB pasó 928, 765, 906 y 139; falló 771, 1019, 583 y 360 por
+contratos funcionales del código generado: archivos CSV, comentario/encoding,
+RSA de 512 bits y formato/desviación de Excel. El fallo BCB es de calidad del
+modelo/agente, no de infraestructura.
+
+La variante CPU-only `155_BALANCE - Laguna S.2.1 · CPU-only HE/BCB · predict
+512` pasó HE0 1/1 en 224,681 s, pero queda descartada como solución de
+producción.
+
+## 2026-08-18 — Investigación adicional de DeepSeek 0–2/0–3
+
+Se probaron copias dual-GPU para evitar el crash de las variantes originales:
+
+| Variante | Resultado HE0 | Causa |
+|---|---:|---|
+| Dual GPU 65k, `tensor-split 1,1` | 0/0 | OOM en GPU1: reserva de 24.641 MiB |
+| Dual GPU 32k, `tensor-split 1,1` | 0/0 | OOM en GPU1: reserva de 24.148 MiB |
+| Dual GPU 32k, `tensor-split 1.1,0.9` | 0/0 | OOM en GPU1; el tensor sigue superando la capacidad disponible |
+| Dual GPU, `gpuLayers=20` | 0/0 | Crash del backend: `ggml-cpu.c:2691 op not implemented` al usar overrides CPU |
+
+Por eso 0–2 y 0–3 continúan bloqueados: no es un fallo del harness ni de la
+calidad del modelo, sino una incompatibilidad entre este GGUF/backend y los
+repartos que intentan mantener esos expertos en GPU0. No se ejecutaron HE20 ni
+BCB. La variante DeepSeek VRAM 0–1 continúa siendo la única de esa familia
+validada con HE0/HE20.
