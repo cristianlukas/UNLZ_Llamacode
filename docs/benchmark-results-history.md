@@ -17,6 +17,27 @@ Desde esta fecha, el conjunto operativo queda restringido a perfiles con el
 indicador `⚡ BEST`; los demás se conservan sólo como histórico y no se
 benchmarkean nuevamente sin autorización explícita.
 
+## 2026-08-17 — Telemetría DeepSeek: VRAM por GPU y TPS
+
+La telemetría histórica de LlamaCode conserva `vramMb` agregado y `ramMb`, no
+el desglose por GPU. Por eso no se inventa una separación GPU0/GPU1 para las
+corridas anteriores; ese desglose debe capturarse durante la nueva serie de
+variantes.
+
+| Corrida | Calidad | Tiempo | TPS | RAM pico | VRAM agregada |
+|---|---:|---:|---:|---:|---:|
+| DeepSeek original — HE20 actual | 20/20 | 1164,244 s | 9,58 | 92.771 MB | 32.986 MB |
+| DeepSeek original — HE20 histórico | 20/20 | 802,656 s | 10,35 | 91.865 MB | 32.785 MB |
+| DeepSeek VRAM balance — HE20 histórico | 20/20 | 775,223 s | 10,76 | 91.779 MB | 35.705 MB |
+| DeepSeek VRAM balance — repetición HE20 | 20/20 | 860,886 s | 9,02 | 91.893 MB | 35.604 MB |
+
+Durante el BCB activo de DeepSeek, la muestra directa del sistema entre
+22:19:43 y 22:20:24 registró GPU0 entre 11.086 y 11.150 MB, GPU1 estable en
+21.698 MB y RAM de trabajo del servidor en 93.097 MB. El endpoint `/metrics`
+reportó 7,484 TPS de generación promedio al cierre de la muestra. La RAM de
+trabajo del proceso no representa toda la memoria mapeada del modelo; para
+comparar contra las corridas históricas se usa el pico `ramMb` de LlamaCode.
+
 ## 2026-08-17 — Laguna safe y reparación del harness
 
 - Laguna original fallaba durante la carga CUDA en GPU0, antes del harness.
