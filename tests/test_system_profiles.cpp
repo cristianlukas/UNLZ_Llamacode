@@ -1483,14 +1483,20 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
                     return value.toObject();
             return QJsonObject{};
         };
+        // Las variantes llevan el quant del PADRE en el id (udq4 / q4km / q5km);
+        // con el prefijo fijo "udq4" este bloque pasaba para el primer perfil y
+        // fallaba en el segundo, aunque el bundle estuviera bien.
+        const QString quant = id.section(QLatin1Char('-'), 3, 3);   // sys-qwen38-27b-<quant>-131k
+        QVERIFY2(!quant.isEmpty(), qPrintable(id));
+        const QString variantPrefix = QStringLiteral("sys-bench-qwen38-%1-").arg(quant);
         for (const QString &suffix : {QStringLiteral("post-parallel2"), QStringLiteral("post-parallel4"), QStringLiteral("post-parallel6")}) {
-            const QJsonObject variant = findVariant(QStringLiteral("sys-bench-qwen38-udq4-") + suffix);
-            QVERIFY2(!variant.isEmpty(), qPrintable(suffix));
+            const QJsonObject variant = findVariant(variantPrefix + suffix);
+            QVERIFY2(!variant.isEmpty(), qPrintable(variantPrefix + suffix));
             const int expectedSlots = suffix.endsWith(QStringLiteral("2")) ? 2 : suffix.endsWith(QStringLiteral("4")) ? 4 : 6;
             QCOMPARE(variant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("parallelSlots")).toInt(), expectedSlots);
         }
-        const QJsonObject longVariant = findVariant(QStringLiteral("sys-bench-qwen38-udq4-post-262k-kv8"));
-        QVERIFY(!longVariant.isEmpty());
+        const QJsonObject longVariant = findVariant(variantPrefix + QStringLiteral("post-262k-kv8"));
+        QVERIFY2(!longVariant.isEmpty(), qPrintable(variantPrefix + QStringLiteral("post-262k-kv8")));
         QCOMPARE(longVariant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("ctx")).toInt(), 262144);
         QCOMPARE(longVariant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("kv")).toString(), QStringLiteral("q8_0"));
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
