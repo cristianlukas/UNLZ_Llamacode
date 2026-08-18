@@ -10,6 +10,9 @@ Documentos relacionados (y su estado):
   las decisiones (p.ej. descartar Goose), no para el estado actual.
 - `docs/agent.md` — descripción del modo Agente; también usa el nombre viejo
   `CustomBackend` en varias secciones.
+- `docs/plan-harness-modular.md` — diseño del harness modular (implementado).
+- `docs/plan-harness-cierre.md` — **vigente**: qué falta cubrir del harness
+  modular (editor QML sin QA, A/B sin correr, fases sin test e2e).
 - `docs/codehamr_harness_review.md` — revisión externa que originó
   `sanitizeApiMessagesForWire`, el idle-watchdog de SSE y el kill de árbol de shell.
 - `docs/agent-efficiency.md`, `docs/agent-workflows.md`, `docs/skills.md`,
