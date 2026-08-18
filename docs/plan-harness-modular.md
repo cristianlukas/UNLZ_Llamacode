@@ -1,5 +1,10 @@
 # Plan — Harness modular y personalizable
 
+> **IMPLEMENTADO.** E0–E8 están en el código; la referencia viva es la sección
+> "Harness modular" de `docs/harness.md`. Este documento queda como registro del
+> diseño y de las decisiones (incluidas las que se desviaron: los presets de
+> sistema quedaron como specs construidos en código, no como JSON bundleado).
+
 Objetivo: que un "nivel de agente" deje de ser un preset cerrado y pase a ser una
 **composición declarativa de módulos** que el usuario arma, guarda, exporta y
 compara. Hoy `Chat liviano / Básico / Intermedio / Avanzado / Máximo` son cinco

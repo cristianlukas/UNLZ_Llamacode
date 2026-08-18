@@ -679,6 +679,7 @@ bool LlamaAgentBackend::isProtectedContextMessage(const QJsonObject &message) co
 // Nunca toca el transcript persistido.
 int LlamaAgentBackend::pruneWorkingContext()
 {
+    if (!m_contextPolicy.prune) return 0;
     if (m_apiMessages.size() < 8) return 0;
     const int beforeTokens = estimateApiTokens();
     QHash<QString, int> newestSignature;
@@ -781,6 +782,7 @@ static QString serializeMsgForSummary(const QJsonObject &m)
 // Decide si hay un tramo intermedio a compactar y devuelve [head, keepFrom).
 bool LlamaAgentBackend::planCompaction(int &head, int &keepFrom) const
 {
+    if (!m_contextPolicy.compaction) return false;
     if (m_ctxLimit <= 0) return false;
     const int n = m_apiMessages.size();
     if (n <= 4) return false;
@@ -794,13 +796,14 @@ bool LlamaAgentBackend::planCompaction(int &head, int &keepFrom) const
     // reservamos el esquema cuando efectivamente se manda como payload nativo.
     const int toolsReserve = usingTextTools() ? 0
                                               : toolSchemaTokensOf(buildToolSchemas());
-    const int budget = qMax(256, int(m_ctxLimit * 0.90) - outReserve - toolsReserve);
+    const int budget = qMax(256, int(m_ctxLimit * m_contextPolicy.compactionTrigger)
+                                     - outReserve - toolsReserve);
     if (budget <= 0) return false;
 
     if (estimateApiTokens() <= budget) return false;
 
     head = qMin(2, n);                           // system[0] + objetivo[1]
-    const int tailBudget = int(budget * 0.6);    // dejar margen de crecimiento
+    const int tailBudget = int(budget * m_contextPolicy.tailRatio);  // margen de crecimiento
     int acc = 0; keepFrom = n;
     for (int i = n - 1; i >= head; --i) {
         acc += msgTokensOf(m_apiMessages[i].toObject());
@@ -1564,7 +1567,52 @@ QString LlamaAgentBackend::buildSystemPrompt() const
             "\n\nRAZONAMIENTO INTERNO: no muestres razonamiento interno. "
             "Respondé sólo con la respuesta final. No emitas etiquetas "
             "<think> ni </think>.");
+
+    // Directivas de usuario (packs .md del harness modular). Van al final, tras
+    // las built-in y la memoria: son el ajuste más específico. Cada una puede
+    // declarar un gate `when` con hechos del contexto actual.
+    if (!m_customDirectives.isEmpty()) {
+        const QVariantMap facts{
+            {QStringLiteral("tools.desktop"),
+             !m_disabledTools.contains(QStringLiteral("desktop_launch"))},
+            {QStringLiteral("tools.shell"),
+             !m_disabledTools.contains(QStringLiteral("run_shell"))},
+            {QStringLiteral("tools.web"),
+             !m_disabledTools.contains(QStringLiteral("web_fetch"))},
+            {QStringLiteral("tools.task"), !m_disabledTools.contains(QStringLiteral("task"))},
+            {QStringLiteral("vision"), m_visionReady},
+            {QStringLiteral("super"), super},
+            {QStringLiteral("project.hasGit"),
+             !m_cwd.isEmpty() && QFileInfo::exists(m_cwd + QStringLiteral("/.git"))}};
+        for (const QVariant &v : m_customDirectives) {
+            const QVariantMap d = v.toMap();
+            const QString body = d.value(QStringLiteral("body")).toString().trimmed();
+            if (body.isEmpty()) continue;
+            if (!directiveConditionMet(d.value(QStringLiteral("when")).toString(), facts))
+                continue;
+            base += QStringLiteral("\n\n--- %1 ---\n")
+                        .arg(d.value(QStringLiteral("slug")).toString())
+                    + body;
+        }
+    }
+
+    // Tope del prompt compuesto: no truncamos el prompt (cortar a la mitad una
+    // instrucción es peor que un prompt largo), pero dejamos el aviso para que
+    // el editor y el log lo muestren. maxChars<=0 = sin tope.
+    if (m_promptMaxChars > 0 && base.size() > m_promptMaxChars) {
+        logFromConst(QStringLiteral("[prompt: %1 chars supera el tope del perfil (%2); "
+                                    "revisá directivas y memoria del proyecto]\n")
+                         .arg(base.size()).arg(m_promptMaxChars));
+    }
     return base;
+}
+
+// buildSystemPrompt es const (la llaman getters y hooks de test) pero el aviso
+// de presupuesto tiene que llegar al log de la UI. Emitir una señal no cambia el
+// estado lógico del backend, así que el const_cast queda acotado acá.
+void LlamaAgentBackend::logFromConst(const QString &text) const
+{
+    emit const_cast<LlamaAgentBackend *>(this)->logAppended(text);
 }
 
 void LlamaAgentBackend::setAgentTuning(const QString &systemExtra, double temperature)
@@ -1742,6 +1790,79 @@ void LlamaAgentBackend::setProgressPolicy(const AgentProgressGovernor::Policy &p
     m_quickToolTimeoutSec = qBound(5, quickToolTimeoutSec, 120);
 }
 
+// Política del loop (módulo `loop` del HarnessSpec). Aplica también al
+// governor: créditos y replan viven ahí, y así una sola llamada deja el turno
+// entero configurado.
+void LlamaAgentBackend::setLoopPolicy(const HarnessLoopModule &loop)
+{
+    m_loopPolicy = loop;
+    m_loopPolicy.set = true;
+    m_quickToolTimeoutSec = qBound(5, loop.quickToolTimeoutSec, 120);
+    m_progressGovernor.setPolicy(AgentProgressGovernor::Policy{
+        loop.credits, loop.maxCredits, loop.replanAfter, loop.stopAfter,
+        loop.maxDistinctWrites});
+    // Propagar a los runtimes por sesión ya creados (cada conversación
+    // concurrente es una instancia completa; sin esto la política nueva sólo
+    // aplicaría a las sesiones futuras).
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setLoopPolicy(loop);
+}
+
+void LlamaAgentBackend::setContextPolicy(const HarnessContextModule &context)
+{
+    m_contextPolicy = context;
+    m_contextPolicy.set = true;
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setContextPolicy(context);
+}
+
+void LlamaAgentBackend::setToolProtocol(const QString &mode)
+{
+    m_toolProtocol = (mode == QLatin1String("native") || mode == QLatin1String("text"))
+                         ? mode : QStringLiteral("auto");
+    // "text" es el mismo camino que ya usa AppController para modelos sin
+    // tool-template; el spec lo vuelve declarativo en vez de heurístico.
+    if (m_toolProtocol == QLatin1String("text")) m_forceTextTools = true;
+    else if (m_toolProtocol == QLatin1String("native")) m_forceTextTools = false;
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setToolProtocol(mode);
+}
+
+void LlamaAgentBackend::setCustomDirectives(const QVariantList &directives)
+{
+    m_customDirectives = directives;
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setCustomDirectives(directives);
+    if (!m_apiMessages.isEmpty()) {
+        QJsonObject sys = m_apiMessages.first().toObject();
+        if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
+            sys[QStringLiteral("content")] = buildSystemPrompt();
+            replaceSystemMessage(sys);
+        }
+    }
+}
+
+// Gate declarativo de una directiva de usuario. Sintaxis mínima a propósito:
+// una lista de hechos separados por coma, todos deben cumplirse; `!` niega.
+// Hechos conocidos los pone buildSystemPrompt (tools.desktop, tools.shell,
+// tools.web, vision, project.hasGit). Un hecho desconocido NO cumple: una
+// directiva mal escrita no se inyecta en silencio a destiempo.
+bool LlamaAgentBackend::directiveConditionMet(const QString &when, const QVariantMap &facts)
+{
+    const QString cond = when.trimmed();
+    if (cond.isEmpty()) return true;
+    const QStringList parts = cond.split(QLatin1Char(','), Qt::SkipEmptyParts);
+    for (const QString &raw : parts) {
+        QString key = raw.trimmed();
+        bool negate = false;
+        if (key.startsWith(QLatin1Char('!'))) { negate = true; key = key.mid(1).trimmed(); }
+        if (key.isEmpty()) continue;
+        const bool value = facts.value(key).toBool();
+        if (value == negate) return false;
+    }
+    return true;
+}
+
 void LlamaAgentBackend::sendMessageWithVisibleText(const QString &apiText,
                                                    const QString &visibleText)
 {
@@ -1833,8 +1954,11 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
     // inline + docs de texto inlineados); si no, string plano.
     const QString apiText = trimmed;
-#ifdef LC_DEBUG_ICON
-    if (attachments.isEmpty() && !m_cwd.isEmpty()) {
+    // Preflight de contexto: slice de archivos candidatos ANTES del primer
+    // request, para que el modelo no gaste vueltas descubriendo el repo. Estaba
+    // detrás de un #ifdef de debug (código muerto en release); ahora lo gobierna
+    // el módulo `context` del HarnessSpec, off por defecto = comportamiento previo.
+    if (m_contextPolicy.preflight && attachments.isEmpty() && !m_cwd.isEmpty()) {
         const QString preflight = ContextPreflight::build(m_cwd, visibleTrimmed);
         appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
                                      {QStringLiteral("content"), preflight},
@@ -1842,10 +1966,9 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
         emit logAppended(QStringLiteral("[preflight: contexto inicial preparado]\n"));
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                               QJsonObject{{QStringLiteral("source"), QStringLiteral("context_preflight")},
-                                          {QStringLiteral("mode"), QStringLiteral("debug")},
+                                          {QStringLiteral("mode"), QStringLiteral("spec")},
                                           {QStringLiteral("candidates"), preflight}});
     }
-#endif
     if (attachments.isEmpty()) {
         appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("user")},
@@ -2315,12 +2438,13 @@ QJsonObject LlamaAgentBackend::buildWarmupPayload(const QJsonArray &wireMessages
 // descarta. Lo dispara Ingi Charla al detectar que el usuario empezó a hablar.
 void LlamaAgentBackend::prefillWarmup()
 {
+    if (!m_contextPolicy.warmup) return;
     if (!m_running || m_reply || m_warmupReply || m_compactReply || m_compacting
         || !m_awaitId.isEmpty())
         return;
     ensureSession();
     // Misma poda que runCompletion: el prefijo cacheado debe coincidir byte a byte.
-    m_apiMessages = trimStaleImages(m_apiMessages, 1);
+    m_apiMessages = trimStaleImages(m_apiMessages, m_contextPolicy.keepLastImages);
     const QJsonArray wire = sanitizeApiMessagesForWire(m_apiMessages, m_ctx.modelId);
     if (wire.isEmpty()) return;
 
@@ -2399,7 +2523,7 @@ void LlamaAgentBackend::runCompletion()
     // Poda persistente de capturas viejas: solo la última imagen queda en el
     // historial (las anteriores → placeholder de texto). Sin esto, sesiones con
     // varias desktop_observe acumulaban 50k+ tokens de prompt (minutos de prefill).
-    m_apiMessages = trimStaleImages(m_apiMessages, 1);
+    m_apiMessages = trimStaleImages(m_apiMessages, m_contextPolicy.keepLastImages);
 
     QJsonArray wireMessages = sanitizeApiMessagesForWire(m_apiMessages, m_ctx.modelId);
     const QByteArray beforeWire = QJsonDocument(m_apiMessages).toJson(QJsonDocument::Compact);
@@ -2592,12 +2716,20 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
             postCompletionRequest(payload, NativeCompat);
             return;
         }
-        if (!ok && mode == NativeCompat && status == 400) {
+        if (!ok && mode == NativeCompat && status == 400
+            && m_toolProtocol != QLatin1String("native")) {
             emit logAppended(QStringLiteral("[turn] server rechazó OpenAI tools (400); "
                                             "reintentando protocolo textual de tools headless%1\n").arg(why));
             m_textToolFallback = true;
             postCompletionRequest(buildTextToolPayload(payload), TextTools);
             return;
+        }
+        if (!ok && mode == NativeCompat && status == 400) {
+            // El perfil declaró protocolo nativo: NO degradar a texto en silencio.
+            // Que el error se vea es el punto — un perfil con un modelo sin
+            // tool-template tiene que corregirse, no disimularse.
+            emit logAppended(QStringLiteral("[turn] server rechazó OpenAI tools (400) y el perfil "
+                                            "exige protocolo nativo; sin fallback textual%1\n").arg(why));
         }
         const RetryClass retryClass = classifyCompletionError(status, err + QLatin1Char(' ') + body);
         if (!ok && retryClass == RetryContextOverflow && m_contextRecoveries < 2) {
@@ -2618,14 +2750,14 @@ void LlamaAgentBackend::postCompletionRequest(QJsonObject payload, CompletionMod
             return;
         }
         if (!ok && retryClass == RetryTransient
-            && m_transportRetries < kMaxTransportRetries) {
+            && m_transportRetries < m_loopPolicy.transportRetries) {
             const int attempt = ++m_transportRetries;
             const int delayMs = qMin(kMaxTransportRetryDelayMs,
                                      500 * (1 << qMin(attempt - 1, 4)));
             emit logAppended(QStringLiteral(
                 "[turn] error transitorio HTTP %1; llama-agent conserva el turno "
                 "mientras llama-server reinicia (reintento %2/%3 en %4 ms)\n")
-                                 .arg(status).arg(attempt).arg(kMaxTransportRetries)
+                                 .arg(status).arg(attempt).arg(m_loopPolicy.transportRetries)
                                  .arg(delayMs));
             closeAssistantBubble();
             QTimer::singleShot(delayMs, this, [this, payload, mode]() {
@@ -2655,8 +2787,13 @@ void LlamaAgentBackend::resetStreamState()
         m_streamBase = m_messages[m_curAsstIdx].toMap().value(QStringLiteral("content")).toString();
 }
 
+// Precedencia: spec del perfil > env LLAMACODE_STREAM_IDLE_TIMEOUT > 3600s.
+// El spec gana porque es la decisión explícita del usuario para ESTE perfil; la
+// env queda como override de máquina/CI.
 int LlamaAgentBackend::streamIdleTimeoutMs() const
 {
+    if (m_loopPolicy.streamIdleTimeoutSec > 0)
+        return qBound(30, m_loopPolicy.streamIdleTimeoutSec, 24 * 60 * 60) * 1000;
     const QByteArray env = qgetenv("LLAMACODE_STREAM_IDLE_TIMEOUT");
     bool ok = false;
     int seconds = QString::fromLatin1(env).trimmed().toInt(&ok);
@@ -3178,7 +3315,7 @@ void LlamaAgentBackend::processPendingCalls()
         name = QStringLiteral("ask_teacher");
         kind = toolKind(name);
         argStr = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
-    } else if (sigCnt >= kMaxSameCall) {
+    } else if (sigCnt >= m_loopPolicy.sameCallLimit) {
         // La tercera llamada consecutiva no se ejecuta. Inyectamos el tool_result
         // para conservar el contrato assistant/tool y se lo devolvemos al modelo:
         // debe intentar una estrategia distinta en vez de dejar trabajo bloqueado.
@@ -3678,7 +3815,8 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     m_execCallId = id;
     m_execToolName = name;
     m_execArguments = argStr;
-    const int watchdogSec = toolWatchdogSeconds(name, a, m_quickToolTimeoutSec);
+    const int watchdogSec = toolWatchdogSeconds(name, a, m_quickToolTimeoutSec,
+                                                m_loopPolicy.webToolTimeoutSec);
     m_execWatchdogSec = watchdogSec;
     m_toolWatchdog->start(watchdogSec * 1000);
     if (name.startsWith(QLatin1String("desktop_")))
@@ -3761,7 +3899,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     // reenviamos el contenido (el server reprocesa todo el prompt cada iter por
     // SWA → re-leer 300 líneas idénticas es puro desperdicio). Devolvemos un stub.
     bool dedup = false;
-    if (name == QLatin1String("read_file") && ok) {
+    if (m_contextPolicy.readDedup && name == QLatin1String("read_file") && ok) {
         const QString rel = result.value(QStringLiteral("readRel")).toString();
         const QString fp  = result.value(QStringLiteral("readFp")).toString();
         if (!rel.isEmpty() && !fp.isEmpty()) {
@@ -3861,7 +3999,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             "\n[anti-loop: %1 ejecuciones consecutivas terminaron con el mismo "
             "problema aunque hayan cambiado los comandos o argumentos. No sigas "
             "probando variantes a ciegas: releé el error, comprobá la causa raíz "
-            "y cambiá de estrategia.]").arg(kFailureSpiralThreshold);
+            "y cambiá de estrategia.]").arg(m_loopPolicy.failureSpiral);
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
                               QJsonObject{{QStringLiteral("tool"), name},
                                           {QStringLiteral("toolCallId"), callId},
@@ -3966,13 +4104,13 @@ QString LlamaAgentBackend::toolCallSignature(const QString &tool, const QString 
 
 int LlamaAgentBackend::toolWatchdogSeconds(const QString &tool,
                                            const QJsonObject &arguments,
-                                           int quickTimeoutSec)
+                                           int quickTimeoutSec, int webTimeoutSec)
 {
     if (tool == QLatin1String("run_shell"))
         return qBound(5, arguments.value(QStringLiteral("timeout_s")).toInt(120) + 15, 1815);
     if (tool.startsWith(QLatin1String("mcp__")) || tool == QLatin1String("mcp_call_tool")
         || tool.contains(QStringLiteral("research")) || tool.startsWith(QLatin1String("web_")))
-        return 180;
+        return qBound(10, webTimeoutSec, 1800);
     return qBound(5, quickTimeoutSec, 120);
 }
 
@@ -3992,7 +4130,7 @@ bool LlamaAgentBackend::recordToolOutcome(const QString &tool, bool ok, bool isW
         m_failureFingerprint = fp;
         m_equivalentFailures = 1;
     }
-    return m_equivalentFailures == kFailureSpiralThreshold;
+    return m_equivalentFailures == m_loopPolicy.failureSpiral;
 }
 
 // run_shell async: arranca → crear tarjeta "en vivo" (typing) con el comando.
@@ -4069,6 +4207,10 @@ static bool gitInstalled()
 QString LlamaAgentBackend::createWorktree(const QString &callId, bool &isolated)
 {
     isolated = false;
+    // Aislamiento apagado por perfil: el sub-agente comparte el cwd del padre.
+    // Es más rápido (no hay worktree ni merge) y a veces es lo que se quiere en un
+    // repo chico, pero pierde el aislamiento de escrituras concurrentes.
+    if (!m_escalationPolicy.isolateSubagents) return QString();
     if (!gitInstalled()) return QString();   // → launchSub pide instalar git
 
     const QString sid = QString(callId).remove(QRegularExpression(QStringLiteral("[^A-Za-z0-9]"))).left(10);
@@ -4202,7 +4344,8 @@ void LlamaAgentBackend::launchSub(const QJsonObject &call)
 
     appendToolCard(QStringLiteral("task"), QStringLiteral("task"), true,
                    desc.isEmpty() ? prompt.left(60) : desc,
-                   QStringLiteral("[worktree git aislada]\n"));
+                   isolated ? QStringLiteral("[worktree git aislada]\n")
+                            : QStringLiteral("[sin aislamiento: mismo cwd que el agente]\n"));
     if (!m_messages.isEmpty()) {
         QVariantMap card = m_messages.last().toMap();
         card[QStringLiteral("typing")] = true;
@@ -4372,9 +4515,26 @@ int LlamaAgentBackend::adaptiveSubagentLimit(int parallelSlots, int ctxTokens,
 
 int LlamaAgentBackend::subagentLimit() const
 {
-    return adaptiveSubagentLimit(m_ctx.parallelSlots,
-                                 m_ctx.ctxOverride > 0 ? m_ctx.ctxOverride : m_ctxLimit,
-                                 m_ctx.vramTotalMb, m_ctx.vramFreeMb);
+    // Tres topes en cascada: el del perfil (spec), el adaptativo por
+    // slots/contexto/VRAM, y el absoluto del harness. Gana el menor.
+    const int adaptive = adaptiveSubagentLimit(m_ctx.parallelSlots,
+                                               m_ctx.ctxOverride > 0 ? m_ctx.ctxOverride : m_ctxLimit,
+                                               m_ctx.vramTotalMb, m_ctx.vramFreeMb);
+    const int fromSpec = qBound(1, m_escalationPolicy.maxParallelSubagents,
+                                kAbsoluteMaxParallelSubs);
+    return qMin(adaptive, fromSpec);
+}
+
+void LlamaAgentBackend::setEscalationPolicy(const HarnessEscalationModule &escalation)
+{
+    m_escalationPolicy = escalation;
+    m_escalationPolicy.set = true;
+    if (!escalation.masterEscalation.isEmpty())
+        m_masterEscalation = escalation.masterEscalation;
+    if (escalation.masterAutoAfterFails > 0)
+        m_masterAutoAfterFails = escalation.masterAutoAfterFails;
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setEscalationPolicy(escalation);
 }
 
 bool LlamaAgentBackend::redundantDesktopConfirmKey(const QString &previousTool,

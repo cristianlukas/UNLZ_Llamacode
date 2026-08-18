@@ -176,6 +176,73 @@ PersonaStyleProfile PersonaStyleProfile::fromJson(const QJsonObject &o) {
 QString PersonaStyleProfile::generateId() { return newId(); }
 
 // ---- AgentProfile ----
+// Spec efectivo: el declarado (hasSpec) o el derivado de los campos legacy.
+// La derivación es la MIGRACIÓN: cualquier perfil guardado antes del harness
+// modular entra al pipeline nuevo sin cambiar de comportamiento.
+HarnessSpec AgentProfile::toSpec() const {
+    if (hasSpec) {
+        HarnessSpec s = spec;
+        if (s.extends.isEmpty()) s.extends = extendsId;
+        return s;
+    }
+    HarnessSpec s;
+    s.extends = extendsId;
+
+    s.tools.set = true;
+    s.tools.include = enabledTools;   // incluye el token "*" tal cual
+    s.tools.mcpToolsEnabled = mcpEnabled;
+
+    s.prompt.set = true;
+    s.prompt.builtin = directives;    // idem con "*"
+    s.prompt.systemExtra = systemExtra;
+
+    s.loop.set = true;
+    s.loop.credits = progressCredits;
+    s.loop.maxCredits = progressMaxCredits;
+    s.loop.replanAfter = progressReplanAfter;
+    s.loop.stopAfter = progressStopAfter;
+    s.loop.quickToolTimeoutSec = quickToolTimeoutSec;
+
+    s.permissions.set = true;
+    s.permissions.approvalMode = approvalMode;
+
+    s.protocol.set = true;
+    s.protocol.thinking = thinking;
+    s.protocol.thinkingLeakGuard = thinkingLeakGuard;
+    s.protocol.temperature = temperature;
+    return s;
+}
+
+// Espeja un spec resuelto a los campos legacy. Sirve para dos cosas: que un
+// binario viejo lea el perfil sin romperse, y que la UI/headless que todavía
+// mira los campos planos vea lo mismo que el harness aplica.
+void AgentProfile::applySpecToLegacyFields(const HarnessSpec &resolved) {
+    if (resolved.tools.set) {
+        enabledTools = resolved.tools.include.contains(QStringLiteral("*"))
+                           ? QStringList{QStringLiteral("*")}
+                           : HarnessTools::resolve(resolved.tools);
+        mcpEnabled = resolved.tools.mcpToolsEnabled;
+    }
+    if (resolved.prompt.set) {
+        directives = resolved.prompt.builtin;
+        systemExtra = resolved.prompt.systemExtra;
+    }
+    if (resolved.loop.set) {
+        progressCredits = resolved.loop.credits;
+        progressMaxCredits = resolved.loop.maxCredits;
+        progressReplanAfter = resolved.loop.replanAfter;
+        progressStopAfter = resolved.loop.stopAfter;
+        quickToolTimeoutSec = resolved.loop.quickToolTimeoutSec;
+    }
+    if (resolved.permissions.set)
+        approvalMode = resolved.permissions.approvalMode;
+    if (resolved.protocol.set) {
+        thinking = resolved.protocol.thinking;
+        thinkingLeakGuard = resolved.protocol.thinkingLeakGuard;
+        temperature = resolved.protocol.temperature;
+    }
+}
+
 QJsonObject AgentProfile::toJson() const {
     QJsonObject o;
     o["id"] = id; o["name"] = name;
@@ -197,6 +264,8 @@ QJsonObject AgentProfile::toJson() const {
     o["progressReplanAfter"] = progressReplanAfter;
     o["progressStopAfter"] = progressStopAfter;
     o["quickToolTimeoutSec"] = quickToolTimeoutSec;
+    if (!extendsId.isEmpty()) o["extends"] = extendsId;
+    if (hasSpec) o["spec"] = spec.toJson();
     return o;
 }
 AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
@@ -221,6 +290,13 @@ AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
     p.progressReplanAfter = qMax(2, o["progressReplanAfter"].toInt(3));
     p.progressStopAfter = qMax(2, o["progressStopAfter"].toInt(5));
     p.quickToolTimeoutSec = qBound(5, o["quickToolTimeoutSec"].toInt(15), 120);
+    p.extendsId = o["extends"].toString();
+    if (o["spec"].isObject()) {
+        p.spec = HarnessSpec::fromJson(o["spec"].toObject());
+        p.hasSpec = !p.spec.isEmpty();
+        if (p.spec.extends.isEmpty()) p.spec.extends = p.extendsId;
+        else if (p.extendsId.isEmpty()) p.extendsId = p.spec.extends;
+    }
     return p;
 }
 QString AgentProfile::generateId() { return newId(); }
@@ -273,6 +349,52 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     presets[4].progressMaxCredits = 32;
     presets[4].progressReplanAfter = 5;
     presets[4].progressStopAfter = 8;
+
+    // --- Presets nuevos del harness modular -------------------------------
+    // Minimal: el modo local-first duro (review de codehamr). Pocas tools, sin
+    // MCP, prompt corto, contexto barato. Para 7B-30B con 32k reales.
+    AgentProfile minimal = mk("agent-minimal", "Minimal (local-first)",
+                              {"read_file", "list_dir", "grep", "write_file",
+                               "edit_file", "run_shell"},
+                              {"efficiency", "style"}, "ask", false, /*mcp=*/false);
+    minimal.progressCredits = 6;
+    minimal.progressMaxCredits = 12;
+    minimal.progressStopAfter = 4;
+    // Derivar el spec de los campos legacy ANTES de marcar hasSpec (toSpec()
+    // devuelve el spec crudo si hasSpec ya está en true).
+    minimal.spec = minimal.toSpec();
+    minimal.hasSpec = true;
+    minimal.spec.context.set = true;
+    minimal.spec.context.keepLastImages = 0;   // sin visión: las capturas sólo inflan
+    minimal.spec.context.preflight = false;
+    minimal.spec.context.compactionTrigger = 0.85;
+    minimal.spec.loop.set = true;
+    minimal.spec.loop.credits = minimal.progressCredits;
+    minimal.spec.loop.maxCredits = minimal.progressMaxCredits;
+    minimal.spec.loop.stopAfter = minimal.progressStopAfter;
+    minimal.spec.loop.sameCallLimit = 2;       // modelo chico: cortar antes el bucle
+    minimal.spec.prompt.set = true;
+    minimal.spec.prompt.builtin = minimal.directives;
+    minimal.spec.prompt.maxChars = 8000;
+
+    // RPA: automatización de escritorio con guardrails apretados.
+    AgentProfile rpa = mk("agent-rpa", "RPA (escritorio)", {}, {"discipline", "efficiency"},
+                          "ask", false);
+    rpa.spec = rpa.toSpec();
+    rpa.hasSpec = true;
+    rpa.spec.tools.set = true;
+    rpa.spec.tools.include.clear();
+    rpa.spec.tools.packs = QStringList{"core", "rpa"};
+    rpa.spec.permissions.set = true;
+    rpa.spec.permissions.approvalMode = "ask";
+    rpa.spec.permissions.hitlDestructive = true;
+    rpa.spec.loop.set = true;
+    rpa.spec.loop.quickToolTimeoutSec = 30;    // UIA/capturas son más lentas que un read
+    rpa.spec.context.set = true;
+    rpa.spec.context.keepLastImages = 2;       // ver el paso anterior ayuda a corregir
+    rpa.enabledTools = HarnessTools::resolve(rpa.spec.tools);
+
+    presets << minimal << rpa;
     return presets;
 }
 

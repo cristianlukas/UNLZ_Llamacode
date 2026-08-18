@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include "core/voice/VoiceTypes.h"
+#include "HarnessSpec.h"
 
 // Flag runtime-only en cada struct: perfil de SISTEMA (bundled desde
 // assets/system_profiles.json). Inmutable (no se borra/edita/renombra) y NO se
@@ -170,6 +171,21 @@ struct AgentProfile {
     int progressReplanAfter = 3;    // acciones estancadas antes de replantear
     int progressStopAfter = 5;      // estancadas posteriores antes de cerrar
     int quickToolTimeoutSec = 15;   // watchdog para tools locales rápidas
+
+    // HARNESS MODULAR: composición declarativa (ver HarnessSpec.h). Opcional:
+    // un perfil sin spec (todos los guardados antes de la feature) se sigue
+    // leyendo igual y toSpec() lo deriva de los campos de arriba. Cuando hay
+    // spec, los campos legacy se siguen escribiendo derivados de él para que una
+    // versión anterior del app pueda leer el archivo sin romperse.
+    HarnessSpec spec;
+    bool hasSpec = false;
+    QString extendsId;              // preset/perfil base del que hereda el spec
+
+    // Spec efectivo de este perfil: el declarado, o el derivado de los campos
+    // legacy. Puro → testeable sin ProfileManager.
+    HarnessSpec toSpec() const;
+    // Vuelca un spec a los campos legacy (compatibilidad de lectura hacia atrás).
+    void applySpecToLegacyFields(const HarnessSpec &resolved);
 
     QJsonObject toJson() const;
     static AgentProfile fromJson(const QJsonObject &obj);

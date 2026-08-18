@@ -1,6 +1,7 @@
 #pragma once
 #include "IAgentBackend.h"
 #include "AgentProgressGovernor.h"
+#include "core/profiles/HarnessSpec.h"
 #include <QHash>
 #include <QList>
 #include <QSet>
@@ -78,6 +79,25 @@ public:
     void setAgentTuning(const QString &systemExtra, double temperature) override;
     void setProgressPolicy(const AgentProgressGovernor::Policy &policy,
                            int quickToolTimeoutSec = 15);
+    // HARNESS MODULAR: políticas que antes eran constantes compiladas. Los
+    // defaults de los módulos reproducen exactamente el comportamiento previo,
+    // así que no llamarlos = no regresionar.
+    void setLoopPolicy(const HarnessLoopModule &loop);
+    void setContextPolicy(const HarnessContextModule &context);
+    void setEscalationPolicy(const HarnessEscalationModule &escalation);
+    HarnessEscalationModule escalationPolicyForTest() const { return m_escalationPolicy; }
+    HarnessLoopModule loopPolicyForTest() const { return m_loopPolicy; }
+    HarnessContextModule contextPolicyForTest() const { return m_contextPolicy; }
+    // Directivas de usuario (packs .md) a inyectar tras las built-in, en orden.
+    // Cada entrada: {slug, body, when}. `when` gatea la inyección por contexto
+    // (tools.desktop / vision / project.hasGit); vacío = siempre.
+    void setCustomDirectives(const QVariantList &directives);
+    QVariantList customDirectivesForTest() const { return m_customDirectives; }
+    // Tope de tamaño del system prompt compuesto (0 = sin tope). No trunca:
+    // avisa por log — cortar una instrucción al medio es peor que un prompt largo.
+    void setPromptMaxChars(int chars) { m_promptMaxChars = qMax(0, chars); }
+    // Evaluación pura del gate `when` de una directiva de usuario.
+    static bool directiveConditionMet(const QString &when, const QVariantMap &facts);
     void setDeterministicSeed(int seed) { m_seed = seed; }
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
@@ -111,6 +131,14 @@ public:
     // tool-calling del modelo activo es "unsupported" (chat-template del GGUF sin
     // tools, ej. Gemma): así el modelo igual puede operar tools vía texto.
     void setForceTextTools(bool v) { m_forceTextTools = v; }
+
+    // Protocolo declarado por el perfil (módulo `protocol` del HarnessSpec):
+    //   "auto"   → como siempre: nativo, con fallback a texto si el server da 400
+    //   "text"   → texto desde el primer request (= setForceTextTools(true))
+    //   "native" → nativo y NO caer a texto aunque el server rechace (útil para
+    //              detectar un perfil mal armado en vez de degradar en silencio)
+    void setToolProtocol(const QString &mode);
+    QString toolProtocolForTest() const { return m_toolProtocol; }
 
     // Servers MCP (stdio) a usar. Cada entrada: {name, command, type, enabled}.
     // Se relanzan en start(). Sus tools se inyectan con prefijo mcp__<server>__<tool>.
@@ -245,7 +273,7 @@ public:
     // (espacios y orden de claves) antes de comparar llamadas consecutivas.
     static QString toolCallSignature(const QString &tool, const QString &arguments);
     static int toolWatchdogSeconds(const QString &tool, const QJsonObject &arguments,
-                                   int quickTimeoutSec = 15);
+                                   int quickTimeoutSec = 15, int webTimeoutSec = 180);
     static int repeatedSuffixStart(const QString &text, int repeats = 3,
                                    int minBlockChars = 80);
     bool recordToolOutcomeForTest(const QString &tool, bool ok, bool isWrite,
@@ -473,6 +501,7 @@ private:
     // Sesión + persistencia a disco (patrón RawChatBackend)
     void ensureSession();
     QString buildSystemPrompt() const;   // prompt base + memoria del proyecto
+    void logFromConst(const QString &text) const;  // log desde métodos const
     void fetchContextLimit();            // n_ctx desde /props
     // Aplica Content-Type + Authorization Bearer (si hay provider cloud con apiKey).
     void applyHeaders(QNetworkRequest &req) const;
@@ -533,6 +562,7 @@ private:
     bool m_running = false;
     bool m_textToolFallback = false;       // server rechazó OpenAI tools nativo (400)
     bool m_forceTextTools = false;         // modelo sin tool-template → texto desde el inicio
+    QString m_toolProtocol = QStringLiteral("auto");  // auto | native | text (spec)
     bool m_visionReady = false;            // server cargó mmproj (ve imágenes)
     // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
     // server o por gating proactivo de AppController para modelos "unsupported").
@@ -599,6 +629,12 @@ private:
     int m_quickToolTimeoutSec = 15;
     int m_execWatchdogSec = 15;
     AgentProgressGovernor m_progressGovernor;
+    // Políticas del harness modular (defaults == comportamiento histórico).
+    HarnessLoopModule m_loopPolicy;
+    HarnessContextModule m_contextPolicy;
+    HarnessEscalationModule m_escalationPolicy;
+    QVariantList m_customDirectives;   // {slug, body, when} del perfil
+    int m_promptMaxChars = 0;          // 0 = sin tope (default histórico)
     int m_progressEvents = 0;
     int m_stagnationEvents = 0;
     int m_replanEvents = 0;
@@ -670,13 +706,13 @@ private:
     QString m_lastDesktopTypeText;        // última entrada por desktop_type (guardrail teclado)
     QSet<QString> m_desktopLaunchApps;   // apps ya lanzadas en la sesión/Task actual
     // Tope de seguridad MUY alto: no cortar trabajo legítimo. El loop infinito
-    // real lo frena kMaxSameCall (misma tool + mismos args repetidos). Que el
-    // agente haga tantas iteraciones como necesite.
+    // real lo frena m_loopPolicy.sameCallLimit (misma tool + mismos args
+    // repetidos). Que el agente haga tantas iteraciones como necesite. Este
+    // fusible NO es configurable a propósito: es el último freno del harness.
     static constexpr int kMaxTurnIters = 1000;
-    static constexpr int kMaxSameCall  = 3; // la tercera idéntica se bloquea y fuerza replanteo
-    static constexpr int kMaxTransportRetries = 60; // hasta ~5 min mientras reinicia llama-server
     static constexpr int kMaxTransportRetryDelayMs = 5000;
-    static constexpr int kFailureSpiralThreshold = 3;
+    // sameCallLimit / transportRetries / failureSpiral viven ahora en
+    // m_loopPolicy (HarnessLoopModule), con los mismos defaults 3 / 60 / 3.
 
     // Aprobación en curso (1 tool a la vez)
     QString m_awaitId;              // id del tool_call esperando respuesta ("" = ninguno)

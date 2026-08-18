@@ -51,6 +51,7 @@
 #include "core/voice/VoiceAgentPolicy.h"
 #include "core/voice/VoiceCursorCommand.h"
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/AgentToolRunner.h"
 #include "core/agent/SubAgentRunner.h"
 #include "core/agent/AgentEfficiency.h"
@@ -4748,6 +4749,12 @@ void AppController::setActiveAgentProfileId(const QString &id)
 void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProfile &ap)
 {
     if (!cb) return;
+    // HARNESS MODULAR: el spec resuelto (cadena de `extends` + defaults) manda.
+    // Un perfil legacy sin spec produce uno derivado equivalente, así que este
+    // camino es el único y no hay dos formas de configurar el backend.
+    const HarnessSpec spec = m_profiles.resolveHarnessSpec(ap);
+    applyHarnessSpec(cb, spec);
+
     QStringList disabled;
     if (!ap.enabledTools.contains(QStringLiteral("*"))) {
         const QSet<QString> on(ap.enabledTools.cbegin(), ap.enabledTools.cend());
@@ -4756,6 +4763,8 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
             if (!on.contains(name)) disabled << name;
         }
     }
+    if (spec.tools.set && !spec.tools.include.contains(QStringLiteral("*")))
+        disabled = HarnessTools::disabledFrom(HarnessTools::resolve(spec.tools));
     cb->setDisabledTools(disabled);
 
     QStringList dirs = ap.directives;
@@ -4786,6 +4795,65 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
                               ap.progressReplanAfter,
                               ap.progressStopAfter},
                           ap.quickToolTimeoutSec);
+}
+
+// Baja al backend los módulos del spec que no tienen equivalente en los campos
+// legacy de AgentProfile (loop fino, contexto, permisos, escalación, protocolo,
+// directivas de usuario). Separada de applyAgentProfileCaps para poder aplicar
+// una FASE (plan/exec/verify) sin rehacer el resto.
+void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &spec)
+{
+    if (!cb) return;
+    if (spec.loop.set) cb->setLoopPolicy(spec.loop);
+    if (spec.context.set) cb->setContextPolicy(spec.context);
+    if (spec.escalation.set) cb->setEscalationPolicy(spec.escalation);
+    if (spec.protocol.set) cb->setToolProtocol(spec.protocol.toolProtocol);
+    if (spec.tools.set) cb->setMcpToolsEnabled(spec.tools.mcpToolsEnabled);
+    if (spec.prompt.set) {
+        cb->setPromptMaxChars(spec.prompt.maxChars);
+        cb->setCustomDirectives(
+            HarnessDirectiveStore::loadMany(spec.prompt.custom, currentAgentProjectDir()));
+    }
+    if (spec.permissions.set) {
+        cb->setPermissionRules(spec.permissions.rules.join(QLatin1Char('\n')));
+        cb->setHitlDestructive(spec.permissions.hitlDestructive);
+        cb->setMailAutoSend(spec.permissions.mailAutoSend);
+        // Alcance de filesystem: el del perfil NUNCA amplía el de la Task en
+        // curso. Se intersecta (project < folder < full) y se aplica el menor.
+        // Si el perfil NO declaró alcance (spec derivado de un perfil legacy),
+        // no tocamos nada: el de la Task manda tal cual.
+        if (!spec.permissions.fsScopeDeclared) return;
+        const QString taskScope = m_agentTaskScope.isEmpty() ? QStringLiteral("project")
+                                                             : m_agentTaskScope;
+        const QString scope = HarnessPolicy::narrowerScope(spec.permissions.fsScope, taskScope);
+        const QStringList folders = HarnessPolicy::intersectFolders(
+            spec.permissions.fsScope, spec.permissions.folders, taskScope, m_agentTaskFolders);
+        if (scope == QLatin1String("project")) cb->clearTaskScope();
+        else cb->setTaskScope(scope, folders);
+    }
+}
+
+// FASES del harness modular: el spec puede declarar overrides por fase
+// (plan/exec/verify/goalCheck). Fase sin override = el spec base, así que
+// llamar a esto siempre es seguro y no cambia nada por default.
+void AppController::applyHarnessPhase(const QString &phase)
+{
+    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!cb) return;
+    const AgentProfile ap = m_profiles.resolveAgentProfile(resolveAgentProfileId());
+    if (ap.id.isEmpty()) return;
+    const HarnessSpec base = m_profiles.resolveHarnessSpec(ap);
+    if (base.phases.isEmpty()) return;              // sin fases declaradas: nada que hacer
+    const HarnessSpec phased = HarnessSpec::forPhase(base, phase);
+    applyHarnessSpec(cb, phased);
+    if (phased.permissions.set && phased.permissions.approvalMode != base.permissions.approvalMode) {
+        cb->setApprovalPolicy(phased.permissions.approvalMode);
+        appendAgentEvent(QStringLiteral("task"),
+                         QStringLiteral("Harness fase '%1': aprobación → %2")
+                             .arg(phase, phased.permissions.approvalMode));
+    }
+    if (phased.tools.set && !phased.tools.include.contains(QStringLiteral("*")))
+        cb->setDisabledTools(HarnessTools::disabledFrom(HarnessTools::resolve(phased.tools)));
 }
 
 void AppController::applyActiveAgentProfile()
@@ -6357,6 +6425,7 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     m_runningTaskName = name;
     m_runningTaskStartedAt = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     m_runningTaskPhase = QStringLiteral("ejecutando");
+    applyHarnessPhase(QStringLiteral("exec"));
     m_runningTaskPostPrompt = AutomationRunner::expandVariables(
         TaskStore::composePostPrompt(task), m_runningTaskRow);
     m_runningTaskLogStart = m_agentLog.size();
@@ -6847,6 +6916,7 @@ void AppController::finishDesktopReplay()
         m_runningTaskPostPrompt.clear();
         m_visualVerificationDesktopActions = 0;
         m_runningTaskPhase = QStringLiteral("verificando");
+    applyHarnessPhase(QStringLiteral("verify"));
         sendToAgentWithAttachments(visualPrompt, {referencePath, actualPath});
         return;
     }
@@ -6869,6 +6939,7 @@ void AppController::finishDesktopReplay()
             "salió bien sin confirmarlo.").arg(n).arg(objective);
     }
     m_runningTaskPhase = QStringLiteral("verificando");
+    applyHarnessPhase(QStringLiteral("verify"));
     appendAgentEvent(QStringLiteral("task"),
                      QStringLiteral("Reproducción fiel completada (%1 pasos); el agente verifica el resultado.").arg(n));
     sendToAgent(verify);
@@ -6974,6 +7045,10 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
     if (!cb) return;
     const QString scope = task.value(QStringLiteral("permScope"), QStringLiteral("project")).toString();
     const QStringList folders = task.value(QStringLiteral("permFolders")).toStringList();
+    // Recordar el alcance de la Task: el spec del perfil se INTERSECTA con él
+    // (applyHarnessSpec), nunca lo amplía.
+    m_agentTaskScope = scope;
+    m_agentTaskFolders = folders;
     cb->setTaskScope(scope, folders);
     const QString policy = task.value(QStringLiteral("approvalPolicy"),
                                       QStringLiteral("sensitive")).toString();
@@ -7043,6 +7118,8 @@ void AppController::applyTaskAgentPermissions(const QVariantMap &task)
 
 void AppController::clearTaskAgentPermissions()
 {
+    m_agentTaskScope.clear();
+    m_agentTaskFolders.clear();
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
         cb->setTaskAutoApprove(false);
         cb->clearTaskScope();
@@ -7101,6 +7178,7 @@ void AppController::onAgentTurnFinished()
         }
         if (!m_runningTaskPostPrompt.isEmpty() && m_runningTaskPhase != QLatin1String("verificando")) {
             m_runningTaskPhase = QStringLiteral("verificando");
+    applyHarnessPhase(QStringLiteral("verify"));
             const QString post = m_runningTaskPostPrompt;
             m_runningTaskPostPrompt.clear();
             m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
@@ -7195,6 +7273,7 @@ void AppController::onAgentTurnFinished()
             const QString goalPrompt = TaskStore::composeLoopGoalPrompt(task);
             if (!goalPrompt.isEmpty()) {
                 m_runningTaskPhase = QStringLiteral("loop-check");
+                applyHarnessPhase(QStringLiteral("goalCheck"));
                 m_tasks.markRun(m_runningTaskId, QStringLiteral("running"),
                                 QStringLiteral("Evaluando objetivo del bucle..."));
                 emit taskRunStateChanged();

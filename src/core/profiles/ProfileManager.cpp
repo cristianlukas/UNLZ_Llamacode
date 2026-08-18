@@ -1,5 +1,6 @@
 #include "ProfileManager.h"
 #include "SystemProfileVariants.h"
+#include "core/agent/HarnessDirectiveStore.h"
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
@@ -878,6 +879,20 @@ bool ProfileManager::updateAgentProfile(const QVariantMap &data)
         p.progressStopAfter = qMax(2, data.value("progressStopAfter").toInt());
     if (data.contains("quickToolTimeoutSec"))
         p.quickToolTimeoutSec = qBound(5, data.value("quickToolTimeoutSec").toInt(), 120);
+    // Harness modular: el editor puede mandar el spec entero y/o el `extends`.
+    if (data.contains("extends")) {
+        p.extendsId = data.value("extends").toString();
+        p.spec.extends = p.extendsId;
+        if (!p.extendsId.isEmpty()) p.hasSpec = true;
+    }
+    if (data.contains("spec")) {
+        const HarnessSpec spec =
+            HarnessSpec::fromJson(QJsonObject::fromVariantMap(data.value("spec").toMap()));
+        p.spec = spec;
+        p.hasSpec = !spec.isEmpty();
+        if (!spec.extends.isEmpty()) p.extendsId = spec.extends;
+        else p.spec.extends = p.extendsId;
+    }
     bool ok = m_agentProfiles.update(p);
     if (ok) save();
     return ok;
@@ -911,6 +926,115 @@ QVariantMap ProfileManager::getAgentProfile(const QString &id) const
 AgentProfile ProfileManager::resolveAgentProfile(const QString &id) const
 {
     return m_agentProfiles.findById(id);
+}
+
+// Resuelve la CADENA de herencia de un perfil: se sube por `extends` hasta la
+// raíz y después se aplica de padre a hijo, así el hijo siempre pisa. Un ciclo
+// (A extends B extends A) corta en el primer repetido: un perfil mal armado
+// degrada, no cuelga el arranque.
+HarnessSpec ProfileManager::resolveHarnessSpec(const AgentProfile &profile) const
+{
+    QList<AgentProfile> chain;
+    QSet<QString> seen;
+    AgentProfile cur = profile;
+    while (true) {
+        if (!cur.id.isEmpty()) {
+            if (seen.contains(cur.id)) break;      // ciclo
+            seen.insert(cur.id);
+        }
+        chain.prepend(cur);
+        const QString parentId = cur.toSpec().extends;
+        if (parentId.isEmpty() || chain.size() > 16) break;
+        const AgentProfile parent = m_agentProfiles.findById(parentId);
+        if (parent.id.isEmpty()) break;            // padre inexistente: degradar
+        cur = parent;
+    }
+
+    HarnessSpec resolved;
+    for (const AgentProfile &p : chain)
+        resolved = HarnessSpec::resolve(resolved, p.toSpec());
+    resolved.extends = profile.toSpec().extends;
+    return resolved;
+}
+
+HarnessSpec ProfileManager::resolveHarnessSpecById(const QString &id) const
+{
+    return resolveHarnessSpec(m_agentProfiles.findById(id));
+}
+
+QVariantList ProfileManager::agentProfileDiff(const QString &id) const
+{
+    const AgentProfile p = m_agentProfiles.findById(id);
+    if (p.id.isEmpty()) return {};
+    const QString parentId = p.toSpec().extends;
+    HarnessSpec base;                              // sin padre: contra defaults
+    if (!parentId.isEmpty()) {
+        const AgentProfile parent = m_agentProfiles.findById(parentId);
+        if (!parent.id.isEmpty()) base = resolveHarnessSpec(parent);
+    }
+    return resolveHarnessSpec(p).diff(base);
+}
+
+QVariantMap ProfileManager::agentProfileSpec(const QString &id) const
+{
+    const AgentProfile p = m_agentProfiles.findById(id);
+    if (p.id.isEmpty()) return {};
+    return resolveHarnessSpec(p).toJson().toVariantMap();
+}
+
+// Guarda un spec declarado sobre un perfil de usuario. Espeja los campos legacy
+// para que un binario anterior lea el perfil sin romperse.
+bool ProfileManager::setAgentProfileSpec(const QString &id, const QVariantMap &specJson)
+{
+    AgentProfile p = m_agentProfiles.findById(id);
+    if (p.id.isEmpty() || p.system) return false;
+    const HarnessSpec spec = HarnessSpec::fromJson(QJsonObject::fromVariantMap(specJson));
+    p.spec = spec;
+    p.hasSpec = !spec.isEmpty();
+    p.extendsId = spec.extends;
+    p.applySpecToLegacyFields(resolveHarnessSpec(p));
+    const bool ok = m_agentProfiles.update(p);
+    if (ok) save();
+    return ok;
+}
+
+QVariantList ProfileManager::harnessPackCatalog() const
+{
+    return HarnessTools::packCatalog();
+}
+
+QVariantList ProfileManager::harnessDirectiveCatalog(const QString &workspace) const
+{
+    return HarnessDirectiveStore::list(workspace);
+}
+
+// Resumen para el editor: tools resueltas, costo aproximado en tokens y
+// advertencias de dependencias. Es lo que convierte "personalizar" en una
+// decisión informada en vez de una adivinanza.
+QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString &workspace) const
+{
+    const AgentProfile p = m_agentProfiles.findById(id);
+    if (p.id.isEmpty()) return {};
+    const HarnessSpec spec = resolveHarnessSpec(p);
+    const QStringList tools = spec.tools.include.contains(QStringLiteral("*"))
+                                  ? HarnessTools::resolve(spec.tools)
+                                  : HarnessTools::resolve(spec.tools);
+    HarnessTools::Environment env;
+    env.hasGit = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
+    QStringList warnings = HarnessTools::dependencyWarnings(tools, env);
+    for (const QString &slug : spec.prompt.custom) {
+        const QVariantMap d = HarnessDirectiveStore::load(slug, workspace);
+        if (!d.value(QStringLiteral("ok")).toBool())
+            warnings << QStringLiteral("directiva '%1': %2")
+                            .arg(slug, d.value(QStringLiteral("error")).toString());
+    }
+    return QVariantMap{
+        {QStringLiteral("tools"), tools},
+        {QStringLiteral("toolCount"), tools.size()},
+        {QStringLiteral("approxTokens"), HarnessTools::approxTokens(tools)},
+        {QStringLiteral("warnings"), warnings},
+        {QStringLiteral("extends"), spec.extends},
+        {QStringLiteral("phases"), QStringList(spec.phases.keys())}};
 }
 
 QString ProfileManager::renderPersonaStyleContext(const AgentProfile &profile) const

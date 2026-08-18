@@ -17,6 +17,55 @@ Documentos relacionados (y su estado):
 
 ---
 
+## 0. Harness modular (`HarnessSpec`)
+
+Desde la implementación del plan modular, un perfil de agente es una
+**composición declarativa de módulos**, no un preset cerrado.
+`src/core/profiles/HarnessSpec.h` define nueve piezas:
+
+| Módulo | Gobierna |
+|---|---|
+| `tools` | packs + include/exclude + gating de tools MCP |
+| `prompt` | directivas built-in + directivas propias (.md) + `systemExtra` + tope de tamaño |
+| `loop` | créditos del governor, `sameCallLimit`, `failureSpiral`, `transportRetries`, watchdogs, idle de stream |
+| `context` | compactación (on/off + umbral + cola), poda, `keepLastImages`, read-dedup, preflight, warmup |
+| `permissions` | `approvalMode`, reglas por patrón, scope de FS, guardrails |
+| `escalation` | cap de sub-agentes, aislamiento en worktree, gatillo del maestro, umbrales del `DifficultyRouter` |
+| `protocol` | `auto` / `native` / `text`, thinking, temperatura, reasoning |
+| `phases` | overrides por fase: `plan`, `exec`, `verify`, `goalCheck` |
+
+Tres invariantes, todas testeadas:
+
+1. **Módulo ausente = heredado**, nunca vacío. Cada módulo lleva un flag `set`
+   que distingue "no lo declaré" de "lo declaré vacío a propósito".
+2. **Los defaults reproducen el comportamiento histórico.** Un perfil que no
+   declara nada se comporta exactamente como antes de la feature.
+3. **Un perfil nunca sube privilegios**: su scope de filesystem se *intersecta*
+   con el de la Task (`HarnessPolicy::narrowerScope`), y `hitlDestructive:false`
+   sólo tiene efecto si el perfil se declara en `approvalMode: "super"` — en
+   cualquier otro modo `fromJson` lo vuelve a poner en `true`.
+
+Resolución en capas: `defaults → cadena de extends (padre→hijo) → override de
+fase`. `ProfileManager::resolveHarnessSpec` sube por `extends` hasta la raíz y
+aplica de padre a hijo; un ciclo corta en el primer repetido (el perfil degrada,
+no cuelga el arranque).
+
+`AgentProfile` sigue siendo lo que se persiste: guarda `spec{}` + `extends`, y
+`toSpec()` deriva un spec equivalente para los perfiles viejos que no lo tienen.
+Al guardar un spec, los campos legacy se espejan (`applySpecToLegacyFields`) para
+que un binario anterior lea el archivo sin romperse.
+
+Headless (contrato obligatorio, ver `docs/HEADLESS.md`) vía `/invoke` sobre el
+target `profileManager`: `harnessPackCatalog`, `harnessDirectiveCatalog`,
+`agentProfileSpec`, `setAgentProfileSpec`, `agentProfileDiff`, `harnessSpecSummary`.
+
+Presets de sistema: los cinco niveles históricos más **`agent-minimal`**
+(local-first duro: pocas tools, sin MCP, prompt ≤8000 chars, `sameCallLimit=2`,
+sin capturas) y **`agent-rpa`** (packs `core`+`rpa`, watchdog de 30 s, dos
+capturas de contexto, guardrail firme).
+
+---
+
 ## 1. Qué es "el harness"
 
 Todo lo que rodea al modelo para que pueda **trabajar**: armado del contexto,
@@ -411,6 +460,9 @@ para benchmarks reproducibles.
 | Memoria + grafo | `tests/test_memory_graph.cpp` |
 | `code_hotspots` | `tests/test_hotspots.cpp` |
 | `MasterCli` | `tests/test_master_cli.cpp` |
+| `HarnessSpec` (herencia, packs, permisos, fases, migración) | `tests/test_harness_spec.cpp` |
+| Cableado de módulos al backend + directivas .md | `tests/test_harness_modules.cpp` |
+| Verbos de harness headless | `tests/test_control_api.cpp` |
 | `EvalSuite` | `tests/test_eval.cpp` |
 
 Gate: `tests.bat` + ctest en verde antes de commitear (`/gate`). Si el
@@ -429,8 +481,13 @@ end-to-end. Detalle en `CLAUDE.md`.
 - `docs/plan_harness.md` y `docs/agent.md` siguen nombrando `CustomBackend`
   (hoy `LlamaAgentBackend`) y describen `OpencodeBackend` como default.
 - `OpencodeBackend` no tiene diffs/revert ni la robustez de protocolo del backend
-  nativo (maneja su propio loop).
-- Preset "Minimal local agent" del review de codehamr: **pendiente**.
+  nativo (maneja su propio loop), y no consume el `HarnessSpec`.
 - Kill de process group en Unix para `run_shell`: **pendiente** (Windows resuelto
   con `taskkill /T /F`).
-- Scope de aprobación por proyecto (hoy global + override por Task).
+- Los presets de sistema son specs construidos en código (`systemPresets()`), no
+  JSON bundleado: quedan auditables y componibles, pero agregar un preset sigue
+  siendo una recompilación.
+- Los umbrales del `DifficultyRouter` viven en el módulo `escalation` pero el
+  router se instancia con sus defaults en `AppController`; falta pasárselos.
+- `maxDistinctWrites` y la cadena del maestro se declaran en el spec; el resto de
+  la config del maestro sigue en `LaunchProfile`.

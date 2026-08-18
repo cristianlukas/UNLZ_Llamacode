@@ -186,6 +186,18 @@ public:
     Q_INVOKABLE bool isSystemAgentProfile(const QString &id) const;
     Q_INVOKABLE QVariantMap getAgentProfile(const QString &id) const;
     AgentProfile resolveAgentProfile(const QString &id) const;
+    // Spec del harness con la cadena de `extends` ya aplicada (padre → hijo).
+    HarnessSpec resolveHarnessSpec(const AgentProfile &profile) const;
+    HarnessSpec resolveHarnessSpecById(const QString &id) const;
+    // Para la UI/headless: {module, field, base, value} de lo que cambia este
+    // perfil respecto de su `extends` (o de los defaults si no hereda).
+    Q_INVOKABLE QVariantList agentProfileDiff(const QString &id) const;
+    Q_INVOKABLE QVariantMap agentProfileSpec(const QString &id) const;
+    Q_INVOKABLE bool setAgentProfileSpec(const QString &id, const QVariantMap &specJson);
+    Q_INVOKABLE QVariantList harnessPackCatalog() const;
+    Q_INVOKABLE QVariantList harnessDirectiveCatalog(const QString &workspace = QString()) const;
+    Q_INVOKABLE QVariantMap harnessSpecSummary(const QString &id,
+                                               const QString &workspace = QString()) const;
     QString renderPersonaStyleContext(const AgentProfile &profile) const;
     QString renderPersonaStyleContext(const AgentProfile &profile, const QString &query) const;
 

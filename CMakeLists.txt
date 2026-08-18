@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.99 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.100 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -90,6 +90,7 @@ set(CORE_SOURCES
     src/core/gateway/LlmGateway.cpp
     src/core/integrations/OpenCodeIntegration.cpp
     src/core/SecretStore.cpp
+    src/core/profiles/HarnessSpec.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
@@ -116,6 +117,7 @@ set(CORE_SOURCES
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
     src/core/agent/PortableSkillStore.cpp
+    src/core/agent/HarnessDirectiveStore.cpp
     src/core/agent/HotspotAnalyzer.cpp
     src/core/agents/AgentDefinitionStore.cpp
     src/core/agents/TriggerManager.cpp
@@ -547,6 +549,8 @@ if (BUILD_TESTS)
     add_lc_test(test_profile_health     tests/test_profile_health.cpp)
     add_lc_test(test_profiles           tests/test_profiles.cpp)
     add_lc_test(test_agent_profiles     tests/test_agent_profiles.cpp)
+    add_lc_test(test_harness_spec       tests/test_harness_spec.cpp)
+    add_lc_test(test_harness_modules    tests/test_harness_modules.cpp)
     add_lc_test(test_agent_definitions  tests/test_agent_definitions.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
     add_lc_test(test_agent_efficiency    tests/test_agent_efficiency.cpp)

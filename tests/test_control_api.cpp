@@ -61,6 +61,7 @@ private slots:
     void requestIdFromBody();
     void requestIdGeneratedWhenMissing();
     void appControllerEngineeringCatalogIsHeadless();
+    void harnessSpecIsHeadless();
 
 private:
     QJsonObject request(const QByteArray &method, const QString &path,
@@ -381,6 +382,47 @@ void ControlApiTests::appControllerEngineeringCatalogIsHeadless()
         R"({"method":"installEngineeringWorkflow","args":["qa"]})");
     QVERIFY(installed.value("ok").toBool());
     QVERIFY(!installed.value("result").toString().isEmpty());
+}
+
+// Contrato headless del harness modular: catálogo de packs, spec resuelto de un
+// perfil, diff contra el padre y resumen (tools + tokens + warnings) tienen que
+// ser alcanzables por /invoke sobre el target profileManager. Sin esto la
+// personalización sería sólo de UI (ver docs/HEADLESS.md).
+void ControlApiTests::harnessSpecIsHeadless()
+{
+    QStandardPaths::setTestModeEnabled(true);
+    QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
+    QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
+    AppController app;
+    ControlApi api(&app);
+    const quint16 port = freePort();
+    QVERIFY(api.start(port));
+
+    const QJsonObject packs = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"target":"profileManager","method":"harnessPackCatalog","args":[]})");
+    QVERIFY(packs.value("ok").toBool());
+    QVERIFY(packs.value("result").toArray().size() >= 5);
+
+    const QJsonObject spec = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"target":"profileManager","method":"agentProfileSpec","args":["agent-intermedio"]})");
+    QVERIFY(spec.value("ok").toBool());
+    QVERIFY(spec.value("result").isObject());
+
+    const QJsonObject summary = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"target":"profileManager","method":"harnessSpecSummary","args":["agent-intermedio",""]})");
+    QVERIFY(summary.value("ok").toBool());
+    const QJsonObject sum = summary.value("result").toObject();
+    QVERIFY(sum.value("toolCount").toInt() > 0);
+    QVERIFY(sum.value("approxTokens").toInt() > 0);
+
+    // Un preset de sistema no se puede pisar por headless: es inmutable.
+    const QJsonObject denied = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"target":"profileManager","method":"setAgentProfileSpec","args":["agent-intermedio",{}]})");
+    QVERIFY(!denied.value("result").toBool());
 }
 
 QTEST_MAIN(ControlApiTests)

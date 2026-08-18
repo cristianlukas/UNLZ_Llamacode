@@ -1,6 +1,7 @@
 // Unit tests de Perfiles de Agente:
 //   - AgentProfile: serialización JSON ida/vuelta.
-//   - systemPresets(): los 5 presets (Chat/Básico/Intermedio/Avanzado/Máximo), sus
+//   - systemPresets(): los 7 presets (Chat/Básico/Intermedio/Avanzado/Máximo +
+//     Minimal/RPA del harness modular), sus
 //     ids estables, capas acumulativas de tools y el sentinel "*" de Máximo.
 //   - LlamaAgentBackend::directiveCatalog() + setDirectives() → buildSystemPrompt
 //     incluye/excluye cada sección (gating por directiva); default = todas.
@@ -239,14 +240,18 @@ void AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
 void AgentProfilesTests::systemPresets_shape()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    QCOMPARE(ps.size(), 5);
+    QCOMPARE(ps.size(), 7);
 
-    // Orden: Chat liviano → Básico → Intermedio → Avanzado → Máximo.
+    // Orden: la escalera histórica primero (Chat liviano → Básico → Intermedio →
+    // Avanzado → Máximo) y después los presets del harness modular, que NO son un
+    // escalón más de la escalera sino perfiles de propósito (local-first, RPA).
     QCOMPARE(ps[0].id, QStringLiteral("agent-chat"));
     QCOMPARE(ps[1].id, QStringLiteral("agent-basico"));
     QCOMPARE(ps[2].id, QStringLiteral("agent-intermedio"));
     QCOMPARE(ps[3].id, QStringLiteral("agent-avanzado"));
     QCOMPARE(ps[4].id, QStringLiteral("agent-maximo"));
+    QCOMPARE(ps[5].id, QStringLiteral("agent-minimal"));
+    QCOMPARE(ps[6].id, QStringLiteral("agent-rpa"));
     QCOMPARE(AgentProfile::defaultPresetId(), QStringLiteral("agent-intermedio"));
 
     for (const AgentProfile &p : ps) QVERIFY(p.system);
@@ -261,8 +266,8 @@ void AgentProfilesTests::systemPresets_shape()
     const AgentProfile avanz  = byId(QStringLiteral("agent-avanzado"));
     const AgentProfile maximo = byId(QStringLiteral("agent-maximo"));
 
-    // Chat liviano: set mínimo, SIN directivas y SIN MCP (presupuesto chico). Es el
-    // único preset con mcpEnabled=false; todos los demás traen MCP (default true).
+    // Chat liviano: set mínimo, SIN directivas y SIN MCP (presupuesto chico).
+    // agent-minimal también apaga MCP por la misma razón; el resto lo trae.
     QVERIFY(chat.enabledTools.contains(QStringLiteral("read_file")));
     QVERIFY(chat.enabledTools.contains(QStringLiteral("edit_file")));
     QVERIFY(chat.directives.isEmpty());

@@ -1357,6 +1357,15 @@ Item {
                         property var directiveItems: [] // catálogo de directivas
                         property int enabledCount: 0
                         property int enabledTokens: 0
+                        // ── Harness modular ──
+                        // specEdit espeja los módulos del HarnessSpec resuelto del
+                        // perfil. Sólo se persiste lo que el usuario toca: guardamos
+                        // el spec entero, y el backend vuelve a resolver la cadena.
+                        property var specEdit: ({})
+                        property var specDiff: []       // {module, field, base, value}
+                        property var specSummary: ({})  // tools/approxTokens/warnings
+                        property var packItems: []      // catálogo de packs de tools
+                        property var customDirectiveItems: []  // directivas .md del usuario
                         property var styleEdit: ({ id: "", name: "", kind: "writing-style",
                                                    description: "", styleCard: "", examples: [] })
                         readonly property string styleExampleSeparator: "\n\n--- EJEMPLO ---\n\n"
@@ -1366,6 +1375,46 @@ Item {
                             var list = App.agentToolCatalog(), out = []
                             for (var i = 0; i < list.length; ++i) out.push(list[i].name)
                             return out
+                        }
+                        // ── Harness modular: helpers ──
+                        function specModule(name) {
+                            return (specEdit && specEdit[name]) ? specEdit[name] : ({})
+                        }
+                        function specSet(moduleName, field, value) {
+                            var s = JSON.parse(JSON.stringify(specEdit || {}))
+                            if (!s[moduleName]) s[moduleName] = {}
+                            s[moduleName][field] = value
+                            specEdit = s
+                        }
+                        function specValue(moduleName, field, fallback) {
+                            var m = specModule(moduleName)
+                            return (m[field] === undefined) ? fallback : m[field]
+                        }
+                        function specToggleListItem(moduleName, field, item, on) {
+                            var arr = (specModule(moduleName)[field] || []).slice()
+                            var i = arr.indexOf(item)
+                            if (on && i < 0) arr.push(item)
+                            else if (!on && i >= 0) arr.splice(i, 1)
+                            specSet(moduleName, field, arr)
+                        }
+                        function specHasListItem(moduleName, field, item) {
+                            return (specModule(moduleName)[field] || []).indexOf(item) >= 0
+                        }
+                        function refreshHarnessInfo() {
+                            if (!edit.id) return
+                            specSummary = App.profileManager.harnessSpecSummary(edit.id, App.currentAgentProjectDir()) || ({})
+                            specDiff = App.profileManager.agentProfileDiff(edit.id) || []
+                            packItems = App.profileManager.harnessPackCatalog() || []
+                            customDirectiveItems = App.profileManager.harnessDirectiveCatalog(App.currentAgentProjectDir()) || []
+                        }
+                        function saveHarnessSpec() {
+                            if (isSystem || !edit.id) return
+                            var s = JSON.parse(JSON.stringify(specEdit || {}))
+                            s.extends = extendsCombo.currentValue || ""
+                            App.profileManager.updateAgentProfile({ "id": edit.id, "spec": s,
+                                                                    "extends": s.extends })
+                            App.profileManager.saveProfiles()
+                            refreshHarnessInfo()
                         }
                         function allDirectiveKeys() {
                             var cat = App.agentDirectiveCatalog(), out = []
@@ -1504,6 +1553,11 @@ Item {
                             var sid = (edit.styleProfileIds || []).length ? edit.styleProfileIds[0] : ""
                             var pi = personalitySelector.indexOfValue(pid); if (pi >= 0) personalitySelector.currentIndex = pi
                             var si = styleSelector.indexOfValue(sid); if (si >= 0) styleSelector.currentIndex = si
+                            // Harness modular: cargar el spec resuelto + info derivada.
+                            specEdit = App.profileManager.agentProfileSpec(p.id) || ({})
+                            var ei = extendsCombo.indexOfValue(specEdit.extends || "")
+                            extendsCombo.currentIndex = ei >= 0 ? ei : 0
+                            refreshHarnessInfo()
                             rebuildGroups()  // recrea delegates → switches re-evaluan checked
                         }
                         function save() {
@@ -1814,6 +1868,303 @@ Item {
                                         checked: App.hitlDestructive
                                         onToggled: App.hitlDestructive = checked
                                     }
+                                }
+
+                                // ── Harness modular ──
+                                // El perfil deja de ser un preset cerrado: acá se
+                                // componen los módulos (tools/prompt/loop/contexto/
+                                // permisos/escalación/protocolo). Lo que no se toca
+                                // se hereda del `extends`; lo que se toca aparece en
+                                // el diff de abajo. Ver docs/harness.md.
+                                Text {
+                                    text: "HARNESS MODULAR"
+                                    color: Theme.accent; font.pixelSize: 11; font.bold: true
+                                }
+
+                                RowLayout {
+                                    Layout.fillWidth: true; spacing: 8
+                                    Text { text: "Hereda de"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcComboBox {
+                                        id: extendsCombo
+                                        Layout.fillWidth: true
+                                        enabled: !agentProfilesSection.isSystem
+                                        textRole: "name"; valueRole: "profileId"
+                                        model: App.profileManager.agentProfiles
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: extendsCombo.displayText || "(defaults del harness)"; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+                                    Text {
+                                        text: (agentProfilesSection.specSummary.toolCount || 0) + " tools · ~"
+                                              + (agentProfilesSection.specSummary.approxTokens || 0) + " tok"
+                                        color: Theme.textMuted; font.pixelSize: 11
+                                    }
+                                    LcButton {
+                                        text: "Guardar harness"; secondary: true
+                                        enabled: !agentProfilesSection.isSystem && !!agentProfilesSection.edit.id
+                                        onClicked: agentProfilesSection.saveHarnessSpec()
+                                    }
+                                }
+
+                                // Advertencias de dependencias (git/embeddings/escritorio/
+                                // correo) y de directivas rotas. No bloquean: informan.
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    visible: (agentProfilesSection.specSummary.warnings || []).length > 0
+                                    color: Theme.inputBg; border.color: Theme.warnText; radius: 8
+                                    implicitHeight: warnCol.implicitHeight + 16
+                                    ColumnLayout {
+                                        id: warnCol
+                                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                                        spacing: 2
+                                        Repeater {
+                                            model: agentProfilesSection.specSummary.warnings || []
+                                            delegate: Text {
+                                                required property var modelData
+                                                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                                                text: "⚠ " + modelData
+                                                color: Theme.warnText; font.pixelSize: 11
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Diff contra el perfil del que hereda: lo que hace
+                                // mantenible un perfil propio ("cambia 6 cosas vs Avanzado").
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    visible: (agentProfilesSection.specDiff || []).length > 0
+                                    color: Theme.inputBg; border.color: Theme.borderColor; radius: 8
+                                    implicitHeight: diffCol.implicitHeight + 16
+                                    ColumnLayout {
+                                        id: diffCol
+                                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                                        spacing: 2
+                                        Text {
+                                            text: "Cambia " + (agentProfilesSection.specDiff || []).length
+                                                  + " ajuste(s) respecto de "
+                                                  + (extendsCombo.displayText || "los defaults")
+                                            color: Theme.textSecondary; font.pixelSize: 11; font.bold: true
+                                        }
+                                        Repeater {
+                                            model: agentProfilesSection.specDiff || []
+                                            delegate: Text {
+                                                required property var modelData
+                                                Layout.fillWidth: true; wrapMode: Text.WordWrap
+                                                text: modelData.module + "." + modelData.field + ": "
+                                                      + modelData.base + " → " + modelData.value
+                                                color: Theme.textMuted; font.pixelSize: 11
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Packs de tools (grupos + compuestos). Se suman a las
+                                // tools sueltas de abajo; `exclude` gana siempre.
+                                Text { text: "Packs de tools"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                Flow {
+                                    Layout.fillWidth: true; spacing: 6
+                                    Repeater {
+                                        model: agentProfilesSection.packItems
+                                        delegate: LcButton {
+                                            required property var modelData
+                                            text: (agentProfilesSection.specHasListItem("tools", "packs", modelData.key) ? "✓ " : "")
+                                                  + modelData.name
+                                            secondary: !agentProfilesSection.specHasListItem("tools", "packs", modelData.key)
+                                            enabled: !agentProfilesSection.isSystem
+                                            ToolTip.visible: hovered
+                                            ToolTip.text: modelData.description
+                                            onClicked: agentProfilesSection.specToggleListItem(
+                                                "tools", "packs", modelData.key,
+                                                !agentProfilesSection.specHasListItem("tools", "packs", modelData.key))
+                                        }
+                                    }
+                                }
+
+                                // Directivas de usuario (.md en <AppLocalData>/harness/
+                                // directives o <proyecto>/.llamacode/directives).
+                                Text {
+                                    text: "Directivas propias (.md)"
+                                    color: Theme.textSecondary; font.pixelSize: 12
+                                    visible: agentProfilesSection.customDirectiveItems.length > 0
+                                }
+                                Flow {
+                                    Layout.fillWidth: true; spacing: 6
+                                    visible: agentProfilesSection.customDirectiveItems.length > 0
+                                    Repeater {
+                                        model: agentProfilesSection.customDirectiveItems
+                                        delegate: LcButton {
+                                            required property var modelData
+                                            text: (agentProfilesSection.specHasListItem("prompt", "custom", modelData.name) ? "✓ " : "")
+                                                  + modelData.name
+                                            secondary: !agentProfilesSection.specHasListItem("prompt", "custom", modelData.name)
+                                            enabled: !agentProfilesSection.isSystem
+                                            ToolTip.visible: hovered
+                                            ToolTip.text: modelData.description
+                                                          + (modelData.when ? ("\ncondición: " + modelData.when) : "")
+                                            onClicked: agentProfilesSection.specToggleListItem(
+                                                "prompt", "custom", modelData.name,
+                                                !agentProfilesSection.specHasListItem("prompt", "custom", modelData.name))
+                                        }
+                                    }
+                                }
+
+                                // Módulos numéricos/booleanos. Vacío = heredar.
+                                GridLayout {
+                                    Layout.fillWidth: true; columns: 4
+                                    rowSpacing: 8; columnSpacing: 10
+                                    enabled: !agentProfilesSection.isSystem
+
+                                    Text { text: "Repetición de tool"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "3"
+                                        text: String(agentProfilesSection.specValue("loop", "sameCallLimit", 3))
+                                        onEditingFinished: agentProfilesSection.specSet("loop", "sameCallLimit", parseInt(text) || 3)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Llamadas idénticas consecutivas antes de bloquear y forzar replanteo."
+                                    }
+                                    Text { text: "Reintentos de transporte"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "60"
+                                        text: String(agentProfilesSection.specValue("loop", "transportRetries", 60))
+                                        onEditingFinished: agentProfilesSection.specSet("loop", "transportRetries", parseInt(text) || 60)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Reintentos HTTP mientras llama-server reinicia."
+                                    }
+
+                                    Text { text: "Timeout tool web (s)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "180"
+                                        text: String(agentProfilesSection.specValue("loop", "webToolTimeoutSec", 180))
+                                        onEditingFinished: agentProfilesSection.specSet("loop", "webToolTimeoutSec", parseInt(text) || 180)
+                                    }
+                                    Text { text: "Stream inactivo (s)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "0 = env / 3600"
+                                        text: String(agentProfilesSection.specValue("loop", "streamIdleTimeoutSec", 0))
+                                        onEditingFinished: agentProfilesSection.specSet("loop", "streamIdleTimeoutSec", parseInt(text) || 0)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Aborta sólo si el stream no emite nada. 0 = usar LLAMACODE_STREAM_IDLE_TIMEOUT o 3600s."
+                                    }
+
+                                    Text { text: "Compactar contexto"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcSwitch {
+                                        checked: agentProfilesSection.specValue("context", "compaction", true)
+                                        onToggled: agentProfilesSection.specSet("context", "compaction", checked)
+                                    }
+                                    Text { text: "Umbral (frac. de n_ctx)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "0.90"
+                                        text: String(agentProfilesSection.specValue("context", "compactionTrigger", 0.90))
+                                        onEditingFinished: agentProfilesSection.specSet("context", "compactionTrigger", parseFloat(text) || 0.90)
+                                    }
+
+                                    Text { text: "Poda determinista"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcSwitch {
+                                        checked: agentProfilesSection.specValue("context", "prune", true)
+                                        onToggled: agentProfilesSection.specSet("context", "prune", checked)
+                                    }
+                                    Text { text: "Capturas a conservar"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "1"
+                                        text: String(agentProfilesSection.specValue("context", "keepLastImages", 1))
+                                        onEditingFinished: agentProfilesSection.specSet("context", "keepLastImages", parseInt(text) || 0)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Con mmproj cada captura son miles de tokens de prefill."
+                                    }
+
+                                    Text { text: "Dedup de lecturas"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcSwitch {
+                                        checked: agentProfilesSection.specValue("context", "readDedup", true)
+                                        onToggled: agentProfilesSection.specSet("context", "readDedup", checked)
+                                    }
+                                    Text { text: "Preflight de contexto"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcSwitch {
+                                        checked: agentProfilesSection.specValue("context", "preflight", false)
+                                        onToggled: agentProfilesSection.specSet("context", "preflight", checked)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Inyecta un slice de archivos candidatos antes del primer request."
+                                    }
+
+                                    Text { text: "Protocolo de tools"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcComboBox {
+                                        id: protocolCombo
+                                        Layout.fillWidth: true
+                                        textRole: "label"; valueRole: "key"
+                                        model: [
+                                            { key: "auto",   label: "Auto (nativo + fallback texto)" },
+                                            { key: "native", label: "Nativo (sin fallback)" },
+                                            { key: "text",   label: "Texto (TOOL_CALL)" }
+                                        ]
+                                        currentIndex: Math.max(0, indexOfValue(agentProfilesSection.specValue("protocol", "toolProtocol", "auto")))
+                                        onActivated: agentProfilesSection.specSet("protocol", "toolProtocol", currentValue)
+                                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                                        contentItem: Text { text: protocolCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                                    }
+                                    Text { text: "Sub-agentes en paralelo"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "5"
+                                        text: String(agentProfilesSection.specValue("escalation", "maxParallelSubagents", 5))
+                                        onEditingFinished: agentProfilesSection.specSet("escalation", "maxParallelSubagents", parseInt(text) || 5)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Techo propio; el cap real es el menor entre esto, el adaptativo por VRAM y 5."
+                                    }
+
+                                    Text { text: "Aislar sub-agentes"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcSwitch {
+                                        checked: agentProfilesSection.specValue("escalation", "isolateSubagents", true)
+                                        onToggled: agentProfilesSection.specSet("escalation", "isolateSubagents", checked)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Cada sub-agente en su git worktree. Apagado: comparten el cwd."
+                                    }
+                                    Text { text: "Tope de prompt (chars)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                    LcTextField {
+                                        Layout.fillWidth: true; placeholderText: "24000"
+                                        text: String(agentProfilesSection.specValue("prompt", "maxChars", 24000))
+                                        onEditingFinished: agentProfilesSection.specSet("prompt", "maxChars", parseInt(text) || 24000)
+                                        ToolTip.visible: hovered
+                                        ToolTip.text: "Avisa por log si el system prompt compuesto lo supera. No trunca."
+                                    }
+                                }
+
+                                Text { text: "Reglas de permiso (una por línea: allow|deny|ask [kind:]<glob>)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                TextArea {
+                                    Layout.fillWidth: true; Layout.minimumHeight: 60
+                                    enabled: !agentProfilesSection.isSystem
+                                    wrapMode: TextArea.Wrap; color: Theme.textPrimary
+                                    placeholderText: "deny write:**/.env\nallow read:src/**"
+                                    text: (agentProfilesSection.specModule("permissions").rules || []).join("\n")
+                                    onEditingFinished: agentProfilesSection.specSet(
+                                        "permissions", "rules",
+                                        text.split("\n").filter(function(l){ return l.trim().length > 0 }))
+                                }
+
+                                // Import / export del spec: compartir un harness entre
+                                // máquinas o pegarlo en un issue.
+                                RowLayout {
+                                    Layout.fillWidth: true; spacing: 8
+                                    LcButton {
+                                        text: "Exportar spec"; secondary: true
+                                        enabled: !!agentProfilesSection.edit.id
+                                        onClicked: specJsonField.text = JSON.stringify(agentProfilesSection.specEdit, null, 2)
+                                    }
+                                    LcButton {
+                                        text: "Importar spec"; secondary: true
+                                        enabled: !agentProfilesSection.isSystem && specJsonField.text.trim().length > 0
+                                        onClicked: {
+                                            try {
+                                                agentProfilesSection.specEdit = JSON.parse(specJsonField.text)
+                                                agentProfilesSection.saveHarnessSpec()
+                                            } catch (e) {
+                                                specJsonField.text = "// JSON inválido: " + e + "\n" + specJsonField.text
+                                            }
+                                        }
+                                    }
+                                }
+                                TextArea {
+                                    id: specJsonField
+                                    Layout.fillWidth: true; Layout.minimumHeight: 70
+                                    wrapMode: TextArea.WrapAnywhere; color: Theme.textPrimary
+                                    placeholderText: "JSON del HarnessSpec (queda local)"
                                 }
 
                                 // ── Directivas ──

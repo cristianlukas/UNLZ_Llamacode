@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.99"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.100"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -1718,6 +1718,16 @@ private:
     // directivas de un perfil a un backend dado. NO toca approval ni
     // tuning (los maneja el caller). Reusado por el agente vivo y el benchmark.
     void      applyAgentProfileCaps(class LlamaAgentBackend *cb, const AgentProfile &ap);
+    // Baja los módulos del HarnessSpec (loop/contexto/permisos/escalación/
+    // protocolo/directivas de usuario) al backend. Ver docs/harness.md.
+    void      applyHarnessSpec(class LlamaAgentBackend *cb, const HarnessSpec &spec);
+    // Aplica el override de una fase declarada en el spec ("plan"|"exec"|
+    // "verify"|"goalCheck"). Sin fases declaradas es un no-op.
+    void      applyHarnessPhase(const QString &phase);
+    // Alcance de filesystem de la Task en curso ("" = ninguna). El spec del
+    // perfil se intersecta con esto: un perfil no puede ampliar permisos.
+    QString     m_agentTaskScope;
+    QStringList m_agentTaskFolders;
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;
