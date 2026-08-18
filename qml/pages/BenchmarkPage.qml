@@ -24,7 +24,7 @@ Item {
     property var colW: ({
         profile: 200, target: 58, agentProfile: 96, benchmark: 100, thinking: 58, score: 60, firstAttemptScore: 58,
         finalScore: 58, qpm: 68, repairAttempts: 52, timeToFirstAttempt: 62, totalTime: 62,
-        passedAfterRepair: 68, tps: 60, ttft: 60, nonGeneration: 78, firstTool: 78, firstWrite: 78, firstEvaluable: 82, seconds: 70, ram: 60, vram: 60, date: 118
+        passedAfterRepair: 68, tps: 60, ttft: 60, nonGeneration: 78, firstTool: 78, firstWrite: 78, firstEvaluable: 82, seconds: 70, ram: 60, vram: 60, vramGpu0: 66, vramGpu1: 66, date: 118
     })
     function colWidth(c) { const w = colW[c]; return (w !== undefined && w > 0) ? w : 60 }
     function setColWidth(c, w) {
@@ -109,6 +109,8 @@ Item {
         if (column === "seconds") return row.elapsedSec ?? 0
         if (column === "ram") return row.ramMb ?? 0
         if (column === "vram") return row.vramMb ?? 0
+        if (column === "vramGpu0") return row.vramGpu0Mb ?? 0
+        if (column === "vramGpu1") return row.vramGpu1Mb ?? 0
         if (column === "date") return row.timestamp ?? 0
         return ""
     }
@@ -178,6 +180,8 @@ Item {
         if (column === "seconds") return secondsLabel(row.elapsedSec)
         if (column === "ram") { const v = row.ramMb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
         if (column === "vram") { const v = row.vramMb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
+        if (column === "vramGpu0") { const v = row.vramGpu0Mb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
+        if (column === "vramGpu1") { const v = row.vramGpu1Mb ?? 0; return v > 0 ? Math.round(v) + " MB" : "—" }
         if (column === "date") { const t = row.timestamp ?? 0; if (!t) return "—"; const d = new Date(t < 1e12 ? t * 1000 : t); return isNaN(d) ? String(t) : Qt.formatDate(d, "yyyy-MM-dd") }
         return ""
     }
@@ -1298,6 +1302,8 @@ Item {
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("seconds"); onLoaded: { item.title = "Segundos"; item.column = "seconds" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("ram"); onLoaded: { item.title = "RAM"; item.column = "ram" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vram"); onLoaded: { item.title = "VRAM"; item.column = "vram" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vramGpu0"); onLoaded: { item.title = "VRAM G0"; item.column = "vramGpu0" } }
+                            Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("vramGpu1"); onLoaded: { item.title = "VRAM G1"; item.column = "vramGpu1" } }
                             Loader { sourceComponent: sortableHeader; Layout.preferredWidth: root.colWidth("date"); onLoaded: { item.title = "Fecha"; item.column = "date" } }
                             Item { Layout.fillWidth: true; height: 30 }
                             Item { Layout.preferredWidth: 34; height: 30 }
@@ -1766,6 +1772,22 @@ Item {
                                     }
                                     color: Theme.textSecondary; font.pixelSize: 11
                                     Layout.preferredWidth: root.colWidth("vram"); horizontalAlignment: Text.AlignRight
+                                }
+                                Text {
+                                    text: {
+                                        const mb = modelData.vramGpu0Mb ?? 0
+                                        return mb > 0 ? mb.toFixed(0) + " MB" : "—"
+                                    }
+                                    color: Theme.textSecondary; font.pixelSize: 11
+                                    Layout.preferredWidth: root.colWidth("vramGpu0"); horizontalAlignment: Text.AlignRight
+                                }
+                                Text {
+                                    text: {
+                                        const mb = modelData.vramGpu1Mb ?? 0
+                                        return mb > 0 ? mb.toFixed(0) + " MB" : "—"
+                                    }
+                                    color: Theme.textSecondary; font.pixelSize: 11
+                                    Layout.preferredWidth: root.colWidth("vramGpu1"); horizontalAlignment: Text.AlignRight
                                 }
                                 Text {
                                     text: {

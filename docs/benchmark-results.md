@@ -15,21 +15,22 @@ salvo autorización explícita.
 
 El esquema obligatorio de cada fila es exactamente: `ID`, `Perfil`, `Agente`,
 `HE0`, `HE20`, `BCB`, `Tiempo HE0`, `Tiempo HE20`, `Tiempo BCB`, `TPS HE0`,
-`TPS HE20`, `TPS BCB`, `VRAM total`, `Visión`, `Drafter`, `Quant`, `Parámetros`,
-`Contexto`, `Thinking`, `Harness` y `Estado`. `VRAM total` es el pico
+`TPS HE20`, `TPS BCB`, `VRAM GPU0`, `VRAM GPU1`, `VRAM total`, `Visión`,
+`Drafter`, `Quant`, `Parámetros`, `Contexto`, `Thinking`, `Harness` y `Estado`.
+`VRAM total` es el pico
 agregado usado por el proceso (`GPU0 + GPU1`, en MB) durante la corrida
 reportada; no es la VRAM libre ni la capacidad instalada.
 
-| ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | VRAM total | Visión | Drafter | Quant | Parámetros | Contexto | Thinking | Harness | Estado |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|---|---|
-| `sys-qwen38-27b-udq4-131k` | ⚡ Qwen3.8 UD-Q4 visión | chat | 1/1 | 20/20 | 5/8 | 11,288 s | 237,507 s | 1430,390 s | 39,22 | 60,50 | 65,21 | 24.569 MB | Sí | MTP3 | UD-Q4_K_XL | 27B | 131k | No | LC-H1 | BCB calidad |
-| `sys-48-katcoder-262k` | KAT2-Coder-7-8-26 | chat | 1/1 | 20/20 | 3/8 | 15,817 s | 183,904 s | 401,169 s | 124,24 | 108,45 | 116,83 | 26.761 MB | No | — | Q4_K_M | 35B-A3B | 262k | No | LC-H1 | Reparado |
-| `sys-repair-48-bigbang-mtp-balance` | BigBang MTP BALANCE | chat | 1/1 | 20/20 | 3/8 | 11,266 s | 253,067 s | 406,496 s | — | 206,53 | 211,18 | 25.644 MB | Sí | MTP embebido | Q4_K_M | 35B-A3B | 65k | No | LC-H1 | Reparado |
-| `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | ThinkingCap Qwen3.6 MTP4 | chat | 1/1 | 20/20 | 3/8 | 11,288 s | 118,098 s | 169,431 s | 48,21 | 61,96 | 52,04 | 23.624 MB | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | BCB calidad |
-| `sys-laguna-s-2-1-q2-48gb-safe` | Laguna S.2.1 · CUDA safe 64k | básico | 1/1 | Pendiente | Pendiente | 150,127 s | — | — | — | — | — | 18.891 MB | No | — | UD-Q2_K_XL | 118B-A8B | 65k | No | LC-H1 | HE0 válido |
-| `8dd3325d-8658-45ca-9aad-ad80d301b4e9` | Laguna S.2.1 · dual GPU safe · 32k | Máximo | 1/1 | 20/20 | 4/8 | 60,919 s | 392,072 s | 871,561 s | 19,77 | 54,70 | 44,33 | 40.760 MB | No | — | UD-Q2_K_XL | 118B-A8B | 32k | No | LC-H1 | Reparado; usa 2×GPU |
-| `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | DeepSeek Fusion VRAM histórico | chat | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | 35.903 MB | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB calidad |
-| `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | 4/8* | 112,497 s | 1164,244 s | 1396,871 s* | — | 9,58 | — | 32.684 MB | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB mejor resultado evaluable; repetir cancelado por reparación estancada |
+| ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | VRAM GPU0 | VRAM GPU1 | VRAM total | Visión | Drafter | Quant | Parámetros | Contexto | Thinking | Harness | Estado |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|---|---|---|---|---|---|
+| `sys-qwen38-27b-udq4-131k` | ⚡ Qwen3.8 UD-Q4 visión | chat | 1/1 | 20/20 | 5/8 | 11,288 s | 237,507 s | 1430,390 s | 39,22 | 60,50 | 65,21 | No medido | No medido | 24.569 MB | Sí | MTP3 | UD-Q4_K_XL | 27B | 131k | No | LC-H1 | BCB calidad |
+| `sys-48-katcoder-262k` | KAT2-Coder-7-8-26 | chat | 1/1 | 20/20 | 3/8 | 15,817 s | 183,904 s | 401,169 s | 124,24 | 108,45 | 116,83 | No medido | No medido | 26.761 MB | No | — | Q4_K_M | 35B-A3B | 262k | No | LC-H1 | Reparado |
+| `sys-repair-48-bigbang-mtp-balance` | BigBang MTP BALANCE | chat | 1/1 | 20/20 | 3/8 | 11,266 s | 253,067 s | 406,496 s | — | 206,53 | 211,18 | No medido | No medido | 25.644 MB | Sí | MTP embebido | Q4_K_M | 35B-A3B | 65k | No | LC-H1 | Reparado |
+| `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | ThinkingCap Qwen3.6 MTP4 | chat | 1/1 | 20/20 | 3/8 | 11,288 s | 118,098 s | 169,431 s | 48,21 | 61,96 | 52,04 | No medido | No medido | 23.624 MB | Sí | MTP4 | Q4_K_M | 27B | 131k | No | LC-H1 | BCB calidad |
+| `sys-laguna-s-2-1-q2-48gb-safe` | Laguna S.2.1 · CUDA safe 64k | básico | 1/1 | Pendiente | Pendiente | 150,127 s | — | — | — | — | — | No medido | No medido | 18.891 MB | No | — | UD-Q2_K_XL | 118B-A8B | 65k | No | LC-H1 | HE0 válido |
+| `8dd3325d-8658-45ca-9aad-ad80d301b4e9` | Laguna S.2.1 · dual GPU safe · 32k | Máximo | 1/1 | 20/20 | 4/8 | 60,919 s | 392,072 s | 871,561 s | 19,77 | 54,70 | 44,33 | No medido | No medido | 40.760 MB | No | — | UD-Q2_K_XL | 118B-A8B | 32k | No | LC-H1 | Reparado; usa 2×GPU |
+| `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | DeepSeek Fusion VRAM histórico | chat | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | No medido | No medido | 35.903 MB | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB calidad |
+| `4f5cc556-333d-4310-955e-15042cd874d6` | DeepSeek repetición actual | avanzado | 1/1 | 20/20 | 4/8* | 112,497 s | 1164,244 s | 1396,871 s* | — | 9,58 | — | No medido | No medido | 32.684 MB | No | — | Q2/Q4 imatrix | 284B | 131k | No | LC-H1 | BCB mejor resultado evaluable; repetir cancelado por reparación estancada |
 
 ## Experimentos con compuerta HE0
 

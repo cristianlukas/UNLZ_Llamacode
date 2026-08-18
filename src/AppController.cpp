@@ -4806,6 +4806,29 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
 // Entorno real para el preflight de dependencias del harness. Lo que sabe el
 // AppController y ProfileManager no: si el server activo expone embeddings, si
 // hay sesión de escritorio, cuentas de correo o automatización de browser.
+// Servers MCP efectivamente habilitados (global + proyecto, el de proyecto pisa
+// por nombre). Es el mismo criterio que usa ensureAgentBackend para lanzarlos.
+int AppController::enabledMcpServerCount() const
+{
+    const QString proj = currentAgentProjectDir();
+    QMap<QString, bool> merged;
+    for (const QVariant &v : listMcpServers(QStringLiteral("global"), QString())) {
+        const QVariantMap m = v.toMap();
+        merged.insert(m.value(QStringLiteral("name")).toString(),
+                      m.value(QStringLiteral("enabled"), true).toBool());
+    }
+    if (!proj.isEmpty())
+        for (const QVariant &v : listMcpServers(QStringLiteral("project"), proj)) {
+            const QVariantMap m = v.toMap();
+            merged.insert(m.value(QStringLiteral("name")).toString(),
+                          m.value(QStringLiteral("enabled"), true).toBool());
+        }
+    int n = 0;
+    for (auto it = merged.cbegin(); it != merged.cend(); ++it)
+        if (it.value()) ++n;
+    return n;
+}
+
 QVariantMap AppController::harnessSpecSummary(const QString &agentProfileId) const
 {
     const QVariantMap env{
@@ -4815,8 +4838,47 @@ QVariantMap AppController::harnessSpecSummary(const QString &agentProfileId) con
         {QStringLiteral("hasDesktop"), true},
         {QStringLiteral("hasMailAccount"), !mailAccountsResolved().isEmpty()},
         {QStringLiteral("hasBrowser"), m_browserAutomationEnabled},
-        {QStringLiteral("hasMcpServers"), true}};
+        // MCP real: global + proyecto, contando sólo los habilitados (mismo
+        // merge por nombre que hace ensureAgentBackend). Estaba hardcodeado en
+        // true, así que un perfil con mcpTools=on y cero servers no avisaba nada.
+        {QStringLiteral("hasMcpServers"), enabledMcpServerCount() > 0}};
     return m_profiles.harnessSpecSummary(agentProfileId, currentAgentProjectDir(), env);
+}
+
+QVariantMap AppController::saveHarnessDirective(const QString &name, const QString &description,
+                                                const QString &when, const QString &body,
+                                                const QString &scope)
+{
+    const QVariantMap res = HarnessDirectiveStore::save(name, description, when, body, scope,
+                                                        currentAgentProjectDir());
+    if (!res.value(QStringLiteral("ok")).toBool()) {
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Directiva rechazada: %1")
+                             .arg(res.value(QStringLiteral("error")).toString()));
+        return res;
+    }
+    // Si el perfil activo ya la referencia, recargarla en vivo (editar una
+    // directiva y tener que reiniciar el agente sería absurdo).
+    applyActiveAgentProfile();
+    return res;
+}
+
+QVariantMap AppController::removeHarnessDirective(const QString &name, const QString &scope)
+{
+    const QVariantMap res = HarnessDirectiveStore::remove(name, scope, currentAgentProjectDir());
+    if (!res.value(QStringLiteral("ok")).toBool()) {
+        appendAgentEvent(QStringLiteral("lifecycle"),
+                         QStringLiteral("Directiva rechazada: %1")
+                             .arg(res.value(QStringLiteral("error")).toString()));
+        return res;
+    }
+    applyActiveAgentProfile();
+    return res;
+}
+
+QVariantMap AppController::harnessDirective(const QString &name) const
+{
+    return HarnessDirectiveStore::load(name, currentAgentProjectDir());
 }
 
 QVariantMap AppController::compareHarnessBenchmarks(const QStringList &agentProfileIds,
@@ -4899,26 +4961,50 @@ void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &s
 // llamar a esto siempre es seguro y no cambia nada por default.
 void AppController::applyHarnessPhase(const QString &phase)
 {
-    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
-    if (!cb) return;
+    if (!m_agentBackend) return;
     const AgentProfile ap = m_profiles.resolveAgentProfile(resolveAgentProfileId());
     if (ap.id.isEmpty()) return;
     const HarnessSpec base = m_profiles.resolveHarnessSpec(ap);
     if (base.phases.isEmpty()) return;              // sin fases declaradas: nada que hacer
-    const HarnessSpec phased = HarnessSpec::forPhase(base, phase);
-    applyHarnessSpec(cb, phased);
-    // Temperatura e instrucciones extra de la fase: una fase de verificación
-    // puede querer temperatura 0 y otro texto sin duplicar el perfil entero.
+    // El goal-check de un bucle ES la verificación. Si el perfil sólo declaró
+    // "verify" (lo que uno escribe naturalmente), esa fase también gobierna el
+    // goal-check: sin este alias, declarar "verify" no hacía nada en una Loop y
+    // el usuario no tenía cómo saberlo.
+    QString effective = phase;
+    if (phase == QLatin1String("goalCheck") && !base.phases.contains(phase)
+        && base.phases.contains(QStringLiteral("verify")))
+        effective = QStringLiteral("verify");
+    const HarnessSpec phased = HarnessSpec::forPhase(base, effective);
+
+    // Lo que EXISTE en IAgentBackend se aplica a cualquier backend: aprobación,
+    // reglas de permiso y tuning. Antes todo esto quedaba adentro de un cast a
+    // LlamaAgentBackend y una fase era un no-op silencioso con otro runtime.
     QString sysExtra;
     double temp = -1.0;
     resolveAgentTuning(ap, phased, &sysExtra, &temp);
-    cb->setAgentTuning(sysExtra, temp);
-    if (phased.permissions.set && phased.permissions.approvalMode != base.permissions.approvalMode) {
-        cb->setApprovalPolicy(phased.permissions.approvalMode);
-        appendAgentEvent(QStringLiteral("task"),
-                         QStringLiteral("Harness fase '%1': aprobación → %2")
-                             .arg(phase, phased.permissions.approvalMode));
+    m_agentBackend->setAgentTuning(sysExtra, temp);
+    // La política se aplica SIEMPRE con el valor de la fase (que es el del spec
+    // base cuando la fase no lo pisa). Aplicarla sólo "si difiere del base" hacía
+    // que una fase que endurecía la aprobación no se deshiciera nunca: la Task
+    // seguía en modo plan después de verificar. El restore tiene que ser
+    // automático, no otra llamada que alguien se puede olvidar.
+    if (phased.permissions.set) {
+        m_agentBackend->setApprovalPolicy(phased.permissions.approvalMode);
+        if (phased.permissions.approvalMode != base.permissions.approvalMode)
+            appendAgentEvent(QStringLiteral("task"),
+                             QStringLiteral("Harness fase '%1': aprobación → %2")
+                                 .arg(effective, phased.permissions.approvalMode));
     }
+    if (phased.permissions.set)
+        m_agentBackend->setPermissionRules(phased.permissions.rules.join(QLatin1Char('\n')));
+
+    // El resto (loop/contexto/escalación/protocolo/tools) sólo lo entiende el
+    // agente nativo.
+    auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
+    if (!cb) return;
+    applyHarnessSpec(cb, phased);
+    // Idem con las tools: si una fase apagó run_shell, la siguiente (sin
+    // override) tiene que devolver el set del spec base.
     if (phased.tools.set && !phased.tools.include.contains(QStringLiteral("*")))
         cb->setDisabledTools(HarnessTools::disabledFrom(HarnessTools::resolve(phased.tools)));
 }
@@ -7314,6 +7400,10 @@ void AppController::onAgentTurnFinished()
                 appendAgentEvent(QStringLiteral("task"),
                                  QStringLiteral("Bucle: %1").arg(d.reason));
                 m_runningTaskPhase = QStringLiteral("ejecutando");
+                // Volver a la fase de ejecución: si el goal-check corrió con una
+                // fase más restrictiva (p.ej. plan), la iteración siguiente tiene
+                // que recuperar los permisos y tools del spec base.
+                applyHarnessPhase(QStringLiteral("exec"));
                 m_runningTaskPostPrompt = TaskStore::composePostPrompt(loopTask);
                 m_tasks.markRun(m_runningTaskId, QStringLiteral("running"), d.reason);
                 emit taskRunStateChanged();
@@ -14672,7 +14762,9 @@ void AppController::startConcurrencyBenchmark(const QString &profileId, int minS
                         auto rows = std::make_shared<QVariantList>();
                         auto finalize = std::make_shared<std::function<void()>>();
                         *finalize = [=]() {
-                            benchmarkMeasureResources([=](double ramMb, double vramMb) {
+                            benchmarkMeasureResources([=](BenchmarkResources resources) {
+                                const double ramMb = resources.ramMb;
+                                const double vramMb = resources.vramMb;
                                 double sumTps = 0.0, sumTtft = 0.0, maxElapsed = 0.0;
                                 int ok = 0, tokens = 0;
                                 for (const QVariant &value : *rows) {
@@ -14707,6 +14799,8 @@ void AppController::startConcurrencyBenchmark(const QString &profileId, int minS
                                 result[QStringLiteral("timeToFirstAttempt")] = wallSec;
                                 result[QStringLiteral("ramMb")] = ramMb;
                                 result[QStringLiteral("vramMb")] = vramMb;
+                                result[QStringLiteral("vramGpu0Mb")] = resources.vramGpu0Mb;
+                                result[QStringLiteral("vramGpu1Mb")] = resources.vramGpu1Mb;
                                 result[QStringLiteral("qualityScore")] = ok;
                                 result[QStringLiteral("qualityTotal")] = requests;
                                 result[QStringLiteral("finalScore")] = ok;
@@ -15245,7 +15339,9 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                     *runTask = [=](int ti) {
                         if (m_benchmarkCanceled || ti >= tasks.size()) {
                             // Measure resources then store result
-                            benchmarkMeasureResources([=](double ramMb, double vramMb) {
+                            benchmarkMeasureResources([=](BenchmarkResources resources) {
+                                const double ramMb = resources.ramMb;
+                                const double vramMb = resources.vramMb;
                                 int passed = 0, qualTotal = 0;
                                 double tpsSum = 0, ttftSum = 0; int speedCount = 0;
                                 bool failed = false;
@@ -15299,6 +15395,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["avgTtftMs"]    = avgTtft;
                                 result["ramMb"]        = ramMb;
                                 result["vramMb"]       = vramMb;
+                                result["vramGpu0Mb"]   = resources.vramGpu0Mb;
+                                result["vramGpu1Mb"]   = resources.vramGpu1Mb;
                                 result["elapsedSec"]   =
                                     (QDateTime::currentMSecsSinceEpoch() - *passStartMs) / 1000.0;
                                 result["generationSec"] = 0.0;
@@ -16179,13 +16277,17 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         };
         auto peakRamMb = std::make_shared<double>(0.0);
         auto peakVramMb = std::make_shared<double>(0.0);
+        auto peakVramGpu0Mb = std::make_shared<double>(0.0);
+        auto peakVramGpu1Mb = std::make_shared<double>(0.0);
         auto hardTimeoutWatchdog = std::make_shared<QTimer *>(nullptr);
         auto sampleResources = std::make_shared<std::function<void()>>();
         *sampleResources = [=]() {
             if (*finished) return;
-            const QPair<double, double> resources = benchmarkMeasureResourcesNow();
-            *peakRamMb = qMax(*peakRamMb, resources.first);
-            *peakVramMb = qMax(*peakVramMb, resources.second);
+            const BenchmarkResources resources = benchmarkMeasureResourcesNow();
+            *peakRamMb = qMax(*peakRamMb, resources.ramMb);
+            *peakVramMb = qMax(*peakVramMb, resources.vramMb);
+            *peakVramGpu0Mb = qMax(*peakVramGpu0Mb, resources.vramGpu0Mb);
+            *peakVramGpu1Mb = qMax(*peakVramGpu1Mb, resources.vramGpu1Mb);
             QTimer::singleShot(5000, this, [=]() { (*sampleResources)(); });
         };
         QTimer::singleShot(1000, this, [=]() { (*sampleResources)(); });
@@ -16541,9 +16643,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 return;
             }
 
-            const QPair<double, double> resources = benchmarkMeasureResourcesNow();
-            const double ramMb = qMax(resources.first, *peakRamMb);
-            const double vramMb = qMax(resources.second, *peakVramMb);
+            const BenchmarkResources resources = benchmarkMeasureResourcesNow();
+            const double ramMb = qMax(resources.ramMb, *peakRamMb);
+            const double vramMb = qMax(resources.vramMb, *peakVramMb);
+            const double vramGpu0Mb = qMax(resources.vramGpu0Mb, *peakVramGpu0Mb);
+            const double vramGpu1Mb = qMax(resources.vramGpu1Mb, *peakVramGpu1Mb);
             const QString rowName = passes > 1
                 ? QString("%1 · pasada %2/%3").arg(profName).arg(*passNo).arg(passes) : profName;
 
@@ -16594,6 +16698,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 ? 0.0 : (ttftCount > 0 ? ttftSum / ttftCount : 0.0);
             result["ramMb"]        = ramMb;
             result["vramMb"]       = vramMb;
+            result["vramGpu0Mb"]   = vramGpu0Mb;
+            result["vramGpu1Mb"]   = vramGpu1Mb;
             result["elapsedSec"]   = elapsed;
             result["generationSec"] = generationMs / 1000.0;
             result["nonGenerationSec"] = qMax(0.0, elapsed - generationMs / 1000.0);
@@ -17348,14 +17454,13 @@ static QStringList parseCsvLine(const QString &line)
     return out;
 }
 
-QPair<double, double> AppController::benchmarkMeasureResourcesNow() const
+AppController::BenchmarkResources AppController::benchmarkMeasureResourcesNow() const
 {
     const qint64 serverPid = m_proc ? m_proc->processId() : 0;
     const QString processName = m_proc
         ? QFileInfo(m_proc->program()).fileName()
         : QStringLiteral("llama-server.exe");
-    double ramMb = 0.0;
-    double vramMb = 0.0;
+    BenchmarkResources resources;
 
 #ifdef Q_OS_WIN
     auto readCimRam = [&](qint64 rootPid, const QString &imageName) {
@@ -17414,60 +17519,73 @@ QPair<double, double> AppController::benchmarkMeasureResourcesNow() const
     };
 
     if (serverPid > 0)
-        ramMb = readCimRam(serverPid, QString());
-    if (ramMb <= 0.0 && !processName.isEmpty())
-        ramMb = readCimRam(0, processName);
-    if (ramMb <= 0.0)
-        ramMb = readCimRam(0, QStringLiteral("llama-server.exe"));
+        resources.ramMb = readCimRam(serverPid, QString());
+    if (resources.ramMb <= 0.0 && !processName.isEmpty())
+        resources.ramMb = readCimRam(0, processName);
+    if (resources.ramMb <= 0.0)
+        resources.ramMb = readCimRam(0, QStringLiteral("llama-server.exe"));
 #endif
 
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
     if (!nvidiaSmi.isEmpty()) {
         QProcess nsmi;
         nsmi.start(nvidiaSmi,
-                   {QStringLiteral("--query-compute-apps=pid,used_memory"),
+                   {QStringLiteral("--query-compute-apps=index,pid,used_memory"),
                     QStringLiteral("--format=csv,noheader,nounits")});
         if (nsmi.waitForFinished(3000)) {
             const QString text = QString::fromUtf8(nsmi.readAllStandardOutput());
             for (const QString &line : text.split('\n', Qt::SkipEmptyParts)) {
                 const QStringList parts = line.split(QLatin1Char(','));
-                if (parts.size() < 2)
+                if (parts.size() < 3)
                     continue;
+                bool indexOk = false;
+                const int index = parts.at(0).trimmed().toInt(&indexOk);
                 bool pidOk = false;
-                const qint64 pid = parts.at(0).trimmed().toLongLong(&pidOk);
+                const qint64 pid = parts.at(1).trimmed().toLongLong(&pidOk);
                 if (serverPid > 0 && (!pidOk || pid != serverPid))
                     continue;
                 bool memOk = false;
-                const double mb = parts.at(1).trimmed().toDouble(&memOk);
-                if (memOk)
-                    vramMb += mb;
+                const double mb = parts.at(2).trimmed().toDouble(&memOk);
+                if (memOk && indexOk) {
+                    if (index == 0) resources.vramGpu0Mb += mb;
+                    if (index == 1) resources.vramGpu1Mb += mb;
+                }
             }
         }
-        if (vramMb <= 0.0) {
+        resources.vramMb = resources.vramGpu0Mb + resources.vramGpu1Mb;
+        if (resources.vramMb <= 0.0) {
             QProcess gpu;
             gpu.start(nvidiaSmi,
-                      {QStringLiteral("--query-gpu=memory.used"),
+                      {QStringLiteral("--query-gpu=index,memory.used"),
                        QStringLiteral("--format=csv,noheader,nounits")});
             if (gpu.waitForFinished(3000)) {
                 const QString text = QString::fromUtf8(gpu.readAllStandardOutput());
                 for (const QString &line : text.split('\n', Qt::SkipEmptyParts)) {
+                    const QStringList parts = line.split(QLatin1Char(','));
+                    if (parts.size() < 2)
+                        continue;
+                    bool indexOk = false;
+                    const int index = parts.at(0).trimmed().toInt(&indexOk);
                     bool ok = false;
-                    const double mb = line.trimmed().toDouble(&ok);
-                    if (ok)
-                        vramMb += mb;
+                    const double mb = parts.at(1).trimmed().toDouble(&ok);
+                    if (ok && indexOk) {
+                        if (index == 0) resources.vramGpu0Mb = mb;
+                        if (index == 1) resources.vramGpu1Mb = mb;
+                    }
                 }
+                resources.vramMb = resources.vramGpu0Mb + resources.vramGpu1Mb;
             }
         }
     }
 
-    return {ramMb, vramMb};
+    return resources;
 }
 
-void AppController::benchmarkMeasureResources(std::function<void(double, double)> onDone)
+void AppController::benchmarkMeasureResources(std::function<void(BenchmarkResources)> onDone)
 {
-    const QPair<double, double> resources = benchmarkMeasureResourcesNow();
+    const BenchmarkResources resources = benchmarkMeasureResourcesNow();
     QTimer::singleShot(0, this, [=]() {
-        onDone(resources.first, resources.second);
+        onDone(resources);
     });
 }
 
@@ -17538,6 +17656,8 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("avgTtftMs")] = 0.0;
     result[QStringLiteral("ramMb")] = 0.0;
     result[QStringLiteral("vramMb")] = 0.0;
+    result[QStringLiteral("vramGpu0Mb")] = 0.0;
+    result[QStringLiteral("vramGpu1Mb")] = 0.0;
     result[QStringLiteral("elapsedSec")] = elapsedSec;
     result[QStringLiteral("generationSec")] = 0.0;
     result[QStringLiteral("nonGenerationSec")] = elapsedSec;
@@ -17632,6 +17752,8 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["measurementPhase"] = result.value("measurementPhase").toString();
     summary["ramMb"]        = result.value("ramMb").toDouble();
     summary["vramMb"]       = result.value("vramMb").toDouble();
+    summary["vramGpu0Mb"]   = result.value("vramGpu0Mb").toDouble();
+    summary["vramGpu1Mb"]   = result.value("vramGpu1Mb").toDouble();
     summary["hardwareFingerprint"] = persistedResult.value("hardwareFingerprint").toString();
     summary["recommendedSplitMode"] = persistedResult.value("recommendedSplitMode").toString();
     summary["hardwareGpuCount"] = persistedResult.value("hardwareGpuCount").toInt();

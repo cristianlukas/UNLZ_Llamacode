@@ -171,6 +171,11 @@ anterior, se inicia el perfil y el monitor toma muestras durante la carga y la
 ejecución. La tabla registra como `VRAM total` el máximo de `GPU0 usada +
 GPU1 usada` en MB (`vramMb`), no la VRAM libre ni la capacidad nominal de las
 placas. También se conserva `ramMb` como RAM pico en el JSON y en la historia.
+Los resultados nuevos incluyen además `vramGpu0Mb` y `vramGpu1Mb`, medidos por
+índice de GPU mediante `nvidia-smi`; `vramMb` es la suma de ambos. Esto permite
+relacionar TPS con la distribución real de memoria y detectar si un perfil
+carga más expertos en una placa. Las corridas históricas que sólo guardaron la
+suma no se desglosan retrospectivamente.
 Si una corrida no obtiene telemetría válida, se escribe `No medido` y no se
 infiere el valor a partir del quant, contexto o TPS. Para variantes MoE se
 anotan además las lecturas por GPU en la historia, porque la suma total no

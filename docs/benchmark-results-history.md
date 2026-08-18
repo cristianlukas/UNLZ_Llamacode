@@ -221,7 +221,8 @@ validada con HE0/HE20.
 
 La tabla operativa ahora incluye `VRAM total`. El valor es `vramMb`, el pico
 agregado de memoria usada en GPU0 + GPU1 durante la corrida reportada; no es
-VRAM libre ni capacidad instalada. La telemetría también conserva `ramMb` y,
-para variantes MoE, las lecturas individuales por GPU cuando están disponibles.
+VRAM libre ni capacidad instalada. Las nuevas corridas también persisten
+`vramGpu0Mb` y `vramGpu1Mb`, además de `ramMb`; las corridas anteriores que
+sólo guardaron la suma no se desglosan retrospectivamente.
 Las corridas históricas sin dato no se completan por inferencia: quedan como
 `No medido` y deben repetirse si la comparación de memoria es necesaria.

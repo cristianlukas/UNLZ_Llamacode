@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.102"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.104"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -808,6 +808,17 @@ public:
     // activo, escritorio, cuentas de correo, browser). ProfileManager solo puede
     // detectar git; sin esto el preflight de dependencias avisaba de menos.
     Q_INVOKABLE QVariantMap harnessSpecSummary(const QString &agentProfileId) const;
+    // Servers MCP habilitados (global + proyecto). Alimenta el preflight.
+    int enabledMcpServerCount() const;
+    // Directivas propias del harness (.md): alta/edición y baja. Pasan por
+    // AppController porque necesitan el workspace del agente para el scope
+    // "project". Devuelven {ok} o {ok:false, error}.
+    Q_INVOKABLE QVariantMap saveHarnessDirective(const QString &name, const QString &description,
+                                                 const QString &when, const QString &body,
+                                                 const QString &scope = QStringLiteral("global"));
+    Q_INVOKABLE QVariantMap removeHarnessDirective(const QString &name,
+                                                   const QString &scope = QStringLiteral("global"));
+    Q_INVOKABLE QVariantMap harnessDirective(const QString &name) const;
     // A/B de HARNESS: agrupa las corridas de benchmark ya guardadas por perfil de
     // AGENTE (mismo modelo, distinto HarnessSpec) y devuelve el mismo informe que
     // usa comparison.json. `runDir` vacío = todas las corridas cargadas.
@@ -1965,8 +1976,14 @@ private:
                           int maxTokens, bool streaming,
                           std::function<void(QVariantMap)> onDone,
                           const QString &resultType = QString());
-    QPair<double, double> benchmarkMeasureResourcesNow() const;
-    void benchmarkMeasureResources(std::function<void(double ramMb, double vramMb)> onDone);
+    struct BenchmarkResources {
+        double ramMb = 0.0;
+        double vramMb = 0.0;
+        double vramGpu0Mb = 0.0;
+        double vramGpu1Mb = 0.0;
+    };
+    BenchmarkResources benchmarkMeasureResourcesNow() const;
+    void benchmarkMeasureResources(std::function<void(BenchmarkResources)> onDone);
     QString modelDownloadDir() const;
     void rebuildModelRecommendations();
     // kind: "cpu" | "beellama" (ngram-mod / Qwen NextN MTP) | "official"/""
