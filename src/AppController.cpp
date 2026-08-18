@@ -1295,28 +1295,33 @@ void AppController::runStartupScan()
             QTimer::singleShot(0, this, [this]() {
                 m_startupStatus = QStringLiteral("Preparando historial y recomendaciones…");
                 emit startupChanged();
-                // Estas cargas eran disparadas por Component.onCompleted de
-                // páginas que StackLayout crea siempre. Dejarlas en la fase
-                // tardía conserva los datos precargados sin penalizar QML.
+                // Cada carga tiene su propio turno. Así una colección grande
+                // de benchmarks o reportes no bloquea consecutivamente el
+                // tray, el repintado y la navegación inicial.
                 loadBenchmarkResults();
-                loadCustomBenchmarks();
-                refreshResearchReports();
-
-                if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
-                    const QString launchId = preferredAgentLaunchId();
-                    if (!launchId.isEmpty()) {
-                        appendAgentEvent(QStringLiteral("lifecycle"),
-                                         QStringLiteral("Auto-inicio del agente al abrir la app (tasks por horario)."));
-                        startServerAndAgent(launchId);
-                    } else {
-                        appendAgentEvent(QStringLiteral("lifecycle"),
-                                         QStringLiteral("Auto-inicio del agente pedido pero no hay último perfil; se omite."));
-                    }
-                }
-                m_startupTimings[QStringLiteral("startupTotalMs")] = m_startupTimer.elapsed();
-                m_startupStatus = QStringLiteral("Aplicación lista · servidor detenido");
-                m_startupBusy = false;
-                emit startupChanged();
+                QTimer::singleShot(0, this, [this]() {
+                    loadCustomBenchmarks();
+                    QTimer::singleShot(0, this, [this]() {
+                        refreshResearchReports();
+                        QTimer::singleShot(0, this, [this]() {
+                            if (m_autoStartAgentOnLaunch && !serverRunning() && !agentRunning()) {
+                                const QString launchId = preferredAgentLaunchId();
+                                if (!launchId.isEmpty()) {
+                                    appendAgentEvent(QStringLiteral("lifecycle"),
+                                                     QStringLiteral("Auto-inicio del agente al abrir la app (tasks por horario)."));
+                                    startServerAndAgent(launchId);
+                                } else {
+                                    appendAgentEvent(QStringLiteral("lifecycle"),
+                                                     QStringLiteral("Auto-inicio del agente pedido pero no hay último perfil; se omite."));
+                                }
+                            }
+                            m_startupTimings[QStringLiteral("startupTotalMs")] = m_startupTimer.elapsed();
+                            m_startupStatus = QStringLiteral("Aplicación lista · servidor detenido");
+                            m_startupBusy = false;
+                            emit startupChanged();
+                        });
+                    });
+                });
             });
         });
     });

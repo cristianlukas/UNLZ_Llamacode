@@ -865,7 +865,11 @@ bool ProfileManager::updateAgentProfile(const QVariantMap &data)
     if (data.contains("styleProfileIds")) p.styleProfileIds = data.value("styleProfileIds").toStringList();
     if (data.contains("injectStyleExamples")) p.injectStyleExamples = data.value("injectStyleExamples").toBool();
     if (data.contains("styleExampleLimit")) p.styleExampleLimit = qBound(0, data.value("styleExampleLimit").toInt(), 8);
-    if (data.contains("styleContextLimit")) p.styleContextLimit = qBound(500, data.value("styleContextLimit").toInt(), 20000);
+    // El límite es un presupuesto explícito del perfil. No imponer un mínimo
+    // de 500 caracteres: perfiles compactos (por ejemplo 120) son válidos y
+    // evitan inflar el prompt cuando sólo se necesita una pista breve.
+    if (data.contains("styleContextLimit"))
+        p.styleContextLimit = qBound(0, data.value("styleContextLimit").toInt(), 20000);
     if (data.contains("mcpEnabled"))   p.mcpEnabled = data.value("mcpEnabled").toBool();
     if (data.contains("thinkingLeakGuard"))
         p.thinkingLeakGuard = data.value("thinkingLeakGuard").toBool();

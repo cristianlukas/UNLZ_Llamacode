@@ -2,6 +2,7 @@
 #include "core/ControlApi.h"
 #include "core/MermaidRenderer.h"
 #include "ThemeProvider.h"
+#include "TrayController.h"
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
@@ -270,6 +271,7 @@ int main(int argc, char *argv[])
     AppController controller;
     ThemeProvider theme;
     MermaidRenderer mermaid;
+    TrayController tray(appIcon, &app);
 
     // API local para UI externa, CLI y pruebas. En --headless / --agent-daemon
     // se convierte en el único frontend y no se carga QML.
@@ -348,6 +350,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("App", &controller);
     engine.rootContext()->setContextProperty("Theme", &theme);
     engine.rootContext()->setContextProperty("Mermaid", &mermaid);
+    engine.rootContext()->setContextProperty("Tray", &tray);
     engine.rootContext()->setContextProperty("AppIconSource", appIconSource);
     engine.rootContext()->setContextProperty("TrayIconSource", trayIconSource);
     engine.rootContext()->setContextProperty("StartedWithWindows", startedWithWindows);

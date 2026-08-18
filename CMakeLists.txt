@@ -69,6 +69,7 @@ qt_standard_project_setup(REQUIRES 6.4)
 
 set(CORE_SOURCES
     src/AppController.cpp
+    src/TrayController.cpp
     src/ThemeProvider.cpp
     src/core/LlamaBinary.cpp
     src/core/BinaryRegistry.cpp
@@ -169,6 +170,7 @@ set(CORE_SOURCES
 
 set(HEADERS
     src/AppController.h
+    src/TrayController.h
     src/ThemeProvider.h
     src/core/LlamaBinary.h
     src/core/BinaryRegistry.h

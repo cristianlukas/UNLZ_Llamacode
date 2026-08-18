@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.platform as Platform
 import LlamaCode 1.0
 import "components/NavigationPolicy.js" as NavigationPolicy
 
@@ -1100,6 +1099,7 @@ ApplicationWindow {
         restoringWindowState = false
 
         // El escaneo pesado ya corrió en main.cpp bajo el splash → counts listos.
+        syncTray()
         if (App.needsSetup) setupPopup.open()
         maybeCreateInitialProfile()
         App.checkForUpdates()
@@ -1113,45 +1113,31 @@ ApplicationWindow {
         }
     }
 
-    // Ícono en la bandeja de notificación. Visible sólo con el toggle activo.
-    // Click izquierdo o doble click restaura; botón derecho da menú Abrir/Salir.
-    Platform.SystemTrayIcon {
-        id: trayIcon
-        visible: window.minimizeToTray || App.teachState === "recording" || App.teachState === "paused"
-        icon.source: TrayIconSource
-        tooltip: "UNLZ_Llamacode"
-        onActivated: function(reason) {
-            if (reason === Platform.SystemTrayIcon.Trigger
-                    || reason === Platform.SystemTrayIcon.DoubleClick)
-                window.showFromTray()
-        }
-        menu: Platform.Menu {
-            Platform.MenuItem {
-                text: (App.langV, App.l("tray.open"))
-                onTriggered: window.showFromTray()
-            }
-            Platform.MenuItem {
-                visible: App.teachState === "recording" || App.teachState === "paused"
-                text: App.teachState === "paused" ? "Continuar Teach" : "Pausar Teach"
-                onTriggered: App.pauseTeach(App.teachState !== "paused")
-            }
-            Platform.MenuItem {
-                visible: App.teachState === "recording" || App.teachState === "paused"
-                text: "Finalizar Teach"
-                onTriggered: App.finishTeach()
-            }
-            Platform.MenuItem {
-                visible: App.teachState === "recording" || App.teachState === "paused"
-                text: "Cancelar Teach"
-                onTriggered: App.cancelTeach()
-            }
-            Platform.MenuItem { separator: true }
-            Platform.MenuItem {
-                text: (App.langV, App.l("tray.quit"))
-                onTriggered: { window.forceQuit = true; Qt.quit() }
-            }
-        }
+    // El tray es nativo para que su menú siga siendo atendible aunque QML esté
+    // cargando una página pesada. Las acciones vuelven a este mismo objeto para
+    // conservar el flujo de restauración y Teach.
+    function syncTray() {
+        const teachActive = App.teachState === "recording" || App.teachState === "paused"
+        Tray.visible = window.minimizeToTray || teachActive
+        Tray.setTeachState(App.teachState)
+        Tray.setMenuTexts(App.l("tray.open"), "Pausar Teach", "Continuar Teach",
+                          "Finalizar Teach", "Cancelar Teach", App.l("tray.quit"))
     }
+
+    Connections {
+        target: Tray
+        function onOpenRequested() { window.showFromTray() }
+        function onQuitRequested() { window.forceQuit = true; Qt.quit() }
+        function onPauseTeachRequested(paused) { App.pauseTeach(paused) }
+        function onFinishTeachRequested() { App.finishTeach() }
+        function onCancelTeachRequested() { App.cancelTeach() }
+    }
+    Connections {
+        target: App
+        function onTeachChanged() { syncTray() }
+        function onLanguageChanged() { syncTray() }
+    }
+    onMinimizeToTrayChanged: syncTray()
 
     onXChanged: saveWindowState()
     onYChanged: saveWindowState()

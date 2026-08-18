@@ -282,7 +282,7 @@ AgentProfile AgentProfile::fromJson(const QJsonObject &o) {
     for (const auto &v : o["styleProfileIds"].toArray()) p.styleProfileIds.append(v.toString());
     p.injectStyleExamples = o["injectStyleExamples"].toBool(true);
     p.styleExampleLimit = qBound(0, o["styleExampleLimit"].toInt(2), 8);
-    p.styleContextLimit = qBound(500, o["styleContextLimit"].toInt(6000), 20000);
+    p.styleContextLimit = qBound(0, o["styleContextLimit"].toInt(6000), 20000);
     p.mcpEnabled = o["mcpEnabled"].toBool(true);   // legacy sin la clave = MCP on
     p.thinkingLeakGuard = o["thinkingLeakGuard"].toBool(false);
     p.progressCredits = qMax(2, o["progressCredits"].toInt(8));

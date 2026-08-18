@@ -26,6 +26,17 @@ Estas pausas son evidencia de trabajo síncrono en el hilo principal. Deben
 correlacionarse con la acción que el usuario estaba realizando antes de mover
 operaciones de disco o CPU a tareas asíncronas.
 
+Las cargas de historial, benchmarks y reportes del arranque se ejecutan en
+turnos separados del event loop. Esto no paraleliza todavía el parseo interno,
+pero evita encadenar varias lecturas grandes sin devolver el control a la GUI.
+
+## Bandeja de notificación
+
+El menú de la bandeja usa `QSystemTrayIcon` y `QMenu` nativos. QML conserva la
+sincronización de visibilidad, idioma y estado de Teach, pero la apertura del
+menú y sus acciones ya no dependen de instanciar páginas QML ni de los menús de
+`Qt.labs.platform`.
+
 ## Validación
 
 Después de cambios en QML o C++ de la interfaz:
