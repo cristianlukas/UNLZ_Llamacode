@@ -131,6 +131,39 @@ struct HarnessEscalationModule {
     static HarnessEscalationModule fromJson(const QJsonObject &o);
 };
 
+// Memoria inyectada en el system prompt del agente: hechos estructurados
+// (MemoryStore) + memoria de proyecto (.llamacode/memory.md o AGENTS.md).
+// Todo esto estaba hardcodeado: 12 hechos y 64 KB de archivo, sin forma de
+// apagarlo. En un perfil al limite de contexto es lo primero que uno querria
+// recortar, y en uno de investigacion lo primero que querria ampliar.
+struct HarnessMemoryModule {
+    bool structuredEnabled = true;     // hechos de MemoryStore
+    int  structuredFacts = 12;         // cuantos hechos vigentes recuperar
+    bool projectMemory = true;         // .llamacode/memory.md / AGENTS.md
+    int  projectMemoryMaxChars = 65536;
+    bool consolidateOnLeave = true;    // consolidar al dejar la sesion
+    bool set = false;
+
+    QJsonObject toJson() const;
+    static HarnessMemoryModule fromJson(const QJsonObject &o);
+};
+
+// Modo Chat (RawChatBackend): hasta ahora el spec no lo tocaba en absoluto, asi
+// que un perfil "minimal" seguia chateando con los defaults globales. No lleva
+// tools ni loop: sampling, razonamiento e instrucciones persistentes.
+struct HarnessChatModule {
+    bool thinking = false;
+    double temperature = -1.0;         // <0 = no enviar (default del server)
+    double topP = -1.0;
+    int topK = -1;
+    bool designerPersona = false;      // preamble de diagramas/mockups
+    QString systemExtra;               // instrucciones persistentes del perfil
+    bool set = false;
+
+    QJsonObject toJson() const;
+    static HarnessChatModule fromJson(const QJsonObject &o);
+};
+
 // Protocolo de wire + razonamiento.
 struct HarnessProtocolModule {
     QString toolProtocol = QStringLiteral("auto");  // auto|native|text
@@ -158,6 +191,8 @@ struct HarnessSpec {
     HarnessPermissionsModule permissions;
     HarnessEscalationModule escalation;
     HarnessProtocolModule protocol;
+    HarnessMemoryModule memory;
+    HarnessChatModule chat;
     // Overrides por fase: "plan" | "exec" | "verify" | "goalCheck" -> patch JSON
     // con la misma forma que el spec (solo los modulos que pisa). Se guardan sin
     // resolver para que forPhase() aplique el patch sobre el spec YA resuelto.

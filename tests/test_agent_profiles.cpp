@@ -14,6 +14,9 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QDir>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QSignalSpy>
 #include <algorithm>
@@ -39,6 +42,7 @@ private slots:
     void reviewTool_isCataloguedAndSchemaIsReadOnly();
     void mcpEnabled_roundTrips();
     void manager_crudAndPersistence();
+    void manager_collapsesExactDuplicateAgentProfiles();
     void manager_systemPresetsImmutable();
     void manager_recommendsAndClonesTaskProfile();
     void personaStyle_jsonAndPromptBudget();
@@ -531,6 +535,37 @@ void AgentProfilesTests::manager_crudAndPersistence()
         QVERIFY(pm2.removeAgentProfile(newId));
         QVERIFY(pm2.getAgentProfile(newId).isEmpty());
     }
+}
+
+void AgentProfilesTests::manager_collapsesExactDuplicateAgentProfiles()
+{
+    AgentProfile first;
+    first.id = QStringLiteral("duplicate-a");
+    first.name = QStringLiteral("Perfil repetido");
+    first.enabledTools = QStringList{QStringLiteral("read_file")};
+    first.directives = QStringList{QStringLiteral("discipline")};
+    AgentProfile second = first;
+    second.id = QStringLiteral("duplicate-b");
+
+    QJsonArray items;
+    items.append(first.toJson());
+    items.append(second.toJson());
+    QFile file(QDir(m_dir.path()).filePath(QStringLiteral("agent_profiles.json")));
+    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    file.write(QJsonDocument(items).toJson(QJsonDocument::Compact));
+    file.close();
+
+    {
+        ProfileManager pm;
+        QCOMPARE(pm.getAgentProfile(QStringLiteral("duplicate-a")).value("name").toString(),
+                 QStringLiteral("Perfil repetido"));
+        QVERIFY(pm.getAgentProfile(QStringLiteral("duplicate-b")).isEmpty());
+    }
+
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const QJsonArray persisted = QJsonDocument::fromJson(file.readAll()).array();
+    file.close();
+    QCOMPARE(persisted.size(), 1);
 }
 
 void AgentProfilesTests::manager_systemPresetsImmutable()

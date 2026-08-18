@@ -225,6 +225,54 @@ HarnessEscalationModule HarnessEscalationModule::fromJson(const QJsonObject &o)
     return m;
 }
 
+QJsonObject HarnessMemoryModule::toJson() const
+{
+    QJsonObject o;
+    o[QStringLiteral("structuredEnabled")] = structuredEnabled;
+    o[QStringLiteral("structuredFacts")] = structuredFacts;
+    o[QStringLiteral("projectMemory")] = projectMemory;
+    o[QStringLiteral("projectMemoryMaxChars")] = projectMemoryMaxChars;
+    o[QStringLiteral("consolidateOnLeave")] = consolidateOnLeave;
+    return o;
+}
+
+HarnessMemoryModule HarnessMemoryModule::fromJson(const QJsonObject &o)
+{
+    HarnessMemoryModule m;
+    m.set = true;
+    m.structuredEnabled = o.value(QStringLiteral("structuredEnabled")).toBool(true);
+    m.structuredFacts = boundedInt(o, "structuredFacts", 12, 0, 200);
+    m.projectMemory = o.value(QStringLiteral("projectMemory")).toBool(true);
+    m.projectMemoryMaxChars = boundedInt(o, "projectMemoryMaxChars", 65536, 0, 1048576);
+    m.consolidateOnLeave = o.value(QStringLiteral("consolidateOnLeave")).toBool(true);
+    return m;
+}
+
+QJsonObject HarnessChatModule::toJson() const
+{
+    QJsonObject o;
+    o[QStringLiteral("thinking")] = thinking;
+    o[QStringLiteral("temperature")] = temperature;
+    o[QStringLiteral("topP")] = topP;
+    o[QStringLiteral("topK")] = topK;
+    o[QStringLiteral("designerPersona")] = designerPersona;
+    o[QStringLiteral("systemExtra")] = systemExtra;
+    return o;
+}
+
+HarnessChatModule HarnessChatModule::fromJson(const QJsonObject &o)
+{
+    HarnessChatModule m;
+    m.set = true;
+    m.thinking = o.value(QStringLiteral("thinking")).toBool(false);
+    m.temperature = o.value(QStringLiteral("temperature")).toDouble(-1.0);
+    m.topP = o.value(QStringLiteral("topP")).toDouble(-1.0);
+    m.topK = o.value(QStringLiteral("topK")).toInt(-1);
+    m.designerPersona = o.value(QStringLiteral("designerPersona")).toBool(false);
+    m.systemExtra = o.value(QStringLiteral("systemExtra")).toString();
+    return m;
+}
+
 QJsonObject HarnessProtocolModule::toJson() const
 {
     QJsonObject o;
@@ -259,7 +307,8 @@ HarnessProtocolModule HarnessProtocolModule::fromJson(const QJsonObject &o)
 bool HarnessSpec::isEmpty() const
 {
     return extends.isEmpty() && !tools.set && !prompt.set && !loop.set && !context.set
-           && !permissions.set && !escalation.set && !protocol.set && phases.isEmpty();
+           && !permissions.set && !escalation.set && !protocol.set && !memory.set
+           && !chat.set && phases.isEmpty();
 }
 
 QJsonObject HarnessSpec::toJson() const
@@ -273,6 +322,8 @@ QJsonObject HarnessSpec::toJson() const
     if (permissions.set) o[QStringLiteral("permissions")] = permissions.toJson();
     if (escalation.set) o[QStringLiteral("escalation")] = escalation.toJson();
     if (protocol.set) o[QStringLiteral("protocol")] = protocol.toJson();
+    if (memory.set) o[QStringLiteral("memory")] = memory.toJson();
+    if (chat.set) o[QStringLiteral("chat")] = chat.toJson();
     if (!phases.isEmpty()) {
         QJsonObject ph;
         for (auto it = phases.cbegin(); it != phases.cend(); ++it)
@@ -303,6 +354,10 @@ HarnessSpec HarnessSpec::fromJson(const QJsonObject &o)
     if (o.value(QStringLiteral("protocol")).isObject())
         s.protocol = HarnessProtocolModule::fromJson(
             o.value(QStringLiteral("protocol")).toObject());
+    if (o.value(QStringLiteral("memory")).isObject())
+        s.memory = HarnessMemoryModule::fromJson(o.value(QStringLiteral("memory")).toObject());
+    if (o.value(QStringLiteral("chat")).isObject())
+        s.chat = HarnessChatModule::fromJson(o.value(QStringLiteral("chat")).toObject());
     const QJsonObject ph = o.value(QStringLiteral("phases")).toObject();
     for (auto it = ph.constBegin(); it != ph.constEnd(); ++it)
         if (it.value().isObject()) s.phases.insert(it.key(), it.value().toObject());
@@ -322,6 +377,8 @@ HarnessSpec HarnessSpec::resolve(const HarnessSpec &base, const HarnessSpec &ove
     if (override.permissions.set) out.permissions = override.permissions;
     if (override.escalation.set) out.escalation = override.escalation;
     if (override.protocol.set) out.protocol = override.protocol;
+    if (override.memory.set) out.memory = override.memory;
+    if (override.chat.set) out.chat = override.chat;
     for (auto it = override.phases.cbegin(); it != override.phases.cend(); ++it)
         out.phases.insert(it.key(), it.value());
     return out;
@@ -415,6 +472,23 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
             protocol.reasoningEffort);
     addDiff(out, "protocol", "reasoningBudget", base.protocol.reasoningBudget,
             protocol.reasoningBudget);
+
+    addDiff(out, "memory", "structuredEnabled", base.memory.structuredEnabled,
+            memory.structuredEnabled);
+    addDiff(out, "memory", "structuredFacts", base.memory.structuredFacts,
+            memory.structuredFacts);
+    addDiff(out, "memory", "projectMemory", base.memory.projectMemory, memory.projectMemory);
+    addDiff(out, "memory", "projectMemoryMaxChars", base.memory.projectMemoryMaxChars,
+            memory.projectMemoryMaxChars);
+    addDiff(out, "memory", "consolidateOnLeave", base.memory.consolidateOnLeave,
+            memory.consolidateOnLeave);
+
+    addDiff(out, "chat", "thinking", base.chat.thinking, chat.thinking);
+    addDiff(out, "chat", "temperature", base.chat.temperature, chat.temperature);
+    addDiff(out, "chat", "topP", base.chat.topP, chat.topP);
+    addDiff(out, "chat", "topK", base.chat.topK, chat.topK);
+    addDiff(out, "chat", "designerPersona", base.chat.designerPersona, chat.designerPersona);
+    addDiff(out, "chat", "systemExtra", base.chat.systemExtra, chat.systemExtra);
     return out;
 }
 

@@ -1591,6 +1591,7 @@ QString ProfileManager::duplicateLaunchProfile(const QString &id)
 void ProfileManager::load()
 {
     bool loadFailed = false;
+    bool agentProfilesDeduplicated = false;
     auto loadList = [&loadFailed](const QString &path, auto &model, auto fromJsonFn) {
         QFile f(path);
         if (!f.exists()) return;                 // first run / never saved — fine
@@ -1618,6 +1619,27 @@ void ProfileManager::load()
     loadList(storagePath("agent_profiles"), m_agentProfiles, &AgentProfile::fromJson);
     loadList(storagePath("persona_styles"), m_personaStyles, &PersonaStyleProfile::fromJson);
 
+    // Una ejecución de pruebas o una importación repetida puede dejar varias
+    // copias exactas del mismo perfil con IDs nuevos. Conservamos la primera:
+    // perfiles con el mismo nombre pero distinta configuración siguen siendo
+    // válidos y no deben ocultarse entre sí.
+    {
+        QList<AgentProfile> unique;
+        QSet<QByteArray> fingerprints;
+        for (const AgentProfile &profile : m_agentProfiles.m_items) {
+            QJsonObject comparable = profile.toJson();
+            comparable.remove(QStringLiteral("id"));
+            const QByteArray fingerprint = QJsonDocument(comparable).toJson(QJsonDocument::Compact);
+            if (fingerprints.contains(fingerprint)) continue;
+            fingerprints.insert(fingerprint);
+            unique.append(profile);
+        }
+        if (unique.size() != m_agentProfiles.m_items.size()) {
+            m_agentProfiles.setItems(unique);
+            agentProfilesDeduplicated = true;
+        }
+    }
+
     // Importa la insignia BEST para perfiles curados que ya existían antes de
     // introducir el campo. No modifica nombres ni perfiles que no coincidan.
     for (LaunchProfile &profile : m_launches.m_items)
@@ -1630,6 +1652,8 @@ void ProfileManager::load()
     m_persistAllowed = !loadFailed;
     if (loadFailed)
         qWarning() << "[ProfileManager] load incomplete — saving DISABLED to protect existing data";
+    else if (agentProfilesDeduplicated)
+        save();
 }
 
 void ProfileManager::save() const

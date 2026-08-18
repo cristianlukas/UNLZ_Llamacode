@@ -64,10 +64,17 @@ public:
     // (bloques ```mermaid / ```svg) que la UI rinde inline.
     void setPersonaDesigner(bool enabled) { m_personaDesigner = enabled; }
 
+
     // System prompt de la persona Diseño (público para test).
     static QString designerSystemPrompt();
     // Mensajes de sistema a prepender al request, según flags. Pura/testeable.
-    static QJsonArray buildSystemPreamble(bool thinkingEnabled, bool designerPersona);
+    // `systemExtra`: instrucciones persistentes del perfil para el modo Chat
+    // (modulo `chat` del HarnessSpec). Van PRIMERAS: son las del usuario, no un
+    // detalle de formato. Pura y estatica -> unit-testeable.
+    static QJsonArray buildSystemPreamble(bool thinkingEnabled, bool designerPersona,
+                                          const QString &systemExtra = QString());
+    void setSystemExtra(const QString &extra) { m_systemExtra = extra; }
+    QString systemExtra() const { return m_systemExtra; }
     // Salida estructurada: grammar GBNF o JSON schema (string JSON). Vacío = libre.
     void setStructuredOutput(const QString &grammar, const QString &jsonSchema) {
         m_grammar = grammar; m_jsonSchema = jsonSchema;
@@ -97,6 +104,7 @@ private:
     bool m_stopping = false;
     bool m_thinkingEnabled = false;
     bool m_personaDesigner = false;
+    QString m_systemExtra;              // instrucciones del perfil (modulo `chat`)
     QString m_grammar;       // GBNF (passthrough a llama-server)
     QString m_jsonSchema;    // JSON schema (string) → response_format
 

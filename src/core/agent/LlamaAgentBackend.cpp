@@ -952,6 +952,7 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
     // los guarda en la memoria estructurada (source="consolidation"). Captura por la
     // ausencia de save/link en vivo del modelo chico. Async, no bloquea la UI.
     if (m_ephemeralSessions) return;                 // sesiones efímeras: no persistir
+    if (!m_memoryPolicy.consolidateOnLeave) return;  // apagado por el perfil (modulo memory)
     if (m_consolidateReply) return;                  // ya hay una corriendo
     if (m_cwd.isEmpty() || m_sessionId.isEmpty()) return;
 
@@ -1543,23 +1544,29 @@ QString LlamaAgentBackend::buildSystemPrompt() const
     // perfil la elige explícitamente (no entra en el default "todas on").
     if (m_directives.contains(QStringLiteral("antiBias"))) base += antiBiasSection();
 
-    // Memoria estructurada: inyectar un conjunto acotado de hechos vigentes.
-    const QString structuredMem = MemoryStore::recall(m_cwd, QString(), QString(), 12);
-    if (!structuredMem.startsWith(QLatin1Char('[')))
-        base += QStringLiteral("\n\n--- Memoria estructurada relevante ---\n") + structuredMem;
+    // Memoria estructurada: hechos vigentes de MemoryStore. Cuántos —y si van—
+    // lo decide el módulo `memory` del spec; antes eran 12 fijos y sin apagar.
+    if (m_memoryPolicy.structuredEnabled && m_memoryPolicy.structuredFacts > 0) {
+        const QString structuredMem = MemoryStore::recall(m_cwd, QString(), QString(),
+                                                          m_memoryPolicy.structuredFacts);
+        if (!structuredMem.startsWith(QLatin1Char('[')))
+            base += QStringLiteral("\n\n--- Memoria estructurada relevante ---\n") + structuredMem;
+    }
 
     // Memoria legacy/instrucciones: .llamacode/memory.md o AGENTS.md.
-    QString mem;
-    for (const QString &cand : {memoryFilePath(m_cwd),
-                                QDir::cleanPath(m_cwd + QStringLiteral("/AGENTS.md"))}) {
-        QFile f(cand);
-        if (f.open(QIODevice::ReadOnly)) {
-            mem = QString::fromUtf8(f.read(64 * 1024)).trimmed();
-            if (!mem.isEmpty()) break;
+    if (m_memoryPolicy.projectMemory && m_memoryPolicy.projectMemoryMaxChars > 0) {
+        QString mem;
+        for (const QString &cand : {memoryFilePath(m_cwd),
+                                    QDir::cleanPath(m_cwd + QStringLiteral("/AGENTS.md"))}) {
+            QFile f(cand);
+            if (f.open(QIODevice::ReadOnly)) {
+                mem = QString::fromUtf8(f.read(m_memoryPolicy.projectMemoryMaxChars)).trimmed();
+                if (!mem.isEmpty()) break;
+            }
         }
+        if (!mem.isEmpty())
+            base += QStringLiteral("\n\n--- Memoria del proyecto ---\n") + mem;
     }
-    if (!mem.isEmpty())
-        base += QStringLiteral("\n\n--- Memoria del proyecto ---\n") + mem;
     if (!m_systemExtra.trimmed().isEmpty())
         base += QStringLiteral("\n\n--- Instrucciones del agente ---\n") + m_systemExtra.trimmed();
     if (!m_thinkingEnabled)
@@ -1795,6 +1802,24 @@ void LlamaAgentBackend::setLoopPolicy(const HarnessLoopModule &loop)
     // aplicaría a las sesiones futuras).
     for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
         if (rt) rt->setLoopPolicy(loop);
+}
+
+void LlamaAgentBackend::setMemoryPolicy(const HarnessMemoryModule &memory)
+{
+    m_memoryPolicy = memory;
+    m_memoryPolicy.set = true;
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setMemoryPolicy(memory);
+    // Con sesion viva el system prompt tiene que rehacerse: cambiar cuantos
+    // hechos se inyectan y que recien aplique en la proxima sesion seria una
+    // perilla que miente.
+    if (!m_apiMessages.isEmpty()) {
+        QJsonObject sys = m_apiMessages.first().toObject();
+        if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
+            sys[QStringLiteral("content")] = buildSystemPrompt();
+            replaceSystemMessage(sys);
+        }
+    }
 }
 
 void LlamaAgentBackend::setContextPolicy(const HarnessContextModule &context)

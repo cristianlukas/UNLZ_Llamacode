@@ -85,6 +85,10 @@ public:
     void setLoopPolicy(const HarnessLoopModule &loop);
     void setContextPolicy(const HarnessContextModule &context);
     void setEscalationPolicy(const HarnessEscalationModule &escalation);
+    // Memoria inyectada en el system prompt (hechos + memoria de proyecto) y
+    // gate de la consolidacion automatica. Ver modulo `memory` del HarnessSpec.
+    void setMemoryPolicy(const HarnessMemoryModule &memory);
+    HarnessMemoryModule memoryPolicyForTest() const { return m_memoryPolicy; }
     HarnessEscalationModule escalationPolicyForTest() const { return m_escalationPolicy; }
     HarnessLoopModule loopPolicyForTest() const { return m_loopPolicy; }
     HarnessContextModule contextPolicyForTest() const { return m_contextPolicy; }
@@ -638,6 +642,7 @@ private:
     HarnessLoopModule m_loopPolicy;
     HarnessContextModule m_contextPolicy;
     HarnessEscalationModule m_escalationPolicy;
+    HarnessMemoryModule m_memoryPolicy;
     QVariantList m_customDirectives;   // {slug, body, when} del perfil
     int m_promptMaxChars = 0;          // 0 = sin tope (default histórico)
     int m_progressEvents = 0;

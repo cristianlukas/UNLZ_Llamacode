@@ -33,9 +33,16 @@ QString RawChatBackend::designerSystemPrompt()
         "Si el pedido es puramente textual (código, explicación), respondé normal.");
 }
 
-QJsonArray RawChatBackend::buildSystemPreamble(bool thinkingEnabled, bool designerPersona)
+QJsonArray RawChatBackend::buildSystemPreamble(bool thinkingEnabled, bool designerPersona,
+                                               const QString &systemExtra)
 {
     QJsonArray msgs;
+    if (!systemExtra.trimmed().isEmpty()) {
+        msgs.append(QJsonObject{
+            {QStringLiteral("role"), QStringLiteral("system")},
+            {QStringLiteral("content"), systemExtra.trimmed()}
+        });
+    }
     if (designerPersona) {
         msgs.append(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("system")},
@@ -471,7 +478,7 @@ void RawChatBackend::sendMessage(const QString &text)
     emit sessionsChanged();
     emit messagesChanged();
 
-    QJsonArray reqMsgs = buildSystemPreamble(m_thinkingEnabled, m_personaDesigner);
+    QJsonArray reqMsgs = buildSystemPreamble(m_thinkingEnabled, m_personaDesigner, m_systemExtra);
     int lastUserIdx = -1;
     for (int i = 0; i < m_messages.size(); ++i) {
         if (m_messages[i].toMap().value(QStringLiteral("role")).toString() == QLatin1String("user"))
