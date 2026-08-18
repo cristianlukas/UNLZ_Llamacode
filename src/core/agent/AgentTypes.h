@@ -22,6 +22,12 @@ struct AgentContext {
     int     parallelSlots = 1;
     double  vramTotalMb = 0.0;
     double  vramFreeMb = 0.0;
+    // Contrato del harness. Vacío/legacy conserva exactamente el backend y el
+    // almacenamiento históricos; los perfiles nuevos se aíslan por engine.
+    QString harnessEngineId = QStringLiteral("legacy");
+    int harnessEngineVersion = 1;
+    QString harnessProfileId;
+    QString harnessSpecHash;
 };
 
 // Mensaje de chat del agente (rol + contenido + estado).
@@ -46,13 +52,20 @@ struct AgentSession {
     QString parentSessionId;
     int     forkMessageIndex = -1;
     int     depth = 0;
+    QString harnessEngineId = QStringLiteral("legacy");
+    int     harnessEngineVersion = 1;
+    QString harnessProfileId;
+    QString harnessSpecHash;
 
     QVariantMap toMap() const {
         return {
             {"id", id}, {"title", title}, {"created", created},
             {"projectId", projectId}, {"projectName", projectName},
             {"projectDir", projectDir}, {"parentSessionId", parentSessionId},
-            {"forkMessageIndex", forkMessageIndex}, {"depth", depth}
+            {"forkMessageIndex", forkMessageIndex}, {"depth", depth},
+            {"harnessEngineId", harnessEngineId},
+            {"harnessEngineVersion", harnessEngineVersion},
+            {"harnessProfileId", harnessProfileId}, {"harnessSpecHash", harnessSpecHash}
         };
     }
 };

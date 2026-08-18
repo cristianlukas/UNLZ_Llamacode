@@ -1,4 +1,5 @@
 #include "RawChatBackend.h"
+#include "ReasoningWire.h"
 #include "core/DocumentExtractor.h"
 #include <QDateTime>
 #include <QDir>
@@ -552,9 +553,9 @@ void RawChatBackend::sendMessage(const QString &text)
     //  - reasoning_budget: per-request, NO depende del chat template. 0 = sin thinking, -1 = ilimitado.
     //  - chat_template_kwargs.enable_thinking: switch oficial Qwen3 (requiere --jinja + template que lo soporte).
     payload.insert(QStringLiteral("reasoning_budget"), m_thinkingEnabled ? -1 : 0);
-    QJsonObject tmplKw;
-    tmplKw.insert(QStringLiteral("enable_thinking"), m_thinkingEnabled);
-    payload.insert(QStringLiteral("chat_template_kwargs"), tmplKw);
+    payload.insert(QStringLiteral("chat_template_kwargs"),
+                   ReasoningWire::templateKwargs(m_thinkingEnabled, false,
+                                                 m_reasoningEffort));
     const QVariantMap sample = sampling();
     const double temperature = sample.value(QStringLiteral("temperature"), -1.0).toDouble();
     const double topP = sample.value(QStringLiteral("topP"), -1.0).toDouble();

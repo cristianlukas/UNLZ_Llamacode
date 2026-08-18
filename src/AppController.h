@@ -8,6 +8,7 @@
 #include "core/profiles/ProfileManager.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/profiles/ProfileHealthChecker.h"
+#include "core/profiles/HarnessEngine.h"
 #include "core/tasks/TaskStore.h"
 #include "core/tasks/AutomationStore.h"
 #include "core/tasks/RunHistoryStore.h"
@@ -185,6 +186,7 @@ class AppController : public QObject
     Q_PROPERTY(double agentTemperature READ agentTemperature WRITE setAgentTemperature NOTIFY agentTuningChanged)
     Q_PROPERTY(QString agentPermRules READ agentPermRules WRITE setAgentPermRules NOTIFY agentTuningChanged)
     Q_PROPERTY(QString activeAgentAdapter READ activeAgentAdapter NOTIFY agentRunningChanged)
+    Q_PROPERTY(QString activeHarnessEngineId READ activeHarnessEngineId NOTIFY agentRunningChanged)
     Q_PROPERTY(bool agentInTerminal   READ agentInTerminal   NOTIFY agentRunningChanged)
     Q_PROPERTY(bool installingHarness READ installingHarness NOTIFY harnessStatusChanged)
     Q_PROPERTY(QString harnessInstallStatus READ harnessInstallStatus NOTIFY harnessStatusChanged)
@@ -402,6 +404,7 @@ public:
     void setAgentTeacherModel(const QString &model);
     void setAgentTeacherKey(const QString &key);
     QString activeAgentAdapter() const { return m_activeAgentAdapter; }
+    QString activeHarnessEngineId() const { return m_activeHarnessEngineId; }
     bool agentInTerminal() const { return m_agentInTerminal; }
     bool installingHarness() const { return m_installingHarness; }
     QString harnessInstallStatus() const { return m_harnessInstallStatus; }
@@ -808,6 +811,7 @@ public:
     // activo, escritorio, cuentas de correo, browser). ProfileManager solo puede
     // detectar git; sin esto el preflight de dependencias avisaba de menos.
     Q_INVOKABLE QVariantMap harnessSpecSummary(const QString &agentProfileId) const;
+    Q_INVOKABLE QVariantList harnessEngineCatalog() const;
     // Servers MCP habilitados (global + proyecto). Alimenta el preflight.
     int enabledMcpServerCount() const;
     // Directivas propias del harness (.md): alta/edición y baja. Pasan por
@@ -1626,6 +1630,7 @@ private:
     bool      m_toolTemplateSupports = false;   // y ese template menciona tools
     void recomputeToolSupport();
     QString   m_activeAgentAdapter;
+    QString   m_activeHarnessEngineId = QStringLiteral("legacy");
     QString   m_agentCwdOverride;   // directory for next/current agent start
     QString   m_pendingAgentLaunchId; // used when restarting for project change
     // pi harness: modo print por-mensaje (sin proceso persistente)
@@ -1680,6 +1685,7 @@ private:
     bool          m_chatGenerating = false;
     bool          m_chatThinkingSupported = false;
     bool          m_chatThinkingEnabled = false;
+    QString       m_chatReasoningEffort;
     bool          m_chatPersonaDesigner = false;
     double        m_chatTemperature = -1.0;
     double        m_chatTopP = -1.0;
@@ -1824,7 +1830,8 @@ private:
     void ensurePiConfig(const QString &openaiBaseUrl);
     void sendPiMessage(const QString &text);
     // Crea/asegura el backend para el adapter dado y conecta señales→QML.
-    IAgentBackend *ensureAgentBackend(const QString &adapter);
+    IAgentBackend *ensureAgentBackend(const QString &adapter,
+                                      const QString &harnessEngineId = QStringLiteral("legacy"));
     IAgentBackend *ensureChatBackend();
     // Helpers de config opencode
     QString ocGlobalConfigDir() const;

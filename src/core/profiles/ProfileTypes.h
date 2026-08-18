@@ -264,7 +264,7 @@ struct LaunchProfile {
     // Vacío = usar el preset por defecto (AgentProfile::defaultPresetId()).
     QString agentProfileId;
     // Política de razonamiento por request. Vacío/-1 = comportamiento heredado.
-    QString reasoningEffort;       // "" | low | high | max
+    QString reasoningEffort;       // "" | low | medium | high | xhigh | max
     int reasoningBudget = -1;      // -1 = ilimitado/heredado; 0 = sin thinking
     QStringList extraArgs;
     QMap<QString, QString> envOverrides;

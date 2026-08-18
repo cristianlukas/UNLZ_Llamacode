@@ -92,6 +92,7 @@ set(CORE_SOURCES
     src/core/integrations/OpenCodeIntegration.cpp
     src/core/SecretStore.cpp
     src/core/profiles/HarnessSpec.cpp
+    src/core/profiles/HarnessEngine.cpp
     src/core/profiles/ProfileTypes.cpp
     src/core/profiles/ProfileManager.cpp
     src/core/profiles/EffectiveProfileBuilder.cpp
@@ -103,6 +104,10 @@ set(CORE_SOURCES
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
     src/core/agent/AgentEventLog.cpp
+    src/core/agent/HarnessEventLog.cpp
+    src/core/agent/HarnessCapabilitySnapshot.cpp
+    src/core/agent/HarnessEffectLedger.cpp
+    src/core/agent/HarnessWorkerProtocol.cpp
     src/core/agent/AgentRoomStore.cpp
     src/core/agent/ToolExecutionSafety.cpp
     src/core/agent/MemoryStore.cpp
@@ -114,6 +119,7 @@ set(CORE_SOURCES
     src/core/agent/HybridPlanning.cpp
     src/core/agent/StructuredSourceView.cpp
     src/core/agent/ProjectBrain.cpp
+    src/core/agent/ContextIndex.cpp
     src/core/agent/ContextPreflight.cpp
     src/core/agent/MasterCli.cpp
     src/core/agent/BrowserTeach.cpp
@@ -200,6 +206,7 @@ set(HEADERS
     src/core/agent/OpencodeBackend.h
     src/core/agent/RawChatBackend.h
     src/core/agent/LlamaAgentBackend.h
+    src/core/agent/ReasoningWire.h
     src/core/agent/McpClient.h
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
@@ -214,6 +221,7 @@ set(HEADERS
     src/core/agent/HybridPlanning.h
     src/core/agent/StructuredSourceView.h
     src/core/agent/ProjectBrain.h
+    src/core/agent/ContextIndex.h
     src/core/agent/ContextPreflight.h
     src/core/agent/BrowserTeach.h
     src/core/agent/PortableSkillStore.h
@@ -563,6 +571,11 @@ if (BUILD_TESTS)
     add_lc_test(test_agent_profiles     tests/test_agent_profiles.cpp)
     add_lc_test(test_harness_spec       tests/test_harness_spec.cpp)
     add_lc_test(test_harness_modules    tests/test_harness_modules.cpp)
+    add_lc_test(test_harness_engine     tests/test_harness_engine.cpp)
+    add_lc_test(test_harness_event_log  tests/test_harness_event_log.cpp)
+    add_lc_test(test_harness_capabilities tests/test_harness_capabilities.cpp)
+    add_lc_test(test_harness_effects    tests/test_harness_effects.cpp)
+    add_lc_test(test_harness_worker_protocol tests/test_harness_worker_protocol.cpp)
     add_lc_test(test_agent_definitions  tests/test_agent_definitions.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
     add_lc_test(test_agent_efficiency    tests/test_agent_efficiency.cpp)
@@ -579,6 +592,7 @@ if (BUILD_TESTS)
     add_lc_test(test_datalab             tests/test_datalab.cpp tests/test_datalab.h)
     add_lc_test(test_memory_graph       tests/test_memory_graph.cpp)
     add_lc_test(test_code_graph         tests/test_code_graph.cpp)
+    add_lc_test(test_context_index      tests/test_context_index.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
     add_lc_test(test_hardware_diagnostics tests/test_hardware_diagnostics.cpp)
     add_lc_test(test_eval               tests/test_eval.cpp)

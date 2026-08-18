@@ -244,18 +244,18 @@ void AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
 void AgentProfilesTests::systemPresets_shape()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    QCOMPARE(ps.size(), 7);
+    QCOMPARE(ps.size(), 8);
 
-    // Orden: la escalera histórica primero (Chat liviano → Básico → Intermedio →
-    // Avanzado → Máximo) y después los presets del harness modular, que NO son un
-    // escalón más de la escalera sino perfiles de propósito (local-first, RPA).
+    // Orden: la escalera histórica primero, luego la variante comparable del
+    // harness Next y finalmente los perfiles de propósito.
     QCOMPARE(ps[0].id, QStringLiteral("agent-chat"));
     QCOMPARE(ps[1].id, QStringLiteral("agent-basico"));
     QCOMPARE(ps[2].id, QStringLiteral("agent-intermedio"));
     QCOMPARE(ps[3].id, QStringLiteral("agent-avanzado"));
     QCOMPARE(ps[4].id, QStringLiteral("agent-maximo"));
-    QCOMPARE(ps[5].id, QStringLiteral("agent-minimal"));
-    QCOMPARE(ps[6].id, QStringLiteral("agent-rpa"));
+    QCOMPARE(ps[5].id, QStringLiteral("agent-intermedio-next"));
+    QCOMPARE(ps[6].id, QStringLiteral("agent-minimal"));
+    QCOMPARE(ps[7].id, QStringLiteral("agent-rpa"));
     QCOMPARE(AgentProfile::defaultPresetId(), QStringLiteral("agent-intermedio"));
 
     for (const AgentProfile &p : ps) QVERIFY(p.system);
@@ -269,6 +269,14 @@ void AgentProfilesTests::systemPresets_shape()
     const AgentProfile inter  = byId(QStringLiteral("agent-intermedio"));
     const AgentProfile avanz  = byId(QStringLiteral("agent-avanzado"));
     const AgentProfile maximo = byId(QStringLiteral("agent-maximo"));
+    const AgentProfile next   = byId(QStringLiteral("agent-intermedio-next"));
+
+    QVERIFY(next.hasSpec);
+    QCOMPARE(next.spec.runtime.engine, QStringLiteral("next"));
+    QCOMPARE(next.spec.runtime.version, 2);
+    QCOMPARE(next.spec.runtime.fallbackEngine, QStringLiteral("legacy"));
+    QVERIFY(next.spec.runtime.experimental);
+    QCOMPARE(next.enabledTools, inter.enabledTools);
 
     // Chat liviano: set mínimo, SIN directivas y SIN MCP (presupuesto chico).
     // agent-minimal también apaga MCP por la misma razón; el resto lo trae.

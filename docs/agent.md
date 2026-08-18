@@ -8,6 +8,11 @@ Cómo funciona el agente de LlamaCode: arquitectura, ciclo de vida, loop ReAct,
 tools (nativas + MCP), aprobación human-in-the-loop, diffs/revert, memoria/contexto,
 robustez y persistencia. Complementa `plan_harness.md` (estado/etapas).
 
+Compatibilidad: el comportamiento histórico se identifica como engine legacy.
+El perfil agent-intermedio-next usa el mismo loop durante la etapa experimental,
+pero recrea el backend y aísla sesiones, eventos y efectos bajo
+agent_harness_next. Cambiar de perfil permite volver a legacy sin migración.
+
 ---
 
 ## 1. Arquitectura
@@ -92,7 +97,10 @@ sendMessage
   estrategia compatible con el binario/modelo: `--reasoning on/off` cuando existe,
   `--reasoning-budget` como fallback, o `--chat-template-kwargs.enable_thinking`
   para templates Qwen/QwQ antiguos. El payload mantiene hints per-request
-  (`reasoning_budget`, `chat_template_kwargs`) sólo como compatibilidad.
+  (`reasoning_budget`, `chat_template_kwargs`) sólo como compatibilidad. El
+  esfuerzo se reenvía como `chat_template_kwargs.reasoning_effort` y acepta
+  `low`, `medium`, `high`, `xhigh` y el alias histórico `max`; los valores
+  desconocidos se omiten. El warmup usa los mismos kwargs que el turno real.
 - El `reasoning_content` del stream se acumula aparte y se muestra envuelto en
   `<think>…</think>` en el bubble.
 - **Al historial de API NO va el `<think>`**: `stripThinkForContext()` lo quita antes de

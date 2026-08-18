@@ -12,6 +12,7 @@
 #include "ToolExecutionSafety.h"
 #include "StructuredSourceView.h" // vista compacta segura y proyectable
 #include "ProjectBrain.h"
+#include "ContextIndex.h"
 #include "HotspotAnalyzer.h"     // tool code_hotspots (archivos riesgosos)
 #include "core/DocumentExtractor.h" // hybrid_search include_docs: pdf/office al índice
 #include "WebFetchProvider.h"
@@ -1371,8 +1372,14 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
         result = runNative(name, args, cwd, out, &ok);
     }
 
-    if (ok && out.value(QStringLiteral("isWrite")).toBool())
-        m_projectBrainDirtyPaths.insert(out.value(QStringLiteral("absPath")).toString());
+    if (ok && out.value(QStringLiteral("isWrite")).toBool()) {
+        const QString absPath = out.value(QStringLiteral("absPath")).toString();
+        m_projectBrainDirtyPaths.insert(absPath);
+        if (!absPath.isEmpty()) {
+            const QString rel = QDir::fromNativeSeparators(QDir(cwd).relativeFilePath(absPath));
+            ContextIndex::refresh(cwd, QStringList{rel});
+        }
+    }
 
     out[QStringLiteral("result")] = result;
     out[QStringLiteral("ok")] = ok;
@@ -1863,6 +1870,41 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (ok) *ok = !brain.contains(QStringLiteral("error"));
         return QString::fromUtf8(QJsonDocument::fromVariant(brain).toJson(QJsonDocument::Compact));
     }
+    if (name == QLatin1String("context_status")) {
+        const QVariantMap state = ContextIndex::status(cwd);
+        for (auto it = state.cbegin(); it != state.cend(); ++it) out[it.key()] = it.value();
+        if (ok) *ok = state.value(QStringLiteral("ok")).toBool();
+        return QString::fromUtf8(QJsonDocument::fromVariant(state).toJson(QJsonDocument::Compact));
+    }
+    if (name == QLatin1String("context_scout")) {
+        const QString query = args.value(QStringLiteral("query")).toString().trimmed();
+        const int budget = qBound(64, args.value(QStringLiteral("token_budget")).toInt(700), 16000);
+        const int k = qBound(1, args.value(QStringLiteral("k")).toInt(8), 15);
+        const QString relPath = normalizeToolPath(args.value(QStringLiteral("path")).toString());
+        const QString scope = relPath.isEmpty() ? cwd : resolve(relPath);
+        if (!inProject(scope)) return outsideMsg(scope);
+        const QVariantMap scout = ContextIndex::scout(cwd, query, budget, k,
+                                                       args.value(QStringLiteral("expand_graph")).toBool(true),
+                                                       relPath);
+        out[QStringLiteral("receipt")] = scout.value(QStringLiteral("receipt"));
+        out[QStringLiteral("neighbors")] = scout.value(QStringLiteral("neighbors"));
+        out[QStringLiteral("index")] = scout.value(QStringLiteral("index"));
+        if (ok) *ok = scout.value(QStringLiteral("ok")).toBool();
+        return ContextIndex::formatScout(scout);
+    }
+    if (name == QLatin1String("context_fetch")) {
+        QVariantMap meta;
+        const QString text = ContextIndex::fetch(cwd,
+            args.value(QStringLiteral("handle")).toString(), &meta);
+        const bool success = !text.startsWith(QStringLiteral("[context_fetch:"));
+        for (auto it = meta.cbegin(); it != meta.cend(); ++it) out[it.key()] = it.value();
+        if (ok) *ok = success;
+        return success ? QStringLiteral("[context_fetch %1:%2-%3]\n%4")
+            .arg(meta.value(QStringLiteral("path")).toString())
+            .arg(meta.value(QStringLiteral("startLine")).toInt())
+            .arg(meta.value(QStringLiteral("endLine")).toInt())
+            .arg(text) : text;
+    }
     if (name == QLatin1String("list_dir")) {
         const QString abs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(abs)) return outsideMsg(abs);
@@ -2277,6 +2319,22 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const bool repoSlice = name == QLatin1String("repo_slice");
         const QString query = args.value(QStringLiteral("query")).toString().trimmed();
         if (query.isEmpty()) return QStringLiteral("[query vacía]");
+        if (args.value(QStringLiteral("mode")).toString().trimmed().toLower()
+                == QLatin1String("scout")) {
+            const int budget = qBound(64, args.value(QStringLiteral("token_budget")).toInt(700), 16000);
+            const int scoutK = qBound(1, args.value(QStringLiteral("k")).toInt(8), 15);
+            const QString relPath = normalizeToolPath(args.value(QStringLiteral("path")).toString());
+            const QString scope = relPath.isEmpty() ? cwd : resolve(relPath);
+            if (!inProject(scope)) return outsideMsg(scope);
+            const QVariantMap scout = ContextIndex::scout(cwd, query, budget, scoutK,
+                                                           args.value(QStringLiteral("expand_graph")).toBool(true),
+                                                           relPath);
+            out[QStringLiteral("receipt")] = scout.value(QStringLiteral("receipt"));
+            out[QStringLiteral("neighbors")] = scout.value(QStringLiteral("neighbors"));
+            out[QStringLiteral("index")] = scout.value(QStringLiteral("index"));
+            if (ok) *ok = scout.value(QStringLiteral("ok")).toBool();
+            return ContextIndex::formatScout(scout);
+        }
         int k = args.value(QStringLiteral("k")).toInt();
         if (k <= 0) k = 6;
         k = qBound(1, k, 15);
@@ -2474,6 +2532,9 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QStringList outL;
         QStringList outFiles;            // archivos ya incluidos (para el dep-graph)
         int usedTok = 0;
+        bool budgetCut = false;
+        QVariantList receiptReturned;
+        QVariantList receiptSkipped;
         for (int i = 0; i < finalOrder.size(); ++i) {
             const Ch &c = chunks[finalOrder[i]];
             QString entry;
@@ -2490,13 +2551,33 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 entry = QStringLiteral("%1:%2\n%3").arg(c.rel).arg(c.line).arg(c.text.left(600));
             }
             const int tok = entry.size() / 4 + 8;
+            usedTok += tok;
             if (tokenBudget > 0) {
-                if (!outL.isEmpty() && usedTok + tok > tokenBudget) break;
-                usedTok += tok;
+                if (!outL.isEmpty() && usedTok > tokenBudget) {
+                    usedTok -= tok;
+                    budgetCut = true;
+                    receiptSkipped.append(QVariantMap{
+                        {QStringLiteral("path"), c.rel},
+                        {QStringLiteral("startLine"), c.line},
+                        {QStringLiteral("endLine"), c.endLine},
+                        {QStringLiteral("reason"), QStringLiteral("token_budget")}});
+                    break;
+                }
             } else if (outL.size() >= k) {
+                usedTok -= tok;
+                receiptSkipped.append(QVariantMap{
+                    {QStringLiteral("path"), c.rel},
+                    {QStringLiteral("reason"), QStringLiteral("k_limit")}});
                 break;
             }
             outL << entry;
+            receiptReturned.append(QVariantMap{
+                {QStringLiteral("path"), c.rel},
+                {QStringLiteral("startLine"), c.line},
+                {QStringLiteral("endLine"), c.endLine},
+                {QStringLiteral("score"), rrf.value(finalOrder[i])},
+                {QStringLiteral("source"), rerankNote},
+                {QStringLiteral("tokenEst"), tok}});
             if (!outFiles.contains(c.rel)) outFiles << c.rel;
         }
 
@@ -2546,6 +2627,19 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                 .arg(docErr.isEmpty() ? QString()
                                                       : QStringLiteral(": ") + docErr);
         }
+        const QVariantMap receipt{
+            {QStringLiteral("schemaVersion"), 1},
+            {QStringLiteral("freshness"), QStringLiteral("live-scan")},
+            {QStringLiteral("backend"), rerankNote},
+            {QStringLiteral("returned"), receiptReturned},
+            {QStringLiteral("skipped"), receiptSkipped},
+            {QStringLiteral("graphOmitted"), QVariantList{}},
+            {QStringLiteral("usedTokensEst"), usedTok},
+            {QStringLiteral("remainingBudgetEst"), tokenBudget > 0 ? qMax(0, tokenBudget - usedTok) : 0},
+            {QStringLiteral("budgetCut"), budgetCut},
+            {QStringLiteral("recommendedNextAction"), receiptReturned.isEmpty()
+                ? QStringLiteral("hybrid_search") : QStringLiteral("read_file")}};
+        out[QStringLiteral("contextReceipt")] = receipt;
         const QString header = (repoSlice
             ? QStringLiteral("[repo_slice · evidencia previa a edición · %1 chunks · %2%3%4%5]\n\n")
             : QStringLiteral("[%1 chunks · %2%3%4%5]\n\n"))
@@ -2553,8 +2647,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             .arg(docsNote)
             .arg(truncated ? QStringLiteral(" · TRUNCADO a 800") : QString())
             .arg(tokenBudget > 0 ? QStringLiteral(" · ~%1 tok").arg(usedTok) : QString());
+        const QString receiptText = QStringLiteral("\n\n── context-receipt ──\n")
+            + QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(receipt))
+                                    .toJson(QJsonDocument::Compact));
         return header + outL.join(compact ? QStringLiteral("\n")
-                                          : QStringLiteral("\n\n──────\n")) + graphFooter;
+                                          : QStringLiteral("\n\n──────\n"))
+            + graphFooter + receiptText;
     }
     if (name == QLatin1String("verify_claims")) {
         // Anti-alucinación: por cada afirmación, busca evidencia en el proyecto y

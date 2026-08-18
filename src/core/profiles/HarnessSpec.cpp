@@ -53,6 +53,32 @@ void addDiff(QVariantList &out, const char *module, const char *field,
 // Modulos
 // ---------------------------------------------------------------------------
 
+QJsonObject HarnessRuntimeModule::toJson() const
+{
+    QJsonObject o;
+    o[QStringLiteral("engine")] = engine;
+    o[QStringLiteral("version")] = version;
+    o[QStringLiteral("fallbackEngine")] = fallbackEngine;
+    o[QStringLiteral("experimental")] = experimental;
+    return o;
+}
+
+HarnessRuntimeModule HarnessRuntimeModule::fromJson(const QJsonObject &o)
+{
+    HarnessRuntimeModule m;
+    m.set = true;
+    m.engine = o.value(QStringLiteral("engine")).toString(QStringLiteral("legacy")).trimmed().toLower();
+    if (m.engine.isEmpty()) m.engine = QStringLiteral("legacy");
+    m.version = qBound(1, o.value(QStringLiteral("version")).toInt(1), 100);
+    m.fallbackEngine = o.value(QStringLiteral("fallbackEngine"))
+                           .toString(QStringLiteral("legacy"))
+                           .trimmed()
+                           .toLower();
+    if (m.fallbackEngine.isEmpty()) m.fallbackEngine = QStringLiteral("legacy");
+    m.experimental = o.value(QStringLiteral("experimental")).toBool(false);
+    return m;
+}
+
 QJsonObject HarnessToolsModule::toJson() const
 {
     QJsonObject o;
@@ -141,6 +167,10 @@ QJsonObject HarnessContextModule::toJson() const
     o[QStringLiteral("keepLastImages")] = keepLastImages;
     o[QStringLiteral("readDedup")] = readDedup;
     o[QStringLiteral("preflight")] = preflight;
+    o[QStringLiteral("indexPolicy")] = indexPolicy;
+    o[QStringLiteral("scoutBudget")] = scoutBudget;
+    o[QStringLiteral("scoutK")] = scoutK;
+    o[QStringLiteral("graphExpansion")] = graphExpansion;
     o[QStringLiteral("warmup")] = warmup;
     return o;
 }
@@ -156,6 +186,12 @@ HarnessContextModule HarnessContextModule::fromJson(const QJsonObject &o)
     m.keepLastImages = boundedInt(o, "keepLastImages", 1, 0, 20);
     m.readDedup = o.value(QStringLiteral("readDedup")).toBool(true);
     m.preflight = o.value(QStringLiteral("preflight")).toBool(false);
+    const QString policy = o.value(QStringLiteral("indexPolicy")).toString().trimmed().toLower();
+    m.indexPolicy = (policy == QLatin1String("off") || policy == QLatin1String("eager"))
+        ? policy : QStringLiteral("lazy");
+    m.scoutBudget = boundedInt(o, "scoutBudget", 700, 64, 16000);
+    m.scoutK = boundedInt(o, "scoutK", 8, 1, 15);
+    m.graphExpansion = o.value(QStringLiteral("graphExpansion")).toBool(true);
     m.warmup = o.value(QStringLiteral("warmup")).toBool(true);
     return m;
 }
@@ -252,6 +288,7 @@ QJsonObject HarnessChatModule::toJson() const
 {
     QJsonObject o;
     o[QStringLiteral("thinking")] = thinking;
+    o[QStringLiteral("reasoningEffort")] = reasoningEffort;
     o[QStringLiteral("temperature")] = temperature;
     o[QStringLiteral("topP")] = topP;
     o[QStringLiteral("topK")] = topK;
@@ -265,6 +302,7 @@ HarnessChatModule HarnessChatModule::fromJson(const QJsonObject &o)
     HarnessChatModule m;
     m.set = true;
     m.thinking = o.value(QStringLiteral("thinking")).toBool(false);
+    m.reasoningEffort = o.value(QStringLiteral("reasoningEffort")).toString();
     m.temperature = o.value(QStringLiteral("temperature")).toDouble(-1.0);
     m.topP = o.value(QStringLiteral("topP")).toDouble(-1.0);
     m.topK = o.value(QStringLiteral("topK")).toInt(-1);
@@ -306,7 +344,7 @@ HarnessProtocolModule HarnessProtocolModule::fromJson(const QJsonObject &o)
 
 bool HarnessSpec::isEmpty() const
 {
-    return extends.isEmpty() && !tools.set && !prompt.set && !loop.set && !context.set
+    return extends.isEmpty() && !runtime.set && !tools.set && !prompt.set && !loop.set && !context.set
            && !permissions.set && !escalation.set && !protocol.set && !memory.set
            && !chat.set && phases.isEmpty();
 }
@@ -315,6 +353,7 @@ QJsonObject HarnessSpec::toJson() const
 {
     QJsonObject o;
     if (!extends.isEmpty()) o[QStringLiteral("extends")] = extends;
+    if (runtime.set) o[QStringLiteral("runtime")] = runtime.toJson();
     if (tools.set) o[QStringLiteral("tools")] = tools.toJson();
     if (prompt.set) o[QStringLiteral("prompt")] = prompt.toJson();
     if (loop.set) o[QStringLiteral("loop")] = loop.toJson();
@@ -337,6 +376,8 @@ HarnessSpec HarnessSpec::fromJson(const QJsonObject &o)
 {
     HarnessSpec s;
     s.extends = o.value(QStringLiteral("extends")).toString();
+    if (o.value(QStringLiteral("runtime")).isObject())
+        s.runtime = HarnessRuntimeModule::fromJson(o.value(QStringLiteral("runtime")).toObject());
     if (o.value(QStringLiteral("tools")).isObject())
         s.tools = HarnessToolsModule::fromJson(o.value(QStringLiteral("tools")).toObject());
     if (o.value(QStringLiteral("prompt")).isObject())
@@ -370,6 +411,7 @@ HarnessSpec HarnessSpec::resolve(const HarnessSpec &base, const HarnessSpec &ove
     // extends del hijo se conserva como metadato de linaje (quien resuelve la
     // cadena es ProfileManager); el resuelto ya no hereda de nadie mas.
     out.extends = base.extends;
+    if (override.runtime.set) out.runtime = override.runtime;
     if (override.tools.set) out.tools = override.tools;
     if (override.prompt.set) out.prompt = override.prompt;
     if (override.loop.set) out.loop = override.loop;
@@ -398,6 +440,11 @@ HarnessSpec HarnessSpec::forPhase(const HarnessSpec &spec, const QString &phase)
 QVariantList HarnessSpec::diff(const HarnessSpec &base) const
 {
     QVariantList out;
+    addDiff(out, "runtime", "engine", base.runtime.engine, runtime.engine);
+    addDiff(out, "runtime", "version", base.runtime.version, runtime.version);
+    addDiff(out, "runtime", "fallbackEngine", base.runtime.fallbackEngine,
+            runtime.fallbackEngine);
+    addDiff(out, "runtime", "experimental", base.runtime.experimental, runtime.experimental);
     addDiff(out, "tools", "packs", base.tools.packs, tools.packs);
     addDiff(out, "tools", "include", base.tools.include, tools.include);
     addDiff(out, "tools", "exclude", base.tools.exclude, tools.exclude);
@@ -430,6 +477,10 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
     addDiff(out, "context", "keepLastImages", base.context.keepLastImages, context.keepLastImages);
     addDiff(out, "context", "readDedup", base.context.readDedup, context.readDedup);
     addDiff(out, "context", "preflight", base.context.preflight, context.preflight);
+    addDiff(out, "context", "indexPolicy", base.context.indexPolicy, context.indexPolicy);
+    addDiff(out, "context", "scoutBudget", base.context.scoutBudget, context.scoutBudget);
+    addDiff(out, "context", "scoutK", base.context.scoutK, context.scoutK);
+    addDiff(out, "context", "graphExpansion", base.context.graphExpansion, context.graphExpansion);
     addDiff(out, "context", "warmup", base.context.warmup, context.warmup);
 
     addDiff(out, "permissions", "approvalMode", base.permissions.approvalMode,
@@ -564,6 +615,8 @@ QVariantList HarnessTools::packCatalog()
                   QStringLiteral("Busqueda semantica, hibrida, memoria y grafo."),
                   {QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
                    QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
+                   QStringLiteral("context_status"), QStringLiteral("context_scout"),
+                   QStringLiteral("context_fetch"),
                    QStringLiteral("verify_claims"), QStringLiteral("memory"),
                    QStringLiteral("graph"), QStringLiteral("project_brain")});
     out << mkPack(QStringLiteral("web"), QStringLiteral("Web"),

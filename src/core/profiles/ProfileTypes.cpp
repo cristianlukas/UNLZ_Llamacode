@@ -325,7 +325,8 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     interTools << "search_docs" << "memory" << "code_hotspots";
     QStringList advTools = interTools;
     advTools << "web_search" << "web_fetch" << "semantic_search"
-             << "hybrid_search" << "verify_claims" << "graph"
+             << "hybrid_search" << "repo_slice" << "context_status"
+             << "context_scout" << "context_fetch" << "verify_claims" << "graph"
              << "browser_network_discover";
     QList<AgentProfile> presets{
         mk("agent-chat",       "Chat liviano", chatTools,  {},
@@ -394,7 +395,21 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     rpa.spec.context.keepLastImages = 2;       // ver el paso anterior ayuda a corregir
     rpa.enabledTools = HarnessTools::resolve(rpa.spec.tools);
 
-    presets << minimal << rpa;
+    // Variante comparable al Intermedio histórico. Sólo cambia el contrato
+    // de ejecución; tools, prompt y límites parten de la misma configuración
+    // para que una comparación A/B tenga una causa interpretable.
+    AgentProfile next = presets[2];
+    next.id = QStringLiteral("agent-intermedio-next");
+    next.name = QStringLiteral("Intermedio · Harness Next (experimental)");
+    next.spec = next.toSpec();
+    next.hasSpec = true;
+    next.spec.runtime.set = true;
+    next.spec.runtime.engine = QStringLiteral("next");
+    next.spec.runtime.version = 2;
+    next.spec.runtime.fallbackEngine = QStringLiteral("legacy");
+    next.spec.runtime.experimental = true;
+
+    presets << next << minimal << rpa;
     return presets;
 }
 
@@ -513,7 +528,9 @@ LaunchProfile LaunchProfile::fromJson(const QJsonObject &o) {
     p.agentProfileId = o["agentProfileId"].toString();
     p.reasoningEffort = o["reasoningEffort"].toString().trimmed().toLower();
     if (p.reasoningEffort != QLatin1String("low")
+        && p.reasoningEffort != QLatin1String("medium")
         && p.reasoningEffort != QLatin1String("high")
+        && p.reasoningEffort != QLatin1String("xhigh")
         && p.reasoningEffort != QLatin1String("max"))
         p.reasoningEffort.clear();
     p.reasoningBudget = qMax(-1, o["reasoningBudget"].toInt(-1));

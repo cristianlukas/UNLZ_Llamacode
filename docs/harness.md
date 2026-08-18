@@ -40,6 +40,13 @@ Desde la implementación del plan modular, un perfil de agente es una
 
 Tres invariantes, todas testeadas:
 
+El módulo runtime agrega una selección explícita y reversible. Si falta, el
+motor efectivo es legacy (versión 1) y conserva las rutas anteriores. El perfil
+agent-intermedio-next declara next (versión 2), mantiene las mismas capacidades
+del perfil Intermedio y usa el namespace de almacenamiento agent_harness_next.
+Cambiar de motor recrea el backend; nunca se reutiliza una instancia con una
+sesión del otro contrato.
+
 1. **Módulo ausente = heredado**, nunca vacío. Cada módulo lleva un flag `set`
    que distingue "no lo declaré" de "lo declaré vacío a propósito".
 2. **Los defaults reproducen el comportamiento histórico.** Un perfil que no
@@ -237,7 +244,7 @@ Mecanismos sobre la memoria de trabajo:
 | Imágenes | `trimStaleImages(msgs, keepLast)` | deja capturas sólo en los últimos N mensajes; el resto pasa a `[captura omitida]` (con mmproj cada screenshot son miles de tokens de prefill) |
 | Warmup | `buildWarmupPayload()` | mismo prefijo, `max_tokens=1`, `stream=false`, `cache_prompt=true` |
 | Read-dedup | `m_readFingerprints` | releer el mismo archivo sin cambios devuelve un stub en vez de re-inyectar el contenido |
-| Preflight | `ContextPreflight::build(root, request, maxFiles)` | slice inicial de archivos relevantes al pedido |
+| Preflight | `ContextPreflight::build(root, request, maxFiles, tokenBudget, expandGraph)` | scout inicial con handles, recibo y vecinos relevantes |
 
 `contextUsage(used, limit)` y `contextManaged(working, transcript, pruned, events)`
 son lo que ve la UI (barra "ctx N/M" y las métricas de poda). El límite sale de
@@ -250,7 +257,8 @@ Pensar OFF quita los `<think>…</think>`, **pero** si el modelo metió toda la
 respuesta adentro (Qwen lo hace) rescata el texto interno en vez de dejar la
 burbuja vacía. Al historial de API el `<think>` no viaja nunca. Estrategia por
 binario/modelo: `--reasoning on/off`, `--reasoning-budget`, o
-`chat_template_kwargs.enable_thinking` (`thinkingTemplateKwargs()`).
+`chat_template_kwargs.enable_thinking` y `reasoning_effort` (`low`, `medium`,
+`high`, `xhigh` o el alias histórico `max`) mediante `thinkingTemplateKwargs()`.
 
 ---
 
@@ -263,7 +271,7 @@ sea una decisión de **presupuesto de contexto** y no de gusto.
 | Grupo | Tools |
 |---|---|
 | Archivos | `read_file`, `list_dir`, `glob` |
-| Búsqueda | `grep`, `code_hotspots`, `search_docs`, `semantic_search`, `hybrid_search`, `repo_slice` |
+| Búsqueda | `grep`, `code_hotspots`, `search_docs`, `semantic_search`, `hybrid_search`, `repo_slice`, `context_status`, `context_scout`, `context_fetch` |
 | Código | `write_file`, `edit_file`, `run_shell` |
 | Revisión | `review_overengineering` |
 | Conocimiento | `project_brain`, `memory`, `graph`, `verify_claims`, `recent_actions`, `context_checkpoint` |
@@ -508,6 +516,9 @@ end-to-end. Detalle en `CLAUDE.md`.
 
 ---
 
+La regresión dedicada de la frontera nueva cubre engine/fingerprint, event log,
+capabilities fail-closed, ledger de efectos y framing/autenticación de workers.
+
 ## 12b. A/B de harness (medir antes de decidir)
 
 Personalizar sin medir es adivinar. El ciclo cerrado:
@@ -531,6 +542,25 @@ defecto y la comparación sería una mentira.
 Regla de lectura: un harness sólo es mejor si **no** baja calidad ni tasa de éxito.
 
 ---
+
+## 12c. Contrato Next y lanes de workers
+
+La primera versión de Next no reemplaza el loop estable: agrega una frontera
+operativa que se puede medir y apagar. Sus sesiones viven en
+AppLocalData/agent_harness_next, con eventos JSONL por sesión y un ledger
+append-only de efectos. Un efecto puede quedar prepared, dispatching, settled,
+uncertain o parked; uncertain es información útil, no un error que se oculte.
+
+HarnessCapabilitySnapshot admite pedidos contra una lista de policy grants y
+entrega handles opacos sólo para los grants admitidos. Revocar o cambiar la
+generación invalida el handle; una tool no debe interpretar la existencia del
+nombre como autoridad.
+
+HarnessWorkerProtocol define framing binario con longitud, límite de bytes,
+protocolo versionado y autenticación por nonce. HarnessWorkerDriver supervisa
+un proceso externo, impone timeout, evita reutilizar call IDs y permite
+cancelación. Es la base común para futuras SDK Node/TypeScript y Python; esas
+SDK y el sandbox de sistema operativo todavía no se declaran implementados.
 
 ## 13. Deudas conocidas
 

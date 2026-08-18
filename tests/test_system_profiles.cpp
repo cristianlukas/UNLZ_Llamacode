@@ -1447,7 +1447,7 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        QCOMPARE(variants.size(), 10); // base + 10 = 11 perfiles reales por GGUF, incluida MTP+ngram
+        QCOMPARE(variants.size(), 15); // variantes base, MTP+ngram y controles inspirados en el post
         QSet<QString> variantIds;
         const QVariantMap baseLaunch = pm.getLaunchProfile(id);
         QVERIFY2(!baseLaunch.isEmpty(), qPrintable(id));
@@ -1477,6 +1477,22 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
                 QVERIFY(args.contains(QStringLiteral("--spec-ngram-mod-n-max")));
             }
         }
+        const auto findVariant = [&](const QString &variantId) {
+            for (const QJsonValue &value : variants)
+                if (value.toObject().value(QStringLiteral("id")).toString() == variantId)
+                    return value.toObject();
+            return QJsonObject{};
+        };
+        for (const QString &suffix : {QStringLiteral("post-parallel2"), QStringLiteral("post-parallel4"), QStringLiteral("post-parallel6")}) {
+            const QJsonObject variant = findVariant(QStringLiteral("sys-bench-qwen38-udq4-") + suffix);
+            QVERIFY2(!variant.isEmpty(), qPrintable(suffix));
+            const int expectedSlots = suffix.endsWith(QStringLiteral("2")) ? 2 : suffix.endsWith(QStringLiteral("4")) ? 4 : 6;
+            QCOMPARE(variant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("parallelSlots")).toInt(), expectedSlots);
+        }
+        const QJsonObject longVariant = findVariant(QStringLiteral("sys-bench-qwen38-udq4-post-262k-kv8"));
+        QVERIFY(!longVariant.isEmpty());
+        QCOMPARE(longVariant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("ctx")).toInt(), 262144);
+        QCOMPARE(longVariant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("kv")).toString(), QStringLiteral("q8_0"));
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.
     }

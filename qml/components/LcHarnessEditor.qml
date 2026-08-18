@@ -23,6 +23,7 @@ Item {
     property var    diff: []                 // [{module, field, base, value}]
     property var    packs: []                // catálogo de packs de tools
     property var    directives: []           // directivas .md descubiertas
+    property var    engines: []              // catálogo de contratos legacy/next
     property var    parents: []              // [{profileId, name}] candidatos a `extends`
     // Hechos disponibles para el gate `when` de una directiva. Se muestran en la
     // UI: sin esto el usuario tiene que adivinarlos.
@@ -74,6 +75,18 @@ Item {
         if (on && i < 0) arr.push(item)
         else if (!on && i >= 0) arr.splice(i, 1)
         return specSet(moduleName, field, arr)
+    }
+    function setRuntimeEngine(id, version) {
+        if (readOnly) return false
+        var s = JSON.parse(JSON.stringify(spec || {}))
+        if (!s.runtime) s.runtime = {}
+        s.runtime.engine = id
+        s.runtime.version = version || 1
+        s.runtime.fallbackEngine = "legacy"
+        s.runtime.experimental = id === "next"
+        spec = s
+        specEdited(s)
+        return true
     }
     // Import de un spec pegado a mano. Devuelve "" si entró; el mensaje de error
     // si no. Un JSON roto NO pisa el spec bueno: es la diferencia entre un typo y
@@ -151,6 +164,44 @@ Item {
                 text: "Guardar harness"; secondary: true
                 enabled: !root.readOnly && root.profileId.length > 0
                 onClicked: root.saveRequested()
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            visible: root.engines.length > 0
+            Text { text: "Motor del harness"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcComboBox {
+                id: engineCombo
+                objectName: "engineCombo"
+                Layout.fillWidth: true
+                enabled: !root.readOnly
+                textRole: "name"; valueRole: "id"
+                model: root.engines
+                currentIndex: Math.max(0, indexOfValue(
+                    root.specValue("runtime", "engine", "legacy")))
+                onActivated: {
+                    var selected = model[currentIndex] || ({})
+                    root.setRuntimeEngine(currentValue || "legacy", selected.version || 1)
+                }
+                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                contentItem: Text {
+                    text: engineCombo.displayText || "Legacy"
+                    color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10
+                    verticalAlignment: Text.AlignVCenter
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: {
+                    var selected = model[currentIndex] || ({})
+                    return selected.description || "Contrato de ejecución del harness"
+                }
+            }
+            Text {
+                text: root.specValue("runtime", "engine", "legacy") === "next"
+                      ? "experimental · sesiones separadas" : "compatibilidad histórica"
+                color: root.specValue("runtime", "engine", "legacy") === "next"
+                       ? Theme.warnText : Theme.textMuted
+                font.pixelSize: 11
             }
         }
 
@@ -469,6 +520,38 @@ Item {
                 onToggled: root.specSet("context", "preflight", checked)
                 ToolTip.visible: hovered
                 ToolTip.text: "Inyecta un slice de archivos candidatos antes del primer request."
+            }
+            Text { text: "Índice de contexto"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcComboBox {
+                id: contextIndexPolicy
+                Layout.fillWidth: true
+                textRole: "label"; valueRole: "key"
+                model: [
+                    { key: "off", label: "Desactivado" },
+                    { key: "lazy", label: "Lazy (recomendado)" },
+                    { key: "eager", label: "Eager" }
+                ]
+                currentIndex: Math.max(0, indexOfValue(root.specValue("context", "indexPolicy", "lazy")))
+                onActivated: root.specSet("context", "indexPolicy", currentValue)
+                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                contentItem: Text { text: contextIndexPolicy.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+            }
+            Text { text: "Budget del scout (tokens)"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "700"
+                text: String(root.specValue("context", "scoutBudget", 700))
+                onEditingFinished: root.specSet("context", "scoutBudget", Math.max(64, parseInt(text) || 700))
+            }
+            Text { text: "Rangos iniciales (k)"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "8"
+                text: String(root.specValue("context", "scoutK", 8))
+                onEditingFinished: root.specSet("context", "scoutK", Math.max(1, Math.min(15, parseInt(text) || 8)))
+            }
+            Text { text: "Expandir vecinos del grafo"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                checked: root.specValue("context", "graphExpansion", true)
+                onToggled: root.specSet("context", "graphExpansion", checked)
             }
 
             Text { text: "Protocolo de tools"; color: Theme.textSecondary; font.pixelSize: 12 }

@@ -29,6 +29,19 @@ base, por lo que sus copias prueban `ngram-mod` solo.
 | `sys-bench-qwen36-cache-mtp6-ngram` | Qwen3.6 cache MTP6 | MTP6 + ngram |
 | `sys-bench-qwen36-cache-text-mtp4-ngram` | Qwen3.6 texto-only MTP4 | MTP4 + ngram |
 
+## Variantes inspiradas en el control público de Qwen3.8
+
+Se agregaron variantes declarativas para comparar la familia Qwen3.8 bajo
+`llama.cpp`, sin incorporar vLLM ni alterar los perfiles base. Replican sólo
+los ejes que tienen equivalente local: contexto 262k con KV `q8_0`, batch 8192
+y concurrencia de 2/4/6 slots. La variante de 262k usa B2048/U512 para evitar
+confundir `max-num-batched-tokens` de vLLM con un flag idéntico de llama.cpp.
+
+Cada eje existe para UD-Q4, Q4_K_M y Q5_K_M, con IDs `*-post-262k-kv8`,
+`*-post-b8192`, `*-post-parallel2`, `*-post-parallel4` y
+`*-post-parallel6`. Son controles de medición, no candidatos promovidos;
+deben compararse con el mismo harness, prompts y huella de configuración.
+
 ## Alcance activo
 
 Sólo se ejecutan nuevos benchmarks para perfiles marcados `⚡ BEST`. La

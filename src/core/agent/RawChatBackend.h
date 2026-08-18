@@ -51,6 +51,7 @@ public:
                               const QString &projectName, const QString &projectDir = QString());
     bool renameProject(const QString &oldName, const QString &newName);
     void setThinkingEnabled(bool enabled) { m_thinkingEnabled = enabled; }
+    void setReasoningEffort(const QString &effort) { m_reasoningEffort = effort; }
     // Sampling por sesión. Un valor negativo significa heredar el default del
     // servidor; los valores se persisten junto con la sesión activa.
     QVariantMap sampling() const;
@@ -103,6 +104,7 @@ private:
     bool m_running = false;
     bool m_stopping = false;
     bool m_thinkingEnabled = false;
+    QString m_reasoningEffort;
     bool m_personaDesigner = false;
     QString m_systemExtra;              // instrucciones del perfil (modulo `chat`)
     QString m_grammar;       // GBNF (passthrough a llama-server)

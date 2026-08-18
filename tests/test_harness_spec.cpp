@@ -28,6 +28,7 @@ private slots:
     void initTestCase();
 
     void modules_defaultsMatchHistoricBehaviour();
+    void context_indexPolicyRoundTripsAndBounds();
     void resolve_absentModuleIsInherited();
     void resolve_declaredEmptyModuleWins();
     void json_roundTripKeepsDeclaredModulesOnly();
@@ -83,6 +84,30 @@ void HarnessSpecTests::modules_defaultsMatchHistoricBehaviour()
     QCOMPARE(s.escalation.maxParallelSubagents, 5);
     QVERIFY(s.escalation.isolateSubagents);
     QVERIFY(s.isEmpty());
+}
+
+void HarnessSpecTests::context_indexPolicyRoundTripsAndBounds()
+{
+    HarnessContextModule context;
+    context.indexPolicy = QStringLiteral("eager");
+    context.scoutBudget = 1200;
+    context.scoutK = 12;
+    context.graphExpansion = false;
+
+    const HarnessContextModule roundTrip =
+        HarnessContextModule::fromJson(context.toJson());
+    QCOMPARE(roundTrip.indexPolicy, QStringLiteral("eager"));
+    QCOMPARE(roundTrip.scoutBudget, 1200);
+    QCOMPARE(roundTrip.scoutK, 12);
+    QVERIFY(!roundTrip.graphExpansion);
+
+    QJsonObject invalid{{QStringLiteral("indexPolicy"), QStringLiteral("unknown")},
+                        {QStringLiteral("scoutBudget"), 999999},
+                        {QStringLiteral("scoutK"), -4}};
+    const HarnessContextModule bounded = HarnessContextModule::fromJson(invalid);
+    QCOMPARE(bounded.indexPolicy, QStringLiteral("lazy"));
+    QCOMPARE(bounded.scoutBudget, 16000);
+    QCOMPARE(bounded.scoutK, 1);
 }
 
 void HarnessSpecTests::resolve_absentModuleIsInherited()

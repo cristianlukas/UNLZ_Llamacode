@@ -1,6 +1,8 @@
 #include "LlamaAgentBackend.h"
+#include "ReasoningWire.h"
 #include "AgentToolRunner.h"
 #include "ContextPreflight.h"
+#include "ContextIndex.h"
 #include "ProjectBrain.h"
 #include "CodeGraphIndexer.h"
 #include "SubAgentRunner.h"
@@ -138,15 +140,8 @@ QJsonObject LlamaAgentBackend::thinkingTemplateKwargs(bool thinkingEnabled,
                                                       bool thinkingLeakGuard,
                                                       const QString &reasoningEffort)
 {
-    QJsonObject kwargs{{QStringLiteral("enable_thinking"), thinkingEnabled}};
-    const QString effort = reasoningEffort.trimmed().toLower();
-    if (thinkingEnabled && (effort == QLatin1String("low")
-                            || effort == QLatin1String("high")
-                            || effort == QLatin1String("max")))
-        kwargs.insert(QStringLiteral("reasoning_effort"), effort);
-    if (thinkingLeakGuard)
-        kwargs.insert(QStringLiteral("preserve_thinking"), false);
-    return kwargs;
+    return ReasoningWire::templateKwargs(thinkingEnabled, thinkingLeakGuard,
+                                         reasoningEffort);
 }
 
 static const QString kMcpPrefix = QStringLiteral("mcp__");
@@ -473,6 +468,14 @@ LlamaAgentBackend::~LlamaAgentBackend() { stop(); teardownWorker(); }
 void LlamaAgentBackend::start(const AgentContext &ctx)
 {
     m_ctx = ctx;
+    m_harnessEngineId = HarnessEngine::effectiveId(
+        HarnessRuntimeModule{ctx.harnessEngineId, ctx.harnessEngineVersion,
+                              QStringLiteral("legacy"), false, true});
+    m_harnessEngineVersion = m_harnessEngineId == QLatin1String("legacy")
+                                 ? 1 : qMax(1, ctx.harnessEngineVersion);
+    m_harnessProfileId = ctx.harnessProfileId;
+    m_harnessSpecHash = ctx.harnessSpecHash;
+    m_harnessActivationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     // Sin proyecto válido NO se cae al home: con auto-aprobación las tools
     // trabajarían sobre C:\Users\<user> (.ssh, .claude, perfiles). Workspace
     // aislado y aviso visible; el cwd real de la sesión lo repone loadFromDisk.
@@ -484,10 +487,37 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                              .arg(QDir::toNativeSeparators(ctx.cwd.trimmed()),
                                   QDir::toNativeSeparators(m_cwd)));
     }
+    if (m_contextPolicy.indexPolicy == QLatin1String("eager")) {
+        const QVariantMap state = ContextIndex::refresh(m_cwd);
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
+                              QJsonObject{{QStringLiteral("source"), QStringLiteral("context_index")},
+                                          {QStringLiteral("mode"), QStringLiteral("eager")},
+                                          {QStringLiteral("state"), QJsonObject::fromVariantMap(state)}});
+    }
     m_running = true;
     if (!m_ephemeralSessions)
         loadFromDisk();     // recupera sesiones previas; activa la primera
     ensureSession();        // si no había ninguna, crea una
+    if (m_harnessEngineId == QLatin1String("next")) {
+        QStringList requested;
+        for (const QVariant &entry : toolCatalog())
+            requested << entry.toMap().value(QStringLiteral("name")).toString();
+        QStringList allowed = requested;
+        for (const QString &disabled : m_disabledTools)
+            allowed.removeAll(disabled);
+        m_harnessCapabilities = HarnessCapabilitySnapshot::admit(
+            m_harnessActivationId, m_harnessEngineId, m_harnessProfileId,
+            m_harnessEngineVersion, requested, allowed);
+        configureHarnessEventLog();
+        QFile capabilityFile(QDir(storageDir()).filePath(QStringLiteral("capabilities.json")));
+        if (capabilityFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+            capabilityFile.write(QJsonDocument(m_harnessCapabilities.toJson()).toJson());
+        m_harnessEventLog.append(QStringLiteral("backend/start"),
+                                 QJsonObject{{QStringLiteral("engine"), m_harnessEngineId},
+                                             {QStringLiteral("version"), m_harnessEngineVersion},
+                                             {QStringLiteral("profileId"), m_harnessProfileId},
+                                             {QStringLiteral("specHash"), m_harnessSpecHash}});
+    }
     // Al reactivar esta misma instancia, las sesiones ya están en memoria:
     // loadFromDisk()/ensureSession() no emiten señales. Republicar siempre el
     // estado evita que el espejo de AppController quede vacío al arrancar.
@@ -1175,6 +1205,10 @@ void LlamaAgentBackend::ensureSession()
     s.created = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
     s.projectDir = m_cwd;
     s.projectName = QFileInfo(m_cwd).fileName();
+    s.harnessEngineId = m_harnessEngineId;
+    s.harnessEngineVersion = m_harnessEngineVersion;
+    s.harnessProfileId = m_harnessProfileId;
+    s.harnessSpecHash = m_harnessSpecHash;
     // Las sesiones efímeras (Tasks/Automatizaciones, sub-agentes) NO se listan ni
     // persisten: corren aisladas y no deben aparecer en el panel de Sesiones.
     if (!m_ephemeralSessions)
@@ -1197,6 +1231,22 @@ void LlamaAgentBackend::ensureSession()
         emit sessionsChanged();
     }
     emit messagesChanged();
+}
+
+void LlamaAgentBackend::configureHarnessEventLog()
+{
+    if (m_ephemeralSessions || m_sessionId.isEmpty()) return;
+    const QString path = QDir(storageDir()).filePath(
+        QStringLiteral("events/%1.jsonl").arg(m_sessionId));
+    QString error;
+    if (!m_harnessEventLog.open(path, &error)) {
+        emit logAppended(QStringLiteral("[harness event log deshabilitado: %1]\n").arg(error));
+    }
+    error.clear();
+    if (!m_harnessEffectLedger.open(QDir(storageDir()).filePath(QStringLiteral("effects.jsonl")),
+                                    &error)) {
+        emit logAppended(QStringLiteral("[harness effect ledger deshabilitado: %1]\n").arg(error));
+    }
 }
 
 QString LlamaAgentBackend::memoryFilePath(const QString &cwd)
@@ -1772,10 +1822,7 @@ void LlamaAgentBackend::sendMessage(const QString &text)
 void LlamaAgentBackend::setReasoningPolicy(const QString &effort, int budget)
 {
     const QString normalized = effort.trimmed().toLower();
-    m_reasoningEffort = (normalized == QLatin1String("low")
-                         || normalized == QLatin1String("high")
-                         || normalized == QLatin1String("max"))
-        ? normalized : QString();
+    m_reasoningEffort = ReasoningWire::normalizeEffort(normalized);
     m_reasoningBudget = qMax(-1, budget);
 }
 
@@ -1826,6 +1873,13 @@ void LlamaAgentBackend::setContextPolicy(const HarnessContextModule &context)
 {
     m_contextPolicy = context;
     m_contextPolicy.set = true;
+    if (m_contextPolicy.indexPolicy == QLatin1String("eager") && !m_cwd.isEmpty()) {
+        const QVariantMap state = ContextIndex::refresh(m_cwd);
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
+                              QJsonObject{{QStringLiteral("source"), QStringLiteral("context_index")},
+                                          {QStringLiteral("mode"), QStringLiteral("eager")},
+                                          {QStringLiteral("state"), QJsonObject::fromVariantMap(state)}});
+    }
     for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
         if (rt) rt->setContextPolicy(context);
 }
@@ -2000,8 +2054,11 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     // request, para que el modelo no gaste vueltas descubriendo el repo. Estaba
     // detrás de un #ifdef de debug (código muerto en release); ahora lo gobierna
     // el módulo `context` del HarnessSpec, off por defecto = comportamiento previo.
-    if (m_contextPolicy.preflight && attachments.isEmpty() && !m_cwd.isEmpty()) {
-        const QString preflight = ContextPreflight::build(m_cwd, visibleTrimmed);
+    if (m_contextPolicy.preflight && m_contextPolicy.indexPolicy != QLatin1String("off")
+        && attachments.isEmpty() && !m_cwd.isEmpty()) {
+        const QString preflight = ContextPreflight::build(
+            m_cwd, visibleTrimmed, m_contextPolicy.scoutK,
+            m_contextPolicy.scoutBudget, m_contextPolicy.graphExpansion);
         appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
                                      {QStringLiteral("content"), preflight},
                                      {QStringLiteral("_lc_protected"), true}});
@@ -2453,7 +2510,8 @@ QJsonObject LlamaAgentBackend::buildWarmupPayload(const QJsonArray &wireMessages
                                                   const QJsonArray &tools,
                                                   const QString &modelId,
                                                   double temperature,
-                                                  bool thinkingEnabled)
+                                                  bool thinkingEnabled,
+                                                  const QString &reasoningEffort)
 {
     QJsonObject payload{
         {QStringLiteral("model"), modelId},
@@ -2469,7 +2527,8 @@ QJsonObject LlamaAgentBackend::buildWarmupPayload(const QJsonArray &wireMessages
     if (temperature >= 0.0) payload.insert(QStringLiteral("temperature"), temperature);
     payload.insert(QStringLiteral("reasoning_budget"), thinkingEnabled ? -1 : 0);
     payload.insert(QStringLiteral("chat_template_kwargs"),
-                   QJsonObject{{QStringLiteral("enable_thinking"), thinkingEnabled}});
+                   ReasoningWire::templateKwargs(thinkingEnabled, false,
+                                                 reasoningEffort));
     return payload;
 }
 
@@ -2493,7 +2552,7 @@ void LlamaAgentBackend::prefillWarmup()
     QJsonObject payload = buildWarmupPayload(
         wire, buildToolSchemas(),
         m_ctx.modelId.isEmpty() ? QStringLiteral("local") : m_ctx.modelId,
-        m_temperature, m_thinkingEnabled);
+        m_temperature, m_thinkingEnabled, m_reasoningEffort);
     if (usingTextTools()) {
         payload = buildTextToolPayload(payload);
         payload[QStringLiteral("max_tokens")] = 1;
@@ -3150,6 +3209,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
             QStringLiteral("grep"), QStringLiteral("glob"),
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
             QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
+            QStringLiteral("context_scout"),
             QStringLiteral("verify_claims"), QStringLiteral("write_file"),
             QStringLiteral("edit_file"), QStringLiteral("review_overengineering")};
         for (int i = 0; i < calls.size(); ++i) {
@@ -3332,6 +3392,17 @@ void LlamaAgentBackend::processPendingCalls()
                                       {QStringLiteral("toolKind"), kind},
                                       {QStringLiteral("args"), argStr.left(8192)},
                                       {QStringLiteral("repeatCount"), sigCnt}});
+    const QString effectId = m_sessionId + QLatin1Char(':') + id;
+    if (m_harnessEngineId == QLatin1String("next") && !id.isEmpty()) {
+        HarnessEffectRecord effect;
+        effect.effectId = effectId;
+        effect.kind = kind;
+        effect.sessionId = m_sessionId;
+        effect.correlationId = m_correlationId;
+        effect.payloadHash = QString::fromLatin1(
+            QCryptographicHash::hash(argStr.toUtf8(), QCryptographicHash::Sha256).toHex());
+        m_harnessEffectLedger.prepare(effect);
+    }
 
     // ── Escalado automático al maestro ───────────────────────────────────
     // Si el agente repite la misma tool sin progreso y el perfil habilitó escalado
@@ -3403,7 +3474,9 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("glob"), QStringLiteral("run_shell"), QStringLiteral("web_fetch"),
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
-        QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
+        QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
+        QStringLiteral("context_status"), QStringLiteral("context_scout"),
+        QStringLiteral("context_fetch"), QStringLiteral("verify_claims"),
         QStringLiteral("review_overengineering"),
         QStringLiteral("memory"), QStringLiteral("graph"), QStringLiteral("context_checkpoint"),
         QStringLiteral("ask_teacher"), QStringLiteral("task"),
@@ -3857,9 +3930,12 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     m_execCallId = id;
     m_execToolName = name;
     m_execArguments = argStr;
+    const QString effectId = m_sessionId + QLatin1Char(':') + id;
     const int watchdogSec = toolWatchdogSeconds(name, a, m_quickToolTimeoutSec,
                                                 m_loopPolicy.webToolTimeoutSec);
     m_execWatchdogSec = watchdogSec;
+    if (m_harnessEngineId == QLatin1String("next"))
+        m_harnessEffectLedger.transition(effectId, QStringLiteral("dispatching"));
     m_toolWatchdog->start(watchdogSec * 1000);
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(true, name, m_execCommand);
@@ -3885,18 +3961,28 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     const QString executedArgs = m_execArguments;
     m_execToolName.clear();
     m_execArguments.clear();
+    if (m_harnessEngineId == QLatin1String("next")) {
+        const QString resultHash = QString::fromLatin1(
+            QCryptographicHash::hash(res.toUtf8(), QCryptographicHash::Sha256).toHex());
+        m_harnessEffectLedger.transition(
+            m_sessionId + QLatin1Char(':') + callId,
+            QStringLiteral("settled"), ok ? QString() : QStringLiteral("tool_failed"),
+            resultHash);
+    }
 #ifdef LC_DEBUG_ICON
     if (ok && isWrite && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))) {
         const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
         const QString path = QDir::cleanPath(args.value(QStringLiteral("path")).toString().trimmed());
         if (!path.isEmpty()) {
             ProjectBrain::update(m_cwd, QStringList{path});
+            const QVariantMap contextState = ContextIndex::refresh(m_cwd, QStringList{path});
             QString report;
             CodeGraphIndexer::reindexFiles(m_cwd, QStringList{path}, {}, &report);
             emit logAppended(QStringLiteral("[preflight: índices resincronizados tras %1]\n").arg(path));
             AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                                   QJsonObject{{QStringLiteral("source"), QStringLiteral("context_resync")},
                                               {QStringLiteral("path"), path},
+                                              {QStringLiteral("contextIndex"), QJsonObject::fromVariantMap(contextState)},
                                               {QStringLiteral("graphReport"), report}});
         }
     }
@@ -4503,6 +4589,8 @@ QStringList LlamaAgentBackend::requiredArgs(const QString &name)
     if (name == QLatin1String("semantic_search")) return {QStringLiteral("query")};
     if (name == QLatin1String("hybrid_search")) return {QStringLiteral("query")};
     if (name == QLatin1String("repo_slice")) return {QStringLiteral("query")};
+    if (name == QLatin1String("context_scout")) return {QStringLiteral("query")};
+    if (name == QLatin1String("context_fetch")) return {QStringLiteral("handle")};
     // verify_claims: 'claims' puede ser array → no se valida acá (toString() de un
     // array da "" y lo rechazaría); la propia tool valida.
     if (name == QLatin1String("task"))       return {QStringLiteral("prompt")};
@@ -5140,8 +5228,29 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("changed_paths"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("array")},
                     {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}},
-                    {QStringLiteral("description"), QStringLiteral("Rutas modificadas por watcher para actualización incremental sin recorrer todo el repo.")}}}},
+                   {QStringLiteral("description"), QStringLiteral("Rutas modificadas por watcher para actualización incremental sin recorrer todo el repo.")}}}},
            QJsonArray{}),
+        fn(QStringLiteral("context_status"),
+           QStringLiteral("Devuelve la frescura y las métricas del índice local de contexto. "
+                          "Es sólo lectura y no fuerza una indexación completa."),
+           QJsonObject{}, QJsonArray{}),
+        fn(QStringLiteral("context_scout"),
+           QStringLiteral("Exploración compacta del repositorio: rankea chunks persistidos por "
+                          "keywords, devuelve archivo:rango, previews, handles, vecinos y un "
+                          "recibo de frescura/presupuesto. Usala antes de editar; después "
+                          "context_fetch o read_file para obtener el código exacto."),
+           QJsonObject{
+               {QStringLiteral("query"), strProp(QStringLiteral("Objetivo concreto de la tarea o bug."))},
+               {QStringLiteral("token_budget"), intProp(QStringLiteral("Presupuesto aproximado de tokens. Default 700."))},
+               {QStringLiteral("k"), intProp(QStringLiteral("Máximo de rangos (default 8, máximo 15)."))},
+               {QStringLiteral("expand_graph"), boolProp(QStringLiteral("Incluir vecinos por imports/includes. Default true."))},
+               {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio opcional."))}},
+           QJsonArray{QStringLiteral("query")}),
+        fn(QStringLiteral("context_fetch"),
+           QStringLiteral("Obtiene el rango exacto identificado por context_scout. Valida el "
+                          "hash del archivo y rechaza handles obsoletos."),
+           QJsonObject{{QStringLiteral("handle"), strProp(QStringLiteral("Handle ctx:... devuelto por context_scout."))}},
+           QJsonArray{QStringLiteral("handle")}),
         fn(QStringLiteral("grep"),
            QStringLiteral("Busca una EXPRESIÓN REGULAR en los archivos del proyecto (recursivo). "
                           "Ignora node_modules/.git/build/dist/venv/__pycache__ y binarios."),
@@ -5267,13 +5376,15 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "sólo citas 'rel:Lini-Lfin' + preview de 1 línea (estilo FastContext): "
                           "explorás barato y leés después los spans con read_file. Con "
                           "include_docs=true suma los PDF/Office/EPUB del proyecto al mismo índice "
-                          "(manuales, normativa, specs), no sólo código. args: query/k/path/"
-                          "token_budget/expand_graph/compact/include_docs."),
+                          "(manuales, normativa, specs), no sólo código. mode=scout devuelve sólo "
+                          "handles y recibo para hacer context_fetch después. args: query/k/path/"
+                          "token_budget/expand_graph/compact/include_docs/mode."),
            QJsonObject{
                {QStringLiteral("query"), strProp(QStringLiteral("Qué buscás (lenguaje natural)."))},
                {QStringLiteral("k"), intProp(QStringLiteral("Cantidad de fragmentos (default 6, máx 15). Ignorado si hay token_budget."))},
                {QStringLiteral("token_budget"), intProp(QStringLiteral("Presupuesto aprox de tokens; llena hasta el límite en vez de k fijo (0=off)."))},
                {QStringLiteral("expand_graph"), boolProp(QStringLiteral("Listar archivos relacionados vía imports/includes. Default true."))},
+               {QStringLiteral("mode"), strProp(QStringLiteral("scout = handles/previews/recibo sin cuerpos; omitido = búsqueda completa."))},
                {QStringLiteral("compact"), boolProp(QStringLiteral("Devolver sólo citas 'rel:Lini-Lfin' + preview, sin cuerpo. Ahorra tokens de exploración. Default false."))},
                {QStringLiteral("include_docs"), boolProp(QStringLiteral("Indexar también PDF/Office/EPUB/HTML vía extractor (máx 25 docs, lento la 1ª vez, después cacheado). Default false."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio a acotar (opcional)."))}},
@@ -5289,6 +5400,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("k"), intProp(QStringLiteral("Resultados si token_budget=0 (default 6, máx 15)."))},
                {QStringLiteral("token_budget"), intProp(QStringLiteral("Presupuesto aproximado de tokens."))},
                {QStringLiteral("expand_graph"), boolProp(QStringLiteral("Incluir vecinos por imports/includes. Default true."))},
+               {QStringLiteral("mode"), strProp(QStringLiteral("scout = handles/previews/recibo sin cuerpos; omitido = slice completo."))},
                {QStringLiteral("compact"), boolProp(QStringLiteral("Sólo citas+rango+preview. Default true."))},
                {QStringLiteral("include_docs"), boolProp(QStringLiteral("Sumar PDF/Office/EPUB/HTML al índice (máx 25). Default false."))},
                {QStringLiteral("path"), strProp(QStringLiteral("Subdirectorio opcional."))}},
@@ -5767,6 +5879,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("read_file", "Archivos", "Lee un archivo de texto (offset/limit).", 90),
         mk("list_dir",  "Archivos", "Lista archivos y carpetas.", 80),
         mk("project_brain", "Conocimiento", "Índice persistente de estructura y metadata del proyecto.", 95),
+        mk("context_status", "Búsqueda", "Estado y frescura del índice local de contexto.", 65),
         mk("glob",      "Archivos", "Lista archivos por patrón glob.", 110),
         mk("grep",      "Búsqueda", "Busca una regex en el proyecto.", 100),
         mk("code_hotspots", "Búsqueda", "Archivos riesgosos: churn git + autores + sin test (score 1-10).", 140),
@@ -5775,6 +5888,8 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("semantic_search", "Búsqueda", "Búsqueda por significado vía embeddings del server.", 130),
         mk("hybrid_search", "Búsqueda", "Híbrida BM25+vector con reranker (RAG, la mejor).", 150),
         mk("repo_slice", "Búsqueda", "Slice compacto con evidencia previo a editar.", 150),
+        mk("context_scout", "Búsqueda", "Scout persistente con handles, vecinos y recibo de presupuesto.", 120),
+        mk("context_fetch", "Búsqueda", "Fetch exacto de un rango con validación de hash.", 75),
         mk("verify_claims", "Conocimiento", "Verifica afirmaciones contra el repo/memoria (anti-alucinación).", 160),
         mk("web_search","Web", "Busca en la web (DuckDuckGo/SearXNG).", 140),
         mk("web_fetch", "Web", "Descarga una URL y devuelve su texto.", 90),
@@ -6009,7 +6124,9 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("grep"), QStringLiteral("glob"), QStringLiteral("web_fetch"),
             QStringLiteral("web_search"), QStringLiteral("deep_research"),
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
-            QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"), QStringLiteral("verify_claims"),
+            QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
+            QStringLiteral("context_status"), QStringLiteral("context_scout"),
+            QStringLiteral("context_fetch"), QStringLiteral("verify_claims"),
             QStringLiteral("browser_skill_list"), QStringLiteral("skill_list"),
             QStringLiteral("skill_load")};
         QJsonArray ro;
@@ -6258,6 +6375,10 @@ void LlamaAgentBackend::copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) c
     runtime->m_forceTextTools = m_forceTextTools;
     runtime->m_visionReady = m_visionReady;
     runtime->m_alwaysAllowed = m_alwaysAllowed;
+    runtime->m_harnessEngineId = m_harnessEngineId;
+    runtime->m_harnessEngineVersion = m_harnessEngineVersion;
+    runtime->m_harnessProfileId = m_harnessProfileId;
+    runtime->m_harnessSpecHash = m_harnessSpecHash;
 }
 
 void LlamaAgentBackend::syncRuntimeSession(const QString &sessionId,
@@ -6702,6 +6823,12 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
     // La consolidación corre al cerrar turnos con recuperación, no al navegar.
     // Así abrir otra sesión nunca compite con el reset de la conversación visible.
     m_sessionId = sessionId;
+    if (m_harnessEngineId == QLatin1String("next")) {
+        configureHarnessEventLog();
+        m_harnessEventLog.append(QStringLiteral("session/switch"),
+                                 QJsonObject{{QStringLiteral("sessionId"), m_sessionId},
+                                             {QStringLiteral("engine"), m_harnessEngineId}});
+    }
     if (m_worker) QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
                                             Q_ARG(QString, m_sessionId));
     m_curAsstIdx = -1;
@@ -6770,7 +6897,8 @@ void LlamaAgentBackend::setCurrentSession(const QString &sessionId)
 QString LlamaAgentBackend::storageDir() const
 {
     const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
-                        + QStringLiteral("/agent_llamaagent");
+                        + QStringLiteral("/")
+                        + HarnessEngine::storageNamespace(m_harnessEngineId);
     QDir().mkpath(dir);
     return dir;
 }
@@ -6930,6 +7058,11 @@ void LlamaAgentBackend::persistSession(const QString &sessionId) const
             {QStringLiteral("prunedMessages"), m_contextPrunedMessages},
             {QStringLiteral("prunedTokens"), static_cast<double>(m_contextPrunedTokens)}}},
         {QStringLiteral("checkpoints"), checkpointsToJson()},
+        {QStringLiteral("harness"), QJsonObject{
+            {QStringLiteral("engine"), m_harnessEngineId},
+            {QStringLiteral("version"), m_harnessEngineVersion},
+            {QStringLiteral("profileId"), m_harnessProfileId},
+            {QStringLiteral("specHash"), m_harnessSpecHash}}},
         {QStringLiteral("snapshotVersion"), 2}
     };
     QFile f(sessionFilePath(sessionId));

@@ -4046,9 +4046,15 @@ void AppController::sendPiMessage(const QString &text)
     }
 }
 
-IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
+IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
+                                                 const QString &harnessEngineId)
 {
-    if (m_agentBackend && m_agentBackend->adapter() == adapter)
+    const QString desiredEngine = adapter == QLatin1String("llamaagent")
+        ? (HarnessEngine::isKnown(harnessEngineId) ? harnessEngineId : QStringLiteral("legacy"))
+        : QStringLiteral("legacy");
+    if (m_agentBackend && m_agentBackend->adapter() == adapter
+        && (adapter != QLatin1String("llamaagent")
+            || m_activeHarnessEngineId == desiredEngine))
         return m_agentBackend;
     if (m_agentBackend) { m_agentBackend->deleteLater(); m_agentBackend = nullptr; }
 
@@ -4058,6 +4064,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
     else if (adapter == QLatin1String("llamaagent"))
         b = new LlamaAgentBackend(this);
     if (!b) return nullptr;
+    m_activeHarnessEngineId = desiredEngine;
 
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(b)) {
         cb->setThinkingEnabled(m_agentThinkingEnabled);
@@ -4132,6 +4139,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter)
             QTimer::singleShot(0, this, [this]() { dispatchPendingScheduledTask(); });
         if (!b->running()) {
             m_activeAgentAdapter.clear();
+            m_activeHarnessEngineId = QStringLiteral("legacy");
             if (!m_agentPendingTool.isEmpty()) {
                 m_agentPendingTool.clear();
                 emit agentPendingToolChanged();
@@ -4850,6 +4858,11 @@ QVariantMap AppController::harnessSpecSummary(const QString &agentProfileId) con
     return m_profiles.harnessSpecSummary(agentProfileId, currentAgentProjectDir(), env);
 }
 
+QVariantList AppController::harnessEngineCatalog() const
+{
+    return HarnessEngine::catalog();
+}
+
 QVariantMap AppController::saveHarnessDirective(const QString &name, const QString &description,
                                                 const QString &when, const QString &body,
                                                 const QString &scope)
@@ -5067,9 +5080,11 @@ void AppController::resolveAgentTuning(const AgentProfile &ap, const HarnessSpec
 void AppController::applyChatHarnessSpec(const HarnessSpec &spec)
 {
     if (!spec.chat.set) return;
+    m_chatReasoningEffort = spec.chat.reasoningEffort;
     auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend);
     if (!raw) return;      // sin backend de chat todavia: se aplica al crearlo
     raw->setThinkingEnabled(spec.chat.thinking);
+    raw->setReasoningEffort(spec.chat.reasoningEffort);
     raw->setPersonaDesigner(spec.chat.designerPersona);
     raw->setSystemExtra(spec.chat.systemExtra);
     QVariantMap sampling = raw->sampling();
@@ -5164,6 +5179,7 @@ IAgentBackend *AppController::ensureChatBackend()
     auto *b = new RawChatBackend(this);
     if (auto *raw = qobject_cast<RawChatBackend *>(b)) {
         raw->setThinkingEnabled(m_chatThinkingEnabled);
+        raw->setReasoningEffort(m_chatReasoningEffort);
         raw->setPersonaDesigner(m_chatPersonaDesigner);
         raw->setSampling(QVariantMap{{QStringLiteral("temperature"), m_chatTemperature},
                                      {QStringLiteral("topP"), m_chatTopP},
@@ -5294,6 +5310,10 @@ void AppController::startAgent(const QString &launchProfileId)
 
     // Backend propio: sin binario externo, corre dentro de la app.
     if (adapter == QLatin1String("llamaagent")) {
+        const AgentProfile activeAgentProfile =
+            m_profiles.resolveAgentProfile(resolveAgentProfileId());
+        const HarnessSpec aspec = m_profiles.resolveHarnessSpec(activeAgentProfile);
+        const QString harnessEngineId = HarnessEngine::effectiveId(aspec.runtime);
         const bool cloud = ctx.backend.isCloud();
         // Provider cloud: resolver la API key por su ref (env var → store). Si no se
         // encuentra, pedirla a la UI y abortar el arranque (se reintenta tras setSecret).
@@ -5343,7 +5363,7 @@ void AppController::startAgent(const QString &launchProfileId)
             }
         }
 
-        IAgentBackend *b = ensureAgentBackend(adapter);
+        IAgentBackend *b = ensureAgentBackend(adapter, harnessEngineId);
         if (!b) {
             appendAgentEvent(QStringLiteral("lifecycle"), QStringLiteral("Error: backend LlamaAgent no disponible"));
             m_agentStarting = false;
@@ -5357,8 +5377,6 @@ void AppController::startAgent(const QString &launchProfileId)
             // Cadena de maestros: el PERFIL DE AGENTE gana sobre el LaunchProfile.
             // Así un mismo modelo puede escalar a distintos revisores según el
             // harness elegido, sin duplicar el launch entero.
-            const HarnessSpec aspec = m_profiles.resolveHarnessSpec(
-                m_profiles.resolveAgentProfile(resolveAgentProfileId()));
             MasterConfig mc = ctx.launch.master;
             if (!aspec.escalation.masterFallbacks.isEmpty()) {
                 MasterConfig fromSpec;
@@ -5382,6 +5400,11 @@ void AppController::startAgent(const QString &launchProfileId)
             ? ctx.workspace.cwd.trimmed() : m_agentCwdOverride;
         AgentContext c;
         c.adapter       = adapter;
+        c.launchProfileId = launchProfileId;
+        c.harnessEngineId = harnessEngineId;
+        c.harnessEngineVersion = HarnessEngine::effectiveVersion(aspec.runtime);
+        c.harnessProfileId = activeAgentProfile.id;
+        c.harnessSpecHash = HarnessEngine::fingerprint(aspec);
         c.cwd           = (!agentCwd.isEmpty() && QFileInfo(agentCwd).isDir()) ? agentCwd : QString();
         if (cloud) {
             c.serverBaseUrl = ctx.backend.cloudBaseUrl.trimmed();
@@ -15138,6 +15161,10 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         meta["agentProfileId"]   = m_benchmarkAgentProfileId;
         meta["agentProfileName"] = m_benchmarkAgentProfileName;
         const AgentProfile metaAgent = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+        const HarnessSpec metaHarnessSpec = m_profiles.resolveHarnessSpec(metaAgent);
+        meta["harnessEngineId"] = HarnessEngine::effectiveId(metaHarnessSpec.runtime);
+        meta["harnessEngineVersion"] = HarnessEngine::effectiveVersion(metaHarnessSpec.runtime);
+        meta["harnessSpecHash"] = HarnessEngine::fingerprint(metaHarnessSpec);
         const bool metaHoney = !metaAgent.id.isEmpty()
             && metaAgent.directives.contains(QStringLiteral("honey"));
         meta["agentVariant"] = metaHoney ? QStringLiteral("honey") : QStringLiteral("baseline");
@@ -16228,6 +16255,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             snapshotBenchmarkWorkspace(workspace);
 
         auto *agent = new LlamaAgentBackend(this);
+        const AgentProfile benchmarkAgentProfile =
+            m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+        const HarnessSpec benchmarkHarnessSpec =
+            m_profiles.resolveHarnessSpec(benchmarkAgentProfile);
+        const QString benchmarkHarnessEngine =
+            HarnessEngine::effectiveId(benchmarkHarnessSpec.runtime);
         m_benchmarkAgent = agent;
         agent->setEphemeralSessions(true);
         agent->setThinkingEnabled(m_agentThinkingEnabled);
@@ -16245,7 +16278,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         // directivas + thinking (para comparar justo a ese nivel). La aprobación
         // queda en "super" igual: el benchmark es headless y no puede pedir permisos.
         if (!m_benchmarkAgentProfileId.isEmpty()) {
-            const AgentProfile ap = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+            const AgentProfile ap = benchmarkAgentProfile;
             if (!ap.id.isEmpty())
                 applyAgentProfileCaps(agent, ap);
         }
@@ -16260,6 +16293,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
 
         AgentContext c;
         c.adapter       = QStringLiteral("llamaagent");
+        c.harnessEngineId = benchmarkHarnessEngine;
+        c.harnessEngineVersion = HarnessEngine::effectiveVersion(benchmarkHarnessSpec.runtime);
+        c.harnessProfileId = benchmarkAgentProfile.id;
+        c.harnessSpecHash = HarnessEngine::fingerprint(benchmarkHarnessSpec);
         c.cwd           = workspace;
         c.serverBaseUrl = serverBaseUrl();
         c.modelId       = routedModelId(ctx.catalogModel.id);
@@ -16715,6 +16752,11 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["target"]       = QStringLiteral("agent");
             result["agentProfileId"]   = m_benchmarkAgentProfileId;
             result["agentProfileName"] = m_benchmarkAgentProfileName;
+            const AgentProfile resultAgent = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+            const HarnessSpec resultHarness = m_profiles.resolveHarnessSpec(resultAgent);
+            result["harnessEngineId"] = HarnessEngine::effectiveId(resultHarness.runtime);
+            result["harnessEngineVersion"] = HarnessEngine::effectiveVersion(resultHarness.runtime);
+            result["harnessSpecHash"] = HarnessEngine::fingerprint(resultHarness);
             result["agentVariant"] = benchmarkVariant;
             result["honeyEnabled"] = honeyEnabled;
             result["agentTemperature"] = benchmarkTemp;

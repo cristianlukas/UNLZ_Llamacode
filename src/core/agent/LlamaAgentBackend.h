@@ -1,6 +1,10 @@
 #pragma once
 #include "IAgentBackend.h"
 #include "AgentProgressGovernor.h"
+#include "HarnessEventLog.h"
+#include "HarnessEffectLedger.h"
+#include "HarnessCapabilitySnapshot.h"
+#include "core/profiles/HarnessEngine.h"
 #include "core/profiles/HarnessSpec.h"
 #include <QHash>
 #include <QList>
@@ -107,6 +111,16 @@ public:
     static QStringList directiveFactKeys();
     QVariantMap directiveFactsForTest() const { return directiveFacts(false); }
     void setDeterministicSeed(int seed) { m_seed = seed; }
+
+    // El backend sigue siendo el mismo loop ReAct en ambos perfiles durante la
+    // primera etapa, pero el contrato, las sesiones y la evidencia quedan
+    // explícitamente aislados. Los getters son para QA/benchmarks y no forman
+    // parte del flujo normal de la UI.
+    QString harnessEngineIdForTest() const { return m_harnessEngineId; }
+    int harnessEngineVersionForTest() const { return m_harnessEngineVersion; }
+    QString harnessStorageDirForTest() const { return storageDir(); }
+    QString harnessEventLogPathForTest() const { return m_harnessEventLog.path(); }
+    HarnessCapabilitySnapshot harnessCapabilitiesForTest() const { return m_harnessCapabilities; }
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
@@ -411,7 +425,8 @@ public:
                                           const QJsonArray &tools,
                                           const QString &modelId,
                                           double temperature,
-                                          bool thinkingEnabled);
+                                          bool thinkingEnabled,
+                                          const QString &reasoningEffort = QString());
 
     // Consolidación de memoria (background): corre 1 completion sobre el transcript
     // actual y extrae hechos durables → MemoryStore (source="consolidation"). Async,
@@ -508,6 +523,7 @@ private:
 
     // Sesión + persistencia a disco (patrón RawChatBackend)
     void ensureSession();
+    void configureHarnessEventLog();
     QString buildSystemPrompt() const;   // prompt base + memoria del proyecto
     void logFromConst(const QString &text) const;  // log desde métodos const
     QVariantMap directiveFacts(bool super) const;  // hechos para el gate `when`
@@ -581,6 +597,14 @@ private:
     // turno (no interleavear entre tool_results → rompería el contrato OpenAI).
     QStringList m_pendingObservations;
     QString m_cwd;
+    QString m_harnessEngineId = QStringLiteral("legacy");
+    int m_harnessEngineVersion = 1;
+    QString m_harnessProfileId;
+    QString m_harnessSpecHash;
+    HarnessEventLog m_harnessEventLog;
+    HarnessEffectLedger m_harnessEffectLedger;
+    QString m_harnessActivationId;
+    HarnessCapabilitySnapshot m_harnessCapabilities;
     QString m_approvalMode = QStringLiteral("ask");
     bool    m_taskAutoApprove = false;   // override temporal durante una Task
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)

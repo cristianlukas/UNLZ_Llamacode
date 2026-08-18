@@ -7,6 +7,19 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+// Contrato de ejecución. Un spec que no declara este módulo es siempre
+// compatible con el harness histórico: no cambia backend, rutas ni sesiones.
+struct HarnessRuntimeModule {
+    QString engine = QStringLiteral("legacy");
+    int version = 1;
+    QString fallbackEngine = QStringLiteral("legacy");
+    bool experimental = false;
+    bool set = false;
+
+    QJsonObject toJson() const;
+    static HarnessRuntimeModule fromJson(const QJsonObject &o);
+};
+
 // HARNESS MODULAR: un perfil de agente deja de ser un preset cerrado y pasa a
 // ser una COMPOSICION declarativa de modulos (HarnessSpec). Cada modulo tiene
 // defaults identicos al comportamiento historico del backend, asi que un spec
@@ -81,6 +94,10 @@ struct HarnessContextModule {
     int keepLastImages = 1;            // trimStaleImages
     bool readDedup = true;             // stub al releer el mismo archivo
     bool preflight = false;            // ContextPreflight al abrir un objetivo
+    QString indexPolicy = QStringLiteral("lazy"); // off|lazy|eager
+    int scoutBudget = 700;             // presupuesto del scout/preflight
+    int scoutK = 8;                    // cantidad máxima de rangos iniciales
+    bool graphExpansion = true;        // vecinos estructurales del contexto
     bool warmup = true;                // prefill del prompt-cache (Charla)
     bool set = false;
 
@@ -153,6 +170,7 @@ struct HarnessMemoryModule {
 // tools ni loop: sampling, razonamiento e instrucciones persistentes.
 struct HarnessChatModule {
     bool thinking = false;
+    QString reasoningEffort;           // "" | low | medium | high | xhigh | max
     double temperature = -1.0;         // <0 = no enviar (default del server)
     double topP = -1.0;
     int topK = -1;
@@ -170,7 +188,7 @@ struct HarnessProtocolModule {
     bool thinking = false;
     bool thinkingLeakGuard = false;
     double temperature = -1.0;         // <0 = heredar del modelo/perfil
-    QString reasoningEffort;           // "" | low | high | max
+    QString reasoningEffort;           // "" | low | medium | high | xhigh | max
     int reasoningBudget = -1;
     bool set = false;
 
@@ -184,6 +202,7 @@ struct HarnessProtocolModule {
 
 struct HarnessSpec {
     QString extends;                   // id del spec padre ("" = defaults)
+    HarnessRuntimeModule runtime;
     HarnessToolsModule tools;
     HarnessPromptModule prompt;
     HarnessLoopModule loop;

@@ -109,15 +109,17 @@ para los paquetes de sistema. Validado en contenedor Ubuntu 24.04 limpio
 
 ## Qué es
 
-### Preflight de contexto en Debug
+### Índice y preflight de contexto
 
-El build Debug activa un preflight local inspirado en Graft: antes del primer
-turno del agente consulta el `project_brain` persistente, prepara candidatos por
-objetivo y solicita `repo_slice`/`hybrid_search` con expansión del grafo. Después
-de cada `write_file` o `edit_file` actualiza el índice de metadata y las
-relaciones del código. El preflight no copia fuentes, no usa servicios externos
-y registra sus métricas en la traza de la sesión. Release conserva el flujo
-histórico hasta validar el beneficio con benchmarks.
+El agente dispone de un índice local inspirado en Graft y archex. `context_scout`
+prepara candidatos por objetivo, rangos exactos, handles y un recibo de frescura y
+presupuesto; `context_fetch` valida el hash antes de devolver el código. También
+existen `repo_slice`/`hybrid_search` con expansión del grafo y recibo estructurado.
+Después de cada `write_file` o `edit_file` se actualizan los chunks y relaciones
+afectados. La búsqueda estructural no usa servicios externos; embeddings y
+reranking siguen siendo opcionales. El preflight se activa por perfil y Release
+conserva el flujo histórico hasta validar el beneficio con benchmarks. Ver
+[`docs/context-graph.md`](docs/context-graph.md).
 
 UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
 
@@ -718,6 +720,8 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   cuando el servidor está listo. Es independiente del toggle de Agente /
   Benchmark / Research y envía `reasoning_budget=0` /
   `chat_template_kwargs.enable_thinking=false` salvo que el usuario lo active.
+  Los perfiles de Chat también pueden fijar `reasoningEffort` (`low`, `medium`,
+  `high`, `xhigh` o `max`) y se reenvía al template sólo con thinking activo.
   Si el modelo emite `<think>` igualmente, Chat descarta ese bloque en streaming
   y no lo guarda en el historial.
 - **Indicador de fase** mientras espera (`Pensando...`, ejecución de tools,
@@ -729,7 +733,21 @@ Pegar un comando de terminal (e.g. `llama-server --model ... --ctx-size 8192 --n
   encima del compositor, numerados y con dos líneas de vista previa; cada uno se
   puede previsualizar, editar o eliminar, y la cola completa puede vaciarse.
 
-## Harness de Agente (opencode)
+## Harness de Agente (opencode + LlamaAgent modular)
+
+El harness actual se conserva como perfil legacy. El perfil experimental
+agent-intermedio-next activa el contrato Next sin migrar ni compartir sesiones
+con legacy: cambia de backend al seleccionar el motor, guarda los resultados con
+engine/version/fingerprint y permite volver a Legacy seleccionando el perfil
+histórico. La comparación A/B usa el mismo launch y separa el namespace de
+persistencia para que probar Next no altere el historial existente.
+
+- Catálogo de motores legacy/next desde el editor de perfiles.
+- Sesiones Next aisladas, event log por sesión y ledger de efectos inciertos.
+- Snapshot de capacidades fail-closed y protocolo de workers versionado con
+  framing acotado, nonce de autenticación, timeout y cancelación.
+- Las SDK Node/Python y el sandbox de sistema operativo siguen siendo la próxima
+  etapa; el driver host-side ya deja fijado el contrato para incorporarlos.
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real

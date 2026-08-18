@@ -83,6 +83,8 @@ private slots:
     void hybridSearch_compactReturnsSpans();
     void hybridSearch_includeDocsReportsCorpus();
     void repoSlice_defaultsToCompactEvidence();
+    void contextScoutAndFetch_validateHandle();
+    void contextStatus_reportsPersistentIndex();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
     void desktopControls_invalidWindowErrorsCleanly();
@@ -537,6 +539,32 @@ void AgentToolsTests::repoSlice_defaultsToCompactEvidence()
     QVERIFY(result.contains("REPOSLICE_MARKER"));
     QVERIFY(!result.contains("BODY_MUST_STAY_OUT"));
     QVERIFY(!result.contains("──────"));
+}
+
+void AgentToolsTests::contextScoutAndFetch_validateHandle()
+{
+    call("write_file", { {"path", "context.cpp"},
+                          {"content", "// CONTEXT_TOOL_MARKER\nint context_value = 42;\n"} });
+    const QVariantMap scout = call("context_scout", {{"query", "CONTEXT_TOOL_MARKER"},
+                                                       {"token_budget", 300}});
+    QVERIFY(scout.value("ok").toBool());
+    const QVariantMap receipt = scout.value("receipt").toMap();
+    QVERIFY(!receipt.value("returned").toList().isEmpty());
+    const QString handle = receipt.value("returned").toList().first().toMap()
+                               .value("handle").toString();
+    QVERIFY(handle.startsWith("ctx:"));
+    const QVariantMap fetched = call("context_fetch", {{"handle", handle}});
+    QVERIFY(fetched.value("ok").toBool());
+    QVERIFY(fetched.value("result").toString().contains("CONTEXT_TOOL_MARKER"));
+}
+
+void AgentToolsTests::contextStatus_reportsPersistentIndex()
+{
+    call("write_file", {{"path", "status.cpp"}, {"content", "int status_value;\n"}});
+    const QVariantMap status = call("context_status", {});
+    QVERIFY(status.value("ok").toBool());
+    QVERIFY(status.value("result").toString().contains("files"));
+    QVERIFY(status.value("result").toString().contains("chunks"));
 }
 
 void AgentToolsTests::recentActions_tailsEventLogForSession()

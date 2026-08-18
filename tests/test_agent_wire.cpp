@@ -1301,6 +1301,14 @@ void AgentWireTests::thinkingLeakGuard_isOptInAndControlsTemplate()
                                                                QStringLiteral("HIGH"));
     QCOMPARE(deepSeekHigh.value(QStringLiteral("reasoning_effort")).toString(),
              QStringLiteral("high"));
+    QCOMPARE(B::thinkingTemplateKwargs(true, false, QStringLiteral("medium"))
+                 .value(QStringLiteral("reasoning_effort")).toString(),
+             QStringLiteral("medium"));
+    QCOMPARE(B::thinkingTemplateKwargs(true, false, QStringLiteral("XHIGH"))
+                 .value(QStringLiteral("reasoning_effort")).toString(),
+             QStringLiteral("xhigh"));
+    QVERIFY(!B::thinkingTemplateKwargs(true, false, QStringLiteral("bogus"))
+                 .contains(QStringLiteral("reasoning_effort")));
     QVERIFY(!B::thinkingTemplateKwargs(false, false, QStringLiteral("max"))
                  .contains(QStringLiteral("reasoning_effort")));
 
@@ -1317,7 +1325,7 @@ void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
     const QJsonArray tools{QJsonObject{{QStringLiteral("type"), QStringLiteral("function")}}};
 
     const QJsonObject p = LlamaAgentBackend::buildWarmupPayload(
-        msgs, tools, QStringLiteral("local"), 0.7, true);
+        msgs, tools, QStringLiteral("local"), 0.7, true, QStringLiteral("medium"));
 
     // Prefijo idéntico al turno real: messages+tools+kwargs de template.
     QCOMPARE(p.value(QStringLiteral("messages")).toArray(), msgs);
@@ -1325,6 +1333,9 @@ void AgentWireTests::buildWarmupPayload_prefillsWithoutGenerating()
     QCOMPARE(p.value(QStringLiteral("temperature")).toDouble(), 0.7);
     QCOMPARE(p.value(QStringLiteral("chat_template_kwargs")).toObject()
                  .value(QStringLiteral("enable_thinking")).toBool(), true);
+    QCOMPARE(p.value(QStringLiteral("chat_template_kwargs")).toObject()
+                 .value(QStringLiteral("reasoning_effort")).toString(),
+             QStringLiteral("medium"));
     // Pero SIN generar: 1 token, sin stream, y con cache_prompt para el KV.
     QCOMPARE(p.value(QStringLiteral("max_tokens")).toInt(), 1);
     QCOMPARE(p.value(QStringLiteral("stream")).toBool(), false);

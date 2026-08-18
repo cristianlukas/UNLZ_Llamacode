@@ -1867,6 +1867,7 @@ Item {
                                     packs: agentProfilesSection.packItems
                                     directives: agentProfilesSection.customDirectiveItems
                                     parents: agentProfilesSection.parentOptions
+                                    engines: App.harnessEngineCatalog()
                                     // Los módulos del harness los aplica el agente
                                     // nativo; con otro backend el editor mentiría.
                                     // Sin agente corriendo no hay nada que advertir; con

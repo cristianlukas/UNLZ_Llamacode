@@ -726,7 +726,9 @@ AgentTaskPreset taskPreset(const QString &kind)
         return {kind, QStringLiteral("Investigación"),
                 QStringLiteral("Conviene razonar, buscar fuentes y verificar afirmaciones."),
                 core + QStringList{"search_docs", "memory", "web_search", "web_fetch",
-                                   "semantic_search", "hybrid_search", "verify_claims", "graph"},
+                                   "semantic_search", "hybrid_search", "repo_slice",
+                                   "context_status", "context_scout", "context_fetch",
+                                   "verify_claims", "graph"},
                 {"discipline", "testNet", "projectContext", "efficiency", "style"},
                 0.35, true, true};
     if (kind == QLatin1String("planning"))
