@@ -2,7 +2,13 @@ param(
     [string]$Config = "Debug",
     [string]$ShortcutName = "LlamaCode",
     [string]$Icon = "assets\app_icon.ico",
-    [string]$ShortcutPath
+    [string]$ShortcutPath,
+    # Publicar/actualizar tambien el acceso del menu Inicio. Se apaga en los
+    # tests (y en CI) para no tocar el perfil de la maquina que compila.
+    [switch]$NoStartMenu,
+    # Carpeta del menu Inicio. Parametrizada para poder testearla contra un
+    # directorio temporal en vez del perfil real del usuario.
+    [string]$StartMenuDir
 )
 
 $AppUserModelId = if ($Config -ieq 'Debug') {
@@ -173,6 +179,22 @@ if ((Test-Path $exePath) -and (Test-Path $taskbarDir)) {
     }
 }
 
+# Menu Inicio: es de donde arranca la app cualquiera que no tenga el pin, y es
+# lo unico que resuelven las herramientas que buscan apps por nombre. Se mantiene
+# junto con el .lnk del repo para que Release y Debug convivan y ninguno quede
+# apuntando a un build viejo.
+$startMenuShortcut = ""
+if (-not $NoStartMenu) {
+    if ([string]::IsNullOrWhiteSpace($StartMenuDir)) {
+        $StartMenuDir = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+    }
+    if (-not (Test-Path $StartMenuDir)) {
+        New-Item -ItemType Directory -Force -Path $StartMenuDir | Out-Null
+    }
+    $startMenuShortcut = Join-Path $StartMenuDir "$ShortcutName.lnk"
+    Update-LlamaCodeShortcutFile -Path $startMenuShortcut
+}
+
 $saved = $wsh.CreateShortcut($ShortcutPath)
 [PSCustomObject]@{
     ShortcutPath      = $ShortcutPath
@@ -182,4 +204,5 @@ $saved = $wsh.CreateShortcut($ShortcutPath)
     IconLocation      = $saved.IconLocation
     AppUserModelID    = $AppUserModelId
     UpdatedPinned     = $updatedPinnedShortcuts
+    StartMenuShortcut = $startMenuShortcut
 } | Format-List

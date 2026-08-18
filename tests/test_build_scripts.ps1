@@ -42,5 +42,64 @@ foreach ($pair in @(@('build.bat', $build), @('build_auto.bat', $auto))) {
     Check ($depIdx -gt 0 -and $depIdx -lt $cfgIdx) "$($pair[0]) repairs the dependency generator before deciding to configure"
 }
 
+# Accesos directos: el build mantiene el .lnk del repo, los pins de la barra y
+# -desde ahora- el del menu Inicio. El menu Inicio importa por dos razones: es
+# de donde arranca la app quien no tiene el pin, y es lo unico que resuelven las
+# herramientas que buscan apps por NOMBRE. Si el build no lo mantiene, queda
+# apuntando a un build viejo (o directamente no existe) y nadie se entera.
+Write-Host '== update-shortcut publishes to the Start Menu =='
+$shortcutScript = Join-Path $root 'update-shortcut.ps1'
+$sandbox = Join-Path ([IO.Path]::GetTempPath()) ("lc-shortcut-test-" + [guid]::NewGuid().ToString('N'))
+$startMenu = Join-Path $sandbox 'StartMenu'
+$repoLnk = Join-Path $sandbox 'LlamaCode-Debug.lnk'
+New-Item -ItemType Directory -Force $startMenu | Out-Null
+try {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $shortcutScript `
+        -Config Debug -ShortcutName 'LlamaCode-Debug' -Icon 'assets\debug_icon.ico' `
+        -ShortcutPath $repoLnk -StartMenuDir $startMenu | Out-Null
+
+    $smLnk = Join-Path $startMenu 'LlamaCode-Debug.lnk'
+    Check (Test-Path $smLnk) 'the Start Menu shortcut is created'
+    if (Test-Path $smLnk) {
+        $wsh = New-Object -ComObject WScript.Shell
+        $sm = $wsh.CreateShortcut($smLnk)
+        $expected = [IO.Path]::GetFullPath((Join-Path $root 'build\Debug\LlamaCode.exe'))
+        Check ([string]::Equals([IO.Path]::GetFullPath($sm.TargetPath), $expected,
+                                [StringComparison]::OrdinalIgnoreCase)) `
+              'it points at the build it was asked for, not at cmd.exe'
+        Check ($sm.IconLocation -match 'debug_icon') 'Debug keeps its own icon so both entries differ'
+    }
+
+    # Reapuntado: si el acceso quedo viejo, el build lo REPARA en vez de dejarlo
+    # roto. Es todo el punto de que lo mantenga el build y no una mano.
+    $stale = $wsh.CreateShortcut((Join-Path $startMenu 'LlamaCode-Debug.lnk'))
+    $stale.TargetPath = 'C:\Windows\System32\cmd.exe'
+    $stale.Save()
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $shortcutScript `
+        -Config Debug -ShortcutName 'LlamaCode-Debug' -Icon 'assets\debug_icon.ico' `
+        -ShortcutPath $repoLnk -StartMenuDir $startMenu | Out-Null
+    $fixed = $wsh.CreateShortcut((Join-Path $startMenu 'LlamaCode-Debug.lnk'))
+    Check ($fixed.TargetPath -notmatch 'cmd.exe') 'a stale Start Menu shortcut is repaired'
+
+    # -NoStartMenu: los tests y CI no deben tocar el perfil de la maquina.
+    $optOut = Join-Path $sandbox 'OptOut'
+    New-Item -ItemType Directory -Force $optOut | Out-Null
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $shortcutScript `
+        -Config Debug -ShortcutName 'LlamaCode-Debug' -Icon 'assets\debug_icon.ico' `
+        -ShortcutPath $repoLnk -StartMenuDir $optOut -NoStartMenu | Out-Null
+    Check (-not (Test-Path (Join-Path $optOut 'LlamaCode-Debug.lnk'))) `
+          '-NoStartMenu skips it entirely'
+} finally {
+    Remove-Item -Recurse -Force $sandbox -ErrorAction SilentlyContinue
+}
+
+# Los dos accesos tienen que quedar publicados: Release y Debug conviven, y el
+# usuario elige cual abre. Que el build publique solo uno es el bug que esto evita.
+Write-Host '== both configurations are published =='
+foreach ($pair in @(@('build.bat', $build), @('build_auto.bat', $auto))) {
+    Check ($pair[1].Contains('-ShortcutName "LlamaCode"')) "$($pair[0]) publishes the Release entry"
+    Check ($pair[1].Contains('-ShortcutName "LlamaCode-Debug"')) "$($pair[0]) publishes the Debug entry"
+}
+
 if ($fails) { throw "$fails build-script regression(s) failed" }
 Write-Host 'All build-script regressions passed.'
