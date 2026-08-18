@@ -207,11 +207,11 @@ El flujo recomendado es:
 
 ### Suite One-shotting
 
-Custom Benchmarks incluye la suite bundleada `One-shotting · Ecommerce + juego`.
-Ejecuta dos tareas creativas de horizonte largo con un único prompt inicial:
-un ecommerce premium de panadería y un juego espacial arcade. La suite exige
-workspace y README, verifica señales funcionales en los artefactos generados y
-marca explícitamente que no debe existir intervención humana durante la corrida.
+Custom Benchmarks incluye dos suites bundleadas independientes: `One-shotting ·
+Ecommerce panadería` y `One-shotting · Space shooter`. Cada una ejecuta una
+tarea creativa de horizonte largo con un único prompt inicial. Ambas exigen
+workspace y README, verifican señales funcionales en los artefactos generados y
+marcan explícitamente que no debe existir intervención humana durante la corrida.
 
 Para comparar los perfiles `Best`, seleccionar esta suite, target `agent`,
 `agent-maximo` y una pasada por perfil. La suite mide autonomía y completitud

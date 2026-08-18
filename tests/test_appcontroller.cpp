@@ -212,7 +212,7 @@ private slots:
     void doctorReportsStructureAndIssues();
     void importOllamaModelsIngestsStore();
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
-    void bundledOneShottingBenchmarkIsAvailable();
+    void bundledOneShottingBenchmarksAreSeparate();
     void importedBenchmarkNamesDescribeSubset();
     void tunerProfileNameUsesOptiPrefixWithoutChaining();
     void tunerGainPctNeedsBothLegs();
@@ -555,26 +555,25 @@ void AppControllerTests::bundledCustomBenchmarkUpgradePreservesPersonalFiles()
     QVERIFY(!AppController::shouldReplaceBundledBenchmarkForTest(personal, oldBundled));
 }
 
-void AppControllerTests::bundledOneShottingBenchmarkIsAvailable()
+void AppControllerTests::bundledOneShottingBenchmarksAreSeparate()
 {
-    const QString suitePath = QDir(QCoreApplication::applicationDirPath())
-        .filePath(QStringLiteral("../../assets/benchmarks/custom/one_shotting_qwen_product_generation_v1.json"));
-    QFile f(suitePath);
-    QVERIFY2(f.open(QIODevice::ReadOnly), "no se pudo abrir la suite One-shotting");
-    const QJsonObject suite = QJsonDocument::fromJson(f.readAll()).object();
-    QVERIFY2(!suite.isEmpty(), "la suite One-shotting debe ser JSON válido");
-    QCOMPARE(suite.value(QStringLiteral("id")).toString(),
-             QStringLiteral("one_shotting_qwen_product_generation_v1"));
-    QCOMPARE(suite.value(QStringLiteral("bundledVersion")).toInt(), 1);
-    QCOMPARE(suite.value(QStringLiteral("evaluation")).toObject()
-                 .value(QStringLiteral("kind")).toString(),
-             QStringLiteral("one-shotting"));
-    const QJsonArray prompts = suite.value(QStringLiteral("prompts")).toArray();
-    QCOMPARE(prompts.size(), 2);
-    QCOMPARE(prompts.at(0).toObject().value(QStringLiteral("id")).toString(),
-             QStringLiteral("bakery_ecommerce"));
-    QCOMPARE(prompts.at(1).toObject().value(QStringLiteral("id")).toString(),
-             QStringLiteral("space_shooter"));
+    const QString root = QDir(QCoreApplication::applicationDirPath())
+        .filePath(QStringLiteral("../../assets/benchmarks/custom"));
+    const QStringList names = {
+        QStringLiteral("one_shotting_bakery_ecommerce_v1.json"),
+        QStringLiteral("one_shotting_space_shooter_v1.json")
+    };
+    for (const QString &name : names) {
+        QFile f(QDir(root).filePath(name));
+        QVERIFY2(f.open(QIODevice::ReadOnly), qPrintable(name));
+        const QJsonObject suite = QJsonDocument::fromJson(f.readAll()).object();
+        QVERIFY2(!suite.isEmpty(), qPrintable(name));
+        QCOMPARE(suite.value(QStringLiteral("bundledVersion")).toInt(), 1);
+        QCOMPARE(suite.value(QStringLiteral("evaluation")).toObject()
+                     .value(QStringLiteral("kind")).toString(),
+                 QStringLiteral("one-shotting"));
+        QCOMPARE(suite.value(QStringLiteral("prompts")).toArray().size(), 1);
+    }
 }
 
 void AppControllerTests::importedBenchmarkNamesDescribeSubset()
