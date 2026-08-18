@@ -17,6 +17,13 @@ Una comparación sólo es válida cuando se mantiene constante el resto de la
 cadena. Si cambia el modelo, el binario, el perfil o el harness, se debe tratar
 como una nueva candidata y repetir el protocolo completo.
 
+## Archivos vivos de resultados
+
+La tabla operativa se mantiene en [`benchmark-results.md`](benchmark-results.md).
+La historia de corridas, descubrimientos, fallos y decisiones se conserva en
+[`benchmark-results-history.md`](benchmark-results-history.md). Toda mejora debe
+actualizar ambos archivos sin borrar los resultados históricos.
+
 ## Regla principal: la escalera de validación
 
 Cada candidata debe avanzar por esta secuencia:
