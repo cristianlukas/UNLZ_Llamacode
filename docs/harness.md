@@ -23,7 +23,7 @@ Documentos relacionados (y su estado):
 
 Desde la implementación del plan modular, un perfil de agente es una
 **composición declarativa de módulos**, no un preset cerrado.
-`src/core/profiles/HarnessSpec.h` define nueve piezas:
+`src/core/profiles/HarnessSpec.h` define once piezas:
 
 | Módulo | Gobierna |
 |---|---|
@@ -34,6 +34,8 @@ Desde la implementación del plan modular, un perfil de agente es una
 | `permissions` | `approvalMode`, reglas por patrón, scope de FS, guardrails |
 | `escalation` | cap de sub-agentes, aislamiento en worktree, cadena y gatillo del maestro, umbrales del `DifficultyRouter` |
 | `protocol` | `auto` / `native` / `text`, leak-guard de thinking, temperatura, reasoning |
+| `memory` | hechos de `MemoryStore` inyectados, memoria de proyecto (+ tope), consolidación al salir |
+| `chat` | modo Chat sin tools: sampling, thinking, persona diseñadora, instrucciones persistentes |
 | `phases` | overrides por fase: `plan`, `exec`, `verify`, `goalCheck` |
 
 Tres invariantes, todas testeadas:
@@ -60,6 +62,14 @@ que un binario anterior lea el archivo sin romperse.
 Headless (contrato obligatorio, ver `docs/HEADLESS.md`) vía `/invoke` sobre el
 target `profileManager`: `harnessPackCatalog`, `harnessDirectiveCatalog`,
 `agentProfileSpec`, `setAgentProfileSpec`, `agentProfileDiff`, `harnessSpecSummary`.
+
+`memory` y `chat` cubren dos cosas que el spec no tocaba: cuánta memoria entra
+al system prompt (eran 12 hechos y 64 KB de archivo, fijos y sin apagar — lo
+primero que uno recorta en un perfil al límite de contexto) y el modo Chat, que
+seguía usando los ajustes globales aunque el perfil dijera otra cosa. El `chat`
+se aplica al `RawChatBackend` al crearlo y en cada cambio de perfil activo, y
+suma `systemExtra`: instrucciones persistentes que van **primeras** en el
+preamble, antes de las notas de formato.
 
 El editor vive en `qml/components/LcHarnessEditor.qml`: no conoce a `App` (todo
 entra por propiedades y sale por señales), y por eso su lógica de edición —la

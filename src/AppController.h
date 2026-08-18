@@ -515,7 +515,7 @@ public:
     Q_INVOKABLE void smokeTestServer(const QString &launchProfileId);
     Q_INVOKABLE bool smokeTestRunning() const { return m_smokeTestProc != nullptr; }
     Q_INVOKABLE QString resolveFlag(const QString &binaryId, const QString &flag) const;
-    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.111"); }
+    Q_INVOKABLE QString version() const { return QStringLiteral("0.1.112"); }
     // Convierte la respuesta de /repos/.../releases/latest al formato interno
     // del popup. Público para poder validar el contrato sin hacer red en tests.
     static QJsonObject githubReleaseToUpdateFlag(const QJsonObject &release);
@@ -1753,6 +1753,9 @@ private:
     // Aplica el override de una fase declarada en el spec ("plan"|"exec"|
     // "verify"|"goalCheck"). Sin fases declaradas es un no-op.
     void      applyHarnessPhase(const QString &phase);
+    // Modulo `chat` del spec al RawChatBackend (sampling, thinking, persona,
+    // instrucciones persistentes). No-op si el modulo no fue declarado.
+    void      applyChatHarnessSpec(const HarnessSpec &spec);
     // Tuning efectivo (systemExtra + temperatura) de un perfil bajo un spec dado
     // (el resuelto, o el de una fase). Ver la definición para la precedencia.
     void      resolveAgentTuning(const AgentProfile &ap, const HarnessSpec &spec,

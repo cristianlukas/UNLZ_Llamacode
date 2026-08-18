@@ -195,6 +195,33 @@ ApplicationWindow {
         check(factsLabel !== null && factsLabel.text.indexOf("project.hasGit") > 0,
               "la UI enumera los hechos disponibles")
 
+        // --- Memoria y Chat: los modulos nuevos editan su propio modulo ------
+        editor.spec = { loop: { credits: 4 } }
+        var factsField = findChild("structuredFactsField")
+        check(factsField !== null, "el campo de hechos de memoria existe")
+        check(factsField.text === "12", "arranca en el default historico: " + factsField.text)
+        editor.specSet("memory", "structuredFacts", 3)
+        check(editor.specValue("memory", "structuredFacts", 0) === 3, "el valor entra")
+        check(editor.specValue("loop", "credits", 0) === 4, "editar memory no pisa loop")
+
+        var projSwitch = findChild("projectMemorySwitch")
+        check(projSwitch !== null && projSwitch.checked === true,
+              "la memoria de proyecto arranca encendida")
+
+        editor.specSet("chat", "systemExtra", "una linea")
+        check(editor.specValue("chat", "systemExtra", "") === "una linea", "chat.systemExtra entra")
+        check(editor.specValue("memory", "structuredFacts", 0) === 3,
+              "editar chat no pisa memory")
+        var chatExtra = findChild("chatSystemExtraField")
+        check(chatExtra !== null && chatExtra.text === "una linea",
+              "el textarea del chat refleja el spec")
+
+        // readOnly tambien cubre los modulos nuevos.
+        editor.readOnly = true
+        check(!editor.specSet("memory", "structuredFacts", 99), "readOnly frena memory")
+        check(!editor.specSet("chat", "thinking", true), "readOnly frena chat")
+        editor.readOnly = false
+
         // --- Guardar: el caller decide qué hacer -----------------------------
         var savesBefore = win.saveCount
         editor.saveRequested()

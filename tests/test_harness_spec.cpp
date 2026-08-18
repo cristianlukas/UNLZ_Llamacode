@@ -44,6 +44,7 @@ private slots:
     void phases_canOverrideTemperatureAndExtra();
     void escalation_masterChainAndRouterThresholds();
     void diff_listsOnlyChangedFields();
+    void memoryAndChat_defaultsAndInheritance();
     void presets_minimalAndRpaExist();
 
 private:
@@ -438,6 +439,58 @@ void HarnessSpecTests::diff_listsOnlyChangedFields()
     QVERIFY(fields.contains(QStringLiteral("sameCallLimit")));
     QVERIFY(fields.contains(QStringLiteral("keepLastImages")));
     QVERIFY(base.diff(base).isEmpty());
+}
+
+// Los modulos nuevos (memoria/RAG y modo Chat) siguen las MISMAS reglas que el
+// resto: defaults iguales al comportamiento historico y herencia por modulo.
+void HarnessSpecTests::memoryAndChat_defaultsAndInheritance()
+{
+    const HarnessSpec def;
+    // Defaults = lo que estaba hardcodeado en buildSystemPrompt.
+    QVERIFY(def.memory.structuredEnabled);
+    QCOMPARE(def.memory.structuredFacts, 12);
+    QVERIFY(def.memory.projectMemory);
+    QCOMPARE(def.memory.projectMemoryMaxChars, 64 * 1024);
+    QVERIFY(def.memory.consolidateOnLeave);
+    QVERIFY(!def.chat.thinking);
+    QCOMPARE(def.chat.temperature, -1.0);
+    QVERIFY(def.chat.systemExtra.isEmpty());
+    QVERIFY(def.isEmpty());          // declarar nada sigue siendo "spec vacio"
+
+    // Round-trip: sin declarar, los modulos no viajan al JSON.
+    HarnessSpec s;
+    s.memory.set = true;
+    s.memory.structuredFacts = 3;
+    s.memory.projectMemory = false;
+    s.chat.set = true;
+    s.chat.systemExtra = QStringLiteral("respondé en una línea");
+    s.chat.temperature = 0.2;
+    const QJsonObject json = s.toJson();
+    QVERIFY(json.contains(QStringLiteral("memory")));
+    QVERIFY(json.contains(QStringLiteral("chat")));
+    QVERIFY(!json.contains(QStringLiteral("tools")));
+
+    const HarnessSpec back = HarnessSpec::fromJson(json);
+    QCOMPARE(back.memory.structuredFacts, 3);
+    QVERIFY(!back.memory.projectMemory);
+    QCOMPARE(back.chat.systemExtra, QStringLiteral("respondé en una línea"));
+    QCOMPARE(back.chat.temperature, 0.2);
+
+    // Herencia por modulo: el hijo que declara `chat` no toca `memory`.
+    HarnessSpec child;
+    child.chat.set = true;
+    child.chat.thinking = true;
+    const HarnessSpec r = HarnessSpec::resolve(s, child);
+    QCOMPARE(r.memory.structuredFacts, 3);        // heredado
+    QVERIFY(r.chat.thinking);                     // pisado
+    QVERIFY(r.chat.systemExtra.isEmpty());        // el modulo se reemplaza entero
+
+    // El diff los reporta como cualquier otro modulo.
+    QVariantList d = s.diff(HarnessSpec());
+    QStringList mods;
+    for (const QVariant &v : d) mods << v.toMap().value(QStringLiteral("module")).toString();
+    QVERIFY(mods.contains(QStringLiteral("memory")));
+    QVERIFY(mods.contains(QStringLiteral("chat")));
 }
 
 void HarnessSpecTests::presets_minimalAndRpaExist()

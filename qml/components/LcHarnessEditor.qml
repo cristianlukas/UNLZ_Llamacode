@@ -512,6 +512,96 @@ Item {
             }
         }
 
+        // Memoria/RAG y modo Chat: los dos módulos que el spec no cubría. La
+        // memoria es lo primero que uno recorta en un perfil al límite de
+        // contexto, y el Chat seguía usando los ajustes globales aunque el
+        // perfil dijera otra cosa.
+        Text { text: "Memoria inyectada"; color: Theme.textSecondary; font.pixelSize: 12 }
+        GridLayout {
+            Layout.fillWidth: true; columns: 4
+            rowSpacing: 8; columnSpacing: 10
+            enabled: !root.readOnly
+
+            Text { text: "Hechos estructurados"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                objectName: "structuredFactsField"
+                Layout.fillWidth: true; placeholderText: "12"
+                text: String(root.specValue("memory", "structuredFacts", 12))
+                onEditingFinished: root.specSet("memory", "structuredFacts", parseInt(text) || 0)
+                ToolTip.visible: hovered
+                ToolTip.text: "Cuántos hechos vigentes de la memoria se inyectan. 0 = ninguno."
+            }
+            Text { text: "Memoria del proyecto"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                objectName: "projectMemorySwitch"
+                checked: root.specValue("memory", "projectMemory", true)
+                onToggled: root.specSet("memory", "projectMemory", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: ".llamacode/memory.md o AGENTS.md al system prompt."
+            }
+
+            Text { text: "Tope memoria proyecto"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "65536"
+                text: String(root.specValue("memory", "projectMemoryMaxChars", 65536))
+                onEditingFinished: root.specSet("memory", "projectMemoryMaxChars", parseInt(text) || 0)
+            }
+            Text { text: "Consolidar al salir"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                checked: root.specValue("memory", "consolidateOnLeave", true)
+                onToggled: root.specSet("memory", "consolidateOnLeave", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: "Extrae hechos durables del transcript al dejar la sesión."
+            }
+        }
+
+        Text { text: "Modo Chat (sin tools)"; color: Theme.textSecondary; font.pixelSize: 12 }
+        GridLayout {
+            Layout.fillWidth: true; columns: 4
+            rowSpacing: 8; columnSpacing: 10
+            enabled: !root.readOnly
+
+            Text { text: "Razonar"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                objectName: "chatThinkingSwitch"
+                checked: root.specValue("chat", "thinking", false)
+                onToggled: root.specSet("chat", "thinking", checked)
+            }
+            Text { text: "Temperatura"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "vacío = heredar"
+                text: root.specValue("chat", "temperature", -1) >= 0
+                      ? String(root.specValue("chat", "temperature", -1)) : ""
+                onEditingFinished: root.specSet("chat", "temperature",
+                                                text.trim().length ? parseFloat(text) : -1)
+            }
+
+            Text { text: "top-P"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "vacío = heredar"
+                text: root.specValue("chat", "topP", -1) >= 0
+                      ? String(root.specValue("chat", "topP", -1)) : ""
+                onEditingFinished: root.specSet("chat", "topP",
+                                                text.trim().length ? parseFloat(text) : -1)
+            }
+            Text { text: "Persona diseñadora"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                checked: root.specValue("chat", "designerPersona", false)
+                onToggled: root.specSet("chat", "designerPersona", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: "Preamble para diagramas/mockups (bloques mermaid/svg)."
+            }
+        }
+        TextArea {
+            objectName: "chatSystemExtraField"
+            Layout.fillWidth: true; Layout.minimumHeight: 50
+            enabled: !root.readOnly
+            wrapMode: TextArea.Wrap; color: Theme.textPrimary
+            placeholderText: "Instrucciones persistentes del modo Chat (opcional)"
+            text: root.specValue("chat", "systemExtra", "")
+            onEditingFinished: root.specSet("chat", "systemExtra", text)
+        }
+
         Text {
             text: "Reglas de permiso (una por línea: allow|deny|ask [kind:]<glob>)"
             color: Theme.textSecondary; font.pixelSize: 12

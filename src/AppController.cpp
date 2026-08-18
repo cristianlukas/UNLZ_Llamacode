@@ -4943,6 +4943,7 @@ void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &s
     if (spec.loop.set) cb->setLoopPolicy(spec.loop);
     if (spec.context.set) cb->setContextPolicy(spec.context);
     if (spec.escalation.set) cb->setEscalationPolicy(spec.escalation);
+    if (spec.memory.set) cb->setMemoryPolicy(spec.memory);
     if (spec.protocol.set) {
         cb->setToolProtocol(spec.protocol.toolProtocol);
         cb->setThinkingLeakGuard(spec.protocol.thinkingLeakGuard);
@@ -5054,6 +5055,26 @@ void AppController::resolveAgentTuning(const AgentProfile &ap, const HarnessSpec
     if (temperature) *temperature = temp;
 }
 
+// El modulo `chat` del spec al RawChatBackend. El modo Chat no tiene loop ni
+// tools, pero si sampling, razonamiento y ahora instrucciones persistentes:
+// hasta esta feature un perfil "minimal" seguia chateando con los defaults
+// globales, que es justo lo que el perfil dice no querer.
+void AppController::applyChatHarnessSpec(const HarnessSpec &spec)
+{
+    if (!spec.chat.set) return;
+    auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend);
+    if (!raw) return;      // sin backend de chat todavia: se aplica al crearlo
+    raw->setThinkingEnabled(spec.chat.thinking);
+    raw->setPersonaDesigner(spec.chat.designerPersona);
+    raw->setSystemExtra(spec.chat.systemExtra);
+    QVariantMap sampling = raw->sampling();
+    if (spec.chat.temperature >= 0.0)
+        sampling[QStringLiteral("temperature")] = spec.chat.temperature;
+    if (spec.chat.topP >= 0.0) sampling[QStringLiteral("topP")] = spec.chat.topP;
+    if (spec.chat.topK >= 0) sampling[QStringLiteral("topK")] = spec.chat.topK;
+    raw->setSampling(sampling);
+}
+
 void AppController::applyActiveAgentProfile()
 {
     auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend);
@@ -5075,8 +5096,10 @@ void AppController::applyActiveAgentProfile()
 
     QString sysExtra;
     double temp = -1.0;
-    resolveAgentTuning(ap, m_profiles.resolveHarnessSpec(ap), &sysExtra, &temp);
+    const HarnessSpec activeSpec = m_profiles.resolveHarnessSpec(ap);
+    resolveAgentTuning(ap, activeSpec, &sysExtra, &temp);
     cb->setAgentTuning(sysExtra, temp);
+    applyChatHarnessSpec(activeSpec);
 
     // Modo Plan: es una fase, no sólo una política de aprobación. Si el spec
     // declaró overrides para "plan" (p.ej. sólo tools de lectura), se aplican acá.
@@ -5143,6 +5166,7 @@ IAgentBackend *AppController::ensureChatBackend()
                                      {QStringLiteral("minP"), m_chatMinP},
                                      {QStringLiteral("repeatPenalty"), m_chatRepeatPenalty}});
     }
+
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_chatMessages = b->messages();
         if (m_chatStreamingIndex != -1) {
@@ -5231,6 +5255,10 @@ IAgentBackend *AppController::ensureChatBackend()
     if (auto *raw = qobject_cast<RawChatBackend *>(b))
         raw->setSampling(m_chatTemperature, m_chatTopP, m_chatTopK);
     m_chatBackend = b;
+    // El sampling de arriba viene de los ajustes globales; el modulo `chat` del
+    // perfil es mas especifico y va DESPUES para no quedar pisado.
+    applyChatHarnessSpec(
+        m_profiles.resolveHarnessSpec(m_profiles.resolveAgentProfile(resolveAgentProfileId())));
     return m_chatBackend;
 }
 

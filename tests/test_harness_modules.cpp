@@ -16,6 +16,7 @@
 #include <QTemporaryDir>
 #include "core/agent/HarnessDirectiveStore.h"
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/agent/RawChatBackend.h"
 #include "core/profiles/HarnessSpec.h"
 
 class HarnessModulesTests : public QObject
@@ -38,6 +39,8 @@ private slots:
     void directiveStore_savesEditsAndRemoves();
     void directiveStore_rejectsInvalidInput();
     void directiveFactKeys_matchTheFactsActuallyUsed();
+    void memory_policyGovernsWhatGetsInjected();
+    void chat_moduleReachesThePreamble();
 
 private:
     QTemporaryDir m_ws;
@@ -470,6 +473,76 @@ void HarnessModulesTests::directiveFactKeys_matchTheFactsActuallyUsed()
     const QVariantMap facts = be.directiveFactsForTest();
     for (const QString &key : declared)
         QVERIFY2(facts.contains(key), qPrintable(key + " declarada pero no evaluada"));
+}
+
+// Memoria: cuantos hechos y si va la memoria de proyecto lo decide el modulo
+// `memory`. Antes eran 12 hechos y 64 KB fijos, sin forma de apagarlo — lo
+// primero que uno querria recortar en un perfil al limite de contexto.
+void HarnessModulesTests::memory_policyGovernsWhatGetsInjected()
+{
+    // Workspace con memoria de proyecto en disco.
+    const QString cwd = m_ws.path();
+    QFile mem(QDir(cwd).filePath(QStringLiteral(".llamacode/memory.md")));
+    QDir().mkpath(QFileInfo(mem).absolutePath());
+    QVERIFY(mem.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    mem.write("MEMORIA-DEL-PROYECTO-MARCADOR\n");
+    mem.close();
+
+    LlamaAgentBackend be;
+    be.setCwdForTest(cwd);
+    QVERIFY2(be.systemPromptForTest().contains(QStringLiteral("MEMORIA-DEL-PROYECTO-MARCADOR")),
+             "por default la memoria de proyecto se inyecta (comportamiento historico)");
+
+    HarnessMemoryModule off;
+    off.set = true;
+    off.projectMemory = false;
+    be.setMemoryPolicy(off);
+    QVERIFY2(!be.systemPromptForTest().contains(QStringLiteral("MEMORIA-DEL-PROYECTO-MARCADOR")),
+             "projectMemory=false la saca del prompt");
+    QCOMPARE(be.memoryPolicyForTest().projectMemory, false);
+
+    // El tope recorta el archivo en vez de leerlo entero.
+    HarnessMemoryModule tiny;
+    tiny.set = true;
+    tiny.projectMemoryMaxChars = 8;
+    be.setMemoryPolicy(tiny);
+    const QString prompt = be.systemPromptForTest();
+    QVERIFY(prompt.contains(QStringLiteral("MEMORIA-")));
+    QVERIFY2(!prompt.contains(QStringLiteral("MEMORIA-DEL-PROYECTO-MARCADOR")),
+             "con el tope chico el archivo entra recortado");
+
+    // structuredFacts=0 apaga el recall aunque structuredEnabled siga en true:
+    // pedir "cero hechos" y que igual inyecte seria una perilla que miente.
+    HarnessMemoryModule zero;
+    zero.set = true;
+    zero.structuredFacts = 0;
+    be.setMemoryPolicy(zero);
+    QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("Memoria estructurada relevante")));
+}
+
+// Modo Chat: el modulo llega al preamble real que se manda al server.
+void HarnessModulesTests::chat_moduleReachesThePreamble()
+{
+    // Sin systemExtra: el preamble es el historico (nota de no-thinking).
+    QJsonArray base = RawChatBackend::buildSystemPreamble(false, false, QString());
+    QCOMPARE(base.size(), 1);
+
+    // Con instrucciones del perfil: van PRIMERAS (son del usuario, no formato).
+    const QString extra = QStringLiteral("Respondé siempre en una línea.");
+    QJsonArray withExtra = RawChatBackend::buildSystemPreamble(false, false, extra);
+    QCOMPARE(withExtra.size(), 2);
+    QCOMPARE(withExtra.first().toObject().value(QStringLiteral("content")).toString(), extra);
+    QCOMPARE(withExtra.first().toObject().value(QStringLiteral("role")).toString(),
+             QStringLiteral("system"));
+
+    // Con thinking ON no se agrega la nota de "sin razonamiento", pero el extra
+    // del perfil sigue estando: son cosas independientes.
+    QJsonArray thinking = RawChatBackend::buildSystemPreamble(true, false, extra);
+    QCOMPARE(thinking.size(), 1);
+    QCOMPARE(thinking.first().toObject().value(QStringLiteral("content")).toString(), extra);
+
+    // Espacios en blanco no cuentan como instruccion.
+    QCOMPARE(RawChatBackend::buildSystemPreamble(false, false, QStringLiteral("   ")).size(), 1);
 }
 
 QTEST_MAIN(HarnessModulesTests)
