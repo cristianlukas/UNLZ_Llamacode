@@ -124,6 +124,7 @@ QString HarnessDirectiveStore::projectRoot(const QString &workspace)
 
 QVariantList HarnessDirectiveStore::list(const QString &workspace)
 {
+    seedBundledExamples();
     // Global primero; la de proyecto pisa por nombre (override local).
     QMap<QString, QVariantMap> byName;
     for (const auto &[scope, root] : rootsFor(workspace)) {
@@ -157,6 +158,109 @@ QVariantMap HarnessDirectiveStore::load(const QString &name, const QString &work
     }
     return {{QStringLiteral("ok"), false},
             {QStringLiteral("error"), QStringLiteral("Directiva no encontrada: %1").arg(slug)}};
+}
+
+namespace {
+// Raiz de un scope, o vacio si el scope pide workspace y no hay.
+QString rootForScope(const QString &scope, const QString &workspace)
+{
+    if (scope == QLatin1String("project"))
+        return HarnessDirectiveStore::projectRoot(workspace);
+    return HarnessDirectiveStore::globalRoot();
+}
+}  // namespace
+
+QVariantMap HarnessDirectiveStore::save(const QString &name, const QString &description,
+                                        const QString &when, const QString &body,
+                                        const QString &scope, const QString &workspace)
+{
+    const QString slug = name.trimmed().toLower();
+    if (!validSlug(slug))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"),
+                 QStringLiteral("El nombre debe ser kebab-case (a-z, 0-9, guiones)")}};
+    const QString desc = description.trimmed();
+    if (desc.isEmpty() || desc.size() > 1024)
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("description es obligatoria (máx. 1024)")}};
+    if (body.trimmed().isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("La directiva no tiene contenido")}};
+    // El frontmatter es delimitado por líneas "---": un valor multilínea rompería
+    // el archivo. Se rechaza acá en vez de escribir algo que después no carga.
+    if (desc.contains(QLatin1Char('\n')) || when.contains(QLatin1Char('\n')))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("description y when son de una sola línea")}};
+
+    const QString root = rootForScope(scope, workspace);
+    if (root.isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Scope 'project' sin workspace abierto")}};
+
+    QString text = QStringLiteral("---\nname: %1\ndescription: %2\n").arg(slug, desc);
+    if (!when.trimmed().isEmpty())
+        text += QStringLiteral("when: %1\n").arg(when.trimmed());
+    text += QStringLiteral("---\n") + body.trimmed() + QLatin1Char('\n');
+
+    const QByteArray utf8 = text.toUtf8();
+    if (utf8.size() > kMaxDirectiveBytes)
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"),
+                 QStringLiteral("La directiva supera %1 KB").arg(kMaxDirectiveBytes / 1024)}};
+
+    QDir().mkpath(root);
+    const QString path = QDir(root).filePath(slug + QStringLiteral(".md"));
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("No se pudo escribir %1").arg(path)}};
+    f.write(utf8);
+    f.close();
+    return {{QStringLiteral("ok"), true}, {QStringLiteral("path"), path},
+            {QStringLiteral("name"), slug}, {QStringLiteral("scope"), scope}};
+}
+
+QVariantMap HarnessDirectiveStore::remove(const QString &name, const QString &scope,
+                                          const QString &workspace)
+{
+    const QString slug = name.trimmed().toLower();
+    if (!validSlug(slug))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Nombre de directiva inválido")}};
+    const QString root = rootForScope(scope, workspace);
+    if (root.isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Scope 'project' sin workspace abierto")}};
+    const QString path = QDir(root).filePath(slug + QStringLiteral(".md"));
+    if (!QFileInfo::exists(path))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("No existe: %1").arg(slug)}};
+    if (!QFile::remove(path))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("No se pudo borrar %1").arg(path)}};
+    return {{QStringLiteral("ok"), true}};
+}
+
+// Copia las directivas bundleadas a la raíz global la PRIMERA vez (si el usuario
+// no tiene ninguna). Sirven de plantilla y de smoke del descubrimiento: si la
+// sección aparece vacía, es que el catálogo no está leyendo la carpeta.
+void HarnessDirectiveStore::seedBundledExamples()
+{
+    const QString root = globalRoot();
+    QDir().mkpath(root);
+    const bool empty = QDir(root).entryInfoList(QStringList{QStringLiteral("*.md")},
+                                                QDir::Files).isEmpty();
+    if (!empty) return;
+    const QDir bundled(QStringLiteral(":/assets/harness/directives"));
+    if (!bundled.exists()) return;
+    for (const QFileInfo &entry : bundled.entryInfoList(QStringList{QStringLiteral("*.md")},
+                                                        QDir::Files)) {
+        const QString dest = QDir(root).filePath(entry.fileName());
+        if (QFileInfo::exists(dest)) continue;
+        QFile::copy(entry.absoluteFilePath(), dest);
+        // El qrc viene read-only: sin esto el usuario no puede editar la copia.
+        QFile(dest).setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    }
 }
 
 QVariantList HarnessDirectiveStore::loadMany(const QStringList &names, const QString &workspace)

@@ -17,6 +17,8 @@
 #include "core/agent/BrowserTeach.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/LlamaAgentBackend.h"
+#include "core/profiles/HarnessSpec.h"
+#include "core/profiles/ProfileManager.h"
 #include "core/profiles/ProfileTypes.h"
 #include "core/tasks/TaskStore.h"
 #include "core/automation/AutomationRunner.h"
@@ -75,6 +77,27 @@ public:
         QTimer::singleShot(m_replyDelayMs, this, [this]() { emit turnFinished(); });
     }
 
+    // Registro de lo que el harness le baja al backend por la interfaz comun.
+    // Sin esto una fase podia ser un no-op y el test no se enteraba.
+    void setApprovalPolicy(const QString &mode) override
+    {
+        m_approvalModes.append(mode);
+        m_approvalAtBodyRun.insert(m_bodyRuns, mode);
+    }
+    void setPermissionRules(const QString &rules) override { m_permRules = rules; }
+    void setAgentTuning(const QString &systemExtra, double temperature) override
+    {
+        m_systemExtra = systemExtra;
+        m_temperature = temperature;
+        m_tuningCalls++;
+    }
+    QStringList approvalModes() const { return m_approvalModes; }
+    QString approvalAtBodyRun(int run) const { return m_approvalAtBodyRun.value(run); }
+    QString permissionRules() const { return m_permRules; }
+    QString systemExtra() const { return m_systemExtra; }
+    double temperature() const { return m_temperature; }
+    int tuningCalls() const { return m_tuningCalls; }
+
     void setVerdicts(const QStringList &v) { m_verdicts = v; }
     void setBodyReplies(const QStringList &r) { m_bodyReplies = r; }
     void setReplyDelayMs(int ms) { m_replyDelayMs = qMax(0, ms); }
@@ -89,6 +112,12 @@ private:
     QString m_lastBodyPrompt;
     int m_replyDelayMs = 0;
     QVariantList m_msgs;
+    QStringList m_approvalModes;
+    QHash<int, QString> m_approvalAtBodyRun;
+    QString m_permRules;
+    QString m_systemExtra;
+    double m_temperature = -1.0;
+    int m_tuningCalls = 0;
 };
 
 class AppControllerTests : public QObject
@@ -158,6 +187,8 @@ private slots:
     void windowsStartupCommandQuotesExecutable();
     void startupHiddenRequiresBothFlags();
     void loopTaskRunsBodyUntilGoalMet();
+    void loopTaskAppliesVerifyPhaseAndRestoresIt();
+    void profileWithoutPhasesDoesNotReapplyHarness();
     void loopTaskStopsAtMaxIterations();
     void loopTaskStopsAtMaxSeconds();
     void dataDrivenTaskRunsBodyPerRow();
@@ -189,6 +220,8 @@ private slots:
 private:
     QTemporaryDir m_tmp;
     QString makeLoopTask(AppController &app, const QString &name, int maxIter);
+    // Perfil de agente con override por FASE, activo en `app`. Devuelve su id.
+    QString makePhasedAgentProfile(AppController &app, const QJsonObject &phases);
 };
 
 void AppControllerTests::githubReleaseIsConvertedToUpdateFlag()
@@ -286,6 +319,89 @@ QString AppControllerTests::makeLoopTask(AppController &app, const QString &name
         {QStringLiteral("loopMaxIterations"), maxIter}
     };
     return app.taskStore()->save(QString(), def);
+}
+
+QString AppControllerTests::makePhasedAgentProfile(AppController &app,
+                                                  const QJsonObject &phases)
+{
+    ProfileManager *pm = app.profileManager();
+    const QString id = pm->addAgentProfile(QStringLiteral("Con fases"));
+    HarnessSpec spec;
+    spec.permissions.set = true;
+    spec.permissions.approvalMode = QStringLiteral("auto");
+    for (auto it = phases.constBegin(); it != phases.constEnd(); ++it)
+        spec.phases.insert(it.key(), it.value().toObject());
+    pm->setAgentProfileSpec(id, spec.toJson().toVariantMap());
+    app.setActiveAgentProfileId(id);
+    return id;
+}
+
+// Las fases del HarnessSpec no valen nada si el runner no las aplica en el
+// momento correcto. Esto es lo que faltaba: forPhase estaba testeada pura, el
+// cableado no. El test tiene que FALLAR si se borra applyHarnessPhase del runner.
+void AppControllerTests::loopTaskAppliesVerifyPhaseAndRestoresIt()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    fake->setVerdicts({QStringLiteral("GOAL_NOT_MET falta"), QStringLiteral("GOAL_MET listo")});
+    app.setTestAgentBackend(fake);
+
+    // Fase de verificación en modo plan (sólo lectura) sobre un perfil que en
+    // ejecución aprueba todo: si la fase se aplica, el modo cambia y vuelve.
+    QJsonObject verifyPatch;
+    verifyPatch[QStringLiteral("permissions")] =
+        QJsonObject{{QStringLiteral("approvalMode"), QStringLiteral("plan")}};
+    QJsonObject phases;
+    phases[QStringLiteral("verify")] = verifyPatch;
+    makePhasedAgentProfile(app, phases);
+
+    const QString id = makeLoopTask(app, QStringLiteral("Loop con fases"), 5);
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(id);
+    QTRY_VERIFY_WITH_TIMEOUT(!fin.isEmpty(), 5000);
+
+    const QStringList modes = fake->approvalModes();
+    QVERIFY2(modes.contains(QStringLiteral("plan")),
+             qPrintable(QStringLiteral("la fase verify debe bajar approvalMode=plan; se vio: ")
+                        + modes.join(QLatin1Char(','))));
+    // Y la iteración siguiente vuelve al modo del spec base: una fase es una
+    // vista temporal, no una mutación del perfil. Se mira desde el PRIMER plan:
+    // el último es el goal-check final, después del cual la Task ya terminó.
+    const int planAt = modes.indexOf(QStringLiteral("plan"));
+    QVERIFY2(modes.mid(planAt + 1).contains(QStringLiteral("auto")),
+             qPrintable(QStringLiteral("tras verificar, el modo base tiene que volver; se vio: ")
+                        + modes.join(QLatin1Char(','))));
+}
+
+// El contrapeso del test anterior: un perfil SIN fases no debe generar ninguna
+// llamada extra. Un no-op de palabra (que igual reaplica todo) ensuciaría el
+// prompt-cache en cada verificación.
+void AppControllerTests::profileWithoutPhasesDoesNotReapplyHarness()
+{
+    AppController app;
+    auto *fake = new FakeAgentBackend(&app);
+    fake->start(AgentContext{});
+    fake->setVerdicts({QStringLiteral("GOAL_MET listo")});
+    app.setTestAgentBackend(fake);
+
+    ProfileManager *pm = app.profileManager();
+    const QString id = pm->addAgentProfile(QStringLiteral("Sin fases"));
+    HarnessSpec spec;
+    spec.permissions.set = true;
+    spec.permissions.approvalMode = QStringLiteral("ask");
+    pm->setAgentProfileSpec(id, spec.toJson().toVariantMap());
+    app.setActiveAgentProfileId(id);
+
+    const int tuningBefore = fake->tuningCalls();
+    const QString task = makeLoopTask(app, QStringLiteral("Loop sin fases"), 3);
+    QSignalSpy fin(&app, &AppController::taskRunFinished);
+    app.runTaskBodyForTest(task);
+    QTRY_VERIFY_WITH_TIMEOUT(!fin.isEmpty(), 5000);
+
+    QCOMPARE(fake->tuningCalls(), tuningBefore);
+    QVERIFY2(!fake->approvalModes().contains(QStringLiteral("plan")),
+             "sin fases declaradas no hay cambio de modo");
 }
 
 void AppControllerTests::hybridExecutionPromptPreservesRequestAndPlan()

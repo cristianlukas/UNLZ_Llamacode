@@ -196,6 +196,10 @@ public:
     Q_INVOKABLE bool setAgentProfileSpec(const QString &id, const QVariantMap &specJson);
     Q_INVOKABLE QVariantList harnessPackCatalog() const;
     Q_INVOKABLE QVariantList harnessDirectiveCatalog(const QString &workspace = QString()) const;
+    // Candidatos válidos para `extends` de un perfil: excluye el propio id y su
+    // subárbol (ofrecer un ciclo es ofrecer un error). Devuelve
+    // [{profileId, name}], con una entrada vacía al tope = "sin herencia".
+    Q_INVOKABLE QVariantList eligibleParents(const QString &id) const;
     // `env` permite al caller (AppController) informar lo que ProfileManager no
     // sabe: si hay embeddings, escritorio, cuentas de correo o browser. Vacío =
     // se asume disponible (sólo git se detecta acá).

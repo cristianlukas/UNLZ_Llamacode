@@ -105,6 +105,14 @@ llama.cpp mainline y beellama v0.3.2):
 Necesitan una sesión de escritorio interactiva con ventanas vivas (no
 reproducible en headless/CI), así que sólo se cubre el path de error en
 `tests/test_agent_tools.cpp`. La lógica real es **QA manual**:
+- **Editor del harness modular** (Ajustes → Perfiles de agente): la lógica está
+  cubierta por `qml_harness_editor`; lo que falta es **verlo**. Duplicar un preset
+  → cambiar herencia, tocar dos packs, bajar "Capturas a conservar" a 0 → Guardar
+  harness → cambiar de perfil y volver: los cambios siguen y el diff muestra
+  exactamente lo tocado. Con la ventana angosta la grilla de 4 columnas no se
+  rompe y los chips hacen wrap. Con el agente corriendo, cambiar de perfil rehace
+  el system prompt sin reiniciar (mirar el log). Exportar el spec, romperlo a mano
+  e importarlo: deja el mensaje de error y NO pisa el perfil.
 - **UI Automation** (`DesktopAutomationBackend::controls` / `clickElement`, tools
   `desktop_controls` / `desktop_click_element`): abrir Notepad → `desktop_windows`
   para el id de ventana → `desktop_controls` lista los controles → tomar el

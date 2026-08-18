@@ -214,7 +214,10 @@ struct Environment {
 
 // Advertencias por tools habilitadas cuya dependencia falta. No bloquea: el
 // runtime ya devuelve error por tool; esto es para el editor y headless.
-QStringList dependencyWarnings(const QStringList &enabled, const Environment &env);
+// `mcpToolsEnabled` es el gate del módulo `tools`: sólo tiene sentido avisar por
+// servers MCP faltantes si el perfil efectivamente los quiere inyectar.
+QStringList dependencyWarnings(const QStringList &enabled, const Environment &env,
+                               bool mcpToolsEnabled = false);
 
 }  // namespace HarnessTools
 

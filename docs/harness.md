@@ -11,8 +11,7 @@ Documentos relacionados (y su estado):
 - `docs/agent.md` — descripción del modo Agente; también usa el nombre viejo
   `CustomBackend` en varias secciones.
 - `docs/plan-harness-modular.md` — diseño del harness modular (implementado).
-- `docs/plan-harness-cierre.md` — **vigente**: qué falta cubrir del harness
-  modular (editor QML sin QA, A/B sin correr, fases sin test e2e).
+- `docs/plan-harness-cierre.md` — plan de cierre (F0–F5), **implementado**.
 - `docs/codehamr_harness_review.md` — revisión externa que originó
   `sanitizeApiMessagesForWire`, el idle-watchdog de SSE y el kill de árbol de shell.
 - `docs/agent-efficiency.md`, `docs/agent-workflows.md`, `docs/skills.md`,
@@ -61,6 +60,16 @@ que un binario anterior lea el archivo sin romperse.
 Headless (contrato obligatorio, ver `docs/HEADLESS.md`) vía `/invoke` sobre el
 target `profileManager`: `harnessPackCatalog`, `harnessDirectiveCatalog`,
 `agentProfileSpec`, `setAgentProfileSpec`, `agentProfileDiff`, `harnessSpecSummary`.
+
+El editor vive en `qml/components/LcHarnessEditor.qml`: no conoce a `App` (todo
+entra por propiedades y sale por señales), y por eso su lógica de edición —la
+parte donde una regresión cuesta un perfil— se testea sola.
+
+Directivas propias: se crean, editan y borran desde el editor
+(`HarnessDirectiveStore::save`/`remove`, expuestas como `saveHarnessDirective` /
+`removeHarnessDirective`). Hay una bundleada de ejemplo
+(`assets/harness/directives/commit-conventions.md`) que se copia a la carpeta del
+usuario la primera vez: sirve de plantilla y de smoke del descubrimiento.
 
 Presets de sistema: los cinco niveles históricos más **`agent-minimal`**
 (local-first duro: pocas tools, sin MCP, prompt ≤8000 chars, `sameCallLimit=2`,
@@ -464,8 +473,11 @@ para benchmarks reproducibles.
 | `code_hotspots` | `tests/test_hotspots.cpp` |
 | `MasterCli` | `tests/test_master_cli.cpp` |
 | `HarnessSpec` (herencia, packs, permisos, fases, migración) | `tests/test_harness_spec.cpp` |
-| Cableado de módulos al backend + directivas .md | `tests/test_harness_modules.cpp` |
+| Cableado de módulos al backend + directivas .md (CRUD incluido) | `tests/test_harness_modules.cpp` |
 | Verbos de harness headless | `tests/test_control_api.cpp` |
+| Editor del harness (QML): edición del spec, diff, import/export | `tests/qml/tst_harness_editor.qml` (ctest: `qml_harness_editor`) |
+| Fases aplicadas por el runner de Tasks | `tests/test_appcontroller.cpp` |
+| Barrido A/B (`tools/harness_ab.ps1`) | `tests/test_harness_ab.ps1` (fuera de ctest, infra PS) |
 | `EvalSuite` | `tests/test_eval.cpp` |
 
 Gate: `tests.bat` + ctest en verde antes de commitear (`/gate`). Si el
@@ -514,4 +526,11 @@ Regla de lectura: un harness sólo es mejor si **no** baja calidad ni tasa de é
 - Los presets de sistema son specs construidos en código (`systemPresets()`), no
   JSON bundleado: quedan auditables y componibles, pero agregar un preset sigue
   siendo una recompilación.
-- `OpencodeBackend` no consume el `HarnessSpec` (maneja su propio loop).
+- **`OpencodeBackend` no consume el `HarnessSpec`** y no va a hacerlo: es el
+  backend legacy con su propio loop, y respetar `loop`/`context` ahí sería
+  reimplementar el harness. Decisión tomada, no deuda: el editor muestra un aviso
+  cuando el agente activo no es el nativo, para que la UI no prometa lo que no se
+  aplica.
+- **Presets de sistema en código** (`systemPresets()`), no JSON bundleado. Se
+  revisará sólo si aparece la necesidad de agregar un preset fuera de una release;
+  hoy el costo (cargador + validación + fallback) no se paga solo.

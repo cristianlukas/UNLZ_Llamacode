@@ -1008,6 +1008,33 @@ QVariantList ProfileManager::harnessDirectiveCatalog(const QString &workspace) c
     return HarnessDirectiveStore::list(workspace);
 }
 
+QVariantList ProfileManager::eligibleParents(const QString &id) const
+{
+    // Descendientes de `id`: si A hereda de B, B no puede heredar de A. Se
+    // recorre hacia arriba desde cada candidato en vez de construir el árbol:
+    // son pocos perfiles y así no hay que mantener un índice de hijos.
+    auto descendsFrom = [this](QString candidate, const QString &ancestor) {
+        QSet<QString> seen;
+        while (!candidate.isEmpty() && !seen.contains(candidate)) {
+            if (candidate == ancestor) return true;
+            seen.insert(candidate);
+            candidate = m_agentProfiles.findById(candidate).toSpec().extends;
+        }
+        return false;
+    };
+
+    QVariantList out;
+    out.append(QVariantMap{{QStringLiteral("profileId"), QString()},
+                           {QStringLiteral("name"), QStringLiteral("(defaults del harness)")}});
+    for (const AgentProfile &p : m_agentProfiles.items()) {
+        if (p.id == id) continue;                       // no heredarse a sí mismo
+        if (!id.isEmpty() && descendsFrom(p.id, id)) continue;   // ni de un hijo
+        out.append(QVariantMap{{QStringLiteral("profileId"), p.id},
+                               {QStringLiteral("name"), p.name}});
+    }
+    return out;
+}
+
 // Resumen para el editor: tools resueltas, costo aproximado en tokens y
 // advertencias de dependencias. Es lo que convierte "personalizar" en una
 // decisión informada en vez de una adivinanza.
@@ -1017,9 +1044,7 @@ QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString 
     const AgentProfile p = m_agentProfiles.findById(id);
     if (p.id.isEmpty()) return {};
     const HarnessSpec spec = resolveHarnessSpec(p);
-    const QStringList tools = spec.tools.include.contains(QStringLiteral("*"))
-                                  ? HarnessTools::resolve(spec.tools)
-                                  : HarnessTools::resolve(spec.tools);
+    const QStringList tools = HarnessTools::resolve(spec.tools);
     HarnessTools::Environment environment;
     environment.hasGit = !QStandardPaths::findExecutable(QStringLiteral("git")).isEmpty();
     auto envFlag = [&env](const char *key, bool def) {
@@ -1031,17 +1056,30 @@ QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString 
     environment.hasMailAccount = envFlag("hasMailAccount", true);
     environment.hasMcpServers = envFlag("hasMcpServers", true);
     environment.hasBrowser = envFlag("hasBrowser", true);
-    QStringList warnings = HarnessTools::dependencyWarnings(tools, environment);
+    QStringList warnings = HarnessTools::dependencyWarnings(tools, environment,
+                                                            spec.tools.mcpToolsEnabled);
+    // Tamaño del prompt propio del perfil: instrucciones extra + cuerpos de las
+    // directivas .md. Es la otra mitad del presupuesto de contexto (la primera
+    // son los schemas de tools); mostrar sólo una era media foto.
+    int promptChars = spec.prompt.systemExtra.size();
     for (const QString &slug : spec.prompt.custom) {
         const QVariantMap d = HarnessDirectiveStore::load(slug, workspace);
-        if (!d.value(QStringLiteral("ok")).toBool())
+        if (!d.value(QStringLiteral("ok")).toBool()) {
             warnings << QStringLiteral("directiva '%1': %2")
                             .arg(slug, d.value(QStringLiteral("error")).toString());
+            continue;
+        }
+        promptChars += d.value(QStringLiteral("body")).toString().size();
     }
+    if (spec.prompt.maxChars > 0 && promptChars > spec.prompt.maxChars)
+        warnings << QStringLiteral("prompt: %1 chars supera el tope del perfil (%2). Sacá alguna "
+                                   "directiva o subí el tope.")
+                        .arg(promptChars).arg(spec.prompt.maxChars);
     return QVariantMap{
         {QStringLiteral("tools"), tools},
         {QStringLiteral("toolCount"), tools.size()},
         {QStringLiteral("approxTokens"), HarnessTools::approxTokens(tools)},
+        {QStringLiteral("promptChars"), promptChars},
         {QStringLiteral("warnings"), warnings},
         {QStringLiteral("extends"), spec.extends},
         {QStringLiteral("phases"), QStringList(spec.phases.keys())}};

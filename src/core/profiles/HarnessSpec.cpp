@@ -584,7 +584,8 @@ int HarnessTools::approxTokens(const QStringList &enabled)
 }
 
 QStringList HarnessTools::dependencyWarnings(const QStringList &enabled,
-                                             const Environment &env)
+                                             const Environment &env,
+                                             bool mcpToolsEnabled)
 {
     const QSet<QString> on(enabled.cbegin(), enabled.cend());
     QStringList out;
@@ -593,20 +594,33 @@ QStringList HarnessTools::dependencyWarnings(const QStringList &enabled,
             if (on.contains(n)) return true;
         return false;
     };
+    // Cada aviso dice QUE falta y QUE HACER: un warning sin acción obliga al
+    // usuario a adivinar dónde se arregla.
     if (!env.hasGit && on.contains(QStringLiteral("task")))
-        out << QStringLiteral("task: sin git no se pueden crear worktrees para sub-agentes.");
+        out << QStringLiteral("task: sin git no se pueden crear worktrees para sub-agentes. "
+                              "Instalá git y reabrí el proyecto, o apagá el aislamiento en "
+                              "el módulo escalation.");
     if (!env.hasGit && on.contains(QStringLiteral("code_hotspots")))
-        out << QStringLiteral("code_hotspots: necesita historial git para calcular churn.");
+        out << QStringLiteral("code_hotspots: necesita historial git para calcular churn. "
+                              "Instalá git o sacá la tool del perfil.");
     if (!env.hasEmbeddings
         && anyOn({QStringLiteral("semantic_search"), QStringLiteral("hybrid_search")}))
-        out << QStringLiteral("semantic_search/hybrid_search: el server activo no expone "
-                              "/v1/embeddings.");
+        out << QStringLiteral("semantic_search/hybrid_search: no hay server activo que exponga "
+                              "/v1/embeddings. Arrancá el server del perfil, o usá grep/"
+                              "search_docs en su lugar.");
     if (!env.hasDesktop && anyOn(toolsOfGroup(QStringLiteral("escritorio"))))
-        out << QStringLiteral("desktop_*: no hay sesion de escritorio interactiva.");
+        out << QStringLiteral("desktop_*: no hay sesion de escritorio interactiva (headless). "
+                              "Corré la app con UI o sacá el pack rpa del perfil.");
     if (!env.hasMailAccount && anyOn(toolsOfGroup(QStringLiteral("correo"))))
-        out << QStringLiteral("email_*: no hay cuentas de correo configuradas.");
+        out << QStringLiteral("email_*: no hay cuentas de correo configuradas. Agregá una en "
+                              "Ajustes → Integraciones, o sacá el pack mail del perfil.");
     if (!env.hasBrowser && anyOn(toolsOfGroup(QStringLiteral("browser"))))
-        out << QStringLiteral("browser_*: la automatizacion de browser esta apagada en el perfil.");
+        out << QStringLiteral("browser_*: la automatizacion de browser esta apagada. Activala "
+                              "en Ajustes (o por perfil, browserAutomation), o sacá el pack.");
+    if (!env.hasMcpServers && mcpToolsEnabled)
+        out << QStringLiteral("MCP: no hay servers configurados/habilitados, así que no se "
+                              "inyecta ninguna tool MCP. Configurá uno en Ajustes → MCP, o "
+                              "apagá mcpTools para ahorrar el chequeo.");
     return out;
 }
 

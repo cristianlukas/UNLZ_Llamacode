@@ -37,6 +37,25 @@ QVariantMap load(const QString &name, const QString &workspace = QString());
 // {slug, body, when} — el formato que consume LlamaAgentBackend::setCustomDirectives.
 QVariantList loadMany(const QStringList &names, const QString &workspace = QString());
 
+// Alta/edición de una directiva. scope: "global" | "project" (necesita
+// `workspace`). Valida lo mismo que el parseo (slug kebab-case, description
+// obligatoria, tope de bytes) ANTES de escribir: un archivo que después no se
+// puede cargar sería peor que un error temprano. Devuelve {ok, path} o
+// {ok:false, error}.
+QVariantMap save(const QString &name, const QString &description, const QString &when,
+                 const QString &body, const QString &scope = QStringLiteral("global"),
+                 const QString &workspace = QString());
+
+// Baja. Devuelve {ok} o {ok:false, error}. No toca el spec de los perfiles que
+// la referencian: una directiva ausente ya degrada con warning (no rompe).
+QVariantMap remove(const QString &name, const QString &scope = QStringLiteral("global"),
+                   const QString &workspace = QString());
+
+// Directiva de ejemplo bundleada (assets/harness/directives). Se copia a la raíz
+// global la primera vez que se lista, si el usuario no tiene ninguna: sin esto
+// la sección arranca vacía y nadie sabe qué se espera ahí.
+void seedBundledExamples();
+
 constexpr qint64 kMaxDirectiveBytes = 32 * 1024;
 
 }  // namespace HarnessDirectiveStore

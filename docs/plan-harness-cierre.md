@@ -1,5 +1,11 @@
 # Plan — Cierre del harness modular
 
+> **IMPLEMENTADO** (F0–F5). El editor se extrajo a `LcHarnessEditor` con su test
+> QML, `harness_ab.ps1` tiene `tests/test_harness_ab.ps1`, las fases se verifican
+> de punta a punta en `test_appcontroller`, las directivas se crean desde la app
+> y F5 quedó decidido: `OpencodeBackend` NO consume el spec (se avisa en la UI) y
+> los presets siguen en código. La referencia viva es `docs/harness.md`.
+
 Estado de partida: el harness modular (`HarnessSpec`) está implementado y en
 `main` (ver `docs/harness.md`). El gate está verde y la app compila. Lo que
 falta **no es funcionalidad nueva**: es cobertura de lo que se entregó sin

@@ -35,6 +35,8 @@ private slots:
     void customDirectives_injectedAndGated();
     void directiveStore_listsLoadsAndRejectsInvalid();
     void directiveStore_projectOverridesGlobal();
+    void directiveStore_savesEditsAndRemoves();
+    void directiveStore_rejectsInvalidInput();
 
 private:
     QTemporaryDir m_ws;
@@ -357,6 +359,95 @@ void HarnessModulesTests::directiveStore_projectOverridesGlobal()
     const QVariantMap overridden = HarnessDirectiveStore::load(slug, m_ws.path());
     QCOMPARE(overridden.value(QStringLiteral("body")).toString(), QStringLiteral("PROYECTO"));
     QCOMPARE(overridden.value(QStringLiteral("scope")).toString(), QStringLiteral("project"));
+}
+
+// Alta/edicion/baja desde la app: sin esto el usuario podia elegir directivas
+// pero no crearlas, y la seccion se veia vacia sin explicacion.
+void HarnessModulesTests::directiveStore_savesEditsAndRemoves()
+{
+    const QString slug = QStringLiteral("ciclo-completo");
+    const QVariantMap saved = HarnessDirectiveStore::save(
+        slug, QStringLiteral("una descripcion"), QStringLiteral("project.hasGit"),
+        QStringLiteral("CUERPO ORIGINAL"), QStringLiteral("project"), m_ws.path());
+    QVERIFY2(saved.value(QStringLiteral("ok")).toBool(),
+             qPrintable(saved.value(QStringLiteral("error")).toString()));
+
+    // Aparece en el catalogo y se carga con el frontmatter bien formado: lo que
+    // se escribe tiene que poder releerse con el MISMO parser.
+    QStringList names;
+    for (const QVariant &v : HarnessDirectiveStore::list(m_ws.path()))
+        names << v.toMap().value(QStringLiteral("name")).toString();
+    QVERIFY(names.contains(slug));
+
+    QVariantMap loaded = HarnessDirectiveStore::load(slug, m_ws.path());
+    QVERIFY(loaded.value(QStringLiteral("ok")).toBool());
+    QCOMPARE(loaded.value(QStringLiteral("body")).toString(), QStringLiteral("CUERPO ORIGINAL"));
+    QCOMPARE(loaded.value(QStringLiteral("when")).toString(), QStringLiteral("project.hasGit"));
+    QCOMPARE(loaded.value(QStringLiteral("description")).toString(),
+             QStringLiteral("una descripcion"));
+
+    // Edicion = guardar de nuevo con el mismo slug.
+    QVERIFY(HarnessDirectiveStore::save(slug, QStringLiteral("otra descripcion"), QString(),
+                                        QStringLiteral("CUERPO NUEVO"),
+                                        QStringLiteral("project"), m_ws.path())
+                .value(QStringLiteral("ok")).toBool());
+    loaded = HarnessDirectiveStore::load(slug, m_ws.path());
+    QCOMPARE(loaded.value(QStringLiteral("body")).toString(), QStringLiteral("CUERPO NUEVO"));
+    QVERIFY(loaded.value(QStringLiteral("when")).toString().isEmpty());
+
+    // Una global con el mismo nombre sigue perdiendo contra la de proyecto.
+    QVERIFY(HarnessDirectiveStore::save(slug, QStringLiteral("global"), QString(),
+                                        QStringLiteral("CUERPO GLOBAL"),
+                                        QStringLiteral("global"))
+                .value(QStringLiteral("ok")).toBool());
+    QCOMPARE(HarnessDirectiveStore::load(slug, m_ws.path())
+                 .value(QStringLiteral("body")).toString(),
+             QStringLiteral("CUERPO NUEVO"));
+
+    // Baja: se va la de proyecto y queda visible la global.
+    QVERIFY(HarnessDirectiveStore::remove(slug, QStringLiteral("project"), m_ws.path())
+                .value(QStringLiteral("ok")).toBool());
+    QCOMPARE(HarnessDirectiveStore::load(slug, m_ws.path())
+                 .value(QStringLiteral("body")).toString(),
+             QStringLiteral("CUERPO GLOBAL"));
+    QVERIFY(HarnessDirectiveStore::remove(slug, QStringLiteral("global"))
+                .value(QStringLiteral("ok")).toBool());
+    QVERIFY(!HarnessDirectiveStore::load(slug, m_ws.path())
+                 .value(QStringLiteral("ok")).toBool());
+    // Borrar algo que no existe es un error explicito, no un silencio.
+    QVERIFY(!HarnessDirectiveStore::remove(slug, QStringLiteral("global"))
+                 .value(QStringLiteral("ok")).toBool());
+}
+
+void HarnessModulesTests::directiveStore_rejectsInvalidInput()
+{
+    // Slug invalido: se rechaza ANTES de escribir (un archivo que despues no
+    // carga es peor que un error temprano).
+    QVERIFY(!HarnessDirectiveStore::save(QStringLiteral("Con Mayusculas Y Espacios"),
+                                         QStringLiteral("d"), QString(), QStringLiteral("b"))
+                 .value(QStringLiteral("ok")).toBool());
+    // description obligatoria y cuerpo no vacio.
+    QVERIFY(!HarnessDirectiveStore::save(QStringLiteral("sin-desc"), QString(), QString(),
+                                         QStringLiteral("b"))
+                 .value(QStringLiteral("ok")).toBool());
+    QVERIFY(!HarnessDirectiveStore::save(QStringLiteral("sin-cuerpo"), QStringLiteral("d"),
+                                         QString(), QStringLiteral("   "))
+                 .value(QStringLiteral("ok")).toBool());
+    // description/when multilinea romperian el frontmatter delimitado por ---.
+    QVERIFY(!HarnessDirectiveStore::save(QStringLiteral("multilinea"),
+                                         QStringLiteral("una\ndos"), QString(),
+                                         QStringLiteral("b"))
+                 .value(QStringLiteral("ok")).toBool());
+    // Cuerpo sobredimensionado: el tope existe porque cada KB es contexto.
+    const QString huge(HarnessDirectiveStore::kMaxDirectiveBytes + 1024, QLatin1Char('x'));
+    QVERIFY(!HarnessDirectiveStore::save(QStringLiteral("gigante"), QStringLiteral("d"),
+                                         QString(), huge)
+                 .value(QStringLiteral("ok")).toBool());
+    // Scope project sin workspace: error claro, no escribir en cualquier lado.
+    QVERIFY(!HarnessDirectiveStore::save(QStringLiteral("sin-ws"), QStringLiteral("d"), QString(),
+                                         QStringLiteral("b"), QStringLiteral("project"),
+                                         QString())
+                 .value(QStringLiteral("ok")).toBool());
 }
 
 QTEST_MAIN(HarnessModulesTests)

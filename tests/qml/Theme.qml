@@ -22,6 +22,11 @@ QtObject {
     property string textSecondary: "#a6adc8"
     property string textMuted: "#585b70"
     property string overlayColor: "#90090b14"
+    // Las usa LcHarnessEditor. En el app salen de ThemeProvider (borderColor /
+    // warnText); si faltan aca, QML asigna undefined a un QColor y el test rojea
+    // aunque todos los asserts pasen.
+    property string borderColor: "#313244"
+    property string warnText: "#f9e2af"
 
     function normalizeHex(s) {
         var t = String(s).trim()

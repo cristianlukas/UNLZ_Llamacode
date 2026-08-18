@@ -37,6 +37,13 @@ param(
 $ErrorActionPreference = "Stop"
 $base = "http://127.0.0.1:$Port"
 
+# Invocado con -File (CI, cmd, otro script), PowerShell NO separa por comas: la
+# lista llega como UN string. Sin esto, '-AgentProfileIds a,b' se interpretaba
+# como un unico perfil llamado "a,b" y el script cortaba diciendo que no existe.
+$AgentProfileIds = @($AgentProfileIds | ForEach-Object { $_ -split ',' } |
+                     ForEach-Object { $_.Trim() } | Where-Object { $_.Length -gt 0 })
+if ($AgentProfileIds.Count -lt 1) { throw "Falta -AgentProfileIds." }
+
 function Inv([string]$target, [string]$method, $arguments) {
     $body = @{ method = $method; args = $arguments } | ConvertTo-Json -Depth 12 -Compress
     return Invoke-RestMethod "$base/invoke?target=$target" -Method Post `
@@ -97,10 +104,14 @@ foreach ($p in $report.profiles) {
 }
 Write-Host ""
 Write-Host "=== Deltas (candidato vs baseline)" -ForegroundColor Cyan
+# Formato con signo explicito: "{n,+6:N1}" NO es valido en .NET (el alineado es
+# un entero, no admite '+') y tiraba FormatException justo antes del resumen.
+function Signed($v) { return ("{0:+0.0;-0.0;0.0}" -f [double]$v) }
 foreach ($c in $report.comparisons) {
-    Write-Host ("{0} -> {1}: calidad {2,+6:N1} pp  exito {3,+6:N1} pp  tiempo {4,+6:N1}%  archivos {5,+5:N1}" -f `
-        $c.baselineProfileId, $c.candidateProfileId, $c.qualityDeltaPctPoints,
-        $c.successRateDeltaPctPoints, $c.comparisonTimeChangePct, $c.filesChangedDelta)
+    Write-Host ("{0} -> {1}: calidad {2,7} pp  exito {3,7} pp  tiempo {4,7}%  archivos {5,6}" -f `
+        $c.baselineProfileId, $c.candidateProfileId, (Signed $c.qualityDeltaPctPoints),
+        (Signed $c.successRateDeltaPctPoints), (Signed $c.comparisonTimeChangePct),
+        (Signed $c.filesChangedDelta))
 }
 Write-Host ""
 Write-Host "Informe completo: $Out"

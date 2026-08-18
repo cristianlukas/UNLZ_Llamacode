@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.102 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.104 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -460,6 +460,14 @@ file(GLOB_RECURSE LLAMACODE_BUNDLED_SKILLS
     CONFIGURE_DEPENDS
     "assets/skills/*/SKILL.md"
 )
+# Directivas de ejemplo del harness modular: se copian a la carpeta del usuario
+# la primera vez (HarnessDirectiveStore::seedBundledExamples) para que la seccion
+# no arranque vacia.
+file(GLOB LLAMACODE_BUNDLED_DIRECTIVES
+    RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+    CONFIGURE_DEPENDS
+    "assets/harness/directives/*.md"
+)
 
 qt_add_resources(LlamaCode "llamacode_assets"
     PREFIX "/"
@@ -481,6 +489,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/eval/snake_retro_singlefile.json
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}
         ${LLAMACODE_BUNDLED_SKILLS}
+        ${LLAMACODE_BUNDLED_DIRECTIVES}
 )
 
 target_include_directories(LlamaCode PRIVATE src)
@@ -625,6 +634,10 @@ if (BUILD_TESTS)
         tests/qml/tst_navigation_policy.qml
         tests/qml/tst_benchmark_score.qml
         tests/qml/tst_datalab.qml
+        tests/qml/LcComboBox.qml
+        tests/qml/LcSwitch.qml
+        tests/qml/tst_harness_editor.qml
+        qml/components/LcHarnessEditor.qml
         qml/components/NavigationPolicy.js
         qml/components/BenchmarkScore.js
         qml/pages/DataLabPage.qml
@@ -669,6 +682,13 @@ if (BUILD_TESTS)
              COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
                      "${LC_QML_HARNESS_DIR}/tst_datalab.qml")
     set_tests_properties(qml_datalab PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
+
+    add_test(NAME qml_harness_editor
+             COMMAND "${_lc_qt_bin}/qml" -I "${LC_QML_HARNESS_DIR}"
+                     "${LC_QML_HARNESS_DIR}/tst_harness_editor.qml")
+    set_tests_properties(qml_harness_editor PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
 
