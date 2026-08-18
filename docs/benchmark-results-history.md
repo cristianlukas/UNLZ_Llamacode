@@ -7,6 +7,12 @@ con fecha, configuración, evidencia y decisión.
 El ID de la primera columna es el `launchId` persistente de LlamaCode. El
 nombre visible puede cambiar sin perder la asociación con sus resultados.
 
+## 2026-08-17 — Selección operativa
+
+La tabla viva se redujo a los siete perfiles solicitados. Se marcó con `⚡` el
+Qwen3.8 UD-Q4 visión como BEST de esta selección por tener el mayor BCB
+registrado (5/8). Los demás perfiles no llevan el indicador BEST.
+
 ## 2026-08-17 — Laguna safe y reparación del harness
 
 - Laguna original fallaba durante la carga CUDA en GPU0, antes del harness.
