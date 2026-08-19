@@ -423,6 +423,7 @@ qt_add_qml_module(LlamaCode
         qml/pages/AgentsPage.qml
         qml/pages/TasksPage.qml
         qml/pages/BenchmarkPage.qml
+        qml/pages/RankingPage.qml
         qml/pages/TunerPage.qml
         qml/pages/ResearchPage.qml
         qml/pages/DataLabPage.qml

@@ -30,6 +30,7 @@ Rectangle {
           keepDuringAgentTransition: true },
         { key: "nav.charla",    icon: "🎙",  serverOnly: true  },
         { key: "nav.benchmark", icon: "📊",  serverOnly: false },
+        { key: "nav.ranking",   icon: "🏆",  serverOnly: false },
         { key: "tuner", label: "Tuner", icon: "🎛", serverOnly: false },
         { key: "nav.downloads", icon: "⬇",   serverOnly: false },
         { key: "agents", label: "Agentes", icon: "🧠", serverOnly: false },

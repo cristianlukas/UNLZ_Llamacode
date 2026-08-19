@@ -195,6 +195,7 @@ class AppController : public QObject
     Q_PROPERTY(int benchmarkProgress READ benchmarkProgress NOTIFY benchmarkProgressChanged)
     Q_PROPERTY(QString benchmarkStatus READ benchmarkStatus NOTIFY benchmarkStatusChanged)
     Q_PROPERTY(QVariantList benchmarkResults READ benchmarkResults NOTIFY benchmarkResultsChanged)
+    Q_PROPERTY(QVariantList benchmarkRanking READ benchmarkRanking NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBest25 READ benchmarkBest25 NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBestModelosSpeed READ benchmarkBestModelosSpeed NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkHumanEval20Candidates READ benchmarkHumanEval20Candidates NOTIFY benchmarkResultsChanged)
@@ -413,6 +414,7 @@ public:
     int benchmarkProgress() const { return m_benchmarkProgress; }
     QString benchmarkStatus() const { return m_benchmarkStatus; }
     QVariantList benchmarkResults() const { return m_benchmarkResults; }
+    QVariantList benchmarkRanking() const;
     QVariantList benchmarkBest25() const;
     QVariantList benchmarkBestModelosSpeed() const;
     QVariantList benchmarkHumanEval20Candidates() const;
@@ -525,6 +527,7 @@ public:
     static bool shouldReplaceBundledBenchmarkForTest(const QJsonObject &source,
                                                      const QJsonObject &destination);
     static QVariantList benchmarkBest25ForTest(const QVariantList &results);
+    static QVariantList benchmarkRankingForTest(const QVariantList &results);
     static QVariantList benchmarkBestModelosSpeedForTest(const QVariantList &candidates);
     static QVariantList benchmarkHumanEval20CandidatesForTest(const QVariantList &speedCandidates,
                                                               const QVariantList &bestControls);
@@ -539,6 +542,7 @@ public:
     static bool benchmarkResultPassesGateForTest(const QVariantMap &result,
                                                   const QString &stage,
                                                   const QString &profileFingerprint);
+    static QString customBenchmarkStageForTest(const QString &label, int taskCount);
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).
     static QString installRootForExePath(const QString &exePath);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
@@ -995,6 +999,16 @@ public:
     Q_INVOKABLE void startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
                                         int passes = 1, const QString &target = QStringLiteral("model"),
                                         int timeoutSec = 0, const QString &agentProfileId = QString());
+    // Ejecuta una escalera explícita HE0 → HE20 → BCB con tres definiciones
+    // custom. Cada etapa se serializa y conserva la compuerta de calidad.
+    Q_INVOKABLE void startThreeStageBenchmark(const QStringList &profileIds,
+                                              const QString &he0Id,
+                                              const QString &he20Id,
+                                              const QString &bcbId,
+                                              int passes = 1,
+                                              const QString &target = QStringLiteral("model"),
+                                              int timeoutSec = 0,
+                                              const QString &agentProfileId = QString());
     // Compara concurrencia real del llama-server. Para cada valor de slots crea
     // una copia editable del launch, abre varias requests simultáneas y guarda
     // throughput agregado, TTFT, latencia, RAM/VRAM y fallos en benchmarks.

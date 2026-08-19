@@ -282,6 +282,62 @@ Item {
     // Custom benchmark selection: "" = standard tasks, else a custom benchmark id
     property string customId: App.readSetting("benchCustomId", "")
     onCustomIdChanged: App.writeSetting("benchCustomId", customId)
+    // Escalera explícita para comparar cualquier selección con las tres etapas
+    // públicas importadas como custom benchmarks.
+    property string stageHe0Id: App.readSetting("benchStageHe0Id", "")
+    property string stageHe20Id: App.readSetting("benchStageHe20Id", "")
+    property string stageBcbId: App.readSetting("benchStageBcbId", "")
+    onStageHe0IdChanged: App.writeSetting("benchStageHe0Id", stageHe0Id)
+    onStageHe20IdChanged: App.writeSetting("benchStageHe20Id", stageHe20Id)
+    onStageBcbIdChanged: App.writeSetting("benchStageBcbId", stageBcbId)
+
+    function customStage(def) {
+        const name = String(def.name || "").toLowerCase()
+        const count = def.prompts && def.prompts.length !== undefined ? def.prompts.length : 0
+        if (name.indexOf("bigcodebench") >= 0 || name.indexOf("bcb") >= 0) return "bcb"
+        if (name.indexOf("he0") >= 0 || (name.indexOf("humaneval") >= 0 && count === 1)) return "he0"
+        if (name.indexOf("he20") >= 0 || (name.indexOf("humaneval") >= 0 && count >= 20)) return "he20"
+        return ""
+    }
+
+    function stageDefinitions(stage) {
+        const out = []
+        for (const def of (App.customBenchmarks || []))
+            if (customStage(def) === stage) out.push(def)
+        return out
+    }
+
+    function stageModel(stage) {
+        const out = []
+        for (const def of stageDefinitions(stage))
+            out.push({ id: def.id, text: customBenchmarkText(def) })
+        if (out.length === 0)
+            out.push({ id: "", text: "(importá una suite para esta etapa)" })
+        return out
+    }
+
+    function stageIndex(id, stage) {
+        const defs = stageDefinitions(stage)
+        for (let i = 0; i < defs.length; ++i)
+            if (String(defs[i].id) === String(id)) return i
+        return 0
+    }
+
+    function synchronizeStageIds() {
+        const pick = function(current, stage) {
+            const defs = stageDefinitions(stage)
+            for (const def of defs) if (String(def.id) === String(current)) return current
+            return defs.length > 0 ? String(defs[0].id) : ""
+        }
+        stageHe0Id = pick(stageHe0Id, "he0")
+        stageHe20Id = pick(stageHe20Id, "he20")
+        stageBcbId = pick(stageBcbId, "bcb")
+    }
+
+    function stageReady() {
+        return stageHe0Id.length > 0 && stageHe20Id.length > 0 && stageBcbId.length > 0
+    }
+
     property var proBenchmarkIds: {
         try { return JSON.parse(App.readSetting("benchProBenchmarkIds", "[]")) } catch (e) { return [] }
     }
@@ -463,10 +519,17 @@ Item {
         const m = String(App.readSetting("benchMode", "short"))
         if (m === "custom") customMode.checked = true
         else if (m === "full") fullMode.checked = true
+        else if (m === "stages") stageMode.checked = true
         else shortMode.checked = true
         App.thinkingEnabled = (App.readSetting("benchThinking", App.thinkingEnabled) === true
                                || String(App.readSetting("benchThinking", "")) === "true")
         _optsRestored = true
+        synchronizeStageIds()
+    }
+
+    Connections {
+        target: App
+        function onCustomBenchmarksChanged() { root.synchronizeStageIds() }
     }
 
     ColumnLayout {
@@ -680,6 +743,32 @@ Item {
                                 wrapMode: Text.Wrap
                             }
                         }
+                        Item { height: 2 }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 5
+                            TapHandler { onTapped: stageMode.checked = true }
+                            RadioButton {
+                                id: stageMode
+                                text: ""
+                                onCheckedChanged: if (root._optsRestored && checked) App.writeSetting("benchMode", "stages")
+                                ButtonGroup.group: modeGroup
+                                padding: 0
+                                leftPadding: 0
+                                rightPadding: 0
+                                Layout.minimumWidth: implicitIndicatorWidth
+                                Layout.preferredWidth: implicitIndicatorWidth
+                                Layout.maximumWidth: implicitIndicatorWidth
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Escalera HE0 → HE20 → BCB (custom)"
+                                color: Theme.textSecondary
+                                font.pixelSize: 12
+                                wrapMode: Text.Wrap
+                            }
+                        }
                     }
 
                     // ── Selector de benchmark personalizado (solo en modo custom) ──
@@ -821,6 +910,71 @@ Item {
                         }
                     }
 
+                    // ── Escalera pública de tres etapas ────────────────────
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        visible: stageMode.checked
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: "SELECCIONÁ LAS SUITES CUSTOM"
+                            color: Theme.textSecondary
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Se ejecutan en orden sobre cada perfil. Si HE0 falla, ese perfil no avanza a HE20; BCB requiere HE20 válido."
+                            color: Theme.textMuted
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 1
+                            rowSpacing: 6
+                            Text { text: "HE0 · 1 ítem"; color: Theme.textSecondary; font.pixelSize: 11 }
+                            LcComboBox {
+                                id: stageHe0Combo
+                                Layout.fillWidth: true
+                                textRole: "text"
+                                valueRole: "id"
+                                model: root.stageModel("he0")
+                                currentIndex: root.stageIndex(root.stageHe0Id, "he0")
+                                onActivated: root.stageHe0Id = currentValue || ""
+                            }
+                            Text { text: "HE20 · 20 ítems"; color: Theme.textSecondary; font.pixelSize: 11 }
+                            LcComboBox {
+                                id: stageHe20Combo
+                                Layout.fillWidth: true
+                                textRole: "text"
+                                valueRole: "id"
+                                model: root.stageModel("he20")
+                                currentIndex: root.stageIndex(root.stageHe20Id, "he20")
+                                onActivated: root.stageHe20Id = currentValue || ""
+                            }
+                            Text { text: "BCB · 8 ítems"; color: Theme.textSecondary; font.pixelSize: 11 }
+                            LcComboBox {
+                                id: stageBcbCombo
+                                Layout.fillWidth: true
+                                textRole: "text"
+                                valueRole: "id"
+                                model: root.stageModel("bcb")
+                                currentIndex: root.stageIndex(root.stageBcbId, "bcb")
+                                onActivated: root.stageBcbId = currentValue || ""
+                            }
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            visible: !root.stageReady()
+                            text: "Importá HumanEval de 1 y 20 ítems y BigCodeBench-Hard desde el selector Custom para habilitar la escalera."
+                            color: Theme.warnText
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+                    }
+
                     Rectangle { height: 1; Layout.fillWidth: true; color: Theme.divider }
 
                     RowLayout {
@@ -838,6 +992,21 @@ Item {
                             secondary: true
                             enabled: root.selectedIds.length > 0 && !App.benchmarkRunning
                             onClicked: root.selectedIds = []
+                        }
+                        LcButton {
+                            text: "Seleccionar 🏆 benchmark"
+                            secondary: true
+                            enabled: !App.benchmarkRunning
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Selecciona todos los perfiles candidatos para HE0 → HE20 → BCB"
+                            onClicked: {
+                                const ids = []
+                                for (const item of (App.profileManager.launchProfilesForMenu() || [])) {
+                                    if (item.benchmark && item.id && ids.indexOf(item.id) < 0)
+                                        ids.push(item.id)
+                                }
+                                root.selectedIds = ids
+                            }
                         }
                         LcButton {
                             text: "Exportar CSV"
@@ -1138,11 +1307,22 @@ Item {
                             danger: App.benchmarkRunning
                             enabled: App.benchmarkRunning
                                      || (root.selectedIds.length > 0
-                                         && ((!customMode.checked || root.customId !== "")
-                                             || root.proBenchmarkIds.length > 0))
+                                         && (stageMode.checked
+                                             ? root.stageReady()
+                                             : ((!customMode.checked || root.customId !== "")
+                                                 || root.proBenchmarkIds.length > 0)))
                             onClicked: {
                                 if (App.benchmarkRunning) {
                                     App.cancelBenchmark()
+                                } else if (stageMode.checked) {
+                                    App.startThreeStageBenchmark(root.selectedIds,
+                                                                 root.stageHe0Id,
+                                                                 root.stageHe20Id,
+                                                                 root.stageBcbId,
+                                                                 passesSpin.value,
+                                                                 agentTarget.checked ? "agent" : "model",
+                                                                 timeoutSpin.value,
+                                                                 agentTarget.checked ? agentProfileCombo.currentValue : "")
                                 } else if (root.proBenchmarkIds.length > 0) {
                                     App.startProBenchmarks(root.selectedIds, root.proBenchmarkIds, passesSpin.value,
                                                            agentTarget.checked ? "agent" : "model", timeoutSpin.value,
@@ -1410,7 +1590,7 @@ Item {
                                 }
                                 Item { Layout.fillWidth: true }
                                 LcButton {
-                                    text: "Seleccionar top 3 + ⚡ BEST"
+                                    text: "Seleccionar top 3 + ⚡ BEST + 🏆 BENCH"
                                     secondary: true
                                     enabled: (App.benchmarkHumanEval20Candidates || []).length > 0
                                     onClicked: {
@@ -1424,7 +1604,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "HumanEval/0 evalúa hasta 10 perfiles por GGUF; HumanEval/20 recibe sólo los 3 ganadores de cada GGUF y todos los controles ⚡ BEST."
+                                text: "HumanEval/0 evalúa hasta 10 perfiles por GGUF; HumanEval/20 recibe sólo los 3 ganadores de cada GGUF y todos los controles ⚡ BEST / 🏆 BENCH."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {
@@ -1501,7 +1681,7 @@ Item {
                             }
                             Text {
                                 Layout.fillWidth: true
-                                text: "HumanEval/20 compara los 3 mejores por GGUF con todos los perfiles ⚡ BEST; infra/timeouts quedan fuera."
+                                text: "HumanEval/20 compara los 3 mejores por GGUF con todos los controles ⚡ BEST / 🏆 BENCH; infra/timeouts quedan fuera."
                                 color: Theme.textMuted; font.pixelSize: 11
                             }
                             Rectangle {
@@ -1528,7 +1708,7 @@ Item {
                                         Text { Layout.preferredWidth: 45; text: modelData.bestModelosQualityRank || (index + 1); color: Theme.accent; font.pixelSize: 11; font.bold: true }
                                         Text { Layout.preferredWidth: 220; text: modelData.ggufName || "—"; color: Theme.textSecondary; font.pixelSize: 11; elide: Text.ElideMiddle }
                                         Text { Layout.fillWidth: true; text: modelData.profileName || ""; color: Theme.textPrimary; font.pixelSize: 11; elide: Text.ElideRight }
-                                        Text { Layout.preferredWidth: 85; text: modelData.humanEval20Control ? "⚡ BEST" : "Top 3"; color: Theme.accent; font.pixelSize: 11 }
+                                        Text { Layout.preferredWidth: 85; text: modelData.humanEval20Control ? (modelData.benchmarkControl ? "🏆 BENCH" : "⚡ BEST") : "Top 3"; color: Theme.accent; font.pixelSize: 11 }
                                         Text { Layout.preferredWidth: 70; text: (modelData.qualityScore || 0) + "/" + (modelData.qualityTotal || 0); color: Theme.successText; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
                                         Text { Layout.preferredWidth: 60; text: Number(modelData.avgTps || 0).toFixed(1); color: Theme.textPrimary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }
                                         Text { Layout.preferredWidth: 75; text: root.secondsLabel(modelData.totalTime || modelData.elapsedSec); color: Theme.textSecondary; font.pixelSize: 11; horizontalAlignment: Text.AlignRight }

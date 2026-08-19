@@ -110,6 +110,7 @@
 
 static QString benchmarkGateStage(const QString &label, int taskCount);
 static bool isBigCodeBenchLabel(const QString &label);
+static QString customBenchmarkStage(const QString &label, int taskCount);
 
 namespace {
 bool launchThinkingEnabled(const QStringList &args, bool fallback)
@@ -11085,6 +11086,7 @@ static const TrEntry k_tr[] = {
     {"nav.binaries", "Binarios",       "Binaries",     "二进制", "Binaires",       "Binari",         "Binärdateien"},
     {"nav.chat",      "Chat",           "Chat",         "聊天",       "Discussion",     "Chat",           "Chat"},
     {"nav.benchmark", "Benchmark",     "Benchmark",    "基准测试",   "Benchmark",      "Benchmark",      "Benchmark"},
+    {"nav.ranking",   "Ranking",       "Ranking",      "排名",       "Classement",     "Classifica",     "Ranking"},
     {"nav.research",  "Investigación",  "Research",     "研究",       "Recherche",      "Ricerca",        "Recherche"},
     {"nav.tasks",     "Automatizaciones","Tasks",        "任务",       "Tâches",         "Attività",       "Aufgaben"},
     {"nav.charla",    "Ingi Charla",    "Ingi Talk",    "对话",       "Ingi Parler",    "Ingi Parla",     "Ingi Sprechen"},
@@ -14004,6 +14006,125 @@ QVariantList AppController::benchmarkBest25() const
     return benchmarkBest25ForTest(m_benchmarkResults);
 }
 
+QVariantList AppController::benchmarkRanking() const
+{
+    return benchmarkRankingForTest(m_benchmarkResults);
+}
+
+QVariantList AppController::benchmarkRankingForTest(const QVariantList &results)
+{
+    // One ranking row represents one launch profile plus the execution context
+    // (chat/agent, agent level and thinking). Keeping those dimensions in the
+    // key prevents a later run with another harness from silently overwriting a
+    // comparable result.
+    const QChar separator(0x1f);
+    QHash<QString, QVariantMap> latestByStage;
+    QHash<QString, QString> groupByStage;
+    QHash<QString, qint64> orderByStage;
+
+    auto stageFor = [](const QString &benchmarkName) {
+        const QString lower = benchmarkName.toLower();
+        if (lower.contains(QStringLiteral("he0"))
+            || (lower.contains(QStringLiteral("humaneval")) && lower.contains(QStringLiteral("(1"))))
+            return QStringLiteral("he0");
+        if (lower.contains(QStringLiteral("he20"))
+            || (lower.contains(QStringLiteral("humaneval")) && lower.contains(QStringLiteral("(20"))))
+            return QStringLiteral("he20");
+        if (lower.contains(QStringLiteral("bigcodebench")) || lower.contains(QStringLiteral("bcb")))
+            return QStringLiteral("bcb");
+        return QString();
+    };
+
+    for (int index = 0; index < results.size(); ++index) {
+        const QVariantMap source = results.at(index).toMap();
+        const QString profileId = source.value(QStringLiteral("profileId")).toString().trimmed();
+        const QString stage = stageFor(source.value(QStringLiteral("benchmarkName")).toString());
+        if (profileId.isEmpty() || stage.isEmpty())
+            continue;
+
+        QString target = source.value(QStringLiteral("target")).toString().trimmed().toLower();
+        if (target.isEmpty()) target = QStringLiteral("model");
+        const QString agentProfileId = source.value(QStringLiteral("agentProfileId")).toString();
+        const QString thinking = source.value(QStringLiteral("thinkingEnabled")).toBool()
+            ? QStringLiteral("1") : QStringLiteral("0");
+        const QString groupKey = profileId + separator + target + separator
+            + agentProfileId + separator + thinking;
+        const QString stageKey = groupKey + separator + stage;
+        const qint64 timestamp = source.value(QStringLiteral("timestamp")).toLongLong();
+        const qint64 order = timestamp > 0 ? timestamp : index;
+        if (!latestByStage.contains(stageKey) || order >= orderByStage.value(stageKey)) {
+            latestByStage.insert(stageKey, source);
+            groupByStage.insert(stageKey, groupKey);
+            orderByStage.insert(stageKey, order);
+        }
+    }
+
+    QHash<QString, QVariantMap> grouped;
+    const QStringList stageNames{QStringLiteral("he0"), QStringLiteral("he20"),
+                                 QStringLiteral("bcb")};
+    for (const QString &stageKey : latestByStage.keys()) {
+        const QVariantMap source = latestByStage.value(stageKey);
+        const QString groupKey = groupByStage.value(stageKey);
+        const QString stage = stageKey.section(separator, -1);
+        const QString profileId = groupKey.section(separator, 0, 0);
+
+        if (!grouped.contains(groupKey)) {
+            QString profileName = source.value(QStringLiteral("profileName")).toString();
+            if (profileName.isEmpty()) profileName = profileId;
+            profileName.remove(QRegularExpression(
+                QStringLiteral("\\s+·\\s+pasada\\s+\\d+/\\s*\\d+$")));
+            QVariantMap row{
+                {QStringLiteral("profileId"), profileId},
+                {QStringLiteral("profileName"), profileName},
+                {QStringLiteral("target"), groupKey.section(separator, 1, 1)},
+                {QStringLiteral("agentProfileId"), groupKey.section(separator, 2, 2)},
+                {QStringLiteral("agentProfileName"), source.value(QStringLiteral("agentProfileName"))},
+                {QStringLiteral("thinkingEnabled"), groupKey.section(separator, 3, 3) == QStringLiteral("1")},
+                {QStringLiteral("stageCount"), 0},
+                {QStringLiteral("complete"), false},
+                {QStringLiteral("latestTimestamp"), source.value(QStringLiteral("timestamp"))}
+            };
+            for (const QString &name : stageNames) {
+                row[name + QStringLiteral("Has")] = false;
+                row[name + QStringLiteral("Score")] = -1;
+                row[name + QStringLiteral("Total")] = 0;
+                row[name + QStringLiteral("ElapsedSec")] = 0.0;
+                row[name + QStringLiteral("Tps")] = 0.0;
+                row[name + QStringLiteral("RamMb")] = 0.0;
+                row[name + QStringLiteral("VramMb")] = 0.0;
+                row[name + QStringLiteral("Timestamp")] = 0.0;
+                row[name + QStringLiteral("Result")] = QVariantMap{};
+            }
+            grouped.insert(groupKey, row);
+        }
+
+        QVariantMap row = grouped.value(groupKey);
+        row[stage + QStringLiteral("Has")] = true;
+        row[stage + QStringLiteral("Score")] = source.value(QStringLiteral("qualityScore"), 0);
+        row[stage + QStringLiteral("Total")] = source.value(QStringLiteral("qualityTotal"), 0);
+        row[stage + QStringLiteral("ElapsedSec")] = source.value(QStringLiteral("elapsedSec"), 0.0);
+        row[stage + QStringLiteral("Tps")] = source.value(QStringLiteral("avgTps"), 0.0);
+        row[stage + QStringLiteral("RamMb")] = source.value(QStringLiteral("ramMb"), 0.0);
+        row[stage + QStringLiteral("VramMb")] = source.value(QStringLiteral("vramMb"), 0.0);
+        row[stage + QStringLiteral("Timestamp")] = source.value(QStringLiteral("timestamp"), 0.0);
+        row[stage + QStringLiteral("Result")] = source;
+        row[QStringLiteral("stageCount")] = row.value(QStringLiteral("stageCount")).toInt() + 1;
+        row[QStringLiteral("complete")] = row.value(QStringLiteral("stageCount")).toInt() == 3;
+        if (source.value(QStringLiteral("timestamp")).toDouble()
+            >= row.value(QStringLiteral("latestTimestamp")).toDouble()) {
+            row[QStringLiteral("latestTimestamp")] = source.value(QStringLiteral("timestamp"));
+            const QString liveAgentName = source.value(QStringLiteral("agentProfileName")).toString();
+            if (!liveAgentName.isEmpty()) row[QStringLiteral("agentProfileName")] = liveAgentName;
+        }
+        grouped.insert(groupKey, row);
+    }
+
+    QVariantList ranking;
+    for (const QVariantMap &row : std::as_const(grouped))
+        ranking.append(row);
+    return ranking;
+}
+
 QVariantList AppController::benchmarkBest25ForTest(const QVariantList &results)
 {
     // Best25 usa la última corrida rápida válida de cada perfil. Las categorías
@@ -14290,7 +14411,9 @@ QVariantList AppController::benchmarkHumanEval20Candidates() const
     QVariantList controls;
     for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
         const QVariantMap item = value.toMap();
-        if (!item.value(QStringLiteral("best")).toBool()) continue;
+        const bool isBest = item.value(QStringLiteral("best")).toBool();
+        const bool isBenchmark = item.value(QStringLiteral("benchmark")).toBool();
+        if (!isBest && !isBenchmark) continue;
         const QString id = item.value(QStringLiteral("id")).toString();
         if (id.isEmpty()) continue;
 
@@ -14306,7 +14429,9 @@ QVariantList AppController::benchmarkHumanEval20Candidates() const
             {QStringLiteral("profileName"), item.value(QStringLiteral("displayName"))},
             {QStringLiteral("ggufName"), gguf},
             {QStringLiteral("ggufKey"), gguf.toLower()},
-            {QStringLiteral("best25Category"), QStringLiteral("⚡ BEST")},
+            {QStringLiteral("best25Category"), isBest ? QStringLiteral("⚡ BEST")
+                                                        : QStringLiteral("🏆 BENCH")},
+            {QStringLiteral("benchmarkControl"), isBenchmark},
             {QStringLiteral("humanEval20Control"), true}});
     }
     return benchmarkHumanEval20CandidatesForTest(benchmarkBestModelosSpeed(), controls);
@@ -14639,9 +14764,7 @@ void AppController::startCustomBenchmark(const QStringList &profileIds, const QS
     const QString label = def.value("name").toString().isEmpty()
                               ? QStringLiteral("custom") : def.value("name").toString();
     const QVariantList prompts = def.value("prompts").toList();
-    QString stage = benchmarkGateStage(label, prompts.size());
-    if (stage.isEmpty() && isBigCodeBenchLabel(label))
-        stage = QStringLiteral("bcb");
+    const QString stage = customBenchmarkStage(label, prompts.size());
 
     QStringList runnableProfiles = profileIds;
     if (stage == QLatin1String("he20") || stage == QLatin1String("bcb")) {
@@ -14721,6 +14844,64 @@ void AppController::startProBenchmarks(const QStringList &profileIds, const QStr
     m_proBenchmarkAgent = agentProfileId;
     // The queue is intentionally serialized: one model/server at a time.
     startCustomBenchmark(profileIds, first, passes, target, timeoutSec, agentProfileId);
+}
+
+void AppController::startThreeStageBenchmark(const QStringList &profileIds,
+                                             const QString &he0Id,
+                                             const QString &he20Id,
+                                             const QString &bcbId,
+                                             int passes, const QString &target,
+                                             int timeoutSec, const QString &agentProfileId)
+{
+    if (m_benchmarkRunning || profileIds.isEmpty()) return;
+
+    const QStringList ids{he0Id.trimmed(), he20Id.trimmed(), bcbId.trimmed()};
+    const QStringList expected{QStringLiteral("he0"), QStringLiteral("he20"),
+                               QStringLiteral("bcb")};
+    QSet<QString> seen;
+    for (int i = 0; i < ids.size(); ++i) {
+        if (ids.at(i).isEmpty() || seen.contains(ids.at(i))) {
+            const QString message = QStringLiteral(
+                "La escalera requiere tres benchmarks personalizados distintos: HE0, HE20 y BCB.");
+            m_benchmarkStatus = message;
+            emit benchmarkStatusChanged();
+            emit serverError(message);
+            return;
+        }
+        seen.insert(ids.at(i));
+
+        QVariantMap definition;
+        for (const QVariant &value : std::as_const(m_customBenchmarks)) {
+            const QVariantMap candidate = value.toMap();
+            if (candidate.value(QStringLiteral("id")).toString() == ids.at(i)) {
+                definition = candidate;
+                break;
+            }
+        }
+        if (definition.isEmpty()) {
+            const QString message = QStringLiteral(
+                "No se encontró la definición custom seleccionada para la etapa %1.")
+                .arg(expected.at(i).toUpper());
+            m_benchmarkStatus = message;
+            emit benchmarkStatusChanged();
+            emit serverError(message);
+            return;
+        }
+        const QString actual = customBenchmarkStage(
+            definition.value(QStringLiteral("name")).toString(),
+            definition.value(QStringLiteral("prompts")).toList().size());
+        if (actual != expected.at(i)) {
+            const QString message = QStringLiteral(
+                "El benchmark seleccionado para %1 no parece corresponder a esa etapa.")
+                .arg(expected.at(i).toUpper());
+            m_benchmarkStatus = message;
+            emit benchmarkStatusChanged();
+            emit serverError(message);
+            return;
+        }
+    }
+
+    startProBenchmarks(profileIds, ids, passes, target, timeoutSec, agentProfileId);
 }
 
 void AppController::startConcurrencyBenchmark(const QString &profileId, int minSlots,
@@ -18106,6 +18287,8 @@ static QString customBenchmarkDuplicateKey(const QJsonObject &definition)
 static QString benchmarkGateStage(const QString &label, int taskCount)
 {
     const QString lower = label.toLower();
+    if (lower.contains(QStringLiteral("he0"))) return QStringLiteral("he0");
+    if (lower.contains(QStringLiteral("he20"))) return QStringLiteral("he20");
     if (!lower.contains(QStringLiteral("humaneval"))) return {};
     if (taskCount == 1) return QStringLiteral("he0");
     if (taskCount >= 20) return QStringLiteral("he20");
@@ -18114,7 +18297,21 @@ static QString benchmarkGateStage(const QString &label, int taskCount)
 
 static bool isBigCodeBenchLabel(const QString &label)
 {
-    return label.toLower().contains(QStringLiteral("bigcodebench"));
+    const QString lower = label.toLower();
+    return lower.contains(QStringLiteral("bigcodebench"))
+        || lower.contains(QStringLiteral("bcb"));
+}
+
+static QString customBenchmarkStage(const QString &label, int taskCount)
+{
+    const QString gated = benchmarkGateStage(label, taskCount);
+    if (!gated.isEmpty()) return gated;
+    return isBigCodeBenchLabel(label) ? QStringLiteral("bcb") : QString();
+}
+
+QString AppController::customBenchmarkStageForTest(const QString &label, int taskCount)
+{
+    return customBenchmarkStage(label, taskCount);
 }
 
 void AppController::seedBundledCustomBenchmarks() const

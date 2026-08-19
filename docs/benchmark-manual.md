@@ -225,6 +225,15 @@ disponible.
    siguiente modelo. Registrar esa limpieza en `server.log`.
 9. Ejecutar una sola etapa a la vez: HE0, luego HE20 y finalmente BCB.
 
+La interfaz de Benchmark ofrece **Escalera HE0 → HE20 → BCB (custom)** para
+hacer esa secuencia con suites elegidas desde `customBenchmarks` y con cualquier
+conjunto de perfiles seleccionado. La API equivalente es
+`startThreeStageBenchmark(profileIds, he0Id, he20Id, bcbId, passes, target,
+timeoutSec, agentProfileId)`. La aplicación valida que cada definición coincida
+con su etapa, serializa las tres corridas y aplica la compuerta HE0/HE20 entre
+ellas. La sección **Ranking** muestra las últimas corridas de esas etapas y
+permite ordenar las columnas de comparación.
+
 Durante la reparación de BCB, la actividad válida es una modificación o
 verificación nueva del workspace. La generación continua de texto no cuenta
 como progreso: el prompt de reparación exige que la primera acción sea

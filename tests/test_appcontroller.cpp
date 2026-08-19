@@ -150,6 +150,8 @@ private slots:
     void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkGateRejectsBrokenOrStaleHe0();
     void benchmarkGateAcceptsValidHe20QualityResult();
+    void benchmarkCustomStageClassification();
+    void benchmarkRankingAggregatesLatestStages();
     void benchmarkUsesOneArtifactPerTask();
     void benchmarkStreamingCountsSnapshotsOnce();
     void concurrencyBenchmarkSettingsClampBounds();
@@ -1690,6 +1692,77 @@ void AppControllerTests::benchmarkGateAcceptsValidHe20QualityResult()
         transport, QStringLiteral("he20"), QStringLiteral("fp-current")));
 }
 
+void AppControllerTests::benchmarkCustomStageClassification()
+{
+    QCOMPARE(AppController::customBenchmarkStageForTest(
+        QStringLiteral("HumanEval (1 ítems)"), 1), QStringLiteral("he0"));
+    QCOMPARE(AppController::customBenchmarkStageForTest(
+        QStringLiteral("HumanEval (20 ítems)"), 20), QStringLiteral("he20"));
+    QCOMPARE(AppController::customBenchmarkStageForTest(
+        QStringLiteral("BCB · suite custom"), 8), QStringLiteral("bcb"));
+    QCOMPARE(AppController::customBenchmarkStageForTest(
+        QStringLiteral("Mi benchmark"), 8), QString());
+}
+
+void AppControllerTests::benchmarkRankingAggregatesLatestStages()
+{
+    QVariantList rows;
+    auto add = [&](const QString &profileId, const QString &target,
+                   const QString &agentId, const QString &agentName,
+                   const QString &benchmarkName, qint64 timestamp,
+                   int score, int total, double elapsed, double tps) {
+        rows.append(QVariantMap{
+            {QStringLiteral("profileId"), profileId},
+            {QStringLiteral("profileName"), profileId + QStringLiteral(" · pasada 1/1")},
+            {QStringLiteral("target"), target},
+            {QStringLiteral("agentProfileId"), agentId},
+            {QStringLiteral("agentProfileName"), agentName},
+            {QStringLiteral("thinkingEnabled"), false},
+            {QStringLiteral("benchmarkName"), benchmarkName},
+            {QStringLiteral("timestamp"), timestamp},
+            {QStringLiteral("qualityScore"), score},
+            {QStringLiteral("qualityTotal"), total},
+            {QStringLiteral("elapsedSec"), elapsed},
+            {QStringLiteral("avgTps"), tps},
+            {QStringLiteral("ramMb"), 100.0},
+            {QStringLiteral("vramMb"), 200.0},
+            {QStringLiteral("failed"), false},
+            {QStringLiteral("failureKind"), QStringLiteral("none")}
+        });
+    };
+
+    add(QStringLiteral("profile-a"), QStringLiteral("agent"), QStringLiteral("agent-1"),
+        QStringLiteral("Agente"), QStringLiteral("HumanEval (1 ítems)"), 1, 0, 1, 90.0, 10.0);
+    add(QStringLiteral("profile-a"), QStringLiteral("agent"), QStringLiteral("agent-1"),
+        QStringLiteral("Agente"), QStringLiteral("HumanEval (1 ítems)"), 2, 1, 1, 80.0, 11.0);
+    add(QStringLiteral("profile-a"), QStringLiteral("agent"), QStringLiteral("agent-1"),
+        QStringLiteral("Agente"), QStringLiteral("HumanEval (20 ítems)"), 3, 18, 20, 300.0, 9.0);
+    add(QStringLiteral("profile-a"), QStringLiteral("agent"), QStringLiteral("agent-1"),
+        QStringLiteral("Agente"), QStringLiteral("BigCodeBench-Hard (8 ítems)"), 4, 4, 8, 500.0, 8.0);
+    // The same launch with another target/harness is a separate ranking row.
+    add(QStringLiteral("profile-a"), QStringLiteral("model"), QString(), QString(),
+        QStringLiteral("HumanEval (1 ítems)"), 5, 1, 1, 40.0, 20.0);
+
+    const QVariantList ranking = AppController::benchmarkRankingForTest(rows);
+    QCOMPARE(ranking.size(), 2);
+    QVariantMap agentRow;
+    for (const QVariant &value : ranking) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("target")).toString() == QStringLiteral("agent")) {
+            agentRow = row;
+            break;
+        }
+    }
+    QVERIFY(!agentRow.isEmpty());
+    QCOMPARE(agentRow.value(QStringLiteral("profileName")).toString(), QStringLiteral("profile-a"));
+    QCOMPARE(agentRow.value(QStringLiteral("he0Score")).toInt(), 1);
+    QCOMPARE(agentRow.value(QStringLiteral("he20Score")).toInt(), 18);
+    QCOMPARE(agentRow.value(QStringLiteral("bcbScore")).toInt(), 4);
+    QCOMPARE(agentRow.value(QStringLiteral("stageCount")).toInt(), 3);
+    QVERIFY(agentRow.value(QStringLiteral("complete")).toBool());
+    QCOMPARE(agentRow.value(QStringLiteral("he0Tps")).toDouble(), 11.0);
+}
+
 void AppControllerTests::benchmarkUsesOneArtifactPerTask()
 {
     QCOMPARE(AppController::benchmarkTaskArtifactNameForTest(QStringLiteral("HumanEval/0")),
@@ -1911,12 +1984,14 @@ void AppControllerTests::benchmarkHumanEval20CandidatesUseTopThreeAndBestControl
     const QVariantList controls = {
         QVariantMap{{QStringLiteral("profileId"), QStringLiteral("qwen-1")}}, // duplicado
         QVariantMap{{QStringLiteral("profileId"), QStringLiteral("kat-best")},
-                    {QStringLiteral("humanEval20Control"), true}}
+                    {QStringLiteral("humanEval20Control"), true}},
+        QVariantMap{{QStringLiteral("profileId"), QStringLiteral("qwen-bench")},
+                    {QStringLiteral("benchmarkControl"), true}}
     };
 
     const QVariantList selected =
         AppController::benchmarkHumanEval20CandidatesForTest(speed, controls);
-    QCOMPARE(selected.size(), 7); // 3 Qwen + 3 Gemma + control BEST externo
+    QCOMPARE(selected.size(), 8); // 3 Qwen + 3 Gemma + control BEST + candidato BENCH
     QSet<QString> ids;
     for (const QVariant &value : selected)
         ids.insert(value.toMap().value(QStringLiteral("profileId")).toString());
@@ -1926,6 +2001,7 @@ void AppControllerTests::benchmarkHumanEval20CandidatesUseTopThreeAndBestControl
     QVERIFY(ids.contains(QStringLiteral("gemma-3")));
     QVERIFY(!ids.contains(QStringLiteral("gemma-4")));
     QVERIFY(ids.contains(QStringLiteral("kat-best")));
+    QVERIFY(ids.contains(QStringLiteral("qwen-bench")));
     QVERIFY(selected.last().toMap().value(QStringLiteral("humanEval20Control")).toBool());
 }
 

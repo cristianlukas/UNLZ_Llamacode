@@ -1583,6 +1583,13 @@ Para comparar varias suites personalizadas en una sola operación, abrir
 secuencial y conserva una fila/resultados independientes por combinación; cancelar
 la corrida también descarta las suites pendientes.
 
+La opción **Escalera HE0 → HE20 → BCB (custom)** permite elegir tres suites
+personalizadas importadas y ejecutarlas en ese orden sobre cualquier selección de
+perfiles. HE0 funciona como compuerta: un perfil que no la supera no continúa a
+HE20, y BCB sólo se habilita para perfiles con HE0 y HE20 válidos. La nueva sección
+**Ranking** agrupa la última corrida de cada etapa por perfil, objetivo y nivel de
+agente; sus columnas HE0, HE20, BCB, tiempos, TPS, RAM y VRAM se pueden ordenar.
+
 Las suites custom pueden declarar un timeout recomendado. La UI avisa cuando el
 límite elegido es menor: un timeout durante la reparación conserva los checks ya
 medidos, pero se identifica como `Timeout` y no como un fallo final de calidad. La

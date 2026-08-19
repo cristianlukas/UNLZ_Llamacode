@@ -318,6 +318,7 @@ ApplicationWindow {
                     Component { id: tasksPageComponent; TasksPage {} }
                     Component { id: charlaPageComponent; CharlaPage {} }
                     Component { id: benchmarkPageComponent; BenchmarkPage {} }
+                    Component { id: rankingPageComponent; RankingPage {} }
                     Component { id: tunerPageComponent; TunerPage {} }
                     Component { id: downloadsPageComponent; DownloadsPage {} }
                     Component { id: agentsPageComponent; AgentsPage {} }
@@ -334,10 +335,11 @@ ApplicationWindow {
                     Loader { id: tasksLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 8; visible: stack.currentIndex === 8; sourceComponent: tasksPageComponent; onLoaded: loaded = true }
                     Loader { id: charlaLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 9; visible: stack.currentIndex === 9; sourceComponent: charlaPageComponent; onLoaded: loaded = true }
                     Loader { id: benchmarkLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 10; visible: stack.currentIndex === 10; sourceComponent: benchmarkPageComponent; onLoaded: loaded = true }
-                    Loader { id: tunerLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 11; visible: stack.currentIndex === 11; sourceComponent: tunerPageComponent; onLoaded: loaded = true }
-                    Loader { id: downloadsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 12; visible: stack.currentIndex === 12; sourceComponent: downloadsPageComponent; onLoaded: loaded = true }
-                    Loader { id: agentsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 13; visible: stack.currentIndex === 13; sourceComponent: agentsPageComponent; onLoaded: loaded = true }
-                    Loader { id: settingsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 14; visible: stack.currentIndex === 14; sourceComponent: settingsPageComponent; onLoaded: loaded = true }
+                    Loader { id: rankingLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 11; visible: stack.currentIndex === 11; sourceComponent: rankingPageComponent; onLoaded: loaded = true }
+                    Loader { id: tunerLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 12; visible: stack.currentIndex === 12; sourceComponent: tunerPageComponent; onLoaded: loaded = true }
+                    Loader { id: downloadsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 13; visible: stack.currentIndex === 13; sourceComponent: downloadsPageComponent; onLoaded: loaded = true }
+                    Loader { id: agentsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 14; visible: stack.currentIndex === 14; sourceComponent: agentsPageComponent; onLoaded: loaded = true }
+                    Loader { id: settingsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 15; visible: stack.currentIndex === 15; sourceComponent: settingsPageComponent; onLoaded: loaded = true }
                 }
             }
         }
