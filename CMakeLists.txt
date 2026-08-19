@@ -499,6 +499,8 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/benchmarks/local_cookbook_priorities.json
         assets/eval/reasoning_bias.json
         assets/eval/snake_retro_singlefile.json
+        docs/benchmark-results.md
+        docs/benchmark-results-history.md
         ${LLAMACODE_BUNDLED_CUSTOM_BENCHMARKS}
         ${LLAMACODE_BUNDLED_SKILLS}
         ${LLAMACODE_BUNDLED_DIRECTIVES}

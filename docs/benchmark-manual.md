@@ -246,6 +246,14 @@ con su etapa, serializa las tres corridas y aplica la compuerta HE0/HE20 entre
 ellas. La sección **Ranking** muestra las últimas corridas de esas etapas y
 permite ordenar las columnas de comparación.
 
+Al iniciar una versión que incluye esta migración, se importan una sola vez las
+filas tabulares con `ID`, perfil y score de los documentos
+`benchmark-results.md` y `benchmark-results-history.md`. El importador conserva
+score, tiempo, TPS, RAM/VRAM, estado y fecha de sección; ignora instrucciones,
+narrativa y filas pendientes. Los resultados quedan marcados como históricos
+`importedFromDocs` y no sirven como huella de configuración para abrir la
+compuerta de nuevas corridas.
+
 Durante la reparación de BCB, la actividad válida es una modificación o
 verificación nueva del workspace. La generación continua de texto no cuenta
 como progreso: el prompt de reparación exige que la primera acción sea

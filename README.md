@@ -1605,6 +1605,10 @@ perfiles. HE0 funciona como compuerta: un perfil que no la supera no continúa a
 HE20, y BCB sólo se habilita para perfiles con HE0 y HE20 válidos. La nueva sección
 **Ranking** agrupa la última corrida de cada etapa por perfil, objetivo y nivel de
 agente; sus columnas HE0, HE20, BCB, tiempos, TPS, RAM y VRAM se pueden ordenar.
+En el primer arranque de esta versión, la app importa las filas tabulares con
+scores desde `docs/benchmark-results.md` y `docs/benchmark-results-history.md`;
+la migración es idempotente y marca esos datos como históricos importados. Las
+filas `Pendiente`, narrativas o sin score no se convierten en resultados.
 
 Las suites custom pueden declarar un timeout recomendado. La UI avisa cuando el
 límite elegido es menor: un timeout durante la reparación conserva los checks ya

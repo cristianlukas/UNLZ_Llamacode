@@ -1300,6 +1300,7 @@ void AppController::runStartupScan()
                 // de benchmarks o reportes no bloquea consecutivamente el
                 // tray, el repintado y la navegación inicial.
                 loadBenchmarkResults();
+                importBundledBenchmarkDocuments();
                 QTimer::singleShot(0, this, [this]() {
                     loadCustomBenchmarks();
                     QTimer::singleShot(0, this, [this]() {
@@ -18068,6 +18069,10 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["failureKind"] = result.value("failureKind").toString();
     summary["failureMessage"] = result.value("failureMessage").toString();
     summary["failureDetail"] = result.value("failureDetail").toString();
+    summary["importedFromDocs"] = result.value("importedFromDocs").toBool();
+    summary["importSource"] = result.value("importSource").toString();
+    summary["importKey"] = result.value("importKey").toString();
+    summary["importFingerprint"] = result.value("importFingerprint").toString();
     summary["isBaseline"] = result.value("isBaseline").toBool();
     summary["baselineId"] = result.value("baselineId").toString();
     summary["elapsedVsBaselinePct"] = result.value("elapsedVsBaselinePct").toDouble();
@@ -18104,6 +18109,386 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
             comparisonFile.write(
                 QJsonDocument(QJsonObject::fromVariantMap(report)).toJson(QJsonDocument::Indented));
     }
+}
+
+static QString benchmarkMarkdownCell(QString value)
+{
+    value = value.trimmed();
+    if (value.startsWith(QLatin1Char('`')) && value.endsWith(QLatin1Char('`')))
+        value = value.mid(1, value.size() - 2);
+    value.remove(QStringLiteral("**"));
+    value.replace(QStringLiteral("&nbsp;"), QStringLiteral(" "));
+    return value.trimmed();
+}
+
+static QString benchmarkMarkdownHeader(QString value)
+{
+    value = benchmarkMarkdownCell(value).toLower();
+    value.replace(QStringLiteral("á"), QStringLiteral("a"));
+    value.replace(QStringLiteral("é"), QStringLiteral("e"));
+    value.replace(QStringLiteral("í"), QStringLiteral("i"));
+    value.replace(QStringLiteral("ó"), QStringLiteral("o"));
+    value.replace(QStringLiteral("ú"), QStringLiteral("u"));
+    return value;
+}
+
+static QStringList benchmarkMarkdownCells(const QString &line)
+{
+    QString row = line.trimmed();
+    if (!row.startsWith(QLatin1Char('|'))) return {};
+    row.remove(0, 1);
+    if (row.endsWith(QLatin1Char('|'))) row.chop(1);
+    QStringList cells = row.split(QLatin1Char('|'));
+    for (QString &cell : cells) cell = benchmarkMarkdownCell(cell);
+    return cells;
+}
+
+static bool benchmarkMarkdownDivider(const QStringList &cells)
+{
+    if (cells.isEmpty()) return false;
+    for (const QString &cell : cells) {
+        if (!QRegularExpression(QStringLiteral("^:?-{3,}:?$"))
+                 .match(cell.trimmed()).hasMatch())
+            return false;
+    }
+    return true;
+}
+
+static int benchmarkMarkdownHeaderIndex(const QStringList &headers,
+                                        const QStringList &needles)
+{
+    for (int i = 0; i < headers.size(); ++i) {
+        const QString header = benchmarkMarkdownHeader(headers.at(i));
+        for (const QString &needle : needles) {
+            if (needle == QLatin1String("id")) {
+                if (header == QLatin1String("id") || header == QLatin1String("launch id"))
+                    return i;
+                continue;
+            }
+            if (header == needle || header.contains(needle)) return i;
+        }
+    }
+    return -1;
+}
+
+static double benchmarkMarkdownNumber(QString value, bool megabytes = false)
+{
+    value = value.trimmed();
+    if (value.isEmpty() || value == QStringLiteral("—") || value == QStringLiteral("-"))
+        return 0.0;
+    value.remove(QRegularExpression(QStringLiteral("[^0-9,.-]")));
+    if (value.isEmpty()) return 0.0;
+    if (megabytes) {
+        value.remove(QLatin1Char('.'));
+        value.remove(QLatin1Char(','));
+    } else if (value.contains(QLatin1Char(','))) {
+        value.remove(QLatin1Char('.'));
+        value.replace(QLatin1Char(','), QLatin1Char('.'));
+    }
+    bool ok = false;
+    const double result = value.toDouble(&ok);
+    return ok ? result : 0.0;
+}
+
+static double benchmarkMarkdownSeconds(const QString &value)
+{
+    const auto match = QRegularExpression(QStringLiteral("([0-9][0-9.,]*)\\s*s"),
+                                           QRegularExpression::CaseInsensitiveOption)
+                           .match(value);
+    return match.hasMatch() ? benchmarkMarkdownNumber(match.captured(1)) : 0.0;
+}
+
+static double benchmarkMarkdownMetric(const QString &value)
+{
+    const auto match = QRegularExpression(QStringLiteral("([0-9][0-9.,]*)"))
+                           .match(value);
+    return match.hasMatch() ? benchmarkMarkdownNumber(match.captured(1)) : 0.0;
+}
+
+static bool benchmarkMarkdownScore(const QString &value, int *score, int *total)
+{
+    const auto match = QRegularExpression(QStringLiteral("^\\s*(\\d+)\\s*/\\s*(\\d+)"))
+                           .match(value);
+    if (!match.hasMatch()) return false;
+    bool scoreOk = false;
+    bool totalOk = false;
+    const int parsedScore = match.captured(1).toInt(&scoreOk);
+    const int parsedTotal = match.captured(2).toInt(&totalOk);
+    if (!scoreOk || !totalOk) return false;
+    if (score) *score = parsedScore;
+    if (total) *total = parsedTotal;
+    return true;
+}
+
+static QString benchmarkImportedAgentId(QString value)
+{
+    value = benchmarkMarkdownHeader(value);
+    if (value.contains(QStringLiteral("→"))) value = value.section(QStringLiteral("→"), -1);
+    if (value.contains(QStringLiteral("maximo"))) return QStringLiteral("agent-maximo");
+    if (value.contains(QStringLiteral("avanzado"))) return QStringLiteral("agent-avanzado");
+    if (value.contains(QStringLiteral("intermedio"))) return QStringLiteral("agent-intermedio");
+    if (value.contains(QStringLiteral("basico"))) return QStringLiteral("agent-basico");
+    if (value.contains(QStringLiteral("chat"))) return QStringLiteral("agent-chat");
+    value.replace(QRegularExpression(QStringLiteral("[^a-z0-9]+")), QStringLiteral("-"));
+    return value.trimmed().isEmpty() ? QString() : QStringLiteral("imported-") + value;
+}
+
+static qint64 benchmarkMarkdownDateMs(const QString &date)
+{
+    const QDate parsed = QDate::fromString(date, Qt::ISODate);
+    if (!parsed.isValid()) return 0;
+    return QDateTime(parsed, QTime(12, 0), Qt::LocalTime).toMSecsSinceEpoch();
+}
+
+QVariantList AppController::benchmarkDocumentRowsForTest(const QString &markdown,
+                                                          const QString &sourceName)
+{
+    const QString source = sourceName.trimmed().isEmpty()
+        ? QStringLiteral("docs/benchmark-results.md") : sourceName.trimmed();
+    const int sourcePriority = source.contains(QStringLiteral("history"), Qt::CaseInsensitive)
+        ? 1 : 2;
+    QString currentDate;
+    QVariantList rows;
+    QStringList headers;
+    int idCol = -1;
+    int profileCol = -1;
+    int agentCol = -1;
+    int thinkingCol = -1;
+    int statusCol = -1;
+    int vramCol = -1;
+    int vramGpu0Col = -1;
+    int vramGpu1Col = -1;
+    int ramCol = -1;
+    int he0Col = -1;
+    int he20Col = -1;
+    int bcbCol = -1;
+    int he0TimeCol = -1;
+    int he20TimeCol = -1;
+    int bcbTimeCol = -1;
+    int he0TpsCol = -1;
+    int he20TpsCol = -1;
+    int bcbTpsCol = -1;
+
+    const auto dateRegex = QRegularExpression(QStringLiteral("\\b(20\\d{2}-\\d{2}-\\d{2})\\b"));
+    const auto lines = markdown.split(QRegularExpression(QStringLiteral("[\\r\\n]")));
+    for (const QString &line : lines) {
+        const auto dateMatch = dateRegex.match(line);
+        if (dateMatch.hasMatch()) currentDate = dateMatch.captured(1);
+
+        const QStringList cells = benchmarkMarkdownCells(line);
+        if (cells.isEmpty()) {
+            headers.clear();
+            idCol = profileCol = agentCol = thinkingCol = statusCol = -1;
+            vramCol = vramGpu0Col = vramGpu1Col = ramCol = -1;
+            he0Col = he20Col = bcbCol = -1;
+            he0TimeCol = he20TimeCol = bcbTimeCol = -1;
+            he0TpsCol = he20TpsCol = bcbTpsCol = -1;
+            continue;
+        }
+        if (benchmarkMarkdownDivider(cells)) continue;
+
+        const int candidateId = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("id")});
+        const int candidateProfile = benchmarkMarkdownHeaderIndex(
+            cells, {QStringLiteral("perfil"), QStringLiteral("configuracion"),
+                    QStringLiteral("variante")});
+        const int candidateHe0 = benchmarkMarkdownHeaderIndex(
+            cells, {QStringLiteral("he0"), QStringLiteral("humaneval/0")});
+        const int candidateHe20 = benchmarkMarkdownHeaderIndex(
+            cells, {QStringLiteral("he20"), QStringLiteral("humaneval/20")});
+        const int candidateBcb = benchmarkMarkdownHeaderIndex(
+            cells, {QStringLiteral("bcb"), QStringLiteral("bigcodebench")});
+        if (candidateId >= 0 && candidateProfile >= 0
+            && (candidateHe0 >= 0 || candidateHe20 >= 0 || candidateBcb >= 0)) {
+            headers = cells;
+            idCol = candidateId;
+            profileCol = candidateProfile;
+            agentCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("agente")});
+            thinkingCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("thinking")});
+            statusCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("estado"),
+                                                               QStringLiteral("resultado"),
+                                                               QStringLiteral("causa")});
+            vramCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("vram total"),
+                                                             QStringLiteral("vram agregada"),
+                                                             QStringLiteral("vram")});
+            vramGpu0Col = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("vram gpu0")});
+            vramGpu1Col = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("vram gpu1")});
+            ramCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("ram pico"),
+                                                           QStringLiteral("ram")});
+            he0Col = candidateHe0;
+            he20Col = candidateHe20;
+            bcbCol = candidateBcb;
+            const int genericTime = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tiempo")});
+            he0TimeCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tiempo he0")});
+            he20TimeCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tiempo he20")});
+            bcbTimeCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tiempo bcb")});
+            const int genericTps = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tps")});
+            he0TpsCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tps he0")});
+            he20TpsCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tps he20")});
+            bcbTpsCol = benchmarkMarkdownHeaderIndex(cells, {QStringLiteral("tps bcb")});
+            if (he0TimeCol < 0 && he20TimeCol < 0 && bcbTimeCol < 0)
+                he0TimeCol = genericTime;
+            if (he0TpsCol < 0 && he20TpsCol < 0 && bcbTpsCol < 0)
+                he0TpsCol = genericTps;
+            continue;
+        }
+        if (headers.isEmpty() || cells.size() < headers.size()) continue;
+
+        const QString profileId = benchmarkMarkdownCell(cells.value(idCol));
+        const QString profileName = benchmarkMarkdownCell(cells.value(profileCol));
+        if (profileId.isEmpty() || profileId == QStringLiteral("—")
+            || profileName.isEmpty() || profileName == QStringLiteral("—"))
+            continue;
+
+        const QString agentName = agentCol >= 0 ? benchmarkMarkdownCell(cells.value(agentCol)) : QString();
+        const QString agentId = benchmarkImportedAgentId(agentName);
+        const QString target = agentName.isEmpty() ? QStringLiteral("model") : QStringLiteral("agent");
+        const QString status = statusCol >= 0 ? benchmarkMarkdownCell(cells.value(statusCol)) : QString();
+        const QString statusLower = benchmarkMarkdownHeader(status);
+        const bool thinking = thinkingCol >= 0
+            && benchmarkMarkdownHeader(cells.value(thinkingCol)).startsWith(QStringLiteral("si"));
+        const qint64 timestamp = benchmarkMarkdownDateMs(currentDate);
+        const double vram = vramCol >= 0
+            ? benchmarkMarkdownNumber(cells.value(vramCol), true) : 0.0;
+        const double vramGpu0 = vramGpu0Col >= 0
+            ? benchmarkMarkdownNumber(cells.value(vramGpu0Col), true) : 0.0;
+        const double vramGpu1 = vramGpu1Col >= 0
+            ? benchmarkMarkdownNumber(cells.value(vramGpu1Col), true) : 0.0;
+        const double ram = ramCol >= 0
+            ? benchmarkMarkdownNumber(cells.value(ramCol), true) : 0.0;
+
+        struct StageColumn { const char *key; int scoreCol; int timeCol; int tpsCol; };
+        const StageColumn stages[] = {
+            {"he0", he0Col, he0TimeCol, he0TpsCol},
+            {"he20", he20Col, he20TimeCol, he20TpsCol},
+            {"bcb", bcbCol, bcbTimeCol, bcbTpsCol}
+        };
+        for (const StageColumn &stage : stages) {
+            if (stage.scoreCol < 0) continue;
+            int score = 0;
+            int total = 0;
+            if (!benchmarkMarkdownScore(cells.value(stage.scoreCol), &score, &total)) continue;
+
+            const QString stageName = QString::fromLatin1(stage.key);
+            const QString benchmarkName = stageName == QLatin1String("he0")
+                ? QStringLiteral("HumanEval (1 ítems)")
+                : stageName == QLatin1String("he20")
+                    ? QStringLiteral("HumanEval (20 ítems)")
+                    : QStringLiteral("BigCodeBench-Hard (8 ítems)");
+            const bool infrastructure = statusLower.contains(QStringLiteral("oom"))
+                || statusLower.contains(QStringLiteral("crash"))
+                || statusLower.contains(QStringLiteral("cuda"))
+                || statusLower.contains(QStringLiteral("no ejecutado"));
+            const bool qualityFailure = (total > 0 && score == 0)
+                || (total == 0 && !statusLower.isEmpty() && !infrastructure);
+            // The documents do not always record the target/agent consistently.
+            // Deduplicate by profile and stage so one historical profile becomes
+            // one Ranking row instead of splitting into artificial contexts.
+            const QString importKey = profileId + QLatin1Char('|') + stageName;
+            const QString rawFingerprint = QString::fromLatin1(
+                QCryptographicHash::hash((source + QLatin1Char('|') + importKey + QLatin1Char('|')
+                                          + line).toUtf8(), QCryptographicHash::Sha256).toHex());
+
+            QVariantMap row;
+            row[QStringLiteral("profileId")] = profileId;
+            row[QStringLiteral("profileName")] = profileName;
+            row[QStringLiteral("target")] = target;
+            row[QStringLiteral("agentProfileId")] = agentId;
+            row[QStringLiteral("agentProfileName")] = agentName;
+            row[QStringLiteral("thinkingEnabled")] = thinking;
+            row[QStringLiteral("benchmarkName")] = benchmarkName;
+            row[QStringLiteral("timestamp")] = timestamp;
+            row[QStringLiteral("qualityScore")] = score;
+            row[QStringLiteral("qualityTotal")] = total;
+            row[QStringLiteral("firstAttemptScore")] = score;
+            row[QStringLiteral("firstAttemptTotal")] = total;
+            row[QStringLiteral("finalScore")] = score;
+            row[QStringLiteral("finalTotal")] = total;
+            row[QStringLiteral("elapsedSec")] = stage.timeCol >= 0
+                ? benchmarkMarkdownSeconds(cells.value(stage.timeCol)) : 0.0;
+            row[QStringLiteral("avgTps")] = stage.tpsCol >= 0
+                ? benchmarkMarkdownMetric(cells.value(stage.tpsCol)) : 0.0;
+            row[QStringLiteral("ramMb")] = ram;
+            row[QStringLiteral("vramMb")] = vram;
+            row[QStringLiteral("vramGpu0Mb")] = vramGpu0;
+            row[QStringLiteral("vramGpu1Mb")] = vramGpu1;
+            row[QStringLiteral("failed")] = infrastructure || qualityFailure;
+            row[QStringLiteral("failureKind")] = infrastructure
+                ? QStringLiteral("infrastructure")
+                : qualityFailure ? QStringLiteral("quality") : QStringLiteral("none");
+            row[QStringLiteral("failureMessage")] = (infrastructure || qualityFailure) ? status : QString();
+            row[QStringLiteral("runLabel")] = QStringLiteral("Importado de %1").arg(source);
+            row[QStringLiteral("mode")] = QStringLiteral("imported");
+            row[QStringLiteral("passes")] = 1;
+            row[QStringLiteral("passesTotal")] = 1;
+            row[QStringLiteral("tasks")] = QVariantList{};
+            row[QStringLiteral("importedFromDocs")] = true;
+            row[QStringLiteral("importSource")] = source;
+            row[QStringLiteral("importKey")] = importKey;
+            row[QStringLiteral("importFingerprint")] = rawFingerprint;
+            row[QStringLiteral("importSourcePriority")] = sourcePriority;
+            rows.append(row);
+        }
+    }
+    return rows;
+}
+
+void AppController::importBundledBenchmarkDocuments()
+{
+    QSettings settings;
+    if (settings.value(QStringLiteral("benchmarks/docsImportedV1"), false).toBool()) return;
+
+    struct Document { const char *resource; const char *source; };
+    const Document documents[] = {
+        {":/docs/benchmark-results.md", "docs/benchmark-results.md"},
+        {":/docs/benchmark-results-history.md", "docs/benchmark-results-history.md"}
+    };
+    QHash<QString, QVariantMap> candidates;
+    for (const Document &document : documents) {
+        QFile file(QString::fromLatin1(document.resource));
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
+        const QVariantList rows = benchmarkDocumentRowsForTest(
+            QString::fromUtf8(file.readAll()), QString::fromLatin1(document.source));
+        for (const QVariant &value : rows) {
+            const QVariantMap row = value.toMap();
+            const QString key = row.value(QStringLiteral("importKey")).toString();
+            if (key.isEmpty()) continue;
+            const int priority = row.value(QStringLiteral("importSourcePriority")).toInt();
+            if (!candidates.contains(key)
+                || priority > candidates.value(key).value(QStringLiteral("importSourcePriority")).toInt()
+                || (priority == candidates.value(key).value(QStringLiteral("importSourcePriority")).toInt()
+                    && row.value(QStringLiteral("timestamp")).toLongLong()
+                       >= candidates.value(key).value(QStringLiteral("timestamp")).toLongLong()))
+                candidates.insert(key, row);
+        }
+    }
+    if (candidates.isEmpty()) return;
+
+    QSet<QString> existingKeys;
+    for (const QVariant &value : std::as_const(m_benchmarkResults)) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("importedFromDocs")).toBool())
+            existingKeys.insert(row.value(QStringLiteral("importKey")).toString());
+    }
+
+    int imported = 0;
+    for (const QVariantMap &candidate : std::as_const(candidates)) {
+        const QString key = candidate.value(QStringLiteral("importKey")).toString();
+        if (key.isEmpty() || existingKeys.contains(key)) continue;
+        QVariantMap row = candidate;
+        row[QStringLiteral("id")] = QStringLiteral("md-import-")
+            + QString::fromLatin1(QCryptographicHash::hash(key.toUtf8(), QCryptographicHash::Sha256).toHex());
+        m_benchmarkResults.append(row);
+        saveBenchmarkResult(row);
+        existingKeys.insert(key);
+        ++imported;
+    }
+    if (imported > 0) {
+        appendServerEvent(QStringLiteral("benchmark"),
+                          QStringLiteral("Importados %1 resultados históricos desde los Markdown de benchmark.")
+                              .arg(imported));
+        emit benchmarkResultsChanged();
+    }
+    settings.setValue(QStringLiteral("benchmarks/docsImportedV1"), true);
 }
 
 void AppController::logAgentUiScroll(const QString &event, const QString &state)

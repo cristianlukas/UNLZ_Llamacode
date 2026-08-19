@@ -543,6 +543,8 @@ public:
                                                   const QString &stage,
                                                   const QString &profileFingerprint);
     static QString customBenchmarkStageForTest(const QString &label, int taskCount);
+    static QVariantList benchmarkDocumentRowsForTest(const QString &markdown,
+                                                      const QString &sourceName = QString());
     // Checkout del que cuelga el exe (lo consume el bootstrap via LC_DIR).
     static QString installRootForExePath(const QString &exePath);
     // Diagnóstico consolidado (estilo `om doctor`): estado de binarios, roots,
@@ -1882,6 +1884,7 @@ private:
     QString      m_benchmarkAgentProfileId;
     QString      m_benchmarkAgentProfileName;
     void         setBenchmarkAgentProfile(const QString &agentProfileId);
+    void         importBundledBenchmarkDocuments();
     QVariantList m_benchmarkResults;
     QVariantList m_customBenchmarks;
     QVariantList m_proBenchmarkQueue;

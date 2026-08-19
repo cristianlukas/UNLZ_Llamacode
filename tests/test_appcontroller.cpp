@@ -153,6 +153,7 @@ private slots:
     void benchmarkGateAcceptsValidHe20QualityResult();
     void benchmarkCustomStageClassification();
     void benchmarkRankingAggregatesLatestStages();
+    void benchmarkDocumentRowsParseScores();
     void benchmarkUsesOneArtifactPerTask();
     void benchmarkStreamingCountsSnapshotsOnce();
     void concurrencyBenchmarkSettingsClampBounds();
@@ -1810,6 +1811,44 @@ void AppControllerTests::benchmarkRankingAggregatesLatestStages()
     QCOMPARE(agentRow.value(QStringLiteral("stageCount")).toInt(), 3);
     QVERIFY(agentRow.value(QStringLiteral("complete")).toBool());
     QCOMPARE(agentRow.value(QStringLiteral("he0Tps")).toDouble(), 11.0);
+}
+
+void AppControllerTests::benchmarkDocumentRowsParseScores()
+{
+    const QString markdown = QStringLiteral(
+        "# 2026-08-18 — import\n"
+        "| ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 | Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | VRAM total | Estado |\n"
+        "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|\n"
+        "| `profile-a` | Perfil A | chat | 1/1 | 18/20 | 4/8 | 11,288 s | 237,507 s | 1430,390 s | 39,22 | 60,50 | 65,21 | 24.569 MB | BCB calidad |\n"
+        "| `profile-pending` | Pendiente | chat | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | — | Pendiente |\n");
+
+    const QVariantList rows = AppController::benchmarkDocumentRowsForTest(
+        markdown, QStringLiteral("docs/benchmark-results.md"));
+    QCOMPARE(rows.size(), 3);
+
+    QVariantMap he0;
+    QVariantMap bcb;
+    for (const QVariant &value : rows) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("benchmarkName")).toString()
+                == QStringLiteral("HumanEval (1 ítems)"))
+            he0 = row;
+        if (row.value(QStringLiteral("benchmarkName")).toString()
+                == QStringLiteral("BigCodeBench-Hard (8 ítems)"))
+            bcb = row;
+    }
+    QVERIFY(!he0.isEmpty());
+    QVERIFY(!bcb.isEmpty());
+    QCOMPARE(he0.value(QStringLiteral("qualityScore")).toInt(), 1);
+    QCOMPARE(he0.value(QStringLiteral("qualityTotal")).toInt(), 1);
+    QCOMPARE(he0.value(QStringLiteral("elapsedSec")).toDouble(), 11.288);
+    QCOMPARE(he0.value(QStringLiteral("avgTps")).toDouble(), 39.22);
+    QCOMPARE(he0.value(QStringLiteral("vramMb")).toDouble(), 24569.0);
+    QCOMPARE(bcb.value(QStringLiteral("qualityScore")).toInt(), 4);
+    QCOMPARE(bcb.value(QStringLiteral("qualityTotal")).toInt(), 8);
+    QVERIFY(!bcb.value(QStringLiteral("failed")).toBool());
+    QVERIFY(bcb.value(QStringLiteral("importedFromDocs")).toBool());
+    QVERIFY(bcb.value(QStringLiteral("timestamp")).toLongLong() > 0);
 }
 
 void AppControllerTests::benchmarkUsesOneArtifactPerTask()
