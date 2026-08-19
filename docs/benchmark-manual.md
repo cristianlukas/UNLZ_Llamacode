@@ -28,8 +28,11 @@ actualizar ambos archivos sin borrar los resultados históricos.
 
 Por defecto, sólo se benchmarkean perfiles marcados `⚡ BEST` en la tabla viva.
 Los perfiles marcados `🏆 BENCH` son candidatos explícitos para una tanda de
-investigación: aparecen en el selector automático de HE20 y se pueden incluir
-en la escalera HE0 → HE20 → BCB con **Seleccionar 🏆 benchmark**. Los perfiles
+investigación. Desde **Perfiles**, la acción **Para benchmark** deja esa marca
+persistida mientras se sigue armando el catálogo; luego, en Benchmark,
+**Seleccionar 🏆 benchmark (N)** carga todos los candidatos pendientes de una vez.
+También aparecen en el selector automático de HE20 y se pueden incluir
+en la escalera HE0 → HE20 → BCB. Los perfiles
 sin ninguno de esos indicadores quedan archivados como referencia y no se
 ejecutan nuevamente. La promoción a `⚡ BEST` sigue requiriendo resultados y
 motivo registrados en el historial.

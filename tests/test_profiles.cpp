@@ -33,6 +33,7 @@ private slots:
     void manager_setBackendCloud();
     void manager_addModelProfile();
     void manager_favoriteAndAlias();
+    void manager_benchmarkQueue();
     void manager_profileSearchFiltersNameAliasAndId();
     void manager_tagsAndLastUsed();
     void manager_profileTemplatesRoundTrip();
@@ -327,6 +328,33 @@ void ProfilesTests::manager_favoriteAndAlias()
     QVERIFY(top.value("best").toBool());
     QCOMPARE(pm.getLaunchProfile(id).value("displayName").toString(),
              QStringLiteral("Alias - 1_L"));
+}
+
+void ProfilesTests::manager_benchmarkQueue()
+{
+    ProfileManager pm;
+    const QString id = pm.addLaunchProfile(QStringLiteral("Pendiente"), "b", "m", "r");
+    QVERIFY(!id.isEmpty());
+
+    pm.setLaunchBenchmark(id, true);
+    const QVariantMap queued = pm.getLaunchProfile(id);
+    QVERIFY(queued.value(QStringLiteral("benchmark")).toBool());
+
+    const QVariantList menu = pm.launchProfilesForMenu();
+    QVERIFY(std::any_of(menu.cbegin(), menu.cend(), [&](const QVariant &value) {
+        const QVariantMap row = value.toMap();
+        return row.value(QStringLiteral("id")).toString() == id
+            && row.value(QStringLiteral("benchmark")).toBool()
+            && row.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("🏆"));
+    }));
+
+    {
+        ProfileManager reloaded;
+        QVERIFY(reloaded.getLaunchProfile(id).value(QStringLiteral("benchmark")).toBool());
+    }
+
+    pm.setLaunchBenchmark(id, false);
+    QVERIFY(!pm.getLaunchProfile(id).value(QStringLiteral("benchmark")).toBool());
 }
 
 void ProfilesTests::manager_profileSearchFiltersNameAliasAndId()

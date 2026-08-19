@@ -252,7 +252,7 @@ struct LaunchProfile {
     bool    favorite = false; // marcados con estrella y ordenados arriba
     QStringList tags;          // etiquetas libres para filtrar perfiles
     qint64 lastUsed = 0;       // epoch ms del último arranque exitoso
-    bool    benchmark = false; // perfil destacado por una evaluación comparativa
+    bool    benchmark = false; // candidato pendiente para la cola de benchmark
     bool    systemBadge = false; // ícono de sistema; distinto de la inmutabilidad interna
     bool    deprecated = false; // visible sólo en Perfiles; excluido de uso operativo
     QString backendProfileId;

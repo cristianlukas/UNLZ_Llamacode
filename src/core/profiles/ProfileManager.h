@@ -160,8 +160,10 @@ public:
     // Config de Charla (voz) por LaunchProfile. get devuelve defaults si no hay.
     Q_INVOKABLE QVariantMap getLaunchVoice(const QString &id) const;
     Q_INVOKABLE bool setLaunchVoice(const QString &id, const QVariantMap &voiceCfg);
-    // Alias opcional (prioridad sobre name en la UI) y favorito (estrella, arriba).
+    // Alias opcional (prioridad sobre name en la UI), favorito (estrella, arriba)
+    // y marca persistente de candidato pendiente para benchmark.
     Q_INVOKABLE void setLaunchFavorite(const QString &id, bool favorite);
+    Q_INVOKABLE void setLaunchBenchmark(const QString &id, bool benchmark);
     Q_INVOKABLE void setLaunchAlias(const QString &id, const QString &alias);
     Q_INVOKABLE void setLaunchTags(const QString &id, const QStringList &tags);
     Q_INVOKABLE void markLaunchUsed(const QString &id);

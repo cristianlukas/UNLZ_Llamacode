@@ -578,6 +578,14 @@ void ProfileManager::setLaunchFavorite(const QString &id, bool favorite)
     if (m_launches.update(p)) { save(); emit launchesChanged(); }
 }
 
+void ProfileManager::setLaunchBenchmark(const QString &id, bool benchmark)
+{
+    LaunchProfile p = m_launches.findById(id);
+    if (p.id.isEmpty() || p.system || p.benchmark == benchmark) return;
+    p.benchmark = benchmark;
+    if (m_launches.update(p)) { save(); emit launchesChanged(); }
+}
+
 void ProfileManager::setLaunchAlias(const QString &id, const QString &alias)
 {
     LaunchProfile p = m_launches.findById(id);

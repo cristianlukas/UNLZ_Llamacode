@@ -633,10 +633,13 @@ A module to compare quants and profiles systematically: measures RAM, VRAM, spee
 
 ### Workflow
 
-1. Select one or more `LaunchProfile`s to compare.
-2. Pick a test mode: **Short** (~30 s) or **Full** (1–5 min).
-3. Run: UNLZ_Llamacode launches each profile in sequence, runs the prompts, records metrics.
-4. View results in a comparison table; export or save for future comparisons.
+1. In **Profiles**, mark each `LaunchProfile` you want to leave **For benchmark**;
+   the mark persists as a queue of pending candidates.
+2. In **Benchmark**, click **Select 🏆 benchmark (N)** to load all marked profiles
+   at once, or select profiles manually.
+3. Pick a test mode: **Short** (~30 s) or **Full** (1–5 min).
+4. Run: UNLZ_Llamacode launches each profile in sequence, runs the prompts, records metrics.
+5. View results in a comparison table; export or save for future comparisons.
 
 ### Test modes
 

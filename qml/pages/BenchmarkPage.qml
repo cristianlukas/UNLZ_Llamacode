@@ -279,6 +279,25 @@ Item {
         }
     }
 
+    // Snapshot reactivo: las llamadas a invokables no forman por sí solas una
+    // dependencia de binding; se refresca al marcar/desmarcar desde Perfiles.
+    property var benchmarkLaunches: App.profileManager.launchProfilesForMenu()
+    Connections {
+        target: App.profileManager
+        function onLaunchesChanged() {
+            root.benchmarkLaunches = App.profileManager.launchProfilesForMenu()
+        }
+    }
+
+    function benchmarkMarkedIds() {
+        const ids = []
+        for (const item of (root.benchmarkLaunches || [])) {
+            if (item.benchmark && item.id && ids.indexOf(item.id) < 0)
+                ids.push(item.id)
+        }
+        return ids
+    }
+
     // Custom benchmark selection: "" = standard tasks, else a custom benchmark id
     property string customId: App.readSetting("benchCustomId", "")
     onCustomIdChanged: App.writeSetting("benchCustomId", customId)
@@ -994,19 +1013,12 @@ Item {
                             onClicked: root.selectedIds = []
                         }
                         LcButton {
-                            text: "Seleccionar 🏆 benchmark"
+                            text: "Seleccionar 🏆 benchmark (" + root.benchmarkMarkedIds().length + ")"
                             secondary: true
-                            enabled: !App.benchmarkRunning
+                            enabled: !App.benchmarkRunning && root.benchmarkMarkedIds().length > 0
                             ToolTip.visible: hovered
-                            ToolTip.text: "Selecciona todos los perfiles candidatos para HE0 → HE20 → BCB"
-                            onClicked: {
-                                const ids = []
-                                for (const item of (App.profileManager.launchProfilesForMenu() || [])) {
-                                    if (item.benchmark && item.id && ids.indexOf(item.id) < 0)
-                                        ids.push(item.id)
-                                }
-                                root.selectedIds = ids
-                            }
+                            ToolTip.text: "Selecciona todos los perfiles marcados como pendientes para HE0 → HE20 → BCB"
+                            onClicked: root.selectedIds = root.benchmarkMarkedIds()
                         }
                         LcButton {
                             text: "Exportar CSV"

@@ -1570,10 +1570,13 @@ artefacto de archivo por tarea.
 
 ### Flujo de uso
 
-1. Seleccionar uno o más `LaunchProfile` para comparar.
-2. Elegir modo de prueba: **Corta** (~30 s) o **Completa** (1–5 min).
-3. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
-4. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
+1. En **Perfiles**, marcar cada `LaunchProfile` que se quiera dejar **Para
+   benchmark**; la marca queda persistida como cola de candidatos pendientes.
+2. En **Benchmark**, pulsar **Seleccionar 🏆 benchmark (N)** para cargar todos
+   los perfiles marcados de una vez, o seleccionar perfiles manualmente.
+3. Elegir modo de prueba: **Corta** (~30 s) o **Completa** (1–5 min).
+4. Ejecutar: UNLZ_Llamacode lanza cada perfil en secuencia, corre los prompts, registra métricas.
+5. Ver resultados en tabla comparativa; exportar o guardar para comparaciones futuras.
 
 Cuando una suite se repite en varias pasadas, el benchmark detiene y vuelve a
 cargar el servidor entre pasadas para aislar el estado de MTP/KV-cache. Si el

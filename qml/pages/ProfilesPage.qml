@@ -54,6 +54,7 @@ Item {
     property bool mtpEnabled: false
     property bool launchBest: false       // BEST (rayo), insignia curada del catálogo
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
+    property bool launchBenchmark: false // candidato pendiente para benchmark
     property bool launchDeprecated: false // visible sólo en esta página administrativa
     property bool smokeTestRunning: false
     // Política: siempre LlamaAgent. Sin selector de harness; sin "none"/"opencode".
@@ -333,6 +334,7 @@ Item {
         // Alias (display) opcional + favorito del perfil.
         root.launchBest = (lp.best === true)
         root.launchFavorite = (lp.favorite === true)
+        root.launchBenchmark = (lp.benchmark === true)
         root.launchDeprecated = (lp.deprecated === true)
         profileAliasField.text = lp.alias ?? ""
         profileTagsField.text = (lp.tags ?? []).join(", ")
@@ -572,6 +574,7 @@ Item {
         const lpOk = App.profileManager.updateLaunchProfile({
             "id": selectedLaunchId, "name": launchName,
             "alias": profileAliasField.text.trim(), "favorite": root.launchFavorite,
+            "benchmark": root.launchBenchmark,
             "tags": profileTagsField.text.split(",").map(function(tag) { return tag.trim() }).filter(function(tag) { return tag.length > 0 }),
             "deprecated": root.launchDeprecated,
             "powerLimitW": parseInt(powerLimitField.text) || 0,
@@ -794,6 +797,21 @@ Item {
                             onClicked: {
                                 root.launchFavorite = !root.launchFavorite
                                 App.profileManager.setLaunchFavorite(selectedLaunchId, root.launchFavorite)
+                            }
+                        }
+                        // 🏆: candidato pendiente. Se puede armar la cola desde
+                        // Perfiles y luego cargar todos juntos en Benchmark.
+                        LcButton {
+                            text: root.launchBenchmark ? "✓ Para benchmark" : "＋ Para benchmark"
+                            secondary: true
+                            enabled: selectedLaunchId.length > 0 && !selectedIsSystem
+                            ToolTip.visible: hovered
+                            ToolTip.text: root.launchBenchmark
+                                ? "Quitar de la cola de perfiles pendientes"
+                                : "Marcar para benchmarkear más tarde"
+                            onClicked: {
+                                root.launchBenchmark = !root.launchBenchmark
+                                App.profileManager.setLaunchBenchmark(selectedLaunchId, root.launchBenchmark)
                             }
                         }
                         // BEST (⚡): distintivo curado; los perfiles BEST son de solo lectura.
