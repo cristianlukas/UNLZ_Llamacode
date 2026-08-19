@@ -4,7 +4,7 @@
     "tier": "24GB-NInfer",
     "order": 170,
     "extra": true,
-    "benchmark": false,
+    "benchmark": true,
     "favorite": false,
     "autoCompanion": false,
     "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.6-27B · texto",
@@ -42,7 +42,7 @@
     "tier": "24GB-NInfer",
     "order": 171,
     "extra": true,
-    "benchmark": false,
+    "benchmark": true,
     "favorite": true,
     "autoCompanion": false,
     "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.6-35B-A3B · coding",
@@ -76,6 +76,44 @@
     "binaryKind": "ninfer3090",
     "contextPresets": [4096, 8192, 16384],
     "comment": "Backend experimental NInfer-3090 para coding. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_35b_a3b.ninfer en el root NInfer-Qwen3.6-35B-A3B. Usa MTP y prompt-lookup adaptativo; comparar HumanEval/0 y luego HumanEval/20 contra llama.cpp."
+  },
+  {
+    "id": "sys-ninfer3090-qwen38",
+    "tier": "24GB-NInfer",
+    "order": 172,
+    "extra": true,
+    "benchmark": true,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[experimental 24GB] NInfer-3090 · Qwen3.8-27B · coding",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "NInfer-Qwen3.8-27B",
+    "agentProfileId": "agent-avanzado",
+    "model": {
+      "repo": "neroued/Qwen3.8-27B-NInfer",
+      "file": "qwen3_8_27b.ninfer",
+      "quant": "groupwise-int"
+    },
+    "runtime": {
+      "ctx": 4096,
+      "batch": 512,
+      "ubatch": 128,
+      "gpuLayers": 999,
+      "kv": "q8_0",
+      "flashAttn": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--model-id", "qwen3.8-27b",
+      "--spec", "mtp", "--draft-tokens", "3", "--lm-head-draft",
+      "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0",
+      "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
+    ],
+    "binaryKind": "ninfer3090",
+    "contextPresets": [4096, 8192, 16384],
+    "comment": "Candidato HE0 → HE20 → BCB. Requiere qwen3_8_27b.ninfer de neroued/Qwen3.8-27B-NInfer y ninfer-serve revision 5232055+ registrado como flavor ninfer-3090. El artefacto incorpora visión/MTP, pero la app arranca NInfer en text-only y el model card declara que no ejecuta tool calls generadas: validar BCB como transporte antes de interpretar un score. La publicación upstream documenta RTX 5090; sólo usarlo en 3090 si el binario local fue adaptado y pasa smoke-test."
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s",
@@ -3024,6 +3062,9 @@
       { "id": "sys-bench-qwen38-udq4-post-parallel2", "order": 194, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-udq4-post-parallel4", "order": 195, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 4 slots · 131k", "runtime": { "parallelSlots": 4 }, "comment": "Mide throughput agregado con cuatro lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-udq4-post-parallel6", "order": 196, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 6 slots · 131k", "runtime": { "parallelSlots": 6 }, "comment": "Mide throughput agregado con seis lanes; no cambia el perfil base." },
+      { "id": "sys-bench-qwen38-udq4-post-tensor", "order": 214, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · tensor split · 131k · MTP3", "extraArgOverrides": { "--split-mode": "tensor", "--tensor-split": "1,1" }, "comment": "A/B multi-GPU contra el reparto layer. Requiere dos GPUs compatibles; se mide como candidato y no cambia el perfil base." },
+      { "id": "sys-bench-qwen38-udq4-post-mmproj-cpu", "order": 215, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · mmproj en RAM · 131k", "extraArgAdds": ["--no-mmproj-offload"], "comment": "Aísla el ahorro de VRAM del proyector de visión. La suite de texto mide memoria/estabilidad; la visión debe validarse aparte." },
+      { "id": "sys-bench-qwen38-udq4-post-cache-warm", "order": 216, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · cache warm · 131k · MTP3", "extraArgAdds": ["--cache-prompt", "--cache-reuse", "512"], "comment": "Escenario de prefijo repetido. No se mezcla con el resultado cold-cache: mide throughput con prompt cache habilitado." },
       { "id": "sys-bench-qwen38-udq4-mtp3-ngram", "order": 172, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia experimental para medir repetición de bloques con MTP; no reemplaza MTP3." }
     ],
     "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa y MTP integrado. Reasoning queda off en este perfil para el flujo agentico: con thinking on el modelo produce borradores largos y no emite la primera tool-call. Diez perfiles reales por GGUF (base + nueve variantes) pasan HumanEval/0 antes de promover tres a HumanEval/20. Opt-in hasta validar estabilidad y calidad contra MAX-Q/ThinkingCap. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
@@ -3085,6 +3126,23 @@
       { "id": "sys-bench-qwen38-q5km-mtp3-ngram", "order": 191, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia Q5_K_M que combina MTP3 y ngram." }
     ],
     "comment": "Variante de precisión: más peso y menos margen de KV. Diez perfiles candidatos por GGUF pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."
+  },
+  {
+    "id": "sys-48-qwen38-27b-q8-196k",
+    "tier": "48GB-Qwen38-Vision", "order": 210, "extra": true, "best": false, "benchmark": true, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 48GB] Qwen3.8 Uncensored Q8 · 196k · visión",
+    "minVramGb": 48, "minRamGb": 64, "cpuOk": false, "folder": "Qwen3.8-27B-Uncensored-GGUF", "agentProfileId": "agent-maximo", "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": { "repo": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF", "file": "Qwen3.8-27B-Uncensored-Q8_0.gguf", "mmprojRepo": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF", "mmprojFile": "Qwen3.8-27B-Uncensored-vision-f16.gguf", "quant": "Q8_0" },
+    "runtime": { "ctx": 196608, "gpuLayers": 999, "batch": 2048, "ubatch": 256, "threads": 8, "kv": "q8_0", "flashAttn": true, "mlock": false, "mmap": true },
+    "extraArgs": ["--cache-type-k", "q8_0", "--cache-type-v", "q8_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--split-mode", "layer", "--tensor-split", "1,1"],
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] },
+    "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [131072, 196608], "vision": true,
+    "benchmarkVariants": [
+      { "id": "sys-bench-48-qwen38-q8-tensor", "order": 211, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q8] tensor split · 196k · MTP3", "extraArgOverrides": { "--split-mode": "tensor", "--tensor-split": "1,1" }, "comment": "A/B del post: reemplaza layer por tensor en dos GPUs. Requiere build official b10331+ y dos GPUs CUDA compatibles." },
+      { "id": "sys-bench-48-qwen38-q8-mmproj-cpu", "order": 212, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q8] mmproj en RAM · 196k", "extraArgAdds": ["--no-mmproj-offload"], "comment": "Mantiene los pesos Q8 y mueve sólo el proyector auxiliar a RAM para medir margen de VRAM; validar visión además de coding." },
+      { "id": "sys-bench-48-qwen38-q8-cache-warm", "order": 213, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q8] cache warm · 196k · MTP3", "extraArgAdds": ["--cache-prompt", "--cache-reuse", "512"], "comment": "Escenario de prefijo repetido inspirado en el post. Su throughput sólo es comparable contra otras corridas warm-cache." }
+    ],
+    "comment": "Candidato 48GB derivado del post de LocalLLaMA: Qwen3.8 Uncensored Q8_0 + vision-f16 + MTP embebido, con 196k y B2048/U256. Adaptado a la política reproducible del repo: KV q8_0, sampling conservador, mmap activo y mlock apagado; el post usaba no-mmap/mlock y penalties distintos. Fuente exacta: JonathanColetti/Qwen3.8-27B-Uncensored-GGUF. Ejecutar HE0 antes de HE20/BCB."
   },
   {
     "id": "sys-experiment-qwen36-cache-mtp2",

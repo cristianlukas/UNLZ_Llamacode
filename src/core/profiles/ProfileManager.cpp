@@ -1492,7 +1492,7 @@ void ProfileManager::loadSystemProfiles()
         // sin recompilar esta clase ni propagar el estado a variantes hermanas.
         lp.favorite = o.value(QStringLiteral("favorite")).toBool(false);
         lp.best = o.value(QStringLiteral("best")).toBool(false);
-        lp.benchmark = false;
+        lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
         lp.backendProfileId = be.id;
         lp.modelProfileId = mp.id;
         lp.runtimePresetId = rt.id;

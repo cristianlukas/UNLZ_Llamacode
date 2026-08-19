@@ -27,9 +27,12 @@ actualizar ambos archivos sin borrar los resultados históricos.
 ## Alcance de ejecución
 
 Por defecto, sólo se benchmarkean perfiles marcados `⚡ BEST` en la tabla viva.
-Los perfiles sin ese indicador quedan archivados como referencia y no se
-ejecutan nuevamente. Incorporar otro perfil al conjunto activo requiere
-marcarlo explícitamente como `⚡ BEST` y registrar el motivo en el historial.
+Los perfiles marcados `🏆 BENCH` son candidatos explícitos para una tanda de
+investigación: aparecen en el selector automático de HE20 y se pueden incluir
+en la escalera HE0 → HE20 → BCB con **Seleccionar 🏆 benchmark**. Los perfiles
+sin ninguno de esos indicadores quedan archivados como referencia y no se
+ejecutan nuevamente. La promoción a `⚡ BEST` sigue requiriendo resultados y
+motivo registrados en el historial.
 
 Toda tabla o exportación resumida debe conservar estas columnas, en este orden:
 `ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 |
@@ -136,6 +139,15 @@ Procedimiento:
 
 Una candidata debe conservar el nombre del perfil base más un sufijo que
 identifique el cambio, por ejemplo `BALANCE - BigBang MTP - KVq8 candidato`.
+
+Las variantes Qwen3.8 derivadas del control público se marcan `benchmark=true` y
+se ejecutan como perfiles independientes en la escalera HE0 → HE20 → BCB. Las
+variantes `tensor` y `mmproj en RAM` requieren comparar también la huella efectiva
+del comando; `cache warm` sólo se compara contra otra corrida con prompt cache
+habilitado y no se mezcla con resultados cold-cache. El perfil Q8 de 48 GB es un
+candidato de calidad separado: usa el GGUF Uncensored publicado, KV `q8_0`,
+sampling conservador y omite `mlock`/`no-mmap` para conservar reproducibilidad en
+Windows.
 
 ## Componentes y responsabilidades
 
@@ -455,9 +467,10 @@ que HE0 vuelva a ser reproducible.
 ### Auditoría de cobertura final
 
 El 2026-08-17 se auditó la matriz contra los resultados persistidos y la huella
-SHA-256 efectiva de cada perfil: **11/11 perfiles tienen HE0, 11/11 tienen
-HE20 y 11/11 tienen BCB**. La cola de etapas faltantes queda en **0 HE0, 0
-HE20 y 0 BCB**. Los BCB con score parcial o cero están marcados
+SHA-256 efectiva de cada perfil: **11/11 perfiles cerrados tienen HE0, 11/11
+tienen HE20 y 11/11 tienen BCB**. Se agregaron tres candidatos NInfer el
+2026-08-18; quedan fuera de ese conteo hasta completar HE0 → HE20 → BCB. Los BCB
+con score parcial o cero están marcados
 `failureKind=quality`; no se repiten ni se modifica el perfil salvo que una
 nueva ejecución demuestre `infrastructure`, `timeout` inválido, transporte roto,
 crash o `CUDA illegal memory access`.

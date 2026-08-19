@@ -59,6 +59,15 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
                 if (!it.value().isNull())
                     args << it.key() << it.value().toVariant().toString();
             }
+            // Some llama.cpp switches are boolean flags without a value
+            // (e.g. --cache-prompt and --no-mmproj-offload). Keep them
+            // declarative too instead of manufacturing an empty argument.
+            for (const QJsonValue &addition :
+                 variant.value(QStringLiteral("extraArgAdds")).toArray()) {
+                const QString arg = addition.toString();
+                if (!arg.isEmpty())
+                    args.append(arg);
+            }
             QJsonArray extraArgs;
             for (const QString &arg : args)
                 extraArgs.append(arg);

@@ -43,6 +43,7 @@ private slots:
     void initTestCase();
 
     void manager_loadsSystemProfiles();
+    void manager_ninferProfilesAreBenchmarkCandidates();
     void manager_systemNotPersisted();
     void manager_immutable();
     void manager_duplicateMakesEditableCopy();
@@ -58,6 +59,7 @@ private slots:
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
     void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
     void bundle_qwen38VariantsAreMtpVisionAndTemplated();
+    void bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded();
     void bundle_bigBangDisablesCrashyFlashAttention();
     void bundle_quantizationPolicyCapsKvAtQ8();
     void bundle_bestProfilesUseRequestedCategoryNames();
@@ -123,6 +125,54 @@ void SystemProfilesTests::manager_loadsSystemProfiles()
     QVERIFY(!m8.value("mmprojId").toString().isEmpty());
     QCOMPARE(m8.value("specType").toString(), QStringLiteral("draft-mtp"));
     QVERIFY(!m8.value("draftModelId").toString().isEmpty());
+}
+
+void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
+{
+    ProfileManager pm;
+    const QStringList ids = {
+        QStringLiteral("sys-ninfer3090-qwen27"),
+        QStringLiteral("sys-ninfer3090-qwen35"),
+        QStringLiteral("sys-ninfer3090-qwen38")};
+    const QVariantList menu = pm.launchProfilesForMenu();
+
+    for (const QString &id : ids) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
+
+        bool found = false;
+        for (const QVariant &value : menu) {
+            const QVariantMap item = value.toMap();
+            if (item.value(QStringLiteral("id")).toString() != id)
+                continue;
+            found = true;
+            QVERIFY2(item.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("🏆")),
+                     qPrintable(id));
+            break;
+        }
+        QVERIFY2(found, qPrintable(id));
+    }
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject qwen38;
+    for (const QJsonValue &value : profiles) {
+        if (value.toObject().value(QStringLiteral("id"))
+                .toString() == QStringLiteral("sys-ninfer3090-qwen38")) {
+            qwen38 = value.toObject();
+            break;
+        }
+    }
+    QVERIFY(!qwen38.isEmpty());
+    QCOMPARE(qwen38.value(QStringLiteral("binaryKind")).toString(),
+             QStringLiteral("ninfer3090"));
+    QCOMPARE(qwen38.value(QStringLiteral("model")).toObject()
+                 .value(QStringLiteral("file")).toString(),
+             QStringLiteral("qwen3_8_27b.ninfer"));
+    QVERIFY(qwen38.value(QStringLiteral("comment")).toString()
+                .contains(QStringLiteral("no ejecuta tool calls")));
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
@@ -1447,7 +1497,8 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        QCOMPARE(variants.size(), 16); // variantes base, MTP+ngram, controles y espejo del post
+        const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 19 : 16;
+        QCOMPARE(variants.size(), expectedVariantCount); // variantes base, controles del post, espejo y MTP+ngram
         QSet<QString> variantIds;
         const QVariantMap baseLaunch = pm.getLaunchProfile(id);
         QVERIFY2(!baseLaunch.isEmpty(), qPrintable(id));
@@ -1510,8 +1561,86 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
             mirrorVariant.value(QStringLiteral("extraArgOverrides")).toObject();
         QCOMPARE(mirrorOverrides.value(QStringLiteral("--spec-draft-n-max")).toString(),
                  QStringLiteral("2"));
+        if (id == QStringLiteral("sys-qwen38-27b-udq4-131k")) {
+            const QStringList postVariantIds = {
+                QStringLiteral("sys-bench-qwen38-udq4-post-tensor"),
+                QStringLiteral("sys-bench-qwen38-udq4-post-mmproj-cpu"),
+                QStringLiteral("sys-bench-qwen38-udq4-post-cache-warm")};
+            for (const QString &variantId : postVariantIds) {
+                const QVariantMap launch = pm.getLaunchProfile(variantId);
+                QVERIFY2(!launch.isEmpty(), qPrintable(variantId));
+                QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+                const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+                if (variantId.endsWith(QStringLiteral("-tensor"))) {
+                    QCOMPARE(args.value(args.indexOf(QStringLiteral("--split-mode")) + 1),
+                             QStringLiteral("tensor"));
+                    QCOMPARE(args.value(args.indexOf(QStringLiteral("--tensor-split")) + 1),
+                             QStringLiteral("1,1"));
+                } else if (variantId.endsWith(QStringLiteral("-mmproj-cpu"))) {
+                    QVERIFY(args.contains(QStringLiteral("--no-mmproj-offload")));
+                } else {
+                    QVERIFY(args.contains(QStringLiteral("--cache-prompt")));
+                    QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-reuse")) + 1),
+                             QStringLiteral("512"));
+                }
+            }
+        }
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.
+    }
+}
+
+void SystemProfilesTests::bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject found;
+    for (const QJsonValue &value : profiles) {
+        if (value.toObject().value(QStringLiteral("id"))
+                == QStringLiteral("sys-48-qwen38-27b-q8-196k")) {
+            found = value.toObject();
+            break;
+        }
+    }
+    QVERIFY(!found.isEmpty());
+    QCOMPARE(found.value(QStringLiteral("minVramGb")).toInt(), 48);
+    QCOMPARE(found.value(QStringLiteral("minRamGb")).toInt(), 64);
+    QVERIFY(found.value(QStringLiteral("benchmark")).toBool());
+    const QJsonObject model = found.value(QStringLiteral("model")).toObject();
+    QCOMPARE(model.value(QStringLiteral("repo")).toString(),
+             QStringLiteral("JonathanColetti/Qwen3.8-27B-Uncensored-GGUF"));
+    QCOMPARE(model.value(QStringLiteral("file")).toString(),
+             QStringLiteral("Qwen3.8-27B-Uncensored-Q8_0.gguf"));
+    QCOMPARE(model.value(QStringLiteral("mmprojFile")).toString(),
+             QStringLiteral("Qwen3.8-27B-Uncensored-vision-f16.gguf"));
+    QCOMPARE(found.value(QStringLiteral("runtime")).toObject()
+                 .value(QStringLiteral("ctx")).toInt(), 196608);
+    QCOMPARE(found.value(QStringLiteral("runtime")).toObject()
+                 .value(QStringLiteral("ubatch")).toInt(), 256);
+
+    const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
+    QCOMPARE(variants.size(), 3);
+    ProfileManager pm;
+    const QStringList ids = {
+        QStringLiteral("sys-bench-48-qwen38-q8-tensor"),
+        QStringLiteral("sys-bench-48-qwen38-q8-mmproj-cpu"),
+        QStringLiteral("sys-bench-48-qwen38-q8-cache-warm")};
+    for (const QString &id : ids) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+        if (id.endsWith(QStringLiteral("-tensor"))) {
+            QCOMPARE(args.value(args.indexOf(QStringLiteral("--split-mode")) + 1),
+                     QStringLiteral("tensor"));
+        } else if (id.endsWith(QStringLiteral("-mmproj-cpu"))) {
+            QVERIFY(args.contains(QStringLiteral("--no-mmproj-offload")));
+        } else {
+            QVERIFY(args.contains(QStringLiteral("--cache-prompt")));
+            QCOMPARE(args.value(args.indexOf(QStringLiteral("--cache-reuse")) + 1),
+                     QStringLiteral("512"));
+        }
     }
 }
 

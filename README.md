@@ -266,6 +266,11 @@ la app descarga los pesos desde Hugging Face cuando se acepta el perfil, pero no
 los incluye en el repositorio; el toggle de thinking controla `enable_thinking`,
 `preserve_thinking` y el esfuerzo `low`/`high`/`max` del template.
 
+Para equipos de **48 GB de VRAM** el catálogo agrega además el candidato de
+benchmark `Qwen3.8 Uncensored Q8_0` de JonathanColetti, con visión, MTP3, 196k y
+B2048/U256. Sus variantes separan `split-mode tensor`, `--no-mmproj-offload` y
+prompt cache warm; todas siguen HE0 → HE20 → BCB y no se promueven automáticamente.
+
 Para **2× RTX 3090 (48 GB agregados) + 64 GB RAM o más**, el perfil paralelo
 `[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k` reutiliza el mismo GGUF y
 lo mantiene completo en GPU (`split-mode layer`, `tensor-split 1,1`, mmap y KV
@@ -561,13 +566,16 @@ La página **Binarios** incluye un catálogo curado de motores y forks:
   interceptar `cl.exe` en este fork.
 - Motores con contrato distinto (`KoboldCpp`, `llamafile`) quedan catalogados como
   opciones experimentales/manuales hasta que el launcher soporte su ciclo completo.
-- **NInfer-3090** queda soportado como backend manual/experimental para sus dos
-  artefactos nativos `qwen3_6_27b.ninfer` y `qwen3_6_35b_a3b.ninfer`. Se registra
-  `ninfer-serve` en **Binarios** con flavor `ninfer-3090`; los perfiles bundled
-  `[experimental 24GB] NInfer-3090` usan la CLI nativa y no alteran los perfiles
-  `llama.cpp`. NInfer no acepta GGUF arbitrarios, visión externa ni draft externo:
-  el tokenizer, template, MTP y recursos compatibles deben estar dentro del
-  artefacto `.ninfer`.
+- **NInfer-3090** queda soportado como backend manual/experimental para los tres
+  artefactos nativos `qwen3_6_27b.ninfer`, `qwen3_6_35b_a3b.ninfer` y
+  `qwen3_8_27b.ninfer`. Se registra `ninfer-serve` en **Binarios** con flavor
+  `ninfer-3090`; los perfiles bundled `[experimental 24GB] NInfer-3090` usan la
+  CLI nativa y aparecen como candidatos de benchmark HE0 → HE20 → BCB. El
+  artefacto Qwen3.8 requiere NInfer revision `5232055+` y su model card declara
+  que no ejecuta tool calls generadas, por lo que BCB debe validarse como
+  transporte antes de interpretar el resultado. NInfer no acepta GGUF
+  arbitrarios, visión externa ni draft externo: el tokenizer, template, MTP y
+  recursos compatibles deben estar dentro del artefacto `.ninfer`.
 
 ### Capabilities Matrix
 

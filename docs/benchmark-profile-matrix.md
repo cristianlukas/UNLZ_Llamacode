@@ -1,6 +1,6 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-17. Este archivo conserva la identidad y la configuración efectiva de los diez perfiles base, además de la variante experimental derivada de DeepSeek y los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-18. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
@@ -116,6 +116,9 @@ conserva IDs, modelo, binario, runtime, flags, harness, suite y huella SHA-256.
 | BALANCE - Laguna S 2.1 | 1/1 | 20/20 | 0/8 | 13,921 s | 341,545 s | 1041,378 s | 47,84 | 55,35 | 52,62 | No | — | UD-Q2_K_XL | 118B-A8B | 100000 | Reparado; BCB calidad | `launch=8d0dd2e0-c6c6-41ef-81d6-893c20d2f621; backend=b53df8bb-16b9-413d-8649-813e0a70d080; modelProfile=358edb77-0667-4190-b0e1-08654cb13864; runtimePreset=1b670632-3987-4047-be78-3efc93bb60d6; model=Laguna-S-2.1-UD-Q2_K_XL.gguf; mmproj=ninguno; binary=official,b10087+; agent=agent-chat; harness=HumanEval/0, HumanEval/20, BigCodeBench-Hard/8; runtime=ctx=100000,batch=512,ubatch=64,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --fit on --split-mode layer --tensor-split 1,1 --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 4096 --parallel 1 --reasoning-format auto --reasoning-preserve --chat-template-file %LOCALAPPDATA%/LlamaCode/LlamaCode/chat-templates/laguna-tools-v24.jinja; fp=0ba62d48dad96884f8953a0499df3ef818b0a63a8285c8501ca1522b6a444d0c` |
 | QUALITY - DeepSeek Fusion leloch | 1/1 | 20/20 | 1/8 | 69,794 s | 802,656 s | 2397,063 s | — | 10,35 | 8,57 | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | 131072 | BCB calidad | `launch=4f5cc556-333d-4310-955e-15042cd874d6; backend=1485cb47-757a-4a01-9f71-832567d01973; modelProfile=6ab3222e-5f71-442d-9eb9-7e895520befc; runtimePreset=20d4e6e6-9240-4926-9ea6-5bcea0eb2c50; model=DeepSeek-V4-Flash-Layers37-42Q4KExperts-OtherExpertLayersIQ2XXS...gguf; mmproj=ninguno; binary=official,b10228+; agent=agent-chat; harness=HumanEval/0, HumanEval/20, BigCodeBench-Hard/8; runtime=ctx=131072,batch=4096,ubatch=1024,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 16384 --parallel 1 --reasoning-format auto --cache-prompt --split-mode layer --tensor-split 1,0 --override-tensor blk\.(37\|38\|39\|40\|41\|42)\.ffn_(gate\|up\|down)_exps\.weight=CUDA1,blk\.[0-9]+\.ffn_(gate\|up\|down)_exps\.weight=CPU --repeat-last-n 64 --flash-attn on --cpu-moe --cache-ram 32768; fp=63dfc6a4f05df0270ad2935da4a43721b7eb1e8adbdf7c3e2d7bb0e2ccf3225b` |
 | QUALITY - DeepSeek Fusion leloch · VRAM balance | 1/1 | 20/20 | 2/8 | 65,622 s | 775,223 s | 6328,761 s | — | 10,76 | 9,45 | No | — | Q2/Q4 imatrix | 284B (≈13B activos) | 131072 | BCB calidad; 2 reparaciones internas | `launch=6b3bf7bd-0889-491a-9b6d-b12128478a5f; backend=07bf242d-0685-45d1-a752-11ddec6ef6df; modelProfile=0985be04-d2bc-455d-a3a5-e5fc19795e5d; runtimePreset=fdd4ca0a-3b8d-43a2-924b-092327aca314; model=DeepSeek-V4-Flash-Layers37-42Q4KExperts-OtherExpertLayersIQ2XXS...gguf; mmproj=ninguno; binary=official,b10228+; agent=agent-chat; harness=HumanEval/0, HumanEval/20, BigCodeBench-Hard/8; runtime=ctx=131072,batch=4096,ubatch=1024,threads=8,gpuLayers=999,slots=1,cache=q4_0,flash=on,cont=on,mmap=on,mlock=off; args=--cache-type-k q4_0 --cache-type-v q4_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 16384 --parallel 1 --reasoning-format auto --cache-prompt --split-mode layer --tensor-split 1,0 --override-tensor blk\.(0\|1)\.ffn_(gate\|up\|down)_exps\.weight=CUDA0,blk\.(37\|38\|39\|40\|41\|42)\.ffn_(gate\|up\|down)_exps\.weight=CUDA1,blk\.[0-9]+\.ffn_(gate\|up\|down)_exps\.weight=CPU --repeat-last-n 64 --flash-attn on --cpu-moe --cache-ram 32768; fp=fa3fbb3f6ef70d2405eb64cc7de9e3737d2c7f47be1c0334e2b52f16b296d789` |
+| [CANDIDATO] NInfer-3090 · Qwen3.6-27B · texto | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No (app text-only) | MTP2 | groupwise-int | 27B | 4096 | Pendiente HE0 | `launch=sys-ninfer3090-qwen27; backend=sysbe-sys-ninfer3090-qwen27; modelProfile=sysmodel-sys-ninfer3090-qwen27; runtimePreset=sysrt-sys-ninfer3090-qwen27; model=qwen3_6_27b.ninfer; binary=ninfer-serve/flavor ninfer-3090; agent=agent-intermedio; runtime=ctx=4096,batch=512,ubatch=128,kv=int8; args=--model-id qwen3.6-27b --mtp-draft-tokens 2 --lm-head-draft --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --reasoning on` |
+| [CANDIDATO] NInfer-3090 · Qwen3.6-35B-A3B · coding | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No (app text-only) | MTP2 + prompt-lookup | groupwise-int | 35B-A3B | 4096 | Pendiente HE0 | `launch=sys-ninfer3090-qwen35; backend=sysbe-sys-ninfer3090-qwen35; modelProfile=sysmodel-sys-ninfer3090-qwen35; runtimePreset=sysrt-sys-ninfer3090-qwen35; model=qwen3_6_35b_a3b.ninfer; binary=ninfer-serve/flavor ninfer-3090; agent=agent-avanzado; runtime=ctx=4096,batch=512,ubatch=128,kv=int8; args=--model-id qwen3.6-35b-a3b --mtp-draft-tokens 2 --lm-head-draft --prompt-lookup-auto --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --reasoning on` |
+| [CANDIDATO] NInfer-3090 · Qwen3.8-27B · coding | Pendiente | Pendiente | Pendiente | — | — | — | — | — | — | No (app text-only; artefacto con visión) | MTP3 | groupwise-int | 27B | 4096 | Pendiente HE0; BCB requiere validar tool-calls | `launch=sys-ninfer3090-qwen38; backend=sysbe-sys-ninfer3090-qwen38; modelProfile=sysmodel-sys-ninfer3090-qwen38; runtimePreset=sysrt-sys-ninfer3090-qwen38; model=qwen3_8_27b.ninfer; binary=ninfer-serve/flavor ninfer-3090; agent=agent-avanzado; runtime=ctx=4096,batch=512,ubatch=128,kv=int8; args=--model-id qwen3.8-27b --spec mtp --draft-tokens 3 --lm-head-draft --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --reasoning on` |
 
 Los scores BCB menores que 8/8 son resultados válidos de calidad del modelo:
 no se repiten ni se “arreglan” cambiando parámetros cuando el transporte, el
@@ -126,9 +129,11 @@ presets a `batch=512, ubatch=64`, se repitió HE0 y luego HE20, y ambas quedaron
 generación fue del modelo durante una ejecución transportada, no un crash ni un
 acceso ilegal de CUDA, por lo que se conserva como calidad.
 
-Auditoría de cobertura: **11/11 perfiles con HE0, 11/11 con HE20 y 11/11 con
-BCB** bajo su huella efectiva actual. No quedan etapas pendientes; los scores
-BCB parciales se conservan como calidad del modelo y no como infraestructura.
+Auditoría de cobertura de los perfiles cerrados: **11/11 perfiles con HE0, 11/11
+con HE20 y 11/11 con BCB** bajo su huella efectiva actual. Los tres candidatos
+NInfer incorporados el 2026-08-18 quedan fuera de ese conteo hasta completar
+HE0 → HE20 → BCB; no se presentan como resultados medidos. Los scores BCB
+parciales se conservan como calidad del modelo y no como infraestructura.
 
 La corrección de la fila BALANCE - BigBang se validó nuevamente en modo headless
 después de recompilar el catálogo el 2026-08-17 con
@@ -232,6 +237,13 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8` (`sys-bench-qwen38-udq4-post-262k-kv8`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir el extremo de contexto largo con KV q8, equivalente al control de comentarios del post | ctx 262k; MTP3; B2048/U512; KV q8_0 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k` (`sys-bench-qwen38-udq4-post-b8192`) | BALANCE - Qwen3.8 UD-Q4 visión | Aislar el batch total alto del post sin cambiar modelo ni contexto | ctx 131k; MTP3; B8192/U512; KV q4_0 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k` (`sys-bench-qwen38-udq4-post-parallel2`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir throughput agregado con dos solicitudes concurrentes; no usar para comparar decode de una sola solicitud | ctx 131k; MTP3; 2 slots; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · tensor split · 131k · MTP3` (`sys-bench-qwen38-udq4-post-tensor`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir `split-mode tensor` contra el control `layer` en dos GPUs | `--split-mode tensor`; `--tensor-split 1,1` | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · mmproj en RAM · 131k` (`sys-bench-qwen38-udq4-post-mmproj-cpu`) | BALANCE - Qwen3.8 UD-Q4 visión | Liberar VRAM del proyector sin cambiar los pesos | `--no-mmproj-offload`; validar visión aparte | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · cache warm · 131k · MTP3` (`sys-bench-qwen38-udq4-post-cache-warm`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir prefijos repetidos con prompt cache | `--cache-prompt`; `--cache-reuse 512`; no mezclar con cold-cache | HE0 → HE20 → BCB |
+| `[bench 48GB] Qwen3.8 Uncensored Q8 · 196k · visión` (`sys-48-qwen38-27b-q8-196k`) | Fuente JonathanColetti Qwen3.8 Uncensored | Comparar calidad Q8 en 48 GB bajo la política reproducible del repo | Q8_0; ctx 196k; B2048/U256; KV q8_0; MTP3 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q8] tensor split · 196k · MTP3` (`sys-bench-48-qwen38-q8-tensor`) | Qwen3.8 Uncensored Q8 | Reproducir el eje multi-GPU del post | `--split-mode tensor`; `--tensor-split 1,1` | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q8] mmproj en RAM · 196k` (`sys-bench-48-qwen38-q8-mmproj-cpu`) | Qwen3.8 Uncensored Q8 | Medir margen de VRAM con visión auxiliar en RAM | `--no-mmproj-offload`; validar visión aparte | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q8] cache warm · 196k · MTP3` (`sys-bench-48-qwen38-q8-cache-warm`) | Qwen3.8 Uncensored Q8 | Medir el escenario de prefijo repetido del post | `--cache-prompt`; `--cache-reuse 512`; sólo warm-cache | HE0 → HE20 → BCB |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k` (`sys-kat3-mtp-262k`) | FAST - KAT2-Coder-7-8-26 | Probar MTP embebido APEX sin alterar KAT2; texto-only | APEX I-Compact; ctx 262k; B512/U64; KV q8_0; MTP4; requiere descargar el GGUF | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
@@ -242,6 +254,9 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `BALANCE - Laguna S 2.1 · CUDA safe 64k` (`sys-laguna-s-2-1-q2-48gb-safe`) | BALANCE - Laguna S 2.1 | Evitar la ruta inestable de fit y reducir presión de KV/prefill; Flash on es obligatorio para V-cache q4_0 | ctx 65k; B256/U64; fit off; Flash on; tensor-split 1,1; 32 expertos CPU | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B2048 · U256 · KV q4_0` (`sys-48-antirez-dsv4-q2q4-0731-32k-b2048`) | QUALITY - DeepSeek Fusion leloch | Bajar contexto/batch para mejorar estabilidad sin repartir capas base | ctx 32k; B2048/U256; `tensor-split 1,0` | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B4096 · U512 · KV q8_0` (`sys-48-antirez-dsv4-q2q4-kv8`) | QUALITY - DeepSeek Fusion leloch | KV q8 puede mejorar calidad sostenida; medir coste real | ctx 32k; KV K/V q8_0 | HE0 → HE20 → BCB |
+| `[bench NInfer] Qwen3.6-27B · texto` (`sys-ninfer3090-qwen27`) | NInfer-3090 · Qwen3.6-27B · texto | Comparar backend nativo contra los candidatos llama.cpp | ctx 4k; B512/U128; KV int8; MTP2 | HE0 → HE20 → BCB |
+| `[bench NInfer] Qwen3.6-35B-A3B · coding` (`sys-ninfer3090-qwen35`) | NInfer-3090 · Qwen3.6-35B-A3B · coding | Comparar el backend nativo en el perfil coder | ctx 4k; B512/U128; KV int8; MTP2 + prompt-lookup | HE0 → HE20 → BCB |
+| `[bench NInfer] Qwen3.8-27B · coding` (`sys-ninfer3090-qwen38`) | NInfer-3090 · Qwen3.8-27B · coding | Verificar el artefacto Qwen3.8 en el flujo local; BCB condicionado a tool-calls | ctx 4k; B512/U128; KV int8; MTP3 | HE0 → HE20 → BCB |
 
 ## Resultados HE0 de los candidatos
 
@@ -249,6 +264,9 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 
 | Candidato | HumanEval/0 | Tiempo HE0 | TPS HE0 | Estado |
 |---|---:|---:|---:|---|
+| `[bench NInfer] Qwen3.6-27B · texto` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench NInfer] Qwen3.6-35B-A3B · coding` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench NInfer] Qwen3.8-27B · coding` | Pendiente | — | — | Pendiente de HE0; BCB requiere validar tool-calls |
 | `[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj` | 1/1 | 12,926 s | 51,68 | Válido |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj` | 1/1 | 10,378 s | 64,66 | Válido |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` | 1/1 | 12,925 s | 57,87 | Válido |
@@ -260,6 +278,13 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] UD-Q4 · tensor split · 131k · MTP3` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] UD-Q4 · mmproj en RAM · 131k` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] UD-Q4 · cache warm · 131k · MTP3` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra warm-cache |
+| `[bench 48GB] Qwen3.8 Uncensored Q8 · 196k · visión` | Pendiente | — | — | Pendiente de HE0; requiere descargar GGUF Q8 + vision |
+| `[bench 48GB Qwen3.8 Q8] tensor split · 196k · MTP3` | Pendiente | — | — | Pendiente de HE0; requiere dos GPUs |
+| `[bench 48GB Qwen3.8 Q8] mmproj en RAM · 196k` | Pendiente | — | — | Pendiente de HE0; validar visión aparte |
+| `[bench 48GB Qwen3.8 Q8] cache warm · 196k · MTP3` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra warm-cache |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` | — | 58,638 s | — | Infraestructura: server-load |
 | `[bench BigBang] 131k · sin MTP · KV q8_0` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
