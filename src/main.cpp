@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     app.setApplicationName("LlamaCode");
     app.setOrganizationName("LlamaCode");
-    app.setApplicationVersion("0.1.112");
+    app.setApplicationVersion("0.1.116");
     const bool startedWithWindows = app.arguments().contains(QStringLiteral("--startup"));
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
