@@ -1,7 +1,12 @@
 #include <QtTest>
 #include <QJsonArray>
+#include <QFileInfo>
+#include <QDir>
+#include <QSignalSpy>
+#include <QStandardPaths>
 
 #include "core/agent/HarnessWorkerProtocol.h"
+#include "core/agent/LlamaAgentBackend.h"
 #include "core/profiles/HarnessSpec.h"
 
 class HarnessWorkerProtocolTests final : public QObject {
@@ -14,6 +19,9 @@ private slots:
     void workerModuleRoundTripsAndClamps();
     void sandboxRejectsEmptyProgramAndKeepsLegacyNone();
     void factoryAdmitsOnlyRequestedCapabilities();
+    void workerCallsAreClassifiedAsDestructive();
+    void nodeWorkerDriverRoundTripsWhenAvailable();
+    void pythonWorkerDriverRoundTripsWhenAvailable();
 };
 
 void HarnessWorkerProtocolTests::framesCanBeChunkedAndCoalesced()
@@ -120,6 +128,76 @@ void HarnessWorkerProtocolTests::factoryAdmitsOnlyRequestedCapabilities()
     QVERIFY(!spec.policy.capabilities.canUse(QStringLiteral("network")));
     QCOMPARE(spec.program, QStringLiteral("node"));
     QCOMPARE(spec.arguments.first(), QStringLiteral("worker.mjs"));
+}
+
+void HarnessWorkerProtocolTests::workerCallsAreClassifiedAsDestructive()
+{
+    QVERIFY(LlamaAgentBackend::isDestructiveAction(
+        QStringLiteral("worker_call"),
+        QJsonObject{{QStringLiteral("operation"), QStringLiteral("echo")},
+                    {QStringLiteral("payload"), QJsonObject{}}}));
+    QVERIFY(!LlamaAgentBackend::isDestructiveAction(
+        QStringLiteral("read_file"),
+        QJsonObject{{QStringLiteral("path"), QStringLiteral("README.md")}}));
+}
+
+void HarnessWorkerProtocolTests::nodeWorkerDriverRoundTripsWhenAvailable()
+{
+    const QString node = QStandardPaths::findExecutable(QStringLiteral("node"));
+    const QString root = qEnvironmentVariable("QT_TESTCASE_SOURCEDIR");
+    const QString entry = QDir(root).filePath(QStringLiteral("sdk/node/examples/echo-worker.mjs"));
+    if (node.isEmpty() || root.isEmpty() || !QFileInfo::exists(entry))
+        QSKIP("Node.js y el ejemplo del SDK no están disponibles en este entorno");
+
+    HarnessWorkerDriver driver;
+    HarnessWorkerPolicy policy;
+    policy.startupTimeoutMs = 5000;
+    policy.callTimeoutMs = 5000;
+    QVERIFY2(driver.start(node, {entry}, root, policy),
+             qPrintable(driver.lastError()));
+    QTRY_VERIFY_WITH_TIMEOUT(driver.authenticated(), 5000);
+
+    QSignalSpy results(&driver, &HarnessWorkerDriver::callResult);
+    QVERIFY(driver.call(QStringLiteral("integration-1"),
+                        QJsonObject{{QStringLiteral("operation"), QStringLiteral("echo")},
+                                    {QStringLiteral("payload"),
+                                     QJsonObject{{QStringLiteral("value"), QStringLiteral("ok")}}}}));
+    QTRY_COMPARE_WITH_TIMEOUT(results.count(), 1, 5000);
+    const QList<QVariant> emitted = results.takeFirst();
+    QCOMPARE(emitted.at(0).toString(), QStringLiteral("integration-1"));
+    QCOMPARE(emitted.at(1).toJsonObject().value(QStringLiteral("value")).toString(),
+             QStringLiteral("ok"));
+    driver.stop();
+}
+
+void HarnessWorkerProtocolTests::pythonWorkerDriverRoundTripsWhenAvailable()
+{
+    QString python = qEnvironmentVariable("LLAMACODE_PYTHON");
+    if (python.isEmpty()) python = QStandardPaths::findExecutable(QStringLiteral("python"));
+    const QString root = qEnvironmentVariable("QT_TESTCASE_SOURCEDIR");
+    const QString entry = QDir(root).filePath(
+        QStringLiteral("sdk/python/examples/echo_worker.py"));
+    if (python.isEmpty() || root.isEmpty() || !QFileInfo::exists(entry))
+        QSKIP("Python y el ejemplo del SDK no están disponibles en este entorno");
+
+    HarnessWorkerDriver driver;
+    HarnessWorkerPolicy policy;
+    policy.startupTimeoutMs = 5000;
+    policy.callTimeoutMs = 5000;
+    QVERIFY2(driver.start(python, {entry}, root, policy), qPrintable(driver.lastError()));
+    QTRY_VERIFY_WITH_TIMEOUT(driver.authenticated(), 5000);
+
+    QSignalSpy results(&driver, &HarnessWorkerDriver::callResult);
+    QVERIFY(driver.call(QStringLiteral("integration-python-1"),
+                        QJsonObject{{QStringLiteral("operation"), QStringLiteral("echo")},
+                                    {QStringLiteral("payload"),
+                                     QJsonObject{{QStringLiteral("value"), QStringLiteral("ok")}}}}));
+    QTRY_COMPARE_WITH_TIMEOUT(results.count(), 1, 5000);
+    const QList<QVariant> emitted = results.takeFirst();
+    QCOMPARE(emitted.at(0).toString(), QStringLiteral("integration-python-1"));
+    QCOMPARE(emitted.at(1).toJsonObject().value(QStringLiteral("value")).toString(),
+             QStringLiteral("ok"));
+    driver.stop();
 }
 
 QTEST_MAIN(HarnessWorkerProtocolTests)

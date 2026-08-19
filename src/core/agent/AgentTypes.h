@@ -4,6 +4,8 @@
 #include <QVariantMap>
 #include <QProcessEnvironment>
 
+#include "core/profiles/HarnessSpec.h"
+
 // Contexto para arrancar un backend de agente.
 struct AgentContext {
     QString adapter;          // "opencode" | "goose" | "raw" | ...
@@ -28,6 +30,9 @@ struct AgentContext {
     int harnessEngineVersion = 1;
     QString harnessProfileId;
     QString harnessSpecHash;
+    // Optional external plugin lane. The default is unset/builtin, which keeps
+    // the historical in-process execution path unchanged.
+    HarnessWorkerModule harnessWorker;
 };
 
 // Mensaje de chat del agente (rol + contenido + estado).

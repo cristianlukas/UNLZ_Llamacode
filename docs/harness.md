@@ -574,11 +574,13 @@ cancelación y enruta llamadas de capacidades sólo después de validar el handl
 contra el snapshot de la activación. `HarnessWorkerFactory` traduce el módulo
 de perfil a Node o CPython y prepara el snapshot fail-closed.
 
-Las SDK ya están implementadas en `sdk/node` (ESM, Node >=20) y
+Las SDK ya están implementadas en `sdk/node` (ESM, Node >=20, con tipos
+`index.d.ts` para TypeScript) y
 `sdk/python` (stdlib, Python >=3.10). Ambas hablan exactamente el mismo wire
 protocol, reservan stdout para frames, exponen `CapabilityBroker` y devuelven
 rechazos nombrados (`capability_denied`, `capability_revoked`) sin convertirlos
-en traps.
+en traps. Si el host desaparece mientras una capability está pendiente, ambas
+despiertan la operación con `worker_disconnected`.
 
 El sandbox OS también es opt-in por perfil: `process` usa Job Objects en Windows
 (kill-on-close, límite de procesos, memoria y CPU cuando se declara) y grupos de procesos Unix;

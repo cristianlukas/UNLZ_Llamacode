@@ -8,13 +8,18 @@ logs van a `stderr`.
 
 Implementaciones:
 
-- `node/`: ESM sin dependencias, Node >=20.
+- `node/`: ESM sin dependencias, Node >=20, con declaraciones `index.d.ts`
+  para plugins TypeScript.
 - `python/`: Python >=3.10, biblioteca estándar.
 
 Ambas exponen el mismo contrato: `hello`/`hello_ack`, `call`/`result`,
 `cancel`, y llamadas de capacidades con handles opacos. Un worker nunca puede
 convertir un pedido en una concesión: una capacidad ausente o revocada produce
 `capability_denied`/`capability_revoked`.
+
+Si el host cierra la conexión mientras una capability está pendiente, ambos
+SDK despiertan la llamada con un error explícito (`worker_disconnected`); no
+queda una promesa ni un thread bloqueado indefinidamente.
 
 Self-tests:
 

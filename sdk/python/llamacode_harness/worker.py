@@ -126,6 +126,7 @@ class WorkerRuntime:
         self._pending_lock = threading.Lock()
         self._write_lock = threading.Lock()
         self._reader_done = threading.Event()
+        self._disconnect_error: Exception | None = None
         self._active_calls: dict[str, threading.Event] = {}
         self._active_lock = threading.Lock()
 
@@ -143,6 +144,8 @@ class WorkerRuntime:
         request_id = f"cap-{uuid.uuid4().hex}"
         event = threading.Event()
         with self._pending_lock:
+            if self._reader_done.is_set():
+                raise CapabilityError("worker_disconnected", "worker host disconnected")
             self._pending[request_id] = (event, None, None)
         try:
             self._send({"type": "capability_call", "requestId": request_id,
@@ -163,6 +166,8 @@ class WorkerRuntime:
             while True:
                 frame = decode_frame(self.input, self.max_frame_bytes)
                 if frame is None:
+                    self._disconnect_error = CapabilityError(
+                        "worker_disconnected", "worker host disconnected")
                     self._frames.put(None)
                     return
                 if frame.get("type") == "capability_result":
@@ -173,6 +178,17 @@ class WorkerRuntime:
             self._frames.put(exc)
         finally:
             self._reader_done.set()
+
+    def _reject_pending_capabilities(self, error: Exception) -> None:
+        with self._pending_lock:
+            pending = list(self._pending.items())
+            for request_id, (event, _, _) in pending:
+                # Keep the original request id: request_capability pops it after
+                # wake-up, while the event guarantees the caller cannot wait
+                # forever after EOF or a framing error.
+                self._pending[request_id] = (event, None, error)
+        for _, (event, _, _) in pending:
+            event.set()
 
     def _resolve_capability(self, frame: Mapping[str, Any]) -> None:
         request_id = str(frame.get("requestId", ""))
@@ -230,8 +246,12 @@ class WorkerRuntime:
         while True:
             frame = self._frames.get()
             if frame is None:
+                self._reject_pending_capabilities(
+                    self._disconnect_error or CapabilityError(
+                        "worker_disconnected", "worker host disconnected"))
                 return
             if isinstance(frame, Exception):
+                self._reject_pending_capabilities(frame)
                 raise frame
             kind = frame.get("type")
             if kind == "hello":

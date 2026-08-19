@@ -480,6 +480,7 @@ private:
     void startHarnessWorker();
     void stopHarnessWorker();
     void failExternalWorkerCalls(const QString &reason);
+    void failWorkerCapabilities(const QString &reason);
     void dispatchWorkerCapability(const QString &requestId, const QString &capability,
                                   const QString &operation, const QJsonObject &payload);
     void finishWorkerCapability(const QVariantMap &result);
