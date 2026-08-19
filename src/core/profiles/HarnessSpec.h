@@ -20,6 +20,29 @@ struct HarnessRuntimeModule {
     static HarnessRuntimeModule fromJson(const QJsonObject &o);
 };
 
+// External worker lane. Absent means the historical in-process path. A worker
+// asks for capabilities but never grants itself authority; the host admits the
+// request and snapshots the result for the activation.
+struct HarnessWorkerModule {
+    QString lane = QStringLiteral("builtin"); // builtin|node|python
+    QString entrypoint;
+    QStringList arguments;
+    QString sandbox = QStringLiteral("none"); // none|process|strong
+    QString workingDirectory;
+    bool allowNetwork = false;
+    int maxFrameBytes = 1024 * 1024;
+    int startupTimeoutMs = 10000;
+    int callTimeoutMs = 120000;
+    int memoryLimitMb = 512;
+    int processLimit = 32;
+    int cpuTimeLimitSec = 0;
+    QStringList requestedCapabilities;
+    bool set = false;
+
+    QJsonObject toJson() const;
+    static HarnessWorkerModule fromJson(const QJsonObject &o);
+};
+
 // HARNESS MODULAR: un perfil de agente deja de ser un preset cerrado y pasa a
 // ser una COMPOSICION declarativa de modulos (HarnessSpec). Cada modulo tiene
 // defaults identicos al comportamiento historico del backend, asi que un spec
@@ -203,6 +226,7 @@ struct HarnessProtocolModule {
 struct HarnessSpec {
     QString extends;                   // id del spec padre ("" = defaults)
     HarnessRuntimeModule runtime;
+    HarnessWorkerModule worker;
     HarnessToolsModule tools;
     HarnessPromptModule prompt;
     HarnessLoopModule loop;

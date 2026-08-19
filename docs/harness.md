@@ -37,6 +37,7 @@ Desde la implementación del plan modular, un perfil de agente es una
 | `memory` | hechos de `MemoryStore` inyectados, memoria de proyecto (+ tope), consolidación al salir |
 | `chat` | modo Chat sin tools: sampling, thinking, persona diseñadora, instrucciones persistentes |
 | `runtime` | contrato de ejecución: `legacy` o `next`, versión, fallback y flag experimental |
+| `worker` | lane Node/Python, entrypoint, límites, capacidades solicitadas y sandbox OS |
 | `phases` | overrides por fase: `plan`, `exec`, `verify`, `goalCheck` |
 
 Tres invariantes, todas testeadas:
@@ -558,10 +559,25 @@ generación invalida el handle; una tool no debe interpretar la existencia del
 nombre como autoridad.
 
 HarnessWorkerProtocol define framing binario con longitud, límite de bytes,
-protocolo versionado y autenticación por nonce. HarnessWorkerDriver supervisa
-un proceso externo, impone timeout, evita reutilizar call IDs y permite
-cancelación. Es la base común para futuras SDK Node/TypeScript y Python; esas
-SDK y el sandbox de sistema operativo todavía no se declaran implementados.
+protocolo versionado y autenticación por nonce. `HarnessWorkerDriver` supervisa
+un proceso externo, impone timeout, evita reutilizar call IDs, permite
+cancelación y enruta llamadas de capacidades sólo después de validar el handle
+contra el snapshot de la activación. `HarnessWorkerFactory` traduce el módulo
+de perfil a Node o CPython y prepara el snapshot fail-closed.
+
+Las SDK ya están implementadas en `sdk/node` (ESM, Node >=20) y
+`sdk/python` (stdlib, Python >=3.10). Ambas hablan exactamente el mismo wire
+protocol, reservan stdout para frames, exponen `CapabilityBroker` y devuelven
+rechazos nombrados (`capability_denied`, `capability_revoked`) sin convertirlos
+en traps.
+
+El sandbox OS también es opt-in por perfil: `process` usa Job Objects en Windows
+(kill-on-close, límite de procesos, memoria y CPU cuando se declara) y grupos de procesos Unix;
+`strong` usa bubblewrap en Unix con root de sólo lectura, workspace writable,
+PID/IPC/UTS aislados y red descompartida. En Windows `strong` se rechaza
+explícitamente: un Job Object contiene procesos pero no es un boundary de red.
+Si el backend solicitado no existe, el worker no arranca y el perfil no cae
+silenciosamente a `none`.
 
 ## 13. Deudas conocidas
 
@@ -569,8 +585,8 @@ SDK y el sandbox de sistema operativo todavía no se declaran implementados.
   (hoy `LlamaAgentBackend`) y describen `OpencodeBackend` como default.
 - `OpencodeBackend` no tiene diffs/revert ni la robustez de protocolo del backend
   nativo (maneja su propio loop), y no consume el `HarnessSpec`.
-- Kill de process group en Unix para `run_shell`: **pendiente** (Windows resuelto
-  con `taskkill /T /F`).
+- `run_shell` continúa usando su propio lifecycle histórico; las lanes externas
+  de plugins usan el sandbox declarativo del módulo `worker`.
 - Los presets de sistema son specs construidos en código (`systemPresets()`), no
   JSON bundleado: quedan auditables y componibles, pero agregar un preset sigue
   siendo una recompilación.

@@ -107,6 +107,7 @@ set(CORE_SOURCES
     src/core/agent/HarnessEventLog.cpp
     src/core/agent/HarnessCapabilitySnapshot.cpp
     src/core/agent/HarnessEffectLedger.cpp
+    src/core/agent/HarnessSandbox.cpp
     src/core/agent/HarnessWorkerProtocol.cpp
     src/core/agent/AgentRoomStore.cpp
     src/core/agent/ToolExecutionSafety.cpp
@@ -211,6 +212,7 @@ set(HEADERS
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
     src/core/agent/AgentEventLog.h
+    src/core/agent/HarnessSandbox.h
     src/core/agent/AgentRoomStore.h
     src/core/agent/ToolExecutionSafety.h
     src/core/agent/MemoryStore.h

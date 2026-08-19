@@ -767,8 +767,9 @@ persistencia para que probar Next no altere el historial existente.
 - Sesiones Next aisladas, event log por sesión y ledger de efectos inciertos.
 - Snapshot de capacidades fail-closed y protocolo de workers versionado con
   framing acotado, nonce de autenticación, timeout y cancelación.
-- Las SDK Node/Python y el sandbox de sistema operativo siguen siendo la próxima
-  etapa; el driver host-side ya deja fijado el contrato para incorporarlos.
+- SDK Node/Python implementadas en `sdk/node` y `sdk/python`, con smoke cruzado;
+  el sandbox OS opt-in usa Job Objects/grupos de procesos y bubblewrap cuando
+  está disponible. El detalle operativo está en `docs/harness.md` y `sdk/README.md`.
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real

@@ -79,6 +79,48 @@ HarnessRuntimeModule HarnessRuntimeModule::fromJson(const QJsonObject &o)
     return m;
 }
 
+QJsonObject HarnessWorkerModule::toJson() const
+{
+    QJsonObject o{{QStringLiteral("lane"), lane},
+                  {QStringLiteral("entrypoint"), entrypoint},
+                  {QStringLiteral("arguments"), fromStringList(arguments)},
+                  {QStringLiteral("sandbox"), sandbox},
+                  {QStringLiteral("workingDirectory"), workingDirectory},
+                  {QStringLiteral("allowNetwork"), allowNetwork},
+                  {QStringLiteral("maxFrameBytes"), maxFrameBytes},
+                  {QStringLiteral("startupTimeoutMs"), startupTimeoutMs},
+                  {QStringLiteral("callTimeoutMs"), callTimeoutMs},
+                  {QStringLiteral("memoryLimitMb"), memoryLimitMb},
+                  {QStringLiteral("processLimit"), processLimit},
+                  {QStringLiteral("cpuTimeLimitSec"), cpuTimeLimitSec},
+                  {QStringLiteral("requestedCapabilities"), fromStringList(requestedCapabilities)}};
+    return o;
+}
+
+HarnessWorkerModule HarnessWorkerModule::fromJson(const QJsonObject &o)
+{
+    HarnessWorkerModule m;
+    m.set = true;
+    const QString rawLane = o.value(QStringLiteral("lane")).toString().trimmed().toLower();
+    m.lane = (rawLane == QLatin1String("node") || rawLane == QLatin1String("python"))
+        ? rawLane : QStringLiteral("builtin");
+    m.entrypoint = o.value(QStringLiteral("entrypoint")).toString().trimmed();
+    m.arguments = toStringList(o.value(QStringLiteral("arguments")));
+    const QString rawSandbox = o.value(QStringLiteral("sandbox")).toString().trimmed().toLower();
+    m.sandbox = (rawSandbox == QLatin1String("process") || rawSandbox == QLatin1String("strong"))
+        ? rawSandbox : QStringLiteral("none");
+    m.workingDirectory = o.value(QStringLiteral("workingDirectory")).toString().trimmed();
+    m.allowNetwork = o.value(QStringLiteral("allowNetwork")).toBool(false);
+    m.maxFrameBytes = boundedInt(o, "maxFrameBytes", 1024 * 1024, 1024, 64 * 1024 * 1024);
+    m.startupTimeoutMs = boundedInt(o, "startupTimeoutMs", 10000, 100, 120000);
+    m.callTimeoutMs = boundedInt(o, "callTimeoutMs", 120000, 100, 3600000);
+    m.memoryLimitMb = boundedInt(o, "memoryLimitMb", 512, 0, 1024 * 1024);
+    m.processLimit = boundedInt(o, "processLimit", 32, 1, 4096);
+    m.cpuTimeLimitSec = boundedInt(o, "cpuTimeLimitSec", 0, 0, 7 * 24 * 60 * 60);
+    m.requestedCapabilities = toStringList(o.value(QStringLiteral("requestedCapabilities")));
+    return m;
+}
+
 QJsonObject HarnessToolsModule::toJson() const
 {
     QJsonObject o;
@@ -344,7 +386,7 @@ HarnessProtocolModule HarnessProtocolModule::fromJson(const QJsonObject &o)
 
 bool HarnessSpec::isEmpty() const
 {
-    return extends.isEmpty() && !runtime.set && !tools.set && !prompt.set && !loop.set && !context.set
+    return extends.isEmpty() && !runtime.set && !worker.set && !tools.set && !prompt.set && !loop.set && !context.set
            && !permissions.set && !escalation.set && !protocol.set && !memory.set
            && !chat.set && phases.isEmpty();
 }
@@ -354,6 +396,7 @@ QJsonObject HarnessSpec::toJson() const
     QJsonObject o;
     if (!extends.isEmpty()) o[QStringLiteral("extends")] = extends;
     if (runtime.set) o[QStringLiteral("runtime")] = runtime.toJson();
+    if (worker.set) o[QStringLiteral("worker")] = worker.toJson();
     if (tools.set) o[QStringLiteral("tools")] = tools.toJson();
     if (prompt.set) o[QStringLiteral("prompt")] = prompt.toJson();
     if (loop.set) o[QStringLiteral("loop")] = loop.toJson();
@@ -378,6 +421,8 @@ HarnessSpec HarnessSpec::fromJson(const QJsonObject &o)
     s.extends = o.value(QStringLiteral("extends")).toString();
     if (o.value(QStringLiteral("runtime")).isObject())
         s.runtime = HarnessRuntimeModule::fromJson(o.value(QStringLiteral("runtime")).toObject());
+    if (o.value(QStringLiteral("worker")).isObject())
+        s.worker = HarnessWorkerModule::fromJson(o.value(QStringLiteral("worker")).toObject());
     if (o.value(QStringLiteral("tools")).isObject())
         s.tools = HarnessToolsModule::fromJson(o.value(QStringLiteral("tools")).toObject());
     if (o.value(QStringLiteral("prompt")).isObject())
@@ -412,6 +457,7 @@ HarnessSpec HarnessSpec::resolve(const HarnessSpec &base, const HarnessSpec &ove
     // cadena es ProfileManager); el resuelto ya no hereda de nadie mas.
     out.extends = base.extends;
     if (override.runtime.set) out.runtime = override.runtime;
+    if (override.worker.set) out.worker = override.worker;
     if (override.tools.set) out.tools = override.tools;
     if (override.prompt.set) out.prompt = override.prompt;
     if (override.loop.set) out.loop = override.loop;
@@ -445,6 +491,23 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
     addDiff(out, "runtime", "fallbackEngine", base.runtime.fallbackEngine,
             runtime.fallbackEngine);
     addDiff(out, "runtime", "experimental", base.runtime.experimental, runtime.experimental);
+    addDiff(out, "worker", "lane", base.worker.lane, worker.lane);
+    addDiff(out, "worker", "entrypoint", base.worker.entrypoint, worker.entrypoint);
+    addDiff(out, "worker", "arguments", base.worker.arguments, worker.arguments);
+    addDiff(out, "worker", "sandbox", base.worker.sandbox, worker.sandbox);
+    addDiff(out, "worker", "workingDirectory", base.worker.workingDirectory,
+            worker.workingDirectory);
+    addDiff(out, "worker", "allowNetwork", base.worker.allowNetwork, worker.allowNetwork);
+    addDiff(out, "worker", "maxFrameBytes", base.worker.maxFrameBytes, worker.maxFrameBytes);
+    addDiff(out, "worker", "startupTimeoutMs", base.worker.startupTimeoutMs,
+            worker.startupTimeoutMs);
+    addDiff(out, "worker", "callTimeoutMs", base.worker.callTimeoutMs, worker.callTimeoutMs);
+    addDiff(out, "worker", "memoryLimitMb", base.worker.memoryLimitMb, worker.memoryLimitMb);
+    addDiff(out, "worker", "processLimit", base.worker.processLimit, worker.processLimit);
+    addDiff(out, "worker", "cpuTimeLimitSec", base.worker.cpuTimeLimitSec,
+            worker.cpuTimeLimitSec);
+    addDiff(out, "worker", "requestedCapabilities", base.worker.requestedCapabilities,
+            worker.requestedCapabilities);
     addDiff(out, "tools", "packs", base.tools.packs, tools.packs);
     addDiff(out, "tools", "include", base.tools.include, tools.include);
     addDiff(out, "tools", "exclude", base.tools.exclude, tools.exclude);
