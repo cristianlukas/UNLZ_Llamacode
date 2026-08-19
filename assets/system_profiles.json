@@ -3145,6 +3145,31 @@
     "comment": "Candidato 48GB derivado del post de LocalLLaMA: Qwen3.8 Uncensored Q8_0 + vision-f16 + MTP embebido, con 196k y B2048/U256. Adaptado a la política reproducible del repo: KV q8_0, sampling conservador, mmap activo y mlock apagado; el post usaba no-mmap/mlock y penalties distintos. Fuente exacta: JonathanColetti/Qwen3.8-27B-Uncensored-GGUF. Ejecutar HE0 antes de HE20/BCB."
   },
   {
+    "id": "sys-48-qwen38-27b-q6-96k",
+    "tier": "48GB-Qwen38-Vision", "order": 217, "extra": true, "best": false, "benchmark": true, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 48GB] Qwen3.8 UD-Q6_K_XL · 96k · MTP2 · visión",
+    "minVramGb": 48, "minRamGb": 64, "cpuOk": false, "folder": "Qwen3.8-27B-GGUF-Q6_K_XL", "agentProfileId": "agent-maximo", "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-UD-Q6_K_XL.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "UD-Q6_K_XL" },
+    "runtime": { "ctx": 98304, "gpuLayers": 999, "batch": 512, "ubatch": 64, "threads": 8, "kv": "q4_0", "flashAttn": true, "mlock": false, "mmap": true },
+    "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--fit", "off", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning", "off", "--split-mode", "layer", "--tensor-split", "1,1"],
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "2"] },
+    "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [65536, 98304, 131072], "vision": true,
+    "benchmarkVariants": [
+      { "id": "sys-bench-48-qwen38-q6-mtp3-96k", "order": 218, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] MTP3 · 96k · visión", "extraArgOverrides": { "--spec-draft-n-max": "3" }, "comment": "Control de MTP3 contra la receta base MTP2 del post." },
+      { "id": "sys-bench-48-qwen38-q6-mtp4-96k", "order": 219, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] MTP4 · 96k · visión", "extraArgOverrides": { "--spec-draft-n-max": "4" }, "comment": "Control de MTP4; validar aceptación y estabilidad sostenida antes de usarlo con el agente." },
+      { "id": "sys-bench-48-qwen38-q6-mtp2-64k", "order": 220, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] MTP2 · 64k · visión", "runtime": { "ctx": 65536 }, "comment": "Control de contexto corto para separar presión de KV y prefill." },
+      { "id": "sys-bench-48-qwen38-q6-mtp2-131k", "order": 221, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] MTP2 · 131k · visión", "runtime": { "ctx": 131072 }, "comment": "Control de contexto largo con la misma cuantización y MTP2." },
+      { "id": "sys-bench-48-qwen38-q6-mtp2-kv8", "order": 222, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] MTP2 · 96k · KV q8", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Mide si KV q8 compra calidad/estabilidad en 96k; sigue la política local de no superar q8." },
+      { "id": "sys-bench-48-qwen38-q6-mtp2-b2048", "order": 223, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] MTP2 · 96k · B2048/U512", "runtime": { "batch": 2048, "ubatch": 512 }, "comment": "Aísla el efecto del batch alto sin mover contexto, quant ni MTP." },
+      { "id": "sys-bench-48-qwen38-q6-post-mirror-96k", "order": 224, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] espejo post · 96k · MTP2 · B2048/U512 · mmproj RAM", "runtime": { "batch": 2048, "ubatch": 512 }, "extraArgAdds": ["--no-mmproj-offload"], "comment": "Receta espejo del post con llama.cpp: 96k, MTP2, B2048/U512 y mmproj en RAM; no replica el hardware ni el backend del autor." },
+      { "id": "sys-bench-48-qwen38-q6-mmproj-cpu", "order": 225, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] mmproj en RAM · 96k · MTP2", "extraArgAdds": ["--no-mmproj-offload"], "comment": "Aísla el ahorro de VRAM del proyector; validar visión además de la suite textual." },
+      { "id": "sys-bench-48-qwen38-q6-tensor", "order": 226, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] tensor split · 96k · MTP2", "extraArgOverrides": { "--split-mode": "tensor", "--tensor-split": "1,1" }, "comment": "A/B multi-GPU contra el reparto layer; requiere dos GPUs CUDA compatibles." },
+      { "id": "sys-bench-48-qwen38-q6-cache-warm", "order": 227, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] cache warm · 96k · MTP2", "extraArgAdds": ["--cache-prompt", "--cache-reuse", "512"], "comment": "Escenario de prefijo repetido; comparar sólo contra otras corridas warm-cache." },
+      { "id": "sys-bench-48-qwen38-q6-reasoning-on", "order": 228, "benchmark": true, "displayName": "[bench 48GB Qwen3.8 Q6] reasoning on · 96k · MTP2", "extraArgOverrides": { "--reasoning": "on" }, "comment": "Variante experimental para medir si thinking afecta la primera tool-call y el tiempo total del agente." }
+    ],
+    "comment": "Candidato 48GB derivado del post de Qwen_AI: Qwen3.8-27B UD-Q6_K_XL, MTP2, 96k y mmproj-BF16. Base conservadora con KV q4_0, sampling local y split layer 1,1; las variantes separan MTP, contexto, KV q8, batch, mmproj CPU, tensor split, cache warm y reasoning. No replica los 80–110 tok/s del post ni se recomienda automáticamente; ejecutar HE0 antes de HE20/BCB."
+  },
+  {
     "id": "sys-experiment-qwen36-cache-mtp2",
     "tier": "24GB-Qwen-Cache-Experiment", "order": 190, "extra": true, "best": true, "benchmark": false, "autoCompanion": false,
     "displayName": "EXPERIMENTAL - MAX-Q copia · cache híbrido · MTP2",

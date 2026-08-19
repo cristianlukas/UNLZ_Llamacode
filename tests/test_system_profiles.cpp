@@ -59,6 +59,7 @@ private slots:
     void manager_16gbCodingProfileUsesBenchmarkedKatCoder();
     void manager_24gbPremiumPromotesThinkingCapAndKeepsMaxCtx();
     void bundle_qwen38VariantsAreMtpVisionAndTemplated();
+    void bundle_qwen38Q6BenchmarkFamilyIsGatedAndExpanded();
     void bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded();
     void bundle_bigBangDisablesCrashyFlashAttention();
     void bundle_quantizationPolicyCapsKvAtQ8();
@@ -1588,6 +1589,119 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.
     }
+}
+
+void SystemProfilesTests::bundle_qwen38Q6BenchmarkFamilyIsGatedAndExpanded()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    const QString baseId = QStringLiteral("sys-48-qwen38-27b-q6-96k");
+    QJsonObject base;
+    for (const QJsonValue &value : profiles) {
+        if (value.toObject().value(QStringLiteral("id")).toString() == baseId) {
+            base = value.toObject();
+            break;
+        }
+    }
+    QVERIFY2(!base.isEmpty(), qPrintable(baseId));
+    QVERIFY(base.value(QStringLiteral("extra")).toBool());
+    QVERIFY(base.value(QStringLiteral("benchmark")).toBool());
+    QCOMPARE(base.value(QStringLiteral("minVramGb")).toInt(), 48);
+    QCOMPARE(base.value(QStringLiteral("minRamGb")).toInt(), 64);
+    QVERIFY(base.value(QStringLiteral("vision")).toBool());
+    QCOMPARE(base.value(QStringLiteral("chatTemplate")).toString(),
+             QStringLiteral("qwen38-tools-fixed.jinja"));
+
+    const QJsonObject model = base.value(QStringLiteral("model")).toObject();
+    QCOMPARE(model.value(QStringLiteral("repo")).toString(),
+             QStringLiteral("unsloth/Qwen3.8-27B-GGUF"));
+    QCOMPARE(model.value(QStringLiteral("file")).toString(),
+             QStringLiteral("Qwen3.8-27B-UD-Q6_K_XL.gguf"));
+    QCOMPARE(model.value(QStringLiteral("mmprojFile")).toString(),
+             QStringLiteral("mmproj-BF16.gguf"));
+    QCOMPARE(model.value(QStringLiteral("quant")).toString(),
+             QStringLiteral("UD-Q6_K_XL"));
+
+    const QJsonObject runtime = base.value(QStringLiteral("runtime")).toObject();
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 98304);
+    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 64);
+    QCOMPARE(runtime.value(QStringLiteral("kv")).toString(), QStringLiteral("q4_0"));
+    QCOMPARE(base.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10331);
+    const QJsonArray presets = base.value(QStringLiteral("contextPresets")).toArray();
+    QVERIFY(presets.contains(65536));
+    QVERIFY(presets.contains(98304));
+    QVERIFY(presets.contains(131072));
+
+    ProfileManager pm;
+    const QVariantMap baseLaunch = pm.getLaunchProfile(baseId);
+    QVERIFY2(!baseLaunch.isEmpty(), qPrintable(baseId));
+    const QStringList baseArgs = baseLaunch.value(QStringLiteral("extraArgs")).toStringList();
+    QVERIFY(baseArgs.contains(QStringLiteral("--fit")));
+    QCOMPARE(baseArgs.value(baseArgs.indexOf(QStringLiteral("--fit")) + 1), QStringLiteral("off"));
+    QCOMPARE(baseArgs.value(baseArgs.indexOf(QStringLiteral("--spec-draft-n-max")) + 1),
+             QStringLiteral("2"));
+    QCOMPARE(baseArgs.value(baseArgs.indexOf(QStringLiteral("--reasoning")) + 1),
+             QStringLiteral("off"));
+    QCOMPARE(baseArgs.value(baseArgs.indexOf(QStringLiteral("--split-mode")) + 1),
+             QStringLiteral("layer"));
+    QCOMPARE(baseArgs.value(baseArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
+             QStringLiteral("1,1"));
+
+    const QJsonArray variants = base.value(QStringLiteral("benchmarkVariants")).toArray();
+    QCOMPARE(variants.size(), 11);
+    QSet<QString> ids;
+    for (const QJsonValue &value : variants) {
+        const QString id = value.toObject().value(QStringLiteral("id")).toString();
+        QVERIFY(!id.isEmpty());
+        QVERIFY(!ids.contains(id));
+        ids.insert(id);
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+        QCOMPARE(args.value(args.indexOf(QStringLiteral("--parallel")) + 1), QStringLiteral("1"));
+    }
+
+    const auto findLaunch = [&pm](const QString &id) {
+        return pm.getLaunchProfile(id);
+    };
+    const auto argValue = [](const QStringList &args, const QString &flag) {
+        const int index = args.indexOf(flag);
+        return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
+    };
+
+    const QVariantMap mirror = findLaunch(QStringLiteral("sys-bench-48-qwen38-q6-post-mirror-96k"));
+    QVERIFY(!mirror.isEmpty());
+    const QVariantMap mirrorRuntime = pm.getRuntimePreset(
+        mirror.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(mirrorRuntime.value(QStringLiteral("ctx")).toInt(), 98304);
+    QCOMPARE(mirrorRuntime.value(QStringLiteral("batch")).toInt(), 2048);
+    QCOMPARE(mirrorRuntime.value(QStringLiteral("ubatch")).toInt(), 512);
+    const QStringList mirrorArgs = mirror.value(QStringLiteral("extraArgs")).toStringList();
+    QVERIFY(mirrorArgs.contains(QStringLiteral("--no-mmproj-offload")));
+    QCOMPARE(argValue(mirrorArgs, QStringLiteral("--spec-draft-n-max")), QStringLiteral("2"));
+
+    const QVariantMap kv8 = findLaunch(QStringLiteral("sys-bench-48-qwen38-q6-mtp2-kv8"));
+    QVERIFY(!kv8.isEmpty());
+    const QVariantMap kv8Runtime = pm.getRuntimePreset(
+        kv8.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(kv8Runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q8_0"));
+    const QStringList kv8Args = kv8.value(QStringLiteral("extraArgs")).toStringList();
+    QCOMPARE(argValue(kv8Args, QStringLiteral("--cache-type-k")), QStringLiteral("q8_0"));
+    QCOMPARE(argValue(kv8Args, QStringLiteral("--cache-type-v")), QStringLiteral("q8_0"));
+
+    const QVariantMap tensor = findLaunch(QStringLiteral("sys-bench-48-qwen38-q6-tensor"));
+    QVERIFY(!tensor.isEmpty());
+    const QStringList tensorArgs = tensor.value(QStringLiteral("extraArgs")).toStringList();
+    QCOMPARE(argValue(tensorArgs, QStringLiteral("--split-mode")), QStringLiteral("tensor"));
+    QCOMPARE(argValue(tensorArgs, QStringLiteral("--tensor-split")), QStringLiteral("1,1"));
+
+    const QVariantMap reasoning = findLaunch(QStringLiteral("sys-bench-48-qwen38-q6-reasoning-on"));
+    QVERIFY(!reasoning.isEmpty());
+    QCOMPARE(argValue(reasoning.value(QStringLiteral("extraArgs")).toStringList(),
+                      QStringLiteral("--reasoning")), QStringLiteral("on"));
 }
 
 void SystemProfilesTests::bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded()

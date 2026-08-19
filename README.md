@@ -271,6 +271,14 @@ benchmark `Qwen3.8 Uncensored Q8_0` de JonathanColetti, con visión, MTP3, 196k 
 B2048/U256. Sus variantes separan `split-mode tensor`, `--no-mmproj-offload` y
 prompt cache warm; todas siguen HE0 → HE20 → BCB y no se promueven automáticamente.
 
+También queda disponible, sólo para benchmark en **48 GB**, el candidato
+`Qwen3.8 UD-Q6_K_XL` de Unsloth: contexto 96k, MTP2, `mmproj-BF16`, split layer
+1,1 y KV q4_0. Sus variantes comparan MTP3/MTP4, 64k/131k, KV q8, B2048/U512,
+mmproj en RAM, tensor split, cache warm y reasoning on. Es la traducción
+reproducible de la receta del post de Qwen_AI; no debe compararse directamente
+con sus 80–110 tok/s porque el post usa otra GPU/backend y no se descarga ni se
+promueve automáticamente.
+
 Para **2× RTX 3090 (48 GB agregados) + 64 GB RAM o más**, el perfil paralelo
 `[experimental 48GB] Laguna S 2.1 118B-A8B Q2 · 100k` reutiliza el mismo GGUF y
 lo mantiene completo en GPU (`split-mode layer`, `tensor-split 1,1`, mmap y KV

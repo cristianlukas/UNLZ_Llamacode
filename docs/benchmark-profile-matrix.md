@@ -244,6 +244,18 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench 48GB Qwen3.8 Q8] tensor split · 196k · MTP3` (`sys-bench-48-qwen38-q8-tensor`) | Qwen3.8 Uncensored Q8 | Reproducir el eje multi-GPU del post | `--split-mode tensor`; `--tensor-split 1,1` | HE0 → HE20 → BCB |
 | `[bench 48GB Qwen3.8 Q8] mmproj en RAM · 196k` (`sys-bench-48-qwen38-q8-mmproj-cpu`) | Qwen3.8 Uncensored Q8 | Medir margen de VRAM con visión auxiliar en RAM | `--no-mmproj-offload`; validar visión aparte | HE0 → HE20 → BCB |
 | `[bench 48GB Qwen3.8 Q8] cache warm · 196k · MTP3` (`sys-bench-48-qwen38-q8-cache-warm`) | Qwen3.8 Uncensored Q8 | Medir el escenario de prefijo repetido del post | `--cache-prompt`; `--cache-reuse 512`; sólo warm-cache | HE0 → HE20 → BCB |
+| `[bench 48GB] Qwen3.8 UD-Q6_K_XL · 96k · MTP2 · visión` (`sys-48-qwen38-27b-q6-96k`) | Qwen3.8 UD-Q6_K_XL de Unsloth | Control base de la receta Q6 del post en llama.cpp | ctx 96k; MTP2; B512/U64; KV q4_0; layer 1,1 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] MTP3 · 96k · visión` (`sys-bench-48-qwen38-q6-mtp3-96k`) | Qwen3.8 UD-Q6_K_XL | Comparar MTP3 contra MTP2 | MTP3 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] MTP4 · 96k · visión` (`sys-bench-48-qwen38-q6-mtp4-96k`) | Qwen3.8 UD-Q6_K_XL | Medir el techo de MTP antes de promoverlo | MTP4 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 64k · visión` (`sys-bench-48-qwen38-q6-mtp2-64k`) | Qwen3.8 UD-Q6_K_XL | Separar presión de KV/prefill | ctx 65k; MTP2 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 131k · visión` (`sys-bench-48-qwen38-q6-mtp2-131k`) | Qwen3.8 UD-Q6_K_XL | Medir contexto largo con la misma quant | ctx 131k; MTP2 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 96k · KV q8` (`sys-bench-48-qwen38-q6-mtp2-kv8`) | Qwen3.8 UD-Q6_K_XL | Medir calidad/estabilidad de KV q8 | KV K/V q8_0 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 96k · B2048/U512` (`sys-bench-48-qwen38-q6-mtp2-b2048`) | Qwen3.8 UD-Q6_K_XL | Aislar el batch alto del post | B2048/U512 | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] espejo post · 96k · MTP2 · B2048/U512 · mmproj RAM` (`sys-bench-48-qwen38-q6-post-mirror-96k`) | Qwen3.8 UD-Q6_K_XL | Reproducir la receta del post con equivalentes llama.cpp | ctx 96k; MTP2; B2048/U512; `--no-mmproj-offload` | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] mmproj en RAM · 96k · MTP2` (`sys-bench-48-qwen38-q6-mmproj-cpu`) | Qwen3.8 UD-Q6_K_XL | Medir margen de VRAM del proyector | `--no-mmproj-offload`; validar visión aparte | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] tensor split · 96k · MTP2` (`sys-bench-48-qwen38-q6-tensor`) | Qwen3.8 UD-Q6_K_XL | Comparar reparto tensor contra layer | `--split-mode tensor`; `--tensor-split 1,1` | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] cache warm · 96k · MTP2` (`sys-bench-48-qwen38-q6-cache-warm`) | Qwen3.8 UD-Q6_K_XL | Medir prefijos repetidos | `--cache-prompt`; `--cache-reuse 512`; sólo warm-cache | HE0 → HE20 → BCB |
+| `[bench 48GB Qwen3.8 Q6] reasoning on · 96k · MTP2` (`sys-bench-48-qwen38-q6-reasoning-on`) | Qwen3.8 UD-Q6_K_XL | Medir efecto de thinking en tool-calls | `--reasoning on` | HE0 → HE20 → BCB |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k` (`sys-kat3-mtp-262k`) | FAST - KAT2-Coder-7-8-26 | Probar MTP embebido APEX sin alterar KAT2; texto-only | APEX I-Compact; ctx 262k; B512/U64; KV q8_0; MTP4; requiere descargar el GGUF | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
@@ -285,6 +297,18 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench 48GB Qwen3.8 Q8] tensor split · 196k · MTP3` | Pendiente | — | — | Pendiente de HE0; requiere dos GPUs |
 | `[bench 48GB Qwen3.8 Q8] mmproj en RAM · 196k` | Pendiente | — | — | Pendiente de HE0; validar visión aparte |
 | `[bench 48GB Qwen3.8 Q8] cache warm · 196k · MTP3` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra warm-cache |
+| `[bench 48GB] Qwen3.8 UD-Q6_K_XL · 96k · MTP2 · visión` | Pendiente | — | — | Pendiente de HE0; requiere descargar GGUF Q6 + mmproj |
+| `[bench 48GB Qwen3.8 Q6] MTP3 · 96k · visión` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench 48GB Qwen3.8 Q6] MTP4 · 96k · visión` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 64k · visión` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 131k · visión` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 96k · KV q8` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench 48GB Qwen3.8 Q6] MTP2 · 96k · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench 48GB Qwen3.8 Q6] espejo post · 96k · MTP2 · B2048/U512 · mmproj RAM` | Pendiente | — | — | Pendiente de HE0; comparar con otras recetas espejo |
+| `[bench 48GB Qwen3.8 Q6] mmproj en RAM · 96k · MTP2` | Pendiente | — | — | Pendiente de HE0; validar visión aparte |
+| `[bench 48GB Qwen3.8 Q6] tensor split · 96k · MTP2` | Pendiente | — | — | Pendiente de HE0; requiere dos GPUs |
+| `[bench 48GB Qwen3.8 Q6] cache warm · 96k · MTP2` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra warm-cache |
+| `[bench 48GB Qwen3.8 Q6] reasoning on · 96k · MTP2` | Pendiente | — | — | Pendiente de HE0; validar primera tool-call |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` | — | 58,638 s | — | Infraestructura: server-load |
 | `[bench BigBang] 131k · sin MTP · KV q8_0` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
