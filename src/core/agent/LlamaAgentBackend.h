@@ -182,6 +182,9 @@ public:
     // aprobación (default false: enviar correo es acción externa irreversible).
     void setMailAccounts(const QVariantList &accounts);
     void setWebProviders(const QVariantList &providers);
+    // Política de skills portables proveniente del HarnessSpec.
+    void setPortableSkillPolicy(const HarnessSkillsModule &policy);
+    HarnessSkillsModule portableSkillPolicyForTest() const { return m_skillPolicy; }
     void setMailAutoSend(bool on) { m_mailAutoSend = on; }
 
     // Guardrail "Zero-Autonomy": si una tool es destructiva/irreversible (borrado
@@ -671,6 +674,7 @@ private:
     QVariantList m_mcpConfig;        // config de servers MCP (de AppController)
     QVariantList m_mailAccounts;     // cuentas de correo (password resuelto)
     QVariantList m_webProviders;     // proveedores web externos opt-in
+    HarnessSkillsModule m_skillPolicy; // ausente = todas las skills portables
     bool         m_mailAutoSend = false; // permitir email_send sin aprobación
     bool         m_hitlDestructive = true; // guardrail Zero-Autonomy (ver setHitlDestructive)
     QVariantList m_mcpTools;         // cache de tool-defs MCP del worker {server,name,description,schema}

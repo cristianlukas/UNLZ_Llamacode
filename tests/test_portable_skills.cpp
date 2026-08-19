@@ -12,6 +12,7 @@ class PortableSkillsTests : public QObject
     Q_OBJECT
 private slots:
     void discoversAndLoadsProjectSkill();
+    void harnessPolicyFiltersAndBlocksSkills();
     void rejectsInvalidManifest();
     void bundledScientificPackIsValid();
 };
@@ -68,6 +69,43 @@ void PortableSkillsTests::rejectsInvalidManifest()
     QVERIFY(!loaded.value(QStringLiteral("ok")).toBool());
     QVERIFY(loaded.value(QStringLiteral("error")).toString().contains(
         QStringLiteral("no encontrada"), Qt::CaseInsensitive));
+}
+
+void PortableSkillsTests::harnessPolicyFiltersAndBlocksSkills()
+{
+    QTemporaryDir temp;
+    QVERIFY(temp.isValid());
+    writeSkill(temp.path(), QStringLiteral("review-paper"),
+               QStringLiteral("---\n"
+                              "name: review-paper\n"
+                              "description: Test\n"
+                              "---\n"
+                              "Contenido\n"));
+    writeSkill(temp.path(), QStringLiteral("other-skill"),
+               QStringLiteral("---\n"
+                              "name: other-skill\n"
+                              "description: Test\n"
+                              "---\n"
+                              "Contenido\n"));
+
+    HarnessSkillsModule policy;
+    policy.set = true;
+    policy.include = {QStringLiteral("review-paper"), QStringLiteral("other-skill")};
+    policy.exclude = {QStringLiteral("review-paper")};
+    const QVariantList listed = PortableSkillStore::list(temp.path(), policy);
+    QCOMPARE(listed.size(), 1);
+    QCOMPARE(listed.first().toMap().value(QStringLiteral("name")).toString(),
+             QStringLiteral("other-skill"));
+    const QVariantMap blocked = PortableSkillStore::load(QStringLiteral("review-paper"),
+                                                          temp.path(), policy);
+    QVERIFY(!blocked.value(QStringLiteral("ok")).toBool());
+    QVERIFY(blocked.value(QStringLiteral("error")).toString().contains(
+        QStringLiteral("desactivada"), Qt::CaseInsensitive));
+
+    policy.include = {QStringLiteral("review-paper")};
+    policy.exclude.clear();
+    QVERIFY(PortableSkillStore::load(QStringLiteral("review-paper"), temp.path(), policy)
+                .value(QStringLiteral("ok")).toBool());
 }
 
 void PortableSkillsTests::bundledScientificPackIsValid()

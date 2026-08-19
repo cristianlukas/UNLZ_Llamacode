@@ -805,6 +805,13 @@ void AgentToolRunner::setServerBaseUrl(const QString &url) { m_serverBaseUrl = u
 void AgentToolRunner::setSessionId(const QString &sessionId) { m_sessionId = sessionId; }
 void AgentToolRunner::setMailAccounts(const QVariantList &accounts) { m_mailAccounts = accounts; }
 void AgentToolRunner::setWebProviders(const QVariantList &providers) { m_webProviders = providers; }
+void AgentToolRunner::setPortableSkillPolicy(const QStringList &include,
+                                             const QStringList &exclude, bool declared)
+{
+    m_skillInclude = include;
+    m_skillExclude = exclude;
+    m_skillPolicyDeclared = declared;
+}
 
 bool AgentToolRunner::consumeWebRateLimit(const QString &host, qint64 nowMs, QString *error)
 {
@@ -1435,8 +1442,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     QMutexLocker<QMutex> desktopLock(
         name.startsWith(QLatin1String("desktop_")) ? &desktopMutex : nullptr);
     if (ok) *ok = false;
+    HarnessSkillsModule skillPolicy;
+    skillPolicy.set = m_skillPolicyDeclared;
+    skillPolicy.include = m_skillInclude;
+    skillPolicy.exclude = m_skillExclude;
     if (name == QLatin1String("skill_list")) {
-        const QVariantList skills = PortableSkillStore::list(cwd);
+        const QVariantList skills = PortableSkillStore::list(cwd, skillPolicy);
         out[QStringLiteral("skills")] = skills;
         out[QStringLiteral("count")] = skills.size();
         if (ok) *ok = true;
@@ -1454,7 +1465,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("skill_load")) {
         const QVariantMap skill =
-            PortableSkillStore::load(args.value(QStringLiteral("name")).toString(), cwd);
+            PortableSkillStore::load(args.value(QStringLiteral("name")).toString(), cwd,
+                                     skillPolicy);
         for (auto it = skill.cbegin(); it != skill.cend(); ++it) out[it.key()] = it.value();
         const bool loaded = skill.value(QStringLiteral("ok")).toBool();
         if (ok) *ok = loaded;

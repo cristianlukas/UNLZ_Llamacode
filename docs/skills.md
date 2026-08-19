@@ -12,6 +12,13 @@ permite que un runner o una revisión humana distinga éxito verificable, fallo 
 bloqueo externo. El preset nativo `autoprompt` de Tasks aplica el mismo contrato
 con persistencia de estado y ramas read-only.
 
+La disponibilidad de una skill portable se gobierna por el módulo `skills` del
+`HarnessSpec` del agente: `include` funciona como allowlist (`"*"` habilita todo)
+y `exclude` siempre gana. Si el módulo no está declarado, se conserva la
+compatibilidad histórica y todas quedan habilitadas. Además, el harness debe
+tener activas las tools `skill_list` y `skill_load`. Ver el inventario completo
+en [`agent-harness-inventory.md`](agent-harness-inventory.md).
+
 ## Ubicaciones
 
 - Global: `AppLocalData/LlamaCode/skills/<nombre>/SKILL.md`

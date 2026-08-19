@@ -76,6 +76,18 @@ struct HarnessToolsModule {
     static HarnessToolsModule fromJson(const QJsonObject &o);
 };
 
+// Skills portables disponibles para el agente. `include` vacío en un módulo
+// declarado significa "ninguna"; `*` habilita todas las descubiertas. `exclude`
+// siempre gana. Módulo ausente = todas, para conservar perfiles legacy.
+struct HarnessSkillsModule {
+    QStringList include;              // slugs o "*"
+    QStringList exclude;              // slugs bloqueados
+    bool set = false;
+
+    QJsonObject toJson() const;
+    static HarnessSkillsModule fromJson(const QJsonObject &o);
+};
+
 // Composicion del system prompt: directivas built-in + packs de usuario (.md).
 struct HarnessPromptModule {
     QStringList builtin;               // keys de directiveCatalog(), o "*"
@@ -245,6 +257,7 @@ struct HarnessSpec {
     HarnessRuntimeModule runtime;
     HarnessWorkerModule worker;
     HarnessToolsModule tools;
+    HarnessSkillsModule skills;
     HarnessPromptModule prompt;
     HarnessLoopModule loop;
     HarnessContextModule context;
@@ -293,7 +306,7 @@ QVariantList packCatalog();
 QStringList resolve(const HarnessToolsModule &module);
 
 // Nombres del catalogo que NO estan en `enabled` (lo que espera setDisabledTools).
-QStringList disabledFrom(const QStringList &enabled);
+    QStringList disabledFrom(const QStringList &enabled);
 
 // Costo aproximado en tokens de un set de tools (suma de approxTokens).
 int approxTokens(const QStringList &enabled);
@@ -316,6 +329,13 @@ QStringList dependencyWarnings(const QStringList &enabled, const Environment &en
                                bool mcpToolsEnabled = false);
 
 }  // namespace HarnessTools
+
+namespace HarnessSkills {
+
+// Decide si un slug puede ser descubierto/cargado por el harness efectivo.
+bool allows(const HarnessSkillsModule &module, const QString &slug);
+
+}  // namespace HarnessSkills
 
 namespace HarnessPolicy {
 

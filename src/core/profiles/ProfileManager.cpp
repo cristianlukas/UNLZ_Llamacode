@@ -1,6 +1,7 @@
 #include "ProfileManager.h"
 #include "SystemProfileVariants.h"
 #include "core/agent/HarnessDirectiveStore.h"
+#include "core/agent/PortableSkillStore.h"
 #include <QFile>
 #include <QDir>
 #include <QStandardPaths>
@@ -1089,10 +1090,20 @@ QVariantMap ProfileManager::harnessSpecSummary(const QString &id, const QString 
         warnings << QStringLiteral("prompt: %1 chars supera el tope del perfil (%2). Sacá alguna "
                                    "directiva o subí el tope.")
                         .arg(promptChars).arg(spec.prompt.maxChars);
+    const QVariantList discoveredSkills = PortableSkillStore::list(workspace);
+    QVariantList enabledSkills;
+    for (const QVariant &value : discoveredSkills) {
+        const QVariantMap skill = value.toMap();
+        if (HarnessSkills::allows(spec.skills, skill.value(QStringLiteral("name")).toString()))
+            enabledSkills.append(skill);
+    }
     return QVariantMap{
         {QStringLiteral("tools"), tools},
         {QStringLiteral("toolCount"), tools.size()},
         {QStringLiteral("approxTokens"), HarnessTools::approxTokens(tools)},
+        {QStringLiteral("skills"), enabledSkills},
+        {QStringLiteral("skillCount"), enabledSkills.size()},
+        {QStringLiteral("skillPolicyDeclared"), spec.skills.set},
         {QStringLiteral("promptChars"), promptChars},
         {QStringLiteral("warnings"), warnings},
         {QStringLiteral("extends"), spec.extends},

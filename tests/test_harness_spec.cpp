@@ -29,6 +29,7 @@ private slots:
 
     void modules_defaultsMatchHistoricBehaviour();
     void context_indexPolicyRoundTripsAndBounds();
+    void skills_roundTripAndInheritance();
     void resolve_absentModuleIsInherited();
     void resolve_declaredEmptyModuleWins();
     void json_roundTripKeepsDeclaredModulesOnly();
@@ -113,6 +114,31 @@ void HarnessSpecTests::context_indexPolicyRoundTripsAndBounds()
     QCOMPARE(bounded.indexPolicy, QStringLiteral("lazy"));
     QCOMPARE(bounded.scoutBudget, 16000);
     QCOMPARE(bounded.scoutK, 1);
+}
+
+void HarnessSpecTests::skills_roundTripAndInheritance()
+{
+    const HarnessSpec defaults;
+    QVERIFY(!defaults.skills.set);
+    QVERIFY(HarnessSkills::allows(defaults.skills, QStringLiteral("autoprompt-coding")));
+
+    HarnessSpec parent;
+    parent.skills.set = true;
+    parent.skills.include = {QStringLiteral("*")};
+    parent.skills.exclude = {QStringLiteral("literature-review")};
+
+    const QJsonObject json = parent.toJson();
+    QVERIFY(json.value(QStringLiteral("skills")).isObject());
+    const HarnessSpec roundTrip = HarnessSpec::fromJson(json);
+    QVERIFY(roundTrip.skills.set);
+    QVERIFY(HarnessSkills::allows(roundTrip.skills, QStringLiteral("autoprompt-coding")));
+    QVERIFY(!HarnessSkills::allows(roundTrip.skills, QStringLiteral("literature-review")));
+
+    HarnessSpec child;
+    child.skills.set = true; // include vacío declarado = deshabilita todas
+    const HarnessSpec resolved = HarnessSpec::resolve(parent, child);
+    QVERIFY(!HarnessSkills::allows(resolved.skills, QStringLiteral("autoprompt-coding")));
+    QVERIFY(!HarnessSkills::allows(resolved.skills, QStringLiteral("literature-review")));
 }
 
 void HarnessSpecTests::resolve_absentModuleIsInherited()

@@ -31,6 +31,7 @@ private slots:
     void context_triggerChangesWhenCompactionKicksIn();
     void context_pruneCanBeDisabled();
     void context_keepLastImagesDropsOlderCaptures();
+    void skills_policyReachesBackend();
     void protocol_modeIsHonoured();
     void directiveCondition_evaluatesFacts();
     void customDirectives_injectedAndGated();
@@ -260,6 +261,25 @@ void HarnessModulesTests::context_keepLastImagesDropsOlderCaptures()
     QCOMPARE(imageCount(LlamaAgentBackend::trimStaleImages(withImages(), 1)), 1);
     QCOMPARE(imageCount(LlamaAgentBackend::trimStaleImages(withImages(), 2)), 2);
     QCOMPARE(imageCount(LlamaAgentBackend::trimStaleImages(withImages(), 0)), 0);
+}
+
+void HarnessModulesTests::skills_policyReachesBackend()
+{
+    LlamaAgentBackend be;
+    HarnessSkillsModule policy;
+    policy.set = true;
+    policy.include = {QStringLiteral("autoprompt-coding"), QStringLiteral("peer-review")};
+    policy.exclude = {QStringLiteral("peer-review")};
+    be.setPortableSkillPolicy(policy);
+    const HarnessSkillsModule effective = be.portableSkillPolicyForTest();
+    const QStringList expectedInclude = {QStringLiteral("autoprompt-coding"),
+                                         QStringLiteral("peer-review")};
+    const QStringList expectedExclude = {QStringLiteral("peer-review")};
+    QVERIFY(effective.set);
+    QCOMPARE(effective.include, expectedInclude);
+    QCOMPARE(effective.exclude, expectedExclude);
+    QVERIFY(HarnessSkills::allows(effective, QStringLiteral("autoprompt-coding")));
+    QVERIFY(!HarnessSkills::allows(effective, QStringLiteral("peer-review")));
 }
 
 void HarnessModulesTests::protocol_modeIsHonoured()

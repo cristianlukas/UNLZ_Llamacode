@@ -10,6 +10,8 @@
 #include <QVariantMap>
 #include <QStringList>
 
+#include "core/profiles/HarnessSpec.h"
+
 class McpClient;
 class QProcess;
 class QTimer;
@@ -54,6 +56,10 @@ public slots:
     // Proveedores web externos habilitados desde Integrations:
     // {provider,baseUrl,apiKey,enabled}. No instala servicios.
     void setWebProviders(const QVariantList &providers);
+    // Política de skills del HarnessSpec: módulo ausente = todas; include="*"
+    // habilita todas y exclude siempre gana.
+    void setPortableSkillPolicy(const QStringList &include, const QStringList &exclude,
+                                bool declared);
     // Config del modelo maestro (tool ask_teacher). Vacío = usar env vars.
     void setTeacherConfig(const QString &url, const QString &model, const QString &key);
     // Config de maestro tipo CLI (claude-code / codex). cliPath vacío = deshabilitado.
@@ -125,6 +131,9 @@ private:
     QString m_correlationId;
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
     QVariantList m_webProviders;   // proveedores REST opt-in (p.ej. Camofox)
+    QStringList m_skillInclude;
+    QStringList m_skillExclude;
+    bool m_skillPolicyDeclared = false;
     QHash<QString, QList<qint64>> m_webRequestTimes; // rate limit por host, ventana 60 s
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)
     // Maestro CLI (claude-code / codex). m_masterKind: "none"|"http"|"cli".

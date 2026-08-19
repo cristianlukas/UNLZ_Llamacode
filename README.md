@@ -777,6 +777,10 @@ persistencia para que probar Next no altere el historial existente.
   `worker_call` aparece sólo después de autenticar el proceso, atraviesa la
   aprobación existente y devuelve errores/`tool_result` al mismo turno; sin ese
   módulo el perfil legacy no crea procesos ni cambia sus schemas.
+- El inventario actualizado de perfiles de agente, roles de salas, motores,
+  adapters y skills portables está en [`docs/agent-harness-inventory.md`](docs/agent-harness-inventory.md).
+  Las skills se pueden activar o desactivar por harness desde el editor del
+  perfil; la política usa `include`/`exclude` y se hereda por fase.
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real

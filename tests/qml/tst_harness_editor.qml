@@ -35,6 +35,10 @@ ApplicationWindow {
             { key: "core", name: "Core", description: "archivos + shell" },
             { key: "rag",  name: "RAG",  description: "busqueda semantica" }
         ]
+        skills: [
+            { name: "autoprompt-coding", description: "loop de coding" },
+            { name: "literature-review", description: "revision bibliografica" }
+        ]
         directives: [
             { name: "mis-convenciones", description: "convenciones", when: "" }
         ]
@@ -90,6 +94,14 @@ ApplicationWindow {
         editor.specToggleListItem("tools", "packs", "core", false)
         check(!editor.specHasListItem("tools", "packs", "core"), "destildar saca el pack")
         check((editor.specModule("tools").packs || []).length === 0, "queda la lista vacia")
+
+        // --- Skills: el harness puede dejar una sola activa ------------------
+        check(editor.skillIsOn("autoprompt-coding"), "sin modulo todas las skills están activas")
+        editor.setSkillOn("autoprompt-coding", false)
+        check(!editor.skillIsOn("autoprompt-coding"), "desactivar skill agrega una denylist")
+        check(editor.skillIsOn("literature-review"), "desactivar una skill no apaga las demás")
+        editor.setSkillOn("autoprompt-coding", true)
+        check(editor.skillIsOn("autoprompt-coding"), "la skill vuelve a activarse")
 
         // --- Editar un número no borra otros módulos -------------------------
         editor.specSet("loop", "transportRetries", 12)

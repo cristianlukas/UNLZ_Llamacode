@@ -1365,6 +1365,7 @@ Item {
                         property var specDiff: []       // {module, field, base, value}
                         property var specSummary: ({})  // tools/approxTokens/warnings
                         property var packItems: []      // catálogo de packs de tools
+                        property var skillItems: []     // skills portables disponibles
                         property var customDirectiveItems: []  // directivas .md del usuario
                         property var parentOptions: []  // candidatos a `extends` (sin ciclos)
                         property var styleEdit: ({ id: "", name: "", kind: "writing-style",
@@ -1385,6 +1386,7 @@ Item {
                             specSummary = App.harnessSpecSummary(edit.id) || ({})
                             specDiff = App.profileManager.agentProfileDiff(edit.id) || []
                             packItems = App.profileManager.harnessPackCatalog() || []
+                            skillItems = App.portableSkills() || []
                             customDirectiveItems = App.profileManager.harnessDirectiveCatalog(App.currentAgentProjectDir()) || []
                             // Candidatos a `extends`: el propio perfil y su subarbol
                             // quedan afuera (ofrecer un ciclo es ofrecer un error).
@@ -1865,6 +1867,7 @@ Item {
                                     summary: agentProfilesSection.specSummary
                                     diff: agentProfilesSection.specDiff
                                     packs: agentProfilesSection.packItems
+                                    skills: agentProfilesSection.skillItems
                                     directives: agentProfilesSection.customDirectiveItems
                                     parents: agentProfilesSection.parentOptions
                                     engines: App.harnessEngineCatalog()

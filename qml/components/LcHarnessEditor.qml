@@ -19,9 +19,10 @@ Item {
     property string profileId: ""
     property bool   readOnly: false          // preset de sistema = sólo lectura
     property var    spec: ({})               // HarnessSpec resuelto (JSON editable)
-    property var    summary: ({})            // {toolCount, approxTokens, promptChars, warnings}
+    property var    summary: ({})            // {toolCount, skillCount, approxTokens, promptChars, warnings}
     property var    diff: []                 // [{module, field, base, value}]
     property var    packs: []                // catálogo de packs de tools
+    property var    skills: []               // catálogo de skills portables
     property var    directives: []           // directivas .md descubiertas
     property var    engines: []              // catálogo de contratos legacy/next
     property var    parents: []              // [{profileId, name}] candidatos a `extends`
@@ -75,6 +76,55 @@ Item {
         if (on && i < 0) arr.push(item)
         else if (!on && i >= 0) arr.splice(i, 1)
         return specSet(moduleName, field, arr)
+    }
+    function skillIsOn(name) {
+        var m = specModule("skills")
+        var include = m.include || []
+        var exclude = m.exclude || []
+        if (exclude.indexOf(name) >= 0) return false
+        return Object.keys(m).length === 0
+            || include.indexOf("*") >= 0
+            || include.indexOf(name) >= 0
+    }
+    function setSkillOn(name, on) {
+        if (readOnly) return false
+        var s = JSON.parse(JSON.stringify(spec || {}))
+        var hadPolicy = s.skills && Object.keys(s.skills).length > 0
+        // Sin módulo declarado, el estado histórico es "todas activas". Para
+        // apagar una sola hay que materializar esa intención como "* menos X";
+        // un objeto vacío declarado significa, en cambio, "ninguna".
+        if (!hadPolicy) {
+            if (on) return true
+            s.skills = { include: ["*"], exclude: [name] }
+            spec = s
+            specEdited(s)
+            return true
+        }
+        var include = (s.skills.include || []).slice()
+        var exclude = (s.skills.exclude || []).slice()
+        var i
+        if (include.indexOf("*") >= 0) {
+            i = exclude.indexOf(name)
+            if (on && i >= 0) exclude.splice(i, 1)
+            else if (!on && i < 0) exclude.push(name)
+        } else {
+            i = include.indexOf(name)
+            if (on && i < 0) include.push(name)
+            else if (!on && i >= 0) include.splice(i, 1)
+        }
+        s.skills.include = include
+        s.skills.exclude = exclude
+        spec = s
+        specEdited(s)
+        return true
+    }
+    function enableAllSkills() {
+        if (readOnly) return false
+        var s = JSON.parse(JSON.stringify(spec || {}))
+        s.skills = { include: ["*"], exclude: [] }
+        spec = s
+        specEdited(s)
+        return true
     }
     function setRuntimeEngine(id, version) {
         if (readOnly) return false
@@ -155,7 +205,8 @@ Item {
             // Mostrar sólo las tools era media foto.
             Text {
                 objectName: "budgetLabel"
-                text: (root.summary.toolCount || 0) + " tools · ~"
+                text: (root.summary.toolCount || 0) + " tools · "
+                      + (root.summary.skillCount || 0) + " skills · ~"
                       + (root.summary.approxTokens || 0) + " tok schemas · ~"
                       + Math.round((root.summary.promptChars || 0) / 4) + " tok prompt"
                 color: Theme.textMuted; font.pixelSize: 11
@@ -388,6 +439,41 @@ Item {
                     onClicked: root.specToggleListItem(
                         "tools", "packs", modelData.key,
                         !root.specHasListItem("tools", "packs", modelData.key))
+                }
+            }
+        }
+
+        // Skills portables: el harness decide qué slugs puede descubrir/cargar.
+        RowLayout {
+            Layout.fillWidth: true
+            Text { text: "Skills portables por harness"; color: Theme.textSecondary; font.pixelSize: 12 }
+            Item { Layout.fillWidth: true }
+            LcButton {
+                text: "Habilitar todas"
+                secondary: true
+                enabled: !root.readOnly
+                onClicked: root.enableAllSkills()
+            }
+        }
+        Text {
+            Layout.fillWidth: true
+            visible: root.skills.length === 0
+            text: "No hay skills portables descubiertas en el alcance actual."
+            color: Theme.textMuted; font.pixelSize: 11
+        }
+        Flow {
+            Layout.fillWidth: true; spacing: 6
+            visible: root.skills.length > 0
+            Repeater {
+                model: root.skills
+                delegate: LcButton {
+                    required property var modelData
+                    text: (root.skillIsOn(modelData.name) ? "✓ " : "") + modelData.name
+                    secondary: !root.skillIsOn(modelData.name)
+                    enabled: !root.readOnly
+                    ToolTip.visible: hovered
+                    ToolTip.text: modelData.description || "Skill portable"
+                    onClicked: root.setSkillOn(modelData.name, !root.skillIsOn(modelData.name))
                 }
             }
         }

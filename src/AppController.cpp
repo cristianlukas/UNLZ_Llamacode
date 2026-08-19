@@ -4985,6 +4985,10 @@ QStringList AppController::expandDirectiveSentinel(const QStringList &keys)
 void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &spec)
 {
     if (!cb) return;
+    // Skills portables quedan gobernadas por el harness efectivo: un módulo
+    // ausente conserva compatibilidad y permite todas; uno declarado aplica
+    // include/exclude antes de que skill_list/skill_load lleguen al worker.
+    cb->setPortableSkillPolicy(spec.skills);
     if (spec.loop.set) cb->setLoopPolicy(spec.loop);
     if (spec.context.set) cb->setContextPolicy(spec.context);
     if (spec.escalation.set) cb->setEscalationPolicy(spec.escalation);

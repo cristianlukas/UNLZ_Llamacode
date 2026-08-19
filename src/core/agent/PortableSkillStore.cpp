@@ -142,6 +142,12 @@ QVariantMap PortableSkillStore::parseFile(const QString &path, const QString &sc
 
 QVariantList PortableSkillStore::list(const QString &workspace)
 {
+    return list(workspace, HarnessSkillsModule{});
+}
+
+QVariantList PortableSkillStore::list(const QString &workspace,
+                                      const HarnessSkillsModule &policy)
+{
     // Global primero; proyecto reemplaza por nombre para permitir overrides locales.
     QMap<QString, QVariantMap> byName;
     const QList<QPair<QString, QString>> roots{
@@ -157,7 +163,8 @@ QVariantList PortableSkillStore::list(const QString &workspace)
         for (const QFileInfo &entry : entries) {
             const QString file = QDir(entry.absoluteFilePath()).filePath(QStringLiteral("SKILL.md"));
             const QVariantMap skill = parseFile(file, scope, root, false);
-            if (skill.value(QStringLiteral("ok")).toBool())
+            if (skill.value(QStringLiteral("ok")).toBool()
+                && HarnessSkills::allows(policy, skill.value(QStringLiteral("name")).toString()))
                 byName[skill.value(QStringLiteral("name")).toString()] = skill;
         }
     }
@@ -168,9 +175,19 @@ QVariantList PortableSkillStore::list(const QString &workspace)
 
 QVariantMap PortableSkillStore::load(const QString &name, const QString &workspace)
 {
+    return load(name, workspace, HarnessSkillsModule{});
+}
+
+QVariantMap PortableSkillStore::load(const QString &name, const QString &workspace,
+                                     const HarnessSkillsModule &policy)
+{
     const QString wanted = name.trimmed().toLower();
     if (!validSlug(wanted))
         return {{QStringLiteral("ok"), false}, {QStringLiteral("error"), QStringLiteral("Nombre inválido")}};
+    if (!HarnessSkills::allows(policy, wanted))
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("Habilidad desactivada por el harness: %1")
+                                                     .arg(wanted)}};
 
     // Proyecto tiene precedencia.
     const QList<QPair<QString, QString>> roots{

@@ -557,6 +557,10 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(QVariantList, m_mailAccounts));
     QMetaObject::invokeMethod(m_worker, "setWebProviders", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_webProviders));
+    QMetaObject::invokeMethod(m_worker, "setPortableSkillPolicy", Qt::QueuedConnection,
+                              Q_ARG(QStringList, m_skillPolicy.include),
+                              Q_ARG(QStringList, m_skillPolicy.exclude),
+                              Q_ARG(bool, m_skillPolicy.set));
     QMetaObject::invokeMethod(m_worker, "initServers", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mcpConfig), Q_ARG(QString, m_cwd));
     startHarnessWorker();
@@ -6179,6 +6183,16 @@ void LlamaAgentBackend::setWebProviders(const QVariantList &providers)
                                   Q_ARG(QVariantList, m_webProviders));
 }
 
+void LlamaAgentBackend::setPortableSkillPolicy(const HarnessSkillsModule &policy)
+{
+    m_skillPolicy = policy;
+    if (m_worker)
+        QMetaObject::invokeMethod(m_worker, "setPortableSkillPolicy", Qt::QueuedConnection,
+                                  Q_ARG(QStringList, m_skillPolicy.include),
+                                  Q_ARG(QStringList, m_skillPolicy.exclude),
+                                  Q_ARG(bool, m_skillPolicy.set));
+}
+
 void LlamaAgentBackend::ensureWorker()
 {
     if (m_worker) return;
@@ -6211,6 +6225,10 @@ void LlamaAgentBackend::configureWorker()
                               Q_ARG(QVariantList, m_mailAccounts));
     QMetaObject::invokeMethod(m_worker, "setWebProviders", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_webProviders));
+    QMetaObject::invokeMethod(m_worker, "setPortableSkillPolicy", Qt::QueuedConnection,
+                              Q_ARG(QStringList, m_skillPolicy.include),
+                              Q_ARG(QStringList, m_skillPolicy.exclude),
+                              Q_ARG(bool, m_skillPolicy.set));
     QMetaObject::invokeMethod(m_worker, "initServers", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mcpConfig), Q_ARG(QString, m_cwd));
 }

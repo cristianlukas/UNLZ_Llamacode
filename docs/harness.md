@@ -28,6 +28,7 @@ Desde la implementación del plan modular, un perfil de agente es una
 | Módulo | Gobierna |
 |---|---|
 | `tools` | packs + include/exclude + gating de tools MCP |
+| `skills` | allowlist/denylist de skills portables por slug |
 | `prompt` | directivas built-in + directivas propias (.md) + `systemExtra` + tope de tamaño |
 | `loop` | créditos del governor, `sameCallLimit`, `failureSpiral`, `transportRetries`, watchdogs, idle de stream |
 | `context` | compactación (on/off + umbral + cola), poda, `keepLastImages`, read-dedup, preflight, warmup |
@@ -108,6 +109,9 @@ Presets de sistema: los cinco niveles históricos más **`agent-minimal`**
 (local-first duro: pocas tools, sin MCP, prompt ≤8000 chars, `sameCallLimit=2`,
 sin capturas) y **`agent-rpa`** (packs `core`+`rpa`, watchdog de 30 s, dos
 capturas de contexto, guardrail firme).
+
+El inventario estable de perfiles, roles de sala, motores, adapters y skills
+está en [`docs/agent-harness-inventory.md`](agent-harness-inventory.md).
 
 ---
 

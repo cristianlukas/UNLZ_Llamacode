@@ -142,6 +142,25 @@ HarnessToolsModule HarnessToolsModule::fromJson(const QJsonObject &o)
     return m;
 }
 
+QJsonObject HarnessSkillsModule::toJson() const
+{
+    return QJsonObject{{QStringLiteral("include"), fromStringList(include)},
+                       {QStringLiteral("exclude"), fromStringList(exclude)}};
+}
+
+HarnessSkillsModule HarnessSkillsModule::fromJson(const QJsonObject &o)
+{
+    HarnessSkillsModule m;
+    m.set = true;
+    m.include = toStringList(o.value(QStringLiteral("include")));
+    m.exclude = toStringList(o.value(QStringLiteral("exclude")));
+    for (QStringList *list : {&m.include, &m.exclude}) {
+        for (QString &slug : *list) slug = slug.trimmed().toLower();
+        list->removeDuplicates();
+    }
+    return m;
+}
+
 QJsonObject HarnessPromptModule::toJson() const
 {
     QJsonObject o;
@@ -412,7 +431,7 @@ HarnessProtocolModule HarnessProtocolModule::fromJson(const QJsonObject &o)
 bool HarnessSpec::isEmpty() const
 {
     return extends.isEmpty() && !runtime.set && !worker.set && !tools.set && !prompt.set && !loop.set && !context.set
-           && !permissions.set && !escalation.set && !protocol.set && !memory.set
+           && !skills.set && !permissions.set && !escalation.set && !protocol.set && !memory.set
            && !knowledge.set
            && !chat.set && phases.isEmpty();
 }
@@ -424,6 +443,7 @@ QJsonObject HarnessSpec::toJson() const
     if (runtime.set) o[QStringLiteral("runtime")] = runtime.toJson();
     if (worker.set) o[QStringLiteral("worker")] = worker.toJson();
     if (tools.set) o[QStringLiteral("tools")] = tools.toJson();
+    if (skills.set) o[QStringLiteral("skills")] = skills.toJson();
     if (prompt.set) o[QStringLiteral("prompt")] = prompt.toJson();
     if (loop.set) o[QStringLiteral("loop")] = loop.toJson();
     if (context.set) o[QStringLiteral("context")] = context.toJson();
@@ -452,6 +472,8 @@ HarnessSpec HarnessSpec::fromJson(const QJsonObject &o)
         s.worker = HarnessWorkerModule::fromJson(o.value(QStringLiteral("worker")).toObject());
     if (o.value(QStringLiteral("tools")).isObject())
         s.tools = HarnessToolsModule::fromJson(o.value(QStringLiteral("tools")).toObject());
+    if (o.value(QStringLiteral("skills")).isObject())
+        s.skills = HarnessSkillsModule::fromJson(o.value(QStringLiteral("skills")).toObject());
     if (o.value(QStringLiteral("prompt")).isObject())
         s.prompt = HarnessPromptModule::fromJson(o.value(QStringLiteral("prompt")).toObject());
     if (o.value(QStringLiteral("loop")).isObject())
@@ -489,6 +511,7 @@ HarnessSpec HarnessSpec::resolve(const HarnessSpec &base, const HarnessSpec &ove
     if (override.runtime.set) out.runtime = override.runtime;
     if (override.worker.set) out.worker = override.worker;
     if (override.tools.set) out.tools = override.tools;
+    if (override.skills.set) out.skills = override.skills;
     if (override.prompt.set) out.prompt = override.prompt;
     if (override.loop.set) out.loop = override.loop;
     if (override.context.set) out.context = override.context;
@@ -543,6 +566,8 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
     addDiff(out, "tools", "include", base.tools.include, tools.include);
     addDiff(out, "tools", "exclude", base.tools.exclude, tools.exclude);
     addDiff(out, "tools", "mcpTools", base.tools.mcpToolsEnabled, tools.mcpToolsEnabled);
+    addDiff(out, "skills", "include", base.skills.include, skills.include);
+    addDiff(out, "skills", "exclude", base.skills.exclude, skills.exclude);
 
     addDiff(out, "prompt", "builtin", base.prompt.builtin, prompt.builtin);
     addDiff(out, "prompt", "custom", base.prompt.custom, prompt.custom);
@@ -798,6 +823,16 @@ QStringList HarnessTools::disabledFrom(const QStringList &enabled)
     for (const QString &name : allToolNames())
         if (!on.contains(name)) out << name;
     return out;
+}
+
+bool HarnessSkills::allows(const HarnessSkillsModule &module, const QString &slug)
+{
+    const QString wanted = slug.trimmed().toLower();
+    if (wanted.isEmpty()) return false;
+    if (!module.set) return true;
+    const bool includeAll = module.include.contains(QStringLiteral("*"));
+    if (!includeAll && !module.include.contains(wanted)) return false;
+    return !module.exclude.contains(wanted);
 }
 
 int HarnessTools::approxTokens(const QStringList &enabled)
