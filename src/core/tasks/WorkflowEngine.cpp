@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 #include <QJsonArray>
+#include <QMetaType>
 #include <QRegularExpression>
 #include <QSet>
 
@@ -78,7 +79,12 @@ QString WorkflowEngine::nextStep(const QJsonObject &step, const QString &route)
 
 QString WorkflowEngine::resultVerdict(const QVariant &result)
 {
-    if (result.canConvert<QVariantMap>()) {
+    // Tipo EXACTO, no canConvert: un QVariant(QString) dice que si a
+    // QVariantMap/QVariantList (Qt ofrece conversiones laxas), asi que un
+    // "LC_GATE: PASS" con texto abajo entraba por la rama agregadora y salia
+    // "fail" en vez de llegar al regex de la primera linea.
+    const int typeId = result.metaType().id();
+    if (typeId == QMetaType::QVariantMap) {
         const QVariantMap map = result.toMap();
         if (!map.isEmpty()) {
             bool allPass = true;
@@ -90,7 +96,7 @@ QString WorkflowEngine::resultVerdict(const QVariant &result)
             return allPass ? QStringLiteral("pass") : QStringLiteral("fail");
         }
     }
-    if (result.canConvert<QVariantList>()) {
+    if (typeId == QMetaType::QVariantList || typeId == QMetaType::QStringList) {
         const QVariantList list = result.toList();
         if (!list.isEmpty()) {
             bool allPass = true;
