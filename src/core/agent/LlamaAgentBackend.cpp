@@ -6026,11 +6026,15 @@ QJsonArray LlamaAgentBackend::toolSchemas()
 // = costo aproximado del schema en el prompt (para estimar ahorro de contexto).
 QVariantList LlamaAgentBackend::toolCatalog()
 {
+    // fromUtf8, NO fromLatin1: los literales del catalogo llevan acentos
+    // ("Busqueda", "Revision", "Codigo", "Coordinacion") y el .cpp se compila con
+    // /utf-8. Decodificarlos como Latin-1 los partia en mojibake ("BAusqueda"),
+    // visible en los grupos de la UI de tools y en los packs del harness.
     auto mk = [](const char *name, const char *group, const char *desc, int tok) {
         return QVariantMap{
-            {QStringLiteral("name"), QString::fromLatin1(name)},
-            {QStringLiteral("group"), QString::fromLatin1(group)},
-            {QStringLiteral("description"), QString::fromLatin1(desc)},
+            {QStringLiteral("name"), QString::fromUtf8(name)},
+            {QStringLiteral("group"), QString::fromUtf8(group)},
+            {QStringLiteral("description"), QString::fromUtf8(desc)},
             {QStringLiteral("approxTokens"), tok}};
     };
     return QVariantList{

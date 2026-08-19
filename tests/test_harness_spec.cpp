@@ -38,6 +38,7 @@ private slots:
     void chain_cycleDoesNotHang();
     void packs_expandIncludeExcludeAndOrder();
     void packs_budgetAndDependencyWarnings();
+    void catalog_labelsAreNotMojibake();
     void permissions_guardrailOnlyDroppableInSuper();
     void permissions_scopeNeverWidens();
     void phases_patchOverridesResolvedSpec();
@@ -318,6 +319,36 @@ void HarnessSpecTests::packs_budgetAndDependencyWarnings()
 
 // Un perfil no puede desactivar el guardrail Zero-Autonomy "de costado": sólo
 // declarándose explícitamente en modo super.
+// Los grupos del catalogo llevan acentos y el .cpp se compila con /utf-8:
+// decodificarlos con fromLatin1 los parte en mojibake ("BAusqueda") y eso viaja
+// a la UI de tools y a los packs del harness. Un test lo fija porque el sintoma
+// es SOLO visual: nada falla, simplemente se lee mal.
+void HarnessSpecTests::catalog_labelsAreNotMojibake()
+{
+    const QChar mojibakeMarker(0x00C3);   // 'A' con tilde: firma del doble-encode
+    for (const QVariant &v : LlamaAgentBackend::toolCatalog()) {
+        const QVariantMap m = v.toMap();
+        for (const char *field : {"group", "description"}) {
+            const QString value = m.value(QString::fromLatin1(field)).toString();
+            QVERIFY2(!value.contains(mojibakeMarker),
+                     qPrintable(QStringLiteral("%1 de %2 con mojibake: %3")
+                                    .arg(QString::fromLatin1(field),
+                                         m.value(QStringLiteral("name")).toString(), value)));
+        }
+    }
+    for (const QVariant &v : HarnessTools::packCatalog()) {
+        const QVariantMap m = v.toMap();
+        QVERIFY2(!m.value(QStringLiteral("name")).toString().contains(mojibakeMarker),
+                 qPrintable(m.value(QStringLiteral("name")).toString()));
+    }
+    // Y los grupos acentuados siguen produciendo su pack con la clave sin tilde.
+    QStringList packKeys;
+    for (const QVariant &v : HarnessTools::packCatalog())
+        packKeys << v.toMap().value(QStringLiteral("key")).toString();
+    QVERIFY2(packKeys.contains(QStringLiteral("busqueda")),
+             qPrintable(packKeys.join(QLatin1Char(','))));
+}
+
 void HarnessSpecTests::permissions_guardrailOnlyDroppableInSuper()
 {
     QJsonObject sneaky{{QStringLiteral("approvalMode"), QStringLiteral("auto")},

@@ -8,9 +8,16 @@ Button {
     property string iconSource: ""
 
     contentItem: Item {
-        anchors.fill: parent
+        // El implicitWidth/Height TIENE que salir del contenido: un Item plano
+        // no lo deriva de sus hijos, asi que con `anchors.fill: parent` a secas
+        // valia 0 y TODOS los botones de la app median 24px de ancho. Donde el
+        // layout los estira (RowLayout + fillWidth) no se notaba; en un Flow de
+        // chips quedaban encimados y con el texto desbordado.
+        implicitWidth: contentRow.implicitWidth
+        implicitHeight: contentRow.implicitHeight
 
         Row {
+            id: contentRow
             anchors.centerIn: parent
             spacing: root.iconSource.length > 0 && root.text.length > 0 ? 5 : 0
 
