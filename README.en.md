@@ -635,6 +635,7 @@ A module to compare quants and profiles systematically: measures RAM, VRAM, spee
 
 1. In **Profiles**, mark each `LaunchProfile` you want to leave **For benchmark**;
    the mark persists as a queue of pending candidates.
+   Candidates from the profile matrix are pre-marked and can be cleared individually.
 2. In **Benchmark**, click **Select 🏆 benchmark (N)** to load all marked profiles
    at once, or select profiles manually.
 3. Pick a test mode: **Short** (~30 s) or **Full** (1–5 min).

@@ -950,6 +950,7 @@
       {
         "id": "sys-bench-48-tc-mtp-131k",
         "order": 85,
+        "benchmark": true,
         "displayName": "[bench 48GB MAX-Q] MTP 4 · 131k · visión",
         "runtime": {
           "ctx": 131072
@@ -1071,6 +1072,7 @@
       {
         "id": "sys-bench-48-kat-f16",
         "order": 88,
+        "benchmark": true,
         "displayName": "[bench 48GB KAT] KV q8_0 · 262k (cap de política)",
         "runtime": {
           "kv": "q8_0"
@@ -1210,6 +1212,7 @@
     "tier": "48GB-KAT",
     "order": 98,
     "extra": true,
+    "benchmark": true,
     "autoCompanion": false,
     "displayName": "EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k",
     "minVramGb": 24,
@@ -2278,6 +2281,7 @@
       {
         "id": "sys-bench-laguna-s-2-1-q2-48gb-64k-b1024",
         "order": 190,
+        "benchmark": true,
         "displayName": "[bench Laguna] Q2 · 64k · B1024 · U256",
         "runtime": {
           "ctx": 65536,
@@ -2289,6 +2293,7 @@
       {
         "id": "sys-bench-laguna-s-2-1-q2-48gb-100k-b1024",
         "order": 191,
+        "benchmark": true,
         "displayName": "[bench Laguna] Q2 · 100k · B1024 · U256",
         "runtime": {
           "batch": 1024,
@@ -2337,7 +2342,7 @@
     "tier": "48GB-Laguna-Experimental",
     "extra": true,
     "autoCompanion": false,
-    "benchmark": false,
+    "benchmark": true,
     "order": 5,
     "displayName": "BALANCE - Laguna S 2.1 · CUDA safe 64k",
     "chatTemplate": "laguna-tools-v24.jinja",
@@ -3014,12 +3019,12 @@
     "contextPresets": [32768, 65536, 131072],
     "benchmarkVariants": [
       { "id": "sys-48-antirez-dsv4-q2q4-0731-16k", "order": 146, "displayName": "[bench antirez] 16k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 16384, "batch": 2048, "ubatch": 256 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b2048", "order": 147, "displayName": "[bench antirez] 32k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b2048", "order": 147, "benchmark": true, "displayName": "[bench antirez] 32k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256 } },
       { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b4096", "order": 148, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512 } },
       { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b8192", "order": 149, "displayName": "[bench antirez stress] 32k · B8192 · U1024 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 1024 } },
       { "id": "sys-48-antirez-dsv4-q2q4-64k", "order": 150, "displayName": "[bench antirez] 64k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
       { "id": "sys-48-antirez-dsv4-q2q4-131k", "order": 151, "displayName": "[bench antirez stress] 131k · B4096 · U1024 · KV q4_0", "runtime": { "ctx": 131072, "batch": 4096, "ubatch": 1024 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-kv8", "order": 152, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q8_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-48-antirez-dsv4-q2q4-kv8", "order": 152, "benchmark": true, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q8_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-48-antirez-dsv4-q2q4-kvf16", "order": 153, "displayName": "[bench antirez stress] 32k · B4096 · U512 · KV q8_0 (cap de política)", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "La variante histórica KV f16 queda limitada a q8_0; los resultados anteriores con f16 no son comparables." },
       { "id": "sys-48-antirez-dsv4-q2q4-64k-kv8", "order": 154, "displayName": "[bench antirez stress] 64k · B4096 · U1024 · KV q8_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 1024, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-48-antirez-dsv4-q2q4-prefill", "order": 155, "displayName": "[bench antirez prefill] 32k · B8192 · U2048 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
@@ -3071,9 +3076,9 @@
     "minimumBinaryBuild": 10262,
     "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
-      { "id": "sys-bench-48-bigbang-base", "order": 150, "displayName": "[bench BigBang] 131k · sin MTP · KV q8_0", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware. La variante histórica usaba KV f16 y debe repetirse para comparar." },
+      { "id": "sys-bench-48-bigbang-base", "order": 150, "benchmark": true, "displayName": "[bench BigBang] 131k · sin MTP · KV q8_0", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware. La variante histórica usaba KV f16 y debe repetirse para comparar." },
       { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV q8_0", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+. KV limitado a q8_0 por política." },
-      { "id": "sys-bench-48-bigbang-fast", "order": 152, "displayName": "[bench BigBang] 131k · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
+      { "id": "sys-bench-48-bigbang-fast", "order": 152, "benchmark": true, "displayName": "[bench BigBang] 131k · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV q8_0", "runtime": { "ctx": 196608, "kv": "q8_0" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64 }, "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido conservado, pero con 64k/batch 256/ubatch 64: en 131k/batch 512 el primer prefill provoca CUDA invalid argument/illegal memory access con mmproj en esta GPU." },
       { "id": "sys-repair-48-bigbang-mtp", "order": 155, "displayName": "REPAIR - BigBang · MTP · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--temp": "0.70", "--top-p": "0.08", "--reasoning": "off", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "Copia de reparación para sys-bench-48-bigbang-mtp y sys-bench-48-bigbang-fast: conserva MTP, baja contexto/batch, usa KV q8_0 y reactiva Flash Attention. Los perfiles originales crashearon con flash off a 131k; no se sobrescriben." },
@@ -3118,16 +3123,16 @@
       { "id": "sys-bench-qwen38-udq4-mtp2", "order": 161, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Comparar con MAX-Q y ThinkingCap." },
       { "id": "sys-bench-qwen38-udq4-mtp4", "order": 162, "best": true, "displayName": "BALANCE - Qwen3.8 UD-Q4 MTP4", "extraArgOverrides": { "--spec-draft-n-max": "4" }, "comment": "Comparar decode y calidad sostenida contra MTP3." },
       { "id": "sys-bench-qwen38-udq4-mtp3-196k", "order": 163, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 196k · mmproj", "runtime": { "ctx": 196608 }, "comment": "Prueba de contexto largo con la misma visión." },
-      { "id": "sys-bench-qwen38-udq4-mtp2-64k", "order": 166, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
+      { "id": "sys-bench-qwen38-udq4-mtp2-64k", "order": 166, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
       { "id": "sys-bench-qwen38-udq4-mtp3-64k", "order": 167, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 64k · mmproj", "runtime": { "ctx": 65536 } },
       { "id": "sys-bench-qwen38-udq4-mtp4-64k", "order": 168, "displayName": "[bench Qwen3.8] UD-Q4 · MTP4 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" } },
-      { "id": "sys-bench-qwen38-udq4-mtp3-kv8", "order": 169, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
-      { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-kv8", "order": 169, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
-      { "id": "sys-bench-qwen38-udq4-post-262k-kv8", "order": 192, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8", "runtime": { "ctx": 262144, "batch": 2048, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Control llama.cpp inspirado en el post: contexto largo, batch alto y KV q8; no replica vLLM/FP8." },
-      { "id": "sys-bench-qwen38-udq4-post-mirror-160k", "order": 207, "displayName": "[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
-      { "id": "sys-bench-qwen38-udq4-post-b8192", "order": 193, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k", "runtime": { "batch": 8192, "ubatch": 512 }, "comment": "Control de max-num-batched-tokens 8192 usando los equivalentes llama.cpp batch/ubatch." },
-      { "id": "sys-bench-qwen38-udq4-post-parallel2", "order": 194, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
+      { "id": "sys-bench-qwen38-udq4-post-262k-kv8", "order": 192, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8", "runtime": { "ctx": 262144, "batch": 2048, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Control llama.cpp inspirado en el post: contexto largo, batch alto y KV q8; no replica vLLM/FP8." },
+      { "id": "sys-bench-qwen38-udq4-post-mirror-160k", "order": 207, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
+      { "id": "sys-bench-qwen38-udq4-post-b8192", "order": 193, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k", "runtime": { "batch": 8192, "ubatch": 512 }, "comment": "Control de max-num-batched-tokens 8192 usando los equivalentes llama.cpp batch/ubatch." },
+      { "id": "sys-bench-qwen38-udq4-post-parallel2", "order": 194, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-udq4-post-parallel4", "order": 195, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 4 slots · 131k", "runtime": { "parallelSlots": 4 }, "comment": "Mide throughput agregado con cuatro lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-udq4-post-parallel6", "order": 196, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 6 slots · 131k", "runtime": { "parallelSlots": 6 }, "comment": "Mide throughput agregado con seis lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-udq4-post-tensor", "order": 214, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · tensor split · 131k · MTP3", "extraArgOverrides": { "--split-mode": "tensor", "--tensor-split": "1,1" }, "comment": "A/B multi-GPU contra el reparto layer. Requiere dos GPUs compatibles; se mide como candidato y no cambia el perfil base." },
@@ -3148,7 +3153,7 @@
     "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"] }, "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768, 65536, 131072], "vision": true,
     "benchmarkVariants": [
       { "id": "sys-bench-qwen38-q4km-mtp2", "order": 172, "displayName": "[bench Qwen3.8] Q4_K_M · MTP2 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "2" } },
-      { "id": "sys-bench-qwen38-q4km-mtp4", "order": 173, "displayName": "[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "4" } },
+      { "id": "sys-bench-qwen38-q4km-mtp4", "order": 173, "benchmark": true, "displayName": "[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj", "extraArgOverrides": { "--spec-draft-n-max": "4" } },
       { "id": "sys-bench-qwen38-q4km-mtp2-64k", "order": 174, "displayName": "[bench Qwen3.8] Q4_K_M · MTP2 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "2" } },
       { "id": "sys-bench-qwen38-q4km-mtp3-64k", "order": 175, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 64k · mmproj", "runtime": { "ctx": 65536 } },
       { "id": "sys-bench-qwen38-q4km-mtp4-64k", "order": 176, "displayName": "[bench Qwen3.8] Q4_K_M · MTP4 · 64k · mmproj", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" } },
@@ -3156,7 +3161,7 @@
       { "id": "sys-bench-qwen38-q4km-mtp3-b1024", "order": 178, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-q4km-mtp3-b2048", "order": 179, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
       { "id": "sys-bench-qwen38-q4km-post-262k-kv8", "order": 197, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 262k · B2048/U512 · KV q8", "runtime": { "ctx": 262144, "batch": 2048, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Control llama.cpp inspirado en el post: contexto largo, batch alto y KV q8; no replica vLLM/FP8." },
-      { "id": "sys-bench-qwen38-q4km-post-mirror-160k", "order": 208, "displayName": "[bench Qwen3.8] Q4_K_M · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
+      { "id": "sys-bench-qwen38-q4km-post-mirror-160k", "order": 208, "benchmark": true, "displayName": "[bench Qwen3.8] Q4_K_M · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
       { "id": "sys-bench-qwen38-q4km-post-b8192", "order": 198, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · B8192/U512 · 131k", "runtime": { "batch": 8192, "ubatch": 512 }, "comment": "Control de max-num-batched-tokens 8192 usando los equivalentes llama.cpp batch/ubatch." },
       { "id": "sys-bench-qwen38-q4km-post-parallel2", "order": 199, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-q4km-post-parallel4", "order": 200, "displayName": "[bench Qwen3.8] Q4_K_M · MTP3 · 4 slots · 131k", "runtime": { "parallelSlots": 4 }, "comment": "Mide throughput agregado con cuatro lanes; no cambia el perfil base." },
@@ -3185,12 +3190,12 @@
       { "id": "sys-bench-qwen38-q5km-mtp3-b1024", "order": 187, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-q5km-mtp3-b2048", "order": 188, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
       { "id": "sys-bench-qwen38-q5km-post-262k-kv8", "order": 202, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 262k · B2048/U512 · KV q8", "runtime": { "ctx": 262144, "batch": 2048, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Control llama.cpp inspirado en el post: contexto largo, batch alto y KV q8; no replica vLLM/FP8." },
-      { "id": "sys-bench-qwen38-q5km-post-mirror-160k", "order": 209, "displayName": "[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
       { "id": "sys-bench-qwen38-q5km-post-b8192", "order": 203, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · B8192/U512 · 131k", "runtime": { "batch": 8192, "ubatch": 512 }, "comment": "Control de max-num-batched-tokens 8192 usando los equivalentes llama.cpp batch/ubatch." },
       { "id": "sys-bench-qwen38-q5km-post-parallel2", "order": 204, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-q5km-post-parallel4", "order": 205, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 4 slots · 131k", "runtime": { "parallelSlots": 4 }, "comment": "Mide throughput agregado con cuatro lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-q5km-post-parallel6", "order": 206, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 6 slots · 131k", "runtime": { "parallelSlots": 6 }, "comment": "Mide throughput agregado con seis lanes; no cambia el perfil base." },
-      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "benchmark": true, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-bench-qwen38-q5km-post-mirror-160k", "order": 209, "benchmark": true, "displayName": "[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
       { "id": "sys-bench-qwen38-q5km-mtp3-ngram", "order": 191, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia Q5_K_M que combina MTP3 y ngram." }
     ],
     "comment": "Variante de precisión: más peso y menos margen de KV. Diez perfiles candidatos por GGUF pasan HumanEval/0 antes de seleccionar tres para HumanEval/20."

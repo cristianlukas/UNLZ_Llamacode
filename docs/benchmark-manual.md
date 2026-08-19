@@ -37,6 +37,10 @@ sin ninguno de esos indicadores quedan archivados como referencia y no se
 ejecutan nuevamente. La promoción a `⚡ BEST` sigue requiriendo resultados y
 motivo registrados en el historial.
 
+El catálogo bundleado deja pre-marcadas como `🏆 BENCH` las candidatas explícitas
+de la matriz de perfiles, incluidas las variantes que todavía están pendientes de
+HE0. Se pueden desmarcar individualmente si una tanda no debe incluirlas.
+
 Toda tabla o exportación resumida debe conservar estas columnas, en este orden:
 `ID | Perfil | Agente | HE0 | HE20 | BCB | Tiempo HE0 | Tiempo HE20 |
 Tiempo BCB | TPS HE0 | TPS HE20 | TPS BCB | Visión | Drafter | Quant |

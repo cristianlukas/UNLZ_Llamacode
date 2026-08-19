@@ -1572,6 +1572,8 @@ artefacto de archivo por tarea.
 
 1. En **Perfiles**, marcar cada `LaunchProfile` que se quiera dejar **Para
    benchmark**; la marca queda persistida como cola de candidatos pendientes.
+   Las candidatas de la matriz de perfiles ya vienen pre-marcadas y se pueden
+   desmarcar individualmente.
 2. En **Benchmark**, pulsar **Seleccionar 🏆 benchmark (N)** para cargar todos
    los perfiles marcados de una vez, o seleccionar perfiles manualmente.
 3. Elegir modo de prueba: **Corta** (~30 s) o **Completa** (1–5 min).

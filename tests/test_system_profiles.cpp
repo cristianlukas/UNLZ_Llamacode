@@ -677,7 +677,7 @@ void SystemProfilesTests::bundle_lagunaIsOptInAndHardwareGated()
     QVERIFY2(!safe.isEmpty(), "falta la variante Laguna CUDA safe");
     QVERIFY(safe.value(QStringLiteral("extra")).toBool());
     QVERIFY(!safe.value(QStringLiteral("autoCompanion")).toBool());
-    QVERIFY(!safe.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(safe.value(QStringLiteral("benchmark")).toBool());
     QCOMPARE(safe.value(QStringLiteral("minVramGb")).toInt(), 48);
     QCOMPARE(safe.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10087);
     QCOMPARE(safe.value(QStringLiteral("model")).toObject(), model);
