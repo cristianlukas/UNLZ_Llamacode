@@ -13,6 +13,7 @@
 #include <QCoreApplication>
 #include <QTimer>
 #include <QSignalSpy>
+#include <QSet>
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/agent/IAgentBackend.h"
@@ -215,6 +216,7 @@ private slots:
     void importOllamaModelsIngestsStore();
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
     void bundledOneShottingBenchmarksAreSeparate();
+    void bundledHarnessContextAbBenchmarkIsValid();
     void importedBenchmarkNamesDescribeSubset();
     void tunerProfileNameUsesOptiPrefixWithoutChaining();
     void tunerGainPctNeedsBothLegs();
@@ -575,6 +577,53 @@ void AppControllerTests::bundledOneShottingBenchmarksAreSeparate()
                      .value(QStringLiteral("kind")).toString(),
                  QStringLiteral("one-shotting"));
         QCOMPARE(suite.value(QStringLiteral("prompts")).toArray().size(), 1);
+    }
+}
+
+void AppControllerTests::bundledHarnessContextAbBenchmarkIsValid()
+{
+    const QString root = QDir(QCoreApplication::applicationDirPath())
+        .filePath(QStringLiteral("../../assets/benchmarks/custom"));
+    QFile f(QDir(root).filePath(QStringLiteral("harness_context_tools_ab_v1.json")));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(f.readAll(), &error);
+    QCOMPARE(error.error, QJsonParseError::NoError);
+    const QJsonObject suite = doc.object();
+    QVERIFY(!suite.isEmpty());
+    QCOMPARE(suite.value(QStringLiteral("id")).toString(),
+             QStringLiteral("harness_context_tools_ab_v1"));
+    QCOMPARE(suite.value(QStringLiteral("bundledVersion")).toInt(), 1);
+    QCOMPARE(suite.value(QStringLiteral("recommendedPasses")).toInt(), 3);
+
+    const QJsonObject evaluation = suite.value(QStringLiteral("evaluation")).toObject();
+    QCOMPARE(evaluation.value(QStringLiteral("kind")).toString(),
+             QStringLiteral("harness-context-ab"));
+    QCOMPARE(evaluation.value(QStringLiteral("target")).toString(),
+             QStringLiteral("agent"));
+    const QJsonArray profiles = evaluation.value(QStringLiteral("compareAgentProfiles"))
+                                    .toArray();
+    QCOMPARE(profiles.size(), 3);
+    QCOMPARE(profiles.at(0).toString(), QStringLiteral("agent-chat"));
+    QCOMPARE(profiles.at(1).toString(), QStringLiteral("agent-intermedio"));
+    QCOMPARE(profiles.at(2).toString(), QStringLiteral("agent-maximo"));
+
+    const QJsonArray prompts = suite.value(QStringLiteral("prompts")).toArray();
+    QCOMPARE(prompts.size(), 3);
+    QSet<QString> ids;
+    for (const QJsonValue &value : prompts) {
+        const QJsonObject prompt = value.toObject();
+        const QString id = prompt.value(QStringLiteral("id")).toString();
+        QVERIFY(!id.isEmpty());
+        QVERIFY(!ids.contains(id));
+        ids.insert(id);
+        QVERIFY(!prompt.value(QStringLiteral("prompt")).toString().isEmpty());
+        const QJsonObject acceptance = prompt.value(QStringLiteral("acceptance")).toObject();
+        QCOMPARE(acceptance.value(QStringLiteral("graderType")).toString(),
+                 QStringLiteral("code_tests"));
+        QVERIFY(!acceptance.value(QStringLiteral("entryPoint")).toString().isEmpty());
+        QVERIFY(!acceptance.value(QStringLiteral("tests")).toString().isEmpty());
     }
 }
 
