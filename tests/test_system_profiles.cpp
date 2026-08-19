@@ -1539,7 +1539,8 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY2(!found.isEmpty(), qPrintable(id));
         QVERIFY(found.value("extra").toBool());
         QVERIFY(found.value("vision").toBool());
-        if (id == QStringLiteral("sys-qwen38-27b-q4km-131k"))
+        if (id == QStringLiteral("sys-qwen38-27b-q4km-131k") ||
+            id == QStringLiteral("sys-qwen38-27b-q5km-131k"))
             QVERIFY(found.value("benchmark").toBool());
         QCOMPARE(found.value("chatTemplate").toString(), QStringLiteral("qwen38-tools-fixed.jinja"));
         const QJsonObject model = found.value("model").toObject();
@@ -1551,6 +1552,19 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
         const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 19 : 16;
         QCOMPARE(variants.size(), expectedVariantCount); // variantes base, controles del post, espejo y MTP+ngram
+        if (id == QStringLiteral("sys-qwen38-27b-udq4-131k")) {
+            bool ngramQueued = false;
+            for (const QJsonValue &variant : variants) {
+                const QJsonObject variantObject = variant.toObject();
+                if (variantObject.value(QStringLiteral("id")).toString() ==
+                    QStringLiteral("sys-bench-qwen38-udq4-mtp3-ngram")) {
+                    ngramQueued = true;
+                    QVERIFY(variantObject.value(QStringLiteral("benchmark")).toBool());
+                    break;
+                }
+            }
+            QVERIFY(ngramQueued);
+        }
         QSet<QString> variantIds;
         const QVariantMap baseLaunch = pm.getLaunchProfile(id);
         QVERIFY2(!baseLaunch.isEmpty(), qPrintable(id));
