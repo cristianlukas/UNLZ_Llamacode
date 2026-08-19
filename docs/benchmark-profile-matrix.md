@@ -264,6 +264,10 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench Laguna] Q2 · 64k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-64k-b1024`) | BALANCE - Laguna S 2.1 | Reducir KV y batch para salir del bucle de evaluación | ctx 65k; B1024/U256 | HE0 → HE20 → BCB |
 | `[bench Laguna] Q2 · 100k · B1024 · U256` (`sys-bench-laguna-s-2-1-q2-48gb-100k-b1024`) | BALANCE - Laguna S 2.1 | Aislar batch como causa manteniendo el contexto histórico | B1024/U256; ctx 100k | HE0 → HE20 → BCB |
 | `BALANCE - Laguna S 2.1 · CUDA safe 64k` (`sys-laguna-s-2-1-q2-48gb-safe`) | BALANCE - Laguna S 2.1 | Evitar la ruta inestable de fit y reducir presión de KV/prefill; Flash on es obligatorio para V-cache q4_0 | ctx 65k; B256/U64; fit off; Flash on; tensor-split 1,1; 32 expertos CPU | HE0 → HE20 → BCB |
+| `[bench Laguna 24GB] 32k · template oficial · thinking OFF` (`sys-bench-laguna-s-2-1-q2-24gb-32k-official`) | Laguna S 2.1 Q2 | A/B contra el template v24 en GPU+RAM; aislar template con contexto y batch conservadores | ctx 32k; B512/U128; template oficial; thinking OFF | HE0 → HE20 → BCB |
+| `[bench Laguna 24GB] 32k · template v24 · thinking OFF` (`sys-bench-laguna-s-2-1-q2-24gb-32k-v24`) | Laguna S 2.1 Q2 | Control del A/B de template en GPU+RAM | ctx 32k; B512/U128; template v24; thinking OFF | HE0 → HE20 → BCB |
+| `[bench Laguna 48GB] 32k · template oficial · thinking OFF` (`sys-bench-laguna-s-2-1-q2-48gb-32k-official`) | Laguna S 2.1 Q2 | A/B principal contra v24 en 2× RTX 3090; aislar template con la misma quant y reparto | ctx 32k; B512/U64; template oficial; thinking OFF; split 1,1 | HE0 → HE20 → BCB |
+| `[bench Laguna 48GB] 32k · template v24 · thinking OFF` (`sys-bench-laguna-s-2-1-q2-48gb-32k-v24`) | Laguna S 2.1 Q2 | Control del A/B principal con template v24 | ctx 32k; B512/U64; template v24; thinking OFF; split 1,1 | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B2048 · U256 · KV q4_0` (`sys-48-antirez-dsv4-q2q4-0731-32k-b2048`) | QUALITY - DeepSeek Fusion leloch | Bajar contexto/batch para mejorar estabilidad sin repartir capas base | ctx 32k; B2048/U256; `tensor-split 1,0` | HE0 → HE20 → BCB |
 | `[bench antirez] 32k · B4096 · U512 · KV q8_0` (`sys-48-antirez-dsv4-q2q4-kv8`) | QUALITY - DeepSeek Fusion leloch | KV q8 puede mejorar calidad sostenida; medir coste real | ctx 32k; KV K/V q8_0 | HE0 → HE20 → BCB |
 | `[bench NInfer] Qwen3.6-27B · texto` (`sys-ninfer3090-qwen27`) | NInfer-3090 · Qwen3.6-27B · texto | Comparar backend nativo contra los candidatos llama.cpp | ctx 4k; B512/U128; KV int8; MTP2 | HE0 → HE20 → BCB |
@@ -313,6 +317,10 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` | — | 58,638 s | — | Infraestructura: server-load |
 | `[bench BigBang] 131k · sin MTP · KV q8_0` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
 | `[bench 48GB MAX-Q] MTP4 · 131k · visión` | 1/1 | 11,498 s | 58,02 | Válido |
+| `[bench Laguna 24GB] 32k · template oficial · thinking OFF` | Pendiente | — | — | Pendiente de HE0; comparar contra la variante v24 de 24 GB |
+| `[bench Laguna 24GB] 32k · template v24 · thinking OFF` | Pendiente | — | — | Pendiente de HE0; control de 24 GB |
+| `[bench Laguna 48GB] 32k · template oficial · thinking OFF` | Pendiente | — | — | Pendiente de HE0; comparar contra la variante v24 de 48 GB |
+| `[bench Laguna 48GB] 32k · template v24 · thinking OFF` | Pendiente | — | — | Pendiente de HE0; control de 48 GB |
 | `[bench Laguna] Q2 · 64k · B1024 · U256` | 1/1 | 15,004 s | 51,46 | Válido |
 | `[bench Laguna] Q2 · 100k · B1024 · U256` | 1/1 | 13,961 s | 51,99 | Válido |
 | `BALANCE - Laguna S 2.1 · CUDA safe 64k` | 1/1 | 150,127 s | — | Válido; carga estable sin illegal access; el tiempo incluye cold start del agente |
