@@ -1447,7 +1447,7 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        QCOMPARE(variants.size(), 15); // variantes base, MTP+ngram y controles inspirados en el post
+        QCOMPARE(variants.size(), 16); // variantes base, MTP+ngram, controles y espejo del post
         QSet<QString> variantIds;
         const QVariantMap baseLaunch = pm.getLaunchProfile(id);
         QVERIFY2(!baseLaunch.isEmpty(), qPrintable(id));
@@ -1499,6 +1499,17 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY2(!longVariant.isEmpty(), qPrintable(variantPrefix + QStringLiteral("post-262k-kv8")));
         QCOMPARE(longVariant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("ctx")).toInt(), 262144);
         QCOMPARE(longVariant.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("kv")).toString(), QStringLiteral("q8_0"));
+        const QJsonObject mirrorVariant = findVariant(variantPrefix + QStringLiteral("post-mirror-160k"));
+        QVERIFY2(!mirrorVariant.isEmpty(), qPrintable(variantPrefix + QStringLiteral("post-mirror-160k")));
+        const QJsonObject mirrorRuntime = mirrorVariant.value(QStringLiteral("runtime")).toObject();
+        QCOMPARE(mirrorRuntime.value(QStringLiteral("ctx")).toInt(), 160927);
+        QCOMPARE(mirrorRuntime.value(QStringLiteral("batch")).toInt(), 2048);
+        QCOMPARE(mirrorRuntime.value(QStringLiteral("ubatch")).toInt(), 512);
+        QCOMPARE(mirrorRuntime.value(QStringLiteral("kv")).toString(), QStringLiteral("q4_0"));
+        const QJsonObject mirrorOverrides =
+            mirrorVariant.value(QStringLiteral("extraArgOverrides")).toObject();
+        QCOMPARE(mirrorOverrides.value(QStringLiteral("--spec-draft-n-max")).toString(),
+                 QStringLiteral("2"));
         // El mmproj se resuelve desde model.mmprojFile al escanear el catálogo;
         // no debe exigirse como ruta absoluta en el bundle declarativo.
     }

@@ -226,6 +226,12 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` (`sys-bench-qwen38-udq4-mtp3-kv8`) | BALANCE - Qwen3.8 UD-Q4 visión | KV q8 puede sostener mejor contexto y calidad | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` (`sys-bench-qwen38-q4km-mtp4`) | Qwen3.8-27B Q4_K_M visión | Comparar MTP4 sin cambiar quant/contexto | MTP4 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` (`sys-bench-qwen38-q5km-mtp3-64k-kv8`) | Qwen3.8-27B Q5_K_M visión | Más precisión/KV puede mejorar BCB a costa de velocidad | ctx 65k; KV q8_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512` (`sys-bench-qwen38-udq4-post-mirror-160k`) | BALANCE - Qwen3.8 UD-Q4 visión | Reproducir el load screen del post en llama.cpp manteniendo el mismo modelo/template | ctx 160927; MTP2; B2048/U512; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] Q4_K_M · espejo post · 160,9k · MTP2 · B2048/U512` (`sys-bench-qwen38-q4km-post-mirror-160k`) | Qwen3.8-27B Q4_K_M visión | Separar el efecto de la quant del modelo del resto de la receta espejo | ctx 160927; MTP2; B2048/U512; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512` (`sys-bench-qwen38-q5km-post-mirror-160k`) | Qwen3.8-27B Q5_K_M visión | Medir si el margen de calidad de Q5 compensa el costo de VRAM a igual receta | ctx 160927; MTP2; B2048/U512; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8` (`sys-bench-qwen38-udq4-post-262k-kv8`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir el extremo de contexto largo con KV q8, equivalente al control de comentarios del post | ctx 262k; MTP3; B2048/U512; KV q8_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k` (`sys-bench-qwen38-udq4-post-b8192`) | BALANCE - Qwen3.8 UD-Q4 visión | Aislar el batch total alto del post sin cambiar modelo ni contexto | ctx 131k; MTP3; B8192/U512; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k` (`sys-bench-qwen38-udq4-post-parallel2`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir throughput agregado con dos solicitudes concurrentes; no usar para comparar decode de una sola solicitud | ctx 131k; MTP3; 2 slots; KV q4_0 | HE0 → HE20 → BCB |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k` (`sys-kat3-mtp-262k`) | FAST - KAT2-Coder-7-8-26 | Probar MTP embebido APEX sin alterar KAT2; texto-only | APEX I-Compact; ctx 262k; B512/U64; KV q8_0; MTP4; requiere descargar el GGUF | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
@@ -248,6 +254,12 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` | 1/1 | 12,925 s | 57,87 | Válido |
 | `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` | 1/1 | 12,968 s | 45,38 | Válido |
 | `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` | 1/1 | 14,982 s | 52,48 | Válido |
+| `[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] Q4_K_M · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k` | Pendiente | — | — | Pendiente de HE0 |
+| `[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` | — | 58,638 s | — | Infraestructura: server-load |
 | `[bench BigBang] 131k · sin MTP · KV q8_0` | Pendiente | — | — | Resultado histórico con f16 archivado; repetir con q8_0 |
