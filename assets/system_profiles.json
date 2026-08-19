@@ -3144,7 +3144,7 @@
   },
   {
     "id": "sys-qwen38-27b-q4km-131k",
-    "tier": "24GB-Qwen38-Vision", "order": 164, "extra": true, "best": true, "autoCompanion": false,
+    "tier": "24GB-Qwen38-Vision", "order": 164, "extra": true, "best": true, "benchmark": true, "autoCompanion": false,
     "displayName": "[experimental 24GB] Qwen3.8-27B Q4_K_M · MTP · visión · 131k",
     "minVramGb": 24, "minRamGb": 32, "cpuOk": false, "folder": "Qwen3.8-27B-GGUF-Q4_K_M", "agentProfileId": "agent-maximo", "chatTemplate": "qwen38-tools-fixed.jinja",
     "model": { "repo": "unsloth/Qwen3.8-27B-GGUF", "file": "Qwen3.8-27B-Q4_K_M.gguf", "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF", "mmprojFile": "mmproj-BF16.gguf", "quant": "Q4_K_M" },

@@ -1539,6 +1539,8 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY2(!found.isEmpty(), qPrintable(id));
         QVERIFY(found.value("extra").toBool());
         QVERIFY(found.value("vision").toBool());
+        if (id == QStringLiteral("sys-qwen38-27b-q4km-131k"))
+            QVERIFY(found.value("benchmark").toBool());
         QCOMPARE(found.value("chatTemplate").toString(), QStringLiteral("qwen38-tools-fixed.jinja"));
         const QJsonObject model = found.value("model").toObject();
         QCOMPARE(model.value("repo").toString(), QStringLiteral("unsloth/Qwen3.8-27B-GGUF"));
