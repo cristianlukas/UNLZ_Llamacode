@@ -1,10 +1,16 @@
 # Habilidades portables
 
-LlamaCode incluye seis habilidades científicas versionadas y descubre habilidades
-declarativas adicionales sin inyectar todas sus instrucciones
+LlamaCode incluye habilidades científicas y de coding versionadas, y descubre
+habilidades declarativas adicionales sin inyectar todas sus instrucciones
 en el contexto. El agente recibe sólo nombre, alcance y descripción mediante
 `skill_list`; cuando una habilidad es relevante usa `skill_load` para leer el
 cuerpo completo.
+
+La habilidad bundled `autoprompt-coding` formaliza el loop de alcance, plan,
+implementación, pruebas, revisión y reparación acotada. Su contrato `LC_GATE`
+permite que un runner o una revisión humana distinga éxito verificable, fallo y
+bloqueo externo. El preset nativo `autoprompt` de Tasks aplica el mismo contrato
+con persistencia de estado y ramas read-only.
 
 ## Ubicaciones
 

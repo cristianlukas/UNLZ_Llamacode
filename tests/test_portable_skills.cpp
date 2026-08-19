@@ -74,6 +74,7 @@ void PortableSkillsTests::bundledScientificPackIsValid()
 {
     const QVariantList skills = PortableSkillStore::list();
     const QStringList expected{
+        QStringLiteral("autoprompt-coding"),
         QStringLiteral("literature-review"),
         QStringLiteral("critical-paper-reading"),
         QStringLiteral("experimental-design"),
@@ -90,6 +91,10 @@ void PortableSkillsTests::bundledScientificPackIsValid()
                  QStringLiteral("bundled"));
         QVERIFY(PortableSkillStore::load(name).value(QStringLiteral("ok")).toBool());
     }
+
+    const QVariantMap autoprompt = PortableSkillStore::load(QStringLiteral("autoprompt-coding"));
+    QVERIFY(autoprompt.value(QStringLiteral("instructions")).toString().contains(
+        QStringLiteral("LC_GATE: PASS")));
 }
 
 QTEST_GUILESS_MAIN(PortableSkillsTests)
