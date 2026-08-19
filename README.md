@@ -1919,9 +1919,10 @@ progresiva: mantiene sólo nombre y descripción en el catálogo y abre las
 instrucciones completas cuando resultan relevantes. Las habilidades del proyecto
 en `.llamacode/skills/` pueden reemplazar una global del mismo nombre, pero nunca
 amplían los permisos de tools ni el confinamiento. La vista **Agente → Skills**
-permite inspeccionarlas. El ejecutable incluye seis skills científicos iniciales:
-revisión bibliográfica, lectura crítica, diseño experimental, verificación de
-citas, revisión por pares y análisis reproducible. Formato, límites y ejemplo en
+permite inspeccionarlas. El ejecutable incluye siete skills iniciales:
+autoprompt-coding, revisión bibliográfica, lectura crítica, diseño experimental,
+verificación de citas, revisión por pares y análisis reproducible. Formato,
+límites y ejemplo en
 [`docs/skills.md`](docs/skills.md).
 
 Las sesiones del agente nativo forman un árbol persistente: una rama conserva

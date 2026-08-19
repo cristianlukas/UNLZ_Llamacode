@@ -23,7 +23,7 @@ en [`agent-harness-inventory.md`](agent-harness-inventory.md).
 
 - Global: `AppLocalData/LlamaCode/skills/<nombre>/SKILL.md`
 - Proyecto: `<workspace>/.llamacode/skills/<nombre>/SKILL.md`
-- Bundled: seis habilidades científicas incluidas en el ejecutable.
+- Bundled: siete habilidades de coding y científicas incluidas en el ejecutable.
 
 La precedencia es proyecto → global → bundled. El nombre
 debe estar en kebab-case, coincidir con la carpeta y tener hasta 64 caracteres.
