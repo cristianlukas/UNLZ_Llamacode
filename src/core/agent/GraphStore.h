@@ -62,6 +62,20 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
              double conf = -1.0, const QString &prov = QStringLiteral("llm"),
              const SourceRefs &sources = {});
 
+// Registra una relación inferida por una tool real: módulo/directorio tocado
+// -> archivo. La relación queda unreviewed y con provenance="tool"; no se
+// presenta como una decisión confirmada del usuario.
+QString inferToolTouch(const QString &cwd, const QString &tool,
+                       const QString &path, const QString &sessionId = QString(),
+                       const QString &correlationId = QString());
+
+// Conecta decisiones y bugs consolidados cuando comparten vocabulario de
+// proyecto. Devuelve cuántos edges inferidos agregó.
+int inferConsolidationLinks(const QString &cwd,
+                            const QVector<QPair<QString, QString>> &facts,
+                            const QString &sessionId = QString(),
+                            const QString &correlationId = QString());
+
 // Una relación tipada para inserción masiva.
 struct Triple {
     QString subj, pred, obj;

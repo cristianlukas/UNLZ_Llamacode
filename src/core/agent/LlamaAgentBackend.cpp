@@ -6,6 +6,7 @@
 #include "ProjectBrain.h"
 #include "CodeGraphIndexer.h"
 #include "KnowledgePacket.h"
+#include "GraphStore.h"
 #include "SubAgentRunner.h"
 #include "AgentEfficiency.h"
 #include "AgentEventLog.h"
@@ -1071,24 +1072,60 @@ void LlamaAgentBackend::consolidateMemory(bool recoveredSkill)
         if (facts.isEmpty()) return;
 
         int saved = 0;
+        int discarded = 0;
+        int partial = 0;
+        QVector<QPair<QString, QString>> acceptedFacts;
         for (const QJsonValue &fv : facts) {
             const QJsonObject f = fv.toObject();
             const QString content = f.value(QStringLiteral("content")).toString().trimmed();
             if (content.isEmpty()) continue;
-            MemoryStore::save(cwd, content,
-                              f.value(QStringLiteral("scope")).toString(QStringLiteral("project")),
-                              f.value(QStringLiteral("type")).toString(QStringLiteral("fact")),
-                              f.value(QStringLiteral("confidence")).toDouble(0.6),
-                              f.value(QStringLiteral("type")).toString() == QLatin1String("skill")
-                                  ? QStringLiteral("recovery_learning")
-                                  : QStringLiteral("consolidation"),
+            const QString scope = f.value(QStringLiteral("scope"))
+                                      .toString(QStringLiteral("project")).trimmed().toLower();
+            const QString type = f.value(QStringLiteral("type"))
+                                     .toString(QStringLiteral("fact")).trimmed().toLower();
+            const QString modelVerification = f.value(QStringLiteral("verification"))
+                                                  .toString(QStringLiteral("inferred"))
+                                                  .trimmed().toLower();
+            const QVector<MemoryStore::ClaimEvidence> evidence =
+                MemoryStore::verifyClaims(cwd, QStringList{content}, cwd, 8000);
+            const MemoryStore::ClaimEvidence proof = evidence.isEmpty()
+                ? MemoryStore::ClaimEvidence{}
+                : evidence.first();
+            const bool trusted = modelVerification == QLatin1String("user")
+                || modelVerification == QLatin1String("test")
+                || modelVerification == QLatin1String("tool");
+            if (!trusted && proof.status == QLatin1String("unaccredited")) {
+                ++discarded;
+                continue;
+            }
+
+            double confidence = f.value(QStringLiteral("confidence")).toDouble(0.6);
+            QString verification = modelVerification;
+            QString source = type == QLatin1String("skill")
+                ? QStringLiteral("recovery_learning") : QStringLiteral("consolidation");
+            if (!trusted) {
+                if (proof.status == QLatin1String("partial")) {
+                    confidence = qMin(confidence <= 0.0 ? 0.6 : confidence, 0.55);
+                    ++partial;
+                } else if (proof.status == QLatin1String("accredited")) {
+                    confidence = qMax(confidence, 0.65);
+                    verification = QStringLiteral("tool");
+                    source += QStringLiteral("+verify_claims");
+                }
+            }
+            MemoryStore::save(cwd, content, scope, type, confidence, source,
                               f.value(QStringLiteral("importance")).toDouble(0.0),
                               f.value(QStringLiteral("surprise")).toDouble(0.0),
-                              f.value(QStringLiteral("verification")).toString(QStringLiteral("inferred")));
+                              verification);
+            acceptedFacts.append({type, content});
             if (++saved >= 10) break;
         }
-        if (saved > 0)
-            emit logAppended(QStringLiteral("[memoria consolidada: +%1 hecho(s) durables]\n").arg(saved));
+        const int inferredLinks = GraphStore::inferConsolidationLinks(
+            cwd, acceptedFacts, sid, m_correlationId);
+        if (saved > 0 || discarded > 0)
+            emit logAppended(QStringLiteral(
+                "[memoria consolidada: +%1 hecho(s), %2 descartado(s), %3 parcial(es), %4 edge(s) inferido(s)]\n")
+                                 .arg(saved).arg(discarded).arg(partial).arg(inferredLinks));
     });
 }
 
@@ -4085,7 +4122,13 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             const QVariantMap contextState = ContextIndex::refresh(m_cwd, QStringList{path});
             QString report;
             CodeGraphIndexer::reindexFiles(m_cwd, QStringList{path}, {}, &report);
+            const QString graphInference = GraphStore::inferToolTouch(
+                m_cwd, name, path, m_sessionId,
+                result.value(QStringLiteral("correlationId")).toString().isEmpty()
+                    ? m_correlationId
+                    : result.value(QStringLiteral("correlationId")).toString());
             emit logAppended(QStringLiteral("[preflight: índices resincronizados tras %1]\n").arg(path));
+            emit logAppended(graphInference + QLatin1Char('\n'));
             AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                                   QJsonObject{{QStringLiteral("source"), QStringLiteral("context_resync")},
                                               {QStringLiteral("path"), path},
@@ -6378,8 +6421,7 @@ void LlamaAgentBackend::startHarnessWorker()
 void LlamaAgentBackend::stopHarnessWorker()
 {
     m_harnessWorkerReady = false;
-    m_workerCapabilityCalls.clear();
-    m_workerCapabilityNames.clear();
+    failWorkerCapabilities(QStringLiteral("worker stopped by the host"));
     if (!m_harnessWorker) {
         m_externalWorkerCalls.clear();
         m_externalWorkerDescriptions.clear();
@@ -6391,6 +6433,19 @@ void LlamaAgentBackend::stopHarnessWorker()
     m_harnessWorker = nullptr;
     m_externalWorkerCalls.clear();
     m_externalWorkerDescriptions.clear();
+}
+
+void LlamaAgentBackend::failWorkerCapabilities(const QString &reason)
+{
+    if (m_harnessWorker) {
+        const auto pending = m_workerCapabilityCalls;
+        for (auto it = pending.cbegin(); it != pending.cend(); ++it) {
+            m_harnessWorker->respondCapabilityCall(
+                it.value(), {}, QStringLiteral("capability_host_unavailable"), reason);
+        }
+    }
+    m_workerCapabilityCalls.clear();
+    m_workerCapabilityNames.clear();
 }
 
 void LlamaAgentBackend::failExternalWorkerCalls(const QString &reason)
@@ -6456,6 +6511,7 @@ void LlamaAgentBackend::onHarnessWorkerError(const QString &message)
 {
     m_harnessWorkerReady = false;
     emit logAppended(QStringLiteral("[harness worker error: %1]\n").arg(message));
+    failWorkerCapabilities(message);
     if (!m_externalWorkerCalls.isEmpty()) {
         failExternalWorkerCalls(QStringLiteral(
             "[worker externo falló antes de devolver un resultado: %1]").arg(message));

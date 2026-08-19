@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QCryptographicHash>
 #include <QHash>
+#include <QRegularExpression>
 #include <QSet>
 #include <QStringList>
 #include <QVector>
@@ -237,6 +238,91 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
     if (!evidence.isEmpty()) relation.insert(QStringLiteral("sources"), evidence);
     appendObj(path, relation);
     return QStringLiteral("[relación creada · %1 -[%2]-> %3]").arg(s, et, o);
+}
+
+QString inferToolTouch(const QString &cwd, const QString &tool,
+                       const QString &path, const QString &sessionId,
+                       const QString &correlationId)
+{
+    QString rel = QDir::fromNativeSeparators(path.trimmed());
+    if (rel.isEmpty()) return QStringLiteral("[graph infer: path vacío]");
+    if (QDir::isAbsolutePath(rel))
+        rel = QDir::fromNativeSeparators(QDir(cwd).relativeFilePath(rel));
+    rel = QDir::cleanPath(rel);
+    if (rel.isEmpty() || rel == QLatin1String(".") || rel == QLatin1String("..")
+        || rel.startsWith(QLatin1String("../")))
+        return QStringLiteral("[graph infer: path fuera del proyecto]");
+
+    const int slash = rel.lastIndexOf(QLatin1Char('/'));
+    const QString dir = slash > 0 ? rel.left(slash) : QStringLiteral("project");
+    const QString module = QStringLiteral("module:%1").arg(dir);
+    addEntity(cwd, module, QStringLiteral("module"));
+    addEntity(cwd, rel, QStringLiteral("file"));
+
+    SourceRef source;
+    source.path = rel;
+    source.kind = QStringLiteral("session");
+    source.sessionId = sessionId;
+    source.correlationId = correlationId;
+    QFile file(QDir(cwd).absoluteFilePath(rel));
+    if (file.open(QIODevice::ReadOnly)) {
+        source.sha256 = QString::fromLatin1(
+            QCryptographicHash::hash(file.readAll(), QCryptographicHash::Sha256).toHex());
+    }
+    const QString result = link(cwd, module, QStringLiteral("touches"), rel,
+                                QStringLiteral("RELATES_TO"), -1.0,
+                                tool.trimmed().isEmpty() ? QStringLiteral("tool")
+                                                          : QStringLiteral("tool"),
+                                SourceRefs{source});
+    return QStringLiteral("[graph infer tool=%1] %2").arg(
+        tool.trimmed().isEmpty() ? QStringLiteral("unknown") : tool.trimmed(), result);
+}
+
+int inferConsolidationLinks(const QString &cwd,
+                            const QVector<QPair<QString, QString>> &facts,
+                            const QString &sessionId,
+                            const QString &correlationId)
+{
+    struct Fact { QString type; QString content; QString entity; QSet<QString> terms; };
+    QVector<Fact> decisions;
+    QVector<Fact> bugs;
+    for (const auto &raw : facts) {
+        const QString type = norm(raw.first);
+        if (type != QLatin1String("decision") && type != QLatin1String("bug")) continue;
+        const QString content = raw.second.trimmed();
+        if (content.isEmpty()) continue;
+        const QByteArray hash = QCryptographicHash::hash(content.toUtf8(), QCryptographicHash::Sha1);
+        Fact fact{type, content,
+                  QStringLiteral("%1:%2 · %3").arg(type, QString::fromLatin1(hash.toHex().left(10)),
+                                                      content.left(120)), {}};
+        for (const QString &term : content.toLower().split(
+                 QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_]+")), Qt::SkipEmptyParts)) {
+            if (term.size() >= 4) fact.terms.insert(term);
+        }
+        addEntity(cwd, fact.entity, type);
+        if (type == QLatin1String("decision")) decisions.append(fact);
+        else bugs.append(fact);
+    }
+
+    int added = 0;
+    for (const Fact &decision : decisions) {
+        for (const Fact &bug : bugs) {
+            QSet<QString> shared = decision.terms;
+            shared.intersect(bug.terms);
+            if (shared.isEmpty()) continue;
+            SourceRef source;
+            source.kind = QStringLiteral("session");
+            source.sessionId = sessionId;
+            source.correlationId = correlationId;
+            const QString result = link(cwd, decision.entity, QStringLiteral("relates_to"),
+                                        bug.entity, QStringLiteral("RELATES_TO"), -1.0,
+                                        QStringLiteral("consolidation"), SourceRefs{source});
+            if (!result.contains(QStringLiteral("ya existe"))
+                && !result.startsWith(QStringLiteral("[graph")))
+                ++added;
+        }
+    }
+    return added;
 }
 
 QString reviewRelation(const QString &cwd, const QString &subj, const QString &pred,

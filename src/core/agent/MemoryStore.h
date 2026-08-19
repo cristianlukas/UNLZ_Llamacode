@@ -1,6 +1,7 @@
 #pragma once
 #include <QString>
 #include <QStringList>
+#include <QVector>
 
 // Memoria PERSISTENTE por capas para el agente. Hechos atómicos con metadata,
 // guardados como JSONL en <cwd>/.llamacode/memory.jsonl (un objeto por línea).
@@ -15,6 +16,16 @@
 // type: preference | decision | fact | bug | skill | other. `skill` representa
 // un procedimiento reutilizable aprendido tras resolver una dificultad real.
 namespace MemoryStore {
+
+// Resultado compartido por la tool `verify_claims` y el gate de consolidación.
+// coverage es la proporción de términos de la afirmación encontrados en un
+// único fragmento del repo o de la memoria estructurada.
+struct ClaimEvidence {
+    QString claim;
+    QString status;       // accredited | partial | unaccredited
+    QString where;
+    double coverage = 0.0;
+};
 
 // Ruta del JSONL estructurado para un cwd dado.
 QString jsonlPath(const QString &cwd);
@@ -32,6 +43,11 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
 // keywords + sesgo por confianza y recencia; si scope != "", filtra por capa.
 // Devuelve top-k formateado (markdown) con id y provenance.
 QString recall(const QString &cwd, const QString &query, const QString &scope, int k);
+
+// Verifica afirmaciones contra el repo y la memoria. root puede limitar la
+// búsqueda a un subdirectorio del proyecto; vacío usa cwd.
+QVector<ClaimEvidence> verifyClaims(const QString &cwd, const QStringList &claims,
+                                    const QString &root = QString(), int maxFiles = 8000);
 
 // OLVIDO: marca como obsoletos (o borra) los hechos que matchean 'query'
 // (keywords sobre content) y/o 'scope'. mode='stale' (default, conserva

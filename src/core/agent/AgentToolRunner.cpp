@@ -2708,46 +2708,19 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString rootAbs = resolve(normalizeToolPath(args.value(QStringLiteral("path")).toString()));
         if (!inProject(rootAbs)) return outsideMsg(rootAbs);
 
-        // Corpus: archivos de texto del proyecto + memoria estructurada.
-        QStringList files;
-        collectFiles(rootAbs, files, 8000);
-        const QString memAll = MemoryStore::recall(cwd, QString(), QString(), 30);
-
         QStringList report;
-        for (const QString &claim : claims) {
-            QStringList terms;
-            for (const QString &t : claim.toLower().split(
-                     QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_]+")), Qt::SkipEmptyParts))
-                if (t.size() >= 3 && !terms.contains(t)) terms << t;
-            if (terms.isEmpty()) { report << QStringLiteral("[NO ACREDITADO] %1").arg(claim); continue; }
-
-            // Buscar la mejor cobertura de términos en un único fragmento.
-            double best = 0; QString where;
-            auto scan = [&](const QString &rel, const QString &text) {
-                const QString low = text.toLower();
-                int hit = 0;
-                for (const QString &t : terms) if (low.contains(t)) ++hit;
-                const double cov = double(hit) / terms.size();
-                if (cov > best) { best = cov; where = rel; }
-            };
-            if (!memAll.isEmpty()) scan(QStringLiteral("memoria"), memAll);
-            for (const QString &fp : files) {
-                if (best >= 0.99) break;
-                QFileInfo fi(fp);
-                if (fi.size() > 1024 * 1024) continue;
-                QFile f(fp);
-                if (!f.open(QIODevice::ReadOnly)) continue;
-                const QByteArray raw = f.read(1024 * 1024);
-                if (raw.contains('\0')) continue;
-                scan(base.relativeFilePath(fp), QString::fromUtf8(raw));
-            }
-
+        const QVector<MemoryStore::ClaimEvidence> evidence =
+            MemoryStore::verifyClaims(cwd, claims, rootAbs, 8000);
+        for (const MemoryStore::ClaimEvidence &item : evidence) {
             QString tag;
-            if (best >= 0.8)      tag = QStringLiteral("[ACREDITADO en %1]").arg(where);
-            else if (best >= 0.4) tag = QStringLiteral("[INFERIDO · parcial en %1]").arg(where);
-            else                  tag = QStringLiteral("[NO ACREDITADO]");
+            if (item.status == QLatin1String("accredited"))
+                tag = QStringLiteral("[ACREDITADO en %1]").arg(item.where);
+            else if (item.status == QLatin1String("partial"))
+                tag = QStringLiteral("[INFERIDO · parcial en %1]").arg(item.where);
+            else
+                tag = QStringLiteral("[NO ACREDITADO]");
             report << QStringLiteral("%1 %2  (cobertura %3)")
-                          .arg(tag, claim).arg(best, 0, 'f', 2);
+                          .arg(tag, item.claim).arg(item.coverage, 0, 'f', 2);
         }
         if (ok) *ok = true;
         return QStringLiteral("Verificación de evidencia (etiquetá las afirmaciones del "

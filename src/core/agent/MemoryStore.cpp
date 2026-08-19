@@ -9,6 +9,7 @@
 #include <QRegularExpression>
 #include <QCryptographicHash>
 #include <QSet>
+#include <QPair>
 #include <algorithm>
 #include <cmath>
 
@@ -50,6 +51,45 @@ QString makeId(const QString &content, const QString &ts)
     const QByteArray h = QCryptographicHash::hash(
         (content + QLatin1Char('|') + ts).toUtf8(), QCryptographicHash::Sha1);
     return QString::fromLatin1(h.toHex().left(8));
+}
+
+bool ignoredDir(const QString &name)
+{
+    static const QSet<QString> ignored{
+        QStringLiteral("node_modules"), QStringLiteral(".git"), QStringLiteral("build"),
+        QStringLiteral("build2"), QStringLiteral("dist"), QStringLiteral(".venv"),
+        QStringLiteral("venv"), QStringLiteral("__pycache__"), QStringLiteral(".next"),
+        QStringLiteral(".turbo"), QStringLiteral("coverage"), QStringLiteral("target"),
+        QStringLiteral(".cache"), QStringLiteral(".llamacode"), QStringLiteral(".idea"),
+        QStringLiteral(".vs"),
+        QStringLiteral(".gradle"), QStringLiteral("bin"), QStringLiteral("obj")};
+    return ignored.contains(name);
+}
+
+QVector<QPair<QString, QString>> textCorpus(const QString &root, int maxFiles)
+{
+    QVector<QPair<QString, QString>> out;
+    QStringList stack{root};
+    const QDir base(root);
+    while (!stack.isEmpty() && out.size() < maxFiles) {
+        const QDir dir(stack.takeLast());
+        const QFileInfoList entries = dir.entryInfoList(
+            QDir::NoDotAndDotDot | QDir::Files | QDir::Dirs, QDir::Name);
+        for (const QFileInfo &info : entries) {
+            if (info.isDir()) {
+                if (!ignoredDir(info.fileName())) stack << info.absoluteFilePath();
+                continue;
+            }
+            if (info.size() > 1024 * 1024) continue;
+            QFile file(info.absoluteFilePath());
+            if (!file.open(QIODevice::ReadOnly)) continue;
+            const QByteArray raw = file.read(1024 * 1024);
+            if (raw.contains('\0')) continue;
+            out.append({base.relativeFilePath(info.absoluteFilePath()),
+                        QString::fromUtf8(raw)});
+        }
+    }
+    return out;
 }
 
 }  // namespace
@@ -205,6 +245,55 @@ QString recall(const QString &cwd, const QString &query, const QString &scope, i
         out << line;
     }
     return out.join(QLatin1Char('\n'));
+}
+
+QVector<ClaimEvidence> verifyClaims(const QString &cwd, const QStringList &claims,
+                                    const QString &root, int maxFiles)
+{
+    const QString rootAbs = root.trimmed().isEmpty() ? cwd : root;
+    const QVector<QPair<QString, QString>> files = textCorpus(rootAbs, qBound(1, maxFiles, 20000));
+    QVector<QPair<QString, QString>> corpus = files;
+    const QString memory = recall(cwd, QString(), QString(), 30);
+    if (!memory.isEmpty() && !memory.startsWith(QLatin1String("[memoria estructurada vacía]")))
+        corpus.prepend({QStringLiteral("memoria"), memory});
+
+    QVector<ClaimEvidence> out;
+    out.reserve(claims.size());
+    for (const QString &claim : claims) {
+        ClaimEvidence evidence;
+        evidence.claim = claim.trimmed();
+        QStringList claimTerms;
+        for (const QString &term : evidence.claim.toLower().split(
+                 QRegularExpression(QStringLiteral("[^\\p{L}\\p{N}_]+")), Qt::SkipEmptyParts)) {
+            if (term.size() >= 3 && !claimTerms.contains(term)) claimTerms << term;
+        }
+        if (claimTerms.isEmpty()) {
+            evidence.status = QStringLiteral("unaccredited");
+            out.append(evidence);
+            continue;
+        }
+
+        for (const auto &fragment : corpus) {
+            const QString haystack = fragment.second.toLower();
+            int hits = 0;
+            for (const QString &term : claimTerms)
+                if (haystack.contains(term)) ++hits;
+            const double coverage = double(hits) / claimTerms.size();
+            if (coverage > evidence.coverage) {
+                evidence.coverage = coverage;
+                evidence.where = fragment.first;
+            }
+            if (evidence.coverage >= 0.99) break;
+        }
+        if (evidence.coverage >= 0.8)
+            evidence.status = QStringLiteral("accredited");
+        else if (evidence.coverage >= 0.4)
+            evidence.status = QStringLiteral("partial");
+        else
+            evidence.status = QStringLiteral("unaccredited");
+        out.append(evidence);
+    }
+    return out;
 }
 
 QString forget(const QString &cwd, const QString &query, const QString &scope,

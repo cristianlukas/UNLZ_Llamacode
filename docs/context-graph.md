@@ -46,6 +46,15 @@ parte del módulo `knowledge` de `HarnessSpec`; está apagado por defecto para
 conservar el presupuesto histórico. Al activarlo, el system prompt instruye al
 modelo a distinguir evidencia verificada de inferencias y a citar las fuentes.
 
+La consolidación de memoria reutiliza el mismo verificador que expone la tool
+`verify_claims`: una inferencia sin cobertura suficiente se descarta y una
+afirmación parcialmente respaldada se conserva con confidence máxima 0.55. Las
+afirmaciones explícitas del usuario, tests o tools mantienen su provenance. Los
+`write_file`/`edit_file` exitosos agregan edges inferidos `module:<directorio>`
+→ `archivo` con `prov=tool`, `sessionId` y `correlationId`; además, decisiones y
+bugs consolidados que comparten vocabulario se relacionan con `prov=consolidation`.
+Todos esos edges quedan `unreviewed` hasta una revisión explícita.
+
 ## Contrato de exploración
 
 `context_scout` devuelve rangos, previews, handles y un `context-receipt` con:
@@ -92,13 +101,15 @@ que las métricas demuestren una mejora sin regresiones.
    contexto afectado y refrescan el grafo estructural.
 6. Las citas sólo son frescas mientras el SHA-256 de su archivo coincida.
 7. El índice no concede permisos adicionales ni permite salir del workspace.
+8. La inferencia automática nunca se presenta como decisión confirmada: conserva
+   provenance de sesión y estado `unreviewed`.
 
 ## Validación
 
 `tests/test_context_index.cpp` cubre persistencia, chunks, edges, recibos, handles
-y rechazo de handles obsoletos. `tests/test_memory_graph.cpp` cubre citas, paquetes
-y `doctor`; `tests/test_code_graph.cpp` verifica rangos y hashes producidos por el
-indexador. `tests/test_agent_tools.cpp` cubre la exposición de `query packet` y
-`doctor` por la tool. La comparación de calidad debe medir recall de archivos
-requeridos, tokens, latencia cold/warm, cortes por presupuesto y éxito de las
-pruebas de la tarea.
+y rechazo de handles obsoletos. `tests/test_memory_graph.cpp` cubre citas, paquetes,
+`doctor`, niveles de evidencia y edges inferidos; `tests/test_code_graph.cpp`
+verifica rangos y hashes producidos por el indexador. `tests/test_agent_tools.cpp`
+cubre la exposición de `query packet` y `doctor` por la tool. La comparación de
+calidad debe medir recall de archivos requeridos, tokens, latencia cold/warm,
+cortes por presupuesto y éxito de las pruebas de la tarea.

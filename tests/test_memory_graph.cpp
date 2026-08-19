@@ -34,6 +34,7 @@ private slots:
     void memory_newFieldsArePersisted();
     void memory_skillTypeIsPersistedAndRecalled();
     void memory_supersedesHidesOldFact();
+    void memory_verifyClaimsReturnsEvidenceLevels();
 
     void graph_addEntityAndQuery();
     void graph_linkRelation();
@@ -44,6 +45,7 @@ private slots:
     void graph_decideKeepsRejected();
     void graph_decisionsFiltersByTopic();
     void graph_sourceEvidencePacketAndDoctor();
+    void graph_infersToolTouchesAndConsolidationLinks();
     void knowledge_packetMergesMemoryAndGraph();
 
     void eventLog_appendTypedEvent();
@@ -77,6 +79,26 @@ void MemoryGraphTests::memory_recallRanksByQuery()
     const QString out = MemoryStore::recall(dir.path(), "vulkan", "", 1);
     QVERIFY(out.contains("vulkan"));
     QVERIFY(!out.contains("cuda"));
+}
+
+void MemoryGraphTests::memory_verifyClaimsReturnsEvidenceLevels()
+{
+    QTemporaryDir dir;
+    const QString path = dir.path() + QStringLiteral("/src/graph.cpp");
+    QVERIFY(QDir().mkpath(QFileInfo(path).absolutePath()));
+    QFile source(path);
+    QVERIFY(source.open(QIODevice::WriteOnly));
+    source.write("GraphStore validates source hashes and keeps citations.\n");
+    source.close();
+
+    const QVector<MemoryStore::ClaimEvidence> evidence = MemoryStore::verifyClaims(
+        dir.path(), {QStringLiteral("GraphStore validates source hashes"),
+                     QStringLiteral("unicorn subsystem always compiles")});
+    QCOMPARE(evidence.size(), 2);
+    QCOMPARE(evidence[0].status, QStringLiteral("accredited"));
+    QVERIFY(evidence[0].coverage >= 0.8);
+    QCOMPARE(evidence[1].status, QStringLiteral("unaccredited"));
+    QCOMPARE(evidence[1].coverage, 0.0);
 }
 
 void MemoryGraphTests::memory_forgetStale()
@@ -374,6 +396,40 @@ void MemoryGraphTests::graph_sourceEvidencePacketAndDoctor()
     const QJsonObject stale = GraphStore::doctor(dir.path());
     QCOMPARE(stale.value(QStringLiteral("staleSources")).toInt(), 1);
     QVERIFY(!stale.value(QStringLiteral("healthy")).toBool());
+}
+
+void MemoryGraphTests::graph_infersToolTouchesAndConsolidationLinks()
+{
+    QTemporaryDir dir;
+    const QString path = dir.path() + QStringLiteral("/src/widget.cpp");
+    QVERIFY(QDir().mkpath(QFileInfo(path).absolutePath()));
+    QFile source(path);
+    QVERIFY(source.open(QIODevice::WriteOnly));
+    source.write("class Widget {};\n");
+    source.close();
+
+    const QString touch = GraphStore::inferToolTouch(
+        dir.path(), QStringLiteral("write_file"), QStringLiteral("src/widget.cpp"),
+        QStringLiteral("session-1"), QStringLiteral("corr-1"));
+    QVERIFY(touch.contains(QStringLiteral("graph infer")));
+    const QJsonObject packet = GraphStore::queryPacket(dir.path(), QStringLiteral("module:src"), 1);
+    QVERIFY(packet.value(QStringLiteral("ok")).toBool());
+    const QJsonObject edge = packet.value(QStringLiteral("edges")).toArray().first().toObject();
+    QCOMPARE(edge.value(QStringLiteral("pred")).toString(), QStringLiteral("touches"));
+    QCOMPARE(edge.value(QStringLiteral("status")).toString(), QStringLiteral("unreviewed"));
+    QVERIFY(edge.value(QStringLiteral("sources")).toArray().first().toObject()
+                .value(QStringLiteral("sessionId")).toString() == QStringLiteral("session-1"));
+
+    const int links = GraphStore::inferConsolidationLinks(
+        dir.path(), {{QStringLiteral("decision"), QStringLiteral("Usar GraphStore para el backend")},
+                     {QStringLiteral("bug"), QStringLiteral("GraphStore falla al abrir el backend")}},
+        QStringLiteral("session-1"), QStringLiteral("corr-1"));
+    QCOMPARE(links, 1);
+    QFile graph(GraphStore::jsonlPath(dir.path()));
+    QVERIFY(graph.open(QIODevice::ReadOnly));
+    const QString graphText = QString::fromUtf8(graph.readAll());
+    QVERIFY(graphText.contains(QStringLiteral("relates_to")));
+    QVERIFY(graphText.contains(QStringLiteral("session-1")));
 }
 
 void MemoryGraphTests::knowledge_packetMergesMemoryAndGraph()

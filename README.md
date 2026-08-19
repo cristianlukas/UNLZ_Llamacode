@@ -123,6 +123,9 @@ memoria durable, con límites y recibo, y el módulo `knowledge` del `HarnessSpe
 controla si entra en preflight. La búsqueda estructural no usa servicios externos;
 embeddings y reranking siguen siendo opcionales. El preflight se activa por perfil
 y Release conserva el flujo histórico hasta validar el beneficio con benchmarks.
+La consolidación reutiliza `verify_claims`: descarta inferencias sin evidencia,
+reduce la confianza de las parciales y registra edges automáticos de tool/sesión
+para archivos tocados y relaciones decisión→bug, siempre como `unreviewed`.
 Ver
 [`docs/context-graph.md`](docs/context-graph.md).
 
@@ -770,6 +773,10 @@ persistencia para que probar Next no altere el historial existente.
 - SDK Node/Python implementadas en `sdk/node` y `sdk/python`, con smoke cruzado;
   el sandbox OS opt-in usa Job Objects/grupos de procesos y bubblewrap cuando
   está disponible. El detalle operativo está en `docs/harness.md` y `sdk/README.md`.
+- Los perfiles `worker.lane=node|python` ya conectan esa frontera al loop nativo:
+  `worker_call` aparece sólo después de autenticar el proceso, atraviesa la
+  aprobación existente y devuelve errores/`tool_result` al mismo turno; sin ese
+  módulo el perfil legacy no crea procesos ni cambia sus schemas.
 
 - **Integración HTTP nativa**: comunica con opencode server vía REST + SSE, sin subproceso `opencode run` (elimina conflicto de DB SQLite en Windows)
 - **Vista Agente**: chat bubbles con streaming en tiempo real
@@ -912,6 +919,12 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   ocultar inferencias no revisadas.
 - **KnowledgePacket**: paquete acotado que une memoria + grafo, con recibo de
   nodos, relaciones y fuentes. Se habilita por perfil mediante `HarnessSpec.knowledge`.
+- **Gate de consolidación**: `verify_claims` se comparte con la persistencia de
+  memoria; los hechos no respaldados no entran y los parcialmente respaldados
+  quedan con confianza limitada.
+- **Edges inferidos**: las escrituras exitosas dejan trazabilidad módulo→archivo,
+  y la consolidación puede relacionar decisiones con bugs por vocabulario común;
+  ambos casos conservan sesión/correlación y requieren revisión explícita.
 - **Repo slice previo a edición**: `repo_slice` combina el ranking híbrido local
   con citas `archivo:Lini-Lfin`, previews y vecinos por imports/includes. El agente
   obtiene evidencia compacta antes de abrir cuerpos completos; funciona con BM25

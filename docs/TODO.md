@@ -175,8 +175,8 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 - [x] **Evidencia durable del grafo** — `SourceRef` con ruta/rango/SHA-256,
   `query packet`, `graph doctor`, `KnowledgePacket` acotado y política opt-in del
   `HarnessSpec`; el reindexado post-escritura funciona también fuera de Debug.
-- [ ] **Gate de calidad sobre lo consolidado** — `consolidateMemory()` guarda hechos durables del transcript sin filtro. Reusar `verify_claims` para descartar/bajar confidence de los no acreditados contra repo+memoria antes de persistir. Hacerlo si aparece ruido en `.llamacode/memory.jsonl`.
-- [ ] **Grafo inferido automático** — que la consolidación además emita `link`s al knowledge graph (`GraphStore`) inferidos de los tool-calls reales (módulo→archivo tocado, decisión→bug). Hoy `graph link` es 100% manual.
+- [x] **Gate de calidad sobre lo consolidado** — `consolidateMemory()` reutiliza la verificación de `verify_claims`: descarta inferencias sin respaldo y baja confidence cuando la evidencia es parcial antes de persistir.
+- [x] **Grafo inferido automático** — los `write_file`/`edit_file` exitosos registran módulo→archivo con provenance de tool/sesión; la consolidación conecta decisión→bug sólo cuando comparten vocabulario y mantiene ambos edges como unreviewed.
 
 ## Backend RAG compacto opcional (LEANN)
 
