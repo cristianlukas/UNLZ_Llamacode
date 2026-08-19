@@ -37,7 +37,7 @@ try {
         Invoke-RestMethod "$base/invoke" -Method Post -ContentType "application/json" -Body $body
     }
     $catalog = Invoke-Llama "engineeringWorkflows" @()
-    if ($catalog.result.Count -ne 5) { throw "Se esperaban 5 workflows, llegaron $($catalog.result.Count)" }
+    if ($catalog.result.Count -ne 6) { throw "Se esperaban 6 workflows, llegaron $($catalog.result.Count)" }
     $qa = ($catalog.result | Where-Object { $_.id -eq "qa" })
     if ((Invoke-Llama "validateWorkflow" @($qa)).result -ne "") { throw "QA inválido" }
     $taskId = (Invoke-Llama "installEngineeringWorkflow" @("qa")).result
@@ -47,6 +47,9 @@ try {
     $saved = (Invoke-RestMethod "$base/invoke" -Method Post -ContentType "application/json" -Body $getBody).result
     if ($saved.workflow.id -ne "qa") { throw "La Task no conserva workflow qa" }
     if ([string]::IsNullOrWhiteSpace($saved.safetyProfile)) { throw "Falta safetyProfile" }
+    $autoprompt = ($catalog.result | Where-Object { $_.id -eq "autoprompt" })
+    if ((Invoke-Llama "validateWorkflow" @($autoprompt)).result -ne "") { throw "Autoprompt inválido" }
+    if ($autoprompt.budget.maxRepairs -ne 3) { throw "Autoprompt sin presupuesto de reparaciones" }
     Write-Host "OK: catálogo, validación, instalación y persistencia headless"
 } finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }

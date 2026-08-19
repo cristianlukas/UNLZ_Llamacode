@@ -16,6 +16,29 @@ static QString subArgsToString(const QJsonValue &v)
     return {};
 }
 
+static bool subAgentReadOnlyBlocked(const QString &name, const QJsonObject &args,
+                                    bool allowShell)
+{
+    if (name == QLatin1String("run_shell")) return !allowShell;
+    if (name == QLatin1String("write_file") || name == QLatin1String("edit_file")
+        || name == QLatin1String("email_send") || name == QLatin1String("task")
+        || name == QLatin1String("mcp_call_tool")
+        || name == QLatin1String("browser_skill_replay")
+        || name.startsWith(QLatin1String("desktop_"))
+        || name.startsWith(QLatin1String("mcp__"))) return true;
+    if (name == QLatin1String("memory")) {
+        const QString action = args.value(QStringLiteral("action")).toString().toLower();
+        return action == QLatin1String("save") || action == QLatin1String("forget")
+            || (action == QLatin1String("prune")
+                && !args.value(QStringLiteral("dry_run")).toBool());
+    }
+    if (name == QLatin1String("graph")) {
+        const QString action = args.value(QStringLiteral("action")).toString().toLower();
+        return action != QLatin1String("query") && action != QLatin1String("decisions");
+    }
+    return false;
+}
+
 SubAgentRunner::SubAgentRunner(const QString &id, const QString &serverBaseUrl,
                                const QString &modelId, const QString &cwd,
                                const QString &taskPrompt, double temperature,
@@ -67,11 +90,21 @@ void SubAgentRunner::start()
     m_worker = new AgentToolRunner;
     m_worker->moveToThread(m_workerThread);
     m_worker->setConfined(true);
+    m_worker->setReadOnly(m_readOnly);
+    m_worker->setReadOnlyShell(m_readOnlyShell);
     m_worker->setServerBaseUrl(m_serverBaseUrl);
     connect(m_worker, &AgentToolRunner::toolExecuted, this, &SubAgentRunner::onToolExecuted);
     m_workerThread->start();
 
-    const QString sys = systemPrompt(m_cwd, m_honey);
+    QString sys = systemPrompt(m_cwd, m_honey);
+    if (m_readOnly) {
+        sys += QStringLiteral(
+            "\n\nPOLÍTICA DE RAMA INDEPENDIENTE: esta rama es solo lectura. No uses "
+            "write_file, edit_file, desktop_*, email_send ni MCP con efectos. %1")
+            .arg(m_readOnlyShell
+                ? QStringLiteral("Podés usar run_shell únicamente para ejecutar tests o inspecciones; no escribas desde shell.")
+                : QStringLiteral("run_shell también está bloqueada; usá sólo lectura y análisis."));
+    }
 
     m_messages = QJsonArray{
         QJsonObject{{QStringLiteral("role"), QStringLiteral("system")}, {QStringLiteral("content"), sys}},
@@ -93,10 +126,20 @@ void SubAgentRunner::runCompletion()
     if (m_done) return;
     if (++m_iters > kMaxIters) { finishUp(m_lastAssistantText + QStringLiteral("\n[corte: límite de iteraciones]"), false); return; }
 
+    QJsonArray tools = LlamaAgentBackend::toolSchemas();
+    if (m_readOnly) {
+        QJsonArray filtered;
+        for (const QJsonValue &value : tools) {
+            const QString name = value.toObject().value(QStringLiteral("function"))
+                                     .toObject().value(QStringLiteral("name")).toString();
+            if (!subAgentReadOnlyBlocked(name, {}, m_readOnlyShell)) filtered.append(value);
+        }
+        tools = filtered;
+    }
     QJsonObject payload{
         {QStringLiteral("model"), m_modelId.isEmpty() ? QStringLiteral("local") : m_modelId},
         {QStringLiteral("messages"), m_messages},
-        {QStringLiteral("tools"), LlamaAgentBackend::toolSchemas()},
+        {QStringLiteral("tools"), tools},
         {QStringLiteral("tool_choice"), QStringLiteral("auto")},
         {QStringLiteral("parallel_tool_calls"), false},
         {QStringLiteral("parse_tool_calls"), false},
@@ -215,6 +258,22 @@ bool SubAgentRunner::dispatchCall(const QJsonObject &call)
     const QString name = fn.value(QStringLiteral("name")).toString();
     const QString id = call.value(QStringLiteral("id")).toString();
     const QString argStr = subArgsToString(fn.value(QStringLiteral("arguments")));
+
+    if (m_readOnly) {
+        QJsonParseError readOnlyParseError;
+        const QJsonObject args = QJsonDocument::fromJson(argStr.toUtf8(),
+                                                          &readOnlyParseError).object();
+        if (subAgentReadOnlyBlocked(name, args, m_readOnlyShell)) {
+            emit progressed(m_id, QStringLiteral("⛔ %1 (bloqueada: rama solo lectura)").arg(name));
+            m_messages.append(QJsonObject{
+                {QStringLiteral("role"), QStringLiteral("tool")},
+                {QStringLiteral("tool_call_id"), id},
+                {QStringLiteral("content"), QStringLiteral(
+                    "[rama solo lectura: '%1' está bloqueada. Reportá el hallazgo "
+                    "sin modificar el workspace ni producir efectos externos.]").arg(name)}});
+            return false;
+        }
+    }
 
     // Guardrail: el sub-agente no tiene HITL → rechazar destructivas de plano.
     if (m_hitlDestructive) {

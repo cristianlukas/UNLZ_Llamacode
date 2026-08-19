@@ -35,6 +35,11 @@ public slots:
                      const QString &argsJson, const QString &cwd);
     // Confinamiento al cwd. false = "Super Agente" (acceso a todo el disco).
     void setConfined(bool confined);
+    // Modo de inspección para revisores/verificadores: bloquea escrituras de
+    // archivos y acciones externas. El shell sólo se habilita explícitamente
+    // para verificadores que necesitan ejecutar tests.
+    void setReadOnly(bool readOnly);
+    void setReadOnlyShell(bool allow);
     // Carpetas extra permitidas además del cwd (scope "folder" de una Task). Rutas
     // absolutas; vacío = solo el cwd. Sin efecto si !m_confined (acceso total).
     void setAllowedRoots(const QStringList &roots);
@@ -112,6 +117,8 @@ private:
 
     QList<McpClient *> m_mcp;
     bool m_confined = true;
+    bool m_readOnly = false;
+    bool m_readOnlyShell = false;
     QStringList m_allowedRoots;   // carpetas extra permitidas (scope "folder")
     QString m_serverBaseUrl;
     QString m_sessionId;           // sesión activa (filtro de recent_actions)

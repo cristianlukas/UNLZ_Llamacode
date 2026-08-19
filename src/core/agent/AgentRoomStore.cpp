@@ -316,6 +316,20 @@ QVariantMap AgentRoomStore::preset(const QString &name, const QString &goal) con
         };
         instructions = QStringLiteral("Delegá implementación y revisión a subagentes aislados. "
                                       "El revisor no puede editar. Repará hallazgos, ejecutá las pruebas y sintetizá evidencia.");
+    } else if (n == QLatin1String("autoprompt")) {
+        members = {
+            QVariantMap{{"id", "agent:implementer"}, {"name", "Implementador"}, {"role", "implementer"},
+                        {"grant", QVariantMap{{"read", true}, {"write", true}, {"shell", true}}}},
+            QVariantMap{{"id", "agent:reviewer"}, {"name", "Revisor independiente"}, {"role", "reviewer"},
+                        {"grant", QVariantMap{{"read", true}, {"write", false}, {"shell", false}}}},
+            QVariantMap{{"id", "agent:verifier"}, {"name", "Verificador"}, {"role", "verifier"},
+                        {"grant", QVariantMap{{"read", true}, {"write", false}, {"shell", true}}}}
+        };
+        instructions = QStringLiteral(
+            "Seguí el ciclo alcance → plan → implementación → revisión independiente → "
+            "verificación → reparación. Cada fase debe dejar evidencia y un veredicto "
+            "PASS/FAIL/BLOCKED; no cierres con una respuesta sin pruebas y acotá las "
+            "reparaciones para evitar bucles.");
     } else if (n == QLatin1String("council")) {
         members = {
             QVariantMap{{"id", "agent:perspective-a"}, {"name", "Perspectiva A"}, {"role", "analyst"}},

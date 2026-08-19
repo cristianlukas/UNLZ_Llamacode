@@ -18,6 +18,7 @@ private slots:
     void structured_rejectsUnsafeLanguagesAndSyntax();
     void workflow_validatesRoutesAndApproval();
     void workflow_budgetAndSnapshot();
+    void workflow_gateVerdictAndBoundedRepair();
     void workflowRunner_dispatchApprovalConditionAndFinish();
     void workflowVisual_roundTripPreservesAdvancedFields();
 };
@@ -176,6 +177,54 @@ void AgentEfficiencyTests::workflow_budgetAndSnapshot()
     QCOMPARE(restored.workflowId, state.workflowId);
     QCOMPARE(restored.status, state.status);
     QCOMPARE(restored.variables.value("goal").toString(), QString("test"));
+}
+
+void AgentEfficiencyTests::workflow_gateVerdictAndBoundedRepair()
+{
+    const QJsonObject def{
+        {"schemaVersion", 1}, {"entry", "implement"},
+        {"budget", QJsonObject{{"maxIterations", 20}, {"maxRepairs", 2}}},
+        {"steps", QJsonObject{
+            {"implement", QJsonObject{{"type", "agent"}, {"verdictRequired", true},
+                {"onSuccess", "review"}, {"onFailure", "repair"}}},
+            {"review", QJsonObject{{"type", "parallel"}, {"verdictRequired", true},
+                {"onSuccess", "finish"}, {"onFailure", "repair"}}},
+            {"repair", QJsonObject{{"type", "repair"}, {"verdictRequired", true},
+                {"onSuccess", "review"}, {"onFailure", "review"}}},
+            {"finish", QJsonObject{{"type", "finish"}}}}}};
+    QVERIFY(WorkflowEngine::validate(def).isEmpty());
+    QCOMPARE(WorkflowEngine::resultVerdict(QStringLiteral("LC_GATE: PASS\nlisto")),
+             QStringLiteral("pass"));
+    QCOMPARE(WorkflowEngine::resultVerdict(QStringLiteral("VERDICT: blocked")),
+             QStringLiteral("blocked"));
+    QVERIFY(WorkflowEngine::resultVerdict(QStringLiteral("texto\nLC_GATE: PASS"))
+            .isEmpty());
+    QCOMPARE(WorkflowEngine::resultVerdict(QVariantMap{
+                 {QStringLiteral("reviewer"), QStringLiteral("LC_GATE: PASS")},
+                 {QStringLiteral("verifier"), QStringLiteral("LC_GATE: PASS")}}),
+             QStringLiteral("pass"));
+
+    WorkflowRunner runner;
+    QSignalSpy requested(&runner, &WorkflowRunner::stepRequested);
+    QVERIFY(runner.start(def, QStringLiteral("autoprompt-test")));
+    runner.completeCurrent(QStringLiteral("LC_GATE: PASS\nimplementado"));
+    QCOMPARE(requested.size(), 2);
+    QCOMPARE(runner.state().currentStep, QStringLiteral("review"));
+    runner.completeCurrent(QVariantMap{
+        {QStringLiteral("reviewer"), QStringLiteral("LC_GATE: FAIL\nregresión")},
+        {QStringLiteral("verifier"), QStringLiteral("LC_GATE: PASS\ntests ok")}});
+    QCOMPARE(runner.state().currentStep, QStringLiteral("repair"));
+    QCOMPARE(runner.state().repairAttempts, 1);
+    runner.completeCurrent(QStringLiteral("LC_GATE: FAIL\nno reparado"));
+    QCOMPARE(runner.state().currentStep, QStringLiteral("review"));
+    runner.completeCurrent(QStringLiteral("LC_GATE: FAIL\nsegunda falla"));
+    QCOMPARE(runner.state().currentStep, QStringLiteral("repair"));
+    QCOMPARE(runner.state().repairAttempts, 2);
+    runner.completeCurrent(QStringLiteral("LC_GATE: PASS\nreparado"));
+    QCOMPARE(runner.state().currentStep, QStringLiteral("review"));
+    runner.completeCurrent(QStringLiteral("LC_GATE: FAIL\ntercera falla"));
+    QCOMPARE(runner.state().status, WorkflowEngine::Failed);
+    QVERIFY(runner.state().error.contains(QStringLiteral("reparaciones")));
 }
 
 void AgentEfficiencyTests::workflowRunner_dispatchApprovalConditionAndFinish()

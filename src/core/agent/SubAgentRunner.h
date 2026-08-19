@@ -34,6 +34,11 @@ public:
     // para que difiera la acción al agente principal. ON por defecto; lo propaga el
     // agente principal desde su propio m_hitlDestructive. Sin efecto en modo super.
     void setHitlDestructive(bool on) { m_hitlDestructive = on; }
+    // Política de ramas de revisión/verificación. Una rama read-only sólo
+    // recibe tools de lectura; allowShell agrega la excepción necesaria para
+    // ejecutar tests, siempre dentro del cwd confinado.
+    void setReadOnly(bool on) { m_readOnly = on; }
+    void setReadOnlyShell(bool allow) { m_readOnlyShell = allow; }
 
     // System prompt del sub-agente. Pura y estática → unit-testeable. honey=true
     // suma la directiva de frugalidad (código YAGNI, respuesta-primero, salida
@@ -67,6 +72,8 @@ private:
     double  m_temperature = -1.0;
     bool    m_honey = false;
     bool    m_hitlDestructive = true;   // guardrail: rechazar destructivas (headless)
+    bool    m_readOnly = false;
+    bool    m_readOnlyShell = false;
 
     QNetworkAccessManager *m_nam = nullptr;
     QNetworkReply *m_reply = nullptr;

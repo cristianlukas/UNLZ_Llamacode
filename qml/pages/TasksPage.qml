@@ -1205,7 +1205,7 @@ Item {
                                     RowLayout {
                                         Layout.fillWidth: true
                                         LcTextField { Layout.preferredWidth: 120; text: model.stepId; onEditingFinished: { workflowVisualModel.setProperty(index, "stepId", text); editor.applyVisualWorkflow() } }
-                                        LcComboBox { Layout.preferredWidth: 120; model: ["agent","tool","verify","condition","approval","parallel","finish"]; currentIndex: Math.max(0, model.indexOf(workflowVisualModel.get(index).stepType)); onActivated: { workflowVisualModel.setProperty(index, "stepType", currentText); editor.applyVisualWorkflow() } }
+                                        LcComboBox { Layout.preferredWidth: 120; model: ["agent","tool","verify","repair","condition","approval","parallel","finish"]; currentIndex: Math.max(0, model.indexOf(workflowVisualModel.get(index).stepType)); onActivated: { workflowVisualModel.setProperty(index, "stepType", currentText); editor.applyVisualWorkflow() } }
                                         Text { text: "→"; color: Theme.textMuted }
                                         LcTextField { Layout.fillWidth: true; text: model.stepNext; placeholderText: "siguiente"; onEditingFinished: { workflowVisualModel.setProperty(index, "stepNext", text); editor.applyVisualWorkflow() } }
                                         LcButton { text: "✕"; secondary: true; onClicked: { workflowVisualModel.remove(index); editor.applyVisualWorkflow() } }

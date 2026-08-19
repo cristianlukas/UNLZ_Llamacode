@@ -69,6 +69,7 @@ private slots:
     void confinement_blocksOutsideCwd();
     void allowedRoots_permitExtraFolder();
     void unconfined_permitsAnyPath();
+    void readOnly_blocksMutationButAllowsRead();
     void editFile_missingFails();
     void editFile_whitespaceNearMissExplains();
     void parseErrorExplainsChunking();
@@ -85,6 +86,7 @@ private slots:
     void repoSlice_defaultsToCompactEvidence();
     void contextScoutAndFetch_validateHandle();
     void contextStatus_reportsPersistentIndex();
+    void graphPacketAndDoctor_areExposedByTool();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
     void desktopControls_invalidWindowErrorsCleanly();
@@ -312,6 +314,24 @@ void AgentToolsTests::glob_listsFiles()
     QVariantMap g = call("glob", {{"pattern", "*.cpp"}});
     QVERIFY(g.value("result").toString().contains("one.cpp"));
     QVERIFY(g.value("result").toString().contains("two.cpp"));
+}
+
+void AgentToolsTests::readOnly_blocksMutationButAllowsRead()
+{
+    const QVariantMap seed = call("write_file", {{"path", "inspect.txt"},
+                                                  {"content", "before"}});
+    QVERIFY(seed.value("ok").toBool());
+    m_runner->setReadOnly(true);
+    const QVariantMap read = call("read_file", {{"path", "inspect.txt"}});
+    QVERIFY(read.value("ok").toBool());
+    QVERIFY(read.value("result").toString().contains(QStringLiteral("before")));
+    const QVariantMap write = call("write_file", {{"path", "inspect.txt"},
+                                                   {"content", "after"}});
+    QVERIFY(!write.value("ok").toBool());
+    QVERIFY(write.value("result").toString().contains(QStringLiteral("solo lectura")));
+    QFile file(m_dir.filePath("inspect.txt"));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QCOMPARE(QString::fromUtf8(file.readAll()), QStringLiteral("before"));
 }
 
 void AgentToolsTests::reviewOverengineering_isReadOnlyAndExplainsCandidates()
@@ -565,6 +585,36 @@ void AgentToolsTests::contextStatus_reportsPersistentIndex()
     QVERIFY(status.value("ok").toBool());
     QVERIFY(status.value("result").toString().contains("files"));
     QVERIFY(status.value("result").toString().contains("chunks"));
+}
+
+void AgentToolsTests::graphPacketAndDoctor_areExposedByTool()
+{
+    const QVariantMap entity = call("graph", {{"action", "add_entity"},
+                                                {"name", "Store"},
+                                                {"etype", "module"}});
+    QVERIFY2(entity.value("ok").toBool(), qPrintable(entity.value("result").toString()));
+    const QVariantMap link = call("graph", {{"action", "link"},
+                                              {"subj", "Store"},
+                                              {"pred", "requires"},
+                                              {"obj", "Config"}});
+    QVERIFY2(link.value("ok").toBool(), qPrintable(link.value("result").toString()));
+
+    const QVariantMap packet = call("graph", {{"action", "query"},
+                                                {"name", "Store"},
+                                                {"format", "packet"},
+                                                {"depth", 1}});
+    QVERIFY(packet.value("ok").toBool());
+    const QJsonObject packetJson = QJsonDocument::fromJson(
+        packet.value("result").toString().toUtf8()).object();
+    QVERIFY(packetJson.value("ok").toBool());
+    QVERIFY(packetJson.value("edges").toArray().size() >= 1);
+    QVERIFY(packetJson.value("receipt").toObject().contains(QStringLiteral("schemaVersion")));
+
+    const QVariantMap doctor = call("graph", {{"action", "doctor"}});
+    QVERIFY(doctor.value("ok").toBool());
+    const QJsonObject doctorJson = QJsonDocument::fromJson(
+        doctor.value("result").toString().toUtf8()).object();
+    QVERIFY(doctorJson.value("healthy").toBool());
 }
 
 void AgentToolsTests::recentActions_tailsEventLogForSession()

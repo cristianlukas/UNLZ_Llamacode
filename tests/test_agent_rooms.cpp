@@ -58,12 +58,19 @@ void AgentRoomStoreTests::presetsAreExecutableContracts()
 {
     QTemporaryDir dir;
     AgentRoomStore store(dir.path());
-    for (const QString &name : {"review", "council", "research"}) {
+    for (const QString &name : {"review", "autoprompt", "council", "research"}) {
         const QVariantMap p = store.preset(name, QStringLiteral("objetivo"));
         QVERIFY2(!p.contains("error"), qPrintable(name));
         QCOMPARE(p.value("name").toString(), name);
         QVERIFY(p.value("participants").toList().size() >= 2);
         QVERIFY(!p.value("instructions").toString().isEmpty());
+        if (name == QStringLiteral("autoprompt")) {
+            const QVariantList participants = p.value("participants").toList();
+            const QVariantMap reviewer = participants.at(1).toMap();
+            const QVariantMap verifier = participants.at(2).toMap();
+            QVERIFY(!reviewer.value("grant").toMap().value("write").toBool());
+            QVERIFY(verifier.value("grant").toMap().value("shell").toBool());
+        }
     }
     QVERIFY(store.preset("unknown", "x").contains("error"));
 }

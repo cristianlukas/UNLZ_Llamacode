@@ -788,6 +788,8 @@ AgentToolRunner::AgentToolRunner(QObject *parent) : QObject(parent) {}
 AgentToolRunner::~AgentToolRunner() { shutdown(); }
 
 void AgentToolRunner::setConfined(bool confined) { m_confined = confined; }
+void AgentToolRunner::setReadOnly(bool readOnly) { m_readOnly = readOnly; }
+void AgentToolRunner::setReadOnlyShell(bool allow) { m_readOnlyShell = allow; }
 void AgentToolRunner::setAllowedRoots(const QStringList &roots)
 {
     m_allowedRoots.clear();
@@ -1216,6 +1218,40 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                                   const QString &argsJson, const QString &cwd)
 {
     const QJsonObject args = QJsonDocument::fromJson(argsJson.toUtf8()).object();
+
+    const auto blockedInReadOnly = [this, &name, &args]() {
+        if (!m_readOnly) return false;
+        if (name == QLatin1String("run_shell")) return !m_readOnlyShell;
+        if (name == QLatin1String("write_file") || name == QLatin1String("edit_file")
+            || name == QLatin1String("email_send") || name == QLatin1String("task")
+            || name == QLatin1String("mcp_call_tool")
+            || name == QLatin1String("browser_skill_replay")
+            || name.startsWith(QLatin1String("desktop_"))) return true;
+        if (name == QLatin1String("memory")) {
+            const QString action = args.value(QStringLiteral("action")).toString().toLower();
+            return action == QLatin1String("save") || action == QLatin1String("forget")
+                || (action == QLatin1String("prune")
+                    && !args.value(QStringLiteral("dry_run")).toBool());
+        }
+        if (name == QLatin1String("graph")) {
+            const QString action = args.value(QStringLiteral("action")).toString().toLower();
+            return action != QLatin1String("query") && action != QLatin1String("decisions");
+        }
+        if (name.startsWith(QLatin1String("mcp__"))) return true;
+        return false;
+    };
+    if (blockedInReadOnly()) {
+        QVariantMap out{{QStringLiteral("callId"), callId},
+                        {QStringLiteral("name"), name},
+                        {QStringLiteral("correlationId"), m_correlationId},
+                        {QStringLiteral("result"), QStringLiteral(
+                            "[modo solo lectura: la tool '%1' fue bloqueada; "
+                            "el revisor/verificador no puede modificar archivos ni "
+                            "producir efectos externos]").arg(name)},
+                        {QStringLiteral("ok"), false}};
+        emit toolExecuted(out);
+        return;
+    }
 
     // run_shell es ASÍNCRONO: spawnea y vuelve. La salida se streamea por
     // toolOutputChunk y el resultado final llega por toolExecuted al terminar.

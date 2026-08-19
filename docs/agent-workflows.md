@@ -9,6 +9,8 @@ Presets disponibles:
 - `qa`: preflight, reproducción, corrección, prueba de regresión y verificación.
 - `document-audit`: detección de documentación obsoleta, faltante o contradictoria.
 - `review`: revisión funcional y revisión de alcance en paralelo.
+- `autoprompt`: alcance, roadmap, implementación, revisión/verificación
+  independiente, reparación acotada y gate final.
 - `release-check`: revisión del estado, `tests.bat Debug`, `build.bat Debug NOPAUSE`
   y aprobación final.
 
@@ -27,12 +29,38 @@ Los workflows no deben asumir nombres de aplicaciones, botones, colores,
 layouts ni coordenadas. Para browser y escritorio deben usar las capacidades
 semánticas, OCR, evidencia y templates de Teach ya existentes.
 
+## Contrato Autoprompt
+
+`autoprompt` adapta el loop planificar → construir → probar → revisar → reparar
+sin depender de una skill externa. Cada fase marcada `verdictRequired` debe
+comenzar su respuesta con exactamente una de estas líneas:
+
+```text
+LC_GATE: PASS
+LC_GATE: FAIL
+LC_GATE: BLOCKED
+```
+
+El runner no toma una respuesta sin gate como éxito. `FAIL` vuelve a `repair` y
+`BLOCKED` detiene el workflow para que el usuario resuelva la dependencia. La
+entrada a `repair` se cuenta en `repairAttempts` y el preset permite como máximo
+tres reparaciones; el snapshot persiste el contador, el último veredicto y los
+resultados para reanudar sin perder contexto.
+
+La revisión y la verificación corren como ramas independientes read-only. El
+revisor no recibe escritura, desktop, correo, MCP con efectos ni shell; el
+verificador puede ejecutar tests dentro del workspace confinado, pero tampoco
+recibe escritura directa ni acciones externas. El shell no es una garantía de
+inmutabilidad: las instrucciones de la rama prohíben modificar desde comandos y
+la evidencia debe hacer visible cualquier desviación.
+
 ## Evidencia y pruebas
 
 Un workflow exitoso debe dejar un resumen de pasos, resultados, herramientas y
 aprobaciones en el historial de la Task. `qa` debe agregar o justificar una
-prueba de regresión y `release-check` debe verificar el ejecutable Debug según
-las instrucciones de `AGENTS.md`.
+prueba de regresión, `autoprompt` debe conservar los gates y reparaciones, y
+`release-check` debe verificar el ejecutable Debug según las instrucciones de
+`AGENTS.md`.
 
 ## Validación headless
 

@@ -369,7 +369,7 @@ void ControlApiTests::appControllerEngineeringCatalogIsHeadless()
         port, "POST", "/invoke",
         R"({"method":"engineeringWorkflows","args":[]})");
     QVERIFY(catalog.value("ok").toBool());
-    QCOMPARE(catalog.value("result").toArray().size(), 5);
+    QCOMPARE(catalog.value("result").toArray().size(), 6);
 
     const QJsonObject safety = requestJsonAt(
         port, "POST", "/invoke",

@@ -11,6 +11,7 @@ QVariantList WorkflowVisualModel::rows(const QVariantMap &definition)
         const QVariantMap step = steps.value(id).toMap();
         QString routeKey;
         for (const QString &candidate : {QStringLiteral("next"), QStringLiteral("onSuccess"),
+                                         QStringLiteral("onFailure"), QStringLiteral("onBlocked"),
                                          QStringLiteral("onTrue"), QStringLiteral("accept")}) {
             if (!step.value(candidate).toString().isEmpty()) { routeKey = candidate; break; }
         }

@@ -92,7 +92,24 @@ void WorkflowRunner::completeCurrent(const QVariant &result, bool success,
 {
     if (m_state.status != WorkflowEngine::Running || !m_dispatched) return;
     m_dispatched = false;
-    WorkflowEngine::completeStep(m_definition, &m_state, result, success, route);
+    const QJsonObject step = WorkflowEngine::currentStep(m_definition, m_state);
+    QString effectiveRoute = route;
+    if (step.value(QStringLiteral("verdictRequired")).toBool()) {
+        const QString verdict = WorkflowEngine::resultVerdict(result);
+        if (verdict == QLatin1String("pass")) {
+            success = true;
+            if (effectiveRoute.isEmpty()) effectiveRoute = QStringLiteral("onSuccess");
+        } else if (verdict == QLatin1String("blocked")) {
+            success = false;
+            if (effectiveRoute.isEmpty()) effectiveRoute = QStringLiteral("onBlocked");
+        } else {
+            // La ausencia de un recibo verificable también falla el gate: una
+            // respuesta elocuente no sustituye evidencia estructurada.
+            success = false;
+            if (effectiveRoute.isEmpty()) effectiveRoute = QStringLiteral("onFailure");
+        }
+    }
+    WorkflowEngine::completeStep(m_definition, &m_state, result, success, effectiveRoute);
     emit stateChanged(snapshot());
     if (!active()) { emit finished(m_state.status == WorkflowEngine::Completed, snapshot()); return; }
     dispatch();

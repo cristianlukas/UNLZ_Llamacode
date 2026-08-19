@@ -116,9 +116,14 @@ prepara candidatos por objetivo, rangos exactos, handles y un recibo de frescura
 presupuesto; `context_fetch` valida el hash antes de devolver el código. También
 existen `repo_slice`/`hybrid_search` con expansión del grafo y recibo estructurado.
 Después de cada `write_file` o `edit_file` se actualizan los chunks y relaciones
-afectados. La búsqueda estructural no usa servicios externos; embeddings y
-reranking siguen siendo opcionales. El preflight se activa por perfil y Release
-conserva el flujo histórico hasta validar el beneficio con benchmarks. Ver
+afectados, incluso en Release. `GraphStore` conserva citas con ruta, rango y hash;
+`graph query` puede devolver un paquete estructurado y `graph doctor` detecta
+fuentes obsoletas o edges huérfanos. `KnowledgePacket` combina ese grafo con la
+memoria durable, con límites y recibo, y el módulo `knowledge` del `HarnessSpec`
+controla si entra en preflight. La búsqueda estructural no usa servicios externos;
+embeddings y reranking siguen siendo opcionales. El preflight se activa por perfil
+y Release conserva el flujo histórico hasta validar el beneficio con benchmarks.
+Ver
 [`docs/context-graph.md`](docs/context-graph.md).
 
 UNLZ_Llamacode es una app nativa (Qt/QML + C++) para orquestar múltiples backends `llama.cpp`, gestionar sesiones de chat, y ejecutar harnesses de agente IA (opencode, aider) sobre repos locales.
@@ -901,6 +906,11 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   ranking y la poda priorizan correcciones, reglas y decisiones verificadas sin
   romper memorias JSONL creadas por versiones anteriores.
 - **GraphStore**: grafo de entidades/relaciones para conocimiento estructurado.
+- **Evidencia del grafo**: `CodeGraphIndexer` adjunta citas `ruta:Línea-Línea` y
+  SHA-256; `graph doctor` informa fuentes obsoletas y relaciones huérfanas sin
+  ocultar inferencias no revisadas.
+- **KnowledgePacket**: paquete acotado que une memoria + grafo, con recibo de
+  nodos, relaciones y fuentes. Se habilita por perfil mediante `HarnessSpec.knowledge`.
 - **Repo slice previo a edición**: `repo_slice` combina el ranking híbrido local
   con citas `archivo:Lini-Lfin`, previews y vecinos por imports/includes. El agente
   obtiene evidencia compacta antes de abrir cuerpos completos; funciona con BM25
@@ -1412,9 +1422,11 @@ LlamaCode/
 ## Workflows de ingeniería
 
 Los presets `Investigar bug`, `QA con regresión`, `Auditar documentación`,
-`Revisar cambios` y `Preparar release Debug` se instalan desde la sección Tasks.
+`Revisar cambios`, `Autoprompt: planificar, construir y verificar` y `Preparar
+release Debug` se instalan desde la sección Tasks.
 Son definiciones declarativas sobre el mismo motor de workflows que ya soporta
-aprobaciones, snapshots, pasos paralelos, reanudación y rollback. No conocen
+aprobaciones, snapshots, pasos paralelos, gates estructurados, reparaciones
+acotadas, reanudación y rollback. No conocen
 aplicaciones concretas ni coordenadas: el agente resuelve cada paso usando las
 tools y permisos del workspace.
 

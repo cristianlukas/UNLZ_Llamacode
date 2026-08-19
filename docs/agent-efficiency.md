@@ -46,8 +46,9 @@ LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
   lenguajes sensibles a indentación, donde se usa la fuente exacta.
 - `WorkflowEngine`: máquina de estados determinista con pasos agent/tool,
   aprobación, condiciones/paralelo/verificación como tipos validados,
-  presupuestos y snapshots JSON reanudables. La ejecución real debe pasar por
-  los runners existentes para conservar permisos y límites de concurrencia.
+  reparación acotada, gates estructurados, presupuestos y snapshots JSON
+  reanudables. La ejecución real debe pasar por los runners existentes para
+  conservar permisos y límites de concurrencia.
 
 ## Esquema de workflow v1
 
@@ -69,6 +70,12 @@ LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
 Tasks y Automations preservan un objeto `workflow` opcional. Los registros de
 historial preservan `workflowState` y `metrics`. Los registros legacy siguen
 siendo válidos.
+
+El preset `autoprompt` usa `LC_GATE: PASS|FAIL|BLOCKED` como recibo de cada
+fase crítica. Las ramas de revisión/verificación se lanzan read-only; sólo el
+verificador puede habilitar shell para tests y siempre queda confinado al
+workspace. Las reparaciones tienen un presupuesto explícito para impedir loops
+infinitos.
 
 ## Loops locales
 

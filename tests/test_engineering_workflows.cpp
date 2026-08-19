@@ -16,9 +16,10 @@ private slots:
 void EngineeringWorkflowTests::catalogHasCoreWorkflows()
 {
     const QVariantList all = EngineeringWorkflowCatalog::workflows();
-    QCOMPARE(all.size(), 5);
+    QCOMPARE(all.size(), 6);
     for (const QString &id : {QStringLiteral("investigate"), QStringLiteral("qa"),
                               QStringLiteral("document-audit"), QStringLiteral("review"),
+                              QStringLiteral("autoprompt"),
                               QStringLiteral("release-check")}) {
         QVERIFY(EngineeringWorkflowCatalog::isKnownWorkflow(id));
         QVERIFY(!EngineeringWorkflowCatalog::workflow(id).value(QStringLiteral("steps"))
@@ -49,6 +50,20 @@ void EngineeringWorkflowTests::installableTaskIsRunnable()
     QCOMPARE(task.value(QStringLiteral("workflow")).toMap().value(QStringLiteral("id"))
                  .toString(), QStringLiteral("qa"));
     QVERIFY(EngineeringWorkflowCatalog::installableTask(QStringLiteral("missing")).isEmpty());
+
+    const QVariantMap autoprompt = EngineeringWorkflowCatalog::installableTask(
+        QStringLiteral("autoprompt"));
+    QVERIFY(!autoprompt.isEmpty());
+    const QVariantMap budget = autoprompt.value(QStringLiteral("workflow")).toMap()
+                                   .value(QStringLiteral("budget")).toMap();
+    QCOMPARE(budget.value(QStringLiteral("maxRepairs")).toInt(), 3);
+    const QVariantMap review = autoprompt.value(QStringLiteral("workflow")).toMap()
+                                   .value(QStringLiteral("steps")).toMap()
+                                   .value(QStringLiteral("review_verify")).toMap();
+    QCOMPARE(review.value(QStringLiteral("type")).toString(), QStringLiteral("parallel"));
+    const QVariantList branches = review.value(QStringLiteral("branches")).toList();
+    QCOMPARE(branches.size(), 2);
+    QVERIFY(branches.at(0).toMap().value(QStringLiteral("readOnly")).toBool());
 }
 
 void EngineeringWorkflowTests::safetyProfilesAreExplicit()

@@ -2802,6 +2802,17 @@ Item {
                     }
                 }
                 LcButton {
+                    text: "/autoprompt"
+                    secondary: true
+                    enabled: App.agentRunning && roomGoal.text.trim().length > 0
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Planificar, construir, revisar, verificar y reparar con gates."
+                    onClicked: {
+                        if (App.runAgentRoomPreset(App.agentRoomStore.currentRoomId, "autoprompt", roomGoal.text))
+                            roomGoal.text = ""
+                    }
+                }
+                LcButton {
                     text: "/council"; secondary: true
                     enabled: App.agentRunning && roomGoal.text.trim().length > 0
                     onClicked: {

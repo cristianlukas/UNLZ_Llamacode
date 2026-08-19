@@ -2304,7 +2304,7 @@ void AppControllerTests::engineeringCatalogIsExposedHeadless()
 {
     AppController app;
     const QVariantList workflows = app.engineeringWorkflows();
-    QCOMPARE(workflows.size(), 5);
+    QCOMPARE(workflows.size(), 6);
     QVERIFY(app.engineeringSafetyProfiles().size() >= 4);
     for (const QVariant &value : workflows) {
         const QVariantMap workflow = value.toMap();
@@ -2318,6 +2318,7 @@ void AppControllerTests::engineeringPresetInstallsPersistsAndRestores()
 {
     const QStringList ids{QStringLiteral("investigate"), QStringLiteral("qa"),
                           QStringLiteral("document-audit"), QStringLiteral("review"),
+                          QStringLiteral("autoprompt"),
                           QStringLiteral("release-check")};
     AppController first;
     QStringList installed;

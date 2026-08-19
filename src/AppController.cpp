@@ -841,6 +841,9 @@ AppController::AppController(QObject *parent) : QObject(parent)
                 auto *sub = new SubAgentRunner(branchId, serverBaseUrl(),
                     routedModelId(active.catalogModel.id), cwd, prompt,
                     m_agentTemperature, false, this);
+                sub->setReadOnly(branch.value(QStringLiteral("readOnly"),
+                                               step.value(QStringLiteral("readOnly"))).toBool());
+                sub->setReadOnlyShell(branch.value(QStringLiteral("allowShell"), false).toBool());
                 m_workflowBranches.insert(branchId, sub);
                 connect(sub, &SubAgentRunner::finished, this,
                         [this](const QString &id, const QString &result, bool ok) {
@@ -6845,9 +6848,17 @@ QString AppController::workflowStepPrompt(const QString &stepId, const QString &
     }
     const QString contextJson = QString::fromUtf8(
         QJsonDocument::fromVariant(context).toJson(QJsonDocument::Compact));
+    QString contract;
+    if (step.value(QStringLiteral("verdictRequired")).toBool()) {
+        contract = QStringLiteral(
+            "\n\nCONTRATO DE GATE: la primera línea debe ser exactamente `LC_GATE: PASS`, "
+            "`LC_GATE: FAIL` o `LC_GATE: BLOCKED`. PASS requiere evidencia concreta; "
+            "FAIL indica requisito/prueba incumplida; BLOCKED indica que falta una "
+            "decisión o permiso externo.");
+    }
     return QStringLiteral("WORKFLOW paso `%1` (%2).\n%3\n\nContexto acumulado: %4\n"
-                          "Completá sólo este paso; no avances al siguiente.")
-        .arg(stepId, type, instruction, contextJson);
+                          "Completá sólo este paso; no avances al siguiente.%5")
+        .arg(stepId, type, instruction, contextJson, contract);
 }
 
 void AppController::startOrRestoreTaskWorkflow(const QVariantMap &task)

@@ -17,9 +17,11 @@ public:
         QVariantMap results;
         QVariantMap variables;
         int iterations = 0;
+        int repairAttempts = 0;
         qint64 startedAtMs = 0;
         Status status = Ready;
         QString error;
+        QString lastVerdict;
     };
 
     static QString validate(const QJsonObject &definition);
@@ -29,6 +31,10 @@ public:
     static bool completeStep(const QJsonObject &definition, State *state,
                              const QVariant &result, bool success,
                              const QString &route = QString());
+    // Extrae el contrato de salida de una fase. El formato canónico es
+    // `LC_GATE: PASS|FAIL|BLOCKED`; también acepta VERDICT para respuestas
+    // producidas por modelos que sigan el contrato equivalente.
+    static QString resultVerdict(const QVariant &result);
     static bool approve(const QJsonObject &definition, State *state,
                         const QString &choice, const QString &userText = QString());
     static QJsonObject toJson(const State &state);
@@ -38,4 +44,5 @@ public:
 private:
     static QString nextStep(const QJsonObject &step, const QString &route);
     static bool budgetExceeded(const QJsonObject &definition, const State &state);
+    static bool repairBudgetExceeded(const QJsonObject &definition, const State &state);
 };

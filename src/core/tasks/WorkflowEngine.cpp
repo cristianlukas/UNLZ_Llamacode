@@ -2,6 +2,7 @@
 
 #include <QDateTime>
 #include <QJsonArray>
+#include <QRegularExpression>
 #include <QSet>
 
 QString WorkflowEngine::validate(const QJsonObject &def)
@@ -14,14 +15,14 @@ QString WorkflowEngine::validate(const QJsonObject &def)
     if (steps.size() > 128) return QStringLiteral("demasiados pasos");
     static const QSet<QString> types{QStringLiteral("agent"), QStringLiteral("tool"),
         QStringLiteral("approval"), QStringLiteral("condition"), QStringLiteral("parallel"),
-        QStringLiteral("verify"), QStringLiteral("finish")};
+        QStringLiteral("verify"), QStringLiteral("repair"), QStringLiteral("finish")};
     for (auto it = steps.begin(); it != steps.end(); ++it) {
         const QJsonObject step = it.value().toObject();
         if (!types.contains(step.value(QStringLiteral("type")).toString()))
             return QStringLiteral("tipo invalido en %1").arg(it.key());
         QStringList routeKeys{QStringLiteral("next"), QStringLiteral("onSuccess"),
-                              QStringLiteral("onFailure"), QStringLiteral("onTrue"),
-                              QStringLiteral("onFalse")};
+                              QStringLiteral("onFailure"), QStringLiteral("onBlocked"),
+                              QStringLiteral("onTrue"), QStringLiteral("onFalse")};
         if (step.value(QStringLiteral("type")).toString() == QLatin1String("approval")) {
             const QJsonObject choices = step.value(QStringLiteral("choices")).toObject();
             for (auto choice = choices.begin(); choice != choices.end(); ++choice)
@@ -70,8 +71,44 @@ QString WorkflowEngine::nextStep(const QJsonObject &step, const QString &route)
         const QString choice = step.value(QStringLiteral("choices")).toObject()
                                    .value(route).toString();
         if (!choice.isEmpty()) return choice;
+        return {};
     }
     return step.value(QStringLiteral("next")).toString();
+}
+
+QString WorkflowEngine::resultVerdict(const QVariant &result)
+{
+    if (result.canConvert<QVariantMap>()) {
+        const QVariantMap map = result.toMap();
+        if (!map.isEmpty()) {
+            bool allPass = true;
+            for (auto it = map.constBegin(); it != map.constEnd(); ++it) {
+                const QString verdict = resultVerdict(it.value());
+                if (verdict == QLatin1String("blocked")) return verdict;
+                if (verdict != QLatin1String("pass")) allPass = false;
+            }
+            return allPass ? QStringLiteral("pass") : QStringLiteral("fail");
+        }
+    }
+    if (result.canConvert<QVariantList>()) {
+        const QVariantList list = result.toList();
+        if (!list.isEmpty()) {
+            bool allPass = true;
+            for (const QVariant &item : list) {
+                const QString verdict = resultVerdict(item);
+                if (verdict == QLatin1String("blocked")) return verdict;
+                if (verdict != QLatin1String("pass")) allPass = false;
+            }
+            return allPass ? QStringLiteral("pass") : QStringLiteral("fail");
+        }
+    }
+    const QString firstLine = result.toString().left(16 * 1024)
+                                  .section(QLatin1Char('\n'), 0, 0).trimmed();
+    static const QRegularExpression rx(
+        QStringLiteral("^(?:LC_GATE|VERDICT)\\s*:\\s*(PASS|FAIL|BLOCKED)\\s*$"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch match = rx.match(firstLine);
+    return match.hasMatch() ? match.captured(1).toLower() : QString();
 }
 
 bool WorkflowEngine::budgetExceeded(const QJsonObject &def, const State &s)
@@ -83,6 +120,13 @@ bool WorkflowEngine::budgetExceeded(const QJsonObject &def, const State &s)
         (maxSeconds > 0 && QDateTime::currentMSecsSinceEpoch() - s.startedAtMs > maxSeconds * 1000);
 }
 
+bool WorkflowEngine::repairBudgetExceeded(const QJsonObject &def, const State &s)
+{
+    const QJsonObject budget = def.value(QStringLiteral("budget")).toObject();
+    if (!budget.contains(QStringLiteral("maxRepairs"))) return false;
+    return s.repairAttempts >= qMax(0, budget.value(QStringLiteral("maxRepairs")).toInt());
+}
+
 bool WorkflowEngine::completeStep(const QJsonObject &def, State *s, const QVariant &result,
                                   bool success, const QString &route)
 {
@@ -91,19 +135,34 @@ bool WorkflowEngine::completeStep(const QJsonObject &def, State *s, const QVaria
     if (step.isEmpty()) { s->status = Failed; s->error = QStringLiteral("paso inexistente"); return false; }
     s->results[s->currentStep] = result;
     s->completedSteps.append(s->currentStep);
+    s->lastVerdict = resultVerdict(result);
     ++s->iterations;
     if (budgetExceeded(def, *s)) {
         s->status = Failed; s->error = QStringLiteral("presupuesto agotado"); return false;
     }
-    QString next = nextStep(step, route);
-    if (next.isEmpty()) next = nextStep(step, success ? QStringLiteral("onSuccess")
-                                                     : QStringLiteral("onFailure"));
+    QString next;
+    if (!route.isEmpty()) {
+        next = nextStep(step, route);
+    } else {
+        next = nextStep(step, success ? QStringLiteral("onSuccess")
+                                      : QStringLiteral("onFailure"));
+        if (next.isEmpty()) next = nextStep(step, QString());
+    }
     if (!success && next.isEmpty()) {
         s->status = Failed; s->error = QStringLiteral("paso fallido sin recuperacion"); return false;
     }
     if (next.isEmpty() || next == QLatin1String("stop") ||
         step.value(QStringLiteral("type")).toString() == QLatin1String("finish")) {
         s->currentStep.clear(); s->status = success ? Completed : Failed; return true;
+    }
+    if (def.value(QStringLiteral("steps")).toObject().value(next).toObject()
+            .value(QStringLiteral("type")).toString() == QLatin1String("repair")) {
+        if (repairBudgetExceeded(def, *s)) {
+            s->status = Failed;
+            s->error = QStringLiteral("presupuesto de reparaciones agotado");
+            return false;
+        }
+        ++s->repairAttempts;
     }
     s->currentStep = next;
     s->status = currentStep(def, *s).value(QStringLiteral("type")).toString() == QLatin1String("approval")
@@ -128,9 +187,11 @@ QJsonObject WorkflowEngine::toJson(const State &s)
             {QStringLiteral("results"), QJsonObject::fromVariantMap(s.results)},
             {QStringLiteral("variables"), QJsonObject::fromVariantMap(s.variables)},
             {QStringLiteral("iterations"), s.iterations},
+            {QStringLiteral("repairAttempts"), s.repairAttempts},
             {QStringLiteral("startedAtMs"), s.startedAtMs},
             {QStringLiteral("status"), statusName(s.status)},
-            {QStringLiteral("error"), s.error}};
+            {QStringLiteral("error"), s.error},
+            {QStringLiteral("lastVerdict"), s.lastVerdict}};
 }
 
 WorkflowEngine::State WorkflowEngine::fromJson(const QJsonObject &o, QString *error)
@@ -144,6 +205,7 @@ WorkflowEngine::State WorkflowEngine::fromJson(const QJsonObject &o, QString *er
     s.results = o.value(QStringLiteral("results")).toObject().toVariantMap();
     s.variables = o.value(QStringLiteral("variables")).toObject().toVariantMap();
     s.iterations = o.value(QStringLiteral("iterations")).toInt();
+    s.repairAttempts = o.value(QStringLiteral("repairAttempts")).toInt();
     s.startedAtMs = o.value(QStringLiteral("startedAtMs")).toInteger();
     const QString status = o.value(QStringLiteral("status")).toString();
     if (status == QLatin1String("running")) s.status = Running;
@@ -153,6 +215,7 @@ WorkflowEngine::State WorkflowEngine::fromJson(const QJsonObject &o, QString *er
     else if (status == QLatin1String("cancelled")) s.status = Cancelled;
     else s.status = Ready;
     s.error = o.value(QStringLiteral("error")).toString();
+    s.lastVerdict = o.value(QStringLiteral("lastVerdict")).toString();
     if (error) error->clear();
     return s;
 }

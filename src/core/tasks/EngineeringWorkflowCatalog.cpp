@@ -12,18 +12,21 @@ QVariantMap step(const QString &type, const QVariantMap &values = {})
 
 QVariantMap definition(const QString &id, const QString &name,
                        const QString &description, const QVariantList &steps,
-                       const QString &entry = QStringLiteral("inspect"))
+                       const QString &entry = QStringLiteral("inspect"),
+                       int maxRepairs = 0)
 {
     QVariantMap stepMap;
     for (const QVariant &value : steps) {
         const QVariantMap item = value.toMap();
         stepMap.insert(item.value(QStringLiteral("id")).toString(), item);
     }
+    QVariantMap budget{{QStringLiteral("maxIterations"), 32},
+                       {QStringLiteral("maxSeconds"), 3600}};
+    if (maxRepairs > 0) budget.insert(QStringLiteral("maxRepairs"), maxRepairs);
     return {{QStringLiteral("id"), id}, {QStringLiteral("name"), name},
             {QStringLiteral("description"), description},
             {QStringLiteral("schemaVersion"), 1}, {QStringLiteral("entry"), entry},
-            {QStringLiteral("budget"), QVariantMap{{QStringLiteral("maxIterations"), 32},
-                                                    {QStringLiteral("maxSeconds"), 3600}}},
+            {QStringLiteral("budget"), budget},
             {QStringLiteral("steps"), stepMap}};
 }
 }
@@ -35,6 +38,7 @@ QVariantList EngineeringWorkflowCatalog::workflows()
         workflow(QStringLiteral("qa")),
         workflow(QStringLiteral("document-audit")),
         workflow(QStringLiteral("review")),
+        workflow(QStringLiteral("autoprompt")),
         workflow(QStringLiteral("release-check"))
     };
 }
@@ -135,6 +139,85 @@ QVariantMap EngineeringWorkflowCatalog::workflow(const QString &id)
                     {QStringLiteral("next"), QStringLiteral("finish")}}),
                 step(QStringLiteral("finish"), {{QStringLiteral("id"), QStringLiteral("finish")}})
             });
+    }
+    if (id == QLatin1String("autoprompt")) {
+        const QString gate = QStringLiteral(
+            "La primera línea de la respuesta debe ser exactamente `LC_GATE: PASS`, "
+            "`LC_GATE: FAIL` o `LC_GATE: BLOCKED`. PASS sólo si hay evidencia concreta; "
+            "FAIL si falta un requisito o una prueba; BLOCKED si no podés continuar sin "
+            "una decisión o permiso externo.");
+        return definition(id, QStringLiteral("Autoprompt: planificar, construir y verificar"),
+            QStringLiteral("Cierra el loop de una tarea compleja con plan, implementación, "
+                           "revisión independiente, verificación y reparaciones acotadas."), {
+                step(QStringLiteral("agent"), {
+                    {QStringLiteral("id"), QStringLiteral("scope")},
+                    {QStringLiteral("prompt"), QStringLiteral(
+                        "Leé el objetivo, AGENTS.md/README.md y el estado del workspace. "
+                        "Delimitá requisitos, riesgos, archivos candidatos y criterios de "
+                        "aceptación. No edites archivos. %1").arg(gate)},
+                    {QStringLiteral("verdictRequired"), true},
+                    {QStringLiteral("next"), QStringLiteral("plan")},
+                    {QStringLiteral("onFailure"), QStringLiteral("stop")},
+                    {QStringLiteral("onBlocked"), QStringLiteral("stop")}}),
+                step(QStringLiteral("agent"), {
+                    {QStringLiteral("id"), QStringLiteral("plan")},
+                    {QStringLiteral("prompt"), QStringLiteral(
+                        "Diseñá un roadmap ejecutable, con pasos pequeños, pruebas y una "
+                        "estrategia de verificación end-to-end. No edites archivos. %1").arg(gate)},
+                    {QStringLiteral("verdictRequired"), true},
+                    {QStringLiteral("next"), QStringLiteral("implement")},
+                    {QStringLiteral("onFailure"), QStringLiteral("stop")},
+                    {QStringLiteral("onBlocked"), QStringLiteral("stop")}}),
+                step(QStringLiteral("agent"), {
+                    {QStringLiteral("id"), QStringLiteral("implement")},
+                    {QStringLiteral("prompt"), QStringLiteral(
+                        "Implementá el roadmap con el cambio mínimo necesario. Agregá o "
+                        "actualizá pruebas, ejecutalas y dejá evidencia reproducible. %1").arg(gate)},
+                    {QStringLiteral("verdictRequired"), true},
+                    {QStringLiteral("onSuccess"), QStringLiteral("review_verify")},
+                    {QStringLiteral("onFailure"), QStringLiteral("repair")},
+                    {QStringLiteral("onBlocked"), QStringLiteral("stop")}}),
+                step(QStringLiteral("parallel"), {
+                    {QStringLiteral("id"), QStringLiteral("review_verify")},
+                    {QStringLiteral("prompt"), QStringLiteral("Cada rama debe producir su propio recibo de gate.")},
+                    {QStringLiteral("verdictRequired"), true},
+                    {QStringLiteral("branches"), QVariantList{
+                        QVariantMap{{QStringLiteral("id"), QStringLiteral("reviewer")},
+                                    {QStringLiteral("readOnly"), true},
+                                    {QStringLiteral("prompt"), QStringLiteral(
+                                        "Revisá de forma independiente el diff contra el objetivo. "
+                                        "Buscá bugs, regresiones, complejidad innecesaria, cambios "
+                                        "fuera de alcance y cobertura faltante. No modifiques nada. %1").arg(gate)}},
+                        QVariantMap{{QStringLiteral("id"), QStringLiteral("verifier")},
+                                    {QStringLiteral("readOnly"), true},
+                                    {QStringLiteral("allowShell"), true},
+                                    {QStringLiteral("prompt"), QStringLiteral(
+                                        "Verificá criterios de aceptación y ejecutá sólo las pruebas "
+                                        "necesarias. No edites archivos ni uses acciones externas. %1").arg(gate)}}}},
+                    {QStringLiteral("onSuccess"), QStringLiteral("goal_check")},
+                    {QStringLiteral("onFailure"), QStringLiteral("repair")},
+                    {QStringLiteral("onBlocked"), QStringLiteral("stop")}}),
+                step(QStringLiteral("repair"), {
+                    {QStringLiteral("id"), QStringLiteral("repair")},
+                    {QStringLiteral("prompt"), QStringLiteral(
+                        "Repará únicamente los hallazgos del implementador/revisor/verificador. "
+                        "No amplíes el alcance; ejecutá las pruebas afectadas y reportá la causa "
+                        "de cada reparación. %1").arg(gate)},
+                    {QStringLiteral("verdictRequired"), true},
+                    {QStringLiteral("onSuccess"), QStringLiteral("review_verify")},
+                    {QStringLiteral("onFailure"), QStringLiteral("review_verify")},
+                    {QStringLiteral("onBlocked"), QStringLiteral("stop")}}),
+                step(QStringLiteral("agent"), {
+                    {QStringLiteral("id"), QStringLiteral("goal_check")},
+                    {QStringLiteral("prompt"), QStringLiteral(
+                        "Hacé una comprobación final fresca: contrastá cada requisito del objetivo "
+                        "con el diff, las pruebas y la evidencia. No edites archivos. %1").arg(gate)},
+                    {QStringLiteral("verdictRequired"), true},
+                    {QStringLiteral("onSuccess"), QStringLiteral("finish")},
+                    {QStringLiteral("onFailure"), QStringLiteral("repair")},
+                    {QStringLiteral("onBlocked"), QStringLiteral("stop")}}),
+                step(QStringLiteral("finish"), {{QStringLiteral("id"), QStringLiteral("finish")}})
+            }, QStringLiteral("scope"), 3);
     }
     if (id == QLatin1String("release-check")) {
         return definition(id, QStringLiteral("Preparar release Debug"),
