@@ -257,6 +257,9 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench 48GB Qwen3.8 Q6] tensor split · 96k · MTP2` (`sys-bench-48-qwen38-q6-tensor`) | Qwen3.8 UD-Q6_K_XL | Comparar reparto tensor contra layer | `--split-mode tensor`; `--tensor-split 1,1` | HE0 → HE20 → BCB |
 | `[bench 48GB Qwen3.8 Q6] cache warm · 96k · MTP2` (`sys-bench-48-qwen38-q6-cache-warm`) | Qwen3.8 UD-Q6_K_XL | Medir prefijos repetidos | `--cache-prompt`; `--cache-reuse 512`; sólo warm-cache | HE0 → HE20 → BCB |
 | `[bench 48GB Qwen3.8 Q6] reasoning on · 96k · MTP2` (`sys-bench-48-qwen38-q6-reasoning-on`) | Qwen3.8 UD-Q6_K_XL | Medir efecto de thinking en tool-calls | `--reasoning on` | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · thinking low · 131k · MTP3 · visión` (`sys-bench-qwen38-udq4-reasoning-low`) | BALANCE - Qwen3.8 UD-Q4 visión | A/B exacto del nivel mínimo de thinking contra el control `reasoning off` | `--reasoning low`; resto idéntico al control | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · thinking medium · 131k · MTP3 · visión` (`sys-bench-qwen38-udq4-reasoning-medium`) | BALANCE - Qwen3.8 UD-Q4 visión | A/B exacto del nivel medio de thinking contra el control `reasoning off` | `--reasoning medium`; resto idéntico al control | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · thinking xhigh · 131k · MTP3 · visión` (`sys-bench-qwen38-udq4-reasoning-xhigh`) | BALANCE - Qwen3.8 UD-Q4 visión | A/B exacto del nivel máximo disponible de thinking contra el control `reasoning off` | `--reasoning xhigh`; resto idéntico al control | HE0 → HE20 → BCB |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k` (`sys-kat3-mtp-262k`) | FAST - KAT2-Coder-7-8-26 | Probar MTP embebido APEX sin alterar KAT2; texto-only | APEX I-Compact; ctx 262k; B512/U64; KV q8_0; MTP4; requiere descargar el GGUF | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
@@ -289,6 +292,9 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` | 1/1 | 12,925 s | 57,87 | Válido |
 | `[bench Qwen3.8] Q4_K_M · MTP4 · 131k · mmproj` | 1/1 | 12,968 s | 45,38 | Válido |
 | `[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj` | 1/1 | 14,982 s | 52,48 | Válido |
+| `[bench Qwen3.8] UD-Q4 · thinking low · 131k · MTP3 · visión` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra el control UD-Q4 `reasoning off` |
+| `[bench Qwen3.8] UD-Q4 · thinking medium · 131k · MTP3 · visión` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra el control UD-Q4 `reasoning off` |
+| `[bench Qwen3.8] UD-Q4 · thinking xhigh · 131k · MTP3 · visión` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra el control UD-Q4 `reasoning off` |
 | `[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench Qwen3.8] Q4_K_M · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |

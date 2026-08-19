@@ -1550,7 +1550,7 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 19 : 16;
+        const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 22 : 16;
         QCOMPARE(variants.size(), expectedVariantCount); // variantes base, controles del post, espejo y MTP+ngram
         if (id == QStringLiteral("sys-qwen38-27b-udq4-131k")) {
             bool ngramQueued = false;
@@ -1564,6 +1564,31 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
                 }
             }
             QVERIFY(ngramQueued);
+            const QStringList reasoningIds = {
+                QStringLiteral("sys-bench-qwen38-udq4-reasoning-low"),
+                QStringLiteral("sys-bench-qwen38-udq4-reasoning-medium"),
+                QStringLiteral("sys-bench-qwen38-udq4-reasoning-xhigh")};
+            const QStringList reasoningLevels = {
+                QStringLiteral("low"), QStringLiteral("medium"), QStringLiteral("xhigh")};
+            for (int i = 0; i < reasoningIds.size(); ++i) {
+                const QJsonObject variant = [&]() {
+                    for (const QJsonValue &value : variants)
+                        if (value.toObject().value(QStringLiteral("id")).toString()
+                            == reasoningIds.at(i))
+                            return value.toObject();
+                    return QJsonObject{};
+                }();
+                QVERIFY2(!variant.isEmpty(), qPrintable(reasoningIds.at(i)));
+                QVERIFY(variant.value(QStringLiteral("benchmark")).toBool());
+                QCOMPARE(variant.value(QStringLiteral("extraArgOverrides")).toObject()
+                             .value(QStringLiteral("--reasoning")).toString(),
+                         reasoningLevels.at(i));
+                const QVariantMap launch = pm.getLaunchProfile(reasoningIds.at(i));
+                QVERIFY2(!launch.isEmpty(), qPrintable(reasoningIds.at(i)));
+                const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+                QCOMPARE(args.value(args.indexOf(QStringLiteral("--reasoning")) + 1),
+                         reasoningLevels.at(i));
+            }
         }
         QSet<QString> variantIds;
         const QVariantMap baseLaunch = pm.getLaunchProfile(id);
