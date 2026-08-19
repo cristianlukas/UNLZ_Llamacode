@@ -18,6 +18,7 @@
 #include <QCoreApplication>
 #include <algorithm>
 #include "core/profiles/ProfileManager.h"
+#include "core/profiles/SystemProfileVariants.h"
 #include "core/profiles/MtpDetection.h"
 #include "AppController.h"
 
@@ -842,19 +843,67 @@ void SystemProfilesTests::bundle_lagunaTemplateIsAppliedToBothProfiles()
     QVERIFY(tpl.contains(QStringLiteral("<tool_call>")));
     QVERIFY(tpl.contains(QStringLiteral("<tool_response>")));
 
+    const QString officialPath = repo.absoluteFilePath(
+        QStringLiteral("chat-templates/poolside-Laguna-S-2.1.jinja"));
+    QFile officialFile(officialPath);
+    QVERIFY2(officialFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("no se pudo abrir %1").arg(officialPath)));
+    const QString official = QString::fromUtf8(officialFile.readAll());
+    QVERIFY(official.contains(QStringLiteral("No formatting instructions")));
+    QVERIFY(official.contains(QStringLiteral("<available_tools>")));
+    QVERIFY(official.contains(QStringLiteral("<tool_response>")));
+
     QFile bundle(bundlePath());
     QVERIFY(bundle.open(QIODevice::ReadOnly));
     const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
     int lagunaProfiles = 0;
+    QJsonObject single;
+    QJsonObject dual;
     for (const QJsonValue &value : profiles) {
         const QJsonObject profile = value.toObject();
-        if (!profile.value(QStringLiteral("id")).toString().startsWith(QStringLiteral("sys-laguna")))
+        const QString id = profile.value(QStringLiteral("id")).toString();
+        if (!id.startsWith(QStringLiteral("sys-laguna")))
             continue;
         ++lagunaProfiles;
         QCOMPARE(profile.value(QStringLiteral("chatTemplate")).toString(),
                  QStringLiteral("laguna-tools-v24.jinja"));
+        if (id == QStringLiteral("sys-laguna-s-2-1-q2")) single = profile;
+        if (id == QStringLiteral("sys-laguna-s-2-1-q2-48gb")) dual = profile;
     }
     QCOMPARE(lagunaProfiles, 3);
+
+    QVERIFY(!single.isEmpty());
+    QVERIFY(!dual.isEmpty());
+    QCOMPARE(single.value(QStringLiteral("benchmarkVariants")).toArray().size(), 2);
+    QCOMPARE(dual.value(QStringLiteral("benchmarkVariants")).toArray().size(), 4);
+
+    const QJsonArray expandedOfficial = expandSystemProfileVariants(QJsonArray{dual});
+    QJsonObject officialVariant;
+    for (const QJsonValue &value : expandedOfficial) {
+        if (value.toObject().value(QStringLiteral("id")).toString()
+            == QStringLiteral("sys-bench-laguna-s-2-1-q2-48gb-32k-official")) {
+            officialVariant = value.toObject();
+            break;
+        }
+    }
+    QVERIFY(!officialVariant.isEmpty());
+    QCOMPARE(officialVariant.value(QStringLiteral("chatTemplate")).toString(),
+             QStringLiteral("poolside-Laguna-S-2.1.jinja"));
+
+    ProfileManager pm;
+    const QStringList variantIds = {
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-24gb-32k-official"),
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-24gb-32k-v24"),
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-48gb-32k-official"),
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-48gb-32k-v24")};
+    for (const QString &id : variantIds) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+        QVERIFY(!args.contains(QStringLiteral("--reasoning-format")));
+        QVERIFY(!args.contains(QStringLiteral("--reasoning-preserve")));
+    }
 }
 
 // El perfil de 48 GB (2x RTX 3090) reusa los mismos shards que ULTRA-Q y solo

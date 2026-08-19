@@ -493,6 +493,7 @@ qt_add_resources(LlamaCode "llamacode_assets"
         assets/system_profiles.json
         assets/chat-templates/gemma4-tools-fixed.jinja
         assets/chat-templates/kat-coder-tools.jinja
+        assets/chat-templates/poolside-Laguna-S-2.1.jinja
         assets/chat-templates/laguna-tools-v24.jinja
         assets/chat-templates/qwen38-tools-fixed.jinja
         assets/benchmarks/aa_intelligence.json

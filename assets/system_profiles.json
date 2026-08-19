@@ -2162,6 +2162,41 @@
       "enabled": false,
       "args": []
     },
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-laguna-s-2-1-q2-24gb-32k-official",
+        "order": 192,
+        "displayName": "[bench Laguna 24GB] 32k · template oficial · thinking OFF",
+        "chatTemplate": "poolside-Laguna-S-2.1.jinja",
+        "benchmark": true,
+        "runtime": {
+          "ctx": 32768,
+          "batch": 512,
+          "ubatch": 128
+        },
+        "extraArgOverrides": {
+          "--reasoning-format": null,
+          "--reasoning-preserve": null
+        },
+        "comment": "Comparación limpia para el equipo de 24 GB: template oficial de llama.cpp, ctx 32k y batch/ubatch reducidos. Iniciar con Pensamiento del servidor OFF; no cambia el quant ni el offload de 32 expertos a CPU."
+      },
+      {
+        "id": "sys-bench-laguna-s-2-1-q2-24gb-32k-v24",
+        "order": 193,
+        "displayName": "[bench Laguna 24GB] 32k · template v24 · thinking OFF",
+        "benchmark": true,
+        "runtime": {
+          "ctx": 32768,
+          "batch": 512,
+          "ubatch": 128
+        },
+        "extraArgOverrides": {
+          "--reasoning-format": null,
+          "--reasoning-preserve": null
+        },
+        "comment": "Control A/B del template v24 con el mismo ctx 32k y batch/ubatch que la variante oficial. Iniciar con Pensamiento del servidor OFF para aislar template y contexto."
+      }
+    ],
     "binaryKind": "official",
     "minimumBinaryBuild": 10087
   },
@@ -2260,6 +2295,39 @@
           "ubatch": 256
         },
         "comment": "Control de batch: conserva el contexto histórico de 100k y reduce sólo batch/ubatch para aislar la causa de bloqueos o Connection closed. Ejecutar HE0 antes de HE20/BCB."
+      },
+      {
+        "id": "sys-bench-laguna-s-2-1-q2-48gb-32k-official",
+        "order": 194,
+        "displayName": "[bench Laguna 48GB] 32k · template oficial · thinking OFF",
+        "chatTemplate": "poolside-Laguna-S-2.1.jinja",
+        "benchmark": true,
+        "runtime": {
+          "ctx": 32768,
+          "batch": 512,
+          "ubatch": 64
+        },
+        "extraArgOverrides": {
+          "--reasoning-format": null,
+          "--reasoning-preserve": null
+        },
+        "comment": "A/B principal en 2x RTX 3090: mismo GGUF, reparto 1,1 y KV q4 del perfil dual, pero ctx 32k y template oficial de llama.cpp. Iniciar con Pensamiento del servidor OFF."
+      },
+      {
+        "id": "sys-bench-laguna-s-2-1-q2-48gb-32k-v24",
+        "order": 195,
+        "displayName": "[bench Laguna 48GB] 32k · template v24 · thinking OFF",
+        "benchmark": true,
+        "runtime": {
+          "ctx": 32768,
+          "batch": 512,
+          "ubatch": 64
+        },
+        "extraArgOverrides": {
+          "--reasoning-format": null,
+          "--reasoning-preserve": null
+        },
+        "comment": "Control A/B del template v24 con exactamente el mismo ctx, batch, ubatch, quant y reparto que la variante oficial. Iniciar con Pensamiento del servidor OFF."
       }
     ],
     "minimumBinaryBuild": 10087

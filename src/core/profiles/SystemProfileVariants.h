@@ -25,6 +25,12 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             derived[QStringLiteral("id")] = id;
             derived[QStringLiteral("displayName")] =
                 variant.value(QStringLiteral("displayName")).toString();
+            // Algunas comparaciones necesitan cambiar el template además de los
+            // flags. Propagarlo permite que ProfileManager materialice el archivo
+            // correcto desde el bundle, en vez de dejar el template del padre.
+            if (variant.contains(QStringLiteral("chatTemplate")))
+                derived[QStringLiteral("chatTemplate")] =
+                    variant.value(QStringLiteral("chatTemplate"));
             // Una variante de tuning no hereda las insignias obtenidas por el
             // perfil base: debe medirse y marcarse de forma explicita.
             derived[QStringLiteral("best")] = variant.value(QStringLiteral("best")).toBool(false);
