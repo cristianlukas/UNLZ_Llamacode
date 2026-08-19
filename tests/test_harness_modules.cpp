@@ -40,6 +40,7 @@ private slots:
     void directiveStore_rejectsInvalidInput();
     void directiveFactKeys_matchTheFactsActuallyUsed();
     void memory_policyGovernsWhatGetsInjected();
+    void knowledge_policyReachesBackend();
     void chat_moduleReachesThePreamble();
 
 private:
@@ -518,6 +519,33 @@ void HarnessModulesTests::memory_policyGovernsWhatGetsInjected()
     zero.structuredFacts = 0;
     be.setMemoryPolicy(zero);
     QVERIFY(!be.systemPromptForTest().contains(QStringLiteral("Memoria estructurada relevante")));
+}
+
+void HarnessModulesTests::knowledge_policyReachesBackend()
+{
+    LlamaAgentBackend be;
+    be.setCwdForTest(m_ws.path());
+    HarnessKnowledgeModule policy;
+    policy.set = true;
+    policy.enabled = true;
+    policy.preflight = true;
+    policy.citeSources = true;
+    policy.maxFacts = 4;
+    policy.maxEdges = 6;
+    policy.maxChars = 4096;
+
+    be.setKnowledgePolicy(policy);
+    const HarnessKnowledgeModule actual = be.knowledgePolicyForTest();
+    QVERIFY(actual.enabled);
+    QVERIFY(actual.preflight);
+    QVERIFY(actual.citeSources);
+    QCOMPARE(actual.maxFacts, 4);
+    QCOMPARE(actual.maxEdges, 6);
+    QCOMPARE(actual.maxChars, 4096);
+
+    const QString prompt = be.systemPromptForTest();
+    QVERIFY(prompt.contains(QStringLiteral("Protocolo de conocimiento")));
+    QVERIFY(prompt.contains(QStringLiteral("Citá las fuentes")));
 }
 
 // Modo Chat: el modulo llega al preamble real que se manda al server.

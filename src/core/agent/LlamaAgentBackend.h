@@ -19,6 +19,7 @@ class QThread;
 class QTimer;
 class AgentToolRunner;
 class SubAgentRunner;
+class HarnessWorkerDriver;
 
 // Backend propio ("llamaagent"): loop ReAct con tool-calling OpenAI contra
 // llama-server. No lanza proceso externo; ejecuta tools nativas (lectura/
@@ -93,6 +94,8 @@ public:
     // gate de la consolidacion automatica. Ver modulo `memory` del HarnessSpec.
     void setMemoryPolicy(const HarnessMemoryModule &memory);
     HarnessMemoryModule memoryPolicyForTest() const { return m_memoryPolicy; }
+    void setKnowledgePolicy(const HarnessKnowledgeModule &knowledge);
+    HarnessKnowledgeModule knowledgePolicyForTest() const { return m_knowledgePolicy; }
     HarnessEscalationModule escalationPolicyForTest() const { return m_escalationPolicy; }
     HarnessLoopModule loopPolicyForTest() const { return m_loopPolicy; }
     HarnessContextModule contextPolicyForTest() const { return m_contextPolicy; }
@@ -121,6 +124,8 @@ public:
     QString harnessStorageDirForTest() const { return storageDir(); }
     QString harnessEventLogPathForTest() const { return m_harnessEventLog.path(); }
     HarnessCapabilitySnapshot harnessCapabilitiesForTest() const { return m_harnessCapabilities; }
+    bool harnessWorkerConfiguredForTest() const;
+    bool harnessWorkerReadyForTest() const { return m_harnessWorkerReady; }
 
     // Razonamiento (Qwen3): on por defecto para que el agente piense las tools.
     void setThinkingEnabled(bool enabled);
@@ -472,6 +477,12 @@ private:
     void configureWorker();
     void restartWorkerAfterTimeout();
     void teardownWorker();
+    void startHarnessWorker();
+    void stopHarnessWorker();
+    void failExternalWorkerCalls(const QString &reason);
+    void dispatchWorkerCapability(const QString &requestId, const QString &capability,
+                                  const QString &operation, const QJsonObject &payload);
+    void finishWorkerCapability(const QVariantMap &result);
 
 private slots:
     void onServersReady(const QVariantList &toolDefs);
@@ -480,6 +491,12 @@ private slots:
     void onToolOutputChunk(const QString &callId, const QString &chunk);
     void onSubFinished(const QString &id, const QString &result, bool ok);
     void onSubProgress(const QString &id, const QString &note);
+    void onHarnessWorkerAuthenticated(bool authenticated);
+    void onHarnessWorkerCallResult(const QString &callId, const QJsonObject &payload);
+    void onHarnessWorkerCapabilityCall(const QString &requestId, const QString &capability,
+                                       const QString &operation, const QJsonObject &payload);
+    void onHarnessWorkerError(const QString &message);
+    void onHarnessWorkerExited(int exitCode);
     void flushQueue();                 // envía el próximo mensaje encolado (si lo hay)
 
 private:
@@ -605,6 +622,13 @@ private:
     HarnessEffectLedger m_harnessEffectLedger;
     QString m_harnessActivationId;
     HarnessCapabilitySnapshot m_harnessCapabilities;
+    HarnessWorkerModule m_harnessWorkerModule;
+    HarnessWorkerDriver *m_harnessWorker = nullptr;
+    bool m_harnessWorkerReady = false;
+    QHash<QString, QString> m_externalWorkerCalls; // driver call id → model tool-call id
+    QHash<QString, QString> m_externalWorkerDescriptions;
+    QHash<QString, QString> m_workerCapabilityCalls; // native call id → broker request id
+    QHash<QString, QString> m_workerCapabilityNames;
     QString m_approvalMode = QStringLiteral("ask");
     bool    m_taskAutoApprove = false;   // override temporal durante una Task
     QString m_systemExtra;          // instrucciones extra del usuario (perfil de agente)
@@ -667,6 +691,7 @@ private:
     HarnessContextModule m_contextPolicy;
     HarnessEscalationModule m_escalationPolicy;
     HarnessMemoryModule m_memoryPolicy;
+    HarnessKnowledgeModule m_knowledgePolicy;
     QVariantList m_customDirectives;   // {slug, body, when} del perfil
     int m_promptMaxChars = 0;          // 0 = sin tope (default histórico)
     int m_progressEvents = 0;

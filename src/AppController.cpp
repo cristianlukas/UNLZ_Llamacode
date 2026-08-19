@@ -4808,6 +4808,14 @@ void AppController::applyAgentProfileCaps(LlamaAgentBackend *cb, const AgentProf
     }
     if (spec.tools.set && !spec.tools.include.contains(QStringLiteral("*")))
         disabled = HarnessTools::disabledFrom(HarnessTools::resolve(spec.tools));
+    const QString workerLane = spec.worker.lane.trimmed().toLower();
+    if (spec.worker.set
+        && (workerLane == QLatin1String("node") || workerLane == QLatin1String("python"))
+        && !spec.tools.exclude.contains(QStringLiteral("worker_call"))) {
+        // Selecting an external lane makes its guarded entrypoint callable by
+        // default. An explicit tools.exclude remains the opt-out switch.
+        disabled.removeAll(QStringLiteral("worker_call"));
+    }
     cb->setDisabledTools(disabled);
 
     cb->setDirectives(expandDirectiveSentinel(ap.directives));
@@ -4981,6 +4989,7 @@ void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &s
     if (spec.context.set) cb->setContextPolicy(spec.context);
     if (spec.escalation.set) cb->setEscalationPolicy(spec.escalation);
     if (spec.memory.set) cb->setMemoryPolicy(spec.memory);
+    if (spec.knowledge.set) cb->setKnowledgePolicy(spec.knowledge);
     if (spec.protocol.set) {
         cb->setToolProtocol(spec.protocol.toolProtocol);
         cb->setThinkingLeakGuard(spec.protocol.thinkingLeakGuard);
@@ -5424,6 +5433,7 @@ void AppController::startAgent(const QString &launchProfileId)
         c.harnessEngineVersion = HarnessEngine::effectiveVersion(aspec.runtime);
         c.harnessProfileId = activeAgentProfile.id;
         c.harnessSpecHash = HarnessEngine::fingerprint(aspec);
+        c.harnessWorker = aspec.worker;
         c.cwd           = (!agentCwd.isEmpty() && QFileInfo(agentCwd).isDir()) ? agentCwd : QString();
         if (cloud) {
             c.serverBaseUrl = ctx.backend.cloudBaseUrl.trimmed();

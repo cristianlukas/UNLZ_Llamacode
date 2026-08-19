@@ -46,6 +46,7 @@ private slots:
     void escalation_masterChainAndRouterThresholds();
     void diff_listsOnlyChangedFields();
     void memoryAndChat_defaultsAndInheritance();
+    void knowledge_defaultsRoundTripAndBounds();
     void presets_minimalAndRpaExist();
 
 private:
@@ -77,6 +78,9 @@ void HarnessSpecTests::modules_defaultsMatchHistoricBehaviour()
     QVERIFY(s.context.readDedup);
     QVERIFY(!s.context.preflight);                 // estaba tras un #ifdef de debug
     QVERIFY(s.context.warmup);
+    QVERIFY(!s.knowledge.enabled);
+    QVERIFY(!s.knowledge.preflight);
+    QVERIFY(s.knowledge.citeSources);
     QCOMPARE(s.permissions.approvalMode, QStringLiteral("ask"));
     QVERIFY(s.permissions.hitlDestructive);
     QVERIFY(!s.permissions.mailAutoSend);
@@ -516,6 +520,59 @@ void HarnessSpecTests::memoryAndChat_defaultsAndInheritance()
     for (const QVariant &v : d) mods << v.toMap().value(QStringLiteral("module")).toString();
     QVERIFY(mods.contains(QStringLiteral("memory")));
     QVERIFY(mods.contains(QStringLiteral("chat")));
+}
+
+void HarnessSpecTests::knowledge_defaultsRoundTripAndBounds()
+{
+    const HarnessSpec def;
+    QVERIFY(!def.knowledge.enabled);
+    QVERIFY(!def.knowledge.preflight);
+    QVERIFY(def.knowledge.citeSources);
+    QCOMPARE(def.knowledge.maxFacts, 8);
+    QCOMPARE(def.knowledge.maxEdges, 12);
+    QCOMPARE(def.knowledge.maxChars, 12000);
+    QVERIFY(def.isEmpty());
+
+    HarnessSpec s;
+    s.knowledge.set = true;
+    s.knowledge.enabled = true;
+    s.knowledge.preflight = true;
+    s.knowledge.citeSources = false;
+    s.knowledge.maxFacts = 17;
+    s.knowledge.maxEdges = 33;
+    s.knowledge.maxChars = 24000;
+    const QJsonObject json = s.toJson();
+    QVERIFY(json.contains(QStringLiteral("knowledge")));
+    const HarnessSpec back = HarnessSpec::fromJson(json);
+    QVERIFY(back.knowledge.set);
+    QVERIFY(back.knowledge.enabled);
+    QVERIFY(back.knowledge.preflight);
+    QVERIFY(!back.knowledge.citeSources);
+    QCOMPARE(back.knowledge.maxFacts, 17);
+    QCOMPARE(back.knowledge.maxEdges, 33);
+    QCOMPARE(back.knowledge.maxChars, 24000);
+
+    const QJsonObject invalid{
+        {QStringLiteral("enabled"), true},
+        {QStringLiteral("maxFacts"), 999},
+        {QStringLiteral("maxEdges"), -3},
+        {QStringLiteral("maxChars"), 1}};
+    const HarnessKnowledgeModule bounded = HarnessKnowledgeModule::fromJson(invalid);
+    QVERIFY(bounded.enabled);
+    QCOMPARE(bounded.maxFacts, 50);
+    QCOMPARE(bounded.maxEdges, 0);
+    QCOMPARE(bounded.maxChars, 512);
+
+    HarnessSpec child;
+    child.chat.set = true;
+    const HarnessSpec resolved = HarnessSpec::resolve(s, child);
+    QVERIFY(resolved.knowledge.enabled);
+    QCOMPARE(resolved.knowledge.maxEdges, 33);
+
+    QStringList modules;
+    for (const QVariant &v : s.diff(HarnessSpec()))
+        modules << v.toMap().value(QStringLiteral("module")).toString();
+    QVERIFY(modules.contains(QStringLiteral("knowledge")));
 }
 
 void HarnessSpecTests::presets_minimalAndRpaExist()

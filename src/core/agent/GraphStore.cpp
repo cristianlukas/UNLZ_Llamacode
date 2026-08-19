@@ -94,9 +94,62 @@ void appendObj(const QString &path, const QJsonObject &o)
     f.close();
 }
 
+QJsonArray sourceArray(const GraphStore::SourceRefs &sources)
+{
+    QJsonArray out;
+    for (const GraphStore::SourceRef &source : sources) {
+        const QJsonObject o = source.toJson();
+        if (!o.isEmpty()) out.append(o);
+    }
+    return out;
+}
+
+GraphStore::SourceRefs readSources(const QJsonObject &o)
+{
+    GraphStore::SourceRefs out;
+    for (const QJsonValue &v : o.value(QStringLiteral("sources")).toArray()) {
+        if (v.isObject()) out.append(GraphStore::SourceRef::fromJson(v.toObject()));
+    }
+    return out;
+}
+
+QString sourceKey(const GraphStore::SourceRef &source)
+{
+    return QString::fromUtf8(QJsonDocument(source.toJson()).toJson(QJsonDocument::Compact));
+}
+
 }  // namespace
 
 namespace GraphStore {
+
+QJsonObject SourceRef::toJson() const
+{
+    QJsonObject o;
+    if (!path.trimmed().isEmpty()) o[QStringLiteral("path")] = path.trimmed();
+    if (startLine > 0) o[QStringLiteral("startLine")] = startLine;
+    if (endLine > 0) o[QStringLiteral("endLine")] = endLine;
+    if (!sha256.trimmed().isEmpty()) o[QStringLiteral("sha256")] = sha256.trimmed();
+    if (!kind.trimmed().isEmpty()) o[QStringLiteral("kind")] = kind.trimmed();
+    if (!sessionId.trimmed().isEmpty()) o[QStringLiteral("sessionId")] = sessionId.trimmed();
+    if (!correlationId.trimmed().isEmpty())
+        o[QStringLiteral("correlationId")] = correlationId.trimmed();
+    if (!commit.trimmed().isEmpty()) o[QStringLiteral("commit")] = commit.trimmed();
+    return o;
+}
+
+SourceRef SourceRef::fromJson(const QJsonObject &o)
+{
+    SourceRef out;
+    out.path = o.value(QStringLiteral("path")).toString();
+    out.startLine = qMax(0, o.value(QStringLiteral("startLine")).toInt());
+    out.endLine = qMax(0, o.value(QStringLiteral("endLine")).toInt());
+    out.sha256 = o.value(QStringLiteral("sha256")).toString();
+    out.kind = o.value(QStringLiteral("kind")).toString();
+    out.sessionId = o.value(QStringLiteral("sessionId")).toString();
+    out.correlationId = o.value(QStringLiteral("correlationId")).toString();
+    out.commit = o.value(QStringLiteral("commit")).toString();
+    return out;
+}
 
 QString jsonlPath(const QString &cwd)
 {
@@ -140,7 +193,7 @@ QString addEntity(const QString &cwd, const QString &name, const QString &etype)
 
 QString link(const QString &cwd, const QString &subj, const QString &pred,
              const QString &obj, const QString &edgeType, double conf,
-             const QString &prov)
+             const QString &prov, const SourceRefs &sources)
 {
     const QString s = subj.trimmed(), p = pred.trimmed(), o = obj.trimmed();
     if (s.isEmpty() || p.isEmpty() || o.isEmpty())
@@ -169,7 +222,7 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
     }
 
     const QString et = normEdge(edgeType, p);
-    appendObj(path, QJsonObject{
+    QJsonObject relation{
         {QStringLiteral("kind"), QStringLiteral("relation")},
         {QStringLiteral("id"), rid},
         {QStringLiteral("subj"), sid},
@@ -179,7 +232,10 @@ QString link(const QString &cwd, const QString &subj, const QString &pred,
         {QStringLiteral("conf"), confVal(conf)},
         {QStringLiteral("prov"), prov.trimmed().isEmpty() ? QStringLiteral("llm")
                                                           : prov.trimmed()},
-        {QStringLiteral("ts"), QDateTime::currentDateTime().toString(Qt::ISODate)}});
+        {QStringLiteral("ts"), QDateTime::currentDateTime().toString(Qt::ISODate)}};
+    const QJsonArray evidence = sourceArray(sources);
+    if (!evidence.isEmpty()) relation.insert(QStringLiteral("sources"), evidence);
+    appendObj(path, relation);
     return QStringLiteral("[relación creada · %1 -[%2]-> %3]").arg(s, et, o);
 }
 
@@ -295,7 +351,7 @@ QString addBatch(const QString &cwd,
         const QString sid = entId(s), oid = entId(o), rid = relId(sid, p, oid);
         if (haveRel.contains(rid)) continue;
         haveRel.insert(rid);
-        const QJsonObject ro{
+        QJsonObject ro{
             {QStringLiteral("kind"), QStringLiteral("relation")},
             {QStringLiteral("id"), rid},
             {QStringLiteral("subj"), sid},
@@ -305,6 +361,8 @@ QString addBatch(const QString &cwd,
             {QStringLiteral("conf"), confVal(conf)},
             {QStringLiteral("prov"), provTag},
             {QStringLiteral("ts"), ts}};
+        const QJsonArray evidence = sourceArray(t.sources);
+        if (!evidence.isEmpty()) ro.insert(QStringLiteral("sources"), evidence);
         f.write(QJsonDocument(ro).toJson(QJsonDocument::Compact));
         f.write("\n");
         ++nR;
@@ -373,98 +431,266 @@ QStringList entityNames(const QString &cwd, const QString &etype)
 
 QString query(const QString &cwd, const QString &name, int depth)
 {
+    const QJsonObject packet = queryPacket(cwd, name, depth);
+    if (!packet.value(QStringLiteral("ok")).toBool())
+        return QStringLiteral("[graph query: %1]")
+            .arg(packet.value(QStringLiteral("error")).toString());
+
+    const QJsonArray edgeArray = packet.value(QStringLiteral("edges")).toArray();
+    if (edgeArray.isEmpty())
+        return QStringLiteral("[entidad '%1' sin relaciones]").arg(name.trimmed());
+
+    QStringList lines;
+    for (const QJsonValue &v : edgeArray) {
+        const QJsonObject e = v.toObject();
+        QString line = QStringLiteral("- %1 -[%2]-> %3%4")
+            .arg(e.value(QStringLiteral("subj")).toString(),
+                 e.value(QStringLiteral("etype")).toString(),
+                 e.value(QStringLiteral("obj")).toString(),
+                 e.value(QStringLiteral("incoming")).toBool()
+                     ? QStringLiteral(" (entrante)") : QString());
+        if (e.value(QStringLiteral("status")).toString() == QLatin1String("unreviewed"))
+            line += QStringLiteral(" [unreviewed·%1]")
+                .arg(e.value(QStringLiteral("prov")).toString(QStringLiteral("llm")));
+        else
+            line += QStringLiteral(" [conf=%1·%2]")
+                .arg(e.value(QStringLiteral("conf")).toDouble(), 0, 'g', 2)
+                .arg(e.value(QStringLiteral("prov")).toString(QStringLiteral("indexer")));
+        const QStringList citations = [&]() {
+            QStringList out;
+            for (const QJsonValue &c : e.value(QStringLiteral("citations")).toArray())
+                out << c.toString();
+            return out;
+        }();
+        if (!citations.isEmpty()) line += QStringLiteral(" · fuente: ") + citations.join(", ");
+        lines << line;
+    }
+    return QStringLiteral("Vecindario de '%1' (depth=%2):\n").arg(name.trimmed())
+           .arg(packet.value(QStringLiteral("depth")).toInt())
+           + lines.join(QLatin1Char('\n'));
+}
+
+QJsonObject queryPacket(const QString &cwd, const QString &name, int depth)
+{
     if (depth <= 0) depth = 1;
-    depth = qBound(1, depth, 2);
+    depth = qBound(1, depth, 3);
     const QString nm = name.trimmed();
-    if (nm.isEmpty()) return QStringLiteral("[graph query: 'name' vacío]");
+    if (nm.isEmpty()) return {{QStringLiteral("ok"), false},
+                              {QStringLiteral("error"), QStringLiteral("'name' vacío")}};
 
     QFile f(jsonlPath(cwd));
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-        return QStringLiteral("[grafo vacío]");
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("grafo vacío")}};
 
-    // Cargar entidades y relaciones en memoria (grafos chicos).
-    QHash<QString, QString> idToName;          // entId -> nombre
-    // conf<0 → unreviewed (campo ausente en relaciones viejas: back-compat).
-    struct Rel { QString subj, pred, obj, etype, prov; double conf; };
+    struct Rel {
+        QString id, subj, pred, obj, etype, prov;
+        double conf = -1.0;
+        SourceRefs sources;
+    };
+    QHash<QString, QString> idToName;
+    QHash<QString, QString> idToType;
     QVector<Rel> rels;
     while (!f.atEnd()) {
         const QByteArray l = f.readLine().trimmed();
         if (l.isEmpty()) continue;
         const QJsonObject o = QJsonDocument::fromJson(l).object();
         const QString kind = o.value(QStringLiteral("kind")).toString();
-        if (kind == QLatin1String("entity"))
-            idToName.insert(o.value(QStringLiteral("id")).toString(),
-                            o.value(QStringLiteral("name")).toString());
-        else if (kind == QLatin1String("relation")) {
-            const QString pr = o.value(QStringLiteral("pred")).toString();
-            // etype ausente (relación vieja) → inferir del pred.
-            QString et = o.value(QStringLiteral("etype")).toString();
-            if (et.isEmpty()) et = normEdge(QString(), pr);
+        if (kind == QLatin1String("entity")) {
+            const QString id = o.value(QStringLiteral("id")).toString();
+            idToName.insert(id, o.value(QStringLiteral("name")).toString());
+            idToType.insert(id, o.value(QStringLiteral("etype")).toString());
+        } else if (kind == QLatin1String("relation")) {
+            const QString pred = o.value(QStringLiteral("pred")).toString();
+            QString etype = o.value(QStringLiteral("etype")).toString();
+            if (etype.isEmpty()) etype = normEdge(QString(), pred);
             const QJsonValue cv = o.value(QStringLiteral("conf"));
-            const double c = cv.isDouble() ? cv.toDouble() : -1.0;   // null/ausente → -1
-            rels.append({o.value(QStringLiteral("subj")).toString(), pr,
-                         o.value(QStringLiteral("obj")).toString(), et,
-                         o.value(QStringLiteral("prov")).toString(), c});
+            rels.append({o.value(QStringLiteral("id")).toString(),
+                         o.value(QStringLiteral("subj")).toString(), pred,
+                         o.value(QStringLiteral("obj")).toString(), etype,
+                         o.value(QStringLiteral("prov")).toString(),
+                         cv.isDouble() ? cv.toDouble() : -1.0, readSources(o)});
         }
     }
     f.close();
 
     const QString startId = entId(nm);
     if (!idToName.contains(startId))
-        return QStringLiteral("[grafo: no existe la entidad '%1']").arg(nm);
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("no existe la entidad '%1'").arg(nm)}};
 
-    auto nameOf = [&](const QString &id) {
-        return idToName.value(id, id);
+    QSet<QString> frontier{startId}, visited{startId}, seenEdges;
+    QVector<QPair<double, QJsonObject>> selected;
+    QSet<QString> sourceKeys;
+    QJsonArray sourceArrayOut;
+    QJsonArray nodes;
+    auto addNode = [&](const QString &id) {
+        if (!idToName.contains(id)) return;
+        nodes.append(QJsonObject{{QStringLiteral("id"), id},
+                                 {QStringLiteral("name"), idToName.value(id)},
+                                 {QStringLiteral("etype"), idToType.value(id)}});
     };
+    addNode(startId);
 
-    // BFS hasta 'depth' saltos; recolecta aristas tocadas.
-    struct Edge { double conf; QString line; };
-    QSet<QString> frontier{startId}, visited{startId};
-    QVector<Edge> edges;
-    QSet<QString> seenEdge;
     for (int d = 0; d < depth; ++d) {
         QSet<QString> next;
         for (const Rel &r : rels) {
-            QString other; bool outgoing;
+            QString other;
+            bool outgoing = false;
             if (frontier.contains(r.subj)) { other = r.obj; outgoing = true; }
-            else if (frontier.contains(r.obj)) { other = r.subj; outgoing = false; }
+            else if (frontier.contains(r.obj)) { other = r.subj; }
             else continue;
 
-            const QString edgeKey = r.subj + r.pred + r.obj;
-            if (!seenEdge.contains(edgeKey)) {
-                seenEdge.insert(edgeKey);
-                // Marca de confianza/origen: unreviewed si conf<0 (NO = incorrecto),
-                // si no muestra el score. Evita que el agente trate una inferencia
-                // del LLM como hecho verificado.
-                const QString tag = r.conf < 0.0
-                    ? QStringLiteral(" [unreviewed·%1]").arg(r.prov.isEmpty()
-                        ? QStringLiteral("llm") : r.prov)
-                    : QStringLiteral(" [conf=%1·%2]").arg(r.conf, 0, 'g', 2)
-                        .arg(r.prov.isEmpty() ? QStringLiteral("indexer") : r.prov);
-                edges.append({r.conf,
-                    QStringLiteral("- %1 -[%2]-> %3%4%5").arg(
-                        nameOf(r.subj), r.etype, nameOf(r.obj),
-                        outgoing ? QString() : QStringLiteral(" (entrante)"), tag)});
+            if (!seenEdges.contains(r.id.isEmpty() ? r.subj + r.pred + r.obj : r.id)) {
+                const QString edgeId = r.id.isEmpty() ? r.subj + r.pred + r.obj : r.id;
+                seenEdges.insert(edgeId);
+                QJsonObject edge{
+                    {QStringLiteral("id"), edgeId},
+                    {QStringLiteral("subj"), idToName.value(r.subj, r.subj)},
+                    {QStringLiteral("obj"), idToName.value(r.obj, r.obj)},
+                    {QStringLiteral("pred"), r.pred},
+                    {QStringLiteral("etype"), r.etype},
+                    {QStringLiteral("prov"), r.prov.isEmpty() ? QStringLiteral("llm") : r.prov},
+                    {QStringLiteral("conf"), r.conf},
+                    {QStringLiteral("status"), r.conf < 0.0 ? QStringLiteral("unreviewed")
+                                                               : QStringLiteral("verified")},
+                    {QStringLiteral("incoming"), !outgoing}};
+                QJsonArray refs;
+                QJsonArray citations;
+                for (const SourceRef &source : r.sources) {
+                    const QJsonObject sourceJson = source.toJson();
+                    if (sourceJson.isEmpty()) continue;
+                    refs.append(sourceJson);
+                    const QString key = sourceKey(source);
+                    if (!sourceKeys.contains(key)) {
+                        sourceKeys.insert(key);
+                        sourceArrayOut.append(sourceJson);
+                    }
+                    if (!source.path.trimmed().isEmpty()) {
+                        QString citation = source.path.trimmed();
+                        if (source.startLine > 0) {
+                            citation += QStringLiteral(":%1").arg(source.startLine);
+                            if (source.endLine > source.startLine)
+                                citation += QStringLiteral("-%1").arg(source.endLine);
+                        }
+                        if (!citations.contains(citation)) citations.append(citation);
+                    }
+                }
+                if (!refs.isEmpty()) edge.insert(QStringLiteral("sources"), refs);
+                if (!citations.isEmpty()) edge.insert(QStringLiteral("citations"), citations);
+                selected.append({r.conf, edge});
             }
-            if (!visited.contains(other)) { next.insert(other); visited.insert(other); }
+            if (!visited.contains(other)) {
+                next.insert(other);
+                visited.insert(other);
+                addNode(other);
+            }
         }
         frontier = next;
         if (frontier.isEmpty()) break;
     }
 
-    if (edges.isEmpty())
-        return QStringLiteral("[entidad '%1' sin relaciones]").arg(nm);
-
-    // Ordenar: verificados (conf alta) primero, unreviewed (conf<0) al final.
-    std::stable_sort(edges.begin(), edges.end(), [](const Edge &a, const Edge &b) {
-        const double ca = a.conf < 0.0 ? -1.0 : a.conf;
-        const double cb = b.conf < 0.0 ? -1.0 : b.conf;
+    std::stable_sort(selected.begin(), selected.end(), [](const auto &a, const auto &b) {
+        const double ca = a.first < 0.0 ? -1.0 : a.first;
+        const double cb = b.first < 0.0 ? -1.0 : b.first;
         return ca > cb;
     });
-    QStringList lines;
-    for (const Edge &e : edges) lines << e.line;
-    return QStringLiteral("Vecindario de '%1' (depth=%2):\n").arg(nm).arg(depth)
-           + lines.join(QLatin1Char('\n'));
+    QJsonArray edges;
+    for (const auto &entry : selected) edges.append(entry.second);
+    const int unreviewedEdges = std::count_if(
+        selected.cbegin(), selected.cend(), [](const auto &e) { return e.first < 0.0; });
+    return {{QStringLiteral("ok"), true},
+            {QStringLiteral("name"), nm},
+            {QStringLiteral("depth"), depth},
+            {QStringLiteral("nodes"), nodes},
+            {QStringLiteral("edges"), edges},
+            {QStringLiteral("sources"), sourceArrayOut},
+            {QStringLiteral("receipt"), QJsonObject{
+                {QStringLiteral("schemaVersion"), 1},
+                {QStringLiteral("edgeCount"), edges.size()},
+                {QStringLiteral("sourceCount"), sourceArrayOut.size()},
+             {QStringLiteral("unreviewedEdges"), unreviewedEdges}}}};
+}
+
+QJsonObject doctor(const QString &cwd)
+{
+    QFile f(jsonlPath(cwd));
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return {{QStringLiteral("ok"), true}, {QStringLiteral("exists"), false},
+                {QStringLiteral("entities"), 0}, {QStringLiteral("relations"), 0},
+                {QStringLiteral("decisions"), 0}, {QStringLiteral("issues"), QJsonArray{}}};
+
+    QSet<QString> entities;
+    QVector<QJsonObject> relations;
+    int invalidLines = 0, decisions = 0, sourceRefs = 0, unreviewed = 0;
+    QJsonArray issues;
+    while (!f.atEnd()) {
+        const QByteArray raw = f.readLine().trimmed();
+        if (raw.isEmpty()) continue;
+        QJsonParseError error;
+        const QJsonObject o = QJsonDocument::fromJson(raw, &error).object();
+        if (error.error != QJsonParseError::NoError || o.isEmpty()) {
+            ++invalidLines;
+            continue;
+        }
+        const QString kind = o.value(QStringLiteral("kind")).toString();
+        if (kind == QLatin1String("entity")) entities.insert(o.value(QStringLiteral("id")).toString());
+        else if (kind == QLatin1String("relation")) {
+            relations.append(o);
+            if (!o.value(QStringLiteral("conf")).isDouble()) ++unreviewed;
+            sourceRefs += o.value(QStringLiteral("sources")).toArray().size();
+        } else if (kind == QLatin1String("decision")) {
+            ++decisions;
+        }
+    }
+    f.close();
+
+    int orphanEdges = 0, staleSources = 0;
+    QSet<QString> seenSourceKeys;
+    for (const QJsonObject &relation : relations) {
+        const QString subj = relation.value(QStringLiteral("subj")).toString();
+        const QString obj = relation.value(QStringLiteral("obj")).toString();
+        if (!entities.contains(subj) || !entities.contains(obj)) {
+            ++orphanEdges;
+            if (issues.size() < 20)
+                issues.append(QStringLiteral("orphan relation %1")
+                             .arg(relation.value(QStringLiteral("id")).toString()));
+        }
+        for (const QJsonValue &v : relation.value(QStringLiteral("sources")).toArray()) {
+            const SourceRef source = SourceRef::fromJson(v.toObject());
+            const QString key = sourceKey(source);
+            if (seenSourceKeys.contains(key)) continue;
+            seenSourceKeys.insert(key);
+            if (source.path.isEmpty() || source.sha256.isEmpty()) continue;
+            const QString abs = QDir(cwd).absoluteFilePath(source.path);
+            QFile sourceFile(abs);
+            // CodeGraphIndexer hashea los bytes que leyó del archivo; conservar
+            // modo binario acá hace que el SHA sea estable también en Windows,
+            // donde Text puede convertir CRLF y producir un falso stale.
+            if (!sourceFile.open(QIODevice::ReadOnly)) continue;
+            const QString actual = QString::fromLatin1(
+                QCryptographicHash::hash(sourceFile.readAll(), QCryptographicHash::Sha256).toHex());
+            if (actual != source.sha256) {
+                ++staleSources;
+                if (issues.size() < 20)
+                    issues.append(QStringLiteral("stale source %1").arg(source.path));
+            }
+        }
+    }
+    if (invalidLines > 0 && issues.size() < 20)
+        issues.append(QStringLiteral("invalid JSONL lines: %1").arg(invalidLines));
+
+    return {{QStringLiteral("ok"), true}, {QStringLiteral("exists"), true},
+            {QStringLiteral("entities"), entities.size()},
+            {QStringLiteral("relations"), relations.size()},
+            {QStringLiteral("decisions"), decisions},
+            {QStringLiteral("unreviewedEdges"), unreviewed},
+            {QStringLiteral("sourceRefs"), sourceRefs},
+            {QStringLiteral("orphanEdges"), orphanEdges},
+            {QStringLiteral("staleSources"), staleSources},
+            {QStringLiteral("invalidLines"), invalidLines},
+            {QStringLiteral("healthy"), invalidLines == 0 && orphanEdges == 0 && staleSources == 0},
+            {QStringLiteral("issues"), issues}};
 }
 
 QString decide(const QString &cwd, const QString &topic, const QString &chosen,

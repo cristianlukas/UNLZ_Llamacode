@@ -5,10 +5,12 @@
 #include "ContextIndex.h"
 #include "ProjectBrain.h"
 #include "CodeGraphIndexer.h"
+#include "KnowledgePacket.h"
 #include "SubAgentRunner.h"
 #include "AgentEfficiency.h"
 #include "AgentEventLog.h"
 #include "ToolExecutionSafety.h"
+#include "HarnessWorkerProtocol.h"
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
 #include "core/ToolCallingSupport.h"
@@ -467,7 +469,14 @@ LlamaAgentBackend::~LlamaAgentBackend() { stop(); teardownWorker(); }
 // ───────────────────────────── Ciclo de vida ─────────────────────────────
 void LlamaAgentBackend::start(const AgentContext &ctx)
 {
+    // A backend can be reused after a server/profile swap. Tear down the
+    // previous external lane before adopting the new profile; the builtin path
+    // remains the default when the module is absent.
+    failExternalWorkerCalls(QStringLiteral(
+        "[worker externo detenido por cambio de perfil]"));
+    stopHarnessWorker();
     m_ctx = ctx;
+    m_harnessWorkerModule = ctx.harnessWorker;
     m_harnessEngineId = HarnessEngine::effectiveId(
         HarnessRuntimeModule{ctx.harnessEngineId, ctx.harnessEngineVersion,
                               QStringLiteral("legacy"), false, true});
@@ -549,6 +558,7 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(QVariantList, m_webProviders));
     QMetaObject::invokeMethod(m_worker, "initServers", Qt::QueuedConnection,
                               Q_ARG(QVariantList, m_mcpConfig), Q_ARG(QString, m_cwd));
+    startHarnessWorker();
     emit runningChanged();
     emit logAppended(QStringLiteral("[LlamaAgent backend listo · cwd: %1]\n")
                          .arg(QDir::toNativeSeparators(m_cwd)));
@@ -694,7 +704,7 @@ bool LlamaAgentBackend::isProtectedContextMessage(const QJsonObject &message) co
         QStringLiteral("write_file"), QStringLiteral("edit_file"),
         QStringLiteral("run_shell"), QStringLiteral("task"),
         QStringLiteral("skill_load"), QStringLiteral("memory"),
-        QStringLiteral("context_checkpoint")
+        QStringLiteral("context_checkpoint"), QStringLiteral("worker_call")
     };
     for (const QJsonValue &v : message.value(QStringLiteral("tool_calls")).toArray()) {
         const QString name = v.toObject().value(QStringLiteral("function")).toObject()
@@ -1100,9 +1110,13 @@ void LlamaAgentBackend::stop()
     // consumidores de turnFinished (Tasks/workflows) esperaban para siempre.
     const bool interruptedTurn = m_reply || m_compactReply || m_compacting
                                  || !m_awaitId.isEmpty() || !m_execCallId.isEmpty()
-                                 || !m_pendingCalls.isEmpty() || subsActive()
+                                 || !m_pendingCalls.isEmpty() || !m_externalWorkerCalls.isEmpty()
+                                 || subsActive()
                                  || m_curAsstIdx >= 0;
     emit desktopActivityChanged(false, QString(), QString());
+    failExternalWorkerCalls(QStringLiteral(
+        "[worker externo detenido: la llamada no llegó a ejecutarse]"));
+    stopHarnessWorker();
     if (m_compactReply) {
         QNetworkReply *cr = m_compactReply; m_compactReply = nullptr;
         cr->disconnect(this); cr->abort(); cr->deleteLater();
@@ -1617,6 +1631,14 @@ QString LlamaAgentBackend::buildSystemPrompt() const
         if (!mem.isEmpty())
             base += QStringLiteral("\n\n--- Memoria del proyecto ---\n") + mem;
     }
+    if (m_knowledgePolicy.enabled && m_knowledgePolicy.citeSources) {
+        base += QStringLiteral(
+            "\n\n--- Protocolo de conocimiento ---\n"
+            "Cuando uses hechos o relaciones del knowledge packet, distinguí "
+            "verified de unreviewed/inferred. Citá las fuentes con el formato "
+            "ruta:Línea-Línea cuando estén disponibles; si no hay fuente exacta, "
+            "declaralo como inferencia. No conviertas un edge unreviewed en un hecho.\n");
+    }
     if (!m_systemExtra.trimmed().isEmpty())
         base += QStringLiteral("\n\n--- Instrucciones del agente ---\n") + m_systemExtra.trimmed();
     if (!m_thinkingEnabled)
@@ -1869,6 +1891,21 @@ void LlamaAgentBackend::setMemoryPolicy(const HarnessMemoryModule &memory)
     }
 }
 
+void LlamaAgentBackend::setKnowledgePolicy(const HarnessKnowledgeModule &knowledge)
+{
+    m_knowledgePolicy = knowledge;
+    m_knowledgePolicy.set = true;
+    if (!m_apiMessages.isEmpty()) {
+        QJsonObject sys = m_apiMessages.first().toObject();
+        if (sys.value(QStringLiteral("role")).toString() == QLatin1String("system")) {
+            sys[QStringLiteral("content")] = buildSystemPrompt();
+            replaceSystemMessage(sys);
+        }
+    }
+    for (LlamaAgentBackend *rt : std::as_const(m_sessionRuntimes))
+        if (rt) rt->setKnowledgePolicy(knowledge);
+}
+
 void LlamaAgentBackend::setContextPolicy(const HarnessContextModule &context)
 {
     m_contextPolicy = context;
@@ -2058,7 +2095,10 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
         && attachments.isEmpty() && !m_cwd.isEmpty()) {
         const QString preflight = ContextPreflight::build(
             m_cwd, visibleTrimmed, m_contextPolicy.scoutK,
-            m_contextPolicy.scoutBudget, m_contextPolicy.graphExpansion);
+            m_contextPolicy.scoutBudget, m_contextPolicy.graphExpansion,
+            m_knowledgePolicy.enabled && m_knowledgePolicy.preflight,
+            m_knowledgePolicy.maxFacts, m_knowledgePolicy.maxEdges,
+            m_knowledgePolicy.maxChars);
         appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
                                      {QStringLiteral("content"), preflight},
                                      {QStringLiteral("_lc_protected"), true}});
@@ -3675,10 +3715,11 @@ void LlamaAgentBackend::processPendingCalls()
         if (a == QLatin1String("prune") && !args.value(QStringLiteral("dry_run")).toBool(false))
             kind = QStringLiteral("write");
     }
-    // graph: 'query'/'decisions' sólo leen; el resto (link/add_entity/decide) muta.
+    // graph: 'query'/'decisions'/'doctor' sólo leen; el resto muta.
     if (name == QLatin1String("graph")) {
         const QString a = args.value(QStringLiteral("action")).toString().toLower();
-        if (a != QLatin1String("query") && a != QLatin1String("decisions"))
+        if (a != QLatin1String("query") && a != QLatin1String("decisions")
+            && a != QLatin1String("doctor"))
             kind = QStringLiteral("write");
     }
     // La envoltura lazy no debe esconder la política del tool MCP real. Buscar es
@@ -3949,6 +3990,45 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
         return;
     }
 
+    // External plugin lane. It is deliberately separate from AgentToolRunner:
+    // the model-visible call is gated by the existing approval path, while the
+    // worker driver owns framing, timeout and cancellation for the child.
+    if (name == QLatin1String("worker_call")) {
+        const QString operation = a.value(QStringLiteral("operation")).toString().trimmed();
+        const QJsonValue payloadValue = a.value(QStringLiteral("payload"));
+        if (!m_harnessWorker || !m_harnessWorkerReady || operation.isEmpty()
+            || !payloadValue.isObject()) {
+            const QString failure = QStringLiteral(
+                "[worker externo no disponible: activá un perfil Node/Python válido y esperá su autenticación]");
+            ++m_toolFail;
+            appendToolCard(name, toolKind(name), false, operation, failure);
+            appendToolResult(id, name, failure);
+            processPendingCalls();
+            return;
+        }
+        const QString driverCallId = QStringLiteral("worker-%1")
+                                         .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+        m_externalWorkerCalls.insert(driverCallId, id);
+        m_externalWorkerDescriptions.insert(driverCallId, operation);
+        if (m_harnessEngineId == QLatin1String("next"))
+            m_harnessEffectLedger.transition(m_sessionId + QLatin1Char(':') + id,
+                                             QStringLiteral("dispatching"));
+        if (!m_harnessWorker->call(
+                driverCallId,
+                QJsonObject{{QStringLiteral("operation"), operation},
+                            {QStringLiteral("payload"), payloadValue.toObject()}})
+            && m_externalWorkerCalls.contains(driverCallId)) {
+            m_externalWorkerCalls.remove(driverCallId);
+            m_externalWorkerDescriptions.remove(driverCallId);
+            const QString failure = QStringLiteral("[worker externo: no se pudo despachar la operación]");
+            ++m_toolFail;
+            appendToolCard(name, toolKind(name), false, operation, failure);
+            appendToolResult(id, name, failure);
+            processPendingCalls();
+        }
+        return;
+    }
+
     // Ejecución en el worker (no bloquea UI). Resume en onToolExecuted().
     ensureWorker();
     m_execCallId = id;
@@ -3973,6 +4053,10 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
 void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
 {
     const QString callId = result.value(QStringLiteral("callId")).toString();
+    if (m_workerCapabilityCalls.contains(callId)) {
+        finishWorkerCapability(result);
+        return;
+    }
     if (callId.isEmpty() || callId != m_execCallId) return;   // resultado tardío/ajeno
     m_execCallId.clear();
     m_toolWatchdog->stop();
@@ -3993,7 +4077,6 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             QStringLiteral("settled"), ok ? QString() : QStringLiteral("tool_failed"),
             resultHash);
     }
-#ifdef LC_DEBUG_ICON
     if (ok && isWrite && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))) {
         const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
         const QString path = QDir::cleanPath(args.value(QStringLiteral("path")).toString().trimmed());
@@ -4010,7 +4093,6 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
                                               {QStringLiteral("graphReport"), report}});
         }
     }
-#endif
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
@@ -5084,6 +5166,7 @@ QString LlamaAgentBackend::toolKind(const QString &name)
     if (name == QLatin1String("task")) return QStringLiteral("task");
     if (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))
         return QStringLiteral("write");
+    if (name == QLatin1String("worker_call")) return QStringLiteral("external");
     if (name == QLatin1String("email_send")) return QStringLiteral("email");
     return QStringLiteral("read");
 }
@@ -5094,6 +5177,12 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
     const QString bare = name.startsWith(kMcpPrefix)
                              ? name.section(QStringLiteral("__"), -1)
                              : name;
+
+    // An external plugin operation is intentionally opaque to the host. It is
+    // therefore treated as an irreversible external effect unless the user is
+    // explicitly in Super mode; this keeps auto profiles from silently granting
+    // a third-party worker write-like authority.
+    if (bare == QLatin1String("worker_call")) return true;
 
     // ── Shell destructivo ─────────────────────────────────────────────────
     if (bare == QLatin1String("run_shell") || bare == QLatin1String("shell")) {
@@ -5494,7 +5583,8 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "módulo depende de cuál, qué decisión causó qué bug, quién pidió qué. "
                           "action='decide' registra una decisión (topic+chosen+reason) conservando las "
                           "alternativas RECHAZADAS con su motivo (audit trail, no se borran); "
-                          "'decisions' devuelve ese log (topic vacío = todas). Registrá las decisiones "
+                          "'decisions' devuelve ese log (topic vacío = todas). 'doctor' devuelve "
+                          "salud, edges huérfanos y fuentes obsoletas. Registrá las decisiones "
                           "de diseño no triviales con sus rechazos para no re-evaluarlas después. "
                           "action='index' SIEMBRA el grafo automáticamente: recorre el repo y extrae "
                           "símbolos (clases/funciones) e imports/includes como relaciones "
@@ -5505,7 +5595,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "sólo lo cambiado desde la última pasada (git/mtime, borra edges viejos); o "
                           "pasá 'files' (lista) para refrescar archivos puntuales tras editarlos."),
            QJsonObject{
-               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'verify' | 'decide' | 'decisions' | 'index'."))},
+               {QStringLiteral("action"), strProp(QStringLiteral("'link' (default) | 'add_entity' | 'query' | 'verify' | 'decide' | 'decisions' | 'doctor' | 'index'."))},
                {QStringLiteral("langs"), strProp(QStringLiteral("index: lenguajes a indexar (CSV, ej. 'cpp,qml'). Vacío = cpp/qml/js/ts/py."))},
                {QStringLiteral("incremental"), boolProp(QStringLiteral("index: reindexar sólo lo cambiado desde la última pasada (default false = todo)."))},
                {QStringLiteral("files"), strProp(QStringLiteral("index: lista de rutas a reindexar puntualmente (CSV). Ignora incremental."))},
@@ -5519,7 +5609,8 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("name"), strProp(QStringLiteral("Nombre de entidad (add_entity y query)."))},
                {QStringLiteral("etype"), strProp(QStringLiteral("Tipo de entidad (sólo add_entity)."))},
                {QStringLiteral("depth"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
-                   {QStringLiteral("description"), QStringLiteral("Saltos en query: 1 (default) o 2.")}}},
+                   {QStringLiteral("description"), QStringLiteral("Saltos en query: 1 (default) a 3.")}}},
+               {QStringLiteral("format"), strProp(QStringLiteral("query: 'markdown' (default) o 'packet' para devolver nodos, edges, fuentes y recibo JSON."))},
                {QStringLiteral("topic"), strProp(QStringLiteral("Tema de la decisión (decide; filtro substring en decisions)."))},
                {QStringLiteral("chosen"), strProp(QStringLiteral("Opción elegida (sólo decide)."))},
                {QStringLiteral("reason"), strProp(QStringLiteral("Motivo de la elección (sólo decide)."))},
@@ -5924,7 +6015,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("memory",    "Conocimiento", "Memoria persistente del proyecto (save/recall/forget).", 110),
         mk("context_checkpoint", "Coordinación",
            "Cierra una fase y compacta memoria de trabajo con transcript intacto.", 95),
-        mk("graph",     "Conocimiento", "Knowledge graph: entidades + relaciones (link/query/index).", 150),
+        mk("graph",     "Conocimiento", "Knowledge graph: relaciones, citas, query, index y doctor.", 150),
         mk("ask_teacher", "Multi-Agente", "Consulta a un modelo más capaz (endpoint aparte).", 130),
         mk("task",      "Multi-Agente", "Delega una subtarea a un sub-agente en worktree.", 180),
         mk("skill_list", "Habilidades", "Lista habilidades portables por metadata.", 65),
@@ -5956,6 +6047,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("email_send", "Correo", "Envía un correo (SMTP). Requiere aprobación por defecto.", 150),
         mk("email_list", "Correo", "Lista correos recientes (IMAP/POP3).", 130),
         mk("email_read", "Correo", "Lee el cuerpo de un correo por uid.", 100),
+        mk("worker_call", "Plugins", "Invoca una operación de un worker Node/Python externo; requiere aprobación.", 135),
     };
 }
 
@@ -6163,6 +6255,38 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
     }
 
     QJsonArray all = toolSchemas();
+    // The external lane is discovered only after nonce authentication. This
+    // keeps legacy profiles identical and prevents the model from seeing a
+    // callable tool while its worker is absent or still starting.
+    if (m_harnessWorkerReady) {
+        QJsonObject operation;
+        operation.insert(QStringLiteral("type"), QStringLiteral("string"));
+        operation.insert(QStringLiteral("minLength"), 1);
+        operation.insert(QStringLiteral("description"),
+                         QStringLiteral("Operación registrada por el plugin."));
+        QJsonObject payload;
+        payload.insert(QStringLiteral("type"), QStringLiteral("object"));
+        payload.insert(QStringLiteral("description"),
+                       QStringLiteral("Argumentos de la operación."));
+        payload.insert(QStringLiteral("additionalProperties"), true);
+        QJsonObject workerProperties;
+        workerProperties.insert(QStringLiteral("operation"), operation);
+        workerProperties.insert(QStringLiteral("payload"), payload);
+        QJsonObject workerParameters;
+        workerParameters.insert(QStringLiteral("type"), QStringLiteral("object"));
+        workerParameters.insert(QStringLiteral("properties"), workerProperties);
+        workerParameters.insert(QStringLiteral("required"),
+                                QJsonArray{QStringLiteral("operation"), QStringLiteral("payload")});
+        workerParameters.insert(QStringLiteral("additionalProperties"), false);
+        QJsonObject workerFunction;
+        workerFunction.insert(QStringLiteral("name"), QStringLiteral("worker_call"));
+        workerFunction.insert(QStringLiteral("description"), QStringLiteral(
+            "Invoca una operación del plugin Node/Python seleccionado. "
+            "Es una acción externa y requiere aprobación humana salvo Super mode."));
+        workerFunction.insert(QStringLiteral("parameters"), workerParameters);
+        all.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("function")},
+                               {QStringLiteral("function"), workerFunction}});
+    }
     if (m_mcpToolsEnabled && !m_mcpTools.isEmpty()) {
         const QJsonObject searchProperties{
             {"query", QJsonObject{{"type", "string"}, {"description", "Qué capacidad necesitás"}}},
@@ -6186,6 +6310,244 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             {"parameters", callParameters}}}});
     }
     return dropDisabled(all);
+}
+
+bool LlamaAgentBackend::harnessWorkerConfiguredForTest() const
+{
+    const QString lane = m_harnessWorkerModule.lane.trimmed().toLower();
+    return m_harnessWorkerModule.set
+        && (lane == QLatin1String("node") || lane == QLatin1String("python"));
+}
+
+void LlamaAgentBackend::startHarnessWorker()
+{
+    if (!harnessWorkerConfiguredForTest()) return;
+
+    HarnessWorkerModule module = m_harnessWorkerModule;
+    if (module.entrypoint.trimmed().isEmpty()) {
+        emit logAppended(QStringLiteral(
+            "[harness worker rechazado: el entrypoint del perfil está vacío]\n"));
+        return;
+    }
+    if (module.workingDirectory.trimmed().isEmpty()) {
+        module.workingDirectory = m_cwd;
+    } else {
+        const QString safe = safeProjectDir(module.workingDirectory);
+        if (safe.isEmpty()) {
+            emit logAppended(QStringLiteral(
+                "[harness worker rechazado: workingDirectory inseguro o inexistente]\n"));
+            return;
+        }
+        module.workingDirectory = safe;
+    }
+
+    m_harnessWorker = new HarnessWorkerDriver(this);
+    connect(m_harnessWorker, &HarnessWorkerDriver::authenticatedChanged,
+            this, &LlamaAgentBackend::onHarnessWorkerAuthenticated);
+    connect(m_harnessWorker, &HarnessWorkerDriver::callResult,
+            this, &LlamaAgentBackend::onHarnessWorkerCallResult);
+    connect(m_harnessWorker, &HarnessWorkerDriver::capabilityCallRequested,
+            this, &LlamaAgentBackend::onHarnessWorkerCapabilityCall);
+    connect(m_harnessWorker, &HarnessWorkerDriver::workerError,
+            this, &LlamaAgentBackend::onHarnessWorkerError);
+    connect(m_harnessWorker, &HarnessWorkerDriver::workerExited,
+            this, &LlamaAgentBackend::onHarnessWorkerExited);
+
+    // These are the only host-dispatched capabilities in this first vertical
+    // slice. All are read-only; network access remains an independent sandbox
+    // switch and is never granted through the capability broker.
+    const QStringList allowedCapabilities{
+        QStringLiteral("fs.read"), QStringLiteral("memory.read"),
+        QStringLiteral("graph.read"), QStringLiteral("context.read")};
+    QString error;
+    if (!HarnessWorkerFactory::start(
+            *m_harnessWorker, module, m_cwd, m_harnessActivationId,
+            m_harnessEngineId, m_harnessProfileId,
+            qMax(1, m_harnessEngineVersion), allowedCapabilities, &error)) {
+        emit logAppended(QStringLiteral("[harness worker no iniciado: %1]\n").arg(error));
+        delete m_harnessWorker;
+        m_harnessWorker = nullptr;
+        return;
+    }
+    emit logAppended(QStringLiteral(
+        "[harness worker externo iniciando · lane=%1 · sandbox=%2 · cwd=%3]\n")
+                         .arg(module.lane, module.sandbox,
+                              QDir::toNativeSeparators(module.workingDirectory)));
+}
+
+void LlamaAgentBackend::stopHarnessWorker()
+{
+    m_harnessWorkerReady = false;
+    m_workerCapabilityCalls.clear();
+    m_workerCapabilityNames.clear();
+    if (!m_harnessWorker) {
+        m_externalWorkerCalls.clear();
+        m_externalWorkerDescriptions.clear();
+        return;
+    }
+    disconnect(m_harnessWorker, nullptr, this, nullptr);
+    m_harnessWorker->stop();
+    delete m_harnessWorker;
+    m_harnessWorker = nullptr;
+    m_externalWorkerCalls.clear();
+    m_externalWorkerDescriptions.clear();
+}
+
+void LlamaAgentBackend::failExternalWorkerCalls(const QString &reason)
+{
+    const auto pending = m_externalWorkerCalls;
+    for (auto it = pending.cbegin(); it != pending.cend(); ++it) {
+        const QString modelCallId = it.value();
+        const QString operation = m_externalWorkerDescriptions.value(it.key());
+        if (m_harnessEngineId == QLatin1String("next"))
+            m_harnessEffectLedger.transition(
+                m_sessionId + QLatin1Char(':') + modelCallId,
+                QStringLiteral("settled"), QStringLiteral("worker_unavailable"));
+        appendToolCard(QStringLiteral("worker_call"), QStringLiteral("external"), false,
+                       operation, reason);
+        appendToolResult(modelCallId, QStringLiteral("worker_call"), reason);
+    }
+    m_externalWorkerCalls.clear();
+    m_externalWorkerDescriptions.clear();
+}
+
+void LlamaAgentBackend::onHarnessWorkerAuthenticated(bool authenticated)
+{
+    m_harnessWorkerReady = authenticated;
+    emit logAppended(authenticated
+        ? QStringLiteral("[harness worker autenticado: worker_call habilitada]\n")
+        : QStringLiteral("[harness worker perdió autenticación]\n"));
+}
+
+void LlamaAgentBackend::onHarnessWorkerCallResult(const QString &callId,
+                                                  const QJsonObject &payload)
+{
+    if (!m_externalWorkerCalls.contains(callId)) return;
+    const QString modelCallId = m_externalWorkerCalls.take(callId);
+    const QString operation = m_externalWorkerDescriptions.take(callId);
+    const QJsonObject error = payload.value(QStringLiteral("error")).toObject();
+    const bool ok = error.isEmpty();
+    const QString output = QString::fromUtf8(
+        QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    if (m_harnessEngineId == QLatin1String("next")) {
+        const QString resultHash = QString::fromLatin1(
+            QCryptographicHash::hash(output.toUtf8(), QCryptographicHash::Sha256).toHex());
+        m_harnessEffectLedger.transition(
+            m_sessionId + QLatin1Char(':') + modelCallId,
+            QStringLiteral("settled"), ok ? QString() : QStringLiteral("worker_failed"),
+            resultHash);
+    }
+    if (ok) ++m_toolOk; else ++m_toolFail;
+    recordToolOutcome(QStringLiteral("worker_call"), ok, false, output);
+    appendToolCard(QStringLiteral("worker_call"), QStringLiteral("external"), ok,
+                   operation, output);
+    AgentEventLog::append(m_cwd, m_sessionId, ok ? QStringLiteral("tool_result")
+                                                 : QStringLiteral("failure"),
+                          QJsonObject{{QStringLiteral("tool"), QStringLiteral("worker_call")},
+                                      {QStringLiteral("toolCallId"), modelCallId},
+                                      {QStringLiteral("operation"), operation},
+                                      {QStringLiteral("externalWrite"), true},
+                                      {QStringLiteral("result"), output.left(8192)}});
+    appendToolResult(modelCallId, QStringLiteral("worker_call"), output);
+    processPendingCalls();
+}
+
+void LlamaAgentBackend::onHarnessWorkerError(const QString &message)
+{
+    m_harnessWorkerReady = false;
+    emit logAppended(QStringLiteral("[harness worker error: %1]\n").arg(message));
+    if (!m_externalWorkerCalls.isEmpty()) {
+        failExternalWorkerCalls(QStringLiteral(
+            "[worker externo falló antes de devolver un resultado: %1]").arg(message));
+        processPendingCalls();
+    }
+}
+
+void LlamaAgentBackend::onHarnessWorkerExited(int exitCode)
+{
+    m_harnessWorkerReady = false;
+    emit logAppended(QStringLiteral("[harness worker finalizado · exit=%1]\n").arg(exitCode));
+    if (!m_externalWorkerCalls.isEmpty()) {
+        failExternalWorkerCalls(QStringLiteral(
+            "[worker externo finalizó antes de devolver un resultado]") );
+        processPendingCalls();
+    }
+}
+
+void LlamaAgentBackend::onHarnessWorkerCapabilityCall(const QString &requestId,
+                                                      const QString &capability,
+                                                      const QString &operation,
+                                                      const QJsonObject &payload)
+{
+    dispatchWorkerCapability(requestId, capability, operation, payload);
+}
+
+void LlamaAgentBackend::dispatchWorkerCapability(const QString &requestId,
+                                                 const QString &capability,
+                                                 const QString &operation,
+                                                 const QJsonObject &payload)
+{
+    if (!m_harnessWorker || !m_harnessWorkerReady || !m_worker) return;
+
+    QString tool;
+    QJsonObject args = payload;
+    if (capability == QLatin1String("fs.read")
+        && (operation == QLatin1String("read") || operation == QLatin1String("read_file"))) {
+        tool = QStringLiteral("read_file");
+    } else if (capability == QLatin1String("memory.read")
+               && operation == QLatin1String("recall")) {
+        tool = QStringLiteral("memory");
+        args.insert(QStringLiteral("action"), QStringLiteral("recall"));
+    } else if (capability == QLatin1String("graph.read")
+               && operation == QLatin1String("query")) {
+        tool = QStringLiteral("graph");
+        args.insert(QStringLiteral("action"), QStringLiteral("query"));
+    } else if (capability == QLatin1String("context.read")
+               && operation == QLatin1String("status")) {
+        tool = QStringLiteral("context_status");
+    }
+
+    if (tool.isEmpty()) {
+        m_harnessWorker->respondCapabilityCall(
+            requestId, {}, QStringLiteral("capability_operation_unsupported"),
+            QStringLiteral("the host only exposes read-only operations for this capability"));
+        return;
+    }
+
+    const QString callId = QStringLiteral("worker-cap-%1")
+                               .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    m_workerCapabilityCalls.insert(callId, requestId);
+    m_workerCapabilityNames.insert(callId, capability);
+    QMetaObject::invokeMethod(m_worker, "executeTool", Qt::QueuedConnection,
+                              Q_ARG(QString, callId), Q_ARG(QString, tool),
+                              Q_ARG(QString, QString::fromUtf8(
+                                  QJsonDocument(args).toJson(QJsonDocument::Compact))),
+                              Q_ARG(QString, m_cwd));
+}
+
+void LlamaAgentBackend::finishWorkerCapability(const QVariantMap &result)
+{
+    const QString callId = result.value(QStringLiteral("callId")).toString();
+    const QString requestId = m_workerCapabilityCalls.take(callId);
+    const QString capability = m_workerCapabilityNames.take(callId);
+    if (requestId.isEmpty() || !m_harnessWorker) return;
+
+    const bool ok = result.value(QStringLiteral("ok")).toBool();
+    const QString text = result.value(QStringLiteral("result")).toString();
+    QJsonObject payload;
+    QJsonParseError parseError;
+    const QJsonDocument parsed = QJsonDocument::fromJson(text.toUtf8(), &parseError);
+    if (ok && parseError.error == QJsonParseError::NoError && parsed.isObject())
+        payload = parsed.object();
+    else if (ok)
+        payload.insert(QStringLiteral("value"), text);
+    if (ok) {
+        m_harnessWorker->respondCapabilityCall(requestId, payload);
+    } else {
+        m_harnessWorker->respondCapabilityCall(
+            requestId, {}, QStringLiteral("capability_operation_failed"),
+            QStringLiteral("%1: %2").arg(capability, text.left(2048)));
+    }
 }
 
 // Diff unificado simple: recorta prefijo/sufijo de líneas comunes y marca el
@@ -6403,6 +6765,7 @@ void LlamaAgentBackend::copyRuntimeConfigurationTo(LlamaAgentBackend *runtime) c
     runtime->m_harnessEngineVersion = m_harnessEngineVersion;
     runtime->m_harnessProfileId = m_harnessProfileId;
     runtime->m_harnessSpecHash = m_harnessSpecHash;
+    runtime->m_harnessWorkerModule = m_harnessWorkerModule;
 }
 
 void LlamaAgentBackend::syncRuntimeSession(const QString &sessionId,

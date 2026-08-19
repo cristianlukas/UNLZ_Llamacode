@@ -8,9 +8,15 @@
 #include <QTemporaryDir>
 #include <QCryptographicHash>
 #include <QFile>
+#include <QDir>
+#include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include "core/agent/AgentEventLog.h"
 #include "core/agent/MemoryStore.h"
 #include "core/agent/GraphStore.h"
+#include "core/agent/KnowledgePacket.h"
 
 class MemoryGraphTests : public QObject
 {
@@ -37,6 +43,8 @@ private slots:
     void graph_normalizesNames();
     void graph_decideKeepsRejected();
     void graph_decisionsFiltersByTopic();
+    void graph_sourceEvidencePacketAndDoctor();
+    void knowledge_packetMergesMemoryAndGraph();
 
     void eventLog_appendTypedEvent();
 };
@@ -325,6 +333,68 @@ void MemoryGraphTests::graph_decisionsFiltersByTopic()
     const QString out = GraphStore::decisions(dir.path(), "storage");
     QVERIFY(out.contains("JSONL"));
     QVERIFY(!out.contains("RawChat"));  // filtrado por substring del tema
+}
+
+void MemoryGraphTests::graph_sourceEvidencePacketAndDoctor()
+{
+    QTemporaryDir dir;
+    const QString path = dir.path() + QStringLiteral("/src/store.cpp");
+    QVERIFY(QDir().mkpath(QFileInfo(path).absolutePath()));
+    QFile source(path);
+    QVERIFY(source.open(QIODevice::WriteOnly));
+    const QByteArray bytes("class Store {};\n");
+    source.write(bytes);
+    source.close();
+
+    GraphStore::SourceRef ref;
+    ref.path = QStringLiteral("src/store.cpp");
+    ref.startLine = 1;
+    ref.endLine = 1;
+    ref.sha256 = QString::fromLatin1(
+        QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex());
+    ref.kind = QStringLiteral("code");
+    GraphStore::link(dir.path(), "src/store.cpp", "defines", "Store",
+                     QStringLiteral("DEFINES"), 1.0, QStringLiteral("indexer"),
+                     GraphStore::SourceRefs{ref});
+
+    const QJsonObject packet = GraphStore::queryPacket(dir.path(), "src/store.cpp", 1);
+    QVERIFY(packet.value(QStringLiteral("ok")).toBool());
+    QVERIFY(packet.value(QStringLiteral("sources")).toArray().size() == 1);
+    QVERIFY(packet.value(QStringLiteral("edges")).toArray().first().toObject()
+                .value(QStringLiteral("citations")).toArray().contains("src/store.cpp:1"));
+    QVERIFY(GraphStore::query(dir.path(), "src/store.cpp", 1).contains("src/store.cpp:1"));
+
+    const QJsonObject healthy = GraphStore::doctor(dir.path());
+    QVERIFY(healthy.value(QStringLiteral("healthy")).toBool());
+    QCOMPARE(healthy.value(QStringLiteral("sourceRefs")).toInt(), 1);
+
+    QVERIFY(source.open(QIODevice::WriteOnly | QIODevice::Truncate));
+    source.write("class Store {};\n// changed\n");
+    source.close();
+    const QJsonObject stale = GraphStore::doctor(dir.path());
+    QCOMPARE(stale.value(QStringLiteral("staleSources")).toInt(), 1);
+    QVERIFY(!stale.value(QStringLiteral("healthy")).toBool());
+}
+
+void MemoryGraphTests::knowledge_packetMergesMemoryAndGraph()
+{
+    QTemporaryDir dir;
+    MemoryStore::save(dir.path(), QStringLiteral("Store usa configuración durable"),
+                      QStringLiteral("project"), QStringLiteral("decision"), 1.0,
+                      QStringLiteral("user"));
+    GraphStore::link(dir.path(), QStringLiteral("Store"), QStringLiteral("requires"),
+                     QStringLiteral("Config"), QStringLiteral("REQUIRES"), 0.9,
+                     QStringLiteral("user"));
+
+    const QJsonObject packet = KnowledgePacket::build(
+        dir.path(), QStringLiteral("Store configuración"), 4, 4);
+    QVERIFY(packet.value(QStringLiteral("factsText")).toString().contains(QStringLiteral("Store")));
+    QVERIFY(packet.value(QStringLiteral("edges")).toArray().size() >= 1);
+    QVERIFY(packet.value(QStringLiteral("receipt")).toObject()
+                .value(QStringLiteral("edgeCount")).toInt() >= 1);
+    const QString formatted = KnowledgePacket::format(packet, 4000);
+    QVERIFY(formatted.contains(QStringLiteral("knowledge-receipt")));
+    QVERIFY(formatted.contains(QStringLiteral("REQUIRES")));
 }
 
 void MemoryGraphTests::eventLog_appendTypedEvent()

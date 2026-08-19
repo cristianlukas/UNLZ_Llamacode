@@ -188,6 +188,23 @@ struct HarnessMemoryModule {
     static HarnessMemoryModule fromJson(const QJsonObject &o);
 };
 
+// Ensamblado opcional de hechos y relaciones con evidencia para el contexto
+// del agente. `enabled=false` conserva el comportamiento histórico: las tools
+// memory/graph siguen disponibles según el pack, pero no se inyecta un paquete
+// automático en cada turno.
+struct HarnessKnowledgeModule {
+    bool enabled = false;
+    bool preflight = false;          // agregarlo al preflight inicial
+    bool citeSources = true;         // pedir citas path:line al modelo
+    int maxFacts = 8;
+    int maxEdges = 12;
+    int maxChars = 12000;
+    bool set = false;
+
+    QJsonObject toJson() const;
+    static HarnessKnowledgeModule fromJson(const QJsonObject &o);
+};
+
 // Modo Chat (RawChatBackend): hasta ahora el spec no lo tocaba en absoluto, asi
 // que un perfil "minimal" seguia chateando con los defaults globales. No lleva
 // tools ni loop: sampling, razonamiento e instrucciones persistentes.
@@ -235,6 +252,7 @@ struct HarnessSpec {
     HarnessEscalationModule escalation;
     HarnessProtocolModule protocol;
     HarnessMemoryModule memory;
+    HarnessKnowledgeModule knowledge;
     HarnessChatModule chat;
     // Overrides por fase: "plan" | "exec" | "verify" | "goalCheck" -> patch JSON
     // con la misma forma que el spec (solo los modulos que pisa). Se guardan sin

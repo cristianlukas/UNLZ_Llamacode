@@ -10,6 +10,8 @@
 #include <QDir>
 #include <QFile>
 #include <QProcess>
+#include <QJsonObject>
+#include <QJsonArray>
 #include "core/agent/GraphStore.h"
 #include "core/agent/CodeGraphIndexer.h"
 
@@ -20,6 +22,7 @@ private slots:
     void addBatch_insertsAndDedupes();
     void index_extractsSymbols();
     void index_extractsImports();
+    void index_edgesCarrySourceCitations();
     void index_idempotent();
     void index_langFilter();
     void graphStore_removeRelationsBySubject();
@@ -98,6 +101,36 @@ void CodeGraphTests::index_extractsImports()
     const QString out = GraphStore::query(dir.path(), "src/alpha.cpp", 1);
     QVERIFY(out.contains("IMPORTS"));
     QVERIFY(out.contains("beta.h"));
+}
+
+void CodeGraphTests::index_edgesCarrySourceCitations()
+{
+    QTemporaryDir dir;
+    writeFile(dir.path(), "src/widget.cpp",
+              "#include \"widget.h\"\n"
+              "class Widget {}\n"
+              "void render() {}\n");
+    writeFile(dir.path(), "src/widget.h", "class Widget;\n");
+
+    CodeGraphIndexer::build(dir.path(), {}, nullptr);
+    const QJsonObject packet = GraphStore::queryPacket(
+        dir.path(), QStringLiteral("src/widget.cpp"), 1);
+    QVERIFY(packet.value(QStringLiteral("ok")).toBool());
+    const QJsonArray edges = packet.value(QStringLiteral("edges")).toArray();
+    QVERIFY(!edges.isEmpty());
+    bool sawLine = false;
+    for (const QJsonValue &v : edges) {
+        const QJsonObject edge = v.toObject();
+        if (edge.value(QStringLiteral("etype")).toString() == QLatin1String("DEFINES")
+            && !edge.value(QStringLiteral("citations")).toArray().isEmpty()) {
+            sawLine = sawLine || edge.value(QStringLiteral("citations")).toArray().first()
+                                      .toString().contains(QStringLiteral("src/widget.cpp:2"));
+        }
+    }
+    QVERIFY(sawLine);
+    const QJsonObject report = GraphStore::doctor(dir.path());
+    QVERIFY(report.value(QStringLiteral("sourceRefs")).toInt() >= 2);
+    QVERIFY(report.value(QStringLiteral("staleSources")).toInt() == 0);
 }
 
 void CodeGraphTests::index_idempotent()

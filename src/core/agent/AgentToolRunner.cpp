@@ -3100,7 +3100,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     if (name == QLatin1String("graph")) {
         // KNOWLEDGE GRAPH: entidades + relaciones tipadas en .llamacode/graph.jsonl.
         // action='link' (default) conecta subj-[pred]->obj; 'add_entity' crea una
-        // entidad; 'query' devuelve el vecindario de una entidad (depth 1|2).
+        // entidad; 'query' devuelve el vecindario de una entidad (depth 1..3;
+        // packet opcional).
         const QString action = args.value(QStringLiteral("action")).toString().trimmed().toLower();
         if (action == QLatin1String("add_entity")) {
             const QString res = GraphStore::addEntity(
@@ -3139,11 +3140,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             return report;
         }
         if (action == QLatin1String("query")) {
-            const QString res = GraphStore::query(
-                cwd, args.value(QStringLiteral("name")).toString(),
-                args.value(QStringLiteral("depth")).toInt());
+            const QString name = args.value(QStringLiteral("name")).toString();
+            const int depth = args.value(QStringLiteral("depth")).toInt();
+            const QString format = args.value(QStringLiteral("format")).toString()
+                                       .trimmed().toLower();
+            const QString res = format == QLatin1String("packet")
+                ? QString::fromUtf8(QJsonDocument(GraphStore::queryPacket(cwd, name, depth))
+                                        .toJson(QJsonDocument::Compact))
+                : GraphStore::query(cwd, name, depth);
             if (ok) *ok = true;
             return res;
+        }
+        if (action == QLatin1String("doctor")) {
+            const QJsonObject report = GraphStore::doctor(cwd);
+            if (ok) *ok = report.value(QStringLiteral("ok")).toBool();
+            return QString::fromUtf8(QJsonDocument(report).toJson(QJsonDocument::Compact));
         }
         if (action == QLatin1String("decide")) {
             // 'rejected' acepta array de objetos {alt,reason} o de strings sueltos.

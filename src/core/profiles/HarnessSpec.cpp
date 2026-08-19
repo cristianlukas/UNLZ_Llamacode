@@ -326,6 +326,31 @@ HarnessMemoryModule HarnessMemoryModule::fromJson(const QJsonObject &o)
     return m;
 }
 
+QJsonObject HarnessKnowledgeModule::toJson() const
+{
+    QJsonObject o;
+    o[QStringLiteral("enabled")] = enabled;
+    o[QStringLiteral("preflight")] = preflight;
+    o[QStringLiteral("citeSources")] = citeSources;
+    o[QStringLiteral("maxFacts")] = maxFacts;
+    o[QStringLiteral("maxEdges")] = maxEdges;
+    o[QStringLiteral("maxChars")] = maxChars;
+    return o;
+}
+
+HarnessKnowledgeModule HarnessKnowledgeModule::fromJson(const QJsonObject &o)
+{
+    HarnessKnowledgeModule m;
+    m.set = true;
+    m.enabled = o.value(QStringLiteral("enabled")).toBool(false);
+    m.preflight = o.value(QStringLiteral("preflight")).toBool(false);
+    m.citeSources = o.value(QStringLiteral("citeSources")).toBool(true);
+    m.maxFacts = boundedInt(o, "maxFacts", 8, 0, 50);
+    m.maxEdges = boundedInt(o, "maxEdges", 12, 0, 100);
+    m.maxChars = boundedInt(o, "maxChars", 12000, 512, 64000);
+    return m;
+}
+
 QJsonObject HarnessChatModule::toJson() const
 {
     QJsonObject o;
@@ -388,6 +413,7 @@ bool HarnessSpec::isEmpty() const
 {
     return extends.isEmpty() && !runtime.set && !worker.set && !tools.set && !prompt.set && !loop.set && !context.set
            && !permissions.set && !escalation.set && !protocol.set && !memory.set
+           && !knowledge.set
            && !chat.set && phases.isEmpty();
 }
 
@@ -405,6 +431,7 @@ QJsonObject HarnessSpec::toJson() const
     if (escalation.set) o[QStringLiteral("escalation")] = escalation.toJson();
     if (protocol.set) o[QStringLiteral("protocol")] = protocol.toJson();
     if (memory.set) o[QStringLiteral("memory")] = memory.toJson();
+    if (knowledge.set) o[QStringLiteral("knowledge")] = knowledge.toJson();
     if (chat.set) o[QStringLiteral("chat")] = chat.toJson();
     if (!phases.isEmpty()) {
         QJsonObject ph;
@@ -442,6 +469,9 @@ HarnessSpec HarnessSpec::fromJson(const QJsonObject &o)
             o.value(QStringLiteral("protocol")).toObject());
     if (o.value(QStringLiteral("memory")).isObject())
         s.memory = HarnessMemoryModule::fromJson(o.value(QStringLiteral("memory")).toObject());
+    if (o.value(QStringLiteral("knowledge")).isObject())
+        s.knowledge = HarnessKnowledgeModule::fromJson(
+            o.value(QStringLiteral("knowledge")).toObject());
     if (o.value(QStringLiteral("chat")).isObject())
         s.chat = HarnessChatModule::fromJson(o.value(QStringLiteral("chat")).toObject());
     const QJsonObject ph = o.value(QStringLiteral("phases")).toObject();
@@ -466,6 +496,7 @@ HarnessSpec HarnessSpec::resolve(const HarnessSpec &base, const HarnessSpec &ove
     if (override.escalation.set) out.escalation = override.escalation;
     if (override.protocol.set) out.protocol = override.protocol;
     if (override.memory.set) out.memory = override.memory;
+    if (override.knowledge.set) out.knowledge = override.knowledge;
     if (override.chat.set) out.chat = override.chat;
     for (auto it = override.phases.cbegin(); it != override.phases.cend(); ++it)
         out.phases.insert(it.key(), it.value());
@@ -596,6 +627,14 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
             memory.projectMemoryMaxChars);
     addDiff(out, "memory", "consolidateOnLeave", base.memory.consolidateOnLeave,
             memory.consolidateOnLeave);
+
+    addDiff(out, "knowledge", "enabled", base.knowledge.enabled, knowledge.enabled);
+    addDiff(out, "knowledge", "preflight", base.knowledge.preflight, knowledge.preflight);
+    addDiff(out, "knowledge", "citeSources", base.knowledge.citeSources,
+            knowledge.citeSources);
+    addDiff(out, "knowledge", "maxFacts", base.knowledge.maxFacts, knowledge.maxFacts);
+    addDiff(out, "knowledge", "maxEdges", base.knowledge.maxEdges, knowledge.maxEdges);
+    addDiff(out, "knowledge", "maxChars", base.knowledge.maxChars, knowledge.maxChars);
 
     addDiff(out, "chat", "thinking", base.chat.thinking, chat.thinking);
     addDiff(out, "chat", "temperature", base.chat.temperature, chat.temperature);

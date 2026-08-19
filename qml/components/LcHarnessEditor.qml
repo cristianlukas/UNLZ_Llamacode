@@ -205,6 +205,116 @@ Item {
             }
         }
 
+        // Lane externa opcional. builtin conserva el loop histórico; Node/Python
+        // sólo se activa cuando el perfil lo declara explícitamente.
+        Rectangle {
+            Layout.fillWidth: true
+            color: Theme.inputBg; border.color: Theme.borderColor; radius: 8
+            implicitHeight: workerCol.implicitHeight + 20
+            ColumnLayout {
+                id: workerCol
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                spacing: 7
+                Text {
+                    text: "Worker externo (opcional)"
+                    color: Theme.textSecondary; font.pixelSize: 12; font.bold: true
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: "Builtin mantiene el flujo actual. Node/Python ejecuta un plugin "
+                          + "supervisado y expone worker_call con aprobación."
+                    color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: "Lane"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcComboBox {
+                        id: workerLaneCombo
+                        objectName: "workerLaneCombo"
+                        Layout.fillWidth: true; enabled: !root.readOnly
+                        textRole: "label"; valueRole: "key"
+                        model: [
+                            { key: "builtin", label: "Integrado (legacy)" },
+                            { key: "node", label: "Node.js / TypeScript" },
+                            { key: "python", label: "CPython" }
+                        ]
+                        currentIndex: Math.max(0, indexOfValue(
+                            root.specValue("worker", "lane", "builtin")))
+                        onActivated: root.specSet("worker", "lane", currentValue)
+                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        contentItem: Text {
+                            text: workerLaneCombo.displayText || "Integrado (legacy)"
+                            color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                }
+                GridLayout {
+                    Layout.fillWidth: true
+                    visible: root.specValue("worker", "lane", "builtin") !== "builtin"
+                    columns: 2; columnSpacing: 10; rowSpacing: 6
+                    Text { text: "Entrypoint"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        objectName: "workerEntrypointField"
+                        Layout.fillWidth: true; placeholderText: "worker.mjs / worker.py"
+                        text: String(root.specValue("worker", "entrypoint", ""))
+                        onEditingFinished: root.specSet("worker", "entrypoint", text.trim())
+                    }
+                    Text { text: "Sandbox OS"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcComboBox {
+                        id: workerSandboxCombo
+                        objectName: "workerSandboxCombo"
+                        Layout.fillWidth: true; enabled: !root.readOnly
+                        textRole: "label"; valueRole: "key"
+                        model: [
+                            { key: "none", label: "Sin sandbox OS" },
+                            { key: "process", label: "Proceso supervisado" },
+                            { key: "strong", label: "Strong (bubblewrap / Unix)" }
+                        ]
+                        currentIndex: Math.max(0, indexOfValue(
+                            root.specValue("worker", "sandbox", "none")))
+                        onActivated: root.specSet("worker", "sandbox", currentValue)
+                        background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                        contentItem: Text {
+                            text: workerSandboxCombo.displayText || "Sin sandbox OS"
+                            color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    Text { text: "Red del worker"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcSwitch {
+                        objectName: "workerNetworkSwitch"
+                        enabled: !root.readOnly
+                        checked: root.specValue("worker", "allowNetwork", false)
+                        onToggled: root.specSet("worker", "allowNetwork", checked)
+                    }
+                    Text { text: "Capabilities read-only"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        objectName: "workerCapabilitiesField"
+                        Layout.fillWidth: true; placeholderText: "fs.read, graph.read"
+                        text: (root.specValue("worker", "requestedCapabilities", []) || []).join(", ")
+                        onEditingFinished: root.specSet("worker", "requestedCapabilities",
+                            text.split(",").map(function(v) { return v.trim() }).filter(function(v) { return v.length > 0 }))
+                    }
+                    Text { text: "Timeout de llamada (ms)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcTextField {
+                        objectName: "workerCallTimeoutField"
+                        Layout.fillWidth: true; placeholderText: "120000"
+                        text: String(root.specValue("worker", "callTimeoutMs", 120000))
+                        onEditingFinished: root.specSet("worker", "callTimeoutMs",
+                            Math.max(100, parseInt(text) || 120000))
+                    }
+                }
+                Text {
+                    Layout.fillWidth: true
+                    visible: root.specValue("worker", "lane", "builtin") !== "builtin"
+                    text: "Strong se rechaza explícitamente en Windows si no hay un boundary "
+                          + "OS compatible; el perfil no cae silenciosamente a builtin."
+                    color: Theme.warnText; font.pixelSize: 11; wrapMode: Text.WordWrap
+                }
+            }
+        }
+
         // Advertencias de dependencias (git/embeddings/escritorio/correo/MCP) y
         // de directivas rotas. No bloquean: informan y dicen qué hacer.
         Rectangle {
@@ -552,6 +662,47 @@ Item {
             LcSwitch {
                 checked: root.specValue("context", "graphExpansion", true)
                 onToggled: root.specSet("context", "graphExpansion", checked)
+            }
+
+            Text { text: "Knowledge packet automático"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                objectName: "knowledgeEnabledSwitch"
+                checked: root.specValue("knowledge", "enabled", false)
+                onToggled: root.specSet("knowledge", "enabled", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: "Combina memoria y relaciones del grafo con fuentes, sin reemplazar el índice de contexto."
+            }
+            Text { text: "Knowledge en preflight"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                checked: root.specValue("knowledge", "preflight", false)
+                onToggled: root.specSet("knowledge", "preflight", checked)
+                ToolTip.visible: hovered
+                ToolTip.text: "Incluye el paquete durable antes del primer request."
+            }
+            Text { text: "Citar fuentes"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcSwitch {
+                checked: root.specValue("knowledge", "citeSources", true)
+                onToggled: root.specSet("knowledge", "citeSources", checked)
+            }
+            Text { text: "Máx. hechos / edges"; color: Theme.textSecondary; font.pixelSize: 12 }
+            RowLayout {
+                Layout.fillWidth: true; spacing: 6
+                LcTextField {
+                    Layout.fillWidth: true; placeholderText: "8"
+                    text: String(root.specValue("knowledge", "maxFacts", 8))
+                    onEditingFinished: root.specSet("knowledge", "maxFacts", Math.max(0, parseInt(text) || 0))
+                }
+                LcTextField {
+                    Layout.fillWidth: true; placeholderText: "12"
+                    text: String(root.specValue("knowledge", "maxEdges", 12))
+                    onEditingFinished: root.specSet("knowledge", "maxEdges", Math.max(0, parseInt(text) || 0))
+                }
+            }
+            Text { text: "Tope knowledge (chars)"; color: Theme.textSecondary; font.pixelSize: 12 }
+            LcTextField {
+                Layout.fillWidth: true; placeholderText: "12000"
+                text: String(root.specValue("knowledge", "maxChars", 12000))
+                onEditingFinished: root.specSet("knowledge", "maxChars", Math.max(512, parseInt(text) || 12000))
             }
 
             Text { text: "Protocolo de tools"; color: Theme.textSecondary; font.pixelSize: 12 }

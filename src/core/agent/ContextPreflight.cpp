@@ -2,9 +2,14 @@
 #include "ProjectBrain.h"
 #include "CodeGraphIndexer.h"
 #include "ContextIndex.h"
+#include "KnowledgePacket.h"
+
+#include <QJsonObject>
 
 QString ContextPreflight::build(const QString &root, const QString &request, int maxFiles,
-                                int tokenBudget, bool expandGraph)
+                                int tokenBudget, bool expandGraph,
+                                bool includeKnowledge, int maxFacts, int maxEdges,
+                                int knowledgeMaxChars)
 {
     QVariantMap brain = ProjectBrain::load(root);
     if (brain.isEmpty()) brain = ProjectBrain::refresh(root);
@@ -15,11 +20,17 @@ QString ContextPreflight::build(const QString &root, const QString &request, int
                                                    qBound(64, tokenBudget, 16000),
                                                    qBound(1, maxFiles, 15), expandGraph);
     if (!scout.value(QStringLiteral("ok")).toBool()) return {};
+    QString knowledge;
+    if (includeKnowledge) {
+        const QJsonObject packet = KnowledgePacket::build(root, request, maxFacts, maxEdges);
+        knowledge = KnowledgePacket::format(packet, knowledgeMaxChars);
+    }
     return QStringLiteral("[preflight de contexto — índice local regenerable]\n"
                           "Archivos de ProjectBrain: %1\n%2\n"
                           "Leé los handles/rangos exactos antes de editar.\n"
-                          "Graph: %3")
+                          "Graph: %3%4")
         .arg(brain.value(QStringLiteral("fileCount")).toInt())
         .arg(ContextIndex::formatScout(scout))
-        .arg(graphReport);
+        .arg(graphReport)
+        .arg(knowledge.isEmpty() ? QString() : QStringLiteral("\n\n") + knowledge);
 }

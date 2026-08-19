@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QCryptographicHash>
 #include <QHash>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -60,21 +61,38 @@ bool isNoiseSymbol(const QString &s)
     return s.size() < 2 || kw.contains(s.toLower());
 }
 
-// Extrae los símbolos (clases/funciones) de 'text' según la familia 'lang'.
-QStringList extractSymbols(const QString &lang, const QString &text, int maxSyms)
+struct LocatedRef {
+    QString name;
+    int startLine = 0;
+    int endLine = 0;
+};
+
+int lineAt(const QString &text, int position)
 {
-    QStringList out;
+    if (position < 0) return 0;
+    return text.left(position).count(QLatin1Char('\n')) + 1;
+}
+
+// Extrae los símbolos (clases/funciones) de 'text' según la familia 'lang',
+// conservando la línea que respalda cada relación defines.
+QVector<LocatedRef> extractSymbols(const QString &lang, const QString &text, int maxSyms)
+{
+    QVector<LocatedRef> out;
     QSet<QString> seen;
-    auto push = [&](const QString &raw) {
+    auto push = [&](const QString &raw, int position) {
         const QString s = raw.trimmed();
         if (isNoiseSymbol(s) || seen.contains(s)) return;
         if (out.size() >= maxSyms) return;
         seen.insert(s);
-        out << s;
+        const int line = lineAt(text, position);
+        out.append({s, line, line});
     };
     auto runRe = [&](const QRegularExpression &re) {
         auto it = re.globalMatch(text);
-        while (it.hasNext() && out.size() < maxSyms) push(it.next().captured(1));
+        while (it.hasNext() && out.size() < maxSyms) {
+            const QRegularExpressionMatch match = it.next();
+            push(match.captured(1), match.capturedStart(1));
+        }
     };
 
     if (lang == QLatin1String("cpp")) {
@@ -109,10 +127,10 @@ QStringList extractSymbols(const QString &lang, const QString &text, int maxSyms
 }
 
 // Extrae referencias de import/include como basenames normalizados (sin ext,
-// minúscula). Mismo criterio que el dep-graph de hybrid_search; autónomo acá.
-QSet<QString> extractImportRefs(const QString &text)
+// minúscula), conservando la primera línea que respalda cada relación imports.
+QVector<LocatedRef> extractImportRefs(const QString &text)
 {
-    QSet<QString> refs;
+    QHash<QString, int> refs;
     static const QRegularExpression reC(
         QStringLiteral("#\\s*include\\s*[\"<]([^\">]+)[\">]"));
     static const QRegularExpression reFrom(
@@ -126,7 +144,7 @@ QSet<QString> extractImportRefs(const QString &text)
     static const QRegularExpression reCodeExt(
         QStringLiteral("\\.(h|hpp|hh|hxx|c|cc|cpp|cxx|js|jsx|mjs|ts|tsx|py|qml|java|go|rs|kt)$"),
         QRegularExpression::CaseInsensitiveOption);
-    auto add = [&](const QString &raw) {
+    auto add = [&](const QString &raw, int position) {
         QString s = raw;
         s.replace(QLatin1Char('\\'), QLatin1Char('/'));
         s = s.section(QLatin1Char('/'), -1).trimmed();
@@ -135,13 +153,19 @@ QSet<QString> extractImportRefs(const QString &text)
         else if (s.contains(QLatin1Char('.')))
             s = s.section(QLatin1Char('.'), -1);
         s = s.toLower();
-        if (s.size() >= 2) refs.insert(s);
+        if (s.size() >= 2 && !refs.contains(s)) refs.insert(s, lineAt(text, position));
     };
     for (const QRegularExpression *re : {&reC, &reFrom, &rePy, &reQml}) {
         auto it = re->globalMatch(text);
-        while (it.hasNext()) add(it.next().captured(1));
+        while (it.hasNext()) {
+            const QRegularExpressionMatch match = it.next();
+            add(match.captured(1), match.capturedStart(1));
+        }
     }
-    return refs;
+    QVector<LocatedRef> out;
+    for (auto it = refs.cbegin(); it != refs.cend(); ++it)
+        out.append({it.key(), it.value(), it.value()});
+    return out;
 }
 
 constexpr int kMaxFiles = 5000;
@@ -193,18 +217,24 @@ void emitDoc(const QString &rel, const QString &lang, const QString &text,
              QVector<GraphStore::Triple> &relations,
              QSet<QString> &distinctSyms)
 {
+    const QString sha256 = QString::fromLatin1(
+        QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Sha256).toHex());
     entities.append({rel, QStringLiteral("file")});
-    for (const QString &sym : extractSymbols(lang, text, kMaxSymsPerFile)) {
-        entities.append({sym, QStringLiteral("concept")});
-        relations.append({rel, QStringLiteral("defines"), sym});
-        distinctSyms.insert(sym);
+    for (const LocatedRef &sym : extractSymbols(lang, text, kMaxSymsPerFile)) {
+        entities.append({sym.name, QStringLiteral("concept")});
+        relations.append({rel, QStringLiteral("defines"), sym.name,
+                          GraphStore::SourceRefs{{rel, sym.startLine, sym.endLine,
+                                                  sha256, QStringLiteral("code")}}});
+        distinctSyms.insert(sym.name);
     }
     const QString selfBase = QFileInfo(rel).completeBaseName().toLower();
-    for (const QString &refb : extractImportRefs(text)) {
-        if (refb == selfBase) continue;
-        const QString target = byBase.value(refb);
+    for (const LocatedRef &ref : extractImportRefs(text)) {
+        if (ref.name == selfBase) continue;
+        const QString target = byBase.value(ref.name);
         if (target.isEmpty() || target == rel) continue;
-        relations.append({rel, QStringLiteral("imports"), target});
+        relations.append({rel, QStringLiteral("imports"), target,
+                          GraphStore::SourceRefs{{rel, ref.startLine, ref.endLine,
+                                                  sha256, QStringLiteral("code")}}});
     }
 }
 

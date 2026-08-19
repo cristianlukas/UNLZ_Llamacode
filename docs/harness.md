@@ -35,6 +35,7 @@ Desde la implementación del plan modular, un perfil de agente es una
 | `escalation` | cap de sub-agentes, aislamiento en worktree, cadena y gatillo del maestro, umbrales del `DifficultyRouter` |
 | `protocol` | `auto` / `native` / `text`, leak-guard de thinking, temperatura, reasoning |
 | `memory` | hechos de `MemoryStore` inyectados, memoria de proyecto (+ tope), consolidación al salir |
+| `knowledge` | paquete de memoria + grafo, preflight, citas y límites de hechos/edges/caracteres |
 | `chat` | modo Chat sin tools: sampling, thinking, persona diseñadora, instrucciones persistentes |
 | `runtime` | contrato de ejecución: `legacy` o `next`, versión, fallback y flag experimental |
 | `worker` | lane Node/Python, entrypoint, límites, capacidades solicitadas y sandbox OS |
@@ -79,6 +80,13 @@ seguía usando los ajustes globales aunque el perfil dijera otra cosa. El `chat`
 se aplica al `RawChatBackend` al crearlo y en cada cambio de perfil activo, y
 suma `systemExtra`: instrucciones persistentes que van **primeras** en el
 preamble, antes de las notas de formato.
+
+`knowledge` agrega una capa opt-in sobre esas dos fuentes: `KnowledgePacket` reúne
+hechos relevantes de `MemoryStore` y relaciones del `GraphStore`, conserva un
+recibo y emite citas de archivo/rango cuando el grafo tiene evidencia. Sus edges
+se etiquetan como verificados o no revisados; el prompt prohíbe convertir una
+inferencia no revisada en un hecho. `preflight` controla si el paquete entra antes
+del primer request y los topes del módulo protegen el presupuesto de contexto.
 
 El editor vive en `qml/components/LcHarnessEditor.qml`: no conoce a `App` (todo
 entra por propiedades y sale por señales), y por eso su lógica de edición —la
@@ -431,7 +439,8 @@ nunca es el home.
 | Componente | Dónde | Qué guarda |
 |---|---|---|
 | `MemoryStore` | tool `memory` | hechos durables por capas (save/recall/forget) |
-| `GraphStore` + `CodeGraphIndexer` | `.llamacode/graph.jsonl` | knowledge graph `archivo -[defines]-> símbolo`, `archivo -[imports]-> archivo`. Indexado **sin LLM**, idempotente, con reindexado incremental por git-diff/mtime |
+| `GraphStore` + `CodeGraphIndexer` | `.llamacode/graph.jsonl` | knowledge graph `archivo -[defines]-> símbolo`, `archivo -[imports]-> archivo`, con `SourceRef` (ruta/rango/hash), citas, revisión y `doctor`. Indexado **sin LLM**, idempotente, con reindexado incremental por git-diff/mtime |
+| `KnowledgePacket` | efímero, dentro del prompt/tool | unión acotada de memoria + grafo, con nodos, edges, fuentes y `knowledge-receipt`; no agrega otro almacenamiento |
 | `ProjectBrain` | cache por root | índice de estructura y metadata del workspace; sólo huellas, nunca copia fuente afuera |
 | `AgentEventLog` | `.llamacode/agent_events.jsonl` | bitácora append-only de lo que el agente intentó/rechazó/ejecutó. La tool `recent_actions` la relee para auto-corregirse |
 | `PortableSkillStore` | `<AppLocalData>/skills/<slug>/SKILL.md` y `<ws>/.llamacode/skills/…` | habilidades portables; expone sólo metadata hasta que `skill_load` pide el cuerpo |
@@ -578,6 +587,30 @@ PID/IPC/UTS aislados y red descompartida. En Windows `strong` se rechaza
 explícitamente: un Job Object contiene procesos pero no es un boundary de red.
 Si el backend solicitado no existe, el worker no arranca y el perfil no cae
 silenciosamente a `none`.
+
+### Integración con el loop del agente
+
+El módulo `worker` ya no es sólo una frontera de proceso: al arrancar
+`LlamaAgentBackend`, un `lane: node|python` crea y autentica su
+`HarnessWorkerDriver`. Una vez autenticado, el schema de `worker_call` aparece
+en el próximo request del modelo. La llamada atraviesa el mismo circuito de
+aprobación que las demás acciones externas y queda registrada como efecto; un
+perfil sin `worker` no crea procesos ni agrega ese schema, por lo que conserva
+el camino legacy.
+
+El host admite por defecto únicamente capacidades de lectura y sólo si el
+perfil las pidió: `fs.read` (`read`/`read_file`), `memory.read` (`recall`),
+`graph.read` (`query`) y `context.read` (`status`). Cualquier otra operación
+recibe `capability_operation_unsupported`; la red, si se habilita, es una
+perilla independiente del sandbox y no una capability brokered. Un fallo o
+salida del worker devuelve el `tool_result` correspondiente y no deja el turno
+del modelo esperando indefinidamente.
+
+En la UI del editor de HarnessSpec, elegir Node/Python habilita el entrypoint,
+sandbox, red, timeout y capabilities solicitadas. `worker_call` se habilita
+automáticamente para esa lane salvo que el perfil lo incluya en
+`tools.exclude`; volver a `builtin` es reversible y no modifica las sesiones ni
+la configuración histórica.
 
 ## 13. Deudas conocidas
 

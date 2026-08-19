@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(LlamaCode VERSION 0.1.112 LANGUAGES CXX)
+project(LlamaCode VERSION 0.1.113 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -114,6 +114,7 @@ set(CORE_SOURCES
     src/core/agent/MemoryStore.cpp
     src/core/agent/GraphStore.cpp
     src/core/agent/CodeGraphIndexer.cpp
+    src/core/agent/KnowledgePacket.cpp
     src/core/agent/AgentEfficiency.cpp
     src/core/agent/AgentProgressGovernor.cpp
     src/core/agent/DifficultyRouter.cpp
@@ -218,6 +219,7 @@ set(HEADERS
     src/core/agent/MemoryStore.h
     src/core/agent/GraphStore.h
     src/core/agent/CodeGraphIndexer.h
+    src/core/agent/KnowledgePacket.h
     src/core/agent/AgentEfficiency.h
     src/core/agent/DifficultyRouter.h
     src/core/agent/HybridPlanning.h

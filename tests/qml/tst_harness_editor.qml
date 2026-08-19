@@ -208,6 +208,42 @@ ApplicationWindow {
         check(projSwitch !== null && projSwitch.checked === true,
               "la memoria de proyecto arranca encendida")
 
+        var knowledgeSwitch = findChild("knowledgeEnabledSwitch")
+        check(knowledgeSwitch !== null && knowledgeSwitch.checked === false,
+              "knowledge arranca apagado para no cambiar el contexto por defecto")
+        editor.specSet("knowledge", "enabled", true)
+        editor.specSet("knowledge", "preflight", true)
+        editor.specSet("knowledge", "maxEdges", 6)
+        check(editor.specValue("knowledge", "enabled", false) === true,
+              "knowledge.enabled entra en su modulo")
+        check(editor.specValue("knowledge", "preflight", false) === true,
+              "knowledge.preflight entra en su modulo")
+        check(editor.specValue("knowledge", "maxEdges", 0) === 6,
+              "knowledge.maxEdges entra en su modulo")
+        check(editor.specValue("loop", "credits", 0) === 4,
+              "editar knowledge no pisa loop")
+
+        // --- Lane externa: queda configurada por perfil y no por globals -----
+        editor.spec = { memory: { structuredFacts: 3 },
+                        knowledge: { enabled: true, preflight: true, maxEdges: 6 },
+                        worker: { lane: "node", entrypoint: "worker.mjs",
+                                  sandbox: "process", allowNetwork: false,
+                                  requestedCapabilities: ["fs.read"] } }
+        var workerLane = findChild("workerLaneCombo")
+        check(workerLane !== null && workerLane.currentValue === "node",
+              "el editor refleja la lane Node del worker")
+        var workerEntry = findChild("workerEntrypointField")
+        check(workerEntry !== null && workerEntry.text === "worker.mjs",
+              "el entrypoint del worker se refleja")
+        var workerCaps = findChild("workerCapabilitiesField")
+        check(workerCaps !== null && workerCaps.text === "fs.read",
+              "las capabilities del worker se reflejan")
+        editor.specSet("worker", "callTimeoutMs", 5000)
+        check(editor.specValue("worker", "callTimeoutMs", 0) === 5000,
+              "el timeout del worker queda en su módulo")
+        check(editor.specValue("worker", "entrypoint", "") === "worker.mjs",
+              "editar el timeout no pisa el entrypoint")
+
         editor.specSet("chat", "systemExtra", "una linea")
         check(editor.specValue("chat", "systemExtra", "") === "una linea", "chat.systemExtra entra")
         check(editor.specValue("memory", "structuredFacts", 0) === 3,
@@ -219,6 +255,7 @@ ApplicationWindow {
         // readOnly tambien cubre los modulos nuevos.
         editor.readOnly = true
         check(!editor.specSet("memory", "structuredFacts", 99), "readOnly frena memory")
+        check(!editor.specSet("knowledge", "maxEdges", 99), "readOnly frena knowledge")
         check(!editor.specSet("chat", "thinking", true), "readOnly frena chat")
         editor.readOnly = false
 

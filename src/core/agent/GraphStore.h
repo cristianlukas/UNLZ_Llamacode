@@ -1,4 +1,5 @@
 #pragma once
+#include <QJsonObject>
 #include <QString>
 #include <QVector>
 #include <QPair>
@@ -22,6 +23,25 @@
 // "Self-Revising Discovery Systems" (rejected alternatives como artefactos).
 namespace GraphStore {
 
+// Evidencia concreta que respalda una relación. Todos los campos salvo path
+// son opcionales para conservar compatibilidad con grafos viejos y con
+// relaciones inferidas que todavía no tienen una fuente exacta.
+struct SourceRef {
+    QString path;                 // ruta relativa al cwd
+    int startLine = 0;            // 1-based; 0 = desconocido
+    int endLine = 0;              // 1-based; 0 = desconocido
+    QString sha256;               // hash del archivo o fragmento
+    QString kind;                 // code|doc|test|decision|session|other
+    QString sessionId;
+    QString correlationId;
+    QString commit;
+
+    QJsonObject toJson() const;
+    static SourceRef fromJson(const QJsonObject &o);
+};
+
+using SourceRefs = QVector<SourceRef>;
+
 // Una alternativa rechazada: (texto de la alternativa, motivo del descarte).
 using Rejected = QVector<QPair<QString, QString>>;
 
@@ -39,10 +59,14 @@ QString addEntity(const QString &cwd, const QString &name, const QString &etype)
 // el LLM entra unreviewed; el indexador determinista entra conf=1 prov=indexer.
 QString link(const QString &cwd, const QString &subj, const QString &pred,
              const QString &obj, const QString &edgeType = QString(),
-             double conf = -1.0, const QString &prov = QStringLiteral("llm"));
+             double conf = -1.0, const QString &prov = QStringLiteral("llm"),
+             const SourceRefs &sources = {});
 
 // Una relación tipada para inserción masiva.
-struct Triple { QString subj, pred, obj; };
+struct Triple {
+    QString subj, pred, obj;
+    SourceRefs sources;
+};
 
 // INSERCIÓN MASIVA: vuelca muchas entidades+relaciones en UNA pasada (lee el
 // grafo existente una sola vez para deduplicar, después appende todo). Pensado
@@ -83,6 +107,15 @@ QString reviewRelation(const QString &cwd, const QString &subj, const QString &p
 // Consulta el vecindario de una entidad por nombre. depth=1 (default) o 2
 // (graph expansion: incluye vecinos de vecinos). Devuelve markdown.
 QString query(const QString &cwd, const QString &name, int depth);
+
+// Consulta estructurada para el harness: conserva nodos, edges, fuentes y un
+// recibo compacto. El formato Markdown de query() sigue siendo el camino
+// compatible para modelos y sesiones existentes.
+QJsonObject queryPacket(const QString &cwd, const QString &name, int depth = 1);
+
+// Diagnóstico read-only del grafo. Detecta edges huérfanos, relaciones sin
+// evidencia y fuentes cuyo hash ya no coincide con el archivo actual.
+QJsonObject doctor(const QString &cwd);
 
 // Registra una decisión: tema, opción elegida, motivo y las alternativas
 // rechazadas (cada una con su propio motivo). Se conservan TODAS: el valor está
