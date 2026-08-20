@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QStringList>
 #include <QVariantList>
+#include <QVariantMap>
 
 // Interfaz común para todos los runtimes de agente (opencode, goose, raw, ...).
 // Cada backend es un QObject que gestiona su proceso/conexión y emite señales
@@ -96,6 +97,10 @@ signals:
     void queueChanged();
     void sessionsChanged();
     void logAppended(const QString &chunk);
+    // Eventos normalizados del ciclo del agente: session.start, prompt.submit,
+    // context.preflight/resync y tool.request/start/finish. Los consumidores no
+    // deben depender del payload particular de Claude/Codex/OpenCode.
+    void agentLifecycleEvent(const QVariantMap &event);
     void toolApprovalNeeded(const QVariantMap &toolCall);
     // Actividad de control del escritorio para indicadores de privacidad/UI.
     // active=false marca el fin incluso cuando la tool falla.

@@ -40,6 +40,35 @@ QVariantMap ProjectBrain::load(const QString &root)
     return QJsonDocument::fromJson(file.readAll()).object().toVariantMap();
 }
 
+QStringList ProjectBrain::changedPaths(const QVariantMap &before, const QVariantMap &after)
+{
+    QHash<QString, QString> oldHashes;
+    for (const QVariant &value : before.value(QStringLiteral("files")).toList()) {
+        const QVariantMap item = value.toMap();
+        const QString path = QDir::fromNativeSeparators(
+            item.value(QStringLiteral("path")).toString());
+        if (!path.isEmpty()) oldHashes.insert(path, item.value(QStringLiteral("sha256")).toString());
+    }
+
+    QSet<QString> changed;
+    for (const QVariant &value : after.value(QStringLiteral("files")).toList()) {
+        const QVariantMap item = value.toMap();
+        const QString path = QDir::fromNativeSeparators(
+            item.value(QStringLiteral("path")).toString());
+        if (path.isEmpty()) continue;
+        const QString hash = item.value(QStringLiteral("sha256")).toString();
+        if (!oldHashes.contains(path) || oldHashes.value(path) != hash)
+            changed.insert(path);
+        oldHashes.remove(path);
+    }
+    for (auto it = oldHashes.cbegin(); it != oldHashes.cend(); ++it)
+        changed.insert(it.key());
+
+    QStringList result = changed.values();
+    result.sort(Qt::CaseInsensitive);
+    return result;
+}
+
 QVariantMap ProjectBrain::refresh(const QString &root, int maxFiles)
 {
     const QDir base(root);

@@ -6,6 +6,7 @@
 #include <QJsonObject>
 
 #include "core/agent/ContextIndex.h"
+#include "core/agent/ProjectBrain.h"
 
 class ContextIndexTests : public QObject
 {
@@ -14,6 +15,7 @@ private slots:
     void refreshPersistsFilesChunksAndEdges();
     void scoutReturnsBudgetReceiptAndHandle();
     void fetchRejectsStaleHandle();
+    void projectBrainDiffDetectsIndirectMutation();
 };
 
 static void writeText(const QString &root, const QString &rel, const QString &text)
@@ -85,6 +87,27 @@ void ContextIndexTests::fetchRejectsStaleHandle()
     const QString fetched = ContextIndex::fetch(dir.path(), handle);
     QVERIFY2(fetched.contains(QStringLiteral("handle obsoleto")),
              qPrintable(fetched));
+}
+
+void ContextIndexTests::projectBrainDiffDetectsIndirectMutation()
+{
+    const QVariantMap before{{QStringLiteral("files"), QVariantList{
+        QVariantMap{{QStringLiteral("path"), QStringLiteral("same.cpp")},
+                    {QStringLiteral("sha256"), QStringLiteral("old")}},
+        QVariantMap{{QStringLiteral("path"), QStringLiteral("removed.cpp")},
+                    {QStringLiteral("sha256"), QStringLiteral("gone")}}}};
+    const QVariantMap after{{QStringLiteral("files"), QVariantList{
+        QVariantMap{{QStringLiteral("path"), QStringLiteral("same.cpp")},
+                    {QStringLiteral("sha256"), QStringLiteral("new")}},
+        QVariantMap{{QStringLiteral("path"), QStringLiteral("added.cpp")},
+                    {QStringLiteral("sha256"), QStringLiteral("fresh")}}}};
+
+    const QStringList changed = ProjectBrain::changedPaths(before, after);
+    QCOMPARE(changed.size(), 3);
+    QVERIFY(changed.contains(QStringLiteral("same.cpp")));
+    QVERIFY(changed.contains(QStringLiteral("removed.cpp")));
+    QVERIFY(changed.contains(QStringLiteral("added.cpp")));
+    QVERIFY(ProjectBrain::changedPaths(after, after).isEmpty());
 }
 
 QTEST_MAIN(ContextIndexTests)

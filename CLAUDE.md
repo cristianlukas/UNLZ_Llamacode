@@ -181,10 +181,11 @@ corre el harness solo, así que son el único punto donde esto se aplica sin
 disciplina. Enganchados en `.claude/settings.json` (checkeado al repo):
 - **SessionStart** → si el tree ya tiene trabajo sin commitear, lo lista y sugiere
   el worktree. Informativo.
-- **PreToolUse(Edit|Write)** → claim por archivo en `.buildlock/claims/`. Si otra
-  sesión viva (claim < 90 min) tocó ese archivo, **avisa** — no bloquea: un claim
-  stale no debe trabar trabajo legítimo, y un choque de edición se arregla con un
-  merge.
+- **PreToolUse(Edit|Write|apply_patch)** → claim por archivo en
+  `.buildlock/claims/`. Si otra sesión viva (claim < 90 min) tocó ese archivo,
+  **avisa** — no bloquea: un claim stale no debe trabar trabajo legítimo, y un
+  choque de edición se arregla con un merge. Un patch multiarchivo reclama todos
+  sus encabezados `Update/Add/Delete File`.
 - **PreToolUse(Bash|PowerShell)** → **BLOQUEA** git de alcance global
   (`checkout/restore .`, `reset --hard`, `clean -fd`, `stash`, `add -A`/`.`) si hay
   trabajo sin commitear. Es el único caso irreversible. La forma **por path**

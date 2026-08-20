@@ -15,6 +15,7 @@
 #include <QJsonObject>
 #include <QTemporaryDir>
 #include "core/agent/HarnessDirectiveStore.h"
+#include "core/agent/AgentLifecycle.h"
 #include "core/agent/LlamaAgentBackend.h"
 #include "core/agent/RawChatBackend.h"
 #include "core/profiles/HarnessSpec.h"
@@ -27,6 +28,7 @@ private slots:
 
     void loop_policyReachesBackend();
     void loop_watchdogUsesConfiguredTimeouts();
+    void lifecycle_normalizesToolInputs();
     void context_compactionCanBeDisabled();
     void context_triggerChangesWhenCompactionKicksIn();
     void context_pruneCanBeDisabled();
@@ -110,6 +112,32 @@ void HarnessModulesTests::loop_watchdogUsesConfiguredTimeouts()
     QCOMPARE(LlamaAgentBackend::toolWatchdogSeconds(
                  QStringLiteral("run_shell"),
                  QJsonObject{{QStringLiteral("timeout_s"), 60}}, 15, 180), 75);
+}
+
+void HarnessModulesTests::lifecycle_normalizesToolInputs()
+{
+    const QStringList editPaths = AgentLifecycle::changedPathsFromToolInput(
+        QStringLiteral("Edit"), QJsonObject{{QStringLiteral("file_path"),
+                                             QStringLiteral("src\\main.cpp")}});
+    QCOMPARE(editPaths, QStringList{QStringLiteral("src/main.cpp")});
+
+    const QString patch = QStringLiteral(
+        "*** Begin Patch\n*** Update File: src/a.cpp\n"
+        "*** Add File: src/b.cpp\n*** End Patch");
+    const QStringList patchPaths = AgentLifecycle::changedPathsFromToolInput(
+        QStringLiteral("apply_patch"),
+        QJsonObject{{QStringLiteral("command"), patch}});
+    QCOMPARE(patchPaths, QStringList({QStringLiteral("src/a.cpp"),
+                                      QStringLiteral("src/b.cpp")}));
+
+    const QVariantMap event = AgentLifecycle::promptSubmit(
+        QStringLiteral("s1"), QStringLiteral("C:/repo"), QStringLiteral("c1"),
+        QStringLiteral("arreglar el parser"), 0);
+    QCOMPARE(event.value(QStringLiteral("event")).toString(),
+             QStringLiteral("prompt.submit"));
+    QCOMPARE(event.value(QStringLiteral("sessionId")).toString(), QStringLiteral("s1"));
+    QCOMPARE(event.value(QStringLiteral("prompt")).toString(),
+             QStringLiteral("arreglar el parser"));
 }
 
 // Historial que, con ctx 8192, sí dispara compactación en modo nativo (mismo

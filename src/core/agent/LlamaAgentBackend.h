@@ -4,6 +4,9 @@
 #include "HarnessEventLog.h"
 #include "HarnessEffectLedger.h"
 #include "HarnessCapabilitySnapshot.h"
+#include "AgentLifecycle.h"
+#include "AgentRunStore.h"
+#include "AgentDeliverableStore.h"
 #include "core/profiles/HarnessEngine.h"
 #include "core/profiles/HarnessSpec.h"
 #include <QHash>
@@ -152,6 +155,9 @@ public:
     // la imagen se inyecta en el contexto como mensaje user con image_url, así el
     // modelo VE el resultado que pidió observar (loop de debug visual recursivo).
     void setVisionAvailable(bool v) { m_visionReady = v; }
+    // Captura opt-in para el inspector de Tasks; no afecta el modo headless
+    // normal ni la conversación de Chat.
+    void setLivePreviewEnabled(bool enabled);
 
     // Forzar el protocolo textual de tools (TOOL_CALL por texto) desde el primer
     // request, sin esperar el 400 del server. Lo activa AppController cuando el
@@ -466,7 +472,8 @@ private:
     void postCompletionRequest(QJsonObject payload, CompletionMode mode);
     QJsonObject buildTextToolPayload(const QJsonObject &nativePayload) const;
     void processPendingCalls();     // procesa m_pendingCalls (approval/exec)
-    void finishTurn(const QString &finalText, bool persistFinalToApi = true);
+    void finishTurn(const QString &finalText, bool persistFinalToApi = true,
+                    const QString &terminalStatus = QStringLiteral("completed"));
     void appendAssistantText(const QString &text);
     void setTyping(bool typing);
 
@@ -544,7 +551,11 @@ private:
 
     // Sesión + persistencia a disco (patrón RawChatBackend)
     void ensureSession();
+    void releaseWorkClaim();
     void configureHarnessEventLog();
+    void configureDurableRunStore();
+    void beginDurableRun(const QString &objective);
+    void finishDurableRun(const QString &status, const QString &detail);
     QString buildSystemPrompt() const;   // prompt base + memoria del proyecto
     void logFromConst(const QString &text) const;  // log desde métodos const
     QVariantMap directiveFacts(bool super) const;  // hechos para el gate `when`
@@ -565,6 +576,8 @@ private:
     // esto el prompt persistido sigue anunciando el proyecto y los permisos de
     // cuando se creó la sesión, y el modelo pide rutas que el runner deniega.
     void refreshSystemPromptContext();
+    void resyncContextAfterMutation(const QString &reason,
+                                    const QStringList &knownPaths = {});
     int pruneWorkingContext();
     bool isProtectedContextMessage(const QJsonObject &message) const;
     QString normalizeCompactionSummary(const QString &summary) const;
@@ -610,6 +623,7 @@ private:
     bool m_forceTextTools = false;         // modelo sin tool-template → texto desde el inicio
     QString m_toolProtocol = QStringLiteral("auto");  // auto | native | text (spec)
     bool m_visionReady = false;            // server cargó mmproj (ve imágenes)
+    bool m_livePreviewEnabled = false;     // screenshots post-acción, sólo Tasks
     // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
     // server o por gating proactivo de AppController para modelos "unsupported").
     bool usingTextTools() const { return m_textToolFallback || m_forceTextTools; }
@@ -624,6 +638,13 @@ private:
     QString m_harnessSpecHash;
     HarnessEventLog m_harnessEventLog;
     HarnessEffectLedger m_harnessEffectLedger;
+    AgentRunStore m_agentRunStore;
+    QTimer *m_runLeaseTimer = nullptr;
+    QString m_runId;
+    QString m_runLeaseToken;
+    QString m_runOwnerId;
+    QJsonObject m_runBeforeSnapshot;
+    static constexpr qint64 kRunLeaseMs = 120000;
     QString m_harnessActivationId;
     HarnessCapabilitySnapshot m_harnessCapabilities;
     HarnessWorkerModule m_harnessWorkerModule;
@@ -783,6 +804,7 @@ private:
     QJsonObject m_awaitCall;
     QString m_awaitPayloadHash;     // aprobación ligada al payload MCP exacto
     QString m_correlationId;        // un ID por turno, propagado a tools/recibos
+    QString m_workClaimId;          // claim expirable del objetivo actual en el proyecto
 
     // Snapshots para revertir ediciones: path absoluto → {existía, contenido viejo}
     struct EditSnapshot { bool existed = false; QByteArray oldContent; };

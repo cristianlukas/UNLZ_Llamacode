@@ -10,16 +10,19 @@
 #include "SubAgentRunner.h"
 #include "AgentEfficiency.h"
 #include "AgentEventLog.h"
+#include "WorkRegistry.h"
 #include "ToolExecutionSafety.h"
 #include "HarnessWorkerProtocol.h"
 #include "MemoryStore.h"          // consolidación de memoria (background)
 #include "core/DocumentExtractor.h"
 #include "core/ToolCallingSupport.h"
 #include "core/automation/FuzzyMatch.h"
+#include "core/automation/DesktopComputerUse.h"
 
 #include <QJsonArray>
 
 #include <QCryptographicHash>
+#include <QCoreApplication>
 
 #include <QDateTime>
 #include <QThread>
@@ -458,7 +461,17 @@ LlamaAgentBackend::LlamaAgentBackend(QObject *parent) : IAgentBackend(parent)
         // normal backend stop path performs the orderly teardown.
         if (!m_ephemeralSessions)
             restartWorkerAfterTimeout();
-        finishTurn(message);
+        finishTurn(message, true, QStringLiteral("failed"));
+    });
+    m_runLeaseTimer = new QTimer(this);
+    m_runLeaseTimer->setInterval(30000);
+    connect(m_runLeaseTimer, &QTimer::timeout, this, [this]() {
+        if (m_runId.isEmpty() || m_runLeaseToken.isEmpty()) return;
+        QString error;
+        if (!m_agentRunStore.heartbeat(m_runId, m_runLeaseToken, kRunLeaseMs, &error)) {
+            emit logAppended(QStringLiteral("[run] heartbeat rechazado: %1\n").arg(error));
+            m_runLeaseTimer->stop();
+        }
     });
     connect(this, &IAgentBackend::turnFinished, this, [this]() {
         if (!m_isSessionRuntime) pumpSessionRuntimes();
@@ -508,6 +521,10 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
     if (!m_ephemeralSessions)
         loadFromDisk();     // recupera sesiones previas; activa la primera
     ensureSession();        // si no había ninguna, crea una
+    configureDurableRunStore();
+    emit agentLifecycleEvent(AgentLifecycle::sessionStart(
+        m_sessionId, m_cwd, m_correlationId, m_harnessProfileId,
+        m_harnessEngineId, m_harnessEngineVersion));
     if (m_harnessEngineId == QLatin1String("next")) {
         QStringList requested;
         for (const QVariant &entry : toolCatalog())
@@ -536,6 +553,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
     fetchContextLimit();
     ensureWorker();         // hilo worker (persiste toda la vida del backend)
     // (Re)configurar el worker en cada start (async, no bloquea UI).
+    QMetaObject::invokeMethod(m_worker, "setLivePreviewEnabled", Qt::QueuedConnection,
+                              Q_ARG(bool, m_livePreviewEnabled));
     QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
                               Q_ARG(bool, m_approvalMode != QLatin1String("super")));
     QMetaObject::invokeMethod(m_worker, "setServerBaseUrl", Qt::QueuedConnection,
@@ -1189,9 +1208,11 @@ void LlamaAgentBackend::stop()
             "[turn] interrumpido porque el backend o servidor se detuvo; liberando estado\n"));
         finishTurn(QStringLiteral(
             "[error: el servidor o backend se reinició durante la respuesta; "
-            "el turno fue interrumpido y puede reintentarse.]"), false);
+            "el turno fue interrumpido y puede reintentarse.]"), false,
+                   QStringLiteral("interrupted"));
     } else {
         // Defensa para estados transitorios heredados de builds anteriores.
+        releaseWorkClaim();
         setTyping(false);
         m_curAsstIdx = -1;
     }
@@ -1213,6 +1234,7 @@ void LlamaAgentBackend::cancelGeneration()
             return;
         }
     }
+    const bool hadTurn = isBusy();
     emit desktopActivityChanged(false, QString(), QString());
     if (m_compactReply) {
         QNetworkReply *cr = m_compactReply;
@@ -1243,10 +1265,14 @@ void LlamaAgentBackend::cancelGeneration()
     cancelAllSubs();
     // PARAR = detener todo, incluida la cola de mensajes pendientes.
     if (!m_msgQueue.isEmpty()) { m_msgQueue.clear(); emit queueChanged(); }
+    releaseWorkClaim();
     if (!m_isSessionRuntime) {
         pumpSessionRuntimes();
         emit sessionsChanged();
     }
+    if (hadTurn)
+        finishTurn(QStringLiteral("[turno cancelado por el usuario]"), false,
+                   QStringLiteral("cancelled"));
 }
 
 void LlamaAgentBackend::ensureSession()
@@ -1302,6 +1328,95 @@ void LlamaAgentBackend::configureHarnessEventLog()
                                     &error)) {
         emit logAppended(QStringLiteral("[harness effect ledger deshabilitado: %1]\n").arg(error));
     }
+}
+
+void LlamaAgentBackend::configureDurableRunStore()
+{
+    if (m_ephemeralSessions || m_sessionId.isEmpty()) return;
+    QString error;
+    const QString root = QDir(storageDir()).filePath(QStringLiteral("agent_runs"));
+    if (!m_agentRunStore.open(root, &error)) {
+        emit logAppended(QStringLiteral("[run store deshabilitado: %1]\n").arg(error));
+        return;
+    }
+    if (m_runOwnerId.isEmpty()) {
+        m_runOwnerId = QStringLiteral("pid:%1/backend:%2")
+            .arg(QCoreApplication::applicationPid())
+            .arg(QString::number(reinterpret_cast<quintptr>(this), 16));
+    }
+    const int recovered = m_agentRunStore.recoverStaleRuns(0, &error);
+    if (!error.isEmpty())
+        emit logAppended(QStringLiteral("[run recovery parcial: %1]\n").arg(error));
+    if (recovered > 0)
+        emit logAppended(QStringLiteral(
+            "[run recovery: %1 corrida(s) quedaron uncertain; no se reejecutan automáticamente]\n")
+                             .arg(recovered));
+}
+
+void LlamaAgentBackend::beginDurableRun(const QString &objective)
+{
+    if (m_ephemeralSessions || m_sessionId.isEmpty() || m_correlationId.isEmpty()
+        || !m_runId.isEmpty() || m_agentRunStore.root().isEmpty())
+        return;
+
+    QString snapshotError;
+    m_runBeforeSnapshot = AgentDeliverableStore::snapshot(m_cwd, &snapshotError);
+    if (m_runBeforeSnapshot.isEmpty() && !snapshotError.isEmpty())
+        emit logAppended(QStringLiteral("[run] snapshot inicial omitido: %1\n").arg(snapshotError));
+
+    QString error;
+    const QString accepted = m_agentRunStore.accept(
+        m_correlationId, m_sessionId, m_correlationId, m_cwd, objective,
+        m_runBeforeSnapshot, &error);
+    if (accepted.isEmpty()) {
+        emit logAppended(QStringLiteral("[run] no se pudo aceptar la corrida: %1\n").arg(error));
+        m_runBeforeSnapshot = {};
+        return;
+    }
+    QString token;
+    if (!m_agentRunStore.claim(accepted, m_runOwnerId, kRunLeaseMs, &token, &error)) {
+        emit logAppended(QStringLiteral("[run] no se pudo reclamar la corrida: %1\n").arg(error));
+        m_runBeforeSnapshot = {};
+        return;
+    }
+    m_runId = accepted;
+    m_runLeaseToken = token;
+    if (m_runLeaseTimer) m_runLeaseTimer->start();
+    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("run_started"),
+                          QJsonObject{{QStringLiteral("runId"), m_runId},
+                                      {QStringLiteral("correlationId"), m_correlationId}});
+}
+
+void LlamaAgentBackend::finishDurableRun(const QString &status, const QString &detail)
+{
+    if (m_runId.isEmpty()) return;
+    const QString runId = m_runId;
+    const QString token = m_runLeaseToken;
+    QString captureError;
+    QJsonObject manifest;
+    if (!m_cwd.isEmpty() && !m_runBeforeSnapshot.isEmpty())
+        manifest = AgentDeliverableStore::capture(runId, m_cwd, m_runBeforeSnapshot, &captureError);
+
+    QJsonObject metadata;
+    if (!manifest.isEmpty()) {
+        QJsonObject summary = manifest;
+        summary.remove(QStringLiteral("entries"));
+        summary[QStringLiteral("manifestPath")] = QDir(AgentDeliverableStore::rootDir())
+            .filePath(QStringLiteral("%1/manifest.json").arg(runId));
+        metadata[QStringLiteral("deliverables")] = summary;
+    }
+    if (!captureError.isEmpty()) metadata[QStringLiteral("deliverablesError")] = captureError;
+
+    QString error;
+    if (!m_agentRunStore.transition(runId, token, status, detail, metadata, &error)) {
+        // No se reclama de nuevo: si el lease expiró, un efecto puede haber
+        // quedado ambiguo y debe permanecer visible como uncertain.
+        emit logAppended(QStringLiteral("[run] no se pudo cerrar %1: %2\n").arg(runId, error));
+    }
+    if (m_runLeaseTimer) m_runLeaseTimer->stop();
+    m_runId.clear();
+    m_runLeaseToken.clear();
+    m_runBeforeSnapshot = {};
 }
 
 QString LlamaAgentBackend::memoryFilePath(const QString &cwd)
@@ -1411,6 +1526,12 @@ QString LlamaAgentBackend::projectContextSection()
         "- Repo grande que no conocés: corré `graph` action='index' UNA vez (mapea "
         "símbolos e imports, determinista y barato) y después navegá con `graph` "
         "action='query' en vez de re-leer archivos para entender cómo se conecta todo.\n"
+        "- Fuente de verdad: priorizá código y tests actuales, después decisiones "
+        "vigentes con evidencia, luego memoria verificada y por último inferencias o "
+        "historial. Una nota vieja nunca gana contra el estado comprobable del repo.\n"
+        "- Trabajo paralelo: antes de editar usá `work_status`. Si una claim de otra "
+        "sesión reclama la misma ruta, no fuerces la escritura: explicá el conflicto "
+        "y coordiná un handoff o elegí otra superficie.\n"
         "- Dejá memoria: cuando descubras o decidas algo durable y NO obvio (por qué "
         "existe un patrón, una restricción, un acoplamiento, una decisión de diseño), "
         "anotá 1-2 líneas en .llamacode/memory.md para que la próxima sesión arranque "
@@ -2091,6 +2212,19 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     }
     ensureSession();
     m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    beginDurableRun(visibleTrimmed);
+    if (m_workClaimId.isEmpty()) {
+        const QString agentId = m_harnessProfileId.trimmed().isEmpty()
+            ? QStringLiteral("llamacode-agent") : m_harnessProfileId.trimmed();
+        m_workClaimId = WorkRegistry::acquire(
+            m_cwd, m_sessionId, agentId, visibleTrimmed, {}, QString(), QString(), 900);
+        if (!m_workClaimId.isEmpty()) {
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("work_claim"),
+                                  QJsonObject{{QStringLiteral("action"), QStringLiteral("acquire")},
+                                              {QStringLiteral("claimId"), m_workClaimId},
+                                              {QStringLiteral("goal"), visibleTrimmed.left(4096)}});
+        }
+    }
     ensureWorker();
     QMetaObject::invokeMethod(m_worker, "setCorrelationId", Qt::QueuedConnection,
                               Q_ARG(QString, m_correlationId));
@@ -2128,6 +2262,8 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     // Contenido para la API: si hay adjuntos, mensaje multimodal (texto + imágenes
     // inline + docs de texto inlineados); si no, string plano.
     const QString apiText = trimmed;
+    emit agentLifecycleEvent(AgentLifecycle::promptSubmit(
+        m_sessionId, m_cwd, m_correlationId, visibleTrimmed, attachments.size()));
     // Preflight de contexto: slice de archivos candidatos ANTES del primer
     // request, para que el modelo no gaste vueltas descubriendo el repo. Estaba
     // detrás de un #ifdef de debug (código muerto en release); ahora lo gobierna
@@ -2139,10 +2275,12 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
             m_contextPolicy.scoutBudget, m_contextPolicy.graphExpansion,
             m_knowledgePolicy.enabled && m_knowledgePolicy.preflight,
             m_knowledgePolicy.maxFacts, m_knowledgePolicy.maxEdges,
-            m_knowledgePolicy.maxChars);
+            m_knowledgePolicy.maxChars, m_sessionId);
         appendApiMessage(QJsonObject{{QStringLiteral("role"), QStringLiteral("user")},
                                      {QStringLiteral("content"), preflight},
                                      {QStringLiteral("_lc_protected"), true}});
+        emit agentLifecycleEvent(AgentLifecycle::contextPreflight(
+            m_sessionId, m_cwd, m_correlationId, preflight.size(), QStringLiteral("prompt")));
         emit logAppended(QStringLiteral("[preflight: contexto inicial preparado]\n"));
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
                               QJsonObject{{QStringLiteral("source"), QStringLiteral("context_preflight")},
@@ -2429,6 +2567,8 @@ void LlamaAgentBackend::steerMessage(const QString &text)
     const QString t = text.trimmed();
     if (!m_running || t.isEmpty()) return;
     if (isBusy()) {
+        finishDurableRun(QStringLiteral("cancelled"),
+                         QStringLiteral("reemplazado por steering del usuario"));
         interruptForSteer();
         emit logAppended(QStringLiteral("[steering: turno interrumpido por nuevo mensaje]\n"));
     }
@@ -2694,7 +2834,7 @@ void LlamaAgentBackend::runCompletion()
 
     if (++m_turnIters > kMaxTurnIters) {
         finishTurn(QStringLiteral("[corté el turno: se alcanzó el límite de %1 iteraciones de tools]")
-                       .arg(kMaxTurnIters));
+                       .arg(kMaxTurnIters), true, QStringLiteral("failed"));
         return;
     }
 
@@ -3215,7 +3355,8 @@ void LlamaAgentBackend::handleStreamData()
 void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 {
     if (!ok && !m_streamRepetitionDetected && !m_streamToolCallCut) {
-        finishTurn(QStringLiteral("[error: %1]").arg(err), false);
+        finishTurn(QStringLiteral("[error: %1]").arg(err), false,
+                   QStringLiteral("failed"));
         return;
     }
     if (ok) {
@@ -3457,6 +3598,39 @@ void LlamaAgentBackend::processPendingCalls()
     ensureAssistantBubble();
     setAssistantStatus(toolStatusText(name, kind));
 
+    // Coordinación por proyecto: no dejamos que dos sesiones escriban la misma
+    // ruta al mismo tiempo sin que el modelo reciba una señal explícita. Las
+    // claims vencidas se ignoran y un conflicto sólo aplica a tools declaradas
+    // como escritura; leer o investigar en paralelo sigue siendo seguro.
+    if (kind == QLatin1String("write") && !m_cwd.isEmpty()) {
+        const QJsonObject writeArgs = QJsonDocument::fromJson(argStr.toUtf8()).object();
+        const QStringList writePaths = AgentLifecycle::changedPathsFromToolInput(name, writeArgs);
+        if (!writePaths.isEmpty()) {
+            QString conflict;
+            const bool claimed = WorkRegistry::claimPaths(
+                m_cwd, m_workClaimId, m_sessionId, writePaths, &conflict);
+            if (!claimed && conflict.isEmpty()) {
+                conflict = WorkRegistry::formatConflicts(m_cwd, m_sessionId, writePaths);
+            }
+            if (!claimed && !conflict.isEmpty()) {
+                ++m_toolFail;
+                m_pendingCalls.removeFirst();
+                const QString refusal = conflict
+                    + QStringLiteral("\n[edición bloqueada: elegí otra ruta, esperá el handoff "
+                                     "de la otra sesión o pedí al usuario que resuelva el conflicto]");
+                AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                      QJsonObject{{QStringLiteral("tool"), name},
+                                                  {QStringLiteral("toolCallId"), id},
+                                                  {QStringLiteral("reason"), QStringLiteral("active_work_conflict")},
+                                                  {QStringLiteral("paths"), QJsonArray::fromStringList(writePaths)}});
+                appendToolCard(name, kind, false, writePaths.join(", "), refusal);
+                appendToolResult(id, name, refusal);
+                processPendingCalls();
+                return;
+            }
+        }
+    }
+
     if (m_harnessEngineId == QLatin1String("next")) {
         bool builtin = false;
         for (const QVariant &entry : toolCatalog()) {
@@ -3497,6 +3671,10 @@ void LlamaAgentBackend::processPendingCalls()
                                       {QStringLiteral("toolKind"), kind},
                                       {QStringLiteral("args"), argStr.left(8192)},
                                       {QStringLiteral("repeatCount"), sigCnt}});
+    emit agentLifecycleEvent(AgentLifecycle::toolEvent(
+        QStringLiteral("tool.request"), m_sessionId, m_cwd, m_correlationId,
+        id, name, argStr, AgentLifecycle::changedPathsFromToolInput(
+            name, QJsonDocument::fromJson(argStr.toUtf8()).object())));
     const QString effectId = m_sessionId + QLatin1Char(':') + id;
     if (m_harnessEngineId == QLatin1String("next") && !id.isEmpty()) {
         HarnessEffectRecord effect;
@@ -3561,7 +3739,7 @@ void LlamaAgentBackend::processPendingCalls()
         if (alreadyReplanned) {
             emit logAppended(QStringLiteral("[anti-loop] el modelo ignoró el replanteo; "
                                             "cerrando turno\n"));
-            finishTurn(notice);
+            finishTurn(notice, true, QStringLiteral("failed"));
             return;
         }
         m_replannedCallSigs.insert(sig);
@@ -3580,7 +3758,8 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("web_search"), QStringLiteral("deep_research"),
         QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
         QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
-        QStringLiteral("context_status"), QStringLiteral("context_scout"),
+        QStringLiteral("context_status"), QStringLiteral("work_status"),
+        QStringLiteral("context_scout"),
         QStringLiteral("context_fetch"), QStringLiteral("verify_claims"),
         QStringLiteral("review_overengineering"),
         QStringLiteral("memory"), QStringLiteral("graph"), QStringLiteral("context_checkpoint"),
@@ -3588,8 +3767,10 @@ void LlamaAgentBackend::processPendingCalls()
         QStringLiteral("browser_skill_list"), QStringLiteral("browser_skill_replay"),
         QStringLiteral("skill_list"), QStringLiteral("skill_load"),
         QStringLiteral("browser_network_discover"),
-        QStringLiteral("recent_actions"), QStringLiteral("desktop_windows"),
+        QStringLiteral("recent_actions"), QStringLiteral("desktop_snapshot"),
+        QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"), QStringLiteral("desktop_click_element"),
+        QStringLiteral("desktop_control_action"),
         QStringLiteral("desktop_find_image"), QStringLiteral("desktop_click_image"),
         QStringLiteral("desktop_wait_image"), QStringLiteral("desktop_assert_image"),
         QStringLiteral("desktop_observe"), QStringLiteral("desktop_click"),
@@ -4086,9 +4267,75 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
         emit desktopActivityChanged(true, name, m_execCommand);
     ensureAssistantBubble();
     setAssistantStatus(toolStatusText(name, toolKind(name), m_execCommand));
+    emit agentLifecycleEvent(AgentLifecycle::toolEvent(
+        QStringLiteral("tool.start"), m_sessionId, m_cwd, m_correlationId,
+        id, name, argStr, AgentLifecycle::changedPathsFromToolInput(
+            name, QJsonDocument::fromJson(argStr.toUtf8()).object())));
     QMetaObject::invokeMethod(m_worker, "executeTool", Qt::QueuedConnection,
                               Q_ARG(QString, id), Q_ARG(QString, name),
                               Q_ARG(QString, argStr), Q_ARG(QString, m_cwd));
+}
+
+void LlamaAgentBackend::resyncContextAfterMutation(const QString &reason,
+                                                    const QStringList &knownPaths)
+{
+    if (m_cwd.isEmpty()) return;
+
+    const QDir base(m_cwd);
+    QStringList safePaths;
+    for (const QString &raw : knownPaths) {
+        const QFileInfo info(raw);
+        const QString absolute = info.isAbsolute()
+            ? info.absoluteFilePath() : base.absoluteFilePath(raw);
+        const QString rel = QDir::fromNativeSeparators(base.relativeFilePath(absolute));
+        if (rel.isEmpty() || rel == QLatin1String(".")
+            || rel == QLatin1String("..") || rel.startsWith(QStringLiteral("../")))
+            continue;
+        if (!safePaths.contains(rel)) safePaths.append(rel);
+    }
+
+    const QVariantMap before = ProjectBrain::load(m_cwd);
+    const bool fullScan = safePaths.isEmpty();
+    const QVariantMap after = fullScan
+        ? ProjectBrain::refresh(m_cwd)
+        : ProjectBrain::update(m_cwd, safePaths);
+    if (after.contains(QStringLiteral("error"))) return;
+
+    QStringList changed = ProjectBrain::changedPaths(before, after);
+    if (!fullScan) {
+        for (const QString &path : safePaths)
+            if (!changed.contains(path)) changed.append(path);
+        changed.sort(Qt::CaseInsensitive);
+    }
+    if (changed.isEmpty()) return;
+
+    const QVariantMap contextState = ContextIndex::refresh(m_cwd, changed);
+    QString graphReport;
+    bool hasDeleted = false;
+    for (const QString &path : changed) {
+        if (!QFileInfo::exists(base.absoluteFilePath(path))) {
+            hasDeleted = true;
+            break;
+        }
+    }
+    if (fullScan || hasDeleted)
+        CodeGraphIndexer::buildIncremental(m_cwd, {}, &graphReport);
+    else
+        CodeGraphIndexer::reindexFiles(m_cwd, changed, {}, &graphReport);
+
+    emit logAppended(QStringLiteral(
+        "[preflight: índices resincronizados tras %1 (%2 archivo(s))]\n")
+                         .arg(reason).arg(changed.size()));
+    emit logAppended(graphReport + QLatin1Char('\n'));
+    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
+                          QJsonObject{{QStringLiteral("source"), QStringLiteral("context_resync")},
+                                      {QStringLiteral("reason"), reason},
+                                      {QStringLiteral("paths"), QJsonArray::fromStringList(changed)},
+                                      {QStringLiteral("contextIndex"),
+                                       QJsonObject::fromVariantMap(contextState)},
+                                      {QStringLiteral("graphReport"), graphReport}});
+    emit agentLifecycleEvent(AgentLifecycle::contextResync(
+        m_sessionId, m_cwd, m_correlationId, reason, changed, graphReport));
 }
 
 void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
@@ -4107,6 +4354,8 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     QString res        = result.value(QStringLiteral("result")).toString();
     const bool isWrite = result.value(QStringLiteral("isWrite")).toBool();
     const bool externalWrite = result.value(QStringLiteral("externalWrite")).toBool();
+    if (!m_workClaimId.isEmpty())
+        WorkRegistry::heartbeat(m_cwd, m_workClaimId, m_sessionId);
     const QString executedArgs = m_execArguments;
     m_execToolName.clear();
     m_execArguments.clear();
@@ -4118,28 +4367,35 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             QStringLiteral("settled"), ok ? QString() : QStringLiteral("tool_failed"),
             resultHash);
     }
-    if (ok && isWrite && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"))) {
-        const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
-        const QString path = QDir::cleanPath(args.value(QStringLiteral("path")).toString().trimmed());
-        if (!path.isEmpty()) {
-            ProjectBrain::update(m_cwd, QStringList{path});
-            const QVariantMap contextState = ContextIndex::refresh(m_cwd, QStringList{path});
-            QString report;
-            CodeGraphIndexer::reindexFiles(m_cwd, QStringList{path}, {}, &report);
+    const QJsonObject args = QJsonDocument::fromJson(executedArgs.toUtf8()).object();
+    const QStringList changedPaths = AgentLifecycle::changedPathsFromToolInput(name, args);
+    const bool nativeFileWrite = isWrite
+        && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"));
+    const bool shellMutation = name == QLatin1String("run_shell");
+    const bool indexedExternalMutation = externalWrite && !changedPaths.isEmpty();
+    if (ok && (nativeFileWrite || shellMutation || indexedExternalMutation)) {
+        const QString reason = shellMutation ? QStringLiteral("run_shell")
+            : (nativeFileWrite ? QStringLiteral("file_tool")
+                               : QStringLiteral("external_tool"));
+        resyncContextAfterMutation(reason, changedPaths);
+
+        if (nativeFileWrite && !changedPaths.isEmpty()) {
+            const QString path = changedPaths.first();
+            if (!m_workClaimId.isEmpty())
+                WorkRegistry::addPaths(m_cwd, m_workClaimId, m_sessionId, {path});
             const QString graphInference = GraphStore::inferToolTouch(
                 m_cwd, name, path, m_sessionId,
                 result.value(QStringLiteral("correlationId")).toString().isEmpty()
                     ? m_correlationId
                     : result.value(QStringLiteral("correlationId")).toString());
-            emit logAppended(QStringLiteral("[preflight: índices resincronizados tras %1]\n").arg(path));
             emit logAppended(graphInference + QLatin1Char('\n'));
-            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("observation"),
-                                  QJsonObject{{QStringLiteral("source"), QStringLiteral("context_resync")},
-                                              {QStringLiteral("path"), path},
-                                              {QStringLiteral("contextIndex"), QJsonObject::fromVariantMap(contextState)},
-                                              {QStringLiteral("graphReport"), report}});
         }
     }
+    emit agentLifecycleEvent(AgentLifecycle::toolResult(
+        m_sessionId, m_cwd,
+        result.value(QStringLiteral("correlationId")).toString().isEmpty()
+            ? m_correlationId : result.value(QStringLiteral("correlationId")).toString(),
+        callId, name, ok, isWrite, externalWrite, res, changedPaths));
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
@@ -4173,6 +4429,9 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
                                       {QStringLiteral("receipt"),
                                        QJsonObject::fromVariantMap(
                                            result.value(QStringLiteral("receipt")).toMap())},
+                                      {QStringLiteral("desktopReceipt"),
+                                       QJsonObject::fromVariantMap(
+                                           result.value(QStringLiteral("desktopReceipt")).toMap())},
                                       {QStringLiteral("detail"), m_execCommand},
                                       {QStringLiteral("result"), res.left(8192)}});
 
@@ -4210,7 +4469,15 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     } else if (!isWrite) {
         // write_file/edit_file → tarjeta de diff (abajo). El resto → tarjeta propia.
         appendToolCard(name, toolKind(name), ok, m_execCommand, res);
-        if (!m_messages.isEmpty() && !result.value(QStringLiteral("receipt")).toMap().isEmpty()) {
+        if (!m_messages.isEmpty() && result.contains(QStringLiteral("imagePath"))) {
+            QVariantMap card = m_messages.last().toMap();
+            card[QStringLiteral("imagePath")] = result.value(QStringLiteral("imagePath")).toString();
+            m_messages[m_messages.size() - 1] = card;
+            emit messagesChanged();
+        }
+        if (!m_messages.isEmpty()
+            && (!result.value(QStringLiteral("receipt")).toMap().isEmpty()
+                || !result.value(QStringLiteral("desktopReceipt")).toMap().isEmpty())) {
             QVariantMap card = m_messages.last().toMap();
             card[QStringLiteral("correlationId")] =
                 result.value(QStringLiteral("correlationId")).toString();
@@ -4221,6 +4488,9 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             card[QStringLiteral("deduplicated")] =
                 result.value(QStringLiteral("deduplicated")).toBool();
             card[QStringLiteral("receipt")] = result.value(QStringLiteral("receipt")).toMap();
+            if (!result.value(QStringLiteral("desktopReceipt")).toMap().isEmpty())
+                card[QStringLiteral("desktopReceipt")] =
+                    result.value(QStringLiteral("desktopReceipt")).toMap();
             m_messages[m_messages.size() - 1] = card;
             emit messagesChanged();
         }
@@ -4297,7 +4567,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
         AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
                               {{QStringLiteral("reason"), QStringLiteral("semantic_stagnation")},
                                {QStringLiteral("semanticKey"), progress.semanticKey}});
-        finishTurn(notice);
+        finishTurn(notice, true, QStringLiteral("failed"));
         return;
     }
 
@@ -5127,7 +5397,20 @@ void LlamaAgentBackend::setTyping(bool typing)
     emit messagesChanged();
 }
 
-void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalToApi)
+void LlamaAgentBackend::releaseWorkClaim()
+{
+    if (m_workClaimId.isEmpty()) return;
+    const QString claimId = m_workClaimId;
+    m_workClaimId.clear();
+    const bool released = WorkRegistry::release(m_cwd, claimId, m_sessionId);
+    AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("work_claim"),
+                          QJsonObject{{QStringLiteral("action"), QStringLiteral("release")},
+                                      {QStringLiteral("claimId"), claimId},
+                                      {QStringLiteral("released"), released}});
+}
+
+void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalToApi,
+                                   const QString &terminalStatus)
 {
     // Si hay texto final pero la burbuja se cerró tras una tool, abrir una nueva.
     if (!finalText.isEmpty() && m_curAsstIdx < 0)
@@ -5155,15 +5438,19 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
         appendApiMessage(QJsonObject{
             {QStringLiteral("role"), QStringLiteral("assistant")},
             {QStringLiteral("content"), finalText}});
-    emit logAppended(QStringLiteral("[turn] completed (finalTextChars=%1)\n").arg(shownChars));
+    emit logAppended(QStringLiteral("[turn] %1 (finalTextChars=%2)\n")
+                         .arg(terminalStatus, QString::number(shownChars)));
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("assistant_final"),
                           QJsonObject{{QStringLiteral("chars"), shownChars},
                                       {QStringLiteral("toolOk"), m_toolOk},
                                       {QStringLiteral("toolFail"), m_toolFail},
                                       {QStringLiteral("progressEvents"), m_progressEvents},
                                       {QStringLiteral("stagnationEvents"), m_stagnationEvents},
-                                      {QStringLiteral("replanEvents"), m_replanEvents},
-                                      {QStringLiteral("text"), finalText.left(4096)}});
+                                       {QStringLiteral("replanEvents"), m_replanEvents},
+                                       {QStringLiteral("text"), finalText.left(4096)}});
+    finishDurableRun(terminalStatus.trimmed().isEmpty()
+                         ? QStringLiteral("completed") : terminalStatus.trimmed().toLower(),
+                     finalText.left(4096));
     m_curAsstIdx = -1;
     m_pendingCalls = {};
     m_awaitId.clear();
@@ -5178,6 +5465,7 @@ void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalTo
                              .arg(m_toolOk).arg(total)
                              .arg(qRound(100.0 * m_toolOk / total)));
 
+    releaseWorkClaim();
     saveCurrentSession();   // persistir al cerrar el turno
 
     // Aprendizaje por recuperación, inspirado en el patrón de skills de Hermes:
@@ -5215,6 +5503,8 @@ QString LlamaAgentBackend::toolKind(const QString &name)
         return QStringLiteral("write");
     if (name == QLatin1String("worker_call")) return QStringLiteral("external");
     if (name == QLatin1String("email_send")) return QStringLiteral("email");
+    if (DesktopComputerUse::isDesktopReadTool(name)) return QStringLiteral("read");
+    if (DesktopComputerUse::isDesktopActionTool(name)) return QStringLiteral("desktop");
     return QStringLiteral("read");
 }
 
@@ -5316,6 +5606,36 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
     if (bare == QLatin1String("desktop_click_text"))
         return desktopLabelIsDestructive(args.value(QStringLiteral("text")).toString().toLower());
 
+    // Las acciones semánticas nuevas no deben depender sólo de un label visible.
+    // El modelo puede pasar metadata del target y UIA puede marcar un campo como
+    // password; en ambos casos se fuerza aprobación antes de escribir o alternar.
+    if (bare == QLatin1String("desktop_control_action")) {
+        const QString action = args.value(QStringLiteral("action")).toString().toLower();
+        const QVariantMap target = args.value(QStringLiteral("target")).toObject().toVariantMap();
+        const QString label = args.value(QStringLiteral("name")).toString()
+                              + QLatin1Char(' ')
+                              + args.value(QStringLiteral("control_id")).toString();
+        if (desktopLabelIsDestructive(label)
+            || action == QLatin1String("delete") || action == QLatin1String("remove")
+            || action == QLatin1String("format") || action == QLatin1String("uninstall"))
+            return true;
+        if (DesktopComputerUse::isSensitiveTarget(target)
+            || args.value(QStringLiteral("sensitive")).toBool()
+            || args.value(QStringLiteral("password")).toBool())
+            return true;
+    }
+    if (bare == QLatin1String("desktop_type")) {
+        if (args.value(QStringLiteral("sensitive")).toBool()
+            || args.value(QStringLiteral("password")).toBool()
+            || DesktopComputerUse::isSensitiveTarget(
+                   args.value(QStringLiteral("target")).toObject().toVariantMap()))
+            return true;
+    }
+    if (bare == QLatin1String("desktop_click")) {
+        return desktopLabelIsDestructive(args.value(QStringLiteral("label")).toString())
+            || desktopLabelIsDestructive(args.value(QStringLiteral("target_name")).toString());
+    }
+
     // ── Memory / DB delete ────────────────────────────────────────────────
     if (bare == QLatin1String("memory")) {
         const QString a = args.value(QStringLiteral("action")).toString().toLower();
@@ -5394,6 +5714,13 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Devuelve la frescura y las métricas del índice local de contexto. "
                           "Es sólo lectura y no fuerza una indexación completa."),
            QJsonObject{}, QJsonArray{}),
+        fn(QStringLiteral("work_status"),
+           QStringLiteral("Devuelve el trabajo activo de otras sesiones/agentes del mismo "
+                          "proyecto: objetivos, rutas reclamadas y claims vigentes. Usala "
+                          "antes de editar si hay trabajo paralelo."),
+           QJsonObject{{QStringLiteral("max_claims"), intProp(
+               QStringLiteral("Máximo de claims a devolver (1-50, default 8)."))}},
+           QJsonArray{}),
         fn(QStringLiteral("context_scout"),
            QStringLiteral("Exploración compacta del repositorio: rankea chunks persistidos por "
                           "keywords, devuelve archivo:rango, previews, handles, vecinos y un "
@@ -5743,6 +6070,17 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("count"), intProp(QStringLiteral("Cuántos eventos traer (default 20, máx 200)."))}},
            QJsonArray{}),
+        fn(QStringLiteral("desktop_snapshot"),
+           QStringLiteral("Obtiene un snapshot compacto y determinista del alcance: ventanas, "
+                          "controles UIA, automationId, patrones, estados y fingerprint. "
+                          "Usá el snapshot_id devuelto al actuar; si quedó stale, la acción "
+                          "se rechaza y debés observar de nuevo. No captura píxeles."),
+           QJsonObject{
+               {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de pantalla o ventana."))},
+               {QStringLiteral("query"), strProp(QStringLiteral("Filtro opcional de controles."))},
+                {QStringLiteral("max"), intProp(QStringLiteral("Máximo de controles; default 120."))}},
+           QJsonArray{QStringLiteral("target_id")}),
         fn(QStringLiteral("desktop_windows"),
            QStringLiteral("Inventario ESTRUCTURADO de ventanas visibles (id, título, pid, "
                           "geometría) — estado barato para orientarte y elegir un objetivo SIN "
@@ -5770,11 +6108,26 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "del control. Pasá el mismo target_id de la ventana."),
            QJsonObject{
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana."))},
+               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint de desktop_snapshot/desktop_controls; opcional pero recomendado."))},
                {QStringLiteral("control_id"), strProp(QStringLiteral(
                     "controlId devuelto por desktop_controls. Si no lo tenés a mano podés "
                     "pasar el nombre visible del control y se resuelve por parecido, pero "
                     "el controlId es exacto: preferilo siempre."))}},
-           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id")}),
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id")} ),
+        fn(QStringLiteral("desktop_control_action"),
+           QStringLiteral("Ejecuta una acción semántica UI Automation sobre un control del "
+                          "snapshot sin robar foco cuando el patrón está disponible. Acciones: "
+                          "invoke, toggle, set_value, select, expand, collapse, range_set, "
+                          "scroll_into_view, read. Usá snapshot_id para evitar actuar sobre "
+                          "un árbol obsoleto."),
+           QJsonObject{
+               {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la ventana."))},
+               {QStringLiteral("control_id"), strProp(QStringLiteral("controlId del snapshot."))},
+               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot."))},
+               {QStringLiteral("action"), strProp(QStringLiteral("invoke|toggle|set_value|select|expand|collapse|range_set|scroll_into_view|read"))},
+               {QStringLiteral("value"), strProp(QStringLiteral("Valor para set_value o range_set."))},
+               {QStringLiteral("sensitive"), boolProp(QStringLiteral("Marca explícita de campo sensible."))}},
+           QJsonArray{QStringLiteral("target_id"), QStringLiteral("control_id"), QStringLiteral("action")} ),
         fn(QStringLiteral("desktop_click_text"),
            QStringLiteral("ÚLTIMO RECURSO: clickea un texto LEÍDO de la pantalla por OCR. "
                           "Usalo SÓLO si desktop_controls no devuelve el control (apps que "
@@ -5784,6 +6137,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id de la pantalla o ventana."))},
+               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot opcional."))},
                {QStringLiteral("text"), strProp(QStringLiteral("Texto visible a clickear."))}},
            QJsonArray{QStringLiteral("target_id"), QStringLiteral("text")}),
         fn(QStringLiteral("desktop_find_image"),
@@ -5794,6 +6148,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot opcional."))},
                {QStringLiteral("template_path"), strProp(QStringLiteral("Ruta de la imagen de referencia."))},
                {QStringLiteral("threshold"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                                                           {QStringLiteral("minimum"), 0.5},
@@ -5813,6 +6168,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonObject{
                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+               {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot opcional."))},
                {QStringLiteral("template_path"), strProp(QStringLiteral("Ruta de la imagen de referencia."))},
                {QStringLiteral("threshold"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                                                           {QStringLiteral("minimum"), 0.5},
@@ -5859,7 +6215,8 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QStringLiteral("Captura el alcance actual como evidencia visual. Usala cuando UIA/OCR "
                           "no alcancen, antes de un clic por coordenadas y una vez después para "
                           "verificar el cambio. No afirmes que un control existe si no se ve con "
-                          "claridad; ante ausencia o ambigüedad, abstenete."),
+                          "claridad; ante ausencia o ambigüedad, abstenete. Devuelve además "
+                          "snapshot_id, fingerprint y controles UIA para poder actuar con stale guard."),
            QJsonObject{
                {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance guardado en la receta."))}},
@@ -5873,6 +6230,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
             QJsonObject{
                 {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                 {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+                {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot opcional."))},
                 {QStringLiteral("x"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                                                     {QStringLiteral("minimum"), 0.0},
                                                     {QStringLiteral("maximum"), 1.0}}},
@@ -5893,6 +6251,7 @@ QJsonArray LlamaAgentBackend::toolSchemas()
             QJsonObject{
                 {QStringLiteral("scope_kind"), strProp(QStringLiteral("'screen' o 'window'."))},
                 {QStringLiteral("target_id"), strProp(QStringLiteral("Id del alcance."))},
+                {QStringLiteral("snapshot_id"), strProp(QStringLiteral("Fingerprint del snapshot opcional."))},
                 {QStringLiteral("points"), QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("array")},
                     {QStringLiteral("description"), QStringLiteral("Lista de {x,y} normalizados 0..1 (mínimo 2).")},
@@ -6046,6 +6405,7 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("list_dir",  "Archivos", "Lista archivos y carpetas.", 80),
         mk("project_brain", "Conocimiento", "Índice persistente de estructura y metadata del proyecto.", 95),
         mk("context_status", "Búsqueda", "Estado y frescura del índice local de contexto.", 65),
+        mk("work_status", "Coordinación", "Trabajo activo y rutas reclamadas por otras sesiones.", 80),
         mk("glob",      "Archivos", "Lista archivos por patrón glob.", 110),
         mk("grep",      "Búsqueda", "Busca una regex en el proyecto.", 100),
         mk("code_hotspots", "Búsqueda", "Archivos riesgosos: churn git + autores + sin test (score 1-10).", 140),
@@ -6075,9 +6435,11 @@ QVariantList LlamaAgentBackend::toolCatalog()
         mk("browser_skill_replay", "Browser", "Reproduce un skill de browser grabado (Playwright).", 100),
         mk("browser_network_discover", "Browser", "Resume requests Playwright sin secretos ni cuerpos.", 105),
         mk("recent_actions", "Conocimiento", "Relee tu rastro reciente (tool_calls/fallos) para auto-corregirte.", 90),
+        mk("desktop_snapshot", "Escritorio", "Snapshot determinista con fingerprint y stale guard.", 125),
         mk("desktop_windows", "Escritorio", "Inventario estructurado de ventanas (barato, sin captura).", 80),
         mk("desktop_controls", "Escritorio", "Árbol de controles de una ventana (UIA, DOM-aware).", 150),
         mk("desktop_click_element", "Escritorio", "Click a un control por nombre/id (UIA), no por pixel.", 110),
+        mk("desktop_control_action", "Escritorio", "Acción semántica UIA sin foco cuando el patrón existe.", 120),
         mk("desktop_find_image", "Escritorio", "Localiza una plantilla visual con confianza y ambigüedad.", 135),
         mk("desktop_click_image", "Escritorio", "Localiza y clickea una plantilla visual única.", 145),
         mk("desktop_wait_image", "Escritorio", "Espera aparición o desaparición de una plantilla.", 120),
@@ -6193,6 +6555,15 @@ void LlamaAgentBackend::setPortableSkillPolicy(const HarnessSkillsModule &policy
                                   Q_ARG(bool, m_skillPolicy.set));
 }
 
+void LlamaAgentBackend::setLivePreviewEnabled(bool enabled)
+{
+    if (m_livePreviewEnabled == enabled && !m_worker) return;
+    m_livePreviewEnabled = enabled;
+    if (m_worker)
+        QMetaObject::invokeMethod(m_worker, "setLivePreviewEnabled", Qt::QueuedConnection,
+                                  Q_ARG(bool, enabled));
+}
+
 void LlamaAgentBackend::ensureWorker()
 {
     if (m_worker) return;
@@ -6210,6 +6581,8 @@ void LlamaAgentBackend::ensureWorker()
 void LlamaAgentBackend::configureWorker()
 {
     if (!m_worker) return;
+    QMetaObject::invokeMethod(m_worker, "setLivePreviewEnabled", Qt::QueuedConnection,
+                              Q_ARG(bool, m_livePreviewEnabled));
     QMetaObject::invokeMethod(m_worker, "setConfined", Qt::QueuedConnection,
                               Q_ARG(bool, m_approvalMode != QLatin1String("super")));
     QMetaObject::invokeMethod(m_worker, "setServerBaseUrl", Qt::QueuedConnection,
@@ -6306,7 +6679,8 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             QStringLiteral("web_search"), QStringLiteral("deep_research"),
             QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
             QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
-            QStringLiteral("context_status"), QStringLiteral("context_scout"),
+            QStringLiteral("context_status"), QStringLiteral("work_status"),
+            QStringLiteral("context_scout"),
             QStringLiteral("context_fetch"), QStringLiteral("verify_claims"),
             QStringLiteral("browser_skill_list"), QStringLiteral("skill_list"),
             QStringLiteral("skill_load")};

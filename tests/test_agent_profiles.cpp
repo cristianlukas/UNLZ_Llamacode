@@ -1,7 +1,6 @@
 // Unit tests de Perfiles de Agente:
 //   - AgentProfile: serialización JSON ida/vuelta.
-//   - systemPresets(): los 7 presets (Chat/Básico/Intermedio/Avanzado/Máximo +
-//     Minimal/RPA del harness modular), sus
+//   - systemPresets(): los 9 presets (incluye Browser Agent y Harness Next), sus
 //     ids estables, capas acumulativas de tools y el sentinel "*" de Máximo.
 //   - LlamaAgentBackend::directiveCatalog() + setDirectives() → buildSystemPrompt
 //     incluye/excluye cada sección (gating por directiva); default = todas.
@@ -244,7 +243,7 @@ void AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
 void AgentProfilesTests::systemPresets_shape()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    QCOMPARE(ps.size(), 8);
+    QCOMPARE(ps.size(), 9);
 
     // Orden: la escalera histórica primero, luego la variante comparable del
     // harness Next y finalmente los perfiles de propósito.
@@ -256,6 +255,7 @@ void AgentProfilesTests::systemPresets_shape()
     QCOMPARE(ps[5].id, QStringLiteral("agent-intermedio-next"));
     QCOMPARE(ps[6].id, QStringLiteral("agent-minimal"));
     QCOMPARE(ps[7].id, QStringLiteral("agent-rpa"));
+    QCOMPARE(ps[8].id, QStringLiteral("agent-browser"));
     QCOMPARE(AgentProfile::defaultPresetId(), QStringLiteral("agent-intermedio"));
 
     for (const AgentProfile &p : ps) QVERIFY(p.system);
@@ -270,6 +270,7 @@ void AgentProfilesTests::systemPresets_shape()
     const AgentProfile avanz  = byId(QStringLiteral("agent-avanzado"));
     const AgentProfile maximo = byId(QStringLiteral("agent-maximo"));
     const AgentProfile next   = byId(QStringLiteral("agent-intermedio-next"));
+    const AgentProfile browser = byId(QStringLiteral("agent-browser"));
 
     QVERIFY(next.hasSpec);
     QCOMPARE(next.spec.runtime.engine, QStringLiteral("next"));
@@ -299,12 +300,31 @@ void AgentProfilesTests::systemPresets_shape()
     QVERIFY(inter.directives.contains(QStringLiteral("discipline")));
     QVERIFY(avanz.directives.contains(QStringLiteral("testNet")));
     QVERIFY(avanz.thinking);
+    QVERIFY(avanz.hasSpec);
+    QVERIFY(avanz.spec.context.preflight);
+    QCOMPARE(avanz.spec.context.indexPolicy, QStringLiteral("lazy"));
+
+    // Browser Agent nativo: tools web/browser acotadas, skills portables
+    // apagadas por defecto y contrato modular explícito.
+    QVERIFY(browser.hasSpec);
+    QCOMPARE(browser.spec.tools.packs,
+             QStringList({QStringLiteral("core"), QStringLiteral("web"),
+                          QStringLiteral("browser")}));
+    QVERIFY(browser.enabledTools.contains(QStringLiteral("web_search")));
+    QVERIFY(browser.enabledTools.contains(QStringLiteral("browser_skill_replay")));
+    QVERIFY(browser.spec.skills.set);
+    QVERIFY(browser.spec.skills.include.isEmpty());
+    QCOMPARE(browser.spec.loop.webToolTimeoutSec, 300);
+    QVERIFY(!browser.enabledTools.contains(QStringLiteral("desktop_windows")));
+    QVERIFY(!browser.enabledTools.contains(QStringLiteral("email_send")));
 
     // Máximo: sentinel "*" = todo el catálogo, super + thinking.
     QCOMPARE(maximo.enabledTools, QStringList{QStringLiteral("*")});
     QCOMPARE(maximo.directives, QStringList{QStringLiteral("*")});
     QCOMPARE(maximo.approvalMode, QStringLiteral("super"));
     QVERIFY(maximo.thinking);
+    QVERIFY(maximo.hasSpec);
+    QVERIFY(maximo.spec.context.preflight);
     QVERIFY(chat.progressCredits < maximo.progressCredits);
     QVERIFY(chat.progressMaxCredits < maximo.progressMaxCredits);
     QVERIFY(chat.quickToolTimeoutSec > 0);

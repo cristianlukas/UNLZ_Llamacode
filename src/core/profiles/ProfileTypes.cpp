@@ -351,6 +351,51 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     presets[4].progressReplanAfter = 5;
     presets[4].progressStopAfter = 8;
 
+    // El contexto estructural se entrega al modelo al enviar cada objetivo,
+    // sin esperar a que decida llamar context_scout. Queda limitado a los
+    // perfiles de coding con presupuesto amplio; Chat/Minimal/RPA conservan
+    // el flujo liviano y Next sigue siendo comparable con Intermedio.
+    auto enableCodingPreflight = [](AgentProfile &profile) {
+        profile.spec = profile.toSpec();
+        profile.hasSpec = true;
+        profile.spec.context.set = true;
+        profile.spec.context.preflight = true;
+        profile.spec.context.indexPolicy = QStringLiteral("lazy");
+        profile.spec.context.graphExpansion = true;
+    };
+    enableCodingPreflight(presets[3]);
+    enableCodingPreflight(presets[4]);
+
+    // Browser Agent nativo: conserva el loop de LlamaCode, pero deja explícito
+    // el perímetro de navegación para poder comparar el harness con el mismo
+    // modelo/runtime. Las skills portables quedan apagadas a propósito; el
+    // benchmark de browser debe medir web/browser/MCP, no instrucciones de
+    // coding cargadas por accidente.
+    AgentProfile browser = mk("agent-browser", "Browser Agent (nativo)", {},
+                              {"discipline", "efficiency"}, "ask", true);
+    browser.progressCredits = 12;
+    browser.progressMaxCredits = 24;
+    browser.progressReplanAfter = 4;
+    browser.progressStopAfter = 8;
+    browser.spec = browser.toSpec();
+    browser.hasSpec = true;
+    browser.spec.tools.set = true;
+    browser.spec.tools.packs = QStringList{"core", "web", "browser"};
+    browser.spec.skills.set = true;
+    browser.spec.skills.include.clear();
+    browser.spec.skills.exclude.clear();
+    browser.spec.loop.set = true;
+    browser.spec.loop.credits = browser.progressCredits;
+    browser.spec.loop.maxCredits = browser.progressMaxCredits;
+    browser.spec.loop.replanAfter = browser.progressReplanAfter;
+    browser.spec.loop.stopAfter = browser.progressStopAfter;
+    browser.spec.loop.webToolTimeoutSec = 300;
+    browser.spec.context.set = true;
+    browser.spec.context.compactionTrigger = 0.85;
+    browser.spec.context.tailRatio = 0.55;
+    browser.spec.context.keepLastImages = 2;
+    browser.enabledTools = HarnessTools::resolve(browser.spec.tools);
+
     // --- Presets nuevos del harness modular -------------------------------
     // Minimal: el modo local-first duro (review de codehamr). Pocas tools, sin
     // MCP, prompt corto, contexto barato. Para 7B-30B con 32k reales.
@@ -409,7 +454,7 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     next.spec.runtime.fallbackEngine = QStringLiteral("legacy");
     next.spec.runtime.experimental = true;
 
-    presets << next << minimal << rpa;
+    presets << next << minimal << rpa << browser;
     return presets;
 }
 

@@ -180,6 +180,16 @@ Ok (-not ($oCol -match 'OJO')) "dos CLAUDE.md en dirs distintos no colisionan"
 $oSame = RunGuard 'edit-claim' @{ session_id='sess-Q'; tool_name='Edit'; tool_input=@{ file_path=$p1 } }
 Ok ($oSame -match 'OJO') "el mismo path si detecta el choque"
 
+Write-Host "== test 4d: apply_patch reclama todos sus archivos =="
+if (Test-Path $claimDir) { Remove-Item -Recurse -Force $claimDir -ErrorAction SilentlyContinue }
+$patch = "*** Begin Patch`n*** Update File: src/core/agent/LlamaAgentBackend.cpp`n*** Add File: src/core/agent/AgentLifecycle.h`n*** End Patch"
+$patchPayload = @{ session_id='sess-PATCH'; tool_name='apply_patch'; tool_input=@{ command=$patch } }
+RunGuard 'edit-claim' $patchPayload | Out-Null
+$patchClaims = @(Get-ChildItem $claimDir -Filter 'sess-PATCH__*.claim' -File -ErrorAction SilentlyContinue)
+Ok ($patchClaims.Count -eq 2) "un patch multiarchivo crea dos claims (actual=$($patchClaims.Count))"
+$patchCollision = RunGuard 'edit-claim' @{ session_id='sess-OTHER'; tool_name='apply_patch'; tool_input=@{ command=$patch } }
+Ok ($patchCollision -match 'LlamaAgentBackend\.cpp') "patch informa colision en el primer archivo"
+
 Write-Host "== test 5: edit-claim ignora claims stale (sesion muerta no traba a nadie) =="
 # Autocontenido a proposito: antes dependia de claims que dejaba el test 4, y
 # cuando el 4c empezo a limpiar el registry el test paso a verificar NADA (no

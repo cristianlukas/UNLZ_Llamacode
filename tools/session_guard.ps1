@@ -189,12 +189,50 @@ if ($Mode -eq 'session-start') {
 }
 
 # =============================================================================
+function Get-EditPaths($inputObject) {
+    $toolInput = $inputObject.tool_input
+    $toolName = [string]$inputObject.tool_name
+    $paths = @()
+    $seen = @{}
+
+    foreach ($key in @('file_path','path','filePath','filename','target','destination','files','paths')) {
+        $value = $toolInput.$key
+        if ($null -eq $value) { continue }
+        $values = if ($value -is [System.Array]) { $value } else { @($value) }
+        foreach ($item in $values) {
+            $path = [string]$item
+            if (-not $path) { continue }
+            $normal = ($path -replace '/', '\')
+            $id = $normal.ToLowerInvariant()
+            if (-not $seen.ContainsKey($id)) { $seen[$id] = $true; $paths += $normal }
+        }
+    }
+
+    # Codex can carry apply_patch in tool_input.command instead of file_path.
+    # Read the patch headers so one hook invocation claims every touched file.
+    $command = [string]$toolInput.command
+    if ($toolName -match 'apply.?patch' -or $command -match '\*\*\* Begin Patch') {
+        $headers = [regex]::Matches($command, '(?m)^\s*\*\*\*\s+(?:Update|Add|Delete) File:\s*(.+?)\s*$')
+        foreach ($match in $headers) {
+            $path = [string]$match.Groups[1].Value.Trim()
+            if (-not $path) { continue }
+            $normal = ($path -replace '/', '\')
+            $id = $normal.ToLowerInvariant()
+            if (-not $seen.ContainsKey($id)) { $seen[$id] = $true; $paths += $normal }
+        }
+    }
+    return @($paths)
+}
+
+# =============================================================================
 if ($Mode -eq 'edit-claim') {
     $in = Read-StdinJson
     if (-not $in) { exit 0 }
     $sid  = [string]$in.session_id
-    $file = [string]$in.tool_input.file_path
-    if (-not $sid -or -not $file) { exit 0 }
+    $files = @(Get-EditPaths $in)
+    if (-not $sid -or $files.Count -eq 0) { exit 0 }
+
+    foreach ($file in $files) {
 
     New-Item -ItemType Directory -Force -Path $claimDir | Out-Null
 
@@ -241,6 +279,7 @@ if ($Mode -eq 'edit-claim') {
         }
         Emit-Context ("[session-guard] OJO: otra sesion edito '$rel' hace ~${ago} min y sigue activa.`n" +
                       "Vas a pisar o mezclar su trabajo. $tail")
+    }
     }
     exit 0
 }
