@@ -440,6 +440,81 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     rpa.spec.context.keepLastImages = 2;       // ver el paso anterior ayuda a corregir
     rpa.enabledTools = HarnessTools::resolve(rpa.spec.tools);
 
+    // Artefactos: separa el trabajo local (crear, validar y dejar un entregable
+    // privado) del trabajo con efectos externos (preparar y publicar mediante
+    // browser/MCP sólo después de una aprobación explícita). El contrato es
+    // deliberadamente general: sirve para HTML, Markdown, PDF, Office o apps
+    // estáticas sin acoplarse a un proveedor de hosting concreto.
+    auto configureArtifactContract = [](AgentProfile &profile, bool publisher) {
+        profile.spec = profile.toSpec();
+        profile.hasSpec = true;
+        profile.spec.tools.set = true;
+        profile.spec.tools.packs = publisher
+            ? QStringList{QStringLiteral("core"), QStringLiteral("web"),
+                          QStringLiteral("browser")}
+            : QStringList{QStringLiteral("core")};
+        profile.spec.tools.mcpToolsEnabled = publisher;
+        profile.spec.prompt.set = true;
+        profile.spec.prompt.builtin = {QStringLiteral("discipline"),
+                                       QStringLiteral("testNet"),
+                                       QStringLiteral("efficiency"),
+                                       QStringLiteral("style")};
+        profile.spec.prompt.maxChars = publisher ? 14000 : 10000;
+        profile.spec.prompt.systemExtra = QStringLiteral(
+            "PROTOCOLO DE ARTEFACTOS: tratá cada entregable como un contrato. "
+            "Definí el formato, entrypoint, archivos esperados y criterios de "
+            "validación antes de terminar. Después de escribir, releé o ejecutá "
+            "una comprobación reproducible y dejá un manifiesto breve con estado, "
+            "visibilidad y archivos. La salida es privada/local por defecto: "
+            "no publiques, subas, envíes ni llames a un servicio externo sólo "
+            "porque el artefacto existe. Separá preparar/stash de publicar y pedí "
+            "aprobación humana justo antes de cualquier efecto externo.%1")
+            .arg(publisher
+                     ? QStringLiteral(
+                           " Si el usuario pide publicar, inspeccioná primero el "
+                           "destino y prepará el paquete; ejecutá la publicación sólo "
+                           "después de la confirmación explícita y verificá la URL o "
+                           "respuesta final sin exponer secretos.")
+                     : QStringLiteral(
+                           " En este perfil no uses red ni hosting: dejá el "
+                           "entregable listo para una futura publicación."));
+        profile.spec.permissions.set = true;
+        profile.spec.permissions.approvalMode = QStringLiteral("ask");
+        profile.spec.permissions.hitlDestructive = true;
+        profile.spec.permissions.mailAutoSend = false;
+        profile.spec.loop.set = true;
+        profile.spec.loop.credits = publisher ? 12 : 8;
+        profile.spec.loop.maxCredits = publisher ? 24 : 16;
+        profile.spec.loop.replanAfter = 4;
+        profile.spec.loop.stopAfter = publisher ? 8 : 5;
+        profile.spec.loop.sameCallLimit = 2;
+        profile.spec.loop.webToolTimeoutSec = 300;
+        profile.spec.context.set = true;
+        profile.spec.context.compactionTrigger = 0.85;
+        profile.spec.context.tailRatio = 0.55;
+        profile.spec.context.keepLastImages = publisher ? 2 : 0;
+        profile.spec.context.preflight = false;
+        profile.enabledTools = HarnessTools::resolve(profile.spec.tools);
+    };
+
+    AgentProfile artifactLocal = mk(
+        "agent-artifact-local", "Artifacts · local/privado", {},
+        {"discipline", "testNet", "efficiency", "style"}, "ask", false,
+        /*mcp=*/false);
+    artifactLocal.progressCredits = 8;
+    artifactLocal.progressMaxCredits = 16;
+    configureArtifactContract(artifactLocal, false);
+
+    AgentProfile artifactPublisher = mk(
+        "agent-artifact-publisher", "Artifacts · publicación aprobada", {},
+        {"discipline", "testNet", "efficiency", "style"}, "ask", true,
+        /*mcp=*/true);
+    artifactPublisher.progressCredits = 12;
+    artifactPublisher.progressMaxCredits = 24;
+    artifactPublisher.progressReplanAfter = 4;
+    artifactPublisher.progressStopAfter = 8;
+    configureArtifactContract(artifactPublisher, true);
+
     // Variante comparable al Intermedio histórico. Sólo cambia el contrato
     // de ejecución; tools, prompt y límites parten de la misma configuración
     // para que una comparación A/B tenga una causa interpretable.
@@ -454,7 +529,7 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     next.spec.runtime.fallbackEngine = QStringLiteral("legacy");
     next.spec.runtime.experimental = true;
 
-    presets << next << minimal << rpa << browser;
+    presets << next << minimal << rpa << browser << artifactLocal << artifactPublisher;
     return presets;
 }
 

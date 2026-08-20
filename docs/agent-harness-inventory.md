@@ -1,6 +1,6 @@
 # Inventario de agentes, harnesses y skills
 
-> Auditoría local y de documentación: 2026-08-19.
+> Auditoría local y de documentación: 2026-08-20.
 >
 > Este documento describe qué está instalado o implementado, qué queda visible
 > en cada runtime y qué condición lo activa. La presencia de un archivo en una
@@ -55,6 +55,8 @@ agent-intermedio. El catálogo actual es:
 | agent-minimal | read/list/grep/write/edit/run_shell, local-first | approval ask, sin MCP, efficiency/style; sin imágenes, sin preflight, prompt máx. 8000 caracteres, 6/12 créditos, sameCallLimit 2, stopAfter 4 |
 | agent-rpa | packs core + rpa para desktop/UI Automation | approval ask, HITL para destructivas, quickToolTimeout 30 s, keepLastImages 2 |
 | agent-intermedio-next | mismo punto de partida que intermedio | Harness next v2 experimental con fallback legacy |
+| agent-artifact-local | pack core, sin MCP/web/browser; crea y valida entregables locales | approval ask, sin thinking; contrato privado/local, manifiesto y validación antes de cerrar |
+| agent-artifact-publisher | packs core + web + browser, MCP disponible bajo demanda | approval ask, thinking activo, 12/24 créditos; separa preparar/stash de publicar y exige confirmación explícita |
 
 El perfil no es una autorización autónoma: el catálogo final también depende
 de HarnessSpec, permisos de la tarea, workspace, fase y aprobación humana.

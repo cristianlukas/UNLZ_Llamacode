@@ -1,6 +1,7 @@
 // Unit tests de Perfiles de Agente:
 //   - AgentProfile: serialización JSON ida/vuelta.
-//   - systemPresets(): los 9 presets (incluye Browser Agent y Harness Next), sus
+//   - systemPresets(): los 11 presets (incluye Browser Agent, Harness Next y los
+//     perfiles de artefactos), sus
 //     ids estables, capas acumulativas de tools y el sentinel "*" de Máximo.
 //   - LlamaAgentBackend::directiveCatalog() + setDirectives() → buildSystemPrompt
 //     incluye/excluye cada sección (gating por directiva); default = todas.
@@ -243,10 +244,10 @@ void AgentProfilesTests::manager_rejectsInvalidImportAndClampsLimits()
 void AgentProfilesTests::systemPresets_shape()
 {
     const QList<AgentProfile> ps = AgentProfile::systemPresets();
-    QCOMPARE(ps.size(), 9);
+    QCOMPARE(ps.size(), 11);
 
     // Orden: la escalera histórica primero, luego la variante comparable del
-    // harness Next y finalmente los perfiles de propósito.
+    // harness Next y finalmente los perfiles de propósito/artefactos.
     QCOMPARE(ps[0].id, QStringLiteral("agent-chat"));
     QCOMPARE(ps[1].id, QStringLiteral("agent-basico"));
     QCOMPARE(ps[2].id, QStringLiteral("agent-intermedio"));
@@ -256,6 +257,8 @@ void AgentProfilesTests::systemPresets_shape()
     QCOMPARE(ps[6].id, QStringLiteral("agent-minimal"));
     QCOMPARE(ps[7].id, QStringLiteral("agent-rpa"));
     QCOMPARE(ps[8].id, QStringLiteral("agent-browser"));
+    QCOMPARE(ps[9].id, QStringLiteral("agent-artifact-local"));
+    QCOMPARE(ps[10].id, QStringLiteral("agent-artifact-publisher"));
     QCOMPARE(AgentProfile::defaultPresetId(), QStringLiteral("agent-intermedio"));
 
     for (const AgentProfile &p : ps) QVERIFY(p.system);
@@ -271,6 +274,8 @@ void AgentProfilesTests::systemPresets_shape()
     const AgentProfile maximo = byId(QStringLiteral("agent-maximo"));
     const AgentProfile next   = byId(QStringLiteral("agent-intermedio-next"));
     const AgentProfile browser = byId(QStringLiteral("agent-browser"));
+    const AgentProfile artifactLocal = byId(QStringLiteral("agent-artifact-local"));
+    const AgentProfile artifactPublisher = byId(QStringLiteral("agent-artifact-publisher"));
 
     QVERIFY(next.hasSpec);
     QCOMPARE(next.spec.runtime.engine, QStringLiteral("next"));
@@ -317,6 +322,30 @@ void AgentProfilesTests::systemPresets_shape()
     QCOMPARE(browser.spec.loop.webToolTimeoutSec, 300);
     QVERIFY(!browser.enabledTools.contains(QStringLiteral("desktop_windows")));
     QVERIFY(!browser.enabledTools.contains(QStringLiteral("email_send")));
+
+    // Artefactos: el perfil local conserva el flujo privado y reproducible;
+    // publisher suma web/browser, pero mantiene approval ask y el contrato de
+    // stash separado de publish.
+    QVERIFY(artifactLocal.hasSpec);
+    QCOMPARE(artifactLocal.spec.tools.packs, QStringList{QStringLiteral("core")});
+    QVERIFY(!artifactLocal.spec.tools.mcpToolsEnabled);
+    QVERIFY(!artifactLocal.enabledTools.contains(QStringLiteral("web_fetch")));
+    QVERIFY(!artifactLocal.enabledTools.contains(QStringLiteral("browser_skill_replay")));
+    QVERIFY(artifactLocal.spec.prompt.systemExtra.contains(QStringLiteral("privada/local")));
+    QVERIFY(artifactLocal.spec.prompt.systemExtra.contains(QStringLiteral("aprobación humana")));
+
+    QVERIFY(artifactPublisher.hasSpec);
+    QCOMPARE(artifactPublisher.spec.tools.packs,
+             QStringList({QStringLiteral("core"), QStringLiteral("web"),
+                          QStringLiteral("browser")}));
+    QVERIFY(artifactPublisher.spec.tools.mcpToolsEnabled);
+    QVERIFY(artifactPublisher.enabledTools.contains(QStringLiteral("web_fetch")));
+    QVERIFY(artifactPublisher.enabledTools.contains(QStringLiteral("browser_skill_replay")));
+    QCOMPARE(artifactPublisher.spec.permissions.approvalMode, QStringLiteral("ask"));
+    QVERIFY(artifactPublisher.spec.permissions.hitlDestructive);
+    QVERIFY(artifactPublisher.spec.prompt.systemExtra.contains(QStringLiteral("publicar")));
+    QVERIFY(artifactPublisher.spec.prompt.systemExtra.contains(QStringLiteral("confirmación explícita")));
+    QCOMPARE(artifactPublisher.spec.loop.webToolTimeoutSec, 300);
 
     // Máximo: sentinel "*" = todo el catálogo, super + thinking.
     QCOMPARE(maximo.enabledTools, QStringList{QStringLiteral("*")});

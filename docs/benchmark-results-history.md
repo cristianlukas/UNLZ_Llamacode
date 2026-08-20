@@ -1,6 +1,28 @@
 # Historia, descubrimientos y anotaciones de benchmarking
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
+## 2026-08-20 — A/B de ciclo de artefactos
+
+El flujo externo aporta una dimensión útil que no queda cubierta por
+HumanEval/HE20/BCB: producir un artefacto autocontenido, conservarlo privado,
+validarlo y separar el stash de una publicación con efectos externos. Se
+agregaron dos presets inmutables y dos variantes declarativas sobre el mismo
+runtime Qwen3.8 UD-Q4:
+
+| Variante | Perfil | Cambio controlado | Resultado |
+|---|---|---|---|
+| `sys-bench-qwen38-udq4-artifact-local` | `agent-artifact-local` | core, sin MCP/web/browser; manifiesto + validación local | Pendiente |
+| `sys-bench-qwen38-udq4-artifact-publisher` | `agent-artifact-publisher` | core + web + browser/MCP bajo demanda; approval ask | Pendiente |
+
+La suite [`artifact_lifecycle_v1.json`](../assets/benchmarks/custom/artifact_lifecycle_v1.json)
+crea un pitch deck HTML y una checklist de publicación. Exige `private by
+default`, `published: false` y aprobación explícita; no autoriza una publicación
+real durante el benchmark. Las filas se medirán por separado de HE0/HE20/BCB,
+con archivos producidos, manifiesto, reparaciones, tiempo y cualquier intento
+de red. No se promueve ninguna variante hasta que ambas pasen la validación
+funcional y el perfil publisher demuestre que no publica durante la fase de
+preparación.
+
 
 ## 2026-08-18 — Candidatas `llama-debug` de runtime
 
