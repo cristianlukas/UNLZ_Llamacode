@@ -1233,6 +1233,7 @@ AppController::AppController(QObject *parent) : QObject(parent)
             startCharla();
     });
     connect(this, &AppController::chatGeneratingChanged, this, [this]() { bumpActivity(); });
+    QTimer::singleShot(0, this, &AppController::refreshNativeAgentRuns);
     // El escaneo pesado (binaries/roots/hardware/catálogo + migraciones) se difiere
     // a runStartupScan(), que QML invoca tras pintar el popup de carga. Antes corría
     // acá en el constructor y congelaba ~3s antes de mostrar la ventana.
@@ -4223,6 +4224,11 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
             [this](const QVariantMap &event) { emit agentLifecycleEvent(event); });
     connect(b, &IAgentBackend::turnFinished, this, [this]() {
         onAgentTurnFinished();
+        refreshNativeAgentRuns();
+        // La captura de entregables corre fuera del hilo de UI y puede terminar
+        // después de la señal del turno; una segunda lectura actualiza el Inbox
+        // sin hacer polling continuo.
+        QTimer::singleShot(750, this, &AppController::refreshNativeAgentRuns);
         emit taskRunAvailabilityChanged();
     });
     connect(b, &IAgentBackend::runningChanged, this, [this, b]() {
@@ -4821,6 +4827,141 @@ void AppController::openManagedAgentRunDirectory(const QString &runId)
     const QVariantMap run = m_managedAgentRuns.run(runId);
     const QString dir = run.value(QStringLiteral("runDir")).toString();
     if (!dir.isEmpty()) QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+}
+
+QStringList AppController::nativeAgentRunRoots() const
+{
+    const QString base = QStandardPaths::writableLocation(
+        QStandardPaths::AppLocalDataLocation);
+    QStringList roots;
+    const QStringList namespaces{
+        HarnessEngine::storageNamespace(QStringLiteral("legacy")),
+        HarnessEngine::storageNamespace(QStringLiteral("next"))};
+    for (const QString &name : namespaces) {
+        const QString root = QDir(base).filePath(name + QStringLiteral("/agent_runs"));
+        if (QDir(QDir(root).filePath(QStringLiteral("runs"))).exists()) roots.append(root);
+    }
+    // Compatibilidad con futuras engines: no dependemos de una lista cerrada
+    // para leer corridas ya persistidas bajo otro namespace.
+    const QFileInfoList children = QDir(base).entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (const QFileInfo &child : children) {
+        const QString root = QDir(child.absoluteFilePath()).filePath(QStringLiteral("agent_runs"));
+        if (QDir(QDir(root).filePath(QStringLiteral("runs"))).exists()
+            && !roots.contains(root))
+            roots.append(root);
+    }
+    return roots;
+}
+
+QString AppController::nativeAgentRunRoot(const QString &runId) const
+{
+    for (const QString &root : nativeAgentRunRoots()) {
+        AgentRunStore store;
+        if (!store.open(root)) continue;
+        if (!store.record(runId).runId.isEmpty()) return root;
+    }
+    return {};
+}
+
+int AppController::nativeUncertainRunCount() const
+{
+    int count = 0;
+    for (const QVariant &value : m_nativeAgentRuns)
+        if (value.toMap().value(QStringLiteral("status")).toString()
+                == QLatin1String("uncertain"))
+            ++count;
+    return count;
+}
+
+void AppController::refreshNativeAgentRuns()
+{
+    QVariantList rows;
+    for (const QString &root : nativeAgentRunRoots()) {
+        AgentRunStore store;
+        QString error;
+        if (!store.open(root, &error)) continue;
+        const QString harness = QFileInfo(QDir(root).absolutePath()).dir().dirName();
+        for (const QJsonValue &value : store.all(500)) {
+            QVariantMap row = value.toObject().toVariantMap();
+            row[QStringLiteral("harnessNamespace")] = harness;
+            rows.append(row);
+        }
+    }
+    std::sort(rows.begin(), rows.end(), [](const QVariant &a, const QVariant &b) {
+        return a.toMap().value(QStringLiteral("updatedAt")).toLongLong()
+            > b.toMap().value(QStringLiteral("updatedAt")).toLongLong();
+    });
+    if (rows.size() > 500) rows = rows.mid(0, 500);
+    m_nativeAgentRuns = rows;
+    emit nativeAgentRunsChanged();
+}
+
+QVariantMap AppController::nativeAgentRun(const QString &runId) const
+{
+    const QString root = nativeAgentRunRoot(runId);
+    if (root.isEmpty()) return {};
+    AgentRunStore store;
+    if (!store.open(root)) return {};
+    return store.record(runId).toJson(false).toVariantMap();
+}
+
+QVariantList AppController::nativeAgentRunEvents(const QString &runId) const
+{
+    const QString root = nativeAgentRunRoot(runId);
+    if (root.isEmpty()) return {};
+    AgentRunStore store;
+    if (!store.open(root)) return {};
+    QVariantList result;
+    for (const QJsonValue &value : store.events(runId)) result.append(value.toObject().toVariantMap());
+    return result;
+}
+
+QVariantMap AppController::nativeAgentDeliverableManifest(const QString &runId) const
+{
+    return AgentDeliverableStore::manifest(runId).toVariantMap();
+}
+
+bool AppController::saveNativeAgentDeliverable(const QString &runId,
+                                               const QString &relativePath,
+                                               const QString &destination,
+                                               bool overwrite)
+{
+    QString error;
+    const bool ok = AgentDeliverableStore::saveAs(runId, relativePath, destination,
+                                                   overwrite, &error);
+    if (!ok && !error.isEmpty())
+        appendAgentEvent(QStringLiteral("deliverables"), error);
+    return ok;
+}
+
+void AppController::openNativeAgentRunDirectory(const QString &runId)
+{
+    const QJsonObject manifest = AgentDeliverableStore::manifest(runId);
+    const QString durablePath = QDir(AgentDeliverableStore::rootDir()).filePath(runId);
+    const QString storeRoot = nativeAgentRunRoot(runId);
+    const QString path = !manifest.isEmpty() && QDir(durablePath).exists()
+        ? durablePath : storeRoot;
+    if (!path.isEmpty()) QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+}
+
+bool AppController::resolveNativeAgentRun(const QString &runId, const QString &status,
+                                          const QString &detail)
+{
+    const QString root = nativeAgentRunRoot(runId);
+    if (root.isEmpty()) return false;
+    AgentRunStore store;
+    QString error;
+    if (!store.open(root, &error)
+        || !store.resolveUncertain(runId, status,
+                                   detail.isEmpty()
+                                       ? QStringLiteral("resuelto explícitamente por el usuario")
+                                       : detail,
+                                   &error)) {
+        if (!error.isEmpty()) appendAgentEvent(QStringLiteral("runs"), error);
+        return false;
+    }
+    refreshNativeAgentRuns();
+    return true;
 }
 
 QVariantList AppController::agentToolCatalog() const

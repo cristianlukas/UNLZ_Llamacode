@@ -22,6 +22,8 @@
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
 #include "core/agent/ManagedAgentRunStore.h"
+#include "core/agent/AgentRunStore.h"
+#include "core/agent/AgentDeliverableStore.h"
 #include "core/agent/AgentRoomStore.h"
 #include "core/SecretStore.h"
 #include "core/gateway/LlmGateway.h"
@@ -66,6 +68,8 @@ class AppController : public QObject
     Q_PROPERTY(TriggerManager* triggerManager READ triggerManager CONSTANT)
     Q_PROPERTY(AgentRoomStore* agentRoomStore READ agentRoomStore CONSTANT)
     Q_PROPERTY(ManagedAgentRunStore* managedAgentRunStore READ managedAgentRunStore CONSTANT)
+    Q_PROPERTY(QVariantList nativeAgentRuns READ nativeAgentRuns NOTIFY nativeAgentRunsChanged)
+    Q_PROPERTY(int nativeUncertainRunCount READ nativeUncertainRunCount NOTIFY nativeAgentRunsChanged)
     Q_PROPERTY(QString activeAgentDefinitionId READ activeAgentDefinitionId
                NOTIFY activeAgentDefinitionChanged)
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
@@ -253,6 +257,8 @@ public:
     AgentDefinitionStore *agentDefinitions() { return &m_agentDefinitions; }
     TriggerManager *triggerManager() { return &m_triggerManager; }
     ManagedAgentRunStore *managedAgentRunStore() { return &m_managedAgentRuns; }
+    QVariantList nativeAgentRuns() const { return m_nativeAgentRuns; }
+    int nativeUncertainRunCount() const;
     Q_INVOKABLE QVariantMap agentDefinitionMetrics(const QString &agentId) const;
     QString activeAgentDefinitionId() const { return m_activeAgentDefinitionId; }
     Q_INVOKABLE bool activateAgentDefinition(const QString &agentId);
@@ -630,6 +636,18 @@ public:
     Q_INVOKABLE QString managedAgentRunLog(const QString &runId) const;
     Q_INVOKABLE bool removeManagedAgentRun(const QString &runId);
     Q_INVOKABLE void openManagedAgentRunDirectory(const QString &runId);
+    Q_INVOKABLE void refreshNativeAgentRuns();
+    Q_INVOKABLE QVariantMap nativeAgentRun(const QString &runId) const;
+    Q_INVOKABLE QVariantList nativeAgentRunEvents(const QString &runId) const;
+    Q_INVOKABLE QVariantMap nativeAgentDeliverableManifest(const QString &runId) const;
+    Q_INVOKABLE bool saveNativeAgentDeliverable(const QString &runId,
+                                                const QString &relativePath,
+                                                const QString &destination,
+                                                bool overwrite = false);
+    Q_INVOKABLE void openNativeAgentRunDirectory(const QString &runId);
+    Q_INVOKABLE bool resolveNativeAgentRun(const QString &runId,
+                                           const QString &status = QStringLiteral("cancelled"),
+                                           const QString &detail = QString());
     Q_INVOKABLE void startAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopAgent();
 
@@ -1348,6 +1366,7 @@ signals:
     void thinkingChanged();
     void mermaidEnabledChanged();
     void agentRunningChanged();
+    void nativeAgentRunsChanged();
     void agentStartingChanged();
     void activeProfileToolSupportChanged();
     void agentLogChanged();
@@ -1543,8 +1562,11 @@ private:
     QHash<QString, QString> m_taskWorkLogs;
     RunHistoryStore  m_runHistory;
     ManagedAgentRunStore m_managedAgentRuns{&m_runHistory};
-    DownloadHistoryStore m_downloadHistory;
     QHash<QString, QPointer<IAgentBackend>> m_managedDelegationBackends;
+    QVariantList m_nativeAgentRuns;
+    QStringList nativeAgentRunRoots() const;
+    QString nativeAgentRunRoot(const QString &runId) const;
+    DownloadHistoryStore m_downloadHistory;
     // Inicio de la corrida actual (para registrar el historial al terminar).
     QString  m_runningTaskStartedAt;
     // Task programada esperando que el agente auto-iniciado quede listo.

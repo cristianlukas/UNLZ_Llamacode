@@ -39,7 +39,29 @@
 #include <QPointer>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QFutureWatcher>
+#include <QtConcurrent/QtConcurrentRun>
 #include <algorithm>
+
+struct AgentDurableCaptureResult {
+    QJsonObject manifest;
+    QString error;
+};
+
+struct AgentDurableRunState {
+    QString runId;
+    QString sessionId;
+    QString workspace;
+    QString runStoreRoot;
+    QString leaseToken;
+    QJsonObject beforeSnapshot;
+    QString status;
+    QString detail;
+    QTimer *captureLeaseTimer = nullptr;
+    bool snapshotReady = false;
+    bool finishRequested = false;
+    bool captureStarted = false;
+};
 
 static int estimateTokens(const QString &text)
 {
@@ -1359,29 +1381,42 @@ void LlamaAgentBackend::beginDurableRun(const QString &objective)
         || !m_runId.isEmpty() || m_agentRunStore.root().isEmpty())
         return;
 
-    QString snapshotError;
-    m_runBeforeSnapshot = AgentDeliverableStore::snapshot(m_cwd, &snapshotError);
-    if (m_runBeforeSnapshot.isEmpty() && !snapshotError.isEmpty())
-        emit logAppended(QStringLiteral("[run] snapshot inicial omitido: %1\n").arg(snapshotError));
-
     QString error;
     const QString accepted = m_agentRunStore.accept(
         m_correlationId, m_sessionId, m_correlationId, m_cwd, objective,
-        m_runBeforeSnapshot, &error);
+        QJsonObject{}, &error);
     if (accepted.isEmpty()) {
         emit logAppended(QStringLiteral("[run] no se pudo aceptar la corrida: %1\n").arg(error));
-        m_runBeforeSnapshot = {};
         return;
     }
     QString token;
     if (!m_agentRunStore.claim(accepted, m_runOwnerId, kRunLeaseMs, &token, &error)) {
         emit logAppended(QStringLiteral("[run] no se pudo reclamar la corrida: %1\n").arg(error));
-        m_runBeforeSnapshot = {};
         return;
     }
     m_runId = accepted;
     m_runLeaseToken = token;
     if (m_runLeaseTimer) m_runLeaseTimer->start();
+    const auto state = QSharedPointer<AgentDurableRunState>::create();
+    state->runId = m_runId;
+    state->sessionId = m_sessionId;
+    state->workspace = m_cwd;
+    state->runStoreRoot = m_agentRunStore.root();
+    state->leaseToken = token;
+    m_runAsyncState = state;
+    auto *watcher = new QFutureWatcher<QJsonObject>(this);
+    connect(watcher, &QFutureWatcher<QJsonObject>::finished, this,
+            [this, watcher, state]() {
+                state->beforeSnapshot = watcher->result();
+                state->snapshotReady = true;
+                watcher->deleteLater();
+                if (state->finishRequested)
+                    scheduleDurableCapture(state);
+            });
+    const QString workspace = m_cwd;
+    watcher->setFuture(QtConcurrent::run([workspace]() {
+        return AgentDeliverableStore::snapshot(workspace);
+    }));
     AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("run_started"),
                           QJsonObject{{QStringLiteral("runId"), m_runId},
                                       {QStringLiteral("correlationId"), m_correlationId}});
@@ -1392,23 +1427,61 @@ void LlamaAgentBackend::finishDurableRun(const QString &status, const QString &d
     if (m_runId.isEmpty()) return;
     const QString runId = m_runId;
     const QString token = m_runLeaseToken;
-    QString captureError;
-    QJsonObject manifest;
-    if (!m_cwd.isEmpty() && !m_runBeforeSnapshot.isEmpty())
-        manifest = AgentDeliverableStore::capture(runId, m_cwd, m_runBeforeSnapshot, &captureError);
+    const auto state = m_runAsyncState;
+    if (state) {
+        state->status = status;
+        state->detail = detail;
+        state->finishRequested = true;
+        if (!state->captureLeaseTimer) {
+            auto *leaseTimer = new QTimer(this);
+            state->captureLeaseTimer = leaseTimer;
+            leaseTimer->setInterval(30000);
+            connect(leaseTimer, &QTimer::timeout, this, [this, state]() {
+                if (!state->finishRequested) return;
+                AgentRunStore store;
+                QString heartbeatError;
+                if (!store.open(state->runStoreRoot, &heartbeatError)
+                    || !store.heartbeat(state->runId, state->leaseToken,
+                                        kRunLeaseMs, &heartbeatError)) {
+                    emit logAppended(QStringLiteral(
+                        "[run] heartbeat de captura rechazado para %1: %2\n")
+                                         .arg(state->runId, heartbeatError));
+                    if (state->captureLeaseTimer)
+                        state->captureLeaseTimer->stop();
+                }
+            });
+            leaseTimer->start();
+        }
+        // No publicar completed antes de tener snapshot y manifiesto: si el
+        // worker termina durante el snapshot, la corrida queda running por un
+        // instante y se cierra junto con la evidencia, o recovery la marca
+        // uncertain si el lease expira.
+        if (!state->snapshotReady)
+            emit logAppended(QStringLiteral(
+                "[run] cierre diferido %1: esperando snapshot de integridad\n").arg(runId));
+        else
+            scheduleDurableCapture(state);
 
-    QJsonObject metadata;
-    if (!manifest.isEmpty()) {
-        QJsonObject summary = manifest;
-        summary.remove(QStringLiteral("entries"));
-        summary[QStringLiteral("manifestPath")] = QDir(AgentDeliverableStore::rootDir())
-            .filePath(QStringLiteral("%1/manifest.json").arg(runId));
-        metadata[QStringLiteral("deliverables")] = summary;
+        // El callback conserva `state` y su lease. Liberamos la identidad del
+        // runtime para no impedir una nueva solicitud mientras la captura
+        // finaliza; si tarda más que el lease, queda uncertain.
+        if (m_runLeaseTimer) m_runLeaseTimer->stop();
+        m_runId.clear();
+        m_runLeaseToken.clear();
+        m_runAsyncState.clear();
+        return;
     }
-    if (!captureError.isEmpty()) metadata[QStringLiteral("deliverablesError")] = captureError;
 
+    // Defensa para estados antiguos sin state async: nunca presentar una
+    // corrida completed sin recibo de entregables.
+    const QString safeStatus = status == QLatin1String("completed")
+        ? QStringLiteral("failed") : status;
     QString error;
-    if (!m_agentRunStore.transition(runId, token, status, detail, metadata, &error)) {
+    if (!m_agentRunStore.transition(
+            runId, token, safeStatus,
+            detail + QStringLiteral(" [cierre endurecido: snapshot no disponible]"),
+            QJsonObject{{QStringLiteral("deliverablesError"),
+                         QStringLiteral("snapshot inicial no disponible")}}, &error)) {
         // No se reclama de nuevo: si el lease expiró, un efecto puede haber
         // quedado ambiguo y debe permanecer visible como uncertain.
         emit logAppended(QStringLiteral("[run] no se pudo cerrar %1: %2\n").arg(runId, error));
@@ -1416,7 +1489,79 @@ void LlamaAgentBackend::finishDurableRun(const QString &status, const QString &d
     if (m_runLeaseTimer) m_runLeaseTimer->stop();
     m_runId.clear();
     m_runLeaseToken.clear();
-    m_runBeforeSnapshot = {};
+}
+
+void LlamaAgentBackend::scheduleDurableCapture(
+    const QSharedPointer<AgentDurableRunState> &state)
+{
+    if (!state || !state->finishRequested || !state->snapshotReady
+        || state->captureStarted)
+        return;
+    state->captureStarted = true;
+    const QString runId = state->runId;
+    const QString workspace = state->workspace;
+    const QJsonObject beforeSnapshot = state->beforeSnapshot;
+    const QString runStoreRoot = state->runStoreRoot;
+    auto *watcher = new QFutureWatcher<AgentDurableCaptureResult>(this);
+    connect(watcher, &QFutureWatcher<AgentDurableCaptureResult>::finished, this,
+            [this, watcher, state, runId, runStoreRoot]() {
+                const AgentDurableCaptureResult captured = watcher->result();
+                if (state->captureLeaseTimer) {
+                    state->captureLeaseTimer->stop();
+                    state->captureLeaseTimer->deleteLater();
+                    state->captureLeaseTimer = nullptr;
+                }
+                QJsonObject metadata;
+                if (!captured.manifest.isEmpty()) {
+                    QJsonObject summary = captured.manifest;
+                    summary.remove(QStringLiteral("entries"));
+                    summary[QStringLiteral("manifestPath")] = QDir(AgentDeliverableStore::rootDir())
+                        .filePath(QStringLiteral("%1/manifest.json").arg(runId));
+                    metadata[QStringLiteral("deliverables")] = summary;
+                }
+                if (!captured.error.isEmpty())
+                    metadata[QStringLiteral("deliverablesError")] = captured.error;
+
+                QString terminalStatus = state->status;
+                if (captured.manifest.isEmpty()
+                    && terminalStatus == QLatin1String("completed")) {
+                    terminalStatus = QStringLiteral("failed");
+                    metadata[QStringLiteral("deliverablesError")] =
+                        captured.error.isEmpty()
+                            ? QStringLiteral("manifiesto de entregables vacío")
+                            : captured.error;
+                }
+                AgentRunStore store;
+                QString error;
+                const bool transitioned = store.open(runStoreRoot, &error)
+                    && store.transition(runId, state->leaseToken, terminalStatus,
+                                        state->detail, metadata, &error);
+                if (!transitioned) {
+                    // El lease puede haber expirado durante una captura pesada;
+                    // recovery lo dejará uncertain en vez de publicar un cierre
+                    // terminal sin evidencia.
+                    emit logAppended(QStringLiteral(
+                        "[run] no se pudo cerrar %1 con evidencia: %2\n")
+                                         .arg(runId, error));
+                }
+                if (transitioned && !captured.manifest.isEmpty())
+                    AgentEventLog::append(state->workspace, state->sessionId,
+                                          QStringLiteral("deliverables_captured"),
+                                          QJsonObject{{QStringLiteral("runId"), runId},
+                                                      {QStringLiteral("changedCount"),
+                                                       captured.manifest.value(QStringLiteral("changedCount"))}});
+                watcher->deleteLater();
+            });
+    watcher->setFuture(QtConcurrent::run([runId, workspace, beforeSnapshot]() {
+        AgentDurableCaptureResult result;
+        if (workspace.isEmpty() || beforeSnapshot.isEmpty()) {
+            result.error = QStringLiteral("snapshot inicial no disponible; no se copian entregables");
+            return result;
+        }
+        result.manifest = AgentDeliverableStore::capture(
+            runId, workspace, beforeSnapshot, &result.error);
+        return result;
+    }));
 }
 
 QString LlamaAgentBackend::memoryFilePath(const QString &cwd)

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import LlamaCode 1.0
 
@@ -18,6 +19,8 @@ Item {
     property var selectedPortableSkill: ({})
     property bool restoringSessionModes: false
     property string restoredSessionModesId: ""
+    property string nativeSaveRunId: ""
+    property string nativeSaveRelativePath: ""
 
     function sessionModeKey(sessionId, field) {
         return "agent/sessionModes/" + sessionId + "/" + field
@@ -358,6 +361,253 @@ Item {
                                           profileSuggestionDialog.pendingAttachments)
                     }
                 }
+            }
+        }
+    }
+
+    // Bandeja local de corridas nativas: los estados uncertain se resuelven
+    // explícitamente y los entregables sólo salen del sandbox mediante Save As.
+    Dialog {
+        id: nativeRunsDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: Math.min(900, parent.width - 36)
+        height: Math.min(680, parent.height - 36)
+        leftPadding: 18; rightPadding: 18; topPadding: 14; bottomPadding: 14
+        closePolicy: Popup.CloseOnEscape
+        onOpened: App.refreshNativeAgentRuns()
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 52; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "📦 Inbox de corridas nativas"
+                color: Theme.textPrimary; font { pixelSize: 14; bold: true }
+            }
+        }
+        contentItem: ColumnLayout {
+            spacing: 9
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    Layout.fillWidth: true
+                    text: App.nativeUncertainRunCount > 0
+                        ? "Hay " + App.nativeUncertainRunCount + " corrida(s) incierta(s): requieren decisión humana."
+                        : "Corridas y entregables persistidos localmente."
+                    color: App.nativeUncertainRunCount > 0 ? Theme.warnText : Theme.textMuted
+                    font.pixelSize: 11; wrapMode: Text.WordWrap
+                }
+                LcButton {
+                    text: "Actualizar"; secondary: true
+                    onClicked: App.refreshNativeAgentRuns()
+                }
+            }
+            ListView {
+                id: nativeRunsList
+                Layout.fillWidth: true; Layout.fillHeight: true
+                clip: true; spacing: 6
+                model: App.nativeAgentRuns
+                delegate: Rectangle {
+                    required property var modelData
+                    width: nativeRunsList.width; height: 96; radius: 7
+                    color: Theme.inputBg; border.color: Theme.borderColor
+                    RowLayout {
+                        anchors { fill: parent; margins: 9 }
+                        spacing: 9
+                        ColumnLayout {
+                            Layout.fillWidth: true; spacing: 2
+                            Text {
+                                text: (modelData.status || "") + " · " + (modelData.harnessNamespace || "native")
+                                color: modelData.status === "completed" ? Theme.successText
+                                     : modelData.status === "uncertain" ? Theme.warnText
+                                       : modelData.status === "failed" ? Theme.errorText : Theme.textPrimary
+                                font { pixelSize: 12; bold: true }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.objective || modelData.detail || "Sin objetivo"
+                                color: Theme.textSecondary; font.pixelSize: 10
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.workspace || ""
+                                color: Theme.textMuted; font.pixelSize: 9; elide: Text.ElideMiddle
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: 4
+                            LcButton {
+                                text: "Detalle"; secondary: true
+                                onClicked: {
+                                    nativeRunDetailDialog.runId = modelData.runId || ""
+                                    nativeRunDetailDialog.open()
+                                }
+                            }
+                            LcButton {
+                                text: "Abrir carpeta"; secondary: true
+                                onClicked: App.openNativeAgentRunDirectory(modelData.runId || "")
+                            }
+                            LcButton {
+                                text: "Cerrar incierta"; danger: true
+                                visible: modelData.status === "uncertain"
+                                onClicked: App.resolveNativeAgentRun(
+                                    modelData.runId || "", "cancelled",
+                                    "cancelada explícitamente desde Inbox")
+                            }
+                        }
+                    }
+                }
+                Text {
+                    anchors.centerIn: parent; visible: nativeRunsList.count === 0
+                    text: "Todavía no hay corridas nativas persistidas."
+                    color: Theme.textMuted; font.pixelSize: 11
+                }
+            }
+        }
+        footer: null
+    }
+
+    Dialog {
+        id: nativeRunDetailDialog
+        property string runId: ""
+        property var run: ({})
+        property var manifest: ({})
+        property var events: []
+        property string errorText: ""
+        property bool allowOverwrite: false
+        modal: true; parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2); y: Math.round((parent.height - height) / 2)
+        width: Math.min(820, parent.width - 36); height: Math.min(600, parent.height - 36)
+        leftPadding: 16; rightPadding: 16; topPadding: 14; bottomPadding: 14
+        closePolicy: Popup.CloseOnEscape
+        onOpened: {
+            run = App.nativeAgentRun(runId)
+            manifest = App.nativeAgentDeliverableManifest(runId)
+            events = App.nativeAgentRunEvents(runId)
+            errorText = ""
+            allowOverwrite = false
+        }
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 48; radius: 12
+            Text {
+                anchors { left: parent.left; leftMargin: 18; verticalCenter: parent.verticalCenter }
+                text: "Detalle · " + (nativeRunDetailDialog.runId || "corrida")
+                color: Theme.textPrimary; font { pixelSize: 13; bold: true }
+            }
+        }
+        contentItem: ColumnLayout {
+            spacing: 8
+            Text {
+                Layout.fillWidth: true
+                text: (nativeRunDetailDialog.run.status || "") + " · "
+                    + (nativeRunDetailDialog.run.detail || nativeRunDetailDialog.run.objective || "")
+                color: Theme.textSecondary; font.pixelSize: 11; wrapMode: Text.WordWrap
+            }
+            Text {
+                Layout.fillWidth: true
+                text: nativeRunDetailDialog.manifest && nativeRunDetailDialog.manifest.entries
+                    ? "Entregables: " + nativeRunDetailDialog.manifest.entries.length
+                    : "No hay entregables capturados para esta corrida."
+                color: Theme.textMuted; font.pixelSize: 11
+            }
+            TextArea {
+                Layout.fillWidth: true; Layout.preferredHeight: 92
+                readOnly: true
+                text: nativeRunDetailDialog.events.length > 0
+                    ? nativeRunDetailDialog.events.map(function(event) {
+                        return "#" + (event.seq || "?") + " · "
+                            + (event.kind || "evento") + " · " + (event.ts || "")
+                    }).join("\n") : "Sin eventos registrados."
+                color: Theme.textMuted; font.pixelSize: 10
+                wrapMode: TextArea.WrapAnywhere
+                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.inputBorderColor }
+            }
+            Text {
+                Layout.fillWidth: true; visible: nativeRunDetailDialog.errorText.length > 0
+                text: nativeRunDetailDialog.errorText
+                color: Theme.errorText; font.pixelSize: 11; wrapMode: Text.WordWrap
+            }
+            ListView {
+                id: nativeDeliverablesList
+                Layout.fillWidth: true; Layout.fillHeight: true
+                clip: true; spacing: 5
+                model: nativeRunDetailDialog.manifest && nativeRunDetailDialog.manifest.entries
+                    ? nativeRunDetailDialog.manifest.entries : []
+                delegate: Rectangle {
+                    required property var modelData
+                    width: nativeDeliverablesList.width; height: 54; radius: 6
+                    color: Theme.inputBg; border.color: Theme.borderColor
+                    RowLayout {
+                        anchors { fill: parent; margins: 8 }
+                        Text {
+                            Layout.fillWidth: true
+                            text: (modelData.status || "") + " · " + (modelData.path || "")
+                            color: modelData.stored === false ? Theme.warnText : Theme.textPrimary
+                            font.pixelSize: 10; elide: Text.ElideMiddle
+                        }
+                        LcButton {
+                            text: "Guardar como"; secondary: true
+                            enabled: modelData.stored !== false
+                            onClicked: {
+                                root.nativeSaveRunId = nativeRunDetailDialog.runId
+                                root.nativeSaveRelativePath = modelData.path || ""
+                                nativeSaveDialog.open()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            RowLayout {
+                anchors {
+                    left: parent.left; leftMargin: 14
+                    right: parent.right; rightMargin: 14
+                    verticalCenter: parent.verticalCenter
+                }
+                CheckBox {
+                    id: nativeOverwriteCheck
+                    text: "Permitir reemplazar destino"
+                    checked: nativeRunDetailDialog.allowOverwrite
+                    onClicked: nativeRunDetailDialog.allowOverwrite = checked
+                    contentItem: Text {
+                        text: nativeOverwriteCheck.text
+                        color: Theme.textMuted; font.pixelSize: 10
+                        leftPadding: nativeOverwriteCheck.indicator.width + 5
+                    }
+                }
+                Item { Layout.fillWidth: true }
+                LcButton { text: "Cerrar"; secondary: true; onClicked: nativeRunDetailDialog.close() }
+            }
+        }
+    }
+
+    FileDialog {
+        id: nativeSaveDialog
+        title: "Guardar entregable"
+        fileMode: FileDialog.SaveFile
+        onAccepted: {
+            const path = selectedFile && selectedFile.toLocalFile
+                ? selectedFile.toLocalFile() : String(selectedFile)
+            if (!App.saveNativeAgentDeliverable(root.nativeSaveRunId,
+                                                root.nativeSaveRelativePath, path,
+                                                nativeRunDetailDialog.allowOverwrite)) {
+                nativeRunDetailDialog.errorText =
+                    "No se pudo guardar. El destino no se pisa automáticamente; elegí otra ruta."
+            } else {
+                nativeRunDetailDialog.errorText = "Entregable guardado en " + path
             }
         }
     }
@@ -1190,6 +1440,11 @@ Item {
                     text: "🚀 Corridas"
                     secondary: true
                     onClicked: managedRunsDialog.open()
+                }
+                LcButton {
+                    text: "📦 Inbox"
+                    secondary: true
+                    onClicked: nativeRunsDialog.open()
                 }
                 LcButton {
                     text: {
