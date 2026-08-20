@@ -16,6 +16,14 @@ public:
     static QVariantList screens();
     static QVariantList windows();
     static QVariantMap targetInfo(const QString &kind, const QString &targetId);
+    // Snapshot compacto y determinista de un alcance. El snapshotId cambia si
+    // cambia la ventana, su geometría o el árbol UIA; las acciones pueden usarlo
+    // como stale guard antes de tocar el escritorio.
+    static QVariantMap snapshot(const QString &kind, const QString &targetId,
+                                const QString &query = QString(), int max = 120,
+                                bool includeCapture = false, QString *error = nullptr);
+    static bool validateSnapshot(const QString &kind, const QString &targetId,
+                                 const QString &snapshotId, QString *error = nullptr);
     static QImage capture(const QString &kind, const QString &targetId, QString *error = nullptr);
     static QString saveCapture(const QString &kind, const QString &targetId,
                                const QString &path, QString *error = nullptr);
@@ -88,6 +96,16 @@ public:
     // trace anota matchedBy=fuzzy-name + matchScore cuando pasa por ahí.
     static bool clickElement(const QString &windowTargetId, const QString &controlId,
                              QString *error = nullptr, QVariantMap *trace = nullptr);
+    static bool clickElement(const QString &windowTargetId, const QString &controlId,
+                             const QString &snapshotId, QString *error,
+                             QVariantMap *trace = nullptr);
+    // Acciones UIA semánticas. No roban foco cuando el patrón correspondiente
+    // existe; sólo el fallback Invoke puede requerir una acción foreground.
+    // action: invoke, toggle, set_value, select, expand, collapse,
+    // range_set, scroll_into_view, read.
+    static bool controlAction(const QString &windowTargetId, const QString &controlId,
+                              const QString &action, const QString &value = QString(),
+                              QString *error = nullptr, QVariantMap *trace = nullptr);
 
     // ── OCR: leer el texto que se VE (último recurso, apps que UIA no expone) ──
     // Captura el alcance, lo pasa por OcrEngine y devuelve las líneas con sus rects

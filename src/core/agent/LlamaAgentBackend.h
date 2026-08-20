@@ -161,6 +161,11 @@ public:
     // Captura opt-in para el inspector de Tasks; no afecta el modo headless
     // normal ni la conversación de Chat.
     void setLivePreviewEnabled(bool enabled);
+    // Pausa la planificación de nuevas tools sin matar la tool que ya está en
+    // vuelo. stepExecution() permite liberar exactamente una acción.
+    void setExecutionPaused(bool paused);
+    void stepExecution();
+    bool executionPaused() const { return m_executionPaused; }
 
     // Forzar el protocolo textual de tools (TOOL_CALL por texto) desde el primer
     // request, sin esperar el 400 del server. Lo activa AppController cuando el
@@ -635,6 +640,8 @@ private:
     QString m_toolProtocol = QStringLiteral("auto");  // auto | native | text (spec)
     bool m_visionReady = false;            // server cargó mmproj (ve imágenes)
     bool m_livePreviewEnabled = false;     // screenshots post-acción, sólo Tasks
+    bool m_executionPaused = false;
+    bool m_executionStep = false;
     // Verdadero si el turno debe usar el protocolo textual de tools (por 400 del
     // server o por gating proactivo de AppController para modelos "unsupported").
     bool usingTextTools() const { return m_textToolFallback || m_forceTextTools; }

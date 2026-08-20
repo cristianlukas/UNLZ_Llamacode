@@ -1552,6 +1552,16 @@ void ProfileManager::loadSystemProfiles()
         lp.modelProfileId = cloudBackend ? QString() : mp.id;
         lp.runtimePresetId = cloudBackend ? QString() : rt.id;
         lp.agentProfileId = o.value(QStringLiteral("agentProfileId")).toString();
+        lp.reasoningEffort = o.value(QStringLiteral("reasoningEffort"))
+                                 .toString().trimmed().toLower();
+        if (lp.reasoningEffort != QLatin1String("low")
+            && lp.reasoningEffort != QLatin1String("medium")
+            && lp.reasoningEffort != QLatin1String("high")
+            && lp.reasoningEffort != QLatin1String("xhigh")
+            && lp.reasoningEffort != QLatin1String("max"))
+            lp.reasoningEffort.clear();
+        lp.reasoningBudget = qMax(-1, o.value(QStringLiteral("reasoningBudget"))
+                                      .toInt(-1));
         lp.plannerProfileId = o.value(QStringLiteral("plannerProfileId")).toString();
         lp.hybridMode = o.value(QStringLiteral("hybridMode")).toString(QStringLiteral("off"));
         QStringList extra;

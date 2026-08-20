@@ -84,6 +84,7 @@ class AppController : public QObject
     Q_PROPERTY(QVariantMap taskRunPreview READ taskRunPreview NOTIFY taskRunTraceChanged)
     Q_PROPERTY(bool taskLivePreviewEnabled READ taskLivePreviewEnabled
                WRITE setTaskLivePreviewEnabled NOTIFY taskLivePreviewChanged)
+    Q_PROPERTY(bool taskPaused READ taskPaused NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantMap runningWorkflowState READ runningWorkflowState NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantMap workflowApproval READ workflowApproval NOTIFY taskRunStateChanged)
     Q_PROPERTY(bool taskAbRunning READ taskAbRunning NOTIFY taskAbChanged)
@@ -279,7 +280,10 @@ public:
     QVariantList taskRunTimeline() const { return m_taskRunTimeline; }
     QVariantMap taskRunPreview() const { return m_taskRunPreview; }
     bool taskLivePreviewEnabled() const { return m_taskLivePreviewEnabled; }
+    bool taskPaused() const { return m_taskPaused; }
     void setTaskLivePreviewEnabled(bool enabled);
+    Q_INVOKABLE void pauseTask(bool paused = true);
+    Q_INVOKABLE void stepTask();
     // Normaliza las tarjetas del backend a una traza segura y estable para QML,
     // historial y pruebas. No expone el razonamiento privado del modelo.
     static QVariantList taskRunTimelineFromMessagesForTest(const QVariantList &messages);
@@ -735,6 +739,8 @@ public:
     Q_INVOKABLE void runAutomation(const QString &automationId);
     Q_INVOKABLE QVariantMap schedulerDaemonStatus() const;
     Q_INVOKABLE QString taskRunWorkLog(const QString &id) const;
+    Q_INVOKABLE QVariantMap captureTaskPreview();
+    Q_INVOKABLE bool clearTaskPreviewArtifacts();
     // Historial de corridas de un Proceso o Programación (más nuevo primero).
     Q_INVOKABLE QVariantList runHistory(const QString &ownerId) const;
     // Exporta el historial como paquete de evidencia versionado con hashes.
@@ -1495,6 +1501,7 @@ private:
     QVariantList m_replayTemplateRows;
     QVariantList m_replayReport;   // {n,tool,ok,summary} por paso (auditoría honesta)
     int          m_replayErrors = 0;
+    bool         m_replaySingleStep = false;
     int          m_visualVerificationDesktopActions = 0;
     AutomationStore   m_automations;
     DataLabStore      m_dataLab;
@@ -1511,6 +1518,7 @@ private:
     QVariantList m_taskRunExtraTimeline;
     QVariantMap m_taskRunPreview;
     bool m_taskLivePreviewEnabled = false;
+    bool m_taskPaused = false;
     QString  m_runningTaskPostPrompt;
     WorkflowRunner *m_workflowRunner = nullptr;
     QJsonObject m_runningWorkflowDefinition;

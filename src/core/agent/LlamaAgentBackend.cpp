@@ -18,6 +18,7 @@
 #include "core/ToolCallingSupport.h"
 #include "core/automation/FuzzyMatch.h"
 #include "core/automation/DesktopComputerUse.h"
+#include "core/automation/AutomationArtifactStore.h"
 
 #include <QJsonArray>
 
@@ -540,6 +541,8 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                                           {QStringLiteral("state"), QJsonObject::fromVariantMap(state)}});
     }
     m_running = true;
+    m_executionPaused = false;
+    m_executionStep = false;
     if (!m_ephemeralSessions)
         loadFromDisk();     // recupera sesiones previas; activa la primera
     ensureSession();        // si no había ninguna, crea una
@@ -1677,6 +1680,13 @@ QString LlamaAgentBackend::projectContextSection()
         "- Trabajo paralelo: antes de editar usá `work_status`. Si una claim de otra "
         "sesión reclama la misma ruta, no fuerces la escritura: explicá el conflicto "
         "y coordiná un handoff o elegí otra superficie.\n"
+        "- Mutaciones opacas: toda tool shell/MCP que pueda crear, modificar o borrar "
+        "archivos debe declarar `changed_paths` con rutas relativas concretas. No "
+        "intentes ocultar una mutación dentro de un comando genérico: el host la "
+        "rechaza si no puede coordinarla y re-sincronizar el contexto.\n"
+        "- Memoria: el mantenimiento automático marca stale sólo hechos viejos y de "
+        "bajo valor; decisiones verificadas/importantes no se descartan. Usá `decay` "
+        "con `dry_run=true` si necesitás inspeccionar candidatos.\n"
         "- Dejá memoria: cuando descubras o decidas algo durable y NO obvio (por qué "
         "existe un patrón, una restricción, un acoplamiento, una decisión de diseño), "
         "anotá 1-2 líneas en .llamacode/memory.md para que la próxima sesión arranque "
@@ -3702,6 +3712,7 @@ void LlamaAgentBackend::handleStreamFinished(bool ok, const QString &err)
 
 void LlamaAgentBackend::processPendingCalls()
 {
+    if (m_executionPaused) return;
     if (subsActive()) return;   // esperando que terminen los sub-agentes
 
     if (m_pendingCalls.isEmpty()) {
@@ -3757,39 +3768,6 @@ void LlamaAgentBackend::processPendingCalls()
         id, name, argStr, AgentLifecycle::changedPathsFromToolInput(name, requestArgs)));
     ensureAssistantBubble();
     setAssistantStatus(toolStatusText(name, kind));
-
-    // Coordinación por proyecto: no dejamos que dos sesiones escriban la misma
-    // ruta al mismo tiempo sin que el modelo reciba una señal explícita. Las
-    // claims vencidas se ignoran y un conflicto sólo aplica a tools declaradas
-    // como escritura; leer o investigar en paralelo sigue siendo seguro.
-    if (kind == QLatin1String("write") && !m_cwd.isEmpty()) {
-        const QJsonObject writeArgs = QJsonDocument::fromJson(argStr.toUtf8()).object();
-        const QStringList writePaths = AgentLifecycle::changedPathsFromToolInput(name, writeArgs);
-        if (!writePaths.isEmpty()) {
-            QString conflict;
-            const bool claimed = WorkRegistry::claimPaths(
-                m_cwd, m_workClaimId, m_sessionId, writePaths, &conflict);
-            if (!claimed && conflict.isEmpty()) {
-                conflict = WorkRegistry::formatConflicts(m_cwd, m_sessionId, writePaths);
-            }
-            if (!claimed && !conflict.isEmpty()) {
-                ++m_toolFail;
-                m_pendingCalls.removeFirst();
-                const QString refusal = conflict
-                    + QStringLiteral("\n[edición bloqueada: elegí otra ruta, esperá el handoff "
-                                     "de la otra sesión o pedí al usuario que resuelva el conflicto]");
-                AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
-                                      QJsonObject{{QStringLiteral("tool"), name},
-                                                  {QStringLiteral("toolCallId"), id},
-                                                  {QStringLiteral("reason"), QStringLiteral("active_work_conflict")},
-                                                  {QStringLiteral("paths"), QJsonArray::fromStringList(writePaths)}});
-                appendToolCard(name, kind, false, writePaths.join(", "), refusal);
-                appendToolResult(id, name, refusal);
-                processPendingCalls();
-                return;
-            }
-        }
-    }
 
     if (m_harnessEngineId == QLatin1String("next")) {
         bool builtin = false;
@@ -4092,6 +4070,8 @@ void LlamaAgentBackend::processPendingCalls()
         // prune muta salvo dry_run (que sólo reporta).
         if (a == QLatin1String("prune") && !args.value(QStringLiteral("dry_run")).toBool(false))
             kind = QStringLiteral("write");
+        if (a == QLatin1String("decay") && !args.value(QStringLiteral("dry_run")).toBool(false))
+            kind = QStringLiteral("write");
     }
     // graph: 'query'/'decisions'/'doctor' sólo leen; el resto muta.
     if (name == QLatin1String("graph")) {
@@ -4124,6 +4104,116 @@ void LlamaAgentBackend::processPendingCalls()
         if (discoveredMcpSafety.value(QStringLiteral("effect")).toString()
                 == QLatin1String("read"))
             kind = QStringLiteral("read");
+    }
+
+    // ── Guard de mutaciones declaradas ───────────────────────────────────
+    // La clasificación de arriba incluye memory/graph y la envoltura MCP; por
+    // eso este gate vive después de resolver el efecto real de la llamada. Un
+    // shell o MCP que puede escribir sin declarar rutas es opaco para el índice
+    // y para WorkRegistry: se rechaza antes de ejecutar.
+    const QJsonObject mutationArgs = args;
+    QString guardTarget = name;
+    if (name == QLatin1String("mcp_call_tool"))
+        guardTarget = args.value(QStringLiteral("name")).toString();
+    auto mcpTargetMayMutate = [this](const QString &target) {
+        if (!target.startsWith(QLatin1String("mcp__"))) return false;
+        for (const QVariant &value : std::as_const(m_mcpTools)) {
+            const QVariantMap def = value.toMap();
+            const QString full = QStringLiteral("mcp__%1__%2")
+                                     .arg(def.value(QStringLiteral("server")).toString(),
+                                          def.value(QStringLiteral("name")).toString());
+            if (full != target) continue;
+            const QVariantMap safety = def.value(QStringLiteral("safety")).toMap();
+            return safety.value(QStringLiteral("effect")).toString().toLower()
+                       != QLatin1String("read")
+                || safety.value(QStringLiteral("externalWrite")).toBool();
+        }
+        // Tool MCP no registrada: tratarla como opaca y exigir declaración.
+        return true;
+    };
+    const bool mcpMutation = (name == QLatin1String("mcp_call_tool")
+                              && !guardTarget.startsWith(QLatin1String("mcp__")))
+        || mcpTargetMayMutate(guardTarget);
+    QString shellCommand = mutationArgs.value(QStringLiteral("command")).toString();
+    if (shellCommand.isEmpty())
+        shellCommand = mutationArgs.value(QStringLiteral("arguments")).toObject()
+                           .value(QStringLiteral("command")).toString();
+    const bool shellMutation = (kind == QLatin1String("shell")
+                                || guardTarget == QLatin1String("run_shell")
+                                || guardTarget == QLatin1String("shell"))
+        && AgentLifecycle::shellCommandMayMutate(shellCommand);
+    QStringList mutationPaths = AgentLifecycle::changedPathsFromToolInput(name, mutationArgs);
+    // memory/graph son mutaciones internas conocidas: tienen una ruta estable
+    // y también deben coordinarse, pero no se obliga al modelo a inventarla.
+    if (name == QLatin1String("memory")
+        && !mutationPaths.contains(QStringLiteral(".llamacode/memory.jsonl")))
+        mutationPaths << QStringLiteral(".llamacode/memory.jsonl");
+    if (name == QLatin1String("graph")
+        && !mutationPaths.contains(QStringLiteral(".llamacode/graph.jsonl")))
+        mutationPaths << QStringLiteral(".llamacode/graph.jsonl");
+    const bool hasOutsideMutationPath = std::any_of(
+        mutationPaths.cbegin(), mutationPaths.cend(), [](const QString &path) {
+            return QDir::isAbsolutePath(path) || path == QLatin1String("..")
+                || path.startsWith(QStringLiteral("../"));
+        });
+    if (hasOutsideMutationPath) {
+        ++m_toolFail;
+        m_pendingCalls.removeFirst();
+        const QString refusal = QStringLiteral(
+            "[mutation_guard: '%1' bloqueada porque declaró una ruta fuera del workspace; "
+            "usá sólo rutas relativas dentro del proyecto]").arg(name);
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("mutation_path_outside_workspace")},
+                                          {QStringLiteral("paths"), QJsonArray::fromStringList(mutationPaths)}});
+        appendToolCard(name, kind, false, mutationPaths.join(", "), refusal);
+        appendToolResult(id, name, refusal);
+        processPendingCalls();
+        return;
+    }
+    const bool requiresMutationPaths = kind == QLatin1String("write")
+        || mcpMutation || shellMutation;
+    const bool shouldClaim = requiresMutationPaths
+        || (!mutationPaths.isEmpty() && kind == QLatin1String("shell"));
+    if (requiresMutationPaths && mutationPaths.isEmpty()) {
+        ++m_toolFail;
+        m_pendingCalls.removeFirst();
+        const QString refusal = QStringLiteral(
+            "[mutation_guard: '%1' bloqueada porque no declaró changed_paths; "
+            "indicá las rutas relativas que puede crear, modificar o borrar]").arg(name);
+        AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                              QJsonObject{{QStringLiteral("tool"), name},
+                                          {QStringLiteral("toolCallId"), id},
+                                          {QStringLiteral("reason"), QStringLiteral("mutation_paths_required")}});
+        appendToolCard(name, kind, false, QString(), refusal);
+        appendToolResult(id, name, refusal);
+        processPendingCalls();
+        return;
+    }
+    if (shouldClaim && !mutationPaths.isEmpty() && !m_cwd.isEmpty()
+        && !m_workClaimId.isEmpty()) {
+        QString conflict;
+        const bool claimed = WorkRegistry::claimPaths(
+            m_cwd, m_workClaimId, m_sessionId, mutationPaths, &conflict);
+        if (!claimed && conflict.isEmpty())
+            conflict = WorkRegistry::formatConflicts(m_cwd, m_sessionId, mutationPaths);
+        if (!claimed && !conflict.isEmpty()) {
+            ++m_toolFail;
+            m_pendingCalls.removeFirst();
+            const QString refusal = conflict
+                + QStringLiteral("\n[edición bloqueada: elegí otra ruta, esperá el handoff "
+                                 "de la otra sesión o pedí al usuario que resuelva el conflicto]");
+            AgentEventLog::append(m_cwd, m_sessionId, QStringLiteral("failure"),
+                                  QJsonObject{{QStringLiteral("tool"), name},
+                                              {QStringLiteral("toolCallId"), id},
+                                              {QStringLiteral("reason"), QStringLiteral("active_work_conflict")},
+                                              {QStringLiteral("paths"), QJsonArray::fromStringList(mutationPaths)}});
+            appendToolCard(name, kind, false, mutationPaths.join(", "), refusal);
+            appendToolResult(id, name, refusal);
+            processPendingCalls();
+            return;
+        }
     }
 
     // PLAN MODE: bloquear cualquier tool que mute (write/shell/mcp). Las read
@@ -4340,6 +4430,11 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
     m_awaitCall = {};
     m_awaitPayloadHash.clear();
 
+    if (m_executionStep) {
+        m_executionStep = false;
+        m_executionPaused = true;
+    }
+
     // Comando/ruta a mostrar en la tarjeta de la tool.
     const QJsonObject a = QJsonDocument::fromJson(argStr.toUtf8()).object();
     m_execCommand = a.value(QStringLiteral("command")).toString();
@@ -4530,7 +4625,10 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     const QStringList changedPaths = AgentLifecycle::changedPathsFromToolInput(name, args);
     const bool nativeFileWrite = isWrite
         && (name == QLatin1String("write_file") || name == QLatin1String("edit_file"));
-    const bool shellMutation = name == QLatin1String("run_shell");
+    const bool shellMutation = name == QLatin1String("run_shell")
+        && (AgentLifecycle::shellCommandMayMutate(
+                args.value(QStringLiteral("command")).toString())
+            || !changedPaths.isEmpty());
     const bool indexedExternalMutation = externalWrite && !changedPaths.isEmpty();
     if (ok && (nativeFileWrite || shellMutation || indexedExternalMutation)) {
         const QString reason = shellMutation ? QStringLiteral("run_shell")
@@ -4615,6 +4713,8 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
         QVariantMap card = m_messages[m_liveToolMsgIdx].toMap();
         card[QStringLiteral("ok")] = ok;
         card[QStringLiteral("typing")] = false;
+        card[QStringLiteral("arguments")] = AutomationArtifactStore::redact(
+            executedArgs).left(8192);
         // Mostrar la salida real final (ya recortada por el worker).
         card[QStringLiteral("output")] = res.left(64 * 1024);
         m_messages[m_liveToolMsgIdx] = card;
@@ -4624,9 +4724,18 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
     } else if (!isWrite) {
         // write_file/edit_file → tarjeta de diff (abajo). El resto → tarjeta propia.
         appendToolCard(name, toolKind(name), ok, m_execCommand, res);
-        if (!m_messages.isEmpty() && result.contains(QStringLiteral("imagePath"))) {
+        if (!m_messages.isEmpty()) {
             QVariantMap card = m_messages.last().toMap();
-            card[QStringLiteral("imagePath")] = result.value(QStringLiteral("imagePath")).toString();
+            card[QStringLiteral("arguments")] = AutomationArtifactStore::redact(
+                executedArgs).left(8192);
+            for (const QString &key : {QStringLiteral("imagePath"),
+                                       QStringLiteral("beforeImagePath"),
+                                       QStringLiteral("afterImagePath"),
+                                       QStringLiteral("snapshotPath"),
+                                       QStringLiteral("beforeSnapshotPath"),
+                                       QStringLiteral("afterSnapshotPath")}) {
+                if (result.contains(key)) card[key] = result.value(key);
+            }
             m_messages[m_messages.size() - 1] = card;
             emit messagesChanged();
         }
@@ -4665,6 +4774,9 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             {QStringLiteral("path"),    result.value(QStringLiteral("relPath")).toString()},
             {QStringLiteral("absPath"), abs},
             {QStringLiteral("diff"),    result.value(QStringLiteral("diff")).toString()},
+            {QStringLiteral("arguments"), AutomationArtifactStore::redact(executedArgs).left(8192)},
+            {QStringLiteral("beforeImagePath"), result.value(QStringLiteral("beforeImagePath"))},
+            {QStringLiteral("afterImagePath"), result.value(QStringLiteral("afterImagePath"))},
             {QStringLiteral("typing"),  false}});
         emit messagesChanged();
     }
@@ -5588,6 +5700,10 @@ void LlamaAgentBackend::releaseWorkClaim()
 void LlamaAgentBackend::finishTurn(const QString &finalText, bool persistFinalToApi,
                                    const QString &terminalStatus)
 {
+    if (m_executionStep) {
+        m_executionStep = false;
+        m_executionPaused = true;
+    }
     // Si hay texto final pero la burbuja se cerró tras una tool, abrir una nueva.
     if (!finalText.isEmpty() && m_curAsstIdx < 0)
         ensureAssistantBubble();
@@ -5818,6 +5934,8 @@ bool LlamaAgentBackend::isDestructiveAction(const QString &name, const QJsonObje
         if (a == QLatin1String("forget")) return true;
         if (a == QLatin1String("prune") && !args.value(QStringLiteral("dry_run")).toBool(false))
             return true;
+        if (a == QLatin1String("decay") && !args.value(QStringLiteral("dry_run")).toBool(false))
+            return true;
         return false;
     }
     if (bare == QLatin1String("graph")) {
@@ -5967,10 +6085,16 @@ QJsonArray LlamaAgentBackend::toolSchemas()
            QJsonArray{QStringLiteral("path"), QStringLiteral("old_string")}),
         fn(QStringLiteral("run_shell"),
            QStringLiteral("Ejecuta un comando de shell en el directorio del proyecto. "
-                          "Para builds/tests largos pasá timeout_s alto (default 120, máx 1800)."),
+                          "Para builds/tests largos pasá timeout_s alto (default 120, máx 1800). "
+                          "Si el comando puede mutar archivos, declaralos en changed_paths; "
+                          "las mutaciones opacas sin rutas son rechazadas por coordinación."),
            QJsonObject{
                {QStringLiteral("command"), strProp(QStringLiteral("Comando a ejecutar."))},
-               {QStringLiteral("timeout_s"), intProp(QStringLiteral("Timeout en segundos (default 120, máx 1800)."))}},
+               {QStringLiteral("timeout_s"), intProp(QStringLiteral("Timeout en segundos (default 120, máx 1800)."))},
+               {QStringLiteral("changed_paths"), QJsonObject{
+                   {QStringLiteral("type"), QStringLiteral("array")},
+                   {QStringLiteral("items"), QJsonObject{{QStringLiteral("type"), QStringLiteral("string")}}},
+                   {QStringLiteral("description"), QStringLiteral("Rutas relativas que el comando espera crear, modificar o borrar. Obligatorio para comandos mutantes.")}}}},
            QJsonArray{QStringLiteral("command")}),
         fn(QStringLiteral("web_fetch"),
            QStringLiteral("Obtiene una URL pública con pipeline direct → Playwright MCP → Camofox. "
@@ -6101,9 +6225,11 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                           "action='prune' poda anti-bloat: evicta los hechos de menor valor "
                           "(confianza·recencia·tipo vs largo) y los casi-duplicados, dejando hasta "
                           "'max_keep'. Usalo cuando la memoria crezca demasiado; con dry_run=true "
-                          "primero para ver qué se iría."),
+                          "primero para ver qué se iría. action='decay' marca stale de forma "
+                          "automática los hechos antiguos y de bajo valor, protegiendo decisiones "
+                          "verificadas, importantes o reutilizadas."),
            QJsonObject{
-               {QStringLiteral("action"), strProp(QStringLiteral("'save' | 'recall' (default) | 'forget' | 'prune'."))},
+               {QStringLiteral("action"), strProp(QStringLiteral("'save' | 'recall' (default) | 'forget' | 'prune' | 'decay'."))},
                {QStringLiteral("content"), strProp(QStringLiteral("Hecho a guardar (sólo action='save')."))},
                {QStringLiteral("scope"), strProp(QStringLiteral("Capa: 'session'|'project'|'personal' (default 'project')."))},
                {QStringLiteral("type"), strProp(QStringLiteral("'preference'|'decision'|'fact'|'bug' (sólo save)."))},
@@ -6121,7 +6247,13 @@ QJsonArray LlamaAgentBackend::toolSchemas()
                {QStringLiteral("max_keep"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
                    {QStringLiteral("description"), QStringLiteral("prune: máximo de hechos a conservar por capa (default 50).")}}},
                {QStringLiteral("dry_run"), QJsonObject{{QStringLiteral("type"), QStringLiteral("boolean")},
-                   {QStringLiteral("description"), QStringLiteral("prune: si true, sólo reporta qué evictaría sin tocar nada.")}}}},
+                   {QStringLiteral("description"), QStringLiteral("prune/decay: si true, sólo reporta qué cambiaría sin tocar nada.")}}},
+               {QStringLiteral("max_age_days"), QJsonObject{{QStringLiteral("type"), QStringLiteral("integer")},
+                   {QStringLiteral("minimum"), 30}, {QStringLiteral("maximum"), 3650},
+                   {QStringLiteral("description"), QStringLiteral("decay: edad mínima para considerar un hecho (default 90 días).")}}},
+               {QStringLiteral("min_value"), QJsonObject{{QStringLiteral("type"), QStringLiteral("number")},
+                   {QStringLiteral("minimum"), 0.05}, {QStringLiteral("maximum"), 0.75},
+                   {QStringLiteral("description"), QStringLiteral("decay: valor máximo para marcar stale (default 0.28).")}}}},
            QJsonArray{}),
         fn(QStringLiteral("graph"),
            QStringLiteral("KNOWLEDGE GRAPH del proyecto (entidades + relaciones tipadas, persiste "
@@ -6745,7 +6877,22 @@ void LlamaAgentBackend::setLivePreviewEnabled(bool enabled)
     m_livePreviewEnabled = enabled;
     if (m_worker)
         QMetaObject::invokeMethod(m_worker, "setLivePreviewEnabled", Qt::QueuedConnection,
-                                  Q_ARG(bool, enabled));
+                              Q_ARG(bool, enabled));
+}
+
+void LlamaAgentBackend::setExecutionPaused(bool paused)
+{
+    m_executionPaused = paused;
+    if (!paused && m_running)
+        processPendingCalls();
+}
+
+void LlamaAgentBackend::stepExecution()
+{
+    if (!m_running) return;
+    m_executionStep = true;
+    m_executionPaused = false;
+    processPendingCalls();
 }
 
 void LlamaAgentBackend::ensureWorker()
@@ -6932,12 +7079,15 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
 
         const QJsonObject callProperties{
             {"name", QJsonObject{{"type", "string"}}},
-            {"arguments", QJsonObject{{"type", "object"}, {"additionalProperties", true}}}};
+            {"arguments", QJsonObject{{"type", "object"}, {"additionalProperties", true}}},
+            {"changed_paths", QJsonObject{{"type", "array"},
+                {"items", QJsonObject{{"type", "string"}}},
+                {"description", "Rutas relativas que la operación MCP puede mutar; obligatorias si no es de sólo lectura."}}}};
         const QJsonObject callParameters{{"type", "object"}, {"properties", callProperties},
                                          {"required", QJsonArray{"name"}}, {"additionalProperties", false}};
         all.append(QJsonObject{{"type", "function"}, {"function", QJsonObject{
             {"name", "mcp_call_tool"},
-            {"description", "Ejecuta una tool MCP descubierta previamente. Copiá el nombre exacto y anidá sus parámetros dentro de arguments."},
+            {"description", "Ejecuta una tool MCP descubierta previamente. Copiá el nombre exacto, anidá sus parámetros dentro de arguments y declará changed_paths si puede mutar archivos."},
             {"parameters", callParameters}}}});
     }
     return dropDisabled(all);

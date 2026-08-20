@@ -108,6 +108,45 @@ inline void collectPathValue(const QJsonValue &value, QStringList &out)
     }
 }
 
+// Detecta comandos shell con una mutación de filesystem aunque el proveedor no
+// haya marcado la tool como write. No intenta interpretar un shell completo:
+// sólo reconoce verbos/redirecciones inequívocos y deja pasar builds, tests y
+// comandos de consulta. La política de coordinación usa esta señal para exigir
+// que el agente declare `changed_paths` antes de ejecutar una mutación opaca.
+inline bool shellCommandMayMutate(const QString &command)
+{
+    const QString value = command.trimmed();
+    if (value.isEmpty()) return false;
+
+    static const QRegularExpression verb(
+        QStringLiteral(
+            "(^|[;&|]\\s*)"
+            "(?:tee|touch|mkdir|md|cp|mv|rm|del|erase|rmdir|rd|"
+            "copy-item|move-item|remove-item|rename-item|new-item|"
+            "set-content|add-content|out-file|"
+            "git\\s+(?:apply|checkout|restore|reset|clean|mv|rm)|"
+            "sed\\s+[^\\r\\n]*\\s-i(?:\\s|$)|"
+            "perl\\s+[^\\r\\n]*\\s-i(?:\\s|$))"),
+        QRegularExpression::CaseInsensitiveOption);
+    if (verb.match(value).hasMatch()) return true;
+
+    // Redirecciones y pipe a tee mutan aunque el verbo anterior sea una
+    // consulta. Se exige un destino no vacío; `2>&1` solo no es una mutación.
+    static const QRegularExpression redirect(
+        QStringLiteral("(?:^|\\s)(?:>>?|\\|\\s*tee)\\s*[^\\s&|]+"),
+        QRegularExpression::CaseInsensitiveOption);
+    if (redirect.match(value).hasMatch()) return true;
+
+    // Python/Node y similares pueden escribir mediante APIs embebidas. Sólo
+    // marcamos la forma evidente; no bloqueamos comandos arbitrarios de build.
+    static const QRegularExpression embeddedWriter(
+        QStringLiteral("(?:python(?:3)?|python\\.exe|node(?:\\.exe)?)"
+                       "[^\\r\\n]*(?:open\\s*\\([^)]*(?:['\\\"](?:w|a|x|wb|ab)"
+                       "['\\\"])[^)]*\\)|write_text\\s*\\(|writeFile(?:Sync)?\\s*\\()"),
+        QRegularExpression::CaseInsensitiveOption);
+    return embeddedWriter.match(value).hasMatch();
+}
+
 // Extrae rutas de inputs de tools conocidas sin asumir un proveedor concreto.
 // Para apply_patch soporta tanto el campo file_path como los encabezados del
 // patch que suelen viajar dentro de tool_input.command.
@@ -118,7 +157,8 @@ inline QStringList changedPathsFromToolInput(const QString &toolName,
     const QStringList keys{QStringLiteral("path"), QStringLiteral("file_path"),
                            QStringLiteral("filePath"), QStringLiteral("filename"),
                            QStringLiteral("target"), QStringLiteral("destination"),
-                           QStringLiteral("paths"), QStringLiteral("files")};
+                           QStringLiteral("paths"), QStringLiteral("files"),
+                           QStringLiteral("changed_paths"), QStringLiteral("changedPaths")};
     for (const QString &key : keys)
         if (input.contains(key)) collectPathValue(input.value(key), paths);
 

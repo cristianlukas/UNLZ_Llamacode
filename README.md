@@ -132,6 +132,13 @@ y los presets `agent-avanzado` y `agent-maximo` lo habilitan de forma automátic
 `agent-intermedio-next` sigue siendo comparable con Intermedio. Las mutaciones
 indirectas exitosas de `run_shell` y las tools externas que declaran rutas también
 disparan una detección incremental de cambios antes de actualizar el contexto.
+Las mutaciones shell/MCP deben declarar `changed_paths`; si son opacas, el host
+las rechaza antes de ejecutar para preservar coordinación e integridad del índice.
+`MemoryStore` usa locks y escrituras atómicas, y aplica un `decay` amortizado que
+marca stale sólo hechos viejos/de bajo valor, protegiendo decisiones verificadas.
+Las corridas durables sólo pasan a `completed` después de capturar snapshot y
+manifiesto de entregables; si el lease vence durante ese cierre, quedan
+`uncertain` para resolución humana.
 Release conserva el flujo histórico de los perfiles que no declaran preflight hasta
 validar el beneficio con benchmarks.
 La consolidación reutiliza `verify_claims`: descarta inferencias sin evidencia,
@@ -266,6 +273,16 @@ completo en la GPU, a costa de velocidad. Para notebooks o equipos con poca
 memoria, conviene empezar con contexto 8k, `Q4_K_M` y cerrar procesos pesados antes
 de lanzar benchmarks o Deep Research.
 
+Como experimento separado para una **GPU de 16 GB**, el catálogo incorpora tres
+candidatos de Qwen3.8-27B basados en el post de LocalLLaMA adjunto: RVN-IQ3_XXS
+con `ngram-mod` a 131k, DFlash2+ngram a 105k y MTP+ngram a 105k. Usan KV
+`q5_1`, `reasoningEffort=medium` y el sampling conservador de LlamaCode; no son
+una recomendación automática ni una réplica exacta del post, que usaba
+`froggeric_fix_qwen38.jinja` y una build experimental propia. El candidato MTP
+requiere copiar manualmente el GGUF fusionado; el de DFlash2 necesita una build
+beellama/dflash2-capable. Ejecutar HE0 antes de HE20/BCB y conservar las
+aprobaciones de tools porque el modelo es uncensored.
+
 En equipos de **24 GB VRAM + 128 GB RAM** el catálogo ofrece además, sólo bajo
 instalación manual, el perfil experimental
 `[experimental] Laguna S 2.1 118B-A8B Q2`. Usa el GGUF
@@ -286,6 +303,18 @@ MTP3 y MTP4 para compararlo con MAX-Q/ThinkingCap bajo la misma suite. Es opt-in
 la app descarga los pesos desde Hugging Face cuando se acepta el perfil, pero no
 los incluye en el repositorio; el toggle de thinking controla `enable_thinking`,
 `preserve_thinking` y el esfuerzo `low`/`high`/`max` del template.
+
+Como experimento de modelo auxiliar, el catálogo incorpora **Ling 3.0 Tiny**:
+7,9B parámetros totales y 1,3B activos por token, con GGUF comunitario y
+thinking configurable. `sys-ling30-tiny-q6-131k` usa Q6 + KV q8 y thinking
+apagado para medir compresión, resúmenes y otras tareas no críticas; su variante
+UD-Q4 de 64k mide el punto de baja memoria. `sys-hybrid-ling30-qwen38` reutiliza
+el harness híbrido secuencial existente: Ling planifica sin tools y Qwen3.8
+ejecuta. Es una prueba de la hipótesis del post, no routing automático de cada
+subtarea ni un resultado ya medido. Los perfiles son opt-in, requieren una build
+con soporte BailingMoE3 (se fija b10331+ como mínimo conservador) y descargan el
+GGUF sólo al aceptarlos. Fuentes: [modelo oficial](https://huggingface.co/inclusionAI/Ling-3.0-tiny)
+y [GGUF](https://huggingface.co/bloomer010/Ling-3.0-tiny-GGUF).
 
 Para equipos de **48 GB de VRAM** el catálogo agrega además el candidato de
 benchmark `Qwen3.8 Uncensored Q8_0` de JonathanColetti, con visión, MTP3, 196k y
@@ -515,6 +544,9 @@ Launcher serio para `llama-server`, evolucionado a centro de mando de agentes de
   invalidan. Tras un cierre durante el swap, el siguiente arranque restaura MAX-Q
   como perfil seleccionado. La UI muestra cada fase del intercambio usando los
   nombres reales del planificador y del ejecutor seleccionados.
+  El benchmark `Ling Tiny planifica → Qwen3.8 ejecuta` usa esa misma ruta para
+  medir si un auxiliar pequeño reduce el tiempo total sin degradar el resultado;
+  todavía no cambia el routing de compresión/resumen del harness.
 - **Chat persistente**: historial de conversaciones agrupado por proyecto/perfil.
 - **Workspaces portables**: los proyectos también pueden asociar investigaciones y
   exportarse desde Deep Research como un paquete JSON autocontenido con manifiesto,
@@ -949,8 +981,10 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   Navegar, crear o abrir sesiones nunca dispara esta tarea pesada.
   Los hechos estructurados vigentes se inyectan de forma acotada al iniciar el
   agente y pueden registrar importancia, sorpresa, verificación y supersesión. El
-  ranking y la poda priorizan correcciones, reglas y decisiones verificadas sin
-  romper memorias JSONL creadas por versiones anteriores.
+   ranking y la poda priorizan correcciones, reglas y decisiones verificadas sin
+   romper memorias JSONL creadas por versiones anteriores.
+   El mantenimiento automático se ejecuta como máximo una vez por día y deja un
+   recibo en `.llamacode/memory_maintenance.json`; `action=decay` admite `dry_run`.
 - **GraphStore**: grafo de entidades/relaciones para conocimiento estructurado.
 - **Evidencia del grafo**: `CodeGraphIndexer` adjunta citas `ruta:Línea-Línea` y
   SHA-256; `graph doctor` informa fuentes obsoletas y relaciones huérfanas sin
@@ -961,7 +995,8 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   `HarnessSpec.knowledge`.
 - **WorkRegistry**: claims efímeras por proyecto con rutas, agente, sesión,
   heartbeat y expiración. `work_status` permite inspeccionarlas y una escritura
-  solapada se rechaza antes de ejecutar la tool.
+  solapada se rechaza antes de ejecutar la tool. Shell/MCP también deben declarar
+  sus rutas afectadas para entrar en el mismo gate.
 - **Gate de consolidación**: `verify_claims` se comparte con la persistencia de
   memoria; los hechos no respaldados no entran y los parcialmente respaldados
   quedan con confianza limitada.
@@ -1057,9 +1092,12 @@ Para diagnosticar una corrida sin perder el aislamiento headless, Tasks ofrece
 **Vista en vivo** (opt-in). El Inspector muestra la captura más reciente de la
 superficie, las acciones en orden y su resultado; en browser solicita una
 captura MCP sólo cuando el servidor la expone sin parámetros, y en escritorio
-captura después de cada acción. La traza se redacta, queda dentro de los
-artefactos de la corrida y se conserva en Historial junto con el reporte y los
-recibos. Apagada, no agrega screenshots ni cambia el comportamiento normal.
+captura antes y después de cada acción. Cuando el MCP lo permite, también guarda
+un snapshot DOM/accessibility redacted. La traza conserva argumentos seguros,
+capturas, snapshots y recibos; el Inspector permite pausar, continuar, ejecutar
+un paso, capturar manualmente y limpiar las observaciones. Los artefactos se
+limitan a 120 archivos o 96 MB y se eliminan los más antiguos automáticamente.
+Apagada, no agrega screenshots ni cambia el comportamiento normal.
 
 Los artefactos Teach son auto-actualizables: si durante una ejecución la interfaz
 cambió y el agente igual logra completar el objetivo, registra un aprendizaje en

@@ -199,6 +199,7 @@ private slots:
     void taskRetriesBodyOnFailure();
     void datasetAbortStopsOnError();
     void fileWatchTriggerRegistersPath();
+    void taskRunTimelineNormalizesToolCards();
     void earlyFailureRecordedInHistory();
     void workflowTaskPausesApprovesAndPersistsSnapshot();
     void workflowDirectToolCompletesWithoutModelTurn();
@@ -218,10 +219,12 @@ private slots:
     void bundledCustomBenchmarkUpgradePreservesPersonalFiles();
     void bundledOneShottingBenchmarksAreSeparate();
     void bundledHarnessContextAbBenchmarkIsValid();
+    void bundledArtifactLifecycleBenchmarkIsValid();
     void importedBenchmarkNamesDescribeSubset();
     void tunerProfileNameUsesOptiPrefixWithoutChaining();
     void tunerGainPctNeedsBothLegs();
     void isRemoteHostDetectsLanHosts();
+    void isLoopbackCloudUrlRequiresLocalHttpEndpoint();
 
 private:
     QTemporaryDir m_tmp;
@@ -625,6 +628,50 @@ void AppControllerTests::bundledHarnessContextAbBenchmarkIsValid()
                  QStringLiteral("code_tests"));
         QVERIFY(!acceptance.value(QStringLiteral("entryPoint")).toString().isEmpty());
         QVERIFY(!acceptance.value(QStringLiteral("tests")).toString().isEmpty());
+    }
+}
+
+void AppControllerTests::bundledArtifactLifecycleBenchmarkIsValid()
+{
+    const QString root = QDir(QCoreApplication::applicationDirPath())
+        .filePath(QStringLiteral("../../assets/benchmarks/custom"));
+    QFile f(QDir(root).filePath(QStringLiteral("artifact_lifecycle_v1.json")));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+
+    QJsonParseError error;
+    const QJsonDocument doc = QJsonDocument::fromJson(f.readAll(), &error);
+    QCOMPARE(error.error, QJsonParseError::NoError);
+    const QJsonObject suite = doc.object();
+    QVERIFY(!suite.isEmpty());
+    QCOMPARE(suite.value(QStringLiteral("id")).toString(),
+             QStringLiteral("artifact_lifecycle_v1"));
+    QCOMPARE(suite.value(QStringLiteral("bundledVersion")).toInt(), 1);
+    QCOMPARE(suite.value(QStringLiteral("recommendedPasses")).toInt(), 1);
+
+    const QJsonObject evaluation = suite.value(QStringLiteral("evaluation")).toObject();
+    QCOMPARE(evaluation.value(QStringLiteral("kind")).toString(),
+             QStringLiteral("artifact-lifecycle"));
+    QCOMPARE(evaluation.value(QStringLiteral("target")).toString(),
+             QStringLiteral("agent"));
+    const QJsonArray expectedAgentProfiles{
+        QStringLiteral("agent-artifact-local"),
+        QStringLiteral("agent-artifact-publisher")};
+    QCOMPARE(evaluation.value(QStringLiteral("compareAgentProfiles")).toArray(),
+             expectedAgentProfiles);
+
+    const QJsonArray prompts = suite.value(QStringLiteral("prompts")).toArray();
+    QCOMPARE(prompts.size(), 2);
+    QSet<QString> ids;
+    for (const QJsonValue &value : prompts) {
+        const QJsonObject prompt = value.toObject();
+        const QString id = prompt.value(QStringLiteral("id")).toString();
+        QVERIFY(!id.isEmpty());
+        QVERIFY(!ids.contains(id));
+        ids.insert(id);
+        QVERIFY(!prompt.value(QStringLiteral("prompt")).toString().isEmpty());
+        const QJsonObject acceptance = prompt.value(QStringLiteral("acceptance")).toObject();
+        QVERIFY(!acceptance.value(QStringLiteral("files")).toArray().isEmpty());
+        QVERIFY(!acceptance.value(QStringLiteral("expectSubstrings")).toArray().isEmpty());
     }
 }
 
@@ -2216,6 +2263,49 @@ void AppControllerTests::pendingAgentClearsStartingWhenAlreadyRunning()
     QVERIFY(app.agentRunning());
 }
 
+void AppControllerTests::taskRunTimelineNormalizesToolCards()
+{
+    const QVariantList messages{
+        QVariantMap{{QStringLiteral("role"), QStringLiteral("user")},
+                    {QStringLiteral("content"), QStringLiteral("objetivo")}},
+        QVariantMap{{QStringLiteral("role"), QStringLiteral("toolcall")},
+                    {QStringLiteral("name"), QStringLiteral("desktop_click")},
+                    {QStringLiteral("command"), QStringLiteral("click password=secret")},
+                    {QStringLiteral("output"), QStringLiteral("ok")},
+                    {QStringLiteral("ok"), true},
+                    {QStringLiteral("createdAt"), 1234},
+                    {QStringLiteral("elapsedMs"), 42},
+                    {QStringLiteral("imagePath"), QStringLiteral("C:/tmp/preview.jpg")},
+                    {QStringLiteral("beforeImagePath"), QStringLiteral("C:/tmp/before.jpg")},
+                    {QStringLiteral("arguments"), QStringLiteral("{\"password\":\"secret\",\"x\":1}")}},
+        QVariantMap{{QStringLiteral("role"), QStringLiteral("toolcall")},
+                    {QStringLiteral("name"), QStringLiteral("browser_snapshot")},
+                    {QStringLiteral("typing"), true},
+                    {QStringLiteral("ok"), true}},
+        QVariantMap{{QStringLiteral("role"), QStringLiteral("diff")},
+                    {QStringLiteral("path"), QStringLiteral("src/main.cpp")},
+                    {QStringLiteral("diff"), QStringLiteral("+changed")},
+                    {QStringLiteral("ok"), true}}
+    };
+    const QVariantList timeline = AppController::taskRunTimelineFromMessagesForTest(messages);
+    QCOMPARE(timeline.size(), 3);
+    QCOMPARE(timeline.at(0).toMap().value(QStringLiteral("n")).toInt(), 1);
+    QCOMPARE(timeline.at(0).toMap().value(QStringLiteral("status")).toString(),
+             QStringLiteral("ok"));
+    QVERIFY(timeline.at(0).toMap().value(QStringLiteral("imageSource")).toString()
+                .startsWith(QStringLiteral("file:")));
+    QVERIFY(!timeline.at(0).toMap().value(QStringLiteral("detail")).toString()
+                .contains(QStringLiteral("secret")));
+    QVERIFY(!timeline.at(0).toMap().value(QStringLiteral("arguments")).toString()
+                .contains(QStringLiteral("secret")));
+    QVERIFY(timeline.at(0).toMap().value(QStringLiteral("beforeImageSource")).toString()
+                .startsWith(QStringLiteral("file:")));
+    QCOMPARE(timeline.at(1).toMap().value(QStringLiteral("status")).toString(),
+             QStringLiteral("running"));
+    QCOMPARE(timeline.at(2).toMap().value(QStringLiteral("tool")).toString(),
+             QStringLiteral("file_change"));
+}
+
 void AppControllerTests::earlyFailureRecordedInHistory()
 {
     AppController app;
@@ -2683,6 +2773,16 @@ void AppControllerTests::isRemoteHostDetectsLanHosts()
     QVERIFY(AppController::isRemoteHost(QStringLiteral("192.168.1.50")));
     QVERIFY(AppController::isRemoteHost(QStringLiteral("10.0.0.15")));
     QVERIFY(AppController::isRemoteHost(QStringLiteral("pc-potente.local")));
+}
+
+void AppControllerTests::isLoopbackCloudUrlRequiresLocalHttpEndpoint()
+{
+    QVERIFY(AppController::isLoopbackCloudUrl(QStringLiteral("http://127.0.0.1:8000")));
+    QVERIFY(AppController::isLoopbackCloudUrl(QStringLiteral("https://localhost/v1")));
+    QVERIFY(AppController::isLoopbackCloudUrl(QStringLiteral("http://[::1]:8001")));
+    QVERIFY(!AppController::isLoopbackCloudUrl(QStringLiteral("http://192.168.1.50:8000")));
+    QVERIFY(!AppController::isLoopbackCloudUrl(QStringLiteral("https://api.example.com")));
+    QVERIFY(!AppController::isLoopbackCloudUrl(QStringLiteral("127.0.0.1:8000")));
 }
 
 QTEST_MAIN(AppControllerTests)

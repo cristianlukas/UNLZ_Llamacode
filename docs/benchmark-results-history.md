@@ -1,6 +1,25 @@
 # Historia, descubrimientos y anotaciones de benchmarking
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
+
+## 2026-08-20 — Controles Qwen3.8 para el piso de 24 GB
+
+El reporte de LocalLLM separa una medición reproducible de `llama-bench tg128`
+de los números de chat, ngram y cola cloud. Se agregaron dos controles
+texto-only al catálogo:
+
+| Variante | Quant | Receta | Estado |
+|---|---|---|---|
+| `sys-bench-qwen38-q4km-24gb-tg128` | Q4_K_M | `-ngl 99`, Flash on, B512/U512, ctx 32k, KV q4_0, sin MTP/cache/mmproj | Pendiente de HE0/tg128 |
+| `sys-bench-qwen38-q6k-24gb-tg128` | Q6_K | misma receta, cambiando sólo el quant | Pendiente de HE0/tg128 |
+
+Cada familia conserva variantes de ngram y prefix-cache warm para diagnóstico,
+pero no se mezclan con la tabla de velocidad cold: un prefijo cacheado o un hit
+de ngram puede ser una repetición del prompt y no throughput autoregresivo. El
+Q8 no se ofrece como candidato 24 GB porque el reporte indica que no entra con
+`-ngl 99`; si una máquina lo intenta y hace offload/OOM, eso se registra como
+infraestructura y no como una velocidad baja.
+
 ## 2026-08-20 — A/B de ciclo de artefactos
 
 El flujo externo aporta una dimensión útil que no queda cubierta por
@@ -22,7 +41,6 @@ con archivos producidos, manifiesto, reparaciones, tiempo y cualquier intento
 de red. No se promueve ninguna variante hasta que ambas pasen la validación
 funcional y el perfil publisher demuestre que no publica durante la fase de
 preparación.
-
 
 ## 2026-08-18 — Candidatas `llama-debug` de runtime
 

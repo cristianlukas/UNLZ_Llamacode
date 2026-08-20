@@ -308,6 +308,13 @@ Item {
                     elide: Text.ElideRight
                 }
                 LcButton {
+                    text: App.taskLivePreviewEnabled ? "Vista en vivo ✓" : "Vista en vivo"
+                    secondary: true
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Captura la superficie después de cada acción y la conserva en Historial. Opt-in."
+                    onClicked: App.taskLivePreviewEnabled = !App.taskLivePreviewEnabled
+                }
+                LcButton {
                     text: "Importar skill"
                     secondary: true
                     onClicked: importPopup.open()
@@ -554,6 +561,12 @@ Item {
                                 secondary: true
                                 visible: !!model.teachArtifactId
                                 onClicked: networkPopup.openFor(model.teachArtifactId, taskName)
+                            }
+                            LcButton {
+                                text: "Inspector"
+                                secondary: true
+                                visible: App.runningTaskId === taskId
+                                onClicked: liveInspector.openLive(taskId, taskName)
                             }
                             LcButton {
                                 text: "Detener"
@@ -2095,6 +2108,262 @@ Item {
         }
     }
 
+    // ── Inspector live/replay de corridas ──
+    Popup {
+        id: liveInspector
+        modal: true
+        parent: Overlay.overlay
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(1080, Math.max(720, root.width - 90))
+        height: Math.min(720, Math.max(520, root.height - 100))
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        padding: 0
+        property string taskId: ""
+        property string taskName: ""
+        property string selectedImage: ""
+        property string selectedBefore: ""
+
+        function openLive(id, name) {
+            taskId = id
+            taskName = name || id
+            selectedImage = (App.taskRunPreview || {}).imageSource || ""
+            selectedBefore = (App.taskRunPreview || {}).beforeImageSource || ""
+            open()
+        }
+
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+
+        contentItem: ColumnLayout {
+            spacing: 0
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 58
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Column {
+                    anchors { left: parent.left; leftMargin: 22; verticalCenter: parent.verticalCenter }
+                    spacing: 2
+                    Text {
+                        text: "Inspector en vivo · " + liveInspector.taskName
+                        color: Theme.textPrimary
+                        font { pixelSize: 14; bold: true }
+                        elide: Text.ElideRight
+                        width: liveInspector.width - 44
+                    }
+                    Text {
+                        text: App.runningTaskPhase || "Último estado disponible"
+                        color: Theme.accent
+                        font.pixelSize: 11
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.margins: 14
+                spacing: 12
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 620
+                    radius: 8
+                    color: Theme.inputBg
+                    border.color: Theme.inputBorderColor
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 6
+                        Text {
+                            text: "Vista actual"
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: "Capturas locales: pueden contener datos sensibles. Se conservan sólo temporalmente."
+                            color: Theme.warnText
+                            font.pixelSize: 10
+                            wrapMode: Text.Wrap
+                        }
+                        Image {
+                            id: inspectorImage
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            source: liveInspector.selectedImage || ((App.taskRunPreview || {}).imageSource || "")
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            cache: false
+                            mipmap: true
+                            visible: source.length > 0
+                        }
+                        Text {
+                            visible: inspectorBeforeImage.visible
+                            text: "Antes de la acción"
+                            color: Theme.textMuted
+                            font.pixelSize: 10
+                        }
+                        Image {
+                            id: inspectorBeforeImage
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: visible ? 110 : 0
+                            source: liveInspector.selectedBefore
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            cache: false
+                            visible: source.length > 0
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: !inspectorImage.visible
+                            text: App.taskLivePreviewEnabled
+                                  ? "Esperando la primera captura…"
+                                  : "Activá «Vista en vivo» para capturar la superficie. La ejecución sigue headless por defecto."
+                            color: Theme.textMuted
+                            font.pixelSize: 12
+                            wrapMode: Text.Wrap
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: 360
+                    Layout.fillHeight: true
+                    radius: 8
+                    color: Theme.inputBg
+                    border.color: Theme.inputBorderColor
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 6
+                        Text {
+                            text: "Timeline · " + App.taskRunTimeline.length + " evento(s)"
+                            color: Theme.textSecondary
+                            font.pixelSize: 12
+                        }
+                        ListView {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            clip: true
+                            spacing: 4
+                            model: App.taskRunTimeline
+                            delegate: Rectangle {
+                                width: ListView.view.width
+                                height: traceText.implicitHeight + 18
+                                radius: 6
+                                color: modelData.status === "error" ? Theme.errorBg : Theme.surfaceBg
+                                border.color: modelData.status === "running" ? Theme.accent : Theme.borderColor
+                                Column {
+                                    id: traceText
+                                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+                                    spacing: 2
+                                    Text {
+                                        text: "#" + (modelData.n || (index + 1)) + "  "
+                                              + (modelData.tool || "evento")
+                                              + "  ·  " + (modelData.status || "—")
+                                        color: modelData.status === "error" ? Theme.errorText : Theme.textPrimary
+                                        font { pixelSize: 11; bold: true }
+                                        elide: Text.ElideRight
+                                        width: parent.width
+                                    }
+                                    Text {
+                                        text: modelData.detail || modelData.output || ""
+                                        color: Theme.textMuted
+                                        font.pixelSize: 10
+                                        wrapMode: Text.Wrap
+                                        maximumLineCount: 3
+                                        elide: Text.ElideRight
+                                        width: parent.width
+                                    }
+                                    Text {
+                                        visible: !!modelData.arguments
+                                        text: modelData.arguments ? "args: " + modelData.arguments : ""
+                                        color: Theme.textMuted
+                                        font.pixelSize: 9
+                                        wrapMode: Text.Wrap
+                                        maximumLineCount: 2
+                                        elide: Text.ElideRight
+                                        width: parent.width
+                                    }
+                                    Text {
+                                        visible: !!modelData.snapshotPath
+                                        text: "DOM/accessibility snapshot guardado"
+                                        color: Theme.accent
+                                        font.pixelSize: 9
+                                        elide: Text.ElideRight
+                                        width: parent.width
+                                    }
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    enabled: !!modelData.imageSource || !!modelData.beforeImageSource
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        liveInspector.selectedImage = modelData.afterImageSource
+                                                || modelData.imageSource || ""
+                                        liveInspector.selectedBefore = modelData.beforeImageSource || ""
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 56
+                color: Theme.popupHeaderBg
+                radius: 12
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 12; color: Theme.popupHeaderBg }
+                Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+                Row {
+                    anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                    spacing: 10
+                    LcButton {
+                        text: "Captura en vivo: " + (App.taskLivePreviewEnabled ? "activa" : "apagada")
+                        secondary: true
+                        onClicked: App.taskLivePreviewEnabled = !App.taskLivePreviewEnabled
+                    }
+                    LcButton {
+                        text: App.taskPaused ? "Continuar" : "Pausar"
+                        secondary: true
+                        onClicked: App.pauseTask(!App.taskPaused)
+                    }
+                    LcButton {
+                        text: "Paso"
+                        secondary: true
+                        enabled: App.taskPaused
+                        onClicked: App.stepTask()
+                    }
+                    LcButton {
+                        text: "Capturar ahora"
+                        secondary: true
+                        onClicked: App.captureTaskPreview()
+                    }
+                    LcButton {
+                        text: "Limpiar capturas"
+                        secondary: true
+                        onClicked: App.clearTaskPreviewArtifacts()
+                    }
+                    LcButton { text: "Detener"; secondary: true; onClicked: App.stopAutomation() }
+                    LcButton { text: "Cerrar"; onClicked: liveInspector.close() }
+                }
+            }
+        }
+    }
+
     // ── Historial de corridas (Proceso o Programación) ──
     Popup {
         id: historyDialog
@@ -2113,6 +2382,7 @@ Item {
         property int selectedRun: -1
         property int baselineRun: -1
         property var metricComparison: ({})
+        property string traceImageSource: ""
 
         function fmt(iso) {
             if (!iso) return "—"
@@ -2128,6 +2398,8 @@ Item {
             runs = App.runHistory(id)
             selectedRun = runs.length > 0 ? 0 : -1
             baselineRun = runs.length > 1 ? 1 : -1
+            traceImageSource = selectedRun >= 0
+                ? ((runs[selectedRun].preview || {}).imageSource || "") : ""
             metricComparison = baselineRun >= 0
                 ? App.compareTaskRunMetrics(ownerId, baselineRun, selectedRun) : ({})
             open()
@@ -2216,6 +2488,7 @@ Item {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     historyDialog.selectedRun = index
+                                    historyDialog.traceImageSource = (modelData.preview || {}).imageSource || ""
                                     historyDialog.metricComparison = historyDialog.baselineRun >= 0
                                         ? App.compareTaskRunMetrics(historyDialog.ownerId,
                                             historyDialog.baselineRun, index) : ({})
@@ -2345,6 +2618,90 @@ Item {
                                             Layout.fillWidth: true
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: detailCol.run && detailCol.run.timeline && detailCol.run.timeline.length > 0
+                        text: "Timeline reproducible"
+                        color: Theme.textSecondary
+                        font.pixelSize: 12
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        visible: detailCol.run && detailCol.run.timeline && detailCol.run.timeline.length > 0
+                        Layout.preferredHeight: 178
+                        radius: 6
+                        color: Theme.inputBg
+                        border.color: Theme.inputBorderColor
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            spacing: 8
+                            ListView {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                clip: true
+                                model: detailCol.run ? (detailCol.run.timeline || []) : []
+                                delegate: Rectangle {
+                                    width: ListView.view.width
+                                    height: 34
+                                    radius: 4
+                                    color: Theme.surfaceBg
+                                    RowLayout {
+                                        anchors { fill: parent; leftMargin: 7; rightMargin: 7 }
+                                        spacing: 6
+                                        Text {
+                                            text: "#" + (modelData.n || (index + 1))
+                                            color: modelData.status === "error" ? Theme.errorText : Theme.textSecondary
+                                            font.pixelSize: 10
+                                        }
+                                        Text {
+                                            text: modelData.tool || "evento"
+                                            color: Theme.textPrimary
+                                            font { pixelSize: 10; bold: true }
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                        }
+                                        Text {
+                                            text: modelData.status || "—"
+                                            color: modelData.status === "error" ? Theme.errorText : Theme.accent
+                                            font.pixelSize: 10
+                                        }
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        enabled: !!modelData.imageSource
+                                        onClicked: historyDialog.traceImageSource = modelData.imageSource
+                                    }
+                                }
+                            }
+                            Rectangle {
+                                Layout.preferredWidth: 220
+                                Layout.fillHeight: true
+                                color: Theme.surfaceBg
+                                radius: 4
+                                Image {
+                                    id: historyTraceImage
+                                    anchors.fill: parent
+                                    anchors.margins: 4
+                                    source: historyDialog.traceImageSource
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    cache: false
+                                    visible: source.length > 0
+                                }
+                                Text {
+                                    anchors.fill: parent
+                                    visible: !historyTraceImage.visible
+                                    text: "Seleccioná un evento con captura"
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.Wrap
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
                                 }
                             }
                         }

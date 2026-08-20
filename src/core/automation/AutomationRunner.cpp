@@ -212,9 +212,11 @@ QString AutomationRunner::foregroundBrowserCommand(const QString &command)
 QStringList AutomationRunner::desktopToolNames()
 {
     return {
+        QStringLiteral("desktop_snapshot"),
         QStringLiteral("desktop_windows"),
         QStringLiteral("desktop_controls"),
         QStringLiteral("desktop_click_element"),
+        QStringLiteral("desktop_control_action"),
         QStringLiteral("desktop_find_image"),
         QStringLiteral("desktop_click_image"),
         QStringLiteral("desktop_wait_image"),
@@ -252,7 +254,7 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "Superficie: escritorio foreground nativo. Usá las tools desktop_* para operar y "
             "verificar la pantalla real.\n"
             "CAMINO RÁPIDO (seguilo, evita el loop de observar):\n"
-            "1) desktop_launch <app> (ej. calc); no uses run_shell para apps GUI.\n"
+            "1) desktop_launch <app>; no uses run_shell para apps GUI.\n"
             "2) desktop_wait ~800 ms y UNA sola desktop_windows. NO repitas desktop_windows; "
             "si aparece la ventana, enfocá y actuá.\n"
             "3) TECLADO primero: desktop_focus <id>, desktop_type texto, desktop_key ENTER/=.\n"
@@ -261,11 +263,17 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
             "(desktop_type \"<expresión>=\"); no la partas ni presiones ENTER después.\n"
             "4) Si no hay teclado: desktop_controls <id> y desktop_click_element por nombre/controlId; "
             "si la receta trae locator image y UIA/OCR fallan, usá desktop_find_image/click_image.\n"
+            "Antes de una acción semántica preferí desktop_snapshot o el snapshot_id de "
+            "desktop_controls/desktop_observe; pasalo a la acción. Si el stale guard falla, "
+            "no insistas: observá de nuevo y re-resolvé el target. Para editar, alternar, "
+            "seleccionar, expandir o desplazar un control preferí desktop_control_action.\n"
             "5) Verificá con desktop_controls usando el visor ACTUAL ('Se muestra X'); "
             "no aceptes Historial/Memoria como resultado final.\n"
             "Cada tool de click devuelve trace con pointer/target; usalo para validar "
             "qué se accionó. Preferí target semántico (controlId/selector) y dejá "
             "coordenadas sólo como respaldo o diagnóstico.\n"
+            "Cada acción desktop produce un receipt estructurado; si queda uncertain o "
+            "failed, no declares éxito y entrá por wait/assert/repair.\n"
             "ANTI-LOOP: una acción -> una verificación por texto -> terminá. Los pasos "
             "[type]/[key]/[click] son intención; traducilos a desktop_* sobre la app. "
             "Un paso [stroke] es un ARRASTRE continuo (dibujo/pintura/swipe): reproducilo "

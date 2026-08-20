@@ -5,6 +5,8 @@
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/automation/AutomationRunner.h"
 #include "core/automation/DesktopAutomationBackend.h"
+#include "core/automation/DesktopComputerUse.h"
+#include "core/automation/DesktopRecoveryPolicy.h"
 #include "core/automation/TeachKeyBuffer.h"
 
 class AutomationTests : public QObject
@@ -44,6 +46,9 @@ private slots:
     void keyBufferFlushesTextBeforeNamedKey();
     void keyBufferEmitsShortcutWithModifiers();
     void winTapDistinguishesLoneTapFromShortcut();
+    void desktopComputerUseContractsAndReceipts();
+    void desktopActionClassificationIsGeneric();
+    void desktopRecoveryPolicyBuildsContracts();
 };
 
 void AutomationTests::initTestCase()
@@ -568,6 +573,10 @@ void AutomationTests::artifactsRoundTripAndRedactSecrets()
     const QVariantList timeline = AutomationArtifactStore::timeline(id);
     QCOMPARE(timeline.size(), 3);
     QVERIFY(timeline.first().toMap().value("text").toString().contains(QStringLiteral("[REDACTED]")));
+    const QString redactedJson = AutomationArtifactStore::redact(
+        QStringLiteral("{\"password\":\"secreto\",\"value\":1}"));
+    QVERIFY(!redactedJson.contains(QStringLiteral("secreto")));
+    QVERIFY(redactedJson.contains(QStringLiteral("[REDACTED]")));
     QCOMPARE(AutomationArtifactStore::recipe(id).value("finalReference").toString(),
              QStringLiteral("final.jpg"));
     QCOMPARE(AutomationArtifactStore::templates(id).size(), 1);
@@ -639,6 +648,73 @@ void AutomationTests::artifactLearningsAppendAndPrompt()
     QVERIFY(prompt.contains(QStringLiteral("Aprendizajes auto-actualizados")));
     QVERIFY(prompt.contains(QStringLiteral("desktop_controls")));
     QDir(AutomationArtifactStore::artifactDir(id)).removeRecursively();
+}
+
+void AutomationTests::desktopComputerUseContractsAndReceipts()
+{
+    using namespace DesktopComputerUse;
+    const QVariantMap target{{QStringLiteral("id"), QStringLiteral("w1")},
+                             {QStringLiteral("label"), QStringLiteral("Editor")},
+                             {QStringLiteral("pid"), 42},
+                             {QStringLiteral("width"), 800},
+                             {QStringLiteral("height"), 600}};
+    const QVariantList controls{QVariantMap{{QStringLiteral("controlId"), QStringLiteral("c1")},
+                                             {QStringLiteral("name"), QStringLiteral("Guardar")},
+                                             {QStringLiteral("role"), QStringLiteral("button")}}};
+    const QString first = snapshotId(QStringLiteral("window"), QStringLiteral("w1"),
+                                     target, {}, controls);
+    const QString second = snapshotId(QStringLiteral("window"), QStringLiteral("w1"),
+                                      target, {}, controls);
+    QCOMPARE(first, second);
+    QVERIFY(!first.isEmpty());
+    QString error;
+    QVERIFY(snapshotMatches(first, second, &error));
+    QVERIFY(!snapshotMatches(first, QStringLiteral("stale"), &error));
+    QVERIFY(error.contains(QStringLiteral("obsoleto")));
+
+    const ActionReceipt receipt = makeReceipt(
+        QStringLiteral("desktop_control_action"),
+        QJsonObject{{QStringLiteral("action"), QStringLiteral("set_value")},
+                    {QStringLiteral("value"), QStringLiteral("password=secret")}},
+        true, QStringLiteral("password=secret"), QStringLiteral("session"),
+        QStringLiteral("corr"), QStringLiteral("uia-pattern"), first, target);
+    const QVariantMap serialized = receipt.toVariantMap();
+    QCOMPARE(serialized.value(QStringLiteral("status")).toString(), QStringLiteral("settled"));
+    QVERIFY(serialized.value(QStringLiteral("receiptId")).toString().size() > 10);
+    QVERIFY(!serialized.value(QStringLiteral("payloadHash")).toString().isEmpty());
+    QVERIFY(serialized.value(QStringLiteral("detail")).toString().contains(QStringLiteral("[REDACTED]")));
+}
+
+void AutomationTests::desktopActionClassificationIsGeneric()
+{
+    using namespace DesktopComputerUse;
+    QVERIFY(isDesktopTool(QStringLiteral("desktop_snapshot")));
+    QVERIFY(isDesktopReadTool(QStringLiteral("desktop_observe")));
+    QVERIFY(!isDesktopActionTool(QStringLiteral("desktop_observe")));
+    QVERIFY(isDesktopActionTool(QStringLiteral("desktop_control_action")));
+    QVERIFY(isSensitiveTarget(QVariantMap{{QStringLiteral("password"), true}}));
+    QVERIFY(isSensitiveTarget(QVariantMap{{QStringLiteral("role"), QStringLiteral("edit")},
+                                         {QStringLiteral("name"), QStringLiteral("Token")}}));
+    QVERIFY(isDestructiveLabel(QStringLiteral("Eliminar elemento")));
+    QVERIFY(!isDestructiveLabel(QStringLiteral("Guardar cambios")));
+}
+
+void AutomationTests::desktopRecoveryPolicyBuildsContracts()
+{
+    const QStringList order = DesktopRecoveryPolicy::strategies(QStringLiteral("template"));
+    QCOMPARE(order.first(), QStringLiteral("template"));
+    QCOMPARE(order.size(), 4);
+    QVERIFY(DesktopRecoveryPolicy::shouldReobserve(QStringLiteral("snapshot obsoleto")));
+    QVERIFY(DesktopRecoveryPolicy::shouldReobserve(QStringLiteral("resultado ambiguo")));
+    QVERIFY(!DesktopRecoveryPolicy::shouldReobserve(QStringLiteral("timeout de espera")));
+    const QVariantMap contract = DesktopRecoveryPolicy::contractForStep(
+        QVariantMap{{QStringLiteral("kind"), QStringLiteral("click")},
+                    {QStringLiteral("intent"), QStringLiteral("Activar opción")}});
+    QVERIFY(contract.contains(QStringLiteral("precondition")));
+    QVERIFY(contract.contains(QStringLiteral("postcondition")));
+    const QVariantMap repair = contract.value(QStringLiteral("repair")).toMap();
+    QCOMPARE(repair.value(QStringLiteral("maxAttempts")).toInt(), 2);
+    QCOMPARE(repair.value(QStringLiteral("strategies")).toList().size(), 4);
 }
 
 void AutomationTests::networkDiscoveriesPersistDedupAndReachPrompt()

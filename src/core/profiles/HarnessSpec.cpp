@@ -742,7 +742,8 @@ QVariantList HarnessTools::packCatalog()
                   QStringLiteral("Busqueda semantica, hibrida, memoria y grafo."),
                   {QStringLiteral("search_docs"), QStringLiteral("semantic_search"),
                    QStringLiteral("hybrid_search"), QStringLiteral("repo_slice"),
-                   QStringLiteral("context_status"), QStringLiteral("context_scout"),
+                   QStringLiteral("context_status"), QStringLiteral("work_status"),
+                   QStringLiteral("context_scout"),
                    QStringLiteral("context_fetch"),
                    QStringLiteral("verify_claims"), QStringLiteral("memory"),
                    QStringLiteral("graph"), QStringLiteral("project_brain")});

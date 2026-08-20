@@ -1,6 +1,7 @@
 #include "AutomationArtifactStore.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/tasks/TaskStore.h"
+#include "DesktopRecoveryPolicy.h"
 
 #include <QDateTime>
 #include <QCryptographicHash>
@@ -15,6 +16,7 @@
 #include <QSet>
 #include <QStandardPaths>
 #include <QUuid>
+#include <algorithm>
 
 namespace {
 bool writeJson(const QString &path, const QVariantMap &value)
@@ -77,6 +79,42 @@ QString AutomationArtifactStore::rootDir()
     return dir;
 }
 
+bool AutomationArtifactStore::cleanupRuntimeObservations(int maxFiles, qint64 maxBytes)
+{
+    maxFiles = qBound(1, maxFiles, 10000);
+    maxBytes = qBound<qint64>(1 * 1024 * 1024, maxBytes, 1024LL * 1024 * 1024);
+    QDir dir(rootDir() + QStringLiteral("/runtime-observations"));
+    if (!dir.exists()) return true;
+    QFileInfoList files = dir.entryInfoList(QDir::Files);
+    std::sort(files.begin(), files.end(), [](const QFileInfo &a, const QFileInfo &b) {
+        return a.lastModified() > b.lastModified();
+    });
+    qint64 keptBytes = 0;
+    int keptFiles = 0;
+    bool ok = true;
+    for (const QFileInfo &info : files) {
+        const bool keep = keptFiles < maxFiles
+            && keptBytes + info.size() <= maxBytes;
+        if (keep) {
+            ++keptFiles;
+            keptBytes += info.size();
+            continue;
+        }
+        ok = QFile::remove(info.absoluteFilePath()) && ok;
+    }
+    return ok;
+}
+
+bool AutomationArtifactStore::clearRuntimeObservations()
+{
+    QDir dir(rootDir() + QStringLiteral("/runtime-observations"));
+    if (!dir.exists()) return true;
+    bool ok = true;
+    for (const QFileInfo &info : dir.entryInfoList(QDir::Files))
+        ok = QFile::remove(info.absoluteFilePath()) && ok;
+    return ok;
+}
+
 QString AutomationArtifactStore::artifactDir(const QString &id)
 {
     return rootDir() + QLatin1Char('/') + TaskStore::sanitize(id);
@@ -94,6 +132,7 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
     const QString now = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     QVariantMap manifest{
         {QStringLiteral("formatVersion"), FormatVersion},
+        {QStringLiteral("recipeFormatVersion"), FormatVersion},
         {QStringLiteral("id"), id},
         {QStringLiteral("taskId"), task.value(QStringLiteral("id"))},
         {QStringLiteral("name"), task.value(QStringLiteral("name"))},
@@ -109,6 +148,11 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
     for (const QVariant &value : events) {
         QVariantMap event = value.toMap();
         event[QStringLiteral("index")] = index++;
+        event[QStringLiteral("schemaVersion")] = FormatVersion;
+        // v3 conserva los campos legacy, pero explicita el contrato que usan
+        // el resolver y el repair runner. Teach viejo puede seguir escribiendo
+        // sólo kind/intent/locator sin perder compatibilidad.
+        event = DesktopRecoveryPolicy::contractForStep(event);
         if (event.contains(QStringLiteral("text")))
             event[QStringLiteral("text")] = redact(event.value(QStringLiteral("text")).toString());
         steps.append(event);
@@ -144,6 +188,10 @@ QString AutomationArtifactStore::create(const QVariantMap &task, const QVariantM
          task.value(QStringLiteral("discoverNetwork"), false)},
         {QStringLiteral("networkDiscoveries"), QVariantList{}},
         {QStringLiteral("successCriteria"), task.value(QStringLiteral("postPrompt"))}};
+    recipe[QStringLiteral("schema")]=QStringLiteral("desktop-stateful-recipe-v3");
+    recipe[QStringLiteral("compatibility")] = QVariantMap{
+        {QStringLiteral("reads"), QVariantList{2, 3}},
+        {QStringLiteral("writes"), 3}};
     // La captura del paso verification es la referencia visual canónica del
     // resultado enseñado (no una captura intermedia de una acción).
     for (auto it = steps.crbegin(); it != steps.crend(); ++it) {
@@ -467,6 +515,10 @@ bool AutomationArtifactStore::removeEvidence(const QString &id, const QString &f
 QString AutomationArtifactStore::redact(const QString &text)
 {
     QString out = text;
+    static const QRegularExpression jsonSecrets(
+        QStringLiteral("(?i)\\\"(password|passwd|token|secret|api[_ -]?key)"
+                       "\\\"\\s*:\\s*\\\"[^\\\"]*\\\""));
+    out.replace(jsonSecrets, QStringLiteral("\"\\1\":\"[REDACTED]\""));
     static const QRegularExpression secrets(
         QStringLiteral("(?i)(password|passwd|token|secret|api[_ -]?key)\\s*[:=]\\s*\\S+"));
     out.replace(secrets, QStringLiteral("\\1=[REDACTED]"));

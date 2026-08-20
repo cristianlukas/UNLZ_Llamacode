@@ -1,13 +1,21 @@
 #pragma once
 
+#include <QtGlobal>
 #include <QVariantList>
 #include <QVariantMap>
 
 class AutomationArtifactStore
 {
 public:
-    static constexpr int FormatVersion = 2;
+    // v3 agrega pre/postcondiciones, locators semánticos y metadatos de
+    // recuperación. Los artefactos v2 siguen siendo legibles y reproducibles.
+    static constexpr int FormatVersion = 3;
     static QString rootDir();
+    // Capturas del Inspector: límite conservador por cantidad y tamaño para
+    // evitar que una corrida larga consuma indefinidamente AppLocalData.
+    static bool cleanupRuntimeObservations(int maxFiles = 120,
+                                           qint64 maxBytes = 96 * 1024 * 1024);
+    static bool clearRuntimeObservations();
     static QString artifactDir(const QString &id);
     static QString create(const QVariantMap &task, const QVariantMap &scope,
                           const QVariantList &events, const QStringList &evidence,

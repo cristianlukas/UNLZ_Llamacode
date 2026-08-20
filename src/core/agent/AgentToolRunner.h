@@ -11,6 +11,7 @@
 #include <QStringList>
 
 #include "core/profiles/HarnessSpec.h"
+#include "core/automation/DesktopComputerUse.h"
 
 class McpClient;
 class QProcess;
@@ -47,6 +48,9 @@ public slots:
     void setAllowedRoots(const QStringList &roots);
     // URL base del llama-server (para /v1/embeddings en semantic_search).
     void setServerBaseUrl(const QString &url);
+    // Captura opt-in de la superficie después de cada acción desktop/MCP
+    // compatible. Desactivado por defecto para preservar privacidad y costo.
+    void setLivePreviewEnabled(bool enabled);
     // Sesión activa del agente: la tool recent_actions filtra el event-log por ella.
     void setSessionId(const QString &sessionId);
     // Identificador de punta a punta del turno actual (Task/agente/tools/reintentos).
@@ -129,6 +133,10 @@ private:
     void startShell(const QString &callId, const QString &command,
                     const QString &cwd, int timeoutS);
     void finishShell(bool timedOut, bool cancelled);
+    QString captureMcpPreview(McpClient *client, const QString &currentTool,
+                              const QJsonObject &rawResult);
+    QVariantMap captureMcpObservation(McpClient *client, const QString &currentTool,
+                                      const QJsonObject &rawResult);
 
     QList<McpClient *> m_mcp;
     bool m_confined = true;
@@ -136,6 +144,7 @@ private:
     bool m_readOnlyShell = false;
     QStringList m_allowedRoots;   // carpetas extra permitidas (scope "folder")
     QString m_serverBaseUrl;
+    bool m_livePreviewEnabled = false;
     QString m_sessionId;           // sesión activa (filtro de recent_actions)
     QString m_correlationId;
     QVariantList m_mailAccounts;   // cuentas de correo con password resuelto
@@ -144,6 +153,7 @@ private:
     QStringList m_skillExclude;
     bool m_skillPolicyDeclared = false;
     QHash<QString, QList<qint64>> m_webRequestTimes; // rate limit por host, ventana 60 s
+    DesktopComputerUse::SessionLease m_desktopLease;
     QString m_teacherUrl, m_teacherModel, m_teacherKey;   // ask_teacher (override de env)
     // Maestro CLI (claude-code / codex). m_masterKind: "none"|"http"|"cli".
     QString m_masterKind = QStringLiteral("none");

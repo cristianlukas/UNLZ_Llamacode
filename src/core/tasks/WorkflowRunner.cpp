@@ -9,6 +9,8 @@ bool WorkflowRunner::start(const QJsonObject &definition, const QString &workflo
     m_definition = definition;
     m_state = WorkflowEngine::start(definition, workflowId, variables);
     m_dispatched = false;
+    m_paused = false;
+    m_singleStep = false;
     emit stateChanged(snapshot());
     dispatch();
     return m_state.status != WorkflowEngine::Failed;
@@ -23,6 +25,8 @@ bool WorkflowRunner::restore(const QJsonObject &definition, const QJsonObject &s
     m_definition = definition;
     m_state = restored;
     m_dispatched = false;
+    m_paused = false;
+    m_singleStep = false;
     emit stateChanged(snapshot());
     dispatch();
     return true;
@@ -41,6 +45,22 @@ void WorkflowRunner::reset()
     m_definition = {};
     m_state = {};
     m_dispatched = false;
+    m_paused = false;
+    m_singleStep = false;
+}
+
+void WorkflowRunner::setPaused(bool paused)
+{
+    m_paused = paused;
+    if (!m_paused) dispatch();
+}
+
+void WorkflowRunner::step()
+{
+    if (!active()) return;
+    m_singleStep = true;
+    m_paused = false;
+    dispatch();
 }
 
 QVariantMap WorkflowRunner::context() const
@@ -62,7 +82,13 @@ QString WorkflowRunner::conditionRoute(const QJsonObject &step) const
 
 void WorkflowRunner::dispatch()
 {
-    if (!active() || m_dispatched) return;
+    if (m_paused || !active() || m_dispatched) return;
+    if (m_singleStep) {
+        // Pausar antes de emitir evita que un completeCurrent() síncrono
+        // encadene más de un paso durante el modo paso-a-paso.
+        m_singleStep = false;
+        m_paused = true;
+    }
     const QJsonObject step = WorkflowEngine::currentStep(m_definition, m_state);
     const QString type = step.value(QStringLiteral("type")).toString();
     if (type == QLatin1String("approval")) {

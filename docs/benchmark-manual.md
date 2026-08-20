@@ -155,6 +155,108 @@ habilitado y no se mezcla con resultados cold-cache. El perfil Q8 de 48 GB es un
 candidato de calidad separado: usa el GGUF Uncensored publicado, KV `q8_0`,
 sampling conservador y omite `mlock`/`no-mmap` para conservar reproducibilidad en
 Windows.
+
+### Auxiliar Ling 3.0 Tiny + Qwen3.8
+
+La referencia de Ling propone un modelo pequeño para tareas auxiliares y un
+modelo más capaz para las decisiones críticas. El bundle traduce esa hipótesis a
+tres perfiles: `sys-ling30-tiny-q6-131k` (Q6/KV q8, thinking off),
+`sys-bench-ling30-tiny-udq4-64k` (baja memoria) y
+`sys-hybrid-ling30-qwen38` (Ling planifica → Qwen3.8 ejecuta). También deja A/B
+de Q6 a 64k, thinking on y KV q4. Todos son `benchmark=true`, `extra=true` y
+`autoCompanion=false`: no se descargan por elegir otro perfil premium.
+
+El Q6 y el UD-Q4 provienen del repositorio GGUF comunitario de
+[`bloomer010/Ling-3.0-tiny-GGUF`](https://huggingface.co/bloomer010/Ling-3.0-tiny-GGUF),
+basado en el modelo oficial de
+[`inclusionAI/Ling-3.0-tiny`](https://huggingface.co/inclusionAI/Ling-3.0-tiny).
+La arquitectura requiere una build de llama.cpp con BailingMoE3; el mínimo
+conservador del catálogo es b10331+. Verificar el binario efectivo y el chat
+template antes de interpretar una corrida.
+
+La evaluación debe separar dos preguntas:
+
+1. **Auxiliar aislado:** HE0 de carga y una suite de resúmenes/compresión que
+   mida fidelidad semántica, omisiones, tokens de salida, TTFT, decode, VRAM y
+   wall-time. Comparar Q6 thinking off contra thinking on, Q6/KV q4 y UD-Q4; no
+   usar un score de substring como sustituto de fidelidad.
+2. **Híbrido:** repetir exactamente la suite agentica del control
+   `sys-qwen38-27b-udq4-131k` y comparar contra `sys-hybrid-ling30-qwen38`.
+   Registrar por separado planificación, ejecución, tiempo total, primer intento,
+   reparaciones y calidad final. La fase Ling no usa tools: este experimento mide
+   el planificador liviano existente, no un router automático de compresión.
+
+No hay resultados Ling en la matriz todavía: el GGUF no estaba descargado en la
+máquina al registrar los perfiles. Hasta ejecutar HE0, los valores deben quedar
+como `Pendiente` y no como velocidad estimada por el model card.
+
+### Experimento Browser Agent + Qwen3.8
+
+El hallazgo externo de Qwen3.8 usa el proyecto [`visnia-ai/browser-agent`](https://github.com/visnia-ai/browser-agent)
+con Chrome real y tareas de BU Bench v1/BrowseWebApp Bench. LlamaCode no
+trata HE0/HE20/BCB como sustitutos de esas suites: sus nuevos perfiles sólo
+reproducen el eje local del experimento, es decir, mismo GGUF/runtime y un
+harness nativo `agent-browser` con `core + web + browser`.
+
+La matriz incorpora cuatro variantes `sys-bench-qwen38-udq4-browser-agent-*`
+con thinking `off`, `low`, `medium` y `xhigh`. `agentProfileId` es un override
+de variante, por lo que no se duplica el modelo ni se altera el control
+`BALANCE - Qwen3.8 UD-Q4 visión`. Para resultados de navegación, registrar
+además navegador, URL/task set, autenticación, número de pasos, éxito por tarea,
+tiempo total y evidencia; un HE0 válido sólo demuestra que el servidor y el
+harness local arrancan.
+
+El post de `syv-ai/qwen38-27b-rtx3090` aporta un segundo eje, de inferencia y no
+de harness: su DFlash2 requiere vLLM 0.27.1 parcheado, un drafter W4A16 externo,
+fp8 KV y kernels específicos de Ampere. Por eso no se lo etiqueta como
+compatible con `llama-server`. La matriz agrega tres aproximaciones que sí
+pueden arrancar en el stack actual de 24 GB: 64k + MTP4 con mmproj en RAM,
+`ngram-mod` como lookup local y prompt-cache 64k. La primera medición debe ser
+HE0; luego se comparan por separado cold-cache/warm-cache y no se atribuye el
+resultado a DFlash2.
+
+### Experimento Qwen3.8-27B en 16 GB
+
+El post de LocalLLaMA adjunto propone una RTX 4080 de 16 GB con `RVN-IQ3_XXS`,
+KV `q5_1`, ngram `4/8/32`, contexto 131k para ngram-only y 105k para DFlash2 o
+MTP. El bundle lo traduce a tres candidatos independientes:
+`sys-bench-16-qwen38-rvn-iq3xxs-ngram-131k`,
+`sys-bench-16-qwen38-rvn-iq3xxs-dflash2-ngram-105k` y
+`sys-bench-16-qwen38-rvn-iq3xxs-mtp-ngram-105k`.
+
+Son perfiles de benchmark, no recomendaciones: el post usa una build
+`dflash2` y `froggeric_fix_qwen38.jinja`, mientras que LlamaCode usa el engine
+`beellama` catalogado y `qwen38-tools-fixed.jinja`. La variante DFlash2 declara
+el drafter separado como dependencia; la variante MTP lleva `manualOnly=true`
+porque el autor describe una fusión manual del GGUF. Colocar ese archivo en la
+carpeta de modelos del perfil antes de aceptarlo; LlamaCode no intentará
+descargarlo. `reasoningEffort=medium` queda en el LaunchProfile y sólo tiene
+efecto cuando el thinking del benchmark está habilitado. Ejecutar HE0 aislado,
+registrar la build/fork real y no comparar sus TPS con los del post sin anotar
+backend, template, quant, KV y contexto.
+
+### Controles 24 GB: Q4/Q6 y throughput honesto
+
+El reporte de RTX 6000 aporta una receta útil para el piso de 24 GB: Q4_K_M
+(`15,40 GiB`) y Q6_K (`20,56 GiB`), `-ngl 99`, Flash Attention, B512/U512,
+contexto 32k y un solo slot. El catálogo la expresa como dos controles
+texto-only, `sys-bench-qwen38-q4km-24gb-tg128` y
+`sys-bench-qwen38-q6k-24gb-tg128`, sin MTP, ngram, prompt-cache ni mmproj.
+El dato de `24,36 tok/s` del post queda como referencia externa: no se copia a
+los resultados locales.
+
+La comparación primaria es `llama-bench tg128` o un HE0 con la misma huella,
+registrando quant, VRAM pico, si todos los layers quedaron en GPU y la versión
+de `llama.cpp`. Q8 no se agrega como perfil ejecutable de 24 GB porque el
+reporte indica que deja de entrar con `-ngl 99`; un OOM por offload no debe
+convertirse en una cifra de rendimiento.
+
+Cada control trae además una variante ngram y otra de prefix-cache warm para
+diagnóstico. Sus resultados se guardan en grupos separados: un hit de ngram o
+un prefijo reutilizado puede producir una tasa espectacular sin representar el
+decode autoregresivo de una solicitud nueva. Nunca se rankean contra los
+controles `tg128` cold ni se combinan con la mediana comparable del benchmark.
+
 ### Benchmark de artefactos y publicación explícita
 
 El caso de uso del post se traduce a una suite local-first independiente:
@@ -171,7 +273,6 @@ es un fallo de seguridad aunque el HTML sea excelente. Si después se quiere med
 la publicación real, debe ser una suite separada, con cuenta/destino de prueba,
 evidencia de aprobación y verificación de la URL final; no se mezcla con esta
 medición privada.
-
 
 ## Componentes y responsabilidades
 

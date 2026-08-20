@@ -754,12 +754,17 @@ static QString taskTraceImageSource(const QString &path)
 
 static QVariantMap taskTraceEventFromMessage(const QVariantMap &message, int number)
 {
-    const QString tool = message.value(QStringLiteral("name")).toString().trimmed();
+    const QString role = message.value(QStringLiteral("role")).toString();
+    const bool isDiff = role == QLatin1String("diff");
+    if (role != QLatin1String("toolcall") && !isDiff) return {};
+    const QString tool = isDiff
+        ? QStringLiteral("file_change")
+        : message.value(QStringLiteral("name")).toString().trimmed();
     if (tool.isEmpty()) return {};
     const bool running = message.value(QStringLiteral("typing")).toBool();
     const bool ok = message.value(QStringLiteral("ok"), true).toBool();
     const QString command = message.value(QStringLiteral("command")).toString();
-    const QString rawOutput = message.value(QStringLiteral("output"),
+    const QString rawOutput = message.value(isDiff ? QStringLiteral("diff") : QStringLiteral("output"),
                                              message.value(QStringLiteral("result")))
                                   .toString();
     QVariantMap event{
@@ -772,14 +777,26 @@ static QVariantMap taskTraceEventFromMessage(const QVariantMap &message, int num
              (command.isEmpty() ? tool : command).simplified()).left(360)},
         {QStringLiteral("output"), AutomationArtifactStore::redact(
              rawOutput).simplified().left(1800)},
+        {QStringLiteral("arguments"), AutomationArtifactStore::redact(
+             message.value(QStringLiteral("arguments")).toString()).left(8192)},
         {QStringLiteral("at"), message.value(QStringLiteral("createdAt"))},
         {QStringLiteral("elapsedMs"), message.value(QStringLiteral("elapsedMs"), 0)},
         {QStringLiteral("correlationId"), message.value(QStringLiteral("correlationId"))}
     };
-    const QString imagePath = message.value(QStringLiteral("imagePath")).toString();
-    if (!imagePath.isEmpty()) {
-        event[QStringLiteral("imagePath")] = imagePath;
-        event[QStringLiteral("imageSource")] = taskTraceImageSource(imagePath);
+    for (const QString &key : {QStringLiteral("imagePath"),
+                               QStringLiteral("beforeImagePath"),
+                               QStringLiteral("afterImagePath"),
+                               QStringLiteral("snapshotPath"),
+                               QStringLiteral("beforeSnapshotPath"),
+                               QStringLiteral("afterSnapshotPath")}) {
+        const QString path = message.value(key).toString();
+        if (!path.isEmpty()) {
+            event[key] = path;
+            QString sourceKey = key;
+            sourceKey.remove(QStringLiteral("Path"));
+            sourceKey += QStringLiteral("Source");
+            event[sourceKey] = taskTraceImageSource(path);
+        }
     }
     const QVariantMap receipt = message.value(QStringLiteral("receipt")).toMap();
     if (!receipt.isEmpty()) {
@@ -6587,8 +6604,8 @@ QVariantList AppController::taskRunTimelineFromMessagesForTest(const QVariantLis
     int number = 0;
     for (const QVariant &value : messages) {
         const QVariantMap message = value.toMap();
-        if (message.value(QStringLiteral("role")).toString()
-                != QLatin1String("toolcall"))
+        const QString role = message.value(QStringLiteral("role")).toString();
+        if (role != QLatin1String("toolcall") && role != QLatin1String("diff"))
             continue;
         const QVariantMap event = taskTraceEventFromMessage(message, ++number);
         if (!event.isEmpty()) timeline.append(event);
@@ -6606,6 +6623,73 @@ void AppController::setTaskLivePreviewEnabled(bool enabled)
     if (m_workflowToolRunner)
         m_workflowToolRunner->setLivePreviewEnabled(m_runningTaskId.isEmpty() ? false : enabled);
     emit taskLivePreviewChanged();
+}
+
+void AppController::pauseTask(bool paused)
+{
+    if (m_runningTaskId.isEmpty()) return;
+    m_taskPaused = paused;
+    if (!paused && !m_replayTaskId.isEmpty())
+        playNextReplayStep();
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setExecutionPaused(paused);
+    if (m_workflowRunner)
+        m_workflowRunner->setPaused(paused);
+    emit taskRunStateChanged();
+}
+
+void AppController::stepTask()
+{
+    if (m_runningTaskId.isEmpty()) return;
+    if (!m_replayTaskId.isEmpty()) {
+        m_replaySingleStep = true;
+        m_taskPaused = false;
+        playNextReplayStep();
+        emit taskRunStateChanged();
+        return;
+    }
+    m_taskPaused = true;
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->stepExecution();
+    if (m_workflowRunner)
+        m_workflowRunner->step();
+    emit taskRunStateChanged();
+}
+
+QVariantMap AppController::captureTaskPreview()
+{
+    if (m_runningTaskId.isEmpty())
+        return {{QStringLiteral("ok"), false},
+                {QStringLiteral("error"), QStringLiteral("no hay una Task en ejecución")}};
+    const QString dir = AutomationArtifactStore::rootDir()
+                        + QStringLiteral("/runtime-observations");
+    QDir().mkpath(dir);
+    const QString path = dir + QStringLiteral("/manual-%1.jpg")
+        .arg(QDateTime::currentMSecsSinceEpoch());
+    QString error;
+    const QString saved = DesktopAutomationBackend::saveCapture(
+        QStringLiteral("screen"), QString(), path, &error);
+    if (saved.isEmpty())
+        return {{QStringLiteral("ok"), false}, {QStringLiteral("error"), error}};
+    AutomationArtifactStore::cleanupRuntimeObservations();
+    QVariantMap event{
+        {QStringLiteral("kind"), QStringLiteral("observation")},
+        {QStringLiteral("tool"), QStringLiteral("manual_capture")},
+        {QStringLiteral("status"), QStringLiteral("ok")},
+        {QStringLiteral("detail"), QStringLiteral("captura manual de la superficie actual")},
+        {QStringLiteral("imagePath"), saved},
+        {QStringLiteral("imageSource"), taskTraceImageSource(saved)},
+        {QStringLiteral("at"), QDateTime::currentMSecsSinceEpoch()}};
+    m_taskRunExtraTimeline.append(event);
+    refreshTaskRunTrace();
+    return {{QStringLiteral("ok"), true},
+            {QStringLiteral("imagePath"), saved},
+            {QStringLiteral("imageSource"), taskTraceImageSource(saved)}};
+}
+
+bool AppController::clearTaskPreviewArtifacts()
+{
+    return AutomationArtifactStore::clearRuntimeObservations();
 }
 
 void AppController::refreshTaskRunTrace()
@@ -6633,6 +6717,11 @@ void AppController::refreshTaskRunTrace()
         if (!imagePath.isEmpty()) {
             event[QStringLiteral("imagePath")] = imagePath;
             event[QStringLiteral("imageSource")] = taskTraceImageSource(imagePath);
+        }
+        const QString beforePath = row.value(QStringLiteral("beforeImagePath")).toString();
+        if (!beforePath.isEmpty()) {
+            event[QStringLiteral("beforeImagePath")] = beforePath;
+            event[QStringLiteral("beforeImageSource")] = taskTraceImageSource(beforePath);
         }
         trace.append(event);
     }
@@ -6671,7 +6760,13 @@ void AppController::appendTaskTraceResult(const QVariantMap &result)
         {QStringLiteral("name"), result.value(QStringLiteral("name"))},
         {QStringLiteral("ok"), result.value(QStringLiteral("ok"))},
         {QStringLiteral("output"), result.value(QStringLiteral("result"))},
+        {QStringLiteral("arguments"), result.value(QStringLiteral("arguments"))},
         {QStringLiteral("imagePath"), result.value(QStringLiteral("imagePath"))},
+        {QStringLiteral("beforeImagePath"), result.value(QStringLiteral("beforeImagePath"))},
+        {QStringLiteral("afterImagePath"), result.value(QStringLiteral("afterImagePath"))},
+        {QStringLiteral("snapshotPath"), result.value(QStringLiteral("snapshotPath"))},
+        {QStringLiteral("beforeSnapshotPath"), result.value(QStringLiteral("beforeSnapshotPath"))},
+        {QStringLiteral("afterSnapshotPath"), result.value(QStringLiteral("afterSnapshotPath"))},
         {QStringLiteral("correlationId"), result.value(QStringLiteral("correlationId"))},
         {QStringLiteral("createdAt"), static_cast<double>(QDateTime::currentMSecsSinceEpoch())},
         {QStringLiteral("elapsedMs"), 0}
@@ -7119,6 +7214,7 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     }
     m_runningTaskId = id;
     m_runningTaskName = name;
+    m_taskPaused = false;
     m_taskRunTimeline.clear();
     m_taskRunExtraTimeline.clear();
     m_taskRunPreview.clear();
@@ -7364,6 +7460,7 @@ bool AppController::startDesktopReplay(const QString &id, const QString &artifac
     m_replayTemplateRows = recipe.value(QStringLiteral("templates")).toList();
     m_replayReport.clear();
     m_replayErrors = 0;
+    m_replaySingleStep = false;
 
     m_tasks.markRun(id, QStringLiteral("running"),
                     QStringLiteral("Reproducción fiel: %1 pasos.").arg(steps.size()));
@@ -7378,6 +7475,7 @@ bool AppController::startDesktopReplay(const QString &id, const QString &artifac
 void AppController::playNextReplayStep()
 {
     if (m_replayTaskId.isEmpty() || m_runningTaskId != m_replayTaskId) return;   // cancelada
+    if (m_taskPaused) return;
     if (m_replayIndex >= m_replaySteps.size()) { finishDesktopReplay(); return; }
 
     const QVariantMap step = m_replaySteps.at(m_replayIndex).toMap();
@@ -7385,6 +7483,17 @@ void AppController::playNextReplayStep()
     QString error;
     bool ok = false;
     QString detail = kind;
+    QString beforeCapture;
+    if (m_taskLivePreviewEnabled) {
+        const QString dir = AutomationArtifactStore::rootDir()
+                            + QStringLiteral("/runtime-observations");
+        QDir().mkpath(dir);
+        const QString path = dir + QStringLiteral("/replay-before-%1.jpg")
+            .arg(QDateTime::currentMSecsSinceEpoch());
+        QString captureError;
+        beforeCapture = DesktopAutomationBackend::saveCapture(
+            m_replayScopeKind, m_replayScopeId, path, &captureError);
+    }
     if (kind == QLatin1String("key")) {
         QStringList mods;
         for (const QVariant &m : step.value(QStringLiteral("modifiers")).toList())
@@ -7517,11 +7626,15 @@ void AppController::playNextReplayStep()
         }
     }
     if (!ok) m_replayErrors++;
+    const int cur = m_replayIndex;
+    m_replayIndex++;
     QVariantMap replayEvent{
         {QStringLiteral("n"), m_replayIndex + 1},
         {QStringLiteral("tool"), detail},
         {QStringLiteral("ok"), ok},
         {QStringLiteral("summary"), ok ? QStringLiteral("ok") : error}};
+    if (!beforeCapture.isEmpty())
+        replayEvent[QStringLiteral("beforeImagePath")] = beforeCapture;
     if (ok && m_taskLivePreviewEnabled) {
         const QString dir = AutomationArtifactStore::rootDir()
                             + QStringLiteral("/runtime-observations");
@@ -7531,7 +7644,10 @@ void AppController::playNextReplayStep()
         QString captureError;
         const QString saved = DesktopAutomationBackend::saveCapture(
             m_replayScopeKind, m_replayScopeId, path, &captureError);
-        if (!saved.isEmpty()) replayEvent[QStringLiteral("imagePath")] = saved;
+        if (!saved.isEmpty()) {
+            replayEvent[QStringLiteral("imagePath")] = saved;
+            AutomationArtifactStore::cleanupRuntimeObservations();
+        }
     }
     m_replayReport << replayEvent;
     refreshTaskRunTrace();
@@ -7540,10 +7656,15 @@ void AppController::playNextReplayStep()
                          .arg(m_replayIndex + 1).arg(m_replaySteps.size())
                          .arg(detail, ok ? QStringLiteral("ok") : error));
 
+    if (m_replaySingleStep) {
+        m_replaySingleStep = false;
+        m_taskPaused = true;
+        emit taskRunStateChanged();
+        return;
+    }
+
     // Programar el próximo paso respetando el hueco temporal grabado (acotado),
     // así se respeta el ritmo (p.ej. esperar a que abra Paint) sin sleeps largos.
-    const int cur = m_replayIndex;
-    m_replayIndex++;
     int gap = 120;
     if (m_replayIndex < m_replaySteps.size()) {
         const qint64 a = m_replaySteps.at(cur).toMap().value(QStringLiteral("atMs")).toLongLong();
@@ -7564,6 +7685,7 @@ void AppController::finishDesktopReplay()
     m_replayTaskId.clear();
     m_replayArtifactId.clear();
     m_replayTemplateRows.clear();
+    m_replaySingleStep = false;
     if (m_runningTaskId != id) return;
 
     // Estado honesto: si algún paso mecánico falló (p.ej. no se pudo abrir la app,
@@ -8231,8 +8353,10 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         m_runningAutomationId.clear();
     }
     clearTaskAgentPermissions();   // restaura confinamiento y aprobación normales
-    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend)) {
+        cb->setExecutionPaused(false);
         cb->setLivePreviewEnabled(false);
+    }
     if (m_workflowToolRunner)
         m_workflowToolRunner->setLivePreviewEnabled(false);
     // Cierra la sesión efímera de la Task y restaura la sesión del usuario, así el
@@ -8240,6 +8364,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->endTaskSession();
     m_runningTaskId.clear();
+    m_taskPaused = false;
     m_runningTaskName.clear();
     m_runningTaskStartedAt.clear();
     m_runningTaskPhase.clear();
@@ -8274,6 +8399,7 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     m_replayTemplateRows.clear();
     m_replayReport.clear();
     m_replayErrors = 0;
+    m_replaySingleStep = false;
     if (m_desktopTaskIndicatorActive) {
         m_desktopTaskIndicatorActive = false;
         m_desktopAgentActive = false;
@@ -13885,6 +14011,8 @@ void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
             .value(QStringLiteral("kind")).toString()
             .compare(QStringLiteral("cloud"), Qt::CaseInsensitive) == 0)
         return; // The external provider owns the model and drafter downloads.
+    if (entry.value(QStringLiteral("manualOnly")).toBool(false))
+        return; // The artifact was merged locally; never invent a remote download.
 
     // No re-descargar lo que ya está en el catálogo (mismo nombre de archivo en
     // cualquier root escaneado, p.ej. D:/Models). buildContext liga por filename.

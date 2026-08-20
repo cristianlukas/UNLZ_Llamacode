@@ -18,9 +18,12 @@ public:
     QJsonObject snapshot() const;
     WorkflowEngine::State state() const { return m_state; }
     bool active() const;
+    bool paused() const { return m_paused; }
     void reset();
 
 public slots:
+    void setPaused(bool paused);
+    void step();
     void completeCurrent(const QVariant &result, bool success = true,
                          const QString &route = QString());
     void approve(const QString &choice, const QString &userText = QString());
@@ -41,4 +44,6 @@ private:
     QJsonObject m_definition;
     WorkflowEngine::State m_state;
     bool m_dispatched = false;
+    bool m_paused = false;
+    bool m_singleStep = false;
 };

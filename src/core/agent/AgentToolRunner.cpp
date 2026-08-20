@@ -9,6 +9,7 @@
 #include "BrowserTeach.h"        // skills de browser grabados (modo teach)
 #include "PortableSkillStore.h"  // habilidades declarativas con carga progresiva
 #include "AgentEventLog.h"       // tool recent_actions (tail del rastro del agente)
+#include "WorkRegistry.h"         // estado de trabajo activo por proyecto
 #include "ToolExecutionSafety.h"
 #include "StructuredSourceView.h" // vista compacta segura y proyectable
 #include "ProjectBrain.h"
@@ -17,6 +18,8 @@
 #include "core/DocumentExtractor.h" // hybrid_search include_docs: pdf/office al índice
 #include "WebFetchProvider.h"
 #include "core/automation/DesktopAutomationBackend.h"
+#include "core/automation/DesktopComputerUse.h"
+#include "core/automation/DesktopRecoveryPolicy.h"
 #include "core/automation/AutomationArtifactStore.h"
 #include "core/mail/MailClient.h" // tools email_send/list/read
 
@@ -97,6 +100,118 @@ const McpClient::ToolDef *findMcpTool(McpClient *client, const QString &name)
     for (const McpClient::ToolDef &tool : client->tools())
         if (tool.name == name) return &tool;
     return nullptr;
+}
+
+bool mcpToolAcceptsEmptyArguments(const McpClient::ToolDef &tool)
+{
+    const QJsonArray required = tool.inputSchema.value(QStringLiteral("required")).toArray();
+    return required.isEmpty();
+}
+
+bool isBrowserMcpTool(const QString &name)
+{
+    const QString lower = name.toLower();
+    return lower.startsWith(QStringLiteral("browser_"))
+        || lower.contains(QStringLiteral("browser"))
+        || lower.contains(QStringLiteral("screenshot"));
+}
+
+QString imageExtension(const QString &mimeType)
+{
+    const QString mime = mimeType.toLower();
+    if (mime.contains(QStringLiteral("png"))) return QStringLiteral("png");
+    if (mime.contains(QStringLiteral("webp"))) return QStringLiteral("webp");
+    if (mime.contains(QStringLiteral("gif"))) return QStringLiteral("gif");
+    return QStringLiteral("jpg");
+}
+
+QString saveMcpImage(const QJsonObject &rawResult, const QString &prefix)
+{
+    const QJsonArray content = rawResult.value(QStringLiteral("content")).toArray();
+    for (const QJsonValue &value : content) {
+        const QJsonObject block = value.toObject();
+        QString data = block.value(QStringLiteral("data")).toString();
+        QString mime = block.value(QStringLiteral("mimeType")).toString();
+        if (data.isEmpty() && block.value(QStringLiteral("resource")).isObject()) {
+            const QJsonObject resource = block.value(QStringLiteral("resource")).toObject();
+            data = resource.value(QStringLiteral("blob")).toString();
+            mime = resource.value(QStringLiteral("mimeType")).toString(mime);
+        }
+        if (data.isEmpty()) continue;
+
+        const QByteArray bytes = QByteArray::fromBase64(data.toLatin1());
+        // Untrusted MCP servers should not be able to fill AppLocalData with an
+        // unbounded payload just by returning an image block.
+        if (bytes.isEmpty() || bytes.size() > 20 * 1024 * 1024) continue;
+        const QString dir = AutomationArtifactStore::rootDir()
+                            + QStringLiteral("/runtime-observations");
+        QDir().mkpath(dir);
+        const QString path = dir + QLatin1Char('/') + prefix + QStringLiteral("-%1.%2")
+            .arg(QDateTime::currentMSecsSinceEpoch()).arg(imageExtension(mime));
+        QSaveFile file(path);
+        if (!file.open(QIODevice::WriteOnly)) continue;
+        if (file.write(bytes) != bytes.size() || !file.commit()) continue;
+        AutomationArtifactStore::cleanupRuntimeObservations();
+        return path;
+    }
+    return {};
+}
+
+QString saveMcpSnapshot(const QJsonObject &rawResult, const QString &prefix)
+{
+    QJsonObject safe;
+    QJsonArray safeContent;
+    for (const QJsonValue &value : rawResult.value(QStringLiteral("content")).toArray()) {
+        const QJsonObject block = value.toObject();
+        const QString type = block.value(QStringLiteral("type")).toString();
+        if (type == QLatin1String("text")) {
+            safeContent.append(QJsonObject{{QStringLiteral("type"), type},
+                                           {QStringLiteral("text"), block.value(QStringLiteral("text"))}});
+        } else if (type == QLatin1String("resource")) {
+            const QJsonObject resource = block.value(QStringLiteral("resource")).toObject();
+            safeContent.append(QJsonObject{
+                {QStringLiteral("type"), type},
+                {QStringLiteral("uri"), resource.value(QStringLiteral("uri"))},
+                {QStringLiteral("mimeType"), resource.value(QStringLiteral("mimeType"))}});
+        } else if (type == QLatin1String("image")) {
+            safeContent.append(QJsonObject{
+                {QStringLiteral("type"), type},
+                {QStringLiteral("mimeType"), block.value(QStringLiteral("mimeType"))}});
+        }
+    }
+    if (!safeContent.isEmpty()) safe[QStringLiteral("content")] = safeContent;
+    const QJsonValue structured = rawResult.value(QStringLiteral("structuredContent"));
+    if (structured.isObject()) safe[QStringLiteral("structuredContent")] = structured;
+    if (safe.isEmpty()) return {};
+
+    QByteArray bytes = AutomationArtifactStore::redact(QString::fromUtf8(
+        QJsonDocument(safe).toJson(QJsonDocument::Indented))).toUtf8();
+    if (bytes.size() > 2 * 1024 * 1024) {
+        bytes.truncate(2 * 1024 * 1024);
+        bytes.append("\n[truncated]\n");
+    }
+    const QString dir = AutomationArtifactStore::rootDir()
+                        + QStringLiteral("/runtime-observations");
+    QDir().mkpath(dir);
+    const QString path = dir + QLatin1Char('/') + prefix + QStringLiteral("-%1.json")
+        .arg(QDateTime::currentMSecsSinceEpoch());
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)
+        || file.write(bytes) != bytes.size() || !file.commit())
+        return {};
+    AutomationArtifactStore::cleanupRuntimeObservations();
+    return path;
+}
+
+bool isMcpSnapshotTool(const McpClient::ToolDef &tool)
+{
+    const QString lower = tool.name.toLower();
+    return lower.contains(QStringLiteral("accessibility"))
+        || lower.contains(QStringLiteral("snapshot"))
+        || lower.contains(QStringLiteral("aria"))
+        || lower.contains(QStringLiteral("dom"))
+        || lower.contains(QStringLiteral("page_source"))
+        || lower.contains(QStringLiteral("page_content"));
 }
 
 } // namespace
@@ -803,7 +918,17 @@ void AgentToolRunner::setAllowedRoots(const QStringList &roots)
     }
 }
 void AgentToolRunner::setServerBaseUrl(const QString &url) { m_serverBaseUrl = url; }
-void AgentToolRunner::setSessionId(const QString &sessionId) { m_sessionId = sessionId; }
+void AgentToolRunner::setSessionId(const QString &sessionId)
+{
+    m_sessionId = sessionId;
+    m_desktopLease = DesktopComputerUse::SessionLease{};
+    m_desktopLease.leaseId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    m_desktopLease.sessionId = sessionId;
+    // El límite duro de la Task sigue siendo superior autoridad; este lease
+    // evita que un worker reutilizado acumule acciones de una sesión anterior.
+    m_desktopLease.maxActions = 500;
+    m_desktopLease.expiresAt = QDateTime::currentMSecsSinceEpoch() + 30 * 60 * 1000;
+}
 void AgentToolRunner::setMailAccounts(const QVariantList &accounts) { m_mailAccounts = accounts; }
 void AgentToolRunner::setWebProviders(const QVariantList &providers) { m_webProviders = providers; }
 void AgentToolRunner::setPortableSkillPolicy(const QStringList &include,
@@ -1261,6 +1386,77 @@ void AgentToolRunner::setCorrelationId(const QString &correlationId)
     m_correlationId = correlationId;
 }
 
+void AgentToolRunner::setLivePreviewEnabled(bool enabled)
+{
+    m_livePreviewEnabled = enabled;
+}
+
+QString AgentToolRunner::captureMcpPreview(McpClient *client, const QString &currentTool,
+                                           const QJsonObject &rawResult)
+{
+    return captureMcpObservation(client, currentTool, rawResult)
+        .value(QStringLiteral("imagePath")).toString();
+}
+
+QVariantMap AgentToolRunner::captureMcpObservation(McpClient *client,
+                                                   const QString &currentTool,
+                                                   const QJsonObject &rawResult)
+{
+    QVariantMap observation;
+    QString path = saveMcpImage(rawResult, QStringLiteral("browser-after"));
+    const QString lowerCurrent = currentTool.toLower();
+    const bool currentIsSnapshot = lowerCurrent.contains(QStringLiteral("accessibility"))
+        || lowerCurrent.contains(QStringLiteral("snapshot"))
+        || lowerCurrent.contains(QStringLiteral("aria"))
+        || lowerCurrent.contains(QStringLiteral("dom"))
+        || lowerCurrent.contains(QStringLiteral("page_source"))
+        || lowerCurrent.contains(QStringLiteral("page_content"));
+    if (currentIsSnapshot) {
+        const QString snapshot = saveMcpSnapshot(rawResult, QStringLiteral("browser-after"));
+        if (!snapshot.isEmpty()) observation[QStringLiteral("snapshotPath")] = snapshot;
+    }
+    if (!path.isEmpty()) observation[QStringLiteral("imagePath")] = path;
+    if (!m_livePreviewEnabled || !client
+        || (!currentTool.isEmpty() && !isBrowserMcpTool(currentTool)))
+        return observation;
+
+    // Muchos servidores MCP entregan el DOM como texto y exponen la captura
+    // como otra tool. Sólo la invocamos cuando su schema no exige parámetros;
+    // así el inspector funciona con implementaciones distintas de Playwright
+    // sin adivinar URLs, páginas o nombres de aplicaciones.
+    for (const McpClient::ToolDef &tool : client->tools()) {
+        const QString lower = tool.name.toLower();
+        if (!lower.contains(QStringLiteral("screenshot"))
+            || !mcpToolAcceptsEmptyArguments(tool))
+            continue;
+        if (!path.isEmpty() && !lowerCurrent.isEmpty()) break;
+        bool ok = false;
+        QJsonObject screenshotResult;
+        client->callTool(tool.name, {}, &ok, &screenshotResult,
+                         QString(), m_correlationId);
+        if (ok) {
+            path = saveMcpImage(screenshotResult, QStringLiteral("browser"));
+            if (!path.isEmpty()) break;
+        }
+    }
+    if (!path.isEmpty()) observation[QStringLiteral("imagePath")] = path;
+    for (const McpClient::ToolDef &tool : client->tools()) {
+        if (!isMcpSnapshotTool(tool) || !mcpToolAcceptsEmptyArguments(tool)) continue;
+        bool ok = false;
+        QJsonObject snapshotResult;
+        client->callTool(tool.name, {}, &ok, &snapshotResult,
+                         QString(), m_correlationId);
+        if (ok) {
+            const QString snapshot = saveMcpSnapshot(snapshotResult, QStringLiteral("browser"));
+            if (!snapshot.isEmpty()) {
+                observation[QStringLiteral("snapshotPath")] = snapshot;
+                break;
+            }
+        }
+    }
+    return observation;
+}
+
 void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                                   const QString &argsJson, const QString &cwd)
 {
@@ -1278,6 +1474,8 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
             const QString action = args.value(QStringLiteral("action")).toString().toLower();
             return action == QLatin1String("save") || action == QLatin1String("forget")
                 || (action == QLatin1String("prune")
+                    && !args.value(QStringLiteral("dry_run")).toBool())
+                || (action == QLatin1String("decay")
                     && !args.value(QStringLiteral("dry_run")).toBool());
         }
         if (name == QLatin1String("graph")) {
@@ -1291,6 +1489,7 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
         QVariantMap out{{QStringLiteral("callId"), callId},
                         {QStringLiteral("name"), name},
                         {QStringLiteral("correlationId"), m_correlationId},
+                        {QStringLiteral("arguments"), AutomationArtifactStore::redact(argsJson).left(8192)},
                         {QStringLiteral("result"), QStringLiteral(
                             "[modo solo lectura: la tool '%1' fue bloqueada; "
                             "el revisor/verificador no puede modificar archivos ni "
@@ -1314,6 +1513,14 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
 
     QVariantMap out{{QStringLiteral("callId"), callId}, {QStringLiteral("name"), name}};
     out[QStringLiteral("correlationId")] = m_correlationId;
+    out[QStringLiteral("arguments")] = AutomationArtifactStore::redact(argsJson).left(8192);
+    const auto attachObservation = [&out](const QVariantMap &observation,
+                                          const QString &prefix) {
+        for (const QString &key : {QStringLiteral("imagePath"), QStringLiteral("snapshotPath")}) {
+            const QString path = observation.value(key).toString();
+            if (!path.isEmpty()) out[prefix + key.left(1).toUpper() + key.mid(1)] = path;
+        }
+    };
     bool ok = false;
     QString result;
 
@@ -1394,9 +1601,16 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                     out[QStringLiteral("deduplicated")] = true;
                     out[QStringLiteral("receipt")] = prior.toVariantMap();
                 } else {
+                    if (m_livePreviewEnabled)
+                        attachObservation(captureMcpObservation(client, target, {}),
+                                          QStringLiteral("before"));
                     QJsonObject rawResult;
                     result = client->callTool(bare, inner, &ok, &rawResult,
                                               key, m_correlationId);
+                    if (ok) {
+                        attachObservation(captureMcpObservation(client, target, rawResult),
+                                          QStringLiteral("after"));
+                    }
                     const QJsonObject structured =
                         rawResult.value(QStringLiteral("structuredContent")).toObject();
                     const QJsonObject serverReceipt =
@@ -1450,9 +1664,78 @@ void AgentToolRunner::executeTool(const QString &callId, const QString &name,
                 if (cc->serverName() == server) { c = cc; break; }
         }
         if (!c) result = QStringLiteral("[mcp: server/tool no encontrado: %1]").arg(name);
-        else    result = c->callTool(bare, args, &ok);
+        else {
+            if (m_livePreviewEnabled)
+                attachObservation(captureMcpObservation(
+                    c, c->serverName() + QLatin1Char('_') + bare, {}),
+                                  QStringLiteral("before"));
+            QJsonObject rawResult;
+            result = c->callTool(bare, args, &ok, &rawResult,
+                                 QString(), m_correlationId);
+            if (ok) {
+                attachObservation(captureMcpObservation(
+                    c, c->serverName() + QLatin1Char('_') + bare, rawResult),
+                                  QStringLiteral("after"));
+            }
+        }
     } else {
+        if (m_livePreviewEnabled && name.startsWith(QLatin1String("desktop_"))) {
+            const QString dir = AutomationArtifactStore::rootDir()
+                                + QStringLiteral("/runtime-observations");
+            QDir().mkpath(dir);
+            const QString path = dir + QStringLiteral("/desktop-before-%1.jpg")
+                .arg(QDateTime::currentMSecsSinceEpoch());
+            QString captureError;
+            const QString saved = DesktopAutomationBackend::saveCapture(
+                args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+                args.value(QStringLiteral("target_id")).toString(), path, &captureError);
+            if (!saved.isEmpty()) out[QStringLiteral("beforeImagePath")] = saved;
+        }
         result = runNative(name, args, cwd, out, &ok);
+        if (ok && m_livePreviewEnabled && name.startsWith(QLatin1String("desktop_"))
+            && name != QLatin1String("desktop_observe")) {
+            const QString dir = AutomationArtifactStore::rootDir()
+                                + QStringLiteral("/runtime-observations");
+            QDir().mkpath(dir);
+            const QString path = dir + QStringLiteral("/desktop-%1.jpg")
+                .arg(QDateTime::currentMSecsSinceEpoch());
+            QString captureError;
+            const QString saved = DesktopAutomationBackend::saveCapture(
+                args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
+                args.value(QStringLiteral("target_id")).toString(), path, &captureError);
+            if (!saved.isEmpty()) {
+                out[QStringLiteral("imagePath")] = saved;
+                out[QStringLiteral("afterImagePath")] = saved;
+                AutomationArtifactStore::cleanupRuntimeObservations();
+            }
+        }
+        if (ok && m_livePreviewEnabled && name.startsWith(QLatin1String("desktop_"))
+            && out.contains(QStringLiteral("imagePath"))
+            && !out.contains(QStringLiteral("afterImagePath"))) {
+            out[QStringLiteral("afterImagePath")] = out.value(QStringLiteral("imagePath"));
+        }
+    }
+
+    if (DesktopComputerUse::isDesktopTool(name)) {
+        if (!ok && DesktopRecoveryPolicy::shouldReobserve(result))
+            result += QStringLiteral(
+                "\n[recovery: stale/ambiguo; ejecutá desktop_snapshot o desktop_observe, "
+                "re-resolvé el target y no repitas la misma acción]");
+        QString strategy = out.value(QStringLiteral("desktopStrategy")).toString();
+        if (strategy.isEmpty())
+            strategy = name == QLatin1String("desktop_control_action")
+                    || name == QLatin1String("desktop_click_element")
+                ? QStringLiteral("uia") : QStringLiteral("native");
+        const DesktopComputerUse::ActionReceipt receipt = DesktopComputerUse::makeReceipt(
+            name, args, ok, result, m_sessionId, m_correlationId, strategy,
+            args.value(QStringLiteral("snapshot_id")).toString(),
+            out.value(QStringLiteral("desktopTarget")).toMap());
+        out[QStringLiteral("desktopReceipt")] = receipt.toVariantMap();
+        // El texto sigue siendo compacto para modelos pequeños; el receipt
+        // completo viaja en el resultado estructurado y queda persistido por el
+        // caller junto con la tool call.
+        result += QStringLiteral("\nreceipt_id=%1 status=%2")
+                      .arg(receipt.receiptId, receipt.status);
     }
 
     if (ok && out.value(QStringLiteral("isWrite")).toBool()) {
@@ -1482,6 +1765,24 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     QMutexLocker<QMutex> desktopLock(
         name.startsWith(QLatin1String("desktop_")) ? &desktopMutex : nullptr);
     if (ok) *ok = false;
+    if (DesktopComputerUse::isDesktopActionTool(name)) {
+        const qint64 now = QDateTime::currentMSecsSinceEpoch();
+        if (m_desktopLease.leaseId.isEmpty()) {
+            m_desktopLease.leaseId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            m_desktopLease.sessionId = m_sessionId;
+            m_desktopLease.expiresAt = now + 30 * 60 * 1000;
+        }
+        if (now > m_desktopLease.expiresAt || !m_desktopLease.consume()) {
+            return QStringLiteral("[desktop: lease expirado o límite de acciones alcanzado; "
+                                  "detené el run o iniciá una sesión nueva]");
+        }
+        out[QStringLiteral("desktopLease")] = m_desktopLease.toVariantMap();
+    }
+    auto validateDesktopSnapshot = [&](const QString &kind, const QString &target,
+                                       QString *error) {
+        return DesktopAutomationBackend::validateSnapshot(
+            kind, target, args.value(QStringLiteral("snapshot_id")).toString(), error);
+    };
     HarnessSkillsModule skillPolicy;
     skillPolicy.set = m_skillPolicyDeclared;
     skillPolicy.include = m_skillInclude;
@@ -1537,6 +1838,22 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         if (ok) *ok = true;
         return out;
     }
+    if (name == QLatin1String("desktop_snapshot")) {
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(
+            QStringLiteral("window"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        QString error;
+        const QVariantMap snap = DesktopAutomationBackend::snapshot(
+            kind, target, args.value(QStringLiteral("query")).toString(),
+            args.value(QStringLiteral("max")).toInt(120), false, &error);
+        if (snap.isEmpty()) return QStringLiteral("[desktop_snapshot: %1]").arg(error);
+        out[QStringLiteral("desktopSnapshot")] = snap;
+        out[QStringLiteral("desktopTarget")] = snap.value(QStringLiteral("target"));
+        if (ok) *ok = true;
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(snap)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_snapshot: ok]\nsnapshot=%1").arg(json);
+    }
     if (name == QLatin1String("desktop_windows")) {
         // Inventario estructurado de ventanas (título + pid + geometría). Estado
         // barato para orientarse y elegir un objetivo SIN gastar una captura (la
@@ -1590,35 +1907,75 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                          .arg(c.value(QStringLiteral("y")).toInt())
                          .arg(c.value(QStringLiteral("name")).toString());
         }
+        QString snapshotError;
+        const QVariantMap snap = DesktopAutomationBackend::snapshot(
+            QStringLiteral("window"), target, query, max, false, &snapshotError);
+        if (!snap.isEmpty()) {
+            out[QStringLiteral("desktopSnapshotId")] = snap.value(QStringLiteral("snapshotId"));
+            out[QStringLiteral("desktopSnapshot")] = snap;
+            out[QStringLiteral("desktopTarget")] = snap.value(QStringLiteral("target"));
+        }
+        const QString snapshotId = snap.value(QStringLiteral("snapshotId")).toString();
         if (ok) *ok = true;
         if (lines.isEmpty())
-            return QStringLiteral("[desktop_controls: 0 controles con nombre%1]")
+            return QStringLiteral("[desktop_controls: 0 controles con nombre%1]\nsnapshot_id=%2")
                 .arg(query.trimmed().isEmpty() ? QString()
-                                               : QStringLiteral(" para \"%1\"").arg(query));
+                                               : QStringLiteral(" para \"%1\"").arg(query))
+                .arg(snapshotId);
         return QStringLiteral("[desktop_controls: %1 control(es)]\n"
-                              "Usá el controlId con desktop_click_element (mismo target_id).\n%2")
-            .arg(lines.size()).arg(lines.join(QLatin1Char('\n')));
+                              "snapshot_id=%2\nUsá el controlId con desktop_click_element "
+                              "(mismo target_id).\n%3")
+            .arg(lines.size()).arg(snapshotId).arg(lines.join(QLatin1Char('\n')));
     }
     if (name == QLatin1String("desktop_click_element")) {
         QString error;
         QVariantMap trace;
         const bool good = DesktopAutomationBackend::clickElement(
             args.value(QStringLiteral("target_id")).toString(),
-            args.value(QStringLiteral("control_id")).toString(), &error, &trace);
+            args.value(QStringLiteral("control_id")).toString(),
+            args.value(QStringLiteral("snapshot_id")).toString(), &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = trace.value(QStringLiteral("strategy"),
+                                                               QStringLiteral("uia"));
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
         if (!good) return QStringLiteral("[desktop_click_element: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
             QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
         return QStringLiteral("[desktop_click_element: ok]\ntrace=%1").arg(json);
     }
-    if (name == QLatin1String("desktop_click_text")) {
+    if (name == QLatin1String("desktop_control_action")) {
         QString error;
         QVariantMap trace;
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        const QString control = args.value(QStringLiteral("control_id")).toString();
+        const bool good = DesktopAutomationBackend::validateSnapshot(
+            QStringLiteral("window"), target,
+            args.value(QStringLiteral("snapshot_id")).toString(), &error)
+            && DesktopAutomationBackend::controlAction(
+                target, control, args.value(QStringLiteral("action")).toString(),
+                args.value(QStringLiteral("value")).toString(), &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = trace.value(QStringLiteral("strategy"),
+                                                               QStringLiteral("uia-pattern"));
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
+        if (ok) *ok = good;
+        if (!good) return QStringLiteral("[desktop_control_action: %1]").arg(error);
+        const QString json = QString::fromUtf8(QJsonDocument(
+            QJsonObject::fromVariantMap(trace)).toJson(QJsonDocument::Compact));
+        return QStringLiteral("[desktop_control_action: ok]\ntrace=%1").arg(json);
+    }
+    if (name == QLatin1String("desktop_click_text")) {
+        QString error;
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        if (!validateDesktopSnapshot(kind, target, &error))
+            return QStringLiteral("[desktop_click_text: %1]").arg(error);
+        QVariantMap trace;
         const bool good = DesktopAutomationBackend::clickText(
-            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
-            args.value(QStringLiteral("target_id")).toString(),
+            kind, target,
             args.value(QStringLiteral("text")).toString(),
             QStringLiteral("left"), 1, &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = QStringLiteral("ocr");
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
         if (!good) return QStringLiteral("[desktop_click_text: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
@@ -1627,9 +1984,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_find_image")) {
         QString error;
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        if (!validateDesktopSnapshot(kind, target, &error))
+            return QStringLiteral("[desktop_find_image: %1]").arg(error);
         const QVariantMap match = DesktopAutomationBackend::findImage(
-            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
-            args.value(QStringLiteral("target_id")).toString(),
+            kind, target,
             args.value(QStringLiteral("template_path")).toString(),
             args.value(QStringLiteral("threshold")).toDouble(0.88),
             args.value(QStringLiteral("min_scale")).toDouble(1.0),
@@ -1646,16 +2006,21 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_click_image")) {
         QString error;
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        if (!validateDesktopSnapshot(kind, target, &error))
+            return QStringLiteral("[desktop_click_image: %1]").arg(error);
         QVariantMap trace;
         const bool good = DesktopAutomationBackend::clickImage(
-            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
-            args.value(QStringLiteral("target_id")).toString(),
+            kind, target,
             args.value(QStringLiteral("template_path")).toString(),
             args.value(QStringLiteral("threshold")).toDouble(0.88),
             args.value(QStringLiteral("min_scale")).toDouble(1.0),
             args.value(QStringLiteral("max_scale")).toDouble(1.0),
             args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
             &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = QStringLiteral("template");
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
         if (!good) return QStringLiteral("[desktop_click_image: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
@@ -1692,6 +2057,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const QString kind = args.value(QStringLiteral("scope_kind")).toString(
             QStringLiteral("screen"));
         const QString target = args.value(QStringLiteral("target_id")).toString();
+        QString snapshotError;
+        const QVariantMap snap = DesktopAutomationBackend::snapshot(
+            kind, target, QString(), 120, false, &snapshotError);
+        if (snap.isEmpty()) return QStringLiteral("[desktop_observe: %1]").arg(snapshotError);
         const QString dir = AutomationArtifactStore::rootDir()
                             + QStringLiteral("/runtime-observations");
         QDir().mkpath(dir);
@@ -1704,22 +2073,31 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         // Path de la captura para que el loop la inyecte como imagen al contexto
         // (el modelo VE la observación que pidió, no sólo su ruta en texto).
         out[QStringLiteral("imagePath")] = saved;
+        out[QStringLiteral("desktopSnapshotId")] = snap.value(QStringLiteral("snapshotId"));
+        out[QStringLiteral("desktopSnapshot")] = snap;
+        out[QStringLiteral("desktopTarget")] = snap.value(QStringLiteral("target"));
         if (ok) *ok = true;
         return QStringLiteral(
-            "[desktop_observe]\nimage_path=%1\nwidth=%2\nheight=%3\n"
+            "[desktop_observe]\nsnapshot_id=%4\nimage_path=%1\nwidth=%2\nheight=%3\n"
             "La captura es la observación actual; comparala con la evidencia Teach antes de actuar.")
-            .arg(saved).arg(image.width()).arg(image.height());
+            .arg(saved).arg(image.width()).arg(image.height())
+            .arg(snap.value(QStringLiteral("snapshotId")).toString());
     }
     if (name == QLatin1String("desktop_click")) {
         QString error;
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        if (!validateDesktopSnapshot(kind, target, &error))
+            return QStringLiteral("[desktop_click: %1]").arg(error);
         QVariantMap trace;
         const bool good = DesktopAutomationBackend::click(
-            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
-            args.value(QStringLiteral("target_id")).toString(),
+            kind, target,
             args.value(QStringLiteral("x")).toDouble(),
             args.value(QStringLiteral("y")).toDouble(),
             args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
             &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = QStringLiteral("foreground-pointer");
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
         if (!good) return QStringLiteral("[desktop_click: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
@@ -1728,6 +2106,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
     }
     if (name == QLatin1String("desktop_stroke")) {
         QString error;
+        const QString kind = args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen"));
+        const QString target = args.value(QStringLiteral("target_id")).toString();
+        if (!validateDesktopSnapshot(kind, target, &error))
+            return QStringLiteral("[desktop_stroke: %1]").arg(error);
         QVariantMap trace;
         QVariantList points;
         for (const QJsonValue &v : args.value(QStringLiteral("points")).toArray()) {
@@ -1736,12 +2118,13 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                                   {QStringLiteral("y"), o.value(QStringLiteral("y")).toDouble()}};
         }
         const bool good = DesktopAutomationBackend::stroke(
-            args.value(QStringLiteral("scope_kind")).toString(QStringLiteral("screen")),
-            args.value(QStringLiteral("target_id")).toString(),
+            kind, target,
             points,
             args.value(QStringLiteral("button")).toString(QStringLiteral("left")),
             args.value(QStringLiteral("hold_ms")).toInt(8),
             &error, &trace);
+        out[QStringLiteral("desktopStrategy")] = QStringLiteral("foreground-stroke");
+        out[QStringLiteral("desktopTarget")] = trace.value(QStringLiteral("target")).toMap();
         if (ok) *ok = good;
         if (!good) return QStringLiteral("[desktop_stroke: %1]").arg(error);
         const QString json = QString::fromUtf8(QJsonDocument(
@@ -1963,6 +2346,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         for (auto it = state.cbegin(); it != state.cend(); ++it) out[it.key()] = it.value();
         if (ok) *ok = state.value(QStringLiteral("ok")).toBool();
         return QString::fromUtf8(QJsonDocument::fromVariant(state).toJson(QJsonDocument::Compact));
+    }
+    if (name == QLatin1String("work_status")) {
+        const int maxClaims = qBound(1, args.value(QStringLiteral("max_claims")).toInt(8), 50);
+        const QString status = WorkRegistry::formatActive(cwd, m_sessionId, maxClaims);
+        if (ok) *ok = true;
+        return status;
     }
     if (name == QLatin1String("context_scout")) {
         const QString query = args.value(QStringLiteral("query")).toString().trimmed();
@@ -3064,6 +3453,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         // query devuelve ambos.
         const QString action = args.value(QStringLiteral("action")).toString().trimmed().toLower();
         const QString scope = args.value(QStringLiteral("scope")).toString();
+        if (action == QLatin1String("save") || action == QLatin1String("forget")
+            || (action == QLatin1String("prune") || action == QLatin1String("decay"))
+                && !args.value(QStringLiteral("dry_run")).toBool(false))
+            out[QStringLiteral("isWrite")] = true;
         if (action == QLatin1String("save")) {
             const QString content = args.value(QStringLiteral("content")).toString().trimmed();
             if (content.isEmpty()) return QStringLiteral("[memory save: 'content' vacío]");
@@ -3173,6 +3566,15 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                 ? QString::fromUtf8(QJsonDocument(GraphStore::queryPacket(cwd, name, depth))
                                         .toJson(QJsonDocument::Compact))
                 : GraphStore::query(cwd, name, depth);
+            if (ok) *ok = true;
+            return res;
+        }
+        if (action == QLatin1String("decay")) {
+            const int maxAgeDays = args.value(QStringLiteral("max_age_days")).toInt(90);
+            const double minValue = args.value(QStringLiteral("min_value")).toDouble(0.28);
+            const bool dryRun = args.value(QStringLiteral("dry_run")).toBool(false);
+            const QString scope = args.value(QStringLiteral("scope")).toString();
+            const QString res = MemoryStore::decay(cwd, scope, maxAgeDays, minValue, dryRun);
             if (ok) *ok = true;
             return res;
         }

@@ -35,6 +35,18 @@ QJsonObject build(const QString &root, const QString &query, int maxFacts, int m
 {
     maxFacts = qBound(0, maxFacts, 50);
     maxEdges = qBound(0, maxEdges, 100);
+    const QJsonArray memories = maxFacts > 0
+        ? MemoryStore::recallFacts(root, query, QStringLiteral("project"), maxFacts)
+        : QJsonArray();
+    QJsonArray decisions;
+    QJsonArray supportingFacts;
+    for (const QJsonValue &value : memories) {
+        const QJsonObject memory = value.toObject();
+        if (memory.value(QStringLiteral("type")).toString() == QLatin1String("decision"))
+            decisions.append(memory);
+        else
+            supportingFacts.append(memory);
+    }
     const QString facts = maxFacts > 0
         ? MemoryStore::recall(root, query, QStringLiteral("project"), maxFacts)
         : QString();
@@ -85,13 +97,28 @@ QJsonObject build(const QString &root, const QString &query, int maxFacts, int m
     return {{QStringLiteral("schemaVersion"), 1},
             {QStringLiteral("query"), query},
             {QStringLiteral("factsText"), facts},
+            {QStringLiteral("decisions"), decisions},
+            {QStringLiteral("supportingFacts"), supportingFacts},
             {QStringLiteral("nodes"), nodes},
             {QStringLiteral("edges"), edges},
             {QStringLiteral("sources"), sources},
+            {QStringLiteral("authority"), QJsonObject{
+                {QStringLiteral("precedence"), QJsonArray{
+                    QStringLiteral("source_and_tests"),
+                    QStringLiteral("accepted_decision"),
+                    QStringLiteral("verified_memory"),
+                    QStringLiteral("unreviewed_inference"),
+                    QStringLiteral("historical_session")}},
+                {QStringLiteral("rule"), QStringLiteral(
+                    "El código y los tests actuales son la fuente de verdad; una decisión "
+                    "sólo guía al agente mientras siga vigente y respaldada.")},
+                {QStringLiteral("decisionCount"), decisions.size()},
+                {QStringLiteral("supportingFactCount"), supportingFacts.size()}}},
             {QStringLiteral("receipt"), QJsonObject{
                 {QStringLiteral("maxFacts"), maxFacts},
                 {QStringLiteral("maxEdges"), maxEdges},
                 {QStringLiteral("factChars"), facts.size()},
+                {QStringLiteral("decisionCount"), decisions.size()},
                 {QStringLiteral("edgeCount"), edges.size()},
                 {QStringLiteral("sourceCount"), sources.size()},
              {QStringLiteral("budgetCut"), budgetCut}}}};
@@ -101,9 +128,54 @@ QString format(const QJsonObject &packet, int maxChars)
 {
     if (maxChars <= 0) maxChars = 12000;
     QStringList lines{QStringLiteral("[knowledge-packet · evidencia durable]")};
-    const QString facts = packet.value(QStringLiteral("factsText")).toString().trimmed();
-    if (!facts.isEmpty() && !facts.startsWith(QLatin1Char('['))) {
-        lines << QStringLiteral("Hechos:") << facts;
+    const QJsonObject authority = packet.value(QStringLiteral("authority")).toObject();
+    if (!authority.isEmpty()) {
+        lines << QStringLiteral("Autoridad: %1")
+                     .arg(authority.value(QStringLiteral("rule")).toString());
+    }
+
+    const QJsonArray decisions = packet.value(QStringLiteral("decisions")).toArray();
+    if (!decisions.isEmpty()) {
+        lines << QStringLiteral("Decisiones vigentes (no reemplazan código/tests actuales):");
+        for (const QJsonValue &value : decisions) {
+            const QJsonObject decision = value.toObject();
+            QString line = QStringLiteral("- %1")
+                .arg(decision.value(QStringLiteral("content")).toString());
+            const QString verification = decision.value(QStringLiteral("verification"))
+                                              .toString(QStringLiteral("inferred"));
+            line += QStringLiteral(" [verification=%1 conf=%2]")
+                .arg(verification)
+                .arg(decision.value(QStringLiteral("confidence")).toDouble(0.0), 0, 'g', 2);
+            const QString source = decision.value(QStringLiteral("source")).toString();
+            if (!source.isEmpty()) line += QStringLiteral(" · src=%1").arg(source);
+            const QString supersedes = decision.value(QStringLiteral("supersedes")).toString();
+            if (!supersedes.isEmpty()) line += QStringLiteral(" · supersedes=%1").arg(supersedes);
+            lines << line;
+        }
+    }
+
+    const QJsonArray supporting = packet.value(QStringLiteral("supportingFacts")).toArray();
+    if (!supporting.isEmpty()) {
+        lines << QStringLiteral("Hechos de apoyo:");
+        for (const QJsonValue &value : supporting) {
+            const QJsonObject fact = value.toObject();
+            QString line = QStringLiteral("- %1")
+                .arg(fact.value(QStringLiteral("content")).toString());
+            const QString verification = fact.value(QStringLiteral("verification"))
+                                             .toString(QStringLiteral("inferred"));
+            line += QStringLiteral(" [verification=%1]").arg(verification);
+            const QString source = fact.value(QStringLiteral("source")).toString();
+            if (!source.isEmpty()) line += QStringLiteral(" · src=%1").arg(source);
+            lines << line;
+        }
+    }
+
+    // Compatibilidad con paquetes construidos por versiones anteriores o con
+    // maxFacts=0: si no hay arrays estructurados, conserva la salida histórica.
+    if (decisions.isEmpty() && supporting.isEmpty()) {
+        const QString facts = packet.value(QStringLiteral("factsText")).toString().trimmed();
+        if (!facts.isEmpty() && !facts.startsWith(QLatin1Char('[')))
+            lines << QStringLiteral("Hechos:") << facts;
     }
     const QJsonArray edges = packet.value(QStringLiteral("edges")).toArray();
     if (!edges.isEmpty()) {

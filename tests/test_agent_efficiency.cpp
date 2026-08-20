@@ -20,6 +20,7 @@ private slots:
     void workflow_budgetAndSnapshot();
     void workflow_gateVerdictAndBoundedRepair();
     void workflowRunner_dispatchApprovalConditionAndFinish();
+    void workflowRunner_pauseResumeAndStep();
     void workflowVisual_roundTripPreservesAdvancedFields();
 };
 
@@ -250,6 +251,31 @@ void AgentEfficiencyTests::workflowRunner_dispatchApprovalConditionAndFinish()
     QCOMPARE(finished.size(), 1);
     QVERIFY(finished.first().at(0).toBool());
     QCOMPARE(runner.snapshot().value("status").toString(), QStringLiteral("completed"));
+}
+
+void AgentEfficiencyTests::workflowRunner_pauseResumeAndStep()
+{
+    const QJsonObject def{{"schemaVersion", 1}, {"entry", "one"},
+        {"steps", QJsonObject{
+            {"one", QJsonObject{{"type", "agent"}, {"next", "two"}}},
+            {"two", QJsonObject{{"type", "agent"}, {"next", "done"}}},
+            {"done", QJsonObject{{"type", "finish"}}}}}};
+    WorkflowRunner runner;
+    QSignalSpy steps(&runner, &WorkflowRunner::stepRequested);
+    QSignalSpy finished(&runner, &WorkflowRunner::finished);
+    QVERIFY(runner.start(def, QStringLiteral("pause-step")));
+    QCOMPARE(steps.size(), 1);
+    runner.setPaused(true);
+    runner.completeCurrent(QStringLiteral("one"));
+    QCOMPARE(steps.size(), 1);
+    QVERIFY(runner.paused());
+    runner.step();
+    QCOMPARE(steps.size(), 2);
+    runner.completeCurrent(QStringLiteral("two"));
+    QCOMPARE(steps.size(), 2);
+    runner.setPaused(false);
+    QCOMPARE(finished.size(), 1);
+    QVERIFY(finished.first().at(0).toBool());
 }
 
 void AgentEfficiencyTests::workflowVisual_roundTripPreservesAdvancedFields()

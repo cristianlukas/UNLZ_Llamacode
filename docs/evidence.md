@@ -12,3 +12,7 @@ exportado; no constituye una firma criptográfica ni prueba de autoría.
 El exportador no vuelve a ejecutar la Task, no incluye secretos y no inventa
 datos que no hayan sido persistidos por el historial. La ruta headless
 `exportRunEvidenceTo(ownerId, path)` está disponible para integraciones locales.
+
+Las acciones Computer Use agregan receipts `desktopReceipt` con estado,
+estrategia de grounding, snapshot asociado, hashes de payload/resultado y target.
+Los detalles de campos sensibles se redactan antes de persistirlos.

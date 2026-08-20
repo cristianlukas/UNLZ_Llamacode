@@ -18,7 +18,9 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include "core/agent/AgentToolRunner.h"
+#include "core/agent/AgentLifecycle.h"
 #include "core/agent/AgentEventLog.h"
+#include "core/agent/WorkRegistry.h"
 #include "core/agent/SubAgentRunner.h"
 
 class CamofoxStub : public QTcpServer
@@ -86,6 +88,8 @@ private slots:
     void repoSlice_defaultsToCompactEvidence();
     void contextScoutAndFetch_validateHandle();
     void contextStatus_reportsPersistentIndex();
+    void workStatus_reportsOtherSessions();
+    void mutationGuard_detectsOpaqueShellAndDeclaredPaths();
     void graphPacketAndDoctor_areExposedByTool();
     void recentActions_tailsEventLogForSession();
     void desktopWindows_returnsStructuredInventory();
@@ -585,6 +589,35 @@ void AgentToolsTests::contextStatus_reportsPersistentIndex()
     QVERIFY(status.value("ok").toBool());
     QVERIFY(status.value("result").toString().contains("files"));
     QVERIFY(status.value("result").toString().contains("chunks"));
+}
+
+void AgentToolsTests::workStatus_reportsOtherSessions()
+{
+    const QString claim = WorkRegistry::acquire(
+        m_dir.path(), QStringLiteral("S2"), QStringLiteral("agent-b"),
+        QStringLiteral("revisar el módulo compartido"), {QStringLiteral("src/shared.cpp")});
+    QVERIFY(!claim.isEmpty());
+    m_runner->setSessionId(QStringLiteral("S1"));
+    const QVariantMap status = call("work_status", {});
+    QVERIFY(status.value("ok").toBool());
+    QVERIFY(status.value("result").toString().contains(QStringLiteral("módulo compartido")));
+    QVERIFY(status.value("result").toString().contains(QStringLiteral("src/shared.cpp")));
+}
+
+void AgentToolsTests::mutationGuard_detectsOpaqueShellAndDeclaredPaths()
+{
+    QVERIFY(!AgentLifecycle::shellCommandMayMutate(QStringLiteral("git status --short")));
+    QVERIFY(!AgentLifecycle::shellCommandMayMutate(QStringLiteral("cmake --build build/Debug")));
+    QVERIFY(AgentLifecycle::shellCommandMayMutate(QStringLiteral("echo hi > generated.txt")));
+    QVERIFY(AgentLifecycle::shellCommandMayMutate(QStringLiteral("git apply change.patch")));
+    QVERIFY(AgentLifecycle::shellCommandMayMutate(QStringLiteral("Set-Content out.txt hi")));
+
+    const QJsonObject input{
+        {QStringLiteral("arguments"), QJsonObject{
+            {QStringLiteral("command"), QStringLiteral("echo hi > generated.txt")},
+            {QStringLiteral("changed_paths"), QJsonArray{QStringLiteral("generated.txt")}}}}};
+    QCOMPARE(AgentLifecycle::changedPathsFromToolInput(QStringLiteral("mcp_call_tool"), input),
+             QStringList{QStringLiteral("generated.txt")});
 }
 
 void AgentToolsTests::graphPacketAndDoctor_areExposedByTool()

@@ -8,6 +8,8 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QCryptographicHash>
+#include <QLockFile>
+#include <QSaveFile>
 #include <QSet>
 #include <QPair>
 #include <algorithm>
@@ -106,11 +108,16 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
              double importance, double surprise, const QString &verification,
              const QString &supersedes)
 {
+    if (cwd.trimmed().isEmpty()) return QStringLiteral("[memory save: cwd vacío]");
     const QString text = content.trimmed();
     if (text.isEmpty()) return QStringLiteral("[memory save: 'content' vacío]");
 
     const QString path = jsonlPath(cwd);
     QDir().mkpath(QFileInfo(path).absolutePath());
+    QLockFile lock(path + QStringLiteral(".lock"));
+    lock.setStaleLockTime(10 * 60 * 1000);
+    if (!lock.tryLock(5000))
+        return QStringLiteral("[memory save: memoria ocupada por otra sesión]");
 
     const QString ts = QDateTime::currentDateTime().toString(Qt::ISODate);
     const QString id = makeId(text, ts);
@@ -150,12 +157,16 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
             rows.append(updated);
         }
         f.close();
-        if (changed && f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        if (changed) {
+            QSaveFile rewritten(path);
+            if (!rewritten.open(QIODevice::WriteOnly | QIODevice::Text))
+                return QStringLiteral("[no se pudo reescribir la memoria: %1]").arg(path);
             for (const QJsonObject &row : std::as_const(rows)) {
-                f.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
-                f.write("\n");
+                rewritten.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
+                rewritten.write("\n");
             }
-            f.close();
+            if (!rewritten.commit())
+                return QStringLiteral("[no se pudo confirmar la memoria: %1]").arg(path);
         }
     }
     if (!f.open(QIODevice::Append | QIODevice::Text))
@@ -168,15 +179,20 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
              fact.value(QStringLiteral("type")).toString());
 }
 
-QString recall(const QString &cwd, const QString &query, const QString &scope, int k)
+QJsonArray recallFacts(const QString &cwd, const QString &query,
+                       const QString &scope, int k)
 {
+    if (cwd.trimmed().isEmpty()) return {};
     if (k <= 0) k = 8;
     k = qBound(1, k, 30);
+    // Mantenimiento conservador y amortizado: evita que el histórico stale o
+    // de muy bajo valor domine el contexto sin convertir cada recall en una
+    // reescritura del JSONL.
+    maintain(cwd, scope, 24);
     const QString path = jsonlPath(cwd);
 
     QFile f(path);
-    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-        return QStringLiteral("[memoria estructurada vacía]");
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return {};
 
     const QString scopeFilter = scope.trimmed().toLower();
     const QStringList qterms = terms(query);
@@ -221,16 +237,28 @@ QString recall(const QString &cwd, const QString &query, const QString &scope, i
     }
     f.close();
 
+    std::stable_sort(rows.begin(), rows.end(),
+                     [](const Row &a, const Row &b) { return a.score > b.score; });
+
+    QJsonArray out;
+    for (int i = 0; i < rows.size() && i < k; ++i) {
+        QJsonObject o = rows[i].obj;
+        o.insert(QStringLiteral("_score"), rows[i].score);
+        out.append(o);
+    }
+    return out;
+}
+
+QString recall(const QString &cwd, const QString &query, const QString &scope, int k)
+{
+    const QJsonArray rows = recallFacts(cwd, query, scope, k);
     if (rows.isEmpty())
         return query.isEmpty() ? QStringLiteral("[memoria estructurada vacía]")
                                : QStringLiteral("[sin hechos para: %1]").arg(query);
 
-    std::stable_sort(rows.begin(), rows.end(),
-                     [](const Row &a, const Row &b) { return a.score > b.score; });
-
     QStringList out;
-    for (int i = 0; i < rows.size() && i < k; ++i) {
-        const QJsonObject &o = rows[i].obj;
+    for (const QJsonValue &value : rows) {
+        const QJsonObject o = value.toObject();
         const QString src = o.value(QStringLiteral("source")).toString();
         const QString id = o.value(QStringLiteral("id")).toString();
         QString line = QStringLiteral("- [%1/%2] %3")
@@ -299,7 +327,12 @@ QVector<ClaimEvidence> verifyClaims(const QString &cwd, const QStringList &claim
 QString forget(const QString &cwd, const QString &query, const QString &scope,
                const QString &mode)
 {
+    if (cwd.trimmed().isEmpty()) return QStringLiteral("[forget: cwd vacío]");
     const QString path = jsonlPath(cwd);
+    QLockFile lock(path + QStringLiteral(".lock"));
+    lock.setStaleLockTime(10 * 60 * 1000);
+    if (!lock.tryLock(5000))
+        return QStringLiteral("[forget: memoria ocupada por otra sesión]");
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
         return QStringLiteral("[memoria estructurada vacía]");
@@ -342,13 +375,15 @@ QString forget(const QString &cwd, const QString &query, const QString &scope,
     if (matched == 0) return QStringLiteral("[forget: nada coincide]");
 
     const QVector<QJsonObject> &outRows = del ? kept : all;
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+    QSaveFile outFile(path);
+    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text))
         return QStringLiteral("[forget: no se pudo reescribir %1]").arg(path);
     for (const QJsonObject &o : outRows) {
-        f.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
-        f.write("\n");
+        outFile.write(QJsonDocument(o).toJson(QJsonDocument::Compact));
+        outFile.write("\n");
     }
-    f.close();
+    if (!outFile.commit())
+        return QStringLiteral("[forget: no se pudo confirmar %1]").arg(path);
     return QStringLiteral("[olvidados %1 hecho(s) · modo=%2]")
         .arg(matched).arg(del ? QStringLiteral("delete") : QStringLiteral("stale"));
 }
@@ -412,10 +447,15 @@ double jaccard(const QSet<QString> &a, const QSet<QString> &b)
 QString prune(const QString &cwd, const QString &scope, int maxKeep,
               const QString &mode, bool dryRun)
 {
+    if (cwd.trimmed().isEmpty()) return QStringLiteral("[prune: cwd vacío]");
     if (maxKeep <= 0) maxKeep = 50;
     maxKeep = qBound(1, maxKeep, 1000);
 
     const QString path = jsonlPath(cwd);
+    QLockFile lock(path + QStringLiteral(".lock"));
+    lock.setStaleLockTime(10 * 60 * 1000);
+    if (!lock.tryLock(5000))
+        return QStringLiteral("[prune: memoria ocupada por otra sesión]");
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
         return QStringLiteral("[memoria estructurada vacía]");
@@ -498,19 +538,133 @@ QString prune(const QString &cwd, const QString &scope, int maxKeep,
 
     // Aplicar: borrar o marcar stale los evictos, reescribiendo el JSONL.
     const bool del = mode.trimmed().toLower() == QLatin1String("delete");
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+    QSaveFile outFile(path);
+    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text))
         return QStringLiteral("[prune: no se pudo reescribir %1]").arg(path);
     for (Row &r : rows) {
         if (r.evict) {
             if (del) continue;
             r.obj.insert(QStringLiteral("stale"), true);
         }
-        f.write(QJsonDocument(r.obj).toJson(QJsonDocument::Compact));
-        f.write("\n");
+        outFile.write(QJsonDocument(r.obj).toJson(QJsonDocument::Compact));
+        outFile.write("\n");
     }
-    f.close();
+    if (!outFile.commit())
+        return QStringLiteral("[prune: no se pudo confirmar %1]").arg(path);
     return report + QStringLiteral("\n· modo=%1")
         .arg(del ? QStringLiteral("delete") : QStringLiteral("stale"));
+}
+
+QString decay(const QString &cwd, const QString &scope, int maxAgeDays,
+              double minValue, bool dryRun)
+{
+    if (cwd.trimmed().isEmpty()) return QStringLiteral("[decay: cwd vacío]");
+    maxAgeDays = qBound(30, maxAgeDays, 3650);
+    minValue = qBound(0.05, minValue, 0.75);
+
+    const QString path = jsonlPath(cwd);
+    QLockFile lock(path + QStringLiteral(".lock"));
+    lock.setStaleLockTime(10 * 60 * 1000);
+    if (!lock.tryLock(5000))
+        return QStringLiteral("[decay: memoria ocupada por otra sesión]");
+
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return QStringLiteral("[decay: memoria estructurada vacía]");
+
+    const QString scopeFilter = scope.trimmed().toLower();
+    const QDateTime now = QDateTime::currentDateTime();
+    QVector<QJsonObject> rows;
+    QStringList sample;
+    int candidates = 0;
+    int active = 0;
+    while (!f.atEnd()) {
+        const QByteArray line = f.readLine().trimmed();
+        if (line.isEmpty()) continue;
+        QJsonObject row = QJsonDocument::fromJson(line).object();
+        if (row.isEmpty()) continue;
+        const bool stale = row.value(QStringLiteral("stale")).toBool(false);
+        const bool inScope = scopeFilter.isEmpty()
+            || row.value(QStringLiteral("scope")).toString() == scopeFilter;
+        const QString type = row.value(QStringLiteral("type")).toString().toLower();
+        const QString verification = row.value(QStringLiteral("verification")).toString().toLower();
+        const bool protectedFact = row.value(QStringLiteral("importance")).toDouble(0.0) >= 0.75
+            || row.value(QStringLiteral("useCount")).toInt(0) >= 3
+            || ((type == QLatin1String("decision") || type == QLatin1String("preference"))
+                && (verification == QLatin1String("user")
+                    || verification == QLatin1String("test")
+                    || verification == QLatin1String("tool")));
+        const QDateTime ts = QDateTime::fromString(
+            row.value(QStringLiteral("ts")).toString(), Qt::ISODate);
+        const double ageDays = ts.isValid()
+            ? qMax(0.0, double(ts.daysTo(now)))
+            : double(maxAgeDays + 1);
+        const bool candidate = !stale && inScope && !protectedFact
+            && ageDays >= maxAgeDays && factValue(row) <= minValue;
+        if (!stale && inScope) ++active;
+        if (candidate) {
+            ++candidates;
+            if (sample.size() < 5)
+                sample << QStringLiteral("  ✗ %1 (%2d, value=%3)")
+                    .arg(row.value(QStringLiteral("content")).toString().left(60))
+                    .arg(qRound(ageDays)).arg(factValue(row), 0, 'f', 2);
+            if (!dryRun) row.insert(QStringLiteral("stale"), true);
+        }
+        rows.append(row);
+    }
+    f.close();
+
+    const QString report = QStringLiteral("[decay%1: %2 candidato(s), %3 activo(s)]\n")
+        .arg(dryRun ? QStringLiteral(" dry-run") : QString())
+        .arg(candidates).arg(active)
+        + sample.join(QLatin1Char('\n'));
+    if (dryRun || candidates == 0) return report;
+
+    QSaveFile outFile(path);
+    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text))
+        return QStringLiteral("[decay: no se pudo reescribir %1]").arg(path);
+    for (const QJsonObject &row : std::as_const(rows)) {
+        outFile.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
+        outFile.write("\n");
+    }
+    if (!outFile.commit())
+        return QStringLiteral("[decay: no se pudo confirmar %1]").arg(path);
+    return report + QStringLiteral("· modo=stale");
+}
+
+QString maintain(const QString &cwd, const QString &scope, int intervalHours)
+{
+    if (cwd.trimmed().isEmpty()) return QStringLiteral("[memory maintenance: cwd vacío]");
+    intervalHours = qBound(1, intervalHours, 24 * 30);
+    const QString marker = QDir::cleanPath(
+        cwd + QStringLiteral("/.llamacode/memory_maintenance.json"));
+    QDir().mkpath(QFileInfo(marker).absolutePath());
+    QLockFile gate(marker + QStringLiteral(".lock"));
+    gate.setStaleLockTime(10 * 60 * 1000);
+    if (!gate.tryLock(100))
+        return QStringLiteral("[memory maintenance: otra sesión ya lo ejecuta]");
+
+    QFile previous(marker);
+    if (previous.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QJsonObject state = QJsonDocument::fromJson(previous.readAll()).object();
+        const QDateTime last = QDateTime::fromString(
+            state.value(QStringLiteral("lastRun")).toString(), Qt::ISODate);
+        if (last.isValid() && last.secsTo(QDateTime::currentDateTime())
+                < intervalHours * 3600)
+            return QStringLiteral("[memory maintenance: no requerido todavía]");
+    }
+
+    const QString result = decay(cwd, scope, 90, 0.28, false);
+    QSaveFile out(marker);
+    if (out.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        const QJsonObject state{
+            {QStringLiteral("lastRun"), QDateTime::currentDateTime().toString(Qt::ISODate)},
+            {QStringLiteral("scope"), scope.trimmed().toLower()},
+            {QStringLiteral("result"), result.left(512)}};
+        out.write(QJsonDocument(state).toJson(QJsonDocument::Compact));
+        out.commit();
+    }
+    return QStringLiteral("[memory maintenance: ejecutado] ") + result;
 }
 
 }  // namespace MemoryStore

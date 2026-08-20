@@ -7,9 +7,11 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QFile>
 #include <QDir>
 #include <QFileInfo>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -30,6 +32,7 @@ private slots:
     void memory_pruneBudget();
     void memory_pruneRedundant();
     void memory_pruneDryRun();
+    void memory_decay_marksOnlyOldLowValueFacts();
     void memory_metadataAffectsRanking();
     void memory_newFieldsArePersisted();
     void memory_skillTypeIsPersistedAndRecalled();
@@ -164,6 +167,58 @@ void MemoryGraphTests::memory_pruneDryRun()
     // dry_run NO toca nada: recall sigue devolviendo los 4.
     const QString out = MemoryStore::recall(dir.path(), "", "", 30);
     QCOMPARE(out.count(QStringLiteral("unico")), 4);
+}
+
+void MemoryGraphTests::memory_decay_marksOnlyOldLowValueFacts()
+{
+    QTemporaryDir dir;
+    const QString path = MemoryStore::jsonlPath(dir.path());
+    QVERIFY(QDir().mkpath(QFileInfo(path).absolutePath()));
+    const QString oldTs = QDateTime::currentDateTime().addDays(-180).toString(Qt::ISODate);
+    const QString recentTs = QDateTime::currentDateTime().toString(Qt::ISODate);
+    const QJsonObject oldFact{
+        {QStringLiteral("id"), QStringLiteral("old-fact")},
+        {QStringLiteral("content"), QStringLiteral("old low value observation")},
+        {QStringLiteral("scope"), QStringLiteral("project")},
+        {QStringLiteral("type"), QStringLiteral("fact")},
+        {QStringLiteral("confidence"), 0.1}, {QStringLiteral("importance"), 0.0},
+        {QStringLiteral("surprise"), 0.0}, {QStringLiteral("verification"), QStringLiteral("inferred")},
+        {QStringLiteral("useCount"), 0}, {QStringLiteral("ts"), oldTs}};
+    const QJsonObject recentFact{
+        {QStringLiteral("id"), QStringLiteral("recent-fact")},
+        {QStringLiteral("content"), QStringLiteral("recent low value observation")},
+        {QStringLiteral("scope"), QStringLiteral("project")},
+        {QStringLiteral("type"), QStringLiteral("fact")},
+        {QStringLiteral("confidence"), 0.1}, {QStringLiteral("importance"), 0.0},
+        {QStringLiteral("surprise"), 0.0}, {QStringLiteral("verification"), QStringLiteral("inferred")},
+        {QStringLiteral("useCount"), 0}, {QStringLiteral("ts"), recentTs}};
+    const QJsonObject protectedDecision{
+        {QStringLiteral("id"), QStringLiteral("protected-decision")},
+        {QStringLiteral("content"), QStringLiteral("old verified project decision")},
+        {QStringLiteral("scope"), QStringLiteral("project")},
+        {QStringLiteral("type"), QStringLiteral("decision")},
+        {QStringLiteral("confidence"), 0.1}, {QStringLiteral("importance"), 0.0},
+        {QStringLiteral("surprise"), 0.0}, {QStringLiteral("verification"), QStringLiteral("user")},
+        {QStringLiteral("useCount"), 0}, {QStringLiteral("ts"), oldTs}};
+    QFile out(path);
+    QVERIFY(out.open(QIODevice::WriteOnly | QIODevice::Text));
+    for (const QJsonObject &row : {oldFact, recentFact, protectedDecision}) {
+        out.write(QJsonDocument(row).toJson(QJsonDocument::Compact));
+        out.write("\n");
+    }
+    out.close();
+
+    const QString report = MemoryStore::decay(dir.path(), "project", 90, 0.28, false);
+    QVERIFY(report.contains(QStringLiteral("1 candidato")));
+    QVERIFY(out.open(QIODevice::ReadOnly | QIODevice::Text));
+    QHash<QString, QJsonObject> rows;
+    while (!out.atEnd()) {
+        const QJsonObject row = QJsonDocument::fromJson(out.readLine()).object();
+        rows.insert(row.value(QStringLiteral("id")).toString(), row);
+    }
+    QVERIFY(rows.value(QStringLiteral("old-fact")).value(QStringLiteral("stale")).toBool());
+    QVERIFY(!rows.value(QStringLiteral("recent-fact")).value(QStringLiteral("stale")).toBool());
+    QVERIFY(!rows.value(QStringLiteral("protected-decision")).value(QStringLiteral("stale")).toBool());
 }
 
 void MemoryGraphTests::memory_metadataAffectsRanking()
@@ -451,6 +506,9 @@ void MemoryGraphTests::knowledge_packetMergesMemoryAndGraph()
     const QString formatted = KnowledgePacket::format(packet, 4000);
     QVERIFY(formatted.contains(QStringLiteral("knowledge-receipt")));
     QVERIFY(formatted.contains(QStringLiteral("REQUIRES")));
+    QVERIFY(packet.value(QStringLiteral("decisions")).toArray().size() >= 1);
+    QVERIFY(formatted.contains(QStringLiteral("Decisiones vigentes")));
+    QVERIFY(formatted.contains(QStringLiteral("fuente de verdad")));
 }
 
 void MemoryGraphTests::eventLog_appendTypedEvent()

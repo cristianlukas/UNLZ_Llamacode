@@ -1,4 +1,5 @@
 #include "DesktopAutomationBackend.h"
+#include "DesktopComputerUse.h"
 #include "VisualMatcher.h"
 
 #include "FuzzyMatch.h"
@@ -6,12 +7,14 @@
 #include "OcrTextLocator.h"
 
 #include <QCursor>
+#include <QDateTime>
 #include <QElapsedTimer>
 #include <QDir>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QProcess>
 #include <QScreen>
+#include <QSet>
 #include <QThread>
 #include <QVector>
 #include <QWindow>
@@ -124,6 +127,9 @@ BOOL CALLBACK collectWindow(HWND hwnd, LPARAM param)
     wchar_t title[512]{};
     GetWindowTextW(hwnd, title, 511);
     const QString text = QString::fromWCharArray(title).trimmed();
+    wchar_t className[256]{};
+    GetClassNameW(hwnd, className, 255);
+    const QString classText = QString::fromWCharArray(className).trimmed();
     RECT r{};
     if (text.isEmpty() || !GetWindowRect(hwnd, &r) || r.right <= r.left || r.bottom <= r.top)
         return TRUE;
@@ -134,6 +140,7 @@ BOOL CALLBACK collectWindow(HWND hwnd, LPARAM param)
         {QStringLiteral("id"), QString::number(reinterpret_cast<quintptr>(hwnd), 16)},
         {QStringLiteral("kind"), QStringLiteral("window")},
         {QStringLiteral("label"), text},
+        {QStringLiteral("className"), classText},
         {QStringLiteral("pid"), static_cast<qulonglong>(pid)},
         {QStringLiteral("x"), static_cast<int>(r.left)},
         {QStringLiteral("y"), static_cast<int>(r.top)},
@@ -234,6 +241,28 @@ QString uiaName(IUIAutomationElement *el)
     return s;
 }
 
+QStringList uiaPatternNames(IUIAutomationElement *el)
+{
+    QStringList names;
+    const QList<QPair<PATTERNID, QString>> patterns{
+        {UIA_InvokePatternId, QStringLiteral("invoke")},
+        {UIA_ValuePatternId, QStringLiteral("value")},
+        {UIA_TogglePatternId, QStringLiteral("toggle")},
+        {UIA_SelectionItemPatternId, QStringLiteral("select")},
+        {UIA_ExpandCollapsePatternId, QStringLiteral("expandCollapse")},
+        {UIA_RangeValuePatternId, QStringLiteral("range")},
+        {UIA_ScrollItemPatternId, QStringLiteral("scrollIntoView")},
+        {UIA_TextPatternId, QStringLiteral("text")}};
+    for (const auto &entry : patterns) {
+        IUnknown *pattern = nullptr;
+        if (SUCCEEDED(el->GetCurrentPattern(entry.first, &pattern)) && pattern) {
+            names << entry.second;
+            pattern->Release();
+        }
+    }
+    return names;
+}
+
 // Resumen semántico de un elemento UIA: name/role/controlId/geometría + la HWND
 // de la ventana de nivel superior que lo contiene (para re-anclarlo al reproducir).
 QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
@@ -250,6 +279,24 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
     if (SUCCEEDED(el->GetCurrentPattern(UIA_InvokePatternId, &pat)) && pat) {
         invokable = TRUE;
         pat->Release();
+    }
+    BOOL password = FALSE;
+    el->get_CurrentIsPassword(&password);
+    const QStringList patterns = uiaPatternNames(el);
+    QString value;
+    if (!password) {
+        IUIAutomationValuePattern *valuePattern = nullptr;
+        if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ValuePatternId,
+                          IID_IUIAutomationValuePattern,
+                          reinterpret_cast<void **>(&valuePattern))) && valuePattern) {
+            BSTR current = nullptr;
+            if (SUCCEEDED(valuePattern->get_CurrentValue(&current)) && current) {
+                value = QString::fromWCharArray(current, static_cast<int>(SysStringLen(current)))
+                            .simplified().left(160);
+                SysFreeString(current);
+            }
+            valuePattern->Release();
+        }
     }
     // AutomationId: id estable definido por el dev de la app (mejor ancla que name).
     QString automationId;
@@ -292,7 +339,49 @@ QVariantMap uiaElementInfo(IUIAutomation *uia, IUIAutomationElement *el)
         {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
         {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)},
         {QStringLiteral("enabled"), static_cast<bool>(enabled)},
-        {QStringLiteral("invokable"), static_cast<bool>(invokable)}};
+        {QStringLiteral("invokable"), static_cast<bool>(invokable)},
+        {QStringLiteral("password"), static_cast<bool>(password)},
+        {QStringLiteral("patterns"), patterns},
+        {QStringLiteral("value"), value}};
+}
+
+QImage captureWindowOffscreen(HWND hwnd)
+{
+    if (!hwnd || !IsWindow(hwnd)) return {};
+    RECT rect{};
+    if (!GetWindowRect(hwnd, &rect)) return {};
+    const int width = rect.right - rect.left;
+    const int height = rect.bottom - rect.top;
+    if (width <= 0 || height <= 0) return {};
+    HDC dc = GetDC(nullptr);
+    if (!dc) return {};
+    HDC memory = CreateCompatibleDC(dc);
+    BITMAPINFO info{};
+    info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info.bmiHeader.biWidth = width;
+    info.bmiHeader.biHeight = -height;
+    info.bmiHeader.biPlanes = 1;
+    info.bmiHeader.biBitCount = 32;
+    info.bmiHeader.biCompression = BI_RGB;
+    void *bits = nullptr;
+    HBITMAP bitmap = CreateDIBSection(dc, &info, DIB_RGB_COLORS, &bits, nullptr, 0);
+    if (!memory || !bitmap) {
+        if (bitmap) DeleteObject(bitmap);
+        if (memory) DeleteDC(memory);
+        ReleaseDC(nullptr, dc);
+        return {};
+    }
+    HGDIOBJ old = SelectObject(memory, bitmap);
+    const BOOL printed = PrintWindow(hwnd, memory, PW_RENDERFULLCONTENT);
+    QImage result;
+    if (printed && bits)
+        result = QImage(static_cast<uchar *>(bits), width, height, width * 4,
+                        QImage::Format_ARGB32).copy();
+    SelectObject(memory, old);
+    DeleteObject(bitmap);
+    DeleteDC(memory);
+    ReleaseDC(nullptr, dc);
+    return result;
 }
 #endif
 }
@@ -341,6 +430,75 @@ QVariantMap DesktopAutomationBackend::targetInfo(const QString &kind, const QStr
     return {};
 }
 
+QVariantMap DesktopAutomationBackend::snapshot(const QString &kind, const QString &targetId,
+                                                const QString &query, int max,
+                                                bool includeCapture, QString *error)
+{
+    if (error) error->clear();
+    const QVariantMap target = targetInfo(kind, targetId);
+    if (target.isEmpty()) {
+        if (error) *error = QStringLiteral("El alcance visual ya no está disponible.");
+        return {};
+    }
+    const QVariantList currentWindows = windows();
+    QVariantList currentControls;
+    if (kind == QLatin1String("window"))
+        currentControls = controls(targetId, query, max, error);
+    if (error && !error->isEmpty() && kind == QLatin1String("window")) return {};
+
+    QVariantMap result{
+        {QStringLiteral("scopeKind"), kind},
+        {QStringLiteral("targetId"), targetId},
+        {QStringLiteral("target"), target},
+        {QStringLiteral("windows"), currentWindows.mid(0, 32)},
+        {QStringLiteral("controls"), currentControls},
+        {QStringLiteral("provider"), kind == QLatin1String("window")
+            ? QStringLiteral("windows-offscreen-or-screen-fallback")
+            : QStringLiteral("screen")}};
+#ifdef Q_OS_WIN
+    const HWND foreground = GetForegroundWindow();
+    const QString foregroundId = foreground
+        ? QString::number(reinterpret_cast<quintptr>(foreground), 16) : QString();
+    result[QStringLiteral("focus")] = QVariantMap{
+        {QStringLiteral("windowId"), foregroundId},
+        {QStringLiteral("matchesTarget"), kind == QLatin1String("window")
+            && foregroundId == targetId}};
+#else
+    result[QStringLiteral("focus")] = QVariantMap{};
+#endif
+    const QString id = DesktopComputerUse::snapshotId(
+        kind, targetId, target, result.value(QStringLiteral("windows")).toList(), currentControls);
+    result[QStringLiteral("snapshotId")] = id;
+    result[QStringLiteral("fingerprint")] = id;
+    result[QStringLiteral("createdAt")] = QDateTime::currentMSecsSinceEpoch();
+    result[QStringLiteral("captureRequested")] = includeCapture;
+    if (includeCapture) {
+        QString captureError;
+        const QImage image = capture(kind, targetId, &captureError);
+        if (image.isNull()) {
+            if (error) *error = captureError;
+            return {};
+        }
+        result[QStringLiteral("capture")] = QVariantMap{
+            {QStringLiteral("width"), image.width()},
+            {QStringLiteral("height"), image.height()},
+            {QStringLiteral("provider"), kind == QLatin1String("window")
+                ? QStringLiteral("windows-offscreen-or-screen-fallback")
+                : QStringLiteral("screen")}};
+    }
+    return result;
+}
+
+bool DesktopAutomationBackend::validateSnapshot(const QString &kind, const QString &targetId,
+                                                 const QString &snapshotId, QString *error)
+{
+    if (snapshotId.trimmed().isEmpty()) return true;
+    const QVariantMap current = snapshot(kind, targetId, QString(), 120, false, error);
+    if (current.isEmpty()) return false;
+    return DesktopComputerUse::snapshotMatches(
+        snapshotId, current.value(QStringLiteral("snapshotId")).toString(), error);
+}
+
 QImage DesktopAutomationBackend::capture(const QString &kind, const QString &targetId, QString *error)
 {
     if (error) error->clear();
@@ -349,6 +507,15 @@ QImage DesktopAutomationBackend::capture(const QString &kind, const QString &tar
         if (error) *error = QStringLiteral("El alcance visual ya no está disponible.");
         return {};
     }
+#ifdef Q_OS_WIN
+    if (kind == QLatin1String("window")) {
+        bool parsed = false;
+        const quintptr raw = targetId.toULongLong(&parsed, 16);
+        const QImage offscreen = parsed
+            ? captureWindowOffscreen(reinterpret_cast<HWND>(raw)) : QImage();
+        if (!offscreen.isNull()) return offscreen;
+    }
+#endif
     QScreen *screen = screenForPhysicalPoint(bounds.center());
     if (!screen) {
         if (error) *error = QStringLiteral("No hay una pantalla disponible.");
@@ -570,10 +737,6 @@ bool DesktopAutomationBackend::stroke(const QString &kind, const QString &target
                 "entre 0 y 1; no se movió el mouse.");
             return false;
         }
-    }
-    if (!interactiveSessionAvailable()) {
-        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
-        return false;
     }
     const QRect bounds = targetBounds(kind, targetId);
     if (!bounds.isValid()) {
@@ -818,33 +981,15 @@ QVariantList DesktopAutomationBackend::controls(const QString &windowTargetId,
         IUIAutomationElement *el = n.el;
         ++visited;
 
-        const QString name = uiaName(el);
-        CONTROLTYPEID ct = 0;
-        el->get_CurrentControlType(&ct);
-        BOOL enabled = FALSE;
-        el->get_CurrentIsEnabled(&enabled);
-        RECT rc{};
-        el->get_CurrentBoundingRectangle(&rc);
-        BOOL invokable = FALSE;
-        IUnknown *pat = nullptr;
-        if (SUCCEEDED(el->GetCurrentPattern(UIA_InvokePatternId, &pat)) && pat) {
-            invokable = TRUE;
-            pat->Release();
-        }
+        const QVariantMap info = uiaElementInfo(uia, el);
+        const QString name = info.value(QStringLiteral("name")).toString();
+        const bool enabled = info.value(QStringLiteral("enabled")).toBool();
+        const bool invokable = info.value(QStringLiteral("invokable")).toBool();
 
         // Incluir sólo controles útiles: con nombre o invocables. Filtrar por query.
         const bool interesting = !name.trimmed().isEmpty() || invokable;
         if (interesting && (needle.isEmpty() || name.toLower().contains(needle))) {
-            out.append(QVariantMap{
-                {QStringLiteral("controlId"), uiaRuntimeId(el)},
-                {QStringLiteral("name"), name.simplified().left(120)},
-                {QStringLiteral("role"), uiaControlTypeName(ct)},
-                {QStringLiteral("x"), static_cast<int>(rc.left)},
-                {QStringLiteral("y"), static_cast<int>(rc.top)},
-                {QStringLiteral("width"), static_cast<int>(rc.right - rc.left)},
-                {QStringLiteral("height"), static_cast<int>(rc.bottom - rc.top)},
-                {QStringLiteral("enabled"), static_cast<bool>(enabled)},
-                {QStringLiteral("invokable"), static_cast<bool>(invokable)}});
+            out.append(info);
         }
         enqueueChildren(el, n.depth + 1);
         el->Release();
@@ -865,6 +1010,16 @@ bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
                                             const QString &controlId, QString *error,
                                             QVariantMap *trace)
 {
+    return clickElement(windowTargetId, controlId, QString(), error, trace);
+}
+
+bool DesktopAutomationBackend::clickElement(const QString &windowTargetId,
+                                            const QString &controlId,
+                                            const QString &snapshotId,
+                                            QString *error, QVariantMap *trace)
+{
+    if (!validateSnapshot(QStringLiteral("window"), windowTargetId, snapshotId, error))
+        return false;
     return clickElementInternal(windowTargetId, controlId, /*allowFuzzy=*/true, error, trace);
 }
 
@@ -873,10 +1028,6 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
                                                     QString *error, QVariantMap *trace)
 {
 #ifdef Q_OS_WIN
-    if (!interactiveSessionAvailable()) {
-        if (error) *error = QStringLiteral("La sesión de escritorio está bloqueada.");
-        return false;
-    }
     bool ok = false;
     HWND hwnd = reinterpret_cast<HWND>(windowTargetId.toULongLong(&ok, 16));
     if (!ok || !hwnd || !IsWindow(hwnd)) {
@@ -887,8 +1038,6 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
         if (error) *error = QStringLiteral("controlId vacío.");
         return false;
     }
-    focusWindow(windowTargetId, nullptr);   // traer al frente (mejor-esfuerzo)
-
     ComGuard com;
     IUIAutomation *uia = nullptr;
     if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr, CLSCTX_INPROC_SERVER,
@@ -963,6 +1112,14 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
                 }
             } else {
                 if (rc.right > rc.left && rc.bottom > rc.top) {
+                    // Sólo el fallback físico necesita foco; Invoke es
+                    // semántico y debe poder operar sin robarlo.
+                    if (!interactiveSessionAvailable()) {
+                        if (error) *error = QStringLiteral(
+                            "El control no expone un patrón semántico y la sesión interactiva está bloqueada.");
+                        break;
+                    }
+                    focusWindow(windowTargetId, nullptr);
                     const int cx = (rc.left + rc.right) / 2;
                     const int cy = (rc.top + rc.bottom) / 2;
                     SetCursorPos(cx, cy);
@@ -1030,6 +1187,206 @@ bool DesktopAutomationBackend::clickElementInternal(const QString &windowTargetI
     return success;
 #else
     Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(allowFuzzy) Q_UNUSED(trace)
+    if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
+    return false;
+#endif
+}
+
+bool DesktopAutomationBackend::controlAction(const QString &windowTargetId,
+                                             const QString &controlId,
+                                             const QString &action,
+                                             const QString &value,
+                                             QString *error,
+                                             QVariantMap *trace)
+{
+#ifdef Q_OS_WIN
+    bool ok = false;
+    HWND hwnd = reinterpret_cast<HWND>(windowTargetId.toULongLong(&ok, 16));
+    if (!ok || !hwnd || !IsWindow(hwnd)) {
+        if (error) *error = QStringLiteral("Ventana no encontrada.");
+        return false;
+    }
+    if (controlId.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("controlId vacío.");
+        return false;
+    }
+    const QString requested = action.trimmed().toLower();
+    const QString op = requested.isEmpty() ? QStringLiteral("invoke") : requested;
+    const QSet<QString> allowed{
+        QStringLiteral("invoke"), QStringLiteral("toggle"), QStringLiteral("set_value"),
+        QStringLiteral("select"), QStringLiteral("expand"), QStringLiteral("collapse"),
+        QStringLiteral("range_set"), QStringLiteral("scroll_into_view"), QStringLiteral("read")};
+    if (!allowed.contains(op)) {
+        if (error) *error = QStringLiteral("Acción UIA no soportada: %1.").arg(op);
+        return false;
+    }
+
+    ComGuard com;
+    IUIAutomation *uia = nullptr;
+    if (FAILED(CoCreateInstance(CLSID_CUIAutomation, nullptr, CLSCTX_INPROC_SERVER,
+                                IID_IUIAutomation, reinterpret_cast<void **>(&uia))) || !uia) {
+        if (error) *error = QStringLiteral("UI Automation no disponible.");
+        return false;
+    }
+    IUIAutomationElement *root = nullptr;
+    IUIAutomationTreeWalker *walker = nullptr;
+    if (FAILED(uia->ElementFromHandle(hwnd, &root)) || !root
+        || FAILED(uia->get_ControlViewWalker(&walker)) || !walker) {
+        if (root) root->Release();
+        uia->Release();
+        if (error) *error = QStringLiteral("No se pudo abrir la ventana en UIA.");
+        return false;
+    }
+
+    struct Node { IUIAutomationElement *el; int depth; };
+    QList<Node> queue;
+    auto enqueueChildren = [&](IUIAutomationElement *parent, int depth) {
+        if (depth > 14) return;
+        IUIAutomationElement *child = nullptr;
+        if (FAILED(walker->GetFirstChildElement(parent, &child))) return;
+        while (child) {
+            queue.append({child, depth});
+            IUIAutomationElement *next = nullptr;
+            walker->GetNextSiblingElement(child, &next);
+            child = next;
+        }
+    };
+
+    bool found = false;
+    bool success = false;
+    enqueueChildren(root, 1);
+    int visited = 0;
+    while (!queue.isEmpty() && !found && visited < 3000) {
+        const Node node = queue.takeFirst();
+        IUIAutomationElement *el = node.el;
+        ++visited;
+        if (uiaRuntimeId(el) == controlId) {
+            found = true;
+            const QVariantMap info = uiaElementInfo(uia, el);
+            if (trace) {
+                *trace = QVariantMap{{QStringLiteral("surface"), QStringLiteral("desktop")},
+                                     {QStringLiteral("action"), op},
+                                     {QStringLiteral("strategy"), QStringLiteral("uia-pattern")},
+                                     {QStringLiteral("target"), info}};
+            }
+            if (op == QLatin1String("read")) {
+                QVariantMap read = info;
+                IUIAutomationTogglePattern *toggle = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_TogglePatternId,
+                                  IID_IUIAutomationTogglePattern,
+                                  reinterpret_cast<void **>(&toggle))) && toggle) {
+                    ToggleState state = ToggleState_Indeterminate;
+                    if (SUCCEEDED(toggle->get_CurrentToggleState(&state)))
+                        read[QStringLiteral("toggleState")] = static_cast<int>(state);
+                    toggle->Release();
+                }
+                IUIAutomationExpandCollapsePattern *expand = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ExpandCollapsePatternId,
+                                  IID_IUIAutomationExpandCollapsePattern,
+                                  reinterpret_cast<void **>(&expand))) && expand) {
+                    ExpandCollapseState state = ExpandCollapseState_LeafNode;
+                    if (SUCCEEDED(expand->get_CurrentExpandCollapseState(&state)))
+                        read[QStringLiteral("expandState")] = static_cast<int>(state);
+                    expand->Release();
+                }
+                if (trace) (*trace)[QStringLiteral("value")] = read;
+                success = true;
+            } else if (op == QLatin1String("invoke")) {
+                IUIAutomationInvokePattern *pattern = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_InvokePatternId,
+                                  IID_IUIAutomationInvokePattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    success = SUCCEEDED(pattern->Invoke());
+                    pattern->Release();
+                } else {
+                    // Sólo este fallback es foreground: no existe operación
+                    // semántica disponible para el control.
+                    RECT rc{};
+                    el->get_CurrentBoundingRectangle(&rc);
+                    if (rc.right > rc.left && rc.bottom > rc.top
+                        && interactiveSessionAvailable()) {
+                        focusWindow(windowTargetId, nullptr);
+                        SetCursorPos((rc.left + rc.right) / 2, (rc.top + rc.bottom) / 2);
+                        INPUT inputs[2]{};
+                        inputs[0].type = inputs[1].type = INPUT_MOUSE;
+                        inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+                        inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+                        success = SendInput(2, inputs, sizeof(INPUT)) == 2;
+                        if (trace) (*trace)[QStringLiteral("strategy")] = QStringLiteral("foreground-pointer");
+                    }
+                }
+            } else if (op == QLatin1String("toggle")) {
+                IUIAutomationTogglePattern *pattern = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_TogglePatternId,
+                                  IID_IUIAutomationTogglePattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    success = SUCCEEDED(pattern->Toggle());
+                    pattern->Release();
+                }
+            } else if (op == QLatin1String("set_value")) {
+                IUIAutomationValuePattern *pattern = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ValuePatternId,
+                                  IID_IUIAutomationValuePattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    BSTR desired = SysAllocString(
+                        reinterpret_cast<LPCWSTR>(value.utf16()));
+                    success = desired && SUCCEEDED(pattern->SetValue(desired));
+                    if (desired) SysFreeString(desired);
+                    pattern->Release();
+                }
+            } else if (op == QLatin1String("select")) {
+                IUIAutomationSelectionItemPattern *pattern = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_SelectionItemPatternId,
+                                  IID_IUIAutomationSelectionItemPattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    success = SUCCEEDED(pattern->Select());
+                    pattern->Release();
+                }
+            } else if (op == QLatin1String("expand") || op == QLatin1String("collapse")) {
+                IUIAutomationExpandCollapsePattern *pattern = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ExpandCollapsePatternId,
+                                  IID_IUIAutomationExpandCollapsePattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    success = SUCCEEDED(op == QLatin1String("expand")
+                        ? pattern->Expand() : pattern->Collapse());
+                    pattern->Release();
+                }
+            } else if (op == QLatin1String("range_set")) {
+                bool numeric = false;
+                const double number = value.toDouble(&numeric);
+                IUIAutomationRangeValuePattern *pattern = nullptr;
+                if (numeric && SUCCEEDED(el->GetCurrentPatternAs(UIA_RangeValuePatternId,
+                                  IID_IUIAutomationRangeValuePattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    success = SUCCEEDED(pattern->SetValue(number));
+                    pattern->Release();
+                }
+            } else if (op == QLatin1String("scroll_into_view")) {
+                IUIAutomationScrollItemPattern *pattern = nullptr;
+                if (SUCCEEDED(el->GetCurrentPatternAs(UIA_ScrollItemPatternId,
+                                  IID_IUIAutomationScrollItemPattern,
+                                  reinterpret_cast<void **>(&pattern))) && pattern) {
+                    success = SUCCEEDED(pattern->ScrollIntoView());
+                    pattern->Release();
+                }
+            }
+            if (!success && error)
+                *error = QStringLiteral("El control no expone el patrón requerido para '%1'.").arg(op);
+        } else {
+            enqueueChildren(el, node.depth + 1);
+        }
+        el->Release();
+    }
+    for (const Node &node : queue) node.el->Release();
+    walker->Release();
+    root->Release();
+    uia->Release();
+    if (!found && error)
+        *error = QStringLiteral("No se encontró el control; generá un snapshot nuevo.");
+    return found && success;
+#else
+    Q_UNUSED(windowTargetId) Q_UNUSED(controlId) Q_UNUSED(action) Q_UNUSED(value)
+    Q_UNUSED(trace)
     if (error) *error = QStringLiteral("UI Automation disponible sólo en Windows.");
     return false;
 #endif
@@ -1141,7 +1498,17 @@ QVariantMap DesktopAutomationBackend::findImage(const QString &kind, const QStri
         return {};
     }
     QString captureError;
-    const QImage haystack = capture(kind, targetId, &captureError);
+    QImage haystack;
+#ifdef Q_OS_WIN
+    if (kind == QLatin1String("window")) {
+        bool parsed = false;
+        const quintptr raw = targetId.toULongLong(&parsed, 16);
+        if (parsed)
+            haystack = captureWindowOffscreen(reinterpret_cast<HWND>(raw));
+    }
+#endif
+    if (haystack.isNull())
+        haystack = capture(kind, targetId, &captureError);
     if (haystack.isNull()) {
         if (error) *error = captureError;
         return {};

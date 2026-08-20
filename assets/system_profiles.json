@@ -3142,8 +3142,15 @@
       { "id": "sys-bench-qwen38-udq4-reasoning-low", "order": 229, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · thinking low · 131k · MTP3 · visión", "extraArgOverrides": { "--reasoning": "low" }, "comment": "A/B exacto contra BALANCE - Qwen3.8 UD-Q4 visión; sólo cambia el nivel de thinking." },
       { "id": "sys-bench-qwen38-udq4-reasoning-medium", "order": 230, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · thinking medium · 131k · MTP3 · visión", "extraArgOverrides": { "--reasoning": "medium" }, "comment": "A/B exacto contra BALANCE - Qwen3.8 UD-Q4 visión; sólo cambia el nivel de thinking." },
       { "id": "sys-bench-qwen38-udq4-reasoning-xhigh", "order": 231, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · thinking xhigh · 131k · MTP3 · visión", "extraArgOverrides": { "--reasoning": "xhigh" }, "comment": "A/B exacto contra BALANCE - Qwen3.8 UD-Q4 visión; sólo cambia el nivel de thinking." },
+      { "id": "sys-bench-qwen38-udq4-browser-agent-off", "order": 232, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Browser Agent · thinking off · 131k", "agentProfileId": "agent-browser", "comment": "A/B del harness Browser Agent nativo contra el control Máximo/off; modelo, runtime, sampling, MTP, visión y template intactos. No es un resultado BU Bench hasta ejecutar una suite de browser real." },
+      { "id": "sys-bench-qwen38-udq4-browser-agent-low", "order": 233, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Browser Agent · thinking low · 131k", "agentProfileId": "agent-browser", "extraArgOverrides": { "--reasoning": "low" }, "comment": "A/B de Browser Agent nativo con thinking low; sólo cambia harness y nivel de reasoning respecto del control Máximo/off." },
+      { "id": "sys-bench-qwen38-udq4-browser-agent-medium", "order": 234, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Browser Agent · thinking medium · 131k", "agentProfileId": "agent-browser", "extraArgOverrides": { "--reasoning": "medium" }, "comment": "A/B de Browser Agent nativo con thinking medium; sólo cambia harness y nivel de reasoning respecto del control Máximo/off." },
+      { "id": "sys-bench-qwen38-udq4-browser-agent-xhigh", "order": 235, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Browser Agent · thinking xhigh · 131k", "agentProfileId": "agent-browser", "extraArgOverrides": { "--reasoning": "xhigh" }, "comment": "A/B de Browser Agent nativo con thinking xhigh; es la corrida prioritaria para contrastar la referencia externa. Requiere suite de browser real para interpretar éxito de navegación." },
       { "id": "sys-bench-qwen38-udq4-artifact-local", "order": 239, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Artifacts local/privado · 131k", "agentProfileId": "agent-artifact-local", "comment": "A/B del harness de artefactos local-first: crea, valida y deja el entregable privado sin web, browser ni MCP. Medir con artifact_lifecycle_v1; no publicar." },
-      { "id": "sys-bench-qwen38-udq4-artifact-publisher", "order": 240, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Artifacts publicación aprobada · 131k", "agentProfileId": "agent-artifact-publisher", "comment": "A/B del mismo flujo con web/browser/MCP disponibles y approval ask. La suite debe comprobar que preparar/stash no dispara una publicación; cualquier publicación real requiere una prueba separada y aprobación explícita." }
+      { "id": "sys-bench-qwen38-udq4-artifact-publisher", "order": 240, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · Artifacts publicación aprobada · 131k", "agentProfileId": "agent-artifact-publisher", "comment": "A/B del mismo flujo con web/browser/MCP disponibles y approval ask. La suite debe comprobar que preparar/stash no dispara una publicación; cualquier publicación real requiere una prueba separada y aprobación explícita." },
+      { "id": "sys-bench-qwen38-udq4-24gb-fast-mtp4-64k", "order": 236, "benchmark": true, "displayName": "[bench 24GB Qwen3.8] UD-Q4 · fast · MTP4 · 64k · mmproj RAM", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-draft-n-max": "4" }, "extraArgAdds": ["--no-mmproj-offload"], "comment": "Variante 24GB de baja presión inspirada en CTX=fast del stack externo: 64k, MTP4 y mmproj en RAM. Es un análogo llama.cpp, no DFlash2 ni fp8-KV; validar visión por separado." },
+      { "id": "sys-bench-qwen38-udq4-24gb-lookup-64k", "order": 237, "benchmark": true, "displayName": "[bench 24GB Qwen3.8] UD-Q4 · lookup aproximado · 64k · MTP3", "runtime": { "ctx": 65536 }, "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Aproximación reproducible de lookup-augmented drafting con el ngram-mod de llama.cpp: busca continuación local, pero no replica el kernel DFlash2 que escanea todo el historial." },
+      { "id": "sys-bench-qwen38-udq4-24gb-prefix-cache-64k", "order": 238, "benchmark": true, "displayName": "[bench 24GB Qwen3.8] UD-Q4 · prefix cache · 64k · MTP3", "runtime": { "ctx": 65536 }, "extraArgAdds": ["--cache-prompt", "--cache-reuse", "512"], "comment": "Variante 24GB para turnos largos repetidos: 64k, MTP3 y prompt cache. Medir sólo contra otra corrida warm-cache; no mezclar con latencia cold-cache." }
     ],
     "comment": "Qwen3.8-27B oficial de Unsloth: visión nativa y MTP integrado. Reasoning queda off en este perfil base para el flujo agentico; las variantes reasoning-low, reasoning-medium y reasoning-xhigh permiten medir el efecto del thinking sin cambiar modelo, quant, contexto, batch, MTP, visión ni template. La app descarga el GGUF y mmproj-BF16 desde Hugging Face.", "vision": true
   },
@@ -3346,6 +3353,51 @@
   "comment": "Copia texto-only del experimento MTP4: elimina mmproj porque el flujo coding no usa visión y b10331 desactiva cache-reuse en modelos multimodales. Es la variante para comprobar si el cache de prompt/checkpoints realmente aporta en el caso de uso."
   },
   {
+    "id": "sys-bench-16-qwen38-rvn-iq3xxs-ngram-131k",
+    "tier": "16GB-Qwen38-Experimental", "order": 242, "extra": true,
+    "benchmark": true, "best": false, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS · ngram-mod · 131k",
+    "minVramGb": 16, "minRamGb": 32, "cpuOk": false,
+    "requiresMtpBinary": true, "folder": "Qwen3.8-27B-Heretic-RVN-IQ3_XXS",
+    "agentProfileId": "agent-maximo", "reasoningEffort": "medium", "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": { "repo": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF", "file": "RVN-IQ3_XXS.gguf", "quant": "IQ3_XXS" },
+    "runtime": { "ctx": 131072, "gpuLayers": 999, "batch": 512, "ubatch": 512, "threads": 8, "kv": "q5_1", "flashAttn": true, "mlock": false, "mmap": true },
+    "extraArgs": ["--cache-type-k", "q5_1", "--cache-type-v", "q5_1", "--fit", "off", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning-format", "deepseek", "--reasoning-preserve", "--load-mode", "none", "--sleep-idle-seconds", "600", "--spec-type", "ngram-mod", "--spec-ngram-mod-n-min", "4", "--spec-ngram-mod-n-max", "8", "--spec-ngram-mod-n-match", "32"],
+    "binaryKind": "beellama",
+    "comment": "Control 16GB derivado del post de LocalLLaMA adjunto: RVN-IQ3_XXS, ngram-mod 4/8/32 y 131072 de contexto en una RTX 4080 16GB. Usa el template Qwen bundleado en lugar de froggeric_fix_qwen38.jinja, y adapta el sampling a la política local conservadora; no es una recomendación automática. Requiere una build beellama/dflash2-capable con ngram-mod. El quant es uncensored: conservar approvals de tools."
+  },
+  {
+    "id": "sys-bench-16-qwen38-rvn-iq3xxs-dflash2-ngram-105k",
+    "tier": "16GB-Qwen38-Experimental", "order": 243, "extra": true,
+    "benchmark": true, "best": false, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS · DFlash2+ngram · 105k",
+    "minVramGb": 16, "minRamGb": 32, "cpuOk": false,
+    "requiresMtpBinary": true, "folder": "Qwen3.8-27B-Heretic-RVN-IQ3_XXS",
+    "agentProfileId": "agent-maximo", "reasoningEffort": "medium", "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": { "repo": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF", "file": "RVN-IQ3_XXS.gguf", "quant": "IQ3_XXS" },
+    "draftModel": { "repo": "incoai/Qwen3.8-27B-DFlash2-GGUF", "file": "Qwen3.8-27B-DFlash2-Q4_K_M.gguf", "folder": "Qwen3.8-27B-DFlash2-Q4_K_M" },
+    "spec": { "type": "draft-dflash", "draftNgl": "all", "draftNMax": 5 },
+    "runtime": { "ctx": 105000, "gpuLayers": 999, "batch": 512, "ubatch": 512, "threads": 8, "kv": "q5_1", "flashAttn": true, "mlock": false, "mmap": true },
+    "extraArgs": ["--cache-type-k", "q5_1", "--cache-type-v", "q5_1", "--fit", "off", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning-format", "deepseek", "--reasoning-preserve", "--load-mode", "none", "--sleep-idle-seconds", "600", "--spec-type", "draft-dflash,ngram-mod", "--spec-ngram-mod-n-min", "4", "--spec-ngram-mod-n-max", "8", "--spec-ngram-mod-n-match", "32"],
+    "binaryKind": "beellama",
+    "comment": "Candidata DFlash2+ngram del post de LocalLLaMA: draft Q4_K_M separado, 5 tokens de DFlash2, ngram 4/8/32 y 105000 de contexto. La app lo expresa como draftModel + spec-draft-model; necesita una build beellama/dflash2-capable del fork experimental, no un llama-server oficial sin ese soporte. Se conserva q5_1/KV y se usa sampling conservador para comparar el modelo sin elevar aleatoriamente la temperatura. HE0 antes de cualquier corrida larga."
+  },
+  {
+    "id": "sys-bench-16-qwen38-rvn-iq3xxs-mtp-ngram-105k",
+    "tier": "16GB-Qwen38-Experimental", "order": 244, "extra": true,
+    "benchmark": true, "best": false, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS-MTP · MTP+ngram · 105k",
+    "minVramGb": 16, "minRamGb": 32, "cpuOk": false,
+    "requiresMtpBinary": true, "manualOnly": true, "folder": "Qwen3.8-27B-Heretic-RVN-IQ3_XXS-MTP",
+    "agentProfileId": "agent-maximo", "reasoningEffort": "medium", "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": { "repo": "0bserverx/Qwen3.8-27B-Heretic-Abliterated-Uncensored-GGUF", "file": "RVN-IQ3_XXS-MTP.gguf", "quant": "IQ3_XXS" },
+    "runtime": { "ctx": 105000, "gpuLayers": 999, "batch": 512, "ubatch": 512, "threads": 8, "kv": "q5_1", "flashAttn": true, "mlock": false, "mmap": true },
+    "extraArgs": ["--cache-type-k", "q5_1", "--cache-type-v", "q5_1", "--fit", "off", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "4096", "--parallel", "1", "--reasoning-format", "deepseek", "--reasoning-preserve", "--load-mode", "none", "--sleep-idle-seconds", "600"],
+    "mtp": { "enabled": true, "selfContained": true, "args": ["--spec-type", "draft-mtp,ngram-mod", "--spec-draft-n-max", "2", "--spec-ngram-mod-n-min", "4", "--spec-ngram-mod-n-max", "8", "--spec-ngram-mod-n-match", "32"] },
+    "binaryKind": "beellama",
+    "comment": "Candidata MTP+ngram del post de LocalLLaMA: el autor fusionó manualmente RVN-IQ3_XXS con el modelo MTP y obtuvo 105000 de contexto. manualOnly evita que LlamaCode intente descargar un GGUF fusionado que no está declarado como artefacto remoto; copiarlo bajo la carpeta de modelos del perfil y validar HE0. Usa el template bundleado y sampling conservador, por lo que no es una réplica bit a bit del comando publicado."
+  },
+  {
     "id": "sys-bench-qwen38-dflash2-vllm-262k",
     "tier": "48GB-Qwen38-DFlash2-vLLM", "order": 240, "extra": true,
     "benchmark": true, "best": false, "favorite": false, "autoCompanion": false,
@@ -3387,5 +3439,208 @@
     },
     "tags": ["qwen3.8", "int8", "w8a16", "vllm", "external-endpoint", "autoregressive-control", "262k", "2x-rtx-3090"],
     "comment": "Control autoregresivo para aislar la ganancia de DFlash2: mismo target, tensor parallel, contexto y KV que la receta n7, pero iniciar vLLM sin speculative-config. LlamaCode sólo conecta al endpoint en 127.0.0.1:8001; no inicia el proceso externo. No mezclar resultados si cambian el engine, los patches o el max-model-len."
+  },
+  {
+    "id": "sys-ling30-tiny-q6-131k",
+    "tier": "12GB-Ling30-Tiny",
+    "order": 250,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[bench 12GB] Ling 3.0 Tiny Q6 · auxiliar · 131k",
+    "minVramGb": 12,
+    "minRamGb": 16,
+    "cpuOk": false,
+    "folder": "Ling-3.0-tiny-GGUF-Q6_K",
+    "agentProfileId": "agent-chat",
+    "model": {
+      "repo": "bloomer010/Ling-3.0-tiny-GGUF",
+      "file": "Ling-3.0-tiny-Q6_K.gguf",
+      "quant": "Q6_K"
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 999,
+      "batch": 1024,
+      "ubatch": 256,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q8_0",
+      "--temp", "1.0",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--chat-template-kwargs", "{\"enable_thinking\":false}"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10331,
+    "contextPresets": [32768, 65536, 131072],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-ling30-tiny-q6-64k",
+        "order": 251,
+        "benchmark": true,
+        "displayName": "[bench Ling 3.0 Tiny] Q6 · auxiliar · 64k",
+        "runtime": { "ctx": 65536 },
+        "comment": "Control de menor contexto para separar el coste de KV del coste de la arquitectura."
+      },
+      {
+        "id": "sys-bench-ling30-tiny-q6-thinking-131k",
+        "order": 252,
+        "benchmark": true,
+        "displayName": "[bench Ling 3.0 Tiny] Q6 · thinking on · 131k",
+        "extraArgOverrides": {
+          "--temp": "1.0",
+          "--chat-template-kwargs": "{\"enable_thinking\":true}"
+        },
+        "comment": "A/B del modo de razonamiento nativo; no mezclar su wall-time con el perfil auxiliar thinking-off."
+      },
+      {
+        "id": "sys-bench-ling30-tiny-q6-kv4-131k",
+        "order": 253,
+        "benchmark": true,
+        "displayName": "[bench Ling 3.0 Tiny] Q6 · auxiliar · KV q4 · 131k",
+        "runtime": { "kv": "q4_0" },
+        "extraArgOverrides": {
+          "--cache-type-k": "q4_0",
+          "--cache-type-v": "q4_0"
+        },
+        "comment": "A/B de memoria/latencia contra KV q8; revisar calidad de resúmenes antes de usarlo como auxiliar."
+      }
+    ],
+    "comment": "Candidato auxiliar derivado de la referencia de Ling 3.0 Tiny: 7,9B totales y 1,3B activos. Usa GGUF Q6, KV q8 y thinking apagado para compresión/resumen y otras tareas no críticas. Es benchmark, no recomendación automática; requiere llama.cpp b10331+ con soporte BailingMoE3 y validar tool-calling antes de usarlo fuera del rol de planificador."
+  },
+  {
+    "id": "sys-bench-ling30-tiny-udq4-64k",
+    "tier": "8GB-Ling30-Tiny",
+    "order": 254,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[bench 8GB] Ling 3.0 Tiny UD-Q4 · auxiliar · 64k",
+    "minVramGb": 8,
+    "minRamGb": 16,
+    "cpuOk": false,
+    "folder": "Ling-3.0-tiny-GGUF-UD-Q4_K_XL",
+    "agentProfileId": "agent-chat",
+    "model": {
+      "repo": "bloomer010/Ling-3.0-tiny-GGUF",
+      "file": "Ling-3.0-tiny-UD-Q4_K_XL.gguf",
+      "quant": "UD-Q4_K_XL"
+    },
+    "runtime": {
+      "ctx": 65536,
+      "gpuLayers": 999,
+      "batch": 1024,
+      "ubatch": 256,
+      "threads": 8,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q4_0",
+      "--cache-type-v", "q4_0",
+      "--temp", "1.0",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--chat-template-kwargs", "{\"enable_thinking\":false}"
+    ],
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10331,
+    "contextPresets": [32768, 65536],
+    "comment": "Candidato de baja memoria para medir si Ling puede cubrir compresión y resúmenes rápidos en una GPU de 8GB. No se asume calidad de tool-calling ni equivalencia con el Q6; primero HE0 y luego una suite de resúmenes con evaluación semántica."
+  },
+  {
+    "id": "sys-hybrid-ling30-qwen38",
+    "tier": "24GB-Hybrid-Ling-Qwen38",
+    "order": 255,
+    "extra": true,
+    "benchmark": true,
+    "best": false,
+    "favorite": false,
+    "autoCompanion": false,
+    "displayName": "[bench hybrid 24GB] Ling Tiny planifica → Qwen3.8 ejecuta",
+    "minVramGb": 24,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "Qwen3.8-27B-GGUF",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "qwen38-tools-fixed.jinja",
+    "model": {
+      "repo": "unsloth/Qwen3.8-27B-GGUF",
+      "file": "Qwen3.8-27B-UD-Q4_K_XL.gguf",
+      "mmprojRepo": "unsloth/Qwen3.8-27B-GGUF",
+      "mmprojFile": "mmproj-BF16.gguf",
+      "quant": "UD-Q4_K_XL"
+    },
+    "runtime": {
+      "ctx": 131072,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
+      "threads": 8,
+      "kv": "q4_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q4_0",
+      "--cache-type-v", "q4_0",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--predict", "4096",
+      "--parallel", "1",
+      "--reasoning", "off"
+    ],
+    "mtp": {
+      "enabled": true,
+      "selfContained": true,
+      "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "3"]
+    },
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10331,
+    "contextPresets": [32768, 65536, 131072],
+    "vision": true,
+    "plannerProfileId": "sys-ling30-tiny-q6-131k",
+    "hybridMode": "sequential",
+    "comment": "Prueba de la arquitectura auxiliar: carga Ling Tiny Q6 sólo para planificar y vuelve a Qwen3.8 para ejecutar con tools. Comparar contra sys-qwen38-27b-udq4-131k en la misma suite, separando tiempo de planificación, tiempo de ejecución, primer intento, reparaciones y calidad final. No implementa todavía routing automático de resúmenes/contexto; es un benchmark del planificador ligero y queda opt-in."
   }
 ]

@@ -1,4 +1,5 @@
 #pragma once
+#include <QJsonArray>
 #include <QString>
 #include <QStringList>
 #include <QVector>
@@ -39,6 +40,12 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
              const QString &verification = QString(),
              const QString &supersedes = QString());
 
+// Igual que recall(), pero conserva la metadata estructurada y el score de
+// selección para que los ensambladores puedan separar decisiones vigentes de
+// hechos de apoyo sin volver a parsear Markdown.
+QJsonArray recallFacts(const QString &cwd, const QString &query,
+                       const QString &scope, int k);
+
 // Recupera hechos NO obsoletos. Si query != "", rankea por solapamiento de
 // keywords + sesgo por confianza y recencia; si scope != "", filtra por capa.
 // Devuelve top-k formateado (markdown) con id y provenance.
@@ -63,5 +70,15 @@ QString forget(const QString &cwd, const QString &query, const QString &scope,
 // dryRun=true sólo reporta sin tocar nada. scope opcional acota la capa.
 QString prune(const QString &cwd, const QString &scope, int maxKeep,
               const QString &mode, bool dryRun);
+
+// DECAIMIENTO conservador: marca stale hechos viejos, de bajo valor y no
+// protegidos por verificación/importancia/uso. dryRun sólo informa candidatos.
+QString decay(const QString &cwd, const QString &scope, int maxAgeDays = 90,
+              double minValue = 0.28, bool dryRun = false);
+
+// Mantenimiento automático acotado por tiempo. Se ejecuta como máximo una vez
+// por intervalo para que el recall no convierta cada consulta en una reescritura.
+QString maintain(const QString &cwd, const QString &scope = QString(),
+                 int intervalHours = 24);
 
 }  // namespace MemoryStore

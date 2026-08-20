@@ -226,6 +226,9 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 
 | Candidato | Derivado de | Hipótesis | Cambio controlado | Orden |
 |---|---|---|---|---|
+| `[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS · ngram-mod · 131k` (`sys-bench-16-qwen38-rvn-iq3xxs-ngram-131k`) | Post LocalLLaMA adjunto · RTX 4080 16GB | Medir el control de contexto largo sin drafter separado | RVN-IQ3_XXS; ctx 131k; KV q5_1; ngram 4/8/32; `reasoningEffort=medium` | HE0 → HE20 → BCB |
+| `[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS · DFlash2+ngram · 105k` (`sys-bench-16-qwen38-rvn-iq3xxs-dflash2-ngram-105k`) | Post LocalLLaMA adjunto · RTX 4080 16GB | Medir si el draft DFlash2 compensa su costo a contexto largo | draft Q4_K_M; 5 tokens; ngram 4/8/32; ctx 105k; build beellama/dflash2 | HE0 → HE20 → BCB |
+| `[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS-MTP · MTP+ngram · 105k` (`sys-bench-16-qwen38-rvn-iq3xxs-mtp-ngram-105k`) | Post LocalLLaMA adjunto · RTX 4080 16GB | Comparar el MTP fusionado contra DFlash2 y ngram-only | GGUF MTP fusionado manualmente; 2 tokens; ngram 4/8/32; ctx 105k; `manualOnly` | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · MTP2 · 64k · mmproj` (`sys-bench-qwen38-udq4-mtp2-64k`) | BALANCE - Qwen3.8 UD-Q4 visión | Menos contexto y MTP pueden mejorar velocidad/estabilidad | ctx 65k; MTP2; B512/U64 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj` (`sys-bench-qwen38-udq4-mtp3-b1024`) | BALANCE - Qwen3.8 UD-Q4 visión | Menor batch puede evitar fallos de infraestructura | B1024/U128; MTP3 | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj` (`sys-bench-qwen38-udq4-mtp3-kv8`) | BALANCE - Qwen3.8 UD-Q4 visión | KV q8 puede sostener mejor contexto y calidad | KV K/V q8_0 | HE0 → HE20 → BCB |
@@ -260,8 +263,24 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench Qwen3.8] UD-Q4 · thinking low · 131k · MTP3 · visión` (`sys-bench-qwen38-udq4-reasoning-low`) | BALANCE - Qwen3.8 UD-Q4 visión | A/B exacto del nivel mínimo de thinking contra el control `reasoning off` | `--reasoning low`; resto idéntico al control | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · thinking medium · 131k · MTP3 · visión` (`sys-bench-qwen38-udq4-reasoning-medium`) | BALANCE - Qwen3.8 UD-Q4 visión | A/B exacto del nivel medio de thinking contra el control `reasoning off` | `--reasoning medium`; resto idéntico al control | HE0 → HE20 → BCB |
 | `[bench Qwen3.8] UD-Q4 · thinking xhigh · 131k · MTP3 · visión` (`sys-bench-qwen38-udq4-reasoning-xhigh`) | BALANCE - Qwen3.8 UD-Q4 visión | A/B exacto del nivel máximo disponible de thinking contra el control `reasoning off` | `--reasoning xhigh`; resto idéntico al control | HE0 → HE20 → BCB |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking off · 131k` (`sys-bench-qwen38-udq4-browser-agent-off`) | BALANCE - Qwen3.8 UD-Q4 visión | Control del harness Browser Agent nativo contra Máximo/off | `agent-browser`; `core + web + browser`; skills portables off | HE0 → HE20 → BCB + suite browser |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking low · 131k` (`sys-bench-qwen38-udq4-browser-agent-low`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir el primer nivel de thinking dentro del harness web | `agent-browser`; `--reasoning low` | HE0 → HE20 → BCB + suite browser |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking medium · 131k` (`sys-bench-qwen38-udq4-browser-agent-medium`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir el punto medio de calidad/latencia en navegación | `agent-browser`; `--reasoning medium` | HE0 → HE20 → BCB + suite browser |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking xhigh · 131k` (`sys-bench-qwen38-udq4-browser-agent-xhigh`) | BALANCE - Qwen3.8 UD-Q4 visión | Contrastar la configuración prioritaria del reporte externo | `agent-browser`; `--reasoning xhigh` | HE0 → HE20 → BCB + suite browser |
 | `[bench Qwen3.8] UD-Q4 · Artifacts local/privado · 131k` (`sys-bench-qwen38-udq4-artifact-local`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir creación, validación y stash local de un artefacto sin red | `agent-artifact-local`; pack core; MCP/web/browser off | `artifact_lifecycle_v1` |
 | `[bench Qwen3.8] UD-Q4 · Artifacts publicación aprobada · 131k` (`sys-bench-qwen38-udq4-artifact-publisher`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir el mismo flujo con web/browser disponibles sin publicar durante la preparación | `agent-artifact-publisher`; core + web + browser; approval ask | `artifact_lifecycle_v1` |
+| `[bench 24GB Qwen3.8] UD-Q4 · fast · MTP4 · 64k · mmproj RAM` (`sys-bench-qwen38-udq4-24gb-fast-mtp4-64k`) | BALANCE - Qwen3.8 UD-Q4 visión | Variante de baja presión para una sola RTX 3090/24GB | ctx 65k; MTP4; `--no-mmproj-offload`; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench 24GB Qwen3.8] UD-Q4 · lookup aproximado · 64k · MTP3` (`sys-bench-qwen38-udq4-24gb-lookup-64k`) | BALANCE - Qwen3.8 UD-Q4 visión | Aproximar lookup-augmented drafting con la tool disponible en llama.cpp | ctx 65k; MTP3 + `ngram-mod`; KV q4_0 | HE0 → HE20 → BCB |
+| `[bench 24GB Qwen3.8] UD-Q4 · prefix cache · 64k · MTP3` (`sys-bench-qwen38-udq4-24gb-prefix-cache-64k`) | BALANCE - Qwen3.8 UD-Q4 visión | Medir turnos repetidos con cache de prefijo en un perfil 24GB | ctx 65k; MTP3; `--cache-prompt`; `--cache-reuse 512` | HE0 → HE20 → BCB |
+| `[bench 24GB] Q4_K_M · tg128 · cold · sin speculative` (`sys-bench-qwen38-q4km-24gb-tg128`) | Control Qwen3.8 Q4_K_M 24GB Turing | Reproducir la receta del reporte sin MTP, ngram, cache de prefijo ni mmproj | `-ngl 99`; Flash on; ctx 32k; B512/U512; KV q4_0; `parallel=1`; thinking off | `llama-bench tg128` / HE0 separado |
+| `[bench 24GB] Q6_K · tg128 · cold · sin speculative` (`sys-bench-qwen38-q6k-24gb-tg128`) | Control Qwen3.8 Q6_K 24GB Turing | Medir el costo de subir Q4 a Q6 manteniendo la misma receta | `-ngl 99`; Flash on; ctx 32k; B512/U512; KV q4_0; `parallel=1`; thinking off | `llama-bench tg128` / HE0 separado |
+| `[diagnóstico 24GB] Q4/Q6 · ngram o prefix warm` | Controles Q4/Q6 24GB Turing | Detectar el tipo de falso throughput descrito en el reporte; nunca rankear contra cold | Variantes `*-ngram-diagnostic` y `*-prefix-warm`; reportar como grupo separado | Diagnóstico, no score comparable |
+| `[bench 12GB] Ling 3.0 Tiny Q6 · auxiliar · 131k` (`sys-ling30-tiny-q6-131k`) | Ling 3.0 Tiny Q6 | Medir el auxiliar thinking-off para compresión, resumen y tareas no críticas | Q6_K; ctx 131k; KV q8_0; `enable_thinking=false` | HE0 + suite auxiliar |
+| `[bench Ling 3.0 Tiny] Q6 · auxiliar · 64k` (`sys-bench-ling30-tiny-q6-64k`) | Ling 3.0 Tiny Q6 | Separar coste de KV/contexto del coste de la arquitectura | ctx 65k; KV q8_0; `enable_thinking=false` | HE0 + suite auxiliar |
+| `[bench Ling 3.0 Tiny] Q6 · thinking on · 131k` (`sys-bench-ling30-tiny-q6-thinking-131k`) | Ling 3.0 Tiny Q6 | A/B del razonamiento nativo frente al uso auxiliar rápido | Q6_K; ctx 131k; KV q8_0; `enable_thinking=true` | HE0 + suite auxiliar |
+| `[bench Ling 3.0 Tiny] Q6 · auxiliar · KV q4 · 131k` (`sys-bench-ling30-tiny-q6-kv4-131k`) | Ling 3.0 Tiny Q6 | Medir ahorro de memoria contra posible pérdida semántica | Q6_K; ctx 131k; KV q4_0; `enable_thinking=false` | HE0 + suite auxiliar |
+| `[bench 8GB] Ling 3.0 Tiny UD-Q4 · auxiliar · 64k` (`sys-bench-ling30-tiny-udq4-64k`) | Ling 3.0 Tiny UD-Q4 | Punto de baja memoria para compresión/resumen | UD-Q4_K_XL; ctx 65k; KV q4_0; `enable_thinking=false` | HE0 + suite auxiliar |
+| `[bench hybrid 24GB] Ling Tiny planifica → Qwen3.8 ejecuta` (`sys-hybrid-ling30-qwen38`) | Qwen3.8 UD-Q4 visión | Medir si el planificador ligero reduce wall-time sin bajar calidad | Ling Q6 planifica sin tools; Qwen3.8 UD-Q4/MTP3 ejecuta; swap secuencial | HE0 → HE20 → BCB |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k` (`sys-kat3-mtp-262k`) | FAST - KAT2-Coder-7-8-26 | Probar MTP embebido APEX sin alterar KAT2; texto-only | APEX I-Compact; ctx 262k; B512/U64; KV q8_0; MTP4; requiere descargar el GGUF | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
@@ -286,6 +305,9 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 
 | Candidato | HumanEval/0 | Tiempo HE0 | TPS HE0 | Estado |
 |---|---:|---:|---:|---|
+| `[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS · ngram-mod · 131k` | Pendiente | — | — | Pendiente de HE0; requiere build beellama/dflash2-capable y GGUF RVN-IQ3_XXS |
+| `[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS · DFlash2+ngram · 105k` | Pendiente | — | — | Pendiente de HE0; requiere drafter DFlash2 y registrar fork/build |
+| `[bench 16GB] Qwen3.8 Heretic RVN-IQ3_XXS-MTP · MTP+ngram · 105k` | Pendiente | — | — | Pendiente de HE0; GGUF fusionado manual; no descargable automáticamente |
 | `[bench NInfer] Qwen3.6-27B · texto` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench NInfer] Qwen3.6-35B-A3B · coding` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench NInfer] Qwen3.8-27B · coding` | Pendiente | — | — | Pendiente de HE0; BCB requiere validar tool-calls |
@@ -297,6 +319,22 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 | `[bench Qwen3.8] UD-Q4 · thinking low · 131k · MTP3 · visión` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra el control UD-Q4 `reasoning off` |
 | `[bench Qwen3.8] UD-Q4 · thinking medium · 131k · MTP3 · visión` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra el control UD-Q4 `reasoning off` |
 | `[bench Qwen3.8] UD-Q4 · thinking xhigh · 131k · MTP3 · visión` | Pendiente | — | — | Pendiente de HE0; comparar sólo contra el control UD-Q4 `reasoning off` |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking off · 131k` | Pendiente | — | — | Pendiente de HE0; luego requiere suite browser real |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking low · 131k` | Pendiente | — | — | Pendiente de HE0; luego requiere suite browser real |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking medium · 131k` | Pendiente | — | — | Pendiente de HE0; luego requiere suite browser real |
+| `[bench Qwen3.8] UD-Q4 · Browser Agent · thinking xhigh · 131k` | Pendiente | — | — | Pendiente de HE0; luego requiere suite browser real |
+| `[bench 24GB Qwen3.8] UD-Q4 · fast · MTP4 · 64k · mmproj RAM` | Pendiente | — | — | Pendiente de HE0; análogo llama.cpp, no DFlash2 |
+| `[bench 24GB Qwen3.8] UD-Q4 · lookup aproximado · 64k · MTP3` | Pendiente | — | — | Pendiente de HE0; ngram-mod no equivale al lookup DFlash2 |
+| `[bench 24GB Qwen3.8] UD-Q4 · prefix cache · 64k · MTP3` | Pendiente | — | — | Pendiente de HE0; comparar sólo con warm-cache |
+| `[bench 24GB] Q4_K_M · tg128 · cold · sin speculative` | Pendiente | — | — | Pendiente de HE0; primero verificar que Q4 queda completamente offloaded |
+| `[bench 24GB] Q6_K · tg128 · cold · sin speculative` | Pendiente | — | — | Pendiente de HE0; registrar OOM/offload si la máquina no deja margen |
+| `[diagnóstico 24GB] Q4/Q6 · ngram o prefix warm` | No rankear | — | — | Medir sólo para demostrar la diferencia entre cold decode, ngram-hit y warm-cache |
+| `[bench 12GB] Ling 3.0 Tiny Q6 · auxiliar · 131k` | Pendiente | — | — | GGUF no descargado; HE0 + suite semántica auxiliar |
+| `[bench Ling 3.0 Tiny] Q6 · auxiliar · 64k` | Pendiente | — | — | GGUF no descargado; HE0 + suite semántica auxiliar |
+| `[bench Ling 3.0 Tiny] Q6 · thinking on · 131k` | Pendiente | — | — | GGUF no descargado; comparar sólo contra Q6 thinking-off |
+| `[bench Ling 3.0 Tiny] Q6 · auxiliar · KV q4 · 131k` | Pendiente | — | — | GGUF no descargado; validar fidelidad antes de promover |
+| `[bench 8GB] Ling 3.0 Tiny UD-Q4 · auxiliar · 64k` | Pendiente | — | — | GGUF no descargado; HE0 + suite semántica auxiliar |
+| `[bench hybrid 24GB] Ling Tiny planifica → Qwen3.8 ejecuta` | Pendiente | — | — | Comparar contra Qwen3.8 directo; separar planificación y ejecución |
 | `[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench Qwen3.8] Q4_K_M · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |
 | `[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512` | Pendiente | — | — | Pendiente de HE0 |

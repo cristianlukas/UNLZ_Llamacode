@@ -46,6 +46,8 @@ private slots:
     void manager_loadsSystemProfiles();
     void manager_ninferProfilesAreBenchmarkCandidates();
     void manager_vllmDflashProfilesAreExternalBenchmarks();
+    void manager_16gbQwen38CandidatesPreservePostTuning();
+    void manager_lingProfilesAreBenchmarkCandidates();
     void manager_systemNotPersisted();
     void manager_immutable();
     void manager_duplicateMakesEditableCopy();
@@ -240,6 +242,189 @@ void SystemProfilesTests::manager_vllmDflashProfilesAreExternalBenchmarks()
     QCOMPARE(autoregressive.value(QStringLiteral("external")).toObject()
                  .value(QStringLiteral("speculativeMethod")).toString(),
              QStringLiteral("none"));
+}
+
+void SystemProfilesTests::manager_16gbQwen38CandidatesPreservePostTuning()
+{
+    const QStringList ids = {
+        QStringLiteral("sys-bench-16-qwen38-rvn-iq3xxs-ngram-131k"),
+        QStringLiteral("sys-bench-16-qwen38-rvn-iq3xxs-dflash2-ngram-105k"),
+        QStringLiteral("sys-bench-16-qwen38-rvn-iq3xxs-mtp-ngram-105k")};
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    ProfileManager pm;
+
+    for (const QString &id : ids) {
+        QJsonObject entry;
+        for (const QJsonValue &value : profiles) {
+            if (value.toObject().value(QStringLiteral("id")).toString() == id) {
+                entry = value.toObject();
+                break;
+            }
+        }
+        QVERIFY2(!entry.isEmpty(), qPrintable(id));
+        QVERIFY(entry.value(QStringLiteral("benchmark")).toBool());
+        QCOMPARE(entry.value(QStringLiteral("minVramGb")).toInt(), 16);
+        QCOMPARE(entry.value(QStringLiteral("minRamGb")).toInt(), 32);
+        QCOMPARE(entry.value(QStringLiteral("binaryKind")).toString(), QStringLiteral("beellama"));
+        QCOMPARE(entry.value(QStringLiteral("reasoningEffort")).toString(), QStringLiteral("medium"));
+        QCOMPARE(entry.value(QStringLiteral("chatTemplate")).toString(),
+                 QStringLiteral("qwen38-tools-fixed.jinja"));
+        QVERIFY(entry.value(QStringLiteral("model")).toObject()
+                    .value(QStringLiteral("mmprojFile")).toString().isEmpty());
+
+        const QJsonObject runtime = entry.value(QStringLiteral("runtime")).toObject();
+        QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(),
+                 id.endsWith(QStringLiteral("131k")) ? 131072 : 105000);
+        QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 512);
+        QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 512);
+        QCOMPARE(runtime.value(QStringLiteral("kv")).toString(), QStringLiteral("q5_1"));
+
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        QCOMPARE(launch.value(QStringLiteral("agentProfileId")).toString(),
+                 QStringLiteral("agent-maximo"));
+        QCOMPARE(launch.value(QStringLiteral("reasoningEffort")).toString(),
+                 QStringLiteral("medium"));
+        const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+        const auto valueAfter = [&args](const QString &flag) {
+            const int index = args.indexOf(flag);
+            return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
+        };
+        for (const QString &flag : {QStringLiteral("--cache-type-k"),
+                                    QStringLiteral("--cache-type-v"),
+                                    QStringLiteral("--fit"), QStringLiteral("--temp"),
+                                    QStringLiteral("--top-p"), QStringLiteral("--top-k"),
+                                    QStringLiteral("--min-p"),
+                                    QStringLiteral("--repeat-penalty"),
+                                    QStringLiteral("--presence-penalty"),
+                                    QStringLiteral("--parallel")})
+            QVERIFY2(args.contains(flag), qPrintable(id + " falta " + flag));
+        QCOMPARE(valueAfter(QStringLiteral("--temp")), QStringLiteral("0.60"));
+        QCOMPARE(valueAfter(QStringLiteral("--top-p")), QStringLiteral("0.95"));
+        QCOMPARE(valueAfter(QStringLiteral("--top-k")), QStringLiteral("20"));
+        QCOMPARE(valueAfter(QStringLiteral("--min-p")), QStringLiteral("0.0"));
+        QCOMPARE(valueAfter(QStringLiteral("--repeat-penalty")), QStringLiteral("1.0"));
+        QCOMPARE(valueAfter(QStringLiteral("--presence-penalty")), QStringLiteral("0.0"));
+        QCOMPARE(valueAfter(QStringLiteral("--cache-type-k")), QStringLiteral("q5_1"));
+        QCOMPARE(valueAfter(QStringLiteral("--cache-type-v")), QStringLiteral("q5_1"));
+        QCOMPARE(valueAfter(QStringLiteral("--parallel")), QStringLiteral("1"));
+        QCOMPARE(valueAfter(QStringLiteral("--spec-ngram-mod-n-min")), QStringLiteral("4"));
+        QCOMPARE(valueAfter(QStringLiteral("--spec-ngram-mod-n-max")), QStringLiteral("8"));
+        QCOMPARE(valueAfter(QStringLiteral("--spec-ngram-mod-n-match")), QStringLiteral("32"));
+
+        const QVariantMap model = pm.getModelProfile(
+            launch.value(QStringLiteral("modelProfileId")).toString());
+        if (id.contains(QStringLiteral("dflash2"))) {
+            QVERIFY(!model.value(QStringLiteral("draftModelId")).toString().isEmpty());
+            QCOMPARE(model.value(QStringLiteral("specType")).toString(),
+                     QStringLiteral("draft-dflash"));
+            QCOMPARE(valueAfter(QStringLiteral("--spec-type")),
+                     QStringLiteral("draft-dflash,ngram-mod"));
+            QCOMPARE(entry.value(QStringLiteral("draftModel")).toObject()
+                         .value(QStringLiteral("file")).toString(),
+                     QStringLiteral("Qwen3.8-27B-DFlash2-Q4_K_M.gguf"));
+        } else {
+            QVERIFY(model.value(QStringLiteral("draftModelId")).toString().isEmpty());
+            QVERIFY(args.contains(QStringLiteral("ngram-mod")));
+        }
+        if (id.contains(QStringLiteral("mtp-ngram"))) {
+            QVERIFY(entry.value(QStringLiteral("manualOnly")).toBool());
+            QVERIFY(entry.value(QStringLiteral("mtp")).toObject()
+                        .value(QStringLiteral("selfContained")).toBool());
+            QVERIFY(args.contains(QStringLiteral("draft-mtp,ngram-mod")));
+            QVERIFY(args.contains(QStringLiteral("--spec-draft-n-max")));
+        }
+    }
+}
+
+void SystemProfilesTests::manager_lingProfilesAreBenchmarkCandidates()
+{
+    ProfileManager pm;
+    const QStringList ids = {
+        QStringLiteral("sys-ling30-tiny-q6-131k"),
+        QStringLiteral("sys-bench-ling30-tiny-q6-64k"),
+        QStringLiteral("sys-bench-ling30-tiny-q6-thinking-131k"),
+        QStringLiteral("sys-bench-ling30-tiny-q6-kv4-131k"),
+        QStringLiteral("sys-bench-ling30-tiny-udq4-64k"),
+        QStringLiteral("sys-hybrid-ling30-qwen38")};
+
+    for (const QString &id : ids) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("system")).toBool(), qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
+    }
+
+    const QVariantMap ling = pm.getLaunchProfile(QStringLiteral("sys-ling30-tiny-q6-131k"));
+    const QVariantMap lingModel = pm.getModelProfile(
+        ling.value(QStringLiteral("modelProfileId")).toString());
+    QVERIFY(lingModel.value(QStringLiteral("mmprojId")).toString().isEmpty());
+    const QVariantMap lingRuntime = pm.getRuntimePreset(
+        ling.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(lingRuntime.value(QStringLiteral("ctx")).toInt(), 131072);
+    QCOMPARE(lingRuntime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("q8_0"));
+    const QStringList lingArgs = ling.value(QStringLiteral("extraArgs")).toStringList();
+    const int kwargs = lingArgs.indexOf(QStringLiteral("--chat-template-kwargs"));
+    QVERIFY(kwargs >= 0 && kwargs + 1 < lingArgs.size());
+    QCOMPARE(lingArgs.at(kwargs + 1), QStringLiteral("{\"enable_thinking\":false}"));
+
+    const QVariantMap shortLing = pm.getLaunchProfile(
+        QStringLiteral("sys-bench-ling30-tiny-q6-64k"));
+    QCOMPARE(pm.getRuntimePreset(shortLing.value(QStringLiteral("runtimePresetId")).toString())
+                 .value(QStringLiteral("ctx")).toInt(), 65536);
+
+    const QVariantMap thinkingLing = pm.getLaunchProfile(
+        QStringLiteral("sys-bench-ling30-tiny-q6-thinking-131k"));
+    const QStringList thinkingArgs = thinkingLing.value(QStringLiteral("extraArgs")).toStringList();
+    const int thinkingKwargs = thinkingArgs.indexOf(QStringLiteral("--chat-template-kwargs"));
+    QVERIFY(thinkingKwargs >= 0 && thinkingKwargs + 1 < thinkingArgs.size());
+    QCOMPARE(thinkingArgs.at(thinkingKwargs + 1), QStringLiteral("{\"enable_thinking\":true}"));
+
+    const QVariantMap kv4Ling = pm.getLaunchProfile(
+        QStringLiteral("sys-bench-ling30-tiny-q6-kv4-131k"));
+    QCOMPARE(pm.getRuntimePreset(kv4Ling.value(QStringLiteral("runtimePresetId")).toString())
+                 .value(QStringLiteral("cacheType")).toString(), QStringLiteral("q4_0"));
+
+    const QVariantMap hybrid = pm.getLaunchProfile(QStringLiteral("sys-hybrid-ling30-qwen38"));
+    QCOMPARE(hybrid.value(QStringLiteral("plannerProfileId")).toString(),
+             QStringLiteral("sys-ling30-tiny-q6-131k"));
+    QCOMPARE(hybrid.value(QStringLiteral("hybridMode")).toString(), QStringLiteral("sequential"));
+    QVERIFY(!hybrid.value(QStringLiteral("modelProfileId")).toString().isEmpty());
+    QVERIFY(hybrid.value(QStringLiteral("modelProfileId")).toString()
+                != ling.value(QStringLiteral("modelProfileId")).toString());
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject q6;
+    QJsonObject q4;
+    QJsonObject hybridJson;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        const QString id = profile.value(QStringLiteral("id")).toString();
+        if (id == QStringLiteral("sys-ling30-tiny-q6-131k")) q6 = profile;
+        if (id == QStringLiteral("sys-bench-ling30-tiny-udq4-64k")) q4 = profile;
+        if (id == QStringLiteral("sys-hybrid-ling30-qwen38")) hybridJson = profile;
+    }
+    QVERIFY(!q6.isEmpty());
+    QVERIFY(!q4.isEmpty());
+    QVERIFY(!hybridJson.isEmpty());
+    QCOMPARE(q6.value(QStringLiteral("model")).toObject().value(QStringLiteral("repo")).toString(),
+             QStringLiteral("bloomer010/Ling-3.0-tiny-GGUF"));
+    QCOMPARE(q6.value(QStringLiteral("model")).toObject().value(QStringLiteral("file")).toString(),
+             QStringLiteral("Ling-3.0-tiny-Q6_K.gguf"));
+    QCOMPARE(q4.value(QStringLiteral("model")).toObject().value(QStringLiteral("quant")).toString(),
+             QStringLiteral("UD-Q4_K_XL"));
+    QCOMPARE(hybridJson.value(QStringLiteral("plannerProfileId")).toString(),
+             QStringLiteral("sys-ling30-tiny-q6-131k"));
+    QCOMPARE(hybridJson.value(QStringLiteral("hybridMode")).toString(),
+             QStringLiteral("sequential"));
+    QVERIFY(hybridJson.value(QStringLiteral("comment")).toString()
+                .contains(QStringLiteral("No implementa todavía routing automático")));
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
@@ -1615,7 +1800,7 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 22 : 16;
+        const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 31 : 16;
         QCOMPARE(variants.size(), expectedVariantCount); // variantes base, controles del post, espejo y MTP+ngram
         if (id == QStringLiteral("sys-qwen38-27b-udq4-131k")) {
             bool ngramQueued = false;
@@ -1653,6 +1838,80 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
                 const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
                 QCOMPARE(args.value(args.indexOf(QStringLiteral("--reasoning")) + 1),
                          reasoningLevels.at(i));
+            }
+            const QStringList browserIds = {
+                QStringLiteral("sys-bench-qwen38-udq4-browser-agent-off"),
+                QStringLiteral("sys-bench-qwen38-udq4-browser-agent-low"),
+                QStringLiteral("sys-bench-qwen38-udq4-browser-agent-medium"),
+                QStringLiteral("sys-bench-qwen38-udq4-browser-agent-xhigh")};
+            const QStringList browserLevels = {
+                QStringLiteral("off"), QStringLiteral("low"),
+                QStringLiteral("medium"), QStringLiteral("xhigh")};
+            for (int i = 0; i < browserIds.size(); ++i) {
+                const QJsonObject variant = [&]() {
+                    for (const QJsonValue &value : variants)
+                        if (value.toObject().value(QStringLiteral("id")).toString()
+                            == browserIds.at(i))
+                            return value.toObject();
+                    return QJsonObject{};
+                }();
+                QVERIFY2(!variant.isEmpty(), qPrintable(browserIds.at(i)));
+                QVERIFY(variant.value(QStringLiteral("benchmark")).toBool());
+                QCOMPARE(variant.value(QStringLiteral("agentProfileId")).toString(),
+                         QStringLiteral("agent-browser"));
+                const QVariantMap launch = pm.getLaunchProfile(browserIds.at(i));
+                QVERIFY2(!launch.isEmpty(), qPrintable(browserIds.at(i)));
+                QCOMPARE(launch.value(QStringLiteral("agentProfileId")).toString(),
+                         QStringLiteral("agent-browser"));
+                const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+                const int reasoning = args.indexOf(QStringLiteral("--reasoning"));
+                QVERIFY(reasoning >= 0 && reasoning + 1 < args.size());
+                QCOMPARE(args.at(reasoning + 1), browserLevels.at(i));
+            }
+            const QStringList artifactIds = {
+                QStringLiteral("sys-bench-qwen38-udq4-artifact-local"),
+                QStringLiteral("sys-bench-qwen38-udq4-artifact-publisher")};
+            const QStringList artifactProfiles = {
+                QStringLiteral("agent-artifact-local"),
+                QStringLiteral("agent-artifact-publisher")};
+            for (int i = 0; i < artifactIds.size(); ++i) {
+                const QJsonObject variant = [&]() {
+                    for (const QJsonValue &value : variants)
+                        if (value.toObject().value(QStringLiteral("id")).toString()
+                            == artifactIds.at(i))
+                            return value.toObject();
+                    return QJsonObject{};
+                }();
+                QVERIFY2(!variant.isEmpty(), qPrintable(artifactIds.at(i)));
+                QVERIFY(variant.value(QStringLiteral("benchmark")).toBool());
+                QCOMPARE(variant.value(QStringLiteral("agentProfileId")).toString(),
+                         artifactProfiles.at(i));
+                const QVariantMap launch = pm.getLaunchProfile(artifactIds.at(i));
+                QVERIFY2(!launch.isEmpty(), qPrintable(artifactIds.at(i)));
+                QCOMPARE(launch.value(QStringLiteral("agentProfileId")).toString(),
+                         artifactProfiles.at(i));
+            }
+            const QStringList memoryIds = {
+                QStringLiteral("sys-bench-qwen38-udq4-24gb-fast-mtp4-64k"),
+                QStringLiteral("sys-bench-qwen38-udq4-24gb-lookup-64k"),
+                QStringLiteral("sys-bench-qwen38-udq4-24gb-prefix-cache-64k")};
+            for (const QString &memoryId : memoryIds) {
+                const QJsonObject variant = [&]() {
+                    for (const QJsonValue &value : variants)
+                        if (value.toObject().value(QStringLiteral("id")).toString() == memoryId)
+                            return value.toObject();
+                    return QJsonObject{};
+                }();
+                QVERIFY2(!variant.isEmpty(), qPrintable(memoryId));
+                QVERIFY(variant.value(QStringLiteral("benchmark")).toBool());
+                QCOMPARE(variant.value(QStringLiteral("runtime")).toObject()
+                             .value(QStringLiteral("ctx")).toInt(), 65536);
+                const QVariantMap launch = pm.getLaunchProfile(memoryId);
+                QVERIFY2(!launch.isEmpty(), qPrintable(memoryId));
+                const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+                QVERIFY(args.contains(QStringLiteral("--spec-draft-n-max"))
+                        || args.contains(QStringLiteral("--spec-type"))
+                        || args.contains(QStringLiteral("--cache-prompt")));
             }
         }
         QSet<QString> variantIds;
@@ -2094,6 +2353,7 @@ void SystemProfilesTests::bundle_quantizationPolicyCapsKvAtQ8()
     const auto allowed = [](const QString &value) {
         return value.isEmpty() || value.compare(QStringLiteral("q8_0"), Qt::CaseInsensitive) == 0
             || value.compare(QStringLiteral("q4_0"), Qt::CaseInsensitive) == 0
+            || value.compare(QStringLiteral("q5_1"), Qt::CaseInsensitive) == 0
             || value.compare(QStringLiteral("q6_k"), Qt::CaseInsensitive) == 0;
     };
     const auto checkCacheArgs = [&allowed](const QJsonObject &object) {

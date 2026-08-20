@@ -31,6 +31,12 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             if (variant.contains(QStringLiteral("chatTemplate")))
                 derived[QStringLiteral("chatTemplate")] =
                     variant.value(QStringLiteral("chatTemplate"));
+            // Una variante puede cambiar el perfil de agente/harness sin
+            // duplicar el modelo, runtime ni sus flags. Esto permite hacer A/B
+            // de harnesses con la misma huella de llama-server.
+            if (variant.contains(QStringLiteral("agentProfileId")))
+                derived[QStringLiteral("agentProfileId")] =
+                    variant.value(QStringLiteral("agentProfileId"));
             // Una variante de tuning no hereda las insignias obtenidas por el
             // perfil base: debe medirse y marcarse de forma explicita.
             derived[QStringLiteral("best")] = variant.value(QStringLiteral("best")).toBool(false);
