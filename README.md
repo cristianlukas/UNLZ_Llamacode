@@ -2065,8 +2065,16 @@ las rutas de prueba están en [`docs/agent-runs.md`](docs/agent-runs.md).
 Al cerrar el turno se comparan hashes del workspace y se conserva en
 `agent_deliverables/<runId>/` sólo lo creado o modificado. El manifiesto incluye
 hash anterior/posterior, estado, tamaño y una copia restaurable cuando entra en
-los límites configurados. `saveAs` y `restore` rechazan sobrescribir por defecto
-y quedan disponibles para una futura superficie de Entregables en GUI/ControlApi.
+los límites configurados. La pestaña Agente expone `📦 Inbox`: permite inspeccionar
+el historial durable, abrir la carpeta de una corrida, revisar sus entregables y
+usar Guardar como. `saveAs` y `restore` rechazan sobrescribir por defecto. Si un
+lease vence, la corrida queda `uncertain` y el Inbox ofrece únicamente cerrarla
+como `cancelled` o `failed`; nunca relanza sus efectos automáticamente.
+
+La captura de snapshots y entregables se ejecuta fuera del hilo de la interfaz.
+Los registros, journals, manifiestos e índices usan locks con recuperación de
+locks stale para que dos instancias no mezclen eventos ni archivos. El detalle
+renderer-safe no expone leases ni el snapshot inicial.
 
 ## Seguridad operativa
 
