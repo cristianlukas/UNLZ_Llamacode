@@ -26,8 +26,9 @@ public:
     explicit RunHistoryStore(QObject *parent = nullptr);
 
     // Agrega un registro al historial del owner. `record` usa las claves de
-    // toJson (startedAt/finishedAt/status/summary/source/log...). Capa a los
-    // últimos kMaxPerOwner.
+    // toJson (startedAt/finishedAt/status/summary/source/log/metadata...).
+    // `metadata` es extensible para artefactos y runtimes sin cambiar el
+    // contrato de los campos históricos. Capa a los últimos kMaxPerOwner.
     Q_INVOKABLE void append(const QString &ownerId, const QVariantMap &record);
     // Historial del owner, más nuevo primero.
     Q_INVOKABLE QVariantList history(const QString &ownerId) const;

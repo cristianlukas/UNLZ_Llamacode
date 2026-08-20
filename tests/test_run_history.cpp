@@ -37,6 +37,7 @@ void RunHistoryTests::jsonRoundTrip()
         {"finishedAt", "2024-01-01T09:05:00"}, {"status", "ok"}, {"summary", "listo"},
         {"source", "manual"}, {"automationId", ""}, {"correlationId", "corr-1"},
         {"log", "traza completa\nlinea 2"},
+        {"metadata", QVariantMap{{"runtime", "codex"}, {"manifestPath", "run/manifest.json"}}},
         {"receipts", QVariantList{QVariantMap{{"status", "executed"}, {"tool", "create_issue"}}}},
         {"report", QVariantList{
             QVariantMap{{"n", 1}, {"tool", "desktop_launch"}, {"ok", true}, {"summary", "ok"}},
@@ -47,6 +48,7 @@ void RunHistoryTests::jsonRoundTrip()
     QCOMPARE(out.value("status").toString(), QStringLiteral("ok"));
     QCOMPARE(out.value("log").toString(), QStringLiteral("traza completa\nlinea 2"));
     QCOMPARE(out.value("correlationId").toString(), QStringLiteral("corr-1"));
+    QCOMPARE(out.value("metadata").toMap().value("runtime").toString(), QStringLiteral("codex"));
     QCOMPARE(out.value("receipts").toList().first().toMap().value("tool").toString(),
              QStringLiteral("create_issue"));
     // El run-report por paso sobrevive el round-trip.

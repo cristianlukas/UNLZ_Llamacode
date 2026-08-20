@@ -16,6 +16,8 @@ Documentos relacionados (y su estado):
   `sanitizeApiMessagesForWire`, el idle-watchdog de SSE y el kill de árbol de shell.
 - `docs/agent-efficiency.md`, `docs/agent-workflows.md`, `docs/skills.md`,
   `docs/evidence.md`, `docs/HEADLESS.md`, `docs/control-api.md`.
+- `docs/managed-agent-runs.md` — corridas largas administradas de Claude Code y
+  Codex, con prompt durable, manifiesto, logs y cierre auditable.
 
 ---
 
@@ -89,6 +91,12 @@ se etiquetan como verificados o no revisados; el prompt prohíbe convertir una
 inferencia no revisada en un hecho. `preflight` controla si el paquete entra antes
 del primer request y los topes del módulo protegen el presupuesto de contexto.
 
+El backend también emite `agentLifecycleEvent` con eventos normalizados de sesión,
+prompt, tools y sincronización de contexto. Después de una mutación nativa, un
+`run_shell` que haya cambiado archivos o una tool externa que declare rutas, el
+backend refresca los índices afectados; para shell compara snapshots de
+`ProjectBrain` en vez de interpretar comandos específicos.
+
 El editor vive en `qml/components/LcHarnessEditor.qml`: no conoce a `App` (todo
 entra por propiedades y sale por señales), y por eso su lógica de edición —la
 parte donde una regresión cuesta un perfil— se testea sola.
@@ -107,8 +115,15 @@ usuario la primera vez: sirve de plantilla y de smoke del descubrimiento.
 
 Presets de sistema: los cinco niveles históricos más **`agent-minimal`**
 (local-first duro: pocas tools, sin MCP, prompt ≤8000 chars, `sameCallLimit=2`,
-sin capturas) y **`agent-rpa`** (packs `core`+`rpa`, watchdog de 30 s, dos
-capturas de contexto, guardrail firme).
+sin capturas), **`agent-rpa`** (packs `core`+`rpa`, watchdog de 30 s, dos
+capturas de contexto, guardrail firme) y **`agent-browser`** (packs
+`core`+`web`+`browser`, timeout web de 300 s, dos imágenes retenidas y skills
+portables apagadas por defecto).
+
+`agent-browser` es una composición nativa inspirada en Browser Agent, no una
+instalación del proyecto externo. Sirve para comparar el perímetro del
+harness con el mismo modelo/runtime; una afirmación sobre BU Bench o
+BrowseWebApp Bench requiere ejecutar esas suites de navegador por separado.
 
 El inventario estable de perfiles, roles de sala, motores, adapters y skills
 está en [`docs/agent-harness-inventory.md`](agent-harness-inventory.md).
@@ -293,7 +308,7 @@ sea una decisión de **presupuesto de contexto** y no de gusto.
 | Multi-Agente | `ask_teacher`, `task` |
 | Habilidades | `skill_list`, `skill_load` |
 | Browser | `browser_skill_list`, `browser_skill_replay`, `browser_network_discover` |
-| Escritorio | `desktop_windows`, `desktop_controls`, `desktop_click_element`, `desktop_find_image` / `click_image` / `wait_image` / `assert_image`, `desktop_observe`, `desktop_click`, `desktop_stroke`, `desktop_type`, `desktop_key`, `desktop_scroll`, `desktop_focus`, `desktop_resize`, `desktop_wait`, `desktop_wait_for`, `desktop_assert`, `desktop_launch` |
+| Escritorio | `desktop_snapshot`, `desktop_windows`, `desktop_controls`, `desktop_click_element`, `desktop_control_action`, `desktop_find_image` / `click_image` / `wait_image` / `assert_image`, `desktop_observe`, `desktop_click`, `desktop_stroke`, `desktop_type`, `desktop_key`, `desktop_scroll`, `desktop_focus`, `desktop_resize`, `desktop_wait`, `desktop_wait_for`, `desktop_assert`, `desktop_launch` |
 | Correo | `email_accounts`, `email_send`, `email_list`, `email_read` |
 
 - `setDisabledTools(names)` las saca de `buildToolSchemas()` → no se ofrecen al

@@ -362,6 +362,197 @@ Item {
         }
     }
 
+    // Corridas largas de Claude Code/Codex: el prompt y los logs quedan en un
+    // manifiesto durable, aunque el usuario cierre este diálogo o la app.
+    Dialog {
+        id: managedRunsDialog
+        modal: true
+        parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2)
+        y: Math.round((parent.height - height) / 2)
+        width: Math.min(820, parent.width - 36)
+        height: Math.min(650, parent.height - 36)
+        leftPadding: 18; rightPadding: 18; topPadding: 14; bottomPadding: 14
+        closePolicy: Popup.CloseOnEscape
+        property string selectedRuntime: "claude"
+        property bool applyEdits: false
+        property string errorText: ""
+        background: Rectangle {
+            color: Theme.popupBg; radius: 12
+            border.color: Theme.popupBorderColor; border.width: 1
+        }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        header: Rectangle {
+            color: Theme.popupHeaderBg; height: 52; radius: 12
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.popupHeaderBorder }
+            Text {
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text: "🚀 Corridas administradas"
+                color: Theme.textPrimary; font { pixelSize: 14; bold: true }
+            }
+        }
+        contentItem: ColumnLayout {
+            spacing: 9
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "Runtime"; color: Theme.textSecondary; font.pixelSize: 12 }
+                LcComboBox {
+                    id: managedRuntimeCombo
+                    Layout.preferredWidth: 150
+                    model: ["claude", "codex"]
+                    currentIndex: managedRunsDialog.selectedRuntime === "codex" ? 1 : 0
+                    onActivated: managedRunsDialog.selectedRuntime = currentValue
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: "Workspace: " + (App.currentAgentProjectDir() || "directorio actual")
+                    color: Theme.textMuted; font.pixelSize: 11; elide: Text.ElideMiddle
+                }
+            }
+            TextArea {
+                id: managedPrompt
+                Layout.fillWidth: true; Layout.preferredHeight: 130
+                placeholderText: "Describí la revisión o implementación larga…"
+                color: Theme.textPrimary; wrapMode: TextArea.Wrap
+                background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.inputBorderColor }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                CheckBox {
+                    id: managedEditsCheck
+                    text: "Permitir ediciones"
+                    checked: managedRunsDialog.applyEdits
+                    onClicked: managedRunsDialog.applyEdits = checked
+                    contentItem: Text { text: managedEditsCheck.text; color: Theme.textPrimary; font.pixelSize: 11
+                        leftPadding: managedEditsCheck.indicator.width + 6 }
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: managedRunsDialog.applyEdits
+                        ? "Se conserva la aprobación del CLI; no se activa bypass automáticamente."
+                        : "Modo plan: lectura y reporte, sin escribir el workspace."
+                    color: managedRunsDialog.applyEdits ? Theme.warnText : Theme.textMuted
+                    font.pixelSize: 11; wrapMode: Text.WordWrap
+                }
+                LcButton {
+                    text: "Iniciar"
+                    enabled: managedPrompt.text.trim().length > 0
+                    onClicked: {
+                        const id = App.startManagedAgentRun({
+                            runtime: managedRunsDialog.selectedRuntime,
+                            prompt: managedPrompt.text,
+                            workspace: App.currentAgentProjectDir(),
+                            applyEdits: managedRunsDialog.applyEdits,
+                            approvalMode: App.agentApprovalMode,
+                            ownerId: "manual-managed-agent"
+                        })
+                        if (id.length > 0) {
+                            managedPrompt.text = ""
+                            managedRunsDialog.errorText = ""
+                        } else {
+                            managedRunsDialog.errorText = App.managedAgentRunStore.lastError
+                        }
+                    }
+                }
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: managedRunsDialog.errorText.length > 0
+                text: managedRunsDialog.errorText
+                color: Theme.errorText; font.pixelSize: 11; wrapMode: Text.WordWrap
+            }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+            Text {
+                text: "Historial local · " + App.managedAgentRunStore.activeCount + " activa(s)"
+                color: Theme.textSecondary; font { pixelSize: 12; bold: true }
+            }
+            ListView {
+                id: managedRunsList
+                Layout.fillWidth: true; Layout.fillHeight: true
+                clip: true; spacing: 6
+                model: App.managedAgentRunStore.runs
+                delegate: Rectangle {
+                    required property var modelData
+                    width: managedRunsList.width; height: 72; radius: 7
+                    color: Theme.inputBg; border.color: Theme.borderColor
+                    RowLayout {
+                        anchors { fill: parent; margins: 9 }
+                        spacing: 9
+                        ColumnLayout {
+                            Layout.fillWidth: true; spacing: 2
+                            Text {
+                                text: (modelData.runtime || "cli") + " · " + (modelData.status || "")
+                                color: modelData.status === "finished" ? Theme.successText
+                                     : modelData.status === "failed" || modelData.status === "stale"
+                                       ? Theme.errorText : Theme.textPrimary
+                                font { pixelSize: 12; bold: true }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.summary || modelData.workspace || ""
+                                color: Theme.textMuted; font.pixelSize: 10; elide: Text.ElideRight
+                            }
+                            Text {
+                                text: modelData.startedAt || ""
+                                color: Theme.textMuted; font.pixelSize: 9
+                            }
+                        }
+                        LcButton {
+                            text: "Logs"; secondary: true
+                            onClicked: {
+                                managedLogDialog.runId = modelData.runId || ""
+                                managedLogDialog.open()
+                            }
+                        }
+                        LcButton {
+                            text: "Abrir"; secondary: true
+                            onClicked: App.openManagedAgentRunDirectory(modelData.runId || "")
+                        }
+                        LcButton {
+                            text: "Parar"; danger: true
+                            visible: ["starting", "running", "stopping"].indexOf(modelData.status) >= 0
+                            onClicked: App.stopManagedAgentRun(modelData.runId || "")
+                        }
+                    }
+                }
+                Text {
+                    anchors.centerIn: parent; visible: managedRunsList.count === 0
+                    text: "Todavía no hay corridas administradas."
+                    color: Theme.textMuted; font.pixelSize: 11
+                }
+            }
+        }
+        footer: null
+    }
+
+    Dialog {
+        id: managedLogDialog
+        property string runId: ""
+        modal: true; parent: Overlay.overlay
+        x: Math.round((parent.width - width) / 2); y: Math.round((parent.height - height) / 2)
+        width: Math.min(900, parent.width - 36); height: Math.min(620, parent.height - 36)
+        leftPadding: 16; rightPadding: 16; topPadding: 14; bottomPadding: 14
+        background: Rectangle { color: Theme.popupBg; radius: 12; border.color: Theme.popupBorderColor }
+        Overlay.modal: Rectangle { color: Theme.overlayColor }
+        contentItem: Flickable {
+            clip: true; contentWidth: width; contentHeight: managedLogText.implicitHeight
+            Text {
+                id: managedLogText
+                width: parent.width
+                text: App.managedAgentRunLog(managedLogDialog.runId)
+                color: Theme.textPrimary; font.family: Theme.codeFont; font.pixelSize: 11
+                wrapMode: Text.WrapAnywhere
+            }
+        }
+        footer: Rectangle {
+            color: Theme.popupHeaderBg; height: 50; radius: 12
+            Row {
+                anchors { right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+                LcButton { text: "Cerrar"; secondary: true; onClicked: managedLogDialog.close() }
+            }
+        }
+    }
+
     Dialog {
         id: superAgentDialog
         modal: true
@@ -983,6 +1174,11 @@ Item {
                     text: "Abrir logs runtime"
                     secondary: true
                     onClicked: App.openRuntimeLogDir()
+                }
+                LcButton {
+                    text: "🚀 Corridas"
+                    secondary: true
+                    onClicked: managedRunsDialog.open()
                 }
                 LcButton {
                     text: {

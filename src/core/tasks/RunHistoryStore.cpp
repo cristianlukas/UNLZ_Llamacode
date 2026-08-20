@@ -39,6 +39,10 @@ QJsonObject RunHistoryStore::toJson(const QVariantMap &r)
     o["workflowState"] = QJsonObject::fromVariantMap(r.value("workflowState").toMap());
     o["metrics"]       = QJsonObject::fromVariantMap(r.value("metrics").toMap());
     o["receipts"]      = QJsonArray::fromVariantList(r.value("receipts").toList());
+    // Metadata extensible: permite que nuevas superficies (por ejemplo una
+    // corrida de un CLI externo) agreguen artefactos sin romper el formato
+    // estable del historial existente.
+    o["metadata"]      = QJsonObject::fromVariantMap(r.value("metadata").toMap());
     return o;
 }
 
@@ -59,6 +63,7 @@ QVariantMap RunHistoryStore::fromJson(const QJsonObject &obj)
     r["workflowState"] = obj.value("workflowState").toObject().toVariantMap();
     r["metrics"]       = obj.value("metrics").toObject().toVariantMap();
     r["receipts"]      = obj.value("receipts").toArray().toVariantList();
+    r["metadata"]      = obj.value("metadata").toObject().toVariantMap();
     return r;
 }
 

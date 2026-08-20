@@ -41,11 +41,12 @@
 - [Arquitectura](#arquitectura)
 - [Diseño Multi-llama.cpp](#diseño-multi-llamacpp) · [Multi-GGUF roots](#diseño-multi-gguf-roots) · [Multi-perfiles](#diseño-multi-perfiles-compuestos)
 - [Cookbook de modelos (hardware-fit)](#cookbook-de-modelos-recomendaciones-hardware-fit)
-- [Chat integrado](#chat-integrado) · [Harness de Agente](#harness-de-agente-opencode) · [Lanzamiento del servidor](#lanzamiento-del-servidor-launchpage)
+- [Chat integrado](#chat-integrado) · [Harness de Agente](#harness-de-agente-opencode) · [Corridas administradas](#corridas-administradas-de-claude-code-y-codex) · [Lanzamiento del servidor](#lanzamiento-del-servidor-launchpage)
 - [Backends cloud + secretos](#backends-cloud--secretos-cifrados) · [Modo Charla (voz)](#modo-charla-voz-a-voz) · [Memoria/RAG](#memoria-rag-y-verificación) · [Maestro/supervisor](#maestro--supervisor-escalado)
 - [Correo](#cuentas-de-correo) · [Browser (Playwright)](#automatización-de-browser-playwright) · [Data Lab](#data-lab) · [Adjuntos/visión](#adjuntos-documentos--visión) · [Watchdog + VRAM](#robustez-del-server-watchdog--vram) · [Otras capacidades](#otras-capacidades)
 - [Process Lifecycle](#process-lifecycle) · [Stack técnico](#stack-técnico) · [Build](#build) · [Estructura del repo](#estructura-del-repo)
 - [Fases](#fases) · [Tasks (macros + scheduler)](#tasks-macros-configurables--scheduler-cron) · [Workflows de ingeniería](#workflows-de-ingeniería) · [Benchmarking](#benchmarking) · [Rendimiento multi-GPU](#rendimiento-multi-gpu) · [Auto-tuning](#auto-tuning-de-parámetros) · [Seguridad operativa](#seguridad-operativa)
+- [Corridas durables y entregables](#corridas-durables-y-entregables)
 - [Agradecimientos](#agradecimientos)
 
 ## Instalación ultra-rápida (banco de pruebas aislado)
@@ -119,10 +120,20 @@ Después de cada `write_file` o `edit_file` se actualizan los chunks y relacione
 afectados, incluso en Release. `GraphStore` conserva citas con ruta, rango y hash;
 `graph query` puede devolver un paquete estructurado y `graph doctor` detecta
 fuentes obsoletas o edges huérfanos. `KnowledgePacket` combina ese grafo con la
-memoria durable, con límites y recibo, y el módulo `knowledge` del `HarnessSpec`
-controla si entra en preflight. La búsqueda estructural no usa servicios externos;
+memoria durable, separa decisiones de hechos de apoyo y declara la precedencia
+código/tests → decisiones vigentes → memoria verificada → inferencias. El módulo
+`knowledge` del `HarnessSpec` controla si entra en preflight. El preflight también
+muestra el trabajo activo de otras sesiones y bloquea escrituras sobre rutas
+reclamadas por un agente vivo; las claims tienen TTL y viven en
+`.llamacode/active_work.json`. La búsqueda estructural no usa servicios externos;
 embeddings y reranking siguen siendo opcionales. El preflight se activa por perfil
-y Release conserva el flujo histórico hasta validar el beneficio con benchmarks.
+y los presets `agent-avanzado` y `agent-maximo` lo habilitan de forma automática;
+`agent-chat`, `agent-minimal`, RPA y Browser conservan el flujo liviano, mientras
+`agent-intermedio-next` sigue siendo comparable con Intermedio. Las mutaciones
+indirectas exitosas de `run_shell` y las tools externas que declaran rutas también
+disparan una detección incremental de cambios antes de actualizar el contexto.
+Release conserva el flujo histórico de los perfiles que no declaran preflight hasta
+validar el beneficio con benchmarks.
 La consolidación reutiliza `verify_claims`: descarta inferencias sin evidencia,
 reduce la confianza de las parciales y registra edges automáticos de tool/sesión
 para archivos tocados y relaciones decisión→bug, siempre como `unreviewed`.
@@ -162,9 +173,11 @@ que se activen en cada sesión.
 | Perfiles y presets | `AppLocalData/LlamaCode/profiles/` | No |
 | Historial de chat | `AppLocalData/LlamaCode/chat/` | No |
 | Tasks programadas | `AppLocalData/LlamaCode/tasks/` | No |
+| Corridas administradas de Claude/Codex | `AppLocalData/LlamaCode/managed-agent-runs/` | El prompt sale sólo al CLI/runtime elegido |
 | Resultados de benchmark | `AppLocalData/LlamaCode/benchmarks/` | No |
 | Métricas de latencia de voz | `AppLocalData/LlamaCode/voice/latency.jsonl` | No |
 | Estado de procesos | `AppLocalData/LlamaCode/services.json` | No |
+| Corridas del agente y entregables | `AppLocalData/LlamaCode/<harness>/agent_runs/` y `agent_deliverables/` | No |
 | Secretos | SecretStore del sistema o referencias a env vars | No se guardan en JSON del repo |
 
 ### Cuándo hay tráfico externo
@@ -195,7 +208,7 @@ que se activen en cada sesión.
   remotos sin controles semánticos, el agente dispone de `desktop_find_image`,
   `desktop_click_image`, `desktop_wait_image` y `desktop_assert_image`: buscan una
   plantilla en memoria con umbral y escala acotados, rechazan coincidencias ambiguas
-  y verifican la geometría antes de actuar. Teach v2 captura automáticamente una
+  y verifican la geometría antes de actuar. Teach v2/v3 captura automáticamente una
   plantilla cuando un clic no tiene ancla semántica; F8 captura una referencia rápida
   y F9 abre una capa de selección multimonitor para arrastrar una región exacta sin
   enviar ese gesto a la aplicación subyacente (Escape cancela). Tasks permite probar, reemplazar, eliminar
@@ -837,6 +850,17 @@ persistencia para que probar Next no altere el historial existente.
 - **Resume automático**: retoma la última sesión al reiniciar el agente
 - **Títulos auto-generados**: actualización en tiempo real vía `session.updated` SSE
 
+## Corridas administradas de Claude Code y Codex
+
+Desde **Agente → 🚀 Corridas**, LlamaCode puede iniciar revisiones o
+implementaciones largas en Claude Code o Codex y seguirlas desde la app. Cada
+corrida conserva prompt, manifiesto, stdout y stderr, y al finalizar se agrega
+a `RunHistoryStore` con metadata y rutas de evidencia. El modo plan es el
+default; permitir ediciones es explícito y nunca activa bypass/full-auto sin
+una confirmación igualmente explícita. Si la app se cierra, la corrida se
+recupera como `stale` en vez de inventar un cierre. El contrato completo está
+en [`docs/managed-agent-runs.md`](docs/managed-agent-runs.md).
+
 ## Backends cloud + secretos cifrados
 
 Aunque el foco es 100% local, cada perfil puede apuntar a un **endpoint OpenAI-compat
@@ -922,7 +946,12 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   SHA-256; `graph doctor` informa fuentes obsoletas y relaciones huérfanas sin
   ocultar inferencias no revisadas.
 - **KnowledgePacket**: paquete acotado que une memoria + grafo, con recibo de
-  nodos, relaciones y fuentes. Se habilita por perfil mediante `HarnessSpec.knowledge`.
+  nodos, relaciones y fuentes. Separa decisiones vigentes de hechos de apoyo y
+  explicita una política de autoridad. Se habilita por perfil mediante
+  `HarnessSpec.knowledge`.
+- **WorkRegistry**: claims efímeras por proyecto con rutas, agente, sesión,
+  heartbeat y expiración. `work_status` permite inspeccionarlas y una escritura
+  solapada se rechaza antes de ejecutar la tool.
 - **Gate de consolidación**: `verify_claims` se comparte con la persistencia de
   memoria; los hechos no respaldados no entran y los parcialmente respaldados
   quedan con confianza limitada.
@@ -993,7 +1022,13 @@ de aplicación, resolución, idioma, tema o ubicación de controles.
   transitorias, y si el objetivo todavía no se cumple usa `desktop_*` para corregir
   y volver a observar antes de finalizar, con un presupuesto finito de corrección
   para terminar con error verificable en vez de iterar indefinidamente. No se aplican reglas visuales específicas
-  de una aplicación ni se exige igualdad exacta de píxeles.
+  de una aplicación ni se exige igualdad exacta de píxeles. Cada observación
+  puede producir un snapshot estructurado con fingerprint, controles UIA,
+  `automationId` y patrones disponibles. Las acciones que reciben `snapshot_id`
+  se rechazan si el árbol quedó obsoleto, y cada `desktop_*` deja un receipt con
+  estrategia, hashes, target, correlación y estado. Los controles con patrones
+  UIA se operan semánticamente mediante `desktop_control_action` sin robar foco;
+  el mouse físico continúa limitado a sesiones foreground.
   Los pasos exitosos ejecutados por el reproductor nativo cuentan como evidencia
   de herramientas: si la comparación visual confirma el objetivo, no se exige una
   llamada redundante a `desktop_*` durante el turno del modelo ni una segunda
@@ -1008,12 +1043,25 @@ de aplicación, resolución, idioma, tema o ubicación de controles.
   verifica el resultado. El destino normal es headless, con fallback a navegador
   oculto cuando el sitio lo requiere.
 
+Para diagnosticar una corrida sin perder el aislamiento headless, Tasks ofrece
+**Vista en vivo** (opt-in). El Inspector muestra la captura más reciente de la
+superficie, las acciones en orden y su resultado; en browser solicita una
+captura MCP sólo cuando el servidor la expone sin parámetros, y en escritorio
+captura después de cada acción. La traza se redacta, queda dentro de los
+artefactos de la corrida y se conserva en Historial junto con el reporte y los
+recibos. Apagada, no agrega screenshots ni cambia el comportamiento normal.
+
 Los artefactos Teach son auto-actualizables: si durante una ejecución la interfaz
 cambió y el agente igual logra completar el objetivo, registra un aprendizaje en
 el `recipe.json` del proceso con el resumen de la adaptación y señales de tools
 usadas. Las corridas siguientes reciben esos aprendizajes como contexto semántico
 para mejorar la adaptación, tanto en escritorio foreground como en navegador
 background.
+
+Los artefactos nuevos usan receta Teach v3, con precondición, postcondición y
+estrategias de reparación por paso. Las recetas v2 existentes se leen sin
+conversión destructiva. La arquitectura detallada está en
+[`docs/computer-use.md`](docs/computer-use.md).
 
 Cada proceso tiene un **Tipo de proceso**: *Escritorio foreground*, *Navegador
 background* o **Auto**. En *Auto* el sistema decide la superficie al ejecutar de
@@ -1987,6 +2035,22 @@ procesos y stores; clientes externos consumen la API. Si se ejecuta el acceso
 directo mientras sólo existe una instancia headless, ésta hace un handoff limpio
 a la GUI y conserva una única instancia visible. Si ya existe una GUI, el acceso
 directo simplemente la restaura y la enfoca.
+
+## Corridas durables y entregables
+
+Cada turno de una sesión persistente del agente nativo recibe una identidad
+durable y se registra en `agent_runs/`: aceptación idempotente, estados
+`queued/running/waiting/completed/failed/cancelled/interrupted`, lease renovable,
+journal JSONL con secuencia y recuperación conservadora. Un lease vencido pasa a
+`uncertain`; no se reejecutan automáticamente efectos de red, archivos o
+desktop cuyo resultado pueda ser ambiguo. El contrato completo, los límites y
+las rutas de prueba están en [`docs/agent-runs.md`](docs/agent-runs.md).
+
+Al cerrar el turno se comparan hashes del workspace y se conserva en
+`agent_deliverables/<runId>/` sólo lo creado o modificado. El manifiesto incluye
+hash anterior/posterior, estado, tamaño y una copia restaurable cuando entra en
+los límites configurados. `saveAs` y `restore` rechazan sobrescribir por defecto
+y quedan disponibles para una futura superficie de Entregables en GUI/ControlApi.
 
 ## Seguridad operativa
 

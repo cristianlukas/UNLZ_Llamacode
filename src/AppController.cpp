@@ -745,8 +745,61 @@ static bool researchEvidenceHasAvailableStock(const QString &evidence)
     return stock.match(evidence).hasMatch();
 }
 
+static QString taskTraceImageSource(const QString &path)
+{
+    if (path.trimmed().isEmpty()) return {};
+    if (path.startsWith(QStringLiteral("file:"), Qt::CaseInsensitive)) return path;
+    return QUrl::fromLocalFile(QFileInfo(path).absoluteFilePath()).toString();
+}
+
+static QVariantMap taskTraceEventFromMessage(const QVariantMap &message, int number)
+{
+    const QString tool = message.value(QStringLiteral("name")).toString().trimmed();
+    if (tool.isEmpty()) return {};
+    const bool running = message.value(QStringLiteral("typing")).toBool();
+    const bool ok = message.value(QStringLiteral("ok"), true).toBool();
+    const QString command = message.value(QStringLiteral("command")).toString();
+    const QString rawOutput = message.value(QStringLiteral("output"),
+                                             message.value(QStringLiteral("result")))
+                                  .toString();
+    QVariantMap event{
+        {QStringLiteral("n"), number},
+        {QStringLiteral("kind"), QStringLiteral("action")},
+        {QStringLiteral("tool"), tool},
+        {QStringLiteral("status"), running ? QStringLiteral("running")
+                                            : (ok ? QStringLiteral("ok") : QStringLiteral("error"))},
+        {QStringLiteral("detail"), AutomationArtifactStore::redact(
+             (command.isEmpty() ? tool : command).simplified()).left(360)},
+        {QStringLiteral("output"), AutomationArtifactStore::redact(
+             rawOutput).simplified().left(1800)},
+        {QStringLiteral("at"), message.value(QStringLiteral("createdAt"))},
+        {QStringLiteral("elapsedMs"), message.value(QStringLiteral("elapsedMs"), 0)},
+        {QStringLiteral("correlationId"), message.value(QStringLiteral("correlationId"))}
+    };
+    const QString imagePath = message.value(QStringLiteral("imagePath")).toString();
+    if (!imagePath.isEmpty()) {
+        event[QStringLiteral("imagePath")] = imagePath;
+        event[QStringLiteral("imageSource")] = taskTraceImageSource(imagePath);
+    }
+    const QVariantMap receipt = message.value(QStringLiteral("receipt")).toMap();
+    if (!receipt.isEmpty()) {
+        event[QStringLiteral("receiptStatus")] = receipt.value(QStringLiteral("status"));
+        event[QStringLiteral("payloadHash")] = receipt.value(QStringLiteral("payloadHash"));
+    }
+    const QVariantMap desktopReceipt = message.value(QStringLiteral("desktopReceipt")).toMap();
+    if (!desktopReceipt.isEmpty()) {
+        event[QStringLiteral("desktopReceipt")] = desktopReceipt;
+        event[QStringLiteral("receiptStatus")] = desktopReceipt.value(QStringLiteral("status"));
+        event[QStringLiteral("snapshotId")] = desktopReceipt.value(QStringLiteral("snapshotId"));
+        event[QStringLiteral("strategy")] = desktopReceipt.value(QStringLiteral("strategy"));
+    }
+    return event;
+}
+
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    m_taskLivePreviewEnabled = QSettings().value(
+        QStringLiteral("tasks/livePreviewEnabled"), false).toBool();
     connect(&m_hardwareWatcher, &QFutureWatcher<QVariantMap>::finished, this,
             [this]() {
         m_hardwareScanInFlight = false;
@@ -770,6 +823,8 @@ AppController::AppController(QObject *parent) : QObject(parent)
     connect(m_workflowToolRunner, &AgentToolRunner::toolExecuted, this,
             [this](const QVariantMap &result) {
         if (!m_workflowRunner || !m_workflowRunner->active()) return;
+        if (!m_runningTaskId.isEmpty())
+            appendTaskTraceResult(result);
         m_workflowStepInFlight = false;
         m_pendingDirectTool.clear();
         m_workflowRunner->completeCurrent(result, result.value(QStringLiteral("ok")).toBool());
@@ -4089,6 +4144,7 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
     // Reflejar estado del backend en los mirrors expuestos a QML.
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_agentMessages = b->messages();
+        refreshTaskRunTrace();
         // Llega la lista autoritativa → terminar cualquier override de streaming
         // (el contenido final ya está en m_agentMessages).
         if (m_agentStreamingIndex != -1) {
@@ -4131,6 +4187,8 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
     connect(b, &IAgentBackend::logAppended, this, [this](const QString &chunk) {
         appendAgentEvent(QStringLiteral("backend"), chunk);
     });
+    connect(b, &IAgentBackend::agentLifecycleEvent, this,
+            [this](const QVariantMap &event) { emit agentLifecycleEvent(event); });
     connect(b, &IAgentBackend::turnFinished, this, [this]() {
         onAgentTurnFinished();
         emit taskRunAvailabilityChanged();
@@ -4683,6 +4741,54 @@ QVariantMap AppController::masterCliStatus(const QString &name, bool force)
 QString AppController::masterCliInstallCommand(const QString &name) const
 {
     return MasterCli::installCommand(name);
+}
+
+QString AppController::startManagedAgentRun(const QVariantMap &request)
+{
+    QVariantMap normalized = request;
+    if (normalized.value(QStringLiteral("runtime")).toString().trimmed().isEmpty())
+        normalized[QStringLiteral("runtime")] = QStringLiteral("claude");
+    if (normalized.value(QStringLiteral("workspace")).toString().trimmed().isEmpty())
+        normalized[QStringLiteral("workspace")] = currentAgentProjectDir().isEmpty()
+            ? QDir::currentPath() : currentAgentProjectDir();
+    if (normalized.value(QStringLiteral("ownerId")).toString().trimmed().isEmpty())
+        normalized[QStringLiteral("ownerId")] = QStringLiteral("managed-agent");
+    if (normalized.value(QStringLiteral("agentProfileId")).toString().trimmed().isEmpty())
+        normalized[QStringLiteral("agentProfileId")] = m_activeAgentProfileId;
+    if (normalized.value(QStringLiteral("approvalMode")).toString().trimmed().isEmpty())
+        normalized[QStringLiteral("approvalMode")] = m_agentApprovalMode;
+    if (!normalized.contains(QStringLiteral("presentation")))
+        normalized[QStringLiteral("presentation")] = QStringLiteral("managed_panel");
+    if (!normalized.contains(QStringLiteral("applyEdits")))
+        normalized[QStringLiteral("applyEdits")] = false;
+    return m_managedAgentRuns.startRun(normalized);
+}
+
+bool AppController::stopManagedAgentRun(const QString &runId)
+{
+    return m_managedAgentRuns.stopRun(runId);
+}
+
+QVariantMap AppController::managedAgentRun(const QString &runId) const
+{
+    return m_managedAgentRuns.run(runId);
+}
+
+QString AppController::managedAgentRunLog(const QString &runId) const
+{
+    return m_managedAgentRuns.log(runId);
+}
+
+bool AppController::removeManagedAgentRun(const QString &runId)
+{
+    return m_managedAgentRuns.removeRun(runId);
+}
+
+void AppController::openManagedAgentRunDirectory(const QString &runId)
+{
+    const QVariantMap run = m_managedAgentRuns.run(runId);
+    const QString dir = run.value(QStringLiteral("runDir")).toString();
+    if (!dir.isEmpty()) QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
 }
 
 QVariantList AppController::agentToolCatalog() const
@@ -5350,7 +5456,8 @@ void AppController::startAgent(const QString &launchProfileId)
         // Provider cloud: resolver la API key por su ref (env var → store). Si no se
         // encuentra, pedirla a la UI y abortar el arranque (se reintenta tras setSecret).
         QString cloudKey;
-        if (cloud) {
+        const bool keylessLoopbackCloud = cloud && isLoopbackCloudUrl(ctx.backend.cloudBaseUrl);
+        if (cloud && !keylessLoopbackCloud) {
             const QString ref = ctx.backend.cloudKeyRef.trimmed();
             cloudKey = m_secrets.resolve(ref);
             if (cloudKey.isEmpty()) {
@@ -5362,6 +5469,10 @@ void AppController::startAgent(const QString &launchProfileId)
                 emit cloudSecretRequired(launchProfileId, ref);
                 return;
             }
+        } else if (keylessLoopbackCloud) {
+            appendAgentEvent(QStringLiteral("lifecycle"),
+                             QStringLiteral("Cloud local: endpoint loopback sin API key (%1).")
+                                 .arg(ctx.backend.cloudBaseUrl.trimmed()));
         }
         // Necesita el llama-server corriendo (usa su API OpenAI). Sin server → refused.
         // Si está corriendo pero el modelo aún carga, igual arranca: la UI muestra
@@ -6297,6 +6408,111 @@ bool AppController::canRunTask() const
     return true;
 }
 
+QVariantList AppController::taskRunTimelineFromMessagesForTest(const QVariantList &messages)
+{
+    QVariantList timeline;
+    int number = 0;
+    for (const QVariant &value : messages) {
+        const QVariantMap message = value.toMap();
+        if (message.value(QStringLiteral("role")).toString()
+                != QLatin1String("toolcall"))
+            continue;
+        const QVariantMap event = taskTraceEventFromMessage(message, ++number);
+        if (!event.isEmpty()) timeline.append(event);
+    }
+    return timeline;
+}
+
+void AppController::setTaskLivePreviewEnabled(bool enabled)
+{
+    if (m_taskLivePreviewEnabled == enabled) return;
+    m_taskLivePreviewEnabled = enabled;
+    QSettings().setValue(QStringLiteral("tasks/livePreviewEnabled"), enabled);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setLivePreviewEnabled(m_runningTaskId.isEmpty() ? false : enabled);
+    if (m_workflowToolRunner)
+        m_workflowToolRunner->setLivePreviewEnabled(m_runningTaskId.isEmpty() ? false : enabled);
+    emit taskLivePreviewChanged();
+}
+
+void AppController::refreshTaskRunTrace()
+{
+    // Las conversaciones normales del Agente no son corridas de Tasks y no
+    // deben reemplazar la última evidencia que el Inspector muestra.
+    if (m_runningTaskId.isEmpty() && m_replayTaskId.isEmpty()) return;
+    QVariantList trace;
+    // El replay determinista vive fuera de las tarjetas del agente. Se antepone
+    // para que el historial lea la ejecución en el mismo orden en que ocurrió.
+    for (const QVariant &value : std::as_const(m_replayReport)) {
+        const QVariantMap row = value.toMap();
+        QVariantMap event{
+            {QStringLiteral("kind"), QStringLiteral("action")},
+            {QStringLiteral("tool"), row.value(QStringLiteral("tool"))},
+            {QStringLiteral("status"), row.value(QStringLiteral("ok")).toBool()
+                ? QStringLiteral("ok") : QStringLiteral("error")},
+            {QStringLiteral("detail"), AutomationArtifactStore::redact(
+                row.value(QStringLiteral("summary")).toString()).left(360)},
+            {QStringLiteral("output"), AutomationArtifactStore::redact(
+                row.value(QStringLiteral("summary")).toString()).left(1800)},
+            {QStringLiteral("at"), QDateTime::currentMSecsSinceEpoch()}
+        };
+        const QString imagePath = row.value(QStringLiteral("imagePath")).toString();
+        if (!imagePath.isEmpty()) {
+            event[QStringLiteral("imagePath")] = imagePath;
+            event[QStringLiteral("imageSource")] = taskTraceImageSource(imagePath);
+        }
+        trace.append(event);
+    }
+    trace += taskRunTimelineFromMessagesForTest(m_agentMessages);
+    trace += m_taskRunExtraTimeline;
+    if (trace.size() > 200)
+        trace = trace.mid(trace.size() - 200);
+
+    int number = 0;
+    for (QVariant &value : trace) {
+        QVariantMap event = value.toMap();
+        event[QStringLiteral("n")] = ++number;
+        value = event;
+    }
+
+    QVariantMap preview;
+    for (auto it = trace.crbegin(); it != trace.crend(); ++it) {
+        const QVariantMap event = it->toMap();
+        if (!event.value(QStringLiteral("imageSource")).toString().isEmpty()) {
+            preview = event;
+            break;
+        }
+    }
+    if (preview.isEmpty() && !trace.isEmpty())
+        preview = trace.last().toMap();
+
+    m_taskRunTimeline = trace;
+    m_taskRunPreview = preview;
+    emit taskRunTraceChanged();
+}
+
+void AppController::appendTaskTraceResult(const QVariantMap &result)
+{
+    QVariantMap message{
+        {QStringLiteral("role"), QStringLiteral("toolcall")},
+        {QStringLiteral("name"), result.value(QStringLiteral("name"))},
+        {QStringLiteral("ok"), result.value(QStringLiteral("ok"))},
+        {QStringLiteral("output"), result.value(QStringLiteral("result"))},
+        {QStringLiteral("imagePath"), result.value(QStringLiteral("imagePath"))},
+        {QStringLiteral("correlationId"), result.value(QStringLiteral("correlationId"))},
+        {QStringLiteral("createdAt"), static_cast<double>(QDateTime::currentMSecsSinceEpoch())},
+        {QStringLiteral("elapsedMs"), 0}
+    };
+    const QVariantList one = taskRunTimelineFromMessagesForTest({message});
+    if (!one.isEmpty()) {
+        m_taskRunExtraTimeline += one.first();
+        if (m_taskRunExtraTimeline.size() > 200)
+            m_taskRunExtraTimeline = m_taskRunExtraTimeline.mid(
+                m_taskRunExtraTimeline.size() - 200);
+        refreshTaskRunTrace();
+    }
+}
+
 void AppController::prepareTaskAgentSession()
 {
     if (m_agentBackend && m_agentBackend->running()) {
@@ -6308,6 +6524,7 @@ void AppController::prepareTaskAgentSession()
         }
         m_agentMessages = m_agentBackend->messages();
         emit agentMessagesChanged();
+        refreshTaskRunTrace();
     } else if (m_piActive) {
         const QString sessDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
                                 + QStringLiteral("/pi-sessions");
@@ -6317,6 +6534,7 @@ void AppController::prepareTaskAgentSession()
         m_agentMessages.clear();
         m_currentAssistantIdx = -1;
         emit agentMessagesChanged();
+        refreshTaskRunTrace();
     }
 }
 
@@ -6728,6 +6946,10 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
     }
     m_runningTaskId = id;
     m_runningTaskName = name;
+    m_taskRunTimeline.clear();
+    m_taskRunExtraTimeline.clear();
+    m_taskRunPreview.clear();
+    refreshTaskRunTrace();
     m_runningTaskStartedAt = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     m_runningTaskPhase = QStringLiteral("ejecutando");
     applyHarnessPhase(QStringLiteral("exec"));
@@ -6774,6 +6996,10 @@ void AppController::launchTaskBody(const QString &id, const QVariantMap &task)
 
     // Aislar la Task en una sesión limpia para no heredar historial/compactación.
     prepareTaskAgentSession();
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setLivePreviewEnabled(m_taskLivePreviewEnabled);
+    if (m_workflowToolRunner)
+        m_workflowToolRunner->setLivePreviewEnabled(m_taskLivePreviewEnabled);
     m_runningTaskLogStart = m_agentLog.size();
     appendAgentEvent(QStringLiteral("task"), QStringLiteral("Sesión limpia preparada para la Task '%1'.").arg(name));
 
@@ -7118,11 +7344,24 @@ void AppController::playNextReplayStep()
         }
     }
     if (!ok) m_replayErrors++;
-    m_replayReport << QVariantMap{
+    QVariantMap replayEvent{
         {QStringLiteral("n"), m_replayIndex + 1},
         {QStringLiteral("tool"), detail},
         {QStringLiteral("ok"), ok},
         {QStringLiteral("summary"), ok ? QStringLiteral("ok") : error}};
+    if (ok && m_taskLivePreviewEnabled) {
+        const QString dir = AutomationArtifactStore::rootDir()
+                            + QStringLiteral("/runtime-observations");
+        QDir().mkpath(dir);
+        const QString path = dir + QStringLiteral("/replay-%1.jpg")
+            .arg(QDateTime::currentMSecsSinceEpoch());
+        QString captureError;
+        const QString saved = DesktopAutomationBackend::saveCapture(
+            m_replayScopeKind, m_replayScopeId, path, &captureError);
+        if (!saved.isEmpty()) replayEvent[QStringLiteral("imagePath")] = saved;
+    }
+    m_replayReport << replayEvent;
+    refreshTaskRunTrace();
     appendAgentEvent(QStringLiteral("task"),
                      QStringLiteral("Reproducción paso %1/%2: %3 → %4")
                          .arg(m_replayIndex + 1).arg(m_replaySteps.size())
@@ -7202,7 +7441,9 @@ void AppController::finishDesktopReplay()
         m_replayReport << QVariantMap{{QStringLiteral("n"), n + 1},
             {QStringLiteral("tool"), QStringLiteral("verificación visual por IA")},
             {QStringLiteral("ok"), true},
-            {QStringLiteral("summary"), QStringLiteral("referencia y resultado adjuntados al agente")}};
+            {QStringLiteral("summary"), QStringLiteral("referencia y resultado adjuntados al agente")},
+            {QStringLiteral("imagePath"), actualPath}};
+        refreshTaskRunTrace();
         appendAgentEvent(QStringLiteral("task"),
                          QStringLiteral("Referencia final Teach y resultado actual enviados al agente con visión."));
 
@@ -7265,6 +7506,7 @@ void AppController::setTestAgentBackend(IAgentBackend *b)
     m_agentBackend = b;
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {
         m_agentMessages = b->messages();
+        refreshTaskRunTrace();
         emit agentMessagesChanged();
     });
     connect(b, &IAgentBackend::turnFinished, this, [this]() { onAgentTurnFinished(); });
@@ -7755,6 +7997,9 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
     }
     if (work.trimmed().isEmpty())
         work = QStringLiteral("No se registraron eventos del agente para esta ejecución.");
+    refreshTaskRunTrace();
+    const QVariantList timeline = m_taskRunTimeline;
+    const QVariantMap preview = m_taskRunPreview;
     m_taskWorkLogs.insert(id, work);
     if (status == QLatin1String("ok")) {
         const QString artifactId = m_tasks.get(id).value(QStringLiteral("teachArtifactId")).toString();
@@ -7771,6 +8016,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         const QVariantMap row = message.toMap();
         const QVariantMap receipt = row.value(QStringLiteral("receipt")).toMap();
         if (!receipt.isEmpty()) receipts.append(receipt);
+        const QVariantMap desktopReceipt = row.value(QStringLiteral("desktopReceipt")).toMap();
+        if (!desktopReceipt.isEmpty()) receipts.append(desktopReceipt);
         if (correlationId.isEmpty())
             correlationId = row.value(QStringLiteral("correlationId")).toString();
     }
@@ -7786,6 +8033,8 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         { QStringLiteral("automationId"), m_runningAutomationId },
         { QStringLiteral("correlationId"), correlationId },
         { QStringLiteral("receipts"), receipts },
+        { QStringLiteral("timeline"), timeline },
+        { QStringLiteral("preview"), preview },
         { QStringLiteral("report"),       m_replayReport.isEmpty()
                                               ? AutomationRunner::buildRunReport(m_agentMessages)
                                               : m_replayReport },
@@ -7809,6 +8058,10 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         m_runningAutomationId.clear();
     }
     clearTaskAgentPermissions();   // restaura confinamiento y aprobación normales
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setLivePreviewEnabled(false);
+    if (m_workflowToolRunner)
+        m_workflowToolRunner->setLivePreviewEnabled(false);
     // Cierra la sesión efímera de la Task y restaura la sesión del usuario, así el
     // panel "Agente" no muestra la corrida de la Automatización como sesión propia.
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
@@ -7943,6 +8196,8 @@ QVariantMap AppController::desktopCursorState() const
 void AppController::recordEarlyFailure(const QString &processId, const QString &summary)
 {
     const QString now = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    const QVariantList timeline = m_runningTaskId.isEmpty() ? QVariantList{} : m_taskRunTimeline;
+    const QVariantMap preview = m_runningTaskId.isEmpty() ? QVariantMap{} : m_taskRunPreview;
     QVariantMap rec{
         { QStringLiteral("startedAt"),  now },
         { QStringLiteral("finishedAt"), now },
@@ -7953,6 +8208,8 @@ void AppController::recordEarlyFailure(const QString &processId, const QString &
                                             ? QStringLiteral("manual")
                                             : QStringLiteral("programacion") },
         { QStringLiteral("automationId"), m_runningAutomationId },
+        { QStringLiteral("timeline"), timeline },
+        { QStringLiteral("preview"), preview },
     };
     if (!processId.isEmpty()) {
         m_tasks.markRun(processId, QStringLiteral("error"), summary);

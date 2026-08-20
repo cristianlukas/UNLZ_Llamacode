@@ -21,6 +21,7 @@
 #include "core/tasks/EngineeringWorkflowCatalog.h"
 #include "core/agent/IAgentBackend.h"
 #include "core/agent/MasterCli.h"
+#include "core/agent/ManagedAgentRunStore.h"
 #include "core/agent/AgentRoomStore.h"
 #include "core/SecretStore.h"
 #include "core/gateway/LlmGateway.h"
@@ -44,6 +45,7 @@
 #include <QNetworkRequest>
 #include <QFile>
 #include <QSettings>
+#include <QUrl>
 class QUdpSocket;
 
 class QThread;
@@ -63,6 +65,7 @@ class AppController : public QObject
     Q_PROPERTY(AgentDefinitionStore* agentDefinitions READ agentDefinitions CONSTANT)
     Q_PROPERTY(TriggerManager* triggerManager READ triggerManager CONSTANT)
     Q_PROPERTY(AgentRoomStore* agentRoomStore READ agentRoomStore CONSTANT)
+    Q_PROPERTY(ManagedAgentRunStore* managedAgentRunStore READ managedAgentRunStore CONSTANT)
     Q_PROPERTY(QString activeAgentDefinitionId READ activeAgentDefinitionId
                NOTIFY activeAgentDefinitionChanged)
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
@@ -73,6 +76,10 @@ class AppController : public QObject
     Q_PROPERTY(QString runningTaskId READ runningTaskId NOTIFY taskRunStateChanged)
     Q_PROPERTY(QString runningTaskName READ runningTaskName NOTIFY taskRunStateChanged)
     Q_PROPERTY(QString runningTaskPhase READ runningTaskPhase NOTIFY taskRunStateChanged)
+    Q_PROPERTY(QVariantList taskRunTimeline READ taskRunTimeline NOTIFY taskRunTraceChanged)
+    Q_PROPERTY(QVariantMap taskRunPreview READ taskRunPreview NOTIFY taskRunTraceChanged)
+    Q_PROPERTY(bool taskLivePreviewEnabled READ taskLivePreviewEnabled
+               WRITE setTaskLivePreviewEnabled NOTIFY taskLivePreviewChanged)
     Q_PROPERTY(QVariantMap runningWorkflowState READ runningWorkflowState NOTIFY taskRunStateChanged)
     Q_PROPERTY(QVariantMap workflowApproval READ workflowApproval NOTIFY taskRunStateChanged)
     Q_PROPERTY(bool taskAbRunning READ taskAbRunning NOTIFY taskAbChanged)
@@ -245,6 +252,7 @@ public:
     TaskStore         *taskStore()       { return &m_tasks; }
     AgentDefinitionStore *agentDefinitions() { return &m_agentDefinitions; }
     TriggerManager *triggerManager() { return &m_triggerManager; }
+    ManagedAgentRunStore *managedAgentRunStore() { return &m_managedAgentRuns; }
     Q_INVOKABLE QVariantMap agentDefinitionMetrics(const QString &agentId) const;
     QString activeAgentDefinitionId() const { return m_activeAgentDefinitionId; }
     Q_INVOKABLE bool activateAgentDefinition(const QString &agentId);
@@ -262,6 +270,13 @@ public:
     QString runningTaskId() const { return m_runningTaskId; }
     QString runningTaskName() const { return m_runningTaskName; }
     QString runningTaskPhase() const { return m_runningTaskPhase; }
+    QVariantList taskRunTimeline() const { return m_taskRunTimeline; }
+    QVariantMap taskRunPreview() const { return m_taskRunPreview; }
+    bool taskLivePreviewEnabled() const { return m_taskLivePreviewEnabled; }
+    void setTaskLivePreviewEnabled(bool enabled);
+    // Normaliza las tarjetas del backend a una traza segura y estable para QML,
+    // historial y pruebas. No expone el razonamiento privado del modelo.
+    static QVariantList taskRunTimelineFromMessagesForTest(const QVariantList &messages);
     QVariantMap runningWorkflowState() const;
     QVariantMap workflowApproval() const { return m_workflowApproval; }
     bool taskAbRunning() const { return !m_taskAbId.isEmpty(); }
@@ -281,6 +296,17 @@ public:
     static bool isRemoteHost(const QString &host) {
         const QString h = host.trimmed().toLower();
         return !h.isEmpty() && h != QLatin1String("127.0.0.1") && h != QLatin1String("localhost") && h != QLatin1String("::1") && h != QLatin1String("0.0.0.0");
+    }
+    static bool isLoopbackCloudUrl(const QString &url) {
+        const QUrl parsed(url.trimmed());
+        if (!parsed.isValid()
+            || (parsed.scheme().compare(QStringLiteral("http"), Qt::CaseInsensitive) != 0
+                && parsed.scheme().compare(QStringLiteral("https"), Qt::CaseInsensitive) != 0))
+            return false;
+        const QString host = parsed.host().trimmed().toLower();
+        return host == QLatin1String("127.0.0.1")
+            || host == QLatin1String("localhost")
+            || host == QLatin1String("::1");
     }
     bool   serverRunning()   const { return (m_proc && m_proc->state() != QProcess::NotRunning) || m_remoteServerActive; }
     bool   serverStopping()  const { return m_serverStopping; }
@@ -595,6 +621,15 @@ public:
     Q_INVOKABLE QStringList masterCliList() const;
     Q_INVOKABLE QVariantMap masterCliStatus(const QString &name, bool force = false);
     Q_INVOKABLE QString masterCliInstallCommand(const QString &name) const;
+    // Corridas largas de Claude Code/Codex con prompt y artefactos durables.
+    // El modo seguro por defecto es de planificación; la escritura requiere
+    // applyEdits explícito y nunca activa bypass/full-auto implícitamente.
+    Q_INVOKABLE QString startManagedAgentRun(const QVariantMap &request);
+    Q_INVOKABLE bool stopManagedAgentRun(const QString &runId);
+    Q_INVOKABLE QVariantMap managedAgentRun(const QString &runId) const;
+    Q_INVOKABLE QString managedAgentRunLog(const QString &runId) const;
+    Q_INVOKABLE bool removeManagedAgentRun(const QString &runId);
+    Q_INVOKABLE void openManagedAgentRunDirectory(const QString &runId);
     Q_INVOKABLE void startAgent(const QString &launchProfileId);
     Q_INVOKABLE void stopAgent();
 
@@ -1316,6 +1351,9 @@ signals:
     void agentStartingChanged();
     void activeProfileToolSupportChanged();
     void agentLogChanged();
+    // Evento normalizado del ciclo del backend (no depende de Claude/Codex/
+    // OpenCode); sirve para integraciones y diagnóstico sin parsear texto de log.
+    void agentLifecycleEvent(const QVariantMap &event);
     void agentMessagesChanged();
     void agentStreamingChanged();
     void personaStyleAnalysisChanged();
@@ -1371,6 +1409,8 @@ signals:
     void taskRunAvailabilityChanged();
     void taskRunFinished(const QString &id, const QString &name, const QString &status,
                          const QString &summary, bool silentUnlessError);
+    void taskRunTraceChanged();
+    void taskLivePreviewChanged();
 
 private:
     void cleanupDuplicateInitialLaunchProfiles();
@@ -1448,6 +1488,10 @@ private:
     QString  m_runningAutomationId;
     QString  m_runningTaskName;
     QString  m_runningTaskPhase;
+    QVariantList m_taskRunTimeline;
+    QVariantList m_taskRunExtraTimeline;
+    QVariantMap m_taskRunPreview;
+    bool m_taskLivePreviewEnabled = false;
     QString  m_runningTaskPostPrompt;
     WorkflowRunner *m_workflowRunner = nullptr;
     QJsonObject m_runningWorkflowDefinition;
@@ -1498,6 +1542,7 @@ private:
     bool     m_pendingSwapFreshSession = false;  // limpiar sesión antes de mandar
     QHash<QString, QString> m_taskWorkLogs;
     RunHistoryStore  m_runHistory;
+    ManagedAgentRunStore m_managedAgentRuns{&m_runHistory};
     DownloadHistoryStore m_downloadHistory;
     // Inicio de la corrida actual (para registrar el historial al terminar).
     QString  m_runningTaskStartedAt;
@@ -1514,6 +1559,8 @@ private:
     QString workflowStepPrompt(const QString &stepId, const QString &type,
                                const QVariantMap &step, const QVariantMap &context) const;
     void finishRunningTask(const QString &status, const QString &summary);
+    void refreshTaskRunTrace();
+    void appendTaskTraceResult(const QVariantMap &result);
     // Registra en el historial una corrida que falló ANTES de arrancar el cuerpo
     // (gating/validación). finishRunningTask sólo graba lo que llegó a correr, así
     // que sin esto los errores tempranos no aparecían en Historial. Marca estado

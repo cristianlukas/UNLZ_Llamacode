@@ -104,6 +104,8 @@ set(CORE_SOURCES
     src/core/agent/AgentToolRunner.cpp
     src/core/agent/SubAgentRunner.cpp
     src/core/agent/AgentEventLog.cpp
+    src/core/agent/AgentRunStore.cpp
+    src/core/agent/AgentDeliverableStore.cpp
     src/core/agent/HarnessEventLog.cpp
     src/core/agent/HarnessCapabilitySnapshot.cpp
     src/core/agent/HarnessEffectLedger.cpp
@@ -123,7 +125,9 @@ set(CORE_SOURCES
     src/core/agent/ProjectBrain.cpp
     src/core/agent/ContextIndex.cpp
     src/core/agent/ContextPreflight.cpp
+    src/core/agent/WorkRegistry.cpp
     src/core/agent/MasterCli.cpp
+    src/core/agent/ManagedAgentRunStore.cpp
     src/core/agent/BrowserTeach.cpp
     src/core/agent/PortableSkillStore.cpp
     src/core/agent/HarnessDirectiveStore.cpp
@@ -163,6 +167,8 @@ set(CORE_SOURCES
     src/core/tasks/WorkflowVisualModel.cpp
     src/core/tasks/EngineeringWorkflowCatalog.cpp
     src/core/automation/DesktopAutomationBackend.cpp
+    src/core/automation/DesktopComputerUse.cpp
+    src/core/automation/DesktopRecoveryPolicy.cpp
     src/core/automation/VisualMatcher.cpp
     src/core/automation/FuzzyMatch.cpp
     src/core/automation/OcrEngine.cpp
@@ -205,6 +211,7 @@ set(HEADERS
     src/core/profiles/ProfileHealthChecker.h
     src/core/agent/AgentTypes.h
     src/core/agent/IAgentBackend.h
+    src/core/agent/AgentLifecycle.h
     src/core/agent/OpencodeBackend.h
     src/core/agent/RawChatBackend.h
     src/core/agent/LlamaAgentBackend.h
@@ -213,6 +220,8 @@ set(HEADERS
     src/core/agent/AgentToolRunner.h
     src/core/agent/SubAgentRunner.h
     src/core/agent/AgentEventLog.h
+    src/core/agent/AgentRunStore.h
+    src/core/agent/AgentDeliverableStore.h
     src/core/agent/HarnessSandbox.h
     src/core/agent/AgentRoomStore.h
     src/core/agent/ToolExecutionSafety.h
@@ -227,7 +236,9 @@ set(HEADERS
     src/core/agent/ProjectBrain.h
     src/core/agent/ContextIndex.h
     src/core/agent/ContextPreflight.h
+    src/core/agent/WorkRegistry.h
     src/core/agent/BrowserTeach.h
+    src/core/agent/ManagedAgentRunStore.h
     src/core/agent/PortableSkillStore.h
     src/core/agent/HotspotAnalyzer.h
     src/core/agents/AgentDefinitionStore.h
@@ -262,6 +273,8 @@ set(HEADERS
     src/core/tasks/WorkflowVisualModel.h
     src/core/tasks/EngineeringWorkflowCatalog.h
     src/core/automation/DesktopAutomationBackend.h
+    src/core/automation/DesktopComputerUse.h
+    src/core/automation/DesktopRecoveryPolicy.h
     src/core/automation/VisualMatcher.h
     src/core/automation/AutomationArtifactStore.h
     src/core/automation/TeachKeyBuffer.h
@@ -583,6 +596,7 @@ if (BUILD_TESTS)
     add_lc_test(test_harness_event_log  tests/test_harness_event_log.cpp)
     add_lc_test(test_harness_capabilities tests/test_harness_capabilities.cpp)
     add_lc_test(test_harness_effects    tests/test_harness_effects.cpp)
+    add_lc_test(test_agent_runs         tests/test_agent_runs.cpp)
     add_lc_test(test_harness_worker_protocol tests/test_harness_worker_protocol.cpp)
     add_lc_test(test_agent_definitions  tests/test_agent_definitions.cpp)
     add_lc_test(test_agent_context_budget tests/test_agent_context_budget.cpp)
@@ -599,6 +613,7 @@ if (BUILD_TESTS)
     add_lc_test(test_document_extractor tests/test_document_extractor.cpp)
     add_lc_test(test_datalab             tests/test_datalab.cpp tests/test_datalab.h)
     add_lc_test(test_memory_graph       tests/test_memory_graph.cpp)
+    add_lc_test(test_work_registry      tests/test_work_registry.cpp)
     add_lc_test(test_code_graph         tests/test_code_graph.cpp)
     add_lc_test(test_context_index      tests/test_context_index.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
@@ -615,6 +630,7 @@ if (BUILD_TESTS)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)
     add_lc_test(test_hotspots           tests/test_hotspots.cpp)
     add_lc_test(test_master_cli         tests/test_master_cli.cpp)
+    add_lc_test(test_managed_agent_runs tests/test_managed_agent_runs.cpp)
     add_lc_test(test_backends_net       tests/test_backends_net.cpp)
     add_lc_test(test_appcontroller      tests/test_appcontroller.cpp)
     add_lc_test(test_mermaid            tests/test_mermaid.cpp)
