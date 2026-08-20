@@ -43,6 +43,7 @@ private slots:
     void builder_emitsHostPort();
     void builder_dropsUnsupportedFlag();
     void builder_missingModelIsBlocking();
+    void builder_cloudProfileIsValidWithoutLocalModel();
     void builder_emitsSpecFlags();
     void builder_missingDraftIsBlocking();
     void builder_rawDraftMtpRequiresDraftModel();
@@ -296,6 +297,25 @@ void CoreTests::builder_missingModelIsBlocking()
     ctx.catalogModel = CatalogModel{};  // sin modelo resuelto
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     QVERIFY(!ep.blockingErrors.isEmpty());
+}
+
+void CoreTests::builder_cloudProfileIsValidWithoutLocalModel()
+{
+    EffectiveProfileBuilder::Context ctx;
+    ctx.backend.kind = QStringLiteral("cloud");
+    ctx.backend.cloudBaseUrl = QStringLiteral("http://127.0.0.1:8000");
+    ctx.backend.cloudModel = QStringLiteral("lued/Qwen3.8-27B-INT8-W8A16-DFlash2");
+    ctx.backend.cloudKeyRef = QStringLiteral("VLLM_KEY");
+    ctx.backend.cloudCtx = 262144;
+    ctx.launch.extraArgs = {QStringLiteral("--external-profile")};
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.isValid(), qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    QVERIFY(ep.binaryPath.isEmpty());
+    QCOMPARE(ep.effectiveArgs, ctx.launch.extraArgs);
+    QVERIFY(ep.commandLine.contains(QStringLiteral("127.0.0.1:8000")));
+    QVERIFY(ep.commandLine.contains(QStringLiteral("lued/Qwen3.8-27B-INT8-W8A16-DFlash2")));
+    QVERIFY(!ep.commandLine.contains(QStringLiteral("VLLM_KEY")));
 }
 
 // Con draft model resuelto, los flags spec-draft seteados deben emitirse.

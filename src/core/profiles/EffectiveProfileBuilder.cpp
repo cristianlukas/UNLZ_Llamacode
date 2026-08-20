@@ -123,6 +123,30 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     QStringList args;
     QMap<QString, QString> env = ctx.binary.envDefaults;
 
+    // Cloud/remote OpenAI-compatible profiles are already served by an external
+    // process. They must be fingerprintable and selectable without pretending
+    // that a local llama-server binary or GGUF is required.
+    if (ctx.backend.isCloud()) {
+        if (ctx.backend.cloudBaseUrl.trimmed().isEmpty())
+            result.blockingErrors.append("Cloud backend has no base URL.");
+        if (ctx.backend.cloudModel.trimmed().isEmpty())
+            result.blockingErrors.append("Cloud backend has no model.");
+
+        for (auto it = ctx.backend.envOverrides.cbegin();
+             it != ctx.backend.envOverrides.cend(); ++it)
+            env[it.key()] = it.value();
+        for (auto it = ctx.launch.envOverrides.cbegin();
+             it != ctx.launch.envOverrides.cend(); ++it)
+            env[it.key()] = it.value();
+
+        result.effectiveArgs = ctx.launch.extraArgs;
+        result.effectiveEnv = env;
+        result.commandLine = QStringLiteral("<external> %1 model=%2")
+                             .arg(ctx.backend.cloudBaseUrl.trimmed(),
+                                  ctx.backend.cloudModel.trimmed());
+        return result;
+    }
+
     // Validate binary
     if (ctx.binary.id.isEmpty()) {
         result.blockingErrors.append("No binary selected.");

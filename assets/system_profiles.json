@@ -3304,5 +3304,48 @@
     { "id": "sys-bench-qwen36-cache-text-mtp4-ngram", "order": 197, "displayName": "[bench Qwen3.6] texto-only · MTP4 + ngram", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia texto-only que combina MTP4 y ngram para coding repetitivo." }
   ],
   "comment": "Copia texto-only del experimento MTP4: elimina mmproj porque el flujo coding no usa visión y b10331 desactiva cache-reuse en modelos multimodales. Es la variante para comprobar si el cache de prompt/checkpoints realmente aporta en el caso de uso."
+  },
+  {
+    "id": "sys-bench-qwen38-dflash2-vllm-262k",
+    "tier": "48GB-Qwen38-DFlash2-vLLM", "order": 240, "extra": true,
+    "benchmark": true, "best": false, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 48GB] Qwen3.8 INT8 W8A16 · DFlash2 · vLLM · 262k · n7",
+    "minVramGb": 48, "minRamGb": 64, "cpuOk": false,
+    "agentProfileId": "agent-maximo",
+    "backend": {
+      "kind": "cloud", "host": "127.0.0.1", "port": 8000,
+      "baseUrl": "http://127.0.0.1:8000",
+      "model": "lued/Qwen3.8-27B-INT8-W8A16-DFlash2", "ctx": 262144
+    },
+    "external": {
+      "provider": "vllm", "targetModel": "lued/Qwen3.8-27B-INT8-W8A16-DFlash2",
+      "drafterModel": "lued/Qwen3.8-27B-DFlash2-W8",
+      "speculativeMethod": "dflash", "numSpeculativeTokens": 7,
+      "tensorParallelSize": 2, "maxModelLen": 262144,
+      "kvCacheDtype": "fp8_e4m3", "patchRepo": "noonghunna/club-3090"
+    },
+    "tags": ["qwen3.8", "int8", "w8a16", "dflash2", "vllm", "external-endpoint", "262k", "2x-rtx-3090"],
+    "comment": "Receta exacta del modelo lued: target INT8 W8A16 + drafter W8 separado, DFlash2 con 7 tokens, tensor parallel 2, KV fp8_e4m3 y max-model-len 262144. LlamaCode no lanza vLLM ni descarga estos safetensors: iniciar el servidor externo y medir el endpoint OpenAI-compatible en 127.0.0.1:8000. Comparar tok/s DFlash2 contra el control autoregresivo y registrar version/patches del servidor."
+  },
+  {
+    "id": "sys-bench-qwen38-dflash2-vllm-ar-262k",
+    "tier": "48GB-Qwen38-DFlash2-vLLM", "order": 241, "extra": true,
+    "benchmark": true, "best": false, "favorite": false, "autoCompanion": false,
+    "displayName": "[bench 48GB] Qwen3.8 INT8 W8A16 · vLLM · autoregresivo · 262k",
+    "minVramGb": 48, "minRamGb": 64, "cpuOk": false,
+    "agentProfileId": "agent-maximo",
+    "backend": {
+      "kind": "cloud", "host": "127.0.0.1", "port": 8001,
+      "baseUrl": "http://127.0.0.1:8001",
+      "model": "lued/Qwen3.8-27B-INT8-W8A16-DFlash2", "ctx": 262144
+    },
+    "external": {
+      "provider": "vllm", "targetModel": "lued/Qwen3.8-27B-INT8-W8A16-DFlash2",
+      "speculativeMethod": "none", "numSpeculativeTokens": 0,
+      "tensorParallelSize": 2, "maxModelLen": 262144,
+      "kvCacheDtype": "fp8_e4m3", "patchRepo": "noonghunna/club-3090"
+    },
+    "tags": ["qwen3.8", "int8", "w8a16", "vllm", "external-endpoint", "autoregressive-control", "262k", "2x-rtx-3090"],
+    "comment": "Control autoregresivo para aislar la ganancia de DFlash2: mismo target, tensor parallel, contexto y KV que la receta n7, pero iniciar vLLM sin speculative-config. LlamaCode sólo conecta al endpoint en 127.0.0.1:8001; no inicia el proceso externo. No mezclar resultados si cambian el engine, los patches o el max-model-len."
   }
 ]

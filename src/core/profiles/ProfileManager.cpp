@@ -1435,6 +1435,9 @@ void ProfileManager::loadSystemProfiles()
         const QJsonObject o = v.toObject();
         const QString id = o.value("id").toString();
         if (id.isEmpty()) continue;
+        const QJsonObject backendConfig = o.value(QStringLiteral("backend")).toObject();
+        const bool cloudBackend = backendConfig.value(QStringLiteral("kind")).toString()
+                                      .compare(QStringLiteral("cloud"), Qt::CaseInsensitive) == 0;
         const QString folder = o.value("folder").toString();
         const QJsonObject mo = o.value("model").toObject();
         const QString file = mo.value("file").toString();
@@ -1458,7 +1461,10 @@ void ProfileManager::loadSystemProfiles()
         rt.mlock = ro.value("mlock").toBool(false);
         rt.contBatching = true;
         rt.cacheType = ro.value("kv").toString(QStringLiteral("q8_0"));
-        sysRt.append(rt);
+        if (cloudBackend)
+            rt.ctx = backendConfig.value(QStringLiteral("ctx")).toInt(rt.ctx);
+        if (!cloudBackend)
+            sysRt.append(rt);
 
         ModelProfile mp;
         mp.id = QStringLiteral("sysmodel-") + id; mp.system = true;
@@ -1479,14 +1485,44 @@ void ProfileManager::loadSystemProfiles()
             mp.specDraftNgl = spec.value("draftNgl").toString();
             mp.specDraftNMax = spec.value("draftNMax").toInt(0);
         }
-        sysModel.append(mp);
+        if (cloudBackend) {
+            // External vLLM profiles carry model identity in BackendProfile. Do
+            // not create a phantom local GGUF reference or ask the downloader to
+            // resolve an empty path.
+            mp.modelId.clear();
+            mp.mmprojId.clear();
+            mp.draftModelId.clear();
+            mp.specType.clear();
+            mp.specDraftNMax = 0;
+            mp.specDraftNgl.clear();
+        } else {
+            sysModel.append(mp);
+        }
 
         BackendProfile be;
         be.id = QStringLiteral("sysbe-") + id; be.system = true;
         be.name = o.value("displayName").toString() + QStringLiteral(" · backend");
         be.binaryId = QString();   // resuelto al construir el comando (AppController)
-        be.host = QStringLiteral("127.0.0.1");
-        be.port = 8021;
+        be.host = cloudBackend
+            ? backendConfig.value(QStringLiteral("host")).toString(QStringLiteral("127.0.0.1"))
+            : QStringLiteral("127.0.0.1");
+        be.port = cloudBackend
+            ? backendConfig.value(QStringLiteral("port")).toInt(0)
+            : 8021;
+        if (cloudBackend) {
+            be.kind = QStringLiteral("cloud");
+            be.cloudBaseUrl = backendConfig.value(QStringLiteral("baseUrl"))
+                                  .toString(backendConfig.value(QStringLiteral("cloudBaseUrl"))
+                                                .toString()).trimmed();
+            be.cloudKeyRef = backendConfig.value(QStringLiteral("keyRef"))
+                                  .toString(backendConfig.value(QStringLiteral("cloudKeyRef"))
+                                                .toString()).trimmed();
+            be.cloudModel = backendConfig.value(QStringLiteral("model"))
+                                  .toString(backendConfig.value(QStringLiteral("cloudModel"))
+                                                .toString()).trimmed();
+            be.cloudCtx = backendConfig.value(QStringLiteral("ctx")).toInt(
+                ro.value(QStringLiteral("ctx")).toInt(0));
+        }
         sysBe.append(be);
 
         LaunchProfile lp;
@@ -1513,8 +1549,8 @@ void ProfileManager::loadSystemProfiles()
         lp.best = o.value(QStringLiteral("best")).toBool(false);
         lp.benchmark = o.value(QStringLiteral("benchmark")).toBool(false);
         lp.backendProfileId = be.id;
-        lp.modelProfileId = mp.id;
-        lp.runtimePresetId = rt.id;
+        lp.modelProfileId = cloudBackend ? QString() : mp.id;
+        lp.runtimePresetId = cloudBackend ? QString() : rt.id;
         lp.agentProfileId = o.value(QStringLiteral("agentProfileId")).toString();
         lp.plannerProfileId = o.value(QStringLiteral("plannerProfileId")).toString();
         lp.hybridMode = o.value(QStringLiteral("hybridMode")).toString(QStringLiteral("off"));

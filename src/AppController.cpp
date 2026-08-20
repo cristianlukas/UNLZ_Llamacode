@@ -13256,6 +13256,11 @@ void AppController::ensureSystemBinary(const QString &kind)
 
 void AppController::ensureSystemProfileBinary(const QJsonObject &entry)
 {
+    if (entry.value(QStringLiteral("backend")).toObject()
+            .value(QStringLiteral("kind")).toString()
+            .compare(QStringLiteral("cloud"), Qt::CaseInsensitive) == 0)
+        return; // External vLLM/OpenAI-compatible endpoint; no local binary.
+
     const QString launchId = entry.value(QStringLiteral("id")).toString();
     const QString pin = entry.value(QStringLiteral("binaryPin")).toString().trimmed();
     if (!pin.isEmpty()) {
@@ -13703,6 +13708,11 @@ void AppController::acceptSystemProfileImpl(const QString &launchId, bool startW
 // Encola modelo + mmproj + draft de un perfil de sistema (cada uno a su subdir).
 void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
 {
+    if (entry.value(QStringLiteral("backend")).toObject()
+            .value(QStringLiteral("kind")).toString()
+            .compare(QStringLiteral("cloud"), Qt::CaseInsensitive) == 0)
+        return; // The external provider owns the model and drafter downloads.
+
     // No re-descargar lo que ya está en el catálogo (mismo nombre de archivo en
     // cualquier root escaneado, p.ej. D:/Models). buildContext liga por filename.
     auto have = [this](const QString &fn) {

@@ -868,6 +868,13 @@ externo** (OpenAI, OpenRouter, Groq, DeepSeek, etc.) en vez de a un `llama-serve
 propio. `BackendProfile.kind = "cloud"` no lanza proceso ni binario: el chat/agente
 pegan directo al `cloudBaseUrl` con el modelo configurado.
 
+Esto también permite registrar servidores locales externos como vLLM sin
+confundirlos con un GGUF administrado por LlamaCode. La familia benchmark
+`sys-bench-qwen38-dflash2-vllm-*` deja declarados el target INT8 W8A16 de Qwen3.8,
+el drafter DFlash2, el contexto 262k, KV FP8 y TP=2; el servidor y sus parches se
+levantan fuera de la app. El procedimiento está en
+[`docs/benchmark-vllm-dflash2.md`](docs/benchmark-vllm-dflash2.md).
+
 - **SecretStore**: las API keys **nunca** se serializan en los JSON del repo. El
   perfil guarda una **referencia** (`cloudKeyRef`) y el valor se resuelve en runtime
   vía variable de entorno o store cifrado en disco — **QtKeychain** (Secret Service /
@@ -1636,6 +1643,12 @@ por separado con `agent-chat`, `agent-intermedio` y `agent-maximo`. Compara cali
 ejecutable, primer intento, TTFT, tokens, tool calls, reparaciones y RAM/VRAM. El
 control de Chat puro debe medirse aparte porque el runner de agente exige un
 artefacto de archivo por tarea.
+
+Los perfiles externos de vLLM siguen la misma escalera HE0 → HE20 → BCB, pero
+LlamaCode sólo conecta al endpoint OpenAI-compatible: no mide como `llama-server`
+ni descarga el modelo. Para DFlash2, comparar la candidata de 7 tokens contra el
+control autoregresivo con la misma suite y registrar aparte la versión/parches de
+vLLM; ver [`docs/benchmark-vllm-dflash2.md`](docs/benchmark-vllm-dflash2.md).
 
 - [BigBang-v1 Q4_K_M (2026-08-10)](docs/research/bigbang-v1-q4km.md): perfil
   experimental con mmproj bf16 y cuatro variantes de benchmark para comparar

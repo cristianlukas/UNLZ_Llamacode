@@ -45,6 +45,7 @@ private slots:
 
     void manager_loadsSystemProfiles();
     void manager_ninferProfilesAreBenchmarkCandidates();
+    void manager_vllmDflashProfilesAreExternalBenchmarks();
     void manager_systemNotPersisted();
     void manager_immutable();
     void manager_duplicateMakesEditableCopy();
@@ -175,6 +176,69 @@ void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
              QStringLiteral("qwen3_8_27b.ninfer"));
     QVERIFY(qwen38.value(QStringLiteral("comment")).toString()
                 .contains(QStringLiteral("no ejecuta tool calls")));
+}
+
+void SystemProfilesTests::manager_vllmDflashProfilesAreExternalBenchmarks()
+{
+    const QStringList ids = {
+        QStringLiteral("sys-bench-qwen38-dflash2-vllm-262k"),
+        QStringLiteral("sys-bench-qwen38-dflash2-vllm-ar-262k")};
+    ProfileManager pm;
+
+    for (const QString &id : ids) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("system")).toBool(), qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("modelProfileId")).toString().isEmpty(),
+                 qPrintable(id));
+        QVERIFY2(launch.value(QStringLiteral("runtimePresetId")).toString().isEmpty(),
+                 qPrintable(id));
+
+        const QVariantMap backend = pm.getBackend(
+            launch.value(QStringLiteral("backendProfileId")).toString());
+        QCOMPARE(backend.value(QStringLiteral("kind")).toString(), QStringLiteral("cloud"));
+        QCOMPARE(backend.value(QStringLiteral("cloudBaseUrl")).toString(),
+                 id.endsWith(QStringLiteral("-ar-262k"))
+                     ? QStringLiteral("http://127.0.0.1:8001")
+                     : QStringLiteral("http://127.0.0.1:8000"));
+        QCOMPARE(backend.value(QStringLiteral("cloudModel")).toString(),
+                 QStringLiteral("lued/Qwen3.8-27B-INT8-W8A16-DFlash2"));
+        QCOMPARE(backend.value(QStringLiteral("cloudCtx")).toInt(), 262144);
+    }
+
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject dflash;
+    QJsonObject autoregressive;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        const QString id = profile.value(QStringLiteral("id")).toString();
+        if (id == ids.at(0)) dflash = profile;
+        if (id == ids.at(1)) autoregressive = profile;
+    }
+    QVERIFY(!dflash.isEmpty());
+    QVERIFY(!autoregressive.isEmpty());
+    QCOMPARE(dflash.value(QStringLiteral("backend")).toObject()
+                 .value(QStringLiteral("kind")).toString(), QStringLiteral("cloud"));
+    const QJsonObject external = dflash.value(QStringLiteral("external")).toObject();
+    QCOMPARE(external.value(QStringLiteral("targetModel")).toString(),
+             QStringLiteral("lued/Qwen3.8-27B-INT8-W8A16-DFlash2"));
+    QCOMPARE(external.value(QStringLiteral("drafterModel")).toString(),
+             QStringLiteral("lued/Qwen3.8-27B-DFlash2-W8"));
+    QCOMPARE(external.value(QStringLiteral("speculativeMethod")).toString(),
+             QStringLiteral("dflash"));
+    QCOMPARE(external.value(QStringLiteral("numSpeculativeTokens")).toInt(), 7);
+    QCOMPARE(external.value(QStringLiteral("tensorParallelSize")).toInt(), 2);
+    QCOMPARE(external.value(QStringLiteral("maxModelLen")).toInt(), 262144);
+    QCOMPARE(external.value(QStringLiteral("kvCacheDtype")).toString(),
+             QStringLiteral("fp8_e4m3"));
+    QCOMPARE(external.value(QStringLiteral("patchRepo")).toString(),
+             QStringLiteral("noonghunna/club-3090"));
+    QCOMPARE(autoregressive.value(QStringLiteral("external")).toObject()
+                 .value(QStringLiteral("speculativeMethod")).toString(),
+             QStringLiteral("none"));
 }
 
 void SystemProfilesTests::manager_systemNotPersisted()
