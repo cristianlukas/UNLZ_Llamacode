@@ -1,4 +1,5 @@
 #include "RawChatBackend.h"
+#include "AgentLifecycle.h"
 #include "ReasoningWire.h"
 #include "core/DocumentExtractor.h"
 #include <QDateTime>
@@ -155,7 +156,18 @@ void RawChatBackend::start(const AgentContext &ctx)
     emit logAppended(QStringLiteral("[raw backend ready]\n"));
     if (m_sessionId.isEmpty())
         createSession(ctx.cwd);
+    emitSessionLifecycle();
     emit runningChanged();
+}
+
+void RawChatBackend::emitSessionLifecycle()
+{
+    if (m_sessionId.isEmpty() || m_sessionId == m_lifecycleSessionId) return;
+    m_lifecycleSessionId = m_sessionId;
+    emit agentLifecycleEvent(AgentLifecycle::sessionStart(
+        m_sessionId, m_projectDir, m_correlationId,
+        m_ctx.harnessProfileId.isEmpty() ? m_ctx.launchProfileId : m_ctx.harnessProfileId,
+        QStringLiteral("raw"), 1));
 }
 
 void RawChatBackend::stop()
@@ -169,6 +181,7 @@ void RawChatBackend::stop()
     saveCurrentMessages();
     persistAll();
     m_running = false;
+    m_lifecycleSessionId.clear();
     m_curAsstIdx = -1;
     emit runningChanged();
 }
@@ -247,6 +260,7 @@ void RawChatBackend::createSession(const QString &projectId, const QString &proj
     persistSession(id);
     emit sessionsChanged();
     emit messagesChanged();
+    emitSessionLifecycle();
 }
 
 void RawChatBackend::pruneEmptySessions(const QString &keepId)
@@ -437,6 +451,11 @@ void RawChatBackend::sendMessage(const QString &text)
     }
     if (m_sessionId.isEmpty())
         createSession(m_projectDir);
+
+    m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    emitSessionLifecycle();
+    emit agentLifecycleEvent(AgentLifecycle::promptSubmit(
+        m_sessionId, m_projectDir, m_correlationId, trimmed, attachments.size()));
 
     // Contenido para mostrar: texto + chips de adjuntos.
     QString display = trimmed;

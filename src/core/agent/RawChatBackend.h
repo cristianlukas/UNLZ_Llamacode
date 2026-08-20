@@ -85,6 +85,7 @@ public:
     void pruneEmptySessions(const QString &keepId);
 
 private:
+    void emitSessionLifecycle();
     QString storageDir() const;
     QString sessionFilePath(const QString &sessionId) const;
     void loadFromDisk();
@@ -111,6 +112,8 @@ private:
     QString m_jsonSchema;    // JSON schema (string) → response_format
 
     QString m_sessionId;
+    QString m_correlationId;
+    QString m_lifecycleSessionId;
     QString m_sessionTitle;
     QString m_projectDir;
     QVariantList m_messages;

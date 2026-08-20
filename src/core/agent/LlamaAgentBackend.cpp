@@ -2212,6 +2212,7 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
     }
     ensureSession();
     m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    m_lifecycleFinishedToolIds.clear();
     beginDurableRun(visibleTrimmed);
     if (m_workClaimId.isEmpty()) {
         const QString agentId = m_harnessProfileId.trimmed().isEmpty()
@@ -3583,6 +3584,16 @@ void LlamaAgentBackend::processPendingCalls()
                 rest.append(v);
         }
         if (!taskCalls.isEmpty()) {
+            for (const QJsonValue &v : std::as_const(taskCalls)) {
+                const QJsonObject call = v.toObject();
+                const QJsonObject fn = call.value(QStringLiteral("function")).toObject();
+                const QString args = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
+                emit agentLifecycleEvent(AgentLifecycle::toolEvent(
+                    QStringLiteral("tool.request"), m_sessionId, m_cwd, m_correlationId,
+                    call.value(QStringLiteral("id")).toString(), QStringLiteral("task"), args,
+                    AgentLifecycle::changedPathsFromToolInput(
+                        QStringLiteral("task"), QJsonDocument::fromJson(args.toUtf8()).object())));
+            }
             m_pendingCalls = rest;       // los no-task se procesan al terminar los subs
             spawnTasks(taskCalls);
             return;
@@ -3595,6 +3606,10 @@ void LlamaAgentBackend::processPendingCalls()
     QString kind           = toolKind(name);
     const QString id       = call.value(QStringLiteral("id")).toString();
     QString argStr         = toolArgumentsToString(fn.value(QStringLiteral("arguments")));
+    const QJsonObject requestArgs = QJsonDocument::fromJson(argStr.toUtf8()).object();
+    emit agentLifecycleEvent(AgentLifecycle::toolEvent(
+        QStringLiteral("tool.request"), m_sessionId, m_cwd, m_correlationId,
+        id, name, argStr, AgentLifecycle::changedPathsFromToolInput(name, requestArgs)));
     ensureAssistantBubble();
     setAssistantStatus(toolStatusText(name, kind));
 
@@ -3671,10 +3686,6 @@ void LlamaAgentBackend::processPendingCalls()
                                       {QStringLiteral("toolKind"), kind},
                                       {QStringLiteral("args"), argStr.left(8192)},
                                       {QStringLiteral("repeatCount"), sigCnt}});
-    emit agentLifecycleEvent(AgentLifecycle::toolEvent(
-        QStringLiteral("tool.request"), m_sessionId, m_cwd, m_correlationId,
-        id, name, argStr, AgentLifecycle::changedPathsFromToolInput(
-            name, QJsonDocument::fromJson(argStr.toUtf8()).object())));
     const QString effectId = m_sessionId + QLatin1Char(':') + id;
     if (m_harnessEngineId == QLatin1String("next") && !id.isEmpty()) {
         HarnessEffectRecord effect;
@@ -4235,6 +4246,9 @@ void LlamaAgentBackend::approveAndContinue(const QString &id, const QString &res
         if (m_harnessEngineId == QLatin1String("next"))
             m_harnessEffectLedger.transition(m_sessionId + QLatin1Char(':') + id,
                                              QStringLiteral("dispatching"));
+        emit agentLifecycleEvent(AgentLifecycle::toolEvent(
+            QStringLiteral("tool.start"), m_sessionId, m_cwd, m_correlationId,
+            id, name, argStr));
         if (!m_harnessWorker->call(
                 driverCallId,
                 QJsonObject{{QStringLiteral("operation"), operation},
@@ -4391,11 +4405,7 @@ void LlamaAgentBackend::onToolExecuted(const QVariantMap &result)
             emit logAppended(graphInference + QLatin1Char('\n'));
         }
     }
-    emit agentLifecycleEvent(AgentLifecycle::toolResult(
-        m_sessionId, m_cwd,
-        result.value(QStringLiteral("correlationId")).toString().isEmpty()
-            ? m_correlationId : result.value(QStringLiteral("correlationId")).toString(),
-        callId, name, ok, isWrite, externalWrite, res, changedPaths));
+    emitToolLifecycleFinish(callId, name, ok, isWrite, externalWrite, res, changedPaths);
     if (name.startsWith(QLatin1String("desktop_")))
         emit desktopActivityChanged(false, name, m_execCommand);
     if (ok) ++m_toolOk; else ++m_toolFail;
@@ -4893,6 +4903,10 @@ void LlamaAgentBackend::launchSub(const QJsonObject &call)
     m_subWorktree.insert(id, wt);
     m_subIsolated.insert(id, isolated);
 
+    emit agentLifecycleEvent(AgentLifecycle::toolEvent(
+        QStringLiteral("tool.start"), m_sessionId, m_cwd, m_correlationId,
+        id, QStringLiteral("task"), argStr));
+
     appendToolCard(QStringLiteral("task"), QStringLiteral("task"), true,
                    desc.isEmpty() ? prompt.left(60) : desc,
                    isolated ? QStringLiteral("[worktree git aislada]\n")
@@ -4951,7 +4965,8 @@ void LlamaAgentBackend::onSubFinished(const QString &id, const QString &result, 
     emit messagesChanged();
 
     if (ok) ++m_toolOk; else ++m_toolFail;
-    appendToolResult(id, QStringLiteral("task"), (result + mergeNote).left(16 * 1024));
+    appendToolResult(id, QStringLiteral("task"), (result + mergeNote).left(16 * 1024),
+                     ok, false, false);
 
     m_subWorktree.remove(id); m_subBranch.remove(id);
     m_subIsolated.remove(id); m_subMsgIdx.remove(id);
@@ -4972,9 +4987,25 @@ void LlamaAgentBackend::cancelAllSubs()
     }
 }
 
-void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name, const QString &content)
+void LlamaAgentBackend::emitToolLifecycleFinish(const QString &id, const QString &name,
+                                                bool ok, bool isWrite, bool externalWrite,
+                                                const QString &content,
+                                                const QStringList &paths)
 {
-    Q_UNUSED(name)
+    if (id.isEmpty()) return;
+    const QString key = m_correlationId + QLatin1Char(':') + id;
+    if (m_lifecycleFinishedToolIds.contains(key)) return;
+    m_lifecycleFinishedToolIds.insert(key);
+    emit agentLifecycleEvent(AgentLifecycle::toolResult(
+        m_sessionId, m_cwd, m_correlationId, id, name, ok, isWrite,
+        externalWrite, content, paths));
+}
+
+void LlamaAgentBackend::appendToolResult(const QString &id, const QString &name,
+                                         const QString &content, bool ok, bool isWrite,
+                                         bool externalWrite, const QStringList &paths)
+{
+    emitToolLifecycleFinish(id, name, ok, isWrite, externalWrite, content, paths);
     if (m_textToolFallback) {
         const QString compact = budgetTextToolOutput(name, content);
         appendApiMessage(QJsonObject{
@@ -6856,7 +6887,8 @@ void LlamaAgentBackend::failExternalWorkerCalls(const QString &reason)
                 QStringLiteral("settled"), QStringLiteral("worker_unavailable"));
         appendToolCard(QStringLiteral("worker_call"), QStringLiteral("external"), false,
                        operation, reason);
-        appendToolResult(modelCallId, QStringLiteral("worker_call"), reason);
+        appendToolResult(modelCallId, QStringLiteral("worker_call"), reason,
+                         false, false, true);
     }
     m_externalWorkerCalls.clear();
     m_externalWorkerDescriptions.clear();
@@ -6899,7 +6931,8 @@ void LlamaAgentBackend::onHarnessWorkerCallResult(const QString &callId,
                                       {QStringLiteral("operation"), operation},
                                       {QStringLiteral("externalWrite"), true},
                                       {QStringLiteral("result"), output.left(8192)}});
-    appendToolResult(modelCallId, QStringLiteral("worker_call"), output);
+    appendToolResult(modelCallId, QStringLiteral("worker_call"), output,
+                     ok, false, true);
     processPendingCalls();
 }
 

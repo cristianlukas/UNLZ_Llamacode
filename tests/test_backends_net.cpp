@@ -84,6 +84,7 @@ private slots:
     void deleteSession_removes();
     void persistsAcrossRestart();
     void stream_accumulatesAssistantContent();
+    void lifecycle_emitsSessionAndPromptInOrder();
     void sampling_isSentPersistedAndFirstTokenMeasured();
     void stream_reportsErrorOnHttp500();
     void queuedMessages_canBePreviewedEditedAndRemoved();
@@ -301,6 +302,34 @@ void BackendsNetTests::stream_accumulatesAssistantContent()
         spy.wait(100);
 
     QCOMPARE(lastAssistant(be), QStringLiteral("Hola mundo"));
+}
+
+void BackendsNetTests::lifecycle_emitsSessionAndPromptInOrder()
+{
+    clearRawChatStore();
+    SseStubServer stub;
+    QVERIFY(stub.start(QByteArrayLiteral("data: [DONE]\n")));
+    QTemporaryDir dir;
+    RawChatBackend be;
+    AgentContext c = ctx(dir.path());
+    c.serverBaseUrl = stub.baseUrl();
+    c.harnessProfileId = QStringLiteral("agent-avanzado");
+    be.start(c);
+
+    QSignalSpy lifecycle(&be, &IAgentBackend::agentLifecycleEvent);
+    QSignalSpy finished(&be, &IAgentBackend::turnFinished);
+    // El start ocurre antes de conectar el spy; el prompt sí debe ser el primer
+    // evento observable de este turno y conservar el mismo correlationId.
+    be.sendMessage(QStringLiteral("revisá el proyecto"));
+    QVERIFY(finished.wait(1000));
+    QVERIFY(!lifecycle.isEmpty());
+    const QVariantMap prompt = lifecycle.last().at(0).toMap();
+    QCOMPARE(prompt.value(QStringLiteral("event")).toString(),
+             QStringLiteral("prompt.submit"));
+    QCOMPARE(prompt.value(QStringLiteral("prompt")).toString(),
+             QStringLiteral("revisá el proyecto"));
+    QVERIFY(!prompt.value(QStringLiteral("sessionId")).toString().isEmpty());
+    QVERIFY(!prompt.value(QStringLiteral("correlationId")).toString().isEmpty());
 }
 
 void BackendsNetTests::sampling_isSentPersistedAndFirstTokenMeasured()

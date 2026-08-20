@@ -17,6 +17,9 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegularExpression>
+#include <QSharedPointer>
+
+struct AgentDurableRunState;
 
 class QThread;
 class QTimer;
@@ -528,7 +531,12 @@ private:
 
 private:
     void approveAndContinue(const QString &id, const QString &response); // once|always|reject
-    void appendToolResult(const QString &id, const QString &name, const QString &content);
+    void emitToolLifecycleFinish(const QString &id, const QString &name, bool ok,
+                                 bool isWrite, bool externalWrite,
+                                 const QString &content, const QStringList &paths = {});
+    void appendToolResult(const QString &id, const QString &name, const QString &content,
+                          bool ok = false, bool isWrite = false,
+                          bool externalWrite = false, const QStringList &paths = {});
     bool recordToolOutcome(const QString &tool, bool ok, bool isWrite,
                            const QString &result);
     // Burbuja de asistente: crear/cerrar por iteración para no apilar texto LLM
@@ -556,6 +564,7 @@ private:
     void configureDurableRunStore();
     void beginDurableRun(const QString &objective);
     void finishDurableRun(const QString &status, const QString &detail);
+    void scheduleDurableCapture(const QSharedPointer<AgentDurableRunState> &state);
     QString buildSystemPrompt() const;   // prompt base + memoria del proyecto
     void logFromConst(const QString &text) const;  // log desde métodos const
     QVariantMap directiveFacts(bool super) const;  // hechos para el gate `when`
@@ -643,7 +652,7 @@ private:
     QString m_runId;
     QString m_runLeaseToken;
     QString m_runOwnerId;
-    QJsonObject m_runBeforeSnapshot;
+    QSharedPointer<AgentDurableRunState> m_runAsyncState;
     static constexpr qint64 kRunLeaseMs = 120000;
     QString m_harnessActivationId;
     HarnessCapabilitySnapshot m_harnessCapabilities;
@@ -790,6 +799,7 @@ private:
     QString m_lastDesktopResult;
     QString m_lastDesktopTypeText;        // última entrada por desktop_type (guardrail teclado)
     QSet<QString> m_desktopLaunchApps;   // apps ya lanzadas en la sesión/Task actual
+    QSet<QString> m_lifecycleFinishedToolIds;
     // Tope de seguridad MUY alto: no cortar trabajo legítimo. El loop infinito
     // real lo frena m_loopPolicy.sameCallLimit (misma tool + mismos args
     // repetidos). Que el agente haga tantas iteraciones como necesite. Este
