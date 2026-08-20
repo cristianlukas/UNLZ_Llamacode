@@ -24,6 +24,7 @@ public:
                                QString *error = nullptr);
 
     static QJsonObject manifest(const QString &runId);
+    static bool remove(const QString &runId);
 
     // `relativePath` debe ser una entrada del manifiesto. Save As no pisa por
     // defecto; `overwrite=true` sólo debe usarse después de una aprobación UI.
@@ -37,4 +38,3 @@ public:
         return saveAs(runId, relativePath, destination, overwrite, error);
     }
 };
-

@@ -2,10 +2,12 @@
 
 #include <QObject>
 #include <QHash>
+#include <QJsonObject>
 #include <QVariantList>
 #include <QVariantMap>
 
 class QProcess;
+class QTimer;
 class RunHistoryStore;
 
 // Orquesta corridas largas de Claude Code/Codex sin perder el contexto cuando
@@ -35,6 +37,7 @@ public:
     // cliPath opcional, applyEdits, approvalMode y presentation.
     Q_INVOKABLE QString startRun(const QVariantMap &request);
     Q_INVOKABLE bool stopRun(const QString &runId);
+    Q_INVOKABLE QString retryRun(const QString &runId);
     Q_INVOKABLE QVariantMap run(const QString &runId) const;
     Q_INVOKABLE QString log(const QString &runId) const;
     Q_INVOKABLE bool removeRun(const QString &runId);
@@ -72,11 +75,24 @@ private:
                       const QByteArray &data);
     void finishRun(const QString &runId, int exitCode, const QString &status,
                    const QString &error = QString());
+    void completeRun(const QString &runId, const QString &status,
+                     const QString &error = QString());
+    void startVerification(const QString &runId);
+    void finishVerification(const QString &runId, int exitCode,
+                            const QString &error = QString());
+    void requestStop(const QString &runId, const QString &reason);
+    void housekeeping();
+    void cleanupRetention();
     void recordHistory(const QVariantMap &run);
 
     RunHistoryStore *m_history = nullptr;
     QHash<QString, QVariantMap> m_runs;
     QHash<QString, QProcess *> m_processes;
+    QHash<QString, QProcess *> m_verifiers;
     QHash<QString, bool> m_stopRequested;
+    QHash<QString, QString> m_stopReasons;
+    QHash<QString, QJsonObject> m_beforeSnapshots;
+    QHash<QString, QString> m_verificationOutput;
+    QTimer *m_housekeepingTimer = nullptr;
     QString m_lastError;
 };

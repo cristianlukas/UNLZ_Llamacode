@@ -74,6 +74,11 @@ public:
     // Ajuste del agente: system prompt extra + temperatura (<0 = default del server).
     virtual void setAgentTuning(const QString &systemExtra, double temperature)
         { Q_UNUSED(systemExtra) Q_UNUSED(temperature) }
+    // Puente opcional para handoffs a CLIs externos administrados por la app.
+    // Los backends que no delegan conservan el no-op compatible.
+    virtual void completeManagedAgentRun(const QString &requestId,
+                                         const QVariantMap &run)
+        { Q_UNUSED(requestId) Q_UNUSED(run) }
 
     // Estado expuesto a la UI
     virtual QString currentSessionId() const { return {}; }
@@ -116,4 +121,6 @@ signals:
     // llama-server): si respondió y si la plantilla referencia tools. Lo usa
     // AppController para advertir si el perfil activo no soporta tool-calling.
     void chatTemplateDetected(bool haveTemplate, bool supportsTools);
+    void managedAgentRunRequested(const QVariantMap &request);
+    void managedAgentRunCancelRequested(const QString &requestId);
 };

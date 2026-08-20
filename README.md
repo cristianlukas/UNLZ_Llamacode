@@ -854,12 +854,15 @@ persistencia para que probar Next no altere el historial existente.
 
 Desde **Agente → 🚀 Corridas**, LlamaCode puede iniciar revisiones o
 implementaciones largas en Claude Code o Codex y seguirlas desde la app. Cada
-corrida conserva prompt, manifiesto, stdout y stderr, y al finalizar se agrega
-a `RunHistoryStore` con metadata y rutas de evidencia. El modo plan es el
-default; permitir ediciones es explícito y nunca activa bypass/full-auto sin
-una confirmación igualmente explícita. Si la app se cierra, la corrida se
-recupera como `stale` en vez de inventar un cierre. El contrato completo está
-en [`docs/managed-agent-runs.md`](docs/managed-agent-runs.md).
+corrida conserva prompt, manifiesto, stdout/stderr y, si corresponde,
+`AgentDeliverableStore`; al finalizar se agrega a `RunHistoryStore` con metadata
+y rutas de evidencia. El prompt viaja por stdin, las corridas con ediciones
+reservan el workspace y tienen watchdog de tiempo, inactividad y tamaño de logs.
+Un cierre con código cero queda distinguido como no verificado, con artefactos
+capturados o verificado por un comando explícito. `ask_teacher` usa el mismo
+supervisor durable para delegar a Claude/Codex sin bloquear la interfaz. Si la
+app se cierra, la corrida se recupera como `stale` y puede reintentarse. El
+contrato completo está en [`docs/managed-agent-runs.md`](docs/managed-agent-runs.md).
 
 ## Backends cloud + secretos cifrados
 

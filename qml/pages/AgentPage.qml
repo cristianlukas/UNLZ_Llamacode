@@ -473,7 +473,7 @@ Item {
                 model: App.managedAgentRunStore.runs
                 delegate: Rectangle {
                     required property var modelData
-                    width: managedRunsList.width; height: 72; radius: 7
+                    width: managedRunsList.width; height: 88; radius: 7
                     color: Theme.inputBg; border.color: Theme.borderColor
                     RowLayout {
                         anchors { fill: parent; margins: 9 }
@@ -482,8 +482,9 @@ Item {
                             Layout.fillWidth: true; spacing: 2
                             Text {
                                 text: (modelData.runtime || "cli") + " · " + (modelData.status || "")
-                                color: modelData.status === "finished" ? Theme.successText
-                                     : modelData.status === "failed" || modelData.status === "stale"
+                                      + (modelData.resultStatus ? " · " + modelData.resultStatus : "")
+                                color: modelData.resultStatus === "verified" ? Theme.successText
+                                     : ["failed", "stale", "timed_out"].indexOf(modelData.status) >= 0
                                        ? Theme.errorText : Theme.textPrimary
                                 font { pixelSize: 12; bold: true }
                             }
@@ -510,8 +511,18 @@ Item {
                         }
                         LcButton {
                             text: "Parar"; danger: true
-                            visible: ["starting", "running", "stopping"].indexOf(modelData.status) >= 0
+                            visible: ["starting", "running", "stopping", "verifying"].indexOf(modelData.status) >= 0
                             onClicked: App.stopManagedAgentRun(modelData.runId || "")
+                        }
+                        LcButton {
+                            text: "Reintentar"; secondary: true
+                            visible: ["failed", "cancelled", "timed_out", "stale"].indexOf(modelData.status) >= 0
+                            onClicked: App.managedAgentRunStore.retryRun(modelData.runId || "")
+                        }
+                        LcButton {
+                            text: "×"; secondary: true
+                            visible: ["starting", "running", "stopping", "verifying"].indexOf(modelData.status) < 0
+                            onClicked: App.removeManagedAgentRun(modelData.runId || "")
                         }
                     }
                 }

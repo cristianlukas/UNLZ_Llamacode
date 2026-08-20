@@ -798,6 +798,13 @@ static QVariantMap taskTraceEventFromMessage(const QVariantMap &message, int num
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    connect(&m_managedAgentRuns, &ManagedAgentRunStore::runFinished, this,
+            [this](const QString &runId, const QVariantMap &run) {
+        const auto backend = m_managedDelegationBackends.take(runId);
+        if (!backend) return;
+        const QString requestId = run.value(QStringLiteral("requestId")).toString();
+        backend->completeManagedAgentRun(requestId, run);
+    });
     m_taskLivePreviewEnabled = QSettings().value(
         QStringLiteral("tasks/livePreviewEnabled"), false).toBool();
     connect(&m_hardwareWatcher, &QFutureWatcher<QVariantMap>::finished, this,
@@ -4140,6 +4147,31 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         injectBrowserMcp(merged, m_activeLaunchId);
         cb->setMcpServers(merged.values());
     }
+
+    connect(b, &IAgentBackend::managedAgentRunRequested, this,
+            [this, b](const QVariantMap &request) {
+        const QString requestId = request.value(QStringLiteral("requestId")).toString();
+        const QString runId = startManagedAgentRun(request);
+        if (runId.isEmpty()) {
+            QVariantMap failure{{QStringLiteral("requestId"), requestId},
+                                {QStringLiteral("status"), QStringLiteral("failed")},
+                                {QStringLiteral("summary"), m_managedAgentRuns.lastError()}};
+            b->completeManagedAgentRun(requestId, failure);
+            return;
+        }
+        m_managedDelegationBackends.insert(runId, b);
+    });
+    connect(b, &IAgentBackend::managedAgentRunCancelRequested, this,
+            [this](const QString &requestId) {
+        for (auto it = m_managedDelegationBackends.cbegin();
+             it != m_managedDelegationBackends.cend(); ++it) {
+            const QVariantMap run = m_managedAgentRuns.run(it.key());
+            if (run.value(QStringLiteral("requestId")).toString() == requestId) {
+                m_managedAgentRuns.stopRun(it.key());
+                break;
+            }
+        }
+    });
 
     // Reflejar estado del backend en los mirrors expuestos a QML.
     connect(b, &IAgentBackend::messagesChanged, this, [this, b]() {

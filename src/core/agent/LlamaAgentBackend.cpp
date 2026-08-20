@@ -6537,6 +6537,14 @@ void LlamaAgentBackend::setMasterChain(const QVariantList &chain, const QString 
                                   Q_ARG(QVariantList, m_masterChain));
 }
 
+void LlamaAgentBackend::completeManagedAgentRun(const QString &requestId,
+                                                const QVariantMap &run)
+{
+    if (!m_worker) return;
+    QMetaObject::invokeMethod(m_worker, "completeManagedRun", Qt::QueuedConnection,
+                              Q_ARG(QString, requestId), Q_ARG(QVariantMap, run));
+}
+
 bool LlamaAgentBackend::escalateToMaster(const QString &problem)
 {
     if (!masterConfigured()) return false;
@@ -6606,6 +6614,14 @@ void LlamaAgentBackend::ensureWorker()
     connect(m_worker, &AgentToolRunner::toolExecuted, this, &LlamaAgentBackend::onToolExecuted);
     connect(m_worker, &AgentToolRunner::toolStarted, this, &LlamaAgentBackend::onToolStarted);
     connect(m_worker, &AgentToolRunner::toolOutputChunk, this, &LlamaAgentBackend::onToolOutputChunk);
+    connect(m_worker, &AgentToolRunner::managedAgentRunRequested, this,
+            [this](const QVariantMap &request) {
+        emit managedAgentRunRequested(request);
+    });
+    connect(m_worker, &AgentToolRunner::managedAgentRunCancelRequested, this,
+            [this](const QString &requestId) {
+        emit managedAgentRunCancelRequested(requestId);
+    });
     m_workerThread->start();
 }
 

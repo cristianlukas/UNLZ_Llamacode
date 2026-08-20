@@ -8,6 +8,7 @@
 #include <QTemporaryDir>
 
 #include "core/agent/ManagedAgentRunStore.h"
+#include "core/agent/WorkRegistry.h"
 #include "core/tasks/RunHistoryStore.h"
 
 class ManagedAgentRunTests : public QObject
@@ -17,6 +18,8 @@ private slots:
     void claude_defaults_toPlan();
     void codex_doesNotEnableFullAutoImplicitly();
     void codex_fullAutoRequiresExplicitDangerousApproval();
+    void defaultTransportUsesStdin();
+    void workspaceClaimRejectsOverlap();
     void invalidRunDoesNotStart();
     void startPersistsArtifactsAndHistory();
 };
@@ -30,7 +33,7 @@ void ManagedAgentRunTests::claude_defaults_toPlan()
     QCOMPARE(command.value("program").toString(), QStringLiteral("claude"));
     const QStringList args = command.value("args").toStringList();
     QVERIFY(args.contains("-p"));
-    QVERIFY(args.contains("revisá el diff"));
+    QVERIFY(!args.contains("revisá el diff"));
     QVERIFY(args.contains("--permission-mode"));
     QVERIFY(args.contains("plan"));
     QCOMPARE(command.value("permissionPosture").toString(), QStringLiteral("plan"));
@@ -59,6 +62,41 @@ void ManagedAgentRunTests::codex_fullAutoRequiresExplicitDangerousApproval()
     QVERIFY(command.value("args").toStringList().contains("--full-auto"));
     QCOMPARE(command.value("permissionPosture").toString(),
              QStringLiteral("full-auto-explicit"));
+}
+
+void ManagedAgentRunTests::defaultTransportUsesStdin()
+{
+    const QVariantMap command = ManagedAgentRunStore::commandForRequest({
+        {"runtime", "claude"}, {"cliPath", "claude"},
+        {"prompt", "secreto no debe ir en argv"}
+    });
+    QCOMPARE(command.value("promptTransport").toString(), QStringLiteral("stdin"));
+    QVERIFY(!command.value("args").toStringList().contains(
+        QStringLiteral("secreto no debe ir en argv")));
+    QVERIFY(!command.value("display").toString().contains(QStringLiteral("secreto")));
+}
+
+void ManagedAgentRunTests::workspaceClaimRejectsOverlap()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    const QString claim = WorkRegistry::acquire(root.path(), QStringLiteral("native-session"),
+                                                QStringLiteral("native"), QStringLiteral("edición"));
+    QVERIFY(!claim.isEmpty());
+    QVERIFY(WorkRegistry::claimPaths(root.path(), claim, QStringLiteral("native-session"),
+                                     {QStringLiteral("src/main.cpp")}));
+    const QByteArray runs = (root.path() + QStringLiteral("/runs")).toUtf8();
+    qputenv("LLAMACODE_MANAGED_RUNS_DIR", runs);
+    ManagedAgentRunStore store(nullptr);
+    const QString id = store.startRun({{"runtime", "claude"}, {"cliPath", "cmd.exe"},
+                                       {"prompt", "editar"}, {"workspace", root.path()},
+                                       {"applyEdits", true},
+                                       {"prefixArgs", QStringList{"/c", "exit", "0"}}});
+    QVERIFY(id.isEmpty());
+    QVERIFY(store.lastError().contains(QStringLiteral("conflict"))
+            || store.lastError().contains(QStringLiteral("reclama")));
+    WorkRegistry::release(root.path(), claim, QStringLiteral("native-session"));
+    qunsetenv("LLAMACODE_MANAGED_RUNS_DIR");
 }
 
 void ManagedAgentRunTests::invalidRunDoesNotStart()

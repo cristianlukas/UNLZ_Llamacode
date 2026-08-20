@@ -404,6 +404,8 @@ public:
     // ya resueltos). Se reenvía al worker. Tiene prioridad sobre setMasterCli.
     void setMasterChain(const QVariantList &chain, const QString &escalation,
                         int autoAfterFails);
+    void completeManagedAgentRun(const QString &requestId,
+                                 const QVariantMap &run) override;
     // Escalado manual: el usuario pide pasar el problema actual al maestro.
     // Envía un turno que instruye al agente a usar ask_teacher. Devuelve false si
     // no hay maestro configurado.

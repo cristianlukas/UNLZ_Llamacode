@@ -1544,6 +1544,7 @@ private:
     RunHistoryStore  m_runHistory;
     ManagedAgentRunStore m_managedAgentRuns{&m_runHistory};
     DownloadHistoryStore m_downloadHistory;
+    QHash<QString, QPointer<IAgentBackend>> m_managedDelegationBackends;
     // Inicio de la corrida actual (para registrar el historial al terminar).
     QString  m_runningTaskStartedAt;
     // Task programada esperando que el agente auto-iniciado quede listo.

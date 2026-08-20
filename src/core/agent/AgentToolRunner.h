@@ -76,6 +76,9 @@ public slots:
     // clave:valor en vez de prosa. Se propaga desde la directiva 'honey' del
     // perfil de agente. No cambia QUÉ se pregunta, sólo el formato de respuesta.
     void setHoneyHandoff(bool on);
+    // Completa un handoff que fue lanzado por el supervisor durable en el hilo
+    // de UI. Se invoca encolado mientras runMasterCli espera en este worker.
+    void completeManagedRun(const QString &requestId, const QVariantMap &run);
     // Mata el run_shell en curso (cancelación real desde PARAR/steer).
     void cancelShell();
     void shutdown();
@@ -87,6 +90,12 @@ signals:
     // run_shell async: arranque (crea tarjeta en vivo) y chunks de salida.
     void toolStarted(const QVariantMap &info);       // {callId,name,kind,command}
     void toolOutputChunk(const QString &callId, const QString &chunk);
+    // Puente async: AppController arranca ManagedAgentRunStore y devuelve el
+    // closeout sin exponer QProcess entre hilos.
+    void managedAgentRunRequested(const QVariantMap &request);
+    void managedAgentRunCancelRequested(const QString &requestId);
+    void managedAgentRunCompleted(const QString &requestId,
+                                  const QVariantMap &run);
 
 private slots:
     void onShellReadyRead();
@@ -154,6 +163,10 @@ private:
     // Recorre la cadena de fallbacks en orden; devuelve la primera respuesta OK.
     QString runMasterChain(const QString &question, const QString &context,
                            const QString &cwd, bool *ok);
+    QString runManagedMaster(const QString &cliName, const QString &cliPath,
+                             bool applyEdits, int timeoutSec,
+                             const QString &question, const QString &context,
+                             const QString &cwd, bool *ok);
 
     // Estado del run_shell async en curso (uno a la vez; el loop es secuencial).
     QProcess   *m_shellProc = nullptr;

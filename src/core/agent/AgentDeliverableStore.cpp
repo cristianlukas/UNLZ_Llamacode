@@ -311,6 +311,12 @@ QJsonObject AgentDeliverableStore::manifest(const QString &runId)
     return readJson(QDir(runDir(runId)).filePath(QStringLiteral("manifest.json")));
 }
 
+bool AgentDeliverableStore::remove(const QString &runId)
+{
+    const QString dir = runDir(runId);
+    return !dir.isEmpty() && QDir(dir).removeRecursively();
+}
+
 bool AgentDeliverableStore::saveAs(const QString &runId, const QString &relativePath,
                                    const QString &destination, bool overwrite, QString *error)
 {

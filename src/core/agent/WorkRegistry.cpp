@@ -68,8 +68,8 @@ QStringList normalizePaths(const QString &root, const QStringList &paths)
             : QDir::cleanPath(raw);
         rel.replace(QLatin1Char('\\'), QLatin1Char('/'));
         while (rel.startsWith(QStringLiteral("./"))) rel.remove(0, 2);
-        if (rel.isEmpty() || rel == QLatin1String(".")
-            || rel == QLatin1String("..") || rel.startsWith(QStringLiteral("../")))
+        if (rel.isEmpty() || rel == QLatin1String("..")
+            || rel.startsWith(QStringLiteral("../")))
             continue;
         if (!out.contains(rel)) out << rel;
     }
@@ -87,6 +87,10 @@ bool samePath(const QString &a, const QString &b)
 
 bool pathMatches(const QString &claimed, const QString &requested)
 {
+    // `.` es una claim de workspace completo. Permite que un proceso externo
+    // que edita el proyecto reserve el mismo ámbito que una lista de archivos
+    // descubierta por un agente nativo.
+    if (claimed == QLatin1String(".") || requested == QLatin1String(".")) return true;
     if (samePath(claimed, requested)) return true;
     const QString c = claimed.endsWith(QLatin1Char('/')) ? claimed
                                                            : claimed + QLatin1Char('/');

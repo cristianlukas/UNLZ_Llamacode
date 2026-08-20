@@ -43,6 +43,7 @@
 #include <QRegularExpression>
 #include <QSet>
 #include <QTimer>
+#include <QUuid>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QJsonObject>
@@ -1017,6 +1018,12 @@ void AgentToolRunner::setHoneyHandoff(bool on)
     m_honeyHandoff = on;
 }
 
+void AgentToolRunner::completeManagedRun(const QString &requestId,
+                                         const QVariantMap &run)
+{
+    emit managedAgentRunCompleted(requestId, run);
+}
+
 QString AgentToolRunner::masterSystemPrompt(bool honey)
 {
     if (honey)
@@ -1032,17 +1039,14 @@ QString AgentToolRunner::masterSystemPrompt(bool honey)
         "Respondé conciso, correcto y accionable.");
 }
 
-// Invoca claude-code / codex en modo no-interactivo, bloqueante. cwd = proyecto.
-QString AgentToolRunner::runMasterCli(const QString &cliName, const QString &cliPath,
-                                      bool applyEdits, int timeoutSec,
-                                      const QString &question, const QString &context,
-                                      const QString &cwd, bool *ok)
+QString AgentToolRunner::runManagedMaster(const QString &cliName, const QString &cliPath,
+                                          bool applyEdits, int timeoutSec,
+                                          const QString &question, const QString &context,
+                                          const QString &cwd, bool *ok)
 {
     if (cliPath.isEmpty())
         return QStringLiteral("[ask_teacher: CLI maestro '%1' no encontrado en PATH. "
                               "Instalalo o configurá el maestro en el perfil.]").arg(cliName);
-
-    const int timeout = timeoutSec > 0 ? timeoutSec : 300;
     QString prompt = question;
     if (!context.isEmpty())
         prompt = QStringLiteral("Contexto:\n%1\n\nProblema:\n%2").arg(context, question);
@@ -1050,40 +1054,76 @@ QString AgentToolRunner::runMasterCli(const QString &cliName, const QString &cli
         prompt += QStringLiteral("\n\nNO modifiques archivos. Devolvé sólo un plan/solución concreta.");
     else
         prompt += QStringLiteral("\n\nResolvé el problema en el proyecto (podés editar archivos). "
-                                 "Al terminar resumí qué cambiaste.");
+                                 "Al terminar resumí qué cambiaste y qué verificaste.");
 
-    QStringList args;
-    if (cliName == QLatin1String("claude")) {
-        // Claude Code modo print: respuesta a stdout y termina.
-        args << QStringLiteral("-p") << prompt;
-        if (applyEdits)
-            args << QStringLiteral("--permission-mode") << QStringLiteral("acceptEdits");
-    } else if (cliName == QLatin1String("codex")) {
-        // Codex modo no-interactivo.
-        args << QStringLiteral("exec");
-        if (applyEdits) args << QStringLiteral("--full-auto");
-        args << prompt;
-    } else {
-        return QStringLiteral("[ask_teacher: CLI maestro desconocido: %1]").arg(cliName);
-    }
+    const QString requestId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const int timeout = timeoutSec > 0 ? timeoutSec : 300;
+    const QVariantMap request{
+        {QStringLiteral("requestId"), requestId},
+        {QStringLiteral("runtime"), cliName},
+        {QStringLiteral("cliPath"), cliPath},
+        {QStringLiteral("prompt"), prompt},
+        {QStringLiteral("workspace"), cwd},
+        {QStringLiteral("ownerId"), m_sessionId},
+        {QStringLiteral("taskId"), m_sessionId},
+        {QStringLiteral("applyEdits"), applyEdits},
+        {QStringLiteral("claimWorkspace"), applyEdits},
+        {QStringLiteral("captureDeliverables"), applyEdits},
+        {QStringLiteral("approvalMode"), applyEdits ? QStringLiteral("ask") : QStringLiteral("plan")},
+        {QStringLiteral("timeoutSec"), timeout},
+        {QStringLiteral("idleTimeoutSec"), qMax(60, qMin(timeout, 600))},
+        {QStringLiteral("presentation"), QStringLiteral("managed_panel")},
+        {QStringLiteral("visibleRequested"), false}
+    };
 
-    QProcess proc;
-    if (!cwd.isEmpty()) proc.setWorkingDirectory(cwd);
-    proc.setProcessChannelMode(QProcess::MergedChannels);
-    proc.start(cliPath, args);
-    if (!proc.waitForStarted(10000))
-        return QStringLiteral("[ask_teacher: no se pudo iniciar %1]").arg(cliName);
-    if (!proc.waitForFinished(timeout * 1000)) {
-        proc.kill();
-        proc.waitForFinished(2000);
-        return QStringLiteral("[ask_teacher: el maestro %1 superó el timeout de %2s]")
-            .arg(cliName).arg(timeout);
+    QEventLoop loop;
+    QTimer timer;
+    QVariantMap completion;
+    bool received = false;
+    const QMetaObject::Connection connection = connect(
+        this, &AgentToolRunner::managedAgentRunCompleted, this,
+        [&loop, &completion, &received, requestId](const QString &id,
+                                                    const QVariantMap &run) {
+            if (id != requestId) return;
+            completion = run;
+            received = true;
+            loop.quit();
+        });
+    timer.setSingleShot(true);
+    connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    emit managedAgentRunRequested(request);
+    timer.start((timeout + 30) * 1000);
+    loop.exec();
+    disconnect(connection);
+    if (!received) {
+        emit managedAgentRunCancelRequested(requestId);
+        if (ok) *ok = false;
+        return QStringLiteral("[ask_teacher: el supervisor durable superó el timeout de %1s]")
+            .arg(timeout);
     }
-    const QString out = QString::fromUtf8(proc.readAll()).trimmed();
-    if (out.isEmpty())
-        return QStringLiteral("[ask_teacher: respuesta vacía del maestro %1]").arg(cliName);
+    const QString status = completion.value(QStringLiteral("status")).toString();
+    if (status != QLatin1String("finished")) {
+        if (ok) *ok = false;
+        return QStringLiteral("[ask_teacher: el CLI %1 terminó con estado %2: %3]")
+            .arg(cliName, status, completion.value(QStringLiteral("summary")).toString());
+    }
     if (ok) *ok = true;
-    return QStringLiteral("[Respuesta del maestro %1]\n%2").arg(cliName, out);
+    QString answer = completion.value(QStringLiteral("stdoutTail")).toString().trimmed();
+    if (answer.isEmpty()) answer = completion.value(QStringLiteral("summary")).toString();
+    return QStringLiteral("[Respuesta del maestro %1 · corrida %2]\n%3")
+        .arg(cliName, completion.value(QStringLiteral("runId")).toString(), answer);
+}
+
+// Invoca claude-code / codex mediante el supervisor durable. cwd = proyecto.
+QString AgentToolRunner::runMasterCli(const QString &cliName, const QString &cliPath,
+                                      bool applyEdits, int timeoutSec,
+                                      const QString &question, const QString &context,
+                                      const QString &cwd, bool *ok)
+{
+    if (cliName != QLatin1String("claude") && cliName != QLatin1String("codex"))
+        return QStringLiteral("[ask_teacher: CLI maestro desconocido: %1]").arg(cliName);
+    return runManagedMaster(cliName, cliPath, applyEdits, timeoutSec,
+                            question, context, cwd, ok);
 }
 
 // Consulta HTTP OpenAI-compat a un maestro. ok=true sólo si hubo respuesta útil.
