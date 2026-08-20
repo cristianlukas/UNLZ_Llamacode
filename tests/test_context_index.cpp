@@ -95,12 +95,12 @@ void ContextIndexTests::projectBrainDiffDetectsIndirectMutation()
         QVariantMap{{QStringLiteral("path"), QStringLiteral("same.cpp")},
                     {QStringLiteral("sha256"), QStringLiteral("old")}},
         QVariantMap{{QStringLiteral("path"), QStringLiteral("removed.cpp")},
-                    {QStringLiteral("sha256"), QStringLiteral("gone")}}}};
+                    {QStringLiteral("sha256"), QStringLiteral("gone")}}}}};
     const QVariantMap after{{QStringLiteral("files"), QVariantList{
         QVariantMap{{QStringLiteral("path"), QStringLiteral("same.cpp")},
                     {QStringLiteral("sha256"), QStringLiteral("new")}},
         QVariantMap{{QStringLiteral("path"), QStringLiteral("added.cpp")},
-                    {QStringLiteral("sha256"), QStringLiteral("fresh")}}}};
+                    {QStringLiteral("sha256"), QStringLiteral("fresh")}}}}};
 
     const QStringList changed = ProjectBrain::changedPaths(before, after);
     QCOMPARE(changed.size(), 3);
