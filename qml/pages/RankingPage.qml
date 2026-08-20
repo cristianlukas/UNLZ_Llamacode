@@ -15,10 +15,10 @@ Item {
     property string targetFilter: String(App.readSetting("rankingTargetFilter", "Todos"))
     property bool onlyComplete: App.readSetting("rankingOnlyComplete", false) === true
                                  || String(App.readSetting("rankingOnlyComplete", "")) === "true"
-    onSortColumnChanged: App.writeSetting("rankingSortColumn", sortColumn)
-    onSortDirectionChanged: App.writeSetting("rankingSortDirection", sortDirection)
-    onTargetFilterChanged: App.writeSetting("rankingTargetFilter", targetFilter)
-    onOnlyCompleteChanged: App.writeSetting("rankingOnlyComplete", onlyComplete)
+    onSortColumnChanged: { App.writeSetting("rankingSortColumn", sortColumn); scheduleRebuild() }
+    onSortDirectionChanged: { App.writeSetting("rankingSortDirection", sortDirection); scheduleRebuild() }
+    onTargetFilterChanged: { App.writeSetting("rankingTargetFilter", targetFilter); scheduleRebuild() }
+    onOnlyCompleteChanged: { App.writeSetting("rankingOnlyComplete", onlyComplete); scheduleRebuild() }
     // La vista nativa comparte con el dashboard la idea de una tabla
     // configurable: los filtros, el orden y las columnas sobreviven a F5.
     property var columnFilters: {
@@ -39,9 +39,27 @@ Item {
         catch (e) { return ({}) }
     }
     property var specsCache: ({})
-    onColumnFiltersChanged: App.writeSetting("rankingColumnFilters", JSON.stringify(columnFilters))
+    property var profileConfigCache: ({})
+    property var allRankingRows: []
+    property var displayedRows: []
+    readonly property string emptyFilterToken: "__LLAMACODE_NO_VALUES__"
+    onColumnFiltersChanged: { App.writeSetting("rankingColumnFilters", JSON.stringify(columnFilters)); scheduleRebuild() }
     onVisibleColumnKeysChanged: App.writeSetting("rankingVisibleColumns", JSON.stringify(visibleColumnKeys))
     onColumnWidthsChanged: App.writeSetting("rankingColumnWidths", JSON.stringify(columnWidths))
+
+    Timer {
+        id: rebuildTimer
+        interval: 0
+        repeat: false
+        onTriggered: root.rebuildRows()
+    }
+
+    Connections {
+        target: App
+        function onBenchmarkResultsChanged() { root.scheduleRebuild() }
+    }
+
+    Component.onCompleted: scheduleRebuild()
 
     readonly property var columns: [
         { key: "profile", title: "Perfil", width: 250 },
@@ -80,6 +98,10 @@ Item {
         for (const k in columnWidths) copy[k] = columnWidths[k]
         copy[key] = Math.max(48, Math.round(width))
         columnWidths = copy
+    }
+
+    function scheduleRebuild() {
+        if (rebuildTimer) rebuildTimer.restart()
     }
     function shownColumns() {
         const out = []
@@ -142,6 +164,24 @@ Item {
             return stage.toUpperCase() + ": " + getter(row, stage)
         }).join("\n")
     }
+
+    function profileConfig(profileId) {
+        const key = String(profileId || "")
+        if (!key) return ({})
+        if (profileConfigCache[key] !== undefined) return profileConfigCache[key]
+        const lp = App.profileManager.getLaunchProfile(key)
+        const config = {
+            launch: lp || ({}),
+            model: lp && lp.modelProfileId ? App.profileManager.getModelProfile(lp.modelProfileId) : ({}),
+            runtime: lp && lp.runtimePresetId ? App.profileManager.getRuntimePreset(lp.runtimePresetId) : ({}),
+            backend: lp && lp.backendProfileId ? App.profileManager.getBackend(lp.backendProfileId) : ({})
+        }
+        const copy = {}
+        for (const k in profileConfigCache) copy[k] = profileConfigCache[k]
+        copy[key] = config
+        profileConfigCache = copy
+        return config
+    }
     function numberText(value, suffix) {
         const n = Number(value)
         if (!isFinite(n) || n <= 0) return "—"
@@ -168,10 +208,11 @@ Item {
         if (cacheKey && specsCache[cacheKey] !== undefined) return specsCache[cacheKey]
         const result = latestStage(row)
         const parts = []
-        const lp = cacheKey ? App.profileManager.getLaunchProfile(cacheKey) : ({})
-        const mp = lp && lp.modelProfileId ? App.profileManager.getModelProfile(lp.modelProfileId) : ({})
-        const rt = lp && lp.runtimePresetId ? App.profileManager.getRuntimePreset(lp.runtimePresetId) : ({})
-        const bp = lp && lp.backendProfileId ? App.profileManager.getBackend(lp.backendProfileId) : ({})
+        const config = profileConfig(cacheKey)
+        const lp = config.launch || ({})
+        const mp = config.model || ({})
+        const rt = config.runtime || ({})
+        const bp = config.backend || ({})
         if (mp && mp.mmprojId) parts.push("Visión: sí")
         else parts.push("Visión: no")
         if (mp && (mp.specType === "draft-mtp" || mp.draftModelId)) {
@@ -221,8 +262,9 @@ Item {
         return ""
     }
 
-    function rows() {
+    function rebuildRows() {
         const source = App.benchmarkRanking || []
+        allRankingRows = source.slice()
         const filtered = []
         for (let i = 0; i < source.length; ++i) {
             const row = source[i]
@@ -232,7 +274,8 @@ Item {
             let matches = true
             for (const column in columnFilters) {
                 const allowed = columnFilters[column]
-                if (allowed && allowed.length && allowed.indexOf(columnLabel(row, column)) < 0) {
+                if (allowed && allowed.length &&
+                        (allowed.indexOf(emptyFilterToken) >= 0 || allowed.indexOf(columnLabel(row, column)) < 0)) {
                     matches = false
                     break
                 }
@@ -240,8 +283,7 @@ Item {
             if (!matches) continue
             filtered.push(row)
         }
-        if (sortDirection === 0 || sortColumn === "") return filtered
-        filtered.sort(function(a, b) {
+        if (sortDirection !== 0 && sortColumn !== "") filtered.sort(function(a, b) {
             const av = sortValue(a, sortColumn), bv = sortValue(b, sortColumn)
             let cmp = 0
             if (typeof av === "number" && typeof bv === "number")
@@ -251,7 +293,11 @@ Item {
             if (cmp === 0) cmp = String(a.profileName || "").localeCompare(String(b.profileName || ""))
             return sortDirection > 0 ? cmp : -cmp
         })
-        return filtered
+        displayedRows = filtered
+    }
+
+    function rows() {
+        return displayedRows
     }
 
     function scoreText(row, stage) {
@@ -321,7 +367,7 @@ Item {
     function columnLabel(row, key) { return cellText(row, key) }
     function distinctColumnValues(key) {
         const seen = {}, values = []
-        for (const row of (App.benchmarkRanking || [])) {
+        for (const row of allRankingRows) {
             const value = columnLabel(row, key)
             if (seen[value]) continue
             seen[value] = true
@@ -347,6 +393,10 @@ Item {
         columnFilters = copy
     }
     function clearAllFilters() { columnFilters = ({}) }
+
+    function openFilterFor(key) {
+        filterPanel.openFor(key)
+    }
 
     readonly property int tableWidth: {
         let total = 0
@@ -411,6 +461,12 @@ Item {
                 onClicked: root.clearAllFilters()
             }
             LcButton {
+                text: root.activeFilterCount() > 0
+                      ? "Filtros (" + root.activeFilterCount() + ")"
+                      : "Filtros"
+                onClicked: filterPanel.openFor(root.sortColumn || "profile")
+            }
+            LcButton {
                 id: visibleColumnsButton
                 text: "Columnas visibles"
                 secondary: true
@@ -418,7 +474,7 @@ Item {
             }
             Item { Layout.fillWidth: true }
             Text {
-                text: root.rows().length + " perfil(es) · " + root.shownColumns().length
+                text: root.displayedRows.length + " perfil(es) · " + root.shownColumns().length
                       + "/" + root.columns.length + " columnas"
                 color: Theme.textMuted
                 font.pixelSize: 11
@@ -530,6 +586,169 @@ Item {
             }
         }
 
+        Popup {
+            id: filterPanel
+            x: Math.max(12, root.width - width - 20)
+            y: 78
+            width: Math.min(360, root.width - 24)
+            height: Math.min(520, root.height - 92)
+            padding: 10
+            modal: false
+            focus: true
+            closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+            property string columnKey: "profile"
+            property var values: []
+            property var checkedValues: ({})
+
+            function openFor(key) {
+                columnKey = key || "profile"
+                const columnIndex = root.columns.findIndex(function(column) {
+                    return column.key === columnKey
+                })
+                if (columnIndex >= 0) filterColumnCombo.currentIndex = columnIndex
+                values = root.distinctColumnValues(columnKey)
+                const current = root.columnFilters[columnKey]
+                const noValues = current && current.length === 1
+                                  && current[0] === root.emptyFilterToken
+                const copy = {}
+                for (const value of values)
+                    copy[value] = noValues || !current || !current.length
+                                  ? !noValues : current.indexOf(value) >= 0
+                checkedValues = copy
+                open()
+            }
+
+            function setValue(value, checked) {
+                const copy = {}
+                for (const k in checkedValues) copy[k] = checkedValues[k]
+                copy[value] = checked
+                checkedValues = copy
+            }
+
+            function setAll(checked) {
+                const copy = {}
+                for (const value of values) copy[value] = checked
+                checkedValues = copy
+            }
+
+            function applyFilter() {
+                const selected = []
+                let all = true
+                for (const value of values) {
+                    if (checkedValues[value]) selected.push(value)
+                    else all = false
+                }
+                if (all) root.setColumnFilter(columnKey, [])
+                else if (!selected.length) root.setColumnFilter(columnKey, [root.emptyFilterToken])
+                else root.setColumnFilter(columnKey, selected)
+                close()
+            }
+
+            background: Rectangle {
+                color: Theme.inputBg
+                border.color: Theme.borderColor
+                radius: 8
+            }
+
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 8
+                Text {
+                    text: "Filtrar resultados"
+                    color: Theme.textPrimary
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: "Columna"; color: Theme.textSecondary; font.pixelSize: 12 }
+                    LcComboBox {
+                        id: filterColumnCombo
+                        Layout.fillWidth: true
+                        model: root.columns.map(function(column) { return column.title })
+                        currentIndex: root.columns.findIndex(function(column) {
+                            return column.key === filterPanel.columnKey
+                        })
+                        onActivated: filterPanel.openFor(root.columns[currentIndex].key)
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    LcButton {
+                        text: "↑ Asc"
+                        secondary: true
+                        Layout.fillWidth: true
+                        onClicked: { root.sortColumn = filterPanel.columnKey; root.sortDirection = 1 }
+                    }
+                    LcButton {
+                        text: "↓ Desc"
+                        secondary: true
+                        Layout.fillWidth: true
+                        onClicked: { root.sortColumn = filterPanel.columnKey; root.sortDirection = -1 }
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
+                CheckBox {
+                    id: filterSelectAll
+                    text: "Seleccionar todo"
+                    Layout.fillWidth: true
+                    checked: filterPanel.values.length > 0 && filterPanel.values.every(function(value) {
+                        return filterPanel.checkedValues[value] === true
+                    })
+                    onToggled: filterPanel.setAll(checked)
+                    contentItem: Text {
+                        text: filterSelectAll.text
+                        color: Theme.textPrimary
+                        font.pixelSize: 12
+                        leftPadding: filterSelectAll.indicator.width + 6
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 1
+                        Repeater {
+                            model: filterPanel.values
+                            delegate: CheckBox {
+                                id: filterValueCheck
+                                required property string modelData
+                                Layout.fillWidth: true
+                                checked: filterPanel.checkedValues[modelData] === true
+                                onToggled: filterPanel.setValue(modelData, checked)
+                                text: modelData
+                                contentItem: Text {
+                                    text: modelData
+                                    color: Theme.textPrimary
+                                    font.pixelSize: 11
+                                    leftPadding: filterValueCheck.indicator.width + 6
+                                    verticalAlignment: Text.AlignVCenter
+                                    elide: Text.ElideRight
+                                }
+                            }
+                        }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    LcButton {
+                        text: "Limpiar"
+                        secondary: true
+                        Layout.fillWidth: true
+                        onClicked: { root.setColumnFilter(filterPanel.columnKey, []); filterPanel.close() }
+                    }
+                    LcButton {
+                        text: "Aplicar"
+                        Layout.fillWidth: true
+                        onClicked: filterPanel.applyFilter()
+                    }
+                }
+            }
+        }
+
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
         Flickable {
@@ -538,16 +757,15 @@ Item {
             Layout.fillHeight: true
             clip: true
             contentWidth: root.tableWidth
-            contentHeight: tableContent.height
+            contentHeight: height
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
-            ScrollBar.vertical: LcScrollBar {}
 
             Column {
                 id: tableContent
                 width: root.tableWidth
                 property int rowHeight: 64
-                height: 38 + root.rows().length * rowHeight
+                height: tableFlick.height
 
                 Rectangle {
                     width: root.tableWidth
@@ -577,14 +795,24 @@ Item {
                                     HoverHandler { cursorShape: Qt.PointingHandCursor }
                                     TapHandler { onTapped: root.cycleSort(modelData.key) }
                                 }
-                                Text {
+                                Rectangle {
                                     id: filterIcon
+                                    width: 24
+                                    height: 26
                                     anchors { right: grip.left; verticalCenter: parent.verticalCenter }
-                                    text: root.columnHasFilter(modelData.key) ? "●" : "▾"
-                                    color: root.columnHasFilter(modelData.key) ? Theme.accent : Theme.textMuted
-                                    font.pixelSize: 10
-                                    HoverHandler { cursorShape: Qt.PointingHandCursor }
-                                    TapHandler { onTapped: { filterPopup.initChecked(); filterPopup.open() } }
+                                    radius: 4
+                                    color: filterHover.hovered || root.columnHasFilter(modelData.key)
+                                           ? Theme.inputBg : "transparent"
+                                    border.color: root.columnHasFilter(modelData.key)
+                                                  ? Theme.accent : Theme.borderColor
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: root.columnHasFilter(modelData.key) ? "●" : "▼"
+                                        color: root.columnHasFilter(modelData.key) ? Theme.accent : Theme.textMuted
+                                        font.pixelSize: 9
+                                    }
+                                    HoverHandler { id: filterHover; cursorShape: Qt.PointingHandCursor }
+                                    TapHandler { onTapped: root.openFilterFor(modelData.key) }
                                 }
                                 Rectangle {
                                     id: grip
@@ -602,139 +830,20 @@ Item {
                                     }
                                 }
 
-                                Popup {
-                                    id: filterPopup
-                                    y: headerCell.height + 2
-                                    x: 0
-                                    width: Math.min(320, Math.max(240, root.width - 24))
-                                    height: Math.min(430, Math.max(180, root.height - 120))
-                                    padding: 8
-                                    modal: false
-                                    focus: true
-                                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-                                    property var checkedValues: ({})
-
-                                    function initChecked() {
-                                        const values = root.distinctColumnValues(headerCell.modelData.key)
-                                        const current = root.columnFilters[headerCell.modelData.key]
-                                        const copy = {}
-                                        for (const value of values)
-                                            copy[value] = !current || !current.length || current.indexOf(value) >= 0
-                                        checkedValues = copy
-                                    }
-                                    function setValue(value, checked) {
-                                        const copy = {}
-                                        for (const k in checkedValues) copy[k] = checkedValues[k]
-                                        copy[value] = checked
-                                        checkedValues = copy
-                                    }
-                                    function setAll(checked) {
-                                        const copy = {}
-                                        for (const value of root.distinctColumnValues(headerCell.modelData.key))
-                                            copy[value] = checked
-                                        checkedValues = copy
-                                    }
-                                    function applyFilter() {
-                                        const values = root.distinctColumnValues(headerCell.modelData.key)
-                                        const selected = []
-                                        let all = true
-                                        for (const value of values) {
-                                            if (checkedValues[value]) selected.push(value)
-                                            else all = false
-                                        }
-                                        root.setColumnFilter(headerCell.modelData.key, all ? [] : selected)
-                                        close()
-                                    }
-
-                                    background: Rectangle { color: Theme.inputBg; border.color: Theme.borderColor; radius: 6 }
-                                    contentItem: ColumnLayout {
-                                        spacing: 6
-                                        RowLayout {
-                                            Layout.fillWidth: true
-                                            LcButton {
-                                                text: "↑ Asc"
-                                                secondary: true
-                                                Layout.fillWidth: true
-                                                onClicked: { root.sortColumn = headerCell.modelData.key; root.sortDirection = 1; filterPopup.close() }
-                                            }
-                                            LcButton {
-                                                text: "↓ Desc"
-                                                secondary: true
-                                                Layout.fillWidth: true
-                                                onClicked: { root.sortColumn = headerCell.modelData.key; root.sortDirection = -1; filterPopup.close() }
-                                            }
-                                        }
-                                        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
-                                        CheckBox {
-                                            id: selectAllCheck
-                                            text: "Seleccionar todo"
-                                            Layout.fillWidth: true
-                                            checked: {
-                                                const values = root.distinctColumnValues(headerCell.modelData.key)
-                                                if (!values.length) return false
-                                                for (const value of values) if (!filterPopup.checkedValues[value]) return false
-                                                return true
-                                            }
-                                            onToggled: filterPopup.setAll(checked)
-                                            contentItem: Text {
-                                                text: selectAllCheck.text
-                                                color: Theme.textPrimary
-                                                font.pixelSize: 12
-                                                leftPadding: selectAllCheck.indicator.width + 6
-                                                verticalAlignment: Text.AlignVCenter
-                                            }
-                                        }
-                                        ScrollView {
-                                            Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            clip: true
-                                            ColumnLayout {
-                                                width: parent.width
-                                                spacing: 1
-                                                Repeater {
-                                                    model: root.distinctColumnValues(headerCell.modelData.key)
-                                                    delegate: CheckBox {
-                                                        id: valueCheck
-                                                        required property string modelData
-                                                        Layout.fillWidth: true
-                                                        checked: filterPopup.checkedValues[modelData] === true
-                                                        onToggled: filterPopup.setValue(modelData, checked)
-                                                        text: modelData
-                                                        contentItem: Text {
-                                                            text: modelData
-                                                            color: Theme.textPrimary
-                                                            font.pixelSize: 11
-                                                            leftPadding: valueCheck.indicator.width + 6
-                                                            verticalAlignment: Text.AlignVCenter
-                                                            elide: Text.ElideRight
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        RowLayout {
-                                            Layout.fillWidth: true
-                                            LcButton {
-                                                text: "Limpiar"
-                                                secondary: true
-                                                Layout.fillWidth: true
-                                                onClicked: { root.setColumnFilter(headerCell.modelData.key, []); filterPopup.close() }
-                                            }
-                                            LcButton {
-                                                text: "Aplicar"
-                                                Layout.fillWidth: true
-                                                onClicked: filterPopup.applyFilter()
-                                            }
-                                        }
-                                    }
-                                }
                             }
                         }
                     }
                 }
 
-                Repeater {
-                    model: root.rows()
+                ListView {
+                    id: rankingList
+                    y: 38
+                    width: root.tableWidth
+                    height: Math.max(0, tableContent.height - 38)
+                    clip: true
+                    model: root.displayedRows
+                    boundsBehavior: Flickable.StopAtBounds
+                    ScrollBar.vertical: LcScrollBar {}
                     delegate: Rectangle {
                         id: rankingRowDelegate
                         required property var modelData
@@ -777,7 +886,7 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                visible: root.rows().length === 0
+                visible: root.displayedRows.length === 0
                 text: "Todavía no hay resultados HE0, HE20 o BCB para mostrar."
                 color: Theme.textMuted
                 font.pixelSize: 13
