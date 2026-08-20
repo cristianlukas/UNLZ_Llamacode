@@ -4,6 +4,8 @@
 #include <QJsonObject>
 #include <QString>
 
+class QLockFile;
+
 struct AgentRunRecord {
     QString runId;
     QString requestHash;
@@ -59,10 +61,19 @@ public:
     // cualquier efecto externo ambiguo debe quedar visible para decisión humana.
     int recoverStaleRuns(qint64 nowMs = 0, QString *error = nullptr);
 
+    // Resolución humana explícita de una corrida uncertain. Nunca reejecuta el
+    // objetivo: sólo permite cerrar la evidencia como cancelled o failed.
+    bool resolveUncertain(const QString &runId, const QString &status,
+                         const QString &detail, QString *error = nullptr);
+    bool mergeTerminalMetadata(const QString &runId, const QJsonObject &metadata,
+                               QString *error = nullptr);
+
     AgentRunRecord record(const QString &runId) const;
     QJsonArray events(const QString &runId) const;
     // Snapshot renderer-safe: nunca incluye leaseToken ni beforeSnapshot.
     QJsonArray pending(int limit = 100) const;
+    // Snapshot renderer-safe de todas las corridas, incluidas las terminales.
+    QJsonArray all(int limit = 100) const;
 
 private:
     QString recordPath(const QString &runId) const;
@@ -70,6 +81,9 @@ private:
     bool writeRecord(const AgentRunRecord &record, QString *error = nullptr) const;
     bool appendEvent(AgentRunRecord &record, const QString &kind,
                      const QJsonObject &payload, QString *error = nullptr) const;
+    QJsonArray eventsUnlocked(const QString &runId) const;
+    AgentRunRecord recordUnlocked(const QString &runId) const;
+    bool acquireLock(QLockFile &lock, QString *error = nullptr) const;
     static QString safeId(const QString &value);
     static QString requestHash(const QString &sessionId, const QString &workspace,
                                const QString &objective);
@@ -77,4 +91,3 @@ private:
 
     QString m_root;
 };
-

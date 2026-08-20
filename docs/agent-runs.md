@@ -54,3 +54,22 @@ Para tests o herramientas headless se pueden redirigir ambos stores con
 La captura es una evidencia de archivos, no un commit automático: los cambios
 siguen perteneciendo al workspace y el usuario decide si los restaura, guarda
 en otro destino o los integra en Git.
+
+## Inbox y recuperación
+
+La página Agente ofrece `📦 Inbox` para leer todas las corridas de los namespaces
+del harness, mostrar el estado `uncertain`, abrir el almacenamiento local y
+examinar el manifiesto. `Guardar como` usa `saveAs` con `overwrite=false`; la UI
+no pisa un destino existente de forma implícita.
+
+Cerrar una corrida `uncertain` es una decisión humana explícita. El contrato sólo
+acepta `cancelled` o `failed`, registra `run.uncertain_resolved` y no vuelve a
+reclamar ni ejecutar el objetivo original. Los metadatos de entregables pueden
+adjuntarse después de la transición terminal mediante `run.metadata_merged`,
+porque el snapshot y la captura se realizan en tareas concurrentes para no
+bloquear la interfaz.
+
+El journal y el registro se protegen con `.store.lock`; cada captura usa además
+un lock por corrida y el índice global usa `.index.lock`. Los locks abandonados
+se consideran stale después de 30 segundos. Las lecturas que llegan a QML usan
+una representación segura: no incluyen `leaseToken` ni `beforeSnapshot`.

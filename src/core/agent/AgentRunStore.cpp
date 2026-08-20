@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QLockFile>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QSet>
@@ -83,11 +84,11 @@ QJsonObject AgentRunRecord::toJson(bool includeLease) const
         {QStringLiteral("leaseExpiresAt"), static_cast<double>(leaseExpiresAt)},
         {QStringLiteral("eventSequence"), static_cast<double>(eventSequence)},
         {QStringLiteral("attempt"), attempt},
-        {QStringLiteral("beforeSnapshot"), beforeSnapshot},
         {QStringLiteral("metadata"), metadata}};
     if (includeLease) {
         object[QStringLiteral("ownerId")] = ownerId;
         object[QStringLiteral("leaseToken")] = leaseToken;
+        object[QStringLiteral("beforeSnapshot")] = beforeSnapshot;
     }
     return object;
 }
@@ -175,8 +176,30 @@ QString AgentRunStore::eventPath(const QString &runId) const
 
 AgentRunRecord AgentRunStore::record(const QString &runId) const
 {
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock)) return {};
+    return recordUnlocked(runId);
+}
+
+AgentRunRecord AgentRunStore::recordUnlocked(const QString &runId) const
+{
     if (m_root.isEmpty() || safeId(runId).isEmpty()) return {};
     return AgentRunRecord::fromJson(loadObject(recordPath(runId)));
+}
+
+bool AgentRunStore::acquireLock(QLockFile &file, QString *error) const
+{
+    if (m_root.isEmpty()) {
+        if (error) *error = QStringLiteral("store no abierto");
+        return false;
+    }
+    file.setStaleLockTime(30000);
+    if (!file.tryLock(5000)) {
+        if (error) *error = QStringLiteral("store ocupado (%1)")
+            .arg(static_cast<int>(file.error()));
+        return false;
+    }
+    return true;
 }
 
 bool AgentRunStore::writeRecord(const AgentRunRecord &value, QString *error) const
@@ -190,6 +213,13 @@ bool AgentRunStore::writeRecord(const AgentRunRecord &value, QString *error) con
 }
 
 QJsonArray AgentRunStore::events(const QString &runId) const
+{
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock)) return {};
+    return eventsUnlocked(runId);
+}
+
+QJsonArray AgentRunStore::eventsUnlocked(const QString &runId) const
 {
     QJsonArray out;
     if (m_root.isEmpty() || safeId(runId).isEmpty()) return out;
@@ -213,7 +243,7 @@ bool AgentRunStore::appendEvent(AgentRunRecord &value, const QString &kind,
         return false;
     }
     qint64 next = value.eventSequence + 1;
-    const QJsonArray previous = events(value.runId);
+    const QJsonArray previous = eventsUnlocked(value.runId);
     if (!previous.isEmpty())
         next = qMax(next, static_cast<qint64>(previous.last().toObject()
             .value(QStringLiteral("seq")).toDouble()) + 1);
@@ -249,10 +279,12 @@ QString AgentRunStore::accept(const QString &runId, const QString &sessionId,
         if (error) *error = QStringLiteral("store no abierto");
         return {};
     }
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return {};
     QString id = safeId(runId);
     if (id.isEmpty()) id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     const QString hash = requestHash(sessionId, workspace, objective);
-    const AgentRunRecord existing = record(id);
+    const AgentRunRecord existing = recordUnlocked(id);
     if (!existing.runId.isEmpty()) {
         if (existing.requestHash != hash) {
             if (error) *error = QStringLiteral("runId reutilizado con otro payload");
@@ -283,7 +315,9 @@ bool AgentRunStore::claim(const QString &runId, const QString &ownerId, qint64 l
                           QString *leaseToken, QString *error)
 {
     if (leaseToken) leaseToken->clear();
-    AgentRunRecord value = record(runId);
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return false;
+    AgentRunRecord value = recordUnlocked(runId);
     if (value.runId.isEmpty() || ownerId.trimmed().isEmpty()) {
         if (error) *error = QStringLiteral("run u owner inválido");
         return false;
@@ -320,7 +354,9 @@ bool AgentRunStore::claim(const QString &runId, const QString &ownerId, qint64 l
 bool AgentRunStore::heartbeat(const QString &runId, const QString &leaseToken,
                               qint64 leaseMs, QString *error)
 {
-    AgentRunRecord value = record(runId);
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return false;
+    AgentRunRecord value = recordUnlocked(runId);
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
     if (value.runId.isEmpty() || value.leaseToken.isEmpty() || value.leaseToken != leaseToken
         || value.leaseExpiresAt <= now) {
@@ -341,7 +377,9 @@ bool AgentRunStore::transition(const QString &runId, const QString &leaseToken,
         if (error) *error = QStringLiteral("estado inválido");
         return false;
     }
-    AgentRunRecord value = record(runId);
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return false;
+    AgentRunRecord value = recordUnlocked(runId);
     const qint64 now = QDateTime::currentMSecsSinceEpoch();
     if (value.runId.isEmpty() || value.leaseToken.isEmpty() || value.leaseToken != leaseToken
         || value.leaseExpiresAt <= now) {
@@ -373,6 +411,8 @@ bool AgentRunStore::transition(const QString &runId, const QString &leaseToken,
 int AgentRunStore::recoverStaleRuns(qint64 nowMs, QString *error)
 {
     if (m_root.isEmpty()) return 0;
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return 0;
     if (nowMs <= 0) nowMs = QDateTime::currentMSecsSinceEpoch();
     int recovered = 0;
     const QFileInfoList files = QDir(QDir(m_root).filePath(QStringLiteral("runs")))
@@ -399,8 +439,56 @@ int AgentRunStore::recoverStaleRuns(qint64 nowMs, QString *error)
     return recovered;
 }
 
+bool AgentRunStore::resolveUncertain(const QString &runId, const QString &status,
+                                     const QString &detail, QString *error)
+{
+    const QString normalized = status.trimmed().toLower();
+    if (normalized != QLatin1String("cancelled")
+        && normalized != QLatin1String("failed")) {
+        if (error) *error = QStringLiteral("una corrida uncertain sólo puede cerrarse como failed o cancelled");
+        return false;
+    }
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return false;
+    AgentRunRecord value = recordUnlocked(runId);
+    if (value.runId.isEmpty() || value.status != QLatin1String("uncertain")) {
+        if (error) *error = QStringLiteral("la corrida no está uncertain");
+        return false;
+    }
+    value.status = normalized;
+    value.detail = detail.trimmed().left(4096);
+    value.finishedAt = QDateTime::currentMSecsSinceEpoch();
+    value.ownerId.clear();
+    value.leaseToken.clear();
+    value.leaseExpiresAt = 0;
+    return appendEvent(value, QStringLiteral("run.uncertain_resolved"),
+                       QJsonObject{{QStringLiteral("status"), normalized},
+                                   {QStringLiteral("detail"), value.detail},
+                                   {QStringLiteral("humanDecision"), true}}, error);
+}
+
+bool AgentRunStore::mergeTerminalMetadata(const QString &runId,
+                                           const QJsonObject &metadata,
+                                           QString *error)
+{
+    if (metadata.isEmpty()) return true;
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock, error)) return false;
+    AgentRunRecord value = recordUnlocked(runId);
+    if (value.runId.isEmpty() || !value.isTerminal()) {
+        if (error) *error = QStringLiteral("só se puede enriquecer una corrida terminal");
+        return false;
+    }
+    for (auto it = metadata.begin(); it != metadata.end(); ++it)
+        value.metadata[it.key()] = it.value();
+    return appendEvent(value, QStringLiteral("run.metadata_merged"),
+                       QJsonObject{{QStringLiteral("metadata"), metadata}}, error);
+}
+
 QJsonArray AgentRunStore::pending(int limit) const
 {
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock)) return {};
     QJsonArray out;
     if (m_root.isEmpty()) return out;
     limit = qBound(1, limit, 500);
@@ -410,6 +498,29 @@ QJsonArray AgentRunStore::pending(int limit) const
     for (const QFileInfo &file : files) {
         const AgentRunRecord value = AgentRunRecord::fromJson(loadObject(file.absoluteFilePath()));
         if (value.runId.isEmpty() || !isPending(value.status)) continue;
+        rows.append(value);
+    }
+    std::sort(rows.begin(), rows.end(), [](const AgentRunRecord &a, const AgentRunRecord &b) {
+        return a.updatedAt > b.updatedAt;
+    });
+    for (int i = 0; i < rows.size() && i < limit; ++i)
+        out.append(rows.at(i).toJson(false));
+    return out;
+}
+
+QJsonArray AgentRunStore::all(int limit) const
+{
+    QLockFile storeLock(QDir(m_root).filePath(QStringLiteral(".store.lock")));
+    if (!acquireLock(storeLock)) return {};
+    QJsonArray out;
+    if (m_root.isEmpty()) return out;
+    limit = qBound(1, limit, 500);
+    QList<AgentRunRecord> rows;
+    const QFileInfoList files = QDir(QDir(m_root).filePath(QStringLiteral("runs")))
+        .entryInfoList(QStringList{QStringLiteral("*.json")}, QDir::Files, QDir::Time);
+    for (const QFileInfo &file : files) {
+        const AgentRunRecord value = AgentRunRecord::fromJson(loadObject(file.absoluteFilePath()));
+        if (value.runId.isEmpty()) continue;
         rows.append(value);
     }
     std::sort(rows.begin(), rows.end(), [](const AgentRunRecord &a, const AgentRunRecord &b) {

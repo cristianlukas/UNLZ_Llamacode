@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonParseError>
+#include <QLockFile>
 #include <QRegularExpression>
 #include <QSaveFile>
 #include <QSet>
@@ -209,6 +210,13 @@ QJsonObject AgentDeliverableStore::capture(const QString &runId, const QString &
         return {};
     }
     const QString dir = runDir(id);
+    QDir().mkpath(dir);
+    QLockFile runLock(QDir(dir).filePath(QStringLiteral(".capture.lock")));
+    runLock.setStaleLockTime(30000);
+    if (!runLock.tryLock(5000)) {
+        if (error) *error = QStringLiteral("captura ocupada por otra sesión");
+        return {};
+    }
     const QString manifestPath = QDir(dir).filePath(QStringLiteral("manifest.json"));
     if (QFile::exists(manifestPath)) return readJson(manifestPath);
 
@@ -290,17 +298,24 @@ QJsonObject AgentDeliverableStore::capture(const QString &runId, const QString &
         {QStringLiteral("storedBytes"), static_cast<double>(storedBytes)}};
     if (!writeJson(manifestPath, result, error)) return {};
 
-    QFile index(QDir(rootDir()).filePath(QStringLiteral("index.jsonl")));
-    if (index.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        index.write(QJsonDocument(QJsonObject{
-            {QStringLiteral("runId"), id},
-            {QStringLiteral("capturedAt"), result.value(QStringLiteral("capturedAt"))},
-            {QStringLiteral("workspace"), result.value(QStringLiteral("workspace"))},
-            {QStringLiteral("changedCount"), result.value(QStringLiteral("changedCount"))},
-            {QStringLiteral("manifest"), QDir(rootDir()).relativeFilePath(manifestPath)}})
-                         .toJson(QJsonDocument::Compact));
-        index.write("\n");
-        index.flush();
+    const QString storeRoot = rootDir();
+    QLockFile indexLock(QDir(storeRoot).filePath(QStringLiteral(".index.lock")));
+    indexLock.setStaleLockTime(30000);
+    if (indexLock.tryLock(5000)) {
+        QFile index(QDir(storeRoot).filePath(QStringLiteral("index.jsonl")));
+        if (index.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            index.write(QJsonDocument(QJsonObject{
+                {QStringLiteral("runId"), id},
+                {QStringLiteral("capturedAt"), result.value(QStringLiteral("capturedAt"))},
+                {QStringLiteral("workspace"), result.value(QStringLiteral("workspace"))},
+                {QStringLiteral("changedCount"), result.value(QStringLiteral("changedCount"))},
+                {QStringLiteral("manifest"), QDir(storeRoot).relativeFilePath(manifestPath)}})
+                             .toJson(QJsonDocument::Compact));
+            index.write("\n");
+            index.flush();
+        }
+    } else if (error && error->isEmpty()) {
+        *error = QStringLiteral("manifiesto guardado pero no se pudo actualizar el índice global");
     }
     return result;
 }
@@ -348,5 +363,13 @@ bool AgentDeliverableStore::saveAs(const QString &runId, const QString &relative
         if (error) *error = QStringLiteral("la copia del entregable no existe");
         return false;
     }
-    return copyAtomic(source, QFileInfo(destination).absoluteFilePath(), overwrite, error);
+    const QString runRoot = QFileInfo(runDir(runId)).canonicalFilePath();
+    const QString sourceCanonical = QFileInfo(source).canonicalFilePath();
+    QString sourceRelative;
+    if (runRoot.isEmpty() || sourceCanonical.isEmpty()
+        || !isInside(runRoot, sourceCanonical, &sourceRelative)) {
+        if (error) *error = QStringLiteral("la copia del entregable sale de su corrida");
+        return false;
+    }
+    return copyAtomic(sourceCanonical, QFileInfo(destination).absoluteFilePath(), overwrite, error);
 }
