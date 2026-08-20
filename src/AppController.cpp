@@ -15,6 +15,8 @@
 #  define NOMINMAX
 #  define VC_EXTRA_LEAN
 #  include <windows.h>
+#  include <psapi.h>
+#  pragma comment(lib, "Psapi.lib")
 #else
 #  include <signal.h>
 #endif
@@ -107,6 +109,59 @@
 #include <QVersionNumber>
 #include <algorithm>
 #include <cmath>
+
+namespace {
+
+#ifdef Q_OS_WIN
+qint64 fileTimeToMilliseconds(const FILETIME &time)
+{
+    ULARGE_INTEGER value;
+    value.LowPart = time.dwLowDateTime;
+    value.HighPart = time.dwHighDateTime;
+    return static_cast<qint64>(value.QuadPart / 10000ULL);
+}
+#endif
+
+QVariantMap currentProcessResources()
+{
+    QVariantMap resources;
+#ifdef Q_OS_WIN
+    PROCESS_MEMORY_COUNTERS_EX memory{};
+    if (GetProcessMemoryInfo(GetCurrentProcess(),
+                             reinterpret_cast<PROCESS_MEMORY_COUNTERS *>(&memory),
+                             sizeof(memory))) {
+        resources.insert(QStringLiteral("rssMb"),
+                         static_cast<double>(memory.WorkingSetSize) / (1024.0 * 1024.0));
+        resources.insert(QStringLiteral("privateMb"),
+                         static_cast<double>(memory.PrivateUsage) / (1024.0 * 1024.0));
+        resources.insert(QStringLiteral("virtualMb"),
+                         static_cast<double>(memory.PagefileUsage) / (1024.0 * 1024.0));
+    }
+
+    FILETIME creation{}, exit{}, kernel{}, user{};
+    if (GetProcessTimes(GetCurrentProcess(), &creation, &exit, &kernel, &user)) {
+        resources.insert(QStringLiteral("cpuMs"),
+                         fileTimeToMilliseconds(kernel) + fileTimeToMilliseconds(user));
+    }
+#elif defined(Q_OS_LINUX)
+    QFile status(QStringLiteral("/proc/self/status"));
+    if (status.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString text = QString::fromUtf8(status.readAll());
+        const auto readKb = [&text](const QString &key) {
+            const QRegularExpressionMatch match = QRegularExpression(
+                QStringLiteral("(?:^|\\n)%1:\\s+(\\d+)\\s+kB").arg(key)).match(text);
+            return match.hasMatch() ? match.captured(1).toDouble() / 1024.0 : -1.0;
+        };
+        const double rss = readKb(QStringLiteral("VmRSS"));
+        const double virtualMemory = readKb(QStringLiteral("VmSize"));
+        if (rss >= 0.0) resources.insert(QStringLiteral("rssMb"), rss);
+        if (virtualMemory >= 0.0) resources.insert(QStringLiteral("virtualMb"), virtualMemory);
+    }
+#endif
+    return resources;
+}
+
+}
 
 static QString benchmarkGateStage(const QString &label, int taskCount);
 static bool isBigCodeBenchLabel(const QString &label);
@@ -335,6 +390,81 @@ static QVariantList groupSessionsByProject(const QVariantList &in)
     out.reserve(rows.size());
     for (const auto &s : std::as_const(rows)) out.append(s);
     return out;
+}
+
+QString AppController::performanceLogPath() const
+{
+    return QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        + QStringLiteral("/performance.jsonl");
+}
+
+void AppController::clearPerformanceLog()
+{
+    QFile::remove(performanceLogPath());
+}
+
+void AppController::setDevMode(bool enabled)
+{
+    if (m_devMode == enabled)
+        return;
+    m_devMode = enabled;
+    writeSetting(QStringLiteral("app/devMode"), enabled);
+    if (m_devMode) {
+        m_performanceClock.start();
+        m_performanceLastWallMs = 0;
+        m_performanceLastCpuMs = -1;
+        capturePerformanceSample(QStringLiteral("dev_mode_enabled"));
+        m_performanceTimer.start();
+    } else {
+        m_performanceTimer.stop();
+        m_performanceSnapshot.clear();
+        emit performanceChanged();
+    }
+    emit devModeChanged();
+}
+
+void AppController::recordPerformanceSample(const QString &label)
+{
+    capturePerformanceSample(label.isEmpty() ? QStringLiteral("manual") : label);
+}
+
+void AppController::capturePerformanceSample(const QString &label)
+{
+    if (!m_devMode)
+        return;
+
+    if (!m_performanceClock.isValid())
+        m_performanceClock.start();
+    const qint64 wallMs = m_performanceClock.elapsed();
+    const QVariantMap resources = currentProcessResources();
+    QVariantMap sample = resources;
+    sample.insert(QStringLiteral("timestamp"), QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs));
+    sample.insert(QStringLiteral("label"), label);
+    sample.insert(QStringLiteral("elapsedMs"), wallMs);
+    if (m_performanceLastWallMs > 0) {
+        const qint64 intervalMs = wallMs - m_performanceLastWallMs;
+        sample.insert(QStringLiteral("sampleIntervalMs"), intervalMs);
+        sample.insert(QStringLiteral("eventLoopLagMs"), qMax<qint64>(0, intervalMs - 1000));
+    }
+    const qint64 cpuMs = resources.value(QStringLiteral("cpuMs"), -1).toLongLong();
+    if (m_performanceLastWallMs > 0 && m_performanceLastCpuMs >= 0 && cpuMs >= 0) {
+        const qint64 wallDelta = wallMs - m_performanceLastWallMs;
+        const qint64 cpuDelta = cpuMs - m_performanceLastCpuMs;
+        if (wallDelta > 0)
+            sample.insert(QStringLiteral("cpuPercent"),
+                          (static_cast<double>(cpuDelta) / static_cast<double>(wallDelta)) * 100.0);
+    }
+    if (m_startupTimer.isValid())
+        sample.insert(QStringLiteral("startupElapsedMs"), m_startupTimer.elapsed());
+
+    m_performanceLastWallMs = wallMs;
+    m_performanceLastCpuMs = cpuMs;
+    m_performanceSnapshot = sample;
+    QDir().mkpath(QFileInfo(performanceLogPath()).absolutePath());
+    appendFileLog(performanceLogPath(),
+                  QString::fromUtf8(QJsonDocument(QJsonObject::fromVariantMap(sample))
+                                        .toJson(QJsonDocument::Compact)));
+    emit performanceChanged();
 }
 
 static bool isSupportedImageAttachment(const QString &path)
@@ -815,6 +945,18 @@ static QVariantMap taskTraceEventFromMessage(const QVariantMap &message, int num
 
 AppController::AppController(QObject *parent) : QObject(parent)
 {
+    m_devMode = QSettings().value(QStringLiteral("app/devMode"), false).toBool();
+    m_performanceTimer.setInterval(1000);
+    connect(&m_performanceTimer, &QTimer::timeout, this,
+            [this]() { capturePerformanceSample(QStringLiteral("interval")); });
+    if (m_devMode) {
+        QTimer::singleShot(0, this, [this]() {
+            m_performanceClock.start();
+            capturePerformanceSample(QStringLiteral("app_controller_ready"));
+            m_performanceTimer.start();
+        });
+    }
+
     connect(&m_managedAgentRuns, &ManagedAgentRunStore::runFinished, this,
             [this](const QString &runId, const QVariantMap &run) {
         const auto backend = m_managedDelegationBackends.take(runId);
@@ -1318,6 +1460,7 @@ void AppController::runStartupScan()
     m_startupStatus = QStringLiteral("Preparando la aplicación…");
     m_startupTimings.clear();
     m_startupTimer.start();
+    capturePerformanceSample(QStringLiteral("startup_begin"));
     emit startupChanged();
 
     m_binaries.refresh();
@@ -1328,6 +1471,7 @@ void AppController::runStartupScan()
     // navegación ni se difieren páginas QML completas.
     QTimer::singleShot(0, this, [this]() {
         m_startupStatus = QStringLiteral("Detectando hardware…");
+        capturePerformanceSample(QStringLiteral("startup_hardware_begin"));
         emit startupChanged();
         rescanHardware();
 
@@ -1348,6 +1492,7 @@ void AppController::runStartupScan()
             }
         }
         QSqlDatabase::removeDatabase(cn);
+        capturePerformanceSample(QStringLiteral("startup_catalog_diagnostic"));
         appendServerEvent(QStringLiteral("lifecycle"),
             QStringLiteral("catalog diag: inMemory=%1 dbRows=%2 dbOpen=%3 path=%4 err=%5 driversAvail=%6")
                 .arg(QString::number(m_catalog.count()), QString::number(dbRows),
@@ -1357,6 +1502,7 @@ void AppController::runStartupScan()
 
         QTimer::singleShot(0, this, [this]() {
             m_startupStatus = QStringLiteral("Actualizando catálogo de modelos…");
+            capturePerformanceSample(QStringLiteral("startup_catalog_begin"));
             emit startupChanged();
             bool scanned = false;
             if (m_roots.count() > 0 && m_catalog.count() == 0) {
@@ -1378,6 +1524,7 @@ void AppController::runStartupScan()
 
             QTimer::singleShot(0, this, [this]() {
                 m_startupStatus = QStringLiteral("Preparando historial y recomendaciones…");
+                capturePerformanceSample(QStringLiteral("startup_history_begin"));
                 emit startupChanged();
                 // Cada carga tiene su propio turno. Así una colección grande
                 // de benchmarks o reportes no bloquea consecutivamente el
@@ -1403,6 +1550,7 @@ void AppController::runStartupScan()
                             m_startupTimings[QStringLiteral("startupTotalMs")] = m_startupTimer.elapsed();
                             m_startupStatus = QStringLiteral("Aplicación lista · servidor detenido");
                             m_startupBusy = false;
+                            capturePerformanceSample(QStringLiteral("startup_complete"));
                             emit startupChanged();
                         });
                     });

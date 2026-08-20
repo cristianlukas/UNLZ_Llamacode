@@ -1480,6 +1480,21 @@ agrupe la ventana abierta con el icono pineado.
 
 > Tras tocar código siempre recompilar — el QML va embebido en el binario vía `qt_add_qml_module`.
 
+### Modos de ejecución y arranque
+
+La aplicación inicia por defecto en **Normal**: no activa muestreo periódico de
+memoria/CPU ni escritura de telemetría de diagnóstico. El splash nativo cubre la
+carga de QML y el escaneo inicial; después del primer arranque las páginas se
+precalientan gradualmente en memoria para que cambiar de sección no tenga que
+crear el árbol QML por primera vez.
+
+En Configuración → Rendimiento y diagnóstico se puede activar **Dev**. Ese modo
+registra fases de arranque, RSS/memoria privada, CPU del proceso, intervalo del
+event loop y pausas detectadas en:
+`%LOCALAPPDATA%\LlamaCode\performance.jsonl`.
+También se puede iniciar explícitamente con `--dev-mode` o volver al modo normal
+con `--normal-mode`.
+
 ### Manual
 
 ```bat

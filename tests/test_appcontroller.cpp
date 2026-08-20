@@ -14,6 +14,7 @@
 #include <QTimer>
 #include <QSignalSpy>
 #include <QSet>
+#include <QSettings>
 #include "AppController.h"
 #include "core/agent/BrowserTeach.h"
 #include "core/agent/IAgentBackend.h"
@@ -178,6 +179,7 @@ private slots:
     void legacyVoiceConfigDefaultsToManagedPiper();
     void hardwareRecommendationIsHeadless();
     void performanceMatrixIsHeadless();
+    void devModeIsOptInAndRecordsPerformance();
     void browserTeachSkillsLifecycle();
     void taskFailureTextDetected();
     void taskRequiresToolEvidenceForWebObjective();
@@ -2703,6 +2705,30 @@ void AppControllerTests::performanceMatrixIsHeadless()
         sample, candidates.first().toMap());
     QCOMPARE(annotated.value(QStringLiteral("measurementStatus")).toString(),
              QStringLiteral("measured"));
+}
+
+void AppControllerTests::devModeIsOptInAndRecordsPerformance()
+{
+    QSettings settings;
+    settings.remove(QStringLiteral("app/devMode"));
+    AppController app;
+
+    QVERIFY(!app.devMode());
+    app.recordPerformanceSample(QStringLiteral("normal_mode"));
+    QVERIFY(app.performanceSnapshot().isEmpty());
+
+    app.setDevMode(true);
+    QVERIFY(app.devMode());
+    QVERIFY(!app.performanceSnapshot().isEmpty());
+    QVERIFY(app.performanceSnapshot().contains(QStringLiteral("rssMb"))
+            || app.performanceSnapshot().contains(QStringLiteral("virtualMb")));
+    QVERIFY(QFile::exists(app.performanceLogPath()));
+
+    app.setDevMode(false);
+    QVERIFY(!app.devMode());
+    QVERIFY(app.performanceSnapshot().isEmpty());
+    app.clearPerformanceLog();
+    settings.remove(QStringLiteral("app/devMode"));
 }
 
 void AppControllerTests::importOllamaModelsIngestsStore()

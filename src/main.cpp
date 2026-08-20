@@ -108,12 +108,16 @@ int main(int argc, char *argv[])
     const bool handoffUi = app.arguments().contains(QStringLiteral("--handoff-ui"));
     const bool headlessAgent = app.arguments().contains(QStringLiteral("--headless"))
         || app.arguments().contains(QStringLiteral("--agent-daemon"));
+    const bool forceDevMode = app.arguments().contains(QStringLiteral("--dev-mode"));
+    const bool forceNormalMode = app.arguments().contains(QStringLiteral("--normal-mode"));
+    const bool devModeAtLaunch = !forceNormalMode
+        && (forceDevMode || QSettings().value(QStringLiteral("app/devMode"), false).toBool());
 
     // Diagnóstico liviano del hilo GUI: si una operación síncrona impide
     // despachar eventos, también puede impedir que Windows entregue a tiempo
     // el menú contextual del tray. Se registra sólo una advertencia por pausa
     // larga para no generar ruido ni trabajo adicional apreciable.
-    if (!headlessAgent) {
+    if (!headlessAgent && devModeAtLaunch) {
         auto eventLoopClock = std::make_shared<QElapsedTimer>();
         eventLoopClock->start();
         auto *eventLoopProbe = new QTimer(&app);
@@ -230,7 +234,7 @@ int main(int argc, char *argv[])
     qDebug() << "QApplication ready elapsedMs=" << startupClock.elapsed();
 
     // Splash nativo: se muestra ANTES de cargar QML y cubre el escaneo pesado de
-    // arranque (runStartupScan). Se cierra cuando la ventana principal aparece.
+    // arranque (runStartupScan). Se cierra cuando startupBusy pasa a false.
     QPixmap splashPix(360, 160);
     splashPix.fill(QColor(0x1e, 0x1e, 0x22));
     {
@@ -243,7 +247,6 @@ int main(int argc, char *argv[])
         p.drawText(QRect(0, 104, 360, 24), Qt::AlignCenter, "UNLZ_Llamacode");
         p.setPen(QColor(0x9a, 0x9a, 0x9a));
         f.setPointSize(9); p.setFont(f);
-        p.drawText(QRect(0, 128, 360, 20), Qt::AlignCenter, "Cargando…");
     }
     // Splash como QWidget frameless NORMAL (no QSplashScreen): el flag
     // Qt::SplashScreen no aplica el icono al botón de taskbar (queda genérico).
@@ -256,22 +259,46 @@ int main(int argc, char *argv[])
     splash.setWindowIcon(appIcon);
     splash.setFixedSize(360, 160);
     splash.setAttribute(Qt::WA_DeleteOnClose, false);
-    {
-        QLabel *lbl = new QLabel(&splash);
-        lbl->setPixmap(splashPix);
-        lbl->setGeometry(0, 0, 360, 160);
-    }
+    QLabel *splashImage = new QLabel(&splash);
+    splashImage->setPixmap(splashPix);
+    splashImage->setGeometry(0, 0, 360, 160);
+    QLabel *splashStatus = new QLabel(QStringLiteral("Cargando…"), &splash);
+    splashStatus->setGeometry(12, 128, 336, 20);
+    splashStatus->setAlignment(Qt::AlignCenter);
+    splashStatus->setStyleSheet(QStringLiteral("color:#9a9a9a; font:9pt 'Segoe UI';"));
     if (QScreen *scr = QGuiApplication::primaryScreen()) {
         const QRect g = scr->availableGeometry();
         splash.move(g.center() - QPoint(180, 80));
     }
-    // NOTA: el splash se muestra DESPUÉS de cargar la ventana (abajo), y el escaneo
-    // pesado se difiere para que la interfaz abra de inmediato.
-
+    const bool startHidden = AppController::shouldStartHidden(
+        startedWithWindows,
+        QSettings().value(QStringLiteral("window/minimizeToTray"), false).toBool());
+    if (!headlessAgent && !startHidden) {
+        splash.show();
+        // Fuerza el primer pintado antes de construir el controlador y cargar QML.
+        // Así el splash no queda esperando al primer app.exec().
+        app.processEvents();
+    }
     AppController controller;
+    if (forceDevMode)
+        controller.setDevMode(true);
+    else if (forceNormalMode)
+        controller.setDevMode(false);
     ThemeProvider theme;
     MermaidRenderer mermaid;
     TrayController tray(appIcon, &app);
+
+    QObject::connect(&controller, &AppController::startupChanged, &app,
+                     [&controller, &splash, splashStatus]() {
+        if (!splashStatus) return;
+        const QString status = controller.startupStatus();
+        if (!status.isEmpty())
+            splashStatus->setText(status);
+        if (!controller.startupBusy() && !status.isEmpty())
+            splash.close();
+    });
+    if (!headlessAgent && !startHidden)
+        splash.show();
 
     // API local para UI externa, CLI y pruebas. En --headless / --agent-daemon
     // se convierte en el único frontend y no se carga QML.
@@ -336,9 +363,6 @@ int main(int argc, char *argv[])
         return app.exec();
     }
 
-    // El escaneo pesado (binaries/roots/hardware/catálogo) se DIFIERE a después de
-    // mostrar la ventana (ver abajo), para que la interfaz abra de inmediato.
-
     QQmlApplicationEngine engine;
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
@@ -363,8 +387,10 @@ int main(int argc, char *argv[])
 
     if (engine.rootObjects().isEmpty()) {
         qCritical() << "No root objects — QML load failed";
+        splash.close();
         return -1;
     }
+    controller.recordPerformanceSample(QStringLiteral("qml_loaded"));
 
     const int runArg = app.arguments().indexOf(QStringLiteral("--run-automation"));
     if (runArg >= 0 && runArg + 1 < app.arguments().size()) {
@@ -374,14 +400,10 @@ int main(int argc, char *argv[])
     }
 
     // Apertura rápida: la ventana se muestra primero; el escaneo pesado se difiere
-    // (QTimer 0) para correr DESPUÉS del primer pintado. El splash aparece sobre la
-    // ventana (transient parent → no se fuerza sobre otras apps) y se cierra al
-    // terminar el escaneo, que dispara el refresco de la UI (setupStateChanged).
+    // (QTimer 0) para correr DESPUÉS del primer pintado. El splash permanece sobre
+    // la ventana (transient parent → no se fuerza sobre otras apps) hasta terminar
+    // el escaneo y el refresco de la UI.
     QWindow *win = qobject_cast<QWindow *>(engine.rootObjects().constFirst());
-    const bool startHidden = AppController::shouldStartHidden(
-        startedWithWindows,
-        controller.readSetting(QStringLiteral("window/minimizeToTray"), false).toBool());
-
     auto runDeferredStartup = [&controller, &splash, &startupClock,
                                win, appIcon, startHidden]() {
         static bool done = false;
@@ -390,15 +412,16 @@ int main(int argc, char *argv[])
         if (win) win->setIcon(appIcon);
         if (win && win->isVisible() && !startHidden) {
             qDebug() << "First window visible elapsedMs=" << startupClock.elapsed();
-            splash.show();
+            controller.recordPerformanceSample(QStringLiteral("first_window_visible"));
+            if (!splash.isVisible())
+                splash.show();
             if (QWindow *sh = splash.windowHandle()) {
                 sh->setIcon(appIcon);
                 sh->setTransientParent(win);   // arriba de LlamaCode, no de otras apps
             }
         }
         QTimer::singleShot(0, &controller, [&controller, &splash]() {
-            controller.runStartupScan();       // escaneo pesado, ventana ya visible
-            splash.close();                    // refresca UI (signals de runStartupScan)
+            controller.runStartupScan();       // el splash queda hasta startupBusy=false
         });
     };
 
@@ -412,9 +435,8 @@ int main(int argc, char *argv[])
         QObject::connect(win, &QWindow::visibleChanged, &controller,
                          [runDeferredStartup](bool v) { if (v) runDeferredStartup(); });
     else
-        QTimer::singleShot(0, &controller, [&controller, &splash]() {
+        QTimer::singleShot(0, &controller, [&controller]() {
             controller.runStartupScan();
-            splash.close();
         });
 
     qDebug() << "QML loaded OK — entering event loop elapsedMs=" << startupClock.elapsed();

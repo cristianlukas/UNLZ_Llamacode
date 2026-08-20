@@ -324,22 +324,55 @@ ApplicationWindow {
                     Component { id: agentsPageComponent; AgentsPage {} }
                     Component { id: settingsPageComponent; SettingsPage {} }
 
-                    Loader { id: launchLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 0; visible: stack.currentIndex === 0; sourceComponent: launchPageComponent; onLoaded: loaded = true }
-                    Loader { id: profilesLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 1; visible: stack.currentIndex === 1; sourceComponent: profilesPageComponent; onLoaded: loaded = true }
-                    Loader { id: modelRootsLoader; property bool loaded: false; property bool pendingOpen: false; anchors.fill: parent; active: loaded || stack.currentIndex === 2; visible: stack.currentIndex === 2; sourceComponent: modelRootsPageComponent; onLoaded: { loaded = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
-                    Loader { id: binariesLoader; property bool loaded: false; property bool pendingOpen: false; anchors.fill: parent; active: loaded || stack.currentIndex === 3; visible: stack.currentIndex === 3; sourceComponent: binariesPageComponent; onLoaded: { loaded = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
-                    Loader { id: chatLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 4; visible: stack.currentIndex === 4; sourceComponent: chatPageComponent; onLoaded: loaded = true }
-                    Loader { id: agentLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 5; visible: stack.currentIndex === 5; sourceComponent: agentPageComponent; onLoaded: loaded = true }
-                    Loader { id: researchLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 6; visible: stack.currentIndex === 6; sourceComponent: researchPageComponent; onLoaded: loaded = true }
-                    Loader { id: dataLabLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 7; visible: stack.currentIndex === 7; sourceComponent: dataLabPageComponent; onLoaded: loaded = true }
-                    Loader { id: tasksLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 8; visible: stack.currentIndex === 8; sourceComponent: tasksPageComponent; onLoaded: loaded = true }
-                    Loader { id: charlaLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 9; visible: stack.currentIndex === 9; sourceComponent: charlaPageComponent; onLoaded: loaded = true }
-                    Loader { id: benchmarkLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 10; visible: stack.currentIndex === 10; sourceComponent: benchmarkPageComponent; onLoaded: loaded = true }
-                    Loader { id: rankingLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 11; visible: stack.currentIndex === 11; sourceComponent: rankingPageComponent; onLoaded: loaded = true }
-                    Loader { id: tunerLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 12; visible: stack.currentIndex === 12; sourceComponent: tunerPageComponent; onLoaded: loaded = true }
-                    Loader { id: downloadsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 13; visible: stack.currentIndex === 13; sourceComponent: downloadsPageComponent; onLoaded: loaded = true }
-                    Loader { id: agentsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 14; visible: stack.currentIndex === 14; sourceComponent: agentsPageComponent; onLoaded: loaded = true }
-                    Loader { id: settingsLoader; property bool loaded: false; anchors.fill: parent; active: loaded || stack.currentIndex === 15; visible: stack.currentIndex === 15; sourceComponent: settingsPageComponent; onLoaded: loaded = true }
+                    Loader { id: launchLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 0; visible: stack.currentIndex === 0; sourceComponent: launchPageComponent; onLoaded: loaded = true }
+                    Loader { id: profilesLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 1; visible: stack.currentIndex === 1; sourceComponent: profilesPageComponent; onLoaded: loaded = true }
+                    Loader { id: modelRootsLoader; property bool loaded: false; property bool prewarm: false; property bool pendingOpen: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 2; visible: stack.currentIndex === 2; sourceComponent: modelRootsPageComponent; onLoaded: { loaded = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
+                    Loader { id: binariesLoader; property bool loaded: false; property bool prewarm: false; property bool pendingOpen: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 3; visible: stack.currentIndex === 3; sourceComponent: binariesPageComponent; onLoaded: { loaded = true; if (pendingOpen && item) { pendingOpen = false; item.openAddDialog() } } }
+                    Loader { id: chatLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 4; visible: stack.currentIndex === 4; sourceComponent: chatPageComponent; onLoaded: loaded = true }
+                    Loader { id: agentLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 5; visible: stack.currentIndex === 5; sourceComponent: agentPageComponent; onLoaded: loaded = true }
+                    Loader { id: researchLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 6; visible: stack.currentIndex === 6; sourceComponent: researchPageComponent; onLoaded: loaded = true }
+                    Loader { id: dataLabLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 7; visible: stack.currentIndex === 7; sourceComponent: dataLabPageComponent; onLoaded: loaded = true }
+                    Loader { id: tasksLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 8; visible: stack.currentIndex === 8; sourceComponent: tasksPageComponent; onLoaded: loaded = true }
+                    Loader { id: charlaLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 9; visible: stack.currentIndex === 9; sourceComponent: charlaPageComponent; onLoaded: loaded = true }
+                    Loader { id: benchmarkLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 10; visible: stack.currentIndex === 10; sourceComponent: benchmarkPageComponent; onLoaded: loaded = true }
+                    Loader { id: rankingLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 11; visible: stack.currentIndex === 11; sourceComponent: rankingPageComponent; onLoaded: loaded = true }
+                    Loader { id: tunerLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 12; visible: stack.currentIndex === 12; sourceComponent: tunerPageComponent; onLoaded: loaded = true }
+                    Loader { id: downloadsLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 13; visible: stack.currentIndex === 13; sourceComponent: downloadsPageComponent; onLoaded: loaded = true }
+                    Loader { id: agentsLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 14; visible: stack.currentIndex === 14; sourceComponent: agentsPageComponent; onLoaded: loaded = true }
+                    Loader { id: settingsLoader; property bool loaded: false; property bool prewarm: false; anchors.fill: parent; active: loaded || prewarm || stack.currentIndex === 15; visible: stack.currentIndex === 15; sourceComponent: settingsPageComponent; onLoaded: loaded = true }
+
+                    property var allLoaders: [launchLoader, profilesLoader, modelRootsLoader, binariesLoader,
+                        chatLoader, agentLoader, researchLoader, dataLabLoader, tasksLoader, charlaLoader,
+                        benchmarkLoader, rankingLoader, tunerLoader, downloadsLoader, agentsLoader, settingsLoader]
+                    property int prewarmIndex: 0
+                    property bool prewarmStarted: false
+                    function startPrewarming() {
+                        if (prewarmStarted) return
+                        prewarmStarted = true
+                        prewarmTimer.start()
+                    }
+                    Timer {
+                        id: prewarmTimer
+                        interval: 180
+                        repeat: true
+                        onTriggered: {
+                            if (stack.prewarmIndex >= stack.allLoaders.length) {
+                                stop()
+                                return
+                            }
+                            const loader = stack.allLoaders[stack.prewarmIndex]
+                            if (loader) loader.prewarm = true
+                            stack.prewarmIndex += 1
+                        }
+                    }
+                }
+
+                Connections {
+                    target: App
+                    function onStartupChanged() {
+                        if (!App.startupBusy && (App.startupStatus || "").length > 0)
+                            stack.startPrewarming()
+                    }
                 }
             }
         }

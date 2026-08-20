@@ -616,6 +616,103 @@ Item {
                         }
                     }
 
+                    // ── Rendimiento / diagnóstico ─────────────────────────
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text {
+                            text: "RENDIMIENTO Y DIAGNÓSTICO"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: performanceInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: performanceInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 12
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 3
+                                        Text {
+                                            text: "Modo de la aplicación"
+                                            color: Theme.textPrimary
+                                            font.pixelSize: 14
+                                            font.bold: true
+                                        }
+                                        Text {
+                                            text: App.devMode
+                                                ? "Dev: registra memoria, CPU, pausas del event loop y fases de arranque."
+                                                : "Normal: rendimiento máximo, sin muestreo periódico ni telemetría de diagnóstico."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 11
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+
+                                    LcSwitch {
+                                        checked: App.devMode
+                                        onToggled: App.devMode = checked
+                                    }
+                                }
+
+                                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.borderColor }
+
+                                Text {
+                                    visible: App.devMode
+                                    Layout.fillWidth: true
+                                    text: {
+                                        const p = App.performanceSnapshot || {}
+                                        const n = function(v, suffix) {
+                                            return v === undefined || v === null ? "—" : Number(v).toFixed(1) + suffix
+                                        }
+                                        return "Última muestra · RSS " + n(p.rssMb, " MB")
+                                            + " · privada " + n(p.privateMb, " MB")
+                                            + " · CPU " + n(p.cpuPercent, "%")
+                                            + " · pausa " + n(p.eventLoopLagMs, " ms")
+                                            + " · fase " + (p.label || "—")
+                                    }
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 11
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Text {
+                                    visible: App.devMode
+                                    Layout.fillWidth: true
+                                    text: "Log JSONL: " + App.performanceLogPath()
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WrapAnywhere
+                                }
+
+                                RowLayout {
+                                    visible: App.devMode
+                                    Layout.fillWidth: true
+                                    LcButton {
+                                        text: "Borrar log de rendimiento"
+                                        secondary: true
+                                        onClicked: App.clearPerformanceLog()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // ── Gateway / API (OpenAI + Anthropic + auto-load) ───────
                     ColumnLayout {
                         id: gatewaySection

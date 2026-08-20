@@ -228,6 +228,10 @@ class AppController : public QObject
     Q_PROPERTY(bool startupBusy READ startupBusy NOTIFY startupChanged)
     Q_PROPERTY(QString startupStatus READ startupStatus NOTIFY startupChanged)
     Q_PROPERTY(QVariantMap startupTimings READ startupTimings NOTIFY startupChanged)
+    // El modo normal evita muestreo periódico y escrituras de telemetría. El
+    // modo dev se activa explícitamente para investigar lentitud de la GUI.
+    Q_PROPERTY(bool devMode READ devMode WRITE setDevMode NOTIFY devModeChanged)
+    Q_PROPERTY(QVariantMap performanceSnapshot READ performanceSnapshot NOTIFY performanceChanged)
     Q_PROPERTY(QVariantList engineCatalog READ engineCatalog NOTIFY hardwareSummaryChanged)
     Q_PROPERTY(QVariantList modelRecommendations READ modelRecommendations NOTIFY modelRecommendationsChanged)
     Q_PROPERTY(bool modelDownloadRunning READ modelDownloadRunning NOTIFY modelDownloadChanged)
@@ -464,6 +468,12 @@ public:
     bool startupBusy() const { return m_startupBusy; }
     QString startupStatus() const { return m_startupStatus; }
     QVariantMap startupTimings() const { return m_startupTimings; }
+    bool devMode() const { return m_devMode; }
+    void setDevMode(bool enabled);
+    QVariantMap performanceSnapshot() const { return m_performanceSnapshot; }
+    Q_INVOKABLE QString performanceLogPath() const;
+    Q_INVOKABLE void clearPerformanceLog();
+    Q_INVOKABLE void recordPerformanceSample(const QString &label);
     QVariantList engineCatalog() const { return EngineCatalog::toVariantList(EngineCatalog::detectHardware()); }
     QVariantList modelRecommendations() const { return m_modelRecommendations; }
     bool modelDownloadRunning() const { return m_modelDownloadReply != nullptr; }
@@ -1422,6 +1432,8 @@ signals:
     void hardwareSummaryChanged();
     void modelRecommendationsChanged();
     void startupChanged();
+    void devModeChanged();
+    void performanceChanged();
     void modelDownloadChanged();
     void downloadHistoryChanged();
     void launchProfileSelected(const QString &launchProfileId);
@@ -1993,6 +2005,13 @@ private:
     bool m_startupScanStarted = false;
     bool m_hardwareScanInFlight = false;
     QFutureWatcher<QVariantMap> m_hardwareWatcher;
+    bool m_devMode = false;
+    QVariantMap m_performanceSnapshot;
+    QTimer m_performanceTimer;
+    QElapsedTimer m_performanceClock;
+    qint64 m_performanceLastWallMs = 0;
+    qint64 m_performanceLastCpuMs = -1;
+    void capturePerformanceSample(const QString &label);
     void applyHardwareSummary(const QVariantMap &hardware);
     QVariantList m_modelRecommendations;
     struct ModelDownloadItem {
