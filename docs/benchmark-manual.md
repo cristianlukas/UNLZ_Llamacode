@@ -24,6 +24,10 @@ La historia de corridas, descubrimientos, fallos y decisiones se conserva en
 [`benchmark-results-history.md`](benchmark-results-history.md). Toda mejora debe
 actualizar ambos archivos sin borrar los resultados históricos.
 
+El ranking por caso de uso, la lectura de los perfiles Qwen3.8/DFlash2/Ling y el
+catálogo de mejoras de las interfaces se consolidan en
+[`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).
+
 ## Alcance de ejecución
 
 Por defecto, sólo se benchmarkean perfiles marcados `⚡ BEST` en la tabla viva.
@@ -639,6 +643,10 @@ timeout/passes | fecha y corrida
   artefacto calificable no es un resultado FAST válido.
 
 ## Decisión por caso de uso
+
+La guía consolidada de recomendaciones FAST/BALANCED/QUALITY, contexto, visión,
+VRAM, warm-cache y deprecación documental está en
+[`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).
 
 ### FAST
 

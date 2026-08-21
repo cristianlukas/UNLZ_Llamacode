@@ -2,6 +2,24 @@
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
 
+## 2026-08-21 — Consolidación de ranking y casos de uso
+
+Se documentaron las mejoras del dashboard web y del Ranking nativo: agrupación de
+HE0/HE20/BCB por perfil + huella + harness, orden numérico de fracciones,
+filtros persistentes, columnas visibles y reordenables, specs, thinking, saltos
+de línea, dos decimales, widths ajustables y modo normal/dev con observabilidad
+de rendimiento. La guía completa está en
+[`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).
+
+La recomendación actual mantiene como referencias Qwen3.8 Dynamic V3 192k/MTP2
+(`abc1df7a-2af1-4957-9d12-dbe2d01988aa`), Dynamic V3 160k/MTP2
+(`8797a8cf-fea9-46cb-934a-0d62f3ee8ca7`), Dynamic MTP 64k
+(`37269d11-26db-4fd0-ade3-3c595f70e4cd`) y el control UD-Q4 con visión
+(`sys-qwen38-27b-udq4-131k`). DFlash2, Ling híbrido, RVN, NInfer y vLLM quedan
+documentados como experimentales, no listos o fallidos por infraestructura según
+la evidencia de cada perfil. No se promovió ni deprecó automáticamente ningún
+perfil en esta actualización documental.
+
 ## 2026-08-20 — Controles Qwen3.8 para el piso de 24 GB
 
 El reporte de LocalLLM separa una medición reproducible de `llama-bench tg128`
