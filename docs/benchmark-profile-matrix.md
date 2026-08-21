@@ -202,7 +202,10 @@ activa. La conclusión es negativa pero útil: KV q8 y `reasoning off` no
 compensan el coste del offload de expertos; B512/U64 estrangula el prefill y
 B2048/U256 tampoco alcanza una respuesta dentro del watchdog. No se asigna
 calidad BCB a estos `0/0` porque son timeouts de infraestructura. El GGUF
-DeepSeek IQ3_S no estaba presente localmente y no se ejecutó.
+DeepSeek IQ3_S sí está presente localmente en cuatro shards dentro de
+`D:\\Models\\llamacpp\\DeepSeek-V4-Flash-0731-UD-IQ3_S\\UD-IQ3_S`; no se
+ejecutó porque sus perfiles siguen retirados/experimentales, no porque falten
+los archivos.
 
 ### Control de perfiles de agente alternativos
 
