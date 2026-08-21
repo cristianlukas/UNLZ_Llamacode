@@ -544,6 +544,8 @@ QVariantMap ProfileManager::getLaunchProfile(const QString &id) const
             {"harnessProfileId", p.harnessProfileId},
             {"workspaceProfileId", p.workspaceProfileId},
             {"agentProfileId", p.agentProfileId},
+            {"reasoningEffort", p.reasoningEffort},
+            {"reasoningBudget", p.reasoningBudget},
             {"plannerProfileId", p.plannerProfileId},
             {"hybridMode", p.hybridMode},
             {"extraArgs", p.extraArgs},

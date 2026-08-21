@@ -166,9 +166,14 @@
 
   <script>
     (() => {
-      // El daemon de benchmarks de esta automatización corre en 18774.
-      // Se conserva ?api=... para poder observar otro puerto explícitamente.
-      const api = new URLSearchParams(location.search).get('api') || 'http://127.0.0.1:18774';
+      // El daemon puede cambiar de puerto en cada ejecución. El servidor del
+      // dashboard expone benchmark-api.json, que descubre sólo ControlApi
+      // locales con benchmarkRunning, benchmarkResults y sus propiedades.
+      // Se conserva ?api=... para poder observar un puerto explícitamente.
+      const apiOverride = new URLSearchParams(location.search).get('api');
+      let api = apiOverride || '';
+      const fallbackApis = ['http://127.0.0.1:8765', 'http://127.0.0.1:18774'];
+      let apiDiscoveryPromise = null;
       const stageNames = ['HE0', 'HE20', 'BCB'];
       const recommendedColumns = ['profileName', 'profileId', 'stageSummary', 'harness', 'thinking', 'specs', 'vision', 'drafter', 'contextK', 'kvCache', 'reasoning', 'scoreHE0', 'scoreHE20', 'scoreBCB', 'secsHE0', 'secsHE20', 'secsBCB', 'failureKindHE0', 'failureKindHE20', 'failureKindBCB', 'timedOutHE0', 'timedOutHE20', 'timedOutBCB', 'avgTpsHE0', 'avgTpsHE20', 'avgTpsBCB', 'avgTtftMsHE0', 'avgTtftMsHE20', 'avgTtftMsBCB', 'elapsedSecHE0', 'elapsedSecHE20', 'elapsedSecBCB', 'runDirHE0', 'runDirHE20', 'runDirBCB', 'timestampHE0', 'timestampHE20', 'timestampBCB'];
       const columnLabels = { stageSummary: 'Etapa', harness: 'Harness', thinking: 'Thinking', thinkingObserved: 'Thinking observado', specs: 'SPECS', vision: 'Visión', drafter: 'Drafter', contextK: 'Contexto', kvCache: 'KV cache', reasoning: 'Reasoning', sampling: 'Sampling', offload: 'Offload', model: 'Modelo', runtime: 'Runtime', parallel: 'Slots / runtime', scoreHE0: 'Score HE0', scoreHE20: 'Score HE20', scoreBCB: 'Score BCB', secsHE0: 'Secs HE0', secsHE20: 'Secs HE20', secsBCB: 'Secs BCB' };
@@ -184,7 +189,67 @@
       let openFilterKey = null;
       let draftFilterValues = new Set();
       const $ = (id) => document.getElementById(id);
-      $('api-label').textContent = api;
+      const normalizeApi = (value) => String(value || '').replace(/\/+$/, '');
+      const setApi = (value) => {
+        api = normalizeApi(value);
+        $('api-label').textContent = api || 'buscando daemon…';
+      };
+      setApi(api);
+
+      function fetchWithTimeout(url, options = {}, timeoutMs = 1400) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+      }
+
+      async function probeApi(candidate) {
+        const base = normalizeApi(candidate);
+        if (!base) return null;
+        try {
+          const health = await fetchWithTimeout(`${base}/health`, { cache: 'no-store' });
+          if (!health.ok) return null;
+          const methodsResponse = await fetchWithTimeout(`${base}/methods`, { cache: 'no-store' });
+          if (!methodsResponse.ok) return null;
+          const methods = await methodsResponse.json();
+          const names = new Set((methods.properties || []).map((property) => property.name));
+          return names.has('benchmarkRunning') && names.has('benchmarkResults') ? base : null;
+        } catch (_) { return null; }
+      }
+
+      async function discoverApi(force = false) {
+        if (apiOverride) { setApi(apiOverride); return api; }
+        if (apiDiscoveryPromise && !force) return apiDiscoveryPromise;
+        apiDiscoveryPromise = (async () => {
+          const candidates = [];
+          try {
+            const response = await fetchWithTimeout(`${location.origin}/benchmark-api.json?ts=${Date.now()}`, { cache: 'no-store' }, 1800);
+            if (response.ok) {
+              const payload = await response.json();
+              for (const item of (payload.apis || [])) candidates.push(item.url || item);
+            }
+          } catch (_) { }
+          candidates.push(...fallbackApis);
+          const uniqueCandidates = [...new Set(candidates.map(normalizeApi).filter(Boolean))];
+          const probed = await Promise.all(uniqueCandidates.map(async (candidate) => ({ candidate, valid: await probeApi(candidate) })));
+          const winner = probed.find((item) => item.valid)?.valid;
+          if (winner) { setApi(winner); return winner; }
+          setApi('');
+          throw new Error('no se encontró un daemon ControlApi con benchmark');
+        })().finally(() => { apiDiscoveryPromise = null; });
+        return apiDiscoveryPromise;
+      }
+
+      async function readProps(names) {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          await discoverApi();
+          try { return await Promise.all(names.map((name) => prop(name))); }
+          catch (error) {
+            if (apiOverride || attempt > 0) throw error;
+            setApi('');
+          }
+        }
+        throw new Error('no se pudo leer el estado del daemon');
+      }
 
       async function prop(name) {
         const response = await fetch(`${api}/prop?name=${encodeURIComponent(name)}`, { cache: 'no-store' });
@@ -722,21 +787,19 @@
 
       async function refreshLive() {
         try {
-          const [running, progress, status, activeId] = await Promise.all([
-            prop('benchmarkRunning'), prop('benchmarkProgress'), prop('benchmarkStatus'), prop('activeLaunchId')
-          ]);
+          const [running, progress, status, activeId] = await readProps(['benchmarkRunning', 'benchmarkProgress', 'benchmarkStatus', 'activeLaunchId']);
           state.running = Boolean(running);
           state.progress = Number(progress) || 0;
           state.status = String(status || '');
           state.activeId = String(activeId || '');
           state.error = '';
           state.updated = new Date();
-        } catch (error) { state.error = `No se puede leer ${api}: ${error.message}`; }
+        } catch (error) { state.error = `No se puede leer el daemon${api ? ` (${api})` : ''}: ${error.message}`; }
         render();
       }
 
       async function refreshResults() {
-        try { state.results = await prop('benchmarkResults'); await refreshProfileDetails(); state.error = ''; state.updated = new Date(); }
+        try { [state.results] = await readProps(['benchmarkResults']); await refreshProfileDetails(); state.error = ''; state.updated = new Date(); }
         catch (error) { state.error = `No se pueden leer los resultados: ${error.message}`; }
         render();
       }
@@ -814,6 +877,7 @@
       });
       $('recommended-columns').addEventListener('click', () => { state.visibleColumns = state.columns.filter((key) => recommendedColumns.includes(key)); savePreferences(); render(); });
       $('all-columns').addEventListener('click', () => { state.visibleColumns = [...state.columns]; savePreferences(); render(); });
+      discoverApi().catch(() => { state.error = 'No se encontró un daemon ControlApi local'; render(); });
       refreshLive();
       refreshResults();
       setInterval(refreshLive, 1500);

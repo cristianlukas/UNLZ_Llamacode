@@ -145,7 +145,7 @@ void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
     for (const QString &id : ids) {
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
-        QVERIFY2(launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
+        QVERIFY2(!launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
 
         bool found = false;
         for (const QVariant &value : menu) {
@@ -153,7 +153,7 @@ void SystemProfilesTests::manager_ninferProfilesAreBenchmarkCandidates()
             if (item.value(QStringLiteral("id")).toString() != id)
                 continue;
             found = true;
-            QVERIFY2(item.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("🏆")),
+            QVERIFY2(!item.value(QStringLiteral("displayName")).toString().contains(QStringLiteral("🏆")),
                      qPrintable(id));
             break;
         }
@@ -192,7 +192,7 @@ void SystemProfilesTests::manager_vllmDflashProfilesAreExternalBenchmarks()
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
         QVERIFY2(launch.value(QStringLiteral("system")).toBool(), qPrintable(id));
-        QVERIFY2(launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
+        QVERIFY2(!launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
         QVERIFY2(launch.value(QStringLiteral("modelProfileId")).toString().isEmpty(),
                  qPrintable(id));
         QVERIFY2(launch.value(QStringLiteral("runtimePresetId")).toString().isEmpty(),
@@ -265,7 +265,7 @@ void SystemProfilesTests::manager_16gbQwen38CandidatesPreservePostTuning()
             }
         }
         QVERIFY2(!entry.isEmpty(), qPrintable(id));
-        QVERIFY(entry.value(QStringLiteral("benchmark")).toBool());
+        QVERIFY(!entry.value(QStringLiteral("benchmark")).toBool());
         QCOMPARE(entry.value(QStringLiteral("minVramGb")).toInt(), 16);
         QCOMPARE(entry.value(QStringLiteral("minRamGb")).toInt(), 32);
         QCOMPARE(entry.value(QStringLiteral("binaryKind")).toString(), QStringLiteral("beellama"));
@@ -284,7 +284,7 @@ void SystemProfilesTests::manager_16gbQwen38CandidatesPreservePostTuning()
 
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
-        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        QVERIFY(!launch.value(QStringLiteral("benchmark")).toBool());
         QCOMPARE(launch.value(QStringLiteral("agentProfileId")).toString(),
                  QStringLiteral("agent-maximo"));
         QCOMPARE(launch.value(QStringLiteral("reasoningEffort")).toString(),
@@ -327,7 +327,7 @@ void SystemProfilesTests::manager_16gbQwen38CandidatesPreservePostTuning()
             QCOMPARE(entry.value(QStringLiteral("draftModel")).toObject()
                          .value(QStringLiteral("file")).toString(),
                      QStringLiteral("Qwen3.8-27B-DFlash2-Q4_K_M.gguf"));
-        } else {
+        } else if (!id.contains(QStringLiteral("mtp-ngram"))) {
             QVERIFY(model.value(QStringLiteral("draftModelId")).toString().isEmpty());
             QVERIFY(args.contains(QStringLiteral("ngram-mod")));
         }
@@ -356,7 +356,7 @@ void SystemProfilesTests::manager_lingProfilesAreBenchmarkCandidates()
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
         QVERIFY2(launch.value(QStringLiteral("system")).toBool(), qPrintable(id));
-        QVERIFY2(launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
+        QVERIFY2(!launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
     }
 
     const QVariantMap ling = pm.getLaunchProfile(QStringLiteral("sys-ling30-tiny-q6-131k"));
@@ -1800,7 +1800,9 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QVERIFY(mtp.value("enabled").toBool());
         QVERIFY(mtp.value("args").toArray().contains(QStringLiteral("draft-mtp")));
         const QJsonArray variants = found.value(QStringLiteral("benchmarkVariants")).toArray();
-        const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k") ? 31 : 16;
+            const int expectedVariantCount = id == QStringLiteral("sys-qwen38-27b-udq4-131k")
+                ? 32
+                : id == QStringLiteral("sys-qwen38-27b-q5km-131k") ? 17 : 16;
         QCOMPARE(variants.size(), expectedVariantCount); // variantes base, controles del post, espejo y MTP+ngram
         if (id == QStringLiteral("sys-qwen38-27b-udq4-131k")) {
             bool ngramQueued = false;
@@ -1903,7 +1905,8 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
                     return QJsonObject{};
                 }();
                 QVERIFY2(!variant.isEmpty(), qPrintable(memoryId));
-                QVERIFY(variant.value(QStringLiteral("benchmark")).toBool());
+                QCOMPARE(variant.value(QStringLiteral("benchmark")).toBool(),
+                         !memoryId.endsWith(QStringLiteral("lookup-64k")));
                 QCOMPARE(variant.value(QStringLiteral("runtime")).toObject()
                              .value(QStringLiteral("ctx")).toInt(), 65536);
                 const QVariantMap launch = pm.getLaunchProfile(memoryId);
@@ -1972,10 +1975,34 @@ void SystemProfilesTests::bundle_qwen38VariantsAreMtpVisionAndTemplated()
         QCOMPARE(mirrorRuntime.value(QStringLiteral("batch")).toInt(), 2048);
         QCOMPARE(mirrorRuntime.value(QStringLiteral("ubatch")).toInt(), 512);
         QCOMPARE(mirrorRuntime.value(QStringLiteral("kv")).toString(), QStringLiteral("q4_0"));
-        const QJsonObject mirrorOverrides =
-            mirrorVariant.value(QStringLiteral("extraArgOverrides")).toObject();
-        QCOMPARE(mirrorOverrides.value(QStringLiteral("--spec-draft-n-max")).toString(),
-                 QStringLiteral("2"));
+            const QJsonObject mirrorOverrides =
+                mirrorVariant.value(QStringLiteral("extraArgOverrides")).toObject();
+            QCOMPARE(mirrorOverrides.value(QStringLiteral("--spec-draft-n-max")).toString(),
+                     QStringLiteral("2"));
+        const QString improvedId = id == QStringLiteral("sys-qwen38-27b-udq4-131k")
+            ? QStringLiteral("sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram")
+            : id == QStringLiteral("sys-qwen38-27b-q5km-131k")
+                ? QStringLiteral("sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram")
+                : QString();
+        if (!improvedId.isEmpty()) {
+            const QJsonObject improved = findVariant(improvedId);
+            QVERIFY2(!improved.isEmpty(), qPrintable(improvedId));
+            QCOMPARE(improved.value(QStringLiteral("runtime")).toObject()
+                         .value(QStringLiteral("ctx")).toInt(), 196608);
+            QCOMPARE(improved.value(QStringLiteral("runtime")).toObject()
+                         .value(QStringLiteral("batch")).toInt(), 512);
+            QCOMPARE(improved.value(QStringLiteral("runtime")).toObject()
+                         .value(QStringLiteral("ubatch")).toInt(), 64);
+            const QJsonObject mtp = improved.value(QStringLiteral("mtp")).toObject();
+            QCOMPARE(mtp.value(QStringLiteral("args")).toArray().at(3).toString(),
+                     QStringLiteral("2"));
+            const QVariantMap launch = pm.getLaunchProfile(improvedId);
+            QVERIFY2(!launch.isEmpty(), qPrintable(improvedId));
+            const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
+            QCOMPARE(args.count(QStringLiteral("--spec-draft-n-max")), 1);
+            QCOMPARE(args.value(args.indexOf(QStringLiteral("--spec-draft-n-max")) + 1),
+                     QStringLiteral("2"));
+        }
         if (id == QStringLiteral("sys-qwen38-27b-udq4-131k")) {
             const QStringList postVariantIds = {
                 QStringLiteral("sys-bench-qwen38-udq4-post-tensor"),
@@ -2024,7 +2051,7 @@ void SystemProfilesTests::bundle_qwen38Turing24gbControlsAreColdAndSeparated()
             }
         }
         QVERIFY2(!base.isEmpty(), qPrintable(id));
-        QVERIFY(base.value(QStringLiteral("benchmark")).toBool());
+        QVERIFY(!base.value(QStringLiteral("benchmark")).toBool());
         QCOMPARE(base.value(QStringLiteral("minVramGb")).toInt(), 24);
         QCOMPARE(base.value(QStringLiteral("minRamGb")).toInt(), 32);
         QVERIFY(!base.value(QStringLiteral("vision")).toBool());
@@ -2077,7 +2104,7 @@ void SystemProfilesTests::bundle_qwen38Turing24gbControlsAreColdAndSeparated()
                 }
             }
             QVERIFY2(!variant.isEmpty(), qPrintable(variantId));
-            QVERIFY(variant.value(QStringLiteral("benchmark")).toBool());
+            QVERIFY(variant.value(QStringLiteral("benchmark")).toBool() == id.contains(QStringLiteral("q4km")));
             const QVariantMap launch = pm.getLaunchProfile(variantId);
             QVERIFY2(!launch.isEmpty(), qPrintable(variantId));
             const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
@@ -2114,7 +2141,7 @@ void SystemProfilesTests::bundle_qwen38Q6BenchmarkFamilyIsGatedAndExpanded()
     }
     QVERIFY2(!base.isEmpty(), qPrintable(baseId));
     QVERIFY(base.value(QStringLiteral("extra")).toBool());
-    QVERIFY(base.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!base.value(QStringLiteral("benchmark")).toBool());
     QCOMPARE(base.value(QStringLiteral("minVramGb")).toInt(), 48);
     QCOMPARE(base.value(QStringLiteral("minRamGb")).toInt(), 64);
     QVERIFY(base.value(QStringLiteral("vision")).toBool());
@@ -2167,7 +2194,7 @@ void SystemProfilesTests::bundle_qwen38Q6BenchmarkFamilyIsGatedAndExpanded()
         ids.insert(id);
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
-        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        QVERIFY(!launch.value(QStringLiteral("benchmark")).toBool());
         const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
         QCOMPARE(args.value(args.indexOf(QStringLiteral("--parallel")) + 1), QStringLiteral("1"));
     }
@@ -2228,7 +2255,7 @@ void SystemProfilesTests::bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded()
     QVERIFY(!found.isEmpty());
     QCOMPARE(found.value(QStringLiteral("minVramGb")).toInt(), 48);
     QCOMPARE(found.value(QStringLiteral("minRamGb")).toInt(), 64);
-    QVERIFY(found.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!found.value(QStringLiteral("benchmark")).toBool());
     const QJsonObject model = found.value(QStringLiteral("model")).toObject();
     QCOMPARE(model.value(QStringLiteral("repo")).toString(),
              QStringLiteral("JonathanColetti/Qwen3.8-27B-Uncensored-GGUF"));
@@ -2251,7 +2278,7 @@ void SystemProfilesTests::bundle_qwen38Q8BenchmarkFamilyIsGatedAndExpanded()
     for (const QString &id : ids) {
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
-        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        QVERIFY(!launch.value(QStringLiteral("benchmark")).toBool());
         const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
         if (id.endsWith(QStringLiteral("-tensor"))) {
             QCOMPARE(args.value(args.indexOf(QStringLiteral("--split-mode")) + 1),

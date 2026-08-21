@@ -44,6 +44,8 @@ El dashboard permite observar el daemon en tiempo real sin detener las corridas:
 - reordenamiento de columnas mediante controles de posición y redimensionado;
 - filtros por columna con selección de valores y limpieza global;
 - orden ascendente/descendente con claves numéricas reales;
+- autodetección del puerto ControlApi local mediante `benchmark-api.json`, con
+  validación de `/health` y `/methods`; `?api=...` sigue disponible como override;
 - score tratado como fracción, por lo que `5/8` queda por encima de `0/0`;
 - máximo de dos decimales en valores decimales;
 - `HE0`, `HE20` y `BCB` separados por salto de línea dentro de una misma celda;
@@ -190,6 +192,99 @@ es una recomendación de calidad ni velocidad en este checkout.
   pero los fallos de `connection closed`, CUDA, carga o timeout no entran en el
   ranking de calidad.
 
+## Auditoría por GGUF y cola operativa — 2026-08-21
+
+La fuente de verdad de esta revisión fue la combinación de `assets/system_profiles.json`,
+los GGUF presentes bajo `D:\Models` y los artefactos de
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`. Se contó cada variante expandida
+por separado, pero la comparación se hizo por GGUF + configuración efectiva + harness.
+
+El catálogo tenía 81 candidatos `benchmark=true`. Después de la auditoría quedan 45
+en la cola operativa: se agregaron dos variantes nuevas para 48 GB y se retiraron 38
+perfiles sin GGUF/runtime/binario local, con fallas de carga repetidas o con una
+configuración que ya excedió el límite operativo de 30 minutos. Retirar significa
+`benchmark=false` y conservar el ID, comentario e historial; no se borró ningún
+modelo ni resultado.
+
+| GGUF/familia | Perfil de referencia | Estado | Caso de uso/ranking |
+|---|---|---|---|
+| Qwen3.8 UD-Q4_K_XL + mmproj | `sys-qwen38-27b-udq4-131k` | Activo; 1/1, 20/20, 7/8 BCB | Mejor control general con visión y 131k |
+| Qwen3.8 UD-Q4_K_XL + mmproj | `abc1df7a-2af1-4957-9d12-dbe2d01988aa` | Mejor resultado local observado: 8/8 BCB, 192k; harness distinto documentado | Calidad/contexto largo |
+| Qwen3.8 Q5_K_M + mmproj | `sys-qwen38-27b-q5km-131k` | Activo; HE0 1/1, HE20 20/20, BCB 3/8 calidad | Calidad potencial superior manteniendo visión; mejor control Q5 disponible |
+| Qwen3.8 Q4_K_M + mmproj | `sys-bench-qwen38-q4km-24gb-tg128` | Diagnóstico activo; el control 32k fue retirado por timeout BCB | Velocidad cold/tg128, no calidad E2E |
+| Qwen3.8 Dynamic V3 UD-Q4 + MTP | `abc1df7a-2af1-4957-9d12-dbe2d01988aa` / `37269d11-26db-4fd0-ade3-3c595f70e4cd` | Activos como perfiles de usuario; ambos con BCB 8/8 en sus huellas | Mejor frontera calidad/velocidad conocida |
+| Qwen3.8 UD-Q4 48GB + mmproj RAM | `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` | HE0 1/1 (34,12 s), HE20 20/20 (370,38 s), BCB 8/8 (537,39 s), sin fallo | Mejor contexto largo con visión en el catálogo operativo |
+| ThinkingCap Qwen3.6 Q4 + mmproj | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | 6/8 BCB de calidad, rápido; harness separado | Coding rápido con thinking |
+| Qwen3.6 Fable Fusion Q6 + mmproj | `sys-48-fablefusion-q6-mtp` | HE0 1/1 válido, visión; no hay BCB E2E comparable en la matriz | Candidato de visión/contexto, sin promoción de calidad |
+| KAT-Coder Q4 | `sys-48-katcoder-262k` | Muy rápido en medición nativa, pero BCB quedó en infraestructura | Speed-first/text-only; no ranking de calidad |
+| BigBang Q4 + mmproj | `sys-repair-48-bigbang-mtp-balance` | Reparación carga; calidad histórica parcial | Candidato de bajo contexto; mantener experimental |
+| DeepSeek V4 / Laguna / antirez | `sys-ultraq-dsv4-0731-iq3s-48gb`, `sys-laguna-s-2-1-q2-48gb-safe` | Cargan en algunas huellas, pero sin resultado E2E comparable completo | Investigación de contexto/tamaño; no promover |
+| Qwen3.8 DFlash2 local/vLLM | perfiles `334f06f9-...`, `03902781-...`, `sys-bench-qwen38-dflash2-vllm-*` | Loader/backend no disponible o incompatibilidad de tensores | Investigación; no rankear |
+| Ling, RVN y NInfer | `sys-ling*`, `sys-bench-16-*`, `sys-ninfer*` | GGUF/runtime/binario ausente en este checkout | No listos; fuera de la cola |
+
+### Mejoras creadas para 48 GB
+
+Se agregaron al catálogo, ambas con `benchmark=true` y una sola ID por ejecución:
+
+- `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram`: UD-Q4, visión, 196k,
+  MTP2, KV q8, B512/U64 y mmproj en RAM. Cerró HE0 1/1, HE20 20/20 y BCB
+  8/8, por lo que queda promovida como referencia 48GB de contexto largo.
+- `sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram`: Q5_K_M, visión, 196k,
+  MTP2, KV q8, B512/U64 y mmproj en RAM; fue retirada después de un crash de
+  CUDA durante HE0, sin score de calidad.
+
+La razón de ambas variantes es aislar una mejora concreta para el equipo dual:
+196k de contexto sin perder visión, menor profundidad MTP para liberar margen de
+VRAM y KV q8 para estabilidad. No se las considera mejores hasta completar HE0,
+HE20 y BCB con la misma configuración efectiva.
+
+### Validación de variantes 48GB — 2026-08-21
+
+La variante UD-Q4 mejorada completó las tres etapas con la misma huella efectiva:
+
+| ID | Etapa | Resultado | Tiempo | failureKind | timedOut | runDir |
+|---|---|---:|---:|---|---|---|
+| `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` | HE0 | 1/1 | 34,12 s | `none` | `false` | `HumanEval_1_tems__20260821_104636` |
+| `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` | HE20 | 20/20 | 370,38 s | `none` | `false` | `HumanEval_20_tems__20260821_104812` |
+| `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` | BCB | 8/8 | 537,39 s | `none` | `false` | `BigCodeBench-Hard_8_tems__20260821_110803` |
+
+El primer BCB de la misma variante se estancó durante el transporte sin producir
+JSON (`BigCodeBench-Hard_8_tems__20260821_105517`); se conservó como evidencia de
+infraestructura y se repitió. La repetición fue válida, con `avgTps=43,71` y
+`avgTtftMs=4.966,56`. El primer HE0 también tuvo un crash CUDA con la receta
+heredada (batch alto/MTP duplicado), antes de la corrección de la variante; no se
+usó como score.
+
+La variante Q5 196k/MTP2/KV q8 falló durante HE0 al cargar el modelo, con acceso
+ilegal de CUDA en `HumanEval_1_tems__20260821_110312`; quedó marcada como
+infraestructura/no promotable y fuera de la cola. La referencia Q5 131k sigue
+activa con HE0 1/1, HE20 20/20 y BCB 3/8 (`failureKind=quality`).
+
+### IDs retirados de la cola
+
+Se conservan en catálogo/matriz, pero no se relanzan automáticamente:
+
+- NInfer: `sys-ninfer3090-qwen27`, `sys-ninfer3090-qwen35`, `sys-ninfer3090-qwen38`.
+- KAT3 sin GGUF local: `sys-kat3-mtp-262k`.
+- Qwen Q6/Q8 sin archivo local: `sys-48-qwen38-27b-q6-96k`,
+  `sys-48-qwen38-27b-q8-196k`, `sys-qwen38-27b-q6k-24gb-32k` y sus variantes.
+- RVN: `sys-bench-16-qwen38-rvn-iq3xxs-ngram-131k`,
+  `sys-bench-16-qwen38-rvn-iq3xxs-dflash2-ngram-105k`,
+  `sys-bench-16-qwen38-rvn-iq3xxs-mtp-ngram-105k`.
+- DFlash2/vLLM sin endpoint: `sys-bench-qwen38-dflash2-vllm-262k`,
+  `sys-bench-qwen38-dflash2-vllm-ar-262k`.
+- Variante Q5 48GB que falló durante la carga: `sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram`.
+- Ling/híbrido sin runtime o GGUF: `sys-ling30-tiny-q6-131k`,
+  `sys-bench-ling30-tiny-q6-64k`, `sys-bench-ling30-tiny-q6-thinking-131k`,
+  `sys-bench-ling30-tiny-q6-kv4-131k`, `sys-bench-ling30-tiny-udq4-64k`,
+  `sys-hybrid-ling30-qwen38`.
+- Qwen3.8 de 24 GB con BCB de 6.936,9 s y lookup roto:
+  `sys-qwen38-27b-q4km-24gb-32k`, `sys-bench-qwen38-udq4-24gb-lookup-64k`.
+
+Los diagnósticos Q4/Q5 de ngram y prefix-cache que sí tienen un GGUF local se
+mantienen activos sólo para sus casos específicos; nunca se mezclan con cold-cache
+ni se promocionan por un `0/0`.
+
 ## Ranking por caso de uso
 
 Este ranking es una recomendación documental basada sólo en resultados válidos y
@@ -283,8 +378,9 @@ Los perfiles CPU-only, los perfiles que no tienen modelo/runtime/binario local y
 los duplicados cuyo único resultado sea una falla de carga pueden ocultarse del
 ranking operativo, pero conservarse en la matriz histórica. Deprecarlos no
 significa borrar JSON, logs ni el ID: significa `benchmark=false` o exclusión
-explícita de la próxima cola, con motivo y fecha. Esta revisión documental no
-cambia automáticamente el catálogo.
+explícita de la próxima cola, con motivo y fecha. En esta revisión sí se aplicó
+esa política al catálogo: 38 perfiles quedaron con `benchmark=false`, y la
+variante UD-Q4 48GB validada quedó como referencia operativa.
 
 ## Cómo leer una fila
 

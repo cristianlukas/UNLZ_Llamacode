@@ -1,6 +1,6 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-18. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-21. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
@@ -9,6 +9,26 @@ menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias
 limitadas a `q8_0`; sus tiempos y scores anteriores no se mezclan con los nuevos.
 Los `mmproj` `F16/BF16` se conservan únicamente como proyectores auxiliares de
 visión y no representan el quant de los pesos ni del KV.
+
+## Auditoría por GGUF y variantes 48GB — 2026-08-21
+
+La auditoría del catálogo partió de 81 candidatos `benchmark=true`. Se retiraron
+38 perfiles por ausencia de GGUF/runtime/binario, incompatibilidad repetida,
+CPU-only o fallo operativo persistente; se conservan IDs, configuraciones y
+resultados históricos. Quedan 45 candidatos operativos. La clasificación por
+velocidad, calidad, tamaño, visión, contexto y caso de uso está en
+[`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).
+
+La variante `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` completó
+HE0 1/1 en 34,12 s, HE20 20/20 en 370,38 s y BCB 8/8 en 537,39 s, todos con
+`failureKind=none` y `timedOut=false`. Usa UD-Q4, visión, MTP2, contexto 196k,
+KV q8, batch 512/ubatch 64 y mmproj en RAM; queda promovida como referencia de
+contexto largo con visión para 2×RTX 3090.
+
+La variante `sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram` falló durante
+HE0 con acceso ilegal de CUDA al cargar el modelo (`HumanEval_1_tems__20260821_110312`)
+y quedó `benchmark=false`. La referencia Q5 131k conserva HE0 1/1, HE20 20/20 y
+BCB 3/8 con fallo de calidad.
 
 ## Tabla de resultados
 

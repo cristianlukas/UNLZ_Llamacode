@@ -37,6 +37,11 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             if (variant.contains(QStringLiteral("agentProfileId")))
                 derived[QStringLiteral("agentProfileId")] =
                     variant.value(QStringLiteral("agentProfileId"));
+            // Las variantes pueden cambiar la profundidad del MTP sin dejar
+            // argumentos heredados duplicados. Esto es importante porque el
+            // bloque `mtp` se materializa después de `extraArgs`.
+            if (variant.contains(QStringLiteral("mtp")))
+                derived[QStringLiteral("mtp")] = variant.value(QStringLiteral("mtp"));
             // Una variante de tuning no hereda las insignias obtenidas por el
             // perfil base: debe medirse y marcarse de forma explicita.
             derived[QStringLiteral("best")] = variant.value(QStringLiteral("best")).toBool(false);
