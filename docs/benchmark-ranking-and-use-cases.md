@@ -199,19 +199,26 @@ los GGUF presentes bajo `D:\Models` y los artefactos de
 `%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`. Se contó cada variante expandida
 por separado, pero la comparación se hizo por GGUF + configuración efectiva + harness.
 
-El catálogo tenía 81 candidatos `benchmark=true`. Después de la auditoría quedan 45
-en la cola operativa: se agregaron dos variantes nuevas para 48 GB y se retiraron 38
-perfiles sin GGUF/runtime/binario local, con fallas de carga repetidas o con una
-configuración que ya excedió el límite operativo de 30 minutos. Retirar significa
-`benchmark=false` y conservar el ID, comentario e historial; no se borró ningún
-modelo ni resultado.
+El catálogo tuvo 81 candidatos `benchmark=true`. En el corte vivo de esta revisión
+quedan 33 candidatos de sistema: se agregaron las variantes 48 GB, se validó la
+UD-Q4 de 196k y se retiraron 12 controles adicionales con carga fallida, timeout o
+estancamiento del harness. Además se marcaron 34 perfiles de usuario con
+`benchmark=false`: duplicados DeepSeek sin una etapa evaluable, perfiles CPU-only,
+las rutas DFlash2 sin backend y una variante Dynamic sin MTP con BCB no evaluable.
+Retirar significa conservar el ID, comentario, logs e historial, pero sacarlo de la
+cola; no se borró ningún modelo ni resultado.
 
 | GGUF/familia | Perfil de referencia | Estado | Caso de uso/ranking |
 |---|---|---|---|
 | Qwen3.8 UD-Q4_K_XL + mmproj | `sys-qwen38-27b-udq4-131k` | Activo; 1/1, 20/20, 7/8 BCB | Mejor control general con visión y 131k |
 | Qwen3.8 UD-Q4_K_XL + mmproj | `abc1df7a-2af1-4957-9d12-dbe2d01988aa` | Mejor resultado local observado: 8/8 BCB, 192k; harness distinto documentado | Calidad/contexto largo |
 | Qwen3.8 Q5_K_M + mmproj | `sys-qwen38-27b-q5km-131k` | Activo; HE0 1/1, HE20 20/20, BCB 3/8 calidad | Calidad potencial superior manteniendo visión; mejor control Q5 disponible |
-| Qwen3.8 Q4_K_M + mmproj | `sys-bench-qwen38-q4km-24gb-tg128` | Diagnóstico activo; el control 32k fue retirado por timeout BCB | Velocidad cold/tg128, no calidad E2E |
+| Qwen3.8 Q4_K_M + mmproj | `sys-qwen38-27b-q4km-131k` | Control activo; `sys-bench-qwen38-q4km-24gb-tg128` retirado por timeout BCB | Calidad/velocidad 24 GB, sin promover el diagnóstico cold |
+
+La familia Laguna Q2 queda representada por el control de 64k con score parcial;
+las variantes 24 GB y el control 48 GB v24 (1/8 BCB) quedan históricas y fuera de
+la cola activa. No se descarta el GGUF: se evita repetir configuraciones que ya
+mostraron peor calidad o una ruta de carga no evaluable.
 | Qwen3.8 Dynamic V3 UD-Q4 + MTP | `abc1df7a-2af1-4957-9d12-dbe2d01988aa` / `37269d11-26db-4fd0-ade3-3c595f70e4cd` | Activos como perfiles de usuario; ambos con BCB 8/8 en sus huellas | Mejor frontera calidad/velocidad conocida |
 | Qwen3.8 UD-Q4 48GB + mmproj RAM | `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` | HE0 1/1 (34,12 s), HE20 20/20 (370,38 s), BCB 8/8 (537,39 s), sin fallo | Mejor contexto largo con visión en el catálogo operativo |
 | ThinkingCap Qwen3.6 Q4 + mmproj | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | 6/8 BCB de calidad, rápido; harness separado | Coding rápido con thinking |
@@ -224,14 +231,14 @@ modelo ni resultado.
 
 ### Mejoras creadas para 48 GB
 
-Se agregaron al catálogo, ambas con `benchmark=true` y una sola ID por ejecución:
+Se prepararon en el catálogo, con una sola ID por ejecución:
 
 - `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram`: UD-Q4, visión, 196k,
   MTP2, KV q8, B512/U64 y mmproj en RAM. Cerró HE0 1/1, HE20 20/20 y BCB
   8/8, por lo que queda promovida como referencia 48GB de contexto largo.
 - `sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram`: Q5_K_M, visión, 196k,
-  MTP2, KV q8, B512/U64 y mmproj en RAM; fue retirada después de un crash de
-  CUDA durante HE0, sin score de calidad.
+  MTP2, KV q8, B512/U64 y mmproj en RAM; quedó `benchmark=false` después de un
+  crash de CUDA durante HE0, sin score de calidad.
 
 La razón de ambas variantes es aislar una mejora concreta para el equipo dual:
 196k de contexto sin perder visión, menor profundidad MTP para liberar margen de
@@ -278,6 +285,50 @@ Se conservan en catálogo/matriz, pero no se relanzan automáticamente:
   `sys-bench-ling30-tiny-q6-64k`, `sys-bench-ling30-tiny-q6-thinking-131k`,
   `sys-bench-ling30-tiny-q6-kv4-131k`, `sys-bench-ling30-tiny-udq4-64k`,
   `sys-hybrid-ling30-qwen38`.
+
+### Auditoría viva de todos los GGUF locales — 2026-08-21
+
+Se inspeccionaron 73 archivos `.gguf` en `D:\Models\llamacpp`, agrupados en 24
+directorios/familias, contra 2.068 resultados vivos. La cola visible pasó de 97 a
+51 perfiles benchmark después de retirar los controles sin backend o sin evidencia
+evaluable. `pendingBenchmark()` quedó vacío y `benchmarkRunning=false` al cerrar la
+revisión.
+
+| GGUF/familia | Conservar como referencia | Retirar o dejar sólo diagnóstico | Caso de uso |
+|---|---|---|---|
+| Qwen3.8 UD-Q4_K_XL + mmproj | `sys-qwen38-27b-udq4-131k`; `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram`; DSH `abc1df7a-2af1-4957-9d12-dbe2d01988aa` | 262k/B2048 `sys-bench-qwen38-udq4-post-262k-kv8` | Mejor conjunto visión + agente + contexto largo |
+| Qwen3.8 Q4_K_M/Q5_K_M + mmproj | Q4 `sys-qwen38-27b-q4km-131k`; Q5 `sys-qwen38-27b-q5km-131k` | `sys-bench-qwen38-q4km-24gb-tg128`; Q5 64k/mirror y Q5 196k ya retirado | Comparación de calidad y presión de VRAM |
+| Dynamic V3 UD-Q4 | DSH 160k `8797a8cf-fea9-46cb-934a-0d62f3ee8ca7`; DSH 192k `abc1df7a-2af1-4957-9d12-dbe2d01988aa`; Browser Agent medium/xhigh; MTP 64k `37269d11-26db-4fd0-ade3-3c595f70e4cd` | DFlash2 local: `2f493452-267b-4d55-9632-cf0a575d8f40`, `334f06f9-74e9-42c9-bf5a-9763933746c8`, `03902781-b147-4f36-9c0e-975154be9ca1`; sin MTP `71098365-b598-401d-abe1-db1cad5de4f4` | Mejor frontera calidad/velocidad; DFlash2 bloqueado por loader |
+| ThinkingCap Qwen3.6 Q4 + mmproj | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c` | No se promueve otro harness como si fuera la misma configuración | Coding rápido con thinking; histórico 6/8 BCB |
+| Fable Fusion Q6 + mmproj | `sys-48-fablefusion-q6-mtp` | Sin BCB E2E comparable; mantener experimental | Visión/contexto, calidad aún no cerrada |
+| KAT-Coder Q4 | `9dda6bf4-7aae-4806-ba3a-8466bf41e702` (4/8 BCB) | `sys-bench-48-kat-f16` por timeout | Speed-first, texto |
+| BigBang Q4 + mmproj | `cbff7c85-2116-4b42-b1b9-485dd33384cc` y reparación `sys-repair-48-bigbang-mtp-balance` | `sys-bench-48-bigbang-base` y `sys-bench-48-bigbang-fast`; fast obtuvo HE0 1/1 pero HE20 se estancó | Alternativa 35B-A3B/visión; no promoción automática |
+| Laguna Q2 / antirez DeepSeek | Laguna 64k/v24 con scores parciales; DeepSeek leloch `4f5cc556-333d-4310-955e-15042cd874d6` y VRAM balance `6b3bf7bd-0889-491a-9b6d-b12128478a5f` | CPU-only Laguna `318368e6-3fb7-4ef8-a76a-23030c544c49`, `bd16d671-9958-403f-92b7-c7327b67b5bc`; variantes DeepSeek expertos/tilted sin etapa evaluable; antirez q4 B2048 | Modelos grandes/contexto; no confundir score parcial con calidad cerrada |
+| Qwen3.8 DFlash2 vLLM | Ninguno en este checkout | `d2e8c641-8e01-4f0a-9fb0-8b95f2d0b701`, `...702`, `...703` | Investigación; requieren endpoint y credencial vLLM |
+| Ling/RVN/NInfer/Gemma y GGUF sin perfil ejecutable | Ninguno promocionable | IDs `sys-ling*`, `sys-bench-16-*`, `sys-ninfer*` | No listos por GGUF/runtime/binario ausente |
+
+Los 34 perfiles de usuario retirados quedan registrados en `profiles/launches.json`
+con `benchmark=false`; los 11 retiros de sistema quedan en
+`assets/system_profiles.json` con comentario de fecha y motivo. No se alteraron
+modelos ni se eliminaron resultados.
+
+### Prueba adicional y control de estancamiento
+
+Se intentó completar el BCB de `sys-bench-48-bigbang-fast` con la suite canónica
+`05c28394-11d0-41fe-a55f-b3cb69db9c15`, una sola etapa y timeout de 1.800 s. La
+compuerta obligó primero a repetir HE0/HE20 por huella efectiva:
+
+- HE0 nuevo: `1/1`, `22,34 s`, `failureKind=none`, `timedOut=false`,
+  `HumanEval_1_tems__20260821_114336`.
+- HE20: `HumanEval_20_tems__20260821_114525`; el backend generó, pero el harness
+  quedó en `prompt 2/20` con `hardFailed=true`, eventos de estancamiento y sin
+  resultado evaluable. Se canceló antes del límite duro; evidencia:
+  `agent_events.jsonl` del mismo `runDir`.
+- BCB no se ejecutó porque HE20 no cerró la compuerta. El perfil quedó retirado
+  para no volver a consumir la cola con la misma configuración.
+
+Esto no se contabiliza como `0/20`: es una falla de harness/infraestructura por
+estancamiento. El score histórico de BigBang no se mezcla con este intento.
 - Qwen3.8 de 24 GB con BCB de 6.936,9 s y lookup roto:
   `sys-qwen38-27b-q4km-24gb-32k`, `sys-bench-qwen38-udq4-24gb-lookup-64k`.
 
@@ -378,9 +429,9 @@ Los perfiles CPU-only, los perfiles que no tienen modelo/runtime/binario local y
 los duplicados cuyo único resultado sea una falla de carga pueden ocultarse del
 ranking operativo, pero conservarse en la matriz histórica. Deprecarlos no
 significa borrar JSON, logs ni el ID: significa `benchmark=false` o exclusión
-explícita de la próxima cola, con motivo y fecha. En esta revisión sí se aplicó
-esa política al catálogo: 38 perfiles quedaron con `benchmark=false`, y la
-variante UD-Q4 48GB validada quedó como referencia operativa.
+explícita de la próxima cola, con motivo y fecha. En esta revisión la política
+quedó aplicada a 50 variantes de sistema y 34 perfiles de usuario; la variante
+UD-Q4 48GB validada quedó como referencia operativa.
 
 ## Cómo leer una fila
 

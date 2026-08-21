@@ -1149,7 +1149,9 @@ void SystemProfilesTests::bundle_lagunaTemplateIsAppliedToBothProfiles()
     for (const QString &id : variantIds) {
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(!launch.isEmpty(), qPrintable(id));
-        QVERIFY(launch.value(QStringLiteral("benchmark")).toBool());
+        const bool retired = id.contains(QStringLiteral("24gb-32k"))
+            || id.endsWith(QStringLiteral("48gb-32k-v24"));
+        QCOMPARE(launch.value(QStringLiteral("benchmark")).toBool(), !retired);
         const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();
         QVERIFY(!args.contains(QStringLiteral("--reasoning-format")));
         QVERIFY(!args.contains(QStringLiteral("--reasoning-preserve")));
@@ -1389,6 +1391,26 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
         const QVariantMap launch = pm.getLaunchProfile(id);
         QVERIFY2(launch.value("system").toBool(), qPrintable(id));
         QVERIFY2(!launch.value("modelProfileId").toString().isEmpty(), qPrintable(id));
+    }
+
+    // Los controles que agotaron BCB, fallaron al cargar o quedaron duplicados
+    // permanecen en la matriz histórica, pero no deben volver a entrar en la cola.
+    const QStringList retiredBenchmarkVariants = {
+        QStringLiteral("sys-bench-48-kat-f16"),
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-24gb-32k-official"),
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-24gb-32k-v24"),
+        QStringLiteral("sys-bench-laguna-s-2-1-q2-48gb-100k-b1024"),
+        QStringLiteral("sys-48-antirez-dsv4-q2q4-0731-32k-b2048"),
+        QStringLiteral("sys-bench-48-bigbang-base"),
+        QStringLiteral("sys-bench-48-bigbang-fast"),
+        QStringLiteral("sys-bench-qwen38-udq4-post-262k-kv8"),
+        QStringLiteral("sys-bench-qwen38-q5km-mtp3-64k-kv8"),
+        QStringLiteral("sys-bench-qwen38-q5km-post-mirror-160k"),
+        QStringLiteral("sys-bench-qwen38-q4km-24gb-tg128")};
+    for (const QString &id : retiredBenchmarkVariants) {
+        const QVariantMap launch = pm.getLaunchProfile(id);
+        QVERIFY2(!launch.isEmpty(), qPrintable(id));
+        QVERIFY2(!launch.value(QStringLiteral("benchmark")).toBool(), qPrintable(id));
     }
 
     // Los tres modelos medidos el 2026-08-07 quedan con nombre propio y fecha para
@@ -2104,7 +2126,9 @@ void SystemProfilesTests::bundle_qwen38Turing24gbControlsAreColdAndSeparated()
                 }
             }
             QVERIFY2(!variant.isEmpty(), qPrintable(variantId));
-            QVERIFY(variant.value(QStringLiteral("benchmark")).toBool() == id.contains(QStringLiteral("q4km")));
+            const bool expectedBenchmark = id.contains(QStringLiteral("q4km"))
+                && !variantId.endsWith(QStringLiteral("tg128"));
+            QCOMPARE(variant.value(QStringLiteral("benchmark")).toBool(), expectedBenchmark);
             const QVariantMap launch = pm.getLaunchProfile(variantId);
             QVERIFY2(!launch.isEmpty(), qPrintable(variantId));
             const QStringList args = launch.value(QStringLiteral("extraArgs")).toStringList();

@@ -1072,7 +1072,7 @@
       {
         "id": "sys-bench-48-kat-f16",
         "order": 88,
-        "benchmark": true,
+        "benchmark": false,
         "displayName": "[bench 48GB KAT] KV q8_0 · 262k (cap de política)",
         "runtime": {
           "kv": "q8_0"
@@ -1081,7 +1081,7 @@
           "--cache-type-k": "q8_0",
           "--cache-type-v": "q8_0"
         },
-        "comment": "Variante histórica que usaba KV f16; queda limitada a q8_0 por política. Los tiempos medidos con f16 no son comparables y deben repetirse."
+        "comment": "Retirada el 2026-08-21: la corrida BCB quedó en timeout/infraestructura y el control KAT de usuario ya cubre el GGUF con resultado parcial válido. Se conserva el ID e historial; no volver a encolar sin una huella nueva."
       },
       {
         "id": "sys-bench-48-kat-kv4",
@@ -2171,7 +2171,7 @@
         "order": 192,
         "displayName": "[bench Laguna 24GB] 32k · template oficial · thinking OFF",
         "chatTemplate": "poolside-Laguna-S-2.1.jinja",
-        "benchmark": true,
+        "benchmark": false,
         "runtime": {
           "ctx": 32768,
           "batch": 512,
@@ -2181,13 +2181,13 @@
           "--reasoning-format": null,
           "--reasoning-preserve": null
         },
-        "comment": "Comparación limpia para el equipo de 24 GB: template oficial de llama.cpp, ctx 32k y batch/ubatch reducidos. Iniciar con Pensamiento del servidor OFF; no cambia el quant ni el offload de 32 expertos a CPU."
+        "comment": "Retirada el 2026-08-21: HE0 quedó sin carga evaluable y el intento se agotó por timeout. Se conserva como control histórico; no volver a encolar sin corregir la ruta de carga."
       },
       {
         "id": "sys-bench-laguna-s-2-1-q2-24gb-32k-v24",
         "order": 193,
         "displayName": "[bench Laguna 24GB] 32k · template v24 · thinking OFF",
-        "benchmark": true,
+        "benchmark": false,
         "runtime": {
           "ctx": 32768,
           "batch": 512,
@@ -2197,7 +2197,7 @@
           "--reasoning-format": null,
           "--reasoning-preserve": null
         },
-        "comment": "Control A/B del template v24 con el mismo ctx 32k y batch/ubatch que la variante oficial. Iniciar con Pensamiento del servidor OFF para aislar template y contexto."
+        "comment": "Retirada el 2026-08-21: no produjo una etapa evaluable dentro del límite operativo. Se conserva para comparar templates sólo si se repara el backend."
       }
     ],
     "binaryKind": "official",
@@ -2293,13 +2293,13 @@
       {
         "id": "sys-bench-laguna-s-2-1-q2-48gb-100k-b1024",
         "order": 191,
-        "benchmark": true,
+        "benchmark": false,
         "displayName": "[bench Laguna] Q2 · 100k · B1024 · U256",
         "runtime": {
           "batch": 1024,
           "ubatch": 256
         },
-        "comment": "Control de batch: conserva el contexto histórico de 100k y reduce sólo batch/ubatch para aislar la causa de bloqueos o Connection closed. Ejecutar HE0 antes de HE20/BCB."
+        "comment": "Retirada el 2026-08-21: HE0/HE20 válidos pero BCB no cerró de forma evaluable; se prioriza la variante 64k que sí tiene score parcial. Se conserva el ID e historial."
       },
       {
         "id": "sys-bench-laguna-s-2-1-q2-48gb-32k-official",
@@ -2322,7 +2322,7 @@
         "id": "sys-bench-laguna-s-2-1-q2-48gb-32k-v24",
         "order": 195,
         "displayName": "[bench Laguna 48GB] 32k · template v24 · thinking OFF",
-        "benchmark": true,
+        "benchmark": false,
         "runtime": {
           "ctx": 32768,
           "batch": 512,
@@ -2332,7 +2332,7 @@
           "--reasoning-format": null,
           "--reasoning-preserve": null
         },
-        "comment": "Control A/B del template v24 con exactamente el mismo ctx, batch, ubatch, quant y reparto que la variante oficial. Iniciar con Pensamiento del servidor OFF."
+        "comment": "Retirada el 2026-08-21: 1/8 en BCB y sin ventaja frente al control oficial. Se conserva como control histórico; no volver a encolar salvo una revisión explícita del template."
       }
     ],
     "minimumBinaryBuild": 10087
@@ -3019,7 +3019,7 @@
     "contextPresets": [32768, 65536, 131072],
     "benchmarkVariants": [
       { "id": "sys-48-antirez-dsv4-q2q4-0731-16k", "order": 146, "displayName": "[bench antirez] 16k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 16384, "batch": 2048, "ubatch": 256 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b2048", "order": 147, "benchmark": true, "displayName": "[bench antirez] 32k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b2048", "order": 147, "benchmark": false, "displayName": "[retirado 2026-08-21] antirez · 32k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256 }, "comment": "Retirado: BCB terminó 0/0 con timeout; el control KV q8 queda como referencia menos agresiva." },
       { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b4096", "order": 148, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512 } },
       { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b8192", "order": 149, "displayName": "[bench antirez stress] 32k · B8192 · U1024 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 1024 } },
       { "id": "sys-48-antirez-dsv4-q2q4-64k", "order": 150, "displayName": "[bench antirez] 64k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
@@ -3076,9 +3076,9 @@
     "minimumBinaryBuild": 10262,
     "contextPresets": [32768, 65536, 131072, 196608],
     "benchmarkVariants": [
-      { "id": "sys-bench-48-bigbang-base", "order": 150, "benchmark": true, "displayName": "[bench BigBang] 131k · sin MTP · KV q8_0", "comment": "Baseline reproducible contra KAT-Coder: misma suite, seed y hardware. La variante histórica usaba KV f16 y debe repetirse para comparar." },
+      { "id": "sys-bench-48-bigbang-base", "order": 150, "benchmark": false, "displayName": "[retirado 2026-08-21] BigBang · 131k · sin MTP · KV q8_0", "comment": "Retirado: HE0 no produjo un resultado evaluable y no llegó a BCB; usar la variante reparada MTP/B256/U64 como control." },
       { "id": "sys-bench-48-bigbang-mtp", "order": 151, "displayName": "[bench BigBang] 131k · MTP embebido · KV q8_0", "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido en el GGUF; requiere llama.cpp b10262+. KV limitado a q8_0 por política." },
-      { "id": "sys-bench-48-bigbang-fast", "order": 152, "benchmark": true, "displayName": "[bench BigBang] 131k · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
+      { "id": "sys-bench-48-bigbang-fast", "order": 152, "benchmark": false, "displayName": "[retirado 2026-08-21] BigBang · MTP · batch 1024 · ubatch 256", "runtime": { "batch": 1024, "ubatch": 256 }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "Retirado tras crash CUDA histórico y estancamiento del harness en HE20 bajo la huella actual; se conserva la evidencia y se usa BigBang reparado/usuario como referencia." },
       { "id": "sys-bench-48-bigbang-long", "order": 153, "displayName": "[bench BigBang] 196k · MTP · KV q8_0", "runtime": { "ctx": 196608, "kv": "q8_0" }, "extraArgOverrides": { "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" } },
       { "id": "sys-bench-48-bigbang-post", "order": 154, "best": true, "displayName": "FAST - BigBang · MTP · top-p 0.08", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64 }, "extraArgOverrides": { "--temp": "0.70", "--top-p": "0.08", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "MTP embebido conservado, pero con 64k/batch 256/ubatch 64: en 131k/batch 512 el primer prefill provoca CUDA invalid argument/illegal memory access con mmproj en esta GPU." },
       { "id": "sys-repair-48-bigbang-mtp", "order": 155, "displayName": "REPAIR - BigBang · MTP · 64k · B256/U64", "runtime": { "ctx": 65536, "batch": 256, "ubatch": 64, "kv": "q8_0", "flashAttn": true }, "extraArgOverrides": { "--flash-attn": "on", "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--temp": "0.70", "--top-p": "0.08", "--reasoning": "off", "--spec-type": "draft-mtp", "--spec-draft-n-max": "5" }, "comment": "Copia de reparación para sys-bench-48-bigbang-mtp y sys-bench-48-bigbang-fast: conserva MTP, baja contexto/batch, usa KV q8_0 y reactiva Flash Attention. Los perfiles originales crashearon con flash off a 131k; no se sobrescriben." },
@@ -3129,7 +3129,7 @@
       { "id": "sys-bench-qwen38-udq4-mtp3-kv8", "order": 169, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 131k · KV q8 · mmproj", "runtime": { "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-bench-qwen38-udq4-mtp3-b1024", "order": 170, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B1024 · mmproj", "runtime": { "batch": 1024, "ubatch": 128 } },
       { "id": "sys-bench-qwen38-udq4-mtp3-b2048", "order": 171, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B2048 · mmproj", "runtime": { "batch": 2048, "ubatch": 256 } },
-      { "id": "sys-bench-qwen38-udq4-post-262k-kv8", "order": 192, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8", "runtime": { "ctx": 262144, "batch": 2048, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Control llama.cpp inspirado en el post: contexto largo, batch alto y KV q8; no replica vLLM/FP8." },
+      { "id": "sys-bench-qwen38-udq4-post-262k-kv8", "order": 192, "benchmark": false, "displayName": "[retirado 2026-08-21] Qwen3.8 UD-Q4 · MTP3 · 262k · B2048/U512 · KV q8", "runtime": { "ctx": 262144, "batch": 2048, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Retirado: HE0 terminó 0/1 y no habilitó HE20/BCB bajo la huella actual; se conserva para investigación de 262k." },
       { "id": "sys-bench-qwen38-udq4-post-mirror-160k", "order": 207, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
       { "id": "sys-bench-qwen38-udq4-post-b8192", "order": 193, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · B8192/U512 · 131k", "runtime": { "batch": 8192, "ubatch": 512 }, "comment": "Control de max-num-batched-tokens 8192 usando los equivalentes llama.cpp batch/ubatch." },
       { "id": "sys-bench-qwen38-udq4-post-parallel2", "order": 194, "benchmark": true, "displayName": "[bench Qwen3.8] UD-Q4 · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
@@ -3207,8 +3207,8 @@
       { "id": "sys-bench-qwen38-q5km-post-parallel2", "order": 204, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 2 slots · 131k", "runtime": { "parallelSlots": 2 }, "comment": "Mide throughput agregado con dos lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-q5km-post-parallel4", "order": 205, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 4 slots · 131k", "runtime": { "parallelSlots": 4 }, "comment": "Mide throughput agregado con cuatro lanes; no cambia el perfil base." },
       { "id": "sys-bench-qwen38-q5km-post-parallel6", "order": 206, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 6 slots · 131k", "runtime": { "parallelSlots": 6 }, "comment": "Mide throughput agregado con seis lanes; no cambia el perfil base." },
-      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "benchmark": true, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
-      { "id": "sys-bench-qwen38-q5km-post-mirror-160k", "order": 209, "benchmark": true, "displayName": "[bench Qwen3.8] Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Espejo llama.cpp del load screen del post: contexto 160927, MTP2 y eval batch/physical batch 2048/512. Conserva KV q4_0 y el resto del baseline para aislar el efecto de esos ajustes; no replica LM Studio/FP8." },
+      { "id": "sys-bench-qwen38-q5km-mtp3-64k-kv8", "order": 189, "benchmark": false, "displayName": "[retirado 2026-08-21] Qwen3.8 Q5_K_M · MTP3 · 64k · KV q8 · mmproj", "runtime": { "ctx": 65536, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "Retirado: BCB quedó 0/0 con timeout; el control Q5 131k conserva la comparación de calidad." },
+      { "id": "sys-bench-qwen38-q5km-post-mirror-160k", "order": 209, "benchmark": false, "displayName": "[retirado 2026-08-21] Qwen3.8 Q5_K_M · espejo post · 160,9k · MTP2 · B2048/U512", "runtime": { "ctx": 160927, "batch": 2048, "ubatch": 512, "kv": "q4_0" }, "extraArgOverrides": { "--spec-draft-n-max": "2" }, "comment": "Retirado: BCB no llegó a una medición evaluable; se conserva el ID para repetirlo sólo con una huella estable." },
       { "id": "sys-bench-qwen38-q5km-mtp3-ngram", "order": 191, "displayName": "[bench Qwen3.8] Q5_K_M · MTP3 + ngram · 131k · mmproj", "extraArgOverrides": { "--spec-type": "draft-mtp,ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Copia Q5_K_M que combina MTP3 y ngram." },
       { "id": "sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram", "order": 261, "benchmark": false, "displayName": "[retirado 2026-08-21] Q5_K_M · 196k · MTP2 · KV q8 · visión", "runtime": { "ctx": 196608, "batch": 512, "ubatch": 64, "kv": "q8_0" }, "mtp": { "enabled": true, "args": ["--spec-type", "draft-mtp", "--spec-draft-n-max", "2"] }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "extraArgAdds": ["--no-mmproj-offload"], "comment": "Retirado tras fallo de infraestructura durante HE0: acceso ilegal de CUDA al cargar con ctx 196k/KV q8/mmproj RAM. Se conserva el ID, perfil e historial; no vuelve a la cola sin una corrección específica del backend." }
     ],
@@ -3226,7 +3226,7 @@
     "extraArgs": ["--cache-type-k", "q4_0", "--cache-type-v", "q4_0", "--temp", "0.60", "--top-p", "0.95", "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--no-context-shift", "--metrics", "--no-warmup", "--jinja", "--predict", "128", "--parallel", "1", "--reasoning", "off"],
     "binaryKind": "official", "minimumBinaryBuild": 10331, "contextPresets": [32768], "vision": false,
     "benchmarkVariants": [
-      { "id": "sys-bench-qwen38-q4km-24gb-tg128", "order": 243, "benchmark": true, "displayName": "[bench 24GB] Q4_K_M · tg128 · cold · sin speculative", "comment": "Control reproducible del reporte de RTX 6000: 24 GB, Q4_K_M, -ngl 99, Flash Attention, B512/U512, ctx 32k, parallel 1, thinking off. Reportar decode/tg128 nativo y no warm-cache." },
+      { "id": "sys-bench-qwen38-q4km-24gb-tg128", "order": 243, "benchmark": false, "displayName": "[retirado 2026-08-21] Q4_K_M · tg128 · cold · sin speculative", "comment": "Retirado: BCB quedó 0/0 con timeout y no permite ranking E2E; los diagnósticos ngram/prefix-cache quedan separados." },
       { "id": "sys-bench-qwen38-q4km-24gb-ngram-diagnostic", "order": 244, "benchmark": true, "displayName": "[diagnóstico 24GB] Q4_K_M · ngram · no rankear", "extraArgOverrides": { "--spec-type": "ngram-mod", "--spec-ngram-mod-n-match": "24", "--spec-ngram-mod-n-min": "16", "--spec-ngram-mod-n-max": "64" }, "comment": "Control negativo para detectar prefijos repetidos o cache-hit: el throughput de ngram no se mezcla con el control tg128 ni se presenta como velocidad real del hardware." },
       { "id": "sys-bench-qwen38-q4km-24gb-prefix-warm", "order": 245, "benchmark": true, "displayName": "[diagnóstico 24GB] Q4_K_M · prefix cache · warm · no rankear", "extraArgAdds": ["--cache-prompt", "--cache-reuse", "512"], "comment": "Control warm-cache: comparar sólo contra otra corrida con el mismo prefijo y cache habilitado; no usar para rankear contra cold-cache." }
     ],

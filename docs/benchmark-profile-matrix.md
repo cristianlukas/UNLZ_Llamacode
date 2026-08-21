@@ -13,9 +13,11 @@ visión y no representan el quant de los pesos ni del KV.
 ## Auditoría por GGUF y variantes 48GB — 2026-08-21
 
 La auditoría del catálogo partió de 81 candidatos `benchmark=true`. Se retiraron
-38 perfiles por ausencia de GGUF/runtime/binario, incompatibilidad repetida,
-CPU-only o fallo operativo persistente; se conservan IDs, configuraciones y
-resultados históricos. Quedan 45 candidatos operativos. La clasificación por
+50 variantes de sistema por ausencia de GGUF/runtime/binario, incompatibilidad
+repetida, CPU-only, timeout o estancamiento; se conservan IDs, configuraciones y
+resultados históricos. Quedan 33 variantes de sistema y 18 perfiles de usuario
+con `benchmark=true`; otros 34 perfiles de usuario quedaron anotados con
+`benchmark=false`. La clasificación por
 velocidad, calidad, tamaño, visión, contexto y caso de uso está en
 [`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).
 
@@ -25,10 +27,27 @@ HE0 1/1 en 34,12 s, HE20 20/20 en 370,38 s y BCB 8/8 en 537,39 s, todos con
 KV q8, batch 512/ubatch 64 y mmproj en RAM; queda promovida como referencia de
 contexto largo con visión para 2×RTX 3090.
 
+En Laguna Q2, el control 48 GB con template v24 (`sys-bench-laguna-s-2-1-q2-48gb-32k-v24`)
+queda retirado por 1/8 en BCB; se conserva el control oficial y el resultado
+histórico para A/B, pero no se vuelve a encolar automáticamente.
+
 La variante `sys-bench-qwen38-q5km-48gb-196k-mtp2-kv8-mmproj-ram` falló durante
 HE0 con acceso ilegal de CUDA al cargar el modelo (`HumanEval_1_tems__20260821_110312`)
 y quedó `benchmark=false`. La referencia Q5 131k conserva HE0 1/1, HE20 20/20 y
 BCB 3/8 con fallo de calidad.
+
+Los renglones históricos de KAT f16, Laguna 24GB sin etapa evaluable, Laguna 100k,
+antirez B2048, BigBang base/fast, Qwen3.8 UD-Q4 262k y Qwen3.8 Q5 64k/espejo
+quedaron `benchmark=false` en el catálogo. La tabla se conserva para auditoría;
+la cola viva debe reconstruirse desde `launchProfilesForMenu()` y la API, no desde
+estos renglones históricos.
+
+La prueba adicional de `sys-bench-48-bigbang-fast` se hizo bajo la huella actual:
+HE0 cerró 1/1 en 22,34 s (`HumanEval_1_tems__20260821_114336`). HE20 llegó a
+`prompt 2/20`, pero `agent_events.jsonl` registró estancamiento semántico y
+`hardFailed=true`; se canceló antes de 1.800 s y no se inventó score. BCB quedó
+bloqueado por la compuerta HE20 y el perfil pasó a `benchmark=false`. La evidencia
+queda en `HumanEval_20_tems__20260821_114525`.
 
 ## Tabla de resultados
 
