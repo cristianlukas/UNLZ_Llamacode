@@ -10,6 +10,49 @@ limitadas a `q8_0`; sus tiempos y scores anteriores no se mezclan con los nuevos
 Los `mmproj` `F16/BF16` se conservan únicamente como proyectores auxiliares de
 visión y no representan el quant de los pesos ni del KV.
 
+## Matriz calidad / velocidad — corte 2026-08-21
+
+Esta matriz usa el último BCB evaluable de cada huella. Calidad es `BCB/8` y
+velocidad es el TPS medio de esa etapa. Los `failureKind=infrastructure`,
+timeouts, conexiones cerradas o “Hay un turno en curso” no se convierten en
+cero de calidad. La cola pendiente reintentada el 2026-08-21 volvió a encontrar
+la colisión de turno en los dos primeros perfiles y se canceló antes de
+contaminar los otros once resultados.
+
+| Perfil representativo | GGUF / receta | Calidad BCB | Velocidad BCB | Lectura |
+| --- | --- | ---: | ---: | --- |
+| Dynamic V3 Browser Agent · medium · 131k | Qwen3.8 UD-Q4, Browser Agent | 8/8 | 71,51 tok/s | Frontera calidad/velocidad; harness específico |
+| Qwen3.8 UD-Q4 · prefix cache · 64k | Qwen3.8 UD-Q4_K_XL | 8/8 | 59,96 tok/s | Depende de prefijo/cache caliente |
+| Dynamic V3 DSH medium · 192k · MTP2 | Qwen3.8 UD-Q4, KV q8 | 8/8 | 55,11 tok/s | Mejor candidato general de contexto largo |
+| Dynamic V3 MTP separado · 131k | Qwen3.8 UD-Q4, MTP | 8/8 | 55,17 tok/s | Calidad máxima medida y buena velocidad |
+| Dynamic V3 DSH medium · 160k · MTP2 | Qwen3.8 UD-Q4, KV q8 | 8/8 | 54,74 tok/s | Muy equilibrado; menor contexto que 192k |
+| Dynamic V3 MTP embebido · 64k | Qwen3.8 UD-Q4, KV q8 | 8/8 | 52,58 tok/s | Calidad máxima con receta local simple |
+| ThinkingCap Qwen3.6 · MTP4 | ThinkingCap Q4_K_M | 6/8 | 56,84 tok/s | Rápido y útil; debajo de Dynamic en calidad |
+| Qwen3.8 UD-Q4 · control 131k | Qwen3.8 UD-Q4_K_XL | 7/8 | 39,53 tok/s | Control conservador; calidad alta, velocidad menor |
+| Qwen3.8 UD-Q4 · 48GB · 196k · MTP2 | Qwen3.8 UD-Q4, KV q8 | 8/8 | 43,71 tok/s | Calidad máxima y contexto largo; más lento |
+| Qwen3.8 Q4_K_M · 131k | Qwen3.8 Q4_K_M | 5/8 | 53,83 tok/s | Control rápido con pérdida de calidad |
+| Qwen3.8 Q5_K_M · 131k | Qwen3.8 Q5_K_M | 3/8 | 47,13 tok/s | La quant más pesada no ganó calidad aquí |
+| KAT Coder Q4 | KAT-Coder Q4_K_M | 3/8 | 116,83 tok/s | Speed-first/text-only; sin visión |
+| BigBang MTP reparado | BigBang Q4_K_M | 3/8 | 211,18 tok/s | Muy veloz; calidad parcial y estabilidad delicada |
+| Laguna S dual GPU · 32k | Laguna S Q2_K_XL | 4/8 | 44,33 tok/s | Modelo grande, lento y de calidad parcial |
+| DeepSeek Fusion · leloch | DeepSeek V4 Q2/Q4 imatrix | 1–2/8 | 8,57–9,45 tok/s | Investigación; no candidato práctico |
+
+### Tres tiers propuestos
+
+Son etiquetas operativas, no una afirmación de que todos los harnesses sean
+idénticos.
+
+| Tier | Perfil recomendado | Por qué |
+| --- | --- | --- |
+| **SOL — mejor relación calidad/velocidad** | Dynamic V3 DSH medium 192k MTP2; Qwen3.8 UD-Q4 prefix cache 64k; Dynamic V3 Browser Agent medium 131k | 8/8 BCB y 55–72 tok/s; cubren contexto largo, cache y agente rápido |
+| **TERRA — más velocidad que calidad, sin ser malos** | KAT Coder Q4; BigBang MTP reparado; ThinkingCap Qwen3.6 MTP4 | 3/8, 3/8 y 6/8 BCB, con 56–211 tok/s; priorizan respuesta rápida |
+| **LUNA — más calidad que velocidad** | Qwen3.8 UD-Q4 48GB 196k MTP2; Dynamic V3 DSH medium 160k; Dynamic V3 MTP embebido 64k | 8/8 BCB en los tres; se priorizan robustez, calidad y contexto |
+
+Los tres primeros candidatos para promoción general son `Dynamic V3 DSH medium
+192k`, `Qwen3.8 UD-Q4 prefix cache 64k` y `Dynamic V3 Browser Agent medium
+131k`. El segundo y el tercero conservan la nota de cache/harness específico
+cuando se publiquen fuera de esta matriz.
+
 ## Auditoría por GGUF y variantes 48GB — 2026-08-21
 
 La auditoría del catálogo partió de 81 candidatos `benchmark=true`. Se retiraron
