@@ -37,22 +37,23 @@ contaminar los otros once resultados.
 | Laguna S dual GPU · 32k | Laguna S Q2_K_XL | 4/8 | 44,33 tok/s | 1.324,6 s | Modelo grande, lento y de calidad parcial |
 | DeepSeek Fusion · leloch | DeepSeek V4 Q2/Q4 imatrix | 1–2/8 | 8,57–9,45 tok/s | 1.720–7.169 s | Investigación; no candidato práctico |
 
-### Tres tiers propuestos
+### Candidatos mejorados
 
 Son etiquetas operativas, no una afirmación de que todos los harnesses sean
 idénticos.
 
 | Tier | Perfil recomendado | Por qué |
 | --- | --- | --- |
-| **SOL — calidad** | Qwen3.8 UD-Q4 48GB 196k MTP2; Dynamic V3 DSH medium 160k; Dynamic V3 MTP embebido 64k | 8/8 BCB, 53–55 tok/s y 890–1.121 s totales; se priorizan calidad, contexto y robustez |
-| **TERRA — balanceado** | Dynamic V3 Browser Agent medium 131k; Dynamic V3 DSH medium 192k MTP2; Dynamic V3 MTP separado 131k | 8/8 BCB, 55–72 tok/s y 592–655 s totales; buen compromiso entre calidad, throughput y cierre |
-| **LUNA — más velocidad que calidad, sin ser malos** | ThinkingCap Qwen3.6 MTP4; KAT Coder Q4 | 3–6/8 BCB, 56–117 tok/s y 299–601 s totales; rápidos sin caer en resultados inutilizables |
-| **METEOR — velocidad extrema** | BigBang MTP reparado | 3/8 BCB, 211,18 tok/s y 670,8 s totales; máxima velocidad medida, con calidad parcial y estabilidad más delicada |
+| **SOL — calidad** | Dynamic V3 DSH medium · 160k · MTP2 | 8/8 BCB, 54,74 tok/s y 890,1 s totales; candidato de calidad/contexto |
+| **TERRA — balanceado** | Dynamic V3 Browser Agent medium · 131k | 8/8 BCB, 71,51 tok/s y 592,5 s totales; mejor compromiso general medido |
+| **LUNA — velocidad** | ThinkingCap Qwen3.6 · MTP4 | 6/8 BCB, 56,84 tok/s y 298,8 s totales; termina rápido sin ser malo |
+| **METEOR — velocidad extrema** | BigBang MTP reparado | 3/8 BCB, 211,18 tok/s y 670,8 s totales; máximo throughput medido, con calidad parcial |
 
-Los tres primeros candidatos para promoción general son `Dynamic V3 DSH medium
-192k`, `Qwen3.8 UD-Q4 prefix cache 64k` y `Dynamic V3 Browser Agent medium
-131k`. El segundo y el tercero conservan la nota de cache/harness específico
-cuando se publiquen fuera de esta matriz.
+El conjunto oficial de candidatos mejorados queda formado por `Dynamic V3 DSH
+medium 160k MTP2` (SOL), `Dynamic V3 Browser Agent medium 131k` (TERRA),
+`ThinkingCap Qwen3.6 MTP4` (LUNA) y `BigBang MTP reparado` (METEOR). Los
+perfiles secundarios permanecen en la tabla de referencia y no desplazan estos
+cuatro nombres en la promoción visible.
 
 ## Auditoría por GGUF y variantes 48GB — 2026-08-21
 
