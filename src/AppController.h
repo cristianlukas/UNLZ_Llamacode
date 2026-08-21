@@ -207,6 +207,7 @@ class AppController : public QObject
     Q_PROPERTY(int benchmarkProgress READ benchmarkProgress NOTIFY benchmarkProgressChanged)
     Q_PROPERTY(QString benchmarkStatus READ benchmarkStatus NOTIFY benchmarkStatusChanged)
     Q_PROPERTY(QVariantList benchmarkResults READ benchmarkResults NOTIFY benchmarkResultsChanged)
+    Q_PROPERTY(QVariantList benchmarkCoverage READ benchmarkCoverage NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkRanking READ benchmarkRanking NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBest25 READ benchmarkBest25 NOTIFY benchmarkResultsChanged)
     Q_PROPERTY(QVariantList benchmarkBestModelosSpeed READ benchmarkBestModelosSpeed NOTIFY benchmarkResultsChanged)
@@ -454,6 +455,7 @@ public:
     int benchmarkProgress() const { return m_benchmarkProgress; }
     QString benchmarkStatus() const { return m_benchmarkStatus; }
     QVariantList benchmarkResults() const { return m_benchmarkResults; }
+    QVariantList benchmarkCoverage() const;
     QVariantList benchmarkRanking() const;
     QVariantList benchmarkBest25() const;
     QVariantList benchmarkBestModelosSpeed() const;
@@ -588,6 +590,9 @@ public:
     static bool benchmarkResultPassesGateForTest(const QVariantMap &result,
                                                   const QString &stage,
                                                   const QString &profileFingerprint);
+    static QString benchmarkStageCoverageStateForTest(const QVariantMap &result,
+                                                       const QString &stage,
+                                                       const QString &profileFingerprint);
     static QString customBenchmarkStageForTest(const QString &label, int taskCount);
     static QVariantList benchmarkDocumentRowsForTest(const QString &markdown,
                                                       const QString &sourceName = QString());
@@ -1067,6 +1072,14 @@ public:
     Q_INVOKABLE void startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes = 1,
                                           const QString &target = QStringLiteral("model"), int timeoutSec = 0,
                                           const QString &agentProfileId = QString());
+    // Ejecuta sólo la siguiente etapa faltante de un perfil benchmark=true.
+    // La selección HE0 -> HE20 -> BCB y la huella efectiva se validan aquí,
+    // evitando que un caller repita etapas ya cerradas o reactive retirados.
+    Q_INVOKABLE QVariantMap startNextPendingBenchmark(const QString &profileId,
+                                                       int passes = 1,
+                                                       const QString &target = QStringLiteral("agent"),
+                                                       int timeoutSec = 1800,
+                                                       const QString &agentProfileId = QString());
     Q_INVOKABLE void startProBenchmarks(const QStringList &profileIds, const QStringList &customIds,
                                         int passes = 1, const QString &target = QStringLiteral("model"),
                                         int timeoutSec = 0, const QString &agentProfileId = QString());

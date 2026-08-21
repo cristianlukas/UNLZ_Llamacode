@@ -88,6 +88,10 @@ Invocables (`/invoke`) — verificados en uso:
 - `startCustomBenchmark([launchIds], customId, passes, target, timeoutSec, agentProfileId)`
   — `target="agent"`, `agentProfileId` fija el **NIVEL** (`agent-chat|agent-basico|
   agent-intermedio|agent-avanzado|agent-maximo`). Requiere el agente corriendo.
+- `startNextPendingBenchmark(profileId, passes, target, timeoutSec, agentProfileId)`
+  — selecciona y ejecuta únicamente la siguiente etapa faltante de ese perfil
+  elegible, en orden HE0 → HE20 → BCB. Rechaza perfiles retirados/no listos o
+  bloqueados, y limita cada etapa a 1800 segundos (30 minutos).
 - `cancelBenchmark()`.
 - `runStartupScan()` — re-escaneo general (hardware + modelos).
 
@@ -99,6 +103,12 @@ Propiedades (`/prop`, y `/setprop` si son escribibles):
 - `agentThinkingEnabled` (read/write: bool).
 - `activeAgentProfileId` (read/write: fija el nivel del agente fuera del benchmark).
 - `benchmarkRunning`, `benchmarkProgress`, `benchmarkStatus`, `benchmarkResults`.
+- `benchmarkCoverage` — matriz viva por perfil del catálogo, incluyendo
+  `benchmarkEligible`, `coverageState` (`complete`, `incomplete`, `not-ready`,
+  `retired`), `stageStates` (`valid`, `pending`, `blocked`, `infra-timeout`),
+  `pendingStages`, `nextStage` y los códigos de salud. Se calcula contra la
+  huella efectiva actual; un resultado histórico con otra configuración no
+  cierra la etapa.
 
 Sub-targets útiles: `rootRegistry` (modelos en disco: `add/remove/scan/scanAll/refresh`,
 prop `count`/`scanning`), `modelCatalog`, `profileManager`, `binaryRegistry`.

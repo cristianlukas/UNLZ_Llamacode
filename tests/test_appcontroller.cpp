@@ -152,6 +152,7 @@ private slots:
     void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkGateRejectsBrokenOrStaleHe0();
     void benchmarkGateAcceptsValidHe20QualityResult();
+    void benchmarkCoverageClassifiesStages();
     void benchmarkCustomStageClassification();
     void benchmarkRankingAggregatesLatestStages();
     void benchmarkDocumentRowsParseScores();
@@ -1789,6 +1790,37 @@ void AppControllerTests::benchmarkGateAcceptsValidHe20QualityResult()
     transport[QStringLiteral("transportAfterEvaluation")] = true;
     QVERIFY(!AppController::benchmarkResultPassesGateForTest(
         transport, QStringLiteral("he20"), QStringLiteral("fp-current")));
+}
+
+void AppControllerTests::benchmarkCoverageClassifiesStages()
+{
+    const QString fp = QStringLiteral("fp-current");
+    QVariantMap he0{{"benchmarkName", "HumanEval (1 ítems)"},
+                    {"profileConfigFingerprint", fp}, {"qualityScore", 1},
+                    {"qualityTotal", 1}, {"failureKind", "none"}};
+    QVariantMap he20{{"benchmarkName", "HumanEval (20 ítems)"},
+                     {"profileConfigFingerprint", fp}, {"qualityScore", 18},
+                     {"qualityTotal", 20}, {"failureKind", "quality"}};
+    QVariantMap bcb{{"benchmarkName", "BigCodeBench (8 ítems)"},
+                    {"profileConfigFingerprint", fp}, {"qualityScore", 6},
+                    {"qualityTotal", 8}, {"failureKind", "quality"}};
+
+    QCOMPARE(AppController::benchmarkStageCoverageStateForTest(he0, "he0", fp),
+             QStringLiteral("valid"));
+    QCOMPARE(AppController::benchmarkStageCoverageStateForTest(he20, "he20", fp),
+             QStringLiteral("valid"));
+    QCOMPARE(AppController::benchmarkStageCoverageStateForTest(bcb, "bcb", fp),
+             QStringLiteral("valid"));
+
+    QVariantMap timeout = he20;
+    timeout[QStringLiteral("timedOut")] = true;
+    timeout[QStringLiteral("failureKind")] = QStringLiteral("timeout");
+    QCOMPARE(AppController::benchmarkStageCoverageStateForTest(timeout, "he20", fp),
+             QStringLiteral("infra-timeout"));
+    QCOMPARE(AppController::benchmarkStageCoverageStateForTest({}, "bcb", fp),
+             QStringLiteral("pending"));
+    QCOMPARE(AppController::benchmarkStageCoverageStateForTest(he0, "he0", "fp-old"),
+             QStringLiteral("pending"));
 }
 
 void AppControllerTests::benchmarkCustomStageClassification()

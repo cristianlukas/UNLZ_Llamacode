@@ -15492,6 +15492,76 @@ void AppController::startBenchmark(const QStringList &profileIds, const QString 
     runBenchmarkInternal(profileIds, mode, {}, QStringLiteral("standard"), qMax(1, passes), target);
 }
 
+QVariantMap AppController::startNextPendingBenchmark(const QString &profileId, int passes,
+                                                      const QString &target, int timeoutSec,
+                                                      const QString &agentProfileId)
+{
+    const QString id = profileId.trimmed();
+    QVariantMap response{{QStringLiteral("started"), false},
+                         {QStringLiteral("profileId"), id}};
+    if (id.isEmpty()) {
+        response[QStringLiteral("reason")] = QStringLiteral("missing-profile-id");
+        return response;
+    }
+    if (m_benchmarkRunning) {
+        response[QStringLiteral("reason")] = QStringLiteral("benchmark-running");
+        return response;
+    }
+    loadBenchmarkResults();
+    const QVariantList matrix = benchmarkCoverage();
+    QVariantMap coverage;
+    for (const QVariant &value : matrix) {
+        const QVariantMap row = value.toMap();
+        if (row.value(QStringLiteral("profileId")).toString() == id) {
+            coverage = row;
+            break;
+        }
+    }
+    if (coverage.isEmpty()) {
+        response[QStringLiteral("reason")] = QStringLiteral("profile-not-found");
+        return response;
+    }
+    if (!coverage.value(QStringLiteral("benchmarkEligible")).toBool()) {
+        response[QStringLiteral("reason")] = QStringLiteral("retired");
+        return response;
+    }
+    if (coverage.value(QStringLiteral("coverageState")).toString() == QLatin1String("not-ready")) {
+        response[QStringLiteral("reason")] = QStringLiteral("not-ready");
+        response[QStringLiteral("healthCodes")] = coverage.value(QStringLiteral("healthCodes"));
+        return response;
+    }
+    const QString stage = coverage.value(QStringLiteral("nextStage")).toString();
+    if (stage.isEmpty()) {
+        response[QStringLiteral("reason")] = coverage.value(QStringLiteral("hasBlockedStage")).toBool()
+            ? QStringLiteral("blocked") : QStringLiteral("complete");
+        return response;
+    }
+
+    QString suiteId;
+    for (const QVariant &value : std::as_const(m_customBenchmarks)) {
+        const QVariantMap definition = value.toMap();
+        if (customBenchmarkStage(definition.value(QStringLiteral("name")).toString(),
+                                 definition.value(QStringLiteral("prompts")).toList().size()) == stage) {
+            suiteId = definition.value(QStringLiteral("id")).toString();
+            break;
+        }
+    }
+    if (suiteId.isEmpty()) {
+        response[QStringLiteral("reason")] = QStringLiteral("suite-not-found");
+        return response;
+    }
+    // Hard cap every stage at the operational 30-minute limit. The runner's
+    // existing activity watchdog can finish earlier when the backend stalls.
+    const int effectiveTimeout = qBound(1, timeoutSec > 0 ? timeoutSec : 1800, 1800);
+    response[QStringLiteral("stage")] = stage;
+    response[QStringLiteral("suiteId")] = suiteId;
+    response[QStringLiteral("timeoutSec")] = effectiveTimeout;
+    startCustomBenchmark(QStringList{id}, suiteId, qMax(1, passes), target,
+                         effectiveTimeout, agentProfileId);
+    response[QStringLiteral("started")] = true;
+    return response;
+}
+
 void AppController::startCustomBenchmark(const QStringList &profileIds, const QString &customId, int passes,
                                          const QString &target, int timeoutSec, const QString &agentProfileId)
 {
@@ -16959,7 +17029,132 @@ bool AppController::benchmarkResultPassesGateForTest(const QVariantMap &result,
             && !invalid && failureKind != QLatin1String("infrastructure")
             && failureKind != QLatin1String("timeout") && total > 0;
     }
+    if (stage == QLatin1String("bcb")) {
+        // BCB is the terminal stage: a transported quality result (including
+        // a partial score) closes coverage, while infra/timeout does not.
+        return (benchmark.contains(QStringLiteral("BigCodeBench"), Qt::CaseInsensitive)
+                || benchmark.startsWith(QStringLiteral("BCB")))
+            && !invalid && failureKind != QLatin1String("infrastructure")
+            && failureKind != QLatin1String("timeout") && total > 0;
+    }
     return false;
+}
+
+QString AppController::benchmarkStageCoverageStateForTest(const QVariantMap &result,
+                                                            const QString &stage,
+                                                            const QString &profileFingerprint)
+{
+    if (result.isEmpty()) return QStringLiteral("pending");
+    if (profileFingerprint.isEmpty()
+        || result.value(QStringLiteral("profileConfigFingerprint")).toString()
+               != profileFingerprint)
+        return QStringLiteral("pending");
+
+    const QString failureKind = result.value(QStringLiteral("failureKind")).toString();
+    const bool infrastructure = result.value(QStringLiteral("timedOut")).toBool()
+        || result.value(QStringLiteral("transportAfterEvaluation")).toBool()
+        || failureKind == QLatin1String("infrastructure")
+        || failureKind == QLatin1String("timeout");
+    if (infrastructure) return QStringLiteral("infra-timeout");
+    if (benchmarkResultPassesGateForTest(result, stage, profileFingerprint))
+        return QStringLiteral("valid");
+    return QStringLiteral("blocked");
+}
+
+QVariantList AppController::benchmarkCoverage() const
+{
+    // This matrix intentionally starts from the live launch catalog, not from
+    // historical results. Thus benchmark=false profiles remain visible as
+    // retired and profiles without any result remain pending/incomplete.
+    QHash<QString, QVariantMap> healthByProfile;
+    for (const HealthIssue &issue : const_cast<AppController *>(this)->resolvedProfileHealth()) {
+        QVariantMap &health = healthByProfile[issue.launchId];
+        QStringList codes = health.value(QStringLiteral("codes")).toStringList();
+        QStringList messages = health.value(QStringLiteral("messages")).toStringList();
+        if (!codes.contains(issue.code)) codes.append(issue.code);
+        if (!messages.contains(issue.message)) messages.append(issue.message);
+        health[QStringLiteral("codes")] = codes;
+        health[QStringLiteral("messages")] = messages;
+        health[QStringLiteral("error")] = health.value(QStringLiteral("error")).toBool()
+            || issue.severity == QLatin1String("error");
+    }
+
+    const QStringList stages{QStringLiteral("he0"), QStringLiteral("he20"), QStringLiteral("bcb")};
+    QVariantList rows;
+    for (const QVariant &value : m_profiles.launchProfilesForMenu()) {
+        const QVariantMap profile = value.toMap();
+        const QString id = profile.value(QStringLiteral("id")).toString();
+        if (id.isEmpty()) continue;
+        const bool eligible = profile.value(QStringLiteral("benchmark")).toBool();
+        const QString fingerprint = const_cast<AppController *>(this)
+            ->benchmarkProfileConfigFingerprint(id);
+        QHash<QString, QVariantMap> latest;
+        for (const QVariant &resultValue : m_benchmarkResults) {
+            const QVariantMap result = resultValue.toMap();
+            if (result.value(QStringLiteral("profileId")).toString() != id) continue;
+            const QString stage = customBenchmarkStage(
+                result.value(QStringLiteral("benchmarkName")).toString(),
+                result.value(QStringLiteral("qualityTotal")).toInt());
+            if (!stages.contains(stage)) continue;
+            const qint64 timestamp = result.value(QStringLiteral("timestamp")).toLongLong();
+            if (!latest.contains(stage)
+                || timestamp >= latest.value(stage).value(QStringLiteral("timestamp")).toLongLong())
+                latest.insert(stage, result);
+        }
+
+        QVariantMap stageMap;
+        QStringList pendingStages;
+        bool allValid = true;
+        bool hasInfra = false;
+        bool hasBlocked = false;
+        for (const QString &stage : stages) {
+            const QString state = benchmarkStageCoverageStateForTest(
+                latest.value(stage), stage, fingerprint);
+            stageMap[stage] = state;
+            if (state != QLatin1String("valid")) {
+                allValid = false;
+                pendingStages.append(stage);
+            }
+            hasInfra = hasInfra || state == QLatin1String("infra-timeout");
+            hasBlocked = hasBlocked || state == QLatin1String("blocked");
+        }
+
+        const QVariantMap health = healthByProfile.value(id);
+        const bool notReady = eligible && health.value(QStringLiteral("error")).toBool();
+        QString coverageState;
+        if (!eligible) coverageState = QStringLiteral("retired");
+        else if (notReady) coverageState = QStringLiteral("not-ready");
+        else if (allValid) coverageState = QStringLiteral("complete");
+        else coverageState = QStringLiteral("incomplete");
+
+        QString nextStage;
+        if (eligible && !notReady && !hasBlocked) {
+            for (const QString &stage : stages) {
+                if (stageMap.value(stage).toString() == QLatin1String("pending")
+                    || stageMap.value(stage).toString() == QLatin1String("infra-timeout")) {
+                    nextStage = stage;
+                    break;
+                }
+            }
+        }
+        QVariantMap row{
+            {QStringLiteral("profileId"), id},
+            {QStringLiteral("profileName"), profile.value(QStringLiteral("name")).toString()},
+            {QStringLiteral("benchmarkEligible"), eligible},
+            {QStringLiteral("retired"), !eligible},
+            {QStringLiteral("coverageState"), coverageState},
+            {QStringLiteral("stageStates"), stageMap},
+            {QStringLiteral("pendingStages"), pendingStages},
+            {QStringLiteral("nextStage"), nextStage},
+            {QStringLiteral("profileConfigFingerprint"), fingerprint},
+            {QStringLiteral("healthCodes"), health.value(QStringLiteral("codes")).toStringList()},
+            {QStringLiteral("healthMessages"), health.value(QStringLiteral("messages")).toStringList()},
+            {QStringLiteral("hasInfrastructureOrTimeout"), hasInfra},
+            {QStringLiteral("hasBlockedStage"), hasBlocked}
+        };
+        rows.append(row);
+    }
+    return rows;
 }
 
 QString AppController::benchmarkProfileConfigFingerprint(const QString &profileId)
