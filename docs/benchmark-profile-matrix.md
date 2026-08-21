@@ -77,13 +77,22 @@ usuario se conservan en `profiles/launches.json`.
 ### Familias conservadas pero fuera de la cola activa
 
 Estas familias existen y deben permanecer en el inventario histórico, aunque no
-se suman a los 51 activos: KAT APEX-MTP y sus variantes de contexto; BigBang
-base/fast/long/post/repair y mmproj; Dynamic V3 sin MTP y DFlash2; DeepSeek V4
-UD-IQ3_S (el DeepSeek Q3), UD-IQ2_M y sus repartos de expertos; y la matriz
-DeepSeek Q2/Q4 antirez completa (16k, 32k, 64k, 131k, KV q8 y prefill).
-La razón de exclusión es `benchmark=false`, ausencia de artefacto local,
-timeout/crash o falta de una corrida comparable; no significa que el GGUF haya
-desaparecido del repositorio.
+se suman a los 51 activos:
+
+| Familia | Motivo de quedar fuera de la cola activa |
+|---|---|
+| KAT APEX-MTP | Experimental; requiere descargar un GGUF específico y todavía no tiene HE0 validado en este checkout. Queda pendiente, no descartado por calidad. |
+| Dynamic V3 DFlash2 local | El loader falla antes de inferir con `wrong number of tensors; expected 81, got 58` y errores `FGDN_AR`. Es incompatibilidad de arquitectura/backend, no una mala puntuación del modelo. |
+| Dynamic V3 DFlash2 vLLM | No es un benchmark local utilizable en Windows nativo: necesita vLLM parcheado, drafter externo y un endpoint Linux/WSL o remoto preparado. Se conserva como experimento externo, separado de llama.cpp. |
+| BigBang base | HE0 no produjo un resultado evaluable y no llegó a BCB. |
+| BigBang fast | Tuvo un crash CUDA histórico y luego estancamiento en HE20. La reparación 64k/B256/U64 queda como control experimental. |
+| DeepSeek Q2/Q4 antirez B2048 | BCB terminó `0/0` por timeout; se conserva el control KV q8 menos agresivo. |
+| DeepSeek Q3 / IQ3_S | Las variantes tienen una huella pesada de offload y reparto de expertos; hubo CUDA/OOM, salidas no evaluables o ausencia de una corrida E2E completa y comparable. |
+| Variantes DeepSeek de reparto de expertos | Varias terminaron con OOM, crashes del backend o `0/0`; otras duplican la misma matriz sin una etapa evaluable adicional. |
+
+La exclusión significa `benchmark=false`, no borrado del GGUF ni de sus
+resultados. DFlash2-vLLM queda fuera específicamente de la ejecución local en
+Windows; podría reactivarse si se ofrece un endpoint externo/Linux reproducible.
 
 Los controles 24 GB Q4/Q6 quedan explícitamente separados: el Q4 cold y las
 tres variantes Q6 están retirados del benchmark activo; sólo siguen activos los
