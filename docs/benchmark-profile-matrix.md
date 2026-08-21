@@ -44,9 +44,10 @@ idénticos.
 
 | Tier | Perfil recomendado | Por qué |
 | --- | --- | --- |
-| **SOL — mejor relación calidad/velocidad** | Dynamic V3 Browser Agent medium 131k; Dynamic V3 DSH medium 192k MTP2; Dynamic V3 MTP separado 131k | 8/8 BCB, 55–72 tok/s y 592–655 s totales; buenos en throughput y tiempo de cierre |
-| **TERRA — más velocidad que calidad, sin ser malos** | ThinkingCap Qwen3.6 MTP4; KAT Coder Q4; BigBang MTP reparado | 3–6/8 BCB, 56–211 tok/s y 299–671 s totales; priorizan terminar rápido |
-| **LUNA — más calidad que velocidad** | Qwen3.8 UD-Q4 48GB 196k MTP2; Dynamic V3 DSH medium 160k; Dynamic V3 MTP embebido 64k | 8/8 BCB, pero 890–1.121 s totales; se priorizan calidad, contexto y robustez |
+| **SOL — calidad** | Qwen3.8 UD-Q4 48GB 196k MTP2; Dynamic V3 DSH medium 160k; Dynamic V3 MTP embebido 64k | 8/8 BCB, 53–55 tok/s y 890–1.121 s totales; se priorizan calidad, contexto y robustez |
+| **TERRA — balanceado** | Dynamic V3 Browser Agent medium 131k; Dynamic V3 DSH medium 192k MTP2; Dynamic V3 MTP separado 131k | 8/8 BCB, 55–72 tok/s y 592–655 s totales; buen compromiso entre calidad, throughput y cierre |
+| **LUNA — más velocidad que calidad, sin ser malos** | ThinkingCap Qwen3.6 MTP4; KAT Coder Q4 | 3–6/8 BCB, 56–117 tok/s y 299–601 s totales; rápidos sin caer en resultados inutilizables |
+| **METEOR — velocidad extrema** | BigBang MTP reparado | 3/8 BCB, 211,18 tok/s y 670,8 s totales; máxima velocidad medida, con calidad parcial y estabilidad más delicada |
 
 Los tres primeros candidatos para promoción general son `Dynamic V3 DSH medium
 192k`, `Qwen3.8 UD-Q4 prefix cache 64k` y `Dynamic V3 Browser Agent medium
