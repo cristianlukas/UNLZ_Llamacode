@@ -51,25 +51,44 @@ queda en `HumanEval_20_tems__20260821_114525`.
 
 ## Inventario vigente por GGUF — 2026-08-21
 
-La cola activa se agrupa por el archivo GGUF efectivo, no por el nombre visible
-del perfil. El conteo incluye sólo entradas base o variantes con
-`benchmark=true`; los perfiles retirados se conservan para auditoría pero no
-entran en la cantidad activa.
+La cola activa se agrupa por el GGUF lógico, no por el nombre visible del perfil
+ni por si la entrada vive en `system_profiles.json` o en `profiles/launches.json`.
+El conteo incluye sólo entradas con `benchmark=true`; los perfiles retirados se
+conservan en una sección histórica separada.
 
-| GGUF | Perfiles activos | IDs activos |
-|---|---:|---|
-| `Qwen3.8-27B-UD-Q4_K_XL.gguf` | 22 | `sys-bench-qwen38-udq4-mtp2-64k`, `sys-bench-qwen38-udq4-mtp3-kv8`, `sys-bench-qwen38-udq4-mtp3-b1024`, `sys-bench-qwen38-udq4-post-mirror-160k`, `sys-bench-qwen38-udq4-post-b8192`, `sys-bench-qwen38-udq4-post-parallel2`, `sys-bench-qwen38-udq4-post-tensor`, `sys-bench-qwen38-udq4-post-mmproj-cpu`, `sys-bench-qwen38-udq4-post-cache-warm`, `sys-bench-qwen38-udq4-mtp3-ngram`, `sys-bench-qwen38-udq4-reasoning-low`, `sys-bench-qwen38-udq4-reasoning-medium`, `sys-bench-qwen38-udq4-reasoning-xhigh`, `sys-bench-qwen38-udq4-browser-agent-off`, `sys-bench-qwen38-udq4-browser-agent-low`, `sys-bench-qwen38-udq4-browser-agent-medium`, `sys-bench-qwen38-udq4-browser-agent-xhigh`, `sys-bench-qwen38-udq4-artifact-local`, `sys-bench-qwen38-udq4-artifact-publisher`, `sys-bench-qwen38-udq4-24gb-fast-mtp4-64k`, `sys-bench-qwen38-udq4-24gb-prefix-cache-64k`, `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` |
-| `Qwen3.8-27B-Q4_K_M.gguf` | 5 | `sys-qwen38-27b-q4km-131k`, `sys-bench-qwen38-q4km-mtp4`, `sys-bench-qwen38-q4km-post-mirror-160k`, `sys-bench-qwen38-q4km-24gb-ngram-diagnostic`, `sys-bench-qwen38-q4km-24gb-prefix-warm` |
-| `Laguna-S-2.1-UD-Q2_K_XL.gguf` | 3 | `sys-bench-laguna-s-2-1-q2-48gb-64k-b1024`, `sys-bench-laguna-s-2-1-q2-48gb-32k-official`, `sys-laguna-s-2-1-q2-48gb-safe` |
-| `Qwen3.8-27B-Q5_K_M.gguf` | 1 | `sys-qwen38-27b-q5km-131k` |
-| `ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf` | 1 | `sys-bench-48-tc-mtp-131k` |
-| `DeepSeek-V4-Flash-Layers37-42Q4KExperts-OtherExpertLayersIQ2XXSGateUp-Q2KDown-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-fixed-0731.gguf` | 1 | `sys-48-antirez-dsv4-q2q4-kv8` |
-| **Total** | **33** | **6 GGUF distintos** |
+| GGUF lógico | Sistema activos | Usuario activos | Total activo |
+|---|---:|---:|---:|
+| `Qwen3.8-27B-UD-Q4_K_XL.gguf` | 22 | 8 Dynamic V3 | 30 |
+| `Laguna-S-2.1-UD-Q2_K_XL.gguf` | 3 | 4 | 7 |
+| `Qwen3.8-27B-Q4_K_M.gguf` | 5 | 0 | 5 |
+| `DeepSeek-V4 Q2/Q4 imatrix` | 1 | 3 | 4 |
+| `ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf` | 1 | 1 | 2 |
+| `Qwen3.8-27B-Q5_K_M.gguf` | 1 | 0 | 1 |
+| `Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf` | 0 | 1 KAT Coder | 1 |
+| `endless-frontier_BigBang-v1-Q4_K_M.gguf` | 0 | 1 BigBang | 1 |
+| **Total** | **33** | **18** | **51 perfiles activos** |
+
+En los 18 perfiles de usuario están incluidos: KAT Coder, BigBang, cuatro
+variantes Laguna, tres variantes DeepSeek Q2/Q4 y ocho variantes Dynamic V3
+(MTP separado, MTP2/KV q8, Browser Agent, DSH 160/192k y MTP embebido 64/131k).
+El inventario detallado de IDs bundled sigue en el catálogo; los nombres de
+usuario se conservan en `profiles/launches.json`.
+
+### Familias conservadas pero fuera de la cola activa
+
+Estas familias existen y deben permanecer en el inventario histórico, aunque no
+se suman a los 51 activos: KAT APEX-MTP y sus variantes de contexto; BigBang
+base/fast/long/post/repair y mmproj; Dynamic V3 sin MTP y DFlash2; DeepSeek V4
+UD-IQ3_S (el DeepSeek Q3), UD-IQ2_M y sus repartos de expertos; y la matriz
+DeepSeek Q2/Q4 antirez completa (16k, 32k, 64k, 131k, KV q8 y prefill).
+La razón de exclusión es `benchmark=false`, ausencia de artefacto local,
+timeout/crash o falta de una corrida comparable; no significa que el GGUF haya
+desaparecido del repositorio.
 
 Los controles 24 GB Q4/Q6 quedan explícitamente separados: el Q4 cold y las
-tres variantes Q6 están retirados del benchmark activo por falta de una corrida
-válida/artefacto local; sólo siguen activos los dos diagnósticos Q4 de ngram y
-prefix-cache. No deben interpretarse como mediciones de throughput comparable.
+tres variantes Q6 están retirados del benchmark activo; sólo siguen activos los
+dos diagnósticos Q4 de ngram y prefix-cache. No deben interpretarse como
+mediciones de throughput comparable.
 
 ## Tabla de resultados
 
