@@ -132,7 +132,7 @@ se suman a los 51 activos:
 | BigBang base | HE0 no produjo un resultado evaluable y no llegó a BCB. |
 | BigBang fast | Tuvo un crash CUDA histórico y luego estancamiento en HE20. La reparación 64k/B256/U64 queda como control experimental. |
 | DeepSeek Q2/Q4 antirez B2048 | BCB terminó `0/0` por timeout; se conserva el control KV q8 menos agresivo. |
-| DeepSeek Q3 / IQ3_S | Las variantes tienen una huella pesada de offload y reparto de expertos; hubo CUDA/OOM, salidas no evaluables o ausencia de una corrida E2E completa y comparable. |
+| DeepSeek Q3 / IQ3_S | Las variantes con DSpark quedan retiradas porque no son una ruta confiable en llama.cpp/Windows. Se recuperan los controles sin speculative, con KV/offload separados para volver a medir HE0. |
 | Variantes DeepSeek de reparto de expertos | Varias terminaron con OOM, crashes del backend o `0/0`; otras duplican la misma matriz sin una etapa evaluable adicional. |
 
 La exclusión significa `benchmark=false`, no borrado del GGUF ni de sus
@@ -206,8 +206,8 @@ DeepSeek IQ3_S sí está presente localmente en cuatro shards dentro de
 `D:\\Models\\llamacpp\\DeepSeek-V4-Flash-0731-UD-IQ3_S\\UD-IQ3_S`; no se
 había ejecutado porque sus perfiles seguían retirados/experimentales, no porque
 faltaran los archivos. En esta revisión se habilitaron tres controles IQ3_S:
-B8192/U2048 + DSpark5, B4096/U1024 sin DSpark y la receta dual 48 GB. Los tres
-cargaron el GGUF correctamente; el primer lote cayó en `failureKind=infrastructure`
+B8192/U2048 sin speculative, B4096/U1024 sin speculative y la receta dual 48 GB.
+Los tres cargaron el GGUF correctamente; el primer lote histórico cayó en `failureKind=infrastructure`
 por la carrera de reparación `Hay un turno en curso`. Se corrigió el harness para
 usar steering headless al iniciar reparaciones. El control B8192/U2048 se repitió
 con la corrección: HE0 llegó a reparación sin el error de turno, pero terminó
@@ -215,6 +215,19 @@ con la corrección: HE0 llegó a reparación sin el error de turno, pero termin�
 archivos durante el watchdog. Por eso todavía no hay calidad comparable ni se
 promueven a SOL/TERRA/LUNA; los perfiles quedan como candidatos experimentales,
 no como resultados de calidad.
+
+### Recuperación sin DSpark/DFlash2 — 2026-08-21
+
+Se reactivaron para nueva cola HE0 los perfiles llama.cpp que no dependen de
+DFlash2 ni DSpark:
+
+| Familia | Perfiles recuperados | Excepciones mantenidas fuera |
+|---|---|---|
+| DeepSeek IQ3_S | B8192/U2048 sin speculative, B4096/U1024 sin speculative, MoE43 sin speculative, KV q8 y control K q8/V q4; además el control dual 48 GB y `DeepSeek V4-7-8-26` | `tensor-split 1,1` por texto corrupto; DSpark por incompatibilidad/resultado no confiable |
+| DeepSeek antirez Q2/Q4 | 16k, 32k B4096, 32k B8192, 64k, 131k, KV q8, 64k KV q8 y prefill B8192 | 32k B2048 y los controles B512/B2048 que ya agotaron timeout sin primer turno |
+
+La siguiente tanda debe empezar por HE0 y sólo promover a HE20/BCB los perfiles
+que entreguen un resultado evaluable.
 
 ### Control de perfiles de agente alternativos
 

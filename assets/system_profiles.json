@@ -183,11 +183,7 @@
       "--parallel",
       "1",
       "--reasoning",
-      "off",
-      "--spec-type",
-      "draft-dspark",
-      "--spec-draft-n-max",
-      "5"
+      "off"
     ],
     "binaryKind": "official",
     "minimumBinaryBuild": 10228,
@@ -201,14 +197,14 @@
     "benchmarkVariants": [
       {
         "id": "sys-bench-ultraq-b8192-u2048-ds5",
-        "benchmark": true,
+        "benchmark": false,
         "order": 98,
-        "displayName": "[bench ULTRA-Q stress] B8192 · U2048 · DSpark 5",
+        "displayName": "[retirado] ULTRA-Q stress B8192 · U2048 · DSpark 5",
         "runtime": {
           "batch": 8192,
           "ubatch": 2048
         },
-        "comment": "BASELINE: mejor wall-time medido (223 s / 250 s en dos pasadas). Referencia contra la que se comparan todas las variantes de investigación de abajo."
+        "comment": "Retirado: DSpark no es una ruta confiable para este llama.cpp en Windows. Se conserva sólo como histórico; usar los controles sin speculative."
       },
       {
         "id": "sys-bench-ultraq-b4096-u1024-nospec",
@@ -240,6 +236,7 @@
       },
       {
         "id": "sys-bench-ultraq-b8192-u2048-nospec",
+        "benchmark": true,
         "order": 110,
         "displayName": "[bench ULTRA-Q] B8192 · U2048 · sin DSpark",
         "runtime": {
@@ -254,6 +251,7 @@
       },
       {
         "id": "sys-bench-ultraq-b4096-u1024-moe43-nospec",
+        "benchmark": true,
         "order": 111,
         "displayName": "[bench ULTRA-Q] B4096 · U1024 · MoE 43 · sin DSpark",
         "runtime": {
@@ -457,6 +455,7 @@
       },
       {
         "id": "sys-bench-ultraq-b8192-u2048-kv8-nospec",
+        "benchmark": true,
         "order": 140,
         "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV q8_0 · sin DSpark",
         "runtime": {
@@ -525,6 +524,7 @@
       },
       {
         "id": "sys-bench-ultraq-b8192-u2048-kv-k8v4",
+        "benchmark": true,
         "order": 144,
         "displayName": "[bench ULTRA-Q] B8192 · U2048 · KV K q8_0 / V q4_0",
         "runtime": {
@@ -588,7 +588,7 @@
         "comment": "Techo: junta lo que midió bien en la primera tanda (KV q8_0 dio 212 s, el mejor tiempo; temp 0 completó) más el prefill con SMT. Sin mlock, que crashea acá. Si esto no le gana al baseline, ninguna pieza suelta lo hará."
       }
     ],
-    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark integrado activo (--spec-type draft-dspark, n-max 5), requiere llama.cpp b10228+. Reasoning effort high explícito evita el low implícito (prefijo vacío) y el budget 8192 corta colas patológicas sin impedir tareas largas. Sampling de agente conservador (temp 0.60, top-p 0.95, top-k 20): DeepSeek publica 1.0/1.0 para uso general y temp 0 para coding, pero el punto intermedio reduce loops de tools sin volver determinista una decisión errónea. 131k es el preset equilibrado. En Windows con llama.cpp b10223, mmap es necesario: no-mmap intento reservar ~99 GB de CUDA Host y fallo. Medir 192k/256k/384k y n-cpu-moe 35/39/43 antes de promover."
+    "comment": "Experimental y opt-in. DeepSeek V4 Flash 0731 UD-IQ3_S en cuatro shards (~116 GB), para RTX 3090 24 GB + 128 GB RAM. DSpark queda retirado de la receta llama.cpp en Windows; usar los controles sin speculative, con n-cpu-moe y KV como variables separadas. Reasoning effort high explícito evita el low implícito (prefijo vacío) y el budget 8192 corta colas patológicas sin impedir tareas largas. Sampling conservador: temp 0.60, top-p 0.95, top-k 20. 131k es el preset equilibrado. En Windows mmap es necesario: no-mmap intenta reservar ~99 GB de CUDA Host y falla."
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s-48gb",
@@ -664,11 +664,7 @@
       "--tensor-split",
       "1,0",
       "-ot",
-      "blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1,blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU",
-      "--spec-type",
-      "draft-dspark",
-      "--spec-draft-n-max",
-      "5"
+      "blk\\.(29|30|31|32|33|34|35|36)\\.ffn_(gate|up|down)_exps\\.weight=CUDA1,blk\\.[0-9]+\\.ffn_(gate|up|down)_exps\\.weight=CPU"
     ],
     "binaryKind": "official",
     "minimumBinaryBuild": 10228,
@@ -684,7 +680,7 @@
   {
     "id": "sys-48-dsv4-nospec",
     "favorite": true,
-    "benchmark": false,
+    "benchmark": true,
     "tier": "48GB-DeepSeek-V4-Ultra",
     "order": 88,
     "extra": true,
@@ -3021,18 +3017,18 @@
     "minimumBinaryBuild": 10228,
     "contextPresets": [32768, 65536, 131072],
     "benchmarkVariants": [
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-16k", "order": 146, "displayName": "[bench antirez] 16k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 16384, "batch": 2048, "ubatch": 256 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-16k", "order": 146, "benchmark": true, "displayName": "[bench antirez] 16k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 16384, "batch": 2048, "ubatch": 256 } },
       { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b2048", "order": 147, "benchmark": false, "displayName": "[retirado 2026-08-21] antirez · 32k · B2048 · U256 · KV q4_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256 }, "comment": "Retirado: BCB terminó 0/0 con timeout; el control KV q8 queda como referencia menos agresiva." },
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b4096", "order": 148, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b8192", "order": 149, "displayName": "[bench antirez stress] 32k · B8192 · U1024 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 1024 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-64k", "order": 150, "displayName": "[bench antirez] 64k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
-      { "id": "sys-48-antirez-dsv4-q2q4-131k", "order": 151, "displayName": "[bench antirez stress] 131k · B4096 · U1024 · KV q4_0", "runtime": { "ctx": 131072, "batch": 4096, "ubatch": 1024 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b4096", "order": 148, "benchmark": true, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-0731-32k-b8192", "order": 149, "benchmark": true, "displayName": "[bench antirez stress] 32k · B8192 · U1024 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 1024 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-64k", "order": 150, "benchmark": true, "displayName": "[bench antirez] 64k · B4096 · U512 · KV q4_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 512 } },
+      { "id": "sys-48-antirez-dsv4-q2q4-131k", "order": 151, "benchmark": true, "displayName": "[bench antirez stress] 131k · B4096 · U1024 · KV q4_0", "runtime": { "ctx": 131072, "batch": 4096, "ubatch": 1024 } },
       { "id": "sys-48-antirez-dsv4-q2q4-kv8", "order": 152, "benchmark": true, "displayName": "[bench antirez] 32k · B4096 · U512 · KV q8_0", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
       { "id": "sys-48-antirez-dsv4-q2q4-kv8-stable", "order": 152.1, "benchmark": false, "displayName": "[control fallido] antirez mejorado · B512 · U64 · KV q8_0", "runtime": { "ctx": 32768, "batch": 512, "ubatch": 64, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--reasoning": "off" }, "comment": "Control experimental: carga sin crash, pero HE0 terminó en idle-timeout durante el prefill (~3–5 tok/s). Se conserva para documentar que B512/U64 estrangula este MoE con offload." },
       { "id": "sys-48-antirez-dsv4-q2q4-kv8-balanced", "order": 152.2, "benchmark": false, "displayName": "[control timeout] antirez mejorado · B2048 · U256 · KV q8_0", "runtime": { "ctx": 32768, "batch": 2048, "ubatch": 256, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0", "--reasoning": "off" }, "comment": "Control experimental: cargó sin OOM/crash, pero HE0 terminó en idle-timeout a 202,8 s sin primer turno. No es puntuación de calidad; queda fuera de la cola activa." },
-      { "id": "sys-48-antirez-dsv4-q2q4-kvf16", "order": 153, "displayName": "[bench antirez stress] 32k · B4096 · U512 · KV q8_0 (cap de política)", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "La variante histórica KV f16 queda limitada a q8_0; los resultados anteriores con f16 no son comparables." },
-      { "id": "sys-48-antirez-dsv4-q2q4-64k-kv8", "order": 154, "displayName": "[bench antirez stress] 64k · B4096 · U1024 · KV q8_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 1024, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
-      { "id": "sys-48-antirez-dsv4-q2q4-prefill", "order": 155, "displayName": "[bench antirez prefill] 32k · B8192 · U2048 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
+      { "id": "sys-48-antirez-dsv4-q2q4-kvf16", "order": 153, "benchmark": true, "displayName": "[bench antirez stress] 32k · B4096 · U512 · KV q8_0 (cap de política)", "runtime": { "ctx": 32768, "batch": 4096, "ubatch": 512, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" }, "comment": "La variante histórica KV f16 queda limitada a q8_0; los resultados anteriores con f16 no son comparables." },
+      { "id": "sys-48-antirez-dsv4-q2q4-64k-kv8", "order": 154, "benchmark": true, "displayName": "[bench antirez stress] 64k · B4096 · U1024 · KV q8_0", "runtime": { "ctx": 65536, "batch": 4096, "ubatch": 1024, "kv": "q8_0" }, "extraArgOverrides": { "--cache-type-k": "q8_0", "--cache-type-v": "q8_0" } },
+      { "id": "sys-48-antirez-dsv4-q2q4-prefill", "order": 155, "benchmark": true, "displayName": "[bench antirez prefill] 32k · B8192 · U2048 · KV q4_0", "runtime": { "ctx": 32768, "batch": 8192, "ubatch": 2048 } }
     ],
     "comment": "Cuant híbrido antirez de ~90,89 GiB: expertos Q4K en capas 37–42 y expertos IQ2XXS en el resto. Opt-in porque el README del autor lo orienta al motor DS4 y la compatibilidad llama.cpp debe validarse localmente. Medir carga, texto corto, prefill y decode antes de usarlo en agente. El perfil no reemplaza DeepSeek V4-7-8-26."
   },
