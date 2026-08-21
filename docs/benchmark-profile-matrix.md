@@ -49,6 +49,28 @@ HE0 cerró 1/1 en 22,34 s (`HumanEval_1_tems__20260821_114336`). HE20 llegó a
 bloqueado por la compuerta HE20 y el perfil pasó a `benchmark=false`. La evidencia
 queda en `HumanEval_20_tems__20260821_114525`.
 
+## Inventario vigente por GGUF — 2026-08-21
+
+La cola activa se agrupa por el archivo GGUF efectivo, no por el nombre visible
+del perfil. El conteo incluye sólo entradas base o variantes con
+`benchmark=true`; los perfiles retirados se conservan para auditoría pero no
+entran en la cantidad activa.
+
+| GGUF | Perfiles activos | IDs activos |
+|---|---:|---|
+| `Qwen3.8-27B-UD-Q4_K_XL.gguf` | 22 | `sys-bench-qwen38-udq4-mtp2-64k`, `sys-bench-qwen38-udq4-mtp3-kv8`, `sys-bench-qwen38-udq4-mtp3-b1024`, `sys-bench-qwen38-udq4-post-mirror-160k`, `sys-bench-qwen38-udq4-post-b8192`, `sys-bench-qwen38-udq4-post-parallel2`, `sys-bench-qwen38-udq4-post-tensor`, `sys-bench-qwen38-udq4-post-mmproj-cpu`, `sys-bench-qwen38-udq4-post-cache-warm`, `sys-bench-qwen38-udq4-mtp3-ngram`, `sys-bench-qwen38-udq4-reasoning-low`, `sys-bench-qwen38-udq4-reasoning-medium`, `sys-bench-qwen38-udq4-reasoning-xhigh`, `sys-bench-qwen38-udq4-browser-agent-off`, `sys-bench-qwen38-udq4-browser-agent-low`, `sys-bench-qwen38-udq4-browser-agent-medium`, `sys-bench-qwen38-udq4-browser-agent-xhigh`, `sys-bench-qwen38-udq4-artifact-local`, `sys-bench-qwen38-udq4-artifact-publisher`, `sys-bench-qwen38-udq4-24gb-fast-mtp4-64k`, `sys-bench-qwen38-udq4-24gb-prefix-cache-64k`, `sys-bench-qwen38-udq4-48gb-196k-mtp2-kv8-mmproj-ram` |
+| `Qwen3.8-27B-Q4_K_M.gguf` | 5 | `sys-qwen38-27b-q4km-131k`, `sys-bench-qwen38-q4km-mtp4`, `sys-bench-qwen38-q4km-post-mirror-160k`, `sys-bench-qwen38-q4km-24gb-ngram-diagnostic`, `sys-bench-qwen38-q4km-24gb-prefix-warm` |
+| `Laguna-S-2.1-UD-Q2_K_XL.gguf` | 3 | `sys-bench-laguna-s-2-1-q2-48gb-64k-b1024`, `sys-bench-laguna-s-2-1-q2-48gb-32k-official`, `sys-laguna-s-2-1-q2-48gb-safe` |
+| `Qwen3.8-27B-Q5_K_M.gguf` | 1 | `sys-qwen38-27b-q5km-131k` |
+| `ThinkingCap-Qwen3.6-27B-Q4_K_M.gguf` | 1 | `sys-bench-48-tc-mtp-131k` |
+| `DeepSeek-V4-Flash-Layers37-42Q4KExperts-OtherExpertLayersIQ2XXSGateUp-Q2KDown-AProjQ8-SExpQ8-OutQ8-chat-v2-imatrix-fixed-0731.gguf` | 1 | `sys-48-antirez-dsv4-q2q4-kv8` |
+| **Total** | **33** | **6 GGUF distintos** |
+
+Los controles 24 GB Q4/Q6 quedan explícitamente separados: el Q4 cold y las
+tres variantes Q6 están retirados del benchmark activo por falta de una corrida
+válida/artefacto local; sólo siguen activos los dos diagnósticos Q4 de ngram y
+prefix-cache. No deben interpretarse como mediciones de throughput comparable.
+
 ## Tabla de resultados
 
 Los valores históricos de la tabla siguiente quedan como referencia. La tabla
