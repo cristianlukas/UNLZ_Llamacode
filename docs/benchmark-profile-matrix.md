@@ -204,8 +204,17 @@ B2048/U256 tampoco alcanza una respuesta dentro del watchdog. No se asigna
 calidad BCB a estos `0/0` porque son timeouts de infraestructura. El GGUF
 DeepSeek IQ3_S sí está presente localmente en cuatro shards dentro de
 `D:\\Models\\llamacpp\\DeepSeek-V4-Flash-0731-UD-IQ3_S\\UD-IQ3_S`; no se
-ejecutó porque sus perfiles siguen retirados/experimentales, no porque falten
-los archivos.
+había ejecutado porque sus perfiles seguían retirados/experimentales, no porque
+faltaran los archivos. En esta revisión se habilitaron tres controles IQ3_S:
+B8192/U2048 + DSpark5, B4096/U1024 sin DSpark y la receta dual 48 GB. Los tres
+cargaron el GGUF correctamente; el primer lote cayó en `failureKind=infrastructure`
+por la carrera de reparación `Hay un turno en curso`. Se corrigió el harness para
+usar steering headless al iniciar reparaciones. El control B8192/U2048 se repitió
+con la corrección: HE0 llegó a reparación sin el error de turno, pero terminó
+`0/1`, 200,693 s, `failureKind=infrastructure`, porque el agente no cambió los
+archivos durante el watchdog. Por eso todavía no hay calidad comparable ni se
+promueven a SOL/TERRA/LUNA; los perfiles quedan como candidatos experimentales,
+no como resultados de calidad.
 
 ### Control de perfiles de agente alternativos
 

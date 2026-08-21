@@ -17861,7 +17861,20 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 }
                 (*repairWatchdog)->start();
                 lastStreamingText->clear();
-                agent->sendMessage(repair);
+                // El log [turn] completed puede llegar antes de que el backend
+                // haya liberado todos sus flags internos (reply/tool/await).
+                // Enviar directamente aquí producía "Hay un turno en curso"
+                // y convertía una reparación válida en fallo de infraestructura.
+                // Esperar explícitamente a isBusy()==false evita además dejar
+                // la reparación atrapada en la cola si turnFinished ya pasó.
+                // El backend puede conservar una operación de herramienta
+                // registrada aun después de turnFinished. En modo headless la
+                // reparación es justamente una transición controlada: steering
+                // cancela ese residuo y abre el turno correctivo sin convertirlo
+                // en el falso error "Hay un turno en curso".
+                QTimer::singleShot(1500, this, [=]() {
+                    if (!*finished) agent->steerMessage(repair);
+                });
                 return;
             }
 

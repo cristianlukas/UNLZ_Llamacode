@@ -201,6 +201,7 @@
     "benchmarkVariants": [
       {
         "id": "sys-bench-ultraq-b8192-u2048-ds5",
+        "benchmark": true,
         "order": 98,
         "displayName": "[bench ULTRA-Q stress] B8192 · U2048 · DSpark 5",
         "runtime": {
@@ -211,6 +212,7 @@
       },
       {
         "id": "sys-bench-ultraq-b4096-u1024-nospec",
+        "benchmark": true,
         "order": 101,
         "displayName": "[bench ULTRA-Q] B4096 · U1024 · sin DSpark",
         "runtime": {
@@ -590,6 +592,7 @@
   },
   {
     "id": "sys-ultraq-dsv4-0731-iq3s-48gb",
+    "benchmark": true,
     "tier": "48GB-DeepSeek-V4-Ultra",
     "order": 89,
     "extra": true,
