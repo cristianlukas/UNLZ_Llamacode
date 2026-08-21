@@ -312,11 +312,16 @@ QString AutomationRunner::augmentPrompt(const QVariantMap &task, const QVariantM
     }
     out += QStringLiteral("Artefacto: %1\n").arg(manifest.value(QStringLiteral("id")).toString());
     const QVariantList steps = recipe.value(QStringLiteral("steps")).toList();
+    // Mantener la receta legible sin dejar que una secuencia larga de intenciones
+    // repetitivas expulse del contexto las instrucciones operativas y los targets.
+    // La información accionable adicional (target, ventana, puntos y aserciones)
+    // se agrega por separado debajo de este resumen corto.
+    constexpr int kIntentPromptLimit = 120;
     for (const QVariant &value : steps) {
         const QVariantMap step = value.toMap();
         out += QStringLiteral("- [%1] %2")
                    .arg(step.value(QStringLiteral("kind")).toString(),
-                        step.value(QStringLiteral("intent")).toString().left(180));
+                        step.value(QStringLiteral("intent")).toString().left(kIntentPromptLimit));
         if (step.contains(QStringLiteral("x")))
             out += QStringLiteral(" (referencia normalizada %1,%2)")
                        .arg(step.value(QStringLiteral("x")).toDouble(), 0, 'f', 3)

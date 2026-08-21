@@ -64,6 +64,13 @@ Los artifacts Teach nuevos usan formato v3. Se conservan `precondition`,
 `postcondition` y `repair` aunque el evento provenga de un Teach legacy. Los
 artifacts v2 siguen siendo legibles.
 
+## Presupuesto del prompt de Teach
+
+Al inyectar una receta larga en el prompt del agente, las intenciones de cada paso
+se resumen a 120 caracteres. Targets, ventanas, puntos de strokes y aserciones se
+conservan como datos estructurados aparte. Así las recetas extensas no desplazan
+las instrucciones operativas ni empujan el contexto fuera del límite del perfil.
+
 ## QA
 
 Los tests unitarios cubren hashes, stale guard, receipts, redacción y clasificación
