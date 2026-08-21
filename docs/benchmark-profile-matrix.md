@@ -186,6 +186,24 @@ comparable. Las corridas se conservan en
 `benchmark-runs/BigCodeBench-Hard_8_tems__20260817_113521` y
 `benchmark-runs/BigCodeBench-Hard_8_tems__20260817_115030`.
 
+### DeepSeek antirez con recetas derivadas de SOL/TERRA/LUNA/METEOR — 2026-08-21
+
+Se probaron dos variantes sobre el GGUF antirez disponible, manteniendo el
+reparto de expertos alineado (`tensor-split 1,0`), KV `q8_0`, sampling
+conservador y `reasoning off`:
+
+| Variante | Resultado | Tiempo | Diagnóstico |
+| --- | --- | ---: | --- |
+| B512/U64 | HE0 `0/0` | 225,9 s | `idle-timeout`; prefill observado ~3–5 tok/s, sin primer turno |
+| B2048/U256 | HE0 `0/0` | 202,8 s | `idle-timeout`, sin primer turno; cargó sin OOM/crash |
+
+Las dos recetas se conservan como controles experimentales fuera de la cola
+activa. La conclusión es negativa pero útil: KV q8 y `reasoning off` no
+compensan el coste del offload de expertos; B512/U64 estrangula el prefill y
+B2048/U256 tampoco alcanza una respuesta dentro del watchdog. No se asigna
+calidad BCB a estos `0/0` porque son timeouts de infraestructura. El GGUF
+DeepSeek IQ3_S no estaba presente localmente y no se ejecutó.
+
 ### Control de perfiles de agente alternativos
 
 Para separar modelo de agente/harness se repitieron corridas headless sin
