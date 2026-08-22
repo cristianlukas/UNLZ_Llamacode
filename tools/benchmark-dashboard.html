@@ -180,7 +180,7 @@
       // Se conserva ?api=... para poder observar un puerto explícitamente.
       const apiOverride = new URLSearchParams(location.search).get('api');
       let api = apiOverride || '';
-      const fallbackApis = ['http://127.0.0.1:8765', 'http://127.0.0.1:18774'];
+      const fallbackApis = ['http://127.0.0.1:8765', 'http://127.0.0.1:8877', 'http://127.0.0.1:18774'];
       let apiDiscoveryPromise = null;
       const stageNames = ['HE0', 'HE20', 'BCB'];
       const recommendedColumns = ['profileName', 'profileId', 'coverageState', 'nextStage', 'stageSummary', 'harness', 'thinking', 'specs', 'vision', 'drafter', 'contextK', 'kvCache', 'reasoning', 'scoreHE0', 'scoreHE20', 'scoreBCB', 'secsHE0', 'secsHE20', 'secsBCB', 'failureKindHE0', 'failureKindHE20', 'failureKindBCB', 'timedOutHE0', 'timedOutHE20', 'timedOutBCB', 'avgTpsHE0', 'avgTpsHE20', 'avgTpsBCB', 'avgTtftMsHE0', 'avgTtftMsHE20', 'avgTtftMsBCB', 'elapsedSecHE0', 'elapsedSecHE20', 'elapsedSecBCB', 'runDirHE0', 'runDirHE20', 'runDirBCB', 'timestampHE0', 'timestampHE20', 'timestampBCB'];
@@ -193,9 +193,10 @@
       let addHarnessColumnOnce = savedPreferences.harnessColumnAdded !== true;
       let addSpecColumnsOnce = savedPreferences.specColumnsAdded !== true;
       const profileResourceCache = { launch: new Map(), model: new Map(), runtime: new Map(), backend: new Map() };
-      const state = { running: false, progress: 0, status: '', activeId: '', results: [], coverage: [], error: '', updated: null, rows: [], columns: [], profileDetails: new Map(), profileDetailsAt: 0, visibleColumns: Array.isArray(savedPreferences.visibleColumns) ? savedPreferences.visibleColumns : [], columnFilters: savedPreferences.columnFilters && typeof savedPreferences.columnFilters === 'object' ? savedPreferences.columnFilters : {}, sortKey: savedPreferences.sortKey || 'timestamp', sortDir: savedPreferences.sortDir === 1 ? 1 : -1 };
+      const state = { running: false, progress: 0, status: '', activeId: '', results: [], coverage: [], error: '', offline: false, updated: null, rows: [], columns: [], profileDetails: new Map(), profileDetailsAt: 0, visibleColumns: Array.isArray(savedPreferences.visibleColumns) ? savedPreferences.visibleColumns : [], columnFilters: savedPreferences.columnFilters && typeof savedPreferences.columnFilters === 'object' ? savedPreferences.columnFilters : {}, sortKey: savedPreferences.sortKey || 'timestamp', sortDir: savedPreferences.sortDir === 1 ? 1 : -1 };
       let openFilterKey = null;
       let draftFilterValues = new Set();
+      let snapshotPromise = null;
       const $ = (id) => document.getElementById(id);
       const normalizeApi = (value) => String(value || '').replace(/\/+$/, '');
       const setApi = (value) => {
@@ -214,9 +215,9 @@
         const base = normalizeApi(candidate);
         if (!base) return null;
         try {
-          const health = await fetchWithTimeout(`${base}/health`, { cache: 'no-store' });
+          const health = await fetchWithTimeout(`${base}/health`, { cache: 'no-store' }, 5000);
           if (!health.ok) return null;
-          const methodsResponse = await fetchWithTimeout(`${base}/methods`, { cache: 'no-store' });
+          const methodsResponse = await fetchWithTimeout(`${base}/methods`, { cache: 'no-store' }, 5000);
           if (!methodsResponse.ok) return null;
           const methods = await methodsResponse.json();
           const names = new Set((methods.properties || []).map((property) => property.name));
@@ -260,10 +261,26 @@
       }
 
       async function prop(name) {
-        const response = await fetch(`${api}/prop?name=${encodeURIComponent(name)}`, { cache: 'no-store' });
+        const response = await fetchWithTimeout(`${api}/prop?name=${encodeURIComponent(name)}`, { cache: 'no-store' }, 6000);
         if (!response.ok) throw new Error(`${name}: HTTP ${response.status}`);
         const body = await response.json();
         return body.value;
+      }
+
+      async function readFilesystemSnapshot() {
+        if (!snapshotPromise) {
+          snapshotPromise = fetchWithTimeout(`${location.origin}/benchmark-snapshot.json?ts=${Date.now()}`, { cache: 'no-store' }, 10000)
+            .then((response) => { if (!response.ok) throw new Error(`snapshot HTTP ${response.status}`); return response.json(); })
+            .finally(() => { snapshotPromise = null; });
+        }
+        const snapshot = await snapshotPromise;
+        if (Array.isArray(snapshot.results)) state.results = snapshot.results;
+        if (Array.isArray(snapshot.coverage)) state.coverage = snapshot.coverage;
+        state.running = Boolean(snapshot.running);
+        state.progress = Number(snapshot.progress) || 0;
+        state.status = String(snapshot.status || 'Resultados guardados en disco.');
+        state.offline = true;
+        state.updated = new Date();
       }
 
       async function invoke(target, method, args = []) {
@@ -810,11 +827,11 @@
         $('coverage-value').textContent = totalStages ? `${coveredStages}/${totalStages} · ${Math.round(coveredStages * 100 / totalStages)}%` : '0/0';
         $('stages-value').textContent = resultCount;
         $('updated-value').textContent = state.updated ? state.updated.toLocaleTimeString() : '—';
-        $('state-value').textContent = state.error ? 'API no disponible' : (state.running ? 'Ejecutando' : 'En espera');
+        $('state-value').textContent = state.error ? (state.offline ? 'Resultados guardados' : 'API no disponible') : (state.running ? 'Ejecutando' : 'En espera');
         $('status-text').textContent = state.error || state.status || 'Sin actividad';
         $('current-detail').textContent = state.running ? `${currentProfileName()} · ${currentStage() || 'etapa en curso'}` : 'Sin benchmark activo';
-        $('live-pill').textContent = state.error ? 'desconectado' : (state.running ? 'corriendo' : 'conectado');
-        $('live-pill').className = `live ${state.error ? '' : (state.running ? 'busy' : 'ok')}`;
+        $('live-pill').textContent = state.error ? (state.offline ? 'caché local' : 'desconectado') : (state.running ? 'corriendo' : 'conectado');
+        $('live-pill').className = `live ${state.error ? (state.offline ? 'busy' : '') : (state.running ? 'busy' : 'ok')}`;
         const percentage = Math.max(0, Math.min(100, Number(state.progress) || 0));
         $('progress-bar').style.width = `${percentage}%`;
         $('progress-bar').parentElement.setAttribute('aria-valuenow', percentage);
@@ -843,13 +860,19 @@
           state.activeId = String(activeId || '');
           state.error = '';
           state.updated = new Date();
-        } catch (error) { state.error = `No se puede leer el daemon${api ? ` (${api})` : ''}: ${error.message}`; }
+        } catch (error) {
+          try { await readFilesystemSnapshot(); state.error = 'ControlApi ocupado; mostrando resultados guardados en disco.'; }
+          catch (_) { state.error = `No se puede leer el daemon${api ? ` (${api})` : ''}: ${error.message}`; state.offline = false; }
+        }
         render();
       }
 
       async function refreshResults() {
-        try { [state.results, state.coverage] = await readProps(['benchmarkResults', 'benchmarkCoverage']); await refreshProfileDetails(); state.error = ''; state.updated = new Date(); }
-        catch (error) { state.error = `No se pueden leer los resultados: ${error.message}`; }
+        try { [state.results, state.coverage] = await readProps(['benchmarkResults', 'benchmarkCoverage']); await refreshProfileDetails(); state.error = ''; state.offline = false; state.updated = new Date(); }
+        catch (error) {
+          try { await readFilesystemSnapshot(); state.error = 'ControlApi ocupado; mostrando resultados guardados en disco.'; }
+          catch (_) { state.error = `No se pueden leer los resultados: ${error.message}`; state.offline = false; }
+        }
         render();
       }
 
@@ -927,7 +950,11 @@
       });
       $('recommended-columns').addEventListener('click', () => { state.visibleColumns = state.columns.filter((key) => recommendedColumns.includes(key)); savePreferences(); render(); });
       $('all-columns').addEventListener('click', () => { state.visibleColumns = [...state.columns]; savePreferences(); render(); });
-      discoverApi().catch(() => { state.error = 'No se encontró un daemon ControlApi local'; render(); });
+      discoverApi().catch(async () => {
+        try { await readFilesystemSnapshot(); state.error = 'ControlApi ocupado; mostrando resultados guardados en disco.'; }
+        catch (_) { state.error = 'No se encontró un daemon ControlApi local'; }
+        render();
+      });
       refreshLive();
       refreshResults();
       setInterval(refreshLive, 1500);

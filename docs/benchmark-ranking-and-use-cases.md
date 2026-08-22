@@ -46,6 +46,9 @@ El dashboard permite observar el daemon en tiempo real sin detener las corridas:
 - orden ascendente/descendente con claves numéricas reales;
 - autodetección del puerto ControlApi local mediante `benchmark-api.json`, con
   validación de `/health` y `/methods`; `?api=...` sigue disponible como override;
+- si ControlApi está ocupado durante una operación larga, el servidor local expone
+  `benchmark-snapshot.json` con los resultados persistidos y el dashboard los muestra
+  como caché local hasta que vuelve la conexión en vivo;
 - score tratado como fracción, por lo que `5/8` queda por encima de `0/0`;
 - máximo de dos decimales en valores decimales;
 - `HE0`, `HE20` y `BCB` separados por salto de línea dentro de una misma celda;
