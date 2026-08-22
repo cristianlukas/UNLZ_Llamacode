@@ -49,7 +49,7 @@ function Normalize-Path {
 
 function Add-Exe {
     param(
-        [Parameter(Mandatory)][System.Collections.Generic.List[string]]$List,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$List,
         [Parameter(Mandatory)][AllowEmptyString()][string]$Path
     )
     $full = Normalize-Path $Path
@@ -63,12 +63,12 @@ function Add-Exe {
             return
         }
     }
-    $List.Add($full)
+    $List.Add($full) | Out-Null
 }
 
 function Add-ExeTree {
     param(
-        [Parameter(Mandatory)][System.Collections.Generic.List[string]]$List,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.Generic.List[string]]$List,
         [Parameter(Mandatory)][string]$Folder,
         [switch]$GameFolder
     )
@@ -207,6 +207,59 @@ function Set-Preference {
     }
 }
 
+function Set-GlobalHighPerformanceAdapter {
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    param([Parameter(Mandatory)][string]$Adapter)
+
+    try {
+        $current = ""
+        if (Test-Path -LiteralPath $RegPath) {
+            $props = Get-ItemProperty -LiteralPath $RegPath
+            foreach ($prop in $props.PSObject.Properties) {
+                if ($prop.Name -ieq "DirectXUserGlobalSettings") {
+                    $current = [string]$prop.Value
+                    break
+                }
+            }
+        }
+
+        $other = @($current -split ';' | Where-Object {
+            -not [string]::IsNullOrWhiteSpace($_) -and
+            $_ -notmatch '^(?i:HighPerfAdapter)='
+        })
+        $parts = @("HighPerfAdapter=$Adapter") + $other
+        $new = (($parts | ForEach-Object { "$_;" }) -join "")
+
+        if ($current -eq $new) {
+            Write-Host "YA OK [global] HighPerfAdapter=$Adapter" -ForegroundColor DarkYellow
+            return
+        }
+
+        if ($PSCmdlet.ShouldProcess("DirectXUserGlobalSettings", "Usar PNY como adaptador global de alto rendimiento")) {
+            if (-not (Test-Path -LiteralPath $RegPath)) {
+                New-Item -Path $RegPath -Force | Out-Null
+            }
+            $arguments = @{
+                Path = $RegPath
+                Name = "DirectXUserGlobalSettings"
+                Value = $new
+                PropertyType = "String"
+                Force = $true
+            }
+            New-ItemProperty @arguments | Out-Null
+            $script:Changed += "[global] DirectXUserGlobalSettings"
+            Write-Host "OK [global] HighPerfAdapter=$Adapter" -ForegroundColor Green
+        }
+        else {
+            Write-Host "SIMULADO [global] HighPerfAdapter=$Adapter" -ForegroundColor Gray
+        }
+    }
+    catch {
+        $script:Errors += "[global] DirectXUserGlobalSettings"
+        Write-Host "ERROR [global] HighPerfAdapter: $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+
 function Backup {
     if (-not (Test-Path -LiteralPath $RegPath)) {
         Write-Host "No existe aun la clave de preferencias; no hay backup para exportar." -ForegroundColor DarkYellow
@@ -333,7 +386,7 @@ function Read-FolderList {
             Write-Host "No existe: $path" -ForegroundColor Red
             continue
         }
-        $items.Add((Resolve-Path -LiteralPath $clean).Path)
+        $items.Add((Resolve-Path -LiteralPath $clean).Path) | Out-Null
     }
     return ,$items
 }
@@ -427,6 +480,9 @@ if ($answer -match '^(n|no)$') {
 }
 
 Section "ASIGNANDO PNY"
+Section "DEFAULT GLOBAL DE ALTO RENDIMIENTO"
+Set-GlobalHighPerformanceAdapter -Adapter $script:Pny.Adapter
+
 foreach ($exe in $desktop) {
     Set-Preference -Exe $exe -Adapter $script:Pny.Adapter -GpuPreference $script:Pny.GpuPreference -Role "PNY"
 }
