@@ -45,3 +45,12 @@ Se conservarán por perfil: BCB `score/8`, tasa de aprobación, tiempo total,
 TTFT, prefill tok/s, decode tok/s, tokens de reasoning, VRAM/RAM, contexto
 efectivo, KV, mmproj, harness y motivo de fallo. Los `0/0`, crashes y
 timeouts quedan como infraestructura; no se presentan como calidad.
+
+Para consolidar la campaña sin mezclar corridas anteriores:
+
+```powershell
+.\tools\export_full_matrix_results.ps1 -Since (Get-Date).Date -Out .\benchmark-full-matrix-results
+```
+
+El exportador produce una fila por etapa y harness, más `finalBcb` agrupado por
+perfil/harness, en JSON y CSV.
