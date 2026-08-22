@@ -17170,6 +17170,17 @@ QString AppController::benchmarkProfileConfigFingerprint(const QString &profileI
     for (auto it = effective.effectiveEnv.cbegin(); it != effective.effectiveEnv.cend(); ++it)
         env[it.key()] = it.value();
     payload[QStringLiteral("env")] = env;
+
+    // The agent/harness is part of the benchmark configuration.  A HE0 made
+    // with a different tool loop or thinking policy must not unlock HE20/BCB
+    // for this profile: those stages measure the complete model + harness
+    // path, not llama-server in isolation.  Keep the effective harness spec in
+    // the fingerprint so edits to its runtime also invalidate old gates.
+    payload[QStringLiteral("agentProfileId")] = m_benchmarkAgentProfileId;
+    const AgentProfile agent = m_profiles.resolveAgentProfile(m_benchmarkAgentProfileId);
+    payload[QStringLiteral("agentProfileName")] = agent.name;
+    payload[QStringLiteral("harnessSpecHash")] =
+        HarnessEngine::fingerprint(m_profiles.resolveHarnessSpec(agent));
     return QString::fromLatin1(QCryptographicHash::hash(
         QJsonDocument(payload).toJson(QJsonDocument::Compact),
         QCryptographicHash::Sha256).toHex());

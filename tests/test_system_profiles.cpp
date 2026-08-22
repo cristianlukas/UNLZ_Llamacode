@@ -1196,8 +1196,11 @@ void SystemProfilesTests::bundle_ultraQ48gbIsDualGpuVariantOfUltraQ()
     QCOMPARE(args.value(args.indexOf("--cache-type-k") + 1), QStringLiteral("q4_0"));
     QCOMPARE(args.value(args.indexOf("--cache-type-v") + 1), QStringLiteral("q4_0"));
     QCOMPARE(args.value(args.indexOf("--threads-batch") + 1), QStringLiteral("16"));
-    QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
-    QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
+    // DSpark is retired for llama.cpp on Windows.  The dual profile is the
+    // validated no-spec control; speculative decoding gets its own explicit
+    // experiments when a backend supports it.
+    QVERIFY(!args.contains(QStringLiteral("--spec-type")));
+    QVERIFY(!args.contains(QStringLiteral("--spec-draft-n-max")));
 
     // El reparto va con -ot explicito, NO con --n-cpu-moe: en multi-GPU el
     // n-cpu-moe manda todas las capas pesadas a una placa (OOM) y, aun
@@ -1425,7 +1428,7 @@ void SystemProfilesTests::bundle_48gbFamilyIsBenchmarkableAndDualGpu()
     QVERIFY(found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("favorite").toBool());
     QVERIFY(!found.value(QStringLiteral("sys-48-thinkingcap-mtp")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("favorite").toBool());
-    QVERIFY(!found.value(QStringLiteral("sys-48-dsv4-nospec")).value("benchmark").toBool());
+    QVERIFY(found.value(QStringLiteral("sys-48-dsv4-nospec")).value("benchmark").toBool());
     QVERIFY(found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("favorite").toBool());
     QVERIFY(!found.value(QStringLiteral("sys-48-fablefusion-q6-mtp")).value("benchmark").toBool());
     int marked = 0;
@@ -1576,9 +1579,9 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QCOMPARE(args.value(args.indexOf("--repeat-penalty") + 1), QStringLiteral("1.0"));
     QCOMPARE(args.value(args.indexOf("--presence-penalty") + 1), QStringLiteral("0.0"));
     QVERIFY(args.contains(QStringLiteral("--no-warmup")));
-    QCOMPARE(args.value(args.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
-    QCOMPARE(args.value(args.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
-    QCOMPARE(ultra.value("benchmarkVariants").toArray().size(), 26);
+    QVERIFY(!args.contains(QStringLiteral("--spec-type")));
+    QVERIFY(!args.contains(QStringLiteral("--spec-draft-n-max")));
+    QCOMPARE(ultra.value("benchmarkVariants").toArray().size(), 31);
 
     QVERIFY(!ultraExternal.isEmpty());
     QVERIFY(ultraExternal.value("extra").toBool());
@@ -1638,9 +1641,13 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
         pm.getModelProfile(ultraLaunch.value("modelProfileId").toString());
     QCOMPARE(balancedModel.value("modelId").toString(),
              ultraModel.value("modelId").toString());
-    QCOMPARE(balanced.value("extraArgs").toStringList().value(
-                 balanced.value("extraArgs").toStringList().indexOf("--spec-draft-n-max") + 1),
-             QStringLiteral("5"));
+    // DSpark queda fuera de la cola activa en llama.cpp/Windows. El perfil
+    // histórico conserva su ID para no romper referencias, pero no debe
+    // reintroducir flags speculative al materializarse.
+    QVERIFY(!balanced.value("extraArgs").toStringList().contains(
+        QStringLiteral("--spec-type")));
+    QVERIFY(!balanced.value("extraArgs").toStringList().contains(
+        QStringLiteral("--spec-draft-n-max")));
 
     const QVariantMap noSpec =
         pm.getLaunchProfile(QStringLiteral("sys-bench-ultraq-b4096-u1024-nospec"));
@@ -1653,7 +1660,8 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     const QStringList moeArgs = moe43.value("extraArgs").toStringList();
     QCOMPARE(moeArgs.value(moeArgs.indexOf("--n-cpu-moe") + 1), QStringLiteral("43"));
 
-    // Variantes de investigación de DSpark sobre el batch ganador (B8192·U2048).
+    // Variantes históricas de DSpark: se conservan para reproducibilidad, pero
+    // ninguna debe quedar disponible para benchmarking activo en Windows.
     auto argsOf = [&pm](const char *id) {
         return pm.getLaunchProfile(QString::fromLatin1(id)).value("extraArgs").toStringList();
     };
@@ -1662,16 +1670,8 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
     QVERIFY(!wideNoSpec.isEmpty());
     QVERIFY(!wideNoSpec.contains(QStringLiteral("--spec-type")));
     QVERIFY(!wideNoSpec.contains(QStringLiteral("--spec-draft-n-max")));
-    // El corte por confianza se agrega sin perder el resto de la config de DSpark.
-    const QStringList pmin = argsOf("sys-bench-ultraq-b8192-u2048-ds5-pmin05");
-    QCOMPARE(pmin.value(pmin.indexOf("--spec-type") + 1), QStringLiteral("draft-dspark"));
-    QCOMPARE(pmin.value(pmin.indexOf("--spec-draft-n-max") + 1), QStringLiteral("5"));
-    QCOMPARE(pmin.value(pmin.indexOf("--spec-draft-p-min") + 1), QStringLiteral("0.5"));
-    // El offload del draft es independiente del offload del target.
-    const QStringList draftGpu = argsOf("sys-bench-ultraq-b8192-u2048-ds5-draftgpu");
-    QCOMPARE(draftGpu.value(draftGpu.indexOf("--n-cpu-moe") + 1), QStringLiteral("39"));
-    QCOMPARE(draftGpu.value(draftGpu.indexOf("--spec-draft-n-cpu-moe") + 1), QStringLiteral("0"));
-    // Cambiar de tipo de speculative reemplaza el valor, no agrega un segundo flag.
+    // La única variante speculative que queda en este grupo es ngram-mod,
+    // porque no depende del drafter DSpark externo.
     const QStringList ngram = argsOf("sys-bench-ultraq-b8192-u2048-ngrammod");
     QCOMPARE(ngram.count(QStringLiteral("--spec-type")), 1);
     QCOMPARE(ngram.value(ngram.indexOf("--spec-type") + 1), QStringLiteral("ngram-mod"));
