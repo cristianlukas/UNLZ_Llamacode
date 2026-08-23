@@ -1778,7 +1778,12 @@ suite `Stress largo y difícil` recomienda al menos 900 s por corrida.
 El timeout duro se controla con un watchdog periódico de pared durante toda la
 pasada, incluida la generación activa. Al vencer, cancela la generación, aborta
 la request HTTP, fuerza la limpieza del `llama-server` y continúa con el siguiente
-perfil; el resultado queda persistido como `failureKind=timeout`.
+perfil; el resultado queda persistido como `failureKind=timeout`. En benchmarks
+de agente no se usa un corte por ausencia de tokens: una generación puede estar
+evaluando prompt, ejecutando una tool/MCP o cerrando el stream. El scheduler
+espera `turnFinished`, reintenta de forma segura el mensaje transitoriamente
+rechazado por `Hay un turno en curso` y sólo avanza de tarea cuando el turno fue
+aceptado y finalizó.
 
 En benchmarks de agente, el checkbox **Thinking** es la configuración efectiva de
 la corrida: si está apagado, se inicia o recarga el servidor con `--reasoning off`

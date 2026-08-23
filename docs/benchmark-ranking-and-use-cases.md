@@ -107,11 +107,23 @@ La política vigente es:
 - después de 30 segundos sin `serverReady` y sin backend real: cancelar temprano
   como backend roto, sin esperar 30 minutos;
 - un backend que sí genera permanece en observación aunque una tarea tarde,
-  hasta que termine, muestre idle real o alcance el límite duro;
+  hasta que termine o alcance el límite duro; no se infiere inactividad por
+  ausencia temporal de tokens visibles;
 - sólo se detiene el daemon iniciado por la automatización; nunca una GUI o
   proceso ajeno.
 
 Esto evita confundir “servidor iniciado” con “modelo cargado y trabajando”.
+
+El ciclo de turnos del benchmark de agente usa `IAgentBackend::turnFinished` como
+señal autoritativa de cierre y deduplica el aviso equivalente del log. Si el
+backend responde `Hay un turno en curso`, la cola lo trata como una condición
+transitoria: espera con backoff y reintenta sin avanzar el índice de la tarea.
+Así, una carrera entre el cierre del turno, el harness y una tool/MCP no se
+registra como fallo de infraestructura ni consume la siguiente tarea. El
+watchdog de inactividad por tokens queda desactivado para esta ruta; sólo el
+límite duro de pared puede cancelar una generación que todavía no cerró. Los
+resultados históricos con `Hay un turno en curso` o `idle-timeout` de una corrida
+anterior deben repetirse antes de entrar al ranking.
 
 ## Familias de perfiles incorporadas
 

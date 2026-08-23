@@ -149,6 +149,7 @@ private slots:
     void pendingAgentClearsStartingWhenAlreadyRunning();
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkRestartErrorsAreInfrastructure();
+    void benchmarkBusyTurnIsRetryableNotInfrastructure();
     void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkGateRejectsBrokenOrStaleHe0();
     void benchmarkGateAcceptsValidHe20QualityResult();
@@ -1732,6 +1733,18 @@ void AppControllerTests::benchmarkRestartErrorsAreInfrastructure()
         QStringLiteral("connection closed by peer")));
     QVERIFY(!AppController::benchmarkErrorIsInfrastructureForTest(
         QStringLiteral("Fallaron criterios de aceptacion.")));
+}
+
+void AppControllerTests::benchmarkBusyTurnIsRetryableNotInfrastructure()
+{
+    QVERIFY(AppController::benchmarkTurnBusyForTest(
+        QStringLiteral("Hay un turno en curso.")));
+    QVERIFY(AppController::benchmarkTurnBusyForTest(
+        QStringLiteral("No se puede editar con un turno en curso.")));
+    QVERIFY(!AppController::benchmarkTurnBusyForTest(
+        QStringLiteral("connection closed by peer")));
+    QVERIFY(!AppController::benchmarkErrorIsInfrastructureForTest(
+        QStringLiteral("Hay un turno en curso.")));
 }
 
 void AppControllerTests::benchmarkPreservesScoreAfterTransportTail()

@@ -16979,6 +16979,13 @@ int AppController::benchmarkStreamingDeltaForTest(QString *previous,
     return qMax(0, delta);
 }
 
+bool AppController::benchmarkTurnBusyForTest(const QString &message)
+{
+    const QString lower = message.toLower();
+    return lower.contains(QStringLiteral("hay un turno en curso"))
+        || lower.contains(QStringLiteral("turno en curso"));
+}
+
 bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message)
 {
     const QString lower = message.toLower();
@@ -17480,10 +17487,19 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         auto firstAttemptTotal = std::make_shared<int>(0);
         auto timeToFirstAttempt = std::make_shared<double>(0.0);
         const int maxRepairAttempts = 2;
-        // Si cancelGeneration() no produce "[turn] completed", una serie
-        // headless no puede quedar clavada para siempre.
-        const int idleTimeoutMs = 180000;
+        // No inferir que el modelo está inactivo sólo porque no hubo un token
+        // visible durante un intervalo fijo. En perfiles grandes el servidor
+        // puede estar evaluando prompt, ejecutando una tool/MCP o esperando el
+        // cierre del stream sin emitir texto. El watchdog de pared es la única
+        // terminación automática de esta corrida; el estado del turno y la
+        // señal turnFinished deciden cuándo avanzar.
+        const int idleTimeoutMs = 0;
         auto lastActivityMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
+        auto promptInFlight = std::make_shared<bool>(false);
+        auto sendRetryScheduled = std::make_shared<bool>(false);
+        auto sendRetryGeneration = std::make_shared<int>(0);
+        auto turnCompletionHandled = std::make_shared<bool>(false);
+        auto busyRetryCount = std::make_shared<int>(0);
         // During repair, token streaming is not useful evidence of progress:
         // a model can keep explaining the same fix forever without touching a
         // solution file. Track the workspace instead and stop only after a
@@ -18102,15 +18118,41 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             QTimer::singleShot(1000, this, [=]() { (*acceptancePoll)(); });
         };
 
-        // Send prompts one after another; advance when the agent goes idle.
+        // Si una señal de MCP, un callback de turnFinished y el fallback de
+        // arranque llegan juntos, no se deben enviar dos veces el mismo prompt.
+        // Antes eso convertía una carrera legítima en "Hay un turno en curso".
         auto sendNext = std::make_shared<std::function<void()>>();
+        auto retrySendNext = std::make_shared<std::function<void()>>();
+        *retrySendNext = [=]() {
+            if (*finished || *sendRetryScheduled) return;
+            *sendRetryScheduled = true;
+            const int retryGeneration = *sendRetryGeneration;
+            const int delayMs = qMin(2000, 250 + (*busyRetryCount * 100));
+            QTimer::singleShot(delayMs, this, [=]() {
+                *sendRetryScheduled = false;
+                if (*finished || retryGeneration != *sendRetryGeneration) return;
+                if (agent->isBusy()) {
+                    (*retrySendNext)();
+                    return;
+                }
+                (*sendNext)();
+            });
+        };
         *sendNext = [=]() {
-            if (!*toolsReady) return;
+            if (!*toolsReady || *promptInFlight) return;
             if (m_benchmarkCanceled || *promptIdx >= prompts.size()) { (*finalize)(); return; }
+            if (agent->isBusy()) {
+                (*retrySendNext)();
+                return;
+            }
+            ++(*sendRetryGeneration);
+            *sendRetryScheduled = false;
             const int currentPrompt = *promptIdx;
             m_benchmarkStatus = QString("[%1/%2] %3 — agente: prompt %4/%5...")
                 .arg(idx+1).arg(total).arg(profName).arg(currentPrompt + 1).arg(prompts.size());
             emit benchmarkStatusChanged();
+            *promptInFlight = true;
+            *turnCompletionHandled = false;
             *turnStartMs = QDateTime::currentMSecsSinceEpoch();
             if (*promptIdx == 0)
                 *firstPromptMs = *turnStartMs;
@@ -18126,7 +18168,76 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                                               {QStringLiteral("promptChars"), prompts.at(currentPrompt).size()}});
             agent->sendMessage(agentPrompt(prompts.at(currentPrompt),
                                            taskArtifacts.value(currentPrompt)));
-            (*promptIdx)++;
+            // sendMessage() no devuelve éxito. El backend sí queda ocupado de
+            // forma observable cuando aceptó el request; si no, reintentamos
+            // conservando promptIdx en vez de perder la tarea.
+            if (*finished || !*promptInFlight) return;
+            if (agent->isBusy()) {
+                *promptInFlight = false;
+                (*promptIdx)++;
+                *busyRetryCount = 0;
+            } else {
+                *promptInFlight = false;
+                (*busyRetryCount)++;
+                (*retrySendNext)();
+            }
+        };
+
+        auto handleTurnCompleted = std::make_shared<std::function<void()>>();
+        *handleTurnCompleted = [=]() {
+            if (*finished || *turnCompletionHandled) return;
+            *turnCompletionHandled = true;
+            *promptInFlight = false;
+            if (*turnStartMs > 0) {
+                const qint64 doneMs = QDateTime::currentMSecsSinceEpoch();
+                QString latestAssistant;
+                const QVariantList currentMsgs = agent->messages();
+                for (auto it = currentMsgs.crbegin(); it != currentMsgs.crend(); ++it) {
+                    const QVariantMap mm = it->toMap();
+                    if (mm.value(QStringLiteral("role")).toString() == QLatin1String("assistant")) {
+                        latestAssistant = mm.value(QStringLiteral("content")).toString();
+                        break;
+                    }
+                }
+                const int toks = estimateTokensLocal(latestAssistant);
+                const qint64 firstMs = (*turnFirstMs >= 0) ? *turnFirstMs : *turnStartMs;
+                const double ttft = qMax<qint64>(0, firstMs - *turnStartMs);
+                const double genSec = qMax(0.001, (doneMs - firstMs) / 1000.0);
+                QVariantMap metric;
+                metric[QStringLiteral("tokens")] = toks;
+                metric[QStringLiteral("elapsedMs")] = static_cast<int>(qMax<qint64>(0, doneMs - *turnStartMs));
+                metric[QStringLiteral("ttft_ms")] = ttft;
+                metric[QStringLiteral("tps")] = toks > 0 ? toks / genSec : 0.0;
+                turnMetrics->append(metric);
+                *turnStartMs = 0;
+                *turnFirstMs = -1;
+            }
+            if (*preToolRecoveryPending) {
+                *preToolRecoveryPending = false;
+                *preToolCut = false;
+                *preToolChars = 0;
+                *toolSeen = false;
+                lastStreamingText->clear();
+                *turnStartMs = QDateTime::currentMSecsSinceEpoch();
+                *turnFirstMs = -1;
+                *turnCompletionHandled = false;
+                AgentEventLog::append(workspace, QString(),
+                                      QStringLiteral("benchmark_tool_recovery"),
+                                      QJsonObject{{QStringLiteral("attempt"), *preToolRecoveryAttempts}});
+                QTimer::singleShot(1500, this, [=]() {
+                    if (*finished) return;
+                    agent->sendMessage(QStringLiteral(
+                        "CORRECCION CRITICA: no describas un plan ni escribas codigo en el chat. "
+                        "Usa ahora mismo la herramienta write_file para crear `%1` "
+                        "en disco; despues ejecuta los checks de aceptacion. Responde solo luego "
+                        "de usar la herramienta.")
+                        .arg(taskArtifacts.value(qMax(0, *promptIdx - 1))));
+                });
+                return;
+            }
+            if (m_benchmarkCanceled) { (*finalize)(); return; }
+            if (*promptIdx >= prompts.size()) (*finalize)();
+            else (*sendNext)();
         };
 
         connect(agent, &IAgentBackend::streamingText, this, [=](int, const QString &content) {
@@ -18222,55 +18333,25 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 (*sendNext)();
                 return;
             }
-            if (!chunk.contains(QLatin1String("[turn] completed"))) return;
-            if (*turnStartMs > 0) {
-                const qint64 doneMs = QDateTime::currentMSecsSinceEpoch();
-                QString latestAssistant;
-                const QVariantList currentMsgs = agent->messages();
-                for (auto it = currentMsgs.crbegin(); it != currentMsgs.crend(); ++it) {
-                    const QVariantMap mm = it->toMap();
-                    if (mm.value(QStringLiteral("role")).toString() == QLatin1String("assistant")) {
-                        latestAssistant = mm.value(QStringLiteral("content")).toString();
-                        break;
-                    }
-                }
-                const int toks = estimateTokensLocal(latestAssistant);
-                const qint64 firstMs = (*turnFirstMs >= 0) ? *turnFirstMs : *turnStartMs;
-                const double ttft = qMax<qint64>(0, firstMs - *turnStartMs);
-                const double genSec = qMax(0.001, (doneMs - firstMs) / 1000.0);
-                QVariantMap metric;
-                metric[QStringLiteral("tokens")] = toks;
-                metric[QStringLiteral("elapsedMs")] = static_cast<int>(qMax<qint64>(0, doneMs - *turnStartMs));
-                metric[QStringLiteral("ttft_ms")] = ttft;
-                metric[QStringLiteral("tps")] = toks > 0 ? toks / genSec : 0.0;
-                turnMetrics->append(metric);
-                *turnStartMs = 0;
-                *turnFirstMs = -1;
-            }
-            if (*preToolRecoveryPending) {
-                *preToolRecoveryPending = false;
-                *preToolCut = false;
-                *preToolChars = 0;
-                *toolSeen = false;
-                lastStreamingText->clear();
-                *turnStartMs = QDateTime::currentMSecsSinceEpoch();
-                *turnFirstMs = -1;
-                AgentEventLog::append(workspace, QString(),
-                                      QStringLiteral("benchmark_tool_recovery"),
-                                      QJsonObject{{QStringLiteral("attempt"), *preToolRecoveryAttempts}});
-                agent->sendMessage(QStringLiteral(
-                    "CORRECCION CRITICA: no describas un plan ni escribas codigo en el chat. "
-                    "Usa ahora mismo la herramienta write_file para crear `%1` "
-                    "en disco; despues ejecuta los checks de aceptacion. Responde solo luego "
-                    "de usar la herramienta.")
-                    .arg(taskArtifacts.value(qMax(0, *promptIdx - 1))));
+            if (chunk.contains(QLatin1String("[turn] completed")))
+                (*handleTurnCompleted)();
+        });
+        // El log es útil para compatibilidad y métricas, pero turnFinished es
+        // la señal autoritativa: el backend ya liberó reply/tool/await cuando
+        // la emite. La guardia evita procesar ambos eventos dos veces.
+        connect(agent, &IAgentBackend::turnFinished, this,
+                [=]() { (*handleTurnCompleted)(); });
+        connect(agent, &IAgentBackend::errorOccurred, this, [=](const QString &msg) {
+            if (benchmarkTurnBusyForTest(msg)) {
+                // No es un fallo del modelo. Otro callback intentó abrir el
+                // mismo turno mientras el backend aún liberaba su estado.
+                // Conservamos el prompt y esperamos a que quede realmente idle.
+                *promptInFlight = false;
+                *lastActivityMs = QDateTime::currentMSecsSinceEpoch();
+                (*busyRetryCount)++;
+                (*retrySendNext)();
                 return;
             }
-            if (m_benchmarkCanceled) { (*finalize)(); return; }
-            if (*promptIdx >= prompts.size()) (*finalize)();
-            else (*sendNext)();
-        });
-        connect(agent, &IAgentBackend::errorOccurred, this, [=](const QString &msg) {
             const QString lower = msg.toLower();
             *serverCrashed = benchmarkErrorIsInfrastructureForTest(lower);
             *passFailed = !*serverCrashed;
@@ -18279,8 +18360,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             (*finalize)();
         });
 
-        // Idle watchdog: no hard wall-clock limit. Fail only if the agent/server
-        // stops producing stream/log/message activity for a sustained interval.
+        // No idle watchdog here: la ausencia de texto no prueba que el modelo
+        // esté detenido. El límite de pared inferior conserva un escape para
+        // un proceso realmente colgado sin convertir una generación lenta o
+        // una tool larga en un falso fallo de infraestructura.
         auto idlePoll = std::make_shared<std::function<void()>>();
         *idlePoll = [=]() {
             if (*finished) return;
