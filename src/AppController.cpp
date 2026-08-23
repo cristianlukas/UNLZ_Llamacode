@@ -2023,6 +2023,36 @@ void AppController::startServer(const QString &launchProfileId)
 
     const QString binaryPath = m_effectiveProfile["binaryPath"].toString();
     QStringList args = m_effectiveProfile["effectiveArgs"].toStringList();
+    if (m_benchmarkRunning && m_benchmarkMemoryAttempt >= 0) {
+        args = benchmarkMemoryPolicyArgsForTest(args, m_benchmarkMemoryAttempt);
+
+        // Do not inject a newer llama.cpp-only flag into a legacy/custom
+        // binary. The profile's declared --fit is still honored when the
+        // binary advertises it; otherwise the layer/offload ladder remains.
+        const bool fitSupported = ctx.binary.supportedFlags.isEmpty()
+            || ctx.binary.supportsFlag(ctx.binary.resolveFlag(QStringLiteral("--fit")));
+        if (!fitSupported) {
+            for (int i = args.size() - 1; i >= 0; --i) {
+                if (args.at(i) != QLatin1String("--fit")
+                    && args.at(i) != QLatin1String("-fit")
+                    && args.at(i) != QLatin1String("--fit-target")
+                    && args.at(i) != QLatin1String("-fitt"))
+                    continue;
+                args.removeAt(i);
+                if (i < args.size() && !args.at(i).startsWith(QLatin1Char('-')))
+                    args.removeAt(i);
+            }
+        }
+        m_effectiveProfile[QStringLiteral("benchmarkEffectiveArgs")] = args;
+        appendServerEvent(
+            QStringLiteral("lifecycle"),
+            QStringLiteral("Benchmark VRAM ladder: intento %1, fit=%2, args=%3")
+                .arg(m_benchmarkMemoryAttempt)
+                .arg(fitSupported ? QStringLiteral("on") : QStringLiteral("unsupported"))
+                .arg(args.join(QLatin1Char(' '))));
+    } else {
+        m_effectiveProfile.remove(QStringLiteral("benchmarkEffectiveArgs"));
+    }
     // Overrides temporales para Ingi Charla (no persisten en el perfil): se
     // aplican solo en este launch, pedidos vía applyCharlaTuneAndStartCharla.
     if (m_charlaTuneOnNextLaunch) {
@@ -2038,6 +2068,8 @@ void AppController::startServer(const QString &launchProfileId)
             m_effectiveProfile[QStringLiteral("effectiveArgs")] = args;  // serverBaseUrl etc.
         }
     }
+    if (m_benchmarkRunning && m_benchmarkMemoryAttempt >= 0)
+        m_benchmarkEffectiveArgs = args;
     const QVariantMap envMap = m_effectiveProfile["effectiveEnv"].toMap();
     m_serverGpuRequested = false;
     const int nglIdx = args.indexOf(QStringLiteral("--n-gpu-layers"));
@@ -16215,6 +16247,8 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
     *processNext = [=](int idx) {
         if (m_benchmarkCanceled || idx >= profileIds.size()) {
             m_benchmarkRunning  = false;
+            m_benchmarkMemoryAttempt = -1;
+            m_benchmarkEffectiveArgs.clear();
             m_benchmarkProgress = 100;
             m_benchmarkStatus   = m_benchmarkCanceled ? "Cancelado." : "Completado.";
             clearBenchmarkResumePoint();
@@ -16244,6 +16278,11 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
         const QVariantMap profData = m_profiles.getLaunchProfile(profileId);
         const QString profNameRaw = profData.value("name").toString();
         const QString profName    = profNameRaw.isEmpty() ? profileId : profNameRaw;
+        // Every profile starts at the highest-VRAM attempt. If the server
+        // reports an OOM while loading, the ready callback advances this
+        // ladder and retries the same profile with a slightly safer budget.
+        m_benchmarkMemoryAttempt = 0;
+        m_benchmarkEffectiveArgs.clear();
 
         auto startAttempts = std::make_shared<int>(0);
         // A cold profile boundary is deliberate: even when no QProcess is
@@ -16304,6 +16343,31 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
             }
             if (!serverRunning()) {
                 if (m_benchmarkCanceled) { (*processNext)(idx + 1); return; }
+                const QString startDetail = benchmarkServerLogTail();
+                if (benchmarkLogIndicatesOutOfMemoryForTest(startDetail)
+                    && m_benchmarkMemoryAttempt < kBenchmarkMaxMemoryAttempts) {
+                    ++m_benchmarkMemoryAttempt;
+                    m_benchmarkStatus =
+                        QString("[%1/%2] %3 — OOM al cargar; bajando presión de VRAM "
+                                "(intento %4/%5)...")
+                            .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                            .arg(m_benchmarkMemoryAttempt).arg(kBenchmarkMaxMemoryAttempts);
+                    emit benchmarkStatusChanged();
+                    appendServerEvent(
+                        QStringLiteral("lifecycle"),
+                        QStringLiteral("Benchmark VRAM: OOM durante el arranque; "
+                                       "reintento adaptativo %1/%2. Detalle: %3")
+                            .arg(m_benchmarkMemoryAttempt)
+                            .arg(kBenchmarkMaxMemoryAttempts)
+                            .arg(startDetail.right(4000)));
+                    *boundaryCleaned = false;
+                    stopServer();
+                    benchmarkKillStrayServers();
+                    benchmarkWaitServerStopped(10000, [=]() {
+                        QTimer::singleShot(3000, this, [=]() { (*runProfile)(); });
+                    });
+                    return;
+                }
                 // Auto-recovery: a stale/leftover llama-server (holding port 8021
                 // or VRAM from a previous hung run) makes startServer fail. Clean
                 // up (stop our proc, kill stray servers, let VRAM free) and retry.
@@ -16357,6 +16421,28 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                 if (!ready || m_benchmarkCanceled) {
                     if (!m_benchmarkCanceled) {
                         const QString detail = benchmarkServerLogTail();
+                        if (benchmarkLogIndicatesOutOfMemoryForTest(detail)
+                            && m_benchmarkMemoryAttempt < kBenchmarkMaxMemoryAttempts) {
+                            ++m_benchmarkMemoryAttempt;
+                            m_benchmarkStatus =
+                                QString("[%1/%2] %3 — OOM durante la carga; "
+                                        "bajando presión de VRAM (intento %4/%5)...")
+                                    .arg(idx + 1).arg(profileIds.size()).arg(profName)
+                                    .arg(m_benchmarkMemoryAttempt).arg(kBenchmarkMaxMemoryAttempts);
+                            emit benchmarkStatusChanged();
+                            appendServerEvent(
+                                QStringLiteral("lifecycle"),
+                                QStringLiteral("Benchmark VRAM: OOM durante health/load; "
+                                               "reintento adaptativo %1/%2. Detalle: %3")
+                                    .arg(m_benchmarkMemoryAttempt)
+                                    .arg(kBenchmarkMaxMemoryAttempts)
+                                    .arg(detail.right(4000)));
+                            stopServer();
+                            benchmarkEnsureServerStopped(45000, [=]() {
+                                QTimer::singleShot(3000, this, [=]() { (*runProfile)(); });
+                            });
+                            return;
+                        }
                         const double elapsed =
                             (QDateTime::currentMSecsSinceEpoch() - loadStartMs) / 1000.0;
                         for (int p = 1; p <= passes; ++p) {
@@ -16525,6 +16611,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["runLabel"] = runLabel;
                                 result["runDir"]   = *runDirShared;
 
+                                decorateBenchmarkMemory(&result);
                                 decorateBenchmarkBaseline(&result);
                                 m_benchmarkResults.append(result);
                                 emit benchmarkResultsChanged();
@@ -16992,6 +17079,150 @@ bool AppController::benchmarkRepairStagnationCheckForTest(bool agentBusy,
     // A busy backend may still be doing prompt prefill or tool work; lack of a
     // file mutation is not stagnation until the turn is idle.
     return !agentBusy && !workspaceChanged;
+}
+
+bool AppController::benchmarkLogIndicatesOutOfMemoryForTest(const QString &message)
+{
+    const QString lower = message.toLower();
+    return lower.contains(QStringLiteral("out of memory"))
+        || lower.contains(QStringLiteral("out of vram"))
+        || lower.contains(QStringLiteral("cudamalloc failed"))
+        || lower.contains(QStringLiteral("unable to allocate"))
+        || lower.contains(QStringLiteral("failed to allocate cuda"))
+        || lower.contains(QStringLiteral("allocation failed"))
+        || lower.contains(QStringLiteral("memoria insuficiente"))
+        || QRegularExpression(QStringLiteral("\\boom\\b"),
+                              QRegularExpression::CaseInsensitiveOption).match(lower).hasMatch();
+}
+
+QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &baseArgs,
+                                                             int attempt)
+{
+    const int level = qBound(0, attempt, 7);
+    const int fitTargets[] = {128, 256, 512, 1024, 1536, 2048, 3072, 4096};
+    QStringList args = baseArgs;
+
+    const QStringList fitNames{QStringLiteral("--fit"), QStringLiteral("-fit")};
+    const QStringList fitTargetNames{QStringLiteral("--fit-target"), QStringLiteral("-fitt")};
+    const QStringList gpuLayerNames{QStringLiteral("--n-gpu-layers"),
+                                    QStringLiteral("--gpu-layers"), QStringLiteral("-ngl")};
+    const QStringList draftGpuLayerNames{QStringLiteral("--n-gpu-layers-draft"),
+                                         QStringLiteral("--gpu-layers-draft"),
+                                         QStringLiteral("-ngld")};
+    const QStringList tensorSplitNames{QStringLiteral("--tensor-split"),
+                                       QStringLiteral("-ts")};
+
+    auto valueIndex = [&args](const QStringList &names) {
+        for (int i = 0; i + 1 < args.size(); ++i)
+            if (names.contains(args.at(i))) return i;
+        return -1;
+    };
+    auto setValue = [&args, &valueIndex](const QStringList &names,
+                                         const QString &canonical,
+                                         const QString &value) {
+        const int index = valueIndex(names);
+        if (index >= 0) {
+            args[index] = canonical;
+            args[index + 1] = value;
+        } else {
+            args << canonical << value;
+        }
+    };
+    auto removePairs = [&args](const QStringList &names) {
+        for (int i = args.size() - 1; i >= 0; --i) {
+            if (!names.contains(args.at(i))) continue;
+            args.removeAt(i);
+            if (i < args.size() && !args.at(i).startsWith(QLatin1Char('-')))
+                args.removeAt(i);
+        }
+    };
+    auto removeCpuMoe = [&removePairs]() {
+        removePairs({QStringLiteral("--cpu-moe"), QStringLiteral("-cmoe"),
+                      QStringLiteral("--n-cpu-moe"), QStringLiteral("-ncmoe"),
+                      QStringLiteral("--cpu-moe-draft"), QStringLiteral("-cmoed"),
+                      QStringLiteral("--n-cpu-moe-draft"), QStringLiteral("-ncmoed")});
+    };
+    auto removeCpuOverrideClauses = [&args]() {
+        const QStringList names{QStringLiteral("--override-tensor"), QStringLiteral("-ot"),
+                                QStringLiteral("--override-tensor-draft"), QStringLiteral("-otd")};
+        for (int i = args.size() - 2; i >= 0; --i) {
+            if (!names.contains(args.at(i))) continue;
+            const QStringList clauses = args.at(i + 1).split(QLatin1Char(','), Qt::SkipEmptyParts);
+            QStringList kept;
+            for (const QString &clause : clauses) {
+                if (!clause.trimmed().endsWith(QStringLiteral("=cpu"), Qt::CaseInsensitive))
+                    kept.append(clause);
+            }
+            if (kept.isEmpty()) {
+                args.removeAt(i + 1);
+                args.removeAt(i);
+            } else {
+                args[i + 1] = kept.join(QLatin1Char(','));
+            }
+        }
+    };
+    auto balanceTensorSplit = [&args, &valueIndex, &tensorSplitNames]() {
+        const int index = valueIndex(tensorSplitNames);
+        if (index < 0) return;
+        QStringList parts = args.at(index + 1).split(QLatin1Char(','), Qt::SkipEmptyParts);
+        if (parts.size() < 2) return;
+        for (QString &part : parts)
+            if (part.trimmed() == QLatin1String("0")) part = QStringLiteral("1");
+        args[index + 1] = parts.join(QLatin1Char(','));
+    };
+    auto scaleValue = [&args, &valueIndex](const QStringList &names, double scale,
+                                           int minimum, int alignment) {
+        const int index = valueIndex(names);
+        if (index < 0) return;
+        bool ok = false;
+        const int original = args.at(index + 1).toInt(&ok);
+        if (!ok || original <= minimum) return;
+        int value = qMax(minimum, static_cast<int>(original * scale));
+        if (alignment > 1) value = qMax(minimum, (value / alignment) * alignment);
+        args[index + 1] = QString::number(value);
+    };
+
+    // llama.cpp defaults --fit to on, but profiles that explicitly disabled it
+    // must be reopened for the aggressive benchmark pass. The runtime caller
+    // removes these flags when the selected binary does not advertise support.
+    setValue(fitNames, QStringLiteral("--fit"), QStringLiteral("on"));
+    setValue(fitTargetNames, QStringLiteral("--fit-target"),
+             QString::number(fitTargets[level]));
+
+    if (level <= 2) {
+        // First try: remove explicit CPU residency and let llama.cpp place as
+        // many weights as possible. A zero in tensor-split is also an explicit
+        // prohibition against using that GPU, so lift it for the max attempt.
+        removeCpuMoe();
+        removeCpuOverrideClauses();
+        balanceTensorSplit();
+        setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("999"));
+        setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),
+                 QStringLiteral("999"));
+    } else {
+        // After an OOM, keep the profile's explicit CPU mapping as a stable
+        // anchor, but let fit choose the layer boundary and keep both GPUs in
+        // play for the next two attempts.
+        if (level <= 4) balanceTensorSplit();
+        setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("auto"));
+        setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),
+                 QStringLiteral("auto"));
+    }
+
+    // Last-resort steps reduce allocation pressure gradually while retaining a
+    // runnable profile: context first, then batch/ubatch. The effective args
+    // are persisted with the result so these runs remain auditable.
+    if (level >= 5) {
+        const double scale = 1.0 - 0.10 * (level - 4);
+        scaleValue({QStringLiteral("--ctx-size"), QStringLiteral("-c")}, scale,
+                   4096, 1024);
+        scaleValue({QStringLiteral("--batch-size"), QStringLiteral("-b")}, scale,
+                   128, 32);
+        scaleValue({QStringLiteral("--ubatch-size"), QStringLiteral("-ub")}, scale,
+                   64, 32);
+    }
+
+    return args;
 }
 
 bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message)
@@ -18046,6 +18277,7 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["runDir"]       = runDir;
 
             if (!canceled) {
+                decorateBenchmarkMemory(&result);
                 decorateBenchmarkBaseline(&result);
                 m_benchmarkResults.append(result);
                 emit benchmarkResultsChanged();
@@ -18965,6 +19197,27 @@ QString AppController::benchmarkServerLogTail(int maxBytes) const
     return QString::fromUtf8(f.readAll()).trimmed();
 }
 
+void AppController::decorateBenchmarkMemory(QVariantMap *result) const
+{
+    if (!result || m_benchmarkMemoryAttempt < 0 || m_benchmarkEffectiveArgs.isEmpty())
+        return;
+
+    int fitTarget = 0;
+    for (int i = 0; i + 1 < m_benchmarkEffectiveArgs.size(); ++i) {
+        if (m_benchmarkEffectiveArgs.at(i) != QLatin1String("--fit-target")
+            && m_benchmarkEffectiveArgs.at(i) != QLatin1String("-fitt"))
+            continue;
+        fitTarget = m_benchmarkEffectiveArgs.at(i + 1).toInt();
+        break;
+    }
+    (*result)[QStringLiteral("benchmarkMemoryAdaptive")] = true;
+    (*result)[QStringLiteral("benchmarkMemoryAttempt")] = m_benchmarkMemoryAttempt;
+    (*result)[QStringLiteral("benchmarkMemoryFitTargetMiB")] = fitTarget;
+    (*result)[QStringLiteral("benchmarkEffectiveArgs")] = m_benchmarkEffectiveArgs;
+    (*result)[QStringLiteral("benchmarkMemoryPolicy")] =
+        QStringLiteral("adaptive-max-vram");
+}
+
 void AppController::saveBenchmarkFailureResult(const QString &profileId, const QString &profileName,
                                                int pass, int passes, const QString &mode,
                                                const QString &target, const QString &benchmarkName,
@@ -19032,6 +19285,7 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("runLabel")] = runLabel;
     result[QStringLiteral("runDir")] = runDir;
 
+    decorateBenchmarkMemory(&result);
     decorateBenchmarkBaseline(&result);
     m_benchmarkResults.append(result);
     emit benchmarkResultsChanged();
@@ -19055,6 +19309,8 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
                             ? QUuid::createUuid().toString(QUuid::WithoutBraces)
                             : existingId;
     QVariantMap persistedResult = result;
+    if (!persistedResult.contains(QStringLiteral("benchmarkMemoryAdaptive")))
+        decorateBenchmarkMemory(&persistedResult);
     if (!persistedResult.contains(QStringLiteral("hardwareFingerprint")))
         persistedResult[QStringLiteral("hardwareFingerprint")] =
             m_hardwareSummary.value(QStringLiteral("hardwareFingerprint"));

@@ -1694,6 +1694,14 @@ cuando el backend está libre y no hubo cambios reales en el workspace durante
 
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
 
+Cada perfil de benchmark usa una escalera adaptativa de VRAM. Primero intenta
+la mayor ocupación útil de las GPU (fit, margen mínimo, capas y expertos en GPU
+cuando el binario lo permite); ante un OOM limpia el servidor y reintenta con un
+margen ligeramente mayor. Si hace falta, conserva el offload explícito y reduce
+gradualmente contexto, batch y ubatch. La configuración efectiva y el intento
+de memoria quedan guardados junto al resultado. Esta adaptación no modifica los
+lanzamientos manuales.
+
 Evaluaciones de modelos candidatas:
 
 El procedimiento completo y reutilizable para comparar un nuevo modelo, binario, perfil o harness está en el [Manual de benchmarking](docs/benchmark-manual.md). La matriz de perfiles y sus resultados históricos se mantiene en [docs/benchmark-profile-matrix.md](docs/benchmark-profile-matrix.md). El [ranking por caso de uso y catálogo de mejoras](docs/benchmark-ranking-and-use-cases.md) resume qué perfiles sirven para calidad, velocidad, visión, contexto, VRAM y warm-cache.
@@ -2016,6 +2024,11 @@ En enlaces PCIe débiles prioriza `layer`; con enlaces rápidos habilita la prue
 de `tensor`. La recomendación no reemplaza una medición: los benchmarks deben
 comparar prefill (`pp/s`), generación (`tg/s`), TTFT, VRAM por GPU y estabilidad
 con el mismo modelo, prompt y versión de `llama.cpp`.
+
+En benchmarks, la ocupación no se evalúa sólo por VRAM agregada: se registra la
+VRAM de cada GPU, porque una distribución 10/22 GB puede ser peor que 16/16 GB
+aunque ambas sumen lo mismo. La escalera adaptativa intenta primero equilibrar
+los dispositivos y sólo baja la presión después de observar un OOM real.
 
 El contrato y las reglas están documentados en
 [`docs/multi-gpu-performance.md`](docs/multi-gpu-performance.md).

@@ -151,6 +151,8 @@ private slots:
     void benchmarkRestartErrorsAreInfrastructure();
     void benchmarkBusyTurnIsRetryableNotInfrastructure();
     void benchmarkRepairPrefillIsNotStagnation();
+    void benchmarkMemoryPressureIsRecognized();
+    void benchmarkUsesMaxVramBeforeReducingPressure();
     void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkGateRejectsBrokenOrStaleHe0();
     void benchmarkGateAcceptsValidHe20QualityResult();
@@ -1754,6 +1756,62 @@ void AppControllerTests::benchmarkRepairPrefillIsNotStagnation()
     QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(true, true));
     QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(false, true));
     QVERIFY(AppController::benchmarkRepairStagnationCheckForTest(false, false));
+}
+
+void AppControllerTests::benchmarkMemoryPressureIsRecognized()
+{
+    QVERIFY(AppController::benchmarkLogIndicatesOutOfMemoryForTest(
+        QStringLiteral("cudaMalloc failed: out of memory")));
+    QVERIFY(AppController::benchmarkLogIndicatesOutOfMemoryForTest(
+        QStringLiteral("Memoria insuficiente (OOM) al cargar el modelo.")));
+    QVERIFY(AppController::benchmarkLogIndicatesOutOfMemoryForTest(
+        QStringLiteral("unable to allocate CUDA buffer")));
+    QVERIFY(!AppController::benchmarkLogIndicatesOutOfMemoryForTest(
+        QStringLiteral("server ready - model loaded")));
+    QVERIFY(!AppController::benchmarkLogIndicatesOutOfMemoryForTest(
+        QStringLiteral("El agente quedó pensando durante el prefill.")));
+}
+
+void AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
+{
+    const QStringList base{
+        QStringLiteral("--fit"), QStringLiteral("off"),
+        QStringLiteral("--n-gpu-layers"), QStringLiteral("999"),
+        QStringLiteral("--tensor-split"), QStringLiteral("1,0"),
+        QStringLiteral("-ot"), QStringLiteral("experts=CUDA1,other=CPU"),
+        QStringLiteral("--n-cpu-moe"), QStringLiteral("32"),
+        QStringLiteral("--ctx-size"), QStringLiteral("131072"),
+        QStringLiteral("--batch-size"), QStringLiteral("4096"),
+        QStringLiteral("--ubatch-size"), QStringLiteral("1024")};
+
+    const QStringList maxArgs = AppController::benchmarkMemoryPolicyArgsForTest(base, 0);
+    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--fit")) + 1),
+             QStringLiteral("on"));
+    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--fit-target")) + 1),
+             QStringLiteral("128"));
+    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
+             QStringLiteral("1,1"));
+    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
+             QStringLiteral("999"));
+    QVERIFY(!maxArgs.contains(QStringLiteral("--n-cpu-moe")));
+    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("-ot")) + 1),
+             QStringLiteral("experts=CUDA1"));
+
+    const QStringList stableArgs = AppController::benchmarkMemoryPolicyArgsForTest(base, 3);
+    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--fit-target")) + 1),
+             QStringLiteral("1024"));
+    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
+             QStringLiteral("1,1"));
+    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
+             QStringLiteral("auto"));
+    QVERIFY(stableArgs.contains(QStringLiteral("--n-cpu-moe")));
+    QVERIFY(stableArgs.at(stableArgs.indexOf(QStringLiteral("-ot")) + 1)
+                .contains(QStringLiteral("=CPU")));
+
+    const QStringList lastResort = AppController::benchmarkMemoryPolicyArgsForTest(base, 5);
+    QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--ctx-size")) + 1).toInt() < 131072);
+    QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--batch-size")) + 1).toInt() < 4096);
+    QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--ubatch-size")) + 1).toInt() < 1024);
 }
 
 void AppControllerTests::benchmarkPreservesScoreAfterTransportTail()

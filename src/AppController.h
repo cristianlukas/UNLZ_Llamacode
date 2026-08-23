@@ -1311,6 +1311,9 @@ public:
     static bool benchmarkTurnBusyForTest(const QString &message);
     static bool benchmarkRepairStagnationCheckForTest(bool agentBusy,
                                                        bool workspaceChanged);
+    static bool benchmarkLogIndicatesOutOfMemoryForTest(const QString &message);
+    static QStringList benchmarkMemoryPolicyArgsForTest(const QStringList &baseArgs,
+                                                        int attempt);
 
     // Puntúa las respuestas de texto del agente con el evaluador que ya trae cada
     // tarea del benchmark. Sin esto, una suite cuyas tareas se contestan en el chat
@@ -2000,6 +2003,12 @@ private:
     int m_proBenchmarkTimeout = 0;
     QString m_proBenchmarkAgent;
     QString      m_lastEvalImportError;
+    // Benchmark-only VRAM escalation. A fresh profile starts at the most
+    // aggressive placement and moves down the ladder only after a load OOM.
+    // Manual launches keep their declared arguments unchanged.
+    int          m_benchmarkMemoryAttempt = -1;
+    QStringList  m_benchmarkEffectiveArgs;
+    static constexpr int kBenchmarkMaxMemoryAttempts = 7;
     // Auto-tuning
     bool         m_autoTuneRunning = false;
     int          m_autoTuneProgress = 0;
@@ -2073,6 +2082,7 @@ private:
                                                   const QString &stage,
                                                   QStringList *blockedProfiles = nullptr);
     QString benchmarkServerLogTail(int maxBytes = 24000) const;
+    void decorateBenchmarkMemory(QVariantMap *result) const;
     void saveBenchmarkFailureResult(const QString &profileId, const QString &profileName,
                                     int pass, int passes, const QString &mode,
                                     const QString &target, const QString &benchmarkName,
