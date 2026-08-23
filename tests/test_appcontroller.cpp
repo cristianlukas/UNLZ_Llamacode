@@ -150,6 +150,7 @@ private slots:
     void benchmarkStopStepKillsWhenBudgetRunsOut();
     void benchmarkRestartErrorsAreInfrastructure();
     void benchmarkBusyTurnIsRetryableNotInfrastructure();
+    void benchmarkRepairPrefillIsNotStagnation();
     void benchmarkPreservesScoreAfterTransportTail();
     void benchmarkGateRejectsBrokenOrStaleHe0();
     void benchmarkGateAcceptsValidHe20QualityResult();
@@ -1745,6 +1746,14 @@ void AppControllerTests::benchmarkBusyTurnIsRetryableNotInfrastructure()
         QStringLiteral("connection closed by peer")));
     QVERIFY(!AppController::benchmarkErrorIsInfrastructureForTest(
         QStringLiteral("Hay un turno en curso.")));
+}
+
+void AppControllerTests::benchmarkRepairPrefillIsNotStagnation()
+{
+    QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(true, false));
+    QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(true, true));
+    QVERIFY(!AppController::benchmarkRepairStagnationCheckForTest(false, true));
+    QVERIFY(AppController::benchmarkRepairStagnationCheckForTest(false, false));
 }
 
 void AppControllerTests::benchmarkPreservesScoreAfterTransportTail()

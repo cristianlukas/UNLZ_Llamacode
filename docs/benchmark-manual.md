@@ -392,6 +392,13 @@ segundos sin cambiar archivos. El corte se registra como
 `repair-stagnation`, evita dejar un daemon consumiendo GPU indefinidamente y
 evita publicar un puntaje parcial como si fuera una corrida final.
 
+El watchdog no mide el prefill de un turno ocupado como estancamiento. En
+modelos grandes una reparación puede tardar varios minutos sólo en evaluar el
+prompt antes de emitir la primera herramienta; mientras el backend está
+ocupado, el límite aplicable es el timeout duro de pared. Cada reparación abre
+además un turno nuevo y reinicia su guardia `turnFinished`; así el cierre de la
+reparación no queda ignorado por el turno anterior.
+
 La huella que usa ese watchdog excluye los artefactos internos de LlamaCode bajo
 `.llamacode/` (por ejemplo `agent_events.jsonl`) y normaliza los separadores de
 ruta antes de comparar. Esto es importante en Windows, donde una ruta relativa

@@ -1686,6 +1686,12 @@ apaga el agente auto-iniciado.
 Los perfiles marcados como **BEST (⚡)** son recomendaciones curadas a partir de
 benchmarks. Se muestran antes que los favoritos en todos los selectores de perfiles.
 
+En benchmarks de agente, la reparación BCB espera el `turnFinished` del turno
+correctivo y no considera estancado un backend que todavía está ocupado en
+prefill, herramientas o cierre de stream. El watchdog de reparación sólo actúa
+cuando el backend está libre y no hubo cambios reales en el workspace durante
+180 segundos; el timeout duro de la corrida sigue siendo el límite de seguridad.
+
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
 
 Evaluaciones de modelos candidatas:

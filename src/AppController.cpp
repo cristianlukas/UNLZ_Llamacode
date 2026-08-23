@@ -16986,6 +16986,14 @@ bool AppController::benchmarkTurnBusyForTest(const QString &message)
         || lower.contains(QStringLiteral("turno en curso"));
 }
 
+bool AppController::benchmarkRepairStagnationCheckForTest(bool agentBusy,
+                                                           bool workspaceChanged)
+{
+    // A busy backend may still be doing prompt prefill or tool work; lack of a
+    // file mutation is not stagnation until the turn is idle.
+    return !agentBusy && !workspaceChanged;
+}
+
 bool AppController::benchmarkErrorIsInfrastructureForTest(const QString &message)
 {
     const QString lower = message.toLower();
@@ -17848,6 +17856,10 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                 emit benchmarkStatusChanged();
                 *turnStartMs = QDateTime::currentMSecsSinceEpoch();
                 *turnFirstMs = -1;
+                // The repair is a new backend turn. The preceding benchmark
+                // prompt already marked this guard handled, so reset it or
+                // the repair's authoritative turnFinished signal is ignored.
+                *turnCompletionHandled = false;
                 *lastActivityMs = *turnStartMs;
                 *repairBaselineFingerprint = workspaceFingerprint();
                 *repairLastProgressMs = *turnStartMs;
@@ -17860,8 +17872,18 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
                             return;
                         const QString currentFingerprint = workspaceFingerprint();
                         const qint64 now = QDateTime::currentMSecsSinceEpoch();
-                        if (currentFingerprint != *repairBaselineFingerprint) {
-                            *repairBaselineFingerprint = currentFingerprint;
+                        // A large repair prompt can spend several minutes in
+                        // llama-server prefill before the first tool call. No
+                        // workspace mutation during that interval is not
+                        // evidence of a repair loop; the hard wall timeout is
+                        // the safety limit for a genuinely stuck turn.
+                        const bool workspaceChanged =
+                            currentFingerprint != *repairBaselineFingerprint;
+                        if (!benchmarkRepairStagnationCheckForTest(
+                                agent->isBusy(), workspaceChanged)) {
+                            if (workspaceChanged) {
+                                *repairBaselineFingerprint = currentFingerprint;
+                            }
                             *repairLastProgressMs = now;
                             return;
                         }

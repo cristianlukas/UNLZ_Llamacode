@@ -1309,6 +1309,8 @@ public:
     static QString benchmarkTaskArtifactNameForTest(const QString &taskId);
     static int benchmarkStreamingDeltaForTest(QString *previous, const QString &current);
     static bool benchmarkTurnBusyForTest(const QString &message);
+    static bool benchmarkRepairStagnationCheckForTest(bool agentBusy,
+                                                       bool workspaceChanged);
 
     // Puntúa las respuestas de texto del agente con el evaluador que ya trae cada
     // tarea del benchmark. Sin esto, una suite cuyas tareas se contestan en el chat
