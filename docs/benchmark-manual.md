@@ -55,6 +55,21 @@ runner activo. Al continuar, se retoma desde `benchmarkCoverage.nextStage`; no
 se reinician etapas ya cerradas ni se convierten intentos interrumpidos en
 resultados válidos.
 
+### Campaña post-corrección serial
+
+La campaña reproducible de los perfiles `benchmark=true` activos se puede
+orquestar con:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File .\tools\run-benchmark-post-correction.ps1
+```
+
+El runner obtiene los perfiles del catálogo, ejecuta un solo perfil por vez y
+consulta `benchmarkCoverage` después de cada etapa. Sólo reintenta un resultado
+`infra-timeout`; un resultado `blocked` detiene ese perfil y no se convierte en
+calidad cero. El registro operativo queda en
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-campaign-post-correction.log`.
+
 ## Alcance de ejecución
 
 Por defecto, sólo se benchmarkean perfiles marcados `⚡ BEST` en la tabla viva.
