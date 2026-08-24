@@ -1809,6 +1809,8 @@ void AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
                 .contains(QStringLiteral("=CPU")));
 
     const QStringList lastResort = AppController::benchmarkMemoryPolicyArgsForTest(base, 5);
+    QCOMPARE(lastResort.at(lastResort.indexOf(QStringLiteral("--tensor-split")) + 1),
+             QStringLiteral("1,1"));
     QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--ctx-size")) + 1).toInt() < 131072);
     QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--batch-size")) + 1).toInt() < 4096);
     QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--ubatch-size")) + 1).toInt() < 1024);

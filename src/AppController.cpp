@@ -17201,9 +17201,10 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
                  QStringLiteral("999"));
     } else {
         // After an OOM, keep the profile's explicit CPU mapping as a stable
-        // anchor, but let fit choose the layer boundary and keep both GPUs in
-        // play for the next two attempts.
-        if (level <= 4) balanceTensorSplit();
+        // anchor, but keep every GPU in play while fit chooses the layer
+        // boundary. A late fallback must not silently return to a profile's
+        // single-GPU tensor split, or one device can remain half empty.
+        balanceTensorSplit();
         setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("auto"));
         setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),
                  QStringLiteral("auto"));
