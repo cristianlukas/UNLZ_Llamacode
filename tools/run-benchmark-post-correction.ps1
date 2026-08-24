@@ -36,25 +36,13 @@ function Get-ControlPropertySafe([string]$Name) {
 }
 
 function Get-ActiveBenchmarkProfiles {
-    $wanted = [System.Collections.Generic.List[string]]::new()
-    foreach ($path in @(
-        (Join-Path $PSScriptRoot '..\assets\system_profiles.json'),
-        (Join-Path $PSScriptRoot '..\profiles\launches.json')
-    )) {
-        $items = Get-Content -LiteralPath ([IO.Path]::GetFullPath($path)) -Raw | ConvertFrom-Json
-        foreach ($item in @($items)) {
-            if (($item.benchmark -eq $true) -and (-not [string]::IsNullOrWhiteSpace([string]$item.id)) -and (-not $wanted.Contains([string]$item.id))) {
-                $wanted.Add([string]$item.id)
-            }
-        }
-    }
-
+    # launchMenu() is authoritative: it includes benchmarkVariants expanded by
+    # ProfileManager, which are not separate rows in the source JSON files.
     $menu = @((Invoke-Control 'launchMenu' @()).result)
-    $selected = foreach ($item in $menu) {
-        if ($wanted.Contains([string]$item.id) -and $item.benchmark -eq $true -and $item.ready -eq $true) {
-            $item
-        }
-    }
+    $selected = @($menu | Where-Object {
+        $_.benchmark -eq $true -and $_.ready -eq $true -and
+        -not [string]::IsNullOrWhiteSpace([string]$_.id)
+    })
     return @($selected)
 }
 

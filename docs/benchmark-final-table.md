@@ -8,9 +8,14 @@ están pausados actualmente: la instrumentación de memoria fue corregida y pas�
 ese cambio. Por eso no presento como nuevos resultados las corridas inválidas
 por infraestructura.
 
-El catálogo actual contiene **23 perfiles con `benchmark=true`**: 5 de sistema
-y 18 de usuario. El número anterior de 51 correspondía a una fotografía
-histórica del catálogo y no es el total vigente.
+El catálogo fuente contiene 23 perfiles base con `benchmark=true` (5 de sistema
+y 18 de usuario), pero el catálogo vivo expande además las variantes
+declarativas de benchmark. Al iniciar la campaña post-corrección, LlamaCode
+reportó **83 perfiles `benchmark=true` listos**: 23 bases + 60 variantes. La
+tabla detallada de abajo conserva los 23 perfiles base; las variantes se
+agregarán al consolidado post-campaña con su propia huella, memoria y etapa.
+El número anterior de 51 correspondía a una fotografía histórica y tampoco es
+el total vigente.
 
 ## Cómo leer la tabla
 
@@ -25,7 +30,7 @@ histórica del catálogo y no es el total vigente.
 - Las filas con `—` no deben leerse como calidad cero: no tienen una medición
   BCB comparable y necesitan reintento.
 
-## Todos los perfiles activos
+## Perfiles base activos ya consolidados
 
 | # | Perfil | GGUF / familia | HE0 | HE20 | BCB | TPS BCB | Tiempos HE0 / HE20 / BCB (s) | Estado consolidado |
 |---:|---|---|---:|---:|---:|---:|---:|---|
