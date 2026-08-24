@@ -17161,6 +17161,27 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
             }
         }
     };
+    auto removePinnedCudaOverrideClauses = [&args]() {
+        const QStringList names{QStringLiteral("--override-tensor"), QStringLiteral("-ot"),
+                                QStringLiteral("--override-tensor-draft"), QStringLiteral("-otd")};
+        const QRegularExpression cudaDevice(QStringLiteral("=cuda[0-9]+$"),
+                                             QRegularExpression::CaseInsensitiveOption);
+        for (int i = args.size() - 2; i >= 0; --i) {
+            if (!names.contains(args.at(i))) continue;
+            const QStringList clauses = args.at(i + 1).split(QLatin1Char(','), Qt::SkipEmptyParts);
+            QStringList kept;
+            for (const QString &clause : clauses) {
+                if (!cudaDevice.match(clause.trimmed()).hasMatch())
+                    kept.append(clause);
+            }
+            if (kept.isEmpty()) {
+                args.removeAt(i + 1);
+                args.removeAt(i);
+            } else {
+                args[i + 1] = kept.join(QLatin1Char(','));
+            }
+        }
+    };
     auto balanceTensorSplit = [&args, &valueIndex, &tensorSplitNames]() {
         const int index = valueIndex(tensorSplitNames);
         if (index < 0) return;
@@ -17188,6 +17209,10 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
     setValue(fitNames, QStringLiteral("--fit"), QStringLiteral("on"));
     setValue(fitTargetNames, QStringLiteral("--fit-target"),
              QString::number(fitTargets[level]));
+    // Explicit CUDA0/CUDA1 expert pins defeat tensor-split: fit can fill one
+    // board while leaving the other mostly empty. Keep CPU clauses for the
+    // stable fallback, but let fit place GPU-resident tensors itself.
+    removePinnedCudaOverrideClauses();
 
     if (level <= 2) {
         // First try: remove explicit CPU residency and let llama.cpp place as

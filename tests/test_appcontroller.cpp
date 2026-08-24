@@ -1794,8 +1794,7 @@ void AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
     QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
              QStringLiteral("999"));
     QVERIFY(!maxArgs.contains(QStringLiteral("--n-cpu-moe")));
-    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("-ot")) + 1),
-             QStringLiteral("experts=CUDA1"));
+    QVERIFY(!maxArgs.contains(QStringLiteral("-ot")));
 
     const QStringList stableArgs = AppController::benchmarkMemoryPolicyArgsForTest(base, 3);
     QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--fit-target")) + 1),
@@ -1805,8 +1804,8 @@ void AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
     QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
              QStringLiteral("auto"));
     QVERIFY(stableArgs.contains(QStringLiteral("--n-cpu-moe")));
-    QVERIFY(stableArgs.at(stableArgs.indexOf(QStringLiteral("-ot")) + 1)
-                .contains(QStringLiteral("=CPU")));
+    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("-ot")) + 1),
+             QStringLiteral("other=CPU"));
 
     const QStringList lastResort = AppController::benchmarkMemoryPolicyArgsForTest(base, 5);
     QCOMPARE(lastResort.at(lastResort.indexOf(QStringLiteral("--tensor-split")) + 1),
