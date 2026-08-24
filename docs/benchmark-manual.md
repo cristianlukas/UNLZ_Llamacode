@@ -28,6 +28,33 @@ El ranking por caso de uso, la lectura de los perfiles Qwen3.8/DFlash2/Ling y el
 catálogo de mejoras de las interfaces se consolidan en
 [`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).
 
+## Procedimiento de validación y pausa segura
+
+Para retomar una tanda de cambios en el planificador de memoria o los harness:
+
+1. Leer `AGENTS.md` y `README.md`; comprobar el estado de Git y preservar los
+   cambios ajenos.
+2. Compilar el candidato Debug con `build.bat Debug NOPAUSE` y comprobar que se
+   actualizó `build/Debug/LlamaCode.exe`.
+3. Ejecutar `tests.bat Debug`; la suite debe terminar con todos los tests en
+   verde (`69/69` en la configuración actual). Si se modifica C++/QML/core, no
+   se salta esta etapa.
+4. Arrancar el Debug, comprobar la API de control y verificar que
+   `benchmarkRunning=false` antes de iniciar una cola.
+5. Ejecutar un único perfil por vez, en orden `HE0 → HE20 → BCB`. Registrar para
+   cada intento el comando efectivo, `fit-target`, OOM, tiempo de carga,
+   `vramGpu0Mb`, `vramGpu1Mb`, capacidad/libre por GPU, RAM total/libre, TPS,
+   TTFT, tiempo total y calidad. Un OOM de carga dispara la escalera adaptativa;
+   no se anota como fracaso de calidad.
+6. Mantener el runner serial activo y detenerlo sólo después de cancelar el
+   benchmark por la API y confirmar que el servidor desapareció. Nunca lanzar
+   otra tanda mientras `benchmarkRunning=true`.
+
+Una pausa segura deja la API sin benchmark, sin `llama-server` residual y sin
+runner activo. Al continuar, se retoma desde `benchmarkCoverage.nextStage`; no
+se reinician etapas ya cerradas ni se convierten intentos interrumpidos en
+resultados válidos.
+
 ## Alcance de ejecución
 
 Por defecto, sólo se benchmarkean perfiles marcados `⚡ BEST` en la tabla viva.
@@ -86,15 +113,17 @@ obliga a repetir HE0 aunque exista un resultado histórico `1/1`.
 Durante una corrida de benchmark, LlamaCode aplica una política de memoria
 adaptativa a cada perfil. El primer arranque intenta la mayor ocupación útil
 posible: habilita `--fit` cuando el binario lo declara, baja el margen de
-`--fit-target`, libera overrides explícitos de expertos a CPU, equilibra los
-dispositivos indicados por `--tensor-split` y solicita el máximo de capas GPU.
+`--fit-target` y libera los flags explícitos de colocación (`--n-gpu-layers`,
+`--n-gpu-layers-draft`, `--tensor-split` y overrides de expertos). Así
+`llama.cpp` puede medir ambas GPUs y elegir por sí mismo el límite de capas y
+el reparto VRAM/RAM según los pesos reales, incluidos los expertos MoE.
 
 Si `llama-server` informa OOM durante la carga, no se registra inmediatamente
 como fallo del modelo. Se limpia el proceso y se avanza por una escalera de
-margen creciente; se eliminan los anclajes CPU/GPU de expertos para que `fit`
-decida el reparto entre VRAM y RAM y, como último recurso, se reduce
-gradualmente contexto, batch y ubatch. La escalera se detiene al encontrar una
-carga estable o al agotar sus intentos. Los flags no soportados por el binario
+margen creciente; se eliminan los anclajes CPU/GPU de expertos y los flags de
+colocación para que `fit` decida el reparto entre las dos VRAM y la RAM y, como
+último recurso, se reduce gradualmente contexto, batch y ubatch. La escalera se
+detiene al encontrar una carga estable o al agotar sus intentos. Los flags no soportados por el binario
 se eliminan antes de iniciar para no convertir una adaptación en un error de
 compatibilidad.
 
@@ -337,10 +366,16 @@ ejecución. La tabla registra como `VRAM total` el máximo de `GPU0 usada +
 GPU1 usada` en MB (`vramMb`), no la VRAM libre ni la capacidad nominal de las
 placas. También se conserva `ramMb` como RAM pico en el JSON y en la historia.
 Los resultados nuevos incluyen además `vramGpu0Mb` y `vramGpu1Mb`, medidos por
-índice de GPU mediante `nvidia-smi`; `vramMb` es la suma de ambos. Esto permite
-relacionar TPS con la distribución real de memoria y detectar si un perfil
-carga más expertos en una placa. Las corridas históricas que sólo guardaron la
-suma no se desglosan retrospectivamente.
+índice de GPU mediante `nvidia-smi`; `vramMb` es la suma de ambos. También se
+guardan capacidad y margen (`vramGpu*TotalMb`, `vramGpu*FreeMb`), RAM total/libre,
+el alcance de la telemetría (`server-process` o `device-total`) y una evaluación
+de equilibrio basada en capacidad (`vramPlacementAssessment`). Esto permite
+relacionar TPS con la distribución real de memoria y detectar si el placement
+quedó sesgado, sin confundir VRAM usada por otras aplicaciones con la del
+servidor. El reparto de expertos no se adivina por el quant: `llama.cpp` recibe
+los tamaños exactos de los tensores GGUF y decide con `fit`; por eso el benchmark
+no fuerza overrides MoE. Las corridas históricas que sólo guardaron la suma no
+se desglosan retrospectivamente.
 Si una corrida no obtiene telemetría válida, se escribe `No medido` y no se
 infiere el valor a partir del quant, contexto o TPS. Para variantes MoE se
 anotan además las lecturas por GPU en la historia, porque la suma total no

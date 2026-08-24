@@ -1695,11 +1695,12 @@ cuando el backend está libre y no hubo cambios reales en el workspace durante
 Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, velocidad y calidad relativa con resultados persistidos en tabla.
 
 Cada perfil de benchmark usa una escalera adaptativa de VRAM. Primero intenta
-la mayor ocupación útil de las GPU (fit, margen mínimo, capas y expertos en GPU
-cuando el binario lo permite); ante un OOM limpia el servidor y reintenta con un
-margen ligeramente mayor. Elimina anclajes explícitos de expertos a CPU o a una
-GPU para que fit pueda repartir la memoria; después reduce gradualmente
-contexto, batch y ubatch. La configuración efectiva y el intento
+la mayor ocupación útil habilitando `fit` y quitando los flags explícitos de
+colocación (`n-gpu-layers`, `n-gpu-layers-draft`, `tensor-split` y overrides de
+expertos), para que `llama.cpp` pueda medir ambas placas y decidir el reparto
+VRAM/RAM según los pesos reales, incluidos los expertos MoE; ante un OOM limpia
+el servidor y reintenta con un margen ligeramente mayor. Después reduce
+gradualmente contexto, batch y ubatch. La configuración efectiva y el intento
 de memoria quedan guardados junto al resultado. Esta adaptación no modifica los
 lanzamientos manuales.
 

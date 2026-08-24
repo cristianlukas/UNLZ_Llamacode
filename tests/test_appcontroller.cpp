@@ -1789,29 +1789,25 @@ void AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
              QStringLiteral("on"));
     QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--fit-target")) + 1),
              QStringLiteral("128"));
-    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
-             QStringLiteral("1,1"));
-    QCOMPARE(maxArgs.at(maxArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
-             QStringLiteral("999"));
     QVERIFY(!maxArgs.contains(QStringLiteral("--n-cpu-moe")));
     QVERIFY(!maxArgs.contains(QStringLiteral("-ot")));
+    QVERIFY(!maxArgs.contains(QStringLiteral("--n-gpu-layers")));
+    QVERIFY(!maxArgs.contains(QStringLiteral("--tensor-split")));
 
     const QStringList stableArgs = AppController::benchmarkMemoryPolicyArgsForTest(base, 3);
     QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--fit-target")) + 1),
              QStringLiteral("1024"));
-    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--tensor-split")) + 1),
-             QStringLiteral("1,1"));
-    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
-             QStringLiteral("auto"));
     QVERIFY(!stableArgs.contains(QStringLiteral("--n-cpu-moe")));
     QVERIFY(!stableArgs.contains(QStringLiteral("-ot")));
+    QVERIFY(!stableArgs.contains(QStringLiteral("--n-gpu-layers")));
+    QVERIFY(!stableArgs.contains(QStringLiteral("--tensor-split")));
 
     const QStringList lastResort = AppController::benchmarkMemoryPolicyArgsForTest(base, 5);
-    QCOMPARE(lastResort.at(lastResort.indexOf(QStringLiteral("--tensor-split")) + 1),
-             QStringLiteral("1,1"));
     QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--ctx-size")) + 1).toInt() < 131072);
     QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--batch-size")) + 1).toInt() < 4096);
     QVERIFY(lastResort.at(lastResort.indexOf(QStringLiteral("--ubatch-size")) + 1).toInt() < 1024);
+    QVERIFY(!lastResort.contains(QStringLiteral("--n-gpu-layers")));
+    QVERIFY(!lastResort.contains(QStringLiteral("--tensor-split")));
 }
 
 void AppControllerTests::benchmarkPreservesScoreAfterTransportTail()

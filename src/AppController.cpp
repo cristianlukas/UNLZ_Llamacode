@@ -15916,6 +15916,7 @@ void AppController::startConcurrencyBenchmark(const QString &profileId, int minS
                                 result[QStringLiteral("vramMb")] = vramMb;
                                 result[QStringLiteral("vramGpu0Mb")] = resources.vramGpu0Mb;
                                 result[QStringLiteral("vramGpu1Mb")] = resources.vramGpu1Mb;
+                                decorateBenchmarkResourceMetrics(&result, resources);
                                 result[QStringLiteral("qualityScore")] = ok;
                                 result[QStringLiteral("qualityTotal")] = requests;
                                 result[QStringLiteral("finalScore")] = ok;
@@ -16570,6 +16571,7 @@ void AppController::runBenchmarkInternal(const QStringList &profileIds, const QS
                                 result["vramMb"]       = vramMb;
                                 result["vramGpu0Mb"]   = resources.vramGpu0Mb;
                                 result["vramGpu1Mb"]   = resources.vramGpu1Mb;
+                                decorateBenchmarkResourceMetrics(&result, resources);
                                 result["elapsedSec"]   =
                                     (QDateTime::currentMSecsSinceEpoch() - *passStartMs) / 1000.0;
                                 result["generationSec"] = 0.0;
@@ -17109,8 +17111,6 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
     const QStringList draftGpuLayerNames{QStringLiteral("--n-gpu-layers-draft"),
                                          QStringLiteral("--gpu-layers-draft"),
                                          QStringLiteral("-ngld")};
-    const QStringList tensorSplitNames{QStringLiteral("--tensor-split"),
-                                       QStringLiteral("-ts")};
 
     auto valueIndex = [&args](const QStringList &names) {
         for (int i = 0; i + 1 < args.size(); ++i)
@@ -17182,15 +17182,6 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
             }
         }
     };
-    auto balanceTensorSplit = [&args, &valueIndex, &tensorSplitNames]() {
-        const int index = valueIndex(tensorSplitNames);
-        if (index < 0) return;
-        QStringList parts = args.at(index + 1).split(QLatin1Char(','), Qt::SkipEmptyParts);
-        if (parts.size() < 2) return;
-        for (QString &part : parts)
-            if (part.trimmed() == QLatin1String("0")) part = QStringLiteral("1");
-        args[index + 1] = parts.join(QLatin1Char(','));
-    };
     auto scaleValue = [&args, &valueIndex](const QStringList &names, double scale,
                                            int minimum, int alignment) {
         const int index = valueIndex(names);
@@ -17216,23 +17207,14 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
     removeCpuOverrideClauses();
     removePinnedCudaOverrideClauses();
 
-    if (level <= 2) {
-        // First try: remove explicit CPU residency and let llama.cpp place as
-        // many weights as possible. A zero in tensor-split is also an explicit
-        // prohibition against using that GPU, so lift it for the max attempt.
-        balanceTensorSplit();
-        setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("999"));
-        setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),
-                 QStringLiteral("999"));
-    } else {
-        // After an OOM, keep every GPU in play while fit chooses the layer
-        // boundary. A late fallback must not silently return to a profile's
-        // single-GPU tensor split or CPU-expert pinning.
-        balanceTensorSplit();
-        setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("auto"));
-        setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),
-                 QStringLiteral("auto"));
-    }
+    // Do not leave placement flags behind: llama.cpp's fit heuristic refuses
+    // to run when the user explicitly sets n-gpu-layers, tensor-split, or the
+    // draft layer count. Removing them lets fit measure both GPUs and choose
+    // the layer/RAM boundary itself instead of attempting the whole model on
+    // CUDA0 and reporting a misleading OOM.
+    removePairs(gpuLayerNames);
+    removePairs(draftGpuLayerNames);
+    removePairs({QStringLiteral("--tensor-split"), QStringLiteral("-ts")});
 
     // Last-resort steps reduce allocation pressure gradually while retaining a
     // runnable profile: context first, then batch/ubatch. The effective args
@@ -18245,6 +18227,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["vramMb"]       = vramMb;
             result["vramGpu0Mb"]   = vramGpu0Mb;
             result["vramGpu1Mb"]   = vramGpu1Mb;
+            BenchmarkResources peakResources = resources;
+            peakResources.ramMb = ramMb;
+            peakResources.vramMb = vramMb;
+            peakResources.vramGpu0Mb = vramGpu0Mb;
+            peakResources.vramGpu1Mb = vramGpu1Mb;
+            decorateBenchmarkResourceMetrics(&result, peakResources);
             result["elapsedSec"]   = elapsed;
             result["generationSec"] = generationMs / 1000.0;
             result["nonGenerationSec"] = qMax(0.0, elapsed - generationMs / 1000.0);
@@ -19137,6 +19125,30 @@ AppController::BenchmarkResources AppController::benchmarkMeasureResourcesNow() 
         resources.ramMb = readCimRam(0, processName);
     if (resources.ramMb <= 0.0)
         resources.ramMb = readCimRam(0, QStringLiteral("llama-server.exe"));
+
+    // Keep total/free system RAM separate from the server's working set. The
+    // latter is the benchmark metric; the former is the capacity available to
+    // llama.cpp when fit decides which tensors (including MoE experts) stay in
+    // VRAM and which spill to host memory.
+    QProcess os;
+    os.start(QStringLiteral("powershell"),
+             {QStringLiteral("-NoProfile"), QStringLiteral("-ExecutionPolicy"),
+              QStringLiteral("Bypass"), QStringLiteral("-Command"),
+              QStringLiteral("$m=Get-CimInstance Win32_OperatingSystem; "
+                             "[Console]::Out.WriteLine(([double]$m.TotalVisibleMemorySize/1024).ToString([Globalization.CultureInfo]::InvariantCulture)+','+"
+                             "(([double]$m.FreePhysicalMemory/1024).ToString([Globalization.CultureInfo]::InvariantCulture)))")});
+    if (os.waitForFinished(5000)) {
+        const QStringList parts = QString::fromUtf8(os.readAllStandardOutput())
+            .trimmed().split(QLatin1Char(','));
+        if (parts.size() >= 2) {
+            bool totalOk = false;
+            bool freeOk = false;
+            resources.ramTotalMb = parts.at(0).trimmed().toDouble(&totalOk);
+            resources.ramFreeMb = parts.at(1).trimmed().toDouble(&freeOk);
+            if (!totalOk) resources.ramTotalMb = 0.0;
+            if (!freeOk) resources.ramFreeMb = 0.0;
+        }
+    }
 #endif
 
     const QString nvidiaSmi = QStandardPaths::findExecutable(QStringLiteral("nvidia-smi"));
@@ -19145,6 +19157,7 @@ AppController::BenchmarkResources AppController::benchmarkMeasureResourcesNow() 
         nsmi.start(nvidiaSmi,
                    {QStringLiteral("--query-compute-apps=index,pid,used_memory"),
                     QStringLiteral("--format=csv,noheader,nounits")});
+        bool processVramFound = false;
         if (nsmi.waitForFinished(3000)) {
             const QString text = QString::fromUtf8(nsmi.readAllStandardOutput());
             for (const QString &line : text.split('\n', Qt::SkipEmptyParts)) {
@@ -19162,33 +19175,44 @@ AppController::BenchmarkResources AppController::benchmarkMeasureResourcesNow() 
                 if (memOk && indexOk) {
                     if (index == 0) resources.vramGpu0Mb += mb;
                     if (index == 1) resources.vramGpu1Mb += mb;
+                    processVramFound = true;
+                }
+            }
+        }
+        resources.vramProcessScoped = processVramFound;
+        QProcess gpu;
+        gpu.start(nvidiaSmi,
+                  {QStringLiteral("--query-gpu=index,memory.total,memory.free,memory.used"),
+                   QStringLiteral("--format=csv,noheader,nounits")});
+        if (gpu.waitForFinished(3000)) {
+            const QString text = QString::fromUtf8(gpu.readAllStandardOutput());
+            for (const QString &line : text.split('\n', Qt::SkipEmptyParts)) {
+                const QStringList parts = line.split(QLatin1Char(','));
+                if (parts.size() < 4)
+                    continue;
+                bool indexOk = false;
+                bool totalOk = false;
+                bool freeOk = false;
+                bool usedOk = false;
+                const int index = parts.at(0).trimmed().toInt(&indexOk);
+                const double total = parts.at(1).trimmed().toDouble(&totalOk);
+                const double free = parts.at(2).trimmed().toDouble(&freeOk);
+                const double used = parts.at(3).trimmed().toDouble(&usedOk);
+                if (!indexOk)
+                    continue;
+                if (index == 0) {
+                    if (totalOk) resources.vramGpu0TotalMb = total;
+                    if (freeOk) resources.vramGpu0FreeMb = free;
+                    if (!processVramFound && usedOk) resources.vramGpu0Mb = used;
+                }
+                if (index == 1) {
+                    if (totalOk) resources.vramGpu1TotalMb = total;
+                    if (freeOk) resources.vramGpu1FreeMb = free;
+                    if (!processVramFound && usedOk) resources.vramGpu1Mb = used;
                 }
             }
         }
         resources.vramMb = resources.vramGpu0Mb + resources.vramGpu1Mb;
-        if (resources.vramMb <= 0.0) {
-            QProcess gpu;
-            gpu.start(nvidiaSmi,
-                      {QStringLiteral("--query-gpu=index,memory.used"),
-                       QStringLiteral("--format=csv,noheader,nounits")});
-            if (gpu.waitForFinished(3000)) {
-                const QString text = QString::fromUtf8(gpu.readAllStandardOutput());
-                for (const QString &line : text.split('\n', Qt::SkipEmptyParts)) {
-                    const QStringList parts = line.split(QLatin1Char(','));
-                    if (parts.size() < 2)
-                        continue;
-                    bool indexOk = false;
-                    const int index = parts.at(0).trimmed().toInt(&indexOk);
-                    bool ok = false;
-                    const double mb = parts.at(1).trimmed().toDouble(&ok);
-                    if (ok && indexOk) {
-                        if (index == 0) resources.vramGpu0Mb = mb;
-                        if (index == 1) resources.vramGpu1Mb = mb;
-                    }
-                }
-                resources.vramMb = resources.vramGpu0Mb + resources.vramGpu1Mb;
-            }
-        }
     }
 
     return resources;
@@ -19200,6 +19224,60 @@ void AppController::benchmarkMeasureResources(std::function<void(BenchmarkResour
     QTimer::singleShot(0, this, [=]() {
         onDone(resources);
     });
+}
+
+void AppController::decorateBenchmarkResourceMetrics(QVariantMap *result,
+                                                      const BenchmarkResources &resources) const
+{
+    if (!result)
+        return;
+
+    (*result)[QStringLiteral("ramTotalMb")] = resources.ramTotalMb;
+    (*result)[QStringLiteral("ramFreeMb")] = resources.ramFreeMb;
+    (*result)[QStringLiteral("vramGpu0TotalMb")] = resources.vramGpu0TotalMb;
+    (*result)[QStringLiteral("vramGpu1TotalMb")] = resources.vramGpu1TotalMb;
+    (*result)[QStringLiteral("vramGpu0FreeMb")] = resources.vramGpu0FreeMb;
+    (*result)[QStringLiteral("vramGpu1FreeMb")] = resources.vramGpu1FreeMb;
+    (*result)[QStringLiteral("vramFreeMb")] =
+        resources.vramGpu0FreeMb + resources.vramGpu1FreeMb;
+    (*result)[QStringLiteral("vramTelemetryScope")] = resources.vramProcessScoped
+        ? QStringLiteral("server-process") : QStringLiteral("device-total");
+
+    const double total0 = resources.vramGpu0TotalMb > 0.0
+        ? resources.vramGpu0TotalMb : resources.vramGpu0Mb;
+    const double total1 = resources.vramGpu1TotalMb > 0.0
+        ? resources.vramGpu1TotalMb : resources.vramGpu1Mb;
+    const double used0 = qMax(0.0, resources.vramGpu0Mb);
+    const double used1 = qMax(0.0, resources.vramGpu1Mb);
+    const double usedTotal = used0 + used1;
+    const double normalized0 = total0 > 0.0 ? used0 / total0 : 0.0;
+    const double normalized1 = total1 > 0.0 ? used1 / total1 : 0.0;
+    const bool hasCapacity = total0 > 0.0 && total1 > 0.0;
+    const double freeTotal = resources.vramGpu0FreeMb + resources.vramGpu1FreeMb;
+    const double optimalShare0 = freeTotal > 0.0
+        ? 100.0 * resources.vramGpu0FreeMb / freeTotal : 50.0;
+    const double observedShare0 = usedTotal > 0.0 ? 100.0 * used0 / usedTotal : 0.0;
+
+    (*result)[QStringLiteral("vramGpu0UsedPct")] = 100.0 * normalized0;
+    (*result)[QStringLiteral("vramGpu1UsedPct")] = 100.0 * normalized1;
+    (*result)[QStringLiteral("vramNormalizedImbalancePct")] =
+        hasCapacity ? 100.0 * qAbs(normalized0 - normalized1) : 0.0;
+    (*result)[QStringLiteral("vramOptimalGpu0SharePct")] = optimalShare0;
+    (*result)[QStringLiteral("vramObservedGpu0SharePct")] = observedShare0;
+    (*result)[QStringLiteral("benchmarkMemoryPlanner")] =
+        QStringLiteral("llama.cpp-fit-expert-aware");
+
+    QString assessment = QStringLiteral("unknown");
+    if (hasCapacity && usedTotal > 0.0) {
+        const double shareDelta = qAbs(observedShare0 - optimalShare0);
+        if (shareDelta <= 10.0)
+            assessment = QStringLiteral("balanced");
+        else if (observedShare0 > optimalShare0)
+            assessment = QStringLiteral("gpu0-heavy");
+        else
+            assessment = QStringLiteral("gpu1-heavy");
+    }
+    (*result)[QStringLiteral("vramPlacementAssessment")] = assessment;
 }
 
 // ── Persistence ───────────────────────────────────────────────────────────────
@@ -19292,6 +19370,15 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("vramMb")] = 0.0;
     result[QStringLiteral("vramGpu0Mb")] = 0.0;
     result[QStringLiteral("vramGpu1Mb")] = 0.0;
+    result[QStringLiteral("ramTotalMb")] = 0.0;
+    result[QStringLiteral("ramFreeMb")] = 0.0;
+    result[QStringLiteral("vramFreeMb")] = 0.0;
+    result[QStringLiteral("vramGpu0TotalMb")] = 0.0;
+    result[QStringLiteral("vramGpu1TotalMb")] = 0.0;
+    result[QStringLiteral("vramGpu0FreeMb")] = 0.0;
+    result[QStringLiteral("vramGpu1FreeMb")] = 0.0;
+    result[QStringLiteral("vramTelemetryScope")] = QStringLiteral("unavailable");
+    result[QStringLiteral("vramPlacementAssessment")] = QStringLiteral("unknown");
     result[QStringLiteral("elapsedSec")] = elapsedSec;
     result[QStringLiteral("generationSec")] = 0.0;
     result[QStringLiteral("nonGenerationSec")] = elapsedSec;

@@ -2135,12 +2135,21 @@ private:
                           const QString &resultType = QString());
     struct BenchmarkResources {
         double ramMb = 0.0;
+        double ramTotalMb = 0.0;
+        double ramFreeMb = 0.0;
         double vramMb = 0.0;
         double vramGpu0Mb = 0.0;
         double vramGpu1Mb = 0.0;
+        double vramGpu0TotalMb = 0.0;
+        double vramGpu1TotalMb = 0.0;
+        double vramGpu0FreeMb = 0.0;
+        double vramGpu1FreeMb = 0.0;
+        bool vramProcessScoped = false;
     };
     BenchmarkResources benchmarkMeasureResourcesNow() const;
     void benchmarkMeasureResources(std::function<void(BenchmarkResources)> onDone);
+    void decorateBenchmarkResourceMetrics(QVariantMap *result,
+                                          const BenchmarkResources &resources) const;
     QString modelDownloadDir() const;
     void rebuildModelRecommendations();
     // kind: "cpu" | "beellama" (ngram-mod / Qwen NextN MTP) | "official"/""
