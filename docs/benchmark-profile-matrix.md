@@ -4,6 +4,10 @@ Snapshot de revisión: 2026-08-21. Este archivo conserva la identidad y la confi
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
+La tabla consolidada vigente de todos los perfiles activos, junto con las
+recomendaciones SOL/TERRA/LUNA/METEOR y los casos de uso, está en
+[Tabla final de benchmarks y recomendaciones](benchmark-final-table.md).
+
 Política vigente: los pesos del modelo principal y el KV K/V deben ser `q8_0` o
 menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias
 limitadas a `q8_0`; sus tiempos y scores anteriores no se mezclan con los nuevos.
