@@ -17209,26 +17209,25 @@ QStringList AppController::benchmarkMemoryPolicyArgsForTest(const QStringList &b
     setValue(fitNames, QStringLiteral("--fit"), QStringLiteral("on"));
     setValue(fitTargetNames, QStringLiteral("--fit-target"),
              QString::number(fitTargets[level]));
-    // Explicit CUDA0/CUDA1 expert pins defeat tensor-split: fit can fill one
-    // board while leaving the other mostly empty. Keep CPU clauses for the
-    // stable fallback, but let fit place GPU-resident tensors itself.
+    // Explicit CPU/CUDA0/CUDA1 expert pins defeat fit: they can either leave
+    // both boards mostly empty or fill only one board. Remove them for every
+    // adaptive attempt and let fit choose the GPU/RAM placement itself.
+    removeCpuMoe();
+    removeCpuOverrideClauses();
     removePinnedCudaOverrideClauses();
 
     if (level <= 2) {
         // First try: remove explicit CPU residency and let llama.cpp place as
         // many weights as possible. A zero in tensor-split is also an explicit
         // prohibition against using that GPU, so lift it for the max attempt.
-        removeCpuMoe();
-        removeCpuOverrideClauses();
         balanceTensorSplit();
         setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("999"));
         setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),
                  QStringLiteral("999"));
     } else {
-        // After an OOM, keep the profile's explicit CPU mapping as a stable
-        // anchor, but keep every GPU in play while fit chooses the layer
+        // After an OOM, keep every GPU in play while fit chooses the layer
         // boundary. A late fallback must not silently return to a profile's
-        // single-GPU tensor split, or one device can remain half empty.
+        // single-GPU tensor split or CPU-expert pinning.
         balanceTensorSplit();
         setValue(gpuLayerNames, QStringLiteral("--n-gpu-layers"), QStringLiteral("auto"));
         setValue(draftGpuLayerNames, QStringLiteral("--n-gpu-layers-draft"),

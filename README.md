@@ -1697,8 +1697,9 @@ Módulo para comparar quants y perfiles de forma sistemática: mide RAM, VRAM, v
 Cada perfil de benchmark usa una escalera adaptativa de VRAM. Primero intenta
 la mayor ocupación útil de las GPU (fit, margen mínimo, capas y expertos en GPU
 cuando el binario lo permite); ante un OOM limpia el servidor y reintenta con un
-margen ligeramente mayor. Si hace falta, conserva el offload explícito y reduce
-gradualmente contexto, batch y ubatch. La configuración efectiva y el intento
+margen ligeramente mayor. Elimina anclajes explícitos de expertos a CPU o a una
+GPU para que fit pueda repartir la memoria; después reduce gradualmente
+contexto, batch y ubatch. La configuración efectiva y el intento
 de memoria quedan guardados junto al resultado. Esta adaptación no modifica los
 lanzamientos manuales.
 

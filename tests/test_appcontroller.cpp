@@ -1803,9 +1803,8 @@ void AppControllerTests::benchmarkUsesMaxVramBeforeReducingPressure()
              QStringLiteral("1,1"));
     QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("--n-gpu-layers")) + 1),
              QStringLiteral("auto"));
-    QVERIFY(stableArgs.contains(QStringLiteral("--n-cpu-moe")));
-    QCOMPARE(stableArgs.at(stableArgs.indexOf(QStringLiteral("-ot")) + 1),
-             QStringLiteral("other=CPU"));
+    QVERIFY(!stableArgs.contains(QStringLiteral("--n-cpu-moe")));
+    QVERIFY(!stableArgs.contains(QStringLiteral("-ot")));
 
     const QStringList lastResort = AppController::benchmarkMemoryPolicyArgsForTest(base, 5);
     QCOMPARE(lastResort.at(lastResort.indexOf(QStringLiteral("--tensor-split")) + 1),

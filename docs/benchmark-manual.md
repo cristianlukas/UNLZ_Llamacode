@@ -91,11 +91,12 @@ dispositivos indicados por `--tensor-split` y solicita el máximo de capas GPU.
 
 Si `llama-server` informa OOM durante la carga, no se registra inmediatamente
 como fallo del modelo. Se limpia el proceso y se avanza por una escalera de
-margen creciente; después se conserva el mapeo CPU explícito, deja que `fit`
-elija el límite de capas y, como último recurso, reduce gradualmente contexto,
-batch y ubatch. La escalera se detiene al encontrar una carga estable o al
-agotar sus intentos. Los flags no soportados por el binario se eliminan antes
-de iniciar para no convertir una adaptación en un error de compatibilidad.
+margen creciente; se eliminan los anclajes CPU/GPU de expertos para que `fit`
+decida el reparto entre VRAM y RAM y, como último recurso, se reduce
+gradualmente contexto, batch y ubatch. La escalera se detiene al encontrar una
+carga estable o al agotar sus intentos. Los flags no soportados por el binario
+se eliminan antes de iniciar para no convertir una adaptación en un error de
+compatibilidad.
 
 Cada resultado guarda `benchmarkMemoryPolicy`, `benchmarkMemoryAttempt`,
 `benchmarkMemoryFitTargetMiB` y `benchmarkEffectiveArgs`. Así, dos filas del
