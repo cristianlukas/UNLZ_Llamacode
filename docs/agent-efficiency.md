@@ -104,7 +104,11 @@ Comparar con el mismo modelo, quant, contexto, prompt, temperatura y hardware:
 4. Cinco pasadas como mínimo y orden aleatorio.
 
 Registrar tokens de prompt/generados, tiempos de prefill/generación/pared,
-tool calls, bytes de tools, éxito, reparaciones, RAM y VRAM. Una variante pasa
+tool calls, bytes de tools, éxito, reparaciones, RAM y VRAM. Cuando la tarea
+declara `acceptance.toolCalls`, registrar además la corrección de la secuencia
+(éxito, fallos, incompletas, redundancias, precision/recall/F1 y llamadas
+inesperadas). Sin esa expectativa la métrica de corrección queda explícitamente
+como "sin dato", no como cero. Una variante pasa
 el gate si reduce al menos 15% tokens o 10% tiempo sin reducir éxito ni producir
 ediciones incorrectas.
 
@@ -126,13 +130,17 @@ de tiempo y calidad, para evitar comparaciones manuales ambiguas.
 Sus IDs, prompts, límites y comandos de aceptación están versionados; una comparación
 válida usa la misma revisión de la suite, modelo, perfil, hardware y cantidad de
 pasadas. La suite recomienda tres pasadas: al seleccionarla la UI aplica ese valor,
-que el usuario todavía puede modificar. Cada carpeta aislada mantiene además
+que el usuario todavía puede modificar. Para barridos A/B de harness,
+`tools/harness_ab.ps1` usa cinco pasadas por defecto, intercala aleatoriamente
+los perfiles con una semilla persistible y aborta si el informe final queda
+desbalanceado; menos de cinco queda reservado para smoke/A-B rapido. Cada
+carpeta aislada mantiene además
 `comparison.json`, actualizado después de cada muestra, con tasa de éxito,
 estabilidad del resultado, rango y mediana de calidad, medianas de tiempo y
 reparaciones, y deltas pareados entre los perfiles seleccionados. Las pasadas
 fallidas cuentan para éxito/estabilidad pero no introducen ceros artificiales en
 las medianas. El resultado individual persistido aporta calidad, tiempo y uso de
-tools.
+tools junto con `toolCallQuality`.
 
 ## Project Brain incremental
 

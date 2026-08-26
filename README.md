@@ -1733,8 +1733,11 @@ Para aislar el costo del harness existe la suite custom **Harness Context A/B v1
 (`harness_context_tools_ab_v1`, [JSON bundleado](assets/benchmarks/custom/harness_context_tools_ab_v1.json)).
 Ejecutarla con target **Agent**, el mismo launch profile y tres pasadas, repitiendo
 por separado con `agent-chat`, `agent-intermedio` y `agent-maximo`. Compara calidad
-ejecutable, primer intento, TTFT, tokens, tool calls, reparaciones y RAM/VRAM. El
-control de Chat puro debe medirse aparte porque el runner de agente exige un
+ejecutable, primer intento, TTFT, tokens, tool calls, corrección de la secuencia
+(`toolCallQuality`), reparaciones y RAM/VRAM. El script
+`tools/harness_ab.ps1` automatiza el barrido con cinco pasadas intercaladas por
+defecto, semilla persistible y validación de balance; una cantidad menor sirve
+para smoke/A-B rapido. El control de Chat puro debe medirse aparte porque el runner de agente exige un
 artefacto de archivo por tarea.
 
 Los perfiles externos de vLLM siguen la misma escalera HE0 → HE20 → BCB, pero

@@ -17895,6 +17895,12 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
         injectBrowserMcp(mergedMcp, m_activeLaunchId);
         agent->setMcpServers(mergedMcp.values());
 
+        auto lifecycleEvents = std::make_shared<QVariantList>();
+        connect(agent, &IAgentBackend::agentLifecycleEvent, this,
+                [lifecycleEvents](const QVariantMap &event) {
+                    lifecycleEvents->append(event);
+                });
+
         AgentContext c;
         c.adapter       = QStringLiteral("llamaagent");
         c.harnessEngineId = benchmarkHarnessEngine;
@@ -18018,6 +18024,29 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             QString fallbackArtifact;
             const QVariantList msgs = agent->messages();
             QVariantList assistantMetrics;
+            const QVariantList toolCalls = AgentEfficiency::toolCallsFromLifecycle(
+                *lifecycleEvents);
+            QVariantList expectedToolCalls;
+            bool hasToolExpectations = false;
+            bool completeToolExpectations = !benchTasks.isEmpty();
+            for (const QVariant &tv : benchTasks) {
+                const QVariantMap acceptance = tv.toMap().value(
+                    QStringLiteral("acceptance")).toMap();
+                if (!acceptance.contains(QStringLiteral("toolCalls"))) {
+                    completeToolExpectations = false;
+                    continue;
+                }
+                hasToolExpectations = true;
+                const QVariantList declared = acceptance.value(
+                    QStringLiteral("toolCalls")).toList();
+                expectedToolCalls.append(declared);
+            }
+            // A partial declaration cannot be compared against the aggregate
+            // lifecycle because calls are not tagged with a benchmark task id.
+            if (!hasToolExpectations || !completeToolExpectations)
+                expectedToolCalls.clear();
+            const QVariantMap toolCallQuality = AgentEfficiency::evaluateToolCalls(
+                toolCalls, expectedToolCalls);
             double tpsSum = 0.0;
             double ttftSum = 0.0;
             double generationMs = 0.0;
@@ -18460,6 +18489,8 @@ void AppController::runAgentBenchmark(const QString &profileId, const QString &p
             result["passedAfterRepair"] = *repairAttempts > 0 && qTotal > 0 && qScore >= qTotal;
             result["response"]     = finalText;
             result["agentFiles"]   = files;
+            result["toolCalls"] = toolCalls.size();
+            result["toolCallQuality"] = toolCallQuality;
             result["complexityMetrics"] = benchmarkWorkspaceDelta(
                 workspaceBefore, snapshotBenchmarkWorkspace(workspace));
             result["agentMetrics"] = assistantMetrics;
@@ -19572,6 +19603,23 @@ void AppController::saveBenchmarkFailureResult(const QString &profileId, const Q
     result[QStringLiteral("finalScore")] = 0;
     result[QStringLiteral("finalTotal")] = 0;
     result[QStringLiteral("repairAttempts")] = 0;
+    result[QStringLiteral("toolCalls")] = 0;
+    result[QStringLiteral("toolCallQuality")] = QVariantMap{
+        {QStringLiteral("totalCalls"), 0},
+        {QStringLiteral("successfulCalls"), 0},
+        {QStringLiteral("failedCalls"), 0},
+        {QStringLiteral("incompleteCalls"), 0},
+        {QStringLiteral("invalidCalls"), 0},
+        {QStringLiteral("redundantCalls"), 0},
+        {QStringLiteral("successRatePct"), -1.0},
+        {QStringLiteral("expectedCalls"), 0},
+        {QStringLiteral("matchedExpectedCalls"), 0},
+        {QStringLiteral("missingExpectedCalls"), 0},
+        {QStringLiteral("unexpectedCalls"), 0},
+        {QStringLiteral("precisionPct"), -1.0},
+        {QStringLiteral("recallPct"), -1.0},
+        {QStringLiteral("f1Pct"), -1.0},
+        {QStringLiteral("sequenceExact"), false}};
     result[QStringLiteral("avgTps")] = 0.0;
     result[QStringLiteral("avgTtftMs")] = 0.0;
     result[QStringLiteral("ramMb")] = 0.0;
@@ -19669,6 +19717,9 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["finalScore"] = result.value("finalScore").toInt();
     summary["finalTotal"] = result.value("finalTotal").toInt();
     summary["repairAttempts"] = result.value("repairAttempts").toInt();
+    summary["toolCalls"] = result.value("toolCalls").toInt();
+    summary["toolCallQuality"] = QJsonObject::fromVariantMap(
+        result.value("toolCallQuality").toMap());
     summary["timeToFirstAttempt"] = result.value("timeToFirstAttempt").toDouble();
     summary["totalTime"] = result.value("totalTime").toDouble();
     summary["passedAfterRepair"] = result.value("passedAfterRepair").toBool();

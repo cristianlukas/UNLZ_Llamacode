@@ -13,7 +13,12 @@ private slots:
     void metrics_parsesLlamaAndOpenAI();
     void metrics_summarizesAndCompares();
     void metrics_summarizesSpeculativeAcceptance();
+    void metrics_extractsLifecycleToolCalls();
+    void metrics_scoresToolCallCorrectnessAndRedundancy();
+    void metrics_detectsWrongToolOrderAndFailedExpectedCall();
+    void metrics_keepsUnknownCorrectnessSeparateFromFailures();
     void metrics_aggregatesRepeatedBenchmarkRuns();
+    void metrics_aggregatesToolQuality();
     void metrics_groupsByAgentProfileForHarnessAb();
     void structured_compactsAndProjects();
     void structured_rejectsUnsafeLanguagesAndSyntax();
@@ -67,6 +72,110 @@ void AgentEfficiencyTests::metrics_summarizesSpeculativeAcceptance()
     QCOMPARE(total.value("draftTokens").toLongLong(), 15);
     QCOMPARE(total.value("draftAcceptedTokens").toLongLong(), 9);
     QCOMPARE(total.value("draftAcceptancePct").toDouble(), 60.0);
+}
+
+void AgentEfficiencyTests::metrics_extractsLifecycleToolCalls()
+{
+    const QVariantList events{
+        QVariantMap{{"event", "tool.request"}, {"callId", "r1"},
+                     {"tool", "read_file"}, {"arguments", "{\"path\":\"a.txt\"}"}},
+        QVariantMap{{"event", "tool.start"}, {"callId", "r1"},
+                     {"tool", "read_file"}},
+        QVariantMap{{"event", "tool.finish"}, {"callId", "r1"},
+                     {"tool", "read_file"}, {"ok", true}, {"result", "ok"}},
+        QVariantMap{{"event", "tool.request"}, {"callId", "r2"},
+                     {"tool", "write_file"}, {"arguments", "{\"path\":\"b.txt\"}"}}
+    };
+    const QVariantList calls = AgentEfficiency::toolCallsFromLifecycle(events);
+    QCOMPARE(calls.size(), 2);
+    QCOMPARE(calls.at(0).toMap().value("tool").toString(), QString("read_file"));
+    QVERIFY(calls.at(0).toMap().value("completed").toBool());
+    QVERIFY(calls.at(0).toMap().value("ok").toBool());
+    QVERIFY(!calls.at(1).toMap().value("completed").toBool());
+}
+
+void AgentEfficiencyTests::metrics_scoresToolCallCorrectnessAndRedundancy()
+{
+    const QVariantList calls{
+        QVariantMap{{"tool", "read_file"},
+                     {"arguments", QVariantMap{{"path", "a.txt"}}},
+                     {"completed", true}, {"ok", true}},
+        // Same semantic call with a different JSON key order: it is redundant,
+        // not a new successful action.
+        QVariantMap{{"tool", "read_file"},
+                     {"arguments", "{\"path\":\"a.txt\"}"},
+                     {"completed", true}, {"ok", true}},
+        QVariantMap{{"tool", "write_file"},
+                     {"arguments", "{\"path\":\"b.txt\",\"content\":\"x\"}"},
+                     {"completed", true}, {"ok", true}}
+    };
+    const QVariantList expected{
+        QVariantMap{{"tool", "read_file"}, {"arguments", QVariantMap{{"path", "a.txt"}}}},
+        QVariantMap{{"tool", "write_file"},
+                     {"arguments", QVariantMap{{"content", "x"}, {"path", "b.txt"}}}}
+    };
+    const QVariantMap score = AgentEfficiency::evaluateToolCalls(calls, expected);
+    QCOMPARE(score.value("totalCalls").toInt(), 3);
+    QCOMPARE(score.value("successfulCalls").toInt(), 3);
+    QCOMPARE(score.value("redundantCalls").toInt(), 1);
+    QCOMPARE(score.value("matchedExpectedCalls").toInt(), 2);
+    QCOMPARE(score.value("unexpectedCalls").toInt(), 1);
+    QCOMPARE(score.value("missingExpectedCalls").toInt(), 0);
+    QCOMPARE(score.value("successRatePct").toDouble(), 100.0);
+    QCOMPARE(score.value("precisionPct").toDouble(), 200.0 / 3.0);
+    QCOMPARE(score.value("recallPct").toDouble(), 100.0);
+    QCOMPARE(score.value("f1Pct").toDouble(), 80.0);
+    QVERIFY(!score.value("sequenceExact").toBool());
+}
+
+void AgentEfficiencyTests::metrics_detectsWrongToolOrderAndFailedExpectedCall()
+{
+    const QVariantList expected{
+        QVariantMap{{"tool", "read_file"}, {"arguments", QVariantMap{{"path", "a.txt"}}}},
+        QVariantMap{{"tool", "write_file"}, {"arguments", QVariantMap{{"path", "b.txt"}}}}
+    };
+    const QVariantList reversed{
+        QVariantMap{{"tool", "write_file"}, {"arguments", QVariantMap{{"path", "b.txt"}}},
+                     {"completed", true}, {"ok", true}},
+        QVariantMap{{"tool", "read_file"}, {"arguments", QVariantMap{{"path", "a.txt"}}},
+                     {"completed", true}, {"ok", true}}
+    };
+    const QVariantMap orderScore = AgentEfficiency::evaluateToolCalls(reversed, expected);
+    QCOMPARE(orderScore.value("matchedExpectedCalls").toInt(), 2);
+    QCOMPARE(orderScore.value("unexpectedCalls").toInt(), 0);
+    QCOMPARE(orderScore.value("missingExpectedCalls").toInt(), 0);
+    QVERIFY(!orderScore.value("sequenceExact").toBool());
+
+    const QVariantList failed{
+        QVariantMap{{"tool", "read_file"}, {"arguments", QVariantMap{{"path", "a.txt"}}},
+                     {"completed", true}, {"ok", false}},
+        QVariantMap{{"tool", "write_file"}, {"arguments", QVariantMap{{"path", "b.txt"}}},
+                     {"completed", true}, {"ok", true}}
+    };
+    const QVariantMap failureScore = AgentEfficiency::evaluateToolCalls(failed, expected);
+    QCOMPARE(failureScore.value("matchedExpectedCalls").toInt(), 2);
+    QCOMPARE(failureScore.value("failedCalls").toInt(), 1);
+    QVERIFY(!failureScore.value("sequenceExact").toBool());
+}
+
+void AgentEfficiencyTests::metrics_keepsUnknownCorrectnessSeparateFromFailures()
+{
+    const QVariantList calls{
+        QVariantMap{{"tool", "run_shell"}, {"arguments", "{bad"},
+                     {"completed", true}, {"ok", false}},
+        QVariantMap{{"tool", "read_file"}, {"arguments", QVariantMap{}},
+                     {"completed", false}}
+    };
+    const QVariantMap score = AgentEfficiency::evaluateToolCalls(calls);
+    QCOMPARE(score.value("failedCalls").toInt(), 1);
+    QCOMPARE(score.value("incompleteCalls").toInt(), 1);
+    QCOMPARE(score.value("invalidCalls").toInt(), 1);
+    QCOMPARE(score.value("successRatePct").toDouble(), 0.0);
+    QCOMPARE(score.value("expectedCalls").toInt(), 0);
+    QCOMPARE(score.value("precisionPct").toDouble(), -1.0);
+    QCOMPARE(score.value("recallPct").toDouble(), -1.0);
+    QCOMPARE(score.value("f1Pct").toDouble(), -1.0);
+    QVERIFY(!score.value("sequenceExact").toBool());
 }
 
 void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
@@ -134,6 +243,33 @@ void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()
     QCOMPARE(comparison.value("qualityDeltaPctPoints").toDouble(), -10.0);
     QCOMPARE(comparison.value("elapsedChangePct").toDouble(), (80.0 / 59.0 - 1.0) * 100.0);
     QCOMPARE(comparison.value("comparisonTimeChangePct").toDouble(), (80.0 / 59.0 - 1.0) * 100.0);
+}
+
+void AgentEfficiencyTests::metrics_aggregatesToolQuality()
+{
+    const QVariantMap firstQuality{
+        {"totalCalls", 4}, {"successRatePct", 75.0},
+        {"redundantCalls", 1}, {"f1Pct", 80.0}};
+    const QVariantMap secondQuality{
+        {"totalCalls", 6}, {"successRatePct", 100.0},
+        {"redundantCalls", 0}, {"f1Pct", 100.0}};
+    const QVariantList runs{
+        QVariantMap{{"profileId", "same-model"}, {"agentProfileId", "minimal"},
+                     {"agentProfileName", "Minimal"}, {"qualityScore", 1},
+                     {"qualityTotal", 1}, {"elapsedSec", 10.0}, {"failed", false},
+                     {"toolCallQuality", firstQuality}},
+        QVariantMap{{"profileId", "same-model"}, {"agentProfileId", "minimal"},
+                     {"agentProfileName", "Minimal"}, {"qualityScore", 1},
+                     {"qualityTotal", 1}, {"elapsedSec", 12.0}, {"failed", false},
+                     {"toolCallQuality", secondQuality}}
+    };
+    const QVariantMap report = AgentEfficiency::benchmarkComparison(
+        runs, QStringLiteral("agentProfileId"));
+    const QVariantMap profile = report.value("profiles").toList().first().toMap();
+    QCOMPARE(profile.value("medianToolCalls").toDouble(), 5.0);
+    QCOMPARE(profile.value("medianToolSuccessRatePct").toDouble(), 87.5);
+    QCOMPARE(profile.value("medianToolRedundantCalls").toDouble(), 0.5);
+    QCOMPARE(profile.value("medianToolF1Pct").toDouble(), 90.0);
 }
 
 void AgentEfficiencyTests::structured_compactsAndProjects()

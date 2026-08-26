@@ -26,12 +26,13 @@ param(
     [Parameter(Mandatory = $true)][string[]] $AgentProfileIds,
     [string] $CustomBenchmarkId = "",
     [string] $Mode = "coding",
-    [int]    $Passes = 1,
+    [int]    $Passes = 5,
     [int]    $TimeoutSec = 0,
     [int]    $Port = 8877,
     [int]    $PollSeconds = 10,
     [int]    $MaxWaitMinutes = 240,
-    [string] $Out = "harness-ab.json"
+    [string] $Out = "harness-ab.json",
+    [int]    $OrderSeed = 4242
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,6 +44,10 @@ $base = "http://127.0.0.1:$Port"
 $AgentProfileIds = @($AgentProfileIds | ForEach-Object { $_ -split ',' } |
                      ForEach-Object { $_.Trim() } | Where-Object { $_.Length -gt 0 })
 if ($AgentProfileIds.Count -lt 1) { throw "Falta -AgentProfileIds." }
+if ($Passes -lt 1) { throw "-Passes debe ser mayor o igual a 1." }
+if ($Passes -lt 5) {
+    Write-Host "AVISO: menos de 5 pasadas; el resultado sirve como smoke/A-B rapido, no como comparacion estable." -ForegroundColor Yellow
+}
 
 function Inv([string]$target, [string]$method, $arguments) {
     $body = @{ method = $method; args = $arguments } | ConvertTo-Json -Depth 12 -Compress
@@ -80,24 +85,60 @@ function Wait-Benchmark {
     return $false
 }
 
+function Get-Shuffled([string[]]$Items, [int]$Seed) {
+    $shuffled = [System.Collections.ArrayList]@($Items)
+    $random = [System.Random]::new($Seed)
+    for ($i = $shuffled.Count - 1; $i -gt 0; $i--) {
+        $j = $random.Next($i + 1)
+        $tmp = $shuffled[$i]
+        $shuffled[$i] = $shuffled[$j]
+        $shuffled[$j] = $tmp
+    }
+    return @($shuffled)
+}
+
 # Instante de arranque: la comparacion final se acota a las corridas de ESTE
 # barrido. Sin esto el informe suma el historial del usuario y un perfil con 30
 # corridas viejas "gana" contra uno recien creado con una.
 $sinceEpochMs = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+$ordersByPass = @()
 
-foreach ($ap in $AgentProfileIds) {
-    Write-Host "=== Corriendo benchmark con perfil de agente '$ap'" -ForegroundColor Cyan
-    if ($CustomBenchmarkId) {
-        Inv "" "startCustomBenchmark" @(@($LaunchProfileId), $CustomBenchmarkId, $Passes,
-                                       "agent", $TimeoutSec, $ap) | Out-Null
-    } else {
-        Inv "" "startBenchmark" @(@($LaunchProfileId), $Mode, $Passes,
-                                 "agent", $TimeoutSec, $ap) | Out-Null
+# Intercalar perfiles por pasada evita que un perfil quede siempre primero (cache
+# fria) o siempre ultimo (temperatura/throttling). Cada llamada es una sola pasada
+# para que todos acumulen exactamente la misma cantidad de muestras.
+for ($pass = 1; $pass -le $Passes; $pass++) {
+    $order = @(Get-Shuffled -Items $AgentProfileIds -Seed ($OrderSeed + $pass - 1))
+    $ordersByPass += ,$order
+    Write-Host ("=== Pasada {0}/{1}: {2}" -f $pass, $Passes, ($order -join ", ")) -ForegroundColor Cyan
+    foreach ($ap in $order) {
+        if ($CustomBenchmarkId) {
+            $started = Inv "" "startCustomBenchmark" @(@($LaunchProfileId), $CustomBenchmarkId, 1,
+                                                       "agent", $TimeoutSec, $ap)
+        } else {
+            $started = Inv "" "startBenchmark" @(@($LaunchProfileId), $Mode, 1,
+                                             "agent", $TimeoutSec, $ap)
+        }
+        if ($started.ok -ne $true) {
+            throw "No se pudo iniciar el benchmark para el perfil '$ap'."
+        }
+        if (-not (Wait-Benchmark)) { throw "Timeout esperando el benchmark del perfil '$ap'." }
     }
-    if (-not (Wait-Benchmark)) { throw "Timeout esperando el benchmark del perfil '$ap'." }
 }
 
 $report = (Inv "" "compareHarnessBenchmarks" @($AgentProfileIds, "", $sinceEpochMs)).result
+$report | Add-Member -Force -NotePropertyName passesRequested -NotePropertyValue $Passes
+$report | Add-Member -Force -NotePropertyName orderSeed -NotePropertyValue $OrderSeed
+$report | Add-Member -Force -NotePropertyName profileOrderByPass -NotePropertyValue @($ordersByPass)
+
+# El informe debe ser balanceado de verdad: un perfil sin todas sus muestras no
+# puede compararse con los demas aunque el API lo marque como parcialmente ok.
+foreach ($ap in $AgentProfileIds) {
+    $row = @($report.profiles | Where-Object { $_.profileId -eq $ap }) | Select-Object -First 1
+    if ($null -eq $row) { throw "El informe no contiene el perfil '$ap'." }
+    if ([int]$row.runs -ne $Passes) {
+        throw ("El perfil '{0}' tiene {1} corridas; se esperaban {2}. Comparacion abortada por desbalance." -f $ap, $row.runs, $Passes)
+    }
+}
 $report | ConvertTo-Json -Depth 12 | Set-Content -Path $Out -Encoding UTF8
 
 Write-Host ""
@@ -108,9 +149,10 @@ Write-Host "=== Resultado por perfil de agente" -ForegroundColor Cyan
 # "sin dato": hay que decirlo, no imprimir un cero.
 foreach ($p in $report.profiles) {
     if ($p.successfulRuns -gt 0) {
-        Write-Host ("{0,-24} calidad {1,6:N1}%  exito {2,6:N1}%  tiempo {3,7:N1}s  archivos {4,4:N1}  runs {5}" -f `
+        $toolF1 = if ($p.PSObject.Properties.Name -contains 'medianToolF1Pct') { $p.medianToolF1Pct } else { -1 }
+        Write-Host ("{0,-24} calidad {1,6:N1}%  exito {2,6:N1}%  tiempo {3,7:N1}s  tools F1 {4,6:N1}%  archivos {5,4:N1}  runs {6}" -f `
             $p.profileName, $p.medianQualityPct, $p.successRatePct, $p.medianElapsedSec,
-            $p.medianFilesChanged, $p.runs)
+            $toolF1, $p.medianFilesChanged, $p.runs)
     } else {
         Write-Host ("{0,-24} calidad     s/d  exito {1,6:N1}%  tiempo     s/d  (0 de {2} corridas pasaron los criterios)" -f `
             $p.profileName, $p.successRatePct, $p.runs) -ForegroundColor Yellow

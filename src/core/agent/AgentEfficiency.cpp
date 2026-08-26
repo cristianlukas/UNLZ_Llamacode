@@ -1,6 +1,14 @@
 #include "AgentEfficiency.h"
 
 #include <algorithm>
+#include <functional>
+#include <QHash>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonValue>
+#include <QMetaType>
+#include <QSet>
+#include <QVector>
 #include <QtMath>
 
 static double firstNumber(const QJsonObject &a, const QJsonObject &b,
@@ -121,6 +129,205 @@ static double median(QList<double> values)
         : (values.at(middle - 1) + values.at(middle)) / 2.0;
 }
 
+static QString canonicalToolArguments(const QVariant &raw, bool *valid = nullptr)
+{
+    if (valid) *valid = true;
+    if (!raw.isValid() || raw.isNull()) return QStringLiteral("{}");
+
+    QJsonValue value;
+    if (raw.typeId() == QMetaType::QString) {
+        const QByteArray bytes = raw.toString().trimmed().toUtf8();
+        if (bytes.isEmpty()) return QStringLiteral("{}");
+        QJsonParseError error;
+        const QJsonDocument doc = QJsonDocument::fromJson(bytes, &error);
+        if (error.error != QJsonParseError::NoError || !doc.isObject()) {
+            if (valid) *valid = false;
+            return QStringLiteral("<invalid-json>");
+        }
+        value = doc.object();
+    } else {
+        value = QJsonValue::fromVariant(raw);
+        if (!value.isObject()) {
+            if (valid) *valid = false;
+            return QStringLiteral("<invalid-object>");
+        }
+    }
+
+    // QJsonObject preserves insertion order. Re-encode through sorted keys so
+    // two providers with a different serialization order compare equally.
+    std::function<QJsonValue(const QJsonValue &)> canonical =
+        [&](const QJsonValue &item) -> QJsonValue {
+            if (item.isArray()) {
+                QJsonArray array;
+                for (const QJsonValue &entry : item.toArray()) array.append(canonical(entry));
+                return array;
+            }
+            if (!item.isObject()) return item;
+            QStringList keys = item.toObject().keys();
+            std::sort(keys.begin(), keys.end());
+            QJsonObject object;
+            for (const QString &key : keys)
+                object.insert(key, canonical(item.toObject().value(key)));
+            return object;
+        };
+    return QString::fromUtf8(QJsonDocument(canonical(value).toObject())
+                                 .toJson(QJsonDocument::Compact));
+}
+
+QVariantList AgentEfficiency::toolCallsFromLifecycle(const QVariantList &events)
+{
+    QVariantList calls;
+    QHash<QString, int> byCallId;
+    for (const QVariant &value : events) {
+        const QVariantMap event = value.toMap();
+        const QString kind = event.value(QStringLiteral("event")).toString();
+        if (kind == QLatin1String("tool.request")) {
+            QVariantMap call{
+                {QStringLiteral("callId"), event.value(QStringLiteral("callId"))},
+                {QStringLiteral("tool"), event.value(QStringLiteral("tool"))},
+                {QStringLiteral("arguments"), event.value(QStringLiteral("arguments"))},
+                {QStringLiteral("completed"), false}};
+            const int index = calls.size();
+            calls.append(call);
+            const QString id = event.value(QStringLiteral("callId")).toString();
+            if (!id.isEmpty()) byCallId.insert(id, index);
+            continue;
+        }
+        if (kind != QLatin1String("tool.finish")) continue;
+
+        const QString id = event.value(QStringLiteral("callId")).toString();
+        const auto it = byCallId.constFind(id);
+        if (it == byCallId.cend()) continue;
+        QVariantMap call = calls.at(it.value()).toMap();
+        call[QStringLiteral("ok")] = event.value(QStringLiteral("ok")).toBool();
+        call[QStringLiteral("completed")] = true;
+        call[QStringLiteral("result")] = event.value(QStringLiteral("result"));
+        calls[it.value()] = call;
+    }
+    return calls;
+}
+
+QVariantMap AgentEfficiency::evaluateToolCalls(const QVariantList &calls,
+                                               const QVariantList &expected)
+{
+    int successful = 0;
+    int failed = 0;
+    int incomplete = 0;
+    int invalid = 0;
+    int redundant = 0;
+    QSet<QString> seen;
+    QVariantList normalized;
+
+    for (const QVariant &value : calls) {
+        const QVariantMap call = value.toMap();
+        const QString tool = call.value(QStringLiteral("tool")).toString().trimmed();
+        bool argsValid = false;
+        const QVariant args = call.contains(QStringLiteral("arguments"))
+            ? call.value(QStringLiteral("arguments")) : call.value(QStringLiteral("args"));
+        const QString argsJson = canonicalToolArguments(args, &argsValid);
+        const bool valid = !tool.isEmpty() && argsValid;
+        if (!valid) ++invalid;
+        const QString signature = tool + QLatin1Char('\n') + argsJson;
+        if (seen.contains(signature)) ++redundant;
+        seen.insert(signature);
+
+        const bool completed = call.contains(QStringLiteral("completed"))
+            ? call.value(QStringLiteral("completed")).toBool()
+            : call.contains(QStringLiteral("ok"));
+        if (!completed) {
+            ++incomplete;
+        } else if (call.value(QStringLiteral("ok")).toBool()) {
+            ++successful;
+        } else {
+            ++failed;
+        }
+        normalized.append(QVariantMap{{QStringLiteral("tool"), tool},
+                                      {QStringLiteral("arguments"), argsJson},
+                                      {QStringLiteral("valid"), valid},
+                                      {QStringLiteral("completed"), completed},
+                                      {QStringLiteral("ok"), completed
+                                          && call.value(QStringLiteral("ok")).toBool()}});
+    }
+
+    const auto matchesExpected = [](const QVariantMap &actual, const QVariantMap &wanted) {
+        if (!actual.value(QStringLiteral("valid")).toBool()) return false;
+        if (actual.value(QStringLiteral("tool")).toString().trimmed()
+                != wanted.value(QStringLiteral("tool")).toString().trimmed())
+            return false;
+        if (!wanted.contains(QStringLiteral("arguments"))
+            && !wanted.contains(QStringLiteral("args")))
+            return true;
+        bool wantedValid = false;
+        const QVariant wantedArgs = wanted.contains(QStringLiteral("arguments"))
+            ? wanted.value(QStringLiteral("arguments")) : wanted.value(QStringLiteral("args"));
+        const QString wantedJson = canonicalToolArguments(wantedArgs, &wantedValid);
+        return wantedValid
+            && actual.value(QStringLiteral("arguments")).toString() == wantedJson;
+    };
+
+    int matched = 0;
+    int unexpected = 0;
+    QVector<bool> expectedMatched(expected.size(), false);
+    for (const QVariant &value : normalized) {
+        const QVariantMap actual = value.toMap();
+        int found = -1;
+        for (int i = 0; i < expected.size(); ++i) {
+            if (expectedMatched.at(i)) continue;
+            const QVariantMap wanted = expected.at(i).toMap();
+            if (matchesExpected(actual, wanted)) {
+                found = i;
+                break;
+            }
+        }
+        if (found >= 0) {
+            expectedMatched[found] = true;
+            ++matched;
+        } else {
+            ++unexpected;
+        }
+    }
+
+    const int missing = expected.size() - matched;
+    const int total = calls.size();
+    const auto pct = [](int numerator, int denominator) {
+        return denominator > 0 ? 100.0 * numerator / denominator : -1.0;
+    };
+    const double precision = pct(matched, total);
+    const double recall = pct(matched, expected.size());
+    const double f1 = precision >= 0.0 && recall >= 0.0 && precision + recall > 0.0
+        ? 2.0 * precision * recall / (precision + recall) : -1.0;
+    const bool hasExpectations = !expected.isEmpty();
+    bool sequenceExact = hasExpectations && total == expected.size();
+    if (sequenceExact) {
+        for (int i = 0; i < total; ++i) {
+            const QVariantMap actual = normalized.at(i).toMap();
+            const QVariantMap wanted = expected.at(i).toMap();
+            if (!actual.value(QStringLiteral("completed")).toBool()
+                || !actual.value(QStringLiteral("ok")).toBool()
+                || !matchesExpected(actual, wanted)) {
+                sequenceExact = false;
+                break;
+            }
+        }
+    }
+
+    return {{QStringLiteral("totalCalls"), total},
+            {QStringLiteral("successfulCalls"), successful},
+            {QStringLiteral("failedCalls"), failed},
+            {QStringLiteral("incompleteCalls"), incomplete},
+            {QStringLiteral("invalidCalls"), invalid},
+            {QStringLiteral("redundantCalls"), redundant},
+            {QStringLiteral("successRatePct"), pct(successful, total)},
+            {QStringLiteral("expectedCalls"), expected.size()},
+            {QStringLiteral("matchedExpectedCalls"), matched},
+            {QStringLiteral("missingExpectedCalls"), hasExpectations ? missing : 0},
+            {QStringLiteral("unexpectedCalls"), hasExpectations ? unexpected : 0},
+            {QStringLiteral("precisionPct"), hasExpectations ? precision : -1.0},
+            {QStringLiteral("recallPct"), hasExpectations ? recall : -1.0},
+            {QStringLiteral("f1Pct"), hasExpectations ? f1 : -1.0},
+            {QStringLiteral("sequenceExact"), sequenceExact}};
+}
+
 QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const QString &groupBy)
 {
     // groupBy: "profileId" (default, compara MODELOS) o "agentProfileId" (compara
@@ -150,6 +357,10 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const
         QList<double> filesChanged;
         QList<double> addedLines;
         QList<double> removedLines;
+        QList<double> toolCalls;
+        QList<double> toolSuccessRatePct;
+        QList<double> toolRedundantCalls;
+        QList<double> toolF1Pct;
         int successful = 0;
         int fullyAccepted = 0;
         int failed = 0;
@@ -193,6 +404,15 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const
                 (warm ? warmFirstAttemptSec : coldFirstAttemptSec).append(first);
             }
             repairAttempts.append(run.value(QStringLiteral("repairAttempts")).toDouble());
+            const QVariantMap toolQuality = run.value(QStringLiteral("toolCallQuality")).toMap();
+            const auto appendKnown = [](QList<double> &target, const QVariant &value) {
+                const double number = value.toDouble();
+                if (number >= 0.0) target.append(number);
+            };
+            appendKnown(toolCalls, toolQuality.value(QStringLiteral("totalCalls")));
+            appendKnown(toolSuccessRatePct, toolQuality.value(QStringLiteral("successRatePct")));
+            appendKnown(toolRedundantCalls, toolQuality.value(QStringLiteral("redundantCalls")));
+            appendKnown(toolF1Pct, toolQuality.value(QStringLiteral("f1Pct")));
         }
 
         const int totalRuns = profileRuns.size();
@@ -225,6 +445,10 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const
             {QStringLiteral("medianAddedLines"), median(addedLines)},
             {QStringLiteral("medianRemovedLines"), median(removedLines)}
         };
+        aggregate[QStringLiteral("medianToolCalls")] = median(toolCalls);
+        aggregate[QStringLiteral("medianToolSuccessRatePct")] = median(toolSuccessRatePct);
+        aggregate[QStringLiteral("medianToolRedundantCalls")] = median(toolRedundantCalls);
+        aggregate[QStringLiteral("medianToolF1Pct")] = median(toolF1Pct);
         aggregate[QStringLiteral("qualityRangePctPoints")] = qualityPct.isEmpty()
             ? 0.0 : *minmaxQuality.second - *minmaxQuality.first;
         profiles.append(aggregate);

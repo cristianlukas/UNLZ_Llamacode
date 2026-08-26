@@ -28,6 +28,16 @@ public:
 
     static QVariantMap summarize(const QVariantList &requests);
     static QVariantMap compare(const QVariantMap &baseline, const QVariantMap &candidate);
+    // Convierte eventos normalizados tool.request/tool.finish en llamadas
+    // comparables. Los backends externos pueden entregar el mismo contrato sin
+    // depender de su formato wire particular.
+    static QVariantList toolCallsFromLifecycle(const QVariantList &events);
+    // Evalua eficiencia/correccion de tools. `calls` acepta mapas con tool,
+    // arguments, ok y completed; `expected` es opcional y puede declarar tool
+    // y arguments exactos por llamada. Sin expectativas, la correccion queda
+    // como desconocida (-1), pero se siguen midiendo fallos y redundancias.
+    static QVariantMap evaluateToolCalls(const QVariantList &calls,
+                                         const QVariantList &expected = {});
     // Agrupa pasadas de benchmark por perfil y calcula estadísticos robustos.
     // Las filas fallidas cuentan para estabilidad/éxito, pero no contaminan
     // medianas de tiempo o calidad con ceros sintéticos.

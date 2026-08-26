@@ -53,6 +53,7 @@ $stubScript = {
     # para que el script tenga que esperar de verdad al menos una vuelta.
     $running = $false
     $polls = 0
+    $startCounts = @{}
     while ($listener.IsListening) {
         $ctx = $listener.GetContext()
         $req = $ctx.Request
@@ -88,19 +89,39 @@ $stubScript = {
                 'harnessSpecSummary' {
                     $resp = '{"ok":true,"result":{"toolCount":7,"approxTokens":640,"warnings":[]}}'
                 }
-                'startBenchmark'       { $running = $true; $polls = 0; $resp = '{"ok":true}' }
-                'startCustomBenchmark' { $running = $true; $polls = 0; $resp = '{"ok":true}' }
+                'startBenchmark' {
+                    $id = $call.args[5]
+                    if (-not $startCounts.ContainsKey($id)) { $startCounts[$id] = 0 }
+                    $startCounts[$id]++
+                    $running = $true; $polls = 0; $resp = '{"ok":true}'
+                }
+                'startCustomBenchmark' {
+                    $id = $call.args[5]
+                    if (-not $startCounts.ContainsKey($id)) { $startCounts[$id] = 0 }
+                    $startCounts[$id]++
+                    $running = $true; $polls = 0; $resp = '{"ok":true}'
+                }
                 'compareHarnessBenchmarks' {
+                    $runCount = 0
+                    if ($startCounts.Count -gt 0) {
+                        $runCount = [int](($startCounts.Values | Measure-Object -Maximum).Maximum)
+                    }
+                    $rows = @()
+                    foreach ($id in $known) {
+                        $rows += ('{"profileId":"' + $id + '","profileName":"' + $id +
+                                  '","medianQualityPct":90.0,"successRatePct":100.0,' +
+                                  '"medianElapsedSec":100.0,"medianFilesChanged":2.0,"runs":' +
+                                  $runCount + '}')
+                    }
+                    $comparisons = '[]'
+                    if ($known.Count -ge 2) {
+                        $comparisons = '[{"baselineProfileId":"' + $known[0] +
+                            '","candidateProfileId":"' + $known[1] +
+                            '","qualityDeltaPctPoints":0.0,"successRateDeltaPctPoints":0.0,' +
+                            '"comparisonTimeChangePct":0.0,"filesChangedDelta":0.0}]'
+                    }
                     $resp = '{"ok":true,"result":{"balanced":true,"profiles":[' +
-                            '{"profileId":"a","profileName":"A","medianQualityPct":90.0,' +
-                            '"successRatePct":100.0,"medianElapsedSec":100.0,' +
-                            '"medianFilesChanged":2.0,"runs":1},' +
-                            '{"profileId":"b","profileName":"B","medianQualityPct":80.0,' +
-                            '"successRatePct":100.0,"medianElapsedSec":70.0,' +
-                            '"medianFilesChanged":2.0,"runs":1}],' +
-                            '"comparisons":[{"baselineProfileId":"a","candidateProfileId":"b",' +
-                            '"qualityDeltaPctPoints":-10.0,"successRateDeltaPctPoints":0.0,' +
-                            '"comparisonTimeChangePct":-30.0,"filesChangedDelta":0.0}]}}'
+                            ($rows -join ',') + '],"comparisons":' + $comparisons + '}}'
                 }
                 default { $resp = '{"ok":true}' }
             }
@@ -179,13 +200,20 @@ try {
 Write-Host "== test 3: una corrida por perfil, esperando entre corridas =="
 $stub = Start-Stub (Join-Path $logDir 'calls3.jsonl') @('agent-intermedio', 'agent-minimal') 2
 try {
-    $r = RunAb $stub @('agent-intermedio', 'agent-minimal')
+    $r = RunAb $stub @('agent-intermedio', 'agent-minimal') @{ Passes = 3; OrderSeed = 11 }
     $calls = Calls $stub
     $starts = @($calls | Where-Object { $_.method -eq 'startBenchmark' })
-    Ok ($starts.Count -eq 2) "arranco 2 benchmarks (uno por perfil): $($starts.Count)"
-    Ok ($starts[0].args[5] -eq 'agent-intermedio') "el primero usa el perfil 1"
-    Ok ($starts[1].args[5] -eq 'agent-minimal')   "el segundo usa el perfil 2"
+    Ok ($starts.Count -eq 6) "arranco 6 benchmarks (3 pasadas por perfil): $($starts.Count)"
+    $perPass = @()
+    for ($pass = 0; $pass -lt 3; $pass++) {
+        $perPass += ,@($starts[($pass * 2)..($pass * 2 + 1)] | ForEach-Object { $_.args[5] })
+    }
+    Ok ((@($perPass[0]).Count -eq 2) -and (@($perPass[1]).Count -eq 2) -and
+        (@($perPass[2]).Count -eq 2)) "cada pasada contiene todos los perfiles"
+    Ok ((@($perPass[0]) -join ',') -ne (@($perPass[1]) -join ',') -or
+        (@($perPass[1]) -join ',') -ne (@($perPass[2]) -join ',')) "el orden se intercala por pasada"
     Ok ($starts[0].args[3] -eq 'agent') "corre con target=agent (no 'model')"
+    Ok ($starts[0].args[2] -eq 1) "cada llamada solicita una sola pasada balanceada"
     $polls = @($calls | Where-Object { $_.method -eq 'compareHarnessBenchmarks' })
     Ok ($polls.Count -eq 1) "compara una sola vez, al final"
     # El filtro temporal es lo que evita mezclar el historial del usuario con el
@@ -198,6 +226,9 @@ try {
         $report = Get-Content $r.OutFile -Raw | ConvertFrom-Json
         Ok ($report.profiles.Count -eq 2) "el informe trae los dos perfiles"
         Ok ($report.comparisons.Count -eq 1) "y el delta entre ellos"
+        Ok ($report.passesRequested -eq 3) "persiste la cantidad de pasadas solicitada"
+        Ok ($report.orderSeed -eq 11) "persiste la semilla del orden"
+        Ok (@($report.profileOrderByPass).Count -eq 3) "persiste el orden de cada pasada"
         Remove-Item $r.OutFile -Force -ErrorAction SilentlyContinue
     }
     Ok ($r.Output -match 'calidad') "imprime el resumen legible por perfil"
@@ -211,9 +242,10 @@ try {
     $calls = Calls $stub
     $custom = @($calls | Where-Object { $_.method -eq 'startCustomBenchmark' })
     $plain  = @($calls | Where-Object { $_.method -eq 'startBenchmark' })
-    Ok ($custom.Count -eq 1) "uso startCustomBenchmark"
+    Ok ($custom.Count -eq 5) "uso startCustomBenchmark en las 5 pasadas por defecto"
     Ok ($plain.Count -eq 0)  "y NO el generico"
     Ok ($custom[0].args[1] -eq 'cb-1') "paso el id del benchmark custom"
+    Ok ($custom[0].args[2] -eq 1) "el custom tambien queda balanceado a una pasada por llamada"
 } finally { Stop-Stub $stub }
 
 Write-Host ""
