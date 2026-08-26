@@ -11,6 +11,10 @@ private slots:
     void parsesP2pTopologyMatrix();
     void parsesNvlinkStatus();
     void enrichmentFeedsRecommendation();
+    void voicePlanReservesWeakGpuAndSplitsRemainingVram();
+    void voicePlanFallsBackToSingleGpu();
+    void voicePlanRejectsOccupiedVoiceGpu();
+    void voicePlanRejectsModelThatDoesNotFit();
     void weakPciePrefersLayer();
     void fastPcieAllowsTensor();
     void fingerprintIsStable();
@@ -59,6 +63,80 @@ void HardwareDiagnosticsTests::enrichmentFeedsRecommendation()
     QVERIFY(enriched.value(QStringLiteral("p2pAvailable")).toBool());
     QVERIFY(enriched.value(QStringLiteral("nvlinkAvailable")).toBool());
     QCOMPARE(HardwareDiagnostics::recommendedSplitMode(enriched), QStringLiteral("layer"));
+}
+
+void HardwareDiagnosticsTests::voicePlanReservesWeakGpuAndSplitsRemainingVram()
+{
+    const QVariantMap hardware{
+        {QStringLiteral("gpus"), QVariantList{
+            QVariantMap{{QStringLiteral("index"), 0},
+                        {QStringLiteral("name"), QStringLiteral("RTX 3060")},
+                        {QStringLiteral("totalMb"), 12288},
+                        {QStringLiteral("freeMb"), 10000}},
+            QVariantMap{{QStringLiteral("index"), 1},
+                        {QStringLiteral("name"), QStringLiteral("RTX 3090")},
+                        {QStringLiteral("totalMb"), 24576},
+                        {QStringLiteral("freeMb"), 22000}}}},
+        {QStringLiteral("p2pAvailable"), false}};
+
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(hardware);
+    QVERIFY(plan.value(QStringLiteral("enabled")).toBool());
+    QCOMPARE(plan.value(QStringLiteral("voiceGpuIndex")).toInt(), 0);
+    QCOMPARE(plan.value(QStringLiteral("voiceGpuMask")).toString(), QStringLiteral("0"));
+    QCOMPARE(plan.value(QStringLiteral("modelGpuMask")).toString(), QStringLiteral("0,1"));
+    QCOMPARE(plan.value(QStringLiteral("modelSplitMode")).toString(), QStringLiteral("layer"));
+    QCOMPARE(plan.value(QStringLiteral("weakGpuModelFreeMb")).toDouble(), 7952.0);
+    QVERIFY(plan.value(QStringLiteral("voiceReserveAvailable")).toBool());
+    QCOMPARE(plan.value(QStringLiteral("modelAvailableMb")).toDouble(), 29952.0);
+    const QStringList split = plan.value(QStringLiteral("modelTensorSplit")).toString().split(',');
+    QCOMPARE(split.size(), 2);
+    QVERIFY(split.at(0).toDouble() < split.at(1).toDouble());
+    QVERIFY(plan.value(QStringLiteral("modelPlacementSafe")).toBool());
+}
+
+void HardwareDiagnosticsTests::voicePlanFallsBackToSingleGpu()
+{
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(QVariantMap{
+        {QStringLiteral("gpus"), QVariantList{QVariantMap{
+            {QStringLiteral("index"), 0}, {QStringLiteral("totalMb"), 24576}}}}});
+    QVERIFY(!plan.value(QStringLiteral("enabled")).toBool());
+    QCOMPARE(plan.value(QStringLiteral("voiceGpuIndex")).toInt(), -1);
+    QCOMPARE(plan.value(QStringLiteral("modelTensorSplit")).toString(), QString());
+}
+
+void HardwareDiagnosticsTests::voicePlanRejectsOccupiedVoiceGpu()
+{
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(QVariantMap{
+        {QStringLiteral("gpus"), QVariantList{
+            QVariantMap{{QStringLiteral("index"), 0},
+                        {QStringLiteral("totalMb"), 8192},
+                        {QStringLiteral("freeMb"), 512}},
+            QVariantMap{{QStringLiteral("index"), 1},
+                        {QStringLiteral("totalMb"), 16384},
+                        {QStringLiteral("freeMb"), 14000}}}}});
+    QVERIFY(plan.value(QStringLiteral("enabled")).toBool());
+    QVERIFY(!plan.value(QStringLiteral("voiceReserveAvailable")).toBool());
+    QCOMPARE(plan.value(QStringLiteral("modelGpuMask")).toString(), QStringLiteral("1"));
+    QVERIFY(!plan.value(QStringLiteral("modelPlacementSafe")).toBool());
+}
+
+void HardwareDiagnosticsTests::voicePlanRejectsModelThatDoesNotFit()
+{
+    const QVariantMap hardware{
+        {QStringLiteral("gpus"), QVariantList{
+            QVariantMap{{QStringLiteral("index"), 0},
+                        {QStringLiteral("totalMb"), 8192},
+                        {QStringLiteral("freeMb"), 8192}},
+            QVariantMap{{QStringLiteral("index"), 1},
+                        {QStringLiteral("totalMb"), 16384},
+                        {QStringLiteral("freeMb"), 16384}}}}};
+    const QVariantMap plan = HardwareDiagnostics::voiceGpuPlan(hardware, 2048.0, 23000.0);
+    QVERIFY(plan.value(QStringLiteral("voiceReserveAvailable")).toBool());
+    QVERIFY(plan.value(QStringLiteral("modelFitKnown")).toBool());
+    QVERIFY(!plan.value(QStringLiteral("modelFitsCapacity")).toBool());
+    QVERIFY(plan.value(QStringLiteral("modelFitMarginMb")).toDouble() < 0.0);
+    QVERIFY(plan.value(QStringLiteral("voicePlacementSafe")).toBool());
+    QVERIFY(!plan.value(QStringLiteral("modelPlacementSafe")).toBool());
 }
 
 void HardwareDiagnosticsTests::weakPciePrefersLayer()

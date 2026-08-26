@@ -19,6 +19,8 @@ public:
     void setConfig(const VoiceConfig &cfg, const QString &resolvedKey);
     // Rutas para modo piper (process-mode). bin vacío = buscar "piper" en PATH.
     void setPiper(const QString &binPath, const QString &modelPath);
+    // Máscara CUDA para los procesos TTS locales. Vacía = heredar el entorno.
+    void setGpuDeviceMask(const QString &mask);
 
     void synthesize(const QString &text);
     // Ocupado = hay un request en vuelo (HTTP, spawn per-call, o turno pendiente
@@ -63,6 +65,7 @@ private:
     void synthesizeQwen(const QString &text);
     void synthesizeInflect(const QString &text);
     void fallbackFrom(const QString &failedMode, const QString &text, const QString &error);
+    void applyGpuEnvironment(class QProcess *process) const;
 
     VoiceConfig m_cfg;
     QString m_key;
@@ -70,6 +73,7 @@ private:
     QNetworkReply *m_reply = nullptr;
     qint64 m_streamBytes = 0;
     QString m_piperBin, m_piperModel;
+    QString m_gpuDeviceMask;
     class QProcess *m_piper = nullptr;   // spawn per-call (fallback)
     QString m_piperOut;                  // wav temporal de salida (per-call)
     class QProcess *m_qwen = nullptr;

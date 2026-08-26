@@ -21,6 +21,7 @@ Item {
     property string binMsgPiper: ""
     property string whisperPath: App.voiceWhisperServerPath()
     property string piperPath: App.voicePiperPath()
+    property var gpuPlan: App.voiceGpuPlan()
 
     // Las descargas de STT (modelo whisper) y TTS (voz piper) comparten señales;
     // rutear el feedback a la sección correcta según el id (antes todo caía en
@@ -54,6 +55,7 @@ Item {
             if (kind === "piper") page.binMsgPiper = msg
             else page.binMsgWhisper = msg
         }
+        function onHardwareSummaryChanged() { page.gpuPlan = App.voiceGpuPlan() }
     }
     function reload() {
         cfg = pid.length ? App.voiceConfig(pid) : ({})
@@ -118,6 +120,38 @@ Item {
                 Layout.fillHeight: true
                 Layout.margins: 24
                 spacing: 20
+
+                Rectangle {
+                    visible: page.gpuPlan.enabled === true
+                    Layout.fillWidth: true
+                    implicitHeight: gpuPlanText.implicitHeight + 18
+                    radius: 8
+                    color: Theme.inputBg
+                    border.color: Theme.borderColor
+                    Text {
+                        id: gpuPlanText
+                        anchors.fill: parent
+                        anchors.margins: 9
+                        wrapMode: Text.WordWrap
+                        color: Theme.textSecondary
+                        font.pixelSize: 12
+                        text: page.gpuPlan.modelPlacementSafe
+                              ? ("Multi-GPU Charla: GPU " + page.gpuPlan.voiceGpuIndex
+                                 + " para voz/auxiliares; LLM en GPU "
+                                 + (page.gpuPlan.modelGpuMask || "-") + " ("
+                                 + Number(page.gpuPlan.modelAvailableGb || 0).toFixed(1)
+                                 + " GB disponibles).")
+                              : (page.gpuPlan.modelFitKnown
+                                 && !page.gpuPlan.modelFitsCapacity
+                                 ? ("El perfil normal actual estima "
+                                   + Number(page.gpuPlan.modelRequiredGb || 0).toFixed(1)
+                                   + " GB, pero el reparto seguro deja "
+                                   + Number(page.gpuPlan.modelAvailableGb || 0).toFixed(1)
+                                   + " GB. Elegí un perfil/modelo más chico.")
+                                 : "Multi-GPU detectado, pero la GPU reservada no tiene margen "
+                                   + "suficiente para la voz; se mantiene el perfil normal.")
+                    }
+                }
 
                 Item { Layout.fillHeight: true }
 

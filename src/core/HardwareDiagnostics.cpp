@@ -5,6 +5,8 @@
 #include <QRegularExpression>
 #include <QSet>
 #include <QStringList>
+#include <QVector>
+#include <utility>
 
 namespace {
 
@@ -26,6 +28,28 @@ QStringList splitCsvLine(const QString &line)
     // conserva una función pequeña y explícita para no introducir un parser
     // CSV general en el camino crítico del diagnóstico.
     return line.split(QLatin1Char(','), Qt::KeepEmptyParts);
+}
+
+struct GpuMemoryEntry
+{
+    int index = -1;
+    QString name;
+    double totalMb = 0.0;
+    double freeMb = 0.0;
+    double modelMb = 0.0;
+};
+
+double memoryValue(const QVariantMap &gpu, const QString &key)
+{
+    return qMax(0.0, gpu.value(key).toDouble());
+}
+
+QString compactNumber(double value)
+{
+    QString out = QString::number(value, 'f', 3);
+    while (out.endsWith(QLatin1Char('0'))) out.chop(1);
+    if (out.endsWith(QLatin1Char('.'))) out.chop(1);
+    return out.isEmpty() ? QStringLiteral("0") : out;
 }
 
 }  // namespace
@@ -138,6 +162,194 @@ QVariantMap HardwareDiagnostics::enrichTopology(const QVariantMap &hardware,
     result[QStringLiteral("nvlinkAvailable")] = nvlink;
     result[QStringLiteral("topologySource")] = !topologyText.trimmed().isEmpty()
         ? QStringLiteral("nvidia-smi topo -m") : QStringLiteral("unavailable");
+    return result;
+}
+
+QVariantMap HardwareDiagnostics::voiceGpuPlan(const QVariantMap &hardware,
+                                              double voiceReserveMb,
+                                              double modelRequiredMb)
+{
+    const QVariantList rawGpus = hardware.value(QStringLiteral("gpus")).toList();
+    QVariantMap result{
+        {QStringLiteral("enabled"), false},
+        {QStringLiteral("mode"), QStringLiteral("single-gpu")},
+        {QStringLiteral("gpuCount"), rawGpus.size()},
+        {QStringLiteral("auxiliaryGpuIndex"), -1},
+        {QStringLiteral("voiceGpuIndex"), -1},
+        {QStringLiteral("voiceGpuMask"), QString()},
+        {QStringLiteral("modelGpuMask"), QString()},
+        {QStringLiteral("modelGpuIndices"), QVariantList{}},
+        {QStringLiteral("modelTensorSplit"), QString()},
+        {QStringLiteral("voiceReserveMb"), qMax(0.0, voiceReserveMb)},
+        {QStringLiteral("voiceReserveAvailable"), false},
+        {QStringLiteral("modelAvailableMb"), 0.0},
+        {QStringLiteral("modelAvailableGb"), 0.0},
+        {QStringLiteral("modelRequiredMb"), qMax(0.0, modelRequiredMb)},
+        {QStringLiteral("modelRequiredGb"), qMax(0.0, modelRequiredMb) / 1024.0},
+        {QStringLiteral("modelFitKnown"), modelRequiredMb > 0.0},
+        {QStringLiteral("modelFitsCapacity"), true},
+        {QStringLiteral("modelFitMarginMb"), 0.0},
+        {QStringLiteral("voicePlacementSafe"), false},
+        {QStringLiteral("modelPlacementSafe"), false},
+        {QStringLiteral("reason"), QStringLiteral(
+            "Se mantiene el modo de una sola GPU hasta detectar al menos dos GPU." )}
+    };
+    if (rawGpus.size() < 2)
+        return result;
+
+    QVector<GpuMemoryEntry> gpus;
+    gpus.reserve(rawGpus.size());
+    for (int position = 0; position < rawGpus.size(); ++position) {
+        const QVariantMap raw = rawGpus.at(position).toMap();
+        GpuMemoryEntry gpu;
+        gpu.index = raw.value(QStringLiteral("index"), position).toInt();
+        if (gpu.index < 0) gpu.index = position;
+        gpu.name = raw.value(QStringLiteral("name")).toString();
+        gpu.totalMb = memoryValue(raw, QStringLiteral("totalMb"));
+        // Si el driver no publica memory.free, totalMb es el único límite seguro
+        // disponible. Un freeMb explícito igual a cero se respeta: la placa está
+        // ocupada y no se debe prometer VRAM que no existe.
+        gpu.freeMb = raw.contains(QStringLiteral("freeMb"))
+            ? memoryValue(raw, QStringLiteral("freeMb")) : gpu.totalMb;
+        gpus.append(gpu);
+    }
+    std::sort(gpus.begin(), gpus.end(), [](const GpuMemoryEntry &a, const GpuMemoryEntry &b) {
+        return a.index < b.index;
+    });
+
+    // "Más débil" significa primero menos VRAM total; en un empate se usa la
+    // VRAM libre observada y finalmente el índice estable de CUDA. No se decide
+    // por el nombre, porque eso no es portable entre fabricantes/idiomas.
+    int weakPosition = 0;
+    for (int i = 1; i < gpus.size(); ++i) {
+        const GpuMemoryEntry &candidate = gpus.at(i);
+        const GpuMemoryEntry &current = gpus.at(weakPosition);
+        const double candidateCapacity = candidate.totalMb > 0.0
+            ? candidate.totalMb : candidate.freeMb;
+        const double currentCapacity = current.totalMb > 0.0
+            ? current.totalMb : current.freeMb;
+        if (candidateCapacity < currentCapacity
+            || (qFuzzyCompare(candidateCapacity + 1.0, currentCapacity + 1.0)
+                && (candidate.freeMb < current.freeMb
+                    || (qFuzzyCompare(candidate.freeMb + 1.0, current.freeMb + 1.0)
+                        && candidate.index < current.index)))) {
+            weakPosition = i;
+        }
+    }
+
+    const int weakIndex = gpus.at(weakPosition).index;
+    const double reserve = qMax(0.0, voiceReserveMb);
+    QVariantList modelByGpu;
+    QVariantList modelIndices;
+    QStringList modelMask;
+    QStringList splitByCudaIndex;
+    double totalModelMb = 0.0;
+    double smallestPositiveModelMb = 0.0;
+    int maxIndex = -1;
+    for (const GpuMemoryEntry &gpu : std::as_const(gpus))
+        maxIndex = qMax(maxIndex, gpu.index);
+
+    for (GpuMemoryEntry &gpu : gpus) {
+        gpu.modelMb = qMax(0.0, gpu.freeMb - (gpu.index == weakIndex ? reserve : 0.0));
+        totalModelMb += gpu.modelMb;
+        if (gpu.modelMb > 0.0 && (smallestPositiveModelMb <= 0.0
+                                  || gpu.modelMb < smallestPositiveModelMb))
+            smallestPositiveModelMb = gpu.modelMb;
+        if (gpu.modelMb > 0.0) {
+            modelIndices.append(gpu.index);
+            modelMask.append(QString::number(gpu.index));
+        }
+        modelByGpu.append(QVariantMap{
+            {QStringLiteral("index"), gpu.index},
+            {QStringLiteral("name"), gpu.name},
+            {QStringLiteral("totalMb"), gpu.totalMb},
+            {QStringLiteral("freeMb"), gpu.freeMb},
+            {QStringLiteral("modelFreeMb"), gpu.modelMb},
+            {QStringLiteral("role"), gpu.index == weakIndex
+                ? QStringLiteral("voice-and-model") : QStringLiteral("model")},
+        });
+    }
+
+    // llama.cpp indexes tensor-split by CUDA device, so preserve holes if a
+    // driver exposes non-contiguous physical indexes. The values are ratios;
+    // normalizing against the smallest positive capacity makes the policy
+    // readable in logs while retaining the measured free-VRAM proportion.
+    for (int cudaIndex = 0; cudaIndex <= maxIndex; ++cudaIndex) {
+        double modelMb = 0.0;
+        bool found = false;
+        for (const GpuMemoryEntry &gpu : std::as_const(gpus)) {
+            if (gpu.index == cudaIndex) {
+                modelMb = gpu.modelMb;
+                found = true;
+                break;
+            }
+        }
+        if (!found || modelMb <= 0.0 || smallestPositiveModelMb <= 0.0)
+            splitByCudaIndex.append(QStringLiteral("0"));
+        else
+            splitByCudaIndex.append(compactNumber(modelMb / smallestPositiveModelMb));
+    }
+    if (splitByCudaIndex.isEmpty())
+        splitByCudaIndex.append(QStringLiteral("1"));
+
+    const GpuMemoryEntry &weak = gpus.at(weakPosition);
+    const QVariantList topology = hardware.value(QStringLiteral("topology")).toList();
+    const QString splitMode = recommendedSplitMode(hardware);
+    result[QStringLiteral("enabled")] = true;
+    result[QStringLiteral("mode")] = QStringLiteral("voice-on-weak-gpu");
+    result[QStringLiteral("auxiliaryGpuIndex")] = weakIndex;
+    result[QStringLiteral("voiceGpuIndex")] = weakIndex;
+    result[QStringLiteral("voiceGpuMask")] = QString::number(weakIndex);
+    result[QStringLiteral("modelGpuMask")] = modelMask.join(QLatin1Char(','));
+    result[QStringLiteral("modelGpuIndices")] = modelIndices;
+    result[QStringLiteral("modelByGpu")] = modelByGpu;
+    result[QStringLiteral("weakGpuName")] = weak.name;
+    result[QStringLiteral("weakGpuTotalMb")] = weak.totalMb;
+    result[QStringLiteral("weakGpuFreeMb")] = weak.freeMb;
+    result[QStringLiteral("weakGpuModelFreeMb")] = weak.modelMb;
+    const bool voiceReserveAvailable = weak.freeMb + 0.001 >= reserve;
+    result[QStringLiteral("voiceReserveAvailable")] = voiceReserveAvailable;
+    result[QStringLiteral("modelTensorSplit")] = splitByCudaIndex.join(QLatin1Char(','));
+    result[QStringLiteral("modelSplitMode")] = splitMode;
+    result[QStringLiteral("modelAvailableMb")] = totalModelMb;
+    result[QStringLiteral("modelAvailableGb")] = totalModelMb / 1024.0;
+    const bool modelFitKnown = modelRequiredMb > 0.0;
+    const bool modelFitsCapacity = !modelFitKnown || modelRequiredMb <= totalModelMb + 0.001;
+    result[QStringLiteral("modelFitKnown")] = modelFitKnown;
+    result[QStringLiteral("modelFitsCapacity")] = modelFitsCapacity;
+    result[QStringLiteral("modelFitMarginMb")] = modelFitKnown
+        ? totalModelMb - modelRequiredMb : 0.0;
+    result[QStringLiteral("voicePlacementSafe")] = voiceReserveAvailable;
+    result[QStringLiteral("modelPlacementSafe")] = voiceReserveAvailable
+        && smallestPositiveModelMb > 0.0 && modelFitsCapacity;
+    result[QStringLiteral("p2pAvailable")] = hardware.value(QStringLiteral("p2pAvailable")).toBool();
+    result[QStringLiteral("topologyKnown")] = !topology.isEmpty();
+    result[QStringLiteral("reason")] = QStringLiteral(
+        "GPU %1 (%2) queda reservada para STT, TTS y auxiliares: %3 MB de reserva; "
+        "el LLM puede repartir %4 GB restantes entre %5 usando split-mode %6.")
+        .arg(weakIndex)
+        .arg(weak.name.isEmpty() ? QStringLiteral("GPU") : weak.name)
+        .arg(QString::number(reserve, 'f', 0))
+        .arg(QString::number(totalModelMb / 1024.0, 'f', 1))
+        .arg(modelMask.join(QLatin1Char(',')))
+        .arg(splitMode);
+    if (!voiceReserveAvailable) {
+        result[QStringLiteral("reason")] = QStringLiteral(
+            "Se detectaron dos GPU, pero la GPU reservada para voz sólo tiene %1 MB "
+            "libres y necesita %2 MB; no se activa el reparto automático seguro.")
+            .arg(QString::number(weak.freeMb, 'f', 0))
+            .arg(QString::number(reserve, 'f', 0));
+    } else if (smallestPositiveModelMb <= 0.0) {
+        result[QStringLiteral("reason")] = QStringLiteral(
+            "Se detectaron dos GPU, pero la GPU de voz no tiene VRAM libre suficiente "
+            "después de la reserva; se evita prometer un reparto seguro para el LLM.");
+    } else if (!modelFitsCapacity) {
+        result[QStringLiteral("reason")] = QStringLiteral(
+            "El perfil actual estima %1 GB y el reparto seguro deja %2 GB; "
+            "se conserva el perfil normal y no se fuerza un split que pueda provocar OOM.")
+            .arg(QString::number(modelRequiredMb / 1024.0, 'f', 1))
+            .arg(QString::number(totalModelMb / 1024.0, 'f', 1));
+    }
     return result;
 }
 

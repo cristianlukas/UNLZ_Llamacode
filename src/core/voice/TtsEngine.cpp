@@ -38,6 +38,19 @@ void TtsEngine::setPiper(const QString &binPath, const QString &modelPath)
     m_piperModel = modelPath;
 }
 
+void TtsEngine::setGpuDeviceMask(const QString &mask)
+{
+    m_gpuDeviceMask = mask.trimmed();
+}
+
+void TtsEngine::applyGpuEnvironment(QProcess *process) const
+{
+    if (!process || m_gpuDeviceMask.isEmpty()) return;
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"), m_gpuDeviceMask);
+    process->setProcessEnvironment(env);
+}
+
 bool TtsEngine::piperAvailable() const
 {
     QString modelPath = m_piperModel;
@@ -107,6 +120,7 @@ void TtsEngine::synthesizeQwen(const QString &text)
         + QStringLiteral("/lc_qwen_tts_") + QUuid::createUuid().toString(QUuid::Id128) + QStringLiteral(".wav");
     m_qwen = new QProcess(this);
     m_qwen->setProcessChannelMode(QProcess::SeparateChannels);
+    applyGpuEnvironment(m_qwen);
     connect(m_qwen, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
             [this, text](int code, QProcess::ExitStatus status) {
         QProcess *p = m_qwen; m_qwen = nullptr;
@@ -156,6 +170,7 @@ void TtsEngine::synthesizeInflect(const QString &text)
     m_inflect = new QProcess(this);
     m_inflect->setWorkingDirectory(m_cfg.inflectModelDir);
     m_inflect->setProcessChannelMode(QProcess::SeparateChannels);
+    applyGpuEnvironment(m_inflect);
     connect(m_inflect, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
             [this, text](int code, QProcess::ExitStatus status) {
         QProcess *p = m_inflect; m_inflect = nullptr;
@@ -223,6 +238,7 @@ bool TtsEngine::ensurePiperResident()
 
     m_piperProc = new QProcess(this);
     m_piperProc->setProcessChannelMode(QProcess::SeparateChannels);
+    applyGpuEnvironment(m_piperProc);
     m_piperResidentModel = modelPath;
 
     connect(m_piperProc, &QProcess::readyReadStandardOutput, this, [this]() {
@@ -340,6 +356,7 @@ void TtsEngine::synthesizePiperOnce(const QString &text)
     const QStringList args = VoiceServerManager::buildPiperArgs(modelPath, tmp);
 
     m_piper = new QProcess(this);
+    applyGpuEnvironment(m_piper);
     connect(m_piper, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
         if (!m_piper) return;
         m_piper->deleteLater(); m_piper = nullptr;

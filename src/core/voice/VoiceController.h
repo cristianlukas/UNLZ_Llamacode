@@ -46,6 +46,9 @@ public:
     void setConfig(const VoiceConfig &cfg, const QString &sttKey, const QString &ttsKey);
     // Rutas para TTS modo piper (process-mode).
     void setTtsPiper(const QString &binPath, const QString &modelPath);
+    // Máscara CUDA para TTS local; la voz puede quedar aislada en la GPU
+    // reservada por el plan de Charla.
+    void setTtsGpuDeviceMask(const QString &mask);
     // Dispositivo de entrada por id (QAudioDevice::id() como string utf8). "" = default.
     void setInputDevice(const QString &id);
     // Lista de micrófonos: [{id,name,isDefault}].

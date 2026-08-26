@@ -43,6 +43,11 @@ void VoiceController::setTtsPiper(const QString &binPath, const QString &modelPa
     m_tts.setPiper(binPath, modelPath);
 }
 
+void VoiceController::setTtsGpuDeviceMask(const QString &mask)
+{
+    m_tts.setGpuDeviceMask(mask);
+}
+
 void VoiceController::setInputDevice(const QString &id)
 {
     m_deviceId = id;

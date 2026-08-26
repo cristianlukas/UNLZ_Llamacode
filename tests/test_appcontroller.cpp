@@ -183,6 +183,7 @@ private slots:
     void voiceWhisperServerAvailabilityUsesConfiguredPath();
     void legacyVoiceConfigDefaultsToManagedPiper();
     void hardwareRecommendationIsHeadless();
+    void voiceGpuPlanIsExposedHeadless();
     void performanceMatrixIsHeadless();
     void devModeIsOptInAndRecordsPerformance();
     void browserTeachSkillsLifecycle();
@@ -2785,6 +2786,17 @@ void AppControllerTests::hardwareRecommendationIsHeadless()
     const QVariantMap recommendation = app.performanceRecommendation(QStringLiteral("balanced"));
     QCOMPARE(recommendation.value(QStringLiteral("splitMode")).toString(), QStringLiteral("layer"));
     QCOMPARE(recommendation.value(QStringLiteral("kvCache")).toString(), QStringLiteral("q8_0"));
+}
+
+void AppControllerTests::voiceGpuPlanIsExposedHeadless()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(36.0, 64.0, QStringLiteral("dual test"), 36.0, 2);
+    const QVariantMap plan = app.voiceGpuPlan();
+    QVERIFY(plan.value(QStringLiteral("enabled")).toBool());
+    QCOMPARE(plan.value(QStringLiteral("voiceGpuIndex")).toInt(), 0);
+    QCOMPARE(plan.value(QStringLiteral("modelGpuMask")).toString(), QStringLiteral("0,1"));
+    QVERIFY(plan.value(QStringLiteral("modelAvailableGb")).toDouble() > 0.0);
 }
 
 void AppControllerTests::performanceMatrixIsHeadless()

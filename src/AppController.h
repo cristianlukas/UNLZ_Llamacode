@@ -1285,6 +1285,9 @@ public:
     Q_INVOKABLE QVariantMap voiceConfig(const QString &profileId) const;
     Q_INVOKABLE void setVoiceConfig(const QString &profileId, const QVariantMap &cfg);
     Q_INVOKABLE QVariantMap recommendedVoiceTts(const QString &profileId) const;
+    // Plan automático de recursos para Charla: GPU más débil para voz/auxiliares
+    // y reparto de la VRAM restante entre las GPU visibles por el LLM.
+    Q_INVOKABLE QVariantMap voiceGpuPlan() const;
     Q_INVOKABLE QVariantMap charlaAgentCapability() const;
     Q_INVOKABLE void startCharla();   // arranca la sesión de voz (usa el backend de chat)
     Q_INVOKABLE void stopCharla();
@@ -1531,6 +1534,9 @@ private:
     void rotateLogIfNeeded(const QString &path) const;
     void appendFileLog(const QString &path, const QString &line) const;
     void finishSmokeTest(bool passed, const QString &output);
+    QVariantMap voiceGpuPlanForLaunch(const QString &launchId,
+                                      const VoiceConfig &config) const;
+    QVariantMap voiceGpuPlanForConfig(const VoiceConfig &config) const;
     EffectiveProfileBuilder::Context buildContext(const QString &launchProfileId);
     // Resuelve la cadena de fallbacks del maestro (keys/cliPath/profile→http) a
     // una QVariantList lista para el worker del agente.
@@ -1813,6 +1819,11 @@ private:
     bool m_charlaActive = false;
     bool m_charlaTuneOnNextLaunch = false;  // startServer aplica overrides de voz
     bool m_charlaStartAfterRelaunch = false; // arrancar charla al serverReady
+    bool m_charlaGpuPlanActive = false;      // auto reparto durante una sesión de voz
+    bool m_serverUsesVoiceGpuPlan = false;   // reparto aplicado al server actual
+    QString m_serverVoiceGpuPlanSignature;
+    bool m_charlaHasVoiceConfigOverride = false;
+    VoiceConfig m_charlaVoiceConfigOverride;
     // Ingi Charla: el turno actual se ruteó al agente (computer-use/visión) en vez
     // del chat backend. Decide quién habla la respuesta final (onAgentTurnFinished).
     bool m_charlaUseAgent = false;

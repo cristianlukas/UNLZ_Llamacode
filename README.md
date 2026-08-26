@@ -935,6 +935,15 @@ incluidos).
   Piper para equipos chicos o cuando conviene reservar VRAM para el LLM. Qwen3
   admite GGUF, embedding de hablante, WAV+transcripción de referencia y una
   instrucción de estilo; si falla puede caer a Piper sin perder el turno.
+- **Charla multi-GPU**: con dos o más GPU NVIDIA, la app reserva automáticamente
+  la de menor VRAM para STT, TTS local y auxiliares, y relanza el perfil normal con
+  un `--tensor-split` proporcional a la VRAM libre que queda en esa GPU más la de
+  las demás. La selección automática también comprueba que el modelo, contexto y
+  draft/mmproj entren en la capacidad combinada; si un perfil de sistema no entra,
+  elige el mayor perfil normal instalado que sí entra; un perfil de usuario se deja
+  intacto y muestra el ajuste necesario en vez de arriesgar un OOM. La selección
+  manual y los perfiles con reparto explícito tienen prioridad; el detalle queda
+  disponible en `App.voiceGpuPlan()` y en el diagnóstico de hardware.
 - **Inflect v2 ONNX experimental**: puede seleccionarse manualmente como TTS local
   ultraliviano con el runner Python oficial y proveedor CPU, DirectML o CUDA.
   Admite las variantes Nano/Micro descargadas por el usuario, pero la versión
@@ -2053,6 +2062,11 @@ incluye secretos. Ver [`docs/evidence.md`](docs/evidence.md).
 
 El diagnóstico de hardware conserva la topología de cada GPU (`gpus`), un
 `hardwareFingerprint` y una recomendación explicable de `split-mode` y KV cache.
+Para Ingi Charla también calcula una reserva de voz: la GPU más débil conserva
+2 GiB de margen para STT/TTS/auxiliares (4–5 GiB si el TTS local elegido es
+Qwen3 o Inflect CUDA) y `llama-server` recibe la capacidad restante de todas las
+GPU. Esto permite mantener una conversación y usar el agente para operar la PC
+sin cargar el modelo de voz sobre la GPU que sostiene la mayor parte del LLM.
 En enlaces PCIe débiles prioriza `layer`; con enlaces rápidos habilita la prueba
 de `tensor`. La recomendación no reemplaza una medición: los benchmarks deben
 comparar prefill (`pp/s`), generación (`tg/s`), TTFT, VRAM por GPU y estabilidad

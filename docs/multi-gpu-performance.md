@@ -15,6 +15,36 @@ El resumen también incluye:
 - `topology`: relaciones entre GPU (`NV*`, `PIX`, `PXB`, `PHB`, `SYS`) cuando el
   driver las publica.
 
+## Reserva automática para Ingi Charla
+
+Cuando el equipo expone dos o más GPU NVIDIA, `HardwareDiagnostics::voiceGpuPlan`
+construye un plan efímero para el modo Charla. La GPU más débil se elige por menor
+VRAM total (empates: VRAM libre y luego índice CUDA), y se reserva allí un margen
+de 2048 MiB para STT, TTS y procesos auxiliares. El LLM conserva esa misma GPU,
+pero sólo recibe la VRAM libre que queda después de la reserva; el resto de GPU
+se agrega completo. `modelTensorSplit` contiene las proporciones calculadas a
+partir de esas capacidades, no una división fija `1,1`.
+
+Al entrar a Charla, si el perfil no tiene una selección manual de GPU ni declara
+su propio `--tensor-split`, LlamaCode relanza una vez el perfil normal con ese
+reparto (`--split-mode` + `--tensor-split`). STT gestionado y los TTS locales que
+se ejecutan como procesos (Piper, Qwen3-TTS e Inflect) reciben
+`CUDA_VISIBLE_DEVICES` apuntando a la GPU reservada. Un endpoint TTS/STT remoto o
+un proceso externo que la app no lanza no puede ser movido por esta política.
+
+El contrato se expone también como `App.voiceGpuPlan()` y dentro de
+`hardwareSummary.voiceGpuPlan`, con `voiceGpuIndex`, `voiceGpuMask`,
+`modelGpuMask`, `modelAvailableGb`, `modelRequiredGb`, `modelFitsCapacity`,
+`voicePlacementSafe`, `modelByGpu` y `reason`. La selección manual del usuario y los perfiles
+experimentales con un reparto explícito conservan prioridad. Si la GPU reservada
+no tiene el margen libre suficiente, o el modelo/contexto activo supera la
+capacidad combinada segura, el plan lo indica en `modelPlacementSafe=false` y no
+fuerza el split. Para un perfil de sistema, Charla busca automáticamente el mayor
+perfil normal instalado que sí entre; un perfil de usuario no se cambia en silencio
+y la UI indica que hay que elegir uno más chico. Para Qwen3-TTS o
+Inflect CUDA la reserva sube automáticamente (4–5 GiB según el caso); Piper y
+Whisper usan el baseline de 2 GiB.
+
 ## Regla inicial
 
 Con una sola GPU se conserva `layer` como valor seguro. En multi-GPU, si el

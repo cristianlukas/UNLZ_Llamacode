@@ -115,6 +115,60 @@
 
 namespace {
 
+bool hasOption(const QStringList &args, const QString &longName,
+               const QString &shortName = QString())
+{
+    for (const QString &arg : args) {
+        if (arg == longName || (!shortName.isEmpty() && arg == shortName)
+            || arg.startsWith(longName + QLatin1Char('='))
+            || (!shortName.isEmpty() && arg.startsWith(shortName + QLatin1Char('='))))
+            return true;
+    }
+    return false;
+}
+
+double estimateVoiceModelVramMb(const CatalogModel &model, const RuntimePreset &runtime)
+{
+    if (model.sizeBytes <= 0)
+        return 0.0;
+
+    const double weightsGb = double(model.sizeBytes) / (1024.0 * 1024.0 * 1024.0);
+    const int context = qMax(2048, runtime.ctx);
+    const int slotCount = qMax(1, runtime.parallelSlots);
+    // Same conservative model used by launchVramFitStatus, extended for the
+    // per-slot KV cache that a multi-GPU Charla session must keep resident.
+    const double kvAndGraphGb = 0.7 + weightsGb * 0.05
+        + context * slotCount * 0.000025;
+    const double headroomGb = 0.2;
+    return (weightsGb + kvAndGraphGb + headroomGb) * 1024.0;
+}
+
+double voiceReserveMbForConfig(const VoiceConfig &config)
+{
+    // 2 GiB is enough for the managed Whisper/Piper baseline. The local neural
+    // TTS engines are heavier, so leave a larger explicit reservation when the
+    // user selected one of them instead of letting the LLM consume that VRAM.
+    if (config.ttsMode == QLatin1String("qwen3")) {
+        const QString model = config.qwenModelName.toLower();
+        return model.contains(QStringLiteral("1.7")) ? 5120.0 : 4096.0;
+    }
+    if (config.ttsMode == QLatin1String("inflect")
+        && config.inflectProvider != QLatin1String("cpu"))
+        return 4096.0;
+    return 2048.0;
+}
+
+QString voiceGpuPlanSignature(const QVariantMap &plan)
+{
+    if (!plan.value(QStringLiteral("enabled")).toBool())
+        return {};
+    return QStringLiteral("%1|%2|%3|%4")
+        .arg(plan.value(QStringLiteral("voiceGpuMask")).toString(),
+             plan.value(QStringLiteral("modelGpuMask")).toString(),
+             plan.value(QStringLiteral("modelTensorSplit")).toString(),
+             plan.value(QStringLiteral("modelSplitMode")).toString());
+}
+
 bool readJsonObjectFile(const QString &path, QJsonObject *object, QString *error)
 {
     if (!object) return false;
@@ -2065,6 +2119,8 @@ void AppController::startServer(const QString &launchProfileId)
         return;
     }
     m_serverIsRouter = false;   // modo normal: un modelo por server
+    m_serverUsesVoiceGpuPlan = false;
+    m_serverVoiceGpuPlanSignature.clear();
 
     const auto ctx = buildContext(launchProfileId);
     const bool isCloud = ctx.backend.isCloud();
@@ -2172,6 +2228,22 @@ void AppController::startServer(const QString &launchProfileId)
     }
     if (m_benchmarkRunning && m_benchmarkMemoryAttempt >= 0)
         m_benchmarkEffectiveArgs = args;
+
+    // El plan se aplica como un override sólo para el server que acompaña a
+    // Charla. Guardamos una señal explícita para no relanzar el mismo servidor
+    // cada vez que la vista vuelve a llamar startCharla().
+    if (m_charlaGpuPlanActive) {
+        const QVariantMap plan = voiceGpuPlan();
+        m_serverUsesVoiceGpuPlan = plan.value(QStringLiteral("enabled")).toBool()
+            && hasOption(args, QStringLiteral("--tensor-split"), QStringLiteral("-ts"));
+        if (m_serverUsesVoiceGpuPlan) {
+            m_serverVoiceGpuPlanSignature = voiceGpuPlanSignature(plan);
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Charla multi-GPU: LLM usa %1; voz/auxiliares quedan en GPU %2.")
+                                  .arg(plan.value(QStringLiteral("modelTensorSplit")).toString(),
+                                       plan.value(QStringLiteral("voiceGpuMask")).toString()));
+        }
+    }
     const QVariantMap envMap = m_effectiveProfile["effectiveEnv"].toMap();
     m_serverGpuRequested = false;
     const int nglIdx = args.indexOf(QStringLiteral("--n-gpu-layers"));
@@ -2291,6 +2363,8 @@ void AppController::startServer(const QString &launchProfileId)
         stopVramPolling();
         m_serverStopping = false;
         m_serverReady    = false;
+        m_serverUsesVoiceGpuPlan = false;
+        m_serverVoiceGpuPlanSignature.clear();
         serverProcess->deleteLater();
         m_proc = nullptr;
         emit serverRunningChanged();
@@ -2844,6 +2918,8 @@ void AppController::stopServer()
         m_remoteServerActive = false;
         m_serverReady = false;
         m_serverStopping = false;
+        m_serverUsesVoiceGpuPlan = false;
+        m_serverVoiceGpuPlanSignature.clear();
         setServerState(QStringLiteral("stopped"));
         if (m_serverHasVision) { m_serverHasVision = false; emit serverHasVisionChanged(); }
         if (m_chatThinkingSupported) { m_chatThinkingSupported = false; emit chatThinkingSupportedChanged(); }
@@ -4009,6 +4085,38 @@ EffectiveProfileBuilder::Context AppController::buildContext(const QString &laun
     ctx.backend = m_profiles.resolveBackend(ctx.launch.backendProfileId);
     ctx.model = m_profiles.resolveModelProfile(ctx.launch.modelProfileId);
     ctx.runtime = m_profiles.resolveRuntime(ctx.launch.runtimePresetId);
+
+    // Durante Ingi Charla, separar la voz del LLM no requiere un perfil nuevo:
+    // el perfil normal conserva sus args y recibe un override efímero calculado
+    // con la VRAM libre observada. La configuración manual siempre gana, porque
+    // algunos perfiles experimentales dependen de un reparto exacto.
+    const bool profileHasTensorSplit = hasOption(ctx.launch.extraArgs,
+                                                 QStringLiteral("--tensor-split"),
+                                                 QStringLiteral("-ts"))
+        || hasOption(ctx.backend.baseArgs, QStringLiteral("--tensor-split"),
+                     QStringLiteral("-ts"));
+    const bool profilePinsMainGpu = hasOption(ctx.launch.extraArgs,
+                                              QStringLiteral("--main-gpu"),
+                                              QStringLiteral("-mg"))
+        || hasOption(ctx.backend.baseArgs, QStringLiteral("--main-gpu"),
+                     QStringLiteral("-mg"));
+    const bool profilePinsCuda = ctx.launch.envOverrides.contains(QStringLiteral("CUDA_VISIBLE_DEVICES"))
+        || ctx.backend.envOverrides.contains(QStringLiteral("CUDA_VISIBLE_DEVICES"));
+    if (m_charlaGpuPlanActive && mainGpu < 0 && vramGpus.isEmpty()
+        && !profilePinsMainGpu
+        && !profileHasTensorSplit && !profilePinsCuda && ctx.runtime.gpuLayers != 0) {
+        const QVariantMap plan = voiceGpuPlan();
+        if (plan.value(QStringLiteral("enabled")).toBool()
+            && plan.value(QStringLiteral("modelPlacementSafe")).toBool()) {
+            const QString tensorSplit = plan.value(QStringLiteral("modelTensorSplit")).toString();
+            if (!tensorSplit.isEmpty()) {
+                ctx.launch.extraArgs << QStringLiteral("--split-mode")
+                                     << plan.value(QStringLiteral("modelSplitMode"),
+                                                   QStringLiteral("layer")).toString()
+                                     << QStringLiteral("--tensor-split") << tensorSplit;
+            }
+        }
+    }
     ctx.harness = m_profiles.resolveHarness(ctx.launch.harnessProfileId);
     // Política: todo perfil usa el agente nativo LlamaAgent. Si el perfil no tiene
     // harness (perfiles viejos con "none") o tenía Opencode (descontinuado), se
@@ -13050,6 +13158,8 @@ void AppController::rescanHardware()
     m_hardwareSummary[QStringLiteral("vramTotalGb")] = 0.0;
     m_hardwareSummary[QStringLiteral("gpuCount")] = 0;
     m_hardwareSummary[QStringLiteral("backendHint")] = QStringLiteral("CPU");
+    m_hardwareSummary[QStringLiteral("voiceGpuPlan")] =
+        HardwareDiagnostics::voiceGpuPlan(m_hardwareSummary);
     m_hardwareSummary[QStringLiteral("summary")] = QStringLiteral("%1 hilos · %2 GB RAM · Detectando GPU…")
         .arg(QThread::idealThreadCount())
         .arg(ramGb > 0 ? QString::number(ramGb, 'f', 1) : QStringLiteral("?"));
@@ -13122,6 +13232,8 @@ void AppController::rescanHardware()
             HardwareDiagnostics::recommendedSplitMode(result);
         result[QStringLiteral("performanceRecommendation")] =
             HardwareDiagnostics::performanceRecommendation(result);
+        result[QStringLiteral("voiceGpuPlan")] =
+            HardwareDiagnostics::voiceGpuPlan(result);
         const QString gpuText = vramGb <= 0
             ? QStringLiteral("sin VRAM NVIDIA detectada")
             : gpuCount > 1
@@ -14568,6 +14680,8 @@ void AppController::setHardwareSummaryForTest(double vramGb, double ramGb,
         HardwareDiagnostics::recommendedSplitMode(m_hardwareSummary);
     m_hardwareSummary[QStringLiteral("performanceRecommendation")] =
         HardwareDiagnostics::performanceRecommendation(m_hardwareSummary);
+    m_hardwareSummary[QStringLiteral("voiceGpuPlan")] =
+        HardwareDiagnostics::voiceGpuPlan(m_hardwareSummary);
     emit hardwareSummaryChanged();
 }
 
@@ -23168,10 +23282,109 @@ QVariantMap AppController::recommendedVoiceTts(const QString &profileId) const
     const double totalVram = m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble();
     const double liveTotal = m_serverStats.value(QStringLiteral("totalMb")).toDouble();
     const double liveUsed = m_serverStats.value(QStringLiteral("usedMb")).toDouble();
-    const double freeVram = liveTotal > 0.0 ? qMax(0.0, liveTotal - liveUsed) / 1024.0 : 0.0;
-    return TtsPolicy::recommend(c, totalVram,
+    double freeVram = liveTotal > 0.0 ? qMax(0.0, liveTotal - liveUsed) / 1024.0 : 0.0;
+    double voiceVram = totalVram;
+    const QVariantMap gpuPlan = voiceGpuPlanForConfig(c);
+    if (gpuPlan.value(QStringLiteral("enabled")).toBool()) {
+        // Automatic TTS selection must fit on the reserved (weak) GPU, not on
+        // the aggregate/strong GPU where the LLM is going to run.
+        voiceVram = qMax(0.0, gpuPlan.value(QStringLiteral("weakGpuModelFreeMb")).toDouble())
+            / 1024.0;
+        if (freeVram > 0.0)
+            freeVram = qMin(freeVram, voiceVram);
+        else
+            freeVram = voiceVram;
+    }
+    return TtsPolicy::recommend(c, voiceVram,
                                 m_hardwareSummary.value(QStringLiteral("ramGb")).toDouble(),
                                 freeVram, qwenReady, piperReady);
+}
+
+QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
+                                                 const VoiceConfig &config) const
+{
+    auto modelRequiredForLaunch = [this](const QString &id) {
+        if (id.isEmpty()) return 0.0;
+        const LaunchProfile launch = m_profiles.resolveLaunch(id);
+        const ModelProfile modelProfile = m_profiles.resolveModelProfile(launch.modelProfileId);
+        CatalogModel model = m_catalog.findById(modelProfile.modelId);
+        const CatalogModel mmproj = m_catalog.findById(modelProfile.mmprojId);
+        const CatalogModel draft = m_catalog.findById(modelProfile.draftModelId);
+        if (model.sizeBytes <= 0 && id == m_activeLaunchId) {
+            const QString effectiveId = m_effectiveProfile.value(QStringLiteral("launchId"))
+                                            .toString();
+            if (effectiveId == id) {
+                const QStringList args = m_effectiveProfile.value(
+                    QStringLiteral("effectiveArgs")).toStringList();
+                for (int i = 0; i + 1 < args.size(); ++i) {
+                    if (args.at(i) != QLatin1String("--model")
+                        && args.at(i) != QLatin1String("-m"))
+                        continue;
+                    const QFileInfo info(args.at(i + 1));
+                    if (info.exists()) {
+                        model.sizeBytes = info.size();
+                        break;
+                    }
+                }
+            }
+        }
+        // A vision projector or an external draft model also consumes device
+        // memory; include them after resolving the primary model fallback.
+        if (mmproj.sizeBytes > 0)
+            model.sizeBytes += mmproj.sizeBytes;
+        if (draft.sizeBytes > 0)
+            model.sizeBytes += draft.sizeBytes;
+        return estimateVoiceModelVramMb(
+            model, m_profiles.resolveRuntime(launch.runtimePresetId));
+    };
+
+    const double modelRequiredMb = modelRequiredForLaunch(launchId);
+    QVariantMap hardware = m_hardwareSummary;
+    if (serverRunning() && !m_activeLaunchId.isEmpty()) {
+        // nvidia-smi.freeMb includes the resident llama-server and any unrelated
+        // process. Recover only the estimated footprint of our active model; using
+        // totalMb here would incorrectly treat another application's VRAM as free.
+        const double currentModelMb = modelRequiredForLaunch(m_activeLaunchId);
+        if (currentModelMb > 0.0) {
+            const QVariantList observed = hardware.value(QStringLiteral("gpus")).toList();
+            double totalMb = 0.0;
+            for (const QVariant &value : observed)
+                totalMb += qMax(0.0, value.toMap().value(QStringLiteral("totalMb")).toDouble());
+            QVariantList recovered;
+            for (const QVariant &value : observed) {
+                QVariantMap gpu = value.toMap();
+                const double capacity = qMax(0.0,
+                    gpu.value(QStringLiteral("totalMb")).toDouble());
+                const double free = qMax(0.0,
+                    gpu.value(QStringLiteral("freeMb")).toDouble());
+                const double share = totalMb > 0.0 ? capacity / totalMb : 0.0;
+                gpu[QStringLiteral("freeMb")] = qMin(capacity,
+                    free + currentModelMb * share);
+                recovered.append(gpu);
+            }
+            if (!recovered.isEmpty())
+                hardware[QStringLiteral("gpus")] = recovered;
+        }
+    }
+    return HardwareDiagnostics::voiceGpuPlan(
+        hardware, voiceReserveMbForConfig(config), modelRequiredMb);
+}
+
+QVariantMap AppController::voiceGpuPlanForConfig(const VoiceConfig &config) const
+{
+    return voiceGpuPlanForLaunch(m_activeLaunchId, config);
+}
+
+QVariantMap AppController::voiceGpuPlan() const
+{
+    VoiceConfig config;
+    if (m_charlaHasVoiceConfigOverride) {
+        config = m_charlaVoiceConfigOverride;
+    } else if (!m_activeLaunchId.isEmpty()) {
+        config = VoiceConfig::fromJson(QJsonObject::fromVariantMap(
+            m_profiles.getLaunchVoice(m_activeLaunchId)));
+    }
+    return voiceGpuPlanForConfig(config);
 }
 
 QVariantMap AppController::charlaAgentCapability() const
@@ -23223,9 +23436,12 @@ void AppController::applyAppLanguageToVoice(VoiceConfig &c) const
 void AppController::applyVoiceConfig()
 {
     if (!m_voice) return;
-    // La Charla usa la config de voz del perfil activo (el que lanzó el server).
-    VoiceConfig c = VoiceConfig::fromJson(
-        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
+    // Charla usa la config del perfil activo (o el override de sesión si eligió
+    // automáticamente un perfil de sistema compatible).
+    VoiceConfig c = m_charlaHasVoiceConfigOverride
+        ? m_charlaVoiceConfigOverride
+        : VoiceConfig::fromJson(
+              QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
     applyAppLanguageToVoice(c);
     if (c.ttsMode == QLatin1String("auto") && c.ttsAutoConfigure) {
         const QVariantMap rec = recommendedVoiceTts(m_activeLaunchId);
@@ -23245,6 +23461,11 @@ void AppController::applyVoiceConfig()
     const QString sttKey = c.sttKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.sttKeyRef);
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
     m_voice->setConfig(c, sttKey, ttsKey);
+    const QVariantMap gpuPlan = voiceGpuPlanForConfig(c);
+    const QString voiceGpuMask = gpuPlan.value(QStringLiteral("enabled")).toBool()
+        && gpuPlan.value(QStringLiteral("voicePlacementSafe")).toBool()
+        ? gpuPlan.value(QStringLiteral("voiceGpuMask")).toString() : QString();
+    m_voice->setTtsGpuDeviceMask(voiceGpuMask);
     m_voice->setInputDevice(voiceInputDevice());
     m_voiceCursorOcr = c.cursorOcr;
     // TTS piper (process-mode): resolver binario + voz instalada.
@@ -23395,23 +23616,167 @@ void AppController::stopMicTest()
 
 void AppController::startCharla()
 {
+    QString selectedLaunchId = m_activeLaunchId;
+    LaunchProfile activeLaunch = m_profiles.resolveLaunch(selectedLaunchId);
+    BackendProfile activeBackend = m_profiles.resolveBackend(activeLaunch.backendProfileId);
+    VoiceConfig plannedVoiceConfig = m_charlaHasVoiceConfigOverride
+        ? m_charlaVoiceConfigOverride
+        : VoiceConfig::fromJson(QJsonObject::fromVariantMap(
+              m_profiles.getLaunchVoice(selectedLaunchId)));
+    applyAppLanguageToVoice(plannedVoiceConfig);
+    if (plannedVoiceConfig.ttsMode == QLatin1String("auto")
+        && plannedVoiceConfig.ttsAutoConfigure) {
+        const QVariantMap rec = recommendedVoiceTts(m_activeLaunchId);
+        plannedVoiceConfig.ttsMode = rec.value(QStringLiteral("mode")).toString();
+        plannedVoiceConfig.qwenModelName = rec.value(
+            QStringLiteral("qwenModelName"), plannedVoiceConfig.qwenModelName).toString();
+    }
+    // Planificar con el motor TTS efectivo: Qwen/Inflect necesitan más reserva
+    // que el baseline Whisper/Piper. Así el split del LLM y la máscara de voz
+    // usan exactamente el mismo presupuesto desde el primer relanzamiento.
+    QVariantMap gpuPlan = voiceGpuPlanForLaunch(selectedLaunchId, plannedVoiceConfig);
+    const int configuredMainGpu = readSetting(QStringLiteral("gpu/processingIndex"), -1).toInt();
+    const QString configuredVramGpus = readSetting(QStringLiteral("gpu/vramIndices"), QString())
+                                           .toString().trimmed();
+    const bool explicitTensorSplit = hasOption(activeLaunch.extraArgs,
+                                               QStringLiteral("--tensor-split"),
+                                               QStringLiteral("-ts"))
+        || hasOption(activeBackend.baseArgs, QStringLiteral("--tensor-split"),
+                     QStringLiteral("-ts"));
+    const bool explicitMainGpu = hasOption(activeLaunch.extraArgs,
+                                            QStringLiteral("--main-gpu"),
+                                            QStringLiteral("-mg"))
+        || hasOption(activeBackend.baseArgs, QStringLiteral("--main-gpu"),
+                     QStringLiteral("-mg"));
+    const bool explicitCudaMask = activeLaunch.envOverrides.contains(QStringLiteral("CUDA_VISIBLE_DEVICES"))
+        || activeBackend.envOverrides.contains(QStringLiteral("CUDA_VISIBLE_DEVICES"));
+    const RuntimePreset activeRuntime = m_profiles.resolveRuntime(activeLaunch.runtimePresetId);
+    const bool localLaunch = !activeBackend.isCloud() && !isRemoteHost(activeBackend.host);
+    const bool automaticGpuSelection = localLaunch
+        && gpuPlan.value(QStringLiteral("enabled")).toBool()
+        && gpuPlan.value(QStringLiteral("modelFitKnown")).toBool()
+        && configuredMainGpu < 0 && configuredVramGpus.isEmpty() && !explicitMainGpu
+        && !explicitTensorSplit && !explicitCudaMask && activeRuntime.gpuLayers != 0;
+
+    // Si el perfil de sistema activo no entra en la capacidad combinada segura,
+    // buscar el mayor perfil normal instalado que sí entra. No se toca un perfil
+    // de usuario: cambiarle el modelo en silencio sería una sorpresa y se deja
+    // que el diagnóstico explique qué debe ajustar.
+    if (automaticGpuSelection && !gpuPlan.value(QStringLiteral("modelPlacementSafe")).toBool()
+        && activeLaunch.system) {
+        QString fallbackId;
+        double fallbackRequiredMb = 0.0;
+        QVariantMap fallbackPlan;
+        for (const QVariant &item : m_profiles.launchProfilesForMenu()) {
+            const QString candidateId = item.toMap().value(QStringLiteral("id")).toString();
+            if (candidateId.isEmpty() || candidateId == selectedLaunchId)
+                continue;
+            const LaunchProfile candidate = m_profiles.resolveLaunch(candidateId);
+            if (!candidate.system || !candidate.systemBadge || candidate.benchmark
+                || candidate.deprecated)
+                continue;
+            const BackendProfile candidateBackend =
+                m_profiles.resolveBackend(candidate.backendProfileId);
+            if (candidateBackend.isCloud() || isRemoteHost(candidateBackend.host))
+                continue;
+            const EffectiveProfile candidateEffective =
+                EffectiveProfileBuilder::build(buildContext(candidateId));
+            if (!candidateEffective.isValid())
+                continue; // no hay binario/modelo listo para usar ahora
+            const QVariantMap candidatePlan =
+                voiceGpuPlanForLaunch(candidateId, plannedVoiceConfig);
+            if (!candidatePlan.value(QStringLiteral("modelFitKnown")).toBool()
+                || !candidatePlan.value(QStringLiteral("modelPlacementSafe")).toBool())
+                continue;
+            const double requiredMb =
+                candidatePlan.value(QStringLiteral("modelRequiredMb")).toDouble();
+            if (fallbackId.isEmpty() || requiredMb > fallbackRequiredMb) {
+                fallbackId = candidateId;
+                fallbackRequiredMb = requiredMb;
+                fallbackPlan = candidatePlan;
+            }
+        }
+        if (!fallbackId.isEmpty()) {
+            const QString previousLaunchId = selectedLaunchId;
+            m_charlaVoiceConfigOverride = plannedVoiceConfig;
+            m_charlaHasVoiceConfigOverride = true;
+            selectedLaunchId = fallbackId;
+            activeLaunch = m_profiles.resolveLaunch(selectedLaunchId);
+            activeBackend = m_profiles.resolveBackend(activeLaunch.backendProfileId);
+            m_activeLaunchId = selectedLaunchId;
+            writeSetting(QStringLiteral("lastLaunchId"), selectedLaunchId);
+            computeEffectiveProfile(selectedLaunchId);
+            emit launchProfileSelected(selectedLaunchId);
+            emit activeLaunchIdChanged();
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Charla: el perfil %1 no entra en el reparto seguro; "
+                                             "seleccionado automáticamente %2.")
+                                  .arg(previousLaunchId, activeLaunch.name));
+            // Este plan se calculó antes de cambiar m_activeLaunchId, por lo que
+            // su recuperación de la VRAM del server anterior sigue siendo válida.
+            gpuPlan = fallbackPlan;
+        }
+    }
+
+    const RuntimePreset selectedRuntime = m_profiles.resolveRuntime(activeLaunch.runtimePresetId);
+    const bool autoGpuPlan = localLaunch && gpuPlan.value(QStringLiteral("enabled")).toBool()
+        && gpuPlan.value(QStringLiteral("modelFitKnown")).toBool()
+        && gpuPlan.value(QStringLiteral("modelPlacementSafe")).toBool()
+        && configuredMainGpu < 0 && configuredVramGpus.isEmpty() && !explicitMainGpu
+        && !explicitTensorSplit && !explicitCudaMask && selectedRuntime.gpuLayers != 0;
+    m_charlaGpuPlanActive = autoGpuPlan;
+
     // Checkbox "siempre aplicar mejoras de charla": si el perfil activo todavía
     // tiene recomendaciones pendientes, relanzar con overrides y volver acá.
+    // El plan multi-GPU ya quedó activo arriba, por lo que ambos overrides viajan
+    // en el mismo arranque.
     if (charlaAutoTune() && !m_charlaStartAfterRelaunch
         && !charlaTuneRecommendations().isEmpty()) {
         applyCharlaTuneAndStartCharla();
         return;
     }
+
+    // Si el servidor ya estaba cargado con el perfil normal, se relanza una sola
+    // vez al entrar a Charla para liberar la porción reservada a voz. El modelo,
+    // el agente y el historial siguen siendo los del mismo LaunchProfile.
+    const bool serverPlanMatches = m_serverUsesVoiceGpuPlan
+        && m_serverVoiceGpuPlanSignature == voiceGpuPlanSignature(gpuPlan);
+    if (autoGpuPlan && !serverPlanMatches) {
+        if (m_activeLaunchId.isEmpty()) {
+            m_charlaGpuPlanActive = false;
+            emit serverError(QStringLiteral(
+                "Charla necesita un perfil local activo para aplicar el reparto multi-GPU."));
+            return;
+        }
+        const QString launchId = m_activeLaunchId;
+        const bool withAgent = agentRunning();
+        m_charlaStartAfterRelaunch = true;
+        auto startAgain = [this, launchId, withAgent]() {
+            if (withAgent) startServerAndAgent(launchId);
+            else startServer(launchId);
+        };
+        if (!serverRunning()) {
+            QTimer::singleShot(0, this, startAgain);
+        } else {
+            auto *conn = new QMetaObject::Connection;
+            *conn = connect(this, &AppController::serverRunningChanged, this,
+                            [this, conn, startAgain]() {
+                if (serverRunning() || m_serverStopping) return;
+                disconnect(*conn);
+                delete conn;
+                QTimer::singleShot(0, this, startAgain);
+            });
+            stopServer();
+        }
+        return;
+    }
+
     m_charlaStartAfterRelaunch = false;
     ensureChatBackend();   // la voz reusa el backend de chat (sesiones/stream)
     ensureVoice();
     // Si el perfil activo usa un STT gestionado, lanzar whisper-server primero.
-    VoiceConfig c = VoiceConfig::fromJson(
-        QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
-    applyAppLanguageToVoice(c);
+    VoiceConfig c = plannedVoiceConfig;
     QString effectiveTtsMode = c.ttsMode;
-    if (effectiveTtsMode == QLatin1String("auto"))
-        effectiveTtsMode = recommendedVoiceTts(m_activeLaunchId).value(QStringLiteral("mode")).toString();
     if (effectiveTtsMode == QLatin1String("piper")) {
         const QString voiceId = c.ttsManagedVoice.isEmpty()
             ? QStringLiteral("es_ES-davefx-medium") : c.ttsManagedVoice;
@@ -23515,6 +23880,11 @@ void AppController::applyCharlaTuneAndStartCharla()
 void AppController::stopCharla()
 {
     m_charlaActive = false;
+    // El server puede seguir vivo con el reparto calculado para conservar el KV
+    // cache; el próximo arranque manual volverá a la configuración del perfil.
+    m_charlaGpuPlanActive = false;
+    m_charlaHasVoiceConfigOverride = false;
+    m_charlaVoiceConfigOverride = VoiceConfig{};
     if (m_voice) m_voice->stop();
     stopManagedStt();
     // Restaurar el thinking configurado (la charla lo fuerza a off por turno).
@@ -23695,6 +24065,17 @@ bool AppController::startManagedStt(const VoiceConfig &c)
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert(QStringLiteral("LLAMACODE_MANAGED"), QStringLiteral("1"));
     env.insert(QStringLiteral("LLAMACODE_ROLE"), QStringLiteral("voice-stt"));
+    const QVariantMap gpuPlan = voiceGpuPlanForConfig(c);
+    if (gpuPlan.value(QStringLiteral("enabled")).toBool()
+        && gpuPlan.value(QStringLiteral("voicePlacementSafe")).toBool()) {
+        env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"),
+                   gpuPlan.value(QStringLiteral("voiceGpuMask")).toString());
+        appendServerEvent(QStringLiteral("lifecycle"),
+                          QStringLiteral("Charla multi-GPU: STT usa GPU %1 (%2); "
+                                         "TTS local heredará la misma máscara.")
+                              .arg(gpuPlan.value(QStringLiteral("voiceGpuMask")).toString(),
+                                   gpuPlan.value(QStringLiteral("weakGpuName")).toString()));
+    }
     m_sttProc->setProcessEnvironment(env);
     connect(m_sttProc, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
         emit serverError(QStringLiteral("No se pudo lanzar whisper-server. Configurá su ruta en Charla."));
