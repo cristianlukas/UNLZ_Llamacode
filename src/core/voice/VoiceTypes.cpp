@@ -37,6 +37,7 @@ QJsonObject VoiceConfig::toJson() const
     o["inflectModelDir"] = inflectModelDir;
     o["inflectProvider"] = inflectProvider;
     o["ttsAutoConfigure"] = ttsAutoConfigure;
+    o["turnMode"]       = turnMode;
     o["vadThreshold"]   = vadThreshold;
     o["vadSilenceMs"]   = vadSilenceMs;
     o["vadSegmentMs"]   = vadSegmentMs;
@@ -93,6 +94,11 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
         && c.inflectProvider != QLatin1String("cuda"))
         c.inflectProvider = QStringLiteral("cpu");
     c.ttsAutoConfigure = o.value("ttsAutoConfigure").toBool(c.ttsAutoConfigure);
+    c.turnMode = o.value("turnMode").toString(c.turnMode).trimmed().toLower();
+    // Aceptar "ptt" en configs editados a mano, pero persistir siempre el
+    // nombre canónico. Los valores desconocidos conservan el modo histórico.
+    if (c.turnMode == QLatin1String("ptt")) c.turnMode = QStringLiteral("push_to_talk");
+    if (c.turnMode != QLatin1String("push_to_talk")) c.turnMode = QStringLiteral("vad");
     c.vadThreshold = o.value("vadThreshold").toDouble(c.vadThreshold);
     c.vadSilenceMs = o.value("vadSilenceMs").toInt(c.vadSilenceMs);
     c.vadSegmentMs = o.value("vadSegmentMs").toInt(c.vadSegmentMs);

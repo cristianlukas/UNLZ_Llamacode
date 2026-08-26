@@ -395,8 +395,17 @@ included).
 - **Capture** PCM16 mono 16 kHz (`QAudioSource`) with **energy-RMS VAD** (configurable
   end-of-turn by silence), **microphone selection** and a live **level meter**. A
   *Test microphone* button validates input with no server.
-- **Barge-in**: interrupt TTS when new speech is detected. State machine
-  `listening → transcribing → thinking → speaking` with optional auto-listen.
+- **Configurable turn-taking**: `Hands-free (VAD)` keeps automatic listening;
+  `Push to talk` keeps the microphone closed while Talk mode is idle and captures
+  only while the button is held. In this mode pauses do not end the turn: releasing
+  the button submits the accumulated audio to STT.
+- **Barge-in**: interrupt TTS when new speech is detected or when PTT is pressed
+  during a reply, also cancelling chat/agent generation so discarded replies do not
+  keep consuming tokens. State machine
+  `ready → listening → transcribing → thinking → speaking` with optional auto-listen.
+- **Prefill + streaming**: the PTT `ready` state warms the backend's stable prefix
+  before speech starts; partial transcription and sentence-level TTS continue in
+  parallel with model generation.
 
 ## Memory, RAG and verification
 

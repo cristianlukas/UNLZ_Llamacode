@@ -959,8 +959,17 @@ incluidos).
 - **Captura** PCM16 mono 16 kHz (`QAudioSource`) con **VAD por energía RMS** (fin de
   turno por silencio configurable), **selección de micrófono** y **medidor de nivel**
   en vivo. Botón *Probar micrófono* para validar entrada sin servidor.
-- **Barge-in**: interrumpir el TTS al detectar voz nueva. Máquina de estados
-  `escuchando → transcribiendo → pensando → hablando` con auto-escucha opcional.
+- **Turn-taking configurable**: `Manos libres (VAD)` conserva la escucha automática;
+  `Pulsar para hablar` deja el micrófono cerrado mientras Charla está en espera y
+  sólo captura mientras se mantiene pulsado el botón. En este modo las pausas no
+  cierran el turno: al soltar se entrega el audio acumulado al STT.
+- **Barge-in**: interrumpir el TTS al detectar voz nueva o al pulsar PTT durante una
+  respuesta, cancelando también la generación del chat/agente para no seguir
+  consumiendo tokens de una respuesta descartada. Máquina de estados
+  `listo → escuchando → transcribiendo → pensando → hablando` con auto-escucha opcional.
+- **Prefill + streaming**: en PTT el estado `listo` precalienta el prefijo estable del
+  backend antes de hablar; la transcripción parcial y el TTS por oraciones siguen
+  fluyendo en paralelo con la generación del modelo.
 - **Dictado literal**: reutiliza el STT configurado sin enviar el texto al LLM ni
   reescribir la intención; al detenerlo deja la transcripción en el portapapeles
   para pegarla en terminales, editores o cualquier otra aplicación.

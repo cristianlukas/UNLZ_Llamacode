@@ -61,6 +61,11 @@ struct VoiceConfig {
     bool ttsAutoConfigure = true;
 
     // ── Captura / VAD (detección de fin de habla) ──
+    // Cómo se inicia un turno: "vad" = manos libres (detecta voz y silencio),
+    // "push_to_talk" = la captura sólo está abierta mientras el usuario
+    // mantiene pulsado el botón. El VAD sigue delimitando segmentos parciales,
+    // pero nunca cierra por sí solo un turno PTT.
+    QString turnMode = QStringLiteral("vad"); // vad | push_to_talk
     // Umbral de energía RMS [0..1] por debajo del cual el frame es "silencio".
     double  vadThreshold = 0.012;
     // Silencio continuo (ms) tras voz para dar el turno por terminado.

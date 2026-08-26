@@ -37,7 +37,7 @@ class VoiceController : public QObject
     Q_PROPERTY(QString lastError READ lastError NOTIFY errorChanged)
     Q_PROPERTY(QVariantMap latencyStats READ latencyStats NOTIFY latencyUpdated)
 public:
-    enum State { Idle, Listening, Transcribing, Thinking, Speaking, Error };
+    enum State { Idle, Ready, Listening, Transcribing, Thinking, Speaking, Error };
     Q_ENUM(State)
 
     explicit VoiceController(QObject *parent = nullptr);
@@ -57,6 +57,10 @@ public:
     double level() const { return m_level; }
     QString lastError() const { return m_lastError; }
     QVariantMap latencyStats() const { return VoiceLatencyTracker::summary(); }
+    bool pushToTalkMode() const
+    {
+        return m_cfg.turnMode == QLatin1String("push_to_talk") && !m_forceVad;
+    }
 
     State state() const { return m_state; }
 
@@ -94,10 +98,15 @@ public:
     static QString sanitizeForSpeech(const QString &s);
 
 public slots:
-    void start();          // arranca la sesión de charla (entra en Listening)
+    void start();          // arranca Charla (Listening o Ready si usa PTT)
+    void startDictation(); // arranca dictado con VAD aunque Charla use PTT
     void finishTurn();     // cierra captura y transcribe lo acumulado
     void stop();           // corta todo y vuelve a Idle
     void startListening(); // fuerza escucha (corta TTS si suena)
+    // En modo push_to_talk, abre/cierra el micrófono para un turno explícito.
+    // En modo VAD son equivalentes a iniciar/finalizar la escucha normal.
+    void pushToTalkStart();
+    void pushToTalkStop();
     void micTest();        // captura solo para ver nivel (sin STT/chat); probar micrófono
     void stopMicTest();
     void speak(const QString &text);   // habla un texto (lo invoca AppController al cerrar turno)
@@ -123,6 +132,9 @@ signals:
     // Transcripción parcial en vivo (segmentos ya reconocidos del turno en curso).
     void partialTranscript(const QString &text);
     void latencyUpdated(const QVariantMap &sample);
+    // El usuario pidió hablar mientras el asistente estaba reproduciendo. El
+    // dueño del backend debe abortar también la generación, no sólo el audio.
+    void interruptRequested();
 
 private slots:
     void onAudioReady();
@@ -181,6 +193,8 @@ private:
     bool   m_turnEnding = false;     // silencio largo detectado: finalizar al drenar la cola
     bool  m_monitorOnly = false;     // true durante Speaking (barge-in): no acumula
     bool  m_testMode = false;        // micTest: captura para nivel, no VAD/STT
+    bool  m_pttHeld = false;         // botón PTT actualmente presionado
+    bool  m_forceVad = false;        // override transitorio usado por dictado
     QString m_deviceId;              // micrófono elegido ("" = default del sistema)
 
     QMediaPlayer *m_player = nullptr;

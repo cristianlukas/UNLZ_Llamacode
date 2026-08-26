@@ -92,12 +92,12 @@ Item {
 
     readonly property string st: App.voiceState
     readonly property var stateColor: ({
-        "idle": Theme.textMuted, "listening": Theme.accent,
+        "idle": Theme.textMuted, "ready": Theme.accent, "listening": Theme.accent,
         "transcribing": "#e0a93b", "thinking": "#9b6dd6",
         "speaking": "#3bbf6e", "error": Theme.btnDangerBg
     })
     readonly property var stateLabel: ({
-        "idle": "Listo", "listening": "Escuchando…", "transcribing": "Transcribiendo…",
+        "idle": "Listo", "ready": "Esperando que hables", "listening": "Escuchando…", "transcribing": "Transcribiendo…",
         "thinking": "Pensando…", "speaking": "Hablando…", "error": "Error"
     })
 
@@ -266,10 +266,25 @@ Item {
                     color: Theme.textMuted; font.pixelSize: 11; wrapMode: Text.WordWrap
                 }
                 LcButton {
+                    id: pttButton
+                    Layout.fillWidth: true
+                    text: App.voiceState === "listening"
+                          ? "Soltá para enviar"
+                          : "Mantené pulsado para hablar"
+                    visible: App.voiceActive && !page.testing && page.cfg.turnMode === "push_to_talk"
+                    enabled: App.voiceState === "ready"
+                             || (App.voiceState === "speaking" && page.cfg.bargeIn !== false)
+                    onPressedChanged: {
+                        if (!visible) return
+                        if (pressed) App.charlaPushToTalkStart()
+                        else App.charlaPushToTalkStop()
+                    }
+                }
+                LcButton {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Hablar ahora"
                     secondary: true
-                    visible: App.voiceActive && !page.testing
+                    visible: App.voiceActive && !page.testing && page.cfg.turnMode !== "push_to_talk"
                     onClicked: App.charlaListen()
                 }
 
@@ -661,6 +676,26 @@ Item {
                     GridLayout {
                         columns: 2; columnSpacing: 12; rowSpacing: 8
                         Layout.leftMargin: 24; Layout.rightMargin: 24; Layout.fillWidth: true
+
+                        Text { text: "Modo de turno"; color: Theme.textSecondary }
+                        LcComboBox {
+                            Layout.fillWidth: true
+                            property var turnModes: [
+                                { id: "vad", name: "Manos libres (VAD)" },
+                                { id: "push_to_talk", name: "Pulsar para hablar" }
+                            ]
+                            textRole: "name"
+                            model: turnModes
+                            currentIndex: page.cfg.turnMode === "push_to_talk" ? 1 : 0
+                            onActivated: { page.cfg.turnMode = turnModes[currentIndex].id; page.save() }
+                        }
+                        Text {
+                            Layout.columnSpan: 2; Layout.fillWidth: true
+                            text: page.cfg.turnMode === "push_to_talk"
+                                  ? "El micrófono sólo se abre mientras mantenés pulsado “Mantené pulsado para hablar”. Soltar envía el turno; las pausas no lo cierran antes."
+                                  : "El VAD detecta cuándo empezás y terminás de hablar. Ajustá el silencio si corta demasiado pronto o espera de más."
+                            color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
+                        }
 
                         Text { text: "Silencio fin de turno (ms)"; color: Theme.textSecondary }
                         LcTextField {

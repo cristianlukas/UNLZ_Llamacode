@@ -25,6 +25,7 @@ class TestVoice : public QObject
     Q_OBJECT
 private slots:
     void configRoundTrip();
+    void turnModeDefaultsAndAliases();
     void cursorCommandParsesOrders();
     void cursorCommandIgnoresConversation();
     void wavHeaderAndExtract();
@@ -207,6 +208,25 @@ void TestVoice::configRoundTrip()
     QCOMPARE(r.vadSilenceMs, 1200);
     QCOMPARE(r.bargeIn, false);
     QVERIFY(!r.ttsIsCloud());
+}
+
+void TestVoice::turnModeDefaultsAndAliases()
+{
+    QCOMPARE(VoiceConfig().turnMode, QStringLiteral("vad"));
+
+    VoiceConfig c;
+    c.turnMode = QStringLiteral("push_to_talk");
+    const VoiceConfig roundTrip = VoiceConfig::fromJson(c.toJson());
+    QCOMPARE(roundTrip.turnMode, QStringLiteral("push_to_talk"));
+
+    // Configs editados a mano pueden usar el alias corto, pero no se propaga
+    // internamente una variante no canónica.
+    QCOMPARE(VoiceConfig::fromJson(QJsonObject{{"turnMode", "ptt"}}).turnMode,
+             QStringLiteral("push_to_talk"));
+    QCOMPARE(VoiceConfig::fromJson(QJsonObject{{"turnMode", "otro"}}).turnMode,
+             QStringLiteral("vad"));
+    QCOMPARE(VoiceController::stateName(VoiceController::Ready),
+             QStringLiteral("ready"));
 }
 
 void TestVoice::latencyPercentiles()

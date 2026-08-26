@@ -67,6 +67,7 @@ QString VoiceController::stateName(State s)
 {
     switch (s) {
     case Idle:         return QStringLiteral("idle");
+    case Ready:        return QStringLiteral("ready");
     case Listening:    return QStringLiteral("listening");
     case Transcribing: return QStringLiteral("transcribing");
     case Thinking:     return QStringLiteral("thinking");
@@ -126,7 +127,16 @@ VadTuning VoiceController::vadTuningFor(const VoiceConfig &cfg)
 void VoiceController::start()
 {
     m_lastError.clear();
+    m_pttHeld = false;
     startListening();
+}
+
+void VoiceController::startDictation()
+{
+    // El dictado conserva su contrato histórico de "hablá y volvé a pulsar para
+    // terminar". No debe heredar el micrófono cerrado del modo PTT de Charla.
+    m_forceVad = true;
+    start();
 }
 
 void VoiceController::finishTurn()
@@ -147,11 +157,29 @@ void VoiceController::stop()
     m_stt.cancel();
     m_tts.cancel();
     m_testMode = false;
+    m_pttHeld = false;
+    m_forceVad = false;
     setState(Idle);
 }
 
 void VoiceController::startListening()
 {
+    // PTT queda armado sin abrir el micrófono. La captura sólo comienza cuando
+    // pushToTalkStart() marca el botón como presionado; así una sesión en espera
+    // no escucha conversaciones ajenas ni depende de que el VAD adivine la
+    // intención del usuario.
+    if (pushToTalkMode() && !m_pttHeld) {
+        endCapture();
+        teardownPlayback();
+        m_ttsQueue.clear();
+        m_audioQueue.clear();
+        m_playing = false;
+        m_streamBubble = -1;
+        m_streamConsumed = 0;
+        m_tts.cancel();
+        if (m_state != Error) setState(Ready);
+        return;
+    }
     teardownPlayback();            // barge-in: cortar cualquier TTS sonando
     m_ttsQueue.clear();            // descartar oraciones/clips pendientes del turno
     m_audioQueue.clear();
@@ -162,6 +190,36 @@ void VoiceController::startListening()
     m_testMode = false;
     beginCapture();
     if (m_state != Error) setState(Listening);
+}
+
+void VoiceController::pushToTalkStart()
+{
+    if (!pushToTalkMode()) {
+        startListening();
+        return;
+    }
+    if (m_pttHeld || m_state == Idle || m_state == Error || m_testMode) return;
+    // Un PTT nuevo puede interrumpir una respuesta hablada. Mientras el modelo
+    // todavía transcribe o piensa, esperamos a que el turno actual termine para
+    // no mezclar dos capturas ni dejar un request STT en un estado ambiguo.
+    if (m_state != Ready && m_state != Speaking) return;
+    const State previous = m_state;
+    if (previous == Speaking && !m_cfg.bargeIn) return;
+    m_pttHeld = true;
+    startListening();
+    if (previous == Speaking && m_state == Listening)
+        emit interruptRequested();
+}
+
+void VoiceController::pushToTalkStop()
+{
+    if (!pushToTalkMode()) {
+        finishTurn();
+        return;
+    }
+    if (!m_pttHeld) return;
+    m_pttHeld = false;
+    if (m_state == Listening) finishTurn();
 }
 
 void VoiceController::micTest()
@@ -302,7 +360,10 @@ void VoiceController::onAudioReady()
     const bool ended = m_cfg.vadAdaptive
         ? (sawVoice && m_silenceMs >= needSilence)
         : turnEnded(m_peak, m_cfg.vadActivationLevel, m_silenceMs, needSilence);
-    if (ended) {
+    // En PTT el silencio no tiene autoridad para cerrar el turno: el release
+    // del botón es la señal de intención. El VAD sigue cortando microsegmentos
+    // para mantener la transcripción parcial y el feedback en vivo.
+    if (ended && !(pushToTalkMode() && m_pttHeld)) {
         if (needSilence != m_cfg.vadSilenceMs)
             qInfo().noquote() << QStringLiteral("[charla] endpoint: corte a %1 ms (base %2, parcial=\"%3\")")
                                      .arg(needSilence).arg(m_cfg.vadSilenceMs).arg(m_partial.right(40));
