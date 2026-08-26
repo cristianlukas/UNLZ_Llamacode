@@ -94,6 +94,9 @@ Invocables (`/invoke`) — verificados en uso:
   bloqueados, y limita cada etapa a 1800 segundos (30 minutos).
 - `cancelBenchmark()`.
 - `runStartupScan()` — re-escaneo general (hardware + modelos).
+- `configureClaudeDesktop(launchProfileId)` — levanta el gateway si hace falta y
+  escribe el perfil local Third-Party Inference de Claude Desktop, con aliases
+  `claude-llamacode-*`; crea respaldos antes de modificar los JSON.
 
 Propiedades (`/prop`, y `/setprop` si son escribibles):
 - `serverState` (read: `"stopped"|"running"|...`), `serverRunning` (bool).

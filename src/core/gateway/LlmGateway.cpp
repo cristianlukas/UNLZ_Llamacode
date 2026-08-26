@@ -15,6 +15,8 @@
 #include <QUdpSocket>
 #include <QNetworkDatagram>
 #include <QHostInfo>
+#include <QHash>
+#include "core/integrations/ClaudeDesktopIntegration.h"
 
 // ── Funciones puras ──────────────────────────────────────────────────────────
 
@@ -30,9 +32,17 @@ static QString flattenAnthropicContent(const QJsonValue &content)
         if (type == QLatin1String("text"))
             out += b.value(QStringLiteral("text")).toString();
         else if (type == QLatin1String("tool_result"))
-            out += b.value(QStringLiteral("content")).toString();
+            out += flattenAnthropicContent(b.value(QStringLiteral("content")));
     }
     return out;
+}
+
+static QByteArray compactJsonValue(const QJsonValue &value)
+{
+    if (value.isObject()) return QJsonDocument(value.toObject()).toJson(QJsonDocument::Compact);
+    if (value.isArray()) return QJsonDocument(value.toArray()).toJson(QJsonDocument::Compact);
+    if (value.isString()) return value.toString().toUtf8();
+    return QByteArrayLiteral("{}");
 }
 
 QJsonObject LlmGateway::anthropicToOpenAI(const QJsonObject &a)
@@ -62,8 +72,54 @@ QJsonObject LlmGateway::anthropicToOpenAI(const QJsonObject &a)
     for (const QJsonValue &mv : a.value(QStringLiteral("messages")).toArray()) {
         const QJsonObject m = mv.toObject();
         const QString role = m.value(QStringLiteral("role")).toString();
-        msgs.append(QJsonObject{{QStringLiteral("role"), role},
-                                {QStringLiteral("content"), flattenAnthropicContent(m.value(QStringLiteral("content")))}});
+        const QJsonValue content = m.value(QStringLiteral("content"));
+        if (!content.isArray()) {
+            msgs.append(QJsonObject{{QStringLiteral("role"), role},
+                                    {QStringLiteral("content"), flattenAnthropicContent(content)}});
+            continue;
+        }
+
+        QString text;
+        QJsonArray toolCalls;
+        bool emittedToolResult = false;
+        for (const QJsonValue &blockValue : content.toArray()) {
+            const QJsonObject block = blockValue.toObject();
+            const QString type = block.value(QStringLiteral("type")).toString();
+            if (type == QLatin1String("text")) {
+                text += block.value(QStringLiteral("text")).toString();
+            } else if (type == QLatin1String("tool_use")) {
+                toolCalls.append(QJsonObject{
+                    {QStringLiteral("id"), block.value(QStringLiteral("id"))},
+                    {QStringLiteral("type"), QStringLiteral("function")},
+                    {QStringLiteral("function"), QJsonObject{
+                        {QStringLiteral("name"), block.value(QStringLiteral("name"))},
+                        {QStringLiteral("arguments"),
+                         QString::fromUtf8(compactJsonValue(block.value(QStringLiteral("input"))))}
+                    }}
+                });
+            } else if (type == QLatin1String("tool_result")) {
+                msgs.append(QJsonObject{
+                    {QStringLiteral("role"), QStringLiteral("tool")},
+                    {QStringLiteral("tool_call_id"), block.value(QStringLiteral("tool_use_id"))},
+                    {QStringLiteral("content"), flattenAnthropicContent(
+                        block.value(QStringLiteral("content")))}
+                });
+                emittedToolResult = true;
+            }
+        }
+
+        if (role == QLatin1String("assistant") && !toolCalls.isEmpty()) {
+            QJsonObject assistant{
+                {QStringLiteral("role"), role},
+                {QStringLiteral("content"), text.isEmpty() ? QJsonValue::Null
+                                                             : QJsonValue(text)},
+                {QStringLiteral("tool_calls"), toolCalls}
+            };
+            msgs.append(assistant);
+        } else if (!text.isEmpty() || !emittedToolResult) {
+            msgs.append(QJsonObject{{QStringLiteral("role"), role},
+                                    {QStringLiteral("content"), text}});
+        }
     }
     o.insert(QStringLiteral("messages"), msgs);
 
@@ -93,20 +149,39 @@ QJsonObject LlmGateway::openAIToAnthropic(const QJsonObject &o)
     const QJsonObject message = choice.value(QStringLiteral("message")).toObject();
 
     QJsonArray content;
-    const QString text = message.value(QStringLiteral("content")).toString();
-    if (!text.isEmpty())
-        content.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("text")},
-                                   {QStringLiteral("text"), text}});
+    const QJsonValue messageContent = message.value(QStringLiteral("content"));
+    if (messageContent.isString()) {
+        const QString text = messageContent.toString();
+        if (!text.isEmpty())
+            content.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("text")},
+                                       {QStringLiteral("text"), text}});
+    } else if (messageContent.isArray()) {
+        for (const QJsonValue &partValue : messageContent.toArray()) {
+            const QJsonObject part = partValue.toObject();
+            if (part.value(QStringLiteral("type")).toString() == QLatin1String("text"))
+                content.append(QJsonObject{{QStringLiteral("type"), QStringLiteral("text")},
+                                           {QStringLiteral("text"), part.value(QStringLiteral("text"))}});
+        }
+    }
     // tool_calls → tool_use blocks
     for (const QJsonValue &tcv : message.value(QStringLiteral("tool_calls")).toArray()) {
         const QJsonObject tc = tcv.toObject();
         const QJsonObject fn = tc.value(QStringLiteral("function")).toObject();
+        QJsonValue input = QJsonValue::Object;
+        const QJsonValue arguments = fn.value(QStringLiteral("arguments"));
+        if (arguments.isObject()) input = arguments;
+        else if (arguments.isString()) {
+            QJsonParseError parseError;
+            const QJsonDocument parsed = QJsonDocument::fromJson(
+                arguments.toString().toUtf8(), &parseError);
+            if (parseError.error == QJsonParseError::NoError && parsed.isObject())
+                input = parsed.object();
+        }
         content.append(QJsonObject{
             {QStringLiteral("type"), QStringLiteral("tool_use")},
             {QStringLiteral("id"), tc.value(QStringLiteral("id"))},
             {QStringLiteral("name"), fn.value(QStringLiteral("name"))},
-            {QStringLiteral("input"), QJsonDocument::fromJson(
-                fn.value(QStringLiteral("arguments")).toString().toUtf8()).object()}
+            {QStringLiteral("input"), input}
         });
     }
 
@@ -159,8 +234,10 @@ QString LlmGateway::resolveModelId(const QString &requested, const QJsonArray &m
     }
     for (const QJsonValue &value : models) {
         const QJsonObject model = value.toObject();
-        if (model.value(QStringLiteral("name")).toString().compare(r, Qt::CaseInsensitive) == 0)
-            return model.value(QStringLiteral("id")).toString();
+        const QString id = model.value(QStringLiteral("id")).toString();
+        if (model.value(QStringLiteral("name")).toString().compare(r, Qt::CaseInsensitive) == 0
+            || ClaudeDesktopIntegration::modelAlias(id).compare(r, Qt::CaseInsensitive) == 0)
+            return id;
     }
     return {};
 }
@@ -172,11 +249,20 @@ QJsonObject LlmGateway::modelsResponse(const QJsonArray &models)
         const QJsonObject model = value.toObject();
         const QString id = model.value(QStringLiteral("id")).toString();
         if (id.isEmpty()) continue;
-        data.append(QJsonObject{
+        const QJsonObject base{
             {QStringLiteral("id"), id},
             {QStringLiteral("object"), QStringLiteral("model")},
             {QStringLiteral("owned_by"), QStringLiteral("llamacode")}
-        });
+        };
+        data.append(base);
+        const QString alias = ClaudeDesktopIntegration::modelAlias(id);
+        if (!alias.isEmpty() && alias != id) {
+            QJsonObject desktop = base;
+            desktop.insert(QStringLiteral("id"), alias);
+            desktop.insert(QStringLiteral("display_name"),
+                           model.value(QStringLiteral("name")).toString(id));
+            data.append(desktop);
+        }
     }
     return QJsonObject{
         {QStringLiteral("object"), QStringLiteral("list")},
@@ -474,7 +560,7 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
         if (ready) {
             waitTimer->stop(); waitTimer->deleteLater();
             delete clock;
-            forward(psock, p, body, anthropic, stream);
+            forward(psock, p, body, anthropic, stream, resolved);
             return;
         }
         if (clock->elapsed() > 90000) {   // 90s
@@ -486,7 +572,7 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
 }
 
 void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray &body,
-                         bool anthropic, bool stream)
+                         bool anthropic, bool stream, const QString &resolvedModel)
 {
     const QString base = m_hooks.baseUrl ? m_hooks.baseUrl() : QString();
     if (base.isEmpty()) { writeError(sock, 502, QStringLiteral("no hay server activo")); return; }
@@ -495,6 +581,11 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
     QByteArray upstreamBody = body;
     QString upstreamPath = path;
     QJsonObject reqObj = QJsonDocument::fromJson(body).object();
+    if (!resolvedModel.isEmpty()) {
+        reqObj.insert(QStringLiteral("model"), resolvedModel);
+        if (!anthropic)
+            upstreamBody = QJsonDocument(reqObj).toJson(QJsonDocument::Compact);
+    }
     if (anthropic) {
         QJsonObject oai = anthropicToOpenAI(reqObj);
         oai.insert(QStringLiteral("stream"), stream);
@@ -545,11 +636,19 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
     sock->write(hdr); sock->flush();
 
     if (anthropic) {
-        // Estado de traducción OpenAI-SSE → Anthropic-SSE (solo texto).
+        // Estado de traducción OpenAI-SSE → Anthropic-SSE. Además de texto,
+        // conserva tool_use/input_json_delta para que Desktop pueda ejecutar
+        // herramientas en Cowork/Code.
         auto *buf = new QByteArray;
         auto *started = new bool(false);
+        auto *nextBlockIndex = new int(0);
+        auto *textBlockIndex = new int(-1);
+        auto *toolBlocks = new QHash<int, int>;
+        auto *blockIndexes = new QList<int>;
+        auto *finishReason = new QString;
         const QString msgId = QStringLiteral("msg_") +
             QUuid::createUuid().toString(QUuid::WithoutBraces).left(24);
+        const QString responseModel = reqObj.value(QStringLiteral("model")).toString();
 
         auto sendEvent = [psock](const char *ev, const QJsonObject &data) {
             if (!psock) return;
@@ -557,9 +656,24 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
             e += "data: " + QJsonDocument(data).toJson(QJsonDocument::Compact) + "\r\n\r\n";
             psock->write(e); psock->flush();
         };
+        auto startMessage = [started, sendEvent, msgId, responseModel]() {
+            if (*started) return;
+            *started = true;
+            sendEvent("message_start", QJsonObject{
+                {QStringLiteral("type"), QStringLiteral("message_start")},
+                {QStringLiteral("message"), QJsonObject{
+                    {QStringLiteral("id"), msgId},
+                    {QStringLiteral("type"), QStringLiteral("message")},
+                    {QStringLiteral("role"), QStringLiteral("assistant")},
+                    {QStringLiteral("model"), responseModel},
+                    {QStringLiteral("content"), QJsonArray()},
+                    {QStringLiteral("stop_reason"), QJsonValue::Null}
+                }}});
+        };
 
         connect(reply, &QNetworkReply::readyRead, this,
-                [this, reply, psock, buf, started, msgId, sendEvent]() {
+                [reply, psock, buf, started, nextBlockIndex, textBlockIndex,
+                 toolBlocks, blockIndexes, finishReason, startMessage, sendEvent]() {
             if (!psock) return;
             buf->append(reply->readAll());
             while (true) {
@@ -573,52 +687,98 @@ void LlmGateway::forward(QTcpSocket *sock, const QString &path, const QByteArray
                 const QJsonObject obj = QJsonDocument::fromJson(d).object();
                 const QJsonArray choices = obj.value(QStringLiteral("choices")).toArray();
                 if (choices.isEmpty()) continue;
-                const QJsonObject delta = choices.first().toObject().value(QStringLiteral("delta")).toObject();
+                const QJsonObject choice = choices.first().toObject();
+                const QString reason = choice.value(QStringLiteral("finish_reason")).toString();
+                if (!reason.isEmpty()) *finishReason = reason;
+                const QJsonObject delta = choice.value(QStringLiteral("delta")).toObject();
                 const QString chunk = delta.value(QStringLiteral("content")).toString();
-                if (chunk.isEmpty()) continue;
-                if (!*started) {
-                    *started = true;
-                    sendEvent("message_start", QJsonObject{
-                        {QStringLiteral("type"), QStringLiteral("message_start")},
-                        {QStringLiteral("message"), QJsonObject{
-                            {QStringLiteral("id"), msgId},
-                            {QStringLiteral("type"), QStringLiteral("message")},
-                            {QStringLiteral("role"), QStringLiteral("assistant")},
-                            {QStringLiteral("content"), QJsonArray()},
-                            {QStringLiteral("stop_reason"), QJsonValue::Null}
-                        }}});
-                    sendEvent("content_block_start", QJsonObject{
-                        {QStringLiteral("type"), QStringLiteral("content_block_start")},
-                        {QStringLiteral("index"), 0},
-                        {QStringLiteral("content_block"), QJsonObject{
-                            {QStringLiteral("type"), QStringLiteral("text")},
-                            {QStringLiteral("text"), QStringLiteral("")}}}});
+                if (!chunk.isEmpty()) {
+                    startMessage();
+                    if (*textBlockIndex < 0) {
+                        *textBlockIndex = (*nextBlockIndex)++;
+                        blockIndexes->append(*textBlockIndex);
+                        sendEvent("content_block_start", QJsonObject{
+                            {QStringLiteral("type"), QStringLiteral("content_block_start")},
+                            {QStringLiteral("index"), *textBlockIndex},
+                            {QStringLiteral("content_block"), QJsonObject{
+                                {QStringLiteral("type"), QStringLiteral("text")},
+                                {QStringLiteral("text"), QStringLiteral("")}}}});
+                    }
+                    sendEvent("content_block_delta", QJsonObject{
+                        {QStringLiteral("type"), QStringLiteral("content_block_delta")},
+                        {QStringLiteral("index"), *textBlockIndex},
+                        {QStringLiteral("delta"), QJsonObject{
+                            {QStringLiteral("type"), QStringLiteral("text_delta")},
+                            {QStringLiteral("text"), chunk}}}});
                 }
-                sendEvent("content_block_delta", QJsonObject{
-                    {QStringLiteral("type"), QStringLiteral("content_block_delta")},
-                    {QStringLiteral("index"), 0},
-                    {QStringLiteral("delta"), QJsonObject{
-                        {QStringLiteral("type"), QStringLiteral("text_delta")},
-                        {QStringLiteral("text"), chunk}}}});
+
+                int fallbackToolIndex = toolBlocks->size();
+                for (const QJsonValue &toolValue :
+                     delta.value(QStringLiteral("tool_calls")).toArray()) {
+                    const QJsonObject toolCall = toolValue.toObject();
+                    const QJsonObject fn = toolCall.value(QStringLiteral("function")).toObject();
+                    const int toolIndex = toolCall.value(QStringLiteral("index"))
+                                              .toInt(fallbackToolIndex++);
+                    int blockIndex = toolBlocks->value(toolIndex, -1);
+                    if (blockIndex < 0) {
+                        blockIndex = (*nextBlockIndex)++;
+                        toolBlocks->insert(toolIndex, blockIndex);
+                        blockIndexes->append(blockIndex);
+                        startMessage();
+                        const QString id = toolCall.value(QStringLiteral("id"))
+                                               .toString(QStringLiteral("call_%1").arg(toolIndex));
+                        const QString name = fn.value(QStringLiteral("name"))
+                                                .toString(QStringLiteral("tool"));
+                        sendEvent("content_block_start", QJsonObject{
+                            {QStringLiteral("type"), QStringLiteral("content_block_start")},
+                            {QStringLiteral("index"), blockIndex},
+                            {QStringLiteral("content_block"), QJsonObject{
+                                {QStringLiteral("type"), QStringLiteral("tool_use")},
+                                {QStringLiteral("id"), id},
+                                {QStringLiteral("name"), name},
+                                {QStringLiteral("input"), QJsonObject()}}}});
+                    }
+                    const QString arguments = fn.value(QStringLiteral("arguments")).toString();
+                    if (!arguments.isEmpty()) {
+                        sendEvent("content_block_delta", QJsonObject{
+                            {QStringLiteral("type"), QStringLiteral("content_block_delta")},
+                            {QStringLiteral("index"), blockIndex},
+                            {QStringLiteral("delta"), QJsonObject{
+                                {QStringLiteral("type"), QStringLiteral("input_json_delta")},
+                                {QStringLiteral("partial_json"), arguments}}}});
+                    }
+                }
             }
         });
         connect(reply, &QNetworkReply::finished, this,
-                [reply, psock, buf, started, sendEvent]() {
+                [reply, psock, buf, started, nextBlockIndex, textBlockIndex,
+                 toolBlocks, blockIndexes, finishReason, startMessage, sendEvent]() {
             if (psock) {
-                if (*started) {
+                startMessage();
+                for (const int blockIndex : *blockIndexes) {
                     sendEvent("content_block_stop", QJsonObject{
                         {QStringLiteral("type"), QStringLiteral("content_block_stop")},
-                        {QStringLiteral("index"), 0}});
+                        {QStringLiteral("index"), blockIndex}});
                 }
+                const QString stopReason = *finishReason == QLatin1String("length")
+                    ? QStringLiteral("max_tokens")
+                    : *finishReason == QLatin1String("tool_calls")
+                        ? QStringLiteral("tool_use") : QStringLiteral("end_turn");
                 sendEvent("message_delta", QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("message_delta")},
                     {QStringLiteral("delta"), QJsonObject{
-                        {QStringLiteral("stop_reason"), QStringLiteral("end_turn")}}}});
+                        {QStringLiteral("stop_reason"), stopReason}}}});
                 sendEvent("message_stop", QJsonObject{
                     {QStringLiteral("type"), QStringLiteral("message_stop")}});
                 psock->disconnectFromHost();
             }
-            delete buf; delete started;
+            delete buf;
+            delete started;
+            delete nextBlockIndex;
+            delete textBlockIndex;
+            delete toolBlocks;
+            delete blockIndexes;
+            delete finishReason;
             reply->deleteLater();
         });
         return;

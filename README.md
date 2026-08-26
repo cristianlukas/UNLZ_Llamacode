@@ -1331,7 +1331,7 @@ un modelo de visión (server lanzado con `--mmproj`) también acepta **imágenes
   porque Windows puede usar memoria compartida y degradar fuertemente los TPS.
 - **Endpoint OpenAI** — con el server corriendo muestra `http://<host>:<port>/v1` (read-only, seleccionable) + botón *Copiar*, para apuntar agentes externos (opencode, aider, etc.) al backend local.
 
-## Gateway local para OpenCode y Claude Code
+## Gateway local para OpenCode, Claude Code y Claude Desktop
 
 En **Configuración > Gateway · API**, LlamaCode puede exponer los perfiles de
 lanzamiento locales mediante una API en `http://127.0.0.1:8088` (puerto
@@ -1340,8 +1340,20 @@ configurable):
 - `GET /v1/models` lista IDs estables de perfiles.
 - `POST /v1/chat/completions` ofrece la API OpenAI-compatible usada por OpenCode.
 - `POST /v1/messages` adapta el protocolo Anthropic para Claude Code.
+- En Configuración, **Configurar Claude Desktop** crea el perfil local de
+  **Third-Party Inference**, con aliases `claude-llamacode-*` y todos los perfiles
+  de lanzamiento disponibles. El alias se traduce de nuevo al ID estable de
+  LlamaCode antes de cargar el modelo.
 - Si un request pide otro perfil y auto-load está activo, LlamaCode hace el swap,
   espera que el modelo correcto quede listo y recién entonces reenvía el request.
+
+Claude Desktop debe estar completamente cerrado al aplicar el cambio y volver a
+abrirse después. La primera vez puede ser necesario habilitar **Developer Mode →
+Configure Third-Party Inference**. El modo 3P es una configuración local no
+oficial de Claude Desktop: Cowork/Code usan el gateway, mientras que funciones
+dependientes de la nube de Anthropic pueden no estar disponibles. LlamaCode deja
+un respaldo de cada JSON modificado en
+`AppLocalData/LlamaCode/claude-desktop/backups/`.
 
 El switch **Compartir server en la red local (LAN)** cambia el bind de loopback a
 `0.0.0.0` y muestra la URL IPv4 privada anunciable (por ejemplo,

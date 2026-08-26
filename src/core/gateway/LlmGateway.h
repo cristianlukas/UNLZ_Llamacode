@@ -78,7 +78,7 @@ private:
     void handle(QTcpSocket *sock, const QByteArray &method, const QString &path,
                 const QByteArray &body, const QString &authHeader);
     void forward(QTcpSocket *sock, const QString &path, const QByteArray &body,
-                 bool anthropic, bool stream);
+                 bool anthropic, bool stream, const QString &resolvedModel);
     void writeError(QTcpSocket *sock, int code, const QString &msg);
     void writeJson(QTcpSocket *sock, int code, const QJsonObject &value);
 

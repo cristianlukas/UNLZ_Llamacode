@@ -70,6 +70,7 @@
 #include "core/ToolCallingSupport.h"
 #include "core/diag/LogTriage.h"
 #include "core/integrations/OpenCodeIntegration.h"
+#include "core/integrations/ClaudeDesktopIntegration.h"
 #include <QtConcurrent>
 #include <QStandardPaths>
 #include <QDebug>
@@ -109,6 +110,101 @@
 #include <QVersionNumber>
 #include <algorithm>
 #include <cmath>
+
+namespace {
+
+bool readJsonObjectFile(const QString &path, QJsonObject *object, QString *error)
+{
+    if (!object) return false;
+    *object = QJsonObject();
+    if (!QFileInfo::exists(path)) return true;
+
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = QStringLiteral("no se pudo leer %1: %2").arg(path, file.errorString());
+        return false;
+    }
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        if (error) *error = QStringLiteral("JSON inválido en %1").arg(path);
+        return false;
+    }
+    *object = document.object();
+    return true;
+}
+
+bool writeJsonObjectFile(const QString &path, const QJsonObject &object, QString *error)
+{
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (error) *error = QStringLiteral("no se pudo escribir %1: %2").arg(path, file.errorString());
+        return false;
+    }
+    const QByteArray data = QJsonDocument(object).toJson(QJsonDocument::Indented);
+    if (file.write(data) != data.size() || !file.commit()) {
+        if (error) *error = QStringLiteral("no se pudo confirmar %1: %2").arg(path, file.errorString());
+        return false;
+    }
+    return true;
+}
+
+bool backupJsonFile(const QString &source, const QString &backupDir, QString *error)
+{
+    if (!QFileInfo::exists(source)) return true;
+    if (!QDir().mkpath(backupDir)) {
+        if (error) *error = QStringLiteral("no se pudo crear el respaldo %1").arg(backupDir);
+        return false;
+    }
+    const QString destination = QDir(backupDir).filePath(QFileInfo(source).fileName());
+    if (!QFile::copy(source, destination)) {
+        if (error) *error = QStringLiteral("no se pudo respaldar %1").arg(source);
+        return false;
+    }
+    return true;
+}
+
+QStringList claudeDesktopDataDirectories()
+{
+#ifdef Q_OS_WIN
+    const QString appData = qEnvironmentVariable("APPDATA");
+    const QString localAppData = qEnvironmentVariable("LOCALAPPDATA");
+    QStringList msixDirs;
+    if (!localAppData.isEmpty()) {
+        const QDir packages(QDir(localAppData).filePath(QStringLiteral("Packages")));
+        for (const QString &packageName : packages.entryList(
+                 {QStringLiteral("Claude_*")}, QDir::Dirs | QDir::NoDotAndDotDot)) {
+            const QString candidate = packages.filePath(packageName +
+                QStringLiteral("/LocalCache/Roaming/Claude-3p"));
+            if (QFileInfo(candidate).isDir()) msixDirs.append(candidate);
+        }
+    }
+    const QStringList candidates = ClaudeDesktopIntegration::windowsDataDirectories(
+        appData, localAppData, msixDirs);
+    QStringList existing;
+    for (const QString &candidate : candidates) {
+        if (QFileInfo(candidate).isDir() && !existing.contains(candidate))
+            existing.append(candidate);
+    }
+    if (!existing.isEmpty()) return existing;
+
+    // Instalación nueva: crear sólo el layout estándar, no el legado 3P.
+    if (!appData.trimmed().isEmpty())
+        return {QDir(appData).filePath(QStringLiteral("Claude"))};
+    return candidates;
+#else
+    const QString configRoot = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    QStringList result;
+    const QString standard = QDir(configRoot).filePath(QStringLiteral("Claude"));
+    const QString legacy = QDir(configRoot).filePath(QStringLiteral("Claude-3p"));
+    if (QFileInfo(standard).isDir()) result.append(standard);
+    if (QFileInfo(legacy).isDir() && !result.contains(legacy)) result.append(legacy);
+    if (result.isEmpty()) result.append(standard);
+    return result;
+#endif
+}
+
+}
 
 namespace {
 
@@ -9146,6 +9242,115 @@ QString AppController::launchClaudeCode()
     appendServerEvent(QStringLiteral("lifecycle"),
         QStringLiteral("Claude Code lanzado contra el gateway (%1).").arg(gatewayBaseUrl()));
     return {};
+}
+
+QString AppController::configureClaudeDesktop(const QString &launchProfileId)
+{
+    QString selectedId = launchProfileId.trimmed();
+    const QJsonArray models = gatewayModelCatalog();
+    if (models.isEmpty())
+        return QStringLiteral("No hay perfiles de lanzamiento disponibles para Claude Desktop.");
+
+    auto hasModel = [&models](const QString &id) {
+        for (const QJsonValue &value : models) {
+            if (value.toObject().value(QStringLiteral("id")).toString() == id)
+                return true;
+        }
+        return false;
+    };
+    if (selectedId.isEmpty() || !hasModel(selectedId))
+        selectedId = m_activeLaunchId;
+    if (selectedId.isEmpty() || !hasModel(selectedId))
+        selectedId = models.first().toObject().value(QStringLiteral("id")).toString();
+    if (selectedId.isEmpty())
+        return QStringLiteral("No se pudo elegir un perfil para Claude Desktop.");
+
+    if (!m_gateway || !m_gateway->listening()) {
+        if (m_gatewayEnabled) startGateway();
+        else setGatewayEnabled(true);
+    }
+    if (!m_gateway || !m_gateway->listening())
+        return QStringLiteral("No pude arrancar el gateway en %1.").arg(gatewayBaseUrl());
+
+    const QString apiKey = m_gatewayApiKey.trimmed().isEmpty()
+        ? QStringLiteral("local") : m_gatewayApiKey.trimmed();
+    QJsonObject gateway = ClaudeDesktopIntegration::gatewayConfig(
+        gatewayBaseUrl(), apiKey, models, selectedId);
+    const QJsonObject generatedMeta = ClaudeDesktopIntegration::metaConfig(models, selectedId);
+
+    const QString timestamp = QDateTime::currentDateTimeUtc().toString(
+        QStringLiteral("yyyyMMdd-hhmmss-zzz"));
+    const QString backupRoot = QDir(
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)).filePath(
+            QStringLiteral("claude-desktop/backups/%1").arg(timestamp));
+
+    int configured = 0;
+    QStringList errors;
+    const QStringList dataDirs = claudeDesktopDataDirectories();
+    for (int i = 0; i < dataDirs.size(); ++i) {
+        const QString dataDir = dataDirs.at(i);
+        const QString libraryDir = QDir(dataDir).filePath(QStringLiteral("configLibrary"));
+        if (!QDir().mkpath(libraryDir)) {
+            errors.append(QStringLiteral("no se pudo crear %1").arg(libraryDir));
+            continue;
+        }
+
+        const QString desktopConfigPath = QDir(dataDir).filePath(
+            QStringLiteral("claude_desktop_config.json"));
+        const QString gatewayConfigPath = QDir(libraryDir).filePath(
+            ClaudeDesktopIntegration::configId() + QStringLiteral(".json"));
+        const QString metaPath = QDir(libraryDir).filePath(QStringLiteral("_meta.json"));
+        QJsonObject desktopConfig;
+        QJsonObject existingGateway;
+        QJsonObject existingMeta;
+        QString error;
+        if (!readJsonObjectFile(desktopConfigPath, &desktopConfig, &error)
+            || !readJsonObjectFile(gatewayConfigPath, &existingGateway, &error)
+            || !readJsonObjectFile(metaPath, &existingMeta, &error)) {
+            errors.append(error);
+            continue;
+        }
+
+        const QString backupDir = QDir(backupRoot).filePath(QStringLiteral("target-%1").arg(i));
+        if (!backupJsonFile(desktopConfigPath, backupDir, &error)
+            || !backupJsonFile(gatewayConfigPath, backupDir, &error)
+            || !backupJsonFile(metaPath, backupDir, &error)) {
+            errors.append(error);
+            continue;
+        }
+
+        desktopConfig = ClaudeDesktopIntegration::withDeploymentMode(
+            desktopConfig, QStringLiteral("3p"));
+        for (auto it = gateway.begin(); it != gateway.end(); ++it)
+            existingGateway.insert(it.key(), it.value());
+        for (auto it = generatedMeta.begin(); it != generatedMeta.end(); ++it)
+            existingMeta.insert(it.key(), it.value());
+
+        if (!writeJsonObjectFile(desktopConfigPath, desktopConfig, &error)
+            || !writeJsonObjectFile(gatewayConfigPath, existingGateway, &error)
+            || !writeJsonObjectFile(metaPath, existingMeta, &error)) {
+            errors.append(error);
+            continue;
+        }
+        ++configured;
+    }
+
+    if (configured == 0) {
+        return errors.isEmpty()
+            ? QStringLiteral("No encontré una ubicación escribible de Claude Desktop.")
+            : QStringLiteral("No se pudo configurar Claude Desktop: %1").arg(errors.join("; "));
+    }
+
+    appendServerEvent(QStringLiteral("lifecycle"),
+        QStringLiteral("Claude Desktop configurado contra el gateway (%1), perfil '%2'.")
+            .arg(gatewayBaseUrl(), selectedId));
+    QString result = QStringLiteral(
+        "Claude Desktop configurado con LlamaCode (%1). Cerrá completamente Claude Desktop y volvé a abrirlo; "
+        "si es la primera vez, habilitá Developer Mode → Configure Third-Party Inference.")
+        .arg(selectedId);
+    if (!errors.isEmpty())
+        result += QStringLiteral(" Algunas rutas no se pudieron actualizar: %1").arg(errors.join("; "));
+    return result;
 }
 
 QString AppController::launchOpenCode(const QString &projectDir,

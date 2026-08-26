@@ -90,6 +90,7 @@ set(CORE_SOURCES
     src/core/AuxiliaryJobScheduler.cpp
     src/core/gateway/LlmGateway.cpp
     src/core/integrations/OpenCodeIntegration.cpp
+    src/core/integrations/ClaudeDesktopIntegration.cpp
     src/core/SecretStore.cpp
     src/core/profiles/HarnessSpec.cpp
     src/core/profiles/HarnessEngine.cpp
@@ -205,6 +206,7 @@ set(HEADERS
     src/core/AuxiliaryJobScheduler.h
     src/core/gateway/LlmGateway.h
     src/core/integrations/OpenCodeIntegration.h
+    src/core/integrations/ClaudeDesktopIntegration.h
     src/core/profiles/ProfileTypes.h
     src/core/profiles/ProfileManager.h
     src/core/profiles/EffectiveProfileBuilder.h

@@ -954,6 +954,48 @@ Item {
                                         onClicked: openCodeProjectDialog.open()
                                     }
                                 }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    visible: App.gatewayEnabled
+                                    spacing: 6
+
+                                    Text {
+                                        text: "OPCIÓN 3 · CLAUDE DESKTOP"
+                                        color: Theme.accent
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                    }
+                                    Text {
+                                        text: "Configura Claude Desktop para usar este gateway en modo Third-Party Inference. "
+                                              + "El perfil elegido queda disponible junto con los demás perfiles locales."
+                                        color: Theme.textSecondary
+                                        font.pixelSize: 11
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 8
+                                        LcButton {
+                                            text: "Configurar Claude Desktop"
+                                            enabled: openCodeProfile.currentValue !== undefined
+                                            onClicked: {
+                                                var result = App.configureClaudeDesktop(
+                                                    openCodeProfile.currentValue ?? "")
+                                                gwMsg.text = result
+                                                gwMsg.ok = result.indexOf("No ") !== 0
+                                                    && result.indexOf("no ") !== 0
+                                            }
+                                        }
+                                        Text {
+                                            text: "Requiere cerrar y volver a abrir Claude Desktop."
+                                            color: Theme.textMuted
+                                            font.pixelSize: 10
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
+                                    }
+                                }
                                 Text {
                                     id: gwMsg
                                     property bool ok: false

@@ -494,6 +494,17 @@ With a vision model (server launched with `--mmproj`) it also accepts **images**
 - **Start server only** — just `llama-server`, no agent.
 - **OpenAI endpoint** — with the server running it shows `http://<host>:<port>/v1` (read-only, selectable) + a *Copy* button, to point external agents (opencode, aider, etc.) at the local backend.
 
+## Local gateway for OpenCode, Claude Code and Claude Desktop
+
+Settings → Gateway · API exposes an Anthropic/OpenAI-compatible local gateway.
+The **Configure Claude Desktop** action writes Claude Desktop's local
+Third-Party Inference profile, publishes stable `claude-llamacode-*` aliases for
+the launch profiles, and keeps a backup under
+`AppLocalData/LlamaCode/claude-desktop/backups/`. Fully quit and relaunch Claude
+Desktop after applying it; the first setup may require Developer Mode → Configure
+Third-Party Inference. Cloud-only Anthropic features may not be available in 3P
+mode.
+
 ## Process Lifecycle
 
 - **Windows Job Object**: all subprocesses (llama-server + harness) are assigned to the main process's Job Object. When UNLZ_Llamacode closes (normally or on crash), children die automatically.

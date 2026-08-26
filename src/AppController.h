@@ -997,6 +997,9 @@ public:
                                   const QString &profileId, const QString &profileName,
                                   int context);
     Q_INVOKABLE QString launchClaudeCode();   // exec `claude` apuntando al gateway
+    // Configura Claude Desktop para Third-Party Inference usando este gateway.
+    // Devuelve un mensaje de error o el resumen de las rutas configuradas.
+    Q_INVOKABLE QString configureClaudeDesktop(const QString &launchProfileId);
     Q_INVOKABLE QString launchOpenCode(const QString &projectDir,
                                        const QString &launchProfileId);
 

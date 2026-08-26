@@ -10,6 +10,7 @@
 #include <QNetworkReply>
 #include <QTcpServer>
 #include "core/gateway/LlmGateway.h"
+#include "core/integrations/ClaudeDesktopIntegration.h"
 #include "core/integrations/OpenCodeIntegration.h"
 #include "AppController.h"
 
@@ -18,10 +19,12 @@ class GatewayTests : public QObject
     Q_OBJECT
 private slots:
     void anthropicToOpenAIMapsSystemAndMessages();
+    void anthropicToolHistoryMapsToOpenAI();
     void anthropicToolsMapToOpenAI();
     void openAIToAnthropicMapsContentAndStop();
     void resolveModelMatches();
     void stableModelCatalog();
+    void claudeDesktopConfigUsesStableAliases();
     void openCodeConfigUsesEnvironmentSecret();
     void openCodeDesktopCandidates();
     void modelsEndpointServesStableIds();
@@ -121,6 +124,37 @@ void GatewayTests::resolveModelMatches()
     QVERIFY(LlmGateway::resolveModel("", avail).isEmpty());
 }
 
+void GatewayTests::anthropicToolHistoryMapsToOpenAI()
+{
+    const QJsonObject a{
+        {"model", "m"},
+        {"messages", QJsonArray{
+            QJsonObject{{"role", "assistant"}, {"content", QJsonArray{
+                QJsonObject{{"type", "tool_use"}, {"id", "call_1"},
+                             {"name", "read_file"},
+                             {"input", QJsonObject{{"path", "main.cpp"}}}}
+            }}},
+            QJsonObject{{"role", "user"}, {"content", QJsonArray{
+                QJsonObject{{"type", "tool_result"}, {"tool_use_id", "call_1"},
+                             {"content", "file contents"}}
+            }}}
+        }}
+    };
+    const QJsonArray messages = LlmGateway::anthropicToOpenAI(a)
+                                    .value("messages").toArray();
+    QCOMPARE(messages.size(), 2);
+    const QJsonObject assistant = messages.at(0).toObject();
+    QCOMPARE(assistant.value("tool_calls").toArray().first().toObject()
+                 .value("function").toObject().value("name").toString(),
+             QStringLiteral("read_file"));
+    QCOMPARE(assistant.value("tool_calls").toArray().first().toObject()
+                 .value("function").toObject().value("arguments").toString(),
+             QStringLiteral("{\"path\":\"main.cpp\"}"));
+    const QJsonObject result = messages.at(1).toObject();
+    QCOMPARE(result.value("role").toString(), QStringLiteral("tool"));
+    QCOMPARE(result.value("tool_call_id").toString(), QStringLiteral("call_1"));
+}
+
 void GatewayTests::stableModelCatalog()
 {
     const QJsonArray models{
@@ -137,11 +171,43 @@ void GatewayTests::stableModelCatalog()
     const QJsonObject response = LlmGateway::modelsResponse(models);
     QCOMPARE(response.value("object").toString(), QStringLiteral("list"));
     const QJsonArray data = response.value("data").toArray();
-    QCOMPARE(data.size(), 2);
+    QCOMPARE(data.size(), 4);
     QCOMPARE(data.first().toObject().value("id").toString(),
              QStringLiteral("launch-qwen"));
     QCOMPARE(data.first().toObject().value("owned_by").toString(),
              QStringLiteral("llamacode"));
+    QCOMPARE(data.at(1).toObject().value("id").toString(),
+             QStringLiteral("claude-llamacode-launch-qwen"));
+    QCOMPARE(LlmGateway::resolveModelId("claude-llamacode-launch-qwen", models),
+             QStringLiteral("launch-qwen"));
+}
+
+void GatewayTests::claudeDesktopConfigUsesStableAliases()
+{
+    const QJsonArray models{
+        QJsonObject{{"id", "launch-qwen"}, {"name", "Qwen Coder"}},
+        QJsonObject{{"id", "launch-gemma"}, {"name", "Gemma"}}
+    };
+    const QJsonObject config = ClaudeDesktopIntegration::gatewayConfig(
+        QStringLiteral("http://127.0.0.1:8088/"), QStringLiteral("local"),
+        models, QStringLiteral("launch-gemma"));
+    QCOMPARE(config.value("inferenceProvider").toString(), QStringLiteral("gateway"));
+    QCOMPARE(config.value("inferenceGatewayBaseUrl").toString(),
+             QStringLiteral("http://127.0.0.1:8088"));
+    const QJsonArray inferenceModels = config.value("inferenceModels").toArray();
+    QCOMPARE(inferenceModels.size(), 2);
+    QCOMPARE(inferenceModels.first().toObject().value("name").toString(),
+             QStringLiteral("claude-llamacode-launch-gemma"));
+    QCOMPARE(inferenceModels.first().toObject().value("labelOverride").toString(),
+             QStringLiteral("LlamaCode · Gemma"));
+
+    const QJsonObject mode = ClaudeDesktopIntegration::withDeploymentMode(
+        QJsonObject{{"keep", true}}, QStringLiteral("3p"));
+    QVERIFY(mode.value("keep").toBool());
+    QCOMPARE(mode.value("deploymentMode").toString(), QStringLiteral("3p"));
+    QCOMPARE(ClaudeDesktopIntegration::metaConfig(models, "launch-gemma")
+                 .value("appliedId").toString(),
+             ClaudeDesktopIntegration::configId());
 }
 
 void GatewayTests::openCodeConfigUsesEnvironmentSecret()
@@ -208,6 +274,8 @@ void GatewayTests::modelsEndpointServesStableIds()
     const QJsonObject result = QJsonDocument::fromJson(reply->readAll()).object();
     QCOMPARE(result.value("data").toArray().first().toObject().value("id").toString(),
              QStringLiteral("launch-qwen"));
+    QCOMPARE(result.value("data").toArray().at(1).toObject().value("id").toString(),
+             QStringLiteral("claude-llamacode-launch-qwen"));
     reply->deleteLater();
 }
 
