@@ -103,6 +103,7 @@ private slots:
     void webFetch_forcedUnavailableProviderFailsDeterministically();
     void webFetch_camofoxProviderE2E();
     void webFetch_rateLimitsPerHost();
+    void auxiliaryEndpoint_prefersValidSidecarAndFallsBack();
 
 private:
     QVariantMap call(const QString &name, const QJsonObject &args);
@@ -123,6 +124,40 @@ void AgentToolsTests::cleanup()
     QDir dir(m_dir.path());
     dir.removeRecursively();
     QDir().mkpath(m_dir.path());
+}
+
+void AgentToolsTests::auxiliaryEndpoint_prefersValidSidecarAndFallsBack()
+{
+    QCOMPARE(AgentToolRunner::auxiliaryEndpointForTest(
+                 QStringLiteral("http://127.0.0.1:8090/"),
+                 QStringLiteral("http://127.0.0.1:8080/")),
+             QStringLiteral("http://127.0.0.1:8090"));
+    QCOMPARE(AgentToolRunner::auxiliaryEndpointForTest(
+                 QString(), QStringLiteral("http://127.0.0.1:8080/")),
+             QStringLiteral("http://127.0.0.1:8080"));
+    QCOMPARE(AgentToolRunner::auxiliaryEndpointForTest(
+                 QStringLiteral("not-a-url"), QStringLiteral("http://127.0.0.1:8080/")),
+             QStringLiteral("http://127.0.0.1:8080"));
+    QCOMPARE(AgentToolRunner::auxiliaryEndpointForTest(
+                 QStringLiteral("file:///tmp/model"), QStringLiteral("http://127.0.0.1:8080")),
+             QStringLiteral("http://127.0.0.1:8080"));
+    QCOMPARE(AgentToolRunner::auxiliaryEndpointForTest(
+                 QStringLiteral("https://rag.example.test/v1/"),
+                 QStringLiteral("http://127.0.0.1:8080")),
+             QStringLiteral("https://rag.example.test"));
+
+    const QString stable = AgentToolRunner::embeddingCacheKeyForTest(
+        QStringLiteral("http://127.0.0.1:8090"), QStringLiteral("embed-a"),
+        QStringLiteral("same document"));
+    QCOMPARE(stable, AgentToolRunner::embeddingCacheKeyForTest(
+                         QStringLiteral("http://127.0.0.1:8090"), QStringLiteral("embed-a"),
+                         QStringLiteral("same document")));
+    QVERIFY(stable != AgentToolRunner::embeddingCacheKeyForTest(
+                         QStringLiteral("http://127.0.0.1:8080"), QStringLiteral("embed-a"),
+                         QStringLiteral("same document")));
+    QVERIFY(stable != AgentToolRunner::embeddingCacheKeyForTest(
+                         QStringLiteral("http://127.0.0.1:8090"), QStringLiteral("embed-b"),
+                         QStringLiteral("same document")));
 }
 
 // Ejecuta una tool síncrona y devuelve el map de toolExecuted.

@@ -584,6 +584,11 @@ void LlamaAgentBackend::start(const AgentContext &ctx)
                               Q_ARG(bool, m_approvalMode != QLatin1String("super")));
     QMetaObject::invokeMethod(m_worker, "setServerBaseUrl", Qt::QueuedConnection,
                               Q_ARG(QString, m_ctx.serverBaseUrl));
+    QMetaObject::invokeMethod(m_worker, "setAuxiliaryServerConfig", Qt::QueuedConnection,
+                              Q_ARG(QString, m_auxiliaryUrl),
+                              Q_ARG(QString, m_auxiliaryEmbeddingModel),
+                              Q_ARG(QString, m_auxiliaryRerankModel),
+                              Q_ARG(QString, m_auxiliaryBearer));
     QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
                               Q_ARG(QString, m_sessionId));
     QMetaObject::invokeMethod(m_worker, "setTeacherConfig", Qt::QueuedConnection,
@@ -6785,6 +6790,23 @@ void LlamaAgentBackend::setTeacherConfig(const QString &url, const QString &mode
                                   Q_ARG(QString, url), Q_ARG(QString, model), Q_ARG(QString, key));
 }
 
+void LlamaAgentBackend::setAuxiliaryServerConfig(const QString &url,
+                                                 const QString &embeddingModel,
+                                                 const QString &rerankModel,
+                                                 const QString &bearer)
+{
+    m_auxiliaryUrl = url.trimmed();
+    m_auxiliaryEmbeddingModel = embeddingModel.trimmed();
+    m_auxiliaryRerankModel = rerankModel.trimmed();
+    m_auxiliaryBearer = bearer.trimmed();
+    if (m_running && m_worker)
+        QMetaObject::invokeMethod(m_worker, "setAuxiliaryServerConfig", Qt::QueuedConnection,
+                                  Q_ARG(QString, m_auxiliaryUrl),
+                                  Q_ARG(QString, m_auxiliaryEmbeddingModel),
+                                  Q_ARG(QString, m_auxiliaryRerankModel),
+                                  Q_ARG(QString, m_auxiliaryBearer));
+}
+
 void LlamaAgentBackend::setMasterCli(const QString &kind, const QString &cliName,
                                      const QString &cliPath, const QString &escalation,
                                      int autoAfterFails, bool applyEdits, int timeoutSec)
@@ -6926,6 +6948,11 @@ void LlamaAgentBackend::configureWorker()
                               Q_ARG(bool, m_approvalMode != QLatin1String("super")));
     QMetaObject::invokeMethod(m_worker, "setServerBaseUrl", Qt::QueuedConnection,
                               Q_ARG(QString, m_ctx.serverBaseUrl));
+    QMetaObject::invokeMethod(m_worker, "setAuxiliaryServerConfig", Qt::QueuedConnection,
+                              Q_ARG(QString, m_auxiliaryUrl),
+                              Q_ARG(QString, m_auxiliaryEmbeddingModel),
+                              Q_ARG(QString, m_auxiliaryRerankModel),
+                              Q_ARG(QString, m_auxiliaryBearer));
     QMetaObject::invokeMethod(m_worker, "setSessionId", Qt::QueuedConnection,
                               Q_ARG(QString, m_sessionId));
     QMetaObject::invokeMethod(m_worker, "setTeacherConfig", Qt::QueuedConnection,

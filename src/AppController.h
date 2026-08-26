@@ -171,6 +171,10 @@ class AppController : public QObject
     Q_PROPERTY(QString agentTeacherUrl   READ agentTeacherUrl   WRITE setAgentTeacherUrl   NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherModel READ agentTeacherModel WRITE setAgentTeacherModel NOTIFY agentTeacherChanged)
     Q_PROPERTY(QString agentTeacherKey   READ agentTeacherKey   WRITE setAgentTeacherKey   NOTIFY agentTeacherChanged)
+    Q_PROPERTY(QString agentAuxiliaryUrl READ agentAuxiliaryUrl WRITE setAgentAuxiliaryUrl NOTIFY agentAuxiliaryChanged)
+    Q_PROPERTY(QString agentAuxiliaryEmbeddingModel READ agentAuxiliaryEmbeddingModel WRITE setAgentAuxiliaryEmbeddingModel NOTIFY agentAuxiliaryChanged)
+    Q_PROPERTY(QString agentAuxiliaryRerankModel READ agentAuxiliaryRerankModel WRITE setAgentAuxiliaryRerankModel NOTIFY agentAuxiliaryChanged)
+    Q_PROPERTY(QString agentAuxiliaryKey READ agentAuxiliaryKey WRITE setAgentAuxiliaryKey NOTIFY agentAuxiliaryChanged)
     Q_PROPERTY(bool mailAutoSend READ mailAutoSend WRITE setMailAutoSend NOTIFY mailAutoSendChanged)
     Q_PROPERTY(bool hitlDestructive READ hitlDestructive WRITE setHitlDestructive NOTIFY hitlDestructiveChanged)
     Q_PROPERTY(bool desktopIndicatorVisible READ desktopIndicatorVisible WRITE setDesktopIndicatorVisible NOTIFY desktopIndicatorChanged)
@@ -445,6 +449,14 @@ public:
     void setAgentTeacherUrl(const QString &url);
     void setAgentTeacherModel(const QString &model);
     void setAgentTeacherKey(const QString &key);
+    QString agentAuxiliaryUrl() const { return m_agentAuxiliaryUrl; }
+    QString agentAuxiliaryEmbeddingModel() const { return m_agentAuxiliaryEmbeddingModel; }
+    QString agentAuxiliaryRerankModel() const { return m_agentAuxiliaryRerankModel; }
+    QString agentAuxiliaryKey() const { return m_agentAuxiliaryKey; }
+    void setAgentAuxiliaryUrl(const QString &url);
+    void setAgentAuxiliaryEmbeddingModel(const QString &model);
+    void setAgentAuxiliaryRerankModel(const QString &model);
+    void setAgentAuxiliaryKey(const QString &key);
     QString activeAgentAdapter() const { return m_activeAgentAdapter; }
     QString activeHarnessEngineId() const { return m_activeHarnessEngineId; }
     bool agentInTerminal() const { return m_agentInTerminal; }
@@ -1441,6 +1453,7 @@ signals:
     void activeAgentProfileChanged();
     void activeAgentDefinitionChanged();
     void agentTeacherChanged();
+    void agentAuxiliaryChanged();
     void mailAutoSendChanged();
     void hitlDestructiveChanged();
     void desktopIndicatorChanged();
@@ -1918,6 +1931,10 @@ private:
     QString   m_agentTeacherUrl;                // ask_teacher: endpoint OpenAI-compat
     QString   m_agentTeacherModel;
     QString   m_agentTeacherKey;
+    QString   m_agentAuxiliaryUrl;              // RAG sidecar: embeddings/rerank
+    QString   m_agentAuxiliaryEmbeddingModel;
+    QString   m_agentAuxiliaryRerankModel;
+    QString   m_agentAuxiliaryKey;
     MasterCli m_masterCli;                      // detección de CLIs maestro (claude/codex)
     SecretStore m_secrets;                       // API keys cloud (fuera del repo)
     bool        m_mailAutoSend = false;          // permitir email_send sin aprobación

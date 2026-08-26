@@ -1337,6 +1337,10 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_agentTeacherUrl   = s.value(QStringLiteral("agent/teacherUrl")).toString();
     m_agentTeacherModel = s.value(QStringLiteral("agent/teacherModel")).toString();
     m_agentTeacherKey   = s.value(QStringLiteral("agent/teacherKey")).toString();
+    m_agentAuxiliaryUrl = s.value(QStringLiteral("agent/auxiliaryUrl")).toString();
+    m_agentAuxiliaryEmbeddingModel = s.value(QStringLiteral("agent/auxiliaryEmbeddingModel")).toString();
+    m_agentAuxiliaryRerankModel = s.value(QStringLiteral("agent/auxiliaryRerankModel")).toString();
+    m_agentAuxiliaryKey = s.value(QStringLiteral("agent/auxiliaryKey")).toString();
     m_mailAutoSend      = s.value(QStringLiteral("agent/mailAutoSend"), false).toBool();
     m_hitlDestructive   = s.value(QStringLiteral("agent/hitlDestructive"), true).toBool();
     m_desktopIndicatorVisible = s.value(QStringLiteral("agent/desktopIndicatorVisible"), true).toBool();
@@ -4633,6 +4637,8 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(b)) {
         cb->setDisabledTools(m_agentDisabledTools);
         cb->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
+        cb->setAuxiliaryServerConfig(m_agentAuxiliaryUrl, m_agentAuxiliaryEmbeddingModel,
+                                     m_agentAuxiliaryRerankModel, m_agentAuxiliaryKey);
         cb->setMailAccounts(mailAccountsResolved());
         cb->setWebProviders(webProviderConfigs());
         cb->setMailAutoSend(m_mailAutoSend);
@@ -5065,6 +5071,50 @@ void AppController::setAgentTeacherKey(const QString &key)
     if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         cb->setTeacherConfig(m_agentTeacherUrl, m_agentTeacherModel, m_agentTeacherKey);
     emit agentTeacherChanged();
+}
+
+void AppController::setAgentAuxiliaryUrl(const QString &url)
+{
+    if (url == m_agentAuxiliaryUrl) return;
+    m_agentAuxiliaryUrl = url.trimmed();
+    writeSetting(QStringLiteral("agent/auxiliaryUrl"), m_agentAuxiliaryUrl);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setAuxiliaryServerConfig(m_agentAuxiliaryUrl, m_agentAuxiliaryEmbeddingModel,
+                                     m_agentAuxiliaryRerankModel, m_agentAuxiliaryKey);
+    emit agentAuxiliaryChanged();
+}
+
+void AppController::setAgentAuxiliaryEmbeddingModel(const QString &model)
+{
+    if (model == m_agentAuxiliaryEmbeddingModel) return;
+    m_agentAuxiliaryEmbeddingModel = model.trimmed();
+    writeSetting(QStringLiteral("agent/auxiliaryEmbeddingModel"), m_agentAuxiliaryEmbeddingModel);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setAuxiliaryServerConfig(m_agentAuxiliaryUrl, m_agentAuxiliaryEmbeddingModel,
+                                     m_agentAuxiliaryRerankModel, m_agentAuxiliaryKey);
+    emit agentAuxiliaryChanged();
+}
+
+void AppController::setAgentAuxiliaryRerankModel(const QString &model)
+{
+    if (model == m_agentAuxiliaryRerankModel) return;
+    m_agentAuxiliaryRerankModel = model.trimmed();
+    writeSetting(QStringLiteral("agent/auxiliaryRerankModel"), m_agentAuxiliaryRerankModel);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setAuxiliaryServerConfig(m_agentAuxiliaryUrl, m_agentAuxiliaryEmbeddingModel,
+                                     m_agentAuxiliaryRerankModel, m_agentAuxiliaryKey);
+    emit agentAuxiliaryChanged();
+}
+
+void AppController::setAgentAuxiliaryKey(const QString &key)
+{
+    if (key == m_agentAuxiliaryKey) return;
+    m_agentAuxiliaryKey = key;
+    writeSetting(QStringLiteral("agent/auxiliaryKey"), m_agentAuxiliaryKey);
+    if (auto *cb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
+        cb->setAuxiliaryServerConfig(m_agentAuxiliaryUrl, m_agentAuxiliaryEmbeddingModel,
+                                     m_agentAuxiliaryRerankModel, m_agentAuxiliaryKey);
+    emit agentAuxiliaryChanged();
 }
 
 QStringList AppController::masterCliList() const

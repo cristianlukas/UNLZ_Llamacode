@@ -77,6 +77,7 @@ set(CORE_SOURCES
     src/core/EngineCatalog.cpp
     src/core/HardwareDiagnostics.cpp
     src/core/PerformanceMatrix.cpp
+    src/core/ServerBenchmarkMetrics.cpp
     src/core/ModelRoot.cpp
     src/core/ModelRootRegistry.cpp
     src/core/CatalogModel.cpp
@@ -193,6 +194,7 @@ set(HEADERS
     src/core/EngineCatalog.h
     src/core/HardwareDiagnostics.h
     src/core/PerformanceMatrix.h
+    src/core/ServerBenchmarkMetrics.h
     src/core/ModelRoot.h
     src/core/ModelRootRegistry.h
     src/core/CatalogModel.h
@@ -804,4 +806,16 @@ if (BUILD_TESTS)
     endif()
     target_include_directories(qa_web_providers PRIVATE src tests)
     target_link_libraries(qa_web_providers PRIVATE llamacode_core)
+
+    # Probe opt-in de concurrencia para decidir si un workload auxiliar (STT,
+    # embeddings, juez o resumen) debe compartir servidor/proceso. No entra en
+    # ctest: requiere un llama-server y un modelo elegidos por el operador.
+    qt_add_executable(qa_auxiliary_concurrency tests/qa_auxiliary_concurrency.cpp)
+    set_target_properties(qa_auxiliary_concurrency PROPERTIES WIN32_EXECUTABLE FALSE)
+    if (MSVC)
+        target_compile_options(qa_auxiliary_concurrency PRIVATE /utf-8)
+        target_link_options(qa_auxiliary_concurrency PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
+    endif()
+    target_include_directories(qa_auxiliary_concurrency PRIVATE src tests)
+    target_link_libraries(qa_auxiliary_concurrency PRIVATE llamacode_core)
 endif()

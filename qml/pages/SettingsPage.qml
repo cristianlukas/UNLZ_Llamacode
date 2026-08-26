@@ -2236,6 +2236,83 @@ Item {
                         }
                     }
 
+                    // ── Sidecar auxiliar (embeddings/rerank) ──────────────
+                    ColumnLayout {
+                        id: auxiliarySection
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Text {
+                            text: "SIDECAR AUXILIAR · RAG"
+                            color: Theme.accent
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            color: Theme.surfaceBg
+                            border.color: Theme.borderColor
+                            radius: 10
+                            implicitHeight: auxiliaryInner.implicitHeight + 32
+
+                            ColumnLayout {
+                                id: auxiliaryInner
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                                spacing: 12
+
+                                Text {
+                                    text: "Endpoint OpenAI-compatible opcional para embeddings y rerank (Base URL sin /v1). Dejalo vacío para usar el server principal. Ideal para un llama-server CPU con un modelo chico: no consume slots del modelo del agente."
+                                    color: Theme.textSecondary
+                                    font.pixelSize: 12
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Text { text: "Base URL"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    Layout.fillWidth: true
+                                    text: App.agentAuxiliaryUrl
+                                    placeholderText: "http://127.0.0.1:8090"
+                                    onEditingFinished: App.agentAuxiliaryUrl = text
+                                }
+
+                                Text { text: "Modelo de embeddings"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    Layout.fillWidth: true
+                                    text: App.agentAuxiliaryEmbeddingModel
+                                    placeholderText: "llamacode-embed"
+                                    onEditingFinished: App.agentAuxiliaryEmbeddingModel = text
+                                }
+
+                                Text { text: "Modelo de rerank"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    Layout.fillWidth: true
+                                    text: App.agentAuxiliaryRerankModel
+                                    placeholderText: "llamacode-rerank"
+                                    onEditingFinished: App.agentAuxiliaryRerankModel = text
+                                }
+
+                                Text { text: "API key (opcional)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                                LcTextField {
+                                    Layout.fillWidth: true
+                                    text: App.agentAuxiliaryKey
+                                    placeholderText: "vacío para servers locales"
+                                    echoMode: TextInput.Password
+                                    onEditingFinished: App.agentAuxiliaryKey = text
+                                }
+
+                                Text {
+                                    text: "También se puede configurar sin guardar credenciales con LLAMACODE_AUXILIARY_URL, LLAMACODE_AUXILIARY_EMBED_MODEL, LLAMACODE_AUXILIARY_RERANK_MODEL y LLAMACODE_AUXILIARY_KEY."
+                                    color: Theme.textMuted
+                                    font.pixelSize: 10
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+                        }
+                    }
+
                     // ── Correo (email_send / email_list / email_read) ───────
                     ColumnLayout {
                         id: mailSection

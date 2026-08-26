@@ -400,6 +400,10 @@ public:
 
     // Config del modelo maestro (tool ask_teacher). Se reenvía al worker.
     void setTeacherConfig(const QString &url, const QString &model, const QString &key);
+    // Endpoint/modelos opcionales para embeddings y rerank. No altera el chat
+    // ni el endpoint del maestro.
+    void setAuxiliaryServerConfig(const QString &url, const QString &embeddingModel,
+                                  const QString &rerankModel, const QString &bearer);
     // Config de maestro tipo CLI (claude-code / codex). Se reenvía al worker.
     // escalation: "manual"|"auto"|"both"; autoAfterFails dispara el escalado auto.
     void setMasterCli(const QString &kind, const QString &cliName, const QString &cliPath,
@@ -696,6 +700,8 @@ private:
 
     QSet<QString> m_disabledTools;   // tools off por el usuario (built-in y MCP)
     QString m_teacherUrl, m_teacherModel, m_teacherKey;  // ask_teacher (config UI)
+    QString m_auxiliaryUrl, m_auxiliaryEmbeddingModel, m_auxiliaryRerankModel,
+        m_auxiliaryBearer;
     // Maestro CLI (claude-code / codex) por perfil.
     QString m_masterKind = QStringLiteral("none");
     QString m_masterCliName, m_masterCliPath, m_masterEscalation = QStringLiteral("manual");

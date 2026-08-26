@@ -760,7 +760,8 @@ static QByteArray httpPostJson(const QUrl &url, const QByteArray &body, QString 
 
 // Llama /v1/embeddings con un batch de textos → vectores. "" en *err si OK.
 static QVector<QVector<float>> embedTexts(const QString &baseUrl, const QStringList &texts,
-                                          QString *err)
+                                          QString *err, const QString &model,
+                                          const QString &bearer)
 {
     QVector<QVector<float>> out;
     if (baseUrl.isEmpty()) { if (err) *err = QStringLiteral("sin URL de server"); return out; }
@@ -768,9 +769,10 @@ static QVector<QVector<float>> embedTexts(const QString &baseUrl, const QStringL
     for (const QString &t : texts) inputs.append(t);
     const QJsonObject payload{
         {QStringLiteral("input"), inputs},
-        {QStringLiteral("model"), QStringLiteral("llamacode-embed")}};
+        {QStringLiteral("model"), model.isEmpty() ? QStringLiteral("llamacode-embed") : model}};
     const QByteArray body = httpPostJson(QUrl(baseUrl + QStringLiteral("/v1/embeddings")),
-                                         QJsonDocument(payload).toJson(QJsonDocument::Compact), err);
+                                         QJsonDocument(payload).toJson(QJsonDocument::Compact), err,
+                                         60000, bearer);
     if (body.isEmpty()) return out;
     const QJsonArray data = QJsonDocument::fromJson(body).object()
                                 .value(QStringLiteral("data")).toArray();
@@ -810,6 +812,24 @@ static QByteArray vecToBlob(const QVector<float> &v)
     return QByteArray(reinterpret_cast<const char *>(v.constData()),
                       int(v.size() * sizeof(float)));
 }
+
+// El mismo texto puede producir vectores incompatibles en el server principal
+// y en un sidecar, o al cambiar el modelo de embeddings. Namespacing evita que
+// una migración de endpoint reutilice silenciosamente un vector viejo.
+QString AgentToolRunner::embeddingCacheKeyForTest(const QString &baseUrl,
+                                                  const QString &model,
+                                                  const QString &text)
+{
+    const QByteArray namespaceBytes = (baseUrl + QLatin1Char('\n') + model).toUtf8();
+    const QByteArray namespaceId = QCryptographicHash::hash(namespaceBytes,
+                                                             QCryptographicHash::Md5)
+                                       .toHex()
+                                       .left(16);
+    return QString::fromLatin1(namespaceId)
+        + QLatin1Char(':')
+        + QString::fromLatin1(QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex());
+}
+
 static QVector<float> blobToVec(const QByteArray &b)
 {
     QVector<float> v(int(b.size() / sizeof(float)));
@@ -830,7 +850,8 @@ static float cosineSim(const QVector<float> &a, const QVector<float> &b)
 // relevancia por doc, alineado al orden de 'docs'. Vector vacío si el endpoint no
 // existe o falla (el caller cae a la fusión sin reranker). "" en *err si OK.
 static QVector<float> rerankTexts(const QString &baseUrl, const QString &query,
-                                  const QStringList &docs, QString *err)
+                                  const QStringList &docs, QString *err,
+                                  const QString &model, const QString &bearer)
 {
     QVector<float> out;
     if (baseUrl.isEmpty() || docs.isEmpty()) {
@@ -841,9 +862,10 @@ static QVector<float> rerankTexts(const QString &baseUrl, const QString &query,
     const QJsonObject payload{
         {QStringLiteral("query"), query},
         {QStringLiteral("documents"), arr},
-        {QStringLiteral("model"), QStringLiteral("llamacode-rerank")}};
+        {QStringLiteral("model"), model.isEmpty() ? QStringLiteral("llamacode-rerank") : model}};
     const QByteArray body = httpPostJson(QUrl(baseUrl + QStringLiteral("/rerank")),
-                                         QJsonDocument(payload).toJson(QJsonDocument::Compact), err);
+                                         QJsonDocument(payload).toJson(QJsonDocument::Compact), err,
+                                         60000, bearer);
     if (body.isEmpty()) return out;
     const QJsonArray results = QJsonDocument::fromJson(body).object()
                                    .value(QStringLiteral("results")).toArray();
@@ -918,6 +940,71 @@ void AgentToolRunner::setAllowedRoots(const QStringList &roots)
     }
 }
 void AgentToolRunner::setServerBaseUrl(const QString &url) { m_serverBaseUrl = url; }
+void AgentToolRunner::setAuxiliaryServerConfig(const QString &url, const QString &embeddingModel,
+                                               const QString &rerankModel, const QString &bearer)
+{
+    m_auxiliaryBaseUrl = url.trimmed();
+    m_auxiliaryEmbeddingModel = embeddingModel.trimmed();
+    m_auxiliaryRerankModel = rerankModel.trimmed();
+    m_auxiliaryBearer = bearer.trimmed();
+}
+
+QString AgentToolRunner::auxiliaryEndpointForTest(const QString &configured,
+                                                  const QString &primary)
+{
+    const auto normalize = [](const QString &raw) {
+        QString candidate = raw.trimmed();
+        if (candidate.isEmpty()) return QString();
+        const QUrl parsed(candidate);
+        if (!parsed.isValid() || parsed.host().isEmpty()
+            || (parsed.scheme().compare(QStringLiteral("http"), Qt::CaseInsensitive) != 0
+                && parsed.scheme().compare(QStringLiteral("https"), Qt::CaseInsensitive) != 0))
+            return QString();
+        while (candidate.endsWith(QLatin1Char('/'))) candidate.chop(1);
+        // El contrato interno recibe la base sin /v1: embeddings agrega
+        // /v1/embeddings y llama-server rerank usa /rerank.
+        if (candidate.endsWith(QStringLiteral("/v1"), Qt::CaseInsensitive))
+            candidate.chop(3);
+        while (candidate.endsWith(QLatin1Char('/'))) candidate.chop(1);
+        return candidate;
+    };
+
+    const QString primaryUrl = normalize(primary);
+    const QString configuredUrl = normalize(configured);
+    return configuredUrl.isEmpty() ? primaryUrl : configuredUrl;
+}
+
+QString AgentToolRunner::auxiliaryEndpoint() const
+{
+    const QString configured = !m_auxiliaryBaseUrl.trimmed().isEmpty()
+        ? m_auxiliaryBaseUrl
+        : qEnvironmentVariable("LLAMACODE_AUXILIARY_URL");
+    return auxiliaryEndpointForTest(configured, m_serverBaseUrl);
+}
+
+QString AgentToolRunner::auxiliaryBearer() const
+{
+    return !m_auxiliaryBearer.trimmed().isEmpty()
+        ? m_auxiliaryBearer.trimmed()
+        : qEnvironmentVariable("LLAMACODE_AUXILIARY_KEY").trimmed();
+}
+
+QString AgentToolRunner::auxiliaryEmbeddingModel() const
+{
+    return !m_auxiliaryEmbeddingModel.trimmed().isEmpty()
+        ? m_auxiliaryEmbeddingModel.trimmed()
+        : qEnvironmentVariable("LLAMACODE_AUXILIARY_EMBED_MODEL",
+                               QStringLiteral("llamacode-embed")).trimmed();
+}
+
+QString AgentToolRunner::auxiliaryRerankModel() const
+{
+    return !m_auxiliaryRerankModel.trimmed().isEmpty()
+        ? m_auxiliaryRerankModel.trimmed()
+        : qEnvironmentVariable("LLAMACODE_AUXILIARY_RERANK_MODEL",
+                               QStringLiteral("llamacode-rerank")).trimmed();
+}
+
 void AgentToolRunner::setSessionId(const QString &sessionId)
 {
     m_sessionId = sessionId;
@@ -2678,7 +2765,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         // RAG semántico real: embeddings vía /v1/embeddings + cache de vectores SQLite.
         const QString query = args.value(QStringLiteral("query")).toString().trimmed();
         if (query.isEmpty()) return QStringLiteral("[query vacía]");
-        if (m_serverBaseUrl.isEmpty())
+        const QString auxiliaryBase = auxiliaryEndpoint();
+        const QString auxiliaryKey = auxiliaryBearer();
+        const QString embeddingModel = auxiliaryEmbeddingModel();
+        if (auxiliaryBase.isEmpty())
             return QStringLiteral("[semantic_search: no hay server activo]");
         int k = args.value(QStringLiteral("k")).toInt();
         if (k <= 0) k = 5;
@@ -2705,8 +2795,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             for (int start = 0; start < lines.size() && chunks.size() < maxChunks; start += chunkLines) {
                 const QString text = lines.mid(start, chunkLines).join(QLatin1Char('\n')).trimmed();
                 if (text.size() < 16) continue;   // descartar fragmentos triviales
-                const QString key = QString::fromLatin1(
-                    QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex());
+                const QString key = embeddingCacheKeyForTest(auxiliaryBase, embeddingModel, text);
                 chunks.append({rel, start + 1, key, text, {}});
             }
         }
@@ -2738,7 +2827,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             const QStringList batch = missTexts.mid(i, 64);
             const QStringList bkeys = missKeys.mid(i, 64);
             QString err;
-            const QVector<QVector<float>> vecs = embedTexts(m_serverBaseUrl, batch, &err);
+            const QVector<QVector<float>> vecs = embedTexts(auxiliaryBase, batch, &err,
+                                                            embeddingModel, auxiliaryKey);
             if (vecs.isEmpty())
                 return QStringLiteral("[semantic_search: el server no devolvió embeddings. "
                                       "Levantá un server con --embeddings (o un modelo de embeddings). "
@@ -2761,7 +2851,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
 
         // 3) Embeber la query y rankear por coseno.
         QString qerr;
-        const QVector<QVector<float>> qv = embedTexts(m_serverBaseUrl, {query}, &qerr);
+        const QVector<QVector<float>> qv = embedTexts(auxiliaryBase, {query}, &qerr,
+                                                      embeddingModel, auxiliaryKey);
         if (qv.isEmpty() || qv[0].isEmpty())
             return QStringLiteral("[semantic_search: no se pudo embeber la query: %1]").arg(qerr);
         const QVector<float> &qvec = qv[0];
@@ -2796,6 +2887,10 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         const bool repoSlice = name == QLatin1String("repo_slice");
         const QString query = args.value(QStringLiteral("query")).toString().trimmed();
         if (query.isEmpty()) return QStringLiteral("[query vacía]");
+        const QString auxiliaryBase = auxiliaryEndpoint();
+        const QString auxiliaryKey = auxiliaryBearer();
+        const QString embeddingModel = auxiliaryEmbeddingModel();
+        const QString rerankModel = auxiliaryRerankModel();
         if (args.value(QStringLiteral("mode")).toString().trimmed().toLower()
                 == QLatin1String("scout")) {
             const int budget = qBound(64, args.value(QStringLiteral("token_budget")).toInt(700), 16000);
@@ -2849,8 +2944,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
                     bm *= (1.0 + 0.5 * (distinct - 1));
                     bm /= (1.0 + text.size() / 4000.0);
                 }
-                const QString key = QString::fromLatin1(
-                    QCryptographicHash::hash(text.toUtf8(), QCryptographicHash::Md5).toHex());
+                const QString key = embeddingCacheKeyForTest(auxiliaryBase, embeddingModel, text);
                 chunks.append({rel, start + 1, start + segLines, key, text, bm});
             }
         };
@@ -2909,7 +3003,7 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         // Ranking vectorial (si hay server con embeddings). Reusa el cache SQLite.
         QVector<int> byVec;
         QString vecErr;
-        if (!m_serverBaseUrl.isEmpty()) {
+        if (!auxiliaryBase.isEmpty()) {
             QSqlDatabase db = embedCacheDb();
             QHash<QString, QVector<float>> cache;
             if (db.isOpen()) {
@@ -2931,7 +3025,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             for (int i = 0; i < missTexts.size() && embedOk; i += 64) {
                 const QStringList batch = missTexts.mid(i, 64);
                 const QStringList bkeys = missKeys.mid(i, 64);
-                const QVector<QVector<float>> vecs = embedTexts(m_serverBaseUrl, batch, &vecErr);
+                const QVector<QVector<float>> vecs = embedTexts(auxiliaryBase, batch, &vecErr,
+                                                                embeddingModel, auxiliaryKey);
                 if (vecs.isEmpty()) { embedOk = false; break; }
                 if (db.isOpen()) db.transaction();
                 for (int j = 0; j < vecs.size() && j < bkeys.size(); ++j) {
@@ -2947,7 +3042,8 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
             }
             if (embedOk) {
                 QString qerr;
-                const QVector<QVector<float>> qv = embedTexts(m_serverBaseUrl, {query}, &qerr);
+                const QVector<QVector<float>> qv = embedTexts(auxiliaryBase, {query}, &qerr,
+                                                              embeddingModel, auxiliaryKey);
                 if (!qv.isEmpty() && !qv[0].isEmpty()) {
                     QVector<QPair<float, int>> scored;
                     for (int i = 0; i < chunks.size(); ++i) {
@@ -2977,11 +3073,12 @@ QString AgentToolRunner::runNative(const QString &name, const QJsonObject &args,
         QVector<int> finalOrder = fused;
         QString rerankNote = byVec.isEmpty()
             ? QStringLiteral("BM25 (sin embeddings)") : QStringLiteral("BM25+vector RRF");
-        if (candN > 1 && !m_serverBaseUrl.isEmpty()) {
+        if (candN > 1 && !auxiliaryBase.isEmpty()) {
             QStringList docs;
             for (int i = 0; i < candN; ++i) docs << chunks[fused[i]].text;
             QString rerr;
-            const QVector<float> scores = rerankTexts(m_serverBaseUrl, query, docs, &rerr);
+            const QVector<float> scores = rerankTexts(auxiliaryBase, query, docs, &rerr,
+                                                      rerankModel, auxiliaryKey);
             if (scores.size() == candN) {
                 QVector<int> idx(candN);
                 for (int i = 0; i < candN; ++i) idx[i] = i;
