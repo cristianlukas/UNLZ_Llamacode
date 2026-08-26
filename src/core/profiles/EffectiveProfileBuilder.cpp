@@ -167,8 +167,8 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     // La aceptación del draft puede bajar con KV cuantizado, por lo que se avisa
     // y se deja que el benchmark mida el costo real.
     const bool specDecoding =
-        !ctx.model.draftModelId.isEmpty() && ctx.draftModel.isAvailable
-        && ctx.model.specType.isEmpty();
+        !ctx.model.specType.isEmpty()
+        || (!ctx.model.draftModelId.isEmpty() && ctx.draftModel.isAvailable);
     applyRuntime(ctx.runtime, ctx.binary, args, result.warnings,
                  result.blockingErrors, specDecoding);
 
@@ -426,6 +426,9 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
         addFlag(bin, "--spec-type", "draft-mtp", args, warnings);
         if (mp.specDraftNMax > 0)
             addFlag(bin, "--spec-draft-n-max", QString::number(mp.specDraftNMax), args, warnings);
+        if (mp.specDraftConfMin > 0.0)
+            addFlag(bin, "--spec-draft-conf-min",
+                    QString::number(mp.specDraftConfMin, 'f', 3), args, warnings);
     } else if (!mp.draftModelId.isEmpty()) {
         if (!draft.isAvailable || draft.absolutePath.isEmpty()) {
             errors.append(QStringLiteral(
@@ -444,12 +447,16 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
             const QString draftFlag = !mp.specType.isEmpty()
                 ? QStringLiteral("--spec-draft-model") : QStringLiteral("--draft-model");
             addFlag(bin, draftFlag, draft.absolutePath, args, warnings);
-            // Flags de speculative decoding. En llama.cpp actual --spec-type
-            // selecciona modos sin draft model (ngram-*); con --spec-draft-model
-            // el tipo lo define el propio draft GGUF.
+            // Flags de speculative decoding. MTP externo no necesita --spec-type
+            // en este flujo; DSpark sí lo declara explícitamente en llama.cpp.
+            if (mp.specType == QLatin1String("draft-dspark"))
+                addFlag(bin, "--spec-type", "draft-dspark", args, warnings);
             if (mp.specDraftNMax > 0)
                 addFlag(bin, "--spec-draft-n-max",
                         QString::number(mp.specDraftNMax), args, warnings);
+            if (mp.specDraftConfMin > 0.0)
+                addFlag(bin, "--spec-draft-conf-min",
+                        QString::number(mp.specDraftConfMin, 'f', 3), args, warnings);
             if (!mp.specDraftNgl.isEmpty())
                 addFlag(bin, "--spec-draft-ngl", mp.specDraftNgl, args, warnings);
             if (!mp.specDraftTypeK.isEmpty())
@@ -501,6 +508,12 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
 
     if (rt.parallelSlots > 1)
         args << "--parallel" << QString::number(rt.parallelSlots);
+
+    if (specDecoding && rt.parallelSlots > 1) {
+        warnings.append(QStringLiteral(
+            "Speculative decoding con --parallel > 1: la aceptación y la salida "
+            "pueden divergir según el backend; validá con parallel=1."));
+    }
 
     if (!rt.cacheType.isEmpty() && rt.cacheType != "f16") {
         if (specDecoding) {

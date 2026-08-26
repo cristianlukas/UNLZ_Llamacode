@@ -35,6 +35,10 @@ LlamaCode implementa estas capacidades de forma propia y desacoplada del agente:
 
 - `AgentEfficiency`: normaliza telemetría `timings` de llama.cpp y `usage` de
   proveedores OpenAI-compatible, agrega por fase y calcula comparaciones A/B.
+  También conserva `draftTokens`, `draftAcceptedTokens` y el porcentaje de
+  aceptación speculative cuando llama.cpp entrega `timings.draft_n` y
+  `timings.draft_n_accepted`; si el backend no los entrega, informa `-1` en el
+  porcentaje en vez de inventar una aceptación.
 - Prefijo estable: el system prompt contiene un protocolo fijo y los cambios
   Plan/Ejecución se agregan como controles cortos al final del historial. El
   runner continúa aplicando el bloqueo efectivo de tools en Plan.

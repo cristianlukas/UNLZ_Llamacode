@@ -2818,6 +2818,7 @@ void AppController::computeEffectiveProfilePreview(const QString &launchProfileI
     ctx.model.draftModelId = overrides.value("draftModelId").toString();
     ctx.model.specType       = overrides.value("specType").toString();
     ctx.model.specDraftNMax  = overrides.value("specDraftNMax", 0).toInt();
+    ctx.model.specDraftConfMin = qBound(0.0, overrides.value("specDraftConfMin", 0.0).toDouble(), 1.0);
     ctx.model.specDraftNgl   = overrides.value("specDraftNgl").toString();
     ctx.model.specDraftTypeK = overrides.value("specDraftTypeK").toString();
     ctx.model.specDraftTypeV = overrides.value("specDraftTypeV").toString();
@@ -8521,7 +8522,9 @@ void AppController::finishRunningTask(const QString &status, const QString &summ
         for (const QString &key : {QStringLiteral("requests"), QStringLiteral("promptTokens"),
                                    QStringLiteral("generatedTokens"), QStringLiteral("promptMs"),
                                    QStringLiteral("generatedMs"), QStringLiteral("wallMs"),
-                                   QStringLiteral("toolCalls"), QStringLiteral("toolBytes")})
+                                   QStringLiteral("toolCalls"), QStringLiteral("toolBytes"),
+                                   QStringLiteral("draftTokens"),
+                                   QStringLiteral("draftAcceptedTokens")})
             metrics[key] = metrics.value(key).toDouble()
                            - m_runningTaskMetricsBaseline.value(key).toDouble();
         rec[QStringLiteral("metrics")] = metrics;
@@ -20444,7 +20447,8 @@ namespace {
 // cache-type-k/v marcados como qualityRisk: el gate de calidad impide que el
 // optimizador colapse al quant más bajo solo por velocidad.
 QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = false,
-                                      bool cpuMoe = false, bool splitMode = false)
+                                      bool cpuMoe = false, bool splitMode = false,
+                                      bool dspark = false)
 {
     using tuner::ParamSpec;
     if (cpuOnly) {
@@ -20478,6 +20482,14 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
     if (hasDraft) {
         params.append({ParamSpec::intRange("spec-draft-n-max", 1, 5, 1),
                        "--spec-draft-n-max", false});
+    }
+    if (dspark) {
+        // En DSpark el umbral de confianza permite cortar drafts poco fiables.
+        // Se explora junto a n-max porque ambos cambian el equilibrio entre
+        // aceptación y coste de verificación.
+        params.append({ParamSpec::categorical("spec-draft-conf-min",
+                                               {"0", "0.2", "0.4", "0.6", "0.8"}),
+                       "--spec-draft-conf-min", false});
     }
     if (cpuMoe) {
         // Modelos MoE gigantes (DeepSeek/Laguna/KAT): explorar el reparto de
@@ -20589,10 +20601,15 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
     const int specTypeIndex = effArgs.indexOf(QStringLiteral("--spec-type"));
     const bool hasEmbeddedDraft = specTypeIndex >= 0 && specTypeIndex + 1 < effArgs.size()
         && effArgs.at(specTypeIndex + 1).contains(QStringLiteral("draft"), Qt::CaseInsensitive);
+    const bool hasDspark = !cpuOnly && (
+        (specTypeIndex >= 0 && specTypeIndex + 1 < effArgs.size()
+         && effArgs.at(specTypeIndex + 1).compare(QStringLiteral("draft-dspark"),
+                                                   Qt::CaseInsensitive) == 0)
+        || effArgs.contains(QStringLiteral("--spec-draft-conf-min")));
     const bool hasDraft = !cpuOnly && (effArgs.contains(QStringLiteral("--draft-model"))
                           || effArgs.contains(QStringLiteral("-md"))
                           || effArgs.contains(QStringLiteral("--spec-draft-model"))
-                          || hasEmbeddedDraft);
+                          || hasEmbeddedDraft || hasDspark);
     const bool cpuMoe = !cpuOnly && effArgs.contains(QStringLiteral("--n-cpu-moe"));
     bool canTuneSplitMode = false;
     if (!cpuOnly && m_hardwareSummary.value(QStringLiteral("gpuCount")).toInt() > 1) {
@@ -20612,7 +20629,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
         }
     }
     QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly, cpuMoe,
-                                                    canTuneSplitMode);
+                                                    canTuneSplitMode, hasDspark);
 
     // baseArgs = args efectivos menos host/port y menos los flags que vamos a
     // afinar (con sus aliases), para no duplicarlos.
@@ -20625,6 +20642,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
         QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
         QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
         QStringLiteral("--spec-draft-n-max"),
+        QStringLiteral("--spec-draft-conf-min"),
         QStringLiteral("--n-cpu-moe"),
         QStringLiteral("--split-mode"),
     };
@@ -20682,7 +20700,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
 
     connect(m_tuneWorker, &TunerWorker::trial, this,
             [this](int index, int total, double tps, double quality, const QString &summary,
-                   double promptTps, double genTps) {
+                   double promptTps, double genTps, double draftAcceptancePct) {
                 m_autoTuneProgress = total > 0 ? (index * 100 / total) : 0;
                 // index 0 = baseline (fuera del presupuesto de trials).
                 m_autoTuneStatus = index == 0
@@ -20700,6 +20718,7 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
                 row[QStringLiteral("quality")] = quality;
                 row[QStringLiteral("promptTps")] = promptTps;
                 row[QStringLiteral("genTps")] = genTps;
+                row[QStringLiteral("draftAcceptancePct")] = draftAcceptancePct;
                 row[QStringLiteral("summary")] = summary;
                 m_autoTuneTrials.append(row);
 
@@ -20709,9 +20728,11 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
 
     connect(m_tuneWorker, &TunerWorker::finished, this,
             [this](bool ok, const QStringList &bestArgs, double tps, double quality,
-                   double promptTps, double genTps, double basePp, double baseTg) {
+                   double promptTps, double genTps, double basePp, double baseTg,
+                   double draftAcceptancePct, double baseDraftAcceptancePct) {
                 onAutoTuneFinished(ok, bestArgs, tps, quality, promptTps, genTps,
-                                   basePp, baseTg);
+                                   basePp, baseTg, draftAcceptancePct,
+                                   baseDraftAcceptancePct);
             });
 
     // Limpieza del hilo al terminar.
@@ -20735,7 +20756,9 @@ void AppController::cancelAutoTune()
 void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
                                        double throughput, double quality,
                                        double promptTps, double genTps,
-                                       double basePromptTps, double baseGenTps)
+                                       double basePromptTps, double baseGenTps,
+                                       double draftAcceptancePct,
+                                       double baseDraftAcceptancePct)
 {
     m_autoTuneRunning = false;
     m_autoTuneProgress = 100;
@@ -20766,6 +20789,7 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
             QStringLiteral("--cache-type-k"), QStringLiteral("-ctk"),
             QStringLiteral("--cache-type-v"), QStringLiteral("-ctv"),
             QStringLiteral("--spec-draft-n-max"),
+            QStringLiteral("--spec-draft-conf-min"),
             QStringLiteral("--split-mode"),
         };
         const QSet<QString> switchFlags = {
@@ -20789,7 +20813,10 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
                                .arg(newName, mergedSummary);
     } else {
         m_autoTuneStatus = ok ? QStringLiteral("Auto-tune sin cambios aplicables.")
-                              : QStringLiteral("Auto-tune sin config válida (¿server no arrancó?).");
+                              : ((basePromptTps > 0.0 || baseGenTps > 0.0)
+                                     ? QStringLiteral("Auto-tune rechazado: ningún trial superó "
+                                                      "al baseline conservando calidad.")
+                                     : QStringLiteral("Auto-tune sin config válida (¿server no arrancó?)."));
     }
 
     // Resumen A/B para la sección Tuner. La mejora sólo tiene sentido si el
@@ -20803,6 +20830,8 @@ void AppController::onAutoTuneFinished(bool ok, const QStringList &bestArgs,
     m_autoTuneResult[QStringLiteral("genTps")] = genTps;
     m_autoTuneResult[QStringLiteral("basePromptTps")] = basePromptTps;
     m_autoTuneResult[QStringLiteral("baseGenTps")] = baseGenTps;
+    m_autoTuneResult[QStringLiteral("draftAcceptancePct")] = draftAcceptancePct;
+    m_autoTuneResult[QStringLiteral("baseDraftAcceptancePct")] = baseDraftAcceptancePct;
     m_autoTuneResult[QStringLiteral("hasBaseline")] = basePromptTps > 0.0 || baseGenTps > 0.0;
     m_autoTuneResult[QStringLiteral("promptGainPct")] = tuneGainPct(promptTps, basePromptTps);
     m_autoTuneResult[QStringLiteral("genGainPct")] = tuneGainPct(genTps, baseGenTps);
@@ -21697,7 +21726,16 @@ void AppController::ensureVoice()
     // el turno: el server prefil-ea system+tools+historial MIENTRAS el usuario
     // habla, y el "pensando" real solo evalúa el texto nuevo. Fire-and-forget.
     connect(m_voice, &VoiceController::stateChanged, this, [this]() {
-        if (!m_charlaActive || m_voice->state() != VoiceController::Listening) return;
+        if (!m_charlaActive) return;
+        // En PTT el estado Ready representa la sesión armada sin micrófono y es
+        // el momento ideal para precalentar el prefijo estable. Al pasar a
+        // Listening no repetimos el warmup: el usuario ya está hablando.
+        if (m_voice->state() == VoiceController::Ready) {
+            if (m_agentBackend && m_agentBackend->running()) m_agentBackend->prefillWarmup();
+            else if (m_chatBackend) m_chatBackend->prefillWarmup();
+            return;
+        }
+        if (m_voice->state() != VoiceController::Listening || m_voice->pushToTalkMode()) return;
         if (m_agentBackend && m_agentBackend->running()) m_agentBackend->prefillWarmup();
         else if (m_chatBackend) m_chatBackend->prefillWarmup();
     });
@@ -21705,6 +21743,13 @@ void AppController::ensureVoice()
     connect(m_voice, &VoiceController::levelChanged, this, &AppController::voiceLevelChanged);
     connect(m_voice, &VoiceController::latencyUpdated, this,
             [this](const QVariantMap &) { emit voiceLatencyStatsChanged(); });
+    connect(m_voice, &VoiceController::interruptRequested, this, [this]() {
+        // El barge-in no debe limitarse a cortar el parlante: abortar el request
+        // evita que la respuesta vieja siga consumiendo tokens o ejecutando
+        // herramientas mientras el usuario ya inició otro turno.
+        if (m_charlaUseAgent) cancelAgentGeneration();
+        else stopChatGeneration();
+    });
 }
 
 QVariantMap AppController::voiceLatencyStats() const
@@ -21761,7 +21806,7 @@ void AppController::toggleDictation()
     m_dictationText.clear();
     m_dictationActive = true;
     emit dictationChanged();
-    m_voice->start();
+    m_voice->startDictation();
 }
 
 void AppController::applyAppLanguageToVoice(VoiceConfig &c) const
@@ -22281,6 +22326,16 @@ void AppController::stopManagedStt()
 void AppController::charlaListen()
 {
     if (m_voice) m_voice->startListening();
+}
+
+void AppController::charlaPushToTalkStart()
+{
+    if (m_charlaActive && m_voice) m_voice->pushToTalkStart();
+}
+
+void AppController::charlaPushToTalkStop()
+{
+    if (m_charlaActive && m_voice) m_voice->pushToTalkStop();
 }
 
 QString AppController::voiceState() const { return m_voice ? m_voice->stateStr() : QStringLiteral("idle"); }

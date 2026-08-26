@@ -22,6 +22,7 @@ ctx 131072 · gpuLayers 44 · batch 1024 · ubatch 512
 KV q4_0 · flash-attn · mmap · parallel 1
 --n-cpu-moe 39 · temp 0.60 · top-p 0.95 · top-k 20
 --spec-type draft-dspark · --spec-draft-n-max 5
+--spec-draft-conf-min 0.0…0.8 (opcional; validar por benchmark)
 ```
 
 El perfil original se conserva sin cambios como control histórico: asume que el
@@ -42,6 +43,7 @@ obligatorio y genera:
 --spec-type draft-dspark
 --spec-draft-n-max 5
 --spec-draft-ngl auto
+--spec-draft-conf-min 0.0…0.8 (opcional)
 ```
 
 El draft agrega aproximadamente 10,9 GB. En una RTX 3090 con el modelo principal

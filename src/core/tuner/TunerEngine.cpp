@@ -74,6 +74,22 @@ bool TunerEngine::canTuneSplitMode(int gpuCount, const QString &backend,
            && !effectiveArgs.contains(QStringLiteral("-ot"));
 }
 
+bool TunerEngine::passesPromotionGate(const tuner::TrialResult &candidate,
+                                      const tuner::TrialResult &baseline,
+                                      double minGainPct)
+{
+    if (candidate.failed || candidate.throughput <= 0.0)
+        return false;
+    // Sin baseline válido no se puede comparar, pero el quality gate normal
+    // del AutoTuner sigue protegiendo la búsqueda.
+    if (baseline.failed || baseline.throughput <= 0.0)
+        return true;
+    const double required = baseline.throughput
+        * (1.0 + qMax(0.0, minGainPct) / 100.0);
+    return candidate.throughput >= required
+           && candidate.quality + 1e-9 >= baseline.quality;
+}
+
 double ThroughputSample::blended(double ppWeight) const
 {
     const double w = qBound(0.0, ppWeight, 1.0);
@@ -93,6 +109,10 @@ ThroughputSample TunerEngine::parseThroughput(const QByteArray &json)
     if (err.error != QJsonParseError::NoError || !doc.isObject()) return s;
     const QJsonObject root = doc.object();
     const QJsonObject timings = root.value(QStringLiteral("timings")).toObject();
+    auto metricInt = [&timings, &root](const QString &key) {
+        const QJsonValue value = timings.contains(key) ? timings.value(key) : root.value(key);
+        return value.isDouble() ? value.toInt(-1) : -1;
+    };
 
     // Generación: predicted_per_second, con fallback derivado.
     if (timings.contains(QStringLiteral("predicted_per_second"))) {
@@ -117,6 +137,10 @@ ThroughputSample TunerEngine::parseThroughput(const QByteArray &json)
                                      .toDouble(root.value(QStringLiteral("tokens_evaluated")).toDouble(-1.0));
         if (promptMs > 0.0 && promptTok > 0.0) s.promptTps = promptTok / (promptMs / 1000.0);
     }
+    s.draftTokens = qMax(0, metricInt(QStringLiteral("draft_n")));
+    s.draftAcceptedTokens = qMax(0, metricInt(QStringLiteral("draft_n_accepted")));
+    if (s.draftTokens > 0)
+        s.draftAcceptedTokens = qMin(s.draftAcceptedTokens, s.draftTokens);
     return s;
 }
 
@@ -353,6 +377,9 @@ tuner::TrialResult TunerEngine::evaluateAgainstUrl(const QString &baseUrl,
     if (!sample.valid()) { r.failed = true; return r; }
     r.promptTps = sample.promptTps;
     r.genTps = sample.genTps;
+    r.draftTokens = sample.draftTokens;
+    r.draftAcceptedTokens = sample.draftAcceptedTokens;
+    r.draftAcceptancePct = sample.draftAcceptancePct();
     r.throughput = sample.blended(ppWeight);
     if (r.throughput <= 0.0) { r.failed = true; return r; }
     r.quality = scoreQuality(extractContent(body), acceptance);
@@ -452,9 +479,14 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
                             b.genTps > 0.0 ? QString::number(b.genTps, 'f', 1)
                                            : QStringLiteral("n/d"));
         }
+        if (b.draftAcceptancePct >= 0.0)
+            sum += QStringLiteral(" spec=%1%% (%2/%3)")
+                       .arg(b.draftAcceptancePct, 0, 'f', 1)
+                       .arg(b.draftAcceptedTokens).arg(b.draftTokens);
         if (!diag.isEmpty()) sum += QStringLiteral(" ! %1").arg(diag);
         // index 0 = baseline: no cuenta como trial del presupuesto.
-        emit trialDone(0, total, b.throughput, b.quality, sum, b.promptTps, b.genTps);
+        emit trialDone(0, total, b.throughput, b.quality, sum, b.promptTps,
+                       b.genTps, b.draftAcceptancePct);
     }
 
     auto eval = [&](const tuner::Config &cfg) -> tuner::TrialResult {
@@ -499,6 +531,10 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
                             r.genTps > 0.0 ? QString::number(r.genTps, 'f', 1)
                                            : QStringLiteral("n/d"));
         }
+        if (r.draftAcceptancePct >= 0.0)
+            sum += QStringLiteral(" spec=%1%% (%2/%3)")
+                       .arg(r.draftAcceptancePct, 0, 'f', 1)
+                       .arg(r.draftAcceptedTokens).arg(r.draftTokens);
         if (baselinePpl > 0.0) {
             if (ppl > 0.0)
                 sum += QStringLiteral(" ppl=%1 base=%2")
@@ -509,7 +545,8 @@ tuner::Trial TunerEngine::run(const TunerJob &job)
             sum += QStringLiteral(" ppl-off=%1").arg(baselinePplDiag.left(80));
         }
         if (!diag.isEmpty()) sum += QStringLiteral(" ! %1").arg(diag);
-        emit trialDone(index, total, r.throughput, r.quality, sum, r.promptTps, r.genTps);
+        emit trialDone(index, total, r.throughput, r.quality, sum, r.promptTps,
+                       r.genTps, r.draftAcceptancePct);
         return r;
     };
 

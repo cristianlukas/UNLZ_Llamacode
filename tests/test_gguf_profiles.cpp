@@ -412,13 +412,11 @@ void CoreTests::builder_externalDsparkEmitsDraftAndType()
     ctx.model.draftModelId = "dspark";
     ctx.model.specType = "draft-dspark";
     ctx.model.specDraftNMax = 5;
+    ctx.model.specDraftConfMin = 0.6;
     ctx.model.specDraftNgl = "auto";
     ctx.draftModel.id = "dspark";
     ctx.draftModel.isAvailable = true;
     ctx.draftModel.absolutePath = "C:/models/DeepseekV4-Flash-20260731-DSpark.gguf";
-    ctx.launch.extraArgs = {QStringLiteral("--spec-type"),
-                            QStringLiteral("draft-dspark")};
-
     const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
     QVERIFY2(ep.blockingErrors.isEmpty(),
              qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
@@ -435,6 +433,9 @@ void CoreTests::builder_externalDsparkEmitsDraftAndType()
     index = args.indexOf(QStringLiteral("--spec-draft-ngl"));
     QVERIFY(index >= 0);
     QCOMPARE(args.value(index + 1), QStringLiteral("auto"));
+    index = args.indexOf(QStringLiteral("--spec-draft-conf-min"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), QStringLiteral("0.600"));
 }
 
 void CoreTests::builder_emitsSelfContainedMtpFlags()

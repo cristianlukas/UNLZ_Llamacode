@@ -59,6 +59,7 @@ struct ModelProfile {
     // del GGUF principal cuando su filename lo identifica como MTP.
     QString specType;          // "" | "draft-mtp" | "draft-dspark"
     int     specDraftNMax = 0; // --spec-draft-n-max (0 = no emitir)
+    double  specDraftConfMin = 0.0; // --spec-draft-conf-min (0 = desactivado)
     QString specDraftNgl;      // --spec-draft-ngl  ("" | "all" | número de capas)
     QString specDraftTypeK;    // --spec-draft-type-k ("" | "q8_0" | "q4_0"...)
     QString specDraftTypeV;    // --spec-draft-type-v

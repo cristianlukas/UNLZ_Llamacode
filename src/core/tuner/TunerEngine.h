@@ -35,7 +35,12 @@ struct TunableParam {
 struct ThroughputSample {
     double promptTps = -1.0;   // timings.prompt_per_second
     double genTps = -1.0;      // timings.predicted_per_second
+    int draftTokens = 0;       // timings.draft_n, cuando hay speculative decoding
+    int draftAcceptedTokens = 0; // timings.draft_n_accepted
     bool valid() const { return promptTps > 0.0 || genTps > 0.0; }
+    double draftAcceptancePct() const {
+        return draftTokens > 0 ? 100.0 * draftAcceptedTokens / draftTokens : -1.0;
+    }
     // Mezcla ponderada: ppWeight 0 = sólo generación (comportamiento histórico),
     // 1 = sólo prefill. Si falta una pata, devuelve la otra en vez de castigar
     // al candidato por algo que no se pudo medir.
@@ -50,6 +55,7 @@ struct TunerJob {
     // como "antes" para poder comparar contra la mejor config encontrada.
     QStringList baselineArgs;
     bool measureBaseline = false;
+    double minBaselineGainPct = 1.0; // no promocionar resultados dentro del ruido
     QString host = QStringLiteral("127.0.0.1");
     int port = 18080;            // puerto scratch, distinto del server principal
     QString evalPrompt;          // prompt de medición
@@ -140,9 +146,17 @@ public:
                                  const QStringList &effectiveArgs,
                                  bool cpuOnly, bool cpuMoe);
 
+    // Un candidato sólo se promociona si supera al perfil medido por el margen
+    // pedido y no pierde calidad. Si el baseline no pudo medirse, no se inventa
+    // un bloqueo: queda a cargo del quality gate normal.
+    static bool passesPromotionGate(const tuner::TrialResult &candidate,
+                                    const tuner::TrialResult &baseline,
+                                    double minGainPct = 1.0);
+
 signals:
     void trialDone(int index, int total, double throughput, double quality,
-                   const QString &summary, double promptTps, double genTps);
+                   const QString &summary, double promptTps, double genTps,
+                   double draftAcceptancePct);
 
 private:
     // Ciclo lanzar/esperar-ready/medir/matar para un argv dado. Compartido por

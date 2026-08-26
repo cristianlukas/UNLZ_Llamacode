@@ -64,6 +64,9 @@ struct TrialResult {
     // dos patas. -1 = no medido.
     double promptTps = -1.0;   // prefill / prompt processing (PP)
     double genTps = -1.0;      // generación / token generation (TG)
+    int draftTokens = 0;       // tokens propuestos por el drafter, si aplica
+    int draftAcceptedTokens = 0; // tokens aceptados por el target, si aplica
+    double draftAcceptancePct = -1.0; // -1 = backend no reportó speculative metrics
     double quality = 0.0;     // score EvalSuite normalizado [0,1] (mayor = mejor)
     bool failed = false;      // el servidor no arrancó / OOM / timeout
 };

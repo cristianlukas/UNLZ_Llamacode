@@ -215,9 +215,11 @@ Item {
         const bp = config.backend || ({})
         if (mp && mp.mmprojId) parts.push("Visión: sí")
         else parts.push("Visión: no")
-        if (mp && (mp.specType === "draft-mtp" || mp.draftModelId)) {
+        if (mp && (mp.specType === "draft-mtp" || mp.specType === "draft-dspark" || mp.draftModelId)) {
             const n = Number(mp.specDraftNMax || 0)
-            parts.push("Drafter: " + (mp.specType === "draft-mtp" ? "MTP" : "draft") + (n > 0 ? n : ""))
+            const kind = mp.specType === "draft-dspark" ? "DSpark"
+                         : mp.specType === "draft-mtp" ? "MTP" : "draft"
+            parts.push("Drafter: " + kind + (n > 0 ? n : ""))
         } else parts.push("Drafter: ninguno")
         if (rt && Number(rt.ctx || 0) > 0) parts.push("Contexto: " + Math.round(Number(rt.ctx) / 1024) + "k")
         if (rt && rt.cacheType) parts.push("KV: " + rt.cacheType)

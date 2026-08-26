@@ -1270,6 +1270,8 @@ public:
     Q_INVOKABLE bool charlaAutoTune() const;
     Q_INVOKABLE void setCharlaAutoTune(bool on);
     Q_INVOKABLE void charlaListen();  // fuerza escucha (corta el TTS si suena)
+    Q_INVOKABLE void charlaPushToTalkStart(); // abre el micrófono al pulsar
+    Q_INVOKABLE void charlaPushToTalkStop();  // cierra el turno al soltar
     // Micrófonos disponibles: [{id,name,isDefault}].
     Q_INVOKABLE QVariantList audioInputDevices() const;
     // Micrófono elegido (persistido en setting "voiceInputDevice"; "" = default).
@@ -2021,7 +2023,9 @@ private:
     void onAutoTuneFinished(bool ok, const QStringList &bestArgs,
                             double throughput, double quality,
                             double promptTps, double genTps,
-                            double basePromptTps, double baseGenTps);
+                            double basePromptTps, double baseGenTps,
+                            double draftAcceptancePct,
+                            double baseDraftAcceptancePct);
     QVariantMap  m_hardwareSummary;
     bool m_startupBusy = false;
     QString m_startupStatus;

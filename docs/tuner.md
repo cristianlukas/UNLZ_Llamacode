@@ -71,6 +71,13 @@ Definido en `AppController::buildTuneParams()`:
 | cache-type-k | `--cache-type-k` | f16 / q8_0 / q4_0 | ✓ |
 | cache-type-v | `--cache-type-v` | f16 / q8_0 / q4_0 | ✓ |
 | split-mode | `--split-mode` | layer / tensor | |
+| spec n-max | `--spec-draft-n-max` | 1 / 2 / 3 / 4 / 5 | |
+| DSpark conf-min | `--spec-draft-conf-min` | 0 / 0.2 / 0.4 / 0.6 / 0.8 | |
+
+Los dos últimos sólo entran cuando el comando efectivo declara speculative
+decoding; `conf-min` se explora específicamente para DSpark. Cuando el backend
+reporta `timings.draft_n` y `timings.draft_n_accepted`, la UI muestra la
+aceptación como `aceptados/propuestos`.
 
 `split-mode` sólo entra al espacio cuando hay al menos dos GPU NVIDIA, el
 binario CUDA declara soporte para el flag y el perfil no usa CPU-MoE ni
@@ -112,15 +119,22 @@ por substrings para no bloquear el flujo.
    tokens/tiempo). El objetivo combina ambos con el peso elegido en la UI.
 5. **Califica**: fracción de substrings de aceptación presentes en `content`
    (estilo EvalSuite), en `[0,1]`.
-6. **Mata** el server para liberar RAM/VRAM.
-7. Si corresponde, corre `llama-perplexity` sobre el candidato y combina el score
+6. **Registra** la aceptación speculative (`draft_n_accepted / draft_n`) cuando
+   el backend la entrega, junto con PP/TG.
+7. **Mata** el server para liberar RAM/VRAM.
+8. Si corresponde, corre `llama-perplexity` sobre el candidato y combina el score
    con el gate PPL.
 
 ---
 
 ## Resultado: perfil nuevo, no sobrescribe
 
-Al terminar, `onAutoTuneFinished` **clona** el LaunchProfile origen
+Al terminar, `onAutoTuneFinished` sólo **promociona** un candidato que, con
+baseline válido, lo supere al menos 1% sin bajar su calidad. Si ningún trial
+cumple, no crea un perfil falso "optimizado" y la UI deja el diagnóstico y las
+mediciones. Sin baseline medible se conserva el gate de calidad del optimizador.
+
+Cuando sí se promociona, `onAutoTuneFinished` **clona** el LaunchProfile origen
 (backend/model/runtime/harness/workspace) en uno nuevo con sufijo `-tuned` y
 alias `"Auto-tuned: <origen>"`, y aplica la mejor config en `extraArgs`
 (reemplazando flags previos de los mismos parámetros). El perfil original queda
@@ -135,7 +149,8 @@ intacto.
 2. Corre `maxTrials` (default 24); la línea de estado muestra
    `Trial i/N — X tok/s, calidad Q [flags]`.
 3. **Cancelar tune** corta tras el trial en curso.
-4. Al terminar aparece el perfil `-tuned` en el dropdown.
+4. Al terminar aparece el perfil `-tuned` en el dropdown sólo si pasó el gate
+   de promoción; de lo contrario se conserva el perfil original.
 
 Parámetros (`startAutoTune(launchProfileId, maxTrials, qualityGate, nPredict)`):
 default `24, 0.6, 256`.
@@ -178,5 +193,4 @@ modelo y carga en vez de fijar una opción global.
 ## Pendiente
 
 - Afinar espacio de búsqueda / `nPredict` / prompt de medición según hardware.
-- Exponer en UI la tabla de trials (hoy solo la última línea de estado).
 - Elegir corpus PPL y umbral desde UI avanzada.

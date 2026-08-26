@@ -18,6 +18,8 @@ public:
         double wallMs = 0.0;
         int toolCalls = 0;
         qint64 toolBytes = 0;
+        int draftTokens = 0;
+        int draftAcceptedTokens = 0;
 
         QVariantMap toVariant() const;
         static Request fromResponse(const QJsonObject &root, const QString &phase,

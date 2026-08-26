@@ -21,7 +21,7 @@ Item {
     property bool measureBaseline: true
 
     readonly property var result: App.autoTuneResult
-    readonly property bool hasResult: (result.ok ?? false) === true
+    readonly property bool hasResult: Object.keys(result || {}).length > 0
     readonly property bool canTune:
         selectedLaunchId.length > 0 && !App.serverRunning && !App.autoTuneRunning
 
@@ -29,6 +29,16 @@ Item {
         const n = Number(v)
         if (!isFinite(n) || n <= 0) return "n/d"
         return n.toFixed(digits === undefined ? 1 : digits)
+    }
+    function fmtAcceptance(v) {
+        const n = Number(v)
+        return isFinite(n) && n >= 0 ? n.toFixed(1) + "%" : "n/d"
+    }
+    function acceptanceDelta(after, before) {
+        const a = Number(after), b = Number(before)
+        if (!isFinite(a) || !isFinite(b) || a < 0 || b < 0) return "—"
+        const d = a - b
+        return (d > 0 ? "+" : "") + d.toFixed(1) + " pp"
     }
     function gainLabel(pct) {
         const n = Number(pct)
@@ -521,6 +531,27 @@ Item {
                             wrapMode: Text.WordWrap
                         }
 
+                        Text {
+                            Layout.fillWidth: true
+                            visible: (root.result.ok ?? false) !== true
+                            text: "No se creó un perfil nuevo: el resultado no superó el gate de promoción."
+                            color: Theme.warnText
+                            font.pixelSize: 11
+                            wrapMode: Text.WordWrap
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 4
+                            columnSpacing: 18
+                            rowSpacing: 6
+
+                            Text { text: "Aceptación draft (%)"; color: Theme.textSecondary; font.pixelSize: 12 }
+                            Text { text: root.fmtAcceptance(root.result.baseDraftAcceptancePct); color: Theme.textPrimary; font.pixelSize: 12 }
+                            Text { text: root.fmtAcceptance(root.result.draftAcceptancePct); color: Theme.textPrimary; font.pixelSize: 12 }
+                            Text { text: root.acceptanceDelta(root.result.draftAcceptancePct, root.result.baseDraftAcceptancePct); color: Theme.textMuted; font.pixelSize: 12 }
+                        }
+
                         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.divider }
 
                         Text {
@@ -605,6 +636,7 @@ Item {
                                 Text { text: "#"; Layout.preferredWidth: 34; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
                                 Text { text: "PP"; Layout.preferredWidth: 62; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
                                 Text { text: "TG"; Layout.preferredWidth: 62; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
+                                Text { text: "Spec"; Layout.preferredWidth: 58; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
                                 Text { text: "Score"; Layout.preferredWidth: 62; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
                                 Text { text: "Cal."; Layout.preferredWidth: 42; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
                                 Text { text: "Config"; Layout.fillWidth: true; color: Theme.textSecondary; font { pixelSize: 11; bold: true } }
@@ -644,6 +676,14 @@ Item {
                                         Layout.preferredWidth: 62
                                         text: root.fmt(modelData.genTps)
                                         color: Theme.textPrimary; font.pixelSize: 11
+                                    }
+                                    Text {
+                                        Layout.preferredWidth: 58
+                                        text: root.fmtAcceptance(modelData.draftAcceptancePct)
+                                        color: (modelData.draftAcceptancePct ?? -1) >= 80 ? Theme.successText
+                                             : (modelData.draftAcceptancePct ?? -1) >= 0 ? Theme.warnText
+                                             : Theme.textMuted
+                                        font.pixelSize: 11
                                     }
                                     Text {
                                         Layout.preferredWidth: 62

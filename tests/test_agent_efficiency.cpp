@@ -12,6 +12,7 @@ class AgentEfficiencyTests : public QObject
 private slots:
     void metrics_parsesLlamaAndOpenAI();
     void metrics_summarizesAndCompares();
+    void metrics_summarizesSpeculativeAcceptance();
     void metrics_aggregatesRepeatedBenchmarkRuns();
     void metrics_groupsByAgentProfileForHarnessAb();
     void structured_compactsAndProjects();
@@ -27,16 +28,21 @@ private slots:
 void AgentEfficiencyTests::metrics_parsesLlamaAndOpenAI()
 {
     QJsonObject llama{{"timings", QJsonObject{{"prompt_n", 100}, {"predicted_n", 20},
-                                                {"prompt_ms", 50.0}, {"predicted_ms", 80.0}}}};
+                                                {"prompt_ms", 50.0}, {"predicted_ms", 80.0},
+                                                {"draft_n", 10}, {"draft_n_accepted", 7}}}};
     auto a = AgentEfficiency::Request::fromResponse(llama, "explorar", 150.0);
     QCOMPARE(a.phase, QString("explore"));
     QCOMPARE(a.promptTokens, 100);
     QCOMPARE(a.generatedTokens, 20);
+    QCOMPARE(a.draftTokens, 10);
+    QCOMPARE(a.draftAcceptedTokens, 7);
+    QCOMPARE(a.toVariant().value("draftAcceptancePct").toDouble(), 70.0);
 
     QJsonObject cloud{{"usage", QJsonObject{{"prompt_tokens", 60}, {"completion_tokens", 10}}}};
     auto b = AgentEfficiency::Request::fromResponse(cloud, "plan", 90.0);
     QCOMPARE(b.promptTokens, 60);
     QCOMPARE(b.generatedTokens, 10);
+    QCOMPARE(b.draftTokens, 0);
 }
 
 void AgentEfficiencyTests::metrics_summarizesAndCompares()
@@ -49,6 +55,18 @@ void AgentEfficiencyTests::metrics_summarizesAndCompares()
     const QVariantMap delta = AgentEfficiency::compare(total,
         QVariantMap{{"promptTokens", 120}, {"wallMs", 60.0}});
     QCOMPARE(delta.value("promptTokensChangePct").toDouble(), -20.0);
+}
+
+void AgentEfficiencyTests::metrics_summarizesSpeculativeAcceptance()
+{
+    const QVariantList rows{
+        QVariantMap{{"draftTokens", 10}, {"draftAcceptedTokens", 7}},
+        QVariantMap{{"draftTokens", 5}, {"draftAcceptedTokens", 2}}
+    };
+    const QVariantMap total = AgentEfficiency::summarize(rows);
+    QCOMPARE(total.value("draftTokens").toLongLong(), 15);
+    QCOMPARE(total.value("draftAcceptedTokens").toLongLong(), 9);
+    QCOMPARE(total.value("draftAcceptancePct").toDouble(), 60.0);
 }
 
 void AgentEfficiencyTests::metrics_aggregatesRepeatedBenchmarkRuns()

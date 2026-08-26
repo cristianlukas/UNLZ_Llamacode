@@ -58,6 +58,7 @@ QJsonObject ModelProfile::toJson() const {
     o["mmprojStableId"] = static_cast<double>(mmprojStableId);
     o["draftStableId"] = static_cast<double>(draftStableId);
     o["specType"] = specType; o["specDraftNMax"] = specDraftNMax;
+    o["specDraftConfMin"] = specDraftConfMin;
     o["specDraftNgl"] = specDraftNgl;
     o["specDraftTypeK"] = specDraftTypeK; o["specDraftTypeV"] = specDraftTypeV;
     return o;
@@ -73,6 +74,7 @@ ModelProfile ModelProfile::fromJson(const QJsonObject &o) {
     p.draftStableId = static_cast<qint64>(o["draftStableId"].toDouble(0));
     p.specType = o["specType"].toString();
     p.specDraftNMax = o["specDraftNMax"].toInt(0);
+    p.specDraftConfMin = qBound(0.0, o["specDraftConfMin"].toDouble(0.0), 1.0);
     p.specDraftNgl = o["specDraftNgl"].toString();
     p.specDraftTypeK = o["specDraftTypeK"].toString();
     p.specDraftTypeV = o["specDraftTypeV"].toString();

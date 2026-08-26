@@ -52,6 +52,7 @@ Item {
     property bool mmprojEnabled: false
     property bool draftEnabled: false
     property bool mtpEnabled: false
+    property string specTypeCurrent: "draft-mtp"
     property bool launchBest: false       // BEST (rayo), insignia curada del catálogo
     property bool launchFavorite: false   // favorito del perfil de lanzamiento
     property bool launchBenchmark: false // candidato pendiente para benchmark
@@ -366,9 +367,14 @@ Item {
         modelMmprojUnresolved = bindModelCombo(modelMmproj, mp.mmprojId ?? "")
         draftEnabled = (mp.draftModelId ?? "").length > 0
         modelDraftUnresolved  = bindModelCombo(modelDraft,  mp.draftModelId ?? "")
-        mtpEnabled = (mp.specType ?? "") === "draft-mtp"
+        const storedSpecType = mp.specType ?? ""
+        mtpEnabled = storedSpecType === "draft-mtp" || storedSpecType === "draft-dspark"
+        specTypeCurrent = storedSpecType === "draft-dspark" ? "draft-dspark" : "draft-mtp"
         specNMaxField.text = ((mp.specDraftNMax ?? 0) || 0).toString()
-        specKvType.currentIndex = Math.max(0, specKvType.find(mp.specDraftTypeK ?? ""))
+        specDraftConfMinField.text = ((mp.specDraftConfMin ?? 0) || 0) > 0
+            ? Number(mp.specDraftConfMin).toFixed(3) : ""
+        specTypeCombo.currentIndex = Math.max(0, specTypeCombo.model.indexOf(specTypeCurrent))
+        specKvType.currentIndex = Math.max(0, specKvType.model.indexOf(mp.specDraftTypeK ?? ""))
 
         const rt = App.profileManager.getRuntimePreset(runtimeId)
         runtimeNameCurrent = rt.name ?? ""
@@ -458,8 +464,10 @@ Item {
             "modelId": effectiveModelId(),
             "mmprojId": mmprojEnabled ? effectiveMmprojId() : "",
             "draftModelId": draftEnabled ? effectiveDraftId() : "",
-            "specType": mtpEnabled ? "draft-mtp" : "",
+            "specType": mtpEnabled ? specTypeCurrent : "",
             "specDraftNMax": mtpEnabled ? (parseInt(specNMaxField.text) || 0) : 0,
+            "specDraftConfMin": mtpEnabled && specTypeCurrent === "draft-dspark"
+                ? Math.max(0, Math.min(1, parseFloat(specDraftConfMinField.text) || 0)) : 0,
             "specDraftNgl": (draftEnabled && mtpEnabled) ? "all" : "",
             "specDraftTypeK": (draftEnabled && mtpEnabled) ? (specKvType.currentText ?? "") : "",
             "specDraftTypeV": (draftEnabled && mtpEnabled) ? (specKvType.currentText ?? "") : "",
@@ -521,13 +529,17 @@ Item {
         }
         // MTP admite draft separado o cabezal autocontenido en el GGUF principal.
         const specOn = mtpEnabled
+        const specType = specOn ? specTypeCurrent : ""
+        const confMin = specOn && specType === "draft-dspark"
+            ? Math.max(0, Math.min(1, parseFloat(specDraftConfMinField.text) || 0)) : 0
         App.profileManager.setModelSpec(
             effectiveMid,
-            specOn ? "draft-mtp" : "",
+            specType,
             specOn ? (parseInt(specNMaxField.text) || 0) : 0,
             specOn ? "all" : "",
             specOn ? (specKvType.currentText ?? "") : "",
-            specOn ? (specKvType.currentText ?? "") : "")
+            specOn ? (specKvType.currentText ?? "") : "",
+            confMin)
 
         // Runtime: update if exists, create if not
         let effectiveRid = runtimeId
@@ -1272,10 +1284,24 @@ Item {
                             background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
                             contentItem: Text { text: modelDraft.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
                         }
+                        Item { Layout.fillWidth: true; implicitHeight: 1 }
 
-                        // ── Speculative decoding / MTP (draft separado o embebido) ──
+                        // ── Speculative decoding / MTP / DSpark ──
                         CheckBox { id: mtpCheck; checked: mtpEnabled; onCheckedChanged: mtpEnabled = checked; padding: 0 }
-                        Text { text: draftEnabled ? "MTP (draft-mtp)" : "MTP autocontenido"; color: mtpEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        Text { text: draftEnabled
+                                    ? (specTypeCurrent === "draft-dspark" ? "DSpark" : "MTP (draft-mtp)")
+                                    : "MTP autocontenido";
+                               color: mtpEnabled ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        LcComboBox {
+                            id: specTypeCombo
+                            Layout.fillWidth: true
+                            enabled: draftEnabled && mtpEnabled
+                            opacity: enabled ? 1.0 : 0.4
+                            model: ["draft-mtp", "draft-dspark"]
+                            onActivated: { specTypeCurrent = currentText; recomputePreview() }
+                            background: Rectangle { color: Theme.inputBg; radius: 6; border.color: Theme.borderColor }
+                            contentItem: Text { text: specTypeCombo.displayText; color: Theme.textPrimary; font.pixelSize: 13; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+                        }
                         Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         Item { implicitWidth: 20 }
@@ -1287,6 +1313,18 @@ Item {
                             inputMethodHints: Qt.ImhDigitsOnly
                             placeholderText: "0 = default"
                         }
+                        Item { Layout.fillWidth: true; implicitHeight: 1 }
+
+                        Item { implicitWidth: 20 }
+                        Text { text: "conf-min"; color: (mtpEnabled && specTypeCurrent === "draft-dspark") ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        LcTextField {
+                            id: specDraftConfMinField
+                            Layout.fillWidth: true
+                            enabled: mtpEnabled && specTypeCurrent === "draft-dspark"; opacity: enabled ? 1.0 : 0.4
+                            inputMethodHints: Qt.ImhFormattedNumbersOnly
+                            placeholderText: "0 = desactivado"
+                        }
+                        Item { Layout.fillWidth: true; implicitHeight: 1 }
 
                         Item { implicitWidth: 20 }
                         Text { text: "draft KV"; color: (draftEnabled && mtpEnabled) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }

@@ -128,7 +128,8 @@ public:
     Q_INVOKABLE bool setModelSpec(const QString &id, const QString &specType,
                                   int specDraftNMax, const QString &specDraftNgl,
                                   const QString &specDraftTypeK,
-                                  const QString &specDraftTypeV);
+                                  const QString &specDraftTypeV,
+                                  double specDraftConfMin = 0.0);
 
     // RuntimePreset
     Q_INVOKABLE QString addRuntimePreset(const QString &name, int ctx, int batch,

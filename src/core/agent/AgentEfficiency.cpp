@@ -22,7 +22,11 @@ QVariantMap AgentEfficiency::Request::toVariant() const
             {QStringLiteral("generatedMs"), generatedMs},
             {QStringLiteral("wallMs"), wallMs},
             {QStringLiteral("toolCalls"), toolCalls},
-            {QStringLiteral("toolBytes"), toolBytes}};
+            {QStringLiteral("toolBytes"), toolBytes},
+            {QStringLiteral("draftTokens"), draftTokens},
+            {QStringLiteral("draftAcceptedTokens"), draftAcceptedTokens},
+            {QStringLiteral("draftAcceptancePct"),
+             draftTokens > 0 ? 100.0 * draftAcceptedTokens / draftTokens : -1.0}};
 }
 
 AgentEfficiency::Request AgentEfficiency::Request::fromResponse(
@@ -38,6 +42,12 @@ AgentEfficiency::Request AgentEfficiency::Request::fromResponse(
         {QStringLiteral("predicted_n"), QStringLiteral("completion_tokens")}));
     r.promptMs = firstNumber(timings, root, {QStringLiteral("prompt_ms")});
     r.generatedMs = firstNumber(timings, root, {QStringLiteral("predicted_ms")});
+    r.draftTokens = qMax(0, qRound(firstNumber(
+        timings, root, {QStringLiteral("draft_n")})));
+    r.draftAcceptedTokens = qMax(0, qRound(firstNumber(
+        timings, root, {QStringLiteral("draft_n_accepted")})));
+    if (r.draftTokens > 0)
+        r.draftAcceptedTokens = qMin(r.draftAcceptedTokens, r.draftTokens);
     r.wallMs = qMax(0.0, elapsed);
     return r;
 }
@@ -46,6 +56,7 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
 {
     QVariantMap out{{QStringLiteral("requests"), requests.size()}};
     qint64 prompt = 0, generated = 0, toolBytes = 0;
+    qint64 draft = 0, draftAccepted = 0;
     int tools = 0;
     double promptMs = 0.0, generatedMs = 0.0, wallMs = 0.0;
     QVariantMap phases;
@@ -58,6 +69,8 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
         wallMs += r.value(QStringLiteral("wallMs")).toDouble();
         tools += r.value(QStringLiteral("toolCalls")).toInt();
         toolBytes += r.value(QStringLiteral("toolBytes")).toLongLong();
+        draft += r.value(QStringLiteral("draftTokens")).toLongLong();
+        draftAccepted += r.value(QStringLiteral("draftAcceptedTokens")).toLongLong();
         const QString phase = normalizedPhase(r.value(QStringLiteral("phase")).toString());
         QVariantMap p = phases.value(phase).toMap();
         p[QStringLiteral("requests")] = p.value(QStringLiteral("requests")).toInt() + 1;
@@ -74,6 +87,10 @@ QVariantMap AgentEfficiency::summarize(const QVariantList &requests)
     out[QStringLiteral("wallMs")] = wallMs;
     out[QStringLiteral("toolCalls")] = tools;
     out[QStringLiteral("toolBytes")] = toolBytes;
+    out[QStringLiteral("draftTokens")] = draft;
+    out[QStringLiteral("draftAcceptedTokens")] = draftAccepted;
+    out[QStringLiteral("draftAcceptancePct")] =
+        draft > 0 ? 100.0 * draftAccepted / draft : -1.0;
     out[QStringLiteral("phases")] = phases;
     return out;
 }
@@ -83,7 +100,9 @@ QVariantMap AgentEfficiency::compare(const QVariantMap &base, const QVariantMap 
     QVariantMap out;
     for (const QString &key : {QStringLiteral("promptTokens"), QStringLiteral("generatedTokens"),
                                QStringLiteral("promptMs"), QStringLiteral("wallMs"),
-                               QStringLiteral("toolCalls"), QStringLiteral("toolBytes")}) {
+                               QStringLiteral("toolCalls"), QStringLiteral("toolBytes"),
+                               QStringLiteral("draftTokens"),
+                               QStringLiteral("draftAcceptedTokens")}) {
         const double a = base.value(key).toDouble();
         const double b = candidate.value(key).toDouble();
         out[key + QStringLiteral("Delta")] = b - a;

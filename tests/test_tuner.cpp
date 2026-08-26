@@ -18,6 +18,7 @@ private slots:
     void computeLoss_penalizesSubGate();
     void run_qualityGateAvoidsLowestQuant();
     void tunedArgs_emitsSpecDraftNMax();
+    void tunedArgs_emitsSpecConfMin();
     void tunedArgs_emitsCpuMoe();
     void tunedArgs_emitsSplitMode();
     void canTuneSplitMode_gatesUnsafeLayouts();
@@ -27,6 +28,7 @@ private slots:
     void parseThroughput_invalidWhenNoTimings();
     void blended_respectsWeightExtremes();
     void blended_fallsBackToMeasuredLeg();
+    void promotionGate_requiresMeasuredImprovementAndQuality();
     void padPrompt_reachesTargetAndKeepsInstruction();
 };
 
@@ -94,6 +96,18 @@ void TunerTests::tunedArgs_emitsSpecDraftNMax()
     QVERIFY(i >= 0 && args[i + 1] == "2");
 }
 
+void TunerTests::tunedArgs_emitsSpecConfMin()
+{
+    QVector<TunableParam> params{
+        {ParamSpec::categorical("spec-draft-conf-min", {"0", "0.2", "0.4", "0.6"}),
+         "--spec-draft-conf-min", false},
+    };
+    Config cfg; cfg["spec-draft-conf-min"] = 3;
+    const QStringList args = TunerEngine::tunedArgs(params, cfg);
+    const int i = args.indexOf("--spec-draft-conf-min");
+    QVERIFY(i >= 0 && args.value(i + 1) == "0.6");
+}
+
 void TunerTests::tunedArgs_emitsCpuMoe()
 {
     QVector<TunableParam> params{
@@ -149,11 +163,14 @@ void TunerTests::parsePerplexity_readsLastReportedValue()
 void TunerTests::parseThroughput_splitsPromptAndGen()
 {
     const QByteArray body =
-        R"({"content":"hi","timings":{"prompt_per_second":812.5,"predicted_per_second":37.2}})";
+        R"({"content":"hi","timings":{"prompt_per_second":812.5,"predicted_per_second":37.2,"draft_n":10,"draft_n_accepted":7}})";
     const ThroughputSample s = TunerEngine::parseThroughput(body);
     QVERIFY(s.valid());
     QCOMPARE(s.promptTps, 812.5);
     QCOMPARE(s.genTps, 37.2);
+    QCOMPARE(s.draftTokens, 10);
+    QCOMPARE(s.draftAcceptedTokens, 7);
+    QCOMPARE(s.draftAcceptancePct(), 70.0);
 }
 
 void TunerTests::parseThroughput_derivesFromMsAndCount()
@@ -199,6 +216,27 @@ void TunerTests::blended_fallsBackToMeasuredLeg()
     ThroughputSample onlyPrompt;
     onlyPrompt.promptTps = 800.0;
     QCOMPARE(onlyPrompt.blended(0.0), 800.0);
+}
+
+void TunerTests::promotionGate_requiresMeasuredImprovementAndQuality()
+{
+    TrialResult base;
+    base.throughput = 100.0;
+    base.quality = 0.9;
+
+    TrialResult equal = base;
+    QVERIFY(!TunerEngine::passesPromotionGate(equal, base, 1.0));
+
+    TrialResult faster = base;
+    faster.throughput = 101.0;
+    QVERIFY(TunerEngine::passesPromotionGate(faster, base, 1.0));
+
+    TrialResult degraded = faster;
+    degraded.quality = 0.899;
+    QVERIFY(!TunerEngine::passesPromotionGate(degraded, base, 1.0));
+
+    base.failed = true;
+    QVERIFY(TunerEngine::passesPromotionGate(degraded, base, 1.0));
 }
 
 void TunerTests::padPrompt_reachesTargetAndKeepsInstruction()

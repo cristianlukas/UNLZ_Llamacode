@@ -264,12 +264,14 @@ bool ProfileManager::updateModelProfile(const QString &id, const QString &name,
 bool ProfileManager::setModelSpec(const QString &id, const QString &specType,
                                   int specDraftNMax, const QString &specDraftNgl,
                                   const QString &specDraftTypeK,
-                                  const QString &specDraftTypeV)
+                                  const QString &specDraftTypeV,
+                                  double specDraftConfMin)
 {
     ModelProfile p = m_models.findById(id);
     if (p.id.isEmpty() || p.system) return false;
     p.specType = specType;
     p.specDraftNMax = specDraftNMax > 0 ? specDraftNMax : 0;
+    p.specDraftConfMin = qBound(0.0, specDraftConfMin, 1.0);
     p.specDraftNgl = specDraftNgl;
     p.specDraftTypeK = specDraftTypeK;
     p.specDraftTypeV = specDraftTypeV;
@@ -285,6 +287,7 @@ QVariantMap ProfileManager::getModelProfile(const QString &id) const
     return {{"id", p.id}, {"name", p.name}, {"modelId", p.modelId},
             {"mmprojId", p.mmprojId}, {"draftModelId", p.draftModelId},
             {"specType", p.specType}, {"specDraftNMax", p.specDraftNMax},
+            {"specDraftConfMin", p.specDraftConfMin},
             {"specDraftNgl", p.specDraftNgl},
             {"specDraftTypeK", p.specDraftTypeK},
             {"specDraftTypeV", p.specDraftTypeV}};
@@ -1486,6 +1489,7 @@ void ProfileManager::loadSystemProfiles()
             mp.specType = spec.value("type").toString();
             mp.specDraftNgl = spec.value("draftNgl").toString();
             mp.specDraftNMax = spec.value("draftNMax").toInt(0);
+            mp.specDraftConfMin = qBound(0.0, spec.value("confMin").toDouble(0.0), 1.0);
         }
         if (cloudBackend) {
             // External vLLM profiles carry model identity in BackendProfile. Do
@@ -1496,6 +1500,7 @@ void ProfileManager::loadSystemProfiles()
             mp.draftModelId.clear();
             mp.specType.clear();
             mp.specDraftNMax = 0;
+            mp.specDraftConfMin = 0.0;
             mp.specDraftNgl.clear();
         } else {
             sysModel.append(mp);

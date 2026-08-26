@@ -96,7 +96,8 @@ void ProfilesTests::modelProfile_jsonRoundTrip()
     ModelProfile m;
     m.id = "m1"; m.name = "qwen"; m.modelId = "cat1";
     m.mmprojId = "mm1"; m.draftModelId = "d1";
-    m.specType = "draft-mtp"; m.specDraftNMax = 3; m.specDraftNgl = "all";
+    m.specType = "draft-dspark"; m.specDraftNMax = 3; m.specDraftConfMin = 0.6;
+    m.specDraftNgl = "all";
     m.specDraftTypeK = "q8_0"; m.specDraftTypeV = "q8_0";
     const ModelProfile r = ModelProfile::fromJson(m.toJson());
     QCOMPARE(r.name, m.name);
@@ -105,6 +106,7 @@ void ProfilesTests::modelProfile_jsonRoundTrip()
     QCOMPARE(r.draftModelId, m.draftModelId);
     QCOMPARE(r.specType, m.specType);
     QCOMPARE(r.specDraftNMax, m.specDraftNMax);
+    QCOMPARE(r.specDraftConfMin, m.specDraftConfMin);
     QCOMPARE(r.specDraftNgl, m.specDraftNgl);
     QCOMPARE(r.specDraftTypeK, m.specDraftTypeK);
     QCOMPARE(r.specDraftTypeV, m.specDraftTypeV);
@@ -300,11 +302,12 @@ void ProfilesTests::manager_addModelProfile()
     QVERIFY(!id.isEmpty());
     QCOMPARE(pm.getModelProfile(id).value("modelId").toString(), QStringLiteral("cat1"));
 
-    // setModelSpec persiste la config MTP y getModelProfile la expone.
-    QVERIFY(pm.setModelSpec(id, "draft-mtp", 3, "all", "q8_0", "q8_0"));
+    // setModelSpec persiste la configuración DSpark y getModelProfile la expone.
+    QVERIFY(pm.setModelSpec(id, "draft-dspark", 3, "all", "q8_0", "q8_0", 0.6));
     const QVariantMap m = pm.getModelProfile(id);
-    QCOMPARE(m.value("specType").toString(), QStringLiteral("draft-mtp"));
+    QCOMPARE(m.value("specType").toString(), QStringLiteral("draft-dspark"));
     QCOMPARE(m.value("specDraftNMax").toInt(), 3);
+    QCOMPARE(m.value("specDraftConfMin").toDouble(), 0.6);
     QCOMPARE(m.value("specDraftTypeK").toString(), QStringLiteral("q8_0"));
 
     QVERIFY(pm.removeModelProfile(id));
