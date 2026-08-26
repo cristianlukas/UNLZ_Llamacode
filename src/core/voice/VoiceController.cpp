@@ -330,6 +330,7 @@ void VoiceController::onAudioReady()
             qInfo().noquote() << QStringLiteral("[charla] barge-in: usuario interrumpió (nivel=%1, piso=%2)")
                                      .arg(lvl, 0, 'f', 3).arg(vf.floor, 0, 'f', 4);
             startListening();
+            emit interruptRequested();
         }
         return;
     }
