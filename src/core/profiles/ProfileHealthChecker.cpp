@@ -80,7 +80,11 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
         // registrado como binary=official. Si ya se detectaron capacidades,
         // podemos distinguir una incompatibilidad real de una detección aún
         // pendiente (supportedFlags vacío).
-        if (r.modelRefFound && r.model.specDraftAdaptive && r.binaryFound
+        const bool adaptiveRequestedByArgs = r.launch.extraArgs.contains(
+            QStringLiteral("--spec-draft-adaptive"));
+        if (r.modelRefFound
+            && (r.model.specDraftAdaptive || adaptiveRequestedByArgs)
+            && r.binaryFound
             && r.binary.pathValid) {
             const bool capabilitiesKnown = !r.binary.supportedFlags.isEmpty();
             const bool hasAdaptive = r.binary.supportsFlag("--spec-draft-adaptive");

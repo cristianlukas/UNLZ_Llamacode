@@ -66,6 +66,7 @@ private slots:
     void adaptiveCapabilityUnknownIsWarning();
     void adaptiveCapabilityMissingIsError();
     void adaptiveCapabilityAvailableIsClean();
+    void adaptiveRawLaunchArgIsValidated();
     void runtimeAndAgentMissingAreWarnings();
     void cloudSkipsBinaryAndModel();
     void cloudMissingUrlIsError();
@@ -205,6 +206,17 @@ void ProfileHealthTests::adaptiveCapabilityAvailableIsClean()
     const auto v = ProfileHealthChecker::checkLaunch(r);
     QVERIFY(!hasCode(v, "adaptive-capability-unknown"));
     QVERIFY(!hasCode(v, "adaptive-capability-missing"));
+}
+
+void ProfileHealthTests::adaptiveRawLaunchArgIsValidated()
+{
+    auto r = healthyLocal();
+    r.launch.extraArgs = {QStringLiteral("--spec-type"), QStringLiteral("draft-mtp"),
+                          QStringLiteral("--spec-draft-adaptive")};
+    r.binary.supportedFlags = {QStringLiteral("--spec-type"),
+                               QStringLiteral("--spec-draft-n-max")};
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QCOMPARE(severityOf(v, "adaptive-capability-missing"), QStringLiteral("error"));
 }
 
 void ProfileHealthTests::runtimeAndAgentMissingAreWarnings()
