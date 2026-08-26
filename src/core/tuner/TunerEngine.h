@@ -139,6 +139,11 @@ public:
     static QStringList tunedArgs(const QVector<TunableParam> &params,
                                  const tuner::Config &config);
 
+    // Rango seguro para el techo de speculative decoding. En modo adaptativo
+    // se conserva el n-min del perfil y se explora hasta 9: cubre el sweet spot
+    // observado sin empujar la búsqueda a drafts excesivamente largos.
+    static TunableParam speculativeNMaxParam(bool adaptive, int minDraftTokens = 0);
+
     // Gate conservador para explorar --split-mode: sólo CUDA multi-GPU, flag
     // confirmado y sin layouts MoE/per-tensor cuyo reparto no es intercambiable.
     static bool canTuneSplitMode(int gpuCount, const QString &backend,

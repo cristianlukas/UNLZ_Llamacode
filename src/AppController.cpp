@@ -2914,6 +2914,8 @@ void AppController::computeEffectiveProfilePreview(const QString &launchProfileI
     ctx.model.draftModelId = overrides.value("draftModelId").toString();
     ctx.model.specType       = overrides.value("specType").toString();
     ctx.model.specDraftNMax  = overrides.value("specDraftNMax", 0).toInt();
+    ctx.model.specDraftNMin  = qMax(0, overrides.value("specDraftNMin", 0).toInt());
+    ctx.model.specDraftAdaptive = overrides.value("specDraftAdaptive", false).toBool();
     ctx.model.specDraftConfMin = qBound(0.0, overrides.value("specDraftConfMin", 0.0).toDouble(), 1.0);
     ctx.model.specDraftNgl   = overrides.value("specDraftNgl").toString();
     ctx.model.specDraftTypeK = overrides.value("specDraftTypeK").toString();
@@ -20704,7 +20706,8 @@ namespace {
 // optimizador colapse al quant más bajo solo por velocidad.
 QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = false,
                                       bool cpuMoe = false, bool splitMode = false,
-                                      bool dspark = false)
+                                      bool dspark = false, bool adaptiveDraft = false,
+                                      int adaptiveNMin = 0)
 {
     using tuner::ParamSpec;
     if (cpuOnly) {
@@ -20736,8 +20739,7 @@ QVector<TunableParam> buildTuneParams(bool hasDraft = false, bool cpuOnly = fals
     // Si hay draft model (spec decoding / MTP), afinar spec-draft-n-max: el sweet
     // spot del acceptance/throughput varía por modelo (p.ej. 26B→1, 12B→2-3).
     if (hasDraft) {
-        params.append({ParamSpec::intRange("spec-draft-n-max", 1, 5, 1),
-                       "--spec-draft-n-max", false});
+        params.append(TunerEngine::speculativeNMaxParam(adaptiveDraft, adaptiveNMin));
     }
     if (dspark) {
         // En DSpark el umbral de confianza permite cortar drafts poco fiables.
@@ -20866,6 +20868,12 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
                           || effArgs.contains(QStringLiteral("-md"))
                           || effArgs.contains(QStringLiteral("--spec-draft-model"))
                           || hasEmbeddedDraft || hasDspark);
+    const bool adaptiveDraft = !cpuOnly
+        && effArgs.contains(QStringLiteral("--spec-draft-adaptive"));
+    int adaptiveNMin = 0;
+    const int adaptiveNMinIndex = effArgs.indexOf(QStringLiteral("--spec-draft-n-min"));
+    if (adaptiveNMinIndex >= 0 && adaptiveNMinIndex + 1 < effArgs.size())
+        adaptiveNMin = qMax(0, effArgs.at(adaptiveNMinIndex + 1).toInt());
     const bool cpuMoe = !cpuOnly && effArgs.contains(QStringLiteral("--n-cpu-moe"));
     bool canTuneSplitMode = false;
     if (!cpuOnly && m_hardwareSummary.value(QStringLiteral("gpuCount")).toInt() > 1) {
@@ -20885,7 +20893,8 @@ void AppController::startAutoTune(const QString &launchProfileId, int maxTrials,
         }
     }
     QVector<TunableParam> params = buildTuneParams(hasDraft, cpuOnly, cpuMoe,
-                                                    canTuneSplitMode, hasDspark);
+                                                    canTuneSplitMode, hasDspark,
+                                                    adaptiveDraft, adaptiveNMin);
 
     // baseArgs = args efectivos menos host/port y menos los flags que vamos a
     // afinar (con sus aliases), para no duplicarlos.

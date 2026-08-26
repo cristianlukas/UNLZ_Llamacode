@@ -18,6 +18,7 @@ private slots:
     void computeLoss_penalizesSubGate();
     void run_qualityGateAvoidsLowestQuant();
     void tunedArgs_emitsSpecDraftNMax();
+    void speculativeNMaxParam_usesAdaptiveBounds();
     void tunedArgs_emitsSpecConfMin();
     void tunedArgs_emitsCpuMoe();
     void tunedArgs_emitsSplitMode();
@@ -94,6 +95,20 @@ void TunerTests::tunedArgs_emitsSpecDraftNMax()
     const QStringList args = TunerEngine::tunedArgs(params, cfg);
     const int i = args.indexOf("--spec-draft-n-max");
     QVERIFY(i >= 0 && args[i + 1] == "2");
+}
+
+void TunerTests::speculativeNMaxParam_usesAdaptiveBounds()
+{
+    const TunableParam adaptive = TunerEngine::speculativeNMaxParam(true, 3);
+    QCOMPARE(adaptive.spec.name, std::string("spec-draft-n-max"));
+    QCOMPARE(adaptive.spec.optionCount(), 7); // 3..9 inclusive
+    QCOMPARE(adaptive.spec.optionValue(0), std::string("3"));
+    QCOMPARE(adaptive.spec.optionValue(4), std::string("7"));
+    QCOMPARE(adaptive.flag, QStringLiteral("--spec-draft-n-max"));
+
+    const TunableParam fixed = TunerEngine::speculativeNMaxParam(false);
+    QCOMPARE(fixed.spec.optionCount(), 5); // existing non-adaptive range 1..5
+    QCOMPARE(fixed.spec.optionValue(0), std::string("1"));
 }
 
 void TunerTests::tunedArgs_emitsSpecConfMin()

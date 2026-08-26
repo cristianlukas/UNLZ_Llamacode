@@ -96,7 +96,8 @@ void ProfilesTests::modelProfile_jsonRoundTrip()
     ModelProfile m;
     m.id = "m1"; m.name = "qwen"; m.modelId = "cat1";
     m.mmprojId = "mm1"; m.draftModelId = "d1";
-    m.specType = "draft-dspark"; m.specDraftNMax = 3; m.specDraftConfMin = 0.6;
+    m.specType = "draft-dspark"; m.specDraftNMax = 3; m.specDraftNMin = 2;
+    m.specDraftAdaptive = true; m.specDraftConfMin = 0.6;
     m.specDraftNgl = "all";
     m.specDraftTypeK = "q8_0"; m.specDraftTypeV = "q8_0";
     const ModelProfile r = ModelProfile::fromJson(m.toJson());
@@ -106,10 +107,21 @@ void ProfilesTests::modelProfile_jsonRoundTrip()
     QCOMPARE(r.draftModelId, m.draftModelId);
     QCOMPARE(r.specType, m.specType);
     QCOMPARE(r.specDraftNMax, m.specDraftNMax);
+    QCOMPARE(r.specDraftNMin, m.specDraftNMin);
+    QCOMPARE(r.specDraftAdaptive, m.specDraftAdaptive);
     QCOMPARE(r.specDraftConfMin, m.specDraftConfMin);
     QCOMPARE(r.specDraftNgl, m.specDraftNgl);
     QCOMPARE(r.specDraftTypeK, m.specDraftTypeK);
     QCOMPARE(r.specDraftTypeV, m.specDraftTypeV);
+
+    // Perfiles anteriores no tienen los campos nuevos y deben seguir siendo
+    // speculative fijo, sin activar adaptive por defecto.
+    const ModelProfile legacy = ModelProfile::fromJson(QJsonObject{
+        {QStringLiteral("specType"), QStringLiteral("draft-mtp")},
+        {QStringLiteral("specDraftNMax"), 3}
+    });
+    QCOMPARE(legacy.specDraftNMin, 0);
+    QVERIFY(!legacy.specDraftAdaptive);
 }
 
 void ProfilesTests::runtimePreset_jsonRoundTrip()
@@ -303,10 +315,12 @@ void ProfilesTests::manager_addModelProfile()
     QCOMPARE(pm.getModelProfile(id).value("modelId").toString(), QStringLiteral("cat1"));
 
     // setModelSpec persiste la configuración DSpark y getModelProfile la expone.
-    QVERIFY(pm.setModelSpec(id, "draft-dspark", 3, "all", "q8_0", "q8_0", 0.6));
+    QVERIFY(pm.setModelSpec(id, "draft-dspark", 3, "all", "q8_0", "q8_0", 0.6, 2, true));
     const QVariantMap m = pm.getModelProfile(id);
     QCOMPARE(m.value("specType").toString(), QStringLiteral("draft-dspark"));
     QCOMPARE(m.value("specDraftNMax").toInt(), 3);
+    QCOMPARE(m.value("specDraftNMin").toInt(), 2);
+    QVERIFY(m.value("specDraftAdaptive").toBool());
     QCOMPARE(m.value("specDraftConfMin").toDouble(), 0.6);
     QCOMPARE(m.value("specDraftTypeK").toString(), QStringLiteral("q8_0"));
 

@@ -265,12 +265,16 @@ bool ProfileManager::setModelSpec(const QString &id, const QString &specType,
                                   int specDraftNMax, const QString &specDraftNgl,
                                   const QString &specDraftTypeK,
                                   const QString &specDraftTypeV,
-                                  double specDraftConfMin)
+                                  double specDraftConfMin,
+                                  int specDraftNMin,
+                                  bool specDraftAdaptive)
 {
     ModelProfile p = m_models.findById(id);
     if (p.id.isEmpty() || p.system) return false;
     p.specType = specType;
     p.specDraftNMax = specDraftNMax > 0 ? specDraftNMax : 0;
+    p.specDraftNMin = qMax(0, specDraftNMin);
+    p.specDraftAdaptive = specDraftAdaptive;
     p.specDraftConfMin = qBound(0.0, specDraftConfMin, 1.0);
     p.specDraftNgl = specDraftNgl;
     p.specDraftTypeK = specDraftTypeK;
@@ -287,6 +291,8 @@ QVariantMap ProfileManager::getModelProfile(const QString &id) const
     return {{"id", p.id}, {"name", p.name}, {"modelId", p.modelId},
             {"mmprojId", p.mmprojId}, {"draftModelId", p.draftModelId},
             {"specType", p.specType}, {"specDraftNMax", p.specDraftNMax},
+            {"specDraftNMin", p.specDraftNMin},
+            {"specDraftAdaptive", p.specDraftAdaptive},
             {"specDraftConfMin", p.specDraftConfMin},
             {"specDraftNgl", p.specDraftNgl},
             {"specDraftTypeK", p.specDraftTypeK},
@@ -1479,17 +1485,20 @@ void ProfileManager::loadSystemProfiles()
         if (!mmFile.isEmpty())
             mp.mmprojId = detId(modelsDir + "/" + subdir + mmFile);
         // Draft model (speculative decoding, p.ej. DFlash de Gemma): subcarpeta
-        // propia. specType/draftNgl desde el bloque "spec".
+        // propia. Las opciones de speculative también pueden describir un cabezal
+        // MTP autocontenido, por eso se leen aunque no haya draftModel externo.
+        const QJsonObject spec = o.value("spec").toObject();
+        mp.specType = spec.value("type").toString();
+        mp.specDraftNgl = spec.value("draftNgl").toString();
+        mp.specDraftNMax = spec.value("draftNMax").toInt(0);
+        mp.specDraftNMin = qMax(0, spec.value("draftNMin").toInt(0));
+        mp.specDraftAdaptive = spec.value("adaptive").toBool(false);
+        mp.specDraftConfMin = qBound(0.0, spec.value("confMin").toDouble(0.0), 1.0);
         const QJsonObject draft = o.value("draftModel").toObject();
         if (!draft.isEmpty()) {
             const QString dFolder = draft.value("folder").toString();
             const QString dSub = dFolder.isEmpty() ? QString() : (dFolder + "/");
             mp.draftModelId = detId(modelsDir + "/" + dSub + draft.value("file").toString());
-            const QJsonObject spec = o.value("spec").toObject();
-            mp.specType = spec.value("type").toString();
-            mp.specDraftNgl = spec.value("draftNgl").toString();
-            mp.specDraftNMax = spec.value("draftNMax").toInt(0);
-            mp.specDraftConfMin = qBound(0.0, spec.value("confMin").toDouble(0.0), 1.0);
         }
         if (cloudBackend) {
             // External vLLM profiles carry model identity in BackendProfile. Do
@@ -1500,6 +1509,8 @@ void ProfileManager::loadSystemProfiles()
             mp.draftModelId.clear();
             mp.specType.clear();
             mp.specDraftNMax = 0;
+            mp.specDraftNMin = 0;
+            mp.specDraftAdaptive = false;
             mp.specDraftConfMin = 0.0;
             mp.specDraftNgl.clear();
         } else {

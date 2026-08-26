@@ -50,6 +50,11 @@ private slots:
     void builder_rawDsparkDoesNotRequireExternalDraftModel();
     void builder_externalDsparkEmitsDraftAndType();
     void builder_emitsSelfContainedMtpFlags();
+    void builder_emitsAdaptiveSelfContainedMtpFlags();
+    void builder_emitsAdaptiveExternalDraftFlags();
+    void builder_rejectsAdaptiveWithoutCeiling();
+    void builder_rejectsAdaptiveMinAboveMax();
+    void builder_rejectsAdaptiveWithoutBinaryCapability();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_respectsKvCapWithDraft();
     void builder_appliesQwenCodingSamplingPreset();
@@ -113,6 +118,8 @@ void CoreTests::draftCandidate()
     QVERIFY(MtpDetection::isSelfContained("bottlecapai_ThinkingCap-Qwen3_6-27B-Q8_0.gguf"));
     QVERIFY(MtpDetection::isSelfContained(
         "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf"));
+    QVERIFY(MtpDetection::isSelfContained("Qwen3.8-27B-UD-Q4_K_XL.gguf"));
+    QVERIFY(MtpDetection::isSelfContained("Qwen3_8-27B-Q5_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("DeepSeek-V4-Flash-Preview-UD-IQ3_S.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("ThinkingCap-Qwen3.5-27B-Q4_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("Qwen3.6-27B-Q3_K_M.gguf"));
@@ -454,6 +461,102 @@ void CoreTests::builder_emitsSelfContainedMtpFlags()
     const int nmax = ep.effectiveArgs.indexOf("--spec-draft-n-max");
     QVERIFY(nmax >= 0 && ep.effectiveArgs.value(nmax + 1) == "4");
     QVERIFY(!ep.effectiveArgs.contains("--spec-draft-model"));
+}
+
+void CoreTests::builder_emitsAdaptiveSelfContainedMtpFlags()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "Qwen3.8-27B-UD-Q4_K_XL.gguf";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMin = 3;
+    ctx.model.specDraftNMax = 7;
+    ctx.model.specDraftAdaptive = true;
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    const QStringList &args = ep.effectiveArgs;
+    QVERIFY(args.contains(QStringLiteral("--spec-draft-adaptive")));
+    int index = args.indexOf(QStringLiteral("--spec-draft-n-min"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), QStringLiteral("3"));
+    index = args.indexOf(QStringLiteral("--spec-draft-n-max"));
+    QVERIFY(index >= 0);
+    QCOMPARE(args.value(index + 1), QStringLiteral("7"));
+}
+
+void CoreTests::builder_emitsAdaptiveExternalDraftFlags()
+{
+    auto ctx = makeCtx();
+    ctx.model.draftModelId = "d1";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMin = 3;
+    ctx.model.specDraftNMax = 8;
+    ctx.model.specDraftAdaptive = true;
+    ctx.draftModel.id = "d1";
+    ctx.draftModel.isAvailable = true;
+    ctx.draftModel.absolutePath = "C:/models/draft.gguf";
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    QVERIFY(ep.effectiveArgs.contains(QStringLiteral("--spec-draft-model")));
+    QVERIFY(ep.effectiveArgs.contains(QStringLiteral("--spec-draft-adaptive")));
+    const int index = ep.effectiveArgs.indexOf(QStringLiteral("--spec-draft-n-min"));
+    QVERIFY(index >= 0);
+    QCOMPARE(ep.effectiveArgs.value(index + 1), QStringLiteral("3"));
+}
+
+void CoreTests::builder_rejectsAdaptiveWithoutCeiling()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "Qwen3.8-27B-UD-Q4_K_XL.gguf";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMin = 3;
+    ctx.model.specDraftAdaptive = true;
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(!ep.blockingErrors.isEmpty());
+    QVERIFY(ep.blockingErrors.join(QStringLiteral("\n")).contains(
+        QStringLiteral("n-max"), Qt::CaseInsensitive));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--spec-draft-adaptive")));
+}
+
+void CoreTests::builder_rejectsAdaptiveMinAboveMax()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "Qwen3.8-27B-UD-Q4_K_XL.gguf";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMin = 8;
+    ctx.model.specDraftNMax = 7;
+    ctx.model.specDraftAdaptive = true;
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(!ep.blockingErrors.isEmpty());
+    QVERIFY(ep.blockingErrors.join(QStringLiteral("\n")).contains(
+        QStringLiteral("n-min"), Qt::CaseInsensitive));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--spec-draft-adaptive")));
+}
+
+void CoreTests::builder_rejectsAdaptiveWithoutBinaryCapability()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName = "Qwen3.8-27B-UD-Q4_K_XL.gguf";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMin = 3;
+    ctx.model.specDraftNMax = 7;
+    ctx.model.specDraftAdaptive = true;
+    ctx.binary.supportedFlags = {
+        QStringLiteral("--host"), QStringLiteral("--port"),
+        QStringLiteral("--model"), QStringLiteral("--spec-type"),
+        QStringLiteral("--spec-draft-n-max"), QStringLiteral("--spec-draft-n-min")
+    };
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(!ep.blockingErrors.isEmpty());
+    QVERIFY(ep.blockingErrors.join(QStringLiteral("\n")).contains(
+        QStringLiteral("--spec-draft-adaptive"), Qt::CaseInsensitive));
+    QVERIFY(!ep.effectiveArgs.contains(QStringLiteral("--spec-draft-adaptive")));
 }
 
 void CoreTests::builder_dropsGemmaDraftOnOldBinary()

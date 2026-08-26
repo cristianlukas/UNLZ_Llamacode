@@ -14,6 +14,7 @@
 #include <QRegularExpression>
 #include <QTimer>
 #include <QUrl>
+#include <algorithm>
 
 namespace {
 
@@ -57,6 +58,14 @@ QStringList TunerEngine::tunedArgs(const QVector<TunableParam> &params,
         }
     }
     return args;
+}
+
+TunableParam TunerEngine::speculativeNMaxParam(bool adaptive, int minDraftTokens)
+{
+    const long lower = adaptive ? std::max(1, minDraftTokens) : 1;
+    const long upper = adaptive ? std::max(lower, 9L) : 5L;
+    return {tuner::ParamSpec::intRange("spec-draft-n-max", lower, upper, 1),
+            QStringLiteral("--spec-draft-n-max"), false};
 }
 
 bool TunerEngine::canTuneSplitMode(int gpuCount, const QString &backend,

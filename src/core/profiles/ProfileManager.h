@@ -129,7 +129,9 @@ public:
                                   int specDraftNMax, const QString &specDraftNgl,
                                   const QString &specDraftTypeK,
                                   const QString &specDraftTypeV,
-                                  double specDraftConfMin = 0.0);
+                                  double specDraftConfMin = 0.0,
+                                  int specDraftNMin = 0,
+                                  bool specDraftAdaptive = false);
 
     // RuntimePreset
     Q_INVOKABLE QString addRuntimePreset(const QString &name, int ctx, int batch,

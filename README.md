@@ -2074,6 +2074,11 @@ PPL baseline con tolerancia default del 3%.
 - Corre `N` trials en un puerto scratch (lanza/mide/mata el server por candidato, en un `QThread` aparte para no congelar la UI).
 - Mide throughput de `timings.predicted_per_second` (`/completion`) y califica la salida con substrings estilo EvalSuite.
 - Modo **Tune CPU**: fuerza `-ngl 0` y explora `threads`, `batch`, `ubatch` y cache K/V para equipos sin GPU.
+- En perfiles MTP/DFlash con capacidad declarada, **Adaptive speculation** es
+  opt-in: conserva `spec-draft-n-min` y auto-tunea `spec-draft-n-max` entre el
+  mínimo y 9. No se habilita por defecto ni se emite contra un binario que no
+  anuncie `--spec-draft-adaptive`; así una build oficial sin el parche no queda
+  marcada como compatible por accidente.
 - Al terminar **clona** el perfil en uno nuevo `-tuned` con la mejor config en `extraArgs`; el original queda intacto.
 - UI: `ProfilesPage` → **Auto-tune**, **Tune CPU** / **Cancelar tune** + estado en vivo.
 

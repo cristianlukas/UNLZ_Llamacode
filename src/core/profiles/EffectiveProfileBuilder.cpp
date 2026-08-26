@@ -106,6 +106,35 @@ static bool supportsGemma4AssistantDraft(const LlamaBinary &bin)
     return build == 0 || build >= 9763;
 }
 
+void EffectiveProfileBuilder::applyAdaptiveSpeculation(const ModelProfile &mp,
+                                                       const LlamaBinary &bin,
+                                                       QStringList &args,
+                                                       QStringList &warnings,
+                                                       QStringList &errors)
+{
+    if (!mp.specDraftAdaptive)
+        return;
+
+    if (mp.specDraftNMax <= 0) {
+        errors.append(QStringLiteral(
+            "Adaptive speculative decoding requiere spec-draft-n-max mayor que cero."));
+        return;
+    }
+    if (mp.specDraftNMin < 0 || mp.specDraftNMin > mp.specDraftNMax) {
+        errors.append(QStringLiteral(
+            "Adaptive speculative decoding requiere 0 <= spec-draft-n-min <= "
+            "spec-draft-n-max."));
+        return;
+    }
+
+    // La capacidad se valida como obligatoria: activar el modo adaptativo en un
+    // binario que sólo conoce el MTP fijo produce una configuración engañosa.
+    addFlag(bin, "--spec-draft-adaptive", {}, args, warnings, true, &errors);
+    if (mp.specDraftNMin > 0)
+        addFlag(bin, "--spec-draft-n-min", QString::number(mp.specDraftNMin), args,
+                warnings, true, &errors);
+}
+
 static bool isNinfer3090(const LlamaBinary &bin)
 {
     const QString tag = (bin.flavor + QLatin1Char(' ') + bin.name + QLatin1Char(' ')
@@ -397,6 +426,9 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
             warnings.append(QStringLiteral(
                 "NInfer-3090 usa visión/MTP embebidos en el artefacto; se ignoran "
                 "mmproj y draft externos del perfil."));
+        if (mp.specDraftAdaptive)
+            errors.append(QStringLiteral(
+                "NInfer-3090 no admite adaptive speculative decoding administrado por LlamaCode."));
         return;
     }
 
@@ -429,6 +461,7 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
         if (mp.specDraftConfMin > 0.0)
             addFlag(bin, "--spec-draft-conf-min",
                     QString::number(mp.specDraftConfMin, 'f', 3), args, warnings);
+        applyAdaptiveSpeculation(mp, bin, args, warnings, errors);
     } else if (!mp.draftModelId.isEmpty()) {
         if (!draft.isAvailable || draft.absolutePath.isEmpty()) {
             errors.append(QStringLiteral(
@@ -463,7 +496,12 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
                 addFlag(bin, "--spec-draft-type-k", mp.specDraftTypeK, args, warnings);
             if (!mp.specDraftTypeV.isEmpty())
                 addFlag(bin, "--spec-draft-type-v", mp.specDraftTypeV, args, warnings);
+            applyAdaptiveSpeculation(mp, bin, args, warnings, errors);
         }
+    } else if (mp.specDraftAdaptive) {
+        errors.append(QStringLiteral(
+            "Adaptive speculative decoding requiere un modelo MTP/DFlash autocontenido "
+            "o un draft model asociado."));
     }
 }
 

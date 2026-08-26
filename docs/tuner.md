@@ -152,6 +152,15 @@ intacto.
 4. Al terminar aparece el perfil `-tuned` en el dropdown sólo si pasó el gate
    de promoción; de lo contrario se conserva el perfil original.
 
+### Adaptive speculation
+
+Los perfiles MTP/DFlash pueden activar `--spec-draft-adaptive` desde el editor
+de perfiles. `n-min` queda fijo y el tuner busca el techo `n-max` en un rango
+válido (desde `n-min` hasta 9); la capacidad debe aparecer en el `--help` del
+binario. El modo queda desactivado por defecto y un binario sin esa capacidad
+produce un error bloqueante en la vista previa, en lugar de arrancar con una
+configuración fija que no refleja lo pedido.
+
 Parámetros (`startAutoTune(launchProfileId, maxTrials, qualityGate, nPredict)`):
 default `24, 0.6, 256`.
 

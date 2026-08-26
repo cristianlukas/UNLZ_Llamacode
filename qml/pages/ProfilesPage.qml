@@ -371,6 +371,8 @@ Item {
         mtpEnabled = storedSpecType === "draft-mtp" || storedSpecType === "draft-dspark"
         specTypeCurrent = storedSpecType === "draft-dspark" ? "draft-dspark" : "draft-mtp"
         specNMaxField.text = ((mp.specDraftNMax ?? 0) || 0).toString()
+        specNMinField.text = ((mp.specDraftNMin ?? 0) || 0).toString()
+        specAdaptiveCheck.checked = mp.specDraftAdaptive === true
         specDraftConfMinField.text = ((mp.specDraftConfMin ?? 0) || 0) > 0
             ? Number(mp.specDraftConfMin).toFixed(3) : ""
         specTypeCombo.currentIndex = Math.max(0, specTypeCombo.model.indexOf(specTypeCurrent))
@@ -466,6 +468,9 @@ Item {
             "draftModelId": draftEnabled ? effectiveDraftId() : "",
             "specType": mtpEnabled ? specTypeCurrent : "",
             "specDraftNMax": mtpEnabled ? (parseInt(specNMaxField.text) || 0) : 0,
+            "specDraftNMin": mtpEnabled && specAdaptiveCheck.checked
+                ? Math.max(0, parseInt(specNMinField.text) || 0) : 0,
+            "specDraftAdaptive": mtpEnabled && specAdaptiveCheck.checked,
             "specDraftConfMin": mtpEnabled && specTypeCurrent === "draft-dspark"
                 ? Math.max(0, Math.min(1, parseFloat(specDraftConfMinField.text) || 0)) : 0,
             "specDraftNgl": (draftEnabled && mtpEnabled) ? "all" : "",
@@ -539,7 +544,10 @@ Item {
             specOn ? "all" : "",
             specOn ? (specKvType.currentText ?? "") : "",
             specOn ? (specKvType.currentText ?? "") : "",
-            confMin)
+            confMin,
+            specOn && specAdaptiveCheck.checked
+                ? Math.max(0, parseInt(specNMinField.text) || 0) : 0,
+            specOn && specAdaptiveCheck.checked)
 
         // Runtime: update if exists, create if not
         let effectiveRid = runtimeId
@@ -1314,6 +1322,27 @@ Item {
                             placeholderText: "0 = default"
                         }
                         Item { Layout.fillWidth: true; implicitHeight: 1 }
+
+                        Item { implicitWidth: 20 }
+                        CheckBox {
+                            id: specAdaptiveCheck
+                            text: "adaptive"
+                            checked: false
+                            enabled: mtpEnabled
+                            opacity: enabled ? 1.0 : 0.4
+                            padding: 0
+                            onCheckedChanged: recomputePreview()
+                        }
+                        Text { text: "n-min"; color: (mtpEnabled && specAdaptiveCheck.checked) ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
+                        LcTextField {
+                            id: specNMinField
+                            Layout.fillWidth: true
+                            enabled: mtpEnabled && specAdaptiveCheck.checked
+                            opacity: enabled ? 1.0 : 0.4
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            placeholderText: "3 recomendado"
+                            onTextChanged: recomputePreview()
+                        }
 
                         Item { implicitWidth: 20 }
                         Text { text: "conf-min"; color: (mtpEnabled && specTypeCurrent === "draft-dspark") ? Theme.textSecondary : Theme.textMuted; font.pixelSize: 12 }
