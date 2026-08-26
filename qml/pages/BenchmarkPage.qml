@@ -1309,6 +1309,117 @@ Item {
                         }
                     }
 
+                    // Medición reproducible del servidor: separada del score E2E
+                    // porque PP/TG/TTFT y la calidad responden preguntas distintas.
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: serverSpeedColumn.implicitHeight + 20
+                        color: Theme.inputBg
+                        radius: 6
+                        border.color: Theme.divider
+                        ColumnLayout {
+                            id: serverSpeedColumn
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                            spacing: 6
+                            Text {
+                                text: "SERVER SPEED v1"
+                                color: Theme.accent; font.pixelSize: 10; font.bold: true
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: "Corpus fijo por categoría: PP/TG, TTFT, ITL, cold/warm, prefill 2K–64K y concurrencia. Guarda condiciones y hash para comparar máquinas."
+                                color: Theme.textMuted; font.pixelSize: 10; wrapMode: Text.Wrap
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 8
+                                Text { text: "Pasadas"; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true }
+                                SpinBox {
+                                    id: serverSpeedPasses
+                                    from: 1; to: 100; editable: true
+                                    value: Math.min(100, Math.max(1, parseInt(App.readSetting("serverSpeedPasses", "5")) || 5))
+                                    Layout.preferredWidth: 76
+                                    onValueModified: App.writeSetting("serverSpeedPasses", value)
+                                }
+                                Text { text: "Warmup"; color: Theme.textSecondary; font.pixelSize: 11 }
+                                SpinBox {
+                                    id: serverSpeedWarmup
+                                    from: 0; to: 10; editable: true
+                                    value: isNaN(parseInt(App.readSetting("serverSpeedWarmup", "1"))) ? 1
+                                           : Math.min(10, Math.max(0, parseInt(App.readSetting("serverSpeedWarmup", "1"))))
+                                    Layout.preferredWidth: 76
+                                    onValueModified: App.writeSetting("serverSpeedWarmup", value)
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 8
+                                Text { text: "Prefill máx."; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true }
+                                SpinBox {
+                                    id: serverSpeedPrefill
+                                    from: 0; to: 65536; stepSize: 2048; editable: true
+                                    value: isNaN(parseInt(App.readSetting("serverSpeedPrefill", "65536"))) ? 65536
+                                           : Math.min(65536, Math.max(0, parseInt(App.readSetting("serverSpeedPrefill", "65536"))))
+                                    Layout.preferredWidth: 100
+                                    textFromValue: function(v) { return v === 0 ? "off" : v + " tok" }
+                                    valueFromText: function(t) { const n = parseInt(t); return isNaN(n) ? 0 : n }
+                                    onValueModified: App.writeSetting("serverSpeedPrefill", value)
+                                }
+                                CheckBox {
+                                    id: serverSpeedPrefillEnabled
+                                    text: "PP"; checked: App.readSetting("serverSpeedIncludePrefill", "true") !== "false"
+                                    onToggled: App.writeSetting("serverSpeedIncludePrefill", checked ? "true" : "false")
+                                }
+                                CheckBox {
+                                    id: serverSpeedConcurrencyEnabled
+                                    text: "Slots"; checked: App.readSetting("serverSpeedIncludeConcurrency", "true") !== "false"
+                                    onToggled: App.writeSetting("serverSpeedIncludeConcurrency", checked ? "true" : "false")
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; enabled: !App.benchmarkRunning; spacing: 8
+                                Text { text: "Slots / req."; color: Theme.textSecondary; font.pixelSize: 11; Layout.fillWidth: true }
+                                SpinBox {
+                                    id: serverSpeedSlots
+                                    from: 1; to: 16; editable: true
+                                    value: Math.min(16, Math.max(1, parseInt(App.readSetting("serverSpeedSlots", "4")) || 4))
+                                    Layout.preferredWidth: 68
+                                    onValueModified: App.writeSetting("serverSpeedSlots", value)
+                                }
+                                SpinBox {
+                                    id: serverSpeedRequests
+                                    from: 1; to: 32; editable: true
+                                    value: Math.min(32, Math.max(1, parseInt(App.readSetting("serverSpeedRequests", "4")) || 4))
+                                    Layout.preferredWidth: 68
+                                    onValueModified: App.writeSetting("serverSpeedRequests", value)
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; spacing: 6
+                                LcButton {
+                                    Layout.fillWidth: true
+                                    text: "Medir servidor"
+                                    secondary: true
+                                    enabled: !App.benchmarkRunning && root.selectedIds.length > 0
+                                    onClicked: App.startServerSpeedBenchmark(root.selectedIds,
+                                        serverSpeedPasses.value, serverSpeedWarmup.value,
+                                        serverSpeedPrefillEnabled.checked,
+                                        serverSpeedConcurrencyEnabled.checked,
+                                        serverSpeedPrefill.value, serverSpeedSlots.value,
+                                        serverSpeedRequests.value)
+                                }
+                                LcButton {
+                                    Layout.fillWidth: true
+                                    text: "A/B + A/A"
+                                    secondary: true
+                                    enabled: !App.benchmarkRunning && root.selectedIds.length === 2
+                                    ToolTip.visible: hovered
+                                    ToolTip.text: "Compara los dos perfiles seleccionados con orden AB/BA y control A/A"
+                                    onClicked: App.startServerSpeedABBenchmark(root.selectedIds[0], root.selectedIds[1],
+                                        Math.max(2, serverSpeedPasses.value * 2), serverSpeedWarmup.value)
+                                }
+                            }
+                        }
+                    }
+
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8
@@ -1814,7 +1925,9 @@ Item {
                                 spacing: 0
 
                                 Text {
-                                    text: modelData.profileName ?? ""
+                                    text: (modelData.comparisonProfileName ?? "") !== ""
+                                          ? (modelData.profileName ?? "") + " vs " + modelData.comparisonProfileName
+                                          : (modelData.profileName ?? "")
                                     color: Theme.textPrimary; font.pixelSize: 12
                                     elide: Text.ElideRight
                                     Layout.preferredWidth: root.colWidth("profile")
@@ -2051,6 +2164,43 @@ Item {
                                                 failureDialog.open()
                                             }
                                         }
+                                    }
+                                }
+
+                                Column {
+                                    visible: (modelData.mode ?? "").toString().indexOf("server-speed") === 0
+                                    width: taskList.width
+                                    spacing: 2
+                                    Text {
+                                        text: {
+                                            const ab = (modelData.mode ?? "") === "server-speed-ab"
+                                            if (ab) {
+                                                const s = modelData.pairedSummary || {}
+                                                const n = modelData.nullTestSummary || {}
+                                                return "A/B TG: " + Number(s.deltaPctMedian || 0).toFixed(1) + "% mediana · "
+                                                       + (s.winner || "sin datos") + " · A/A: "
+                                                       + (modelData.nullTestPassed === false ? "inestable" : "OK")
+                                            }
+                                            const s = modelData.serverSpeedSummary || {}
+                                            return "TG p50 " + (Number(s.decodeTpsP50 || 0) > 0 ? Number(s.decodeTpsP50).toFixed(1) : "—")
+                                                   + " t/s · PP p50 " + (Number(s.promptTpsP50 || 0) > 0 ? Number(s.promptTpsP50).toFixed(1) : "—")
+                                                   + " t/s · TTFT p50 " + (Number(s.ttftMsP50 || 0) > 0 ? Math.round(Number(s.ttftMsP50)) : "—") + " ms"
+                                        }
+                                        color: Theme.accent; font.pixelSize: 11; font.bold: true
+                                    }
+                                    Text {
+                                        visible: (modelData.mode ?? "") !== "server-speed-ab"
+                                        text: {
+                                            const cold = modelData.coldSummary || {}
+                                            const warm = modelData.warmSummary || {}
+                                            const pre = modelData.prefillSummary || {}
+                                            const slots = (modelData.concurrencySweep || []).length
+                                            return "Cold/Warm TG: " + Number(cold.decodeTpsMean || 0).toFixed(1) + "/"
+                                                   + Number(warm.decodeTpsMean || 0).toFixed(1) + " t/s · prefill: "
+                                                   + (Number(pre.promptTpsMean || 0) > 0 ? Number(pre.promptTpsMean).toFixed(1) : "—")
+                                                   + " t/s · puntos slots: " + slots
+                                        }
+                                        color: Theme.textMuted; font.pixelSize: 10
                                     }
                                 }
 

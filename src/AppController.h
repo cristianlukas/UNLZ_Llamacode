@@ -1104,6 +1104,21 @@ public:
                                                int requests = 4, int maxTokens = 128,
                                                const QString &prompt = QStringLiteral(
                                                    "Respondé con una lista numerada de 5 puntos sobre buenas prácticas de programación."));
+    // Benchmark nativo del servidor, separado del score E2E del agente. Mide
+    // corpus versionado por categoría, PP/TG/TTFT/ITL, distribuciones,
+    // cold/warm, sweep de prefill y curva de concurrencia. El límite de ocho
+    // argumentos mantiene compatibilidad con ControlApi.
+    Q_INVOKABLE void startServerSpeedBenchmark(const QStringList &profileIds,
+                                               int passes = 5, int warmup = 1,
+                                               bool includePrefill = true,
+                                               bool includeConcurrency = true,
+                                               int maxPrefillTokens = 65536,
+                                               int maxSlots = 4, int requests = 4);
+    // A/B pareado para dos perfiles. Cada par usa el mismo prompt y alterna el
+    // orden A/B; al final guarda el intervalo de confianza y un test A/A.
+    Q_INVOKABLE void startServerSpeedABBenchmark(const QString &profileAId,
+                                                 const QString &profileBId,
+                                                 int pairs = 10, int warmup = 1);
     // Auto-tuning de parámetros de inferencia (AutoTuner TPE-lite + gate de
     // calidad). Lanza llama-server por candidato en un puerto scratch, mide
     // tok/s y calidad, y al terminar fusiona la mejor config en extraArgs del
@@ -2139,7 +2154,8 @@ private:
     void benchmarkRequest(const QString &url, const QString &prompt,
                           int maxTokens, bool streaming,
                           std::function<void(QVariantMap)> onDone,
-                          const QString &resultType = QString());
+                          const QString &resultType = QString(),
+                          bool cachePrompt = false, int seed = -1);
     struct BenchmarkResources {
         double ramMb = 0.0;
         double ramTotalMb = 0.0;
@@ -2157,6 +2173,9 @@ private:
     void benchmarkMeasureResources(std::function<void(BenchmarkResources)> onDone);
     void decorateBenchmarkResourceMetrics(QVariantMap *result,
                                           const BenchmarkResources &resources) const;
+    QVariantMap serverBenchmarkCorpus(QString *contentHash = nullptr) const;
+    static QString serverBenchmarkPadPrompt(const QString &prompt, int targetTokens);
+    static QString serverBenchmarkNonce(int sequence);
     QString modelDownloadDir() const;
     void rebuildModelRecommendations();
     // kind: "cpu" | "beellama" (ngram-mod / Qwen NextN MTP) | "official"/""

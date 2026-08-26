@@ -2023,6 +2023,13 @@ los siguientes guardan su referencia y deltas de tiempo y calidad.
 - Las importaciones de packs públicos muestran la cantidad y las tareas incluidas;
   copias exactas importadas varias veces se agrupan en la lista sin borrar sus archivos.
 - Exportar a CSV desde la UI.
+Además, Benchmark ofrece **Server Speed v1**, una medición nativa separada de
+la calidad E2E: corpus versionado por categoría, PP/TG, TTFT, ITL y sus
+distribuciones, fases cold/warm, barrido de prefill 2K–64K, concurrencia y
+comparación A/B intercalada con control A/A. Cada corrida guarda sus condiciones
+(hash del corpus, seed, perfil efectivo, hardware y parámetros) junto con
+`metadata.json` y `comparison.json`. Ver
+[`docs/server-speed-benchmark.md`](docs/server-speed-benchmark.md).
 
 ### Tabla de ejemplo
 

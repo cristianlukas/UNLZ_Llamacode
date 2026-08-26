@@ -64,6 +64,7 @@
 #include "core/agent/McpClient.h"
 #include "core/eval/EvalSuite.h"
 #include "core/eval/BenchmarkPack.h"
+#include "core/ServerBenchmarkMetrics.h"
 #include "core/tasks/WorkflowVisualModel.h"
 #include "core/tasks/SchedulerDaemonRegistration.h"
 #include "core/tasks/TaskSecurityPolicy.h"
@@ -110,6 +111,7 @@
 #include <QVersionNumber>
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace {
 
@@ -16176,6 +16178,1021 @@ QVariantMap AppController::concurrencyBenchmarkSettingsForTest(int minSlots, int
         {QStringLiteral("maxTokens"), qBound(1, maxTokens, 4096)}};
 }
 
+QVariantMap AppController::serverBenchmarkCorpus(QString *contentHash) const
+{
+    QFile file(QStringLiteral(":/assets/benchmarks/server_speed_v1.json"));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return {};
+    const QByteArray bytes = file.readAll();
+    if (contentHash) {
+        *contentHash = QString::fromLatin1(
+            QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex());
+    }
+    QJsonParseError error;
+    const QJsonDocument document = QJsonDocument::fromJson(bytes, &error);
+    return error.error == QJsonParseError::NoError && document.isObject()
+        ? document.object().toVariantMap() : QVariantMap{};
+}
+
+QString AppController::serverBenchmarkPadPrompt(const QString &prompt, int targetTokens)
+{
+    if (targetTokens <= 0) return prompt;
+    const int targetChars = qMin(targetTokens, 262144) * 4;
+    if (prompt.size() >= targetChars) return prompt;
+
+    static const QStringList fillerWords = {
+        QStringLiteral("system"), QStringLiteral("module"), QStringLiteral("returns"),
+        QStringLiteral("value"), QStringLiteral("context"), QStringLiteral("buffer"),
+        QStringLiteral("request"), QStringLiteral("handler"), QStringLiteral("record"),
+        QStringLiteral("session"), QStringLiteral("client"), QStringLiteral("thread")};
+    QString filler;
+    filler.reserve(targetChars);
+    int i = 0;
+    while (filler.size() < targetChars - prompt.size()) {
+        filler += fillerWords.at(i % fillerWords.size());
+        filler += (i % fillerWords.size() == fillerWords.size() - 1)
+            ? QLatin1Char('\n') : QLatin1Char(' ');
+        ++i;
+    }
+    return filler + QLatin1Char('\n') + prompt;
+}
+
+QString AppController::serverBenchmarkNonce(int sequence)
+{
+    return QStringLiteral("[LlamaCode server-speed-v1 nonce %1]").arg(sequence, 6, 10, QLatin1Char('0'));
+}
+
+void AppController::startServerSpeedBenchmark(const QStringList &profileIds, int passes,
+                                              int warmup, bool includePrefill,
+                                              bool includeConcurrency, int maxPrefillTokens,
+                                              int maxSlots, int requests)
+{
+    if (m_benchmarkRunning || profileIds.isEmpty()) return;
+    if (m_catalog.count() == 0) m_catalog.reload();
+
+    QString corpusHash;
+    const QVariantMap corpus = serverBenchmarkCorpus(&corpusHash);
+    const QVariantList items = corpus.value(QStringLiteral("items")).toList();
+    if (items.isEmpty()) {
+        const QString message = QStringLiteral("No se pudo cargar el corpus server-speed-v1.");
+        m_benchmarkStatus = message;
+        emit benchmarkStatusChanged();
+        emit serverError(message);
+        return;
+    }
+
+    QStringList ids;
+    for (const QString &rawId : profileIds) {
+        const QString id = rawId.trimmed();
+        if (id.isEmpty() || ids.contains(id)) continue;
+        if (!m_profiles.getLaunchProfile(id).isEmpty()) ids.append(id);
+    }
+    if (ids.isEmpty()) return;
+
+    passes = qBound(1, passes, 100);
+    warmup = qBound(0, warmup, 10);
+    maxPrefillTokens = qBound(0, maxPrefillTokens, 65536);
+    maxSlots = qBound(1, maxSlots, 16);
+    requests = qBound(1, requests, 32);
+
+    QVariantList prefillDepths;
+    const QVariantMap prefill = corpus.value(QStringLiteral("prefill")).toMap();
+    for (const QVariant &value : prefill.value(QStringLiteral("depths")).toList()) {
+        const int depth = value.toInt();
+        if (depth <= 0 || (maxPrefillTokens > 0 && depth > maxPrefillTokens)) continue;
+        if (!prefillDepths.contains(depth)) prefillDepths.append(depth);
+    }
+
+    const int mainUnits = passes * items.size() * 2;
+    const int prefillUnits = includePrefill ? prefillDepths.size() : 0;
+    const int concurrencyUnits = includeConcurrency
+        ? requests * maxSlots * (maxSlots + 1) / 2 : 0;
+    const int unitsPerProfile = mainUnits + prefillUnits + concurrencyUnits;
+    const int totalUnits = qMax(1, ids.size() * unitsPerProfile);
+    const int seed = 424242;
+
+    m_benchmarkRunning = true;
+    m_benchmarkCanceled = false;
+    m_benchmarkProgress = 0;
+    m_benchmarkStatus = QStringLiteral("Preparando Server Speed Benchmark v1...");
+    m_benchmarkReplies.clear();
+    m_proBenchmarkQueue.clear();
+    emit benchmarkRunningChanged();
+    emit benchmarkProgressChanged();
+    emit benchmarkStatusChanged();
+
+    const QString stamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
+    const QString runDir = benchmarkRunsDir() + QStringLiteral("/server_speed_") + stamp;
+    QDir().mkpath(runDir);
+
+    QJsonObject metadata;
+    metadata[QStringLiteral("schemaVersion")] = 1;
+    metadata[QStringLiteral("benchmarkType")] = QStringLiteral("server-speed");
+    metadata[QStringLiteral("benchmarkName")] = corpus.value(QStringLiteral("name")).toString();
+    metadata[QStringLiteral("corpusId")] = corpus.value(QStringLiteral("id")).toString();
+    metadata[QStringLiteral("corpusVersion")] = QStringLiteral("v1");
+    metadata[QStringLiteral("corpusHash")] = corpusHash;
+    metadata[QStringLiteral("generatedAt")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+    metadata[QStringLiteral("startedAtMs")] = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
+    metadata[QStringLiteral("passes")] = passes;
+    metadata[QStringLiteral("warmup")] = warmup;
+    metadata[QStringLiteral("includePrefill")] = includePrefill;
+    metadata[QStringLiteral("includeConcurrency")] = includeConcurrency;
+    metadata[QStringLiteral("maxPrefillTokens")] = maxPrefillTokens;
+    metadata[QStringLiteral("maxSlots")] = maxSlots;
+    metadata[QStringLiteral("requestsPerConcurrencyPoint")] = requests;
+    metadata[QStringLiteral("sampling")] = QJsonObject{
+        {QStringLiteral("temperature"), 0.0}, {QStringLiteral("top_p"), 1.0},
+        {QStringLiteral("seed"), seed}, {QStringLiteral("cachePolicy"), QStringLiteral("cold nonce + warm stable")}};
+    metadata[QStringLiteral("hardware")] = QJsonObject::fromVariantMap(m_hardwareSummary);
+    QJsonArray profileArray;
+    for (const QString &id : ids) {
+        const QVariantMap profile = m_profiles.getLaunchProfile(id);
+        const LaunchProfile launch = m_profiles.resolveLaunch(id);
+        const EffectiveProfile effective = EffectiveProfileBuilder::build(buildContext(id));
+        QJsonObject profileObject{
+            {QStringLiteral("profileId"), id},
+            {QStringLiteral("profileName"), profile.value(QStringLiteral("name")).toString()},
+            {QStringLiteral("profileConfigFingerprint"), benchmarkProfileConfigFingerprint(id)},
+            {QStringLiteral("backendProfileId"), launch.backendProfileId},
+            {QStringLiteral("modelProfileId"), launch.modelProfileId},
+            {QStringLiteral("runtimePresetId"), launch.runtimePresetId},
+            {QStringLiteral("powerLimitW"), launch.powerLimitW},
+            {QStringLiteral("binaryPath"), effective.binaryPath},
+            {QStringLiteral("effectiveArgs"), QJsonArray::fromStringList(effective.effectiveArgs)},
+            {QStringLiteral("blockingErrors"), QJsonArray::fromStringList(effective.blockingErrors)}};
+        profileArray.append(profileObject);
+    }
+    metadata[QStringLiteral("profiles")] = profileArray;
+    metadata[QStringLiteral("items")] = QJsonArray::fromVariantList(items);
+    QFile metadataFile(QDir(runDir).filePath(QStringLiteral("metadata.json")));
+    if (metadataFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        metadataFile.write(QJsonDocument(metadata).toJson(QJsonDocument::Indented));
+
+    auto completed = std::make_shared<int>(0);
+    auto campaignRows = std::make_shared<QVariantList>();
+    auto updateProgress = [this, completed, totalUnits]() {
+        m_benchmarkProgress = qMin(99, (*completed * 100) / totalUnits);
+        emit benchmarkProgressChanged();
+    };
+    auto finishCampaign = std::make_shared<std::function<void()>>();
+    *finishCampaign = [=]() {
+        auto finish = [=]() {
+            QVariantMap report;
+            report[QStringLiteral("benchmarkType")] = QStringLiteral("server-speed");
+            report[QStringLiteral("corpusVersion")] = QStringLiteral("v1");
+            report[QStringLiteral("corpusHash")] = corpusHash;
+            report[QStringLiteral("generatedAt")] = QDateTime::currentDateTime().toString(Qt::ISODate);
+            report[QStringLiteral("results")] = *campaignRows;
+            QFile comparisonFile(QDir(runDir).filePath(QStringLiteral("comparison.json")));
+            if (comparisonFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                comparisonFile.write(QJsonDocument(QJsonObject::fromVariantMap(report))
+                                         .toJson(QJsonDocument::Indented));
+
+            m_benchmarkRunning = false;
+            m_benchmarkMemoryAttempt = -1;
+            m_benchmarkEffectiveArgs.clear();
+            m_benchmarkProgress = 100;
+            m_benchmarkStatus = m_benchmarkCanceled
+                ? QStringLiteral("Server Speed Benchmark cancelado.")
+                : QStringLiteral("Server Speed Benchmark completado.");
+            emit benchmarkRunningChanged();
+            emit benchmarkProgressChanged();
+            emit benchmarkStatusChanged();
+        };
+        if (serverRunning()) {
+            stopServer();
+            benchmarkEnsureServerStopped(45000, finish);
+        } else {
+            finish();
+        }
+    };
+
+    auto processProfile = std::make_shared<std::function<void(int)>>();
+    *processProfile = [=](int profileIndex) {
+        if (m_benchmarkCanceled || profileIndex >= ids.size()) {
+            (*finishCampaign)();
+            return;
+        }
+
+        const QString profileId = ids.at(profileIndex);
+        const QVariantMap profile = m_profiles.getLaunchProfile(profileId);
+        const QString profileName = profile.value(QStringLiteral("name")).toString().isEmpty()
+            ? profileId : profile.value(QStringLiteral("name")).toString();
+        m_benchmarkMemoryAttempt = 0;
+        m_benchmarkEffectiveArgs.clear();
+
+        auto samples = std::make_shared<QVariantList>();
+        auto prefillSamples = std::make_shared<QVariantList>();
+        auto concurrencyPoints = std::make_shared<QVariantList>();
+        auto concurrencyRowsBySlot = std::make_shared<QHash<int, QVariantList>>();
+        auto concurrencyStartBySlot = std::make_shared<QHash<int, qint64>>();
+        auto profileStartedMs = std::make_shared<qint64>(QDateTime::currentMSecsSinceEpoch());
+        auto finalizing = std::make_shared<bool>(false);
+
+        auto makeSample = [=](const QVariantMap &response, const QString &itemId,
+                              const QString &category, const QString &phase,
+                              int pass, int requestedPromptTokens, int sequence,
+                              const QString &exactPrompt, bool cachePrompt) {
+            QVariantMap row = response;
+            row[QStringLiteral("sampleId")] = QStringLiteral("%1-%2-%3-%4")
+                .arg(profileId, itemId, phase).arg(pass);
+            row[QStringLiteral("profileId")] = profileId;
+            row[QStringLiteral("category")] = category;
+            row[QStringLiteral("promptId")] = itemId;
+            row[QStringLiteral("measurementPhase")] = phase;
+            row[QStringLiteral("pass")] = pass;
+            row[QStringLiteral("requestedPromptTokens")] = requestedPromptTokens;
+            row[QStringLiteral("nonce")] = serverBenchmarkNonce(sequence);
+            row[QStringLiteral("promptHash")] = QString::fromLatin1(
+                QCryptographicHash::hash(exactPrompt.toUtf8(), QCryptographicHash::Sha256).toHex());
+            row[QStringLiteral("seed")] = seed;
+            row[QStringLiteral("cachePrompt")] = cachePrompt;
+            row[QStringLiteral("promptTokens")] = response.value(QStringLiteral("prompt_tokens"));
+            row[QStringLiteral("completionTokens")] = response.value(QStringLiteral("tokens"));
+            row[QStringLiteral("ttftMs")] = response.value(QStringLiteral("ttft_ms"));
+            row[QStringLiteral("decodeTps")] = response.value(QStringLiteral("decodeTps"),
+                                                                  response.value(QStringLiteral("tps")));
+            row[QStringLiteral("promptTps")] = response.value(QStringLiteral("prompt_tps"));
+            row[QStringLiteral("elapsedMs")] = response.value(QStringLiteral("elapsed_ms"));
+            row[QStringLiteral("generationMs")] = response.value(QStringLiteral("generation_ms"));
+            row[QStringLiteral("itlMs")] = response.value(QStringLiteral("itl_ms"));
+            row[QStringLiteral("timingSource")] = response.value(QStringLiteral("timingSource"),
+                                                                    QStringLiteral("client-sse"));
+            return row;
+        };
+
+        auto finishProfile = std::make_shared<std::function<void()>>();
+        *finishProfile = [=]() {
+            if (*finalizing) return;
+            *finalizing = true;
+            if (m_benchmarkCanceled) {
+                auto next = [=]() { (*processProfile)(profileIndex + 1); };
+                if (serverRunning()) {
+                    stopServer();
+                    benchmarkEnsureServerStopped(45000, next);
+                } else {
+                    next();
+                }
+                return;
+            }
+
+            benchmarkMeasureResources([=](BenchmarkResources resources) {
+                QVariantList cold, warm;
+                for (const QVariant &value : std::as_const(*samples)) {
+                    const QVariantMap row = value.toMap();
+                    if (row.value(QStringLiteral("measurementPhase")).toString() == QLatin1String("cold"))
+                        cold.append(row);
+                    else if (row.value(QStringLiteral("measurementPhase")).toString() == QLatin1String("warm"))
+                        warm.append(row);
+                }
+                const QVariantMap summary = ServerBenchmarkMetrics::summarizeSamples(*samples);
+                const QVariantMap coldSummary = ServerBenchmarkMetrics::summarizeSamples(cold);
+                const QVariantMap warmSummary = ServerBenchmarkMetrics::summarizeSamples(warm);
+                const QVariantMap prefillSummary = ServerBenchmarkMetrics::summarizeSamples(*prefillSamples);
+                QMap<QString, QVariantList> samplesByCategory;
+                for (const QVariant &value : std::as_const(*samples)) {
+                    const QVariantMap row = value.toMap();
+                    samplesByCategory[row.value(QStringLiteral("category")).toString()].append(row);
+                }
+                QVariantMap categorySummaries;
+                for (auto it = samplesByCategory.cbegin(); it != samplesByCategory.cend(); ++it)
+                    categorySummaries[it.key()] = ServerBenchmarkMetrics::summarizeSamples(it.value());
+                const double elapsed =
+                    (QDateTime::currentMSecsSinceEpoch() - *profileStartedMs) / 1000.0;
+
+                QVariantMap result;
+                result[QStringLiteral("id")] = QUuid::createUuid().toString(QUuid::WithoutBraces);
+                result[QStringLiteral("profileId")] = profileId;
+                result[QStringLiteral("profileName")] = profileName;
+                result[QStringLiteral("profileConfigFingerprint")] = benchmarkProfileConfigFingerprint(profileId);
+                result[QStringLiteral("benchmarkName")] = corpus.value(QStringLiteral("name"));
+                result[QStringLiteral("runLabel")] = QStringLiteral("Server Speed v1 · %1").arg(profileName);
+                result[QStringLiteral("runDir")] = runDir;
+                result[QStringLiteral("mode")] = QStringLiteral("server-speed");
+                result[QStringLiteral("target")] = QStringLiteral("server");
+                result[QStringLiteral("conditions")] = metadata.toVariantMap();
+                result[QStringLiteral("measurementType")] = QStringLiteral("inference-server");
+                result[QStringLiteral("corpusId")] = corpus.value(QStringLiteral("id"));
+                result[QStringLiteral("corpusVersion")] = QStringLiteral("v1");
+                result[QStringLiteral("corpusHash")] = corpusHash;
+                result[QStringLiteral("passes")] = passes;
+                result[QStringLiteral("passesTotal")] = passes;
+                result[QStringLiteral("warmup")] = warmup;
+                result[QStringLiteral("seed")] = seed;
+                result[QStringLiteral("temperature")] = 0.0;
+                result[QStringLiteral("topP")] = 1.0;
+                result[QStringLiteral("includePrefill")] = includePrefill;
+                result[QStringLiteral("includeConcurrency")] = includeConcurrency;
+                result[QStringLiteral("maxPrefillTokens")] = maxPrefillTokens;
+                result[QStringLiteral("maxSlots")] = maxSlots;
+                result[QStringLiteral("requestsPerConcurrencyPoint")] = requests;
+                result[QStringLiteral("serverSpeedSummary")] = summary;
+                result[QStringLiteral("categorySummaries")] = categorySummaries;
+                result[QStringLiteral("coldSummary")] = coldSummary;
+                result[QStringLiteral("warmSummary")] = warmSummary;
+                result[QStringLiteral("prefillSummary")] = prefillSummary;
+                result[QStringLiteral("samples")] = *samples;
+                result[QStringLiteral("prefillSweep")] = *prefillSamples;
+                result[QStringLiteral("concurrencySweep")] = *concurrencyPoints;
+                result[QStringLiteral("avgTps")] = summary.value(QStringLiteral("decodeTpsMean"));
+                result[QStringLiteral("avgTtftMs")] = summary.value(QStringLiteral("ttftMsMean"));
+                result[QStringLiteral("promptTps")] = summary.value(QStringLiteral("promptTpsMean"));
+                result[QStringLiteral("ppTps")] = summary.value(QStringLiteral("promptTpsMean"));
+                result[QStringLiteral("tgTps")] = summary.value(QStringLiteral("decodeTpsMean"));
+                result[QStringLiteral("decodeTpsP50")] = summary.value(QStringLiteral("decodeTpsP50"));
+                result[QStringLiteral("decodeTpsP95")] = summary.value(QStringLiteral("decodeTpsP95"));
+                result[QStringLiteral("ttftP50Ms")] = summary.value(QStringLiteral("ttftMsP50"));
+                result[QStringLiteral("ttftP95Ms")] = summary.value(QStringLiteral("ttftMsP95"));
+                result[QStringLiteral("itlP50Ms")] = summary.value(QStringLiteral("itlMsP50"));
+                result[QStringLiteral("itlP99Ms")] = summary.value(QStringLiteral("itlMsP99"));
+                result[QStringLiteral("itlTpsP01")] = summary.value(QStringLiteral("itlMsRateP01"));
+                result[QStringLiteral("itlTpsP50")] = summary.value(QStringLiteral("itlMsRateP50"));
+                result[QStringLiteral("itlTpsP99")] = summary.value(QStringLiteral("itlMsRateP99"));
+                result[QStringLiteral("qualityScore")] = 0;
+                result[QStringLiteral("qualityTotal")] = 0;
+                result[QStringLiteral("finalScore")] = 0;
+                result[QStringLiteral("finalTotal")] = 0;
+                result[QStringLiteral("firstAttemptScore")] = 0;
+                result[QStringLiteral("firstAttemptTotal")] = 0;
+                result[QStringLiteral("repairAttempts")] = 0;
+                result[QStringLiteral("elapsedSec")] = elapsed;
+                result[QStringLiteral("totalTime")] = elapsed;
+                result[QStringLiteral("generationSec")] = 0.0;
+                result[QStringLiteral("nonGenerationSec")] = elapsed;
+                result[QStringLiteral("timeToFirstAttempt")] = summary.value(QStringLiteral("ttftMsMean")).toDouble() / 1000.0;
+                result[QStringLiteral("ramMb")] = resources.ramMb;
+                result[QStringLiteral("vramMb")] = resources.vramMb;
+                result[QStringLiteral("vramGpu0Mb")] = resources.vramGpu0Mb;
+                result[QStringLiteral("vramGpu1Mb")] = resources.vramGpu1Mb;
+                result[QStringLiteral("failed")] = summary.value(QStringLiteral("validSamples")).toInt() <= 0;
+                result[QStringLiteral("failureKind")] = result.value(QStringLiteral("failed")).toBool()
+                    ? QStringLiteral("infrastructure") : QStringLiteral("none");
+                result[QStringLiteral("measurementStatus")] = summary.value(QStringLiteral("failedSamples")).toInt() > 0
+                    ? QStringLiteral("partial") : QStringLiteral("measured");
+                result[QStringLiteral("measurementPhase")] = QStringLiteral("mixed");
+                result[QStringLiteral("timedOut")] = false;
+                decorateBenchmarkResourceMetrics(&result, resources);
+                decorateBenchmarkMemory(&result);
+                decorateBenchmarkBaseline(&result);
+                m_benchmarkResults.append(result);
+                emit benchmarkResultsChanged();
+                saveBenchmarkResult(result);
+                campaignRows->append(result);
+                QString fileName = profileName;
+                fileName.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_-]+")), QStringLiteral("_"));
+                QFile report(QDir(runDir).filePath(fileName.left(60) + QStringLiteral("_speed.json")));
+                if (report.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    report.write(QJsonDocument(QJsonObject::fromVariantMap(result))
+                                     .toJson(QJsonDocument::Indented));
+
+                auto next = [=]() { (*processProfile)(profileIndex + 1); };
+                if (serverRunning()) {
+                    stopServer();
+                    benchmarkEnsureServerStopped(45000, next);
+                } else {
+                    next();
+                }
+            });
+        };
+
+        auto failProfile = [=](const QString &stage, const QString &message,
+                               const QString &detail) {
+            if (*finalizing) return;
+            *finalizing = true;
+            saveBenchmarkFailureResult(profileId, profileName, 1, 1,
+                                       QStringLiteral("server-speed"),
+                                       QStringLiteral("server"),
+                                       corpus.value(QStringLiteral("name")).toString(),
+                                       QStringLiteral("Server Speed v1 · %1").arg(profileName),
+                                       runDir, stage, message, detail,
+                                       (QDateTime::currentMSecsSinceEpoch() - *profileStartedMs) / 1000.0);
+            *completed += unitsPerProfile;
+            updateProgress();
+            auto next = [=]() { (*processProfile)(profileIndex + 1); };
+            if (serverRunning()) {
+                stopServer();
+                benchmarkEnsureServerStopped(45000, next);
+            } else {
+                next();
+            }
+        };
+
+        auto measureConcurrency = std::make_shared<std::function<void(int,int)>>();
+        auto measurePrefill = std::make_shared<std::function<void(int)>>();
+        auto measureMain = std::make_shared<std::function<void(int,int,int)>>();
+
+        *measureConcurrency = [=](int concurrency, int batch) {
+            if (m_benchmarkCanceled) { (*finishProfile)(); return; }
+            if (!includeConcurrency || concurrency > maxSlots) { (*finishProfile)(); return; }
+
+            auto waveRemaining = std::make_shared<int>(concurrency);
+            if (batch == 0) {
+                (*concurrencyRowsBySlot)[concurrency] = {};
+                (*concurrencyStartBySlot)[concurrency] = QDateTime::currentMSecsSinceEpoch();
+            }
+            const QString basePrompt = items.first().toMap().value(QStringLiteral("prompt")).toString();
+            const QString category = items.first().toMap().value(QStringLiteral("category")).toString();
+            for (int requestIndex = 0; requestIndex < concurrency; ++requestIndex) {
+                const int sequence = 100000 + concurrency * requests + batch * 32 + requestIndex;
+                const QString exactPrompt = serverBenchmarkNonce(sequence) + QLatin1Char('\n') + basePrompt;
+                benchmarkRequest(serverBaseUrl(), exactPrompt,
+                                 qBound(1, items.first().toMap().value(QStringLiteral("maxTokens")).toInt(), 4096), true,
+                    [=](QVariantMap response) {
+                        QVariantMap row = makeSample(response, QStringLiteral("concurrency"), category,
+                                                     QStringLiteral("concurrency"), batch + 1, 0,
+                                                     sequence, exactPrompt, false);
+                        row[QStringLiteral("concurrency")] = concurrency;
+                        row[QStringLiteral("batch")] = batch + 1;
+                        row[QStringLiteral("requestIndex")] = requestIndex;
+                        (*concurrencyRowsBySlot)[concurrency].append(row);
+                        ++(*completed);
+                        updateProgress();
+                        if (--(*waveRemaining) != 0) return;
+
+                        if (batch + 1 < requests)
+                            (*measureConcurrency)(concurrency, batch + 1);
+                        else {
+                            const QVariantList allRows = concurrencyRowsBySlot->value(concurrency);
+                            const QVariantMap pointSummary = ServerBenchmarkMetrics::summarizeSamples(allRows);
+                            QVariantMap point;
+                            point[QStringLiteral("concurrency")] = concurrency;
+                            point[QStringLiteral("requests")] = requests;
+                            point[QStringLiteral("samples")] = allRows;
+                            point[QStringLiteral("summary")] = pointSummary;
+                            double tokens = 0.0;
+                            for (const QVariant &v : allRows)
+                                tokens += v.toMap().value(QStringLiteral("completionTokens")).toDouble();
+                            const qint64 durationMs = QDateTime::currentMSecsSinceEpoch()
+                                - concurrencyStartBySlot->value(concurrency);
+                            point[QStringLiteral("aggregateTps")] = durationMs > 0
+                                ? tokens * 1000.0 / durationMs : 0.0;
+                            concurrencyPoints->append(point);
+                            (*measureConcurrency)(concurrency + 1, 0);
+                        }
+                    }, QStringLiteral("server-speed-concurrency"), false, seed);
+            }
+        };
+
+        *measurePrefill = [=](int index) {
+            if (m_benchmarkCanceled) { (*finishProfile)(); return; }
+            if (!includePrefill || index >= prefillDepths.size()) {
+                (*measureConcurrency)(1, 0);
+                return;
+            }
+            const int depth = prefillDepths.at(index).toInt();
+            const QString basePrompt = prefill.value(QStringLiteral("prompt")).toString();
+            const QString exactPrompt = serverBenchmarkNonce(200000 + index) + QLatin1Char('\n')
+                + serverBenchmarkPadPrompt(basePrompt, depth);
+            benchmarkRequest(serverBaseUrl(), exactPrompt,
+                             qBound(1, prefill.value(QStringLiteral("maxTokens")).toInt(), 4096), true,
+                [=](QVariantMap response) {
+                    QVariantMap row = makeSample(response, QStringLiteral("prefill"),
+                                                 QStringLiteral("prefill"), QStringLiteral("prefill"),
+                                                 index + 1, depth, 200000 + index,
+                                                 exactPrompt, false);
+                    row[QStringLiteral("requestedPromptTokens")] = depth;
+                    if (response.value(QStringLiteral("failed")).toBool()) {
+                        const QString failure = response.value(QStringLiteral("failureMessage")).toString();
+                        const bool contextLimit = failure.contains(QStringLiteral("context"), Qt::CaseInsensitive)
+                            || failure.contains(QStringLiteral("length"), Qt::CaseInsensitive)
+                            || failure.contains(QStringLiteral("maximum"), Qt::CaseInsensitive);
+                        if (contextLimit) {
+                            row[QStringLiteral("skipped")] = true;
+                            row[QStringLiteral("failureKind")] = QStringLiteral("skipped-context");
+                        }
+                    }
+                    prefillSamples->append(row);
+                    ++(*completed);
+                    updateProgress();
+                    (*measurePrefill)(index + 1);
+                }, QStringLiteral("server-speed-prefill"), false, seed);
+        };
+
+        *measureMain = [=](int pass, int itemIndex, int phase) {
+            if (m_benchmarkCanceled) { (*finishProfile)(); return; }
+            if (pass > passes) {
+                (*measurePrefill)(0);
+                return;
+            }
+            const QVariantMap item = items.at(itemIndex).toMap();
+            const QString itemId = item.value(QStringLiteral("id")).toString();
+            const QString category = item.value(QStringLiteral("category")).toString();
+            const QString basePrompt = item.value(QStringLiteral("prompt")).toString();
+            const bool warmPhase = phase == 1;
+            const int sequence = ((pass - 1) * items.size() + itemIndex) * 2 + phase;
+            const QString exactPrompt = warmPhase
+                ? basePrompt : serverBenchmarkNonce(sequence) + QLatin1Char('\n') + basePrompt;
+            const int maxTokens = qBound(1, item.value(QStringLiteral("maxTokens")).toInt(), 4096);
+            benchmarkRequest(serverBaseUrl(), exactPrompt, maxTokens, true,
+                [=](QVariantMap response) {
+                    samples->append(makeSample(response, itemId, category,
+                                               warmPhase ? QStringLiteral("warm") : QStringLiteral("cold"),
+                                               pass, 0, sequence, exactPrompt, warmPhase));
+                    ++(*completed);
+                    updateProgress();
+                    if (!warmPhase) {
+                        (*measureMain)(pass, itemIndex, 1);
+                    } else if (itemIndex + 1 < items.size()) {
+                        (*measureMain)(pass, itemIndex + 1, 0);
+                    } else {
+                        (*measureMain)(pass + 1, 0, 0);
+                    }
+                }, QStringLiteral("server-speed"), warmPhase, seed);
+        };
+
+        auto warmupNext = std::make_shared<std::function<void(int)>>();
+        *warmupNext = [=](int index) {
+            if (m_benchmarkCanceled) { (*finishProfile)(); return; }
+            if (index >= warmup) {
+                (*measureMain)(1, 0, 0);
+                return;
+            }
+            const QVariantMap item = items.first().toMap();
+            benchmarkRequest(serverBaseUrl(), item.value(QStringLiteral("prompt")).toString(),
+                             8, true, [=](QVariantMap) { (*warmupNext)(index + 1); },
+                             QStringLiteral("server-speed-warmup"), true, seed);
+        };
+
+        auto startProfile = std::make_shared<std::function<void()>>();
+        auto startRetries = std::make_shared<int>(0);
+        *startProfile = [=]() {
+            if (m_benchmarkCanceled) { (*finishProfile)(); return; }
+            if (serverRunning()) {
+                stopServer();
+                benchmarkEnsureServerStopped(45000, [=]() { (*startProfile)(); });
+                return;
+            }
+            m_benchmarkStatus = QStringLiteral("[%1/%2] %3 — cargando modelo para speed benchmark...")
+                .arg(profileIndex + 1).arg(ids.size()).arg(profileName);
+            emit benchmarkStatusChanged();
+            startServer(profileId);
+            if (!serverRunning()) {
+                const QString detail = benchmarkServerLogTail();
+                if (benchmarkLogIndicatesOutOfMemoryForTest(detail)
+                    && *startRetries < kBenchmarkMaxMemoryAttempts) {
+                    ++(*startRetries);
+                    ++m_benchmarkMemoryAttempt;
+                    benchmarkKillStrayServers();
+                    QTimer::singleShot(3000, this, [=]() { (*startProfile)(); });
+                    return;
+                }
+                failProfile(QStringLiteral("server-start"),
+                            QStringLiteral("No se pudo iniciar el servidor para speed benchmark."), detail);
+                return;
+            }
+            benchmarkWaitServerReady(150, 150, serverBaseUrl(),
+                QStringLiteral("[%1/%2] %3").arg(profileIndex + 1).arg(ids.size()).arg(profileName),
+                [=](bool ready) {
+                    if (!ready) {
+                        const QString detail = benchmarkServerLogTail();
+                        if (benchmarkLogIndicatesOutOfMemoryForTest(detail)
+                            && *startRetries < kBenchmarkMaxMemoryAttempts) {
+                            ++(*startRetries);
+                            ++m_benchmarkMemoryAttempt;
+                            stopServer();
+                            benchmarkEnsureServerStopped(45000, [=]() {
+                                QTimer::singleShot(3000, this, [=]() { (*startProfile)(); });
+                            });
+                            return;
+                        }
+                        failProfile(QStringLiteral("server-load"),
+                                    QStringLiteral("El servidor no quedó listo para speed benchmark."), detail);
+                        return;
+                    }
+                    *profileStartedMs = QDateTime::currentMSecsSinceEpoch();
+                    (*warmupNext)(0);
+                });
+        };
+        (*startProfile)();
+    };
+    (*processProfile)(0);
+}
+
+void AppController::startServerSpeedABBenchmark(const QString &profileAId,
+                                                const QString &profileBId,
+                                                int pairs, int warmup)
+{
+    if (m_benchmarkRunning) return;
+    if (m_catalog.count() == 0) m_catalog.reload();
+    const QString aId = profileAId.trimmed();
+    const QString bId = profileBId.trimmed();
+    if (aId.isEmpty() || bId.isEmpty() || aId == bId) {
+        const QString message = QStringLiteral("A/B requiere dos perfiles distintos.");
+        m_benchmarkStatus = message;
+        emit benchmarkStatusChanged();
+        emit serverError(message);
+        return;
+    }
+    if (m_profiles.getLaunchProfile(aId).isEmpty() || m_profiles.getLaunchProfile(bId).isEmpty()) {
+        const QString message = QStringLiteral("No se encontraron los perfiles elegidos para A/B.");
+        m_benchmarkStatus = message;
+        emit benchmarkStatusChanged();
+        emit serverError(message);
+        return;
+    }
+
+    QString corpusHash;
+    const QVariantMap corpus = serverBenchmarkCorpus(&corpusHash);
+    const QVariantList items = corpus.value(QStringLiteral("items")).toList();
+    if (items.isEmpty()) {
+        const QString message = QStringLiteral("No se pudo cargar el corpus server-speed-v1.");
+        m_benchmarkStatus = message;
+        emit benchmarkStatusChanged();
+        emit serverError(message);
+        return;
+    }
+    pairs = qBound(2, pairs, 100);
+    warmup = qBound(0, warmup, 10);
+    const int nullPairs = qMax(3, qMin(10, pairs));
+    const int totalUnits = qMax(1, pairs * 2 + nullPairs * 2);
+    const int seed = 424242;
+
+    m_benchmarkRunning = true;
+    m_benchmarkCanceled = false;
+    m_benchmarkProgress = 0;
+    m_benchmarkStatus = QStringLiteral("Preparando comparación A/B server-speed-v1...");
+    m_benchmarkReplies.clear();
+    m_proBenchmarkQueue.clear();
+    emit benchmarkRunningChanged();
+    emit benchmarkProgressChanged();
+    emit benchmarkStatusChanged();
+
+    const QString stamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
+    const QString runDir = benchmarkRunsDir() + QStringLiteral("/server_speed_ab_") + stamp;
+    QDir().mkpath(runDir);
+    QJsonObject metadata;
+    metadata[QStringLiteral("schemaVersion")] = 1;
+    metadata[QStringLiteral("benchmarkType")] = QStringLiteral("server-speed-ab");
+    metadata[QStringLiteral("benchmarkName")] = QStringLiteral("LlamaCode Server Speed v1 A/B");
+    metadata[QStringLiteral("corpusId")] = corpus.value(QStringLiteral("id")).toString();
+    metadata[QStringLiteral("corpusVersion")] = QStringLiteral("v1");
+    metadata[QStringLiteral("corpusHash")] = corpusHash;
+    metadata[QStringLiteral("startedAtMs")] = static_cast<double>(QDateTime::currentMSecsSinceEpoch());
+    metadata[QStringLiteral("profileAId")] = aId;
+    metadata[QStringLiteral("profileBId")] = bId;
+    metadata[QStringLiteral("profileAFingerprint")] = benchmarkProfileConfigFingerprint(aId);
+    metadata[QStringLiteral("profileBFingerprint")] = benchmarkProfileConfigFingerprint(bId);
+    metadata[QStringLiteral("pairs")] = pairs;
+    metadata[QStringLiteral("warmup")] = warmup;
+    metadata[QStringLiteral("nullTestPairs")] = nullPairs;
+    metadata[QStringLiteral("sampling")] = QJsonObject{
+        {QStringLiteral("temperature"), 0.0}, {QStringLiteral("top_p"), 1.0},
+        {QStringLiteral("seed"), seed},
+        {QStringLiteral("cachePolicy"), QStringLiteral("cache_prompt=false + pair nonce")}};
+    metadata[QStringLiteral("hardware")] = QJsonObject::fromVariantMap(m_hardwareSummary);
+    const LaunchProfile launchA = m_profiles.resolveLaunch(aId);
+    const LaunchProfile launchB = m_profiles.resolveLaunch(bId);
+    const EffectiveProfile effectiveA = EffectiveProfileBuilder::build(buildContext(aId));
+    const EffectiveProfile effectiveB = EffectiveProfileBuilder::build(buildContext(bId));
+    metadata[QStringLiteral("profiles")] = QJsonArray{
+        QJsonObject{{QStringLiteral("profileId"), aId},
+                    {QStringLiteral("profileName"), launchA.name},
+                    {QStringLiteral("backendProfileId"), launchA.backendProfileId},
+                    {QStringLiteral("modelProfileId"), launchA.modelProfileId},
+                    {QStringLiteral("runtimePresetId"), launchA.runtimePresetId},
+                    {QStringLiteral("powerLimitW"), launchA.powerLimitW},
+                    {QStringLiteral("binaryPath"), effectiveA.binaryPath},
+                    {QStringLiteral("effectiveArgs"), QJsonArray::fromStringList(effectiveA.effectiveArgs)}},
+        QJsonObject{{QStringLiteral("profileId"), bId},
+                    {QStringLiteral("profileName"), launchB.name},
+                    {QStringLiteral("backendProfileId"), launchB.backendProfileId},
+                    {QStringLiteral("modelProfileId"), launchB.modelProfileId},
+                    {QStringLiteral("runtimePresetId"), launchB.runtimePresetId},
+                    {QStringLiteral("powerLimitW"), launchB.powerLimitW},
+                    {QStringLiteral("binaryPath"), effectiveB.binaryPath},
+                    {QStringLiteral("effectiveArgs"), QJsonArray::fromStringList(effectiveB.effectiveArgs)}}};
+    metadata[QStringLiteral("items")] = QJsonArray::fromVariantList(items);
+    QFile metadataFile(QDir(runDir).filePath(QStringLiteral("metadata.json")));
+    if (metadataFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        metadataFile.write(QJsonDocument(metadata).toJson(QJsonDocument::Indented));
+
+    auto completed = std::make_shared<int>(0);
+    auto pairedRows = std::make_shared<QVariantList>();
+    auto nullRows = std::make_shared<QVariantList>();
+    auto currentProfile = std::make_shared<QString>();
+    auto finishing = std::make_shared<bool>(false);
+    auto updateProgress = [this, completed, totalUnits]() {
+        m_benchmarkProgress = qMin(99, (*completed * 100) / totalUnits);
+        emit benchmarkProgressChanged();
+    };
+
+    auto finish = std::make_shared<std::function<void()>>();
+    *finish = [=]() {
+        if (*finishing) return;
+        *finishing = true;
+        auto complete = [=]() {
+            if (m_benchmarkCanceled || pairedRows->isEmpty()) {
+                m_benchmarkRunning = false;
+                m_benchmarkProgress = 100;
+                m_benchmarkStatus = m_benchmarkCanceled
+                    ? QStringLiteral("Comparación A/B cancelada.")
+                    : QStringLiteral("Comparación A/B sin muestras válidas.");
+                emit benchmarkRunningChanged();
+                emit benchmarkProgressChanged();
+                emit benchmarkStatusChanged();
+                return;
+            }
+
+            QVariantList aRows, bRows, aTtftRows, bTtftRows, aPromptRows, bPromptRows;
+            for (const QVariant &value : std::as_const(*pairedRows)) {
+                const QVariantMap pair = value.toMap();
+                aRows.append(QVariantMap{{QStringLiteral("decodeTps"), pair.value(QStringLiteral("aTps"))}});
+                bRows.append(QVariantMap{{QStringLiteral("decodeTps"), pair.value(QStringLiteral("bTps"))}});
+                aTtftRows.append(QVariantMap{{QStringLiteral("ttftMs"), pair.value(QStringLiteral("aTtftMs"))}});
+                bTtftRows.append(QVariantMap{{QStringLiteral("ttftMs"), pair.value(QStringLiteral("bTtftMs"))}});
+                aPromptRows.append(QVariantMap{{QStringLiteral("promptTps"), pair.value(QStringLiteral("aPromptTps"))}});
+                bPromptRows.append(QVariantMap{{QStringLiteral("promptTps"), pair.value(QStringLiteral("bPromptTps"))}});
+            }
+            const QVariantMap pairedSummary = ServerBenchmarkMetrics::summarizePaired(
+                *pairedRows, QStringLiteral("aTps"), QStringLiteral("bTps"));
+            const QVariantMap ttftSummary = ServerBenchmarkMetrics::summarizePaired(
+                *pairedRows, QStringLiteral("aTtftMs"), QStringLiteral("bTtftMs"));
+            const QVariantMap promptSummary = ServerBenchmarkMetrics::summarizePaired(
+                *pairedRows, QStringLiteral("aPromptTps"), QStringLiteral("bPromptTps"));
+            const QVariantMap nullSummary = ServerBenchmarkMetrics::summarizePaired(
+                *nullRows, QStringLiteral("aTps"), QStringLiteral("bTps"));
+            const QVariantMap aSummary = ServerBenchmarkMetrics::summarizeSamples(aRows);
+            const QVariantMap bSummary = ServerBenchmarkMetrics::summarizeSamples(bRows);
+            const QVariantMap aTtftSummary = ServerBenchmarkMetrics::summarizeSamples(aTtftRows);
+            const QVariantMap bTtftSummary = ServerBenchmarkMetrics::summarizeSamples(bTtftRows);
+            const double elapsed = metadata.value(QStringLiteral("startedAtMs")).toDouble() > 0
+                ? (QDateTime::currentMSecsSinceEpoch()
+                   - metadata.value(QStringLiteral("startedAtMs")).toDouble()) / 1000.0
+                : 0.0;
+
+            QVariantMap result;
+            result[QStringLiteral("id")] = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            result[QStringLiteral("profileId")] = aId;
+            result[QStringLiteral("profileName")] = m_profiles.getLaunchProfile(aId).value(QStringLiteral("name"), aId);
+            result[QStringLiteral("comparisonProfileId")] = bId;
+            result[QStringLiteral("comparisonProfileName")] = m_profiles.getLaunchProfile(bId).value(QStringLiteral("name"), bId);
+            result[QStringLiteral("profileConfigFingerprint")] = benchmarkProfileConfigFingerprint(aId);
+            result[QStringLiteral("comparisonProfileConfigFingerprint")] = benchmarkProfileConfigFingerprint(bId);
+            result[QStringLiteral("benchmarkName")] = metadata.value(QStringLiteral("benchmarkName")).toString();
+            result[QStringLiteral("runLabel")] = QStringLiteral("Server Speed A/B · %1 vs %2")
+                .arg(result.value(QStringLiteral("profileName")).toString(),
+                     result.value(QStringLiteral("comparisonProfileName")).toString());
+            result[QStringLiteral("runDir")] = runDir;
+            result[QStringLiteral("mode")] = QStringLiteral("server-speed-ab");
+            result[QStringLiteral("target")] = QStringLiteral("server");
+            result[QStringLiteral("conditions")] = metadata.toVariantMap();
+            result[QStringLiteral("measurementType")] = QStringLiteral("inference-server-paired");
+            result[QStringLiteral("corpusId")] = corpus.value(QStringLiteral("id"));
+            result[QStringLiteral("corpusVersion")] = QStringLiteral("v1");
+            result[QStringLiteral("corpusHash")] = corpusHash;
+            result[QStringLiteral("pairs")] = pairs;
+            result[QStringLiteral("warmup")] = warmup;
+            result[QStringLiteral("seed")] = seed;
+            result[QStringLiteral("temperature")] = 0.0;
+            result[QStringLiteral("topP")] = 1.0;
+            result[QStringLiteral("pairedSamples")] = *pairedRows;
+            result[QStringLiteral("nullTestPairs")] = *nullRows;
+            result[QStringLiteral("pairedSummary")] = pairedSummary;
+            result[QStringLiteral("ttftSummary")] = ttftSummary;
+            result[QStringLiteral("promptSummary")] = promptSummary;
+            result[QStringLiteral("nullTestSummary")] = nullSummary;
+            result[QStringLiteral("speedDeltaPctMean")] = pairedSummary.value(QStringLiteral("deltaPctMean"));
+            result[QStringLiteral("speedDeltaPctMedian")] = pairedSummary.value(QStringLiteral("deltaPctMedian"));
+            result[QStringLiteral("speedCi95LowPct")] = pairedSummary.value(QStringLiteral("ci95LowPct"));
+            result[QStringLiteral("speedCi95HighPct")] = pairedSummary.value(QStringLiteral("ci95HighPct"));
+            result[QStringLiteral("speedWinner")] = pairedSummary.value(QStringLiteral("winner"));
+            result[QStringLiteral("ttftDeltaPctMedian")] = ttftSummary.value(QStringLiteral("deltaPctMedian"));
+            result[QStringLiteral("promptDeltaPctMedian")] = promptSummary.value(QStringLiteral("deltaPctMedian"));
+            const bool nullHasData = nullSummary.value(QStringLiteral("pairCount")).toInt() >= 2;
+            result[QStringLiteral("nullTestPassed")] = nullHasData
+                && !nullSummary.value(QStringLiteral("significant")).toBool();
+            result[QStringLiteral("nullTestStatus")] = !nullHasData
+                ? QStringLiteral("insufficient-data")
+                : (nullSummary.value(QStringLiteral("significant")).toBool()
+                   ? QStringLiteral("unstable") : QStringLiteral("passed"));
+            result[QStringLiteral("profileASummary")] = aSummary;
+            result[QStringLiteral("profileBSummary")] = bSummary;
+            result[QStringLiteral("profileATtftSummary")] = aTtftSummary;
+            result[QStringLiteral("profileBTtftSummary")] = bTtftSummary;
+            result[QStringLiteral("avgTps")] = bSummary.value(QStringLiteral("decodeTpsMean"));
+            result[QStringLiteral("avgTtftMs")] = bTtftSummary.value(QStringLiteral("ttftMsMean"));
+            result[QStringLiteral("promptTps")] = bSummary.value(QStringLiteral("promptTpsMean"));
+            result[QStringLiteral("ppTps")] = bSummary.value(QStringLiteral("promptTpsMean"));
+            result[QStringLiteral("tgTps")] = bSummary.value(QStringLiteral("decodeTpsMean"));
+            result[QStringLiteral("decodeTpsP50")] = bSummary.value(QStringLiteral("decodeTpsP50"));
+            result[QStringLiteral("ttftP50Ms")] = bTtftSummary.value(QStringLiteral("ttftMsP50"));
+            result[QStringLiteral("elapsedSec")] = elapsed;
+            result[QStringLiteral("totalTime")] = elapsed;
+            result[QStringLiteral("qualityScore")] = 0;
+            result[QStringLiteral("qualityTotal")] = 0;
+            result[QStringLiteral("finalScore")] = 0;
+            result[QStringLiteral("finalTotal")] = 0;
+            result[QStringLiteral("repairAttempts")] = 0;
+            result[QStringLiteral("failureKind")] = QStringLiteral("none");
+            result[QStringLiteral("measurementStatus")] = pairedSummary.value(QStringLiteral("pairCount")).toInt() >= 2
+                ? QStringLiteral("measured") : QStringLiteral("partial");
+            result[QStringLiteral("measurementPhase")] = QStringLiteral("paired-interleaved");
+            result[QStringLiteral("failed")] = pairedSummary.value(QStringLiteral("pairCount")).toInt() < 2;
+            benchmarkMeasureResources([=](BenchmarkResources resources) {
+                QVariantMap completedResult = result;
+                completedResult[QStringLiteral("ramMb")] = resources.ramMb;
+                completedResult[QStringLiteral("vramMb")] = resources.vramMb;
+                completedResult[QStringLiteral("vramGpu0Mb")] = resources.vramGpu0Mb;
+                completedResult[QStringLiteral("vramGpu1Mb")] = resources.vramGpu1Mb;
+                decorateBenchmarkResourceMetrics(&completedResult, resources);
+                decorateBenchmarkMemory(&completedResult);
+                m_benchmarkResults.append(completedResult);
+                emit benchmarkResultsChanged();
+                saveBenchmarkResult(completedResult);
+
+                QVariantMap report;
+                report[QStringLiteral("benchmarkType")] = QStringLiteral("server-speed-ab");
+                report[QStringLiteral("corpusVersion")] = QStringLiteral("v1");
+                report[QStringLiteral("corpusHash")] = corpusHash;
+                report[QStringLiteral("profileAId")] = aId;
+                report[QStringLiteral("profileBId")] = bId;
+                report[QStringLiteral("pairedSummary")] = pairedSummary;
+                report[QStringLiteral("ttftSummary")] = ttftSummary;
+                report[QStringLiteral("promptSummary")] = promptSummary;
+                report[QStringLiteral("nullTestSummary")] = nullSummary;
+                report[QStringLiteral("nullTestStatus")] = completedResult.value(QStringLiteral("nullTestStatus"));
+                report[QStringLiteral("results")] = QVariantList{completedResult};
+                QFile comparisonFile(QDir(runDir).filePath(QStringLiteral("comparison.json")));
+                if (comparisonFile.open(QIODevice::WriteOnly | QIODevice::Truncate))
+                    comparisonFile.write(QJsonDocument(QJsonObject::fromVariantMap(report))
+                                             .toJson(QJsonDocument::Indented));
+
+                m_benchmarkRunning = false;
+                m_benchmarkMemoryAttempt = -1;
+                m_benchmarkEffectiveArgs.clear();
+                m_benchmarkProgress = 100;
+                m_benchmarkStatus = QStringLiteral("Comparación A/B completada.");
+                emit benchmarkRunningChanged();
+                emit benchmarkProgressChanged();
+                emit benchmarkStatusChanged();
+            });
+        };
+        if (serverRunning()) {
+            stopServer();
+            benchmarkEnsureServerStopped(45000, complete);
+        } else {
+            complete();
+        }
+    };
+
+    auto ensureProfile = std::make_shared<std::function<void(const QString &, std::function<void(bool)>)>>();
+    *ensureProfile = [=](const QString &wanted, std::function<void(bool)> onReady) {
+        if (m_benchmarkCanceled) { onReady(false); return; }
+        if (serverRunning() && *currentProfile == wanted) {
+            onReady(true);
+            return;
+        }
+        auto start = [=]() {
+            *currentProfile = wanted;
+            startServer(wanted);
+            if (!serverRunning()) { onReady(false); return; }
+            benchmarkWaitServerReady(150, 150, serverBaseUrl(),
+                                     QStringLiteral("A/B · %1").arg(wanted),
+                [=](bool ready) {
+                    if (!ready) { onReady(false); return; }
+                    auto warmupNext = std::make_shared<std::function<void(int)>>();
+                    *warmupNext = [=](int index) {
+                        if (index >= warmup) { onReady(true); return; }
+                        const QVariantMap item = items.first().toMap();
+                        benchmarkRequest(serverBaseUrl(),
+                                         item.value(QStringLiteral("prompt")).toString(), 8, true,
+                            [=](QVariantMap) { (*warmupNext)(index + 1); },
+                            QStringLiteral("server-speed-ab-warmup"), true, seed);
+                    };
+                    (*warmupNext)(0);
+                });
+        };
+        if (serverRunning()) {
+            stopServer();
+            benchmarkEnsureServerStopped(45000, start);
+        } else {
+            start();
+        }
+    };
+
+    auto makeSample = [=](const QVariantMap &response, const QString &profileId,
+                          const QString &itemId, const QString &phase, int index,
+                          const QString &exactPrompt) {
+        QVariantMap row = response;
+        row[QStringLiteral("profileId")] = profileId;
+        row[QStringLiteral("promptId")] = itemId;
+        row[QStringLiteral("measurementPhase")] = phase;
+        row[QStringLiteral("pairIndex")] = index;
+        row[QStringLiteral("seed")] = seed;
+        row[QStringLiteral("cachePrompt")] = false;
+        row[QStringLiteral("nonce")] = serverBenchmarkNonce(300000 + index);
+        row[QStringLiteral("promptHash")] = QString::fromLatin1(
+            QCryptographicHash::hash(exactPrompt.toUtf8(), QCryptographicHash::Sha256).toHex());
+        row[QStringLiteral("promptTokens")] = response.value(QStringLiteral("prompt_tokens"));
+        row[QStringLiteral("completionTokens")] = response.value(QStringLiteral("tokens"));
+        row[QStringLiteral("ttftMs")] = response.value(QStringLiteral("ttft_ms"));
+        row[QStringLiteral("decodeTps")] = response.value(QStringLiteral("decodeTps"), response.value(QStringLiteral("tps")));
+        row[QStringLiteral("promptTps")] = response.value(QStringLiteral("prompt_tps"));
+        row[QStringLiteral("elapsedMs")] = response.value(QStringLiteral("elapsed_ms"));
+        row[QStringLiteral("generationMs")] = response.value(QStringLiteral("generation_ms"));
+        row[QStringLiteral("itlMs")] = response.value(QStringLiteral("itl_ms"));
+        return row;
+    };
+
+    auto measureSide = std::make_shared<std::function<void(const QString &, const QString &,
+                                                            const QString &, const QString &, int,
+                                                            std::function<void(QVariantMap)>)>>();
+    *measureSide = [=](const QString &profileId, const QString &key, const QString &itemId,
+                       const QString &exactPrompt, int index, std::function<void(QVariantMap)> done) {
+        (*ensureProfile)(profileId, [=](bool ready) {
+            if (!ready) {
+                (*finish)();
+                return;
+            }
+            const QVariantMap item = items.at(index % items.size()).toMap();
+            benchmarkRequest(serverBaseUrl(), exactPrompt,
+                             qBound(1, item.value(QStringLiteral("maxTokens")).toInt(), 4096), true,
+                [=](QVariantMap response) {
+                    QVariantMap sample = makeSample(response, profileId, itemId,
+                                                    QStringLiteral("paired"), index, exactPrompt);
+                    sample[QStringLiteral("side")] = key;
+                    ++(*completed);
+                    updateProgress();
+                    done(sample);
+                }, QStringLiteral("server-speed-ab"), false, seed);
+        });
+    };
+
+    auto runNull = std::make_shared<std::function<void(int)>>();
+    auto runPair = std::make_shared<std::function<void(int)>>();
+    *runNull = [=](int index) {
+        if (m_benchmarkCanceled) { (*finish)(); return; }
+        if (index >= nullPairs) { (*finish)(); return; }
+        const QVariantMap item = items.at(index % items.size()).toMap();
+        const QString itemId = item.value(QStringLiteral("id")).toString();
+        const QString prompt = serverBenchmarkNonce(400000 + index) + QLatin1Char('\n')
+            + item.value(QStringLiteral("prompt")).toString();
+        (*measureSide)(aId, QStringLiteral("a"), itemId, prompt, 1000 + index,
+            [=](QVariantMap first) {
+                (*measureSide)(aId, QStringLiteral("b"), itemId, prompt, 1000 + index,
+                    [=](QVariantMap second) {
+                        QVariantMap firstSample = first;
+                        firstSample[QStringLiteral("nonce")] = serverBenchmarkNonce(400000 + index);
+                        second[QStringLiteral("nonce")] = serverBenchmarkNonce(400000 + index);
+                        QVariantMap row;
+                        row[QStringLiteral("pairIndex")] = index;
+                        row[QStringLiteral("promptId")] = itemId;
+                        row[QStringLiteral("aTps")] = firstSample.value(QStringLiteral("decodeTps"));
+                        row[QStringLiteral("bTps")] = second.value(QStringLiteral("decodeTps"));
+                        row[QStringLiteral("aTtftMs")] = firstSample.value(QStringLiteral("ttftMs"));
+                        row[QStringLiteral("bTtftMs")] = second.value(QStringLiteral("ttftMs"));
+                        row[QStringLiteral("aPromptTps")] = firstSample.value(QStringLiteral("promptTps"));
+                        row[QStringLiteral("bPromptTps")] = second.value(QStringLiteral("promptTps"));
+                        row[QStringLiteral("aSample")] = firstSample;
+                        row[QStringLiteral("bSample")] = second;
+                        row[QStringLiteral("control")] = QStringLiteral("A/A");
+                        nullRows->append(row);
+                        (*runNull)(index + 1);
+                    });
+            });
+    };
+    *runPair = [=](int index) {
+        if (m_benchmarkCanceled) { (*finish)(); return; }
+        if (index >= pairs) { (*runNull)(0); return; }
+        const QVariantMap item = items.at(index % items.size()).toMap();
+        const QString itemId = item.value(QStringLiteral("id")).toString();
+        const QString prompt = serverBenchmarkNonce(300000 + index) + QLatin1Char('\n')
+            + item.value(QStringLiteral("prompt")).toString();
+        const bool abOrder = (index % 2) == 0;
+        const QString firstId = abOrder ? aId : bId;
+        const QString secondId = abOrder ? bId : aId;
+        const QString firstKey = abOrder ? QStringLiteral("a") : QStringLiteral("b");
+        const QString secondKey = abOrder ? QStringLiteral("b") : QStringLiteral("a");
+        (*measureSide)(firstId, firstKey, itemId, prompt, index,
+            [=](QVariantMap first) {
+                (*measureSide)(secondId, secondKey, itemId, prompt, index,
+                    [=](QVariantMap second) {
+                        const QVariantMap a = firstKey == QLatin1String("a") ? first : second;
+                        const QVariantMap b = firstKey == QLatin1String("a") ? second : first;
+                        QVariantMap row;
+                        row[QStringLiteral("pairIndex")] = index;
+                        row[QStringLiteral("promptId")] = itemId;
+                        row[QStringLiteral("category")] = item.value(QStringLiteral("category"));
+                        row[QStringLiteral("nonce")] = serverBenchmarkNonce(300000 + index);
+                        row[QStringLiteral("order")] = abOrder ? QStringLiteral("AB") : QStringLiteral("BA");
+                        row[QStringLiteral("aTps")] = a.value(QStringLiteral("decodeTps"));
+                        row[QStringLiteral("bTps")] = b.value(QStringLiteral("decodeTps"));
+                        row[QStringLiteral("aTtftMs")] = a.value(QStringLiteral("ttftMs"));
+                        row[QStringLiteral("bTtftMs")] = b.value(QStringLiteral("ttftMs"));
+                        row[QStringLiteral("aPromptTps")] = a.value(QStringLiteral("promptTps"));
+                        row[QStringLiteral("bPromptTps")] = b.value(QStringLiteral("promptTps"));
+                        row[QStringLiteral("aSample")] = a;
+                        row[QStringLiteral("bSample")] = b;
+                        row[QStringLiteral("failed")] = a.value(QStringLiteral("failed")).toBool()
+                            || b.value(QStringLiteral("failed")).toBool();
+                        pairedRows->append(row);
+                        (*runPair)(index + 1);
+                    });
+            });
+    };
+    (*runPair)(0);
+}
+
 void AppController::openBenchmarkFolder(const QString &path)
 {
     if (path.trimmed().isEmpty()) return;
@@ -19071,7 +20088,8 @@ void AppController::benchmarkKillStrayServers()
 void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                                       int maxTokens, bool streaming,
                                       std::function<void(QVariantMap)> onDone,
-                                      const QString &resultType)
+                                      const QString &resultType,
+                                      bool cachePrompt, int seed)
 {
     if (!m_nam) m_nam = new QNetworkAccessManager(this);
     QNetworkRequest req(QUrl(url + "/v1/chat/completions"));
@@ -19085,6 +20103,8 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
     payload["max_tokens"] = maxTokens;
     payload["temperature"]= 0.0;
     payload["top_p"]      = 1.0;
+    payload["cache_prompt"] = cachePrompt;
+    if (seed >= 0) payload["seed"] = seed;
     if (streaming)
         payload["stream_options"] = QJsonObject{{"include_usage", true}};
 
@@ -19126,7 +20146,9 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
     if (streaming) {
         struct SpeedState { QByteArray buf; qint64 ttftMs = -1; int chunks = 0;
                             int tokens = 0; int predictedN = 0; double predictedMs = -1.0;
-                            double predictedPerSecond = -1.0;
+                            double predictedPerSecond = -1.0; int promptN = 0;
+                            double promptMs = -1.0; double promptPerSecond = -1.0;
+                            qint64 lastContentMs = -1; QVariantList itlMs;
                             QString response; QString reasoning; };
         auto state = std::make_shared<SpeedState>();
 
@@ -19150,14 +20172,23 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                     const int predictedN = timings.value(QStringLiteral("predicted_n")).toInt(0);
                     const double predictedMs = timings.value(QStringLiteral("predicted_ms")).toDouble(-1.0);
                     const double predictedPerSecond = timings.value(QStringLiteral("predicted_per_second")).toDouble(-1.0);
+                    const int promptN = timings.value(QStringLiteral("prompt_n")).toInt(0);
+                    const double promptMs = timings.value(QStringLiteral("prompt_ms")).toDouble(-1.0);
+                    const double promptPerSecond = timings.value(QStringLiteral("prompt_per_second")).toDouble(-1.0);
                     if (predictedN > 0) state->predictedN = predictedN;
                     if (predictedMs > 0.0) state->predictedMs = predictedMs;
                     if (predictedPerSecond > 0.0) state->predictedPerSecond = predictedPerSecond;
+                    if (promptN > 0) state->promptN = promptN;
+                    if (promptMs > 0.0) state->promptMs = promptMs;
+                    if (promptPerSecond > 0.0) state->promptPerSecond = promptPerSecond;
                 }
                 // Final usage chunk (choices empty, usage populated)
                 const QJsonObject usage = obj.value("usage").toObject();
-                if (!usage.isEmpty())
+                if (!usage.isEmpty()) {
                     state->tokens = usage.value("completion_tokens").toInt(state->tokens);
+                    const int promptTokens = usage.value("prompt_tokens").toInt(0);
+                    if (promptTokens > 0) state->promptN = promptTokens;
+                }
                 const QJsonObject deltaObj = obj.value("choices").toArray().first().toObject()
                     .value("delta").toObject();
                 const QString content = deltaObj.value("content").toString();
@@ -19169,7 +20200,11 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
                 // '¿'" o "unterminated string literal". El razonamiento es un
                 // fallback para cuando NO hay respuesta, no parte de la respuesta.
                 if (!content.isEmpty() || !reasoning.isEmpty()) {
-                    if (state->ttftMs < 0) state->ttftMs = QDateTime::currentMSecsSinceEpoch() - startMs;
+                    const qint64 nowMs = QDateTime::currentMSecsSinceEpoch();
+                    if (state->ttftMs < 0) state->ttftMs = nowMs - startMs;
+                    else if (state->lastContentMs >= 0)
+                        state->itlMs.append(static_cast<double>(qMax<qint64>(0, nowMs - state->lastContentMs)));
+                    state->lastContentMs = nowMs;
                     state->chunks++;
                     state->response += content;
                     state->reasoning += reasoning;
@@ -19191,10 +20226,31 @@ void AppController::benchmarkRequest(const QString &url, const QString &prompt,
             } else if (!failed && state->ttftMs >= 0 && tokens > 0) {
                 tps = tokens / qMax(0.001, (totalMs - state->ttftMs) / 1000.0);
             }
+            if (state->promptPerSecond <= 0.0 && state->promptN > 0 && state->promptMs > 0.0)
+                state->promptPerSecond = state->promptN * 1000.0 / state->promptMs;
+            if (state->promptPerSecond <= 0.0 && state->promptN > 0 && state->ttftMs > 0.0)
+                state->promptPerSecond = state->promptN * 1000.0 / state->ttftMs;
+            const double itlScale = state->tokens > 0 && state->chunks > 0
+                ? static_cast<double>(state->chunks) / state->tokens : 1.0;
+            if (itlScale > 0.0 && !state->itlMs.isEmpty()) {
+                for (int i = 0; i < state->itlMs.size(); ++i)
+                    state->itlMs[i] = state->itlMs.at(i).toDouble() * itlScale;
+            }
             QVariantMap r;
             r["type"]       = resultType.isEmpty() ? QStringLiteral("speed") : resultType;
             r["ttft_ms"]    = state->ttftMs;
             r["tps"]        = tps;
+            r["decodeTps"]  = tps;
+            r["prompt_tokens"] = state->promptN;
+            r["prompt_ms"] = state->promptMs;
+            r["prompt_tps"] = state->promptPerSecond;
+            r["timingSource"] = (state->predictedPerSecond > 0.0
+                                  || state->promptPerSecond > 0.0)
+                ? QStringLiteral("llama-timings") : QStringLiteral("client-sse");
+            r["generation_ms"] = state->predictedMs > 0.0
+                ? state->predictedMs : qMax(0.0, static_cast<double>(totalMs)
+                    - static_cast<double>(qMax<qint64>(0, state->ttftMs)));
+            r["itl_ms"] = state->itlMs;
             r["chunks"]     = state->chunks;
             r["tokens"]     = tokens;
             r["elapsed_ms"] = totalMs;
@@ -19711,6 +20767,8 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["passesTotal"]  = result.value("passesTotal").toInt();
     summary["mode"]         = result.value("mode").toString();
     summary["benchmarkName"] = result.value("benchmarkName").toString();
+    summary["comparisonProfileId"] = result.value("comparisonProfileId").toString();
+    summary["comparisonProfileName"] = result.value("comparisonProfileName").toString();
     summary["timestamp"]    = result.value("timestamp").toDouble();
     summary["qualityScore"] = result.value("qualityScore").toInt();
     summary["qualityTotal"] = result.value("qualityTotal").toInt();
@@ -19745,6 +20803,25 @@ void AppController::saveBenchmarkResult(const QVariantMap &result)
     summary["performanceMatrixId"] = persistedResult.value("performanceMatrixId").toString();
     summary["performanceScore"] = persistedResult.value("performanceScore").toDouble();
     summary["measurementStatus"] = persistedResult.value("measurementStatus").toString();
+    summary["corpusId"] = persistedResult.value("corpusId").toString();
+    summary["corpusVersion"] = persistedResult.value("corpusVersion").toString();
+    summary["corpusHash"] = persistedResult.value("corpusHash").toString();
+    summary["decodeTpsP50"] = persistedResult.value("decodeTpsP50").toDouble();
+    summary["decodeTpsP95"] = persistedResult.value("decodeTpsP95").toDouble();
+    summary["promptTps"] = persistedResult.value("promptTps").toDouble();
+    summary["ppTps"] = persistedResult.value("ppTps").toDouble();
+    summary["tgTps"] = persistedResult.value("tgTps").toDouble();
+    summary["ttftP50Ms"] = persistedResult.value("ttftP50Ms").toDouble();
+    summary["pairedSummary"] = QJsonObject::fromVariantMap(
+        persistedResult.value("pairedSummary").toMap());
+    summary["nullTestSummary"] = QJsonObject::fromVariantMap(
+        persistedResult.value("nullTestSummary").toMap());
+    summary["nullTestPassed"] = persistedResult.value("nullTestPassed").toBool();
+    summary["nullTestStatus"] = persistedResult.value("nullTestStatus").toString();
+    summary["speedDeltaPctMedian"] = persistedResult.value("speedDeltaPctMedian").toDouble();
+    summary["speedCi95LowPct"] = persistedResult.value("speedCi95LowPct").toDouble();
+    summary["speedCi95HighPct"] = persistedResult.value("speedCi95HighPct").toDouble();
+    summary["speedWinner"] = persistedResult.value("speedWinner").toString();
     summary["target"]       = result.value("target").toString();
     summary["thinkingEnabled"] = result.value("thinkingEnabled").toBool();
     summary["agentProfileId"]   = result.value("agentProfileId").toString();
@@ -20239,10 +21316,12 @@ void AppController::loadBenchmarkResults()
     for (const QJsonValue &v : arr) {
         QVariantMap m = v.toObject().toVariantMap();
         const QString id = m.value(QStringLiteral("id")).toString();
+        const QString storedMode = m.value(QStringLiteral("mode")).toString();
         const bool needsFullResult =
             m.value(QStringLiteral("benchmarkName")).toString().isEmpty()
             || m.value(QStringLiteral("runLabel")).toString().isEmpty()
             || m.value(QStringLiteral("target")).toString().isEmpty()
+            || storedMode.startsWith(QStringLiteral("server-speed"))
             || (m.value(QStringLiteral("failed")).toBool()
                 && m.value(QStringLiteral("failureDetail")).toString().isEmpty());
         if (!id.isEmpty() && needsFullResult) {

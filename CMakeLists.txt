@@ -619,6 +619,7 @@ if (BUILD_TESTS)
     add_lc_test(test_code_graph         tests/test_code_graph.cpp)
     add_lc_test(test_context_index      tests/test_context_index.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
+    add_lc_test(test_server_benchmark_metrics tests/test_server_benchmark_metrics.cpp)
     add_lc_test(test_hardware_diagnostics tests/test_hardware_diagnostics.cpp)
     add_lc_test(test_eval               tests/test_eval.cpp)
     # Ruta de la suite bundleada para validar el JSON real (no sólo el sample inline).
