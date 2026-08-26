@@ -3090,7 +3090,10 @@ void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry)
     QDir().mkpath(toolsDir);
 
     const QString repoUrl = entry.homepage;
-    const QString slug = EngineCatalog::buildDirName(entry.repo);
+    // Dos forks pueden compartir el mismo nombre de repositorio (por ejemplo,
+    // varias ramas/repos "llama.cpp"). Incluir el id del catálogo evita que un
+    // build adaptive borre o reutilice el árbol de otro motor.
+    const QString slug = EngineCatalog::sourceBuildDirName(entry);
     const QString flavor = entry.flavor;
     const QString displayName = entry.name;
     const QString sourceBranch = entry.sourceBranch;
