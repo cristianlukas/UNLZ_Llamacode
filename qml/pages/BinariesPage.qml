@@ -142,7 +142,7 @@ Item {
                     }
                     Text {
                         Layout.fillWidth: true
-                        text: "Instalá official/MTP o compilá forks llama-server desde source cuando no hay prebuilt."
+                        text: "Instalá official/MTP/adaptive o compilá forks llama-server desde source cuando no hay prebuilt."
                         color: Theme.textMuted
                         font.pixelSize: 12
                         elide: Text.ElideRight
@@ -491,6 +491,25 @@ Item {
                     color: (binData.hasCapabilities ?? false) ? Theme.successText : Theme.textMuted
                     font.pixelSize: 12
                 }
+
+                Text { text: "Adaptive speculation:"; color: Theme.textMuted; font.pixelSize: 12 }
+                Text {
+                    text: {
+                        const flags = binData.supportedFlags ?? []
+                        if (flags.length === 0) return "No detectado"
+                        return flags.indexOf("--spec-draft-adaptive") >= 0
+                            && flags.indexOf("--spec-draft-n-min") >= 0
+                            ? "Disponible" : "No compatible"
+                    }
+                    color: {
+                        const flags = binData.supportedFlags ?? []
+                        if (flags.length === 0) return Theme.textMuted
+                        return flags.indexOf("--spec-draft-adaptive") >= 0
+                            && flags.indexOf("--spec-draft-n-min") >= 0
+                            ? Theme.successText : Theme.errorText
+                    }
+                    font.pixelSize: 12
+                }
             }
 
             Row {
@@ -510,6 +529,14 @@ Item {
                     danger: true
                     onClicked: { App.binaryRegistry.remove(binId); listView.currentIndex = -1 }
                 }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.Wrap
+                color: Theme.textMuted
+                font.pixelSize: 12
+                text: "Adaptive requiere una build llama-server con --spec-draft-adaptive y --spec-draft-n-min (por ejemplo, una variante mtp-fork). Registrala, ejecutá Detect capabilities y luego activá adaptive en el perfil."
             }
 
             Rectangle {

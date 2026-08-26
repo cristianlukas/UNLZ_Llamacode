@@ -65,6 +65,7 @@ public:
 
     static QString normalizeRepo(const QString &repoOrUrl);
     static QString buildDirName(const QString &repoOrUrl, const QString &branch = {});
+    static QString sourceBuildDirName(const EngineCatalogEntry &entry);
     static bool isVariantCompatible(const EngineVariant &variant,
                                     const HardwareSignals &hw,
                                     QString *reason = nullptr);

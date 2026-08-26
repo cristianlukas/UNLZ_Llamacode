@@ -19,6 +19,15 @@ void EngineCatalogTests::catalogIncludesSourceForks()
     QVERIFY(!ik.variants.isEmpty());
     QVERIFY(ik.variants.first().buildFromSource);
 
+    const EngineCatalogEntry adaptive = EngineCatalog::entry(QStringLiteral("llama.cpp-adaptive"));
+    QCOMPARE(adaptive.repo, QStringLiteral("LaurentZuijdwijk/llama.cpp"));
+    QCOMPARE(adaptive.flavor, QStringLiteral("mtp-fork"));
+    QVERIFY(!adaptive.variants.isEmpty());
+    QVERIFY(adaptive.variants.first().buildFromSource);
+    QCOMPARE(adaptive.variants.first().gpuVendors, QStringList{QStringLiteral("nvidia")});
+    QVERIFY(EngineCatalog::sourceBuildDirName(adaptive).contains(QStringLiteral("adaptive")));
+    QVERIFY(EngineCatalog::sourceBuildDirName(adaptive) != QStringLiteral("llama.cpp"));
+
     const EngineCatalogEntry official = EngineCatalog::entry(QStringLiteral("llama.cpp"));
     QVERIFY(official.variants.size() >= 3);
 

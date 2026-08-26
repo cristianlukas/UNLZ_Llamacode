@@ -63,6 +63,9 @@ private slots:
     void modelFileMissing();
     void mmprojMissingIsWarning();
     void specWithoutDraft();
+    void adaptiveCapabilityUnknownIsWarning();
+    void adaptiveCapabilityMissingIsError();
+    void adaptiveCapabilityAvailableIsClean();
     void runtimeAndAgentMissingAreWarnings();
     void cloudSkipsBinaryAndModel();
     void cloudMissingUrlIsError();
@@ -169,6 +172,39 @@ void ProfileHealthTests::specWithoutDraft()
     const auto v = ProfileHealthChecker::checkLaunch(r);
     QVERIFY(hasCode(v, "spec-without-draft"));
     QCOMPARE(severityOf(v, "spec-without-draft"), QStringLiteral("warning"));
+}
+
+void ProfileHealthTests::adaptiveCapabilityUnknownIsWarning()
+{
+    auto r = healthyLocal();
+    r.model.specType = "draft-mtp";
+    r.model.specDraftAdaptive = true;
+    // supportedFlags vacío significa que todavía no se ejecutó --help.
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QCOMPARE(severityOf(v, "adaptive-capability-unknown"), QStringLiteral("warning"));
+    QVERIFY(!hasCode(v, "adaptive-capability-missing"));
+}
+
+void ProfileHealthTests::adaptiveCapabilityMissingIsError()
+{
+    auto r = healthyLocal();
+    r.model.specType = "draft-mtp";
+    r.model.specDraftAdaptive = true;
+    r.binary.supportedFlags = {"--spec-type", "--spec-draft-n-max"};
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QCOMPARE(severityOf(v, "adaptive-capability-missing"), QStringLiteral("error"));
+}
+
+void ProfileHealthTests::adaptiveCapabilityAvailableIsClean()
+{
+    auto r = healthyLocal();
+    r.model.specType = "draft-mtp";
+    r.model.specDraftAdaptive = true;
+    r.binary.supportedFlags = {"--spec-type", "--spec-draft-n-max",
+                               "--spec-draft-adaptive", "--spec-draft-n-min"};
+    const auto v = ProfileHealthChecker::checkLaunch(r);
+    QVERIFY(!hasCode(v, "adaptive-capability-unknown"));
+    QVERIFY(!hasCode(v, "adaptive-capability-missing"));
 }
 
 void ProfileHealthTests::runtimeAndAgentMissingAreWarnings()

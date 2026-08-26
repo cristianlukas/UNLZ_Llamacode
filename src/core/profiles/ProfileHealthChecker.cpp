@@ -75,6 +75,26 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
             out << mk("error", id, "binary", "binary-path-invalid",
                       "El ejecutable del binario no existe en su ruta.",
                       "Corregir la ruta del binario o re-agregarlo.");
+
+        // Adaptive MTP/DFlash no es parte del llama.cpp oficial que suele estar
+        // registrado como binary=official. Si ya se detectaron capacidades,
+        // podemos distinguir una incompatibilidad real de una detección aún
+        // pendiente (supportedFlags vacío).
+        if (r.modelRefFound && r.model.specDraftAdaptive && r.binaryFound
+            && r.binary.pathValid) {
+            const bool capabilitiesKnown = !r.binary.supportedFlags.isEmpty();
+            const bool hasAdaptive = r.binary.supportsFlag("--spec-draft-adaptive");
+            const bool hasAdaptiveMin = r.binary.supportsFlag("--spec-draft-n-min");
+            if (!capabilitiesKnown) {
+                out << mk("warning", id, "binary", "adaptive-capability-unknown",
+                          "Adaptive speculative decoding está activado, pero todavía no se detectaron las capacidades del binario.",
+                          "Usar Detect capabilities en Binarios y confirmar que --spec-draft-adaptive y --spec-draft-n-min aparecen en --help.");
+            } else if (!hasAdaptive || !hasAdaptiveMin) {
+                out << mk("error", id, "binary", "adaptive-capability-missing",
+                          "El binario seleccionado no declara soporte para adaptive speculative decoding.",
+                          "Registrar una build compatible (mtp-fork) y volver a detectar sus capacidades, o desactivar adaptive.");
+            }
+        }
     }
 
     // --- Modelo (no aplica a cloud) ---

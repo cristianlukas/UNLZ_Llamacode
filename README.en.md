@@ -738,6 +738,16 @@ Automatic search for the `llama-server` flags (`ngl`, `batch`, `ubatch`, `flash-
 
 - Runs `N` trials on a scratch port (launches/measures/kills the server per candidate, in a separate `QThread` so the UI doesn't freeze).
 - Measures `timings.predicted_per_second` throughput (`/completion`) and grades the output with EvalSuite-style substrings.
+- MTP/DFlash profiles can opt into **adaptive speculation**: the editor preserves
+  `spec-draft-n-min` and the tuner searches `spec-draft-n-max` from that minimum
+  through 9. It is emitted only when the selected binary declares
+  `--spec-draft-adaptive`; register a compatible build as `mtp-fork` and run
+  **Detect capabilities** in the Binaries page.
+- The historical Qwen3.8 system profiles store MTP in `extraArgs`; the profile
+  editor hydrates those flags and migrates them to the structured model settings
+  when a copy is saved. For a real fixed/adaptive A/B run, use
+  `tools/benchmark_adaptive_speculation.ps1` with an explicit patched server and
+  GGUF model; it writes per-task metrics to JSON.
 - When done it **clones** the profile into a new `-tuned` one with the best config in `extraArgs`; the original stays intact.
 - UI: `ProfilesPage` → **Auto-tune** / **Cancel tune** + live status.
 

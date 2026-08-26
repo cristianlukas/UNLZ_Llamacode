@@ -186,6 +186,33 @@ Item {
         return false
     }
 
+    // Los perfiles de sistema históricos guardan MTP en `launch.mtp.args`,
+    // que llega como extraArgs, mientras que los perfiles editables nuevos lo
+    // guardan en ModelProfile. Leer ambos formatos permite editar/duplicar
+    // Qwen3.8 sin perder adaptive ni mostrar sus flags como texto manual.
+    function rawArgValue(rawArgs, flag) {
+        for (let i = 0; i + 1 < rawArgs.length; ++i)
+            if (rawArgs[i] === flag) return rawArgs[i + 1]
+        return ""
+    }
+
+    function rawHasFlag(rawArgs, flag) {
+        for (let i = 0; i < rawArgs.length; ++i)
+            if (rawArgs[i] === flag) return true
+        return false
+    }
+
+    function rawDraftSpecType(rawArgs) {
+        const value = (rawArgValue(rawArgs, "--spec-type") ?? "").toLowerCase()
+        const types = value.split(/[,|]/)
+        for (let i = 0; i < types.length; ++i) {
+            const t = types[i].trim()
+            if (t === "draft-dspark") return "draft-dspark"
+            if (t === "draft-mtp") return "draft-mtp"
+        }
+        return ""
+    }
+
     function extractManualArgs(rawArgs) {
         const pairFlags = {
             "--alias": true, "--n-predict": true, "--cache-type-v": true, "--temp": true,
@@ -193,12 +220,32 @@ Item {
             "--repeat-penalty": true, "--presence-penalty": true,
             "--cache-ram": true, "--cache-reuse": true
         }
+        // Estos flags son administrados por el editor cuando el launch trae
+        // MTP/DFlash crudo desde un perfil de sistema. No sacar
+        // --spec-draft-model: un draft externo sigue siendo un argumento
+        // manual válido y debe conservarse.
+        const specPairFlags = {
+            "--spec-draft-n-max": true, "--spec-draft-n-min": true,
+            "--spec-draft-conf-min": true, "--spec-draft-ngl": true,
+            "--spec-draft-type-k": true, "--spec-draft-type-v": true
+        }
         const boolFlags = { "--no-context-shift": true, "--context-shift": true, "--metrics": true, "--no-warmup": true }
+        const rawSpecValue = (rawArgValue(rawArgs, "--spec-type") ?? "").toLowerCase()
+        const rawSpecParts = rawSpecValue.split(/[,|]/).map(s => s.trim()).filter(s => s.length > 0)
+        // Si hay ngram-mod u otro spec combinado, conservar el --spec-type
+        // completo: al guardar, el argumento raw queda después del bloque
+        // estructurado y mantiene la combinación histórica intacta.
+        const managedDraftSpec = rawSpecParts.length === 1
+            && (rawSpecParts[0] === "draft-mtp" || rawSpecParts[0] === "draft-dspark")
+        const draftSpec = rawDraftSpecType(rawArgs).length > 0
         const out = []
         for (let i = 0; i < rawArgs.length; ++i) {
             const cur = rawArgs[i]
             if (pairFlags[cur]) { i += 1; continue }
             if (boolFlags[cur]) continue
+            if (draftSpec && managedDraftSpec && cur === "--spec-type") { i += 1; continue }
+            if (draftSpec && cur === "--spec-draft-adaptive") continue
+            if (draftSpec && managedDraftSpec && specPairFlags[cur]) { i += 1; continue }
             out.push(cur)
         }
         return out
@@ -368,15 +415,25 @@ Item {
         draftEnabled = (mp.draftModelId ?? "").length > 0
         modelDraftUnresolved  = bindModelCombo(modelDraft,  mp.draftModelId ?? "")
         const storedSpecType = mp.specType ?? ""
-        mtpEnabled = storedSpecType === "draft-mtp" || storedSpecType === "draft-dspark"
-        specTypeCurrent = storedSpecType === "draft-dspark" ? "draft-dspark" : "draft-mtp"
-        specNMaxField.text = ((mp.specDraftNMax ?? 0) || 0).toString()
-        specNMinField.text = ((mp.specDraftNMin ?? 0) || 0).toString()
+        const rawSpecType = rawDraftSpecType(rawExtra)
+        const resolvedSpecType = (storedSpecType === "draft-mtp" || storedSpecType === "draft-dspark")
+            ? storedSpecType : rawSpecType
+        const rawNMax = parseInt(rawArgValue(rawExtra, "--spec-draft-n-max")) || 0
+        const rawNMin = parseInt(rawArgValue(rawExtra, "--spec-draft-n-min")) || 0
+        const rawConfMin = parseFloat(rawArgValue(rawExtra, "--spec-draft-conf-min")) || 0
+        const rawTypeK = rawArgValue(rawExtra, "--spec-draft-type-k") ?? ""
+        mtpEnabled = resolvedSpecType === "draft-mtp" || resolvedSpecType === "draft-dspark"
+        specTypeCurrent = resolvedSpecType === "draft-dspark" ? "draft-dspark" : "draft-mtp"
+        specNMaxField.text = (((mp.specDraftNMax ?? 0) || 0) > 0 ? mp.specDraftNMax : rawNMax).toString()
+        specNMinField.text = (((mp.specDraftNMin ?? 0) || 0) > 0 ? mp.specDraftNMin : rawNMin).toString()
         specAdaptiveCheck.checked = mp.specDraftAdaptive === true
-        specDraftConfMinField.text = ((mp.specDraftConfMin ?? 0) || 0) > 0
-            ? Number(mp.specDraftConfMin).toFixed(3) : ""
+            || rawHasFlag(rawExtra, "--spec-draft-adaptive")
+        const confMin = ((mp.specDraftConfMin ?? 0) || 0) > 0 ? mp.specDraftConfMin : rawConfMin
+        specDraftConfMinField.text = confMin > 0 ? Number(confMin).toFixed(3) : ""
         specTypeCombo.currentIndex = Math.max(0, specTypeCombo.model.indexOf(specTypeCurrent))
-        specKvType.currentIndex = Math.max(0, specKvType.model.indexOf(mp.specDraftTypeK ?? ""))
+        const storedTypeK = mp.specDraftTypeK ?? ""
+        specKvType.currentIndex = Math.max(0, specKvType.model.indexOf(
+            storedTypeK.length > 0 ? storedTypeK : rawTypeK))
 
         const rt = App.profileManager.getRuntimePreset(runtimeId)
         runtimeNameCurrent = rt.name ?? ""

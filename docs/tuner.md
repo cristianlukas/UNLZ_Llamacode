@@ -71,7 +71,7 @@ Definido en `AppController::buildTuneParams()`:
 | cache-type-k | `--cache-type-k` | f16 / q8_0 / q4_0 | ✓ |
 | cache-type-v | `--cache-type-v` | f16 / q8_0 / q4_0 | ✓ |
 | split-mode | `--split-mode` | layer / tensor | |
-| spec n-max | `--spec-draft-n-max` | 1 / 2 / 3 / 4 / 5 | |
+| spec n-max | `--spec-draft-n-max` | 1..5 (fixed) / n-min..9 (adaptive) | |
 | DSpark conf-min | `--spec-draft-conf-min` | 0 / 0.2 / 0.4 / 0.6 / 0.8 | |
 
 Los dos últimos sólo entran cuando el comando efectivo declara speculative
@@ -163,6 +163,29 @@ configuración fija que no refleja lo pedido.
 
 Parámetros (`startAutoTune(launchProfileId, maxTrials, qualityGate, nPredict)`):
 default `24, 0.6, 256`.
+
+### Benchmark A/B en hardware real
+
+El tuner valida candidatos dentro de LlamaCode, pero para comparar una build
+oficial con la fork adaptive conviene reiniciar el server por configuración y
+medir las mismas tareas en ambos modos. El script reproducible hace eso y
+registra `promptMs`, `decodeTps`, `draftN`, `draftAccepted`, wall time y un
+chequeo de salida por tarea:
+
+```powershell
+tools\benchmark_adaptive_speculation.ps1 `
+  -Server D:\Models\llamacpp\adaptive\llama-server.exe `
+  -Model D:\Models\qwen\Qwen3.8-27B-Q4_K_M.gguf `
+  -Mmproj D:\Models\qwen\mmproj-BF16.gguf `
+  -Template C:\Users\<user>\AppData\Local\LlamaCode\LlamaCode\chat-templates\qwen38-tools-fixed.jinja `
+  -Passes 2 -Output .\benchmarks\adaptive-qwen38.json
+```
+
+Por defecto compara baseline fijo `n-max=3` contra adaptive `3..5`, `3..7`,
+`3..8` y `3..9`. Se puede ajustar la matriz con `-FixedNMax` y
+`-AdaptiveNMax`. El script corta antes de medir si `--help` no declara tanto
+`--spec-draft-adaptive` como `--spec-draft-n-min`, y conserva logs temporales
+del proceso cuando una configuración no llega a healthy.
 
 ---
 

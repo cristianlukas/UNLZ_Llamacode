@@ -82,6 +82,18 @@ QList<EngineCatalogEntry> EngineCatalog::entries()
          {variant(QStringLiteral("beellama-cuda"), QStringLiteral("CUDA (NVIDIA)"),
                   QStringLiteral("cuda"), {QStringLiteral("windows")}, {QStringLiteral("nvidia")},
                   true, false, QStringLiteral("experimental"), QStringLiteral("fast"))}},
+        {QStringLiteral("llama.cpp-adaptive"),
+         QStringLiteral("llama.cpp adaptive MTP"),
+         QStringLiteral("llama-server"),
+         QStringLiteral("Fork con adaptive speculative decoding para ajustar MTP según el contenido."),
+         QStringLiteral("LaurentZuijdwijk/llama.cpp"),
+         QStringLiteral("https://github.com/LaurentZuijdwijk/llama.cpp"),
+         QStringLiteral("mtp-fork"),
+         QStringLiteral("experimental"),
+         QStringLiteral("Build desde source; requiere toolchain CUDA/MSVC y se registra con detección de capacidades."),
+         {variant(QStringLiteral("llama.cpp-adaptive-cuda-source"), QStringLiteral("Build CUDA (NVIDIA)"),
+                  QStringLiteral("cuda"), {QStringLiteral("windows")}, {QStringLiteral("nvidia")},
+                  false, true, QStringLiteral("experimental"), QStringLiteral("fast"))}},
         {QStringLiteral("nanbeige42"),
          QStringLiteral("Nanbeige llama.cpp"),
          QStringLiteral("llama-server"),
@@ -349,4 +361,17 @@ QString EngineCatalog::buildDirName(const QString &repoOrUrl, const QString &bra
     raw.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9._-]+")), QStringLiteral("-"));
     raw.remove(QRegularExpression(QStringLiteral("^-+|-+$")));
     return raw.isEmpty() ? QStringLiteral("engine") : raw;
+}
+
+QString EngineCatalog::sourceBuildDirName(const EngineCatalogEntry &entry)
+{
+    QString slug = buildDirName(entry.repo);
+    const QString repoLeaf = normalizeRepo(entry.repo).section(QLatin1Char('/'), -1);
+    if (entry.id != repoLeaf) {
+        QString suffix = entry.id;
+        suffix.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9._-]+")), QStringLiteral("-"));
+        if (!suffix.isEmpty())
+            slug += QLatin1Char('-') + suffix;
+    }
+    return slug;
 }
