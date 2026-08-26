@@ -1479,6 +1479,12 @@ AppController::AppController(QObject *parent) : QObject(parent)
     // Migración: Procesos legacy con schedule embebido → Automatización enlazada.
     migrateLegacySchedulesToAutomations();
 
+    // Lane separado del scheduler cron: las operaciones auxiliares tienen su
+    // propia cola observable y no interfieren con las Tasks programadas.
+    m_auxiliaryScheduler = new AuxiliaryJobScheduler(this);
+    connect(m_auxiliaryScheduler, &AuxiliaryJobScheduler::jobsChanged,
+            this, &AppController::auxiliaryJobsChanged);
+
     // Scheduler de Automatizaciones (cron in-app). automationDue→runAutomation.
     // El toggle global persiste.
     m_scheduler = new TaskScheduler(&m_automations, this);

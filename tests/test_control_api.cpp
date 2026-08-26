@@ -62,6 +62,7 @@ private slots:
     void requestIdGeneratedWhenMissing();
     void appControllerEngineeringCatalogIsHeadless();
     void harnessSpecIsHeadless();
+    void auxiliarySchedulerIsHeadless();
 
 private:
     QJsonObject request(const QByteArray &method, const QString &path,
@@ -423,6 +424,50 @@ void ControlApiTests::harnessSpecIsHeadless()
         port, "POST", "/invoke",
         R"({"target":"profileManager","method":"setAgentProfileSpec","args":["agent-intermedio",{}]})");
     QVERIFY(!denied.value("result").toBool());
+}
+
+void ControlApiTests::auxiliarySchedulerIsHeadless()
+{
+    QStandardPaths::setTestModeEnabled(true);
+    QCoreApplication::setOrganizationName(QStringLiteral("LlamaCode"));
+    QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
+    AppController app;
+    ControlApi api(&app);
+    const quint16 port = freePort();
+    QVERIFY(api.start(port));
+
+    const QJsonObject methods = requestJsonAt(port, "GET", "/methods");
+    QVERIFY(methods.value(QStringLiteral("targets")).toArray()
+                .contains(QJsonValue(QStringLiteral("auxiliaryScheduler"))));
+
+    const QJsonObject queued = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"target":"auxiliaryScheduler","method":"enqueue","args":["retrieval","cpu-embed",5,"headless test"]})");
+    QVERIFY(queued.value(QStringLiteral("ok")).toBool());
+    const QString id = queued.value(QStringLiteral("result")).toString();
+    QVERIFY(!id.isEmpty());
+
+    const QJsonObject started = requestJsonAt(
+        port, "POST", "/invoke",
+        R"({"target":"auxiliaryScheduler","method":"startNextJob","args":[]})");
+    QCOMPARE(started.value(QStringLiteral("result")).toString(), id);
+
+    const QJsonObject jobs = requestJsonAt(
+        port, "GET", "/prop?target=auxiliaryScheduler&name=jobs");
+    const QJsonArray rows = jobs.value(QStringLiteral("value")).toArray();
+    QCOMPARE(rows.size(), 1);
+    QCOMPARE(rows.first().toObject().value(QStringLiteral("state")).toString(),
+             QStringLiteral("running"));
+
+    const QByteArray completeBody = QStringLiteral(
+        R"({"target":"auxiliaryScheduler","method":"complete","args":["%1",true,"done"]})")
+        .arg(id).toUtf8();
+    const QJsonObject finished = requestJsonAt(port, "POST", "/invoke", completeBody);
+    QVERIFY(finished.value(QStringLiteral("ok")).toBool());
+
+    const QJsonObject appJobs = requestJsonAt(port, "GET", "/prop?name=auxiliaryJobs");
+    QCOMPARE(appJobs.value(QStringLiteral("value")).toArray().first().toObject()
+                 .value(QStringLiteral("state")).toString(), QStringLiteral("completed"));
 }
 
 QTEST_MAIN(ControlApiTests)

@@ -114,7 +114,32 @@ Propiedades (`/prop`, y `/setprop` si son escribibles):
   cierra la etapa.
 
 Sub-targets útiles: `rootRegistry` (modelos en disco: `add/remove/scan/scanAll/refresh`,
-prop `count`/`scanning`), `modelCatalog`, `profileManager`, `binaryRegistry`.
+prop `count`/`scanning`), `modelCatalog`, `profileManager`, `binaryRegistry` y
+`auxiliaryScheduler`.
+
+### Scheduler de operaciones auxiliares
+
+`auxiliaryScheduler` es una cola separada del scheduler cron de Tasks. Permite que
+un sidecar de embeddings, rerank, STT u otra operación CPU tenga límite por clase,
+exclusión por recurso, prioridad y estado observable:
+
+```powershell
+$aux = "$base/invoke?target=auxiliaryScheduler"
+$jobBody = @{method="enqueue"; args=@("retrieval", "cpu-embed", 5, "RAG")} |
+  ConvertTo-Json -Compress
+$job = (Invoke-RestMethod $aux -Method Post -ContentType application/json -Body $jobBody).result
+Invoke-RestMethod $aux -Method Post -ContentType application/json `
+  -Body (@{method="startNextJob"; args=@()} | ConvertTo-Json -Compress)
+Invoke-RestMethod $aux -Method Post -ContentType application/json `
+  -Body (@{method="complete"; args=@($job, $true, "ok")} | ConvertTo-Json -Compress)
+Invoke-RestMethod "$base/prop?target=auxiliaryScheduler&name=jobs"
+```
+
+Las llamadas anteriores llevan `target=auxiliaryScheduler`; `auxiliaryJobs` en la
+raíz de `AppController` ofrece el mismo snapshot para QML o polling. El scheduler
+no ejecuta procesos por sí solo: el worker/sidecar que realiza el trabajo debe
+avanzarlo con `startNextJob()` y cerrarlo con `complete(id, ok, detail)` o
+`cancel(id, detail)`.
 
 ## Ciclo de vida del agente (importante)
 

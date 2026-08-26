@@ -15,6 +15,7 @@
 #include "core/tasks/EvidenceBundle.h"
 #include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
+#include "core/AuxiliaryJobScheduler.h"
 #include "core/agents/AgentDefinitionStore.h"
 #include "core/agents/TriggerManager.h"
 #include "core/tasks/WorkflowRunner.h"
@@ -74,6 +75,8 @@ class AppController : public QObject
                NOTIFY activeAgentDefinitionChanged)
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
     Q_PROPERTY(DataLabStore*      dataLab         READ dataLab         CONSTANT)
+    Q_PROPERTY(AuxiliaryJobScheduler* auxiliaryScheduler READ auxiliaryScheduler CONSTANT)
+    Q_PROPERTY(QVariantList auxiliaryJobs READ auxiliaryJobs NOTIFY auxiliaryJobsChanged)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
     Q_PROPERTY(bool canRunTask READ canRunTask NOTIFY taskRunAvailabilityChanged)
@@ -274,6 +277,9 @@ public:
     Q_INVOKABLE bool activateAgentDefinition(const QString &agentId);
     AutomationStore   *automationStore() { return &m_automations; }
     DataLabStore       *dataLab()        { return &m_dataLab; }
+    AuxiliaryJobScheduler *auxiliaryScheduler() const { return m_auxiliaryScheduler; }
+    QVariantList auxiliaryJobs() const
+    { return m_auxiliaryScheduler ? m_auxiliaryScheduler->snapshot() : QVariantList{}; }
     bool tasksSchedulerEnabled() const
     { return QSettings().value(QStringLiteral("tasks/schedulerEnabled"), false).toBool(); }
     void setTasksSchedulerEnabled(bool on);
@@ -1457,6 +1463,7 @@ signals:
     void activeAgentDefinitionChanged();
     void agentTeacherChanged();
     void agentAuxiliaryChanged();
+    void auxiliaryJobsChanged();
     void mailAutoSendChanged();
     void hitlDestructiveChanged();
     void desktopIndicatorChanged();
@@ -1576,6 +1583,7 @@ private:
     AutomationStore   m_automations;
     DataLabStore      m_dataLab;
     TaskScheduler    *m_scheduler = nullptr;
+    AuxiliaryJobScheduler *m_auxiliaryScheduler = nullptr;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
     QString  m_runningTaskId;
     // Automatización que disparó la corrida actual (si vino del scheduler/UI de

@@ -19,7 +19,10 @@ AuxiliaryJobScheduler::AuxiliaryJobScheduler(QObject *parent)
 
 void AuxiliaryJobScheduler::setClassLimit(const QString &jobClass, int limit)
 {
-    m_classLimits.insert(jobClass, qMax(0, limit));
+    const int normalized = qMax(0, limit);
+    if (m_classLimits.value(jobClass, 1) == normalized) return;
+    m_classLimits.insert(jobClass, normalized);
+    emit jobsChanged();
 }
 
 int AuxiliaryJobScheduler::classLimit(const QString &jobClass) const
@@ -39,6 +42,7 @@ QString AuxiliaryJobScheduler::enqueue(const QString &jobClass, const QString &r
     job.sequence = m_nextSequence++;
     m_jobs.append(job);
     emit jobQueued(job.id);
+    emit jobsChanged();
     return job.id;
 }
 
@@ -49,7 +53,15 @@ bool AuxiliaryJobScheduler::startNext(QString *startedId)
     m_jobs[index].state = JobState::Running;
     if (startedId) *startedId = m_jobs[index].id;
     emit jobStarted(m_jobs[index].id);
+    emit jobsChanged();
     return true;
+}
+
+QString AuxiliaryJobScheduler::startNextJob()
+{
+    QString startedId;
+    if (!startNext(&startedId)) return {};
+    return startedId;
 }
 
 bool AuxiliaryJobScheduler::complete(const QString &id, bool ok, const QString &detail)
@@ -59,6 +71,7 @@ bool AuxiliaryJobScheduler::complete(const QString &id, bool ok, const QString &
     job->state = ok ? JobState::Completed : JobState::Failed;
     job->detail = detail;
     emit jobFinished(id, ok);
+    emit jobsChanged();
     return true;
 }
 
@@ -72,6 +85,7 @@ bool AuxiliaryJobScheduler::cancel(const QString &id, const QString &detail)
     job->state = JobState::Cancelled;
     job->detail = detail;
     emit jobCancelled(id);
+    emit jobsChanged();
     return true;
 }
 

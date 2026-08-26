@@ -14,6 +14,7 @@
 class AuxiliaryJobScheduler : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(QVariantList jobs READ snapshot NOTIFY jobsChanged)
 public:
     enum class JobState { Queued, Running, Completed, Failed, Cancelled };
     Q_ENUM(JobState)
@@ -31,16 +32,18 @@ public:
 
     explicit AuxiliaryJobScheduler(QObject *parent = nullptr);
 
-    void setClassLimit(const QString &jobClass, int limit);
-    int classLimit(const QString &jobClass) const;
+    Q_INVOKABLE void setClassLimit(const QString &jobClass, int limit);
+    Q_INVOKABLE int classLimit(const QString &jobClass) const;
 
-    QString enqueue(const QString &jobClass, const QString &resourceKey = {},
-                    int priority = 0, const QString &detail = {});
+    Q_INVOKABLE QString enqueue(const QString &jobClass, const QString &resourceKey = {},
+                                int priority = 0, const QString &detail = {});
     bool startNext(QString *startedId = nullptr);
-    bool complete(const QString &id, bool ok = true, const QString &detail = {});
-    bool cancel(const QString &id, const QString &detail = {});
+    Q_INVOKABLE QString startNextJob();
+    Q_INVOKABLE bool complete(const QString &id, bool ok = true,
+                              const QString &detail = {});
+    Q_INVOKABLE bool cancel(const QString &id, const QString &detail = {});
 
-    QVariantList snapshot() const;
+    Q_INVOKABLE QVariantList snapshot() const;
     static QString stateName(JobState state);
 
 signals:
@@ -48,6 +51,7 @@ signals:
     void jobStarted(const QString &id);
     void jobFinished(const QString &id, bool ok);
     void jobCancelled(const QString &id);
+    void jobsChanged();
 
 private:
     int runningCountForClass(const QString &jobClass) const;

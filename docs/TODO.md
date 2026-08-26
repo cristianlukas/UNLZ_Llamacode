@@ -160,7 +160,7 @@ Target de tests: `cmake -B build_tests -DBUILD_TESTS=ON` → `LlamaCodeTests` (Q
 
 - [ ] **LlamaProcessManager dedicado** — extraer ciclo de vida de proceso de `AppController` a clase propia. Refactor arquitectónico grande, alto riesgo, bajo ROI ahora. No empezado.
 - [x] **ControlApi `reqId` estable** — acepta `reqId` por body/query/header (`x-req-id`/`reqid`), lo genera si falta y lo devuelve en respuestas/errores. Falta propagar ese id a logs de Tasks/agente/benchmark.
-- [x] **Scheduler de operaciones auxiliares (núcleo)** — `AuxiliaryJobScheduler` separa del `TaskScheduler` cron una cola interna por clases de trabajo, prioridad, recurso ocupado, cancelación y snapshot consultable. Falta integrarlo con AppController/ControlApi para trabajos reales.
+- [x] **Scheduler de operaciones auxiliares** — `AuxiliaryJobScheduler` separa del `TaskScheduler` cron una cola interna por clases de trabajo, prioridad, recurso ocupado, cancelación y snapshot consultable. Está expuesto como subobjeto observable de `AppController` y es invocable por `ControlApi` para encolar, iniciar, completar/cancelar y consultar trabajos reales.
 - [x] **Sampling por sesión (chat)** — temperature/top-p/top-k/min-p/repeat penalty, persistencia JSON, payload, medición first-token y panel en ChatPage.
 - [x] **Panel UI de búsqueda en historial** — campo de búsqueda + resultados (snippet y `switchChatSession`) en ChatPage.
 - [x] **Combo UI de filtro de log por nivel** — selector all/error/warn/stderr/stdout/lifecycle/health/diag en LaunchPage.
