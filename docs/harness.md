@@ -571,6 +571,17 @@ defecto y la comparación sería una mentira.
 
 Regla de lectura: un harness sólo es mejor si **no** baja calidad ni tasa de éxito.
 
+Para comparar harnesses que viven fuera de LlamaCode existe además
+`tools/harness_matrix.py`. Usa el contrato JSONL `llamacode-harness-v1`, ejecuta
+el mismo producto adapter × tarea con orden intercalado y semilla reproducible,
+y guarda deltas pareados de éxito, latencia, F1 de tools y redundancias. Los IDs
+de OpenClaw, Hermes, Pi y Nanobot se incluyen como configuración de ejemplo, pero
+los comandos concretos se inyectan por ambiente para no acoplarse a una CLI
+particular. La suite bundleada multi-dominio es
+`assets/benchmarks/custom/harness_multidomain_v1.json`; el contrato mínimo de
+secuencia de herramientas está separado en
+`assets/benchmarks/custom/harness_tool_contract_v1.json`.
+
 ---
 
 ## 12c. Contrato Next y lanes de workers

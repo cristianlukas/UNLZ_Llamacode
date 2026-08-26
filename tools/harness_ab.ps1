@@ -170,6 +170,17 @@ foreach ($c in $report.comparisons) {
         $c.baselineProfileId, $c.candidateProfileId, (Signed $c.qualityDeltaPctPoints),
         (Signed $c.successRateDeltaPctPoints), (Signed $c.comparisonTimeChangePct),
         (Signed $c.filesChangedDelta))
+    $toolF1Delta = if ($c.PSObject.Properties.Name -contains 'toolF1DeltaPctPoints') {
+        Signed $c.toolF1DeltaPctPoints
+    } else { 's/d' }
+    $toolSuccessDelta = if ($c.PSObject.Properties.Name -contains 'toolSuccessRateDeltaPctPoints') {
+        Signed $c.toolSuccessRateDeltaPctPoints
+    } else { 's/d' }
+    $toolRedundantDelta = if ($c.PSObject.Properties.Name -contains 'toolRedundantCallsDelta') {
+        Signed $c.toolRedundantCallsDelta
+    } else { 's/d' }
+    Write-Host ("   tools: F1 {0,7} pp  exito {1,7} pp  redundancias {2,7}" -f `
+        $toolF1Delta, $toolSuccessDelta, $toolRedundantDelta)
     if ($noSamples -contains $c.baselineProfileId -or $noSamples -contains $c.candidateProfileId) {
         Write-Host ("   ^ delta NO interpretable: uno de los dos no tiene corridas exitosas. " +
                     "Suma pasadas (-Passes) o revisa por que fallo.") -ForegroundColor Yellow

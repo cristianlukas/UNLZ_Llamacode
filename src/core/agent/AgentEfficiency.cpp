@@ -469,7 +469,7 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const
                 : QStringLiteral("medianFirstAttemptSec");
             const double baseTime = baseline.value(timeKey).toDouble();
             const double candidateTime = candidate.value(timeKey).toDouble();
-            comparisons.append(QVariantMap{
+            QVariantMap comparison{
                 {QStringLiteral("baselineProfileId"), ids.at(i)},
                 {QStringLiteral("candidateProfileId"), ids.at(j)},
                 {QStringLiteral("qualityDeltaPctPoints"),
@@ -491,8 +491,25 @@ QVariantMap AgentEfficiency::benchmarkComparison(const QVariantList &runs, const
                      - baseline.value(QStringLiteral("medianRemovedLines")).toDouble()},
                 // Backward-compatible alias for consumers of schemaVersion 1.
                 {QStringLiteral("elapsedChangePct"),
-                 baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0}
-            });
+                  baseTime > 0.0 ? (candidateTime / baseTime - 1.0) * 100.0 : 0.0}
+            };
+            const auto knownDelta = [](const QVariantMap &base,
+                                       const QVariantMap &candidate,
+                                       const QString &key) {
+                if (!base.contains(key) || !candidate.contains(key)) return -1.0;
+                const double a = base.value(key).toDouble();
+                const double b = candidate.value(key).toDouble();
+                return a >= 0.0 && b >= 0.0 ? b - a : -1.0;
+            };
+            comparison[QStringLiteral("toolF1DeltaPctPoints")] =
+                knownDelta(baseline, candidate, QStringLiteral("medianToolF1Pct"));
+            comparison[QStringLiteral("toolSuccessRateDeltaPctPoints")] =
+                knownDelta(baseline, candidate, QStringLiteral("medianToolSuccessRatePct"));
+            comparison[QStringLiteral("toolRedundantCallsDelta")] =
+                knownDelta(baseline, candidate, QStringLiteral("medianToolRedundantCalls"));
+            comparison[QStringLiteral("toolCallsDelta")] =
+                knownDelta(baseline, candidate, QStringLiteral("medianToolCalls"));
+            comparisons.append(comparison);
         }
     }
 

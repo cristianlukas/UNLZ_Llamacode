@@ -232,6 +232,7 @@ try {
         Remove-Item $r.OutFile -Force -ErrorAction SilentlyContinue
     }
     Ok ($r.Output -match 'calidad') "imprime el resumen legible por perfil"
+    Ok ($r.Output -match 'tools: F1') "imprime los deltas de calidad de tools"
     Ok ($r.Output -match 'NO baja calidad') "recuerda el criterio de lectura"
 } finally { Stop-Stub $stub }
 

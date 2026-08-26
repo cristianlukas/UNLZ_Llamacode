@@ -60,6 +60,14 @@ echo [INFO] ===== Running ctest (%CFG%) =====
 "%CTEST%" --test-dir build_tests -C %CFG% --output-on-failure
 if errorlevel 1 ( echo. & echo === TESTS FAILED === & goto :done_fail )
 
+REM El runner externo de harnesses y su contrato JSONL tienen tests de Python.
+where python >nul 2>&1
+if errorlevel 1 ( echo [ERROR] Python is required for tests\test_harness_matrix.py. & goto :done_fail )
+python -m unittest discover -s tests -p "test_harness_matrix.py"
+if errorlevel 1 ( echo. & echo === PYTHON TESTS FAILED === & goto :done_fail )
+python -m unittest tests.test_kv_cache_ab
+if errorlevel 1 ( echo. & echo === KV CACHE A/B PYTHON TESTS FAILED === & goto :done_fail )
+
 echo.
 echo === All tests passed ===
 goto :done_ok

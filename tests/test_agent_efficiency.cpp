@@ -270,6 +270,28 @@ void AgentEfficiencyTests::metrics_aggregatesToolQuality()
     QCOMPARE(profile.value("medianToolSuccessRatePct").toDouble(), 87.5);
     QCOMPARE(profile.value("medianToolRedundantCalls").toDouble(), 0.5);
     QCOMPARE(profile.value("medianToolF1Pct").toDouble(), 90.0);
+
+    const QVariantMap candidateQuality{
+        {"totalCalls", 3}, {"successRatePct", 100.0},
+        {"redundantCalls", 0}, {"f1Pct", 100.0}};
+    const QVariantList abRuns{
+        QVariantMap{{"profileId", "same-model"}, {"agentProfileId", "a-minimal"},
+                     {"agentProfileName", "Minimal"}, {"qualityScore", 1},
+                     {"qualityTotal", 1}, {"elapsedSec", 10.0}, {"failed", false},
+                     {"toolCallQuality", firstQuality}},
+        QVariantMap{{"profileId", "same-model"}, {"agentProfileId", "b-maximo"},
+                     {"agentProfileName", "Maximo"}, {"qualityScore", 1},
+                     {"qualityTotal", 1}, {"elapsedSec", 9.0}, {"failed", false},
+                     {"toolCallQuality", candidateQuality}}
+    };
+    const QVariantList comparisons = AgentEfficiency::benchmarkComparison(
+        abRuns, QStringLiteral("agentProfileId")).value("comparisons").toList();
+    QCOMPARE(comparisons.size(), 1);
+    const QVariantMap delta = comparisons.first().toMap();
+    QCOMPARE(delta.value("toolF1DeltaPctPoints").toDouble(), 20.0);
+    QCOMPARE(delta.value("toolSuccessRateDeltaPctPoints").toDouble(), 25.0);
+    QCOMPARE(delta.value("toolRedundantCallsDelta").toDouble(), -1.0);
+    QCOMPARE(delta.value("toolCallsDelta").toDouble(), -1.0);
 }
 
 void AgentEfficiencyTests::structured_compactsAndProjects()
