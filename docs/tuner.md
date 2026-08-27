@@ -166,11 +166,12 @@ default `24, 0.6, 256`.
 
 ### Benchmark A/B en hardware real
 
-El tuner valida candidatos dentro de LlamaCode, pero para comparar una build
-oficial con la fork adaptive conviene reiniciar el server por configuración y
-medir las mismas tareas en ambos modos. El script reproducible hace eso y
-registra `promptMs`, `decodeTps`, `draftN`, `draftAccepted`, wall time y un
-chequeo de salida por tarea:
+El tuner valida candidatos dentro de LlamaCode, pero para medir adaptive en
+hardware real conviene reiniciar el server por configuración y repetir las
+mismas tareas en el control fijo y en el modo adaptive del mismo binario
+parcheado. El script reproducible hace eso y registra `promptMs`, `decodeTps`,
+`draftN`, `draftAccepted`, wall time y un chequeo de salida por tarea. No es,
+por sí solo, una comparación entre dos binarios distintos:
 
 ```powershell
 tools\benchmark_adaptive_speculation.ps1 `
