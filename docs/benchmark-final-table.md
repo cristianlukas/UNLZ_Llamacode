@@ -58,6 +58,33 @@ el total vigente.
 | 22 | Qwen3.8 MTP embebido 131k | Qwen3.8 UD-Q4_K_XL | 1/1 | 20/20 | 7/8 | 49,67 | 29,1 / 266,4 / 646,0 | Casi completo; inferior al MTP separado |
 | 23 | Qwen3.8 MTP embebido 64k | Qwen3.8 UD-Q4_K_XL | 1/1 | 20/20 | 8/8 | 52,58 | 26,6 / 468,5 / 625,5 | BCB completo; contexto más corto |
 
+## Actualización post-corte: KAT APEX-MTP + Qwen mmproj (2026-08-27)
+
+Estas corridas agregan evidencia funcional que no existía al cierre de la
+tabla, pero no reemplazan el ranking consolidado: HE20 no quedó validado y la
+compuerta de calidad bloqueó BCB. La referencia histórica de KAT sigue siendo
+BCB **3/8**. El modelo sí merece entrar como **candidato experimental para
+visión y contexto largo**, no como perfil SOL/TERRA/LUNA hasta completar
+HE20 → BCB.
+
+La receta común fue KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf con
+mmproj-F16.gguf, MTP2, KV `q8_0` en K/V, Flash Attention, `split-mode layer`,
+`--skip-chat-parsing` y el parser XML de LlamaCode. En 32k, el smoke de tools
+devolvió XML KAT válido (`read_file` + `README.md`), con 17/22 tokens MTP
+aceptados y 113,01 tok/s de decode; `test_agent_wire` también pasó.
+
+| Candidato | Evidencia de contexto | MTP / velocidad observada | Decisión |
+|---|---|---|---|
+| KAT APEX + mmproj · 64k | 47.622 tokens efectivos; marcador exacto; carga estable | 6/8 aceptados; prompt 903,50 tok/s; decode 103,08 tok/s | **Candidato experimental recomendado** para visión + herramientas con más contexto que 32k |
+| KAT APEX + mmproj · 131k | 99.371 tokens efectivos; marcador exacto; carga estable | 8/8 aceptados; prompt 801,32 tok/s; decode 98,78 tok/s | **Candidato experimental recomendado** para contexto largo |
+| KAT APEX + mmproj · 262k | La configuración 262.144 cargó; 199.856 tokens pasaron el marcador exacto. Una corrida cercana al límite procesó 244.505 tokens sin OOM, pero devolvió el marcador truncado | 7/8 en la corrida de 199k; cerca del límite, 4/4 y decode 39,89 tok/s | **Experimental / no promocionar todavía**: capacidad disponible, recuperación/calidad en el límite pendiente |
+
+HE0 sí pasó 1/1 en 32k. El intento de HE20 no produjo resultado válido: el
+agente entró en anti-loop repitiendo lecturas (11 eventos de fallo antes de
+cancelar). Por eso BCB no se ejecutó como medición de calidad y no corresponde
+comparar este candidato contra el KAT histórico 3/8 como si tuviera un score
+nuevo. Los TPS anteriores son smokes de contexto/tool calling, no `TPS BCB`.
+
 ## Recomendación principal: SOL, TERRA, LUNA y METEOR
 
 Estas etiquetas son decisiones de producto, no sólo un ranking por TPS. Pesan
@@ -93,6 +120,9 @@ calidad BCB, tiempo total, estabilidad, contexto y el tipo de trabajo.
 | Coding rápido | Qwen3.8 MTP separado 131k | 8/8 y 55,17 tok/s; más confiable que KAT en BCB. |
 | Coding con razonamiento fuerte | Browser Agent xhigh 131k | 8/8 y mayor nivel de thinking, con penalización de tiempo. |
 | Visión en 48 GB | Qwen3.8 UD-Q4 196k · MTP2 · KV Q8 · mmproj RAM | 8/8, 43,71 tok/s y 941,9 s E2E; especializado. |
+| Visión + herramientas en 48 GB (experimental) | KAT APEX + Qwen mmproj · MTP2 · 64k · KV Q8 | XML KAT válido, mmproj funcional y recuperación exacta probada; HE20/BCB pendientes. |
+| Visión con contexto largo (experimental) | KAT APEX + Qwen mmproj · MTP2 · 131k · KV Q8 | 99.371 tokens efectivos y marcador exacto; HE20/BCB pendientes. |
+| Capacidad máxima de contexto (experimental) | KAT APEX + Qwen mmproj · MTP2 · 262k · KV Q8 | Configuración cargada y 244.505 tokens procesados sin OOM, pero recuperación degradada cerca del límite. |
 | DeepSeek local | DeepSeek V4 Flash IQ3_S sin DSpark | Es el único DeepSeek con 8/8 BCB completo, pero 9,65 tok/s lo deja como experimental. |
 
 ## DeepSeek: conclusión
@@ -108,7 +138,7 @@ corresponde reintentarlos con la cola serial y la nueva planificación fit-aware
 
 | Familia | Decisión | Motivo |
 |---|---|---|
-| KAT APEX-MTP | Fuera de la cola activa | Experimental; falta HE0 validado en este checkout. |
+| KAT APEX-MTP | Candidato experimental; todavía no promocionado | HE0 1/1 y visión/tool calling XML funcionales; HE20 quedó inválido por anti-loop, BCB bloqueado por la compuerta; 64k/131k pasaron smokes de recuperación y 262k mostró degradación cerca del límite. |
 | Dynamic V3 DFlash2 local | Fuera de la cola activa | El loader falla por incompatibilidad de arquitectura/backend (`wrong number of tensors`, `FGDN_AR`). |
 | Dynamic V3 DFlash2 vLLM | No local en Windows | Requiere endpoint vLLM parcheado y drafter externo; no es comparable en este entorno. |
 | BigBang base / fast | No promocionados | Fallos históricos de HE0, CUDA o estancamiento; sólo se conserva el control reparado. |
