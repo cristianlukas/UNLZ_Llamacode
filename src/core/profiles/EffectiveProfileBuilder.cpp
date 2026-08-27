@@ -198,7 +198,7 @@ EffectiveProfile EffectiveProfileBuilder::build(const Context &ctx)
     const bool specDecoding =
         !ctx.model.specType.isEmpty()
         || (!ctx.model.draftModelId.isEmpty() && ctx.draftModel.isAvailable);
-    applyRuntime(ctx.runtime, ctx.binary, args, result.warnings,
+    applyRuntime(ctx.runtime, ctx.binary, ctx.catalogModel, args, result.warnings,
                  result.blockingErrors, specDecoding);
 
     // Harness env
@@ -507,6 +507,7 @@ void EffectiveProfileBuilder::applyModel(const ModelProfile &mp,
 
 void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
                                            const LlamaBinary &bin,
+                                           const CatalogModel &model,
                                            QStringList &args,
                                            QStringList &warnings,
                                            QStringList &errors,
@@ -554,12 +555,27 @@ void EffectiveProfileBuilder::applyRuntime(const RuntimePreset &rt,
     }
 
     if (!rt.cacheType.isEmpty() && rt.cacheType != "f16") {
-        if (specDecoding) {
+        // La arquitectura Qwen4 (qwen4exp) NO soporta KV cache cuantizado: el
+        // server ABORTA al construir el grafo, no degrada. Medido contra el PR
+        // 27742 con --cache-type-k q8_0:
+        //   qwen4exp.cpp:544: GGML_ASSERT(inp->self_k_rot == nullptr &&
+        //                                 inp->self_v_rot == nullptr) failed
+        // Los args base del backend traen q8_0 por default, asi que sin este
+        // dropeo cualquier perfil de este modelo crashea en loop hasta que el
+        // watchdog se rinde. Es exactamente el caso de uso de addFlag: degradar
+        // en vez de lanzar algo que se sabe roto.
+        if (GGUFScanner::isNgramArchitectureName(model.fileName)) {
             warnings.append(QStringLiteral(
-                "Speculative decoding active: se respeta KV cache quant '%1'; "
-                "puede reducir la aceptación del draft.").arg(rt.cacheType));
+                "KV cache quant '%1' descartado: la arquitectura Qwen4 (Ngram/PLE) "
+                "aborta con KV cuantizado. Se usa f16.").arg(rt.cacheType));
+        } else {
+            if (specDecoding) {
+                warnings.append(QStringLiteral(
+                    "Speculative decoding active: se respeta KV cache quant '%1'; "
+                    "puede reducir la aceptación del draft.").arg(rt.cacheType));
+            }
+            addFlag(bin, "--cache-type-k", rt.cacheType, args, warnings);
         }
-        addFlag(bin, "--cache-type-k", rt.cacheType, args, warnings);
     }
 
     // llama.cpp b10228+ acepta varias reglas separadas por coma en un unico
