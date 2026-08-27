@@ -23738,6 +23738,7 @@ void AppController::startCharla()
     // buscar el mayor perfil normal instalado que sí entra. No se toca un perfil
     // de usuario: cambiarle el modelo en silencio sería una sorpresa y se deja
     // que el diagnóstico explique qué debe ajustar.
+    bool launchChangedByFallback = false;
     if (automaticGpuSelection && !gpuPlan.value(QStringLiteral("modelPlacementSafe")).toBool()
         && activeLaunch.system) {
         QString fallbackId;
@@ -23777,6 +23778,7 @@ void AppController::startCharla()
             m_charlaVoiceConfigOverride = plannedVoiceConfig;
             m_charlaHasVoiceConfigOverride = true;
             selectedLaunchId = fallbackId;
+            launchChangedByFallback = true;
             activeLaunch = m_profiles.resolveLaunch(selectedLaunchId);
             activeBackend = m_profiles.resolveBackend(activeLaunch.backendProfileId);
             m_activeLaunchId = selectedLaunchId;
@@ -23815,7 +23817,8 @@ void AppController::startCharla()
     // Si el servidor ya estaba cargado con el perfil normal, se relanza una sola
     // vez al entrar a Charla para liberar la porción reservada a voz. El modelo,
     // el agente y el historial siguen siendo los del mismo LaunchProfile.
-    const bool serverPlanMatches = m_serverUsesVoiceGpuPlan
+    const bool serverPlanMatches = !launchChangedByFallback
+        && m_serverUsesVoiceGpuPlan
         && m_serverVoiceGpuPlanSignature == voiceGpuPlanSignature(gpuPlan);
     if (autoGpuPlan && !serverPlanMatches) {
         if (m_activeLaunchId.isEmpty()) {
