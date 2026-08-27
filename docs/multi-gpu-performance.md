@@ -27,10 +27,20 @@ partir de esas capacidades, no una división fija `1,1`.
 
 Al entrar a Charla, si el perfil no tiene una selección manual de GPU ni declara
 su propio `--tensor-split`, LlamaCode relanza una vez el perfil normal con ese
-reparto (`--split-mode` + `--tensor-split`). STT gestionado y los TTS locales que
-se ejecutan como procesos (Piper, Qwen3-TTS e Inflect) reciben
-`CUDA_VISIBLE_DEVICES` apuntando a la GPU reservada. Un endpoint TTS/STT remoto o
-un proceso externo que la app no lanza no puede ser movido por esta política.
+reparto (`--split-mode` + `--tensor-split`). Mientras Charla está activa,
+`nvidia-smi` se consulta cada 2 segundos. Si otra aplicación toma o libera una
+cantidad material de VRAM, el cambio debe aparecer en tres muestras consecutivas;
+recién entonces se detiene y relanza el server con un split nuevo. Si el modelo
+ya no entra de forma segura, no se hace un relanzamiento riesgoso: se registra el
+aviso y se espera a que vuelva a haber margen.
+
+STT gestionado y los TTS locales que se ejecutan como procesos (Piper, Qwen3-TTS
+e Inflect) reciben `CUDA_VISIBLE_DEVICES` apuntando a la GPU reservada. Para un
+STT/TTS HTTP local externo, la configuración de Charla permite indicar un
+`sttManagedCommand`/`ttsManagedCommand` y sus listas de argumentos; LlamaCode
+lo lanza sin shell, lo asocia a su job y lo detiene al cerrar Charla. Un endpoint
+remoto, o un proceso que ya estaba corriendo y la app no lanzó, no puede ser
+movido ni aislado retroactivamente.
 
 El contrato se expone también como `App.voiceGpuPlan()` y dentro de
 `hardwareSummary.voiceGpuPlan`, con `voiceGpuIndex`, `voiceGpuMask`,
@@ -84,6 +94,19 @@ El script inicia `--agent-daemon`, invoca `runStartupScan`, espera
 realista y valida el ranking. También valida que `splitMode` sea `layer` o
 `tensor`. En una máquina sin NVIDIA también debe pasar, usando el fallback CPU.
 El script borra el directorio temporal y detiene el daemon al finalizar.
+
+### Prueba física de dos GPU
+
+Con dos placas instaladas, la prueba siguiente compara la salida real de
+`nvidia-smi` con el plan calculado por el daemon. En la máquina de desarrollo
+espera las dos RTX 3090 de 24 GiB:
+
+```powershell
+.\tests\dual_gpu_voice_smoke.ps1 -Exe .\build\Debug\LlamaCode.exe -RequireRtx3090
+```
+
+No arranca un modelo ni reserva VRAM adicional. Verifica cantidad, modelo,
+bus/VRAM libre observados, GPU de voz y el `modelTensorSplit` para ambas placas.
 
 ### Matriz declarativa
 

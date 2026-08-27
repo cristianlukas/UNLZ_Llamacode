@@ -1762,9 +1762,18 @@ private:
     QTimer   *m_vramPollTimer = nullptr;
     QProcess *m_vramProc = nullptr;
     QVariantMap m_serverStats;
+    // Última muestra de nvidia-smi, conservada aunque el server se detenga
+    // durante un rebalanceo. Así el próximo plan no confunde VRAM ocupada por
+    // otras aplicaciones con VRAM libre.
+    QVariantList m_lastLiveGpus;
+    QString m_charlaGpuRebalanceCandidate;
+    int m_charlaGpuRebalanceSamples = 0;
+    bool m_charlaGpuRebalancePending = false;
+    bool m_charlaGpuRebalanceWarned = false;
     void startVramPolling();
     void stopVramPolling();
     void pollServerStats();
+    void maybeRebalanceCharlaGpuPlan();
     // Aplica el power limit configurado al arrancar un server: usa el override del
     // launch profile (powerLimitW>0) o, si no, el global "gpuPowerLimitW". No-op si
     // ambos son 0 o no hay nvidia-smi. Loguea a eventos del server.
@@ -1823,6 +1832,8 @@ private:
     class VoiceController *m_voice = nullptr;
     VoiceServerManager m_voiceServers;  // catálogo + descarga de modelos STT
     QProcess *m_sttProc = nullptr;      // server STT gestionado (whisper.cpp)
+    QProcess *m_externalSttProc = nullptr; // endpoint STT local configurado por el usuario
+    QProcess *m_externalTtsProc = nullptr; // endpoint TTS local configurado por el usuario
     QString m_pendingVoicePrerequisitesEngine;
     bool m_charlaActive = false;
     bool m_charlaTuneOnNextLaunch = false;  // startServer aplica overrides de voz
@@ -1830,6 +1841,7 @@ private:
     bool m_charlaGpuPlanActive = false;      // auto reparto durante una sesión de voz
     bool m_serverUsesVoiceGpuPlan = false;   // reparto aplicado al server actual
     QString m_serverVoiceGpuPlanSignature;
+    QVariantMap m_serverVoiceGpuPlan;
     bool m_charlaHasVoiceConfigOverride = false;
     VoiceConfig m_charlaVoiceConfigOverride;
     // Ingi Charla: el turno actual se ruteó al agente (computer-use/visión) en vez
@@ -1849,6 +1861,8 @@ private:
     // Ingi Charla no mezcla idiomas por mala detección de whisper en auto.
     void applyAppLanguageToVoice(VoiceConfig &c) const;
     bool startManagedStt(const VoiceConfig &c);  // lanza whisper-server del perfil activo
+    bool startManagedExternalVoice(const VoiceConfig &c, bool stt);
+    void stopManagedExternalVoice();
     void continueVoicePrerequisitesInstall();
     void stopManagedStt();
     QString voiceConfigPath() const;

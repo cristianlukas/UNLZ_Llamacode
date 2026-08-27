@@ -172,8 +172,12 @@ void TestVoice::configRoundTrip()
     c.sttModel = "whisper-1";
     c.sttKeyRef = "voice/openai";
     c.sttLanguage = "es";
+    c.sttManagedCommand = "python";
+    c.sttManagedArgs = {"stt_server.py", "--port", "8081"};
     c.ttsProvider = "local";
     c.ttsVoice = "nova";
+    c.ttsManagedCommand = "python";
+    c.ttsManagedArgs = {"tts_server.py", "--port", "8082"};
     c.ttsFormat = "mp3";
     c.ttsStreamAudio = true;
     c.ttsPcmSampleRate = 22050;
@@ -196,7 +200,11 @@ void TestVoice::configRoundTrip()
     QVERIFY(r.sttIsCloud());
     QCOMPARE(r.sttKeyRef, QString("voice/openai"));
     QCOMPARE(r.sttLanguage, QString("es"));
+    QCOMPARE(r.sttManagedCommand, QString("python"));
+    QCOMPARE(r.sttManagedArgs, QStringList({"stt_server.py", "--port", "8081"}));
     QCOMPARE(r.ttsVoice, QString("nova"));
+    QCOMPARE(r.ttsManagedCommand, QString("python"));
+    QCOMPARE(r.ttsManagedArgs, QStringList({"tts_server.py", "--port", "8082"}));
     QCOMPARE(r.ttsMode, QString("auto"));
     QCOMPARE(r.ttsFormat, QString("mp3"));
     QCOMPARE(r.ttsStreamAudio, true);

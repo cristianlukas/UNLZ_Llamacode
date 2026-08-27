@@ -169,6 +169,34 @@ QString voiceGpuPlanSignature(const QVariantMap &plan)
              plan.value(QStringLiteral("modelSplitMode")).toString());
 }
 
+bool voiceGpuPlansNeedRebalance(const QVariantMap &current, const QVariantMap &candidate)
+{
+    if (!candidate.value(QStringLiteral("enabled")).toBool()) return false;
+    if (current.value(QStringLiteral("voiceGpuMask")).toString()
+            != candidate.value(QStringLiteral("voiceGpuMask")).toString()
+        || current.value(QStringLiteral("modelGpuMask")).toString()
+            != candidate.value(QStringLiteral("modelGpuMask")).toString()
+        || current.value(QStringLiteral("modelSplitMode")).toString()
+            != candidate.value(QStringLiteral("modelSplitMode")).toString())
+        return true;
+
+    const QStringList oldSplit = current.value(QStringLiteral("modelTensorSplit"))
+        .toString().split(QLatin1Char(','), Qt::KeepEmptyParts);
+    const QStringList newSplit = candidate.value(QStringLiteral("modelTensorSplit"))
+        .toString().split(QLatin1Char(','), Qt::KeepEmptyParts);
+    if (oldSplit.size() != newSplit.size()) return true;
+    for (int i = 0; i < oldSplit.size(); ++i) {
+        const double oldValue = oldSplit.at(i).toDouble();
+        const double newValue = newSplit.at(i).toDouble();
+        // Ignore small fluctuations caused by KV-cache growth or telemetry
+        // rounding. A 20% relative change (or 0.15 absolute) is a real
+        // redistribution caused by another process taking/releasing VRAM.
+        if (qAbs(newValue - oldValue) > qMax(0.15, qAbs(oldValue) * 0.20))
+            return true;
+    }
+    return false;
+}
+
 bool readJsonObjectFile(const QString &path, QJsonObject *object, QString *error)
 {
     if (!object) return false;
@@ -2127,6 +2155,8 @@ void AppController::startServer(const QString &launchProfileId)
     m_serverIsRouter = false;   // modo normal: un modelo por server
     m_serverUsesVoiceGpuPlan = false;
     m_serverVoiceGpuPlanSignature.clear();
+    if (!m_charlaGpuRebalancePending)
+        m_serverVoiceGpuPlan.clear();
 
     const auto ctx = buildContext(launchProfileId);
     const bool isCloud = ctx.backend.isCloud();
@@ -2243,6 +2273,7 @@ void AppController::startServer(const QString &launchProfileId)
         m_serverUsesVoiceGpuPlan = plan.value(QStringLiteral("enabled")).toBool()
             && hasOption(args, QStringLiteral("--tensor-split"), QStringLiteral("-ts"));
         if (m_serverUsesVoiceGpuPlan) {
+            m_serverVoiceGpuPlan = plan;
             m_serverVoiceGpuPlanSignature = voiceGpuPlanSignature(plan);
             appendServerEvent(QStringLiteral("lifecycle"),
                               QStringLiteral("Charla multi-GPU: LLM usa %1; voz/auxiliares quedan en GPU %2.")
@@ -2680,6 +2711,8 @@ void AppController::stopVramPolling()
         m_serverStats.clear();
         emit serverStatsChanged();
     }
+    if (!m_charlaGpuRebalancePending)
+        m_lastLiveGpus.clear();
 }
 
 // Lee VRAM por GPU vía nvidia-smi (async, no bloquea la GUI). Publica m_serverStats:
@@ -2698,25 +2731,27 @@ void AppController::pollServerStats()
         m_vramProc = nullptr;
 
         QVariantList gpus;
-        double sumTotal = 0, sumUsed = 0, sumDraw = 0, sumLimit = 0;
+        double sumTotal = 0, sumUsed = 0, sumFree = 0, sumDraw = 0, sumLimit = 0;
         const QStringList lines = text.split('\n', Qt::SkipEmptyParts);
         for (const QString &line : lines) {
             const QStringList p = line.split(QLatin1Char(','));
-            if (p.size() < 4) continue;
-            bool iOk = false, tOk = false, uOk = false;
+            if (p.size() < 5) continue;
+            bool iOk = false, tOk = false, uOk = false, fOk = false;
             const int idx = p.at(0).trimmed().toInt(&iOk);
             const QString name = p.at(1).trimmed();
             const double totalMb = p.at(2).trimmed().toDouble(&tOk);
             const double usedMb  = p.at(3).trimmed().toDouble(&uOk);
-            if (!iOk || !tOk || !uOk) continue;
+            const double freeMb  = p.at(4).trimmed().toDouble(&fOk);
+            if (!iOk || !tOk || !uOk || !fOk) continue;
             // power.draw / power.limit pueden venir "[N/A]" en GPUs sin telemetría.
-            const double drawW  = p.size() > 4 ? p.at(4).trimmed().toDouble() : 0.0;
-            const double limitW = p.size() > 5 ? p.at(5).trimmed().toDouble() : 0.0;
+            const double drawW  = p.size() > 5 ? p.at(5).trimmed().toDouble() : 0.0;
+            const double limitW = p.size() > 6 ? p.at(6).trimmed().toDouble() : 0.0;
             QVariantMap g;
             g[QStringLiteral("index")]   = idx;
             g[QStringLiteral("name")]    = name;
             g[QStringLiteral("totalMb")] = totalMb;
             g[QStringLiteral("usedMb")]  = usedMb;
+            g[QStringLiteral("freeMb")]  = qMax(0.0, freeMb);
             g[QStringLiteral("pct")]     = totalMb > 0 ? (usedMb / totalMb * 100.0) : 0.0;
             g[QStringLiteral("drawW")]   = drawW;
             g[QStringLiteral("limitW")]  = limitW;
@@ -2724,6 +2759,7 @@ void AppController::pollServerStats()
             gpus.append(g);
             sumTotal += totalMb;
             sumUsed  += usedMb;
+            sumFree  += qMax(0.0, freeMb);
             sumDraw  += drawW;
             sumLimit += limitW;
         }
@@ -2731,17 +2767,96 @@ void AppController::pollServerStats()
         stats[QStringLiteral("gpus")]    = gpus;
         stats[QStringLiteral("totalMb")] = sumTotal;
         stats[QStringLiteral("usedMb")]  = sumUsed;
+        stats[QStringLiteral("freeMb")]  = sumFree;
         stats[QStringLiteral("pct")]     = sumTotal > 0 ? (sumUsed / sumTotal * 100.0) : 0.0;
         stats[QStringLiteral("drawW")]   = sumDraw;
         stats[QStringLiteral("limitW")]  = sumLimit;
         stats[QStringLiteral("powerPct")] = sumLimit > 0 ? (sumDraw / sumLimit * 100.0) : 0.0;
         m_serverStats = stats;
+        m_lastLiveGpus = gpus;
         emit serverStatsChanged();
+        maybeRebalanceCharlaGpuPlan();
     });
     m_vramProc->start(nvidiaSmi,
-                      {QStringLiteral("--query-gpu=index,name,memory.total,memory.used,"
+                      {QStringLiteral("--query-gpu=index,name,memory.total,memory.used,memory.free,"
                                       "power.draw,power.limit"),
                        QStringLiteral("--format=csv,noheader,nounits")});
+}
+
+void AppController::maybeRebalanceCharlaGpuPlan()
+{
+    if (!m_charlaActive || !m_charlaGpuPlanActive || !serverRunning()
+        || m_charlaGpuRebalancePending || m_serverStopping || m_charlaStartAfterRelaunch)
+        return;
+
+    const QVariantMap candidate = voiceGpuPlan();
+    if (!candidate.value(QStringLiteral("enabled")).toBool()
+        || !candidate.value(QStringLiteral("modelFitKnown")).toBool())
+        return;
+
+    const QVariantMap current = m_serverVoiceGpuPlan.isEmpty()
+        ? candidate : m_serverVoiceGpuPlan;
+    if (!voiceGpuPlansNeedRebalance(current, candidate)) {
+        m_charlaGpuRebalanceCandidate.clear();
+        m_charlaGpuRebalanceSamples = 0;
+        m_charlaGpuRebalanceWarned = false;
+        return;
+    }
+
+    const QString candidateKey = voiceGpuPlanSignature(candidate)
+        + QLatin1Char('|')
+        + (candidate.value(QStringLiteral("modelPlacementSafe")).toBool()
+            ? QStringLiteral("safe") : QStringLiteral("unsafe"));
+    if (candidateKey != m_charlaGpuRebalanceCandidate) {
+        m_charlaGpuRebalanceCandidate = candidateKey;
+        m_charlaGpuRebalanceSamples = 1;
+        return;
+    }
+    ++m_charlaGpuRebalanceSamples;
+    if (m_charlaGpuRebalanceSamples < 3) return;
+
+    if (!candidate.value(QStringLiteral("modelPlacementSafe")).toBool()) {
+        if (!m_charlaGpuRebalanceWarned) {
+            m_charlaGpuRebalanceWarned = true;
+            appendServerEvent(QStringLiteral("lifecycle"),
+                              QStringLiteral("Charla multi-GPU: otra aplicación ocupa VRAM; "
+                                             "el reparto actual queda sin margen. Se espera a "
+                                             "que libere VRAM antes de relanzar el modelo."));
+        }
+        return;
+    }
+
+    const QString launchId = m_activeLaunchId;
+    if (launchId.isEmpty()) return;
+    const bool withAgent = agentRunning();
+    m_charlaGpuRebalancePending = true;
+    m_charlaGpuRebalanceCandidate.clear();
+    m_charlaGpuRebalanceSamples = 0;
+    m_charlaGpuRebalanceWarned = false;
+    m_charlaStartAfterRelaunch = true;
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Charla multi-GPU: cambió la VRAM libre; "
+                                     "recalculando reparto (%1).")
+                          .arg(candidate.value(QStringLiteral("modelTensorSplit")).toString()));
+    if (m_voice) m_voice->stop();
+    stopManagedStt();
+    stopManagedExternalVoice();
+    auto startAgain = [this, launchId, withAgent]() {
+        if (withAgent) startServerAndAgent(launchId);
+        else startServer(launchId);
+    };
+    if (!serverRunning()) QTimer::singleShot(0, this, startAgain);
+    else {
+        auto *conn = new QMetaObject::Connection;
+        *conn = connect(this, &AppController::serverRunningChanged, this,
+                        [this, conn, startAgain]() {
+            if (serverRunning() || m_serverStopping) return;
+            disconnect(*conn);
+            delete conn;
+            QTimer::singleShot(0, this, startAgain);
+        });
+        stopServer();
+    }
 }
 
 // Parser estático: cada línea CSV es
@@ -13221,10 +13336,14 @@ void AppController::rescanHardware()
             QProcess p;
             p.start(nvidiaSmi, {QStringLiteral(
                                     "--query-gpu=index,name,memory.total,memory.free,pci.bus_id,"
-                                    "pci.link.gen.current,pci.link.width.current,temperature.gpu,"
+                                    "pcie.link.gen.current,pcie.link.width.current,temperature.gpu,"
                                     "power.draw,power.limit"),
                                 QStringLiteral("--format=csv,noheader,nounits")});
-            if (p.waitForFinished(1800)) {
+            // La primera consulta fría puede inicializar el driver NVIDIA y
+            // tardar varios segundos (en especial con dos placas). El worker
+            // no bloquea la UI, así que priorizamos no declarar falsamente CPU
+            // por un timeout demasiado agresivo.
+            if (p.waitForFinished(10000)) {
                 const QVariantList gpus = HardwareDiagnostics::parseNvidiaSmiCsv(
                     QString::fromUtf8(p.readAllStandardOutput()));
                 result[QStringLiteral("gpus")] = gpus;
@@ -23431,7 +23550,9 @@ QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
 
     const double modelRequiredMb = modelRequiredForLaunch(launchId);
     QVariantMap hardware = m_hardwareSummary;
-    if (serverRunning() && !m_activeLaunchId.isEmpty()) {
+    if ((serverRunning() || m_charlaGpuRebalancePending) && !m_lastLiveGpus.isEmpty())
+        hardware[QStringLiteral("gpus")] = m_lastLiveGpus;
+    if ((serverRunning() || m_charlaGpuRebalancePending) && !m_activeLaunchId.isEmpty()) {
         // nvidia-smi.freeMb includes the resident llama-server and any unrelated
         // process. Recover only the estimated footprint of our active model; using
         // totalMb here would incorrectly treat another application's VRAM as free.
@@ -23439,16 +23560,33 @@ QVariantMap AppController::voiceGpuPlanForLaunch(const QString &launchId,
         if (currentModelMb > 0.0) {
             const QVariantList observed = hardware.value(QStringLiteral("gpus")).toList();
             double totalMb = 0.0;
+            double plannedModelCapacityMb = 0.0;
+            const QVariantList plannedByGpu = m_serverVoiceGpuPlan
+                .value(QStringLiteral("modelByGpu")).toList();
+            for (const QVariant &value : plannedByGpu)
+                plannedModelCapacityMb += qMax(0.0,
+                    value.toMap().value(QStringLiteral("modelFreeMb")).toDouble());
             for (const QVariant &value : observed)
                 totalMb += qMax(0.0, value.toMap().value(QStringLiteral("totalMb")).toDouble());
             QVariantList recovered;
             for (const QVariant &value : observed) {
                 QVariantMap gpu = value.toMap();
+                const int gpuIndex = gpu.value(QStringLiteral("index")).toInt();
                 const double capacity = qMax(0.0,
                     gpu.value(QStringLiteral("totalMb")).toDouble());
                 const double free = qMax(0.0,
                     gpu.value(QStringLiteral("freeMb")).toDouble());
-                const double share = totalMb > 0.0 ? capacity / totalMb : 0.0;
+                double share = totalMb > 0.0 ? capacity / totalMb : 0.0;
+                if (plannedModelCapacityMb > 0.0) {
+                    for (const QVariant &planned : plannedByGpu) {
+                        const QVariantMap plannedMap = planned.toMap();
+                        if (plannedMap.value(QStringLiteral("index")).toInt() != gpuIndex)
+                            continue;
+                        share = qMax(0.0, plannedMap.value(QStringLiteral("modelFreeMb"))
+                            .toDouble()) / plannedModelCapacityMb;
+                        break;
+                    }
+                }
                 gpu[QStringLiteral("freeMb")] = qMin(capacity,
                     free + currentModelMb * share);
                 recovered.append(gpu);
@@ -23503,7 +23641,11 @@ void AppController::toggleDictation()
     VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
     applyAppLanguageToVoice(c);
-    if (!c.sttManagedEngine.isEmpty() && !startManagedStt(c)) return;
+    if (!c.sttManagedCommand.trimmed().isEmpty()) {
+        if (!startManagedExternalVoice(c, true)) return;
+    } else if (!c.sttManagedEngine.isEmpty() && !startManagedStt(c)) {
+        return;
+    }
     m_dictationText.clear();
     m_dictationActive = true;
     emit dictationChanged();
@@ -23898,7 +24040,9 @@ void AppController::startCharla()
             return;
         }
     }
-    if (!c.sttManagedEngine.isEmpty()) {
+    if (!c.sttManagedCommand.trimmed().isEmpty()) {
+        if (!startManagedExternalVoice(c, true)) return;
+    } else if (!c.sttManagedEngine.isEmpty()) {
         if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
             emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
                              .arg(c.sttManagedEngine));
@@ -23910,6 +24054,15 @@ void AppController::startCharla()
             return;
         }
         if (!startManagedStt(c)) return;
+    }
+    if (!c.ttsManagedCommand.trimmed().isEmpty()
+        && (effectiveTtsMode == QLatin1String("http")
+            || effectiveTtsMode == QLatin1String("auto"))) {
+        if (!startManagedExternalVoice(c, false)) {
+            stopManagedStt();
+            stopManagedExternalVoice();
+            return;
+        }
     }
     qInfo().noquote() << QStringLiteral(
         "[charla] start: stt=%1(managed=%2) tts=%3(voz=%4) llm=%5 agente=%6")
@@ -23925,6 +24078,10 @@ void AppController::startCharla()
     if (auto *raw = qobject_cast<RawChatBackend *>(m_chatBackend))
         raw->setThinkingEnabled(false);
     m_charlaActive = true;
+    m_charlaGpuRebalancePending = false;
+    m_charlaGpuRebalanceCandidate.clear();
+    m_charlaGpuRebalanceSamples = 0;
+    m_charlaGpuRebalanceWarned = false;
     m_voice->start();
 }
 
@@ -23981,6 +24138,11 @@ void AppController::stopCharla()
     m_charlaVoiceConfigOverride = VoiceConfig{};
     if (m_voice) m_voice->stop();
     stopManagedStt();
+    stopManagedExternalVoice();
+    m_charlaGpuRebalancePending = false;
+    m_charlaGpuRebalanceCandidate.clear();
+    m_charlaGpuRebalanceSamples = 0;
+    m_charlaGpuRebalanceWarned = false;
     // Restaurar el thinking configurado (la charla lo fuerza a off por turno).
     if (auto *lb = qobject_cast<LlamaAgentBackend *>(m_agentBackend))
         lb->setThinkingEnabled(m_agentThinkingEnabled);
@@ -24184,6 +24346,71 @@ bool AppController::startManagedStt(const VoiceConfig &c)
     m_sttProc->deleteLater();
     m_sttProc = nullptr;
     return false;
+}
+
+bool AppController::startManagedExternalVoice(const VoiceConfig &c, bool stt)
+{
+    const QString program = (stt ? c.sttManagedCommand : c.ttsManagedCommand).trimmed();
+    if (program.isEmpty()) return true;
+    const QStringList args = stt ? c.sttManagedArgs : c.ttsManagedArgs;
+    QProcess *&process = stt ? m_externalSttProc : m_externalTtsProc;
+    if (process && process->state() != QProcess::NotRunning) return true;
+    if (process) {
+        process->deleteLater();
+        process = nullptr;
+    }
+
+    process = new QProcess(this);
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("LLAMACODE_MANAGED"), QStringLiteral("1"));
+    env.insert(QStringLiteral("LLAMACODE_ROLE"),
+               stt ? QStringLiteral("voice-stt-external")
+                   : QStringLiteral("voice-tts-external"));
+    env.insert(QStringLiteral("LLAMACODE_APP_PID"),
+               QString::number(QCoreApplication::applicationPid()));
+    const QVariantMap plan = voiceGpuPlanForConfig(c);
+    if (plan.value(QStringLiteral("enabled")).toBool()
+        && plan.value(QStringLiteral("voicePlacementSafe")).toBool()) {
+        env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"),
+                   plan.value(QStringLiteral("voiceGpuMask")).toString());
+    }
+    process->setProcessEnvironment(env);
+    const QPointer<QProcess> managedProcess = process;
+    connect(managedProcess, &QProcess::errorOccurred, this,
+            [this, managedProcess, stt](QProcess::ProcessError) {
+        if (!managedProcess) return;
+        emit serverError(QStringLiteral("No se pudo lanzar el proceso externo de %1 administrado por Charla.")
+                             .arg(stt ? QStringLiteral("STT") : QStringLiteral("TTS")));
+    });
+    process->start(program, args);
+    if (!process->waitForStarted(4000)) {
+        process->deleteLater();
+        process = nullptr;
+        return false;
+    }
+    assignToJobObject(process->processId());
+    appendServerEvent(QStringLiteral("lifecycle"),
+                      QStringLiteral("Charla: %1 externo administrado iniciado (%2 %3), GPU de voz=%4.")
+                          .arg(stt ? QStringLiteral("STT") : QStringLiteral("TTS"),
+                               program, args.join(QLatin1Char(' ')),
+                               env.value(QStringLiteral("CUDA_VISIBLE_DEVICES"),
+                                         QStringLiteral("sin máscara"))));
+    return true;
+}
+
+void AppController::stopManagedExternalVoice()
+{
+    for (QProcess **slot : {&m_externalSttProc, &m_externalTtsProc}) {
+        QProcess *process = *slot;
+        if (!process) continue;
+        process->disconnect();
+        if (process->state() != QProcess::NotRunning) {
+            process->terminate();
+            if (!process->waitForFinished(2000)) process->kill();
+        }
+        process->deleteLater();
+        *slot = nullptr;
+    }
 }
 
 void AppController::stopManagedStt()

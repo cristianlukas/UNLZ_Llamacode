@@ -89,6 +89,14 @@ Item {
     // Persiste y REASIGNA cfg (copia) para que QML reevalúe los bindings `visible`
     // que dependen de cfg (mutar un campo no notifica el cambio del var property).
     function save() { if (pid.length) App.setVoiceConfig(pid, cfg); cfg = Object.assign({}, cfg) }
+    function argsJson(args) { return JSON.stringify(args || []) }
+    function parseArgs(text, fallback) {
+        try {
+            var value = JSON.parse(text)
+            if (Array.isArray(value)) return value
+        } catch (e) {}
+        return fallback || []
+    }
     onPidChanged: reload()
     Component.onCompleted: reload()
 
@@ -445,6 +453,28 @@ Item {
                             text: page.cfg.sttKeyRef || ""
                             onEditingFinished: { page.cfg.sttKeyRef = text; page.save() }
                         }
+                        Text { text: "Proceso externo administrado"; color: Theme.textSecondary }
+                        LcTextField {
+                            Layout.fillWidth: true
+                            placeholderText: "ruta a tu servidor STT local (vacío = ya iniciado)"
+                            text: page.cfg.sttManagedCommand || ""
+                            onEditingFinished: { page.cfg.sttManagedCommand = text; page.save() }
+                        }
+                        Text { text: "Argumentos del proceso (JSON)"; color: Theme.textSecondary }
+                        LcTextField {
+                            Layout.fillWidth: true
+                            placeholderText: "[\"--port\",\"8081\"]"
+                            text: page.argsJson(page.cfg.sttManagedArgs)
+                            onEditingFinished: {
+                                page.cfg.sttManagedArgs = page.parseArgs(text, page.cfg.sttManagedArgs)
+                                page.save()
+                            }
+                        }
+                        Text {
+                            Layout.columnSpan: 2; Layout.fillWidth: true
+                            text: "Si indicás un proceso, Charla lo lanza sin shell, le asigna la GPU de voz y lo detiene al salir. Un endpoint que ya corre por fuera no puede aislarse retroactivamente."
+                            color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
+                        }
                     }
 
                     Text { text: "Motor TTS (automático o manual)"; color: Theme.textPrimary; Layout.leftMargin: 24; font { pixelSize: 15; bold: true } }
@@ -472,6 +502,24 @@ Item {
                             model: ["auto", "piper", "kokoro", "qwen3", "inflect", "http"]
                             currentIndex: Math.max(0, model.indexOf(page.cfg.ttsMode || "auto"))
                             onActivated: { page.cfg.ttsMode = model[currentIndex]; page.save() }
+                        }
+
+                        Text { text: "Proceso externo administrado"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "http" }
+                        LcTextField {
+                            Layout.fillWidth: true; visible: page.cfg.ttsMode === "http"
+                            placeholderText: "ruta a tu servidor TTS local (vacío = ya iniciado)"
+                            text: page.cfg.ttsManagedCommand || ""
+                            onEditingFinished: { page.cfg.ttsManagedCommand = text; page.save() }
+                        }
+                        Text { text: "Argumentos del proceso (JSON)"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "http" }
+                        LcTextField {
+                            Layout.fillWidth: true; visible: page.cfg.ttsMode === "http"
+                            placeholderText: "[\"--port\",\"8082\"]"
+                            text: page.argsJson(page.cfg.ttsManagedArgs)
+                            onEditingFinished: {
+                                page.cfg.ttsManagedArgs = page.parseArgs(text, page.cfg.ttsManagedArgs)
+                                page.save()
+                            }
                         }
 
                         Text { text: "Recomendación"; color: Theme.textSecondary; visible: page.cfg.ttsMode === "auto" }

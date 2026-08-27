@@ -1,5 +1,7 @@
 #include "VoiceTypes.h"
 
+#include <QJsonArray>
+
 QJsonObject VoiceConfig::toJson() const
 {
     QJsonObject o;
@@ -11,6 +13,8 @@ QJsonObject VoiceConfig::toJson() const
     o["sttLanguage"]    = sttLanguage;
     o["sttEndpointPath"] = sttEndpointPath;
     o["sttManagedEngine"] = sttManagedEngine;
+    o["sttManagedCommand"] = sttManagedCommand;
+    o["sttManagedArgs"] = QJsonArray::fromStringList(sttManagedArgs);
     o["ttsProvider"]    = ttsProvider;
     o["ttsBaseUrl"]     = ttsBaseUrl;
     o["ttsModel"]       = ttsModel;
@@ -23,6 +27,8 @@ QJsonObject VoiceConfig::toJson() const
     o["ttsPcmChannels"] = ttsPcmChannels;
     o["ttsManagedVoice"]= ttsManagedVoice;
     o["ttsFallbackMode"] = ttsFallbackMode;
+    o["ttsManagedCommand"] = ttsManagedCommand;
+    o["ttsManagedArgs"] = QJsonArray::fromStringList(ttsManagedArgs);
     o["qwenBinaryPath"] = qwenBinaryPath;
     o["qwenModelDir"] = qwenModelDir;
     o["qwenModelName"] = qwenModelName;
@@ -62,6 +68,11 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.sttEndpointPath = o.value("sttEndpointPath").toString(c.sttEndpointPath);
     if (c.sttEndpointPath.isEmpty()) c.sttEndpointPath = QStringLiteral("/v1/audio/transcriptions");
     c.sttManagedEngine = o.value("sttManagedEngine").toString(c.sttManagedEngine);
+    c.sttManagedCommand = o.value("sttManagedCommand").toString(c.sttManagedCommand);
+    if (o.value("sttManagedArgs").isArray()) {
+        for (const QJsonValue &value : o.value("sttManagedArgs").toArray())
+            if (value.isString()) c.sttManagedArgs.append(value.toString());
+    }
     c.ttsProvider = o.value("ttsProvider").toString(c.ttsProvider);
     c.ttsBaseUrl  = o.value("ttsBaseUrl").toString(c.ttsBaseUrl);
     c.ttsModel    = o.value("ttsModel").toString(c.ttsModel);
@@ -75,6 +86,11 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.ttsPcmChannels = qBound(1, o.value("ttsPcmChannels").toInt(c.ttsPcmChannels), 2);
     c.ttsManagedVoice = o.value("ttsManagedVoice").toString(c.ttsManagedVoice);
     c.ttsFallbackMode = o.value("ttsFallbackMode").toString(c.ttsFallbackMode);
+    c.ttsManagedCommand = o.value("ttsManagedCommand").toString(c.ttsManagedCommand);
+    if (o.value("ttsManagedArgs").isArray()) {
+        for (const QJsonValue &value : o.value("ttsManagedArgs").toArray())
+            if (value.isString()) c.ttsManagedArgs.append(value.toString());
+    }
     c.qwenBinaryPath = o.value("qwenBinaryPath").toString();
     c.qwenModelDir = o.value("qwenModelDir").toString();
     c.qwenModelName = o.value("qwenModelName").toString(c.qwenModelName);

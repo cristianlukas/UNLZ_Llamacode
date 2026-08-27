@@ -1,5 +1,6 @@
 #pragma once
 #include <QString>
+#include <QStringList>
 #include <QJsonObject>
 
 // Config del modo "Charla" (voz-a-voz). STT y TTS van SIEMPRE por endpoints
@@ -25,6 +26,12 @@ struct VoiceConfig {
     // (si falta) y se lanza este motor STT, fijando baseUrl/endpointPath. Id del
     // catálogo de VoiceServerManager (ej "whisper-base").
     QString sttManagedEngine;
+    // Comando opcional para un endpoint STT externo local. Si se configura,
+    // LlamaCode lo lanza y lo mata con la sesión de Charla, aislándolo con la
+    // misma CUDA_VISIBLE_DEVICES de la GPU de voz. No controla procesos que ya
+    // estaban corriendo fuera de la app.
+    QString sttManagedCommand;
+    QStringList sttManagedArgs;
 
     // ── TTS (text-to-speech) ──
     QString ttsProvider = QStringLiteral("local");  // local | cloud
@@ -43,6 +50,10 @@ struct VoiceConfig {
     int ttsPcmChannels = 1;
     QString ttsManagedVoice = QStringLiteral("es_ES-davefx-medium");
     QString ttsFallbackMode = QStringLiteral("piper"); // none | http | piper
+    // Comando opcional para un endpoint TTS externo local administrado por la
+    // sesión. Los argumentos se pasan sin shell, como una lista separada.
+    QString ttsManagedCommand;
+    QStringList ttsManagedArgs;
     QString qwenBinaryPath;                          // qwen3-tts-cli[.exe]
     QString qwenModelDir;                            // carpeta con GGUFs del runtime
     QString qwenModelName = QStringLiteral("qwen-talker-0.6b-base-Q8_0.gguf");

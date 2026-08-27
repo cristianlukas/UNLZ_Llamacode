@@ -59,8 +59,8 @@ QVariantList HardwareDiagnostics::parseNvidiaSmiCsv(const QString &csv)
     QVariantList out;
     const QStringList lines = csv.split(QRegularExpression(QStringLiteral("[\\r\\n]+")),
                                         Qt::SkipEmptyParts);
-    // index,name,memory.total,memory.free,pci.bus_id,pci.link.gen.current,
-    // pci.link.width.current,temperature.gpu,power.draw,power.limit
+    // index,name,memory.total,memory.free,pci.bus_id,pcie.link.gen.current,
+    // pcie.link.width.current,temperature.gpu,power.draw,power.limit
     for (const QString &raw : lines) {
         const QStringList fields = splitCsvLine(raw);
         if (fields.size() < 7)
