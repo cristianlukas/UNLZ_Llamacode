@@ -75,6 +75,26 @@ Los contextos permitidos para crear variantes son 64k, 131k, 192k, 256k y 384k.
 tiempo de prefill. El tuner incluye `--n-cpu-moe 31/35/39/43` y conserva el gate
 de calidad/perplexity existente.
 
+## Rama DeepSeek LID CUDA
+
+El perfil separado `sys-ultraq-dsv4-0731-lid-cuda` prueba la rama
+`spencer-zaid/llama.cpp`, branch `deepseek-lid-cuda`, que incorpora Lightning
+Indexer CUDA. LlamaCode la instala sólo como build-from-source y la resuelve por
+el flavor `deepseek-lid-cuda`; nunca reemplaza ni contamina el binario oficial.
+La receta desactiva el build npm de la Web UI, permite descargar los assets
+prebuilt que el servidor igual necesita y agrega un `loading.html` mínimo si el
+paquete lo omite; así no depende de que Node coincida con los engines del fork.
+Mantiene `--n-cpu-moe 39`, `--fit-target 512`, `--fit-ctx 131072` y fuerza
+`GGML_CUDA_NO_PINNED=1` en el proceso.
+
+Esta rama debe usar KV f16: el test local cargó los cuatro shards y generó `OK`
+con 131072 tokens en 2× RTX 3090 y 128 GB de RAM. Por eso el perfil LID no hereda
+los flags q4_0 del baseline. Los presets 256k/512k/1M están disponibles para
+medición, pero son hipótesis del fork y no una garantía de que entren o conserven
+calidad. Para cada uno registrar carga, TTFT, PP/TG, RAM comprometida, pagefile,
+VRAM y una prueba de calidad; si falla, conservar el resultado como límite y
+volver al perfil oficial.
+
 ## Perfiles de benchmark
 
 El bundle incluye doce perfiles opt-in `[bench ULTRA-Q]` que reutilizan los mismos

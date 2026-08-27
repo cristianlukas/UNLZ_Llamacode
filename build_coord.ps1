@@ -81,15 +81,24 @@ function Get-Fingerprint {
     $cmake = Join-Path $root 'CMakeLists.txt'
     if (Test-Path $cmake) { $files += Get-Item $cmake }
 
-    $sb = [System.Text.StringBuilder]::new()
-    foreach ($f in ($files | Sort-Object FullName)) {
+    # No depender de Sort-Object: PowerShell 5.1 y 7 pueden ordenar igual texto
+    # de paths con reglas de cultura distintas. El owner suele ser pwsh y los
+    # sharers de los .bat pueden ser powershell.exe; si el orden cambia, una
+    # misma fuente parece otra y nunca llega a REUSE. SortedDictionary Ordinal
+    # mantiene el fingerprint estable entre ambas versiones.
+    $sorted = New-Object 'System.Collections.Generic.SortedDictionary[string,string]' ([System.StringComparer]::Ordinal)
+    foreach ($f in $files) {
         try {
             $txt = [IO.File]::ReadAllText($f.FullName)
         } catch { continue }
         # Neutraliza triples semver (X.Y.Z) para que el bump de version no cuente.
         $txt = [regex]::Replace($txt, '\d+\.\d+\.\d+', 'V')
         $rel = $f.FullName.Substring($root.Length)
-        [void]$sb.Append($rel).Append("|").Append($txt).Append("`n")
+        $sorted[$rel] = $txt
+    }
+    $sb = [System.Text.StringBuilder]::new()
+    foreach ($item in $sorted.GetEnumerator()) {
+        [void]$sb.Append($item.Key).Append("|").Append($item.Value).Append("`n")
     }
     $bytes = [Text.Encoding]::UTF8.GetBytes($sb.ToString())
     $sha   = [Security.Cryptography.SHA256]::Create()
@@ -131,6 +140,32 @@ function Remove-Lock {
 }
 
 function Result-Path([string]$fp) { Join-Path $resultDir ("{0}.{1}.txt" -f $Lane, $fp) }
+
+# Publicar el resultado como reemplazo atómico. Set-Content directo deja una
+# ventana en la que el archivo ya existe pero todavía está vacío/parcial; un
+# sharer puede leerlo, clasificarlo como FALLO y robar el turno en vez de hacer
+# REUSE (o descartar correctamente un DIRTY). El temporal vive en el mismo
+# directorio para que Move reemplace dentro del mismo volumen.
+function Publish-Result([string]$path, [string]$content) {
+    $tmp = "$path.$PID.$([guid]::NewGuid().ToString('N')).tmp"
+    try {
+        [System.IO.File]::WriteAllText($tmp, $content, [System.Text.Encoding]::ASCII)
+        # File.Move(source, destination, overwrite) sólo existe en .NET Core /
+        # PowerShell 7. Los .bat lanzan Windows PowerShell 5.1, donde ese
+        # overload falla y el catch de release dejaría al sharer sin resultado.
+        # Replace es atómico cuando ya existe el destino; Move también lo es
+        # para la primera publicación dentro del mismo directorio.
+        if ([System.IO.File]::Exists($path)) {
+            [System.IO.File]::Replace($tmp, $path, $null, $true)
+        } else {
+            [System.IO.File]::Move($tmp, $path)
+        }
+    } finally {
+        if (Test-Path -LiteralPath $tmp) {
+            Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
 
 # =============================================================================
 if ($Action -eq 'fingerprint') {
@@ -179,8 +214,8 @@ if ($Action -eq 'release') {
         $published = $(if ($dirty) { 'DIRTY' } else { $Result })
         $rp = Result-Path $me.fingerprint
         try {
-            "{0}|{1}|{2}" -f $published, (Get-Date).ToUniversalTime().ToString('o'), $PID |
-                Set-Content -Path $rp -Encoding ASCII
+            $line = "{0}|{1}|{2}" -f $published, (Get-Date).ToUniversalTime().ToString('o'), $PID
+            Publish-Result $rp $line
         } catch {}
     }
     Remove-Lock

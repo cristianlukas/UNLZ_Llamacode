@@ -1,5 +1,6 @@
-// Harness de QA manual del OCR. NO es un test de ctest: necesita una sesión de
-// escritorio viva, una app abierta y el paquete de idioma OCR de Windows.
+// Harness de QA manual del OCR. Su parte visual no es un test de ctest: necesita
+// una sesión de escritorio viva, una app abierta y el paquete de idioma OCR de
+// Windows. La ayuda CLI sí tiene una prueba headless.
 //
 // Verifica lo que ningún unit test puede: que los rects que devuelve
 // DesktopAutomationBackend::readText() caigan REALMENTE sobre el texto en
@@ -36,6 +37,35 @@ static QTextStream out(stdout);
 
 int main(int argc, char *argv[])
 {
+    // La ayuda es un contrato CLI y debe funcionar incluso sin escritorio ni
+    // plugin QPA: ctest la ejecuta headless y un operador puede consultar el
+    // uso antes de preparar la sesión visual.
+    for (int i = 1; i < argc; ++i) {
+        const QString arg = QString::fromLocal8Bit(argv[i]);
+        if (arg == QLatin1String("--help") || arg == QLatin1String("-h")
+            || arg == QLatin1String("-?")) {
+            out << "Uso: qa_ocr_probe.exe [--self-contained] [texto-a-buscar]\n"
+                << "  --self-contained  ejecuta la fixture OCR/UIA en cada monitor\n"
+                << "  texto-a-buscar    prueba la pantalla real (default: Archivo)\n"
+                << "  --help            muestra esta ayuda sin tocar el escritorio\n"
+                << Qt::endl;
+            return 0;
+        }
+    }
+
+    // Un probe de pantalla real no puede producir evidencia válida con la
+    // plataforma Qt offscreen. Comprobarlo antes de QApplication evita que el
+    // plugin intente inicializar una sesión gráfica inexistente y quede
+    // bloqueado antes de poder imprimir el diagnóstico.
+    if (qEnvironmentVariableIsSet("QT_QPA_PLATFORM")
+        && qEnvironmentVariable("QT_QPA_PLATFORM")
+               .compare(QStringLiteral("offscreen"), Qt::CaseInsensitive) == 0) {
+        out << "ERROR: qa_ocr_probe requiere un escritorio Qt real; "
+               "QUITAR QT_QPA_PLATFORM=offscreen."
+            << Qt::endl;
+        return 2;
+    }
+
     QApplication app(argc, argv);
     bool selfContained = false;
     QString needle;

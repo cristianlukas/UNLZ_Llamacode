@@ -3183,6 +3183,9 @@ void AppController::startSourceBuildInstall(const EngineCatalogEntry &entry)
     const QString flavor = entry.flavor;
     const QString displayName = entry.name;
     const QString sourceBranch = entry.sourceBranch;
+    const QString sourceCMakeArgs = entry.sourceCMakeArgs.join(QLatin1Char(' '));
+    const QString sourceBuildTarget = entry.sourceBuildTarget.trimmed().isEmpty()
+        ? QStringLiteral("llama-server") : entry.sourceBuildTarget.trimmed();
 
     const QString script = QStringLiteral(R"PS(
 $ErrorActionPreference = 'Stop'
@@ -3238,9 +3241,26 @@ try {
 @echo off
 call "$vcvars" x64
 if errorlevel 1 exit /b 1
-cmake -G "$generator" -S "$src" -B "$build" -DGGML_CUDA=ON -DGGML_CCACHE=OFF -DCMAKE_BUILD_TYPE=Release
+rem El fork deriva b1 de LLAMA_BUILD_NUMBER, pero el bucket vigente es latest;
+rem fijarlo en ambos pasos evita descargar de nuevo y borrar el fallback en el
+rem segundo intento del build.
+set "HF_UI_VERSION=latest"
+cmake -G "$generator" -S "$src" -B "$build" -DGGML_CUDA=ON -DGGML_CCACHE=OFF -DCMAKE_BUILD_TYPE=Release %5
 if errorlevel 1 exit /b 1
-cmake --build "$build" -j --target llama-server
+cmake --build "$build" -j --target %6
+set "BUILD_RC=%errorlevel%"
+if "%BUILD_RC%"=="0" exit /b 0
+rem Esta rama exige loading.html aunque LLAMA_BUILD_UI=OFF. Algunos paquetes
+rem prebuilt de la UI lo omiten; agregar una pagina minima permite compilar el
+rem servidor sin npm/Node y deja que un build roto falle en el segundo intento.
+set "UI_DIST=%build%\tools\ui\dist"
+if not exist "%UI_DIST%\index.html" exit /b %BUILD_RC%
+if exist "%UI_DIST%\loading.html" exit /b %BUILD_RC%
+echo [INFO] Agregando fallback UI_DIST loading.html para el fork...
+> "%UI_DIST%\loading.html" echo ^<!doctype html^>
+>>"%UI_DIST%\loading.html" echo ^<html lang="en"^>^<head^>^<meta charset="utf-8"^>^<title^>Loading llama-server^</title^>^</head^>
+>>"%UI_DIST%\loading.html" echo ^<body^>Loading llama-server...^</body^>^</html^>
+cmake --build "$build" -j --target %6
 exit /b %errorlevel%
 "@ | Set-Content -Encoding ASCII -LiteralPath $bat
     cmd.exe /c $bat
@@ -3274,7 +3294,9 @@ exit /b %errorlevel%
 )PS").arg(QString(repoUrl).replace("'", "''"),
           QString(slug).replace("'", "''"),
           QDir::toNativeSeparators(toolsDir).replace("'", "''"),
-          QString(sourceBranch).replace("'", "''"));
+          QString(sourceBranch).replace("'", "''"),
+          sourceCMakeArgs,
+          sourceBuildTarget);
 
     m_installSourceRepo = entry.repo;
     m_installSourceLabel = flavor;
@@ -14095,6 +14117,28 @@ void AppController::ensureSystemBinary(const QString &kind)
 {
     if (kind == QLatin1String("ninfer3090"))
         return; // NInfer se instala manualmente junto con sus artefactos .ninfer.
+    // Los perfiles pueden apuntar a cualquier entrada source-build del catálogo.
+    // No caer silenciosamente al binario oficial: una rama experimental puede
+    // tener flags/formatos incompatibles aunque ambos produzcan llama-server.exe.
+    const EngineCatalogEntry catalogEntry = EngineCatalog::entry(kind);
+    const bool catalogSourceBuild = !catalogEntry.id.isEmpty()
+        && std::any_of(catalogEntry.variants.cbegin(), catalogEntry.variants.cend(),
+                       [](const EngineVariant &v) { return v.buildFromSource; });
+    if (catalogSourceBuild) {
+        bool installed = false;
+        for (int r = 0; r < m_binaries.rowCount(); ++r) {
+            const QString bid = m_binaries.data(m_binaries.index(r, 0),
+                                                BinaryRegistry::IdRole).toString();
+            const LlamaBinary b = m_binaries.findById(bid);
+            if (b.pathValid && b.flavor.compare(catalogEntry.flavor, Qt::CaseInsensitive) == 0) {
+                installed = true;
+                break;
+            }
+        }
+        if (!installed)
+            installCatalogEngine(kind);
+        return;
+    }
     bool hasBee = false, hasOfficial = false;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const LlamaBinary b = m_binaries.findById(
@@ -14323,13 +14367,20 @@ QString AppController::minimumSystemBinaryId(const QString &launchId) const
 
 QString AppController::resolveSystemBinaryId(const QString &kind) const
 {
-    QString firstId, beeId, officialId, gemmaId, ninferId, cpuId;
+    const EngineCatalogEntry catalogEntry = EngineCatalog::entry(kind);
+    const QString requestedFlavor = catalogEntry.id.isEmpty() ? QString() : catalogEntry.flavor;
+    QString firstId, beeId, officialId, gemmaId, ninferId, cpuId, catalogId;
     for (int r = 0; r < m_binaries.rowCount(); ++r) {
         const QString bid = m_binaries.data(m_binaries.index(r, 0), BinaryRegistry::IdRole).toString();
         if (bid.isEmpty()) continue;
         const LlamaBinary b = m_binaries.findById(bid);
         if (b.path.isEmpty() || !QFileInfo::exists(b.path)) continue;     // solo válidos
         if (firstId.isEmpty()) firstId = bid;
+        if (!requestedFlavor.isEmpty()
+            && b.flavor.compare(requestedFlavor, Qt::CaseInsensitive) == 0) {
+            if (catalogId.isEmpty()) catalogId = bid;
+            continue;
+        }
         const QString tag = (b.name + QLatin1Char(' ') + b.path).toLower();
         if (tag.contains(QStringLiteral("ninfer-3090"))
             || tag.contains(QStringLiteral("ninfer-rtx3090"))
@@ -14356,6 +14407,8 @@ QString AppController::resolveSystemBinaryId(const QString &kind) const
         return !beeId.isEmpty() ? beeId : firstId;
     if (kind == QLatin1String("gemma4"))                                  // gemma4-assistant
         return !gemmaId.isEmpty() ? gemmaId : (!officialId.isEmpty() ? officialId : firstId);
+    if (!requestedFlavor.isEmpty())
+        return catalogId;
     // "official": gemma4-assistant y demás NO corren en beellama → preferir no-bee.
     return !officialId.isEmpty() ? officialId : firstId;
 }

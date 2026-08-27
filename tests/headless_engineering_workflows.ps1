@@ -10,6 +10,24 @@ $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
 $listener.Start(); $port = $listener.LocalEndpoint.Port; $listener.Stop()
 $profileDir = Join-Path ([IO.Path]::GetTempPath()) ("llamacode-workflow-" + [guid]::NewGuid())
 $oldPort = $env:LLAMACODE_CONTROL_PORT; $oldProfiles = $env:LLAMACODE_PROFILES_DIR; $proc = $null
+function Remove-ProfileDir([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return }
+    # Start-Process redirection can keep stdout/stderr handles alive for a
+    # short moment after WaitForExit/Stop-Process. Cleanup must not turn a
+    # passing HTTP smoke into a false failure on Windows.
+    for ($attempt = 0; $attempt -lt 40; $attempt++) {
+        try {
+            Remove-Item -LiteralPath $path -Recurse -Force -ErrorAction Stop
+            return
+        } catch {
+            if ($attempt -eq 39) {
+                Write-Warning ("No pude limpiar el perfil temporal {0}: {1}" -f $path, $_.Exception.Message)
+                return
+            }
+            Start-Sleep -Milliseconds 250
+        }
+    }
+}
 try {
     New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
     $env:LLAMACODE_CONTROL_PORT = [string]$port; $env:LLAMACODE_PROFILES_DIR = $profileDir
@@ -53,8 +71,8 @@ try {
     Write-Host "OK: catálogo, validación, instalación y persistencia headless"
 } finally {
     if ($proc -and -not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
-    if ($proc) { $proc.WaitForExit(3000) | Out-Null }
+    if ($proc) { $proc.WaitForExit(10000) | Out-Null }
     if ($null -eq $oldPort) { Remove-Item Env:LLAMACODE_CONTROL_PORT -ErrorAction SilentlyContinue } else { $env:LLAMACODE_CONTROL_PORT = $oldPort }
     if ($null -eq $oldProfiles) { Remove-Item Env:LLAMACODE_PROFILES_DIR -ErrorAction SilentlyContinue } else { $env:LLAMACODE_PROFILES_DIR = $oldProfiles }
-    if (Test-Path -LiteralPath $profileDir) { Remove-Item -LiteralPath $profileDir -Recurse -Force }
+    Remove-ProfileDir $profileDir
 }

@@ -60,6 +60,12 @@ Write-Host "== test 1b: el fingerprint ignora lo que no puede afectar al build =
 # en el fingerprint, editarla invalida un gate de C++ en curso -> DIRTY falso. Y un
 # DIRTY falso ensena a ignorar los DIRTY de verdad.
 $fpBase = (& $coord -Lane build -Action fingerprint).Trim()
+$legacyPs = Get-Command powershell.exe -ErrorAction SilentlyContinue
+if ($legacyPs) {
+    $fpLegacy = (& powershell.exe -NoProfile -ExecutionPolicy Bypass -Command `
+        "& '$coord' -Lane build -Action fingerprint").Trim()
+    Ok ($fpLegacy -eq $fpBase) "fingerprint igual en Windows PowerShell 5.1 y pwsh 7"
+}
 $psProbe = Join-Path $root 'tests\_ignored_probe.ps1'
 'Write-Host "infra, no fuente"' | Set-Content $psProbe -Encoding ASCII
 $fpPs = (& $coord -Lane build -Action fingerprint).Trim()
