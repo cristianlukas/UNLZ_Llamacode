@@ -17,6 +17,7 @@ private slots:
     void buildCases_hasUniqueSingleOccurrencePasskeys();
     void buildCases_placesNeedleMonotonically();
     void buildCases_reachesRequestedApproximateContext();
+    void buildCases_supportsOneMillionTokens();
     void retrievalAcceptance_isCaseInsensitiveButNotEmpty();
 };
 
@@ -95,6 +96,15 @@ void LongContextProbeTests::buildCases_reachesRequestedApproximateContext()
         QVERIFY2(approx >= target - 8, qPrintable(QString::number(approx)));
         QVERIFY(approx <= target + 32);
     }
+}
+
+void LongContextProbeTests::buildCases_supportsOneMillionTokens()
+{
+    const auto cases = buildCases(1048576, {0.50});
+    QCOMPARE(cases.size(), 1);
+    const int approx = approximatePromptTokens(cases.first().prompt);
+    QVERIFY(approx >= 1048576 - 8);
+    QVERIFY(approx <= 1048576 + 32);
 }
 
 void LongContextProbeTests::retrievalAcceptance_isCaseInsensitiveButNotEmpty()

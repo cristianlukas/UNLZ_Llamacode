@@ -27,6 +27,8 @@ namespace {
 
 using long_context_probe::RetrievalCase;
 
+constexpr int kMaxContextTokens = 1048576;
+
 struct ProbeResult {
     RetrievalCase fixture;
     bool finished = false;
@@ -45,7 +47,7 @@ bool parseIntList(const QString &raw, QVector<int> *out)
     for (const QString &part : raw.split(QLatin1Char(','), Qt::SkipEmptyParts)) {
         bool ok = false;
         const int value = part.trimmed().toInt(&ok);
-        if (!ok || value <= 0 || value > 1000000) return false;
+        if (!ok || value <= 0 || value > kMaxContextTokens) return false;
         out->append(value);
     }
     return !out->isEmpty();
