@@ -79,6 +79,7 @@ private slots:
     void controller_showcaseEmptyWhenNoSiblings();
     void bundle_lagunaIsOptInAndHardwareGated();
     void bundle_ultraQAndHybridAreWiredAndOptIn();
+    void bundle_deepSeekLidUsesDedicatedExperimentalBinaryAndF16Kv();
     void bundle_katApexMtpVisionIsOptInAndWired();
     void bundle_miniMaxIsOptInAndMemoryGated();
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
@@ -1736,6 +1737,54 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
         QVERIFY2(pm.getLaunchProfile(QString::fromLatin1(gone)).isEmpty(), gone);
 }
 
+void SystemProfilesTests::bundle_deepSeekLidUsesDedicatedExperimentalBinaryAndF16Kv()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject lid;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        if (profile.value(QStringLiteral("id")).toString()
+            == QLatin1String("sys-ultraq-dsv4-0731-lid-cuda")) {
+            lid = profile;
+            break;
+        }
+    }
+
+    QVERIFY(!lid.isEmpty());
+    QVERIFY(lid.value(QStringLiteral("extra")).toBool());
+    QVERIFY(!lid.value(QStringLiteral("autoCompanion")).toBool());
+    QCOMPARE(lid.value(QStringLiteral("binaryKind")).toString(),
+             QStringLiteral("llama.cpp-deepseek-lid-cuda"));
+    QCOMPARE(lid.value(QStringLiteral("runtime")).toObject().value(QStringLiteral("kv"))
+                 .toString(), QStringLiteral("f16"));
+    QCOMPARE(lid.value(QStringLiteral("contextPresets")).toArray().size(), 4);
+    QCOMPARE(lid.value(QStringLiteral("env")).toObject()
+                 .value(QStringLiteral("GGML_CUDA_NO_PINNED")).toString(), QStringLiteral("1"));
+
+    QStringList args;
+    for (const QJsonValue &value : lid.value(QStringLiteral("extraArgs")).toArray())
+        args << value.toString();
+    QVERIFY(!args.contains(QStringLiteral("--cache-type-k")));
+    QVERIFY(!args.contains(QStringLiteral("--cache-type-v")));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--fit-ctx")) + 1),
+             QStringLiteral("131072"));
+    QCOMPARE(args.value(args.indexOf(QStringLiteral("--fit-target")) + 1),
+             QStringLiteral("512"));
+
+    ProfileManager pm;
+    const QVariantMap launch =
+        pm.getLaunchProfile(QStringLiteral("sys-ultraq-dsv4-0731-lid-cuda"));
+    QVERIFY(launch.value(QStringLiteral("system")).toBool());
+    const QVariantMap runtime = pm.getRuntimePreset(
+        launch.value(QStringLiteral("runtimePresetId")).toString());
+    QCOMPARE(runtime.value(QStringLiteral("cacheType")).toString(), QStringLiteral("f16"));
+    const QVariantMap backend = pm.getBackend(
+        launch.value(QStringLiteral("backendProfileId")).toString());
+    QVERIFY(backend.value(QStringLiteral("binaryId")).toString().isEmpty());
+}
+
 void SystemProfilesTests::bundle_katApexMtpVisionIsOptInAndWired()
 {
     QFile bundle(bundlePath());
@@ -2527,7 +2576,9 @@ void SystemProfilesTests::bundle_quantizationPolicyCapsKvAtQ8()
         const QJsonObject profile = value.toObject();
         const QString id = profile.value(QStringLiteral("id")).toString();
         const QJsonObject runtime = profile.value(QStringLiteral("runtime")).toObject();
-        QVERIFY2(allowed(runtime.value(QStringLiteral("kv")).toString()), qPrintable(id));
+        const QString kv = runtime.value(QStringLiteral("kv")).toString();
+        const bool lidF16 = id == QStringLiteral("sys-ultraq-dsv4-0731-lid-cuda");
+        QVERIFY2(lidF16 || allowed(kv), qPrintable(id));
         checkCacheArgs(profile);
         for (const QJsonValue &variantValue : profile.value(QStringLiteral("benchmarkVariants")).toArray()) {
             const QJsonObject variant = variantValue.toObject();
