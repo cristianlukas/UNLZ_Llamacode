@@ -102,6 +102,40 @@ estadísticamente inestable, `validForPromotion` queda en `false`. El proceso
 termina con código distinto de cero ante fallos de arranque, timeouts, pérdida
 de passkeys, filas no pareadas o resultados que no pasan el control de calidad.
 
+## Matriz de contextos (LID y otros runtimes)
+
+Para comparar presets que requieren una reserva KV distinta, usar
+[`tools/long_context_matrix.py`](../tools/long_context_matrix.py). A diferencia
+del probe directo, reinicia `llama-server` para cada contexto y reescribe tanto
+`--ctx-size` como `--fit-ctx` cuando aparecen en la receta. Cada fila conserva
+su comando, log y recibo; `verifiedContexts` sólo incluye contextos que
+arrancaron y pasaron todas las passkeys exactamente.
+
+El ejemplo para la rama DeepSeek LID CUDA está en
+[`assets/benchmarks/deepseek_lid_context_matrix.example.json`](../assets/benchmarks/deepseek_lid_context_matrix.example.json):
+
+```powershell
+python tools/long_context_matrix.py `
+  --config assets/benchmarks/deepseek_lid_context_matrix.example.json `
+  --probe build/Debug/qa_kv_cache.exe `
+  --out deepseek-lid-context-matrix.json
+```
+
+Se puede hacer una corrida acotada antes de lanzar toda la matriz:
+
+```powershell
+python tools/long_context_matrix.py `
+  --config assets/benchmarks/deepseek_lid_context_matrix.example.json `
+  --contexts 131072 `
+  --probe build/Debug/qa_kv_cache.exe `
+  --out deepseek-lid-131k.json
+```
+
+`--dry-run` valida la configuración y muestra los comandos finales sin cargar
+el modelo. Los presets 256K, 512K y 1M siguen siendo experimentales: que estén
+en el perfil sólo los ofrece en la UI; deben aparecer en `verifiedContexts` de
+un recibo real antes de considerarse capacidad confirmada.
+
 ### Windows con WSL2
 
 El runner admite `launcher.kind = "wsl"`: el probe sigue ejecutándose en
