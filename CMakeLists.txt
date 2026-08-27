@@ -622,6 +622,8 @@ if (BUILD_TESTS)
     add_lc_test(test_context_index      tests/test_context_index.cpp)
     add_lc_test(test_tuner              tests/test_tuner.cpp)
     add_lc_test(test_server_benchmark_metrics tests/test_server_benchmark_metrics.cpp)
+    add_lc_test(test_long_context_probe tests/test_long_context_probe.cpp
+               tests/long_context_probe.cpp)
     add_lc_test(test_hardware_diagnostics tests/test_hardware_diagnostics.cpp)
     add_lc_test(test_eval               tests/test_eval.cpp)
     # Ruta de la suite bundleada para validar el JSON real (no sólo el sample inline).
@@ -806,6 +808,17 @@ if (BUILD_TESTS)
     endif()
     target_include_directories(qa_web_providers PRIVATE src tests)
     target_link_libraries(qa_web_providers PRIVATE llamacode_core)
+
+    # Opt-in probe against a real llama-server. It is intentionally not an
+    # add_test(): it needs a model, a running server and may allocate 128K prompts.
+    qt_add_executable(qa_kv_cache tests/qa_kv_cache.cpp tests/long_context_probe.cpp)
+    set_target_properties(qa_kv_cache PROPERTIES WIN32_EXECUTABLE FALSE)
+    if (MSVC)
+        target_compile_options(qa_kv_cache PRIVATE /utf-8)
+        target_link_options(qa_kv_cache PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup)
+    endif()
+    target_include_directories(qa_kv_cache PRIVATE src tests)
+    target_link_libraries(qa_kv_cache PRIVATE llamacode_core)
 
     # Probe opt-in de concurrencia para decidir si un workload auxiliar (STT,
     # embeddings, juez o resumen) debe compartir servidor/proceso. No entra en
