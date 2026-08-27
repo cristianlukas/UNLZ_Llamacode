@@ -49,7 +49,11 @@ de `build/Debug/LlamaCode.exe` (26.113.024 bytes). El build fue incremental: el
 ejecutable ya era posterior al archivo fuente más nuevo, por lo que su timestamp
 no tuvo que avanzar; el acceso directo Debug sí fue actualizado.
 
-No se ejecutaron `qa_visual_automation` ni `qa_ocr_probe`: ambos probes pueden
-tomar foco, mostrar superficies o mover el mouse, y no había una ventana de prueba
-dedicada aislada del entorno interactivo. Los locks de build y tests quedaron
-libres al cierre.
+Al quedar libres las corridas y con LlamaCode cerrado, sí se ejecutaron los probes
+autocontenidos. `qa_visual_automation --matrix` terminó `summary cases=12
+failures=0`: cubrió los 3 monitores, temas claro/oscuro, DPI 100% y 125%, usando
+el backend `qt-sampled` y sin `--execute-click`. `qa_ocr_probe --self-contained`
+terminó con código 0: motor OCR disponible en `es-MX`, 3 pantallas, 100% de
+acuerdo OCR/UIA en cada pantalla y 100% de acuerdo también en los monitores
+escalados al 125%. Las superficies de prueba fueron destruidas al terminar y los
+locks de build/tests quedaron libres al cierre.
