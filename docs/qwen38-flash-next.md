@@ -120,3 +120,52 @@ No es Apache/MIT. Permisiva para uso local, interno, fine-tuning y derivados,
 pero MaaS comercial o un asistente de codigo/oficina standalone requieren una
 licencia aparte de Qwen. Relevante si LlamaCode alguna vez lo bundlea o lo
 ofrece como servicio; para uso local no cambia nada.
+
+## Medido en la maquina de desarrollo (2x RTX 3090 + 127 GB RAM)
+
+Composicion real del UD-Q4_K_XL, leida de los 4 shards:
+
+| | |
+|---|---|
+| Total | 103.68 GB |
+| Ngram/PLE | 26.85 GB (**25.9%**) |
+| Backbone residente | 76.82 GB |
+
+La regla del 75% se confirma con el modelo en la mano. Layout: el **shard 1 no
+tiene tensores** (solo metadata) y **todos** los Ngram estan en el shard 2, que
+ademas mezcla backbone (46.4 GB totales, 26.9 de Ngram). Por eso
+`readComposition` de un solo shard no sirve para este modelo y hay
+`readCompositionAllShards`.
+
+### Cosas que rompen, encontradas al correrlo
+
+1. **KV cache cuantizado crashea.** `--cache-type-k/-v q8_0` aborta en
+   `qwen4exp.cpp:544`: `GGML_ASSERT(inp->self_k_rot == nullptr && inp->self_v_rot
+   == nullptr)`. Hay que usar f16. Cuesta contexto y todavia no tiene workaround.
+2. **`-ot` desactiva `--fit`.** El loader avisa `tensor_buft_overrides already
+   set by user, abort` y entonces mete todas las capas a GPU -> OOM. `--tensor-split`
+   lo desactiva igual. Con `-ot` hay que dimensionar a mano.
+3. **`--n-gpu-layers 999` solo no alcanza.** El backbone son 77 GB contra 48 GB
+   de VRAM. Hace falta `--n-cpu-moe N`.
+4. **`--mmap` / `--no-mmap` / `--mlock` estan DEPRECADOS** en este build, en favor
+   de `-lm/--load-mode {auto|none|mmap|mlock|mmap+mlock}` (auto = mmap). Ademas el
+   loader sugiere `--load-mode none` cuando hay `-ot ...=CPU`, o sea que hay un
+   trade-off real entre RAM y page faults, no una opcion obviamente mejor.
+
+### VRAM por configuracion (deterministico)
+
+| `--n-cpu-moe` | VRAM total | resultado |
+|---|---|---|
+| 26 | — | **OOM**: pide 36 GB en una sola placa |
+| 32 | — | carga |
+| 36 | — | carga |
+| 40 | 22.8 GB | carga |
+| 48 (`--cpu-moe`) | 10.2 GB | carga |
+
+Con 48 capas de expertos en CPU sobran ~38 GB de VRAM: hay lugar de sobra para
+subir expertos, el limite lo pone el reparto desigual entre las dos placas.
+
+**Los t/s medidos hasta ahora NO son confiables**: se tomaron con otra sesion
+compilando en paralelo (7 procesos de MSVC), y dieron entre 2.4 y 8.2 t/s para la
+misma clase de configuracion. Para numeros publicables hay que correr
+`benchmark_qwen38_flash_next.ps1` con la maquina quieta.

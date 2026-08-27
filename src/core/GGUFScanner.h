@@ -46,11 +46,24 @@ public:
         QString breakdown() const;          // "q4_0:265, q6_k:1, f32:392"
     };
     static Composition readComposition(const QString &filePath, qint64 fileSizeBytes);
+    // Un GGUF partido ("...-00001-of-00004.gguf") reparte los tensores entre los
+    // shards, y el primero suele traer SOLO metadata (0 tensores). Leer nada mas
+    // el shard registrado en el catalogo da totalElements=0 y ngramElements=0,
+    // que es peor que no tener el dato. Esto suma los shards hermanos.
+    // Con un archivo no particionado equivale a readComposition.
+    static Composition readCompositionAllShards(const QString &firstShardPath);
+    // Devuelve los paths de todos los shards de un GGUF particionado (incluido el
+    // propio), en orden. Lista de un solo elemento si no esta particionado.
+    static QStringList shardPaths(const QString &anyShardPath);
     static QString ggmlTypeName(quint32 t);
     // Tabla de lookup Ngram/PLE (blk.N.ple_key / ple_value, per_layer_token_embd).
     // Deliberadamente NO matchea ple_norm_*, ple_conv1d ni per_layer_proj_norm:
     // esos son compute, sacarlos de la GPU es perdida neta.
     static bool isNgramLookupTensor(const QString &tensorName);
+    // Heuristica por NOMBRE de archivo para la familia Qwen4 con tablas Ngram/PLE.
+    // La fuente de verdad es general.architecture == "qwen4exp" dentro del GGUF,
+    // pero hay chequeos (health de perfiles) que solo tienen el nombre a mano.
+    static bool isNgramArchitectureName(const QString &fileName);
 
     // True si el modelo es un Gemma QAT con quant real q4_0 "crudo" (Google-style):
     // llama.cpp aplica scales fp16 sobre un QAT entrenado con scales bf16 → clipping

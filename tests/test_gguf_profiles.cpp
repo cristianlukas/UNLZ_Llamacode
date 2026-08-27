@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFile>
 #include <tuple>
+#include <QTemporaryDir>
 #include "core/GGUFScanner.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/profiles/ProfileTypes.h"
@@ -38,6 +39,9 @@ private slots:
     // ── GGUFScanner::readComposition (parser binario) ──
     void ngramLookupTensorClassification();
     void readComposition_countsNgramElements();
+    void ngramArchitectureNameDetection();
+    void shardPaths_enumeratesSiblings();
+    void readCompositionAllShards_aggregates();
     void readComposition_realTensors();
     void readComposition_metadata();
     void readComposition_rejectsGarbage();
@@ -202,8 +206,8 @@ void putTensor(QByteArray &b, const QByteArray &name,
 // GGUF v3 mínimo: magic, version, tensorCount, kvCount=0, luego tensor infos.
 // Igual que writeGgufFixture pero con nombres de tensor explicitos: hace falta
 // para ejercitar la clasificacion Ngram/PLE, que depende del NOMBRE.
-QString writeGgufFixtureNamed(const QString &name,
-                              const QList<std::tuple<QByteArray, quint32, quint64>> &tensors)
+QString writeGgufFixtureNamedAt(const QString &path,
+                                const QList<std::tuple<QByteArray, quint32, quint64>> &tensors)
 {
     QByteArray b;
     putU32(b, 0x46554747u);
@@ -212,10 +216,15 @@ QString writeGgufFixtureNamed(const QString &name,
     putU64(b, 0);
     for (const auto &t : tensors)
         putTensor(b, std::get<0>(t), {std::get<2>(t)}, std::get<1>(t));
-    const QString path = QDir(QDir::tempPath()).filePath(name);
     QFile f(path);
     if (f.open(QIODevice::WriteOnly)) { f.write(b); f.close(); }
     return path;
+}
+
+QString writeGgufFixtureNamed(const QString &name,
+                              const QList<std::tuple<QByteArray, quint32, quint64>> &tensors)
+{
+    return writeGgufFixtureNamedAt(QDir(QDir::tempPath()).filePath(name), tensors);
 }
 
 QString writeGgufFixture(const QString &name, const QList<QPair<quint32, quint64>> &tensors)
@@ -280,6 +289,84 @@ void CoreTests::readComposition_countsNgramElements()
     QCOMPARE(c.totalElements - c.ngramElements, 3050ll);
 
     QFile::remove(path);
+}
+
+void CoreTests::ngramArchitectureNameDetection()
+{
+    QVERIFY(GGUFScanner::isNgramArchitectureName(
+        QStringLiteral("Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf")));
+    QVERIFY(GGUFScanner::isNgramArchitectureName(QStringLiteral("qwen4-something.gguf")));
+    QVERIFY(GGUFScanner::isNgramArchitectureName(
+        QStringLiteral("D:/Models/Qwen3.8-Flash-Next/flash_next.gguf")));
+
+    // "Flash" solo NO alcanza: DeepSeek V4 Flash es otra arquitectura sin Ngram.
+    QVERIFY(!GGUFScanner::isNgramArchitectureName(
+        QStringLiteral("DeepSeek-V4-Flash-0731-UD-IQ3_S.gguf")));
+    QVERIFY(!GGUFScanner::isNgramArchitectureName(QStringLiteral("Qwen3.8-27B-Q4_K_M.gguf")));
+    QVERIFY(!GGUFScanner::isNgramArchitectureName(QString()));
+}
+
+void CoreTests::shardPaths_enumeratesSiblings()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString base = QStringLiteral("Model-UD-Q4_K_XL");
+    QStringList created;
+    for (int i = 1; i <= 3; ++i) {
+        const QString p = QDir(dir.path()).filePath(
+            QStringLiteral("%1-%2-of-00003.gguf").arg(base,
+                QString::number(i).rightJustified(5, QLatin1Char('0'))));
+        QFile f(p);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.close();
+        created << p;
+    }
+
+    // Desde cualquier shard se llega a todos, en orden.
+    const QStringList fromFirst = GGUFScanner::shardPaths(created.first());
+    QCOMPARE(fromFirst.size(), 3);
+    QVERIFY(fromFirst.first().endsWith(QStringLiteral("00001-of-00003.gguf")));
+    QVERIFY(fromFirst.last().endsWith(QStringLiteral("00003-of-00003.gguf")));
+    QCOMPARE(GGUFScanner::shardPaths(created.at(1)).size(), 3);
+
+    // Un archivo sin particionar se devuelve solo, no vacio.
+    const QString single = QDir(dir.path()).filePath(QStringLiteral("plain.gguf"));
+    QFile pf(single);
+    QVERIFY(pf.open(QIODevice::WriteOnly));
+    pf.close();
+    QCOMPARE(GGUFScanner::shardPaths(single), QStringList{single});
+}
+
+void CoreTests::readCompositionAllShards_aggregates()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    // Reproduce el layout real de Qwen3.8-Flash-Next: el shard 1 es SOLO
+    // metadata (0 tensores) y los Ngram viven todos en el shard 2. Leer nada
+    // mas el shard 1 -- que es el que queda registrado en el catalogo -- daria
+    // total=0 y ngram=0, que es justo el bug que esto arregla.
+    auto shardPath = [&](int i) {
+        return QDir(dir.path()).filePath(
+            QStringLiteral("Split-%1-of-00002.gguf")
+                .arg(QString::number(i).rightJustified(5, QLatin1Char('0'))));
+    };
+    writeGgufFixtureNamedAt(shardPath(1), {});
+    writeGgufFixtureNamedAt(shardPath(2), {
+        {QByteArray("blk.0.attn_q.weight"),        12u, 1000ull},
+        {QByteArray("blk.0.ple_key"),              12u, 2000ull},
+        {QByteArray("per_layer_token_embd.weight"),12u, 3000ull}
+    });
+
+    const GGUFScanner::Composition solo =
+        GGUFScanner::readComposition(shardPath(1), QFileInfo(shardPath(1)).size());
+    QCOMPARE(solo.totalElements, 0ll);
+
+    const GGUFScanner::Composition agg =
+        GGUFScanner::readCompositionAllShards(shardPath(1));
+    QCOMPARE(agg.totalElements, 6000ll);
+    QCOMPARE(agg.ngramElements, 5000ll);
+    QCOMPARE(agg.totalElements - agg.ngramElements, 1000ll);
 }
 
 void CoreTests::readComposition_realTensors()

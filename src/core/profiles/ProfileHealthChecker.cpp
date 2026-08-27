@@ -1,4 +1,6 @@
 #include "ProfileHealthChecker.h"
+#include "../GGUFScanner.h"
+#include <algorithm>
 #include "ProfileManager.h"
 #include "../BinaryRegistry.h"
 #include "../ModelCatalog.h"
@@ -98,6 +100,38 @@ QList<HealthIssue> ProfileHealthChecker::checkLaunch(const Refs &r)
                           "El binario seleccionado no declara soporte para adaptive speculative decoding.",
                           "Registrar una build compatible (mtp-fork) y volver a detectar sus capacidades, o desactivar adaptive.");
             }
+        }
+    }
+
+    // Arquitectura Qwen4 (Ngram/PLE): las tablas de lookup son ~25% del peso
+    // y pueden quedar fuera de memoria residente. Forzar residencia las trae
+    // de vuelta en silencio -- el server levanta igual y anda, solo que come
+    // ~27 GB de mas en un Q4_K_XL. Es un fallo caro y mudo, por eso es warning
+    // explicito y no algo que el usuario tenga que deducir del uso de RAM.
+    if (r.modelRefFound && GGUFScanner::isNgramArchitectureName(r.modelFileName)) {
+        const QStringList &ea = r.launch.extraArgs;
+        const int lmIdx = ea.indexOf(QStringLiteral("--load-mode")) >= 0
+            ? ea.indexOf(QStringLiteral("--load-mode"))
+            : ea.indexOf(QStringLiteral("-lm"));
+        const QString loadMode = (lmIdx >= 0 && lmIdx + 1 < ea.size())
+            ? ea.at(lmIdx + 1).trimmed().toLower() : QString();
+        const bool pinsMemory = loadMode.contains(QStringLiteral("mlock"))
+            || ea.contains(QStringLiteral("--mlock"))
+            || ea.contains(QStringLiteral("--no-mmap"));
+        const bool overridesNgram = std::any_of(
+            ea.cbegin(), ea.cend(), [](const QString &a) {
+                return a.contains(QStringLiteral("ple_key"))
+                    || a.contains(QStringLiteral("per_layer_token_embd"));
+            });
+
+        if (pinsMemory) {
+            out << mk("warning", id, "runtime", "ngram-offload-defeated",
+                      "El perfil fuerza residencia en RAM (mlock/--no-mmap) sobre un modelo con tablas Ngram/PLE.",
+                      "Usar --load-mode mmap: las tablas Ngram son lookup de acceso aleatorio (~25% del peso) y pueden paginarse del SSD sin costo de velocidad.");
+        } else if (!overridesNgram) {
+            out << mk("warning", id, "runtime", "ngram-offload-unused",
+                      "Modelo con tablas Ngram/PLE sin -ot: compiten por VRAM con el backbone.",
+                      "Agregar -ot \"(ple_key|ple_value|per_layer_token_embd)=CPU\" para liberar ~25% del peso del modelo.");
         }
     }
 

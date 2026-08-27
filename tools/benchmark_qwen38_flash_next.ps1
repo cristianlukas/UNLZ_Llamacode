@@ -13,6 +13,9 @@ param(
     [int]$Port      = 18097,
     [int]$Passes    = 2,
     [int]$CtxSize   = 32768,
+    # Capas cuyos expertos MoE quedan en CPU. En 2x24GB, por debajo de ~32 el
+    # modelo NO entra: con 26 el loader pide 36 GB en una sola placa y hace OOM.
+    [int]$NCpuMoe   = 36,
     # Regex de tensores Ngram/PLE. Vacio = autodetectar desde el GGUF.
     [string]$NgramRegex = "",
     [ValidateSet("thinking","instruct","both")]
@@ -118,31 +121,37 @@ function Test-NgramLayout($modelPath) {
 }
 
 function Invoke-Bench($label, $placement, $modeName) {
+    # KV cache f16 a proposito: --cache-type-k/v q8_0 CRASHEA el PR 27742 en esta
+    # arquitectura (GGML_ASSERT(inp->self_k_rot == nullptr) en qwen4exp.cpp:544).
+    # Tampoco se pasa --tensor-split ni --fit: -ot desactiva --fit ("tensor_buft_
+    # overrides already set by user, abort") y --tensor-split tambien.
     $s = $sampling[$modeName]
     $serverArgs = @(
         "-m", $Model, "--host", "127.0.0.1", "--port", "$Port",
         "--ctx-size", "$CtxSize", "--parallel", "1",
-        "--n-gpu-layers", "999", "--split-mode", "layer", "--tensor-split", "1,1",
-        "--cache-type-k", "q8_0", "--cache-type-v", "q8_0",
+        "--n-gpu-layers", "999",
+        "--n-cpu-moe", "$NCpuMoe",
         "--flash-attn", "on", "--jinja", "--metrics", "--no-warmup",
         "--temp", $s.temp, "--top-p", $s.topP, "--top-k", $s.topK,
         "--min-p", $s.minP, "--presence-penalty", $s.presence
     )
-    # OJO: --mmap es el DEFAULT en llama.cpp actual (incluido el PR 27742). No hay
-    # que pasarlo; lo que rompe el offload es pasar --no-mmap o --mlock. Por eso
-    # el brazo "ram" es el que agrega --no-mmap, no al reves.
+    # OJO: en el PR 27742 los flags --mmap / --no-mmap / --mlock estan DEPRECADOS
+    # en favor de -lm/--load-mode {auto|none|mmap|mlock|mmap+mlock}. auto = mmap.
+    # Ademas el loader avisa explicito: "tensor overrides to CPU are used with
+    # mmap enabled - consider using --load-mode none for better performance".
+    # O sea que hay un trade-off real y es lo que este sweep mide:
+    #   mmap  -> los Ngram quedan en disco y se paginan. Minima RAM, page faults.
+    #   none  -> los Ngram se copian a RAM. Mas rapido, ~27 GB mas de RAM.
+    #   mlock -> todo residente y wired. Maxima RAM, sin page faults.
     switch ($placement) {
         "gpu" {
-            # Ngram/PLE a VRAM junto con el resto. Baseline.
+            # Sin -ot: Ngram/PLE compiten por VRAM con el backbone. Baseline.
         }
         "ram" {
-            # Residencia real en RAM: sin mmap el loader copia los tensores.
-            $serverArgs += @("-ot", ($NgramRegex + "=CPU"), "--no-mmap")
+            $serverArgs += @("-ot", ($NgramRegex + "=CPU"), "--load-mode", "none")
         }
         "ssd" {
-            # -ot manda los Ngram al backend CPU y mmap (default) deja que el SO
-            # los pagine desde el SSD bajo demanda, sin copiarlos a RAM.
-            $serverArgs += @("-ot", ($NgramRegex + "=CPU"))
+            $serverArgs += @("-ot", ($NgramRegex + "=CPU"), "--load-mode", "mmap")
         }
     }
 

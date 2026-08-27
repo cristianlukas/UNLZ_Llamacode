@@ -3,6 +3,7 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
 #include <QUuid>
 #include <QRegularExpression>
 #include <QStringList>
@@ -311,6 +312,18 @@ QString GGUFScanner::Composition::breakdown() const
     return parts.join(", ");
 }
 
+bool GGUFScanner::isNgramArchitectureName(const QString &fileName)
+{
+    if (fileName.isEmpty())
+        return false;
+    const QString base = QFileInfo(fileName).fileName().toLower();
+    // Qwen3.8-Flash-Next y los Qwen4 que hereden la arquitectura qwen4exp.
+    static const QRegularExpression re(
+        QStringLiteral(R"((flash[-_.]?next)|(^|[-_.])qwen4)"),
+        QRegularExpression::CaseInsensitiveOption);
+    return re.match(base).hasMatch();
+}
+
 bool GGUFScanner::isNgramLookupTensor(const QString &tensorName)
 {
     // Nombres tomados de llama-arch.cpp del soporte de qwen4exp (PR 27742):
@@ -327,6 +340,71 @@ bool GGUFScanner::isNgramLookupTensor(const QString &tensorName)
     static const QRegularExpression blockRe(
         QStringLiteral(R"(^blk\.[0-9]+\.ple_(key|value)$)"));
     return blockRe.match(base).hasMatch();
+}
+
+QStringList GGUFScanner::shardPaths(const QString &anyShardPath)
+{
+    const QFileInfo info(anyShardPath);
+    const QString name = info.fileName();
+    // Convencion de gguf-split: "<base>-00001-of-00004.gguf".
+    static const QRegularExpression re(
+        QStringLiteral(R"(^(.*)-([0-9]{5})-of-([0-9]{5})\.gguf$)"),
+        QRegularExpression::CaseInsensitiveOption);
+    const QRegularExpressionMatch m = re.match(name);
+    if (!m.hasMatch())
+        return {anyShardPath};
+
+    const QString base = m.captured(1);
+    const int total = m.captured(3).toInt();
+    if (total <= 0 || total > 999)
+        return {anyShardPath};
+
+    const QDir dir = info.absoluteDir();
+    QStringList out;
+    for (int i = 1; i <= total; ++i) {
+        const QString shard = QStringLiteral("%1-%2-of-%3.gguf")
+            .arg(base,
+                 QString::number(i).rightJustified(5, QLatin1Char('0')),
+                 QString::number(total).rightJustified(5, QLatin1Char('0')));
+        const QString full = dir.absoluteFilePath(shard);
+        // Un shard faltante no invalida el resto: se suma lo que haya y el
+        // caller ve un total menor, en vez de perder el dato entero.
+        if (QFile::exists(full))
+            out << full;
+    }
+    return out.isEmpty() ? QStringList{anyShardPath} : out;
+}
+
+GGUFScanner::Composition GGUFScanner::readCompositionAllShards(const QString &firstShardPath)
+{
+    const QStringList shards = shardPaths(firstShardPath);
+    if (shards.size() == 1)
+        return readComposition(firstShardPath, QFileInfo(firstShardPath).size());
+
+    Composition agg;
+    for (const QString &shard : shards) {
+        const Composition c = readComposition(shard, QFileInfo(shard).size());
+        agg.totalElements += c.totalElements;
+        agg.ngramElements += c.ngramElements;
+        for (auto it = c.typeTensors.constBegin(); it != c.typeTensors.constEnd(); ++it)
+            agg.typeTensors[it.key()] += it.value();
+        for (auto it = c.typeElements.constBegin(); it != c.typeElements.constEnd(); ++it)
+            agg.typeElements[it.key()] += it.value();
+        // Los metadatos generales viven en el primer shard que los traiga.
+        if (agg.architecture.isEmpty())   agg.architecture = c.architecture;
+        if (agg.parameterCount == 0)      agg.parameterCount = c.parameterCount;
+        if (agg.trainedContext == 0)      agg.trainedContext = c.trainedContext;
+    }
+
+    // Recalcular el quant dominante sobre el agregado: hacerlo por shard daria
+    // el dominante de UN shard, que puede no ser el del modelo.
+    static const QStringList rawFloats = {"f32", "f16", "bf16", "f64"};
+    qint64 best = -1;
+    for (auto it = agg.typeElements.constBegin(); it != agg.typeElements.constEnd(); ++it) {
+        if (rawFloats.contains(it.key())) continue;
+        if (it.value() > best) { best = it.value(); agg.dominantQuant = it.key(); }
+    }
+    return agg;
 }
 
 GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
