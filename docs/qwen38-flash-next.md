@@ -110,6 +110,38 @@ donde se rompe. Encaja con el commit del propio PR ("hold the qwen4exp indexer
 cache in a new llama_memory_hybrid_idx"): hay un cache nuevo especifico de esta
 arquitectura.
 
+### Caracterizado: se caen tokens de UN caracter
+
+Probe con 5 continuaciones inequivocas x 3 repeticiones x 4 tamanos de ubatch
+(`tools/` no lo incluye; fue un harness descartable). Resultado:
+
+| tarea | prompt | ubatch1 | ubatch32 | ubatch128 | default |
+|---|---|---|---|---|---|
+| letters | `A B C D E F G H I` | 3/3 | 3/3 | 3/3 | 3/3 |
+| evens | `2 4 6 8 10 12 14 16` | 0/3 | 3/3 | 3/3 | 3/3 |
+| count | `121 122 ... 129` | 3/3 | 0/3 | 1/3 | 1/3 |
+| numbers | `55 56 ... 63` | 0/3 | 0/3 | 0/3 | 0/3 |
+| days | `Monday Tuesday ...` | 0/3 | 0/3 | 0/3 | 0/3 |
+
+**`letters` es el unico que sale perfecto siempre.** Y las fallas tienen forma:
+
+```
+"55 56 57 ... 63"   -> " 6 6 6 6 6 6"      (el 2do digito de cada numero, ausente)
+"2 4 6 ... 16"      -> " 1820222426283"    (los numeros correctos, SIN espacios)
+```
+
+El tokenizer NO es el culpable: `/tokenize` + `/detokenize` da round-trip
+perfecto en 8/8 casos, incluidos `"Count: 121 122 123"` y `"2^100 mod 125"`.
+
+Lo que si muestra el tokenizer es la clave: `"55 56 57"` son **8 tokens** -- los
+digitos van de a uno. `"J K L M"` son 4. O sea que el modelo genera digito por
+digito, y lo que se pierde son **tokens de un solo caracter** (digitos sueltos y
+espacios). Las letras zafan porque cada "letra + espacio" es un token unico.
+
+Es corrupcion en el forward pass a nivel de token individual, no en el
+tokenizer ni en el sampler. `--ubatch-size` cambia CUALES prompts fallan, lo que
+apunta al batching del prefill, pero ningun valor los arregla a todos.
+
 ### Correccion de una conclusion anterior
 
 En una primera pasada se atribuyo la corrupcion a `-ot` de los Ngram y a
