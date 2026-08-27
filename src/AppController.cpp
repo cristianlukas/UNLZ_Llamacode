@@ -14647,15 +14647,30 @@ void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
     if (entry.value(QStringLiteral("manualOnly")).toBool(false))
         return; // The artifact was merged locally; never invent a remote download.
 
-    // No re-descargar lo que ya está en el catálogo (mismo nombre de archivo en
-    // cualquier root escaneado, p.ej. D:/Models). buildContext liga por filename.
-    auto have = [this](const QString &fn) {
+    // El modelo principal suele tener un nombre único y puede reutilizarse desde
+    // cualquier root escaneado (p.ej. D:/Models). Los mmproj, en cambio, suelen
+    // llamarse simplemente mmproj-F16/BF16.gguf: aceptar cualquier copia haría
+    // que una proyección de otra familia cancele la descarga correcta y luego
+    // buildContext no pueda emparejarla con este perfil.
+    auto have = [this](const QString &fn, const QString &requiredSubdir = QString()) {
         if (fn.isEmpty()) return true;
+        QString subdir = QDir::fromNativeSeparators(requiredSubdir.trimmed());
+        while (subdir.startsWith(QLatin1Char('/'))) subdir.remove(0, 1);
+        while (subdir.endsWith(QLatin1Char('/'))) subdir.chop(1);
         for (int i = 0; i < m_catalog.rowCount(); ++i) {
             const QVariantMap m = m_catalog.getAt(i);
             if (m.value(QStringLiteral("fileName")).toString() == fn
                 && m.value(QStringLiteral("isAvailable"), true).toBool())
-                return true;
+            {
+                if (subdir.isEmpty())
+                    return true;
+                const QString path = QDir::fromNativeSeparators(
+                    m.value(QStringLiteral("absolutePath")).toString());
+                const QString suffix = QLatin1Char('/') + subdir
+                                     + QLatin1Char('/') + fn;
+                if (path.endsWith(suffix, Qt::CaseInsensitive))
+                    return true;
+            }
         }
         return false;
     };
@@ -14673,7 +14688,7 @@ void AppController::enqueueSystemProfileAssets(const QJsonObject &entry)
     }
     const QString mmRepo = mo.value("mmprojRepo").toString();
     const QString mmFile = mo.value("mmprojFile").toString();
-    if (!mmRepo.isEmpty() && !mmFile.isEmpty() && !have(mmFile))
+    if (!mmRepo.isEmpty() && !mmFile.isEmpty() && !have(mmFile, folder))
         enqueueModelDownload(mmRepo, mmFile, folder);
     const QJsonObject draft = entry.value("draftModel").toObject();
     QStringList specTokens;

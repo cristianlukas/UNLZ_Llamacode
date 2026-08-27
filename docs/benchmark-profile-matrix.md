@@ -628,6 +628,12 @@ compatibles: hay que comprobar que el `mmproj` produzca respuestas útiles y que
 MTP no provoque crash en la build instalada. El APEX MTP es un GGUF de una sola
 pieza; no se debe combinar un cabezal Qwen externo con el KAT Q4 normal.
 
+El template bundleado `kat-coder-tools.jinja` conserva el formato de tool-calling
+de KAT y convierte el contenido OpenAI multimodal (`image_url`) en los marcadores
+`<|vision_start|><|image_pad|><|vision_end|>` que consume `llama-server` con
+`--mmproj`. Por eso el smoke debe probar también una imagen real, no sólo que el
+proyector aparezca en la línea de comandos.
+
 ### FAST - KAT-Coder-7-8-26
 
 ```text

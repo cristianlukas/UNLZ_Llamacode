@@ -6,6 +6,9 @@
 // Run:   ctest --test-dir build  (o ejecutar LlamaCodeTests directo).
 
 #include <QtTest>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFile>
 #include <tuple>
 #include "core/GGUFScanner.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
@@ -30,6 +33,7 @@ private slots:
     // ── GGUFScanner candidatos vision/draft ──
     void visionCandidate();
     void draftCandidate();
+    void katTemplateSupportsVisionContent();
 
     // ── GGUFScanner::readComposition (parser binario) ──
     void ngramLookupTensorClassification();
@@ -134,6 +138,35 @@ void CoreTests::draftCandidate()
     QVERIFY(!MtpDetection::isSelfContained("DeepSeek-V4-Flash-Preview-UD-IQ3_S.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("ThinkingCap-Qwen3.5-27B-Q4_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("Qwen3.6-27B-Q3_K_M.gguf"));
+}
+
+void CoreTests::katTemplateSupportsVisionContent()
+{
+    const QStringList candidates = {
+        QDir::current().absoluteFilePath(
+            QStringLiteral("assets/chat-templates/kat-coder-tools.jinja")),
+        QDir::current().absoluteFilePath(
+            QStringLiteral("../assets/chat-templates/kat-coder-tools.jinja")),
+        QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(
+            QStringLiteral("../../assets/chat-templates/kat-coder-tools.jinja")),
+    };
+    QFile templateFile;
+    QString resolvedPath;
+    for (const QString &candidate : candidates) {
+        if (!QFile::exists(candidate))
+            continue;
+        templateFile.setFileName(candidate);
+        resolvedPath = candidate;
+        break;
+    }
+    QVERIFY2(!resolvedPath.isEmpty(),
+             "no se encontró el template KAT bundleado para probar visión");
+    QVERIFY2(templateFile.open(QIODevice::ReadOnly), qPrintable(resolvedPath));
+    const QByteArray source = templateFile.readAll();
+    QVERIFY(source.contains("render_content"));
+    QVERIFY(source.contains("'image_url' in item"));
+    QVERIFY(source.contains("<|vision_start|><|image_pad|><|vision_end|>"));
+    QVERIFY(source.contains("render_content(message.content)"));
 }
 
 // ── Helpers para construir un GGUF sintético en disco ──────────────────────
