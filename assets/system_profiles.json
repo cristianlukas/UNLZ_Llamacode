@@ -1341,6 +1341,93 @@
     "comment": "KAT3 experimental derived from KAT2: APEX I-Compact with embedded MTP, q8_0 KV and the same 262k/512/64 dual-GPU runtime. Text-only: no mmproj is attached because the upstream KAT APEX-MTP GGUF does not provide working vision support through llama.cpp. Requires downloading the GGUF before HE0; validate HE0 first, then HE20 and BCB."
   },
   {
+    "id": "sys-48-katcoder-mtp-vision",
+    "tier": "48GB-KAT-Vision",
+    "order": 100,
+    "extra": true,
+    "benchmark": false,
+    "autoCompanion": false,
+    "displayName": "[experimental 48GB] KAT APEX-MTP + Qwen mmproj · 32k",
+    "minVramGb": 48,
+    "minRamGb": 32,
+    "cpuOk": false,
+    "folder": "KAT-Coder-V2.5-Dev-MTP-APEX-GGUF",
+    "agentProfileId": "agent-maximo",
+    "chatTemplate": "kat-coder-tools.jinja",
+    "model": {
+      "repo": "ursb01/KAT-Coder-V2.5-Dev-MTP-APEX-GGUF",
+      "file": "KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf",
+      "mmprojRepo": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+      "mmprojFile": "mmproj-F16.gguf",
+      "quant": "APEX I-Quality-v2"
+    },
+    "runtime": {
+      "ctx": 32768,
+      "gpuLayers": 999,
+      "batch": 512,
+      "ubatch": 64,
+      "threads": 8,
+      "kv": "q8_0",
+      "flashAttn": true,
+      "mlock": false,
+      "mmap": true
+    },
+    "extraArgs": [
+      "--cache-type-k", "q8_0",
+      "--cache-type-v", "q8_0",
+      "--fit", "off",
+      "--temp", "0.60",
+      "--top-p", "0.95",
+      "--top-k", "20",
+      "--min-p", "0.0",
+      "--repeat-penalty", "1.0",
+      "--presence-penalty", "0.0",
+      "--no-context-shift",
+      "--metrics",
+      "--no-warmup",
+      "--jinja",
+      "--threads-batch", "16",
+      "--predict", "8192",
+      "--parallel", "1",
+      "--reasoning", "off",
+      "--cache-prompt",
+      "--cache-reuse", "512",
+      "--split-mode", "layer",
+      "--tensor-split", "1,1",
+      "--skip-chat-parsing"
+    ],
+    "spec": {
+      "type": "draft-mtp",
+      "draftNMax": 2
+    },
+    "binaryKind": "official",
+    "minimumBinaryBuild": 10331,
+    "contextPresets": [32768],
+    "benchmarkVariants": [
+      {
+        "id": "sys-bench-48-kat-mtp-vision-mtp3",
+        "order": 101,
+        "benchmark": true,
+        "displayName": "[bench 48GB] KAT APEX-MTP + visión · MTP3 · 32k",
+        "spec": {
+          "type": "draft-mtp",
+          "draftNMax": 3
+        },
+        "comment": "Misma huella que el perfil base con MTP3; comparar aceptación y decode contra MTP2."
+      },
+      {
+        "id": "sys-bench-48-kat-mtp-vision-nospec",
+        "order": 102,
+        "benchmark": true,
+        "displayName": "[bench 48GB] KAT APEX-MTP + visión · sin MTP · 32k",
+        "spec": null,
+        "comment": "Control de visión sin speculative decoding. El GGUF conserva el cabezal MTP, pero no se activa."
+      }
+    ],
+    "comment": "Opt-in: injerto comunitario MTP sobre KAT y mmproj-F16 de Qwen3.6-35B-A3B. El KAT oficial es text-only; la visión puede degradarse tras el fine-tune y la aceptación MTP puede ser baja porque el cabezal proviene del trunk base. La verificación target mantiene la corrección: una mala aceptación sólo reduce velocidad. Descargar ambos archivos en esta carpeta y validar primero texto, luego imagen sin MTP y finalmente imagen + MTP2/MTP3.",
+    "vision": true
+  },
+  {
     "id": "sys-48-katcoder-393k-nographs",
     "tier": "48GB-KAT",
     "order": 99,

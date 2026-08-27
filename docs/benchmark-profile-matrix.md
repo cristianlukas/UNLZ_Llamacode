@@ -130,7 +130,7 @@ se suman a los 51 activos:
 
 | Familia | Motivo de quedar fuera de la cola activa |
 |---|---|
-| KAT APEX-MTP | Experimental; requiere descargar un GGUF específico y todavía no tiene HE0 validado en este checkout. Queda pendiente, no descartado por calidad. |
+| KAT APEX-MTP | Experimental; el perfil opt-in `sys-48-katcoder-mtp-vision` ya está cableado con `mmproj-F16`, pero requiere descargar ambos GGUF y todavía no tiene HE0 validado en este checkout. Queda fuera de la cola automática, no descartado por calidad. |
 | Dynamic V3 DFlash2 local | El loader falla antes de inferir con `wrong number of tensors; expected 81, got 58` y errores `FGDN_AR`. Es incompatibilidad de arquitectura/backend, no una mala puntuación del modelo. |
 | Dynamic V3 DFlash2 vLLM | No es un benchmark local utilizable en Windows nativo: necesita vLLM parcheado, drafter externo y un endpoint Linux/WSL o remoto preparado. Se conserva como experimento externo, separado de llama.cpp. |
 | BigBang base | HE0 no produjo un resultado evaluable y no llegó a BCB. |
@@ -464,6 +464,9 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench hybrid 24GB] Ling Tiny planifica → Qwen3.8 ejecuta` (`sys-hybrid-ling30-qwen38`) | Qwen3.8 UD-Q4 visión | Medir si el planificador ligero reduce wall-time sin bajar calidad | Ling Q6 planifica sin tools; Qwen3.8 UD-Q4/MTP3 ejecuta; swap secuencial | HE0 → HE20 → BCB |
 | `[bench 48GB KAT] KV q8_0 · 262k (cap de política)` (`sys-bench-48-kat-f16`) | FAST - KAT-Coder-7-8-26 | Repetir la variante histórica con la cota vigente | KV K/V q8_0 | HE0 → HE20 → BCB |
 | `EXPERIMENTAL - KAT3-Coder-7-8-26 · APEX-MTP · 262k` (`sys-kat3-mtp-262k`) | FAST - KAT2-Coder-7-8-26 | Probar MTP embebido APEX sin alterar KAT2; texto-only | APEX I-Compact; ctx 262k; B512/U64; KV q8_0; MTP4; requiere descargar el GGUF | HE0 → HE20 → BCB |
+| `[experimental 48GB] KAT APEX-MTP + Qwen mmproj · 32k` (`sys-48-katcoder-mtp-vision`) | KAT APEX-MTP + mmproj Qwen3.6 | Separar compatibilidad de visión y aceleración MTP sobre el trunk fine-tuneado | GGUF comunitario I-Quality-v2 + `mmproj-F16`; ctx 32k; KV q8_0; MTP2; b10331+ | Texto → imagen sin MTP → imagen + MTP2/MTP3 |
+| `[bench 48GB] KAT APEX-MTP + visión · MTP3 · 32k` (`sys-bench-48-kat-mtp-vision-mtp3`) | KAT APEX-MTP + mmproj Qwen3.6 | Medir si MTP3 supera a MTP2 sin alterar la huella multimodal | Misma huella; MTP3; `parallel=1` | HE0 → HE20 → BCB |
+| `[bench 48GB] KAT APEX-MTP + visión · sin MTP · 32k` (`sys-bench-48-kat-mtp-vision-nospec`) | KAT APEX-MTP + mmproj Qwen3.6 | Controlar visión con el cabezal MTP desactivado | Misma huella; sin speculative; `parallel=1` | Smoke de imagen → HE0 |
 | `[bench BigBang] 131k · MTP · batch 1024 · ubatch 256` (`sys-bench-48-bigbang-fast`) | FAST - BigBang MTP | Mantener MTP y bajar presión de prefill para corregir `Connection closed` | B1024/U256; MTP5 | HE0 → HE20 → BCB |
 | `[bench BigBang] 131k · sin MTP · KV q8_0` (`sys-bench-48-bigbang-base`) | BALANCE - BigBang MTP | Aislar si el fallo pertenece al MTP o al harness/modelo | MTP desactivado; KV q8_0 | HE0 → HE20 → BCB |
 | `[bench 48GB MAX-Q] MTP4 · 131k · visión` (`sys-bench-48-tc-mtp-131k`) | BALANCE - ThinkingCap Qwen3.6 MTP4 | Mantener MTP4 y reducir contexto para evitar bloqueo sostenido | ctx 131k; MTP4 | HE0 → HE20 → BCB |
@@ -606,6 +609,24 @@ agentProfileId: agent-maximo
 runtime: ctx=262144, batch=2048, ubatch=512, threads=8, gpuLayers=999, parallelSlots=1, cache=q8_0, flashAttention=on, contBatching=on, mmap=on, mlock=off
 extraArgs: --cache-type-k q8_0 --cache-type-v q8_0 --fit off --temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0 --repeat-penalty 1.0 --presence-penalty 0.0 --no-context-shift --metrics --no-warmup --jinja --threads-batch 16 --predict 8192 --parallel 1 --reasoning off --cache-prompt --cache-reuse 512 --split-mode layer --tensor-split 1,1 --skip-chat-parsing --chat-template-file %LOCALAPPDATA%/LlamaCode/LlamaCode/chat-templates/kat-coder-tools.jinja
 ```
+
+### KAT APEX-MTP + Qwen mmproj — experimental
+
+```text
+launchId: sys-48-katcoder-mtp-vision
+modelProfileId: sysmodel-sys-48-katcoder-mtp-vision
+runtimePresetId: sysrt-sys-48-katcoder-mtp-vision
+runtime: ctx=32768, batch=512, ubatch=64, threads=8, gpuLayers=999, parallelSlots=1, cache=q8_0, flashAttention=on, contBatching=on, mmap=on, mlock=off
+model: KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf
+mmproj: mmproj-F16.gguf (unsloth/Qwen3.6-35B-A3B-MTP-GGUF)
+spec: draft-mtp, n-max=2 (variante MTP3; variante nospec)
+minimumBinaryBuild: 10331
+```
+
+La combinación no está validada automáticamente por tener nombres de familia
+compatibles: hay que comprobar que el `mmproj` produzca respuestas útiles y que
+MTP no provoque crash en la build instalada. El APEX MTP es un GGUF de una sola
+pieza; no se debe combinar un cabezal Qwen externo con el KAT Q4 normal.
 
 ### FAST - KAT-Coder-7-8-26
 

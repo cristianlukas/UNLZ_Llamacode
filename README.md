@@ -273,6 +273,17 @@ completo en la GPU, a costa de velocidad. Para notebooks o equipos con poca
 memoria, conviene empezar con contexto 8k, `Q4_K_M` y cerrar procesos pesados antes
 de lanzar benchmarks o Deep Research.
 
+Para **2× RTX 3090 (48 GB agregados)** también queda disponible, sólo como experimento,
+`KAT APEX-MTP + Qwen mmproj` (`sys-48-katcoder-mtp-vision`). Usa el GGUF comunitario
+`KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf` junto con `mmproj-F16.gguf` de
+Qwen3.6-35B-A3B, contexto 32k, KV q8 y MTP2. El KAT oficial es text-only, por lo
+que la visión injertada puede perder calidad después del fine-tune y la aceptación
+MTP puede ser menor que en Qwen; una baja aceptación sólo reduce velocidad, no la
+corrección del modelo target. Incluye controles MTP3 y sin MTP para separar ambos
+efectos. Requiere llama.cpp b10331+ y se valida en este orden: texto, imagen sin MTP,
+imagen + MTP2 y luego MTP3. No reemplaza al perfil KAT estable ni se descarga junto
+con los perfiles automáticos.
+
 Como experimento separado para una **GPU de 16 GB**, el catálogo incorpora tres
 candidatos de Qwen3.8-27B basados en el post de LocalLLaMA adjunto: RVN-IQ3_XXS
 con `ngram-mod` a 131k, DFlash2+ngram a 105k y MTP+ngram a 105k. Usan KV

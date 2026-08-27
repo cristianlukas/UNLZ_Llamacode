@@ -79,6 +79,7 @@ private slots:
     void controller_showcaseEmptyWhenNoSiblings();
     void bundle_lagunaIsOptInAndHardwareGated();
     void bundle_ultraQAndHybridAreWiredAndOptIn();
+    void bundle_katApexMtpVisionIsOptInAndWired();
     void bundle_miniMaxIsOptInAndMemoryGated();
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_launchMenuGatesByTotalVramAcrossGpus();
@@ -1733,6 +1734,111 @@ void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()
                              "sys-bench-ultraq-b4096-u1024-moe35", "sys-bench-ultraq-b4096-u1024-ds1",
                              "sys-bench-ultraq-b4096-u1024-ds3"})
         QVERIFY2(pm.getLaunchProfile(QString::fromLatin1(gone)).isEmpty(), gone);
+}
+
+void SystemProfilesTests::bundle_katApexMtpVisionIsOptInAndWired()
+{
+    QFile bundle(bundlePath());
+    QVERIFY(bundle.open(QIODevice::ReadOnly));
+    const QJsonArray profiles = QJsonDocument::fromJson(bundle.readAll()).array();
+    QJsonObject kat;
+    for (const QJsonValue &value : profiles) {
+        const QJsonObject profile = value.toObject();
+        if (profile.value(QStringLiteral("id")).toString()
+            == QLatin1String("sys-48-katcoder-mtp-vision")) {
+            kat = profile;
+            break;
+        }
+    }
+
+    QVERIFY(!kat.isEmpty());
+    QVERIFY(kat.value(QStringLiteral("extra")).toBool());
+    QVERIFY(!kat.value(QStringLiteral("benchmark")).toBool());
+    QVERIFY(!kat.value(QStringLiteral("autoCompanion")).toBool());
+    QVERIFY(kat.value(QStringLiteral("vision")).toBool());
+    QCOMPARE(kat.value(QStringLiteral("minVramGb")).toInt(), 48);
+    QCOMPARE(kat.value(QStringLiteral("minimumBinaryBuild")).toInt(), 10331);
+
+    const QJsonObject model = kat.value(QStringLiteral("model")).toObject();
+    QCOMPARE(model.value(QStringLiteral("repo")).toString(),
+             QStringLiteral("ursb01/KAT-Coder-V2.5-Dev-MTP-APEX-GGUF"));
+    QCOMPARE(model.value(QStringLiteral("file")).toString(),
+             QStringLiteral("KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf"));
+    QCOMPARE(model.value(QStringLiteral("mmprojRepo")).toString(),
+             QStringLiteral("unsloth/Qwen3.6-35B-A3B-MTP-GGUF"));
+    QCOMPARE(model.value(QStringLiteral("mmprojFile")).toString(),
+             QStringLiteral("mmproj-F16.gguf"));
+
+    const QJsonObject runtime = kat.value(QStringLiteral("runtime")).toObject();
+    QCOMPARE(runtime.value(QStringLiteral("ctx")).toInt(), 32768);
+    QCOMPARE(runtime.value(QStringLiteral("batch")).toInt(), 512);
+    QCOMPARE(runtime.value(QStringLiteral("ubatch")).toInt(), 64);
+    QCOMPARE(runtime.value(QStringLiteral("kv")).toString(), QStringLiteral("q8_0"));
+
+    const QJsonObject spec = kat.value(QStringLiteral("spec")).toObject();
+    QCOMPARE(spec.value(QStringLiteral("type")).toString(), QStringLiteral("draft-mtp"));
+    QCOMPARE(spec.value(QStringLiteral("draftNMax")).toInt(), 2);
+
+    const QJsonArray variants = kat.value(QStringLiteral("benchmarkVariants")).toArray();
+    QCOMPARE(variants.size(), 2);
+    const QJsonArray expanded = expandSystemProfileVariants(QJsonArray{kat});
+    QHash<QString, QJsonObject> expandedById;
+    for (const QJsonValue &value : expanded)
+        expandedById.insert(value.toObject().value(QStringLiteral("id")).toString(),
+                            value.toObject());
+    const QJsonObject mtp3 = expandedById.value(
+        QStringLiteral("sys-bench-48-kat-mtp-vision-mtp3"));
+    QVERIFY(!mtp3.isEmpty());
+    QCOMPARE(mtp3.value(QStringLiteral("spec")).toObject()
+                 .value(QStringLiteral("draftNMax")).toInt(), 3);
+    const QJsonObject noSpec = expandedById.value(
+        QStringLiteral("sys-bench-48-kat-mtp-vision-nospec"));
+    QVERIFY(!noSpec.isEmpty());
+    QVERIFY(noSpec.value(QStringLiteral("spec")).isNull());
+
+    ProfileManager pm;
+    const QVariantMap launch = pm.getLaunchProfile(
+        QStringLiteral("sys-48-katcoder-mtp-vision"));
+    QVERIFY(!launch.isEmpty());
+    const QVariantMap modelProfile = pm.getModelProfile(
+        launch.value(QStringLiteral("modelProfileId")).toString());
+    const QString modelsDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)
+        + QStringLiteral("/models/KAT-Coder-V2.5-Dev-MTP-APEX-GGUF/");
+    const QUuid ns(QStringLiteral("a1b2c3d4-e5f6-4a5b-8c7d-0e1f2a3b4c5d"));
+    QCOMPARE(modelProfile.value(QStringLiteral("modelId")).toString(),
+             QUuid::createUuidV5(
+                 ns, (modelsDir
+                      + QStringLiteral("KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf"))
+                         .toUtf8())
+                 .toString(QUuid::WithoutBraces));
+    QCOMPARE(modelProfile.value(QStringLiteral("mmprojId")).toString(),
+             QUuid::createUuidV5(ns, (modelsDir + QStringLiteral("mmproj-F16.gguf"))
+                                     .toUtf8())
+                 .toString(QUuid::WithoutBraces));
+    QCOMPARE(modelProfile.value(QStringLiteral("specType")).toString(),
+             QStringLiteral("draft-mtp"));
+    QCOMPARE(modelProfile.value(QStringLiteral("specDraftNMax")).toInt(), 2);
+    QVERIFY(!modelProfile.value(QStringLiteral("mmprojId")).toString().isEmpty());
+    QVERIFY(modelProfile.value(QStringLiteral("draftModelId")).toString().isEmpty());
+
+    const QVariantMap mtp3Launch = pm.getLaunchProfile(
+        QStringLiteral("sys-bench-48-kat-mtp-vision-mtp3"));
+    QVERIFY(!mtp3Launch.isEmpty());
+    const QVariantMap mtp3Model = pm.getModelProfile(
+        mtp3Launch.value(QStringLiteral("modelProfileId")).toString());
+    QCOMPARE(mtp3Model.value(QStringLiteral("specType")).toString(),
+             QStringLiteral("draft-mtp"));
+    QCOMPARE(mtp3Model.value(QStringLiteral("specDraftNMax")).toInt(), 3);
+
+    const QVariantMap noSpecLaunch = pm.getLaunchProfile(
+        QStringLiteral("sys-bench-48-kat-mtp-vision-nospec"));
+    QVERIFY(!noSpecLaunch.isEmpty());
+    const QVariantMap noSpecModel = pm.getModelProfile(
+        noSpecLaunch.value(QStringLiteral("modelProfileId")).toString());
+    QVERIFY(noSpecModel.value(QStringLiteral("specType")).toString().isEmpty());
+    QCOMPARE(noSpecModel.value(QStringLiteral("specDraftNMax")).toInt(), 0);
+    QVERIFY(!noSpecModel.value(QStringLiteral("mmprojId")).toString().isEmpty());
 }
 
 // Regresión: duplicar un perfil de sistema debe FIJAR en la copia lo que el

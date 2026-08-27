@@ -287,7 +287,8 @@ activa con HE0 1/1, HE20 20/20 y BCB 3/8 (`failureKind=quality`).
 Se conservan en catálogo/matriz, pero no se relanzan automáticamente:
 
 - NInfer: `sys-ninfer3090-qwen27`, `sys-ninfer3090-qwen35`, `sys-ninfer3090-qwen38`.
-- KAT3 sin GGUF local: `sys-kat3-mtp-262k`.
+- KAT3 y KAT APEX-MTP + visión sin GGUF local: `sys-kat3-mtp-262k`,
+  `sys-48-katcoder-mtp-vision` y sus variantes `sys-bench-48-kat-mtp-vision-*`.
 - Qwen Q6/Q8 sin archivo local: `sys-48-qwen38-27b-q6-96k`,
   `sys-48-qwen38-27b-q8-196k`, `sys-qwen38-27b-q6k-24gb-32k` y sus variantes.
 - RVN: `sys-bench-16-qwen38-rvn-iq3xxs-ngram-131k`,
