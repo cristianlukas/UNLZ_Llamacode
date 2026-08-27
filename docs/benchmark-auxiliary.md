@@ -49,3 +49,12 @@ Interpretación mínima:
 
 El probe no cambia perfiles, no lanza procesos, no descarga modelos y no decide
 automáticamente un ganador.
+
+## Registro de disponibilidad — 2026-08-27
+
+Se verificó `qa_auxiliary_concurrency --help` y su contrato de uso. No se
+ejecutó contra un servidor real: en la revisión apareció un `llama-server`
+preexistente de otra instalación en `127.0.0.1:8033`, y esta prueba enviaría
+carga `/completion` sobre la sesión ajena. No se lo interrumpió, no se lanzó un
+segundo servidor y no se produjo un resultado de concurrencia que pudiera
+confundirse con una medición del perfil auxiliar.

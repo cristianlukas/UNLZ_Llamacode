@@ -157,3 +157,17 @@ arquitecturas que declara el paquete; WSL2 no convierte ese binario en un
 runtime Win32 nativo. `FRAQTL_MEMBRANE_EXCLUSIVE=1` debe mantenerse durante la
 validación: ante un dispatch no soportado el proceso debe fallar, no continuar
 con una ruta de cache que ya no representa la variante candidata.
+
+## Registro de disponibilidad — 2026-08-27
+
+Se verificó el contrato local de `qa_kv_cache` y se imprimió su ayuda. El
+ejecutable devuelve código 2 cuando se invoca sin el `base-url` posicional,
+aunque la ayuda se muestra; esto es una observación de CLI y no un resultado de
+KV cache.
+
+No se ejecutó la carga real. La PC tenía modelos GGUF locales disponibles,
+pero durante la revisión apareció un `llama-server` preexistente de otra
+instalación en `127.0.0.1:8033` (Qwen3.5-9B, contexto 32768). El probe puede
+enviar prompts grandes y no se debe usar contra un servidor que no fue lanzado
+por esta corrida. Para preservar la sesión existente no se inició otro server,
+no se enviaron requests al PID 34264 y no se generó un recibo de benchmark.

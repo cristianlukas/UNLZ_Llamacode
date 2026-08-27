@@ -65,3 +65,15 @@ Una comprobación posterior encontró la entrada de usuario activa y la ventana
 registrada en los locks, la PC no se consideró libre; no se iniciaron tests, build
 ni probes y no se tocó ninguna aplicación. El seguimiento automático queda
 programado para volver a comprobar dentro de 10 minutos.
+
+### 2026-08-27 — validación ampliada
+
+Con la lane de tests libre y `LlamaCode` cerrado se repitió la matriz visual
+en el candidato Debug. `qa_visual_automation --matrix` terminó con
+`summary cases=12 failures=0` sin ejecutar clicks. Luego
+`qa_visual_automation --matrix --execute-click` ejecutó los 12 clicks sobre
+las ventanas propias del fixture y terminó también con `exit=0`.
+
+La matriz cubrió los tres monitores, temas claro/oscuro y escalado 100/125 %.
+El resultado queda consolidado junto con el OCR y el build en
+[`validation-run-2026-08-27.md`](validation-run-2026-08-27.md).
