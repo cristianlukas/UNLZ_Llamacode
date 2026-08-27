@@ -776,10 +776,10 @@ if (BUILD_TESTS)
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
         FAIL_REGULAR_EXPRESSION "FAIL |ReferenceError|Unable to assign")
 
-    # Harness de QA manual del OCR: se compila pero NO se registra en ctest (a
-    # propósito: necesita escritorio vivo + paquete de idioma, y en headless daría
-    # rojo por el entorno, no por el código). Correr a mano con una app abierta.
-    # Ver "QA manual pendiente" en CLAUDE.md.
+    # Harness de QA manual del OCR: la prueba de pantalla necesita escritorio vivo
+    # y paquete de idioma, pero el contrato CLI de ayuda sí es headless-testable.
+    # La ayuda debe salir antes de tocar OCR/UIA; la validación visual se corre a
+    # mano con una app abierta. Ver "QA manual pendiente" en CLAUDE.md.
     qt_add_executable(qa_ocr_probe tests/qa_ocr_probe.cpp)
     set_target_properties(qa_ocr_probe PROPERTIES WIN32_EXECUTABLE FALSE)
     if (MSVC)
@@ -788,6 +788,25 @@ if (BUILD_TESTS)
     endif()
     target_include_directories(qa_ocr_probe PRIVATE src tests)
     target_link_libraries(qa_ocr_probe PRIVATE llamacode_core)
+    add_test(NAME qa_ocr_probe_help COMMAND qa_ocr_probe --help)
+    set_tests_properties(qa_ocr_probe_help PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1")
+    add_test(NAME qa_ocr_probe_offscreen_guard COMMAND qa_ocr_probe Archivo)
+    set_tests_properties(qa_ocr_probe_offscreen_guard PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_ASSUME_STDERR_HAS_CONSOLE=1"
+        WILL_FAIL TRUE)
+    if (WIN32)
+        set_property(TEST qa_ocr_probe_help PROPERTY ENVIRONMENT_MODIFICATION
+            "PATH=path_list_prepend:$<TARGET_FILE_DIR:qa_ocr_probe>"
+            "PATH=path_list_prepend:$<TARGET_FILE_DIR:llamacode_core>"
+            "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>"
+        )
+        set_property(TEST qa_ocr_probe_offscreen_guard PROPERTY ENVIRONMENT_MODIFICATION
+            "PATH=path_list_prepend:$<TARGET_FILE_DIR:qa_ocr_probe>"
+            "PATH=path_list_prepend:$<TARGET_FILE_DIR:llamacode_core>"
+            "PATH=path_list_prepend:$<TARGET_FILE_DIR:Qt6::Core>"
+        )
+    endif()
 
     qt_add_executable(qa_visual_automation tests/qa_visual_automation.cpp)
     set_target_properties(qa_visual_automation PROPERTIES WIN32_EXECUTABLE FALSE)
