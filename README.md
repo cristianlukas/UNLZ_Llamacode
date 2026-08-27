@@ -371,6 +371,17 @@ el GGUF DSpark separado (~10,9 GB), emitiendo `--spec-draft-model` junto con
 `draft-dspark`. Sigue siendo opt-in: en 24 GB de VRAM el costo adicional puede
 anular la aceleración y debe compararse contra ULTRA-Q y la variante `nospec`.
 
+Como prueba separada de la optimización del fork, LlamaCode incorpora el perfil
+`[experimental] DeepSeek V4 Flash · LID CUDA · f16 KV · 131k`. Compila desde la
+rama `spencer-zaid/llama.cpp:deepseek-lid-cuda`, que agrega Lightning Indexer
+CUDA, y se selecciona por el flavor dedicado para no sustituir al binario oficial.
+La configuración verificada cargó los cuatro shards y respondió `OK` a 131k en
+2× RTX 3090 + 128 GB RAM; usa KV f16, `GGML_CUDA_NO_PINNED=1`, `--fit-ctx 131072`
+y desactiva el build npm de la UI; permite assets prebuilt y agrega un
+`loading.html` mínimo si el fork lo omite. También expone 256k/512k/1M como presets
+experimentales para medir, no como capacidades garantizadas. El baseline ULTRA-Q
+q4_0 no se modifica porque la rama LID exige f16.
+
 El tier dual de 48 GB incluye además el perfil opt-in
 `[experimental 48GB] Fable Fusion Qwen3.6-27B Q6 · MTP · visión`. Requiere
 llama.cpp b10331+, descarga el GGUF MTP Q6 y `mmproj-F16`, y usa MTP3 a 32k con
@@ -2224,6 +2235,9 @@ ese proceso termina o el PID es reutilizado, la siguiente corrida roba el lock
 inmediatamente. No se usan procesos `Start-Sleep` como señal de actividad y un
 proceso ajeno no puede publicar ni liberar el resultado del propietario. El estado
 se consulta con `build_coord.ps1 -Lane build|tests -Action status`.
+El resultado compartido se publica mediante reemplazo atómico: un proceso en cola
+no puede leer una línea vacía/parcial y confundir un build limpio con un fallo o un
+`DIRTY`.
 
 Ese lock serializa *quién compila*, no *qué fuente hay en disco*: si dos sesiones
 comparten el working tree, la otra puede editar `src/` mientras compilás. Para
