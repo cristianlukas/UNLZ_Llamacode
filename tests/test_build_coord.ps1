@@ -77,7 +77,7 @@ $fpMd = (& $coord -Lane build -Action fingerprint).Trim()
 Remove-Item $mdProbe -Force
 Ok ($fpMd -eq $fpBase) "tocar un .md en tests/ NO cambia el fingerprint"
 $pycProbe = Join-Path $root 'tests\_ignored_probe.pyc'
-[byte[]](0, 1, 2, 3) | Set-Content $pycProbe -Encoding Byte
+[IO.File]::WriteAllBytes($pycProbe, [byte[]](0, 1, 2, 3))
 $fpPyc = (& $coord -Lane build -Action fingerprint).Trim()
 Remove-Item $pycProbe -Force
 Ok ($fpPyc -eq $fpBase) "tocar un .pyc en tests/ NO cambia el fingerprint"
