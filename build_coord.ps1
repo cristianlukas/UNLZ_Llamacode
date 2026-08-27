@@ -67,7 +67,9 @@ function Log([string]$m) { Write-Host ("[coord:{0}] {1}" -f $Lane, $m) }
 # DIRTY falso ensena a ignorar los DIRTY de verdad. Blacklist y no whitelist a
 # proposito: excluir de mas seria un DIRTY que NO salta (verde mentiroso), que es
 # el error caro; incluir de mas solo cuesta un re-run.
-$script:FpIgnoreExt = @('.ps1', '.md', '.log', '.tmp', '.claim', '.bat')
+# Los tests Python generan bytecode en tests/__pycache__/ durante la corrida;
+# no es fuente ni debe convertir un gate verde en DIRTY.
+$script:FpIgnoreExt = @('.ps1', '.md', '.log', '.tmp', '.claim', '.bat', '.pyc', '.pyo')
 
 function Get-Fingerprint {
     $targets = @('src','qml','tests') | ForEach-Object { Join-Path $root $_ }

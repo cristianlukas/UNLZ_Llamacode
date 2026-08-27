@@ -76,6 +76,11 @@ $mdProbe = Join-Path $root 'tests\_ignored_probe.md'
 $fpMd = (& $coord -Lane build -Action fingerprint).Trim()
 Remove-Item $mdProbe -Force
 Ok ($fpMd -eq $fpBase) "tocar un .md en tests/ NO cambia el fingerprint"
+$pycProbe = Join-Path $root 'tests\_ignored_probe.pyc'
+[byte[]](0, 1, 2, 3) | Set-Content $pycProbe -Encoding Byte
+$fpPyc = (& $coord -Lane build -Action fingerprint).Trim()
+Remove-Item $pycProbe -Force
+Ok ($fpPyc -eq $fpBase) "tocar un .pyc en tests/ NO cambia el fingerprint"
 # ...pero la fuente de verdad si tiene que contar (si no, DIRTY nunca salta).
 $cppProbe = Join-Path $root 'tests\_counted_probe.cpp'
 'int probe() { return 1; }' | Set-Content $cppProbe -Encoding ASCII
