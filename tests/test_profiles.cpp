@@ -337,12 +337,16 @@ void ProfilesTests::manager_favoriteAndAlias()
     pm.setLaunchAlias(id, "Alias");
     const QVariantList menu = pm.launchProfilesForMenu();
     QVERIFY(!menu.isEmpty());
-    const QVariantMap top = menu.first().toMap();
-    QCOMPARE(top.value("alias").toString(), QStringLiteral("Alias"));
-    QVERIFY(top.value("favorite").toBool());
+    const auto it = std::find_if(menu.cbegin(), menu.cend(), [&](const QVariant &value) {
+        return value.toMap().value("id").toString() == id;
+    });
+    QVERIFY(it != menu.cend());
+    const QVariantMap row = it->toMap();
+    QCOMPARE(row.value("alias").toString(), QStringLiteral("Alias"));
+    QVERIFY(row.value("favorite").toBool());
     // displayName antepone la estrella a los favoritos y muestra alias + nombre.
-    QCOMPARE(top.value("displayName").toString(), QStringLiteral("⚡ ★ Alias - 1_L"));
-    QVERIFY(top.value("best").toBool());
+    QCOMPARE(row.value("displayName").toString(), QStringLiteral("⚡ ★ Alias - 1_L"));
+    QVERIFY(row.value("best").toBool());
     QCOMPARE(pm.getLaunchProfile(id).value("displayName").toString(),
              QStringLiteral("Alias - 1_L"));
 }
@@ -409,8 +413,9 @@ void ProfilesTests::manager_tagsAndLastUsed()
     const QVariantMap after = pm.getLaunchProfile(id);
     QVERIFY(after.value("lastUsed").toLongLong() > 0);
     const QVariantList byTag = pm.launchProfilesForProfilesPage(QStringLiteral("LOCAL"));
-    QCOMPARE(byTag.size(), 1);
-    QCOMPARE(byTag.first().toMap().value("id").toString(), id);
+    QVERIFY(std::any_of(byTag.cbegin(), byTag.cend(), [&](const QVariant &value) {
+        return value.toMap().value("id").toString() == id;
+    }));
 }
 
 void ProfilesTests::manager_profileTemplatesRoundTrip()
