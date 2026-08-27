@@ -6,6 +6,7 @@
 // Run:   ctest --test-dir build  (o ejecutar LlamaCodeTests directo).
 
 #include <QtTest>
+#include <tuple>
 #include "core/GGUFScanner.h"
 #include "core/profiles/EffectiveProfileBuilder.h"
 #include "core/profiles/ProfileTypes.h"
@@ -31,6 +32,8 @@ private slots:
     void draftCandidate();
 
     // ── GGUFScanner::readComposition (parser binario) ──
+    void ngramLookupTensorClassification();
+    void readComposition_countsNgramElements();
     void readComposition_realTensors();
     void readComposition_metadata();
     void readComposition_rejectsGarbage();
@@ -44,9 +47,12 @@ private slots:
     void builder_dropsUnsupportedFlag();
     void builder_missingModelIsBlocking();
     void builder_cloudProfileIsValidWithoutLocalModel();
+    void builder_cpuAuxiliaryRuntimeEmitsConservativeFlags();
+    void builder_parallelRuntimeEmitsConfiguredSlots();
     void builder_emitsSpecFlags();
     void builder_missingDraftIsBlocking();
     void builder_rawDraftMtpRequiresDraftModel();
+    void builder_emitsKatApexMtpWithMmproj();
     void builder_rawDsparkDoesNotRequireExternalDraftModel();
     void builder_externalDsparkEmitsDraftAndType();
     void builder_emitsSelfContainedMtpFlags();
@@ -62,6 +68,7 @@ private slots:
     void builder_emitsTensorOverrides();
     void builder_warnsOnMalformedTensorOverride();
     void builder_ninfer3090UsesNativeArtifactCli();
+    void builder_preservesSpecializedKvRuntimeArgsAndEnv();
     void runtimePreset_roundtripsTensorOverrides();
 };
 
@@ -118,6 +125,10 @@ void CoreTests::draftCandidate()
     QVERIFY(MtpDetection::isSelfContained("bottlecapai_ThinkingCap-Qwen3_6-27B-Q8_0.gguf"));
     QVERIFY(MtpDetection::isSelfContained(
         "DeepSeek-V4-Flash-0731-UD-IQ3_S-00001-of-00004.gguf"));
+    QVERIFY(MtpDetection::isSelfContained(
+        "KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf"));
+    QVERIFY(MtpDetection::isSelfContained(
+        "KAT_Coder_V2_5_Dev_MTP_APEX_I_Quality_v2.gguf"));
     QVERIFY(MtpDetection::isSelfContained("Qwen3.8-27B-UD-Q4_K_XL.gguf"));
     QVERIFY(MtpDetection::isSelfContained("Qwen3_8-27B-Q5_K_M.gguf"));
     QVERIFY(!MtpDetection::isSelfContained("DeepSeek-V4-Flash-Preview-UD-IQ3_S.gguf"));
@@ -156,6 +167,24 @@ void putTensor(QByteArray &b, const QByteArray &name,
     putU64(b, 0); // offset
 }
 // GGUF v3 mínimo: magic, version, tensorCount, kvCount=0, luego tensor infos.
+// Igual que writeGgufFixture pero con nombres de tensor explicitos: hace falta
+// para ejercitar la clasificacion Ngram/PLE, que depende del NOMBRE.
+QString writeGgufFixtureNamed(const QString &name,
+                              const QList<std::tuple<QByteArray, quint32, quint64>> &tensors)
+{
+    QByteArray b;
+    putU32(b, 0x46554747u);
+    putU32(b, 3);
+    putU64(b, quint64(tensors.size()));
+    putU64(b, 0);
+    for (const auto &t : tensors)
+        putTensor(b, std::get<0>(t), {std::get<2>(t)}, std::get<1>(t));
+    const QString path = QDir(QDir::tempPath()).filePath(name);
+    QFile f(path);
+    if (f.open(QIODevice::WriteOnly)) { f.write(b); f.close(); }
+    return path;
+}
+
 QString writeGgufFixture(const QString &name, const QList<QPair<quint32, quint64>> &tensors)
 {
     QByteArray b;
@@ -173,6 +202,52 @@ QString writeGgufFixture(const QString &name, const QList<QPair<quint32, quint64
     return path;
 }
 } // namespace
+
+void CoreTests::ngramLookupTensorClassification()
+{
+    // Tablas de lookup Ngram/PLE: offloadeables a CPU/SSD sin costo de compute.
+    QVERIFY(GGUFScanner::isNgramLookupTensor(QStringLiteral("per_layer_token_embd")));
+    QVERIFY(GGUFScanner::isNgramLookupTensor(QStringLiteral("per_layer_token_embd.weight")));
+    QVERIFY(GGUFScanner::isNgramLookupTensor(QStringLiteral("blk.0.ple_key")));
+    QVERIFY(GGUFScanner::isNgramLookupTensor(QStringLiteral("blk.47.ple_value.weight")));
+
+    // Comparten prefijo pero son COMPUTE: mandarlos fuera de la GPU es perdida
+    // neta. Un "contains(ple)" los agarraria; por eso el match es exacto.
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("blk.0.ple_norm_key")));
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("blk.0.ple_norm_query")));
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("blk.0.ple_conv1d")));
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("per_layer_proj_norm")));
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("per_layer_model_proj")));
+
+    // Arquitecturas sin Ngram no deben marcar nada.
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("token_embd.weight")));
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QStringLiteral("blk.0.attn_q.weight")));
+    QVERIFY(!GGUFScanner::isNgramLookupTensor(QString()));
+}
+
+void CoreTests::readComposition_countsNgramElements()
+{
+    // type 12 = q4_K en la tabla de ggml; el valor exacto no importa aca, lo que
+    // se mide es que los elementos se atribuyan al balde correcto.
+    const QString path = writeGgufFixtureNamed(QStringLiteral("lc_ngram_fixture.gguf"), {
+        {QByteArray("token_embd.weight"),        12u, 1000ull},
+        {QByteArray("blk.0.attn_q.weight"),      12u, 2000ull},
+        {QByteArray("blk.0.ple_norm_key"),       12u,   50ull},  // compute, NO cuenta
+        {QByteArray("blk.0.ple_key"),            12u, 3000ull},  // lookup
+        {QByteArray("blk.0.ple_value"),          12u, 4000ull},  // lookup
+        {QByteArray("per_layer_token_embd.weight"), 12u, 5000ull} // lookup
+    });
+    QVERIFY(!path.isEmpty());
+
+    const GGUFScanner::Composition c =
+        GGUFScanner::readComposition(path, QFileInfo(path).size());
+    QCOMPARE(c.totalElements, 15050ll);
+    QCOMPARE(c.ngramElements, 12000ll);
+    // El backbone es lo que realmente tiene que entrar en memoria residente.
+    QCOMPARE(c.totalElements - c.ngramElements, 3050ll);
+
+    QFile::remove(path);
+}
 
 void CoreTests::readComposition_realTensors()
 {
@@ -325,6 +400,49 @@ void CoreTests::builder_cloudProfileIsValidWithoutLocalModel()
     QVERIFY(!ep.commandLine.contains(QStringLiteral("VLLM_KEY")));
 }
 
+void CoreTests::builder_cpuAuxiliaryRuntimeEmitsConservativeFlags()
+{
+    auto ctx = makeCtx();
+    ctx.binary.backend = QStringLiteral("cpu");
+    ctx.runtime.ctx = 32768;
+    ctx.runtime.threads = 20;
+    ctx.runtime.gpuLayers = 0;
+    ctx.runtime.batch = 256;
+    ctx.runtime.ubatch = 128;
+    ctx.runtime.flashAttention = false;
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    const QStringList &args = ep.effectiveArgs;
+    const auto valueAfter = [&args](const QString &flag) {
+        const int index = args.indexOf(flag);
+        return index >= 0 && index + 1 < args.size() ? args.at(index + 1) : QString();
+    };
+    QCOMPARE(valueAfter(QStringLiteral("--ctx-size")), QStringLiteral("32768"));
+    QCOMPARE(valueAfter(QStringLiteral("--threads")), QStringLiteral("20"));
+    QCOMPARE(valueAfter(QStringLiteral("--n-gpu-layers")), QStringLiteral("0"));
+    QCOMPARE(valueAfter(QStringLiteral("--batch-size")), QStringLiteral("256"));
+    QCOMPARE(valueAfter(QStringLiteral("--ubatch-size")), QStringLiteral("128"));
+    QVERIFY(!args.contains(QStringLiteral("--flash-attn")));
+}
+
+void CoreTests::builder_parallelRuntimeEmitsConfiguredSlots()
+{
+    auto ctx = makeCtx();
+    ctx.runtime.parallelSlots = 4;
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    const int index = ep.effectiveArgs.indexOf(QStringLiteral("--parallel"));
+    QVERIFY(index >= 0 && index + 1 < ep.effectiveArgs.size());
+    QCOMPARE(ep.effectiveArgs.at(index + 1), QStringLiteral("4"));
+
+    ctx.runtime.parallelSlots = 1;
+    const EffectiveProfile single = EffectiveProfileBuilder::build(ctx);
+    QVERIFY(!single.effectiveArgs.contains(QStringLiteral("--parallel")));
+}
+
 // Con draft model resuelto, los flags spec-draft seteados deben emitirse.
 void CoreTests::builder_emitsSpecFlags()
 {
@@ -390,6 +508,34 @@ void CoreTests::builder_rawDraftMtpRequiresDraftModel()
         if (e.contains(QStringLiteral("draftModel"), Qt::CaseInsensitive))
             mentionsProfileDraft = true;
     QVERIFY2(mentionsProfileDraft, qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+}
+
+void CoreTests::builder_emitsKatApexMtpWithMmproj()
+{
+    auto ctx = makeCtx();
+    ctx.catalogModel.fileName =
+        "KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf";
+    ctx.model.mmprojId = "mmproj";
+    ctx.mmprojModel.id = "mmproj";
+    ctx.mmprojModel.isAvailable = true;
+    ctx.mmprojModel.absolutePath = "C:/models/mmproj-F16.gguf";
+    ctx.model.specType = "draft-mtp";
+    ctx.model.specDraftNMax = 2;
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    const QStringList &args = ep.effectiveArgs;
+    const int mmproj = args.indexOf(QStringLiteral("--mmproj"));
+    QVERIFY(mmproj >= 0 && mmproj + 1 < args.size());
+    QCOMPARE(args.at(mmproj + 1), ctx.mmprojModel.absolutePath);
+    const int type = args.indexOf(QStringLiteral("--spec-type"));
+    QVERIFY(type >= 0 && type + 1 < args.size());
+    QCOMPARE(args.at(type + 1), QStringLiteral("draft-mtp"));
+    const int nmax = args.indexOf(QStringLiteral("--spec-draft-n-max"));
+    QVERIFY(nmax >= 0 && nmax + 1 < args.size());
+    QCOMPARE(args.at(nmax + 1), QStringLiteral("2"));
+    QVERIFY(!args.contains(QStringLiteral("--spec-draft-model")));
 }
 
 void CoreTests::builder_rawDsparkDoesNotRequireExternalDraftModel()
@@ -700,6 +846,38 @@ void CoreTests::builder_ninfer3090UsesNativeArtifactCli()
     QVERIFY(a.contains(QStringLiteral("int8")));
     QVERIFY(a.contains(QStringLiteral("--text-only")));
     QVERIFY(!a.contains(QStringLiteral("--jinja")));
+}
+
+void CoreTests::builder_preservesSpecializedKvRuntimeArgsAndEnv()
+{
+    auto ctx = makeCtx();
+    ctx.launch.extraArgs = {
+        QStringLiteral("--fraqtl-kv"),
+        QStringLiteral("--fraqtl-eigenbasis"),
+        QStringLiteral("C:/sidecars/v-eigenbasis.bin"),
+        QStringLiteral("--fraqtl-k-protect"),
+        QStringLiteral("32"),
+        QStringLiteral("--fraqtl-k-eigenbasis"),
+        QStringLiteral("C:/sidecars/k-eigenbasis.bin"),
+        QStringLiteral("--fraqtl-sink-tokens"),
+        QStringLiteral("0"),
+        QStringLiteral("--fraqtl-residual-window"),
+        QStringLiteral("0"),
+    };
+    ctx.launch.envOverrides = {
+        {QStringLiteral("FRAQTL_MEMBRANE"), QStringLiteral("1")},
+        {QStringLiteral("FRAQTL_MEMBRANE_EXCLUSIVE"), QStringLiteral("1")},
+    };
+
+    const EffectiveProfile ep = EffectiveProfileBuilder::build(ctx);
+    QVERIFY2(ep.blockingErrors.isEmpty(),
+             qPrintable(ep.blockingErrors.join(QStringLiteral("\n"))));
+    for (const QString &arg : ctx.launch.extraArgs)
+        QVERIFY2(ep.effectiveArgs.contains(arg), qPrintable(arg));
+    QCOMPARE(ep.effectiveEnv.value(QStringLiteral("FRAQTL_MEMBRANE")),
+             QStringLiteral("1"));
+    QCOMPARE(ep.effectiveEnv.value(QStringLiteral("FRAQTL_MEMBRANE_EXCLUSIVE")),
+             QStringLiteral("1"));
 }
 
 // Persistencia: tensorOverrides sobrevive toJson→fromJson; entries vacías se filtran.

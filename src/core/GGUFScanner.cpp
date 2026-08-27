@@ -311,6 +311,24 @@ QString GGUFScanner::Composition::breakdown() const
     return parts.join(", ");
 }
 
+bool GGUFScanner::isNgramLookupTensor(const QString &tensorName)
+{
+    // Nombres tomados de llama-arch.cpp del soporte de qwen4exp (PR 27742):
+    //   blk.%d.ple_key / blk.%d.ple_value / per_layer_token_embd
+    // Los ple_norm_* y ple_conv1d comparten prefijo pero son compute, por eso el
+    // match es exacto por sufijo y no un "contains(ple)".
+    if (tensorName.isEmpty())
+        return false;
+    const QString base = tensorName.endsWith(QLatin1String(".weight"))
+        ? tensorName.left(tensorName.size() - 7)
+        : tensorName;
+    if (base == QLatin1String("per_layer_token_embd"))
+        return true;
+    static const QRegularExpression blockRe(
+        QStringLiteral(R"(^blk\.[0-9]+\.ple_(key|value)$)"));
+    return blockRe.match(base).hasMatch();
+}
+
 GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
                                                       qint64 fileSizeBytes)
 {
@@ -360,7 +378,7 @@ GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
 
     // Tensor infos: name(str), n_dims(u32), dims[n_dims](u64), type(u32), offset(u64).
     for (quint64 t = 0; t < tensorCount && r.ok; ++t) {
-        r.skipStr();
+        const QString tensorName = r.str();
         quint32 nDims = r.u32();
         if (nDims > 8) { r.ok = false; break; }
         qint64 elems = 1;
@@ -372,6 +390,8 @@ GGUFScanner::Composition GGUFScanner::readComposition(const QString &filePath,
         c.typeTensors[name] += 1;
         c.typeElements[name] += elems;
         c.totalElements += elems;
+        if (isNgramLookupTensor(tensorName))
+            c.ngramElements += elems;
     }
     if (!r.ok || c.totalElements <= 0) return c;
 

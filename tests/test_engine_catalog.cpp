@@ -10,6 +10,8 @@ private slots:
     void versionComparisonHandlesBuildTagsAndSemver();
     void sourceUpdateComparesShortSha();
     void repoNormalizationAndBuildDirAreStable();
+    void pullRequestRefIsParsedAsBranch();
+    void qwen38NextEntryBuildsFromPullRequest();
 };
 
 void EngineCatalogTests::catalogIncludesSourceForks()
@@ -27,6 +29,18 @@ void EngineCatalogTests::catalogIncludesSourceForks()
     QCOMPARE(adaptive.variants.first().gpuVendors, QStringList{QStringLiteral("nvidia")});
     QVERIFY(EngineCatalog::sourceBuildDirName(adaptive).contains(QStringLiteral("adaptive")));
     QVERIFY(EngineCatalog::sourceBuildDirName(adaptive) != QStringLiteral("llama.cpp"));
+
+    const EngineCatalogEntry lid =
+        EngineCatalog::entry(QStringLiteral("llama.cpp-deepseek-lid-cuda"));
+    QCOMPARE(lid.repo, QStringLiteral("spencer-zaid/llama.cpp"));
+    QCOMPARE(lid.sourceBranch, QStringLiteral("deepseek-lid-cuda"));
+    QCOMPARE(lid.flavor, QStringLiteral("deepseek-lid-cuda"));
+    QVERIFY(!lid.variants.isEmpty());
+    QVERIFY(lid.variants.first().buildFromSource);
+    QCOMPARE(lid.sourceBuildTarget, QStringLiteral("llama-server"));
+    QVERIFY(lid.sourceCMakeArgs.contains(QStringLiteral("-DLLAMA_BUILD_UI=OFF")));
+    QVERIFY(lid.sourceCMakeArgs.contains(QStringLiteral("-DLLAMA_USE_PREBUILT_UI=ON")));
+    QVERIFY(EngineCatalog::sourceBuildDirName(lid).contains(QStringLiteral("lid-cuda")));
 
     const EngineCatalogEntry official = EngineCatalog::entry(QStringLiteral("llama.cpp"));
     QVERIFY(official.variants.size() >= 3);
@@ -80,6 +94,39 @@ void EngineCatalogTests::repoNormalizationAndBuildDirAreStable()
              QStringLiteral("ikawrakow/ik_llama.cpp"));
     QCOMPARE(EngineCatalog::buildDirName(QStringLiteral("https://github.com/a/repo.git"), QStringLiteral("feature/x")),
              QStringLiteral("repo-feature-x"));
+}
+
+void EngineCatalogTests::pullRequestRefIsParsedAsBranch()
+{
+    QCOMPARE(EngineCatalog::parsePullRequestRef(QStringLiteral("pull/27742/head")), 27742);
+    QCOMPARE(EngineCatalog::localBranchForRef(QStringLiteral("pull/27742/head")),
+             QStringLiteral("pr-27742"));
+
+    // Una rama comun no debe confundirse con un PR: se clona con --branch.
+    QCOMPARE(EngineCatalog::parsePullRequestRef(QStringLiteral("master")), 0);
+    QCOMPARE(EngineCatalog::parsePullRequestRef(QStringLiteral("pull/abc/head")), 0);
+    QCOMPARE(EngineCatalog::parsePullRequestRef(QStringLiteral("pull/27742/merge")), 0);
+    QCOMPARE(EngineCatalog::parsePullRequestRef(QString()), 0);
+    QCOMPARE(EngineCatalog::localBranchForRef(QStringLiteral("nanbeige42")),
+             QStringLiteral("nanbeige42"));
+}
+
+void EngineCatalogTests::qwen38NextEntryBuildsFromPullRequest()
+{
+    const EngineCatalogEntry e = EngineCatalog::entry(QStringLiteral("qwen38-next"));
+    QCOMPARE(e.repo, QStringLiteral("ggml-org/llama.cpp"));
+    QCOMPARE(e.sourceBranch, QStringLiteral("pull/27742/head"));
+    QVERIFY(EngineCatalog::parsePullRequestRef(e.sourceBranch) > 0);
+    QCOMPARE(e.sourceBuildTarget, QStringLiteral("llama-server"));
+    QVERIFY(!e.variants.isEmpty());
+    QVERIFY(e.variants.first().buildFromSource);
+    QVERIFY(!e.variants.first().hasPrebuilt);
+
+    // El arbol del PR no debe pisar el build del llama.cpp oficial.
+    const EngineCatalogEntry official = EngineCatalog::entry(QStringLiteral("llama.cpp"));
+    QVERIFY(EngineCatalog::sourceBuildDirName(e)
+            != EngineCatalog::sourceBuildDirName(official));
+    QCOMPARE(EngineCatalog::sourceBuildDirName(e), QStringLiteral("llama.cpp-qwen38-next"));
 }
 
 QTEST_MAIN(EngineCatalogTests)

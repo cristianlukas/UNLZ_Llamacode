@@ -28,6 +28,10 @@ struct EngineCatalogEntry {
     QString note;
     QList<EngineVariant> variants;
     QString sourceBranch;
+    // Opciones/target específicos para forks que no comparten exactamente el
+    // recipe de CMake del llama.cpp oficial. Vacíos = recipe genérico.
+    QStringList sourceCMakeArgs;
+    QString sourceBuildTarget = QStringLiteral("llama-server");
 };
 
 struct HardwareSignals {
@@ -64,6 +68,11 @@ public:
                                                   bool sourceBuild = false);
 
     static QString normalizeRepo(const QString &repoOrUrl);
+    // Un sourceBranch con la forma "pull/<N>/head" apunta a un pull request, no
+    // a una rama: `git clone --branch` no lo resuelve. Devuelve N (0 si no lo es).
+    static int parsePullRequestRef(const QString &branch);
+    // Rama local en la que aterriza el ref remoto ("pr-<N>" para un PR).
+    static QString localBranchForRef(const QString &branch);
     static QString buildDirName(const QString &repoOrUrl, const QString &branch = {});
     static QString sourceBuildDirName(const EngineCatalogEntry &entry);
     static bool isVariantCompatible(const EngineVariant &variant,

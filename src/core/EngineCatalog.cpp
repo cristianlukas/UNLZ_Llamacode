@@ -94,6 +94,45 @@ QList<EngineCatalogEntry> EngineCatalog::entries()
          {variant(QStringLiteral("llama.cpp-adaptive-cuda-source"), QStringLiteral("Build CUDA (NVIDIA)"),
                   QStringLiteral("cuda"), {QStringLiteral("windows")}, {QStringLiteral("nvidia")},
                   false, true, QStringLiteral("experimental"), QStringLiteral("fast"))}},
+        {QStringLiteral("llama.cpp-deepseek-lid-cuda"),
+         QStringLiteral("llama.cpp DeepSeek LID CUDA"),
+         QStringLiteral("llama-server"),
+         QStringLiteral("Fork experimental con Lightning Indexer CUDA para DeepSeek V4 Flash y contextos largos."),
+         QStringLiteral("spencer-zaid/llama.cpp"),
+         QStringLiteral("https://github.com/spencer-zaid/llama.cpp"),
+         QStringLiteral("deepseek-lid-cuda"),
+         QStringLiteral("experimental"),
+         QStringLiteral("Sólo para DeepSeek V4 Flash. Requiere build CUDA desde source; esta rama usa KV f16 y no reemplaza al llama.cpp oficial."),
+         {variant(QStringLiteral("llama.cpp-deepseek-lid-cuda-source"), QStringLiteral("Build CUDA (NVIDIA)"),
+                  QStringLiteral("cuda"), {QStringLiteral("windows")}, {QStringLiteral("nvidia")},
+                  false, true, QStringLiteral("experimental"), QStringLiteral("long-context"))},
+         QStringLiteral("deepseek-lid-cuda"),
+         {QStringLiteral("-DLLAMA_BUILD_TESTS=OFF"),
+          QStringLiteral("-DLLAMA_BUILD_EXAMPLES=OFF"),
+          QStringLiteral("-DLLAMA_BUILD_APP=OFF"),
+          QStringLiteral("-DLLAMA_BUILD_SERVER=ON"),
+          QStringLiteral("-DLLAMA_BUILD_UI=OFF"),
+          // El fork siempre embebe assets para llama-server aunque no compile
+          // la UI. Permitir el paquete prebuilt evita npm/Node; el recipe agrega
+          // un fallback para el loading.html que falta en algunos paquetes.
+          QStringLiteral("-DLLAMA_USE_PREBUILT_UI=ON")},
+         QStringLiteral("llama-server")},
+        {QStringLiteral("qwen38-next"),
+         QStringLiteral("llama.cpp Qwen3.8-Flash-Next"),
+         QStringLiteral("llama-server"),
+         QStringLiteral("PR upstream con soporte para la arquitectura Qwen4 (MoE + Ngram/PLE)."),
+         QStringLiteral("ggml-org/llama.cpp"),
+         QStringLiteral("https://github.com/ggml-org/llama.cpp/pull/27742"),
+         QStringLiteral("qwen38-next"),
+         QStringLiteral("experimental"),
+         QStringLiteral("Necesario para Qwen3.8-Flash-Next: mainline todavia no mergeo la arquitectura. Build CUDA desde el pull request."),
+         {variant(QStringLiteral("qwen38-next-cuda-source"), QStringLiteral("Build CUDA (NVIDIA)"),
+                  QStringLiteral("cuda"), {QStringLiteral("windows")}, {QStringLiteral("nvidia")},
+                  false, true, QStringLiteral("experimental"), QStringLiteral("long-context"))},
+         QStringLiteral("pull/27742/head"),
+         {QStringLiteral("-DBUILD_SHARED_LIBS=OFF"),
+          QStringLiteral("-DLLAMA_CURL=OFF")},
+         QStringLiteral("llama-server")},
         {QStringLiteral("nanbeige42"),
          QStringLiteral("Nanbeige llama.cpp"),
          QStringLiteral("llama-server"),
@@ -259,6 +298,9 @@ QVariantMap EngineCatalog::toVariantMap(const EngineCatalogEntry &entry, const H
         {QStringLiteral("flavor"), entry.flavor},
         {QStringLiteral("support"), entry.support},
         {QStringLiteral("note"), entry.note},
+        {QStringLiteral("sourceBranch"), entry.sourceBranch},
+        {QStringLiteral("sourceCMakeArgs"), entry.sourceCMakeArgs},
+        {QStringLiteral("sourceBuildTarget"), entry.sourceBuildTarget},
         {QStringLiteral("variants"), vars},
         {QStringLiteral("compatible"), anyCompatible},
         {QStringLiteral("incompatibleReason"), anyCompatible ? QString() : firstReason},
@@ -361,6 +403,25 @@ QString EngineCatalog::buildDirName(const QString &repoOrUrl, const QString &bra
     raw.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9._-]+")), QStringLiteral("-"));
     raw.remove(QRegularExpression(QStringLiteral("^-+|-+$")));
     return raw.isEmpty() ? QStringLiteral("engine") : raw;
+}
+
+int EngineCatalog::parsePullRequestRef(const QString &branch)
+{
+    static const QRegularExpression re(QStringLiteral("^pull/([0-9]+)/head$"));
+    const QRegularExpressionMatch m = re.match(branch.trimmed());
+    if (!m.hasMatch())
+        return 0;
+    bool ok = false;
+    const int n = m.captured(1).toInt(&ok);
+    return (ok && n > 0) ? n : 0;
+}
+
+QString EngineCatalog::localBranchForRef(const QString &branch)
+{
+    const int pr = parsePullRequestRef(branch);
+    if (pr > 0)
+        return QStringLiteral("pr-%1").arg(pr);
+    return branch.trimmed();
 }
 
 QString EngineCatalog::sourceBuildDirName(const EngineCatalogEntry &entry)

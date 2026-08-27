@@ -42,6 +42,11 @@ inline QJsonArray expandSystemProfileVariants(const QJsonArray &source)
             // bloque `mtp` se materializa después de `extraArgs`.
             if (variant.contains(QStringLiteral("mtp")))
                 derived[QStringLiteral("mtp")] = variant.value(QStringLiteral("mtp"));
+            // Speculative decoding también puede aislarse en una variante. Esto
+            // permite comparar el mismo GGUF MTP con MTP2/MTP3 y sin speculative
+            // sin duplicar el modelo ni dejar flags heredados en el perfil frío.
+            if (variant.contains(QStringLiteral("spec")))
+                derived[QStringLiteral("spec")] = variant.value(QStringLiteral("spec"));
             // Una variante de tuning no hereda las insignias obtenidas por el
             // perfil base: debe medirse y marcarse de forma explicita.
             derived[QStringLiteral("best")] = variant.value(QStringLiteral("best")).toBool(false);

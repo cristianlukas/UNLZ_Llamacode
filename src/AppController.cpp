@@ -3208,9 +3208,26 @@ try {
     New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
     $branch = '%4'
     Write-Output ('STATUS: Clonando ' + $repo + $(if ($branch) { ' [' + $branch + ']' } else { '' }) + ' ...')
-    if ($branch) { git clone --branch $branch --depth 1 $repo $src }
-    else { git clone --depth 1 $repo $src }
-    if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
+    if ($branch -match '^pull/([0-9]+)/head$') {
+        # Un PR no es una rama: git clone --branch no lo resuelve. Hay que clonar
+        # el default y traer el ref del pull request a una rama local.
+        $prNum = $Matches[1]
+        $prBranch = 'pr-' + $prNum
+        git clone --depth 1 $repo $src
+        if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
+        git -C $src fetch --depth 1 origin ('pull/' + $prNum + '/head:' + $prBranch)
+        if ($LASTEXITCODE -ne 0) { throw ('No se pudo traer el pull request ' + $prNum + '.') }
+        git -C $src checkout $prBranch
+        if ($LASTEXITCODE -ne 0) { throw ('No se pudo hacer checkout de ' + $prBranch + '.') }
+    }
+    elseif ($branch) {
+        git clone --branch $branch --depth 1 $repo $src
+        if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
+    }
+    else {
+        git clone --depth 1 $repo $src
+        if ($LASTEXITCODE -ne 0) { throw 'git clone falló.' }
+    }
     $commit = (git -C $src rev-parse --short HEAD).Trim()
 
     Write-Output 'STATUS: Configurando CMake CUDA Release...'

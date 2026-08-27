@@ -29,11 +29,15 @@ inline bool isSelfContained(const QString &fileName)
     static const QRegularExpression qwen38(
         QStringLiteral(R"((^|[-_.])qwen3[._-]?8[-_.]27b($|[-_.]))"),
         QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression katCoderApexMtp(
+        QStringLiteral(R"((^|[-_.])kat[-_.]?coder[-_.]?v2[._-]?5[-_.]?dev[-_.]?mtp[-_.]?apex($|[-_.]))"),
+        QRegularExpression::CaseInsensitiveOption);
     return marker.match(base).hasMatch()
         || thinkingCapQwen36.match(base).hasMatch()
         || deepSeekV4Flash0731.match(base).hasMatch()
         || bigBangV1.match(base).hasMatch()
-        || qwen38.match(base).hasMatch();
+        || qwen38.match(base).hasMatch()
+        || katCoderApexMtp.match(base).hasMatch();
 }
 
 } // namespace MtpDetection
