@@ -71,7 +71,6 @@ private slots:
     void builder_rejectsAdaptiveWithoutBinaryCapability();
     void builder_dropsGemmaDraftOnOldBinary();
     void builder_respectsKvCapWithDraft();
-    void builder_dropsKvQuantOnNgramArchitecture();
     void builder_appliesQwenCodingSamplingPreset();
     void builder_warnsOnManualQwenSampling();
     void builder_emitsTensorOverrides();
@@ -874,31 +873,6 @@ void CoreTests::builder_respectsKvCapWithDraft()
             if (w.contains("aceptación del draft")) warned = true;
         QVERIFY(warned);
     }
-}
-
-void CoreTests::builder_dropsKvQuantOnNgramArchitecture()
-{
-    auto ctx = makeCtx();
-    ctx.binary.supportedFlags = QStringList{"--host", "--port", "--model", "--cache-type-k"};
-    ctx.runtime.cacheType = "q8_0";
-
-    // Modelo normal: el KV quant se respeta.
-    ctx.catalogModel.fileName = "Qwen3.8-27B-Q4_K_M.gguf";
-    const EffectiveProfile normal = EffectiveProfileBuilder::build(ctx);
-    QVERIFY(normal.effectiveArgs.contains("--cache-type-k"));
-
-    // Qwen4 / Ngram: el server ABORTA con KV cuantizado, no degrada. Hay que
-    // dropearlo y decirlo, no lanzar algo que se sabe que crashea en loop.
-    ctx.catalogModel.fileName = "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf";
-    const EffectiveProfile ngram = EffectiveProfileBuilder::build(ctx);
-    QVERIFY(!ngram.effectiveArgs.contains("--cache-type-k"));
-    QVERIFY(!ngram.effectiveArgs.contains("q8_0"));
-    bool warned = false;
-    for (const QString &w : ngram.warnings)
-        if (w.contains("Qwen4")) warned = true;
-    QVERIFY(warned);
-    // Dropear el KV quant no debe bloquear el lanzamiento.
-    QVERIFY(ngram.blockingErrors.isEmpty());
 }
 
 void CoreTests::builder_appliesQwenCodingSamplingPreset()

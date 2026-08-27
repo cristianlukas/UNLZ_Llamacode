@@ -33,11 +33,8 @@ private:
                            const LlamaBinary &bin,
                            QStringList &args,
                            QStringList &warnings, QStringList &errors);
-    // `model` hace falta para decisiones que dependen de la arquitectura, no
-    // solo del runtime: p.ej. Qwen4 (Ngram/PLE) aborta con KV cache cuantizado.
     static void applyRuntime(const RuntimePreset &rt,
                              const LlamaBinary &bin,
-                             const CatalogModel &model,
                              QStringList &args,
                              QStringList &warnings, QStringList &errors,
                              bool specDecoding = false);

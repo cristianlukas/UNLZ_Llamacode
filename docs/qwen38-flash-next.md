@@ -209,9 +209,17 @@ ademas mezcla backbone (46.4 GB totales, 26.9 de Ngram). Por eso
 
 ### Cosas que rompen, encontradas al correrlo
 
-1. **KV cache cuantizado crashea.** `--cache-type-k/-v q8_0` aborta en
-   `qwen4exp.cpp:544`: `GGML_ASSERT(inp->self_k_rot == nullptr && inp->self_v_rot
-   == nullptr)`. Hay que usar f16. Cuesta contexto y todavia no tiene workaround.
+1. **KV cache cuantizado: ARREGLADO upstream (2026-08-27).** Hasta el commit
+   `035e22731` abortaba en `qwen4exp.cpp:544` (`GGML_ASSERT(inp->self_k_rot ==
+   nullptr)`). El commit `0ac4b1802` ("support a quantized KV cache in the QSA
+   attention path") lo resolvio: verificado contra `ef6876693`, q8_0 y q4_0
+   levantan y responden bien.
+   LlamaCode llego a tener un workaround que descartaba el KV quant para esta
+   arquitectura; **se revirtio**, porque una vez arreglado el engine ese dropeo
+   pasaba a recortar contexto en silencio. Moraleja para forks en desarrollo
+   activo: un workaround contra un bug transitorio caduca, y hay que re-testear
+   antes de dejarlo.
+
 2. **`-ot` desactiva `--fit`.** El loader avisa `tensor_buft_overrides already
    set by user, abort` y entonces mete todas las capas a GPU -> OOM. `--tensor-split`
    lo desactiva igual. Con `-ot` hay que dimensionar a mano.
@@ -258,3 +266,41 @@ accuracy de este harness no dice nada sobre el modelo.
 
 Lo que si es solido de esta tabla: **throughput (~9.4-10 t/s) y VRAM**, que no
 dependen de que el texto sea correcto.
+
+## Re-test contra `ef6876693` (2026-08-27)
+
+El PR **no** esta mergeado, pero sumo 27 commits en un dia. Recompilado y
+re-medido con el mismo probe:
+
+| ubatch | build `035e22731` | build `ef6876693` |
+|---|---|---|
+| 1 | 40% | 40% |
+| 32 | 40% | 53% |
+| 128 | 47% | 60% |
+| default | 47% | 60% |
+
+Mejoro, y `count` paso de 1/3 a 3/3. Siguen fallando 0/3 `numbers`
+("55 56 ... 63" -> " 6 6 6 6") y `days` en todas las configuraciones.
+
+### Descartado como causa (verificado, no supuesto)
+
+Se comparo `qwen4exp.cpp` contra la implementacion de referencia
+(`transformers/models/qwen4_exp/modeling_qwen4_exp.py`):
+
+- el mixing del hash n-gram (XOR de `token * multiplicador` por posicion) es
+  identico;
+- el corte de ventana por EOS es identico, incluida la sutileza de que el EOS
+  del propio token no corta su contexto;
+- las constantes horneadas en el GGUF (`layer_multipliers`, `head_vocab_sizes`,
+  `head_offsets`) se reprodujeron en Python desde el config de referencia
+  (splitmix64 + primos + offsets acumulados) y **coinciden exactamente**.
+
+O sea que ni el convert ni la matematica del hash son el problema. Lo que queda
+es la obtencion de predecesores desde las celdas KV o el grafo de computo -- que
+es justo donde estan iterando los autores (`llama: give the qwen4exp full memory
+context its indexer cache`, `keep the indexer cache in step across server
+slots`, `fix the PLE history seq_rm(-1) iterator invalidation`).
+
+Siguiente paso si hace falta localizarlo: instrumentar `llm_graph_input_ple::
+set_input` para volcar los indices calculados y diffearlos contra el calculo en
+Python sobre los mismos token ids.
