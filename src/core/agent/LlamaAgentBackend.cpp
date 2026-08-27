@@ -5506,10 +5506,23 @@ QJsonObject LlamaAgentBackend::textToolCallFromContent(const QString &content)
             const QRegularExpression parameterRe(
                 QStringLiteral("<parameter\\s*=\\s*([^>]+)>([\\s\\S]*?)</parameter>"),
                 QRegularExpression::CaseInsensitiveOption);
+            auto stripParameterWrapperNewline = [](QString value) {
+                // KAT/Qwen sometimes place a formatting newline immediately
+                // inside the parameter tags. Remove only that wrapper newline;
+                // preserve meaningful leading/trailing spaces in file content.
+                if (value.startsWith(QStringLiteral("\r\n"))) value.remove(0, 2);
+                else if (value.startsWith(QLatin1Char('\n'))
+                         || value.startsWith(QLatin1Char('\r'))) value.remove(0, 1);
+                if (value.endsWith(QStringLiteral("\r\n"))) value.chop(2);
+                else if (value.endsWith(QLatin1Char('\n'))
+                         || value.endsWith(QLatin1Char('\r'))) value.chop(1);
+                return value;
+            };
             QRegularExpressionMatchIterator it = parameterRe.globalMatch(body);
             while (it.hasNext()) {
                 const QRegularExpressionMatch pm = it.next();
-                args.insert(pm.captured(1).trimmed(), pm.captured(2));
+                args.insert(pm.captured(1).trimmed(),
+                            stripParameterWrapperNewline(pm.captured(2)));
             }
         }
     }

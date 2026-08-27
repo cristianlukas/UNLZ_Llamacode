@@ -375,6 +375,20 @@ void AgentWireTests::parsesKatCoderXmlToolCallFallback()
     QCOMPARE(args.value(QStringLiteral("path")).toString(), QStringLiteral("solution.py"));
     QCOMPARE(args.value(QStringLiteral("content")).toString(),
              QStringLiteral("def answer():\\n    return 42"));
+
+    // Formato observado en el smoke test real de KAT-Coder: el modelo puede
+    // separar el tag de apertura, el valor y el cierre con saltos de línea.
+    const QString streamed = QStringLiteral(
+        "<tool_call>\n<function=get_weather>\n"
+        "<parameter=city>\nBuenos Aires\n</parameter>\n"
+        "</function>\n</tool_call>");
+    const QJsonObject streamedCall = LlamaAgentBackend::textToolCallFromContent(streamed);
+    QVERIFY(!streamedCall.isEmpty());
+    const QJsonObject streamedArgs = QJsonDocument::fromJson(
+        streamedCall.value(QStringLiteral("function")).toObject()
+            .value(QStringLiteral("arguments")).toString().toUtf8()).object();
+    QCOMPARE(streamedArgs.value(QStringLiteral("city")).toString(),
+             QStringLiteral("Buenos Aires"));
 }
 
 // Ráfaga: el modelo escupe decenas de TOOL_CALL en UNA generación. Sólo el
