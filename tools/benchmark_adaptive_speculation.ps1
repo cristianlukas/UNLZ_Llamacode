@@ -10,10 +10,10 @@ param(
     [int]$Passes = 2,
     [int]$Port = 18091,
     [int]$NMin = 3,
-    [int[]]$FixedNMax = @(3),
-    [int[]]$AdaptiveNMax = @(5, 7, 8, 9),
+    [string[]]$FixedNMax = @("3"),
+    [string[]]$AdaptiveNMax = @("5", "7", "8", "9"),
     [int]$Context = 32768,
-    [int]$MaxTokens = 256,
+    [int]$MaxTokens = 512,
     [string]$Reasoning = "off",
     [string[]]$ExtraServerArgs = @()
 )
@@ -46,9 +46,36 @@ function Get-TimingNumber($timings, [string]$name) {
 
 function Get-PropertyValue($object, [string]$name) {
     if ($null -eq $object) { return $null }
+    if ($object -is [System.Collections.IDictionary] -and $object.Contains($name)) {
+        return $object[$name]
+    }
     $property = $object.PSObject.Properties[$name]
     if ($null -eq $property) { return $null }
     return $property.Value
+}
+
+function Get-NumericSum([object[]]$values) {
+    $sum = 0.0
+    foreach ($value in @($values)) {
+        if ($null -eq $value) { continue }
+        try { $sum += [double]$value } catch {}
+    }
+    return $sum
+}
+
+function Convert-ToIntList([object[]]$values, [string]$label) {
+    $result = @()
+    foreach ($value in @($values)) {
+        foreach ($part in ([string]$value -split '[,;\s]+')) {
+            if ([string]::IsNullOrWhiteSpace($part)) { continue }
+            try {
+                $result += [int]$part
+            } catch {
+                throw "$label contiene un valor inválido: $part"
+            }
+        }
+    }
+    return ,$result
 }
 
 function Get-ResponseAnswer($response) {
@@ -88,7 +115,10 @@ if ($Passes -lt 1) { throw "Passes debe ser >= 1" }
 if ($Port -lt 1024 -or $Port -gt 65535) { throw "Port debe estar entre 1024 y 65535" }
 if ($NMin -lt 1) { throw "NMin debe ser >= 1" }
 
-foreach ($n in @($AdaptiveNMax)) {
+$fixedNMaxValues = Convert-ToIntList $FixedNMax "FixedNMax"
+$adaptiveNMaxValues = Convert-ToIntList $AdaptiveNMax "AdaptiveNMax"
+
+foreach ($n in @($adaptiveNMaxValues)) {
     if ($n -lt $NMin) { throw "AdaptiveNMax=$n es menor que NMin=$NMin" }
 }
 
@@ -105,32 +135,32 @@ if ($helpText -notmatch "--spec-draft-n-min") {
 $tasks = @(
     [ordered]@{
         id = "structured-json"
-        expected = '(?is)FINAL\s*:\s*\{.*"language".*"items"'
-        prompt = 'Respondé con una explicación breve y terminá con una sola línea FINAL: seguida de JSON válido, por ejemplo FINAL: {"language":"python","items":[1,4,9]}. No agregues texto después.'
+        expected = '(?im)^FINAL\s*:\s*\{"language"\s*:\s*"python"\s*,\s*"items"\s*:\s*\[\s*1\s*,\s*4\s*,\s*9\s*\]\}\s*$'
+        prompt = 'Respondé únicamente con esta línea exacta, sin markdown ni texto adicional: FINAL: {"language":"python","items":[1,4,9]}'
     },
     [ordered]@{
         id = "coding"
         expected = '(?im)FINAL\s*:\s*implemented'
-        prompt = "Diseñá una función thread-safe de token bucket en C++17 en menos de 40 líneas. Explicá las decisiones y terminá exactamente con FINAL: implemented."
+        prompt = "Escribí una función thread-safe de token bucket en C++17 en menos de 40 líneas. Explicá brevemente la decisión y terminá exactamente con una línea FINAL: implemented."
     },
     [ordered]@{
         id = "reasoning"
         expected = '(?im)FINAL\s*:\s*100/101'
-        prompt = "Calculá la suma de k=1..100 de 1/(k(k+1)). Explicá brevemente y terminá exactamente con FINAL: 100/101."
+        prompt = "Calculá la suma de k=1..100 de 1/(k(k+1)) en no más de tres líneas y terminá exactamente con FINAL: 100/101."
     },
     [ordered]@{
         id = "high-entropy-prose"
         expected = '(?im)FINAL\s*:\s*NO'
-        prompt = "Todas las aves son animales. Algunos animales no vuelan. ¿Se deduce que algunas aves no vuelan? Explicá la lógica y terminá exactamente con FINAL: YES o FINAL: NO."
+        prompt = "Todas las aves son animales. Algunos animales no vuelan. ¿Se deduce que algunas aves no vuelan? Explicá brevemente y terminá exactamente con FINAL: NO."
     }
 )
 
 $configs = @()
-foreach ($n in @($FixedNMax)) {
+foreach ($n in @($fixedNMaxValues)) {
     if ($n -lt 1) { throw "FixedNMax debe contener valores >= 1" }
     $configs += [ordered]@{ id = "fixed-$n"; mode = "fixed"; nMin = 0; nMax = $n }
 }
-foreach ($n in @($AdaptiveNMax)) {
+foreach ($n in @($adaptiveNMaxValues)) {
     $configs += [ordered]@{ id = "adaptive-$NMin-$n"; mode = "adaptive"; nMin = $NMin; nMax = $n }
 }
 
@@ -222,17 +252,19 @@ foreach ($config in $configs) {
 }
 
 $summary = @()
-foreach ($group in @($allRuns | Where-Object { $_.error -eq "" } | Group-Object configId)) {
+foreach ($group in @($allRuns | Where-Object { (Get-PropertyValue $_ "error") -eq "" } |
+        Group-Object { Get-PropertyValue $_ "configId" })) {
     $rows = @($group.Group)
-    $accepted = @($rows | Where-Object { $_.draftN -gt 0 })
-    $draftTotal = ($accepted | Measure-Object -Property draftN -Sum).Sum
-    $draftAcceptedTotal = ($accepted | Measure-Object -Property draftAccepted -Sum).Sum
+    $accepted = @($rows | Where-Object { [double](Get-PropertyValue $_ "draftN") -gt 0 })
+    $draftTotal = Get-NumericSum @($accepted | ForEach-Object { Get-PropertyValue $_ "draftN" })
+    $draftAcceptedTotal = Get-NumericSum @($accepted | ForEach-Object { Get-PropertyValue $_ "draftAccepted" })
     $summary += [ordered]@{
-        configId = $rows[0].configId; mode = $rows[0].mode; nMin = $rows[0].nMin; nMax = $rows[0].nMax
-        quality = "{0}/{1}" -f @($rows | Where-Object { $_.qualityOk }).Count, $rows.Count
-        medianDecodeTps = [math]::Round((Get-Median @($rows | ForEach-Object { $_.decodeTps })), 2)
-        medianPromptMs = [math]::Round((Get-Median @($rows | ForEach-Object { $_.promptMs })), 1)
-        medianWallSec = [math]::Round((Get-Median @($rows | ForEach-Object { $_.wallSec })), 3)
+        configId = Get-PropertyValue $rows[0] "configId"; mode = Get-PropertyValue $rows[0] "mode"
+        nMin = Get-PropertyValue $rows[0] "nMin"; nMax = Get-PropertyValue $rows[0] "nMax"
+        quality = "{0}/{1}" -f @($rows | Where-Object { [bool](Get-PropertyValue $_ "qualityOk") }).Count, $rows.Count
+        medianDecodeTps = [math]::Round((Get-Median @($rows | ForEach-Object { Get-PropertyValue $_ "decodeTps" })), 2)
+        medianPromptMs = [math]::Round((Get-Median @($rows | ForEach-Object { Get-PropertyValue $_ "promptMs" })), 1)
+        medianWallSec = [math]::Round((Get-Median @($rows | ForEach-Object { Get-PropertyValue $_ "wallSec" })), 3)
         draftAcceptance = if ($draftTotal -gt 0) { [math]::Round($draftAcceptedTotal / $draftTotal, 4) } else { $null }
     }
 }
