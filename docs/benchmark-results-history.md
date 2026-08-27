@@ -361,6 +361,27 @@ visible. En los logs de b10331, `cache-reuse` fue desactivado tanto por el
 crearon/restauraron, pero PR #25592 no se presume integrado en b10331. Resultado:
 ninguna copia se promueve todavía. MTP6 merece una repetición; texto-only queda
 como candidata de menor memoria para coding, no como mejora de velocidad.
+
+## 2026-08-27 — Baseline Qwen3.6 para evaluar carga híbrida de expertos
+
+Con la PC libre se ejecutaron `tests.bat Debug`, `build.bat Debug NOPAUSE`,
+corridas directas de `llama-cli` y un smoke test de `llama-server` usando el
+Qwen3.6-35B-A3B IQ4_XS de 16,96 GB en dos RTX 3090. El detalle reproducible
+queda en [`research/qwen36-expert-streaming-windows-2026-08-27.md`](research/qwen36-expert-streaming-windows-2026-08-27.md).
+
+El A/B directo (`n=128`, prompt corto, `n-cpu-moe=24`) produjo 19,6 t/s de
+decode en la primera pasada `load-mode mmap`, 30,1 t/s en su repetición y
+35,7 t/s en una pasada `load-mode none`; no se considera un resultado
+estadístico por el estado cambiante de las cachés. El barrido frío con `none`
+fue descartado tras 337,7 s sin resumen y aproximadamente 20 GB de memoria
+privada, por lo que no se agrega a la tabla competitiva.
+
+El servidor local respondió correctamente a `/health` y a
+`/v1/chat/completions`, confirmando que LlamaCode podría consumir un backend
+especializado vía su interfaz existente. La prueba no implementa ni valida
+streaming de expertos: `n-cpu-moe`/`load-mode none` son controles de llama.cpp,
+no un caché `pread` con solapamiento de lecturas. No se modificó código de
+producción ni se promovió ningún perfil.
 # 2026-08-18 — Variantes ngram combinadas con MTP
 
 Se agregaron copias declarativas de los perfiles operativos para medir la
