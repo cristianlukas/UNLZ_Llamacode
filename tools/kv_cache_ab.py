@@ -351,6 +351,15 @@ def _join_url(host: str, port: int) -> str:
     return f"http://{host}:{port}"
 
 
+def _log_tail(path: Path, max_bytes: int = 4000) -> str:
+    """Return a bounded UTF-8 tail for actionable startup diagnostics."""
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return ""
+    return data[-max_bytes:].decode("utf-8", errors="replace").strip()
+
+
 def wait_for_server(base_url: str, timeout_seconds: float,
                     process: Optional[subprocess.Popen] = None,
                     poll_seconds: float = 0.5) -> None:
@@ -601,7 +610,11 @@ def main() -> int:
                            "receipt": receipt, "passed": probe_exit == 0 and
                            bool(receipt.get("summary", {}).get("allPassed"))})
         except (OSError, RuntimeError, subprocess.SubprocessError) as error:
-            record.update({"passed": False, "error": str(error)})
+            detail = str(error)
+            tail = _log_tail(log_path)
+            if tail:
+                detail += f"\nlog tail:\n{tail}"
+            record.update({"passed": False, "error": detail})
         finally:
             if server is not None:
                 record["serverExitCode"] = server.stop()

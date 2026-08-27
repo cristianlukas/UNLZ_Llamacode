@@ -78,6 +78,11 @@ Windows y Linux, arranca y detiene cada `llama-server`, espera `/health`, corre
 el mismo probe en ambos lados y guarda los comandos, logs, recibos y deltas
 pareados. No descarga modelos ni sidecars.
 
+Si un servidor termina durante el arranque o antes de responder `/health`, el
+runner conserva también las últimas líneas de su log dentro del campo `error`
+del registro de esa variante, además de `logPath`. Esto permite diagnosticar un
+fallo de runtime desde el JSON sin perder la evidencia original.
+
 Copiar y editar
 [`assets/benchmarks/kv_cache_ab.example.json`](../assets/benchmarks/kv_cache_ab.example.json)
 con las rutas reales. Después:

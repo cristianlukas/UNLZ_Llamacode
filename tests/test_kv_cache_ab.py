@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 from tools.kv_cache_ab import (
     compare_receipts,
     compare_run_records,
     normalize_server_args,
+    _log_tail,
     summarize_deltas,
     validate_config,
 )
@@ -123,6 +126,14 @@ class KvCacheAbTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValueError, "ruta absoluta Linux"):
             validate_config(config)
+
+    def test_log_tail_keeps_startup_failure_actionable_and_bounded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "server.log"
+            path.write_bytes(("prefix\n" + "x" * 5000 + "\nCUDA failure\n").encode())
+            tail = _log_tail(path, max_bytes=128)
+            self.assertLessEqual(len(tail.encode("utf-8")), 128)
+            self.assertIn("CUDA failure", tail)
 
 
 if __name__ == "__main__":
