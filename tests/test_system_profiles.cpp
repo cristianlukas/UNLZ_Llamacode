@@ -525,19 +525,28 @@ void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
     // sigue existiendo para lo que importa — que nadie arrastre un mmproj sin
     // querer, porque cuesta VRAM.
     QSet<QString> declaresVision;
+    QHash<QString, QString> modelFilesByLaunchId;
     {
         QFile bundle(bundlePath());
         QVERIFY(bundle.open(QIODevice::ReadOnly));
         for (const QJsonValue &v : QJsonDocument::fromJson(bundle.readAll()).array()) {
             const QJsonObject o = v.toObject();
+            const QString id = o.value(QStringLiteral("id")).toString();
+            const QString file = o.value(QStringLiteral("model")).toObject()
+                                     .value(QStringLiteral("file")).toString();
+            if (!id.isEmpty() && !file.isEmpty())
+                modelFilesByLaunchId.insert(id, file);
             if (o.value(QStringLiteral("vision")).toBool()) {
-                declaresVision.insert(o.value(QStringLiteral("id")).toString());
+                declaresVision.insert(id);
                 // Las variantes declarativas heredan mmproj/vision del perfil base
                 // al expandirse en ProfileManager; reconocer también sus IDs.
                 for (const QJsonValue &variant :
                      o.value(QStringLiteral("benchmarkVariants")).toArray()) {
-                    declaresVision.insert(
-                        variant.toObject().value(QStringLiteral("id")).toString());
+                    const QString variantId =
+                        variant.toObject().value(QStringLiteral("id")).toString();
+                    declaresVision.insert(variantId);
+                    if (!variantId.isEmpty() && !file.isEmpty())
+                        modelFilesByLaunchId.insert(variantId, file);
                 }
             }
         }
@@ -565,7 +574,13 @@ void SystemProfilesTests::manager_systemProfilesAvoidAccidentalVisionAndMtp()
         const bool hasSpec = !model.value("specType").toString().isEmpty()
                              || model.value("specDraftNMax").toInt() > 0;
         if (hasSpec) {
-            QVERIFY2(!model.value("draftModelId").toString().isEmpty(),
+            // MTP puede ir integrado en el GGUF (por ejemplo KAT/APEX-MTP),
+            // por lo que no corresponde exigir un segundo archivo draft.
+            const bool selfContainedMtp =
+                model.value("specType").toString() == QStringLiteral("draft-mtp")
+                && model.value("draftModelId").toString().isEmpty()
+                && MtpDetection::isSelfContained(modelFilesByLaunchId.value(launchId));
+            QVERIFY2(!model.value("draftModelId").toString().isEmpty() || selfContainedMtp,
                      qPrintable(QStringLiteral("%1 declara speculative/MTP sin draftModel")
                                     .arg(launchId)));
         }
