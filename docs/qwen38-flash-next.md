@@ -81,38 +81,76 @@ accuracy. El regex de tensores Ngram se **deriva del GGUF**, no se adivina.
 powershell -File tools\benchmark_qwen38_flash_next.ps1 -Passes 2 -Output run.json
 ```
 
-## Offload de Ngram a SSD: lo que realmente hay que saber
+## Estado real: el engine produce salida corrupta
 
-Tres cosas contraintuitivas, confirmadas en la practica por el reporte de
-`returnity` en el PR 27742 (medido en un M5 Max de 128 GB):
+Lo mas importante que salio de correrlo: **el PR 27742 genera texto corrupto de
+forma no reproducible**. Se le caen digitos y caracteres:
 
-1. **`--mmap` ya es el default.** No hay que pasarlo. Lo que ROMPE el offload es
-   pasar `--no-mmap` o `--mlock`. Un perfil que active mlock "para ir mas rapido"
-   silenciosamente convierte 29 GB de lookup table en residentes.
-2. **El layout del quant puede sabotearlo.** En el GGUF de unsloth los tensores
-   PLE/Ngram estan interleaved con el backbone adentro de los shards. Si un shard
-   mezcla ambos, mmap lo trae entero y no se ahorra nada. Solo funciona si los
-   Ngram viven en shards propios; si no, hay que repackear el GGUF.
-   Verificado en Metal; en CUDA puede no aplicar, hay que medirlo.
-3. **Regla de bolsillo:** el backbone es ~**75%** del tamano en disco del quant.
-   El 25% restante son los Ngram, que pueden irse al SSD. Q4_K_XL: 111 GB en
-   disco -> ~83 GB de backbone + ~28 GB de Ngram.
+```
+"2^100 mod 125"   ->  el modelo razona sobre "2^18 mod "
+"coprime"         ->  "copr"
+"doesn't"         ->  "doesn"
+"Count: 121 122 123 ..."  ->  "1211 1211 1212" en vez de "130 131 132"
+```
 
-Numeros reportados: 123 GB -> 97 GB de memoria residente, con el **mismo** t/s
-(36 tok/s sin MTP). O sea: el offload sale gratis en velocidad.
+Con `temperature 0` y `seed` fijo la salida deberia ser identica siempre. No lo
+es: cambia entre instancias del server y entre modos de prefill.
 
-Por eso `benchmark_qwen38_flash_next.ps1` mide **working set y VRAM**, no solo
-t/s: sin la foto de memoria el benchmark no prueba que el offload esta pasando.
-Los brazos son `gpu` (baseline), `ram` (`-ot ngram=CPU --no-mmap`, residencia
-forzada) y `ssd` (`-ot ngram=CPU`, mmap por default). El script tambien corre un
-preflight que reporta que shards mezclan Ngram con backbone.
+### Lo que SI se pudo aislar
+
+| condicion | resultado |
+|---|---|
+| 10 peticiones identicas, mismo estado | 10/10 identicas (estable DENTRO de un estado) |
+| `cache_prompt=false` (prefill fresco) | corrupto, consistente |
+| `cache_prompt=true` (prefijo cacheado) | correcto, consistente |
+| `--ubatch-size 1` | arregla algunos prompts, no todos |
+
+O sea: la generacion desde un prefijo ya cacheado esta bien; el **prefill** es
+donde se rompe. Encaja con el commit del propio PR ("hold the qwen4exp indexer
+cache in a new llama_memory_hybrid_idx"): hay un cache nuevo especifico de esta
+arquitectura.
+
+### Correccion de una conclusion anterior
+
+En una primera pasada se atribuyo la corrupcion a `-ot` de los Ngram y a
+`--cpu-moe`. **Eso estaba mal.** Esas mediciones eran de UNA sola peticion por
+config, y justo esa peticion cae en la loteria del prefill. Repitiendo con
+warmup y varias peticiones, ambas configs alternan entre salida buena y mala:
+
+| | req 1 | req 2 | req 3 |
+|---|---|---|---|
+| sin `-ot` | correcto | corrupto | corrupto |
+| con `-ot` | corrupto | correcto | correcto |
+
+No hay causalidad a nivel de flag. Por eso NO se agrego ningun health check que
+culpe a `-ot` o a `--cpu-moe`: seria codificar una conclusion que los datos no
+sostienen.
+
+## El offload de Ngram no sirve (por otro motivo)
+
+Independientemente de la corrupcion, el `-ot` de los Ngram **no ahorra memoria**
+en CUDA. Medido en el sweep completo:
+
+| config | VRAM |
+|---|---|
+| `--n-cpu-moe 40` sin `-ot` | 24168 MiB |
+| `--n-cpu-moe 40` con `-ot` de Ngram | 24136 MiB |
+
+32 MiB de diferencia sobre 26.85 GB de tensores, y ~0.06 t/s mas lento. El
+reporte original que motivo la idea era de **Metal**; en CUDA el override no
+hace lo que promete. La variable util para dimensionar es `--n-cpu-moe`.
 
 ## Implicancia para el calculo de tier
 
-`EffectiveProfileBuilder` asume `tamano de archivo ~= memoria necesaria`. Con
-esta arquitectura eso sobreestima en ~25%: un tier que hoy rechaza Q4_K_XL por
-"no entra" en realidad lo corre si manda los Ngram al SSD. El calculo deberia
-usar **peso residente** (backbone), no el tamano del GGUF.
+`EffectiveProfileBuilder` asume `tamano de archivo ~= memoria necesaria`. Para
+esta arquitectura eso sigue siendo falso, pero **no** por la razon que se
+esperaba: como el offload de Ngram no funciona en CUDA, los 26.85 GB de lookup
+tables SI tienen que estar en memoria. Lo que si cambia el calculo es el MoE:
+con `--n-cpu-moe 36` el modelo de 103.68 GB corre con 30.1 GB de VRAM.
+
+O sea que la variable de dimensionamiento util es `--n-cpu-moe`, no el offload de
+Ngram. `GGUFScanner::ngramElements` sigue siendo el dato correcto para saber
+cuanto del peso es lookup, pero hoy no se traduce en memoria ahorrada.
 
 ## Licencia
 
@@ -169,3 +207,22 @@ subir expertos, el limite lo pone el reparto desigual entre las dos placas.
 compilando en paralelo (7 procesos de MSVC), y dieron entre 2.4 y 8.2 t/s para la
 misma clase de configuracion. Para numeros publicables hay que correr
 `benchmark_qwen38_flash_next.ps1` con la maquina quieta.
+
+## Benchmark medido (maquina libre, 2x RTX 3090 + 127 GB)
+
+`tools/benchmark_qwen38_flash_next.ps1 -Passes 1 -Mode thinking -IncludeNgramOffload`
+
+| `--n-cpu-moe` | ngram `-ot` | t/s | VRAM | working set | accuracy |
+|---|---|---|---|---|---|
+| 36 | no | **9.96** | 30168 MiB | 25.4 GB | 0% |
+| 40 | no | 9.41 | 24168 MiB | 19.6 GB | 0% |
+| 40 | si | 9.35 | 24136 MiB | 19.6 GB | 0% |
+| 32 / 34 | — | OOM (pide ~28 GB en una placa de 24) | | | |
+
+**La accuracy de 0% NO mide calidad del modelo**: casi todas las tareas agotan el
+presupuesto de 4096 tokens sin emitir su linea `FINAL`, porque el razonamiento se
+va corrompiendo (ver la seccion de arriba). Mientras el prefill este roto, la
+accuracy de este harness no dice nada sobre el modelo.
+
+Lo que si es solido de esta tabla: **throughput (~9.4-10 t/s) y VRAM**, que no
+dependen de que el texto sea correcto.

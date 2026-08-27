@@ -13,9 +13,25 @@ param(
     [int]$Port      = 18097,
     [int]$Passes    = 2,
     [int]$CtxSize   = 32768,
-    # Capas cuyos expertos MoE quedan en CPU. En 2x24GB, por debajo de ~32 el
-    # modelo NO entra: con 26 el loader pide 36 GB en una sola placa y hace OOM.
-    [int]$NCpuMoe   = 36,
+    # Capas cuyos expertos MoE quedan en CPU (de 48). En 2x24GB, por debajo de
+    # ~32 el modelo NO entra: con 26 el loader pide 36 GB en una placa -> OOM.
+    # 32 y 34 hacen OOM en 2x24 GB (piden ~28 GB en una sola placa).
+    [int[]]$NCpuMoeSweep = @(36, 40),
+    # Sin bajar el esfuerzo de razonamiento el modelo NUNCA emite content: se
+    # come el presupuesto entero pensando (xhigh es el default) y devuelve
+    # finish_reason=length con content vacio.
+    # OJO: el chat template SOLO acepta xhigh/medium/low. La doc de unsloth
+    # lista "none" como opcion, pero el template hace raise_exception y el
+    # server devuelve 500 ("Unexpected reasoning effort none").
+    # Aun con "low" el modelo se come 2048 tokens en tareas triviales, por eso
+    # el presupuesto por defecto es alto.
+    [ValidateSet("low","medium","xhigh")]
+    [string]$ReasoningEffort = "low",
+    [int]$MaxTokens = 4096,
+    # Incluye un brazo con -ot de los Ngram. Medido: en CUDA CORROMPE la salida
+    # y NO ahorra VRAM. Off por defecto; encenderlo sirve para re-verificar si
+    # una build futura del PR lo arregla.
+    [switch]$IncludeNgramOffload,
     # Regex de tensores Ngram/PLE. Vacio = autodetectar desde el GGUF.
     [string]$NgramRegex = "",
     [ValidateSet("thinking","instruct","both")]
@@ -55,22 +71,29 @@ $tasks = @(
 $script:NgramTensorRegex = "(ple_key|ple_value|per_layer_token_embd)"
 
 function Get-NgramRegex($modelPath) {
-    # Confirma contra el GGUF que los tensores existen con ese nombre antes de
-    # usarlos en -ot: un regex que no matchea nada falla silencioso (el modelo
-    # carga igual, entero en VRAM, y el benchmark "anda" midiendo otra cosa).
+    # Hay que mirar TODOS los shards, no solo el que se pasa: en este modelo el
+    # shard 1 es puro metadata (0 tensores) y los Ngram estan enteros en el 2.
+    # Mirando uno solo, la verificacion decia "no hay tensores" y no verificaba
+    # nada.
     $dump = Join-Path (Split-Path $Server) "llama-gguf.exe"
     if (-not (Test-Path $dump)) { return "" }
-    $names = & $dump $modelPath r n 2>$null
-    $hits = ($names | Select-String -Pattern $script:NgramTensorRegex).Count
+    $hits = 0
+    foreach ($sh in (Get-ChildItem -Path (Split-Path $modelPath) -Filter "*.gguf")) {
+        $names = & $dump $sh.FullName r n 2>$null
+        $hits += ($names | Select-String -Pattern $script:NgramTensorRegex).Count
+    }
     if ($hits -lt 1) {
-        Write-Warning "El GGUF no tiene tensores que matcheen $script:NgramTensorRegex."
+        Write-Warning "Ningun shard tiene tensores que matcheen $script:NgramTensorRegex."
         return ""
     }
-    Write-Output ("Tensores Ngram/PLE encontrados: " + $hits)
+    # Write-Host, no Write-Output: esta funcion DEVUELVE el regex, y un
+    # Write-Output se concatena al retorno. Con eso $NgramRegex quedaba como
+    # "Tensores... 12 (ple_key|...)" y despues no matcheaba nada.
+    Write-Host ("Tensores Ngram/PLE encontrados: " + $hits)
     return $script:NgramTensorRegex
 }
 
-function Wait-Healthy([int]$targetPort, [int]$maxSeconds = 900) {
+function Wait-Healthy([int]$targetPort, [int]$maxSeconds = 600) {
     # Este modelo tarda en cargar: 111 GB con mmap desde SSD no levanta en 60s.
     $deadline = (Get-Date).AddSeconds($maxSeconds)
     while ((Get-Date) -lt $deadline) {
@@ -106,7 +129,7 @@ function Test-NgramLayout($modelPath) {
     foreach ($sh in $shards) {
         $names = & $dump $sh.FullName r n 2>$null
         $ng = ($names | Select-String -Pattern $NgramRegex).Count
-        $tot = ($names | Select-String -Pattern '^\s*tensor').Count
+        $tot = ($names | Select-String -Pattern 'tensor\[').Count
         $report += [pscustomobject]@{
             shard = $sh.Name; ngram_tensors = $ng; total_tensors = $tot
             pure_ngram = ($ng -gt 0 -and $tot -gt 0 -and $ng -eq $tot)
@@ -120,7 +143,7 @@ function Test-NgramLayout($modelPath) {
     return $report
 }
 
-function Invoke-Bench($label, $placement, $modeName) {
+function Invoke-Bench($label, $ncmoe, $withNgramOffload, $modeName) {
     # KV cache f16 a proposito: --cache-type-k/v q8_0 CRASHEA el PR 27742 en esta
     # arquitectura (GGML_ASSERT(inp->self_k_rot == nullptr) en qwen4exp.cpp:544).
     # Tampoco se pasa --tensor-split ni --fit: -ot desactiva --fit ("tensor_buft_
@@ -130,29 +153,23 @@ function Invoke-Bench($label, $placement, $modeName) {
         "-m", $Model, "--host", "127.0.0.1", "--port", "$Port",
         "--ctx-size", "$CtxSize", "--parallel", "1",
         "--n-gpu-layers", "999",
-        "--n-cpu-moe", "$NCpuMoe",
         "--flash-attn", "on", "--jinja", "--metrics", "--no-warmup",
+        # Las comillas van escapadas con \" a proposito: Start-Process arma la
+        # command line nativa y sin eso llega '{reasoning_effort:low}', que
+        # llama-server rechaza con "syntax error while parsing object key".
+        "--chat-template-kwargs", ('{\"reasoning_effort\":\"' + $ReasoningEffort + '\"}'),
         "--temp", $s.temp, "--top-p", $s.topP, "--top-k", $s.topK,
         "--min-p", $s.minP, "--presence-penalty", $s.presence
     )
-    # OJO: en el PR 27742 los flags --mmap / --no-mmap / --mlock estan DEPRECADOS
-    # en favor de -lm/--load-mode {auto|none|mmap|mlock|mmap+mlock}. auto = mmap.
-    # Ademas el loader avisa explicito: "tensor overrides to CPU are used with
-    # mmap enabled - consider using --load-mode none for better performance".
-    # O sea que hay un trade-off real y es lo que este sweep mide:
-    #   mmap  -> los Ngram quedan en disco y se paginan. Minima RAM, page faults.
-    #   none  -> los Ngram se copian a RAM. Mas rapido, ~27 GB mas de RAM.
-    #   mlock -> todo residente y wired. Maxima RAM, sin page faults.
-    switch ($placement) {
-        "gpu" {
-            # Sin -ot: Ngram/PLE compiten por VRAM con el backbone. Baseline.
-        }
-        "ram" {
-            $serverArgs += @("-ot", ($NgramRegex + "=CPU"), "--load-mode", "none")
-        }
-        "ssd" {
-            $serverArgs += @("-ot", ($NgramRegex + "=CPU"), "--load-mode", "mmap")
-        }
+    # Medido contra el binario real del PR 27742 (ver docs/qwen38-flash-next.md):
+    #  - "--cpu-moe" (las 48 capas en CPU) ROMPE la salida: "121 122 123" ->
+    #    "1211 1211 1212". Con --n-cpu-moe 36 la misma prueba da "130 131 132".
+    #  - -ot de los Ngram a CPU corrompe la salida Y no ahorra VRAM (28936 vs
+    #    28904 MiB sobre 26.85 GB de tensores). En CUDA no hace lo que promete.
+    #  - --mmap/--no-mmap/--mlock estan deprecados -> -lm/--load-mode.
+    $serverArgs += @("--n-cpu-moe", "$ncmoe", "--load-mode", "mmap")
+    if ($withNgramOffload) {
+        $serverArgs += @("--override-tensor", ($NgramRegex + "=CPU"))
     }
 
     $log = Join-Path ([IO.Path]::GetTempPath()) ("llamacode-q38fn-" + $label + ".log")
@@ -167,12 +184,15 @@ function Invoke-Bench($label, $placement, $modeName) {
         $proc.Refresh()
         $wsMB   = [math]::Round($proc.WorkingSet64 / 1MB, 0)
         $vramMB = Get-VramMB
-        Write-Output ("  memoria: working set " + $wsMB + " MB, VRAM " + $vramMB + " MB")
+        # Write-Host y no Write-Output: dentro de una funcion que devuelve filas,
+        # Write-Output las mezcla en el pipeline de retorno y el resumen explota
+        # con "No se encuentra la propiedad tok_s".
+        Write-Host ("  memoria: working set " + $wsMB + " MB, VRAM " + $vramMB + " MB")
         foreach ($t in $tasks) {
             for ($p = 1; $p -le $Passes; $p++) {
                 $body = @{
                     messages = @(@{ role="user"; content=$t.prompt })
-                    max_tokens = 2048
+                    max_tokens = $MaxTokens
                     stream = $false
                 } | ConvertTo-Json -Depth 6
                 $sw = [Diagnostics.Stopwatch]::StartNew()
@@ -182,7 +202,8 @@ function Invoke-Bench($label, $placement, $modeName) {
                 $text = $r.choices[0].message.content
                 $genTok = $r.usage.completion_tokens
                 $rows += [pscustomobject]@{
-                    placement  = $placement
+                    ncmoe      = $ncmoe
+                    ngram_ot   = [bool]$withNgramOffload
                     mode       = $modeName
                     task       = $t.id
                     pass       = $p
@@ -214,28 +235,46 @@ $layout = Test-NgramLayout $Model
 if ($layout) { $layout | Format-Table -AutoSize }
 
 $modes = if ($Mode -eq "both") { @("thinking","instruct") } else { @($Mode) }
+$configs = @()
+foreach ($n in $NCpuMoeSweep) { $configs += ,@($n, $false) }
+if ($IncludeNgramOffload) {
+    # El mayor del sweep = el que mas VRAM deja libre; usar el primero podia
+    # caer justo en la config que hace OOM y perder el brazo entero.
+    $configs += ,@(($NCpuMoeSweep | Measure-Object -Maximum).Maximum, $true)
+}
+
 $all = @()
 foreach ($m in $modes) {
-    foreach ($placement in @("gpu","ram","ssd")) {
-        Write-Output ("== " + $m + " / ngram=" + $placement + " ==")
-        $all += Invoke-Bench ($m + "-" + $placement) $placement $m
+    foreach ($cfg in $configs) {
+        $n  = $cfg[0]
+        $ot = $cfg[1]
+        Write-Output ("== " + $m + " / n-cpu-moe=" + $n + " / ngram-ot=" + $ot + " ==")
+        try {
+            $all += Invoke-Bench ($m + "-n" + $n + $(if ($ot) { "-ot" } else { "" })) $n $ot $m
+        } catch {
+            # Una config que no entra en VRAM no invalida las demas: se anota y
+            # el sweep sigue. Perder 3 brazos buenos por 1 malo seria absurdo
+            # cuando cada carga son minutos.
+            Write-Warning ("config n-cpu-moe=" + $n + " ngram-ot=" + $ot + " FALLO: " + $_.Exception.Message)
+        }
     }
 }
 
 $all | Format-Table -AutoSize
 Write-Output ""
 Write-Output "== Resumen =="
-$all | Group-Object placement, mode | ForEach-Object {
+$all | Group-Object ncmoe, ngram_ot, mode | ForEach-Object {
     $g = $_.Group
     [pscustomobject]@{
-        placement = $g[0].placement
+        ncmoe     = $g[0].ncmoe
+        ngram_ot  = $g[0].ngram_ot
         mode      = $g[0].mode
         avg_tok_s = [math]::Round(($g | Measure-Object tok_s -Average).Average, 2)
         accuracy  = [math]::Round((($g | Where-Object correct).Count / $g.Count) * 100, 1)
         ws_mb     = $g[0].ws_mb
         vram_mb   = $g[0].vram_mb
     }
-} | Format-Table -AutoSize
+} | Sort-Object mode, ncmoe | Format-Table -AutoSize
 
 if ($Output) {
     $all | ConvertTo-Json -Depth 5 | Set-Content -Path $Output -Encoding UTF8

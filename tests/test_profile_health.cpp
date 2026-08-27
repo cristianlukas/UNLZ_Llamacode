@@ -64,9 +64,6 @@ private slots:
     void mmprojMissingIsWarning();
     void specWithoutDraft();
     void adaptiveCapabilityUnknownIsWarning();
-    void ngramOffloadDefeatedByMlock();
-    void ngramOffloadUnusedWithoutOverride();
-    void ngramChecksIgnoreNonNgramModels();
     void adaptiveCapabilityMissingIsError();
     void adaptiveCapabilityAvailableIsClean();
     void adaptiveRawLaunchArgIsValidated();
@@ -281,57 +278,6 @@ void ProfileHealthTests::hybridPlannerValidation()
                                                {"plannerProfileId", executor}}));
     issues = ProfileHealthChecker::checkAll(&pm, nullptr, nullptr);
     QVERIFY(hasCode(issues, "hybrid-self-reference"));
-}
-
-void ProfileHealthTests::ngramOffloadDefeatedByMlock()
-{
-    ProfileHealthChecker::Refs r = healthyLocal();
-    r.modelFileName = "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf";
-    r.launch.extraArgs = {"-ot", "(ple_key|ple_value|per_layer_token_embd)=CPU",
-                          "--load-mode", "mlock"};
-
-    const auto issues = ProfileHealthChecker::checkLaunch(r);
-    QVERIFY(hasCode(issues, "ngram-offload-defeated"));
-    QCOMPARE(severityOf(issues, "ngram-offload-defeated"), QStringLiteral("warning"));
-    // Tiene el -ot puesto, asi que NO debe quejarse tambien de que falta.
-    QVERIFY(!hasCode(issues, "ngram-offload-unused"));
-
-    // Las formas deprecadas equivalen a lo mismo y tienen que detectarse igual.
-    r.launch.extraArgs = {"-ot", "(ple_key)=CPU", "--mlock"};
-    QVERIFY(hasCode(ProfileHealthChecker::checkLaunch(r), "ngram-offload-defeated"));
-    r.launch.extraArgs = {"-ot", "(ple_key)=CPU", "--no-mmap"};
-    QVERIFY(hasCode(ProfileHealthChecker::checkLaunch(r), "ngram-offload-defeated"));
-}
-
-void ProfileHealthTests::ngramOffloadUnusedWithoutOverride()
-{
-    ProfileHealthChecker::Refs r = healthyLocal();
-    r.modelFileName = "Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf";
-    r.launch.extraArgs = {"--ctx-size", "32768"};
-
-    const auto issues = ProfileHealthChecker::checkLaunch(r);
-    QVERIFY(hasCode(issues, "ngram-offload-unused"));
-    QCOMPARE(severityOf(issues, "ngram-offload-unused"), QStringLiteral("warning"));
-
-    // Con el -ot puesto y sin pinning, el perfil esta bien: sin quejas.
-    r.launch.extraArgs = {"-ot", "(ple_key|ple_value|per_layer_token_embd)=CPU",
-                          "--load-mode", "mmap"};
-    const auto clean = ProfileHealthChecker::checkLaunch(r);
-    QVERIFY(!hasCode(clean, "ngram-offload-unused"));
-    QVERIFY(!hasCode(clean, "ngram-offload-defeated"));
-}
-
-void ProfileHealthTests::ngramChecksIgnoreNonNgramModels()
-{
-    // Un modelo sin tablas Ngram no debe recibir NINGUNA de las dos advertencias,
-    // ni siquiera con mlock: ahi mlock es una decision legitima.
-    ProfileHealthChecker::Refs r = healthyLocal();
-    r.modelFileName = "Qwen3.8-27B-Q4_K_M.gguf";
-    r.launch.extraArgs = {"--load-mode", "mlock"};
-
-    const auto issues = ProfileHealthChecker::checkLaunch(r);
-    QVERIFY(!hasCode(issues, "ngram-offload-defeated"));
-    QVERIFY(!hasCode(issues, "ngram-offload-unused"));
 }
 
 QTEST_MAIN(ProfileHealthTests)
