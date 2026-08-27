@@ -57,3 +57,11 @@ terminó con código 0: motor OCR disponible en `es-MX`, 3 pantallas, 100% de
 acuerdo OCR/UIA en cada pantalla y 100% de acuerdo también en los monitores
 escalados al 125%. Las superficies de prueba fueron destruidas al terminar y los
 locks de build/tests quedaron libres al cierre.
+
+### 2026-08-27 — seguimiento diferido
+
+Una comprobación posterior encontró la entrada de usuario activa y la ventana
+`Seguridad de Windows` en primer plano. Aunque no había una compilación o suite
+registrada en los locks, la PC no se consideró libre; no se iniciaron tests, build
+ni probes y no se tocó ninguna aplicación. El seguimiento automático queda
+programado para volver a comprobar dentro de 10 minutos.
