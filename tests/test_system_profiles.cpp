@@ -98,6 +98,10 @@ void SystemProfilesTests::initTestCase()
     QCoreApplication::setApplicationName(QStringLiteral("LlamaCode"));
     QVERIFY(m_dir.isValid());
     qputenv("LLAMACODE_PROFILES_DIR", m_dir.path().toLocal8Bit());
+    // ProfileManager acepta LLAMACODE_MODELS_DIR como override de runtime,
+    // pero este test verifica los IDs contra QStandardPaths. No dejar que una
+    // variable del entorno del proceso vuelva no determinista la expectativa.
+    qunsetenv("LLAMACODE_MODELS_DIR");
     const QString bundle = bundlePath();
     QVERIFY2(QFile::exists(bundle), "falta assets/system_profiles.json");
     qputenv("LLAMACODE_SYSTEM_PROFILES", bundle.toLocal8Bit());
