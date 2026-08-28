@@ -77,3 +77,37 @@ las ventanas propias del fixture y terminó también con `exit=0`.
 La matriz cubrió los tres monitores, temas claro/oscuro y escalado 100/125 %.
 El resultado queda consolidado junto con el OCR y el build en
 [`validation-run-2026-08-27.md`](validation-run-2026-08-27.md).
+
+### 2026-08-28 — validación coordinada completa
+
+La comprobación inicial encontró las lanes `tests` y `build` libres, sin procesos
+de LlamaCode, `llama-server`, `cmake`, `MSBuild`, `ctest` ni probes QA, y sin
+interacción reciente. Se leyeron `AGENTS.md` y `README.md` antes de iniciar la
+corrida.
+
+`tests.bat Debug` terminó con resultado compartido
+`OK|2026-08-28T23:51:11.5025490Z|20940`: CTest pasó 73/73 pruebas, y las dos
+suites auxiliares también terminaron en `OK` (6 y 8 casos). Luego
+`build.bat Debug NOPAUSE` terminó con
+`OK|2026-08-28T23:51:53.2025411Z|46280`; se verificó
+`build/Debug/LlamaCode.exe` (26.113.024 bytes, modificado a las 20:51:47
+`-03:00`) y el acceso directo conservó `assets/debug_icon.ico`.
+
+El build mostró los warnings ya observados de despliegue (`dxcompiler.dll`/`dxil.dll`
+y `VCINSTALLDIR`) y los mensajes espurios de cmd `"M"`/`"EM"`; no alteraron el
+resultado `OK`. Al cierre, ambas lanes reportaron `FREE`. Quedaron únicamente
+workers persistentes de MSBuild con `/nodeReuse:true`, sin `ctest` ni ejecución de
+build activa.
+
+Los probes foreground se ejecutaron sin `--execute-click`:
+
+- `build/Debug/qa_visual_automation.exe --matrix`: `summary cases=12 failures=0`,
+  cubriendo 3 monitores, temas claro/oscuro y DPI 100/125 %, con backend
+  `qt-sampled`.
+- `build/Debug/qa_ocr_probe.exe --self-contained`: código 0, OCR `es-MX`, tres
+  pantallas (2560x1440 al 100 % y dos 1920x1080 al 125 %, incluida una con
+  coordenadas negativas), 100 % de acuerdo OCR/UIA y coordenadas físicas
+  correctas.
+
+Las superficies temporales de los probes se destruyeron al terminar y no se
+realizaron clicks sobre aplicaciones del usuario.
