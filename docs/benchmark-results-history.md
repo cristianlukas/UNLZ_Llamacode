@@ -445,3 +445,20 @@ incompleto por HE0 bloqueado y el perfil 7 inició BCB con modelo real.
 
 La campaña sigue abierta; estos datos son seguimiento operativo y no
 constituyen resultados finales ni una promoción de perfil.
+
+## 2026-08-28 — Retiro de A/B antirez lentos
+
+La comparación durante la campaña oficial mostró que el control
+`[bench antirez] 32k · reasoning off · KV q4_0` completó HE0 1/1 en `217,863 s`,
+pero HE20 expiró en `1801,3 s` sin score evaluable. Su variante
+`reasoning low` pasó HE0 1/1 en aproximadamente `335 s`, pero tras unos 14
+minutos de HE20 sólo había alcanzado el prompt 5/20. Frente a DeepSeek Fusion,
+que completó HE20 en `1216,85–1300,74 s` con 20/20, ambas variantes quedaron
+fuera del objetivo operativo; la variante low además no produjo una medición
+HE20 de calidad.
+
+Se canceló el test low antes de BCB y se detuvo la campaña serial en forma
+controlada. Ambos IDs quedaron con `benchmark=false` y nombre de retirado en
+`assets/system_profiles.json`; se conservan sus resultados y metadata locales
+para auditoría. La campaña queda cerrada como retiro temprano en el perfil
+58/86, no como cobertura completa de la matriz.

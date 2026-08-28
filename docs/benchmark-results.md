@@ -164,3 +164,18 @@ on 100k · agent-maximo` permanecía incompleto con HE0 bloqueado.
 
 No se agregan filas ni se cambian rankings en esta etapa: el estado es parcial
 y la campaña continúa en segundo plano.
+
+## Retiro de perfiles antirez A/B — 2026-08-28
+
+Se retiraron de la cola activa las variantes declarativas:
+
+| Perfil | HE0 | HE20 | Decisión |
+|---|---:|---:|---|
+| `sys-48-antirez-dsv4-q2q4-32k-reasoning-off` | 1/1 en 217,863 s | timeout a 1801,3 s; 0/0 evaluable | Retirado; no escala a HE20 |
+| `sys-48-antirez-dsv4-q2q4-32k-reasoning-low` | 1/1 en ~335 s | cancelado en prompt 5/20 tras ~14 min; sin score | Retirado; demasiado lento y sin calidad HE20 demostrada |
+
+El control DeepSeek Fusion comparable completó HE20 en 1216,85–1300,74 s
+con 20/20. Los resultados y metadata de esta campaña permanecen en
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`; no se elimina evidencia.
+La campaña oficial se canceló de manera intencional después de este gate y no
+se presenta como matriz completa.

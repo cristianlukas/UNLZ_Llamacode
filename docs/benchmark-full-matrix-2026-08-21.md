@@ -21,7 +21,7 @@ promover a BCB una configuración que sólo resolvió una tarea.
 |---|---|---|---|
 | DeepSeek IQ3_S 24 GB | `sys-ultraq-dsv4-0731-iq3s` y variantes `sys-bench-ultraq-*` | 64/131k, B/U, MoE CPU, KV q4/q8, reasoning off/low/medium/high, sin DSpark | No hay mmproj local en `D:\Models\llamacpp\DeepSeek-V4-Flash-0731-UD-IQ3_S`; no se inventa una prueba de visión |
 | DeepSeek IQ3_S 48 GB | `sys-ultraq-dsv4-0731-iq3s-48gb`, `sys-48-dsv4-nospec` y variantes dual | 64/131k, KV q4/q8, reparto experto, reasoning off/medium/high, sin DSpark | Sin mmproj local; la variante dual conserva el reparto validado `1,0` |
-| DeepSeek Antirez Q2/Q4 | `sys-48-antirez-dsv4-q2q4-0731` y todos sus `benchmarkVariants` activos | 16/32/64/131k, B/U, KV q4/q8, prefill, reasoning off/low/high | Sin mmproj local |
+| DeepSeek Antirez Q2/Q4 | `sys-48-antirez-dsv4-q2q4-0731` y sus `benchmarkVariants` activos; las variantes 32k `reasoning off/low` quedaron retiradas el 2026-08-28 | 16/32/64/131k, B/U, KV q4/q8, prefill, reasoning high y controles vigentes | Sin mmproj local |
 | SOL | `8797a8cf-fea9-46cb-934a-0d62f3ee8ca7`, `abc1df7a-2af1-4957-9d12-dbe2d01988aa` | DSH medium, 160/192k, MTP2, KV q8, mmproj en RAM | Sí, mmproj Qwen3.8 |
 | TERRA | `7d54c7f2-47dd-43df-a608-f67e4d4b027d`, `2c25280b-819e-411c-92fc-c5127cb3b900` | Browser Agent medium/xhigh, 131k, MTP, reasoning | Sí, mmproj Qwen3.8 |
 | LUNA | `a03e65f5-2f2c-4d45-b67b-4b1270fa2a6c`, `sys-48-thinkingcap-131k`, `sys-48-thinkingcap-196k`, `sys-bench-48-tc-*` | MTP4, 131/196k, batch, KV q4/q8, thinking | Sí, `mmproj-ThinkingCap-Qwen3.6-27B-f16.gguf` |

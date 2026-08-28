@@ -291,6 +291,12 @@ DFlash2 ni DSpark:
 La siguiente tanda debe empezar por HE0 y sólo promover a HE20/BCB los perfiles
 que entreguen un resultado evaluable.
 
+Actualización 2026-08-28: las variantes A/B de 32k con `reasoning off` y
+`reasoning low` se retiraron de la cola activa. `reasoning off` agotó HE20 por
+timeout (1801,3 s, sin score) y `reasoning low` pasó HE0 1/1 pero fue
+cancelado en HE20 por latencia no competitiva antes de BCB; sus artefactos se
+conservan para auditoría.
+
 ### Control de perfiles de agente alternativos
 
 Para separar modelo de agente/harness se repitieron corridas headless sin
