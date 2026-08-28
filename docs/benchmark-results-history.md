@@ -389,3 +389,21 @@ combinación recomendada por llama.cpp: `draft-mtp,ngram-mod`. Las variantes
 usan `n-match=24`, `n-min=16` y `n-max=64`, conservando el MTP y el sampling del
 perfil base. KAT y Laguna se dejaron como `ngram-mod` solo porque sus perfiles
 base no incluyen un drafter MTP. Los perfiles originales no fueron alterados.
+
+## 2026-08-27 — Repetición A/B de Qwen3.6 para carga híbrida
+
+Con la máquina libre se repitió un smoke de inferencia local sobre Qwen3.6-
+35B-A3B IQ4_XS, dos RTX 3090, `n-cpu-moe=24`, contexto 4096, `n=96` y
+sampling conservador. Ambos modos terminaron correctamente en `DONE`:
+
+| Carga | Tiempo total | Prefill | Decode |
+|---|---:|---:|---:|
+| `load-mode mmap` | 58,31 s | 5,0 t/s | 11,4 t/s |
+| `load-mode none` | 11,24 s | 77,8 t/s | 28,5 t/s |
+
+La diferencia corresponde a esta pasada en frío y no es una medición
+estadística ni una promoción de perfil. También se validó temporalmente el
+servidor OpenAI-compatible (`/health` y `/v1/chat/completions`) con respuesta
+válida, y se cerró el proceso propio dejando libre el puerto 18080. La corrida
+completa de perfiles no se lanzó: sigue requiriendo una campaña controlada y no
+se mezcla con el ranking HE0/HE20/BCB.
