@@ -152,3 +152,15 @@ serie HE0 → HE20 → BCB. Al momento de esta anotación se encuentra en
 `141_QUALITY - DeepSeek Fusion leloch`, BCB, prompt 1/8; por lo tanto las
 columnas oficiales no se actualizan ni se considera cerrada la campaña hasta
 que exista un resultado persistido o un cierre explícito del runner.
+
+## Seguimiento de campaña reanudada — 2026-08-28
+
+Tras verificar la PC libre, se relanzó la campaña con el Release headless y la
+cobertura persistida. El runner volvió a detectar 86 perfiles, omitió los que
+ya tenían HE0/HE20/BCB válidos y avanzó hasta el perfil
+`141_QUALITY - DeepSeek Fusion leloch · VRAM experts 0-2`, que inició BCB con
+modelo real. En el mismo control, el perfil `153_BALANCE - Laguna S 2.1 · fit
+on 100k · agent-maximo` permanecía incompleto con HE0 bloqueado.
+
+No se agregan filas ni se cambian rankings en esta etapa: el estado es parcial
+y la campaña continúa en segundo plano.

@@ -434,3 +434,14 @@ campaña detectó 86 perfiles benchmark listos y respeta HE0 → HE20 → BCB; a
 momento del registro estaba en el primer perfil, BCB, prompt 1/8. Esta entrada
 queda deliberadamente abierta hasta que el runner produzca estados finales o
 agote su política de timeout/reintentos.
+
+## 2026-08-28 — Reanudación de campaña oficial
+
+Con la PC libre y sin procesos ajenos activos, se levantó el daemon Release en
+`127.0.0.1:8765` y se relanzó `tools/run-benchmark-post-correction.ps1`. La
+cobertura previa permitió omitir los perfiles ya completos: en el primer
+avance se reconocieron completos los perfiles 1 y 3–6, el perfil 2 quedó
+incompleto por HE0 bloqueado y el perfil 7 inició BCB con modelo real.
+
+La campaña sigue abierta; estos datos son seguimiento operativo y no
+constituyen resultados finales ni una promoción de perfil.
