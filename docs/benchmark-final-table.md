@@ -1,6 +1,6 @@
 # Tabla final de benchmarks y recomendaciones
 
-Fecha de corte: 2026-08-24.
+Fecha de corte base: 2026-08-24; auditoría post-campaña: 2026-08-28.
 
 Este documento consolida los resultados persistidos disponibles. Los benchmarks
 están pausados actualmente: la instrumentación de memoria fue corregida y pasó
@@ -15,7 +15,9 @@ reportó **83 perfiles `benchmark=true` listos**: 23 bases + 60 variantes. La
 tabla detallada de abajo conserva los 23 perfiles base; las variantes se
 agregarán al consolidado post-campaña con su propia huella, memoria y etapa.
 El número anterior de 51 correspondía a una fotografía histórica y tampoco es
-el total vigente.
+el total vigente. La campaña post-corrección del 2026-08-28 llegó hasta el
+perfil 58/86 antes de detenerse intencionalmente; sus resultados parciales y el
+conteo de cierres se detallan en `benchmark-results-history.md`.
 
 ## Cómo leer la tabla
 
@@ -79,11 +81,13 @@ aceptados y 113,01 tok/s de decode; `test_agent_wire` también pasó.
 | KAT APEX + mmproj · 131k | 99.371 tokens efectivos; marcador exacto; carga estable | 8/8 aceptados; prompt 801,32 tok/s; decode 98,78 tok/s | **Candidato experimental recomendado** para contexto largo |
 | KAT APEX + mmproj · 262k | La configuración 262.144 cargó; 199.856 tokens pasaron el marcador exacto. Una corrida cercana al límite procesó 244.505 tokens sin OOM, pero devolvió el marcador truncado | 7/8 en la corrida de 199k; cerca del límite, 4/4 y decode 39,89 tok/s | **Experimental / no promocionar todavía**: capacidad disponible, recuperación/calidad en el límite pendiente |
 
-HE0 sí pasó 1/1 en 32k. El intento de HE20 no produjo resultado válido: el
-agente entró en anti-loop repitiendo lecturas (11 eventos de fallo antes de
-cancelar). Por eso BCB no se ejecutó como medición de calidad y no corresponde
-comparar este candidato contra el KAT histórico 3/8 como si tuviera un score
-nuevo. Los TPS anteriores son smokes de contexto/tool calling, no `TPS BCB`.
+HE0 sí pasó 1/1 en 32k. El primer intento auxiliar de HE20 no produjo resultado
+válido: el agente entró en anti-loop repitiendo lecturas (11 eventos de fallo
+antes de cancelar). En la campaña oficial posterior sí quedaron persistidos dos
+cortes completos de esta familia: MTP3 obtuvo 18/20 y 5/8 BCB, mientras el
+control sin MTP obtuvo 19/20 y 1/8 BCB. Ambos son resultados de calidad parcial,
+no reemplazan el ranking consolidado ni habilitan promoción. Los TPS anteriores
+son smokes de contexto/tool calling, no `TPS BCB`.
 
 ### Control Q4 y sampling A/B (2026-08-28)
 
@@ -149,9 +153,11 @@ calidad BCB, tiempo total, estabilidad, contexto y el tipo de trabajo.
 No todos los GGUF DeepSeek funcionan igual. El **IQ3_S sin DSpark** sí tiene
 una corrida BCB completa y válida, pero es demasiado lento para SOL/TERRA/LUNA.
 Los perfiles Fusion/antirez conservaron HE0 y HE20 en varias configuraciones,
-pero BCB quedó parcial, muy lento o afectado por timeout/infraestructura. No
-corresponde convertir esos fallos en calidad cero ni retirarlos definitivamente;
-corresponde reintentarlos con la cola serial y la nueva planificación fit-aware.
+pero BCB quedó parcial, muy lento o afectado por timeout/infraestructura. La
+campaña post-corrección confirmó además un caso antirez 64k KV q8 con 19/20 y
+3/8 BCB, sin desplazar a los candidatos consolidados. Los dos A/B antirez de
+32k con reasoning off/low fueron retirados el 2026-08-28 por latencia no
+competitiva; el resto permanece histórico o experimental, no promovido.
 
 ## Familias retiradas o no promocionadas
 

@@ -4,7 +4,7 @@ Este archivo es la tabla operativa vigente. Cada mejora de perfil, harness,
 agente o infraestructura debe actualizar esta tabla y agregar una entrada en
 [`benchmark-results-history.md`](benchmark-results-history.md).
 
-Última actualización: 2026-08-18.
+Última actualización: 2026-08-28.
 
 ## Variantes ngram para comparar
 
@@ -162,8 +162,50 @@ ya tenían HE0/HE20/BCB válidos y avanzó hasta el perfil
 modelo real. En el mismo control, el perfil `153_BALANCE - Laguna S 2.1 · fit
 on 100k · agent-maximo` permanecía incompleto con HE0 bloqueado.
 
-No se agregan filas ni se cambian rankings en esta etapa: el estado es parcial
-y la campaña continúa en segundo plano.
+No se agregaban filas ni se cambiaban rankings en ese corte intermedio. La
+campaña quedó posteriormente detenida de forma intencional en el perfil 58/86;
+el detalle auditado del cierre se registra abajo.
+
+## Auditoría del corte de campaña oficial — 2026-08-28
+
+El log persistente
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-campaign-post-correction.log`
+registra una campaña de 86 perfiles iniciada a las 09:32. Hubo cierre explícito
+para los perfiles 1–57: **27 `complete` y 30 `incomplete`**. El perfil 58
+(`antirez · 32k · reasoning low`) inició HE20 y fue cancelado en el prompt 5/20;
+por eso no tiene línea de cierre propia. En esta clasificación, `complete`
+significa que no quedó una etapa pendiente o bloqueada en el runner; no implica
+BCB 8/8.
+
+Perfiles cerrados como `complete`: `1`, `3–6`, `8`, `11–12`, `14–22`,
+`39–47` y `55`. Cerrados como `incomplete`: `2`, `7`, `9–10`, `13`, `23–38`,
+`48–54` y `56–57`. Los artefactos del 28 de agosto agregan 42 JSON de resultado
+para 30 nombres de perfil; el resto de la cobertura se reutilizó desde corridas
+persistidas anteriores.
+
+Los 17 JSON de HE0 con `0/0` y `failureStage=server-load` corresponden a
+`DeepSeek V4-7-8-26` y las 16 variantes ULTRA-Q de los perfiles 13 y 23–38.
+No son puntuaciones de calidad: el servidor no llegó a dejar una pasada
+evaluable. El perfil 10, `VRAM balance`, dejó un intento BCB 5/8, pero su cierre
+global quedó `infra-timeout` tras tres intentos; se conserva como resultado
+provisional, no como promoción.
+
+Resultados nuevos con evidencia persistida que faltaba reflejar:
+
+| Perfil | HE0 | HE20 | BCB | Estado de lectura |
+|---|---:|---:|---:|---|
+| `[bench 48GB] KAT APEX-MTP + visión · MTP3 · 32k` | 1/1 · 46,149 s | 18/20 · 429,338 s | 5/8 · 463,354 s | Calidad parcial; cierre completo, sin promoción |
+| `[bench 48GB] KAT APEX-MTP + visión · sin MTP · 32k` | 1/1 · 43,946 s | 19/20 · 702,375 s | 1/8 · 342,839 s | Control válido, calidad insuficiente |
+| `[bench antirez stress] 64k · B4096 · U1024 · KV q8_0` | 1/1 · 156,513 s | 19/20 · 1150,040 s | 3/8 · 2049,730 s | Calidad parcial; no desplaza candidatos |
+
+Las rutas de evidencia son, respectivamente,
+`HumanEval_1_tems__20260828_123336` + `123721` +
+`BigCodeBench-Hard_8_tems__20260828_124543`,
+`HumanEval_1_tems__20260828_125509` + `125706` +
+`BigCodeBench-Hard_8_tems__20260828_131007`, y
+`HumanEval_1_tems__20260828_171744` + `172159` +
+`BigCodeBench-Hard_8_tems__20260828_174241`, dentro de
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`.
 
 ## Retiro de perfiles antirez A/B — 2026-08-28
 
@@ -172,7 +214,7 @@ Se retiraron de la cola activa las variantes declarativas:
 | Perfil | HE0 | HE20 | Decisión |
 |---|---:|---:|---|
 | `sys-48-antirez-dsv4-q2q4-32k-reasoning-off` | 1/1 en 217,863 s | timeout a 1801,3 s; 0/0 evaluable | Retirado; no escala a HE20 |
-| `sys-48-antirez-dsv4-q2q4-32k-reasoning-low` | 1/1 en ~335 s | cancelado en prompt 5/20 tras ~14 min; sin score | Retirado; demasiado lento y sin calidad HE20 demostrada |
+| `sys-48-antirez-dsv4-q2q4-32k-reasoning-low` | 1/1 en 270,169 s | cancelado en prompt 5/20 tras ~14 min; sin score | Retirado; demasiado lento y sin calidad HE20 demostrada |
 
 El control DeepSeek Fusion comparable completó HE20 en 1216,85–1300,74 s
 con 20/20. Los resultados y metadata de esta campaña permanecen en

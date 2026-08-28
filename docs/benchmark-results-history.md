@@ -443,15 +443,46 @@ cobertura previa permitió omitir los perfiles ya completos: en el primer
 avance se reconocieron completos los perfiles 1 y 3–6, el perfil 2 quedó
 incompleto por HE0 bloqueado y el perfil 7 inició BCB con modelo real.
 
-La campaña sigue abierta; estos datos son seguimiento operativo y no
-constituyen resultados finales ni una promoción de perfil.
+La campaña seguía abierta en ese corte; estos datos eran seguimiento operativo
+y no constituían resultados finales ni una promoción de perfil. El cierre
+posterior queda auditado en la entrada siguiente.
+
+## 2026-08-28 — Auditoría del cierre parcial de 86 perfiles
+
+La revisión cruzada del log persistente y de los JSON locales encontró una
+campaña iniciada a las 09:32 con 86 perfiles. Los perfiles 1–57 tienen cierre
+explícito: 27 terminaron `complete` y 30 `incomplete`; el perfil 58 comenzó
+HE20 y se canceló en el prompt 5/20 antes de registrar cierre. `complete` aquí
+describe el estado de etapas del runner, no una garantía de BCB 8/8.
+
+El conjunto `complete` fue `1`, `3–6`, `8`, `11–12`, `14–22`, `39–47` y `55`.
+El conjunto `incomplete` fue `2`, `7`, `9–10`, `13`, `23–38`, `48–54` y
+`56–57`. El corte produjo 42 JSON para 30 nombres de perfil nuevos o
+reintentados; los perfiles ya cubiertos reutilizaron evidencia previa.
+
+Los perfiles 13 y 23–38 dejaron 17 intentos HE0 `0/0` con
+`failureStage=server-load` (DeepSeek V4-7-8-26 y variantes ULTRA-Q). Se
+clasifican como infraestructura, no como calidad cero. El perfil 10
+(`VRAM balance`) dejó un BCB 5/8 en un intento, pero el cierre global fue
+`infra-timeout` tras tres intentos, por lo que no se promueve.
+
+También faltaba registrar la evidencia completa de tres perfiles: KAT APEX MTP3
+obtuvo HE0 1/1 en 46,149 s, HE20 18/20 en 429,338 s y BCB 5/8 en 463,354 s;
+KAT APEX sin MTP obtuvo 1/1 en 43,946 s, 19/20 en 702,375 s y 1/8 en
+342,839 s; y antirez stress 64k KV q8 obtuvo 1/1 en 156,513 s, 19/20 en
+1150,040 s y 3/8 en 2049,730 s. Son mediciones válidas pero parciales y no
+alteran las promociones SOL/TERRA/LUNA/METEOR.
+
+La evidencia está bajo
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`; el log fuente es
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-campaign-post-correction.log`.
 
 ## 2026-08-28 — Retiro de A/B antirez lentos
 
 La comparación durante la campaña oficial mostró que el control
 `[bench antirez] 32k · reasoning off · KV q4_0` completó HE0 1/1 en `217,863 s`,
 pero HE20 expiró en `1801,3 s` sin score evaluable. Su variante
-`reasoning low` pasó HE0 1/1 en aproximadamente `335 s`, pero tras unos 14
+`reasoning low` pasó HE0 1/1 en `270,169 s`, pero tras unos 14
 minutos de HE20 sólo había alcanzado el prompt 5/20. Frente a DeepSeek Fusion,
 que completó HE20 en `1216,85–1300,74 s` con 20/20, ambas variantes quedaron
 fuera del objetivo operativo; la variante low además no produjo una medición

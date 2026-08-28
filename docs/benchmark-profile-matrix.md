@@ -824,6 +824,28 @@ La variante conserva `--tensor-split 1,0` para no desalinear las capas base de l
 
 Backup de los cuatro archivos antes de la edición: `profiles/{launches,backends,models,runtimes}.json.bak.vram-variant.20260816_121921`.
 
+## Corte auditado de campaña post-corrección — 2026-08-28
+
+La campaña serial de 86 perfiles no quedó documentada sólo como “en curso”:
+el log persistente registra cierre explícito para los perfiles 1–57 (27
+`complete`, 30 `incomplete`) y cancelación controlada al comenzar el perfil
+58. `complete` describe el estado de etapas del runner y no significa BCB 8/8.
+La lista completa por número y el inventario de artefactos están en
+[`benchmark-results-history.md`](benchmark-results-history.md).
+
+En esta campaña se persistieron los siguientes resultados que antes figuraban
+como pendientes en la matriz:
+
+| Perfil | HE0 | HE20 | BCB | Lectura |
+|---|---:|---:|---:|---|
+| `[bench 48GB] KAT APEX-MTP + visión · MTP3 · 32k` | 1/1 · 46,149 s | 18/20 · 429,338 s | 5/8 · 463,354 s | Calidad parcial; no promover |
+| `[bench 48GB] KAT APEX-MTP + visión · sin MTP · 32k` | 1/1 · 43,946 s | 19/20 · 702,375 s | 1/8 · 342,839 s | Control válido; calidad insuficiente |
+| `[bench antirez stress] 64k · B4096 · U1024 · KV q8_0` | 1/1 · 156,513 s | 19/20 · 1150,040 s | 3/8 · 2049,730 s | Calidad parcial; no desplaza candidatos |
+
+Los 17 intentos HE0 `0/0` de `DeepSeek V4-7-8-26` y ULTRA-Q quedaron
+clasificados como `server-load`, no como calidad cero. Los archivos JSON y sus
+metadatos se conservan bajo `%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs`.
+
 ## Regla de edición y verificación
 
 1. Cerrar LlamaCode antes de editar cualquier perfil o runtime desde la UI/archivo de perfiles.
