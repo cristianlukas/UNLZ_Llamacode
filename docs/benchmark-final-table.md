@@ -58,7 +58,7 @@ el total vigente.
 | 22 | Qwen3.8 MTP embebido 131k | Qwen3.8 UD-Q4_K_XL | 1/1 | 20/20 | 7/8 | 49,67 | 29,1 / 266,4 / 646,0 | Casi completo; inferior al MTP separado |
 | 23 | Qwen3.8 MTP embebido 64k | Qwen3.8 UD-Q4_K_XL | 1/1 | 20/20 | 8/8 | 52,58 | 26,6 / 468,5 / 625,5 | BCB completo; contexto más corto |
 
-## Actualización post-corte: KAT APEX-MTP + Qwen mmproj (2026-08-27)
+## Actualización post-corte: KAT APEX-MTP + Qwen mmproj (2026-08-28)
 
 Estas corridas agregan evidencia funcional que no existía al cierre de la
 tabla, pero no reemplazan el ranking consolidado: HE20 no quedó validado y la
@@ -84,6 +84,25 @@ agente entró en anti-loop repitiendo lecturas (11 eventos de fallo antes de
 cancelar). Por eso BCB no se ejecutó como medición de calidad y no corresponde
 comparar este candidato contra el KAT histórico 3/8 como si tuviera un score
 nuevo. Los TPS anteriores son smokes de contexto/tool calling, no `TPS BCB`.
+
+### Control Q4 y sampling A/B (2026-08-28)
+
+Como control comparable adicional, `sys-48-katcoder-262k` y su clon
+`51d46758-fd7c-4d3c-8018-23154a2e0062` usaron Q4_K_M, K/V `q8_0`, contexto
+262k, B512/U64, fit adaptativo, reasoning off, el mismo agente/harness y la
+misma semilla. El control mantuvo `temp 0.60`, `top-p 0.95`, `top-k 20`,
+`min-p 0.0`; el clon usó `temp 0.30`, `top-p 0.90`, `top-k 20`, `min-p 0.05`.
+
+| Perfil | HE0 | HE20 | BCB | Estado para el listado |
+|---|---:|---:|---:|---|
+| KAT Q4 vigente, 262k | 3/3, 100%, sin reparación | 2/3 corridas completas; 18/20 primer intento | 3/8, 315,509 s, 84,18 tok/s, una pasada | **Speed-first experimental**; no desplaza calidad 8/8 |
+| KAT Q4 sampling A/B, 262k | 3/3, 100%, sin reparación | 3/3 finales; 18/20 primer intento y 1 reparación por corrida | Sin resultado: BCB cancelado por un `llama-server` externo que ocupó puerto/GPU | **No promover aún**; falta BCB propio |
+
+El A/B fue ~5,4% más rápido en warm HE0 (29,08 s vs. 30,66 s), pero ~29,3%
+más lento en warm HE20 (253,81 s vs. 179,42 s en la métrica disponible) y
+necesitó reparación en todos los HE20. Por ello se anotan las variantes 64k,
+131k y 262k de APEX como candidatos experimentales en este listado, pero sólo
+SOL/TERRA/LUNA/METEOR conservan promoción consolidada.
 
 ## Recomendación principal: SOL, TERRA, LUNA y METEOR
 

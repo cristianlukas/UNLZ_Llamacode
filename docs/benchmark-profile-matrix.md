@@ -1,6 +1,6 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-21. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-28. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
@@ -13,6 +13,64 @@ menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias
 limitadas a `q8_0`; sus tiempos y scores anteriores no se mezclan con los nuevos.
 Los `mmproj` `F16/BF16` se conservan únicamente como proyectores auxiliares de
 visión y no representan el quant de los pesos ni del KV.
+
+## Validación KAT Q4/A-B y APEX — 2026-08-28
+
+Esta actualización agrega corridas headless nuevas sin reemplazar las filas
+históricas. El control Q4 y su clon A/B usaron el mismo modelo, KV, contexto,
+seed, agente y harness; sólo cambiaron `temp`, `top-p` y `min-p`:
+
+| Perfil | Receta efectiva | HE0 (3 pasadas) | HE20 (3 pasadas) | BCB | Lectura |
+|---|---|---:|---:|---:|---|
+| `sys-48-katcoder-262k` | Q4_K_M, K/V `q8_0`, ctx 262k, B512/U64, fit on, reasoning off, `0.60/0.95/top-k20/min-p0.0` | 3/3, 100%, 0 reparaciones | 2/3 corridas completas; 18/20 primer intento; una corrida terminó 19/20 con `failureKind=quality` | 3/8 en primera pasada, 315,509 s, 84,18 tok/s | Control rápido; no estable como calidad consolidada en esta repetición |
+| `51d46758-fd7c-4d3c-8018-23154a2e0062` | Misma huella; `0.30/0.90/top-k20/min-p0.05` | 3/3, 100%, 0 reparaciones | 3/3 finales, 18/20 primer intento en cada una, 1 reparación por corrida | No evaluable: el BCB fue cancelado por contención externa antes de completar el A/B | Mejor cobertura final tras reparación, pero no candidato de calidad sin BCB |
+
+En HE0 el A/B tuvo una mediana warm de `29,08 s` frente a `30,66 s` del
+control (aprox. 5,4% mejor). En HE20, en cambio, el control fue aprox. 29,3%
+más rápido en la métrica warm disponible (`179,42 s` frente a `253,81 s` del
+A/B), con una corrida fallida y dispersión de resultados; por eso no se trata
+como una victoria definitiva de velocidad. La huella verificable del control
+incluye `--model .../Kwaipilot_KAT-Coder-V2.5-Dev-Q4_K_M.gguf`,
+`--ctx-size 262144`, `--batch-size 512`, `--ubatch-size 64`,
+`--cache-type-k q8_0 --cache-type-v q8_0`, `--fit on`,
+`--temp 0.60 --top-p 0.95 --top-k 20 --min-p 0.0`, `--jinja`,
+`--skip-chat-parsing`, el template `kat-coder-tools.jinja` y
+`--reasoning off`; el clon sólo sustituyó los tres valores de sampling.
+La telemetría de las corridas HE20 fue aproximadamente 13,5–14,2 GiB en GPU0,
+12,9–13,1 GiB en GPU1 y 26,5–27,2 GiB de RAM.
+
+El BCB del control es un resultado de calidad parcial, no una repetición final:
+`BigCodeBench-Hard_8_tems__20260827_225118` produjo 3/8 en primer intento,
+sin reparaciones, `failureKind=quality`, 315,509 s y 84,18 tok/s. El A/B no
+obtuvo BCB: durante la segunda etapa apareció un `llama-server` ajeno de
+DeepSeek en el puerto 8021, con ambas RTX 3090 ocupadas, y se canceló la
+corrida propia sin cerrar ni tocar ese proceso. Las filas antiguas que dicen
+“BCB infraestructura” corresponden a conexiones cerradas/transportes rotos y
+no deben convertirse en cero; la fila histórica 3/8 y este 3/8 parcial son
+scores evaluables, pero ninguno habilita promoción frente a los perfiles 8/8.
+
+El perfil APEX exacto sí tiene los artefactos locales
+`D:\Models\llamacpp\KAT-Coder-V2.5-Dev-MTP-APEX-GGUF\KAT-Coder-V2.5-Dev-MTP-APEX-i-quality-v2.gguf`
+(SHA-256 `F4501B4F54577DA43A1D088BD3B81CE4DF900A553F5407BC5D29BCBE54AF66EF`)
+y `mmproj-F16.gguf` (SHA-256
+`71F3CBC1F7CC0F30D09D41CFA924C0060827EBC33BF15ACE7E86661E856F0160`). El
+smoke confirmó texto, XML KAT (`read_file` sobre `README.md`) e imagen; HE0
+fue 1/1, 100%, sin reparaciones, en 90,747 s con MTP2, y el smoke directo
+midió 17/22 tokens MTP aceptados (77,27%) y 113,01 tok/s de decode.
+
+| Contexto configurado | Prompt efectivo | Resultado del smoke APEX + mmproj, KV `q8_0` |
+|---:|---:|---|
+| 32k | 23.508 tokens | estable; PP 960,64; decode 113,88 tok/s; MTP 8/8 |
+| 64k | 47.622 tokens | marcador exacto; PP 903,50; decode 103,08 tok/s; MTP 6/8 |
+| 131k | 99.371 tokens | marcador exacto; PP 801,32; decode 98,78 tok/s; MTP 8/8 |
+| 262k | 199.856 tokens | cargó sin OOM; PP 633,02; decode 73,47 tok/s; MTP 7/8 |
+| cerca del límite 262k | 244.505 tokens | sin OOM, pero marcador truncado; decode 39,89 tok/s; MTP 4/4 |
+
+Los 64k y 131k quedan como candidatos experimentales de visión/herramientas;
+262k demuestra capacidad de carga, no recuperación de calidad al límite. MTP3
+no superó a MTP2 en el smoke agregado (56,9% frente a 63,5% de aceptación y
+115,53 frente a 123,62 tok/s predichos). APEX no entra todavía en la tabla de
+calidad: faltan HE20 y BCB válidos bajo la misma huella.
 
 ## Matriz calidad / velocidad — corte 2026-08-21
 
@@ -130,7 +188,7 @@ se suman a los 51 activos:
 
 | Familia | Motivo de quedar fuera de la cola activa |
 |---|---|
-| KAT APEX-MTP | Experimental; el perfil opt-in `sys-48-katcoder-mtp-vision` ya está cableado con `mmproj-F16`, pero requiere descargar ambos GGUF y todavía no tiene HE0 validado en este checkout. Queda fuera de la cola automática, no descartado por calidad. |
+| KAT APEX-MTP | Experimental; el perfil opt-in `sys-48-katcoder-mtp-vision` está cableado con `mmproj-F16` y los dos GGUF exactos ya están disponibles. HE0 1/1 y los smokes de texto, XML e imagen son válidos; HE20/BCB siguen pendientes. Queda fuera de la cola automática, no descartado por calidad. |
 | Dynamic V3 DFlash2 local | El loader falla antes de inferir con `wrong number of tensors; expected 81, got 58` y errores `FGDN_AR`. Es incompatibilidad de arquitectura/backend, no una mala puntuación del modelo. |
 | Dynamic V3 DFlash2 vLLM | No es un benchmark local utilizable en Windows nativo: necesita vLLM parcheado, drafter externo y un endpoint Linux/WSL o remoto preparado. Se conserva como experimento externo, separado de llama.cpp. |
 | BigBang base | HE0 no produjo un resultado evaluable y no llegó a BCB. |

@@ -5,7 +5,7 @@ incorporadas al flujo de LlamaCode, junto con la lectura operativa de los
 resultados disponibles. Es una guía de decisión, no reemplaza los JSON brutos ni
 la matriz histórica.
 
-**Corte de esta revisión:** 2026-08-21.  
+**Corte de esta revisión:** 2026-08-28.
 **Hardware de referencia:** 2 × RTX 3090 de 24 GB, 48 GB de VRAM agregada.  
 **Suites canónicas:** HumanEval/0, HumanEval/20 y BigCodeBench/8.  
 **Ejecución:** un perfil por vez, HE0 → HE20 → BCB, con la misma huella efectiva
@@ -27,6 +27,46 @@ sí es un resultado de calidad, aunque sea bajo.
 No se mezclan resultados con distinto modelo, runtime, configuración efectiva,
 harness o perfil de agente. Cuando el mismo perfil aparece con varios harnesses,
 la tabla los conserva en filas/grupos separados.
+
+## Actualización KAT Q4/A-B y APEX — 2026-08-28
+
+La nueva campaña compara el KAT Q4_K_M vigente contra un clon con la misma
+huella y sólo `temp 0.30`, `top-p 0.90` y `min-p 0.05` (control:
+`0.60/0.95/min-p 0.0`, `top-k 20`). Ambos usaron K/V `q8_0`, contexto 262k,
+B512/U64, fit adaptativo, reasoning off, agente Máximo y el harness legacy.
+
+| Perfil | HE0 | HE20 | BCB | Telemetría/decisión |
+|---|---:|---:|---:|---|
+| Q4 vigente `sys-48-katcoder-262k` | 3/3, 100%, sin reparación | 2/3 corridas completas; 18/20 de primer intento; una quedó 19/20 con fallo de calidad | 3/8, 315,509 s, 84,18 tok/s, una primera pasada | Control speed-first; el 3/8 es parcial evaluable, pero no supera a los perfiles 8/8 |
+| A/B `51d46758-fd7c-4d3c-8018-23154a2e0062` | 3/3, 100%, sin reparación | 3/3 finales; 18/20 primer intento y 1 reparación en cada corrida | Sin BCB: una inferencia DeepSeek ajena ocupó puerto 8021 y ambas GPU; corrida cancelada sin tocarla | No promover: mejora HE0 y recuperación tras reparación, pero fue ~29,3% más lento en warm HE20 y carece de BCB |
+
+El A/B redujo el warm time-to-first-attempt de HE0 de 30,66 s a 29,08 s
+(~5,4%), pero la ventaja no se sostuvo en HE20: 253,81 s frente a 179,42 s
+del control en la métrica warm disponible. La comparación de HE20 debe leerse
+con cautela porque el control tuvo una corrida fallida; aun así, no respalda
+promover el A/B como perfil “mejor”. La medición BCB actual del control
+reconcilia la discrepancia documental: la fila histórica 3/8 es un score
+parcial válido de otra huella/corte, las corridas `Connection closed` son
+infraestructura y el 3/8 de esta campaña es calidad parcial, no un 8/8 ni una
+repetición final de tres pasadas.
+
+El KAT APEX-MTP multimodal usa exactamente el GGUF I-Quality-v2 y
+`mmproj-F16.gguf` locales, con K/V `q8_0` y MTP2. Pasó HE0 1/1 sin reparación;
+el smoke produjo XML KAT válido (`read_file` + `README.md`), imagen y 17/22
+tokens MTP aceptados con 113,01 tok/s de decode. Sus smokes de contexto fueron:
+
+| Contexto | Prompt efectivo | Evidencia | Estado |
+|---:|---:|---|---|
+| 32k | 23.508 | PP 960,64; decode 113,88 tok/s; MTP 8/8 | Experimental, visión/tools |
+| 64k | 47.622 | marcador exacto; PP 903,50; decode 103,08; MTP 6/8 | Experimental recomendado |
+| 131k | 99.371 | marcador exacto; PP 801,32; decode 98,78; MTP 8/8 | Experimental recomendado |
+| 262k | 199.856 | carga sin OOM; PP 633,02; decode 73,47; MTP 7/8 | Experimental, no calidad al límite |
+| ~244,5k | 244.505 | sin OOM, pero marcador truncado; decode 39,89; MTP 4/4 | Capacidad, no promoción |
+
+APEX 64k/131k merece figurar como candidato experimental para visión y
+herramientas; no desplaza los perfiles SOL/TERRA/LUNA porque todavía no tiene
+HE20 y BCB válidos. MTP3 tampoco se promueve: en el smoke agregado quedó por
+debajo de MTP2 (56,9% vs. 63,5% de aceptación; 115,53 vs. 123,62 tok/s).
 
 ## Mejoras de interfaz y observabilidad
 
