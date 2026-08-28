@@ -407,3 +407,30 @@ servidor OpenAI-compatible (`/health` y `/v1/chat/completions`) con respuesta
 válida, y se cerró el proceso propio dejando libre el puerto 18080. La corrida
 completa de perfiles no se lanzó: sigue requiriendo una campaña controlada y no
 se mezcla con el ranking HE0/HE20/BCB.
+
+## 2026-08-27 — HumanEval 20 real y preparación de campaña Release
+
+Se ejecutó una corrida auxiliar con el modelo local real, `HumanEval (20
+ítems)`, tres pasadas por cada uno de dos perfiles. El artefacto completo y el
+`comparison.json` están en
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs\HumanEval_20_tems__20260827_222122`.
+
+| Perfil | Pasadas | Resultado | Tiempo total mediano | TPS mediano | Observación |
+|---|---:|---:|---:|---:|---|
+| `174_KAT Q4 K_M · sampling A/B 0.30/0.90` | 3/3 | 20/20 en todas | 277,601 s | 84,18 | estable en esta muestra |
+| `FAST - KAT2-Coder-7-8-26` | 2/3 | 19/20, 20/20, 20/20 | 214,785 s | 106,30 | primer resultado falló por calidad |
+
+El agregado fue 5/6 corridas aceptadas, sin fallo de transporte ni de
+infraestructura. La comparación estadística es auxiliar y no promueve ni
+reemplaza los resultados históricos de HE0/HE20/BCB.
+
+El binario Release se compiló con CMake y se desplegó con `windeployqt
+--release`; el smoke Release con reinicio y scheduler pasó. No se ejecutó
+`build.bat` porque su `taskkill /F /IM LlamaCode.exe` habría terminado un
+daemon Debug ajeno que seguía abierto en 8877.
+
+También se inició la campaña oficial post-corrección con Release en 8765. La
+campaña detectó 86 perfiles benchmark listos y respeta HE0 → HE20 → BCB; al
+momento del registro estaba en el primer perfil, BCB, prompt 1/8. Esta entrada
+queda deliberadamente abierta hasta que el runner produzca estados finales o
+agote su política de timeout/reintentos.

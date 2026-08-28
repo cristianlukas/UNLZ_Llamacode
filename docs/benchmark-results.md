@@ -129,3 +129,26 @@ pasar HE0, quedan bloqueadas y no se ejecutan HE20 ni BCB.
 Cada cambio debe registrar primero HE0, después HE20 y finalmente BCB. Si se
 modifica perfil, binario, harness o agente de forma material, los resultados
 anteriores quedan marcados como históricos y se repite la cadena desde HE0.
+
+## Corrida auxiliar HumanEval 20 — 2026-08-27
+
+Esta corrida usa modelo real y sirve como control de agente/sampling; no
+reemplaza la cadena oficial HE0 → HE20 → BCB de la tabla operativa. Artefactos:
+`%LOCALAPPDATA%\LlamaCode\LlamaCode\benchmark-runs\HumanEval_20_tems__20260827_222122`.
+
+| Perfil | HE20 | Pasadas | Tiempo total mediano | TPS mediano | Estado |
+|---|---:|---:|---:|---:|---|
+| `174_KAT Q4 K_M · sampling A/B 0.30/0.90` (`51d46758-fd7c-4d3c-8018-23154a2e0062`) | 20/20 | 3/3 | 277,601 s | 84,18 | Estable |
+| `FAST - KAT2-Coder-7-8-26` (`sys-48-katcoder-262k`) | 20/20 en 2/3 | 2/3 | 214,785 s | 106,30 | Una pasada 19/20 por calidad |
+
+El `comparison.json` persistido registra 5/6 corridas aceptadas y no muestra
+fallo de infraestructura. No se promueve un ganador con esta muestra auxiliar.
+
+## Campaña oficial en curso — 2026-08-27
+
+El runner `tools/run-benchmark-post-correction.ps1` se inició con el binario
+Release en `127.0.0.1:8765`, detectó 86 perfiles listos y está ejecutando en
+serie HE0 → HE20 → BCB. Al momento de esta anotación se encuentra en
+`141_QUALITY - DeepSeek Fusion leloch`, BCB, prompt 1/8; por lo tanto las
+columnas oficiales no se actualizan ni se considera cerrada la campaña hasta
+que exista un resultado persistido o un cierre explícito del runner.
