@@ -8,16 +8,14 @@ están pausados actualmente: la instrumentación de memoria fue corregida y pas�
 ese cambio. Por eso no presento como nuevos resultados las corridas inválidas
 por infraestructura.
 
-El catálogo fuente contiene 23 perfiles base con `benchmark=true` (5 de sistema
-y 18 de usuario), pero el catálogo vivo expande además las variantes
-declarativas de benchmark. Al iniciar la campaña post-corrección, LlamaCode
-reportó **83 perfiles `benchmark=true` listos**: 23 bases + 60 variantes. La
-tabla detallada de abajo conserva los 23 perfiles base; las variantes se
-agregarán al consolidado post-campaña con su propia huella, memoria y etapa.
-El número anterior de 51 correspondía a una fotografía histórica y tampoco es
-el total vigente. La campaña post-corrección del 2026-08-28 llegó hasta el
-perfil 58/86 antes de detenerse intencionalmente; sus resultados parciales y el
-conteo de cierres se detallan en `benchmark-results-history.md`.
+El catálogo fuente contiene perfiles base y variantes declarativas. En la
+campaña post-corrección, LlamaCode reportó **86 perfiles `benchmark=true`
+listos**. La campaña del 2026-08-28 llegó hasta el perfil 58/86 antes de
+detenerse intencionalmente; sus resultados parciales, descartes y el inventario
+fila por fila se detallan en
+[`benchmark-profile-ledger-2026-08.md`](benchmark-profile-ledger-2026-08.md).
+La tabla de abajo sigue siendo el resumen de promoción; no pretende reemplazar
+el ledger ni convertir perfiles no alcanzados en descartados.
 
 ## Cómo leer la tabla
 

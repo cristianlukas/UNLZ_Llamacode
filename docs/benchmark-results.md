@@ -4,6 +4,10 @@ Este archivo es la tabla operativa vigente. Cada mejora de perfil, harness,
 agente o infraestructura debe actualizar esta tabla y agregar una entrada en
 [`benchmark-results-history.md`](benchmark-results-history.md).
 
+Para el inventario completo por perfil —incluidos descartados, bloqueados,
+retirados, binarios, quantizaciones, configuración efectiva, huellas y métricas
+por etapa— consultar el [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md).
+
 Última actualización: 2026-08-28.
 
 ## Variantes ngram para comparar

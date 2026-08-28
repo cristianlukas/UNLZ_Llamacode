@@ -1,6 +1,12 @@
 # Historia, descubrimientos y anotaciones de benchmarking
 
 Este archivo es el espejo histórico de [`benchmark-results.md`](benchmark-results.md).
+El detalle auditable por perfil está consolidado en el [registro detallado de
+perfiles](benchmark-profile-ledger-2026-08.md): conserva identidad, modelo,
+quant, binario, configuración, huella, métricas, causa de descarte y estado de
+los perfiles no alcanzados. Este historial conserva además la narrativa y los
+eventos operativos; ambos documentos se complementan y no reemplazan resultados
+anteriores.
 
 ## 2026-08-21 — Consolidación de ranking y casos de uso
 

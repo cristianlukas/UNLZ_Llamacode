@@ -24,6 +24,12 @@ La historia de corridas, descubrimientos, fallos y decisiones se conserva en
 [`benchmark-results-history.md`](benchmark-results-history.md). Toda mejora debe
 actualizar ambos archivos sin borrar los resultados históricos.
 
+El detalle fila por fila de perfiles ejecutados, descartados, bloqueos de
+infraestructura, quantizaciones, binarios, huellas y métricas se conserva en el
+[registro detallado de perfiles](benchmark-profile-ledger-2026-08.md). Ese
+registro debe crecer por adición: no se borran los intentos anteriores ni se
+convierte una falla de transporte en cero de calidad.
+
 El ranking por caso de uso, la lectura de los perfiles Qwen3.8/DFlash2/Ling y el
 catálogo de mejoras de las interfaces se consolidan en
 [`benchmark-ranking-and-use-cases.md`](benchmark-ranking-and-use-cases.md).

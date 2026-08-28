@@ -8,6 +8,12 @@ La tabla consolidada vigente de todos los perfiles activos, junto con las
 recomendaciones SOL/TERRA/LUNA/METEOR y los casos de uso, está en
 [Tabla final de benchmarks y recomendaciones](benchmark-final-table.md).
 
+El [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md)
+contiene la tabla fila por fila de la campaña de 86 candidatos: descartes,
+motivos, binarios, quantizaciones, configuración efectiva, huellas y métricas
+por etapa. Esta matriz conserva el resumen comparativo y no reemplaza ese
+inventario.
+
 Política vigente: los pesos del modelo principal y el KV K/V deben ser `q8_0` o
 menor. Las variantes históricas con KV `f16` fueron reemplazadas por copias
 limitadas a `q8_0`; sus tiempos y scores anteriores no se mezclan con los nuevos.
