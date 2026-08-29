@@ -59,3 +59,25 @@ Después del build se verificó:
 `C:\Users\cristian\Documents\LlamaCode\build\Debug\LlamaCode.exe` — existente, tamaño observado `26,113,024` bytes.
 
 Los daemons y probes propios fueron detenidos por sus bloques de limpieza; los directorios temporales de las ejecuciones fueron eliminados. No se dejó ningún proceso, servidor ni probe propio activo al finalizar la campaña.
+
+## Revalidación posterior con PC libre — 2026-08-29 03:27–03:39
+
+- Antes de actuar se volvieron a leer `AGENTS.md` y `README.md`; `.llamacode\\active_work.json` quedó en `none`.
+- `build_coord.ps1 -Lane build/tests -Action status`: ambas lanes `FREE` antes y después de la campaña.
+- La única tarea de Codex activa era esta validación; las demás tareas del repo estaban `idle` o `notLoaded`. RAM usada: `21,7%` (101.979 MB libres de 130.214 MB); las dos RTX 3090 estaban prácticamente ociosas (`0%` y `1%`, 1.064/839 MiB usados).
+- Working tree: se preservaron sin tocar las modificaciones ajenas preexistentes (`.gitignore`, `CMakeLists.txt`, `README.md`, `assets/update/latest.json`, documentación, perfiles, `src/AppController.h`, `src/main.cpp`, `tests/test_tuner.cpp`, `artifacts/`, `build_tests_aux/`, `build_tests_final/` y `tools/run_qwen38_flash_next_campaign.ps1`).
+
+| Comando | Resultado | Tiempo / observaciones |
+|---|---|---|
+| `cmd /c tests.bat Debug` | PASS | CTest: 73/73, `Total Test time (real) = 101.84 sec`; suites Python: 6/6 y 8/8. Incluyó agent, Tasks, perfiles, OCR locator, VisualMatcher, QML, automatización y guards de probes OCR. |
+| `cmd /c build.bat Debug NOPAUSE` | PASS | Compilación incremental completa; generó `build\\Debug\\LlamaCode.exe`, actualizó el acceso directo Debug y liberó la lane. Persistieron advertencias conocidas de `dxcompiler.dll`/`dxil.dll` y `VCINSTALLDIR`; además aparecieron mensajes no fatales de cmd (`"M"` y `"EM"` no se reconocen) antes del deploy, con exit code 0. |
+| `tests\\headless_smoke.ps1` | PASS | Hardware/topología, matriz de rendimiento, ControlApi, TaskStore CRUD, persistencia y validación headless. |
+| `tests\\headless_smoke.ps1 -TestRestartPersistence` | PASS | Reinicio aislado y persistencia verificados. |
+| `tests\\headless_smoke.ps1 -TestSchedulerDaemon` | PASS | Scheduler daemon verificado. |
+| `tests\\headless_harness_smoke.ps1` | PASS | Health, catálogo/directivas, perfiles de agente, resumen, CRUD y aislamiento AppData. |
+| `tests\\headless_engineering_gate.ps1` | PASS | Workflows 6, task security 6, Tasks 22, AppController 108 y ControlApi 24; smoke HTTP OK. Un `QWARN` benigno por `0.0.0.0:8088` no impidió el PASS. |
+| `tests\\headless_persona_styles.ps1` | PASS | CRUD, análisis JSON, asociación, ranking, preview e import/export. |
+| `tools\\harness_sdk_smoke.py` | PASS | `NODE_SDK_OK` y `PYTHON_SDK_OK`. |
+| `tests\\dual_gpu_voice_smoke.ps1 -RequireRtx3090` | PASS | 2 RTX 3090; voz en GPU 0; split `1,1.107`; memoria física libre reportada: `23.259 MiB`. |
+
+No se ejecutaron modelos reales, benchmarks largos ni probes interactivos que pudieran robar foco o mover mouse/teclado. No se detectó un bug propio reproducible que justificara modificar C++/QML/core. La revalidación dejó libres las lanes y no dejó `LlamaCode`, `llama-server`, `ctest`, `cmake`, `MSBuild`, servidores ni probes propios activos. No se actualizó `README.md` porque no cambió ninguna capacidad ni recomendación.
