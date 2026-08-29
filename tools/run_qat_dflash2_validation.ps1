@@ -19,7 +19,7 @@ $template = (Resolve-Path (Join-Path $PSScriptRoot '..\assets\chat-templates\qwe
 $outputRoot = Join-Path $PSScriptRoot ('..\docs\benchmark-artifacts\' + $RunTag)
 $base = "http://127.0.0.1:$Port"
 
-foreach ($required in @($server, $model, $draftQ4, $template)) {
+foreach ($required in @($server, $model, $draftQ4, $mtpQ4, $template)) {
     if (!(Test-Path -LiteralPath $required)) {
         throw "Missing required file: $required"
     }
@@ -111,7 +111,7 @@ function Run-Mode([string]$label, [string[]]$specArgs) {
         '--reasoning', 'off', '--jinja', '--chat-template-file', $template,
         '--metrics', '--no-warmup', '--no-context-shift', '--predict', "$MaxTokens",
         '--fit', 'on'
-    ) + $specArgs
+    ) + @($specArgs | Where-Object { $null -ne $_ -and $_ -ne '' })
     $process = Start-Process -FilePath $server -ArgumentList $args -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru -WindowStyle Hidden
     $rows = @()
     $metrics = ''
@@ -152,6 +152,7 @@ $manifest = @(
     Get-ManifestEntry $server
     Get-ManifestEntry $model
     Get-ManifestEntry $draftQ4
+    Get-ManifestEntry $mtpQ4
     Get-ManifestEntry $template
 )
 
@@ -183,16 +184,23 @@ $summary = @($runs | Where-Object { $_.rows } | ForEach-Object {
     }
 })
 
+$versionErrorAction = $ErrorActionPreference
+try {
+    $ErrorActionPreference = 'Continue'
+    $serverVersion = [string]((& $server --version 2>&1 | Select-Object -First 1))
+} finally {
+    $ErrorActionPreference = $versionErrorAction
+}
 $result = [ordered]@{
     generatedAt = (Get-Date).ToString('o')
     server = $server
-    serverVersion = ((& $server --version 2>&1 | Select-Object -First 1).ToString())
+    serverVersion = $serverVersion
     contextSize = $ContextSize
     maxTokens = $MaxTokens
     hardware = '2x RTX 3090 24GB; split-mode layer; tensor-split 1,1'
     sampling = [ordered]@{ temperature = 0.6; topP = 0.95; topK = 20; minP = 0.0; repeatPenalty = 1.0; presencePenalty = 0.0; seed = 42 }
     manifest = $manifest
-    omissions = @('QAT Q2 main GGUF not present locally', 'DFlash2 Q2_K_S-MIX draft not present locally', 'MTP omitted: no verified compatible artifact for this standard Qwen3.8 target')
+    omissions = @('QAT Q2 main GGUF not present locally', 'DFlash2 Q2_K_S-MIX draft not present locally', '131k stages are capacity smokes when max_tokens is intentionally capped; they are not quality verdicts')
     summary = $summary
     runs = $runs
 }
