@@ -1,5 +1,30 @@
 # Diagnóstico y rendimiento multi-GPU
 
+## Afinidad de perfiles por GPU
+
+El menú de lanzamiento conserva el gate de VRAM, pero además calcula una señal
+de afinidad contra el hardware detectado. Una configuración cuyo
+`minVramGb` sólo puede alcanzarse sumando varias placas se marca como perfil
+dual-GPU; por ejemplo, 2× RTX 3090 habilita y enfatiza los perfiles de 48 GB.
+
+Los motores especializados pueden declarar una afinidad opcional en
+`assets/system_profiles.json`:
+
+```json
+"hardwareAffinity": {
+  "gpuNamePatterns": ["RTX 3090"],
+  "requireGpuName": true,
+  "gpuScope": "single",
+  "label": "Nativa para RTX 3090 · 1 GPU"
+}
+```
+
+La coincidencia sólo agrega la marca `🎯` y datos `gpuAffinity*` al menú; no
+oculta ni bloquea perfiles. Así una NInfer para una GPU concreta puede convivir
+con perfiles llama.cpp que aprovechan la VRAM agregada. La selección sigue
+siendo una recomendación: el rendimiento final depende del modelo, backend,
+reparto, enlace PCIe y calidad medida.
+
 LlamaCode conserva el detalle de cada GPU detectada por `nvidia-smi` dentro de
 `hardwareSummary.gpus`. Cada entrada incluye VRAM total/libre, bus PCIe,
 generación, lanes, temperatura y potencia cuando el driver los informa.

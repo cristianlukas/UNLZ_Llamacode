@@ -17,6 +17,7 @@ private slots:
     void voicePlanRejectsModelThatDoesNotFit();
     void weakPciePrefersLayer();
     void fastPcieAllowsTensor();
+    void profileAffinityMatchesDualGpuAndExactName();
     void fingerprintIsStable();
     void scoreRespectsObjectiveAndStability();
     void scoresRealBenchmarkArtifact();
@@ -167,6 +168,43 @@ void HardwareDiagnosticsTests::fastPcieAllowsTensor()
                  {QStringLiteral("gpus"), gpus},
                  {QStringLiteral("p2pAvailable"), true}}),
              QStringLiteral("tensor"));
+}
+
+void HardwareDiagnosticsTests::profileAffinityMatchesDualGpuAndExactName()
+{
+    const QVariantList gpus{
+        QVariantMap{{QStringLiteral("name"), QStringLiteral("NVIDIA GeForce RTX 3090")},
+                    {QStringLiteral("totalMb"), 24576}},
+        QVariantMap{{QStringLiteral("name"), QStringLiteral("NVIDIA GeForce RTX 3090")},
+                    {QStringLiteral("totalMb"), 24576}}};
+    const QVariantMap hardware{
+        {QStringLiteral("gpus"), gpus},
+        {QStringLiteral("gpuCount"), 2},
+        {QStringLiteral("vramGb"), 24.0},
+        {QStringLiteral("vramTotalGb"), 48.0}};
+
+    const QVariantMap dual = HardwareDiagnostics::profileHardwareAffinity(
+        hardware, QVariantMap{{QStringLiteral("minVramGb"), 48.0}});
+    QVERIFY(dual.value(QStringLiteral("matched")).toBool());
+    QCOMPARE(dual.value(QStringLiteral("kind")).toString(), QStringLiteral("dual-gpu"));
+    QVERIFY(dual.value(QStringLiteral("label")).toString().contains(QStringLiteral("48")));
+
+    const QVariantMap exact = HardwareDiagnostics::profileHardwareAffinity(
+        hardware, QVariantMap{
+            {QStringLiteral("minVramGb"), 24.0},
+            {QStringLiteral("hardwareAffinity"), QVariantMap{
+                {QStringLiteral("gpuNamePatterns"), QStringList{QStringLiteral("RTX 3090")}},
+                {QStringLiteral("requireGpuName"), true}}}});
+    QVERIFY(exact.value(QStringLiteral("matched")).toBool());
+    QCOMPARE(exact.value(QStringLiteral("kind")).toString(), QStringLiteral("exact-gpu"));
+
+    const QVariantMap other = HardwareDiagnostics::profileHardwareAffinity(
+        hardware, QVariantMap{
+            {QStringLiteral("hardwareAffinity"), QVariantMap{
+                {QStringLiteral("gpuNamePatterns"), QStringList{QStringLiteral("RTX 4090")}},
+                {QStringLiteral("requireGpuName"), true}}}});
+    QVERIFY(!other.value(QStringLiteral("matched")).toBool());
+    QCOMPARE(other.value(QStringLiteral("kind")).toString(), QStringLiteral("other-gpu"));
 }
 
 void HardwareDiagnosticsTests::fingerprintIsStable()

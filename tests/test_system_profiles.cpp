@@ -84,6 +84,7 @@ private slots:
     void bundle_miniMaxIsOptInAndMemoryGated();
     void bundle_ultraQ48gbIsDualGpuVariantOfUltraQ();
     void controller_launchMenuGatesByTotalVramAcrossGpus();
+    void controller_launchMenuAnnotatesGpuAffinity();
     void bundle_48gbFamilyIsBenchmarkableAndDualGpu();
     void controller_duplicateBakesResolvedBinary();
 
@@ -1558,6 +1559,32 @@ void SystemProfilesTests::controller_launchMenuGatesByTotalVramAcrossGpus()
         if (m.value("id").toString() != id) continue;
         QCOMPARE(m.value("minVram").toDouble(), 48.0);
     }
+}
+
+void SystemProfilesTests::controller_launchMenuAnnotatesGpuAffinity()
+{
+    AppController app;
+    app.setHardwareSummaryForTest(24.0, 128.0,
+                                  QStringLiteral("NVIDIA GeForce RTX 3090"), 48.0, 2);
+    const QVariantList menu = app.launchMenu();
+    bool dualMarked = false;
+    bool ninferMarked = false;
+    for (const QVariant &value : menu) {
+        const QVariantMap item = value.toMap();
+        const QString id = item.value(QStringLiteral("id")).toString();
+        if (id == QStringLiteral("sys-48-thinkingcap-131k")) {
+            dualMarked = item.value(QStringLiteral("gpuAffinityMatched")).toBool();
+            QVERIFY(item.value(QStringLiteral("displayName")).toString().startsWith(QStringLiteral("🎯 ")));
+            QVERIFY(item.value(QStringLiteral("gpuAffinityLabel")).toString().contains(QStringLiteral("48")));
+        }
+        if (id == QStringLiteral("sys-ninfer3090-qwen38")) {
+            ninferMarked = item.value(QStringLiteral("gpuAffinityMatched")).toBool();
+            QVERIFY(item.value(QStringLiteral("gpuAffinityLabel")).toString()
+                        .contains(QStringLiteral("RTX 3090")));
+        }
+    }
+    QVERIFY(dualMarked);
+    QVERIFY(ninferMarked);
 }
 
 void SystemProfilesTests::bundle_ultraQAndHybridAreWiredAndOptIn()

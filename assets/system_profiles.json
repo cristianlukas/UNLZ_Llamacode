@@ -34,6 +34,12 @@
       "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
     ],
     "binaryKind": "ninfer3090",
+    "hardwareAffinity": {
+      "gpuNamePatterns": ["RTX 3090"],
+      "requireGpuName": true,
+      "gpuScope": "single",
+      "label": "Nativa para RTX 3090 · 1 GPU"
+    },
     "contextPresets": [4096, 8192, 16384],
     "comment": "Backend experimental NInfer-3090. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_27b.ninfer en el root NInfer-Qwen3.6-27B. Sólo texto; el artefacto incorpora tokenizer, template y MTP."
   },
@@ -74,6 +80,12 @@
       "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
     ],
     "binaryKind": "ninfer3090",
+    "hardwareAffinity": {
+      "gpuNamePatterns": ["RTX 3090"],
+      "requireGpuName": true,
+      "gpuScope": "single",
+      "label": "Nativa para RTX 3090 · 1 GPU"
+    },
     "contextPresets": [4096, 8192, 16384],
     "comment": "Backend experimental NInfer-3090 para coding. Requiere ninfer-serve registrado como flavor ninfer-3090 y qwen3_6_35b_a3b.ninfer en el root NInfer-Qwen3.6-35B-A3B. Usa MTP y prompt-lookup adaptativo; comparar HumanEval/0 y luego HumanEval/20 contra llama.cpp."
   },
@@ -112,6 +124,12 @@
       "--repeat-penalty", "1.0", "--presence-penalty", "0.0", "--reasoning", "on"
     ],
     "binaryKind": "ninfer3090",
+    "hardwareAffinity": {
+      "gpuNamePatterns": ["RTX 3090"],
+      "requireGpuName": true,
+      "gpuScope": "single",
+      "label": "Nativa para RTX 3090 · 1 GPU"
+    },
     "contextPresets": [4096, 8192, 16384],
     "comment": "Candidato HE0 → HE20 → BCB. Requiere qwen3_8_27b.ninfer de neroued/Qwen3.8-27B-NInfer y ninfer-serve revision 5232055+ registrado como flavor ninfer-3090. El artefacto incorpora visión/MTP, pero la app arranca NInfer en text-only y el model card declara que no ejecuta tool calls generadas: validar BCB como transporte antes de interpretar un score. La publicación upstream documenta RTX 5090; sólo usarlo en 3090 si el binario local fue adaptado y pasa smoke-test."
   },

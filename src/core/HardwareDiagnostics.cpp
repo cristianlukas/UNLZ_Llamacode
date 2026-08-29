@@ -52,6 +52,23 @@ QString compactNumber(double value)
     return out.isEmpty() ? QStringLiteral("0") : out;
 }
 
+QStringList stringListValue(const QVariantMap &map, const QString &key)
+{
+    const QVariant value = map.value(key);
+    if (value.canConvert<QStringList>())
+        return value.toStringList();
+    if (value.canConvert<QVariantList>()) {
+        QStringList out;
+        for (const QVariant &item : value.toList()) {
+            const QString text = item.toString().trimmed();
+            if (!text.isEmpty()) out.append(text);
+        }
+        return out;
+    }
+    const QString scalar = value.toString().trimmed();
+    return scalar.isEmpty() ? QStringList{} : QStringList{scalar};
+}
+
 }  // namespace
 
 QVariantList HardwareDiagnostics::parseNvidiaSmiCsv(const QString &csv)
@@ -392,6 +409,115 @@ QString HardwareDiagnostics::recommendedSplitMode(const QVariantMap &hardware)
     if (!hardware.value(QStringLiteral("p2pAvailable")).toBool() || minBandwidth < 16.0)
         return QStringLiteral("layer");
     return QStringLiteral("tensor");
+}
+
+QVariantMap HardwareDiagnostics::profileHardwareAffinity(const QVariantMap &hardware,
+                                                         const QVariantMap &profile)
+{
+    const QVariantList rawGpus = hardware.value(QStringLiteral("gpus")).toList();
+    const int gpuCount = rawGpus.isEmpty()
+        ? hardware.value(QStringLiteral("gpuCount")).toInt()
+        : rawGpus.size();
+    double maxGpuGb = qMax(0.0, hardware.value(QStringLiteral("vramGb")).toDouble());
+    const double reportedTotalGpuGb =
+        qMax(0.0, hardware.value(QStringLiteral("vramTotalGb")).toDouble());
+    double totalGpuGb = 0.0;
+    QStringList gpuNames;
+    for (const QVariant &value : rawGpus) {
+        const QVariantMap gpu = value.toMap();
+        const double totalMb = qMax(0.0, gpu.value(QStringLiteral("totalMb")).toDouble());
+        maxGpuGb = qMax(maxGpuGb, totalMb / 1024.0);
+        totalGpuGb += totalMb / 1024.0;
+        const QString name = gpu.value(QStringLiteral("name")).toString().trimmed();
+        if (!name.isEmpty()) gpuNames.append(name);
+    }
+    if (reportedTotalGpuGb > totalGpuGb + 0.01)
+        totalGpuGb = reportedTotalGpuGb;
+    if (totalGpuGb <= 0.0)
+        totalGpuGb = reportedTotalGpuGb > 0.0 ? reportedTotalGpuGb : maxGpuGb;
+    if (gpuNames.isEmpty()) {
+        const QString name = hardware.value(QStringLiteral("gpuName")).toString().trimmed();
+        if (!name.isEmpty()) gpuNames.append(name);
+    }
+
+    const QVariantMap affinity = profile.value(QStringLiteral("hardwareAffinity")).toMap();
+    const QStringList patterns = stringListValue(affinity, QStringLiteral("gpuNamePatterns"));
+    const bool requireGpuName = affinity.value(QStringLiteral("requireGpuName")).toBool();
+    const int minGpuCount = qMax(0, affinity.value(QStringLiteral("minGpuCount")).toInt());
+    const int preferredGpuCount = qMax(0, affinity.value(QStringLiteral("preferredGpuCount")).toInt());
+    const double minVramGb = qMax(0.0, profile.value(QStringLiteral("minVramGb")).toDouble());
+
+    bool nameMatch = patterns.isEmpty();
+    if (!patterns.isEmpty()) {
+        nameMatch = false;
+        for (const QString &name : gpuNames) {
+            const QString foldedName = name.toCaseFolded();
+            for (const QString &pattern : patterns) {
+                if (!pattern.trimmed().isEmpty()
+                    && foldedName.contains(pattern.trimmed().toCaseFolded())) {
+                    nameMatch = true;
+                    break;
+                }
+            }
+            if (nameMatch) break;
+        }
+    }
+
+    const bool aggregateFit = gpuCount >= 2 && minVramGb > maxGpuGb + 0.01
+                               && totalGpuGb + 0.01 >= minVramGb;
+    const bool explicitMismatch = requireGpuName && !nameMatch;
+    const bool countMismatch = minGpuCount > 0 && gpuCount < minGpuCount;
+    int score = 0;
+    QStringList reasons;
+    QString kind = QStringLiteral("generic");
+    QString label;
+
+    if (aggregateFit && !explicitMismatch && !countMismatch) {
+        score += 60;
+        kind = QStringLiteral("dual-gpu");
+        label = QStringLiteral("Aprovecha %1 GPU · %2 GB combinados")
+                    .arg(gpuCount).arg(QString::number(totalGpuGb, 'f', 0));
+        reasons.append(QStringLiteral("requiere repartir el modelo entre varias GPU"));
+    }
+    if (!patterns.isEmpty() && nameMatch && !countMismatch) {
+        score += 35;
+        kind = aggregateFit ? QStringLiteral("dual-gpu-exact") : QStringLiteral("exact-gpu");
+        reasons.append(QStringLiteral("coincide con %1").arg(patterns.join(QStringLiteral(" / "))));
+    }
+    if (preferredGpuCount > 0 && preferredGpuCount == gpuCount && !countMismatch) {
+        score += 5;
+        reasons.append(QStringLiteral("cantidad de GPU preferida: %1").arg(preferredGpuCount));
+    }
+
+    score = qBound(0, score, 100);
+    const bool matched = score > 0 && !explicitMismatch && !countMismatch;
+    if (!matched) {
+        if (explicitMismatch) {
+            kind = QStringLiteral("other-gpu");
+            reasons = {QStringLiteral("el perfil pide %1, pero no coincide con la GPU detectada")
+                           .arg(patterns.join(QStringLiteral(" / "))) };
+        } else if (countMismatch) {
+            kind = QStringLiteral("insufficient-gpus");
+            reasons = {QStringLiteral("requiere al menos %1 GPU").arg(minGpuCount)};
+        } else {
+            reasons.clear();
+        }
+    }
+
+    if (matched && !affinity.value(QStringLiteral("label")).toString().trimmed().isEmpty())
+        label = affinity.value(QStringLiteral("label")).toString().trimmed();
+
+    return QVariantMap{
+        {QStringLiteral("score"), score},
+        {QStringLiteral("matched"), matched},
+        {QStringLiteral("kind"), kind},
+        {QStringLiteral("label"), label},
+        {QStringLiteral("reason"), reasons.join(QStringLiteral("; "))},
+        {QStringLiteral("gpuCount"), gpuCount},
+        {QStringLiteral("maxGpuGb"), maxGpuGb},
+        {QStringLiteral("totalGpuGb"), totalGpuGb},
+        {QStringLiteral("minVramGb"), minVramGb}
+    };
 }
 
 QVariantMap HardwareDiagnostics::performanceRecommendation(const QVariantMap &hardware,

@@ -14586,10 +14586,12 @@ QVariantList AppController::launchMenu()
     const double vram = qMax(m_hardwareSummary.value(QStringLiteral("vramTotalGb")).toDouble(),
                              m_hardwareSummary.value(QStringLiteral("vramGb")).toDouble());
     QHash<QString, double> minV;
+    QHash<QString, QVariantMap> profileMetadata;
     for (const QJsonValue &v : readSystemProfilesBundle()) {
         const QJsonObject e = v.toObject();
-        minV.insert(e.value(QStringLiteral("id")).toString(),
-                    e.value(QStringLiteral("minVramGb")).toDouble());
+        const QString id = e.value(QStringLiteral("id")).toString();
+        minV.insert(id, e.value(QStringLiteral("minVramGb")).toDouble());
+        profileMetadata.insert(id, e.toVariantMap());
     }
     QVariantList out;
     for (const QVariant &it : m_profiles.launchProfilesForMenu()) {
@@ -14599,6 +14601,16 @@ QVariantList AppController::launchMenu()
             if (vram > 0.0 && mv > vram + 0.01) continue;   // ocultar los de más VRAM
             m[QStringLiteral("minVram")] = mv;
             m[QStringLiteral("ready")] = systemProfileReady(m.value(QStringLiteral("id")).toString());
+            const QVariantMap affinity = HardwareDiagnostics::profileHardwareAffinity(
+                m_hardwareSummary, profileMetadata.value(m.value(QStringLiteral("id")).toString()));
+            m[QStringLiteral("gpuAffinityScore")] = affinity.value(QStringLiteral("score"));
+            m[QStringLiteral("gpuAffinityMatched")] = affinity.value(QStringLiteral("matched"));
+            m[QStringLiteral("gpuAffinityKind")] = affinity.value(QStringLiteral("kind"));
+            m[QStringLiteral("gpuAffinityLabel")] = affinity.value(QStringLiteral("label"));
+            m[QStringLiteral("gpuAffinityReason")] = affinity.value(QStringLiteral("reason"));
+            if (affinity.value(QStringLiteral("matched")).toBool())
+                m[QStringLiteral("displayName")] =
+                    QStringLiteral("🎯 ") + m.value(QStringLiteral("displayName")).toString();
         } else {
             m[QStringLiteral("ready")] = true;
         }

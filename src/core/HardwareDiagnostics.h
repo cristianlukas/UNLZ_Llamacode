@@ -24,6 +24,11 @@ public:
                                     double modelRequiredMb = 0.0);
     static QString hardwareFingerprint(const QVariantMap &hardware);
     static QString recommendedSplitMode(const QVariantMap &hardware);
+    // Evalua la afinidad declarativa de un perfil contra el hardware observado.
+    // No reemplaza el gate de VRAM: sólo aporta una señal de recomendación para
+    // distinguir perfiles genéricos, dual-GPU y motores afinados a una familia.
+    static QVariantMap profileHardwareAffinity(const QVariantMap &hardware,
+                                                const QVariantMap &profile);
     static QVariantMap performanceRecommendation(const QVariantMap &hardware,
                                                  const QString &target = {});
     static double performanceScore(const QVariantMap &sample, const QString &target = {});
