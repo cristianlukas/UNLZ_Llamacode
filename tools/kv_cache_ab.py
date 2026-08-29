@@ -4,7 +4,8 @@ The runner deliberately stays outside the application runtime. It starts one
 server per variant, waits for /health, runs the compiled qa_kv_cache probe and
 then compares the same deterministic NIAH cases. A JSON config keeps arbitrary
 llama-server flags and environment variables lossless on both Windows and
-Linux, which is important for sidecar-based runtimes.
+Linux, which is important for sidecar-based runtimes. Each variant may optionally
+override ``serverExe`` when an A/B comparison needs different runtime builds.
 """
 
 from __future__ import annotations
@@ -336,6 +337,11 @@ def validate_config(config: Mapping[str, Any]) -> Dict[str, Any]:
         if variant_id in seen:
             raise ValueError(f"id de variante duplicado: {variant_id}")
         seen.add(variant_id)
+        variant_server = str(variant.get("serverExe", server)).strip()
+        if not variant_server:
+            raise ValueError(f"variants[{index}].serverExe no puede estar vacio")
+        if launcher_kind == "wsl" and not PurePosixPath(variant_server).is_absolute():
+            raise ValueError(f"variants[{index}].serverExe debe ser una ruta absoluta Linux para WSL")
         args = _as_string_list(variant.get("args", []), f"variants[{index}].args")
         environment = variant.get("env", {})
         if not isinstance(environment, dict) or any(
@@ -343,7 +349,10 @@ def validate_config(config: Mapping[str, Any]) -> Dict[str, Any]:
             for key, value in environment.items()
         ):
             raise ValueError(f"variants[{index}].env debe ser un objeto string -> string")
-        normalized["variants"].append({"id": variant_id, "args": args, "env": dict(environment)})
+        normalized["variants"].append({
+            "id": variant_id, "serverExe": variant_server,
+            "args": args, "env": dict(environment),
+        })
     return normalized
 
 
@@ -548,6 +557,8 @@ def main() -> int:
             model_path = config["modelPath"]
             _wsl_test_file(launcher["distro"], server_exe)
             _wsl_test_file(launcher["distro"], model_path)
+            for variant in config["variants"]:
+                _wsl_test_file(launcher["distro"], variant["serverExe"])
         else:
             server_exe = Path(config["serverExe"]).expanduser().resolve()
             model_path = Path(config["modelPath"]).expanduser().resolve()
@@ -555,6 +566,11 @@ def main() -> int:
                 raise ValueError(f"serverExe no existe: {server_exe}")
             if not model_path.is_file():
                 raise ValueError(f"modelPath no existe: {model_path}")
+            for variant in config["variants"]:
+                variant_server = Path(variant["serverExe"]).expanduser().resolve()
+                if not variant_server.is_file():
+                    raise ValueError(
+                        f"variants[{variant['id']}].serverExe no existe: {variant_server}")
         probe = args.probe.expanduser().resolve()
         if not probe.is_file():
             raise ValueError(f"qa_kv_cache no existe: {probe}")
@@ -587,6 +603,9 @@ def main() -> int:
 
     def run_variant(variant: Mapping[str, Any], port: int, pass_number: int,
                     label: str) -> Dict[str, Any]:
+        variant_server: Any = variant["serverExe"]
+        if launcher["kind"] == "native":
+            variant_server = Path(variant_server).expanduser().resolve()
         variant_args = normalize_server_args(
             config["commonArgs"] + variant["args"], str(model_path), args.host, port,
             add_metrics=not args.no_metrics)
@@ -594,13 +613,15 @@ def main() -> int:
         log_path = log_dir / f"pass-{pass_number:03d}-{label}.log"
         record: Dict[str, Any] = {
             "pass": pass_number, "variant": label, "id": variant["id"],
-            "port": port, "baseUrl": base_url, "command": [str(server_exe), *variant_args],
+            "serverExe": str(variant_server),
+            "port": port, "baseUrl": base_url,
+            "command": [str(variant_server), *variant_args],
             "envKeys": sorted(variant["env"].keys()), "logPath": str(log_path),
             "launcher": launcher,
         }
         server: Optional[RunningServer] = None
         try:
-            server = start_server(server_exe, variant_args, variant["env"], log_path,
+            server = start_server(variant_server, variant_args, variant["env"], log_path,
                                   launcher)
             wait_for_server(base_url, args.startup_timeout, server.process)
             receipt, probe_exit, probe_stderr = run_probe(
@@ -657,10 +678,12 @@ def main() -> int:
         "contexts": args.contexts, "depths": args.depths, "users": args.users,
         "nPredict": args.n_predict, "timeoutMs": args.timeout_ms,
         "passes": args.passes, "includeAa": args.include_aa,
-        "variants": [{"id": baseline["id"], "args": baseline["args"],
-                       "envKeys": sorted(baseline["env"].keys())},
-                      {"id": candidate["id"], "args": candidate["args"],
-                       "envKeys": sorted(candidate["env"].keys())}],
+        "variants": [
+            {"id": baseline["id"], "serverExe": baseline["serverExe"],
+             "args": baseline["args"], "envKeys": sorted(baseline["env"].keys())},
+            {"id": candidate["id"], "serverExe": candidate["serverExe"],
+             "args": candidate["args"], "envKeys": sorted(candidate["env"].keys())},
+        ],
         "baselineRuns": baseline_runs, "candidateRuns": candidate_runs,
         "comparison": comparison, "aaComparison": aa_comparison,
         "summary": {

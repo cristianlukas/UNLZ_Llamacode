@@ -552,6 +552,31 @@ No se duplican manualmente los perfiles base. Se incorporan al plan las variante
 | `[bench NInfer] Qwen3.6-27B · texto` (`sys-ninfer3090-qwen27`) | NInfer-3090 · Qwen3.6-27B · texto | Comparar backend nativo contra los candidatos llama.cpp | ctx 4k; B512/U128; KV int8; MTP2 | HE0 → HE20 → BCB |
 | `[bench NInfer] Qwen3.6-35B-A3B · coding` (`sys-ninfer3090-qwen35`) | NInfer-3090 · Qwen3.6-35B-A3B · coding | Comparar el backend nativo en el perfil coder | ctx 4k; B512/U128; KV int8; MTP2 + prompt-lookup | HE0 → HE20 → BCB |
 | `[bench NInfer] Qwen3.8-27B · coding` (`sys-ninfer3090-qwen38`) | NInfer-3090 · Qwen3.8-27B · coding | Verificar el artefacto Qwen3.8 en el flujo local; BCB condicionado a tool-calls | ctx 4k; B512/U128; KV int8; MTP3 | HE0 → HE20 → BCB |
+| **[SUPERIOR CONTEXTO LARGO] Qwen3.8 KV streaming · 131k · K8/V4 · B256/U256** (`sys-bench-qwen38-kvstream-24gb-131k`) | Fork `sachin-detrax/llama.cpp-adaptive-kv-streaming`, commit `11a01c8` | Ejecutar Qwen3.8 dense con KV autoritativo en RAM pinned y pool CUDA acotado en una sola RTX 3090 de 24GB | `--kv-stream-stage-mib 2048`; ctx 131k; K q8_0/V q4_0; B256/U256; `split-mode none`; `parallel=1`; texto-only | **Historial de infraestructura: 8k..131k sintético OK; no promocionar calidad** |
+
+### Resultado directo del perfil KV streaming — 2026-08-29
+
+Se construyó el fork Windows desde `feature/adaptive-kv-stream`, commit
+`11a01c8`, con MSVC/CUDA y `GGML_CUDA_FA_ALL_QUANTS=ON`. En la RTX 3090 de
+24 GiB se ejecutó el sweep sintético del fork con Qwen3.8 UD-Q4, Flash on,
+K=`q8_0`, V=`q4_0`, B/U=`256/256`, `parallel=1`, una GPU visible y pool fijo
+de 2048 MiB. Cada punto llenó `context-8` y generó 8 tokens:
+
+| Contexto | Prefill tok/s | Decode tok/s | VRAM usada después | Resultado |
+|---:|---:|---:|---:|---|
+| 8k | 1226,2 | 36,02 | 19.065 MiB | OK |
+| 32k | 1074,5 | 31,09 | 19.173 MiB | OK |
+| 64k | 858,7 | 25,22 | 19.316 MiB | OK |
+| 131k | 617,1 | 5,25 | 19.621 MiB | OK |
+
+La clasificación es **SUPERIOR en ejecución sintética larga con B256/U256**:
+el fork completó 131k manteniendo ~4,7 GiB libres. Es **INFERIOR en latencia
+de contexto largo** a medida que crece la transferencia KV; no es un perfil
+speed-first. El A/B de passkey no se promociona: con este GGUF ambos runtimes
+fallaron la salida exacta, aunque el oficial b10331 además cayó con `ubatch=256`
+y con `ubatch=64` resultó mucho más lento (44,5 tok/s de prefill y 12,0 tok/s
+de decode, frente a 870,1 y 38,3 del candidato en una pasada). La diferencia
+de calidad queda **sin validar**.
 
 ## Resultados HE0 de los candidatos
 

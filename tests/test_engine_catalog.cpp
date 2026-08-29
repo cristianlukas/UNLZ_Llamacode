@@ -30,6 +30,20 @@ void EngineCatalogTests::catalogIncludesSourceForks()
     QVERIFY(EngineCatalog::sourceBuildDirName(adaptive).contains(QStringLiteral("adaptive")));
     QVERIFY(EngineCatalog::sourceBuildDirName(adaptive) != QStringLiteral("llama.cpp"));
 
+    const EngineCatalogEntry kvStreaming =
+        EngineCatalog::entry(QStringLiteral("llama.cpp-kv-streaming"));
+    QCOMPARE(kvStreaming.repo,
+             QStringLiteral("sachin-detrax/llama.cpp-adaptive-kv-streaming"));
+    QCOMPARE(kvStreaming.sourceBranch, QStringLiteral("feature/adaptive-kv-stream"));
+    QCOMPARE(kvStreaming.flavor, QStringLiteral("kv-streaming"));
+    QVERIFY(!kvStreaming.variants.isEmpty());
+    QVERIFY(kvStreaming.variants.first().buildFromSource);
+    QCOMPARE(kvStreaming.variants.first().gpuVendors,
+             QStringList{QStringLiteral("nvidia")});
+    QVERIFY(kvStreaming.sourceCMakeArgs.contains(QStringLiteral("-DGGML_CUDA_FA_ALL_QUANTS=ON")));
+    QCOMPARE(kvStreaming.sourceBuildTarget, QStringLiteral("llama-server"));
+    QVERIFY(EngineCatalog::sourceBuildDirName(kvStreaming).contains(QStringLiteral("kv-streaming")));
+
     const EngineCatalogEntry lid =
         EngineCatalog::entry(QStringLiteral("llama.cpp-deepseek-lid-cuda"));
     QCOMPARE(lid.repo, QStringLiteral("spencer-zaid/llama.cpp"));

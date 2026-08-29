@@ -17,6 +17,7 @@
     },
     {
       "id": "fraqtl-compressed-kv",
+      "serverExe": "C:/path/to/llama-server-fraqtl",
       "args": [
         "--fraqtl-kv",
         "--fraqtl-eigenbasis", "C:/path/to/v-sidecar",

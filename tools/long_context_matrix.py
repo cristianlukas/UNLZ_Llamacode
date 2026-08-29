@@ -196,6 +196,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--out", type=Path, default=Path("long-context-matrix.json"))
     parser.add_argument("--log-dir", type=Path, default=None)
     parser.add_argument("--no-metrics", action="store_true")
+    parser.add_argument("--startup-only", action="store_true",
+                        help="verifica el arranque saludable de cada contexto sin ejecutar qa_kv_cache")
     parser.add_argument("--dry-run", action="store_true",
                         help="validar y mostrar los comandos sin iniciar servidores")
     return parser.parse_args()
@@ -220,7 +222,7 @@ def main() -> int:
         if not 1024 <= args.port <= 65533:
             raise ValueError("port fuera de rango")
         probe = (args.probe or _default_probe()).expanduser().resolve()
-        if not args.dry_run and not probe.is_file():
+        if not args.dry_run and not args.startup_only and not probe.is_file():
             raise ValueError(f"qa_kv_cache no existe: {probe}")
         launcher = config["launcher"]
         if launcher["kind"] == "wsl" and not args.dry_run:
@@ -269,6 +271,7 @@ def main() -> int:
             "envKeys": sorted(config["variant"]["env"].keys()),
             "logPath": str(log_path),
             "passed": False,
+            "startupOnly": args.startup_only,
         }
         server: Optional[RunningServer] = None
         try:
@@ -276,16 +279,19 @@ def main() -> int:
                                   config["variant"]["env"], log_path, launcher)
             base_url = _join_url(args.host, args.port)
             wait_for_server(base_url, args.startup_timeout, server.process)
-            receipt, probe_exit, probe_stderr = run_probe(
-                probe, base_url, str(context), args.depths, args.users,
-                args.n_predict, args.timeout_ms,
-                max(60.0, args.timeout_ms / 1000.0 * max(1, len(args.depths.split(","))) + 60.0),
-            )
-            passed = probe_exit == 0 and bool(receipt.get("summary", {}).get("allPassed"))
-            record.update({"probeExitCode": probe_exit, "probeStderr": probe_stderr,
-                           "receipt": receipt, "passed": passed})
-            if not passed:
-                record["error"] = "el probe no pasó la recuperación exacta"
+            if args.startup_only:
+                record["passed"] = True
+            else:
+                receipt, probe_exit, probe_stderr = run_probe(
+                    probe, base_url, str(context), args.depths, args.users,
+                    args.n_predict, args.timeout_ms,
+                    max(60.0, args.timeout_ms / 1000.0 * max(1, len(args.depths.split(","))) + 60.0),
+                )
+                passed = probe_exit == 0 and bool(receipt.get("summary", {}).get("allPassed"))
+                record.update({"probeExitCode": probe_exit, "probeStderr": probe_stderr,
+                               "receipt": receipt, "passed": passed})
+                if not passed:
+                    record["error"] = "el probe no pasó la recuperación exacta"
         except (OSError, RuntimeError, ValueError) as error:
             record["error"] = str(error)
         finally:
@@ -313,6 +319,7 @@ def main() -> int:
         "users": args.users,
         "nPredict": args.n_predict,
         "timeoutMs": args.timeout_ms,
+        "startupOnly": args.startup_only,
         "startupTimeoutSec": args.startup_timeout,
         "rows": rows,
         "summary": {

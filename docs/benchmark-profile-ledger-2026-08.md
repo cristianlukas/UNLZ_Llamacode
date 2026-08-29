@@ -40,6 +40,26 @@ La campaña generó o reintentó **42 JSON para 30 nombres de perfil** el 28/08.
 | Excepciones | KAT A/B: `temp 0.30`, `top-p 0.90`, `min-p 0.05`; BigBang rápido: `temp 0.70`, `top-p 0.08`; Browser/DSH Dynamic: `temp 1.00` y reasoning medium/xhigh según fila. |
 | Política KV | El KV K/V queda limitado a `q8_0` o menor. Los nombres antiguos con `f16` fueron capados a `q8_0` y no se mezclan con resultados históricos f16. `mmproj` F16/BF16 es proyector auxiliar de visión, no quant de pesos/KV. |
 
+## Addendum fuera de la campaña serial — 2026-08-29
+
+El perfil `sys-bench-qwen38-kvstream-24gb-131k` se agrega como registro
+experimental posterior; no altera el conteo ni el orden de la campaña 86
+perfiles del 2026-08-28. Su identidad queda congelada en
+`assets/system_profiles.json`: engine `kv-streaming`, Qwen3.8 UD-Q4, K/V
+`q8_0/q4_0`, ctx 131072, B/U 256/256, una GPU, un slot y pool de 2048 MiB.
+
+| Evidencia | Resultado | Decisión |
+|---|---|---|
+| Benchmark sintético del fork, 8k → 131k | 16/16 puntos OK; 131k con 617,1 tok/s de prefill, 5,25 tok/s de decode y 19.621 MiB de VRAM usada | **Superior en ejecución/capacidad de contexto largo; mantener experimental** |
+| Probe NIAH/passkey | Sin salida exacta en el A/B; no es score de calidad válido para este GGUF | **No promocionar** |
+| Control `stage=0` del mismo fork | Cuelga al iniciar el prompt sintético de 8k | **Inferior / no usar** |
+
+Los recibos completos quedan en la estación de prueba bajo
+`D:\Models\llamacpp\qwen38-adaptive-kv-sweep-20260829-131k-clean` y
+`D:\Models\llamacpp\qwen38-adaptive-kv-ab-20260829-ub64-result.json`. El
+runner A/B fue ampliado para conservar `serverExe` por variante, y la matriz
+LID recibió `--startup-only`; ambas mejoras sí quedan versionadas en el repo.
+
 ## Inventario de modelos, quantizaciones y binarios
 
 | Familia | Archivo/piezas relevantes | Quant de pesos | Proyector/drafter | Build mínima declarada | Observación |

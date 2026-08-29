@@ -114,6 +114,20 @@ class KvCacheAbTests(unittest.TestCase):
         self.assertEqual(normalized["launcher"]["kind"], "wsl")
         self.assertEqual(normalized["launcher"]["distro"], "Ubuntu-22.04")
 
+    def test_validate_config_allows_a_server_per_variant(self):
+        config = {
+            "serverExe": "baseline-server",
+            "modelPath": "model.gguf",
+            "variants": [
+                {"id": "baseline", "args": [], "env": {}},
+                {"id": "candidate", "serverExe": "kv-stream-server",
+                 "args": ["--kv-stream-stage-mib", "2048"], "env": {}},
+            ],
+        }
+        normalized = validate_config(config)
+        self.assertEqual(normalized["variants"][0]["serverExe"], "baseline-server")
+        self.assertEqual(normalized["variants"][1]["serverExe"], "kv-stream-server")
+
     def test_validate_config_rejects_relative_wsl_paths(self):
         config = {
             "serverExe": "runtime/llama-server",

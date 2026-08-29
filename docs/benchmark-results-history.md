@@ -8,6 +8,34 @@ los perfiles no alcanzados. Este historial conserva además la narrativa y los
 eventos operativos; ambos documentos se complementan y no reemplazan resultados
 anteriores.
 
+## 2026-08-29 — Qwen3.8 adaptive KV streaming desde LocalLLM
+
+El reporte adjunto aportó una idea útil para el stack local: un fork de
+`llama.cpp` que mantiene el KV autoritativo en RAM pinned y usa una piscina CUDA
+acotada para streaming/prefetch. No se confundió con el engine existente
+`llama.cpp-adaptive`, que en LlamaCode es un fork de MTP/speculative decoding.
+
+Se incorporó el engine experimental `llama.cpp-kv-streaming` y el perfil
+`sys-bench-qwen38-kvstream-24gb-131k`, marcado `benchmark=true`, `extra=true` y
+`manualOnly=true`. La receta es texto-only, una GPU, un slot, Flash Attention,
+K=`q8_0`, V=`q4_0`, B/U=`256/256` y `--kv-stream-stage-mib 2048`. El binario se
+construyó en Windows desde `sachin-detrax/llama.cpp-adaptive-kv-streaming`,
+rama `feature/adaptive-kv-stream`, commit `11a01c8`.
+
+| Prueba | Resultado | Clasificación |
+|---|---|---|
+| Sweep sintético 8k → 131k, 8 tokens por punto | 16/16 puntos OK; 131k: prefill 617,1 tok/s, decode 5,25 tok/s; ~19.621 MiB usados | **SUPERIOR en ejecución/capacidad de contexto largo con B256/U256** |
+| NIAH/passkey con Qwen3.8 UD-Q4 | ambos runtimes sin salida exacta; el oficial además cae con B/U=256/256 | **Calidad sin validar; no promover** |
+| Latencia larga | prefill 1226,2 → 617,1 tok/s; decode 36,02 → 5,25 tok/s de 8k a 131k | **INFERIOR para speed-first** |
+| Streaming desactivado en el fork (`stage=0`) | cuelga al comenzar el prompt sintético de 8k; GPU queda en 0% | **CONTROL INFERIOR / NO USAR** |
+| Benchmark sintético upstream en Windows | `SIGINT` falla con `Unsupported signal: 2`; se corrigió sólo en la copia externa con `terminate()` para la corrida | Mejora de robustez del harness |
+
+La conclusión es acotada: el perfil sirve para investigar contexto largo cuando
+la velocidad es secundaria, pero no reemplaza el perfil Qwen3.8 oficial ni se
+promueve a BEST/TERRA/LUNA. El A/B ahora acepta `serverExe` por variante para
+comparar builds distintos sin duplicar el modelo/receta, y la matriz de contexto
+acepta `--startup-only` para separar capacidad de arranque de calidad del probe.
+
 ## 2026-08-21 — Consolidación de ranking y casos de uso
 
 Se documentaron las mejoras del dashboard web y del Ranking nativo: agrupación de

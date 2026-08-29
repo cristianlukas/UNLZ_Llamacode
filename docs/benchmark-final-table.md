@@ -17,6 +17,18 @@ fila por fila se detallan en
 La tabla de abajo sigue siendo el resumen de promoción; no pretende reemplazar
 el ledger ni convertir perfiles no alcanzados en descartados.
 
+## Registro adicional — KV streaming Qwen3.8 (2026-08-29)
+
+Se agregó `sys-bench-qwen38-kvstream-24gb-131k` al listado como perfil
+experimental **SUPERIOR en ejecución sintética de contexto largo**: el fork
+Windows `sachin-detrax/llama.cpp-adaptive-kv-streaming` (`11a01c8`) completó
+8k, 32k, 64k y 131k con Qwen3.8 UD-Q4, una RTX 3090 de 24 GiB, K=`q8_0`,
+V=`q4_0`, B/U=`256/256` y pool de 2048 MiB, dejando ~4,7 GiB libres en 131k.
+Queda **INFERIOR en latencia larga** (decode ~36,0 tok/s en 8k → ~5,25 en
+131k) y no desplaza los perfiles activos: el probe de passkey no obtuvo salida
+exacta y la calidad queda sin validar. Es manual-only, texto-only, una GPU y un
+slot; no se ofrece como default ni como perfil de visión/MoE.
+
 ## Cómo leer la tabla
 
 - HE0, HE20 y BCB son los scores de cada etapa; BCB se expresa sobre 8 casos.

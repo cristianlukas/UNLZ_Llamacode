@@ -87,6 +87,10 @@ Copiar y editar
 [`assets/benchmarks/kv_cache_ab.example.json`](../assets/benchmarks/kv_cache_ab.example.json)
 con las rutas reales. Después:
 
+La ruta común `serverExe` se conserva por compatibilidad; cada variante puede
+sobrescribirla con su propio binario. Esto permite comparar el oficial contra
+un fork especializado sin cambiar el modelo ni el resto de la receta.
+
 ```powershell
 python tools/kv_cache_ab.py `
   --config assets/benchmarks/kv_cache_ab.example.json `
@@ -135,6 +139,11 @@ python tools/long_context_matrix.py `
 el modelo. Los presets 256K, 512K y 1M siguen siendo experimentales: que estén
 en el perfil sólo los ofrece en la UI; deben aparecer en `verifiedContexts` de
 un recibo real antes de considerarse capacidad confirmada.
+
+Para separar capacidad de calidad, `--startup-only` reinicia el servidor por
+contexto y sólo exige que `/health` responda; no ejecuta `qa_kv_cache`. Sirve
+para diagnosticar reservas diferidas o límites de VRAM, pero no confirma
+recuperación ni calidad del modelo.
 
 ### Windows con WSL2
 
