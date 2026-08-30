@@ -280,7 +280,9 @@ mostraron peor calidad o una ruta de carga no evaluable.
 | Qwen3.6 Fable Fusion Q6 + mmproj | `sys-48-fablefusion-q6-mtp` | HE0 1/1 válido, visión; no hay BCB E2E comparable en la matriz | Candidato de visión/contexto, sin promoción de calidad |
 | KAT-Coder Q4 | `sys-48-katcoder-262k` | Muy rápido en medición nativa, pero BCB quedó en infraestructura | Speed-first/text-only; no ranking de calidad |
 | BigBang Q4 + mmproj | `sys-repair-48-bigbang-mtp-balance` | Reparación carga; calidad histórica parcial | Candidato de bajo contexto; mantener experimental |
-| DeepSeek V4 / Laguna / antirez | `sys-ultraq-dsv4-0731-iq3s-48gb`, `sys-laguna-s-2-1-q2-48gb-safe` | Cargan en algunas huellas, pero sin resultado E2E comparable completo | Investigación de contexto/tamaño; no promover |
+| DeepSeek V4 Flash UD-IQ3_S | `sys-48-dsv4-nospec` / `sys-ultraq-dsv4-0731-iq3s-48gb` | HE20 20/20 y BCB histórico 8/8; la corrida actual nativa aisló 5,764–6,171 tok/s | **BEST DeepSeek por calidad**; no ganador universal de velocidad |
+| DeepSeek Fusion / antirez Q2/Q4 | `sys-48-antirez-dsv4-q2q4-0731` y variantes | BCB histórico 8/8 a 10,548 tok/s, pero campañas lentas y variantes parciales | Referencia de velocidad DeepSeek; no reemplaza automáticamente al IQ3 |
+| Laguna / DeepSeek sin etapa comparable | `sys-laguna-s-2-1-q2-48gb-safe` y controles fallidos | Carga en algunas huellas, pero sin E2E comparable completo | Investigación de contexto/tamaño; no promover |
 | Qwen3.8 DFlash2 local/vLLM | perfiles `334f06f9-...`, `03902781-...`, `sys-bench-qwen38-dflash2-vllm-*` | Loader/backend no disponible o incompatibilidad de tensores | Investigación; no rankear |
 | Ling, RVN y NInfer | `sys-ling*`, `sys-bench-16-*`, `sys-ninfer*` | GGUF/runtime/binario ausente en este checkout | No listos; fuera de la cola |
 
@@ -391,6 +393,46 @@ estancamiento. El score histórico de BigBang no se mezcla con este intento.
 Los diagnósticos Q4/Q5 de ngram y prefix-cache que sí tienen un GGUF local se
 mantienen activos sólo para sus casos específicos; nunca se mezclan con cold-cache
 ni se promocionan por un `0/0`.
+
+### Auditoría DeepSeek — campaña local 2026-08-30
+
+La matriz manual cubrió los tres artefactos DeepSeek presentes en la máquina:
+UD-IQ3_S en cuatro shards, LID CUDA sobre el mismo IQ3_S y el híbrido antirez
+Q2/Q4. Se probaron b10228/b10331, una/dos RTX 3090, KV q4/q8, reparto 1:0 y
+1:1, tres cantidades de expertos residentes y `mmap`/`load-mode none`. El
+UD-IQ2_M catalogado no se ejecutó porque el GGUF local de tres shards no está
+presente.
+
+Las cifras nativas son sólo un smoke controlado: `/completion`, petición caliente
+de 256 tokens y prompt de 57 tokens con `--ctx-size` 131k/64k. No representan
+decode luego de poblar 128k y no sustituyen la cadena E2E.
+
+| Familia | Configuración que funcionó mejor en la matriz | Resultado | Fallos/limitaciones |
+|---|---|---:|---|
+| UD-IQ3_S | b10331, 2 GPU, `tensor-split 1,0`, expertos 25–36 en CUDA1, KV q4 | **6,171 tok/s** | 21–36 baja a 3,604; `load-mode none` falla al reservar 109 GB |
+| UD-IQ3_S | b10331, LID CUDA, f16 KV | Recuperación exacta a 131k/262k; 4,733/4,877 tok/s | 524k rechaza conexión; 1M no pasa health/timeout |
+| antirez Q2/Q4 | b10331, 2 GPU, expertos 37–42 en CUDA1, KV q4 | **8,280 tok/s** a 131k | El score BCB actual no se repitió; el histórico es válido pero antiguo |
+| antirez Q2/Q4 | b10331, misma colocación, KV q8 | **9,066 tok/s** a 64k | Una sola corrida nativa; no rankear como BCB |
+
+`tensor-split 1,1` generó la respuesta exacta “París” con b10331 y quedó en
+5,381 tok/s; la corrupción registrada en el comentario histórico de los perfiles
+no se reprodujo en esta build, pero el reparto fue más lento y no se cambia por
+eso el default. El baseline IQ3_S de una sola 3090 dio 6,071 tok/s y el dual
+base 5,764 tok/s: la segunda placa sólo ayudó cuando se ajustó la banda de
+expertos, no por estar conectada.
+
+#### Decisión de ranking
+
+`sys-48-dsv4-nospec` se marca `BEST` en el catálogo, con alcance explícito a la
+familia DeepSeek y a calidad: el IQ3_S tiene BCB histórico 8/8, frente a 2–4/8
+de DeepSeek Fusion. No se lo etiqueta como campeón universal: antirez también
+tiene BCB 8/8 y conserva 10,548 tok/s históricos, mientras que el nuevo smoke
+nativo favorece a antirez. Esta es una frontera de Pareto — calidad/estabilidad
+IQ3_S frente a velocidad antirez — y no una afirmación de que la quantización
+IQ3_S sea más rápida.
+
+El detalle de comandos, JSON de timings y logs está en
+[`artifacts/deepseek-campaign-20260830`](../artifacts/deepseek-campaign-20260830/README.md).
 
 ## Ranking por caso de uso
 

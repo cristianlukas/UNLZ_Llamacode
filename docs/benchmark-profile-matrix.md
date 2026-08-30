@@ -1,6 +1,6 @@
 # Matriz de perfiles para benchmarks
 
-Snapshot de revisión: 2026-08-28. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
+Snapshot de revisión: 2026-08-28; anexo de campaña DeepSeek nativa: 2026-08-30. Este archivo conserva la identidad y la configuración efectiva de los perfiles medidos, además de los candidatos derivados del catálogo. Los cambios de perfiles deben hacerse con LlamaCode cerrada; luego hay que volver a abrir la app headless y verificar que los argumentos efectivos coincidan con esta captura.
 
 El procedimiento reusable para agregar modelos, binarios, perfiles o harnesses está documentado en el [Manual de benchmarking](benchmark-manual.md). Esta matriz resume resultados; el manual define las condiciones de validez, el orden HE0 → HE20 → BCB y las reglas de promoción para FAST, BALANCED y QUALITY. HE0 es una compuerta dura: si falla, el perfil queda bloqueado para HE20 y BCB hasta investigar la causa raíz y repetir HE0 con resultado válido.
 
@@ -291,7 +291,7 @@ DFlash2 ni DSpark:
 
 | Familia | Perfiles recuperados | Excepciones mantenidas fuera |
 |---|---|---|
-| DeepSeek IQ3_S | B8192/U2048 sin speculative, B4096/U1024 sin speculative, MoE43 sin speculative, KV q8 y control K q8/V q4; además el control dual 48 GB y `DeepSeek V4-7-8-26` | `tensor-split 1,1` por texto corrupto; DSpark por incompatibilidad/resultado no confiable |
+| DeepSeek IQ3_S | B8192/U2048 sin speculative, B4096/U1024 sin speculative, MoE43 sin speculative, KV q8 y control K q8/V q4; además el control dual 48 GB y `DeepSeek V4-7-8-26` | `tensor-split 1,1` queda como diagnóstico: corrupción histórica con b10228, pero respuesta exacta en smoke b10331; DSpark por incompatibilidad/resultado no confiable |
 | DeepSeek antirez Q2/Q4 | 16k, 32k B4096, 32k B8192, 64k, 131k, KV q8, 64k KV q8 y prefill B8192 | 32k B2048 y los controles B512/B2048 que ya agotaron timeout sin primer turno |
 
 La siguiente tanda debe empezar por HE0 y sólo promover a HE20/BCB los perfiles
@@ -655,7 +655,7 @@ TPS es el decode nativo informado por `llama-server` en `eval time`, no el `avgT
 
 Evidencia de la tanda: `benchmark-runs/HumanEval_1_tems__20260816_130505` a `HumanEval_1_tems__20260816_133559`. La variante segura de Laguna se ejecutó en `benchmark-runs/HumanEval_1_tems__20260817_203002` con `agent-basico`: `1/1`, `150,127 s`, `failed=false`, `failureKind=none`, `vramMb=18891`, `ramMb=38050`. Los 24 IDs fueron ejecutados aisladamente. KAT2 (`sys-48-katcoder-262k`) cargó y llegó a timing nativo de `103,93 t/s`, pero el daemon terminó en `APPCRASH` de `LlamaCode.exe` dentro de `Qt6Core.dll` antes de persistir el JSON; queda como `HE0 daemon-crash`, no como calidad.
 
-Las variantes DeepSeek mantienen la regla de seguridad del perfil histórico: `--tensor-split 1,0`, expertos residentes alineados con sus capas y resto en CPU. No se propone `tensor-split 1,1`, porque la prueba local anterior terminó en OOM/corrupción y no es una mejora válida.
+Las variantes DeepSeek mantienen la regla de seguridad del perfil histórico: `--tensor-split 1,0`, expertos residentes alineados con sus capas y resto en CPU. `tensor-split 1,1` queda sólo como diagnóstico: con b10331 generó “París” correctamente, pero fue 6,6% más lento en el smoke; requiere repetir HE0/HE20/BCB antes de cambiar la receta.
 
 `*` En KAT2, `103,93 t/s` es timing nativo observado antes del `APPCRASH`; no hay JSON evaluable y debe repetirse.
 

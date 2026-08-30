@@ -1,6 +1,7 @@
 # Tabla final de benchmarks y recomendaciones
 
-Fecha de corte base: 2026-08-24; auditoría post-campaña: 2026-08-28.
+Fecha de corte base: 2026-08-24; auditoría post-campaña: 2026-08-28; actualización
+manual DeepSeek nativa: 2026-08-30.
 
 Este documento consolida los resultados persistidos disponibles. Los benchmarks
 están pausados actualmente: la instrumentación de memoria fue corregida y pasó
@@ -156,18 +157,25 @@ calidad BCB, tiempo total, estabilidad, contexto y el tipo de trabajo.
 | Visión + herramientas en 48 GB (experimental) | KAT APEX + Qwen mmproj · MTP2 · 64k · KV Q8 | XML KAT válido, mmproj funcional y recuperación exacta probada; HE20/BCB pendientes. |
 | Visión con contexto largo (experimental) | KAT APEX + Qwen mmproj · MTP2 · 131k · KV Q8 | 99.371 tokens efectivos y marcador exacto; HE20/BCB pendientes. |
 | Capacidad máxima de contexto (experimental) | KAT APEX + Qwen mmproj · MTP2 · 262k · KV Q8 | Configuración cargada y 244.505 tokens procesados sin OOM, pero recuperación degradada cerca del límite. |
-| DeepSeek local | DeepSeek V4 Flash IQ3_S sin DSpark | Es el único DeepSeek con 8/8 BCB completo, pero 9,65 tok/s lo deja como experimental. |
+| DeepSeek local | **BEST DeepSeek — DeepSeek V4 Flash IQ3_S sin DSpark** (`sys-48-dsv4-nospec`) | Único candidato IQ3_S con BCB 8/8 completo; superior en calidad a Fusion (2–4/8). Sigue siendo experimental para velocidad: 9,65 tok/s BCB histórico. |
 
 ## DeepSeek: conclusión
 
-No todos los GGUF DeepSeek funcionan igual. El **IQ3_S sin DSpark** sí tiene
-una corrida BCB completa y válida, pero es demasiado lento para SOL/TERRA/LUNA.
-Los perfiles Fusion/antirez conservaron HE0 y HE20 en varias configuraciones,
-pero BCB quedó parcial, muy lento o afectado por timeout/infraestructura. La
-campaña post-corrección confirmó además un caso antirez 64k KV q8 con 19/20 y
-3/8 BCB, sin desplazar a los candidatos consolidados. Los dos A/B antirez de
-32k con reasoning off/low fueron retirados el 2026-08-28 por latencia no
-competitiva; el resto permanece histórico o experimental, no promovido.
+No todos los GGUF DeepSeek funcionan igual. El **IQ3_S sin DSpark** tiene la
+calidad E2E más completa de la familia y queda marcado `BEST` dentro de
+DeepSeek: BCB 8/8 frente a 2–4/8 de Fusion. No es el ganador universal de
+velocidad: antirez conserva BCB histórico 8/8 a 10,548 tok/s, mientras que el
+IQ3_S registra 9,645 tok/s.
+
+La campaña local del 2026-08-30 probó IQ3_S, LID CUDA y antirez con b10228/b10331,
+KV q4/q8, una/dos 3090 y distintos rangos de expertos. El mejor smoke nativo
+IQ3_S fue 6,171 tok/s con 12 capas expertas residentes; antirez dio 8,280 tok/s
+a 131k y 9,066 tok/s a 64k/KV q8. Son peticiones de 57 tokens con `ctx-size`
+nominal, no decodes después de llenar 128k, y no reemplazan HE0/HE20/BCB.
+LID verificó recuperación exacta hasta 262k; 524k/1M no quedaron verificados.
+Los dos A/B antirez de 32k con reasoning off/low siguen retirados por latencia
+no competitiva; el detalle completo está en la campaña fechada y enlazada desde
+los documentos vivos.
 
 ## Familias retiradas o no promocionadas
 

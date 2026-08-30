@@ -8,7 +8,7 @@ Para el inventario completo por perfil —incluidos descartados, bloqueados,
 retirados, binarios, quantizaciones, configuración efectiva, huellas y métricas
 por etapa— consultar el [registro detallado de perfiles](benchmark-profile-ledger-2026-08.md).
 
-Última actualización: 2026-08-28.
+Última actualización: 2026-08-30.
 
 ## Variantes ngram para comparar
 
@@ -67,10 +67,35 @@ de publicación; una publicación no solicitada cuenta como fallo de seguridad.
 ## Alcance activo
 
 Sólo se ejecutan nuevos benchmarks para perfiles marcados `⚡ BEST`. La
-selección activa incluye **⚡ Qwen3.8 UD-Q4 visión** y los cuatro candidatos
-experimentales Qwen3.6 de cache/MTP incorporados el 2026-08-18. Estos cuatro
-son candidatos de medición, no ganadores promovidos: sus resultados siguen
+selección activa incluye **⚡ Qwen3.8 UD-Q4 visión**, el `BEST` DeepSeek
+`sys-48-dsv4-nospec` y los cuatro candidatos experimentales Qwen3.6 de cache/MTP
+incorporados el 2026-08-18. Los candidatos Qwen3.6
+son de medición, no ganadores promovidos: sus resultados siguen
 pendientes y no deben reemplazar perfiles existentes automáticamente.
+
+## Campaña DeepSeek local — 2026-08-30
+
+Se ejecutó una matriz manual sobre los artefactos DeepSeek disponibles en esta
+PC: UD-IQ3_S en cuatro shards, la variante LID CUDA y el híbrido antirez. Se
+probaron builds b10228/b10331, una y dos RTX 3090, KV `q4_0`/`q8_0`, reparto
+`tensor-split 1,0`/`1,1`, tres rangos de expertos residentes y los modos de carga
+`mmap`/`none`. La tabla nativa usa una petición caliente de 256 tokens con
+prompt de 57 tokens; no debe leerse como decode después de llenar 128k. El
+recibo completo, logs y fallos están en
+[`artifacts/deepseek-campaign-20260830`](../artifacts/deepseek-campaign-20260830/README.md).
+
+| Perfil/familia | Evidencia E2E histórica | Native smoke 2026-08-30 | Estado y decisión |
+|---|---|---|---|
+| `sys-48-dsv4-nospec` · UD-IQ3_S | BCB **8/8**, 9,645 tok/s, 131k | 6,171 tok/s con 12 capas expertas en CUDA1; 5,764 con 8 | **BEST dentro de DeepSeek por calidad**; no ganador universal de velocidad |
+| `sys-ultraq-dsv4-0731-lid-cuda` · UD-IQ3_S | Recuperación exacta 131k y 262k con f16 KV | 4,733 / 4,877 tok/s en esos recibos | Capacidad confirmada hasta 262k; 524k/1M no verificados |
+| `sys-48-antirez-dsv4-q2q4-0731` · híbrido Q2/Q4 | BCB **8/8**, 10,548 tok/s, 131k | 8,280 q4/131k; 9,066 q8/64k | Referencia DeepSeek de velocidad; BCB histórico más rápido |
+| `sys-48-dsv4-iq2m` · UD-IQ2_M | Sin resultado | GGUF local ausente | No se descarga ni se inventa score; queda pendiente |
+
+Resultado de comparación: `sys-48-dsv4-nospec` queda marcado como `BEST` en el
+catálogo porque supera a DeepSeek Fusion en calidad histórica (BCB 8/8 frente a
+2–4/8). No se lo marca como ganador absoluto: antirez conserva 8/8 y mayor TPS
+BCB histórico, aunque con un coste total alto. La campaña nativa tampoco
+reemplaza la cadena HE0 → HE20 → BCB.
 
 El esquema obligatorio de cada fila es exactamente: `ID`, `Perfil`, `Agente`,
 `HE0`, `HE20`, `BCB`, `Tiempo HE0`, `Tiempo HE20`, `Tiempo BCB`, `TPS HE0`,

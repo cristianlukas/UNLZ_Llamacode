@@ -527,3 +527,65 @@ controlada. Ambos IDs quedaron con `benchmark=false` y nombre de retirado en
 `assets/system_profiles.json`; se conservan sus resultados y metadata locales
 para auditoría. La campaña queda cerrada como retiro temprano en el perfil
 58/86, no como cobertura completa de la matriz.
+
+## 2026-08-30 — Campaña DeepSeek: matriz local y decisión de promoción
+
+Se hizo una campaña manual con todos los artefactos DeepSeek disponibles en la
+PC, sin descargar modelos nuevos: UD-IQ3_S en cuatro shards, la rama LID CUDA y
+el GGUF híbrido antirez Q2/Q4. El supuesto UD-IQ2_M no tiene sus tres shards
+locales y queda explícitamente sin medir. El hardware fue Ryzen 7 7700, 128 GiB
+nominales de RAM configurada a DDR5-4000 y 2× RTX 3090 de 24 GiB, sin NVLink;
+las dos placas se observaron en PCIe Gen4 x8.
+
+La matriz nativa usó `llama-server` y `/completion`, build oficial b10331
+(`7ba604f1c`) salvo el control b10228, `parallel=1`, sampling conservador,
+`--ctx-size` de 131k o 64k, y una petición caliente de 256 tokens. El prompt
+real tenía 57 tokens, por lo que estas cifras son diagnóstico de colocación y
+decode con contexto corto; no se mezclan con TPS E2E de HE20/BCB ni se presentan
+como decode con 128k ya poblados. El detalle reproducible quedó en
+`artifacts/deepseek-campaign-20260830/README.md`.
+
+| Familia / configuración | Build | Contexto nominal | Resultado nativo | Resultado de la prueba |
+|---|---|---:|---:|---|
+| UD-IQ3_S, expertos 29–36 CUDA1, resto CPU, `tensor-split 1,0`, KV q4 | b10331 | 131k | 5,764 tok/s | Cargó y completó 256 tokens |
+| UD-IQ3_S, expertos 25–36 CUDA1, resto CPU, `tensor-split 1,0`, KV q4 | b10331 | 131k | **6,171 tok/s** | Mejor colocación observada; +7,1% vs baseline |
+| UD-IQ3_S, expertos 21–36 CUDA1, resto CPU, `tensor-split 1,0`, KV q4 | b10331 | 131k | 3,604 tok/s | Más residencia empeora; −41,6% |
+| UD-IQ3_S, `tensor-split 1,1`, KV q4 | b10331 | 131k | 5,381 tok/s | Generación funcional; −6,6% vs `1,0` |
+| UD-IQ3_S, `tensor-split 1,0`, KV q8 | b10331 | 131k | 6,238 tok/s | Arranque OK; diferencia no concluyente con una pasada |
+| UD-IQ3_S, una RTX 3090, `n-gpu-layers 44`, `n-cpu-moe 39`, KV q4 | b10331 | 131k | 6,071 tok/s | La segunda GPU no acelera automáticamente |
+| UD-IQ3_S, baseline equivalente | b10228 | 131k | 2,617 tok/s | Arranque OK, pero −54,6% vs b10331 actual |
+| antirez Q2/Q4, expertos 37–42 CUDA1, resto CPU, KV q4 | b10331 | 131k | **8,280 tok/s** | Más rápido en este smoke nativo |
+| antirez Q2/Q4, misma colocación, KV q8 | b10331 | 64k | 9,066 tok/s | Arranque OK; no reemplaza BCB histórico |
+
+También se probaron controles negativos. `load-mode none` no logró reservar el
+buffer CUDA host de `109.117.186.048` bytes; `llama-bench` falló con un error
+CUDA genérico durante carga aunque `llama-server` sí pudo cargar el mismo IQ3_S.
+Se conservan ambos como fallos de infraestructura/runtime, no como fallos de
+calidad del modelo.
+
+### LID y contexto largo
+
+Se auditó el recibo reciente
+`D:\Models\llamacpp\deepseek-lid-context-matrix-ultraq-ot-50.json`. Con el
+runtime LID CUDA y KV f16, la recuperación exacta pasó a 131k y 262k, con 4,733 y
+4,877 tok/s respectivamente. 524k terminó con conexión rechazada y exit
+`3221226505`; 1M no llegó a `/health`. La variante 1M con KV q4 terminó en
+timeout. Por política, LID queda confirmado hasta 262k; 524k/1M no se
+promueven.
+
+### Comparación contra DeepSeek histórico
+
+La evidencia E2E que ya tenía el repositorio sigue siendo la referencia de
+calidad: `sys-ultraq-dsv4-0731-iq3s-48gb` completó BCB 8/8 a 9,645 tok/s y
+`sys-48-antirez-dsv4-q2q4-0731-131k` completó BCB 8/8 a 10,548 tok/s. Los
+controles DeepSeek Fusion quedaron en 2–4/8 BCB según huella. Por eso
+`sys-48-dsv4-nospec` queda promovido con marca `BEST` **dentro de la familia
+DeepSeek por calidad comprobada**: es el candidato IQ3_S con calidad completa y
+supera a Fusion. No se lo declara ganador universal de velocidad: antirez
+conserva el mejor TPS BCB histórico, aunque también es más lento en tiempo total
+y no reemplaza un perfil práctico automáticamente.
+
+La marca `BEST` es deliberadamente de familia/caso de uso; no convierte una
+medición nativa con prompt corto en un nuevo score HE20/BCB. Todas las respuestas,
+timings y logs de esta campaña quedan conservados bajo
+`artifacts/deepseek-campaign-20260830/`.
