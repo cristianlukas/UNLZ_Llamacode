@@ -24,6 +24,8 @@ private slots:
     void openAIToAnthropicMapsContentAndStop();
     void resolveModelMatches();
     void stableModelCatalog();
+    void discoveryNeverContainsCredentials();
+    void lanHealthRequiresAuthentication();
     void claudeDesktopConfigUsesStableAliases();
     void openCodeConfigUsesEnvironmentSecret();
     void openCodeDesktopCandidates();
@@ -180,6 +182,51 @@ void GatewayTests::stableModelCatalog()
              QStringLiteral("claude-llamacode-launch-qwen"));
     QCOMPARE(LlmGateway::resolveModelId("claude-llamacode-launch-qwen", models),
              QStringLiteral("launch-qwen"));
+}
+
+void GatewayTests::discoveryNeverContainsCredentials()
+{
+    const QJsonObject response = LlmGateway::discoveryResponse(
+        QStringLiteral("devbox"), 8088, true, QStringLiteral("launch-qwen"),
+        QJsonArray{QJsonObject{{"id", "launch-qwen"}}});
+    QVERIFY(!response.contains(QStringLiteral("apiKey")));
+    QVERIFY(!QJsonDocument(response).toJson(QJsonDocument::Compact)
+                 .contains("secret"));
+    QCOMPARE(response.value(QStringLiteral("protocol")).toString(),
+             QStringLiteral("llamacode-lan-v1"));
+}
+
+void GatewayTests::lanHealthRequiresAuthentication()
+{
+    QTcpServer probe;
+    QVERIFY(probe.listen(QHostAddress::AnyIPv4, 0));
+    const quint16 port = probe.serverPort();
+    probe.close();
+
+    LlmGateway gateway;
+    gateway.setApiKey(QStringLiteral("secret"));
+    QVERIFY(gateway.start(port, QHostAddress::AnyIPv4));
+
+    QNetworkAccessManager nam;
+    QNetworkReply *unauthorized = nam.get(QNetworkRequest(
+        QUrl(QStringLiteral("http://127.0.0.1:%1/health").arg(port))));
+    QEventLoop unauthorizedLoop;
+    connect(unauthorized, &QNetworkReply::finished,
+            &unauthorizedLoop, &QEventLoop::quit);
+    unauthorizedLoop.exec();
+    QCOMPARE(unauthorized->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 401);
+    unauthorized->deleteLater();
+
+    QNetworkRequest authorizedRequest(
+        QUrl(QStringLiteral("http://127.0.0.1:%1/health").arg(port)));
+    authorizedRequest.setRawHeader("Authorization", QByteArrayLiteral("Bearer secret"));
+    QNetworkReply *authorized = nam.get(authorizedRequest);
+    QEventLoop authorizedLoop;
+    connect(authorized, &QNetworkReply::finished,
+            &authorizedLoop, &QEventLoop::quit);
+    authorizedLoop.exec();
+    QCOMPARE(authorized->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt(), 200);
+    authorized->deleteLater();
 }
 
 void GatewayTests::claudeDesktopConfigUsesStableAliases()

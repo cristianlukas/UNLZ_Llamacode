@@ -9,6 +9,7 @@
 #include "AgentDeliverableStore.h"
 #include "core/profiles/HarnessEngine.h"
 #include "core/profiles/HarnessSpec.h"
+#include "ToolSurfaceRouter.h"
 #include <QHash>
 #include <QList>
 #include <QSet>
@@ -386,6 +387,11 @@ public:
     // Tools deshabilitadas por el usuario (nombres built-in y/o mcp__server__tool).
     // Se excluyen de buildToolSchemas() → no se ofrecen al modelo (ahorra contexto).
     void setDisabledTools(const QStringList &names);
+    // Recorte adaptativo de la superficie inicial. No modifica permisos: sólo
+    // decide qué schemas se anuncian en el primer request.
+    void setAdaptiveToolRouting(bool enabled);
+    QVariantMap toolSurfaceDecisionForTest() const
+    { return m_toolSurfaceDecision.toVariantMap(); }
 
     // Permisos de filesystem por Task (no persisten; aplican a la corrida actual).
     //   scope = "project" → confinado al cwd (default)
@@ -699,6 +705,8 @@ private:
     QList<PermRule> m_permRules;
 
     QSet<QString> m_disabledTools;   // tools off por el usuario (built-in y MCP)
+    bool m_adaptiveToolRouting = false;
+    ToolSurfaceRouter::Decision m_toolSurfaceDecision;
     QString m_teacherUrl, m_teacherModel, m_teacherKey;  // ask_teacher (config UI)
     QString m_auxiliaryUrl, m_auxiliaryEmbeddingModel, m_auxiliaryRerankModel,
         m_auxiliaryBearer;

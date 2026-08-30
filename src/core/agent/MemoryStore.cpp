@@ -12,6 +12,7 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QPair>
+#include <QStandardPaths>
 #include <algorithm>
 #include <cmath>
 
@@ -103,6 +104,19 @@ QString jsonlPath(const QString &cwd)
     return QDir::cleanPath(cwd + QStringLiteral("/.llamacode/memory.jsonl"));
 }
 
+QString personalJsonlPath()
+{
+    QString root = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    if (root.isEmpty()) root = QDir::homePath() + QStringLiteral("/.llamacode");
+    return QDir::cleanPath(root + QStringLiteral("/memory/personal.jsonl"));
+}
+
+static QString pathForScope(const QString &cwd, const QString &scope)
+{
+    return normScope(scope) == QLatin1String("personal")
+        ? personalJsonlPath() : jsonlPath(cwd);
+}
+
 QString save(const QString &cwd, const QString &content, const QString &scope,
              const QString &type, double confidence, const QString &source,
              double importance, double surprise, const QString &verification,
@@ -112,7 +126,7 @@ QString save(const QString &cwd, const QString &content, const QString &scope,
     const QString text = content.trimmed();
     if (text.isEmpty()) return QStringLiteral("[memory save: 'content' vacío]");
 
-    const QString path = jsonlPath(cwd);
+    const QString path = pathForScope(cwd, scope);
     QDir().mkpath(QFileInfo(path).absolutePath());
     QLockFile lock(path + QStringLiteral(".lock"));
     lock.setStaleLockTime(10 * 60 * 1000);
@@ -189,7 +203,7 @@ QJsonArray recallFacts(const QString &cwd, const QString &query,
     // de muy bajo valor domine el contexto sin convertir cada recall en una
     // reescritura del JSONL.
     maintain(cwd, scope, 24);
-    const QString path = jsonlPath(cwd);
+    const QString path = pathForScope(cwd, scope);
 
     QFile f(path);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return {};
@@ -328,7 +342,7 @@ QString forget(const QString &cwd, const QString &query, const QString &scope,
                const QString &mode)
 {
     if (cwd.trimmed().isEmpty()) return QStringLiteral("[forget: cwd vacío]");
-    const QString path = jsonlPath(cwd);
+    const QString path = pathForScope(cwd, scope);
     QLockFile lock(path + QStringLiteral(".lock"));
     lock.setStaleLockTime(10 * 60 * 1000);
     if (!lock.tryLock(5000))
@@ -451,7 +465,7 @@ QString prune(const QString &cwd, const QString &scope, int maxKeep,
     if (maxKeep <= 0) maxKeep = 50;
     maxKeep = qBound(1, maxKeep, 1000);
 
-    const QString path = jsonlPath(cwd);
+    const QString path = pathForScope(cwd, scope);
     QLockFile lock(path + QStringLiteral(".lock"));
     lock.setStaleLockTime(10 * 60 * 1000);
     if (!lock.tryLock(5000))
@@ -562,7 +576,7 @@ QString decay(const QString &cwd, const QString &scope, int maxAgeDays,
     maxAgeDays = qBound(30, maxAgeDays, 3650);
     minValue = qBound(0.05, minValue, 0.75);
 
-    const QString path = jsonlPath(cwd);
+    const QString path = pathForScope(cwd, scope);
     QLockFile lock(path + QStringLiteral(".lock"));
     lock.setStaleLockTime(10 * 60 * 1000);
     if (!lock.tryLock(5000))

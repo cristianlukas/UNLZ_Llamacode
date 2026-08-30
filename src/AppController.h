@@ -16,6 +16,8 @@
 #include "core/downloads/DownloadHistoryStore.h"
 #include "core/tasks/TaskScheduler.h"
 #include "core/AuxiliaryJobScheduler.h"
+#include "core/ModelRoleRegistry.h"
+#include "core/assistant/AssistantRuntime.h"
 #include "core/agents/AgentDefinitionStore.h"
 #include "core/agents/TriggerManager.h"
 #include "core/tasks/WorkflowRunner.h"
@@ -76,7 +78,9 @@ class AppController : public QObject
     Q_PROPERTY(AutomationStore*    automationStore READ automationStore CONSTANT)
     Q_PROPERTY(DataLabStore*      dataLab         READ dataLab         CONSTANT)
     Q_PROPERTY(AuxiliaryJobScheduler* auxiliaryScheduler READ auxiliaryScheduler CONSTANT)
+    Q_PROPERTY(ModelRoleRegistry* modelRoles READ modelRoles CONSTANT)
     Q_PROPERTY(QVariantList auxiliaryJobs READ auxiliaryJobs NOTIFY auxiliaryJobsChanged)
+    Q_PROPERTY(AssistantRuntime* assistantRuntime READ assistantRuntime CONSTANT)
     Q_PROPERTY(bool tasksSchedulerEnabled READ tasksSchedulerEnabled WRITE setTasksSchedulerEnabled NOTIFY tasksSchedulerChanged)
     Q_PROPERTY(bool taskRunning READ taskRunning NOTIFY taskRunStateChanged)
     Q_PROPERTY(bool canRunTask READ canRunTask NOTIFY taskRunAvailabilityChanged)
@@ -278,6 +282,8 @@ public:
     AutomationStore   *automationStore() { return &m_automations; }
     DataLabStore       *dataLab()        { return &m_dataLab; }
     AuxiliaryJobScheduler *auxiliaryScheduler() const { return m_auxiliaryScheduler; }
+    ModelRoleRegistry *modelRoles() { return &m_modelRoles; }
+    AssistantRuntime *assistantRuntime() { return &m_assistantRuntime; }
     QVariantList auxiliaryJobs() const
     { return m_auxiliaryScheduler ? m_auxiliaryScheduler->snapshot() : QVariantList{}; }
     bool tasksSchedulerEnabled() const
@@ -840,6 +846,16 @@ public:
     // keyRef del backend cloud de un perfil ("" si el backend no es cloud).
     Q_INVOKABLE QString cloudKeyRefForProfile(const QString &launchProfileId);
     Q_INVOKABLE void sendToAgent(const QString &text);
+    // Arranca el canal estrecho del asistente. Devuelve el token efectivo para
+    // mostrarlo una sola vez; si token está vacío se genera y guarda cifrado.
+    Q_INVOKABLE QString startAssistantGateway(int port = 8787,
+                                              const QString &token = QString(),
+                                              bool lan = false);
+    Q_INVOKABLE void stopAssistantGateway();
+    // Encola una capacidad auxiliar con la clase, recurso, prioridad y fallback
+    // definidos por el rol; la ejecución efectiva queda a cargo del worker.
+    Q_INVOKABLE QString enqueueModelRoleJob(const QString &roleId,
+                                             const QString &detail = {});
     // Analiza una muestra con el backend activo y aplica una ficha JSON validada
     // al perfil indicado. No usa tools ni modifica el historial del agente.
     Q_INVOKABLE bool analyzePersonaStyleProfile(const QString &profileId,
@@ -1584,6 +1600,9 @@ private:
     DataLabStore      m_dataLab;
     TaskScheduler    *m_scheduler = nullptr;
     AuxiliaryJobScheduler *m_auxiliaryScheduler = nullptr;
+    ModelRoleRegistry m_modelRoles;
+    AssistantRuntime m_assistantRuntime;
+    QString m_activeAssistantMessageId;
     // Task en ejecución (para marcar lastRun ok al terminar el turno).
     QString  m_runningTaskId;
     // Automatización que disparó la corrida actual (si vino del scheduler/UI de

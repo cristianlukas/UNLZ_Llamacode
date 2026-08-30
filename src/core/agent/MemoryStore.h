@@ -30,6 +30,8 @@ struct ClaimEvidence {
 
 // Ruta del JSONL estructurado para un cwd dado.
 QString jsonlPath(const QString &cwd);
+// Ruta global para hechos `personal`, compartida entre proyectos del usuario.
+QString personalJsonlPath();
 
 // Guarda un hecho atómico. 'source' = PROVENANCE (de dónde salió el hecho:
 // nombre de sesión/tarea, archivo, "user", etc.); opcional. Cada hecho recibe

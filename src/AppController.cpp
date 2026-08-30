@@ -1429,7 +1429,17 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_autoStartAgentOnLaunch = s.value(QStringLiteral("agent/autoStartOnLaunch"), false).toBool();
     m_gatewayEnabled = s.value(QStringLiteral("gateway/enabled"), false).toBool();
     m_gatewayPort    = s.value(QStringLiteral("gateway/port"), 8088).toInt();
-    m_gatewayApiKey  = s.value(QStringLiteral("gateway/apiKey")).toString();
+    // Las claves del gateway no viven en QSettings: se migran una sola vez al
+    // SecretStore cifrado y sólo se conserva la referencia en configuración.
+    m_gatewayApiKey = m_secrets.resolve(QStringLiteral("gateway/apiKey"));
+    if (m_gatewayApiKey.isEmpty()) {
+        const QString legacyKey = s.value(QStringLiteral("gateway/apiKey")).toString();
+        if (!legacyKey.isEmpty()) {
+            m_gatewayApiKey = legacyKey;
+            m_secrets.set(QStringLiteral("gateway/apiKey"), legacyKey);
+            s.remove(QStringLiteral("gateway/apiKey"));
+        }
+    }
     m_gatewayKeepN   = s.value(QStringLiteral("gateway/keepN"), 4).toInt();
     m_gatewayAutoSwap = s.value(QStringLiteral("gateway/autoSwap"), true).toBool();
     m_gatewayLanEnabled = s.value(QStringLiteral("gateway/lanEnabled"), false).toBool();
@@ -1512,6 +1522,33 @@ AppController::AppController(QObject *parent) : QObject(parent)
     m_auxiliaryScheduler = new AuxiliaryJobScheduler(this);
     connect(m_auxiliaryScheduler, &AuxiliaryJobScheduler::jobsChanged,
             this, &AppController::auxiliaryJobsChanged);
+
+    // Canal estrecho para el asistente remoto/local. El runtime sólo entrega
+    // texto a este backend; no abre la superficie reflective de ControlApi.
+    connect(&m_assistantRuntime, &AssistantRuntime::messageReceived, this,
+            [this](const QVariantMap &message) {
+        const QString id = message.value(QStringLiteral("id")).toString();
+        if (!m_activeAssistantMessageId.isEmpty()) {
+            m_assistantRuntime.completeMessage(
+                id, QString(), false, QStringLiteral("hay otro turno en curso"));
+            return;
+        }
+        if (!m_agentBackend || !m_agentBackend->running()) {
+            m_assistantRuntime.completeMessage(
+                id, QString(), false, QStringLiteral("el agente no está corriendo"));
+            return;
+        }
+        m_activeAssistantMessageId = id;
+        m_agentBackend->queueMessage(message.value(QStringLiteral("text")).toString());
+        appendAgentEvent(QStringLiteral("assistant"),
+                         QStringLiteral("Mensaje remoto encolado (%1)." ).arg(id));
+    });
+    connect(&m_assistantRuntime, &AssistantRuntime::notificationAdded, this,
+            [this](const QVariantMap &event) {
+        appendAgentEvent(QStringLiteral("assistant"),
+                         event.value(QStringLiteral("type"),
+                                     QStringLiteral("notification")).toString());
+    });
 
     // Scheduler de Automatizaciones (cron in-app). automationDue→runAutomation.
     // El toggle global persiste.
@@ -4795,7 +4832,22 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
     });
     connect(b, &IAgentBackend::agentLifecycleEvent, this,
             [this](const QVariantMap &event) { emit agentLifecycleEvent(event); });
-    connect(b, &IAgentBackend::turnFinished, this, [this]() {
+    connect(b, &IAgentBackend::turnFinished, this, [this, b]() {
+        if (m_agentBackend == b && !m_activeAssistantMessageId.isEmpty()) {
+            const QString id = m_activeAssistantMessageId;
+            QString answer;
+            const QVariantList messages = b->messages();
+            for (int i = messages.size() - 1; i >= 0; --i) {
+                const QVariantMap message = messages.at(i).toMap();
+                if (message.value(QStringLiteral("role")).toString() != QLatin1String("assistant")
+                    || message.value(QStringLiteral("typing")).toBool()) continue;
+                answer = message.value(QStringLiteral("content")).toString().trimmed();
+                if (!answer.isEmpty()) break;
+            }
+            if (answer.isEmpty()) answer = QStringLiteral("Turno completado.");
+            m_assistantRuntime.completeMessage(id, answer, true);
+            m_activeAssistantMessageId.clear();
+        }
         onAgentTurnFinished();
         refreshNativeAgentRuns();
         // La captura de entregables corre fuera del hilo de UI y puede terminar
@@ -4823,7 +4875,12 @@ IAgentBackend *AppController::ensureAgentBackend(const QString &adapter,
         }
         emit agentRunningChanged();
     });
-    connect(b, &IAgentBackend::errorOccurred, this, [this](const QString &m) {
+    connect(b, &IAgentBackend::errorOccurred, this, [this, b](const QString &m) {
+        if (m_agentBackend == b && !m_activeAssistantMessageId.isEmpty()) {
+            const QString id = m_activeAssistantMessageId;
+            m_activeAssistantMessageId.clear();
+            m_assistantRuntime.completeMessage(id, QString(), false, m);
+        }
         if (m_agentStarting) {
             m_agentStarting = false;
             emit agentStartingChanged();
@@ -5883,6 +5940,7 @@ QStringList AppController::expandDirectiveSentinel(const QStringList &keys)
 void AppController::applyHarnessSpec(LlamaAgentBackend *cb, const HarnessSpec &spec)
 {
     if (!cb) return;
+    cb->setAdaptiveToolRouting(spec.tools.set && spec.tools.adaptiveRouting);
     // Skills portables quedan gobernadas por el harness efectivo: un módulo
     // ausente conserva compatibilidad y permite todas; uno declarado aplica
     // include/exclude antes de que skill_list/skill_load lleguen al worker.
@@ -6732,6 +6790,48 @@ void AppController::sendToAgent(const QString &text)
 
     // Adapters genéricos basados en stdin (opencode usa OpencodeBackend, delegado arriba).
     m_agentProc->write((text + QLatin1Char('\n')).toUtf8());
+}
+
+QString AppController::startAssistantGateway(int port, const QString &token, bool lan)
+{
+    if (port <= 0 || port > 65535) return {};
+    QString effective = token.trimmed();
+    if (effective.isEmpty())
+        effective = m_secrets.resolve(QStringLiteral("assistant/gateway"));
+    if (effective.isEmpty()) {
+        effective = QUuid::createUuid().toString(QUuid::WithoutBraces)
+            .remove(QLatin1Char('-'));
+        m_secrets.set(QStringLiteral("assistant/gateway"), effective);
+    } else {
+        m_secrets.set(QStringLiteral("assistant/gateway"), effective);
+    }
+    const QHostAddress address = lan ? QHostAddress::AnyIPv4 : QHostAddress::LocalHost;
+    if (!m_assistantRuntime.start(static_cast<quint16>(port), effective, address))
+        return {};
+    return effective;
+}
+
+QString AppController::enqueueModelRoleJob(const QString &roleId, const QString &detail)
+{
+    if (!m_auxiliaryScheduler) return {};
+    const QVariantMap hint = m_modelRoles.schedulingHint(roleId);
+    if (hint.isEmpty()) return {};
+    if (hint.value(QStringLiteral("class")).toString().isEmpty()) return {};
+    const int limit = hint.value(QStringLiteral("maxConcurrency"), 1).toInt();
+    m_auxiliaryScheduler->setClassLimit(hint.value(QStringLiteral("class")).toString(), limit);
+    const QString model = hint.value(QStringLiteral("model")).toString();
+    QString enriched = detail.trimmed();
+    if (!model.isEmpty())
+        enriched = QStringLiteral("[%1] %2").arg(model, enriched);
+    return m_auxiliaryScheduler->enqueue(
+        hint.value(QStringLiteral("class")).toString(),
+        hint.value(QStringLiteral("resourceKey")).toString(),
+        hint.value(QStringLiteral("priority")).toInt(), enriched);
+}
+
+void AppController::stopAssistantGateway()
+{
+    m_assistantRuntime.stop();
 }
 
 void AppController::startSequentialHybrid(const QString &text, const LaunchProfile &executor)
@@ -9357,7 +9457,8 @@ void AppController::setGatewayApiKey(const QString &k)
 {
     if (m_gatewayApiKey == k) return;
     m_gatewayApiKey = k;
-    QSettings().setValue(QStringLiteral("gateway/apiKey"), k);
+    m_secrets.set(QStringLiteral("gateway/apiKey"), k);
+    QSettings().remove(QStringLiteral("gateway/apiKey"));
     if (m_gateway) m_gateway->setApiKey(k);
     emit gatewayChanged();
 }
@@ -9390,7 +9491,8 @@ void AppController::setGatewayLanEnabled(bool on)
     if (on && m_gatewayApiKey.trimmed().isEmpty()) {
         m_gatewayApiKey = QUuid::createUuid().toString(QUuid::WithoutBraces)
             .remove(QLatin1Char('-'));
-        settings.setValue(QStringLiteral("gateway/apiKey"), m_gatewayApiKey);
+        m_secrets.set(QStringLiteral("gateway/apiKey"), m_gatewayApiKey);
+        settings.remove(QStringLiteral("gateway/apiKey"));
         if (m_gateway) m_gateway->setApiKey(m_gatewayApiKey);
     }
     if (m_gateway && m_gateway->listening()) {

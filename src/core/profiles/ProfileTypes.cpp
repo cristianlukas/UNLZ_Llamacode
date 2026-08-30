@@ -371,6 +371,8 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     };
     enableCodingPreflight(presets[3]);
     enableCodingPreflight(presets[4]);
+    presets[3].spec.tools.adaptiveRouting = true;
+    presets[4].spec.tools.adaptiveRouting = true;
 
     // Browser Agent nativo: conserva el loop de LlamaCode, pero deja explícito
     // el perímetro de navegación para poder comparar el harness con el mismo
@@ -401,6 +403,7 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     browser.spec.context.tailRatio = 0.55;
     browser.spec.context.keepLastImages = 2;
     browser.enabledTools = HarnessTools::resolve(browser.spec.tools);
+    browser.spec.tools.adaptiveRouting = true;
 
     // --- Presets nuevos del harness modular -------------------------------
     // Minimal: el modo local-first duro (review de codehamr). Pocas tools, sin
@@ -445,6 +448,7 @@ QList<AgentProfile> AgentProfile::systemPresets() {
     rpa.spec.context.set = true;
     rpa.spec.context.keepLastImages = 2;       // ver el paso anterior ayuda a corregir
     rpa.enabledTools = HarnessTools::resolve(rpa.spec.tools);
+    rpa.spec.tools.adaptiveRouting = true;
 
     // Artefactos: separa el trabajo local (crear, validar y dejar un entregable
     // privado) del trabajo con efectos externos (preparar y publicar mediante

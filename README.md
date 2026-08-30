@@ -42,7 +42,7 @@
 - [Diseño Multi-llama.cpp](#diseño-multi-llamacpp) · [Multi-GGUF roots](#diseño-multi-gguf-roots) · [Multi-perfiles](#diseño-multi-perfiles-compuestos)
 - [Cookbook de modelos (hardware-fit)](#cookbook-de-modelos-recomendaciones-hardware-fit)
 - [Chat integrado](#chat-integrado) · [Harness de Agente](#harness-de-agente-opencode) · [Corridas administradas](#corridas-administradas-de-claude-code-y-codex) · [Lanzamiento del servidor](#lanzamiento-del-servidor-launchpage)
-- [Backends cloud + secretos](#backends-cloud--secretos-cifrados) · [Modo Charla (voz)](#modo-charla-voz-a-voz) · [Memoria/RAG](#memoria-rag-y-verificación) · [Maestro/supervisor](#maestro--supervisor-escalado)
+- [Backends cloud + secretos](#backends-cloud--secretos-cifrados) · [Modo Charla (voz)](#modo-charla-voz-a-voz) · [Memoria/RAG](#memoria-rag-y-verificación) · [Asistente continuo](#asistente-continuo) · [Maestro/supervisor](#maestro--supervisor-escalado)
 - [Correo](#cuentas-de-correo) · [Browser (Playwright)](#automatización-de-browser-playwright) · [Data Lab](#data-lab) · [Adjuntos/visión](#adjuntos-documentos--visión) · [Watchdog + VRAM](#robustez-del-server-watchdog--vram) · [Otras capacidades](#otras-capacidades)
 - [Process Lifecycle](#process-lifecycle) · [Stack técnico](#stack-técnico) · [Build](#build) · [Estructura del repo](#estructura-del-repo)
 - [Fases](#fases) · [Tasks (macros + scheduler)](#tasks-macros-configurables--scheduler-cron) · [Workflows de ingeniería](#workflows-de-ingeniería) · [Benchmarking](#benchmarking) · [Rendimiento multi-GPU](#rendimiento-multi-gpu) · [Auto-tuning](#auto-tuning-de-parámetros) · [Seguridad operativa](#seguridad-operativa)
@@ -1054,6 +1054,22 @@ El agente nativo no solo lee archivos: mantiene memoria y conocimiento estructur
   aceptó, falló o se descartó.
 - **Tools**: `hybrid_search` (búsqueda híbrida léxica+semántica), `verify_claims`
   (chequeo de afirmaciones), memoria por capas. RAG sobre el material del proyecto.
+
+### Asistente continuo
+
+`AssistantRuntime` ofrece un canal HTTP estrecho y autenticado para un agente
+siempre disponible: mensajes con deduplicación, cola acotada, respuestas y un
+outbox persistente con cursor. El bind es loopback por defecto; LAN requiere un
+token obligatorio. Los adaptadores de Telegram, Discord o voz se conectan a
+este contrato sin obtener acceso a `ControlApi`. Ver
+[`docs/assistant-runtime.md`](docs/assistant-runtime.md).
+
+Los perfiles avanzados pueden usar routing adaptativo de tools: recorta la
+superficie del primer turno por intención semántica y vuelve a abrirla luego;
+las intenciones ambiguas fallan abierto. `ModelRoleRegistry` agrega roles de
+modelo (`planner`, `verifier`, `embedding`, `reranker`, `stt`, `tts`, `vision`)
+con modelo preferido, fallback y límites de scheduler persistidos fuera del
+repo.
 
 ## Maestro / supervisor (escalado)
 

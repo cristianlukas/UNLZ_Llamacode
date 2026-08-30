@@ -128,6 +128,7 @@ QJsonObject HarnessToolsModule::toJson() const
     o[QStringLiteral("include")] = fromStringList(include);
     o[QStringLiteral("exclude")] = fromStringList(exclude);
     o[QStringLiteral("mcpTools")] = mcpToolsEnabled;
+    o[QStringLiteral("adaptiveRouting")] = adaptiveRouting;
     return o;
 }
 
@@ -139,6 +140,7 @@ HarnessToolsModule HarnessToolsModule::fromJson(const QJsonObject &o)
     m.include = toStringList(o.value(QStringLiteral("include")));
     m.exclude = toStringList(o.value(QStringLiteral("exclude")));
     m.mcpToolsEnabled = o.value(QStringLiteral("mcpTools")).toBool(true);
+    m.adaptiveRouting = o.value(QStringLiteral("adaptiveRouting")).toBool(false);
     return m;
 }
 
@@ -566,6 +568,8 @@ QVariantList HarnessSpec::diff(const HarnessSpec &base) const
     addDiff(out, "tools", "include", base.tools.include, tools.include);
     addDiff(out, "tools", "exclude", base.tools.exclude, tools.exclude);
     addDiff(out, "tools", "mcpTools", base.tools.mcpToolsEnabled, tools.mcpToolsEnabled);
+    addDiff(out, "tools", "adaptiveRouting", base.tools.adaptiveRouting,
+            tools.adaptiveRouting);
     addDiff(out, "skills", "include", base.skills.include, skills.include);
     addDiff(out, "skills", "exclude", base.skills.exclude, skills.exclude);
 

@@ -89,6 +89,8 @@ set(CORE_SOURCES
     src/core/MermaidRenderer.cpp
     src/core/ControlApi.cpp
     src/core/AuxiliaryJobScheduler.cpp
+    src/core/ModelRoleRegistry.cpp
+    src/core/assistant/AssistantRuntime.cpp
     src/core/gateway/LlmGateway.cpp
     src/core/integrations/OpenCodeIntegration.cpp
     src/core/integrations/ClaudeDesktopIntegration.cpp
@@ -116,6 +118,7 @@ set(CORE_SOURCES
     src/core/agent/AgentRoomStore.cpp
     src/core/agent/ToolExecutionSafety.cpp
     src/core/agent/MemoryStore.cpp
+    src/core/agent/ToolSurfaceRouter.cpp
     src/core/agent/GraphStore.cpp
     src/core/agent/CodeGraphIndexer.cpp
     src/core/agent/KnowledgePacket.cpp
@@ -206,6 +209,8 @@ set(HEADERS
     src/core/MermaidRenderer.h
     src/core/ControlApi.h
     src/core/AuxiliaryJobScheduler.h
+    src/core/ModelRoleRegistry.h
+    src/core/assistant/AssistantRuntime.h
     src/core/gateway/LlmGateway.h
     src/core/integrations/OpenCodeIntegration.h
     src/core/integrations/ClaudeDesktopIntegration.h
@@ -230,6 +235,7 @@ set(HEADERS
     src/core/agent/AgentRoomStore.h
     src/core/agent/ToolExecutionSafety.h
     src/core/agent/MemoryStore.h
+    src/core/agent/ToolSurfaceRouter.h
     src/core/agent/GraphStore.h
     src/core/agent/CodeGraphIndexer.h
     src/core/agent/KnowledgePacket.h
@@ -637,6 +643,9 @@ if (BUILD_TESTS)
         LC_SNAKE_SUITE_JSON="${CMAKE_CURRENT_SOURCE_DIR}/assets/eval/snake_retro_singlefile.json")
     add_lc_test(test_control_api        tests/test_control_api.cpp)
     add_lc_test(test_auxiliary_job_scheduler tests/test_auxiliary_job_scheduler.cpp)
+    add_lc_test(test_model_role_registry tests/test_model_role_registry.cpp)
+    add_lc_test(test_tool_surface_router tests/test_tool_surface_router.cpp)
+    add_lc_test(test_assistant_runtime tests/test_assistant_runtime.cpp)
     add_lc_test(test_agent_tools        tests/test_agent_tools.cpp)
     add_lc_test(test_portable_skills    tests/test_portable_skills.cpp)
     add_lc_test(test_agent_wire         tests/test_agent_wire.cpp)

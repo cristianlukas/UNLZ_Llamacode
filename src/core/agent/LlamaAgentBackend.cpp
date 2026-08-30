@@ -1937,6 +1937,11 @@ QString LlamaAgentBackend::buildSystemPrompt() const
                                                           m_memoryPolicy.structuredFacts);
         if (!structuredMem.startsWith(QLatin1Char('[')))
             base += QStringLiteral("\n\n--- Memoria estructurada relevante ---\n") + structuredMem;
+        const int personalFacts = qMax(1, m_memoryPolicy.structuredFacts / 3);
+        const QString personalMem = MemoryStore::recall(
+            m_cwd, QString(), QStringLiteral("personal"), personalFacts);
+        if (!personalMem.startsWith(QLatin1Char('[')))
+            base += QStringLiteral("\n\n--- Memoria personal relevante ---\n") + personalMem;
     }
 
     // Memoria legacy/instrucciones: .llamacode/memory.md o AGENTS.md.
@@ -2371,6 +2376,10 @@ void LlamaAgentBackend::sendMessageImpl(const QString &text, const QString &visi
         return;
     }
     ensureSession();
+    if (m_adaptiveToolRouting)
+        m_toolSurfaceDecision = ToolSurfaceRouter::decide(visibleTrimmed, toolCatalog());
+    else
+        m_toolSurfaceDecision = ToolSurfaceRouter::Decision{};
     m_correlationId = QUuid::createUuid().toString(QUuid::WithoutBraces);
     m_lifecycleFinishedToolIds.clear();
     beginDurableRun(visibleTrimmed);
@@ -6795,6 +6804,12 @@ void LlamaAgentBackend::setDisabledTools(const QStringList &names)
     m_disabledTools = QSet<QString>(names.cbegin(), names.cend());
 }
 
+void LlamaAgentBackend::setAdaptiveToolRouting(bool enabled)
+{
+    m_adaptiveToolRouting = enabled;
+    if (!enabled) m_toolSurfaceDecision = ToolSurfaceRouter::Decision{};
+}
+
 void LlamaAgentBackend::setTeacherConfig(const QString &url, const QString &model, const QString &key)
 {
     m_teacherUrl = url; m_teacherModel = model; m_teacherKey = key;
@@ -7130,7 +7145,36 @@ QJsonArray LlamaAgentBackend::buildToolSchemas() const
             {"description", "Ejecuta una tool MCP descubierta previamente. Copiá el nombre exacto, anidá sus parámetros dentro de arguments y declará changed_paths si puede mutar archivos."},
             {"parameters", callParameters}}}});
     }
-    return dropDisabled(all);
+    QJsonArray filtered = dropDisabled(all);
+    // El primer request puede llevar una superficie acotada; después de que el
+    // modelo haya empezado a interactuar se expande automáticamente. Esto evita
+    // que un clasificador imperfecto bloquee una capacidad en un follow-up.
+    if (!m_adaptiveToolRouting || m_toolSurfaceDecision.fullSurface || m_turnIters > 1)
+        return filtered;
+
+    QHash<QString, QString> groupByTool;
+    for (const QVariant &entry : toolCatalog()) {
+        const QVariantMap item = entry.toMap();
+        groupByTool.insert(item.value(QStringLiteral("name")).toString(),
+                           ToolSurfaceRouter::canonicalGroup(
+                               item.value(QStringLiteral("group")).toString()));
+    }
+    QJsonArray routed;
+    for (const QJsonValue &value : filtered) {
+        const QJsonObject fn = value.toObject().value(QStringLiteral("function")).toObject();
+        const QString name = fn.value(QStringLiteral("name")).toString();
+        // El descubrimiento MCP sigue siendo lazy: sus dos meta-tools siempre
+        // deben estar disponibles aunque el grupo concreto todavía no se sepa.
+        if (name == QLatin1String("mcp_search_tools")
+            || name == QLatin1String("mcp_call_tool")) {
+            routed.append(value);
+            continue;
+        }
+        const QString group = groupByTool.value(name);
+        if (group.isEmpty() || m_toolSurfaceDecision.groups.contains(group))
+            routed.append(value);
+    }
+    return routed;
 }
 
 bool LlamaAgentBackend::harnessWorkerConfiguredForTest() const

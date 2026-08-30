@@ -270,6 +270,20 @@ QJsonObject LlmGateway::modelsResponse(const QJsonArray &models)
     };
 }
 
+QJsonObject LlmGateway::discoveryResponse(const QString &name, quint16 port,
+                                          bool ready, const QString &currentModel,
+                                          const QJsonArray &models)
+{
+    return QJsonObject{
+        {QStringLiteral("protocol"), QStringLiteral("llamacode-lan-v1")},
+        {QStringLiteral("name"), name},
+        {QStringLiteral("port"), static_cast<int>(port)},
+        {QStringLiteral("ready"), ready},
+        {QStringLiteral("currentModel"), currentModel},
+        {QStringLiteral("profiles"), models}
+    };
+}
+
 QStringList LlmGateway::lruTouch(QStringList &order, const QString &name, int keepN)
 {
     if (name.isEmpty()) return {};
@@ -310,6 +324,7 @@ bool LlmGateway::start(quint16 port, const QHostAddress &addr)
 {
     stop();
     if (port == 0) return false;
+    m_lanMode = addr != QHostAddress::LocalHost && addr != QHostAddress::LocalHostIPv6;
     m_server = new QTcpServer(this);
     connect(m_server, &QTcpServer::newConnection, this, &LlmGateway::onNewConnection);
     if (!m_server->listen(addr, port)) {
@@ -327,15 +342,11 @@ bool LlmGateway::start(quint16 port, const QHostAddress &addr)
                     const QNetworkDatagram request = m_discovery->receiveDatagram();
                     if (request.data().trimmed() != QByteArrayLiteral("LLAMACODE_DISCOVER_V1"))
                         continue;
-                    const QJsonObject response{
-                        {"protocol", "llamacode-lan-v1"},
-                        {"name", QHostInfo::localHostName()},
-                        {"port", int(m_port)},
-                        {"apiKey", m_apiKey},
-                        {"ready", m_hooks.ready ? m_hooks.ready() : false},
-                        {"currentModel", m_hooks.currentModel ? m_hooks.currentModel() : QString()},
-                        {"profiles", m_hooks.models ? m_hooks.models() : QJsonArray{}}
-                    };
+                    const QJsonObject response = discoveryResponse(
+                        QHostInfo::localHostName(), m_port,
+                        m_hooks.ready ? m_hooks.ready() : false,
+                        m_hooks.currentModel ? m_hooks.currentModel() : QString(),
+                        m_hooks.models ? m_hooks.models() : QJsonArray{});
                     m_discovery->writeDatagram(
                         QJsonDocument(response).toJson(QJsonDocument::Compact),
                         request.senderAddress(), request.senderPort());
@@ -358,6 +369,7 @@ void LlmGateway::stop()
         m_discovery = nullptr;
     }
     if (m_server) { m_server->close(); m_server->deleteLater(); m_server = nullptr; }
+    m_lanMode = false;
     m_port = 0;
 }
 
@@ -460,7 +472,10 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
         sock->write(r); sock->flush(); sock->disconnectFromHost();
         return;
     }
-    if (p == QLatin1String("/health") || p == QLatin1String("/")) {
+    // En loopback la health pública es útil para la UI y watchdog. En LAN toda
+    // respuesta, incluida health, exige la clave; nunca se publica estado del
+    // proceso a cualquiera que pueda alcanzar el puerto.
+    if (!m_lanMode && (p == QLatin1String("/health") || p == QLatin1String("/"))) {
         const QByteArray j = "{\"ok\":true,\"gateway\":true}";
         QByteArray r = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
         r += "Content-Length: " + QByteArray::number(j.size()) + "\r\n\r\n" + j;
@@ -468,11 +483,22 @@ void LlmGateway::handle(QTcpSocket *sock, const QByteArray &method, const QStrin
         return;
     }
 
-    // Auth opcional (Bearer o x-api-key).
-    if (!m_apiKey.isEmpty()) {
+    // Auth obligatoria para LAN; local sigue permitiendo gateway sin clave para
+    // conservar el flujo histórico de OpenCode/Claude Desktop.
+    if (m_lanMode || !m_apiKey.isEmpty()) {
         const QString tok = authHeader.startsWith(QLatin1String("Bearer "))
             ? authHeader.mid(7).trimmed() : authHeader.trimmed();
-        if (tok != m_apiKey) { writeError(sock, 401, QStringLiteral("API key inválida")); return; }
+        if (m_apiKey.isEmpty() || tok != m_apiKey) {
+            writeError(sock, 401, QStringLiteral("API key inválida")); return;
+        }
+    }
+
+    if (p == QLatin1String("/health") || p == QLatin1String("/")) {
+        const QByteArray j = "{\"ok\":true,\"gateway\":true}";
+        QByteArray r = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n";
+        r += "Content-Length: " + QByteArray::number(j.size()) + "\r\n\r\n" + j;
+        sock->write(r); sock->flush(); sock->disconnectFromHost();
+        return;
     }
 
     if (p == QLatin1String("/v1/models")) {

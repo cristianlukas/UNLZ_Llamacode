@@ -15,6 +15,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStandardPaths>
 #include "core/agent/AgentEventLog.h"
 #include "core/agent/MemoryStore.h"
 #include "core/agent/GraphStore.h"
@@ -24,8 +25,11 @@ class MemoryGraphTests : public QObject
 {
     Q_OBJECT
 private slots:
+    void initTestCase();
+    void cleanupTestCase();
     void memory_saveThenRecall();
     void memory_recallFiltersByScope();
+    void memory_personalScopeIsGlobalAndIsolated();
     void memory_recallRanksByQuery();
     void memory_forgetStale();
     void memory_forgetDelete();
@@ -54,6 +58,19 @@ private slots:
     void eventLog_appendTypedEvent();
 };
 
+void MemoryGraphTests::initTestCase()
+{
+    QStandardPaths::setTestModeEnabled(true);
+    QFile::remove(MemoryStore::personalJsonlPath());
+    QFile::remove(MemoryStore::personalJsonlPath() + QStringLiteral(".lock"));
+}
+
+void MemoryGraphTests::cleanupTestCase()
+{
+    QFile::remove(MemoryStore::personalJsonlPath());
+    QFile::remove(MemoryStore::personalJsonlPath() + QStringLiteral(".lock"));
+}
+
 void MemoryGraphTests::memory_saveThenRecall()
 {
     QTemporaryDir dir;
@@ -72,6 +89,32 @@ void MemoryGraphTests::memory_recallFiltersByScope()
     const QString proj = MemoryStore::recall(dir.path(), "", "project", 10);
     QVERIFY(proj.contains("proyecto X"));
     QVERIFY(!proj.contains("personal Y"));
+    MemoryStore::forget(dir.path(), "personal Y", "personal", "delete");
+}
+
+void MemoryGraphTests::memory_personalScopeIsGlobalAndIsolated()
+{
+    QTemporaryDir first;
+    QTemporaryDir second;
+    QVERIFY(first.isValid());
+    QVERIFY(second.isValid());
+    const QString token = QStringLiteral("__lc_global_personal_%1")
+        .arg(QDateTime::currentMSecsSinceEpoch());
+    MemoryStore::save(first.path(), token, "personal", "preference", 1.0, "user");
+
+    const QString fromOtherProject = MemoryStore::recall(
+        second.path(), token, "personal", 5);
+    QVERIFY(fromOtherProject.contains(token));
+    QVERIFY(QFile::exists(MemoryStore::personalJsonlPath()));
+    const QString projectOnly = MemoryStore::recall(second.path(), token, "project", 5);
+    // La respuesta de "sin hechos" repite el query; inspeccionar la fila de
+    // memoria evita confundir ese eco con una fuga entre scopes.
+    QVERIFY(!projectOnly.contains(QStringLiteral("[personal/preference]")));
+
+    const QString forgotten = MemoryStore::forget(second.path(), token, "personal", "delete");
+    QVERIFY(forgotten.contains(QStringLiteral("1 hecho")));
+    QVERIFY(!MemoryStore::recall(second.path(), token, "personal", 5)
+                 .contains(QStringLiteral("[personal/preference]")));
 }
 
 void MemoryGraphTests::memory_recallRanksByQuery()

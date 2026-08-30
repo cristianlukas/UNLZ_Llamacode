@@ -60,6 +60,11 @@ public:
     static QString resolveModel(const QString &requested, const QStringList &available);
     static QString resolveModelId(const QString &requested, const QJsonArray &models);
     static QJsonObject modelsResponse(const QJsonArray &models);
+    // Respuesta de discovery LAN. Nunca incluye credenciales: discovery sólo
+    // anuncia cómo encontrar el gateway; la autenticación viaja por HTTP.
+    static QJsonObject discoveryResponse(const QString &name, quint16 port,
+                                         bool ready, const QString &currentModel,
+                                         const QJsonArray &models);
     // LRU: registrar uso de `name`; devuelve los ids a desalojar (size > keepN).
     static QStringList lruTouch(QStringList &order, const QString &name, int keepN);
     // Inyecta salida estructurada (grammar GBNF o json_schema) en un payload OpenAI.
@@ -88,6 +93,7 @@ private:
     Hooks   m_hooks;
     int     m_keepN = 4;
     bool    m_autoSwap = true;
+    bool    m_lanMode = false;
     QString m_apiKey;
     quint16 m_port = 0;
     QStringList m_lru;   // orden de uso (frente = más reciente)

@@ -70,6 +70,7 @@ struct HarnessToolsModule {
     QStringList include;               // nombres sueltos, o "*" = todo
     QStringList exclude;               // se restan al final
     bool mcpToolsEnabled = true;       // inyectar tools MCP descubiertas
+    bool adaptiveRouting = false;      // recortar tools en el primer turno
     bool set = false;
 
     QJsonObject toJson() const;

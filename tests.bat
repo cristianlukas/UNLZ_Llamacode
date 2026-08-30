@@ -54,6 +54,10 @@ if errorlevel 1 ( echo. & echo === Build FAILED === & goto :done_fail )
 
 REM Los test exes necesitan las DLLs de Qt en PATH (no se hace windeployqt).
 set PATH=%QT_DIR%\bin;%PATH%
+REM CTest usa QT_QPA_PLATFORM=offscreen para no abrir ventanas. En los tests
+REM ejecutables no se hace windeployqt, por lo que hay que indicar también el
+REM árbol de plugins de la instalación Qt (en especial platforms/qoffscreen.dll).
+set QT_PLUGIN_PATH=%QT_DIR%\plugins
 
 echo.
 echo [INFO] ===== Running ctest (%CFG%) =====

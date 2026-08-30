@@ -308,6 +308,20 @@ int main(int argc, char *argv[])
     auto *controlApi = new ControlApi(&controller, &controller);
     controlApi->start(controlPort);
 
+    // El canal remoto del asistente sólo se habilita con un token explícito en
+    // el entorno. Sin token no se abre ningún listener adicional.
+    const QByteArray assistantToken = qgetenv("LLAMACODE_ASSISTANT_TOKEN");
+    if (!assistantToken.trimmed().isEmpty()) {
+        bool ok = false;
+        const int requestedPort = qgetenv("LLAMACODE_ASSISTANT_PORT").toInt(&ok);
+        const int assistantPort = ok && requestedPort > 0 ? requestedPort : 8787;
+        const bool assistantLan = qgetenv("LLAMACODE_ASSISTANT_LAN") == QByteArrayLiteral("1");
+        const QString startedToken = controller.startAssistantGateway(
+            assistantPort, QString::fromUtf8(assistantToken), assistantLan);
+        qInfo() << "AssistantRuntime:" << (!startedToken.isEmpty() ? "activo" : "no disponible")
+                << "port=" << assistantPort << "lan=" << assistantLan;
+    }
+
     // Servidor de instancia única: cuando otra instancia intente abrirse, recibe
     // su "raise" y le pide a la UI que restaure/enfoque la ventana existente.
     // Si la instancia existente es headless no hay QML que restaurar: hacemos un

@@ -173,6 +173,14 @@ sendMessage
 - **Project memory**: `buildSystemPrompt()` inyecta `.llamacode/memory.md` (fallback
   `AGENTS.md`) en el system prompt. Editable desde la UI
   (`readAgentMemory`/`writeAgentMemory`).
+- **Personal memory**: los hechos `scope=personal` se almacenan globalmente en
+  `AppLocalData/memory/personal.jsonl`, no dentro de un proyecto, y el prompt
+  recibe sólo una selección acotada. Esto permite continuidad entre repos sin
+  mezclar reglas privadas con la memoria del código.
+- **Adaptive tool surface**: los perfiles que lo habilitan reducen las tools del
+  primer turno por grupos semánticos; una intención ambigua conserva la
+  superficie completa y los turnos siguientes vuelven a exponerla. El router
+  usa categorías generales, no nombres de apps ni coordenadas.
 - **Persistencia de sesiones** (= memoria de conversación): cada sesión se guarda en
   `AppLocalData/agent_custom/`:
   - `index.json` — lista de sesiones (id, title, projectDir…).
