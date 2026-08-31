@@ -33,6 +33,8 @@ private slots:
     void rmsLevels();
     void sttMultipart();
     void sttParseTranscript();
+    void sttStreamingProtocol();
+    void sttStreamingParser();
     void ttsSpeechBody();
     void ttsPiperJsonLine();
     void ttsPiperResidentArgs();
@@ -200,6 +202,7 @@ void TestVoice::configRoundTrip()
     QVERIFY(r.sttIsCloud());
     QCOMPARE(r.sttKeyRef, QString("voice/openai"));
     QCOMPARE(r.sttLanguage, QString("es"));
+    QCOMPARE(r.sttMode, QString("http_batch"));
     QCOMPARE(r.sttManagedCommand, QString("python"));
     QCOMPARE(r.sttManagedArgs, QStringList({"stt_server.py", "--port", "8081"}));
     QCOMPARE(r.ttsVoice, QString("nova"));
@@ -323,6 +326,40 @@ void TestVoice::sttParseTranscript()
     QCOMPARE(SttEngine::parseTranscript("{\"text\":\"  hola mundo \"}"), QString("hola mundo"));
     QCOMPARE(SttEngine::parseTranscript("{\"error\":{\"message\":\"x\"}}"), QString());
     QCOMPARE(SttEngine::parseTranscript("garbage"), QString());
+}
+
+void TestVoice::sttStreamingProtocol()
+{
+    const QByteArray config = SttEngine::buildStreamingConfig(16000, "es", "parakeet");
+    QVERIFY(config.endsWith('\n'));
+    const QJsonObject cfg = QJsonDocument::fromJson(config.trimmed()).object();
+    QCOMPARE(cfg.value("type").toString(), QString("config"));
+    QCOMPARE(cfg.value("sample_rate").toInt(), 16000);
+    QCOMPARE(cfg.value("language").toString(), QString("es"));
+    QCOMPARE(cfg.value("model").toString(), QString("parakeet"));
+
+    const QByteArray audio = SttEngine::buildStreamingAudio(QByteArray("\1\2\3\4"), 7);
+    const QJsonObject packet = QJsonDocument::fromJson(audio.trimmed()).object();
+    QCOMPARE(packet.value("type").toString(), QString("audio"));
+    QCOMPARE(packet.value("sequence").toInteger(), qint64(7));
+    QCOMPARE(QByteArray::fromBase64(packet.value("pcm16_base64").toString().toLatin1()),
+             QByteArray("\1\2\3\4"));
+    QCOMPARE(SttEngine::buildStreamingEnd(), QByteArray("{\"type\":\"end\"}\n"));
+    QCOMPARE(SttEngine::buildStreamingCancel(), QByteArray("{\"type\":\"cancel\"}\n"));
+}
+
+void TestVoice::sttStreamingParser()
+{
+    const QVariantMap partial = SttEngine::parseStreamingMessage(
+        "{\"type\":\"partial\",\"text\":\"hola\"}");
+    QCOMPARE(partial.value("type").toString(), QString("partial"));
+    QCOMPARE(partial.value("text").toString(), QString("hola"));
+    QCOMPARE(SttEngine::parseStreamingMessage("garbage"), QVariantMap());
+    QCOMPARE(SttEngine::parseStreamingMessage("{\"text\":\"sin tipo\"}"), QVariantMap());
+
+    const QVariantMap upper = SttEngine::parseStreamingMessage(
+        "{\"type\":\"FINAL\",\"text\":\"listo\"}");
+    QCOMPARE(upper.value("type").toString(), QString("final"));
 }
 
 void TestVoice::ttsSpeechBody()
@@ -703,6 +740,13 @@ void TestVoice::sttServerCatalog()
     QCOMPARE(VoiceServerManager::endpointPath("whisper-base"), QString("/inference"));
     QVERIFY(VoiceServerManager::modelPath("whisper-base").endsWith("ggml-base.bin"));
     QVERIFY(VoiceServerManager::sttEngine("inexistente").isEmpty());
+
+    const QVariantMap parakeet = VoiceServerManager::sttEngine("parakeet-tdt-0.6b-v3");
+    QVERIFY(!parakeet.isEmpty());
+    QCOMPARE(parakeet.value("transport").toString(), QString("stream_process"));
+    QVERIFY(parakeet.value("requiresCommand").toBool());
+    QVERIFY(!parakeet.value("docsUrl").toString().isEmpty());
+    QVERIFY(VoiceServerManager::modelPath("parakeet-tdt-0.6b-v3").isEmpty());
 
     // Args de whisper-server: modelo + host + port, y -l solo si lang != auto.
     QStringList a = VoiceServerManager::buildWhisperArgs("m.bin", "127.0.0.1", 8081, "auto");

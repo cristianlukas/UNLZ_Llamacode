@@ -23755,6 +23755,17 @@ void AppController::toggleDictation()
     VoiceConfig c = VoiceConfig::fromJson(
         QJsonObject::fromVariantMap(m_profiles.getLaunchVoice(m_activeLaunchId)));
     applyAppLanguageToVoice(c);
+    const QVariantMap sttEngine = VoiceServerManager::sttEngine(c.sttManagedEngine);
+    if (sttEngine.value(QStringLiteral("transport")).toString()
+            == QLatin1String("stream_process"))
+        c.sttMode = QStringLiteral("stream_process");
+    if ((c.sttMode == QLatin1String("stream_process")
+         || sttEngine.value(QStringLiteral("requiresCommand")).toBool())
+        && c.sttManagedCommand.trimmed().isEmpty()) {
+        emit serverError(QStringLiteral(
+            "El motor STT seleccionado requiere configurar un proceso sidecar en Charla."));
+        return;
+    }
     if (!c.sttManagedCommand.trimmed().isEmpty()) {
         if (!startManagedExternalVoice(c, true)) return;
     } else if (!c.sttManagedEngine.isEmpty() && !startManagedStt(c)) {
@@ -23800,10 +23811,17 @@ void AppController::applyVoiceConfig()
     // STT gestionado: apuntar al server local que lanza la app (whisper.cpp).
     if (!c.sttManagedEngine.isEmpty()) {
         const QVariantMap eng = VoiceServerManager::sttEngine(c.sttManagedEngine);
+        if (eng.value(QStringLiteral("transport")).toString()
+                == QLatin1String("stream_process")) {
+            c.sttMode = QStringLiteral("stream_process");
+            c.sttProvider = QStringLiteral("local");
+        }
         const int port = eng.value("defaultPort", 8081).toInt();
-        c.sttProvider = QStringLiteral("local");
-        c.sttBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(port);
-        c.sttEndpointPath = VoiceServerManager::endpointPath(c.sttManagedEngine);
+        if (c.sttMode != QLatin1String("stream_process")) {
+            c.sttProvider = QStringLiteral("local");
+            c.sttBaseUrl = QStringLiteral("http://127.0.0.1:%1").arg(port);
+            c.sttEndpointPath = VoiceServerManager::endpointPath(c.sttManagedEngine);
+        }
     }
     const QString sttKey = c.sttKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.sttKeyRef);
     const QString ttsKey = c.ttsKeyRef.isEmpty() ? QString() : m_secrets.resolve(c.ttsKeyRef);
@@ -24154,6 +24172,17 @@ void AppController::startCharla()
             return;
         }
     }
+    const QVariantMap sttEngine = VoiceServerManager::sttEngine(c.sttManagedEngine);
+    if (sttEngine.value(QStringLiteral("transport")).toString()
+            == QLatin1String("stream_process"))
+        c.sttMode = QStringLiteral("stream_process");
+    if ((c.sttMode == QLatin1String("stream_process")
+         || sttEngine.value(QStringLiteral("requiresCommand")).toBool())
+        && c.sttManagedCommand.trimmed().isEmpty()) {
+        emit serverError(QStringLiteral(
+            "El motor STT seleccionado requiere configurar un proceso sidecar en Charla."));
+        return;
+    }
     if (!c.sttManagedCommand.trimmed().isEmpty()) {
         if (!startManagedExternalVoice(c, true)) return;
     } else if (!c.sttManagedEngine.isEmpty()) {
@@ -24415,6 +24444,13 @@ QString AppController::voiceBinaryDefaultUrl(const QString &kind) const
 bool AppController::startManagedStt(const VoiceConfig &c)
 {
     stopManagedStt();
+    const QVariantMap engine = VoiceServerManager::sttEngine(c.sttManagedEngine);
+    if (engine.value(QStringLiteral("transport")).toString()
+            == QLatin1String("stream_process")) {
+        emit serverError(QStringLiteral(
+            "Este motor STT es un sidecar streaming; configurá su comando en Charla."));
+        return false;
+    }
     if (!m_voiceServers.modelInstalled(c.sttManagedEngine)) {
         emit serverError(QStringLiteral("Modelo STT no instalado: %1. Instalalo desde Charla.")
                          .arg(c.sttManagedEngine));
@@ -24488,6 +24524,12 @@ bool AppController::startManagedExternalVoice(const VoiceConfig &c, bool stt)
         env.insert(QStringLiteral("CUDA_VISIBLE_DEVICES"),
                    plan.value(QStringLiteral("voiceGpuMask")).toString());
     }
+    if (stt && c.sttMode == QLatin1String("stream_process")) {
+        env.insert(QStringLiteral("LLAMACODE_STT_PROTOCOL"), QStringLiteral("ndjson-v1"));
+        env.insert(QStringLiteral("LLAMACODE_STT_SAMPLE_RATE"), QStringLiteral("16000"));
+        env.insert(QStringLiteral("LLAMACODE_STT_LANGUAGE"), c.sttLanguage);
+        env.insert(QStringLiteral("LLAMACODE_STT_MODEL"), c.sttModel);
+    }
     process->setProcessEnvironment(env);
     const QPointer<QProcess> managedProcess = process;
     connect(managedProcess, &QProcess::errorOccurred, this,
@@ -24503,6 +24545,8 @@ bool AppController::startManagedExternalVoice(const VoiceConfig &c, bool stt)
         return false;
     }
     assignToJobObject(process->processId());
+    if (stt && c.sttMode == QLatin1String("stream_process") && m_voice)
+        m_voice->setStreamingSttProcess(process);
     appendServerEvent(QStringLiteral("lifecycle"),
                       QStringLiteral("Charla: %1 externo administrado iniciado (%2 %3), GPU de voz=%4.")
                           .arg(stt ? QStringLiteral("STT") : QStringLiteral("TTS"),

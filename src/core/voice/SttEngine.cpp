@@ -6,6 +6,7 @@
 #include <QJsonObject>
 #include <QUrl>
 #include <QDebug>
+#include <QProcess>
 
 SttEngine::SttEngine(QObject *parent) : QObject(parent) {}
 
@@ -52,9 +53,167 @@ QString SttEngine::parseTranscript(const QByteArray &json)
     return QString();
 }
 
+QByteArray SttEngine::buildStreamingConfig(int sampleRate, const QString &language,
+                                            const QString &model)
+{
+    const QJsonObject object{
+        {QStringLiteral("type"), QStringLiteral("config")},
+        {QStringLiteral("sample_rate"), sampleRate},
+        {QStringLiteral("language"), language},
+        {QStringLiteral("model"), model}};
+    return QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n';
+}
+
+QByteArray SttEngine::buildStreamingAudio(const QByteArray &pcm16, quint64 sequence)
+{
+    const QJsonObject object{
+        {QStringLiteral("type"), QStringLiteral("audio")},
+        {QStringLiteral("sequence"), static_cast<qint64>(sequence)},
+        {QStringLiteral("pcm16_base64"), QString::fromLatin1(pcm16.toBase64())}};
+    return QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n';
+}
+
+QByteArray SttEngine::buildStreamingEnd()
+{
+    return QByteArray("{\"type\":\"end\"}\n");
+}
+
+QByteArray SttEngine::buildStreamingCancel()
+{
+    return QByteArray("{\"type\":\"cancel\"}\n");
+}
+
+QVariantMap SttEngine::parseStreamingMessage(const QByteArray &line)
+{
+    const QJsonDocument document = QJsonDocument::fromJson(line.trimmed());
+    if (!document.isObject()) return {};
+    const QJsonObject object = document.object();
+    QVariantMap result = object.toVariantMap();
+    const QString type = result.value(QStringLiteral("type")).toString().trimmed().toLower();
+    if (type.isEmpty()) return {};
+    result[QStringLiteral("type")] = type;
+    return result;
+}
+
+void SttEngine::attachStreamingProcess(QProcess *process)
+{
+    if (m_streamProcess)
+        disconnect(m_streamProcess, nullptr, this, nullptr);
+    m_streamProcess = process;
+    m_streamOutput.clear();
+    if (!m_streamProcess) return;
+
+    connect(m_streamProcess, &QProcess::readyReadStandardOutput, this,
+            &SttEngine::consumeStreamingOutput);
+    connect(m_streamProcess, &QProcess::errorOccurred, this,
+            [this](QProcess::ProcessError) {
+        if (!m_streamingActive) return;
+        m_streamingActive = false;
+        emit failed(QStringLiteral("sidecar STT: ")
+                    + (m_streamProcess ? m_streamProcess->errorString()
+                                        : QStringLiteral("proceso no disponible")));
+    });
+    connect(m_streamProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int, QProcess::ExitStatus status) {
+        if (!m_streamingActive) return;
+        m_streamingActive = false;
+        if (status != QProcess::NormalExit || !m_streamFinalSeen)
+            emit failed(QStringLiteral("sidecar STT terminó antes de finalizar el turno"));
+    });
+}
+
+bool SttEngine::startStreaming(int sampleRate)
+{
+    if (m_reply || m_streamingActive) return false;
+    if (!m_streamProcess || m_streamProcess->state() != QProcess::Running) return false;
+
+    m_streamOutput.clear();
+    m_streamLatestText.clear();
+    m_streamSequence = 0;
+    m_streamEndRequested = false;
+    m_streamFinalSeen = false;
+    m_streamingActive = true;
+    if (m_streamProcess->write(buildStreamingConfig(sampleRate, m_cfg.sttLanguage,
+                                                     m_cfg.sttModel)) < 0) {
+        m_streamingActive = false;
+        return false;
+    }
+    return true;
+}
+
+void SttEngine::pushStreamingAudio(const QByteArray &pcm16)
+{
+    if (!m_streamingActive || pcm16.isEmpty()) return;
+    if (!m_streamProcess || m_streamProcess->state() != QProcess::Running) {
+        m_streamingActive = false;
+        emit failed(QStringLiteral("sidecar STT no está ejecutándose"));
+        return;
+    }
+    if (m_streamProcess->write(buildStreamingAudio(pcm16, ++m_streamSequence)) < 0) {
+        m_streamingActive = false;
+        emit failed(QStringLiteral("no se pudo enviar audio al sidecar STT"));
+    }
+}
+
+void SttEngine::finishStreaming()
+{
+    if (!m_streamingActive || m_streamEndRequested) return;
+    if (!m_streamProcess || m_streamProcess->state() != QProcess::Running) {
+        m_streamingActive = false;
+        emit failed(QStringLiteral("sidecar STT no está ejecutándose"));
+        return;
+    }
+    m_streamEndRequested = true;
+    if (m_streamProcess->write(buildStreamingEnd()) < 0) {
+        m_streamingActive = false;
+        emit failed(QStringLiteral("no se pudo cerrar la sesión STT"));
+    }
+}
+
+void SttEngine::consumeStreamingOutput()
+{
+    if (!m_streamProcess) return;
+    m_streamOutput += m_streamProcess->readAllStandardOutput();
+    int newline = -1;
+    while ((newline = m_streamOutput.indexOf('\n')) >= 0) {
+        const QByteArray line = m_streamOutput.left(newline).trimmed();
+        m_streamOutput.remove(0, newline + 1);
+        if (!line.isEmpty()) handleStreamingMessage(parseStreamingMessage(line));
+    }
+}
+
+void SttEngine::handleStreamingMessage(const QVariantMap &message)
+{
+    if (message.isEmpty()) return;
+    const QString type = message.value(QStringLiteral("type")).toString();
+    if (type == QLatin1String("partial")) {
+        const QString text = message.value(QStringLiteral("text")).toString().trimmed();
+        if (text.isEmpty() || !m_streamingActive) return;
+        m_streamLatestText = text;
+        emit partialTranscribed(text);
+        return;
+    }
+    if (type == QLatin1String("final")) {
+        if (!m_streamingActive) return;
+        const QString text = message.value(QStringLiteral("text")).toString().trimmed();
+        if (!text.isEmpty()) m_streamLatestText = text;
+        m_streamFinalSeen = true;
+        m_streamingActive = false;
+        m_streamEndRequested = false;
+        emit streamingFinished(m_streamLatestText);
+        return;
+    }
+    if (type == QLatin1String("error")) {
+        if (!m_streamingActive) return;
+        m_streamingActive = false;
+        const QString detail = message.value(QStringLiteral("error")).toString().trimmed();
+        emit failed(detail.isEmpty() ? QStringLiteral("sidecar STT informó un error") : detail);
+    }
+}
+
 void SttEngine::transcribe(const QByteArray &pcm16, int sampleRate)
 {
-    if (m_reply) { emit failed(QStringLiteral("STT ocupado")); return; }
+    if (m_reply || m_streamingActive) { emit failed(QStringLiteral("STT ocupado")); return; }
     const QByteArray wav = AudioCodec::pcm16ToWav(pcm16, sampleRate);
     const QByteArray boundary = "----LlamaCodeVoiceSTT";
     const QByteArray body = buildMultipart(boundary, wav, m_cfg.sttModel, m_cfg.sttLanguage);
@@ -99,4 +258,13 @@ void SttEngine::transcribe(const QByteArray &pcm16, int sampleRate)
 void SttEngine::cancel()
 {
     if (m_reply) { m_reply->abort(); }
+    if (m_streamingActive && m_streamProcess
+        && m_streamProcess->state() == QProcess::Running) {
+        m_streamProcess->write(buildStreamingCancel());
+    }
+    m_streamingActive = false;
+    m_streamEndRequested = false;
+    m_streamFinalSeen = false;
+    m_streamLatestText.clear();
+    m_streamOutput.clear();
 }

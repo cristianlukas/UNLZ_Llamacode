@@ -951,6 +951,12 @@ incluidos).
   `/v1/audio/speech`). Una sola ruta de código: **local** (whisper.cpp server,
   openedai-speech, piper-http en localhost, sin key) o **cloud** (URL remota +
   keyRef). Configurable por separado para STT y TTS.
+- **STT streaming experimental**: además del transporte batch, Charla admite
+  sesiones `stream_process` persistentes con protocolo NDJSON v1. Envía bloques
+  PCM16 mientras hablás, acepta parciales revisables y descarta resultados tardíos
+  después de cancelar o interrumpir. El adapter de Parakeet TDT v3 vive en
+  [`docs/voice-streaming.md`](docs/voice-streaming.md) y
+  `tools/parakeet_stt_sidecar.py`; Whisper batch permanece como fallback.
 - **TTS multimotor**: cada perfil puede fijar HTTP/Kokoro, Piper o `qwen3-tts.cpp`, o
   dejarlo en `auto`. La selección automática considera RAM, VRAM total/libre y
   motores instalados: prioriza Qwen3-TTS 1.7B/0.6B cuando hay margen y conserva
@@ -978,7 +984,8 @@ incluidos).
   que termine la síntesis. El sample rate y los canales se declaran en el perfil.
 - **Presupuesto de latencia observable**: cada turno mide desde el endpointing
   (antes del STT) hasta el primer bloque enviado al dispositivo de audio, separando
-  STT, primer texto del LLM, solicitud/generación TTS y arranque de playback. Se
+  STT, primer texto del LLM, primer texto útil, solicitud/generación TTS y arranque
+  de playback. Se
   conservan hasta 500 muestras locales en `voice/latency.jsonl` y la pantalla de
   Charla muestra p50/p90/p95 para comparar motores y perfiles con datos reales.
 - **Guarda de capacidad agentic**: Charla clasifica el modelo activo por tamaño y

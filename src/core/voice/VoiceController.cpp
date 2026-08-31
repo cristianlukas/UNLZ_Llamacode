@@ -19,6 +19,8 @@ VoiceController::VoiceController(QObject *parent) : QObject(parent)
 {
     connect(&m_stt, &SttEngine::transcribed, this, &VoiceController::onSttDone);
     connect(&m_stt, &SttEngine::failed,      this, &VoiceController::onSttFailed);
+    connect(&m_stt, &SttEngine::partialTranscribed, this, &VoiceController::onSttPartial);
+    connect(&m_stt, &SttEngine::streamingFinished, this, &VoiceController::onSttStreamFinished);
     connect(&m_tts, &TtsEngine::audioReady,  this, &VoiceController::onTtsAudio);
     connect(&m_tts, &TtsEngine::audioChunk, this, &VoiceController::onTtsAudioChunk);
     connect(&m_tts, &TtsEngine::audioStreamFinished, this, &VoiceController::onTtsStreamFinished);
@@ -46,6 +48,11 @@ void VoiceController::setTtsPiper(const QString &binPath, const QString &modelPa
 void VoiceController::setTtsGpuDeviceMask(const QString &mask)
 {
     m_tts.setGpuDeviceMask(mask);
+}
+
+void VoiceController::setStreamingSttProcess(QProcess *process)
+{
+    m_stt.attachStreamingProcess(process);
 }
 
 void VoiceController::setInputDevice(const QString &id)
@@ -146,8 +153,10 @@ void VoiceController::startDictation()
 
 void VoiceController::finishTurn()
 {
-    if (m_state == Listening && !m_testMode && !m_monitorOnly)
-        flushSegment(true);
+    if (m_state != Listening || m_testMode || m_monitorOnly) return;
+    m_endpointReason = QStringLiteral("manual");
+    if (m_streamingTurn) finishStreamingTurn();
+    else flushSegment(true);
 }
 
 void VoiceController::stop()
@@ -164,6 +173,7 @@ void VoiceController::stop()
     m_testMode = false;
     m_pttHeld = false;
     m_forceVad = false;
+    m_streamingTurn = false;
     setState(Idle);
 }
 
@@ -232,8 +242,8 @@ void VoiceController::micTest()
     m_lastError.clear();
     emit errorChanged();
     teardownPlayback();
-    beginCapture();
     m_testMode = true;
+    beginCapture();
     if (m_state != Error) setState(Listening);
 }
 
@@ -252,6 +262,14 @@ void VoiceController::beginCapture()
     m_monitorOnly = false;
     m_vad.setTuning(vadTuningFor(m_cfg));
     m_vad.reset();   // el piso de ruido se re-mide por captura (mic/entorno pueden cambiar)
+
+    if (m_cfg.sttMode == QLatin1String("stream_process") && !m_testMode) {
+        if (!m_stt.startStreaming(m_sampleRate)) {
+            fail(QStringLiteral("no se pudo iniciar la sesión STT streaming: sidecar no disponible"));
+            return;
+        }
+        m_streamingTurn = true;
+    }
 
     QAudioFormat fmt;
     fmt.setSampleRate(m_sampleRate);
@@ -292,6 +310,9 @@ void VoiceController::stopSource()
 
 void VoiceController::endCapture()
 {
+    // Si el micrófono falla o se inicia otra captura, cerrar también la sesión
+    // NDJSON para no dejar al sidecar esperando un `end` imposible.
+    if (m_streamingTurn) m_stt.cancel();
     stopSource();
     // Reset completo del estado de stream (descarta turno en curso).
     m_segment.clear();
@@ -301,6 +322,7 @@ void VoiceController::endCapture()
     m_partial.clear();
     m_segQueue.clear();
     m_turnEnding = false;
+    m_streamingTurn = false;
 }
 
 void VoiceController::onAudioReady()
@@ -340,7 +362,8 @@ void VoiceController::onAudioReady()
         return;
     }
 
-    m_segment += chunk;
+    if (m_streamingTurn) m_stt.pushStreamingAudio(chunk);
+    else m_segment += chunk;
     if (speech) {
         if (lvl > m_peak) m_peak = lvl;
         if (lvl > m_segPeak) m_segPeak = lvl;
@@ -351,7 +374,9 @@ void VoiceController::onAudioReady()
         m_silenceMs += chunkMs;
         m_segSilenceMs += chunkMs;
         // Micro-pausa: cerrar segmento y transcribirlo en vivo (sin terminar turno).
-        if (m_segSilenceMs >= m_cfg.vadSegmentMs && segmentHadVoice())
+        // Un sidecar streaming recibe todos los frames y no necesita requests
+        // rolling de segmentos completos.
+        if (!m_streamingTurn && m_segSilenceMs >= m_cfg.vadSegmentMs && segmentHadVoice())
             flushSegment(false);
     }
 
@@ -370,10 +395,13 @@ void VoiceController::onAudioReady()
     // del botón es la señal de intención. El VAD sigue cortando microsegmentos
     // para mantener la transcripción parcial y el feedback en vivo.
     if (ended && !(pushToTalkMode() && m_pttHeld)) {
+        m_endpointReason = m_cfg.smartTurn
+            ? QStringLiteral("vad_smart") : QStringLiteral("vad_fixed");
         if (needSilence != m_cfg.vadSilenceMs)
             qInfo().noquote() << QStringLiteral("[charla] endpoint: corte a %1 ms (base %2, parcial=\"%3\")")
                                      .arg(needSilence).arg(m_cfg.vadSilenceMs).arg(m_partial.right(40));
-        flushSegment(true);
+        if (m_streamingTurn) finishStreamingTurn();
+        else flushSegment(true);
     }
 }
 
@@ -384,7 +412,7 @@ bool VoiceController::segmentHadVoice() const
 
 void VoiceController::flushSegment(bool finalSeg)
 {
-    if (finalSeg) m_latency.beginTurn();
+    if (finalSeg) m_latency.beginTurn(m_endpointReason);
     // Encolar el segmento solo si tuvo voz y dura algo (>200ms) — evita fragmentos.
     const int segMs = int((m_segment.size() / 2) * 1000.0 / m_sampleRate);
     if (segmentHadVoice() && segMs >= 200) {
@@ -408,6 +436,16 @@ void VoiceController::flushSegment(bool finalSeg)
         if (m_state != Error) setState(Transcribing);
     }
     pumpSegments();
+}
+
+void VoiceController::finishStreamingTurn()
+{
+    if (!m_streamingTurn) return;
+    m_latency.beginTurn(m_endpointReason);
+    m_turnEnding = true;
+    stopSource();
+    if (m_state != Error) setState(Transcribing);
+    m_stt.finishStreaming();
 }
 
 void VoiceController::pumpSegments()
@@ -465,10 +503,39 @@ void VoiceController::onSttFailed(const QString &err)
     qWarning().noquote() << QStringLiteral("[charla] STT: fallo en %1 ms: %2 (parcial=%3 chars)")
                                 .arg(m_tStt.isValid() ? m_tStt.elapsed() : 0)
                                 .arg(err).arg(m_partial.size());
+    if (m_streamingTurn) {
+        m_streamingTurn = false;
+        fail(QStringLiteral("STT streaming: ") + err);
+        return;
+    }
     // Si ya hay texto parcial, ignorar el segmento fallido y seguir; si no, error duro
     // (típico: server STT caído → "Conexión rechazada").
     if (m_partial.isEmpty()) { fail(QStringLiteral("STT: ") + err); return; }
     pumpSegments();
+}
+
+void VoiceController::onSttPartial(const QString &text)
+{
+    if (!m_streamingTurn || m_turnEnding) return;
+    const QString t = text.trimmed();
+    if (t.isEmpty()) return;
+    // Los sidecars pueden revisar el prefijo completo: reemplazar, en vez de
+    // concatenar, evita duplicaciones típicas de los decoders rolling.
+    m_partial = t;
+    emit partialTranscript(m_partial);
+}
+
+void VoiceController::onSttStreamFinished(const QString &text)
+{
+    if (!m_streamingTurn) return;
+    m_streamingTurn = false;
+    m_turnEnding = false;
+    const QString t = text.trimmed();
+    if (!t.isEmpty()) {
+        m_partial = t;
+        emit partialTranscript(m_partial);
+    }
+    finalizeTurn();
 }
 
 void VoiceController::notifyThinking()
@@ -545,6 +612,7 @@ void VoiceController::speak(const QString &text)
         return;
     }
     m_latency.markFirstLlmText();
+    m_latency.markFirstUsefulLlmText();
     // TTS por chunks: trocear en oraciones y sintetizar la primera ya; las demás
     // se generan mientras suena la anterior (arranca a hablar mucho antes).
     m_streamBubble = -1;
@@ -600,6 +668,7 @@ void VoiceController::speakStreaming(int bubbleId, const QString &rawText)
     int consumed = 0;
     const QStringList sents = splitCompleteSentences(pending, minLen, &consumed);
     if (sents.isEmpty()) return;          // todavía no cerró ninguna oración nueva
+    m_latency.markFirstUsefulLlmText();
     m_streamConsumed += consumed;
     qInfo().noquote() << QStringLiteral("[charla] stream: +%1 oración(es) (bubble=%2, consumido=%3)")
                              .arg(sents.size()).arg(bubbleId).arg(m_streamConsumed);

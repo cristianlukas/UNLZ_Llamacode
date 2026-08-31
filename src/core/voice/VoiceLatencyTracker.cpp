@@ -9,10 +9,12 @@
 #include <algorithm>
 #include <utility>
 
-void VoiceLatencyTracker::beginTurn()
+void VoiceLatencyTracker::beginTurn(const QString &endpointReason)
 {
     m_clock.restart();
-    m_transcriptMs = m_firstLlmTextMs = m_firstTtsRequestMs = m_firstAudioGeneratedMs = -1;
+    m_transcriptMs = m_firstLlmTextMs = m_firstUsefulLlmTextMs =
+        m_firstTtsRequestMs = m_firstAudioGeneratedMs = -1;
+    m_endpointReason = endpointReason.trimmed();
     m_saved = false;
 }
 
@@ -24,6 +26,12 @@ void VoiceLatencyTracker::markTranscript()
 void VoiceLatencyTracker::markFirstLlmText()
 {
     if (m_clock.isValid() && m_firstLlmTextMs < 0) m_firstLlmTextMs = int(m_clock.elapsed());
+}
+
+void VoiceLatencyTracker::markFirstUsefulLlmText()
+{
+    if (m_clock.isValid() && m_firstUsefulLlmTextMs < 0)
+        m_firstUsefulLlmTextMs = int(m_clock.elapsed());
 }
 
 void VoiceLatencyTracker::markFirstTtsRequest()
@@ -47,6 +55,7 @@ QVariantMap VoiceLatencyTracker::markFirstAudioPlayed(const QString &sttEngine,
         {QStringLiteral("timestamp"), QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)},
         {QStringLiteral("sttMs"), m_transcriptMs},
         {QStringLiteral("llmFirstTextMs"), m_firstLlmTextMs},
+        {QStringLiteral("llmFirstUsefulTextMs"), m_firstUsefulLlmTextMs},
         {QStringLiteral("ttsRequestMs"), m_firstTtsRequestMs},
         {QStringLiteral("audioGeneratedMs"), m_firstAudioGeneratedMs},
         {QStringLiteral("endToFirstAudioMs"), played},
@@ -58,6 +67,7 @@ QVariantMap VoiceLatencyTracker::markFirstAudioPlayed(const QString &sttEngine,
              ? played - m_firstAudioGeneratedMs : -1},
         {QStringLiteral("sttEngine"), sttEngine},
         {QStringLiteral("ttsEngine"), ttsEngine},
+        {QStringLiteral("endpointReason"), m_endpointReason},
     };
     append(s);
     return s;
@@ -101,7 +111,7 @@ QVariantMap VoiceLatencyTracker::summary()
 {
     QFile f(storagePath());
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return {{QStringLiteral("count"), 0}};
-    QList<int> total, stt, llm, tts;
+    QList<int> total, stt, llm, useful, tts;
     QVariantMap last;
     while (!f.atEnd()) {
         const QJsonObject o = QJsonDocument::fromJson(f.readLine()).object();
@@ -111,7 +121,8 @@ QVariantMap VoiceLatencyTracker::summary()
             const int v = o.value(QLatin1String(key)).toInt(-1);
             if (v >= 0) out << v;
         };
-        add("endToFirstAudioMs", total); add("sttMs", stt); add("llmMs", llm); add("ttsMs", tts);
+        add("endToFirstAudioMs", total); add("sttMs", stt); add("llmMs", llm);
+        add("llmFirstUsefulTextMs", useful); add("ttsMs", tts);
     }
     return {{QStringLiteral("count"), total.size()}, {QStringLiteral("last"), last},
             {QStringLiteral("p50Ms"), percentile(total, .50)},
@@ -119,5 +130,6 @@ QVariantMap VoiceLatencyTracker::summary()
             {QStringLiteral("p95Ms"), percentile(total, .95)},
             {QStringLiteral("sttP50Ms"), percentile(stt, .50)},
             {QStringLiteral("llmP50Ms"), percentile(llm, .50)},
+            {QStringLiteral("llmUsefulP50Ms"), percentile(useful, .50)},
             {QStringLiteral("ttsP50Ms"), percentile(tts, .50)}};
 }

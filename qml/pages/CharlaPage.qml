@@ -31,6 +31,15 @@ Item {
         for (var i = 0; i < o.length; ++i) if (o[i].id === id) return true
         return false
     }
+    function sttEngineInfo(id) {
+        var o = App.voiceSttCatalog()
+        for (var i = 0; i < o.length; ++i) if (o[i].id === id) return o[i]
+        return {}
+    }
+    function sttIsStreaming() {
+        return (page.cfg.sttMode || "http_batch") === "stream_process"
+               || sttEngineInfo(page.cfg.sttManagedEngine || "").transport === "stream_process"
+    }
     Connections {
         target: App
         function onVoiceInstallProgress(engineId, pct, status) {
@@ -66,7 +75,7 @@ Item {
     function startOrPromptModelDownload() {
         const engineId = page.cfg.sttManagedEngine || ""
         const voiceId = page.cfg.ttsManagedVoice || "es_ES-davefx-medium"
-        if (engineId.length > 0
+        if (engineId.length > 0 && !page.sttIsStreaming()
                 && (!App.voiceModelInstalled(engineId)
                     || !App.voiceWhisperServerAvailable()
                     || !App.voiceTtsVoiceInstalled(voiceId)
@@ -365,7 +374,12 @@ Item {
                                 var cur = page.cfg.sttManagedEngine || ""
                                 for (var i = 0; i < opts.length; ++i) if (opts[i].id === cur) { currentIndex = i; break }
                             }
-                            onActivated: { page.cfg.sttManagedEngine = opts[currentIndex].id; page.save() }
+                            onActivated: {
+                                var selected = opts[currentIndex] || {}
+                                page.cfg.sttManagedEngine = selected.id || ""
+                                page.cfg.sttMode = selected.transport || "http_batch"
+                                page.save()
+                            }
                         }
 
                         Text { text: "Estado"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" }
@@ -375,14 +389,18 @@ Item {
                             Text {
                                 Layout.fillWidth: true
                                 color: Theme.textMuted; font.pixelSize: 12
-                                text: page.installPct >= 0 ? page.installMsg
+                                text: page.sttIsStreaming()
+                                      ? ((page.cfg.sttManagedCommand || "").length > 0
+                                         ? "Sidecar configurado ✓" : "Requiere comando sidecar")
+                                      : (page.installPct >= 0 ? page.installMsg
                                       : (App.voiceModelInstalled(page.cfg.sttManagedEngine || "") ? "Instalado ✓"
-                                         : (page.installMsg.length ? page.installMsg : "No instalado"))
+                                         : (page.installMsg.length ? page.installMsg : "No instalado")))
                             }
                             LcButton {
                                 text: page.installPct >= 0 ? "Cancelar" : "Instalar modelo"
                                 secondary: true
-                                visible: page.installPct >= 0 || !App.voiceModelInstalled(page.cfg.sttManagedEngine || "")
+                                visible: !page.sttIsStreaming()
+                                         && (page.installPct >= 0 || !App.voiceModelInstalled(page.cfg.sttManagedEngine || ""))
                                 onClicked: {
                                     if (page.installPct >= 0) App.cancelVoiceModelInstall()
                                     else App.installVoiceModel(page.cfg.sttManagedEngine)
@@ -390,10 +408,33 @@ Item {
                             }
                         }
 
-                        Text { text: "Binario whisper-server"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" }
+                        Text { text: "Proceso sidecar streaming (NDJSON v1)"; color: Theme.textSecondary; visible: page.sttIsStreaming() }
+                        LcTextField {
+                            Layout.fillWidth: true; visible: page.sttIsStreaming()
+                            placeholderText: "python tools/parakeet_stt_sidecar.py"
+                            text: page.cfg.sttManagedCommand || ""
+                            onEditingFinished: { page.cfg.sttManagedCommand = text; page.save() }
+                        }
+                        Text { text: "Argumentos sidecar (JSON)"; color: Theme.textSecondary; visible: page.sttIsStreaming() }
+                        LcTextField {
+                            Layout.fillWidth: true; visible: page.sttIsStreaming()
+                            placeholderText: "[\"--model\",\"nvidia/parakeet-tdt-0.6b-v3\"]"
+                            text: page.argsJson(page.cfg.sttManagedArgs)
+                            onEditingFinished: {
+                                page.cfg.sttManagedArgs = page.parseArgs(text, page.cfg.sttManagedArgs)
+                                page.save()
+                            }
+                        }
+                        Text {
+                            Layout.columnSpan: 2; Layout.fillWidth: true; visible: page.sttIsStreaming()
+                            text: "El sidecar recibe audio PCM16 por stdin y devuelve parciales/finales JSON por stdout. LlamaCode lo limita al job y a la GPU de voz."
+                            color: Theme.textMuted; font.pixelSize: 12; wrapMode: Text.WordWrap
+                        }
+
+                        Text { text: "Binario whisper-server"; color: Theme.textSecondary; visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming() }
                         RowLayout {
                             Layout.fillWidth: true; spacing: 6
-                            visible: (page.cfg.sttManagedEngine || "") !== ""
+                            visible: (page.cfg.sttManagedEngine || "") !== "" && !page.sttIsStreaming()
                             LcTextField {
                                 Layout.fillWidth: true
                                 placeholderText: "ruta a whisper-server (vacío = PATH)"
@@ -403,9 +444,9 @@ Item {
                             LcButton { text: "Descargar"; secondary: true; onClicked: App.installVoiceBinary("whisper-server", "") }
                             LcButton { text: "…"; secondary: true; onClicked: { App.pickVoiceWhisperServer(); page.whisperPath = App.voiceWhisperServerPath() } }
                         }
-                        Item { visible: page.binMsgWhisper.length > 0; width: 1; height: 1 }
+                        Item { visible: page.binMsgWhisper.length > 0 && !page.sttIsStreaming(); width: 1; height: 1 }
                         Text {
-                            visible: page.binMsgWhisper.length > 0
+                            visible: page.binMsgWhisper.length > 0 && !page.sttIsStreaming()
                             text: page.binMsgWhisper; color: Theme.textMuted; font.pixelSize: 12
                         }
                     }
@@ -452,6 +493,13 @@ Item {
                             placeholderText: "ej: voice/openai (env var o store)"
                             text: page.cfg.sttKeyRef || ""
                             onEditingFinished: { page.cfg.sttKeyRef = text; page.save() }
+                        }
+                        Text { text: "Transporte"; color: Theme.textSecondary }
+                        LcComboBox {
+                            Layout.fillWidth: true
+                            model: ["http_batch", "stream_process"]
+                            currentIndex: (page.cfg.sttMode === "stream_process") ? 1 : 0
+                            onActivated: { page.cfg.sttMode = model[currentIndex]; page.save() }
                         }
                         Text { text: "Proceso externo administrado"; color: Theme.textSecondary }
                         LcTextField {

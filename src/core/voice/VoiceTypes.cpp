@@ -11,6 +11,7 @@ QJsonObject VoiceConfig::toJson() const
     o["sttModel"]       = sttModel;
     o["sttKeyRef"]      = sttKeyRef;
     o["sttLanguage"]    = sttLanguage;
+    o["sttMode"]        = sttMode;
     o["sttEndpointPath"] = sttEndpointPath;
     o["sttManagedEngine"] = sttManagedEngine;
     o["sttManagedCommand"] = sttManagedCommand;
@@ -65,6 +66,9 @@ VoiceConfig VoiceConfig::fromJson(const QJsonObject &o)
     c.sttModel    = o.value("sttModel").toString(c.sttModel);
     c.sttKeyRef   = o.value("sttKeyRef").toString(c.sttKeyRef);
     c.sttLanguage = o.value("sttLanguage").toString(c.sttLanguage);
+    c.sttMode = o.value("sttMode").toString(c.sttMode).trimmed().toLower();
+    if (c.sttMode != QLatin1String("stream_process"))
+        c.sttMode = QStringLiteral("http_batch");
     c.sttEndpointPath = o.value("sttEndpointPath").toString(c.sttEndpointPath);
     if (c.sttEndpointPath.isEmpty()) c.sttEndpointPath = QStringLiteral("/v1/audio/transcriptions");
     c.sttManagedEngine = o.value("sttManagedEngine").toString(c.sttManagedEngine);

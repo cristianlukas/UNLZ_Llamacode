@@ -16,20 +16,24 @@ struct Engine {
     const char *id; const char *name; const char *engine;
     const char *modelFile; const char *modelUrl; int sizeMb;
     const char *endpointPath; int defaultPort;
+    const char *transport; bool installable; const char *docsUrl;
 };
 const Engine kEngines[] = {
     {"whisper-tiny",  "Whisper tiny (multilingüe, ~78 MB, rápido)",   "whisper-cpp",
      "ggml-tiny.bin",
      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
-     78,  "/inference", 8081},
+     78,  "/inference", 8081, "http_batch", true, "https://github.com/ggerganov/whisper.cpp"},
     {"whisper-base",  "Whisper base (multilingüe, ~148 MB, balance)", "whisper-cpp",
      "ggml-base.bin",
      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
-     148, "/inference", 8081},
+     148, "/inference", 8081, "http_batch", true, "https://github.com/ggerganov/whisper.cpp"},
     {"whisper-small", "Whisper small (multilingüe, ~488 MB, preciso)","whisper-cpp",
      "ggml-small.bin",
      "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
-     488, "/inference", 8081},
+     488, "/inference", 8081, "http_batch", true, "https://github.com/ggerganov/whisper.cpp"},
+    {"parakeet-tdt-0.6b-v3", "Parakeet TDT v3 (sidecar rolling, experimental)", "parakeet-sidecar",
+     "", "", 600, "/stream", 0, "stream_process", false,
+     "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3"},
 };
 
 // Voces piper (TTS process-mode). Cada voz = .onnx + .onnx.json (rhasspy/piper-voices).
@@ -70,7 +74,11 @@ QVariantList VoiceServerManager::sttCatalog()
             {"modelUrl", QString::fromLatin1(e.modelUrl)},
             {"sizeMb", e.sizeMb},
             {"endpointPath", QString::fromLatin1(e.endpointPath)},
-            {"defaultPort", e.defaultPort}});
+            {"defaultPort", e.defaultPort},
+            {"transport", QString::fromLatin1(e.transport)},
+            {"installable", e.installable},
+            {"requiresCommand", !e.installable},
+            {"docsUrl", QString::fromLatin1(e.docsUrl)}});
     }
     return out;
 }
@@ -153,7 +161,7 @@ QString VoiceServerManager::installRoot()
 QString VoiceServerManager::modelPath(const QString &engineId)
 {
     const QVariantMap e = sttEngine(engineId);
-    if (e.isEmpty()) return {};
+    if (e.isEmpty() || e.value("modelFile").toString().isEmpty()) return {};
     return installRoot() + QStringLiteral("/") + engineId + QStringLiteral("/")
            + e.value("modelFile").toString();
 }
@@ -188,6 +196,12 @@ void VoiceServerManager::installModel(const QString &engineId)
     }
     const QVariantMap e = sttEngine(engineId);
     if (e.isEmpty()) { emit installFinished(engineId, false, QStringLiteral("motor desconocido")); return; }
+    if (!e.value(QStringLiteral("installable"), true).toBool()
+        || e.value(QStringLiteral("modelUrl")).toString().isEmpty()) {
+        emit installFinished(engineId, false,
+                             QStringLiteral("este motor requiere configurar un sidecar externo"));
+        return;
+    }
     startDownloadQueue(engineId, {{ e.value("modelUrl").toString(), modelPath(engineId) }});
 }
 

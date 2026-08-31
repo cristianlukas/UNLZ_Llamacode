@@ -13,16 +13,17 @@ class QFile;
 // proceso del server lo lanza AppController (Job Object + lifecycle), igual que
 // llama-server; acá solo vive lo descargable + las funciones puras (testeables).
 //
-// Motor soportado: whisper.cpp `whisper-server` (endpoint `/inference`). El
-// binario se resuelve desde un setting/PATH; los MODELOS ggml se descargan de
-// HuggingFace (URLs estables) por la app.
+// whisper.cpp se administra de forma nativa. Otros motores, como Parakeet, se
+// conectan como sidecars explícitos con el protocolo streaming NDJSON v1; así
+// el binario Qt no incorpora runtimes Python/NeMo/ONNX pesados.
 class VoiceServerManager : public QObject
 {
     Q_OBJECT
 public:
     explicit VoiceServerManager(QObject *parent = nullptr);
 
-    // Catálogo de motores STT: [{id,name,engine,modelFile,modelUrl,sizeMb,endpointPath,defaultPort}].
+    // Catálogo de motores STT: incluye transport/installable/requiresCommand
+    // para distinguir servidores batch de sidecars streaming.
     static QVariantList sttCatalog();
     // Entrada del catálogo por id ({} si no existe).
     static QVariantMap sttEngine(const QString &id);

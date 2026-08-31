@@ -21,6 +21,7 @@ class QMediaPlayer;
 class QAudioOutput;
 class QAudioSink;
 class QBuffer;
+class QProcess;
 
 // Orquestador del modo "Charla" (voz-a-voz):
 //   Listening → (VAD detecta fin de habla) → Transcribing (STT) →
@@ -49,6 +50,9 @@ public:
     // Máscara CUDA para TTS local; la voz puede quedar aislada en la GPU
     // reservada por el plan de Charla.
     void setTtsGpuDeviceMask(const QString &mask);
+    // Conecta un sidecar STT persistente administrado por AppController. El
+    // proceso mantiene su lifecycle existente; acá sólo se usa stdin/stdout.
+    void setStreamingSttProcess(QProcess *process);
     // Dispositivo de entrada por id (QAudioDevice::id() como string utf8). "" = default.
     void setInputDevice(const QString &id);
     // Lista de micrófonos: [{id,name,isDefault}].
@@ -143,6 +147,8 @@ private slots:
     void onAudioReady();
     void onSttDone(const QString &text);
     void onSttFailed(const QString &err);
+    void onSttPartial(const QString &text);
+    void onSttStreamFinished(const QString &text);
     void onTtsAudio(const QByteArray &audio, const QString &format);
     void onTtsAudioChunk(const QByteArray &pcm, int sampleRate, int channels);
     void onTtsStreamFinished();
@@ -157,6 +163,7 @@ private:
     void stopSource();             // detiene el QAudioSource sin resetear el transcript
     void flushSegment(bool finalSeg); // encola el segmento actual (si tuvo voz) y pumpea
     void pumpSegments();           // transcribe el próximo segmento si STT está libre
+    void finishStreamingTurn();    // cierra una sesión STT NDJSON y espera el final
     void finalizeTurn();           // arma el texto final del turno y lo emite
     void playAudio(const QByteArray &audio, const QString &format);
     // Path rápido: WAV PCM16 (piper/whisper-speech) directo a QAudioSink, sin el
@@ -194,6 +201,8 @@ private:
     QString m_partial;               // transcripción acumulada del turno
     QList<QByteArray> m_segQueue;    // segmentos esperando transcripción (en orden)
     bool   m_turnEnding = false;     // silencio largo detectado: finalizar al drenar la cola
+    bool   m_streamingTurn = false;  // sesión STT sidecar activa para este turno
+    QString m_endpointReason;        // métrica: vad/ptt/manual
     bool  m_monitorOnly = false;     // true durante Speaking (barge-in): no acumula
     bool  m_testMode = false;        // micTest: captura para nivel, no VAD/STT
     bool  m_pttHeld = false;         // botón PTT actualmente presionado
